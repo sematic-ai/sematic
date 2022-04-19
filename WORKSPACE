@@ -22,10 +22,10 @@ load("@python3_9//:defs.bzl", "interpreter")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
-    name = "sematic",
+    name = "glow",
     requirements_lock = "//requirements:requirements.txt",
     python_interpreter_target = interpreter,
 )
 
-load("@sematic//:requirements.bzl", "install_deps")
+load("@glow//:requirements.bzl", "install_deps")
 install_deps()
