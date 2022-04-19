@@ -44,9 +44,17 @@ def test_cast_subclass():
         def safe_cast(cls, _):
             pass
 
+        @classmethod
+        def can_cast_type(cls, _):
+            pass
+
     class ChildClass(ParentType):
         @classmethod
         def safe_cast(cls, _):
+            pass
+
+        @classmethod
+        def can_cast_type(cls, _):
             pass
 
     assert isinstance(ParentType.cast(ChildClass()), ChildClass)
@@ -62,6 +70,10 @@ def test_has_instances_false():
         def safe_cast(cls, _):
             pass
 
+        @classmethod
+        def can_cast_type(cls, _):
+            pass
+
     with pytest.raises(
         RuntimeError, match="Type NoInstancesType cannot be instantiated"
     ):
@@ -72,6 +84,10 @@ def test_has_instances_true():
     class YesInstancesType(Type):
         @classmethod
         def safe_cast(cls, _):
+            pass
+
+        @classmethod
+        def can_cast_type(cls, _):
             pass
 
     assert isinstance(YesInstancesType(), YesInstancesType)

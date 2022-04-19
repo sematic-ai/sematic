@@ -1,4 +1,4 @@
-load("@sematic//:requirements.bzl", "requirement")
+load("@glow//:requirements.bzl", "requirement")
 
 package(default_visibility = ["//visibility:public"])
 
