@@ -10,6 +10,8 @@ weeks.
 
 ## Development
 
+### Developer guidelines
+
 ### Running tests
 
 Run tests with Bazel (install instructions).
