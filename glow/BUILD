@@ -1,3 +1,5 @@
+load("@rules_python//python:packaging.bzl", "py_wheel")
+
 glow_py_lib(
     name = "init",
     srcs = ["__init__.py"],
@@ -53,4 +55,26 @@ glow_py_lib(
     deps = [
         ":abstract_future",
     ]
+)
+
+py_wheel(
+    name = "glow_wheel",
+    distribution = "glow",
+    python_tag = "py3",
+    version = "0.0.1",
+    author = "Sematic AI",
+    author_email = "emmanuel@sematic.ai",
+    classifiers = [
+        "Development Status :: 1 - Planning",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "Programming Language :: Python :: 3 :: Only",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Topic :: Scientific/Engineering :: Visualization",
+        "Typing :: Typed",
+    ],
+    deps = [
+        "//glow:init",
+        "//glow/types:init",
+    ],
 )
