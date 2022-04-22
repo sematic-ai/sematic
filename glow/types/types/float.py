@@ -2,7 +2,7 @@
 import typing
 
 # Glow
-from glow.types.type import Type, is_type
+from glow.types.type import Type, is_type, NotAGlowTypeError
 
 
 class Float(Type, float):
@@ -28,7 +28,7 @@ class Float(Type, float):
         cls, type_: typing.Type[Type]
     ) -> typing.Tuple[bool, typing.Optional[str]]:
         if not is_type(type_):
-            raise TypeError("{} is not a Glow type".format(type_))
+            raise NotAGlowTypeError(type_)
 
         if issubclass(type_, Float):
             return True, None

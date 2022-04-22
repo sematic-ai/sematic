@@ -66,3 +66,11 @@ def is_type(type_: type) -> bool:
         raise ValueError("{} is not a Python type".format(type_))
 
     return issubclass(type_, Type)
+
+
+class NotAGlowTypeError(TypeError):
+
+    _NOT_A_GLOW_TYPE_ERROR = "{} is not a Glow type. See https://docs."
+
+    def __init__(self, type_: typing.Any):
+        super().__init__(self._NOT_A_GLOW_TYPE_ERROR.format(type_))

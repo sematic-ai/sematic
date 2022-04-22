@@ -1,5 +1,8 @@
+# Standard library
 import typing
-from glow.types.type import Type
+
+# Glow
+from glow.types.type import Type, is_type, NotAGlowTypeError
 
 
 class Null(Type):
@@ -26,4 +29,10 @@ class Null(Type):
     def can_cast_type(
         cls, type_: typing.Type[Type]
     ) -> typing.Tuple[bool, typing.Optional[str]]:
-        pass
+        if not is_type(type_):
+            raise NotAGlowTypeError(type_)
+
+        if issubclass(type_, Null):
+            return True, None
+
+        return False, "{} cannot cast to Null".format(type_.__name__)
