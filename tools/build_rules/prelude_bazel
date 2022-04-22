@@ -1,0 +1,13 @@
+"""
+This file gets loaded before every BUILD file
+"""
+
+# @unused
+load("@glow//:requirements.bzl", "requirement")
+
+# @unused
+load(
+    "@//tools:glow_rules.bzl",
+    "pytest_test",
+    "glow_py_lib",
+)

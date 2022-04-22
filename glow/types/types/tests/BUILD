@@ -1,5 +1,3 @@
-load("@//tools:test_rules.bzl", "pytest_test")
-
 pytest_test(
     name = "test_float",
     srcs = ["test_float.py"],
