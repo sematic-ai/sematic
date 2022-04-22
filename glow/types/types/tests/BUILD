@@ -20,7 +20,6 @@ pytest_test(
     name = "test_integer",
     srcs = ["test_integer.py"],
     deps = [
-        "//glow/types/types:float",
         "//glow/types/types:integer",
     ]
 )
