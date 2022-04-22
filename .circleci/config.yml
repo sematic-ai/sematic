@@ -58,7 +58,7 @@ jobs:
           name: Linting
           command:  |
             python3 -m pip install flake8
-            flake8 --max-line-length=90
+            python3 -m flake8 --max-line-length=90
       - run:
           name: MyPy
           command: mypy glow --explicit-package-bases --namespace-packages
