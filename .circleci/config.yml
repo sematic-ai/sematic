@@ -47,19 +47,17 @@ jobs:
     steps:
       - checkout
       - setup-bazel
-      #- python/install-packages:
-      #    pkg-manager: pip
-          # app-dir: ~/project/package-directory/  # If you're requirements.txt isn't in the root directory.
-          # pip-dependency-file: test-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
+      - python/install-packages:
+          pkg-manager: pip
+          app-dir: ~/requirements/  # If you're requirements.txt isn't in the root directory.
+          pip-dependency-file: test-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
           command: bazel test //glow/... --test_output=all
       - run:
           name: Linting
-          command:  |
-            python3 -m pip install flake8
-            python3 -m flake8 --max-line-length=90
+          command: python3 -m flake8 --max-line-length=90
       - run:
           name: MyPy
           command: mypy glow --explicit-package-bases --namespace-packages
