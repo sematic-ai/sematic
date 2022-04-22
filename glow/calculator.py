@@ -44,9 +44,11 @@ class Calculator(AbstractCalculator):
         for arg in (arg_specs.varargs, arg_specs.varkw):
             if arg is not None:
                 raise ValueError(
-                    "Variadic arguments are not supported. {} has variadic argument {}. See https://docs.".format(
-                        self, repr(arg)
-                    )
+                    (
+                        "Variadic arguments are not supported."
+                        " {} has variadic argument {}."
+                        " See https://docs."
+                    ).format(self, repr(arg))
                 )
 
     def _set_types(self) -> None:
@@ -73,9 +75,10 @@ class Calculator(AbstractCalculator):
         missing_annotations = set(self._full_arg_spec.args) - set(input_types)
         if len(missing_annotations) > 0:
             raise ValueError(
-                "Missing calculator type annotations. The following arguments are not annotated: {}".format(
-                    _repr_str_iterable(missing_annotations)
-                )
+                (
+                    "Missing calculator type annotations."
+                    " The following arguments are not annotated: {}"
+                ).format(_repr_str_iterable(missing_annotations))
             )
 
         self._output_type: typing.Type[Type] = output_type

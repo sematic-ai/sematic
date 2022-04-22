@@ -28,7 +28,11 @@ class GenericMeta(TypeMeta):
     ) -> "GenericMeta":
         if not isinstance(parameters, collections.OrderedDict):
             raise TypeError(
-                "Incorrect generic type implementation for {}. parameters should be a collections.OrderedDict. See https://docs"
+                (
+                    "Incorrect generic type implementation for {}."
+                    " parameters should be a collections.OrderedDict."
+                    " See https://docs"
+                )
             )
 
         type_ = GenericMeta(

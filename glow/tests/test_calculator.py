@@ -91,7 +91,10 @@ def test_types_specified():
 def test_variadic():
     with pytest.raises(
         ValueError,
-        match="Variadic arguments are not supported. glow.tests.test_calculator.func has variadic argument 'abc'",
+        match=(
+            "Variadic arguments are not supported."
+            " glow.tests.test_calculator.func has variadic argument 'abc'"
+        ),
     ):
 
         @calculator
@@ -102,7 +105,10 @@ def test_variadic():
 def test_missing_types():
     with pytest.raises(
         ValueError,
-        match="Missing calculator type annotations. The following arguments are not annotated: 'a', 'b'",
+        match=(
+            "Missing calculator type annotations."
+            " The following arguments are not annotated: 'a', 'b'"
+        ),
     ):
 
         @calculator
