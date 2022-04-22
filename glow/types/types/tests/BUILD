@@ -29,5 +29,7 @@ pytest_test(
     srcs = ["test_null.py"],
     deps = [
         "//glow/types/types:null",
+        "//glow/types/types:float",
+        "//glow/types:type",
     ]
 )
