@@ -10,3 +10,9 @@ $ python3 -m piptools compile requirements/requirements.in > requirements/requir
 ```
 
 `--allow-unsafe` is to ensure `setuptools` doesn't get filtered out.
+
+## Build the glow wheel
+
+```shell
+$ bazel build //glow/glow_wheel
+```
