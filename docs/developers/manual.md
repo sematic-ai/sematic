@@ -6,5 +6,7 @@ Add dependency to `requirements/requirements.in`, and if possible, set a fixed v
 
 Then run:
 ```shell
-$ python3 -m piptools compile requirements/requirements.in > requirements/requirements.txt
+$ python3 -m piptools compile requirements/requirements.in > requirements/requirements.txt --allow-unsafe
 ```
+
+`--allow-unsafe` is to ensure `setuptools` doesn't get filtered out.

@@ -1,4 +1,4 @@
-py_library(
+glow_py_lib(
     name = "local_resolver",
     srcs = ["local_resolver.py"],
     visibility = ["//visibility:public"],

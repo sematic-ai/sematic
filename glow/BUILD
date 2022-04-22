@@ -1,18 +1,18 @@
-py_library(
+glow_py_lib(
     name = "abstract_calculator",
     srcs = ["abstract_calculator.py"],
     visibility = ["//visibility:public"],
     deps = []
 )
 
-py_library(
+glow_py_lib(
     name = "abstract_future",
     srcs = ["abstract_future.py"],
     visibility = ["//visibility:public"],
     deps = []
 )
 
-py_library(
+glow_py_lib(
     name = "calculator",
     srcs = ["calculator.py"],
     visibility = ["//visibility:public"],
@@ -24,7 +24,7 @@ py_library(
     ]
 )
 
-py_library(
+glow_py_lib(
     name = "future",
     srcs = ["future.py"],
     visibility = ["//visibility:public"],
@@ -35,7 +35,7 @@ py_library(
     ]
 )
 
-py_library(
+glow_py_lib(
     name = "resolver",
     srcs = ["resolver.py"],
     visibility = ["//visibility:public"],

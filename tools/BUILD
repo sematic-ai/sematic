@@ -1,8 +1,6 @@
-load("@glow//:requirements.bzl", "requirement")
-
 package(default_visibility = ["//visibility:public"])
 
-py_library(
+glow_py_lib(
     name = "pytest_runner",
     srcs = ["pytest_runner.py"],
     deps = [
