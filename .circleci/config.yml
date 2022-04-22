@@ -54,6 +54,15 @@ jobs:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
           command: bazel test //glow/... --test_output=all
+      - run:
+          name: Linting
+          command: flake8 --max-line-length=90
+      - run:
+          name: MyPy
+          command: mypy glow --explicit-package-bases --namespace-packages
+      - run:
+          name: Build wheel
+          command: bazel build //glow/glow_wheel
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows

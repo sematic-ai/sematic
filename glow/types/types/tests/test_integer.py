@@ -2,7 +2,6 @@
 import pytest
 
 # Glow
-from glow.types.types.float import Float
 from glow.types.types.integer import Integer
 
 
