@@ -8,3 +8,11 @@ pytest_test(
         "//glow/types/types:float",
     ]
 )
+
+pytest_test(
+    name = "test_init",
+    srcs = ["test_init.py"],
+    deps = [
+        "//glow:init",
+    ]
+)

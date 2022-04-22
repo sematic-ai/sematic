@@ -1,4 +1,15 @@
 glow_py_lib(
+    name = "init",
+    srcs = ["__init__.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":calculator",
+        ":resolver",
+        "//glow/resolvers:local_resolver"
+    ]
+)
+
+glow_py_lib(
     name = "abstract_calculator",
     srcs = ["abstract_calculator.py"],
     visibility = ["//visibility:public"],
