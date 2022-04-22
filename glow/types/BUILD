@@ -11,4 +11,5 @@ glow_py_lib(
     name = "type",
     srcs = ["type.py"],
     visibility = ["//visibility:public"],
+    deps = [],
 )

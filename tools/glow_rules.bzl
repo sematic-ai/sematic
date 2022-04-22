@@ -5,7 +5,7 @@ pytest_test rule
 load(
     "@rules_python//python:defs.bzl",
     "py_test",
-    "glow_py_lib",
+    "py_library",
     "py_binary",
 )
 

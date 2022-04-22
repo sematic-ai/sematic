@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-glow_py_lib(
+py_library(
     name = "pytest_runner",
     srcs = ["pytest_runner.py"],
     deps = [
