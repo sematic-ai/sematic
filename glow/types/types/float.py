@@ -1,4 +1,7 @@
+# Standard library
 import typing
+
+# Glow
 from glow.types.type import Type, is_type
 
 
@@ -37,8 +40,14 @@ class Float(Type, float):
 
     # This is necessary to satisy mypy when using +
     # and the calculator output type is Float
-    def __add__(self, __x: float) -> "Float":
-        return Float(super().__add__(__x))
+    def __add__(self, x: float) -> "Float":
+        return Float(super().__add__(x))
 
-    def __mul__(self, __x: float) -> "Float":
-        return Float(super().__mul__(__x))
+    def __sub__(self, x: float) -> "Float":
+        return Float(super().__sub__(x))
+
+    def __mul__(self, x: float) -> "Float":
+        return Float(super().__mul__(x))
+
+    def __truediv__(self, x: float) -> "Float":
+        return Float(super().__truediv__(x))

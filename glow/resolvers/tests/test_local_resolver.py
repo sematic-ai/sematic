@@ -2,6 +2,13 @@
 from glow.calculator import calculator
 from glow.resolvers.local_resolver import LocalResolver
 from glow.types.types.float import Float
+from glow.types.types.integer import Integer
+
+
+# Testing mypy compliance
+@calculator
+def add_int(a: Integer, b: Integer) -> Integer:
+    return a + b
 
 
 @calculator
