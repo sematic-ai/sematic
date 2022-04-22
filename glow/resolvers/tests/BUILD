@@ -7,5 +7,6 @@ pytest_test(
         "//glow:calculator",
         "//glow/resolvers:local_resolver",
         "//glow/types/types:float",
+        "//glow/types/types:integer",
     ]
 )

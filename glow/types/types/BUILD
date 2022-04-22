@@ -18,6 +18,15 @@ py_library(
 )
 
 py_library(
+    name = "integer",
+    srcs = ["integer.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//glow/types:type",
+    ],
+)
+
+py_library(
     name = "null",
     srcs = ["null.py"],
     visibility = ["//visibility:public"],
