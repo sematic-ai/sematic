@@ -63,7 +63,7 @@ jobs:
           command: mypy glow --explicit-package-bases --namespace-packages
       - run:
           name: Build wheel
-          command: bazel build //glow/glow_wheel
+          command: bazel build //glow:glow_wheel
       - slack/notify:
           channel: C03CPMXA1QU
           event: always
