@@ -56,7 +56,9 @@ jobs:
           command: bazel test //glow/... --test_output=all
       - run:
           name: Linting
-          command: flake8 --max-line-length=90
+          command:  |
+            python3 -m pip install flake8
+            flake8 --max-line-length=90
       - run:
           name: MyPy
           command: mypy glow --explicit-package-bases --namespace-packages
