@@ -54,5 +54,5 @@ $ python3 -m piptools compile requirements/requirements.in > requirements/requir
 ## Build the glow wheel
 
 ```shell
-$ bazel build //glow/glow_wheel
+$ bazel build //glow:glow_wheel
 ```
