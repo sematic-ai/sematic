@@ -6,7 +6,7 @@ import typing
 
 # Glow
 from glow.types.generic_type import GenericType
-from glow.types.type import Type
+from glow.types.type import Type, is_type, NotAGlowTypeError
 from glow.types.types.float import Float
 
 
@@ -16,7 +16,7 @@ class FloatInRange(GenericType, Float):
 
     @classmethod
     def parametrize(cls, args: typing.Tuple) -> typing.OrderedDict[str, typing.Any]:
-        if len(args) < 2:
+        if not isinstance(args, tuple) or len(args) < 2:
             raise ValueError(
                 "Not enough arguments to parametrize {}. See https://docs".format(
                     cls.__name__
@@ -80,6 +80,22 @@ class FloatInRange(GenericType, Float):
         return parameters
 
     @classmethod
+    def lower_bound(cls) -> float:
+        return cls.get_parameters()["lower_bound"]
+
+    @classmethod
+    def upper_bound(cls) -> float:
+        return cls.get_parameters()["upper_bound"]
+
+    @classmethod
+    def lower_inclusive(cls) -> bool:
+        return cls.get_parameters()["lower_inclusive"]
+
+    @classmethod
+    def upper_inclusive(cls) -> bool:
+        return cls.get_parameters()["upper_inclusive"]
+
+    @classmethod
     def safe_cast(
         cls, value: typing.Any
     ) -> typing.Tuple[typing.Optional[typing.Any], typing.Optional[str]]:
@@ -121,4 +137,54 @@ class FloatInRange(GenericType, Float):
     def can_cast_type(
         cls, type_: typing.Type[Type]
     ) -> typing.Tuple[bool, typing.Optional[str]]:
-        pass
+        if not is_type(type_):
+            raise NotAGlowTypeError(type_)
+
+        if not issubclass(type_, FloatInRange):
+            return False, "{} cannot cast to {}".format(type_, cls)
+
+        if type_.lower_bound() < cls.lower_bound():
+            return (
+                False,
+                "Incompatible ranges: {}'s lower bound is lower than {}'s".format(
+                    type_.__name__, cls.__name__
+                ),
+            )
+
+        if (
+            type_.lower_bound() == cls.lower_bound()
+            and cls.lower_inclusive() is False
+            and type_.lower_inclusive() is True
+        ):
+            return (
+                False,
+                (
+                    "Incompatible ranges:"
+                    " {} has an exclusive lower bound,"
+                    " {} has an inclusive lower bound"
+                ).format(cls.__name__, type_.__name__),
+            )
+
+        if type_.upper_bound() > cls.upper_bound():
+            return (
+                False,
+                "Incompatible ranges: {}'s upper bound is greater than {}'s".format(
+                    type_.__name__, cls.__name__
+                ),
+            )
+
+        if (
+            type_.upper_bound() == cls.upper_bound()
+            and cls.upper_inclusive() is False
+            and type_.upper_inclusive() is True
+        ):
+            return (
+                False,
+                (
+                    "Incompatible ranges:"
+                    " {} has an exclusive upper bound,"
+                    " {} has an inclusive upper bound"
+                ).format(cls.__name__, type_.__name__),
+            )
+
+        return True, None
