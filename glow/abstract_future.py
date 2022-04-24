@@ -20,8 +20,10 @@ class FutureState(enum.Enum):
     RESOLVED = "RESOLVED"
     # The future has executed and returned a nested future
     RAN = "RAN"
-    # THe future was scheduled to execute
+    # The future was scheduled to execute
     SCHEDULED = "SCHEDULED"
+    FAILED = "FAILED"
+    NESTED_FAILED = "NESTED_FAILED"
 
 
 class AbstractFuture(abc.ABC):
