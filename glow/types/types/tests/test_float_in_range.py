@@ -34,6 +34,23 @@ def test_parametrization(type_, parameters, name):
 
 
 @pytest.mark.parametrize(
+    "type_lambda, expected_err",
+    (
+        (lambda: FloatInRange[0], "Not enough arguments"),
+        (lambda: FloatInRange[0, 1, 2, 3, 4], "Too many arguments"),
+        (lambda: FloatInRange["a", 1], "lower_bound must be a number"),
+        (lambda: FloatInRange[0, "b"], "upper_bound must be a number"),
+        (lambda: FloatInRange[1, 0], "lower bound 1.0 should be <= to upper bound 0.0"),
+        (lambda: FloatInRange[0, 1, "a"], "lower_inclusive should be a boolean"),
+        (lambda: FloatInRange[0, 1, True, "a"], "upper_inclusive should be a boolean"),
+    ),
+)
+def test_parametrize(type_lambda, expected_err):
+    with pytest.raises(ValueError, match=expected_err):
+        type_lambda()
+
+
+@pytest.mark.parametrize(
     "type_, value, expected_cast_value, expected_error_msg",
     (
         (FloatInRange[0, 1], -1, None, "-1.0 is not in range [0.0, 1.0]"),
@@ -70,3 +87,60 @@ def test_multiply():
     b = a * 2
     assert isinstance(b, Float)
     assert not isinstance(b, FloatIn01)
+
+
+@pytest.mark.parametrize(
+    "type1, type2, expected_can_cast, expected_err",
+    (
+        (FloatInRange[0, 1], FloatInRange[0.1, 0.7], True, None),
+        (FloatInRange[0, 1, True, True], FloatInRange[0, 1, True, True], True, None),
+        (FloatInRange[0, 1, True, True], FloatInRange[0, 1, False, True], True, None),
+        (FloatInRange[0, 1, True, True], FloatInRange[0, 1, True, False], True, None),
+        (
+            FloatInRange[0, 1],
+            FloatInRange[-0.5, 1],
+            False,
+            (
+                "Incompatible ranges:"
+                " FloatInRange[-0.5, 1.0, True, True]'s lower bound"
+                " is lower than FloatInRange[0.0, 1.0, True, True]'s"
+            ),
+        ),
+        (
+            FloatInRange[0, 1],
+            FloatInRange[0, 1.5],
+            False,
+            (
+                "Incompatible ranges:"
+                " FloatInRange[0.0, 1.5, True, True]'s upper bound"
+                " is greater than FloatInRange[0.0, 1.0, True, True]'s"
+            ),
+        ),
+        (
+            FloatInRange[0, 1, False, True],
+            FloatInRange[0, 1, True, True],
+            False,
+            (
+                "Incompatible ranges:"
+                " FloatInRange[0.0, 1.0, False, True] has an exclusive"
+                " lower bound, FloatInRange[0.0, 1.0, True, True] has"
+                " an inclusive lower bound"
+            ),
+        ),
+        (
+            FloatInRange[0, 1, True, False],
+            FloatInRange[0, 1, True, True],
+            False,
+            (
+                "Incompatible ranges:"
+                " FloatInRange[0.0, 1.0, True, False] has an exclusive"
+                " upper bound, FloatInRange[0.0, 1.0, True, True] has"
+                " an inclusive upper bound"
+            ),
+        ),
+    ),
+)
+def test_can_cast_type(type1, type2, expected_can_cast, expected_err):
+    can_cast, err = type1.can_cast_type(type2)
+    assert can_cast == expected_can_cast
+    assert err == expected_err
