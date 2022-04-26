@@ -1,9 +1,10 @@
 pytest_test(
-    name = "test_local_resolver",
-    srcs = ["test_local_resolver.py"],
+    name = "test_offline_resolver",
+    srcs = ["test_offline_resolver.py"],
     deps = [
+        "//glow:abstract_future",
         "//glow:calculator",
-        "//glow/resolvers:local_resolver",
+        "//glow/resolvers:offline_resolver",
         "//glow/types/types:float",
         "//glow/types/types:integer",
     ]

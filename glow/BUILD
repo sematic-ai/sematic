@@ -7,7 +7,7 @@ glow_py_lib(
     deps = [
         ":calculator",
         ":resolver",
-        "//glow/resolvers:local_resolver"
+        "//glow/resolvers:offline_resolver"
     ]
 )
 
@@ -31,6 +31,7 @@ glow_py_lib(
     visibility = ["//visibility:public"],
     deps = [
         ":abstract_calculator",
+        ":future",
         "//glow/types:type",
         "//glow/types/types:null",
         "//glow/utils:memoized_property",
