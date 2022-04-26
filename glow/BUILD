@@ -59,6 +59,7 @@ glow_py_lib(
 
 py_wheel(
     name = "glow_wheel",
+    visibility = ["//visibility:public"],
     distribution = "glow",
     python_tag = "py3",
     version = "0.0.1",

@@ -64,6 +64,9 @@ jobs:
       - run:
           name: Build wheel
           command: bazel build //glow:glow_wheel
+      - run:
+          name: Test pip install
+          command: bazel run //glow/tests/integration:test_pip_install
       - slack/notify:
           channel: C03CPMXA1QU
           event: always
