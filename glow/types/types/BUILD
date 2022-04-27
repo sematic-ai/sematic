@@ -1,4 +1,13 @@
 glow_py_lib(
+    name = "boolean",
+    srcs = ["boolean.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//glow/types:type",
+    ]
+)
+
+glow_py_lib(
     name = "float",
     srcs = ["float.py"],
     visibility = ["//visibility:public"],
