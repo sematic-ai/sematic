@@ -249,10 +249,10 @@ class StateMachineResolver(Resolver, abc.ABC):
             mark parent future `NESTED_FAILED` all the way to the top of the DAG.
         """
         self._set_future_state(future, FutureState.FAILED)
-        future = future.parent_future
-        while future is not None and future is not up_to_future:
-            self._set_future_state(future, FutureState.NESTED_FAILED)
-            future = future.parent_future
+        parent_future = future.parent_future
+        while parent_future is not None and parent_future is not up_to_future:
+            self._set_future_state(parent_future, FutureState.NESTED_FAILED)
+            parent_future = future.parent_future
 
     def _update_future_with_value(
         self, future: AbstractFuture, value: typing.Any
