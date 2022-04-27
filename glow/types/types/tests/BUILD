@@ -1,4 +1,12 @@
 pytest_test(
+    name = "test_boolean",
+    srcs = ["test_boolean.py"],
+    deps = [
+        "//glow/types/types:boolean",
+    ]
+)
+
+pytest_test(
     name = "test_float",
     srcs = ["test_float.py"],
     deps = [
