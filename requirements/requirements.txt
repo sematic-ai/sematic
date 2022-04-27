@@ -50,6 +50,8 @@ pytest==7.1.1
     # via -r requirements/requirements.in
 six==1.16.0
     # via asttokens
+sqlalchemy==1.4.36
+    # via -r requirements/requirements.in
 stack-data==0.2.0
     # via ipython
 tomli==2.0.1
