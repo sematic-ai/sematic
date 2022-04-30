@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+      /* Basic */
+      "target": "es2017",
+      "module": "CommonJS",
+      "lib": ["ESNext", "DOM"],
+  
+      /* Modules Resolution */
+      "moduleResolution": "node",
+      "esModuleInterop": true,
+  
+      /* Paths Resolution */
+      "baseUrl": "./",
+      "paths": {
+        "@my-app/*": ["packages/*"]
+      },
+  
+      /* Advanced */
+      "jsx": "react",
+      "experimentalDecorators": true,
+      "resolveJsonModule": true
+    },
+    "exclude": ["node_modules", "**/node_modules/*", "dist"]
+  }
+  

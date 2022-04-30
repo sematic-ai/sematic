@@ -1,0 +1,8 @@
+{
+  "name": "@glow-web/common",
+  "version": "0.0.1",
+  "description": "Glow's common packages for web applications",
+  "main": "./src/index.ts",
+  "author": "glow",
+  "private": true
+}
