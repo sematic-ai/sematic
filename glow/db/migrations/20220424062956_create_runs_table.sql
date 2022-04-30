@@ -6,7 +6,7 @@ CREATE TYPE future_state AS ENUM (
     'RESOLVED',
     'SCHEDULED',
     'FAILED',
-    'NESTED_FAIL',
+    'NESTED_FAIL'
 );
 
 CREATE TABLE runs (
