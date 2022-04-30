@@ -1,0 +1,26 @@
+{
+  "name": "glow-web",
+  "version": "0.0.1",
+  "description": "Glow is an open source developer toolkit to help you prototype and productionize ML",
+  "main": "index.js",
+  "author": "glow",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "esbuild": "^0.14.38",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.4"
+  },
+  "scripts": {
+    "app": "yarn workspace @glow-web/app",
+    "common": "yarn workspace @glow-web/common",
+    "server": "yarn workspace @glow-web/server",
+    "build": "ts-node ./scripts/build.ts",
+    "serve": "node ./packages/server/dist/index.js"
+  },
+  "dependencies": {
+    "yarn": "^1.22.18"
+  }
+}
