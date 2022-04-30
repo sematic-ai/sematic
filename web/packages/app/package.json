@@ -1,0 +1,12 @@
+{
+  "name": "@glow-web/app",
+  "version": "0.0.1",
+  "description": "Glow's front-end web application",
+  "main": "index.js",
+  "author": "glow",
+  "private": true,
+  "dependencies": {
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0"
+  }
+}
