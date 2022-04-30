@@ -9,9 +9,42 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: future_state; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.future_state AS ENUM (
+    'CREATED',
+    'RAN',
+    'RESOLVED',
+    'SCHEDULED',
+    'FAILED',
+    'NESTED_FAIL'
+);
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.runs (
+    id character(32) NOT NULL,
+    future_state public.future_state NOT NULL,
+    name text,
+    calculator_path text,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone,
+    started_at timestamp without time zone,
+    ended_at timestamp without time zone,
+    resolved_at timestamp without time zone,
+    failed_at timestamp without time zone,
+    parent_id character(32)
+);
+
 
 --
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
@@ -20,6 +53,14 @@ SET default_table_access_method = heap;
 CREATE TABLE public.schema_migrations (
     version character varying(255) NOT NULL
 );
+
+
+--
+-- Name: runs runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.runs
+    ADD CONSTRAINT runs_pkey PRIMARY KEY (id);
 
 
 --
@@ -39,3 +80,5 @@ ALTER TABLE ONLY public.schema_migrations
 -- Dbmate schema migrations
 --
 
+INSERT INTO public.schema_migrations (version) VALUES
+    ('20220424062956');
