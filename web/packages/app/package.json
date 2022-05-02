@@ -5,13 +5,21 @@
   "main": "index.js",
   "author": "glow",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
     "@mui/icons-material": "^5.6.2",
+    "@mui/lab": "^5.0.0-alpha.79",
     "@mui/material": "^5.6.3",
     "@mui/x-data-grid": "^5.10.0",
+    "deepmerge": "^4.2.2",
+    "polished": "^4.2.2",
     "react": "^18.1.0",
-    "react-dom": "^18.1.0"
+    "react-dom": "^18.1.0",
+    "react-feather": "^2.0.9",
+    "react-i18next": "^11.16.7",
+    "react-perfect-scrollbar": "^1.5.8",
+    "react-router-dom": "^6.3.0"
   }
 }
