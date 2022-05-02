@@ -14,12 +14,17 @@
     "@mui/material": "^5.6.3",
     "@mui/x-data-grid": "^5.10.0",
     "deepmerge": "^4.2.2",
+    "plotly.js": "^2.11.1",
     "polished": "^4.2.2",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-feather": "^2.0.9",
     "react-i18next": "^11.16.7",
     "react-perfect-scrollbar": "^1.5.8",
+    "react-plotly.js": "^2.5.1",
     "react-router-dom": "^6.3.0"
+  },
+  "devDependencies": {
+    "@types/plotly.js": "^1.54.20"
   }
 }
