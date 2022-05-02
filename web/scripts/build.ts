@@ -21,7 +21,7 @@ export async function buildApp(options: BuildOptions) {
     },
     bundle: true,
     minify: env === 'production',
-    sourcemap: env === 'development',
+    sourcemap: true,
   });
 }
 
