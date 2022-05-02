@@ -2,28 +2,26 @@ import * as React from 'react';
 import styled from "@emotion/styled";
 import {
   Link,
-  Breadcrumbs as MuiBreadcrumbs,
   Card as MuiCard,
   CardContent as MuiCardContent,
-  Divider as MuiDivider,
   Paper as MuiPaper,
   Typography,
   Stack,
-  Alert,
+  Alert as MuiAlert,
+  Chip as MuiChip,
 } from "@mui/material";
-import Chip from '@mui/material/Chip';
 import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
-import { spacing } from "@mui/system";
+import { spacing, sizing } from "@mui/system";
 
 const Card = styled(MuiCard)(spacing);
 
 const CardContent = styled(MuiCardContent)(spacing);
 
-const Divider = styled(MuiDivider)(spacing);
-
-const Breadcrumbs = styled(MuiBreadcrumbs)(spacing);
-
 const Paper = styled(MuiPaper)(spacing);
+
+const Chip = styled(MuiChip)(spacing);
+
+const Alert = styled(MuiAlert)(sizing);
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'Run ID', width: 90 },
@@ -57,7 +55,7 @@ const columns: GridColDef[] = [
           <Stack direction="row">
             {props.row.tags.map((tagName: string, index: number) =>
               <React.Fragment key={index}>
-                <Chip label={tagName} color="secondary" variant="outlined"/>
+                <Chip label={tagName} marginRight={"5px"}/>
               </React.Fragment>
             )}
           </Stack>
@@ -74,7 +72,7 @@ const columns: GridColDef[] = [
       if (props.row.status === 'success') {
         return (
           <React.Fragment>
-            <Alert variant="outlined" severity="success">
+            <Alert severity="success" width={"100%"}>
               Completed
             </Alert>
           </React.Fragment>
@@ -82,7 +80,7 @@ const columns: GridColDef[] = [
       } else {
         return (
           <React.Fragment>
-            <Alert variant="outlined" severity="error">
+            <Alert severity="error" width={"100%"}>
               Failed
             </Alert>
           </React.Fragment>
