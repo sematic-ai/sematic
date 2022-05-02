@@ -15,6 +15,7 @@ import Footer from "./components/Footer";
 import navItems from "./components/navItems";
 
 import RunsList from "./RunsList";
+import RunViz from "./components/Run/RunViz";
 
 const drawerWidth = 258;
 
@@ -88,6 +89,7 @@ const Dashboard = ({ children }) => {
         <MainContent p={isLgUp ? 12 : 5}>
           {children}
           <RunsList />
+          <RunViz />
           <Outlet />
         </MainContent>
         <Footer />
