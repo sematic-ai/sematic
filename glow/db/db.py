@@ -6,6 +6,10 @@ import typing
 import sqlalchemy
 import sqlalchemy.orm
 
+# Glow
+from glow.utils.config_dir import get_config_dir
+
+
 _db_instance = None
 
 
@@ -40,7 +44,9 @@ def db() -> DB:
 
 class LocalDB(DB):
 
-    LOCAL_DB_FILE = "~/.glow/db.sqlite3"
+    LOCAL_DB_FILE = "sqlite:///{}/db.sqlite3".format(get_config_dir())
 
-    def __init__(self):
-        super().__init__(self.LOCAL_DB_FILE)
+    def __init__(self, url: str = None):
+        if url is None:
+            url = self.LOCAL_DB_FILE
+        super().__init__(url)
