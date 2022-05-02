@@ -1,13 +1,18 @@
-import { APP_TITLE } from '@glow-web/common';
-import * as React from 'react';
+import React from 'react';
 import Dashboard from './Dashboard';
 
+import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
+
+import createTheme from "./theme";
+
 export function App(): React.ReactElement {
-  const [count, setCount] = React.useState(0);
+  const theme = "LIGHT";
 
   return (
     <div>
-      <Dashboard />
+        <MuiThemeProvider theme={createTheme(theme)}>
+            <Dashboard children={undefined} />
+        </MuiThemeProvider>
     </div>
   );
 }
