@@ -25,6 +25,13 @@
     "react-router-dom": "^6.3.0"
   },
   "devDependencies": {
-    "@types/plotly.js": "^1.54.20"
+    "@types/plotly.js": "^1.54.20",
+    "@typescript-eslint/eslint-plugin": "^5.22.0",
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-react": "^7.28.0",
+    "prettier": "^2.6.2"
   }
 }
