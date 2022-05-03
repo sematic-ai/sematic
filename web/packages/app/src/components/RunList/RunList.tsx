@@ -55,7 +55,7 @@ const columns: GridColDef[] = [
           <Stack direction="row">
             {props.row.tags.map((tagName: string, index: number) =>
               <React.Fragment key={index}>
-                <Chip label={tagName} marginRight={"5px"}/>
+                <Chip size="small" label={tagName} marginRight={"5px"}/>
               </React.Fragment>
             )}
           </Stack>
