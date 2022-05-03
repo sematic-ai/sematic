@@ -7,15 +7,14 @@ import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { spacing } from "@mui/system";
 
-import GlobalStyle from "./components/GlobalStyle";
-import Navbar from "./components/Navbar";
-import Sidebar from "./components/Sidebar/Sidebar";
-import Footer from "./components/Footer";
+import GlobalStyle from "../components/GlobalStyle";
+import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar/Sidebar";
+import Footer from "../components/Footer";
 
-import navItems from "./components/navItems";
+import navItems from "../components/navItems";
 
-import RunsList from "./components/RunList/RunList";
-import RunViz from "./components/Run/RunViz";
+import RunsList from "../pages/RunList";
 
 const drawerWidth = 258;
 
@@ -53,7 +52,7 @@ const MainContent = styled(Paper)`
   }
 `;
 
-const Dashboard = ({ children }) => {
+const Dashboard: any = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleDrawerToggle = () => {
@@ -88,7 +87,6 @@ const Dashboard = ({ children }) => {
         <Navbar onDrawerToggle={handleDrawerToggle} />
         <MainContent p={isLgUp ? 12 : 5}>
           {children}
-          <RunsList />
           <Outlet />
         </MainContent>
         <Footer />
