@@ -1,5 +1,5 @@
-import React from 'react';
-import Dashboard from './Dashboard';
+import React from "react";
+import Dashboard from "./Dashboard";
 
 import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 

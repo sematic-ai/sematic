@@ -1,1 +1,1 @@
-export const APP_TITLE = 'glow-web';
+export const APP_TITLE = "glow-web";
