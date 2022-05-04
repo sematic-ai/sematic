@@ -3,8 +3,10 @@ glow_py_lib(
     srcs = ["offline_resolver.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//glow:abstract_future",
         ":state_machine_resolver",
+        "//glow:abstract_future",
+        "//glow/db:queries",
+        "//glow/db/models:run",
     ]
 )
 
