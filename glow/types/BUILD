@@ -5,6 +5,7 @@ glow_py_lib(
     deps = [
         ":generic_type",
         ":type",
+        "//glow/types/types:boolean",
         "//glow/types/types:float",
         "//glow/types/types:float_in_range",
         "//glow/types/types:integer",

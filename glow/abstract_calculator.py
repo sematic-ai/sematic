@@ -13,6 +13,10 @@ from glow.types.type import Type
 
 
 class AbstractCalculator(abc.ABC):
+    def __init__(self) -> None:
+        # Simply typing attributes
+        self.__name__: str
+
     @abc.abstractmethod
     def calculate(self, **kwargs) -> typing.Any:
         pass
