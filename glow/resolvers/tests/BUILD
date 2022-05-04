@@ -4,6 +4,7 @@ pytest_test(
     deps = [
         "//glow:abstract_future",
         "//glow:calculator",
+        "//glow/db/tests:fixtures",
         "//glow/resolvers:offline_resolver",
         "//glow/types/types:float",
         "//glow/types/types:integer",
