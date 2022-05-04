@@ -14,7 +14,7 @@ def test_db_fixture(test_db):  # noqa: F811
 
     run = Run(
         id=uuid.uuid4().hex,
-        future_state=FutureState.CREATED,
+        future_state=FutureState.CREATED.value,
         name="test_run",
         calculator_path="path.to.test_run",
     )

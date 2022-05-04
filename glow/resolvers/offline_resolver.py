@@ -34,7 +34,7 @@ class OfflineResolver(StateMachineResolver):
         super()._future_did_schedule(future)
         run = Run(
             id=future.id,
-            future_state=FutureState.SCHEDULED,
+            future_state=FutureState.SCHEDULED.value,
             # todo(@neutralino1): replace with future name
             name=future.calculator.__name__,
             calculator_path="{}.{}".format(

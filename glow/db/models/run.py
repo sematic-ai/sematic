@@ -16,10 +16,10 @@ class Run(Base):
     __tablename__ = "runs"
 
     id: str = Column(types.String(), primary_key=True)
-    future_state: FutureState = Column(types.String(), nullable=False)
+    future_state: str = Column(types.String(), nullable=False)
     name: str = Column(types.String(), nullable=True)
     calculator_path: str = Column(types.String(), nullable=False)
-    parent_id: str = Column(types.String(), nullable=True)
+    parent_id: typing.Optional[str] = Column(types.String(), nullable=True)
 
     # Lifecycle timestamps
     created_at: datetime.datetime = Column(
@@ -53,4 +53,4 @@ class Run(Base):
                     " must be one of the values in `FutureState`."
                 )
             )
-        return value.value
+        return value
