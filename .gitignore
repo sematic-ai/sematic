@@ -133,3 +133,18 @@ dmypy.json
 
 # Bazel
 bazel-*
+
+# Web logs
+yarn-debug.log*
+yarn-error.log*
+
+# Web binaries
+node_modules/
+
+# Web builds
+dist/
+**/public/script.js
+**/public/script.css
+
+# Mac
+.DS_Store
