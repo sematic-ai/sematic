@@ -1,17 +1,8 @@
 -- migrate:up
 
-CREATE TYPE future_state AS ENUM (
-    'CREATED',
-    'RAN',
-    'RESOLVED',
-    'SCHEDULED',
-    'FAILED',
-    'NESTED_FAIL',
-);
-
 CREATE TABLE runs (
     id character(32) NOT NULL,
-    future_state future_state NOT NULL,
+    future_state TEXT NOT NULL,
     name TEXT,
     calculator_path TEXT,
     created_at timestamp without time zone,
@@ -28,5 +19,3 @@ CREATE TABLE runs (
 -- migrate:down
 
 DROP TABLE runs;
-DROP TYPE future_state;
-

@@ -15,14 +15,18 @@ glow_py_lib(
     name = "abstract_calculator",
     srcs = ["abstract_calculator.py"],
     visibility = ["//visibility:public"],
-    deps = []
+    deps = [
+        "//glow/types:type",
+    ]
 )
 
 glow_py_lib(
     name = "abstract_future",
     srcs = ["abstract_future.py"],
     visibility = ["//visibility:public"],
-    deps = []
+    deps = [
+        ":abstract_calculator",
+    ]
 )
 
 glow_py_lib(

@@ -25,6 +25,10 @@ class FutureState(enum.Enum):
     FAILED = "FAILED"
     NESTED_FAILED = "NESTED_FAILED"
 
+    @classmethod
+    def values(cls) -> typing.Tuple[str, ...]:
+        return tuple([future_state.value for future_state in cls.__members__.values()])
+
 
 class AbstractFuture(abc.ABC):
     """

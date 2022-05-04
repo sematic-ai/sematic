@@ -1,6 +1,8 @@
 # Glow
 from glow.abstract_future import FutureState
 from glow.calculator import calculator
+from glow.db.tests.fixtures import test_db  # noqa: F401
+from glow.db.queries import count_runs
 from glow.resolvers.offline_resolver import OfflineResolver
 from glow.types.types.float import Float
 from glow.types.types.integer import Integer
@@ -29,13 +31,14 @@ def pipeline(a: Float, b: Float) -> Float:
     return add(c, d)
 
 
-def test_single_calculator():
+def test_single_calculator(test_db):  # noqa: F811
     future = add(1, 2)
     assert future.resolve(OfflineResolver()) == 3
     assert future.state == FutureState.RESOLVED
+    assert count_runs() == 1
 
 
-def test_local_resolver():
+def test_local_resolver(test_db):  # noqa: F811
     future = pipeline(3, 5)
 
     result = future.resolve(OfflineResolver())
@@ -43,3 +46,5 @@ def test_local_resolver():
     assert result == 24
     assert isinstance(result, Float)
     assert future.state == FutureState.RESOLVED
+
+    assert count_runs() == 6
