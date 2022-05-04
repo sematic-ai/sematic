@@ -57,15 +57,15 @@ jobs:
           name: Freeze requirements
           command: pip-compile --allow-unsafe ~/project/requirements/requirements.in > ~/project/requirements/requirements.txt
       - run:
-          name: Run tests
-          # This assumes pytest is installed via the install-package step above
-          command: bazel test //glow/... --test_output=all
-      - run:
           name: Linting
           command: python3 -m flake8 --max-line-length=90
       - run:
           name: MyPy
           command: mypy glow
+      - run:
+          name: Run tests
+          # This assumes pytest is installed via the install-package step above
+          command: bazel test //glow/... --test_output=all
       - run:
           name: Build wheel
           command: bazel build //glow:glow_wheel
