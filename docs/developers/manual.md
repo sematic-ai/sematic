@@ -9,12 +9,6 @@ Install Bazel:
 $ brew install bazel
 ```
 
-Install postgres:
-```shell
-$ brew install postgres
-$ /opt/homebrew/bin/createuser -s postgres
-```
-
 Install Dbmate:
 ```shell
 $ brew install dbmate
@@ -26,7 +20,7 @@ Add the following line to the `.env` file at the root of the
 codebase.
 
 ```
-DATABASE_URL="postgres://postgres@127.0.0.1:5432/glow_dev?sslmode=disable"
+DATABASE_URL="sqlite3:/$HOME/.glow/db.sqlite3"
 ```
 
 Then create the database:
