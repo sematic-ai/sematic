@@ -46,7 +46,7 @@ class Run(Base):
 
     @validates("future_state")
     def validate_future_state(self, key, value):
-        if value not in FutureState.__members__.values():
+        if value not in FutureState.values():
             raise ValueError(
                 (
                     "The value of `Run.future_state`"
