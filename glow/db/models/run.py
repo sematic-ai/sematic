@@ -13,6 +13,8 @@ from glow.db.models.base import Base
 
 class Run(Base):
 
+    __tablename__ = "runs"
+
     id: str = Column(types.String(), primary_key=True)
     future_state: FutureState = Column(types.String(), nullable=False)
     name: str = Column(types.String(), nullable=True)
@@ -51,4 +53,4 @@ class Run(Base):
                     " must be one of the values in `FutureState`."
                 )
             )
-        return value
+        return value.value

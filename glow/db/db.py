@@ -26,7 +26,7 @@ class DB(object):
         return self._engine
 
     @contextmanager
-    def get_session(self) -> typing.Generator[sqlalchemy.orm.Session]:
+    def get_session(self) -> typing.Generator[sqlalchemy.orm.Session, None, None]:
         session = self._Session()
         try:
             yield session

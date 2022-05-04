@@ -23,12 +23,13 @@ def pytest_test(name, srcs, deps = [], args = [], **kwargs):
     )
 
 
-def glow_py_lib(name, srcs, visibility, deps):
+def glow_py_lib(name, srcs, visibility, deps, data = None):
     py_library(
         name = name,
         srcs = srcs,
         visibility = visibility,
         deps = deps,
+        data = data,
     )
 
     py_binary(
@@ -39,4 +40,5 @@ def glow_py_lib(name, srcs, visibility, deps):
             ":{0}".format(name),
             requirement("ipython"),
         ],
+        data = data,
     )
