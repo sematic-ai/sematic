@@ -4,4 +4,4 @@ pytest
 # Required for pip-compile on the CI worker
 pip-tools
 # Required for mypy
-sqlalchemy2-stubs
+sqlalchemy[mypy]
