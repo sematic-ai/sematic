@@ -7,6 +7,7 @@ from glow.resolvers.offline_resolver import OfflineResolver
 from glow.types.types.float import Float
 from glow.types.types.integer import Integer
 
+
 # Testing mypy compliance
 @calculator
 def add_int(a: Integer, b: Integer) -> Integer:
