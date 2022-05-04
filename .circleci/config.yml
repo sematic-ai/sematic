@@ -65,7 +65,7 @@ jobs:
           command: python3 -m flake8 --max-line-length=90
       - run:
           name: MyPy
-          command: mypy glow --explicit-package-bases --namespace-packages
+          command: mypy glow
       - run:
           name: Build wheel
           command: bazel build //glow:glow_wheel

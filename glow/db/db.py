@@ -14,10 +14,6 @@ _db_instance = None
 
 
 class DB(object):
-
-    _engine = None
-    _Session = None
-
     def __init__(self, url):
         self._engine = sqlalchemy.create_engine(url)
         self._Session = sqlalchemy.orm.sessionmaker(bind=self._engine)

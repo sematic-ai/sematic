@@ -8,13 +8,11 @@ from glow.types.type import Type, is_type, NotAGlowTypeError
 BOOL_TYPES = [bool]
 try:
     # If numpy exists, we want to recognize numpy.bool_
-    import numpy
+    import numpy  # type: ignore
 
     BOOL_TYPES.append(numpy.bool_)
 except ImportError:
     pass
-
-BOOL_TYPES = tuple(BOOL_TYPES)
 
 
 class Boolean(Type):
@@ -26,7 +24,7 @@ class Boolean(Type):
     def safe_cast(
         cls, value: typing.Any
     ) -> typing.Tuple[typing.Optional[bool], typing.Optional[str]]:
-        if isinstance(value, BOOL_TYPES):
+        if isinstance(value, tuple(BOOL_TYPES)):
             return value, None
 
         return None, "Only instances of bool can cast to Boolean. Got {}.".format(
