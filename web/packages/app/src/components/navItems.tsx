@@ -14,7 +14,7 @@ const pagesSection = [
 
 const navItems = [
   {
-    title: "Glow",
+    title: "Glow Workspace",
     pages: pagesSection,
   },
 ];
