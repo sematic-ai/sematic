@@ -1,3 +1,5 @@
 flake8
 mypy
 pytest
+# Required for pip-compile on the CI worker
+pip-tools
