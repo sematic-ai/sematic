@@ -52,6 +52,11 @@ jobs:
           app-dir: ~/project/requirements  # If you're requirements.txt isn't in the root directory.
           pip-dependency-file: test-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
       - run:
+          # This is necessary because some packages have platform-dependent dependencies
+          # For example sqlalchemy requires greenlet only on certain platforms
+          name: Freeze requirements
+          command: pip-compile --allow-unsafe ~/project/requirements/requirements.in > ~/project/requirements/requirements.txt
+      - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
           command: bazel test //glow/... --test_output=all
