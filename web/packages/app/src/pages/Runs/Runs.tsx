@@ -16,6 +16,9 @@ import { Link } from "react-router-dom";
 
 import UniqueColorAssigner from "../../helpers/UniqueColorAssigner";
 
+import runData from "../../fixtures/runData";
+
+// Styling wrappers, to help us style components declaratively using props.
 const Card = styled(MuiCard)(spacing);
 
 const CardContent = styled(MuiCardContent)(spacing);
@@ -26,6 +29,7 @@ const Chip = styled(MuiChip)(spacing);
 
 const Alert = styled(MuiAlert)(sizing);
 
+// Define each grid column. @TODO: move this into it's own file, it's getting messy here.
 const columns: GridColDef[] = [
   { field: "id", headerName: "Run ID", width: 90 },
   {
@@ -100,47 +104,6 @@ const columns: GridColDef[] = [
   },
 ];
 
-function createData(
-  id: number,
-  createdAt: string,
-  name: string,
-  tags: Array<string>,
-  status: string
-) {
-  return { id, createdAt, name, tags, status };
-}
-
-const rows = [
-  createData(
-    0,
-    "16 Mar, 2019",
-    "Auto Featurization",
-    ["experiment-blahsd", "random-tag"],
-    "success"
-  ),
-  createData(
-    1,
-    "16 Mar, 2019",
-    "Train model",
-    ["experiment-blahsd", "randfdsf"],
-    "success"
-  ),
-  createData(
-    2,
-    "16 Mar, 2019",
-    "Train model",
-    ["experiment-blahsd", "2daf-tags", "dadceef"],
-    "failed"
-  ),
-  createData(
-    3,
-    "15 Mar, 2019",
-    "Evaluate model",
-    ["ddasgfa"],
-    "success"
-  ),
-];
-
 export default function RunList() {
   // Sets the inital state of the data grid.
   // We want to only show runs that have succeeded by default.
@@ -153,8 +116,10 @@ export default function RunList() {
   };
 
   // We want to assign unique colors to each unique tag.
-  const tagsWithUniqueColors = UniqueColorAssigner(rows.map((row) => row.tags));
-  const rowsWithTagUniqueColors = rows.map((row) => {
+  // Note that we grab the fixture data here which provides us mocks, we will eventually move
+  // this to a service call to grab data from the DB.
+  const tagsWithUniqueColors = UniqueColorAssigner(runData.map((row) => row.tags));
+  const rowsWithTagUniqueColors = runData.map((row) => {
     // We don't want to mutate the original data we assign an new object.
     const newRow = { ...row };
     newRow.tags = row.tags.map((tag) => {

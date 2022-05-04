@@ -14,8 +14,7 @@ import Footer from "../components/Footer";
 
 import navItems from "../components/navItems";
 
-import RunsList from "../pages/Runs/Runs";
-
+// Specific and custom styling for the Dashboard layout.
 const drawerWidth = 258;
 
 const Root = styled.div`
