@@ -14,7 +14,7 @@ import Footer from "../components/Footer";
 
 import navItems from "../components/navItems";
 
-import RunsList from "../pages/RunList";
+import RunsList from "../pages/Runs/Runs";
 
 const drawerWidth = 258;
 

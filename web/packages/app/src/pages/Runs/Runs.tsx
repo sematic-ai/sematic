@@ -1,7 +1,6 @@
 import * as React from "react";
 import styled from "@emotion/styled";
 import {
-  Link,
   Card as MuiCard,
   CardContent as MuiCardContent,
   Paper as MuiPaper,
@@ -12,6 +11,10 @@ import {
 } from "@mui/material";
 import { DataGrid, GridColDef, GridToolbar } from "@mui/x-data-grid";
 import { spacing, sizing } from "@mui/system";
+
+import { Link } from "react-router-dom";
+
+import UniqueColorAssigner from "../../helpers/UniqueColorAssigner";
 
 const Card = styled(MuiCard)(spacing);
 
@@ -28,18 +31,22 @@ const columns: GridColDef[] = [
   {
     field: "createdAt",
     headerName: "Created at",
+    description: "When the run was created.",
     editable: false,
-    flex: 1,
+    width: 150,
+    resizable: true,
   },
   {
-    field: "blockName",
+    field: "name",
     headerName: "Name",
+    description: "The name of the @glow.func decorator.",
     editable: false,
-    flex: 1,
+    width: 200,
+    resizable: true,
     renderCell: (props) => {
       return (
         <React.Fragment>
-          <Link href="/">{props.row.blockName}</Link>
+          <Link to={`/runs/${props.row.id}`}>{props.row.name}</Link>
         </React.Fragment>
       );
     }
@@ -47,15 +54,17 @@ const columns: GridColDef[] = [
   {
     field: "tags",
     headerName: "Tags",
+    description: "Tags are user defined when triggering a run.",
     editable: false,
     flex: 1,
+    resizable: true,
     renderCell: (props) => {
       return (
         <React.Fragment>
           <Stack direction="row">
-            {props.row.tags.map((tagName: string, index: number) =>
+            {props.row.tags.map((tagObject: any, index: number) =>
               <React.Fragment key={index}>
-                <Chip size="small" label={tagName} marginRight={"5px"}/>
+                <Chip size="small" label={tagObject.value} marginRight={"5px"} sx={{bgcolor: tagObject.color}} />
               </React.Fragment>
             )}
           </Stack>
@@ -66,8 +75,9 @@ const columns: GridColDef[] = [
   {
     field: "status",
     headerName: "Status",
-    description: "This column has a value getter and is not sortable.",
-    flex: 1,
+    description: "The status of the run.",
+    width: 300,
+    resizable: true,
     renderCell: (props: any) => {
       if (props.row.status === "success") {
         return (
@@ -93,11 +103,11 @@ const columns: GridColDef[] = [
 function createData(
   id: number,
   createdAt: string,
-  blockName: string,
-  tags: Array<any>,
+  name: string,
+  tags: Array<string>,
   status: string
 ) {
-  return { id, createdAt, blockName, tags, status };
+  return { id, createdAt, name, tags, status };
 }
 
 const rows = [
@@ -112,14 +122,14 @@ const rows = [
     1,
     "16 Mar, 2019",
     "Train model",
-    ["experiment-bler", "randfdsf"],
+    ["experiment-blahsd", "randfdsf"],
     "success"
   ),
   createData(
     2,
     "16 Mar, 2019",
     "Train model",
-    ["experiment-bler", "2daf-tags", "dadceef"],
+    ["experiment-blahsd", "2daf-tags", "dadceef"],
     "failed"
   ),
   createData(
@@ -132,6 +142,29 @@ const rows = [
 ];
 
 export default function RunList() {
+  // Sets the inital state of the data grid.
+  // We want to only show runs that have succeeded by default.
+  const initialState = {
+    filter: {
+      filterModel: {
+        items: [{ columnField: "status", operatorValue: "equals", value: "success" }],
+      }
+    }
+  };
+
+  // We want to assign unique colors to each unique tag.
+  const tagsWithUniqueColors = UniqueColorAssigner(rows.map((row) => row.tags));
+  const rowsWithTagUniqueColors = rows.map((row) => {
+    // We don't want to mutate the original data we assign an new object.
+    const newRow = { ...row };
+    newRow.tags = row.tags.map((tag) => {
+      return {
+        ...tagsWithUniqueColors[tag],
+      }
+    });
+    return newRow;
+  });
+
   return (
     <Card mb={6}>
       <CardContent pb={1}>
@@ -142,12 +175,14 @@ export default function RunList() {
       <Paper>
         <div style={{ height: 400, width: "100%" }}>
           <DataGrid
+            initialState={initialState}
             rowsPerPageOptions={[5, 10, 25]}
-            rows={rows}
+            rows={rowsWithTagUniqueColors}
             columns={columns}
             pageSize={5}
             checkboxSelection
             components={{ Toolbar: GridToolbar }}
+            sx={{border: "0px"}}
           />
         </div>
       </Paper>
