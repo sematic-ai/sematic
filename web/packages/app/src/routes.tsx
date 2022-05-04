@@ -4,7 +4,7 @@ import React from "react";
 import DashboardLayout from "./layouts/Dashboard";
 
 // Pages
-import RunList from "./pages/RunList";
+import Runs from "./pages/Runs/Runs";
 
 const routes = [
     {
@@ -13,7 +13,7 @@ const routes = [
         children: [
           {
             path: "",
-            element: <RunList />,
+            element: <Runs />,
           },
         ],
     },
@@ -22,8 +22,8 @@ const routes = [
         element: <DashboardLayout />,
         children: [
           {
-            path: "/runs/:id",
-            element: <RunList />,
+            path: "",
+            element: <Runs />,
           },
         ],
     },
