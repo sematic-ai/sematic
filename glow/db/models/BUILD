@@ -9,7 +9,7 @@ glow_py_lib(
 
 glow_py_lib(
     name = "run",
-    srcs = ["runs.py"],
+    srcs = ["run.py"],
     visibility = ["//visibility:public"],
     deps = [
         ":base",

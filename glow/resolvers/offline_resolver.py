@@ -4,7 +4,7 @@ import typing
 
 # Glow
 from glow.abstract_future import AbstractFuture, FutureState
-from glow.db.db import db
+from glow.db.queries import create_run
 from glow.db.models.run import Run
 from glow.resolvers.state_machine_resolver import StateMachineResolver
 
@@ -45,6 +45,5 @@ class OfflineResolver(StateMachineResolver):
             ),
             started_at=datetime.datetime.utcnow(),
         )
-        with db().get_session() as session:
-            session.add(run)
-            session.flush()
+
+        create_run(run)
