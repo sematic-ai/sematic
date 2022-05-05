@@ -1,3 +1,6 @@
+"""
+Module keeping the connection to the DB.
+"""
 # Standard Library
 from contextlib import contextmanager
 import typing
@@ -10,11 +13,13 @@ import sqlalchemy.orm
 from glow.utils.config_dir import get_config_dir
 
 
-_db_instance = None
+class DB:
+    """
+    Base class to describe SQLAlchemy database
+    connections.
+    """
 
-
-class DB(object):
-    def __init__(self, url):
+    def __init__(self, url: str):
         self._engine = sqlalchemy.create_engine(url)
         self._Session = sqlalchemy.orm.sessionmaker(bind=self._engine)
 
@@ -30,19 +35,40 @@ class DB(object):
             session.close()
 
 
+_db_instance: typing.Optional[DB] = None
+
+
 def db() -> DB:
+    """
+    Convenience method to access the current database
+    connection.
+
+    This should be the primary way any code accesses the DB.
+
+    Example
+    -------
+    ```
+    from glow.db.db import db
+
+    with db().get_session() as session:
+        session.query(...)
+    ```
+    """
     global _db_instance
     if _db_instance is None:
-        url = None  # cloud_settings().db_settings.url
-        _db_instance = DB(url) if url else LocalDB()
+        url: typing.Optional[str] = None  # cloud_settings().db_settings.url
+        _db_instance = DB(url) if url is not None else LocalDB()
     return _db_instance
 
 
 class LocalDB(DB):
+    """
+    Subclass of DB to represent a local SQLite DB.
+    """
 
     LOCAL_DB_FILE = "sqlite:///{}/db.sqlite3".format(get_config_dir())
 
-    def __init__(self, url: str = None):
+    def __init__(self, url: typing.Optional[str] = None):
         if url is None:
             url = self.LOCAL_DB_FILE
         super().__init__(url)
