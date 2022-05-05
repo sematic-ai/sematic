@@ -12,6 +12,42 @@ from glow.db.models.base import Base
 
 
 class Run(Base):
+    """
+    SQLAlchemy model for runs.
+
+    Runs represent the execution of a :class:`glow.Calculator`. They are
+    created upon scheduling of a :class:`glow.Future`.
+
+    Attributes
+    ----------
+    id: str
+        The UUID4 of the run.
+    future_state: str
+        The state of the corresponding :class:`glow.Future`. See
+        :class:`glow.abstract_future.FutureState` for possible values.
+    name: str
+        The name of the run. Defaults to the name of the :class:`glow.Calculator`.
+    calculator_path: str
+        The full import path of the :class:`glow.Calculator`.
+    parent_id: Optional[str]
+        The id of the parent run. A parent run is the run corresponding to
+        the :class:`glow.Calculator` encapsulating the current
+        :class:`glow.Calculator`.
+    created_at: datetime
+        Time of creating of the run record in the DB.
+    updated_at: datetime
+        Time of last update of the run record in the DB.
+    started_at: Optional[datetime]
+        Time at which the run has actually started executing.
+    ended_at: Optional[datetime]
+        Time at which the run has finished running.
+    resolved_at: Optional[datetime]
+        Time at which the run has a concrete resolved value.
+        This is different from `ended_at` if the :calc:`glow.Calculator`
+        returns a :class:`glow.Future`.
+    failed_at: Optional[datetime]
+        Time at which the run has failed.
+    """
 
     __tablename__ = "runs"
 
@@ -45,7 +81,10 @@ class Run(Base):
     )
 
     @validates("future_state")
-    def validate_future_state(self, key, value):
+    def validate_future_state(self, key, value) -> str:
+        """
+        Validates that the future_state value is allowed.
+        """
         if value not in FutureState.values():
             raise ValueError(
                 (
