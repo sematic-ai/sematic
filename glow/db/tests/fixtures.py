@@ -1,8 +1,13 @@
+# Standard library
+import uuid
+
 # Third-party
 import pytest
 
 # Glow
 import glow.db.db as db
+from glow.db.models.run import Run
+from glow.abstract_future import FutureState
 
 
 @pytest.fixture(scope="function")
@@ -23,3 +28,14 @@ def test_db():
         yield temp_db
     finally:
         db._db_instance = original_db
+
+
+@pytest.fixture
+def run() -> Run:
+    run = Run(
+        id=uuid.uuid4().hex,
+        future_state=FutureState.CREATED.value,
+        name="test_run",
+        calculator_path="path.to.test_run",
+    )
+    return run
