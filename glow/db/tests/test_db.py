@@ -1,23 +1,12 @@
-# Standard Library
-import uuid
-
 # Glow
-from glow.abstract_future import FutureState
 from glow.db.models.run import Run
 from glow.db.db import db
 from glow.db.queries import count_runs, create_run
-from glow.db.tests.fixtures import test_db  # noqa: F401
+from glow.db.tests.fixtures import run, test_db  # noqa: F401
 
 
-def test_db_fixture(test_db):  # noqa: F811
+def test_db_fixture(test_db, run: Run):  # noqa: F811
     assert count_runs() == 0
-
-    run = Run(
-        id=uuid.uuid4().hex,
-        future_state=FutureState.CREATED.value,
-        name="test_run",
-        calculator_path="path.to.test_run",
-    )
 
     create_run(run)
 
