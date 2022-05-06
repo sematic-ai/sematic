@@ -5,10 +5,22 @@ import DashboardLayout from "./layouts/Dashboard";
 
 // Pages
 import Runs from "./pages/Runs/Runs";
+import RunDetails from "./pages/Runs/RunDetails";
+import Discover from "./pages/Discover";
 
 const routes = [
     {
-        path: "/",
+      path: "/",
+      element: <DashboardLayout />,
+      children: [
+        {
+          path: "",
+          element: <Discover />,
+        },
+      ],
+    },
+    {
+        path: "/runs",
         element: <DashboardLayout />,
         children: [
           {
@@ -23,10 +35,20 @@ const routes = [
         children: [
           {
             path: "",
-            element: <Runs />,
+            element: <RunDetails />,
           },
         ],
     },
+    {
+      path: "/types",
+      element: <DashboardLayout />,
+      children: [
+        {
+          path: "",
+          element: <RunDetails />,
+        },
+      ],
+  },
 ];
 
 export default routes;
