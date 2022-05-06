@@ -55,10 +55,8 @@ function RunViz(props: any) {
 
     return (
         <Card mb={6}>
-            <CardMedia title="Run name">
-                {viz}
-            </CardMedia>
             <CardContent>
+                {viz}
                 <Typography gutterBottom variant="h5" component="h2">
                     {artifactSelected.name}
                 </Typography>

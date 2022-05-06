@@ -21,6 +21,7 @@ type SidebarNavSectionProps = {
   component?: React.ElementType;
   pages: SidebarItemsType[];
   title?: string;
+  to?: string;
 };
 
 const SidebarNavSection: React.FC<SidebarNavSectionProps> = (props: any) => {
@@ -29,11 +30,12 @@ const SidebarNavSection: React.FC<SidebarNavSectionProps> = (props: any) => {
     pages,
     className,
     component: Component = "nav",
+    href,
     ...rest
   } = props;
 
   return (
-    <Component {...rest}>
+    <Component to={href} {...rest}>
       {title && <Title variant="subtitle2">{title}</Title>}
       <SidebarNavList pages={pages} depth={0} />
     </Component>
