@@ -15,7 +15,6 @@
   },
   "scripts": {
     "app": "yarn workspace @glow-web/app",
-    "common": "yarn workspace @glow-web/common",
     "server": "yarn workspace @glow-web/server",
     "build": "ts-node ./scripts/build.ts",
     "serve": "node ./packages/server/dist/index.js"
