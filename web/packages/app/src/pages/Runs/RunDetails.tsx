@@ -12,7 +12,6 @@ import styled from "@emotion/styled";
 import { spacing } from "@mui/system";
 
 import RunViz from "../../components/Run/RunViz";
-import DagViz from "../../components/DagViz";
 
 const Card = styled(MuiCard)(spacing);
 
@@ -34,9 +33,6 @@ function RunDetails() {
               <RunViz />
             </div>
           </Paper>
-        </Card>
-        <Card mb={6} style={{ height: "400px" }}>
-          <DagViz />
         </Card>
       </div>
     );
