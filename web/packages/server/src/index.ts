@@ -1,4 +1,3 @@
-import { APP_TITLE } from "@glow-web/common";
 import cors from "cors";
 import express from "express";
 import { join } from "path";
@@ -17,5 +16,5 @@ app.get("*", (req: any, res: any) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`${APP_TITLE}"s server listening at http://localhost:${PORT}`);
+  console.log(`Glows server listening at http://localhost:${PORT}`);
 });
