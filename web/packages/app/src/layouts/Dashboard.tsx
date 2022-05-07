@@ -12,7 +12,7 @@ import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar/Sidebar";
 import Footer from "../components/Footer";
 
-import navItems from "../components/navItems";
+import sidebarItems from "../components/Sidebar/sidebarItems";
 
 // Specific and custom styling for the Dashboard layout.
 const drawerWidth = 258;
@@ -72,13 +72,13 @@ const Dashboard: any = ({ children }) => {
             variant="temporary"
             open={false}
             onClose={handleDrawerToggle}
-            items={navItems}
+            items={sidebarItems}
           />
         </Box>
         <Box sx={{ display: { xs: "none", md: "block" } }}>
           <Sidebar
             PaperProps={{ style: { width: drawerWidth } }}
-            items={navItems}
+            items={sidebarItems}
           />
         </Box>
       </Drawer>
