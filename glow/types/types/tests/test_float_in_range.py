@@ -1,7 +1,6 @@
 import pytest
 
 from glow.types.generic_type import GenericMeta
-from glow.types.types.float import Float
 from glow.types.types.float_in_range import FloatInRange
 
 
@@ -76,7 +75,7 @@ def test_add():
     a = FloatIn01(0.3)
     assert isinstance(a, FloatIn01)
     b = a + 2
-    assert isinstance(b, Float)
+    assert isinstance(b, float)
     assert not isinstance(b, FloatIn01)
 
 
@@ -85,7 +84,7 @@ def test_multiply():
     a = FloatIn01(0.3)
     assert isinstance(a, FloatIn01)
     b = a * 2
-    assert isinstance(b, Float)
+    assert isinstance(b, float)
     assert not isinstance(b, FloatIn01)
 
 

@@ -6,6 +6,7 @@ import copy
 
 # Glow
 from glow.types.type import Type, TypeMeta
+from glow.types.registry import register_can_cast, register_safe_cast
 
 
 class GenericMeta(TypeMeta):
@@ -21,6 +22,10 @@ class GenericMeta(TypeMeta):
     # Defined here for consistency, since used in __getitem__
     # See GenericType for documentation.
     def parametrize(cls, args) -> typing.OrderedDict[str, typing.Any]:
+        raise NotImplementedError()
+
+    # To satisfy mypy
+    def get_parameters(cls) -> typing.OrderedDict[str, typing.Any]:
         raise NotImplementedError()
 
     def make_type(
@@ -45,6 +50,9 @@ class GenericMeta(TypeMeta):
             (cls,),
             dict(__module__=cls.__module__, _parameters=parameters),
         )
+
+        register_safe_cast(type_)(type_.safe_cast)
+        register_can_cast(type_)(type_.can_cast_type)
 
         return type_
 

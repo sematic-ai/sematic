@@ -1,53 +1,22 @@
 # Standard library
+import numbers
 import typing
 
 # Glow
-from glow.types.type import Type, is_type, NotAGlowTypeError
+from glow.types.registry import register_can_cast, register_safe_cast
 
 
-class Float(Type, float):
-    """
-    Glow type representing a Python `float`.
-    """
+@register_can_cast(float)
+def can_cast_type(type_: type) -> typing.Tuple[bool, typing.Optional[str]]:
+    if issubclass(type_, numbers.Real):
+        return True, None
 
-    # Required to override Type.__init__
-    def __init__(self, value):
-        super().__init__()
+    return False, "Cannot cast {} to float".format(type_)
 
-    @classmethod
-    def safe_cast(
-        cls, value: typing.Any
-    ) -> typing.Tuple[typing.Optional["Float"], typing.Optional[str]]:
-        try:
-            return cls(value), None
-        except ValueError as exception:
-            return None, str(exception)
 
-    @classmethod
-    def can_cast_type(
-        cls, type_: typing.Type[Type]
-    ) -> typing.Tuple[bool, typing.Optional[str]]:
-        if not is_type(type_):
-            raise NotAGlowTypeError(type_)
-
-        if issubclass(type_, Float):
-            return True, None
-
-        # if issubclass(type_, Integer):
-        #    return True, None
-
-        return False, "{} cannot cast to Float".format(type_)
-
-    # This is necessary to satisy mypy when using +
-    # and the calculator output type is Float
-    def __add__(self, x: float) -> "Float":
-        return Float(super().__add__(x))
-
-    def __sub__(self, x: float) -> "Float":
-        return Float(super().__sub__(x))
-
-    def __mul__(self, x: float) -> "Float":
-        return Float(super().__mul__(x))
-
-    def __truediv__(self, x: float) -> "Float":
-        return Float(super().__truediv__(x))
+@register_safe_cast(float)
+def safe_cast(value: typing.Any) -> typing.Tuple[typing.Any, typing.Optional[str]]:
+    try:
+        return float(value), None
+    except ValueError as exception:
+        return None, str(exception)
