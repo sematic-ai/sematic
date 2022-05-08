@@ -8,9 +8,6 @@ modules for Calculator and Future.
 import abc
 import typing
 
-# Glow
-from glow.types.type import Type
-
 
 class AbstractCalculator(abc.ABC):
     def __init__(self) -> None:
@@ -32,9 +29,9 @@ class AbstractCalculator(abc.ABC):
         pass
 
     @abc.abstractproperty
-    def input_types(self) -> typing.Dict[str, typing.Type[Type]]:
+    def input_types(self) -> typing.Dict[str, type]:
         pass
 
     @abc.abstractproperty
-    def output_type(self) -> typing.Type[Type]:
+    def output_type(self) -> type:
         pass

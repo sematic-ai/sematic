@@ -7,12 +7,15 @@ import typing
 # Glow
 from glow.types.generic_type import GenericType
 from glow.types.type import Type, is_type, NotAGlowTypeError
-from glow.types.types.float import Float
+from glow.types.casting import safe_cast
 
 
-class FloatInRange(GenericType, Float):
+class FloatInRange(float, GenericType):
     _DEFAULT_INCLUSIVE_LOWER = True
     _DEFAULT_INCLUSIVE_UPPER = True
+
+    def __init__(cls, value):
+        float.__init__(value)
 
     @classmethod
     def parametrize(cls, args: typing.Tuple) -> typing.OrderedDict[str, typing.Any]:
@@ -100,13 +103,13 @@ class FloatInRange(GenericType, Float):
         cls, value: typing.Any
     ) -> typing.Tuple[typing.Optional[typing.Any], typing.Optional[str]]:
 
-        cast_float, error_msg = super().safe_cast(value)
+        cast_float, error_msg = safe_cast(value, float)
         if error_msg is not None:
             return None, error_msg
 
         # Getting rid of the typing.Optional constraint
         # garanteed by the check above
-        cast_float = typing.cast(Float, cast_float)
+        cast_float = typing.cast(float, cast_float)
 
         (
             lower_bound,
