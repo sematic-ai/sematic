@@ -47,12 +47,10 @@ def db() -> DB:
 
     Example
     -------
-    ```
     from glow.db.db import db
 
     with db().get_session() as session:
         session.query(...)
-    ```
     """
     global _db_instance
     if _db_instance is None:
