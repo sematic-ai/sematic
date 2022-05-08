@@ -1,7 +1,9 @@
+# Standard library
 import inspect
 import types
 import typing
 
+# Glow
 from glow.abstract_calculator import AbstractCalculator
 from glow.future import Future
 from glow.types.type import is_type, Type

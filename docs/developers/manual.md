@@ -50,3 +50,12 @@ $ python3 -m piptools compile requirements/requirements.in > requirements/requir
 ```shell
 $ bazel build //glow:glow_wheel
 ```
+
+## Generate documentation
+
+```shell
+$ sphinx-apidoc -f -o docs/source glow
+$ cd docs
+$ make clean
+$ make html
+```

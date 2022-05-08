@@ -7,6 +7,10 @@ from glow.resolver import Resolver
 
 
 class Future(AbstractFuture):
+    """
+    Class representing a future.
+    """
+
     def resolve(self, resolver: Resolver, attach: bool = False) -> typing.Any:
         if self.state != FutureState.RESOLVED:
             self.value = resolver.resolve(self)
