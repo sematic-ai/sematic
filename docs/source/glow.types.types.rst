@@ -4,14 +4,6 @@ glow.types.types package
 Submodules
 ----------
 
-glow.types.types.boolean module
--------------------------------
-
-.. automodule:: glow.types.types.boolean
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 glow.types.types.float module
 -----------------------------
 
@@ -36,10 +28,10 @@ glow.types.types.integer module
    :undoc-members:
    :show-inheritance:
 
-glow.types.types.null module
+glow.types.types.list module
 ----------------------------
 
-.. automodule:: glow.types.types.null
+.. automodule:: glow.types.types.list
    :members:
    :undoc-members:
    :show-inheritance:

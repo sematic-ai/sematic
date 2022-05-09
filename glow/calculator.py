@@ -6,8 +6,8 @@ import typing
 # Glow
 from glow.abstract_calculator import AbstractCalculator
 from glow.future import Future
-from glow.types.type import is_type, Type
-from glow.types.types.null import Null
+from glow.types.casting import safe_cast, can_cast_type
+from glow.types.type import is_type
 from glow.utils.memoized_property import memoized_property
 
 
@@ -59,16 +59,10 @@ class Calculator(AbstractCalculator):
         """
         annotations = self._func.__annotations__
 
-        output_type: typing.Type[Type] = Null
-        input_types: typing.Dict[str, typing.Type[Type]] = {}
+        output_type: type = type(None)
+        input_types: typing.Dict[str, type] = {}
 
         for name, type_ in annotations.items():
-            if not is_type(type_):
-                raise ValueError(
-                    "{} is not a valid type annotation for {}. See https://docs.".format(
-                        type_.__name__, name
-                    )
-                )
             if name == "return":
                 output_type = type_
             else:
@@ -83,8 +77,8 @@ class Calculator(AbstractCalculator):
                 ).format(_repr_str_iterable(missing_annotations))
             )
 
-        self._output_type: typing.Type[Type] = output_type
-        self._input_types: typing.Dict[str, typing.Type[Type]] = input_types
+        self._output_type: type = output_type
+        self._input_types: typing.Dict[str, type] = input_types
 
     @memoized_property
     def _full_arg_spec(self):
@@ -95,11 +89,11 @@ class Calculator(AbstractCalculator):
         return self._func
 
     @property
-    def output_type(self) -> typing.Type[Type]:
+    def output_type(self) -> type:
         return self._output_type
 
     @property
-    def input_types(self) -> typing.Dict[str, typing.Type[Type]]:
+    def input_types(self) -> typing.Dict[str, type]:
         return self._input_types
 
     # Returns typing.Any instead of Future to ensure
@@ -175,13 +169,13 @@ class Calculator(AbstractCalculator):
 
     @staticmethod
     def cast_value(
-        value: typing.Any, type_: typing.Type[Type], error_prefix: str = ""
+        value: typing.Any, type_: type, error_prefix: str = ""
     ) -> typing.Any:
         """
         Attempts to cast a value to the passed type.
         """
         if isinstance(value, Future):
-            can_cast, error = type_.can_cast_type(value.calculator.output_type)
+            can_cast, error = can_cast_type(value.calculator.output_type, type_)
             if not can_cast:
                 raise TypeError(
                     "{} Cannot cast {} to {}: {}".format(
@@ -190,10 +184,10 @@ class Calculator(AbstractCalculator):
                 )
             return value
 
-        if is_type(type(value)) and type_.can_cast_type(type(value))[0]:
+        if is_type(type(value)) and can_cast_type(type_, type(value))[0]:
             return value
 
-        cast_value, error = type_.safe_cast(value)
+        cast_value, error = safe_cast(value, type_)
         if error is not None:
             raise TypeError(
                 "{} Cannot cast {} to {}: {}".format(error_prefix, value, type_, error)

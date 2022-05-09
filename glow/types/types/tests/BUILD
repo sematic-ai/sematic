@@ -1,16 +1,9 @@
 pytest_test(
-    name = "test_boolean",
-    srcs = ["test_boolean.py"],
-    deps = [
-        "//glow/types/types:boolean",
-    ]
-)
-
-pytest_test(
     name = "test_float",
     srcs = ["test_float.py"],
     deps = [
-        "//glow/types/types:float",
+        "//glow/types:init",
+        "//glow/types:casting",
     ]
 )
 
@@ -19,7 +12,7 @@ pytest_test(
     srcs = ["test_float_in_range.py"],
     deps = [
         "//glow/types:generic_type",
-        "//glow/types/types:float",
+        "//glow/types:init",
         "//glow/types/types:float_in_range",
     ]
 )
@@ -28,16 +21,16 @@ pytest_test(
     name = "test_integer",
     srcs = ["test_integer.py"],
     deps = [
-        "//glow/types/types:integer",
+        "//glow/types:init",
+        "//glow/types:casting",
     ]
 )
 
 pytest_test(
-    name = "test_null",
-    srcs = ["test_null.py"],
+    name = "test_list",
+    srcs = ["test_list.py"],
     deps = [
-        "//glow/types/types:null",
-        "//glow/types/types:float",
-        "//glow/types:type",
+        "//glow/types:init",
+        "//glow/types:casting",
     ]
 )
