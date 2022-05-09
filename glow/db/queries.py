@@ -59,3 +59,25 @@ def get_run(run_id: str) -> Run:
     """
     with db().get_session() as session:
         return session.query(Run).filter(Run.id == run_id).one()
+
+
+def save_run(run: Run) -> Run:
+    """
+    Save run to the database.
+
+    Parameters
+    ----------
+    run : Run
+        Run to save
+
+    Returns
+    -------
+    Run
+        saved run
+    """
+    with db().get_session() as session:
+        session.add(run)
+        session.commit()
+        session.refresh(run)
+
+    return run
