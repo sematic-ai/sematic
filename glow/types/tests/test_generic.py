@@ -63,3 +63,15 @@ def test_safe_cast(value, expected_value, error, expected_value2, error2):
 
     assert safe_cast(value, type_) == (expected_value, error)
     assert safe_cast(value, type2) == (expected_value2, error2)
+
+
+def test_can_cast_type():
+    assert can_cast_type(SomeGenericType[34, 56], SomeGenericType[34, 56]) == (
+        True,
+        None,
+    )
+
+    assert can_cast_type(SomeGenericType[34, 56], SomeGenericType[32, 57]) == (
+        False,
+        "Incompatible values",
+    )

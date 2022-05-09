@@ -6,6 +6,7 @@ import typing
 # Glow
 from glow.abstract_calculator import AbstractCalculator
 from glow.future import Future
+from glow.types.casting import safe_cast, can_cast_type
 from glow.types.type import is_type
 from glow.utils.memoized_property import memoized_property
 
@@ -174,7 +175,7 @@ class Calculator(AbstractCalculator):
         Attempts to cast a value to the passed type.
         """
         if isinstance(value, Future):
-            can_cast, error = can_cast_type(type_, value.calculator.output_type)
+            can_cast, error = can_cast_type(value.calculator.output_type, type_)
             if not can_cast:
                 raise TypeError(
                     "{} Cannot cast {} to {}: {}".format(
@@ -186,7 +187,7 @@ class Calculator(AbstractCalculator):
         if is_type(type(value)) and can_cast_type(type_, type(value))[0]:
             return value
 
-        cast_value, error = safe_cast(type_, value)
+        cast_value, error = safe_cast(value, type_)
         if error is not None:
             raise TypeError(
                 "{} Cannot cast {} to {}: {}".format(error_prefix, value, type_, error)
