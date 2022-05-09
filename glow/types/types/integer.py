@@ -7,7 +7,7 @@ from glow.types.registry import register_can_cast, register_safe_cast
 
 
 @register_can_cast(int)
-def can_cast_type(type_: type) -> typing.Tuple[bool, typing.Optional[str]]:
+def can_cast_type(type_: type, _) -> typing.Tuple[bool, typing.Optional[str]]:
     if issubclass(type_, numbers.Real):
         return True, None
 
@@ -15,7 +15,7 @@ def can_cast_type(type_: type) -> typing.Tuple[bool, typing.Optional[str]]:
 
 
 @register_safe_cast(int)
-def safe_cast(value: typing.Any) -> typing.Tuple[typing.Any, typing.Optional[str]]:
+def safe_cast(value: typing.Any, _) -> typing.Tuple[typing.Any, typing.Optional[str]]:
     try:
         return int(value), None
     except ValueError as exception:

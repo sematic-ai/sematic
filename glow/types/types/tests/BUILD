@@ -25,3 +25,12 @@ pytest_test(
         "//glow/types:casting",
     ]
 )
+
+pytest_test(
+    name = "test_list",
+    srcs = ["test_list.py"],
+    deps = [
+        "//glow/types:init",
+        "//glow/types:casting",
+    ]
+)

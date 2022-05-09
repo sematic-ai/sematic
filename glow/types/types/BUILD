@@ -25,3 +25,14 @@ glow_py_lib(
         "//glow/types:registry",
     ],
 )
+
+
+glow_py_lib(
+    name = "list",
+    srcs = ["list.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//glow/types:registry",
+        "//glow/types:casting",
+    ]
+)
