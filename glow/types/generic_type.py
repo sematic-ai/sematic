@@ -23,6 +23,10 @@ class GenericMeta(TypeMeta):
     def parametrize(cls, args) -> typing.OrderedDict[str, typing.Any]:
         raise NotImplementedError()
 
+    # To satisfy mypy
+    def get_parameters(cls) -> typing.OrderedDict[str, typing.Any]:
+        raise NotImplementedError()
+
     def make_type(
         cls, parameters: typing.OrderedDict[str, typing.Any]
     ) -> "GenericMeta":

@@ -4,8 +4,6 @@ pytest_test(
     deps = [
         "//glow:calculator",
         "//glow:future",
-        "//glow/types/types:null",
-        "//glow/types/types:float",
     ]
 )
 

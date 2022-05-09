@@ -2,8 +2,6 @@ import pytest
 
 from glow.calculator import Calculator, calculator
 from glow.future import Future
-from glow.types.types.null import Null
-from glow.types.types.float import Float
 
 
 def test_decorator_no_params():
@@ -50,42 +48,16 @@ def test_types_not_specified():
         pass
 
     assert func.input_types == dict()
-    assert func.output_type is Null
-
-
-def test_input_type_not_type():
-    class NotAType:
-        pass
-
-    with pytest.raises(
-        ValueError, match="NotAType is not a valid type annotation for a"
-    ):
-
-        @calculator
-        def func(a: NotAType):
-            pass
-
-
-def test_output_type_not_type():
-    class NotAType:
-        pass
-
-    with pytest.raises(
-        ValueError, match="NotAType is not a valid type annotation for return"
-    ):
-
-        @calculator
-        def func() -> NotAType:
-            pass
+    assert func.output_type is type(None)  # noqa: E721
 
 
 def test_types_specified():
     @calculator
-    def func(a: Null) -> Float:
+    def func(a: float) -> int:
         pass
 
-    assert func.input_types == dict(a=Null)
-    assert func.output_type is Float
+    assert func.input_types == dict(a=float)
+    assert func.output_type is int
 
 
 def test_variadic():
@@ -112,13 +84,13 @@ def test_missing_types():
     ):
 
         @calculator
-        def func(a, b, c: Float):
+        def func(a, b, c: float):
             pass
 
 
 def test_call_fail_cast():
     @calculator
-    def func(a: Float) -> Float:
+    def func(a: float) -> float:
         return a
 
     with pytest.raises(TypeError, match="could not convert string to float"):
@@ -127,7 +99,7 @@ def test_call_fail_cast():
 
 def test_call_pass_cast():
     @calculator
-    def func(a: Float) -> Float:
+    def func(a: float) -> float:
         return a
 
     f = func(1.23)
@@ -135,13 +107,13 @@ def test_call_pass_cast():
     assert isinstance(f, Future)
     assert f.calculator is func
     assert set(f.kwargs) == {"a"}
-    assert isinstance(f.kwargs["a"], Float)
+    assert isinstance(f.kwargs["a"], float)
     assert f.kwargs["a"] == 1.23
 
 
 def test_call_fail_binding():
     @calculator
-    def func(a: Float) -> Float:
+    def func(a: float) -> float:
         return a
 
     with pytest.raises(TypeError, match="too many positional arguments"):

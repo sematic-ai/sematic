@@ -7,7 +7,9 @@ glow_py_lib(
     deps = [
         ":calculator",
         ":resolver",
-        "//glow/resolvers:offline_resolver"
+        "//glow/resolvers:offline_resolver",
+        "//glow/types:init",
+        "//glow/types:casting",
     ]
 )
 
@@ -15,9 +17,7 @@ glow_py_lib(
     name = "abstract_calculator",
     srcs = ["abstract_calculator.py"],
     visibility = ["//visibility:public"],
-    deps = [
-        "//glow/types:type",
-    ]
+    deps = []
 )
 
 glow_py_lib(
@@ -36,8 +36,9 @@ glow_py_lib(
     deps = [
         ":abstract_calculator",
         ":future",
+        "//glow/types:casting",
+        "//glow/types:init",
         "//glow/types:type",
-        "//glow/types/types:null",
         "//glow/utils:memoized_property",
     ]
 )
@@ -81,6 +82,5 @@ py_wheel(
     ],
     deps = [
         "//glow:init",
-        "//glow/types:init",
     ],
 )
