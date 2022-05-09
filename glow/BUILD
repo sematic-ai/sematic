@@ -36,6 +36,8 @@ glow_py_lib(
     deps = [
         ":abstract_calculator",
         ":future",
+        "//glow/types:casting",
+        "//glow/types:init",
         "//glow/types:type",
         "//glow/utils:memoized_property",
     ]
