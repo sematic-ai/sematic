@@ -66,10 +66,12 @@ def _is_valid_typing(type_: typing.Any) -> bool:
     """
     Is this a `typing` type, and if so, is it correctly parametrized?
     """
-    if isinstance(type_, (typing._GenericAlias, typing._UnionGenericAlias)):
+    if isinstance(
+        type_, (typing._GenericAlias, typing._UnionGenericAlias)  # type: ignore
+    ):
         return True
 
-    if isinstance(type_, (typing._SpecialForm, typing._BaseGenericAlias)):
+    if isinstance(type_, (typing._SpecialForm, typing._BaseGenericAlias)):  # type: ignore
         raise ValueError("{} must be parametrized")
 
     return False
