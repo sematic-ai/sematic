@@ -12,10 +12,26 @@ Subpackages
 Submodules
 ----------
 
+glow.types.casting module
+-------------------------
+
+.. automodule:: glow.types.casting
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 glow.types.generic\_type module
 -------------------------------
 
 .. automodule:: glow.types.generic_type
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+glow.types.registry module
+--------------------------
+
+.. automodule:: glow.types.registry
    :members:
    :undoc-members:
    :show-inheritance:

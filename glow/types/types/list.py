@@ -12,6 +12,11 @@ from glow.types.casting import safe_cast, can_cast_type
 def safe_cast_list(
     value: typing.Any, type_: typing.Any
 ) -> typing.Tuple[typing.Any, typing.Optional[str]]:
+    """
+    Value casting logic for `List[T]`.
+
+    All list elements are attempted to cast to `T`.
+    """
     if not isinstance(value, typing.Iterable):
         return None, "{} not an iterable".format(value)
 
@@ -33,6 +38,20 @@ def safe_cast_list(
 # `typing.List[T].__origin__` is `list`
 @register_can_cast(list)
 def can_cast_to_list(from_type: typing.Any, to_type: typing.Any):
+    """
+    Type casting logic for `List[T]`.
+
+    `from_type` and `to_type` should be subscripted generics
+    of the form `List[T]`.
+
+    All subclasses of `Iterable` are castable to `List`: `List`, `Tuple`, `Dict`, `Set`.
+
+    A type of the form `Iterable[A, B, C]` is castable to `List[T]` if all
+    `A`, `B`, and `C` are castable to `T`.
+
+    For example `Tuple[int, float]` is castable to `List[int]`, but `Tuple[int, str]`
+    is not.
+    """
     err_prefix = "Can't cast {} to {}:".format(from_type, to_type)
 
     if not isinstance(from_type, typing._GenericAlias):  # type: ignore
