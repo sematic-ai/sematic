@@ -6,7 +6,6 @@ import copy
 
 # Glow
 from glow.types.type import Type, TypeMeta
-from glow.types.registry import register_can_cast, register_safe_cast
 
 
 class GenericMeta(TypeMeta):
@@ -50,9 +49,6 @@ class GenericMeta(TypeMeta):
             (cls,),
             dict(__module__=cls.__module__, _parameters=parameters),
         )
-
-        register_safe_cast(type_)(type_.safe_cast)
-        register_can_cast(type_)(type_.can_cast_type)
 
         return type_
 

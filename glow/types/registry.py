@@ -1,7 +1,10 @@
 # Standard library
 import typing
 
-CanCastTypeCallable = typing.Callable[[type], typing.Tuple[bool, typing.Optional[str]]]
+# Input type has to be `typing.Any` because `typing.List` is not a `type`
+CanCastTypeCallable = typing.Callable[
+    [typing.Any, typing.Any], typing.Tuple[bool, typing.Optional[str]]
+]
 
 
 CAN_CAST_REGISTRY: typing.Dict[type, CanCastTypeCallable] = {}
@@ -20,7 +23,7 @@ def register_can_cast(
 
 
 SafeCastCallable = typing.Callable[
-    [typing.Any], typing.Tuple[typing.Any, typing.Optional[str]]
+    [typing.Any, typing.Any], typing.Tuple[typing.Any, typing.Optional[str]]
 ]
 
 

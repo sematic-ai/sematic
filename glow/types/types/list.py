@@ -1,0 +1,53 @@
+# Standard library
+import typing
+
+# Glow
+from glow.types.registry import register_safe_cast, register_can_cast
+from glow.types.casting import safe_cast, can_cast_type
+
+
+# Using `list` instead of `typing.List` here because
+# `typing.List[T].__origin__` is `list`
+@register_safe_cast(list)
+def safe_cast_list(
+    value: typing.Any, type_: typing.Any
+) -> typing.Tuple[typing.Any, typing.Optional[str]]:
+    if not isinstance(value, typing.Iterable):
+        return None, "{} not an iterable".format(value)
+
+    element_type = type_.__args__[0]
+
+    result: typing.List[element_type] = []  # type: ignore
+
+    for index, element in enumerate(value):
+        cast_element, error = safe_cast(element, element_type)
+        if error is not None:
+            return None, "Cannot cast {} to {}: {}".format(value, type_, error)
+
+        result.append(cast_element)
+
+    return result, None
+
+
+# Using `list` instead of `typing.List` here because
+# `typing.List[T].__origin__` is `list`
+@register_can_cast(list)
+def can_cast_to_list(from_type: typing.Any, to_type: typing.Any):
+    err_prefix = "Can't cast {} to {}:".format(from_type, to_type)
+
+    if not isinstance(from_type, typing._GenericAlias):  # type: ignore
+        return False, "{} not a subscripted generic".format(err_prefix)
+
+    if not issubclass(from_type.__origin__, typing.Iterable):
+        return False, "{} not an iterable".format(err_prefix)
+
+    from_type_args = from_type.__args__
+
+    element_type = to_type.__args__[0]
+
+    for from_element_type in from_type_args:
+        can_cast, error = can_cast_type(from_element_type, element_type)
+        if can_cast is False:
+            return False, "{}: {}".format(err_prefix, error)
+
+    return True, None

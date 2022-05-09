@@ -1,8 +1,12 @@
-# Glow
+# Standard library
 import re
+import typing
 
+# Third-party
 import pytest
-from glow.types.casting import can_cast_type, safe_cast, cast
+
+# Glow
+from glow.types.casting import can_cast_type, safe_cast, cast, _is_valid_typing
 from glow.types.registry import register_can_cast, register_safe_cast
 
 
@@ -52,7 +56,7 @@ def test_safe_cast_registered():
             self.value = value
 
     @register_safe_cast(A)
-    def _safe_cast_to_A(value):
+    def _safe_cast_to_A(value, _):
         return A(value), None
 
     cast_value, error = safe_cast(42, A)
@@ -103,7 +107,19 @@ def test_can_cast_type_registered():
         pass
 
     @register_can_cast(B)
-    def _can_cast_type_to_b(type_):
+    def _can_cast_type_to_b(type_, _):
         return True, None
 
     assert can_cast_type(A, B) == (True, None)
+
+
+def test_is_valid_typing():
+    assert _is_valid_typing(int) is False
+    assert _is_valid_typing(typing.List[int]) is True
+    assert _is_valid_typing(typing.Optional[int]) is True
+
+    with pytest.raises(ValueError, match="must be parametrized"):
+        _is_valid_typing(typing.List)
+
+    with pytest.raises(ValueError, match="must be parametrized"):
+        _is_valid_typing(typing.Optional)

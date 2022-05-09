@@ -8,6 +8,7 @@ glow_py_lib(
         "//glow/types/types:float",
         "//glow/types/types:float_in_range",
         "//glow/types/types:integer",
+        "//glow/types/types:list",
     ]
 )
 
@@ -16,7 +17,8 @@ glow_py_lib(
     srcs = ["casting.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":registry"
+        ":registry",
+        ":type",
     ],
 )
 
@@ -26,7 +28,6 @@ glow_py_lib(
     visibility = ["//visibility:public"],
     deps = [
         ":type",
-        ":registry",
     ]
 )
 
