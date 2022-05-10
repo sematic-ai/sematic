@@ -2,7 +2,7 @@
 from glow.abstract_future import FutureState
 from glow.calculator import calculator
 from glow.db.tests.fixtures import test_db  # noqa: F401
-from glow.db.queries import count_runs
+from glow.db.queries import count_runs, get_run
 from glow.resolvers.offline_resolver import OfflineResolver
 
 
@@ -46,3 +46,61 @@ def test_local_resolver(test_db):  # noqa: F811
     assert future.state == FutureState.RESOLVED
 
     assert count_runs() == 6
+
+
+class DBStateMachineTestResolver(OfflineResolver):
+    def _future_did_schedule(self, future) -> None:
+        super()._future_did_schedule(future)
+
+        run = get_run(future.id)
+
+        assert run.id == future.id
+        assert run.future_state == FutureState.SCHEDULED.value
+        assert run.name == future.calculator.__name__
+        assert run.calculator_path == "{}.{}".format(
+            future.calculator.__module__, future.calculator.__name__
+        )
+        assert run.parent_id == (
+            future.parent_future.id if future.parent_future is not None else None
+        )
+        assert run.started_at is not None
+
+    def _future_did_run(self, future) -> None:
+        super()._future_did_run(future)
+
+        run = get_run(future.id)
+
+        assert run.id == future.id
+        assert run.future_state == FutureState.RAN.value
+
+        assert run.ended_at is not None
+
+    def _future_did_resolve(self, future) -> None:
+        super()._future_did_resolve(future)
+
+        run = get_run(future.id)
+
+        assert run.id == future.id
+        assert run.future_state == FutureState.RESOLVED.value
+
+        assert run.resolved_at is not None
+
+    def _future_did_fail(self, failed_future) -> None:
+        super()._future_did_fail(failed_future)
+
+        run = get_run(failed_future.id)
+
+        assert run.id == failed_future.id
+
+        if (
+            failed_future.nested_future is not None
+            and failed_future.nested_future.state
+            in (FutureState.FAILED.value, FutureState.NESTED_FAILED.value)
+        ):
+            assert run.future_state == FutureState.NESTED_FAILED.value
+        else:
+            assert run.future_state == FutureState.FAILED.value
+
+
+def test_db_state_machine(test_db):  # noqa: F811
+    pipeline(1, 2).resolve(DBStateMachineTestResolver())

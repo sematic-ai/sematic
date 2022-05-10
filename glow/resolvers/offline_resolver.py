@@ -11,7 +11,7 @@ from glow.resolvers.state_machine_resolver import StateMachineResolver
 
 class OfflineResolver(StateMachineResolver):
     """
-    A resolver to resolver a DAG locally with no tracking.
+    A resolver to resolver a DAG locally.
     """
 
     def _schedule_run(
@@ -62,7 +62,7 @@ class OfflineResolver(StateMachineResolver):
         save_run(run)
 
     def _future_did_resolve(self, future: AbstractFuture) -> None:
-        return super()._future_did_resolve(future)
+        super()._future_did_resolve(future)
 
         run = get_run(future.id)
 
@@ -72,7 +72,7 @@ class OfflineResolver(StateMachineResolver):
         save_run(run)
 
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
-        return super()._future_did_fail(failed_future)
+        super()._future_did_fail(failed_future)
 
         run = get_run(failed_future.id)
 
