@@ -4,14 +4,14 @@ import typing
 
 # Glow
 from glow.abstract_future import AbstractFuture, FutureState
-from glow.db.queries import create_run
+from glow.db.queries import create_run, get_run, save_run
 from glow.db.models.run import Run
 from glow.resolvers.state_machine_resolver import StateMachineResolver
 
 
 class OfflineResolver(StateMachineResolver):
     """
-    A resolver to resolver a DAG locally with no tracking.
+    A resolver to resolver a DAG locally.
     """
 
     def _schedule_run(
@@ -47,3 +47,41 @@ class OfflineResolver(StateMachineResolver):
         )
 
         create_run(run)
+
+    def _future_did_run(self, future: AbstractFuture) -> None:
+        super()._future_did_run(future)
+
+        run = get_run(future.id)
+
+        if future.parent_future is not None:
+            run.parent_id = future.parent_future.id
+
+        run.future_state = FutureState.RAN.value
+        run.ended_at = datetime.datetime.utcnow()
+
+        save_run(run)
+
+    def _future_did_resolve(self, future: AbstractFuture) -> None:
+        super()._future_did_resolve(future)
+
+        run = get_run(future.id)
+
+        run.future_state = FutureState.RESOLVED.value
+        run.resolved_at = datetime.datetime.utcnow()
+
+        save_run(run)
+
+    def _future_did_fail(self, failed_future: AbstractFuture) -> None:
+        super()._future_did_fail(failed_future)
+
+        run = get_run(failed_future.id)
+
+        run.future_state = (
+            FutureState.NESTED_FAILED.value
+            if failed_future.nested_future is not None
+            and failed_future.state in (FutureState.FAILED, FutureState.NESTED_FAILED)
+            else FutureState.FAILED.value
+        )
+        run.failed_at = datetime.datetime.utcnow()
+
+        save_run(run)
