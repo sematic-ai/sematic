@@ -1,0 +1,9 @@
+[tool.pyright]
+exclude = [
+  "bazel-out",
+  "bazel-bin",
+  "bazel-glow",
+  "bazel-testlogs",
+  "docs",
+  "build",
+]

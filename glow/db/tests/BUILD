@@ -8,6 +8,7 @@ glow_py_lib(
     deps = [
         "//glow:abstract_future",
         "//glow/db:db",
+        "//glow/db:queries",
         "//glow/db/models:run",
         requirement("pytest"),
     ]
