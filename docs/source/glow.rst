@@ -7,7 +7,9 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   glow.api
    glow.db
+   glow.examples
    glow.resolvers
    glow.types
    glow.utils

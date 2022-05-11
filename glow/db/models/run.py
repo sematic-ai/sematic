@@ -9,9 +9,10 @@ from sqlalchemy.orm import validates
 # Glow
 from glow.abstract_future import FutureState
 from glow.db.models.base import Base
+from glow.db.models.json_encodable_mixin import JSONEncodableMixin
 
 
-class Run(Base):
+class Run(Base, JSONEncodableMixin):
     """
     SQLAlchemy model for runs.
 
