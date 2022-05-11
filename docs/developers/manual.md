@@ -59,3 +59,9 @@ $ cd docs
 $ make clean
 $ make html
 ```
+
+## Starting the API server
+
+```shell
+$ bazel run //glow/api:server
+```
