@@ -1,6 +1,9 @@
 """
 Module holding common DB queries.
 """
+# Standard library
+import typing
+
 # Glow
 from glow.db.models.run import Run
 from glow.db.db import db
@@ -81,3 +84,8 @@ def save_run(run: Run) -> Run:
         session.refresh(run)
 
     return run
+
+
+def list_runs() -> typing.List[Run]:
+    with db().get_session() as session:
+        return session.query(Run).all()
