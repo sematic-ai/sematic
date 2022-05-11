@@ -1,9 +1,6 @@
 """
 Module holding common DB queries.
 """
-# Standard library
-import typing
-
 # Glow
 from glow.db.models.run import Run
 from glow.db.db import db
