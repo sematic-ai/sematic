@@ -68,6 +68,8 @@ class OfflineResolver(StateMachineResolver):
 
         run.future_state = FutureState.RESOLVED.value
         run.resolved_at = datetime.datetime.utcnow()
+        if run.ended_at is None:
+            run.ended_at = run.resolved_at
 
         save_run(run)
 
