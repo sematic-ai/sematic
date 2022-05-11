@@ -30,6 +30,21 @@ def list_runs_endpoint() -> flask.Response:
 
     Response
     --------
+    current_page_url : str
+        URL of the current page
+    next_page_url : Optional[str]
+        URL of the next page, if any, `null` otherwise
+    limit : int
+        Current page size. The actual number of items returned may be inferior
+        if current page is last page.
+    next_cursor : Optional[str]
+        Cursor to obtain next page. Already included in `next_page_url`.
+    after_cursor_count : int
+        Number of items remain after the current cursos, i.e. including current
+        page.
+    content: List[Run]
+        A list of run JSON payloads. The size of the list is `limit` or less if
+        current page is last page.
     """
     request_args = flask.request.args
 
