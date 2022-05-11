@@ -17,11 +17,20 @@ from glow.db.db import db
 from glow.db.models.run import Run
 
 
+# Default page size for run list
 DEFAULT_LIMIT = 20
 
 
 @glow_api.route("/api/v1/runs", methods=["GET"])
 def list_runs_endpoint() -> flask.Response:
+    """
+    GET /api/v1/runs endpoint.
+
+    The API endpoint to list and filter runs. Returns a JSON payload.
+
+    Response
+    --------
+    """
     request_args = flask.request.args
 
     limit: int = int(request_args.get("limit", DEFAULT_LIMIT))
