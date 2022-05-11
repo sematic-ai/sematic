@@ -42,6 +42,9 @@ def test_list_runs(test_client: flask.testing.FlaskClient):  # noqa: F811
     next_page_url = next_page_url.split("localhost")[1]
 
     results = test_client.get(next_page_url)
+    payload = results.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
     assert payload["next_page_url"] is None
     assert payload["next_cursor"] is None
     assert payload["after_cursor_count"] == 2
