@@ -4,7 +4,9 @@ glow_py_lib(
     visibility = ["//visibility:public"],
     deps = [
         "//glow/api:app",
-        "//glow/db:queries",
+        "//glow/db:db",
+        "//glow/db/models:run",
         requirement("flask"),
+        requirement("sqlalchemy"),
     ]
 )
