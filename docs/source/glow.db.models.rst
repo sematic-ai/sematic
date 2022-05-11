@@ -12,6 +12,14 @@ glow.db.models.base module
    :undoc-members:
    :show-inheritance:
 
+glow.db.models.json\_encodable\_mixin module
+--------------------------------------------
+
+.. automodule:: glow.db.models.json_encodable_mixin
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 glow.db.models.run module
 -------------------------
 
