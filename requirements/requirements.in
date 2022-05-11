@@ -2,3 +2,4 @@ pytest==7.1.1
 ipython==8.2.0
 setuptools==58.1.0
 SQLAlchemy==1.4.36
+flask
