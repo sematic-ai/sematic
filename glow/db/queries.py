@@ -84,8 +84,3 @@ def save_run(run: Run) -> Run:
         session.refresh(run)
 
     return run
-
-
-def list_runs() -> typing.List[Run]:
-    with db().get_session() as session:
-        return session.query(Run).all()

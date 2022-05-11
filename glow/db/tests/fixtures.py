@@ -31,8 +31,7 @@ def test_db():
         db._db_instance = original_db
 
 
-@pytest.fixture
-def run() -> Run:
+def make_run() -> Run:
     run = Run(
         id=uuid.uuid4().hex,
         future_state=FutureState.CREATED.value,
@@ -40,6 +39,11 @@ def run() -> Run:
         calculator_path="path.to.test_run",
     )
     return run
+
+
+@pytest.fixture
+def run() -> Run:
+    return make_run()
 
 
 @pytest.fixture

@@ -11,5 +11,10 @@ def index():
     return jsonify({"hello": "world"})
 
 
+@glow_api.route("/api/v1/ping")
+def ping():
+    return jsonify({"status": "ok"})
+
+
 if __name__ == "__main__":
     glow_api.run(debug=True)
