@@ -65,3 +65,10 @@ $ make html
 ```shell
 $ bazel run //glow/api:server
 ```
+
+## Starting the UI
+
+```shell
+$ cd glow/ui
+$ npm start
+```
