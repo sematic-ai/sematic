@@ -54,7 +54,7 @@ def list_runs_endpoint() -> flask.Response:
 
     cursor: typing.Optional[str] = None
     decoded_cursor: typing.Optional[str] = None
-    if "cursor" in request_args:
+    if len(request_args.get("cursor", "")) > 0:
         cursor = request_args["cursor"]
         try:
             decoded_cursor = base64.urlsafe_b64decode(bytes(cursor, "utf-8")).decode(
