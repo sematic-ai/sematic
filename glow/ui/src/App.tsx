@@ -15,7 +15,7 @@ const pages = [['Runs', '/runs'], ['Artifacts', '/'], ['Docs', '/']];
 function App() {
   return (
   <>
-    <AppBar>
+    <AppBar position='static'>
     <Container maxWidth="xl">
       <Toolbar>
     <LightModeIcon />
@@ -45,7 +45,7 @@ function App() {
     </AppBar>
       <Container
         maxWidth="xl"
-        sx={{ marginTop: 9,  paddingTop: 4}}
+        sx={{ paddingTop: 4}}
       >
         <Container maxWidth="xl">
           <Outlet />
