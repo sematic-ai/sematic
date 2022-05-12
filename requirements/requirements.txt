@@ -19,6 +19,10 @@ decorator==5.1.1
 executing==0.8.3
     # via stack-data
 flask==2.1.2
+    # via
+    #   -r requirements/requirements.in
+    #   flask-cors
+flask-cors==3.0.10
     # via -r requirements/requirements.in
 importlib-metadata==4.11.3
     # via flask
@@ -61,7 +65,7 @@ pyparsing==3.0.8
 pytest==7.1.1
     # via -r requirements/requirements.in
 six==1.16.0
-    # via asttokens
+    # via flask-cors
 sqlalchemy==1.4.36
     # via -r requirements/requirements.in
 stack-data==0.2.0

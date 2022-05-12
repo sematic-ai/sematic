@@ -3,7 +3,8 @@ glow_py_lib(
     srcs = ["app.py"],
     visibility = ["//visibility:public"],
     deps = [
-        requirement("flask")
+        requirement("flask"),
+        requirement("flask-cors"),
     ]
 )
 
