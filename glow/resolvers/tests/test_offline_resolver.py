@@ -1,3 +1,6 @@
+# Third-party
+import pytest
+
 # Glow
 from glow.abstract_future import FutureState
 from glow.calculator import calculator
@@ -46,6 +49,37 @@ def test_local_resolver(test_db):  # noqa: F811
     assert future.state == FutureState.RESOLVED
 
     assert count_runs() == 6
+
+
+def test_failure(test_db):  # noqa: F811
+    class CustomException(Exception):
+        pass
+
+    @calculator
+    def failure(a: None):
+        raise CustomException("some message")
+
+    @calculator
+    def success():
+        return
+
+    @calculator
+    def pipeline():
+        return failure(success())
+
+    resolver = OfflineResolver()
+
+    with pytest.raises(CustomException, match="some message"):
+        pipeline().resolve(resolver)
+
+    expected_states = dict(
+        pipeline=FutureState.NESTED_FAILED,
+        success=FutureState.RESOLVED,
+        failure=FutureState.FAILED,
+    )
+
+    for future in resolver._futures:
+        assert future.state == expected_states[future.calculator.__name__]
 
 
 class DBStateMachineTestResolver(OfflineResolver):

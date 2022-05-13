@@ -1,9 +1,19 @@
 glow_py_lib(
+    name = "calculators",
+    srcs = ["calculators.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//glow:init",
+    ]
+)
+
+glow_py_lib(
     name = "main_lib",
     srcs = ["main.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//glow:init"
+        ":calculators",
+        "//glow:init",
     ]
 )
 
