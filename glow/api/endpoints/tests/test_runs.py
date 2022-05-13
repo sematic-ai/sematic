@@ -1,4 +1,6 @@
+import json
 import typing
+import uuid
 
 # Third-party
 import flask.testing
@@ -66,3 +68,22 @@ def test_group_by(test_client: flask.testing.FlaskClient):  # noqa: F811
 
     assert len(payload["content"]) == 2
     assert {run["name"] for run in payload["content"]} == set(runs)
+
+
+def test_filters(test_client: flask.testing.FlaskClient):  # noqa: F811
+    runs = make_run(), make_run()
+    runs[0].parent_id = uuid.uuid4().hex
+
+    for run in runs:
+        create_run(run)
+
+    for run in runs:
+        filters = json.dumps({"parent_id": {"eq": run.parent_id}})
+
+        results = test_client.get("/api/v1/runs?filters={}".format(filters))
+
+        payload = results.json
+        payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+        assert len(payload["content"]) == 1
+        assert payload["content"][0]["id"] == run.id
