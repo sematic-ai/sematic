@@ -51,6 +51,15 @@ def test_types_not_specified():
     assert func.output_type is type(None)  # noqa: E721
 
 
+def test_none_types():
+    @calculator
+    def func(a: None) -> None:
+        pass
+
+    assert func.output_type is type(None)  # noqa: E721
+    assert func.input_types == dict(a=type(None))
+
+
 def test_types_specified():
     @calculator
     def func(a: float) -> int:
