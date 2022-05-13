@@ -49,3 +49,20 @@ def test_list_runs(test_client: flask.testing.FlaskClient):  # noqa: F811
     assert payload["next_cursor"] is None
     assert payload["after_cursor_count"] == 2
     assert payload["content"] == [run.to_json_encodable() for run in created_runs[3:]]
+
+
+def test_group_by(test_client: flask.testing.FlaskClient):  # noqa: F811
+    runs = dict(RUN_A=[make_run(), make_run()], RUN_B=[make_run(), make_run()])
+
+    for name, runs_ in runs.items():
+        for run in runs_:
+            run.name = name
+            create_run(run)
+
+    results = test_client.get("/api/v1/runs?group_by=name")
+
+    payload = results.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == 2
+    assert {run["name"] for run in payload["content"]} == set(runs)
