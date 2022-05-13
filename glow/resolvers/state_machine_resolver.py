@@ -231,6 +231,17 @@ class StateMachineResolver(Resolver, abc.ABC):
             future.value = nested_future.value
             self._set_future_state(future, FutureState.RESOLVED)
 
+    def _handle_future_failure(self, future: AbstractFuture, exception: Exception):
+        """
+        When a future fails, its state machine as well as that of its parent
+        futures need to be updated.
+
+        Additionally (not yet implemented) the stack trace needs to be persisted
+        in order to display in the UI.
+        """
+        self._fail_future_and_parents(future)
+        raise exception
+
     def _fail_future_and_parents(
         self,
         future: AbstractFuture,
@@ -249,10 +260,11 @@ class StateMachineResolver(Resolver, abc.ABC):
             mark parent future `NESTED_FAILED` all the way to the top of the DAG.
         """
         self._set_future_state(future, FutureState.FAILED)
+
         parent_future = future.parent_future
         while parent_future is not None and parent_future is not up_to_future:
             self._set_future_state(parent_future, FutureState.NESTED_FAILED)
-            parent_future = future.parent_future
+            parent_future = parent_future.parent_future
 
     def _update_future_with_value(
         self, future: AbstractFuture, value: typing.Any

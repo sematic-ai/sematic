@@ -63,6 +63,9 @@ class Calculator(AbstractCalculator):
         input_types: typing.Dict[str, type] = {}
 
         for name, type_ in annotations.items():
+            if type_ is None:
+                type_ = type(None)
+
             if name == "return":
                 output_type = type_
             else:

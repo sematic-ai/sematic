@@ -34,3 +34,12 @@ pytest_test(
         "//glow/types:casting",
     ]
 )
+
+pytest_test(
+    name = "test_none",
+    srcs = ["test_none.py"],
+    deps = [
+        "//glow/types:init",
+        "//glow/types:casting",
+    ]
+)
