@@ -5,7 +5,6 @@ import TableBody from '@mui/material/TableBody';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
-import Typography from "@mui/material/Typography";
 import CircularProgress from '@mui/material/CircularProgress';
 import { useState, useEffect } from 'react';
 import TablePagination from '@mui/material/TablePagination';
@@ -62,7 +61,7 @@ function RunList(props: RunListProps) {
           setError(error);
         }
       )
-  }, [currentPage, pages])
+  }, [currentPage, pages, props.filters, props.groupBy])
 
   let tableBody;
   let currentPayload = pages[currentPage];

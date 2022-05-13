@@ -5,16 +5,16 @@ import Tooltip from '@mui/material/Tooltip';
 import { ReactElement } from 'react';
 
 
-function RunStateChip(props: { state: string }) {
-    const state = props.state;
-    let statusChip: ReactElement = <HelpOutlineOutlinedIcon color="disabled"></HelpOutlineOutlinedIcon>;
+function RunStateChip(props: { state?: string}) {
+    const state = props.state || "undefined";
+    let statusChip: ReactElement = <HelpOutlineOutlinedIcon color="disabled" />;
     
     if (state === "RESOLVED") {
-      statusChip = <CheckCircleIcon color="success"></CheckCircleIcon>;
+      statusChip = <CheckCircleIcon color="success" />;
     }
     
     if (state === "SCHEDULED") {
-      statusChip = <CircleOutlinedIcon color="primary"></CircleOutlinedIcon>;
+      statusChip = <CircleOutlinedIcon color="primary" />;
     }
     
     return <Tooltip title={state} placement="right">
@@ -22,5 +22,5 @@ function RunStateChip(props: { state: string }) {
     </Tooltip>;
   }
 
-  
+
 export default RunStateChip;
