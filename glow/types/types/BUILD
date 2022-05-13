@@ -36,3 +36,12 @@ glow_py_lib(
         "//glow/types:casting",
     ]
 )
+
+glow_py_lib(
+    name = "none",
+    srcs = ["none.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//glow/types:registry",
+    ],
+)

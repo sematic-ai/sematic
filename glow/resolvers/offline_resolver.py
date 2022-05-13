@@ -23,9 +23,12 @@ class OfflineResolver(StateMachineResolver):
         self, future: AbstractFuture, kwargs: typing.Dict[str, typing.Any]
     ) -> None:
         self._set_future_state(future, FutureState.SCHEDULED)
-        value = future.calculator.calculate(**kwargs)
-        cast_value = future.calculator.cast_output(value)
-        self._update_future_with_value(future, cast_value)
+        try:
+            value = future.calculator.calculate(**kwargs)
+            cast_value = future.calculator.cast_output(value)
+            self._update_future_with_value(future, cast_value)
+        except Exception as exception:
+            self._handle_future_failure(future, exception)
 
     def _wait_for_scheduled_run(self) -> None:
         pass
