@@ -23,6 +23,7 @@ glow_py_lib(
     visibility = ["//visibility:public"],
     deps = [
         "//glow/types:registry",
+        "//glow/types:serialization",
     ],
 )
 
