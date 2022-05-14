@@ -45,3 +45,13 @@ glow_py_lib(
     visibility = ["//visibility:public"],
     deps = [],
 )
+
+glow_py_lib(
+    name = "serialization",
+    srcs = ["serialization.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":registry",
+        requirement("cloudpickle"),
+    ],
+)

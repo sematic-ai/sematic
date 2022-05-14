@@ -23,6 +23,7 @@ pytest_test(
     deps = [
         "//glow/types:init",
         "//glow/types:casting",
+        "//glow/types:serialization",
     ]
 )
 

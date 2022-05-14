@@ -4,3 +4,4 @@ setuptools==58.1.0
 SQLAlchemy==1.4.36
 flask
 flask-cors
+cloudpickle
