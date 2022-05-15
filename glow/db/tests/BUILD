@@ -30,7 +30,11 @@ pytest_test(
     srcs = ["test_queries.py"],
     deps = [
         ":fixtures",
+        "//glow/db:db",
         "//glow/db:queries",
+        "//glow/db/models:factories",
+        "//glow/db/models:artifact",
         "//glow/db/models:run",
+        "//glow/db/models:run_artifact",
     ]
 )
