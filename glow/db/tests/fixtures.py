@@ -8,7 +8,7 @@ import pytest
 import glow.db.db as db
 from glow.db.models.run import Run
 from glow.abstract_future import FutureState
-from glow.db.queries import create_run
+from glow.db.queries import save_run
 
 
 @pytest.fixture(scope="function")
@@ -48,4 +48,4 @@ def run() -> Run:
 
 @pytest.fixture
 def persisted_run(run, test_db) -> Run:
-    return create_run(run)
+    return save_run(run)

@@ -8,7 +8,7 @@ import flask.testing
 # Glow
 from glow.api.tests.fixtures import test_client  # noqa: F401
 from glow.db.tests.fixtures import test_db, make_run  # noqa: F401
-from glow.db.queries import create_run
+from glow.db.queries import save_run
 
 
 def test_list_runs_empty(test_client: flask.testing.FlaskClient):  # noqa: F811
@@ -25,7 +25,7 @@ def test_list_runs_empty(test_client: flask.testing.FlaskClient):  # noqa: F811
 
 
 def test_list_runs(test_client: flask.testing.FlaskClient):  # noqa: F811
-    created_runs = [create_run(make_run()) for _ in range(5)]
+    created_runs = [save_run(make_run()) for _ in range(5)]
 
     # Sort by latest
     created_runs = sorted(created_runs, key=lambda run: run.created_at, reverse=True)
@@ -59,7 +59,7 @@ def test_group_by(test_client: flask.testing.FlaskClient):  # noqa: F811
     for name, runs_ in runs.items():
         for run in runs_:
             run.name = name
-            create_run(run)
+            save_run(run)
 
     results = test_client.get("/api/v1/runs?group_by=name")
 
@@ -75,7 +75,7 @@ def test_filters(test_client: flask.testing.FlaskClient):  # noqa: F811
     runs[0].parent_id = uuid.uuid4().hex
 
     for run in runs:
-        create_run(run)
+        save_run(run)
 
     for run in runs:
         filters = json.dumps({"parent_id": {"eq": run.parent_id}})
