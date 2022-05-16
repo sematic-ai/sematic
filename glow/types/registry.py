@@ -1,6 +1,9 @@
 # Standard library
 import typing
 
+# Glow
+from glow.types.generic_type import GenericType
+
 
 # TYPE CASTING
 
@@ -146,6 +149,7 @@ def _get_registered_func(
     Obtain a registered function (casting, serialization) from a registry.
     """
     registry_type = _get_registry_type(type_)
+
     return registry.get(registry_type)
 
 
@@ -158,9 +162,10 @@ def _get_registry_type(type_: typing.Any):
     where we extract the origin type (e.g. `list`).
     """
     registry_type = type_
-    if is_valid_typing_alias(registry_type):
+    if is_valid_typing_alias(registry_type) or _is_glow_parametrized_generic_type(
+        registry_type
+    ):
         registry_type = registry_type.__origin__
-
     return registry_type
 
 
@@ -177,3 +182,9 @@ def is_valid_typing_alias(type_: typing.Any) -> bool:
         raise ValueError("{} must be parametrized")
 
     return False
+
+
+def _is_glow_parametrized_generic_type(type_: typing.Any) -> bool:
+    return (
+        issubclass(type_, GenericType) and GenericType.PARAMETERS_KEY in type_.__dict__
+    )

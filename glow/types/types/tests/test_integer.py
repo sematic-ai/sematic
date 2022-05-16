@@ -12,7 +12,7 @@ from glow.types.serialization import to_binary, from_binary
         (1, 1, None),
         (1.23, 1, None),
         ("42", 42, None),
-        ("abc", None, "invalid literal for int() with base 10: 'abc'"),
+        ("abc", None, "Cannot cast 'abc' to <class 'int'>"),
     ),
 )
 def test_can_cast(value, expected_cast_value, expected_err_msg):

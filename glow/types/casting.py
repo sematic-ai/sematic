@@ -7,7 +7,6 @@ from glow.types.registry import (
     get_safe_cast_func,
     is_valid_typing_alias,
 )
-from glow.types.type import Type
 
 
 # types must be `typing.Any` because `typing` aliases are not type
@@ -44,9 +43,6 @@ def can_cast_type(
     if _can_cast_func is not None:
         return _can_cast_func(from_type, to_type)
 
-    if isinstance(to_type, type) and issubclass(to_type, Type):
-        return to_type.can_cast_type(from_type)
-
     return False, "{} cannot cast to {}".format(from_type, to_type)
 
 
@@ -72,21 +68,24 @@ def safe_cast(
         successful or `None`, and the second element is an error message
         if unsuccessful or `None`.
     """
+    # 1. First we check if there is a custom casting function
+    _safe_cast_func = get_safe_cast_func(type_)
+    if _safe_cast_func is not None:
+        return _safe_cast_func(value, type_)
+
+    # 2. If not, we check if value is simply an instance of type_
     if not is_valid_typing_alias(type_):
         # isinstance is not allowed with generics
         if isinstance(value, type_):
             return value, None
 
-    # builtin types and `typing` aliases
-    _safe_cast_func = get_safe_cast_func(type_)
-    if _safe_cast_func is not None:
-        return _safe_cast_func(value, type_)
+    # 3. Finally we attempt an actual cast
+    try:
+        return type_(value), None
+    except Exception:
+        pass
 
-    # Custom types
-    if issubclass(type_, Type):
-        return type_.safe_cast(value)
-
-    return None, "Can't cast {} to {}".format(value, type_)
+    return None, "Cannot cast {} to {}".format(repr(value), type_)
 
 
 def cast(value: typing.Any, type_: type) -> typing.Any:

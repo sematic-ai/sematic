@@ -3,16 +3,11 @@ import typing
 
 
 class TypeMeta(abc.ABCMeta):
+    """
+    Metaclass for Type. Needed as a base class of GenericMeta.
+    """
 
-    # Defined here to satisfy mypy
-    # Although it is not incorrect
-    def safe_cast(
-        cls, value: typing.Any
-    ) -> typing.Tuple[typing.Any, typing.Optional[str]]:
-        raise NotImplementedError()
-
-    def can_cast_type(cls, type_: type) -> typing.Tuple[bool, typing.Optional[str]]:
-        raise NotImplementedError
+    pass
 
 
 class Type(abc.ABC, metaclass=TypeMeta):
@@ -29,18 +24,6 @@ class Type(abc.ABC, metaclass=TypeMeta):
     @classmethod
     def has_instances(cls) -> bool:
         return True
-
-    @classmethod
-    @abc.abstractmethod
-    def safe_cast(
-        cls, value: typing.Any
-    ) -> typing.Tuple[typing.Optional[typing.Any], typing.Optional[str]]:
-        pass
-
-    @classmethod
-    @abc.abstractmethod
-    def can_cast_type(cls, type_: type) -> typing.Tuple[bool, typing.Optional[str]]:
-        pass
 
 
 def is_type(type_: type) -> bool:

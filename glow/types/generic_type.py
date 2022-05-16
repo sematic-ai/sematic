@@ -14,6 +14,8 @@ class GenericMeta(TypeMeta):
     API on generic types (square bracket notation to parametrize generics).
     """
 
+    PARAMETERS_KEY = "_parameters"
+
     def __getitem__(cls, args) -> "GenericMeta":
         parameters = cls.parametrize(args)
         return cls.make_type(parameters)
@@ -47,7 +49,12 @@ class GenericMeta(TypeMeta):
                 )
             ),
             (cls,),
-            dict(__module__=cls.__module__, _parameters=parameters),
+            {
+                "__module": cls.__module__,
+                cls.PARAMETERS_KEY: parameters,
+                # this mirrors the behavior of `typing` generics
+                "__origin__": cls,
+            },
         )
 
         return type_

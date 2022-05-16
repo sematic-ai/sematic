@@ -4,6 +4,7 @@ glow_py_lib(
     visibility = ["//visibility:public"],
     deps = [
         "//glow/types:registry",
+        "//glow/types:serialization",
     ],
 )
 
@@ -14,6 +15,9 @@ glow_py_lib(
     deps = [
         "//glow/types:generic_type",
         "//glow/types:casting",
+        "//glow/types:registry",
+        "//glow/types:serialization",
+        "//glow/types:type",
     ],
 )
 
@@ -35,6 +39,7 @@ glow_py_lib(
     deps = [
         "//glow/types:registry",
         "//glow/types:casting",
+        "//glow/types:serialization",
     ]
 )
 

@@ -20,7 +20,7 @@ from glow.types.casting import safe_cast, can_cast_type
             None,
             (
                 "Cannot cast ['abc'] to typing.List[float]: "
-                "could not convert string to float: 'abc'"
+                "Cannot cast 'abc' to <class 'float'>"
             ),
         ),
     ),
