@@ -24,7 +24,7 @@ def test_safe_cast_different_classes():
     cast_value, error = safe_cast(B(), A)
 
     assert cast_value is None
-    assert re.match("Can't cast .*B object.* to .*A", error)
+    assert re.match("Cannot cast .*B object.* to .*A", error)
 
 
 def test_safe_cast_same_class():

@@ -31,9 +31,7 @@ def make_run_from_future(future: AbstractFuture) -> Run:
 
 
 def make_artifact(value: typing.Any, type_: typing.Any) -> Artifact:
-    binary_serialization = to_binary(value, type_)
-
-    sha1_digest = hashlib.sha1(binary_serialization).hexdigest()
+    sha1_digest = _get_value_sha1_digest(value, type_)
 
     artifact = Artifact(
         id=sha1_digest,
@@ -42,3 +40,21 @@ def make_artifact(value: typing.Any, type_: typing.Any) -> Artifact:
     )
 
     return artifact
+
+
+def _get_value_sha1_digest(value: typing.Any, type_: typing.Any) -> str:
+    binary_serialization = to_binary(value, type_)
+
+    # ToDo: implement type serialization
+    type_serialization = bytes()
+
+    # Do not change the order of this list. It will invalidate all prior
+    # artifacts
+    # Should this list include some form of type versioning?
+    ordered_components = [binary_serialization, type_serialization]
+
+    sha1_digest = hashlib.sha1()
+    for component in ordered_components:
+        sha1_digest.update(component)
+
+    return sha1_digest.hexdigest()

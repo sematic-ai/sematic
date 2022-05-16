@@ -19,7 +19,6 @@ glow_py_lib(
     visibility = ["//visibility:public"],
     deps = [
         ":registry",
-        ":type",
     ],
 )
 
@@ -36,7 +35,9 @@ glow_py_lib(
     name = "registry",
     srcs = ["registry.py"],
     visibility = ["//visibility:public"],
-    deps = [],
+    deps = [
+        ":generic_type",
+    ],
 )
 
 glow_py_lib(

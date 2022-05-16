@@ -6,7 +6,12 @@ import typing
 import cloudpickle  # type: ignore
 
 # Glow
-from glow.types.registry import get_to_binary_func, get_from_binary_func
+from glow.types.registry import (
+    get_to_binary_func,
+    get_from_binary_func,
+    register_to_binary,
+    register_from_binary,
+)
 
 
 # type_ must be `typing.Any` because `typing` aliases are not type
@@ -32,8 +37,27 @@ def from_binary(binary: bytes, type_: typing.Any) -> typing.Any:
 
 
 def to_binary_json(value: typing.Any) -> bytes:
-    return json.dumps(value).encode("utf-8")
+    return json.dumps(value, sort_keys=True).encode("utf-8")
 
 
 def from_binary_json(binary: bytes) -> typing.Any:
     return json.loads(binary.decode("utf-8"))
+
+
+RegisteredType = typing.TypeVar("RegisteredType", bound=type)
+
+
+def serializes_to_json(type_: RegisteredType) -> None:
+    """
+    registers a type to serialize to JSON
+    """
+
+    @register_to_binary(type_)
+    def _to_binary(value: RegisteredType, _) -> bytes:
+        return to_binary_json(value)
+
+    @register_from_binary(type_)
+    def _from_binary(binary: bytes, _) -> RegisteredType:
+        value = from_binary_json(binary)
+        value = typing.cast(RegisteredType, value)
+        return value

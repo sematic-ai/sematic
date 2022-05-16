@@ -13,6 +13,7 @@ pytest_test(
     deps = [
         "//glow/types:generic_type",
         "//glow/types:init",
+        "//glow/types:casting",
         "//glow/types/types:float_in_range",
     ]
 )
