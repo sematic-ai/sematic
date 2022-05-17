@@ -12,11 +12,13 @@ from urllib.parse import urlunsplit, urlencode, urlsplit
 import sqlalchemy
 import flask
 from sqlalchemy.sql.elements import BinaryExpression
+from sqlalchemy.orm.exc import NoResultFound
 
 # Glow
 from glow.api.app import glow_api
 from glow.db.db import db
 from glow.db.models.run import Run
+from glow.db.queries import get_run
 
 
 # Default page size for run list
@@ -224,3 +226,25 @@ def list_runs_endpoint() -> flask.Response:
 
 def _make_cursor(key: str) -> str:
     return base64.urlsafe_b64encode(bytes(key, "utf-8")).decode("utf-8")
+
+
+def _jsonify_404(error: str):
+    return flask.Response(
+        json.dumps(dict(error=error)),
+        status=404,
+        mimetype="application/json",
+    )
+
+
+@glow_api.route("/api/v1/runs/<run_id>", methods=["GET"])
+def get_run_endpoint(run_id: str) -> flask.Response:
+    try:
+        run = get_run(run_id)
+    except NoResultFound:
+        return _jsonify_404("No runs with id {}".format(repr(run_id)))
+
+    payload = dict(
+        content=run.to_json_encodable(),
+    )
+
+    return flask.jsonify(payload)
