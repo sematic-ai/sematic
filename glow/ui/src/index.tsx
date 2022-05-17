@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import RunIndex from "./runs/RunIndex";
+import RunView from "./runs/RunView";
 import Dashboard from "./Dashboard";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
@@ -19,7 +20,7 @@ root.render(
       <Routes>
         <Route path="/" element={<App />}>
           <Route index element={<Dashboard />} />
-          <Route path="runs/:id" element={<RunView />} />
+          <Route path="runs/:id" element={<RunView id="abc" />} />
           <Route path="runs" element={<RunIndex />} />
         </Route>
       </Routes>
