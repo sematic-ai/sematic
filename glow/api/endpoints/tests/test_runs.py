@@ -7,8 +7,9 @@ import flask.testing
 
 # Glow
 from glow.api.tests.fixtures import test_client  # noqa: F401
-from glow.db.tests.fixtures import test_db, make_run  # noqa: F401
+from glow.db.tests.fixtures import test_db, make_run, persisted_run, run  # noqa: F401
 from glow.db.queries import save_run
+from glow.db.models.run import Run
 
 
 def test_list_runs_empty(test_client: flask.testing.FlaskClient):  # noqa: F811
@@ -87,3 +88,25 @@ def test_filters(test_client: flask.testing.FlaskClient):  # noqa: F811
 
         assert len(payload["content"]) == 1
         assert payload["content"][0]["id"] == run.id
+
+
+def test_get_run_endpoint(
+    persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    response = test_client.get("/api/v1/runs/{}".format(persisted_run.id))
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert payload["content"]["id"] == persisted_run.id
+
+
+def test_get_run_404(test_client: flask.testing.FlaskClient):  # noqa: F811
+    response = test_client.get("/api/v1/runs/unknownid")
+
+    assert response.status_code == 404
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert payload == dict(error="No runs with id 'unknownid'")

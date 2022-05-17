@@ -19,6 +19,7 @@ root.render(
       <Routes>
         <Route path="/" element={<App />}>
           <Route index element={<Dashboard />} />
+          <Route path="runs/:id" element={<RunView />} />
           <Route path="runs" element={<RunIndex />} />
         </Route>
       </Routes>
