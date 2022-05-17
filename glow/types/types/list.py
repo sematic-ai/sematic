@@ -93,4 +93,6 @@ def list_to_binary(value: list, type_: typing.Any) -> bytes:
         for item in value
     ]
 
+    # Todo: Support polymorphism
+
     return to_binary_json(list_of_bins)
