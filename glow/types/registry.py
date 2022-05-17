@@ -148,12 +148,12 @@ def _get_registered_func(
     """
     Obtain a registered function (casting, serialization) from a registry.
     """
-    registry_type = _get_registry_type(type_)
+    registry_type = get_origin_type(type_)
 
     return registry.get(registry_type)
 
 
-def _get_registry_type(type_: typing.Any):
+def get_origin_type(type_: typing.Any) -> typing.Any:
     """
     Extract the type by which the casting and serialization logic
     is indexed.
@@ -162,7 +162,7 @@ def _get_registry_type(type_: typing.Any):
     where we extract the origin type (e.g. `list`).
     """
     registry_type = type_
-    if is_valid_typing_alias(registry_type) or _is_glow_parametrized_generic_type(
+    if is_valid_typing_alias(registry_type) or is_glow_parametrized_generic_type(
         registry_type
     ):
         registry_type = registry_type.__origin__
@@ -174,7 +174,12 @@ def is_valid_typing_alias(type_: typing.Any) -> bool:
     Is this a `typing` type, and if so, is it correctly subscribed?
     """
     if isinstance(
-        type_, (typing._GenericAlias, typing._UnionGenericAlias)  # type: ignore
+        type_,
+        (
+            typing._GenericAlias,  # type: ignore
+            typing._UnionGenericAlias,  # type: ignore
+            typing._CallableGenericAlias,  # type: ignore
+        ),
     ):
         return True
 
@@ -184,7 +189,9 @@ def is_valid_typing_alias(type_: typing.Any) -> bool:
     return False
 
 
-def _is_glow_parametrized_generic_type(type_: typing.Any) -> bool:
+def is_glow_parametrized_generic_type(type_: typing.Any) -> bool:
     return (
-        issubclass(type_, GenericType) and GenericType.PARAMETERS_KEY in type_.__dict__
+        isinstance(type_, type)
+        and issubclass(type_, GenericType)
+        and GenericType.PARAMETERS_KEY in type_.__dict__
     )
