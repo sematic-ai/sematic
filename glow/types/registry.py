@@ -18,7 +18,7 @@ _CAN_CAST_REGISTRY: typing.Dict[type, CanCastTypeCallable] = {}
 
 
 def register_can_cast(
-    type_: type,
+    *types: type,
 ) -> typing.Callable[[CanCastTypeCallable], CanCastTypeCallable]:
     """
     Register a `can_cast_type` function for type `type_`.
@@ -26,7 +26,8 @@ def register_can_cast(
 
     def _register_can_cast(func: CanCastTypeCallable) -> CanCastTypeCallable:
         # ToDo(@neutralino1): validate func signature
-        _CAN_CAST_REGISTRY[type_] = func
+        for type_ in types:
+            _CAN_CAST_REGISTRY[type_] = func
 
         return func
 
@@ -53,7 +54,7 @@ _SAFE_CAST_REGISTRY: typing.Dict[type, SafeCastCallable] = {}
 
 
 def register_safe_cast(
-    type_: type,
+    *types: type,
 ) -> typing.Callable[[SafeCastCallable], SafeCastCallable]:
     """
     Register a `safe_cast` function for type `type_`.
@@ -61,7 +62,8 @@ def register_safe_cast(
 
     def _register_can_cast(func: SafeCastCallable) -> SafeCastCallable:
         # Todo(@neutralino1): validate func signature
-        _SAFE_CAST_REGISTRY[type_] = func
+        for type_ in types:
+            _SAFE_CAST_REGISTRY[type_] = func
 
         return func
 
