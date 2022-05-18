@@ -80,20 +80,22 @@ class GenericType(Type, metaclass=GenericMeta):
     @abc.abstractmethod
     def parametrize(cls, args: typing.Tuple) -> typing.OrderedDict[str, typing.Any]:
         """
-        This is the method that defines the parameter dictionary for generic types.
+        This is the method that defines the parameter dictionary for generic
+        types.
 
-        The method must return a `collections.OrderedDict` so that the order can be
-        preserved when printing the type name.
+        The method must return a `collections.OrderedDict` so that type
+        serialization is deterministic.
 
-        This method should contain all the validation logic for input parameters, as well
-        as setting defaults for optional parameters.
+        This method should contain all the validation logic for input
+        parameters, as well as setting defaults for optional parameters.
 
         The returned dictionary should be JSON-encodable.
 
         Parameters
         ----------
         args: typing.Tuple
-            A tuple of arguments as they were passed by the user to the [] operator.
+            A tuple of arguments as they were passed by the user to the []
+            operator.
         """
         pass
 

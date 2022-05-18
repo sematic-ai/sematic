@@ -10,7 +10,7 @@ import json
 from glow.abstract_future import AbstractFuture
 from glow.db.models.artifact import Artifact
 from glow.db.models.run import Run
-from glow.types.serialization import to_binary
+from glow.types.serialization import to_binary, type_to_json_encodable
 
 
 def make_run_from_future(future: AbstractFuture) -> Run:
@@ -46,7 +46,7 @@ def _get_value_sha1_digest(value: typing.Any, type_: typing.Any) -> str:
     binary_serialization = to_binary(value, type_)
 
     # ToDo: implement type serialization
-    type_serialization = bytes()
+    type_serialization = json.dumps(type_to_json_encodable(type_)).encode("utf-8")
 
     # Do not change the order of this list. It will invalidate all prior
     # artifacts
