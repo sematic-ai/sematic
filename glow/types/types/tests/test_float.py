@@ -11,7 +11,7 @@ from glow.types.casting import safe_cast, can_cast_type
         (1.23, 1.23, None),
         (int(1), 1.0, None),
         ("3.14", 3.14, None),
-        ("abc", None, "could not convert string to float: 'abc'"),
+        ("abc", None, "Cannot cast 'abc' to <class 'float'>"),
     ),
 )
 def test_safe_cast(value, expected_cast_value, expected_err_msg):

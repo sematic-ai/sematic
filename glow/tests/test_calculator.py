@@ -102,7 +102,7 @@ def test_call_fail_cast():
     def func(a: float) -> float:
         return a
 
-    with pytest.raises(TypeError, match="could not convert string to float"):
+    with pytest.raises(TypeError, match="Cannot cast 'abc' to <class 'float'>"):
         func("abc")
 
 

@@ -14,6 +14,8 @@ class GenericMeta(TypeMeta):
     API on generic types (square bracket notation to parametrize generics).
     """
 
+    PARAMETERS_KEY = "_parameters"
+
     def __getitem__(cls, args) -> "GenericMeta":
         parameters = cls.parametrize(args)
         return cls.make_type(parameters)
@@ -47,7 +49,12 @@ class GenericMeta(TypeMeta):
                 )
             ),
             (cls,),
-            dict(__module__=cls.__module__, _parameters=parameters),
+            {
+                "__module": cls.__module__,
+                cls.PARAMETERS_KEY: parameters,
+                # this mirrors the behavior of `typing` generics
+                "__origin__": cls,
+            },
         )
 
         return type_
@@ -73,20 +80,22 @@ class GenericType(Type, metaclass=GenericMeta):
     @abc.abstractmethod
     def parametrize(cls, args: typing.Tuple) -> typing.OrderedDict[str, typing.Any]:
         """
-        This is the method that defines the parameter dictionary for generic types.
+        This is the method that defines the parameter dictionary for generic
+        types.
 
-        The method must return a `collections.OrderedDict` so that the order can be
-        preserved when printing the type name.
+        The method must return a `collections.OrderedDict` so that type
+        serialization is deterministic.
 
-        This method should contain all the validation logic for input parameters, as well
-        as setting defaults for optional parameters.
+        This method should contain all the validation logic for input
+        parameters, as well as setting defaults for optional parameters.
 
         The returned dictionary should be JSON-encodable.
 
         Parameters
         ----------
         args: typing.Tuple
-            A tuple of arguments as they were passed by the user to the [] operator.
+            A tuple of arguments as they were passed by the user to the []
+            operator.
         """
         pass
 

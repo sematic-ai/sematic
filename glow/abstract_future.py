@@ -48,15 +48,20 @@ class AbstractFuture(abc.ABC):
     calculator: AbstractCalculator
         The calculator this is a future of
     kwargs: typing.Dict[str, typing.Any]
-        The input arguments to the calculator
+        The input arguments to the calculator. Can be concrete values or other futures.
     """
 
     def __init__(
         self, calculator: AbstractCalculator, kwargs: typing.Dict[str, typing.Any]
     ):
+        self.id: str = uuid.uuid4().hex
         self.calculator = calculator
         self.kwargs = kwargs
-        self.id: str = uuid.uuid4().hex
+        # We don't want to replace futures in kwargs, because it holds
+        # the source of truth for the future graph. Instead we have concrete
+        # values in resolved_kwargs
+        # It will be set only once all input values are resolved
+        self.resolved_kwargs: typing.Dict[str, typing.Any] = {}
         self.value: typing.Any = None
         self.state: FutureState = FutureState.CREATED
         self.parent_future: typing.Optional["AbstractFuture"] = None

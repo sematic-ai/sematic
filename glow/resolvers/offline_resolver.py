@@ -1,12 +1,16 @@
 # Standard library
 import datetime
-import typing
 
 # Glow
 from glow.abstract_future import AbstractFuture, FutureState
-from glow.db.queries import create_run, get_run, save_run
-from glow.db.models.run import Run
+from glow.db.queries import (
+    get_run,
+    save_run,
+    create_run_with_artifacts,
+    set_run_output_artifact,
+)
 from glow.resolvers.state_machine_resolver import StateMachineResolver
+from glow.db.models.factories import make_artifact, make_run_from_future
 
 
 class OfflineResolver(StateMachineResolver):
@@ -14,17 +18,13 @@ class OfflineResolver(StateMachineResolver):
     A resolver to resolver a DAG locally.
     """
 
-    def _schedule_run(
-        self, future: AbstractFuture, kwargs: typing.Dict[str, typing.Any]
-    ) -> None:
-        self._run_inline(future, kwargs)
+    def _schedule_future(self, future: AbstractFuture) -> None:
+        self._run_inline(future)
 
-    def _run_inline(
-        self, future: AbstractFuture, kwargs: typing.Dict[str, typing.Any]
-    ) -> None:
+    def _run_inline(self, future: AbstractFuture) -> None:
         self._set_future_state(future, FutureState.SCHEDULED)
         try:
-            value = future.calculator.calculate(**kwargs)
+            value = future.calculator.calculate(**future.resolved_kwargs)
             cast_value = future.calculator.cast_output(value)
             self._update_future_with_value(future, cast_value)
         except Exception as exception:
@@ -33,23 +33,19 @@ class OfflineResolver(StateMachineResolver):
     def _wait_for_scheduled_run(self) -> None:
         pass
 
-    def _future_did_schedule(self, future: AbstractFuture) -> None:
-        super()._future_did_schedule(future)
-        run = Run(
-            id=future.id,
-            future_state=FutureState.SCHEDULED.value,
-            # todo(@neutralino1): replace with future name
-            name=future.calculator.__name__,
-            calculator_path="{}.{}".format(
-                future.calculator.__module__, future.calculator.__name__
-            ),
-            parent_id=(
-                future.parent_future.id if future.parent_future is not None else None
-            ),
-            started_at=datetime.datetime.utcnow(),
-        )
+    def _future_will_schedule(self, future: AbstractFuture) -> None:
+        super()._future_will_schedule(future)
 
-        create_run(run)
+        run = make_run_from_future(future)
+        run.future_state = FutureState.SCHEDULED.value
+        run.started_at = datetime.datetime.utcnow()
+
+        artifacts = {
+            name: make_artifact(value, future.calculator.input_types[name])
+            for name, value in future.resolved_kwargs.items()
+        }
+
+        create_run_with_artifacts(run, artifacts)
 
     def _future_did_run(self, future: AbstractFuture) -> None:
         super()._future_did_run(future)
@@ -69,12 +65,9 @@ class OfflineResolver(StateMachineResolver):
 
         run = get_run(future.id)
 
-        run.future_state = FutureState.RESOLVED.value
-        run.resolved_at = datetime.datetime.utcnow()
-        if run.ended_at is None:
-            run.ended_at = run.resolved_at
+        output_artifact = make_artifact(future.value, future.calculator.output_type)
 
-        save_run(run)
+        set_run_output_artifact(run, output_artifact)
 
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
         super()._future_did_fail(failed_future)

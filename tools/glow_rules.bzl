@@ -23,7 +23,10 @@ def pytest_test(name, srcs, deps = [], args = [], **kwargs):
     )
 
 
-def glow_py_lib(name, srcs, visibility, deps, data = None):
+def glow_py_lib(name, srcs, deps, visibility = None, data = None):
+    if visibility == None:
+        visibility = ["//visibility:public"]
+
     py_library(
         name = name,
         srcs = srcs,

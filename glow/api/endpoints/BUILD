@@ -5,6 +5,7 @@ glow_py_lib(
     deps = [
         "//glow/api:app",
         "//glow/db:db",
+        "//glow/db:queries",
         "//glow/db/models:run",
         requirement("flask"),
         requirement("sqlalchemy"),

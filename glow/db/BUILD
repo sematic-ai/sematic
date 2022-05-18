@@ -14,7 +14,10 @@ glow_py_lib(
     visibility = ["//visibility:public"],
     deps = [
         ":db",
+        "//glow:abstract_future",
+        "//glow/db/models:artifact",
         "//glow/db/models:run",
+        "//glow/db/models:run_artifact",
     ]
 )
 

@@ -6,7 +6,7 @@ glow_py_lib(
         ":state_machine_resolver",
         "//glow:abstract_future",
         "//glow/db:queries",
-        "//glow/db/models:run",
+        "//glow/db/models:factories",
     ]
 )
 

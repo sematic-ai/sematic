@@ -13,6 +13,8 @@ pytest_test(
     deps = [
         "//glow/types:generic_type",
         "//glow/types:init",
+        "//glow/types:casting",
+        "//glow/types:serialization",
         "//glow/types/types:float_in_range",
     ]
 )
@@ -23,6 +25,7 @@ pytest_test(
     deps = [
         "//glow/types:init",
         "//glow/types:casting",
+        "//glow/types:serialization",
     ]
 )
 
@@ -32,6 +35,7 @@ pytest_test(
     deps = [
         "//glow/types:init",
         "//glow/types:casting",
+        "//glow/types:serialization",
     ]
 )
 

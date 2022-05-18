@@ -6,8 +6,12 @@ import typing
 import pytest
 
 # Glow
-from glow.types.casting import can_cast_type, safe_cast, cast, _is_valid_typing
-from glow.types.registry import register_can_cast, register_safe_cast
+from glow.types.casting import can_cast_type, safe_cast, cast
+from glow.types.registry import (
+    register_can_cast,
+    register_safe_cast,
+    is_valid_typing_alias,
+)
 
 
 def test_safe_cast_different_classes():
@@ -20,7 +24,7 @@ def test_safe_cast_different_classes():
     cast_value, error = safe_cast(B(), A)
 
     assert cast_value is None
-    assert re.match("Can't cast .*B object.* to .*A", error)
+    assert re.match("Cannot cast .*B object.* to .*A", error)
 
 
 def test_safe_cast_same_class():
@@ -114,12 +118,12 @@ def test_can_cast_type_registered():
 
 
 def test_is_valid_typing():
-    assert _is_valid_typing(int) is False
-    assert _is_valid_typing(typing.List[int]) is True
-    assert _is_valid_typing(typing.Optional[int]) is True
+    assert is_valid_typing_alias(int) is False
+    assert is_valid_typing_alias(typing.List[int]) is True
+    assert is_valid_typing_alias(typing.Optional[int]) is True
 
     with pytest.raises(ValueError, match="must be parametrized"):
-        _is_valid_typing(typing.List)
+        is_valid_typing_alias(typing.List)
 
     with pytest.raises(ValueError, match="must be parametrized"):
-        _is_valid_typing(typing.Optional)
+        is_valid_typing_alias(typing.Optional)

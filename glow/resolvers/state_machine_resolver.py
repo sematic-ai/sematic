@@ -48,13 +48,11 @@ class StateMachineResolver(Resolver, abc.ABC):
                 self._enqueue_future(value)
 
     @abc.abstractmethod
-    def _schedule_run(
-        self, future: AbstractFuture, kwargs: typing.Dict[str, typing.Any]
-    ):
+    def _schedule_future(self, future: AbstractFuture):
         pass
 
     @abc.abstractmethod
-    def _run_inline(self, future: AbstractFuture, kwargs: typing.Dict[str, typing.Any]):
+    def _run_inline(self, future: AbstractFuture):
         pass
 
     @abc.abstractmethod
@@ -212,13 +210,14 @@ class StateMachineResolver(Resolver, abc.ABC):
 
         all_args_resolved = len(kwargs) == len(future.kwargs)
         if all_args_resolved:
+            future.resolved_kwargs = kwargs
             self._future_will_schedule(future)
             if future.inline:
                 logger.info("Running inline {}".format(future.calculator))
-                self._run_inline(future, kwargs)
+                self._run_inline(future)
             else:
                 logger.info("Scheduling {}".format(future.calculator))
-                self._schedule_run(future, kwargs)
+                self._schedule_future(future)
 
     @typing.final
     def _resolve_nested_future(self, future: AbstractFuture) -> None:

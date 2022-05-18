@@ -8,3 +8,7 @@ export type RunListPayload = {
   after_cursor_count: number;
   content: Array<Run>;
 };
+
+export type RunViewPayload = {
+  content: Run;
+};
