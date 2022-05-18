@@ -121,15 +121,15 @@ def test_type_to_json_encodable_subclass():
                                                                         "args": [
                                                                             {
                                                                                 "type": (
-                                                                                    "builtins",
+                                                                                    "builtins",  # noqa: E501
                                                                                     "int",
                                                                                     None,
                                                                                 ),
                                                                             },
                                                                             {
                                                                                 "type": (
-                                                                                    "builtins",
-                                                                                    "float",
+                                                                                    "builtins",  # noqa: E501
+                                                                                    "float",  # noqa: E501
                                                                                     None,
                                                                                 ),
                                                                             },
