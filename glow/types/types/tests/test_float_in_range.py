@@ -1,6 +1,13 @@
+# Standard library
+import collections
+
+# Third party
 import pytest
 
+# Glow
+from glow.types.casting import can_cast_type, safe_cast
 from glow.types.generic_type import GenericMeta
+from glow.types.serialization import to_binary, type_to_json_encodable
 from glow.types.types.float_in_range import FloatInRange
 
 
@@ -61,7 +68,7 @@ def test_parametrize(type_lambda, expected_err):
     ),
 )
 def test_safe_cast(type_: GenericMeta, value, expected_cast_value, expected_error_msg):
-    cast_value, error_msg = type_.safe_cast(value)
+    cast_value, error_msg = safe_cast(value, type_)
     assert cast_value == expected_cast_value
 
     if error_msg is None:
@@ -140,6 +147,94 @@ def test_multiply():
     ),
 )
 def test_can_cast_type(type1, type2, expected_can_cast, expected_err):
-    can_cast, err = type1.can_cast_type(type2)
+    can_cast, err = can_cast_type(type2, type1)
     assert can_cast == expected_can_cast
     assert err == expected_err
+
+
+def test_to_binary():
+    t = FloatInRange[0, 1]
+    binary = to_binary(0.5, t)
+    assert binary.decode("utf-8") == "0.5"
+
+
+def test_type_serialization():
+    t = FloatInRange[0, 1]
+
+    json_encodable = type_to_json_encodable(t)
+
+    assert json_encodable == collections.OrderedDict(
+        [
+            (
+                "type",
+                (
+                    None,
+                    "FloatInRange",
+                    {
+                        "parameters": collections.OrderedDict(
+                            [
+                                ("lower_bound", {"value": 0.0}),
+                                ("upper_bound", {"value": 1.0}),
+                                ("lower_inclusive", {"value": True}),
+                                ("upper_inclusive", {"value": True}),
+                            ]
+                        )
+                    },
+                ),
+            ),
+            (
+                "registry",
+                collections.OrderedDict(
+                    [("FloatInRange", [("builtins", "float", None)]), ("float", [])]
+                ),
+            ),
+        ]
+    )
+
+
+def test_type_serialization_subclass():
+    class Probability(FloatInRange[0, 1]):
+        pass
+
+    json_encodable = type_to_json_encodable(Probability)
+
+    assert json_encodable == collections.OrderedDict(
+        [
+            (
+                "type",
+                (
+                    None,
+                    "Probability",
+                    None,
+                ),
+            ),
+            (
+                "registry",
+                collections.OrderedDict(
+                    [
+                        (
+                            "Probability",
+                            [
+                                (
+                                    None,
+                                    "FloatInRange",
+                                    {
+                                        "parameters": collections.OrderedDict(
+                                            [
+                                                ("lower_bound", {"value": 0.0}),
+                                                ("upper_bound", {"value": 1.0}),
+                                                ("lower_inclusive", {"value": True}),
+                                                ("upper_inclusive", {"value": True}),
+                                            ]
+                                        )
+                                    },
+                                )
+                            ],
+                        ),
+                        ("FloatInRange", [("builtins", "float", None)]),
+                        ("float", []),
+                    ]
+                ),
+            ),
+        ]
+    )

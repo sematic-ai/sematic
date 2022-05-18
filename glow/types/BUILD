@@ -19,7 +19,6 @@ glow_py_lib(
     visibility = ["//visibility:public"],
     deps = [
         ":registry",
-        ":type",
     ],
 )
 
@@ -36,7 +35,9 @@ glow_py_lib(
     name = "registry",
     srcs = ["registry.py"],
     visibility = ["//visibility:public"],
-    deps = [],
+    deps = [
+        ":generic_type",
+    ],
 )
 
 glow_py_lib(
@@ -44,4 +45,14 @@ glow_py_lib(
     srcs = ["type.py"],
     visibility = ["//visibility:public"],
     deps = [],
+)
+
+glow_py_lib(
+    name = "serialization",
+    srcs = ["serialization.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":registry",
+        requirement("cloudpickle"),
+    ],
 )

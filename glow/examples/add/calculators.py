@@ -1,5 +1,5 @@
 # Standrd library
-import time
+# import time
 
 # Glow
 from glow import calculator
@@ -7,7 +7,7 @@ from glow import calculator
 
 @calculator
 def add(a: float, b: float) -> float:
-    time.sleep(5)
+    # time.sleep(5)
     return a + b
 
 

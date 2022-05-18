@@ -5,7 +5,12 @@ import pytest
 from glow.abstract_future import FutureState
 from glow.calculator import calculator
 from glow.db.tests.fixtures import test_db  # noqa: F401
-from glow.db.queries import count_runs, get_run
+from glow.db.queries import (
+    count_runs,
+    get_run,
+    get_run_input_artifacts,
+    get_run_output_artifact,
+)
 from glow.resolvers.offline_resolver import OfflineResolver
 
 
@@ -37,6 +42,14 @@ def test_single_calculator(test_db):  # noqa: F811
     assert future.resolve(OfflineResolver()) == 3
     assert future.state == FutureState.RESOLVED
     assert count_runs() == 1
+
+    input_artifacts = get_run_input_artifacts(future.id)
+    assert set(input_artifacts) == {"a", "b"}
+    assert input_artifacts["a"].json_summary == "1.0"
+    assert input_artifacts["b"].json_summary == "2.0"
+
+    output_artifact = get_run_output_artifact(future.id)
+    assert output_artifact.json_summary == "3.0"
 
 
 def test_local_resolver(test_db):  # noqa: F811
@@ -83,8 +96,8 @@ def test_failure(test_db):  # noqa: F811
 
 
 class DBStateMachineTestResolver(OfflineResolver):
-    def _future_did_schedule(self, future) -> None:
-        super()._future_did_schedule(future)
+    def _future_will_schedule(self, future) -> None:
+        super()._future_will_schedule(future)
 
         run = get_run(future.id)
 

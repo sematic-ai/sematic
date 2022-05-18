@@ -1,14 +1,14 @@
 # Glow
 from glow.db.models.run import Run
 from glow.db.db import db
-from glow.db.queries import count_runs, create_run
+from glow.db.queries import count_runs, save_run
 from glow.db.tests.fixtures import run, test_db  # noqa: F401
 
 
 def test_db_fixture(test_db, run: Run):  # noqa: F811
     assert count_runs() == 0
 
-    create_run(run)
+    save_run(run)
 
     assert count_runs() == 1
 

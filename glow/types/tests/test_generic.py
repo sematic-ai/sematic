@@ -7,6 +7,7 @@ import pytest
 # Glow
 from glow.types.generic_type import GenericType
 from glow.types.casting import can_cast_type, safe_cast
+from glow.types.registry import register_can_cast, register_safe_cast
 
 
 class SomeGenericType(GenericType):
@@ -19,23 +20,25 @@ class SomeGenericType(GenericType):
             )
         )
 
-    @classmethod
-    def safe_cast(cls, value):  # noqa: F811
-        values = cls.get_parameters().values()
-        if value in cls.get_parameters().values():
-            return value, None
 
-        return None, "value not in {}".format(tuple(values))
+@register_safe_cast(SomeGenericType)
+def _safe_cast(value, type_):  # noqa: F811
+    values = type_.get_parameters().values()
+    if value in type_.get_parameters().values():
+        return value, None
 
-    @classmethod
-    def can_cast_type(cls, type_):  # noqa: F811
-        if issubclass(type_, SomeGenericType):
-            values = type_.get_parameters().values()
-            allowed_values = cls.get_parameters().values()
-            if set(values) == set(allowed_values):
-                return True, None
+    return None, "value not in {}".format(tuple(values))
 
-        return False, "Incompatible values"
+
+@register_can_cast(SomeGenericType)
+def _can_cast_type(from_type, to_type):  # noqa: F811
+    if issubclass(from_type, SomeGenericType):
+        values = from_type.get_parameters().values()
+        allowed_values = to_type.get_parameters().values()
+        if set(values) == set(allowed_values):
+            return True, None
+
+    return False, "Incompatible values"
 
 
 def test_parameters():

@@ -5,11 +5,11 @@ import TableBody from "@mui/material/TableBody";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
-import CircularProgress from "@mui/material/CircularProgress";
 import { useState, useEffect } from "react";
 import TablePagination from "@mui/material/TablePagination";
 import TableFooter from "@mui/material/TableFooter";
 import { RunListPayload } from "../Payloads";
+import Loading from "./Loading";
 
 const pageSize = 10;
 
@@ -78,7 +78,7 @@ function RunList(props: RunListProps) {
       <TableBody>
         <TableRow>
           <TableCell colSpan={4} align="center">
-            <CircularProgress sx={{ marginY: 5 }}></CircularProgress>
+            <Loading />
           </TableCell>
         </TableRow>
       </TableBody>

@@ -6,7 +6,9 @@ import typing
 
 # Glow
 from glow.types.generic_type import GenericType
-from glow.types.type import Type, is_type, NotAGlowTypeError
+from glow.types.registry import register_can_cast, register_safe_cast
+from glow.types.serialization import serializes_to_json
+from glow.types.type import is_type, NotAGlowTypeError
 from glow.types.casting import safe_cast
 
 
@@ -98,96 +100,101 @@ class FloatInRange(float, GenericType):
     def upper_inclusive(cls) -> bool:
         return cls.get_parameters()["upper_inclusive"]
 
-    @classmethod
-    def safe_cast(
-        cls, value: typing.Any
-    ) -> typing.Tuple[typing.Optional[typing.Any], typing.Optional[str]]:
 
-        cast_float, error_msg = safe_cast(value, float)
-        if error_msg is not None:
-            return None, error_msg
+@register_safe_cast(FloatInRange)
+def safe_cast_float_in_rance(
+    value: typing.Any, type_: typing.Type[FloatInRange]
+) -> typing.Tuple[typing.Optional[typing.Any], typing.Optional[str]]:
 
-        # Getting rid of the typing.Optional constraint
-        # garanteed by the check above
-        cast_float = typing.cast(float, cast_float)
+    cast_float, error_msg = safe_cast(value, float)
+    if error_msg is not None:
+        return None, error_msg
 
-        (
-            lower_bound,
-            upper_bound,
-            lower_inclusive,
-            upper_inclusive,
-        ) = cls.get_parameters().values()
+    # Getting rid of the typing.Optional constraint
+    # garanteed by the check above
+    cast_float = typing.cast(float, cast_float)
 
-        lower_op, upper_op = operator.le, operator.ge
-        lower_str, upper_str = "(", ")"
+    (
+        lower_bound,
+        upper_bound,
+        lower_inclusive,
+        upper_inclusive,
+    ) = type_.get_parameters().values()
 
-        if lower_inclusive:
-            lower_op, lower_str = operator.lt, "["
+    lower_op, upper_op = operator.le, operator.ge
+    lower_str, upper_str = "(", ")"
 
-        if upper_inclusive:
-            upper_op, upper_str = operator.gt, "]"
+    if lower_inclusive:
+        lower_op, lower_str = operator.lt, "["
 
-        range_str = "{}{}, {}{}".format(
-            lower_str, repr(lower_bound), repr(upper_bound), upper_str
+    if upper_inclusive:
+        upper_op, upper_str = operator.gt, "]"
+
+    range_str = "{}{}, {}{}".format(
+        lower_str, repr(lower_bound), repr(upper_bound), upper_str
+    )
+
+    if lower_op(cast_float, lower_bound) or upper_op(cast_float, upper_bound):
+        return None, "{} is not in range {}".format(repr(cast_float), range_str)
+
+    return type_(cast_float), None
+
+
+@register_can_cast(FloatInRange)
+def can_cast_type(
+    from_type: typing.Any, to_type: typing.Type[FloatInRange]
+) -> typing.Tuple[bool, typing.Optional[str]]:
+    if not is_type(from_type):
+        raise NotAGlowTypeError(from_type)
+
+    if not issubclass(from_type, FloatInRange):
+        return False, "{} cannot cast to {}".format(from_type, to_type)
+
+    if from_type.lower_bound() < to_type.lower_bound():
+        return (
+            False,
+            "Incompatible ranges: {}'s lower bound is lower than {}'s".format(
+                from_type.__name__, to_type.__name__
+            ),
         )
 
-        if lower_op(cast_float, lower_bound) or upper_op(cast_float, upper_bound):
-            return None, "{} is not in range {}".format(repr(cast_float), range_str)
+    if (
+        from_type.lower_bound() == to_type.lower_bound()
+        and to_type.lower_inclusive() is False
+        and from_type.lower_inclusive() is True
+    ):
+        return (
+            False,
+            (
+                "Incompatible ranges:"
+                " {} has an exclusive lower bound,"
+                " {} has an inclusive lower bound"
+            ).format(to_type.__name__, from_type.__name__),
+        )
 
-        return cls(cast_float), None
+    if from_type.upper_bound() > to_type.upper_bound():
+        return (
+            False,
+            "Incompatible ranges: {}'s upper bound is greater than {}'s".format(
+                from_type.__name__, to_type.__name__
+            ),
+        )
 
-    @classmethod
-    def can_cast_type(
-        cls, type_: typing.Type[Type]
-    ) -> typing.Tuple[bool, typing.Optional[str]]:
-        if not is_type(type_):
-            raise NotAGlowTypeError(type_)
+    if (
+        from_type.upper_bound() == to_type.upper_bound()
+        and to_type.upper_inclusive() is False
+        and from_type.upper_inclusive() is True
+    ):
+        return (
+            False,
+            (
+                "Incompatible ranges:"
+                " {} has an exclusive upper bound,"
+                " {} has an inclusive upper bound"
+            ).format(to_type.__name__, from_type.__name__),
+        )
 
-        if not issubclass(type_, FloatInRange):
-            return False, "{} cannot cast to {}".format(type_, cls)
+    return True, None
 
-        if type_.lower_bound() < cls.lower_bound():
-            return (
-                False,
-                "Incompatible ranges: {}'s lower bound is lower than {}'s".format(
-                    type_.__name__, cls.__name__
-                ),
-            )
 
-        if (
-            type_.lower_bound() == cls.lower_bound()
-            and cls.lower_inclusive() is False
-            and type_.lower_inclusive() is True
-        ):
-            return (
-                False,
-                (
-                    "Incompatible ranges:"
-                    " {} has an exclusive lower bound,"
-                    " {} has an inclusive lower bound"
-                ).format(cls.__name__, type_.__name__),
-            )
-
-        if type_.upper_bound() > cls.upper_bound():
-            return (
-                False,
-                "Incompatible ranges: {}'s upper bound is greater than {}'s".format(
-                    type_.__name__, cls.__name__
-                ),
-            )
-
-        if (
-            type_.upper_bound() == cls.upper_bound()
-            and cls.upper_inclusive() is False
-            and type_.upper_inclusive() is True
-        ):
-            return (
-                False,
-                (
-                    "Incompatible ranges:"
-                    " {} has an exclusive upper bound,"
-                    " {} has an inclusive upper bound"
-                ).format(cls.__name__, type_.__name__),
-            )
-
-        return True, None
+serializes_to_json(FloatInRange)

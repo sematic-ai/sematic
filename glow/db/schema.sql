@@ -14,6 +14,30 @@ CREATE TABLE runs (
 
     PRIMARY KEY (id)
 );
+CREATE TABLE artifacts (
+    -- sha1 hex digest are 40 characters
+    id character(40) NOT NULL,
+    json_summary TEXT NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL,
+
+    PRIMARY KEY (id)
+);
+CREATE TABLE run_artifacts (
+    run_id character(32) NOT NULL,
+    artifact_id character(40) NOT NULL,
+    name TEXT,
+    relationship TEXT,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL,
+
+    FOREIGN KEY(artifact_id) REFERENCES artifacts (id),
+    FOREIGN KEY(run_id) REFERENCES runs (id),
+
+    PRIMARY KEY(run_id, artifact_id, name)
+);
 -- Dbmate schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
-  ('20220424062956');
+  ('20220424062956'),
+  ('20220514015440'),
+  ('20220514020602');
