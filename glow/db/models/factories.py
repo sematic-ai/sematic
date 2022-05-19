@@ -10,7 +10,11 @@ import json
 from glow.abstract_future import AbstractFuture
 from glow.db.models.artifact import Artifact
 from glow.db.models.run import Run
-from glow.types.serialization import to_binary, type_to_json_encodable
+from glow.types.serialization import (
+    value_to_json_encodable,
+    type_to_json_encodable,
+    get_json_summary,
+)
 
 
 def make_run_from_future(future: AbstractFuture) -> Run:
@@ -31,30 +35,23 @@ def make_run_from_future(future: AbstractFuture) -> Run:
 
 
 def make_artifact(value: typing.Any, type_: typing.Any) -> Artifact:
-    sha1_digest = _get_value_sha1_digest(value, type_)
-
     artifact = Artifact(
-        id=sha1_digest,
-        # Replace with registered function
-        json_summary=json.dumps(value),
+        id=_get_value_sha1_digest(value, type_),
+        json_summary=get_json_summary(value, type_),
     )
 
     return artifact
 
 
 def _get_value_sha1_digest(value: typing.Any, type_: typing.Any) -> str:
-    binary_serialization = to_binary(value, type_)
+    payload = {
+        "value": value_to_json_encodable(value, type_),
+        "type": type_to_json_encodable(type_),
+        # Should there be some sort of type versioning concept here?
+    }
 
-    # ToDo: implement type serialization
-    type_serialization = json.dumps(type_to_json_encodable(type_)).encode("utf-8")
+    binary = json.dumps(payload, sort_keys=True).encode("utf-8")
 
-    # Do not change the order of this list. It will invalidate all prior
-    # artifacts
-    # Should this list include some form of type versioning?
-    ordered_components = [binary_serialization, type_serialization]
-
-    sha1_digest = hashlib.sha1()
-    for component in ordered_components:
-        sha1_digest.update(component)
+    sha1_digest = hashlib.sha1(binary)
 
     return sha1_digest.hexdigest()
