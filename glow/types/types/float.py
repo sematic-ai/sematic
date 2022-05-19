@@ -4,7 +4,6 @@ import typing
 
 # Glow
 from glow.types.registry import register_can_cast
-from glow.types.serialization import serializes_to_json
 
 
 @register_can_cast(float)
@@ -21,6 +20,3 @@ def can_cast_type(type_: type, _) -> typing.Tuple[bool, typing.Optional[str]]:
 
 
 # Default safe_cast behavior is sufficient
-
-
-serializes_to_json(float)
