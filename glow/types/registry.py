@@ -77,65 +77,73 @@ def get_safe_cast_func(type_: typing.Any) -> typing.Optional[SafeCastCallable]:
     return _get_registered_func(_SAFE_CAST_REGISTRY, type_)
 
 
-# BINARY SERIALIZATION
+# VALUE SERIALIZATION
 
-ToBinaryCallable = typing.Callable[[typing.Any, typing.Any], bytes]
-
-
-_TO_BINARY_REGISTRY: typing.Dict[type, ToBinaryCallable] = {}
+ToJSONEncodableCallable = typing.Callable[[typing.Any, typing.Any], typing.Any]
 
 
-def register_to_binary(
+_TO_JSON_ENCODABLE_REGISTRY: typing.Dict[type, ToJSONEncodableCallable] = {}
+
+
+def register_to_json_encodable(
     type_: type,
-) -> typing.Callable[[ToBinaryCallable], ToBinaryCallable]:
+) -> typing.Callable[[ToJSONEncodableCallable], ToJSONEncodableCallable]:
     """
-    Decorator to register a function to convert `type_` to a binary payload for
+    Decorator to register a function to convert `type_` to a JSON-encodable payload for
     serialization.
     """
 
-    def _register_to_binary(func: ToBinaryCallable) -> ToBinaryCallable:
+    def _register_to_json_encodable(
+        func: ToJSONEncodableCallable,
+    ) -> ToJSONEncodableCallable:
         # ToDo(@neutralino1): validate func signature
-        _TO_BINARY_REGISTRY[type_] = func
+        _TO_JSON_ENCODABLE_REGISTRY[type_] = func
 
         return func
 
-    return _register_to_binary
+    return _register_to_json_encodable
 
 
-def get_to_binary_func(type_: typing.Any) -> typing.Optional[ToBinaryCallable]:
+def get_to_json_encodable_func(
+    type_: typing.Any,
+) -> typing.Optional[ToJSONEncodableCallable]:
     """
-    Obtain the serialization functionf or `type_`.
+    Obtain the serialization function for `type_`.
     """
-    return _get_registered_func(_TO_BINARY_REGISTRY, type_)
+    return _get_registered_func(_TO_JSON_ENCODABLE_REGISTRY, type_)
 
 
-FromBinaryCallable = typing.Callable[[bytes, typing.Any], typing.Any]
+FromJSONEncodableCallable = typing.Callable[[typing.Any, typing.Any], typing.Any]
 
 
-_FROM_BINARY_REGISTRY: typing.Dict[type, FromBinaryCallable] = {}
+_FROM_JSON_ENCODABLE_REGISTRY: typing.Dict[type, FromJSONEncodableCallable] = {}
 
 
-def register_from_binary(
+def register_from_json_encodable(
     type_: type,
-) -> typing.Callable[[FromBinaryCallable], FromBinaryCallable]:
+) -> typing.Callable[[FromJSONEncodableCallable], FromJSONEncodableCallable]:
     """
     Decorator to register a deserilization function for `type_`.
     """
 
-    def _register_from_binary(func: FromBinaryCallable) -> FromBinaryCallable:
+    def _register_from_json_encodable(
+        func: FromJSONEncodableCallable,
+    ) -> FromJSONEncodableCallable:
         # ToDo(@neutralino1): validate func signature
-        _FROM_BINARY_REGISTRY[type_] = func
+        _FROM_JSON_ENCODABLE_REGISTRY[type_] = func
 
         return func
 
-    return _register_from_binary
+    return _register_from_json_encodable
 
 
-def get_from_binary_func(type_: typing.Any) -> typing.Optional[FromBinaryCallable]:
+def get_from_json_encodable_func(
+    type_: typing.Any,
+) -> typing.Optional[FromJSONEncodableCallable]:
     """
     Obtain the deserialization function for `type_`.
     """
-    return _get_registered_func(_FROM_BINARY_REGISTRY, type_)
+    return _get_registered_func(_FROM_JSON_ENCODABLE_REGISTRY, type_)
 
 
 # TOOLS

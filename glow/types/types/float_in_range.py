@@ -7,7 +7,6 @@ import typing
 # Glow
 from glow.types.generic_type import GenericType
 from glow.types.registry import register_can_cast, register_safe_cast
-from glow.types.serialization import serializes_to_json
 from glow.types.type import is_type, NotAGlowTypeError
 from glow.types.casting import safe_cast
 
@@ -195,6 +194,3 @@ def can_cast_type(
         )
 
     return True, None
-
-
-serializes_to_json(FloatInRange)

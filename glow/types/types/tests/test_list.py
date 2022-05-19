@@ -1,6 +1,5 @@
 # Standard library
 import collections
-import json
 import typing
 
 # Third-party
@@ -8,7 +7,7 @@ import pytest
 
 # Glow
 from glow.types.casting import safe_cast, can_cast_type
-from glow.types.serialization import to_binary, type_to_json_encodable
+from glow.types.serialization import value_to_json_encodable, type_to_json_encodable
 
 
 @pytest.mark.parametrize(
@@ -168,12 +167,12 @@ def test_type_to_json_encodable_subclass():
     )
 
 
-def test_to_binary():
+def test_value_to_json_encodable():
     type_ = typing.List[int]
 
-    binary = to_binary([1, 2, 3], type_)
+    json_encodable = value_to_json_encodable([1, 2, 3], type_)
 
-    assert binary.decode("utf-8") == "[1, 2, 3]"
+    assert json_encodable == [1, 2, 3]
 
 
 # Needs to be defined here intead of inside test_to_binary_arbitrary
@@ -186,9 +185,9 @@ def test_to_binary_arbitrary():
 
     type_ = typing.List[A]
 
-    binary = to_binary([A(), A()], type_)
+    json_encodable = value_to_json_encodable([A(), A()], type_)
 
-    assert json.loads(binary.decode("utf-8")) == [
+    assert json_encodable == [
         "gAWVLQAAAAAAAACMIGdsb3cudHlwZXMudHlwZXMudGVzdHMudGVzdF9saXN0lIwBQZSTlCmBlC4=",  # noqa: E501
         "gAWVLQAAAAAAAACMIGdsb3cudHlwZXMudHlwZXMudGVzdHMudGVzdF9saXN0lIwBQZSTlCmBlC4=",  # noqa: E501
     ]

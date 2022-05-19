@@ -5,15 +5,10 @@ import typing
 from glow.types.registry import (
     register_safe_cast,
     register_can_cast,
-    register_to_binary,
+    register_to_json_encodable,
 )
 from glow.types.casting import safe_cast, can_cast_type
-from glow.types.serialization import (
-    does_serialize_to_json,
-    to_binary,
-    binary_to_string,
-    to_binary_json,
-)
+from glow.types.serialization import value_to_json_encodable
 
 
 # Using `list` instead of `typing.List` here because
@@ -82,17 +77,7 @@ def can_cast_to_list(from_type: typing.Any, to_type: typing.Any):
     return True, None
 
 
-@register_to_binary(list)
-def list_to_binary(value: list, type_: typing.Any) -> bytes:
+@register_to_json_encodable(list)
+def list_to_json_encodable(value: list, type_: typing.Any) -> list:
     element_type = type_.__args__[0]
-
-    list_of_bins = [
-        item
-        if does_serialize_to_json(element_type)
-        else binary_to_string(to_binary(item, element_type))
-        for item in value
-    ]
-
-    # Todo: Support polymorphism
-
-    return to_binary_json(list_of_bins)
+    return [value_to_json_encodable(item, element_type) for item in value]
