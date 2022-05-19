@@ -10,18 +10,15 @@ import inspect
 import json
 import typing
 
-
 # Third-party
 import cloudpickle  # type: ignore
 
 # Glow
 from glow.types.registry import (
-    get_to_binary_func,
-    get_from_binary_func,
+    get_to_json_encodable_func,
+    get_from_json_encodable_func,
     is_glow_parametrized_generic_type,
     is_valid_typing_alias,
-    register_to_binary,
-    register_from_binary,
     get_origin_type,
 )
 from glow.types.generic_type import GenericType
@@ -29,81 +26,61 @@ from glow.types.generic_type import GenericType
 
 # VALUE SERIALIZATION
 
-
 # type_ must be `typing.Any` because `typing` aliases are not type
-def to_binary(value: typing.Any, type_: typing.Any) -> bytes:
+def value_to_json_encodable(value: typing.Any, type_: typing.Any) -> typing.Any:
+    to_json_encodable_func = get_to_json_encodable_func(type_)
+
+    if to_json_encodable_func is not None:
+        return to_json_encodable_func(value, type_)
+
+    try:
+        # We try to dump to JSON, this is innefficient, how else can we test this?
+        json.dumps(value)
+        return value
+    except Exception:
+        # Otherwise we pickle by default
+        return binary_to_string(cloudpickle.dumps(value))
+
+
+def value_from_json_encodable(
+    json_encodable: typing.Any, type_: typing.Any
+) -> typing.Any:
     """
-    Public API to serialize `value` to binary using the
-    serialization logic of `type_`.
-    """
-    # First we check if there is a registered serialization
-    # function for type_.
-    to_binary_func = get_to_binary_func(type_)
-
-    if to_binary_func is not None:
-        return to_binary_func(value, type_)
-
-    # If not, we use cloudpickle.
-    return cloudpickle.dumps(value)
-
-
-def from_binary(binary: bytes, type_: typing.Any) -> typing.Any:
-    """
-    Public API to deserialize a binary blob into its
+    Public API to deserialize a JSON-encodable payload into its
     corresponding value using the deserialization of `type_`.
     """
-    # First we check whether this is a registered serialization
+    # First we check whether this is a registered deserialization
     # function for type_.
-    from_binary_func = get_from_binary_func(type_)
+    from_json_encodable_func = get_from_json_encodable_func(type_)
 
-    if from_binary_func is not None:
-        return from_binary_func(binary, type)
+    if from_json_encodable_func is not None:
+        return from_json_encodable_func(json_encodable, type)
 
-    # Otherwise we try pickle.
-    return cloudpickle.loads(binary)
-
-
-RegisteredType = typing.TypeVar("RegisteredType", bound=type)
-
-
-SERIALIZES_TO_JSON: typing.Set[type] = set()
-
-
-def serializes_to_json(type_: RegisteredType) -> None:
-    """
-    registers a type to serialize to JSON.
-
-    This is a shortcut for all types that can natively
-    serialization to JSON (e.g. `int`, `float`, `str`, etc.)
-    """
-
-    @register_to_binary(type_)
-    def _to_binary(value: RegisteredType, _) -> bytes:
-        return to_binary_json(value)
-
-    @register_from_binary(type_)
-    def _from_binary(binary: bytes, _) -> RegisteredType:
-        value = from_binary_json(binary)
-        value = typing.cast(RegisteredType, value)
-        return value
-
-    SERIALIZES_TO_JSON.add(type_)
-
-
-def does_serialize_to_json(type_: type) -> bool:
-    return type_ in SERIALIZES_TO_JSON
-
-
-def to_binary_json(value: typing.Any) -> bytes:
-    return json.dumps(value, sort_keys=True).encode("utf-8")
-
-
-def from_binary_json(binary: bytes) -> typing.Any:
-    return json.loads(binary.decode("utf-8"))
+    try:
+        # Is this a pickle payload?
+        return cloudpickle.loads(binary_from_string(json_encodable))
+    except Exception:
+        # If not the raw value must have already been
+        # JSON encodable
+        return json_encodable
 
 
 def binary_to_string(binary: bytes) -> str:
     return base64.b64encode(binary).decode("ascii")
+
+
+def binary_from_string(string: str) -> bytes:
+    return base64.b64decode(string.encode("ascii"))
+
+
+# JSON SUMMARIES
+def get_json_summary(value: typing.Any, type_: typing.Any) -> str:
+    # First we check custom summaries
+    # TODO
+
+    # By default we use the full payload
+    json_encodable = value_to_json_encodable(value, type_)
+    return json.dumps(json_encodable, sort_keys=True)
 
 
 # TYPE SERIALIZATION

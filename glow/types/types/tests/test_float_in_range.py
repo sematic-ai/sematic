@@ -7,7 +7,7 @@ import pytest
 # Glow
 from glow.types.casting import can_cast_type, safe_cast
 from glow.types.generic_type import GenericMeta
-from glow.types.serialization import to_binary, type_to_json_encodable
+from glow.types.serialization import value_from_json_encodable, type_to_json_encodable
 from glow.types.types.float_in_range import FloatInRange
 
 
@@ -152,10 +152,10 @@ def test_can_cast_type(type1, type2, expected_can_cast, expected_err):
     assert err == expected_err
 
 
-def test_to_binary():
+def test_value_to_json_encodable():
     t = FloatInRange[0, 1]
-    binary = to_binary(0.5, t)
-    assert binary.decode("utf-8") == "0.5"
+    json_encodable = value_from_json_encodable(0.5, t)
+    assert json_encodable == 0.5
 
 
 def test_type_serialization():

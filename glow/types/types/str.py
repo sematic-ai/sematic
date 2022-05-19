@@ -6,7 +6,6 @@ import typing
 
 # Glow
 from glow.types.registry import register_safe_cast, register_can_cast
-from glow.types.serialization import serializes_to_json
 
 
 @register_safe_cast(str, typing.Text)
@@ -33,6 +32,3 @@ def can_cast_to_str(type_: type, _) -> typing.Tuple[bool, typing.Optional[str]]:
         return True, None
 
     return False, "{} cannot cast to {}".format(type_, str)
-
-
-serializes_to_json(str)
