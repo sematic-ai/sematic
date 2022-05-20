@@ -2,9 +2,9 @@ import { Run } from "./Models";
 
 export type RunListPayload = {
   current_page_url: string;
-  next_page_url: string | undefined;
+  next_page_url?: string;
   limit: number;
-  next_cursor: string | undefined;
+  next_cursor?: string;
   after_cursor_count: number;
   content: Array<Run>;
 };

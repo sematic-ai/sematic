@@ -1,12 +1,14 @@
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import { useEffect, useState } from "react";
-import RunList from "./components/RunList";
-import { Run } from "./Models";
+import { RunList } from "../components/RunList";
+import { Run } from "../Models";
 import Link from "@mui/material/Link";
-import { RunListPayload } from "./Payloads";
-import RunStateChip from "./components/RunStateChip";
+import { RunListPayload } from "../Payloads";
+import RunStateChip from "../components/RunStateChip";
 import CircleOutlined from "@mui/icons-material/CircleOutlined";
 
 function RecentStatuses(props: { runs: Array<Run> | undefined }) {
@@ -61,29 +63,53 @@ function PipelineRow(props: { run: Run }) {
   let durationMS: number = endedAt.getTime() - startedAt.getTime();
 
   return (
-    <TableRow key={run.id}>
-      <TableCell key="name">
-        <Link href={"/runs/" + run.id} underline="hover">
-          <Typography variant="h6">{run.name}</Typography>
-        </Link>
-        <Typography fontSize="small" color="GrayText">
-          <code>{run.calculator_path}</code>
-        </Typography>
-      </TableCell>
-      <TableCell key="last-run">
-        <Typography fontSize="small" color="GrayText">
-          {durationMS / 1000} seconds on&nbsp;
-          {new Date(run.created_at).toLocaleString()}
-        </Typography>
-      </TableCell>
-      <TableCell key="status">
-        <RecentStatuses runs={runs} />
-      </TableCell>
-    </TableRow>
+    <>
+      <TableRow key={run.id}>
+        <TableCell key="name">
+          <Link href={"/pipelines/" + run.calculator_path} underline="hover">
+            <Typography variant="h6">{run.name}</Typography>
+          </Link>
+          <Typography fontSize="small" color="GrayText">
+            <code>{run.calculator_path}</code>
+          </Typography>
+        </TableCell>
+        <TableCell key="last-run">
+          <Typography fontSize="small" color="GrayText">
+            {durationMS / 1000} seconds on&nbsp;
+            {new Date(run.created_at).toLocaleString()}
+          </Typography>
+        </TableCell>
+        <TableCell key="status">
+          <RecentStatuses runs={runs} />
+        </TableCell>
+      </TableRow>
+      <TableRow>
+        <TableCell colSpan={3}>
+          <Box>
+            <Typography variant="overline">Description: </Typography>
+            <Typography variant="caption" color="GrayText">
+              {run.description}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant="overline">Tags: </Typography>
+            {(run.tags || []).map((tag) => (
+              <Chip
+                label={tag}
+                color="primary"
+                size="small"
+                variant="outlined"
+                key={tag}
+              />
+            ))}
+          </Box>
+        </TableCell>
+      </TableRow>
+    </>
   );
 }
 
-function Dashboard() {
+function PipelineIndex() {
   return (
     <>
       <Typography variant="h4" component="h2">
@@ -92,7 +118,7 @@ function Dashboard() {
       <RunList
         columns={["Name", "Last run", "Status"]}
         groupBy="calculator_path"
-        filters={{ parent_id: { eq: null } }}
+        filters={{ AND: [{ parent_id: { eq: null } }] }}
       >
         {(run: Run) => <PipelineRow run={run} key={run.id} />}
       </RunList>
@@ -100,4 +126,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard;
+export default PipelineIndex;
