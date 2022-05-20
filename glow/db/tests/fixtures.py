@@ -34,7 +34,7 @@ def test_db():
 def make_run(**kwargs) -> Run:
     run = Run(
         id=uuid.uuid4().hex,
-        future_state=FutureState.CREATED.value,
+        future_state=FutureState.CREATED,
         name="test_run",
         calculator_path="path.to.test_run",
     )
