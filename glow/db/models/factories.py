@@ -21,14 +21,15 @@ def make_run_from_future(future: AbstractFuture) -> Run:
     run = Run(
         id=future.id,
         future_state=future.state.value,
-        # todo(@neutralino1): replace with future name
-        name=future.calculator.__name__,
+        name=future.name,
         calculator_path="{}.{}".format(
             future.calculator.__module__, future.calculator.__name__
         ),
         parent_id=(
             future.parent_future.id if future.parent_future is not None else None
         ),
+        description=future.calculator.__doc__,
+        tags=future.tags,
     )
 
     return run

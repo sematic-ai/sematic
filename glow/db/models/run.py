@@ -1,6 +1,7 @@
 # Standard library
 import datetime
 import typing
+import json
 
 # Third party
 from sqlalchemy import Column, types
@@ -9,7 +10,7 @@ from sqlalchemy.orm import validates
 # Glow
 from glow.abstract_future import FutureState
 from glow.db.models.base import Base
-from glow.db.models.json_encodable_mixin import JSONEncodableMixin
+from glow.db.models.json_encodable_mixin import JSONEncodableMixin, JSON_KEY
 
 
 class Run(Base, JSONEncodableMixin):
@@ -58,6 +59,10 @@ class Run(Base, JSONEncodableMixin):
     name: str = Column(types.String(), nullable=True)
     calculator_path: str = Column(types.String(), nullable=False)
     parent_id: typing.Optional[str] = Column(types.String(), nullable=True)
+    description: typing.Optional[str] = Column(types.String(), nullable=True)
+    tags: typing.List[str] = Column(
+        types.String(), nullable=False, default="[]", info={JSON_KEY: True}
+    )
 
     # Lifecycle timestamps
     created_at: datetime.datetime = Column(
@@ -94,4 +99,15 @@ class Run(Base, JSONEncodableMixin):
                     " must be one of the values in `FutureState`."
                 )
             )
+        return value
+
+    @validates("tags")
+    def convert_tags_to_json(self, key, value) -> str:
+        return json.dumps(value)
+
+    @validates("description")
+    def strip_description(self, key, value) -> str:
+        if value is not None:
+            value = value.strip()
+
         return value

@@ -31,13 +31,17 @@ def test_db():
         db._db_instance = original_db
 
 
-def make_run() -> Run:
+def make_run(**kwargs) -> Run:
     run = Run(
         id=uuid.uuid4().hex,
         future_state=FutureState.CREATED.value,
         name="test_run",
         calculator_path="path.to.test_run",
     )
+
+    for name, value in kwargs.items():
+        setattr(run, name, value)
+
     return run
 
 
