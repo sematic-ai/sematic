@@ -7,3 +7,12 @@ pytest_test(
         "//glow/db/models:factories",
     ]
 )
+
+pytest_test(
+    name = "test_run",
+    srcs = ["test_run.py"],
+    deps = [
+        "//glow:abstract_future",
+        "//glow/db/models:run",
+    ]
+)

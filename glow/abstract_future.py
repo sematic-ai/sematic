@@ -67,3 +67,5 @@ class AbstractFuture(abc.ABC):
         self.parent_future: typing.Optional["AbstractFuture"] = None
         self.nested_future: typing.Optional["AbstractFuture"] = None
         self.inline: bool = False
+        self.name: str = calculator.__name__
+        self.tags: typing.List[str] = []

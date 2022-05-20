@@ -31,7 +31,9 @@ class RunArtifact(Base):
     name: str = Column(
         types.String(), ForeignKey("runs.id"), nullable=True, primary_key=True
     )
-    relationship: str = Column(types.String(), nullable=False)
+    relationship: RunArtifactRelationship = Column(  # type: ignore
+        types.String(), nullable=False
+    )
     created_at: datetime.datetime = Column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow
     )
@@ -44,9 +46,7 @@ class RunArtifact(Base):
 
     @validates("relationship")
     def validate_relationship(selk, key, value) -> str:
-        if value not in RunArtifactRelationship.values():
-            raise ValueError(
-                "Invalid run-artifact relationship: {}".format(repr(value))
-            )
+        if not isinstance(value, RunArtifactRelationship):
+            raise ValueError("relationship must be a RunArtifactRelationship")
 
-        return value
+        return value.value

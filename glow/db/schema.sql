@@ -10,7 +10,7 @@ CREATE TABLE runs (
     ended_at timestamp without time zone,
     resolved_at timestamp without time zone,
     failed_at timestamp without time zone,
-    parent_id character(32),
+    parent_id character(32), description TEXT, tags TEXT,
 
     PRIMARY KEY (id)
 );
@@ -40,4 +40,5 @@ CREATE TABLE run_artifacts (
 INSERT INTO "schema_migrations" (version) VALUES
   ('20220424062956'),
   ('20220514015440'),
-  ('20220514020602');
+  ('20220514020602'),
+  ('20220519154144');
