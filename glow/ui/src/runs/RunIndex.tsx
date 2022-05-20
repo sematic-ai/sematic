@@ -6,41 +6,69 @@ import TimeAgo from "javascript-time-ago";
 import ReactTimeAgo from "react-time-ago";
 import en from "javascript-time-ago/locale/en.json";
 import { Run } from "../Models";
-import RunList from "../components/RunList";
+import { RunList } from "../components/RunList";
 import RunStateChip from "../components/RunStateChip";
+import React, { useState } from "react";
 
 TimeAgo.addDefaultLocale(en);
 
-function RunRow(props: { run: Run }) {
+type RunRowProps = {
+  run: Run;
+  variant?: string;
+  onClick?: React.MouseEventHandler;
+  selected?: boolean;
+};
+
+export function RunRow(props: RunRowProps) {
   let run = props.run;
 
+  let calculatorPath: React.ReactElement | undefined = undefined;
+  let createdAt: React.ReactElement | undefined;
+
+  if (props.variant !== "skinny") {
+    calculatorPath = (
+      <Typography fontSize="small" color="GrayText">
+        <code>{run.calculator_path}</code>
+      </Typography>
+    );
+
+    createdAt = (
+      <Typography fontSize="small" color="GrayText">
+        {new Date(run.created_at).toLocaleString()}
+      </Typography>
+    );
+  }
+
   return (
-    <TableRow key={run.id}>
-      <TableCell>
-        <code>{run.id.substring(0, 8)}</code>
+    <TableRow
+      key={run.id}
+      hover={props.onClick !== undefined}
+      sx={{ cursor: props.onClick ? "pointer" : undefined }}
+      selected={props.selected}
+    >
+      <TableCell onClick={props.onClick}>
+        <Typography fontSize="small" color="GrayText">
+          <code>{run.id.substring(0, 8)}</code>
+        </Typography>
       </TableCell>
-      <TableCell>
+      <TableCell onClick={props.onClick}>
         <Link href={"/runs/" + run.id} underline="hover">
           {run.name}
         </Link>
-        <Typography fontSize="small" color="GrayText">
-          <code>{run.calculator_path}</code>
-        </Typography>
+        {calculatorPath}
       </TableCell>
-      <TableCell>
+      <TableCell onClick={props.onClick}>
         {<ReactTimeAgo date={new Date(run.created_at)} locale="en-US" />}
-        <Typography fontSize="small" color="GrayText">
-          {new Date(run.created_at).toLocaleString()}
-        </Typography>
+        {createdAt}
       </TableCell>
-      <TableCell>
+      <TableCell onClick={props.onClick}>
         <RunStateChip state={run.future_state} />
       </TableCell>
     </TableRow>
   );
 }
 
-function RunIndex() {
+export function RunIndex() {
   return (
     <>
       <Typography variant="h4" component="h2">
@@ -52,5 +80,3 @@ function RunIndex() {
     </>
   );
 }
-
-export default RunIndex;

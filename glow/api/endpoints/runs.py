@@ -33,7 +33,10 @@ _COLUMN_MAPPING: typing.Dict[str, sqlalchemy.Column] = {
 def _get_request_parameters(
     args: typing.Dict[str, str]
 ) -> typing.Tuple[
-    int, typing.Optional[str], typing.Optional[str], typing.List[BinaryExpression]
+    int,
+    typing.Optional[str],
+    typing.Optional[sqlalchemy.Column],
+    typing.List[BinaryExpression],
 ]:
     """
     Extract, validate, and format query parameters.
@@ -60,10 +63,13 @@ def _get_request_parameters(
 
     cursor = _none_if_empty("cursor")
 
-    group_by = _none_if_empty("group_by")
+    group_by, group_by_column = _none_if_empty("group_by"), None
 
-    if group_by is not None and group_by not in _COLUMN_MAPPING:
-        raise ValueError("Unsupported group_by value {}".format(repr(group_by)))
+    if group_by is not None:
+        if group_by not in _COLUMN_MAPPING:
+            raise ValueError("Unsupported group_by value {}".format(repr(group_by)))
+
+        group_by_column = _COLUMN_MAPPING[group_by]
 
     filters_json: str = args.get("filters", "{}")
     filters: typing.Dict[str, typing.Any] = {}
@@ -74,44 +80,63 @@ def _get_request_parameters(
 
     sql_predicates = _get_sql_predicates(filters)
 
-    return limit, cursor, group_by, sql_predicates
+    print(group_by, sql_predicates)
+    return limit, cursor, group_by_column, sql_predicates
 
 
 def _get_sql_predicates(
     filters: typing.Dict[str, typing.Dict[str, typing.Any]]
 ) -> typing.List[BinaryExpression]:
     """
-    Basic support for a single filter predicate.
+    Basic support for a AND filter predicate.
 
     filters are of the form:
     ```
     {"column_name": {"operator": "value"}}
+    OR
+    {
+        "AND": [
+            {"column_name": {"operator": "value"}},
+            {"column_name": {"operator": "value"}}
+        ]
+    }
     ```
     """
-    sql_predicates: typing.List[BinaryExpression] = []
-
     if len(filters) == 0:
-        return sql_predicates
+        return []
 
-    column_name = list(filters.keys())[0]
+    operand = list(filters.keys())[0]
+
+    # Only support single operand for now
+    if operand not in {"AND", "OR"}:
+        return [_extract_single_predicate(filters)]
+
+    if operand == "AND":
+        return [_extract_single_predicate(filter) for filter in filters[operand]]
+
+    raise NotImplementedError("Unsupported filter: {}".format(filters))
+
+
+def _extract_single_predicate(filter) -> BinaryExpression:
+    column_name = list(filter.keys())[0]
 
     try:
         column = _COLUMN_MAPPING[column_name]
     except KeyError:
         raise Exception("Unknown filter field: {}".format(column_name))
 
-    filter = filters[column_name]
-    if len(filter) == 0:
-        raise Exception("Empty filter: {}".format(filters))
+    condition = filter[column_name]
+    if len(condition) == 0:
+        raise Exception("Empty filter: {}".format(filter))
 
-    operator = list(filter.keys())[0]
-    value = filter[operator]
+    operator = list(condition.keys())[0]
+    value = condition[operator]
 
     # Will obviously need to add more, only supporting eq for now
     if operator == "eq":
-        sql_predicates.append(column == value)
+        return column == value
 
-    return sql_predicates
+    raise NotImplementedError("Unsupported filter: {}".format(filter))
 
 
 @glow_api.route("/api/v1/runs", methods=["GET"])
@@ -152,7 +177,7 @@ def list_runs_endpoint() -> flask.Response:
         A list of run JSON payloads. The size of the list is `limit` or less if
         current page is last page.
     """
-    limit, cursor, group_by, sql_predicates = _get_request_parameters(
+    limit, cursor, group_by_column, sql_predicates = _get_request_parameters(
         flask.request.args
     )
 
@@ -168,8 +193,26 @@ def list_runs_endpoint() -> flask.Response:
     with db().get_session() as session:
         query = session.query(Run)
 
-        if group_by is not None:
-            query = query.group_by(group_by)
+        if group_by_column is not None:
+            sub_query = (
+                session.query(
+                    group_by_column,
+                    # TODO: Parametrize this part as well
+                    sqlalchemy.sql.expression.func.max(Run.created_at).label(
+                        "max_created_at"
+                    ),
+                )
+                .group_by(group_by_column)
+                .subquery("grouped_runs")
+            )
+
+            query = query.join(
+                sub_query,
+                sqlalchemy.and_(
+                    group_by_column == getattr(sub_query.c, group_by_column.name),
+                    Run.created_at == sub_query.c.max_created_at,
+                ),
+            )
 
         if len(sql_predicates) > 0:
             query = query.filter(*sql_predicates)

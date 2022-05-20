@@ -55,11 +55,10 @@ def test_list_runs(test_client: flask.testing.FlaskClient):  # noqa: F811
 
 
 def test_group_by(test_client: flask.testing.FlaskClient):  # noqa: F811
-    runs = dict(RUN_A=[make_run(), make_run()], RUN_B=[make_run(), make_run()])
+    runs = {key: [make_run(name=key), make_run(name=key)] for key in ("RUN_A", "RUN_B")}
 
     for name, runs_ in runs.items():
         for run_ in runs_:
-            run_.name = name
             save_run(run_)
 
     results = test_client.get("/api/v1/runs?group_by=name")
@@ -88,6 +87,25 @@ def test_filters(test_client: flask.testing.FlaskClient):  # noqa: F811
 
         assert len(payload["content"]) == 1
         assert payload["content"][0]["id"] == run_.id
+
+
+def test_and_filters(test_client: flask.testing.FlaskClient):  # noqa: F811
+    run1 = make_run(name="abc", calculator_path="abc")
+    run2 = make_run(name="def", calculator_path="abc")
+    run3 = make_run(name="abc", calculator_path="def")
+
+    for run_ in [run1, run2, run3]:
+        save_run(run_)
+
+    filters = {"AND": [{"name": {"eq": "abc"}}, {"calculator_path": {"eq": "abc"}}]}
+
+    results = test_client.get("/api/v1/runs?filters={}".format(json.dumps(filters)))
+
+    payload = results.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == 1
+    assert payload["content"][0]["id"] == run1.id
 
 
 def test_get_run_endpoint(

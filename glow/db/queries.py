@@ -98,7 +98,7 @@ def create_run_with_artifacts(run: Run, artifacts: typing.Dict[str, Artifact]) -
                 run_id=run.id,
                 artifact_id=artifact.id,
                 name=name,
-                relationship=RunArtifactRelationship.INPUT.value,
+                relationship=RunArtifactRelationship.INPUT,
             )
 
             session.add(run_artifact)
@@ -170,7 +170,7 @@ def set_run_output_artifact(run: Run, artifact: Artifact) -> None:
     Sets the output artifact and updates the run state in the same
     transaction
     """
-    run.future_state = FutureState.RESOLVED.value
+    run.future_state = FutureState.RESOLVED
     run.resolved_at = datetime.datetime.utcnow()
 
     if run.ended_at is None:
@@ -179,7 +179,7 @@ def set_run_output_artifact(run: Run, artifact: Artifact) -> None:
     run_artifact = RunArtifact(
         run_id=run.id,
         artifact_id=artifact.id,
-        relationship=RunArtifactRelationship.OUTPUT.value,
+        relationship=RunArtifactRelationship.OUTPUT,
     )
 
     with db().get_session() as session:

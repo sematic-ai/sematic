@@ -2,6 +2,7 @@
 import base64
 import datetime
 import enum
+import json
 
 
 class JSONEncodableMixin:
@@ -16,6 +17,9 @@ class JSONEncodableMixin:
             column.key: _to_json_encodable(getattr(self, column.key), column)
             for column in self.__table__.columns
         }
+
+
+JSON_KEY = "json"
 
 
 def _to_json_encodable(value, column):
@@ -33,5 +37,8 @@ def _to_json_encodable(value, column):
 
     if isinstance(value, enum.Enum):
         return value.value
+
+    if info.get(JSON_KEY, False) and value is not None:
+        return json.loads(value)
 
     return value

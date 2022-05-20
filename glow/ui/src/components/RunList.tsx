@@ -11,20 +11,30 @@ import TableFooter from "@mui/material/TableFooter";
 import { RunListPayload } from "../Payloads";
 import Loading from "./Loading";
 
-const pageSize = 10;
+const defaultPageSize = 10;
+
+export type RunFilterType = {
+  [k: string]: Array<{
+    [v: string]: { [vv: string]: string | number | null };
+  }>;
+};
 
 type RunListProps = {
   columns: Array<string>;
   children: Function;
   groupBy?: string;
-  filters?: { [k: string]: { [v: string]: string | number | null } };
+  filters?: RunFilterType;
+  pageSize?: number;
+  size?: "small" | "medium" | undefined;
 };
 
-function RunList(props: RunListProps) {
+export function RunList(props: RunListProps) {
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
   const [pages, setPages] = useState<Array<RunListPayload>>([]);
   const [currentPage, setPage] = useState(0);
+
+  let pageSize = props.pageSize || defaultPageSize;
 
   useEffect(() => {
     if (currentPage <= pages.length - 1) {
@@ -101,7 +111,7 @@ function RunList(props: RunListProps) {
   return (
     <>
       <TableContainer>
-        <Table>
+        <Table size={props.size}>
           <TableHead>
             <TableRow>
               {props.columns.map((column) => (
@@ -126,5 +136,3 @@ function RunList(props: RunListProps) {
     </>
   );
 }
-
-export default RunList;
