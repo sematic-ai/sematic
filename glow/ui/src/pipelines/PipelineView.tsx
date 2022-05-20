@@ -57,7 +57,7 @@ function PipelineView() {
     };
 
     let onRowClick = (run: Run) => {
-      if (selectedRun && selectedRun.id == run.id) {
+      if (selectedRun && selectedRun.id === run.id) {
         setSelectedRun(undefined);
       } else {
         setSelectedRun(run);

@@ -31,7 +31,9 @@ class RunArtifact(Base):
     name: str = Column(
         types.String(), ForeignKey("runs.id"), nullable=True, primary_key=True
     )
-    relationship: RunArtifactRelationship = Column(types.String(), nullable=False)
+    relationship: RunArtifactRelationship = Column(  # type: ignore
+        types.String(), nullable=False
+    )
     created_at: datetime.datetime = Column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow
     )

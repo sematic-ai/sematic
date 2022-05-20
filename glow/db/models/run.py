@@ -55,12 +55,12 @@ class Run(Base, JSONEncodableMixin):
     __tablename__ = "runs"
 
     id: str = Column(types.String(), primary_key=True)
-    future_state: FutureState = Column(types.String(), nullable=False)
+    future_state: FutureState = Column(types.String(), nullable=False)  # type: ignore
     name: str = Column(types.String(), nullable=True)
     calculator_path: str = Column(types.String(), nullable=False)
     parent_id: typing.Optional[str] = Column(types.String(), nullable=True)
     description: typing.Optional[str] = Column(types.String(), nullable=True)
-    tags: typing.List[str] = Column(
+    tags: typing.List[str] = Column(  # type: ignore
         types.String(), nullable=False, default="[]", info={JSON_KEY: True}
     )
 
