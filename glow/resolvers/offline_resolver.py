@@ -37,7 +37,7 @@ class OfflineResolver(StateMachineResolver):
         super()._future_will_schedule(future)
 
         run = make_run_from_future(future)
-        run.future_state = FutureState.SCHEDULED.value
+        run.future_state = FutureState.SCHEDULED
         run.started_at = datetime.datetime.utcnow()
 
         artifacts = {
@@ -55,7 +55,7 @@ class OfflineResolver(StateMachineResolver):
         if future.parent_future is not None:
             run.parent_id = future.parent_future.id
 
-        run.future_state = FutureState.RAN.value
+        run.future_state = FutureState.RAN
         run.ended_at = datetime.datetime.utcnow()
 
         save_run(run)
@@ -75,10 +75,10 @@ class OfflineResolver(StateMachineResolver):
         run = get_run(failed_future.id)
 
         run.future_state = (
-            FutureState.NESTED_FAILED.value
+            FutureState.NESTED_FAILED
             if failed_future.nested_future is not None
             and failed_future.state in (FutureState.FAILED, FutureState.NESTED_FAILED)
-            else FutureState.FAILED.value
+            else FutureState.FAILED
         )
         run.failed_at = datetime.datetime.utcnow()
 

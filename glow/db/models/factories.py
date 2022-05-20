@@ -20,7 +20,7 @@ from glow.types.serialization import (
 def make_run_from_future(future: AbstractFuture) -> Run:
     run = Run(
         id=future.id,
-        future_state=future.state.value,
+        future_state=future.state,
         name=future.name,
         calculator_path="{}.{}".format(
             future.calculator.__module__, future.calculator.__name__

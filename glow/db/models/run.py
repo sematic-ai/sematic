@@ -55,7 +55,7 @@ class Run(Base, JSONEncodableMixin):
     __tablename__ = "runs"
 
     id: str = Column(types.String(), primary_key=True)
-    future_state: str = Column(types.String(), nullable=False)
+    future_state: FutureState = Column(types.String(), nullable=False)
     name: str = Column(types.String(), nullable=True)
     calculator_path: str = Column(types.String(), nullable=False)
     parent_id: typing.Optional[str] = Column(types.String(), nullable=True)
@@ -92,14 +92,10 @@ class Run(Base, JSONEncodableMixin):
         """
         Validates that the future_state value is allowed.
         """
-        if value not in FutureState.values():
-            raise ValueError(
-                (
-                    "The value of `Run.future_state`"
-                    " must be one of the values in `FutureState`."
-                )
-            )
-        return value
+        if not isinstance(value, FutureState):
+            raise ValueError("future_state must be a FutureState")
+
+        return value.value
 
     @validates("tags")
     def convert_tags_to_json(self, key, value) -> str:
