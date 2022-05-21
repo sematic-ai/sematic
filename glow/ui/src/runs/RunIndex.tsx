@@ -10,6 +10,7 @@ import { RunList } from "../components/RunList";
 import RunStateChip from "../components/RunStateChip";
 import React, { useState } from "react";
 import Tags from "../components/Tags";
+import CalculatorPath from "../components/CalculatorPath";
 
 TimeAgo.addDefaultLocale(en);
 
@@ -27,11 +28,7 @@ export function RunRow(props: RunRowProps) {
   let createdAt: React.ReactElement | undefined;
 
   if (props.variant !== "skinny") {
-    calculatorPath = (
-      <Typography fontSize="small" color="GrayText">
-        <code>{run.calculator_path}</code>
-      </Typography>
-    );
+    calculatorPath = <CalculatorPath calculatorPath={run.calculator_path} />;
 
     createdAt = (
       <Typography fontSize="small" color="GrayText">

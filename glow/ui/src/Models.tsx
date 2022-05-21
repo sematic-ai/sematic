@@ -4,8 +4,10 @@ export type Run = {
   name: string;
   calculator_path: string;
   description: string | null;
+  source_code: string;
   tags: Array<string>;
   parent_id: string | null;
+  root_id: string;
   created_at: Date;
   updated_at: Date;
   started_at: Date | null;

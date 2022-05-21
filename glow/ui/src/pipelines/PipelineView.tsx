@@ -12,6 +12,12 @@ import { useParams } from "react-router-dom";
 import { Grid, List, ListItem, Typography } from "@mui/material";
 import { RunList, RunFilterType } from "../components/RunList";
 import { RunRow } from "../runs/RunIndex";
+import CalculatorPath from "../components/CalculatorPath";
+import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
+import python from "react-syntax-highlighter/dist/esm/languages/hljs/python";
+import docco from "react-syntax-highlighter/dist/esm/styles/hljs/docco";
+
+SyntaxHighlighter.registerLanguage("python", python);
 
 function PipelineView() {
   let params = useParams();
@@ -70,9 +76,7 @@ function PipelineView() {
             <Typography variant="h5" component="h2">
               {lastRun.name}
             </Typography>
-            <Typography fontSize="small" color="GrayText">
-              <code>{lastRun.calculator_path}</code>
-            </Typography>
+            <CalculatorPath calculatorPath={lastRun.calculator_path} />
           </Box>
           <Box marginBottom={1}>
             <Typography variant="overline" component="h3">
@@ -123,79 +127,112 @@ type ArtifactMap = Map<
 >;
 
 function SelectedRun(props: { run: Run | undefined }) {
-  const tabIndex = { ARTIFACTS: 0, DAG: 1 };
+  const tabIndex = { ARTIFACTS: 0, SOURCE: 1, DAG: 2 };
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<Error | undefined>(undefined);
   const [selectedTab, setSelectedTab] = useState(tabIndex.ARTIFACTS);
   const [artifacts, setArtifacts] = useState<ArtifactMap>(new Map());
+  const [runsByRootId, setRunsByRootId] = useState<Map<string, Array<Run>>>(
+    new Map()
+  );
 
   let run = props.run;
   useEffect(() => {
     setError(undefined);
-    if (run === undefined) {
-      return;
-    }
+    if (run === undefined) return;
+
     if (artifacts.has(run.id)) return;
-    if (run && selectedTab === tabIndex.ARTIFACTS) {
-      setIsLoaded(false);
-      fetch("/api/v1/artifacts?consumer_run_ids=" + run.id)
-        .then((res) => res.json())
-        .then(
-          (result: ArtifactListPayload) => {
-            let artifactsByID: Map<string, Artifact> = new Map();
-            result.content.forEach((artifact) => {
-              artifactsByID.set(artifact.id, artifact);
-            });
-            let newMap = artifacts;
-            Object.entries(result.extra.run_mapping).forEach(
-              ([runId, mapping]) => {
-                let artifactMap: Map<string, Artifact> = new Map();
-                Object.entries(mapping.input).forEach(([name, artifactId]) => {
-                  let artifact = artifactsByID.get(artifactId);
-                  if (artifact) {
-                    artifactMap.set(name, artifact);
-                  } else {
-                    throw "Missing artifact";
-                  }
-                });
-                newMap.set(runId, {
-                  input: artifactMap,
-                  output: undefined,
-                });
-              }
-            );
-            setArtifacts(newMap);
-            setIsLoaded(true);
-          },
-          (error) => {
-            setError(error);
-            setIsLoaded(true);
-          }
-        );
-    }
+
+    console.log("Fetching artifacts for run " + run.id);
+    setIsLoaded(false);
+    fetch("/api/v1/artifacts?consumer_run_ids=" + run.id)
+      .then((res) => res.json())
+      .then(
+        (result: ArtifactListPayload) => {
+          let artifactsByID: Map<string, Artifact> = new Map();
+          result.content.forEach((artifact) => {
+            artifactsByID.set(artifact.id, artifact);
+          });
+          let newMap = artifacts;
+          Object.entries(result.extra.run_mapping).forEach(
+            ([runId, mapping]) => {
+              let artifactMap: Map<string, Artifact> = new Map();
+              Object.entries(mapping.input).forEach(([name, artifactId]) => {
+                let artifact = artifactsByID.get(artifactId);
+                if (artifact) {
+                  artifactMap.set(name, artifact);
+                } else {
+                  throw "Missing artifact";
+                }
+              });
+              newMap.set(runId, {
+                input: artifactMap,
+                output: undefined,
+              });
+            }
+          );
+          setArtifacts(newMap);
+          setIsLoaded(true);
+        },
+        (error) => {
+          setError(error);
+          setIsLoaded(true);
+        }
+      );
   }, [run, selectedTab, artifacts]);
+
+  useEffect(() => {
+    if (run === undefined) return;
+
+    if (runsByRootId.has(run.id)) return;
+
+    setIsLoaded(false);
+
+    console.log("Fetching runs for root " + run.id);
+    let filters = JSON.stringify({ root_id: { eq: run.id } });
+    fetch("/api/v1/runs?limit=-1&filters=" + filters)
+      .then((res) => res.json())
+      .then(
+        (result: RunListPayload) => {
+          if (!run) return;
+          let newMap = runsByRootId;
+          newMap.set(run.id, result.content);
+          setRunsByRootId(newMap);
+          setIsLoaded(true);
+        },
+        (error) => {
+          setError(error);
+          setIsLoaded(true);
+        }
+      );
+  }, [run]);
 
   let tabsDisabled = run === undefined || !isLoaded;
 
   let inputArtifacts: Map<string, Artifact> = new Map();
+  let runs: Array<Run> = [];
+  let uniqueRunsByCalculator: Map<string, Run> = new Map();
+
   if (run) {
-    let inputArtifactMap = artifacts.get(run.id)?.input;
-    if (inputArtifactMap) {
-      inputArtifacts = inputArtifactMap;
-    }
+    inputArtifacts = artifacts.get(run.id)?.input || new Map();
+    runs = runsByRootId.get(run.id) || [];
+    runs.forEach((run_) =>
+      uniqueRunsByCalculator.set(run_.calculator_path, run_)
+    );
   }
 
   return (
     <>
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
-          value={tabIndex.ARTIFACTS}
-          onChange={undefined}
+          value={selectedTab}
+          onChange={(e, n) => setSelectedTab(n)}
           aria-label="run-tabs"
         >
-          <Tab label="Artifacts" disabled={tabsDisabled} />
-          <Tab label="Graph" disabled={tabsDisabled} />
+          <Tab label="Artifacts" disabled={tabsDisabled} {...a11yProps(0)} />
+          <Tab label="Soure code" disabled={tabsDisabled} {...a11yProps(1)} />
+          <Tab label="Graph" disabled={tabsDisabled} {...a11yProps(2)} />
         </Tabs>
       </Box>
 
@@ -247,6 +284,25 @@ function SelectedRun(props: { run: Run | undefined }) {
                 </Typography>
               </Grid>
             </Grid>
+          </TabPanel>
+          <TabPanel value={selectedTab} index={tabIndex.SOURCE}>
+            {Array.from(uniqueRunsByCalculator).map(
+              ([calculatorPath, run_]) => (
+                <Box key={calculatorPath} sx={{ marginTop: 2 }}>
+                  <Box sx={{ marginTop: 7 }}>
+                    <CalculatorPath calculatorPath={calculatorPath} />
+                  </Box>
+                  <SyntaxHighlighter
+                    language="python"
+                    style={docco}
+                    showLineNumbers
+                    customStyle={{ fontSize: 14 }}
+                  >
+                    {run_.source_code}
+                  </SyntaxHighlighter>
+                </Box>
+              )
+            )}
           </TabPanel>
           <TabPanel value={selectedTab} index={tabIndex.DAG}>
             Item Two
