@@ -5,6 +5,6 @@ ALTER TABLE runs ADD COLUMN tags TEXT;
 
 -- migrate:down
 
-ALTER TABLE DROP COLUMN description;
+ALTER TABLE runs DROP COLUMN description;
 
-ALTER TABLE DROP COLUMN tags;
+ALTER TABLE runs DROP COLUMN tags;
