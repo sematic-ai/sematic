@@ -30,6 +30,7 @@ def make_run_from_future(future: AbstractFuture) -> Run:
         ),
         description=future.calculator.__doc__,
         tags=future.tags,
+        source_code=future.calculator.get_source(),
     )
 
     return run

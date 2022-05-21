@@ -11,7 +11,10 @@ from glow.types.serialization import value_to_json_encodable, type_to_json_encod
 
 @calculator
 def func():
-    pass
+    """
+    An informative docstring.
+    """
+    pass  # Some comment
 
 
 def test_make_run_from_future():
@@ -25,6 +28,17 @@ def test_make_run_from_future():
     assert run.calculator_path == "glow.db.models.tests.test_factories.func"
     assert run.name == "func"
     assert run.parent_id == parent_future.id
+    assert run.description == "An informative docstring."
+    assert (
+        run.source_code
+        == """@calculator
+def func():
+    \"\"\"
+    An informative docstring.
+    \"\"\"
+    pass  # Some comment
+"""
+    )
 
 
 def test_make_artifact():

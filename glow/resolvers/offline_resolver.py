@@ -38,6 +38,7 @@ class OfflineResolver(StateMachineResolver):
 
         run = make_run_from_future(future)
         run.future_state = FutureState.SCHEDULED
+        run.root_id = self._futures[0].id
         run.started_at = datetime.datetime.utcnow()
 
         artifacts = {

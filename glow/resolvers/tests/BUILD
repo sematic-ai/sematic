@@ -5,6 +5,8 @@ pytest_test(
         "//glow:abstract_future",
         "//glow:calculator",
         "//glow/types:init",
+        "//glow/db:db",
+        "//glow/db/models:run",
         "//glow/db/tests:fixtures",
         "//glow/resolvers:offline_resolver",
     ]

@@ -35,6 +35,9 @@ class Calculator(AbstractCalculator):
     def __repr__(self):
         return "{}.{}".format(self.__module__, self.__name__)
 
+    def get_source(self) -> str:
+        return inspect.getsource(self._func)
+
     def _validate_arg_specs(self):
         """
         Validates the calculator's function argument specification.
