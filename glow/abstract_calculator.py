@@ -35,3 +35,7 @@ class AbstractCalculator(abc.ABC):
     @abc.abstractproperty
     def output_type(self) -> type:
         pass
+
+    @abc.abstractmethod
+    def get_source(self) -> str:
+        pass

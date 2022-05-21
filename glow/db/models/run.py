@@ -35,6 +35,14 @@ class Run(Base, JSONEncodableMixin):
         The id of the parent run. A parent run is the run corresponding to
         the :class:`glow.Calculator` encapsulating the current
         :class:`glow.Calculator`.
+    root_id : str
+        ID of the root run of the current graph. The root run corresponds to the
+        entry point of the graph, i.e. the one corresponding to the future on which
+        `resolve` was called.
+    description: Optional[str]
+        The run's description. Defaults to the calculator's docstring.
+    source_code: str
+        The calculator's source code.
     created_at : datetime
         Time of creating of the run record in the DB.
     updated_at : datetime
@@ -59,10 +67,12 @@ class Run(Base, JSONEncodableMixin):
     name: str = Column(types.String(), nullable=True)
     calculator_path: str = Column(types.String(), nullable=False)
     parent_id: typing.Optional[str] = Column(types.String(), nullable=True)
+    root_id: str = Column(types.String(), nullable=False)
     description: typing.Optional[str] = Column(types.String(), nullable=True)
     tags: typing.List[str] = Column(  # type: ignore
         types.String(), nullable=False, default="[]", info={JSON_KEY: True}
     )
+    source_code: str = Column(types.String(), nullable=False)
 
     # Lifecycle timestamps
     created_at: datetime.datetime = Column(

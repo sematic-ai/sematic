@@ -4,6 +4,8 @@ import pytest
 # Glow
 from glow.abstract_future import FutureState
 from glow.calculator import calculator
+from glow.db.db import db
+from glow.db.models.run import Run
 from glow.db.tests.fixtures import test_db  # noqa: F401
 from glow.db.queries import (
     count_runs,
@@ -62,6 +64,9 @@ def test_local_resolver(test_db):  # noqa: F811
     assert future.state == FutureState.RESOLVED
 
     assert count_runs() == 6
+
+    with db().get_session() as session:
+        assert session.query(Run).filter(Run.root_id == future.id).count() == 6
 
 
 def test_failure(test_db):  # noqa: F811
