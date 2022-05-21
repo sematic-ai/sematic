@@ -51,6 +51,7 @@ export function RunList(props: RunListProps) {
     if (props.groupBy) {
       url = url + "&group_by=" + props.groupBy;
     }
+
     if (props.filters) {
       let filters = JSON.stringify(props.filters);
       url += "&filters=" + filters;

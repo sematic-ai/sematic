@@ -1,13 +1,14 @@
+import Container from "@mui/material/Container";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { Run } from "../Models";
-import { RunListPayload } from "../Payloads";
+import { useState, useEffect, useCallback } from "react";
+import { Artifact, Run } from "../Models";
+import { ArtifactListPayload, RunListPayload } from "../Payloads";
 import Loading from "../components/Loading";
 import { useParams } from "react-router-dom";
-import { TableCell, TableRow, Typography } from "@mui/material";
+import { Grid, List, ListItem, Typography } from "@mui/material";
 import Chip from "@mui/material/Chip";
 import { RunList, RunFilterType } from "../components/RunList";
 import { RunRow } from "../runs/RunIndex";
@@ -18,7 +19,6 @@ function PipelineView() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [lastRun, setLastRun] = useState<Run | undefined>(undefined);
   const [selectedRun, setSelectedRun] = useState<Run | undefined>(undefined);
-  const [runIsLoading, setRunIsLoading] = useState(false);
 
   useEffect(() => {
     let filters = JSON.stringify({
@@ -42,9 +42,16 @@ function PipelineView() {
       );
   }, [params.calculatorPath]);
 
-  useEffect(() => {
-    setRunIsLoading(selectedRun !== undefined);
-  }, [selectedRun]);
+  let onRowClick = useCallback(
+    (run: Run) => {
+      if (selectedRun && selectedRun.id === run.id) {
+        setSelectedRun(undefined);
+      } else {
+        setSelectedRun(run);
+      }
+    },
+    [selectedRun]
+  );
 
   if (error) {
     return <Alert severity="error">API Error: {error.message}</Alert>;
@@ -56,21 +63,9 @@ function PipelineView() {
       ],
     };
 
-    let onRowClick = (run: Run) => {
-      if (selectedRun && selectedRun.id === run.id) {
-        setSelectedRun(undefined);
-      } else {
-        setSelectedRun(run);
-      }
-    };
-
-    let tabsDisabled = !selectedRun || runIsLoading;
-
-    let selectedTab: number = 0;
-
     return (
       <>
-        <Box marginBottom={5}>
+        <Box marginTop={5} marginBottom={12}>
           <Box marginBottom={3}>
             <Typography variant="h5" component="h2">
               {lastRun.name}
@@ -117,36 +112,7 @@ function PipelineView() {
             />
           )}
         </RunList>
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs value={0} onChange={undefined} aria-label="input artifacts">
-            <Tab label="Inputs" disabled={tabsDisabled} />
-            <Tab label="Output" disabled={tabsDisabled} />
-            <Tab label="Graph" disabled={tabsDisabled} />
-          </Tabs>
-        </Box>
-        {runIsLoading && (
-          <Box textAlign="center">
-            <Loading />
-          </Box>
-        )}
-        {!runIsLoading && !selectedRun && (
-          <Box padding={3}>
-            <Alert severity="info">Select a run.</Alert>
-          </Box>
-        )}
-        {!runIsLoading && selectedRun && (
-          <>
-            <TabPanel value={selectedTab} index={0}>
-              Item One
-            </TabPanel>
-            <TabPanel value={selectedTab} index={1}>
-              Item Two
-            </TabPanel>
-            <TabPanel value={selectedTab} index={2}>
-              Item Three
-            </TabPanel>
-          </>
-        )}
+        <SelectedRun run={selectedRun} />
       </>
     );
   }
@@ -154,6 +120,149 @@ function PipelineView() {
     <Box textAlign="center">
       <Loading />
     </Box>
+  );
+}
+
+type ArtifactMap = Map<
+  string,
+  {
+    input: Map<string, Artifact>;
+    output: Artifact | undefined;
+  }
+>;
+
+function SelectedRun(props: { run: Run | undefined }) {
+  const tabIndex = { ARTIFACTS: 0, DAG: 1 };
+
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [error, setError] = useState<Error | undefined>(undefined);
+  const [selectedTab, setSelectedTab] = useState(tabIndex.ARTIFACTS);
+  const [artifacts, setArtifacts] = useState<ArtifactMap>(new Map());
+
+  let run = props.run;
+  useEffect(() => {
+    setError(undefined);
+    if (run === undefined) {
+      return;
+    }
+    if (artifacts.has(run.id)) return;
+    if (run && selectedTab === tabIndex.ARTIFACTS) {
+      setIsLoaded(false);
+      fetch("/api/v1/artifacts?consumer_run_ids=" + run.id)
+        .then((res) => res.json())
+        .then(
+          (result: ArtifactListPayload) => {
+            let artifactsByID: Map<string, Artifact> = new Map();
+            result.content.forEach((artifact) => {
+              artifactsByID.set(artifact.id, artifact);
+            });
+            let newMap = artifacts;
+            Object.entries(result.extra.run_mapping).forEach(
+              ([runId, mapping]) => {
+                let artifactMap: Map<string, Artifact> = new Map();
+                Object.entries(mapping.input).forEach(([name, artifactId]) => {
+                  let artifact = artifactsByID.get(artifactId);
+                  if (artifact) {
+                    artifactMap.set(name, artifact);
+                  } else {
+                    throw "Missing artifact";
+                  }
+                });
+                newMap.set(runId, {
+                  input: artifactMap,
+                  output: undefined,
+                });
+              }
+            );
+            setArtifacts(newMap);
+            setIsLoaded(true);
+          },
+          (error) => {
+            setError(error);
+            setIsLoaded(true);
+          }
+        );
+    }
+  }, [run, selectedTab, artifacts]);
+
+  let tabsDisabled = run === undefined || !isLoaded;
+
+  let inputArtifacts: Map<string, Artifact> = new Map();
+  if (run) {
+    let inputArtifactMap = artifacts.get(run.id)?.input;
+    if (inputArtifactMap) {
+      inputArtifacts = inputArtifactMap;
+    }
+  }
+
+  return (
+    <>
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Tabs
+          value={tabIndex.ARTIFACTS}
+          onChange={undefined}
+          aria-label="run-tabs"
+        >
+          <Tab label="Artifacts" disabled={tabsDisabled} />
+          <Tab label="Graph" disabled={tabsDisabled} />
+        </Tabs>
+      </Box>
+
+      {run && !isLoaded && (
+        <Box textAlign="center">
+          <Loading />
+        </Box>
+      )}
+
+      {!run && (
+        <Box padding={3}>
+          <Alert severity="info">Select a run.</Alert>
+        </Box>
+      )}
+
+      {error && (
+        <Box padding={3}>
+          <Alert severity="error">API Error: {error.message}</Alert>
+        </Box>
+      )}
+
+      {run && isLoaded && !error && inputArtifacts.size > 0 && (
+        <>
+          <TabPanel value={selectedTab} index={tabIndex.ARTIFACTS}>
+            <Grid container>
+              <Grid item xs={6}>
+                <Typography variant="overline" fontSize="small">
+                  Input
+                </Typography>
+                <List>
+                  {Array.from(inputArtifacts).map(([name, artifact]) => (
+                    <ListItem key={name} sx={{ display: "block" }}>
+                      <Container sx={{ display: "flex", paddingX: 0 }}>
+                        <Typography>{name}:</Typography>
+                        <Typography paddingLeft={4} color="GrayText">
+                          <code>float</code>
+                        </Typography>
+                      </Container>
+                      <Box sx={{ backgroundColor: "#eaeaea", padding: 2 }}>
+                        <code>{artifact.json_summary}</code>
+                      </Box>
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="overline" fontSize="small">
+                  Output
+                </Typography>
+              </Grid>
+            </Grid>
+          </TabPanel>
+          <TabPanel value={selectedTab} index={tabIndex.DAG}>
+            Item Two
+          </TabPanel>
+        </>
+      )}
+    </>
   );
 }
 
@@ -174,11 +283,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          <Typography>{children}</Typography>
-        </Box>
-      )}
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
 }

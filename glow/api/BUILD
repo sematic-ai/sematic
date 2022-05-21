@@ -15,6 +15,7 @@ glow_py_lib(
     deps = [
         "//glow/api:app",
         "//glow/api/endpoints:runs",
+        "//glow/api/endpoints:artifacts",
         requirement("flask"),
     ]
 )

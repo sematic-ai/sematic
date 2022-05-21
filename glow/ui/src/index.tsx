@@ -16,18 +16,16 @@ const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 root.render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />}>
-          <Route path="pipelines" element={<PipelineIndex />} />
-          <Route path="pipelines/:calculatorPath" element={<PipelineView />} />
-          {
-            //<Route path="runs/:id" element={<RunView id="abc" />} />
-          }
-          <Route path="runs" element={<RunIndex />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
-  </React.StrictMode>
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<App />}>
+        <Route path="pipelines" element={<PipelineIndex />} />
+        <Route path="pipelines/:calculatorPath" element={<PipelineView />} />
+        {
+          //<Route path="runs/:id" element={<RunView id="abc" />} />
+        }
+        <Route path="runs" element={<RunIndex />} />
+      </Route>
+    </Routes>
+  </BrowserRouter>
 );

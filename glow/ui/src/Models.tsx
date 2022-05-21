@@ -13,3 +13,10 @@ export type Run = {
   resolved_at: Date | null;
   failed_at: Date | null;
 };
+
+export type Artifact = {
+  id: string;
+  json_summary: any;
+  created_at: Date;
+  updated_at: Date;
+};
