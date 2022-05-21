@@ -9,6 +9,7 @@ import { Run } from "../Models";
 import { RunList } from "../components/RunList";
 import RunStateChip from "../components/RunStateChip";
 import React, { useState } from "react";
+import Tags from "../components/Tags";
 
 TimeAgo.addDefaultLocale(en);
 
@@ -46,7 +47,7 @@ export function RunRow(props: RunRowProps) {
       sx={{ cursor: props.onClick ? "pointer" : undefined }}
       selected={props.selected}
     >
-      <TableCell onClick={props.onClick}>
+      <TableCell onClick={props.onClick} width={1}>
         <Typography fontSize="small" color="GrayText">
           <code>{run.id.substring(0, 8)}</code>
         </Typography>
@@ -56,6 +57,9 @@ export function RunRow(props: RunRowProps) {
           {run.name}
         </Link>
         {calculatorPath}
+      </TableCell>
+      <TableCell>
+        <Tags tags={run.tags || []} />
       </TableCell>
       <TableCell onClick={props.onClick}>
         {<ReactTimeAgo date={new Date(run.created_at)} locale="en-US" />}
@@ -74,7 +78,7 @@ export function RunIndex() {
       <Typography variant="h4" component="h2">
         Run list
       </Typography>
-      <RunList columns={["ID", "Name", "Time", "Status"]}>
+      <RunList columns={["ID", "Name", "Tags", "Time", "Status"]}>
         {(run: Run) => <RunRow run={run} key={run.id} />}
       </RunList>
     </>

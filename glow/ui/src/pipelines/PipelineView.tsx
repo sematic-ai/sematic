@@ -7,9 +7,9 @@ import { useState, useEffect, useCallback } from "react";
 import { Artifact, Run } from "../Models";
 import { ArtifactListPayload, RunListPayload } from "../Payloads";
 import Loading from "../components/Loading";
+import Tags from "../components/Tags";
 import { useParams } from "react-router-dom";
 import { Grid, List, ListItem, Typography } from "@mui/material";
-import Chip from "@mui/material/Chip";
 import { RunList, RunFilterType } from "../components/RunList";
 import { RunRow } from "../runs/RunIndex";
 
@@ -81,23 +81,14 @@ function PipelineView() {
             <Typography>{lastRun.description}</Typography>
           </Box>
           <Box>
-            {(lastRun.tags || []).map((tag) => (
-              <Chip
-                label={tag}
-                color="primary"
-                size="small"
-                variant="outlined"
-                key={tag}
-                sx={{ marginRight: 1 }}
-              />
-            ))}
+            <Tags tags={lastRun.tags || []} />
           </Box>
         </Box>
         <Typography variant="h6" component="h3">
           Latest runs
         </Typography>
         <RunList
-          columns={["ID", "Name", "Time", "Status"]}
+          columns={["ID", "Name", "Tags", "Time", "Status"]}
           filters={runFilters}
           pageSize={5}
           size="small"
