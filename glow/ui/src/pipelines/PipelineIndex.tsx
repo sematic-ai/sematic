@@ -105,6 +105,7 @@ function PipelineIndex() {
         columns={["Name", "Description", "Last run", "Status"]}
         groupBy="calculator_path"
         filters={{ AND: [{ parent_id: { eq: null } }] }}
+        emptyAlert="No pipelines."
       >
         {(run: Run) => <PipelineRow run={run} key={run.id} />}
       </RunList>

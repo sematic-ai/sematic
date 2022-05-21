@@ -26,6 +26,7 @@ type RunListProps = {
   filters?: RunFilterType;
   pageSize?: number;
   size?: "small" | "medium" | undefined;
+  emptyAlert?: string;
 };
 
 export function RunList(props: RunListProps) {
@@ -78,7 +79,7 @@ export function RunList(props: RunListProps) {
     tableBody = (
       <TableBody>
         <TableRow>
-          <TableCell colSpan={4}>
+          <TableCell colSpan={props.columns.length}>
             <Alert severity="error">API Error: {error.message}</Alert>
           </TableCell>
         </TableRow>
@@ -88,7 +89,7 @@ export function RunList(props: RunListProps) {
     tableBody = (
       <TableBody>
         <TableRow>
-          <TableCell colSpan={4} align="center">
+          <TableCell colSpan={props.columns.length} align="center">
             <Loading />
           </TableCell>
         </TableRow>
@@ -97,7 +98,15 @@ export function RunList(props: RunListProps) {
   } else if (currentPayload) {
     tableBody = (
       <TableBody>
-        {currentPayload.content.map((run) => props.children(run))}
+        {currentPayload.content.length > 0 &&
+          currentPayload.content.map((run) => props.children(run))}
+        {currentPayload.content.length == 0 && (
+          <TableRow>
+            <TableCell colSpan={props.columns.length}>
+              <Alert severity="info">{props.emptyAlert || "No runs."}</Alert>
+            </TableCell>
+          </TableRow>
+        )}
       </TableBody>
     );
   }
