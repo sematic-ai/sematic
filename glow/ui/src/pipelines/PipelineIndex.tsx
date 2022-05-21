@@ -1,10 +1,10 @@
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import { useEffect, useState } from "react";
 import { RunList } from "../components/RunList";
+import Tags from "../components/Tags";
 import { Run } from "../Models";
 import Link from "@mui/material/Link";
 import { RunListPayload } from "../Payloads";
@@ -73,6 +73,14 @@ function PipelineRow(props: { run: Run }) {
             <code>{run.calculator_path}</code>
           </Typography>
         </TableCell>
+        <TableCell key="description">
+          <Box>
+            <Typography variant="caption" color="GrayText">
+              {run.description}
+            </Typography>
+          </Box>
+          <Tags tags={run.tags || []} />
+        </TableCell>
         <TableCell key="last-run">
           <Typography fontSize="small" color="GrayText">
             {durationMS / 1000} seconds on&nbsp;
@@ -81,28 +89,6 @@ function PipelineRow(props: { run: Run }) {
         </TableCell>
         <TableCell key="status">
           <RecentStatuses runs={runs} />
-        </TableCell>
-      </TableRow>
-      <TableRow>
-        <TableCell colSpan={3}>
-          <Box>
-            <Typography variant="overline">Description: </Typography>
-            <Typography variant="caption" color="GrayText">
-              {run.description}
-            </Typography>
-          </Box>
-          <Box>
-            <Typography variant="overline">Tags: </Typography>
-            {(run.tags || []).map((tag) => (
-              <Chip
-                label={tag}
-                color="primary"
-                size="small"
-                variant="outlined"
-                key={tag}
-              />
-            ))}
-          </Box>
         </TableCell>
       </TableRow>
     </>
@@ -116,7 +102,7 @@ function PipelineIndex() {
         Pipelines
       </Typography>
       <RunList
-        columns={["Name", "Last run", "Status"]}
+        columns={["Name", "Description", "Last run", "Status"]}
         groupBy="calculator_path"
         filters={{ AND: [{ parent_id: { eq: null } }] }}
       >
