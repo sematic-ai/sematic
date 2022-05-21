@@ -51,8 +51,8 @@ def _get_request_parameters(
         limit, custor, group_by, filters
     """
     limit: int = int(args.get("limit", _DEFAULT_LIMIT))
-    if limit < 1:
-        raise Exception("limit must be greater than 0")
+    if not (limit == -1 or limit > 0):
+        raise Exception("limit must be greater than 0 or -1")
 
     def _none_if_empty(name: str) -> typing.Optional[str]:
         value = args.get(name)
