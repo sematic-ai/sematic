@@ -80,7 +80,6 @@ def _get_request_parameters(
 
     sql_predicates = _get_sql_predicates(filters)
 
-    print(group_by, sql_predicates)
     return limit, cursor, group_by_column, sql_predicates
 
 

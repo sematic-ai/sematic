@@ -1,4 +1,4 @@
-import { Run } from "./Models";
+import { Run, Artifact } from "./Models";
 
 export type RunListPayload = {
   current_page_url: string;
@@ -11,4 +11,11 @@ export type RunListPayload = {
 
 export type RunViewPayload = {
   content: Run;
+};
+
+export type ArtifactListPayload = {
+  content: Array<Artifact>;
+  extra: {
+    run_mapping: { [run_id: string]: { input: { [name: string]: string } } };
+  };
 };

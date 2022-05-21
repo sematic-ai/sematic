@@ -1,7 +1,6 @@
 glow_py_lib(
     name = "runs",
     srcs = ["runs.py"],
-    visibility = ["//visibility:public"],
     deps = [
         "//glow/api:app",
         "//glow/db:db",
@@ -9,5 +8,15 @@ glow_py_lib(
         "//glow/db/models:run",
         requirement("flask"),
         requirement("sqlalchemy"),
+    ]
+)
+
+glow_py_lib(
+    name = "artifacts",
+    srcs = ["artifacts.py"],
+    deps = [
+        "//glow/api:app",
+        "//glow/db:queries",
+        requirement("flask"),
     ]
 )

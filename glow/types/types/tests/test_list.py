@@ -82,8 +82,6 @@ def test_type_to_json_encodable_subclass():
 
     json_encodable = type_to_json_encodable(type_)
 
-    print(json_encodable["type"][2]["args"][0])
-
     assert json_encodable == collections.OrderedDict(
         (
             (
