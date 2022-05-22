@@ -16,6 +16,11 @@ export type RunViewPayload = {
 export type ArtifactListPayload = {
   content: Array<Artifact>;
   extra: {
-    run_mapping: { [run_id: string]: { input: { [name: string]: string } } };
+    run_mapping: {
+      [runId: string]: {
+        input: { [name: string]: string };
+        output: { [name: string]: string };
+      };
+    };
   };
 };

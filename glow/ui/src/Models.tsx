@@ -1,3 +1,5 @@
+import { TypeSerialization } from "./types/Types";
+
 export type Run = {
   id: string;
   future_state: string;
@@ -19,6 +21,7 @@ export type Run = {
 export type Artifact = {
   id: string;
   json_summary: any;
+  type_serialization: TypeSerialization;
   created_at: Date;
   updated_at: Date;
 };
