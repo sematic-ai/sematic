@@ -87,7 +87,13 @@ function PipelineView() {
             <Grid item xs={6}>
               <Box marginY={3}>
                 <Card variant="outlined" sx={{ padding: 4, fontSize: "small" }}>
-                  <ReactMarkdown>{lastRun.description || ""}</ReactMarkdown>
+                  {(lastRun.description && (
+                    <ReactMarkdown>{lastRun.description}</ReactMarkdown>
+                  )) || (
+                    <Typography color="GrayText">
+                      Your function's docstring will appear here.
+                    </Typography>
+                  )}
                 </Card>
               </Box>
             </Grid>
@@ -229,6 +235,8 @@ function SelectedRun(props: { run: Run | undefined }) {
       uniqueRunsByCalculator.set(run_.calculator_path, run_)
     );
   }
+
+  console.log(artifactMap);
 
   return (
     <>
