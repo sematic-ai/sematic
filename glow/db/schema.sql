@@ -17,9 +17,9 @@ CREATE TABLE runs (
 CREATE TABLE artifacts (
     -- sha1 hex digest are 40 characters
     id character(40) NOT NULL,
-    json_summary TEXT NOT NULL,
+    json_summary JSONB NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL, type_serialization JSONB NOT NULL,
 
     PRIMARY KEY (id)
 );
@@ -43,4 +43,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20220514020602'),
   ('20220519154144'),
   ('20220521155045'),
-  ('20220521155336');
+  ('20220521155336'),
+  ('20220522082435');

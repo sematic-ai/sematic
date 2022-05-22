@@ -13,7 +13,7 @@ from glow.db.models.run import Run
 from glow.types.serialization import (
     value_to_json_encodable,
     type_to_json_encodable,
-    get_json_summary,
+    get_json_encodable_summary,
 )
 
 
@@ -37,18 +37,26 @@ def make_run_from_future(future: AbstractFuture) -> Run:
 
 
 def make_artifact(value: typing.Any, type_: typing.Any) -> Artifact:
+    type_serialization = type_to_json_encodable(type_)
+    value_serialization = value_to_json_encodable(value, type_)
+
     artifact = Artifact(
-        id=_get_value_sha1_digest(value, type_),
-        json_summary=get_json_summary(value, type_),
+        id=_get_value_sha1_digest(value_serialization, type_serialization),
+        json_summary=json.dumps(
+            get_json_encodable_summary(value, type_), sort_keys=True
+        ),
+        type_serialization=json.dumps(type_serialization, sort_keys=True),
     )
 
     return artifact
 
 
-def _get_value_sha1_digest(value: typing.Any, type_: typing.Any) -> str:
+def _get_value_sha1_digest(
+    value_serialization: typing.Any, type_serialization: typing.Any
+) -> str:
     payload = {
-        "value": value_to_json_encodable(value, type_),
-        "type": type_to_json_encodable(type_),
+        "value": value_serialization,
+        "type": type_serialization,
         # Should there be some sort of type versioning concept here?
     }
 

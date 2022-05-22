@@ -44,12 +44,16 @@ def func():
 def test_make_artifact():
     artifact = make_artifact(42, int)
 
+    value_serialization = value_to_json_encodable(42, int)
+    type_serialization = type_to_json_encodable(int)
+
     payload = {
-        "value": value_to_json_encodable(42, int),
-        "type": type_to_json_encodable(int),
+        "value": value_serialization,
+        "type": type_serialization,
     }
 
     sha1 = hashlib.sha1(json.dumps(payload, sort_keys=True).encode("utf-8"))
 
     assert artifact.id == sha1.hexdigest()
     assert artifact.json_summary == "42"
+    assert artifact.type_serialization == json.dumps(type_serialization, sort_keys=True)

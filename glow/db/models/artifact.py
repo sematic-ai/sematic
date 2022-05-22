@@ -14,7 +14,10 @@ class Artifact(Base, JSONEncodableMixin):
     __tablename__ = "artifacts"
 
     id: str = Column(types.String(), primary_key=True)
-    json_summary: str = Column(types.String(), nullable=False, info={JSON_KEY: True})
+    json_summary: str = Column(types.JSON(), nullable=False, info={JSON_KEY: True})
+    type_serialization: str = Column(
+        types.JSON(), nullable=False, info={JSON_KEY: True}
+    )
     created_at: datetime.datetime = Column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow
     )

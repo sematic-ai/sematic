@@ -1,5 +1,6 @@
 # Standard library
 import datetime
+import re
 import typing
 import json
 
@@ -114,6 +115,6 @@ class Run(Base, JSONEncodableMixin):
     @validates("description")
     def strip_description(self, key, value) -> str:
         if value is not None:
-            value = value.strip()
+            value = re.sub("\\n\s{4}", "\n", value.strip())
 
         return value

@@ -9,13 +9,14 @@ import { ArtifactListPayload, RunListPayload } from "../Payloads";
 import Loading from "../components/Loading";
 import Tags from "../components/Tags";
 import { useParams } from "react-router-dom";
-import { Grid, List, ListItem, Typography } from "@mui/material";
+import { Card, Grid, List, ListItem, Typography } from "@mui/material";
 import { RunList, RunFilterType } from "../components/RunList";
 import { RunRow } from "../runs/RunIndex";
 import CalculatorPath from "../components/CalculatorPath";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import python from "react-syntax-highlighter/dist/esm/languages/hljs/python";
 import docco from "react-syntax-highlighter/dist/esm/styles/hljs/docco";
+import ReactMarkdown from "react-markdown";
 
 SyntaxHighlighter.registerLanguage("python", python);
 
@@ -71,22 +72,26 @@ function PipelineView() {
 
     return (
       <>
-        <Box marginTop={5} marginBottom={12}>
+        <Box marginTop={2} marginBottom={12}>
           <Box marginBottom={3}>
-            <Typography variant="h5" component="h2">
+            <Typography variant="h3" component="h2">
               {lastRun.name}
             </Typography>
             <CalculatorPath calculatorPath={lastRun.calculator_path} />
           </Box>
-          <Box marginBottom={1}>
-            <Typography variant="overline" component="h3">
-              Description
-            </Typography>
-            <Typography>{lastRun.description}</Typography>
-          </Box>
           <Box>
             <Tags tags={lastRun.tags || []} />
           </Box>
+          <Grid container>
+            <Grid item xs={6}>
+              <Box marginY={3}>
+                <Card variant="outlined" sx={{ padding: 4, fontSize: "small" }}>
+                  <ReactMarkdown>{lastRun.description || ""}</ReactMarkdown>
+                </Card>
+              </Box>
+            </Grid>
+            <Grid item xs={6}></Grid>
+          </Grid>
         </Box>
         <Typography variant="h6" component="h3">
           Latest runs
@@ -189,7 +194,6 @@ function SelectedRun(props: { run: Run | undefined }) {
 
     setIsLoaded(false);
 
-    console.log("Fetching runs for root " + run.id);
     let filters = JSON.stringify({ root_id: { eq: run.id } });
     fetch("/api/v1/runs?limit=-1&filters=" + filters)
       .then((res) => res.json())
