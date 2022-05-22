@@ -3,12 +3,18 @@ import time
 
 # Glow
 from glow import calculator
+from glow.types import FloatInRange
 
 
 @calculator
 def add(a: float, b: float) -> float:
     time.sleep(5)
     return a + b
+
+
+@calculator
+def sum_list(list_: list[float], a: FloatInRange[0, 1]) -> float:
+    return sum(list_) + a
 
 
 @calculator

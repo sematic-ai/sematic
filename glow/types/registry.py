@@ -1,4 +1,5 @@
 # Standard library
+import inspect
 import typing
 
 # Glow
@@ -186,6 +187,7 @@ def is_valid_typing_alias(type_: typing.Any) -> bool:
     if isinstance(
         type_,
         (
+            typing.GenericAlias,  # type: ignore
             typing._GenericAlias,  # type: ignore
             typing._UnionGenericAlias,  # type: ignore
             typing._CallableGenericAlias,  # type: ignore
@@ -200,8 +202,10 @@ def is_valid_typing_alias(type_: typing.Any) -> bool:
 
 
 def is_glow_parametrized_generic_type(type_: typing.Any) -> bool:
-    return (
-        isinstance(type_, type)
-        and issubclass(type_, GenericType)
-        and GenericType.PARAMETERS_KEY in type_.__dict__
-    )
+    try:
+        return (
+            issubclass(type_, GenericType)
+            and GenericType.PARAMETERS_KEY in type_.__dict__
+        )
+    except Exception:
+        return False
