@@ -114,7 +114,7 @@ def create_run_with_artifacts(run: Run, artifacts: typing.Dict[str, Artifact]) -
 
 def get_run_output_artifact(run_id: str) -> typing.Optional[Artifact]:
     """Get a run's output artifact."""
-    artifacts = get_run_artifacts(run_id, RunArtifactRelationship.OUTPUT)
+    artifacts = get_runs_artifacts([run_id], RunArtifactRelationship.OUTPUT)
     if artifacts:
         return artifacts[0]
 
@@ -125,20 +125,10 @@ def get_run_input_artifacts(run_id: str) -> typing.Dict[typing.Text, Artifact]:
     """Get a mapping of a run's input artifacts."""
     artifacts_by_id = {
         artifact.id: artifact
-        for artifact in get_run_artifacts(run_id, RunArtifactRelationship.INPUT)
+        for artifact in get_runs_artifacts([run_id], RunArtifactRelationship.INPUT)
     }
 
-    with db().get_session() as session:
-        run_artifacts: typing.List[RunArtifact] = (
-            session.query(RunArtifact)
-            .filter(
-                sqlalchemy.and_(
-                    RunArtifact.run_id == run_id,
-                    RunArtifact.relationship == RunArtifactRelationship.INPUT.value,
-                )
-            )
-            .all()
-        )
+    run_artifacts = get_runs_run_artifacts([run_id], RunArtifactRelationship.INPUT)
 
     return {
         run_artifact.name: artifacts_by_id[run_artifact.artifact_id]
@@ -146,11 +136,28 @@ def get_run_input_artifacts(run_id: str) -> typing.Dict[typing.Text, Artifact]:
     }
 
 
-def get_run_artifacts(
-    run_id: str, relationship: typing.Optional[RunArtifactRelationship] = None
+def get_runs_run_artifacts(
+    run_ids: typing.List[str],
+    relationship: typing.Optional[RunArtifactRelationship] = None,
+) -> typing.List[RunArtifact]:
+    run_artifact_filter = [RunArtifact.run_id.in_(run_ids)]
+    if relationship:
+        run_artifact_filter.append(RunArtifact.relationship == relationship.value)
+
+    with db().get_session() as session:
+        return (
+            session.query(RunArtifact)
+            .filter(sqlalchemy.and_(*run_artifact_filter))
+            .all()
+        )
+
+
+def get_runs_artifacts(
+    run_ids: typing.List[str],
+    relationship: typing.Optional[RunArtifactRelationship] = None,
 ) -> typing.Tuple[Artifact, ...]:
     """Get artifacts associated with a run."""
-    run_artifact_filter = [RunArtifact.run_id == run_id]
+    run_artifact_filter = [RunArtifact.run_id.in_(run_ids)]
     if relationship:
         run_artifact_filter.append(RunArtifact.relationship == relationship.value)
 

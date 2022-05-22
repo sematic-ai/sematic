@@ -9,7 +9,7 @@ import { ArtifactListPayload, RunListPayload } from "../Payloads";
 import Loading from "../components/Loading";
 import Tags from "../components/Tags";
 import { useParams } from "react-router-dom";
-import { Card, Grid, List, ListItem, Typography } from "@mui/material";
+import { Card, Grid, Typography } from "@mui/material";
 import { RunList, RunFilterType } from "../components/RunList";
 import { RunRow } from "../runs/RunIndex";
 import CalculatorPath from "../components/CalculatorPath";
@@ -17,6 +17,7 @@ import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import python from "react-syntax-highlighter/dist/esm/languages/hljs/python";
 import docco from "react-syntax-highlighter/dist/esm/styles/hljs/docco";
 import ReactMarkdown from "react-markdown";
+import { ArtifactList } from "../components/Artifacts";
 
 SyntaxHighlighter.registerLanguage("python", python);
 
@@ -123,13 +124,36 @@ function PipelineView() {
   );
 }
 
-type ArtifactMap = Map<
-  string,
-  {
-    input: Map<string, Artifact>;
-    output: Artifact | undefined;
-  }
->;
+type ArtifactMap = {
+  input: Map<string, Artifact>;
+  output: Map<string, Artifact>;
+};
+
+type RunArtifactMap = Map<string, ArtifactMap>;
+
+function buildArtifactMap(payload: ArtifactListPayload): ArtifactMap {
+  let artifactsByID: Map<string, Artifact> = new Map();
+  payload.content.forEach((artifact) =>
+    artifactsByID.set(artifact.id, artifact)
+  );
+  let artifactMap: ArtifactMap = { input: new Map(), output: new Map() };
+  Object.entries(payload.extra.run_mapping).forEach(([runId, mapping]) => {
+    Object.entries(mapping).forEach(([relationship, artifacts]) => {
+      Object.entries(artifacts).forEach(([name, artifactId]) => {
+        let artifact = artifactsByID.get(artifactId);
+        if (artifact) {
+          let map =
+            relationship === "input" ? artifactMap.input : artifactMap.output;
+          map.set(name, artifact);
+        } else {
+          throw Error("Missing artifact");
+        }
+      });
+    });
+  });
+
+  return artifactMap;
+}
 
 function SelectedRun(props: { run: Run | undefined }) {
   const tabIndex = { ARTIFACTS: 0, SOURCE: 1, DAG: 2 };
@@ -137,7 +161,7 @@ function SelectedRun(props: { run: Run | undefined }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<Error | undefined>(undefined);
   const [selectedTab, setSelectedTab] = useState(tabIndex.ARTIFACTS);
-  const [artifacts, setArtifacts] = useState<ArtifactMap>(new Map());
+  const [artifacts, setArtifacts] = useState<RunArtifactMap>(new Map());
   const [runsByRootId, setRunsByRootId] = useState<Map<string, Array<Run>>>(
     new Map()
   );
@@ -149,34 +173,14 @@ function SelectedRun(props: { run: Run | undefined }) {
 
     if (artifacts.has(run.id)) return;
 
-    console.log("Fetching artifacts for run " + run.id);
     setIsLoaded(false);
-    fetch("/api/v1/artifacts?consumer_run_ids=" + run.id)
+    fetch("/api/v1/artifacts?run_ids=" + run.id)
       .then((res) => res.json())
       .then(
         (result: ArtifactListPayload) => {
-          let artifactsByID: Map<string, Artifact> = new Map();
-          result.content.forEach((artifact) => {
-            artifactsByID.set(artifact.id, artifact);
-          });
+          if (run === undefined) return;
           let newMap = artifacts;
-          Object.entries(result.extra.run_mapping).forEach(
-            ([runId, mapping]) => {
-              let artifactMap: Map<string, Artifact> = new Map();
-              Object.entries(mapping.input).forEach(([name, artifactId]) => {
-                let artifact = artifactsByID.get(artifactId);
-                if (artifact) {
-                  artifactMap.set(name, artifact);
-                } else {
-                  throw "Missing artifact";
-                }
-              });
-              newMap.set(runId, {
-                input: artifactMap,
-                output: undefined,
-              });
-            }
-          );
+          newMap.set(run.id, buildArtifactMap(result));
           setArtifacts(newMap);
           setIsLoaded(true);
         },
@@ -210,17 +214,17 @@ function SelectedRun(props: { run: Run | undefined }) {
           setIsLoaded(true);
         }
       );
-  }, [run]);
+  }, [run, runsByRootId]);
 
   let tabsDisabled = run === undefined || !isLoaded;
 
-  let inputArtifacts: Map<string, Artifact> = new Map();
+  let artifactMap: ArtifactMap = { input: new Map(), output: new Map() };
   let runs: Array<Run> = [];
   let uniqueRunsByCalculator: Map<string, Run> = new Map();
 
   if (run) {
-    inputArtifacts = artifacts.get(run.id)?.input || new Map();
-    runs = runsByRootId.get(run.id) || [];
+    artifactMap = artifacts.get(run.id) || artifactMap;
+    runs = runsByRootId.get(run.id) || runs;
     runs.forEach((run_) =>
       uniqueRunsByCalculator.set(run_.calculator_path, run_)
     );
@@ -258,7 +262,7 @@ function SelectedRun(props: { run: Run | undefined }) {
         </Box>
       )}
 
-      {run && isLoaded && !error && inputArtifacts.size > 0 && (
+      {run && isLoaded && !error && (
         <>
           <TabPanel value={selectedTab} index={tabIndex.ARTIFACTS}>
             <Grid container>
@@ -266,26 +270,13 @@ function SelectedRun(props: { run: Run | undefined }) {
                 <Typography variant="overline" fontSize="small">
                   Input
                 </Typography>
-                <List>
-                  {Array.from(inputArtifacts).map(([name, artifact]) => (
-                    <ListItem key={name} sx={{ display: "block" }}>
-                      <Container sx={{ display: "flex", paddingX: 0 }}>
-                        <Typography>{name}:</Typography>
-                        <Typography paddingLeft={4} color="GrayText">
-                          <code>float</code>
-                        </Typography>
-                      </Container>
-                      <Box sx={{ backgroundColor: "#eaeaea", padding: 2 }}>
-                        <code>{artifact.json_summary}</code>
-                      </Box>
-                    </ListItem>
-                  ))}
-                </List>
+                <ArtifactList artifacts={artifactMap.input} />
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="overline" fontSize="small">
                   Output
                 </Typography>
+                <ArtifactList artifacts={artifactMap.output} />
               </Grid>
             </Grid>
           </TabPanel>
