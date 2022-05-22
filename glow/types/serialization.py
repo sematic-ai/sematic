@@ -74,13 +74,12 @@ def binary_from_string(string: str) -> bytes:
 
 
 # JSON SUMMARIES
-def get_json_summary(value: typing.Any, type_: typing.Any) -> str:
+def get_json_encodable_summary(value: typing.Any, type_: typing.Any) -> typing.Any:
     # First we check custom summaries
     # TODO
 
     # By default we use the full payload
-    json_encodable = value_to_json_encodable(value, type_)
-    return json.dumps(json_encodable, sort_keys=True)
+    return value_to_json_encodable(value, type_)
 
 
 # TYPE SERIALIZATION
