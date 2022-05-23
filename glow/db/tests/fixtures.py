@@ -32,11 +32,13 @@ def test_db():
 
 
 def make_run(**kwargs) -> Run:
+    id = uuid.uuid4().hex
     run = Run(
-        id=uuid.uuid4().hex,
+        id=id,
         future_state=FutureState.CREATED,
         name="test_run",
         calculator_path="path.to.test_run",
+        root_id=id,
     )
 
     for name, value in kwargs.items():
