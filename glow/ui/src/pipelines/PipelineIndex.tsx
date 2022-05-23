@@ -10,6 +10,8 @@ import Link from "@mui/material/Link";
 import { RunListPayload } from "../Payloads";
 import RunStateChip from "../components/RunStateChip";
 import CircleOutlined from "@mui/icons-material/CircleOutlined";
+import Tooltip from "@mui/material/Tooltip";
+import ReactTimeAgo from "react-time-ago";
 
 function RecentStatuses(props: { runs: Array<Run> | undefined }) {
   function statusChip(index: number) {
@@ -74,20 +76,32 @@ function PipelineRow(props: { run: Run }) {
           </Typography>
         </TableCell>
         <TableCell key="description">
-          <Box>
-            <Typography variant="caption" color="GrayText">
-              {run.description}
-            </Typography>
+          <Box
+            maxWidth={400}
+            sx={{
+              textOverflow: "ellipsis",
+              overflow: "hidden",
+              whiteSpace: "nowrap",
+            }}
+            component="div"
+          >
+            <Tooltip title={run.description || ""} placement="bottom-start">
+              <Typography variant="caption" color="GrayText">
+                {run.description}
+              </Typography>
+            </Tooltip>
           </Box>
           <Tags tags={run.tags || []} />
         </TableCell>
         <TableCell key="last-run">
+          {<ReactTimeAgo date={new Date(run.created_at)} locale="en-US" />}
           <Typography fontSize="small" color="GrayText">
-            {durationMS / 1000} seconds on&nbsp;
+            {Number.parseFloat((durationMS / 1000).toString()).toFixed(1)}{" "}
+            seconds on&nbsp;
             {new Date(run.created_at).toLocaleString()}
           </Typography>
         </TableCell>
-        <TableCell key="status">
+        <TableCell key="status" width={120}>
           <RecentStatuses runs={runs} />
         </TableCell>
       </TableRow>

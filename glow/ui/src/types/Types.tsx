@@ -1,5 +1,6 @@
 import Typography from "@mui/material/Typography";
 import React from "react";
+import Tooltip from "@mui/material/Tooltip";
 
 export type TypeRepr = [
   string | undefined,
@@ -94,10 +95,21 @@ function FloatInRangeTypeView(props: TypeViewProps) {
   return (
     <code>
       {"FloatInRange["}
-      {params["lower_bound"]["value"]},&nbsp;
-      {params["upper_bound"]["value"]},&nbsp;
-      {params["lower_inclusive"]["value"] ? "True" : "False"},&nbsp;
-      {params["upper_inclusive"]["value"] ? "True" : "False"}
+      <Tooltip title="Lower bound">
+        <span>{params["lower_bound"]["value"]}</span>
+      </Tooltip>
+      ,&nbsp;
+      <Tooltip title="Upper bound">
+        <span>{params["upper_bound"]["value"]}</span>
+      </Tooltip>
+      ,&nbsp;
+      <Tooltip title="Lower inclusive">
+        <span>{params["lower_inclusive"]["value"] ? "True" : "False"}</span>
+      </Tooltip>
+      ,&nbsp;
+      <Tooltip title="Upper inclusive">
+        <span>{params["upper_inclusive"]["value"] ? "True" : "False"}</span>
+      </Tooltip>
       {"]"}
     </code>
   );

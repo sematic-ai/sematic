@@ -236,8 +236,6 @@ function SelectedRun(props: { run: Run | undefined }) {
     );
   }
 
-  console.log(artifactMap);
-
   return (
     <>
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
@@ -273,17 +271,13 @@ function SelectedRun(props: { run: Run | undefined }) {
       {run && isLoaded && !error && (
         <>
           <TabPanel value={selectedTab} index={tabIndex.ARTIFACTS}>
-            <Grid container>
+            <Grid container paddingTop={5}>
               <Grid item xs={6}>
-                <Typography variant="overline" fontSize="small">
-                  Input
-                </Typography>
+                <Typography variant="h6">Input values</Typography>
                 <ArtifactList artifacts={artifactMap.input} />
               </Grid>
               <Grid item xs={6}>
-                <Typography variant="overline" fontSize="small">
-                  Output
-                </Typography>
+                <Typography variant="h6">Output value</Typography>
                 <ArtifactList artifacts={artifactMap.output} />
               </Grid>
             </Grid>

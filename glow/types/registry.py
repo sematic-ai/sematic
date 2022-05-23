@@ -1,5 +1,4 @@
 # Standard library
-import inspect
 import typing
 
 # Glow
@@ -209,3 +208,12 @@ def is_glow_parametrized_generic_type(type_: typing.Any) -> bool:
         )
     except Exception:
         return False
+
+
+class DataclassKey:
+    """
+    This is solely to be used as indexation key in the registry for
+    the default dataclass casting and serialization logics.
+    """
+
+    pass
