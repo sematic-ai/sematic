@@ -1,8 +1,10 @@
 # Standard Library
+import dataclasses
 import typing
 
 # Glow
 from glow.types.registry import (
+    DataclassKey,
     get_can_cast_func,
     get_safe_cast_func,
     is_valid_typing_alias,
@@ -70,6 +72,11 @@ def safe_cast(
     """
     # 1. First we check if there is a custom casting function
     _safe_cast_func = get_safe_cast_func(type_)
+
+    # 1b. If this is a dataclass we fetch the datacalss casting logic
+    if _safe_cast_func is None and dataclasses.is_dataclass(type_):
+        _safe_cast_func = get_can_cast_func(DataclassKey)
+
     if _safe_cast_func is not None:
         return _safe_cast_func(value, type_)
 

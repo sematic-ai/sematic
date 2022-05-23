@@ -26,7 +26,7 @@ function RunStateChip(props: { state?: string }) {
   }
 
   return (
-    <Tooltip title={toolTipMessage} placement="right">
+    <Tooltip title={toolTipMessage} placement="bottom-start">
       {statusChip}
     </Tooltip>
   );

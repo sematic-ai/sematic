@@ -19,6 +19,7 @@
     "@types/react-dom": "^18.0.3",
     "javascript-time-ago": "^2.3.13",
     "react": "^18.1.0",
+    "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.1.0",
     "react-markdown": "^8.0.3",
     "react-router-dom": "^6.3.0",
@@ -53,6 +54,7 @@
     ]
   },
   "devDependencies": {
+    "@types/react-copy-to-clipboard": "^5.0.2",
     "@types/react-syntax-highlighter": "^15.5.1"
   }
 }

@@ -8,9 +8,10 @@ import en from "javascript-time-ago/locale/en.json";
 import { Run } from "../Models";
 import { RunList } from "../components/RunList";
 import RunStateChip from "../components/RunStateChip";
-import React, { useState } from "react";
+import React from "react";
 import Tags from "../components/Tags";
 import CalculatorPath from "../components/CalculatorPath";
+import Id from "../components/Id";
 
 TimeAgo.addDefaultLocale(en);
 
@@ -45,9 +46,7 @@ export function RunRow(props: RunRowProps) {
       selected={props.selected}
     >
       <TableCell onClick={props.onClick} width={1}>
-        <Typography fontSize="small" color="GrayText">
-          <code>{run.id.substring(0, 8)}</code>
-        </Typography>
+        <Id id={run.id} trimTo={8} />
       </TableCell>
       <TableCell onClick={props.onClick}>
         <Link href={"/runs/" + run.id} underline="hover">
