@@ -115,6 +115,6 @@ class Run(Base, JSONEncodableMixin):
     @validates("description")
     def strip_description(self, key, value) -> str:
         if value is not None:
-            value = re.sub("\\n\s{4}", "\n", value.strip())
+            value = re.sub(r"\\n\s{4}", "\n", value.strip())
 
         return value

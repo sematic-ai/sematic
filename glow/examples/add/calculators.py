@@ -13,7 +13,7 @@ def add(a: float, b: float) -> float:
 
 
 @calculator
-def sum_list(list_: list[float], a: FloatInRange[0, 1]) -> float:
+def sum_list(list_: list[float], a: FloatInRange[0, 1]) -> float:  # type: ignore
     return sum(list_) + a
 
 
