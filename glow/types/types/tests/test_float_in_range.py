@@ -163,33 +163,21 @@ def test_type_serialization():
 
     json_encodable = type_to_json_encodable(t)
 
-    assert json_encodable == collections.OrderedDict(
-        [
-            (
-                "type",
-                (
-                    None,
-                    "FloatInRange",
-                    {
-                        "parameters": collections.OrderedDict(
-                            [
-                                ("lower_bound", {"value": 0.0}),
-                                ("upper_bound", {"value": 1.0}),
-                                ("lower_inclusive", {"value": True}),
-                                ("upper_inclusive", {"value": True}),
-                            ]
-                        )
-                    },
-                ),
-            ),
-            (
-                "registry",
-                collections.OrderedDict(
-                    [("FloatInRange", [("builtins", "float", None)]), ("float", [])]
-                ),
-            ),
-        ]
-    )
+    assert json_encodable == {
+        "type": (
+            "generic",
+            "FloatInRange",
+            {
+                "parameters": [
+                    ("lower_bound", {"value": 0.0}),
+                    ("upper_bound", {"value": 1.0}),
+                    ("lower_inclusive", {"value": True}),
+                    ("upper_inclusive", {"value": True}),
+                ]
+            },
+        ),
+        "registry": {"FloatInRange": [("builtin", "float", {})], "float": []},
+    }
 
 
 def test_type_serialization_subclass():
@@ -198,43 +186,28 @@ def test_type_serialization_subclass():
 
     json_encodable = type_to_json_encodable(Probability)
 
-    assert json_encodable == collections.OrderedDict(
-        [
-            (
-                "type",
+    assert json_encodable == {
+        "type": (
+            "class",
+            "Probability",
+            {"import_path": "glow.types.types.tests.test_float_in_range"},
+        ),
+        "registry": {
+            "Probability": [
                 (
-                    None,
-                    "Probability",
-                    None,
-                ),
-            ),
-            (
-                "registry",
-                collections.OrderedDict(
-                    [
-                        (
-                            "Probability",
-                            [
-                                (
-                                    None,
-                                    "FloatInRange",
-                                    {
-                                        "parameters": collections.OrderedDict(
-                                            [
-                                                ("lower_bound", {"value": 0.0}),
-                                                ("upper_bound", {"value": 1.0}),
-                                                ("lower_inclusive", {"value": True}),
-                                                ("upper_inclusive", {"value": True}),
-                                            ]
-                                        )
-                                    },
-                                )
-                            ],
-                        ),
-                        ("FloatInRange", [("builtins", "float", None)]),
-                        ("float", []),
-                    ]
-                ),
-            ),
-        ]
-    )
+                    "generic",
+                    "FloatInRange",
+                    {
+                        "parameters": [
+                            ("lower_bound", {"value": 0.0}),
+                            ("upper_bound", {"value": 1.0}),
+                            ("lower_inclusive", {"value": True}),
+                            ("upper_inclusive", {"value": True}),
+                        ]
+                    },
+                )
+            ],
+            "FloatInRange": [("builtin", "float", {})],
+            "float": [],
+        },
+    }

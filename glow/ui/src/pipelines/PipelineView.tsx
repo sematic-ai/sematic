@@ -1,4 +1,3 @@
-import Container from "@mui/material/Container";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
@@ -70,7 +69,7 @@ function PipelineView() {
         { calculator_path: { eq: lastRun.calculator_path } },
       ],
     };
-
+    console.log(lastRun.description);
     return (
       <>
         <Box marginTop={2} marginBottom={12}>

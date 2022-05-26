@@ -23,9 +23,12 @@ function App() {
         <AppBar position="static" color="transparent" sx={{ boxShadow: 0 }}>
           <Container maxWidth="xl">
             <Toolbar>
-              <LightModeIcon color="primary" />
+              {
+                //<LightModeIcon color="primary" />
+              }
               <Link href="/" sx={{ color: "white" }} underline="none">
-                <Typography
+                <img src="/glow.png" width={100} alt="Glow" />
+                {/*<Typography
                   variant="h5"
                   component="h1"
                   color="primary"
@@ -35,7 +38,7 @@ function App() {
                   }}
                 >
                   Glow
-                </Typography>
+                </Typography>*/}
               </Link>
               <Box sx={{ flexGrow: 1, display: "flex" }}>
                 {pages.map((page) => (

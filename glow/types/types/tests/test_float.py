@@ -3,6 +3,7 @@ import pytest
 
 # Glow
 from glow.types.casting import safe_cast, can_cast_type
+from glow.types.serialization import type_to_json_encodable
 
 
 @pytest.mark.parametrize(
@@ -24,3 +25,10 @@ def test_safe_cast(value, expected_cast_value, expected_err_msg):
 
 def test_can_cast_type():
     assert can_cast_type(int, float) == (True, None)
+
+
+def test_type_to_json_encodable():
+    assert type_to_json_encodable(float) == {
+        "type": ("builtin", "float", {}),
+        "registry": {"float": []},
+    }

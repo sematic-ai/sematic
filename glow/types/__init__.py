@@ -4,6 +4,7 @@ Glow Types public API
 Only types with lightweight dependencies should
 be added here. Ideally only standard library.
 """
+import glow.types.types.dataclass  # noqa: F401
 import glow.types.types.integer  # noqa: F401
 import glow.types.types.list  # noqa: F401
 import glow.types.types.float  # noqa: F401

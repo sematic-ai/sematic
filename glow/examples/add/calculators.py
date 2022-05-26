@@ -1,9 +1,26 @@
 # Standrd library
 import time
+from dataclasses import dataclass
 
 # Glow
 from glow import calculator
 from glow.types import FloatInRange
+
+
+@dataclass
+class Bar:
+    barr: list[int]
+
+
+@dataclass
+class Config:
+    foo: list[float]
+    bar: Bar
+
+
+@calculator
+def using_dataclass(config: Config) -> Config:
+    return config
 
 
 @calculator

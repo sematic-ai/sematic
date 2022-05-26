@@ -70,7 +70,7 @@ export function RunList(props: RunListProps) {
           setError(error);
         }
       );
-  }, [currentPage, pages, props.filters, props.groupBy]);
+  }, [currentPage, pages, props.filters, props.groupBy, pageSize]);
 
   let tableBody;
   let currentPayload = pages[currentPage];
@@ -100,7 +100,7 @@ export function RunList(props: RunListProps) {
       <TableBody>
         {currentPayload.content.length > 0 &&
           currentPayload.content.map((run) => props.children(run))}
-        {currentPayload.content.length == 0 && (
+        {currentPayload.content.length === 0 && (
           <TableRow>
             <TableCell colSpan={props.columns.length}>
               <Alert severity="info">{props.emptyAlert || "No runs."}</Alert>

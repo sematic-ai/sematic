@@ -31,4 +31,4 @@ def can_cast_to_str(type_: type, _) -> typing.Tuple[bool, typing.Optional[str]]:
     if issubclass(type_, str):
         return True, None
 
-    return False, "{} cannot cast to {}".format(type_, str)
+    return False, "{} cannot cast to str".format(type_)

@@ -66,15 +66,10 @@ def test_type_to_json_encodable():
 
     json_encodable = type_to_json_encodable(type_)
 
-    assert json_encodable == collections.OrderedDict(
-        (
-            (
-                "type",
-                ("typing", "list", {"args": [{"type": ("builtins", "int", None)}]}),
-            ),
-            ("registry", collections.OrderedDict((("int", []), ("list", [])))),
-        )
-    )
+    assert json_encodable == {
+        "type": ("typing", "list", {"args": [{"type": ("builtin", "int", {})}]}),
+        "registry": {"int": [], "list": []},
+    }
 
 
 def test_type_to_json_encodable_subclass():
@@ -82,87 +77,77 @@ def test_type_to_json_encodable_subclass():
 
     json_encodable = type_to_json_encodable(type_)
 
-    assert json_encodable == collections.OrderedDict(
-        (
-            (
-                "type",
-                (
-                    "typing",
-                    "list",
+    assert json_encodable == {
+        "type": (
+            "typing",
+            "list",
+            {
+                "args": [
                     {
-                        "args": [
+                        "type": (
+                            "typing",
+                            "Union",
                             {
-                                "type": (
-                                    "typing",
-                                    "Union",
+                                "args": [
                                     {
-                                        "args": [
+                                        "type": (
+                                            "typing",
+                                            "dict",
                                             {
-                                                "type": (
-                                                    "typing",
-                                                    "dict",
+                                                "args": [
                                                     {
-                                                        "args": [
-                                                            {
-                                                                "type": (
-                                                                    "builtins",
-                                                                    "str",
-                                                                    None,
-                                                                )
-                                                            },
-                                                            {
-                                                                "type": (
-                                                                    "typing",
-                                                                    "Union",
-                                                                    {
-                                                                        "args": [
-                                                                            {
-                                                                                "type": (
-                                                                                    "builtins",  # noqa: E501
-                                                                                    "int",
-                                                                                    None,
-                                                                                ),
-                                                                            },
-                                                                            {
-                                                                                "type": (
-                                                                                    "builtins",  # noqa: E501
-                                                                                    "float",  # noqa: E501
-                                                                                    None,
-                                                                                ),
-                                                                            },
-                                                                        ]
-                                                                    },
-                                                                )
-                                                            },
-                                                        ]
+                                                        "type": (
+                                                            "builtin",
+                                                            "str",
+                                                            {},
+                                                        )
                                                     },
-                                                )
+                                                    {
+                                                        "type": (
+                                                            "typing",
+                                                            "Union",
+                                                            {
+                                                                "args": [
+                                                                    {
+                                                                        "type": (
+                                                                            "builtin",  # noqa: E501
+                                                                            "int",
+                                                                            {},
+                                                                        ),
+                                                                    },
+                                                                    {
+                                                                        "type": (
+                                                                            "builtin",  # noqa: E501
+                                                                            "float",  # noqa: E501
+                                                                            {},
+                                                                        ),
+                                                                    },
+                                                                ]
+                                                            },
+                                                        )
+                                                    },
+                                                ]
                                             },
-                                            {"type": ("builtins", "NoneType", None)},
-                                        ]
+                                        )
                                     },
-                                )
+                                    {"type": ("builtin", "NoneType", {})},
+                                ]
                             },
-                        ]
+                        )
                     },
-                ),
-            ),
-            (
-                "registry",
-                collections.OrderedDict(
-                    (
-                        ("str", []),
-                        ("int", []),
-                        ("float", []),
-                        ("Union", []),
-                        ("dict", []),
-                        ("NoneType", []),
-                        ("list", []),
-                    )
-                ),
-            ),
-        )
-    )
+                ]
+            },
+        ),
+        "registry": {
+            "str": [],
+            "int": [],
+            "float": [],
+            "Union": [],
+            "dict": [],
+            "NoneType": [],
+            "list": [],
+        },
+    }
 
 
 def test_value_to_json_encodable():
