@@ -3,7 +3,7 @@ import logging
 
 # Glow
 from glow import OfflineResolver
-from glow.examples.add.calculators import pipeline, sum_list
+from glow.examples.add.calculators import pipeline, sum_list, using_dataclass
 
 
 if __name__ == "__main__":
@@ -13,7 +13,9 @@ if __name__ == "__main__":
         name="Basic add example pipeline", tags=["example", "basic", "final"]
     )
 
-    future = sum_list([1, 2, 3, 4, 5], 0.5)
+    # future = sum_list([1, 2, 3, 4, 5], 0.5)
+
+    # future = using_dataclass(dict(foo=[1, 2, 3], bar=dict(barr=[3, 4, 5])))
     result = future.resolve(OfflineResolver())
 
     logging.info(result)

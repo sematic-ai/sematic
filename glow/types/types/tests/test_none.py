@@ -1,5 +1,6 @@
 # Glow
 from glow.types.casting import safe_cast, can_cast_type
+from glow.types.serialization import type_to_json_encodable
 
 
 def test_safe_cast():
@@ -13,3 +14,10 @@ def test_can_cast_type():
         False,
         "<class 'int'> cannot cast to <class 'NoneType'>",
     )
+
+
+def test_type_to_json_encodable():
+    assert type_to_json_encodable(type(None)) == {
+        "type": ("builtin", "NoneType", {}),
+        "registry": {"NoneType": []},
+    }

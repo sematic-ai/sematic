@@ -1,4 +1,13 @@
 pytest_test(
+    name = "test_dataclass",
+    srcs = ["test_dataclass.py"],
+    deps = [
+        "//glow/types:init",
+        "//glow/types:casting",
+    ]
+)
+
+pytest_test(
     name = "test_float",
     srcs = ["test_float.py"],
     deps = [
@@ -45,5 +54,6 @@ pytest_test(
     deps = [
         "//glow/types:init",
         "//glow/types:casting",
+        "//glow/types:serialization",
     ]
 )

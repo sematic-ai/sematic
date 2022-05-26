@@ -1,4 +1,13 @@
 glow_py_lib(
+    name = "dataclass",
+    srcs = ["dataclass.py"],
+    deps = [
+        "//glow/types:registry",
+        "//glow/types:casting",
+    ]
+)
+
+glow_py_lib(
     name = "float",
     srcs = ["float.py"],
     deps = [

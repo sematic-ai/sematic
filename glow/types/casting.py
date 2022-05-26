@@ -41,9 +41,14 @@ def can_cast_type(
     if from_type is to_type:
         return True, None
 
-    _can_cast_func = get_can_cast_func(to_type)
-    if _can_cast_func is not None:
-        return _can_cast_func(from_type, to_type)
+    can_cast_func = get_can_cast_func(to_type)
+
+    # If this is a dataclass we fetch the datacalss casting logic
+    if can_cast_func is None and dataclasses.is_dataclass(to_type):
+        can_cast_func = get_can_cast_func(DataclassKey)
+
+    if can_cast_func is not None:
+        return can_cast_func(from_type, to_type)
 
     return False, "{} cannot cast to {}".format(from_type, to_type)
 
@@ -75,7 +80,7 @@ def safe_cast(
 
     # 1b. If this is a dataclass we fetch the datacalss casting logic
     if _safe_cast_func is None and dataclasses.is_dataclass(type_):
-        _safe_cast_func = get_can_cast_func(DataclassKey)
+        _safe_cast_func = get_safe_cast_func(DataclassKey)
 
     if _safe_cast_func is not None:
         return _safe_cast_func(value, type_)

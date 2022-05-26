@@ -3,7 +3,11 @@ import pytest
 
 # Glow
 from glow.types.casting import safe_cast, can_cast_type
-from glow.types.serialization import value_from_json_encodable, value_to_json_encodable
+from glow.types.serialization import (
+    value_from_json_encodable,
+    value_to_json_encodable,
+    type_to_json_encodable,
+)
 
 
 @pytest.mark.parametrize(
@@ -44,3 +48,10 @@ def test_json_serialization():
 
     assert deserialized == 42
     assert isinstance(deserialized, int)
+
+
+def test_type_to_json_encodable():
+    assert type_to_json_encodable(int) == {
+        "type": ("builtin", "int", {}),
+        "registry": {"int": []},
+    }
