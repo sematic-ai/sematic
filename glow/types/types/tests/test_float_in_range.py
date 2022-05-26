@@ -1,6 +1,3 @@
-# Standard library
-import collections
-
 # Third party
 import pytest
 

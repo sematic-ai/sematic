@@ -1,5 +1,4 @@
 # Standard library
-import collections
 import typing
 
 # Third-party

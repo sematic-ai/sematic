@@ -3,7 +3,11 @@ import logging
 
 # Glow
 from glow import OfflineResolver
-from glow.examples.add.calculators import pipeline, sum_list, using_dataclass
+from glow.examples.add.calculators import (  # noqa:F401
+    pipeline,
+    sum_list,
+    using_dataclass,
+)
 
 
 if __name__ == "__main__":
