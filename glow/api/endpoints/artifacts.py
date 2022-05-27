@@ -1,5 +1,6 @@
 # Standard library
 from collections import defaultdict
+import json
 import typing
 
 # Third-party
@@ -13,7 +14,12 @@ from glow.db.queries import get_runs_artifacts, get_runs_run_artifacts
 @glow_api.route("/api/v1/artifacts", methods=["GET"])
 def list_artifacts_endpoint() -> flask.Response:
     args = flask.request.args
-    run_ids = args["run_ids"].split(",")
+    try:
+        run_ids = json.loads(args["run_ids"])
+    except Exception as e:
+        raise Exception(
+            "Malformed run_ids list {}, error: {}".format(args["run_ids"], e)
+        )
 
     artifacts = get_runs_artifacts(run_ids)
     run_artifacts = get_runs_run_artifacts(run_ids)

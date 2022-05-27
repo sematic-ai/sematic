@@ -75,22 +75,12 @@ export function RunList(props: RunListProps) {
   let tableBody;
   let currentPayload = pages[currentPage];
 
-  if (error) {
-    tableBody = (
-      <TableBody>
-        <TableRow>
-          <TableCell colSpan={props.columns.length}>
-            <Alert severity="error">API Error: {error.message}</Alert>
-          </TableCell>
-        </TableRow>
-      </TableBody>
-    );
-  } else if (!isLoaded) {
+  if (error || !isLoaded) {
     tableBody = (
       <TableBody>
         <TableRow>
           <TableCell colSpan={props.columns.length} align="center">
-            <Loading />
+            <Loading error={error} isLoaded={isLoaded} />
           </TableCell>
         </TableRow>
       </TableBody>
