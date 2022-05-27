@@ -1,4 +1,3 @@
-import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import { useState, useEffect } from "react";
 import { Run } from "../Models";
@@ -25,14 +24,8 @@ function RunView(props: { id: string }) {
       );
   }, [props.id]);
 
-  if (error) {
-    return <Alert severity="error">API Error:</Alert>;
-  } else if (!isLoaded) {
-    return (
-      <Box textAlign="center">
-        <Loading />
-      </Box>
-    );
+  if (error || !isLoaded) {
+    return <Loading error={error} isLoaded={isLoaded} />;
   }
 }
 
