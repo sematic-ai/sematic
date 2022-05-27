@@ -2,19 +2,16 @@
 Module holding common DB queries.
 """
 # Standard library
-import datetime
-import typing
+from typing import List, Optional, Dict
 
 # Third-party
-import sqlalchemy
 import sqlalchemy.orm
 
 # Glow
-from glow.abstract_future import FutureState
 from glow.db.models.artifact import Artifact
+from glow.db.models.edge import Edge
 from glow.db.models.run import Run
 from glow.db.db import db
-from glow.db.models.run_artifact import RunArtifact, RunArtifactRelationship
 
 
 def count_runs() -> int:
@@ -72,132 +69,69 @@ def save_run(run: Run) -> Run:
     return run
 
 
-def create_run_with_artifacts(run: Run, artifacts: typing.Dict[str, Artifact]) -> Run:
-    """
-    Create a run and its input artifacts.
-
-    Parameters
-    ----------
-    run: Run
-        Run to create
-    artifacts: Dict[str, Artifact]
-        Mapping of input argument name to artifact
-
-    Returns
-    -------
-    Run
-        persisted run
-    """
-    with db().get_session() as session:
-        session.add(run)
-
-        for name, artifact in artifacts.items():
-            artifacts[name] = _add_unique_artifact(session, artifact)
-
-            run_artifact = RunArtifact(
-                run_id=run.id,
-                artifact_id=artifact.id,
-                name=name,
-                relationship=RunArtifactRelationship.INPUT,
-            )
-
-            session.add(run_artifact)
-
-        session.commit()
-        session.refresh(run)
-
-        for artifact in artifacts.values():
-            session.refresh(artifact)
-
+def create_run_with_artifacts(run: Run, artifacts: Dict[str, Artifact]) -> Run:
+    edges = [
+        Edge(destination_run_id=run.id, destination_name=name, artifact_id=artifact.id)
+        for name, artifact in artifacts.items()
+    ]
+    save_graph([run], list(artifacts.values()), edges)
     return run
 
 
-def get_run_output_artifact(run_id: str) -> typing.Optional[Artifact]:
+def set_run_output_artifact(run, artifact):
+    edge = Edge(source_run_id=run.id, artifact_id=artifact.id)
+    save_graph([run], [artifact], [edge])
+
+
+def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
+    unique_artifacts = []
+    with db().get_session() as session:
+        session.add_all(runs)
+        unique_artifacts = [
+            _add_unique_artifact(session, artifact) for artifact in artifacts
+        ]
+
+        # session.flush()
+        session.add_all(edges)
+        session.commit()
+
+        for run in runs:
+            session.refresh(run)
+
+        for artifact in unique_artifacts:
+            session.refresh(artifact)
+
+        for edge in edges:
+            session.refresh(edge)
+
+
+def get_run_output_artifact(run_id: str) -> Optional[Artifact]:
     """Get a run's output artifact."""
-    artifacts = get_runs_artifacts([run_id], RunArtifactRelationship.OUTPUT)
-    if artifacts:
-        return artifacts[0]
-
-    return None
-
-
-def get_run_input_artifacts(run_id: str) -> typing.Dict[typing.Text, Artifact]:
-    """Get a mapping of a run's input artifacts."""
-    artifacts_by_id = {
-        artifact.id: artifact
-        for artifact in get_runs_artifacts([run_id], RunArtifactRelationship.INPUT)
-    }
-
-    run_artifacts = get_runs_run_artifacts([run_id], RunArtifactRelationship.INPUT)
-
-    return {
-        run_artifact.name: artifacts_by_id[run_artifact.artifact_id]
-        for run_artifact in run_artifacts
-    }
-
-
-def get_runs_run_artifacts(
-    run_ids: typing.List[str],
-    relationship: typing.Optional[RunArtifactRelationship] = None,
-) -> typing.List[RunArtifact]:
-    run_artifact_filter = [RunArtifact.run_id.in_(run_ids)]
-    if relationship:
-        run_artifact_filter.append(RunArtifact.relationship == relationship.value)
-
     with db().get_session() as session:
         return (
-            session.query(RunArtifact)
-            .filter(sqlalchemy.and_(*run_artifact_filter))
-            .all()
-        )
-
-
-def get_runs_artifacts(
-    run_ids: typing.List[str],
-    relationship: typing.Optional[RunArtifactRelationship] = None,
-) -> typing.Tuple[Artifact, ...]:
-    """Get artifacts associated with a run."""
-    run_artifact_filter = [RunArtifact.run_id.in_(run_ids)]
-    if relationship:
-        run_artifact_filter.append(RunArtifact.relationship == relationship.value)
-
-    with db().get_session() as session:
-        artifacts: typing.List[Artifact] = (
             session.query(Artifact)
-            .join(RunArtifact)
-            .filter(sqlalchemy.and_(*run_artifact_filter))
-            .all()
+            .join(Edge, Edge.artifact_id == Artifact.id)
+            .filter(Edge.source_run_id == run_id)
+            .first()
         )
 
-    return tuple(artifacts)
 
-
-def set_run_output_artifact(run: Run, artifact: Artifact) -> None:
-    """
-    Sets the output artifact and updates the run state in the same
-    transaction
-    """
-    run.future_state = FutureState.RESOLVED
-    run.resolved_at = datetime.datetime.utcnow()
-
-    if run.ended_at is None:
-        run.ended_at = run.resolved_at
-
-    run_artifact = RunArtifact(
-        run_id=run.id,
-        artifact_id=artifact.id,
-        relationship=RunArtifactRelationship.OUTPUT,
-    )
-
+def get_run_input_artifacts(run_id: str) -> Dict[str, Artifact]:
+    """Get a mapping of a run's input artifacts."""
     with db().get_session() as session:
-        artifact = _add_unique_artifact(session, artifact)
-        session.add(artifact)
-        session.flush()
-        session.add(run)
-        session.add(run_artifact)
-        session.commit()
-        session.refresh(run)
-        session.refresh(artifact)
+        edges = set(
+            session.query(Edge)
+            .with_entities(Edge.artifact_id, Edge.destination_name)
+            .filter(Edge.destination_run_id == run_id)
+            .all()
+        )
+        artifact_ids = set(edge.artifact_id for edge in edges)
+        artifacts = session.query(Artifact).filter(Artifact.id.in_(artifact_ids)).all()
+        artifacts_by_id = {artifact.id: artifact for artifact in artifacts}
+
+        return {
+            edge.destination_name: artifacts_by_id[edge.artifact_id] for edge in edges
+        }
 
 
 def _add_unique_artifact(
