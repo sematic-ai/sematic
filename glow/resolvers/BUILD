@@ -7,6 +7,9 @@ glow_py_lib(
         "//glow:abstract_future",
         "//glow/db:queries",
         "//glow/db/models:factories",
+        "//glow/db/models:artifact",
+        "//glow/db/models:run",
+        "//glow/db/models:edge",
     ]
 )
 

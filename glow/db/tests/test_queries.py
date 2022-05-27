@@ -4,13 +4,14 @@ from glow.abstract_future import FutureState
 
 # Glow
 from glow.db.db import db
+from glow.db.models.edge import Edge
 from glow.db.queries import (
     count_runs,
-    create_run_with_artifacts,
     get_run,
     get_run_input_artifacts,
     get_run_output_artifact,
     save_run,
+    create_run_with_artifacts,
     set_run_output_artifact,
 )
 from glow.db.models.artifact import Artifact
@@ -64,23 +65,18 @@ def test_create_run_with_artifacts(test_db):  # noqa: F811
         assert get_run(run.id).id == run.id
 
         with db().get_session() as session:
-            run_artifacts: typing.List[RunArtifact] = (
-                session.query(RunArtifact).filter(RunArtifact.run_id == run.id).all()
+            edges: typing.List[Edge] = (
+                session.query(Edge).filter(Edge.destination_run_id == run.id).all()
             )
-            name_to_run_artifacts = {
-                run_artifact.name: run_artifact for run_artifact in run_artifacts
-            }
 
-        assert set(name_to_run_artifacts) == {"a", "b"}
+        edges_by_name = {edge.destination_name: edge for edge in edges}
+
+        assert set(edges_by_name.keys()) == {"a", "b"}
 
         for name, artifact in artifacts.items():
             assert artifact.created_at is not None
             assert artifact.updated_at is not None
-            assert name_to_run_artifacts[name].artifact_id == artifact.id
-            assert (
-                name_to_run_artifacts[name].relationship
-                == RunArtifactRelationship.INPUT.value
-            )
+            assert edges_by_name[name].artifact_id == artifact.id
 
     # Count total number of artifact created
     with db().get_session() as session:
@@ -103,10 +99,6 @@ def test_get_run_output_artifacts(test_db, persisted_run: Run):  # noqa: F811
     artifact = make_artifact(3, int)
 
     set_run_output_artifact(persisted_run, artifact)
-
-    assert persisted_run.future_state == FutureState.RESOLVED.value
-    assert persisted_run.ended_at is not None
-    assert persisted_run.resolved_at is not None
 
     output_artifact = get_run_output_artifact(persisted_run.id)
 
