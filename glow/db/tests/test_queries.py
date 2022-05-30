@@ -1,6 +1,5 @@
 # Standard library
 import typing
-from glow.abstract_future import FutureState
 
 # Glow
 from glow.db.db import db
@@ -17,7 +16,6 @@ from glow.db.queries import (
 from glow.db.models.artifact import Artifact
 from glow.db.models.factories import make_artifact
 from glow.db.models.run import Run
-from glow.db.models.run_artifact import RunArtifact, RunArtifactRelationship
 from glow.db.tests.fixtures import make_run, test_db, run, persisted_run  # noqa: F401
 
 
