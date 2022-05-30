@@ -1,4 +1,4 @@
-import { Run, Artifact } from "./Models";
+import { Run, Artifact, Edge } from "./Models";
 
 export type RunListPayload = {
   current_page_url: string;
@@ -22,16 +22,13 @@ export type RunArtifactMap = Map<string, ArtifactMap>;
 
 export type ArtifactListPayload = {
   content: Artifact[];
-  extra: {
-    run_mapping: {
-      [runId: string]: {
-        input: { [name: string]: string };
-        output: { [name: string]: string };
-      };
-    };
-  };
 };
 
+export type EdgeListPayload = {
+  content: Edge[];
+};
+
+/*
 export function buildArtifactMap(payload: ArtifactListPayload): RunArtifactMap {
   let artifactsByID: Map<string, Artifact> = new Map();
   payload.content.forEach((artifact) =>
@@ -60,3 +57,4 @@ export function buildArtifactMap(payload: ArtifactListPayload): RunArtifactMap {
 
   return runArtifactMap;
 }
+*/

@@ -9,22 +9,22 @@ import {
   RunListPayload,
   ArtifactMap,
   RunArtifactMap,
-  buildArtifactMap,
 } from "../Payloads";
 import Loading from "../components/Loading";
 import Tags from "../components/Tags";
 import { useParams } from "react-router-dom";
-import { Card, Grid, Typography } from "@mui/material";
+import Grid from "@mui/material/Grid";
+import Typography from "@mui/material/Typography";
 import { RunList, RunFilterType } from "../components/RunList";
 import { RunRow } from "../runs/RunIndex";
 import CalculatorPath from "../components/CalculatorPath";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import python from "react-syntax-highlighter/dist/esm/languages/hljs/python";
 import docco from "react-syntax-highlighter/dist/esm/styles/hljs/docco";
-import ReactMarkdown from "react-markdown";
 import { ArtifactList } from "../components/Artifacts";
-import Dag from "../components/Dag";
-import ReaflowDag from "../components/ReaflowDag";
+import { fetchJSON } from "../utils";
+import DagTab from "../components/DagTab";
+import Docstring from "../components/Docstring";
 
 SyntaxHighlighter.registerLanguage("python", python);
 
@@ -39,22 +39,19 @@ function PipelineView() {
     let filters = JSON.stringify({
       calculator_path: { eq: params.calculatorPath },
     });
-    fetch("/api/v1/runs?limit=1&filters=" + filters)
-      .then((res) => res.json())
-      .then(
-        (result: RunListPayload) => {
-          if (result.content.length > 0) {
-            setLastRun(result.content[0]);
-          } else {
-            setError(Error("No pipeline named " + params.calculatorPath));
-          }
-          setIsLoaded(true);
-        },
-        (error) => {
-          setError(error);
-          setIsLoaded(true);
+    fetchJSON(
+      "/api/v1/runs?limit=1&filters=" + filters,
+      (result: RunListPayload) => {
+        if (result.content.length > 0) {
+          setLastRun(result.content[0]);
+          setSelectedRun(result.content[0]);
+        } else {
+          setError(Error("No pipeline named " + params.calculatorPath));
         }
-      );
+      },
+      setError,
+      setIsLoaded
+    );
   }, [params.calculatorPath]);
 
   let onRowClick = useCallback(
@@ -93,15 +90,7 @@ function PipelineView() {
           <Grid container>
             <Grid item xs={6}>
               <Box marginY={3}>
-                <Card variant="outlined" sx={{ padding: 4, fontSize: "small" }}>
-                  {(lastRun.description && (
-                    <ReactMarkdown>{lastRun.description}</ReactMarkdown>
-                  )) || (
-                    <Typography color="GrayText">
-                      Your function's docstring will appear here.
-                    </Typography>
-                  )}
-                </Card>
+                <Docstring run={lastRun} />
               </Box>
             </Grid>
             <Grid item xs={6}></Grid>
@@ -123,10 +112,17 @@ function PipelineView() {
               variant="skinny"
               onClick={(e) => onRowClick(run)}
               selected={selectedRun?.id === run.id}
+              noRunLink
             />
           )}
         </RunList>
-        <SelectedRun run={selectedRun} />
+        <Box paddingY={10}>
+          {!selectedRun && <Alert severity="info">Select a run.</Alert>}
+          {selectedRun && <DagTab rootRun={selectedRun} />}
+        </Box>
+        {
+          //<SelectedRun run={selectedRun} />
+        }
       </>
     );
   }
@@ -156,7 +152,7 @@ function SelectedRun(props: { run: Run | undefined }) {
       .then((res) => res.json())
       .then(
         (result: ArtifactListPayload) => {
-          if (run === undefined) return;
+          /*if (run === undefined) return;
           let newMap = artifacts;
           let artifactMap = buildArtifactMap(result).get(run.id);
           if (artifactMap) {
@@ -164,7 +160,7 @@ function SelectedRun(props: { run: Run | undefined }) {
           } else {
             setError(Error("Incorrect artifact response"));
           }
-          setArtifacts(newMap);
+          setArtifacts(newMap);*/
           setIsLoaded(true);
         },
         (error) => {
@@ -284,7 +280,6 @@ function SelectedRun(props: { run: Run | undefined }) {
           <TabPanel value={selectedTab} index={tabIndex.DAG}>
             <Box paddingTop={5}>
               <Typography variant="h6">Execution graph</Typography>
-              <ReaflowDag rootId={run.id} />
             </Box>
           </TabPanel>
         </>

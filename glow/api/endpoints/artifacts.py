@@ -1,42 +1,38 @@
 # Standard library
-from collections import defaultdict
-import json
-import typing
+from typing import Dict, List
 
 # Third-party
 import flask
+import sqlalchemy
 
 # Glow
 from glow.api.app import glow_api
-from glow.db.queries import get_runs_artifacts, get_runs_run_artifacts
+from glow.api.endpoints.request_parameters import get_request_parameters
+from glow.db.models.artifact import Artifact
+from glow.db.db import db
+
+
+_COLUMN_MAPPING: Dict[str, sqlalchemy.Column] = {
+    column.name: column for column in Artifact.__table__.columns
+}
 
 
 @glow_api.route("/api/v1/artifacts", methods=["GET"])
 def list_artifacts_endpoint() -> flask.Response:
-    args = flask.request.args
-    try:
-        run_ids = json.loads(args["run_ids"])
-    except Exception as e:
-        raise Exception(
-            "Malformed run_ids list {}, error: {}".format(args["run_ids"], e)
-        )
+    limit, _, _, sql_predicates = get_request_parameters(
+        flask.request.args, _COLUMN_MAPPING
+    )
 
-    artifacts = get_runs_artifacts(run_ids)
-    run_artifacts = get_runs_run_artifacts(run_ids)
+    with db().get_session() as session:
+        query = session.query(Artifact)
 
-    run_mapping: typing.Dict[
-        str, typing.Dict[str, typing.Dict[typing.Optional[str], str]]
-    ] = defaultdict(lambda: dict(input={}, output={}))
+        if sql_predicates is not None:
+            query = query.filter(sql_predicates)
 
-    for run_artifact in run_artifacts:
-        relationship = typing.cast(str, run_artifact.relationship)
-        run_mapping[run_artifact.run_id][relationship.lower()][
-            run_artifact.name
-        ] = run_artifact.artifact_id
+        query = query.order_by(sqlalchemy.desc(Artifact.created_at))
 
-    payload = {
-        "content": [artifact.to_json_encodable() for artifact in artifacts],
-        "extra": {"run_mapping": run_mapping},
-    }
+        artifacts: List[Artifact] = query.limit(limit).all()
+
+    payload = dict(content=[artifacts.to_json_encodable() for artifacts in artifacts])
 
     return flask.jsonify(payload)

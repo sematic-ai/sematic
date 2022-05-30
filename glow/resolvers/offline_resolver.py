@@ -1,7 +1,6 @@
 # Standard library
 import datetime
 from typing import Dict, Optional
-import uuid
 
 # Glow
 from glow.abstract_future import AbstractFuture, FutureState
@@ -128,6 +127,10 @@ class OfflineResolver(StateMachineResolver):
 
     def _future_did_resolve(self, future: AbstractFuture) -> None:
         super()._future_did_resolve(future)
+
+        run = self._get_run(future.id)
+        run.future_state = FutureState.RESOLVED
+        run.resolved_at = datetime.datetime.utcnow()
 
         output_artifact = make_artifact(future.value, future.calculator.output_type)
 
