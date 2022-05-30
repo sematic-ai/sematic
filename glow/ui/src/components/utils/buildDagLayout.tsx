@@ -17,7 +17,6 @@ export default function buildDagLayout(
   let nodeDimensions = new Map(
     iNodes.map((node) => {
       let element = getNodeElement(node);
-      console.log(element);
       return [
         node.id,
         {
@@ -38,34 +37,39 @@ export default function buildDagLayout(
   });
 
   const rootNodes = iNodesByParentId.get(null);
-  if (rootNodes === undefined || rootNodes.length == 0)
+  if (rootNodes === undefined || rootNodes.length === 0)
     throw Error("No root node");
-
-  let queue: string[] = [rootNodes[0].id];
-  let stack: string[] = [];
-
-  let subGraphOrder: string[] = [];
-  let renderOrder: string[] = [];
 
   /*
     Algorithm for leaf-first BFS
     We want to create layout for the innermost graphs first
     then work our way up to the root.
-
+    
     Stack my_stask
     Queue my_queue
-
+    
     insert tree.root into my_queue
-  
+    
     while my_queue != empty
-      pop Node node from my_queue
-      push node.children into my_queue
-      push node into my_stask
-
+    pop Node node from my_queue
+    push node.children into my_queue
+    push node into my_stask
+    
     while my_stask != empty
-      pop Node node from my_stask
-      print node
+    pop Node node from my_stask
+    print node
     */
+
+  let queue: string[] = [rootNodes[0].id];
+  let stack: string[] = [];
+
+  // order of parent node Ids in which we should compute layout
+  // Innermost sugraphs first, then moving out
+  let subGraphOrder: string[] = [];
+
+  // order in which we should render subgraphs
+  // outermost first (root), then moving in
+  let renderOrder: string[] = [];
 
   while (queue.length > 0) {
     let nodeId = queue.shift();
@@ -86,6 +90,8 @@ export default function buildDagLayout(
     subGraphOrder.push(nodeId);
   }
 
+  // End of graph algo, now we have subGraphOrder and renderOrder
+
   let iEdgesByParentId: Map<string | null, Edge[]> = new Map();
   iEdges.forEach((edge) => {
     let parentId: string | null = edge.data.parentId
@@ -98,7 +104,6 @@ export default function buildDagLayout(
   });
 
   let finalNodes: Map<string, Node> = new Map();
-  let finalOrder: Node[] = [];
 
   subGraphOrder.forEach((parentNodeId) => {
     let childrenNodes = iNodesByParentId.get(parentNodeId);
@@ -116,7 +121,6 @@ export default function buildDagLayout(
 
     childrenNodes.forEach((node) => {
       dagreGraph.setNode(node.id, {
-        // + 2 because I thing
         width: nodeDimensions.get(node.id)?.width,
         height: nodeDimensions.get(node.id)?.height,
       });
