@@ -6,6 +6,7 @@ glow_py_lib(
         "//glow/db:db",
         "//glow/db:queries",
         "//glow/db/models:run",
+        ":request_parameters",
         requirement("flask"),
         requirement("sqlalchemy"),
     ]
@@ -18,5 +19,26 @@ glow_py_lib(
         "//glow/api:app",
         "//glow/db:queries",
         requirement("flask"),
+    ]
+)
+
+glow_py_lib(
+    name = "request_parameters",
+    srcs = ["request_parameters.py"],
+    deps = [
+        requirement("sqlalchemy"),
+    ]
+)
+
+glow_py_lib(
+    name = "edges",
+    srcs = ["edges.py"],
+    deps = [
+        "//glow/api:app",
+        "//glow/db:db",
+        "//glow/db/models:edge",
+        ":request_parameters",
+        requirement("flask"),
+        requirement("sqlalchemy"),
     ]
 )

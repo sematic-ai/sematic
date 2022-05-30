@@ -11,7 +11,6 @@ from urllib.parse import urlunsplit, urlencode, urlsplit
 # Third-party
 import sqlalchemy
 import flask
-from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.orm.exc import NoResultFound
 
 # Glow
@@ -19,123 +18,12 @@ from glow.api.app import glow_api
 from glow.db.db import db
 from glow.db.models.run import Run
 from glow.db.queries import get_run
-
-
-# Default page size for run list
-_DEFAULT_LIMIT = 20
+from glow.api.endpoints.request_parameters import get_request_parameters
 
 
 _COLUMN_MAPPING: typing.Dict[str, sqlalchemy.Column] = {
     column.name: column for column in Run.__table__.columns
 }
-
-
-def _get_request_parameters(
-    args: typing.Dict[str, str]
-) -> typing.Tuple[
-    int,
-    typing.Optional[str],
-    typing.Optional[sqlalchemy.Column],
-    typing.List[BinaryExpression],
-]:
-    """
-    Extract, validate, and format query parameters.
-
-    Parameters
-    ----------
-    args : Dict[str, str]
-        request argument as returned by `flask.request.args`.
-
-    Returns
-    Tuple[int, Optional[str], Optional[str], List[BinaryExpression]]
-        limit, custor, group_by, filters
-    """
-    limit: int = int(args.get("limit", _DEFAULT_LIMIT))
-    if not (limit == -1 or limit > 0):
-        raise Exception("limit must be greater than 0 or -1")
-
-    def _none_if_empty(name: str) -> typing.Optional[str]:
-        value = args.get(name)
-        if value is not None and len(value) == 0:
-            value = None
-
-        return value
-
-    cursor = _none_if_empty("cursor")
-
-    group_by, group_by_column = _none_if_empty("group_by"), None
-
-    if group_by is not None:
-        if group_by not in _COLUMN_MAPPING:
-            raise ValueError("Unsupported group_by value {}".format(repr(group_by)))
-
-        group_by_column = _COLUMN_MAPPING[group_by]
-
-    filters_json: str = args.get("filters", "{}")
-    filters: typing.Dict[str, typing.Any] = {}
-    try:
-        filters = json.loads(filters_json)
-    except Exception as e:
-        raise Exception("Malformed filters: {}, error: {}".format(filters_json, e))
-
-    sql_predicates = _get_sql_predicates(filters)
-
-    return limit, cursor, group_by_column, sql_predicates
-
-
-def _get_sql_predicates(
-    filters: typing.Dict[str, typing.Dict[str, typing.Any]]
-) -> typing.List[BinaryExpression]:
-    """
-    Basic support for a AND filter predicate.
-
-    filters are of the form:
-    ```
-    {"column_name": {"operator": "value"}}
-    OR
-    {
-        "AND": [
-            {"column_name": {"operator": "value"}},
-            {"column_name": {"operator": "value"}}
-        ]
-    }
-    ```
-    """
-    if len(filters) == 0:
-        return []
-
-    operand = list(filters.keys())[0]
-
-    # Only support single operand for now
-    if operand not in {"AND", "OR"}:
-        return [_extract_single_predicate(filters)]
-
-    if operand == "AND":
-        return [_extract_single_predicate(filter) for filter in filters[operand]]
-
-    raise NotImplementedError("Unsupported filter: {}".format(filters))
-
-
-def _extract_single_predicate(filter) -> BinaryExpression:
-    column_name = list(filter.keys())[0]
-
-    try:
-        column = _COLUMN_MAPPING[column_name]
-    except KeyError:
-        raise Exception("Unknown filter field: {}".format(column_name))
-
-    condition = filter[column_name]
-    if len(condition) == 0:
-        raise Exception("Empty filter: {}".format(filter))
-
-    operator = list(condition.keys())[0]
-    value = condition[operator]
-
-    # Will obviously need to add more, only supporting eq for now
-    if operator == "eq":
-        return column == value
-
-    raise NotImplementedError("Unsupported filter: {}".format(filter))
 
 
 @glow_api.route("/api/v1/runs", methods=["GET"])
@@ -176,8 +64,8 @@ def list_runs_endpoint() -> flask.Response:
         A list of run JSON payloads. The size of the list is `limit` or less if
         current page is last page.
     """
-    limit, cursor, group_by_column, sql_predicates = _get_request_parameters(
-        flask.request.args
+    limit, cursor, group_by_column, sql_predicates = get_request_parameters(
+        flask.request.args, _COLUMN_MAPPING
     )
 
     decoded_cursor: typing.Optional[str] = None
@@ -213,8 +101,8 @@ def list_runs_endpoint() -> flask.Response:
                 ),
             )
 
-        if len(sql_predicates) > 0:
-            query = query.filter(*sql_predicates)
+        if sql_predicates is not None:
+            query = query.filter(sql_predicates)
 
         if decoded_cursor is not None:
             query = query.filter(
