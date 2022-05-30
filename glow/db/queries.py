@@ -2,9 +2,10 @@
 Module holding common DB queries.
 """
 # Standard library
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Tuple
 
 # Third-party
+import sqlalchemy
 import sqlalchemy.orm
 
 # Glow
@@ -103,6 +104,31 @@ def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
 
         for edge in edges:
             session.refresh(edge)
+
+
+def get_graph(root_id: str) -> Tuple[List[Run], List[Artifact], List[Edge]]:
+    """
+    Retrieve the entire graph for a given root run ID.
+    """
+    with db().get_session() as session:
+        runs: List[Run] = session.query(Run).filter(Run.root_id == root_id).all()
+        run_ids = [run.id for run in runs]
+        edges: List[Edge] = (
+            session.query(Edge)
+            .filter(
+                sqlalchemy.or_(
+                    Edge.source_run_id.in_(run_ids),
+                    Edge.destination_run_id.in_(run_ids),
+                )
+            )
+            .all()
+        )
+        artifact_ids = {edge.artifact_id for edge in edges}
+        artifacts: List[Artifact] = (
+            session.query(Artifact).filter(Artifact.id.in_(artifact_ids)).all()
+        )
+
+    return runs, artifacts, edges
 
 
 def get_run_output_artifact(run_id: str) -> Optional[Artifact]:

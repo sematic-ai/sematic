@@ -1,6 +1,6 @@
 # Standard library
 import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Union, Tuple
 
 # Glow
 from glow.abstract_future import AbstractFuture, FutureState
@@ -23,7 +23,7 @@ class OfflineResolver(StateMachineResolver):
         self._runs: Dict[str, Run] = {}
         self._artifacts: Dict[str, Artifact] = {}
 
-    def _set_edge(
+    def _update_edge(
         self,
         source_run_id: Optional[str],
         destination_run_id: Optional[str],
@@ -34,8 +34,8 @@ class OfflineResolver(StateMachineResolver):
         """
         Creates or updates an edge in the graph.
         """
-        edge_key = "{}:{}:{}".format(
-            source_run_id, destination_run_id, destination_name
+        edge_key = "{}:{}:{}:{}".format(
+            source_run_id, parent_id, destination_run_id, destination_name
         )
 
         edge = self._edges.get(edge_key)
@@ -66,15 +66,16 @@ class OfflineResolver(StateMachineResolver):
 
         return None
 
-    def _get_output_edge(self, source_run_id) -> Optional[Edge]:
+    def _get_output_edges(self, source_run_id) -> List[Edge]:
         """
-        Find an output edge.
+        Find output edges.
+        There can be multiple ones if the output goes to multiple futures.
         """
-        for key, edge in self._edges.items():
-            if key.startswith("{}:".format(source_run_id)):
-                return edge
-
-        return None
+        return [
+            edge
+            for key, edge in self._edges.items()
+            if key.startswith("{}:".format(source_run_id))
+        ]
 
     def _schedule_future(self, future: AbstractFuture) -> None:
         self._run_inline(future)
@@ -171,16 +172,24 @@ class OfflineResolver(StateMachineResolver):
             run.root_id = self._futures[0].id
             self._runs[future.id] = run
 
+        # Updating input edges
         for name, value in future.kwargs.items():
+            # Updating the input artifact
             artfact_id = None
             if input_artifacts is not None and name in input_artifacts:
                 artfact_id = input_artifacts[name].id
                 self._artifacts[artfact_id] = input_artifacts[name]
 
+            # If the input is a future, we connect the edge
             source_run_id = None
             if isinstance(value, AbstractFuture):
                 source_run_id = value.id
 
+            # Attempt to link edges across nested graphs
+            # This relies on value identity, it's ok for complex objects
+            # but `a is a` is true for e.g. int, but `a` may not be the value passed in
+            # from the parent input.
+            # The parent_id field is currently not used in the DAG view.
             parent_id = None
             if future.parent_future is not None:
                 for (
@@ -197,7 +206,10 @@ class OfflineResolver(StateMachineResolver):
 
                         parent_id = parent_edge.id
 
-            self._set_edge(
+            # This is idempotent, edges are indexed by a unique key.
+            # It's ok to set the same edge multiple times (e.g. first without
+            # `artifact_id`, then with)
+            self._update_edge(
                 source_run_id=source_run_id,
                 destination_run_id=future.id,
                 destination_name=name,
@@ -205,35 +217,55 @@ class OfflineResolver(StateMachineResolver):
                 parent_id=parent_id,
             )
 
-        destination_run_id, destination_name = None, None
-        output_edge = self._get_output_edge(future.id)
-        if output_edge is not None:
-            destination_run_id = output_edge.destination_run_id
-            destination_name = output_edge.destination_name
-            parent_id = output_edge.parent_id
+        # Updating output edges
 
+        # Updating the output artifact
         artifact_id = None
         if output_artifact is not None:
             artifact_id = output_artifact.id
             self._artifacts[artifact_id] = output_artifact
 
-        parent_id = None
-        if (
-            future.parent_future is not None
-            and future.parent_future.nested_future is future
-        ):
-            parent_edge = self._get_output_edge(future.parent_future.id)
-            if parent_edge is not None:
-                parent_id = parent_edge.id
+        # There can be multiple output edges:
+        # - the output value is input to multiple futures
+        # - the future is nested and the parent future has multiple output edges
+        output_edges = self._get_output_edges(future.id)
 
-        self._set_edge(
-            source_run_id=future.id,
-            destination_run_id=destination_run_id,
-            destination_name=destination_name,
-            artifact_id=artifact_id,
-            parent_id=parent_id,
-        )
+        # It means we are creating it for the first time
+        if len(output_edges) == 0:
+            # Let's figure out if the parent future has output edges yet
+            parent_output_edges = []
 
+            if (
+                future.parent_future is not None
+                and future.parent_future.nested_future is future
+            ):
+                parent_output_edges = self._get_output_edges(future.parent_future.id)
+
+            parent_ids: Union[List[str], Tuple[None]] = [
+                edge.id for edge in parent_output_edges
+            ] or (None,)
+
+            # For each parent output edge, we create an edge
+            for parent_id in parent_ids:
+                self._update_edge(
+                    source_run_id=future.id,
+                    destination_run_id=None,
+                    destination_name=None,
+                    artifact_id=artifact_id,
+                    parent_id=parent_id,
+                )
+        # There already are output edges, we simply update the artifact id
+        else:
+            for output_edge in output_edges:
+                self._update_edge(
+                    source_run_id=future.id,
+                    destination_run_id=output_edge.destination_run_id,
+                    destination_name=output_edge.destination_name,
+                    parent_id=output_edge.parent_id,
+                    artifact_id=artifact_id,
+                )
+
+        # populate the graph for upstream futures
         for value in future.kwargs.values():
             if isinstance(value, AbstractFuture):
                 self._populate_graph(value)

@@ -54,6 +54,7 @@ class Edge(Base, JSONEncodableMixin):
         "parent_id",
     )
 
+    # Necessary for testing purposes, see test_offline_resolver.py
     def __eq__(self, other) -> bool:
         return all(
             getattr(self, field) == getattr(other, field)
@@ -64,13 +65,5 @@ class Edge(Base, JSONEncodableMixin):
         return hash(
             ":".join(
                 map(str, [getattr(self, field) for field in self._EQUALITY_FIELDS])
-            )
-        )
-
-    def __repr__(self):
-        return "Edge({})".format(
-            ", ".join(
-                "{}={}".format(column.name, repr(getattr(self, column.name)))
-                for column in Edge.__table__.columns
             )
         )

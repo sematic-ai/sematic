@@ -1,16 +1,31 @@
+# Third-party
+import pytest
+
+# Glow
+from glow.abstract_future import AbstractFuture, FutureState
 from glow.calculator import calculator
-from glow.db.models.artifact import Artifact
 from glow.db.models.edge import Edge
 from glow.db.models.factories import make_artifact
-from glow.db.models.run import Run
 from glow.resolvers.offline_resolver import OfflineResolver
-from glow.db.db import db
 from glow.db.tests.fixtures import test_db  # noqa: F401
+from glow.db.queries import get_graph
 
 
 @calculator
 def add(a: float, b: float) -> float:
     return a + b
+
+
+@calculator
+def add3(a: float, b: float, c: float) -> float:
+    return add(add(a, b), c)
+
+
+@calculator
+def pipeline(a: float, b: float) -> float:
+    c = add(a, b)
+    d = add3(a, b, c)
+    return add(c, d)
 
 
 def test_single_calculator(test_db):  # noqa: F811
@@ -20,10 +35,7 @@ def test_single_calculator(test_db):  # noqa: F811
 
     assert result == 3
 
-    with db().get_session() as session:
-        runs = session.query(Run).all()
-        artifacts = session.query(Artifact).all()
-        edges = session.query(Edge).all()
+    runs, artifacts, edges = get_graph(future.id)
 
     assert len(runs) == 1
     assert len(artifacts) == 3
@@ -72,11 +84,150 @@ def test_add_add(test_db):  # noqa: F811
 
     assert result == 7
 
-    with db().get_session() as session:
-        runs = session.query(Run).all()
-        artifacts = session.query(Artifact).all()
-        edges = session.query(Edge).all()
+    runs, artifacts, edges = get_graph(future.id)
 
     assert len(runs) == 4
     assert len(artifacts) == 5
     assert len(edges) == 10
+
+
+def test_pipeline(test_db):  # noqa: F811
+    future = pipeline(3, 5)
+
+    result = future.resolve(OfflineResolver())
+
+    assert result == 24
+    assert isinstance(result, float)
+    assert future.state == FutureState.RESOLVED
+
+    runs, artifacts, edges = get_graph(future.id)
+
+    assert len(runs) == 6
+    assert len(artifacts) == 5
+    assert len(edges) == 16
+
+
+def test_failure(test_db):  # noqa: F811
+    class CustomException(Exception):
+        pass
+
+    @calculator
+    def failure(a: None):
+        raise CustomException("some message")
+
+    @calculator
+    def success():
+        return
+
+    @calculator
+    def pipeline():
+        return failure(success())
+
+    resolver = OfflineResolver()
+
+    with pytest.raises(CustomException, match="some message"):
+        pipeline().resolve(resolver)
+
+    expected_states = dict(
+        pipeline=FutureState.NESTED_FAILED,
+        success=FutureState.RESOLVED,
+        failure=FutureState.FAILED,
+    )
+
+    for future in resolver._futures:
+        assert future.state == expected_states[future.calculator.__name__]
+
+
+class DBStateMachineTestResolver(OfflineResolver):
+    def _future_will_schedule(self, future) -> None:
+        super()._future_will_schedule(future)
+
+        run = self._get_run(future.id)
+
+        assert run.id == future.id
+        assert run.future_state == FutureState.SCHEDULED.value
+        assert run.name == future.calculator.__name__
+        assert run.calculator_path == "{}.{}".format(
+            future.calculator.__module__, future.calculator.__name__
+        )
+        assert run.parent_id == (
+            future.parent_future.id if future.parent_future is not None else None
+        )
+        assert run.started_at is not None
+
+        for name, value in future.kwargs.items():
+            source_run_id = None
+            if isinstance(value, AbstractFuture):
+                source_run_id = value.id
+
+            edge = self._get_input_edge(future.id, name)
+            assert edge is not None
+            assert edge.source_run_id == source_run_id
+            assert edge.destination_run_id == future.id
+            assert edge.destination_name == name
+
+        output_edges = self._get_output_edges(future.id)
+
+        assert len(output_edges) > 0
+        assert all(edge.source_run_id == future.id for edge in output_edges)
+        assert all(edge.source_name is None for edge in output_edges)
+        assert (
+            len(output_edges) == 1
+            or all(edge.destination_run_id is not None for edge in output_edges)
+            or all(edge.parent_id is not None for edge in output_edges)
+        )
+
+    def _future_did_run(self, future) -> None:
+        super()._future_did_run(future)
+
+        run = self._get_run(future.id)
+
+        assert run.id == future.id
+        assert run.future_state == FutureState.RAN.value
+
+        assert run.ended_at is not None
+
+        output_edges = self._get_output_edges(future.id)
+
+        assert len(output_edges) > 0
+        assert all(edge.artifact_id is None for edge in output_edges)
+
+    def _future_did_resolve(self, future) -> None:
+        super()._future_did_resolve(future)
+
+        run = self._get_run(future.id)
+
+        assert run.id == future.id
+        assert run.future_state == FutureState.RESOLVED.value
+
+        assert run.resolved_at is not None
+
+        output_edges = self._get_output_edges(future.id)
+
+        assert len(output_edges) > 0
+        assert all(edge.artifact_id is not None for edge in output_edges)
+
+    def _future_did_fail(self, failed_future) -> None:
+        super()._future_did_fail(failed_future)
+
+        run = self._get_run(failed_future.id)
+
+        assert run.id == failed_future.id
+
+        if (
+            failed_future.nested_future is not None
+            and failed_future.nested_future.state
+            in (FutureState.FAILED.value, FutureState.NESTED_FAILED.value)
+        ):
+            assert run.future_state == FutureState.NESTED_FAILED.value
+        else:
+            assert run.future_state == FutureState.FAILED.value
+
+        output_edges = self._get_output_edges(failed_future.id)
+
+        assert len(output_edges) > 0
+        assert all(edge.artifact_id is None for edge in output_edges)
+
+
+def test_db_state_machine(test_db):  # noqa: F811
+    pipeline(1, 2).resolve(DBStateMachineTestResolver())
