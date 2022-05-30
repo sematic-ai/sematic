@@ -36,9 +36,3 @@ def list_edges_endpoint() -> flask.Response:
     payload = dict(content=[edge.to_json_encodable() for edge in edges])
 
     return flask.jsonify(payload)
-
-
-import logging
-
-logging.basicConfig()
-logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
