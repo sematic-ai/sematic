@@ -17,15 +17,18 @@
     "@types/node": "^16.11.34",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.3",
+    "dagre": "^0.8.5",
     "javascript-time-ago": "^2.3.13",
     "react": "^18.1.0",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.1.0",
+    "react-flow-renderer": "^10.3.1",
     "react-markdown": "^8.0.3",
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.1",
     "react-syntax-highlighter": "^15.5.0",
     "react-time-ago": "^7.1.9",
+    "reaflow": "^5.0.5",
     "typescript": "^4.6.4",
     "web-vitals": "^2.1.4"
   },
@@ -54,6 +57,7 @@
     ]
   },
   "devDependencies": {
+    "@types/dagre": "^0.7.47",
     "@types/react-copy-to-clipboard": "^5.0.2",
     "@types/react-syntax-highlighter": "^15.5.1"
   }

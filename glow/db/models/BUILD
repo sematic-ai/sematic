@@ -28,6 +28,16 @@ glow_py_lib(
 )
 
 glow_py_lib(
+    name = "edge",
+    srcs = ["edge.py"],
+    deps = [
+        ":base",
+        ":json_encodable_mixin",
+        requirement("sqlalchemy"),
+    ]
+)
+
+glow_py_lib(
     name = "json_encodable_mixin",
     srcs = ["json_encodable_mixin.py"],
     deps = [],
@@ -40,15 +50,6 @@ glow_py_lib(
         ":base",
         ":json_encodable_mixin",
         "//glow:abstract_future",
-        requirement("sqlalchemy"),
-    ]
-)
-
-glow_py_lib(
-    name = "run_artifact",
-    srcs = ["run_artifact.py"],
-    deps = [
-        ":base",
         requirement("sqlalchemy"),
     ]
 )
