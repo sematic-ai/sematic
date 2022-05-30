@@ -7,6 +7,7 @@ from glow.api.app import glow_api
 # Endpoint modules need to be imported for endpoints
 # to be registered.
 import glow.api.endpoints.runs  # noqa: F401
+import glow.api.endpoints.edges  # noqa: F401
 import glow.api.endpoints.artifacts  # noqa: F401
 
 

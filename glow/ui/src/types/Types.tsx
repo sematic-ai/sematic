@@ -78,6 +78,7 @@ interface ValueViewProps {
   typeRepr: TypeRepr;
   typeSerialization: TypeSerialization;
   valueSummary: any;
+  key?: string;
 }
 
 function ValueView(props: ValueViewProps) {
@@ -123,11 +124,12 @@ export function renderSummary(
       typeRepr={typeRepr}
       typeSerialization={typeSerialization}
       valueSummary={valueSummary}
+      key={key}
     />
   );
 }
 
-function FloatView(props: ValueViewProps) {
+function FloatValueView(props: ValueViewProps) {
   return (
     <Typography display="inline" component="span">
       {Number.parseFloat(props.valueSummary).toFixed(1)}
@@ -135,7 +137,7 @@ function FloatView(props: ValueViewProps) {
   );
 }
 
-function ListView(props: ValueViewProps) {
+function ListValueView(props: ValueViewProps) {
   let typeRepr = props.typeRepr as AliasTypeRepr;
   if (!typeRepr[2].args) {
     return <Alert severity="error">Incorrect type serialization</Alert>;
@@ -296,9 +298,9 @@ type ComponentPair = {
 };
 
 const TypeComponents: Map<string, ComponentPair> = new Map([
-  ["float", { type: TypeView, value: FloatView }],
-  ["FloatInRange", { type: FloatInRangeTypeView, value: FloatView }],
-  ["list", { type: ListTypeView, value: ListView }],
+  ["float", { type: TypeView, value: FloatValueView }],
+  ["FloatInRange", { type: FloatInRangeTypeView, value: FloatValueView }],
+  ["list", { type: ListTypeView, value: ListValueView }],
   ["dataclass", { type: DataclassTypeView, value: DataclassValueView }],
 ]);
 

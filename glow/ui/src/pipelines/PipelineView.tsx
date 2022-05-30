@@ -3,20 +3,28 @@ import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import { useState, useEffect, useCallback } from "react";
-import { Artifact, Run } from "../Models";
-import { ArtifactListPayload, RunListPayload } from "../Payloads";
+import { Run } from "../Models";
+import {
+  ArtifactListPayload,
+  RunListPayload,
+  ArtifactMap,
+  RunArtifactMap,
+} from "../Payloads";
 import Loading from "../components/Loading";
 import Tags from "../components/Tags";
 import { useParams } from "react-router-dom";
-import { Card, Grid, Typography } from "@mui/material";
+import Grid from "@mui/material/Grid";
+import Typography from "@mui/material/Typography";
 import { RunList, RunFilterType } from "../components/RunList";
 import { RunRow } from "../runs/RunIndex";
 import CalculatorPath from "../components/CalculatorPath";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import python from "react-syntax-highlighter/dist/esm/languages/hljs/python";
 import docco from "react-syntax-highlighter/dist/esm/styles/hljs/docco";
-import ReactMarkdown from "react-markdown";
 import { ArtifactList } from "../components/Artifacts";
+import { fetchJSON } from "../utils";
+import DagTab from "../components/DagTab";
+import Docstring from "../components/Docstring";
 
 SyntaxHighlighter.registerLanguage("python", python);
 
@@ -31,22 +39,19 @@ function PipelineView() {
     let filters = JSON.stringify({
       calculator_path: { eq: params.calculatorPath },
     });
-    fetch("/api/v1/runs?limit=1&filters=" + filters)
-      .then((res) => res.json())
-      .then(
-        (result: RunListPayload) => {
-          if (result.content.length > 0) {
-            setLastRun(result.content[0]);
-          } else {
-            setError(Error("No pipeline named " + params.calculatorPath));
-          }
-          setIsLoaded(true);
-        },
-        (error) => {
-          setError(error);
-          setIsLoaded(true);
+    fetchJSON(
+      "/api/v1/runs?limit=1&filters=" + filters,
+      (result: RunListPayload) => {
+        if (result.content.length > 0) {
+          setLastRun(result.content[0]);
+          setSelectedRun(result.content[0]);
+        } else {
+          setError(Error("No pipeline named " + params.calculatorPath));
         }
-      );
+      },
+      setError,
+      setIsLoaded
+    );
   }, [params.calculatorPath]);
 
   let onRowClick = useCallback(
@@ -60,8 +65,8 @@ function PipelineView() {
     [selectedRun]
   );
 
-  if (error) {
-    return <Alert severity="error">API Error: {error.message}</Alert>;
+  if (error || !isLoaded) {
+    return <Loading error={error} isLoaded={isLoaded} />;
   } else if (lastRun) {
     let runFilters: RunFilterType = {
       AND: [
@@ -69,7 +74,7 @@ function PipelineView() {
         { calculator_path: { eq: lastRun.calculator_path } },
       ],
     };
-    console.log(lastRun.description);
+
     return (
       <>
         <Box marginTop={2} marginBottom={12}>
@@ -85,15 +90,7 @@ function PipelineView() {
           <Grid container>
             <Grid item xs={6}>
               <Box marginY={3}>
-                <Card variant="outlined" sx={{ padding: 4, fontSize: "small" }}>
-                  {(lastRun.description && (
-                    <ReactMarkdown>{lastRun.description}</ReactMarkdown>
-                  )) || (
-                    <Typography color="GrayText">
-                      Your function's docstring will appear here.
-                    </Typography>
-                  )}
-                </Card>
+                <Docstring run={lastRun} />
               </Box>
             </Grid>
             <Grid item xs={6}></Grid>
@@ -115,49 +112,21 @@ function PipelineView() {
               variant="skinny"
               onClick={(e) => onRowClick(run)}
               selected={selectedRun?.id === run.id}
+              noRunLink
             />
           )}
         </RunList>
-        <SelectedRun run={selectedRun} />
+        <Box paddingY={10}>
+          {!selectedRun && <Alert severity="info">Select a run.</Alert>}
+          {selectedRun && <DagTab rootRun={selectedRun} />}
+        </Box>
+        {
+          //<SelectedRun run={selectedRun} />
+        }
       </>
     );
   }
-  return (
-    <Box textAlign="center">
-      <Loading />
-    </Box>
-  );
-}
-
-type ArtifactMap = {
-  input: Map<string, Artifact>;
-  output: Map<string, Artifact>;
-};
-
-type RunArtifactMap = Map<string, ArtifactMap>;
-
-function buildArtifactMap(payload: ArtifactListPayload): ArtifactMap {
-  let artifactsByID: Map<string, Artifact> = new Map();
-  payload.content.forEach((artifact) =>
-    artifactsByID.set(artifact.id, artifact)
-  );
-  let artifactMap: ArtifactMap = { input: new Map(), output: new Map() };
-  Object.entries(payload.extra.run_mapping).forEach(([runId, mapping]) => {
-    Object.entries(mapping).forEach(([relationship, artifacts]) => {
-      Object.entries(artifacts).forEach(([name, artifactId]) => {
-        let artifact = artifactsByID.get(artifactId);
-        if (artifact) {
-          let map =
-            relationship === "input" ? artifactMap.input : artifactMap.output;
-          map.set(name, artifact);
-        } else {
-          throw Error("Missing artifact");
-        }
-      });
-    });
-  });
-
-  return artifactMap;
+  return <></>;
 }
 
 function SelectedRun(props: { run: Run | undefined }) {
@@ -179,14 +148,19 @@ function SelectedRun(props: { run: Run | undefined }) {
     if (artifacts.has(run.id)) return;
 
     setIsLoaded(false);
-    fetch("/api/v1/artifacts?run_ids=" + run.id)
+    fetch("/api/v1/artifacts?run_ids=" + JSON.stringify([run.id]))
       .then((res) => res.json())
       .then(
         (result: ArtifactListPayload) => {
-          if (run === undefined) return;
+          /*if (run === undefined) return;
           let newMap = artifacts;
-          newMap.set(run.id, buildArtifactMap(result));
-          setArtifacts(newMap);
+          let artifactMap = buildArtifactMap(result).get(run.id);
+          if (artifactMap) {
+            newMap.set(run.id, artifactMap);
+          } else {
+            setError(Error("Incorrect artifact response"));
+          }
+          setArtifacts(newMap);*/
           setIsLoaded(true);
         },
         (error) => {
@@ -251,7 +225,7 @@ function SelectedRun(props: { run: Run | undefined }) {
 
       {run && !isLoaded && (
         <Box textAlign="center">
-          <Loading />
+          <Loading isLoaded={isLoaded} />
         </Box>
       )}
 
@@ -282,26 +256,31 @@ function SelectedRun(props: { run: Run | undefined }) {
             </Grid>
           </TabPanel>
           <TabPanel value={selectedTab} index={tabIndex.SOURCE}>
-            {Array.from(uniqueRunsByCalculator).map(
-              ([calculatorPath, run_]) => (
-                <Box key={calculatorPath} sx={{ marginTop: 2 }}>
-                  <Box sx={{ marginTop: 7 }}>
-                    <CalculatorPath calculatorPath={calculatorPath} />
+            <Box paddingTop={5}>
+              <Typography variant="h6">Calculator source code</Typography>
+              {Array.from(uniqueRunsByCalculator).map(
+                ([calculatorPath, run_]) => (
+                  <Box key={calculatorPath} sx={{ marginTop: 2 }}>
+                    <Box sx={{ marginTop: 7 }}>
+                      <CalculatorPath calculatorPath={calculatorPath} />
+                    </Box>
+                    <SyntaxHighlighter
+                      language="python"
+                      style={docco}
+                      showLineNumbers
+                      customStyle={{ fontSize: 14 }}
+                    >
+                      {run_.source_code}
+                    </SyntaxHighlighter>
                   </Box>
-                  <SyntaxHighlighter
-                    language="python"
-                    style={docco}
-                    showLineNumbers
-                    customStyle={{ fontSize: 14 }}
-                  >
-                    {run_.source_code}
-                  </SyntaxHighlighter>
-                </Box>
-              )
-            )}
+                )
+              )}
+            </Box>
           </TabPanel>
           <TabPanel value={selectedTab} index={tabIndex.DAG}>
-            Item Two
+            <Box paddingTop={5}>
+              <Typography variant="h6">Execution graph</Typography>
+            </Box>
           </TabPanel>
         </>
       )}

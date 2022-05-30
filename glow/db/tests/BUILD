@@ -35,6 +35,6 @@ pytest_test(
         "//glow/db/models:factories",
         "//glow/db/models:artifact",
         "//glow/db/models:run",
-        "//glow/db/models:run_artifact",
+        "//glow/db/models:edge",
     ]
 )

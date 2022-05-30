@@ -16,6 +16,7 @@ glow_py_lib(
         "//glow/api:app",
         "//glow/api/endpoints:runs",
         "//glow/api/endpoints:artifacts",
+        "//glow/api/endpoints:edges",
         requirement("flask"),
     ]
 )

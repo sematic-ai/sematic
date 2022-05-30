@@ -25,3 +25,15 @@ export type Artifact = {
   created_at: Date;
   updated_at: Date;
 };
+
+export type Edge = {
+  id: string;
+  source_run_id: string | null;
+  source_name: string | null;
+  destination_run_id: string | null;
+  destination_name: string | null;
+  artifact_id: string | null;
+  parent_id: string | null;
+  created_at: Date;
+  updated_at: Date;
+};

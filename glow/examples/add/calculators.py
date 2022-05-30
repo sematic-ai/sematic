@@ -1,5 +1,4 @@
 # Standrd library
-import time
 from dataclasses import dataclass
 
 # Glow
@@ -25,7 +24,6 @@ def using_dataclass(config: Config) -> Config:
 
 @calculator
 def add(a: float, b: float) -> float:
-    time.sleep(5)
     return a + b
 
 

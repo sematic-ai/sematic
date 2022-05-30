@@ -1,6 +1,4 @@
 import AppBar from "@mui/material/AppBar";
-import Typography from "@mui/material/Typography";
-import LightModeIcon from "@mui/icons-material/LightMode";
 import Toolbar from "@mui/material/Toolbar";
 import Container from "@mui/material/Container";
 import Button from "@mui/material/Button";
@@ -59,7 +57,7 @@ function App() {
             </Toolbar>
           </Container>
         </AppBar>
-        <Container maxWidth="lg" sx={{ paddingTop: 4 }}>
+        <Container maxWidth="xl" sx={{ paddingTop: 4 }}>
           <Container maxWidth="xl">
             <Outlet />
           </Container>

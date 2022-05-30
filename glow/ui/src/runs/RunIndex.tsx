@@ -20,6 +20,7 @@ type RunRowProps = {
   variant?: string;
   onClick?: React.MouseEventHandler;
   selected?: boolean;
+  noRunLink?: boolean;
 };
 
 export function RunRow(props: RunRowProps) {
@@ -49,9 +50,12 @@ export function RunRow(props: RunRowProps) {
         <Id id={run.id} trimTo={8} />
       </TableCell>
       <TableCell onClick={props.onClick}>
-        <Link href={"/runs/" + run.id} underline="hover">
-          {run.name}
-        </Link>
+        {props.noRunLink && run.name}
+        {!props.noRunLink && (
+          <Link href={"/runs/" + run.id} underline="hover">
+            {run.name}
+          </Link>
+        )}
         {calculatorPath}
       </TableCell>
       <TableCell>

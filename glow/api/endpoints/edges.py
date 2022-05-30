@@ -1,38 +1,38 @@
-# Standard library
+# Standard Library
 from typing import Dict, List
 
 # Third-party
-import flask
 import sqlalchemy
+import flask
 
 # Glow
 from glow.api.app import glow_api
 from glow.api.endpoints.request_parameters import get_request_parameters
-from glow.db.models.artifact import Artifact
 from glow.db.db import db
+from glow.db.models.edge import Edge
 
 
 _COLUMN_MAPPING: Dict[str, sqlalchemy.Column] = {
-    column.name: column for column in Artifact.__table__.columns
+    column.name: column for column in Edge.__table__.columns
 }
 
 
-@glow_api.route("/api/v1/artifacts", methods=["GET"])
-def list_artifacts_endpoint() -> flask.Response:
+@glow_api.route("/api/v1/edges", methods=["GET"])
+def list_edges_endpoint() -> flask.Response:
     limit, _, _, sql_predicates = get_request_parameters(
         flask.request.args, _COLUMN_MAPPING
     )
 
     with db().get_session() as session:
-        query = session.query(Artifact)
+        query = session.query(Edge)
 
         if sql_predicates is not None:
             query = query.filter(sql_predicates)
 
-        query = query.order_by(sqlalchemy.desc(Artifact.created_at))
+        query = query.order_by(sqlalchemy.desc(Edge.created_at))
 
-        artifacts: List[Artifact] = query.limit(limit).all()
+        edges: List[Edge] = query.limit(limit).all()
 
-    payload = dict(content=[artifacts.to_json_encodable() for artifacts in artifacts])
+    payload = dict(content=[edge.to_json_encodable() for edge in edges])
 
     return flask.jsonify(payload)
