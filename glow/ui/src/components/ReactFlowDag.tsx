@@ -2,8 +2,6 @@ import { Run, Edge, Artifact } from "../Models";
 import ReactFlow, {
   Node,
   Edge as RFEdge,
-  Handle,
-  Position,
   ReactFlowInstance,
   useNodesState,
   useEdgesState,
@@ -13,21 +11,11 @@ import ReactFlow, {
   MarkerType,
   Background,
   BackgroundVariant,
-  applyNodeChanges,
-  NodeProps,
 } from "react-flow-renderer";
-import {
-  Alert,
-  AlertTitle,
-  Collapse,
-  Container,
-  lighten,
-  useTheme,
-} from "@mui/material";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { Alert, Collapse, Container, lighten, useTheme } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
-import CalculatorPath from "./CalculatorPath";
 import buildDagLayout from "./utils/buildDagLayout";
+import RunNode from "./RunNode";
 
 var util = require("dagre/lib/util");
 var graphlib = require("graphlib");
@@ -51,68 +39,6 @@ util.asNonCompoundGraph = function asNonCompoundGraph(g: any) {
   });
   return simplified;
 };
-
-function RunNode(props: NodeProps) {
-  const theme = useTheme();
-
-  const run: Run = props.data.run;
-  const calculatorPathParts = run.calculator_path.split(".");
-  let shortCalculatorPath = calculatorPathParts[calculatorPathParts.length - 1];
-  if (calculatorPathParts.length > 1) {
-    shortCalculatorPath =
-      calculatorPathParts[calculatorPathParts.length - 2] +
-      "." +
-      shortCalculatorPath;
-    if (calculatorPathParts.length > 2) {
-      shortCalculatorPath = "..." + shortCalculatorPath;
-    }
-  }
-
-  return (
-    <>
-      <Handle
-        isConnectable={props.isConnectable}
-        type="target"
-        position={Position.Top}
-      />
-      <Alert
-        severity="success"
-        variant="outlined"
-        icon={<CheckCircleIcon />}
-        id={props.data.run.id}
-        style={{
-          height: "-webkit-fill-available",
-        }}
-        sx={{
-          paddingX: 3,
-          cursor: "pointer",
-          borderColor: lighten(
-            theme.palette.success.light,
-            props.selected ? 0 : 0.3
-          ),
-          backgroundColor: lighten(
-            theme.palette.success.light,
-            props.selected ? 0.7 : 0.9
-          ),
-          "&:hover": {
-            backgroundColor: lighten(
-              theme.palette.success.light,
-              props.selected ? 0.7 : 0.87
-            ),
-          },
-        }}
-      >
-        <AlertTitle>{props.data.label}</AlertTitle>
-        <CalculatorPath calculatorPath={shortCalculatorPath} />
-      </Alert>
-      <Handle
-        isConnectable={props.isConnectable}
-        type="source"
-        position={Position.Bottom}
-      />
-    </>
-  );
-}
 
 interface ReactFlowDagProps {
   runs: Run[];
