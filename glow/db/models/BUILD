@@ -53,12 +53,3 @@ glow_py_lib(
         requirement("sqlalchemy"),
     ]
 )
-
-glow_py_lib(
-    name = "run_artifact",
-    srcs = ["run_artifact.py"],
-    deps = [
-        ":base",
-        requirement("sqlalchemy"),
-    ]
-)
