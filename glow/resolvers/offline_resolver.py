@@ -284,7 +284,7 @@ class OfflineResolver(StateMachineResolver):
             artifacts=self._artifacts.values(),
             edges=self._edges.values(),
         )
-        requests.put(
-            "http://127.0.0.1:5000/api/v1/runs/graph",
-            json={"run_id": self._futures[0].id},
-        )
+        # requests.put(
+        #    "http://127.0.0.1:5000/api/v1/runs/graph",
+        #    json={"run_id": self._futures[0].id},
+        # )
