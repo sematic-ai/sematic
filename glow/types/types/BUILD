@@ -4,6 +4,7 @@ glow_py_lib(
     deps = [
         "//glow/types:registry",
         "//glow/types:casting",
+        "//glow/types:serialization",
     ]
 )
 
@@ -12,6 +13,7 @@ glow_py_lib(
     srcs = ["float.py"],
     deps = [
         "//glow/types:registry",
+        "//glow/types:serialization",
     ],
 )
 
@@ -23,6 +25,7 @@ glow_py_lib(
         "//glow/types:casting",
         "//glow/types:registry",
         "//glow/types:type",
+        "//glow/types:serialization",
     ],
 )
 
@@ -31,6 +34,7 @@ glow_py_lib(
     srcs = ["integer.py"],
     deps = [
         "//glow/types:registry",
+        "//glow/types:serialization",
     ],
 )
 
@@ -51,5 +55,15 @@ glow_py_lib(
     srcs = ["str.py"],
     deps = [
         "//glow/types:registry",
+        "//glow/types:serialization",
+    ]
+)
+
+glow_py_lib(
+    name = "none",
+    srcs = ["none.py"],
+    deps = [
+        "//glow/types:registry",
+        "//glow/types:serialization",
     ]
 )

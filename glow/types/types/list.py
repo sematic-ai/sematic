@@ -1,4 +1,6 @@
 # Standard library
+import json
+import math
 import typing
 
 # Glow
@@ -6,9 +8,10 @@ from glow.types.registry import (
     register_safe_cast,
     register_can_cast,
     register_to_json_encodable,
+    register_to_json_encodable_summary,
 )
 from glow.types.casting import safe_cast, can_cast_type
-from glow.types.serialization import value_to_json_encodable
+from glow.types.serialization import get_json_encodable_summary, value_to_json_encodable
 
 
 # Using `list` instead of `typing.List` here because
@@ -81,3 +84,31 @@ def can_cast_to_list(from_type: typing.Any, to_type: typing.Any):
 def list_to_json_encodable(value: list, type_: typing.Any) -> list:
     element_type = type_.__args__[0]
     return [value_to_json_encodable(item, element_type) for item in value]
+
+
+@register_to_json_encodable_summary(list)
+def list_to_json_encodable_summary(
+    value: list, type_: typing.Any
+) -> typing.Dict[str, typing.Any]:
+    element_type = type_.__args__[0]
+
+    complete_summary = [
+        get_json_encodable_summary(item, element_type) for item in value
+    ]
+
+    element_char_len = None
+    if len(complete_summary) > 0:
+        element_char_len = len(json.dumps(complete_summary[0]))
+
+    estimated_total_char_len = (
+        (0 if element_char_len is None else len(value) * element_char_len)
+        + 2
+        + 2 * len(value)
+    )
+
+    max_item = math.floor((1000 / estimated_total_char_len))
+
+    return {
+        "length": len(value),
+        "summary": complete_summary[:max_item],
+    }

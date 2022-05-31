@@ -1,6 +1,6 @@
 # Standard library
 import copy
-import typing
+from typing import Any, Tuple, Callable, Optional, Dict, Union, Literal
 import dataclasses
 
 # Glow
@@ -10,15 +10,18 @@ from glow.types.registry import (
     register_can_cast,
     register_safe_cast,
     register_to_json_encodable,
+    register_to_json_encodable_summary,
 )
 from glow.types.casting import can_cast_type, safe_cast
-from glow.types.serialization import type_to_json_encodable, value_to_json_encodable
+from glow.types.serialization import (
+    get_json_encodable_summary,
+    type_to_json_encodable,
+    value_to_json_encodable,
+)
 
 
 @register_safe_cast(DataclassKey)
-def _safe_cast_dataclass(
-    value: typing.Any, type_: typing.Any
-) -> typing.Tuple[typing.Any, typing.Optional[str]]:
+def _safe_cast_dataclass(value: Any, type_: Any) -> Tuple[Any, Optional[str]]:
     """
     Casting logic for dataclasses.
 
@@ -68,16 +71,14 @@ def _safe_cast_dataclass(
 
 
 @register_can_cast(DataclassKey)
-def _can_cast_to_dataclass(
-    from_type: typing.Any, to_type: typing.Any
-) -> typing.Tuple[bool, typing.Optional[str]]:
+def _can_cast_to_dataclass(from_type: Any, to_type: Any) -> Tuple[bool, Optional[str]]:
     prefix = "Cannot cast {} to {}".format(from_type, to_type)
 
     if not dataclasses.is_dataclass(from_type):
         return False, "{}: not a dataclass".format(prefix)
 
-    from_fields: typing.Dict[str, dataclasses.Field] = from_type.__dataclass_fields__
-    to_fields: typing.Dict[str, dataclasses.Field] = to_type.__dataclass_fields__
+    from_fields: Dict[str, dataclasses.Field] = from_type.__dataclass_fields__
+    to_fields: Dict[str, dataclasses.Field] = to_type.__dataclass_fields__
 
     missing_fields = to_fields.keys() - from_fields.keys()
     if len(missing_fields) > 0:
@@ -94,17 +95,17 @@ def _can_cast_to_dataclass(
 
 
 @register_to_json_encodable(DataclassKey)
-def _dataclass_to_json_encodable(value: typing.Any, _) -> typing.Any:
+def _dataclass_to_json_encodable(value: Any, _) -> Any:
     # We use type(value) instead of the passed type because we want to
     # conserve any subclasses
     type_ = type(value)
 
-    output: typing.Dict[
-        typing.Union[typing.Literal["values"], typing.Literal["types"]],
-        typing.Dict[str, typing.Any],
+    output: Dict[
+        Union[Literal["values"], Literal["types"]],
+        Dict[str, Any],
     ] = {"values": {}, "types": {}}
 
-    fields: typing.Dict[str, dataclasses.Field] = type_.__dataclass_fields__
+    fields: Dict[str, dataclasses.Field] = type_.__dataclass_fields__
 
     for name, field in fields.items():
         field_value = getattr(value, name)
@@ -117,7 +118,7 @@ def _dataclass_to_json_encodable(value: typing.Any, _) -> typing.Any:
         # Only if the value type is different (e.g. subclass) do we persist the type
         # serialization
         # `typing` generics are excluded as they will always be different since the type
-        # parametrization (e.g. `int` for `typing.List[int]`) is not conserved on
+        # parametrization (e.g. `int` for `List[int]`) is not conserved on
         # instances
         if not (value_type is field_type) and not is_valid_typing_alias(field_type):
             output["types"][name] = type_to_json_encodable(value_type)
@@ -128,3 +129,13 @@ def _dataclass_to_json_encodable(value: typing.Any, _) -> typing.Any:
         )
 
     return output
+
+
+@register_to_json_encodable_summary(DataclassKey)
+def _dataclass_to_json_encodable_summary(value: Any, type_: Any) -> Any:
+    fields: Dict[str, dataclasses.Field] = type_.__dataclass_fields__
+
+    return {
+        name: get_json_encodable_summary(getattr(value, name), field.type)
+        for name, field in fields.items()
+    }

@@ -6,7 +6,12 @@ import typing
 
 # Glow
 from glow.types.generic_type import GenericType
-from glow.types.registry import register_can_cast, register_safe_cast
+from glow.types.registry import (
+    register_can_cast,
+    register_safe_cast,
+    register_to_json_encodable_summary,
+)
+from glow.types.serialization import value_to_json_encodable
 from glow.types.type import is_type, NotAGlowTypeError
 from glow.types.casting import safe_cast
 
@@ -194,3 +199,8 @@ def can_cast_type(
         )
 
     return True, None
+
+
+@register_to_json_encodable_summary(FloatInRange)
+def _float_in_range_summary(value: float, _) -> float:
+    return value_to_json_encodable(value, float)

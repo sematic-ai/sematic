@@ -18,6 +18,7 @@ from glow.types.registry import (
     DataclassKey,
     get_to_json_encodable_func,
     get_from_json_encodable_func,
+    get_to_json_encodable_summary_func,
     is_glow_parametrized_generic_type,
     is_valid_typing_alias,
     get_origin_type,
@@ -88,11 +89,17 @@ def binary_from_string(string: str) -> bytes:
 
 # JSON SUMMARIES
 def get_json_encodable_summary(value: typing.Any, type_: typing.Any) -> typing.Any:
-    # First we check custom summaries
-    # TODO
+    to_json_encodable_summary_func = get_to_json_encodable_summary_func(type_)
 
-    # By default we use the full payload
-    return value_to_json_encodable(value, type_)
+    if to_json_encodable_summary_func is None and dataclasses.is_dataclass(type_):
+        to_json_encodable_summary_func = get_to_json_encodable_summary_func(
+            DataclassKey
+        )
+
+    if to_json_encodable_summary_func is not None:
+        return to_json_encodable_summary_func(value, type_)
+
+    return "No summary available"
 
 
 # TYPE SERIALIZATION

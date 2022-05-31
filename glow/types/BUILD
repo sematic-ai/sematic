@@ -8,6 +8,7 @@ glow_py_lib(
         "//glow/types/types:float",
         "//glow/types/types:float_in_range",
         "//glow/types/types:integer",
+        "//glow/types/types:none",
         "//glow/types/types:list",
         "//glow/types/types:str",
     ]
