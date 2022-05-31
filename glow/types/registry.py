@@ -1,5 +1,5 @@
 # Standard library
-from typing import (
+from typing import (  # type: ignore
     Any,
     Callable,
     Tuple,

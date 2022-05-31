@@ -1,6 +1,6 @@
 # Third-party
 from flask import jsonify
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO  # type: ignore
 
 # Glow
 from glow.api.app import glow_api

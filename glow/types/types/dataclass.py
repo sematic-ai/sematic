@@ -1,6 +1,6 @@
 # Standard library
 import copy
-from typing import Any, Tuple, Callable, Optional, Dict, Union, Literal
+from typing import Any, Tuple, Optional, Dict, Union, Literal
 import dataclasses
 
 # Glow

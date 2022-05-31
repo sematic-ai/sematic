@@ -12,7 +12,7 @@ from urllib.parse import urlunsplit, urlencode, urlsplit
 import sqlalchemy
 import flask
 from sqlalchemy.orm.exc import NoResultFound
-import flask_socketio
+import flask_socketio  # type: ignore
 
 # Glow
 from glow.api.app import glow_api
