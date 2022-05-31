@@ -7,3 +7,5 @@ pip-tools
 sqlalchemy[mypy]
 # Required for mypy
 flask
+# Required for mypy
+types-requests
