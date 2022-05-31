@@ -31,6 +31,7 @@ pytest_test(
     deps = [
         ":fixtures",
         "//glow/db:db",
+        "//glow/types:init",
         "//glow/db:queries",
         "//glow/db/models:factories",
         "//glow/db/models:artifact",
