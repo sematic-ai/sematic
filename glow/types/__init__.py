@@ -8,5 +8,6 @@ import glow.types.types.dataclass  # noqa: F401
 import glow.types.types.integer  # noqa: F401
 import glow.types.types.list  # noqa: F401
 import glow.types.types.float  # noqa: F401
+import glow.types.types.none  # noqa: F401
 import glow.types.types.str  # noqa: F401
 from glow.types.types.float_in_range import FloatInRange  # noqa: F401

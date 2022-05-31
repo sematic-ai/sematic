@@ -36,7 +36,7 @@ def register_can_cast(
     """
 
     def _register_can_cast(func: CanCastTypeCallable) -> CanCastTypeCallable:
-        # ToDo(@neutralino1): validate func signature
+        # TODO(@neutralino1): validate func signature
         for type_ in types:
             _CAN_CAST_REGISTRY[type_] = func
 
@@ -70,7 +70,7 @@ def register_safe_cast(
     """
 
     def _register_can_cast(func: SafeCastCallable) -> SafeCastCallable:
-        # Todo(@neutralino1): validate func signature
+        # TODO(@neutralino1): validate func signature
         for type_ in types:
             _SAFE_CAST_REGISTRY[type_] = func
 
@@ -95,7 +95,7 @@ _TO_JSON_ENCODABLE_REGISTRY: Dict[type, ToJSONEncodableCallable] = {}
 
 
 def register_to_json_encodable(
-    type_: type,
+    *types: type,
 ) -> Callable[[ToJSONEncodableCallable], ToJSONEncodableCallable]:
     """
     Decorator to register a function to convert `type_` to a JSON-encodable payload for
@@ -105,8 +105,9 @@ def register_to_json_encodable(
     def _register_to_json_encodable(
         func: ToJSONEncodableCallable,
     ) -> ToJSONEncodableCallable:
-        # ToDo(@neutralino1): validate func signature
-        _TO_JSON_ENCODABLE_REGISTRY[type_] = func
+        # TODO(@neutralino1): validate func signature
+        for type_ in types:
+            _TO_JSON_ENCODABLE_REGISTRY[type_] = func
 
         return func
 
@@ -129,7 +130,7 @@ _FROM_JSON_ENCODABLE_REGISTRY: Dict[type, FromJSONEncodableCallable] = {}
 
 
 def register_from_json_encodable(
-    type_: type,
+    *types: type,
 ) -> Callable[[FromJSONEncodableCallable], FromJSONEncodableCallable]:
     """
     Decorator to register a deserilization function for `type_`.
@@ -138,8 +139,9 @@ def register_from_json_encodable(
     def _register_from_json_encodable(
         func: FromJSONEncodableCallable,
     ) -> FromJSONEncodableCallable:
-        # ToDo(@neutralino1): validate func signature
-        _FROM_JSON_ENCODABLE_REGISTRY[type_] = func
+        # TODO(@neutralino1): validate func signature
+        for type_ in types:
+            _FROM_JSON_ENCODABLE_REGISTRY[type_] = func
 
         return func
 
@@ -159,17 +161,19 @@ _JSON_ENCODABLE_SUMMARY_REGISTRY: Dict[type, ToJSONEncodableCallable] = {}
 
 
 def register_to_json_encodable_summary(
-    type_: type,
+    *types: Any,
 ) -> Callable[[ToJSONEncodableCallable], ToJSONEncodableCallable]:
     """
-    Decorator to register a function to convert `type_` to a JSON-encodable summary for the UI.
+    Decorator to register a function to convert `type_` to a JSON-encodable summary for
+    the UI.
     """
 
     def _register_to_json_encodable_summary(
         func: ToJSONEncodableCallable,
     ) -> ToJSONEncodableCallable:
-        # ToDo(@neutralino1): validate func signature
-        _JSON_ENCODABLE_SUMMARY_REGISTRY[type_] = func
+        # TODO(@neutralino1): validate func signature
+        for type_ in types:
+            _JSON_ENCODABLE_SUMMARY_REGISTRY[type_] = func
 
         return func
 

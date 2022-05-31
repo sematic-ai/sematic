@@ -3,7 +3,8 @@ import numbers
 import typing
 
 # Glow
-from glow.types.registry import register_can_cast
+from glow.types.registry import register_can_cast, register_to_json_encodable_summary
+from glow.types.serialization import value_to_json_encodable
 
 
 @register_can_cast(float)
@@ -20,3 +21,8 @@ def can_cast_type(type_: type, _) -> typing.Tuple[bool, typing.Optional[str]]:
 
 
 # Default safe_cast behavior is sufficient
+
+
+@register_to_json_encodable_summary(float)
+def _float_summary(value: float, _) -> float:
+    return value_to_json_encodable(value, float)

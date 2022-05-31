@@ -5,7 +5,12 @@ Casting and serialization logic for `str`.
 import typing
 
 # Glow
-from glow.types.registry import register_safe_cast, register_can_cast
+from glow.types.registry import (
+    register_safe_cast,
+    register_can_cast,
+    register_to_json_encodable_summary,
+)
+from glow.types.serialization import value_to_json_encodable
 
 
 @register_safe_cast(str, typing.Text)
@@ -32,3 +37,8 @@ def can_cast_to_str(type_: type, _) -> typing.Tuple[bool, typing.Optional[str]]:
         return True, None
 
     return False, "{} cannot cast to str".format(type_)
+
+
+@register_to_json_encodable_summary(str, typing.Text)
+def _str_summary(value: str, _) -> str:
+    return value_to_json_encodable(value, str)
