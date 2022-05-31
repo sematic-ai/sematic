@@ -12,8 +12,15 @@ import ReactFlow, {
   Background,
   BackgroundVariant,
 } from "react-flow-renderer";
-import { Alert, Collapse, Container, lighten, useTheme } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import {
+  Alert,
+  Collapse,
+  Container,
+  lighten,
+  useTheme,
+  Box,
+} from "@mui/material";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import buildDagLayout from "./utils/buildDagLayout";
 import RunNode from "./RunNode";
 
@@ -45,6 +52,7 @@ interface ReactFlowDagProps {
   edges: Edge[];
   artifactsById: Map<string, Artifact>;
   onSelectRun: (run: Run) => void;
+  selectedRunId: string;
 }
 
 const nodeTypes = {
@@ -52,7 +60,7 @@ const nodeTypes = {
 };
 
 function ReactFlowDag(props: ReactFlowDagProps) {
-  const { runs, edges, artifactsById, onSelectRun } = props;
+  const { runs, edges, artifactsById, onSelectRun, selectedRunId } = props;
 
   const runsById: Map<string, Run> = new Map(runs.map((run) => [run.id, run]));
 
@@ -78,7 +86,7 @@ function ReactFlowDag(props: ReactFlowDagProps) {
     [artifactsById]
   );
 
-  useEffect(() => {
+  const getNodesEdges = useCallback(() => {
     let node_data: Node[] = [];
     let edge_data: RFEdge[] = [];
     node_data = runs.map((run) => {
@@ -87,7 +95,7 @@ function ReactFlowDag(props: ReactFlowDagProps) {
         id: run.id,
         data: { label: run.name, run: run },
         parentNode: run.parent_id === null ? undefined : run.parent_id,
-        selected: run.parent_id === null,
+        selected: run.id == selectedRunId,
         position: { x: 0, y: 0 },
         style: {
           backgroundColor: lighten(theme.palette.success.light, 0.9),
@@ -117,29 +125,41 @@ function ReactFlowDag(props: ReactFlowDagProps) {
         });
       }
     });
-
-    setRFNodes(node_data);
-    setRFEdges(edge_data);
-  }, [runs, edges]);
-
-  const onInit = useCallback((instance: ReactFlowInstance) => {
-    let orderedNodes = buildDagLayout(instance, (node) =>
-      document.getElementById(node.id)
-    );
-    setRFNodes(orderedNodes);
-    setRFEdges(instance.getEdges());
-  }, []);
+    return { nodes: node_data, edges: edge_data };
+  }, [runs, edges, getEdgeLabel, runsById]);
 
   useEffect(() => {
-    if (reactFlowInstance && reactFlowInstance.getNodes().length > 0) {
-      onInit(reactFlowInstance);
-    }
+    let nodesEdges = getNodesEdges();
+    setRFNodes(nodesEdges.nodes);
+    setRFEdges(nodesEdges.edges);
   }, [runs]);
 
-  const onConnect = useCallback(
-    (connection: any) => setRFEdges((eds) => addEdge(connection, eds)),
-    [setRFEdges]
+  //useMemo(() => {
+  //  setNodesEdges();
+  //}, [runs, edges]);
+
+  const onInit = useCallback(
+    (instance: ReactFlowInstance) => {
+      let orderedNodes = buildDagLayout(
+        instance.getNodes(),
+        instance.getEdges(),
+        (node) => document.getElementById(node.id)
+      );
+      setRFNodes(orderedNodes);
+      setRFEdges(instance.getEdges());
+    },
+    [getNodesEdges, setRFNodes, setRFEdges]
   );
+
+  //useEffect(() => {
+  //  if (reactFlowInstance && reactFlowInstance.getNodes().length > 0) {
+  //    onInit(reactFlowInstance);
+  //  }
+  //}, [runs]);
+
+  //useMemo(() => {
+  //  reactFlowInstance.set;
+  //}, [reactFlowInstance]);
 
   const onNodeClick = useCallback(
     (event: any, node: Node) => {
@@ -154,6 +174,21 @@ function ReactFlowDag(props: ReactFlowDagProps) {
 
   return (
     <>
+      {/*<Box width={0} height={0}>
+        {rfNodes.map((node) => (
+          <RunNode
+            {...node}
+            type=""
+            selected
+            zIndex={0}
+            isConnectable
+            xPos={0}
+            yPos={0}
+            dragging
+            key={node.id}
+          />
+        ))}
+      </Box>*/}
       <Container
         sx={{ width: "100%", height: "1000px", paddingX: 0, marginX: 0 }}
       >
@@ -168,7 +203,7 @@ function ReactFlowDag(props: ReactFlowDagProps) {
           nodeTypes={nodeTypes}
           onInit={onInit}
           zoomOnScroll={false}
-          onConnect={onConnect}
+          //onConnect={onConnect}
           panOnScroll
           nodesDraggable={false}
           onNodeClick={onNodeClick}

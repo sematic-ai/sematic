@@ -2,6 +2,9 @@
 import datetime
 from typing import Dict, Optional, List, Union, Tuple
 
+# Third-party
+import requests
+
 # Glow
 from glow.abstract_future import AbstractFuture, FutureState
 from glow.db.models.artifact import Artifact
@@ -280,4 +283,8 @@ class OfflineResolver(StateMachineResolver):
             runs=self._runs.values(),
             artifacts=self._artifacts.values(),
             edges=self._edges.values(),
+        )
+        requests.put(
+            "http://127.0.0.1:5000/api/v1/runs/graph",
+            json={"run_id": self._futures[0].id},
         )

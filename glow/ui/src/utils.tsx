@@ -1,3 +1,5 @@
+import io from "socket.io-client";
+
 export function fetchJSON(
   url: string,
   callback: (payload: any) => void,
@@ -19,3 +21,5 @@ export function fetchJSON(
       }
     );
 }
+
+export const graphSocket = io("/graph");

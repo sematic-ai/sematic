@@ -1,5 +1,18 @@
 # Standard library
-import typing
+from typing import (
+    Any,
+    Callable,
+    Tuple,
+    Optional,
+    Dict,
+    GenericAlias,
+    _GenericAlias,
+    _UnionGenericAlias,
+    _CallableGenericAlias,
+    _SpecialForm,
+    _BaseGenericAlias,
+    TypeVar,
+)
 
 # Glow
 from glow.types.generic_type import GenericType
@@ -8,18 +21,16 @@ from glow.types.generic_type import GenericType
 # TYPE CASTING
 
 
-# Input type has to be `typing.Any` because `typing.List` is not a `type`
-CanCastTypeCallable = typing.Callable[
-    [typing.Any, typing.Any], typing.Tuple[bool, typing.Optional[str]]
-]
+# Input type has to be `Any` because `List` is not a `type`
+CanCastTypeCallable = Callable[[Any, Any], Tuple[bool, Optional[str]]]
 
 
-_CAN_CAST_REGISTRY: typing.Dict[type, CanCastTypeCallable] = {}
+_CAN_CAST_REGISTRY: Dict[type, CanCastTypeCallable] = {}
 
 
 def register_can_cast(
     *types: type,
-) -> typing.Callable[[CanCastTypeCallable], CanCastTypeCallable]:
+) -> Callable[[CanCastTypeCallable], CanCastTypeCallable]:
     """
     Register a `can_cast_type` function for type `type_`.
     """
@@ -34,8 +45,8 @@ def register_can_cast(
     return _register_can_cast
 
 
-# Input type has to be `typing.Any` because `typing.List` is not a `type`
-def get_can_cast_func(type_: typing.Any) -> typing.Optional[CanCastTypeCallable]:
+# Input type has to be `Any` because `List` is not a `type`
+def get_can_cast_func(type_: Any) -> Optional[CanCastTypeCallable]:
     """
     Obtain the registered `can_cast_type` logic for `type_`.
     """
@@ -45,17 +56,15 @@ def get_can_cast_func(type_: typing.Any) -> typing.Optional[CanCastTypeCallable]
 # VALUE CASTING
 
 
-SafeCastCallable = typing.Callable[
-    [typing.Any, typing.Any], typing.Tuple[typing.Any, typing.Optional[str]]
-]
+SafeCastCallable = Callable[[Any, Any], Tuple[Any, Optional[str]]]
 
 
-_SAFE_CAST_REGISTRY: typing.Dict[type, SafeCastCallable] = {}
+_SAFE_CAST_REGISTRY: Dict[type, SafeCastCallable] = {}
 
 
 def register_safe_cast(
     *types: type,
-) -> typing.Callable[[SafeCastCallable], SafeCastCallable]:
+) -> Callable[[SafeCastCallable], SafeCastCallable]:
     """
     Register a `safe_cast` function for type `type_`.
     """
@@ -70,7 +79,7 @@ def register_safe_cast(
     return _register_can_cast
 
 
-def get_safe_cast_func(type_: typing.Any) -> typing.Optional[SafeCastCallable]:
+def get_safe_cast_func(type_: Any) -> Optional[SafeCastCallable]:
     """
     Obtain a `safe_cast` function for type `type_`.
     """
@@ -79,15 +88,15 @@ def get_safe_cast_func(type_: typing.Any) -> typing.Optional[SafeCastCallable]:
 
 # VALUE SERIALIZATION
 
-ToJSONEncodableCallable = typing.Callable[[typing.Any, typing.Any], typing.Any]
+ToJSONEncodableCallable = Callable[[Any, Any], Any]
 
 
-_TO_JSON_ENCODABLE_REGISTRY: typing.Dict[type, ToJSONEncodableCallable] = {}
+_TO_JSON_ENCODABLE_REGISTRY: Dict[type, ToJSONEncodableCallable] = {}
 
 
 def register_to_json_encodable(
     type_: type,
-) -> typing.Callable[[ToJSONEncodableCallable], ToJSONEncodableCallable]:
+) -> Callable[[ToJSONEncodableCallable], ToJSONEncodableCallable]:
     """
     Decorator to register a function to convert `type_` to a JSON-encodable payload for
     serialization.
@@ -105,23 +114,23 @@ def register_to_json_encodable(
 
 
 def get_to_json_encodable_func(
-    type_: typing.Any,
-) -> typing.Optional[ToJSONEncodableCallable]:
+    type_: Any,
+) -> Optional[ToJSONEncodableCallable]:
     """
     Obtain the serialization function for `type_`.
     """
     return _get_registered_func(_TO_JSON_ENCODABLE_REGISTRY, type_)
 
 
-FromJSONEncodableCallable = typing.Callable[[typing.Any, typing.Any], typing.Any]
+FromJSONEncodableCallable = Callable[[Any, Any], Any]
 
 
-_FROM_JSON_ENCODABLE_REGISTRY: typing.Dict[type, FromJSONEncodableCallable] = {}
+_FROM_JSON_ENCODABLE_REGISTRY: Dict[type, FromJSONEncodableCallable] = {}
 
 
 def register_from_json_encodable(
     type_: type,
-) -> typing.Callable[[FromJSONEncodableCallable], FromJSONEncodableCallable]:
+) -> Callable[[FromJSONEncodableCallable], FromJSONEncodableCallable]:
     """
     Decorator to register a deserilization function for `type_`.
     """
@@ -138,23 +147,53 @@ def register_from_json_encodable(
 
 
 def get_from_json_encodable_func(
-    type_: typing.Any,
-) -> typing.Optional[FromJSONEncodableCallable]:
+    type_: Any,
+) -> Optional[FromJSONEncodableCallable]:
     """
     Obtain the deserialization function for `type_`.
     """
     return _get_registered_func(_FROM_JSON_ENCODABLE_REGISTRY, type_)
 
 
+_JSON_ENCODABLE_SUMMARY_REGISTRY: Dict[type, ToJSONEncodableCallable] = {}
+
+
+def register_to_json_encodable_summary(
+    type_: type,
+) -> Callable[[ToJSONEncodableCallable], ToJSONEncodableCallable]:
+    """
+    Decorator to register a function to convert `type_` to a JSON-encodable summary for the UI.
+    """
+
+    def _register_to_json_encodable_summary(
+        func: ToJSONEncodableCallable,
+    ) -> ToJSONEncodableCallable:
+        # ToDo(@neutralino1): validate func signature
+        _JSON_ENCODABLE_SUMMARY_REGISTRY[type_] = func
+
+        return func
+
+    return _register_to_json_encodable_summary
+
+
+def get_to_json_encodable_summary_func(
+    type_: Any,
+) -> Optional[ToJSONEncodableCallable]:
+    """
+    Obtain the serialization function for `type_`.
+    """
+    return _get_registered_func(_JSON_ENCODABLE_SUMMARY_REGISTRY, type_)
+
+
 # TOOLS
 
 
-RegisteredFunc = typing.TypeVar("RegisteredFunc")
+RegisteredFunc = TypeVar("RegisteredFunc")
 
 
 def _get_registered_func(
-    registry: typing.Dict[type, RegisteredFunc], type_: typing.Any
-) -> typing.Optional[RegisteredFunc]:
+    registry: Dict[type, RegisteredFunc], type_: Any
+) -> Optional[RegisteredFunc]:
     """
     Obtain a registered function (casting, serialization) from a registry.
     """
@@ -163,7 +202,7 @@ def _get_registered_func(
     return registry.get(registry_type)
 
 
-def get_origin_type(type_: typing.Any) -> typing.Any:
+def get_origin_type(type_: Any) -> Any:
     """
     Extract the type by which the casting and serialization logic
     is indexed.
@@ -179,28 +218,28 @@ def get_origin_type(type_: typing.Any) -> typing.Any:
     return registry_type
 
 
-def is_valid_typing_alias(type_: typing.Any) -> bool:
+def is_valid_typing_alias(type_: Any) -> bool:
     """
     Is this a `typing` type, and if so, is it correctly subscribed?
     """
     if isinstance(
         type_,
         (
-            typing.GenericAlias,  # type: ignore
-            typing._GenericAlias,  # type: ignore
-            typing._UnionGenericAlias,  # type: ignore
-            typing._CallableGenericAlias,  # type: ignore
+            GenericAlias,  # type: ignore
+            _GenericAlias,  # type: ignore
+            _UnionGenericAlias,  # type: ignore
+            _CallableGenericAlias,  # type: ignore
         ),
     ):
         return True
 
-    if isinstance(type_, (typing._SpecialForm, typing._BaseGenericAlias)):  # type: ignore
+    if isinstance(type_, (_SpecialForm, _BaseGenericAlias)):  # type: ignore
         raise ValueError("{} must be parametrized")
 
     return False
 
 
-def is_glow_parametrized_generic_type(type_: typing.Any) -> bool:
+def is_glow_parametrized_generic_type(type_: Any) -> bool:
     try:
         return (
             issubclass(type_, GenericType)

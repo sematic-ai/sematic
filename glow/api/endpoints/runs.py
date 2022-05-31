@@ -12,6 +12,7 @@ from urllib.parse import urlunsplit, urlencode, urlsplit
 import sqlalchemy
 import flask
 from sqlalchemy.orm.exc import NoResultFound
+import flask_socketio
 
 # Glow
 from glow.api.app import glow_api
@@ -178,3 +179,14 @@ def get_run_endpoint(run_id: str) -> flask.Response:
     )
 
     return flask.jsonify(payload)
+
+
+@glow_api.route("/api/v1/runs/graph", methods=["PUT"])
+def graph_update() -> flask.Response:
+    flask_socketio.emit(
+        "graph",
+        flask.request.json,
+        namespace="/graph",
+        broadcast=True,
+    )
+    return flask.jsonify({})

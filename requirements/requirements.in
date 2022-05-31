@@ -5,3 +5,6 @@ SQLAlchemy==1.4.36
 flask
 flask-cors
 cloudpickle
+flask-socketio
+eventlet
+requests

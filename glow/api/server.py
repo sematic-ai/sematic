@@ -1,5 +1,6 @@
 # Third-party
 from flask import jsonify
+from flask_socketio import SocketIO
 
 # Glow
 from glow.api.app import glow_api
@@ -24,5 +25,9 @@ def ping():
     return jsonify({"status": "ok"})
 
 
+socketio = SocketIO(glow_api)
+
 if __name__ == "__main__":
-    glow_api.run(debug=True)
+    glow_api.debug = True
+    # glow_api.run(debug=True)
+    socketio.run(glow_api)

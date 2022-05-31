@@ -18,6 +18,8 @@ glow_py_lib(
         "//glow/api/endpoints:artifacts",
         "//glow/api/endpoints:edges",
         requirement("flask"),
+        requirement("flask-socketio"),
+        requirement("eventlet")
     ]
 )
 
