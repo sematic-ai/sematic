@@ -1,149 +1,138 @@
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Artifact, Edge, Run } from "../Models";
 import {
   ArtifactListPayload,
   EdgeListPayload,
   RunListPayload,
 } from "../Payloads";
-import { fetchJSON } from "../utils";
+import { fetchJSON, graphSocket } from "../utils";
 import { ArtifactList } from "./Artifacts";
 import Loading from "./Loading";
 import { FlowWithProvider } from "./ReactFlowDag";
 import SourceCode from "./SourceCode";
 import CalculatorPath from "./CalculatorPath";
-import Alert from "@mui/material/Alert";
 import Tab from "@mui/material/Tab";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
-import { Tooltip } from "@mui/material";
 import Tags from "./Tags";
 import Docstring from "./Docstring";
+import { Alert } from "@mui/material";
 
 type IOArtifacts = {
   input: Map<string, Artifact | undefined>;
   output: Map<string, Artifact | undefined>;
 };
 
+type Graph = {
+  runs: Map<string, Run>;
+  edges: Edge[];
+  artifacts: Artifact[];
+};
+
 function DagTab(props: { rootRun: Run }) {
   let rootRun = props.rootRun;
 
   const [error, setError] = useState<Error | undefined>(undefined);
-  const [isLoadedRuns, setIsLoadedRuns] = useState(false);
-  const [isLoadedEdges, setIsLoadedEdges] = useState(false);
-  const [isLoadedArtifacts, setIsLoadedArtifacs] = useState(false);
-
-  const [runsByRootId, setRunsByRootId] = useState<
-    Map<string, Map<string, Run>>
-  >(new Map());
-  const [edgesByRootId, setEdgesByRootId] = useState<Map<string, Edge[]>>(
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [graphsByRootId, setGraphsByRootId] = useState<Map<string, Graph>>(
     new Map()
   );
-  const [artifactsByRootId, setArtifactsByRootId] = useState<
-    Map<string, Artifact[]>
-  >(new Map());
 
-  const [selectedRun, setSelectedRun] = useState<Run>(rootRun);
+  const [selectedRunId, setSelectedRunId] = useState<string>(rootRun.id);
 
   useEffect(() => {
-    setSelectedRun(rootRun);
+    graphSocket.removeAllListeners();
+    graphSocket.on("graph", (args: { run_id: string }) => {
+      console.log(args);
+      if (args.run_id == rootRun.id) {
+        loadGraph();
+      }
+    });
   }, [rootRun]);
 
   useEffect(() => {
-    if (runsByRootId.has(rootRun.id)) return;
-    let filters = JSON.stringify({ root_id: { eq: rootRun.id } });
+    setSelectedRunId(rootRun.id);
+  }, [rootRun.id]);
 
+  const loadGraph = useCallback(() => {
+    let graph = {
+      runs: new Map(),
+      edges: new Array<Edge>(),
+      artifacts: new Array<Artifact>(),
+    };
+
+    let filters = JSON.stringify({ root_id: { eq: rootRun.id } });
     fetchJSON(
       "/api/v1/runs?limit=-1&filters=" + filters,
-      (payload: RunListPayload) =>
-        setRunsByRootId(
-          (currentMap) =>
-            // Have to make a new map to make sure memoized values get refreshed
-            new Map([
-              ...Array.from(currentMap),
-              [
-                rootRun.id,
-                new Map<string, Run>(
-                  payload.content.map((run) => [run.id, run])
-                ),
-              ],
-            ])
-        ),
-      setError,
-      setIsLoadedRuns
+      (payload: RunListPayload) => {
+        graph.runs = new Map(payload.content.map((run) => [run.id, run]));
+
+        let runIds = Array.from(graph.runs.keys());
+
+        let filters = JSON.stringify({
+          OR: [
+            { source_run_id: { in: runIds } },
+            { destination_run_id: { in: runIds } },
+          ],
+        });
+
+        fetchJSON(
+          "/api/v1/edges?limit=-1&filters=" + filters,
+          (payload: EdgeListPayload) => {
+            graph.edges = payload.content;
+            let artifactIds = graph.edges
+              .map((edge) => edge.artifact_id)
+              .filter((artifactId) => artifactId !== null);
+
+            let filters = JSON.stringify({ id: { in: artifactIds } });
+
+            fetchJSON(
+              "/api/v1/artifacts?limit=-1&filters=" + filters,
+              (payload: ArtifactListPayload) => {
+                graph.artifacts = payload.content;
+                setGraphsByRootId((currentMap) => {
+                  currentMap.set(rootRun.id, graph);
+                  return new Map(currentMap);
+                });
+                setIsLoaded(true);
+              },
+              setError
+            );
+          },
+          setError
+        );
+      },
+      setError
     );
-  }, [rootRun, runsByRootId]);
+  }, [rootRun]);
 
   useEffect(() => {
-    if (edgesByRootId.has(rootRun.id)) return;
-    let runs = runsByRootId.get(rootRun.id);
-    if (runs === undefined) return;
-
-    let runIds = Array.from(runs.keys());
-
-    let filters = JSON.stringify({
-      OR: [
-        { source_run_id: { in: runIds } },
-        { destination_run_id: { in: runIds } },
-      ],
-    });
-
-    fetchJSON(
-      "/api/v1/edges?limit=-1&filters=" + filters,
-      (payload: EdgeListPayload) =>
-        setEdgesByRootId(
-          (currentMap) =>
-            // Have to make a new map to make sure memoized values get refreshed
-            new Map([...Array.from(currentMap), [rootRun.id, payload.content]])
-        ),
-      setError,
-      setIsLoadedEdges
-    );
-  }, [rootRun, edgesByRootId, runsByRootId]);
-
-  useEffect(() => {
-    if (artifactsByRootId.has(rootRun.id)) return;
-    let edges = edgesByRootId.get(rootRun.id);
-    if (edges === undefined) return;
-
-    let artifactIds = edges
-      .map((edge) => edge.artifact_id)
-      .filter((artifactId) => artifactId !== null);
-
-    let filters = JSON.stringify({ id: { in: artifactIds } });
-
-    fetchJSON(
-      "/api/v1/artifacts?limit=-1&filters=" + filters,
-      (payload: ArtifactListPayload) =>
-        setArtifactsByRootId(
-          (currentMap) =>
-            // Have to make a new map to make sure memoized values get refreshed
-            new Map([...Array.from(currentMap), [rootRun.id, payload.content]])
-        ),
-      setError,
-      setIsLoadedArtifacs
-    );
-  }, [rootRun.id, artifactsByRootId, edgesByRootId]);
+    if (!graphsByRootId.has(rootRun.id)) {
+      setIsLoaded(false);
+      loadGraph();
+    }
+  }, [rootRun]);
 
   const runs = useMemo(
-    () => runsByRootId.get(rootRun.id),
-    [runsByRootId, rootRun]
+    () => graphsByRootId.get(rootRun.id)?.runs,
+    [graphsByRootId, rootRun]
   );
 
   const artifactsById = useMemo(() => {
-    let allArtifactsForRoot = artifactsByRootId.get(rootRun.id);
+    let allArtifactsForRoot = graphsByRootId.get(rootRun.id)?.artifacts;
     return (
       allArtifactsForRoot &&
       new Map(allArtifactsForRoot.map((artifact) => [artifact.id, artifact]))
     );
-  }, [artifactsByRootId.size, rootRun]);
+  }, [graphsByRootId, rootRun]);
 
   const edges = useMemo(
-    () => edgesByRootId.get(rootRun.id),
-    [edgesByRootId, rootRun]
+    () => graphsByRootId.get(rootRun.id)?.edges,
+    [graphsByRootId, rootRun]
   );
 
   const selectedRunArtifacts = useMemo(() => {
@@ -161,7 +150,7 @@ function DagTab(props: { rootRun: Run }) {
       if (artifact_id !== null) {
         artifact = artifactsById.get(artifact_id);
         if (artifact === undefined) {
-          setError(Error("Artifact missing"));
+          //setError(Error("Artifact missing"));
           return;
         }
       }
@@ -172,25 +161,29 @@ function DagTab(props: { rootRun: Run }) {
     };
 
     edges.forEach((edge) => {
-      if (edge.destination_run_id === selectedRun.id) {
+      if (edge.destination_run_id === selectedRunId) {
         setArtifact(ioArtifacts.input, edge.artifact_id, edge.destination_name);
       }
-      if (edge.source_run_id === selectedRun.id) {
+      if (edge.source_run_id === selectedRunId) {
         setArtifact(ioArtifacts.output, edge.artifact_id, edge.source_name);
       }
     });
     return ioArtifacts;
-  }, [edges, artifactsById, selectedRun]);
+  }, [edges, artifactsById, selectedRunId]);
 
-  if (error || !(isLoadedRuns && isLoadedEdges && isLoadedArtifacts))
-    return (
-      <Loading
-        error={error}
-        isLoaded={isLoadedRuns && isLoadedArtifacts && isLoadedEdges}
-      />
-    );
+  let selectedRun = useMemo(
+    () => runs?.get(selectedRunId),
+    [runs, selectedRunId]
+  );
 
-  if (runs == undefined || edges === undefined || artifactsById === undefined) {
+  if (error || !isLoaded) return <Loading error={error} isLoaded={isLoaded} />;
+
+  if (
+    runs === undefined ||
+    edges === undefined ||
+    artifactsById === undefined ||
+    selectedRun === undefined
+  ) {
     setError(
       Error(
         "There was problem loading the graph: no runs or edges or artifacts."
@@ -198,7 +191,6 @@ function DagTab(props: { rootRun: Run }) {
     );
     return <></>; // necessary to ensure runs is defined below.
   }
-
   return (
     <Grid container>
       <Grid item xs={6}>
@@ -207,18 +199,20 @@ function DagTab(props: { rootRun: Run }) {
           {
             //<ReaflowDag runs={Array.from(runs.values())} edges={edges} />
           }
-          {
-            <FlowWithProvider
-              runs={Array.from(runs.values())}
-              edges={edges}
-              artifactsById={artifactsById}
-              onSelectRun={(run) => {
-                if (run.id != selectedRun.id) {
-                  setSelectedRun(run);
-                }
-              }}
-            />
-          }
+          <FlowWithProvider
+            // Nasty hack to make sure the DAG is remounted each time to trigger a ReactFlow onInit
+            // to trigger a new layout
+            key={Math.random().toString()}
+            runs={Array.from(runs.values())}
+            edges={edges}
+            artifactsById={artifactsById}
+            onSelectRun={(run) => {
+              //if (run.id !== selectedRun.id) {
+              setSelectedRunId(run.id);
+              //}
+            }}
+            selectedRunId={selectedRunId}
+          />
         </Box>
       </Grid>
       <Grid item xs={6}>
@@ -262,6 +256,8 @@ function RunTabs(props: { run: Run; artifacts: IOArtifacts | undefined }) {
     setSelectedTab(newValue);
   };
 
+  console.log(run.future_state);
+
   return (
     <>
       <TabContext value={selectedTab}>
@@ -279,7 +275,15 @@ function RunTabs(props: { run: Run; artifacts: IOArtifacts | undefined }) {
           {artifacts && <ArtifactList artifacts={artifacts.input} />}
         </TabPanel>
         <TabPanel value="output">
-          {artifacts && <ArtifactList artifacts={artifacts.output} />}
+          {["CREATED", "SCHEDULED", "RAN"].includes(run.future_state) && (
+            <Alert severity="info">No output yet. Run has not completed</Alert>
+          )}
+          {["FAILED", "NESTED_FAILED"].includes(run.future_state) && (
+            <Alert severity="error">Run has failed. No output.</Alert>
+          )}
+          {artifacts && run.future_state === "RESOLVED" && (
+            <ArtifactList artifacts={artifacts.output} />
+          )}
         </TabPanel>
         <TabPanel value="documentation">
           <Docstring run={run} />

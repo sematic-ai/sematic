@@ -5,11 +5,13 @@ import dagre from "dagre";
 Builds the nested dag layout
 */
 export default function buildDagLayout(
-  instance: ReactFlowInstance,
+  iNodes: Node[],
+  iEdges: Edge[],
+  //instance: ReactFlowInstance,
   getNodeElement: (node: Node) => HTMLElement | null
 ): Node[] {
-  let iNodes = instance.getNodes();
-  let iEdges = instance.getEdges();
+  //let iNodes = instance.getNodes();
+  //let iEdges = instance.getEdges();
 
   let iNodesById: Map<string, Node> = new Map(
     iNodes.map((node) => [node.id, node])

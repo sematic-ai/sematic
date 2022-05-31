@@ -9,6 +9,7 @@ glow_py_lib(
         ":request_parameters",
         requirement("flask"),
         requirement("sqlalchemy"),
+        requirement("flask-socketio")
     ]
 )
 

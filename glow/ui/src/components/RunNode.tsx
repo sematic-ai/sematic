@@ -8,7 +8,6 @@ import {
 } from "@mui/material";
 import { Handle, NodeProps, Position } from "react-flow-renderer";
 import { Run } from "../Models";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CalculatorPath from "./CalculatorPath";
 import RunStateChip from "./RunStateChip";
 
@@ -74,6 +73,7 @@ export default function RunNode(props: NodeProps) {
           "&:hover": {
             backgroundColor: lighten(color.light, props.selected ? 0.7 : 0.87),
           },
+          //display: "-webkit-inline-flex",
         }}
       >
         <AlertTitle>{props.data.label}</AlertTitle>
