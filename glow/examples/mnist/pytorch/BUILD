@@ -3,6 +3,11 @@ glow_py_lib(
     srcs = ["calculators.py"],
     deps = [
         "//glow:init",
+        requirement("torch"),
+        requirement("torchvision"),
+        requirement("torchmetrics"),
+        requirement("plotly"),
+        requirement("pandas"),
     ]
 )
 

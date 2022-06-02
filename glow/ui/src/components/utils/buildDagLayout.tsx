@@ -142,8 +142,8 @@ export default function buildDagLayout(
       let nodeHeight = nodeDimensions.get(node.id)?.height || 0;
 
       node.position = {
-        x: dagreNode.x - (nodeWidth || 0) / 2 + 10,
-        y: dagreNode.y - (nodeHeight || 0) / 2 + 80,
+        x: dagreNode.x - (nodeWidth || 0) / 2 + 20,
+        y: dagreNode.y - (nodeHeight || 0) / 2 + 100,
       };
 
       node.style = {
@@ -158,13 +158,13 @@ export default function buildDagLayout(
         let parentNodeWidth = nodeDimensions.get(parentNode.id)?.width || 0;
         parentNodeWidth = Math.max(
           parentNodeWidth,
-          node.position.x + (nodeWidth || 0) + 10
+          node.position.x + (nodeWidth || 0) + 20
         );
 
         let parentNodeHeight = nodeDimensions.get(parentNode.id)?.height || 0;
         parentNodeHeight = Math.max(
           parentNodeHeight || 0,
-          node.position.y + (nodeHeight || 0) + 20
+          node.position.y + (nodeHeight || 0) + 40
         );
         let parentDimensions = {
           width: parentNodeWidth,

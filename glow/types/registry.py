@@ -12,10 +12,14 @@ from typing import (  # type: ignore
     _SpecialForm,
     _BaseGenericAlias,
     TypeVar,
+    Union,
 )
 
 # Glow
 from glow.types.generic_type import GenericType
+
+
+RegistryKey = Union[type, _SpecialForm]
 
 
 # TYPE CASTING
@@ -25,11 +29,11 @@ from glow.types.generic_type import GenericType
 CanCastTypeCallable = Callable[[Any, Any], Tuple[bool, Optional[str]]]
 
 
-_CAN_CAST_REGISTRY: Dict[type, CanCastTypeCallable] = {}
+_CAN_CAST_REGISTRY: Dict[RegistryKey, CanCastTypeCallable] = {}
 
 
 def register_can_cast(
-    *types: type,
+    *types: RegistryKey,
 ) -> Callable[[CanCastTypeCallable], CanCastTypeCallable]:
     """
     Register a `can_cast_type` function for type `type_`.
@@ -59,11 +63,11 @@ def get_can_cast_func(type_: Any) -> Optional[CanCastTypeCallable]:
 SafeCastCallable = Callable[[Any, Any], Tuple[Any, Optional[str]]]
 
 
-_SAFE_CAST_REGISTRY: Dict[type, SafeCastCallable] = {}
+_SAFE_CAST_REGISTRY: Dict[RegistryKey, SafeCastCallable] = {}
 
 
 def register_safe_cast(
-    *types: type,
+    *types: RegistryKey,
 ) -> Callable[[SafeCastCallable], SafeCastCallable]:
     """
     Register a `safe_cast` function for type `type_`.
@@ -91,11 +95,11 @@ def get_safe_cast_func(type_: Any) -> Optional[SafeCastCallable]:
 ToJSONEncodableCallable = Callable[[Any, Any], Any]
 
 
-_TO_JSON_ENCODABLE_REGISTRY: Dict[type, ToJSONEncodableCallable] = {}
+_TO_JSON_ENCODABLE_REGISTRY: Dict[RegistryKey, ToJSONEncodableCallable] = {}
 
 
 def register_to_json_encodable(
-    *types: type,
+    *types: RegistryKey,
 ) -> Callable[[ToJSONEncodableCallable], ToJSONEncodableCallable]:
     """
     Decorator to register a function to convert `type_` to a JSON-encodable payload for
@@ -126,11 +130,11 @@ def get_to_json_encodable_func(
 FromJSONEncodableCallable = Callable[[Any, Any], Any]
 
 
-_FROM_JSON_ENCODABLE_REGISTRY: Dict[type, FromJSONEncodableCallable] = {}
+_FROM_JSON_ENCODABLE_REGISTRY: Dict[RegistryKey, FromJSONEncodableCallable] = {}
 
 
 def register_from_json_encodable(
-    *types: type,
+    *types: RegistryKey,
 ) -> Callable[[FromJSONEncodableCallable], FromJSONEncodableCallable]:
     """
     Decorator to register a deserilization function for `type_`.
@@ -157,11 +161,11 @@ def get_from_json_encodable_func(
     return _get_registered_func(_FROM_JSON_ENCODABLE_REGISTRY, type_)
 
 
-_JSON_ENCODABLE_SUMMARY_REGISTRY: Dict[type, ToJSONEncodableCallable] = {}
+_JSON_ENCODABLE_SUMMARY_REGISTRY: Dict[RegistryKey, ToJSONEncodableCallable] = {}
 
 
 def register_to_json_encodable_summary(
-    *types: Any,
+    *types: RegistryKey,
 ) -> Callable[[ToJSONEncodableCallable], ToJSONEncodableCallable]:
     """
     Decorator to register a function to convert `type_` to a JSON-encodable summary for
@@ -196,7 +200,7 @@ RegisteredFunc = TypeVar("RegisteredFunc")
 
 
 def _get_registered_func(
-    registry: Dict[type, RegisteredFunc], type_: Any
+    registry: Dict[RegistryKey, RegisteredFunc], type_: Any
 ) -> Optional[RegisteredFunc]:
     """
     Obtain a registered function (casting, serialization) from a registry.
