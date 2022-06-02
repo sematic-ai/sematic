@@ -56,7 +56,7 @@ def train(
                 "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
                     epoch,
                     batch_idx * len(data),
-                    len(train_loader.dataset),
+                    len(train_loader.dataset),  # type: ignore
                     100.0 * batch_idx / len(train_loader),
                     loss.item(),
                 )
@@ -85,7 +85,7 @@ def test(model: nn.Module, device: torch.device, test_loader: DataLoader):
             )  # get the index of the max log-probability
             correct += pred.eq(target.view_as(pred)).sum().item()
 
-    test_loss /= len(test_loader.dataset)
+    test_loss /= len(test_loader.dataset)  # type: ignore
     pr_curve = PrecisionRecallCurve(num_classes=10)
     precision, recall, thresholds = pr_curve(torch.cat(preds), torch.cat(targets))
     classes = []
@@ -110,6 +110,6 @@ def test(model: nn.Module, device: torch.device, test_loader: DataLoader):
 
     return dict(
         average_loss=test_loss,
-        accuracy=correct / len(test_loader.dataset),
+        accuracy=correct / len(test_loader.dataset),  # type: ignore
         pr_curve=fig,
     )

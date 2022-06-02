@@ -94,7 +94,7 @@ def evaluate_model(
     """
     results = test(model, device, test_loader)
     return EvaluationResults(
-        test_set_size=len(test_loader.dataset),
+        test_set_size=len(test_loader.dataset),  # type: ignore
         average_loss=results["average_loss"],
         accuracy=results["accuracy"],
         pr_curve=results["pr_curve"],
