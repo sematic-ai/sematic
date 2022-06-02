@@ -59,12 +59,3 @@ glow_py_lib(
         requirement("cloudpickle"),
     ],
 )
-
-glow_py_lib(
-    name = "bool",
-    srcs = ["bool.py"],
-    deps = [
-        ":registry",
-        "serialization",
-    ]
-)
