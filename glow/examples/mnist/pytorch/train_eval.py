@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
-from torchmetrics import PrecisionRecallCurve
+from torchmetrics import PrecisionRecallCurve  # type: ignore
 import pandas
 import plotly.express as px
 
