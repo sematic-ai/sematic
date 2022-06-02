@@ -3,9 +3,9 @@ mypy>=0.950
 pytest
 # Required for pip-compile on the CI worker
 pip-tools
+
 # Required for mypy
 sqlalchemy[mypy]
-# Required for mypy
 flask
-# Required for mypy
 types-requests
+pandas-stubs

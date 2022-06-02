@@ -59,14 +59,27 @@ markupsafe==2.1.1
     # via jinja2
 matplotlib-inline==0.1.3
     # via ipython
+numpy==1.22.4
+    # via
+    #   pandas
+    #   torchmetrics
+    #   torchvision
 packaging==21.3
-    # via pytest
+    # via
+    #   pytest
+    #   torchmetrics
+pandas==1.4.2
+    # via -r requirements/requirements.in
 parso==0.8.3
     # via jedi
 pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
+pillow==9.1.1
+    # via torchvision
+plotly==5.8.0
+    # via -r requirements/requirements.in
 pluggy==1.0.0
     # via pytest
 prompt-toolkit==3.0.29
@@ -83,26 +96,48 @@ pyparsing==3.0.9
     # via packaging
 pytest==7.1.1
     # via -r requirements/requirements.in
+python-dateutil==2.8.2
+    # via pandas
 python-engineio==4.3.2
     # via python-socketio
 python-socketio==5.6.0
     # via flask-socketio
+pytz==2022.1
+    # via pandas
 requests==2.27.1
-    # via -r requirements/requirements.in
+    # via
+    #   -r requirements/requirements.in
+    #   torchvision
 six==1.16.0
     # via
     #   eventlet
     #   flask-cors
+    #   python-dateutil
 sqlalchemy==1.4.36
     # via -r requirements/requirements.in
 stack-data==0.2.0
     # via ipython
+tenacity==8.0.1
+    # via plotly
 tomli==2.0.1
     # via pytest
+torch==1.11.0
+    # via
+    #   -r requirements/requirements.in
+    #   torchmetrics
+    #   torchvision
+torchmetrics==0.9.0
+    # via -r requirements/requirements.in
+torchvision==0.12.0
+    # via -r requirements/requirements.in
 traitlets==5.2.0
     # via
     #   ipython
     #   matplotlib-inline
+typing-extensions==4.2.0
+    # via
+    #   torch
+    #   torchvision
 urllib3==1.26.9
     # via requests
 wcwidth==0.2.5

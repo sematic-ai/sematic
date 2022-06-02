@@ -105,16 +105,13 @@ class Calculator(AbstractCalculator):
     # Returns typing.Any instead of Future to ensure
     # calculator algebra is valid from a mypy perspective
     def __call__(self, *args: typing.Any, **kwargs: typing.Any) -> typing.Any:
-        argument_binding = self.__signature__().bind(*args, **kwargs)
+        signature = self.__signature__()
+        argument_binding = signature.bind(*args, **kwargs)
         argument_map = argument_binding.arguments
 
-        if set(argument_map) != set(self._input_types):
-            raise ValueError(
-                "Passed arguments {} do not match calculator signature: {}".format(
-                    _repr_str_iterable(set(argument_map)),
-                    _repr_str_iterable(set(self._input_types)),
-                )
-            )
+        for name, parameter in signature.parameters.items():
+            if name not in argument_map:
+                argument_map[name] = parameter.default
 
         cast_arguments = self.cast_inputs(argument_map)
 
