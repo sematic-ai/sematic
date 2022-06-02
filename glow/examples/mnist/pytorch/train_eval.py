@@ -100,10 +100,6 @@ def test(model: nn.Module, device: torch.device, test_loader: DataLoader):
         }
     )
 
-    # import pdb
-
-    # pdb.set_trace()
-
     fig = px.scatter(
         df,
         x="recall",
@@ -112,14 +108,6 @@ def test(model: nn.Module, device: torch.device, test_loader: DataLoader):
         labels={"x": "Recall", "y": "Precision"},
     )
 
-    print(
-        "\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
-            test_loss,
-            correct,
-            len(test_loader.dataset),
-            100.0 * correct / len(test_loader.dataset),
-        )
-    )
     return dict(
         average_loss=test_loss,
         accuracy=correct / len(test_loader.dataset),

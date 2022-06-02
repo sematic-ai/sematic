@@ -23,3 +23,4 @@ torchvision
 torchmetrics
 plotly
 pandas
+pandas-stubs

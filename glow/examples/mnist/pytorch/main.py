@@ -1,9 +1,6 @@
-# Standard library
-import logging
-
-# Glow
-from glow import OfflineResolver
-
+"""
+This is an example implementation of the MNIST pipeline in PyTorch on Glow.
+"""
 # MNIST example
 from glow.examples.mnist.pytorch.calculators import (
     pipeline,
@@ -11,6 +8,8 @@ from glow.examples.mnist.pytorch.calculators import (
     DataLoaderConfig,
     TrainConfig,
 )
+
+from glow import OfflineResolver
 
 
 PIPELINE_CONFIG = PipelineConfig(
@@ -20,8 +19,6 @@ PIPELINE_CONFIG = PipelineConfig(
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-
     pipeline(PIPELINE_CONFIG).set(
         name="PyTorch MNIST Example", tags=["pytorch", "example", "mnist"]
     ).resolve(OfflineResolver())
