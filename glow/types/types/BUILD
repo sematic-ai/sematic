@@ -67,3 +67,22 @@ glow_py_lib(
         "//glow/types:serialization",
     ]
 )
+
+glow_py_lib(
+    name = "union",
+    srcs = ["union.py"],
+    deps = [
+        "//glow/types:casting",
+        "//glow/types:registry",
+        "//glow/types:serialization",
+    ]
+)
+
+glow_py_lib(
+    name = "bool",
+    srcs = ["bool.py"],
+    deps = [
+        "//glow/types:registry",
+        "//glow/types:serialization",
+    ]
+)

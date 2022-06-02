@@ -99,7 +99,7 @@ def get_json_encodable_summary(value: typing.Any, type_: typing.Any) -> typing.A
     if to_json_encodable_summary_func is not None:
         return to_json_encodable_summary_func(value, type_)
 
-    return "No summary available"
+    return {"repr": repr(value)}
 
 
 # TYPE SERIALIZATION

@@ -6,6 +6,7 @@ import dataclasses
 # Glow
 from glow.types.registry import (
     DataclassKey,
+    ToJSONEncodableCallable,
     is_valid_typing_alias,
     register_can_cast,
     register_safe_cast,
@@ -95,7 +96,16 @@ def _can_cast_to_dataclass(from_type: Any, to_type: Any) -> Tuple[bool, Optional
 
 
 @register_to_json_encodable(DataclassKey)
-def _dataclass_to_json_encodable(value: Any, _) -> Any:
+def _dataclass_to_json_encodable(value: Any, type_: Any) -> Any:
+    return _serialize_dataclass(value_to_json_encodable, value, type_)
+
+
+@register_to_json_encodable_summary(DataclassKey)
+def _dataclass_to_json_encodable_summary(value: Any, type_: Any) -> Any:
+    return _serialize_dataclass(get_json_encodable_summary, value, type_)
+
+
+def _serialize_dataclass(serializer: ToJSONEncodableCallable, value: Any, _) -> Any:
     # We use type(value) instead of the passed type because we want to
     # conserve any subclasses
     type_ = type(value)
@@ -124,18 +134,6 @@ def _dataclass_to_json_encodable(value: Any, _) -> Any:
             output["types"][name] = type_to_json_encodable(value_type)
             value_serialization_type = value_type
 
-        output["values"][name] = value_to_json_encodable(
-            field_value, value_serialization_type
-        )
+        output["values"][name] = serializer(field_value, value_serialization_type)
 
     return output
-
-
-@register_to_json_encodable_summary(DataclassKey)
-def _dataclass_to_json_encodable_summary(value: Any, type_: Any) -> Any:
-    fields: Dict[str, dataclasses.Field] = type_.__dataclass_fields__
-
-    return {
-        name: get_json_encodable_summary(getattr(value, name), field.type)
-        for name, field in fields.items()
-    }

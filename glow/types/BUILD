@@ -4,13 +4,19 @@ glow_py_lib(
     deps = [
         ":generic_type",
         ":type",
+        "//glow/types/types:bool",
         "//glow/types/types:dataclass",
         "//glow/types/types:float",
         "//glow/types/types:float_in_range",
         "//glow/types/types:integer",
         "//glow/types/types:none",
+        "//glow/types/types:union",
         "//glow/types/types:list",
         "//glow/types/types:str",
+        # Does not actually create a dependency on torch
+        "//glow/types/types/pytorch:init",
+        # Does not actually create a dependency on plotly
+        "//glow/types/types/plotly:init",
     ]
 )
 
@@ -52,4 +58,13 @@ glow_py_lib(
         ":generic_type",
         requirement("cloudpickle"),
     ],
+)
+
+glow_py_lib(
+    name = "bool",
+    srcs = ["bool.py"],
+    deps = [
+        ":registry",
+        "serialization",
+    ]
 )
