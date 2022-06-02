@@ -39,12 +39,13 @@ def make_run_from_future(future: AbstractFuture) -> Run:
 def make_artifact(value: typing.Any, type_: typing.Any) -> Artifact:
     type_serialization = type_to_json_encodable(type_)
     value_serialization = value_to_json_encodable(value, type_)
+    json_summary = get_json_encodable_summary(value, type_)
 
     artifact = Artifact(
-        id=_get_value_sha1_digest(value_serialization, type_serialization),
-        json_summary=json.dumps(
-            get_json_encodable_summary(value, type_), sort_keys=True
+        id=_get_value_sha1_digest(
+            value_serialization, type_serialization, json_summary
         ),
+        json_summary=json.dumps(json_summary, sort_keys=True),
         type_serialization=json.dumps(type_serialization, sort_keys=True),
     )
 
@@ -52,11 +53,14 @@ def make_artifact(value: typing.Any, type_: typing.Any) -> Artifact:
 
 
 def _get_value_sha1_digest(
-    value_serialization: typing.Any, type_serialization: typing.Any
+    value_serialization: typing.Any,
+    type_serialization: typing.Any,
+    json_summary: typing.Any,
 ) -> str:
     payload = {
         "value": value_serialization,
         "type": type_serialization,
+        "summary": json_summary,
         # Should there be some sort of type versioning concept here?
     }
 

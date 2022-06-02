@@ -19,7 +19,7 @@ function App() {
     <>
       <MuiThemeProvider theme={createTheme("LIGHT")}>
         <AppBar position="static" color="transparent" sx={{ boxShadow: 0 }}>
-          <Container maxWidth="xl">
+          <Container maxWidth={false}>
             <Toolbar>
               {
                 //<LightModeIcon color="primary" />
@@ -57,8 +57,8 @@ function App() {
             </Toolbar>
           </Container>
         </AppBar>
-        <Container maxWidth="xl" sx={{ paddingTop: 4 }}>
-          <Container maxWidth="xl">
+        <Container maxWidth={false} sx={{ paddingTop: 4 }}>
+          <Container maxWidth={false}>
             <Outlet />
           </Container>
         </Container>

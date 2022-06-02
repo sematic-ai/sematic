@@ -50,6 +50,10 @@ def can_cast_type(
     if can_cast_func is not None:
         return can_cast_func(from_type, to_type)
 
+    # Default behavior
+    if issubclass(from_type, to_type):
+        return True, None
+
     return False, "{} cannot cast to {}".format(from_type, to_type)
 
 

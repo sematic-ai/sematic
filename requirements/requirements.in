@@ -1,10 +1,26 @@
+# Tests
 pytest==7.1.1
+
+# System
 ipython==8.2.0
 setuptools==58.1.0
+
+# DB
 SQLAlchemy==1.4.36
+
+# API server
 flask
 flask-cors
 cloudpickle
 flask-socketio
 eventlet
 requests
+
+# Examples
+## MNIST
+torch
+torchvision
+torchmetrics
+plotly
+pandas
+pandas-stubs

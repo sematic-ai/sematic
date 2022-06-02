@@ -1,11 +1,14 @@
 import Typography from "@mui/material/Typography";
 import React from "react";
 import Tooltip from "@mui/material/Tooltip";
+import Box from "@mui/material/Box";
 import Alert from "@mui/material/Alert";
 import Table from "@mui/material/Table";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import TableBody from "@mui/material/TableBody";
+import Chip from "@mui/material/Chip";
+import Plot from "react-plotly.js";
 
 type TypeCategory = "builtin" | "typing" | "dataclass" | "generic" | "class";
 
@@ -54,6 +57,13 @@ interface TypeViewProps {
 
 function TypeView(props: TypeViewProps) {
   let repr = props.typeRepr;
+  if (repr[0] === "class") {
+    return (
+      <code>
+        {repr[2]["import_path"]}.{repr[1]}
+      </code>
+    );
+  }
   return (
     <code>
       {repr[1]}
@@ -119,6 +129,17 @@ export function renderSummary(
     return renderSummary(typeSerialization, valueSummary, parentTypes[0], key);
   }
 
+  if (valueSummary["repr"] !== undefined) {
+    return (
+      <ReprValueView
+        typeRepr={typeRepr}
+        typeSerialization={typeSerialization}
+        valueSummary={valueSummary}
+        key={key}
+      />
+    );
+  }
+
   return (
     <ValueView
       typeRepr={typeRepr}
@@ -129,11 +150,45 @@ export function renderSummary(
   );
 }
 
+function ReprValueView(props: ValueViewProps) {
+  console.log(props.valueSummary);
+  let repr: string[] = props.valueSummary["repr"].split("\n");
+  return (
+    <div>
+      {repr.map((line) => (
+        <div style={{ whiteSpace: "pre" }} key={line}>
+          {line}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function FloatValueView(props: ValueViewProps) {
   return (
     <Typography display="inline" component="span">
-      {Number.parseFloat(props.valueSummary).toFixed(1)}
+      {Number.parseFloat(props.valueSummary).toFixed(4)}
     </Typography>
+  );
+}
+
+function IntValueView(props: ValueViewProps) {
+  return (
+    <Typography display="inline" component="span">
+      {props.valueSummary}
+    </Typography>
+  );
+}
+
+function BoolValueView(props: ValueViewProps) {
+  let value: boolean = props.valueSummary;
+  return (
+    <Chip
+      label={value ? "TRUE" : "FALSE"}
+      color={value ? "success" : "error"}
+      variant="outlined"
+      size="small"
+    />
   );
 }
 
@@ -168,7 +223,7 @@ function ListTypeView(props: TypeViewProps) {
   let typeArgs = typeRepr[2].args;
 
   if (typeArgs === undefined) {
-    return <Alert severity="error">Incorrect type serialization</Alert>;
+    throw Error("Incorrect type serialization for " + typeRepr[1]);
   }
 
   let elementTypeRepr: TypeRepr = typeArgs[0].type as TypeRepr;
@@ -178,6 +233,32 @@ function ListTypeView(props: TypeViewProps) {
       {"list["}
       {renderType(elementTypeRepr)}
       {"]"}
+    </code>
+  );
+}
+
+function UnionTypeView(props: TypeViewProps) {
+  let typeRepr = props.typeRepr as AliasTypeRepr;
+  let typeArgs = typeRepr[2].args;
+
+  if (typeArgs === undefined) {
+    throw Error("Incorrect type serialization for " + typeRepr[1]);
+  }
+
+  let unionTypeReprs: TypeRepr[] = typeArgs.map(
+    (typeArg) => typeArg.type as TypeRepr
+  );
+  let key = 0;
+  return (
+    <code>
+      <div>{"Union["}</div>
+      {unionTypeReprs.map<React.ReactNode>((unionTypeRepr) => (
+        <Box paddingLeft={5} key={key++}>
+          {renderType(unionTypeRepr)}
+          {", "}
+        </Box>
+      ))}
+      <div>{"]"}</div>
     </code>
   );
 }
@@ -292,6 +373,60 @@ function DataclassValueView(props: ValueViewProps) {
   );
 }
 
+function TorchDataLoaderValueView(props: ValueViewProps) {
+  let { valueSummary, typeRepr, typeSerialization } = props;
+
+  return (
+    <Table>
+      <TableBody>
+        <TableRow key="batch-size">
+          <TableCell>
+            <b>Batch size</b>
+          </TableCell>
+          <TableCell>{valueSummary["batch_size"]}</TableCell>
+        </TableRow>
+        <TableRow key="num_workers">
+          <TableCell>
+            <b>Number of suprocesses</b>
+          </TableCell>
+          <TableCell>{valueSummary["num_workers"]}</TableCell>
+        </TableRow>
+        <TableRow key="pin_memory">
+          <TableCell>
+            <b>Copy tensors into pinned memory</b>
+          </TableCell>
+          <TableCell>
+            <BoolValueView
+              {...props}
+              valueSummary={valueSummary["pin_memory"]}
+            />
+          </TableCell>
+        </TableRow>
+        <TableRow key="timeout">
+          <TableCell>
+            <b>Timeout</b>
+          </TableCell>
+          <TableCell>{valueSummary["timeout"]} sec.</TableCell>
+        </TableRow>
+        <TableRow key="dataset">
+          <TableCell>
+            <b>Dataset</b>
+          </TableCell>
+          <TableCell>
+            <ReprValueView {...props} valueSummary={valueSummary["dataset"]} />
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+  );
+}
+
+function PlotlyFigureValueView(props: ValueViewProps) {
+  let { valueSummary } = props;
+  let { data, layout, config } = valueSummary["figure"];
+  return <Plot data={data} layout={layout} config={config} />;
+}
+
 type ComponentPair = {
   type: (props: TypeViewProps) => JSX.Element;
   value: (props: ValueViewProps) => JSX.Element;
@@ -299,13 +434,28 @@ type ComponentPair = {
 
 const TypeComponents: Map<string, ComponentPair> = new Map([
   ["float", { type: TypeView, value: FloatValueView }],
+  ["int", { type: TypeView, value: IntValueView }],
+  ["bool", { type: TypeView, value: BoolValueView }],
   ["FloatInRange", { type: FloatInRangeTypeView, value: FloatValueView }],
   ["list", { type: ListTypeView, value: ListValueView }],
   ["dataclass", { type: DataclassTypeView, value: DataclassValueView }],
+  ["Union", { type: UnionTypeView, value: ValueView }],
+  [
+    "torch.utils.data.dataloader.DataLoader",
+    { type: TypeView, value: TorchDataLoaderValueView },
+  ],
+  [
+    "plotly.graph_objs._figure.Figure",
+    { type: TypeView, value: PlotlyFigureValueView },
+  ],
 ]);
 
 function getComponentPair(typeRepr: TypeRepr) {
   let typeKey = typeRepr[1];
+  if (typeRepr[0] === "class") {
+    typeKey = typeRepr[2]["import_path"] + "." + typeKey;
+  }
+  console.log(typeKey);
   let componentPair = TypeComponents.get(typeKey);
 
   if (typeRepr[0] === "dataclass" && !componentPair) {
