@@ -1,6 +1,6 @@
 glow_py_lib(
-    name = "calculators",
-    srcs = ["calculators.py"],
+    name = "main_lib",
+    srcs = ["main.py", "calculators.py", "train_eval.py"],
     deps = [
         "//glow:init",
         requirement("torch"),
@@ -8,15 +8,6 @@ glow_py_lib(
         requirement("torchmetrics"),
         requirement("plotly"),
         requirement("pandas"),
-    ]
-)
-
-glow_py_lib(
-    name = "main_lib",
-    srcs = ["main.py"],
-    deps = [
-        ":calculators",
-        "//glow:init",
     ]
 )
 

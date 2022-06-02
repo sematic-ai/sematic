@@ -1,7 +1,6 @@
 # Standard library
 from typing import Optional
 from dataclasses import dataclass
-from glow.types.types.float_in_range import FloatInRange
 
 # Third-party
 import torch
@@ -14,7 +13,8 @@ from torch.utils.data.dataset import Dataset
 from torch.utils.data import DataLoader
 import plotly
 
-from .train_eval import train, test, Net
+
+from glow.examples.mnist.pytorch.train_eval import train, test, Net
 
 # Glow
 from glow import calculator
@@ -81,7 +81,7 @@ def train_model(
 class EvaluationResults:
     test_set_size: int
     average_loss: float
-    accuracy: FloatInRange[0, 1]
+    accuracy: float
     pr_curve: plotly.graph_objs.Figure
 
 
@@ -106,7 +106,8 @@ def pipeline(config: PipelineConfig) -> EvaluationResults:
     """
     # MNIST example in PyTorch
 
-    As implemented in the [PyTorch repository](https://github.com/pytorch/examples/blob/main/mnist/main.py).
+    As implemented in the
+    [PyTorch repository](https://github.com/pytorch/examples/blob/main/mnist/main.py).
     """
     train_dataset = load_mnist_dataset(train=True).set(
         name="Load train dataset", tags=["train"]
