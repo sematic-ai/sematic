@@ -151,7 +151,6 @@ export function renderSummary(
 }
 
 function ReprValueView(props: ValueViewProps) {
-  console.log(props.valueSummary);
   let repr: string[] = props.valueSummary["repr"].split("\n");
   return (
     <div>
@@ -455,7 +454,6 @@ function getComponentPair(typeRepr: TypeRepr) {
   if (typeRepr[0] === "class") {
     typeKey = typeRepr[2]["import_path"] + "." + typeKey;
   }
-  console.log(typeKey);
   let componentPair = TypeComponents.get(typeKey);
 
   if (typeRepr[0] === "dataclass" && !componentPair) {

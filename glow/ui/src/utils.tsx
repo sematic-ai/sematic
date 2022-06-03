@@ -23,3 +23,5 @@ export function fetchJSON(
 }
 
 export const graphSocket = io("/graph");
+
+export const pipelineSocket = io("/pipeline");

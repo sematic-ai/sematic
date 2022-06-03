@@ -4,7 +4,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 
 function Loading(props: { isLoaded: boolean; error?: Error }) {
   if (props.error) {
-    return <Alert severity="error">API Error: {props.error.message}</Alert>;
+    return <Alert severity="error">{props.error.message}</Alert>;
   }
   if (!props.isLoaded) {
     return (

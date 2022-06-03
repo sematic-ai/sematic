@@ -18,7 +18,7 @@ import flask_socketio  # type: ignore
 from glow.api.app import glow_api
 from glow.db.db import db
 from glow.db.models.run import Run
-from glow.db.queries import get_run
+from glow.db.queries import get_root_graph, get_run
 from glow.api.endpoints.request_parameters import get_request_parameters
 
 
@@ -181,12 +181,40 @@ def get_run_endpoint(run_id: str) -> flask.Response:
     return flask.jsonify(payload)
 
 
-@glow_api.route("/api/v1/runs/graph", methods=["PUT"])
-def graph_update() -> flask.Response:
+@glow_api.route("/api/v1/runs/<run_id>/graph", methods=["GET"])
+def get_run_graph(run_id: str) -> flask.Response:
+    """
+    Retrieve graph objects for root run with id `run_id`.
+
+    Response
+    --------
+    root_id: str
+        ID of root run
+    runs: List[Run]
+        Unique runs in the graph
+    edges: List[Edge]
+        Unique edges in the graph
+    artifacts: List[Artifact]
+        Unique artifacts in the graph
+    """
+    runs, edges, artifacts = get_root_graph(run_id)
+
+    payload = dict(
+        root_id=run_id,
+        runs=[run.to_json_encodable() for run in runs],
+        edges=[edge.to_json_encodable() for edge in edges],
+        artifacts=[artifact.to_json_encodable() for artifact in artifacts],
+    )
+
+    return flask.jsonify(payload)
+
+
+@glow_api.route("/api/v1/events/<namespace>/<event>", methods=["POST"])
+def graph_update(namespace: str, event: str) -> flask.Response:
     flask_socketio.emit(
-        "graph",
+        event,
         flask.request.json,
-        namespace="/graph",
+        namespace="/{}".format(namespace),
         broadcast=True,
     )
     return flask.jsonify({})

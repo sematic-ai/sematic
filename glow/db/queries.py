@@ -2,7 +2,8 @@
 Module holding common DB queries.
 """
 # Standard library
-from typing import List, Optional, Dict, Tuple
+from ctypes import Union
+from typing import List, Literal, Optional, Dict, Set, Tuple
 
 # Third-party
 import sqlalchemy
@@ -158,6 +159,40 @@ def get_run_input_artifacts(run_id: str) -> Dict[str, Artifact]:
         return {
             edge.destination_name: artifacts_by_id[edge.artifact_id] for edge in edges
         }
+
+
+def get_root_graph(root_run_id: str) -> Tuple[Set[Run], Set[Edge], Set[Artifact]]:
+    import logging
+
+    logging.basicConfig()
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+    with db().get_session() as session:
+        results = (
+            session.query(Run, Edge, Artifact)
+            .filter(
+                sqlalchemy.and_(
+                    Run.root_id == root_run_id,
+                    sqlalchemy.or_(
+                        Edge.source_run_id == Run.id, Edge.destination_run_id == Run.id
+                    ),
+                    sqlalchemy.or_(
+                        Edge.artifact_id == Artifact.id, Edge.artifact_id.is_(None)
+                    ),
+                )
+            )
+            .all()
+        )
+
+    runs: List[Run] = []
+    artifacts: List[Artifact] = []
+    edges: List[Edge] = []
+
+    for result in results:
+        runs.append(result[0])
+        edges.append(result[1])
+        artifacts.append(result[2])
+
+    return set(runs), set(edges), set(artifacts)
 
 
 def _add_unique_artifact(
