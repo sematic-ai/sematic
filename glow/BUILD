@@ -3,7 +3,6 @@ load("@rules_python//python:packaging.bzl", "py_wheel")
 glow_py_lib(
     name = "init",
     srcs = ["__init__.py"],
-    visibility = ["//visibility:public"],
     deps = [
         ":calculator",
         ":resolver",
@@ -14,16 +13,29 @@ glow_py_lib(
 )
 
 glow_py_lib(
+    name = "config",
+    srcs = ["config.py"],
+    deps = []
+)
+
+glow_py_lib(
+    name = "api_client",
+    srcs = ["api_client.py"],
+    deps = [
+        ":config",
+        requirement("requests")
+    ]
+)
+
+glow_py_lib(
     name = "abstract_calculator",
     srcs = ["abstract_calculator.py"],
-    visibility = ["//visibility:public"],
     deps = []
 )
 
 glow_py_lib(
     name = "abstract_future",
     srcs = ["abstract_future.py"],
-    visibility = ["//visibility:public"],
     deps = [
         ":abstract_calculator",
     ]
@@ -32,7 +44,6 @@ glow_py_lib(
 glow_py_lib(
     name = "calculator",
     srcs = ["calculator.py"],
-    visibility = ["//visibility:public"],
     deps = [
         ":abstract_calculator",
         ":future",
@@ -46,7 +57,6 @@ glow_py_lib(
 glow_py_lib(
     name = "future",
     srcs = ["future.py"],
-    visibility = ["//visibility:public"],
     deps = [
         ":abstract_calculator",
         ":abstract_future",
@@ -57,7 +67,6 @@ glow_py_lib(
 glow_py_lib(
     name = "resolver",
     srcs = ["resolver.py"],
-    visibility = ["//visibility:public"],
     deps = [
         ":abstract_future",
     ]

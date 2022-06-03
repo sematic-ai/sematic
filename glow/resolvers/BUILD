@@ -10,6 +10,7 @@ glow_py_lib(
         "//glow/db/models:artifact",
         "//glow/db/models:run",
         "//glow/db/models:edge",
+        "//glow:api_client",
         requirement("requests"),
     ]
 )

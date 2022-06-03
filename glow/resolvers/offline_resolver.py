@@ -13,6 +13,7 @@ from glow.db.models.run import Run
 from glow.resolvers.state_machine_resolver import StateMachineResolver
 from glow.db.models.factories import make_artifact, make_run_from_future
 from glow.db.queries import save_graph
+import glow.api_client as api_client
 
 
 class OfflineResolver(StateMachineResolver):
@@ -111,6 +112,12 @@ class OfflineResolver(StateMachineResolver):
 
         self._save_graph()
 
+    def _future_did_schedule(self, future: AbstractFuture) -> None:
+        super()._future_did_schedule(future)
+        root_future = self._futures[0]
+        if root_future.id == future.id:
+            api_client.notify_pipeline_start(self._runs[future.id].calculator_path)
+
     def _future_did_run(self, future: AbstractFuture) -> None:
         super()._future_did_run(future)
 
@@ -128,6 +135,8 @@ class OfflineResolver(StateMachineResolver):
         self._populate_graph(future.nested_future)
 
         self._save_graph()
+        if future.id == self._futures[0].id:
+            print(self._edges)
 
     def _future_did_resolve(self, future: AbstractFuture) -> None:
         super()._future_did_resolve(future)
@@ -178,15 +187,24 @@ class OfflineResolver(StateMachineResolver):
         # Updating input edges
         for name, value in future.kwargs.items():
             # Updating the input artifact
-            artfact_id = None
+            artifact_id = None
             if input_artifacts is not None and name in input_artifacts:
-                artfact_id = input_artifacts[name].id
-                self._artifacts[artfact_id] = input_artifacts[name]
+                artifact_id = input_artifacts[name].id
+                self._artifacts[artifact_id] = input_artifacts[name]
 
             # If the input is a future, we connect the edge
             source_run_id = None
             if isinstance(value, AbstractFuture):
                 source_run_id = value.id
+
+            if future.name == "evaluate_model" and name == "model":
+                print(
+                    "evaluate_model",
+                    "model",
+                    future.state,
+                    isinstance(value, AbstractFuture),
+                )
+                print(source_run_id)
 
             # Attempt to link edges across nested graphs
             # This relies on value identity, it's ok for complex objects
@@ -216,7 +234,7 @@ class OfflineResolver(StateMachineResolver):
                 source_run_id=source_run_id,
                 destination_run_id=future.id,
                 destination_name=name,
-                artifact_id=artfact_id,
+                artifact_id=artifact_id,
                 parent_id=parent_id,
             )
 
@@ -284,7 +302,206 @@ class OfflineResolver(StateMachineResolver):
             artifacts=self._artifacts.values(),
             edges=self._edges.values(),
         )
-        # requests.put(
-        #    "http://127.0.0.1:5000/api/v1/runs/graph",
-        #    json={"run_id": self._futures[0].id},
-        # )
+        api_client.notify_graph_update(self._futures[0].id)
+
+
+"""
+{
+    "a57bf979d18743649945455b9e22f379": Run(
+        id="a57bf979d18743649945455b9e22f379",
+        future_state="RAN",
+        name="PyTorch MNIST Example",
+        calculator_path="glow.examples.mnist.pytorch.calculators.pipeline",
+        parent_id=None,
+        root_id="a57bf979d18743649945455b9e22f379",
+    ),
+    "56a46997970448119e0483f0b9e238b9": Run(
+        id="56a46997970448119e0483f0b9e238b9",
+        future_state="CREATED",
+        name="evaluate_model",
+        calculator_path="glow.examples.mnist.pytorch.calculators.evaluate_model",
+        parent_id="a57bf979d18743649945455b9e22f379",
+        root_id="a57bf979d18743649945455b9e22f379",
+        description="Evaluate the model.",
+    ),
+    "adade426535e4cce9fdff87d484abd4d": Run(
+        id="adade426535e4cce9fdff87d484abd4d",
+        future_state="CREATED",
+        name="train_model",
+        calculator_path="glow.examples.mnist.pytorch.calculators.train_model",
+        parent_id="a57bf979d18743649945455b9e22f379",
+        root_id="a57bf979d18743649945455b9e22f379",
+    ),
+    "80e59e6e92c34420bb7481610fde6e49": Run(
+        id="80e59e6e92c34420bb7481610fde6e49",
+        future_state="CREATED",
+        name="get_dataloader",
+        calculator_path="glow.examples.mnist.pytorch.calculators.get_dataloader",
+        parent_id="a57bf979d18743649945455b9e22f379",
+        root_id="a57bf979d18743649945455b9e22f379",
+    ),
+    "2287a784a45d40cf9881646b52e235f0": Run(
+        id="2287a784a45d40cf9881646b52e235f0",
+        future_state="CREATED",
+        name="get_dataloader",
+        calculator_path="glow.examples.mnist.pytorch.calculators.get_dataloader",
+        parent_id="a57bf979d18743649945455b9e22f379",
+        root_id="a57bf979d18743649945455b9e22f379",
+    ),
+}
+{
+    "None:None:a57bf979d18743649945455b9e22f379:config": Edge(
+        id="31799db684b34b7c91075a07c13adc5f",
+        source_run_id=None,
+        source_name=None,
+        destination_run_id="a57bf979d18743649945455b9e22f379",
+        destination_name="config",
+        artifact_id="9c1597e395db5467ecdc773ce27bbb79acfc9c20",
+        parent_id=None,
+    ),
+    "a57bf979d18743649945455b9e22f379:None:None:None": Edge(
+        id="80d24d6efadb442cb1d8124ea1665a5b",
+        source_run_id="a57bf979d18743649945455b9e22f379",
+        source_name=None,
+        destination_run_id=None,
+        destination_name=None,
+        artifact_id=None,
+        parent_id=None,
+    ),
+    "adade426535e4cce9fdff87d484abd4d:None:56a46997970448119e0483f0b9e238b9:model": Edge(
+        id="13dd05b841f34d4e9c1351a56d096514",
+        source_run_id="adade426535e4cce9fdff87d484abd4d",
+        source_name=None,
+        destination_run_id="56a46997970448119e0483f0b9e238b9",
+        destination_name="model",
+        artifact_id=None,
+        parent_id=None,
+    ),
+    "2287a784a45d40cf9881646b52e235f0:None:56a46997970448119e0483f0b9e238b9:test_loader": Edge(
+        id="db50bf42ee224ff2b904b43db1fbec30",
+        source_run_id="2287a784a45d40cf9881646b52e235f0",
+        source_name=None,
+        destination_run_id="56a46997970448119e0483f0b9e238b9",
+        destination_name="test_loader",
+        artifact_id=None,
+        parent_id=None,
+    ),
+    "None:None:56a46997970448119e0483f0b9e238b9:device": Edge(
+        id="072cf8175f104030bc61885ec420a139",
+        source_run_id=None,
+        source_name=None,
+        destination_run_id="56a46997970448119e0483f0b9e238b9",
+        destination_name="device",
+        artifact_id=None,
+        parent_id=None,
+    ),
+    "56a46997970448119e0483f0b9e238b9:80d24d6efadb442cb1d8124ea1665a5b:None:None": Edge(
+        id="43b2bea76de24879aa18075079a11c72",
+        source_run_id="56a46997970448119e0483f0b9e238b9",
+        source_name=None,
+        destination_run_id=None,
+        destination_name=None,
+        artifact_id=None,
+        parent_id="80d24d6efadb442cb1d8124ea1665a5b",
+    ),
+    "None:None:adade426535e4cce9fdff87d484abd4d:config": Edge(
+        id="e60f4e5e075c479cafe229a0364ec367",
+        source_run_id=None,
+        source_name=None,
+        destination_run_id="adade426535e4cce9fdff87d484abd4d",
+        destination_name="config",
+        artifact_id=None,
+        parent_id=None,
+    ),
+    "80e59e6e92c34420bb7481610fde6e49:None:adade426535e4cce9fdff87d484abd4d:train_loader": Edge(
+        id="357833fa29604a65ad2a9654fede5542",
+        source_run_id="80e59e6e92c34420bb7481610fde6e49",
+        source_name=None,
+        destination_run_id="adade426535e4cce9fdff87d484abd4d",
+        destination_name="train_loader",
+        artifact_id=None,
+        parent_id=None,
+    ),
+    "None:None:adade426535e4cce9fdff87d484abd4d:device": Edge(
+        id="f11b8feebac44dc588969bce9b761c32",
+        source_run_id=None,
+        source_name=None,
+        destination_run_id="adade426535e4cce9fdff87d484abd4d",
+        destination_name="device",
+        artifact_id=None,
+        parent_id=None,
+    ),
+    "a1212b888b354d09a047f1eb0d65bbf5:None:80e59e6e92c34420bb7481610fde6e49:dataset": Edge(
+        id="e5c8f999b9304b0c8b4b39803dbff1fe",
+        source_run_id="a1212b888b354d09a047f1eb0d65bbf5",
+        source_name=None,
+        destination_run_id="80e59e6e92c34420bb7481610fde6e49",
+        destination_name="dataset",
+        artifact_id=None,
+        parent_id=None,
+    ),
+    "None:None:80e59e6e92c34420bb7481610fde6e49:config": Edge(
+        id="bcb9e6c1ead34cbf826cede2dbd88a1f",
+        source_run_id=None,
+        source_name=None,
+        destination_run_id="80e59e6e92c34420bb7481610fde6e49",
+        destination_name="config",
+        artifact_id=None,
+        parent_id=None,
+    ),
+    "None:None:a1212b888b354d09a047f1eb0d65bbf5:train": Edge(
+        id="c66f18e92aa54946b29c554c62206c10",
+        source_run_id=None,
+        source_name=None,
+        destination_run_id="a1212b888b354d09a047f1eb0d65bbf5",
+        destination_name="train",
+        artifact_id=None,
+        parent_id=None,
+    ),
+    "None:None:a1212b888b354d09a047f1eb0d65bbf5:path": Edge(
+        id="6939d6e89b1242668797ca2cdeb1610e",
+        source_run_id=None,
+        source_name=None,
+        destination_run_id="a1212b888b354d09a047f1eb0d65bbf5",
+        destination_name="path",
+        artifact_id=None,
+        parent_id=None,
+    ),
+    "f5e26bb847e54160963ba9f4c004c082:None:2287a784a45d40cf9881646b52e235f0:dataset": Edge(
+        id="44a072530390438b8733f8de587b58c9",
+        source_run_id="f5e26bb847e54160963ba9f4c004c082",
+        source_name=None,
+        destination_run_id="2287a784a45d40cf9881646b52e235f0",
+        destination_name="dataset",
+        artifact_id=None,
+        parent_id=None,
+    ),
+    "None:None:2287a784a45d40cf9881646b52e235f0:config": Edge(
+        id="21a114f5934e486ab07f0c643cdf2e5d",
+        source_run_id=None,
+        source_name=None,
+        destination_run_id="2287a784a45d40cf9881646b52e235f0",
+        destination_name="config",
+        artifact_id=None,
+        parent_id=None,
+    ),
+    "None:None:f5e26bb847e54160963ba9f4c004c082:train": Edge(
+        id="a1f1f78f87a6466290e0c878f5724a57",
+        source_run_id=None,
+        source_name=None,
+        destination_run_id="f5e26bb847e54160963ba9f4c004c082",
+        destination_name="train",
+        artifact_id=None,
+        parent_id=None,
+    ),
+    "None:None:f5e26bb847e54160963ba9f4c004c082:path": Edge(
+        id="b41e4ba83b4747f7b2e129d2e9eb7407",
+        source_run_id=None,
+        source_name=None,
+        destination_run_id="f5e26bb847e54160963ba9f4c004c082",
+        destination_name="path",
+        artifact_id=None,
+        parent_id=None,
+    ),
+}
+"""
