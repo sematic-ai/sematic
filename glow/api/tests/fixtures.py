@@ -5,7 +5,10 @@ from urllib.parse import urljoin
 # Third-party
 import pytest
 import werkzeug
-import responses
+
+# responses 0.21.0 has type stubs but they break mypy
+# See https://github.com/getsentry/responses/issues/556
+import responses  # type: ignore
 
 # Glow
 from glow.db.tests.fixtures import test_db  # noqa: F401
