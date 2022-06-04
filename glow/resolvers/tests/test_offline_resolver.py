@@ -3,6 +3,7 @@ import pytest
 
 # Glow
 from glow.abstract_future import AbstractFuture, FutureState
+from glow.api.tests.fixtures import test_client, mock_requests  # noqa: F401
 from glow.calculator import calculator
 from glow.db.models.edge import Edge
 from glow.db.models.factories import make_artifact
@@ -28,7 +29,7 @@ def pipeline(a: float, b: float) -> float:
     return add(c, d)
 
 
-def test_single_calculator(test_db):  # noqa: F811
+def test_single_calculator(test_db, mock_requests):  # noqa: F811
     future = add(1, 2)
 
     result = future.set(name="AAA").resolve(OfflineResolver())
@@ -77,7 +78,7 @@ def add_add_add(a: float, b: float) -> float:
     return add(bb, aa)
 
 
-def test_add_add(test_db):  # noqa: F811
+def test_add_add(test_db, mock_requests):  # noqa: F811
     future = add_add_add(1, 2)
 
     result = future.resolve(OfflineResolver())
@@ -91,7 +92,7 @@ def test_add_add(test_db):  # noqa: F811
     assert len(edges) == 10
 
 
-def test_pipeline(test_db):  # noqa: F811
+def test_pipeline(test_db, mock_requests):  # noqa: F811
     future = pipeline(3, 5)
 
     result = future.resolve(OfflineResolver())
@@ -107,7 +108,7 @@ def test_pipeline(test_db):  # noqa: F811
     assert len(edges) == 16
 
 
-def test_failure(test_db):  # noqa: F811
+def test_failure(test_db, mock_requests):  # noqa: F811
     class CustomException(Exception):
         pass
 
@@ -229,5 +230,5 @@ class DBStateMachineTestResolver(OfflineResolver):
         assert all(edge.artifact_id is None for edge in output_edges)
 
 
-def test_db_state_machine(test_db):  # noqa: F811
+def test_db_state_machine(test_db, mock_requests):  # noqa: F811
     pipeline(1, 2).resolve(DBStateMachineTestResolver())

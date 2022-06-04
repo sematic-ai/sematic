@@ -13,6 +13,7 @@ from glow.db.models.run import Run
 from glow.resolvers.state_machine_resolver import StateMachineResolver
 from glow.db.models.factories import make_artifact, make_run_from_future
 from glow.db.queries import save_graph
+import glow.api_client as api_client
 
 
 class OfflineResolver(StateMachineResolver):
@@ -111,6 +112,12 @@ class OfflineResolver(StateMachineResolver):
 
         self._save_graph()
 
+    def _future_did_schedule(self, future: AbstractFuture) -> None:
+        super()._future_did_schedule(future)
+        root_future = self._futures[0]
+        if root_future.id == future.id:
+            api_client.notify_pipeline_start(self._runs[future.id].calculator_path)
+
     def _future_did_run(self, future: AbstractFuture) -> None:
         super()._future_did_run(future)
 
@@ -128,6 +135,8 @@ class OfflineResolver(StateMachineResolver):
         self._populate_graph(future.nested_future)
 
         self._save_graph()
+        if future.id == self._futures[0].id:
+            print(self._edges)
 
     def _future_did_resolve(self, future: AbstractFuture) -> None:
         super()._future_did_resolve(future)
@@ -178,15 +187,24 @@ class OfflineResolver(StateMachineResolver):
         # Updating input edges
         for name, value in future.kwargs.items():
             # Updating the input artifact
-            artfact_id = None
+            artifact_id = None
             if input_artifacts is not None and name in input_artifacts:
-                artfact_id = input_artifacts[name].id
-                self._artifacts[artfact_id] = input_artifacts[name]
+                artifact_id = input_artifacts[name].id
+                self._artifacts[artifact_id] = input_artifacts[name]
 
             # If the input is a future, we connect the edge
             source_run_id = None
             if isinstance(value, AbstractFuture):
                 source_run_id = value.id
+
+            if future.name == "evaluate_model" and name == "model":
+                print(
+                    "evaluate_model",
+                    "model",
+                    future.state,
+                    isinstance(value, AbstractFuture),
+                )
+                print(source_run_id)
 
             # Attempt to link edges across nested graphs
             # This relies on value identity, it's ok for complex objects
@@ -216,7 +234,7 @@ class OfflineResolver(StateMachineResolver):
                 source_run_id=source_run_id,
                 destination_run_id=future.id,
                 destination_name=name,
-                artifact_id=artfact_id,
+                artifact_id=artifact_id,
                 parent_id=parent_id,
             )
 
@@ -284,7 +302,4 @@ class OfflineResolver(StateMachineResolver):
             artifacts=self._artifacts.values(),
             edges=self._edges.values(),
         )
-        # requests.put(
-        #    "http://127.0.0.1:5000/api/v1/runs/graph",
-        #    json={"run_id": self._futures[0].id},
-        # )
+        api_client.notify_graph_update(self._futures[0].id)

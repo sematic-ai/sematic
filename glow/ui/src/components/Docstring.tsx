@@ -3,13 +3,15 @@ import Typography from "@mui/material/Typography";
 import ReactMarkdown from "react-markdown";
 import { Run } from "../Models";
 
-export default function Docstring(props: { run: Run }) {
-  const { run } = props;
+export default function Docstring(props: {
+  docstring: string | undefined | null;
+}) {
+  const { docstring } = props;
 
   return (
     <Card variant="outlined" sx={{ padding: 4, fontSize: "small" }}>
-      {(run.description && (
-        <ReactMarkdown>{run.description}</ReactMarkdown>
+      {(docstring !== undefined && docstring !== null && (
+        <ReactMarkdown>{docstring}</ReactMarkdown>
       )) || (
         <Typography color="GrayText">
           Your function's docstring will appear here.

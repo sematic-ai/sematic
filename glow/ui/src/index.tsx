@@ -19,10 +19,6 @@ root.render(
       <Route path="/" element={<App />}>
         <Route path="pipelines" element={<PipelineIndex />} />
         <Route path="pipelines/:calculatorPath" element={<PipelineView />} />
-        {
-          //<Route path="runs/:id" element={<RunView id="abc" />} />
-        }
-        <Route path="runs" element={<RunIndex />} />
       </Route>
     </Routes>
   </BrowserRouter>

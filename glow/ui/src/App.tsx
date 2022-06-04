@@ -10,8 +10,9 @@ import createTheme from "./themes/mira";
 
 const pages = [
   ["Pipelines", "/pipelines"],
-  ["Runs", "/runs"],
+  //["Runs", "/runs"],
   ["Docs", "/"],
+  ["Get help", "/"],
 ];
 
 function App() {
@@ -25,7 +26,12 @@ function App() {
                 //<LightModeIcon color="primary" />
               }
               <Link href="/" sx={{ color: "white" }} underline="none">
-                <img src="/glow.png" width={100} alt="Glow" />
+                <img
+                  src="/sematic.png"
+                  width={100}
+                  alt="Glow"
+                  style={{ marginTop: 3, marginLeft: -6 }}
+                />
                 {/*<Typography
                   variant="h5"
                   component="h1"

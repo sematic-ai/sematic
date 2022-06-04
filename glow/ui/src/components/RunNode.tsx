@@ -57,7 +57,7 @@ function getChipColor(
   | "success"
   | "warning"
   | undefined {
-  if (futureState == "RESOLVED") {
+  if (futureState === "RESOLVED") {
     return "success";
   }
   if (["SCHEDULED", "RAN"].includes(futureState)) {
@@ -79,11 +79,28 @@ export default function RunNode(props: NodeProps) {
 
   return (
     <>
-      <Handle
-        isConnectable={props.isConnectable}
+      {props.data.argNames.map((argName: string) => (
+        <Handle
+          key={argName}
+          isConnectable={false}
+          id={argName}
+          position={Position.Top}
+          type="target"
+          style={{
+            backgroundColor: lighten(color.light, props.selected ? 0.5 : 0.5),
+            border: 0,
+          }}
+        />
+      ))}
+      {/*<Handle
+        isConnectable={false}
         type="target"
         position={Position.Top}
-      />
+        style={{
+          backgroundColor: lighten(color.light, props.selected ? 0.5 : 0.5),
+          border: 0,
+        }}
+      />*/}
       <Alert
         //severity="success"
         variant="outlined"
@@ -95,7 +112,7 @@ export default function RunNode(props: NodeProps) {
         sx={{
           paddingX: 3,
           cursor: "pointer",
-          borderColor: lighten(color.light, props.selected ? 0 : 0.3),
+          borderColor: lighten(color.light, props.selected ? 0.5 : 0.5),
           backgroundColor: lighten(color.light, props.selected ? 0.7 : 0.9),
           "&:hover": {
             backgroundColor: lighten(color.light, props.selected ? 0.7 : 0.87),
@@ -113,9 +130,14 @@ export default function RunNode(props: NodeProps) {
         </Box>
       </Alert>
       <Handle
-        isConnectable={props.isConnectable}
+        id={run.id}
+        isConnectable={false}
         type="source"
         position={Position.Bottom}
+        style={{
+          backgroundColor: lighten(color.light, props.selected ? 0.5 : 0.5),
+          border: 0,
+        }}
       />
     </>
   );

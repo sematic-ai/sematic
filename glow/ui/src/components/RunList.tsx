@@ -5,11 +5,12 @@ import TableBody from "@mui/material/TableBody";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import TablePagination from "@mui/material/TablePagination";
 import TableFooter from "@mui/material/TableFooter";
 import { RunListPayload } from "../Payloads";
 import Loading from "./Loading";
+import { Run } from "../Models";
 
 const defaultPageSize = 10;
 
@@ -27,15 +28,29 @@ type RunListProps = {
   pageSize?: number;
   size?: "small" | "medium" | undefined;
   emptyAlert?: string;
+  onRunsLoaded?: (runs: Run[]) => void;
+  triggerRefresh?: (refreshCallback: () => void) => void;
 };
 
 export function RunList(props: RunListProps) {
+  let { triggerRefresh } = props;
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
   const [pages, setPages] = useState<Array<RunListPayload>>([]);
   const [currentPage, setPage] = useState(0);
 
   let pageSize = props.pageSize || defaultPageSize;
+
+  const refreshCallback = useCallback(() => {
+    setPages([]);
+    setPage(0);
+  }, [setPages, setPage]);
+
+  useEffect(() => {
+    if (triggerRefresh !== undefined) {
+      triggerRefresh(refreshCallback);
+    }
+  }, [triggerRefresh]);
 
   useEffect(() => {
     if (currentPage <= pages.length - 1) {
@@ -61,9 +76,12 @@ export function RunList(props: RunListProps) {
     fetch(url)
       .then((res) => res.json())
       .then(
-        (result) => {
+        (result: RunListPayload) => {
           setPages(pages.concat(result));
           setIsLoaded(true);
+          if (props.onRunsLoaded !== undefined) {
+            props.onRunsLoaded(result.content);
+          }
         },
         (error) => {
           setIsLoaded(true);

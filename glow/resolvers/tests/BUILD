@@ -8,5 +8,6 @@ pytest_test(
         "//glow/db/models:edge",
         "//glow/db/tests:fixtures",
         "//glow/resolvers:offline_resolver",
+        "//glow/api/tests:fixtures"
     ]
 )

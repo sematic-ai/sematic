@@ -2,8 +2,8 @@ glow_py_lib(
     name = "db",
     srcs = ["db.py"],
     deps = [
+        "//glow:config",
         requirement("sqlalchemy"),
-        "//glow/utils:config_dir",
     ]
 )
 
