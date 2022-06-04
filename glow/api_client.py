@@ -1,6 +1,5 @@
 # Standard library
 from typing import Any
-import unused
 
 # Third party
 import requests
