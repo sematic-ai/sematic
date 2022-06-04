@@ -22,7 +22,7 @@ def _notify_event(namespace: str, event: str, payload: Any = None):
 
 def _post(endpoint, json_payload) -> Any:
     url = _url(endpoint)
-
+    print(url)
     response = requests.post(url, json=json_payload)
     response.raise_for_status()
 
@@ -33,6 +33,4 @@ def _post(endpoint, json_payload) -> Any:
 
 
 def _url(endpoint) -> str:
-    base_url = get_config().api_url
-    api_version = get_config().api_version
-    return "{}api/v{}{}".format(base_url, api_version, endpoint)
+    return "{}{}".format(get_config().api_url, endpoint)

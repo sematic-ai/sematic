@@ -1,8 +1,15 @@
+# Standard library
+import re
+from urllib.parse import urljoin
+
 # Third-party
 import pytest
+import werkzeug
+import responses
 
 # Glow
 from glow.db.tests.fixtures import test_db  # noqa: F401
+from glow.config import get_config
 
 # Importing from server instead of app to make sure
 # all endpoints are loaded
@@ -16,3 +23,35 @@ def test_client(test_db):  # noqa: F811
 
     with glow_api.test_client() as client:
         yield client
+
+
+# Credit to https://github.com/adamtheturtle/requests-mock-flask
+@pytest.fixture  # noqa: F811
+def mock_requests(test_client):
+    def _request_callback(request):
+        environ_builder = werkzeug.test.EnvironBuilder(
+            path=request.path_url,
+            method=str(request.method),
+            headers=dict(request.headers),
+            data=request.body,
+        )
+        environ = environ_builder.get_environ()
+
+        if "Content-Length" in request.headers:
+            environ["CONTENT_LENGTH"] = request.headers["Content-Length"]
+
+        response = test_client.open(environ)
+        return response.status_code, dict(response.headers), response.data
+
+    api_url = get_config().api_url
+    with responses.RequestsMock(assert_all_requests_are_fired=False) as request_mock:
+        for rule in glow_api.url_map.iter_rules():
+            path_to_match = re.sub(pattern=r"<\w+>", repl="\\\w+", string=rule.rule)
+            pattern = urljoin(api_url, path_to_match)
+            url = re.compile(pattern)
+            for method in rule.methods:
+                request_mock.add_callback(
+                    callback=_request_callback, method=method, url=url
+                )
+
+        yield
