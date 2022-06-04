@@ -2,8 +2,7 @@
 Module holding common DB queries.
 """
 # Standard library
-from ctypes import Union
-from typing import List, Literal, Optional, Dict, Set, Tuple
+from typing import List, Optional, Dict, Set, Tuple
 
 # Third-party
 import sqlalchemy

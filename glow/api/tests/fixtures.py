@@ -46,7 +46,9 @@ def mock_requests(test_client):
     api_url = get_config().api_url
     with responses.RequestsMock(assert_all_requests_are_fired=False) as request_mock:
         for rule in glow_api.url_map.iter_rules():
-            path_to_match = re.sub(pattern=r"<\w+>", repl="\\\w+", string=rule.rule)
+            path_to_match = re.sub(
+                pattern=r"<\w+>", repl="\\\w+", string=rule.rule  # noqa: W605
+            )
             pattern = urljoin(api_url, path_to_match)
             url = re.compile(pattern)
             for method in rule.methods:
