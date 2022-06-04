@@ -10,7 +10,7 @@ import sqlalchemy
 import sqlalchemy.orm
 
 # Glow
-from glow.utils.config_dir import get_config_dir
+from glow.config import get_config
 
 
 class DB:
@@ -64,7 +64,7 @@ class LocalDB(DB):
     Subclass of DB to represent a local SQLite DB.
     """
 
-    LOCAL_DB_FILE = "sqlite:///{}/db.sqlite3".format(get_config_dir())
+    LOCAL_DB_FILE = "sqlite:///{}/db.sqlite3".format(get_config().config_dir)
 
     def __init__(self, url: typing.Optional[str] = None):
         if url is None:

@@ -62,12 +62,12 @@ export default function buildDagLayout(
     print node
     */
 
-  let queue: string[] = [rootNodes[0].id];
-  let stack: string[] = [];
+  let queue: Array<string | null> = [null]; //rootNodes[0].id];
+  let stack: Array<string | null> = [];
 
   // order of parent node Ids in which we should compute layout
   // Innermost sugraphs first, then moving out
-  let subGraphOrder: string[] = [];
+  let subGraphOrder: Array<string | null> = [];
 
   // order in which we should render subgraphs
   // outermost first (root), then moving in
@@ -77,7 +77,9 @@ export default function buildDagLayout(
     let nodeId = queue.shift();
     if (nodeId === undefined) throw Error();
 
-    renderOrder.push(nodeId);
+    if (nodeId !== null) {
+      renderOrder.push(nodeId);
+    }
 
     (iNodesByParentId.get(nodeId) || []).forEach((node) => {
       queue.push(node.id);
@@ -143,7 +145,7 @@ export default function buildDagLayout(
 
       node.position = {
         x: dagreNode.x - (nodeWidth || 0) / 2 + 20,
-        y: dagreNode.y - (nodeHeight || 0) / 2 + 100,
+        y: dagreNode.y - (nodeHeight || 0) / 2 + (parentNodeId ? 100 : 5),
       };
 
       node.style = {

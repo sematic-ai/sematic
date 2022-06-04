@@ -23,6 +23,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import buildDagLayout from "./utils/buildDagLayout";
 import RunNode from "./RunNode";
+import ArtifactNode from "./ArtifactNode";
 
 var util = require("dagre/lib/util");
 var graphlib = require("graphlib");
@@ -57,12 +58,20 @@ interface ReactFlowDagProps {
 
 const nodeTypes = {
   runNode: RunNode,
+  artifactNode: ArtifactNode,
 };
 
 function ReactFlowDag(props: ReactFlowDagProps) {
   const { runs, edges, artifactsById, onSelectRun, selectedRunId } = props;
 
-  const runsById: Map<string, Run> = new Map(runs.map((run) => [run.id, run]));
+  const runsById = useMemo(
+    () => new Map(runs.map((run) => [run.id, run])),
+    [runs]
+  );
+  const edgesById = useMemo(
+    () => new Map(edges.map((edge) => [edge.id, edge])),
+    [edges]
+  );
 
   const [rfNodes, setRFNodes, onNodesChange] = useNodesState([]);
   const [rfEdges, setRFEdges, onEdgesChange] = useEdgesState([]);
@@ -90,30 +99,86 @@ function ReactFlowDag(props: ReactFlowDagProps) {
     let node_data: Node[] = [];
     let edge_data: RFEdge[] = [];
     node_data = runs.map((run) => {
+      let runArgNames: string[] = [];
+      edges.forEach((edge) => {
+        if (edge.destination_run_id === run.id) {
+          runArgNames.push(edge.destination_name || "");
+        }
+      });
       return {
         type: "runNode",
         id: run.id,
-        data: { label: run.name, run: run },
+        data: { label: run.name, run: run, argNames: runArgNames },
         parentNode: run.parent_id === null ? undefined : run.parent_id,
-        selected: run.id == selectedRunId,
+        selected: run.id === selectedRunId,
         position: { x: 0, y: 0 },
-        style: {
-          backgroundColor: lighten(theme.palette.success.light, 0.9),
-        },
         extent: run.parent_id === null ? undefined : "parent",
         // Always render below edges.
         zIndex: 0,
       };
     });
 
+    let makeArtifactNodeId = (edge: Edge) =>
+      (edge.source_run_id || "null") +
+      (edge.destination_name || "null") +
+      (edge.destination_run_id || "null");
+
     edges.forEach((edge) => {
-      if (edge.source_run_id && edge.destination_run_id) {
+      let parentId =
+        runsById.get(edge.destination_run_id || edge.source_run_id || "")
+          ?.parent_id || undefined;
+
+      let artifactNodeId = makeArtifactNodeId(edge);
+
+      if (edge.parent_id === null) {
+        node_data.push({
+          type: "artifactNode",
+          id: artifactNodeId,
+          data: {
+            label: edge.destination_name,
+            nodeId: artifactNodeId,
+            sourceRunId: edge.source_run_id,
+            destinationRunId: edge.destination_run_id,
+          }, //getEdgeLabel(edge) },
+          parentNode: parentId,
+          position: { x: 0, y: 0 },
+          zIndex: 0,
+        });
+      } else {
+        let parentEdge = edgesById.get(edge.parent_id);
+        if (parentEdge) {
+          artifactNodeId = makeArtifactNodeId(parentEdge);
+        }
+      }
+
+      if (edge.source_run_id !== null) {
+        edge_data.push({
+          id: edge.source_run_id + edge.id,
+          source: edge.source_run_id,
+          target: artifactNodeId,
+          data: { parentId: parentId },
+          zIndex: 1000,
+        });
+      }
+
+      if (edge.destination_run_id !== null) {
+        edge_data.push({
+          id: edge.destination_run_id + edge.id + (edge.destination_name || ""),
+          source: artifactNodeId,
+          target: edge.destination_run_id,
+          targetHandle: edge.destination_name,
+          data: { parentId: parentId },
+          zIndex: 1000,
+        });
+      }
+
+      /*if (edge.source_run_id && edge.destination_run_id) {
         let parentId = runsById.get(edge.source_run_id)?.parent_id;
         edge_data.push({
           id: edge.id,
           source: edge.source_run_id,
           target: edge.destination_run_id,
-          label: getEdgeLabel(edge),
+          //label: getEdgeLabel(edge),
           data: { parentId: parentId },
           // Always render above nodes.
           zIndex: 1000,
@@ -123,7 +188,7 @@ function ReactFlowDag(props: ReactFlowDagProps) {
           labelShowBg: false,
           labelStyle: { fontFamily: "monospace" },
         });
-      }
+      }*/
     });
     return { nodes: node_data, edges: edge_data };
   }, [runs, edges, getEdgeLabel, runsById]);
@@ -134,32 +199,20 @@ function ReactFlowDag(props: ReactFlowDagProps) {
     setRFEdges(nodesEdges.edges);
   }, [runs]);
 
-  //useMemo(() => {
-  //  setNodesEdges();
-  //}, [runs, edges]);
-
   const onInit = useCallback(
     (instance: ReactFlowInstance) => {
+      console.log(instance.getNodes());
       let orderedNodes = buildDagLayout(
         instance.getNodes(),
         instance.getEdges(),
         (node) => document.getElementById(node.id)
       );
+      console.log(orderedNodes);
       setRFNodes(orderedNodes);
       setRFEdges(instance.getEdges());
     },
     [getNodesEdges, setRFNodes, setRFEdges]
   );
-
-  //useEffect(() => {
-  //  if (reactFlowInstance && reactFlowInstance.getNodes().length > 0) {
-  //    onInit(reactFlowInstance);
-  //  }
-  //}, [runs]);
-
-  //useMemo(() => {
-  //  reactFlowInstance.set;
-  //}, [reactFlowInstance]);
 
   const onNodeClick = useCallback(
     (event: any, node: Node) => {
@@ -190,7 +243,7 @@ function ReactFlowDag(props: ReactFlowDagProps) {
         ))}
       </Box>*/}
       <Container
-        sx={{ width: "100%", height: "1000px", paddingX: 0, marginX: 0 }}
+        sx={{ width: "100%", height: "1500px", paddingX: 0, marginX: 0 }}
       >
         <Collapse in={showTip}>
           <Alert severity="info" sx={{ marginBottom: 4 }}>
@@ -204,7 +257,7 @@ function ReactFlowDag(props: ReactFlowDagProps) {
           onInit={onInit}
           zoomOnScroll={false}
           //onConnect={onConnect}
-          panOnScroll
+          //panOnScroll
           nodesDraggable={false}
           onNodeClick={onNodeClick}
         >

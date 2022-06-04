@@ -6,6 +6,7 @@ import { Artifact, Edge, Run } from "../Models";
 import {
   ArtifactListPayload,
   EdgeListPayload,
+  RunGraphPayload,
   RunListPayload,
 } from "../Payloads";
 import { fetchJSON, graphSocket } from "../utils";
@@ -46,9 +47,8 @@ function DagTab(props: { rootRun: Run }) {
 
   useEffect(() => {
     graphSocket.removeAllListeners();
-    graphSocket.on("graph", (args: { run_id: string }) => {
-      console.log(args);
-      if (args.run_id == rootRun.id) {
+    graphSocket.on("update", (args: { run_id: string }) => {
+      if (args.run_id === rootRun.id) {
         loadGraph();
       }
     });
@@ -59,52 +59,19 @@ function DagTab(props: { rootRun: Run }) {
   }, [rootRun.id]);
 
   const loadGraph = useCallback(() => {
-    let graph = {
-      runs: new Map(),
-      edges: new Array<Edge>(),
-      artifacts: new Array<Artifact>(),
-    };
-
-    let filters = JSON.stringify({ root_id: { eq: rootRun.id } });
     fetchJSON(
-      "/api/v1/runs?limit=-1&filters=" + filters,
-      (payload: RunListPayload) => {
-        graph.runs = new Map(payload.content.map((run) => [run.id, run]));
-
-        let runIds = Array.from(graph.runs.keys());
-
-        let filters = JSON.stringify({
-          OR: [
-            { source_run_id: { in: runIds } },
-            { destination_run_id: { in: runIds } },
-          ],
+      "/api/v1/runs/" + rootRun.id + "/graph",
+      (payload: RunGraphPayload) => {
+        let graph = {
+          runs: new Map(payload.runs.map((run) => [run.id, run])),
+          edges: payload.edges,
+          artifacts: payload.artifacts,
+        };
+        setGraphsByRootId((currentMap) => {
+          currentMap.set(rootRun.id, graph);
+          return new Map(currentMap);
         });
-
-        fetchJSON(
-          "/api/v1/edges?limit=-1&filters=" + filters,
-          (payload: EdgeListPayload) => {
-            graph.edges = payload.content;
-            let artifactIds = graph.edges
-              .map((edge) => edge.artifact_id)
-              .filter((artifactId) => artifactId !== null);
-
-            let filters = JSON.stringify({ id: { in: artifactIds } });
-
-            fetchJSON(
-              "/api/v1/artifacts?limit=-1&filters=" + filters,
-              (payload: ArtifactListPayload) => {
-                graph.artifacts = payload.content;
-                setGraphsByRootId((currentMap) => {
-                  currentMap.set(rootRun.id, graph);
-                  return new Map(currentMap);
-                });
-                setIsLoaded(true);
-              },
-              setError
-            );
-          },
-          setError
-        );
+        setIsLoaded(true);
       },
       setError
     );
@@ -256,8 +223,6 @@ function RunTabs(props: { run: Run; artifacts: IOArtifacts | undefined }) {
     setSelectedTab(newValue);
   };
 
-  console.log(run.future_state);
-
   return (
     <>
       <TabContext value={selectedTab}>
@@ -286,7 +251,7 @@ function RunTabs(props: { run: Run; artifacts: IOArtifacts | undefined }) {
           )}
         </TabPanel>
         <TabPanel value="documentation">
-          <Docstring run={run} />
+          <Docstring docstring={run.description} />
         </TabPanel>
         <TabPanel value="source">
           <SourceCode run={run} />
