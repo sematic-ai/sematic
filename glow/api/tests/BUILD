@@ -6,6 +6,8 @@ glow_py_lib(
         "//glow/db/tests:fixtures",
         "//glow/api:server_lib",
         requirement("pytest"),
+        requirement("werkzeug"),
+        requirement("responses"),
     ]
 )
 

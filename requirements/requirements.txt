@@ -70,6 +70,8 @@ packaging==21.3
     #   torchmetrics
 pandas==1.4.2
     # via -r requirements/requirements.in
+pandas-stubs==1.2.0.60
+    # via -r requirements/requirements.in
 parso==0.8.3
     # via jedi
 pexpect==4.8.0
@@ -107,7 +109,10 @@ pytz==2022.1
 requests==2.27.1
     # via
     #   -r requirements/requirements.in
+    #   responses
     #   torchvision
+responses==0.21.0
+    # via -r requirements/requirements.in
 six==1.16.0
     # via
     #   eventlet
@@ -139,11 +144,15 @@ typing-extensions==4.2.0
     #   torch
     #   torchvision
 urllib3==1.26.9
-    # via requests
+    # via
+    #   requests
+    #   responses
 wcwidth==0.2.5
     # via prompt-toolkit
 werkzeug==2.1.2
-    # via flask
+    # via
+    #   -r requirements/requirements.in
+    #   flask
 zipp==3.8.0
     # via importlib-metadata
 
