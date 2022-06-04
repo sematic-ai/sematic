@@ -111,7 +111,7 @@ requests==2.27.1
     #   -r requirements/requirements.in
     #   responses
     #   torchvision
-responses==0.21.0
+responses==0.20.0
     # via -r requirements/requirements.in
 six==1.16.0
     # via
