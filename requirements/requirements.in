@@ -8,7 +8,7 @@ setuptools==58.1.0
 
 # DB
 SQLAlchemy==1.4.36
-psycopg2
+psycopg2-binary
 
 # API server
 flask

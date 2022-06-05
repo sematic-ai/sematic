@@ -12,7 +12,7 @@ glow_py_lib(
         "//glow/db/models:run",
         requirement("pytest"),
         requirement("testing.postgresql"),
-        requirement("psycopg2"),
+        requirement("psycopg2-binary"),
     ]
 )
 

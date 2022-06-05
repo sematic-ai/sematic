@@ -4,7 +4,7 @@ glow_py_lib(
     deps = [
         "//glow:config",
         requirement("sqlalchemy"),
-        requirement("psycopg2")
+        requirement("psycopg2-binary")
     ]
 )
 
