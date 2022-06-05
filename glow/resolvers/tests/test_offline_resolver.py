@@ -8,7 +8,7 @@ from glow.calculator import calculator
 from glow.db.models.edge import Edge
 from glow.db.models.factories import make_artifact
 from glow.resolvers.offline_resolver import OfflineResolver
-from glow.db.tests.fixtures import test_db  # noqa: F401
+from glow.db.tests.fixtures import test_db, pg_mock  # noqa: F401
 from glow.db.queries import get_graph
 
 

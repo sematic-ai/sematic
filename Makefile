@@ -9,7 +9,21 @@ start_db_container: pull_db_container
 	docker create -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} --name ${POSTGRES_CONTAINER_NAME} postgres:14.3
 	docker ps | grep ${POSTGRES_CONTAINER_NAME} || docker start ${POSTGRES_CONTAINER_NAME}
 
-run_migrations:
+db_migrate_up:
 	cd glow; DATABASE_URL=postgres://0.0.0.0:5432/${POSTGRES_DB_NAME}?sslmode=disable dbmate up
 
-create_db: start_db_container run_migrations
+db_migrate_down:
+	cd glow; DATABASE_URL=postgres://0.0.0.0:5432/${POSTGRES_DB_NAME}?sslmode=disable dbmate down
+
+clear_db:
+	psql -h 0.0.0.0 -p 5432 -d sematic < glow/db/scripts/clear_all.sql
+
+clear_sqlite:
+	sqlite3 ~/.glow/db.sqlite3 < glow/db/scripts/clear_all.sql
+
+create_db: start_db_container db_migrate_up
+
+precommit:
+	flake8
+	mypy glow
+	black glow --check

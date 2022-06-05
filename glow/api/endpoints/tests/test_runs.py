@@ -7,7 +7,13 @@ import flask.testing
 
 # Glow
 from glow.api.tests.fixtures import test_client  # noqa: F401
-from glow.db.tests.fixtures import test_db, make_run, persisted_run, run  # noqa: F401
+from glow.db.tests.fixtures import (  # noqa: F401
+    test_db,
+    pg_mock,
+    make_run,
+    persisted_run,
+    run,
+)
 from glow.db.queries import save_run
 from glow.db.models.run import Run
 

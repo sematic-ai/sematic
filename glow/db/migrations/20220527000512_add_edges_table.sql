@@ -13,8 +13,6 @@ CREATE TABLE edges (
 
     PRIMARY KEY (id),
 
-    FOREIGN KEY(source_run_id) REFERENCES runs (id),
-    FOREIGN KEY(destination_run_id) REFERENCES runs (id),
     FOREIGN KEY(artifact_id) REFERENCES artifacts (id),
     FOREIGN KEY(parent_id) REFERENCES edges (id)
 );

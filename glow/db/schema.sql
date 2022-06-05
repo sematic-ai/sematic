@@ -116,27 +116,11 @@ ALTER TABLE ONLY public.edges
 
 
 --
--- Name: edges edges_destination_run_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.edges
-    ADD CONSTRAINT edges_destination_run_id_fkey FOREIGN KEY (destination_run_id) REFERENCES public.runs(id);
-
-
---
 -- Name: edges edges_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.edges
     ADD CONSTRAINT edges_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.edges(id);
-
-
---
--- Name: edges edges_source_run_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.edges
-    ADD CONSTRAINT edges_source_run_id_fkey FOREIGN KEY (source_run_id) REFERENCES public.runs(id);
 
 
 --
