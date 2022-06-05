@@ -7,6 +7,7 @@ import { Outlet } from "react-router-dom";
 import Link from "@mui/material/Link";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import createTheme from "./themes/mira";
+import logo from "./sematic.png";
 
 const pages = [
   ["Pipelines", "/pipelines"],
@@ -27,9 +28,9 @@ function App() {
               }
               <Link href="/" sx={{ color: "white" }} underline="none">
                 <img
-                  src="/sematic.png"
+                  src={logo}
                   width={100}
-                  alt="Glow"
+                  alt="Sematic"
                   style={{ marginTop: 3, marginLeft: -6 }}
                 />
                 {/*<Typography
