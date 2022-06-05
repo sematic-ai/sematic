@@ -51,6 +51,7 @@ jobs:
     # Then run your tests!
     # CircleCI will report the results back to your VCS provider.
     steps:
+      - install-postgres
       - checkout
       - setup-bazel
       - python/install-packages:
