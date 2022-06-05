@@ -1,7 +1,6 @@
 glow_py_lib(
     name = "app",
     srcs = ["app.py"],
-    visibility = ["//visibility:public"],
     deps = [
         requirement("flask"),
         requirement("flask-cors"),
@@ -11,8 +10,9 @@ glow_py_lib(
 glow_py_lib(
     name = "server_lib",
     srcs = ["server.py"],
-    visibility = ["//visibility:public"],
+    data = ["//glow/ui:ui_build"],
     deps = [
+        "//glow:config",
         "//glow/api:app",
         "//glow/api/endpoints:runs",
         "//glow/api/endpoints:artifacts",

@@ -22,7 +22,6 @@ def _notify_event(namespace: str, event: str, payload: Any = None):
 
 def _post(endpoint, json_payload) -> Any:
     url = _url(endpoint)
-    print(url)
     response = requests.post(url, json=json_payload)
     response.raise_for_status()
 
