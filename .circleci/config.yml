@@ -13,6 +13,18 @@ orbs:
   slack: circleci/slack@4.9.3
 
 commands:
+  install-postgres:
+    description: Install PostgreSQL
+    steps:
+      - run:
+          name: Add PG 14 repository
+          command: |
+            sudo apt install wget gnupg
+            sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+            wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+      - run:
+          name: Install PostgreSQL
+          command: sudo apt update && sudo apt install postgresql-14
   setup-bazel:
     description: |
       Setup the Bazel build system used for building Android projects
@@ -45,6 +57,7 @@ jobs:
     # Then run your tests!
     # CircleCI will report the results back to your VCS provider.
     steps:
+      - install-postgres
       - checkout
       - setup-bazel
       - python/install-packages:

@@ -9,3 +9,4 @@ sqlalchemy[mypy]
 flask
 types-requests
 pandas-stubs
+types-psycopg2

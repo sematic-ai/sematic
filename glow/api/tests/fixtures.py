@@ -11,7 +11,7 @@ import werkzeug
 import responses  # type: ignore
 
 # Glow
-from glow.db.tests.fixtures import test_db  # noqa: F401
+from glow.db.tests.fixtures import test_db, pg_mock  # noqa: F401
 from glow.config import get_config
 
 # Importing from server instead of app to make sure

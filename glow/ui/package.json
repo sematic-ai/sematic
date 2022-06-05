@@ -19,7 +19,7 @@
     "@types/react-dom": "^18.0.3",
     "dagre": "^0.8.5",
     "javascript-time-ago": "^2.3.13",
-    "plotly.js": "^2.12.1",
+    "plotly.js-basic-dist": "^2.12.1",
     "react": "^18.1.0",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.1.0",
@@ -31,8 +31,8 @@
     "react-scripts": "5.0.1",
     "react-syntax-highlighter": "^15.5.0",
     "react-time-ago": "^7.1.9",
-    "reaflow": "^5.0.5",
     "socket.io-client": "^4.5.1",
+    "source-map-explorer": "^2.5.2",
     "typescript": "^4.6.4",
     "web-vitals": "^2.1.4"
   },
@@ -40,7 +40,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "analyze": "source-map-explorer 'build/static/js/*.js'"
   },
   "eslintConfig": {
     "extends": [
@@ -62,6 +63,7 @@
   },
   "devDependencies": {
     "@types/dagre": "^0.7.47",
+    "@types/plotly.js-basic-dist": "^1.54.0",
     "@types/react-copy-to-clipboard": "^5.0.2",
     "@types/react-plotly.js": "^2.5.0",
     "@types/react-syntax-highlighter": "^15.5.1"
