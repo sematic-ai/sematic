@@ -13,6 +13,12 @@ orbs:
   slack: circleci/slack@4.9.3
 
 commands:
+  install-postgres:
+    description: Install PostgreSQL
+      steps:
+        - run:
+          name: Install PostgreSQL
+          command: apt-get -y install postgresql-14.3
   setup-bazel:
     description: |
       Setup the Bazel build system used for building Android projects
