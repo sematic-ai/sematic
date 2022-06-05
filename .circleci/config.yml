@@ -15,8 +15,8 @@ orbs:
 commands:
   install-postgres:
     description: Install PostgreSQL
-      steps:
-        - run:
+    steps:
+      - run:
           name: Install PostgreSQL
           command: apt-get -y install postgresql-14.3
   setup-bazel:
