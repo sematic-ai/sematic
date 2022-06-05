@@ -18,7 +18,7 @@ commands:
     steps:
       - run:
           name: Install PostgreSQL
-          command: apt-get -y install postgresql-14.3
+          command: sudo apt-get -y install postgresql-14.3
   setup-bazel:
     description: |
       Setup the Bazel build system used for building Android projects
