@@ -11,6 +11,8 @@ glow_py_lib(
         "//glow/db:queries",
         "//glow/db/models:run",
         requirement("pytest"),
+        requirement("testing.postgresql"),
+        requirement("psycopg2"),
     ]
 )
 
@@ -19,7 +21,6 @@ pytest_test(
     srcs = ["test_db.py"],
     deps = [
         ":fixtures",
-        "//glow/db:db",
         "//glow/db/models:run",
         "//glow/db:queries",
     ]
