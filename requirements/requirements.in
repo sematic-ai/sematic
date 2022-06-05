@@ -1,5 +1,6 @@
 # Tests
 pytest==7.1.1
+testing-postgresql
 
 # System
 ipython==8.2.0
@@ -7,6 +8,7 @@ setuptools==58.1.0
 
 # DB
 SQLAlchemy==1.4.36
+psycopg2-binary
 
 # API server
 flask

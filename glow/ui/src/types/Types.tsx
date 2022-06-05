@@ -8,7 +8,10 @@ import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import TableBody from "@mui/material/TableBody";
 import Chip from "@mui/material/Chip";
-import Plot from "react-plotly.js";
+import Plotly from "plotly.js-basic-dist";
+
+import createPlotlyComponent from "react-plotly.js/factory";
+const Plot = createPlotlyComponent(Plotly);
 
 type TypeCategory = "builtin" | "typing" | "dataclass" | "generic" | "class";
 

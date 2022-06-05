@@ -54,19 +54,6 @@ def db() -> DB:
     """
     global _db_instance
     if _db_instance is None:
-        url: typing.Optional[str] = None  # cloud_settings().db_settings.url
-        _db_instance = DB(url) if url is not None else LocalDB()
+        url = get_config().db_url
+        _db_instance = DB(url)
     return _db_instance
-
-
-class LocalDB(DB):
-    """
-    Subclass of DB to represent a local SQLite DB.
-    """
-
-    LOCAL_DB_FILE = "sqlite:///{}/db.sqlite3".format(get_config().config_dir)
-
-    def __init__(self, url: typing.Optional[str] = None):
-        if url is None:
-            url = self.LOCAL_DB_FILE
-        super().__init__(url)

@@ -16,7 +16,13 @@ from glow.db.queries import (
 from glow.db.models.artifact import Artifact
 from glow.db.models.factories import make_artifact
 from glow.db.models.run import Run
-from glow.db.tests.fixtures import make_run, test_db, run, persisted_run  # noqa: F401
+from glow.db.tests.fixtures import (  # noqa: F401
+    make_run,
+    test_db,
+    pg_mock,
+    run,
+    persisted_run,
+)
 
 
 def test_count_runs(test_db, run: Run):  # noqa: F811

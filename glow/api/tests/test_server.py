@@ -3,7 +3,7 @@ import flask.testing
 
 # Glow
 from glow.api.tests.fixtures import test_client  # noqa: F401
-from glow.db.tests.fixtures import test_db  # noqa: F401
+from glow.db.tests.fixtures import test_db, pg_mock  # noqa: F401
 
 
 def test_ping(test_client: flask.testing.FlaskClient):  # noqa: F811

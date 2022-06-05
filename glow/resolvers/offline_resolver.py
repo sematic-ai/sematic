@@ -135,8 +135,6 @@ class OfflineResolver(StateMachineResolver):
         self._populate_graph(future.nested_future)
 
         self._save_graph()
-        if future.id == self._futures[0].id:
-            print(self._edges)
 
     def _future_did_resolve(self, future: AbstractFuture) -> None:
         super()._future_did_resolve(future)
@@ -196,15 +194,6 @@ class OfflineResolver(StateMachineResolver):
             source_run_id = None
             if isinstance(value, AbstractFuture):
                 source_run_id = value.id
-
-            if future.name == "evaluate_model" and name == "model":
-                print(
-                    "evaluate_model",
-                    "model",
-                    future.state,
-                    isinstance(value, AbstractFuture),
-                )
-                print(source_run_id)
 
             # Attempt to link edges across nested graphs
             # This relies on value identity, it's ok for complex objects
