@@ -90,7 +90,7 @@ pluggy==1.0.0
     # via pytest
 prompt-toolkit==3.0.29
     # via ipython
-psycopg2==2.9.3
+psycopg2-binary==2.9.3
     # via -r requirements/requirements.in
 ptyprocess==0.7.0
     # via pexpect

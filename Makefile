@@ -23,7 +23,13 @@ clear_sqlite:
 
 create_db: start_db_container db_migrate_up
 
-precommit:
+pre_commit:
 	flake8
 	mypy glow
 	black glow --check
+
+refresh_dependencies:
+	pip-compile --allow-unsafe requirements/requirements.in
+
+test:
+	bazel test //glow/... --test_output=all
