@@ -170,6 +170,6 @@ def test_to_binary_arbitrary():
     json_encodable = value_to_json_encodable([A(), A()], type_)
 
     assert json_encodable == [
-        "gAWVLQAAAAAAAACMIGdsb3cudHlwZXMudHlwZXMudGVzdHMudGVzdF9saXN0lIwBQZSTlCmBlC4=",  # noqa: E501
-        "gAWVLQAAAAAAAACMIGdsb3cudHlwZXMudHlwZXMudGVzdHMudGVzdF9saXN0lIwBQZSTlCmBlC4=",  # noqa: E501
+        "gAWVMAAAAAAAAACMI3NlbWF0aWMudHlwZXMudHlwZXMudGVzdHMudGVzdF9saXN0lIwBQZSTlCmBlC4=",  # noqa: E501
+        "gAWVMAAAAAAAAACMI3NlbWF0aWMudHlwZXMudHlwZXMudGVzdHMudGVzdF9saXN0lIwBQZSTlCmBlC4=",  # noqa: E501
     ]
