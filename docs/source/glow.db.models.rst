@@ -1,29 +1,29 @@
-glow.db.models package
+sematic.db.models package
 ======================
 
 Submodules
 ----------
 
-glow.db.models.base module
+sematic.db.models.base module
 --------------------------
 
-.. automodule:: glow.db.models.base
+.. automodule:: sematic.db.models.base
    :members:
    :undoc-members:
    :show-inheritance:
 
-glow.db.models.json\_encodable\_mixin module
+sematic.db.models.json\_encodable\_mixin module
 --------------------------------------------
 
-.. automodule:: glow.db.models.json_encodable_mixin
+.. automodule:: sematic.db.models.json_encodable_mixin
    :members:
    :undoc-members:
    :show-inheritance:
 
-glow.db.models.run module
+sematic.db.models.run module
 -------------------------
 
-.. automodule:: glow.db.models.run
+.. automodule:: sematic.db.models.run
    :members:
    :undoc-members:
    :show-inheritance:
@@ -31,7 +31,7 @@ glow.db.models.run module
 Module contents
 ---------------
 
-.. automodule:: glow.db.models
+.. automodule:: sematic.db.models
    :members:
    :undoc-members:
    :show-inheritance:

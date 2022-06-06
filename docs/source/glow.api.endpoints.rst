@@ -1,13 +1,13 @@
-glow.api.endpoints package
+sematic.api.endpoints package
 ==========================
 
 Submodules
 ----------
 
-glow.api.endpoints.runs module
+sematic.api.endpoints.runs module
 ------------------------------
 
-.. automodule:: glow.api.endpoints.runs
+.. automodule:: sematic.api.endpoints.runs
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +15,7 @@ glow.api.endpoints.runs module
 Module contents
 ---------------
 
-.. automodule:: glow.api.endpoints
+.. automodule:: sematic.api.endpoints
    :members:
    :undoc-members:
    :show-inheritance:

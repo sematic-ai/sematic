@@ -1,4 +1,4 @@
-glow.db package
+sematic.db package
 ===============
 
 Subpackages
@@ -7,24 +7,24 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   glow.db.models
-   glow.db.tests
+   sematic.db.models
+   sematic.db.tests
 
 Submodules
 ----------
 
-glow.db.db module
+sematic.db.db module
 -----------------
 
-.. automodule:: glow.db.db
+.. automodule:: sematic.db.db
    :members:
    :undoc-members:
    :show-inheritance:
 
-glow.db.queries module
+sematic.db.queries module
 ----------------------
 
-.. automodule:: glow.db.queries
+.. automodule:: sematic.db.queries
    :members:
    :undoc-members:
    :show-inheritance:
@@ -32,7 +32,7 @@ glow.db.queries module
 Module contents
 ---------------
 
-.. automodule:: glow.db
+.. automodule:: sematic.db
    :members:
    :undoc-members:
    :show-inheritance:

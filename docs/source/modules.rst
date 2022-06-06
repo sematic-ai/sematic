@@ -1,7 +1,7 @@
-glow
+sematic
 ====
 
 .. toctree::
    :maxdepth: 4
 
-   glow
+   sematic

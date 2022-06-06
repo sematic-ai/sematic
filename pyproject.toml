@@ -2,7 +2,7 @@
 exclude = [
   "bazel-out",
   "bazel-bin",
-  "bazel-glow",
+  "bazel-sematic",
   "bazel-testlogs",
   "docs",
   "build",

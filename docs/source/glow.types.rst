@@ -1,4 +1,4 @@
-glow.types package
+sematic.types package
 ==================
 
 Subpackages
@@ -7,39 +7,39 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   glow.types.types
+   sematic.types.types
 
 Submodules
 ----------
 
-glow.types.casting module
+sematic.types.casting module
 -------------------------
 
-.. automodule:: glow.types.casting
+.. automodule:: sematic.types.casting
    :members:
    :undoc-members:
    :show-inheritance:
 
-glow.types.generic\_type module
+sematic.types.generic\_type module
 -------------------------------
 
-.. automodule:: glow.types.generic_type
+.. automodule:: sematic.types.generic_type
    :members:
    :undoc-members:
    :show-inheritance:
 
-glow.types.registry module
+sematic.types.registry module
 --------------------------
 
-.. automodule:: glow.types.registry
+.. automodule:: sematic.types.registry
    :members:
    :undoc-members:
    :show-inheritance:
 
-glow.types.type module
+sematic.types.type module
 ----------------------
 
-.. automodule:: glow.types.type
+.. automodule:: sematic.types.type
    :members:
    :undoc-members:
    :show-inheritance:
@@ -47,7 +47,7 @@ glow.types.type module
 Module contents
 ---------------
 
-.. automodule:: glow.types
+.. automodule:: sematic.types
    :members:
    :undoc-members:
    :show-inheritance:

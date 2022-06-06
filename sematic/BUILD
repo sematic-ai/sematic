@@ -1,0 +1,95 @@
+load("@rules_python//python:packaging.bzl", "py_wheel")
+
+sematic_py_lib(
+    name = "init",
+    srcs = ["__init__.py"],
+    deps = [
+        ":calculator",
+        ":resolver",
+        "//sematic/resolvers:offline_resolver",
+        "//sematic/types:init",
+        "//sematic/types:casting",
+    ]
+)
+
+sematic_py_lib(
+    name = "config",
+    srcs = ["config.py"],
+    deps = []
+)
+
+sematic_py_lib(
+    name = "api_client",
+    srcs = ["api_client.py"],
+    deps = [
+        ":config",
+        requirement("requests")
+    ]
+)
+
+sematic_py_lib(
+    name = "abstract_calculator",
+    srcs = ["abstract_calculator.py"],
+    deps = []
+)
+
+sematic_py_lib(
+    name = "abstract_future",
+    srcs = ["abstract_future.py"],
+    deps = [
+        ":abstract_calculator",
+    ]
+)
+
+sematic_py_lib(
+    name = "calculator",
+    srcs = ["calculator.py"],
+    deps = [
+        ":abstract_calculator",
+        ":future",
+        "//sematic/types:casting",
+        "//sematic/types:init",
+        "//sematic/types:type",
+        "//sematic/utils:memoized_property",
+    ]
+)
+
+sematic_py_lib(
+    name = "future",
+    srcs = ["future.py"],
+    deps = [
+        ":abstract_calculator",
+        ":abstract_future",
+        ":resolver",
+    ]
+)
+
+sematic_py_lib(
+    name = "resolver",
+    srcs = ["resolver.py"],
+    deps = [
+        ":abstract_future",
+    ]
+)
+
+py_wheel(
+    name = "sematic_wheel",
+    visibility = ["//visibility:public"],
+    distribution = "sematic",
+    python_tag = "py3",
+    version = "0.0.1",
+    author = "Sematic AI",
+    author_email = "emmanuel@sematic.ai",
+    classifiers = [
+        "Development Status :: 1 - Planning",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "Programming Language :: Python :: 3 :: Only",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Topic :: Scientific/Engineering :: Visualization",
+        "Typing :: Typed",
+    ],
+    deps = [
+        "//sematic:init",
+    ],
+)

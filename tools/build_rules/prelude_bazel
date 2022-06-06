@@ -3,11 +3,11 @@ This file gets loaded before every BUILD file
 """
 
 # @unused
-load("@glow//:requirements.bzl", "requirement")
+load("@sematic//:requirements.bzl", "requirement")
 
 # @unused
 load(
-    "@//tools:glow_rules.bzl",
+    "@//tools:sematic_rules.bzl",
     "pytest_test",
-    "glow_py_lib",
+    "sematic_py_lib",
 )

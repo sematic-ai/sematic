@@ -1,13 +1,13 @@
-glow.examples.add package
+sematic.examples.add package
 =========================
 
 Submodules
 ----------
 
-glow.examples.add.main module
+sematic.examples.add.main module
 -----------------------------
 
-.. automodule:: glow.examples.add.main
+.. automodule:: sematic.examples.add.main
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +15,7 @@ glow.examples.add.main module
 Module contents
 ---------------
 
-.. automodule:: glow.examples.add
+.. automodule:: sematic.examples.add
    :members:
    :undoc-members:
    :show-inheritance:

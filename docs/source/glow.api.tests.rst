@@ -1,21 +1,21 @@
-glow.api.tests package
+sematic.api.tests package
 ======================
 
 Submodules
 ----------
 
-glow.api.tests.fixtures module
+sematic.api.tests.fixtures module
 ------------------------------
 
-.. automodule:: glow.api.tests.fixtures
+.. automodule:: sematic.api.tests.fixtures
    :members:
    :undoc-members:
    :show-inheritance:
 
-glow.api.tests.test\_server module
+sematic.api.tests.test\_server module
 ----------------------------------
 
-.. automodule:: glow.api.tests.test_server
+.. automodule:: sematic.api.tests.test_server
    :members:
    :undoc-members:
    :show-inheritance:
@@ -23,7 +23,7 @@ glow.api.tests.test\_server module
 Module contents
 ---------------
 
-.. automodule:: glow.api.tests
+.. automodule:: sematic.api.tests
    :members:
    :undoc-members:
    :show-inheritance:

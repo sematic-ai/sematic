@@ -1,29 +1,29 @@
-glow.db.tests package
+sematic.db.tests package
 =====================
 
 Submodules
 ----------
 
-glow.db.tests.fixtures module
+sematic.db.tests.fixtures module
 -----------------------------
 
-.. automodule:: glow.db.tests.fixtures
+.. automodule:: sematic.db.tests.fixtures
    :members:
    :undoc-members:
    :show-inheritance:
 
-glow.db.tests.test\_db module
+sematic.db.tests.test\_db module
 -----------------------------
 
-.. automodule:: glow.db.tests.test_db
+.. automodule:: sematic.db.tests.test_db
    :members:
    :undoc-members:
    :show-inheritance:
 
-glow.db.tests.test\_queries module
+sematic.db.tests.test\_queries module
 ----------------------------------
 
-.. automodule:: glow.db.tests.test_queries
+.. automodule:: sematic.db.tests.test_queries
    :members:
    :undoc-members:
    :show-inheritance:
@@ -31,7 +31,7 @@ glow.db.tests.test\_queries module
 Module contents
 ---------------
 
-.. automodule:: glow.db.tests
+.. automodule:: sematic.db.tests
    :members:
    :undoc-members:
    :show-inheritance:

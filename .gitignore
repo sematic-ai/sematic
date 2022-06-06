@@ -136,7 +136,7 @@ bazel-*
 
 # Node stuff
 # dependencies
-glow/ui/node_modules
+sematic/ui/node_modules
 /.pnp
 .pnp.js
 
