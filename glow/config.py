@@ -23,38 +23,60 @@ def _get_config_dir() -> str:
 
 @dataclass
 class Config:
-    api_server_url: str
+    server_address: str
     api_version: int
-    api_port: int
+    port: int
     db_url: str
     config_dir: str = _get_config_dir()
 
     @property
     def api_url(self):
         return urljoin(
-            "{}:{}".format(self.api_server_url, self.api_port),
+            "http://{}:{}".format(self.server_address, self.port),
             "api/v{}".format(self.api_version),
         )
 
 
-_LOCAL_CONFIG = Config(
-    api_server_url="http://127.0.0.1",
-    api_port=5000,
+# Local API server
+# DB in container
+_DEV_CONFIG = Config(
+    server_address="127.0.0.1",
+    port=5001,
     api_version=1,
-    db_url="postgresql://0.0.0.0:5432/sematic",
+    db_url="postgresql://postgres:password@0.0.0.0:5432/sematic",
 )
 
-_LOCAL_SQLITE = Config(
+
+# DB and API in containers
+_LOCAL_CONFIG = Config(
+    server_address="0.0.0.0",
+    port=5002,
+    api_version=1,
+    db_url="postgresql://postgres:password@0.0.0.0:5432/sematic",
+)
+
+# Local API server
+# DB in SQLITE file
+_LOCAL_SQLITE_CONFIG = Config(
     **(
-        asdict(_LOCAL_CONFIG)  # type: ignore
+        asdict(_DEV_CONFIG)  # type: ignore
         | dict(db_url="sqlite:///{}/db.sqlite3".format(_get_config_dir()))
     )
+)
+
+# For the API server to run within the container
+_CONTAINER_CONFIG = Config(
+    server_address="0.0.0.0",
+    api_version=1,
+    port=5002,
+    db_url="postgresql://postgres:password@sematic-postgres:5432/sematic",
 )
 
 
 class EnvironmentConfigurations(Enum):
     local = _LOCAL_CONFIG
-    local_sqlite = _LOCAL_SQLITE
+    local_sqlite = _LOCAL_SQLITE_CONFIG
+    container = _CONTAINER_CONFIG
 
 
 DEFAULT_ENV = "local"
