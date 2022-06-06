@@ -12,7 +12,11 @@ from glow.api.app import glow_api
 import glow.api.endpoints.runs  # noqa: F401
 import glow.api.endpoints.edges  # noqa: F401
 import glow.api.endpoints.artifacts  # noqa: F401
-from glow.config import DEFAULT_ENV, get_config, switch_env  # noqa: F401
+from glow.config import (
+    DEFAULT_ENV,
+    get_config,
+    switch_env,
+)  # noqa: F401
 
 
 @glow_api.route("/")
@@ -42,9 +46,7 @@ socketio = SocketIO(glow_api)
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser("Sematic API server")
     parser.add_argument("--env", required=False, default=DEFAULT_ENV, type=str)
-    parser.add_argument(
-        "--port", required=False, default=get_config().api_port, type=int
-    )
+    parser.add_argument("--debug", required=False, default=False, action="store_true")
     return parser.parse_args()
 
 
@@ -54,7 +56,9 @@ if __name__ == "__main__":
     args = parse_arguments()
     switch_env(args.env)
 
-    glow_api.debug = True
-    # glow_api.run(debug=True)
+    glow_api.debug = args.debug
+    glow_api.run(
+        debug=args.debug, port=get_config().port, host=get_config().server_address
+    )
 
-    socketio.run(glow_api, port=args.port)
+    # socketio.run(glow_api, port=args.port, host=get_config().server_address)
