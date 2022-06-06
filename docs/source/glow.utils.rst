@@ -1,21 +1,21 @@
-glow.utils package
+sematic.utils package
 ==================
 
 Submodules
 ----------
 
-glow.utils.config\_dir module
+sematic.utils.config\_dir module
 -----------------------------
 
-.. automodule:: glow.utils.config_dir
+.. automodule:: sematic.utils.config_dir
    :members:
    :undoc-members:
    :show-inheritance:
 
-glow.utils.memoized\_property module
+sematic.utils.memoized\_property module
 ------------------------------------
 
-.. automodule:: glow.utils.memoized_property
+.. automodule:: sematic.utils.memoized_property
    :members:
    :undoc-members:
    :show-inheritance:
@@ -23,7 +23,7 @@ glow.utils.memoized\_property module
 Module contents
 ---------------
 
-.. automodule:: glow.utils
+.. automodule:: sematic.utils
    :members:
    :undoc-members:
    :show-inheritance:

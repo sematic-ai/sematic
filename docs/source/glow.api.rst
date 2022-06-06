@@ -1,4 +1,4 @@
-glow.api package
+sematic.api package
 ================
 
 Subpackages
@@ -7,24 +7,24 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   glow.api.endpoints
-   glow.api.tests
+   sematic.api.endpoints
+   sematic.api.tests
 
 Submodules
 ----------
 
-glow.api.app module
+sematic.api.app module
 -------------------
 
-.. automodule:: glow.api.app
+.. automodule:: sematic.api.app
    :members:
    :undoc-members:
    :show-inheritance:
 
-glow.api.server module
+sematic.api.server module
 ----------------------
 
-.. automodule:: glow.api.server
+.. automodule:: sematic.api.server
    :members:
    :undoc-members:
    :show-inheritance:
@@ -32,7 +32,7 @@ glow.api.server module
 Module contents
 ---------------
 
-.. automodule:: glow.api
+.. automodule:: sematic.api
    :members:
    :undoc-members:
    :show-inheritance:

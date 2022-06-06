@@ -20,7 +20,7 @@ Add the following line to the `.env` file at the root of the
 codebase.
 
 ```
-DATABASE_URL="sqlite3:/$HOME/.glow/db.sqlite3"
+DATABASE_URL="sqlite3:/$HOME/.sematic/db.sqlite3"
 ```
 
 Then create the database:
@@ -45,16 +45,16 @@ $ python3 -m piptools compile requirements/requirements.in > requirements/requir
 
 `--allow-unsafe` is to ensure `setuptools` doesn't get filtered out.
 
-## Build the glow wheel
+## Build the sematic wheel
 
 ```shell
-$ bazel build //glow:glow_wheel
+$ bazel build //sematic:sematic_wheel
 ```
 
 ## Generate documentation
 
 ```shell
-$ sphinx-apidoc -f -o docs/source glow
+$ sphinx-apidoc -f -o docs/source sematic
 $ cd docs
 $ make clean
 $ make html
@@ -63,12 +63,12 @@ $ make html
 ## Starting the API server
 
 ```shell
-$ bazel run //glow/api:server
+$ bazel run //sematic/api:server
 ```
 
 ## Starting the UI
 
 ```shell
-$ cd glow/ui
+$ cd sematic/ui
 $ npm start
 ```

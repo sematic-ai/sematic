@@ -42,18 +42,18 @@ def func(
 
 ## Package imports
 
-Within Glow code and tests, always import other classes from their granular
+Within Sematic code and tests, always import other classes from their granular
 location, not from the top level public API. This limits import to be loaded for
 a given test and allows for a more precise and granular dependency tree.
 
 Example:
 ```python
 # Do not do
-from glow import calculator
+from sematic import calculator
 
 # Do
-from glow.calculator import calculator
+from sematic.calculator import calculator
 ```
 
-In addition, when adding a class to the public API at `glow/__init__.py`, add a
-test for its import in `glow/tests/test_init.py`.
+In addition, when adding a class to the public API at `sematic/__init__.py`, add a
+test for its import in `sematic/tests/test_init.py`.

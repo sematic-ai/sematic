@@ -74,17 +74,17 @@ jobs:
           command: python3 -m flake8 --max-line-length=90
       - run:
           name: MyPy
-          command: mypy glow
+          command: mypy sematic
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
-          command: bazel test //glow/... --test_output=all
+          command: bazel test //sematic/... --test_output=all
       - run:
           name: Build wheel
-          command: bazel build //glow:glow_wheel
+          command: bazel build //sematic:sematic_wheel
       - run:
           name: Test pip install
-          command: bazel run //glow/tests/integration:test_pip_install
+          command: bazel run //sematic/tests/integration:test_pip_install
       - slack/notify:
           channel: C03CPMXA1QU
           event: always
@@ -92,6 +92,6 @@ jobs:
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  glow-test:
+  sematic-test:
     jobs:
       - build-and-test

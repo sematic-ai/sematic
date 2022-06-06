@@ -1,0 +1,26 @@
+sematic_py_lib(
+    name = "offline_resolver",
+    srcs = ["offline_resolver.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":state_machine_resolver",
+        "//sematic:abstract_future",
+        "//sematic/db:queries",
+        "//sematic/db/models:factories",
+        "//sematic/db/models:artifact",
+        "//sematic/db/models:run",
+        "//sematic/db/models:edge",
+        "//sematic:api_client",
+        requirement("requests"),
+    ]
+)
+
+sematic_py_lib(
+    name = "state_machine_resolver",
+    srcs = ["state_machine_resolver.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//sematic:abstract_future",
+        "//sematic:resolver",
+    ]
+)

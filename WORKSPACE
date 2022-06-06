@@ -1,4 +1,4 @@
-workspace(name = "glow_ws")
+workspace(name = "sematic_ws")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
@@ -27,6 +27,8 @@ http_archive(
 
 # Special logic for building python interpreter with OpenSSL from homebrew.
 # See https://devguide.python.org/setup/#macos-and-os-x
+# For xz linking
+# See https://qiita.com/ShotaMiyazaki94/items/d868855b379d797d605f
 _py_configure = """
 if [[ "$OSTYPE" == "darwin"* ]]; then
     prefix=$(brew --prefix)
@@ -69,7 +71,7 @@ register_toolchains("//:sematic_py_toolchain")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
-    name = "glow",
+    name = "sematic",
     requirements_lock = "//requirements:requirements.txt",
     # Cannonical
     # python_interpreter_target = interpreter,
@@ -77,7 +79,7 @@ pip_parse(
     python_interpreter_target = "@python_interpreter//:python_bin",
 )
 
-load("@glow//:requirements.bzl", "install_deps")
+load("@sematic//:requirements.bzl", "install_deps")
 install_deps()
 
 ## DOCKER RULES

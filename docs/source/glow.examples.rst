@@ -1,4 +1,4 @@
-glow.examples package
+sematic.examples package
 =====================
 
 Subpackages
@@ -7,12 +7,12 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   glow.examples.add
+   sematic.examples.add
 
 Module contents
 ---------------
 
-.. automodule:: glow.examples
+.. automodule:: sematic.examples
    :members:
    :undoc-members:
    :show-inheritance:

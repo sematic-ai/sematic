@@ -1,4 +1,4 @@
-glow package
+sematic package
 ============
 
 Subpackages
@@ -7,52 +7,52 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   glow.api
-   glow.db
-   glow.examples
-   glow.resolvers
-   glow.types
-   glow.utils
+   sematic.api
+   sematic.db
+   sematic.examples
+   sematic.resolvers
+   sematic.types
+   sematic.utils
 
 Submodules
 ----------
 
-glow.abstract\_calculator module
+sematic.abstract\_calculator module
 --------------------------------
 
-.. automodule:: glow.abstract_calculator
+.. automodule:: sematic.abstract_calculator
    :members:
    :undoc-members:
    :show-inheritance:
 
-glow.abstract\_future module
+sematic.abstract\_future module
 ----------------------------
 
-.. automodule:: glow.abstract_future
+.. automodule:: sematic.abstract_future
    :members:
    :undoc-members:
    :show-inheritance:
 
-glow.calculator module
+sematic.calculator module
 ----------------------
 
-.. automodule:: glow.calculator
+.. automodule:: sematic.calculator
    :members:
    :undoc-members:
    :show-inheritance:
 
-glow.future module
+sematic.future module
 ------------------
 
-.. automodule:: glow.future
+.. automodule:: sematic.future
    :members:
    :undoc-members:
    :show-inheritance:
 
-glow.resolver module
+sematic.resolver module
 --------------------
 
-.. automodule:: glow.resolver
+.. automodule:: sematic.resolver
    :members:
    :undoc-members:
    :show-inheritance:
@@ -60,7 +60,7 @@ glow.resolver module
 Module contents
 ---------------
 
-.. automodule:: glow
+.. automodule:: sematic
    :members:
    :undoc-members:
    :show-inheritance:
