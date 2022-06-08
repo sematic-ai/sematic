@@ -1,4 +1,5 @@
 load("@rules_python//python:defs.bzl", "py_runtime_pair")
+load("@//tools:stamp.bzl", "stamp_build_setting")
 
 py_runtime(
     name = "python3_runtime",
@@ -21,3 +22,5 @@ toolchain(
 )
 
 exports_files(["README.rst"])
+
+stamp_build_setting(name = "stamp")

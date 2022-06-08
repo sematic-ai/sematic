@@ -1,5 +1,3 @@
-load("@rules_python//python:packaging.bzl", "py_wheel", "py_package")
-
 sematic_py_lib(
     name = "init",
     srcs = ["__init__.py"],
@@ -72,17 +70,9 @@ sematic_py_lib(
     ]
 )
 
-py_package(
-    name = "wheel_package",
-    deps = [
-        "//sematic:init",
-        "//sematic/cli:main_lib",
-    ]
-)
 
-
-py_wheel(
-    name = "sematic_wheel",
+sematic_py_wheel(
+    name = "wheel",
     visibility = ["//visibility:public"],
     distribution = "sematic",
     python_tag = "py3",
@@ -92,6 +82,10 @@ py_wheel(
     author = "Sematic AI, Inc.",
     author_email = "emmanuel@sematic.ai",
     homepage = "https://sematic.ai",
+    deps = [
+        "//sematic:init",
+        "//sematic/cli:main_lib",
+    ],
     classifiers = [
         "Development Status :: 1 - Planning",
         "Intended Audience :: Developers",
@@ -102,7 +96,4 @@ py_wheel(
         "Typing :: Typed",
     ],
     entry_points={"console_scripts": ["sematic = sematic.cli.main:main"]},
-    deps = [
-        ":wheel_package",
-    ],
 )

@@ -81,7 +81,7 @@ jobs:
           command: bazel test //sematic/... --test_output=all
       - run:
           name: Build wheel
-          command: bazel build //sematic:sematic_wheel
+          command: make wheel
       - run:
           name: Test pip install
           command: bazel run //sematic/tests/integration:test_pip_install
