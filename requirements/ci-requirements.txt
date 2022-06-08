@@ -10,3 +10,6 @@ flask
 types-requests
 pandas-stubs
 types-psycopg2
+
+# To generate the wheel
+m2r
