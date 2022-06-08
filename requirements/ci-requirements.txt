@@ -12,4 +12,5 @@ pandas-stubs
 types-psycopg2
 
 # To generate the wheel
+mistune==0.8.4
 m2r
