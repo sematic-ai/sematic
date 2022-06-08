@@ -77,6 +77,7 @@ pip_parse(
     # python_interpreter_target = interpreter,
     # Hermetic
     python_interpreter_target = "@python_interpreter//:python_bin",
+    pip_data_exclude = ["*.dist-info/*"],
 )
 
 load("@sematic//:requirements.bzl", "install_deps")

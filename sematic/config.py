@@ -44,7 +44,7 @@ class Config:
 # Local API server
 # DB in container
 _DEV_CONFIG = Config(
-    server_address="127.0.0.1",
+    server_address="0.0.0.0",
     port=5001,
     api_version=1,
     db_url="postgresql://postgres:password@0.0.0.0:5432/sematic",
@@ -112,7 +112,7 @@ def set_config(config: Config):
 
 def current_env() -> Optional[str]:
     for env, config in EnvironmentConfigurations.__members__.items():
-        if get_config() is config:
+        if get_config() is config.value:
             return env
 
     return None
