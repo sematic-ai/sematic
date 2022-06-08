@@ -5,7 +5,7 @@ import subprocess
 import click
 
 # Sematic
-from sematic.config import get_config
+from sematic.config import current_env, get_config, switch_env
 from sematic.cli.process_utils import (
     server_is_running,
     write_server_pid,
@@ -18,7 +18,7 @@ def main():
     """
     Welcome to Sematic
     """
-    pass
+    switch_env("local_sqlite")
 
 
 @main.command("start", short_help="Start the Sematic app")
@@ -32,7 +32,7 @@ def start():
 
     click.echo("Starting Sematic...")
     process = subprocess.Popen(
-        "python3 sematic/api/server.py --env local_sqlite &> /tmp/out", shell=True
+        ["python3", "-m", "sematic.api.server", "--env", current_env()]
     )
 
     write_server_pid(process.pid)

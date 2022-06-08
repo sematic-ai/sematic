@@ -53,3 +53,12 @@ server_image_interpreter: build_server_image
 
 start:
 	cd sematic/api; docker compose up
+
+release:
+	m2r --overwrite README.md
+	bazel build --stamp //sematic:sematic_wheel
+	sleep 3
+	$(eval STAMPED_WHEEL := $(shell cat bazel-bin/sematic/sematic_wheel.name))
+	@echo $(STAMPED_WHEEL)
+	cp -f bazel-bin/sematic/sematic-0.0.2.alpha._BUILD_TIMESTAMP_-py3-none-any.whl /tmp/$(STAMPED_WHEEL)
+	python3 -m twine upload /tmp/$(STAMPED_WHEEL)

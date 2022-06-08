@@ -19,3 +19,5 @@ toolchain(
     toolchain = ":sematic_py_runtime_pair",
     toolchain_type = "@bazel_tools//tools/python:toolchain_type",
 )
+
+exports_files(["README.rst"])

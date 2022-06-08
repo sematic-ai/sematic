@@ -27,8 +27,7 @@ def get_server_pid() -> Optional[str]:
     if pid is not None and len(pid) > 0:
         command = "ps | grep {} | grep -v grep".format(pid)
         process = subprocess.run(command, shell=True, capture_output=True)
-        print(command)
-        print(process)
+
         if process.returncode == 0 and len(process.stdout.decode()) > 0:
             return pid
 
@@ -41,8 +40,7 @@ def get_server_pid() -> Optional[str]:
         shell=True,
         capture_output=True,
     )
-    print(command)
-    print(process)
+
     output = process.stdout.decode()
     if len(output) > 0:
         pid = output.split(" ")[0]
