@@ -27,4 +27,4 @@ RUN python3 -m pip install psycopg2-binary
 # ENTRYPOINT [ "python3" ]
 
 EXPOSE 5002
-CMD python3 -m sematic.api.server --env container
+CMD python3 -m sematic.api.server --env container --debug

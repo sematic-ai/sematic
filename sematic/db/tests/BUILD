@@ -3,7 +3,8 @@ sematic_py_lib(
     srcs = ["fixtures.py"],
     visibility = ["//visibility:public"],
     data = [
-        "//sematic/db:schema.sql",
+        "//sematic/db:schema.sql.pg",
+        "//sematic/db:schema.sql.sqlite",
     ],
     deps = [
         "//sematic:abstract_future",

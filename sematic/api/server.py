@@ -1,6 +1,5 @@
 # Third-party
 import argparse
-import logging
 from flask import jsonify, send_file
 from flask_socketio import SocketIO  # type: ignore
 
@@ -51,14 +50,9 @@ def parse_arguments() -> argparse.Namespace:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-
     args = parse_arguments()
     switch_env(args.env)
 
     sematic_api.debug = args.debug
-    sematic_api.run(
-        debug=args.debug, port=get_config().port, host=get_config().server_address
-    )
 
-    # socketio.run(sematic_api, port=args.port, host=get_config().server_address)
+    socketio.run(sematic_api, port=get_config().port, host=get_config().server_address)

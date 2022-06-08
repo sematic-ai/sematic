@@ -5,7 +5,7 @@ import logging
 import os
 import pathlib
 from urllib.parse import urljoin
-
+from typing import Optional
 
 _DEFAULT_CONFIG_DIR = ".sematic"
 
@@ -30,9 +30,13 @@ class Config:
     config_dir: str = _get_config_dir()
 
     @property
+    def server_url(self) -> str:
+        return "http://{}:{}".format(self.server_address, self.port)
+
+    @property
     def api_url(self):
         return urljoin(
-            "http://{}:{}".format(self.server_address, self.port),
+            self.server_url,
             "api/v{}".format(self.api_version),
         )
 
@@ -96,9 +100,22 @@ def switch_env(env: str):
             )
         )
 
+    set_config(EnvironmentConfigurations[env].value)
+    logger = logging.getLogger(__name__)
+    logger.info("Switch to env {} whose config is {}".format(env, get_config()))
+
+
+def set_config(config: Config):
     global _active_config
-    _active_config = EnvironmentConfigurations[env].value
-    logging.info("Switch to env {} whose config is {}".format(env, _active_config))
+    _active_config = config
+
+
+def current_env() -> Optional[str]:
+    for env, config in EnvironmentConfigurations.__members__.items():
+        if get_config() is config:
+            return env
+
+    return None
 
 
 def get_config() -> Config:

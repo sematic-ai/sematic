@@ -21,4 +21,4 @@ sematic_py_lib(
     ]
 )
 
-exports_files(["schema.sql"])
+exports_files(["schema.sql.pg", "schema.sql.sqlite"])

@@ -80,6 +80,7 @@ py_wheel(
     version = "0.0.1",
     author = "Sematic AI",
     author_email = "emmanuel@sematic.ai",
+    homepage = "https://sematic.ai",
     classifiers = [
         "Development Status :: 1 - Planning",
         "Intended Audience :: Developers",
@@ -89,6 +90,9 @@ py_wheel(
         "Topic :: Scientific/Engineering :: Visualization",
         "Typing :: Typed",
     ],
+    entry_points={
+        {"console_scripts": ["sematic = sematic.cli.main:main"]}
+    }
     deps = [
         "//sematic:init",
     ],

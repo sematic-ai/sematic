@@ -14,7 +14,7 @@ from sematic.db.queries import save_run
 
 
 def handler(postgresql):
-    with open("sematic/db/schema.sql", "r") as f:
+    with open("sematic/db/schema.sql.pg", "r") as f:
         schema = f.read()
 
     conn = psycopg2.connect(**postgresql.dsn())
@@ -43,7 +43,7 @@ def pg_mock():
 
 
 @pytest.fixture(scope="function")
-def test_db(pg_mock):
+def test_db_pg(pg_mock):
     postgresql = Postgresql()
     previous_instance = db._db_instance
     db._db_instance = db.DB(postgresql.url())
@@ -55,11 +55,11 @@ def test_db(pg_mock):
 
 
 @pytest.fixture(scope="function")
-def test_sqlite_db():
+def test_db():
     original_db = db._db_instance
-    temp_db = db.LocalDB("sqlite://")
+    temp_db = db.DB("sqlite://")
 
-    with open("sematic/db/schema.sql", "r") as file:
+    with open("sematic/db/schema.sql.sqlite", "r") as file:
         schema = file.read()
 
     connection = temp_db.get_engine().raw_connection()
