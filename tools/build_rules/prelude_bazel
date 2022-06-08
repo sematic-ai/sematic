@@ -11,3 +11,9 @@ load(
     "pytest_test",
     "sematic_py_lib",
 )
+
+# @unused
+load(
+    "@//tools:sematic_wheel_rule.bzl",
+    "sematic_py_wheel",
+)
