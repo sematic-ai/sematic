@@ -22,3 +22,20 @@ sematic_py_lib(
 )
 
 exports_files(["schema.sql.pg", "schema.sql.sqlite"])
+
+
+sematic_py_lib(
+    name = "migrate_lib",
+    srcs = ["migrate.py"],
+    data = glob(["migrations/*.sql"]),
+    deps = [
+        "//sematic:config",
+    ]
+)
+
+
+py_binary(
+    name = "migrate",
+    srcs = ["migrate.py"],
+    deps = [":migrate_lib"]
+)

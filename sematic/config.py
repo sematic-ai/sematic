@@ -63,12 +63,14 @@ _LOCAL_CONFIG = Config(
     db_url="postgresql://postgres:password@0.0.0.0:5432/sematic",
 )
 
+SQLITE_FILE = "db.sqlite3"
+
 # Local API server
 # DB in SQLITE file
 _LOCAL_SQLITE_CONFIG = Config(
     **(
         asdict(_DEV_CONFIG)  # type: ignore
-        | dict(db_url="sqlite:///{}/db.sqlite3".format(_get_config_dir()))
+        | dict(db_url="sqlite:///{}/{}".format(_get_config_dir(), SQLITE_FILE))
     )
 )
 
