@@ -41,3 +41,11 @@ pytest_test(
         "//sematic/db/models:edge",
     ]
 )
+
+pytest_test(
+    name = "test_migrate",
+    srcs = ["test_migrate.py"],
+    deps = [
+        "//sematic/db:migrate_lib",
+    ]
+)
