@@ -94,7 +94,15 @@ def _sematic_py_wheel_impl(ctx):
         file_path = _path_inside_wheel(input_file)
 
         if "dist-info/METADATA" in file_path:
-            requires.append(file_path.split(".dist-info")[0].split("-")[0].replace("_", "-"))
+            depedency_name = file_path.split(".dist-info")[0].split("-")[0].replace("_", "-")
+            # Making sure we don't override requires passed manually
+            already_in = False
+            for require in requires:
+                if require.startswith(depedency_name):
+                    already_in = True
+            
+            if not already_in:
+                requires.append(depedency_name)
 
         if file_path.startswith("sematic"):
             deps_files.append(input_file)

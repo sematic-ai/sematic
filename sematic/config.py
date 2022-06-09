@@ -40,6 +40,10 @@ class Config:
             "api/v{}".format(self.api_version),
         )
 
+    @property
+    def server_pid_file_path(self):
+        return os.path.join(self.config_dir, "server.pid")
+
 
 # Local API server
 # DB in container
@@ -83,7 +87,7 @@ class EnvironmentConfigurations(Enum):
     container = _CONTAINER_CONFIG
 
 
-DEFAULT_ENV = "local"
+DEFAULT_ENV = "local_sqlite"
 
 
 _active_config: Config = EnvironmentConfigurations[DEFAULT_ENV].value
