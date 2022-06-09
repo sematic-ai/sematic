@@ -1,6 +1,6 @@
 -- migrate:up
 
-ALTER TABLE runs ADD COLUMN root_id character(32) NOT NULL;
+ALTER TABLE runs ADD COLUMN root_id character(32);
 
 -- migrate:down
 
