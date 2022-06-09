@@ -1,14 +1,42 @@
-import os
+"""
+When users hit
 
+$ sematic start
+
+The SQLite DB should be migrated to the latest version
+automatically.
+
+On the dev side, we use dbmate to create and run migrations. One option would
+have been to package it with the wheel and run it in a subprocess, but Macs are
+not friendly with arbitrary binaries being downloaded and launched (need to
+activate permissions). The option chosen here is to replicate a simple UP script
+in Python that can be called by the CLI. The script only supports SQLite for
+now.
+"""
+# Standard library
+import os
 import sqlite3
 
+# Sematic
 from sematic.config import get_config, SQLITE_FILE
 
 
-def migrate():
+def _get_conn() -> sqlite3.Connection:
+    """
+    We break this out to enable mocking in tests.
+    """
     sqlite_file_path = os.path.join(get_config().config_dir, SQLITE_FILE)
 
-    conn = sqlite3.connect(sqlite_file_path)
+    return sqlite3.connect(sqlite_file_path)
+
+
+def migrate():
+    """
+    Will migrate the SQLite DB sitting at `get_config().config_dir, SQLITE_FILE`
+    to the latest version.
+    """
+
+    conn = _get_conn()
 
     with conn:
         conn.execute(
