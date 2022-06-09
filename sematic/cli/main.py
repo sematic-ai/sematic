@@ -1,16 +1,18 @@
 # Standard library
-import subprocess
+import os
+import signal
+import webbrowser
 
 # Third-party
 import click
 
 # Sematic
-from sematic.config import current_env, get_config, switch_env
+from sematic.config import get_config, switch_env
 from sematic.cli.process_utils import (
     server_is_running,
-    write_server_pid,
     get_server_pid,
 )
+from sematic.api.server import run_wsgi
 
 
 @click.group("sematic")
@@ -24,41 +26,28 @@ def main():
 @main.command("start", short_help="Start the Sematic app")
 def start():
     if server_is_running():
-        # The server url may be incorrect here if started with a different env
-        # We can save the URL in server.pid, but we can't use the `ps` recovery strategy
-        # in `_get_server_pid` if the pid is incorrect
-        click.echo("Sematic already running at {}".format(get_config().server_url))
+        click.echo("Sematic is already running.")
         return
 
     click.echo("Starting Sematic...")
-    process = subprocess.Popen(
-        ["python3", "-m", "sematic.api.server", "--env", current_env()]
-    )
-
-    write_server_pid(process.pid)
-
-    click.echo("Started with PID {}".format(process.pid))
     click.echo("Visit Sematic at {}".format(get_config().server_url))
+
+    if os.fork():
+        webbrowser.open(get_config().server_url, new=2, autoraise=True)
+        os._exit(0)
+    run_wsgi(False)
 
 
 @main.command("stop", short_help="Stop the Sematic server")
 def stop():
-    server_pid = get_server_pid()
-    if server_pid is None:
+    if not server_is_running():
         click.echo("Sematic is not running.")
         return
 
-    process = subprocess.run(
-        "kill {}".format(server_pid), shell=True, capture_output=True
-    )
-    error = process.stderr.decode()
-
-    if process.returncode == 0:
-        click.echo("Successfully stopped Sematic.")
-    elif "No such process" in error:
-        click.echo("Sematic is not running.")
-    else:
-        click.echo("There was a problem stopping Sematic: {}".format(error))
+    server_pid = get_server_pid()
+    # Ideally SIGTERM but I think websocker workers take a while to finish
+    os.kill(server_pid, signal.SIGQUIT)
+    click.echo("Sematic stopped.")
 
 
 if __name__ == "__main__":
