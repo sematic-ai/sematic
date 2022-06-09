@@ -1,3 +1,6 @@
+# Standard library
+import os
+
 # Third-party
 import argparse
 from flask import jsonify, send_file
@@ -16,6 +19,7 @@ from sematic.config import (
     get_config,
     switch_env,
 )  # noqa: F401
+from sematic.api.wsgi import SematicWSGI
 
 
 @sematic_api.route("/")
@@ -46,13 +50,32 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser("Sematic API server")
     parser.add_argument("--env", required=False, default=DEFAULT_ENV, type=str)
     parser.add_argument("--debug", required=False, default=False, action="store_true")
+    parser.add_argument("--daemon", required=False, default=False, action="store_true")
     return parser.parse_args()
+
+
+def run_wsgi(daemon: bool):
+    options = {
+        "bind": "{}:{}".format(get_config().server_address, get_config().port),
+        "workers": 1,
+        "worker_class": "eventlet",
+        "daemon": daemon,
+        "pidfile": get_config().server_pid_file_path,
+        "accesslog": os.path.join(get_config().config_dir, "access.log"),
+        "errorlog": os.path.join(get_config().config_dir, "error.log"),
+    }
+    SematicWSGI(sematic_api, options).run()
 
 
 if __name__ == "__main__":
     args = parse_arguments()
     switch_env(args.env)
 
-    sematic_api.debug = args.debug
+    if args.debug:
+        sematic_api.debug = args.debug
+        socketio.run(
+            sematic_api, port=get_config().port, host=get_config().server_address
+        )
 
-    socketio.run(sematic_api, port=get_config().port, host=get_config().server_address)
+    else:
+        run_wsgi(args.daemon)

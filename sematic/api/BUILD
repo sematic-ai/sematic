@@ -1,9 +1,8 @@
-load("@rules_python//python:packaging.bzl", "py_wheel", "py_package")
-
 sematic_py_lib(
     name = "app",
     srcs = ["app.py"],
     deps = [
+        ":wsgi",
         requirement("flask"),
         requirement("flask-cors"),
     ]
@@ -34,19 +33,12 @@ py_binary(
     ]
 )
 
-py_package(
-    name = "server_package",
+sematic_py_lib(
+    name = "wsgi",
+    srcs = ["wsgi.py"],
     deps = [
-        ":server_lib",
-    ]
-)
-
-py_wheel(
-    name = "sematic_server",
-    distribution = "sematic-server",
-    version = "0.0.1",
-    deps = [
-        ":server_package",
+        requirement("flask"),
+        requirement("gunicorn"),
     ]
 )
 
