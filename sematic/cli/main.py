@@ -13,6 +13,7 @@ from sematic.cli.process_utils import (
     get_server_pid,
 )
 from sematic.api.server import run_wsgi
+from sematic.db.migrate import migrate
 
 
 @click.group("sematic")
@@ -21,6 +22,7 @@ def main():
     Welcome to Sematic
     """
     switch_env("local_sqlite")
+    migrate()
 
 
 @main.command("start", short_help="Start the Sematic app")

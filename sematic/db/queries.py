@@ -161,10 +161,6 @@ def get_run_input_artifacts(run_id: str) -> Dict[str, Artifact]:
 
 
 def get_root_graph(root_run_id: str) -> Tuple[Set[Run], Set[Edge], Set[Artifact]]:
-    import logging
-
-    logging.basicConfig()
-    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
     with db().get_session() as session:
         results = (
             session.query(Run, Edge, Artifact)
