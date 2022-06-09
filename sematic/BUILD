@@ -86,6 +86,11 @@ sematic_py_wheel(
         "//sematic:init",
         "//sematic/cli:main_lib",
     ],
+    requires = [
+        # Specifying this by hand because sematic_py_wheel doesn't know
+        # how to fix versions
+        "eventlet==0.30.2",
+    ],
     classifiers = [
         "Development Status :: 1 - Planning",
         "Intended Audience :: Developers",

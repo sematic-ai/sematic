@@ -28,9 +28,9 @@ cloudpickle==2.0.0
     # via -r requirements/requirements.in
 decorator==5.1.1
     # via ipython
-dnspython==2.2.1
+dnspython==1.16.0
     # via eventlet
-eventlet==0.33.1
+eventlet==0.30.2
     # via -r requirements/requirements.in
 executing==0.8.3
     # via stack-data
@@ -45,6 +45,8 @@ flask-socketio==5.2.0
     # via -r requirements/requirements.in
 greenlet==1.1.2
     # via eventlet
+gunicorn==20.1.0
+    # via -r requirements/requirements.in
 idna==3.3
     # via requests
 importlib-metadata==4.11.3
@@ -175,4 +177,5 @@ zipp==3.8.0
 setuptools==58.1.0
     # via
     #   -r requirements/requirements.in
+    #   gunicorn
     #   ipython
