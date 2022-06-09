@@ -4,6 +4,7 @@ sematic_py_lib(
     deps = [
         ":process_utils",
         "//sematic/api:server_lib",
+        "//sematic/db:migrate_lib",
         requirement("click"),
     ]
 )
