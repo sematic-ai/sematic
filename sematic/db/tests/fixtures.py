@@ -1,5 +1,6 @@
 # Standard library
 import uuid
+from typing import Any
 
 # Third-party
 import pytest
@@ -28,10 +29,17 @@ def handler(postgresql):
     conn.close()
 
 
-# Use `handler()` on initialize database
-Postgresql = testing.postgresql.PostgresqlFactory(
-    cache_initialized_db=True, on_initialized=handler
-)
+_Postgresql: Any = None
+
+
+def _get_postgre():
+    global _Postgresql
+    if _Postgresql is None:
+        # Use `handler()` on initialize database
+        _Postgresql = testing.postgresql.PostgresqlFactory(
+            cache_initialized_db=True, on_initialized=handler
+        )
+    return _Postgresql
 
 
 @pytest.fixture(scope="module")
@@ -39,12 +47,12 @@ def pg_mock():
     try:
         yield
     finally:
-        Postgresql.clear_cache()
+        _get_postgre().clear_cache()
 
 
 @pytest.fixture(scope="function")
 def test_db_pg(pg_mock):
-    postgresql = Postgresql()
+    postgresql = _get_postgre()()
     previous_instance = db._db_instance
     db._db_instance = db.DB(postgresql.url())
     try:
