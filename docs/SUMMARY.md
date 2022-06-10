@@ -1,5 +1,8 @@
 # Table of contents
 
 * [Welcome](README.md)
+* [Get started](get-started.md)
 
-## Heading
+## Sematic
+
+* [Concepts](concepts.md)
