@@ -1,5 +1,5 @@
-# Welcome to the Sematic Documentation
+## Welcome to the Sematic Documentation
 
-## Sematic users
+### Sematic users
 
-## Sematic contributors
+### Sematic contributors
