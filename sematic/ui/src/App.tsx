@@ -9,10 +9,10 @@ import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import createTheme from "./themes/mira";
 import logo from "./sematic.png";
 
-const pages: [string, string][] = [
-  ["Pipelines", "/pipelines"],
+const pages: [string, string, string | undefined][] = [
+  ["Pipelines", "/pipelines", undefined],
   //["Runs", "/runs"],
-  //["Docs", "/"],
+  ["Documentation", "https://docs.sematic.ai", "_blank"],
   //["Get help", "/"],
 ];
 
@@ -56,6 +56,7 @@ function App() {
                       display: "block",
                     }}
                     href={page[1]}
+                    target={page[2]}
                   >
                     {page[0]}
                   </Button>
