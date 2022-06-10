@@ -121,7 +121,8 @@ class OfflineResolver(StateMachineResolver):
                 "{}/pipelines/{}".format(
                     get_config().server_url,
                     self._get_run(root_future.id).calculator_path,
-                )
+                ),
+                new=0,
             )
 
     def _future_did_run(self, future: AbstractFuture) -> None:

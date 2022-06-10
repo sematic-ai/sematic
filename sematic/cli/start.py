@@ -24,7 +24,7 @@ def start():
     click.echo("Visit Sematic at {}".format(get_config().server_url))
 
     if os.fork():
-        webbrowser.open(get_config().server_url, new=2, autoraise=True)
+        webbrowser.open(get_config().server_url, new=0, autoraise=True)
 
         os._exit(0)
 

@@ -10,7 +10,7 @@ import createTheme from "./themes/mira";
 import logo from "./sematic.png";
 
 const pages: [string, string][] = [
-  //["Pipelines", "/pipelines"],
+  ["Pipelines", "/pipelines"],
   //["Runs", "/runs"],
   //["Docs", "/"],
   //["Get help", "/"],
