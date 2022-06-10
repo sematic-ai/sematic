@@ -1,7 +1,6 @@
 import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
 import ReactMarkdown from "react-markdown";
-import { Run } from "../Models";
 
 export default function Docstring(props: {
   docstring: string | undefined | null;

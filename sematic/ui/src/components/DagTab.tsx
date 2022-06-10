@@ -3,12 +3,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Artifact, Edge, Run } from "../Models";
-import {
-  ArtifactListPayload,
-  EdgeListPayload,
-  RunGraphPayload,
-  RunListPayload,
-} from "../Payloads";
+import { RunGraphPayload } from "../Payloads";
 import { fetchJSON, graphSocket } from "../utils";
 import { ArtifactList } from "./Artifacts";
 import Loading from "./Loading";
