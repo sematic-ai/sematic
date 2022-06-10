@@ -11,6 +11,13 @@ _DEFAULT_CONFIG_DIR = ".sematic"
 
 
 def _get_config_dir() -> str:
+    """
+    Build the absolute path to the default config directory.
+
+    The config directory is at the base of the user's home
+    typically ~/.sematic, and contains the SQLite DB, server.pid,
+    API log files, etc.
+    """
     home_dir = pathlib.Path.home()
     config_dir = os.path.join(home_dir, _DEFAULT_CONFIG_DIR)
     try:
@@ -21,13 +28,35 @@ def _get_config_dir() -> str:
     return config_dir
 
 
+def _get_migrations_dir() -> str:
+    """
+    Build the absolute path to the migrations directory.
+    """
+    return os.path.join(_get_base_dir(), "db", "migrations")
+
+
+def _get_base_dir() -> str:
+    """
+    Build absolute path of directory where examples are stored.
+    """
+    return os.path.dirname(os.path.realpath(__file__))
+
+
 @dataclass
 class Config:
+    """
+    Base Config class to store application configs.
+    """
+
     server_address: str
     api_version: int
     port: int
     db_url: str
     config_dir: str = _get_config_dir()
+    migrations_dir: str = _get_migrations_dir()
+    base_dir: str = _get_base_dir()
+    # Module containing the `main` function
+    examples_entry_point: str = "main"
 
     @property
     def server_url(self) -> str:

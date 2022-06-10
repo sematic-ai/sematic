@@ -6,12 +6,12 @@ sematic_py_lib(
         ":state_machine_resolver",
         "//sematic:abstract_future",
         "//sematic/db:queries",
+        "//sematic:config",
         "//sematic/db/models:factories",
         "//sematic/db/models:artifact",
         "//sematic/db/models:run",
         "//sematic/db/models:edge",
         "//sematic:api_client",
-        requirement("requests"),
     ]
 )
 

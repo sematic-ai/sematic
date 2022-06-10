@@ -40,7 +40,7 @@ test:
 	bazel test //sematic/... --test_output=all
 
 build_ui:
-	#cd sematic/ui; npm run build
+	cd sematic/ui; npm run build
 
 server_image: build_ui
 	bazel build //sematic/api:sematic_server
@@ -58,10 +58,11 @@ wheel:
 	m2r --overwrite README.md
 	bazel build //sematic:wheel
 
-release:
+release: build_ui
 	m2r --overwrite README.md
 	bazel build --stamp //sematic:wheel
 	sleep 1
+	cat bazel-bin/sematic/wheel.name
 	$(eval STAMPED_WHEEL := $(shell cat bazel-bin/sematic/wheel.name))
 	cp -f bazel-bin/sematic/sematic-0.0.2.alpha._BUILD_TIMESTAMP_-py3-none-any.whl /tmp/$(STAMPED_WHEEL)
 	python3 -m twine upload /tmp/$(STAMPED_WHEEL)
