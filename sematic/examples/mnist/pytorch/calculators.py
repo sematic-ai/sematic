@@ -17,10 +17,10 @@ import plotly
 from sematic.examples.mnist.pytorch.train_eval import train, test, Net
 
 # Sematic
-from sematic import calculator
+import sematic
 
 
-@calculator
+@sematic.func
 def load_mnist_dataset(train: bool, path: str = "/tmp/pytorch-mnist") -> MNIST:
     transform = Compose([ToTensor(), Normalize((0.1307,), (0.3081,))])
     return MNIST(root=path, train=train, download=True, transform=transform)
@@ -31,7 +31,7 @@ class DataLoaderConfig:
     batch_size: Optional[int] = 1000
 
 
-@calculator
+@sematic.func
 def get_dataloader(dataset: Dataset, config: DataLoaderConfig) -> DataLoader:
     return DataLoader(dataset, batch_size=config.batch_size)
 
@@ -52,7 +52,7 @@ class PipelineConfig:
     use_cuda: bool = False
 
 
-@calculator
+@sematic.func
 def train_model(
     config: TrainConfig,
     train_loader: DataLoader,
@@ -85,7 +85,7 @@ class EvaluationResults:
     pr_curve: plotly.graph_objs.Figure
 
 
-@calculator
+@sematic.func
 def evaluate_model(
     model: nn.Module, test_loader: DataLoader, device: torch.device
 ) -> EvaluationResults:
@@ -101,7 +101,7 @@ def evaluate_model(
     )
 
 
-@calculator
+@sematic.func
 def pipeline(config: PipelineConfig) -> EvaluationResults:
     """
     # MNIST example in PyTorch

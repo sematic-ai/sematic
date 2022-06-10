@@ -40,7 +40,7 @@ test:
 	bazel test //sematic/... --test_output=all
 
 build_ui:
-	#cd sematic/ui; npm run build
+	cd sematic/ui; npm run build
 
 server_image: build_ui
 	bazel build //sematic/api:sematic_server
@@ -58,7 +58,7 @@ wheel:
 	m2r --overwrite README.md
 	bazel build //sematic:wheel
 
-release:
+release: build_ui
 	m2r --overwrite README.md
 	bazel build --stamp //sematic:wheel
 	sleep 1

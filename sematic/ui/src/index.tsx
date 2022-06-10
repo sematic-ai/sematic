@@ -1,6 +1,5 @@
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import { RunIndex } from "./runs/RunIndex";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
@@ -17,6 +16,7 @@ root.render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />}>
+        <Redirect to="/runs" />
         <Route path="pipelines" element={<PipelineIndex />} />
         <Route path="pipelines/:calculatorPath" element={<PipelineView />} />
       </Route>
