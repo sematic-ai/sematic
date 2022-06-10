@@ -8,6 +8,7 @@
 * [Concepts](concepts.md)
 * [Type support]()
 * [Future algebra]()
+* [Glossary]()
 
 ## Contribute
 

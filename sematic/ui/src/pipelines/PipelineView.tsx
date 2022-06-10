@@ -19,14 +19,13 @@ export default function PipelineView() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   let params = useParams();
-  console.log(params);
 
   let { calculatorPath } = params;
 
   const triggerRefresh = useCallback(
     (refreshCallback: () => void) => {
       pipelineSocket.removeAllListeners();
-      pipelineSocket.on("start", (args: { calculator_path: string }) => {
+      pipelineSocket.on("update", (args: { calculator_path: string }) => {
         if (args.calculator_path === calculatorPath) {
           refreshCallback();
         }
