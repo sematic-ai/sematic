@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import time
 
 # Sematic
-from sematic import calculator
+import sematic
 from sematic.types import FloatInRange
 
 
@@ -18,12 +18,12 @@ class Config:
     bar: Bar
 
 
-@calculator
+@sematic.func
 def using_dataclass(config: Config) -> Config:
     return config
 
 
-@calculator
+@sematic.func
 def add(a: float, b: float) -> float:
     """
     Adds two numbers.
@@ -32,12 +32,12 @@ def add(a: float, b: float) -> float:
     return a + b
 
 
-@calculator
+@sematic.func
 def sum_list(list_: list[float], a: FloatInRange[0, 1]) -> float:  # type: ignore
     return sum(list_) + a
 
 
-@calculator
+@sematic.func
 def add3(a: float, b: float, c: float) -> float:
     """
     Adds three numbers.
@@ -46,7 +46,7 @@ def add3(a: float, b: float, c: float) -> float:
     return add(add(a, b), c)
 
 
-@calculator
+@sematic.func
 def pipeline(a: float, b: float, c: float) -> float:
     """
     ## This is the docstring

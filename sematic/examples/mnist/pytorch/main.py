@@ -9,16 +9,17 @@ from sematic.examples.mnist.pytorch.calculators import (
     TrainConfig,
 )
 
-from sematic import OfflineResolver
-
-
 PIPELINE_CONFIG = PipelineConfig(
     dataloader_config=DataLoaderConfig(),
     train_config=TrainConfig(epochs=1),
 )
 
 
-if __name__ == "__main__":
+def main():
     pipeline(PIPELINE_CONFIG).set(
         name="PyTorch MNIST Example", tags=["pytorch", "example", "mnist"]
-    ).resolve(OfflineResolver())
+    ).resolve()
+
+
+if __name__ == "__main__":
+    main()
