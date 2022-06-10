@@ -1,12 +1,11 @@
 # Standard library
 import datetime
 from typing import Dict, Optional, List, Union, Tuple
-
-# Third-party
-# import requests
+import webbrowser
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
+from sematic.config import get_config
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
@@ -117,6 +116,14 @@ class OfflineResolver(StateMachineResolver):
         root_future = self._futures[0]
         if root_future.id == future.id:
             api_client.notify_pipeline_start(self._runs[future.id].calculator_path)
+
+            webbrowser.open(
+                "{}/pipelines/{}".format(
+                    get_config().server_url,
+                    self._get_run(root_future.id).calculator_path,
+                ),
+                new=0,
+            )
 
     def _future_did_run(self, future: AbstractFuture) -> None:
         super()._future_did_run(future)

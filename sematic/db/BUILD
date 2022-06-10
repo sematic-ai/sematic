@@ -4,7 +4,8 @@ sematic_py_lib(
     deps = [
         "//sematic:config",
         requirement("sqlalchemy"),
-        requirement("psycopg2-binary")
+        # Not needed until we use postgres
+        # requirement("psycopg2-binary")
     ]
 )
 

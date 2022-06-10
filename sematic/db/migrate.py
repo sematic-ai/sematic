@@ -50,18 +50,16 @@ def migrate():
 
     versions = [row[0] for row in schema_migrations]
 
-    migration_dir = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "migrations"
-    )
+    migrations_dir = get_config().migrations_dir
 
-    migration_files = os.listdir(migration_dir)
+    migration_files = os.listdir(migrations_dir)
 
     for migration_file in migration_files:
         version = migration_file.split("_")[0]
         if version in versions:
             continue
 
-        with open(os.path.join(migration_dir, migration_file), "r") as file:
+        with open(os.path.join(migrations_dir, migration_file), "r") as file:
             sql = file.read()
 
         up_sql = sql.split("-- migrate:down")[0].split("-- migrate:up")[1].strip()

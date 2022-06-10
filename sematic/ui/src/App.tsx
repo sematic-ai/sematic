@@ -9,11 +9,11 @@ import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import createTheme from "./themes/mira";
 import logo from "./sematic.png";
 
-const pages = [
+const pages: [string, string][] = [
   ["Pipelines", "/pipelines"],
   //["Runs", "/runs"],
-  ["Docs", "/"],
-  ["Get help", "/"],
+  //["Docs", "/"],
+  //["Get help", "/"],
 ];
 
 function App() {
