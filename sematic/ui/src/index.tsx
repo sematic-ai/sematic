@@ -16,7 +16,6 @@ root.render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />}>
-        <Redirect to="/runs" />
         <Route path="pipelines" element={<PipelineIndex />} />
         <Route path="pipelines/:calculatorPath" element={<PipelineView />} />
       </Route>

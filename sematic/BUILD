@@ -101,5 +101,5 @@ sematic_py_wheel(
         "Topic :: Scientific/Engineering :: Visualization",
         "Typing :: Typed",
     ],
-    entry_points={"console_scripts": ["sematic = sematic.cli.main:main"]},
+    entry_points={"console_scripts": ["sematic = sematic.cli.main:cli"]},
 )

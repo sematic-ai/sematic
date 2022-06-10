@@ -62,6 +62,7 @@ release: build_ui
 	m2r --overwrite README.md
 	bazel build --stamp //sematic:wheel
 	sleep 1
+	cat bazel-bin/sematic/wheel.name
 	$(eval STAMPED_WHEEL := $(shell cat bazel-bin/sematic/wheel.name))
 	cp -f bazel-bin/sematic/sematic-0.0.2.alpha._BUILD_TIMESTAMP_-py3-none-any.whl /tmp/$(STAMPED_WHEEL)
 	python3 -m twine upload /tmp/$(STAMPED_WHEEL)
