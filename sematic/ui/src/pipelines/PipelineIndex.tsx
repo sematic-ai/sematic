@@ -32,8 +32,6 @@ function RecentStatuses(props: { runs: Array<Run> | undefined }) {
 function PipelineRow(props: { run: Run }) {
   let run = props.run;
 
-  const [error, setError] = useState<Error | undefined>(undefined);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [runs, setRuns] = useState<Array<Run> | undefined>(undefined);
 
   useEffect(() => {
@@ -43,16 +41,9 @@ function PipelineRow(props: { run: Run }) {
 
     fetch("/api/v1/runs?limit=5&filters=" + filters)
       .then((res) => res.json())
-      .then(
-        (result: RunListPayload) => {
-          setRuns(result.content);
-          setIsLoaded(true);
-        },
-        (error) => {
-          setError(error);
-          setIsLoaded(true);
-        }
-      );
+      .then((result: RunListPayload) => {
+        setRuns(result.content);
+      });
   }, [run.calculator_path]);
 
   let startedAt = new Date(run.started_at || run.created_at);

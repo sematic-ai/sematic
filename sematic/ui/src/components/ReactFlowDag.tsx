@@ -5,21 +5,11 @@ import ReactFlow, {
   ReactFlowInstance,
   useNodesState,
   useEdgesState,
-  addEdge,
-  useReactFlow,
   ReactFlowProvider,
-  MarkerType,
   Background,
   BackgroundVariant,
 } from "react-flow-renderer";
-import {
-  Alert,
-  Collapse,
-  Container,
-  lighten,
-  useTheme,
-  Box,
-} from "@mui/material";
+import { Alert, Collapse, Container } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import buildDagLayout from "./utils/buildDagLayout";
 import RunNode from "./RunNode";
@@ -78,8 +68,8 @@ function ReactFlowDag(props: ReactFlowDagProps) {
 
   const [showTip, setShowTip] = useState(false);
 
-  const reactFlowInstance = useReactFlow();
-  const theme = useTheme();
+  //const reactFlowInstance = useReactFlow();
+  //const theme = useTheme();
 
   const getEdgeLabel = useCallback(
     (edge: Edge) => {
@@ -201,13 +191,11 @@ function ReactFlowDag(props: ReactFlowDagProps) {
 
   const onInit = useCallback(
     (instance: ReactFlowInstance) => {
-      console.log(instance.getNodes());
       let orderedNodes = buildDagLayout(
         instance.getNodes(),
         instance.getEdges(),
         (node) => document.getElementById(node.id)
       );
-      console.log(orderedNodes);
       setRFNodes(orderedNodes);
       setRFEdges(instance.getEdges());
     },
