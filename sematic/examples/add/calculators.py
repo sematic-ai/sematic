@@ -61,6 +61,7 @@ def pipeline(a: float, b: float, c: float) -> float:
     `pretty_cool`.
     """
     time.sleep(5)
-    sum1 = add3(a, b, c)
-    sum2 = add3(a, b, c)
-    return add(sum1, sum2)
+    return a + b + c
+    # sum1 = add3(a, b, c)
+    # sum2 = add3(a, b, c)
+    # return add(sum1, sum2)

@@ -8,8 +8,8 @@ import requests
 from sematic.config import get_config
 
 
-def notify_pipeline_start(calculator_path: str):
-    _notify_event("pipeline", "start", {"calculator_path": calculator_path})
+def notify_pipeline_update(calculator_path: str):
+    _notify_event("pipeline", "update", {"calculator_path": calculator_path})
 
 
 def notify_graph_update(run_id: str):

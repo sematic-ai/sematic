@@ -13,21 +13,6 @@ import CalculatorPath from "./CalculatorPath";
 import RunStateChip from "./RunStateChip";
 import Tags from "./Tags";
 
-function getShortCalculatorPath(calculatorPath: string): string {
-  const calculatorPathParts = calculatorPath.split(".");
-  let shortCalculatorPath = calculatorPathParts[calculatorPathParts.length - 1];
-  if (calculatorPathParts.length > 1) {
-    shortCalculatorPath =
-      calculatorPathParts[calculatorPathParts.length - 2] +
-      "." +
-      shortCalculatorPath;
-    if (calculatorPathParts.length > 2) {
-      shortCalculatorPath = "..." + shortCalculatorPath;
-    }
-  }
-  return shortCalculatorPath;
-}
-
 function getColor(futureState: string, theme: Theme): PaletteColor {
   if (futureState === "RESOLVED") {
     return theme.palette.success;
@@ -121,12 +106,13 @@ export default function RunNode(props: NodeProps) {
         }}
       >
         <AlertTitle>{run.name}</AlertTitle>
-        <CalculatorPath calculatorPath={shortCalculatorPath} />
+        {/*<CalculatorPath calculatorPath={shortCalculatorPath} />*/}
         <Box marginTop={1}>
+          {/*
           <Tags
             tags={run.tags}
             chipProps={{ color: getChipColor(run.future_state) }}
-          />
+          />*/}
         </Box>
       </Alert>
       <Handle

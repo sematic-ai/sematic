@@ -1,11 +1,11 @@
 # Standard library
 import datetime
 from typing import Dict, Optional, List, Union, Tuple
-import webbrowser
+import webbrowser  # noqa: F401
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.config import get_config
+from sematic.config import get_config  # noqa: F401
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
@@ -115,15 +115,15 @@ class OfflineResolver(StateMachineResolver):
         super()._future_did_schedule(future)
         root_future = self._futures[0]
         if root_future.id == future.id:
-            api_client.notify_pipeline_start(self._runs[future.id].calculator_path)
+            api_client.notify_pipeline_update(self._runs[future.id].calculator_path)
 
-            webbrowser.open(
-                "{}/pipelines/{}".format(
-                    get_config().server_url,
-                    self._get_run(root_future.id).calculator_path,
-                ),
-                new=0,
-            )
+            # webbrowser.open(
+            #     "{}/pipelines/{}".format(
+            #         get_config().server_url,
+            #         self._get_run(root_future.id).calculator_path,
+            #     ),
+            #     new=0,
+            # )
 
     def _future_did_run(self, future: AbstractFuture) -> None:
         super()._future_did_run(future)
@@ -170,6 +170,18 @@ class OfflineResolver(StateMachineResolver):
         run.failed_at = datetime.datetime.utcnow()
 
         self._save_graph()
+
+    def _notify_pipeline_update(self):
+        root_future = self._futures[0]
+        api_client.notify_pipeline_update(self._runs[root_future.id].calculator_path)
+
+    def _resolution_did_succeed(self) -> None:
+        super()._resolution_did_succeed()
+        self._notify_pipeline_update()
+
+    def _resolution_did_fail(self) -> None:
+        super()._resolution_did_fail()
+        self._notify_pipeline_update()
 
     def _get_run(self, run_id) -> Run:
         # Should refresh from DB for remote exec

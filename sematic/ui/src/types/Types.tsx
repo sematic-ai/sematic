@@ -76,7 +76,6 @@ function TypeView(props: TypeViewProps) {
 }
 
 export function renderType(typeRepr: TypeRepr): JSX.Element {
-  let typeKey = typeRepr[1];
   let componentPair = getComponentPair(typeRepr);
 
   if (componentPair) {
@@ -376,7 +375,7 @@ function DataclassValueView(props: ValueViewProps) {
 }
 
 function TorchDataLoaderValueView(props: ValueViewProps) {
-  let { valueSummary, typeRepr, typeSerialization } = props;
+  let { valueSummary } = props;
 
   return (
     <Table>
