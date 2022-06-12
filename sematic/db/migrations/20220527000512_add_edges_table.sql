@@ -8,8 +8,8 @@ CREATE TABLE edges (
     destination_name TEXT,
     artifact_id character(40),
     parent_id character(32),
-    created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL,
 
     PRIMARY KEY (id),
 
