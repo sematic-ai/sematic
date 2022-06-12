@@ -16,3 +16,12 @@ pytest_test(
         "//sematic/db/models:run",
     ]
 )
+
+pytest_test(
+    name = "test_json_encodable_mixin",
+    srcs = ["test_json_encodable_mixin.py"],
+    deps = [
+        "//sematic/db/tests:fixtures",
+        "//sematic/db/models:run",
+    ]
+)
