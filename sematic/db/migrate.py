@@ -16,6 +16,7 @@ now.
 # Standard library
 import os
 import sqlite3
+from typing import List
 
 # Sematic
 from sematic.config import get_config, SQLITE_FILE
@@ -28,6 +29,12 @@ def _get_conn() -> sqlite3.Connection:
     sqlite_file_path = os.path.join(get_config().config_dir, SQLITE_FILE)
 
     return sqlite3.connect(sqlite_file_path)
+
+
+def _get_migration_files() -> List[str]:
+    migrations_dir = get_config().migrations_dir
+
+    return sorted(os.listdir(migrations_dir))
 
 
 def migrate():
@@ -50,16 +57,16 @@ def migrate():
 
     versions = [row[0] for row in schema_migrations]
 
-    migrations_dir = get_config().migrations_dir
-
-    migration_files = os.listdir(migrations_dir)
+    migration_files = _get_migration_files()
 
     for migration_file in migration_files:
         version = migration_file.split("_")[0]
         if version in versions:
             continue
 
-        with open(os.path.join(migrations_dir, migration_file), "r") as file:
+        with open(
+            os.path.join(get_config().migrations_dir, migration_file), "r"
+        ) as file:
             sql = file.read()
 
         up_sql = sql.split("-- migrate:down")[0].split("-- migrate:up")[1].strip()
