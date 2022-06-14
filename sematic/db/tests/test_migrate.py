@@ -6,7 +6,7 @@ import sqlite3
 import pytest
 
 # Sematic
-from sematic.db.migrate import migrate
+from sematic.db.migrate import migrate, _get_migration_files
 
 
 _MEMORY_CONN = sqlite3.connect(":memory:")
@@ -28,3 +28,26 @@ def test_migrate(_):
         run_count = _MEMORY_CONN.execute("SELECT COUNT(*) from runs;")
 
     assert list(run_count)[0][0] == 0
+
+
+def test_get_migration_files():
+    """
+    Tests that the actual migration files are returned.
+    """
+    migration_files = _get_migration_files()
+
+    assert len(migration_files) > 0
+    assert all(migration_file.endswith(".sql") for migration_file in migration_files)
+
+
+# Make sure return_value is unordered
+@patch(
+    "sematic.db.migrate.os.listdir",
+    return_value=["20220521155336", "20220424062956", "20220522082435"],
+)
+def test_get_migration_files_sorted(_):
+    """
+    Tests that migration files are sorted.
+    """
+    migration_files = _get_migration_files()
+    assert migration_files == ["20220424062956", "20220521155336", "20220522082435"]
