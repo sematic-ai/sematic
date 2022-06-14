@@ -4,7 +4,8 @@ Welcome to Sematic's company handbook.
 
 Here you'll find everything about our company: why we started, culture, values, strategy and roadmap.
 
-Transparency and open cultures is one of our core values, which is why we make this handbook and its processes, our technology and source code available to the public. We see transparency as a way to involve the community to work together to solve problems.
+Transparency and openness are some of our core values. We believe they lead to better outcomes for everyone.
+That is why we make our handbook, our processes, and our source code available to the public.
 
 We also like to share ideas early and often with our community, so we can iterate faster to get better results. 
 
