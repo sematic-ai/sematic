@@ -4,13 +4,13 @@ CREATE TABLE runs (
     future_state TEXT NOT NULL,
     name TEXT,
     calculator_path TEXT,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone,
-    started_at timestamp without time zone,
-    ended_at timestamp without time zone,
-    resolved_at timestamp without time zone,
-    failed_at timestamp without time zone,
-    parent_id character(32), description TEXT, tags TEXT, source_code TEXT, root_id character(32) NOT NULL,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL,
+    started_at timestamp,
+    ended_at timestamp,
+    resolved_at timestamp,
+    failed_at timestamp,
+    parent_id character(32), description TEXT, tags TEXT, source_code TEXT, root_id character(32),
 
     PRIMARY KEY (id)
 );
@@ -18,8 +18,8 @@ CREATE TABLE artifacts (
     -- sha1 hex digest are 40 characters
     id character(40) NOT NULL,
     json_summary JSONB NOT NULL,
-    created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL, type_serialization JSONB NOT NULL,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL, type_serialization JSONB NOT NULL DEFAULT "{}",
 
     PRIMARY KEY (id)
 );
@@ -31,8 +31,8 @@ CREATE TABLE edges (
     destination_name TEXT,
     artifact_id character(40),
     parent_id character(32),
-    created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL,
 
     PRIMARY KEY (id),
 
