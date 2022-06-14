@@ -3,7 +3,8 @@
 sematic_py_lib(
     name = "main_lib",
     srcs = ["main.py", "pipeline.py", "train.py", "data_processing.py", "plots.py"],
-    data = ["requirements.txt"],
+    # TODO: store CSV in the cloud instead of in the wheel
+    data = ["requirements.txt", "data/cirrhosis.csv"],
     deps = [
         "//sematic:init",
     ]
