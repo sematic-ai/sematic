@@ -78,7 +78,7 @@ sematic_py_wheel(
     distribution = "sematic",
     python_tag = "py3",
     platform = "any",
-    version = "0.0.2.alpha.{BUILD_TIMESTAMP}",
+    version = "0.0.2-alpha+{BUILD_TIMESTAMP}",
     description_file = "//:README.rst",
     author = "Sematic AI, Inc.",
     author_email = "emmanuel@sematic.ai",

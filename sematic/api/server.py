@@ -22,6 +22,15 @@ from sematic.config import (
 from sematic.api.wsgi import SematicWSGI
 
 
+@sematic_api.route("/data/<file>")
+def data(file: str):
+    """
+    Endpoint to serve images and large payloads stored on disc.
+    """
+    path = os.path.join(get_config().data_dir, file)
+    return send_file(path)
+
+
 @sematic_api.route("/")
 @sematic_api.route("/<path:path>")
 def index(path=""):

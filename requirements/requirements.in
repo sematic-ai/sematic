@@ -25,10 +25,15 @@ gunicorn
 click
 
 # Examples
-## MNIST
 torch
 torchvision
 torchmetrics
 plotly
 pandas
 pandas-stubs
+seaborn
+matplotlib
+statsmodels
+sklearn
+numpy
+xgboost
