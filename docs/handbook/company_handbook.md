@@ -22,7 +22,7 @@ Inspired by our learnings, we started Sematic and gathered early support from Y 
 
 By speaking with many Data Scientists and ML Engineers across the industry, we made two broad observations:
 
-*  Jupyter Notebooks are the tool of choice for early prototyping and tinkering on new ideas, because of their visual and interactive aspects
+* Jupyter Notebooks are the tool of choice for early prototyping and tinkering on new ideas, because of their visual and interactive aspects
 * Many ML teams are struggling to train or fine-tune new models on their own data, in order to scale their business to new use cases, new regions or cohorts
 
 While we are big fans of Notebooks for exploratory work, the gap between Notebooks and product code is a big leap. What if there was a way to iterate, collaborate, and visualize data directly on a production-ready pipeline? This is where Sematic comes in.
