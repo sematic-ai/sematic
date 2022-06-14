@@ -145,7 +145,7 @@ class Calculator(AbstractCalculator):
                 kwargs[name],
                 type_,
                 error_prefix=(
-                    "Invalid input type for argument {} when calling calculator '{}'."
+                    "Invalid input type for argument {} when calling '{}'."
                 ).format(repr(name), self),
             )
             for name, type_ in self.input_types.items()
@@ -167,7 +167,9 @@ class Calculator(AbstractCalculator):
             The cast output value
         """
         return self.cast_value(
-            value, self.output_type, error_prefix="Invalid output type."
+            value,
+            self.output_type,
+            error_prefix="Invalid output type for '{}'.".format(self),
         )
 
     @staticmethod

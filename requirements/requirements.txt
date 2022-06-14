@@ -26,6 +26,8 @@ click==8.1.3
     #   flask
 cloudpickle==2.0.0
     # via -r requirements/requirements.in
+cycler==0.11.0
+    # via matplotlib
 decorator==5.1.1
     # via ipython
 dnspython==1.16.0
@@ -43,6 +45,8 @@ flask-cors==3.0.10
     # via -r requirements/requirements.in
 flask-socketio==5.2.0
     # via -r requirements/requirements.in
+fonttools==4.33.3
+    # via matplotlib
 greenlet==1.1.2
     # via eventlet
 gunicorn==20.1.0
@@ -61,25 +65,43 @@ jedi==0.18.1
     # via ipython
 jinja2==3.1.2
     # via flask
+kiwisolver==1.4.3
+    # via matplotlib
 markupsafe==2.1.1
     # via jinja2
+matplotlib==3.5.2
+    # via
+    #   -r requirements/requirements.in
+    #   seaborn
 matplotlib-inline==0.1.3
     # via ipython
 numpy==1.22.4
     # via
+    #   matplotlib
     #   pandas
+    #   patsy
+    #   scipy
+    #   seaborn
+    #   statsmodels
     #   torchmetrics
     #   torchvision
 packaging==21.3
     # via
+    #   matplotlib
     #   pytest
+    #   statsmodels
     #   torchmetrics
 pandas==1.4.2
-    # via -r requirements/requirements.in
+    # via
+    #   -r requirements/requirements.in
+    #   seaborn
+    #   statsmodels
 pandas-stubs==1.2.0.60
     # via -r requirements/requirements.in
 parso==0.8.3
     # via jedi
+patsy==0.5.2
+    # via statsmodels
 pexpect==4.8.0
     # via ipython
 pg8000==1.29.1
@@ -87,7 +109,9 @@ pg8000==1.29.1
 pickleshare==0.7.5
     # via ipython
 pillow==9.1.1
-    # via torchvision
+    # via
+    #   matplotlib
+    #   torchvision
 plotly==5.8.0
     # via -r requirements/requirements.in
 pluggy==1.0.0
@@ -105,11 +129,15 @@ py==1.11.0
 pygments==2.12.0
     # via ipython
 pyparsing==3.0.9
-    # via packaging
+    # via
+    #   matplotlib
+    #   packaging
 pytest==7.1.1
     # via -r requirements/requirements.in
 python-dateutil==2.8.2
-    # via pandas
+    # via
+    #   matplotlib
+    #   pandas
 python-engineio==4.3.2
     # via python-socketio
 python-socketio==5.6.0
@@ -123,18 +151,27 @@ requests==2.27.1
     #   torchvision
 responses==0.20.0
     # via -r requirements/requirements.in
+scipy==1.8.1
+    # via
+    #   seaborn
+    #   statsmodels
 scramp==1.4.1
     # via pg8000
+seaborn==0.11.2
+    # via -r requirements/requirements.in
 six==1.16.0
     # via
     #   asttokens
     #   eventlet
     #   flask-cors
+    #   patsy
     #   python-dateutil
 sqlalchemy==1.4.36
     # via -r requirements/requirements.in
 stack-data==0.2.0
     # via ipython
+statsmodels==0.13.2
+    # via -r requirements/requirements.in
 tenacity==8.0.1
     # via plotly
 testing-common-database==2.0.3

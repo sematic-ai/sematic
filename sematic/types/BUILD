@@ -17,6 +17,10 @@ sematic_py_lib(
         "//sematic/types/types/pytorch:init",
         # Does not actually create a dependency on plotly
         "//sematic/types/types/plotly:init",
+        # Does not actually create a dependency on pandas
+        "//sematic/types/types/pandas:init",
+        # Does not actually create a dependency on matplotlib 
+        "//sematic/types/types/matplotlib:init",
     ]
 )
 
