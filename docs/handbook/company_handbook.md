@@ -43,7 +43,7 @@ We want to help companies prototype and productionize ML easier: we believe it s
 
 * *Fun and fast:* we believe you should be able to iterate with as close to vanilla Python and SQL as possible.
 
-* *Easy to collaborate collaborate:* a core part of ML is easy access to visualize your models, metrics and share to others for comments/feedback prior to releases and keep track of all your releases and learnings over time.
+* *Easy to collaborate:* An important part of the ML and DS workflows is to visualize models, datasets, and metrics, and to share those with others for comments and feedback. It's important to keep all these interactions as close to the actual work as possible for documentation.
 
 * *Easier to scale:* a more seamless transition from a working prototype to a reliable production pipeline, that can help you speed up deployments as you learn from customer feedback and improve your data over time, as well as create new pipelines for new use cases and domains.
 
