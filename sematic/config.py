@@ -42,6 +42,21 @@ def _get_base_dir() -> str:
     return os.path.dirname(os.path.realpath(__file__))
 
 
+def _get_data_dir() -> str:
+    """
+    Build the absolute path to the data dir where plots and large payloads
+    are stored.
+    """
+    data_dir = os.path.join(_get_config_dir(), "data")
+
+    try:
+        os.mkdir(data_dir)
+    except FileExistsError:
+        pass
+
+    return data_dir
+
+
 @dataclass
 class Config:
     """
@@ -55,6 +70,7 @@ class Config:
     config_dir: str = _get_config_dir()
     migrations_dir: str = _get_migrations_dir()
     base_dir: str = _get_base_dir()
+    data_dir: str = _get_data_dir()
     # Module containing the `main` function
     examples_entry_point: str = "main"
 

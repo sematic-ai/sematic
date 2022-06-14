@@ -9,6 +9,7 @@ sematic_py_lib(
         # Examples
         # These do not add dependencies on 3rd party packages
         "//sematic/examples/mnist/pytorch:main_lib",
+        "//sematic/examples/liver_cirrhosis:main_lib",
     ]
 )
 
@@ -71,5 +72,6 @@ py_binary(
         ":main_lib",
         # This is to make sure we can test via Bazel
         "//sematic/examples/mnist/pytorch:requirements",
+        "//sematic/examples/liver_cirrhosis:requirements",
     ]
 )

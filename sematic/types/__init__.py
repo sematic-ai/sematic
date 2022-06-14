@@ -16,10 +16,19 @@ from sematic.types.types.float_in_range import FloatInRange  # noqa: F401
 
 
 # PyTorch
-# Only activates if torch is already imported by user
+# Only activates if torch is available
 import sematic.types.types.pytorch  # noqa: F401
 
 
 # Plotly
-# Only activates if plotly is already imported by user
+# Only activates if plotly is available
 import sematic.types.types.plotly  # noqa: F401
+
+
+# Pandas
+# Only activates if pandas is available
+import sematic.types.types.pandas  # noqa: F401
+
+# Matplotlib
+# Only activates if matplotlib is available
+import sematic.types.types.matplotlib  # noqa: F401

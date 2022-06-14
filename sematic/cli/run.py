@@ -72,6 +72,7 @@ def _run_example(example_path: str):
 def run(script_path: str):
     if not server_is_running():
         click.echo("Sematic is not started, issue `sematic start` first.")
+        return
 
     if _is_example(script_path):
         _run_example(script_path)
