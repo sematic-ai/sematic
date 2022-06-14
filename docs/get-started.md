@@ -20,7 +20,7 @@ $ sematic start
 
 That will open the app in your browser.
 
-> At this time, Sematic runs on your local machine. Soon we will enable you to host it in your cloud.
+{% hint style="info" %} At this time, Sematic runs on your local machine. Soon we will enable you to host it in your cloud. {% endhint %}
 
 If you want to stop the app, simpy issue
 
@@ -36,7 +36,7 @@ To run an example pipeline, for example MNIST in PyTorch, issue:
 $ sematic run examples/mnist/pytorch
 ```
 
-> Sematic does not include expensive dependencies such as PyTorch or Pandas out of the box. If they are missing on your machine, Sematic will let you know how to install them.
+{% hint style="info" %} Sematic does not include expensive dependencies such as PyTorch or Pandas out of the box. If they are missing on your machine, Sematic will let you know how to install them. {% endhint %}
 
 The UI should open the Pipeline Page for the MNIST pipeline and you can follow execution and inspect inputs and outputs.
 
