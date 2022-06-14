@@ -5,7 +5,16 @@ import os
 from sematic.examples.liver_cirrhosis.pipeline import pipeline
 
 
-if __name__ == "__main__":
+def main():
+    """
+    Entry point for examples/liver_cirrhosis
+
+    Run with
+
+    ```shell
+    $ sematic run examples/liver_cirrhosis
+    ```
+    """
     csv_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "data", "cirrhosis.csv"
     )
@@ -14,3 +23,7 @@ if __name__ == "__main__":
         name="Liver disease prediction",
         tags=["example", "seaborn", "matplotlib", "pandas"],
     ).resolve()
+
+
+if __name__ == "__main__":
+    main()

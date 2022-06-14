@@ -16,6 +16,15 @@ PIPELINE_CONFIG = PipelineConfig(
 
 
 def main():
+    """
+    Entry point for examples/mnist/pytorch
+
+    Run with
+
+    ```shell
+    $ sematic run examples/mnist/pytorch
+    ```
+    """
     pipeline(PIPELINE_CONFIG).set(
         name="PyTorch MNIST Example", tags=["pytorch", "example", "mnist"]
     ).resolve()
