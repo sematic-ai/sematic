@@ -27,7 +27,7 @@
 ## Project
 
 * [Roadmap]()
-* [Changelog]()
+* [Changelog](changelog.md)
 
 ## Company
 
