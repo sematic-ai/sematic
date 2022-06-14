@@ -41,11 +41,11 @@ In this period we are focused on two things: building the initial product with b
 
 We want to help companies prototype and productionize ML easier: we believe it should be fun, collaborative and easy to scale.
 
-* *Fun and fast:* we believe you should be able to iterate with as close to vanilla Python and SQL as possible.
+* *Fun and fast:* we believe users should be able to iterate with as close to vanilla Python as possible.
 
 * *Easy to collaborate:* An important part of the ML and DS workflows is to visualize models, datasets, and metrics, and to share those with others for comments and feedback. It's important to keep all these interactions as close to the actual work as possible for documentation.
 
-* *Easier to scale:* a more seamless transition from a working prototype to a reliable production pipeline, that can help you speed up deployments as you learn from customer feedback and improve your data over time, as well as create new pipelines for new use cases and domains.
+* *Easier to scale:* a more seamless transition from a working prototype to a reliable production pipeline, that can help users speed up deployments, learn from customer feedback to improve your data over time, as well as create new pipelines for new use cases and domains.
 
 ## Roadmap
 Our roadmap is published on Trello.
