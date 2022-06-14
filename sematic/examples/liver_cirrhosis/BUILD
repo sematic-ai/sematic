@@ -2,7 +2,7 @@
 # included in the main sematic wheel
 sematic_py_lib(
     name = "main_lib",
-    srcs = ["main.py", "pipeline.py"],
+    srcs = ["main.py", "pipeline.py", "train.py", "data_processing.py", "plots.py"],
     data = ["requirements.txt"],
     deps = [
         "//sematic:init",
