@@ -39,7 +39,7 @@ In this period we are focused on two things: building the initial product with b
 
 ## Strategy
 
-We want to help companies prototype and productionize ML easier: we believe it should be fun, collaborative and easy to scale.
+We want to help companies prototype and productionize ML more easily: we believe it should be fun, collaborative and easy to scale.
 
 * *Fun and fast:* we believe users should be able to iterate with as close to vanilla Python as possible.
 
