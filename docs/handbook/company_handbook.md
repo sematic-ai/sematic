@@ -29,8 +29,6 @@ While we are big fans of Notebooks for exploratory work, the gap between Noteboo
 
 Sematic is building an open-source development toolkit to help Data Scientists and ML Engineers prototype and productionize their work in days instead of weeks.
 
-At the same time, we made two broad observations: Data Scientists still rely on Notebooks for the early stages of ML, and many ML teams were attempting to apply new models on their own data, while struggling to scale to new use cases, regions quick enough to meet business deadlines. We set out to help in these areas. While we are big fans of Notebooks for exploratory work and tinkering, we felt that the gap from a Notebook to production code is a big leap. We decided to focus on the middle-ground, a way for Data Scientists and ML Engineers to prototype with a fun, collaborative, and interactive experience while allowing a faster pathway to production ML, in a way that is non-intrusive and lightweight.
-
 ### June - August 2022 (Alpha / Prototype)
 
 In this period we are focused on two things: building the initial product with barebones functionality and listening to Data Scientists and ML Engineers.
