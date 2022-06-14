@@ -10,6 +10,7 @@ flask
 types-requests
 pandas-stubs
 types-psycopg2
+data-science-types
 
 # To generate the wheel
 mistune==0.8.4
