@@ -17,6 +17,9 @@ sematic_py_lib(
         requirement("statsmodels"),
         requirement("seaborn"),
         requirement("matplotlib"),
+        requirement("sklearn"),
+        requirement("xgboost"),
+        requirement("numpy"),
     ]
 )
 

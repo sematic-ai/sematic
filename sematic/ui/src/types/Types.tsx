@@ -173,6 +173,19 @@ function ReprValueView(props: ValueViewProps) {
   );
 }
 
+function StrValueView(props: ValueViewProps) {
+  let repr: string[] = props.valueSummary.split("\n");
+  return (
+    <div>
+      {repr.map((line) => (
+        <div style={{ whiteSpace: "pre" }} key={line}>
+          {line}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function FloatValueView(props: ValueViewProps) {
   return (
     <Typography display="inline" component="span">
@@ -568,6 +581,7 @@ type ComponentPair = {
 
 const TypeComponents: Map<string, ComponentPair> = new Map([
   ["float", { type: TypeView, value: FloatValueView }],
+  ["str", { type: TypeView, value: StrValueView }],
   ["int", { type: TypeView, value: IntValueView }],
   ["bool", { type: TypeView, value: BoolValueView }],
   ["FloatInRange", { type: FloatInRangeTypeView, value: FloatValueView }],
