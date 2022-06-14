@@ -18,7 +18,16 @@ Feedback on the handbook is encouraged.
 
 Sematic was founded by Emmanuel and Jai in June 2022. We met on our first day working at Cruise (self-driving cars) in San Francisco. At Cruise we worked on ML Infrastructure, and together with a great team, developed tools that enabled Cruise's Continuous Learning Machine.
 
-Inspired by our learnings, we applied to YC in Summer 2022 with the idea to develop an open-source developer toolkit for developers to easily create and manage continuous learning machines. However, after talking to many Data Scientists and ML Engineers in the community, we discovered that this problem was experienced by more advanced companies. Instead, we aspired to build a lightweight product to help empower smaller Data Science teams to tinker with and productionize ML easily.
+Inspired by our learnings, we started Sematic and gathered early support from Y Combinator (S22). Our goal is clear: make it painless to prototype and productionize machine learning models and data science pipelines. 
+
+By speaking with many Data Scientists and ML Engineers across the industry, we made two broad observations:
+
+*  Jupyter Notebooks are the tool of choice for early prototyping and tinkering on new ideas, because of their visual and interactive aspects
+* Many ML teams are struggling to train or fine-tune new models on their own data, in order to scale their business to new use cases, new regions or cohorts
+
+While we are big fans of Notebooks for exploratory work, the gap between Notebooks and product code is a big leap. What if there was a way to iterate, collaborate, and visualize data directly on a production-ready pipeline? This is where Sematic comes in.
+
+Sematic is building an open-source development toolkit to help Data Scientists and ML Engineers prototype and productionize their work in days instead of weeks.
 
 At the same time, we made two broad observations: Data Scientists still rely on Notebooks for the early stages of ML, and many ML teams were attempting to apply new models on their own data, while struggling to scale to new use cases, regions quick enough to meet business deadlines. We set out to help in these areas. While we are big fans of Notebooks for exploratory work and tinkering, we felt that the gap from a Notebook to production code is a big leap. We decided to focus on the middle-ground, a way for Data Scientists and ML Engineers to prototype with a fun, collaborative, and interactive experience while allowing a faster pathway to production ML, in a way that is non-intrusive and lightweight.
 
