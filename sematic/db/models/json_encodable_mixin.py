@@ -33,7 +33,18 @@ def _to_json_encodable(value, column):
             return base64.b64encode(value).decode("ascii")
 
     if isinstance(value, datetime.datetime):
-        return value.isoformat()
+        # SQLite does not store timezone
+        utc_value = datetime.datetime(
+            value.year,
+            value.month,
+            value.day,
+            value.hour,
+            value.minute,
+            value.second,
+            value.microsecond,
+            tzinfo=datetime.timezone.utc,
+        )
+        return utc_value.isoformat()
 
     if isinstance(value, enum.Enum):
         return value.value
