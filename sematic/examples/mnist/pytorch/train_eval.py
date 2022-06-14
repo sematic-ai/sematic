@@ -94,8 +94,8 @@ def test(model: nn.Module, device: torch.device, test_loader: DataLoader):
 
     df = pandas.DataFrame(
         {
-            "precision": torch.cat(precision),
-            "recall": torch.cat(recall),
+            "precision": list(torch.cat(precision)),
+            "recall": list(torch.cat(recall)),
             "class": classes,
         }
     )

@@ -9,6 +9,14 @@ import TableRow from "@mui/material/TableRow";
 import TableBody from "@mui/material/TableBody";
 import Chip from "@mui/material/Chip";
 import Plotly from "plotly.js-basic-dist";
+import Zoom from "react-medium-image-zoom";
+import "react-medium-image-zoom/dist/styles.css";
+import DataEditor, {
+  Item,
+  GridCell,
+  GridColumn,
+  GridCellKind,
+} from "@glideapps/glide-data-grid";
 
 import createPlotlyComponent from "react-plotly.js/factory";
 const Plot = createPlotlyComponent(Plotly);
@@ -428,6 +436,131 @@ function PlotlyFigureValueView(props: ValueViewProps) {
   return <Plot data={data} layout={layout} config={config} />;
 }
 
+function MatplotlibFigureValueView(props: ValueViewProps) {
+  let { valueSummary } = props;
+  let { path } = valueSummary;
+  return (
+    <Zoom>
+      <img src={path} width={"100%"} />
+    </Zoom>
+  );
+}
+
+function DataFrameTable(props: {
+  dataframe: { [k: string]: { [v: string]: any } };
+  dtypes: [string, string][];
+  index: any[];
+}) {
+  let { dataframe, dtypes, index } = props;
+
+  let indexColumn: { [v: string]: any } = {};
+  index.forEach((i) => (indexColumn[i] = i));
+  dataframe = { index: indexColumn, ...dataframe };
+
+  dtypes = [["index", "index"], ...dtypes];
+
+  let length = 0;
+  const entries = Object.entries(dataframe);
+  if (entries.length > 0) {
+    length = Object.entries(entries[0][1]).length;
+  }
+
+  const orderedCols: string[] = [];
+  const dtypesByColumn: Map<string, string> = new Map();
+  const columns: GridColumn[] = [];
+
+  Array.from(dtypes).forEach((value: [string, string]) => {
+    orderedCols.push(value[0]);
+    columns.push({ id: value[0], title: value[0] });
+    dtypesByColumn.set(value[0], value[1]);
+  });
+
+  const getContent = React.useCallback((cell: Item): GridCell => {
+    const [col, row] = cell;
+    console.log(col, row);
+    const column = orderedCols[col];
+    console.log(column);
+    const dataRow = dataframe[column];
+    console.log(dataRow);
+    const d = dataRow[index[row]];
+    console.log(d);
+    let kind: GridCellKind = GridCellKind.Text;
+    let dtype = dtypesByColumn.get(column);
+    if (dtype?.startsWith("int") || dtype?.startsWith("float")) {
+      kind = GridCellKind.Number;
+    } else if (dtype === "bool") {
+      kind = GridCellKind.Boolean;
+    } else if (dtype === "index") {
+      kind = GridCellKind.RowID;
+    }
+    return {
+      kind: kind,
+      allowOverlay: false,
+      displayData: d.toString(),
+      data: d.toString(),
+    };
+  }, []);
+
+  return (
+    <DataEditor getCellContent={getContent} columns={columns} rows={length} />
+  );
+}
+
+function DataFrameValueView(props: ValueViewProps) {
+  let { valueSummary } = props;
+  let { dataframe, describe, truncated, shape, index } = valueSummary;
+  let dtypes: [string, string][] = valueSummary["dtypes"];
+
+  let describeDtypes: [string, string][] = Object.entries(describe).map(
+    (field) => [field[0], "float64"]
+  );
+
+  const describeIndex = [
+    "count",
+    "mean",
+    "std",
+    "min",
+    "25%",
+    "50%",
+    "75%",
+    "max",
+  ];
+
+  return (
+    <>
+      <Box marginTop={5}>
+        <Typography variant="h6">Dataframe shape</Typography>
+        <Box marginTop={5}>
+          <Typography>
+            {shape[0]} rows &times; {shape[1]} columns
+          </Typography>
+        </Box>
+      </Box>
+      <Box marginTop={10}>
+        <Typography variant="h6">
+          Dataframe {truncated ? "preview" : ""}
+        </Typography>
+        <Box marginTop={5}>
+          <DataFrameTable dataframe={dataframe} dtypes={dtypes} index={index} />
+          {truncated && (
+            <Typography>... and {shape[0] - 5} rows not shown.</Typography>
+          )}
+        </Box>
+      </Box>
+      <Box marginTop={10}>
+        <Typography variant="h6">Describe</Typography>
+        <Box marginTop={5}>
+          <DataFrameTable
+            dataframe={describe}
+            dtypes={describeDtypes}
+            index={describeIndex}
+          />
+        </Box>
+      </Box>
+    </>
+  );
+}
+
 type ComponentPair = {
   type: (props: TypeViewProps) => JSX.Element;
   value: (props: ValueViewProps) => JSX.Element;
@@ -449,6 +582,17 @@ const TypeComponents: Map<string, ComponentPair> = new Map([
     "plotly.graph_objs._figure.Figure",
     { type: TypeView, value: PlotlyFigureValueView },
   ],
+  [
+    "matplotlib.figure.Figure",
+    { type: TypeView, value: MatplotlibFigureValueView },
+  ],
+  [
+    "pandas.core.frame.DataFrame",
+    {
+      type: TypeView,
+      value: DataFrameValueView,
+    },
+  ],
 ]);
 
 function getComponentPair(typeRepr: TypeRepr) {
@@ -456,6 +600,7 @@ function getComponentPair(typeRepr: TypeRepr) {
   if (typeRepr[0] === "class") {
     typeKey = typeRepr[2]["import_path"] + "." + typeKey;
   }
+
   let componentPair = TypeComponents.get(typeKey);
 
   if (typeRepr[0] === "dataclass" && !componentPair) {
