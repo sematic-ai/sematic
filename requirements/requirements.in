@@ -34,3 +34,6 @@ pandas-stubs
 seaborn
 matplotlib
 statsmodels
+sklearn
+numpy
+xgboost

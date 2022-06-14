@@ -2,3 +2,6 @@ pandas
 seaborn
 matplotlib
 statsmodels
+sklearn
+xgboost
+numpy
