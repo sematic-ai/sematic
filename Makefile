@@ -55,14 +55,13 @@ start:
 	cd sematic/api; docker compose up
 
 wheel:
+	rm -f bazel-bin/sematic/*.whl
 	m2r --overwrite README.md
 	bazel build //sematic:wheel
 
-release: build_ui
-	m2r --overwrite README.md
-	bazel build --stamp //sematic:wheel
-	sleep 1
-	cat bazel-bin/sematic/wheel.name
-	$(eval STAMPED_WHEEL := $(shell cat bazel-bin/sematic/wheel.name))
-	cp -f bazel-bin/sematic/sematic-0.0.2.alpha._BUILD_TIMESTAMP_-py3-none-any.whl /tmp/$(STAMPED_WHEEL)
-	python3 -m twine upload /tmp/$(STAMPED_WHEEL)
+release: build_ui wheel
+	# sleep 1
+	# cat bazel-bin/sematic/wheel.name
+	# $(eval STAMPED_WHEEL := $(shell cat bazel-bin/sematic/wheel.name))
+	# cp -f bazel-bin/sematic/sematic-0.0.2.alpha._BUILD_TIMESTAMP_-py3-none-any.whl /tmp/$(STAMPED_WHEEL)
+	python3 -m twine upload --repository testpypi bazel-bin/sematic/*.whl

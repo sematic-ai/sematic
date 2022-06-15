@@ -1,4 +1,4 @@
-* 0.0.3-alpha
+* 0.0.3-alpha.2
     * [bugfix] Fix date display to cnvert from UTC
     * [bugfix] Fix migration bootstrapping to guarantee order of migrations
     * [feature] UI support for `pandas.DataFrame`
