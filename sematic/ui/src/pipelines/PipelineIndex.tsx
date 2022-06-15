@@ -10,8 +10,10 @@ import Link from "@mui/material/Link";
 import { RunListPayload } from "../Payloads";
 import RunStateChip from "../components/RunStateChip";
 import CircleOutlined from "@mui/icons-material/CircleOutlined";
-import Tooltip from "@mui/material/Tooltip";
 import ReactTimeAgo from "react-time-ago";
+import { Alert, AlertTitle, Card, Container, useTheme } from "@mui/material";
+import { SiDiscord, SiReadthedocs } from "react-icons/si";
+import { InfoOutlined } from "@mui/icons-material";
 
 function RecentStatuses(props: { runs: Array<Run> | undefined }) {
   function statusChip(index: number) {
@@ -59,28 +61,16 @@ function PipelineRow(props: { run: Run }) {
     <>
       <TableRow key={run.id}>
         <TableCell key="name">
-          <Link href={"/pipelines/" + run.calculator_path} underline="hover">
-            <Typography variant="h6">{run.name}</Typography>
-          </Link>
-          <Typography fontSize="small" color="GrayText">
-            <code>{run.calculator_path}</code>
-          </Typography>
-        </TableCell>
-        <TableCell key="description">
-          <Box
-            maxWidth={400}
-            sx={{
-              textOverflow: "ellipsis",
-              overflow: "hidden",
-              whiteSpace: "nowrap",
-            }}
-            component="div"
-          >
-            <Tooltip title={run.description || ""} placement="bottom-start">
-              <Typography variant="caption" color="GrayText">
-                {run.description}
-              </Typography>
-            </Tooltip>
+          <Box sx={{ mb: 3 }}>
+            <Link
+              href={"/new/pipelines/" + run.calculator_path}
+              underline="hover"
+            >
+              <Typography variant="h6">{run.name}</Typography>
+            </Link>
+            <Typography fontSize="small" color="GrayText">
+              <code>{run.calculator_path}</code>
+            </Typography>
           </Box>
           <Tags tags={run.tags || []} />
         </TableCell>
@@ -88,8 +78,9 @@ function PipelineRow(props: { run: Run }) {
           {<ReactTimeAgo date={new Date(run.created_at)} locale="en-US" />}
           <Typography fontSize="small" color="GrayText">
             {Number.parseFloat((durationMS / 1000).toString()).toFixed(1)}{" "}
-            seconds on&nbsp;
-            {new Date(run.created_at).toLocaleString()}
+            seconds
+            {/*on&nbsp;
+            {new Date(run.created_at).toLocaleString()*/}
           </Typography>
         </TableCell>
         <TableCell key="status" width={120}>
@@ -101,20 +92,38 @@ function PipelineRow(props: { run: Run }) {
 }
 
 function PipelineIndex() {
+  const theme = useTheme();
   return (
-    <>
-      <Typography variant="h4" component="h2">
-        Pipelines
-      </Typography>
-      <RunList
-        columns={["Name", "Description", "Last run", "Status"]}
-        groupBy="calculator_path"
-        filters={{ AND: [{ parent_id: { eq: null } }] }}
-        emptyAlert="No pipelines."
-      >
-        {(run: Run) => <PipelineRow run={run} key={run.id} />}
-      </RunList>
-    </>
+    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 300px" }}>
+      <Box sx={{ gridColumn: 1 }}>
+        <Container sx={{ pt: 15 }}>
+          <Box sx={{ mx: 5 }}>
+            <Box sx={{ mb: 10 }}>
+              <Typography variant="h2" component="h2">
+                Your pipelines
+              </Typography>
+            </Box>
+            <RunList
+              columns={["Name", "Last run", "Status"]}
+              groupBy="calculator_path"
+              filters={{ AND: [{ parent_id: { eq: null } }] }}
+              emptyAlert="No pipelines."
+            >
+              {(run: Run) => <PipelineRow run={run} key={run.id} />}
+            </RunList>
+          </Box>
+        </Container>
+      </Box>
+      <Box sx={{ gridColumn: 2, pr: 5, pt: 45 }}>
+        <Alert severity="warning" icon={<InfoOutlined />}>
+          <AlertTitle>Your latest pipelines are listed here</AlertTitle>
+          <p>
+            Pipelines are identified by the import path of their entry point,
+            which is the function you called <code>.resolve()</code> on.
+          </p>
+        </Alert>
+      </Box>
+    </Box>
   );
 }
 
