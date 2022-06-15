@@ -245,7 +245,7 @@ function ReactFlowDag(props: ReactFlowDagProps) {
           onInit={onInit}
           zoomOnScroll={false}
           //onConnect={onConnect}
-          //panOnScroll
+          panOnScroll
           nodesDraggable={false}
           onNodeClick={onNodeClick}
         >
