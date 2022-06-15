@@ -14,17 +14,41 @@ Sematic is an open-source development toolkit to help Data Scientists and Machin
 Learning (ML) Engineers prototype and productionize ML pipelines in days not
 weeks.
 
-Development
------------
+Find our docs at `docs.sematic.ai <https://docs.sematic.ai>`_.
 
-Developer guidelines
-^^^^^^^^^^^^^^^^^^^^
+Installation
+------------
 
-Running tests
-^^^^^^^^^^^^^
-
-Run tests with Bazel (install instructions).
+Instal Sematic with
 
 .. code-block:: shell
 
-   $ bazel test //sematic/...
+   $ pip install sematic
+
+Usage
+-----
+
+Start the app with
+
+.. code-block:: shell
+
+   $ sematic start
+
+Then run an example pipeline with
+
+.. code-block:: shell
+
+   $ sematic run examples/mnist/pytorch
+
+Or point to your own pipeline
+
+.. code-block:: shell
+
+   $ sematic run pipeline.py
+
+See our docs at `docs.sematic.ai <https://docs.sematic.ai>`_\ , and join us on (Discord)[https://discord.gg/PFCpatvy].
+
+Contribute
+----------
+
+See our Contributor guide at `docs.sematic.ai <https://docs.sematic.ai>`_.
