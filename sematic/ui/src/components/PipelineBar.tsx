@@ -74,11 +74,13 @@ export default function PipelineBar(props: {
       if (args.calculator_path === calculatorPath) {
         fetchLatestRuns(calculatorPath, (runs) => {
           setLatestRuns(runs);
-          setHasNewRun(true);
+          if (runs[0].id !== latestRuns[0].id) {
+            setHasNewRun(true);
+          }
         });
       }
     });
-  }, []);
+  }, [latestRuns]);
 
   const onSelect = useCallback(
     (event: SelectChangeEvent) => {
