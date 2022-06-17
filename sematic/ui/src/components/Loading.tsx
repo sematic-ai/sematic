@@ -8,7 +8,7 @@ function Loading(props: { isLoaded: boolean; error?: Error }) {
   }
   if (!props.isLoaded) {
     return (
-      <Box textAlign="center">
+      <Box sx={{ textAlign: "center" }}>
         <CircularProgress sx={{ marginY: 5 }} />
       </Box>
     );
