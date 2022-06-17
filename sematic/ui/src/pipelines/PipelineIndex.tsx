@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RunList } from "../components/RunList";
 import Tags from "../components/Tags";
 import { Run } from "../Models";
@@ -16,6 +16,7 @@ import en from "javascript-time-ago/locale/en.json";
 import { Alert, AlertTitle, Container, useTheme } from "@mui/material";
 import { InfoOutlined } from "@mui/icons-material";
 import { RunTime } from "../components/RunTime";
+import { pipelineSocket } from "../utils";
 
 TimeAgo.addDefaultLocale(en);
 
@@ -49,7 +50,6 @@ function PipelineRow(props: { run: Run }) {
       });
   }, [run.calculator_path]);
 
-  let startedAt = new Date(run.started_at || run.created_at);
   let endedAt = new Date();
   let endTimeString = run.failed_at || run.resolved_at;
   if (endTimeString) {
@@ -84,6 +84,14 @@ function PipelineRow(props: { run: Run }) {
 
 function PipelineIndex() {
   const theme = useTheme();
+
+  const triggerRefresh = useCallback((refreshCallback: () => void) => {
+    pipelineSocket.removeAllListeners();
+    pipelineSocket.on("update", (args) => {
+      refreshCallback();
+    });
+  }, []);
+
   return (
     <Box sx={{ display: "grid", gridTemplateColumns: "1fr 300px" }}>
       <Box sx={{ gridColumn: 1 }}>
@@ -99,6 +107,7 @@ function PipelineIndex() {
               groupBy="calculator_path"
               filters={{ AND: [{ parent_id: { eq: null } }] }}
               emptyAlert="No pipelines."
+              triggerRefresh={triggerRefresh}
             >
               {(run: Run) => <PipelineRow run={run} key={run.id} />}
             </RunList>
