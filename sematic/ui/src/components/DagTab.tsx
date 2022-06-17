@@ -18,7 +18,7 @@ import Tags from "./Tags";
 import Docstring from "./Docstring";
 import { Alert } from "@mui/material";
 
-type IOArtifacts = {
+export type IOArtifacts = {
   input: Map<string, Artifact | undefined>;
   output: Map<string, Artifact | undefined>;
 };
@@ -207,12 +207,13 @@ function getDefaultTab(future_state: string): string {
   return "input";
 }
 
-function RunTabs(props: { run: Run; artifacts: IOArtifacts | undefined }) {
+export function RunTabs(props: {
+  run: Run;
+  artifacts: IOArtifacts | undefined;
+}) {
   const { run, artifacts } = props;
 
-  const [selectedTab, setSelectedTab] = useState(
-    getDefaultTab(run.future_state)
-  );
+  const [selectedTab, setSelectedTab] = useState("output");
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setSelectedTab(newValue);
@@ -225,9 +226,7 @@ function RunTabs(props: { run: Run; artifacts: IOArtifacts | undefined }) {
           <TabList onChange={handleChange} aria-label="Selected run tabs">
             <Tab label="Input" value="input" />
             <Tab label="Output" value="output" />
-            <Tab label="Documentation" value="documentation" />
             <Tab label="Source" value="source" />
-            <Tab label="Comments" value="comments" disabled />
             <Tab label="Logs" value="logs" disabled />
           </TabList>
         </Box>

@@ -9,24 +9,25 @@ import { Run } from "../Models";
 import Link from "@mui/material/Link";
 import { RunListPayload } from "../Payloads";
 import RunStateChip from "../components/RunStateChip";
-import CircleOutlined from "@mui/icons-material/CircleOutlined";
+import TimeAgo from "javascript-time-ago";
+
 import ReactTimeAgo from "react-time-ago";
-import { Alert, AlertTitle, Card, Container, useTheme } from "@mui/material";
-import { SiDiscord, SiReadthedocs } from "react-icons/si";
+import en from "javascript-time-ago/locale/en.json";
+import { Alert, AlertTitle, Container, useTheme } from "@mui/material";
 import { InfoOutlined } from "@mui/icons-material";
+import { RunTime } from "../components/RunTime";
+
+TimeAgo.addDefaultLocale(en);
 
 function RecentStatuses(props: { runs: Array<Run> | undefined }) {
+  let state: string | undefined = undefined;
   function statusChip(index: number) {
-    if (props.runs === undefined) {
-      return <RunStateChip key={index} />;
-    }
-    if (props.runs.length > index) {
-      return (
-        <RunStateChip state={props.runs[index].future_state} key={index} />
-      );
+    if (props.runs && props.runs.length > index) {
+      state = props.runs[index].future_state;
     } else {
-      return <CircleOutlined color="disabled" key={index} />;
+      state = "undefined";
     }
+    return <RunStateChip state={state} key={index} />;
   }
   return <>{[...Array(5)].map((e, i) => statusChip(i))}</>;
 }
@@ -55,17 +56,12 @@ function PipelineRow(props: { run: Run }) {
     endedAt = new Date(endTimeString);
   }
 
-  let durationMS: number = endedAt.getTime() - startedAt.getTime();
-
   return (
     <>
       <TableRow key={run.id}>
         <TableCell key="name">
           <Box sx={{ mb: 3 }}>
-            <Link
-              href={"/new/pipelines/" + run.calculator_path}
-              underline="hover"
-            >
+            <Link href={"/pipelines/" + run.calculator_path} underline="hover">
               <Typography variant="h6">{run.name}</Typography>
             </Link>
             <Typography fontSize="small" color="GrayText">
@@ -76,12 +72,7 @@ function PipelineRow(props: { run: Run }) {
         </TableCell>
         <TableCell key="last-run">
           {<ReactTimeAgo date={new Date(run.created_at)} locale="en-US" />}
-          <Typography fontSize="small" color="GrayText">
-            {Number.parseFloat((durationMS / 1000).toString()).toFixed(1)}{" "}
-            seconds
-            {/*on&nbsp;
-            {new Date(run.created_at).toLocaleString()*/}
-          </Typography>
+          <RunTime run={run} />
         </TableCell>
         <TableCell key="status" width={120}>
           <RecentStatuses runs={runs} />

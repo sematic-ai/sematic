@@ -19,6 +19,7 @@ import DataEditor, {
 } from "@glideapps/glide-data-grid";
 
 import createPlotlyComponent from "react-plotly.js/factory";
+import { Stack } from "@mui/material";
 const Plot = createPlotlyComponent(Plotly);
 
 type TypeCategory = "builtin" | "typing" | "dataclass" | "generic" | "class";
@@ -372,25 +373,30 @@ function DataclassValueView(props: ValueViewProps) {
   }
 
   return (
+    <Stack>
+      {Object.entries(valueSummary.values).map<React.ReactNode>(
+        ([name, fieldSummary]) => (
+          <Box
+            key={name}
+            sx={{ borderBottom: 1, borderColor: "#f0f0f0", py: 5 }}
+          >
+            <Typography variant="h6">{name}</Typography>
+            <Box sx={{ mt: 3, pl: 5 }}>
+              {renderSummary(
+                valueSummary.types[name] || props.typeSerialization,
+                fieldSummary,
+                valueSummary.types[name]?.type || typeFields[name].type
+              )}
+            </Box>
+          </Box>
+        )
+      )}
+    </Stack>
+  );
+
+  return (
     <Table>
-      <TableBody>
-        {Object.entries(valueSummary.values).map<React.ReactNode>(
-          ([name, fieldSummary]) => (
-            <TableRow key={name}>
-              <TableCell sx={{ verticalAlign: "top" }}>
-                <b>{name}</b>
-              </TableCell>
-              <TableCell>
-                {renderSummary(
-                  valueSummary.types[name] || props.typeSerialization,
-                  fieldSummary,
-                  valueSummary.types[name]?.type || typeFields[name].type
-                )}
-              </TableCell>
-            </TableRow>
-          )
-        )}
-      </TableBody>
+      <TableBody></TableBody>
     </Table>
   );
 }
