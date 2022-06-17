@@ -15,7 +15,7 @@ function SourceCode(props: { run: Run }) {
         language="python"
         style={docco}
         showLineNumbers
-        customStyle={{ fontSize: 14 }}
+        customStyle={{ fontSize: 12 }}
       >
         {run.source_code}
       </SyntaxHighlighter>
