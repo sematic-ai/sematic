@@ -14,7 +14,12 @@ from sematic.config import get_config
 
 @cli.command("new", short_help="Create new project")
 @click.argument("project_name", type=click.STRING)
-@click.option("--from", "from_example", type=click.STRING)
+@click.option(
+    "--from",
+    "from_example",
+    type=click.STRING,
+    help="Create a new project from an example template",
+)
 def new(project_name: str, from_example: Optional[str]):
     """
     Create a new project with a scaffold or from an existing example.
