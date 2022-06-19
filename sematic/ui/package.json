@@ -20,7 +20,7 @@
     "@types/react-dom": "^18.0.3",
     "dagre": "^0.8.5",
     "javascript-time-ago": "^2.3.13",
-    "plotly.js-basic-dist": "^2.12.1",
+    "plotly.js-cartesian-dist": "^2.12.1",
     "react": "^18.1.0",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.1.0",
@@ -66,7 +66,7 @@
   },
   "devDependencies": {
     "@types/dagre": "^0.7.47",
-    "@types/plotly.js-basic-dist": "^1.54.0",
+    "@types/plotly.js": "^1.54.22",
     "@types/react-copy-to-clipboard": "^5.0.2",
     "@types/react-plotly.js": "^2.5.0",
     "@types/react-syntax-highlighter": "^15.5.1"

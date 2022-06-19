@@ -4,7 +4,7 @@
 # included in the main sematic wheel
 sematic_py_lib(
     name = "main_lib",
-    srcs = ["main.py", "calculators.py", "train_eval.py"],
+    srcs = ["main.py", "pipeline.py", "train_eval.py"],
     data = ["requirements.txt"],
     deps = [
         "//sematic:init",
@@ -20,6 +20,7 @@ sematic_py_lib(
         requirement("torchmetrics"),
         requirement("plotly"),
         requirement("pandas"),
+        requirement("sklearn"),
     ]
 )
 

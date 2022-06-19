@@ -8,7 +8,7 @@ import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import TableBody from "@mui/material/TableBody";
 import Chip from "@mui/material/Chip";
-import Plotly from "plotly.js-basic-dist";
+import Plotly from "plotly.js-cartesian-dist";
 import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import DataEditor, {
