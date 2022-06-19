@@ -1,8 +1,11 @@
 import { Box, TextField, useTheme } from "@mui/material";
-import Messages from "./Messages";
+import { useState } from "react";
+import Notes from "./Notes";
 
-export default function MessagePanel() {
+export default function NotesPanel(props: { calculatorPath: string }) {
   const theme = useTheme();
+
+  const [messages, setMessages] = useState([]);
 
   return (
     <Box
@@ -16,7 +19,7 @@ export default function MessagePanel() {
       }}
     >
       <Box sx={{ gridRow: 1, display: "flex" }}>
-        <Messages />
+        <Notes calculatorPath={props.calculatorPath} />
       </Box>
       <Box sx={{ gridRow: 2 }}>
         <TextField
