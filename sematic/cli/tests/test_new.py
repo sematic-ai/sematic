@@ -29,7 +29,14 @@ def test_new(project_name):
 
         files = os.listdir(os.path.join(os.getcwd(), project_name))
 
-    assert set(files) == {"main.py", "__init__.py", "requirements.txt", "pipeline.py"}
+    assert set(files) == {
+        "main.py",
+        "__init__.py",
+        "requirements.txt",
+        "pipeline.py",
+        # Will not be present when called from the CLI
+        "BUILD",
+    }
 
 
 def test_new_already_exists(project_name):
