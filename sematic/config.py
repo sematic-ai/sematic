@@ -42,6 +42,16 @@ def _get_base_dir() -> str:
     return os.path.dirname(os.path.realpath(__file__))
 
 
+EXAMPLES_DIR = "examples"
+
+
+def _get_examples_dir() -> str:
+    """
+    Build absolute path to the directory holding examples.
+    """
+    return os.path.join(_get_base_dir(), EXAMPLES_DIR)
+
+
 def _get_data_dir() -> str:
     """
     Build the absolute path to the data dir where plots and large payloads
@@ -70,6 +80,8 @@ class Config:
     config_dir: str = _get_config_dir()
     migrations_dir: str = _get_migrations_dir()
     base_dir: str = _get_base_dir()
+    examples_dir: str = _get_examples_dir()
+    project_template_dir: str = "{}/template".format(_get_examples_dir())
     data_dir: str = _get_data_dir()
     # Module containing the `main` function
     examples_entry_point: str = "main"

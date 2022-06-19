@@ -9,3 +9,13 @@ pytest_test(
         requirement("click")
     ]
 )
+
+pytest_test(
+    name = "test_new",
+    srcs = ["test_new.py"],
+    deps = [
+        "//sematic/cli:new",
+        "//sematic/cli:examples_utils",
+        requirement("click")
+    ]
+)

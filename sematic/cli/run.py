@@ -9,21 +9,7 @@ import click
 from sematic.config import get_config
 from sematic.cli.cli import cli
 from sematic.cli.process_utils import server_is_running
-
-
-def _is_example(script_path: str):
-    if not script_path.startswith("examples"):
-        return False
-    if script_path.endswith(".py"):
-        return False
-
-    return os.path.exists(
-        os.path.join(
-            get_config().base_dir,
-            script_path,
-            "{}.py".format(get_config().examples_entry_point),
-        )
-    )
+from sematic.cli.examples_utils import is_example
 
 
 def _example_path_to_import_path(script_path: str) -> str:
@@ -74,5 +60,5 @@ def run(script_path: str):
         click.echo("Sematic is not started, issue `sematic start` first.")
         return
 
-    if _is_example(script_path):
+    if is_example(script_path):
         _run_example(script_path)
