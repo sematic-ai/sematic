@@ -18,8 +18,8 @@ export default function buildDagLayout(
       return [
         node.id,
         {
-          height: (element?.clientHeight || 0) + 2,
-          width: (element?.clientWidth || 0) + 2,
+          height: element?.clientHeight || 0,
+          width: (element?.clientWidth || 0) + 5,
         },
       ];
     })

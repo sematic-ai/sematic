@@ -19,8 +19,9 @@ export default function RunPanel(props: {
   selectedPanel: string;
   graph: Graph;
   selectedRun: Run;
+  onSelectRun: (run: Run) => void;
 }) {
-  const { selectedPanel, graph, selectedRun } = props;
+  const { selectedPanel, graph, selectedRun, onSelectRun } = props;
 
   const runsById = useMemo(() => graph.runs, [graph]);
 
@@ -81,11 +82,7 @@ export default function RunPanel(props: {
             runs={Array.from(runsById.values())}
             edges={edges}
             artifactsById={artifactsById}
-            onSelectRun={(run) => {
-              //if (run.id !== selectedRun.id) {
-              //setSelectedRunId(run.id);
-              //}
-            }}
+            onSelectRun={onSelectRun}
             selectedRunId={selectedRun.id}
           />
         </>
