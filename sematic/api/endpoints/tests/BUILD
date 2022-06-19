@@ -10,14 +10,14 @@ pytest_test(
 )
 
 pytest_test(
-    name = "test_comments",
-    srcs = ["test_comments.py"],
+    name = "test_notes",
+    srcs = ["test_notes.py"],
     deps = [
         "//sematic/api/tests:fixtures",
         "//sematic/db/tests:fixtures",
         "//sematic/db:queries",
         "//sematic/db/models:run",
-        "//sematic/db/models:comment",
+        "//sematic/db/models:note",
         requirement("flask"),
         requirement("sqlalchemy"),
     ]
