@@ -60,7 +60,6 @@ export default function PipelinePanels(props: { rootRun: Run }) {
   );
 
   useEffect(() => {
-    setSelectedRun(rootRun);
     if (selectedRun && runs) {
       runs.forEach((run) => {
         if (run.calculator_path === selectedRun.calculator_path) {
