@@ -47,11 +47,11 @@ def sematic_py_lib(name, srcs, deps, visibility = None, data = None):
     )
 
 
-def sematic_example(name, requirements = None):
+def sematic_example(name, requirements = None, data = None):
     sematic_py_lib(
         name = "{}_lib".format(name),
         srcs = native.glob(["*.py", "**/*.py"]),
-        data = ["requirements.txt"],
+        data = ["requirements.txt"] + (data or []),
         deps = [
             "//sematic:init",
         ]
@@ -67,7 +67,7 @@ def sematic_example(name, requirements = None):
 
     py_binary(
         name = name,
-        main = 'main.py',
+        main = "main.py",
         srcs = ["main.py"],
         deps = [
             ":{}_lib".format(name),

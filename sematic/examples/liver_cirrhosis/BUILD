@@ -1,37 +1,13 @@
-# This should have no external dependencies as it will be
-# included in the main sematic wheel
-sematic_py_lib(
-    name = "main_lib",
-    srcs = ["main.py", "pipeline.py", "train.py", "data_processing.py", "plots.py"],
-    # TODO: store CSV in the cloud instead of in the wheel
-    data = ["requirements.txt", "data/cirrhosis.csv"],
-    deps = [
-        "//sematic:init",
-    ]
-)
-
-sematic_py_lib(
-    name = "requirements",
-    srcs = ["main.py"],
-    deps = [
-        requirement("pandas"),
-        requirement("statsmodels"),
-        requirement("seaborn"),
-        requirement("matplotlib"),
-        requirement("sklearn"),
-        requirement("xgboost"),
-        requirement("numpy"),
-    ]
-)
-
-# This can contain external dependencies as it will not
-# be included in the main wheel.
-py_binary(
-    name = "main",
-    main = "main.py",
-    srcs = ["main.py"],
-    deps = [
-        ":main_lib",
-        ":requirements",
+sematic_example(
+    name = "liver_cirrhosis",
+    data = ["data/cirrhosis.csv"],
+    requirements = [
+        "pandas",
+        "statsmodels",
+        "seaborn",
+        "matplotlib",
+        "sklearn",
+        "xgboost",
+        "numpy",
     ]
 )
