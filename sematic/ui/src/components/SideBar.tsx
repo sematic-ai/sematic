@@ -46,8 +46,14 @@ export default function SideBar() {
           <Typography fontSize={10}>Docs</Typography>
         </Box>
         <Box>
-          <SiDiscord />
-          <Typography fontSize={10}>Discord</Typography>
+          <Link
+            href="https://discord.gg/PFCpatvy"
+            sx={{ color: "rgba(255, 255, 255, 0.5)" }}
+            underline="none"
+          >
+            <SiDiscord />
+            <Typography fontSize={10}>Discord</Typography>
+          </Link>
         </Box>
       </Stack>
     </Box>

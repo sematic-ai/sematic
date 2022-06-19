@@ -9,9 +9,7 @@ import {
 } from "@mui/material";
 import { Handle, NodeProps, Position } from "react-flow-renderer";
 import { Run } from "../Models";
-import CalculatorPath from "./CalculatorPath";
 import RunStateChip from "./RunStateChip";
-import Tags from "./Tags";
 
 function getColor(futureState: string, theme: Theme): PaletteColor {
   if (futureState === "RESOLVED") {
@@ -89,7 +87,7 @@ export default function RunNode(props: NodeProps) {
       <Alert
         //severity="success"
         variant="outlined"
-        icon={<RunStateChip state={run.future_state} />}
+        icon={false}
         id={props.data.run.id}
         style={{
           height: "-webkit-fill-available",
@@ -99,13 +97,16 @@ export default function RunNode(props: NodeProps) {
           cursor: "pointer",
           borderColor: lighten(color.light, props.selected ? 0.5 : 0.5),
           backgroundColor: lighten(color.light, props.selected ? 0.7 : 0.9),
-          "&:hover": {
-            backgroundColor: lighten(color.light, props.selected ? 0.7 : 0.87),
-          },
+          //"&:hover": {
+          //  backgroundColor: lighten(color.light, props.selected ? 0.7 : 0.87),
+          //},
           //display: "-webkit-inline-flex",
         }}
       >
-        <AlertTitle>{run.name}</AlertTitle>
+        <AlertTitle>
+          <RunStateChip state={run.future_state} />
+          {run.name}
+        </AlertTitle>
         {/*<CalculatorPath calculatorPath={shortCalculatorPath} />*/}
         <Box marginTop={1}>
           {/*
