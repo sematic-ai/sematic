@@ -1,5 +1,5 @@
 # Standard Library
-from typing import Dict, List
+from typing import List
 
 # Third-party
 import sqlalchemy
@@ -12,16 +12,9 @@ from sematic.db.db import db
 from sematic.db.models.edge import Edge
 
 
-_COLUMN_MAPPING: Dict[str, sqlalchemy.Column] = {
-    column.name: column for column in Edge.__table__.columns
-}
-
-
 @sematic_api.route("/api/v1/edges", methods=["GET"])
 def list_edges_endpoint() -> flask.Response:
-    limit, _, _, sql_predicates = get_request_parameters(
-        flask.request.args, _COLUMN_MAPPING
-    )
+    limit, _, _, sql_predicates = get_request_parameters(flask.request.args, Edge)
 
     with db().get_session() as session:
         query = session.query(Edge)

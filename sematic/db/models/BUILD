@@ -40,7 +40,10 @@ sematic_py_lib(
 sematic_py_lib(
     name = "json_encodable_mixin",
     srcs = ["json_encodable_mixin.py"],
-    deps = [],
+    deps = [
+        requirement("python-dateutil"),
+        requirement("sqlalchemy"),
+    ],
 )
 
 sematic_py_lib(
@@ -50,6 +53,16 @@ sematic_py_lib(
         ":base",
         ":json_encodable_mixin",
         "//sematic:abstract_future",
+        requirement("sqlalchemy"),
+    ]
+)
+
+sematic_py_lib(
+    name = "note",
+    srcs = ["note.py"],
+    deps = [
+        ":base",
+        ":json_encodable_mixin",
         requirement("sqlalchemy"),
     ]
 )

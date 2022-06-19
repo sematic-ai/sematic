@@ -4,7 +4,6 @@ Module keeping all /api/v*/runs/* API endpoints.
 
 # Standard library
 import base64
-import json
 import typing
 from urllib.parse import urlunsplit, urlencode, urlsplit
 
@@ -19,12 +18,7 @@ from sematic.api.app import sematic_api
 from sematic.db.db import db
 from sematic.db.models.run import Run
 from sematic.db.queries import get_root_graph, get_run
-from sematic.api.endpoints.request_parameters import get_request_parameters
-
-
-_COLUMN_MAPPING: typing.Dict[str, sqlalchemy.Column] = {
-    column.name: column for column in Run.__table__.columns
-}
+from sematic.api.endpoints.request_parameters import get_request_parameters, jsonify_404
 
 
 @sematic_api.route("/api/v1/runs", methods=["GET"])
@@ -66,7 +60,7 @@ def list_runs_endpoint() -> flask.Response:
         current page is last page.
     """
     limit, cursor, group_by_column, sql_predicates = get_request_parameters(
-        flask.request.args, _COLUMN_MAPPING
+        flask.request.args, Run
     )
 
     decoded_cursor: typing.Optional[str] = None
@@ -159,20 +153,12 @@ def _make_cursor(key: str) -> str:
     return base64.urlsafe_b64encode(bytes(key, "utf-8")).decode("utf-8")
 
 
-def _jsonify_404(error: str):
-    return flask.Response(
-        json.dumps(dict(error=error)),
-        status=404,
-        mimetype="application/json",
-    )
-
-
 @sematic_api.route("/api/v1/runs/<run_id>", methods=["GET"])
 def get_run_endpoint(run_id: str) -> flask.Response:
     try:
         run = get_run(run_id)
     except NoResultFound:
-        return _jsonify_404("No runs with id {}".format(repr(run_id)))
+        return jsonify_404("No runs with id {}".format(repr(run_id)))
 
     payload = dict(
         content=run.to_json_encodable(),

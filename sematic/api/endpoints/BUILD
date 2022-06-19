@@ -28,6 +28,7 @@ sematic_py_lib(
     srcs = ["request_parameters.py"],
     deps = [
         requirement("sqlalchemy"),
+        requirement("flask"),
     ]
 )
 
@@ -38,6 +39,19 @@ sematic_py_lib(
         "//sematic/api:app",
         "//sematic/db:db",
         "//sematic/db/models:edge",
+        ":request_parameters",
+        requirement("flask"),
+        requirement("sqlalchemy"),
+    ]
+)
+
+sematic_py_lib(
+    name = "notes",
+    srcs = ["notes.py"],
+    deps = [
+        "//sematic/api:app",
+        "//sematic/db:queries",
+        "//sematic/db/models:note",
         ":request_parameters",
         requirement("flask"),
         requirement("sqlalchemy"),

@@ -17,6 +17,7 @@ sematic_py_lib(
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:run",
+        "//sematic/db/models:note",
         requirement("sqlalchemy"),
 
     ]
