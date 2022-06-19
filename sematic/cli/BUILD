@@ -9,8 +9,8 @@ sematic_py_lib(
         ":new",
         # Examples
         # These do not add dependencies on 3rd party packages
-        "//sematic/examples/mnist/pytorch:main_lib",
-        "//sematic/examples/liver_cirrhosis:main_lib",
+        "//sematic/examples/mnist/pytorch:pytorch_lib",
+        "//sematic/examples/liver_cirrhosis:liver_cirrhosis_lib",
     ]
 )
 
