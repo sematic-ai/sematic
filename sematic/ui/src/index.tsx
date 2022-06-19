@@ -16,6 +16,7 @@ root.render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<Shell />}>
+        <Route path="" element={<Home />} />
         <Route path="pipelines" element={<PipelineIndex />} />
         <Route path="pipelines/:calculatorPath" element={<PipelineView />} />
       </Route>
