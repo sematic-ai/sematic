@@ -11,6 +11,7 @@ types-requests
 pandas-stubs
 types-psycopg2
 data-science-types
+types-python-dateutil
 
 # To generate the wheel
 mistune==0.8.4

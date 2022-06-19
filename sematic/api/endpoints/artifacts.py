@@ -1,5 +1,5 @@
 # Standard library
-from typing import Dict, List
+from typing import List
 
 # Third-party
 import flask
@@ -12,16 +12,9 @@ from sematic.db.models.artifact import Artifact
 from sematic.db.db import db
 
 
-_COLUMN_MAPPING: Dict[str, sqlalchemy.Column] = {
-    column.name: column for column in Artifact.__table__.columns
-}
-
-
 @sematic_api.route("/api/v1/artifacts", methods=["GET"])
 def list_artifacts_endpoint() -> flask.Response:
-    limit, _, _, sql_predicates = get_request_parameters(
-        flask.request.args, _COLUMN_MAPPING
-    )
+    limit, _, _, sql_predicates = get_request_parameters(flask.request.args, Artifact)
 
     with db().get_session() as session:
         query = session.query(Artifact)
