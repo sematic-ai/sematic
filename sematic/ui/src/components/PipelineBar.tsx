@@ -11,10 +11,6 @@ import {
   useTheme,
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
-import TimeAgo from "javascript-time-ago";
-import en from "javascript-time-ago/locale/en.json";
-
-import ReactTimeAgo from "react-time-ago";
 import { Run } from "../Models";
 import { RunListPayload } from "../Payloads";
 import { fetchJSON, pipelineSocket } from "../utils";
@@ -22,8 +18,7 @@ import CalculatorPath from "./CalculatorPath";
 import Loading from "./Loading";
 import { RunFilterType } from "./RunList";
 import RunStateChip from "./RunStateChip";
-
-TimeAgo.addDefaultLocale(en);
+import TimeAgo from "./TimeAgo";
 
 export default function PipelineBar(props: {
   calculatorPath: string;
@@ -171,12 +166,7 @@ export default function PipelineBar(props: {
                       </Typography>
                     </Box>
                     <Box ml={3}>
-                      {
-                        <ReactTimeAgo
-                          date={new Date(run.created_at)}
-                          locale="en-US"
-                        />
-                      }
+                      <TimeAgo date={run.created_at} />
                     </Box>
                   </Typography>
                 </MenuItem>

@@ -6,7 +6,7 @@ import {
   ListItemText,
   useTheme,
 } from "@mui/material";
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { Run } from "../Models";
 import RunStateChip from "./RunStateChip";
 
@@ -50,7 +50,7 @@ export default function RunTree(props: {
       }}
     >
       {directChildren.map((run) => (
-        <>
+        <Fragment key={run.id}>
           <ListItemButton
             onClick={() => onSelectRun(run)}
             key={run.id}
@@ -72,7 +72,7 @@ export default function RunTree(props: {
               />
             </Box>
           )}
-        </>
+        </Fragment>
       ))}
     </List>
   );

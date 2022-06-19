@@ -83,6 +83,7 @@ class EvaluationResults:
     average_loss: float
     accuracy: float
     pr_curve: plotly.graph_objs.Figure
+    confusion_matrix: plotly.graph_objs.Figure
 
 
 @sematic.func
@@ -98,6 +99,7 @@ def evaluate_model(
         average_loss=results["average_loss"],
         accuracy=results["accuracy"],
         pr_curve=results["pr_curve"],
+        confusion_matrix=results["confusion_matrix"],
     )
 
 
