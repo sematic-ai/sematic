@@ -64,7 +64,7 @@ export default function MenuPanel(props: {
     >
       <List sx={{ py: 0 }}>
         {panelList.map((panel) => (
-          <ListItem disablePadding>
+          <ListItem disablePadding key={panel.label}>
             <ListItemButton
               onClick={panel.onClick}
               sx={{ height: "4em" }}
