@@ -2,9 +2,6 @@ import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
-import TimeAgo from "javascript-time-ago";
-import ReactTimeAgo from "react-time-ago";
-import en from "javascript-time-ago/locale/en.json";
 import { Run } from "../Models";
 import { RunList } from "../components/RunList";
 import RunStateChip from "../components/RunStateChip";
@@ -12,8 +9,7 @@ import React from "react";
 import Tags from "../components/Tags";
 import CalculatorPath from "../components/CalculatorPath";
 import Id from "../components/Id";
-
-TimeAgo.addDefaultLocale(en);
+import TimeAgo from "../components/TimeAgo";
 
 type RunRowProps = {
   run: Run;
@@ -62,7 +58,7 @@ export function RunRow(props: RunRowProps) {
         <Tags tags={run.tags || []} />
       </TableCell>
       <TableCell onClick={props.onClick}>
-        {<ReactTimeAgo date={new Date(run.created_at)} locale="en-US" />}
+        <TimeAgo date={run.created_at} />
         {createdAt}
       </TableCell>
       <TableCell onClick={props.onClick}>

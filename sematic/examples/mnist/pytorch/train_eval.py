@@ -1,3 +1,5 @@
+from typing import List
+from sklearn.metrics import confusion_matrix
 import torch
 import torch.nn as nn
 from torch.optim.optimizer import Optimizer
@@ -6,6 +8,7 @@ import torch.nn.functional as F
 from torchmetrics import PrecisionRecallCurve  # type: ignore
 import pandas
 import plotly.express as px
+from plotly.graph_objs import Figure, Heatmap
 
 
 class Net(nn.Module):
@@ -65,29 +68,46 @@ def train(
                 break
 
 
+def _confusion_matrix(targets: List[int], preds: List[int]):
+    matrix = confusion_matrix(y_true=targets, y_pred=preds)
+    data = Heatmap(
+        z=matrix,
+        text=matrix,
+        texttemplate="%{text}",
+        x=list(range(10)),
+        y=list(range(10)),
+    )
+    layout = {
+        "title": "Confusion Matrix",
+        "xaxis": {"title": "Predicted value"},
+        "yaxis": {"title": "Real value"},
+    }
+    return Figure(data=data, layout=layout)
+
+
 def test(model: nn.Module, device: torch.device, test_loader: DataLoader):
     model.eval()
     test_loss: float = 0
     correct = 0
+    probas = []
     preds = []
     targets = []
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            preds.append(output)
+            probas.append(output)
             targets.append(target)
             test_loss += F.nll_loss(
                 output, target, reduction="sum"
             ).item()  # sum up batch loss
-            pred = output.argmax(
-                dim=1, keepdim=True
-            )  # get the index of the max log-probability
-            correct += pred.eq(target.view_as(pred)).sum().item()
+            pred = output.argmax(dim=1)  # get the index of the max log-probability
+            preds.append(pred)
+            correct += pred.eq(target).sum().item()
 
     test_loss /= len(test_loader.dataset)  # type: ignore
     pr_curve = PrecisionRecallCurve(num_classes=10)
-    precision, recall, thresholds = pr_curve(torch.cat(preds), torch.cat(targets))
+    precision, recall, thresholds = pr_curve(torch.cat(probas), torch.cat(targets))
     classes = []
     for i in range(10):
         classes += [i] * len(precision[i])
@@ -112,4 +132,5 @@ def test(model: nn.Module, device: torch.device, test_loader: DataLoader):
         average_loss=test_loss,
         accuracy=correct / len(test_loader.dataset),  # type: ignore
         pr_curve=fig,
+        confusion_matrix=_confusion_matrix(torch.cat(targets), torch.cat(preds)),
     )

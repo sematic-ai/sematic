@@ -31,6 +31,7 @@ export default function Messages() {
               px: 2,
               py: 1,
             }}
+            key={Math.random().toString()}
           >
             <Typography
               sx={{ fontSize: "small", color: theme.palette.grey[500] }}

@@ -9,16 +9,12 @@ import { Run } from "../Models";
 import Link from "@mui/material/Link";
 import { RunListPayload } from "../Payloads";
 import RunStateChip from "../components/RunStateChip";
-import TimeAgo from "javascript-time-ago";
-
-import ReactTimeAgo from "react-time-ago";
-import en from "javascript-time-ago/locale/en.json";
 import { Alert, AlertTitle, Container, useTheme } from "@mui/material";
 import { InfoOutlined } from "@mui/icons-material";
 import { RunTime } from "../components/RunTime";
 import { pipelineSocket } from "../utils";
-
-TimeAgo.addDefaultLocale(en);
+import CalculatorPath from "../components/CalculatorPath";
+import TimeAgo from "../components/TimeAgo";
 
 function RecentStatuses(props: { runs: Array<Run> | undefined }) {
   let state: string | undefined = undefined;
@@ -64,14 +60,12 @@ function PipelineRow(props: { run: Run }) {
             <Link href={"/pipelines/" + run.calculator_path} underline="hover">
               <Typography variant="h6">{run.name}</Typography>
             </Link>
-            <Typography fontSize="small" color="GrayText">
-              <code>{run.calculator_path}</code>
-            </Typography>
+            <CalculatorPath calculatorPath={run.calculator_path} />
           </Box>
           <Tags tags={run.tags || []} />
         </TableCell>
         <TableCell key="last-run">
-          {<ReactTimeAgo date={new Date(run.created_at)} locale="en-US" />}
+          <TimeAgo date={run.created_at} />
           <RunTime run={run} />
         </TableCell>
         <TableCell key="status" width={120}>

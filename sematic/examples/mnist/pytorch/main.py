@@ -2,7 +2,7 @@
 This is an example implementation of the MNIST pipeline in PyTorch on sematic.
 """
 # MNIST example
-from sematic.examples.mnist.pytorch.calculators import (
+from sematic.examples.mnist.pytorch.pipeline import (
     pipeline,
     PipelineConfig,
     DataLoaderConfig,
