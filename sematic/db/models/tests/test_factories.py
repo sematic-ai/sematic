@@ -18,7 +18,7 @@ def func():
     """
     An informative docstring.
     """
-    pass  # Some comment
+    pass  # Some note
 
 
 def test_make_run_from_future():
@@ -40,7 +40,7 @@ def func():
     \"\"\"
     An informative docstring.
     \"\"\"
-    pass  # Some comment
+    pass  # Some note
 """
     )
 

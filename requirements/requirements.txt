@@ -142,6 +142,7 @@ pytest==7.1.1
 python-dateutil==2.8.2
     # via
     #   matplotlib
+    #   -r requirements/requirements.in
     #   pandas
 python-engineio==4.3.2
     # via python-socketio

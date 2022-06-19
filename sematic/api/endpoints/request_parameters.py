@@ -3,6 +3,7 @@ from typing import Dict, Literal, Tuple, Optional, List, Union, cast
 import json
 
 # Third-party
+import flask
 import sqlalchemy
 from sqlalchemy.sql.elements import ColumnElement, BooleanClauseList
 
@@ -23,7 +24,7 @@ Filters = Union[
 
 
 def get_request_parameters(
-    args: Dict[str, str], column_mapping: ColumnMapping
+    args: Dict[str, str], model: type
 ) -> Tuple[
     int, Optional[str], Optional[sqlalchemy.Column], Optional[BooleanClauseList]
 ]:
@@ -54,6 +55,8 @@ def get_request_parameters(
 
     group_by, group_by_column = _none_if_empty("group_by"), None
 
+    column_mapping = _get_column_mapping(model)
+
     if group_by is not None:
         if group_by not in column_mapping:
             raise ValueError("Unsupported group_by value {}".format(repr(group_by)))
@@ -72,6 +75,21 @@ def get_request_parameters(
     )
 
     return limit, cursor, group_by_column, sql_predicates
+
+
+def jsonify_404(error: str):
+    return flask.Response(
+        json.dumps(dict(error=error)),
+        status=404,
+        mimetype="application/json",
+    )
+
+
+def _get_column_mapping(model: type) -> Dict[str, sqlalchemy.Column]:
+    """
+    Create a mapping of column name to column for a SQLAlchemy model.
+    """
+    return {column.name: column for column in model.__table__.columns}  # type: ignore
 
 
 def _get_sql_predicates(

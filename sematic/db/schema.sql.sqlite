@@ -39,6 +39,20 @@ CREATE TABLE edges (
     FOREIGN KEY(artifact_id) REFERENCES artifacts (id),
     FOREIGN KEY(parent_id) REFERENCES edges (id)
 );
+CREATE TABLE notes (
+    id character(32) NOT NULL,
+    author_id TEXT NOT NULL,
+    note TEXT NOT NULL,
+    run_id character(32) NOT NULL,
+    root_id character(32) NOT NULL,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone,
+
+    PRIMARY KEY(id),
+
+    FOREIGN KEY(run_id) REFERENCES runs (id),
+    FOREIGN KEY(root_id) REFERENCES runs (id)
+);
 -- Dbmate schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
   ('20220424062956'),
@@ -47,4 +61,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20220521155045'),
   ('20220521155336'),
   ('20220522082435'),
-  ('20220527000512');
+  ('20220527000512'),
+  ('20220610234559');
