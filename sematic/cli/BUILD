@@ -6,6 +6,7 @@ sematic_py_lib(
         ":start",
         ":stop",
         ":run",
+        ":new",
         # Examples
         # These do not add dependencies on 3rd party packages
         "//sematic/examples/mnist/pytorch:main_lib",
@@ -57,8 +58,27 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "new",
+    srcs = ["new.py"],
+    deps = [
+        ":cli",
+        ":examples_utils",
+        "//sematic:config",
+        requirement("click"),
+    ]
+)
+
+sematic_py_lib(
     name = "process_utils",
     srcs = ["process_utils.py"],
+    deps = [
+        "//sematic:config",
+    ]
+)
+
+sematic_py_lib(
+    name = "examples_utils",
+    srcs = ["examples_utils.py"],
     deps = [
         "//sematic:config",
     ]
