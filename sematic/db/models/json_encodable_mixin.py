@@ -4,6 +4,10 @@ import datetime
 import enum
 import json
 
+# Third-party
+import dateutil.parser
+from sqlalchemy import inspect, types
+
 
 class JSONEncodableMixin:
     """
@@ -17,6 +21,20 @@ class JSONEncodableMixin:
             column.key: _to_json_encodable(getattr(self, column.key), column)
             for column in self.__table__.columns
         }
+
+    @classmethod
+    def from_json_encodable(cls, json_encodable):
+        field_dict = {
+            column.key: cls.field_from_json_encodable(column.key, json_encodable)
+            for column in inspect(cls).attrs
+        }
+        return cls(**field_dict)
+
+    @classmethod
+    def field_from_json_encodable(cls, field_name, json_encodable):
+        return _from_json_encodable(
+            json_encodable.get(field_name), getattr(cls, field_name)
+        )
 
 
 JSON_KEY = "json"
@@ -53,3 +71,25 @@ def _to_json_encodable(value, column):
         return json.loads(value)
 
     return value
+
+
+HEX_ENCODE = "hex_encode"
+
+
+def _from_json_encodable(json_encodable, column):
+    if json_encodable is None:
+        return None
+
+    if isinstance(column.type, types.Enum):
+        return getattr(column.type.enum_class, json_encodable)
+
+    if isinstance(column.type, types.DateTime):
+        return dateutil.parser.parse(json_encodable)
+
+    if isinstance(column.type, types.LargeBinary):
+        if column.info.get(HEX_ENCODE, False):
+            return bytes.fromhex(json_encodable)
+
+        return base64.b64decode(json_encodable)
+
+    return json_encodable

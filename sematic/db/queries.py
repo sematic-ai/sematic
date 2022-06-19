@@ -12,6 +12,7 @@ import sqlalchemy.orm
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
+from sematic.db.models.note import Note
 from sematic.db.db import db
 
 
@@ -158,6 +159,35 @@ def get_run_input_artifacts(run_id: str) -> Dict[str, Artifact]:
         return {
             edge.destination_name: artifacts_by_id[edge.artifact_id] for edge in edges
         }
+
+
+def get_note(note_id: str) -> Note:
+    """
+    Get note from DB.
+    """
+    with db().get_session() as session:
+        return session.query(Note).filter(Note.id == note_id).one()
+
+
+def save_note(note: Note) -> Note:
+    """
+    Persist a note.
+    """
+    with db().get_session() as session:
+        session.add(note)
+        session.commit()
+        session.refresh(note)
+
+    return note
+
+
+def delete_note(note: Note):
+    """
+    Delete note.
+    """
+    with db().get_session() as session:
+        session.delete(note)
+        session.commit()
 
 
 def get_root_graph(root_run_id: str) -> Tuple[Set[Run], Set[Edge], Set[Artifact]]:
