@@ -10,6 +10,7 @@ load(
     "@//tools:sematic_rules.bzl",
     "pytest_test",
     "sematic_py_lib",
+    "sematic_example",
 )
 
 # @unused
