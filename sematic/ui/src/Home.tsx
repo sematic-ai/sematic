@@ -104,10 +104,14 @@ export default function Home() {
           </Typography>
           <ul>
             <li>
-              <code>examples/mnist/pytorch</code>
+              <Typography>
+                <code>examples/mnist/pytorch</code>
+              </Typography>
             </li>
             <li>
-              <code>examples/liver_cirrhosis</code>
+              <Typography>
+                <code>examples/liver_cirrhosis</code>
+              </Typography>
             </li>
           </ul>
           <Typography paragraph>
