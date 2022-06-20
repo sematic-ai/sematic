@@ -8,6 +8,7 @@ import { Route, BrowserRouter, Routes } from "react-router-dom";
 import PipelineIndex from "./pipelines/PipelineIndex";
 import PipelineView from "./pipelines/PipelineView";
 import Shell from "./components/Shell";
+import Home from "./Home";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -16,6 +17,7 @@ root.render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<Shell />}>
+        <Route path="" element={<Home />} />
         <Route path="pipelines" element={<PipelineIndex />} />
         <Route path="pipelines/:calculatorPath" element={<PipelineView />} />
       </Route>
