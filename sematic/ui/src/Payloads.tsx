@@ -1,4 +1,4 @@
-import { Run, Artifact, Edge } from "./Models";
+import { Run, Artifact, Edge, Note } from "./Models";
 
 export type RunListPayload = {
   current_page_url: string;
@@ -33,4 +33,12 @@ export type RunGraphPayload = {
   runs: Run[];
   edges: Edge[];
   artifacts: Artifact[];
+};
+
+export type NoteListPayload = {
+  content: Note[];
+};
+
+export type NoteCreatePayload = {
+  content: Note;
 };
