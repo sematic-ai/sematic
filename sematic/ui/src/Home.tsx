@@ -86,11 +86,12 @@ export default function Home() {
   }, []);
 
   return (
-    <Container sx={{ pt: 20, mx: 5, height: "100vh", overflowY: "scroll" }}>
+    <Container sx={{ pt: 20, height: "100vh", overflowY: "scroll" }}>
+      {/*sx={{ pt: 20, mx: 5, height: "100vh", overflowY: "scroll" }}>*/}
       <Typography variant="h1">🦊 Welcome to Sematic!</Typography>
-      <Box sx={{ my: 15, minHeight: "1px" }}>{prompt}</Box>
+      <Box sx={{ mt: 15, mb: 5, minHeight: "1px" }}>{prompt}</Box>
       <Grid container>
-        <Grid item xs sx={{ pr: 5 }}>
+        <Grid item xs sx={{ pr: 5, mt: 10 }}>
           <Typography variant="h3" sx={{ textAlign: "center" }}>
             Run an example pipeline
           </Typography>
@@ -124,7 +125,7 @@ export default function Home() {
         </Grid>
         <Divider orientation="vertical" flexItem sx={{ my: 5 }} />
 
-        <Grid item xs sx={{ px: 5 }}>
+        <Grid item xs sx={{ px: 5, mt: 10 }}>
           <Typography variant="h3" sx={{ textAlign: "center" }}>
             Start your own project
           </Typography>
@@ -145,7 +146,7 @@ export default function Home() {
         </Grid>
         <Divider orientation="vertical" flexItem sx={{ my: 5 }} />
 
-        <Grid item xs sx={{ pl: 5 }}>
+        <Grid item xs sx={{ pl: 5, mt: 10 }}>
           <Typography variant="h3" sx={{ textAlign: "center" }}>
             Join the community
           </Typography>
