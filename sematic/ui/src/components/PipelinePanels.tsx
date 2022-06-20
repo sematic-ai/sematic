@@ -108,7 +108,7 @@ export default function PipelinePanels(props: { rootRun: Run }) {
             setSelectedPanelItem("run");
           }}
         />
-        <NotesPanel calculatorPath={rootRun.calculator_path} />
+        <NotesPanel rootRun={rootRun} selectedRun={selectedRun} />
       </>
     );
   }

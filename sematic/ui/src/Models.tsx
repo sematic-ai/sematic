@@ -37,3 +37,13 @@ export type Edge = {
   created_at: Date;
   updated_at: Date;
 };
+
+export type Note = {
+  id: string;
+  author_id: string;
+  note: string;
+  run_id: string;
+  root_id: string;
+  created_at: Date;
+  updated_at: Date;
+};

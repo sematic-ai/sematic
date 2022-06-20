@@ -1,24 +1,10 @@
-import { Stack, Box, Typography, useTheme } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
+import { Note } from "../Models";
+import TimeAgo from "./TimeAgo";
+import DeleteIcon from "@mui/icons-material/Delete";
 
-const messages = [
-  {
-    author: "alice@acme.ai",
-    message:
-      "The distribution looks skewed. Can you try with a greater threshold?",
-    time: "Yesterday at 2:53pm",
-  },
-  {
-    author: "bob@acme.ai",
-    message:
-      "Sure, let me take a look, the sampling may be using last week's snapshot too.",
-    time: "Yesterday at 4:31pm",
-  },
-];
-
-function Note(props: {
-  message: { author: string; message: string; time: string };
-}) {
-  const { author, message, time } = props.message;
+export function NoteView(props: { note: Note }) {
+  const { note } = props;
   const theme = useTheme();
 
   return (
@@ -30,38 +16,30 @@ function Note(props: {
         px: 2,
         py: 1,
       }}
-      key={Math.random().toString()}
+      key={note.id}
     >
       <Typography sx={{ fontSize: "small", color: theme.palette.grey[500] }}>
-        {author}:
+        {note.author_id}:
       </Typography>
       <Box sx={{ my: 4 }}>
-        <Typography fontSize="small">{message}</Typography>
+        <Typography fontSize="small">{note.note}</Typography>
       </Box>
-      <Typography
-        sx={{
-          fontSize: "small",
-          color: theme.palette.grey[500],
-          textAlign: "right",
-        }}
-      >
-        {time}
-      </Typography>
-    </Box>
-  );
-}
-
-export default function Notes(props: { calculatorPath: string }) {
-  const theme = useTheme();
-  return (
-    <Box sx={{ display: "grid", gridTemplateRows: "1fr auto" }}>
-      <Box sx={{ gridRow: 1 }}></Box>
-
-      <Stack sx={{ gridRow: 2 }}>
-        {messages.map((message) => (
-          <Note message={message} />
-        ))}
-      </Stack>
+      <Box sx={{ display: "grid", gridTemplateColumns: "auto 1fr auto" }}>
+        <Box sx={{ gridColumn: 1, color: theme.palette.grey[300] }}>
+          {/*<DeleteIcon style={{ fontSize: 16 }} />*/}
+        </Box>
+        <Typography
+          sx={{
+            gridColumn: 3,
+            fontSize: "small",
+            color: theme.palette.grey[500],
+            textAlign: "right",
+          }}
+        >
+          <TimeAgo date={note.created_at} /> on run{" "}
+          <code style={{ fontSize: 12 }}>{note.root_id.substring(0, 6)}</code>
+        </Typography>
+      </Box>
     </Box>
   );
 }
