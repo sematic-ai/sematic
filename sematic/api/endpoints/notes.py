@@ -35,7 +35,7 @@ def list_notes_endpoint() -> flask.Response:
                 Run.calculator_path == flask.request.args["calculator_path"]
             )
 
-        query = query.order_by(sqlalchemy.desc(Note.created_at))
+        query = query.order_by(sqlalchemy.asc(Note.created_at))
 
         # query = query.limit(limit)
 
