@@ -90,7 +90,7 @@ export default function Home() {
       <Typography variant="h1">🦊 Welcome to Sematic!</Typography>
       <Box sx={{ my: 15, minHeight: "1px" }}>{prompt}</Box>
       <Grid container>
-        <Grid item xs sx={{ px: 5 }}>
+        <Grid item xs sx={{ pr: 5 }}>
           <Typography variant="h3" sx={{ textAlign: "center" }}>
             Run an example pipeline
           </Typography>
@@ -137,11 +137,11 @@ export default function Home() {
           <Typography paragraph sx={{ mt: 10 }}>
             Then simpy run:
           </Typography>
-          <ShellCommand command={"sematic run my_new_project/main.py"} />
+          <ShellCommand command={"python my_new_project/main.py"} />
         </Grid>
         <Divider orientation="vertical" flexItem sx={{ my: 5 }} />
 
-        <Grid item xs sx={{ px: 5 }}>
+        <Grid item xs sx={{ pl: 5 }}>
           <Typography variant="h3" sx={{ textAlign: "center" }}>
             Join the community
           </Typography>
