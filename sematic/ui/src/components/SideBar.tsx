@@ -20,7 +20,9 @@ export default function SideBar() {
     >
       <Stack sx={{ gridRow: 1, spacing: 2, paddingTop: 3 }}>
         <Box sx={{ color: "#ffffff", paddingBottom: 4 }}>
-          <Typography fontSize={32}>🦊</Typography>
+          <Link href="/" underline="none">
+            <Typography fontSize={32}>🦊</Typography>
+          </Link>
         </Box>
         <Box>
           <Link
