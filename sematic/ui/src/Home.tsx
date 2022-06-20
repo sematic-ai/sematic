@@ -1,12 +1,19 @@
 import { ContentCopy } from "@mui/icons-material";
 import {
+  Box,
   ButtonBase,
   Container,
+  Divider,
   Grid,
+  Link,
   Typography,
   useTheme,
 } from "@mui/material";
-import { useCallback, useState } from "react";
+import { ReactElement, useCallback, useEffect, useState } from "react";
+import { SiDiscord, SiReadthedocs, SiGithub } from "react-icons/si";
+import RunStateChip from "./components/RunStateChip";
+import { RunListPayload } from "./Payloads";
+import { fetchJSON } from "./utils";
 
 function ShellCommand(props: { command: string }) {
   const { command } = props;
@@ -45,30 +52,64 @@ function ShellCommand(props: { command: string }) {
 export default function Home() {
   const theme = useTheme();
 
+  const [prompt, setPrompt] = useState<ReactElement | undefined>(undefined);
+
+  useEffect(() => {
+    let filters = JSON.stringify({
+      parent_id: { eq: null },
+    });
+
+    fetchJSON(
+      "/api/v1/runs?limit=1&filters=" + filters,
+      (payload: RunListPayload) => {
+        if (payload.content.length > 0) {
+          const run = payload.content[0];
+          setPrompt(
+            <Typography
+              fontSize="medium"
+              component="span"
+              sx={{ display: "flex", alignItems: "center" }}
+            >
+              Your latest run:&nbsp; <RunStateChip state={run.future_state} />
+              <Link href={"/pipelines/" + run.calculator_path}>{run.name}</Link>
+            </Typography>
+          );
+        } else {
+          setPrompt(
+            <Typography fontSize="medium">
+              Nice to have you here, get started.
+            </Typography>
+          );
+        }
+      }
+    );
+  }, []);
+
   return (
-    <Container sx={{ mt: 20, mx: 5 }}>
+    <Container sx={{ pt: 20, mx: 5, height: "100vh", overflowY: "scroll" }}>
       <Typography variant="h1">🦊 Welcome to Sematic!</Typography>
-      <Grid container sx={{ mt: 20 }}>
-        <Grid item xs={12} md={4} sx={{ px: 5 }}>
-          <Typography variant="h3" sx={{ mb: 3 }}>
+      <Box sx={{ my: 15, minHeight: "1px" }}>{prompt}</Box>
+      <Grid container>
+        <Grid item xs sx={{ px: 5 }}>
+          <Typography variant="h3" sx={{ textAlign: "center" }}>
             Run an example pipeline
           </Typography>
-          <Typography paragraph>
+          <Typography paragraph sx={{ mt: 10 }}>
             Sematic comes with a number of examples out-of-the box.
           </Typography>
           <Typography paragraph>Try the following:</Typography>
           <ShellCommand command={"sematic run examples/mnist/pytorch"} />
-          <Typography paragraph sx={{ mt: 3 }}>
+          <Typography paragraph sx={{ mt: 10 }}>
             Or any of the following:
-            <ul>
-              <li>
-                <code>examples/mnist/pytorch</code>
-              </li>
-              <li>
-                <code>examples/liver_cirrhosis</code>
-              </li>
-            </ul>
           </Typography>
+          <ul>
+            <li>
+              <code>examples/mnist/pytorch</code>
+            </li>
+            <li>
+              <code>examples/liver_cirrhosis</code>
+            </li>
+          </ul>
           <Typography paragraph>
             Read more about examples on the{" "}
             <a href="https://docs.sematic.ai" target="blank">
@@ -77,11 +118,84 @@ export default function Home() {
             .
           </Typography>
         </Grid>
-        <Grid item xs={12} md={4} sx={{ borderLeft: 1, px: 5, borderColor:  }}>
-          <Typography variant="h3">Write your own</Typography>
+        <Divider orientation="vertical" flexItem sx={{ my: 5 }} />
+
+        <Grid item xs sx={{ px: 5 }}>
+          <Typography variant="h3" sx={{ textAlign: "center" }}>
+            Start your own project
+          </Typography>
+          <Typography paragraph sx={{ mt: 10 }}>
+            Start a new Sematic project from a simple template:
+          </Typography>
+          <ShellCommand command={"sematic new my_new_project"} />
+          <Typography paragraph sx={{ mt: 10 }}>
+            Or start from one of the examples:
+          </Typography>
+          <ShellCommand
+            command={"sematic new my_new_project --from examples/mnist/pytorch"}
+          />
+          <Typography paragraph sx={{ mt: 10 }}>
+            Then simpy run:
+          </Typography>
+          <ShellCommand command={"sematic run my_new_project/main.py"} />
         </Grid>
-        <Grid item xs={12} md={4} sx={{ borderLeft: 1, px: 5 }}>
-          <Typography variant="h3">Join the community</Typography>
+        <Divider orientation="vertical" flexItem sx={{ my: 5 }} />
+
+        <Grid item xs sx={{ px: 5 }}>
+          <Typography variant="h3" sx={{ textAlign: "center" }}>
+            Join the community
+          </Typography>
+          <Typography paragraph sx={{ mt: 10 }}>
+            Get in touch on the following channels:
+          </Typography>
+          <Grid
+            container
+            sx={{ justifyContent: "center", alignItems: "flex-start", pt: 3 }}
+            spacing={20}
+          >
+            <Grid item sx={{ textAlign: "center" }}>
+              <Link
+                href="https://discord.gg/PFCpatvy"
+                underline="none"
+                target="_blank"
+              >
+                <SiDiscord fontSize={42} color="#7289da" />
+                <Typography>Discord</Typography>
+              </Link>
+            </Grid>
+            <Grid item sx={{ textAlign: "center" }}>
+              <Link
+                href="https://github.com/sematic-ai/sematic"
+                underline="none"
+                target="_blank"
+              >
+                <SiGithub fontSize={42} color="#000000" />
+                <Typography>GitHub</Typography>
+              </Link>
+            </Grid>
+          </Grid>
+          <Typography paragraph sx={{ mt: 10 }}>
+            Check out the Sematic Documentation:
+          </Typography>
+          <Grid
+            container
+            sx={{ justifyContent: "center", alignItems: "flex-start", pt: 3 }}
+          >
+            <Grid item sx={{ textAlign: "center" }}>
+              <Link
+                href="https://docs.sematic.ai"
+                underline="none"
+                target="_blank"
+              >
+                <SiReadthedocs fontSize={38} color="#000000" />
+                <Typography>Sematic Documentation</Typography>
+              </Link>
+            </Grid>
+          </Grid>
+          <Typography paragraph sx={{ mt: 10 }}>
+            Or email us at{" "}
+            <Link href="mailto:support@sematic.ai">support@sematic.ai</Link>.
+          </Typography>
         </Grid>
       </Grid>
     </Container>
