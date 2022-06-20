@@ -5,7 +5,7 @@ import { RunGraphPayload } from "../Payloads";
 import { fetchJSON, graphSocket } from "../utils";
 import Loading from "./Loading";
 import MenuPanel from "./MenuPanel";
-import MessagePanel from "./MessagePanel";
+import NotesPanel from "./NotesPanel";
 import RunPanel, { Graph } from "./RunPanel";
 
 export default function PipelinePanels(props: { rootRun: Run }) {
@@ -108,7 +108,7 @@ export default function PipelinePanels(props: { rootRun: Run }) {
             setSelectedPanelItem("run");
           }}
         />
-        <MessagePanel />
+        <NotesPanel rootRun={rootRun} selectedRun={selectedRun} />
       </>
     );
   }

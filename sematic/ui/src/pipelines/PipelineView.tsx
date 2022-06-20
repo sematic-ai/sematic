@@ -17,7 +17,7 @@ export default function PipelineView() {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: "250px 1fr 250px",
+          gridTemplateColumns: "250px 1fr 350px",
           gridTemplateRows: "70px 1fr",
           height: "100vh",
         }}

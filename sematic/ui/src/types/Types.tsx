@@ -178,8 +178,8 @@ function StrValueView(props: ValueViewProps) {
   let repr: string[] = props.valueSummary.split("\n");
   return (
     <div>
-      {repr.map((line) => (
-        <div style={{ whiteSpace: "pre" }} key={line}>
+      {repr.map((line, index) => (
+        <div style={{ whiteSpace: "pre" }} key={index}>
           {line}
         </div>
       ))}
@@ -392,12 +392,6 @@ function DataclassValueView(props: ValueViewProps) {
         )
       )}
     </Stack>
-  );
-
-  return (
-    <Table>
-      <TableBody></TableBody>
-    </Table>
   );
 }
 

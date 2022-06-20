@@ -12,6 +12,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.request_parameters import get_request_parameters, jsonify_404
 from sematic.db.models.note import Note
+from sematic.db.models.run import Run
 from sematic.db.db import db
 from sematic.db.queries import delete_note, get_note, save_note
 
@@ -29,9 +30,16 @@ def list_notes_endpoint() -> flask.Response:
         if sql_predicates is not None:
             query = query.filter(sql_predicates)
 
+        if "calculator_path" in flask.request.args:
+            query.join(Run, Run.id == Note.root_id).filter(
+                Run.calculator_path == flask.request.args["calculator_path"]
+            )
+
         query = query.order_by(sqlalchemy.desc(Note.created_at))
 
-        notes: List[Note] = query.limit(limit).all()
+        # query = query.limit(limit)
+
+        notes: List[Note] = query.all()
 
     payload = dict(content=[note.to_json_encodable() for note in notes])
 
