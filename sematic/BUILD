@@ -59,7 +59,7 @@ sematic_py_lib(
         ":abstract_calculator",
         ":abstract_future",
         ":resolver",
-        "//sematic/resolvers:offline_resolver",
+        #"//sematic/resolvers:offline_resolver",
     ]
 )
 

@@ -2,6 +2,7 @@
 Casting and serialization logic for `str`.
 """
 # Standard library
+import inspect
 import typing
 
 # Sematic
@@ -33,7 +34,7 @@ def can_cast_to_str(type_: type, _) -> typing.Tuple[bool, typing.Optional[str]]:
     Type casting logic for `str`.
     Only subclasses of `str` can cast to `str`.
     """
-    if issubclass(type_, str):
+    if inspect.isclass(type_) and issubclass(type_, str):
         return True, None
 
     return False, "{} cannot cast to str".format(type_)
