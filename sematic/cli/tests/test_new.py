@@ -34,6 +34,8 @@ def test_new(project_name):
         "__init__.py",
         "requirements.txt",
         "pipeline.py",
+        "README",
+        "AUTHORS",
         # Will not be present when called from the CLI
         "BUILD",
     }
