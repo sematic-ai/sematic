@@ -1,4 +1,8 @@
-* [in-progress] 0.1.0-alpha
+* [in-progress] 0.1.0-alpha.2
+    * [feature] Support for returning and passing lists of futures
+    * [example] Dummy dynamic graph
+    * [bugfix] List UI display
+* 0.1.0-alpha
     * [feature] Show run panel when clicking run in DAG
     * [feature] When switching root run, stay on same function if possible
     * [feature] Discord link in side bar
