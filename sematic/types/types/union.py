@@ -50,9 +50,19 @@ def _union_can_cast(from_type: Any, to_type: Any) -> Tuple[bool, Optional[str]]:
 @register_to_json_encodable(Union)
 def _union_to_json_encodable(value: Any, type_: Any) -> Any:
     # We assume that casting has already vetted type_
-    return value_to_json_encodable(value, type(value))
+
+    return value_to_json_encodable(value, _get_value_type(value, type_))
 
 
 @register_to_json_encodable_summary(Union)
 def _union_to_summary(value: Any, type_: Any) -> Any:
-    return get_json_encodable_summary(value, type(value))
+    return get_json_encodable_summary(value, _get_value_type(value, type_))
+
+
+def _get_value_type(value: Any, type_: Any) -> Any:
+    for unioned_type in type_.__args__:
+        _, error = safe_cast(value, unioned_type)
+        if error is None:
+            return unioned_type
+
+    return type(value)

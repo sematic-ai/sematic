@@ -22,5 +22,6 @@ sematic_py_lib(
     deps = [
         "//sematic:abstract_future",
         "//sematic:resolver",
+        "//sematic/utils:make_list",
     ]
 )

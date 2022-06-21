@@ -1,3 +1,6 @@
+# Standard library
+from typing import List
+
 # Third-party
 import pytest
 
@@ -232,3 +235,11 @@ class DBStateMachineTestResolver(OfflineResolver):
 
 def test_db_state_machine(test_db, mock_requests):  # noqa: F811
     pipeline(1, 2).resolve(DBStateMachineTestResolver())
+
+
+def test_list_conversion(test_db, mock_requests):  # noqa: F811
+    @calculator
+    def alist(a: float, b: float) -> List[float]:
+        return [add(a, b), add(a, b)]
+
+    assert alist(1, 2).resolve() == [3, 3]

@@ -39,7 +39,7 @@ def test_name():
 
 def test_not_a_function():
     with pytest.raises(ValueError, match="not a function"):
-        Calculator("abc")
+        Calculator("abc", {}, None)
 
 
 def test_types_not_specified():
@@ -72,10 +72,7 @@ def test_types_specified():
 def test_variadic():
     with pytest.raises(
         ValueError,
-        match=(
-            "Variadic arguments are not supported."
-            " sematic.tests.test_calculator.func has variadic argument 'abc'"
-        ),
+        match=("Variadic arguments are not supported."),
     ):
 
         @calculator

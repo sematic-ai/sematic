@@ -87,8 +87,8 @@ class OfflineResolver(StateMachineResolver):
         self._set_future_state(future, FutureState.SCHEDULED)
         try:
             value = future.calculator.calculate(**future.resolved_kwargs)
-            cast_value = future.calculator.cast_output(value)
-            self._update_future_with_value(future, cast_value)
+            # cast_value = future.calculator.cast_output(value)
+            self._update_future_with_value(future, value)
         except Exception as exception:
             self._handle_future_failure(future, exception)
 
