@@ -4,6 +4,8 @@ pytest_test(
     deps = [
         "//sematic:calculator",
         "//sematic:future",
+        "//sematic/db/tests:fixtures",
+        "//sematic/api/tests:fixtures",
     ]
 )
 

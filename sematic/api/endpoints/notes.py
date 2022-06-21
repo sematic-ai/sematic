@@ -23,7 +23,6 @@ def list_notes_endpoint() -> flask.Response:
         flask.request.args,
         Note,
     )
-
     with db().get_session() as session:
         query = session.query(Note)
 
@@ -31,7 +30,7 @@ def list_notes_endpoint() -> flask.Response:
             query = query.filter(sql_predicates)
 
         if "calculator_path" in flask.request.args:
-            query.join(Run, Run.id == Note.root_id).filter(
+            query = query.join(Run, Run.id == Note.root_id).filter(
                 Run.calculator_path == flask.request.args["calculator_path"]
             )
 
