@@ -9,7 +9,7 @@ import ReactFlow, {
   Background,
   BackgroundVariant,
 } from "react-flow-renderer";
-import { Alert, Collapse, Container } from "@mui/material";
+import { Alert, Box, Collapse, Container } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import buildDagLayout from "./utils/buildDagLayout";
 import RunNode from "./RunNode";
@@ -230,14 +230,7 @@ function ReactFlowDag(props: ReactFlowDagProps) {
           />
         ))}
       </Box>*/}
-      <Container
-        sx={{ width: "100%", height: "1500px", paddingX: 0, marginX: 0 }}
-      >
-        <Collapse in={showTip}>
-          <Alert severity="info" sx={{ marginBottom: 4 }}>
-            Select a run to view in the right-hand-side panel.
-          </Alert>
-        </Collapse>
+      <Box sx={{ width: "100%", height: "1500px", paddingX: 0, marginX: 0 }}>
         <ReactFlow
           nodes={rfNodes}
           edges={rfEdges}
@@ -251,7 +244,7 @@ function ReactFlowDag(props: ReactFlowDagProps) {
         >
           <Background variant={BackgroundVariant.Dots} />
         </ReactFlow>
-      </Container>
+      </Box>
     </>
   );
 }

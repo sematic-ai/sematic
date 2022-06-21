@@ -46,6 +46,7 @@ sematic_py_lib(
         ":abstract_calculator",
         ":future",
         "//sematic/types:casting",
+        "//sematic/types:registry",
         "//sematic/types:init",
         "//sematic/types:type",
         "//sematic/utils:memoized_property",
@@ -59,7 +60,7 @@ sematic_py_lib(
         ":abstract_calculator",
         ":abstract_future",
         ":resolver",
-        #"//sematic/resolvers:offline_resolver",
+        "//sematic/resolvers:offline_resolver",
     ]
 )
 

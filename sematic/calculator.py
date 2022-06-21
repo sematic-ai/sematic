@@ -1,13 +1,15 @@
 # Standard library
+import collections
 import inspect
 import types
-from typing import Any, Callable, Dict, Iterable, Union
+from typing import Any, Callable, Dict, Iterable, List, Sequence, Type, TypeVar, Union
 
 # Sematic
 from sematic.abstract_calculator import AbstractCalculator
 from sematic.future import Future
 from sematic.types.casting import safe_cast, can_cast_type
 from sematic.types.type import is_type
+from sematic.types.registry import get_origin_type, is_valid_typing_alias
 
 
 class Calculator(AbstractCalculator):
@@ -65,6 +67,10 @@ class Calculator(AbstractCalculator):
             if name not in argument_map:
                 argument_map[name] = parameter.default
 
+            # Support for list of futures
+            if isinstance(argument_map[name], list):
+                argument_map[name] = _convert_lists(argument_map[name])
+
         cast_arguments = self.cast_inputs(argument_map)
 
         return Future(self, cast_arguments)
@@ -73,7 +79,13 @@ class Calculator(AbstractCalculator):
         return inspect.signature(self._func)
 
     def calculate(self, **kwargs) -> Any:
-        return self.func(**kwargs)
+        output = self.func(**kwargs)
+
+        # Support for lists of futures
+        if isinstance(output, list):
+            output = _convert_lists(output)
+
+        return output
 
     def cast_inputs(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -214,3 +226,68 @@ def _getfullargspec(func_: Callable) -> inspect.FullArgSpec:
             )
 
     return full_arg_spec
+
+
+OutputType = TypeVar("OutputType")
+
+
+def _make_list(type_: Type[OutputType], list_with_futures: Sequence[Any]) -> OutputType:
+    """
+    Given a list with futures, returns a future List.
+    """
+    if not (is_valid_typing_alias(type_) and get_origin_type(type_) is list):
+        raise Exception("type_ must be a List type.")
+
+    if not isinstance(list_with_futures, collections.abc.Sequence):
+        raise Exception("list_with_futures must be a collections.Sequence.")
+
+    element_type = type_.__args__[0]  # type: ignore
+
+    input_types = {}
+    inputs = {}
+
+    for i, item in enumerate(list_with_futures):
+        if isinstance(item, Future):
+            can_cast, error = can_cast_type(item.calculator.output_type, element_type)
+            if not can_cast:
+                raise TypeError("Invalid value: {}".format(error))
+        else:
+            _, error = safe_cast(item, element_type)
+            if error is not None:
+                raise TypeError("Invalid value: {}".format(error))
+
+        input_types["v{}".format(i)] = element_type
+        inputs["v{}".format(i)] = item
+
+    source_code = """
+def _make_list({inputs}):
+    return [{inputs}]
+    """.format(
+        inputs=", ".join("v{}".format(i) for i in range(len(list_with_futures)))
+    )
+    scope: Dict[str, Any] = {"__name__": __name__}
+    exec(source_code, scope)
+    _make_list = scope["_make_list"]
+
+    return Calculator(_make_list, input_types=input_types, output_type=type_)(**inputs)
+
+
+def _convert_lists(value_):
+    for idx, item in enumerate(value_):
+        if isinstance(item, list):
+            value_[idx] = _convert_lists(item)
+
+    if any(isinstance(item, Future) for item in value_):
+        output_type = None
+        for item in value_:
+            item_type = (
+                item.calculator.output_type if isinstance(item, Future) else type(item)
+            )
+            if output_type is None:
+                output_type = item_type
+            elif output_type != item_type:
+                output_type = Union[output_type, item_type]
+
+        return _make_list(List[output_type], value_)
+
+    return value_

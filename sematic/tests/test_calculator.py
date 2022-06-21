@@ -1,7 +1,14 @@
+# Standard library
+from typing import List, Union
+
+# Third-party
 import pytest
 
-from sematic.calculator import Calculator, calculator
+# Sematic
+from sematic.calculator import Calculator, calculator, _make_list, _convert_lists
 from sematic.future import Future
+from sematic.db.tests.fixtures import test_db  # noqa: F401
+from sematic.api.tests.fixtures import mock_requests, test_client  # noqa: F401
 
 
 def test_decorator_no_params():
@@ -124,3 +131,53 @@ def test_call_fail_binding():
 
     with pytest.raises(TypeError, match="too many positional arguments"):
         func(1, 2)
+
+
+@calculator
+def foo() -> str:
+    return "foo"
+
+
+@calculator
+def bar() -> str:
+    return "bar"
+
+
+def test_make_list():
+    future = _make_list(List[str], [foo(), bar()])
+
+    assert isinstance(future, Future)
+    assert future.calculator.output_type is List[str]
+    assert len(future.calculator.input_types) == 2
+
+
+@calculator
+def pipeline() -> List[str]:
+    return _make_list(List[str], [foo(), bar(), "baz"])
+
+
+def test_pipeline(test_db, mock_requests):  # noqa: F811
+    output = pipeline().resolve()
+    assert output == ["foo", "bar", "baz"]
+
+
+def test_convert_lists(test_db, mock_requests):  # noqa: F811
+    result = _convert_lists([1, foo(), [2, bar()], 3, [4, [5, foo()]]])
+
+    assert isinstance(result, Future)
+    assert len(result.kwargs) == 5
+    assert (
+        result.calculator.output_type
+        is List[
+            Union[
+                int, str, List[Union[int, str]], List[Union[int, List[Union[int, str]]]]
+            ]
+        ]
+    )
+
+    assert isinstance(result.kwargs["v1"], Future)
+    assert isinstance(result.kwargs["v2"], Future)
+    assert isinstance(result.kwargs["v2"].kwargs["v1"], Future)
+    assert isinstance(result.kwargs["v4"].kwargs["v1"].kwargs["v1"], Future)
+
+    assert result.resolve() == [1, "foo", [2, "bar"], 3, [4, [5, "foo"]]]
