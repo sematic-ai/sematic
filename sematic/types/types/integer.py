@@ -2,6 +2,7 @@
 typing logic for the `int` type.
 """
 # Standard library
+import inspect
 import numbers
 import typing
 
@@ -17,7 +18,7 @@ def can_cast_type(type_: type, _) -> typing.Tuple[bool, typing.Optional[str]]:
 
     Only subclasses of `numbers.Real` can cast to `int`.
     """
-    if issubclass(type_, numbers.Real):
+    if inspect.isclass(type_) and issubclass(type_, numbers.Real):
         return True, None
 
     return False, "Cannot cast {} to int".format(type_)

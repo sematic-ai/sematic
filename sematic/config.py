@@ -105,7 +105,7 @@ class Config:
 # Local API server
 # DB in container
 _DEV_CONFIG = Config(
-    server_address="localhost",
+    server_address="0.0.0.0",
     port=5001,
     api_version=1,
     db_url="postgresql://postgres:password@0.0.0.0:5432/sematic",
@@ -114,7 +114,7 @@ _DEV_CONFIG = Config(
 
 # DB and API in containers
 _LOCAL_CONFIG = Config(
-    server_address="localhost",
+    server_address="0.0.0.0",
     port=5002,
     api_version=1,
     db_url="postgresql://postgres:password@0.0.0.0:5432/sematic",
