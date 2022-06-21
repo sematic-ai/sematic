@@ -9,7 +9,6 @@ import typing
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.resolver import Resolver
-from sematic.utils.make_list import convert_lists
 
 logger = logging.getLogger(__name__)
 
@@ -269,9 +268,6 @@ class StateMachineResolver(Resolver, abc.ABC):
     def _update_future_with_value(
         self, future: AbstractFuture, value: typing.Any
     ) -> None:
-        if isinstance(value, list):
-            value = convert_lists(value)
-
         value = future.calculator.cast_output(value)
 
         if isinstance(value, AbstractFuture):

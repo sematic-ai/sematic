@@ -10,7 +10,7 @@ import RunPanel, { Graph } from "./RunPanel";
 
 export default function PipelinePanels(props: { rootRun: Run }) {
   const { rootRun } = props;
-  const [selectedPanelItem, setSelectedPanelItem] = useState("graph");
+  const [selectedPanelItem, setSelectedPanelItem] = useState("run");
   const [graphsByRootId, setGraphsByRootId] = useState<Map<string, Graph>>(
     new Map()
   );
@@ -31,7 +31,7 @@ export default function PipelinePanels(props: { rootRun: Run }) {
           currentMap.set(rootRun.id, graph);
           return new Map(currentMap);
         });
-        setSelectedPanelItem("run");
+        //setSelectedPanelItem("run");
         setIsLoaded(true);
       },
       setError
