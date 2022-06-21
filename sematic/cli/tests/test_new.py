@@ -23,8 +23,11 @@ def test_new(project_name):
     with runner.isolated_filesystem():
         result = runner.invoke(new, [project_name])
 
-        assert result.output == "New project scaffold created at {}\n".format(
-            os.path.join(os.getcwd(), project_name)
+        assert (
+            result.output
+            == "New project scaffold created at {} from examples/template\n".format(
+                os.path.join(os.getcwd(), project_name)
+            )
         )
 
         files = os.listdir(os.path.join(os.getcwd(), project_name))

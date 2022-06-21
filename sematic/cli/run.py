@@ -1,6 +1,8 @@
 # Standard library
 import os
 import importlib
+import runpy
+import sys
 
 # Third-party
 import click
@@ -53,12 +55,26 @@ def _run_example(example_path: str):
         click.echo("\tpip3 install -r {}".format(_get_requirements_path(example_path)))
 
 
-@cli.command("run", short_help="Run a pipeline, or a packaged example")
+@cli.command(
+    "run",
+    short_help="Run a pipeline, or a packaged example",
+    context_settings=dict(
+        ignore_unknown_options=True,
+        allow_extra_args=True,
+    ),
+)
 @click.argument("script_path", type=click.STRING)
-def run(script_path: str):
+@click.pass_context
+def run(ctx, script_path: str):
     if not server_is_running():
         click.echo("Sematic is not started, issue `sematic start` first.")
         return
 
     if is_example(script_path):
         _run_example(script_path)
+        return
+
+    # This is ugly, better way to do this?
+    sys.argv = [sys.argv[0]] + ctx.args
+
+    runpy.run_module(script_path, run_name="__main__")

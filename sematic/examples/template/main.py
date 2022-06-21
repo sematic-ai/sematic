@@ -3,7 +3,7 @@ This is the entry point of your pipeline.
 
 This is where you import the pipeline function from its module and resolve it.
 """
-from pipeline import pipeline
+from sematic.examples.template.pipeline import pipeline
 
 
 def main():

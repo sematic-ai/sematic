@@ -233,7 +233,7 @@ export function RunTabs(props: {
         <TabPanel value="input">
           {artifacts && <ArtifactList artifacts={artifacts.input} />}
         </TabPanel>
-        <TabPanel value="output">
+        <TabPanel value="output" sx={{ pt: 5 }}>
           {["CREATED", "SCHEDULED", "RAN"].includes(run.future_state) && (
             <Alert severity="info">No output yet. Run has not completed</Alert>
           )}

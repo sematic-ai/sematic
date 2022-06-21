@@ -20,13 +20,13 @@ def random_uniform() -> float:
 
 @sematic.func
 def cube(data: float) -> float:
-    time.sleep(data * 10)
+    time.sleep(data * 5)
     return data**3
 
 
 @sematic.func
 def square(data: float) -> float:
-    time.sleep(data * 10)
+    time.sleep(data * 5)
     return data**2
 
 
@@ -39,9 +39,8 @@ def process(data: float) -> float:
 
 
 @sematic.func
-def find_best(randoms: List[float], candidates: List[float]) -> int:
+def find_best(randoms: List[float], candidates: List[float]) -> float:
     max_value = max(candidates)
-
     index = candidates.index(max_value)
     return randoms[index]
 

@@ -1,5 +1,6 @@
 # Standard library
 import os
+import re
 import shutil
 from typing import Optional
 
@@ -24,21 +25,21 @@ def new(project_name: str, from_example: Optional[str]):
     """
     Create a new project with a scaffold or from an existing example.
     """
-    source_path = get_config().project_template_dir
-    from_suffix = ""
+    if from_example is None:
+        from_example = "examples/template"
 
-    if from_example is not None:
-        if not is_example(from_example):
-            click.echo("No such example: {}\n".format(from_example))
-            click.echo("Available examples are:")
+    if not is_example(from_example):
+        click.echo("No such example: {}\n".format(from_example))
+        click.echo("Available examples are:")
 
-            for example in all_examples():
-                click.echo("\t{}".format(example))
+        for example in all_examples():
+            click.echo("\t{}".format(example))
 
-            return
+        return
 
-        source_path = os.path.join(get_config().base_dir, from_example)
-        from_suffix = " from {}".format(from_example)
+    source_path = os.path.join(get_config().base_dir, from_example)
+    from_suffix = " from {}".format(from_example)
+    example_module = ".".join(from_example.split("/"))
 
     project_path = os.path.join(os.getcwd(), project_name)
 
@@ -47,5 +48,21 @@ def new(project_name: str, from_example: Optional[str]):
         return
 
     shutil.copytree(source_path, project_path)
+
+    for dir, _, files in os.walk(project_name):
+        for filename in files:
+            if not filename.endswith(".py"):
+                continue
+
+            with open(os.path.join(dir, filename), "r+") as file:
+                content = file.read()
+                file.seek(0)
+                content = re.sub(
+                    r"from sematic.{}".format(example_module),
+                    "from {}".format(project_name),
+                    content,
+                )
+                file.write(content)
+                file.truncate()
 
     click.echo("New project scaffold created at {}{}".format(project_path, from_suffix))

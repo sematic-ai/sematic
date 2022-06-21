@@ -19,7 +19,7 @@ import DataEditor, {
 } from "@glideapps/glide-data-grid";
 
 import createPlotlyComponent from "react-plotly.js/factory";
-import { Stack } from "@mui/material";
+import { Stack, useTheme } from "@mui/material";
 const Plot = createPlotlyComponent(Plotly);
 
 type TypeCategory = "builtin" | "typing" | "dataclass" | "generic" | "class";
@@ -162,28 +162,18 @@ export function renderSummary(
 }
 
 function ReprValueView(props: ValueViewProps) {
-  let repr: string[] = props.valueSummary["repr"].split("\n");
   return (
-    <div>
-      {repr.map((line) => (
-        <div style={{ whiteSpace: "pre" }} key={line}>
-          {line}
-        </div>
-      ))}
-    </div>
+    <Typography>
+      <pre>{props.valueSummary["repr"]}</pre>
+    </Typography>
   );
 }
 
 function StrValueView(props: ValueViewProps) {
-  let repr: string[] = props.valueSummary.split("\n");
   return (
-    <div>
-      {repr.map((line, index) => (
-        <div style={{ whiteSpace: "pre" }} key={index}>
-          {line}
-        </div>
-      ))}
-    </div>
+    <Typography>
+      <pre>"{props.valueSummary}"</pre>
+    </Typography>
   );
 }
 
@@ -215,6 +205,10 @@ function BoolValueView(props: ValueViewProps) {
   );
 }
 
+function NoneValueView(props: ValueViewProps) {
+  return <Chip label="NONE" size="small" />;
+}
+
 function ListValueView(props: ValueViewProps) {
   let typeRepr = props.typeRepr as AliasTypeRepr;
   if (!typeRepr[2].args) {
@@ -223,21 +217,50 @@ function ListValueView(props: ValueViewProps) {
 
   let elementTypeRepr: TypeRepr = typeRepr[2].args[0].type as TypeRepr;
 
-  return (
+  const summaryIsComplete =
+    props.valueSummary["summary"].length == props.valueSummary["length"];
+
+  const summary = (
     <Typography display="inline" component="span">
       [
-      {Object.entries(props.valueSummary)
-        .map<React.ReactNode>((pairs) =>
+      {Array.from(props.valueSummary["summary"])
+        .map<React.ReactNode>((element, index) =>
           renderSummary(
             props.typeSerialization,
-            pairs[1],
+            element,
             elementTypeRepr,
-            pairs[0]
+            index.toString()
           )
         )
         .reduce((prev, curr) => [prev, ", ", curr])}
       ]
     </Typography>
+  );
+
+  if (summaryIsComplete) return summary;
+
+  return (
+    <Table>
+      <TableBody>
+        <TableRow>
+          <TableCell>
+            <b>Total elements</b>
+          </TableCell>
+          <TableCell>{props.valueSummary["length"]}</TableCell>
+        </TableRow>
+        <TableRow>
+          <TableCell>
+            <b>Excerpt</b>
+          </TableCell>
+          <TableCell>
+            {summary} and{" "}
+            {props.valueSummary["length"] -
+              props.valueSummary["summary"].length}{" "}
+            more items.
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
   );
 }
 
@@ -490,13 +513,9 @@ function DataFrameTable(props: {
 
   const getContent = React.useCallback((cell: Item): GridCell => {
     const [col, row] = cell;
-    console.log(col, row);
     const column = orderedCols[col];
-    console.log(column);
     const dataRow = dataframe[column];
-    console.log(dataRow);
     const d = dataRow[index[row]];
-    console.log(d);
     let kind: GridCellKind = GridCellKind.Text;
     let dtype = dtypesByColumn.get(column);
     if (dtype?.startsWith("int") || dtype?.startsWith("float")) {
@@ -580,6 +599,7 @@ type ComponentPair = {
 };
 
 const TypeComponents: Map<string, ComponentPair> = new Map([
+  ["NoneType", { type: TypeView, value: NoneValueView }],
   ["float", { type: TypeView, value: FloatValueView }],
   ["str", { type: TypeView, value: StrValueView }],
   ["int", { type: TypeView, value: IntValueView }],
