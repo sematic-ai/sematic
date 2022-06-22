@@ -2,7 +2,7 @@ import { BatchPrediction } from "@mui/icons-material";
 import { Box, Typography, Link, Stack } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { SiDiscord, SiReadthedocs } from "react-icons/si";
-
+import logo from "../Fox.png";
 export default function SideBar() {
   const theme = useTheme();
 
@@ -21,7 +21,7 @@ export default function SideBar() {
       <Stack sx={{ gridRow: 1, spacing: 2, paddingTop: 3 }}>
         <Box sx={{ color: "#ffffff", paddingBottom: 4 }}>
           <Link href="/" underline="none">
-            <img src="/Fox.png" width="30px" />
+            <img src={logo} width="30px" />
             {/*<Typography fontSize={32}>🦊</Typography>*/}
           </Link>
         </Box>

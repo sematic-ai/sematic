@@ -1,6 +1,8 @@
+.. role:: raw-html-m2r(raw)
+   :format: html
 
-Sematic
-=======
+
+:raw-html-m2r:`<img src="https://github.com/sematic-ai/sematic/raw/main/sematic/ui/public/Logo.png" alt="Sematic" width="400"/>`
 
 
 .. image:: https://circleci.com/gh/sematic-ai/sematic.svg?style=shield&circle-token=c8e0115ddccadc17b98ab293b32cad27026efb25
@@ -15,6 +17,12 @@ Learning (ML) Engineers prototype and productionize ML pipelines in days not
 weeks.
 
 Find our docs at `docs.sematic.ai <https://docs.sematic.ai>`_.
+
+
+.. image:: https://github.com/sematic-ai/sematic/raw/main/docs/images/Screenshot_README_1.png
+   :target: https://github.com/sematic-ai/sematic/raw/main/docs/images/Screenshot_README_1.png
+   :alt: UI Screenshot
+
 
 Installation
 ------------
@@ -40,13 +48,25 @@ Then run an example pipeline with
 
    $ sematic run examples/mnist/pytorch
 
-Or point to your own pipeline
+Create a new boilerplate project
 
 .. code-block:: shell
 
-   $ sematic run pipeline.py
+   $ sematic new my_new_project
 
-See our docs at `docs.sematic.ai <https://docs.sematic.ai>`_\ , and join us on (Discord)[https://discord.gg/PFCpatvy].
+Or from an existing example:
+
+.. code-block:: shell
+
+   $ sematic new my_new_project --from examples/mnist/pytorch
+
+Then run it with
+
+.. code-block:: shell
+
+   $ sematic run my_new_project.main
+
+See our docs at `docs.sematic.ai <https://docs.sematic.ai>`_\ , and join us on `Discord <https://discord.gg/PFCpatvy>`_.
 
 Contribute
 ----------
