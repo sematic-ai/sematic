@@ -514,30 +514,38 @@ function DataFrameTable(props: {
     [dtypes]
   );
 
-  const getContent = React.useCallback(
-    (cell: Item): GridCell => {
-      const [col, row] = cell;
-      const column = orderedCols[col];
-      const dataRow = dataframe[column];
-      const d = dataRow[index[row]];
-      let kind: GridCellKind = GridCellKind.Text;
-      let dtype = dtypesByColumn.get(column);
-      if (dtype?.startsWith("int") || dtype?.startsWith("float")) {
-        kind = GridCellKind.Number;
-      } else if (dtype === "bool") {
-        kind = GridCellKind.Boolean;
-      } else if (dtype === "index") {
-        kind = GridCellKind.RowID;
-      }
-      return {
-        kind: kind,
-        allowOverlay: false,
-        displayData: d.toString(),
-        data: d.toString(),
-      };
-    },
-    [index, orderedCols, dataframe, dtypesByColumn]
-  );
+  const getContent = React.useCallback((cell: Item): GridCell => {
+    const [col, row] = cell;
+
+    const column = orderedCols[col];
+    const dataRow = dataframe[column];
+
+    let data = dataRow[index[row]];
+    let displayData = "";
+    try {
+      displayData = data.toString();
+    } catch {}
+
+    let kind: GridCellKind = GridCellKind.Text;
+    let dtype = dtypesByColumn.get(column);
+
+    if (dtype?.startsWith("int") || dtype?.startsWith("float")) {
+      kind = GridCellKind.Number;
+      data = data === null ? undefined : data;
+      displayData = data === null ? "null" : displayData;
+    } else if (dtype === "bool") {
+      kind = GridCellKind.Boolean;
+    } else if (dtype === "index") {
+      kind = GridCellKind.RowID;
+      data = data.toString();
+    }
+    return {
+      kind: kind,
+      allowOverlay: false,
+      displayData: displayData,
+      data: data,
+    };
+  }, []);
 
   return (
     <DataEditor getCellContent={getContent} columns={columns} rows={length} />
