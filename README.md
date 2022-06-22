@@ -11,7 +11,7 @@ weeks.
 Find our docs at [docs.sematic.ai](https://docs.sematic.ai).
 
 
-![UI Screenshot]()
+![UI Screenshot](https://github.com/sematic-ai/sematic/raw/main/sematic/docs/images/Screenshot_README_1.png)
 
 
 ## Installation
