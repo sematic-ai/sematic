@@ -1,4 +1,4 @@
-# Sematic
+![Sematic](https://github.com/sematic-ai/sematic/raw/main/sematic/ui/public/Logo.png)
 
 [![CircleCI](https://circleci.com/gh/sematic-ai/sematic.svg?style=shield&circle-token=c8e0115ddccadc17b98ab293b32cad27026efb25)](<LINK>)
 
@@ -32,11 +32,24 @@ Then run an example pipeline with
 $ sematic run examples/mnist/pytorch
 ```
 
-Or point to your own pipeline
+Create a new boilerplate project
 
 ```shell
-$ sematic run pipeline.py
+$ sematic new my_new_project
 ```
+
+Or from an existing example:
+
+```shell
+$ sematic new my_new_project --from examples/mnist/pytorch
+```
+
+Then run it with
+
+```shell
+$ sematic run my_new_project.main
+```
+
 
 See our docs at [docs.sematic.ai](https://docs.sematic.ai), and join us on (Discord)[https://discord.gg/PFCpatvy].
 
