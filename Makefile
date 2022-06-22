@@ -56,8 +56,13 @@ start:
 
 wheel:
 	rm -f bazel-bin/sematic/*.whl
-	m2r --overwrite README.md
+	cat README.md | grep -v "<img" > README.nohtml
+	m2r --overwrite README.nohtml
+	rm README.nohtml
 	bazel build //sematic:wheel
 
-release:
+test-release:
 	python3 -m twine upload --repository testpypi bazel-bin/sematic/*.whl
+
+release:
+	python3 -m twine upload bazel-bin/sematic/*.whl
