@@ -142,7 +142,7 @@ export default function Home() {
           <Typography paragraph sx={{ mt: 10 }}>
             Then simpy run:
           </Typography>
-          <ShellCommand command={"python my_new_project/main.py"} />
+          <ShellCommand command={"sematic run my_new_project.main"} />
         </Grid>
         <Divider orientation="vertical" flexItem sx={{ my: 5 }} />
 

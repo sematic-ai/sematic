@@ -21,10 +21,11 @@ export default function SideBar() {
       <Stack sx={{ gridRow: 1, spacing: 2, paddingTop: 3 }}>
         <Box sx={{ color: "#ffffff", paddingBottom: 4 }}>
           <Link href="/" underline="none">
-            <Typography fontSize={32}>🦊</Typography>
+            <img src="/Fox.png" width="30px" />
+            {/*<Typography fontSize={32}>🦊</Typography>*/}
           </Link>
         </Box>
-        <Box>
+        <Box mt={5}>
           <Link
             href="/pipelines"
             sx={{ color: "rgba(255, 255, 255, 0.5)" }}

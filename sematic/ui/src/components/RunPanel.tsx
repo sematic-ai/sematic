@@ -1,4 +1,12 @@
-import { Box, Typography } from "@mui/material";
+import { FileCopy, History, Insights, Refresh } from "@mui/icons-material";
+import {
+  Box,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Typography,
+} from "@mui/material";
 import { useMemo } from "react";
 import { Artifact, Edge, Run } from "../Models";
 import CalculatorPath from "./CalculatorPath";
@@ -71,6 +79,12 @@ export default function RunPanel(props: {
     return ioArtifacts;
   }, [edges, artifactsById, selectedRun]);
 
+  const actions = [
+    [<FileCopy />, "Clone"],
+    [<History />, "Schedule"],
+    [<Insights />, "Share"],
+  ];
+
   return (
     <Box sx={{ gridColumn: 2, gridRow: 2, overflowY: "scroll" }}>
       {selectedPanel === "graph" && (
@@ -104,9 +118,34 @@ export default function RunPanel(props: {
             <Box sx={{ gridColumn: 2 }}>
               <RunStateChip state={selectedRun.future_state} variant="full" />
               <RunTime run={selectedRun} prefix="in " />
+              <FormControl fullWidth size="small" sx={{ mt: 5 }}>
+                <InputLabel id="actions-label">Actions</InputLabel>
+                <Select
+                  labelId="actions-label"
+                  id="action-select"
+                  label="Actions"
+                  placeholder=""
+                >
+                  {actions.map(([icon, label]) => (
+                    <MenuItem>
+                      <Typography
+                        component="span"
+                        sx={{ display: "flex", alignItems: "center" }}
+                      >
+                        {icon}
+                        <Typography component="span" sx={{ ml: 3 }}>
+                          {label}
+                        </Typography>
+                      </Typography>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Box>
           </Box>
-          <Docstring docstring={selectedRun.description} />
+          <Box sx={{ my: 10 }}>
+            <Docstring docstring={selectedRun.description} />
+          </Box>
           <RunTabs run={selectedRun} artifacts={selectedRunArtifacts} />
         </Box>
       )}
