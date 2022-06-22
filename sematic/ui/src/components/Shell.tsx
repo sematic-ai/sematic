@@ -1,11 +1,10 @@
 import Box from "@mui/material/Box";
-import { useTheme, ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import { Outlet } from "react-router-dom";
 import createTheme from "../themes/mira";
 import SideBar from "./SideBar";
 
 export default function Shell() {
-  const theme = useTheme();
   return (
     <ThemeProvider theme={createTheme("LIGHT")}>
       <Box

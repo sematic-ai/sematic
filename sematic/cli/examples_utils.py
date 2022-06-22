@@ -5,7 +5,13 @@ import os
 from sematic.config import get_config, EXAMPLES_DIR
 
 
-MIN_EXAMPLE_FILES = ["main.py", "requirements.txt", "AUTHORS", "README"]
+MIN_EXAMPLE_FILES = [
+    "__main__.py",
+    "__init__.py",
+    "requirements.txt",
+    "AUTHORS",
+    "README",
+]
 
 
 def is_example(path: str):

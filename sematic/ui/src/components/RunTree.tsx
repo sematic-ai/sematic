@@ -4,7 +4,6 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  useTheme,
 } from "@mui/material";
 import { Fragment, useMemo } from "react";
 import { Run } from "../Models";
@@ -22,8 +21,6 @@ export default function RunTree(props: {
   onSelectRun: (run: Run) => void;
 }) {
   let { runsByParentId, parentId, selectedRunId, onSelectRun } = props;
-
-  const theme = useTheme();
 
   const directChildren = useMemo(() => {
     let runs = runsByParentId.get(parentId);

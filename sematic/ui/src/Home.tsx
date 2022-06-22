@@ -50,8 +50,6 @@ function ShellCommand(props: { command: string }) {
 }
 
 export default function Home() {
-  const theme = useTheme();
-
   const [prompt, setPrompt] = useState<ReactElement | undefined>(undefined);
 
   useEffect(() => {
@@ -142,7 +140,7 @@ export default function Home() {
           <Typography paragraph sx={{ mt: 10 }}>
             Then simpy run:
           </Typography>
-          <ShellCommand command={"sematic run my_new_project.main"} />
+          <ShellCommand command={"python3 -m my_new_project"} />
         </Grid>
         <Divider orientation="vertical" flexItem sx={{ my: 5 }} />
 

@@ -105,7 +105,9 @@ class Config:
 # Local API server
 # DB in container
 _DEV_CONFIG = Config(
-    server_address="0.0.0.0",
+    # If choosing localhost, the React app will not be able
+    # To proxy requests to the socker io server. Unsure why.
+    server_address="127.0.0.1",
     port=5001,
     api_version=1,
     db_url="postgresql://postgres:password@0.0.0.0:5432/sematic",

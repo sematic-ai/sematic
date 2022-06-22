@@ -53,7 +53,7 @@ def ping():
     return jsonify({"status": "ok"})
 
 
-socketio = SocketIO(sematic_api)
+socketio = SocketIO(sematic_api, cors_allowed_origins="*")
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -82,9 +82,11 @@ if __name__ == "__main__":
     switch_env(args.env)
 
     if args.debug:
-        sematic_api.debug = args.debug
         socketio.run(
-            sematic_api, port=get_config().port, host=get_config().server_address
+            sematic_api,
+            port=get_config().port,
+            host=get_config().server_address,
+            debug=args.debug,
         )
 
     else:

@@ -1,13 +1,4 @@
-import Typography from "@mui/material/Typography";
-import React from "react";
-import Tooltip from "@mui/material/Tooltip";
-import Box from "@mui/material/Box";
-import Alert from "@mui/material/Alert";
-import Table from "@mui/material/Table";
-import TableCell from "@mui/material/TableCell";
-import TableRow from "@mui/material/TableRow";
-import TableBody from "@mui/material/TableBody";
-import Chip from "@mui/material/Chip";
+import React, { useMemo } from "react";
 import Plotly from "plotly.js-cartesian-dist";
 import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
@@ -19,7 +10,18 @@ import DataEditor, {
 } from "@glideapps/glide-data-grid";
 
 import createPlotlyComponent from "react-plotly.js/factory";
-import { Stack, useTheme } from "@mui/material";
+import {
+  Stack,
+  Typography,
+  Tooltip,
+  Box,
+  Alert,
+  Table,
+  TableCell,
+  TableRow,
+  TableBody,
+  Chip,
+} from "@mui/material";
 const Plot = createPlotlyComponent(Plotly);
 
 type TypeCategory = "builtin" | "typing" | "dataclass" | "generic" | "class";
@@ -218,7 +220,7 @@ function ListValueView(props: ValueViewProps) {
   let elementTypeRepr: TypeRepr = typeRepr[2].args[0].type as TypeRepr;
 
   const summaryIsComplete =
-    props.valueSummary["summary"].length == props.valueSummary["length"];
+    props.valueSummary["summary"].length === props.valueSummary["length"];
 
   const summary = (
     <Typography display="inline" component="span">
@@ -477,7 +479,7 @@ function MatplotlibFigureValueView(props: ValueViewProps) {
   let { path } = valueSummary;
   return (
     <Zoom>
-      <img src={path} width={"100%"} />
+      <img src={path} width={"100%"} alt="matplotlib figure" />
     </Zoom>
   );
 }
@@ -501,37 +503,45 @@ function DataFrameTable(props: {
     length = Object.entries(entries[0][1]).length;
   }
 
-  const orderedCols: string[] = [];
-  const dtypesByColumn: Map<string, string> = new Map();
-  const columns: GridColumn[] = [];
+  const orderedCols: string[] = useMemo(
+    () => dtypes.map((value) => value[0]),
+    [dtypes]
+  );
 
-  Array.from(dtypes).forEach((value: [string, string]) => {
-    orderedCols.push(value[0]);
-    columns.push({ id: value[0], title: value[0] });
-    dtypesByColumn.set(value[0], value[1]);
-  });
+  const columns: GridColumn[] = useMemo(
+    () => dtypes.map((value) => ({ id: value[0], title: value[0] })),
+    [dtypes]
+  );
 
-  const getContent = React.useCallback((cell: Item): GridCell => {
-    const [col, row] = cell;
-    const column = orderedCols[col];
-    const dataRow = dataframe[column];
-    const d = dataRow[index[row]];
-    let kind: GridCellKind = GridCellKind.Text;
-    let dtype = dtypesByColumn.get(column);
-    if (dtype?.startsWith("int") || dtype?.startsWith("float")) {
-      kind = GridCellKind.Number;
-    } else if (dtype === "bool") {
-      kind = GridCellKind.Boolean;
-    } else if (dtype === "index") {
-      kind = GridCellKind.RowID;
-    }
-    return {
-      kind: kind,
-      allowOverlay: false,
-      displayData: d.toString(),
-      data: d.toString(),
-    };
-  }, []);
+  const dtypesByColumn: Map<string, string> = useMemo(
+    () => new Map(dtypes),
+    [dtypes]
+  );
+
+  const getContent = React.useCallback(
+    (cell: Item): GridCell => {
+      const [col, row] = cell;
+      const column = orderedCols[col];
+      const dataRow = dataframe[column];
+      const d = dataRow[index[row]];
+      let kind: GridCellKind = GridCellKind.Text;
+      let dtype = dtypesByColumn.get(column);
+      if (dtype?.startsWith("int") || dtype?.startsWith("float")) {
+        kind = GridCellKind.Number;
+      } else if (dtype === "bool") {
+        kind = GridCellKind.Boolean;
+      } else if (dtype === "index") {
+        kind = GridCellKind.RowID;
+      }
+      return {
+        kind: kind,
+        allowOverlay: false,
+        displayData: d.toString(),
+        data: d.toString(),
+      };
+    },
+    [index, orderedCols, dataframe, dtypesByColumn]
+  );
 
   return (
     <DataEditor getCellContent={getContent} columns={columns} rows={length} />
