@@ -59,7 +59,7 @@ def sematic_example(name, requirements = None, data = None):
 
     sematic_py_lib(
         name = "requirements",
-        srcs = ["main.py"],
+        srcs = ["__main__.py"],
         deps = [
             requirement(req) for req in (requirements or [])
         ]
@@ -67,8 +67,8 @@ def sematic_example(name, requirements = None, data = None):
 
     py_binary(
         name = name,
-        main = "main.py",
-        srcs = ["main.py"],
+        main = "__main__.py",
+        srcs = ["__main__.py"],
         deps = [
             ":{}_lib".format(name),
             ":requirements",

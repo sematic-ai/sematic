@@ -21,7 +21,7 @@ export default function SideBar() {
       <Stack sx={{ gridRow: 1, spacing: 2, paddingTop: 3 }}>
         <Box sx={{ color: "#ffffff", paddingBottom: 4 }}>
           <Link href="/" underline="none">
-            <img src={logo} width="30px" />
+            <img src={logo} width="30px" alt="Sematic fox" />
             {/*<Typography fontSize={32}>🦊</Typography>*/}
           </Link>
         </Box>

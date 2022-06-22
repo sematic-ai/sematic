@@ -9,8 +9,8 @@ import ReactFlow, {
   Background,
   BackgroundVariant,
 } from "react-flow-renderer";
-import { Alert, Box, Collapse, Container } from "@mui/material";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Box } from "@mui/material";
+import { useCallback, useEffect, useMemo } from "react";
 import buildDagLayout from "./utils/buildDagLayout";
 import RunNode from "./RunNode";
 import ArtifactNode from "./ArtifactNode";
@@ -65,11 +65,6 @@ function ReactFlowDag(props: ReactFlowDagProps) {
 
   const [rfNodes, setRFNodes, onNodesChange] = useNodesState([]);
   const [rfEdges, setRFEdges, onEdgesChange] = useEdgesState([]);
-
-  const [showTip, setShowTip] = useState(false);
-
-  //const reactFlowInstance = useReactFlow();
-  //const theme = useTheme();
 
   const getEdgeLabel = useCallback(
     (edge: Edge) => {
@@ -204,7 +199,6 @@ function ReactFlowDag(props: ReactFlowDagProps) {
 
   const onNodeClick = useCallback(
     (event: any, node: Node) => {
-      setShowTip(false);
       let selectedRun = runsById.get(node.id);
       if (selectedRun) {
         onSelectRun(selectedRun);

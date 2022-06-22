@@ -1,7 +1,6 @@
 import { Box, Typography, useTheme } from "@mui/material";
 import { Note } from "../Models";
 import TimeAgo from "./TimeAgo";
-import DeleteIcon from "@mui/icons-material/Delete";
 
 export function NoteView(props: { note: Note }) {
   const { note } = props;

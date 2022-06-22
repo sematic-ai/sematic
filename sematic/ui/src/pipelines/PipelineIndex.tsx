@@ -9,7 +9,7 @@ import { Run } from "../Models";
 import Link from "@mui/material/Link";
 import { RunListPayload } from "../Payloads";
 import RunStateChip from "../components/RunStateChip";
-import { Alert, AlertTitle, Container, useTheme } from "@mui/material";
+import { Alert, AlertTitle, Container } from "@mui/material";
 import { InfoOutlined } from "@mui/icons-material";
 import { RunTime } from "../components/RunTime";
 import { pipelineSocket } from "../utils";
@@ -46,12 +46,6 @@ function PipelineRow(props: { run: Run }) {
       });
   }, [run.calculator_path]);
 
-  let endedAt = new Date();
-  let endTimeString = run.failed_at || run.resolved_at;
-  if (endTimeString) {
-    endedAt = new Date(endTimeString);
-  }
-
   return (
     <>
       <TableRow key={run.id}>
@@ -77,8 +71,6 @@ function PipelineRow(props: { run: Run }) {
 }
 
 function PipelineIndex() {
-  const theme = useTheme();
-
   const triggerRefresh = useCallback((refreshCallback: () => void) => {
     pipelineSocket.removeAllListeners();
     pipelineSocket.on("update", (args) => {

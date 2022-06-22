@@ -68,7 +68,7 @@ export default function MenuPanel(props: {
             <ListItemButton
               onClick={panel.onClick}
               sx={{ height: "4em" }}
-              selected={selectedPanel == panel.label}
+              selected={selectedPanel === panel.label}
             >
               <ListItemIcon sx={{ minWidth: "40px" }}>
                 {panel.icon}

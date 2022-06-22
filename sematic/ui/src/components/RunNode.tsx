@@ -29,34 +29,8 @@ function getColor(futureState: string, theme: Theme): PaletteColor {
   };
 }
 
-function getChipColor(
-  futureState: string
-):
-  | "default"
-  | "primary"
-  | "secondary"
-  | "error"
-  | "info"
-  | "success"
-  | "warning"
-  | undefined {
-  if (futureState === "RESOLVED") {
-    return "success";
-  }
-  if (["SCHEDULED", "RAN"].includes(futureState)) {
-    return "info";
-  }
-  if (["FAILED", "NESTED_FAILED"].includes(futureState)) {
-    return "error";
-  }
-  return "default";
-}
-
 export default function RunNode(props: NodeProps) {
   const run: Run = props.data.run;
-  // let shortCalculatorPath = getShortCalculatorPath(run.calculator_path);
-  const calculatorPathParts = run.calculator_path.split(".");
-  let shortCalculatorPath = calculatorPathParts[calculatorPathParts.length - 1];
   const theme = useTheme();
   let color = getColor(run.future_state, theme);
 
