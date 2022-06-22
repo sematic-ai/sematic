@@ -10,6 +10,10 @@ weeks.
 
 Find our docs at [docs.sematic.ai](https://docs.sematic.ai).
 
+
+![UI Screenshot]()
+
+
 ## Installation
 
 Instal Sematic with
@@ -51,7 +55,7 @@ $ sematic run my_new_project.main
 ```
 
 
-See our docs at [docs.sematic.ai](https://docs.sematic.ai), and join us on (Discord)[https://discord.gg/PFCpatvy].
+See our docs at [docs.sematic.ai](https://docs.sematic.ai), and join us on [Discord](https://discord.gg/PFCpatvy).
 
 ## Contribute
 
