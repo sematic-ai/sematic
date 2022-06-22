@@ -1,4 +1,6 @@
-* [in-progress] 0.1.1-alpha.2
+* 0.1.2-alpha
+    * [bugfix] Fix example execution
+* 0.1.1-alpha
     * [feature] Support for returning and passing lists of futures
     * [example] Dummy dynamic graph
     * [bugfix] List UI display

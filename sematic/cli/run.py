@@ -1,6 +1,5 @@
 # Standard library
 import os
-import importlib
 import runpy
 import sys
 
@@ -34,13 +33,9 @@ def _get_requirements(example_path: str) -> list[str]:
 def _run_example(example_path: str):
     click.echo("Running example {}\n".format(example_path))
     try:
-        example_main = importlib.import_module(
-            "{}.{}".format(
-                _example_path_to_import_path(example_path),
-                get_config().examples_entry_point,
-            )
+        runpy.run_module(
+            _example_path_to_import_path(example_path), run_name="__main__"
         )
-        example_main.main()
         click.echo(
             "\nYou run has completed, view it at {}\n".format(get_config().server_url)
         )
