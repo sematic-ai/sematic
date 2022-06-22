@@ -1,8 +1,3 @@
-.. role:: raw-html-m2r(raw)
-   :format: html
-
-
-:raw-html-m2r:`<img src="https://github.com/sematic-ai/sematic/raw/main/sematic/ui/public/Logo.png" alt="Sematic" width="400"/>`
 
 
 .. image:: https://circleci.com/gh/sematic-ai/sematic.svg?style=shield&circle-token=c8e0115ddccadc17b98ab293b32cad27026efb25
