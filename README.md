@@ -1,8 +1,18 @@
-<img src="https://github.com/sematic-ai/sematic/raw/main/sematic/ui/public/Logo.png" alt="Sematic" width="400"/>
+![Sematic logo](https://github.com/sematic-ai/sematic/raw/main/docs/images/Logo_README.png)
 
-[![CircleCI](https://circleci.com/gh/sematic-ai/sematic.svg?style=shield&circle-token=c8e0115ddccadc17b98ab293b32cad27026efb25)](<LINK>)
+---------------
 
-Welcome to Sematic.
+<p align="center">Prototype to production ML in days not weeks</p>
+
+![UI Screenshot](https://github.com/sematic-ai/sematic/raw/main/docs/images/Screenshot_README_1.png)
+
+[![CircleCI](https://img.shields.io/circleci/build/github/sematic-ai/sematic/main?label=CircleCI&style=for-the-badge&token=c8e0115ddccadc17b98ab293b32cad27026efb25)](https://app.circleci.com/pipelines/github/sematic-ai/sematic?branch=main&filter=all)
+![PyPI - License](https://img.shields.io/pypi/l/sematic?style=for-the-badge)
+[![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue?style=for-the-badge&logo=none)](https://python.org)
+![Discord](https://img.shields.io/discord/983789877927747714?label=DISCORD&style=for-the-badge)
+[![Made By Sematic](https://img.shields.io/badge/Made_by-Sematic_🦊-E19632?style=for-the-badge&logo=none)](https://sematic.ai)
+
+## Welcome to Sematic.
 
 Sematic is an open-source development toolkit to help Data Scientists and Machine
 Learning (ML) Engineers prototype and productionize ML pipelines in days not
@@ -11,7 +21,6 @@ weeks.
 Find our docs at [docs.sematic.ai](https://docs.sematic.ai).
 
 
-![UI Screenshot](https://github.com/sematic-ai/sematic/raw/main/docs/images/Screenshot_README_1.png)
 
 ## Installation
 
