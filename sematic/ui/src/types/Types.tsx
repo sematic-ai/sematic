@@ -164,11 +164,7 @@ export function renderSummary(
 }
 
 function ReprValueView(props: ValueViewProps) {
-  return (
-    <Typography>
-      <pre>{props.valueSummary["repr"]}</pre>
-    </Typography>
-  );
+  return <pre>{props.valueSummary["repr"]}</pre>;
 }
 
 function StrValueView(props: ValueViewProps) {

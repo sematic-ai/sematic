@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { Note, Run } from "../Models";
@@ -61,6 +62,12 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
     [composedNote, rootRun, selectedRun, notes]
   );
 
+  const bottomRef = useRef<null | HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView();
+  }, [notes]);
+
   return (
     <Box
       sx={{
@@ -70,6 +77,7 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
         borderColor: theme.palette.grey[200],
         display: "grid",
         gridTemplateRows: "1fr auto",
+        overflowY: "scroll",
       }}
     >
       <Box
@@ -79,7 +87,9 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
           gridTemplateRows: "1fr auto",
           borderBottom: 1,
           borderColor: theme.palette.grey[200],
+          overflowY: "scroll",
         }}
+        id="notesList"
       >
         <Box sx={{ gridRow: 1 }}></Box>
         <Box sx={{ gridRow: 2, display: "flex", flexDirection: "column" }}>
@@ -87,10 +97,11 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
             <Box sx={{ gridRow: 1 }}></Box>
 
             <Stack sx={{ gridRow: 2 }}>
-              {notes.map((note) => (
-                <NoteView note={note} />
+              {notes.map((note, idx) => (
+                <NoteView note={note} key={idx} />
               ))}
             </Stack>
+            <div ref={bottomRef} />
           </Box>
         </Box>
       </Box>

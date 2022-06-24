@@ -126,8 +126,8 @@ export default function RunPanel(props: {
                   label="Actions"
                   placeholder=""
                 >
-                  {actions.map(([icon, label]) => (
-                    <MenuItem>
+                  {actions.map(([icon, label], idx) => (
+                    <MenuItem key={idx}>
                       <Typography
                         component="span"
                         sx={{ display: "flex", alignItems: "center" }}
