@@ -1,12 +1,16 @@
 import { ChevronLeft } from "@mui/icons-material";
 import {
   Box,
+  Button,
   FormControl,
+  IconButton,
   InputLabel,
   Link,
   MenuItem,
   Select,
   SelectChangeEvent,
+  Snackbar,
+  SnackbarContent,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -19,6 +23,7 @@ import Loading from "./Loading";
 import { RunFilterType } from "./RunList";
 import RunStateChip from "./RunStateChip";
 import TimeAgo from "./TimeAgo";
+import CloseIcon from "@mui/icons-material/Close";
 
 export default function PipelineBar(props: {
   calculatorPath: string;
@@ -91,6 +96,34 @@ export default function PipelineBar(props: {
     [latestRuns]
   );
 
+  const selectLatestRun = useCallback(() => {
+    setRootRun(latestRuns[0]);
+    onRootRunChange(latestRuns[0]);
+  }, [latestRuns]);
+
+  const snackBarAction = (
+    <>
+      <Button
+        color="secondary"
+        size="small"
+        onClick={() => {
+          selectLatestRun();
+          setHasNewRun(false);
+        }}
+      >
+        View
+      </Button>
+      <IconButton
+        size="small"
+        aria-label="close"
+        color="inherit"
+        onClick={() => setHasNewRun(false)}
+      >
+        <CloseIcon fontSize="small" />
+      </IconButton>
+    </>
+  );
+
   if (error || !isLoaded) {
     return (
       <Box sx={{ p: 5 }}>
@@ -110,6 +143,13 @@ export default function PipelineBar(props: {
           gridTemplateColumns: "70px 1fr auto",
         }}
       >
+        <Snackbar
+          open={hasNewRun}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+          message="New run available"
+          sx={{ marginTop: "50px" }}
+          action={snackBarAction}
+        />
         <Box
           sx={{
             gridColumn: 1,
@@ -137,18 +177,11 @@ export default function PipelineBar(props: {
             display: "flex",
           }}
         >
-          <Box sx={{ width: "100px" }}>
-            {hasNewRun && (
-              <Typography color={theme.palette.warning.light}>
-                New run available.
-              </Typography>
-            )}
-          </Box>
           <FormControl fullWidth size="small">
-            <InputLabel id="demo-simple-select-label">Latest runs</InputLabel>
+            <InputLabel id="root-run-select-label">Latest runs</InputLabel>
             <Select
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
+              labelId="root-run-select-label"
+              id="root-run-select"
               value={rootRun.id}
               label="Latest runs"
               onChange={onSelect}
