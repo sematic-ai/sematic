@@ -12,7 +12,11 @@
 ![Discord](https://img.shields.io/discord/983789877927747714?label=DISCORD&style=for-the-badge)
 [![Made By Sematic](https://img.shields.io/badge/Made_by-Sematic_🦊-E19632?style=for-the-badge&logo=none)](https://sematic.ai)
 
-## Welcome to Sematic.
+## Hi 👋
+
+We built the infrastructure behind Cruise's [Continuous Learning
+Machine](https://medium.com/cruise/cruise-continuous-learning-machine-30d60f4c691b).
+Now we want to bring our learnings to you!
 
 Sematic is an open-source development toolkit to help Data Scientists and Machine
 Learning (ML) Engineers prototype and productionize ML pipelines in days not
@@ -20,6 +24,13 @@ weeks.
 
 Find our docs at [docs.sematic.ai](https://docs.sematic.ai).
 
+Sematic helps you
+
+* Bring your prototype ML code from your Notebook to a production pipeline with minimal efforts
+* Monitor, visualize, and track all inputs and outputs of all pipeline steps in a slick UI
+* Collaborate with your team: keep the discussion close to the pipeline as opposed to scattered elsewhere
+* [soon] Clone/re-run your pipelines with different inputs/configs
+* [soon] Schedule your pipelines to keep your models fresh and relevant
 
 
 ## Installation
@@ -32,7 +43,7 @@ $ pip install sematic
 
 ## Usage
 
-Start the app with
+Start the app locally with
 
 ```shell
 $ sematic start
@@ -59,7 +70,7 @@ $ sematic new my_new_project --from examples/mnist/pytorch
 Then run it with
 
 ```shell
-$ sematic run my_new_project.main
+$ python3 -m my_new_project
 ```
 
 
