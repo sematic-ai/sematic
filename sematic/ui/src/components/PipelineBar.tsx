@@ -10,7 +10,6 @@ import {
   Select,
   SelectChangeEvent,
   Snackbar,
-  SnackbarContent,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -66,7 +65,7 @@ export default function PipelineBar(props: {
       setRootRun(runs[0]);
       onRootRunChange(runs[0]);
     });
-  }, [calculatorPath]);
+  }, [calculatorPath, fetchLatestRuns, onRootRunChange]);
 
   useEffect(() => {
     pipelineSocket.removeAllListeners();
@@ -80,7 +79,7 @@ export default function PipelineBar(props: {
         });
       }
     });
-  }, [latestRuns]);
+  }, [latestRuns, calculatorPath, fetchLatestRuns]);
 
   const onSelect = useCallback(
     (event: SelectChangeEvent) => {
@@ -93,13 +92,13 @@ export default function PipelineBar(props: {
         }
       });
     },
-    [latestRuns]
+    [latestRuns, onRootRunChange]
   );
 
   const selectLatestRun = useCallback(() => {
     setRootRun(latestRuns[0]);
     onRootRunChange(latestRuns[0]);
-  }, [latestRuns]);
+  }, [latestRuns, onRootRunChange]);
 
   const snackBarAction = (
     <>
