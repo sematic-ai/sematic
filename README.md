@@ -6,6 +6,7 @@
 
 ![UI Screenshot](https://github.com/sematic-ai/sematic/raw/main/docs/images/Screenshot_README_1.png)
 
+![PyPI](https://img.shields.io/pypi/v/sematic?style=for-the-badge)
 [![CircleCI](https://img.shields.io/circleci/build/github/sematic-ai/sematic/main?label=CircleCI&style=for-the-badge&token=c8e0115ddccadc17b98ab293b32cad27026efb25)](https://app.circleci.com/pipelines/github/sematic-ai/sematic?branch=main&filter=all)
 ![PyPI - License](https://img.shields.io/pypi/l/sematic?style=for-the-badge)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue?style=for-the-badge&logo=none)](https://python.org)
