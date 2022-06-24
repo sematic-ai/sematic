@@ -83,8 +83,9 @@ sematic_py_wheel(
     python_requires = ">=3.9",
     description_file = "//:README.rst",
     author = "Sematic AI, Inc.",
+    license = "MIT",
     author_email = "emmanuel@sematic.ai",
-    homepage = "https://sematic.ai",
+    homepage = "https://github.com/sematic-ai/sematic",
     deps = [
         "//sematic:init",
         "//sematic/cli:main_lib",
@@ -95,7 +96,7 @@ sematic_py_wheel(
         "eventlet==0.30.2",
     ],
     classifiers = [
-        "Development Status :: 1 - Planning",
+        "Classifier: License :: OSI Approved :: MIT License",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "Programming Language :: Python :: 3 :: Only",
