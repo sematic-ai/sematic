@@ -57,6 +57,19 @@ Each box with a status pin (the tiny green spots) corresponds to a Sematic
 Function's run. You can click on them to open the corresponding run in the
 central [Run Panel](#run-panel) in order to inspect its details.
 
+### Run Panel
+
+![Run panel](images/RunPanel.png)
+
+When a run is selected in the [Graph Panel](#graph-panel) or in the [Menu Panel](#menu-panel), the Run Panel shows run details in the central area.
+
+In this panel you can inspect and visualize:
+
+* Run metadata: name, full import path, docstring (supports Markdown), execution status and wall time
+* Run inputs and outputs
+* Source code
+* [soon] logs
+
 ### Notes Panel
 
 ![Notes panel](images/NotesPanel.png)
@@ -64,3 +77,6 @@ central [Run Panel](#run-panel) in order to inspect its details.
 On the far right side of the screen, you will find the Notes Panel where you can
 collaborate with your team and exchange notes and comments about the pipeline's
 outputs.
+
+Notes of all runs are showed but notes are always attached to a specific run in
+order to maintain the history and context of the conversation.
