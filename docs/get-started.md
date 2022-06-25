@@ -21,7 +21,7 @@ $ sematic start
 This will open the app in your browser.
 
 {% hint style="info" %}
-This runs the Sematic app in your local machine. To
+This runs the Sematic app on your local machine. To
 deploy it withing your cloud see [Deploying Sematic](deployment.md).
 {% endhint %}
 
@@ -33,7 +33,7 @@ $ sematic stop
 
 ## Running an example pipeline
 
-Sematic comes with a number of pre-packages examples.
+Sematic comes with a number of pre-packaged examples.
 
 To run an example pipeline (e.g. MNIST in PyTorch), do:
 
@@ -52,7 +52,7 @@ of the box. If they are missing on your machine, Sematic will let you know how
 to install them.
 {% endhint %}
 
-You can follow execution of the pipeline in the UI, visualize inputs, outputs,
+You can follow execution of the pipeline in the [Sematic UI](sematic-ui.md), visualize inputs, outputs,
 markdown docstrings, etc.
 
 If you want to contribute examples to the Sematic code base, see our
