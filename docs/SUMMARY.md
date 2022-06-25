@@ -7,7 +7,7 @@
 
 ## Sematic
 
-* [Sematic functions](functions.md)
+* [Sematic Functions](functions.md)
 * [Type support]()
 * [Future algebra]()
 * [Graph resolution]()

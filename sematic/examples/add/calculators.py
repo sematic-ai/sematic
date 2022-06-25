@@ -1,6 +1,5 @@
 # Standrd library
 from dataclasses import dataclass
-import time
 
 # Sematic
 import sematic
@@ -28,7 +27,6 @@ def add(a: float, b: float) -> float:
     """
     Adds two numbers.
     """
-    time.sleep(5)
     return a + b
 
 
@@ -59,6 +57,7 @@ def pipeline(a: float, b: float, c: float) -> float:
 
     `pretty_cool`.
     """
-    sum1 = add3(a, b, c)
-    sum2 = add3(a, b, c)
-    return add(sum1, sum2)
+    sum1 = add(a, b)
+    sum2 = add(b, c)
+    sum3 = add(a, c)
+    return add3(sum1, sum2, sum3)
