@@ -109,13 +109,154 @@ Here Sematic will know how to convert `List[Future[float]]` into
 
 ## Currently unsupported behaviors
 
+We are working hard to move these unsupported behaviors to the supported section
+above. In the meantime, we offer some workarounds.
+
+{% hint style="info" %}
+
+All these workaround rely on the fact that within a Sematic Function, all input
+argument are **always** [concrete](./glossary.md#concrete-inputs).
+
+{% endhint %}
+
 ### Containers of futures
+
+Passing and returning lists of future is supported as [mentioned
+above](#passing-and-returning-lists-of-futures). However, other container
+(tuple, dictionaries, dataclasses) are currently not supported.
+
+Here's an example of how to get around this for dataclasses:
+
+```python
+@dataclass
+class MyOutput:
+    foo: int
+    bar: float
+
+@sematic.func
+def make_output(foo: int, bar: float) -> MyOutput:
+    return MyOutput(foo=foo, bar=bar)
+
+@sematic.func
+def pipeline(...) -> MyOutput:
+    foo = some_sematic_func()
+    bar = another_sematic_func()
+    return make_output(foo, bar)
+```
 
 ### Unpacking and iteration
 
+If your future is a `Future[List[T]]`, you cannot currently unpack it or iterate
+on it.
+
+Here's a workaround
+
+```python
+@sematic.func
+def pipeline() -> T:
+    future_of_list = some_sematic_func()
+
+    # Not supported
+    for item in future_of_list:
+        ...
+    
+    # Do this instead
+    output = iterate_on_list(future_of_list)
+
+# Where
+@sematic.func
+def iterate_on_list(some_list: List[U]) -> T:
+    # Here you are guaranteed that `some_list` is concrete.
+    for item in some_list:
+        ...
+```
+
 ### Attribute and item access
+
+At this time if `future` is of type `Future[List[T]]`, you cannot do `future[0]`.
+
+If `future` is of type `Future[Dict[K, V]]`, you cannot do `future["some-key"]`.
+
+If `future` is of type `Future[SomeClass]` where `SomeClass` has an attribute
+named `foo`, you cannot do `future.foo`.
+
+Here is a workaround for attribute access:
+
+```python
+@sematic.func
+def get_attr(obj: SomeClass, name: str) -> T:
+    return getattr(obj, name)
+
+@sematic.func
+def pipeline() -> T:
+    future = some_sematic_func()
+    return get_attr(future, "foo")
+```
+
+Here is a workaround for item access:
+
+```python
+@sematic.func
+def get_item(obj: List[T], item: int) -> T:
+    return obj[item]
+```
+
+Use a similar approach for dictionaries.
 
 ### Arithmetic operations
 
+At this time, arithmetic operations are not supported on futures.
+
+If `future` is of type `Future[float]`, you cannot do `future + 1`.
+
+Here is a workaround
+
+```python
+@sematic.func
+def add(a: float, b: float) -> float:
+    return a + b
+
+@sematic.func
+def pipeline() -> float:
+    float_future = some_sematic_func()
+    return add(float_future, 1)
+```
+
 ### Unreturned futures
 
+If a future is not passed as input to a Sematic Function or returned as output
+of a parent future, it will not be resolved.
+
+For example, in the following case:
+
+```python
+@sematic.func
+def pipeline() -> str:
+    future = some_sematic_func()
+    return "foo"
+```
+
+`some_sematic_func` will never be executed. That is because at the current time,
+Sematic builds the execution graph by looking for futures that are returned by,
+or passed as input arguments to other Sematic Functions.
+
+Here is a workaround:
+
+```python
+@sematic.func
+def pipeline() -> List[Union[T, str]]:
+    future = some_sematic_func()
+    return [future, "foo"]
+```
+
+## Unsupported behaviors
+
+The following behaviors will not be supported.
+
+### Variadic arguments
+
+Sematic Functions cannot have variadic arguments.
+
+In Python, variadic arguments are of the form `*args` or `**kwargs`.
+
+This would prevent Sematic from clearly defining and typing input and output artifacts.
