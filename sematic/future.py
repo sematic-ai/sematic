@@ -3,20 +3,34 @@ import typing
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.resolver import Resolver
 from sematic.resolvers.local_resolver import LocalResolver
+from sematic.resolvers.silent_resolver import SilentResolver
 
 
 class Future(AbstractFuture):
     """
     Class representing a future.
+
+    A future is essentially a tuple of with two elements:
+
+    * The function to execute
+    * A set of input arguments, that can be concrete values or futures themselves
     """
 
-    def resolve(self, resolver: Resolver = None, attach: bool = False) -> typing.Any:
-        if self.state != FutureState.RESOLVED:
-            if resolver is None:
+    def resolve(self, tracking: bool = True) -> typing.Any:
+        """
+        Trigger the resolution of the future and all its nested futures.
 
-                resolver = LocalResolver()
+        Parameters
+        ----------
+        tracking: bool
+            Enable tracking. Defaults to `True`. If `True`, the future's
+            execution as well as that of all its nested future will be tracked
+            in the database and viewable in the UI. If `False`, no tracking is
+            persisted to the DB.
+        """
+        if self.state != FutureState.RESOLVED:
+            resolver = LocalResolver() if tracking else SilentResolver()
 
             self.value = resolver.resolve(self)
 

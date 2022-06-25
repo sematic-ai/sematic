@@ -59,8 +59,8 @@ sematic_py_lib(
     deps = [
         ":abstract_calculator",
         ":abstract_future",
-        ":resolver",
         "//sematic/resolvers:local_resolver",
+        "//sematic/resolvers:silent_resolver",
     ]
 )
 
