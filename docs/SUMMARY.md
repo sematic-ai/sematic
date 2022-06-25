@@ -7,12 +7,11 @@
 
 ## Sematic
 
-* [Concepts](concepts.md)
 * [Sematic functions](functions.md)
 * [Type support]()
 * [Future algebra]()
 * [Graph resolution]()
-* [Deploy sematic]()
+* [Deploy Sematic]()
 * [Debugging]()
 * [Glossary]()
 
@@ -24,6 +23,7 @@
 * Google BigQuery
 * AWS Redshift
 * DBT
+* Slack
 
 ## Contribute
 
