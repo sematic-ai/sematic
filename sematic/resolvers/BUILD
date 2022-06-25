@@ -1,9 +1,8 @@
 sematic_py_lib(
-    name = "offline_resolver",
-    srcs = ["offline_resolver.py"],
-    visibility = ["//visibility:public"],
+    name = "local_resolver",
+    srcs = ["local_resolver.py"],
     deps = [
-        ":state_machine_resolver",
+        ":silent_resolver",
         "//sematic:abstract_future",
         "//sematic/db:queries",
         "//sematic:config",
@@ -18,9 +17,17 @@ sematic_py_lib(
 sematic_py_lib(
     name = "state_machine_resolver",
     srcs = ["state_machine_resolver.py"],
-    visibility = ["//visibility:public"],
     deps = [
         "//sematic:abstract_future",
         "//sematic:resolver",
+    ]
+)
+
+sematic_py_lib(
+    name = "silent_resolver",
+    srcs = ["silent_resolver.py"],
+    deps = [
+        "//sematic:abstract_future",
+        "//sematic/resolvers:state_machine_resolver",
     ]
 )
