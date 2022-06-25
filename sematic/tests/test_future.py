@@ -3,16 +3,16 @@
 import pytest
 
 # Sematic
-from sematic.calculator import calculator
+from sematic.calculator import func
 
 
-@calculator
-def func():
-    pass
+@func
+def foo() -> str:
+    return "foo"
 
 
 def test_set():
-    future = func()
+    future = foo()
     f = future.set(name="some name", tags=["tag1", "tag2"])
 
     assert f.id == future.id
@@ -21,21 +21,25 @@ def test_set():
 
 
 def test_set_validate_name():
-    future = func()
+    future = foo()
 
     with pytest.raises(ValueError, match="Invalid name"):
         future.set(name=123)
 
 
 def test_set_validate_tags():
-    future = func()
+    future = foo()
 
     with pytest.raises(ValueError, match="Invalid tags"):
         future.set(tags=123)
 
 
 def test_set_validate_fields():
-    future = func()
+    future = foo()
 
     with pytest.raises(ValueError, match="Cannot mutate fields"):
         future.set(abc=123)
+
+
+def test_no_tracking():
+    assert foo().resolve(tracking=False) == "foo"
