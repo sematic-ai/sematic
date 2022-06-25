@@ -28,7 +28,7 @@ We encountered all sorts of use cases from statistical modeling to performance
 intensive data processing, and deep learning.
 
 We are dedicated to bringing the most powerful tools and infrastructure to DS
-amd ML developers of all skills and background.
+and ML developers of all skills and background.
 
 ## What is Sematic?
 

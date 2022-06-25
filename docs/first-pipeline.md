@@ -25,7 +25,7 @@ The following files are present in the `hello_world/` directory:
   can see it is a very standard Python script that you can parametrize
   arbitrarily with command-line arguments using
   [`argparse`](https://docs.python.org/3/library/argparse.html).
-* `pipeline.py` – This is where your pipeline and its steps are defined. As your
+* `pipeline.py` – This is where your pipeline and its nested steps are defined. As your
   code gets more complex, it is recommended to break it down into further sub-modules (e.g. `train.py`, `eval.py`, etc.). Of course you can define multiple pipelines and pilot their executions from the `__main__.py` script.
 * `requirements.txt` – This is where you can keep the external dependencies specific to your project.
 
@@ -84,18 +84,19 @@ if __name__ == "__main__":
     pipeline(args.name).resolve()
 ```
 
-Now you can it with
+Now you can run it with
 
 ```shell
 $ python3 -m hello_world --name "Knight who says Nee"
 ```
 
 You can now follow execution of the pipeline in the UI. For a tour of the UI
-sees [Sematic UI](sematic-ui.md).
+see [Sematic UI](sematic-ui.md).
 
 {% hint style="info" %}
 
-Obviously this toy pipeline is not very useful. Here are a number of things you can do in Sematic functions
+Obviously this toy pipeline is not very useful. Here are a number of things you
+can do in Sematic functions:
 
 * Anything that can be expressed in Python
 * Load, process, filter dataframes
@@ -112,20 +113,20 @@ Really anything you can do in Python 🙂.
 
 The `@sematic.func` decorator converts any plain Python function into a
 so-called ["Sematic Function"](glossary.md). Sematic functions are tracked by
-Sematic as pipeline steps. This means that there inputs and outputs are tracked
-as [Artifacts](glossary.md), and that you will be able to inspect and visualize
-the function's execution in the UI.
+Sematic as pipeline steps. This means that there inputs and outputs are
+type-checked and tracked as [Artifacts](glossary.md), and that you will be able
+to inspect and visualize the function's execution in the UI.
 
 In the case of [cloud execution](glossary.md), each function can run as its own
 isolated job with its own set of resources.
 
 {% hint style="info" %}
 
-Note that calling a Sematic Function returns a Future instead of the actual
+Note that calling a Sematic Function returns a **Future** instead of the actual
 value returned by the decorated Python function. Read more about Futures in the
 [Glossary](glossary.md).
 
-Futures are the way Sematic construct the execution graph of your pipeline.
+Futures are the way Sematic constructs the execution graph of your pipeline.
 Futures support a subset of native Python's operation, although we are adding
 new functionalities every week. See [Future Algebra](future-algebra.md) for more
 details.
@@ -143,7 +144,7 @@ execution graph. Sematic will do the following things:
 
 * Perform some "almost-static" type checking to ensure connected pipeline steps
   do not have incompatible types (e.g. passing a `bool` to a function requiring
-  an `int`).
+  an `int`). See [Type support](type-support.md) for more details.
 * Start resolving the nested graph layer by layer. See [Graph
   resolution](graph-resolution.md) for more details.
 * For each layer, Sematic will resolve Futures (your functions) in topological
