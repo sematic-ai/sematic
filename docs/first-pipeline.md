@@ -92,3 +92,85 @@ $ python3 -m hello_world --name "Knight who says Nee"
 
 You can now follow execution of the pipeline in the UI. For a tour of the UI
 sees [Sematic UI](sematic-ui.md).
+
+{% hint style="info" %}
+
+Obviously this toy pipeline is not very useful. Here are a number of things you can do in Sematic functions
+
+* Anything that can be expressed in Python
+* Load, process, filter dataframes
+* Launch a data processing job (e.g. Spark, Google Dataflow)
+* Train a model, launch a training job on a dedicated service
+* Query a database or data warehouse
+* Query an API
+
+Really anything you can do in Python 🙂.
+
+{% endhint %}
+
+## What happens when I decorate a function with `@sematic.func`?
+
+The `@sematic.func` decorator converts any plain Python function into a
+so-called ["Sematic Function"](glossary.md). Sematic functions are tracked by
+Sematic as pipeline steps. This means that there inputs and outputs are tracked
+as [Artifacts](glossary.md), and that you will be able to inspect and visualize
+the function's execution in the UI.
+
+In the case of [cloud execution](glossary.md), each function can run as its own
+isolated job with its own set of resources.
+
+{% hint style="info" %}
+
+Note that calling a Sematic Function returns a Future instead of the actual
+value returned by the decorated Python function. Read more about Futures in the
+[Glossary](glossary.md).
+
+Futures are the way Sematic construct the execution graph of your pipeline.
+Futures support a subset of native Python's operation, although we are adding
+new functionalities every week. See [Future Algebra](future-algebra.md) for more
+details.
+
+In order to trigger the actual execution of a graph, you need to call
+`.resolve()` on the entry point of your graph, that is typically the function
+called `pipeline`. See the [Glossary](glossary.md) for more details.
+
+{% endhint %}
+
+## What happens when I call `.resolve()` on the `pipeline` function?
+
+Calling `resolve` will trigger the actual "resolution" of your pipeline's
+execution graph. Sematic will do the following things:
+
+* Perform some "almost-static" type checking to ensure connected pipeline steps
+  do not have incompatible types (e.g. passing a `bool` to a function requiring
+  an `int`).
+* Start resolving the nested graph layer by layer. See [Graph
+  resolution](graph-resolution.md) for more details.
+* For each layer, Sematic will resolve Futures (your functions) in topological
+  order (parallelizing execution when possible depending on the chosen
+  resolution strategy).
+* For each individual function
+    * the concrete input values are type-checked against the type annotations
+  you have specified in your function's signature
+    * input artifacts (individual function arguments) are serialized and persisted for tracking and visualization
+    * the function gets executed
+    * the output value is type-checked against the declared output type
+    * the output artifact is serialized and persisted for tracking and visualization
+
+{% hint style="info" %}
+
+`.resolve()` should be called **only  once** per pipeline. If you want to nest
+pipeline steps, simply call the function and return the resulting Future.
+
+{% endhint %}
+  
+## Dive into more details
+
+If you want to learn more, explore the following resources:
+
+* A growing list of [Example pipelines](https://github.com/sematic-ai/sematic/tree/main/sematic/examples)
+* More details about [Sematic Functions](functions.md)
+* All about types: [Type support](type-support.md)
+* Operations supported on Futures: [Future algebra](future-algebra.md)
+* Sematic's [Graph resolution](graph-resolution.md) mechanism
+* [Glossary](glossary.md) for all the definitions
