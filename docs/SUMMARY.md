@@ -3,13 +3,13 @@
 * [Welcome 👋](README.md)
 * [Get started](get-started.md)
 * [Your first pipeline](first-pipeline.md)
-* [Sematic UI](sematic-ui.md)
+* [The Sematic UI](sematic-ui.md)
 
-## Sematic
+## Diving deeper
 
 * [Sematic Functions](functions.md)
 * [Type support](type-support.md)
-* [Future algebra]()
+* [Future algebra](future-algebra.md)
 * [Graph resolution]()
 * [Deploy Sematic]()
 * [Debugging]()
@@ -17,18 +17,18 @@
 
 ## Integrations
 
-* Spark
-* Google Dataflow
-* Snowflake
-* Google BigQuery
-* AWS Redshift
-* DBT
-* Slack
+* [Apache Spark](integrations.md)
+* [Google Dataflow](integrations.md)
+* [Snowflake](integrations.md)
+* [Google BigQuery](integrations.md)
+* [AWS Redshift](integrations.md)
+* [DBT](integrations.md)
+* [Slack](integrations.md)
 
 ## Contribute
 
 * [Code of Conduct]()
-* [Contributor guide]()
+* [Contributor guide](contributor-guide.md)
 * [Monorepo]()
 * [Code style]()
 
@@ -41,7 +41,7 @@
 
 ## Project
 
-* [Roadmap]()
+* [Roadmap](roadmap.md)
 * [Changelog](changelog.md)
 
 ## Company
