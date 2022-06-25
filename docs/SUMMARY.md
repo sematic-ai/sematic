@@ -2,18 +2,22 @@
 
 * [Welcome](README.md)
 * [Get started](get-started.md)
+* [Your first pipeline](first-pipeline.md)
+* [Sematic UI](sematic-ui.md)
 
 ## Sematic
 
 * [Concepts](concepts.md)
 * [Type support]()
 * [Future algebra]()
+* [Deploy sematic]()
+* [Debugging]()
 * [Glossary]()
 
 ## Contribute
 
 * [Code of Conduct]()
-* [Where to contribute]()
+* [Contributor guide]()
 * [Monorepo]()
 * [Code style]()
 
