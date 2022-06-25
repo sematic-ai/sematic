@@ -4,7 +4,7 @@ sematic_py_lib(
     deps = [
         ":calculator",
         ":resolver",
-        "//sematic/resolvers:offline_resolver",
+        "//sematic/resolvers:local_resolver",
         "//sematic/types:init",
         "//sematic/types:casting",
     ]
@@ -60,7 +60,7 @@ sematic_py_lib(
         ":abstract_calculator",
         ":abstract_future",
         ":resolver",
-        "//sematic/resolvers:offline_resolver",
+        "//sematic/resolvers:local_resolver",
     ]
 )
 
