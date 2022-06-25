@@ -4,7 +4,7 @@ import typing
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.resolver import Resolver
-from sematic.resolvers.offline_resolver import OfflineResolver
+from sematic.resolvers.local_resolver import LocalResolver
 
 
 class Future(AbstractFuture):
@@ -16,7 +16,7 @@ class Future(AbstractFuture):
         if self.state != FutureState.RESOLVED:
             if resolver is None:
 
-                resolver = OfflineResolver()
+                resolver = LocalResolver()
 
             self.value = resolver.resolve(self)
 

@@ -54,7 +54,7 @@ class Edge(Base, JSONEncodableMixin):
         "parent_id",
     )
 
-    # Necessary for testing purposes, see test_offline_resolver.py
+    # Necessary for testing purposes, see test_local_resolver.py
     def __eq__(self, other) -> bool:
         return all(
             getattr(self, field) == getattr(other, field)
