@@ -142,7 +142,7 @@ called `pipeline`. See the [Glossary](glossary.md) for more details.
 Calling `resolve` will trigger the actual "resolution" of your pipeline's
 execution graph. Sematic will do the following things:
 
-* Perform some "almost-static" type checking to ensure connected pipeline steps
+* Perform some "pseudo-static" type checking to ensure connected pipeline steps
   do not have incompatible types (e.g. passing a `bool` to a function requiring
   an `int`). See [Type support](type-support.md) for more details.
 * Start resolving the nested graph layer by layer. See [Graph

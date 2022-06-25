@@ -57,15 +57,23 @@ For examples, you can build three pipelines, and a fourth one for the end-to-end
 import sematic
 
 @sematic.func
-def process_data(raw_data: SnowflakeTable, config: DataProcessingConfig) -> SnowflakeTable:
+def process_data(
+    raw_data: SnowflakeTable, config: DataProcessingConfig
+) -> SnowflakeTable:
     # Data processing pipeline, e.g. query SQL, chain Spark jobs, etc.
 
 @sematic.func
-def train_eval(training_datset: SnowflakeTable, config: TrainEvalConfig) -> Tuple[nn.Module, EvalMetrics]:
+def train_eval(
+    training_datset: SnowflakeTable, config: TrainEvalConfig
+) -> Tuple[nn.Module, EvalMetrics]:
+    # Model training pipeline
     # launch traning job, run model evaluation
 
 @sematic.func
-def generate_inferences(model: nn.Module, features: SnowflakeTable) -> SnowflakeTable:
+def generate_inferences(
+    model: nn.Module, features: SnowflakeTable
+) -> SnowflakeTable:
+    # Inference pipeline
     # generate and write inferences
 
 @sematic.func
