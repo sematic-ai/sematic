@@ -56,3 +56,11 @@ Directed Acyclic Graph (DAG).
 Each box with a status pin (the tiny green spots) corresponds to a Sematic
 Function's run. You can click on them to open the corresponding run in the
 central [Run Panel](#run-panel) in order to inspect its details.
+
+### Notes Panel
+
+![Notes panel](images/NotesPanel.png)
+
+On the far right side of the screen, you will find the Notes Panel where you can
+collaborate with your team and exchange notes and comments about the pipeline's
+outputs.

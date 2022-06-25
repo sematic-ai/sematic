@@ -10,7 +10,7 @@ from sematic.api.tests.fixtures import test_client, mock_requests  # noqa: F401
 from sematic.calculator import calculator
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
-from sematic.resolvers.offline_resolver import OfflineResolver
+from sematic.resolvers.local_resolver import LocalResolver
 from sematic.db.tests.fixtures import test_db, pg_mock  # noqa: F401
 from sematic.db.queries import get_graph
 
@@ -35,7 +35,7 @@ def pipeline(a: float, b: float) -> float:
 def test_single_calculator(test_db, mock_requests):  # noqa: F811
     future = add(1, 2)
 
-    result = future.set(name="AAA").resolve(OfflineResolver())
+    result = future.set(name="AAA").resolve(LocalResolver())
 
     assert result == 3
 
@@ -84,7 +84,7 @@ def add_add_add(a: float, b: float) -> float:
 def test_add_add(test_db, mock_requests):  # noqa: F811
     future = add_add_add(1, 2)
 
-    result = future.resolve(OfflineResolver())
+    result = future.resolve(LocalResolver())
 
     assert result == 7
 
@@ -98,7 +98,7 @@ def test_add_add(test_db, mock_requests):  # noqa: F811
 def test_pipeline(test_db, mock_requests):  # noqa: F811
     future = pipeline(3, 5)
 
-    result = future.resolve(OfflineResolver())
+    result = future.resolve(LocalResolver())
 
     assert result == 24
     assert isinstance(result, float)
@@ -127,7 +127,7 @@ def test_failure(test_db, mock_requests):  # noqa: F811
     def pipeline():
         return failure(success())
 
-    resolver = OfflineResolver()
+    resolver = LocalResolver()
 
     with pytest.raises(CustomException, match="some message"):
         pipeline().resolve(resolver)
@@ -142,7 +142,7 @@ def test_failure(test_db, mock_requests):  # noqa: F811
         assert future.state == expected_states[future.calculator.__name__]
 
 
-class DBStateMachineTestResolver(OfflineResolver):
+class DBStateMachineTestResolver(LocalResolver):
     def _future_will_schedule(self, future) -> None:
         super()._future_will_schedule(future)
 

@@ -1,7 +1,6 @@
 # Standard library
 import datetime
 from typing import Dict, Optional, List, Union, Tuple
-import webbrowser  # noqa: F401
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
@@ -9,15 +8,18 @@ from sematic.config import get_config  # noqa: F401
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
-from sematic.resolvers.state_machine_resolver import StateMachineResolver
+from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.db.models.factories import make_artifact, make_run_from_future
 from sematic.db.queries import save_graph
 import sematic.api_client as api_client
 
 
-class OfflineResolver(StateMachineResolver):
+class LocalResolver(SilentResolver):
     """
-    A resolver to resolver a DAG locally.
+    A resolver to resolver a graph in-memory.
+
+    Each Future's resolution is tracked in the DB as a run. Each individual function's
+    input argument and output value is tracked as an artifact.
     """
 
     def __init__(self):
@@ -80,21 +82,6 @@ class OfflineResolver(StateMachineResolver):
             if key.startswith("{}:".format(source_run_id))
         ]
 
-    def _schedule_future(self, future: AbstractFuture) -> None:
-        self._run_inline(future)
-
-    def _run_inline(self, future: AbstractFuture) -> None:
-        self._set_future_state(future, FutureState.SCHEDULED)
-        try:
-            value = future.calculator.calculate(**future.resolved_kwargs)
-            # cast_value = future.calculator.cast_output(value)
-            self._update_future_with_value(future, value)
-        except Exception as exception:
-            self._handle_future_failure(future, exception)
-
-    def _wait_for_scheduled_run(self) -> None:
-        pass
-
     def _future_will_schedule(self, future: AbstractFuture) -> None:
         super()._future_will_schedule(future)
 
@@ -116,14 +103,6 @@ class OfflineResolver(StateMachineResolver):
         root_future = self._futures[0]
         if root_future.id == future.id:
             api_client.notify_pipeline_update(self._runs[future.id].calculator_path)
-
-            # webbrowser.open(
-            #     "{}/pipelines/{}".format(
-            #         get_config().server_url,
-            #         self._get_run(root_future.id).calculator_path,
-            #     ),
-            #     new=0,
-            # )
 
     def _future_did_run(self, future: AbstractFuture) -> None:
         super()._future_did_run(future)

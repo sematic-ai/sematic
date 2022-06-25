@@ -206,6 +206,9 @@ def calculator(
     return _wrapper(func)
 
 
+func = calculator
+
+
 def _getfullargspec(func_: Callable) -> inspect.FullArgSpec:
     """
     Validates the function's argument specification.
