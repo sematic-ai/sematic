@@ -1,6 +1,6 @@
 # Table of contents
 
-* [Welcome](README.md)
+* [Welcome 👋](README.md)
 * [Get started](get-started.md)
 * [Your first pipeline](first-pipeline.md)
 * [Sematic UI](sematic-ui.md)
@@ -8,11 +8,22 @@
 ## Sematic
 
 * [Concepts](concepts.md)
+* [Sematic functions](functions.md)
 * [Type support]()
 * [Future algebra]()
+* [Graph resolution]()
 * [Deploy sematic]()
 * [Debugging]()
 * [Glossary]()
+
+## Integrations
+
+* Spark
+* Google Dataflow
+* Snowflake
+* Google BigQuery
+* AWS Redshift
+* DBT
 
 ## Contribute
 
