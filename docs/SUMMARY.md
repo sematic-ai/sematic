@@ -6,16 +6,17 @@
 * [A real ML pipeline](real-example.md)
 * [The Sematic UI](sematic-ui.md)
 * [Sematic vs. ____](sematic-vs.md)
+* [Join us on Discord](https://discord.gg/ztnS9qaS)
 
 ## Diving deeper
 
 * [Sematic Functions](functions.md)
 * [Type support](type-support.md)
 * [Future algebra](future-algebra.md)
-* [Graph resolution]()
-* [Deploy Sematic]()
-* [Debugging]()
-* [Glossary]()
+* [Graph resolution](coming-soon.md)
+* [Deploy Sematic](coming-soon.md)
+* [Debugging](coming-soon.md)
+* [Glossary](coming-soon.md)
 
 ## Integrations
 
@@ -29,21 +30,21 @@
 
 ## Contribute
 
-* [Code of Conduct]()
-* [Contributor guide](contributor-guide.md)
-* [Monorepo]()
-* [Code style]()
+* [Code of Conduct](coming-soon.md)
+* [Contributor guide](coming-soon.md)
+* [Monorepo](coming-soon.md)
+* [Code style](coming-soon.md)
 
 ## Design
 
-* [Concepts](concepts.md)
-* [Architecture]()
-* [Stack]()
-* [Tooling]()
+* [Concepts](coming-soon.md)
+* [Architecture](coming-soon.md)
+* [Stack](coming-soon.md)
+* [Tooling](coming-soon.md)
 
 ## Project
 
-* [Roadmap](roadmap.md)
+* [Roadmap](coming-soon.md)
 * [Changelog](changelog.md)
 
 ## Company
