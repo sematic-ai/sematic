@@ -133,6 +133,10 @@ _LOCAL_SQLITE_CONFIG = Config(
     )
 )
 
+_LOCAL_CLOUD_DB_CONFIG = Config(
+    **(asdict(_DEV_CONFIG) | dict(db_url=os.environ["SEMATIC_DB_URL"]))  # type: ignore
+)
+
 # For the API server to run within the container
 _CONTAINER_CONFIG = Config(
     server_address="0.0.0.0",
@@ -146,6 +150,7 @@ class EnvironmentConfigurations(Enum):
     local = _LOCAL_CONFIG
     local_sqlite = _LOCAL_SQLITE_CONFIG
     container = _CONTAINER_CONFIG
+    local_cloud_db = _LOCAL_CLOUD_DB_CONFIG
 
 
 DEFAULT_ENV = "local_sqlite"
