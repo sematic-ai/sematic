@@ -11,4 +11,4 @@ When we do, we will have a dedicated page for it in this space.
 
 Make sure to check our [public roadmap](roadmap.md) for what's coming, learn
 [how to contribute](contributor-guide.md), or join our [Discord
-Server](https://discord.gg/ztnS9qaS).
+Server](https://discord.gg/4KZJ6kYVax).
