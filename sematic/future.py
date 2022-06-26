@@ -90,3 +90,8 @@ class Future(AbstractFuture):
         raise NotImplementedError(
             "Future.__getitem__ is not supported yet. Find a workaround at https://docs.sematic.ai/diving-deeper/future-algebra#attribute-and-item-access"  # noqa: E501
         )
+
+    def __iter__(self):
+        raise NotImplementedError(
+            "Future.__iter__ is not supported yet. Find a workaround at https://docs.sematic.ai/diving-deeper/future-algebra#unpacking-and-iteration"  # noqa: E501
+        )
