@@ -22,7 +22,7 @@ CREATE TABLE public.artifacts (
     json_summary jsonb NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    type_serialization jsonb NOT NULL
+    type_serialization jsonb
 );
 
 
@@ -44,6 +44,21 @@ CREATE TABLE public.edges (
 
 
 --
+-- Name: notes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notes (
+    id character(32) NOT NULL,
+    author_id text NOT NULL,
+    note text NOT NULL,
+    run_id character(32) NOT NULL,
+    root_id character(32) NOT NULL,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
+);
+
+
+--
 -- Name: runs; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -52,8 +67,8 @@ CREATE TABLE public.runs (
     future_state text NOT NULL,
     name text,
     calculator_path text,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
     started_at timestamp without time zone,
     ended_at timestamp without time zone,
     resolved_at timestamp without time zone,
@@ -62,7 +77,7 @@ CREATE TABLE public.runs (
     description text,
     tags text,
     source_code text,
-    root_id character(32) NOT NULL
+    root_id character(32)
 );
 
 
@@ -89,6 +104,14 @@ ALTER TABLE ONLY public.artifacts
 
 ALTER TABLE ONLY public.edges
     ADD CONSTRAINT edges_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: notes notes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT notes_pkey PRIMARY KEY (id);
 
 
 --
@@ -124,6 +147,22 @@ ALTER TABLE ONLY public.edges
 
 
 --
+-- Name: notes notes_root_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT notes_root_id_fkey FOREIGN KEY (root_id) REFERENCES public.runs(id);
+
+
+--
+-- Name: notes notes_run_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT notes_run_id_fkey FOREIGN KEY (run_id) REFERENCES public.runs(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -139,4 +178,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20220521155045'),
     ('20220521155336'),
     ('20220522082435'),
-    ('20220527000512');
+    ('20220527000512'),
+    ('20220610234559');

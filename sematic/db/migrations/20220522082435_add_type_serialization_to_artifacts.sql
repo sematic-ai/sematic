@@ -1,6 +1,6 @@
 -- migrate:up
 
-ALTER TABLE artifacts ADD COLUMN type_serialization JSONB NOT NULL DEFAULT "{}";
+ALTER TABLE artifacts ADD COLUMN type_serialization JSONB;
 
 -- migrate:down
 
