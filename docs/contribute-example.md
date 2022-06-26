@@ -99,6 +99,30 @@ Don't worry, your third-party dependencies will not be added to the Sematic pip 
 
 Finally, your package should contain a `requirements.txt` file. This is used to help users install the particular dependencies for your example (since they are not included in the main Sematic wheel).
 
-### Credit yourself
+### Document and credit yourself
+
+Make sure all your Sematic Functions have good docstrings. You can use Markdown
+to add links to external docs.
+
+Add a `README` file at the root of your package with some baseline documentation.
+
+Add your personal info to an `AUTHORS` file. You can add whatever you want
+(email, twitter, Github profile, etc). This will be displayed to users when they run your example.
+
 
 ### Create a Pull Request
+
+Push your branch:
+
+```shell
+$ git push origin your-branch-name
+```
+
+Then head over to [Sematics' Pull
+Requests](https://github.com/sematic-ai/sematic/compare) to create one.
+
+To increase your chances of being merged fast:
+
+* Add a comprehensive description to your pipeline
+* Make sure the Circle CI build passes for your branch (Use `make pre_commit` to run the linter and code formatter)
+* Add `@neutralino1` as a reviewer
