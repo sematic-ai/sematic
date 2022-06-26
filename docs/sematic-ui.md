@@ -18,7 +18,7 @@ Let's go through each component of the view.
 ### Side Bar
 
 At the far left, the dark side bar lets you return to the Home page, the Pipeline index, access these docs or join our [Discord
-Server](https://discord.gg/ztnS9qaS).
+Server](https://discord.gg/4KZJ6kYVax).
 
 ### Pipeline Bar
 
