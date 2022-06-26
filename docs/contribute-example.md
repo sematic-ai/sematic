@@ -125,4 +125,4 @@ To increase your chances of being merged fast:
 
 * Add a comprehensive description to your pipeline
 * Make sure the Circle CI build passes for your branch (Use `make pre_commit` to run the linter and code formatter)
-* Add `@neutralino1` as a reviewer
+* Add `neutralino1` as a reviewer
