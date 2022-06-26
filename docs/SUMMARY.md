@@ -32,7 +32,8 @@
 ## Contribute
 
 * [Code of Conduct](code-of-conduct.md)
-* [Contributor guide](coming-soon.md)
+* [How to contribute](./contributor-guide.md)
+    * [Example pipelines](./contribute-example.md)
 * [Monorepo](coming-soon.md)
 * [Code style](coming-soon.md)
 
@@ -45,7 +46,8 @@
 
 ## Project
 
-* [Roadmap](coming-soon.md)
+* [License](mit.md)
+* [Roadmap](https://trello.com/b/AznpHZ7e/sematic-public-roadmap)
 * [Changelog](changelog.md)
 
 ## Company
