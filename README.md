@@ -1,10 +1,9 @@
-![Sematic logo](https://github.com/sematic-ai/sematic/raw/main/docs/images/Logo_README.png)
+![Sematic logo](./docs/images/Logo_README.png)
 
----------------
 
-<p align="center">Prototype to production ML in days not weeks</p>
+<p font-size="2em" align="center">Prototype-to-production ML in days not weeks</p>
 
-![UI Screenshot](https://github.com/sematic-ai/sematic/raw/main/docs/images/Screenshot_README_1.png)
+![UI Screenshot](./docs/images/Screenshot_README_1_framed.png)
 
 ![PyPI](https://img.shields.io/pypi/v/sematic?style=for-the-badge)
 [![CircleCI](https://img.shields.io/circleci/build/github/sematic-ai/sematic/main?label=CircleCI&style=for-the-badge&token=c8e0115ddccadc17b98ab293b32cad27026efb25)](https://app.circleci.com/pipelines/github/sematic-ai/sematic?branch=main&filter=all)
