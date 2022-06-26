@@ -31,7 +31,7 @@
 
 ## Contribute
 
-* [Code of Conduct](coming-soon.md)
+* [Code of Conduct](code-of-conduct.md)
 * [Contributor guide](coming-soon.md)
 * [Monorepo](coming-soon.md)
 * [Code style](coming-soon.md)
