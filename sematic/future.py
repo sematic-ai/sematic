@@ -85,3 +85,8 @@ class Future(AbstractFuture):
             setattr(self, name, value)
 
         return self
+
+    def __getitem__(self, index):
+        raise NotImplementedError(
+            "Future.__getitem__ is not supported yet. Find a workaround at https://docs.sematic.ai/diving-deeper/future-algebra#attribute-and-item-access"  # noqa: E501
+        )

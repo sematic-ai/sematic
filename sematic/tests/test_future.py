@@ -1,4 +1,3 @@
-# Sematic
 # Third-party
 import pytest
 
@@ -43,3 +42,8 @@ def test_set_validate_fields():
 
 def test_no_tracking():
     assert foo().resolve(tracking=False) == "foo"
+
+
+def test_getitem():
+    with pytest.raises(NotImplementedError, match="docs.sematic.ai"):
+        foo()[0]
