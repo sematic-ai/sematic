@@ -85,3 +85,53 @@ class Future(AbstractFuture):
             setattr(self, name, value)
 
         return self
+
+    def __getitem__(self, index):
+        raise NotImplementedError(
+            "Future.__getitem__ is not supported yet. Find a workaround at https://docs.sematic.ai/diving-deeper/future-algebra#attribute-and-item-access"  # noqa: E501
+        )
+
+    def __iter__(self):
+        raise NotImplementedError(
+            "Future.__iter__ is not supported yet. Find a workaround at https://docs.sematic.ai/diving-deeper/future-algebra#unpacking-and-iteration"  # noqa: E501
+        )
+
+    def __bool__(self):
+        raise NotImplementedError(
+            "Future.__bool__ is not supported yet. Find a workaround at https://docs.sematic.ai/diving-deeper/future-algebra#arithmetic-operations"  # noqa: E501
+        )
+
+    def __not__(self):
+        raise NotImplementedError(
+            "Future.__not__ is not supported yet. Find a workaround at https://docs.sematic.ai/diving-deeper/future-algebra#arithmetic-operations"  # noqa: E501
+        )
+
+    def __add__(self, _):
+        raise NotImplementedError(
+            "Future.__add__ is not supported yet. Find a workaround at https://docs.sematic.ai/diving-deeper/future-algebra#arithmetic-operations"  # noqa: E501
+        )
+
+    def __iadd__(self, _):
+        raise NotImplementedError(
+            "Future.__iadd__ is not supported yet. Find a workaround at https://docs.sematic.ai/diving-deeper/future-algebra#arithmetic-operations"  # noqa: E501
+        )
+
+    def __mul__(self, _):
+        raise NotImplementedError(
+            "Future.__mul__ is not supported yet. Find a workaround at https://docs.sematic.ai/diving-deeper/future-algebra#arithmetic-operations"  # noqa: E501
+        )
+
+    def __imul__(self, _):
+        raise NotImplementedError(
+            "Future.__imul__ is not supported yet. Find a workaround at https://docs.sematic.ai/diving-deeper/future-algebra#arithmetic-operations"  # noqa: E501
+        )
+
+    def __truediv__(self, _):
+        raise NotImplementedError(
+            "Future.__truediv__ is not supported yet. Find a workaround at https://docs.sematic.ai/diving-deeper/future-algebra#arithmetic-operations"  # noqa: E501
+        )
+
+    def __itruediv__(self, _):
+        raise NotImplementedError(
+            "Future.__itruediv__ is not supported yet. Find a workaround at https://docs.sematic.ai/diving-deeper/future-algebra#arithmetic-operations"  # noqa: E501
+        )
