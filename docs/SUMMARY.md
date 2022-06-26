@@ -3,7 +3,9 @@
 * [Welcome 👋](README.md)
 * [Get started](get-started.md)
 * [Your first pipeline](first-pipeline.md)
+* [A real ML pipeline](real-example.md)
 * [The Sematic UI](sematic-ui.md)
+* [Sematic vs. ____](sematic-vs.md)
 
 ## Diving deeper
 
