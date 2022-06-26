@@ -153,7 +153,7 @@ See
 (sematic/types/types)[https://github.com/sematic-ai/sematic/tree/main/sematic/types/types]
 for the current list of support types.
 
-Get in touch on [Discord](https://discord.gg/ztnS9qaS) for more type support, or
+Get in touch on [Discord](https://discord.gg/4KZJ6kYVax) for more type support, or
 learn how to customize support for your types.
 
 ## Customizing support for a particular type

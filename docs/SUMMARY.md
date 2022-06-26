@@ -6,7 +6,7 @@
 * [A real ML pipeline](real-example.md)
 * [The Sematic UI](sematic-ui.md)
 * [Sematic vs. ____](sematic-vs.md)
-* [Join us on Discord](https://discord.gg/ztnS9qaS)
+* [Join us on Discord](https://discord.gg/4KZJ6kYVax)
 
 ## Diving deeper
 

@@ -13,7 +13,7 @@ makes you work faster by:
   market and world conditions change
 
 If you're new, read how to [Get Started](get-started.md) or join our [Discord
-Server](https://discord.gg/ztnS9qaS).
+Server](https://discord.gg/4KZJ6kYVax).
 
 If you want to dig deeper, check out the [Sematic Concepts](concepts.md), or the
 [Sematic Source Code](https://github.com/sematic-ai/sematic).

@@ -50,7 +50,7 @@ export default function SideBar() {
         </Box>
         <Box>
           <Link
-            href="https://discord.gg/PFCpatvy"
+            href="https://discord.gg/4KZJ6kYVax"
             sx={{ color: "rgba(255, 255, 255, 0.5)" }}
             underline="none"
           >
