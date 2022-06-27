@@ -95,7 +95,7 @@ def test_can_cast_type(from_type, to_type, expected_can_cast, expected_error):
             A,
             None,
             None,
-            "Cannot cast C(a='abc') to <class 'sematic.types.types.tests.test_dataclass.A'>: Cannot cast 'abc' to <class 'int'>",  # noqa: E501
+            "Cannot cast C(a='abc') to <class 'sematic.types.types.tests.test_dataclass.A'> in field a: Cannot cast 'abc' to <class 'int'>",  # noqa: E501
         ),
     ),
 )
