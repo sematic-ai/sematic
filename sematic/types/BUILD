@@ -21,6 +21,8 @@ sematic_py_lib(
         "//sematic/types/types/pandas:init",
         # Does not actually create a dependency on matplotlib 
         "//sematic/types/types/matplotlib:init",
+        # Does not actually create a dependency on huggingface
+        "//sematic/types/types/huggingface:init",
     ]
 )
 
