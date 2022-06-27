@@ -22,7 +22,8 @@ Sematic is an open-source development toolkit to help Data Scientists and Machin
 Learning (ML) Engineers prototype and productionize ML pipelines in days not
 weeks.
 
-Find our docs at [docs.sematic.ai](https://docs.sematic.ai).
+Find our docs at [docs.sematic.ai](https://docs.sematic.ai), and join us on
+[Discord](https://discord.gg/4KZJ6kYVax).
 
 Sematic helps you
 
@@ -74,7 +75,8 @@ $ python3 -m my_new_project
 ```
 
 
-See our docs at [docs.sematic.ai](https://docs.sematic.ai), and join us on [Discord](https://discord.gg/PFCpatvy).
+See our docs at [docs.sematic.ai](https://docs.sematic.ai), and join us on
+[Discord](https://discord.gg/4KZJ6kYVax).
 
 ## Contribute
 
