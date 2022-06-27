@@ -2,6 +2,8 @@
 import hashlib
 import json
 
+import pytest
+
 # Sematic
 from sematic.abstract_future import FutureState
 from sematic.calculator import calculator
@@ -63,3 +65,17 @@ def test_make_artifact():
     assert artifact.id == sha1.hexdigest()
     assert artifact.json_summary == json.dumps(json_summary, sort_keys=True)
     assert artifact.type_serialization == json.dumps(type_serialization, sort_keys=True)
+
+
+@pytest.mark.parametrize(
+    "value, expected_value",
+    (
+        (float("nan"), "NaN"),
+        (float("Infinity"), "Infinity"),
+        (float("-Infinity"), "-Infinity"),
+    ),
+)
+def test_make_artifact_special_floats(value, expected_value):
+    artifact = make_artifact(value, float)
+
+    assert json.loads(artifact.json_summary) == expected_value
