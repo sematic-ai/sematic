@@ -22,7 +22,7 @@ from sematic.types.serialization import (
 
 
 @register_safe_cast(DataclassKey)
-def _safe_cast_dataclass(value: Any, type_: Any) -> Tuple[Any, Optional[str]]:
+def safe_cast_dataclass(value: Any, type_: Any) -> Tuple[Any, Optional[str]]:
     """
     Casting logic for dataclasses.
 
@@ -58,7 +58,9 @@ def _safe_cast_dataclass(value: Any, type_: Any) -> Tuple[Any, Optional[str]]:
 
         cast_field, error = safe_cast(field_value, field.type)
         if error is not None:
-            return None, "Cannot cast {} to {}: {}".format(repr(value), type_, error)
+            return None, "Cannot cast {} to {} in field {}: {}".format(
+                repr(value), type_, name, error
+            )
 
         if create_instance_from_scratch:
             cast_value[name] = cast_field
@@ -96,12 +98,12 @@ def _can_cast_to_dataclass(from_type: Any, to_type: Any) -> Tuple[bool, Optional
 
 
 @register_to_json_encodable(DataclassKey)
-def _dataclass_to_json_encodable(value: Any, type_: Any) -> Any:
+def dataclass_to_json_encodable(value: Any, type_: Any) -> Any:
     return _serialize_dataclass(value_to_json_encodable, value, type_)
 
 
 @register_to_json_encodable_summary(DataclassKey)
-def _dataclass_to_json_encodable_summary(value: Any, type_: Any) -> Any:
+def dataclass_to_json_encodable_summary(value: Any, type_: Any) -> Any:
     return _serialize_dataclass(get_json_encodable_summary, value, type_)
 
 

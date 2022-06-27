@@ -32,3 +32,7 @@ import sematic.types.types.pandas  # noqa: F401
 # Matplotlib
 # Only activates if matplotlib is available
 import sematic.types.types.matplotlib  # noqa: F401
+
+# Huggingface
+# Only activates if transformers is available
+import sematic.types.types.huggingface  # noqa: F401

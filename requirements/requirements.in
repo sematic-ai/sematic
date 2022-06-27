@@ -38,3 +38,4 @@ statsmodels
 sklearn
 numpy
 xgboost
+transformers
