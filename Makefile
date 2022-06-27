@@ -32,9 +32,9 @@ clear_sqlite:
 create_pg: start_db_container db_migrate_up
 
 pre_commit:
-	#flake8
-	#mypy sematic
-	#black sematic --check
+	flake8
+	mypy sematic
+	black sematic --check
 
 refresh_dependencies:
 	pip-compile --allow-unsafe requirements/requirements.in
