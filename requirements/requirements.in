@@ -17,7 +17,7 @@ cloudpickle
 flask-socketio
 eventlet==0.30.2  # Because of https://stackoverflow.com/questions/67409452/gunicorn-importerror-cannot-import-name-already-handled-from-eventlet-wsgi
 requests
-responses==0.20.0  # 0.21.0 breaks mypy checks https://github.com/getsentry/responses/issues/556
+responses==0.18.0  # Require < 0.19.0 for HuggingFace datasets; 0.21.0 breaks mypy checks https://github.com/getsentry/responses/issues/556
 werkzeug
 gunicorn
 python-dateutil
@@ -39,3 +39,4 @@ sklearn
 numpy
 xgboost
 transformers
+datasets
