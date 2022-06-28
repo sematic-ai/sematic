@@ -2,6 +2,8 @@ sematic_example(
     name = "distilbert",  # Replace with name of directory
     requirements = [
         "numpy",
+        "torch",
+        "sklearn",
         "transformers",
         "datasets",
     ],
