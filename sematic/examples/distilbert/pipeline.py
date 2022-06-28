@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import typing
 import sematic
 import numpy as np
 import os
