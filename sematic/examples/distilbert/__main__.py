@@ -1,16 +1,12 @@
-"""
-This is the entry point of your pipeline.
-
-This is where you import the pipeline function from its module and resolve it.
-"""
 from sematic.examples.distilbert.pipeline import pipeline
+from transformers import TrainingArguments
 
+training_args = TrainingArguments(output_dir="test_trainer", evaluation_strategy="epoch")
 
 def main():
-    """
-    Entry point of my pipeline.
-    """
-    pipeline().resolve()
+    pipeline(training_args).set(
+        name="HuggingFace DistilBERT Yelp Reviews Example", tags=["hugging-face", "example", "bert"]
+    ).resolve()
 
 
 if __name__ == "__main__":
