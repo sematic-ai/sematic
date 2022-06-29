@@ -10,30 +10,26 @@ import yaml
 from sematic.config import get_config
 
 
-Credentials = Dict[str, Dict[str, str]]
+Credentials = Dict[str, Dict[str, Dict[str, str]]]
 
 
 def _load_credentials():
-    with open(get_config().credentials_file, "r") as f:
-        credentials = yaml.load(f, yaml.Loader)
+    try:
+        with open(get_config().credentials_file, "r") as f:
+            credentials = yaml.load(f, yaml.Loader)
+    except FileNotFoundError:
+        credentials = None
 
     if credentials is None:
-        return {}
+        credentials = {"default": {}}
 
-    selected_credentials = credentials["default"]
-
-    # Override with env vars
-    for key, creds in selected_credentials.items():
-        for var, value in creds.items():
-            selected_credentials[key][var] = os.environ.get(var, value)
-
-    return selected_credentials
+    return credentials
 
 
 _credentials: Optional[Credentials] = None
 
 
-def get_credentials() -> Credentials:
+def get_credentials() -> Dict[str, Dict[str, str]]:
     """
     Main API to access stored credentials.
     """
@@ -42,7 +38,12 @@ def get_credentials() -> Credentials:
     if _credentials is None:
         _credentials = _load_credentials()
 
-    return _credentials
+        # Override with env vars
+        for key, creds in _credentials["default"].items():
+            for var, value in creds.items():
+                _credentials["default"][key][var] = os.environ.get(var, value)
+
+    return _credentials["default"]
 
 
 class CredentialKeys(enum.Enum):
@@ -80,14 +81,13 @@ def set_credential(key: CredentialKeys, var: str, value: str):
             )
         )
 
-    with open(get_config().credentials_file, "r") as f:
-        credentials = yaml.load(f, yaml.Loader)
+    saved_credentials = _load_credentials()
 
-    if credentials is None:
-        credentials = {"default": {}}
+    if key.value not in saved_credentials["default"]:
+        saved_credentials["default"][key.value] = {}
 
-    credentials["default"][key.value][var] = value
-    yaml_output = yaml.dump(credentials, Dumper=yaml.Dumper)
+    saved_credentials["default"][key.value][var] = value
+    yaml_output = yaml.dump(saved_credentials, Dumper=yaml.Dumper)
 
     with open(get_config().credentials_file, "w") as f:
         f.write(yaml_output)
