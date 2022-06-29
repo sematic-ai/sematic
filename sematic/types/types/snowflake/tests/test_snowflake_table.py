@@ -12,7 +12,7 @@ from sematic.types.types.snowflake.snowflake_table import SnowflakeTable
 @pytest.fixture
 def credentials():
     with patch(
-        "sematic.credentials.get_credential",
+        "sematic.types.types.snowflake.snowflake_table.get_credential",
         return_value="dummy",
     ):
         yield
@@ -35,4 +35,3 @@ def test_snowflake_table(_, snowflake_connector, credentials):
     df = table.to_df(limit=10)
 
     assert len(df) == 2
-    assert True
