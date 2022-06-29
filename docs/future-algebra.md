@@ -244,9 +244,9 @@ Here is a workaround:
 
 ```python
 @sematic.func
-def pipeline() -> List[Union[T, str]]:
+def pipeline() -> Tuple[T, str]:
     future = some_sematic_func()
-    return [future, "foo"]
+    return future, "foo"
 ```
 
 ## Unsupported behaviors
