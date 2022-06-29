@@ -6,7 +6,6 @@ import os
 import pathlib
 from urllib.parse import urljoin
 from typing import Optional
-from pathlib import Path
 
 _DEFAULT_CONFIG_DIR = ".sematic"
 
@@ -68,17 +67,6 @@ def _get_data_dir() -> str:
     return data_dir
 
 
-def _get_credential_file() -> str:
-    """
-    Initializes the credentials yaml file.
-    """
-    credentials_path = os.path.join(_get_config_dir(), "credentials.yaml")
-    if not os.path.isfile(credentials_path):
-        Path(credentials_path).touch()
-
-    return credentials_path
-
-
 @dataclass
 class Config:
     """
@@ -95,7 +83,10 @@ class Config:
     examples_dir: str = _get_examples_dir()
     project_template_dir: str = "{}/template".format(_get_examples_dir())
     data_dir: str = _get_data_dir()
-    credentials_file: str = _get_credential_file()
+
+    @property
+    def credentials_file(self):
+        return "{}/credentials.yaml".format(self.config_dir)
 
     @property
     def server_url(self) -> str:

@@ -19,7 +19,7 @@ def credentials():
 
 
 @pytest.fixture
-def snowflake_connector(credentials):
+def snowflake_connector():
     with patch("snowflake.connector.connection.SnowflakeConnection._authenticate"):
         with patch("snowflake.connector.cursor.SnowflakeCursor.execute") as execute:
             yield execute
@@ -29,9 +29,10 @@ def snowflake_connector(credentials):
     "snowflake.connector.cursor.SnowflakeCursor.fetch_pandas_all",
     return_value=pandas.DataFrame(dict(a=[1, 2])),
 )
-def test_snowflake_table(_, snowflake_connector):
+def test_snowflake_table(_, snowflake_connector, credentials):
     table = SnowflakeTable(database="STARBUCKS_PLACES_SAMPLE", table="CORE_POI")
 
     df = table.to_df(limit=10)
 
     assert len(df) == 2
+    assert True
