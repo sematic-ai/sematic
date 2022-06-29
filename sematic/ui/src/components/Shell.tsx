@@ -18,7 +18,7 @@ export default function Shell() {
         <Box sx={{ gridColumn: 1, gridRow: 1 }}>
           <SideBar />
         </Box>
-        <Box sx={{ gridColumn: 2 }}>
+        <Box sx={{ gridColumn: 2, overflowY: "scroll" }}>
           <Outlet />
         </Box>
       </Box>
