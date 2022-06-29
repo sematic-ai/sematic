@@ -68,7 +68,17 @@ def get_credential(key: CredentialKeys, var: str) -> str:
     credential = get_credentials().get(key.value, {}).get(var)
 
     if credential is None:
-        raise MissingCredentialsError("Missing credentials: {}".format(var))
+        raise MissingCredentialsError(
+            """
+Missing credentials: {}
+
+Set it with
+
+    $ sematic credentials set {} {} VALUE
+""".format(
+                var, key.value, var
+            )
+        )
 
     return credential
 

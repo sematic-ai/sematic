@@ -1,7 +1,7 @@
 # Standard library
 from contextlib import contextmanager
-from dataclasses import dataclass
-from typing import Generator
+from dataclasses import dataclass, field
+from typing import Generator, Type, Any
 import os
 
 # Third-party
@@ -29,6 +29,8 @@ except ImportError as e:
 
 # Sematic
 from sematic.credentials import get_credential, CredentialKeys
+from sematic.types.registry import register_to_json_encodable_summary
+from sematic.types.types.dataclass import _dataclass_to_json_encodable_summary
 
 
 @dataclass
@@ -39,6 +41,7 @@ class SnowflakeTable:
 
     database: str
     table: str
+    _preview: pandas.DataFrame = field(init=False, default_factory=pandas.DataFrame)
 
     def _connection(self) -> snowflake.connector.connection.SnowflakeConnection:
         return snowflake.connector.connect(
@@ -67,3 +70,10 @@ class SnowflakeTable:
         with self._cursor() as cursor:
             cursor.execute("SELECT * FROM {} LIMIT {};".format(self.table, limit))
             return cursor.fetch_pandas_all()
+
+
+@register_to_json_encodable_summary(SnowflakeTable)
+def _snowflake_table_summary(value: SnowflakeTable, type_: Type[SnowflakeTable]) -> Any:
+    value._preview = value.to_df(limit=5)
+
+    return _dataclass_to_json_encodable_summary(value, type_)
