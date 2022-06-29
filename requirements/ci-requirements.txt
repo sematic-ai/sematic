@@ -13,6 +13,7 @@ types-psycopg2
 data-science-types
 types-python-dateutil
 types-PyYAML
+snowflake_table
 
 # To generate the wheel
 mistune==0.8.4
