@@ -2,10 +2,30 @@
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Generator
+import os
 
 # Third-party
-import pandas
-import snowflake.connector
+try:
+    import pandas
+    import pyarrow  # type: ignore  # noqa: F401
+    import snowflake.connector
+except ImportError as e:
+    print(
+        "You are attempting to use SnowflakeTable which requires the following dependencies:"  # noqa: E501
+    )
+
+    requirements_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "requirements.txt"
+    )
+
+    with open(requirements_path) as f:
+        for line in f.read().split("\n"):
+            print("\t{}".format(line))
+        print()
+
+    print("Install them with\n")
+    print("\tpip3 install -r {}".format(requirements_path))
+    raise e
 
 # Sematic
 from sematic.credentials import get_credential, CredentialKeys
