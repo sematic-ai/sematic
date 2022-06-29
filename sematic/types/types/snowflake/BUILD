@@ -6,3 +6,11 @@ sematic_py_lib(
         "//sematic:credentials",
     ]
 )
+
+sematic_py_lib(
+    name = "init",
+    srcs = ["__init__.py"],
+    deps = [
+        ":snowflake_table",
+    ]
+)
