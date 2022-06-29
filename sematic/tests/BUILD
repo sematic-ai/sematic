@@ -24,3 +24,12 @@ pytest_test(
         "//sematic:init",
     ]
 )
+
+pytest_test(
+    name = "test_credentials",
+    srcs = ["test_credentials.py"],
+    deps = [
+        "//sematic:credentials",
+        "//sematic:config",
+    ]
+)
