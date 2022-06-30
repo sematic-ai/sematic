@@ -1,3 +1,8 @@
+* 0.2.0
+    * [bugfix] UI scroll issues
+    * [bugfix] Dataframe UI previews fails for null/NaN values
+    * [improvement] link to docs in exceptions for unsupported future operations
+    * [example] dynamic graph examples
 * 0.1.2-alpha
     * [bugfix] Fix example execution
 * 0.1.1-alpha
