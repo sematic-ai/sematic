@@ -7,7 +7,7 @@ to patch some odd behavior.
 not transitive. For this purpose, py_package is to be used. Since we are redefining py_wheel
 here, might as well include that behavior natively.
 
-- py_package by default packages all source files included those of third-party dependencies
+- py_package by default packages all source files including those of third-party dependencies
 that were installed by pip_parse. To remedy this, py_package offers a packages arguments that
 allows filtering. We bake this into sematic_py_wheel for an easier API
 
