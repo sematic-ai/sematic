@@ -5,7 +5,8 @@
 * [Your first pipeline](first-pipeline.md)
 * [A real ML pipeline](real-example.md)
 * [The Sematic UI](sematic-ui.md)
-* [Execution modes](execution-modes.md)
+* [The Sematic CLI](cli.md)
+* [Local and Cloud execution](execution-modes.md)
 * [Sematic vs. _____](sematic-vs.md)
 * [Join us on Discord](https://discord.gg/4KZJ6kYVax)
 
@@ -21,9 +22,9 @@
 
 ## Integrations
 
+* [Snowflake](snowflake.md)
 * [Apache Spark](integrations.md)
 * [Google Dataflow](integrations.md)
-* [Snowflake](integrations.md)
 * [Google BigQuery](integrations.md)
 * [AWS Redshift](integrations.md)
 * [DBT](integrations.md)
