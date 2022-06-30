@@ -57,3 +57,13 @@ pytest_test(
         "//sematic/types:serialization",
     ]
 )
+
+pytest_test(
+    name = "test_tuple",
+    srcs = ["test_tuple.py"],
+    deps = [
+        "//sematic/types:init",
+        "//sematic/types:casting",
+        "//sematic/types:serialization"
+    ]
+)

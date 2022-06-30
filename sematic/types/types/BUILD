@@ -86,3 +86,12 @@ sematic_py_lib(
         "//sematic/types:serialization",
     ]
 )
+
+sematic_py_lib(
+    name = "tuple",
+    srcs = ["tuple.py"],
+    deps = [
+        "//sematic/types:registry",
+        "//sematic/types:casting",
+    ]
+)

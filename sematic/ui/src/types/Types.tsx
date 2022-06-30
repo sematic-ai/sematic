@@ -21,6 +21,8 @@ import {
   TableRow,
   TableBody,
   Chip,
+  List,
+  ListItem,
 } from "@mui/material";
 const Plot = createPlotlyComponent(Plotly);
 
@@ -169,7 +171,7 @@ function ReprValueView(props: ValueViewProps) {
 
 function StrValueView(props: ValueViewProps) {
   return (
-    <Typography>
+    <Typography component="div">
       <pre>"{props.valueSummary}"</pre>
     </Typography>
   );
@@ -259,6 +261,27 @@ function ListValueView(props: ValueViewProps) {
         </TableRow>
       </TableBody>
     </Table>
+  );
+}
+
+function TupleValueView(props: ValueViewProps) {
+  let typeRepr = props.typeRepr as AliasTypeRepr;
+
+  let elementTypesRepr = typeRepr[2].args;
+
+  return (
+    <List>
+      {Array.from(props.valueSummary).map((element, index) => (
+        <ListItem key={index}>
+          {renderSummary(
+            props.typeSerialization,
+            element,
+            elementTypesRepr[index].type as TypeRepr,
+            index.toString()
+          )}
+        </ListItem>
+      ))}
+    </List>
   );
 }
 
@@ -620,6 +643,7 @@ const TypeComponents: Map<string, ComponentPair> = new Map([
   ["bool", { type: TypeView, value: BoolValueView }],
   ["FloatInRange", { type: FloatInRangeTypeView, value: FloatValueView }],
   ["list", { type: ListTypeView, value: ListValueView }],
+  ["tuple", { type: TypeView, value: TupleValueView }],
   ["dataclass", { type: DataclassTypeView, value: DataclassValueView }],
   ["Union", { type: UnionTypeView, value: ValueView }],
   [
