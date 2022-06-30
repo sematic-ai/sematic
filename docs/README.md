@@ -57,3 +57,7 @@ many ways including the following:
 * Contribute examples
 * Contribute to type support
 * Contribute features
+
+## License
+
+Sematic is Apache 2.0 licensed.
