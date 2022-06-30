@@ -242,7 +242,7 @@ def is_valid_typing_alias(type_: Any) -> bool:
         return True
 
     if isinstance(type_, (_SpecialForm, _BaseGenericAlias)):  # type: ignore
-        raise ValueError("{} must be parametrized")
+        raise ValueError("{} must be parametrized".format(type_))
 
     return False
 
