@@ -4,6 +4,8 @@ sematic_py_lib(
     data = ["requirements.txt"],
     deps = [
         "//sematic:credentials",
+        "//sematic/types:registry",
+        "//sematic/types/types:dataclass",
     ]
 )
 
