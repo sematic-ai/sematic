@@ -59,7 +59,7 @@ start:
 
 wheel:
 	rm -f bazel-bin/sematic/*.whl
-	cat README.md | grep -v "<img" > README.nohtml
+	cat README.md | grep -v "<img" | grep -v "<p" > README.nohtml
 	m2r --overwrite README.nohtml
 	rm README.nohtml
 	bazel build //sematic:wheel
