@@ -79,7 +79,7 @@ sematic_py_wheel(
     distribution = "sematic",
     python_tag = "py3",
     platform = "any",
-    version = "0.1.2-alpha",#+{BUILD_TIMESTAMP}",
+    version = "0.2.0",#+{BUILD_TIMESTAMP}",
     python_requires = ">=3.9",
     description_file = "//:README.rst",
     author = "Sematic AI, Inc.",
@@ -96,7 +96,7 @@ sematic_py_wheel(
         "eventlet==0.30.2",
     ],
     classifiers = [
-        "Classifier: License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: MIT License",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "Programming Language :: Python :: 3 :: Only",
