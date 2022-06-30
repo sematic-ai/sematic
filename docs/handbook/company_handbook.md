@@ -16,7 +16,7 @@ Feedback on the handbook is encouraged.
 ## Company
 ### Our Story
 
-Sematic was founded by Emmanuel and Jai in May 2022. We met in 2018, on our first day working at Cruise, a self-driving car company based in San Francisco, CA. At Cruise we worked on ML Infrastructure, and together with a great team, developed tools that enabled Cruise's (Continuous Learning Machine)[https://medium.com/cruise/cruise-continuous-learning-machine-30d60f4c691b].
+Sematic was founded by Emmanuel and Jai in May 2022. We met in 2018, on our first day working at Cruise, a self-driving car company based in San Francisco, CA. At Cruise we worked on ML Infrastructure, and together with a great team, developed tools that enabled Cruise's [Continuous Learning Machine](https://medium.com/cruise/cruise-continuous-learning-machine-30d60f4c691b).
 
 Inspired by our learnings, we started Sematic and gathered early support from Y Combinator (S22). Our goal is clear: make it painless to prototype and productionize machine learning models and data science pipelines. 
 

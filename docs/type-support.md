@@ -59,7 +59,7 @@ Runtime type checking ensures greater safety and reliability of your pipelines.
 
 ## Pseudo-static type checking
 
-Because Sematic construct the execution graph of your pipeline using futures
+Because Sematic constructs the execution graph of your pipeline using futures
 whose type is known (thanks to your type annotations), it is able to also fail
 even before any concrete values are known, potentially saving you many hours of
 wasted compute or debugging.
@@ -142,7 +142,7 @@ For the latter, Sematic provides baseline type-checking (`issubclass`,
 `isinstance`) and visualization (using `repr`).
 
 In addition, Sematic supports popular third-party types and adds more support
-every week At this time, Sematic supports
+every week. At this time, Sematic supports
 
 * `pandas.DataFrame`, `pandas.Series`
 * `torch.nn.Module`, `torch.Tensor`
@@ -150,7 +150,7 @@ every week At this time, Sematic supports
 * `matplotlib.figure.Figure`
 
 See
-(sematic/types/types)[https://github.com/sematic-ai/sematic/tree/main/sematic/types/types]
+[sematic/types/types](https://github.com/sematic-ai/sematic/tree/main/sematic/types/types)
 for the current list of support types.
 
 Get in touch on [Discord](https://discord.gg/4KZJ6kYVax) for more type support, or

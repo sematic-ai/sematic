@@ -99,7 +99,7 @@ Obviously this toy pipeline is not very useful. Here are a number of things you
 can do in Sematic functions:
 
 * Anything that can be expressed in Python
-* Load, process, filter dataframes
+* Load, process, and  filter dataframes
 * Launch a data processing job (e.g. Spark, Google Dataflow)
 * Train a model, launch a training job on a dedicated service
 * Query a database or data warehouse
@@ -113,7 +113,7 @@ Really anything you can do in Python 🙂.
 
 The `@sematic.func` decorator converts any plain Python function into a
 so-called ["Sematic Function"](glossary.md). Sematic functions are tracked by
-Sematic as pipeline steps. This means that there inputs and outputs are
+Sematic as pipeline steps. This means that the inputs and outputs are
 type-checked and tracked as [Artifacts](glossary.md), and that you will be able
 to inspect and visualize the function's execution in the UI.
 

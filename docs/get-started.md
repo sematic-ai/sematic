@@ -22,7 +22,7 @@ This will open the app in your browser.
 
 {% hint style="info" %}
 This runs the Sematic app on your local machine. To
-deploy it withing your cloud see [Deploying Sematic](deployment.md).
+deploy it within your cloud see [Deploying Sematic](deployment.md).
 {% endhint %}
 
 To stop the app, simply do
