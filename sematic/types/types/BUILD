@@ -95,3 +95,12 @@ sematic_py_lib(
         "//sematic/types:casting",
     ]
 )
+
+sematic_py_lib(
+    name = "dict",
+    srcs = ["dict.py"],
+    deps = [
+        "//sematic/types:registry",
+        "//sematic/types:casting",
+    ]
+)

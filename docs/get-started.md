@@ -1,7 +1,5 @@
 # Get started
 
-Welcome to Sematic, let's get you set up.
-
 ## Installation
 
 First, let's install Sematic
@@ -12,7 +10,7 @@ $ pip install sematic
 
 ## Starting the app
 
-Now you should be able to launch the Sematic App on your local with
+Now you should be able to launch the Sematic App on your local machine with
 
 ```shell
 $ sematic start
@@ -22,7 +20,7 @@ This will open the app in your browser.
 
 {% hint style="info" %}
 This runs the Sematic app on your local machine. To
-deploy it withing your cloud see [Deploying Sematic](deployment.md).
+deploy it within your cloud see [Deploying Sematic](deployment.md).
 {% endhint %}
 
 To stop the app, simply do
