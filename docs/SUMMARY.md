@@ -47,7 +47,6 @@
 
 ## Project
 
-* [License](mit.md)
 * [Roadmap](https://trello.com/b/AznpHZ7e/sematic-public-roadmap)
 * [Changelog](changelog.md)
 
