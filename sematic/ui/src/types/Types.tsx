@@ -23,6 +23,7 @@ import {
   Chip,
   List,
   ListItem,
+  TableHead,
 } from "@mui/material";
 const Plot = createPlotlyComponent(Plotly);
 
@@ -439,6 +440,38 @@ function DataclassValueView(props: ValueViewProps) {
   );
 }
 
+function DictValueView(props: ValueViewProps) {
+  let typeRepr = props.typeRepr as AliasTypeRepr;
+
+  let keyTypeRepr = typeRepr[2].args[0].type as TypeRepr;
+  let valueTypeRepr = typeRepr[2].args[1].type as TypeRepr;
+
+  let valueSummary = props.valueSummary as [any, any];
+
+  return (
+    <Table>
+      <TableHead>
+        <TableRow>
+          <TableCell>key</TableCell>
+          <TableCell>value</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {Array.from(valueSummary).map((pair, index) => (
+          <TableRow key={index}>
+            <TableCell>
+              {renderSummary(props.valueSummary, pair[0], keyTypeRepr)}
+            </TableCell>
+            <TableCell>
+              {renderSummary(props.valueSummary, pair[1], valueTypeRepr)}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
 function TorchDataLoaderValueView(props: ValueViewProps) {
   let { valueSummary } = props;
 
@@ -644,6 +677,7 @@ const TypeComponents: Map<string, ComponentPair> = new Map([
   ["FloatInRange", { type: FloatInRangeTypeView, value: FloatValueView }],
   ["list", { type: ListTypeView, value: ListValueView }],
   ["tuple", { type: TypeView, value: TupleValueView }],
+  ["dict", { type: TypeView, value: DictValueView }],
   ["dataclass", { type: DataclassTypeView, value: DataclassValueView }],
   ["Union", { type: UnionTypeView, value: ValueView }],
   [

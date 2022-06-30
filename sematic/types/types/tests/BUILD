@@ -67,3 +67,13 @@ pytest_test(
         "//sematic/types:serialization"
     ]
 )
+
+pytest_test(
+    name = "test_dict",
+    srcs = ["test_dict.py"],
+    deps = [
+        "//sematic/types:init",
+        "//sematic/types:casting",
+        "//sematic/types:serialization",
+    ]
+)

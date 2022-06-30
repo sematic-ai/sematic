@@ -13,6 +13,7 @@ sematic_py_lib(
         "//sematic/types/types:union",
         "//sematic/types/types:list",
         "//sematic/types/types:tuple",
+        "//sematic/types/types:dict",
         "//sematic/types/types:str",
         # Does not actually create a dependency on torch
         "//sematic/types/types/pytorch:init",

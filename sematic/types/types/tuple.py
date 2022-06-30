@@ -50,6 +50,9 @@ def _tuple_safe_cast(
 
 @register_to_json_encodable(tuple)
 def _tuple_to_json_encodable(value: Tuple, type_: Type) -> List:
+    """
+    Serialization of tuples
+    """
     return [
         value_to_json_encodable(element, element_type)
         for element, element_type in zip(value, type_.__args__)
