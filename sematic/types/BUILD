@@ -21,6 +21,8 @@ sematic_py_lib(
         "//sematic/types/types/pandas:init",
         # Does not actually create a dependency on matplotlib 
         "//sematic/types/types/matplotlib:init",
+        # Does not actually create a dependency on snowflake
+        "//sematic/types/types/snowflake:init",
     ]
 )
 
