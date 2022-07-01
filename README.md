@@ -27,11 +27,13 @@ Find our docs at [docs.sematic.ai](https://docs.sematic.ai), and join us on
 
 Sematic helps you
 
-* Bring your prototype ML code from your Notebook to a production pipeline with minimal efforts
+* Develop and run ML pipelines using native Python functions, no new DSL to learn
 * Monitor, visualize, and track all inputs and outputs of all pipeline steps in a slick UI
-* Collaborate with your team: keep the discussion close to the pipeline as opposed to scattered elsewhere
+* Collaborate with your team to keep the discussion close to the pipeline as opposed to scattered elsewhere
 * [soon] Clone/re-run your pipelines with different inputs/configs
 * [soon] Schedule your pipelines to keep your models fresh and relevant
+
+Sematic is an alternative to other ML pipeline tools, such as KubeFlow Pipelines.
 
 
 ## Installation
