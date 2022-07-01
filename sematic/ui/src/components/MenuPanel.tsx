@@ -32,14 +32,13 @@ export default function MenuPanel(props: {
     return map;
   }, [runsById]);
 
-  const panelList = [
+  let panelList = [
     {
       label: "graph",
       title: "Execution graph",
       icon: <BubbleChart />,
       onClick: () => onPanelSelect("graph"),
     },
-    { label: "topline", title: "Topline metrics", icon: <Timeline /> },
     {
       label: "run",
       title: "Nested runs",
@@ -50,6 +49,15 @@ export default function MenuPanel(props: {
       },
     },
   ];
+
+  if (process.env.NODE_ENV === "development") {
+    panelList.splice(1, 0, {
+      label: "topline",
+      title: "Topline metrics",
+      icon: <Timeline />,
+      onClick: () => {},
+    });
+  }
 
   return (
     <Box
