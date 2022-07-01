@@ -1,6 +1,8 @@
 * 0.3.0
     * [feature] Support for Tuple types
     * [feature] Support for Dict types
+    * [feature] `SnowflakeTable` type
+    * [feature] `$ sematic credentials set <app> <var> <value>` CLI command
 * 0.2.0
     * [bugfix] UI scroll issues
     * [bugfix] Dataframe UI previews fails for null/NaN values
