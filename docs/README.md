@@ -5,11 +5,11 @@ We're glad you're here!
 Whether you're a Machine Learning (ML) or Data Science (DS) developer, Sematic
 makes you work faster by:
 
-* facilitating the transition from Jupyter Notebook prototype code to steady
+* Facilitating the transition from Jupyter Notebook prototype code to steady
   production-grade pipelines
-* helping you iterate, investigate, debug, and collaborate directly on
+* Helping you iterate, investigate, debug, and collaborate directly on
   production pipelines
-* automating ML/DS pipelines to keep models and metrics fresh and relevant as
+* Automating ML/DS pipelines to keep models and metrics fresh and relevant as
   market and world conditions change
 
 If you're new, read how to [Get Started](get-started.md) or join our [Discord
@@ -54,7 +54,7 @@ Sematic's features include:
 We would be thrilled to have you contribute to Sematic. You can contribute in
 many ways including the following:
 
-* Contribute examples
+* [Contribute examples](https://docs.sematic.ai/contribute/contributor-guide/contribute-example)
 * Contribute to type support
 * Contribute features
 

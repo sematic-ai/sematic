@@ -65,7 +65,7 @@ Sematic differs from Airflow in the following ways:
 
 * Iterative development: change code, run in the cloud, visualize, repeat. In Airflow, you can either run a pipeline on a local Airflow instance, or if you want to run it in the cloud, you must merge your code and deploy it to the cloud instance which adds many steps to your iteration workflow.
 
-* Semantic UI: Sematic brings visualizations for your functions inputs and outputs straight to the forefront. No need to take care of persisting thing elsewhere or fetching them into a local notebook.
+* Semantic UI: Sematic brings visualizations for your functions inputs and outputs straight to the forefront. No need to take care of persisting things elsewhere or fetching them into a local notebook.
 
 * Dynamic graph:
 
