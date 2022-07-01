@@ -241,14 +241,16 @@ def pipeline() -> str:
 Sematic builds the execution graph by looking for futures that are returned by,
 or passed as input arguments to other Sematic Functions.
 
-Here is a workaround:
+Here is a workaround, assuming `some_sematic_func` returns a `str`:
 
 ```python
 @sematic.func
-def pipeline() -> Tuple[T, str]:
+def pipeline() -> List[str]:
     future = some_sematic_func()
-    return future, "foo"
+    return [future, "foo"]
 ```
+
+This issue is tracked in [Github Issue #56](https://github.com/sematic-ai/sematic/issues/56).
 
 ## Unsupported behaviors
 
