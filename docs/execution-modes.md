@@ -21,7 +21,7 @@ Sematic provides the following execution stragegies:
 ## Silent execution
 
 Silent execution runs your code locally (i.e. on your machine) and does not
-write anything to the (local) database. Your pipeline will not show up in the UI.
+write anything to the database. Your pipeline will not show up in the UI.
 
 This is useful for quick debugging in a Python console, or writing tests.
 
