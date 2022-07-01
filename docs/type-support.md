@@ -12,7 +12,7 @@ The type hints are used in the following way:
 In regular Python, type hints are used by mypy for static type checking but are
 not actually enforced at runtime.
 
-If a function declares it expected an argument `foo: int`, but an `"abc"` is
+If a function declares it expects an argument `foo: int`, but `"abc"` is
 passed, Python will not complain. This at-times practical behavior can be
 detrimental in long-running pipelines. Imagine a pipeline failing after 12 hours
 of processing because of a silly mistyped input (e.g. `foo / 2` in the case above).
@@ -38,7 +38,7 @@ Let's execute this Sematic Function:
 TypeError: Invalid input type for argument 'a' when calling '__main__.f'. Cannot cast 'abc' to <class 'int'>
 ```
 
-Sematic will not even let us generate a future of the `f`.
+Sematic will not even let us generate a future of `f`.
 
 Now let's pass a valid `int`:
 

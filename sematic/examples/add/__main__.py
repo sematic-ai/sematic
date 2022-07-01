@@ -2,7 +2,6 @@
 import logging
 
 # Sematic
-from sematic import LocalResolver
 from sematic.examples.add.pipeline import pipeline
 
 
@@ -12,6 +11,6 @@ if __name__ == "__main__":
     future = pipeline(1, 2, 3).set(
         name="Basic add example pipeline", tags=["example", "basic", "final"]
     )
-    result = future.resolve(LocalResolver())
+    result = future.resolve()
 
     logging.info(result)

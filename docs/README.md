@@ -57,3 +57,7 @@ many ways including the following:
 * [Contribute examples](https://docs.sematic.ai/contribute/contributor-guide/contribute-example)
 * Contribute to type support
 * Contribute features
+
+## License
+
+Sematic is Apache 2.0 licensed.

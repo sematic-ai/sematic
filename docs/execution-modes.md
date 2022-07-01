@@ -18,7 +18,7 @@ of wasted time.
 
 Sematic provides the following execution stragegies:
 
-### Silent execution
+## Silent execution
 
 Silent execution runs your code locally (i.e. on your machine) and does not
 write anything to the (local) database. Your pipeline will not show up in the UI.
@@ -31,7 +31,7 @@ To use this mode, simply do:
 >>> pipeline(...).resolve(tracking=False)
 ```
 
-### Local execution
+## Local execution
 
 This is the default mode. Your pipeline still runs on your local machine, but
 tracks execution in Sematic's database. Your pipeline's runs and artifacts are
@@ -54,7 +54,7 @@ cloud infrastructure. See [Deploy Sematic](./coming-soon.md).
 
 {% endhint %}
 
-### Cloud execution
+## Cloud execution
 
 {% hint style="warning" %}
 

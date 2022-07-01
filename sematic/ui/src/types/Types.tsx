@@ -21,6 +21,9 @@ import {
   TableRow,
   TableBody,
   Chip,
+  List,
+  ListItem,
+  TableHead,
 } from "@mui/material";
 const Plot = createPlotlyComponent(Plotly);
 
@@ -169,7 +172,7 @@ function ReprValueView(props: ValueViewProps) {
 
 function StrValueView(props: ValueViewProps) {
   return (
-    <Typography>
+    <Typography component="div">
       <pre>"{props.valueSummary}"</pre>
     </Typography>
   );
@@ -259,6 +262,27 @@ function ListValueView(props: ValueViewProps) {
         </TableRow>
       </TableBody>
     </Table>
+  );
+}
+
+function TupleValueView(props: ValueViewProps) {
+  let typeRepr = props.typeRepr as AliasTypeRepr;
+
+  let elementTypesRepr = typeRepr[2].args;
+
+  return (
+    <List>
+      {Array.from(props.valueSummary).map((element, index) => (
+        <ListItem key={index}>
+          {renderSummary(
+            props.typeSerialization,
+            element,
+            elementTypesRepr[index].type as TypeRepr,
+            index.toString()
+          )}
+        </ListItem>
+      ))}
+    </List>
   );
 }
 
@@ -413,6 +437,38 @@ function DataclassValueView(props: ValueViewProps) {
         )
       )}
     </Stack>
+  );
+}
+
+function DictValueView(props: ValueViewProps) {
+  let typeRepr = props.typeRepr as AliasTypeRepr;
+
+  let keyTypeRepr = typeRepr[2].args[0].type as TypeRepr;
+  let valueTypeRepr = typeRepr[2].args[1].type as TypeRepr;
+
+  let valueSummary = props.valueSummary as [any, any];
+
+  return (
+    <Table>
+      <TableHead>
+        <TableRow>
+          <TableCell>key</TableCell>
+          <TableCell>value</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {Array.from(valueSummary).map((pair, index) => (
+          <TableRow key={index}>
+            <TableCell>
+              {renderSummary(props.valueSummary, pair[0], keyTypeRepr)}
+            </TableCell>
+            <TableCell>
+              {renderSummary(props.valueSummary, pair[1], valueTypeRepr)}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -620,6 +676,8 @@ const TypeComponents: Map<string, ComponentPair> = new Map([
   ["bool", { type: TypeView, value: BoolValueView }],
   ["FloatInRange", { type: FloatInRangeTypeView, value: FloatValueView }],
   ["list", { type: ListTypeView, value: ListValueView }],
+  ["tuple", { type: TypeView, value: TupleValueView }],
+  ["dict", { type: TypeView, value: DictValueView }],
   ["dataclass", { type: DataclassTypeView, value: DataclassValueView }],
   ["Union", { type: UnionTypeView, value: ValueView }],
   [

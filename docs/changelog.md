@@ -1,5 +1,6 @@
-* 0.2.0-alpha
-    * [improvement] Update docs with better formatting and lesser spelling errors
+* HEAD
+    * [feature] Support for Tuple types
+    * [feature] Support for Dict types
 * 0.2.0
     * [bugfix] UI scroll issues
     * [bugfix] Dataframe UI previews fails for null/NaN values

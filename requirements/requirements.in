@@ -10,6 +10,9 @@ setuptools==58.1.0
 SQLAlchemy==1.4.36
 psycopg2-binary
 
+# Code
+pyyaml
+
 # API server
 flask
 flask-cors
@@ -38,3 +41,8 @@ statsmodels
 sklearn
 numpy
 xgboost
+
+# Types
+## Snowflake
+snowflake-connector-python
+pyarrow

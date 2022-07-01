@@ -83,8 +83,10 @@ class Config:
     examples_dir: str = _get_examples_dir()
     project_template_dir: str = "{}/template".format(_get_examples_dir())
     data_dir: str = _get_data_dir()
-    # Module containing the `main` function
-    examples_entry_point: str = "main"
+
+    @property
+    def credentials_file(self):
+        return "{}/credentials.yaml".format(self.config_dir)
 
     @property
     def server_url(self) -> str:

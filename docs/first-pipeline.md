@@ -107,24 +107,26 @@ can do in Sematic functions:
 
 Really anything you can do in Python 🙂.
 
+Check out [A real ML pipeline](./real-example.md).
+
 {% endhint %}
 
 ## What happens when I decorate a function with `@sematic.func`?
 
 The `@sematic.func` decorator converts any plain Python function into a
 so-called ["Sematic Function"](glossary.md). Sematic functions are tracked by
-Sematic as pipeline steps. This means that the inputs and outputs are
-type-checked and tracked as [Artifacts](glossary.md), and that you will be able
+Sematic as pipeline steps. This means that their inputs and outputs are
+type-checked and tracked as [Artifacts](glossary.md#artifact), and that you will be able
 to inspect and visualize the function's execution in the UI.
 
-In the case of [cloud execution](glossary.md), each function can run as its own
+In the case of [cloud execution](glossary.md#cloud-execution), each function can run as its own
 isolated job with its own set of resources.
 
 {% hint style="info" %}
 
 Note that calling a Sematic Function returns a **Future** instead of the actual
 value returned by the decorated Python function. Read more about Futures in the
-[Glossary](glossary.md).
+[Glossary](glossary.md#future).
 
 Futures are the way Sematic constructs the execution graph of your pipeline.
 Futures support a subset of native Python's operation, although we are adding
@@ -133,7 +135,7 @@ details.
 
 In order to trigger the actual execution of a graph, you need to call
 `.resolve()` on the entry point of your graph, that is typically the function
-called `pipeline`. See the [Glossary](glossary.md) for more details.
+called `pipeline`. See the [Glossary](glossary.md#pipeline) for more details.
 
 {% endhint %}
 

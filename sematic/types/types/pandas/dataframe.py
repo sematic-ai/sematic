@@ -29,12 +29,18 @@ def _dataframe_json_encodable_summary(value: pandas.DataFrame, _) -> Any:
         (name, dtype.name) for name, dtype in zip(value.dtypes.index, value.dtypes)
     ]
 
+    describe = []
+    try:
+        describe = value.describe().to_dict()  # type: ignore  # (pandas stubs bug)
+    except ValueError:
+        pass
+
     return dict(
         dataframe=payload,
         index=index,
         dtypes=dtypes,
         truncated=truncated,
         shape=value.shape,
-        describe=value.describe().to_dict(),  # type: ignore  # (pandas stubs bug)
+        describe=describe,
         isna=value.isna().sum().to_dict(),
     )
