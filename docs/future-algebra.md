@@ -1,5 +1,6 @@
 As described in [Sematic Functions](functions.md), decorating a plain Python
-function with `@sematic.func` makes it so calling said function returns a Future
+function with `@sematic.func` makes it a
+so-called ["Sematic Function"](glossary.md). So, calling the said function returns a Future
 instead of the actual output of the function.
 
 ## What is a Future?
@@ -22,7 +23,7 @@ For example, in the following code:
 >>> f = foo(123)
 ```
 
-`f` is not equal to `123` it is equal to
+`f` is not equal to `123`. It is equal to
 
 ```python
 Future(foo, {"a": 123})
@@ -70,7 +71,7 @@ Futures of `float` values. They can be passed to another Sematic Function (e.g.
 
 {% hint style="info" %}
 
-This ensure support for basic data flow between pipeline steps and arbitrary
+This ensures support for basic data flow between pipeline steps and arbitrary
 nesting of Sematic Functions.
 
 {% endhint %}
@@ -122,7 +123,7 @@ argument are **always** [concrete](./glossary.md#concrete-inputs).
 ### Containers of futures
 
 Passing and returning lists of future is supported as [mentioned
-above](#passing-and-returning-lists-of-futures). However, other container
+above](#passing-and-returning-lists-of-futures). However, other containers
 (tuple, dictionaries, dataclasses) are currently not supported.
 
 Here's an example of how to get around this for dataclasses:
@@ -173,7 +174,7 @@ def iterate_on_list(some_list: List[U]) -> T:
 
 ### Attribute and item access
 
-At this time if `future` is of type `Future[List[T]]`, you cannot do `future[0]`.
+At this time, if `future` is of type `Future[List[T]]`, you cannot do `future[0]`.
 
 If `future` is of type `Future[Dict[K, V]]`, you cannot do `future["some-key"]`.
 

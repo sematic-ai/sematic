@@ -1,4 +1,4 @@
-Sematic aims to make you development workflow faster and more efficient.
+Sematic aims to make your development workflow faster and more efficient.
 
 It is quite typical to start iterating on a pipeline locally, e.g. on 1% of the
 data, and then run it at scale in the cloud.
@@ -13,7 +13,7 @@ differences in underlying hardware (CPU, GPU, etc.), invalid data not present in
 your local 1%, rare corner cases, etc.
 
 But when it comes to building your code, correctness of your type hints and
-syntax, dependency packaging, Sematic can do a great deal to save you from a lot
+syntax, and dependency packaging, Sematic can do a great deal to save you from a lot
 of wasted time.
 
 Sematic provides the following execution stragegies:
@@ -45,7 +45,7 @@ To use this mode, simply do:
 
 {% hint style="info" %}
 
-Out of the box, Sematic write to a local database sitting on your mocal machine,
+Out of the box, Sematic writes to a local database sitting on your local machine,
 and the UI also runs in a local server.
 
 To be able to share results with your team, it is best to deploy Sematic in your

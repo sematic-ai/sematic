@@ -33,7 +33,7 @@ At the very top, the horizontal bar provides baseline information about the Pipe
 
 At the far left of the Pipeline Bar, you will find a dropdown menu with all the recent executions of your pipeline. You can quickly switch between different executions.
 
-The six-character string you see in the dropdown corresponds to the first dix characters of the pipeline run ID. Every time you run the pipeline, a new item will appear in this dropdown.
+The six-character string you see in the dropdown corresponds to the first six characters of the pipeline run ID. Every time you run the pipeline, a new item will appear in this dropdown.
 
 ### Menu Panel
 
@@ -44,7 +44,7 @@ The grey panel to the left is the Menu Panel. Three items are listed:
 * **Execution graph** – this will open the Graph Panel in the central area. See [Graph Panel](#graph-panel).
 * [Coming soon] **Topline metrics** – this will display plots of the main
   metrics of your pipeline across successive executions
-* **Nested runs** – This lists all the nested runs of the your pipeline in a tree view. This is a summarized view of the execution graph visible in the [#graph-panel]. You can click and select any run to view them in the central [Run Panel](#run-panel)
+* **Nested runs** – This lists all the nested runs of the your pipeline in a tree view. This is a summarized view of the execution graph visible in the [Graph Panel](#graph-panel). You can click and select any run to view it in the central [Run Panel](#run-panel)
 
 ### Graph Panel
 
@@ -61,7 +61,7 @@ central [Run Panel](#run-panel) in order to inspect its details.
 
 ![Run panel](images/RunPanel.png)
 
-When a run is selected in the [Graph Panel](#graph-panel) or in the [Menu Panel](#menu-panel), the Run Panel shows run details in the central area.
+When a run is selected in the [Graph Panel](#graph-panel) or in the [Menu Panel](#menu-panel), the Run Panel shows the run details in the central area.
 
 In this panel you can inspect and visualize:
 
@@ -78,5 +78,5 @@ On the far right side of the screen, you will find the Notes Panel where you can
 collaborate with your team and exchange notes and comments about the pipeline's
 outputs.
 
-Notes of all runs are showed but notes are always attached to a specific run in
+Notes of all the runs are showed but notes are always attached to a specific run in
 order to maintain the history and context of the conversation.
