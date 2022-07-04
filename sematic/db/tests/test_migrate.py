@@ -1,31 +1,28 @@
 # Standard library
 from unittest.mock import patch
-import sqlite3
 
 # Third-party
 import pytest
+from sqlalchemy.exc import OperationalError
 
 # Sematic
 from sematic.db.migrate import migrate, _get_migration_files
+from sematic.db.db import db
+from sematic.db.tests.fixtures import test_db_empty  # noqa: F401
 
 
-_MEMORY_CONN = sqlite3.connect(":memory:")
+def test_migrate(test_db_empty):  # noqa: F811
 
-
-@patch("sematic.db.migrate._get_conn", return_value=_MEMORY_CONN)
-def test_migrate(_):
-
-    # Test no tables exist
-    with pytest.raises(sqlite3.OperationalError):
-        with _MEMORY_CONN:
-            _MEMORY_CONN.execute("SELECT version FROM schema_migrations;")
+    with pytest.raises(OperationalError):
+        with db().get_engine().connect() as conn:
+            conn.execute("SELECT version FROM schema_migrations;")
 
     migrate()
 
     # Test tables were created
-    with _MEMORY_CONN:
-        _MEMORY_CONN.execute("SELECT version FROM schema_migrations;")
-        run_count = _MEMORY_CONN.execute("SELECT COUNT(*) from runs;")
+    with db().get_engine().connect() as conn:
+        conn.execute("SELECT version FROM schema_migrations;")
+        run_count = conn.execute("SELECT COUNT(*) from runs;")
 
     assert list(run_count)[0][0] == 0
 
