@@ -26,10 +26,10 @@ pytest_test(
 )
 
 pytest_test(
-    name = "test_credentials",
-    srcs = ["test_credentials.py"],
+    name = "test_user_settings",
+    srcs = ["test_user_settings.py"],
     deps = [
-        "//sematic:credentials",
+        "//sematic:user_settings",
         "//sematic:config",
     ]
 )
