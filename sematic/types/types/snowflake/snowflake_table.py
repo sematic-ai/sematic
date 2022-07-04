@@ -28,7 +28,7 @@ except ImportError as e:
     raise e
 
 # Sematic
-from sematic.credentials import get_credential, CredentialKeys
+from sematic.user_settings import get_user_settings, SettingsVar
 from sematic.types.registry import register_to_json_encodable_summary
 from sematic.types.types.dataclass import _dataclass_to_json_encodable_summary
 
@@ -45,9 +45,9 @@ class SnowflakeTable:
 
     def _connection(self) -> snowflake.connector.connection.SnowflakeConnection:
         return snowflake.connector.connect(
-            user=get_credential(CredentialKeys.snowflake, "SNOWFLAKE_USER"),
-            password=get_credential(CredentialKeys.snowflake, "SNOWFLAKE_PASSWORD"),
-            account=get_credential(CredentialKeys.snowflake, "SNOWFLAKE_ACCOUNT"),
+            user=get_user_settings(SettingsVar.SNOWFLAKE_USER),
+            password=get_user_settings(SettingsVar.SNOWFLAKE_PASSWORD),
+            account=get_user_settings(SettingsVar.SNOWFLAKE_ACCOUNT),
             database=self.database,
         )
 

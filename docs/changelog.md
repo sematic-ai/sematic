@@ -1,3 +1,6 @@
+* HEAD
+    * [improvement] Rename `$ sematic credentials` to `$ sematic settings` to be
+      able to store other things than credentials.
 * 0.3.0
     * [feature] Support for Tuple types
     * [feature] Support for Dict types

@@ -17,8 +17,8 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "credentials",
-    srcs = ["credentials.py"],
+    name = "user_settings",
+    srcs = ["user_settings.py"],
     deps = [
         ":config",
         requirement("pyyaml"),
