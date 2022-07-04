@@ -45,11 +45,8 @@ test:
 build_ui:
 	cd sematic/ui; npm run build
 
-server_image: build_ui
-	bazel build //sematic/api:sematic_server
-	cp -f bazel-bin/sematic/api/sematic_server-0.0.1-py3-none-any.whl .
+server-image:
 	docker build -t sematicai/sematic-server:dev .
-	rm -f sematic_server-0.0.1-py3-none-any.whl
 
 server_image_interpreter: build_server_image
 	docker run -it sematic-server python3
@@ -66,6 +63,10 @@ wheel:
 
 test-release:
 	python3 -m twine upload --repository testpypi bazel-bin/sematic/*.whl
+	docker build -t sematicai/sematic-server:dev .
+	docker push sematicai/sematic-server:dev
 
 release:
 	python3 -m twine upload bazel-bin/sematic/*.whl
+	docker build -t sematicai/sematic-server:latest .
+	docker push sematicai/sematic-server:latest

@@ -151,11 +151,20 @@ _CONTAINER_CONFIG = Config(
 )
 
 
+CLOUD_CONFIG = Config(
+    server_address="0.0.0.0",
+    api_version=1,
+    port=80,
+    db_url=os.environ.get("DATABASE_URL", "NO_DB"),
+)
+
+
 class EnvironmentConfigurations(Enum):
     local = _LOCAL_CONFIG
     local_sqlite = _LOCAL_SQLITE_CONFIG
     container = _CONTAINER_CONFIG
     local_cloud_db = _LOCAL_CLOUD_DB_CONFIG
+    cloud = CLOUD_CONFIG
 
 
 DEFAULT_ENV = "local_sqlite"
