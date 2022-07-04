@@ -31,6 +31,7 @@ sematic_py_lib(
     data = glob(["migrations/*.sql"]),
     deps = [
         "//sematic:config",
+        "//sematic/db:db",
     ]
 )
 
