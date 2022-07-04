@@ -85,8 +85,8 @@ class Config:
     data_dir: str = _get_data_dir()
 
     @property
-    def credentials_file(self):
-        return "{}/credentials.yaml".format(self.config_dir)
+    def settings_file(self):
+        return "{}/settings.yaml".format(self.config_dir)
 
     @property
     def server_url(self) -> str:
