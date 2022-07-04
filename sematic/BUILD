@@ -13,6 +13,15 @@ sematic_py_lib(
 sematic_py_lib(
     name = "config",
     srcs = ["config.py"],
+    deps = [
+        ":config_dir",
+        ":user_settings",
+    ]
+)
+
+sematic_py_lib(
+    name = "config_dir",
+    srcs = ["config_dir.py"],
     deps = []
 )
 
@@ -20,7 +29,7 @@ sematic_py_lib(
     name = "user_settings",
     srcs = ["user_settings.py"],
     deps = [
-        ":config",
+        ":config_dir",
         requirement("pyyaml"),
     ]
 )

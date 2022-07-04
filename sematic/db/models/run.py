@@ -11,7 +11,11 @@ from sqlalchemy.orm import validates
 # Sematic
 from sematic.abstract_future import FutureState
 from sematic.db.models.base import Base
-from sematic.db.models.json_encodable_mixin import JSONEncodableMixin, JSON_KEY
+from sematic.db.models.json_encodable_mixin import (
+    JSONEncodableMixin,
+    JSON_KEY,
+    ENUM_KEY,
+)
 
 
 class Run(Base, JSONEncodableMixin):
@@ -64,7 +68,9 @@ class Run(Base, JSONEncodableMixin):
     __tablename__ = "runs"
 
     id: str = Column(types.String(), primary_key=True)
-    future_state: FutureState = Column(types.String(), nullable=False)  # type: ignore
+    future_state: FutureState = Column(  # type: ignore
+        types.String(), nullable=False, info={ENUM_KEY: FutureState}
+    )
     name: str = Column(types.String(), nullable=True)
     calculator_path: str = Column(types.String(), nullable=False)
     parent_id: typing.Optional[str] = Column(types.String(), nullable=True)
@@ -103,14 +109,20 @@ class Run(Base, JSONEncodableMixin):
         """
         Validates that the future_state value is allowed.
         """
-        if not isinstance(value, FutureState):
-            raise ValueError("future_state must be a FutureState")
+        if isinstance(value, FutureState):
+            return value.value
 
-        return value.value
+        try:
+            return FutureState[value].value
+        except Exception:
+            raise ValueError("future_state must be a FutureState, got {}".format(value))
 
     @validates("tags")
     def convert_tags_to_json(self, key, value) -> str:
-        return json.dumps(value)
+        if isinstance(value, list):
+            return json.dumps(value)
+
+        return value
 
     @validates("description")
     def strip_description(self, key, value) -> str:
