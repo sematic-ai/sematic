@@ -10,17 +10,17 @@ to access it.
 In a console do
 
 ```
-$ sematic credentials set snowflake SNOWFLAKE_USER "foobar"
-$ sematic credentials set snowflake SNOWFLAKE_PASSWORD "foobar"
-$ sematic credentials set snowflake SNOWFLAKE_ACCOUNT "foobar"
-$ sematic credentials show
+$ sematic settings set SNOWFLAKE_USER "foobar"
+$ sematic settings set SNOWFLAKE_PASSWORD "foobar"
+$ sematic settings set SNOWFLAKE_ACCOUNT "foobar"
+$ sematic settings show
 snowflake:
     SNOWFLAKE_USER: foobar
     SNOWFLAKE_PASSWORD: foobar
     SNOWFLAKE_ACCOUNT: foobar
 ```
 
-These credentials are simply store in the `/.sematic/credentials.yaml` file on
+These settings are simply store in the `/.sematic/settings.yaml` file on
 your machine.
 
 ## `SnowflakeTable` type
