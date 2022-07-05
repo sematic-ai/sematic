@@ -4,7 +4,7 @@ import os
 # Third-party
 import argparse
 from flask import jsonify, send_file
-from flask_socketio import SocketIO  # type: ignore
+from flask_socketio import SocketIO, Namespace  # type: ignore
 
 # Sematic
 from sematic.api.app import sematic_api
@@ -53,6 +53,10 @@ def ping():
 
 
 socketio = SocketIO(sematic_api, cors_allowed_origins="*")
+# This is necessary because starting version 5.7.0 python-socketio does not
+# accept connections to undeclared namespaces
+socketio.on_namespace(Namespace("/pipeline"))
+socketio.on_namespace(Namespace("/graph"))
 
 
 def parse_arguments() -> argparse.Namespace:
