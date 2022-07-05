@@ -60,10 +60,10 @@ wheel:
 
 test-release:
 	python3 -m twine upload --repository testpypi bazel-bin/sematic/*.whl
-	docker build -t sematicai/sematic-server:dev .
-	docker push sematicai/sematic-server:dev
 
 release:
 	python3 -m twine upload bazel-bin/sematic/*.whl
+
+release-server:
 	docker build -t sematicai/sematic-server:latest .
 	docker push sematicai/sematic-server:latest

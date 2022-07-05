@@ -1,4 +1,6 @@
-* HEAD
+* 0.4.0
+    * [feature] ability to deploy the Sematic API to a cloud instance and run
+      pipelines against it (pipeline still runs locally)
     * [improvement] Rename `$ sematic credentials` to `$ sematic settings` to be
       able to store other things than credentials.
 * 0.3.0

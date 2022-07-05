@@ -63,21 +63,24 @@ pipelines, since it was the first to provide such abilities.
 
 Sematic differs from Airflow in the following ways:
 
-* Iterative development: change code, run in the cloud, visualize, repeat. In Airflow, you can either run a pipeline on a local Airflow instance, or if you want to run it in the cloud, you must merge your code and deploy it to the cloud instance which adds many steps to your iteration workflow.
+* **Iterative development** – change code, run in the cloud, visualize, repeat. In Airflow, you can either run a pipeline on a local Airflow instance, or if you want to run it in the cloud, you must merge your code and deploy it to the cloud instance which adds many steps to your iteration workflow.
 
-* Semantic UI: Sematic brings visualizations for your functions inputs and outputs straight to the forefront. No need to take care of persisting things elsewhere or fetching them into a local notebook.
+* **Semantic UI** – Sematic brings visualizations for your functions inputs and outputs straight to the forefront. No need to take care of persisting things elsewhere or fetching them into a local notebook.
 
-* Dynamic graph:
+* **Dynamic graph** – Sematic lets up loop over configurations, run different branches of your pipelines depending on the outcome of upstream steps, and even do hyperparameter tuning.
 
 ### Kubeflow Pipelines
 
-* Barrier to entry:
+* **Barrier to entry** – Using KFP requires quite a bit of knowledge about
+  Kubernetes, Docker images, Argo, etc. These things take a lot of time to
+  master. Sematic tries to provide working solutions out-of-the-box so that you
+  can focus on your expertise instead of infrastructure.
 
-* Dynamic graph:
+* **Dynamic graph** – In KFP, DAGs are fixed ahead of time. Sematic lets up loop over configurations, run different branches of your pipelines depending on the outcome of upstream steps, and even do hyperparameter tuning.
 
-* Lineage tracking:
+* **Lineage tracking** – KFP does not keep a rigorous track of all assets and artifacts flowing between your steps. You need to implement that yourself on top of it. In Sematic, lineage tracking is a first-class citizen. All inputs and outputs of all Sematic Functions are tracked and versioned.
 
-* Semantic UI:
+* **Semantic UI** – The KFP UI offers barebones tools to monitor and inspect runs, but no rich visualization or advanced features.
 
 ### MLFlow
 
@@ -85,13 +88,16 @@ Sematic differs from Airflow in the following ways:
 
 ### Comet ML
 
-Experiment tracking, use Comet ML with Sematic
+Comet ML specializes in experiment tracking. If this is a particular concern of
+yours, you can definitely use Comet ML with Sematic. They are complementary
+tools.
 
 ### Weights & Biases
 
-Experiment tracking, visualizations, use W&B with Sematic
+Weights & Biases excels at experiment tracking and visualization. You can
+absolutely use W&B together with Sematic, they are complementary tols.
 
 ### HuggingFace
 
-Pre-trained models, use HF with Sematic
-
+HuggingFace provides a large collection of pre-trained models and datasets. You
+can absolutely use HuggingFace with Sematic.
