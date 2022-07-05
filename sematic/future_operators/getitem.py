@@ -1,3 +1,7 @@
+"""
+Defining these operators in seperate modules in order to avoid circular
+dependencies between Future and Calculator
+"""
 # Standard library
 from types import GenericAlias
 from typing import Any, cast

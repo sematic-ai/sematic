@@ -8,6 +8,14 @@ from sematic.future_operators.getitem import __getitem__
 
 
 def __iter__(self: Future):
+    """
+    Implementation of __iter__ on Futures.
+
+    When users try to iterate on a future returning an iterable, a list of
+    futures needs to be returned.
+
+    Only supporting tuples for now.
+    """
     is_tuple_future = False
     future_type: GenericAlias = cast(GenericAlias, self.calculator.output_type)
 
