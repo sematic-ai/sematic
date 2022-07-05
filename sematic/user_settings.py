@@ -7,15 +7,22 @@ from typing import Dict, Optional
 import yaml
 
 # Sematic
-from sematic.config import get_config
+from sematic.config_dir import get_config_dir
+
+
+_SETTINGS_FILE = "settings.yaml"
 
 
 Settings = Dict[str, Dict[str, str]]
 
 
+def _settings_file() -> str:
+    return os.path.join(get_config_dir(), _SETTINGS_FILE)
+
+
 def _load_settings():
     try:
-        with open(get_config().settings_file, "r") as f:
+        with open(_settings_file(), "r") as f:
             settings = yaml.load(f, yaml.Loader)
     except FileNotFoundError:
         settings = None
@@ -46,6 +53,9 @@ def get_all_user_settings() -> Dict[str, str]:
 
 
 class SettingsVar(enum.Enum):
+    # Sematic
+    SEMATIC_API_ADDRESS = "SEMATIC_API_ADDRESS"
+
     # Snowflake
     SNOWFLAKE_USER = "SNOWFLAKE_USER"
     SNOWFLAKE_PASSWORD = "SNOWFLAKE_PASSWORD"
@@ -99,5 +109,5 @@ def set_user_settings(var: SettingsVar, value: str):
     saved_settings["default"][var.value] = value
     yaml_output = yaml.dump(saved_settings, Dumper=yaml.Dumper)
 
-    with open(get_config().settings_file, "w") as f:
+    with open(_settings_file(), "w") as f:
         f.write(yaml_output)

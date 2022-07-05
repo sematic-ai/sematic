@@ -22,7 +22,7 @@ import logging
 from sqlalchemy import text
 
 # Sematic
-from sematic.config import get_config, DEFAULT_ENV, switch_env
+from sematic.config import get_config, switch_env
 from sematic.db.db import db
 
 
@@ -34,8 +34,7 @@ def _get_migration_files() -> List[str]:
 
 def migrate():
     """
-    Will migrate the SQLite DB sitting at `get_config().config_dir, SQLITE_FILE`
-    to the latest version.
+    Will migrate the DB to the latest version.
     """
 
     logging.info("Running migrations on {}".format(get_config().db_url))
@@ -88,7 +87,7 @@ def migrate():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Sematic migration script")
-    parser.add_argument("--env", required=False, default=DEFAULT_ENV, type=str)
+    parser.add_argument("--env", required=False, default="local", type=str)
     parser.add_argument("--verbose", required=False, default=False, action="store_true")
     args = parser.parse_args()
 

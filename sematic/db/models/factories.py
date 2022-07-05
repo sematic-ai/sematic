@@ -2,6 +2,7 @@
 Functions to generate models.
 """
 # Standard library
+import datetime
 import typing
 import hashlib
 import json
@@ -31,6 +32,8 @@ def make_run_from_future(future: AbstractFuture) -> Run:
         description=future.calculator.__doc__,
         tags=future.tags,
         source_code=future.calculator.get_source(),
+        created_at=datetime.datetime.utcnow(),
+        updated_at=datetime.datetime.utcnow(),
     )
 
     return run
@@ -47,6 +50,8 @@ def make_artifact(value: typing.Any, type_: typing.Any) -> Artifact:
         ),
         json_summary=_fix_nan_inf(json.dumps(json_summary, sort_keys=True)),
         type_serialization=json.dumps(type_serialization, sort_keys=True),
+        created_at=datetime.datetime.utcnow(),
+        updated_at=datetime.datetime.utcnow(),
     )
 
     return artifact

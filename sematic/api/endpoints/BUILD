@@ -6,6 +6,8 @@ sematic_py_lib(
         "//sematic/db:db",
         "//sematic/db:queries",
         "//sematic/db/models:run",
+        "//sematic/db/models:artifact",
+        "//sematic/db/models:edge",
         ":request_parameters",
         requirement("flask"),
         requirement("sqlalchemy"),

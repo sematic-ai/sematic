@@ -4,6 +4,7 @@ Module keeping all /api/v*/runs/* API endpoints.
 
 # Standard library
 import base64
+from http import HTTPStatus
 import typing
 from urllib.parse import urlunsplit, urlencode, urlsplit
 
@@ -16,9 +17,14 @@ import flask_socketio  # type: ignore
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.db.db import db
+from sematic.db.models.artifact import Artifact
+from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
-from sematic.db.queries import get_root_graph, get_run
-from sematic.api.endpoints.request_parameters import get_request_parameters, jsonify_404
+from sematic.db.queries import get_root_graph, get_run, save_graph
+from sematic.api.endpoints.request_parameters import (
+    get_request_parameters,
+    jsonify_error,
+)
 
 
 @sematic_api.route("/api/v1/runs", methods=["GET"])
@@ -158,7 +164,9 @@ def get_run_endpoint(run_id: str) -> flask.Response:
     try:
         run = get_run(run_id)
     except NoResultFound:
-        return jsonify_404("No runs with id {}".format(repr(run_id)))
+        return jsonify_error(
+            "No runs with id {}".format(repr(run_id)), HTTPStatus.NOT_FOUND
+        )
 
     payload = dict(
         content=run.to_json_encodable(),
@@ -196,11 +204,35 @@ def get_run_graph(run_id: str) -> flask.Response:
 
 
 @sematic_api.route("/api/v1/events/<namespace>/<event>", methods=["POST"])
-def graph_update(namespace: str, event: str) -> flask.Response:
+def events(namespace: str, event: str) -> flask.Response:
     flask_socketio.emit(
         event,
         flask.request.json,
         namespace="/{}".format(namespace),
         broadcast=True,
     )
+    return flask.jsonify({})
+
+
+@sematic_api.route("/api/v1/graph", methods=["PUT"])
+def save_graph_endpoint():
+    if not flask.request or not flask.request.json or "graph" not in flask.request.json:
+        return jsonify_error(
+            "Please provide a graph payload in JSON format.",
+            HTTPStatus.BAD_REQUEST.value,
+        )
+
+    graph = flask.request.json["graph"]
+
+    runs = [Run.from_json_encodable(run) for run in graph["runs"]]
+    artifacts = [
+        Artifact.from_json_encodable(artifact) for artifact in graph["artifacts"]
+    ]
+    edges = [Edge.from_json_encodable(edge) for edge in graph["edges"]]
+
+    # try:
+    save_graph(runs, artifacts, edges)
+    # except Exception as e:
+    #    return jsonify_error(str(e), HTTPStatus.INTERNAL_SERVER_ERROR)
+
     return flask.jsonify({})
