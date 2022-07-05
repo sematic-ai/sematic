@@ -7,6 +7,7 @@ sematic_py_lib(
         "//sematic/resolvers:local_resolver",
         "//sematic/types:init",
         "//sematic/types:casting",
+        "//sematic/future_operators:init",
     ]
 )
 

@@ -44,16 +44,6 @@ def test_no_tracking():
     assert foo().resolve(tracking=False) == "foo"
 
 
-def test_getitem():
-    with pytest.raises(NotImplementedError, match="docs.sematic.ai"):
-        foo()[0]
-
-
-def test_iter():
-    with pytest.raises(NotImplementedError, match="docs.sematic.ai"):
-        a, b = foo()
-
-
 def test_bool():
     with pytest.raises(NotImplementedError, match="docs.sematic.ai"):
         if foo():
