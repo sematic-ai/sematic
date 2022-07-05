@@ -4,7 +4,6 @@ sematic_py_lib(
     deps = [
         ":silent_resolver",
         "//sematic:abstract_future",
-        "//sematic/db:queries",
         "//sematic:config",
         "//sematic/db/models:factories",
         "//sematic/db/models:artifact",

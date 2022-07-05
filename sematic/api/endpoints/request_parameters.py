@@ -1,4 +1,5 @@
 # Standard library
+from http import HTTPStatus
 from typing import Dict, Literal, Tuple, Optional, List, Union, cast
 import json
 
@@ -77,10 +78,10 @@ def get_request_parameters(
     return limit, cursor, group_by_column, sql_predicates
 
 
-def jsonify_404(error: str):
+def jsonify_error(error: str, status: HTTPStatus):
     return flask.Response(
         json.dumps(dict(error=error)),
-        status=404,
+        status=status.value,
         mimetype="application/json",
     )
 

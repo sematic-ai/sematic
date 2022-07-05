@@ -7,7 +7,7 @@ import pytest
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.api.tests.fixtures import test_client, mock_requests  # noqa: F401
-from sematic.calculator import calculator
+from sematic.calculator import func
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
 from sematic.resolvers.local_resolver import LocalResolver
@@ -15,24 +15,24 @@ from sematic.db.tests.fixtures import test_db, pg_mock  # noqa: F401
 from sematic.db.queries import get_graph
 
 
-@calculator
+@func
 def add(a: float, b: float) -> float:
     return a + b
 
 
-@calculator
+@func
 def add3(a: float, b: float, c: float) -> float:
     return add(add(a, b), c)
 
 
-@calculator
+@func
 def pipeline(a: float, b: float) -> float:
     c = add(a, b)
     d = add3(a, b, c)
     return add(c, d)
 
 
-def test_single_calculator(test_db, mock_requests):  # noqa: F811
+def test_single_function(test_db, mock_requests):  # noqa: F811
     future = add(1, 2)
 
     result = future.set(name="AAA").resolve(LocalResolver())
@@ -74,7 +74,7 @@ def test_single_calculator(test_db, mock_requests):  # noqa: F811
     }
 
 
-@calculator
+@func
 def add_add_add(a: float, b: float) -> float:
     aa = add(a, b)
     bb = add(a, aa)
@@ -115,15 +115,15 @@ def test_failure(test_db, mock_requests):  # noqa: F811
     class CustomException(Exception):
         pass
 
-    @calculator
+    @func
     def failure(a: None):
         raise CustomException("some message")
 
-    @calculator
+    @func
     def success():
         return
 
-    @calculator
+    @func
     def pipeline():
         return failure(success())
 
@@ -238,7 +238,7 @@ def test_db_state_machine(test_db, mock_requests):  # noqa: F811
 
 
 def test_list_conversion(test_db, mock_requests):  # noqa: F811
-    @calculator
+    @func
     def alist(a: float, b: float) -> List[float]:
         return [add(a, b), add(a, b)]
 

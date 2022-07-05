@@ -38,6 +38,7 @@ class JSONEncodableMixin:
 
 
 JSON_KEY = "json"
+ENUM_KEY = "enum"
 
 
 def _to_json_encodable(value, column):
@@ -82,6 +83,12 @@ def _from_json_encodable(json_encodable, column):
 
     if isinstance(column.type, types.Enum):
         return getattr(column.type.enum_class, json_encodable)
+
+    if column.info.get(ENUM_KEY, False):
+        return getattr(column.info[ENUM_KEY], json_encodable)
+
+    if column.info.get(JSON_KEY, False) and json_encodable is not None:
+        return json.dumps(json_encodable)
 
     if isinstance(column.type, types.DateTime):
         return dateutil.parser.parse(json_encodable)

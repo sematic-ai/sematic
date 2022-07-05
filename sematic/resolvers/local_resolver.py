@@ -1,6 +1,7 @@
 # Standard library
 import datetime
 from typing import Dict, Optional, List, Union, Tuple
+import uuid
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
@@ -10,7 +11,6 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.db.models.factories import make_artifact, make_run_from_future
-from sematic.db.queries import save_graph
 import sematic.api_client as api_client
 
 
@@ -47,6 +47,9 @@ class LocalResolver(SilentResolver):
 
         if edge is None:
             edge = Edge(
+                id=uuid.uuid4().hex,
+                created_at=datetime.datetime.utcnow(),
+                updated_at=datetime.datetime.utcnow(),
                 source_run_id=source_run_id,
                 destination_run_id=destination_run_id,
                 destination_name=destination_name,
@@ -284,7 +287,7 @@ class LocalResolver(SilentResolver):
         """
         Persist the graph to the DB
         """
-        save_graph(
+        api_client.save_graph(
             runs=self._runs.values(),
             artifacts=self._artifacts.values(),
             edges=self._edges.values(),
