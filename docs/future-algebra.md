@@ -108,6 +108,60 @@ def pipeline(a: float, b: float) -> List[float]:
 Here Sematic will know how to convert `List[Future[float]]` into
 `Future[List[float]]`.
 
+### Item access
+
+If a future is of type `Future[List[T]]`, `Future[Dict[K, V]]`, or
+`Future[Tuple[U, V]]`, you can access elements of the container directly using
+standard Python notations.
+
+If `future` is of type `Future[List[T]]` or `Future[Tuple[U, V]]`, you can do `future[i]` where `i` is an `int`.
+
+If `future` is of type `Future[Dict[K, V]]`, you can do `future[key]`, where `key` is of type `K` (usually `str`).
+
+For example:
+
+```python
+@sematic.func
+def foo() -> Tuple[int, str]:
+    return 42, "foo"
+
+@sematic.func
+def pipeline() -> str:
+    a = foo()[1]
+    return a
+```
+
+### Unpacking and iterating on tuples
+
+If a future is of type `Future[Tuple[T, U]]`, it can be unpacked using standard Python syntax.
+
+For example, unpacking:
+
+```python
+@sematic.func
+def foo() -> Tuple[int, str]:
+    return 42, "foo"
+
+@sematic.func
+def pipeline() -> str:
+    a, b = foo()
+    return b
+```
+
+Iteration:
+```python
+@sematic.func
+def foo() -> Tuple[int, str]:
+    return 42, "foo"
+
+@sematic.func
+def pipeline():
+    for a in foo():
+        some_list.append(process(a))
+    
+    return
+```
+
 ## Currently unsupported behaviors
 
 We are working hard to move these unsupported behaviors to the supported section
@@ -145,7 +199,7 @@ def pipeline(...) -> MyOutput:
     return make_output(foo, bar)
 ```
 
-### Unpacking and iteration
+### Unpacking and iteration on lists
 
 If your future is a `Future[List[T]]`, you cannot currently unpack it or iterate
 on it.
@@ -172,11 +226,7 @@ def iterate_on_list(some_list: List[U]) -> T:
         ...
 ```
 
-### Attribute and item access
-
-At this time, if `future` is of type `Future[List[T]]`, you cannot do `future[0]`.
-
-If `future` is of type `Future[Dict[K, V]]`, you cannot do `future["some-key"]`.
+### Attribute access
 
 If `future` is of type `Future[SomeClass]` where `SomeClass` has an attribute
 named `foo`, you cannot do `future.foo`.
@@ -193,16 +243,6 @@ def pipeline() -> T:
     future = some_sematic_func()
     return get_attr(future, "foo")
 ```
-
-Here is a workaround for item access:
-
-```python
-@sematic.func
-def get_item(obj: List[T], item: int) -> T:
-    return obj[item]
-```
-
-Use a similar approach for dictionaries.
 
 ### Arithmetic operations
 

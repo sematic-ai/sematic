@@ -17,4 +17,5 @@ snowflake-connector-python
 
 # To generate the wheel
 mistune==0.8.4
+docutils==0.18.1
 m2r

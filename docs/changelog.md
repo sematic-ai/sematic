@@ -1,3 +1,6 @@
+* HEAD
+    * [feature] `getitem` support for futures of list, tuples, dictionaries
+    * [feature] `__iter__` support for futures of tuples
 * 0.4.0
     * [feature] ability to deploy the Sematic API to a cloud instance and run
       pipelines against it (pipeline still runs locally)
