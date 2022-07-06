@@ -45,45 +45,45 @@ def test_no_tracking():
 
 
 def test_bool():
-    with pytest.raises(NotImplementedError, match="docs.sematic.ai"):
+    with pytest.raises(NotImplementedError, match="docs.sematic.dev"):
         if foo():
             pass
 
 
 def test_not():
-    with pytest.raises(NotImplementedError, match="docs.sematic.ai"):
+    with pytest.raises(NotImplementedError, match="docs.sematic.dev"):
         if not foo():
             pass
 
 
 def test_add():
-    with pytest.raises(NotImplementedError, match="docs.sematic.ai"):
+    with pytest.raises(NotImplementedError, match="docs.sematic.dev"):
         foo() + 1
 
 
 def test_iadd():
-    with pytest.raises(NotImplementedError, match="docs.sematic.ai"):
+    with pytest.raises(NotImplementedError, match="docs.sematic.dev"):
         f = foo()
         f += 1
 
 
 def test_mul():
-    with pytest.raises(NotImplementedError, match="docs.sematic.ai"):
+    with pytest.raises(NotImplementedError, match="docs.sematic.dev"):
         foo() * 1
 
 
 def test_imul():
-    with pytest.raises(NotImplementedError, match="docs.sematic.ai"):
+    with pytest.raises(NotImplementedError, match="docs.sematic.dev"):
         f = foo()
         f *= 1
 
 
 def test_div():
-    with pytest.raises(NotImplementedError, match="docs.sematic.ai"):
+    with pytest.raises(NotImplementedError, match="docs.sematic.dev"):
         foo() / 1
 
 
 def test_idiv():
-    with pytest.raises(NotImplementedError, match="docs.sematic.ai"):
+    with pytest.raises(NotImplementedError, match="docs.sematic.dev"):
         f = foo()
         f /= 1
