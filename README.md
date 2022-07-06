@@ -10,7 +10,7 @@
 ![PyPI - License](https://img.shields.io/pypi/l/sematic?style=for-the-badge)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue?style=for-the-badge&logo=none)](https://python.org)
 ![Discord](https://img.shields.io/discord/983789877927747714?label=DISCORD&style=for-the-badge)
-[![Made By Sematic](https://img.shields.io/badge/Made_by-Sematic_🦊-E19632?style=for-the-badge&logo=none)](https://sematic.ai)
+[![Made By Sematic](https://img.shields.io/badge/Made_by-Sematic_🦊-E19632?style=for-the-badge&logo=none)](https://sematic.dev)
 
 ## Hi 👋
 
@@ -23,7 +23,7 @@ Sematic is based on learnings from building the infrastructure behind Cruise's
 Machine](https://medium.com/cruise/cruise-continuous-learning-machine-30d60f4c691b).
 
 
-Find our docs at [docs.sematic.ai](https://docs.sematic.ai), and join us on
+Find our docs at [docs.sematic.dev](https://docs.sematic.dev), and join us on
 [Discord](https://discord.gg/4KZJ6kYVax).
 
 Sematic helps you
@@ -78,9 +78,9 @@ $ python3 -m my_new_project
 ```
 
 
-See our docs at [docs.sematic.ai](https://docs.sematic.ai), and join us on
+See our docs at [docs.sematic.dev](https://docs.sematic.dev), and join us on
 [Discord](https://discord.gg/4KZJ6kYVax).
 
 ## Contribute
 
-See our Contributor guide at [docs.sematic.ai](https://docs.sematic.ai).
+See our Contributor guide at [docs.sematic.dev](https://docs.sematic.dev).
