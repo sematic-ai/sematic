@@ -1,4 +1,4 @@
-* HEAD
+* 0.5.0
     * [feature] `getitem` support for futures of list, tuples, dictionaries
     * [feature] `__iter__` support for futures of tuples
 * 0.4.0

@@ -38,7 +38,7 @@
 
 
 .. image:: https://img.shields.io/badge/Made_by-Sematic_🦊-E19632?style=for-the-badge&logo=none
-   :target: https://sematic.ai
+   :target: https://sematic.dev
    :alt: Made By Sematic
 
 
@@ -53,7 +53,7 @@ Sematic is based on learnings from building the infrastructure behind Cruise's
 `Continuous Learning
 Machine <https://medium.com/cruise/cruise-continuous-learning-machine-30d60f4c691b>`_.
 
-Find our docs at `docs.sematic.ai <https://docs.sematic.ai>`_\ , and join us on
+Find our docs at `docs.sematic.dev <https://docs.sematic.dev>`_\ , and join us on
 `Discord <https://discord.gg/4KZJ6kYVax>`_.
 
 Sematic helps you
@@ -109,10 +109,10 @@ Then run it with
 
    $ python3 -m my_new_project
 
-See our docs at `docs.sematic.ai <https://docs.sematic.ai>`_\ , and join us on
+See our docs at `docs.sematic.dev <https://docs.sematic.dev>`_\ , and join us on
 `Discord <https://discord.gg/4KZJ6kYVax>`_.
 
 Contribute
 ----------
 
-See our Contributor guide at `docs.sematic.ai <https://docs.sematic.ai>`_.
+See our Contributor guide at `docs.sematic.dev <https://docs.sematic.dev>`_.
