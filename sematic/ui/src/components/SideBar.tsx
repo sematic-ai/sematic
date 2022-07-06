@@ -46,7 +46,14 @@ export default function SideBar() {
       >
         <Box>
           <SiReadthedocs />
-          <Typography fontSize={10}>Docs</Typography>
+          <Link
+            href="https://decs.sematic.dev"
+            sx={{ color: "rgba(255, 255, 255, 0.5)" }}
+            underline="none"
+            target="_blank"
+          >
+            <Typography fontSize={10}>Docs</Typography>
+          </Link>
         </Box>
         <Box>
           <Link
