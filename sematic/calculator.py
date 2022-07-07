@@ -21,7 +21,11 @@ class Calculator(AbstractCalculator):
     """
 
     def __init__(
-        self, func: types.FunctionType, input_types: Dict[str, type], output_type: type
+        self,
+        func: types.FunctionType,
+        input_types: Dict[str, type],
+        output_type: type,
+        parallelize: bool = False,
     ) -> None:
         if not inspect.isfunction(func):
             raise ValueError("{} is not a function".format(func))
@@ -30,6 +34,8 @@ class Calculator(AbstractCalculator):
 
         self._input_types = input_types
         self._output_type = output_type
+
+        self._parallelize = parallelize
 
         self.__doc__ = func.__doc__
         self.__module__ = func.__module__
@@ -56,6 +62,10 @@ class Calculator(AbstractCalculator):
     def input_types(self) -> Dict[str, type]:
         return self._input_types
 
+    @property
+    def parallelize(self) -> bool:
+        return self._parallelize
+
     # Returns typing.Any instead of Future to ensure
     # calculator algebra is valid from a mypy perspective
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
@@ -73,7 +83,7 @@ class Calculator(AbstractCalculator):
 
         cast_arguments = self.cast_inputs(argument_map)
 
-        return Future(self, cast_arguments)
+        return Future(self, cast_arguments, parallelize=self.parallelize)
 
     def __signature__(self) -> inspect.Signature:
         return inspect.signature(self._func)
@@ -166,7 +176,7 @@ def _repr_str_iterable(str_iterable: Iterable[str]) -> str:
 
 
 def calculator(
-    func: Callable = None,
+    func: Callable = None, parallelize: bool = False
 ) -> Union[Callable, Calculator]:
     """
     calculator decorator.
@@ -198,7 +208,12 @@ def calculator(
                 ).format(_repr_str_iterable(missing_annotations))
             )
 
-        return Calculator(func_, input_types=input_types, output_type=output_type)
+        return Calculator(
+            func_,
+            input_types=input_types,
+            output_type=output_type,
+            parallelize=parallelize,
+        )
 
     if func is None:
         return _wrapper

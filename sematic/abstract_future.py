@@ -4,6 +4,7 @@ between `Future` and `Resolver`.
 """
 # Standard library
 import abc
+from dataclasses import dataclass
 import enum
 import typing
 import uuid
@@ -30,6 +31,21 @@ class FutureState(enum.Enum):
         return tuple([future_state.value for future_state in cls.__members__.values()])
 
 
+@dataclass
+class FutureProperties:
+    """
+    This is meant as a container of properties for Future.
+
+    The reason is we want to keep the property namespace as empty
+    as possible on Future to enable attribute access on futures
+    of dataclasses and such.
+
+    Ideally over time we move all future properties to this dataclass.
+    """
+
+    parallelize: bool
+
+
 class AbstractFuture(abc.ABC):
     """
     Abstract base class to support `Future`.
@@ -52,7 +68,10 @@ class AbstractFuture(abc.ABC):
     """
 
     def __init__(
-        self, calculator: AbstractCalculator, kwargs: typing.Dict[str, typing.Any]
+        self,
+        calculator: AbstractCalculator,
+        kwargs: typing.Dict[str, typing.Any],
+        parallelize: bool,
     ):
         self.id: str = uuid.uuid4().hex
         self.calculator = calculator
@@ -69,3 +88,15 @@ class AbstractFuture(abc.ABC):
         self.inline: bool = False
         self.name: str = calculator.__name__
         self.tags: typing.List[str] = []
+
+        self._props = FutureProperties(parallelize=parallelize)
+
+    @property
+    def props(self) -> FutureProperties:
+        """
+        Ideally this is the only property we expose on future.
+        All other properties above should be migrated to FutureProperties
+
+        TODO: Migrate all future properties to FutureProperties
+        """
+        return self._props

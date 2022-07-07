@@ -61,6 +61,9 @@ class SettingsVar(enum.Enum):
     SNOWFLAKE_PASSWORD = "SNOWFLAKE_PASSWORD"
     SNOWFLAKE_ACCOUNT = "SNOWFLAKE_ACCOUNT"
 
+    # AWS
+    AWS_S3_BUCKET = "AWS_S3_BUCKET"
+
 
 class MissingSettingsError(Exception):
     pass

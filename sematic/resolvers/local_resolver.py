@@ -28,6 +28,9 @@ class LocalResolver(SilentResolver):
         self._runs: Dict[str, Run] = {}
         self._artifacts: Dict[str, Artifact] = {}
 
+        # TODO: Replace this with a local storage engine
+        self._store_artifacts = False
+
     def _update_edge(
         self,
         source_run_id: Optional[str],
@@ -89,7 +92,9 @@ class LocalResolver(SilentResolver):
         super()._future_will_schedule(future)
 
         input_artifacts = {
-            name: make_artifact(value, future.calculator.input_types[name])
+            name: make_artifact(
+                value, future.calculator.input_types[name], store=self._store_artifacts
+            )
             for name, value in future.resolved_kwargs.items()
         }
 

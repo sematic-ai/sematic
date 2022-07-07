@@ -11,6 +11,14 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.8.0.tar.gz",
 )
 
+# http_archive(
+#    name = "rules_cc",
+#    sha256 = "691a29db9c336349e48e04c5c2f4873f2890af5cbfa6e51f4de87fefe6169294",
+#    strip_prefix = "rules_cc-2f8c04c04462ab83c545ab14c0da68c3b4c96191",
+#    urls = [
+#        "https://github.com/bazelbuild/rules_cc/archive/2f8c04c04462ab83c545ab14c0da68c3b4c96191.zip",
+#    ],
+#)
 
 ## Canonical host toolchain
 
@@ -85,28 +93,36 @@ install_deps()
 
 ## DOCKER RULES
 
+http_archive(
+    name = "io_bazel_rules_docker",
+    sha256 = "b1e80761a8a8243d03ebca8845e9cc1ba6c82ce7c5179ce2b295cd36f7e394bf",
+    urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v0.25.0/rules_docker-v0.25.0.tar.gz"],
+)
 
-# http_archive(
-#     name = "io_bazel_rules_docker",
-#     sha256 = "27d53c1d646fc9537a70427ad7b034734d08a9c38924cc6357cc973fed300820",
-#     strip_prefix = "rules_docker-0.24.0",
-#     urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v0.24.0/rules_docker-v0.24.0.tar.gz"],
-# )
+load(
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
+    container_repositories = "repositories",
+)
 
-# load(
-#     "@io_bazel_rules_docker//repositories:repositories.bzl",
-#     container_repositories = "repositories",
-# )
-# container_repositories()
+container_repositories()
 
-# load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
 
-# container_deps()
+load(
+    "@io_bazel_rules_docker//python3:image.bzl",
+    _py_image_repos = "repositories",
+)
 
-# load(
-#     "@io_bazel_rules_docker//python3:image.bzl",
-#     _py_image_repos = "repositories",
-# )
+_py_image_repos()
 
-# _py_image_repos()
 
+load("@io_bazel_rules_docker//container:pull.bzl", "container_pull")
+
+
+container_pull(
+     name = "python_39",
+    digest = "sha256:4169ae884e9e7d9bd6d005d82fc8682e7d34b7b962ee7c2ad59c42480657cb1d",
+    registry = "index.docker.io",
+    repository = "python",
+    # tag field is ignored since digest is set
+    tag = "3.9-slim-bullseye",
+)

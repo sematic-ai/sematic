@@ -1,3 +1,10 @@
+load(
+    "@io_bazel_rules_docker//python3:image.bzl",
+    "py3_image",
+)
+
+#load("//tools:sematic_pipeline.bzl", "sematic_pipeline")
+
 sematic_py_lib(
     name = "local_resolver",
     srcs = ["local_resolver.py"],
@@ -29,4 +36,10 @@ sematic_py_lib(
         "//sematic:abstract_future",
         "//sematic/resolvers:state_machine_resolver",
     ]
+)
+
+py3_image(
+    name = "worker",
+    srcs = ["worker.py"],
+    deps = []
 )
