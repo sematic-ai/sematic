@@ -16,6 +16,7 @@ from sematic.types.serialization import (
     type_to_json_encodable,
     get_json_encodable_summary,
 )
+import sematic.storage as storage
 
 
 def make_run_from_future(future: AbstractFuture) -> Run:
@@ -39,7 +40,9 @@ def make_run_from_future(future: AbstractFuture) -> Run:
     return run
 
 
-def make_artifact(value: typing.Any, type_: typing.Any) -> Artifact:
+def make_artifact(
+    value: typing.Any, type_: typing.Any, store: bool = False
+) -> Artifact:
     type_serialization = type_to_json_encodable(type_)
     value_serialization = value_to_json_encodable(value, type_)
     json_summary = get_json_encodable_summary(value, type_)
@@ -55,6 +58,12 @@ def make_artifact(value: typing.Any, type_: typing.Any) -> Artifact:
         created_at=datetime.datetime.utcnow(),
         updated_at=datetime.datetime.utcnow(),
     )
+
+    if store:
+        storage.set(
+            "artifacts/{}".format(artifact.id),
+            json.dumps(value_serialization, sort_keys=True),
+        )
 
     return artifact
 

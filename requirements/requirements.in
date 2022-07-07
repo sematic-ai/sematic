@@ -46,3 +46,7 @@ xgboost
 ## Snowflake
 snowflake-connector-python
 pyarrow
+
+# Cloud execution
+kubernetes
+boto3
