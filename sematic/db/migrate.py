@@ -14,21 +14,16 @@ in Python that can be called by the CLI. The script only supports SQLite for
 now.
 """
 # Standard library
+import argparse
 import os
-import sqlite3
 from typing import List
+import logging
+
+from sqlalchemy import text
 
 # Sematic
-from sematic.config import get_config, SQLITE_FILE
-
-
-def _get_conn() -> sqlite3.Connection:
-    """
-    We break this out to enable mocking in tests.
-    """
-    sqlite_file_path = os.path.join(get_config().config_dir, SQLITE_FILE)
-
-    return sqlite3.connect(sqlite_file_path)
+from sematic.config import get_config, switch_env
+from sematic.db.db import db
 
 
 def _get_migration_files() -> List[str]:
@@ -39,13 +34,12 @@ def _get_migration_files() -> List[str]:
 
 def migrate():
     """
-    Will migrate the SQLite DB sitting at `get_config().config_dir, SQLITE_FILE`
-    to the latest version.
+    Will migrate the DB to the latest version.
     """
 
-    conn = _get_conn()
+    logging.info("Running migrations on {}".format(get_config().db_url))
 
-    with conn:
+    with db().get_engine().connect() as conn:
         conn.execute(
             (
                 "CREATE TABLE IF NOT EXISTS "
@@ -53,16 +47,21 @@ def migrate():
             )
         )
 
-    schema_migrations = conn.execute("SELECT version FROM schema_migrations;")
+        schema_migrations = conn.execute("SELECT version FROM schema_migrations;")
 
-    versions = [row[0] for row in schema_migrations]
+        versions = [row[0] for row in schema_migrations]
+
+    logging.info("Already applied: {}".format(versions))
 
     migration_files = _get_migration_files()
 
     for migration_file in migration_files:
         version = migration_file.split("_")[0]
         if version in versions:
+            logging.info("Already applied {}".format(migration_file))
             continue
+
+        logging.info("Applying {}".format(migration_file))
 
         with open(
             os.path.join(get_config().migrations_dir, migration_file), "r"
@@ -73,7 +72,7 @@ def migrate():
 
         statements = up_sql.split(";")
 
-        with conn:
+        with db().get_engine().begin() as conn:
             for statement in statements:
                 if len(statement) == 0:
                     continue
@@ -81,9 +80,20 @@ def migrate():
                 conn.execute("{};".format(statement))
 
             conn.execute(
-                "INSERT INTO schema_migrations(version) values (?)", (version,)
+                text("INSERT INTO schema_migrations(version) values (:version)"),
+                version=version,
             )
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser("Sematic migration script")
+    parser.add_argument("--env", required=False, default="local", type=str)
+    parser.add_argument("--verbose", required=False, default=False, action="store_true")
+    args = parser.parse_args()
+
+    switch_env(args.env)
+
+    if args.verbose:
+        logging.basicConfig(level=logging.INFO)
+
     migrate()

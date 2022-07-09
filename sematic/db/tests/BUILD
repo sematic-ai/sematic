@@ -47,5 +47,8 @@ pytest_test(
     srcs = ["test_migrate.py"],
     deps = [
         "//sematic/db:migrate_lib",
+        "//sematic/db:db",
+        "//sematic/db/tests:fixtures",
+        requirement("sqlalchemy")
     ]
 )

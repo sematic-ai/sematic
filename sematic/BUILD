@@ -7,20 +7,30 @@ sematic_py_lib(
         "//sematic/resolvers:local_resolver",
         "//sematic/types:init",
         "//sematic/types:casting",
+        "//sematic/future_operators:init",
     ]
 )
 
 sematic_py_lib(
     name = "config",
     srcs = ["config.py"],
+    deps = [
+        ":config_dir",
+        ":user_settings",
+    ]
+)
+
+sematic_py_lib(
+    name = "config_dir",
+    srcs = ["config_dir.py"],
     deps = []
 )
 
 sematic_py_lib(
-    name = "credentials",
-    srcs = ["credentials.py"],
+    name = "user_settings",
+    srcs = ["user_settings.py"],
     deps = [
-        ":config",
+        ":config_dir",
         requirement("pyyaml"),
     ]
 )
@@ -88,7 +98,7 @@ sematic_py_wheel(
     distribution = "sematic",
     python_tag = "py3",
     platform = "any",
-    version = "0.2.0",#+{BUILD_TIMESTAMP}",
+    version = "0.5.0",#+{BUILD_TIMESTAMP}",
     python_requires = ">=3.9",
     description_file = "//:README.rst",
     author = "Sematic AI, Inc.",

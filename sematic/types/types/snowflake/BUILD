@@ -3,7 +3,7 @@ sematic_py_lib(
     srcs = ["snowflake_table.py"],
     data = ["requirements.txt"],
     deps = [
-        "//sematic:credentials",
+        "//sematic:user_settings",
         "//sematic/types:registry",
         "//sematic/types/types:dataclass",
     ]

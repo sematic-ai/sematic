@@ -79,7 +79,7 @@ sematic_example(
 )
 ```
 
-Then you should ne able to run (after [installing Bazel](https://bazel.build/install)):
+Then you should be able to run (after [installing Bazel](https://bazel.build/install)):
 
 ```shell
 $ bazel run //sematic/examples/my_package

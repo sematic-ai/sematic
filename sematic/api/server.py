@@ -4,7 +4,7 @@ import os
 # Third-party
 import argparse
 from flask import jsonify, send_file
-from flask_socketio import SocketIO  # type: ignore
+from flask_socketio import SocketIO, Namespace  # type: ignore
 
 # Sematic
 from sematic.api.app import sematic_api
@@ -16,7 +16,6 @@ import sematic.api.endpoints.notes  # noqa: F401
 import sematic.api.endpoints.edges  # noqa: F401
 import sematic.api.endpoints.artifacts  # noqa: F401
 from sematic.config import (
-    DEFAULT_ENV,
     get_config,
     switch_env,
 )  # noqa: F401
@@ -54,11 +53,15 @@ def ping():
 
 
 socketio = SocketIO(sematic_api, cors_allowed_origins="*")
+# This is necessary because starting version 5.7.0 python-socketio does not
+# accept connections to undeclared namespaces
+socketio.on_namespace(Namespace("/pipeline"))
+socketio.on_namespace(Namespace("/graph"))
 
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser("Sematic API server")
-    parser.add_argument("--env", required=False, default=DEFAULT_ENV, type=str)
+    parser.add_argument("--env", required=False, default="local", type=str)
     parser.add_argument("--debug", required=False, default=False, action="store_true")
     parser.add_argument("--daemon", required=False, default=False, action="store_true")
     return parser.parse_args()

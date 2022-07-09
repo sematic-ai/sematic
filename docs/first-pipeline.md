@@ -99,7 +99,7 @@ Obviously this toy pipeline is not very useful. Here are a number of things you
 can do in Sematic functions:
 
 * Anything that can be expressed in Python
-* Load, process, filter dataframes
+* Load, process, and  filter dataframes
 * Launch a data processing job (e.g. Spark, Google Dataflow)
 * Train a model, launch a training job on a dedicated service
 * Query a database or data warehouse

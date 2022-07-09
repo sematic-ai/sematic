@@ -7,7 +7,7 @@ sematic_py_lib(
         ":stop",
         ":run",
         ":new",
-        ":credentials",
+        ":settings",
         # Examples
         "//sematic/examples/template:template_lib",
         # These do not add dependencies on 3rd party packages
@@ -87,11 +87,11 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "credentials",
-    srcs = ["credentials.py"],
+    name = "settings",
+    srcs = ["settings.py"],
     deps = [
         ":cli",
-        "//sematic:credentials",
+        "//sematic:user_settings",
         requirement("pyyaml"),
         requirement("click"),
     ]

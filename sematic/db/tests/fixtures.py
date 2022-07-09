@@ -63,6 +63,17 @@ def test_db_pg(pg_mock):
 
 
 @pytest.fixture(scope="function")
+def test_db_empty():
+    original_db = db._db_instance
+    temp_db = db.DB("sqlite://")
+    db._db_instance = temp_db
+    try:
+        yield temp_db
+    finally:
+        db._db_instance = original_db
+
+
+@pytest.fixture(scope="function")
 def test_db():
     original_db = db._db_instance
     temp_db = db.DB("sqlite://")

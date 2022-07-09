@@ -115,7 +115,7 @@ export default function Home() {
           </ul>
           <Typography paragraph>
             Read more about examples on the{" "}
-            <a href="https://docs.sematic.ai" target="blank">
+            <a href="https://docs.sematic.dev" target="blank">
               Sematic Documentation
             </a>
             .
@@ -186,7 +186,7 @@ export default function Home() {
           >
             <Grid item sx={{ textAlign: "center" }}>
               <Link
-                href="https://docs.sematic.ai"
+                href="https://docs.sematic.dev"
                 underline="none"
                 target="_blank"
               >

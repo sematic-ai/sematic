@@ -17,5 +17,5 @@ def cli():
     Run an example:
         $ sematic run examples/mnist/pytorch
     """
-    switch_env("local_sqlite")
+    switch_env("local")
     migrate()

@@ -31,28 +31,22 @@ clear_sqlite:
 
 create_pg: start_db_container db_migrate_up
 
-pre_commit:
+pre-commit:
 	flake8
 	mypy sematic
 	black sematic --check
 
-refresh_dependencies:
+refresh-dependencies:
 	pip-compile --allow-unsafe requirements/requirements.in
 
 test:
 	bazel test //sematic/... --test_output=all
 
-build_ui:
+ui:
 	cd sematic/ui; npm run build
 
-server_image: build_ui
-	bazel build //sematic/api:sematic_server
-	cp -f bazel-bin/sematic/api/sematic_server-0.0.1-py3-none-any.whl .
+server-image:
 	docker build -t sematicai/sematic-server:dev .
-	rm -f sematic_server-0.0.1-py3-none-any.whl
-
-server_image_interpreter: build_server_image
-	docker run -it sematic-server python3
 
 start:
 	cd sematic/api; docker compose up
@@ -69,3 +63,7 @@ test-release:
 
 release:
 	python3 -m twine upload bazel-bin/sematic/*.whl
+
+release-server:
+	docker build -t sematicai/sematic-server:latest .
+	docker push sematicai/sematic-server:latest

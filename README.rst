@@ -38,32 +38,34 @@
 
 
 .. image:: https://img.shields.io/badge/Made_by-Sematic_🦊-E19632?style=for-the-badge&logo=none
-   :target: https://sematic.ai
+   :target: https://sematic.dev
    :alt: Made By Sematic
 
 
 Hi 👋
 -----
 
-We built the infrastructure behind Cruise's `Continuous Learning
+Sematic is an open-source development toolkit to help Data Scientists and
+Machine Learning (ML) Engineers prototype and productionize ML pipelines in days
+not weeks.
+
+Sematic is based on learnings from building the infrastructure behind Cruise's
+`Continuous Learning
 Machine <https://medium.com/cruise/cruise-continuous-learning-machine-30d60f4c691b>`_.
-Now we want to bring our learnings to you!
 
-Sematic is an open-source development toolkit to help Data Scientists and Machine
-Learning (ML) Engineers prototype and productionize ML pipelines in days not
-weeks.
-
-Find our docs at `docs.sematic.ai <https://docs.sematic.ai>`_\ , and join us on
+Find our docs at `docs.sematic.dev <https://docs.sematic.dev>`_\ , and join us on
 `Discord <https://discord.gg/4KZJ6kYVax>`_.
 
 Sematic helps you
 
 
-* Bring your prototype ML code from your Notebook to a production pipeline with minimal efforts
+* Develop and run ML pipelines using native Python functions, no new DSL to learn
 * Monitor, visualize, and track all inputs and outputs of all pipeline steps in a slick UI
-* Collaborate with your team: keep the discussion close to the pipeline as opposed to scattered elsewhere
+* Collaborate with your team to keep the discussion close to the pipeline as opposed to scattered elsewhere
 * [soon] Clone/re-run your pipelines with different inputs/configs
 * [soon] Schedule your pipelines to keep your models fresh and relevant
+
+Sematic is an alternative to other ML pipeline tools, such as KubeFlow Pipelines.
 
 Installation
 ------------
@@ -107,10 +109,10 @@ Then run it with
 
    $ python3 -m my_new_project
 
-See our docs at `docs.sematic.ai <https://docs.sematic.ai>`_\ , and join us on
+See our docs at `docs.sematic.dev <https://docs.sematic.dev>`_\ , and join us on
 `Discord <https://discord.gg/4KZJ6kYVax>`_.
 
 Contribute
 ----------
 
-See our Contributor guide at `docs.sematic.ai <https://docs.sematic.ai>`_.
+See our Contributor guide at `docs.sematic.dev <https://docs.sematic.dev>`_.

@@ -153,9 +153,9 @@ Since they are Python functions, your imagination is the limit. Some examples of
 
 The execution status of Sematic Functions is tracked and visualizable in the UI. There are 4 statuses:
 
-* **Pending** – the function is waiting for upstream functions to complete
-* **Running** – the function or some of its nested functions are currently executing
-* **Succeeded** – The function has completed and has a concrete output (not a future), youc an view it in the UI
+* **Pending** – The function is waiting for upstream functions to complete
+* **Running** – The function or some of its nested functions are currently executing
+* **Succeeded** – The function has completed and has a concrete output (not a future), you can view it in the UI
 * **Failed** – The function has failed. The exception can be inspected in the UI (coming soon).
 
 ## Artifact tracking

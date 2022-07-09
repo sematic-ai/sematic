@@ -31,29 +31,41 @@ Since Sematic makes sure not to include unnecessary heavy dependencies, you may
 be prompted to install those needed by the example you want to run.
 
 
-### Set credentials
+### User settings
 
-Certain integrations need credentials. `SnowflakeTable` needs your Snowflake
-credentials to be able to query your data for you.
+Certain Sematic functionalities need certain settings variables to be set. For
+example, `SnowflakeTable` needs your Snowflake credentials to be able to query
+your data for you.
 
-You can set credentials as follow:
+You can set user settings as follow:
 
 ```shell
-$ sematic credentials set APP VAR VALUE
+$ sematic settings set VAR VALUE
 ```
 
 For example
 
 ```shell
-$ sematic credentials set snowflake SNOWFLAKE_USER "foobar"
+$ sematic settings set SNOWFLAKE_USER "foobar"
 ```
 
-Then you can check every thing is alright with
+Then you can check your stored settings with
 
 ```shell
-$ sematic credentials show
-Active credentials:
+$ sematic settings show
+Active settings:
 
-snowflake:
-  SNOWFLAKE_USER: foobar
+SNOWFLAKE_USER: foobar
+```
+
+These settings are simply store in the `/.sematic/settings.yaml` file on
+your machine.
+
+You can always override them at runtime with an environment variable:
+
+```shell
+$ SNOWFLAKE_USER="notfoobar" sematic settings show
+Active settings:
+
+SNOWFLAKE_USER: notfoobar
 ```

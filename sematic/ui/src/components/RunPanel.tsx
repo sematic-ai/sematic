@@ -118,29 +118,31 @@ export default function RunPanel(props: {
             <Box sx={{ gridColumn: 2 }}>
               <RunStateChip state={selectedRun.future_state} variant="full" />
               <RunTime run={selectedRun} prefix="in " />
-              <FormControl fullWidth size="small" sx={{ mt: 5 }}>
-                <InputLabel id="actions-label">Actions</InputLabel>
-                <Select
-                  labelId="actions-label"
-                  id="action-select"
-                  label="Actions"
-                  placeholder=""
-                >
-                  {actions.map(([icon, label], idx) => (
-                    <MenuItem key={idx}>
-                      <Typography
-                        component="span"
-                        sx={{ display: "flex", alignItems: "center" }}
-                      >
-                        {icon}
-                        <Typography component="span" sx={{ ml: 3 }}>
-                          {label}
+              {process.env.NODE_ENV === "development" && (
+                <FormControl fullWidth size="small" sx={{ mt: 5 }}>
+                  <InputLabel id="actions-label">Actions</InputLabel>
+                  <Select
+                    labelId="actions-label"
+                    id="action-select"
+                    label="Actions"
+                    placeholder=""
+                  >
+                    {actions.map(([icon, label], idx) => (
+                      <MenuItem key={idx}>
+                        <Typography
+                          component="span"
+                          sx={{ display: "flex", alignItems: "center" }}
+                        >
+                          {icon}
+                          <Typography component="span" sx={{ ml: 3 }}>
+                            {label}
+                          </Typography>
                         </Typography>
-                      </Typography>
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
             </Box>
           </Box>
           <Box sx={{ my: 10 }}>

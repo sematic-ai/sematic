@@ -10,7 +10,10 @@ from sqlalchemy.orm.exc import NoResultFound
 
 # Sematic
 from sematic.api.app import sematic_api
-from sematic.api.endpoints.request_parameters import get_request_parameters, jsonify_404
+from sematic.api.endpoints.request_parameters import (
+    get_request_parameters,
+    jsonify_error,
+)
 from sematic.db.models.note import Note
 from sematic.db.models.run import Run
 from sematic.db.db import db
@@ -75,7 +78,7 @@ def delete_note_endpoint(note_id: str) -> flask.Response:
     try:
         note = get_note(note_id)
     except NoResultFound:
-        return jsonify_404("No such note: {}".format(note_id))
+        return jsonify_error("No such note: {}".format(note_id), HTTPStatus.NOT_FOUND)
 
     delete_note(note)
 

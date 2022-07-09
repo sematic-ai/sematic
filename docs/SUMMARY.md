@@ -16,7 +16,7 @@
 * [Type support](type-support.md)
 * [Future algebra](future-algebra.md)
 * [Graph resolution](coming-soon.md)
-* [Deploy Sematic](coming-soon.md)
+* [Deploy Sematic](deploy.md)
 * [Debugging](coming-soon.md)
 * [Glossary](glossary.md)
 

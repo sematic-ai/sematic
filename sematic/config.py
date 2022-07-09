@@ -3,29 +3,12 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 import logging
 import os
-import pathlib
 from urllib.parse import urljoin
 from typing import Optional
 
-_DEFAULT_CONFIG_DIR = ".sematic"
-
-
-def _get_config_dir() -> str:
-    """
-    Build the absolute path to the default config directory.
-
-    The config directory is at the base of the user's home
-    typically ~/.sematic, and contains the SQLite DB, server.pid,
-    API log files, etc.
-    """
-    home_dir = pathlib.Path.home()
-    config_dir = os.path.join(home_dir, _DEFAULT_CONFIG_DIR)
-    try:
-        os.mkdir(config_dir)
-    except FileExistsError:
-        pass
-
-    return config_dir
+# Sematic
+from sematic.config_dir import get_config_dir
+from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
 
 
 def _get_migrations_dir() -> str:
@@ -57,7 +40,7 @@ def _get_data_dir() -> str:
     Build the absolute path to the data dir where plots and large payloads
     are stored.
     """
-    data_dir = os.path.join(_get_config_dir(), "data")
+    data_dir = os.path.join(get_config_dir(), "data")
 
     try:
         os.mkdir(data_dir)
@@ -77,16 +60,12 @@ class Config:
     api_version: int
     port: int
     db_url: str
-    config_dir: str = _get_config_dir()
+    config_dir: str = get_config_dir()
     migrations_dir: str = _get_migrations_dir()
     base_dir: str = _get_base_dir()
     examples_dir: str = _get_examples_dir()
     project_template_dir: str = "{}/template".format(_get_examples_dir())
     data_dir: str = _get_data_dir()
-
-    @property
-    def credentials_file(self):
-        return "{}/credentials.yaml".format(self.config_dir)
 
     @property
     def server_url(self) -> str:
@@ -104,64 +83,47 @@ class Config:
         return os.path.join(self.config_dir, "server.pid")
 
 
+_SQLITE_FILE = "db.sqlite3"
+
 # Local API server
-# DB in container
-_DEV_CONFIG = Config(
+# SQlite DB
+_LOCAL_CONFIG = Config(
     # If choosing localhost, the React app will not be able
     # To proxy requests to the socker io server. Unsure why.
     server_address="127.0.0.1",
     port=5001,
     api_version=1,
-    db_url="postgresql://postgres:password@0.0.0.0:5432/sematic",
+    db_url="sqlite:///{}/{}".format(get_config_dir(), _SQLITE_FILE),
 )
 
 
-# DB and API in containers
-_LOCAL_CONFIG = Config(
-    server_address="0.0.0.0",
-    port=5002,
-    api_version=1,
-    db_url="postgresql://postgres:password@0.0.0.0:5432/sematic",
-)
-
-SQLITE_FILE = "db.sqlite3"
-
-# Local API server
-# DB in SQLITE file
-_LOCAL_SQLITE_CONFIG = Config(
-    **(
-        asdict(_DEV_CONFIG)  # type: ignore
-        | dict(db_url="sqlite:///{}/{}".format(_get_config_dir(), SQLITE_FILE))
-    )
-)
-
-_LOCAL_CLOUD_DB_CONFIG = Config(
-    **(
-        asdict(_DEV_CONFIG)  # type: ignore
-        | dict(db_url=os.environ.get("SEMATIC_DB_URL"))
-    )
-)
-
-# For the API server to run within the container
-_CONTAINER_CONFIG = Config(
+_CLOUD_CONFIG = Config(
     server_address="0.0.0.0",
     api_version=1,
-    port=5002,
-    db_url="postgresql://postgres:password@sematic-postgres:5432/sematic",
+    port=80,
+    db_url=os.environ.get("DATABASE_URL", "NO_DB"),
 )
+
+
+class UserOverrideConfig(Config):
+    @property
+    def server_url(self) -> str:
+        try:
+            return get_user_settings(SettingsVar.SEMATIC_API_ADDRESS)
+        except MissingSettingsError:
+            return "http://{}:{}".format(self.server_address, self.port)
+
+
+_USER_OVERRIDE_CONFIG = UserOverrideConfig(**asdict(_LOCAL_CONFIG))
 
 
 class EnvironmentConfigurations(Enum):
     local = _LOCAL_CONFIG
-    local_sqlite = _LOCAL_SQLITE_CONFIG
-    container = _CONTAINER_CONFIG
-    local_cloud_db = _LOCAL_CLOUD_DB_CONFIG
+    cloud = _CLOUD_CONFIG
+    user = _USER_OVERRIDE_CONFIG
 
 
-DEFAULT_ENV = "local_sqlite"
-
-
-_active_config: Config = EnvironmentConfigurations[DEFAULT_ENV].value
+_active_config: Config = EnvironmentConfigurations.user.value
 
 
 def switch_env(env: str):

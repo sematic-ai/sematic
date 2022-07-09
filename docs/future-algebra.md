@@ -1,5 +1,6 @@
 As described in [Sematic Functions](functions.md), decorating a plain Python
-function with `@sematic.func` makes it so calling said function returns a Future
+function with `@sematic.func` makes it a
+so-called ["Sematic Function"](glossary.md). So, calling the said function returns a Future
 instead of the actual output of the function.
 
 ## What is a Future?
@@ -22,7 +23,7 @@ For example, in the following code:
 >>> f = foo(123)
 ```
 
-`f` is not equal to `123` it is equal to
+`f` is not equal to `123`. It is equal to
 
 ```python
 Future(foo, {"a": 123})
@@ -70,7 +71,7 @@ Futures of `float` values. They can be passed to another Sematic Function (e.g.
 
 {% hint style="info" %}
 
-This ensure support for basic data flow between pipeline steps and arbitrary
+This ensures support for basic data flow between pipeline steps and arbitrary
 nesting of Sematic Functions.
 
 {% endhint %}
@@ -107,6 +108,60 @@ def pipeline(a: float, b: float) -> List[float]:
 Here Sematic will know how to convert `List[Future[float]]` into
 `Future[List[float]]`.
 
+### Item access
+
+If a future is of type `Future[List[T]]`, `Future[Dict[K, V]]`, or
+`Future[Tuple[U, V]]`, you can access elements of the container directly using
+standard Python notations.
+
+If `future` is of type `Future[List[T]]` or `Future[Tuple[U, V]]`, you can do `future[i]` where `i` is an `int`.
+
+If `future` is of type `Future[Dict[K, V]]`, you can do `future[key]`, where `key` is of type `K` (usually `str`).
+
+For example:
+
+```python
+@sematic.func
+def foo() -> Tuple[int, str]:
+    return 42, "foo"
+
+@sematic.func
+def pipeline() -> str:
+    a = foo()[1]
+    return a
+```
+
+### Unpacking and iterating on tuples
+
+If a future is of type `Future[Tuple[T, U]]`, it can be unpacked using standard Python syntax.
+
+For example, unpacking:
+
+```python
+@sematic.func
+def foo() -> Tuple[int, str]:
+    return 42, "foo"
+
+@sematic.func
+def pipeline() -> str:
+    a, b = foo()
+    return b
+```
+
+Iteration:
+```python
+@sematic.func
+def foo() -> Tuple[int, str]:
+    return 42, "foo"
+
+@sematic.func
+def pipeline():
+    for a in foo():
+        some_list.append(process(a))
+    
+    return
+```
+
 ## Currently unsupported behaviors
 
 We are working hard to move these unsupported behaviors to the supported section
@@ -122,7 +177,7 @@ argument are **always** [concrete](./glossary.md#concrete-inputs).
 ### Containers of futures
 
 Passing and returning lists of future is supported as [mentioned
-above](#passing-and-returning-lists-of-futures). However, other container
+above](#passing-and-returning-lists-of-futures). However, other containers
 (tuple, dictionaries, dataclasses) are currently not supported.
 
 Here's an example of how to get around this for dataclasses:
@@ -144,7 +199,7 @@ def pipeline(...) -> MyOutput:
     return make_output(foo, bar)
 ```
 
-### Unpacking and iteration
+### Unpacking and iteration on lists
 
 If your future is a `Future[List[T]]`, you cannot currently unpack it or iterate
 on it.
@@ -171,11 +226,7 @@ def iterate_on_list(some_list: List[U]) -> T:
         ...
 ```
 
-### Attribute and item access
-
-At this time if `future` is of type `Future[List[T]]`, you cannot do `future[0]`.
-
-If `future` is of type `Future[Dict[K, V]]`, you cannot do `future["some-key"]`.
+### Attribute access
 
 If `future` is of type `Future[SomeClass]` where `SomeClass` has an attribute
 named `foo`, you cannot do `future.foo`.
@@ -192,16 +243,6 @@ def pipeline() -> T:
     future = some_sematic_func()
     return get_attr(future, "foo")
 ```
-
-Here is a workaround for item access:
-
-```python
-@sematic.func
-def get_item(obj: List[T], item: int) -> T:
-    return obj[item]
-```
-
-Use a similar approach for dictionaries.
 
 ### Arithmetic operations
 
@@ -240,14 +281,16 @@ def pipeline() -> str:
 Sematic builds the execution graph by looking for futures that are returned by,
 or passed as input arguments to other Sematic Functions.
 
-Here is a workaround:
+Here is a workaround, assuming `some_sematic_func` returns a `str`:
 
 ```python
 @sematic.func
-def pipeline() -> Tuple[T, str]:
+def pipeline() -> List[str]:
     future = some_sematic_func()
-    return future, "foo"
+    return [future, "foo"]
 ```
+
+This issue is tracked in [Github Issue #56](https://github.com/sematic-ai/sematic/issues/56).
 
 ## Unsupported behaviors
 
