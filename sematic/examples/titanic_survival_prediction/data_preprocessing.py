@@ -1,8 +1,6 @@
-# Data class
-from sematic.examples.titanic_survival_prediction.data_classes import TrainTestData, TrainTestSplit
-
 # Third-party
 import pandas as pd
+from typing import Tuple
 from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import fetch_openml
 from sklearn.impute import SimpleImputer
@@ -63,22 +61,20 @@ def scale_numerical_data(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 @sematic.func
-def load_data() -> TrainTestData:
+def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
     X, y = fetch_openml('titanic', version=1, as_frame=True, return_X_y=True)
-    return TrainTestData(X, y)
+    return X, y
 
 @sematic.func
-def feature_engineering(feature_label_dataframes: TrainTestData) -> TrainTestData:
-    df_X, df_y = feature_label_dataframes.train_data, feature_label_dataframes.test_data
-    df_X = df_X.copy()
-    df_X = remove_columns(df_X)
-    df_X = fill_missing_values(df_X)
-    df_X = categorical_to_numerical(df_X)
-    df_X = scale_numerical_data(df_X)
-    return TrainTestData(df_X, df_y)
+def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df = remove_columns(df)
+    df = fill_missing_values(df)
+    df = categorical_to_numerical(df)
+    df = scale_numerical_data(df)
+    return df
 
 @sematic.func
-def split_data(feature_label_dataframes: TrainTestData) -> TrainTestSplit:
-    df_X, df_y = feature_label_dataframes.train_data, feature_label_dataframes.test_data
+def split_data(df_X: pd.DataFrame, df_y: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     X_train, X_test, y_train, y_test = train_test_split(df_X, df_y, test_size=0.3, random_state=consts.RAND_STATE)
-    return TrainTestSplit(X_train, y_train, X_test, y_test)
+    return X_train, y_train, X_test, y_test

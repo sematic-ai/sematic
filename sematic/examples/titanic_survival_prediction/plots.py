@@ -1,5 +1,4 @@
-# Data class
-from sematic.examples.titanic_survival_prediction.data_classes import TrainTestData
+from sematic.examples.titanic_survival_prediction.data_classes import EDAPlots
 
 # Third-party
 import pandas as pd
@@ -13,13 +12,30 @@ import sematic
 def plot_missing_values(df: pd.DataFrame) -> matplotlib.figure.Figure:
     figure = plt.figure()
     miss_vals = pd.DataFrame(df.isnull().sum() / len(df) * 100)
+    miss_vals.plot(kind='bar',
+        title='Missing values in percentage',
+        ylabel='percentage'
+        )
+    return figure
+
+def plot_survival_gender(df: pd.DataFrame) -> matplotlib.figure.Figure:
+    figure = plt.figure()
+    df['survived'] = df.survived.astype('int')
     sns.barplot(
-        data=miss_vals
+        x='sex',
+        y='survived',
+        data=df
     )
     return figure
 
+def plot_survival_by_class(df: pd.DataFrame) -> matplotlib.figure.Figure:
+    figure = plt.figure()
+    sns.countplot(x='pclass', data=df)
+    return figure
+
 @sematic.func
-def make_eda_plots(feature_label_dataframes: TrainTestData) -> matplotlib.figure.Figure:
-    df_X, df_y = feature_label_dataframes.train_data, feature_label_dataframes.test_data
+def make_eda_plots(df_X: pd.DataFrame, df_y: pd.DataFrame) -> EDAPlots:
     df = pd.concat([df_X, df_y], axis=1)
-    return plot_missing_values(df)
+    survival_gender_figure = plot_survival_gender(df)
+    survival_class_figure = plot_survival_by_class(df)
+    return EDAPlots(survival_gender_figure, survival_class_figure)
