@@ -1,3 +1,5 @@
+* 0.5.1
+    * [bugfix] Fix JSON summary of Pandas dataframes with timestamp fields
 * 0.5.0
     * [feature] `getitem` support for futures of list, tuples, dictionaries
     * [feature] `__iter__` support for futures of tuples
