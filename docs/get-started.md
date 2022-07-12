@@ -2,7 +2,7 @@
 
 ## Installation
 
-First, let's install Sematic
+Make sure you are using Python 3.9+, then install Sematic:
 
 ```shell
 $ pip install sematic
