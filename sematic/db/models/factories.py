@@ -48,7 +48,9 @@ def make_artifact(value: typing.Any, type_: typing.Any) -> Artifact:
         id=_get_value_sha1_digest(
             value_serialization, type_serialization, json_summary
         ),
-        json_summary=_fix_nan_inf(json.dumps(json_summary, sort_keys=True)),
+        json_summary=_fix_nan_inf(
+            json.dumps(json_summary, sort_keys=True, default=str)
+        ),
         type_serialization=json.dumps(type_serialization, sort_keys=True),
         created_at=datetime.datetime.utcnow(),
         updated_at=datetime.datetime.utcnow(),
@@ -69,7 +71,9 @@ def _get_value_sha1_digest(
         # Should there be some sort of type versioning concept here?
     }
 
-    binary = _fix_nan_inf(json.dumps(payload, sort_keys=True)).encode("utf-8")
+    binary = _fix_nan_inf(json.dumps(payload, sort_keys=True, default=str)).encode(
+        "utf-8"
+    )
 
     sha1_digest = hashlib.sha1(binary)
 
