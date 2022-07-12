@@ -5,6 +5,7 @@ pytest_test(
     deps = [
         "//sematic/types:serialization",
         "//sematic/types:init",
+        "//sematic/db/models:factories",
         requirement("pandas")
     ]
 )
