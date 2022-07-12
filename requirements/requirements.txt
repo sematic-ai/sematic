@@ -81,7 +81,7 @@ idna==3.3
     # via
     #   requests
     #   snowflake-connector-python
-importlib-metadata==4.11.3
+importlib-metadata==4.12.0
     # via flask
 iniconfig==1.1.1
     # via pytest

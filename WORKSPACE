@@ -119,10 +119,18 @@ load("@io_bazel_rules_docker//container:pull.bzl", "container_pull")
 
 
 container_pull(
-     name = "python_39",
+    name = "python_39",
     digest = "sha256:4169ae884e9e7d9bd6d005d82fc8682e7d34b7b962ee7c2ad59c42480657cb1d",
     registry = "index.docker.io",
     repository = "python",
     # tag field is ignored since digest is set
     tag = "3.9-slim-bullseye",
+)
+
+container_pull(
+    name = "sematic-worker-base",
+    registry = "index.docker.io",
+    repository = "sematicai/sematic-worker-base",
+    tag = "latest",
+    digest = "sha256:4f855eb4155527424633ce9414c62a22b417e5a28d4d908a03bd652a830e2d85"
 )

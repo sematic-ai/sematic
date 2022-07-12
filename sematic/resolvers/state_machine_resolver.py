@@ -33,6 +33,9 @@ class StateMachineResolver(Resolver, abc.ABC):
 
         self._resolution_did_succeed()
 
+        if future.state != FutureState.RESOLVED:
+            raise RuntimeError("Unresolved Future after resolver call.")
+
         return future.value
 
     def _enqueue_future(self, future: AbstractFuture) -> None:

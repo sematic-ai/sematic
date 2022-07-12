@@ -105,7 +105,9 @@ def get_graph(root_id: str) -> Tuple[List[Run], List[Artifact], List[Edge]]:
             )
             .all()
         )
-        artifact_ids = {edge.artifact_id for edge in edges}
+        artifact_ids = {
+            edge.artifact_id for edge in edges if edge.artifact_id is not None
+        }
         artifacts: List[Artifact] = (
             session.query(Artifact).filter(Artifact.id.in_(artifact_ids)).all()
         )
@@ -142,6 +144,10 @@ def delete_note(note: Note):
         session.commit()
 
 
+# DO NOT USER
+# This query is more optimal than the one in `get_graph` (single query)
+# but has corner cases when some runs have no edges or artifacts
+# Use `get_graph` instead
 def get_root_graph(root_run_id: str) -> Tuple[Set[Run], Set[Edge], Set[Artifact]]:
     with db().get_session() as session:
         results = (

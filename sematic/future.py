@@ -4,7 +4,7 @@ import typing
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.resolvers.local_resolver import LocalResolver
-from sematic.resolvers.silent_resolver import SilentResolver
+from sematic.resolver import Resolver
 
 
 class Future(AbstractFuture):
@@ -17,7 +17,9 @@ class Future(AbstractFuture):
     * A set of input arguments, that can be concrete values or futures themselves
     """
 
-    def resolve(self, tracking: bool = True) -> typing.Any:
+    def resolve(
+        self, resolver: typing.Optional[Resolver] = None, tracking: bool = True
+    ) -> typing.Any:
         """
         Trigger the resolution of the future and all its nested futures.
 
@@ -30,12 +32,9 @@ class Future(AbstractFuture):
             persisted to the DB.
         """
         if self.state != FutureState.RESOLVED:
-            resolver = LocalResolver() if tracking else SilentResolver()
+            resolver = resolver or LocalResolver()
 
             self.value = resolver.resolve(self)
-
-        if self.state != FutureState.RESOLVED:
-            raise RuntimeError("Unresolved Future after resolver call.")
 
         return self.value
 

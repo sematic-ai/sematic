@@ -1,9 +1,4 @@
-load(
-    "@io_bazel_rules_docker//python3:image.bzl",
-    "py3_image",
-)
-
-#load("//tools:sematic_pipeline.bzl", "sematic_pipeline")
+load("//tools:sematic_pipeline.bzl", "sematic_pipeline")
 
 sematic_py_lib(
     name = "local_resolver",
@@ -38,8 +33,25 @@ sematic_py_lib(
     ]
 )
 
-py3_image(
+sematic_py_lib(
+    name = "cloud_resolver",
+    srcs = ["cloud_resolver.py"],
+    deps = [
+        "//sematic:abstract_future",
+        ":local_resolver",
+        "//sematic/db/models:run",
+        "//sematic/db/models:artifact",
+        "//sematic/db/models:edge",
+        requirement("kubernetes"),
+    ]
+)
+
+sematic_py_lib(
     name = "worker",
     srcs = ["worker.py"],
     deps = []
 )
+
+exports_files([
+    "worker.py",
+])

@@ -5,6 +5,7 @@ sematic_py_lib(
         ":calculator",
         ":resolver",
         "//sematic/resolvers:local_resolver",
+        "//sematic/resolvers:cloud_resolver",
         "//sematic/types:init",
         "//sematic/types:casting",
         "//sematic/future_operators:init",
@@ -40,6 +41,9 @@ sematic_py_lib(
     srcs = ["api_client.py"],
     deps = [
         ":config",
+        "//sematic/db/models:artifact",
+        "//sematic/db/models:edge",
+        "//sematic/db/models:run",
         requirement("requests")
     ]
 )
@@ -78,8 +82,8 @@ sematic_py_lib(
     deps = [
         ":abstract_calculator",
         ":abstract_future",
+        "//sematic:resolver",
         "//sematic/resolvers:local_resolver",
-        "//sematic/resolvers:silent_resolver",
     ]
 )
 
@@ -91,6 +95,15 @@ sematic_py_lib(
     ]
 )
 
+
+sematic_py_lib(
+    name = "storage",
+    srcs = ["storage.py"],
+    deps = [
+        ":user_settings",
+        requirement("boto3"),
+    ]
+)
 
 sematic_py_wheel(
     name = "wheel",
