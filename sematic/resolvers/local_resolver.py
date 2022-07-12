@@ -10,7 +10,10 @@ from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
 from sematic.resolvers.silent_resolver import SilentResolver
-from sematic.db.models.factories import make_artifact, make_run_from_future
+from sematic.db.models.factories import (
+    make_artifact,
+    make_run_from_future,
+)
 import sematic.api_client as api_client
 
 
@@ -42,23 +45,20 @@ class LocalResolver(SilentResolver):
         """
         Creates or updates an edge in the graph.
         """
-        edge_key = "{}:{}:{}:{}".format(
-            source_run_id, parent_id, destination_run_id, destination_name
+        edge = Edge(
+            id=uuid.uuid4().hex,
+            created_at=datetime.datetime.utcnow(),
+            updated_at=datetime.datetime.utcnow(),
+            source_run_id=source_run_id,
+            destination_run_id=destination_run_id,
+            destination_name=destination_name,
+            artifact_id=artifact_id,
+            parent_id=parent_id,
         )
 
-        edge = self._edges.get(edge_key)
+        edge_key = make_edge_key(edge)
 
-        if edge is None:
-            edge = Edge(
-                id=uuid.uuid4().hex,
-                created_at=datetime.datetime.utcnow(),
-                updated_at=datetime.datetime.utcnow(),
-                source_run_id=source_run_id,
-                destination_run_id=destination_run_id,
-                destination_name=destination_name,
-                artifact_id=artifact_id,
-                parent_id=parent_id,
-            )
+        edge = self._edges.get(edge_key, edge)
 
         # We don't want to overwrite
         if artifact_id is not None:
@@ -298,3 +298,12 @@ class LocalResolver(SilentResolver):
             edges=self._edges.values(),
         )
         api_client.notify_graph_update(self._futures[0].id)
+
+
+def make_edge_key(edge: Edge) -> str:
+    return "{}:{}:{}:{}".format(
+        edge.source_run_id,
+        edge.parent_id,
+        edge.destination_run_id,
+        edge.destination_name,
+    )

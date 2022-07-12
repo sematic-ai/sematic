@@ -6,7 +6,7 @@ between `Future` and `Resolver`.
 import abc
 from dataclasses import dataclass
 import enum
-import typing
+from typing import Tuple, Optional, Dict, Any, List
 import uuid
 
 # Sematic
@@ -27,7 +27,7 @@ class FutureState(enum.Enum):
     NESTED_FAILED = "NESTED_FAILED"
 
     @classmethod
-    def values(cls) -> typing.Tuple[str, ...]:
+    def values(cls) -> Tuple[str, ...]:
         return tuple([future_state.value for future_state in cls.__members__.values()])
 
 
@@ -70,7 +70,7 @@ class AbstractFuture(abc.ABC):
     def __init__(
         self,
         calculator: AbstractCalculator,
-        kwargs: typing.Dict[str, typing.Any],
+        kwargs: Dict[str, Any],
         parallelize: bool,
     ):
         self.id: str = uuid.uuid4().hex
@@ -80,14 +80,14 @@ class AbstractFuture(abc.ABC):
         # the source of truth for the future graph. Instead we have concrete
         # values in resolved_kwargs
         # It will be set only once all input values are resolved
-        self.resolved_kwargs: typing.Dict[str, typing.Any] = {}
-        self.value: typing.Any = None
+        self.resolved_kwargs: Dict[str, Any] = {}
+        self.value: Any = None
         self.state: FutureState = FutureState.CREATED
-        self.parent_future: typing.Optional["AbstractFuture"] = None
-        self.nested_future: typing.Optional["AbstractFuture"] = None
+        self.parent_future: Optional["AbstractFuture"] = None
+        self.nested_future: Optional["AbstractFuture"] = None
         self.inline: bool = False
         self.name: str = calculator.__name__
-        self.tags: typing.List[str] = []
+        self.tags: List[str] = []
 
         self._props = FutureProperties(parallelize=parallelize)
 

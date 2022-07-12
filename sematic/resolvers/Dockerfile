@@ -1,0 +1,13 @@
+# This is the base image for the worker for cloud execution
+FROM ubuntu:22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt update -y
+RUN apt install -y software-properties-common
+RUN add-apt-repository -y ppa:deadsnakes/ppa
+RUN apt install -y python3.9
+
+RUN rm /usr/bin/python3
+RUN ln -s /usr/bin/python3.9 /usr/bin/python3
+RUN ln -s /usr/bin/python3.9 /usr/bin/python

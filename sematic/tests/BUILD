@@ -33,3 +33,11 @@ pytest_test(
         "//sematic:config",
     ]
 )
+
+sematic_py_lib(
+    name = "fixtures",
+    srcs = ["fixtures.py"],
+    deps = [
+        "//sematic:storage"
+    ]
+)

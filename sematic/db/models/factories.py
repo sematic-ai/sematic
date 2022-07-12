@@ -73,16 +73,24 @@ def _get_value_sha1_digest(
     type_serialization: typing.Any,
     json_summary: typing.Any,
 ) -> str:
+    """
+    Get sha1 digest for artifact value
+    """
     payload = {
         "value": value_serialization,
         "type": type_serialization,
         "summary": json_summary,
         # Should there be some sort of type versioning concept here?
     }
+    string = _fix_nan_inf(json.dumps(payload, sort_keys=True))
+    return get_str_sha1_digest(string)
 
-    binary = _fix_nan_inf(json.dumps(payload, sort_keys=True, default=str)).encode(
-        "utf-8"
-    )
+
+def get_str_sha1_digest(string: str) -> str:
+    """
+    Get SHA1 hex digest for a string
+    """
+    binary = string.encode("utf-8")
 
     sha1_digest = hashlib.sha1(binary)
 
