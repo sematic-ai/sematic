@@ -19,7 +19,7 @@ def _dataframe_json_encodable_summary(value: pandas.DataFrame, _) -> Any:
     payload: Any = value.to_dict()
     index = list(value.index)
 
-    if len(json.dumps(payload)) > _PAYLOAD_CUTOFF:
+    if len(json.dumps(payload, default=str)) > _PAYLOAD_CUTOFF:
         payload = value.head().to_dict()
         index = index[: len(value.head())]
         truncated = True
