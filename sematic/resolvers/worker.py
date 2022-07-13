@@ -2,6 +2,7 @@
 import argparse
 import importlib
 import logging
+import os
 
 # Sematic
 import sematic.api_client as api_client
@@ -19,7 +20,7 @@ def _get_args():
     return args
 
 
-logger = logging.Logger("sematic-worker")
+logger = logging.getLogger(__name__)
 
 
 def main(run_id: str, resolve: bool):
@@ -51,10 +52,11 @@ def main(run_id: str, resolve: bool):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+
     args = _get_args()
 
     logger.info("Worker CLI args: run_id=%s", args.run_id)
     logger.info("Worker CLI args:  resolve=%s", args.resolve)
-    print(args.run_id, args.resolve)
 
     main(args.run_id, args.resolve)

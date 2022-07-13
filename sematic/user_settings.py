@@ -1,5 +1,6 @@
 # Standard library
 import enum
+import logging
 import os
 from typing import Dict, Optional
 
@@ -11,6 +12,9 @@ from sematic.config_dir import get_config_dir
 
 
 _SETTINGS_FILE = "settings.yaml"
+
+
+logger = logging.getLogger(__name__)
 
 
 Settings = Dict[str, Dict[str, str]]
@@ -46,8 +50,12 @@ def get_all_user_settings() -> Dict[str, str]:
         _settings = _load_settings()
 
         # Override with env vars
-        for var, value in _settings["default"].items():
-            _settings["default"][var] = os.environ.get(var, value)
+        for var in SettingsVar.__members__.values():
+            if var.value in os.environ:
+                logger.debug(
+                    "Override {} with {}".format(var.value, os.environ[var.value])
+                )
+                _settings["default"][var.value] = os.environ[var.value]
 
     return _settings["default"]
 
@@ -55,6 +63,9 @@ def get_all_user_settings() -> Dict[str, str]:
 class SettingsVar(enum.Enum):
     # Sematic
     SEMATIC_API_ADDRESS = "SEMATIC_API_ADDRESS"
+
+    # Kubernetes
+    KUBERNETES_NAMESPACE = "KUBERNETES_NAMESPACE"
 
     # Snowflake
     SNOWFLAKE_USER = "SNOWFLAKE_USER"
@@ -91,7 +102,7 @@ Set it with
 
     $ sematic settings set {} VALUE
 """.format(
-                var, var
+                var.value, var.value
             )
         )
 

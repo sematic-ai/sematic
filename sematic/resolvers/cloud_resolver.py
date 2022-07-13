@@ -14,6 +14,14 @@ from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
+from sematic.user_settings import (
+    SettingsVar,
+    get_all_user_settings,
+    get_user_settings,
+)
+
+
+logger = logging.getLogger(__name__)
 
 
 class CloudResolver(LocalResolver):
@@ -53,7 +61,7 @@ class CloudResolver(LocalResolver):
 
         job_name = _make_job_name(future, JobType.driver)
         # SUBMIT ORCHESTRATOR JOB
-        _schedule_job(future.id, job_name)
+        _schedule_job(future.id, job_name, resolve=True)
 
         return run.id
 
@@ -78,7 +86,7 @@ def _make_job_name(future: AbstractFuture, job_type: JobType) -> str:
 
 
 def _schedule_job(run_id: str, name: str, resolve: bool = False):
-    logging.info("_schedule_job %s", name)
+    logger.info("Scheduling job %s", name)
     args = ["--run_id", run_id]
 
     if resolve:
@@ -105,7 +113,13 @@ def _schedule_job(run_id: str, name: str, resolve: bool = False):
                             name=name,
                             image=image,
                             args=args,
-                            env=[],
+                            env=[
+                                kubernetes.client.V1EnvVar(
+                                    name=name,
+                                    value=value,
+                                )
+                                for name, value in get_all_user_settings().items()
+                            ],
                             volume_mounts=[],
                             resources=None,
                         )
@@ -124,11 +138,11 @@ def _schedule_job(run_id: str, name: str, resolve: bool = False):
     kubernetes.config.load_kube_config()  # type: ignore
 
     kubernetes.client.BatchV1Api().create_namespaced_job(  # type: ignore
-        namespace="default", body=job
+        namespace=get_user_settings(SettingsVar.KUBERNETES_NAMESPACE), body=job
     )
 
 
-def _get_image():
+def _get_image() -> str:
     with open(
         "{}_push_at_build.uri".format(os.path.splitext(__main__.__file__)[0])
     ) as f:

@@ -1,11 +1,12 @@
 # Standard library
-from typing import Any, List, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 # Third party
 import requests
 
 # Sematic
 from sematic.config import get_config
+from sematic.user_settings import SettingsVar
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
@@ -63,18 +64,13 @@ def _notify_event(namespace: str, event: str, payload: Any = None):
 
 
 def _get(endpoint) -> Any:
-    url = _url(endpoint)
-    response = requests.get(url)
-
-    response.raise_for_status()
+    response = _request(requests.get, endpoint)
 
     return response.json()
 
 
 def _post(endpoint, json_payload) -> Any:
-    url = _url(endpoint)
-    response = requests.post(url, json=json_payload)
-    response.raise_for_status()
+    response = _request(requests.post, endpoint, dict(json=json_payload))
 
     if len(response.content) == 0:
         return None
@@ -83,14 +79,37 @@ def _post(endpoint, json_payload) -> Any:
 
 
 def _put(endpoint, json_payload) -> Any:
-    url = _url(endpoint)
-    response = requests.put(url, json=json_payload)
-    response.raise_for_status()
+    response = _request(requests.put, endpoint, dict(json=json_payload))
 
     if len(response.content) == 0:
         return None
 
     return response.json()
+
+
+class APIConnectionError(requests.exceptions.ConnectionError):
+    pass
+
+
+def _request(
+    method: Callable[[Any], requests.Response],
+    endpoint: str,
+    kwargs: Optional[Dict[str, Any]] = None,
+):
+    try:
+        response = method(_url(endpoint), **(kwargs or {}))
+    except requests.exceptions.ConnectionError:
+        raise APIConnectionError(
+            (
+                "Unable to connect to the Sematic API at {}.\n"
+                "Make sure the correct server address is set with\n"
+                "\t$ sematic settings set {} <address>"
+            ).format(get_config().server_url, SettingsVar.SEMATIC_API_ADDRESS.value)
+        )
+
+    response.raise_for_status()
+
+    return response
 
 
 def _url(endpoint) -> str:
