@@ -18,8 +18,8 @@ def add(a: float, b: float) -> float:
 
 # TODO: support pipeline args
 @func
-def pipeline() -> float:
-    return add(1, 2)
+def pipeline(a: float, b: float) -> float:
+    return add(a, b)
 
 
 @mock.patch("sematic.resolvers.cloud_resolver._schedule_job")
@@ -32,7 +32,7 @@ def test_main(
     # On the user's machine
     resolver = CloudResolver(detach=True)
 
-    future = pipeline()
+    future = pipeline(1, 2)
 
     future.resolve(resolver)
 
@@ -43,4 +43,4 @@ def test_main(
     runs, artifacts, edges = api_client.get_graph(future.id)
     assert len(runs) == 2
     assert len(artifacts) == 3
-    assert len(edges) == 4
+    assert len(edges) == 6

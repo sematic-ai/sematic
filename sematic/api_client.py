@@ -21,7 +21,9 @@ def get_run(run_id: str) -> Run:
     return Run.from_json_encodable(response["content"])
 
 
-def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
+def save_graph(
+    root_id: str, runs: List[Run], artifacts: List[Artifact], edges: List[Edge]
+):
     """
     Persist a graph.
     """
@@ -34,6 +36,7 @@ def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
     }
 
     _put("/graph", payload)
+    notify_graph_update(root_id)
 
 
 def get_graph(run_id: str) -> Tuple[List[Run], List[Artifact], List[Edge]]:

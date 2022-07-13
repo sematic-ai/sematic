@@ -301,11 +301,11 @@ class LocalResolver(SilentResolver):
         Persist the graph to the DB
         """
         api_client.save_graph(
+            root_id=self._futures[0].id,
             runs=self._runs.values(),
             artifacts=self._artifacts.values(),
             edges=self._edges.values(),
         )
-        api_client.notify_graph_update(self._futures[0].id)
 
 
 def make_edge_key(edge: Edge) -> str:

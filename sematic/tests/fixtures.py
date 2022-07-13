@@ -10,8 +10,16 @@ def test_storage():
     current_set = storage.set
     current_get = storage.get
 
-    storage.set = lambda _, __: None
-    storage.get = lambda _: _
+    store = {}
+
+    def _set(key, value):
+        store[key] = value
+
+    def _get(key):
+        return store[key]
+
+    storage.set = _set
+    storage.get = _get
 
     try:
         yield
