@@ -1,10 +1,7 @@
 import logging
 import sematic
 
-
-@sematic.func
-def pipeline():
-    pass
+from sematic.examples.bazel.pipeline import pipeline
 
 
 if __name__ == "__main__":

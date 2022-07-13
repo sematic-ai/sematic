@@ -6,46 +6,44 @@ load("@io_bazel_rules_docker//container:push.bzl", "container_push")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@io_bazel_rules_docker//container:providers.bzl", "PushInfo")
 
-
 def sematic_pipeline(
-    name,
-    deps,
-    registry,
-    repository,
-    data = None,
-    base = "@sematic-worker-base//image",
-    srcs = None,
-    **kwargs
-):
+        name,
+        deps,
+        registry,
+        repository = None,
+        data = None,
+        base = "@sematic-worker-base//image",
+        srcs = None):
     """docstring"""
     py3_image(
         name = "{}_image".format(name),
         main = "//sematic/resolvers:worker.py",
         srcs = ["//sematic/resolvers:worker.py"],
+        data = data,
         deps = deps + ["//sematic/resolvers:worker"],
         visibility = ["//visibility:public"],
         base = base,
         # TODO: parametrize instead of hard-code prefix
         env = {
-            "PYTHONHOME": "/app/sematic/examples/bazel/{}_image.binary.runfiles/python_interpreter/bazel_install".format(name)
+            "PYTHONHOME": "/app/sematic/examples/bazel/{}_image.binary.runfiles/python_interpreter/bazel_install".format(name),
         },
-        tags = ["manual"]
+        tags = ["manual"],
     )
 
     container_push(
         name = "{}_push".format(name),
         image = "{}_image".format(name),
         registry = registry,
-        repository = repository,
-        tag = "latest",
+        repository = repository or "sematic",
+        tag = name,
         format = "Docker",
-        tags = ["manual"]
+        tags = ["manual"],
     )
 
     container_push_at_build(
         name = "{}_push_at_build".format(name),
         container_push = ":{}_push".format(name),
-        tags = ["manual"]
+        tags = ["manual"],
     )
 
     py_binary(
@@ -53,7 +51,7 @@ def sematic_pipeline(
         srcs = srcs or ["{}.py".format(name)],
         deps = deps,
         data = [":{}_push_at_build".format(name)],
-        tags = ["manual"]
+        tags = ["manual"],
     )
 
     py_binary(
@@ -62,7 +60,6 @@ def sematic_pipeline(
         srcs = ["{}.py".format(name)],
         deps = deps,
     )
-
 
 def _container_push_at_build(ctx):
     marker = ctx.actions.declare_file("{0}.marker".format(ctx.label.name))
