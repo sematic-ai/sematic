@@ -4,6 +4,7 @@ import typing
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.resolvers.local_resolver import LocalResolver
+from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.resolver import Resolver
 
 
@@ -32,7 +33,8 @@ class Future(AbstractFuture):
             persisted to the DB.
         """
         if self.state != FutureState.RESOLVED:
-            resolver = resolver or LocalResolver()
+            default_resolver = LocalResolver if tracking else SilentResolver
+            resolver = resolver or default_resolver()
 
             self.value = resolver.resolve(self)
 
