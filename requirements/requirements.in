@@ -38,7 +38,7 @@ pandas-stubs
 seaborn
 matplotlib
 statsmodels
-sklearn
+scikit-learn
 numpy
 xgboost
 
