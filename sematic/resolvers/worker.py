@@ -2,10 +2,14 @@
 import argparse
 import importlib
 import logging
-import os
+from typing import Any, Dict, List
 
 # Sematic
+from sematic.abstract_future import FutureState
 import sematic.api_client as api_client
+from sematic.db.models.artifact import Artifact
+from sematic.db.models.edge import Edge
+from sematic.db.models.factories import get_artifact_value
 from sematic.future import Future
 from sematic.resolvers.cloud_resolver import CloudResolver
 
@@ -21,6 +25,25 @@ def _get_args():
 
 
 logger = logging.getLogger(__name__)
+
+
+def _get_input_kwargs(
+    run_id: str, artifacts: List[Artifact], edges: List[Edge]
+) -> Dict[str, Any]:
+    """
+    Get input values for run
+    """
+    artifacts_by_id = {artifact.id: artifact for artifact in artifacts}
+
+    kwargs = {
+        edge.destination_name: get_artifact_value(artifacts_by_id[edge.artifact_id])
+        for edge in edges
+        if edge.destination_run_id == run_id
+        and edge.artifact_id is not None
+        and edge.destination_name is not None
+    }
+
+    return kwargs
 
 
 def main(run_id: str, resolve: bool):
@@ -42,7 +65,15 @@ def main(run_id: str, resolve: bool):
 
         func = getattr(module, function_name)
 
-        future: Future = func()
+        try:
+            kwargs = _get_input_kwargs(run.id, artifacts, edges)
+            future: Future = func(**kwargs)
+        except Exception as e:
+            run.future_state = FutureState.FAILED
+            api_client.save_graph(run.id, runs, artifacts, edges)
+            api_client.notify_pipeline_update(function_path)
+            raise e
+
         future.id = run.id
 
         resolver = CloudResolver(detach=False)

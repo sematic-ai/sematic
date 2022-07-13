@@ -12,6 +12,8 @@ from sematic.abstract_future import AbstractFuture
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.run import Run
 from sematic.types.serialization import (
+    type_from_json_encodable,
+    value_from_json_encodable,
     value_to_json_encodable,
     type_to_json_encodable,
     get_json_encodable_summary,
@@ -70,11 +72,31 @@ def make_artifact(
 
     if store:
         storage.set(
-            "artifacts/{}".format(artifact.id),
-            json.dumps(value_serialization, sort_keys=True),
+            _get_artifact_storage_key(artifact),
+            json.dumps(value_serialization, sort_keys=True).encode("utf-8"),
         )
 
     return artifact
+
+
+def get_artifact_value(artifact: Artifact) -> typing.Any:
+    """
+    Fetch artifact serialization from storage and deserialize.
+    """
+    payload = storage.get(_get_artifact_storage_key(artifact))
+
+    value_serialization = json.loads(payload.decode("utf-8"))
+    type_serialization = json.loads(artifact.type_serialization)
+
+    type_ = type_from_json_encodable(type_serialization)
+
+    value = value_from_json_encodable(value_serialization, type_)
+
+    return value
+
+
+def _get_artifact_storage_key(artifact: Artifact) -> str:
+    return "artifacts/{}".format(artifact.id)
 
 
 def _get_value_sha1_digest(

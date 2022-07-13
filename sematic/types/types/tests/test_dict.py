@@ -6,7 +6,11 @@ import pytest
 
 # Sematic
 from sematic.types.casting import safe_cast
-from sematic.types.serialization import get_json_encodable_summary
+from sematic.types.serialization import (
+    get_json_encodable_summary,
+    type_from_json_encodable,
+    type_to_json_encodable,
+)
 
 
 @pytest.mark.parametrize(
@@ -34,3 +38,9 @@ def test_dict_summary():
     summary = get_json_encodable_summary(dict(a=123), Dict[str, int])
 
     assert summary == [("a", 123)]
+
+
+@pytest.mark.parametrize("type_", (Dict[str, int],))
+def test_type_from_json_encodable(type_):
+    json_encodable = type_to_json_encodable(type_)
+    assert type_from_json_encodable(json_encodable) is type_

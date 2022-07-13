@@ -4,9 +4,11 @@ import sematic
 from sematic.examples.bazel.pipeline import pipeline
 
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    logging.info("Starting bazel example")
-    future = pipeline()
-    logging.info(future.id)
+    logger.info("Starting bazel example")
+    future = pipeline(1, 2)
     future.resolve(sematic.CloudResolver())

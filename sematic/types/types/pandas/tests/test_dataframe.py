@@ -5,8 +5,12 @@ import pandas
 import json
 
 # Sematic
-from sematic.types.serialization import get_json_encodable_summary
 from sematic.db.models.factories import make_artifact
+from sematic.types.serialization import (
+    get_json_encodable_summary,
+    type_from_json_encodable,
+    type_to_json_encodable,
+)
 
 
 def test_dataframe_summary():
@@ -32,3 +36,8 @@ def test_dataframe_datetime():
     assert json.loads(artifact.json_summary)["dataframe"] == {
         "a": {"0": str(timestamp)}
     }
+
+
+def test_type_from_json_encodable():
+    json_encodable = type_to_json_encodable(pandas.DataFrame)
+    assert type_from_json_encodable(json_encodable) is pandas.DataFrame

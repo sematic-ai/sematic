@@ -4,7 +4,9 @@ This module contains the public API for artifact serialization.
 # Standard library
 import abc
 import base64
+import builtins
 import dataclasses
+import importlib
 import typing
 import inspect
 import json
@@ -106,7 +108,9 @@ def get_json_encodable_summary(value: typing.Any, type_: typing.Any) -> typing.A
 
 
 def type_to_json_encodable(type_: typing.Any) -> typing.Dict[str, typing.Any]:
-
+    """
+    Serialize a type
+    """
     registry: typing.Dict[str, typing.Any] = dict()
 
     _populate_registry(type_, registry)
@@ -115,6 +119,58 @@ def type_to_json_encodable(type_: typing.Any) -> typing.Dict[str, typing.Any]:
         "type": _type_repr(type_),
         "registry": registry,
     }
+
+
+# This is necessary because `List[T].__origin__.__name__` is `"list"`.
+_ORIGIN_TO_ALIAS_MAPPING: typing.Dict[str, typing.Type] = {
+    "list": typing.List,
+    "dict": typing.Dict,
+    "set": typing.Set,
+    "tuple": typing.Tuple,  # type: ignore
+}
+
+
+def type_from_json_encodable(json_encodable: typing.Any) -> typing.Any:
+    """
+    Recover original type from serialization.
+    """
+    type_repr = json_encodable["type"]
+    type_registry = json_encodable["registry"]
+
+    category, key, parameters = type_repr
+
+    if category == "builtin":
+        if key == "NoneType":
+            return type(None)
+
+        return getattr(builtins, key)
+
+    if category == "typing":
+        base = getattr(typing, key, _ORIGIN_TO_ALIAS_MAPPING.get(key))
+
+        if base is None:
+            raise TypeError("Unable to find base type for key {}".format(repr(key)))
+
+        args = [
+            type_from_json_encodable(dict(type=arg["type"], registry=type_registry))
+            for arg in parameters["args"]
+        ]
+
+        args = args[0] if len(args) == 1 else tuple(args)
+
+        return base.__getitem__(args)
+
+    if category in ("dataclass", "class"):
+        import_path = parameters["import_path"]
+
+        module = importlib.import_module(import_path)
+
+        return getattr(module, key)
+
+    if category == "generic":
+        raise NotImplementedError("Generics should not be used")
+
+    raise TypeError("Unable to deserialize type {}".format(key))
 
 
 def _type_repr(
