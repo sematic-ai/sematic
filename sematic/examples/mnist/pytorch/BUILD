@@ -6,6 +6,6 @@ sematic_example(
         "torchmetrics",
         "plotly",
         "pandas",
-        "sklearn",
-    ]
+        "scikit-learn",
+    ],
 )

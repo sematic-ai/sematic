@@ -6,8 +6,8 @@ sematic_example(
         "statsmodels",
         "seaborn",
         "matplotlib",
-        "sklearn",
+        "scikit-learn",
         "xgboost",
         "numpy",
-    ]
+    ],
 )
