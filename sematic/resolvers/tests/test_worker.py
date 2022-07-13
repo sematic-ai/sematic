@@ -30,7 +30,7 @@ def test_main(
     test_storage,  # noqa: F811
 ):
     # On the user's machine
-    resolver = CloudResolver(attach=False)
+    resolver = CloudResolver(detach=True)
 
     future = pipeline()
 
