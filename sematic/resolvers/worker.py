@@ -45,7 +45,7 @@ def main(run_id: str, resolve: bool):
         future: Future = func()
         future.id = run.id
 
-        resolver = CloudResolver(attach=True)
+        resolver = CloudResolver(detach=False)
         resolver.set_graph(runs=runs, artifacts=artifacts, edges=edges)
 
         resolver.resolve(future)

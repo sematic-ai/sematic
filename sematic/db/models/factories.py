@@ -20,6 +20,9 @@ import sematic.storage as storage
 
 
 def make_run_from_future(future: AbstractFuture) -> Run:
+    """
+    Create a Run model instance from a future.
+    """
     run = Run(
         id=future.id,
         future_state=future.state,
@@ -43,6 +46,12 @@ def make_run_from_future(future: AbstractFuture) -> Run:
 def make_artifact(
     value: typing.Any, type_: typing.Any, store: bool = False
 ) -> Artifact:
+    """
+    Create an Artifact model instance from a value and type.
+
+    `store` set to `True` will persist the artifact's serialization.
+    TODO: replace with modular storage engine.
+    """
     type_serialization = type_to_json_encodable(type_)
     value_serialization = value_to_json_encodable(value, type_)
     json_summary = get_json_encodable_summary(value, type_)

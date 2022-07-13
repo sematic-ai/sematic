@@ -14,13 +14,25 @@ logger = logging.getLogger(__name__)
 
 
 class StateMachineResolver(Resolver, abc.ABC):
-    def __init__(self):
+    def __init__(self, detach: bool = False):
         self._futures: typing.List[AbstractFuture] = []
+        self._detach = detach
 
     def resolve(self, future: AbstractFuture) -> typing.Any:
+        resolved_kwargs = self._get_resolved_kwargs(future)
+        if not len(resolved_kwargs) == len(future.kwargs):
+            raise ValueError(
+                "All input arguments of your root function should be concrete."
+            )
+
+        future.resolved_kwargs = resolved_kwargs
+
         self._resolution_will_start()
 
         self._enqueue_future(future)
+
+        if self._detach:
+            return self._detach_resolution(future)
 
         while future.state != FutureState.RESOLVED:
             for future_ in self._futures:
@@ -37,6 +49,9 @@ class StateMachineResolver(Resolver, abc.ABC):
             raise RuntimeError("Unresolved Future after resolver call.")
 
         return future.value
+
+    def _detach_resolution(self, future: AbstractFuture) -> str:
+        raise NotImplementedError()
 
     def _enqueue_future(self, future: AbstractFuture) -> None:
         if future in self._futures:
@@ -201,19 +216,29 @@ class StateMachineResolver(Resolver, abc.ABC):
         """
         pass
 
-    @typing.final
-    def _schedule_future_if_input_ready(self, future: AbstractFuture) -> None:
-        kwargs = {}
+    @staticmethod
+    def _get_resolved_kwargs(future: AbstractFuture) -> typing.Dict[str, typing.Any]:
+        """
+        Extract only resolved/concrete kwargs
+        """
+        resolved_kwargs = {}
         for name, value in future.kwargs.items():
             if isinstance(value, AbstractFuture):
                 if value.state == FutureState.RESOLVED:
-                    kwargs[name] = value.value
+                    resolved_kwargs[name] = value.value
             else:
-                kwargs[name] = value
+                resolved_kwargs[name] = value
 
-        all_args_resolved = len(kwargs) == len(future.kwargs)
+        return resolved_kwargs
+
+    @typing.final
+    def _schedule_future_if_input_ready(self, future: AbstractFuture) -> None:
+        resolved_kwargs = self._get_resolved_kwargs(future)
+
+        all_args_resolved = len(resolved_kwargs) == len(future.kwargs)
+
         if all_args_resolved:
-            future.resolved_kwargs = kwargs
+            future.resolved_kwargs = resolved_kwargs
             self._future_will_schedule(future)
             if future.inline:
                 logger.info("Running inline {}".format(future.calculator))

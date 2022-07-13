@@ -25,10 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 class CloudResolver(LocalResolver):
-    def __init__(self, attach: bool = False):
-        super().__init__()
-
-        self._attach = attach
+    def __init__(self, detach: bool = True):
+        super().__init__(detach=detach)
 
         # TODO: Replace this with a cloud storage engine
         self._store_artifacts = True
@@ -47,13 +45,8 @@ class CloudResolver(LocalResolver):
         self._artifacts = {artifact.id: artifact for artifact in artifacts}
         self._edges = {make_edge_key(edge): edge for edge in edges}
 
-    def resolve(self, future: AbstractFuture) -> str:
-        if self._attach:
-            return super().resolve(future)
-
-        self._enqueue_future(future)
-
-        run = self._populate_graph(future)
+    def _detach_resolution(self, future: AbstractFuture) -> str:
+        run = self._populate_run_and_artifacts(future)
 
         run.root_id = future.id
 

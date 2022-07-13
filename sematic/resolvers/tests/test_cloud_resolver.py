@@ -30,7 +30,7 @@ def test_simulate_cloud_exec(
 ):
     # On the user's machine
 
-    resolver = CloudResolver(attach=False)
+    resolver = CloudResolver(detach=True)
 
     future = pipeline()
 
@@ -39,14 +39,14 @@ def test_simulate_cloud_exec(
     assert result == future.id
 
     mock_schedule_job.assert_called_once_with(
-        future.id, "sematic-driver-pipeline-{}".format(future.id)
+        future.id, "sematic-driver-pipeline-{}".format(future.id), resolve=True
     )
 
     # In the driver job
 
     runs, artifacts, edges = api_client.get_graph(future.id)
 
-    driver_resolver = CloudResolver(attach=True)
+    driver_resolver = CloudResolver(detach=False)
 
     driver_resolver.set_graph(runs=runs, artifacts=artifacts, edges=edges)
 

@@ -25,8 +25,8 @@ class LocalResolver(SilentResolver):
     input argument and output value is tracked as an artifact.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._edges: Dict[str, Edge] = {}
         self._runs: Dict[str, Run] = {}
         self._artifacts: Dict[str, Artifact] = {}
@@ -88,8 +88,9 @@ class LocalResolver(SilentResolver):
             if key.startswith("{}:".format(source_run_id))
         ]
 
-    def _future_will_schedule(self, future: AbstractFuture) -> None:
-        super()._future_will_schedule(future)
+    def _populate_run_and_artifacts(self, future: AbstractFuture) -> Run:
+        if len(future.kwargs) != len(future.resolved_kwargs):
+            raise RuntimeError("Not all input arguments are resolved")
 
         input_artifacts = {
             name: make_artifact(
@@ -99,6 +100,13 @@ class LocalResolver(SilentResolver):
         }
 
         run = self._populate_graph(future, input_artifacts=input_artifacts)
+
+        return run
+
+    def _future_will_schedule(self, future: AbstractFuture) -> None:
+        super()._future_will_schedule(future)
+
+        run = self._populate_run_and_artifacts(future)
 
         run.future_state = FutureState.SCHEDULED
         run.root_id = self._futures[0].id
