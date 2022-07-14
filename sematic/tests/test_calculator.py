@@ -5,39 +5,39 @@ from typing import List, Union
 import pytest
 
 # Sematic
-from sematic.calculator import Calculator, calculator, _make_list, _convert_lists
+from sematic.calculator import Calculator, func, _make_list, _convert_lists
 from sematic.future import Future
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.api.tests.fixtures import mock_requests, test_client  # noqa: F401
 
 
 def test_decorator_no_params():
-    @calculator
-    def func():
+    @func
+    def f():
         pass
 
-    assert isinstance(func, Calculator)
+    assert isinstance(f, Calculator)
 
 
 def test_decorator_with_params():
-    @calculator()
-    def func():
+    @func()
+    def f():
         pass
 
-    assert isinstance(func, Calculator)
+    assert isinstance(f, Calculator)
 
 
 def test_doc():
-    @calculator
-    def func():
+    @func
+    def f():
         """Some documentation"""
         pass
 
-    assert func.__doc__ == "Some documentation"
+    assert f.__doc__ == "Some documentation"
 
 
 def test_name():
-    @calculator
+    @func
     def abc():
         pass
 
@@ -50,30 +50,30 @@ def test_not_a_function():
 
 
 def test_types_not_specified():
-    @calculator
-    def func():
+    @func
+    def f():
         pass
 
-    assert func.input_types == dict()
-    assert func.output_type is type(None)  # noqa: E721
+    assert f.input_types == dict()
+    assert f.output_type is type(None)  # noqa: E721
 
 
 def test_none_types():
-    @calculator
-    def func(a: None) -> None:
+    @func
+    def f(a: None) -> None:
         pass
 
-    assert func.output_type is type(None)  # noqa: E721
-    assert func.input_types == dict(a=type(None))
+    assert f.output_type is type(None)  # noqa: E721
+    assert f.input_types == dict(a=type(None))
 
 
 def test_types_specified():
-    @calculator
-    def func(a: float) -> int:
+    @func
+    def f(a: float) -> int:
         pass
 
-    assert func.input_types == dict(a=float)
-    assert func.output_type is int
+    assert f.input_types == dict(a=float)
+    assert f.output_type is int
 
 
 def test_variadic():
@@ -82,8 +82,8 @@ def test_variadic():
         match=("Variadic arguments are not supported."),
     ):
 
-        @calculator
-        def func(*abc):
+        @func
+        def f(*abc):
             pass
 
 
@@ -96,49 +96,49 @@ def test_missing_types():
         ),
     ):
 
-        @calculator
-        def func(a, b, c: float):
+        @func
+        def f(a, b, c: float):
             pass
 
 
 def test_call_fail_cast():
-    @calculator
-    def func(a: float) -> float:
+    @func
+    def f(a: float) -> float:
         return a
 
     with pytest.raises(TypeError, match="Cannot cast 'abc' to <class 'float'>"):
-        func("abc")
+        f("abc")
 
 
 def test_call_pass_cast():
-    @calculator
-    def func(a: float) -> float:
+    @func
+    def f(a: float) -> float:
         return a
 
-    f = func(1.23)
+    ff = f(1.23)
 
-    assert isinstance(f, Future)
-    assert f.calculator is func
-    assert set(f.kwargs) == {"a"}
-    assert isinstance(f.kwargs["a"], float)
-    assert f.kwargs["a"] == 1.23
+    assert isinstance(ff, Future)
+    assert ff.calculator is f
+    assert set(ff.kwargs) == {"a"}
+    assert isinstance(ff.kwargs["a"], float)
+    assert ff.kwargs["a"] == 1.23
 
 
 def test_call_fail_binding():
-    @calculator
-    def func(a: float) -> float:
+    @func
+    def f(a: float) -> float:
         return a
 
     with pytest.raises(TypeError, match="too many positional arguments"):
-        func(1, 2)
+        f(1, 2)
 
 
-@calculator
+@func
 def foo() -> str:
     return "foo"
 
 
-@calculator
+@func
 def bar() -> str:
     return "bar"
 
@@ -151,17 +151,17 @@ def test_make_list():
     assert len(future.calculator.input_types) == 2
 
 
-@calculator
+@func
 def pipeline() -> List[str]:
-    return _make_list(List[str], [foo(), bar(), "baz"])
+    return [foo(), bar(), "baz"]
 
 
-def test_pipeline(test_db, mock_requests):  # noqa: F811
-    output = pipeline().resolve()
+def test_pipeline():
+    output = pipeline().resolve(tracking=False)
     assert output == ["foo", "bar", "baz"]
 
 
-def test_convert_lists(test_db, mock_requests):  # noqa: F811
+def test_convert_lists():
     result = _convert_lists([1, foo(), [2, bar()], 3, [4, [5, foo()]]])
 
     assert isinstance(result, Future)
@@ -180,4 +180,21 @@ def test_convert_lists(test_db, mock_requests):  # noqa: F811
     assert isinstance(result.kwargs["v2"].kwargs["v1"], Future)
     assert isinstance(result.kwargs["v4"].kwargs["v1"].kwargs["v1"], Future)
 
-    assert result.resolve() == [1, "foo", [2, "bar"], 3, [4, [5, "foo"]]]
+    @func
+    def pipeline() -> List[
+        Union[
+            int,
+            str,
+            List[Union[int, str]],
+            List[Union[int, List[Union[int, str]]]],
+        ]
+    ]:
+        return [1, foo(), [2, bar()], 3, [4, [5, foo()]]]  # type: ignore
+
+    assert pipeline().resolve(tracking=False) == [
+        1,
+        "foo",
+        [2, "bar"],
+        3,
+        [4, [5, "foo"]],
+    ]
