@@ -68,7 +68,10 @@ def can_cast_to_list(from_type: typing.Any, to_type: typing.Any):
     if not isinstance(from_type, typing._GenericAlias):  # type: ignore
         return False, "{} not a subscripted generic".format(err_prefix)
 
-    if not issubclass(from_type.__origin__, typing.Iterable):
+    if not (
+        isinstance(from_type.__origin__, type)
+        and issubclass(from_type.__origin__, typing.Iterable)
+    ):
         return False, "{} not an iterable".format(err_prefix)
 
     from_type_args = from_type.__args__
