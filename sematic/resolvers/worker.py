@@ -1,5 +1,6 @@
 # Standard library
 import argparse
+import datetime
 import importlib
 import logging
 from typing import Any, Dict, List
@@ -13,7 +14,7 @@ import sematic.api_client as api_client
 from sematic.calculator import Calculator
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.factories import get_artifact_value
+from sematic.db.models.factories import get_artifact_value, make_artifact
 from sematic.db.models.run import Run
 from sematic.future import Future
 from sematic.resolvers.cloud_resolver import CloudResolver
@@ -60,6 +61,7 @@ def _fail_run(run: Run):
     Mark run as failed.
     """
     run.future_state = FutureState.FAILED
+    run.failed_at = datetime.datetime.utcnow()
     api_client.save_graph(run.id, [run], [], [])
 
 
@@ -78,13 +80,35 @@ def _get_func(run: Run) -> Calculator:
     return getattr(module, function_name)
 
 
-def _set_run_output(run: Run, output: Any):
+def _set_run_output(run: Run, output: Any, type_: Any):
+    """
+    Persist run output, whether it is a nested future or a concrete output.
+    """
+    artifacts, edges = [], []
+
     if isinstance(output, Future):
         pickled_nested_future = cloudpickle.dumps(output)
         storage.set("future/{}".format(output.id), pickled_nested_future)
+        run.nested_future_id = output.id
+        run.future_state = FutureState.RAN
+        run.ended_at = datetime.datetime.utcnow()
+
+    else:
+        artifacts.append(make_artifact(output, type_, store=True))
+        edges.append(Edge(source_run_id=run.id, artifact_id=artifacts[0].id))
+        run.future_state = FutureState.RESOLVED
+        run.resolved_at = datetime.datetime.utcnow()
+
+    api_client.save_graph(run.root_id, [run], artifacts, edges)
 
 
 def main(run_id: str, resolve: bool):
+    """
+    Main job logic.
+
+    `resolve` set to `True` will execute the driver logic.
+    `resolve` set to `False` will execute the worker logic.
+    """
     runs, artifacts, edges = api_client.get_graph(run_id)
 
     if len(runs) == 0:
@@ -116,7 +140,7 @@ def main(run_id: str, resolve: bool):
     else:
         try:
             output = func.func(**kwargs)
-            _set_run_output(run, output)
+            _set_run_output(run, output, func.output_type)
         except Exception as e:
             _fail_run(run)
             raise e
