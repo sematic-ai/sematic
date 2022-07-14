@@ -13,7 +13,7 @@ def sematic_pipeline(
         repository = None,
         data = None,
         base = "@sematic-worker-base//image",
-        srcs = None):
+        env = None):
     """docstring"""
     py3_image(
         name = "{}_image".format(name),
@@ -23,10 +23,7 @@ def sematic_pipeline(
         deps = deps + ["//sematic/resolvers:worker"],
         visibility = ["//visibility:public"],
         base = base,
-        # TODO: parametrize instead of hard-code prefix
-        env = {
-            "PYTHONHOME": "/app/sematic/examples/bazel/{}_image.binary.runfiles/python_interpreter/bazel_install".format(name),
-        },
+        env = env or {},
         tags = ["manual"],
     )
 
@@ -48,7 +45,7 @@ def sematic_pipeline(
 
     py_binary(
         name = name,
-        srcs = srcs or ["{}.py".format(name)],
+        srcs = ["{}.py".format(name)],
         deps = deps,
         data = [":{}_push_at_build".format(name)],
         tags = ["manual"],

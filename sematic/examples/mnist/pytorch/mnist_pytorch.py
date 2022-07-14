@@ -9,6 +9,9 @@ from sematic.examples.mnist.pytorch.pipeline import (
     TrainConfig,
 )
 from sematic import CloudResolver
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 PIPELINE_CONFIG = PipelineConfig(

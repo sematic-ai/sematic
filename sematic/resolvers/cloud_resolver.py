@@ -59,9 +59,9 @@ class CloudResolver(LocalResolver):
         return run.id
 
     def _schedule_future(self, future: AbstractFuture) -> None:
-        if future.props.parallelize:
+        if future.props.inline:
             job_name = _make_job_name(future, JobType.worker)
-            _schedule_job(future.id, job_name)
+            _schedule_job(future.id, job_name, resolve=False)
         else:
             self._run_inline(future)
 

@@ -176,7 +176,7 @@ def _repr_str_iterable(str_iterable: Iterable[str]) -> str:
 
 
 def calculator(
-    func: Callable = None, parallelize: bool = False
+    func: Callable = None, inline: bool = True
 ) -> Union[Callable, Calculator]:
     """
     calculator decorator.
@@ -212,7 +212,7 @@ def calculator(
             func_,
             input_types=input_types,
             output_type=output_type,
-            parallelize=parallelize,
+            inline=inline,
         )
 
     if func is None:

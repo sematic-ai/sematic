@@ -10,6 +10,7 @@ import typing
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.resolver import Resolver
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -240,7 +241,7 @@ class StateMachineResolver(Resolver, abc.ABC):
         if all_args_resolved:
             future.resolved_kwargs = resolved_kwargs
             self._future_will_schedule(future)
-            if future.inline:
+            if future.props.inline:
                 logger.info("Running inline {}".format(future.calculator))
                 self._run_inline(future)
             else:
