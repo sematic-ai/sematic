@@ -69,7 +69,7 @@ def value_from_json_encodable(
 
     # If we have a deserializer we use it
     if from_json_encodable_func is not None:
-        return from_json_encodable_func(json_encodable, type)
+        return from_json_encodable_func(json_encodable, type_)
 
     # Otherwise we default
     try:

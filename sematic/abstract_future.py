@@ -43,7 +43,7 @@ class FutureProperties:
     Ideally over time we move all future properties to this dataclass.
     """
 
-    parallelize: bool
+    inline: bool
 
 
 class AbstractFuture(abc.ABC):
@@ -71,7 +71,7 @@ class AbstractFuture(abc.ABC):
         self,
         calculator: AbstractCalculator,
         kwargs: Dict[str, Any],
-        parallelize: bool,
+        inline: bool,
     ):
         self.id: str = uuid.uuid4().hex
         self.calculator = calculator
@@ -85,11 +85,10 @@ class AbstractFuture(abc.ABC):
         self.state: FutureState = FutureState.CREATED
         self.parent_future: Optional["AbstractFuture"] = None
         self.nested_future: Optional["AbstractFuture"] = None
-        self.inline: bool = False
         self.name: str = calculator.__name__
         self.tags: List[str] = []
 
-        self._props = FutureProperties(parallelize=parallelize)
+        self._props = FutureProperties(inline=inline)
 
     @property
     def props(self) -> FutureProperties:
