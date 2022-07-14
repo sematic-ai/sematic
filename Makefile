@@ -1,21 +1,6 @@
-pull_db_container:
-	docker pull postgres:14.3
 
-POSTGRES_CONTAINER_NAME=sematic_postgres
-POSTGRES_PASSWORD=password
-POSTGRES_DB_NAME=sematic
-
-start_pg_container: pull_db_container
-	docker create -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} --name ${POSTGRES_CONTAINER_NAME} -p 5432:5432 postgres:14.3
-
-migrate_up_pg_docker:
-	cd sematic; DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@0.0.0.0:5432/${POSTGRES_DB_NAME}?sslmode=disable dbmate up
-
-migrate_down_pg_docker:
-	cd sematic; DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@0.0.0.0:5432/${POSTGRES_DB_NAME}?sslmode=disable dbmate down
-
-migrate_up_pg_aws:
-	cd sematic; DATABASE_URL=${SEMATIC_OSS_DB_URL} dbmate -s db/schema.sql.pg up 
+migrate_up_rds:
+	cd sematic; DATABASE_URL=${DATABASE_URL} dbmate -s db/schema.sql.pg up 
 
 migrate_up_sqlite:
 	cd sematic; DATABASE_URL="sqlite3:/${HOME}/.sematic/db.sqlite3" dbmate --schema-file db/schema.sql.sqlite up
@@ -23,13 +8,8 @@ migrate_up_sqlite:
 migrate_down_sqlite:
 	cd sematic; DATABASE_URL="sqlite3:/${HOME}/.sematic/db.sqlite3" dbmate -s db/schema.sql.sqlite down
 
-clear_pg:
-	psql -h 0.0.0.0 -p 5432 -d sematic < sematic/db/scripts/clear_all.sql
-
 clear_sqlite:
 	sqlite3 ~/.sematic/db.sqlite3 < sematic/db/scripts/clear_all.sql
-
-create_pg: start_db_container db_migrate_up
 
 pre-commit:
 	flake8

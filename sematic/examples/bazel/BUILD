@@ -14,6 +14,9 @@ sematic_py_lib(
 sematic_pipeline(
     name = "bazel",
     base = "@sematic-worker-base//image",
+    env = {
+        "PYTHONHOME": "/app/sematic/examples/bazel/bazel_image.binary.runfiles/python_interpreter/bazel_install",
+    },
     registry = "558717131297.dkr.ecr.us-west-2.amazonaws.com",
     repository = "sematic-dev",
     deps = [

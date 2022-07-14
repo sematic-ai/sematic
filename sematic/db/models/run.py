@@ -80,6 +80,7 @@ class Run(Base, JSONEncodableMixin):
         types.String(), nullable=False, default="[]", info={JSON_KEY: True}
     )
     source_code: str = Column(types.String(), nullable=False)
+    nested_future_id: str = Column(types.String(), nullable=True)
 
     # Lifecycle timestamps
     created_at: datetime.datetime = Column(

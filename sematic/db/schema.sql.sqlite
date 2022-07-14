@@ -4,13 +4,13 @@ CREATE TABLE runs (
     future_state TEXT NOT NULL,
     name TEXT,
     calculator_path TEXT,
-    created_at timestamp NOT NULL,
-    updated_at timestamp NOT NULL,
+    created_at timestamp WITH time zone NOT NULL,
+    updated_at timestamp WITH time zone NOT NULL,
     started_at timestamp,
     ended_at timestamp,
     resolved_at timestamp,
     failed_at timestamp,
-    parent_id character(32), description TEXT, tags TEXT, source_code TEXT, root_id character(32),
+    parent_id character(32), description TEXT, tags TEXT, source_code TEXT, root_id character(32), nested_future_id character(32),
 
     PRIMARY KEY (id)
 );
@@ -19,7 +19,7 @@ CREATE TABLE artifacts (
     id character(40) NOT NULL,
     json_summary JSONB NOT NULL,
     created_at timestamp NOT NULL,
-    updated_at timestamp NOT NULL, type_serialization JSONB NOT NULL DEFAULT "{}",
+    updated_at timestamp NOT NULL, type_serialization JSONB,
 
     PRIMARY KEY (id)
 );
@@ -62,4 +62,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20220521155336'),
   ('20220522082435'),
   ('20220527000512'),
-  ('20220610234559');
+  ('20220610234559'),
+  ('20220714175433');
