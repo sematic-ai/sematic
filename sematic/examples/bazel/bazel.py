@@ -1,3 +1,4 @@
+import argparse
 import logging
 import sematic
 
@@ -9,6 +10,11 @@ logger = logging.getLogger(__name__)
 
 
 if __name__ == "__main__":
-    logger.info("Starting bazel example")
+    parser = argparse.ArgumentParser("Bazel Example")
+    parser.add_argument("--detach", default=False, action="store_true")
+
+    args = parser.parse_args()
+
+    logger.info("Starting bazel example...")
     future = pipeline(1, 2, 3)
-    future.resolve(sematic.CloudResolver(detach=False))
+    future.resolve(sematic.CloudResolver(detach=args.detach))

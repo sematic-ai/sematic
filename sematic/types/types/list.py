@@ -5,6 +5,7 @@ import typing
 
 # Sematic
 from sematic.types.registry import (
+    register_from_json_encodable,
     register_safe_cast,
     register_can_cast,
     register_to_json_encodable,
@@ -13,6 +14,7 @@ from sematic.types.registry import (
 from sematic.types.casting import safe_cast, can_cast_type
 from sematic.types.serialization import (
     get_json_encodable_summary,
+    value_from_json_encodable,
     value_to_json_encodable,
 )
 
@@ -90,6 +92,12 @@ def can_cast_to_list(from_type: typing.Any, to_type: typing.Any):
 def list_to_json_encodable(value: list, type_: typing.Any) -> list:
     element_type = type_.__args__[0]
     return [value_to_json_encodable(item, element_type) for item in value]
+
+
+@register_from_json_encodable(list)
+def list_from_json_encodable(value: list, type_: typing.Any) -> list:
+    element_type = type_.__args__[0]
+    return [value_from_json_encodable(item, element_type) for item in value]
 
 
 @register_to_json_encodable_summary(list)
