@@ -3,15 +3,18 @@ import enum
 import os
 import __main__
 import logging
-from typing import List
+from typing import Dict, List, Optional
 
 # Third-party
 import kubernetes
+import urllib3
+import cloudpickle
 
 # Sematic
-from sematic.abstract_future import AbstractFuture
+from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
+from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.run import Run
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
 from sematic.user_settings import (
@@ -19,6 +22,8 @@ from sematic.user_settings import (
     get_all_user_settings,
     get_user_settings,
 )
+import sematic.api_client as api_client
+import sematic.storage as storage
 
 
 logger = logging.getLogger(__name__)
@@ -28,8 +33,12 @@ class CloudResolver(LocalResolver):
     def __init__(self, detach: bool = True):
         super().__init__(detach=detach)
 
+        kubernetes.config.load_kube_config()  # type: ignore
+
         # TODO: Replace this with a cloud storage engine
         self._store_artifacts = True
+
+        self._output_artifacts_by_run_id: Dict[str, Artifact] = {}
 
     def set_graph(self, runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
         """
@@ -59,11 +68,115 @@ class CloudResolver(LocalResolver):
         return run.id
 
     def _schedule_future(self, future: AbstractFuture) -> None:
-        if future.props.inline:
-            job_name = _make_job_name(future, JobType.worker)
-            _schedule_job(future.id, job_name, resolve=False)
+        self._set_future_state(future, FutureState.SCHEDULED)
+        job_name = _make_job_name(future, JobType.worker)
+        _schedule_job(future.id, job_name, resolve=False)
+
+    def _wait_for_scheduled_run(self) -> None:
+        run_id = self._wait_for_any_inline_run() or self._wait_for_any_remote_job()
+
+        if run_id is None:
+            return
+
+        self._process_run_output(run_id)
+
+    def _process_run_output(self, run_id: str):
+        self._refresh_graph(run_id)
+
+        run = self._get_run(run_id)
+
+        future = next(future for future in self._futures if future.id == run.id)
+
+        if run.future_state not in {FutureState.RESOLVED.value, FutureState.RAN.value}:
+            self._handle_future_failure(future, Exception("Run failed"))
+
+        if run.nested_future_id is not None:
+            pickled_nested_future = storage.get(
+                make_nested_future_storage_key(run.nested_future_id)
+            )
+            value = cloudpickle.loads(pickled_nested_future)
+
         else:
-            self._run_inline(future)
+            output_edge = self._get_output_edges(run.id)[0]
+            output_artifact = self._artifacts[output_edge.artifact_id]
+            self._output_artifacts_by_run_id[run.id] = output_artifact
+            value = get_artifact_value(output_artifact)
+
+            # for parent_future in self._find_parent_futures(future):
+            #    parent_future.value = value
+            #    parent_future.run_handle = api_client.set_run_output_artifact(
+            #        parent_future.run_handle.id, value
+            #    )
+
+        self._update_future_with_value(future, value)
+
+    def _get_output_artifact(self, run_id: str) -> Optional[Artifact]:
+        return self._output_artifacts_by_run_id.get(run_id)
+
+    def _refresh_graph(self, run_id):
+        """
+        Refresh graph for run ID.
+
+        Will only refresh artifacts and edges directly connected to run
+        """
+        runs, artifacts, edges = api_client.get_graph(run_id)
+
+        for run in runs:
+            self._runs[run.id] = run
+
+        for artifact in artifacts:
+            self._artifacts[artifact.id] = artifact
+
+        for edge in edges:
+            self._edges[make_edge_key(edge)] = edge
+
+    def _wait_for_any_inline_run(self) -> Optional[str]:
+        return next(
+            (
+                future.id
+                for future in self._futures
+                if future.props.inline and future.state == FutureState.SCHEDULED
+            ),
+            None,
+        )
+
+    def _wait_for_any_remote_job(self) -> Optional[str]:
+        job_names = [
+            _make_job_name(future, JobType.worker)
+            for future in self._futures
+            if not future.props.inline and future.state == FutureState.SCHEDULED
+        ]
+
+        if len(job_names) == 0:
+            return None
+
+        while True:
+            try:
+                watch = kubernetes.watch.Watch()  # type: ignore
+
+                for event in watch.stream(
+                    kubernetes.client.BatchV1Api().list_namespaced_job,  # type: ignore
+                    namespace=get_user_settings(SettingsVar.KUBERNETES_NAMESPACE),
+                    label_selector="job-name in ({0})".format(", ".join(job_names)),
+                ):
+                    job = event["object"]
+
+                    if job.status.succeeded or job.status.failed:
+                        watch.stop()
+                        return _get_run_id_from_name(job.metadata.name)
+
+            except kubernetes.client.rest.ApiException as e:  # type: ignore
+                # apparently if you watch for sufficiently long, Kubernetes will
+                # return a 410 with a "too old resource" message. It's fine, just
+                # need to restart the watch.
+                # Ref: https://stackoverflow.com/a/61437982/2540669
+                if e.status == 410:
+                    logger.warning("Kubernetes watch needs restarting, received 410.")
+                    continue
+                raise
+            except urllib3.exceptions.ProtocolError:
+                # in case of some transient network issue.
+                logger.warning("Kubernetes watch needs restarting, protocol error.")
 
 
 class JobType(enum.Enum):
@@ -71,11 +184,27 @@ class JobType(enum.Enum):
     worker = "worker"
 
 
+def make_nested_future_storage_key(future_id: str) -> str:
+    return "futures/{}".format(future_id)
+
+
 def _make_job_name(future: AbstractFuture, job_type: JobType) -> str:
-    job_name = "-".join(
-        ("sematic", job_type.value, future.calculator.__name__, future.id)
-    )
+    """
+    Make K8s job name.
+
+    Please keep in sync with `_get_run_id_from_name`.
+    """
+    job_name = "-".join(("sematic", job_type.value, future.id))
     return job_name
+
+
+def _get_run_id_from_name(job_name: str) -> str:
+    """
+    Extract run ID from K8s job name.
+
+    Should be the reverse of `_make_job_name`.
+    """
+    return job_name.split("-")[-1]
 
 
 def _schedule_job(run_id: str, name: str, resolve: bool = False):
@@ -99,7 +228,7 @@ def _schedule_job(run_id: str, name: str, resolve: bool = False):
                     },
                 ),
                 spec=kubernetes.client.V1PodSpec(  # type: ignore
-                    node_selector={},
+                    # node_selector={"node.kubernetes.io/instance-type": "c4.xlarge"},
                     # service_account_name="sematic-sa",
                     containers=[
                         kubernetes.client.V1Container(  # type: ignore
@@ -107,7 +236,7 @@ def _schedule_job(run_id: str, name: str, resolve: bool = False):
                             image=image,
                             args=args,
                             env=[
-                                kubernetes.client.V1EnvVar(
+                                kubernetes.client.V1EnvVar(  # type: ignore
                                     name=name,
                                     value=value,
                                 )
@@ -127,8 +256,6 @@ def _schedule_job(run_id: str, name: str, resolve: bool = False):
             ttl_seconds_after_finished=4 * 24 * 3600,
         ),
     )
-
-    kubernetes.config.load_kube_config()  # type: ignore
 
     kubernetes.client.BatchV1Api().create_namespaced_job(  # type: ignore
         namespace=get_user_settings(SettingsVar.KUBERNETES_NAMESPACE), body=job

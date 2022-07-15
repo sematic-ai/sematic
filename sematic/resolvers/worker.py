@@ -17,7 +17,10 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value, make_artifact
 from sematic.db.models.run import Run
 from sematic.future import Future
-from sematic.resolvers.cloud_resolver import CloudResolver
+from sematic.resolvers.cloud_resolver import (
+    CloudResolver,
+    make_nested_future_storage_key,
+)
 import sematic.storage as storage
 
 
@@ -80,22 +83,30 @@ def _get_func(run: Run) -> Calculator:
     return getattr(module, function_name)
 
 
-def _set_run_output(run: Run, output: Any, type_: Any):
+def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
     """
     Persist run output, whether it is a nested future or a concrete output.
     """
-    artifacts, edges = [], []
+    logger.info("_set_run_output")
+    artifacts = []
 
     if isinstance(output, Future):
+        logger.info("output is future")
         pickled_nested_future = cloudpickle.dumps(output)
-        storage.set("future/{}".format(output.id), pickled_nested_future)
+        storage.set(make_nested_future_storage_key(output.id), pickled_nested_future)
         run.nested_future_id = output.id
         run.future_state = FutureState.RAN
         run.ended_at = datetime.datetime.utcnow()
 
     else:
+        logger.info("output is concrete")
         artifacts.append(make_artifact(output, type_, store=True))
-        edges.append(Edge(source_run_id=run.id, artifact_id=artifacts[0].id))
+
+        # Set output artifact on output edges
+        for edge in edges:
+            if edge.source_run_id == run.id:
+                edge.artifact_id = artifacts[0].id
+
         run.future_state = FutureState.RESOLVED
         run.resolved_at = datetime.datetime.utcnow()
 
@@ -139,15 +150,21 @@ def main(run_id: str, resolve: bool):
         resolver.resolve(future)
     else:
         try:
+            logger.info("Executing %s", func.__name__)
             output = func.func(**kwargs)
-            _set_run_output(run, output, func.output_type)
+            _set_run_output(run, output, func.output_type, edges)
+
         except Exception as e:
+            logger.error("Run failed:")
+            logger.error("%s: %s", e.__class__.__name__, e)
+
             _fail_run(run)
+
             raise e
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     args = _get_args()
 

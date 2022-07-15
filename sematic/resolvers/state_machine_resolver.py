@@ -114,8 +114,8 @@ class StateMachineResolver(Resolver, abc.ABC):
         ValueError
             If attempting to set state to the same as current state.
         """
-        if state == future.state:
-            raise ValueError("Future already has state {}".format(state))
+        # if state == future.state:
+        #    raise ValueError("Future already has state {}".format(state))
 
         # This is the only location where the setting a future's state
         # is allowed. Setting it elsewhere would forego callbacks.
@@ -273,7 +273,6 @@ class StateMachineResolver(Resolver, abc.ABC):
     def _fail_future_and_parents(
         self,
         future: AbstractFuture,
-        up_to_future: typing.Optional[AbstractFuture] = None,
     ):
         """
         Mark the future FAILED and its parent futures NESTED_FAILED, up
@@ -290,7 +289,7 @@ class StateMachineResolver(Resolver, abc.ABC):
         self._set_future_state(future, FutureState.FAILED)
 
         parent_future = future.parent_future
-        while parent_future is not None and parent_future is not up_to_future:
+        while parent_future is not None:
             self._set_future_state(parent_future, FutureState.NESTED_FAILED)
             parent_future = parent_future.parent_future
 

@@ -45,5 +45,5 @@ release:
 	python3 -m twine upload bazel-bin/sematic/*.whl
 
 release-server:
-	docker build -t sematicai/sematic-server:latest .
-	docker push sematicai/sematic-server:latest
+	docker build -t sematicai/sematic-server:${TAG} .
+	docker push sematicai/sematic-server:${TAG}

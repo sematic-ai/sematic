@@ -25,7 +25,7 @@ class Calculator(AbstractCalculator):
         func: types.FunctionType,
         input_types: Dict[str, type],
         output_type: type,
-        parallelize: bool = False,
+        inline: bool = True,
     ) -> None:
         if not inspect.isfunction(func):
             raise ValueError("{} is not a function".format(func))
@@ -35,7 +35,7 @@ class Calculator(AbstractCalculator):
         self._input_types = input_types
         self._output_type = output_type
 
-        self._parallelize = parallelize
+        self._inline = inline
 
         self.__doc__ = func.__doc__
         self.__module__ = func.__module__
@@ -62,10 +62,6 @@ class Calculator(AbstractCalculator):
     def input_types(self) -> Dict[str, type]:
         return self._input_types
 
-    @property
-    def parallelize(self) -> bool:
-        return self._parallelize
-
     # Returns typing.Any instead of Future to ensure
     # calculator algebra is valid from a mypy perspective
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
@@ -83,7 +79,7 @@ class Calculator(AbstractCalculator):
 
         cast_arguments = self.cast_inputs(argument_map)
 
-        return Future(self, cast_arguments, parallelize=self.parallelize)
+        return Future(self, cast_arguments, inline=self._inline)
 
     def __signature__(self) -> inspect.Signature:
         return inspect.signature(self._func)
@@ -287,7 +283,9 @@ def _make_list({inputs}):
     exec(source_code, scope)
     _make_list = scope["_make_list"]
 
-    return Calculator(_make_list, input_types=input_types, output_type=type_)(**inputs)
+    return Calculator(
+        _make_list, input_types=input_types, output_type=type_, inline=True
+    )(**inputs)
 
 
 def _convert_lists(value_):

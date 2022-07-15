@@ -55,7 +55,7 @@ function DagTab(props: { rootRun: Run }) {
 
   const loadGraph = useCallback(() => {
     fetchJSON(
-      "/api/v1/runs/" + rootRun.id + "/graph",
+      "/api/v1/runs/" + rootRun.id + "/graph?root=1",
       (payload: RunGraphPayload) => {
         let graph = {
           runs: new Map(payload.runs.map((run) => [run.id, run])),
