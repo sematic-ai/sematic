@@ -1,5 +1,6 @@
 # Standard library
 from typing import Any, Callable, Dict, List, Optional, Tuple
+import logging
 
 # Third party
 import requests
@@ -10,6 +11,9 @@ from sematic.user_settings import SettingsVar
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_run(run_id: str) -> Run:

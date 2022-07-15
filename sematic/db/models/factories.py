@@ -72,7 +72,7 @@ def make_artifact(
 
     if store:
         storage.set(
-            _get_artifact_storage_key(artifact),
+            _make_artifact_storage_key(artifact),
             json.dumps(value_serialization, sort_keys=True).encode("utf-8"),
         )
 
@@ -83,7 +83,7 @@ def get_artifact_value(artifact: Artifact) -> typing.Any:
     """
     Fetch artifact serialization from storage and deserialize.
     """
-    payload = storage.get(_get_artifact_storage_key(artifact))
+    payload = storage.get(_make_artifact_storage_key(artifact))
 
     value_serialization = json.loads(payload.decode("utf-8"))
     type_serialization = json.loads(artifact.type_serialization)
@@ -95,7 +95,7 @@ def get_artifact_value(artifact: Artifact) -> typing.Any:
     return value
 
 
-def _get_artifact_storage_key(artifact: Artifact) -> str:
+def _make_artifact_storage_key(artifact: Artifact) -> str:
     return "artifacts/{}".format(artifact.id)
 
 

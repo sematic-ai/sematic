@@ -20,7 +20,7 @@ from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
-from sematic.db.queries import get_run, save_graph, get_run_graph
+from sematic.db.queries import get_root_graph, get_run, save_graph, get_run_graph
 from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
@@ -194,7 +194,11 @@ def get_run_graph_endpoint(run_id: str) -> flask.Response:
     artifacts: List[Artifact]
         Unique artifacts in the graph
     """
-    runs, artifacts, edges = get_run_graph(run_id)
+    root = bool(int(flask.request.args.get("root", "0")))
+
+    get_graph_fn = get_root_graph if root else get_run_graph
+
+    runs, artifacts, edges = get_graph_fn(run_id)
     payload = dict(
         run_id=run_id,
         runs=[run.to_json_encodable() for run in runs],

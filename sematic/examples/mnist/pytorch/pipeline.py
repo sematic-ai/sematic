@@ -1,5 +1,5 @@
 # Standard library
-from typing import Optional
+from typing import List, Optional, Tuple
 from dataclasses import dataclass
 
 # Third-party
@@ -20,7 +20,7 @@ from sematic.examples.mnist.pytorch.train_eval import train, test, Net
 import sematic
 
 
-@sematic.func
+@sematic.func(inline=False)
 def load_mnist_dataset(train: bool, path: str = "/tmp/pytorch-mnist") -> MNIST:
     transform = Compose([ToTensor(), Normalize((0.1307,), (0.3081,))])
     return MNIST(root=path, train=train, download=True, transform=transform)
@@ -31,7 +31,7 @@ class DataLoaderConfig:
     batch_size: Optional[int] = 1000
 
 
-@sematic.func
+@sematic.func(inline=False)
 def get_dataloader(dataset: Dataset, config: DataLoaderConfig) -> DataLoader:
     return DataLoader(dataset, batch_size=config.batch_size)
 
@@ -52,7 +52,7 @@ class PipelineConfig:
     use_cuda: bool = False
 
 
-@sematic.func
+@sematic.func(inline=False)
 def train_model(
     config: TrainConfig,
     train_loader: DataLoader,
@@ -86,7 +86,7 @@ class EvaluationResults:
     confusion_matrix: plotly.graph_objs.Figure
 
 
-@sematic.func
+@sematic.func(inline=False)
 def evaluate_model(
     model: nn.Module, test_loader: DataLoader, device: torch.device
 ) -> EvaluationResults:
@@ -103,7 +103,24 @@ def evaluate_model(
     )
 
 
-@sematic.func
+@sematic.func(inline=True)
+def train_eval(
+    train_dataloader: DataLoader, test_dataloader: DataLoader, train_config: TrainConfig
+) -> EvaluationResults:
+    device = torch.device("cpu")
+
+    model = train_model(
+        config=train_config, train_loader=train_dataloader, device=device
+    )
+
+    evaluation_results = evaluate_model(
+        model=model, test_loader=test_dataloader, device=device
+    )
+
+    return evaluation_results
+
+
+@sematic.func(inline=False)
 def pipeline(config: PipelineConfig) -> EvaluationResults:
     """
     # MNIST example in PyTorch
@@ -125,14 +142,54 @@ def pipeline(config: PipelineConfig) -> EvaluationResults:
         dataset=test_dataset, config=config.dataloader_config
     )
 
-    device = torch.device("cuda" if config.use_cuda else "cpu")
-
-    model = train_model(
-        config=config.train_config, train_loader=train_dataloader, device=device
-    )
-
-    evaluation_resuts = evaluate_model(
-        model=model, test_loader=test_dataloader, device=device
+    evaluation_resuts = train_eval(
+        train_dataloader=train_dataloader,
+        test_dataloader=test_dataloader,
+        train_config=config.train_config,
     )
 
     return evaluation_resuts
+
+
+@sematic.func(inline=True)
+def find_best_accuracy_index(evaluation_results: List[EvaluationResults]) -> int:
+    best_accuracy = 0
+    best_index = None
+    for idx, evaluation_result in enumerate(evaluation_results):
+        if evaluation_result.accuracy > best_accuracy:
+            best_accuracy = evaluation_result.accuracy
+            best_index = idx
+
+    return best_index
+
+
+@sematic.func(inline=True)
+def get_best_learning_rate(configs: List[TrainConfig], best_index: int) -> float:
+    return configs[best_index].learning_rate
+
+
+@sematic.func(inline=True)
+def scan_learning_rate(
+    dataloader_config: DataLoaderConfig, train_configs: List[TrainConfig]
+) -> float:
+    train_dataset = load_mnist_dataset(train=True).set(
+        name="Load train dataset", tags=["train"]
+    )
+    test_dataset = load_mnist_dataset(train=False).set(
+        name="Load test dataset", tags=["test"]
+    )
+    train_dataloader = get_dataloader(dataset=train_dataset, config=dataloader_config)
+
+    test_dataloader = get_dataloader(dataset=test_dataset, config=dataloader_config)
+
+    evaluation_results = [
+        train_eval(
+            train_dataloader=train_dataloader,
+            test_dataloader=test_dataloader,
+            train_config=config,
+        ).set(name="Train/Eval LR={}".format(config.learning_rate))
+        for config in train_configs
+    ]
+
+    best_accuracy_index = find_best_accuracy_index(evaluation_results)
+    return get_best_learning_rate(train_configs, best_accuracy_index)
