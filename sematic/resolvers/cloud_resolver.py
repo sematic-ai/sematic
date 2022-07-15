@@ -33,7 +33,13 @@ class CloudResolver(LocalResolver):
     def __init__(self, detach: bool = True):
         super().__init__(detach=detach)
 
-        kubernetes.config.load_kube_config()  # type: ignore
+        try:
+            kubernetes.config.load_kube_config()  # type: ignore
+        except kubernetes.config.config_exception.ConfigException as e1:
+            try:
+                kubernetes.config.load_incluster_config()
+            except kubernetes.config.config_exception.ConfigException as e2:
+                raise RuntimeError("Unable to find kube config:\n{}\n{}".format(e1, e2))
 
         # TODO: Replace this with a cloud storage engine
         self._store_artifacts = True
@@ -60,6 +66,8 @@ class CloudResolver(LocalResolver):
         run.root_id = future.id
 
         self._save_graph()
+
+        api_client.notify_pipeline_update(run.calculator_path)
 
         job_name = _make_job_name(future, JobType.driver)
         # SUBMIT ORCHESTRATOR JOB
@@ -222,20 +230,21 @@ def _schedule_job(run_id: str, name: str, resolve: bool = False):
         metadata=kubernetes.client.V1ObjectMeta(name=name),  # type: ignore
         spec=kubernetes.client.V1JobSpec(  # type: ignore
             template=kubernetes.client.V1PodTemplateSpec(  # type: ignore
-                metadata=kubernetes.client.V1ObjectMeta(  # type: ignore
-                    annotations={
-                        "cluster-autoscaler.kubernetes.io/safe-to-evict": "false"
-                    },
-                ),
                 spec=kubernetes.client.V1PodSpec(  # type: ignore
                     # node_selector={"node.kubernetes.io/instance-type": "c4.xlarge"},
-                    # service_account_name="sematic-sa",
+                    # service_account_name,
                     containers=[
                         kubernetes.client.V1Container(  # type: ignore
                             name=name,
                             image=image,
                             args=args,
                             env=[
+                                kubernetes.client.V1EnvVar(  # type: ignore
+                                    name=_CONTAINER_IMAGE_ENV_VAR,
+                                    value=image,
+                                )
+                            ]
+                            + [
                                 kubernetes.client.V1EnvVar(  # type: ignore
                                     name=name,
                                     value=value,
@@ -249,10 +258,10 @@ def _schedule_job(run_id: str, name: str, resolve: bool = False):
                     volumes=[],
                     tolerations=[],
                     restart_policy="Never",
-                    # termination_grace_period_seconds=TERMINATION_GRACE_PERIOD_IN_SECS,
+                    # termination_grace_period_seconds,
                 ),
             ),
-            backoff_limit=0,  # num retries
+            backoff_limit=0,
             ttl_seconds_after_finished=4 * 24 * 3600,
         ),
     )
@@ -262,7 +271,13 @@ def _schedule_job(run_id: str, name: str, resolve: bool = False):
     )
 
 
+_CONTAINER_IMAGE_ENV_VAR = "SEMATIC_CONTAINER_IMAGE"
+
+
 def _get_image() -> str:
+    if _CONTAINER_IMAGE_ENV_VAR in os.environ:
+        return os.environ[_CONTAINER_IMAGE_ENV_VAR]
+
     with open(
         "{}_push_at_build.uri".format(os.path.splitext(__main__.__file__)[0])
     ) as f:

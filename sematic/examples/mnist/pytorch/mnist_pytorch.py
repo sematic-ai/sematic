@@ -2,6 +2,7 @@
 This is an example implementation of the MNIST pipeline in PyTorch on sematic.
 """
 # MNIST example
+import argparse
 from sematic.examples.mnist.pytorch.pipeline import (
     pipeline,
     PipelineConfig,
@@ -30,22 +31,18 @@ TRAIN_CONFIGS = [
 
 
 def main():
-    """
-    Entry point for examples/mnist/pytorch
+    parser = argparse.ArgumentParser("MNIST PyTorch example")
+    parser.add_argument("--detach", default=False, action="store_true")
 
-    Run with
+    args = parser.parse_args()
 
-    ```shell
-    $ sematic run examples/mnist/pytorch
-    ```
-    """
     # pipeline(PIPELINE_CONFIG).set(
     #    name="PyTorch MNIST Example", tags=["pytorch", "example", "mnist"]
     # ).resolve(CloudResolver(detach=False))
 
     scan_learning_rate(
         dataloader_config=DataLoaderConfig(), train_configs=TRAIN_CONFIGS
-    ).set(name="Scan MNIST learning rates").resolve(CloudResolver(detach=False))
+    ).set(name="Scan MNIST learning rates").resolve(CloudResolver(detach=args.detach))
 
 
 if __name__ == "__main__":
