@@ -31,7 +31,7 @@ def test_make_run_from_future():
 
     assert run.id == future.id
     assert run.future_state == FutureState.CREATED.value
-    assert run.calculator_path == "sematic.db.models.tests.test_factories.func"
+    assert run.calculator_path == "sematic.db.models.tests.test_factories.f"
     assert run.name == "f"
     assert run.parent_id == parent_future.id
     assert run.description == "An informative docstring."

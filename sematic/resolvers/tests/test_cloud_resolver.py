@@ -39,7 +39,7 @@ def test_simulate_cloud_exec(
     assert result == future.id
 
     mock_schedule_job.assert_called_once_with(
-        future.id, "sematic-driver-pipeline-{}".format(future.id), resolve=True
+        future.id, "sematic-driver-{}".format(future.id), resolve=True
     )
 
     # In the driver job

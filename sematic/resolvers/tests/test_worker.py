@@ -8,7 +8,7 @@ from sematic.calculator import func
 from sematic.api.tests.fixtures import mock_requests, test_client  # noqa: F401
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.tests.fixtures import test_storage  # noqa: F401
-import sematic.api_client as api_client
+from sematic.db.queries import get_root_graph
 
 
 @func
@@ -40,7 +40,7 @@ def test_main(
 
     main(run_id=future.id, resolve=True)
 
-    runs, artifacts, edges = api_client.get_graph(future.id)
+    runs, artifacts, edges = get_root_graph(future.id)
     assert len(runs) == 2
     assert len(artifacts) == 3
     assert len(edges) == 6
