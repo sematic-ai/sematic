@@ -7,6 +7,7 @@ sematic_py_lib(
         "//sematic/future_operators:init",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:local_resolver",
+        "//sematic/resolvers:resource_requirements",
         "//sematic/types:casting",
         "//sematic/types:init",
     ],
@@ -59,6 +60,7 @@ sematic_py_lib(
     srcs = ["abstract_future.py"],
     deps = [
         ":abstract_calculator",
+        "//sematic/resolvers:resource_requirements",
     ],
 )
 
@@ -68,6 +70,7 @@ sematic_py_lib(
     deps = [
         ":abstract_calculator",
         ":future",
+        "//sematic/resolvers:resource_requirements",
         "//sematic/types:casting",
         "//sematic/types:init",
         "//sematic/types:registry",

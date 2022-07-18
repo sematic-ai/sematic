@@ -47,6 +47,12 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "resource_requirements",
+    srcs = ["resource_requirements.py"],
+    deps = [],
+)
+
+sematic_py_lib(
     name = "worker",
     srcs = ["worker.py"],
     deps = [

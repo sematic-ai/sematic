@@ -18,6 +18,7 @@ from sematic.examples.mnist.pytorch.train_eval import train, test, Net
 
 # Sematic
 import sematic
+from sematic import ResourceRequirements, KubernetesResourceRequirements
 
 
 @sematic.func(inline=False)
@@ -52,14 +53,21 @@ class PipelineConfig:
     use_cuda: bool = False
 
 
-@sematic.func(inline=False)
+GPU_RESOURCE_REQS = ResourceRequirements(
+    kubernetes=KubernetesResourceRequirements(
+        node_selector={"node.kubernetes.io/instance-type": "g4dn.xlarge"}
+    )
+)
+
+
+@sematic.func(inline=False, resource_requirements=GPU_RESOURCE_REQS)
 def train_model(
     config: TrainConfig,
     train_loader: DataLoader,
     device: torch.device,
 ) -> nn.Module:
     """Train the model"""
-    model = Net()
+    model = Net().to(device)
     optimizer = Adadelta(model.parameters(), lr=config.learning_rate)
     scheduler = StepLR(optimizer, step_size=1, gamma=config.gamma)
     for epoch in range(1, config.epochs + 1):
@@ -86,7 +94,7 @@ class EvaluationResults:
     confusion_matrix: plotly.graph_objs.Figure
 
 
-@sematic.func(inline=False)
+@sematic.func(inline=False, resource_requirements=GPU_RESOURCE_REQS)
 def evaluate_model(
     model: nn.Module, test_loader: DataLoader, device: torch.device
 ) -> EvaluationResults:
@@ -107,7 +115,10 @@ def evaluate_model(
 def train_eval(
     train_dataloader: DataLoader, test_dataloader: DataLoader, train_config: TrainConfig
 ) -> EvaluationResults:
-    device = torch.device("cpu")
+    """
+    The train/eval sub-pipeline.
+    """
+    device = torch.device("cuda")
 
     model = train_model(
         config=train_config, train_loader=train_dataloader, device=device
@@ -153,6 +164,9 @@ def pipeline(config: PipelineConfig) -> EvaluationResults:
 
 @sematic.func(inline=True)
 def find_best_accuracy_index(evaluation_results: List[EvaluationResults]) -> int:
+    """
+    Find the best accuracy out of a list of evaluation results.
+    """
     best_accuracy = 0
     best_index = None
     for idx, evaluation_result in enumerate(evaluation_results):
@@ -172,6 +186,10 @@ def get_best_learning_rate(configs: List[TrainConfig], best_index: int) -> float
 def scan_learning_rate(
     dataloader_config: DataLoaderConfig, train_configs: List[TrainConfig]
 ) -> float:
+    """
+    Train MNIST with a number of training configurations and extract the one with the
+    best accuracy.
+    """
     train_dataset = load_mnist_dataset(train=True).set(
         name="Load train dataset", tags=["train"]
     )

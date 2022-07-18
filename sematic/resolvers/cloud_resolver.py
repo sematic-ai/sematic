@@ -17,6 +17,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.run import Run
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
+from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.user_settings import (
     SettingsVar,
     get_all_user_settings,
@@ -78,7 +79,12 @@ class CloudResolver(LocalResolver):
     def _schedule_future(self, future: AbstractFuture) -> None:
         self._set_future_state(future, FutureState.SCHEDULED)
         job_name = _make_job_name(future, JobType.worker)
-        _schedule_job(future.id, job_name, resolve=False)
+        _schedule_job(
+            future.id,
+            job_name,
+            resolve=False,
+            resource_requirements=future.props.resource_requirements,
+        )
 
     def _wait_for_scheduled_run(self) -> None:
         run_id = self._wait_for_any_inline_run() or self._wait_for_any_remote_job()
@@ -159,32 +165,18 @@ class CloudResolver(LocalResolver):
             return None
 
         while True:
-            try:
-                watch = kubernetes.watch.Watch()  # type: ignore
+            watch = kubernetes.watch.Watch()  # type: ignore
 
-                for event in watch.stream(
-                    kubernetes.client.BatchV1Api().list_namespaced_job,  # type: ignore
-                    namespace=get_user_settings(SettingsVar.KUBERNETES_NAMESPACE),
-                    label_selector="job-name in ({0})".format(", ".join(job_names)),
-                ):
-                    job = event["object"]
+            for event in watch.stream(
+                kubernetes.client.BatchV1Api().list_namespaced_job,  # type: ignore
+                namespace=get_user_settings(SettingsVar.KUBERNETES_NAMESPACE),
+                label_selector="job-name in ({0})".format(", ".join(job_names)),
+            ):
+                job = event["object"]
 
-                    if job.status.succeeded or job.status.failed:
-                        watch.stop()
-                        return _get_run_id_from_name(job.metadata.name)
-
-            except kubernetes.client.rest.ApiException as e:  # type: ignore
-                # apparently if you watch for sufficiently long, Kubernetes will
-                # return a 410 with a "too old resource" message. It's fine, just
-                # need to restart the watch.
-                # Ref: https://stackoverflow.com/a/61437982/2540669
-                if e.status == 410:
-                    logger.warning("Kubernetes watch needs restarting, received 410.")
-                    continue
-                raise
-            except urllib3.exceptions.ProtocolError:
-                # in case of some transient network issue.
-                logger.warning("Kubernetes watch needs restarting, protocol error.")
+                if job.status.succeeded or job.status.failed:
+                    watch.stop()
+                    return _get_run_id_from_name(job.metadata.name)
 
 
 class JobType(enum.Enum):
@@ -215,7 +207,12 @@ def _get_run_id_from_name(job_name: str) -> str:
     return job_name.split("-")[-1]
 
 
-def _schedule_job(run_id: str, name: str, resolve: bool = False):
+def _schedule_job(
+    run_id: str,
+    name: str,
+    resource_requirements: Optional[ResourceRequirements] = None,
+    resolve: bool = False,
+):
     logger.info("Scheduling job %s", name)
     args = ["--run_id", run_id]
 
@@ -224,6 +221,11 @@ def _schedule_job(run_id: str, name: str, resolve: bool = False):
 
     image = _get_image()
 
+    node_selector = {}
+    if resource_requirements is not None:
+        node_selector = resource_requirements.kubernetes.node_selector
+        logger.debug("kubernetes node_selector %s", node_selector)
+
     job = kubernetes.client.V1Job(  # type: ignore
         api_version="batch/v1",
         kind="Job",
@@ -231,8 +233,7 @@ def _schedule_job(run_id: str, name: str, resolve: bool = False):
         spec=kubernetes.client.V1JobSpec(  # type: ignore
             template=kubernetes.client.V1PodTemplateSpec(  # type: ignore
                 spec=kubernetes.client.V1PodSpec(  # type: ignore
-                    # node_selector={"node.kubernetes.io/instance-type": "c4.xlarge"},
-                    # service_account_name,
+                    node_selector=node_selector,
                     containers=[
                         kubernetes.client.V1Container(  # type: ignore
                             name=name,
@@ -258,11 +259,10 @@ def _schedule_job(run_id: str, name: str, resolve: bool = False):
                     volumes=[],
                     tolerations=[],
                     restart_policy="Never",
-                    # termination_grace_period_seconds,
                 ),
             ),
             backoff_limit=0,
-            ttl_seconds_after_finished=4 * 24 * 3600,
+            ttl_seconds_after_finished=3600,
         ),
     )
 

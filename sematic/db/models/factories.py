@@ -28,7 +28,7 @@ def make_run_from_future(future: AbstractFuture) -> Run:
     run = Run(
         id=future.id,
         future_state=future.state,
-        name=future.name,
+        name=future.props.name,
         calculator_path="{}.{}".format(
             future.calculator.__module__, future.calculator.__name__
         ),
@@ -36,7 +36,7 @@ def make_run_from_future(future: AbstractFuture) -> Run:
             future.parent_future.id if future.parent_future is not None else None
         ),
         description=future.calculator.__doc__,
-        tags=future.tags,
+        tags=future.props.tags,
         source_code=future.calculator.get_source(),
         created_at=datetime.datetime.utcnow(),
         updated_at=datetime.datetime.utcnow(),

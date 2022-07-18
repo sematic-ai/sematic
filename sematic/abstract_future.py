@@ -11,6 +11,7 @@ import uuid
 
 # Sematic
 from sematic.abstract_calculator import AbstractCalculator
+from sematic.resolvers.resource_requirements import ResourceRequirements
 
 
 class FutureState(enum.Enum):
@@ -44,6 +45,9 @@ class FutureProperties:
     """
 
     inline: bool
+    name: str
+    tags: List[str]
+    resource_requirements: Optional[ResourceRequirements] = None
 
 
 class AbstractFuture(abc.ABC):
@@ -72,6 +76,7 @@ class AbstractFuture(abc.ABC):
         calculator: AbstractCalculator,
         kwargs: Dict[str, Any],
         inline: bool,
+        resource_requirements: Optional[ResourceRequirements] = None,
     ):
         self.id: str = uuid.uuid4().hex
         self.calculator = calculator
@@ -85,10 +90,13 @@ class AbstractFuture(abc.ABC):
         self.state: FutureState = FutureState.CREATED
         self.parent_future: Optional["AbstractFuture"] = None
         self.nested_future: Optional["AbstractFuture"] = None
-        self.name: str = calculator.__name__
-        self.tags: List[str] = []
 
-        self._props = FutureProperties(inline=inline)
+        self._props = FutureProperties(
+            inline=inline,
+            resource_requirements=resource_requirements,
+            name=calculator.__name__,
+            tags=[],
+        )
 
     @property
     def props(self) -> FutureProperties:

@@ -114,8 +114,8 @@ def test(model: nn.Module, device: torch.device, test_loader: DataLoader):
 
     df = pandas.DataFrame(
         {
-            "precision": list(torch.cat(precision)),
-            "recall": list(torch.cat(recall)),
+            "precision": list(torch.cat(precision).cpu()),
+            "recall": list(torch.cat(recall).cpu()),
             "class": classes,
         }
     )
@@ -132,5 +132,7 @@ def test(model: nn.Module, device: torch.device, test_loader: DataLoader):
         average_loss=test_loss,
         accuracy=correct / len(test_loader.dataset),  # type: ignore
         pr_curve=fig,
-        confusion_matrix=_confusion_matrix(torch.cat(targets), torch.cat(preds)),
+        confusion_matrix=_confusion_matrix(
+            torch.cat(targets).cpu(), torch.cat(preds).cpu()
+        ),
     )
