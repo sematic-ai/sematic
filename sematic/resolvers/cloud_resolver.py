@@ -35,10 +35,10 @@ class CloudResolver(LocalResolver):
 
         try:
             kubernetes.config.load_kube_config()  # type: ignore
-        except kubernetes.config.config_exception.ConfigException as e1:
+        except kubernetes.config.config_exception.ConfigException as e1:  # type: ignore
             try:
-                kubernetes.config.load_incluster_config()
-            except kubernetes.config.config_exception.ConfigException as e2:
+                kubernetes.config.load_incluster_config()  # type: ignore
+            except kubernetes.config.config_exception.ConfigException as e2:  # type: ignore # noqa: E501
                 raise RuntimeError("Unable to find kube config:\n{}\n{}".format(e1, e2))
 
         # TODO: Replace this with a cloud storage engine
