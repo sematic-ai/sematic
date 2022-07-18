@@ -11,15 +11,6 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.8.0.tar.gz",
 )
 
-# http_archive(
-#    name = "rules_cc",
-#    sha256 = "691a29db9c336349e48e04c5c2f4873f2890af5cbfa6e51f4de87fefe6169294",
-#    strip_prefix = "rules_cc-2f8c04c04462ab83c545ab14c0da68c3b4c96191",
-#    urls = [
-#        "https://github.com/bazelbuild/rules_cc/archive/2f8c04c04462ab83c545ab14c0da68c3b4c96191.zip",
-#    ],
-#)
-
 ## Canonical host toolchain
 
 # load("@rules_python//python:repositories.bzl", "python_register_toolchains")
