@@ -7,7 +7,6 @@ from typing import Dict, List, Optional
 
 # Third-party
 import kubernetes
-import urllib3
 import cloudpickle
 
 # Sematic

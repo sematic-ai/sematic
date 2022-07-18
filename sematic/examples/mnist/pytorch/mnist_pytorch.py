@@ -4,7 +4,6 @@ This is an example implementation of the MNIST pipeline in PyTorch on sematic.
 # MNIST example
 import argparse
 from sematic.examples.mnist.pytorch.pipeline import (
-    pipeline,
     PipelineConfig,
     DataLoaderConfig,
     TrainConfig,
