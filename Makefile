@@ -28,8 +28,8 @@ ui:
 server-image:
 	docker build -t sematicai/sematic-server:dev .
 
-start:
-	cd sematic/api; docker compose up
+worker-image:
+	docker build -t sematicai/sematic-worker-base:latest -f sematic/resolvers/Dockerfile .
 
 wheel:
 	rm -f bazel-bin/sematic/*.whl

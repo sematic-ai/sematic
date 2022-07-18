@@ -1,5 +1,6 @@
 # This is the base image for the worker for cloud execution
-FROM ubuntu:22.04
+#FROM ubuntu:22.04
+FROM nvidia/cuda:11.7.0-base-ubuntu22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 

@@ -6,7 +6,7 @@ import pytest
 
 # Sematic
 from sematic.abstract_future import FutureState
-from sematic.calculator import calculator
+from sematic.calculator import func
 from sematic.db.models.factories import make_run_from_future, make_artifact
 from sematic.types.serialization import (
     get_json_encodable_summary,
@@ -15,8 +15,8 @@ from sematic.types.serialization import (
 )
 
 
-@calculator
-def func():
+@func
+def f():
     """
     An informative docstring.
     """
@@ -24,21 +24,21 @@ def func():
 
 
 def test_make_run_from_future():
-    future = func()
-    parent_future = func()
+    future = f()
+    parent_future = f()
     future.parent_future = parent_future
     run = make_run_from_future(future)
 
     assert run.id == future.id
     assert run.future_state == FutureState.CREATED.value
     assert run.calculator_path == "sematic.db.models.tests.test_factories.func"
-    assert run.name == "func"
+    assert run.name == "f"
     assert run.parent_id == parent_future.id
     assert run.description == "An informative docstring."
     assert (
         run.source_code
-        == """@calculator
-def func():
+        == """@func
+def f():
     \"\"\"
     An informative docstring.
     \"\"\"

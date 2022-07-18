@@ -56,7 +56,7 @@ class Future(AbstractFuture):
         Future
             The current future. This enables chaining.
         """
-        mutable_fields = {"name", "inline", "tags"}
+        mutable_fields = {"name", "inline", "tags", "resource_requirements"}
         invalid_fields = set(kwargs) - mutable_fields
         if len(invalid_fields) > 0:
             raise ValueError("Cannot mutate fields: {}".format(invalid_fields))
@@ -82,8 +82,7 @@ class Future(AbstractFuture):
                     )
 
             # TODO: valdidate inline
-
-            setattr(self, name, value)
+            setattr(self._props, name, value)
 
         return self
 
