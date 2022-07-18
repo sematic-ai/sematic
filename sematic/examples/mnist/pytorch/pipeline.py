@@ -1,5 +1,5 @@
 # Standard library
-from typing import List, Optional, Tuple
+from typing import List, Optional
 from dataclasses import dataclass
 
 # Third-party

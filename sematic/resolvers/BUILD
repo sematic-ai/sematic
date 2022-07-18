@@ -1,5 +1,3 @@
-load("//tools:sematic_pipeline.bzl", "sematic_pipeline")
-
 sematic_py_lib(
     name = "local_resolver",
     srcs = ["local_resolver.py"],
@@ -43,6 +41,7 @@ sematic_py_lib(
         "//sematic/db/models:edge",
         "//sematic/db/models:run",
         requirement("kubernetes"),
+        requirement("cloudpickle"),
     ],
 )
 
