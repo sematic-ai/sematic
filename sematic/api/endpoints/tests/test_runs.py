@@ -4,9 +4,10 @@ import uuid
 
 # Third-party
 import flask.testing
+import pytest
 
 # Sematic
-from sematic.api.tests.fixtures import test_client  # noqa: F401
+from sematic.api.tests.fixtures import test_client, mock_requests  # noqa: F401
 from sematic.db.tests.fixtures import (  # noqa: F401
     test_db,
     pg_mock,
@@ -16,6 +17,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
 )
 from sematic.db.queries import save_run
 from sematic.db.models.run import Run
+from sematic.calculator import func
 
 
 def test_list_runs_empty(test_client: flask.testing.FlaskClient):  # noqa: F811
@@ -134,3 +136,41 @@ def test_get_run_404(test_client: flask.testing.FlaskClient):  # noqa: F811
     payload = typing.cast(typing.Dict[str, typing.Any], payload)
 
     assert payload == dict(error="No runs with id 'unknownid'")
+
+
+@func
+def add(a: float, b: float) -> float:
+    return a + b
+
+
+@func
+def pipeline(a: float, b: float) -> float:
+    return add(add(a, b), b)
+
+
+@pytest.mark.parametrize(
+    "root, run_count, artifact_count, edge_count", ((0, 1, 3, 3), (1, 3, 4, 8))
+)
+def test_get_run_graph_endpoint(
+    root: int,
+    run_count: int,
+    artifact_count: int,
+    edge_count: int,
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_requests,  # noqa: F811
+):
+    future = pipeline(1, 2)
+    future.resolve()
+
+    response = test_client.get("/api/v1/runs/{}/graph?root={}".format(future.id, root))
+
+    assert response.status_code == 200
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert payload["run_id"] == future.id
+    assert len(payload["runs"]) == run_count
+    assert payload["runs"][0]["id"] == future.id
+    assert len(payload["artifacts"]) == artifact_count
+    assert len(payload["edges"]) == edge_count

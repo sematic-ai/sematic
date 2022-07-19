@@ -3,6 +3,7 @@ import io
 
 # Third-party
 import boto3
+import botocore.exceptions
 
 # Sematic
 from sematic.user_settings import get_user_settings, SettingsVar
@@ -35,6 +36,13 @@ def get(key: str) -> bytes:
 
     file_obj = io.BytesIO()
 
-    s3_client.download_fileobj(_get_bucket(), key, file_obj)
+    try:
+        s3_client.download_fileobj(_get_bucket(), key, file_obj)
+    except botocore.exceptions.ClientError as e:
+        # Standardizing "Not found" errors across storage backends
+        if "404" in str(e):
+            raise KeyError("{}: {}".format(key, str(e)))
+
+        raise e
 
     return file_obj.getvalue()

@@ -5,16 +5,15 @@ pytest_test(
         "//sematic:calculator",
         "//sematic:future",
         "//sematic/db/tests:fixtures",
-        "//sematic/api/tests:fixtures",
-    ]
+    ],
 )
 
 pytest_test(
     name = "test_future",
     srcs = ["test_future.py"],
     deps = [
-        "//sematic:calculator"
-    ]
+        "//sematic:calculator",
+    ],
 )
 
 pytest_test(
@@ -22,22 +21,22 @@ pytest_test(
     srcs = ["test_init.py"],
     deps = [
         "//sematic:init",
-    ]
+    ],
 )
 
 pytest_test(
     name = "test_user_settings",
     srcs = ["test_user_settings.py"],
     deps = [
-        "//sematic:user_settings",
         "//sematic:config",
-    ]
+        "//sematic:user_settings",
+    ],
 )
 
 sematic_py_lib(
     name = "fixtures",
     srcs = ["fixtures.py"],
     deps = [
-        "//sematic:storage"
-    ]
+        "//sematic:storage",
+    ],
 )

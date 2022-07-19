@@ -35,6 +35,7 @@ class LocalResolver(SilentResolver):
         self._runs: Dict[str, Run] = {}
         self._artifacts: Dict[str, Artifact] = {}
 
+        # Buffers for persistency
         self._buffer_edges: Dict[str, Edge] = {}
         self._buffer_runs: Dict[str, Run] = {}
         self._buffer_artifacts: Dict[str, Artifact] = {}
@@ -66,13 +67,11 @@ class LocalResolver(SilentResolver):
 
         edge_key = make_edge_key(edge)
 
-        existing_edge = self._edges.get(edge_key)
-        if existing_edge:
-            if existing_edge.artifact_id is None and artifact_id is not None:
-                existing_edge.artifact_id = artifact_id
-                self._add_edge(existing_edge)
-        else:
-            self._add_edge(edge)
+        edge = self._edges.get(edge_key, edge)
+        if edge.artifact_id is None and artifact_id is not None:
+            edge.artifact_id = artifact_id
+
+        self._add_edge(edge)
 
     def _get_input_edge(self, destination_run_id, destination_name) -> Optional[Edge]:
         """

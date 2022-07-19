@@ -8,7 +8,10 @@ import pytest
 from sematic.calculator import Calculator, func, _make_list, _convert_lists
 from sematic.future import Future
 from sematic.db.tests.fixtures import test_db  # noqa: F401
-from sematic.api.tests.fixtures import mock_requests, test_client  # noqa: F401
+from sematic.resolvers.resource_requirements import (
+    KubernetesResourceRequirements,
+    ResourceRequirements,
+)  # noqa: F401
 
 
 def test_decorator_no_params():
@@ -165,6 +168,7 @@ def test_convert_lists():
     result = _convert_lists([1, foo(), [2, bar()], 3, [4, [5, foo()]]])
 
     assert isinstance(result, Future)
+    assert result.props.inline is True
     assert len(result.kwargs) == 5
     assert (
         result.calculator.output_type
@@ -198,3 +202,34 @@ def test_convert_lists():
         3,
         [4, [5, "foo"]],
     ]
+
+
+def test_inline_default():
+    @func
+    def f():
+        pass
+
+    assert f._inline is True
+    assert f().props.inline is True
+
+
+def test_inline():
+    @func(inline=False)
+    def f():
+        pass
+
+    assert f._inline is False
+    assert f().props.inline is False
+
+
+def test_resource_requirements():
+    resource_requirements = ResourceRequirements(
+        kubernetes=KubernetesResourceRequirements(node_selector={"a": "b"})
+    )
+
+    @func(resource_requirements=resource_requirements)
+    def f():
+        pass
+
+    assert f._resource_requirements == resource_requirements
+    assert f().props.resource_requirements == resource_requirements
