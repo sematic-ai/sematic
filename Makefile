@@ -29,7 +29,7 @@ server-image:
 	docker build -t sematicai/sematic-server:dev .
 
 worker-image:
-	docker build -t sematicai/sematic-worker-base:latest -f sematic/resolvers/Dockerfile .
+	cd docker; docker build -t sematicai/sematic-worker-base:latest -f Dockerfile.worker .
 
 wheel:
 	rm -f bazel-bin/sematic/*.whl
@@ -45,5 +45,11 @@ release:
 	python3 -m twine upload bazel-bin/sematic/*.whl
 
 release-server:
-	docker build -t sematicai/sematic-server:${TAG} .
+	cd docker; docker build -t sematicai/sematic-server:${TAG} -f Dockerfile.server .
 	docker push sematicai/sematic-server:${TAG}
+
+test:
+	bazel test //sematic/... --test_tag_filters=nocov --test_output=all
+
+coverage:
+	bazel coverage //sematic/... --combined_report=lcov --test_tag_filters=cov --test_output=all
