@@ -93,7 +93,8 @@ jobs:
       - run:
           name: Link to codecov output
           command: ln -s $(bazel info output_path)/_coverage/_coverage_report.dat coverage.dat
-      - codecov/upload
+      - codecov/upload:
+          token: c5bcc995-87d0-43d8-a856-cc2a33ab3278
       - run:
           name: Build wheel
           command: make wheel
