@@ -70,7 +70,7 @@ register_toolchains("//:sematic_py_toolchain")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
-    name = "sematic",
+    name = "pip_dependencies",
     # Cannonical
     # python_interpreter_target = interpreter,
     # Hermetic
@@ -79,7 +79,7 @@ pip_parse(
     # pip_data_exclude = ["*.dist-info/*"],
 )
 
-load("@sematic//:requirements.bzl", "install_deps")
+load("@pip_dependencies//:requirements.bzl", "install_deps")
 
 install_deps()
 

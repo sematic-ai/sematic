@@ -82,7 +82,7 @@ jobs:
           command: bazel converage //sematic/... --test_output=all --combined_report=lcov
       - run:
           name: Link to codecov output
-          command: ln -s coverage.dat $(bazel info output_path)/_coverage/_coverage_report.dat
+          command: ln -s $(bazel info output_path)/_coverage/_coverage_report.dat coverage.dat
       - codecov/upload
       - run:
           name: Build wheel
