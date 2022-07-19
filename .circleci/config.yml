@@ -42,7 +42,7 @@ commands:
           command: sudo apt update && sudo apt install bazel
   install-java:
     description: Install JAVA JDK
-    step:
+    steps:
       - run:
         command: |
           sudo apt install default-jre default-jdk
