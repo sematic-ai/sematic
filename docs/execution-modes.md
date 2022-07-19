@@ -16,13 +16,13 @@ But when it comes to building your code, correctness of your type hints and
 syntax, and dependency packaging, Sematic can do a great deal to save you from a lot
 of wasted time.
 
-In Sematic, 
+In Sematic, how your pipelines execute is dictated by your choice of **Resolver**.
 
-Sematic provides the following execution stragegies:
+Sematic provides the following resolution strategies:
 
-## Silent execution
+## Silent resolution
 
-Silent execution runs your code locally (i.e. on your machine) and does not
+`SilentResolver` runs your code locally (i.e. on your machine) and does not
 write anything to the database. Your pipeline will not show up in the UI.
 
 This is useful for quick debugging in a Python console, or writing tests.
@@ -30,7 +30,8 @@ This is useful for quick debugging in a Python console, or writing tests.
 To use this mode, simply do:
 
 ```
->>> pipeline(...).resolve(tracking=False)
+>>> from sematic import SilentResolver
+>>> pipeline(...).resolve(SilentResolver())
 ```
 
 ## Local execution
