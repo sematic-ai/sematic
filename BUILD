@@ -1,5 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_runtime_pair")
 load("@//tools:stamp.bzl", "stamp_build_setting")
+load("@sematic//:requirements.bzl", "entry_point")
 
 py_runtime(
     name = "python3_runtime",
@@ -24,3 +25,9 @@ toolchain(
 exports_files(["README.rst"])
 
 stamp_build_setting(name = "stamp")
+
+alias(
+    name = "python_coverage_tools",
+    actual = entry_point("coverage"),
+    visibility = ["//visibility:public"],
+)

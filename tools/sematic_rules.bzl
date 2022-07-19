@@ -15,8 +15,11 @@ def pytest_test(name, srcs, deps = [], args = [], **kwargs):
         name = name,
         srcs = ["//tools:pytest_runner"] + srcs,
         main = "tools/pytest_runner.py",
-        deps = deps,
+        deps = deps + ["//:python_coverage_tools"],
         args = args + ["$(location :%s)" % x for x in srcs],
+        env = {
+            "PYTHON_COVERAGE": "$(location //:python_coverage_tools)",
+        },
         **kwargs
     )
 
@@ -40,6 +43,7 @@ def sematic_py_lib(name, srcs, deps, visibility = None, data = None):
             ":{0}".format(name),
             requirement("ipython"),
         ],
+        tags = ["manual"],
         data = data,
     )
 
@@ -81,5 +85,6 @@ def sematic_example(name, requirements = None, data = None):
             ":requirements",
             requirement("ipython"),
         ],
+        tags = ["manual"],
         data = data,
     )
