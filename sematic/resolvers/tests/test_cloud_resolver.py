@@ -22,7 +22,9 @@ def pipeline() -> float:
 
 
 @mock.patch("sematic.resolvers.cloud_resolver._schedule_job")
+@mock.patch("kubernetes.config.load_kube_config")
 def test_simulate_cloud_exec(
+    mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
@@ -41,7 +43,7 @@ def test_simulate_cloud_exec(
     mock_schedule_job.assert_called_once_with(
         future.id, "sematic-driver-{}".format(future.id), resolve=True
     )
-
+    mock_load_kube_config.assert_called_once()
     # In the driver job
 
     runs, artifacts, edges = api_client.get_graph(future.id)

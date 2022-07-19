@@ -23,7 +23,9 @@ def pipeline(a: float, b: float) -> float:
 
 
 @mock.patch("sematic.resolvers.cloud_resolver._schedule_job")
+@mock.patch("kubernetes.config.load_kube_config")
 def test_main(
+    mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
