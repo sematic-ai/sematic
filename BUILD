@@ -1,6 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_runtime_pair")
 load("@//tools:stamp.bzl", "stamp_build_setting")
-load("@sematic//:requirements.bzl", "entry_point")
+load("@pip_dependencies//:requirements.bzl", "entry_point")
 
 py_runtime(
     name = "python3_runtime",

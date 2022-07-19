@@ -3,7 +3,7 @@ This file gets loaded before every BUILD file
 """
 
 # @unused
-load("@sematic//:requirements.bzl", "requirement")
+load("@pip_dependencies//:requirements.bzl", "requirement")
 
 # @unused
 load(

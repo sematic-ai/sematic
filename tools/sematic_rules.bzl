@@ -8,7 +8,7 @@ load(
     "py_library",
     "py_test",
 )
-load("@sematic//:requirements.bzl", "requirement")
+load("@pip_dependencies//:requirements.bzl", "requirement")
 
 def pytest_test(name, srcs, deps = [], args = [], **kwargs):
     py_test(
