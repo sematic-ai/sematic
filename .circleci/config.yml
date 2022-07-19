@@ -44,9 +44,9 @@ commands:
     description: Install JAVA JDK
     steps:
       - run:
-        command: |
-          sudo apt install default-jre default-jdk
-          export JAVA_HOME=/usr/lib/jvm/default-java
+          command: |
+            sudo apt install default-jre default-jdk
+            export JAVA_HOME=/usr/lib/jvm/default-java
 
 
 # Define a job to be invoked later in a workflow.
