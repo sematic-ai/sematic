@@ -16,6 +16,8 @@ But when it comes to building your code, correctness of your type hints and
 syntax, and dependency packaging, Sematic can do a great deal to save you from a lot
 of wasted time.
 
+In Sematic, 
+
 Sematic provides the following execution stragegies:
 
 ## Silent execution

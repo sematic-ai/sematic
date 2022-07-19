@@ -79,7 +79,7 @@ jobs:
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
-          command: bazel converage //sematic/... --test_output=all --combined_report=lcov
+          command: bazel coverage //sematic/... --test_output=all --combined_report=lcov
       - run:
           name: Link to codecov output
           command: ln -s $(bazel info output_path)/_coverage/_coverage_report.dat coverage.dat
