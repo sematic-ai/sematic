@@ -40,6 +40,14 @@ commands:
       - run:
           name: Install Bazel from Apt
           command: sudo apt update && sudo apt install bazel
+  install-java:
+    description: Install JAVA JDK
+    step:
+      - run:
+        command: |
+          sudo apt install default-jre default-jdk
+          export JAVA_HOME=/usr/lib/jvm/default-java
+
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -61,6 +69,7 @@ jobs:
       # - install-postgres
       - checkout
       - setup-bazel
+      - install-java
       - python/install-packages:
           pkg-manager: pip
           app-dir: ~/project/requirements  # If you're requirements.txt isn't in the root directory.
