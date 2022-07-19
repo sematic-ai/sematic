@@ -101,6 +101,7 @@ def evaluate_model(
     """
     Evaluate the model.
     """
+    model = Net().to(device)
     results = test(model, device, test_loader)
     return EvaluationResults(
         test_set_size=len(test_loader.dataset),  # type: ignore
@@ -190,12 +191,10 @@ def scan_learning_rate(
     Train MNIST with a number of training configurations and extract the one with the
     best accuracy.
     """
-    train_dataset = load_mnist_dataset(train=True).set(
-        name="Load train dataset", tags=["train"]
-    )
-    test_dataset = load_mnist_dataset(train=False).set(
-        name="Load test dataset", tags=["test"]
-    )
+    train_dataset = load_mnist_dataset(train=True).set(name="Load train dataset")
+
+    test_dataset = load_mnist_dataset(train=False).set(name="Load test dataset")
+
     train_dataloader = get_dataloader(dataset=train_dataset, config=dataloader_config)
 
     test_dataloader = get_dataloader(dataset=test_dataset, config=dataloader_config)
