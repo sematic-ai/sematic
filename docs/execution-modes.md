@@ -34,9 +34,9 @@ To use this mode, simply do:
 >>> pipeline(...).resolve(SilentResolver())
 ```
 
-## Local execution
+## Local resolution
 
-This is the default mode. Your pipeline still runs on your local machine, but
+`LocalResolver` is the default resolver. Your pipeline still runs on your local machine, but
 tracks execution in Sematic's database. Your pipeline's runs and artifacts are
 visualizable in the UI.
 
@@ -52,12 +52,14 @@ Out of the box, Sematic writes to a local database sitting on your local machine
 and the UI also runs in a local server.
 
 To be able to share results with your team, it is best to deploy Sematic in your
-cloud infrastructure. See [Deploy Sematic](./coming-soon.md).
+cloud infrastructure. See [Deploy Sematic](./deploy.md).
 
 
 {% endhint %}
 
-## Cloud execution
+## Cloud resolution
+
+With `CloudResolver`
 
 {% hint style="warning" %}
 

@@ -15,11 +15,22 @@ def pytest_test(name, srcs, deps = [], args = [], **kwargs):
         name = name,
         srcs = ["//tools:pytest_runner"] + srcs,
         main = "tools/pytest_runner.py",
+        deps = deps,
+        args = args + ["$(location :%s)" % x for x in srcs],
+        tags = ["nocov"],
+        **kwargs
+    )
+
+    py_test(
+        name = "{}_coverage".format(name),
+        srcs = ["//tools:pytest_runner"] + srcs,
+        main = "tools/pytest_runner.py",
         deps = deps + ["//:python_coverage_tools"],
         args = args + ["$(location :%s)" % x for x in srcs],
         env = {
             "PYTHON_COVERAGE": "$(location //:python_coverage_tools)",
         },
+        tags = ["cov"],
         **kwargs
     )
 
