@@ -50,7 +50,7 @@ def value_to_json_encodable(value: typing.Any, type_: typing.Any) -> typing.Any:
         return value
     except Exception:
         # Otherwise we pickle by default
-        return binary_to_string(cloudpickle.dumps(value))
+        return {"pickle": binary_to_string(cloudpickle.dumps(value))}
 
 
 def value_from_json_encodable(
@@ -71,14 +71,13 @@ def value_from_json_encodable(
     if from_json_encodable_func is not None:
         return from_json_encodable_func(json_encodable, type_)
 
-    # Otherwise we default
-    try:
-        # Is this a pickle payload?
-        return cloudpickle.loads(binary_from_string(json_encodable))
-    except Exception:
-        # If not the raw value must have already been
-        # JSON encodable
-        return json_encodable
+    # If this is a pickled payload
+    if isinstance(json_encodable, typing.Mapping) and set(json_encodable) == {"pickle"}:
+        return cloudpickle.loads(binary_from_string(json_encodable["pickle"]))
+
+    # If not the raw value must have already been
+    # JSON encodable
+    return json_encodable
 
 
 def binary_to_string(binary: bytes) -> str:

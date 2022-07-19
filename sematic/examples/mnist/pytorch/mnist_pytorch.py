@@ -45,10 +45,6 @@ def main():
         for learning_rate in learning_rates
     ]
 
-    # pipeline(PIPELINE_CONFIG).set(
-    #    name="PyTorch MNIST Example", tags=["pytorch", "example", "mnist"]
-    # ).resolve(CloudResolver(detach=False))
-
     scan_learning_rate(
         dataloader_config=DataLoaderConfig(), train_configs=train_configs
     ).set(name="Scan MNIST learning rates").resolve(CloudResolver(detach=args.detach))
