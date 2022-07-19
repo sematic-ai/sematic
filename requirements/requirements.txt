@@ -44,6 +44,8 @@ click==8.1.3
     #   flask
 cloudpickle==2.0.0
     # via -r requirements/requirements.in
+coverage @ git+https://github.com/ulfjack/coveragepy.git@lcov-support
+    # via -r requirements/requirements.in
 cryptography==36.0.2
     # via
     #   pyopenssl

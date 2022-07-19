@@ -55,6 +55,7 @@ def sematic_pipeline(
         name = "{}_local".format(name),
         main = "{}.py".format(name),
         srcs = ["{}.py".format(name)],
+        tags = ["manual"],
         deps = deps,
     )
 
