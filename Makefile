@@ -19,9 +19,6 @@ pre-commit:
 refresh-dependencies:
 	pip-compile --allow-unsafe requirements/requirements.in
 
-test:
-	bazel test //sematic/... --test_output=all
-
 ui:
 	cd sematic/ui; npm run build
 
