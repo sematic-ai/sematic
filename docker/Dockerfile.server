@@ -1,0 +1,17 @@
+# Dockerfile for the API server
+# Ideally we would do this via Bazel instead but the py3_image rules
+# are currently broken for M1 Macs
+
+# see https://stackoverflow.com/questions/65612411/forcing-docker-to-use-linux-amd64-platform-by-default-on-macos/69636473#69636473
+# for why --platform
+FROM --platform=linux/amd64 python:3.9-bullseye
+
+RUN python3 -m pip install --upgrade pip
+
+RUN pip install sematic
+# When debugging use the wheel directly
+# COPY sematic-*.whl .
+# RUN pip install sematic-*.whl
+
+EXPOSE 80
+CMD python3 -m sematic.db.migrate --env cloud; python3 -m sematic.api.server --env cloud
