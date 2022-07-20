@@ -30,6 +30,22 @@ logger = logging.getLogger(__name__)
 
 
 class CloudResolver(LocalResolver):
+    """
+    Resolves a pipeline on a Kubernetes cluster.
+
+    Parameters
+    ----------
+    detach: Optional[bool]
+        Defaults to `True`.
+
+        When `True`, the driver job will run on the remote cluster. This is the so
+        called `fire-and-forget` mode. The shell prompt will return as soon as
+        the driver job as been submitted.
+
+        When `False`, the driver job runs on the local machine. The shell prompt
+        will return when the entire pipeline has completed.
+    """
+
     def __init__(self, detach: bool = True):
         super().__init__(detach=detach)
 
