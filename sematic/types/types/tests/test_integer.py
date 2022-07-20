@@ -4,6 +4,7 @@ import pytest
 # Sematic
 from sematic.types.casting import safe_cast, can_cast_type
 from sematic.types.serialization import (
+    type_from_json_encodable,
     value_from_json_encodable,
     value_to_json_encodable,
     type_to_json_encodable,
@@ -55,3 +56,8 @@ def test_type_to_json_encodable():
         "type": ("builtin", "int", {}),
         "registry": {"int": []},
     }
+
+
+def test_type_from_json_encodable():
+    json_encodable = type_to_json_encodable(int)
+    assert type_from_json_encodable(json_encodable) is int

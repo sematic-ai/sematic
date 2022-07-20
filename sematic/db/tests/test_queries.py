@@ -1,7 +1,12 @@
+# Third-party
+import pytest
+
 # Sematic
 from sematic.db.queries import (
     count_runs,
+    get_root_graph,
     get_run,
+    get_run_graph,
     save_run,
 )
 from sematic.db.models.run import Run
@@ -12,6 +17,8 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     persisted_run,
 )
+from sematic.calculator import func
+from sematic.api.tests.fixtures import mock_requests, test_client  # noqa: F401
 
 
 def test_count_runs(test_db, run: Run):  # noqa: F811
@@ -41,3 +48,34 @@ def test_save_run(test_db, persisted_run: Run):  # noqa: F811
     fetched_run = get_run(persisted_run.id)
     assert fetched_run.name == "New Name"
     assert fetched_run.updated_at > old_updated_at
+
+
+@func
+def add(a: float, b: float) -> float:
+    return a + b
+
+
+@func
+def pipeline(a: float, b: float) -> float:
+    return add(add(a, b), b)
+
+
+@pytest.mark.parametrize(
+    "fn, run_count, artifact_count, edge_count",
+    ((get_run_graph, 1, 3, 3), (get_root_graph, 3, 4, 8)),
+)
+def test_get_run_graph(
+    fn,
+    run_count: int,
+    artifact_count: int,
+    edge_count: int,
+    mock_requests,  # noqa: F811
+):
+    future = pipeline(1, 2)
+    future.resolve()
+
+    runs, artifacts, edges = fn(future.id)
+
+    assert len(runs) == run_count
+    assert len(artifacts) == artifact_count
+    assert len(edges) == edge_count

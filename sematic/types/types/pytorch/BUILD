@@ -3,7 +3,8 @@ sematic_py_lib(
     srcs = ["__init__.py"],
     deps = [
         ":dataloader",
-    ]
+        ":module",
+    ],
 )
 
 sematic_py_lib(
@@ -15,5 +16,18 @@ sematic_py_lib(
         # DO NOT ADD torch HERE
         # This code path is activated in init only if
         # torch is available
-    ]
+    ],
+)
+
+sematic_py_lib(
+    name = "module",
+    srcs = ["module.py"],
+    deps = [
+        "//sematic/types:registry",
+        "//sematic/types:serialization",
+        requirement("cloudpickle"),
+        # DO NOT ADD torch HERE
+        # This code path is activated in init only if
+        # torch is available
+    ],
 )

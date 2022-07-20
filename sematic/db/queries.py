@@ -7,6 +7,7 @@ from typing import List, Set, Tuple
 # Third-party
 import sqlalchemy
 import sqlalchemy.orm
+from sqlalchemy.sql.elements import ColumnElement
 
 # Sematic
 from sematic.db.models.artifact import Artifact
@@ -88,12 +89,35 @@ def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
         session.commit()
 
 
-def get_graph(root_id: str) -> Tuple[List[Run], List[Artifact], List[Edge]]:
+Graph = Tuple[List[Run], List[Artifact], List[Edge]]
+
+
+def get_run_graph(run_id: str) -> Graph:
     """
-    Retrieve the entire graph for a given root run ID.
+    Get run graph.
+
+    This will return the run's direct graph, meaning
+    only edges directly connected to it, and their corresponding artifacts.
+    """
+    return _get_graph(Run.id == run_id)
+
+
+def get_root_graph(root_id: str) -> Graph:
+    """
+    Get entire graph for root_id.
+
+    This will return the entire graph for a given root_id.
+    """
+    return _get_graph(Run.root_id == root_id)
+
+
+def _get_graph(run_predicate: ColumnElement) -> Graph:
+    """
+    Retrieve the graph for a run predicate
+    (e.g. Run.root_id == root_id, or Run.id == run_id)
     """
     with db().get_session() as session:
-        runs: List[Run] = session.query(Run).filter(Run.root_id == root_id).all()
+        runs: List[Run] = session.query(Run).filter(run_predicate).all()
         run_ids = [run.id for run in runs]
         edges: List[Edge] = (
             session.query(Edge)
@@ -105,7 +129,9 @@ def get_graph(root_id: str) -> Tuple[List[Run], List[Artifact], List[Edge]]:
             )
             .all()
         )
-        artifact_ids = {edge.artifact_id for edge in edges}
+        artifact_ids = {
+            edge.artifact_id for edge in edges if edge.artifact_id is not None
+        }
         artifacts: List[Artifact] = (
             session.query(Artifact).filter(Artifact.id.in_(artifact_ids)).all()
         )
@@ -142,7 +168,11 @@ def delete_note(note: Note):
         session.commit()
 
 
-def get_root_graph(root_run_id: str) -> Tuple[Set[Run], Set[Edge], Set[Artifact]]:
+# DO NOT USE
+# This query is more optimal than the one in `get_graph` (single query)
+# but has corner cases when some runs have no edges or artifacts
+# Use `get_graph` instead
+def _get_root_graph(root_run_id: str) -> Tuple[Set[Run], Set[Edge], Set[Artifact]]:
     with db().get_session() as session:
         results = (
             session.query(Run, Edge, Artifact)

@@ -11,6 +11,7 @@ orbs:
   # See the orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
   python: circleci/python@1.5.0
   slack: circleci/slack@4.9.3
+  codecov: codecov/codecov@3.2.3
 
 commands:
   install-postgres:
@@ -39,6 +40,14 @@ commands:
       - run:
           name: Install Bazel from Apt
           command: sudo apt update && sudo apt install bazel
+  install-java:
+    description: Install JAVA JDK
+    steps:
+      - run:
+          command: |
+            sudo apt install default-jre default-jdk
+            export JAVA_HOME=/usr/lib/jvm/default-java
+
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -50,7 +59,8 @@ jobs:
     # The executor is the environment in which the steps below will be executed - below will use a python 3.10.2 container
     # Change the version below to your required version of python
     docker:
-      - image: cimg/python:3.9.10
+      - image: sematicai/sematic-ci:latest
+    #  - image: cimg/python:3.9.10
     # Checkout the code as the first step. This is a dedicated CircleCI step.
     # The python orb's install-packages step will install the dependencies from a Pipfile via Pipenv by default.
     # Here we're making sure we use just use the system-wide pip. By default it uses the project root's requirements.txt.
@@ -59,7 +69,8 @@ jobs:
     steps:
       # - install-postgres
       - checkout
-      - setup-bazel
+      #- setup-bazel
+      #- install-java
       - python/install-packages:
           pkg-manager: pip
           app-dir: ~/project/requirements  # If you're requirements.txt isn't in the root directory.
@@ -78,7 +89,11 @@ jobs:
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
-          command: bazel test //sematic/... --test_output=all
+          command: bazel coverage //sematic/... --test_output=all --combined_report=lcov --test_tag_filters=cov
+      - run:
+          name: Link to codecov output
+          command: ln -s $(bazel info output_path)/_coverage/_coverage_report.dat coverage.dat
+      - codecov/upload
       - run:
           name: Build wheel
           command: make wheel
