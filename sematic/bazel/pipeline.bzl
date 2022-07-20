@@ -1,12 +1,13 @@
 load(
     "@io_bazel_rules_docker//python3:image.bzl",
     "py3_image",
-    "repositories",
 )
 load("@io_bazel_rules_docker//container:push.bzl", "container_push")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@io_bazel_rules_docker//container:providers.bzl", "PushInfo")
 load("@io_bazel_rules_docker//container:pull.bzl", "container_pull")
+load("@rules_python//python:pip.bzl", "pip_install")
+load("@python3_9//:defs.bzl", "interpreter")
 
 def sematic_pipeline(
         name,
@@ -111,8 +112,6 @@ container_push_at_build = rule(
 )
 
 def base_images():
-    repositories()
-
     container_pull(
         name = "python_39",
         digest = "sha256:4169ae884e9e7d9bd6d005d82fc8682e7d34b7b962ee7c2ad59c42480657cb1d",

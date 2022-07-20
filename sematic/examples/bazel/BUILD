@@ -1,4 +1,4 @@
-load("//tools:sematic_pipeline.bzl", "sematic_pipeline")
+load("//bazel:pipeline.bzl", "sematic_pipeline")
 
 sematic_py_lib(
     name = "bazel_lib",

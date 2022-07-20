@@ -62,6 +62,7 @@ sematic_py_lib(
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
         "//sematic/resolvers:cloud_resolver",
+        requirement("cloudpickle"),
     ],
 )
 
