@@ -134,7 +134,7 @@ sematic_py_wheel(
         # how to fix versions
         "eventlet==0.30.2",
     ],
-    version = "0.5.0",  #+{BUILD_TIMESTAMP}",
+    version = "0.6.0-beta",  #+{BUILD_TIMESTAMP}",
     visibility = ["//visibility:public"],
     deps = [
         "//sematic:init",
