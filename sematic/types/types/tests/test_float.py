@@ -3,7 +3,7 @@ import pytest
 
 # Sematic
 from sematic.types.casting import safe_cast, can_cast_type
-from sematic.types.serialization import type_to_json_encodable
+from sematic.types.serialization import type_to_json_encodable, type_from_json_encodable
 
 
 @pytest.mark.parametrize(
@@ -32,3 +32,8 @@ def test_type_to_json_encodable():
         "type": ("builtin", "float", {}),
         "registry": {"float": []},
     }
+
+
+def test_type_from_json_encodable():
+    json_encodable = type_to_json_encodable(float)
+    assert type_from_json_encodable(json_encodable) is float

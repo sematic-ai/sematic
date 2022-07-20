@@ -16,11 +16,13 @@ But when it comes to building your code, correctness of your type hints and
 syntax, and dependency packaging, Sematic can do a great deal to save you from a lot
 of wasted time.
 
-Sematic provides the following execution stragegies:
+In Sematic, how your pipelines execute is dictated by your choice of **Resolver**.
 
-## Silent execution
+Sematic provides the following resolution strategies:
 
-Silent execution runs your code locally (i.e. on your machine) and does not
+## Silent resolution
+
+`SilentResolver` runs your code locally (i.e. on your machine) and does not
 write anything to the database. Your pipeline will not show up in the UI.
 
 This is useful for quick debugging in a Python console, or writing tests.
@@ -28,12 +30,13 @@ This is useful for quick debugging in a Python console, or writing tests.
 To use this mode, simply do:
 
 ```
->>> pipeline(...).resolve(tracking=False)
+>>> from sematic import SilentResolver
+>>> pipeline(...).resolve(SilentResolver())
 ```
 
-## Local execution
+## Local resolution
 
-This is the default mode. Your pipeline still runs on your local machine, but
+`LocalResolver` is the default resolver. Your pipeline still runs on your local machine, but
 tracks execution in Sematic's database. Your pipeline's runs and artifacts are
 visualizable in the UI.
 
@@ -49,12 +52,14 @@ Out of the box, Sematic writes to a local database sitting on your local machine
 and the UI also runs in a local server.
 
 To be able to share results with your team, it is best to deploy Sematic in your
-cloud infrastructure. See [Deploy Sematic](./coming-soon.md).
+cloud infrastructure. See [Deploy Sematic](./deploy.md).
 
 
 {% endhint %}
 
-## Cloud execution
+## Cloud resolution
+
+With `CloudResolver`
 
 {% hint style="warning" %}
 

@@ -12,7 +12,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
 from sematic.resolvers.local_resolver import LocalResolver
 from sematic.db.tests.fixtures import test_db, pg_mock  # noqa: F401
-from sematic.db.queries import get_graph
+from sematic.db.queries import get_root_graph
 
 
 @func
@@ -39,7 +39,7 @@ def test_single_function(test_db, mock_requests):  # noqa: F811
 
     assert result == 3
 
-    runs, artifacts, edges = get_graph(future.id)
+    runs, artifacts, edges = get_root_graph(future.id)
 
     assert len(runs) == 1
     assert len(artifacts) == 3
@@ -88,7 +88,7 @@ def test_add_add(test_db, mock_requests):  # noqa: F811
 
     assert result == 7
 
-    runs, artifacts, edges = get_graph(future.id)
+    runs, artifacts, edges = get_root_graph(future.id)
 
     assert len(runs) == 4
     assert len(artifacts) == 5
@@ -104,7 +104,7 @@ def test_pipeline(test_db, mock_requests):  # noqa: F811
     assert isinstance(result, float)
     assert future.state == FutureState.RESOLVED
 
-    runs, artifacts, edges = get_graph(future.id)
+    runs, artifacts, edges = get_root_graph(future.id)
 
     assert len(runs) == 6
     assert len(artifacts) == 5

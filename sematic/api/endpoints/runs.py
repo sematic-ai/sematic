@@ -20,7 +20,7 @@ from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
-from sematic.db.queries import get_root_graph, get_run, save_graph
+from sematic.db.queries import get_root_graph, get_run, save_graph, get_run_graph
 from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
@@ -176,14 +176,17 @@ def get_run_endpoint(run_id: str) -> flask.Response:
 
 
 @sematic_api.route("/api/v1/runs/<run_id>/graph", methods=["GET"])
-def get_run_graph(run_id: str) -> flask.Response:
+def get_run_graph_endpoint(run_id: str) -> flask.Response:
     """
-    Retrieve graph objects for root run with id `run_id`.
+    Retrieve graph objects for run with id `run_id`.
+
+    This will return the run's direct graph, meaning
+    only edges directly connected to it, and their corresponding artifacts.
 
     Response
     --------
-    root_id: str
-        ID of root run
+    run_id: str
+        ID passed in request
     runs: List[Run]
         Unique runs in the graph
     edges: List[Edge]
@@ -191,10 +194,13 @@ def get_run_graph(run_id: str) -> flask.Response:
     artifacts: List[Artifact]
         Unique artifacts in the graph
     """
-    runs, edges, artifacts = get_root_graph(run_id)
+    root = bool(int(flask.request.args.get("root", "0")))
 
+    get_graph_fn = get_root_graph if root else get_run_graph
+
+    runs, artifacts, edges = get_graph_fn(run_id)
     payload = dict(
-        root_id=run_id,
+        run_id=run_id,
         runs=[run.to_json_encodable() for run in runs],
         edges=[edge.to_json_encodable() for edge in edges],
         artifacts=[artifact.to_json_encodable() for artifact in artifacts],

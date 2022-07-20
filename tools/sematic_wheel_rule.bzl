@@ -25,7 +25,7 @@ in sync that way.
 """
 
 load("@rules_python//python:packaging.bzl", "PyWheelInfo")
-load("@//tools:stamp.bzl", "is_stamping_enabled")
+load("//tools:stamp.bzl", "is_stamping_enabled")
 
 def _path_inside_wheel(input_file):
     # input_file.short_path is sometimes relative ("../${repository_root}/foobar")
@@ -95,12 +95,13 @@ def _sematic_py_wheel_impl(ctx):
 
         if "dist-info/METADATA" in file_path:
             depedency_name = file_path.split(".dist-info")[0].split("-")[0].replace("_", "-")
+
             # Making sure we don't override requires passed manually
             already_in = False
             for require in requires:
                 if require.startswith(depedency_name):
                     already_in = True
-            
+
             if not already_in:
                 requires.append(depedency_name)
 

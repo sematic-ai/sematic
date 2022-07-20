@@ -1,6 +1,12 @@
+# Standard library
+import logging
+
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
+
+
+logger = logging.getLogger(__name__)
 
 
 class SilentResolver(StateMachineResolver):

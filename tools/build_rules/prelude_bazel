@@ -3,11 +3,11 @@ This file gets loaded before every BUILD file
 """
 
 # @unused
-load("@sematic//:requirements.bzl", "requirement")
+load("@pip_dependencies//:requirements.bzl", "requirement")
 
 # @unused
 load(
-    "@//tools:sematic_rules.bzl",
+    "//tools:sematic_rules.bzl",
     "pytest_test",
     "sematic_py_lib",
     "sematic_example",
@@ -15,6 +15,6 @@ load(
 
 # @unused
 load(
-    "@//tools:sematic_wheel_rule.bzl",
+    "//tools:sematic_wheel_rule.bzl",
     "sematic_py_wheel",
 )

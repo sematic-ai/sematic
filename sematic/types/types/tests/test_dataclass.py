@@ -6,7 +6,12 @@ import pytest
 
 # Sematic
 from sematic.types.casting import can_cast_type, safe_cast
-from sematic.types.serialization import type_to_json_encodable
+from sematic.types.serialization import (
+    type_from_json_encodable,
+    type_to_json_encodable,
+    value_from_json_encodable,
+    value_to_json_encodable,
+)
 
 
 @dataclass
@@ -162,3 +167,37 @@ def test_type_to_json_encodable_subclass():
             "float": [],
         },
     }
+
+
+@dataclass
+class F:
+    a: A
+    b: B
+    c: C
+    d: D
+    e: E
+    dd: DD
+
+
+@pytest.mark.parametrize(
+    "type_",
+    (A, B, C, D, E, DD, F),
+)
+def test_type_from_json_encodable(type_):
+    json_encodable = type_to_json_encodable(type_)
+    assert type_from_json_encodable(json_encodable) is type_
+
+
+def test_serialization():
+    value = F(
+        a=A(a=1),
+        b=B(a=2.1, b="b"),
+        c=C(a="a"),
+        d=D(a=3, d=4.5),
+        e=E(a=5.6),
+        dd=DD(a=7, d=8.9),
+    )
+
+    json_encodable = value_to_json_encodable(value, F)
+
+    assert value_from_json_encodable(json_encodable, F) == value

@@ -15,8 +15,8 @@ def test_set():
     f = future.set(name="some name", tags=["tag1", "tag2"])
 
     assert f.id == future.id
-    assert f.name == "some name"
-    assert f.tags == ["tag1", "tag2"]
+    assert f.props.name == "some name"
+    assert f.props.tags == ["tag1", "tag2"]
 
 
 def test_set_validate_name():

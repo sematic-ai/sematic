@@ -1,6 +1,6 @@
 # Sematic
 from sematic.types.casting import safe_cast, can_cast_type
-from sematic.types.serialization import type_to_json_encodable
+from sematic.types.serialization import type_from_json_encodable, type_to_json_encodable
 
 
 def test_safe_cast():
@@ -21,3 +21,8 @@ def test_type_to_json_encodable():
         "type": ("builtin", "NoneType", {}),
         "registry": {"NoneType": []},
     }
+
+
+def test_type_from_json_encodable():
+    json_encodable = type_to_json_encodable(type(None))
+    assert type_from_json_encodable(json_encodable) is type(None)  # noqa: E721

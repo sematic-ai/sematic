@@ -44,6 +44,7 @@ def mock_requests(test_client):
             environ["CONTENT_LENGTH"] = request.headers["Content-Length"]
 
         response = test_client.open(environ)
+
         return response.status_code, dict(response.headers), response.data
 
     api_url = get_config().api_url
