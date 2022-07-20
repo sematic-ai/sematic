@@ -1,4 +1,4 @@
-from sematic.resolvers.worker import main, _get_args
+from sematic.resolvers.worker import main, parse_args
 
 if __name__ == "__main__":
-    main(**_get_args())
+    main(**vars(parse_args()))

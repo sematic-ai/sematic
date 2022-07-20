@@ -31,7 +31,7 @@ from sematic.resolvers.cloud_resolver import (
 import sematic.storage as storage
 
 
-def _get_args():
+def parse_args():
     """
     Get worker CLI arguments, passed to image by K8s job.
     """
@@ -173,7 +173,7 @@ def main(run_id: str, resolve: bool):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
-    args = _get_args()
+    args = parse_args()
 
     logger.info("Worker CLI args: run_id=%s", args.run_id)
     logger.info("Worker CLI args:  resolve=%s", args.resolve)
