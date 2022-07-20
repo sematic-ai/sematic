@@ -1,11 +1,4 @@
 # Standard library
-import sys
-import os
-
-# print(os.environ)
-# print(sys.executable)
-# os.environ["PYTHONHOME"] = "/".join(os.path.realpath(sys.executable).split("/")[:-2])
-
 import argparse
 import datetime
 import importlib
