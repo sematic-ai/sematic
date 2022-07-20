@@ -31,8 +31,8 @@ py_library(
 
 sematic_pipeline(
     name = "mnist_pytorch",
+    dev = True,
     registry = "558717131297.dkr.ecr.us-west-2.amazonaws.com",
-    repository = "sematic-dev",
     deps = [
         ":mnist_pytorch_lib",
     ],
