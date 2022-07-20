@@ -1,15 +1,16 @@
+"""
+The sematic_pipeline Bazel macro.
+"""
+
 load(
     "@io_bazel_rules_docker//python3:image.bzl",
     "py3_image",
-)
-load("@io_bazel_rules_docker//container:push.bzl", "container_push")
-load("@rules_python//python:defs.bzl", "py_binary")
-load("@io_bazel_rules_docker//container:providers.bzl", "PushInfo")
-load("@io_bazel_rules_docker//container:pull.bzl", "container_pull")
-load(
-    "@io_bazel_rules_docker//python3:image.bzl",
     "repositories",
 )
+load("@io_bazel_rules_docker//container:push.bzl", "container_push")
+load("@io_bazel_rules_docker//container:providers.bzl", "PushInfo")
+load("@io_bazel_rules_docker//container:pull.bzl", "container_pull")
+load("@rules_python//python:defs.bzl", "py_binary")
 
 def sematic_pipeline(
         name,
@@ -17,10 +18,38 @@ def sematic_pipeline(
         registry,
         repository = None,
         data = None,
-        base = "@sematic-worker-base//image",
+        base = "@sematic-worker-cuda//image",
         env = None,
         dev = False):
-    """docstring"""
+    """
+    A Bazel rule to run a Sematic pipeline.
+
+    Invoking this target will package the entry point (<name>.py) and
+    dependencies into a container image, register it to a remote registry, and
+    execute the entry point.
+
+    The `<name>_local` image skips all the container packaging and registration
+    and simply runs the entry point.
+
+    Args:
+        name: name of the target
+
+        deps: list of dependencies
+
+        registry: URI of the container registry to use to register
+            the container image
+
+        repository: container repository for the image
+
+        data: data files to add to the image
+
+        base: label of the base image to use.
+
+        env: mapping of environment variables to set in the container
+
+        dev: For Sematic dev only. switch between using worker in the installed
+        wheel or in the current repo.
+    """
     if dev:
         py3_image(
             name = "{}_image".format(name),
