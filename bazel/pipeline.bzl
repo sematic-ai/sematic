@@ -16,19 +16,33 @@ def sematic_pipeline(
         repository = None,
         data = None,
         base = "@sematic-worker-base//image",
-        env = None):
+        env = None,
+        dev = False):
     """docstring"""
-    py3_image(
-        name = "{}_image".format(name),
-        main = "@sematic//sematic/resolvers:worker.py",
-        srcs = ["@sematic//sematic/resolvers:worker.py"],
-        data = data,
-        deps = deps + ["@sematic//sematic/resolvers:worker"],
-        visibility = ["//visibility:public"],
-        base = base,
-        env = env or {},
-        tags = ["manual"],
-    )
+    if dev:
+        py3_image(
+            name = "{}_image".format(name),
+            main = "@sematic//sematic/resolvers:worker.py",
+            srcs = ["@sematic//sematic/resolvers:worker.py"],
+            data = data,
+            deps = deps + ["@sematic//sematic/resolvers:worker"],
+            visibility = ["//visibility:public"],
+            base = base,
+            env = env or {},
+            tags = ["manual"],
+        )
+    else:
+        py3_image(
+            name = "{}_image".format(name),
+            main = "@sematic//bazel:worker.py",
+            main = ["@sematic//bazel:worker.py"],
+            data = data,
+            deps = deps,
+            visibility = ["//visibility:public"],
+            base = base,
+            env = env or {},
+            tags = ["manual"],
+        )
 
     container_push(
         name = "{}_push".format(name),
