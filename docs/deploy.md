@@ -53,3 +53,102 @@ execution coming soon). In order to write metadata to the deployed API, simply d
 ```shell
 $ sematic settings set SEMATIC_API_ADDRESS http://my-remote-server.dev
 ```
+
+## Run pipelines in your cloud
+
+In order to benefit from cloud resources (e.g. GPUs, high memory, etc.), Sematic
+lets you run pipelines in a Kubernetes cluster.
+
+{% hint style="warning" %}
+
+In theory Sematic can run in any cloud provider. However at this time, Sematic
+focuses support on **Amazon Web Services**. Other providers to follow soon.
+
+{% endhint %}
+
+In order to do so, the following must be true:
+
+* The Sematic web app is deployed. See [Deploy the web app](#deploy-the-web-app).
+
+* You have a Kubernetes cluster and have permissions to submit jobs to it.
+
+* You have an S3 bucket and you and nodes in your Kubernetes cluster have read
+  and write permissions to it.
+
+* You have a container registry (e.g. AWS Elastic Container Registry) and you
+  have write access, and nodes in yout Kubernetes cluster have read access to
+  it.
+
+When you are set, the following settings should be visible to Sematic
+
+```
+$ sematic settings show
+Active settings:
+
+AWS_S3_BUCKET: <bucket-name>
+KUBERNETES_NAMESPACE: <namespace>
+SEMATIC_API_ADDRESS: <web-app-server-address>
+```
+
+
+### Kubernetes setup
+
+Assuming you have
+
+* a Kubernetes cluster instantiated in your cloud,
+
+* have the [AWS CLI
+  installed](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+  on your machine,
+
+* have [`kubectl`
+installed](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/) on
+your machine,
+
+you can generate the Kube config for your cluster with
+
+```
+$ aws eks update-kubeconfig --region <region> --name <cluster-name>
+```
+
+then verify that everything is set up correctly with
+
+```
+$ kubectl get svc
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   172.20.0.1   <none>        443/TCP   14d
+```
+
+Select the relevant namespace with
+```
+$ kubectl config set-context --current --namespace=<namespace>
+```
+
+then set this namespace in Sematic settings with
+```
+$ sematic settings set KUBERNETES_NAMESPACE <namespace>
+```
+
+### Cloud storage bucket
+
+Once you have created an S3 bucket, make sure your Kubernetes cluster's node
+groups' IAM role has the following policy:
+
+```
+arn:aws:iam::aws:policy/AmazonS3FullAccess
+```
+
+then set the name of your bucket in your Sematic settings:
+
+```
+$ sematic settings set AWS_S3_BUCKET <bucket-name>
+```
+
+### Container registry
+
+Make sure you have [Docker installed](https://docs.docker.com/engine/install/)
+on your machine, then authenticate with your container registry with
+
+```
+$ aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <aws-account-id>.dkr.ecr.<region>.amazonaws.com
+```

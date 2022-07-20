@@ -1,3 +1,6 @@
+* 0.6.0
+    * [feature] Cloud execution with `CloudResolver`
+    * [feature] Dependency packaging with the `sematic_pipeline` Bazel wheel
 * 0.5.1
     * [bugfix] Fix JSON summary of Pandas dataframes with timestamp fields
 * 0.5.0
