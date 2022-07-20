@@ -113,7 +113,7 @@ def _get_value_sha1_digest(
         "summary": json_summary,
         # Should there be some sort of type versioning concept here?
     }
-    string = _fix_nan_inf(json.dumps(payload, sort_keys=True))
+    string = _fix_nan_inf(json.dumps(payload, sort_keys=True, default=str))
     return get_str_sha1_digest(string)
 
 
