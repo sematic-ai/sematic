@@ -39,15 +39,15 @@ def sematic_pipeline(
         registry: URI of the container registry to use to register
             the container image
 
-        repository: container repository for the image
+        repository: (optional) container repository for the image
 
-        data: data files to add to the image
+        data: (optional) data files to add to the image
 
-        base: label of the base image to use.
+        base: (optional) label of the base image to use.
 
-        env: mapping of environment variables to set in the container
+        env: (optional) mapping of environment variables to set in the container
 
-        dev: For Sematic dev only. switch between using worker in the installed
+        dev: (optional) For Sematic dev only. switch between using worker in the installed
         wheel or in the current repo.
     """
     if dev:
@@ -79,7 +79,7 @@ def sematic_pipeline(
         name = "{}_push".format(name),
         image = "{}_image".format(name),
         registry = registry,
-        repository = repository or "sematic",
+        repository = repository or "sematic-dev",
         tag = name,
         format = "Docker",
         tags = ["manual"],
