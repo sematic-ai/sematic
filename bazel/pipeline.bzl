@@ -35,7 +35,7 @@ def sematic_pipeline(
         py3_image(
             name = "{}_image".format(name),
             main = "@sematic//bazel:worker.py",
-            main = ["@sematic//bazel:worker.py"],
+            srcs = ["@sematic//bazel:worker.py"],
             data = data,
             deps = deps,
             visibility = ["//visibility:public"],
