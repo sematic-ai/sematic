@@ -13,14 +13,12 @@ http_archive(
 
 ## Canonical host toolchain
 
-# load("@rules_python//python:repositories.bzl", "python_register_toolchains")
+load("@rules_python//python:repositories.bzl", "python_register_toolchains")
 
-# python_register_toolchains(
-#     name = "python3_9",
-#     # Available versions are listed in @rules_python//python:versions.bzl.
-#     # We recommend using the same version your team is already standardized on.
-#     python_version = "3.9",
-# )
+python_register_toolchains(
+    name = "python3_9",
+    python_version = "3.9",
+)
 
 # Hermetic python from https://thethoughtfulkoala.com/posts/2020/05/16/bazel-hermetic-python.html
 
@@ -28,6 +26,7 @@ http_archive(
 # See https://devguide.python.org/setup/#macos-and-os-x
 # For xz linking
 # See https://qiita.com/ShotaMiyazaki94/items/d868855b379d797d605f
+
 _py_configure = """
 if [[ "$OSTYPE" == "darwin"* ]]; then
     prefix=$(brew --prefix)
@@ -40,41 +39,40 @@ else
 fi
 """
 
-http_archive(
-    name = "python_interpreter",
-    build_file_content = """
-exports_files(["python_bin"])
-filegroup(
-    name = "files",
-    srcs = glob(["bazel_install/**"], exclude = ["**/* *"]),
-    visibility = ["//visibility:public"],
-)
-""",
-    patch_cmds = [
-        "mkdir $(pwd)/bazel_install",
-        _py_configure,
-        "make",
-        "make install",
-        "ln -s bazel_install/bin/python3 python_bin",
-    ],
-    sha256 = "0a8fbfb5287ebc3a13e9baf3d54e08fa06778ffeccf6311aef821bb3a6586cc8",
-    strip_prefix = "Python-3.9.10",
-    urls = ["https://www.python.org/ftp/python/3.9.10/Python-3.9.10.tar.xz"],
-)
+#http_archive(
+#    name = "python_interpreter",
+#    build_file_content = """
+#exports_files(["python_bin"])
+#filegroup(
+#    name = "files",
+#    srcs = glob(["bazel_install/**"], exclude = ["**/* *"]),
+#    visibility = ["//visibility:public"],
+#)
+#""",
+#    patch_cmds = [
+#        "mkdir $(pwd)/bazel_install",
+#        _py_configure,
+#        "make",
+#        "make install",
+#        "ln -s bazel_install/bin/python3 python_bin",
+#    ],
+#    sha256 = "0a8fbfb5287ebc3a13e9baf3d54e08fa06778ffeccf6311aef821bb3a6586cc8",
+#    strip_prefix = "Python-3.9.10",
+#    urls = ["https://www.python.org/ftp/python/3.9.10/Python-3.9.10.tar.xz"],
+#)
 
-register_toolchains("//:sematic_py_toolchain")
+#register_toolchains("//:sematic_py_toolchain")
 
 # Canonical interpreter
-# load("@python3_9//:defs.bzl", "interpreter")
-
+load("@python3_9//:defs.bzl", "interpreter")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
     name = "pip_dependencies",
     # Cannonical
-    # python_interpreter_target = interpreter,
+    python_interpreter_target = interpreter,
     # Hermetic
-    python_interpreter_target = "@python_interpreter//:python_bin",
+    #python_interpreter_target = "@python_interpreter//:python_bin",
     requirements_lock = "//requirements:requirements.txt",
     # pip_data_exclude = ["*.dist-info/*"],
 )
