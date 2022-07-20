@@ -9,6 +9,7 @@ from sematic.types.registry import (
     ToJSONEncodableCallable,
     is_valid_typing_alias,
     register_can_cast,
+    register_from_json_encodable,
     register_safe_cast,
     register_to_json_encodable,
     register_to_json_encodable_summary,
@@ -16,7 +17,9 @@ from sematic.types.registry import (
 from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.serialization import (
     get_json_encodable_summary,
+    type_from_json_encodable,
     type_to_json_encodable,
+    value_from_json_encodable,
     value_to_json_encodable,
 )
 
@@ -98,6 +101,25 @@ def _can_cast_to_dataclass(from_type: Any, to_type: Any) -> Tuple[bool, Optional
 @register_to_json_encodable(DataclassKey)
 def _dataclass_to_json_encodable(value: Any, type_: Any) -> Any:
     return _serialize_dataclass(value_to_json_encodable, value, type_)
+
+
+@register_from_json_encodable(DataclassKey)
+def _dataclass_from_json_encodable(value: Any, type_: Any) -> Any:
+    types = value["types"]
+    values = value["values"]
+
+    kwargs = {}
+
+    fields: Dict[str, dataclasses.Field] = type_.__dataclass_fields__
+
+    for name, field in fields.items():
+        field_type = field.type
+        if name in types:
+            field_type = type_from_json_encodable(types[name])
+
+        kwargs[name] = value_from_json_encodable(values[name], field_type)
+
+    return type_(**kwargs)
 
 
 @register_to_json_encodable_summary(DataclassKey)

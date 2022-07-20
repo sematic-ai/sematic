@@ -8,6 +8,8 @@ from sematic.examples.mnist.pytorch.pipeline import (
     DataLoaderConfig,
     TrainConfig,
 )
+from sematic import CloudResolver
+
 
 PIPELINE_CONFIG = PipelineConfig(
     dataloader_config=DataLoaderConfig(),
@@ -27,7 +29,7 @@ def main():
     """
     pipeline(PIPELINE_CONFIG).set(
         name="PyTorch MNIST Example", tags=["pytorch", "example", "mnist"]
-    ).resolve()
+    ).resolve(CloudResolver())
 
 
 if __name__ == "__main__":

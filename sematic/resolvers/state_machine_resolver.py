@@ -10,17 +10,30 @@ import typing
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.resolver import Resolver
 
+
 logger = logging.getLogger(__name__)
 
 
 class StateMachineResolver(Resolver, abc.ABC):
-    def __init__(self):
+    def __init__(self, detach: bool = False):
         self._futures: typing.List[AbstractFuture] = []
+        self._detach = detach
 
     def resolve(self, future: AbstractFuture) -> typing.Any:
+        resolved_kwargs = self._get_resolved_kwargs(future)
+        if not len(resolved_kwargs) == len(future.kwargs):
+            raise ValueError(
+                "All input arguments of your root function should be concrete."
+            )
+
+        future.resolved_kwargs = resolved_kwargs
+
         self._resolution_will_start()
 
         self._enqueue_future(future)
+
+        if self._detach:
+            return self._detach_resolution(future)
 
         while future.state != FutureState.RESOLVED:
             for future_ in self._futures:
@@ -33,7 +46,13 @@ class StateMachineResolver(Resolver, abc.ABC):
 
         self._resolution_did_succeed()
 
+        if future.state != FutureState.RESOLVED:
+            raise RuntimeError("Unresolved Future after resolver call.")
+
         return future.value
+
+    def _detach_resolution(self, future: AbstractFuture) -> str:
+        raise NotImplementedError()
 
     def _enqueue_future(self, future: AbstractFuture) -> None:
         if future in self._futures:
@@ -95,8 +114,8 @@ class StateMachineResolver(Resolver, abc.ABC):
         ValueError
             If attempting to set state to the same as current state.
         """
-        if state == future.state:
-            raise ValueError("Future already has state {}".format(state))
+        # if state == future.state:
+        #    raise ValueError("Future already has state {}".format(state))
 
         # This is the only location where the setting a future's state
         # is allowed. Setting it elsewhere would forego callbacks.
@@ -198,21 +217,31 @@ class StateMachineResolver(Resolver, abc.ABC):
         """
         pass
 
-    @typing.final
-    def _schedule_future_if_input_ready(self, future: AbstractFuture) -> None:
-        kwargs = {}
+    @staticmethod
+    def _get_resolved_kwargs(future: AbstractFuture) -> typing.Dict[str, typing.Any]:
+        """
+        Extract only resolved/concrete kwargs
+        """
+        resolved_kwargs = {}
         for name, value in future.kwargs.items():
             if isinstance(value, AbstractFuture):
                 if value.state == FutureState.RESOLVED:
-                    kwargs[name] = value.value
+                    resolved_kwargs[name] = value.value
             else:
-                kwargs[name] = value
+                resolved_kwargs[name] = value
 
-        all_args_resolved = len(kwargs) == len(future.kwargs)
+        return resolved_kwargs
+
+    @typing.final
+    def _schedule_future_if_input_ready(self, future: AbstractFuture) -> None:
+        resolved_kwargs = self._get_resolved_kwargs(future)
+
+        all_args_resolved = len(resolved_kwargs) == len(future.kwargs)
+
         if all_args_resolved:
-            future.resolved_kwargs = kwargs
+            future.resolved_kwargs = resolved_kwargs
             self._future_will_schedule(future)
-            if future.inline:
+            if future.props.inline:
                 logger.info("Running inline {}".format(future.calculator))
                 self._run_inline(future)
             else:
@@ -244,7 +273,6 @@ class StateMachineResolver(Resolver, abc.ABC):
     def _fail_future_and_parents(
         self,
         future: AbstractFuture,
-        up_to_future: typing.Optional[AbstractFuture] = None,
     ):
         """
         Mark the future FAILED and its parent futures NESTED_FAILED, up
@@ -261,7 +289,7 @@ class StateMachineResolver(Resolver, abc.ABC):
         self._set_future_state(future, FutureState.FAILED)
 
         parent_future = future.parent_future
-        while parent_future is not None and parent_future is not up_to_future:
+        while parent_future is not None:
             self._set_future_state(parent_future, FutureState.NESTED_FAILED)
             parent_future = parent_future.parent_future
 

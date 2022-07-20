@@ -4,8 +4,10 @@ pytest_test(
     deps = [
         "//sematic:abstract_future",
         "//sematic:calculator",
+        "//sematic:storage",
         "//sematic/db/models:factories",
-    ]
+        "//sematic/tests:fixtures",
+    ],
 )
 
 pytest_test(
@@ -14,14 +16,14 @@ pytest_test(
     deps = [
         "//sematic:abstract_future",
         "//sematic/db/models:run",
-    ]
+    ],
 )
 
 pytest_test(
     name = "test_json_encodable_mixin",
     srcs = ["test_json_encodable_mixin.py"],
     deps = [
-        "//sematic/db/tests:fixtures",
         "//sematic/db/models:run",
-    ]
+        "//sematic/db/tests:fixtures",
+    ],
 )

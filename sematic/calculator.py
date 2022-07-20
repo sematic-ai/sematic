@@ -2,11 +2,23 @@
 import collections
 import inspect
 import types
-from typing import Any, Callable, Dict, Iterable, List, Sequence, Type, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Type,
+    TypeVar,
+    Union,
+)
 
 # Sematic
 from sematic.abstract_calculator import AbstractCalculator
 from sematic.future import Future
+from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.types.casting import safe_cast, can_cast_type
 from sematic.types.type import is_type
 from sematic.types.registry import get_origin_type, is_valid_typing_alias
@@ -21,7 +33,12 @@ class Calculator(AbstractCalculator):
     """
 
     def __init__(
-        self, func: types.FunctionType, input_types: Dict[str, type], output_type: type
+        self,
+        func: types.FunctionType,
+        input_types: Dict[str, type],
+        output_type: type,
+        resource_requirements: Optional[ResourceRequirements] = None,
+        inline: bool = True,
     ) -> None:
         if not inspect.isfunction(func):
             raise ValueError("{} is not a function".format(func))
@@ -30,6 +47,9 @@ class Calculator(AbstractCalculator):
 
         self._input_types = input_types
         self._output_type = output_type
+
+        self._inline = inline
+        self._resource_requirements = resource_requirements
 
         self.__doc__ = func.__doc__
         self.__module__ = func.__module__
@@ -73,7 +93,12 @@ class Calculator(AbstractCalculator):
 
         cast_arguments = self.cast_inputs(argument_map)
 
-        return Future(self, cast_arguments)
+        return Future(
+            self,
+            cast_arguments,
+            inline=self._inline,
+            resource_requirements=self._resource_requirements,
+        )
 
     def __signature__(self) -> inspect.Signature:
         return inspect.signature(self._func)
@@ -165,11 +190,13 @@ def _repr_str_iterable(str_iterable: Iterable[str]) -> str:
     return ", ".join(repr(arg) for arg in sorted(str_iterable))
 
 
-def calculator(
+def func(
     func: Callable = None,
+    inline: bool = True,
+    resource_requirements: Optional[ResourceRequirements] = None,
 ) -> Union[Callable, Calculator]:
     """
-    calculator decorator.
+    Sematic Function decorator.
     """
 
     def _wrapper(func_):
@@ -198,15 +225,18 @@ def calculator(
                 ).format(_repr_str_iterable(missing_annotations))
             )
 
-        return Calculator(func_, input_types=input_types, output_type=output_type)
+        return Calculator(
+            func_,
+            input_types=input_types,
+            output_type=output_type,
+            inline=inline,
+            resource_requirements=resource_requirements,
+        )
 
     if func is None:
         return _wrapper
 
     return _wrapper(func)
-
-
-func = calculator
 
 
 def _getfullargspec(func_: Callable) -> inspect.FullArgSpec:
@@ -272,7 +302,9 @@ def _make_list({inputs}):
     exec(source_code, scope)
     _make_list = scope["_make_list"]
 
-    return Calculator(_make_list, input_types=input_types, output_type=type_)(**inputs)
+    return Calculator(
+        _make_list, input_types=input_types, output_type=type_, inline=True
+    )(**inputs)
 
 
 def _convert_lists(value_):

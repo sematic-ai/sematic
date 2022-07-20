@@ -77,7 +77,8 @@ CREATE TABLE public.runs (
     description text,
     tags text,
     source_code text,
-    root_id character(32)
+    root_id character(32),
+    nested_future_id character(32)
 );
 
 
@@ -179,4 +180,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20220521155336'),
     ('20220522082435'),
     ('20220527000512'),
-    ('20220610234559');
+    ('20220610234559'),
+    ('20220714175433');

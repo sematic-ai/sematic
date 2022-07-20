@@ -2,6 +2,7 @@
 import datetime
 from typing import Dict, Optional, List, Union, Tuple
 import uuid
+import logging
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
@@ -10,8 +11,14 @@ from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
 from sematic.resolvers.silent_resolver import SilentResolver
-from sematic.db.models.factories import make_artifact, make_run_from_future
+from sematic.db.models.factories import (
+    make_artifact,
+    make_run_from_future,
+)
 import sematic.api_client as api_client
+
+
+logger = logging.getLogger(__name__)
 
 
 class LocalResolver(SilentResolver):
@@ -22,11 +29,19 @@ class LocalResolver(SilentResolver):
     input argument and output value is tracked as an artifact.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._edges: Dict[str, Edge] = {}
         self._runs: Dict[str, Run] = {}
         self._artifacts: Dict[str, Artifact] = {}
+
+        # Buffers for persistency
+        self._buffer_edges: Dict[str, Edge] = {}
+        self._buffer_runs: Dict[str, Run] = {}
+        self._buffer_artifacts: Dict[str, Artifact] = {}
+
+        # TODO: Replace this with a local storage engine
+        self._store_artifacts = False
 
     def _update_edge(
         self,
@@ -39,66 +54,73 @@ class LocalResolver(SilentResolver):
         """
         Creates or updates an edge in the graph.
         """
-        edge_key = "{}:{}:{}:{}".format(
-            source_run_id, parent_id, destination_run_id, destination_name
+        edge = Edge(
+            id=uuid.uuid4().hex,
+            created_at=datetime.datetime.utcnow(),
+            updated_at=datetime.datetime.utcnow(),
+            source_run_id=source_run_id,
+            destination_run_id=destination_run_id,
+            destination_name=destination_name,
+            artifact_id=artifact_id,
+            parent_id=parent_id,
         )
 
-        edge = self._edges.get(edge_key)
+        edge_key = make_edge_key(edge)
 
-        if edge is None:
-            edge = Edge(
-                id=uuid.uuid4().hex,
-                created_at=datetime.datetime.utcnow(),
-                updated_at=datetime.datetime.utcnow(),
-                source_run_id=source_run_id,
-                destination_run_id=destination_run_id,
-                destination_name=destination_name,
-                artifact_id=artifact_id,
-                parent_id=parent_id,
-            )
-
-        # We don't want to overwrite
-        if artifact_id is not None:
+        edge = self._edges.get(edge_key, edge)
+        if edge.artifact_id is None and artifact_id is not None:
             edge.artifact_id = artifact_id
 
-        self._edges[edge_key] = edge
+        self._add_edge(edge)
 
     def _get_input_edge(self, destination_run_id, destination_name) -> Optional[Edge]:
         """
         Find an input edge.
         """
-        for key, edge in self._edges.items():
-            # Kind of ugly heh
-            if key.endswith(":{}:{}".format(destination_run_id, destination_name)):
+        for edge in self._edges.values():
+            if (
+                edge.destination_run_id == destination_run_id
+                and edge.destination_name == destination_name
+            ):
                 return edge
 
         return None
 
-    def _get_output_edges(self, source_run_id) -> List[Edge]:
+    def _get_output_edges(self, source_run_id: str) -> List[Edge]:
         """
         Find output edges.
         There can be multiple ones if the output goes to multiple futures.
         """
         return [
-            edge
-            for key, edge in self._edges.items()
-            if key.startswith("{}:".format(source_run_id))
+            edge for edge in self._edges.values() if edge.source_run_id == source_run_id
         ]
+
+    def _populate_run_and_artifacts(self, future: AbstractFuture) -> Run:
+        if len(future.kwargs) != len(future.resolved_kwargs):
+            raise RuntimeError("Not all input arguments are resolved")
+
+        input_artifacts = {}
+        for name, value in future.resolved_kwargs.items():
+            artifact = make_artifact(
+                value, future.calculator.input_types[name], store=self._store_artifacts
+            )
+            self._add_artifact(artifact)
+            input_artifacts[name] = artifact
+
+        run = self._populate_graph(future, input_artifacts=input_artifacts)
+
+        return run
 
     def _future_will_schedule(self, future: AbstractFuture) -> None:
         super()._future_will_schedule(future)
 
-        input_artifacts = {
-            name: make_artifact(value, future.calculator.input_types[name])
-            for name, value in future.resolved_kwargs.items()
-        }
-
-        run = self._populate_graph(future, input_artifacts=input_artifacts)
+        run = self._populate_run_and_artifacts(future)
 
         run.future_state = FutureState.SCHEDULED
         run.root_id = self._futures[0].id
         run.started_at = datetime.datetime.utcnow()
 
+        self._add_run(run)
         self._save_graph()
 
     def _future_did_schedule(self, future: AbstractFuture) -> None:
@@ -122,8 +144,11 @@ class LocalResolver(SilentResolver):
             raise Exception("Missing nested future")
 
         self._populate_graph(future.nested_future)
-
+        self._add_run(run)
         self._save_graph()
+
+    def _get_output_artifact(self, run_id: str) -> Optional[Artifact]:
+        return None
 
     def _future_did_resolve(self, future: AbstractFuture) -> None:
         super()._future_did_resolve(future)
@@ -132,10 +157,13 @@ class LocalResolver(SilentResolver):
         run.future_state = FutureState.RESOLVED
         run.resolved_at = datetime.datetime.utcnow()
 
-        output_artifact = make_artifact(future.value, future.calculator.output_type)
+        output_artifact = self._get_output_artifact(future.id)
+        if output_artifact is None:
+            output_artifact = make_artifact(future.value, future.calculator.output_type)
+            self._add_artifact(output_artifact)
 
         self._populate_graph(future, output_artifact=output_artifact)
-
+        self._add_run(run)
         self._save_graph()
 
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
@@ -150,7 +178,7 @@ class LocalResolver(SilentResolver):
             else FutureState.FAILED
         )
         run.failed_at = datetime.datetime.utcnow()
-
+        self._add_run(run)
         self._save_graph()
 
     def _notify_pipeline_update(self):
@@ -169,6 +197,19 @@ class LocalResolver(SilentResolver):
         # Should refresh from DB for remote exec
         return self._runs[run_id]
 
+    def _add_run(self, run: Run):
+        self._runs[run.id] = run
+        self._buffer_runs[run.id] = run
+
+    def _add_artifact(self, artifact: Artifact):
+        self._artifacts[artifact.id] = artifact
+        self._buffer_artifacts[artifact.id] = artifact
+
+    def _add_edge(self, edge: Edge):
+        edge_key = make_edge_key(edge)
+        self._edges[edge_key] = edge
+        self._buffer_edges[edge_key] = edge
+
     def _populate_graph(
         self,
         future: AbstractFuture,
@@ -181,7 +222,7 @@ class LocalResolver(SilentResolver):
         if future.id not in self._runs:
             run = make_run_from_future(future)
             run.root_id = self._futures[0].id
-            self._runs[future.id] = run
+            self._add_run(run)
 
         # Updating input edges
         for name, value in future.kwargs.items():
@@ -189,7 +230,6 @@ class LocalResolver(SilentResolver):
             artifact_id = None
             if input_artifacts is not None and name in input_artifacts:
                 artifact_id = input_artifacts[name].id
-                self._artifacts[artifact_id] = input_artifacts[name]
 
             # If the input is a future, we connect the edge
             source_run_id = None
@@ -202,6 +242,7 @@ class LocalResolver(SilentResolver):
             # from the parent input.
             # The parent_id field is currently not used in the DAG view.
             parent_id = None
+
             if future.parent_future is not None:
                 for (
                     parent_name,
@@ -234,7 +275,6 @@ class LocalResolver(SilentResolver):
         artifact_id = None
         if output_artifact is not None:
             artifact_id = output_artifact.id
-            self._artifacts[artifact_id] = output_artifact
 
         # There can be multiple output edges:
         # - the output value is input to multiple futures
@@ -287,9 +327,26 @@ class LocalResolver(SilentResolver):
         """
         Persist the graph to the DB
         """
+        runs = list(self._buffer_runs.values())
+        artifacts = list(self._buffer_artifacts.values())
+        edges = list(self._buffer_edges.values())
+
+        if not any(len(buffer) for buffer in (runs, artifacts, edges)):
+            return
+
         api_client.save_graph(
-            runs=self._runs.values(),
-            artifacts=self._artifacts.values(),
-            edges=self._edges.values(),
+            root_id=self._futures[0].id, runs=runs, artifacts=artifacts, edges=edges
         )
-        api_client.notify_graph_update(self._futures[0].id)
+
+        self._buffer_runs.clear()
+        self._buffer_artifacts.clear()
+        self._buffer_edges.clear()
+
+
+def make_edge_key(edge: Edge) -> str:
+    return "{}:{}:{}:{}".format(
+        edge.source_run_id,
+        edge.parent_id,
+        edge.destination_run_id,
+        edge.destination_name,
+    )

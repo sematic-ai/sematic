@@ -1,22 +1,26 @@
 # Standard library
-import typing
+from typing import Dict, List, Optional, Tuple, Union
 
 # Third-party
 import pytest
 
 # Sematic
 from sematic.types.casting import safe_cast, can_cast_type
-from sematic.types.serialization import value_to_json_encodable, type_to_json_encodable
+from sematic.types.serialization import (
+    type_from_json_encodable,
+    value_to_json_encodable,
+    type_to_json_encodable,
+)
 
 
 @pytest.mark.parametrize(
     "type_, value, expected_cast_value, expected_error",
     (
-        (typing.List[int], [1, 2, 3], [1, 2, 3], None),
-        (typing.List[int], [1.2, 3.4], [1, 3], None),
-        (typing.List[float], ["1.2", 3], [1.2, 3], None),
+        (List[int], [1, 2, 3], [1, 2, 3], None),
+        (List[int], [1.2, 3.4], [1, 3], None),
+        (List[float], ["1.2", 3], [1.2, 3], None),
         (
-            typing.List[float],
+            List[float],
             ["abc"],
             None,
             (
@@ -36,19 +40,19 @@ def test_safe_cast(type_, value, expected_cast_value, expected_error):
 @pytest.mark.parametrize(
     "from_type, to_type, expected_can_cast, expected_error",
     (
-        (typing.List[float], typing.List[int], True, None),
+        (List[float], List[int], True, None),
         # Need to implement str casting logic
-        # (typing.List[float], typing.List[str], True, None),
+        # (List[float], List[str], True, None),
         (
             float,
-            typing.List[int],
+            List[int],
             False,
             "Can't cast <class 'float'> to typing.List[int]: not a subscripted generic",
         ),
-        (typing.Tuple[int, float], typing.List[float], True, None),
+        (Tuple[int, float], List[float], True, None),
         (
-            typing.Tuple[typing.List[float], typing.List[int]],
-            typing.List[typing.List[int]],
+            Tuple[List[float], List[int]],
+            List[List[int]],
             True,
             None,
         ),
@@ -61,7 +65,7 @@ def test_can_cast_type(from_type, to_type, expected_can_cast, expected_error):
 
 
 def test_type_to_json_encodable():
-    type_ = typing.List[int]
+    type_ = List[int]
 
     json_encodable = type_to_json_encodable(type_)
 
@@ -72,7 +76,7 @@ def test_type_to_json_encodable():
 
 
 def test_type_to_json_encodable_subclass():
-    type_ = typing.List[typing.Optional[typing.Dict[str, typing.Union[int, float]]]]
+    type_ = List[Optional[Dict[str, Union[int, float]]]]
 
     json_encodable = type_to_json_encodable(type_)
 
@@ -150,7 +154,7 @@ def test_type_to_json_encodable_subclass():
 
 
 def test_value_to_json_encodable():
-    type_ = typing.List[int]
+    type_ = List[int]
 
     json_encodable = value_to_json_encodable([1, 2, 3], type_)
 
@@ -165,11 +169,24 @@ class A:
 
 def test_to_binary_arbitrary():
 
-    type_ = typing.List[A]
+    type_ = List[A]
 
     json_encodable = value_to_json_encodable([A(), A()], type_)
 
     assert json_encodable == [
-        "gAWVMAAAAAAAAACMI3NlbWF0aWMudHlwZXMudHlwZXMudGVzdHMudGVzdF9saXN0lIwBQZSTlCmBlC4=",  # noqa: E501
-        "gAWVMAAAAAAAAACMI3NlbWF0aWMudHlwZXMudHlwZXMudGVzdHMudGVzdF9saXN0lIwBQZSTlCmBlC4=",  # noqa: E501
+        {
+            "pickle": "gAWVMAAAAAAAAACMI3NlbWF0aWMudHlwZXMudHlwZXMudGVzdHMudGVzdF9saXN0lIwBQZSTlCmBlC4="  # noqa: E501
+        },
+        {
+            "pickle": "gAWVMAAAAAAAAACMI3NlbWF0aWMudHlwZXMudHlwZXMudGVzdHMudGVzdF9saXN0lIwBQZSTlCmBlC4="  # noqa: E501
+        },
     ]
+
+
+@pytest.mark.parametrize(
+    "type_",
+    (List[float], List[List[float]], List[Optional[Dict[str, Union[int, float]]]]),
+)
+def test_type_from_json_encodable(type_):
+    json_encodable = type_to_json_encodable(type_)
+    assert type_from_json_encodable(json_encodable) is type_

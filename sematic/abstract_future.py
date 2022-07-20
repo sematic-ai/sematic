@@ -4,12 +4,14 @@ between `Future` and `Resolver`.
 """
 # Standard library
 import abc
+from dataclasses import dataclass
 import enum
-import typing
+from typing import Tuple, Optional, Dict, Any, List
 import uuid
 
 # Sematic
 from sematic.abstract_calculator import AbstractCalculator
+from sematic.resolvers.resource_requirements import ResourceRequirements
 
 
 class FutureState(enum.Enum):
@@ -26,8 +28,26 @@ class FutureState(enum.Enum):
     NESTED_FAILED = "NESTED_FAILED"
 
     @classmethod
-    def values(cls) -> typing.Tuple[str, ...]:
+    def values(cls) -> Tuple[str, ...]:
         return tuple([future_state.value for future_state in cls.__members__.values()])
+
+
+@dataclass
+class FutureProperties:
+    """
+    This is meant as a container of properties for Future.
+
+    The reason is we want to keep the property namespace as empty
+    as possible on Future to enable attribute access on futures
+    of dataclasses and such.
+
+    Ideally over time we move all future properties to this dataclass.
+    """
+
+    inline: bool
+    name: str
+    tags: List[str]
+    resource_requirements: Optional[ResourceRequirements] = None
 
 
 class AbstractFuture(abc.ABC):
@@ -52,7 +72,11 @@ class AbstractFuture(abc.ABC):
     """
 
     def __init__(
-        self, calculator: AbstractCalculator, kwargs: typing.Dict[str, typing.Any]
+        self,
+        calculator: AbstractCalculator,
+        kwargs: Dict[str, Any],
+        inline: bool,
+        resource_requirements: Optional[ResourceRequirements] = None,
     ):
         self.id: str = uuid.uuid4().hex
         self.calculator = calculator
@@ -61,11 +85,25 @@ class AbstractFuture(abc.ABC):
         # the source of truth for the future graph. Instead we have concrete
         # values in resolved_kwargs
         # It will be set only once all input values are resolved
-        self.resolved_kwargs: typing.Dict[str, typing.Any] = {}
-        self.value: typing.Any = None
+        self.resolved_kwargs: Dict[str, Any] = {}
+        self.value: Any = None
         self.state: FutureState = FutureState.CREATED
-        self.parent_future: typing.Optional["AbstractFuture"] = None
-        self.nested_future: typing.Optional["AbstractFuture"] = None
-        self.inline: bool = False
-        self.name: str = calculator.__name__
-        self.tags: typing.List[str] = []
+        self.parent_future: Optional["AbstractFuture"] = None
+        self.nested_future: Optional["AbstractFuture"] = None
+
+        self._props = FutureProperties(
+            inline=inline,
+            resource_requirements=resource_requirements,
+            name=calculator.__name__,
+            tags=[],
+        )
+
+    @property
+    def props(self) -> FutureProperties:
+        """
+        Ideally this is the only property we expose on future.
+        All other properties above should be migrated to FutureProperties
+
+        TODO: Migrate all future properties to FutureProperties
+        """
+        return self._props

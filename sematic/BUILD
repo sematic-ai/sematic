@@ -4,11 +4,14 @@ sematic_py_lib(
     deps = [
         ":calculator",
         ":resolver",
-        "//sematic/resolvers:local_resolver",
-        "//sematic/types:init",
-        "//sematic/types:casting",
         "//sematic/future_operators:init",
-    ]
+        "//sematic/resolvers:cloud_resolver",
+        "//sematic/resolvers:local_resolver",
+        "//sematic/resolvers:resource_requirements",
+        "//sematic/resolvers:worker",
+        "//sematic/types:casting",
+        "//sematic/types:init",
+    ],
 )
 
 sematic_py_lib(
@@ -17,13 +20,13 @@ sematic_py_lib(
     deps = [
         ":config_dir",
         ":user_settings",
-    ]
+    ],
 )
 
 sematic_py_lib(
     name = "config_dir",
     srcs = ["config_dir.py"],
-    deps = []
+    deps = [],
 )
 
 sematic_py_lib(
@@ -32,7 +35,7 @@ sematic_py_lib(
     deps = [
         ":config_dir",
         requirement("pyyaml"),
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -40,14 +43,17 @@ sematic_py_lib(
     srcs = ["api_client.py"],
     deps = [
         ":config",
-        requirement("requests")
-    ]
+        "//sematic/db/models:artifact",
+        "//sematic/db/models:edge",
+        "//sematic/db/models:run",
+        requirement("requests"),
+    ],
 )
 
 sematic_py_lib(
     name = "abstract_calculator",
     srcs = ["abstract_calculator.py"],
-    deps = []
+    deps = [],
 )
 
 sematic_py_lib(
@@ -55,7 +61,8 @@ sematic_py_lib(
     srcs = ["abstract_future.py"],
     deps = [
         ":abstract_calculator",
-    ]
+        "//sematic/resolvers:resource_requirements",
+    ],
 )
 
 sematic_py_lib(
@@ -64,12 +71,13 @@ sematic_py_lib(
     deps = [
         ":abstract_calculator",
         ":future",
+        "//sematic/resolvers:resource_requirements",
         "//sematic/types:casting",
-        "//sematic/types:registry",
         "//sematic/types:init",
+        "//sematic/types:registry",
         "//sematic/types:type",
         "//sematic/utils:memoized_property",
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -78,9 +86,10 @@ sematic_py_lib(
     deps = [
         ":abstract_calculator",
         ":abstract_future",
+        "//sematic:resolver",
         "//sematic/resolvers:local_resolver",
         "//sematic/resolvers:silent_resolver",
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -88,32 +97,22 @@ sematic_py_lib(
     srcs = ["resolver.py"],
     deps = [
         ":abstract_future",
-    ]
+    ],
 )
 
+sematic_py_lib(
+    name = "storage",
+    srcs = ["storage.py"],
+    deps = [
+        ":user_settings",
+        requirement("boto3"),
+    ],
+)
 
 sematic_py_wheel(
     name = "wheel",
-    visibility = ["//visibility:public"],
-    distribution = "sematic",
-    python_tag = "py3",
-    platform = "any",
-    version = "0.5.1",#+{BUILD_TIMESTAMP}",
-    python_requires = ">=3.9",
-    description_file = "//:README.rst",
     author = "Sematic AI, Inc.",
-    license = "MIT",
     author_email = "emmanuel@sematic.ai",
-    homepage = "https://github.com/sematic-ai/sematic",
-    deps = [
-        "//sematic:init",
-        "//sematic/cli:main_lib",
-    ],
-    requires = [
-        # Specifying this by hand because sematic_py_wheel doesn't know
-        # how to fix versions
-        "eventlet==0.30.2",
-    ],
     classifiers = [
         "License :: OSI Approved :: MIT License",
         "Intended Audience :: Developers",
@@ -123,5 +122,23 @@ sematic_py_wheel(
         "Topic :: Scientific/Engineering :: Visualization",
         "Typing :: Typed",
     ],
-    entry_points={"console_scripts": ["sematic = sematic.cli.main:cli"]},
+    description_file = "//:README.rst",
+    distribution = "sematic",
+    entry_points = {"console_scripts": ["sematic = sematic.cli.main:cli"]},
+    homepage = "https://github.com/sematic-ai/sematic",
+    license = "MIT",
+    platform = "any",
+    python_requires = ">=3.9",
+    python_tag = "py3",
+    requires = [
+        # Specifying this by hand because sematic_py_wheel doesn't know
+        # how to fix versions
+        "eventlet==0.30.2",
+    ],
+    version = "0.6.0-beta.2",  #+{BUILD_TIMESTAMP}",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//sematic:init",
+        "//sematic/cli:main_lib",
+    ],
 )
