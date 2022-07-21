@@ -34,6 +34,7 @@ def main():
     parser.add_argument("--detach", default=False, action="store_true")
     parser.add_argument("--epochs", type=int, default=1)
     parser.add_argument("--learning-rates", type=str, default="1")
+    parser.add_argument("--cuda", default=False, action="store_true")
 
     args = parser.parse_args()
 
@@ -41,7 +42,7 @@ def main():
     learning_rates = map(float, args.learning_rates.split(","))
 
     train_configs = [
-        TrainConfig(epochs=epochs, learning_rate=learning_rate)
+        TrainConfig(epochs=epochs, learning_rate=learning_rate, cuda=args.cuda)
         for learning_rate in learning_rates
     ]
 
