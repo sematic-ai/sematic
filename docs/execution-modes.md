@@ -136,6 +136,9 @@ At this time this only allows you to pass a node selector to choose a node in
 your Kubernetes cluster. In the future, we will also surface CPU, memory, and
 ephemeral storage requirements.
 
+Note that the corresponding instances need to have been provisioned in your
+Sematic cluster ahead of time.
+
 ### Dependency packaging
 
 When Sematic submits Kubernetes jobs, it needs to package all your dependencies
