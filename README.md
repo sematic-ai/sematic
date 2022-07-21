@@ -31,6 +31,7 @@ Sematic helps you
 * Develop and run ML pipelines using native Python functions, no new DSL to learn
 * Monitor, visualize, and track all inputs and outputs of all pipeline steps in a slick UI
 * Collaborate with your team to keep the discussion close to the pipeline as opposed to scattered elsewhere
+* Execute your pipelines locally or in your cloud
 * [soon] Clone/re-run your pipelines with different inputs/configs
 * [soon] Schedule your pipelines to keep your models fresh and relevant
 
