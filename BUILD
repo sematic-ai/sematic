@@ -2,6 +2,8 @@ load("@rules_python//python:defs.bzl", "py_runtime_pair")
 load("@//tools:stamp.bzl", "stamp_build_setting")
 load("@pip_dependencies//:requirements.bzl", "entry_point")
 
+# Needed by the custom toolchain
+# Can remove if we siwtch back to the canonical one
 """
 py_runtime(
     name = "python3_runtime",
