@@ -229,7 +229,7 @@ sematic_pipeline(
 ```
 
 See a complete example at
-[github.com/sematic-ai/example-bazel](https://github.com/sematic-ai/example-bazel).
+[github.com/sematic-ai/example_bazel](https://github.com/sematic-ai/example_bazel).
 
 You can then run the target with
 
