@@ -152,3 +152,5 @@ on your machine, then authenticate with your container registry with
 ```
 $ aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <aws-account-id>.dkr.ecr.<region>.amazonaws.com
 ```
+
+You will likely need to issue this command every day.
