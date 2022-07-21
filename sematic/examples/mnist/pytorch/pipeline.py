@@ -44,6 +44,7 @@ class TrainConfig:
     gamma: float = 0.7
     dry_run: bool = False
     log_interval: int = 10
+    cuda: bool = False
 
 
 @dataclass
@@ -119,7 +120,7 @@ def train_eval(
     """
     The train/eval sub-pipeline.
     """
-    device = torch.device("cuda")
+    device = torch.device("cuda" if train_config.cuda else "cpu")
 
     model = train_model(
         config=train_config, train_loader=train_dataloader, device=device
