@@ -44,7 +44,7 @@ Sematic's features include:
 * An extremely lightweight Python SDK to define nestable and dynamic
   computational workflows
 * Pseudo-static and runtime type checking
-* Execution backends: local and cloud (soon)
+* Execution backends: local and cloud
 * A semantic UI to monitor, inspect, and share pipelines and their artifacts
 * End-to-end lineage tracking of all artifacts and assets for reproducibility
   and traceability
