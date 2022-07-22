@@ -38,7 +38,7 @@ class StateMachineResolver(Resolver, abc.ABC):
         while future.state != FutureState.RESOLVED:
             for future_ in self._futures:
                 if future_.state == FutureState.CREATED:
-                    self._schedule_future_if_input_ready(future_)
+                    self._schedule_future_if_args_resolved(future_)
                 if future_.state == FutureState.RAN:
                     self._resolve_nested_future(future_)
 
@@ -97,28 +97,7 @@ class StateMachineResolver(Resolver, abc.ABC):
         # type: (AbstractFuture, FutureState) -> None
         """
         Sets state on future and call corresponding callback.
-
-        **This method must always be used in place of setting state manually.**
-
-        This method could also contain logic to validate allowed state transitions.
-
-        Parameters
-        ----------
-        future: Future
-            Future whose state to set
-        state: FutureState
-            State to set on future
-
-        Raises
-        ------
-        ValueError
-            If attempting to set state to the same as current state.
         """
-        # if state == future.state:
-        #    raise ValueError("Future already has state {}".format(state))
-
-        # This is the only location where the setting a future's state
-        # is allowed. Setting it elsewhere would forego callbacks.
         future.state = state
 
         CALLBACKS = {
@@ -164,11 +143,6 @@ class StateMachineResolver(Resolver, abc.ABC):
         Callback allowing resolvers to implement custom actions.
 
         This is called after a future was scheduled.
-
-        Parameters
-        ----------
-        future: Future
-            The scheduled future
         """
         pass
 
@@ -176,44 +150,21 @@ class StateMachineResolver(Resolver, abc.ABC):
         pass
 
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
-        """Callback allowing specific resolvers to react when a future is marked failed.
-
-        Parameters
-        ----------
-        failed_future:
-            The future that failed
+        """
+        Callback allowing specific resolvers to react when a future is marked failed.
         """
         pass
 
     def _future_did_resolve(self, future: AbstractFuture) -> None:
-        """Callback allowing specific resolvers to react when a future is marked resolved.
-
-        Parameters
-        ----------
-        future:
-            The future that resolved
         """
-        pass
-
-    def _future_did_enqueue_for_reschedule(self, future: AbstractFuture) -> None:
-        """
-        Callback allowing specific resolvers to react when a future is marked enqueued
-        for reschedule.
-
-        Parameters
-        ----------
-        future:
-            The future that enqueued for reschedule
+        Callback allowing specific resolvers to react when a future is marked resolved.
         """
         pass
 
     def _future_will_schedule(self, future: AbstractFuture) -> None:
-        """Callback allowing specific resolvers to react when a future is about to be scheduled.
-
-        Parameters
-        ----------
-        future:
-            The future that is about to be scheduled
+        """
+        Callback allowing specific resolvers to react when a future is about to
+        be scheduled.
         """
         pass
 
@@ -233,7 +184,7 @@ class StateMachineResolver(Resolver, abc.ABC):
         return resolved_kwargs
 
     @typing.final
-    def _schedule_future_if_input_ready(self, future: AbstractFuture) -> None:
+    def _schedule_future_if_args_resolved(self, future: AbstractFuture) -> None:
         resolved_kwargs = self._get_resolved_kwargs(future)
 
         all_args_resolved = len(resolved_kwargs) == len(future.kwargs)
@@ -275,16 +226,7 @@ class StateMachineResolver(Resolver, abc.ABC):
         future: AbstractFuture,
     ):
         """
-        Mark the future FAILED and its parent futures NESTED_FAILED, up
-        to `up_to_future` future.
-
-        Parameters
-        ----------
-        future : Future
-            Future instance to be marked `FAILED` state.
-        up_to_future : typing.Optional[Future]
-            Parent future instance to stop marking `NESTED_FAILED` state. If `None`,
-            mark parent future `NESTED_FAILED` all the way to the top of the DAG.
+        Mark the future FAILED and its parent futures NESTED_FAILED.
         """
         self._set_future_state(future, FutureState.FAILED)
 
