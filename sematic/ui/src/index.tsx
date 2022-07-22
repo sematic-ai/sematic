@@ -9,6 +9,7 @@ import PipelineIndex from "./pipelines/PipelineIndex";
 import PipelineView from "./pipelines/PipelineView";
 import Shell from "./components/Shell";
 import Home from "./Home";
+import GoogleLogin from "react-google-login";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
