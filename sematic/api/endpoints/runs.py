@@ -225,7 +225,7 @@ def save_graph_endpoint():
     if not flask.request or not flask.request.json or "graph" not in flask.request.json:
         return jsonify_error(
             "Please provide a graph payload in JSON format.",
-            HTTPStatus.BAD_REQUEST.value,
+            HTTPStatus.BAD_REQUEST,
         )
 
     graph = flask.request.json["graph"]

@@ -4,7 +4,7 @@ import { Outlet } from "react-router-dom";
 import createTheme from "../themes/mira";
 import SideBar from "./SideBar";
 
-export default function Shell() {
+export default function Shell(props: { onLogout: () => void }) {
   return (
     <ThemeProvider theme={createTheme("LIGHT")}>
       <Box
@@ -16,7 +16,7 @@ export default function Shell() {
         }}
       >
         <Box sx={{ gridColumn: 1, gridRow: 1 }}>
-          <SideBar />
+          <SideBar onLogout={props.onLogout} />
         </Box>
         <Box sx={{ gridColumn: 2, overflowY: "scroll" }}>
           <Outlet />

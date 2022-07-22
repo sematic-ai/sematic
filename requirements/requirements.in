@@ -25,6 +25,7 @@ responses==0.20.0  # 0.21.0 breaks mypy checks https://github.com/getsentry/resp
 werkzeug
 gunicorn
 python-dateutil
+google-auth
 
 # CLI
 click
