@@ -1,9 +1,18 @@
-import { BatchPrediction } from "@mui/icons-material";
-import { Box, Typography, Link, Stack } from "@mui/material";
+import { BatchPrediction, Logout } from "@mui/icons-material";
+import {
+  Box,
+  Typography,
+  Link,
+  Stack,
+  Button,
+  ButtonBase,
+} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import { googleLogout } from "@react-oauth/google";
 import { SiDiscord, SiReadthedocs } from "react-icons/si";
 import logo from "../Fox.png";
-export default function SideBar() {
+
+export default function SideBar(props: { onLogout: () => void }) {
   const theme = useTheme();
 
   return (
@@ -44,26 +53,38 @@ export default function SideBar() {
           paddingBottom: 4,
         }}
       >
+        <Stack spacing={4} sx={{ paddingBottom: 4 }}>
+          <Box>
+            <SiReadthedocs />
+            <Link
+              href="https://decs.sematic.dev"
+              sx={{ color: "rgba(255, 255, 255, 0.5)" }}
+              underline="none"
+              target="_blank"
+            >
+              <Typography fontSize={10}>Docs</Typography>
+            </Link>
+          </Box>
+          <Box>
+            <Link
+              href="https://discord.gg/4KZJ6kYVax"
+              sx={{ color: "rgba(255, 255, 255, 0.5)" }}
+              underline="none"
+            >
+              <SiDiscord />
+              <Typography fontSize={10}>Discord</Typography>
+            </Link>
+          </Box>
+        </Stack>
+        <hr style={{ margin: "5px 5px", opacity: 0.2 }} />
         <Box>
-          <SiReadthedocs />
-          <Link
-            href="https://decs.sematic.dev"
-            sx={{ color: "rgba(255, 255, 255, 0.5)" }}
-            underline="none"
-            target="_blank"
+          <ButtonBase
+            onClick={props.onLogout}
+            sx={{ display: "block", width: "100%" }}
           >
-            <Typography fontSize={10}>Docs</Typography>
-          </Link>
-        </Box>
-        <Box>
-          <Link
-            href="https://discord.gg/4KZJ6kYVax"
-            sx={{ color: "rgba(255, 255, 255, 0.5)" }}
-            underline="none"
-          >
-            <SiDiscord />
-            <Typography fontSize={10}>Discord</Typography>
-          </Link>
+            <Logout />
+            <Typography fontSize={10}>Sign out</Typography>
+          </ButtonBase>
         </Box>
       </Stack>
     </Box>
