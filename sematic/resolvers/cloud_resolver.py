@@ -131,12 +131,6 @@ class CloudResolver(LocalResolver):
             self._output_artifacts_by_run_id[run.id] = output_artifact
             value = get_artifact_value(output_artifact)
 
-            # for parent_future in self._find_parent_futures(future):
-            #    parent_future.value = value
-            #    parent_future.run_handle = api_client.set_run_output_artifact(
-            #        parent_future.run_handle.id, value
-            #    )
-
         self._update_future_with_value(future, value)
 
     def _get_output_artifact(self, run_id: str) -> Optional[Artifact]:
