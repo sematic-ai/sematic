@@ -1,0 +1,4 @@
+matplotlib==3.5.2
+pandas==1.4.2
+scikit-learn==1.1.1
+seaborn==0.11.2
