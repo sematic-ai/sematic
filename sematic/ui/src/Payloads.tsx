@@ -42,3 +42,10 @@ export type NoteListPayload = {
 export type NoteCreatePayload = {
   content: Note;
 };
+
+export type GoogleLoginPayload = {
+  email: string;
+  first_name: string;
+  last_name: string;
+  picture: string;
+};

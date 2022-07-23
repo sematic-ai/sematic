@@ -41,7 +41,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "REACT_APP_HOST=127.0.0.1 react-scripts start",
+    "start": "REACT_APP_HOST=127.0.0.1 AUTHORIZED_DOMAIN=sematic.ai react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",

@@ -2,17 +2,17 @@ sematic_py_lib(
     name = "runs",
     srcs = ["runs.py"],
     deps = [
+        ":request_parameters",
         "//sematic/api:app",
-        "//sematic/db:db",
+        "//sematic/db",
         "//sematic/db:queries",
-        "//sematic/db/models:run",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
-        ":request_parameters",
+        "//sematic/db/models:run",
         requirement("flask"),
         requirement("sqlalchemy"),
-        requirement("flask-socketio")
-    ]
+        requirement("flask-socketio"),
+    ],
 )
 
 sematic_py_lib(
@@ -22,7 +22,7 @@ sematic_py_lib(
         "//sematic/api:app",
         "//sematic/db:queries",
         requirement("flask"),
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -31,31 +31,44 @@ sematic_py_lib(
     deps = [
         requirement("sqlalchemy"),
         requirement("flask"),
-    ]
+    ],
 )
 
 sematic_py_lib(
     name = "edges",
     srcs = ["edges.py"],
     deps = [
-        "//sematic/api:app",
-        "//sematic/db:db",
-        "//sematic/db/models:edge",
         ":request_parameters",
+        "//sematic/api:app",
+        "//sematic/db",
+        "//sematic/db/models:edge",
         requirement("flask"),
         requirement("sqlalchemy"),
-    ]
+    ],
 )
 
 sematic_py_lib(
     name = "notes",
     srcs = ["notes.py"],
     deps = [
+        ":request_parameters",
         "//sematic/api:app",
         "//sematic/db:queries",
         "//sematic/db/models:note",
-        ":request_parameters",
         requirement("flask"),
         requirement("sqlalchemy"),
-    ]
+    ],
+)
+
+sematic_py_lib(
+    name = "auth",
+    srcs = ["auth.py"],
+    deps = [
+        ":request_parameters",
+        "//sematic:config",
+        "//sematic/api:app",
+        requirement("flask"),
+        requirement("google-auth"),
+        requirement("requests"),
+    ],
 )

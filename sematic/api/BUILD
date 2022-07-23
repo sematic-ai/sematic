@@ -5,7 +5,7 @@ sematic_py_lib(
         ":wsgi",
         requirement("flask"),
         requirement("flask-cors"),
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -15,23 +15,24 @@ sematic_py_lib(
     deps = [
         "//sematic:config",
         "//sematic/api:app",
-        "//sematic/api/endpoints:runs",
         "//sematic/api/endpoints:artifacts",
+        "//sematic/api/endpoints:auth",
         "//sematic/api/endpoints:edges",
         "//sematic/api/endpoints:notes",
+        "//sematic/api/endpoints:runs",
         requirement("flask"),
         requirement("flask-socketio"),
-        requirement("eventlet")
-    ]
+        requirement("eventlet"),
+    ],
 )
 
 py_binary(
     name = "server",
-    main = "server.py",
     srcs = ["server.py"],
+    main = "server.py",
     deps = [
         ":server_lib",
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -40,7 +41,7 @@ sematic_py_lib(
     deps = [
         requirement("flask"),
         requirement("gunicorn"),
-    ]
+    ],
 )
 
 # Does not work just yet on M1 mac
