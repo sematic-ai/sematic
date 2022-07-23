@@ -6,13 +6,20 @@ import {
   Stack,
   Button,
   ButtonBase,
+  Avatar,
+  Tooltip,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  IconButton,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { googleLogout } from "@react-oauth/google";
+import { useContext, useState } from "react";
 import { SiDiscord, SiReadthedocs } from "react-icons/si";
+import { UserContext } from "..";
 import logo from "../Fox.png";
 
-export default function SideBar(props: { onLogout: () => void }) {
+export default function SideBar() {
   const theme = useTheme();
 
   return (
@@ -76,17 +83,81 @@ export default function SideBar(props: { onLogout: () => void }) {
             </Link>
           </Box>
         </Stack>
-        <hr style={{ margin: "5px 5px", opacity: 0.2 }} />
-        <Box>
-          <ButtonBase
-            onClick={props.onLogout}
-            sx={{ display: "block", width: "100%" }}
-          >
-            <Logout />
-            <Typography fontSize={10}>Sign out</Typography>
-          </ButtonBase>
-        </Box>
+        <UserMenu />
       </Stack>
     </Box>
+  );
+}
+
+function UserMenu() {
+  const { user, signOut } = useContext(UserContext);
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  return user && signOut ? (
+    <>
+      <Box>
+        <IconButton
+          onClick={handleClick}
+          size="small"
+          aria-controls={open ? "account-menu" : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? "true" : undefined}
+        >
+          <Avatar
+            alt={user.first_name}
+            src={user.picture}
+            sx={{ mx: "auto", mb: 1 }}
+          >
+            {user.first_name[0] + user.last_name[0]}
+          </Avatar>
+        </IconButton>
+      </Box>
+      <Menu
+        id="account-menu"
+        open={open}
+        onClose={handleClose}
+        onClick={handleClose}
+        PaperProps={{
+          elevation: 0,
+          sx: {
+            overflow: "visible",
+            filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.32))",
+            ml: 13,
+            mt: -1,
+            "&:before": {
+              content: '""',
+              display: "block",
+              position: "absolute",
+              bottom: 18,
+              left: 0,
+              width: 10,
+              height: 10,
+              bgcolor: "background.paper",
+              transform: "translateX(-50%) rotate(45deg)",
+              zIndex: 0,
+            },
+          },
+        }}
+      >
+        <MenuItem>
+          <ButtonBase onClick={signOut}>
+            <ListItemIcon>
+              <Logout fontSize="small" />
+            </ListItemIcon>
+            Sign out
+          </ButtonBase>
+        </MenuItem>
+      </Menu>
+    </>
+  ) : (
+    <></>
   );
 }

@@ -66,6 +66,7 @@ class Config:
     examples_dir: str = _get_examples_dir()
     project_template_dir: str = "{}/template".format(_get_examples_dir())
     data_dir: str = _get_data_dir()
+    authenticate: bool = False
 
     @property
     def server_url(self) -> str:
@@ -81,6 +82,10 @@ class Config:
     @property
     def server_pid_file_path(self):
         return os.path.join(self.config_dir, "server.pid")
+
+    @property
+    def authorized_email_domain(self):
+        return os.environ.get("AUTHORIZED_EMAIL_DOMAIN")
 
 
 _SQLITE_FILE = "db.sqlite3"
@@ -102,6 +107,7 @@ _CLOUD_CONFIG = Config(
     api_version=1,
     port=80,
     db_url=os.environ.get("DATABASE_URL", "NO_DB"),
+    authenticate=True,
 )
 
 

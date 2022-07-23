@@ -11,6 +11,7 @@ from sematic.api.app import sematic_api
 
 # Endpoint modules need to be imported for endpoints
 # to be registered.
+import sematic.api.endpoints.auth  # noqa: F401
 import sematic.api.endpoints.runs  # noqa: F401
 import sematic.api.endpoints.notes  # noqa: F401
 import sematic.api.endpoints.edges  # noqa: F401

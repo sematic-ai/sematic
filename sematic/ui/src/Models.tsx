@@ -47,3 +47,10 @@ export type Note = {
   created_at: Date;
   updated_at: Date;
 };
+
+export type User = {
+  email: string;
+  first_name: string;
+  last_name: string;
+  picture: string;
+};
