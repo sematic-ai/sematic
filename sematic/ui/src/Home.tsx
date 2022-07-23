@@ -9,8 +9,15 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { ReactElement, useCallback, useEffect, useState } from "react";
+import {
+  ReactElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { SiDiscord, SiReadthedocs, SiGithub } from "react-icons/si";
+import { UserContext } from ".";
 import RunStateChip from "./components/RunStateChip";
 import { RunListPayload } from "./Payloads";
 import { fetchJSON } from "./utils";
@@ -52,14 +59,17 @@ function ShellCommand(props: { command: string }) {
 export default function Home() {
   const [prompt, setPrompt] = useState<ReactElement | undefined>(undefined);
 
+  const { user } = useContext(UserContext);
+
   useEffect(() => {
     let filters = JSON.stringify({
       parent_id: { eq: null },
     });
 
-    fetchJSON(
-      "/api/v1/runs?limit=1&filters=" + filters,
-      (payload: RunListPayload) => {
+    fetchJSON({
+      url: "/api/v1/runs?limit=1&filters=" + filters,
+      apiKey: user?.api_key,
+      callback: (payload: RunListPayload) => {
         if (payload.content.length > 0) {
           const run = payload.content[0];
           setPrompt(
@@ -72,22 +82,33 @@ export default function Home() {
               <Link href={"/pipelines/" + run.calculator_path}>{run.name}</Link>
             </Typography>
           );
-        } else {
-          setPrompt(
-            <Typography fontSize="medium">
-              Nice to have you here, get started.
-            </Typography>
-          );
         }
-      }
-    );
+      },
+    });
   }, []);
 
+  const h1 = user ? "Hi " + user.first_name : "Welcome to Sematic";
+
   return (
-    <Container sx={{ pt: 20, height: "100vh", overflowY: "scroll" }}>
+    <Container sx={{ pt: 10, height: "100vh", overflowY: "scroll" }}>
       {/*sx={{ pt: 20, mx: 5, height: "100vh", overflowY: "scroll" }}>*/}
-      <Typography variant="h1">🦊 Welcome to Sematic!</Typography>
-      <Box sx={{ mt: 15, mb: 5, minHeight: "1px" }}>{prompt}</Box>
+      <Typography variant="h1">{h1}</Typography>
+      <Box sx={{ mt: 15, mb: 10, minHeight: "1px" }}>
+        {prompt && false ? (
+          prompt
+        ) : user ? (
+          <Box sx={{ width: 600 }}>
+            <Typography variant="h4" sx={{ mb: 4 }}>
+              To get started, set your API key:
+            </Typography>
+            <ShellCommand
+              command={"sematic settings set SEMATIC_API_KEY " + user.api_key}
+            />
+          </Box>
+        ) : (
+          <></>
+        )}
+      </Box>
       <Grid container>
         <Grid item xs sx={{ pr: 5, mt: 10 }}>
           <Typography variant="h3" sx={{ textAlign: "center" }}>

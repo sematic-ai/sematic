@@ -1,4 +1,4 @@
-import { Run, Artifact, Edge, Note } from "./Models";
+import { Run, Artifact, Edge, Note, User } from "./Models";
 
 export type RunListPayload = {
   current_page_url: string;
@@ -44,8 +44,5 @@ export type NoteCreatePayload = {
 };
 
 export type GoogleLoginPayload = {
-  email: string;
-  first_name: string;
-  last_name: string;
-  picture: string;
+  user: User;
 };

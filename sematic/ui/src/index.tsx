@@ -18,7 +18,7 @@ import {
 } from "@react-oauth/google";
 import { GoogleLoginPayload } from "./Payloads";
 import { User } from "./Models";
-import { Paper } from "@mui/material";
+import { Alert, Paper } from "@mui/material";
 import logo from "./Fox.png";
 import { fetchJSON } from "./utils";
 
@@ -36,9 +36,14 @@ function App() {
     undefined
   );
 
+  const [error, setError] = useState<Error | undefined>(undefined);
+
   useEffect(() => {
-    fetchJSON("/authenticate", (payload: { authenticate: boolean }) => {
-      setAuthenticate(payload.authenticate);
+    fetchJSON({
+      url: "/authenticate",
+      callback: (payload: { authenticate: boolean }) => {
+        setAuthenticate(payload.authenticate);
+      },
     });
   }, []);
 
@@ -60,20 +65,25 @@ function App() {
 
   const onGoogleLoginSuccess = useCallback(
     (credentialResponse: CredentialResponse) => {
-      fetch("/login/google", {
+      fetchJSON({
+        url: "/login/google",
         method: "POST",
-        body: JSON.stringify({
+        body: {
           token: credentialResponse.credential,
-        }),
-        headers: {
-          "Content-Type": "application/json",
         },
-      })
-        .then((response) => response.json())
-        .then((payload: GoogleLoginPayload) => {
-          localStorage.setItem("user", JSON.stringify(payload));
-          setUser(payload);
-        });
+        callback: (payload: GoogleLoginPayload) => {
+          setError(undefined);
+          localStorage.setItem("user", JSON.stringify(payload.user));
+          setUser(payload.user);
+        },
+        setError: (error) => {
+          if (error) {
+            setError(Error("Unauthorized user"));
+          } else {
+            setError(undefined);
+          }
+        },
+      });
     },
     []
   );
@@ -108,13 +118,18 @@ function App() {
         style={{ marginBottom: "30px" }}
       />
       {authenticate === undefined ? <Loading isLoaded={false} /> : <></>}
-      {authenticate === true ? (
+      {authenticate === true && error ? (
+        <Alert severity="error">{error.message}</Alert>
+      ) : (
+        <></>
+      )}
+      {authenticate === true && !error ? (
         <GoogleLogin
           text="signin_with"
           logo_alignment="center"
           onSuccess={onGoogleLoginSuccess}
           onError={() => {
-            console.log("Login Failed");
+            setError(Error("Unauthorized user"));
           }}
         />
       ) : (

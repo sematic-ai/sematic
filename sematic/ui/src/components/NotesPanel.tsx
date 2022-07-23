@@ -2,11 +2,13 @@ import { Box, Stack, TextField, useTheme } from "@mui/material";
 import {
   KeyboardEvent,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
+import { UserContext } from "..";
 import { Note, Run } from "../Models";
 import { NoteCreatePayload, NoteListPayload } from "../Payloads";
 import { fetchJSON } from "../utils";
@@ -14,6 +16,7 @@ import { NoteView } from "./Notes";
 
 export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
   const theme = useTheme();
+  const { user } = useContext(UserContext);
 
   const { rootRun, selectedRun } = props;
 
@@ -24,12 +27,13 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
   const [composedNote, setComposedNote] = useState("");
 
   useEffect(() => {
-    fetchJSON(
-      "/api/v1/notes?calculator_path=" + calculatorPath,
-      (payload: NoteListPayload) => {
+    fetchJSON({
+      url: "/api/v1/notes?calculator_path=" + calculatorPath,
+      apiKey: user?.api_key,
+      callback: (payload: NoteListPayload) => {
         setNotes(payload.content);
-      }
-    );
+      },
+    });
   }, [calculatorPath]);
 
   const submitNote = useCallback(
@@ -39,25 +43,24 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
 
       setInputDisabled(true);
 
-      const requestOptions = {
+      fetchJSON({
+        url: "/api/v1/notes",
+        apiKey: user?.api_key,
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           note: {
-            author_id: "anonymous@acme.com",
+            author_id: user?.email || "anonymous@acme.com",
             note: composedNote,
             root_id: rootRun.id,
             run_id: selectedRun.id,
           },
-        }),
-      };
-      fetch("/api/v1/notes", requestOptions)
-        .then((response) => response.json())
-        .then((payload: NoteCreatePayload) => {
+        },
+        callback: (payload: NoteCreatePayload) => {
           setNotes([...notes, payload.content]);
           setComposedNote("");
           setInputDisabled(false);
-        });
+        },
+      });
     },
     [composedNote, rootRun, selectedRun, notes]
   );

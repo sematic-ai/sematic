@@ -5,7 +5,7 @@ Module keeping all /api/v*/runs/* API endpoints.
 # Standard library
 import base64
 from http import HTTPStatus
-import typing
+from typing import Optional, List, Dict
 from urllib.parse import urlunsplit, urlencode, urlsplit
 
 # Third-party
@@ -16,10 +16,12 @@ import flask_socketio  # type: ignore
 
 # Sematic
 from sematic.api.app import sematic_api
+from sematic.api.endpoints.auth import authenticate
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
+from sematic.db.models.user import User
 from sematic.db.queries import get_root_graph, get_run, save_graph, get_run_graph
 from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
@@ -28,7 +30,8 @@ from sematic.api.endpoints.request_parameters import (
 
 
 @sematic_api.route("/api/v1/runs", methods=["GET"])
-def list_runs_endpoint() -> flask.Response:
+@authenticate
+def list_runs_endpoint(user: Optional[User]) -> flask.Response:
     """
     GET /api/v1/runs endpoint.
 
@@ -69,7 +72,7 @@ def list_runs_endpoint() -> flask.Response:
         flask.request.args, Run
     )
 
-    decoded_cursor: typing.Optional[str] = None
+    decoded_cursor: Optional[str] = None
     if cursor is not None:
         try:
             decoded_cursor = base64.urlsafe_b64decode(bytes(cursor, "utf-8")).decode(
@@ -118,10 +121,10 @@ def list_runs_endpoint() -> flask.Response:
 
         query = query.order_by(sqlalchemy.desc(Run.created_at))
 
-        runs: typing.List[Run] = query.limit(limit).all()
+        runs: List[Run] = query.limit(limit).all()
         after_cursor_count: int = query.count()
 
-    current_url_params: typing.Dict[str, str] = dict(limit=str(limit))
+    current_url_params: Dict[str, str] = dict(limit=str(limit))
     if cursor is not None:
         current_url_params["cursor"] = cursor
 
@@ -130,11 +133,11 @@ def list_runs_endpoint() -> flask.Response:
         (scheme, netloc, path, urlencode(current_url_params), fragment)
     )
 
-    next_page_url: typing.Optional[str] = None
-    next_cursor: typing.Optional[str] = None
+    next_page_url: Optional[str] = None
+    next_cursor: Optional[str] = None
 
     if runs and after_cursor_count > limit:
-        next_url_params: typing.Dict[str, str] = dict(limit=str(limit))
+        next_url_params: Dict[str, str] = dict(limit=str(limit))
         next_cursor = _make_cursor("{}_{}".format(runs[-1].created_at, runs[-1].id))
         next_url_params["cursor"] = next_cursor
         next_page_url = urlunsplit(
@@ -160,7 +163,8 @@ def _make_cursor(key: str) -> str:
 
 
 @sematic_api.route("/api/v1/runs/<run_id>", methods=["GET"])
-def get_run_endpoint(run_id: str) -> flask.Response:
+@authenticate
+def get_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     try:
         run = get_run(run_id)
     except NoResultFound:
@@ -176,7 +180,8 @@ def get_run_endpoint(run_id: str) -> flask.Response:
 
 
 @sematic_api.route("/api/v1/runs/<run_id>/graph", methods=["GET"])
-def get_run_graph_endpoint(run_id: str) -> flask.Response:
+@authenticate
+def get_run_graph_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     """
     Retrieve graph objects for run with id `run_id`.
 
@@ -210,7 +215,8 @@ def get_run_graph_endpoint(run_id: str) -> flask.Response:
 
 
 @sematic_api.route("/api/v1/events/<namespace>/<event>", methods=["POST"])
-def events(namespace: str, event: str) -> flask.Response:
+@authenticate
+def events(user: Optional[User], namespace: str, event: str) -> flask.Response:
     flask_socketio.emit(
         event,
         flask.request.json,
@@ -221,7 +227,8 @@ def events(namespace: str, event: str) -> flask.Response:
 
 
 @sematic_api.route("/api/v1/graph", methods=["PUT"])
-def save_graph_endpoint():
+@authenticate
+def save_graph_endpoint(user: Optional[User]):
     if not flask.request or not flask.request.json or "graph" not in flask.request.json:
         return jsonify_error(
             "Please provide a graph payload in JSON format.",

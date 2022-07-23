@@ -45,7 +45,7 @@ class Run(Base, JSONEncodableMixin):
         entry point of the graph, i.e. the one corresponding to the future on which
         `resolve` was called.
     description: Optional[str]
-        The run's description. Defaults to the calculator's docstring.
+        The run's description. Defaults to the function's docstring.
     source_code: str
         The calculator's source code.
     created_at : datetime

@@ -4,8 +4,8 @@ sematic_py_lib(
     deps = [
         "//sematic:config",
         requirement("sqlalchemy"),
-        requirement("psycopg2-binary")
-    ]
+        requirement("psycopg2-binary"),
+    ],
 )
 
 sematic_py_lib(
@@ -15,15 +15,17 @@ sematic_py_lib(
         ":db",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
-        "//sematic/db/models:run",
         "//sematic/db/models:note",
+        "//sematic/db/models:run",
+        "//sematic/db/models:user",
         requirement("sqlalchemy"),
-
-    ]
+    ],
 )
 
-exports_files(["schema.sql.pg", "schema.sql.sqlite"])
-
+exports_files([
+    "schema.sql.pg",
+    "schema.sql.sqlite",
+])
 
 sematic_py_lib(
     name = "migrate_lib",
@@ -31,13 +33,12 @@ sematic_py_lib(
     data = glob(["migrations/*.sql"]),
     deps = [
         "//sematic:config",
-        "//sematic/db:db",
-    ]
+        "//sematic/db",
+    ],
 )
-
 
 py_binary(
     name = "migrate",
     srcs = ["migrate.py"],
-    deps = [":migrate_lib"]
+    deps = [":migrate_lib"],
 )

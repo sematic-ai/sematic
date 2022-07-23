@@ -50,7 +50,9 @@ export type Note = {
 
 export type User = {
   email: string;
-  first_name: string;
-  last_name: string;
-  picture: string;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string;
+  // only returned if user is self
+  api_key: string | null;
 };

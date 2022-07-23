@@ -12,12 +12,15 @@ import {
   MenuItem,
   ListItemIcon,
   IconButton,
+  ListItem,
+  Divider,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useContext, useState } from "react";
 import { SiDiscord, SiReadthedocs } from "react-icons/si";
 import { UserContext } from "..";
 import logo from "../Fox.png";
+import { User } from "../Models";
 
 export default function SideBar() {
   const theme = useTheme();
@@ -89,6 +92,21 @@ export default function SideBar() {
   );
 }
 
+function userInitials(user: User) {
+  let initials = "";
+
+  if (user.first_name) {
+    initials += user.first_name[0];
+    if (user.last_name) {
+      initials += user.last_name[0];
+    }
+  } else {
+    initials += user.email[0];
+  }
+
+  return initials;
+}
+
 function UserMenu() {
   const { user, signOut } = useContext(UserContext);
 
@@ -112,11 +130,11 @@ function UserMenu() {
           aria-expanded={open ? "true" : undefined}
         >
           <Avatar
-            alt={user.first_name}
-            src={user.picture}
+            alt={user.first_name || user.email}
+            src={user.avatar_url || undefined}
             sx={{ mx: "auto", mb: 1 }}
           >
-            {user.first_name[0] + user.last_name[0]}
+            {userInitials(user)}
           </Avatar>
         </IconButton>
       </Box>
@@ -147,7 +165,21 @@ function UserMenu() {
           },
         }}
       >
-        <MenuItem>
+        <ListItem sx={{ pb: 0 }}>
+          <Typography variant="h6">
+            {user.first_name + " " + user.last_name}
+          </Typography>
+        </ListItem>
+        <ListItem sx={{ py: 2 }}>
+          <Typography color="GrayText">{user.email}</Typography>
+        </ListItem>
+        <ListItem sx={{ pt: 0, pb: 4 }}>
+          <Typography color="GrayText">
+            API key: <code>{user.api_key}</code>
+          </Typography>
+        </ListItem>
+        <Divider />
+        <MenuItem sx={{ mt: 2 }}>
           <ButtonBase onClick={signOut}>
             <ListItemIcon>
               <Logout fontSize="small" />
