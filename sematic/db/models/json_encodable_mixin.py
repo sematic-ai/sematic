@@ -1,5 +1,4 @@
 # Standard library
-import base64
 import datetime
 import enum
 import json
@@ -45,18 +44,10 @@ REDACTED = "REDACTED"
 
 
 def _to_json_encodable(value, column):
-    HEX_ENCODE = "hex_encode"
-
     info = column.info
 
     if info.get(REDACTED_KEY, False):
         return REDACTED
-
-    if isinstance(value, bytes):
-        if info.get(HEX_ENCODE, False):
-            return value.hex()
-        else:
-            return base64.b64encode(value).decode("ascii")
 
     if isinstance(value, datetime.datetime):
         # SQLite does not store timezone
@@ -81,9 +72,6 @@ def _to_json_encodable(value, column):
     return value
 
 
-HEX_ENCODE = "hex_encode"
-
-
 def _from_json_encodable(json_encodable, column):
     if json_encodable is None:
         return None
@@ -99,11 +87,5 @@ def _from_json_encodable(json_encodable, column):
 
     if isinstance(column.type, types.DateTime):
         return dateutil.parser.parse(json_encodable)
-
-    if isinstance(column.type, types.LargeBinary):
-        if column.info.get(HEX_ENCODE, False):
-            return bytes.fromhex(json_encodable)
-
-        return base64.b64decode(json_encodable)
 
     return json_encodable
