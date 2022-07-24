@@ -5,19 +5,30 @@ import pytest
 from sqlalchemy.orm.exc import NoResultFound
 
 # Sematic
-from sematic.api.tests.fixtures import test_client  # noqa: F401
+from sematic.api.tests.fixtures import (  # noqa: F401
+    make_auth_test,
+    test_client,
+)
+from sematic.db.models.user import User  # noqa: F401
 from sematic.db.queries import get_note, save_note  # noqa: F401
-from sematic.db.tests.fixtures import test_db, persisted_run, run  # noqa: F401
+from sematic.db.tests.fixtures import (  # noqa: F401
+    test_db,
+    persisted_run,
+    run,
+    persisted_user,
+)
 from sematic.db.models.run import Run
 from sematic.db.models.note import Note
+
+
+test_list_note_auth = make_auth_test("/api/v1/notes")
+test_create_note_auth = make_auth_test("/api/v1/notes", method="POST")
 
 
 def test_list_notes_empty(test_client: flask.testing.FlaskClient):  # noqa: F811
     response = test_client.get("/api/v1/notes")
 
-    assert response.json == dict(
-        content=[],
-    )
+    assert response.json == dict(content=[], authors=[])
 
 
 def test_create_note(
@@ -45,9 +56,9 @@ def test_create_note(
 
 
 @pytest.fixture
-def note(persisted_run: Run) -> Note:  # noqa: F811
+def note(persisted_run: Run, persisted_user: User) -> Note:  # noqa: F811
     return Note(
-        author_id="test@test.test",
+        author_id=persisted_user.email,
         note="And now for something completely different",
         run_id=persisted_run.id,
         root_id=persisted_run.id,
@@ -69,6 +80,9 @@ def test_list_notes(
     assert response.json is not None
     assert len(response.json["content"]) == 1
     assert response.json["content"][0]["id"] == persisted_note.id
+
+    assert len(response.json["authors"]) == 1
+    assert response.json["authors"][0]["email"] == persisted_note.author_id
 
 
 def test_delete_note(

@@ -1,11 +1,13 @@
 # Standard library
 import contextlib
+from http import HTTPStatus
 import re
 from urllib.parse import urljoin
 
 # Third-party
 import pytest
 import werkzeug
+import flask.testing
 
 # responses 0.21.0 has type stubs but they break mypy
 # See https://github.com/getsentry/responses/issues/556
@@ -74,3 +76,12 @@ def do_authenticate(auth_config: bool):
 
     finally:
         get_config().authenticate = current_authenticate
+
+
+def make_auth_test(endpoint: str, method: str = "GET"):
+    def test_auth(test_client: flask.testing.FlaskClient):
+        with do_authenticate(True):
+            response = getattr(test_client, method.lower())(endpoint)
+            assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+    return test_auth

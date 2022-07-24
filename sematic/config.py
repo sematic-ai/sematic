@@ -99,7 +99,6 @@ _LOCAL_CONFIG = Config(
     port=5001,
     api_version=1,
     db_url="sqlite:///{}/{}".format(get_config_dir(), _SQLITE_FILE),
-    authenticate=True,
 )
 
 

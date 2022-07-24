@@ -7,7 +7,11 @@ import flask.testing
 import pytest
 
 # Sematic
-from sematic.api.tests.fixtures import test_client, mock_requests  # noqa: F401
+from sematic.api.tests.fixtures import (  # noqa: F401
+    make_auth_test,
+    test_client,
+    mock_requests,
+)
 from sematic.db.tests.fixtures import (  # noqa: F401
     test_db,
     pg_mock,
@@ -18,6 +22,13 @@ from sematic.db.tests.fixtures import (  # noqa: F401
 from sematic.db.queries import save_run
 from sematic.db.models.run import Run
 from sematic.calculator import func
+
+
+test_list_runs_auth = make_auth_test("/api/v1/runs")
+test_get_run_auth = make_auth_test("/api/v1/runs/123")
+test_get_run_graph_auth = make_auth_test("/api/v1/runs/123/graph")
+test_put_run_graph_auth = make_auth_test("/api/v1/graph", method="PUT")
+test_post_events_auth = make_auth_test("/api/v1/events/namespace/event", method="POST")
 
 
 def test_list_runs_empty(test_client: flask.testing.FlaskClient):  # noqa: F811

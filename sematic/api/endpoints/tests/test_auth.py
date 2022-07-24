@@ -14,11 +14,10 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     mock_requests,
     do_authenticate,
 )
-from sematic.db.models.factories import make_user
 from sematic.db.models.json_encodable_mixin import REDACTED
 from sematic.db.models.user import User
-from sematic.db.queries import get_user, save_user
-from sematic.db.tests.fixtures import test_db  # noqa: F401
+from sematic.db.queries import get_user
+from sematic.db.tests.fixtures import test_db, persisted_user  # noqa: F401
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.app import sematic_api
 
@@ -47,26 +46,14 @@ def test_login_new_user(test_client: flask.testing.FlaskClient):  # noqa: F811
 
         returned_user = User.from_json_encodable(response.json["user"])  # type: ignore
 
-    persisted_user = get_user("ringo@example.com")
+    saved_user = get_user("ringo@example.com")
 
-    for user in (returned_user, persisted_user):
+    for user in (returned_user, saved_user):
         assert user.first_name == "Ringo"
         assert user.last_name == "Starr"
         assert user.email == "ringo@example.com"
         assert user.avatar_url == "https://picture"
         assert user.api_key != REDACTED
-
-
-@pytest.fixture
-def persisted_user(test_db):  # noqa: F811
-    user = make_user(
-        email="george@example.com",
-        first_name="George",
-        last_name="Harrison",
-        avatar_url="https://avatar",
-    )
-    save_user(user)
-    return user
 
 
 def test_login_existing_user(
@@ -123,7 +110,7 @@ def test_login_invalid_domain(test_client: flask.testing.FlaskClient):  # noqa: 
 @pytest.mark.parametrize("authenticate_config", (True, False))
 def test_authenticate_decorator(
     authenticate_config: bool,
-    persisted_user: User,
+    persisted_user: User,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     with do_authenticate(authenticate_config):

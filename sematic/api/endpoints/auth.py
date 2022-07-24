@@ -101,16 +101,12 @@ def authenticate(endpoint_fn: Callable) -> Callable:
     """
     Decorator for endpoints who need authentication.
     """
-    if not get_config().authenticate:
-
-        @functools.wraps(endpoint_fn)
-        def unauthenticated_endpoint(*args, **kwargs):
-            return endpoint_fn(None, *args, **kwargs)
-
-        return unauthenticated_endpoint
 
     @functools.wraps(endpoint_fn)
-    def authenticated_endpoint(*args, **kwargs) -> flask.Response:
+    def endpoint(*args, **kwargs) -> flask.Response:
+        if not get_config().authenticate:
+            return endpoint_fn(None, *args, **kwargs)
+
         request_api_key = flask.request.headers.get("X-API-KEY")
         if request_api_key is None:
             return jsonify_error("Missing API key", HTTPStatus.UNAUTHORIZED)
@@ -122,4 +118,4 @@ def authenticate(endpoint_fn: Callable) -> Callable:
 
         return endpoint_fn(user, *args, **kwargs)
 
-    return authenticated_endpoint
+    return endpoint
