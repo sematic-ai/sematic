@@ -23,3 +23,17 @@ pytest_test(
         requirement("sqlalchemy"),
     ],
 )
+
+pytest_test(
+    name = "test_auth",
+    srcs = ["test_auth.py"],
+    deps = [
+        "//sematic/api/endpoints:auth",
+        "//sematic/api/tests:fixtures",
+        "//sematic/db:queries",
+        "//sematic/db/models:factories",
+        "//sematic/db/models:json_encodable_mixin",
+        "//sematic/db/models:user",
+        requirement("flask"),
+    ],
+)

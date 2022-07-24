@@ -1,4 +1,5 @@
 # Standard library
+import contextlib
 import re
 from urllib.parse import urljoin
 
@@ -19,7 +20,7 @@ from sematic.config import get_config
 from sematic.api.server import sematic_api
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def test_client(test_db):  # noqa: F811
     sematic_api.config["DATABASE"] = test_db
     sematic_api.config["TESTING"] = True
@@ -61,3 +62,15 @@ def mock_requests(test_client):
                 )
 
         yield
+
+
+@contextlib.contextmanager
+def do_authenticate(auth_config: bool):
+    current_authenticate = get_config().authenticate
+    try:
+        get_config().authenticate = auth_config
+
+        yield auth_config
+
+    finally:
+        get_config().authenticate = current_authenticate
