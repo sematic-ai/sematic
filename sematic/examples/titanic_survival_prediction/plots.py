@@ -9,29 +9,28 @@ import seaborn as sns
 # Sematic
 import sematic
 
+
 def plot_missing_values(df: pd.DataFrame) -> matplotlib.figure.Figure:
     figure = plt.figure()
     miss_vals = pd.DataFrame(df.isnull().sum() / len(df) * 100)
-    miss_vals.plot(kind='bar',
-        title='Missing values in percentage',
-        ylabel='percentage'
-        )
-    return figure
-
-def plot_survival_gender(df: pd.DataFrame) -> matplotlib.figure.Figure:
-    figure = plt.figure()
-    df['survived'] = df.survived.astype('int')
-    sns.barplot(
-        x='sex',
-        y='survived',
-        data=df
+    miss_vals.plot(
+        kind="bar", title="Missing values in percentage", ylabel="percentage"
     )
     return figure
 
+
+def plot_survival_gender(df: pd.DataFrame) -> matplotlib.figure.Figure:
+    figure = plt.figure()
+    df["survived"] = df.survived.astype("int")
+    sns.barplot(x="sex", y="survived", data=df)
+    return figure
+
+
 def plot_survival_by_class(df: pd.DataFrame) -> matplotlib.figure.Figure:
     figure = plt.figure()
-    sns.countplot(x='pclass', data=df)
+    sns.countplot(x="pclass", data=df)
     return figure
+
 
 @sematic.func
 def make_eda_plots(df_X: pd.DataFrame, df_y: pd.DataFrame) -> EDAPlots:
