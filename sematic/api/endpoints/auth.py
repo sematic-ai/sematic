@@ -74,6 +74,11 @@ def login() -> flask.Response:
 
     try:
         user = get_user(idinfo["email"])
+
+        # In case these have changed
+        user.first_name = idinfo["given_name"]
+        user.last_name = idinfo["family_name"]
+        user.avatar_url = idinfo["picture"]
     except NoResultFound:
         user = make_user(
             email=idinfo["email"],
@@ -81,7 +86,8 @@ def login() -> flask.Response:
             last_name=idinfo["family_name"],
             avatar_url=idinfo["picture"],
         )
-        user = save_user(user)
+
+    user = save_user(user)
 
     payload = {"user": user.to_json_encodable()}
     # API keys are redacted by default.
