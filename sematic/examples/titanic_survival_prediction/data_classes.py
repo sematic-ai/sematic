@@ -5,15 +5,18 @@ from dataclasses import dataclass
 import pandas as pd
 import matplotlib.figure
 
+
 @dataclass
 class EvaluationOutput:
     classification_report: pd.DataFrame
     confusion_matrix: pd.DataFrame
 
+
 @dataclass
 class EDAPlots:
     survival_gender_figure: matplotlib.figure.Figure
     survival_class_figure: matplotlib.figure.Figure
+
 
 @dataclass
 class PipelineOutput:

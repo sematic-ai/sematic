@@ -1,26 +1,26 @@
 # Standard library
-from typing import List, Tuple, Union
+from typing import List, Union
 
-# Third-party
-import matplotlib.figure
-
-# TODO move data class below sematic
 # Sematic
 import sematic
 
 # Data class
-from sematic.examples.titanic_survival_prediction.data_classes import EDAPlots, EvaluationOutput
+from sematic.examples.titanic_survival_prediction.data_classes import (
+    EDAPlots,
+    EvaluationOutput,
+)
 
 # Titianic survival prediction example
 from sematic.examples.titanic_survival_prediction.data_preprocessing import (
     load_data,
     feature_engineering,
-    split_data
+    split_data,
 )
 from sematic.examples.titanic_survival_prediction.plots import make_eda_plots
 from sematic.examples.titanic_survival_prediction.model import init_model
 from sematic.examples.titanic_survival_prediction.train import train_model
 from sematic.examples.titanic_survival_prediction.test import eval_model
+
 
 @sematic.func
 def pipeline() -> List[Union[EvaluationOutput, EDAPlots]]:
@@ -28,9 +28,7 @@ def pipeline() -> List[Union[EvaluationOutput, EDAPlots]]:
     Titanic survial prediction as [implemented
     here](https://www.jcchouinard.com/classification-machine-learning-project-in-scikit-learn/)
     """
-    df_X, df_y = load_data().set(
-        name="Load Data", tags=["data loading"]
-    )
+    df_X, df_y = load_data().set(name="Load Data", tags=["data loading"])
 
     eda_plots = make_eda_plots(df_X, df_y).set(
         name="EDA Analysis", tags=["eda analysis"]
@@ -44,9 +42,7 @@ def pipeline() -> List[Union[EvaluationOutput, EDAPlots]]:
         name="Split Data", tags=["data splitting"]
     )
 
-    model = init_model().set(
-        name="Initialise Model", tags=["model initialising"]
-    )
+    model = init_model().set(name="Initialise Model", tags=["model initialising"])
 
     trained_model = train_model(model, X_train, y_train).set(
         name="Train Model", tags=["model training"]
