@@ -51,7 +51,7 @@ def login() -> flask.Response:
                 raise ValueError("Incorrect email domain")
 
     except Exception:
-        return jsonify_error("Invalid user", HTTPStatus.FORBIDDEN)
+        return jsonify_error("Invalid user", HTTPStatus.UNAUTHORIZED)
 
     # Returned schema
     """
@@ -84,6 +84,9 @@ def login() -> flask.Response:
         user = save_user(user)
 
     payload = {"user": user.to_json_encodable()}
+    # API keys are redacted by default.
+    # In this case we do need to pass it to the front-end.
+    payload["user"]["api_key"] = user.api_key
 
     return flask.jsonify(payload)
 
@@ -104,12 +107,12 @@ def authenticate(endpoint_fn: Callable) -> Callable:
     def authenticated_endpoint(*args, **kwargs) -> flask.Response:
         request_api_key = flask.request.headers.get("X-API-KEY")
         if request_api_key is None:
-            return jsonify_error("Missing API key", HTTPStatus.FORBIDDEN)
+            return jsonify_error("Missing API key", HTTPStatus.UNAUTHORIZED)
 
         try:
             user = get_user_by_api_key(request_api_key)
         except NoResultFound:
-            return jsonify_error("Missing API key", HTTPStatus.FORBIDDEN)
+            return jsonify_error("Missing API key", HTTPStatus.UNAUTHORIZED)
 
         return endpoint_fn(user, *args, **kwargs)
 

@@ -52,7 +52,7 @@ export type User = {
   email: string;
   first_name: string | null;
   last_name: string | null;
-  avatar_url: string;
+  avatar_url: string | null;
   // only returned if user is self
   api_key: string | null;
 };

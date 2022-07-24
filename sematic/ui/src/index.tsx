@@ -76,13 +76,7 @@ function App() {
           localStorage.setItem("user", JSON.stringify(payload.user));
           setUser(payload.user);
         },
-        setError: (error) => {
-          if (error) {
-            setError(Error("Unauthorized user"));
-          } else {
-            setError(undefined);
-          }
-        },
+        setError: setError,
       });
     },
     []

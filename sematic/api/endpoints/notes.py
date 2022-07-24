@@ -46,7 +46,16 @@ def list_notes_endpoint(user: Optional[User]) -> flask.Response:
 
         notes: List[Note] = query.all()
 
-    payload = dict(content=[note.to_json_encodable() for note in notes])
+        author_ids = set(note.author_id for note in notes)
+
+        authors: List[User] = (
+            session.query(User).filter(User.email.in_(author_ids)).all()
+        )
+
+    payload = dict(
+        content=[note.to_json_encodable() for note in notes],
+        authors=[user.to_json_encodable() for user in authors],
+    )
 
     return flask.jsonify(payload)
 
@@ -62,6 +71,11 @@ def create_note_endpoint(user: Optional[User]) -> flask.Response:
         )
 
     note_json = flask.request.json["note"]
+
+    # We do this even though the front-end sends an author_id
+    # to make sure nobody posts notes on someone else's behalf
+    if user:
+        note_json["author_id"] = user.email
 
     try:
         note = Note.from_json_encodable(note_json)

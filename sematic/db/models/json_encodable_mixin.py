@@ -39,12 +39,17 @@ class JSONEncodableMixin:
 
 JSON_KEY = "json"
 ENUM_KEY = "enum"
+REDACTED_KEY = "redacted"
 
 
 def _to_json_encodable(value, column):
     HEX_ENCODE = "hex_encode"
 
     info = column.info
+
+    if info.get(REDACTED_KEY, False):
+        return "REDACTED"
+
     if isinstance(value, bytes):
         if info.get(HEX_ENCODE, False):
             return value.hex()

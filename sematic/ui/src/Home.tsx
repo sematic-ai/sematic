@@ -94,7 +94,7 @@ export default function Home() {
       {/*sx={{ pt: 20, mx: 5, height: "100vh", overflowY: "scroll" }}>*/}
       <Typography variant="h1">{h1}</Typography>
       <Box sx={{ mt: 15, mb: 10, minHeight: "1px" }}>
-        {prompt && false ? (
+        {prompt ? (
           prompt
         ) : user ? (
           <Box sx={{ width: 600 }}>

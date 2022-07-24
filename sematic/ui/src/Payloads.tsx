@@ -37,6 +37,7 @@ export type RunGraphPayload = {
 
 export type NoteListPayload = {
   content: Note[];
+  authors: User[];
 };
 
 export type NoteCreatePayload = {

@@ -63,6 +63,7 @@ def get_all_user_settings() -> Dict[str, str]:
 class SettingsVar(enum.Enum):
     # Sematic
     SEMATIC_API_ADDRESS = "SEMATIC_API_ADDRESS"
+    SEMATIC_API_KEY = "SEMATIC_API_KEY"
 
     # Kubernetes
     KUBERNETES_NAMESPACE = "KUBERNETES_NAMESPACE"
@@ -77,7 +78,17 @@ class SettingsVar(enum.Enum):
 
 
 class MissingSettingsError(Exception):
-    pass
+    def __init__(self, missing_settings: SettingsVar):
+        message = """
+Missing settings: {}
+
+Set it with
+
+    $ sematic settings set {} VALUE
+""".format(
+            missing_settings.value, missing_settings.value
+        )
+        super().__init__(message)
 
 
 def get_user_settings(var: SettingsVar) -> str:
@@ -94,17 +105,7 @@ def get_user_settings(var: SettingsVar) -> str:
     settings = get_all_user_settings().get(var.value)
 
     if settings is None:
-        raise MissingSettingsError(
-            """
-Missing settings: {}
-
-Set it with
-
-    $ sematic settings set {} VALUE
-""".format(
-                var.value, var.value
-            )
-        )
+        raise MissingSettingsError(var)
 
     return settings
 

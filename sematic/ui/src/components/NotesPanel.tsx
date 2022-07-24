@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { UserContext } from "..";
-import { Note, Run } from "../Models";
+import { Note, Run, User } from "../Models";
 import { NoteCreatePayload, NoteListPayload } from "../Payloads";
 import { fetchJSON } from "../utils";
 import { NoteView } from "./Notes";
@@ -22,7 +22,18 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
 
   const calculatorPath = useMemo(() => rootRun.calculator_path, [rootRun]);
 
+  const anonymousUser: User = {
+    email: "anonymous@acme.com",
+    first_name: "Anonymous",
+    last_name: null,
+    avatar_url: null,
+    api_key: null,
+  };
+
   const [notes, setNotes] = useState<Note[]>([]);
+  const [authorsByEmail, setAuthorsByEmail] = useState<Map<string, User>>(
+    new Map(user ? [[user.email, user]] : [])
+  );
   const [inputDisabled, setInputDisabled] = useState(false);
   const [composedNote, setComposedNote] = useState("");
 
@@ -32,6 +43,11 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
       apiKey: user?.api_key,
       callback: (payload: NoteListPayload) => {
         setNotes(payload.content);
+        let currentAuthors = new Map(authorsByEmail);
+        payload.authors.forEach((user: User) =>
+          currentAuthors.set(user.email, user)
+        );
+        setAuthorsByEmail(currentAuthors);
       },
     });
   }, [calculatorPath]);
@@ -49,7 +65,7 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
         method: "POST",
         body: {
           note: {
-            author_id: user?.email || "anonymous@acme.com",
+            author_id: (user || anonymousUser).email,
             note: composedNote,
             root_id: rootRun.id,
             run_id: selectedRun.id,
@@ -101,7 +117,11 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
 
             <Stack sx={{ gridRow: 2 }}>
               {notes.map((note, idx) => (
-                <NoteView note={note} key={idx} />
+                <NoteView
+                  note={note}
+                  key={idx}
+                  author={authorsByEmail.get(note.author_id) || anonymousUser}
+                />
               ))}
             </Stack>
             <div ref={bottomRef} />

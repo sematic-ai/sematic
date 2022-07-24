@@ -4,10 +4,7 @@ import {
   Typography,
   Link,
   Stack,
-  Button,
   ButtonBase,
-  Avatar,
-  Tooltip,
   Menu,
   MenuItem,
   ListItemIcon,
@@ -21,6 +18,7 @@ import { SiDiscord, SiReadthedocs } from "react-icons/si";
 import { UserContext } from "..";
 import logo from "../Fox.png";
 import { User } from "../Models";
+import UserAvatar from "./UserAvatar";
 
 export default function SideBar() {
   const theme = useTheme();
@@ -92,21 +90,6 @@ export default function SideBar() {
   );
 }
 
-function userInitials(user: User) {
-  let initials = "";
-
-  if (user.first_name) {
-    initials += user.first_name[0];
-    if (user.last_name) {
-      initials += user.last_name[0];
-    }
-  } else {
-    initials += user.email[0];
-  }
-
-  return initials;
-}
-
 function UserMenu() {
   const { user, signOut } = useContext(UserContext);
 
@@ -129,20 +112,13 @@ function UserMenu() {
           aria-haspopup="true"
           aria-expanded={open ? "true" : undefined}
         >
-          <Avatar
-            alt={user.first_name || user.email}
-            src={user.avatar_url || undefined}
-            sx={{ mx: "auto", mb: 1 }}
-          >
-            {userInitials(user)}
-          </Avatar>
+          <UserAvatar user={user} sx={{ mx: "auto", mb: 1 }} />
         </IconButton>
       </Box>
       <Menu
         id="account-menu"
         open={open}
         onClose={handleClose}
-        onClick={handleClose}
         PaperProps={{
           elevation: 0,
           sx: {
