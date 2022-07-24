@@ -1,6 +1,7 @@
 # Standard library
 from http import HTTPStatus
 from unittest import mock
+import uuid
 
 # Third-party
 import flask.testing
@@ -113,6 +114,8 @@ def test_authenticate_decorator(
     persisted_user: User,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
+    test_id = uuid.uuid4().hex
+
     with do_authenticate(authenticate_config):
 
         def endpoint(user):
@@ -124,16 +127,14 @@ def test_authenticate_decorator(
             return flask.Response()
 
         # Necessary to not confuse Flask
-        endpoint.__name__ = "endpoint_{}".format(authenticate_config)
+        endpoint.__name__ = "endpoint_{}".format(test_id)
 
-        sematic_api.route("/test-{}".format(authenticate_config))(
-            authenticate(endpoint)
-        )
+        sematic_api.route("/test-{}".format(test_id))(authenticate(endpoint))
 
         headers = {"X-API-KEY": persisted_user.api_key} if authenticate_config else {}
 
         response = test_client.get(
-            "/test-{}".format(authenticate_config),
+            "/test-{}".format(test_id),
             headers=headers,
         )
 
@@ -145,20 +146,18 @@ def test_authenticate_decorator_fail(
     headers,
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
+    test_id = uuid.uuid4().hex
+
     with do_authenticate(True):
 
         def endpoint(user):
             assert False
 
         # Necessary to not confuse Flask
-        endpoint.__name__ = "endpoint_{}".format(headers.get("X-API-KEY"))
+        endpoint.__name__ = "endpoint_{}".format(test_id)
 
-        sematic_api.route("/test-{}".format(headers.get("X-API-KEY")))(
-            authenticate(endpoint)
-        )
+        sematic_api.route("/test-{}".format(test_id))(authenticate(endpoint))
 
-        response = test_client.get(
-            "/test-{}".format(headers.get("X-API-KEY")), headers=headers
-        )
+        response = test_client.get("/test-{}".format(test_id), headers=headers)
 
         assert response.status_code == HTTPStatus.UNAUTHORIZED
