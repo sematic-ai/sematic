@@ -3,6 +3,7 @@ Functions to generate models.
 """
 # Standard library
 import datetime
+import secrets
 import typing
 import hashlib
 import json
@@ -11,6 +12,7 @@ import json
 from sematic.abstract_future import AbstractFuture
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.run import Run
+from sematic.db.models.user import User
 from sematic.types.serialization import (
     type_from_json_encodable,
     value_from_json_encodable,
@@ -141,3 +143,30 @@ def _fix_nan_inf(string: str) -> str:
         .replace("Infinity", '"Infinity"')
         .replace('-"Infinity"', '"-Infinity"')
     )
+
+
+def make_user(
+    email: str,
+    first_name: typing.Optional[str],
+    last_name: typing.Optional[str],
+    avatar_url: typing.Optional[str],
+) -> User:
+    """
+    Make a user
+    """
+    api_key = _make_api_key()
+
+    return User(
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+        avatar_url=avatar_url,
+        api_key=api_key,
+    )
+
+
+def _make_api_key() -> str:
+    """
+    Generate an API key
+    """
+    return secrets.token_urlsafe(16)

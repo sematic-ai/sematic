@@ -257,7 +257,7 @@ def _schedule_job(
                             + [
                                 kubernetes.client.V1EnvVar(  # type: ignore
                                     name=name,
-                                    value=value,
+                                    value=str(value),
                                 )
                                 for name, value in get_all_user_settings().items()
                             ],

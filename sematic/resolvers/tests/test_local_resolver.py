@@ -6,7 +6,11 @@ import pytest
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.api.tests.fixtures import test_client, mock_requests  # noqa: F401
+from sematic.api.tests.fixtures import (  # noqa: F401
+    mock_no_auth,
+    test_client,
+    mock_requests,
+)
 from sematic.calculator import func
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
@@ -32,6 +36,7 @@ def pipeline(a: float, b: float) -> float:
     return add(c, d)
 
 
+@mock_no_auth
 def test_single_function(test_db, mock_requests):  # noqa: F811
     future = add(1, 2)
 
@@ -81,6 +86,7 @@ def add_add_add(a: float, b: float) -> float:
     return add(bb, aa)
 
 
+@mock_no_auth
 def test_add_add(test_db, mock_requests):  # noqa: F811
     future = add_add_add(1, 2)
 
@@ -95,6 +101,7 @@ def test_add_add(test_db, mock_requests):  # noqa: F811
     assert len(edges) == 10
 
 
+@mock_no_auth
 def test_pipeline(test_db, mock_requests):  # noqa: F811
     future = pipeline(3, 5)
 
@@ -111,6 +118,7 @@ def test_pipeline(test_db, mock_requests):  # noqa: F811
     assert len(edges) == 16
 
 
+@mock_no_auth
 def test_failure(test_db, mock_requests):  # noqa: F811
     class CustomException(Exception):
         pass
@@ -233,10 +241,12 @@ class DBStateMachineTestResolver(LocalResolver):
         assert all(edge.artifact_id is None for edge in output_edges)
 
 
+@mock_no_auth
 def test_db_state_machine(test_db, mock_requests):  # noqa: F811
     pipeline(1, 2).resolve(DBStateMachineTestResolver())
 
 
+@mock_no_auth
 def test_list_conversion(test_db, mock_requests):  # noqa: F811
     @func
     def alist(a: float, b: float) -> List[float]:

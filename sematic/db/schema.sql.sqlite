@@ -53,6 +53,17 @@ CREATE TABLE notes (
     FOREIGN KEY(run_id) REFERENCES runs (id),
     FOREIGN KEY(root_id) REFERENCES runs (id)
 );
+CREATE TABLE users (
+    email TEXT NOT NULL,
+    first_name TEXT,
+    last_name TEXT,
+    avatar_url TEXT,
+    api_key TEXT NOT NULL,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL,
+
+    PRIMARY KEY (email)
+);
 -- Dbmate schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
   ('20220424062956'),
@@ -63,4 +74,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20220522082435'),
   ('20220527000512'),
   ('20220610234559'),
-  ('20220714175433');
+  ('20220714175433'),
+  ('20220723010628');

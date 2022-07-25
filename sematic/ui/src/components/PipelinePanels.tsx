@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { UserContext } from "..";
 import { Run } from "../Models";
 import { RunGraphPayload } from "../Payloads";
 import { fetchJSON, graphSocket } from "../utils";
@@ -17,11 +18,13 @@ export default function PipelinePanels(props: { rootRun: Run }) {
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedRun, setSelectedRun] = useState<Run>(rootRun);
+  const { user } = useContext(UserContext);
 
   const loadGraph = useCallback(() => {
-    fetchJSON(
-      "/api/v1/runs/" + rootRun.id + "/graph?root=1",
-      (payload: RunGraphPayload) => {
+    fetchJSON({
+      url: "/api/v1/runs/" + rootRun.id + "/graph?root=1",
+      apiKey: user?.api_key,
+      callback: (payload: RunGraphPayload) => {
         let graph = {
           runs: new Map(payload.runs.map((run) => [run.id, run])),
           edges: payload.edges,
@@ -34,8 +37,8 @@ export default function PipelinePanels(props: { rootRun: Run }) {
         //setSelectedPanelItem("run");
         setIsLoaded(true);
       },
-      setError
-    );
+      setError: setError,
+    });
   }, [rootRun]);
 
   useEffect(() => {

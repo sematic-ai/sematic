@@ -134,6 +134,7 @@ sematic_py_wheel(
         # Specifying this by hand because sematic_py_wheel doesn't know
         # how to fix versions
         "eventlet==0.30.2",
+        #"gunicorn @ git+https://github.com/benoitc/gunicorn.git",
     ],
     version = "0.6.0",  #+{BUILD_TIMESTAMP}",
     visibility = ["//visibility:public"],

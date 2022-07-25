@@ -1,4 +1,4 @@
-import { Run, Artifact, Edge, Note } from "./Models";
+import { Run, Artifact, Edge, Note, User } from "./Models";
 
 export type RunListPayload = {
   current_page_url: string;
@@ -37,8 +37,21 @@ export type RunGraphPayload = {
 
 export type NoteListPayload = {
   content: Note[];
+  authors: User[];
 };
 
 export type NoteCreatePayload = {
   content: Note;
+};
+
+export type GoogleLoginPayload = {
+  user: User;
+};
+
+export type AuthenticatePayload = {
+  authenticate: boolean;
+  providers: {
+    GOOGLE_OAUTH_CLIENT_ID?: string;
+    GITHUB_OAUTH_CLIENT_ID?: string;
+  };
 };

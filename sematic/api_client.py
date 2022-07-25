@@ -7,7 +7,7 @@ import requests
 
 # Sematic
 from sematic.config import get_config
-from sematic.user_settings import SettingsVar
+from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
@@ -106,8 +106,15 @@ def _request(
     endpoint: str,
     kwargs: Optional[Dict[str, Any]] = None,
 ):
+    kwargs = kwargs or {}
+
+    headers = kwargs.get("headers", {})
+    headers["Content-Type"] = "application/json"
+    headers["X-API-KEY"] = _get_api_key()
+    kwargs["headers"] = headers
+
     try:
-        response = method(_url(endpoint), **(kwargs or {}))
+        response = method(_url(endpoint), **kwargs)
     except requests.exceptions.ConnectionError:
         raise APIConnectionError(
             (
@@ -117,6 +124,12 @@ def _request(
             ).format(get_config().server_url, SettingsVar.SEMATIC_API_ADDRESS.value)
         )
 
+    if (
+        response.status_code == requests.codes.unauthorized
+        and headers["X-API-KEY"] is None
+    ):
+        raise MissingSettingsError(SettingsVar.SEMATIC_API_KEY)
+
     response.raise_for_status()
 
     return response
@@ -124,3 +137,13 @@ def _request(
 
 def _url(endpoint) -> str:
     return "{}{}".format(get_config().api_url, endpoint)
+
+
+def _get_api_key() -> Optional[str]:
+    """
+    Read the API key from user settings.
+    """
+    try:
+        return get_user_settings(SettingsVar.SEMATIC_API_KEY)
+    except MissingSettingsError:
+        return None

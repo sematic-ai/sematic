@@ -5,7 +5,7 @@ sematic_py_lib(
         ":base",
         ":json_encodable_mixin",
         requirement("sqlalchemy"),
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -13,7 +13,7 @@ sematic_py_lib(
     srcs = ["base.py"],
     deps = [
         requirement("sqlalchemy"),
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -22,10 +22,11 @@ sematic_py_lib(
     deps = [
         ":artifact",
         ":run",
+        ":user",
         "//sematic:abstract_future",
-        "//sematic/types:serialization",
         "//sematic:storage",
-    ]
+        "//sematic/types:serialization",
+    ],
 )
 
 sematic_py_lib(
@@ -35,7 +36,7 @@ sematic_py_lib(
         ":base",
         ":json_encodable_mixin",
         requirement("sqlalchemy"),
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -55,7 +56,7 @@ sematic_py_lib(
         ":json_encodable_mixin",
         "//sematic:abstract_future",
         requirement("sqlalchemy"),
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -65,5 +66,15 @@ sematic_py_lib(
         ":base",
         ":json_encodable_mixin",
         requirement("sqlalchemy"),
-    ]
+    ],
+)
+
+sematic_py_lib(
+    name = "user",
+    srcs = ["user.py"],
+    deps = [
+        ":base",
+        ":json_encodable_mixin",
+        requirement("sqlalchemy"),
+    ],
 )
