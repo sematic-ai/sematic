@@ -24,6 +24,7 @@ requests
 responses==0.20.0  # 0.21.0 breaks mypy checks https://github.com/getsentry/responses/issues/556
 werkzeug
 gunicorn
+#git+https://github.com/benoitc/gunicorn.git
 python-dateutil
 google-auth
 

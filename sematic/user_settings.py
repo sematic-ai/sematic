@@ -64,6 +64,14 @@ class SettingsVar(enum.Enum):
     # Sematic
     SEMATIC_API_ADDRESS = "SEMATIC_API_ADDRESS"
     SEMATIC_API_KEY = "SEMATIC_API_KEY"
+    SEMATIC_AUTHENTICATE = "SEMATIC_AUTHENTICATE"
+    SEMATIC_AUTHORIZED_EMAIL_DOMAIN = "SEMATIC_AUTHORIZED_EMAIL_DOMAIN"
+
+    # Google
+    GOOGLE_OAUTH_CLIENT_ID = "GOOGLE_OAUTH_CLIENT_ID"
+
+    # Github
+    GITHUB_OAUTH_CLIENT_ID = "GITHUB_OAUTH_CLIENT_ID"
 
     # Kubernetes
     KUBERNETES_NAMESPACE = "KUBERNETES_NAMESPACE"
@@ -91,9 +99,11 @@ Set it with
         super().__init__(message)
 
 
-def get_user_settings(var: SettingsVar) -> str:
+def get_user_settings(var: SettingsVar, *args) -> str:
     """
     Main API to access individual settings.
+
+    Default as first args or will raise if no settings.
     """
     if var not in SettingsVar.__members__.values():
         raise ValueError(
@@ -105,6 +115,9 @@ def get_user_settings(var: SettingsVar) -> str:
     settings = get_all_user_settings().get(var.value)
 
     if settings is None:
+        if len(args) >= 1:
+            return args[0]
+
         raise MissingSettingsError(var)
 
     return settings

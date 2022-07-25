@@ -9,6 +9,7 @@ import pytest
 # Sematic
 from sematic.api.tests.fixtures import (  # noqa: F401
     make_auth_test,
+    mock_no_auth,
     test_client,
     mock_requests,
 )
@@ -31,6 +32,7 @@ test_put_run_graph_auth = make_auth_test("/api/v1/graph", method="PUT")
 test_post_events_auth = make_auth_test("/api/v1/events/namespace/event", method="POST")
 
 
+@mock_no_auth
 def test_list_runs_empty(test_client: flask.testing.FlaskClient):  # noqa: F811
     results = test_client.get("/api/v1/runs?limit=3")
 
@@ -44,6 +46,7 @@ def test_list_runs_empty(test_client: flask.testing.FlaskClient):  # noqa: F811
     )
 
 
+@mock_no_auth
 def test_list_runs(test_client: flask.testing.FlaskClient):  # noqa: F811
     created_runs = [save_run(make_run()) for _ in range(5)]
 
@@ -73,6 +76,7 @@ def test_list_runs(test_client: flask.testing.FlaskClient):  # noqa: F811
     assert payload["content"] == [run_.to_json_encodable() for run_ in created_runs[3:]]
 
 
+@mock_no_auth
 def test_group_by(test_client: flask.testing.FlaskClient):  # noqa: F811
     runs = {key: [make_run(name=key), make_run(name=key)] for key in ("RUN_A", "RUN_B")}
 
@@ -89,6 +93,7 @@ def test_group_by(test_client: flask.testing.FlaskClient):  # noqa: F811
     assert {run_["name"] for run_ in payload["content"]} == set(runs)
 
 
+@mock_no_auth
 def test_filters(test_client: flask.testing.FlaskClient):  # noqa: F811
     runs = make_run(), make_run()
     runs[0].parent_id = uuid.uuid4().hex
@@ -108,6 +113,7 @@ def test_filters(test_client: flask.testing.FlaskClient):  # noqa: F811
         assert payload["content"][0]["id"] == run_.id
 
 
+@mock_no_auth
 def test_and_filters(test_client: flask.testing.FlaskClient):  # noqa: F811
     run1 = make_run(name="abc", calculator_path="abc")
     run2 = make_run(name="def", calculator_path="abc")
@@ -127,6 +133,7 @@ def test_and_filters(test_client: flask.testing.FlaskClient):  # noqa: F811
     assert payload["content"][0]["id"] == run1.id
 
 
+@mock_no_auth
 def test_get_run_endpoint(
     persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
@@ -138,6 +145,7 @@ def test_get_run_endpoint(
     assert payload["content"]["id"] == persisted_run.id
 
 
+@mock_no_auth
 def test_get_run_404(test_client: flask.testing.FlaskClient):  # noqa: F811
     response = test_client.get("/api/v1/runs/unknownid")
 
@@ -162,6 +170,7 @@ def pipeline(a: float, b: float) -> float:
 @pytest.mark.parametrize(
     "root, run_count, artifact_count, edge_count", ((0, 1, 3, 3), (1, 3, 4, 8))
 )
+@mock_no_auth
 def test_get_run_graph_endpoint(
     root: int,
     run_count: int,

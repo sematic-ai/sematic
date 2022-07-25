@@ -7,6 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 # Sematic
 from sematic.api.tests.fixtures import (  # noqa: F401
     make_auth_test,
+    mock_no_auth,
     test_client,
 )
 from sematic.db.models.user import User  # noqa: F401
@@ -25,12 +26,14 @@ test_list_note_auth = make_auth_test("/api/v1/notes")
 test_create_note_auth = make_auth_test("/api/v1/notes", method="POST")
 
 
+@mock_no_auth
 def test_list_notes_empty(test_client: flask.testing.FlaskClient):  # noqa: F811
     response = test_client.get("/api/v1/notes")
 
     assert response.json == dict(content=[], authors=[])
 
 
+@mock_no_auth
 def test_create_note(
     test_client: flask.testing.FlaskClient, persisted_run: Run  # noqa: F811
 ):
@@ -71,6 +74,7 @@ def persisted_note(note: Note) -> Note:
     return note
 
 
+@mock_no_auth
 def test_list_notes(
     test_client: flask.testing.FlaskClient, persisted_note: Note  # noqa: F811
 ):
@@ -85,6 +89,7 @@ def test_list_notes(
     assert response.json["authors"][0]["email"] == persisted_note.author_id
 
 
+@mock_no_auth
 def test_delete_note(
     test_client: flask.testing.FlaskClient, persisted_note: Note  # noqa: F811
 ):

@@ -1,5 +1,6 @@
 # Standard library
 from http import HTTPStatus
+from typing import Dict
 from unittest import mock
 import uuid
 
@@ -7,13 +8,13 @@ import uuid
 import flask.testing
 import flask
 import pytest
-import google.oauth2
+from google.auth.exceptions import GoogleAuthError
 
 # Sematic
 from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
     mock_requests,
-    do_authenticate,
+    mock_user_settings,
 )
 from sematic.db.models.json_encodable_mixin import REDACTED
 from sematic.db.models.user import User
@@ -21,16 +22,32 @@ from sematic.db.queries import get_user
 from sematic.db.tests.fixtures import test_db, persisted_user  # noqa: F401
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.app import sematic_api
+from sematic.user_settings import SettingsVar
 
 
-@pytest.mark.parametrize("authenticate_config", (True, False))
+@pytest.mark.parametrize(
+    "authenticate_config, expected_providers",
+    ((True, {"GOOGLE_OAUTH_CLIENT_ID": "ABC123"}), (False, {})),
+)
 def test_authenticate_endpoint(
-    authenticate_config: bool, test_client: flask.testing.FlaskClient  # noqa: F811
+    authenticate_config: bool,
+    expected_providers: Dict[str, str],
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
-    with do_authenticate(authenticate_config):
-        response = test_client.get("/authenticate")
+    with mock_user_settings(
+        SettingsVar.SEMATIC_AUTHENTICATE,
+        authenticate_config,
+    ):
+        with mock_user_settings(
+            SettingsVar.GOOGLE_OAUTH_CLIENT_ID,
+            "ABC123",
+        ):
+            response = test_client.get("/authenticate")
 
-        assert response.json == {"authenticate": authenticate_config}
+            assert response.json == {
+                "authenticate": authenticate_config,
+                "providers": expected_providers,
+            }
 
 
 def test_login_new_user(test_client: flask.testing.FlaskClient):  # noqa: F811
@@ -85,7 +102,7 @@ def test_login_existing_user(
 
 def test_login_invalid_token(test_client: flask.testing.FlaskClient):  # noqa: F811
     def verify_oauth2_token(*args):
-        raise google.auth.exceptions.GoogleAuthError()
+        raise GoogleAuthError()
 
     with mock.patch(
         "google.oauth2.id_token.verify_oauth2_token", side_effect=verify_oauth2_token
@@ -96,8 +113,9 @@ def test_login_invalid_token(test_client: flask.testing.FlaskClient):  # noqa: F
 
 
 def test_login_invalid_domain(test_client: flask.testing.FlaskClient):  # noqa: F811
-    with mock.patch(
-        "sematic.config.Config.authorized_email_domain", return_value="example.com"
+    with mock_user_settings(
+        SettingsVar.SEMATIC_AUTHORIZED_EMAIL_DOMAIN,
+        "example.com",
     ):
         with mock.patch(
             "google.oauth2.id_token.verify_oauth2_token",
@@ -116,7 +134,10 @@ def test_authenticate_decorator(
 ):
     test_id = uuid.uuid4().hex
 
-    with do_authenticate(authenticate_config):
+    with mock_user_settings(
+        SettingsVar.SEMATIC_AUTHENTICATE,
+        authenticate_config,
+    ):
 
         def endpoint(user):
             if authenticate_config:
@@ -148,7 +169,10 @@ def test_authenticate_decorator_fail(
 ):
     test_id = uuid.uuid4().hex
 
-    with do_authenticate(True):
+    with mock_user_settings(
+        SettingsVar.SEMATIC_AUTHENTICATE,
+        True,
+    ):
 
         def endpoint(user):
             assert False

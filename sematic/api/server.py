@@ -1,10 +1,12 @@
 # Standard library
 import os
+import sys
 
 # Third-party
 import argparse
 from flask import jsonify, send_file
 from flask_socketio import SocketIO, Namespace  # type: ignore
+import eventlet
 
 # Sematic
 from sematic.api.app import sematic_api
@@ -21,6 +23,13 @@ from sematic.config import (
     switch_env,
 )  # noqa: F401
 from sematic.api.wsgi import SematicWSGI
+
+# Monkey-patching ssl
+# See https://eventlet.net/doc/patching.html
+# google.oauth2.id_token.verify_oauth2_token makes outgoing
+# SSL queries
+eventlet.import_patched("ssl")
+sys.modules["ssl"] = eventlet.green.ssl
 
 
 @sematic_api.route("/data/<file>")
@@ -77,6 +86,8 @@ def run_wsgi(daemon: bool):
         "pidfile": get_config().server_pid_file_path,
         "accesslog": os.path.join(get_config().config_dir, "access.log"),
         "errorlog": os.path.join(get_config().config_dir, "error.log"),
+        "certfile": os.environ.get("CERTIFICATE"),
+        "keyfile": os.environ.get("PRIVATE_KEY"),
     }
     SematicWSGI(sematic_api, options).run()
 

@@ -3,12 +3,13 @@ sematic_py_lib(
     srcs = ["fixtures.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//sematic/db/tests:fixtures",
+        "//sematic:user_settings",
         "//sematic/api:server_lib",
+        "//sematic/db/tests:fixtures",
         requirement("pytest"),
         requirement("werkzeug"),
         requirement("responses"),
-    ]
+    ],
 )
 
 pytest_test(
@@ -17,6 +18,6 @@ pytest_test(
     deps = [
         ":fixtures",
         "//sematic/db/tests:fixtures",
-        requirement("flask")
-    ]
+        requirement("flask"),
+    ],
 )

@@ -47,3 +47,11 @@ export type NoteCreatePayload = {
 export type GoogleLoginPayload = {
   user: User;
 };
+
+export type AuthenticatePayload = {
+  authenticate: boolean;
+  providers: {
+    GOOGLE_OAUTH_CLIENT_ID?: string;
+    GITHUB_OAUTH_CLIENT_ID?: string;
+  };
+};

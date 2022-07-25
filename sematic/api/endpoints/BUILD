@@ -71,7 +71,7 @@ sematic_py_lib(
     srcs = ["auth.py"],
     deps = [
         ":request_parameters",
-        "//sematic:config",
+        "//sematic:user_settings",
         "//sematic/api:app",
         "//sematic/db:queries",
         "//sematic/db/models:factories",

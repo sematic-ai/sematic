@@ -16,7 +16,7 @@ import {
   GoogleLogin,
   GoogleOAuthProvider,
 } from "@react-oauth/google";
-import { GoogleLoginPayload } from "./Payloads";
+import { AuthenticatePayload, GoogleLoginPayload } from "./Payloads";
 import { User } from "./Models";
 import { Alert, Paper } from "@mui/material";
 import logo from "./Fox.png";
@@ -32,18 +32,19 @@ function App() {
   const [user, setUser] = useState<User | null>(
     userFromStorage ? JSON.parse(userFromStorage) : null
   );
-  const [authenticate, setAuthenticate] = useState<boolean | undefined>(
-    undefined
-  );
+  const [authenticate, setAuthenticate] = useState<
+    AuthenticatePayload | undefined
+  >(undefined);
 
   const [error, setError] = useState<Error | undefined>(undefined);
 
   useEffect(() => {
     fetchJSON({
       url: "/authenticate",
-      callback: (payload: { authenticate: boolean }) => {
-        setAuthenticate(payload.authenticate);
+      callback: (payload: AuthenticatePayload) => {
+        setAuthenticate(payload);
       },
+      setError: setError,
     });
   }, []);
 
@@ -82,7 +83,7 @@ function App() {
     []
   );
 
-  return authenticate === false || user ? (
+  return authenticate?.authenticate === false || user ? (
     <UserContext.Provider value={userContextValue}>
       <Routes>
         <Route path="/" element={<Shell />}>
@@ -112,20 +113,25 @@ function App() {
         style={{ marginBottom: "30px" }}
       />
       {authenticate === undefined ? <Loading isLoaded={false} /> : <></>}
-      {authenticate === true && error ? (
-        <Alert severity="error">{error.message}</Alert>
-      ) : (
-        <></>
-      )}
-      {authenticate === true && !error ? (
-        <GoogleLogin
-          text="signin_with"
-          logo_alignment="center"
-          onSuccess={onGoogleLoginSuccess}
-          onError={() => {
-            setError(Error("Unauthorized user"));
-          }}
-        />
+
+      {error ? <Alert severity="error">{error.message}</Alert> : <></>}
+
+      {!error &&
+      authenticate &&
+      authenticate.authenticate === true &&
+      authenticate.providers.GOOGLE_OAUTH_CLIENT_ID !== undefined ? (
+        <GoogleOAuthProvider
+          clientId={authenticate.providers.GOOGLE_OAUTH_CLIENT_ID}
+        >
+          <GoogleLogin
+            text="signin_with"
+            logo_alignment="center"
+            onSuccess={onGoogleLoginSuccess}
+            onError={() => {
+              setError(Error("Unauthorized user"));
+            }}
+          />
+        </GoogleOAuthProvider>
       ) : (
         <></>
       )}
@@ -137,9 +143,7 @@ const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 root.render(
-  <GoogleOAuthProvider clientId="977722105393-257kdkrc5dfbpu0jcsd8etn1k4u4q4ut.apps.googleusercontent.com">
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </GoogleOAuthProvider>
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
 );

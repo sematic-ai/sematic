@@ -8,10 +8,10 @@ FROM --platform=linux/amd64 python:3.9-bullseye
 
 RUN python3 -m pip install --upgrade pip
 
-RUN pip install sematic
+# RUN pip install sematic
 # When debugging use the wheel directly
-# COPY sematic-*.whl .
-# RUN pip install sematic-*.whl
+COPY sematic-*.whl .
+RUN pip install sematic-*.whl
 
 EXPOSE 80
 CMD python3 -m sematic.db.migrate --env cloud; python3 -m sematic.api.server --env cloud
