@@ -37,6 +37,8 @@ $ sudo docker run -d -p 80:80 \
     [-e SEMATIC_AUTHENTICATE=1 \]
     [-e GOOGLE_OAUTH_CLIENT_ID=123456789.apps.googleusercontent.com \]
     [-e SEMATIC_AUTHORIZED_EMAIL_DOMAIN=yourdomain.com \]
+    [-e CERTIFICATE=/path/to/certificate.pem \]
+    [-e PRIVATE_KEY=/path/to/private.key \]
     sematicai/sematic-server:latest
 ```
 
@@ -66,6 +68,15 @@ will not need to authenticate to use it. Everyone will be the "Anonymous" user.
 
 * `SEMATIC_AUTHORIZED_EMAIL_DOMAIN` denies access to users whose email is not of
   said domain.
+
+### SSL
+
+If you have an SLL certificate for the domain on which you are deploying
+Sematic, you can pass it to the server container with the `CERTIFICATE` and
+`PRIVATE_KEY` environment variables when calling `docker run`.
+
+Make sure that the certificate and private key files are accessible within the
+container (e.g. place them in the `~/.sematic` directory).
 
 ### Run pipelines against the deployed API
 
