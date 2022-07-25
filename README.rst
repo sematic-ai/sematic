@@ -49,9 +49,7 @@ Sematic is an open-source development toolkit to help Data Scientists and
 Machine Learning (ML) Engineers prototype and productionize ML pipelines in days
 not weeks.
 
-Sematic is based on learnings from building the infrastructure behind Cruise's
-`Continuous Learning
-Machine <https://medium.com/cruise/cruise-continuous-learning-machine-30d60f4c691b>`_.
+Sematic is based on experience working at leading tech companies.
 
 Find our docs at `docs.sematic.dev <https://docs.sematic.dev>`_\ , and join us on
 `Discord <https://discord.gg/4KZJ6kYVax>`_.
