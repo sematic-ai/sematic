@@ -58,7 +58,6 @@ class StateMachineResolver(Resolver, abc.ABC):
         if future in self._futures:
             return
 
-        self._validate_resources(future)
         self._futures.append(future)
 
         for value in future.kwargs.values():
@@ -76,20 +75,6 @@ class StateMachineResolver(Resolver, abc.ABC):
 
     @abc.abstractmethod
     def _wait_for_scheduled_run(self) -> None:
-        pass
-
-    def _validate_resources(self, future: AbstractFuture):
-        """Confirm that the future can be run, raise an appropriate exception otherwise.
-
-        Is intended for any resolver-specific constraints. For example, the remote
-        resolver can check whether the cloud resources available can meet the
-        resource requirements the future has expressed.
-
-        Parameters
-        ----------
-        future:
-            The future to validate.
-        """
         pass
 
     @typing.final

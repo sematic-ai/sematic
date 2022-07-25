@@ -5,7 +5,11 @@ from unittest import mock
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.resolvers.worker import main
 from sematic.calculator import func
-from sematic.api.tests.fixtures import mock_requests, test_client  # noqa: F401
+from sematic.api.tests.fixtures import (  # noqa: F401
+    mock_no_auth,
+    mock_requests,
+    test_client,
+)
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.tests.fixtures import test_storage  # noqa: F401
 from sematic.db.queries import get_root_graph
@@ -24,6 +28,7 @@ def pipeline(a: float, b: float) -> float:
 
 @mock.patch("sematic.resolvers.cloud_resolver._schedule_job")
 @mock.patch("kubernetes.config.load_kube_config")
+@mock_no_auth
 def test_main(
     mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,

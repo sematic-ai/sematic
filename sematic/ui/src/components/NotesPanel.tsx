@@ -2,34 +2,54 @@ import { Box, Stack, TextField, useTheme } from "@mui/material";
 import {
   KeyboardEvent,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
-import { Note, Run } from "../Models";
+import { UserContext } from "..";
+import { Note, Run, User } from "../Models";
 import { NoteCreatePayload, NoteListPayload } from "../Payloads";
 import { fetchJSON } from "../utils";
 import { NoteView } from "./Notes";
 
 export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
   const theme = useTheme();
+  const { user } = useContext(UserContext);
 
   const { rootRun, selectedRun } = props;
 
   const calculatorPath = useMemo(() => rootRun.calculator_path, [rootRun]);
 
+  const anonymousUser: User = {
+    email: "anonymous@acme.com",
+    first_name: "Anonymous",
+    last_name: null,
+    avatar_url: null,
+    api_key: null,
+  };
+
   const [notes, setNotes] = useState<Note[]>([]);
+  const [authorsByEmail, setAuthorsByEmail] = useState<Map<string, User>>(
+    new Map(user ? [[user.email, user]] : [])
+  );
   const [inputDisabled, setInputDisabled] = useState(false);
   const [composedNote, setComposedNote] = useState("");
 
   useEffect(() => {
-    fetchJSON(
-      "/api/v1/notes?calculator_path=" + calculatorPath,
-      (payload: NoteListPayload) => {
+    fetchJSON({
+      url: "/api/v1/notes?calculator_path=" + calculatorPath,
+      apiKey: user?.api_key,
+      callback: (payload: NoteListPayload) => {
         setNotes(payload.content);
-      }
-    );
+        let currentAuthors = new Map(authorsByEmail);
+        payload.authors.forEach((user: User) =>
+          currentAuthors.set(user.email, user)
+        );
+        setAuthorsByEmail(currentAuthors);
+      },
+    });
   }, [calculatorPath]);
 
   const submitNote = useCallback(
@@ -39,25 +59,24 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
 
       setInputDisabled(true);
 
-      const requestOptions = {
+      fetchJSON({
+        url: "/api/v1/notes",
+        apiKey: user?.api_key,
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           note: {
-            author_id: "anonymous@acme.com",
+            author_id: (user || anonymousUser).email,
             note: composedNote,
             root_id: rootRun.id,
             run_id: selectedRun.id,
           },
-        }),
-      };
-      fetch("/api/v1/notes", requestOptions)
-        .then((response) => response.json())
-        .then((payload: NoteCreatePayload) => {
+        },
+        callback: (payload: NoteCreatePayload) => {
           setNotes([...notes, payload.content]);
           setComposedNote("");
           setInputDisabled(false);
-        });
+        },
+      });
     },
     [composedNote, rootRun, selectedRun, notes]
   );
@@ -98,7 +117,11 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
 
             <Stack sx={{ gridRow: 2 }}>
               {notes.map((note, idx) => (
-                <NoteView note={note} key={idx} />
+                <NoteView
+                  note={note}
+                  key={idx}
+                  author={authorsByEmail.get(note.author_id) || anonymousUser}
+                />
               ))}
             </Stack>
             <div ref={bottomRef} />

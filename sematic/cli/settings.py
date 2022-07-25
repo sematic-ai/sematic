@@ -31,6 +31,10 @@ def set_settings_cli(var, value):
     """
     try:
         settings_var = SettingsVar[var]
+
+        # Normalize booleans
+        value = {"true": True, "false": False}.get(value, value)
+
         set_user_settings(settings_var, value)
         click.echo("Successfully set {} to {}".format(var, repr(value)))
     except KeyError:

@@ -13,7 +13,7 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { Run } from "../Models";
 import { RunListPayload } from "../Payloads";
 import { fetchJSON, pipelineSocket } from "../utils";
@@ -23,6 +23,7 @@ import { RunFilterType } from "./RunList";
 import RunStateChip from "./RunStateChip";
 import TimeAgo from "./TimeAgo";
 import CloseIcon from "@mui/icons-material/Close";
+import { UserContext } from "..";
 
 export default function PipelineBar(props: {
   calculatorPath: string;
@@ -34,6 +35,7 @@ export default function PipelineBar(props: {
   const [isLoaded, setIsLoaded] = useState(false);
   const [latestRuns, setLatestRuns] = useState<Run[]>([]);
   const [hasNewRun, setHasNewRun] = useState(false);
+  const { user } = useContext(UserContext);
 
   const theme = useTheme();
 
@@ -46,14 +48,15 @@ export default function PipelineBar(props: {
         ],
       };
 
-      fetchJSON(
-        "/api/v1/runs?limit=5&filters=" + JSON.stringify(runFilters),
-        (response: RunListPayload) => {
+      fetchJSON({
+        url: "/api/v1/runs?limit=5&filters=" + JSON.stringify(runFilters),
+        apiKey: user?.api_key,
+        callback: (response: RunListPayload) => {
           onResults(response.content);
         },
-        setError,
-        setIsLoaded
-      );
+        setError: setError,
+        setIsLoaded: setIsLoaded,
+      });
     },
     []
   );

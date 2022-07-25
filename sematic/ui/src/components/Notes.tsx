@@ -1,9 +1,10 @@
-import { Box, Typography, useTheme } from "@mui/material";
-import { Note } from "../Models";
+import { Avatar, Box, Typography, useTheme } from "@mui/material";
+import { Note, User } from "../Models";
 import TimeAgo from "./TimeAgo";
+import UserAvatar from "./UserAvatar";
 
-export function NoteView(props: { note: Note }) {
-  const { note } = props;
+export function NoteView(props: { note: Note; author: User }) {
+  const { note, author } = props;
   const theme = useTheme();
 
   return (
@@ -13,12 +14,25 @@ export function NoteView(props: { note: Note }) {
         borderColor: theme.palette.grey[200],
         color: theme.palette.grey[800],
         px: 2,
-        py: 1,
+        py: 2,
       }}
       key={note.id}
     >
-      <Typography sx={{ fontSize: "small", color: theme.palette.grey[500] }}>
-        {note.author_id}:
+      <Typography
+        component="span"
+        sx={{ display: "flex", alignItems: "center" }}
+      >
+        <UserAvatar user={author} sx={{ width: 24, height: 24 }} />
+        <Typography
+          sx={{
+            fontSize: "small",
+            ml: 1,
+            color: theme.palette.grey[500],
+            fontWeight: 500,
+          }}
+        >
+          {author.first_name}:
+        </Typography>
       </Typography>
       <Box sx={{ my: 4 }}>
         <Typography fontSize="small">{note.note}</Typography>

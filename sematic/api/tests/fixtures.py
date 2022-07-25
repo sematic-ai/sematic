@@ -1,10 +1,15 @@
 # Standard library
+import contextlib
+import functools
+from http import HTTPStatus
 import re
+from typing import Any, Callable
 from urllib.parse import urljoin
 
 # Third-party
 import pytest
 import werkzeug
+import flask.testing
 
 # responses 0.21.0 has type stubs but they break mypy
 # See https://github.com/getsentry/responses/issues/556
@@ -13,13 +18,14 @@ import responses  # type: ignore
 # Sematic
 from sematic.db.tests.fixtures import test_db, pg_mock  # noqa: F401
 from sematic.config import get_config
+import sematic.user_settings as user_settings
 
 # Importing from server instead of app to make sure
 # all endpoints are loaded
 from sematic.api.server import sematic_api
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def test_client(test_db):  # noqa: F811
     sematic_api.config["DATABASE"] = test_db
     sematic_api.config["TESTING"] = True
@@ -61,3 +67,39 @@ def mock_requests(test_client):
                 )
 
         yield
+
+
+@contextlib.contextmanager
+def mock_user_settings(var: user_settings.SettingsVar, value: Any):
+    # Force load everything first
+    user_settings.get_all_user_settings()
+
+    original_settings = user_settings._settings
+
+    patched_settings = (original_settings or {"default": {}}).copy()
+    patched_settings["default"][var.value] = value
+
+    user_settings._settings = patched_settings
+
+    try:
+        yield value
+    finally:
+        user_settings._settings = original_settings
+
+
+def mock_no_auth(fn: Callable) -> Callable:
+    @functools.wraps(fn)
+    def no_auth_fn(*args, **kwargs):
+        with mock_user_settings(user_settings.SettingsVar.SEMATIC_AUTHENTICATE, False):
+            fn(*args, **kwargs)
+
+    return no_auth_fn
+
+
+def make_auth_test(endpoint: str, method: str = "GET"):
+    def test_auth(test_client: flask.testing.FlaskClient):
+        with mock_user_settings(user_settings.SettingsVar.SEMATIC_AUTHENTICATE, True):
+            response = getattr(test_client, method.lower())(endpoint)
+            assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+    return test_auth

@@ -47,3 +47,12 @@ export type Note = {
   created_at: Date;
   updated_at: Date;
 };
+
+export type User = {
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+  // only returned if user is self
+  api_key: string | null;
+};

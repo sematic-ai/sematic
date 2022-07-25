@@ -15,6 +15,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
 from sematic.db.models.note import Note
 from sematic.db.db import db
+from sematic.db.models.user import User
 
 
 def count_runs() -> int:
@@ -200,3 +201,31 @@ def _get_root_graph(root_run_id: str) -> Tuple[Set[Run], Set[Edge], Set[Artifact
         artifacts.append(result[2])
 
     return set(runs), set(edges), set(artifacts)
+
+
+def get_user(email: str) -> User:
+    """
+    Get a user from the DB.
+    """
+    with db().get_session() as session:
+        return session.query(User).filter(User.email == email).one()
+
+
+def get_user_by_api_key(api_key: str) -> User:
+    """
+    Get a user by API key
+    """
+    with db().get_session() as session:
+        return session.query(User).filter(User.api_key == api_key).one()
+
+
+def save_user(user: User) -> User:
+    """
+    Save a user to the DB
+    """
+    with db().get_session() as session:
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+
+    return user
