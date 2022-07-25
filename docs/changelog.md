@@ -1,3 +1,5 @@
+* 0.7.0
+    * [feature] Optional authentication with Google OAuth
 * 0.6.0
     * [feature] Cloud execution with `CloudResolver`
     * [feature] Dependency packaging with the `sematic_pipeline` Bazel wheel
