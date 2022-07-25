@@ -31,8 +31,12 @@ $ sudo docker pull sematicai/sematic-server:latest
 launch the server
 
 ```shell
-$ sudo docker run -d -p 80:80 -e DATABASE_URL=<DATABASE_URL> \
+$ sudo docker run -d -p 80:80 \
+    -e DATABASE_URL=<DATABASE_URL> \
     -v /home/ubuntu/.sematic:/root/.sematic \
+    [-e SEMATIC_AUTHENTICATE=1 \]
+    [-e GOOGLE_OAUTH_CLIENT_ID=123456789.apps.googleusercontent.com \]
+    [-e SEMATIC_AUTHORIZED_EMAIL_DOMAIN=yourdomain.com \]
     sematicai/sematic-server:latest
 ```
 
@@ -44,6 +48,24 @@ postgresql://<username>:<password>@<hostname>:<port>/<database>
 ```
 
 Now you should be able to visit http://my-remote-server.dev and see the landing page.
+
+### Authentication
+
+In the `docker run` command above, three optional environment variables dictate
+authentication behavior for your deployed app.
+
+If you don't pass any of them, your app will be available publicly and users
+will not need to authenticate to use it. Everyone will be the "Anonymous" user.
+
+* `SEMATIC_AUTHENTICATE` activates authentication. Users will need to sign in to
+  user the web app, and will need to set an API key in their local settings in
+  order to submit jobs.
+
+* `GOOGLE_OAUTH_CLIENT_ID` is the client ID of your Google OAuth App. We will
+  support more OAuth providers int he future.
+
+* `SEMATIC_AUTHORIZED_EMAIL_DOMAIN` denies access to users whose email is not of
+  said domain.
 
 ### Run pipelines against the deployed API
 
