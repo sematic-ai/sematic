@@ -34,11 +34,9 @@ launch the server
 $ sudo docker run -d -p 80:80 \
     -e DATABASE_URL=<DATABASE_URL> \
     -v /home/ubuntu/.sematic:/root/.sematic \
-    [-e SEMATIC_AUTHENTICATE=1 \]
-    [-e GOOGLE_OAUTH_CLIENT_ID=123456789.apps.googleusercontent.com \]
+    [-e SEMATIC_AUTHENTICATE=1 -e GOOGLE_OAUTH_CLIENT_ID=123456789.apps.googleusercontent.com \]
     [-e SEMATIC_AUTHORIZED_EMAIL_DOMAIN=yourdomain.com \]
-    [-e CERTIFICATE=/path/to/certificate.pem \]
-    [-e PRIVATE_KEY=/path/to/private.key \]
+    [-p 443:443 -e CERTIFICATE=/path/to/certificate.pem -e PRIVATE_KEY=/path/to/private.key \]
     sematicai/sematic-server:latest
 ```
 
@@ -77,6 +75,8 @@ Sematic, you can pass it to the server container with the `CERTIFICATE` and
 
 Make sure that the certificate and private key files are accessible within the
 container (e.g. place them in the `~/.sematic` directory).
+
+Also make sure to add `-p 443:443` to the forwarded ports.
 
 ### Run pipelines against the deployed API
 
