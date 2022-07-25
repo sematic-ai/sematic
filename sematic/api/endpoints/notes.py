@@ -1,6 +1,6 @@
 # Standard library
 import json
-from typing import List
+from typing import List, Optional
 from http import HTTPStatus
 
 # Third-party
@@ -10,6 +10,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 # Sematic
 from sematic.api.app import sematic_api
+from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
@@ -17,11 +18,13 @@ from sematic.api.endpoints.request_parameters import (
 from sematic.db.models.note import Note
 from sematic.db.models.run import Run
 from sematic.db.db import db
+from sematic.db.models.user import User
 from sematic.db.queries import delete_note, get_note, save_note
 
 
 @sematic_api.route("/api/v1/notes", methods=["GET"])
-def list_notes_endpoint() -> flask.Response:
+@authenticate
+def list_notes_endpoint(user: Optional[User]) -> flask.Response:
     limit, _, _, sql_predicates = get_request_parameters(
         flask.request.args,
         Note,
@@ -43,13 +46,23 @@ def list_notes_endpoint() -> flask.Response:
 
         notes: List[Note] = query.all()
 
-    payload = dict(content=[note.to_json_encodable() for note in notes])
+        author_ids = set(note.author_id for note in notes)
+
+        authors: List[User] = (
+            session.query(User).filter(User.email.in_(author_ids)).all()
+        )
+
+    payload = dict(
+        content=[note.to_json_encodable() for note in notes],
+        authors=[user.to_json_encodable() for user in authors],
+    )
 
     return flask.jsonify(payload)
 
 
 @sematic_api.route("/api/v1/notes", methods=["POST"])
-def create_note_endpoint() -> flask.Response:
+@authenticate
+def create_note_endpoint(user: Optional[User]) -> flask.Response:
     if not flask.request or not flask.request.json or "note" not in flask.request.json:
         return flask.Response(
             json.dumps(dict(error="Malformed payload")),
@@ -58,6 +71,11 @@ def create_note_endpoint() -> flask.Response:
         )
 
     note_json = flask.request.json["note"]
+
+    # We do this even though the front-end sends an author_id
+    # to make sure nobody posts notes on someone else's behalf
+    if user:
+        note_json["author_id"] = user.email
 
     try:
         note = Note.from_json_encodable(note_json)
@@ -74,7 +92,8 @@ def create_note_endpoint() -> flask.Response:
 
 
 @sematic_api.route("/api/v1/notes/<note_id>", methods=["DELETE"])
-def delete_note_endpoint(note_id: str) -> flask.Response:
+@authenticate
+def delete_note_endpoint(user: Optional[User], note_id: str) -> flask.Response:
     try:
         note = get_note(note_id)
     except NoResultFound:

@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { RunList } from "../components/RunList";
 import Tags from "../components/Tags";
 import { Run } from "../Models";
@@ -12,9 +12,10 @@ import RunStateChip from "../components/RunStateChip";
 import { Alert, AlertTitle, Container } from "@mui/material";
 import { InfoOutlined } from "@mui/icons-material";
 import { RunTime } from "../components/RunTime";
-import { pipelineSocket } from "../utils";
+import { fetchJSON, pipelineSocket } from "../utils";
 import CalculatorPath from "../components/CalculatorPath";
 import TimeAgo from "../components/TimeAgo";
+import { UserContext } from "..";
 
 function RecentStatuses(props: { runs: Array<Run> | undefined }) {
   let state: string | undefined = undefined;
@@ -32,6 +33,8 @@ function RecentStatuses(props: { runs: Array<Run> | undefined }) {
 function PipelineRow(props: { run: Run }) {
   let run = props.run;
 
+  const { user } = useContext(UserContext);
+
   const [runs, setRuns] = useState<Array<Run> | undefined>(undefined);
 
   useEffect(() => {
@@ -39,11 +42,13 @@ function PipelineRow(props: { run: Run }) {
       calculator_path: { eq: run.calculator_path },
     });
 
-    fetch("/api/v1/runs?limit=5&filters=" + filters)
-      .then((res) => res.json())
-      .then((result: RunListPayload) => {
+    fetchJSON({
+      url: "/api/v1/runs?limit=5&filters=" + filters,
+      callback: (result: RunListPayload) => {
         setRuns(result.content);
-      });
+      },
+      apiKey: user?.api_key,
+    });
   }, [run.calculator_path]);
 
   return (

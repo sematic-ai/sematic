@@ -4,6 +4,8 @@
 #
 #    pip-compile --allow-unsafe requirements/requirements.in
 #
+appnope==0.1.3
+    # via ipython
 asn1crypto==1.5.1
     # via
     #   oscrypto
@@ -72,11 +74,11 @@ flask-socketio==5.2.0
 fonttools==4.33.3
     # via matplotlib
 google-auth==2.9.0
-    # via kubernetes
-greenlet==1.1.2
     # via
-    #   eventlet
-    #   sqlalchemy
+    #   -r requirements/requirements.in
+    #   kubernetes
+greenlet==1.1.2
+    # via eventlet
 gunicorn==20.1.0
     # via -r requirements/requirements.in
 idna==3.3

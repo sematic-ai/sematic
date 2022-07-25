@@ -18,8 +18,22 @@ pytest_test(
         "//sematic/db:queries",
         "//sematic/db/models:note",
         "//sematic/db/models:run",
+        "//sematic/db/models:user",
         "//sematic/db/tests:fixtures",
         requirement("flask"),
         requirement("sqlalchemy"),
+    ],
+)
+
+pytest_test(
+    name = "test_auth",
+    srcs = ["test_auth.py"],
+    deps = [
+        "//sematic/api/endpoints:auth",
+        "//sematic/api/tests:fixtures",
+        "//sematic/db:queries",
+        "//sematic/db/models:json_encodable_mixin",
+        "//sematic/db/models:user",
+        requirement("flask"),
     ],
 )

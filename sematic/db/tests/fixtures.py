@@ -11,7 +11,8 @@ import psycopg2
 import sematic.db.db as db
 from sematic.db.models.run import Run
 from sematic.abstract_future import FutureState
-from sematic.db.queries import save_run
+from sematic.db.queries import save_run, save_user
+from sematic.db.models.factories import make_user
 
 
 def handler(postgresql):
@@ -117,3 +118,15 @@ def run() -> Run:
 @pytest.fixture
 def persisted_run(run, test_db) -> Run:
     return save_run(run)
+
+
+@pytest.fixture
+def persisted_user(test_db):  # noqa: F811
+    user = make_user(
+        email="george@example.com",
+        first_name="George",
+        last_name="Harrison",
+        avatar_url="https://avatar",
+    )
+    save_user(user)
+    return user

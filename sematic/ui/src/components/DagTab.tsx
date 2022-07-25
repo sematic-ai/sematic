@@ -1,7 +1,7 @@
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Artifact, Edge, Run } from "../Models";
 import { RunGraphPayload } from "../Payloads";
 import { fetchJSON, graphSocket } from "../utils";
@@ -17,6 +17,7 @@ import TabPanel from "@mui/lab/TabPanel";
 import Tags from "./Tags";
 import Docstring from "./Docstring";
 import { Alert } from "@mui/material";
+import { UserContext } from "..";
 
 export type IOArtifacts = {
   input: Map<string, Artifact | undefined>;
@@ -37,6 +38,7 @@ function DagTab(props: { rootRun: Run }) {
   const [graphsByRootId, setGraphsByRootId] = useState<Map<string, Graph>>(
     new Map()
   );
+  const { user } = useContext(UserContext);
 
   const [selectedRunId, setSelectedRunId] = useState<string>(rootRun.id);
 
@@ -54,9 +56,10 @@ function DagTab(props: { rootRun: Run }) {
   }, [rootRun.id]);
 
   const loadGraph = useCallback(() => {
-    fetchJSON(
-      "/api/v1/runs/" + rootRun.id + "/graph?root=1",
-      (payload: RunGraphPayload) => {
+    fetchJSON({
+      url: "/api/v1/runs/" + rootRun.id + "/graph?root=1",
+      apiKey: user?.api_key,
+      callback: (payload: RunGraphPayload) => {
         let graph = {
           runs: new Map(payload.runs.map((run) => [run.id, run])),
           edges: payload.edges,
@@ -68,8 +71,8 @@ function DagTab(props: { rootRun: Run }) {
         });
         setIsLoaded(true);
       },
-      setError
-    );
+      setError: setError,
+    });
   }, [rootRun]);
 
   useEffect(() => {

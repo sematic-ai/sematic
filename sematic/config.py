@@ -100,7 +100,7 @@ _LOCAL_CONFIG = Config(
 _CLOUD_CONFIG = Config(
     server_address="0.0.0.0",
     api_version=1,
-    port=80,
+    port=int(os.environ.get("PORT", 80)),
     db_url=os.environ.get("DATABASE_URL", "NO_DB"),
 )
 

@@ -63,6 +63,15 @@ def get_all_user_settings() -> Dict[str, str]:
 class SettingsVar(enum.Enum):
     # Sematic
     SEMATIC_API_ADDRESS = "SEMATIC_API_ADDRESS"
+    SEMATIC_API_KEY = "SEMATIC_API_KEY"
+    SEMATIC_AUTHENTICATE = "SEMATIC_AUTHENTICATE"
+    SEMATIC_AUTHORIZED_EMAIL_DOMAIN = "SEMATIC_AUTHORIZED_EMAIL_DOMAIN"
+
+    # Google
+    GOOGLE_OAUTH_CLIENT_ID = "GOOGLE_OAUTH_CLIENT_ID"
+
+    # Github
+    GITHUB_OAUTH_CLIENT_ID = "GITHUB_OAUTH_CLIENT_ID"
 
     # Kubernetes
     KUBERNETES_NAMESPACE = "KUBERNETES_NAMESPACE"
@@ -77,12 +86,24 @@ class SettingsVar(enum.Enum):
 
 
 class MissingSettingsError(Exception):
-    pass
+    def __init__(self, missing_settings: SettingsVar):
+        message = """
+Missing settings: {}
+
+Set it with
+
+    $ sematic settings set {} VALUE
+""".format(
+            missing_settings.value, missing_settings.value
+        )
+        super().__init__(message)
 
 
-def get_user_settings(var: SettingsVar) -> str:
+def get_user_settings(var: SettingsVar, *args) -> str:
     """
     Main API to access individual settings.
+
+    Default as first args or will raise if no settings.
     """
     if var not in SettingsVar.__members__.values():
         raise ValueError(
@@ -94,17 +115,10 @@ def get_user_settings(var: SettingsVar) -> str:
     settings = get_all_user_settings().get(var.value)
 
     if settings is None:
-        raise MissingSettingsError(
-            """
-Missing settings: {}
+        if len(args) >= 1:
+            return args[0]
 
-Set it with
-
-    $ sematic settings set {} VALUE
-""".format(
-                var.value, var.value
-            )
-        )
+        raise MissingSettingsError(var)
 
     return settings
 

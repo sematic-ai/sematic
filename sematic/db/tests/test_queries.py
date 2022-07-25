@@ -18,7 +18,11 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     persisted_run,
 )
 from sematic.calculator import func
-from sematic.api.tests.fixtures import mock_requests, test_client  # noqa: F401
+from sematic.api.tests.fixtures import (  # noqa: F401
+    mock_no_auth,
+    mock_requests,
+    test_client,
+)
 
 
 def test_count_runs(test_db, run: Run):  # noqa: F811
@@ -64,6 +68,7 @@ def pipeline(a: float, b: float) -> float:
     "fn, run_count, artifact_count, edge_count",
     ((get_run_graph, 1, 3, 3), (get_root_graph, 3, 4, 8)),
 )
+@mock_no_auth
 def test_get_run_graph(
     fn,
     run_count: int,

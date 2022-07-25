@@ -10,6 +10,7 @@ sematic_py_lib(
         "//sematic:abstract_future",
         "//sematic/db",
         "//sematic/db:queries",
+        "//sematic/db/models:factories",
         "//sematic/db/models:run",
         requirement("pytest"),
         requirement("testing.postgresql"),
