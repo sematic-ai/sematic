@@ -1,3 +1,5 @@
+* 0.8.0
+    * [feature] Capture exception stack traces and display in UI
 * 0.7.0
     * [feature] Optional authentication with Google OAuth
 * 0.6.0
