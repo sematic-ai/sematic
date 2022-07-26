@@ -5,10 +5,10 @@ from typing import (  # type: ignore
     Tuple,
     Optional,
     Dict,
-    GenericAlias,
+    # GenericAlias,
     _GenericAlias,
-    _UnionGenericAlias,
-    _CallableGenericAlias,
+    # _UnionGenericAlias,
+    # _CallableGenericAlias,
     _SpecialForm,
     _BaseGenericAlias,
     TypeVar,
@@ -233,10 +233,10 @@ def is_valid_typing_alias(type_: Any) -> bool:
     if isinstance(
         type_,
         (
-            GenericAlias,  # type: ignore
+            # GenericAlias,  # type: ignore
             _GenericAlias,  # type: ignore
-            _UnionGenericAlias,  # type: ignore
-            _CallableGenericAlias,  # type: ignore
+            # _UnionGenericAlias,  # type: ignore
+            # _CallableGenericAlias,  # type: ignore
         ),
     ):
         return True

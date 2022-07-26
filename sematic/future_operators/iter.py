@@ -3,8 +3,7 @@ Defining these operators in seperate modules in order to avoid circular
 dependencies between Future and Calculator
 """
 # standard library
-from types import GenericAlias
-from typing import cast
+from typing import cast, _GenericAlias as GenericAlias
 
 # Sematic
 from sematic.future import Future
