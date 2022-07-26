@@ -4,6 +4,7 @@ import datetime
 import importlib
 import logging
 from typing import Any, Dict, List
+import traceback
 
 # Third-party
 import cloudpickle
@@ -65,6 +66,7 @@ def _fail_run(run: Run):
     """
     run.future_state = FutureState.FAILED
     run.failed_at = datetime.datetime.utcnow()
+    run.exception = traceback.format_exc()
     api_client.save_graph(run.id, [run], [], [])
 
 
@@ -130,37 +132,32 @@ def main(run_id: str, resolve: bool):
     try:
         func = _get_func(run)
         kwargs = _get_input_kwargs(run.id, artifacts, edges)
-    except Exception as e:
-        _fail_run(run)
-        raise e
 
-    if resolve:
-        try:
+        if resolve:
+            logger.info("Resolving %s", func.__name__)
             future: Future = func(**kwargs)
-        except Exception as e:
-            _fail_run(run)
-            api_client.notify_pipeline_update(run.calculator_path)
-            raise e
+            future.id = run.id
 
-        future.id = run.id
+            resolver = CloudResolver(detach=False)
+            resolver.set_graph(runs=runs, artifacts=artifacts, edges=edges)
 
-        resolver = CloudResolver(detach=False)
-        resolver.set_graph(runs=runs, artifacts=artifacts, edges=edges)
+            resolver.resolve(future)
 
-        resolver.resolve(future)
-    else:
-        try:
+        else:
             logger.info("Executing %s", func.__name__)
             output = func.func(**kwargs)
             _set_run_output(run, output, func.output_type, edges)
 
-        except Exception as e:
-            logger.error("Run failed:")
-            logger.error("%s: %s", e.__class__.__name__, e)
+    except Exception as e:
+        logger.error("Run failed:")
+        logger.error("%s: %s", e.__class__.__name__, e)
 
-            _fail_run(run)
+        _fail_run(run)
 
-            raise e
+        if resolve:
+            api_client.notify_pipeline_update(run.calculator_path)
+
+        raise e
 
 
 if __name__ == "__main__":

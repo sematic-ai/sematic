@@ -14,6 +14,17 @@ def add3(a: float, b: float, c: float) -> float:
 
 
 @sematic.func(inline=False)
+def fail() -> float:
+    return fail_nested()
+
+
+@sematic.func(inline=False)
+def fail_nested() -> float:
+    raise ValueError("Some exception")
+
+
+@sematic.func(inline=False)
 def pipeline(a: float, b: float, c: float) -> float:
-    return add(add3(a, b, c), add(a, b))
+    # return add(add3(a, b, c), add(a, b))
     # return add(a, b)
+    return fail()

@@ -38,6 +38,7 @@ pytest_test(
     name = "test_worker",
     srcs = ["test_worker.py"],
     deps = [
+        "//sematic:abstract_future",
         "//sematic:calculator",
         "//sematic/api/tests:fixtures",
         "//sematic/db:queries",
