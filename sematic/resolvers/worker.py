@@ -4,6 +4,7 @@ import datetime
 import importlib
 import logging
 from typing import Any, Dict, List
+import traceback
 
 # Third-party
 import cloudpickle
@@ -65,6 +66,7 @@ def _fail_run(run: Run):
     """
     run.future_state = FutureState.FAILED
     run.failed_at = datetime.datetime.utcnow()
+    run.exception = traceback.format_exc()
     api_client.save_graph(run.id, [run], [], [])
 
 

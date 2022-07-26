@@ -1,7 +1,7 @@
 # Standard library
 import datetime
 import re
-import typing
+from typing import List, Optional
 import json
 
 # Third party
@@ -48,6 +48,8 @@ class Run(Base, JSONEncodableMixin):
         The run's description. Defaults to the function's docstring.
     source_code: str
         The calculator's source code.
+    exception: Optional[str]
+        The calculator's source code.
     created_at : datetime
         Time of creating of the run record in the DB.
     updated_at : datetime
@@ -73,13 +75,14 @@ class Run(Base, JSONEncodableMixin):
     )
     name: str = Column(types.String(), nullable=True)
     calculator_path: str = Column(types.String(), nullable=False)
-    parent_id: typing.Optional[str] = Column(types.String(), nullable=True)
+    parent_id: Optional[str] = Column(types.String(), nullable=True)
     root_id: str = Column(types.String(), nullable=False)
-    description: typing.Optional[str] = Column(types.String(), nullable=True)
-    tags: typing.List[str] = Column(  # type: ignore
+    description: Optional[str] = Column(types.String(), nullable=True)
+    tags: List[str] = Column(  # type: ignore
         types.String(), nullable=False, default="[]", info={JSON_KEY: True}
     )
     source_code: str = Column(types.String(), nullable=False)
+    exception: str = Column(types.String(), nullable=True)
     nested_future_id: str = Column(types.String(), nullable=True)
 
     # Lifecycle timestamps
@@ -92,18 +95,10 @@ class Run(Base, JSONEncodableMixin):
         default=datetime.datetime.utcnow,
         onupdate=datetime.datetime.utcnow,
     )
-    started_at: typing.Optional[datetime.datetime] = Column(
-        types.DateTime(), nullable=True
-    )
-    ended_at: typing.Optional[datetime.datetime] = Column(
-        types.DateTime(), nullable=True
-    )
-    resolved_at: typing.Optional[datetime.datetime] = Column(
-        types.DateTime(), nullable=True
-    )
-    failed_at: typing.Optional[datetime.datetime] = Column(
-        types.DateTime(), nullable=True
-    )
+    started_at: Optional[datetime.datetime] = Column(types.DateTime(), nullable=True)
+    ended_at: Optional[datetime.datetime] = Column(types.DateTime(), nullable=True)
+    resolved_at: Optional[datetime.datetime] = Column(types.DateTime(), nullable=True)
+    failed_at: Optional[datetime.datetime] = Column(types.DateTime(), nullable=True)
 
     @validates("future_state")
     def validate_future_state(self, key, value) -> str:

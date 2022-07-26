@@ -3,6 +3,7 @@ import datetime
 from typing import Dict, Optional, List, Union, Tuple
 import uuid
 import logging
+import traceback
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
@@ -171,12 +172,16 @@ class LocalResolver(SilentResolver):
 
         run = self._get_run(failed_future.id)
 
-        run.future_state = (
-            FutureState.NESTED_FAILED
-            if failed_future.nested_future is not None
-            and failed_future.state in (FutureState.FAILED, FutureState.NESTED_FAILED)
-            else FutureState.FAILED
-        )
+        if (
+            failed_future.nested_future is not None
+            and failed_future.nested_future.state
+            in (FutureState.FAILED, FutureState.NESTED_FAILED)
+        ):
+            run.future_state = FutureState.NESTED_FAILED
+        else:
+            run.future_state = FutureState.FAILED
+            run.exception = traceback.format_exc()
+
         run.failed_at = datetime.datetime.utcnow()
         self._add_run(run)
         self._save_graph()
