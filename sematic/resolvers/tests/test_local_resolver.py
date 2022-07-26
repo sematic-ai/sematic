@@ -226,14 +226,7 @@ class DBStateMachineTestResolver(LocalResolver):
 
         assert run.id == failed_future.id
 
-        if (
-            failed_future.nested_future is not None
-            and failed_future.nested_future.state
-            in (FutureState.FAILED.value, FutureState.NESTED_FAILED.value)
-        ):
-            assert run.future_state == FutureState.NESTED_FAILED.value
-        else:
-            assert run.future_state == FutureState.FAILED.value
+        assert run.future_state == failed_future.state
 
         output_edges = self._get_output_edges(failed_future.id)
 
@@ -253,3 +246,29 @@ def test_list_conversion(test_db, mock_requests):  # noqa: F811
         return [add(a, b), add(a, b)]
 
     assert alist(1, 2).resolve() == [3, 3]
+
+
+@mock_no_auth
+def test_exceptions(mock_requests):  # noqa: F811
+    @func
+    def fail():
+        raise Exception("FAIL!")
+
+    @func
+    def pipeline():
+        return fail()
+
+    future = pipeline()
+
+    with pytest.raises(Exception, match="FAIL!"):
+        future.resolve()
+
+    runs, _, _ = get_root_graph(future.id)
+
+    runs_by_id = {run.id: run for run in runs}
+
+    assert runs_by_id[future.id].future_state == FutureState.NESTED_FAILED.value
+    assert runs_by_id[future.id].exception is None
+
+    assert runs_by_id[future.nested_future.id].future_state == FutureState.FAILED.value
+    assert "FAIL!" in runs_by_id[future.nested_future.id].exception

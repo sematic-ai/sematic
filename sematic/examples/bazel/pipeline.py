@@ -13,13 +13,13 @@ def add3(a: float, b: float, c: float) -> float:
     return add(add(a, b), c)
 
 
-@sematic.func
-def fail():
+@sematic.func(inline=False)
+def fail() -> float:
     return fail_nested()
 
 
-@sematic.func
-def fail_nested():
+@sematic.func(inline=False)
+def fail_nested() -> float:
     raise ValueError("Some exception")
 
 

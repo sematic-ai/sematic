@@ -1,7 +1,10 @@
 # Standard Library
 from unittest import mock
 
+import pytest
+
 # Sematic
+from sematic.abstract_future import FutureState
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.resolvers.worker import main
 from sematic.calculator import func
@@ -20,7 +23,6 @@ def add(a: float, b: float) -> float:
     return a + b
 
 
-# TODO: support pipeline args
 @func
 def pipeline(a: float, b: float) -> float:
     return add(a, b)
@@ -51,3 +53,34 @@ def test_main(
     assert len(runs) == 2
     assert len(artifacts) == 3
     assert len(edges) == 6
+
+
+@func
+def fail():
+    raise Exception("FAIL!")
+
+
+@mock.patch("sematic.resolvers.cloud_resolver._schedule_job")
+@mock.patch("kubernetes.config.load_kube_config")
+@mock_no_auth
+def test_fail(
+    mock_load_kube_config: mock.MagicMock,
+    mock_schedule_job: mock.MagicMock,
+    mock_requests,  # noqa: F811
+    test_storage,  # noqa: F811
+):
+    # On the user's machine
+    resolver = CloudResolver(detach=True)
+
+    future = fail()
+
+    future.resolve(resolver)
+
+    # In the driver job
+    with pytest.raises(Exception, match="FAIL!"):
+        main(run_id=future.id, resolve=True)
+
+    runs, _, _ = get_root_graph(future.id)
+
+    assert runs[0].future_state == FutureState.FAILED.value
+    assert "FAIL!" in runs[0].exception
