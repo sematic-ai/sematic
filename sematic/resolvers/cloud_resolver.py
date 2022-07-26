@@ -1,5 +1,4 @@
 # Standard library
-import datetime
 import enum
 import os
 import __main__
