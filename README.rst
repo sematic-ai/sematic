@@ -42,6 +42,11 @@
    :alt: Made By Sematic
 
 
+.. image:: https://img.shields.io/pypi/dm/sematic?style=for-the-badge
+   :target: https://img.shields.io/pypi/dm/sematic?style=for-the-badge
+   :alt: PyPI - Downloads
+
+
 Hi 👋
 -----
 
