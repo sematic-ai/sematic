@@ -7,6 +7,7 @@ export type Run = {
   calculator_path: string;
   description: string | null;
   source_code: string;
+  exception: string | null;
   tags: Array<string>;
   parent_id: string | null;
   root_id: string;

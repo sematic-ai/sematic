@@ -117,7 +117,9 @@ class CloudResolver(LocalResolver):
         future = next(future for future in self._futures if future.id == run.id)
 
         if run.future_state not in {FutureState.RESOLVED.value, FutureState.RAN.value}:
-            self._handle_future_failure(future, Exception("Run failed"))
+            self._handle_future_failure(
+                future, Exception("Run failed, see exception in the UI.")
+            )
 
         if run.nested_future_id is not None:
             pickled_nested_future = storage.get(
@@ -135,6 +137,12 @@ class CloudResolver(LocalResolver):
 
     def _get_output_artifact(self, run_id: str) -> Optional[Artifact]:
         return self._output_artifacts_by_run_id.get(run_id)
+
+    def _future_did_fail(self, failed_future: AbstractFuture) -> None:
+        # Unlike LocalResolver._future_did_fail, we only care about
+        # failing parent futures since runs are marked FAILED by worker.py
+        if failed_future.state == FutureState.NESTED_FAILED:
+            super()._future_did_fail(failed_future)
 
     def _refresh_graph(self, run_id):
         """

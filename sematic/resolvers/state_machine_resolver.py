@@ -223,7 +223,10 @@ class StateMachineResolver(Resolver, abc.ABC):
     def _update_future_with_value(
         self, future: AbstractFuture, value: typing.Any
     ) -> None:
-        value = future.calculator.cast_output(value)
+        try:
+            value = future.calculator.cast_output(value)
+        except TypeError as exception:
+            self._handle_future_failure(future, exception)
 
         if isinstance(value, AbstractFuture):
             self._set_nested_future(future, value)

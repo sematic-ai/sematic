@@ -16,7 +16,7 @@ import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import Tags from "./Tags";
 import Docstring from "./Docstring";
-import { Alert } from "@mui/material";
+import { Alert, AlertTitle } from "@mui/material";
 import { UserContext } from "..";
 
 export type IOArtifacts = {
@@ -216,7 +216,9 @@ export function RunTabs(props: {
 }) {
   const { run, artifacts } = props;
 
-  const [selectedTab, setSelectedTab] = useState("output");
+  const defaultTab = run.future_state === "FAILED" ? "logs" : "output";
+
+  const [selectedTab, setSelectedTab] = useState(defaultTab);
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setSelectedTab(newValue);
@@ -230,7 +232,7 @@ export function RunTabs(props: {
             <Tab label="Input" value="input" />
             <Tab label="Output" value="output" />
             <Tab label="Source" value="source" />
-            <Tab label="Logs" value="logs" disabled />
+            <Tab label="Logs" value="logs" />
           </TabList>
         </Box>
         <TabPanel value="input">
@@ -249,6 +251,29 @@ export function RunTabs(props: {
         </TabPanel>
         <TabPanel value="documentation">
           <Docstring docstring={run.description} />
+        </TabPanel>
+        <TabPanel value="logs">
+          {run.exception ? (
+            <Alert severity="error" icon={false}>
+              <AlertTitle>
+                {
+                  run.exception.split("\n")[
+                    run.exception.split("\n").length - 2
+                  ]
+                }
+              </AlertTitle>
+              <pre
+                style={{
+                  whiteSpace: "pre-wrap",
+                  overflowWrap: "anywhere",
+                }}
+              >
+                {run.exception}
+              </pre>
+            </Alert>
+          ) : (
+            <></>
+          )}
         </TabPanel>
         <TabPanel value="source">
           <SourceCode run={run} />
