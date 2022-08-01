@@ -1,7 +1,7 @@
 # Standard library
 import functools
 from http import HTTPStatus
-from typing import Callable
+from typing import Callable, Optional
 import distutils.util
 
 # Third-party
@@ -23,6 +23,7 @@ from sematic.db.queries import (
     save_user,
 )
 from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
+from sematic.db.models.user import User
 
 
 @sematic_api.route("/authenticate", methods=["GET"])
@@ -159,3 +160,20 @@ def authenticate(endpoint_fn: Callable) -> Callable:
         return endpoint_fn(user, *args, **kwargs)
 
     return endpoint
+
+
+@sematic_api.route("/env", methods=["GET"])
+@authenticate
+def env_endpoint(user: Optional[User]) -> flask.Response:
+    env = {}
+    for settings in (
+        SettingsVar.GOOGLE_OAUTH_CLIENT_ID,
+        SettingsVar.KUBERNETES_NAMESPACE,
+        SettingsVar.GRAFANA_PANEL_URL,
+    ):
+        try:
+            env[settings.value] = get_user_settings(settings)
+        except MissingSettingsError:
+            continue
+
+    return flask.jsonify(dict(env=env))
