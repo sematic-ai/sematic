@@ -23,6 +23,7 @@
 ## Integrations
 
 * [Snowflake](snowflake.md)
+* [Grafana](grafana.md)
 * [Apache Spark](integrations.md)
 * [Google Dataflow](integrations.md)
 * [Google BigQuery](integrations.md)
