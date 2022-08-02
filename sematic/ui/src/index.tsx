@@ -16,7 +16,11 @@ import {
   GoogleLogin,
   GoogleOAuthProvider,
 } from "@react-oauth/google";
-import { AuthenticatePayload, GoogleLoginPayload } from "./Payloads";
+import {
+  AuthenticatePayload,
+  EnvPayload,
+  GoogleLoginPayload,
+} from "./Payloads";
 import { User } from "./Models";
 import { Alert, Paper } from "@mui/material";
 import logo from "./Fox.png";
@@ -27,6 +31,8 @@ export const UserContext = React.createContext<{
   signOut: (() => void) | null;
 }>({ user: null, signOut: null });
 
+export const EnvContext = React.createContext<Map<string, string>>(new Map());
+
 function App() {
   const userFromStorage = localStorage.getItem("user");
   const [user, setUser] = useState<User | null>(
@@ -35,7 +41,7 @@ function App() {
   const [authenticate, setAuthenticate] = useState<
     AuthenticatePayload | undefined
   >(undefined);
-
+  const [env, setEnv] = useState<Map<string, string>>(new Map());
   const [error, setError] = useState<Error | undefined>(undefined);
 
   useEffect(() => {
@@ -64,6 +70,21 @@ function App() {
     [user, signOut]
   );
 
+  useEffect(() => {
+    if (!user) {
+      setEnv(new Map());
+    }
+    fetchJSON({
+      url: "/env",
+      callback: (payload: EnvPayload) => {
+        setEnv(new Map(Object.entries(payload.env)));
+      },
+      apiKey: user?.api_key,
+    });
+  }, [user]);
+
+  const envContextValue = useMemo(() => env, [env]);
+
   const onGoogleLoginSuccess = useCallback(
     (credentialResponse: CredentialResponse) => {
       fetchJSON({
@@ -85,13 +106,18 @@ function App() {
 
   return authenticate?.authenticate === false || user ? (
     <UserContext.Provider value={userContextValue}>
-      <Routes>
-        <Route path="/" element={<Shell />}>
-          <Route path="" element={<Home />} />
-          <Route path="pipelines" element={<PipelineIndex />} />
-          <Route path="pipelines/:calculatorPath" element={<PipelineView />} />
-        </Route>
-      </Routes>
+      <EnvContext.Provider value={envContextValue}>
+        <Routes>
+          <Route path="/" element={<Shell />}>
+            <Route path="" element={<Home />} />
+            <Route path="pipelines" element={<PipelineIndex />} />
+            <Route
+              path="pipelines/:calculatorPath"
+              element={<PipelineView />}
+            />
+          </Route>
+        </Routes>
+      </EnvContext.Provider>
     </UserContext.Provider>
   ) : (
     <Paper

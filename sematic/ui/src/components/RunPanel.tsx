@@ -10,7 +10,7 @@ import {
 import { useMemo } from "react";
 import { Artifact, Edge, Run } from "../Models";
 import CalculatorPath from "./CalculatorPath";
-import { IOArtifacts, RunTabs } from "./DagTab";
+import RunTabs, { IOArtifacts } from "./RunTabs";
 import Docstring from "./Docstring";
 import { FlowWithProvider } from "./ReactFlowDag";
 import RunStateChip from "./RunStateChip";
