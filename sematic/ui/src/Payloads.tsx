@@ -55,3 +55,7 @@ export type AuthenticatePayload = {
     GITHUB_OAUTH_CLIENT_ID?: string;
   };
 };
+
+export type EnvPayload = {
+  env: { [k: string]: string };
+};
