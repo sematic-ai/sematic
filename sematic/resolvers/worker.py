@@ -89,11 +89,9 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
     """
     Persist run output, whether it is a nested future or a concrete output.
     """
-    logger.info("_set_run_output")
     artifacts = []
 
     if isinstance(output, Future):
-        logger.info("output is future")
         pickled_nested_future = cloudpickle.dumps(output)
         storage.set(make_nested_future_storage_key(output.id), pickled_nested_future)
         run.nested_future_id = output.id
@@ -101,7 +99,6 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
         run.ended_at = datetime.datetime.utcnow()
 
     else:
-        logger.info("output is concrete")
         artifacts.append(make_artifact(output, type_, store=True))
 
         # Set output artifact on output edges

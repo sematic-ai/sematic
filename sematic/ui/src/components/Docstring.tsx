@@ -15,7 +15,7 @@ export default function Docstring(props: {
       sx={{
         padding: 4,
         fontSize: "small",
-        backgroundColor: lighten(theme.palette.warning.light, 0.9),
+        backgroundColor: lighten(theme.palette.warning.light, 0.95),
       }}
     >
       {(docstring !== undefined && docstring !== null && (
