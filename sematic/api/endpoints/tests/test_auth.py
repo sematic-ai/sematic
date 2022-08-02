@@ -157,7 +157,7 @@ def test_authenticate_decorator(
 
         # Necessary to not confuse Flask
         endpoint.__name__ = "endpoint_{}".format(test_id)
-
+        sematic_api._got_first_request = False
         sematic_api.route("/test-{}".format(test_id))(authenticate(endpoint))
 
         headers = {"X-API-KEY": persisted_user.api_key} if authenticate_config else {}
