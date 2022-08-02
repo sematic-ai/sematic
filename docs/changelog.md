@@ -1,3 +1,5 @@
+* 0.9.0
+    * [feature] Grafana integration for log panels
 * 0.8.0
     * [feature] Capture exception stack traces and display in UI
 * 0.7.0
