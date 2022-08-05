@@ -1,3 +1,5 @@
+* HEAD
+    * [improvement] Friendly error message for unsupported Python version
 * 0.9.0
     * [feature] Grafana integration for log panels
 * 0.8.0
