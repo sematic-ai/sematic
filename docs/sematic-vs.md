@@ -59,15 +59,21 @@ But bear with us, we'll catch up fast!
 ### Airflow
 
 Airflow is probably the most popular and widespread way to build end-to-end
-pipelines, since it was the first to provide such abilities.
+pipelines, since it was one of the first to provide such abilities.
 
 Sematic differs from Airflow in the following ways:
 
-* **Iterative development** – change code, run in the cloud, visualize, repeat. In Airflow, you can either run a pipeline on a local Airflow instance, or if you want to run it in the cloud, you must merge your code and deploy it to the cloud instance which adds many steps to your iteration workflow.
+* **Iterative development** – change code, run in the cloud, visualize, repeat. In Airflow, you can either run a pipeline on a local Airflow instance, or if you want to run it in the cloud, you must merge your code and deploy it to the cloud instance which adds many steps to your iteration workflow. In Sematic, you can execute your pipeline entirely locally while you develop: you can even run it
+without running a local server if you want to!
 
 * **Semantic UI** – Sematic brings visualizations for your functions inputs and outputs straight to the forefront. No need to take care of persisting things elsewhere or fetching them into a local notebook.
 
 * **Dynamic graph** – Sematic lets up loop over configurations, run different branches of your pipelines depending on the outcome of upstream steps, and even do hyperparameter tuning.
+
+* **Dead simple I/O between steps** – Sematic makes I/O between steps in your pipelines as simple as passing an output of one
+python function as the input of another. Airflow provides APIs like
+[XComs](https://airflow.apache.org/docs/apache-airflow/stable/concepts/xcoms.html) which can pass data between tasks, but involves
+some boilerplate around explicitly pushing/pulling data around, and coupling producers and consumers via named data keys.
 
 ### Kubeflow Pipelines
 
@@ -76,13 +82,35 @@ Sematic differs from Airflow in the following ways:
   master. Sematic tries to provide working solutions out-of-the-box so that you
   can focus on your expertise instead of infrastructure.
 
-* **Dynamic graph** – In KFP, DAGs are fixed ahead of time. Sematic lets up loop over configurations, run different branches of your pipelines depending on the outcome of upstream steps, and even do hyperparameter tuning.
+* **Dynamic graph** – In KFP, DAGs are fixed ahead of time. While it does provide
+[some mechanisms](https://kubeflow-pipelines.readthedocs.io/en/stable/source/kfp.dsl.html#kfp.dsl.Condition)
+to modify pipeline behavior mid-execution, you are limited by the provided control flow
+statements. Sematic lets you use standard python control flow to loop over configurations,
+run different branches of your pipelines depending on the outcome of upstream steps,
+and even do hyperparameter tuning.
 
-* **Lineage tracking** – KFP does not keep a rigorous track of all assets and artifacts flowing between your steps. You need to implement that yourself on top of it. In Sematic, lineage tracking is a first-class citizen. All inputs and outputs of all Sematic Functions are tracked and versioned.
+* **Lineage tracking** – KFP has some basic tracking of artifacts flowing between your steps, but is limited in the
+type of data that can be tracked in this way. If you want to have tracking for high-level, typed objects like "models"
+instead of just paths to blobs, you need to implement that yourself on top of it. In Sematic, lineage tracking of richly
+typed artifacts is a first-class citizen. All inputs and outputs of all Sematic Functions are tracked and versioned.
 
 * **Semantic UI** – The KFP UI offers barebones tools to monitor and inspect runs, but no rich visualization or advanced features.
 
-### MLFlow
+### MLFlow Pipelines
+
+* **Flexibility** - To use
+[MLFlow pipelines](https://www.mlflow.org/docs/latest/pipelines.html#pipeline-templates),
+you are limited to a pre-defined set of pipeline templates. Sematic lets you build any
+pipeline structure you like.
+
+* **Pythonic SDK** - Using MLFlow requires using a yaml-based configuration combined with
+Jina templating to enable hierachical config specifications. Sematic lets you stick with
+simple python for constructing your pipeline and feeding in configurations and other inputs.
+
+* **Powerful compute access** - MLFlow pipelines run natively on Databricks VMs, or
+you can execute them on your own VMs if you manually integrate it with your own job
+execution solution. Sematic lets each step in your pipeline run with the computing
+resources that are appropriate for it.
 
 ### Dagster
 
