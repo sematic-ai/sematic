@@ -5,6 +5,23 @@ from urllib.parse import urlparse
 
 @dataclass
 class Link:
+    """
+    Link lets users return a URL from a Sematic function which
+    will render as a button in the UI.
+
+    Parameters
+    ----------
+    label: str
+        The label of the button that will be displayed in the UI
+    url: str
+        The URL to link to
+
+    Raises
+    ------
+    ValueError
+        In case of missing URL scheme and netloc as extracted by `urllib.parse.urlparse`.
+    """
+
     label: str
     url: str
 
