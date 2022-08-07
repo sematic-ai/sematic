@@ -43,7 +43,7 @@ the bounds prescribed by the framework is simply not possible.
 At Sematic, we strive to hit the right balance of constraints to make work fast
 and effortless, and flexibility to not hinder our users' creativity.
 
-## Sematic vs. _____
+## Sematic vs. ...
 
 {% hint style="warning" %}
 
@@ -56,7 +56,7 @@ But bear with us, we'll catch up fast!
 
 {% endhint %}
 
-### Airflow
+### ... Airflow
 
 Airflow is probably the most popular and widespread way to build end-to-end
 pipelines, since it was one of the first to provide such abilities.
@@ -75,7 +75,7 @@ python function as the input of another. Airflow provides APIs like
 [XComs](https://airflow.apache.org/docs/apache-airflow/stable/concepts/xcoms.html) which can pass data between tasks, but involves
 some boilerplate around explicitly pushing/pulling data around, and coupling producers and consumers via named data keys.
 
-### Kubeflow Pipelines
+### ... Kubeflow Pipelines
 
 * **Barrier to entry** – Using KFP requires quite a bit of knowledge about
   Kubernetes, Docker images, Argo, etc. These things take a lot of time to
@@ -96,7 +96,7 @@ typed artifacts is a first-class citizen. All inputs and outputs of all Sematic 
 
 * **Semantic UI** – The KFP UI offers barebones tools to monitor and inspect runs, but no rich visualization or advanced features.
 
-### MLFlow Pipelines
+### ... MLFlow Pipelines
 
 * **Flexibility** - To use
 [MLFlow pipelines](https://www.mlflow.org/docs/latest/pipelines.html#pipeline-templates),
@@ -112,7 +112,20 @@ you can execute them on your own VMs if you manually integrate it with your own 
 execution solution. Sematic lets each step in your pipeline run with the computing
 resources that are appropriate for it.
 
-### Dagster
+### ... Dagster
+* **No power/simplicity tradeoffs** - Dagster provides pythonic APIs for simple pipeline
+steps (`op`s in Dagster terminology), but if you want your step to be able to execute on
+Kubernetes to enable it access to more powerful computing resources, you're back to
+specifying your step in terms of docker images and container arguments. You also lose
+the ability to run your pipeline locally during development. Sematic allows you
+to execute any python function on compute resources that are right-sized for it, or on
+your local machine with an appropriate configuration for iterative development.
+
+### Flyte
+TODO
+
+### Prefect
+TODO
 
 ### Comet ML
 
