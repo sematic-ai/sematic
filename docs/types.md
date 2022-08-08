@@ -1,6 +1,6 @@
 # Types
 
-Sematic comes with a number of types for greater convenience.
+Sematic comes with a number of types for greater convenience. These types may have special support within Sematic, such as custom visualizations in the UI.
 
 ## `Link` type
 
