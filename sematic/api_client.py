@@ -1,7 +1,7 @@
 # Standard library
 from json import JSONDecodeError
 import time
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 import logging
 
 # Third party
@@ -135,7 +135,7 @@ def _validate_server_compatibility(
         ServerError,
     )
     response = None
-    error = None
+    error: Optional[Exception] = None
     for _ in range(tries):
         response, error = _validate_server_compatibility_no_catch()
         if error is None:
@@ -155,6 +155,8 @@ def _validate_server_compatibility(
             response.status_code,
             response.text,
         )
+
+    assert error is not None  # should be impossible to fail, but makes mypy happy
     raise error
 
 
@@ -163,6 +165,7 @@ def _validate_server_compatibility_no_catch() -> Tuple[
 ]:
     headers = {"Content-Type": "application/json"}
     response = None
+    error: Optional[Exception] = None
     try:
         response = requests.get(_url("/meta/versions"), headers=headers)
     except ConnectionError:
@@ -195,8 +198,10 @@ def _validate_server_compatibility_no_catch() -> Tuple[
         )
         return response, error
 
-    server_version = tuple(response_json["server"])
-    server_min_client_version = tuple(response_json["min_client_supported"])
+    server_version = cast(Tuple[int, int, int], tuple(response_json["server"]))
+    server_min_client_version = cast(
+        Tuple[int, int, int], tuple(response_json["min_client_supported"])
+    )
     if CURRENT_VERSION > server_version:
         error = IncompatibleClientError(
             f"The Sematic API client is at version "
