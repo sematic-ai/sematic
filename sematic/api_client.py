@@ -6,6 +6,7 @@ import logging
 
 # Third party
 import requests
+from requests.exceptions import ConnectionError
 
 # Sematic
 from sematic.versions import CURRENT_VERSION, version_as_string
@@ -105,7 +106,7 @@ def _put(endpoint, json_payload) -> Any:
     return response.json()
 
 
-class APIConnectionError(requests.exceptions.ConnectionError):
+class APIConnectionError(ConnectionError):
     pass
 
 
@@ -117,18 +118,20 @@ class ServerError(Exception):
     pass
 
 
-def _validate_server_compatibility(tries: int = 5, seconds_between_tries: int = 10):
+def _validate_server_compatibility(
+    tries: int = 5, seconds_between_tries: int = 10, use_cached: bool = True
+):
     """Check that the client is compatible with the server.
 
     Raises an error if the server and client are incompatible, or if this can't be
     verified.
     """
     global _validated_client_version
-    if _validated_client_version:
+    if _validated_client_version and use_cached:
         return
 
     retriable_errors = (
-        requests.exceptions.ConnectionError,
+        ConnectionError,
         ServerError,
     )
     response = None
@@ -162,7 +165,7 @@ def _validate_server_compatibility_no_catch() -> Tuple[
     response = None
     try:
         response = requests.get(_url("/meta/versions"), headers=headers)
-    except requests.exceptions.ConnectionError:
+    except ConnectionError:
         error = APIConnectionError(
             (
                 f"Unable to connect to the Sematic API at "
@@ -237,7 +240,7 @@ def _request(
 
     try:
         response = method(_url(endpoint), **kwargs)
-    except requests.exceptions.ConnectionError:
+    except ConnectionError:
         raise APIConnectionError(
             (
                 "Unable to connect to the Sematic API at {}.\n"

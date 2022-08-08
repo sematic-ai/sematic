@@ -43,6 +43,7 @@ sematic_py_lib(
     srcs = ["api_client.py"],
     deps = [
         ":config",
+        "//sematic:versions",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:run",

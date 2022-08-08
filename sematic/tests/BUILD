@@ -9,6 +9,15 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_api_client",
+    srcs = ["test_api_client.py"],
+    deps = [
+        "//sematic:api_client",
+        "//sematic:versions",
+    ],
+)
+
+pytest_test(
     name = "test_future",
     srcs = ["test_future.py"],
     deps = [
