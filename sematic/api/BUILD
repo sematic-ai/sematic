@@ -18,6 +18,7 @@ sematic_py_lib(
         "//sematic/api/endpoints:artifacts",
         "//sematic/api/endpoints:auth",
         "//sematic/api/endpoints:edges",
+        "//sematic/api/endpoints:meta",
         "//sematic/api/endpoints:notes",
         "//sematic/api/endpoints:runs",
         requirement("flask"),

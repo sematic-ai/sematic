@@ -109,6 +109,12 @@ sematic_py_lib(
     ],
 )
 
+sematic_py_lib(
+    name = "versions",
+    srcs = ["versions.py"],
+    deps = [],
+)
+
 sematic_py_wheel(
     name = "wheel",
     author = "Sematic AI, Inc.",
@@ -135,7 +141,7 @@ sematic_py_wheel(
         # how to fix versions
         "eventlet==0.30.2",
     ],
-    version = "0.9.0",  #+{BUILD_TIMESTAMP}",
+    version = "0.10.0",  #+{BUILD_TIMESTAMP}",  # When updating this, also update versions.py and changelog.md
     visibility = ["//visibility:public"],
     deps = [
         "//sematic:init",
