@@ -27,8 +27,16 @@ class Link:
 
     def __init__(self, label: str, url: str):
         parsed_url = urlparse(url)
-        if len(parsed_url.scheme) == 0 or len(parsed_url.netloc) == 0:
-            raise ValueError("Incorrect URL: {}".format(repr(parsed_url)))
+
+        if len(parsed_url.scheme) == 0:
+            raise ValueError(
+                f"Incorrect URL, missing scheme (e.g. https://): {repr(parsed_url)}"
+            )
+
+        if len(parsed_url.netloc) == 0:
+            raise ValueError(
+                f"Incorrect URL, missing netloc (e.g. https://<netloc>): {repr(parsed_url)}"  # noqa: E501
+            )
 
         self.label = label
         self.url = url
