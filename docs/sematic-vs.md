@@ -104,7 +104,7 @@ you are limited to a pre-defined set of pipeline templates. Sematic lets you bui
 pipeline structure you like.
 
 * **Pythonic SDK** - Using MLFlow requires using a yaml-based configuration combined with
-Jina templating to enable hierachical config specifications. Sematic lets you stick with
+Jinja templating to enable hierachical config specifications. Sematic lets you stick with
 simple python for constructing your pipeline and feeding in configurations and other inputs.
 
 * **Powerful compute access** - MLFlow pipelines run natively on Databricks VMs, or
@@ -142,8 +142,7 @@ def do_a_or_b(partial_result: MyPartialResult) -> MyResult:
 * **Semantic UI** – Sematic has rich visualizations for the inputs and outputs at all levels
 of your pipelines. Instead of having to search through logs to find out what was executed or
 what the result was, you can see this information right on the page for the execution. You
-can also reconfigure your execution directly from the UI and re-execute (re-run feature
-coming soon!).
+can also reconfigure directly from the UI and re-execute (re-run feature coming soon!).
 
 * **Seamless Packaging** - Instead of having to learn and manage a manifest system unique to
 the orchestration product, use the dependency management solution you're already using to let
