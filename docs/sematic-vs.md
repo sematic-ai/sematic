@@ -138,12 +138,16 @@ def do_a_or_b(partial_result: MyPartialResult) -> MyResult:
     return do_b_sematic_func()
 ```
 
-
-### Flyte
-TODO
-
 ### Prefect
-TODO
+* **Semantic UI** – Sematic has rich visualizations for the inputs and outputs at all levels
+of your pipelines. Instead of having to search through logs to find out what was executed or
+what the result was, you can see this information right on the page for the execution. You
+can also reconfigure your execution directly from the UI and re-execute (re-run feature
+coming soon!).
+
+* **Seamless Packaging** - Instead of having to learn and manage a manifest system unique to
+the orchestration product, use the dependency management solution you're already using to let
+Sematic build a docker image that can be used to execute your code in the cloud.
 
 ### Comet ML
 
