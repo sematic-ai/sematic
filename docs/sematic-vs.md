@@ -3,13 +3,13 @@ Learning and Data Science pipelines.
 
 ## So why Sematic?
 
-We believe our experience at the world's number 1 robotaxi company has taught us
+We believe our experience at leading tech companies has taught us
 a number of important base principles:
 
 ### Abstract away infrastructure
 
 Machine Learning (ML) and Data Science (DS) developers are **not** software
-enginers, and vice versa.
+engineers, and vice-versa.
 
 While software engineers love nerding out on scalable infrastructure and
 beautiful abstractions, ML/DS developers care about a different set of semantics:
@@ -47,9 +47,10 @@ and effortless, and flexibility to not hinder our users' creativity.
 
 {% hint style="warning" %}
 
-In this section we try to discuss Sematic's differentiators in the most candid and transparent way possible.
+In this section we try to discuss Sematic's differentiators in the most candid
+and transparent way possible.
 
-Sematic is a brand new product (Founded May 2022 👶), and is therefore obviously
+Sematic is a brand new product (founded May 2022 👶), and is therefore obviously
 not as mature, reliable, or stable as some of these long-established products.
 
 But bear with us, we'll catch up fast!
