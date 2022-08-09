@@ -2,10 +2,10 @@ sematic_py_lib(
     name = "dataclass",
     srcs = ["dataclass.py"],
     deps = [
-        "//sematic/types:registry",
         "//sematic/types:casting",
+        "//sematic/types:registry",
         "//sematic/types:serialization",
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -21,11 +21,11 @@ sematic_py_lib(
     name = "float_in_range",
     srcs = ["float_in_range.py"],
     deps = [
-        "//sematic/types:generic_type",
         "//sematic/types:casting",
+        "//sematic/types:generic_type",
         "//sematic/types:registry",
-        "//sematic/types:type",
         "//sematic/types:serialization",
+        "//sematic/types:type",
     ],
 )
 
@@ -38,17 +38,15 @@ sematic_py_lib(
     ],
 )
 
-
 sematic_py_lib(
     name = "list",
     srcs = ["list.py"],
     deps = [
-        "//sematic/types:registry",
         "//sematic/types:casting",
+        "//sematic/types:registry",
         "//sematic/types:serialization",
-    ]
+    ],
 )
-
 
 sematic_py_lib(
     name = "str",
@@ -56,7 +54,7 @@ sematic_py_lib(
     deps = [
         "//sematic/types:registry",
         "//sematic/types:serialization",
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -65,7 +63,7 @@ sematic_py_lib(
     deps = [
         "//sematic/types:registry",
         "//sematic/types:serialization",
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -75,7 +73,7 @@ sematic_py_lib(
         "//sematic/types:casting",
         "//sematic/types:registry",
         "//sematic/types:serialization",
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -84,23 +82,29 @@ sematic_py_lib(
     deps = [
         "//sematic/types:registry",
         "//sematic/types:serialization",
-    ]
+    ],
 )
 
 sematic_py_lib(
     name = "tuple",
     srcs = ["tuple.py"],
     deps = [
-        "//sematic/types:registry",
         "//sematic/types:casting",
-    ]
+        "//sematic/types:registry",
+    ],
 )
 
 sematic_py_lib(
     name = "dict",
     srcs = ["dict.py"],
     deps = [
-        "//sematic/types:registry",
         "//sematic/types:casting",
-    ]
+        "//sematic/types:registry",
+    ],
+)
+
+sematic_py_lib(
+    name = "link",
+    srcs = ["link.py"],
+    deps = [],
 )

@@ -12,6 +12,7 @@ sematic_py_lib(
         "//sematic/types/types:none",
         "//sematic/types/types:union",
         "//sematic/types/types:list",
+        "//sematic/types/types:link",
         "//sematic/types/types:tuple",
         "//sematic/types/types:dict",
         "//sematic/types/types:str",
@@ -21,11 +22,11 @@ sematic_py_lib(
         "//sematic/types/types/plotly:init",
         # Does not actually create a dependency on pandas
         "//sematic/types/types/pandas:init",
-        # Does not actually create a dependency on matplotlib 
+        # Does not actually create a dependency on matplotlib
         "//sematic/types/types/matplotlib:init",
         # Does not actually create a dependency on snowflake
         "//sematic/types/types/snowflake:init",
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -41,7 +42,7 @@ sematic_py_lib(
     srcs = ["generic_type.py"],
     deps = [
         ":type",
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -62,8 +63,8 @@ sematic_py_lib(
     name = "serialization",
     srcs = ["serialization.py"],
     deps = [
-        ":registry",
         ":generic_type",
+        ":registry",
         requirement("cloudpickle"),
     ],
 )
