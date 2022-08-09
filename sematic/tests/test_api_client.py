@@ -8,6 +8,7 @@ from dataclasses import dataclass
 import pytest
 
 # Sematic
+from sematic.config import get_config
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 from sematic.api_client import (
     IncompatibleClientError,
@@ -47,7 +48,7 @@ def test_validate_server_compatibility(mock_requests):
     )
     _validate_server_compatibility(seconds_between_tries=0, use_cached=False)
     mock_requests.get.assert_called_with(
-        "https://dev.sematic.cloud/api/v1/meta/versions",
+        f"{get_config().api_url}/meta/versions",
         headers={"Content-Type": "application/json"},
     )
 

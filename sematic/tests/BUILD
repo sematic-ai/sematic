@@ -13,6 +13,7 @@ pytest_test(
     srcs = ["test_api_client.py"],
     deps = [
         "//sematic:api_client",
+        "//sematic:config",
         "//sematic:versions",
     ],
 )
