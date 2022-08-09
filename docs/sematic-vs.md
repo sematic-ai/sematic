@@ -77,7 +77,7 @@ some boilerplate around explicitly pushing/pulling data around, and coupling pro
 
 ### ... Kubeflow Pipelines
 
-* **Barrier to entry** – Using KFP requires quite a bit of knowledge about
+* **Low Barrier to entry** – Using KFP requires quite a bit of knowledge about
   Kubernetes, Docker images, Argo, etc. These things take a lot of time to
   master. Sematic tries to provide working solutions out-of-the-box so that you
   can focus on your expertise instead of infrastructure.
@@ -113,13 +113,31 @@ execution solution. Sematic lets each step in your pipeline run with the computi
 resources that are appropriate for it.
 
 ### ... Dagster
-* **No power/simplicity tradeoffs** - Dagster provides pythonic APIs for simple pipeline
-steps (`op`s in Dagster terminology), but if you want your step to be able to execute on
-Kubernetes to enable it access to more powerful computing resources, you're back to
-specifying your step in terms of docker images and container arguments. You also lose
-the ability to run your pipeline locally during development. Sematic allows you
-to execute any python function on compute resources that are right-sized for it, or on
-your local machine with an appropriate configuration for iterative development.
+* **Semantic UI** – Sematic has rich visualizations for the inputs and outputs at all levels
+of your pipelines. Instead of specifying configurations with yaml in your browser, you can
+fill out web forms that have just the fields expected, with appropriate validation. You can
+also get automatic links to data in external systems like Snowflake straight from the UI for
+your executions.
+
+* **Natural control flow** - In Dagster, options for creating dynamic pipelines are
+limited and require using
+[custom APIs](https://docs.dagster.io/concepts/ops-jobs-graphs/graphs#with-conditional-branching)
+dedicated to the purpose. In Sematic, you can define dynamic pipelines as easily as this:
+
+```python
+@sematic.func
+def my_dynamic_pipeline() -> MyResult:
+  partial_result = another_sematic_func()
+  return do_a_or_b(partial_result)
+
+@sematic.func
+def do_a_or_b(partial_result: MyPartialResult) -> MyResult:
+  if partial_result.some_bool:
+    return do_a_sematic_func()
+  else:
+    return do_b_sematic_func()
+```
+
 
 ### Flyte
 TODO
