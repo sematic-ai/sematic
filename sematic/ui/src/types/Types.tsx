@@ -24,7 +24,9 @@ import {
   List,
   ListItem,
   TableHead,
+  Button,
 } from "@mui/material";
+import { OpenInNew } from "@mui/icons-material";
 const Plot = createPlotlyComponent(Plotly);
 
 type TypeCategory = "builtin" | "typing" | "dataclass" | "generic" | "class";
@@ -663,6 +665,22 @@ function DataFrameValueView(props: ValueViewProps) {
   );
 }
 
+function LinkValueView(props: ValueViewProps) {
+  let { valueSummary } = props;
+  let { values } = valueSummary;
+
+  return (
+    <Button
+      href={values.url}
+      variant="contained"
+      target="blank"
+      endIcon={<OpenInNew />}
+    >
+      {values.label}
+    </Button>
+  );
+}
+
 type ComponentPair = {
   type: (props: TypeViewProps) => JSX.Element;
   value: (props: ValueViewProps) => JSX.Element;
@@ -680,6 +698,7 @@ const TypeComponents: Map<string, ComponentPair> = new Map([
   ["dict", { type: TypeView, value: DictValueView }],
   ["dataclass", { type: DataclassTypeView, value: DataclassValueView }],
   ["Union", { type: UnionTypeView, value: ValueView }],
+  ["Link", { type: TypeView, value: LinkValueView }],
   [
     "torch.utils.data.dataloader.DataLoader",
     { type: TypeView, value: TorchDataLoaderValueView },
