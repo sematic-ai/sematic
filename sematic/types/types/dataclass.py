@@ -7,7 +7,7 @@ import dataclasses
 from sematic.types.registry import (
     DataclassKey,
     ToJSONEncodableCallable,
-    is_valid_typing_alias,
+    is_parameterized_generic,
     register_can_cast,
     register_from_json_encodable,
     register_safe_cast,
@@ -152,7 +152,7 @@ def _serialize_dataclass(serializer: ToJSONEncodableCallable, value: Any, _) -> 
         # `typing` generics are excluded as they will always be different since the type
         # parametrization (e.g. `int` for `List[int]`) is not conserved on
         # instances
-        if not (value_type is field_type) and not is_valid_typing_alias(field_type):
+        if not (value_type is field_type) and not is_parameterized_generic(field_type):
             output["types"][name] = type_to_json_encodable(value_type)
             value_serialization_type = value_type
 

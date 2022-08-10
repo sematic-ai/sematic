@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 # Sematic
 import sematic
-from sematic.types import FloatInRange
 
 
 @dataclass
@@ -31,7 +30,7 @@ def add(a: float, b: float) -> float:
 
 
 @sematic.func
-def sum_list(list_: list[float], a: FloatInRange[0, 1]) -> float:  # type: ignore
+def sum_list(list_: list[float], a: float) -> float:  # type: ignore
     return sum(list_) + a
 
 

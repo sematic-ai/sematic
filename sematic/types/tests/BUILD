@@ -21,12 +21,3 @@ pytest_test(
         "//sematic/types:casting",
     ]
 )
-
-pytest_test(
-    name = "test_generic",
-    srcs = ["test_generic.py"],
-    deps = [
-        "//sematic/types:generic_type",
-        "//sematic/types:casting",
-    ]
-)

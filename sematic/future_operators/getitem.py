@@ -3,8 +3,7 @@ Defining these operators in seperate modules in order to avoid circular
 dependencies between Future and Calculator
 """
 # Standard library
-from types import GenericAlias
-from typing import Any, cast
+from typing import Any, get_args, get_origin
 
 # Sematic
 from sematic.future import Future
@@ -19,17 +18,20 @@ def __getitem__(self: Future, key: Any):
     When users try to access an item on a future returning a list, tuple, dict,
     a new Sematic Function needs to be created on the fly to access the item.
     """
-    future_type: GenericAlias = cast(GenericAlias, self.calculator.output_type)
+    future_type = self.calculator.output_type
 
-    try:
-        origin_type = future_type.__origin__
-    except AttributeError:
-        raise TypeError("__getitem__ is not supported on type {}".format(future_type))
+    origin_type = get_origin(future_type)
+    if origin_type is None:
+        raise TypeError(
+            "__getitem__ is not supported for Futures of type {}".format(future_type)
+        )
 
     if origin_type not in (tuple, list, dict):
-        raise TypeError("__getitem__ is not supported on type {}".format(future_type))
+        raise TypeError(
+            "__getitem__ is not supported for Futures of type {}".format(future_type)
+        )
 
-    element_types = future_type.__args__
+    element_types = get_args(future_type)
 
     if origin_type is dict:
         key_type, value_type = element_types

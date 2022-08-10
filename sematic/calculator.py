@@ -13,6 +13,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    get_origin,
 )
 
 # Sematic
@@ -21,7 +22,6 @@ from sematic.future import Future
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.types.casting import safe_cast, can_cast_type
 from sematic.types.type import is_type
-from sematic.types.registry import get_origin_type, is_valid_typing_alias
 
 
 class Calculator(AbstractCalculator):
@@ -268,8 +268,10 @@ def _make_list(type_: Type[OutputType], list_with_futures: Sequence[Any]) -> Out
     """
     Given a list with futures, returns a future List.
     """
-    if not (is_valid_typing_alias(type_) and get_origin_type(type_) is list):
-        raise Exception("type_ must be a List type.")
+    if get_origin(type_) is not list:
+        raise Exception(
+            "type_ must be a List type, and it must be parameterized as List[SomeType]."
+        )
 
     if not isinstance(list_with_futures, collections.abc.Sequence):
         raise Exception("list_with_futures must be a collections.Sequence.")

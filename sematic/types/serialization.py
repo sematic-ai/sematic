@@ -22,7 +22,8 @@ from sematic.types.registry import (
     get_from_json_encodable_func,
     get_to_json_encodable_summary_func,
     is_sematic_parametrized_generic_type,
-    is_valid_typing_alias,
+    is_parameterized_generic,
+    is_supported_type_annotation,
     get_origin_type,
 )
 
@@ -202,7 +203,8 @@ def _get_category(type_: typing.Any) -> str:
     if _is_dataclass(type_):
         return "dataclass"
 
-    if is_valid_typing_alias(type_):
+    if is_parameterized_generic(type_):
+        # TODO: rename this to builtin_generic
         return "typing"
 
     if is_sematic_parametrized_generic_type(type_):
@@ -247,8 +249,8 @@ def _get_parameters(type_: typing.Any) -> typing.Dict[str, typing.Any]:
     if _is_builtin(type_):
         return {}
 
-    if is_valid_typing_alias(type_):
-        return {"args": [_parameter_repr(arg) for arg in type_.__args__]}
+    if is_parameterized_generic(type_):
+        return {"args": [_parameter_repr(arg) for arg in typing.get_args(type_)]}
 
     if _is_dataclass(type_):
         return {
@@ -275,17 +277,14 @@ def _get_parameters(type_: typing.Any) -> typing.Dict[str, typing.Any]:
 
 
 def _parameter_repr(value: typing.Any) -> typing.Any:
-    def _is_type(type_) -> bool:
-        return isinstance(type_, type) or is_valid_typing_alias(value)
-
-    if _is_type(value):
+    if is_supported_type_annotation(value):
         return {"type": _type_repr(value)}
 
     def _is_scalar(v):
         # is not a type or a class or a function or a sequence or a mapping
         return (
             (isinstance(v, str) or not isinstance(v, (typing.Sequence, typing.Mapping)))
-            and not _is_type(v)
+            and not is_supported_type_annotation(v)
             and not inspect.isclass(v)
             and not inspect.isfunction(v)
         )
@@ -313,7 +312,7 @@ def _populate_registry(
     if is_sematic_parametrized_generic_type(type_):
         _populate_registry_from_parameters(type_.get_parameters(), registry)
 
-    if is_valid_typing_alias(type_):
+    if is_parameterized_generic(type_):
         _populate_registry_from_parameters(type_.__args__, registry)
 
     if _is_dataclass(type_):
@@ -348,7 +347,7 @@ def _populate_registry(
 
 
 def _populate_registry_from_parameters(parameters, registry):
-    if isinstance(parameters, type) or is_valid_typing_alias(parameters):
+    if is_supported_type_annotation(parameters):
         _populate_registry(parameters, registry)
 
     if isinstance(parameters, _BUILTINS):
