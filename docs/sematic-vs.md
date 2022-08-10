@@ -133,7 +133,7 @@ def do_a_or_b(partial_result: MyPartialResult) -> MyResult:
     return do_b_sematic_func()
 ```
 
-### Prefect
+### ... Prefect
 * **Semantic UI** – Sematic has rich visualizations for the inputs and outputs at all levels
 of your pipelines. Instead of having to search through logs to find out what was executed or
 what the result was, you can see this information right on the page for the execution. You
@@ -144,18 +144,18 @@ can also reconfigure directly from the UI and re-execute
 the orchestration product, use the dependency management solution you're already using to let
 Sematic build a docker image that can be used to execute your code in the cloud.
 
-### Comet ML
+### ... Comet ML
 
 Comet ML specializes in experiment tracking. If this is a particular concern of
 yours, you can definitely use Comet ML with Sematic. They are complementary
 tools.
 
-### Weights & Biases
+### ... Weights & Biases
 
 Weights & Biases excels at experiment tracking and visualization. You can
 absolutely use W&B together with Sematic, they are complementary tols.
 
-### HuggingFace
+### ... HuggingFace
 
 HuggingFace provides a large collection of pre-trained models and datasets. You
 can absolutely use HuggingFace with Sematic.

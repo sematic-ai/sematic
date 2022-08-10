@@ -8,7 +8,7 @@
 * [The Sematic CLI](cli.md)
 * [Types](types.md)
 * [Local and Cloud execution](execution-modes.md)
-* [Sematic vs. _____](sematic-vs.md)
+* [Sematic vs. ...](sematic-vs.md)
 * [Join us on Discord](https://discord.gg/4KZJ6kYVax)
 
 ## Diving deeper
