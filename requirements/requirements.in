@@ -6,7 +6,6 @@ git+https://github.com/ulfjack/coveragepy.git@lcov-support
 # System
 ipython==8.2.0
 setuptools==58.1.0
-debugpy
 
 # DB
 SQLAlchemy==1.4.36
