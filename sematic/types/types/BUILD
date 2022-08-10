@@ -2,10 +2,10 @@ sematic_py_lib(
     name = "dataclass",
     srcs = ["dataclass.py"],
     deps = [
-        "//sematic/types:registry",
         "//sematic/types:casting",
+        "//sematic/types:registry",
         "//sematic/types:serialization",
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -26,17 +26,15 @@ sematic_py_lib(
     ],
 )
 
-
 sematic_py_lib(
     name = "list",
     srcs = ["list.py"],
     deps = [
-        "//sematic/types:registry",
         "//sematic/types:casting",
+        "//sematic/types:registry",
         "//sematic/types:serialization",
-    ]
+    ],
 )
-
 
 sematic_py_lib(
     name = "str",
@@ -44,7 +42,7 @@ sematic_py_lib(
     deps = [
         "//sematic/types:registry",
         "//sematic/types:serialization",
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -53,7 +51,7 @@ sematic_py_lib(
     deps = [
         "//sematic/types:registry",
         "//sematic/types:serialization",
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -63,7 +61,7 @@ sematic_py_lib(
         "//sematic/types:casting",
         "//sematic/types:registry",
         "//sematic/types:serialization",
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -72,23 +70,29 @@ sematic_py_lib(
     deps = [
         "//sematic/types:registry",
         "//sematic/types:serialization",
-    ]
+    ],
 )
 
 sematic_py_lib(
     name = "tuple",
     srcs = ["tuple.py"],
     deps = [
-        "//sematic/types:registry",
         "//sematic/types:casting",
-    ]
+        "//sematic/types:registry",
+    ],
 )
 
 sematic_py_lib(
     name = "dict",
     srcs = ["dict.py"],
     deps = [
-        "//sematic/types:registry",
         "//sematic/types:casting",
-    ]
+        "//sematic/types:registry",
+    ],
+)
+
+sematic_py_lib(
+    name = "link",
+    srcs = ["link.py"],
+    deps = [],
 )

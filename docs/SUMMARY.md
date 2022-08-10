@@ -6,6 +6,7 @@
 * [A real ML pipeline](real-example.md)
 * [The Sematic UI](sematic-ui.md)
 * [The Sematic CLI](cli.md)
+* [Types](types.md)
 * [Local and Cloud execution](execution-modes.md)
 * [Sematic vs. _____](sematic-vs.md)
 * [Join us on Discord](https://discord.gg/4KZJ6kYVax)
