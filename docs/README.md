@@ -20,8 +20,17 @@ If you want to dig deeper, check out the [Sematic Concepts](concepts.md), or the
 
 ## Who we are
 
-We spent the last four years building the infrastructure behind
-[Cruise](https://getcruise.com)'s [Continuous Learning
+The Sematic team hails from around the world and has extensive industry
+experience in software development, cloud infrastructure, and Machine Learning
+tooling.
+
+While searching for the Higgs boson at CERN, developing payment infrastructure
+for Instacart, or building ML tooling for Cruise, we encountered a wide variety
+of systems, practices, and patterns, which inform the design of Sematic every
+day.
+
+Notably, we spent the last four years building the infrastructure behind
+Cruise's [Continuous Learning
 Machine](https://medium.com/cruise/cruise-continuous-learning-machine-30d60f4c691b),
 which ensures safety-critical models keep learning as world conditions change.
 We encountered all sorts of use cases from statistical modeling to performance
