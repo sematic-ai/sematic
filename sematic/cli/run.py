@@ -2,6 +2,7 @@
 import os
 import runpy
 import sys
+import typing
 
 # Third-party
 import click
@@ -25,7 +26,7 @@ def _get_requirements_path(example_path: str) -> str:
     )
 
 
-def _get_requirements(example_path: str) -> list[str]:
+def _get_requirements(example_path: str) -> typing.List[str]:
     with open(_get_requirements_path(example_path), "r") as file:
         return file.read().split("\n")
 

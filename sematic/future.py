@@ -48,7 +48,7 @@ class Future(AbstractFuture):
         ----------
         name: str
             The future's name. This will be used to name the run in the UI.
-        tags: list[str]
+        tags: typing.List[str]
             A list of strings tags to attach to the resulting run.
 
         Returns
