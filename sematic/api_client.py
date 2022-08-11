@@ -110,6 +110,13 @@ def _get(endpoint) -> Any:
     return response.json()
 
 
+@retry(
+    exceptions=APIConnectionError,
+    tries=4,
+    delay=1,
+    backoff=2,
+    jitter=0.1,
+)
 def _post(endpoint, json_payload) -> Any:
     response = _request(requests.post, endpoint, dict(json=json_payload))
 
@@ -119,6 +126,13 @@ def _post(endpoint, json_payload) -> Any:
     return response.json()
 
 
+@retry(
+    exceptions=APIConnectionError,
+    tries=4,
+    delay=1,
+    backoff=2,
+    jitter=0.1,
+)
 def _put(endpoint, json_payload) -> Any:
     response = _request(requests.put, endpoint, dict(json=json_payload))
 
