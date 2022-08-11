@@ -185,12 +185,10 @@ def _validate_server_compatibility_no_catch() -> None:
             validate_version_compatibility=False,  # to avoid recursion
             validate_json=True,
         )
-    except BadRequestError:
+    except (BadRequestError, InvalidResponseError):
         raise unexpected_server_response_error
     except ServerError:
         raise ServerError("The Sematic server is not responsive")
-    except InvalidResponseError:
-        raise unexpected_server_response_error
 
     response_json = response.json()
     server_version = cast(Tuple[int, int, int], tuple(response_json["server"]))
