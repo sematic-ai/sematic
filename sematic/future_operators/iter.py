@@ -3,8 +3,7 @@ Defining these operators in seperate modules in order to avoid circular
 dependencies between Future and Calculator
 """
 # standard library
-from types import GenericAlias
-from typing import cast
+from typing import get_origin, get_args
 
 # Sematic
 from sematic.future import Future
@@ -21,19 +20,16 @@ def __iter__(self: Future):
     Only supporting tuples for now.
     """
     is_tuple_future = False
-    future_type: GenericAlias = cast(GenericAlias, self.calculator.output_type)
+    future_type = self.calculator.output_type
 
-    try:
-        is_tuple_future = future_type.__origin__ is tuple
-    except AttributeError:
-        pass
+    is_tuple_future = get_origin(future_type) is tuple
 
     if not is_tuple_future:
         raise NotImplementedError(
             "Future.__iter__ is only supported on Tuple futures. Find a workaround at https://docs.sematic.dev/diving-deeper/future-algebra#unpacking-and-iteration"  # noqa: E501
         )
 
-    yield from [__getitem__(self, idx) for idx, _ in enumerate(future_type.__args__)]
+    yield from [__getitem__(self, idx) for idx, _ in enumerate(get_args(future_type))]
 
 
 Future.__iter__ = __iter__  # type: ignore

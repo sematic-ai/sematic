@@ -1,7 +1,5 @@
 # Sematic
-from sematic.types import (  # noqa: F401
-    FloatInRange,
-)
+import sematic.types  # noqa: F401
 
 
 def test_pass():

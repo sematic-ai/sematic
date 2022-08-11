@@ -12,14 +12,6 @@ sematic.types.types.float module
    :undoc-members:
    :show-inheritance:
 
-sematic.types.types.float\_in\_range module
-----------------------------------------
-
-.. automodule:: sematic.types.types.float_in_range
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 sematic.types.types.integer module
 -------------------------------
 

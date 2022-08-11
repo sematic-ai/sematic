@@ -17,18 +17,6 @@ pytest_test(
 )
 
 pytest_test(
-    name = "test_float_in_range",
-    srcs = ["test_float_in_range.py"],
-    deps = [
-        "//sematic/types:casting",
-        "//sematic/types:generic_type",
-        "//sematic/types:init",
-        "//sematic/types:serialization",
-        "//sematic/types/types:float_in_range",
-    ],
-)
-
-pytest_test(
     name = "test_integer",
     srcs = ["test_integer.py"],
     deps = [
