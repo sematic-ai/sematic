@@ -1,15 +1,16 @@
-# Standard library
+# Standard Library
+import os
 import random
 import string
-import os
+
+import pytest
 
 # Third-party
 from click.testing import CliRunner
-import pytest
 
 # Sematic
-from sematic.cli.new import new
 from sematic.cli.examples_utils import MIN_EXAMPLE_FILES, all_examples
+from sematic.cli.new import new
 
 
 @pytest.fixture

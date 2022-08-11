@@ -1,4 +1,4 @@
-# Standard library
+# Standard Library
 from dataclasses import dataclass
 
 # Third-party
@@ -8,12 +8,9 @@ from xgboost import XGBClassifier
 
 # Sematic
 import sematic
-
-# Liver cirrhosis
-from sematic.examples.liver_cirrhosis.train import TrainingOutput, train_model
 from sematic.examples.liver_cirrhosis.data_processing import (
-    load_data,
     fill_na,
+    load_data,
     pre_process,
 )
 from sematic.examples.liver_cirrhosis.plots import (
@@ -23,6 +20,9 @@ from sematic.examples.liver_cirrhosis.plots import (
     plot_positive_correlations,
     plot_stage_counts,
 )
+
+# Liver cirrhosis
+from sematic.examples.liver_cirrhosis.train import TrainingOutput, train_model
 
 
 @dataclass

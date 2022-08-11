@@ -2,31 +2,31 @@
 Module keeping all /api/v*/runs/* API endpoints.
 """
 
-# Standard library
+# Standard Library
 import base64
 from http import HTTPStatus
-from typing import Optional, List, Dict
-from urllib.parse import urlunsplit, urlencode, urlsplit
+from typing import Dict, List, Optional
+from urllib.parse import urlencode, urlsplit, urlunsplit
 
 # Third-party
-import sqlalchemy
 import flask
-from sqlalchemy.orm.exc import NoResultFound
 import flask_socketio  # type: ignore
+import sqlalchemy
+from sqlalchemy.orm.exc import NoResultFound
 
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
+from sematic.api.endpoints.request_parameters import (
+    get_request_parameters,
+    jsonify_error,
+)
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
-from sematic.db.queries import get_root_graph, get_run, save_graph, get_run_graph
-from sematic.api.endpoints.request_parameters import (
-    get_request_parameters,
-    jsonify_error,
-)
+from sematic.db.queries import get_root_graph, get_run, get_run_graph, save_graph
 
 
 @sematic_api.route("/api/v1/runs", methods=["GET"])

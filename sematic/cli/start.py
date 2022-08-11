@@ -1,7 +1,7 @@
 """
 Module containing logic for the `start` CLI command.
 """
-# Standard library
+# Standard Library
 import os
 import webbrowser
 
@@ -9,12 +9,10 @@ import webbrowser
 import click
 
 # Sematic
-from sematic.config import get_config
-from sematic.cli.process_utils import (
-    server_is_running,
-)
 from sematic.api.server import run_wsgi
 from sematic.cli.cli import cli
+from sematic.cli.process_utils import server_is_running
+from sematic.config import get_config
 
 
 @cli.command("start", short_help="Start the Sematic app")

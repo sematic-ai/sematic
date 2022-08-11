@@ -1,10 +1,9 @@
-# Standard library
+# Standard Library
 from typing import Any
 
 # Third-party
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
-
 
 # Sematic
 from sematic.types.registry import register_to_json_encodable_summary

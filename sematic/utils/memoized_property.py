@@ -1,5 +1,6 @@
-from functools import wraps
+# Standard Library
 import typing
+from functools import wraps
 
 
 def memoized_property(fget: typing.Callable) -> property:

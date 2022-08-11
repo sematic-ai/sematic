@@ -1,26 +1,26 @@
 """
 Functions to generate models.
 """
-# Standard library
+# Standard Library
 import datetime
-import secrets
-import typing
 import hashlib
 import json
+import secrets
+import typing
 
 # Sematic
+import sematic.storage as storage
 from sematic.abstract_future import AbstractFuture
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.types.serialization import (
+    get_json_encodable_summary,
     type_from_json_encodable,
+    type_to_json_encodable,
     value_from_json_encodable,
     value_to_json_encodable,
-    type_to_json_encodable,
-    get_json_encodable_summary,
 )
-import sematic.storage as storage
 
 
 def make_run_from_future(future: AbstractFuture) -> Run:

@@ -1,17 +1,21 @@
-# Standard library
+# Standard Library
 from dataclasses import dataclass
 
-# Third-party
-from sklearn.metrics import classification_report
-from sklearn.model_selection import StratifiedKFold
-import numpy as np
-import sklearn
-from sklearn.metrics import roc_auc_score
-from sklearn.metrics import roc_curve, auc
-from sklearn.metrics import precision_recall_curve
 import matplotlib.figure
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
+import sklearn
+
+# Third-party
+from sklearn.metrics import (
+    auc,
+    classification_report,
+    precision_recall_curve,
+    roc_auc_score,
+    roc_curve,
+)
+from sklearn.model_selection import StratifiedKFold
 
 # Sematic
 import sematic

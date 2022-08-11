@@ -1,17 +1,16 @@
-# Standard library
-from typing import Any, Callable, Dict, List, Optional, Tuple
+# Standard Library
 import logging
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 # Third party
 import requests
 
 # Sematic
 from sematic.config import get_config
-from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
-
+from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
 
 logger = logging.getLogger(__name__)
 

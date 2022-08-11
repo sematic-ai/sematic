@@ -1,4 +1,4 @@
-# Standard library
+# Standard Library
 import os
 import runpy
 import sys
@@ -8,10 +8,10 @@ import typing
 import click
 
 # Sematic
-from sematic.config import get_config
 from sematic.cli.cli import cli
-from sematic.cli.process_utils import server_is_running
 from sematic.cli.examples_utils import is_example
+from sematic.cli.process_utils import server_is_running
+from sematic.config import get_config
 
 
 def _example_path_to_import_path(script_path: str) -> str:

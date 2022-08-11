@@ -1,25 +1,25 @@
-# Standard library
+# Standard Library
 import hashlib
 import json
 
 import pytest
 
 # Sematic
+import sematic.storage as storage
 from sematic.abstract_future import FutureState
 from sematic.calculator import func
 from sematic.db.models.factories import (
-    get_artifact_value,
-    make_run_from_future,
-    make_artifact,
     _make_artifact_storage_key,
-)
-from sematic.types.serialization import (
-    get_json_encodable_summary,
-    value_to_json_encodable,
-    type_to_json_encodable,
+    get_artifact_value,
+    make_artifact,
+    make_run_from_future,
 )
 from sematic.tests.fixtures import test_storage  # noqa: F401
-import sematic.storage as storage
+from sematic.types.serialization import (
+    get_json_encodable_summary,
+    type_to_json_encodable,
+    value_to_json_encodable,
+)
 
 
 @func

@@ -2,16 +2,16 @@
 from unittest import mock
 
 # Sematic
-from sematic.calculator import func
-from sematic.resolvers.cloud_resolver import CloudResolver
+import sematic.api_client as api_client
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_no_auth,
     mock_requests,
     test_client,
 )
+from sematic.calculator import func
 from sematic.db.tests.fixtures import test_db  # noqa: F401
+from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.tests.fixtures import test_storage  # noqa: F401
-import sematic.api_client as api_client
 
 
 @func

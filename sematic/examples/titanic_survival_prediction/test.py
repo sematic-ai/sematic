@@ -1,12 +1,11 @@
-from sematic.examples.titanic_survival_prediction.data_classes import EvaluationOutput
+# Third-party
+import pandas as pd
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.tree import DecisionTreeClassifier
 
 # Sematic
 import sematic
-
-# Third-party
-import pandas as pd
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import confusion_matrix, classification_report
+from sematic.examples.titanic_survival_prediction.data_classes import EvaluationOutput
 
 
 @sematic.func

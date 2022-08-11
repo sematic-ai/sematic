@@ -1,4 +1,4 @@
-# Standard library
+# Standard Library
 import collections
 import inspect
 import types
@@ -20,7 +20,7 @@ from typing import (
 from sematic.abstract_calculator import AbstractCalculator
 from sematic.future import Future
 from sematic.resolvers.resource_requirements import ResourceRequirements
-from sematic.types.casting import safe_cast, can_cast_type
+from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.type import is_type
 
 

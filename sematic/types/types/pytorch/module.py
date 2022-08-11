@@ -1,14 +1,14 @@
-# Standard library
+# Standard Library
 from typing import Any
 
 # Third-party
-import torch.nn
 import cloudpickle
+import torch.nn
 
 # Sematic
 from sematic.types.registry import (
-    register_to_json_encodable,
     register_from_json_encodable,
+    register_to_json_encodable,
 )
 from sematic.types.serialization import binary_from_string, binary_to_string
 

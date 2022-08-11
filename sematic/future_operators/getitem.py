@@ -2,13 +2,13 @@
 Defining these operators in seperate modules in order to avoid circular
 dependencies between Future and Calculator
 """
-# Standard library
+# Standard Library
 from typing import Any, get_args, get_origin
 
 # Sematic
+from sematic.calculator import func
 from sematic.future import Future
 from sematic.types.casting import can_cast_type, safe_cast
-from sematic.calculator import func
 
 
 def __getitem__(self: Future, key: Any):

@@ -1,4 +1,4 @@
-# Standard library
+# Standard Library
 from typing import Dict, Union
 
 # Third-party

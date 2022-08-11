@@ -1,24 +1,22 @@
-# Standard library
-from typing import List, Optional
+# Standard Library
 from dataclasses import dataclass
+from typing import List, Optional
 
 # Third-party
+import plotly
 import torch
 import torch.nn as nn
-from torchvision.datasets import MNIST
-from torchvision.transforms import Compose, ToTensor, Normalize
 from torch.optim import Adadelta
 from torch.optim.lr_scheduler import StepLR
-from torch.utils.data.dataset import Dataset
 from torch.utils.data import DataLoader
-import plotly
-
-
-from sematic.examples.mnist.pytorch.train_eval import train, test, Net
+from torch.utils.data.dataset import Dataset
+from torchvision.datasets import MNIST
+from torchvision.transforms import Compose, Normalize, ToTensor
 
 # Sematic
 import sematic
-from sematic import ResourceRequirements, KubernetesResourceRequirements
+from sematic import KubernetesResourceRequirements, ResourceRequirements
+from sematic.examples.mnist.pytorch.train_eval import Net, test, train
 
 
 @sematic.func(inline=False)

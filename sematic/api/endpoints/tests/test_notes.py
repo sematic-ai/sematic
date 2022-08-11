@@ -1,5 +1,7 @@
-# Third-party
+# Standard Library
 import json
+
+# Third-party
 import flask.testing
 import pytest
 from sqlalchemy.orm.exc import NoResultFound
@@ -10,17 +12,16 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     mock_no_auth,
     test_client,
 )
+from sematic.db.models.note import Note
+from sematic.db.models.run import Run
 from sematic.db.models.user import User  # noqa: F401
 from sematic.db.queries import get_note, save_note  # noqa: F401
 from sematic.db.tests.fixtures import (  # noqa: F401
-    test_db,
     persisted_run,
-    run,
     persisted_user,
+    run,
+    test_db,
 )
-from sematic.db.models.run import Run
-from sematic.db.models.note import Note
-
 
 test_list_note_auth = make_auth_test("/api/v1/notes")
 test_create_note_auth = make_auth_test("/api/v1/notes", method="POST")

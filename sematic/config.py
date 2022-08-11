@@ -1,10 +1,10 @@
-# Standard library
-from dataclasses import dataclass, asdict
-from enum import Enum
+# Standard Library
 import logging
 import os
-from urllib.parse import urljoin
+from dataclasses import asdict, dataclass
+from enum import Enum
 from typing import Optional
+from urllib.parse import urljoin
 
 # Sematic
 from sematic.config_dir import get_config_dir

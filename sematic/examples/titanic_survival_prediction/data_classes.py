@@ -1,9 +1,9 @@
-# Standard library
+# Standard Library
 from dataclasses import dataclass
 
 # Third-party
-import pandas as pd
 import matplotlib.figure
+import pandas as pd
 
 
 @dataclass

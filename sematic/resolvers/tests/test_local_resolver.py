@@ -1,4 +1,4 @@
-# Standard library
+# Standard Library
 from typing import List
 
 # Third-party
@@ -8,15 +8,15 @@ import pytest
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_no_auth,
-    test_client,
     mock_requests,
+    test_client,
 )
 from sematic.calculator import func
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
-from sematic.resolvers.local_resolver import LocalResolver
-from sematic.db.tests.fixtures import test_db, pg_mock  # noqa: F401
 from sematic.db.queries import get_root_graph
+from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
+from sematic.resolvers.local_resolver import LocalResolver
 
 
 @func

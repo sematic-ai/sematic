@@ -1,11 +1,11 @@
-# Standard library
+# Standard Library
 import typing
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
+from sematic.resolver import Resolver
 from sematic.resolvers.local_resolver import LocalResolver
 from sematic.resolvers.silent_resolver import SilentResolver
-from sematic.resolver import Resolver
 
 
 class Future(AbstractFuture):

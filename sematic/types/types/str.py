@@ -1,14 +1,14 @@
 """
 Casting and serialization logic for `str`.
 """
-# Standard library
+# Standard Library
 import inspect
 import typing
 
 # Sematic
 from sematic.types.registry import (
-    register_safe_cast,
     register_can_cast,
+    register_safe_cast,
     register_to_json_encodable_summary,
 )
 from sematic.types.serialization import value_to_json_encodable

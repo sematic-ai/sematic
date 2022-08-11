@@ -1,18 +1,18 @@
-# Standard library
+# Standard Library
 import uuid
 from typing import Any
 
 # Third-party
+import psycopg2
 import pytest
 import testing.postgresql  # type: ignore
-import psycopg2
 
 # Sematic
 import sematic.db.db as db
-from sematic.db.models.run import Run
 from sematic.abstract_future import FutureState
-from sematic.db.queries import save_run, save_user
 from sematic.db.models.factories import make_user
+from sematic.db.models.run import Run
+from sematic.db.queries import save_run, save_user
 
 
 def handler(postgresql):

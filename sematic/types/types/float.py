@@ -1,4 +1,4 @@
-# Standard library
+# Standard Library
 import numbers
 import typing
 

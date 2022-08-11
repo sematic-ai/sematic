@@ -1,4 +1,7 @@
+# Standard Library
 import time
+
+# Sematic
 import sematic
 
 

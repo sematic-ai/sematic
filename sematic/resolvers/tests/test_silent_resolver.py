@@ -1,6 +1,6 @@
 # Sematic
-from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.calculator import func
+from sematic.resolvers.silent_resolver import SilentResolver
 
 
 @func

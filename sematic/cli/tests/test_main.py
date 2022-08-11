@@ -1,18 +1,19 @@
-# Standard library
-from dataclasses import asdict
+# Standard Library
 import tempfile
+from dataclasses import asdict
+
 import pytest
-
-# import subprocess
-
-# Third-party
-# from click.testing import CliRunner
 
 # Sematic
 # import sematic.cli.main as main
 # from sematic.cli.process_utils import server_is_running
 from sematic.config import Config, get_config, set_config
 from sematic.db.tests.fixtures import test_db  # noqa: F401
+
+# import subprocess
+
+# Third-party
+# from click.testing import CliRunner
 
 
 @pytest.fixture

@@ -1,14 +1,14 @@
-# Standard library
+# Standard Library
 import os
-from typing import Any
 import uuid
+from typing import Any
 
 # Third-party
 import matplotlib.figure  # type: ignore
 
 # Sematic
-from sematic.types.registry import register_to_json_encodable_summary
 from sematic.config import get_config
+from sematic.types.registry import register_to_json_encodable_summary
 
 
 @register_to_json_encodable_summary(matplotlib.figure.Figure)

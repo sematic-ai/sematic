@@ -1,15 +1,15 @@
 """
 This module contains the public API for artifact serialization.
 """
-# Standard library
+# Standard Library
 import abc
 import base64
 import builtins
 import dataclasses
 import importlib
-import typing
 import inspect
 import json
+import typing
 
 # Third-party
 import cloudpickle  # type: ignore
@@ -18,15 +18,14 @@ import cloudpickle  # type: ignore
 from sematic.types.generic_type import GenericType
 from sematic.types.registry import (
     DataclassKey,
-    get_to_json_encodable_func,
     get_from_json_encodable_func,
-    get_to_json_encodable_summary_func,
-    is_sematic_parametrized_generic_type,
-    is_parameterized_generic,
-    is_supported_type_annotation,
     get_origin_type,
+    get_to_json_encodable_func,
+    get_to_json_encodable_summary_func,
+    is_parameterized_generic,
+    is_sematic_parametrized_generic_type,
+    is_supported_type_annotation,
 )
-
 
 # VALUE SERIALIZATION
 

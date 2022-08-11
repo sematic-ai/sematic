@@ -1,7 +1,7 @@
 """
 Module holding common DB queries.
 """
-# Standard library
+# Standard Library
 from typing import List, Set, Tuple
 
 # Third-party
@@ -10,11 +10,11 @@ import sqlalchemy.orm
 from sqlalchemy.sql.elements import ColumnElement
 
 # Sematic
+from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.run import Run
 from sematic.db.models.note import Note
-from sematic.db.db import db
+from sematic.db.models.run import Run
 from sematic.db.models.user import User
 
 

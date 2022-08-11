@@ -1,9 +1,8 @@
-# Standard library
+# Standard Library
 import os
 
 # Sematic
-from sematic.config import get_config, EXAMPLES_DIR
-
+from sematic.config import EXAMPLES_DIR, get_config
 
 MIN_EXAMPLE_FILES = [
     "__main__.py",

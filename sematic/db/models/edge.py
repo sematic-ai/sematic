@@ -1,7 +1,7 @@
-# Standard library
+# Standard Library
 import datetime
-from typing import Optional
 import uuid
+from typing import Optional
 
 # Third-party
 from sqlalchemy import Column, ForeignKey, types

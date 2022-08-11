@@ -1,17 +1,17 @@
-# Standard library
+# Standard Library
 import json
 import math
 import typing
 
 # Sematic
+from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.registry import (
+    register_can_cast,
     register_from_json_encodable,
     register_safe_cast,
-    register_can_cast,
     register_to_json_encodable,
     register_to_json_encodable_summary,
 )
-from sematic.types.casting import safe_cast, can_cast_type
 from sematic.types.serialization import (
     get_json_encodable_summary,
     value_from_json_encodable,

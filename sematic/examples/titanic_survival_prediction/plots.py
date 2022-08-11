@@ -1,13 +1,13 @@
-from sematic.examples.titanic_survival_prediction.data_classes import EDAPlots
+import matplotlib.figure
+import matplotlib.pyplot as plt
 
 # Third-party
 import pandas as pd
-import matplotlib.figure
-import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Sematic
 import sematic
+from sematic.examples.titanic_survival_prediction.data_classes import EDAPlots
 
 
 def plot_missing_values(df: pd.DataFrame) -> matplotlib.figure.Figure:

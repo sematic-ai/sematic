@@ -1,14 +1,14 @@
 """
 This is an example implementation of the MNIST pipeline in PyTorch on sematic.
 """
+# Sematic
 # MNIST example
 from sematic.examples.mnist.pytorch.pipeline import (
-    pipeline,
-    PipelineConfig,
     DataLoaderConfig,
+    PipelineConfig,
     TrainConfig,
+    pipeline,
 )
-
 
 PIPELINE_CONFIG = PipelineConfig(
     dataloader_config=DataLoaderConfig(),

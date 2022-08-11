@@ -1,4 +1,4 @@
-# Standard library
+# Standard Library
 import os
 import re
 import shutil

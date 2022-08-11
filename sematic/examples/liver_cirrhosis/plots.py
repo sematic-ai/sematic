@@ -1,8 +1,8 @@
 # Third-party
 import matplotlib.figure
 import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
+import seaborn as sns
 
 # Sematic
 import sematic

@@ -1,8 +1,8 @@
-# Sematic
-from sematic.types.types.link import Link
-
 # Third-party
 import pytest
+
+# Sematic
+from sematic.types.types.link import Link
 
 
 def test_url_validation_pass():

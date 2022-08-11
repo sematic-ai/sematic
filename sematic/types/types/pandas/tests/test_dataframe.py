@@ -1,8 +1,10 @@
 # Third-party
+# Standard Library
 import datetime
-import os
-import pandas
 import json
+import os
+
+import pandas
 
 # Sematic
 from sematic.db.models.factories import make_artifact

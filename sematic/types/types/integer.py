@@ -1,7 +1,7 @@
 """
 typing logic for the `int` type.
 """
-# Standard library
+# Standard Library
 import inspect
 import numbers
 import typing

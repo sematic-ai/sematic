@@ -1,6 +1,6 @@
 # Standard Library
-from typing import Any
 import json
+from typing import Any
 
 # Third-party
 from plotly.graph_objs import Figure

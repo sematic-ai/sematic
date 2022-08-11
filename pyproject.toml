@@ -7,3 +7,10 @@ exclude = [
   "docs",
   "build",
 ]
+
+[tool.isort]
+profile = "black"
+import_heading_stdlib="Standard Library"
+import_heading_firstparty="Sematic"
+known_third_party = ["flask", "psycopg2", "matplotlib", "cloudpickle"]
+multi_line_output = 3

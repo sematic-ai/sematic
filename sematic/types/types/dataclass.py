@@ -1,9 +1,10 @@
-# Standard library
+# Standard Library
 import copy
-from typing import Any, Tuple, Optional, Dict, Union, Literal
 import dataclasses
+from typing import Any, Dict, Literal, Optional, Tuple, Union
 
 # Sematic
+from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.registry import (
     DataclassKey,
     ToJSONEncodableCallable,
@@ -14,7 +15,6 @@ from sematic.types.registry import (
     register_to_json_encodable,
     register_to_json_encodable_summary,
 )
-from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.serialization import (
     get_json_encodable_summary,
     type_from_json_encodable,

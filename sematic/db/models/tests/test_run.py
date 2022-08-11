@@ -1,6 +1,6 @@
 # Sematic
-from sematic.db.models.run import Run
 from sematic.abstract_future import FutureState
+from sematic.db.models.run import Run
 
 
 def test_set_future_state():

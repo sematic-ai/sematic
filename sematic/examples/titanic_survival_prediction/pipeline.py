@@ -1,4 +1,4 @@
-# Standard library
+# Standard Library
 from typing import List, Union
 
 # Sematic
@@ -12,14 +12,14 @@ from sematic.examples.titanic_survival_prediction.data_classes import (
 
 # Titianic survival prediction example
 from sematic.examples.titanic_survival_prediction.data_preprocessing import (
-    load_data,
     feature_engineering,
+    load_data,
     split_data,
 )
-from sematic.examples.titanic_survival_prediction.plots import make_eda_plots
 from sematic.examples.titanic_survival_prediction.model import init_model
-from sematic.examples.titanic_survival_prediction.train import train_model
+from sematic.examples.titanic_survival_prediction.plots import make_eda_plots
 from sematic.examples.titanic_survival_prediction.test import eval_model
+from sematic.examples.titanic_survival_prediction.train import train_model
 
 
 @sematic.func
