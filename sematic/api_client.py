@@ -193,7 +193,7 @@ def _validate_server_compatibility_no_catch() -> None:
             f"{version_as_string(server_min_client_version)}"
         )
 
-    logger.info(
+    logger.debug(
         "Sematic client %s is compatible with server %s",
         version_as_string(CURRENT_VERSION),
         version_as_string(server_version),
