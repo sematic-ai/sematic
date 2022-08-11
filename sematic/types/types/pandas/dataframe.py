@@ -1,6 +1,6 @@
 # Standard library
 import json
-from typing import Any
+from typing import Any, List, Dict
 
 # Third party
 import pandas
@@ -29,7 +29,7 @@ def _dataframe_json_encodable_summary(value: pandas.DataFrame, _) -> Any:
         (name, dtype.name) for name, dtype in zip(value.dtypes.index, value.dtypes)
     ]
 
-    describe = []
+    describe: List[Dict[str, Any]] = []
     try:
         describe = value.describe().to_dict()  # type: ignore  # (pandas stubs bug)
     except ValueError:
