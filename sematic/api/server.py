@@ -15,6 +15,7 @@ import sematic.api.endpoints.artifacts  # noqa: F401
 # to be registered.
 import sematic.api.endpoints.auth  # noqa: F401
 import sematic.api.endpoints.edges  # noqa: F401
+import sematic.api.endpoints.meta  # noqa: F401
 import sematic.api.endpoints.notes  # noqa: F401
 import sematic.api.endpoints.runs  # noqa: F401
 from sematic.api.app import sematic_api

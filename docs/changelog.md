@@ -1,5 +1,7 @@
+<!--- When updating the version, update versions.py and sematic/BUILD accordingly -->
 * HEAD
     * [improvement] Friendly error message for unsupported Python version
+    * [improvement] Friendly error message when clients don't match server version
 * 0.9.0
     * [feature] Grafana integration for log panels
 * 0.8.0

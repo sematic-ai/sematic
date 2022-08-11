@@ -22,7 +22,7 @@ import sematic.user_settings as user_settings
 # Importing from server instead of app to make sure
 # all endpoints are loaded
 from sematic.api.server import sematic_api
-from sematic.config import get_config
+from sematic.config import get_config, switch_env
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 
 
@@ -38,6 +38,10 @@ def test_client(test_db):  # noqa: F811
 # Credit to https://github.com/adamtheturtle/requests-mock-flask
 @pytest.fixture  # noqa: F811
 def mock_requests(test_client):
+    # This mock will place calls to an in-memory server, local configurations
+    # are the appropriate match.
+    switch_env("local")
+
     def _request_callback(request):
         environ_builder = werkzeug.test.EnvironBuilder(
             path=request.path_url,
@@ -67,7 +71,7 @@ def mock_requests(test_client):
                     callback=_request_callback, method=method, url=url
                 )
 
-        yield
+        yield request_mock
 
 
 @contextlib.contextmanager

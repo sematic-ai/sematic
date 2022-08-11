@@ -1,7 +1,7 @@
 # Standard Library
 import uuid
 from http import HTTPStatus
-from typing import Any, Dict, cast
+from typing import Dict
 from unittest import mock
 
 # Third-party
@@ -192,14 +192,3 @@ def test_authenticate_decorator_fail(
         response = test_client.get("/test-{}".format(test_id), headers=headers)
 
         assert response.status_code == HTTPStatus.UNAUTHORIZED
-
-
-def test_env(test_client: flask.testing.FlaskClient):  # noqa: F811
-    with mock_user_settings(
-        {SettingsVar.GRAFANA_PANEL_URL: "abc", SettingsVar.SEMATIC_AUTHENTICATE: False}
-    ):
-        response = test_client.get("/env")
-        payload = response.json
-        payload = cast(Dict[str, Any], payload)
-
-        assert payload["env"][SettingsVar.GRAFANA_PANEL_URL.value] == "abc"

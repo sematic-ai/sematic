@@ -27,3 +27,4 @@ from sematic.resolvers.resource_requirements import (  # noqa: F401,E402
     KubernetesResourceRequirements,
     ResourceRequirements,
 )
+from sematic.versions import CURRENT_VERSION_STR as __version__  # noqa: F401,E402

@@ -50,6 +50,16 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "meta",
+    srcs = ["meta.py"],
+    deps = [
+        "//sematic/api:app",
+        "//sematic:versions",
+        requirement("flask"),
+    ],
+)
+
+sematic_py_lib(
     name = "notes",
     srcs = ["notes.py"],
     deps = [

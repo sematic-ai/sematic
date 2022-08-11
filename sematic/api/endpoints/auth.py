@@ -2,7 +2,7 @@
 import distutils.util
 import functools
 from http import HTTPStatus
-from typing import Callable, Optional
+from typing import Callable
 
 # Third-party
 import flask
@@ -15,7 +15,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.db.models.factories import make_user
-from sematic.db.models.user import User
 from sematic.db.queries import get_user, get_user_by_api_key, save_user
 from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
 
@@ -154,20 +153,3 @@ def authenticate(endpoint_fn: Callable) -> Callable:
         return endpoint_fn(user, *args, **kwargs)
 
     return endpoint
-
-
-@sematic_api.route("/env", methods=["GET"])
-@authenticate
-def env_endpoint(user: Optional[User]) -> flask.Response:
-    env = {}
-    for settings in (
-        SettingsVar.GOOGLE_OAUTH_CLIENT_ID,
-        SettingsVar.KUBERNETES_NAMESPACE,
-        SettingsVar.GRAFANA_PANEL_URL,
-    ):
-        try:
-            env[settings.value] = get_user_settings(settings)
-        except MissingSettingsError:
-            continue
-
-    return flask.jsonify(dict(env=env))
