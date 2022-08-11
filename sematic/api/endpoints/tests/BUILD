@@ -37,3 +37,16 @@ pytest_test(
         requirement("flask"),
     ],
 )
+
+pytest_test(
+    name = "test_meta",
+    srcs = ["test_meta.py"],
+    deps = [
+        "//sematic/api/endpoints:meta",
+        "//sematic/api:app",
+        "//sematic:user_settings",
+        "//sematic:versions",
+        "//sematic/api/tests:fixtures",
+        requirement("flask"),
+    ],
+)
