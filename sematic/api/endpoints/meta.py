@@ -35,9 +35,10 @@ def get_server_version_info() -> flask.Response:
     return flask.jsonify(payload)
 
 
-@sematic_api.route("/env", methods=["GET"])
+@sematic_api.route("/api/v1/meta/env", methods=["GET"])
 @authenticate
 def env_endpoint(user: Optional[User]) -> flask.Response:
+    """Return a dictionary with information about the configuration of the server"""
     env = {}
     for settings in (
         SettingsVar.GOOGLE_OAUTH_CLIENT_ID,

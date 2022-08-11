@@ -75,7 +75,7 @@ function App() {
       setEnv(new Map());
     }
     fetchJSON({
-      url: "/env",
+      url: "/api/v1/meta/env",
       callback: (payload: EnvPayload) => {
         setEnv(new Map(Object.entries(payload.env)));
       },

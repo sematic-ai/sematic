@@ -4,7 +4,6 @@ from typing import Any, Dict, cast
 # Third-party
 import flask.testing
 import flask
-import pytest
 
 # Sematic
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
@@ -20,34 +19,11 @@ from sematic.api.app import sematic_api  # noqa: F401
 from sematic.user_settings import SettingsVar
 
 
-@pytest.mark.parametrize(
-    "authenticate_config, expected_providers",
-    ((True, {"GOOGLE_OAUTH_CLIENT_ID": "ABC123"}), (False, {})),
-)
-def test_authenticate_endpoint(
-    authenticate_config: bool,
-    expected_providers: Dict[str, str],
-    test_client: flask.testing.FlaskClient,  # noqa: F811
-):
-    with mock_user_settings(
-        {
-            SettingsVar.SEMATIC_AUTHENTICATE: authenticate_config,
-            SettingsVar.GOOGLE_OAUTH_CLIENT_ID: "ABC123",
-        }
-    ):
-        response = test_client.get("/authenticate")
-
-        assert response.json == {
-            "authenticate": authenticate_config,
-            "providers": expected_providers,
-        }
-
-
 def test_env(test_client: flask.testing.FlaskClient):  # noqa: F811
     with mock_user_settings(
         {SettingsVar.GRAFANA_PANEL_URL: "abc", SettingsVar.SEMATIC_AUTHENTICATE: False}
     ):
-        response = test_client.get("/env")
+        response = test_client.get("/api/v1/meta/env")
         payload = response.json
         payload = cast(Dict[str, Any], payload)
 

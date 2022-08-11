@@ -2,6 +2,7 @@
 from http import HTTPStatus
 from unittest import mock
 import uuid
+from typing import Dict
 
 # Third-party
 import flask.testing
@@ -23,6 +24,29 @@ from sematic.db.tests.fixtures import test_db, persisted_user  # noqa: F401
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.app import sematic_api
 from sematic.user_settings import SettingsVar
+
+
+@pytest.mark.parametrize(
+    "authenticate_config, expected_providers",
+    ((True, {"GOOGLE_OAUTH_CLIENT_ID": "ABC123"}), (False, {})),
+)
+def test_authenticate_endpoint(
+    authenticate_config: bool,
+    expected_providers: Dict[str, str],
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+):
+    with mock_user_settings(
+        {
+            SettingsVar.SEMATIC_AUTHENTICATE: authenticate_config,
+            SettingsVar.GOOGLE_OAUTH_CLIENT_ID: "ABC123",
+        }
+    ):
+        response = test_client.get("/authenticate")
+
+        assert response.json == {
+            "authenticate": authenticate_config,
+            "providers": expected_providers,
+        }
 
 
 def test_login_new_user(test_client: flask.testing.FlaskClient):  # noqa: F811
