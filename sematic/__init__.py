@@ -3,7 +3,7 @@ Sematic Public API
 """
 import sys
 
-MIN_PYTHON_VERSION = (3, 9, 0)
+MIN_PYTHON_VERSION = (3, 8, 0)
 _CURRENT_PYTHON_VERSION = sys.version_info[0:3]
 
 if _CURRENT_PYTHON_VERSION < MIN_PYTHON_VERSION:

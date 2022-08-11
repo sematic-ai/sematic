@@ -55,8 +55,8 @@ http_archive(
 load("@rules_python//python:repositories.bzl", "python_register_toolchains")
 
 python_register_toolchains(
-    name = "python3_9",
-    python_version = "3.9",
+    name = "python3_8",
+    python_version = "3.8",
 )
 
 # Hermetic python from https://thethoughtfulkoala.com/posts/2020/05/16/bazel-hermetic-python.html
@@ -103,7 +103,7 @@ fi
 #register_toolchains("//:sematic_py_toolchain")
 
 # Canonical interpreter
-load("@python3_9//:defs.bzl", "interpreter")
+load("@python3_8//:defs.bzl", "interpreter")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(

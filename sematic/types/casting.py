@@ -7,7 +7,7 @@ from sematic.types.registry import (
     DataclassKey,
     get_can_cast_func,
     get_safe_cast_func,
-    is_valid_typing_alias,
+    is_parameterized_generic,
 )
 
 
@@ -90,7 +90,7 @@ def safe_cast(
         return _safe_cast_func(value, type_)
 
     # 2. If not, we check if value is simply an instance of type_
-    if not is_valid_typing_alias(type_):
+    if not is_parameterized_generic(type_):
         # isinstance is not allowed with generics
         if isinstance(value, type_):
             return value, None

@@ -1,19 +1,19 @@
 # Standrd library
+import typing
 from dataclasses import dataclass
 
 # Sematic
 import sematic
-from sematic.types import FloatInRange
 
 
 @dataclass
 class Bar:
-    barr: list[int]
+    barr: typing.List[int]
 
 
 @dataclass
 class Config:
-    foo: list[float]
+    foo: typing.List[float]
     bar: Bar
 
 
@@ -31,7 +31,7 @@ def add(a: float, b: float) -> float:
 
 
 @sematic.func
-def sum_list(list_: list[float], a: FloatInRange[0, 1]) -> float:  # type: ignore
+def sum_list(list_: typing.List[float], a: float) -> float:  # type: ignore
     return sum(list_) + a
 
 
