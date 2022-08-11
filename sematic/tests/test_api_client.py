@@ -22,6 +22,8 @@ class MockResponse:
     status_code: int
     json_contents: Dict[str, Any]
     text_contents: Optional[str] = None
+    url: str = "http://example.com"
+    method: str = "GET"
 
     def json(self) -> Dict[str, Any]:
         return self.json_contents
@@ -65,7 +67,7 @@ def test_validate_server_compatibility_retry(mock_requests):
 
 @mock.patch("sematic.api_client.requests")
 def test_validate_server_compatibility_bad_json(mock_requests):
-    mock_requests.get.return_value = MockResponse(status_code=500, json_contents={})
+    mock_requests.get.return_value = MockResponse(status_code=200, json_contents={})
 
     def bad_json(*_):
         raise json.JSONDecodeError("", "", 1)
