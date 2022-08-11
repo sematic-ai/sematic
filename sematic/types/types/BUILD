@@ -18,18 +18,6 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "float_in_range",
-    srcs = ["float_in_range.py"],
-    deps = [
-        "//sematic/types:casting",
-        "//sematic/types:generic_type",
-        "//sematic/types:registry",
-        "//sematic/types:serialization",
-        "//sematic/types:type",
-    ],
-)
-
-sematic_py_lib(
     name = "integer",
     srcs = ["integer.py"],
     deps = [

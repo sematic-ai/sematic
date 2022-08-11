@@ -7,7 +7,6 @@ sematic_py_lib(
         "//sematic/types/types:bool",
         "//sematic/types/types:dataclass",
         "//sematic/types/types:float",
-        "//sematic/types/types:float_in_range",
         "//sematic/types/types:integer",
         "//sematic/types/types:none",
         "//sematic/types/types:union",

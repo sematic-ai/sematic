@@ -10,7 +10,7 @@ from sematic.types.casting import can_cast_type, safe_cast, cast
 from sematic.types.registry import (
     register_can_cast,
     register_safe_cast,
-    is_valid_typing_alias,
+    is_parameterized_generic,
 )
 
 
@@ -117,13 +117,13 @@ def test_can_cast_type_registered():
     assert can_cast_type(A, B) == (True, None)
 
 
-def test_is_valid_typing():
-    assert is_valid_typing_alias(int) is False
-    assert is_valid_typing_alias(typing.List[int]) is True
-    assert is_valid_typing_alias(typing.Optional[int]) is True
+def test_is_parameterized_generic():
+    assert is_parameterized_generic(int) is False
+    assert is_parameterized_generic(typing.List[int]) is True
+    assert is_parameterized_generic(typing.Optional[int]) is True
 
     with pytest.raises(ValueError, match="must be parametrized"):
-        is_valid_typing_alias(typing.List)
+        is_parameterized_generic(typing.List)
 
     with pytest.raises(ValueError, match="must be parametrized"):
-        is_valid_typing_alias(typing.Optional)
+        is_parameterized_generic(typing.Optional)
