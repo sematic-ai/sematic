@@ -18,6 +18,11 @@ from sematic.api_client import (
 
 
 @dataclass
+class MockRequest:
+    method: str = "GET"
+
+
+@dataclass
 class MockResponse:
     status_code: int
     json_contents: Dict[str, Any]
@@ -33,6 +38,10 @@ class MockResponse:
         if self.text_contents is None:
             return json.dumps(self.json_contents)
         return self.text_contents
+
+    @property
+    def request(self) -> MockRequest:
+        return MockRequest(method=self.method)
 
 
 class ConnectionError(RuntimeError):

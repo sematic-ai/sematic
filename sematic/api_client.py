@@ -32,6 +32,10 @@ class ServerError(Exception):
     pass
 
 
+class InvalidResponseError(Exception):
+    pass
+
+
 class IncompatibleClientError(Exception):
     pass
 
@@ -172,17 +176,21 @@ def _validate_server_compatibility_no_catch() -> None:
         "provide this information. Consider upgrading your server if possible, "
         "or reach out to Sematic for support."
     )
-    response = _request(
-        method=requests.get,
-        endpoint="/meta/versions",
-        attempt_auth=False,
-        validate_version_compatibility=False,  # to avoid recursion
-        error_response_kwarg_overrides=dict(
-            error_4xx=unexpected_server_response_error,
-            error_5xx=ServerError("The Sematic server is not responsive"),
-            error_json_decode_fail=unexpected_server_response_error,
-        ),
-    )
+
+    try:
+        response = _request(
+            method=requests.get,
+            endpoint="/meta/versions",
+            attempt_auth=False,
+            validate_version_compatibility=False,  # to avoid recursion
+            validate_json=True,
+        )
+    except BadRequestError:
+        raise unexpected_server_response_error
+    except ServerError:
+        raise ServerError("The Sematic server is not responsive")
+    except InvalidResponseError:
+        raise unexpected_server_response_error
 
     response_json = response.json()
     server_version = cast(Tuple[int, int, int], tuple(response_json["server"]))
@@ -220,17 +228,16 @@ def _request(
     kwargs: Optional[Dict[str, Any]] = None,
     attempt_auth: bool = True,
     validate_version_compatibility: bool = True,
-    error_response_kwarg_overrides: Dict[str, Any] = None,
+    validate_json: bool = False,
 ):
     """Internal function for wrapping requests.<get/put/etc.>.
 
     validate_version_compatibility indicates whether we should check that the
     Sematic server is compatible with this Sematic client.
 
-    error_response_kwarg_overrides provides overrides for how to handle
-    error HTTP responses in the form of overrides for the kwargs of _raise_for_response
+    validate_json indicates whether the response is expected to contain
+    valid json.
     """
-    error_response_kwarg_overrides = error_response_kwarg_overrides or {}
     if validate_version_compatibility:
         _validate_server_compatibility()
     kwargs = kwargs or {}
@@ -260,7 +267,7 @@ def _request(
 
     _raise_for_response(
         response,
-        **error_response_kwarg_overrides,
+        validate_json,
     )
 
     return response
@@ -268,17 +275,15 @@ def _request(
 
 def _raise_for_response(
     response: requests.Response,
-    error_4xx: Optional[Exception] = None,
-    error_5xx: Optional[Exception] = None,
-    error_json_decode_fail: Optional[Exception] = None,
+    validate_json: bool,
 ) -> None:
-    to_raise = None
+    to_raise: Optional[Exception] = None
     url = response.url
-    error_4xx = error_4xx or BadRequestError(
+    error_4xx = BadRequestError(
         f"The {response.request.method} request to {url} was invalid, "
         f"response was {response.status_code}"
     )
-    error_5xx = error_5xx or ServerError(
+    error_5xx = ServerError(
         f"The Sematic server could not handle the "
         f"{response.request.method} request to {url}",
     )
@@ -287,11 +292,15 @@ def _raise_for_response(
         to_raise = error_4xx
     if response.status_code >= 500:
         to_raise = error_5xx
-    if to_raise is None and error_json_decode_fail is not None:
+    if to_raise is None and validate_json:
         try:
             response.json()
         except Exception:
-            to_raise = error_json_decode_fail
+            to_raise = InvalidResponseError(
+                f"The Sematic server was expected to return json for "
+                f"{response.request.method} request to {url}, but the "
+                f"response was not json."
+            )
     if to_raise is None:
         return
 
