@@ -274,14 +274,23 @@ def validate_type_annotation(*types: TypeAnnotation) -> None:
     types:
         The object(s) that may be a type/annotation understood by Sematic.
     """
-    for type_ in types:
-        if is_supported_type_annotation(type_):
-            continue
-        raise TypeError(
-            f"Expected a Sematic-supported type here, but got: {type_}. Please "
-            f"refer to the Sematic docs about supported types: "
-            f"{_SUPPORTED_TYPES_DOCS}"
-        )
+
+    def assert_supported(type_):
+        try:
+            subclasses_type = issubclass(type_, type)
+        except TypeError:
+            subclasses_type = False
+        if type(type_) is type or subclasses_type:
+            return
+        if not is_parameterized_generic(type_, raise_for_unparameterized=True):
+            raise TypeError(
+                f"Expected a Sematic-supported type here, but got: {type_}. Please "
+                f"refer to the Sematic docs about supported types: "
+                f"{_SUPPORTED_TYPES_DOCS}"
+            )
+
+    for t in types:
+        assert_supported(t)
 
 
 def is_supported_type_annotation(type_: TypeAnnotation) -> bool:
@@ -300,19 +309,25 @@ def is_supported_type_annotation(type_: TypeAnnotation) -> bool:
     True if the type annotation can be handled by Sematic, False otherwise.
     """
     try:
-        subclasses_type = issubclass(type_, type)
+        validate_type_annotation(type_)
+        return True
     except TypeError:
-        subclasses_type = False
-    return type(type_) is type or subclasses_type or is_parameterized_generic(type_)
+        return False
 
 
-def is_parameterized_generic(type_: TypeAnnotation) -> bool:
+def is_parameterized_generic(
+    type_: TypeAnnotation, raise_for_unparameterized=False
+) -> bool:
     """Is this a `typing` type, and if so, is it correctly specified?
 
     Parameters
     ----------
     type_:
         The 'type' to check for support
+    raise_for_unparameterized:
+        When this is set to True, will raise a TypeError if the type is found to be
+        something that is a generic, but is not yet parameterized
+        (e.g. Union without any [...]).
 
     Returns
     -------
@@ -326,9 +341,12 @@ def is_parameterized_generic(type_: TypeAnnotation) -> bool:
         hasattr(type_, "__module__") and getattr(type_, "__module__") == "typing"
     )
     if is_from_typing and type_ in SUPPORTED_GENERIC_TYPING_ANNOTATIONS.keys():
-        raise ValueError(
-            f"{type_} must be parametrized ({type_}[...] " f"instead of {type_})"
-        )
+        if raise_for_unparameterized:
+            raise TypeError(
+                f"{type_} must be parametrized ({type_}[...] " f"instead of {type_})"
+            )
+        else:
+            return False
 
     # If you call get_origin(Union), it will return None, but
     # get_origin(Union[int, float]) returns Union. Aka, get_origin

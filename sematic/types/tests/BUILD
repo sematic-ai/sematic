@@ -21,3 +21,11 @@ pytest_test(
         "//sematic/types:casting",
     ]
 )
+
+pytest_test(
+    name = "test_registry",
+    srcs = ["test_registry.py"],
+    deps = [
+        "//sematic/types:registry",
+    ]
+)
