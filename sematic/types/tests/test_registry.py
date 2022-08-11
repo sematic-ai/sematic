@@ -1,0 +1,74 @@
+# Standard
+from dataclasses import dataclass
+from typing import Union, Optional, List, Literal, Any
+
+# Third party
+import pytest
+
+# Sematic
+from sematic.types.registry import (
+    validate_type_annotation,
+    is_supported_type_annotation,
+    is_parameterized_generic,
+    _validate_registry_keys,
+)
+
+
+@dataclass
+class FooDataclass:
+    foo: int
+
+
+class FooStandard:
+    pass
+
+
+def test_validate_type_annotation():
+    validate_type_annotation(int)
+    validate_type_annotation(FooDataclass)
+    validate_type_annotation(FooStandard)
+    validate_type_annotation(Union[int, float])
+    validate_type_annotation(Optional[int])
+    validate_type_annotation(List[int])
+    validate_type_annotation(List[int], int)
+    with pytest.raises(TypeError, match=r"Expected a Sematic-supported type here"):
+        validate_type_annotation(42)
+    with pytest.raises(TypeError, match=r"Expected a Sematic-supported type here"):
+        validate_type_annotation(List[int], 42)
+    with pytest.raises(TypeError, match=r"Expected a Sematic-supported type here"):
+        validate_type_annotation(Literal[42])
+    with pytest.raises(TypeError, match="Expected a Sematic-supported type here"):
+        validate_type_annotation(Any)
+    with pytest.raises(TypeError, match="typing.Union must be parametrized"):
+        validate_type_annotation(Union)
+
+
+def test_is_supported_type_annotation():
+    assert is_supported_type_annotation(FooDataclass)
+    assert not is_supported_type_annotation(Union)
+
+
+def test_is_parameterized_generic():
+    assert not is_parameterized_generic(FooDataclass)
+    assert not is_parameterized_generic(FooStandard)
+    assert is_parameterized_generic(Union[int, float])
+    assert is_parameterized_generic(Optional[int])
+    assert is_parameterized_generic(List[int])
+    assert not is_parameterized_generic(Literal[42])
+    assert not is_parameterized_generic(Any)
+    assert not is_parameterized_generic(Union)
+
+
+def test_validate_registry_keys():
+    _validate_registry_keys(int)
+    _validate_registry_keys(int, int)
+    _validate_registry_keys(FooDataclass)
+    _validate_registry_keys(FooStandard)
+    _validate_registry_keys(Union)
+    _validate_registry_keys(List)
+    with pytest.raises(
+        TypeError, match=r"Cannot register type typing.Union\[int, float\]"
+    ):
+        _validate_registry_keys(Union[int, float])
+    with pytest.raises(TypeError, match=r"Cannot register type 42"):
+        _validate_registry_keys(42)
