@@ -11,7 +11,7 @@ migrate_down_sqlite:
 clear_sqlite:
 	sqlite3 ~/.sematic/db.sqlite3 < sematic/db/scripts/clear_all.sql
 
-prepare-pre-commit:
+install-dev-deps:
 	pip install -r requirements/ci-requirements.txt
 
 pre-commit:
