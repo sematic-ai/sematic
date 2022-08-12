@@ -1,13 +1,13 @@
-# Standard library
+# Standard Library
 from typing import Any, Dict, List, Mapping, Optional, Tuple, Type
 
 # Sematic
+from sematic.types.casting import safe_cast
 from sematic.types.registry import (
     register_safe_cast,
     register_to_json_encodable,
     register_to_json_encodable_summary,
 )
-from sematic.types.casting import safe_cast
 from sematic.types.serialization import (
     get_json_encodable_summary,
     value_to_json_encodable,

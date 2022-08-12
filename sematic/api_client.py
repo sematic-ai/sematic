@@ -1,20 +1,19 @@
-# Standard library
-from typing import Any, Callable, Dict, List, Optional, Tuple, cast
+# Standard Library
 import logging
+from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
 # Third party
 import requests
 from requests.exceptions import ConnectionError
 
 # Sematic
-from sematic.versions import CURRENT_VERSION, version_as_string
 from sematic.config import get_config
-from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
+from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
 from sematic.utils.retry import retry
-
+from sematic.versions import CURRENT_VERSION, version_as_string
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,4 @@
-# Standard library
+# Standard Library
 from unittest.mock import patch
 
 # Third-party

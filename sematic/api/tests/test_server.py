@@ -3,7 +3,7 @@ import flask.testing
 
 # Sematic
 from sematic.api.tests.fixtures import test_client  # noqa: F401
-from sematic.db.tests.fixtures import test_db, pg_mock  # noqa: F401
+from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 
 
 def test_ping(test_client: flask.testing.FlaskClient):  # noqa: F811

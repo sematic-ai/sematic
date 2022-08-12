@@ -1,27 +1,21 @@
-# Standard library
+# Standard Library
+import distutils.util
 import functools
 from http import HTTPStatus
 from typing import Callable
-import distutils.util
 
 # Third-party
 import flask
-from google.oauth2 import id_token
 from google.auth.exceptions import GoogleAuthError
 from google.auth.transport import requests
+from google.oauth2 import id_token
 from sqlalchemy.orm.exc import NoResultFound
 
 # Sematic
 from sematic.api.app import sematic_api
-from sematic.api.endpoints.request_parameters import (
-    jsonify_error,
-)
+from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.db.models.factories import make_user
-from sematic.db.queries import (
-    get_user,
-    get_user_by_api_key,
-    save_user,
-)
+from sematic.db.queries import get_user, get_user_by_api_key, save_user
 from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
 
 

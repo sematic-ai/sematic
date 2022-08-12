@@ -2,12 +2,12 @@
 `AbstractFuture` is needed to resolve circular dependencies
 between `Future` and `Resolver`.
 """
-# Standard library
+# Standard Library
 import abc
-from dataclasses import dataclass
 import enum
-from typing import Tuple, Optional, Dict, Any, List
 import uuid
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
 
 # Sematic
 from sematic.abstract_calculator import AbstractCalculator

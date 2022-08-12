@@ -1,17 +1,17 @@
-# Standard library
+# Standard Library
 from typing import List, Union
 
 # Third-party
 import pytest
 
 # Sematic
-from sematic.calculator import Calculator, func, _make_list, _convert_lists
-from sematic.future import Future
+from sematic.calculator import Calculator, _convert_lists, _make_list, func
 from sematic.db.tests.fixtures import test_db  # noqa: F401
-from sematic.resolvers.resource_requirements import (
+from sematic.future import Future
+from sematic.resolvers.resource_requirements import (  # noqa: F401
     KubernetesResourceRequirements,
     ResourceRequirements,
-)  # noqa: F401
+)
 
 
 def test_decorator_no_params():

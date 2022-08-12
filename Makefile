@@ -11,10 +11,18 @@ migrate_down_sqlite:
 clear_sqlite:
 	sqlite3 ~/.sematic/db.sqlite3 < sematic/db/scripts/clear_all.sql
 
+install-dev-deps:
+	pip install -r requirements/ci-requirements.txt
+
 pre-commit:
 	flake8
 	mypy sematic
 	black sematic --check
+	isort sematic --diff
+
+fix:
+	isort sematic
+	black sematic
 
 refresh-dependencies:
 	pip-compile --allow-unsafe requirements/requirements.in

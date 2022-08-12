@@ -1,16 +1,19 @@
 """
 This is an example implementation of the MNIST pipeline in PyTorch on sematic.
 """
+# Standard Library
 # MNIST example
 import argparse
+import logging
+
+# Sematic
+from sematic import CloudResolver
 from sematic.examples.mnist.pytorch.pipeline import (
-    PipelineConfig,
     DataLoaderConfig,
+    PipelineConfig,
     TrainConfig,
     scan_learning_rate,
 )
-from sematic import CloudResolver
-import logging
 
 logging.basicConfig(level=logging.INFO)
 

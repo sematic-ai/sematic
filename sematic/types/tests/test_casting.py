@@ -1,4 +1,4 @@
-# Standard library
+# Standard Library
 import re
 import typing
 
@@ -6,11 +6,11 @@ import typing
 import pytest
 
 # Sematic
-from sematic.types.casting import can_cast_type, safe_cast, cast
+from sematic.types.casting import can_cast_type, cast, safe_cast
 from sematic.types.registry import (
+    is_parameterized_generic,
     register_can_cast,
     register_safe_cast,
-    is_parameterized_generic,
 )
 
 

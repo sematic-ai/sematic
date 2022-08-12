@@ -1,8 +1,8 @@
-# Standard library
+# Standard Library
 import abc
-import typing
 import collections
 import copy
+import typing
 
 # Sematic
 from sematic.types.type import Type, TypeMeta

@@ -1,3 +1,4 @@
+# Standard Library
 import json
 import typing
 import uuid
@@ -10,20 +11,19 @@ import pytest
 from sematic.api.tests.fixtures import (  # noqa: F401
     make_auth_test,
     mock_no_auth,
-    test_client,
     mock_requests,
+    test_client,
 )
+from sematic.calculator import func
+from sematic.db.models.run import Run
+from sematic.db.queries import save_run
 from sematic.db.tests.fixtures import (  # noqa: F401
-    test_db,
-    pg_mock,
     make_run,
     persisted_run,
+    pg_mock,
     run,
+    test_db,
 )
-from sematic.db.queries import save_run
-from sematic.db.models.run import Run
-from sematic.calculator import func
-
 
 test_list_runs_auth = make_auth_test("/api/v1/runs")
 test_get_run_auth = make_auth_test("/api/v1/runs/123")

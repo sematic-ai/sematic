@@ -2,8 +2,8 @@
 Module keeping the connection to the DB.
 """
 # Standard Library
-from contextlib import contextmanager
 import typing
+from contextlib import contextmanager
 
 # Third-party
 import sqlalchemy

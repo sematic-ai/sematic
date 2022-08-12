@@ -1,4 +1,5 @@
 # Titianic survival prediction example
+# Sematic
 from sematic.examples.titanic_survival_prediction.pipeline import pipeline
 
 
