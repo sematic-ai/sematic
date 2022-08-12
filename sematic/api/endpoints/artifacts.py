@@ -1,4 +1,4 @@
-# Standard library
+# Standard Library
 from typing import List
 
 # Third-party
@@ -8,8 +8,8 @@ import sqlalchemy
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.request_parameters import get_request_parameters
-from sematic.db.models.artifact import Artifact
 from sematic.db.db import db
+from sematic.db.models.artifact import Artifact
 
 
 @sematic_api.route("/api/v1/artifacts", methods=["GET"])

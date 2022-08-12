@@ -5,17 +5,17 @@ import pytest
 
 # Sematic
 from sematic.abstract_future import FutureState
-from sematic.resolvers.cloud_resolver import CloudResolver
-from sematic.resolvers.worker import main
-from sematic.calculator import func
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_no_auth,
     mock_requests,
     test_client,
 )
-from sematic.db.tests.fixtures import test_db  # noqa: F401
-from sematic.tests.fixtures import test_storage  # noqa: F401
+from sematic.calculator import func
 from sematic.db.queries import get_root_graph
+from sematic.db.tests.fixtures import test_db  # noqa: F401
+from sematic.resolvers.cloud_resolver import CloudResolver
+from sematic.resolvers.worker import main
+from sematic.tests.fixtures import test_storage  # noqa: F401
 
 
 @func

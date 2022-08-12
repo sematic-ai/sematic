@@ -1,9 +1,9 @@
-# Sematic
-import sematic
-
 # Third-party
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
+
+# Sematic
+import sematic
 
 
 @sematic.func

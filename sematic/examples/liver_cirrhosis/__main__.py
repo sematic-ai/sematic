@@ -1,6 +1,7 @@
-# Standard library
+# Standard Library
 import os
 
+# Sematic
 # Liver cirrhosis
 from sematic.examples.liver_cirrhosis.pipeline import pipeline
 

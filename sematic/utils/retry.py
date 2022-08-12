@@ -5,7 +5,7 @@
 # Retrieved on 08/10/22, original source code uses the Apache 2
 # license.
 
-# Standard library
+# Standard Library
 import logging
 import random
 import time

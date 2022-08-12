@@ -1,6 +1,6 @@
+# Standard Library
 import os
 import pathlib
-
 
 _DEFAULT_CONFIG_DIR = ".sematic"
 

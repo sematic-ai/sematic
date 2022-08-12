@@ -1,13 +1,13 @@
-# Standard library
-from typing import Optional
+# Standard Library
 import datetime
+from typing import Optional
 
 # Third-party
 from sqlalchemy import Column, types
 
 # Sematic
 from sematic.db.models.base import Base
-from sematic.db.models.json_encodable_mixin import JSONEncodableMixin, REDACTED_KEY
+from sematic.db.models.json_encodable_mixin import REDACTED_KEY, JSONEncodableMixin
 
 
 class User(Base, JSONEncodableMixin):

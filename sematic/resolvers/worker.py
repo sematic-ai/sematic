@@ -1,17 +1,18 @@
-# Standard library
+# Standard Library
 import argparse
 import datetime
 import importlib
 import logging
-from typing import Any, Dict, List
 import traceback
+from typing import Any, Dict, List
 
 # Third-party
 import cloudpickle
 
 # Sematic
-from sematic.abstract_future import FutureState
 import sematic.api_client as api_client
+import sematic.storage as storage
+from sematic.abstract_future import FutureState
 from sematic.calculator import Calculator
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
@@ -22,7 +23,6 @@ from sematic.resolvers.cloud_resolver import (
     CloudResolver,
     make_nested_future_storage_key,
 )
-import sematic.storage as storage
 
 
 def parse_args():

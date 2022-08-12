@@ -2,8 +2,9 @@
 Defining these operators in seperate modules in order to avoid circular
 dependencies between Future and Calculator
 """
+# Standard Library
 # standard library
-from typing import get_origin, get_args
+from typing import get_args, get_origin
 
 # Sematic
 from sematic.future import Future

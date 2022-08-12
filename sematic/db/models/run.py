@@ -1,8 +1,8 @@
-# Standard library
+# Standard Library
 import datetime
+import json
 import re
 from typing import List, Optional
-import json
 
 # Third party
 from sqlalchemy import Column, types
@@ -12,9 +12,9 @@ from sqlalchemy.orm import validates
 from sematic.abstract_future import FutureState
 from sematic.db.models.base import Base
 from sematic.db.models.json_encodable_mixin import (
-    JSONEncodableMixin,
-    JSON_KEY,
     ENUM_KEY,
+    JSON_KEY,
+    JSONEncodableMixin,
 )
 
 

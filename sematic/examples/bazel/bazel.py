@@ -1,9 +1,10 @@
+# Standard Library
 import argparse
 import logging
+
+# Sematic
 import sematic
-
 from sematic.examples.bazel.pipeline import pipeline
-
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

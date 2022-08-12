@@ -1,6 +1,6 @@
-# Standard library
+# Standard Library
 import tempfile
-from unittest.mock import patch, PropertyMock
+from unittest.mock import PropertyMock, patch
 
 # Third-party
 import pytest

@@ -4,11 +4,12 @@ This is the module in which you define your pipeline functions.
 Feel free to break these definitions into as many files as you want for your
 preferred code structure.
 """
-# Standard library
+# Standard Library
 import random
 import time
 from typing import List
 
+# Sematic
 # Third-party
 import sematic
 

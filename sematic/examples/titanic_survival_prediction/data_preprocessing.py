@@ -1,10 +1,12 @@
+# Standard Library
+from typing import Tuple
+
 # Third-party
 import pandas as pd
-from typing import Tuple
-from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import fetch_openml
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 # Sematic
 import sematic

@@ -13,11 +13,11 @@ activate permissions). The option chosen here is to replicate a simple UP script
 in Python that can be called by the CLI. The script only supports SQLite for
 now.
 """
-# Standard library
+# Standard Library
 import argparse
+import logging
 import os
 from typing import List
-import logging
 
 from sqlalchemy import text
 

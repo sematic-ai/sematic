@@ -2,8 +2,8 @@
 from typing import List
 
 # Third-party
-import sqlalchemy
 import flask
+import sqlalchemy
 
 # Sematic
 from sematic.api.app import sematic_api

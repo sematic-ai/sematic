@@ -1,29 +1,26 @@
-# Standard library
+# Standard Library
+import argparse
 import os
 import sys
 
 # Third-party
-import argparse
-from flask import jsonify, send_file
-from flask_socketio import SocketIO, Namespace  # type: ignore
 import eventlet
+from flask import jsonify, send_file
+from flask_socketio import Namespace, SocketIO  # type: ignore
 
 # Sematic
-from sematic.api.app import sematic_api
+import sematic.api.endpoints.artifacts  # noqa: F401
 
 # Endpoint modules need to be imported for endpoints
 # to be registered.
 import sematic.api.endpoints.auth  # noqa: F401
-import sematic.api.endpoints.runs  # noqa: F401
-import sematic.api.endpoints.notes  # noqa: F401
 import sematic.api.endpoints.edges  # noqa: F401
-import sematic.api.endpoints.artifacts  # noqa: F401
 import sematic.api.endpoints.meta  # noqa: F401
-from sematic.config import (
-    get_config,
-    switch_env,
-)  # noqa: F401
+import sematic.api.endpoints.notes  # noqa: F401
+import sematic.api.endpoints.runs  # noqa: F401
+from sematic.api.app import sematic_api
 from sematic.api.wsgi import SematicWSGI
+from sematic.config import get_config, switch_env  # noqa: F401
 
 # Monkey-patching ssl
 # See https://eventlet.net/doc/patching.html

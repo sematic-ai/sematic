@@ -1,6 +1,6 @@
 # Sematic
 from sematic.db.models.run import Run
-from sematic.db.tests.fixtures import run, persisted_run, test_db  # noqa: F401
+from sematic.db.tests.fixtures import persisted_run, run, test_db  # noqa: F401
 
 
 def test_utc_timestamp(persisted_run: Run):  # noqa: F811

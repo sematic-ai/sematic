@@ -1,22 +1,22 @@
-# Standard library
+# Standard Library
 from typing import Any, Dict, cast
 
 # Third-party
-import flask.testing
 import flask
+import flask.testing
 
 # Sematic
-from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
-from sematic.api.tests.fixtures import (  # noqa: F401
-    mock_no_auth,
-    test_client,
-    mock_requests,
-    mock_user_settings,
-)
-from sematic.db.tests.fixtures import test_db, persisted_user  # noqa: F401
 import sematic.api.endpoints.meta  # noqa: F401
 from sematic.api.app import sematic_api  # noqa: F401
+from sematic.api.tests.fixtures import (  # noqa: F401
+    mock_no_auth,
+    mock_requests,
+    mock_user_settings,
+    test_client,
+)
+from sematic.db.tests.fixtures import persisted_user, test_db  # noqa: F401
 from sematic.user_settings import SettingsVar
+from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 
 
 def test_env(test_client: flask.testing.FlaskClient):  # noqa: F811

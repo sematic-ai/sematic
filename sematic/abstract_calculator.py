@@ -4,7 +4,7 @@ Module defining AbstractCalculator.
 This is needed to avoid circular dependencies between
 modules for Calculator and Future.
 """
-# Standard library
+# Standard Library
 import abc
 import typing
 

@@ -1,28 +1,28 @@
-# Standard library
-from http import HTTPStatus
-from unittest import mock
+# Standard Library
 import uuid
+from http import HTTPStatus
 from typing import Dict
+from unittest import mock
 
 # Third-party
-import flask.testing
 import flask
+import flask.testing
 import pytest
 from google.auth.exceptions import GoogleAuthError
 
 # Sematic
+from sematic.api.app import sematic_api
+from sematic.api.endpoints.auth import authenticate
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_no_auth,
-    test_client,
     mock_requests,
     mock_user_settings,
+    test_client,
 )
 from sematic.db.models.json_encodable_mixin import REDACTED
 from sematic.db.models.user import User
 from sematic.db.queries import get_user
-from sematic.db.tests.fixtures import test_db, persisted_user  # noqa: F401
-from sematic.api.endpoints.auth import authenticate
-from sematic.api.app import sematic_api
+from sematic.db.tests.fixtures import persisted_user, test_db  # noqa: F401
 from sematic.user_settings import SettingsVar
 
 
