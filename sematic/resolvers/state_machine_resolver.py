@@ -1,7 +1,7 @@
 """
 Abstract base class for a state machine-based resolution.
 """
-# Standard library
+# Standard Library
 import abc
 import logging
 import typing
@@ -9,7 +9,6 @@ import typing
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.resolver import Resolver
-
 
 logger = logging.getLogger(__name__)
 

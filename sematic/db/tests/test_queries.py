@@ -2,6 +2,13 @@
 import pytest
 
 # Sematic
+from sematic.api.tests.fixtures import (  # noqa: F401
+    mock_no_auth,
+    mock_requests,
+    test_client,
+)
+from sematic.calculator import func
+from sematic.db.models.run import Run
 from sematic.db.queries import (
     count_runs,
     get_root_graph,
@@ -9,19 +16,12 @@ from sematic.db.queries import (
     get_run_graph,
     save_run,
 )
-from sematic.db.models.run import Run
 from sematic.db.tests.fixtures import (  # noqa: F401
     make_run,
-    test_db,
+    persisted_run,
     pg_mock,
     run,
-    persisted_run,
-)
-from sematic.calculator import func
-from sematic.api.tests.fixtures import (  # noqa: F401
-    mock_no_auth,
-    mock_requests,
-    test_client,
+    test_db,
 )
 
 

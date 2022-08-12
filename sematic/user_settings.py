@@ -1,4 +1,4 @@
-# Standard library
+# Standard Library
 import enum
 import logging
 import os
@@ -9,7 +9,6 @@ import yaml
 
 # Sematic
 from sematic.config_dir import get_config_dir
-
 
 _SETTINGS_FILE = "settings.yaml"
 

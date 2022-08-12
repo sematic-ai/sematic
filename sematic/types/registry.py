@@ -1,10 +1,10 @@
-# Standard library
-from typing import (  # type: ignore
+# Standard Library
+from typing import (
     Any,
     Callable,
-    Optional,
     Dict,
     List,
+    Optional,
     Tuple,
     TypeVar,
     Union,

@@ -1,6 +1,7 @@
 """
 Sematic Public API
 """
+# Standard Library
 import sys
 
 MIN_PYTHON_VERSION = (3, 8, 0)
@@ -15,14 +16,15 @@ if _CURRENT_PYTHON_VERSION < MIN_PYTHON_VERSION:
         f"to continue."
     )
 
+# Sematic
+import sematic.future_operators  # noqa: F401,E402
+import sematic.types  # noqa: F401,E402
 from sematic.calculator import func  # noqa: F401,E402
 from sematic.resolver import Resolver  # noqa: F401,E402
-from sematic.resolvers.local_resolver import LocalResolver  # noqa: F401,E402
 from sematic.resolvers.cloud_resolver import CloudResolver  # noqa: F401,E402
+from sematic.resolvers.local_resolver import LocalResolver  # noqa: F401,E402
 from sematic.resolvers.resource_requirements import (  # noqa: F401,E402
-    ResourceRequirements,
     KubernetesResourceRequirements,
+    ResourceRequirements,
 )
-import sematic.types  # noqa: F401,E402
-import sematic.future_operators  # noqa: F401,E402
 from sematic.versions import CURRENT_VERSION_STR as __version__  # noqa: F401,E402

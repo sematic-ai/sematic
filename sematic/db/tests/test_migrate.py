@@ -1,4 +1,4 @@
-# Standard library
+# Standard Library
 from unittest.mock import patch
 
 # Third-party
@@ -6,8 +6,8 @@ import pytest
 from sqlalchemy.exc import OperationalError
 
 # Sematic
-from sematic.db.migrate import migrate, _get_migration_files
 from sematic.db.db import db
+from sematic.db.migrate import _get_migration_files, migrate
 from sematic.db.tests.fixtures import test_db_empty  # noqa: F401
 
 

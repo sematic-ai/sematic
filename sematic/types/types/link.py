@@ -1,4 +1,4 @@
-# Standard library
+# Standard Library
 from dataclasses import dataclass
 from urllib.parse import urlparse
 

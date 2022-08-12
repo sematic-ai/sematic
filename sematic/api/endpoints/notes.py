@@ -1,7 +1,7 @@
-# Standard library
+# Standard Library
 import json
-from typing import List, Optional
 from http import HTTPStatus
+from typing import List, Optional
 
 # Third-party
 import flask
@@ -15,9 +15,9 @@ from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
 )
+from sematic.db.db import db
 from sematic.db.models.note import Note
 from sematic.db.models.run import Run
-from sematic.db.db import db
 from sematic.db.models.user import User
 from sematic.db.queries import delete_note, get_note, save_note
 

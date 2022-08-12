@@ -1,9 +1,8 @@
-# Standard library
+# Standard Library
 import logging
 
 # Sematic
 from sematic.examples.add.pipeline import pipeline
-
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

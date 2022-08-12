@@ -1,6 +1,5 @@
-# Standard library
+# Standard Library
 import typing
-
 
 # Represents the version of the client, server, and all other parts of
 # the sdk. Should be bumped any time a release is made. Should be set

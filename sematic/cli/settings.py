@@ -1,6 +1,6 @@
 # Third-party
-import yaml
 import click
+import yaml
 
 # Sematic
 from sematic.cli.cli import cli

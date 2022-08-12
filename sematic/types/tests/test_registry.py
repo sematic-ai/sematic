@@ -1,16 +1,17 @@
 # Standard
+# Standard Library
 from dataclasses import dataclass
-from typing import Union, Optional, List, Literal, Any
+from typing import Any, List, Literal, Optional, Union
 
 # Third party
 import pytest
 
 # Sematic
 from sematic.types.registry import (
-    validate_type_annotation,
-    is_supported_type_annotation,
-    is_parameterized_generic,
     _validate_registry_keys,
+    is_parameterized_generic,
+    is_supported_type_annotation,
+    validate_type_annotation,
 )
 
 

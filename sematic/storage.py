@@ -1,4 +1,4 @@
-# Standard library
+# Standard Library
 import io
 
 # Third-party
@@ -6,7 +6,7 @@ import boto3
 import botocore.exceptions
 
 # Sematic
-from sematic.user_settings import get_user_settings, SettingsVar
+from sematic.user_settings import SettingsVar, get_user_settings
 
 
 def _get_bucket() -> str:

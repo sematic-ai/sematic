@@ -1,6 +1,7 @@
 """Metadata about the server itself."""
 
 # Standard
+# Standard Library
 from typing import Optional
 
 # Third-party
@@ -8,10 +9,10 @@ import flask
 
 # Sematic
 from sematic.api.app import sematic_api
-from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
+from sematic.api.endpoints.auth import authenticate
 from sematic.db.models.user import User
 from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
-from sematic.api.endpoints.auth import authenticate
+from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 
 
 @sematic_api.route("/api/v1/meta/versions", methods=["GET"])

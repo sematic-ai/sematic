@@ -1,28 +1,29 @@
-# Standard library
+# Standard Library
 import contextlib
 import functools
-from http import HTTPStatus
 import re
+from http import HTTPStatus
 from typing import Any, Callable, Dict
 from urllib.parse import urljoin
 
+import flask.testing
+
 # Third-party
 import pytest
-import werkzeug
-import flask.testing
 
 # responses 0.21.0 has type stubs but they break mypy
 # See https://github.com/getsentry/responses/issues/556
 import responses  # type: ignore
+import werkzeug
 
 # Sematic
-from sematic.db.tests.fixtures import test_db, pg_mock  # noqa: F401
-from sematic.config import get_config, switch_env
 import sematic.user_settings as user_settings
 
 # Importing from server instead of app to make sure
 # all endpoints are loaded
 from sematic.api.server import sematic_api
+from sematic.config import get_config, switch_env
+from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 
 
 @pytest.fixture(scope="function")

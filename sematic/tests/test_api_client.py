@@ -1,20 +1,21 @@
 # Standard
+# Standard Library
 import json
-from typing import Optional, Dict, Any
-from unittest import mock
 from dataclasses import dataclass
+from typing import Any, Dict, Optional
+from unittest import mock
 
 # Third party
 import pytest
 
 # Sematic
-from sematic.config import get_config
-from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 from sematic.api_client import (
     IncompatibleClientError,
-    _validate_server_compatibility,
     ServerError,
+    _validate_server_compatibility,
 )
+from sematic.config import get_config
+from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 
 
 @dataclass

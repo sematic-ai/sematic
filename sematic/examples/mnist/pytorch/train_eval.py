@@ -1,14 +1,16 @@
+# Standard Library
 from typing import List
-from sklearn.metrics import confusion_matrix
-import torch
-import torch.nn as nn
-from torch.optim.optimizer import Optimizer
-from torch.utils.data import DataLoader
-import torch.nn.functional as F
-from torchmetrics import PrecisionRecallCurve  # type: ignore
+
 import pandas
 import plotly.express as px
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from plotly.graph_objs import Figure, Heatmap
+from sklearn.metrics import confusion_matrix
+from torch.optim.optimizer import Optimizer
+from torch.utils.data import DataLoader
+from torchmetrics import PrecisionRecallCurve  # type: ignore
 
 
 class Net(nn.Module):

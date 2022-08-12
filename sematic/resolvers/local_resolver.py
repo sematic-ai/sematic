@@ -1,23 +1,19 @@
-# Standard library
+# Standard Library
 import datetime
-from typing import Dict, Optional, List, Union, Tuple
-import uuid
 import logging
 import traceback
+import uuid
+from typing import Dict, List, Optional, Tuple, Union
 
 # Sematic
+import sematic.api_client as api_client
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.config import get_config  # noqa: F401
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
+from sematic.db.models.factories import make_artifact, make_run_from_future
 from sematic.db.models.run import Run
 from sematic.resolvers.silent_resolver import SilentResolver
-from sematic.db.models.factories import (
-    make_artifact,
-    make_run_from_future,
-)
-import sematic.api_client as api_client
-
 
 logger = logging.getLogger(__name__)
 

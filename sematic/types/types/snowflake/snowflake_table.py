@@ -1,8 +1,8 @@
-# Standard library
+# Standard Library
+import os
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Generator, Type, Any
-import os
+from typing import Any, Generator, Type
 
 # Third-party
 try:
@@ -28,9 +28,9 @@ except ImportError as e:
     raise e
 
 # Sematic
-from sematic.user_settings import get_user_settings, SettingsVar
 from sematic.types.registry import register_to_json_encodable_summary
 from sematic.types.types.dataclass import _dataclass_to_json_encodable_summary
+from sematic.user_settings import SettingsVar, get_user_settings
 
 
 @dataclass

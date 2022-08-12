@@ -1,6 +1,6 @@
-# Standard library
-from typing import Optional
+# Standard Library
 import os
+from typing import Optional
 
 # Sematic
 from sematic.config import get_config

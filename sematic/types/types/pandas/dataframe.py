@@ -1,14 +1,12 @@
-# Standard library
+# Standard Library
 import json
-from typing import Any, List, Dict
+from typing import Any, Dict, List
 
 # Third party
 import pandas
 
-
 # Sematic
 from sematic.types.registry import register_to_json_encodable_summary
-
 
 _PAYLOAD_CUTOFF = 3000
 

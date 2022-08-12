@@ -1,10 +1,10 @@
-# Standard library
+# Standard Library
 from typing import Tuple
 
 # Sematic
-from sematic.future import Future
 import sematic.future_operators.iter  # # noqa: F401
 from sematic.calculator import func
+from sematic.future import Future
 
 
 @func
