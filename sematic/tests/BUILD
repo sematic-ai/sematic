@@ -66,6 +66,7 @@ sematic_py_lib(
     name = "fixtures",
     srcs = ["fixtures.py"],
     deps = [
+        "//sematic:api_client",
         "//sematic:storage",
     ],
 )
