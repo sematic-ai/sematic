@@ -10,6 +10,7 @@ from requests.exceptions import ConnectionError
 from sematic.config import get_config
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
+from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.run import Run
 from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
 from sematic.utils.retry import retry
@@ -41,6 +42,32 @@ class IncompatibleClientError(Exception):
 
 class BadRequestError(Exception):
     pass
+
+
+def get_artifact_value_by_id(artifact_id: str) -> Any:
+    """
+    Retrieve the value of an artifact by ID.
+
+    Parameters
+    ----------
+    artifact_id: str
+
+    Returns
+    -------
+    Any
+        The value of the requiested artifact.
+    """
+    artifact = _get_artifact(artifact_id)
+    return get_artifact_value(artifact)
+
+
+def _get_artifact(artifact_id: str) -> Artifact:
+    """
+    Retrieve and deserialize artifact.
+    """
+    response = _get("/artifacts/{}".format(artifact_id))
+
+    return Artifact.from_json_encodable(response["content"])
 
 
 def get_run(run_id: str) -> Run:

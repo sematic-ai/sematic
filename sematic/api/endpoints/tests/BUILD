@@ -48,13 +48,25 @@ pytest_test(
     name = "test_meta",
     srcs = ["test_meta.py"],
     deps = [
-        "//sematic/api/endpoints:meta",
-        "//sematic/api:app",
         "//sematic:user_settings",
         "//sematic:versions",
+        "//sematic/api:app",
+        "//sematic/api/endpoints:meta",
         "//sematic/api/tests:fixtures",
     ],
     pip_deps = [
         "flask",
+    ],
+)
+
+pytest_test(
+    name = "test_artifacts",
+    srcs = ["test_artifacts.py"],
+    deps = [
+        "//sematic/api/tests:fixtures",
+        "//sematic/db/models:artifact",
+        "//sematic/db/tests:fixtures",
+        "//sematic/tests:fixtures",
+        requirement("flask"),
     ],
 )

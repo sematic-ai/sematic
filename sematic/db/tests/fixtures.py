@@ -10,9 +10,10 @@ import testing.postgresql  # type: ignore
 # Sematic
 import sematic.db.db as db
 from sematic.abstract_future import FutureState
-from sematic.db.models.factories import make_user
+from sematic.db.models.factories import make_artifact, make_user
 from sematic.db.models.run import Run
 from sematic.db.queries import save_run, save_user
+from sematic.tests.fixtures import test_storage  # noqa: F401
 
 
 def handler(postgresql):
@@ -130,3 +131,18 @@ def persisted_user(test_db):  # noqa: F811
     )
     save_user(user)
     return user
+
+
+@pytest.fixture
+def persisted_artifact(test_db, test_storage):  # noqa: F811
+    """
+    Persisted artifact fixture.
+    """
+    artifact = make_artifact(42, int, True)
+
+    with db.db().get_session() as session:
+        session.add(artifact)
+        session.commit()
+        session.refresh(artifact)
+
+    return artifact

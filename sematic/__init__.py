@@ -19,6 +19,9 @@ if _CURRENT_PYTHON_VERSION < MIN_PYTHON_VERSION:
 # Sematic
 import sematic.future_operators  # noqa: F401,E402
 import sematic.types  # noqa: F401,E402
+from sematic.api_client import (  # noqa: F401,E402
+    get_artifact_value_by_id as get_artifact_value,
+)
 from sematic.calculator import func  # noqa: F401,E402
 from sematic.resolver import Resolver  # noqa: F401,E402
 from sematic.resolvers.cloud_resolver import CloudResolver  # noqa: F401,E402

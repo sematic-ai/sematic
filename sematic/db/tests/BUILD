@@ -5,19 +5,19 @@ sematic_py_lib(
         "//sematic/db:schema.sql.pg",
         "//sematic/db:schema.sql.sqlite",
     ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//sematic:abstract_future",
-        "//sematic/db:db",
-        "//sematic/db:queries",
-        "//sematic/db/models:factories",
-        "//sematic/db/models:run",
-    ],
     pip_deps = [
         "pytest",
         "testing.postgresql",
         "psycopg2-binary",
-    ]
+    ],
+    deps = [
+        "//sematic:abstract_future",
+        "//sematic/db",
+        "//sematic/db:queries",
+        "//sematic/db/models:factories",
+        "//sematic/db/models:run",
+        "//sematic/tests:fixtures",
+    ],
 )
 
 pytest_test(
@@ -37,12 +37,13 @@ pytest_test(
         ":fixtures",
         "//sematic:calculator",
         "//sematic/api/tests:fixtures",
-        "//sematic/db:db",
+        "//sematic/db",
         "//sematic/db:queries",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
         "//sematic/db/models:run",
+        "//sematic/tests:fixtures",
         "//sematic/types:init",
     ],
 )
@@ -50,10 +51,10 @@ pytest_test(
 pytest_test(
     name = "test_migrate",
     srcs = ["test_migrate.py"],
+    pip_deps = ["sqlalchemy"],
     deps = [
-        "//sematic/db:db",
+        "//sematic/db",
         "//sematic/db:migrate_lib",
         "//sematic/db/tests:fixtures",
     ],
-    pip_deps = ["sqlalchemy"],
 )

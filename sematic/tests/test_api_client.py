@@ -1,4 +1,3 @@
-# Standard
 # Standard Library
 import json
 from dataclasses import dataclass
@@ -13,8 +12,11 @@ from sematic.api_client import (
     IncompatibleClientError,
     ServerError,
     _validate_server_compatibility,
+    get_artifact_value_by_id,
 )
 from sematic.config import get_config
+from sematic.db.models.factories import make_artifact
+from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 
 
@@ -131,3 +133,19 @@ def test_validate_server_compatibility_new_server_still_supports(mock_requests):
         ),
     )
     _validate_server_compatibility(tries=5, seconds_between_tries=0, use_cached=False)
+
+
+@mock.patch("sematic.api_client.requests")
+def test_get_artifact_value_by_id(
+    mock_requests, test_storage, valid_client_version  # noqa: F811
+):
+    artifact = make_artifact(42, int, True)
+    mock_requests.get.return_value = MockResponse(
+        status_code=200,
+        json_contents=dict(content=artifact.to_json_encodable()),
+    )
+
+    value = get_artifact_value_by_id(artifact.id)
+
+    assert isinstance(value, int)
+    assert value == 42

@@ -32,6 +32,8 @@ pytest_test(
         "//sematic:api_client",
         "//sematic:config",
         "//sematic:versions",
+        "//sematic/db/models:factories",
+        "//sematic/tests:fixtures",
     ],
 )
 

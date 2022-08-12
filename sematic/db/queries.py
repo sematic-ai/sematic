@@ -33,6 +33,24 @@ def count_runs() -> int:
     return run_count
 
 
+def get_artifact(artifact_id: str) -> Artifact:
+    """
+    Get an artifact from the database.
+
+    Parameters
+    ----------
+    artifact_id : str
+        ID of artifact to retrieve.
+
+    Returns
+    -------
+    Artifact
+        Fetched artifact
+    """
+    with db().get_session() as session:
+        return session.query(Artifact).filter(Artifact.id == artifact_id).one()
+
+
 def get_run(run_id: str) -> Run:
     """
     Get a run from the database.
