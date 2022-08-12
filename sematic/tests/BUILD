@@ -9,6 +9,12 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_py39",
+    srcs = ["test_py39.py"],
+    deps = test_requirements(["pytest", "requests"]),
+)
+
+pytest_test(
     name = "test_api_client",
     srcs = ["test_api_client.py"],
     deps = [

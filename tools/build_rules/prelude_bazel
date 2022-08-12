@@ -3,13 +3,15 @@ This file gets loaded before every BUILD file
 """
 
 # @unused
-load("@pip_dependencies//:requirements.bzl", "requirement")
+load("@pip_dependencies38//:requirements.bzl", "requirement")
+load("@pip_dependencies39//:requirements.bzl", requirement39="requirement")
 
 # @unused
 load(
     "//tools:sematic_rules.bzl",
     "pytest_test",
     "sematic_py_lib",
+    "sematic_py_binary",
     "sematic_example",
 )
 
@@ -18,3 +20,10 @@ load(
     "//tools:sematic_wheel_rule.bzl",
     "sematic_py_wheel",
 )
+
+def test_requirements(reqs):
+    result_requirements = []
+    for req in reqs:
+        result_requirements.append(requirement(req))
+        result_requirements.append(requirement39(req))
+    return result_requirements

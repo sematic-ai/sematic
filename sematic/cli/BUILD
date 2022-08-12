@@ -1,3 +1,5 @@
+load("@python3_8//:defs.bzl", interpreter38="interpreter")
+
 sematic_py_lib(
     name = "main_lib",
     srcs = ["main.py"],
@@ -97,7 +99,7 @@ sematic_py_lib(
     ]
 )
 
-py_binary(
+sematic_py_binary(
     name = "main",
     main = "main.py",
     srcs = ["main.py"],
@@ -106,5 +108,5 @@ py_binary(
         # This is to make sure we can test via Bazel
         "//sematic/examples/mnist/pytorch:requirements",
         "//sematic/examples/liver_cirrhosis:requirements",
-    ]
+    ],
 )
