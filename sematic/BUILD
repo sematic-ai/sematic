@@ -136,14 +136,14 @@ sematic_py_wheel(
     homepage = "https://sematic.dev",
     license = "Apache License 2.0",
     platform = "any",
-    python_requires = ">=3.9",
+    python_requires = ">=3.8,<3.10",
     python_tag = "py3",
     requires = [
         # Specifying this by hand because sematic_py_wheel doesn't know
         # how to fix versions
         "eventlet==0.30.2",
     ],
-    version = "0.9.0",  #+{BUILD_TIMESTAMP}",  # When updating this, also update versions.py and changelog.md
+    version = "0.10.0",  #+{BUILD_TIMESTAMP}",  # When updating this, also update versions.py and changelog.md
     visibility = ["//visibility:public"],
     deps = [
         "//sematic:init",
