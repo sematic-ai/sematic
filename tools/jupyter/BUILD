@@ -6,7 +6,5 @@ py_binary(
     name = "ipython",
     main = "ipython.py",
     srcs = ["ipython.py"],
-    deps = [
-        requirement("ipython"),
-    ]
+    deps = test_requirements(["ipython"]),
 )

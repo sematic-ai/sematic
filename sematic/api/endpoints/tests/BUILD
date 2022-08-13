@@ -6,8 +6,9 @@ pytest_test(
         "//sematic/api/tests:fixtures",
         "//sematic/db:queries",
         "//sematic/db/tests:fixtures",
-        requirement("flask"),
-    ],
+    ] + test_requirements([
+        "flask"
+    ]),
 )
 
 pytest_test(
@@ -20,9 +21,10 @@ pytest_test(
         "//sematic/db/models:run",
         "//sematic/db/models:user",
         "//sematic/db/tests:fixtures",
-        requirement("flask"),
-        requirement("sqlalchemy"),
-    ],
+    ] + test_requirements([
+        "flask",
+        "sqlalchemy",
+    ]),
 )
 
 pytest_test(
@@ -34,8 +36,9 @@ pytest_test(
         "//sematic/db:queries",
         "//sematic/db/models:json_encodable_mixin",
         "//sematic/db/models:user",
-        requirement("flask"),
-    ],
+    ] + test_requirements([
+        "flask",
+    ]),
 )
 
 pytest_test(
@@ -47,6 +50,7 @@ pytest_test(
         "//sematic:user_settings",
         "//sematic:versions",
         "//sematic/api/tests:fixtures",
-        requirement("flask"),
-    ],
+    ] + test_requirements([
+        "flask",
+    ]),
 )

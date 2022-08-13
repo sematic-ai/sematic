@@ -9,9 +9,10 @@ pytest_test(
 )
 
 pytest_test(
-    name = "test_py39",
-    srcs = ["test_py39.py"],
-    deps = test_requirements(["pytest", "requests"]),
+    name = "test_39_interpreter",
+    srcs = ["test_39_interpreter.py"],
+    deps = test_requirements(["requests"]),
+    py_versions=[PY3.PY39],
 )
 
 pytest_test(
