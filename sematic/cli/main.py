@@ -1,6 +1,4 @@
 import sys
-print(sys.version_info)
-print(sys.executable)
 
 # Sematic
 import sematic.cli.new  # noqa: F401

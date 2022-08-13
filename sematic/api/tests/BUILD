@@ -6,9 +6,11 @@ sematic_py_lib(
         "//sematic:user_settings",
         "//sematic/api:server_lib",
         "//sematic/db/tests:fixtures",
-        requirement("pytest"),
-        requirement("werkzeug"),
-        requirement("responses"),
+    ],
+    pip_deps = [
+        "pytest",
+        "werkzeug",
+        "responses",
     ],
 )
 
@@ -18,6 +20,8 @@ pytest_test(
     deps = [
         ":fixtures",
         "//sematic/db/tests:fixtures",
-        requirement("flask"),
     ],
+    pip_deps = [
+        "flask",
+    ]
 )

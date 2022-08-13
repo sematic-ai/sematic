@@ -3,9 +3,11 @@ sematic_py_lib(
     srcs = ["app.py"],
     deps = [
         ":wsgi",
-        requirement("flask"),
-        requirement("flask-cors"),
     ],
+    pip_deps = [
+        "flask",
+        "flask-cors",
+    ]
 )
 
 sematic_py_lib(
@@ -21,9 +23,11 @@ sematic_py_lib(
         "//sematic/api/endpoints:meta",
         "//sematic/api/endpoints:notes",
         "//sematic/api/endpoints:runs",
-        requirement("flask"),
-        requirement("flask-socketio"),
-        requirement("eventlet"),
+    ],
+    pip_deps = [
+        "flask",
+        "flask-socketio",
+        "eventlet",
     ],
 )
 
@@ -39,9 +43,10 @@ py_binary(
 sematic_py_lib(
     name = "wsgi",
     srcs = ["wsgi.py"],
-    deps = [
-        requirement("flask"),
-        requirement("gunicorn"),
+    deps = [],
+    pip_deps = [
+        "flask",
+        "gunicorn",
     ],
 )
 

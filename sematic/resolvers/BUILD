@@ -40,8 +40,10 @@ sematic_py_lib(
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:run",
-        requirement("kubernetes"),
-        requirement("cloudpickle"),
+    ],
+    pip_deps = [
+        "kubernetes",
+        "cloudpickle",
     ],
 )
 
@@ -62,7 +64,9 @@ sematic_py_lib(
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
         "//sematic/resolvers:cloud_resolver",
-        requirement("cloudpickle"),
+    ],
+    pip_deps = [
+        "cloudpickle",
     ],
 )
 

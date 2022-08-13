@@ -11,7 +11,8 @@ pytest_test(
 pytest_test(
     name = "test_39_interpreter",
     srcs = ["test_39_interpreter.py"],
-    deps = test_requirements(["requests"]),
+    deps = [],
+    pip_deps = ["requests"],
     py_versions=[PY3.PY39],
 )
 

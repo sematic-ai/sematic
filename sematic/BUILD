@@ -34,7 +34,9 @@ sematic_py_lib(
     srcs = ["user_settings.py"],
     deps = [
         ":config_dir",
-        requirement("pyyaml"),
+    ],
+    pip_deps = [
+        "pyyaml",
     ],
 )
 
@@ -48,8 +50,10 @@ sematic_py_lib(
         "//sematic/db/models:edge",
         "//sematic/db/models:run",
         "//sematic/utils:retry",
-        requirement("requests"),
     ],
+    pip_deps = [
+        "requests",
+    ]
 )
 
 sematic_py_lib(
@@ -107,7 +111,9 @@ sematic_py_lib(
     srcs = ["storage.py"],
     deps = [
         ":user_settings",
-        requirement("boto3"),
+    ],
+    pip_deps = [
+        "boto3",
     ],
 )
 

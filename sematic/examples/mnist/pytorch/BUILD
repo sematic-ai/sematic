@@ -1,5 +1,5 @@
 load("//bazel:pipeline.bzl", "sematic_pipeline")
-"""
+
 sematic_example(
     name = "pytorch",
     requirements = [
@@ -37,4 +37,3 @@ sematic_pipeline(
         ":mnist_pytorch_lib",
     ],
 )
-"""

@@ -55,12 +55,17 @@ def pytest_test(
     name,
     srcs,
     deps = [],
-    args = [],
+    pip_deps = None,
+    args = None,
     data=None,
     env=None,
     py_versions=None,
     **kwargs
     ):
+    if pip_deps == None:
+        pip_deps = []
+    if args == None:
+        args = []
     if data == None:
         data = []
     if env == None:
@@ -71,10 +76,9 @@ def pytest_test(
     if len(py_versions) < 1:
         fail("There must be at least one python version to test")
     py_versions = sorted(py_versions)
-
-    deps = deps + test_requirements(["pytest"])
     for i, py3_version in enumerate(py_versions):
         (pyenv, runfiles) = env_and_runfiles_for_python(py3_version)
+        final_deps = versioned_sematic_deps(deps, py3_version) + versioned_pip_deps(pip_deps + ["pytest"], py3_version)
 
         # Use the lowest python version provided for the default target,
         # all other python versions should have a suffix like _py39
@@ -85,7 +89,7 @@ def pytest_test(
             srcs = ["//tools:pytest_runner"] + srcs,
             main = "tools/pytest_runner.py",
             env = dict(env, **pyenv),
-            deps = deps,
+            deps = final_deps,
             data = data + runfiles,
             args = args + ["$(location :%s)" % x for x in srcs],
             tags = ["nocov"],
@@ -98,7 +102,7 @@ def pytest_test(
                 name = "{}_coverage".format(name),
                 srcs = ["//tools:pytest_runner"] + srcs,
                 main = "tools/pytest_runner.py",
-                deps = deps + ["//:python_coverage_tools"],
+                deps = final_deps + ["//:python_coverage_tools"],
                 data = data + runfiles,
                 args = args + ["$(location :%s)" % x for x in srcs],
                 env = dict(
@@ -109,7 +113,9 @@ def pytest_test(
                 **kwargs
             )
 
-def sematic_py_lib(name, srcs, deps, visibility = None, data = None):
+def sematic_py_lib(name, srcs, deps, pip_deps = None, visibility = None, data = None):
+    if pip_deps == None:
+        pip_deps = []
     if visibility == None:
         visibility = ["//visibility:public"]
     if data == None:
@@ -122,7 +128,7 @@ def sematic_py_lib(name, srcs, deps, visibility = None, data = None):
             name = full_name,
             srcs = srcs,
             visibility = visibility,
-            deps = deps,
+            deps = versioned_sematic_deps(deps, py_version) + versioned_pip_deps(pip_deps, py_version),
             data = data + runfiles,
         )
 
@@ -133,7 +139,7 @@ def sematic_py_lib(name, srcs, deps, visibility = None, data = None):
             deps = [
                 ":{0}".format(full_name),
                 requirement("ipython"),
-            ],
+            ] + versioned_pip_deps(pip_deps, py_version),
             env = pyenv,
             tags = ["manual"],
             data = data + runfiles,
@@ -143,7 +149,7 @@ def sematic_py_lib(name, srcs, deps, visibility = None, data = None):
                 name = name,
                 srcs = srcs,
                 visibility = visibility,
-                deps = deps,
+                deps = deps + versioned_pip_deps(pip_deps, py_version),
                 data = data + runfiles,
             )
 
@@ -154,7 +160,7 @@ def sematic_py_lib(name, srcs, deps, visibility = None, data = None):
                 deps = [
                     ":{0}".format(name),
                     requirement("ipython"),
-                ],
+                ] + versioned_pip_deps(pip_deps, py_version),
                 env = pyenv,
                 tags = ["manual"],
                 data = data + runfiles,
@@ -174,9 +180,9 @@ def sematic_example(name, requirements = None, data = None):
     sematic_py_lib(
         name = "requirements",
         srcs = ["__main__.py"],
-        deps = [
-            requirement(req)
-            for req in (requirements or [])
+        deps = [],
+        pip_deps = [
+            req for req in (requirements or [])
         ],
     )
 
@@ -225,3 +231,17 @@ def test_requirements(reqs):
         for py_version in _PYTHON_VERSION_INFO.values():
             result_requirements.append(py_version.pip_requirement(req))
     return result_requirements
+
+def versioned_pip_deps(pip_deps, py_version):
+    final_deps = []
+    requirement_func = _PYTHON_VERSION_INFO[py_version].pip_requirement
+    for pip_dep in pip_deps:
+        final_deps.append(requirement_func(pip_dep))
+    return final_deps
+
+
+def versioned_sematic_deps(deps, py_version):
+    final_deps = []
+    for dep in deps:
+        final_deps.append("{}_{}".format(dep, py_version.lower()))
+    return final_deps

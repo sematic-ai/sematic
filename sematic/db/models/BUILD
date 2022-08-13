@@ -4,15 +4,18 @@ sematic_py_lib(
     deps = [
         ":base",
         ":json_encodable_mixin",
-        requirement("sqlalchemy"),
+    ],
+    pip_deps = [
+        "sqlalchemy"
     ],
 )
 
 sematic_py_lib(
     name = "base",
     srcs = ["base.py"],
-    deps = [
-        requirement("sqlalchemy"),
+    deps = [],
+    pip_deps = [
+        "sqlalchemy"
     ],
 )
 
@@ -35,16 +38,19 @@ sematic_py_lib(
     deps = [
         ":base",
         ":json_encodable_mixin",
-        requirement("sqlalchemy"),
+    ],
+    pip_deps = [
+        "sqlalchemy",
     ],
 )
 
 sematic_py_lib(
     name = "json_encodable_mixin",
     srcs = ["json_encodable_mixin.py"],
-    deps = [
-        requirement("python-dateutil"),
-        requirement("sqlalchemy"),
+    deps = [],
+    pip_deps = [
+        "python-dateutil",
+        "sqlalchemy",
     ],
 )
 
@@ -55,7 +61,9 @@ sematic_py_lib(
         ":base",
         ":json_encodable_mixin",
         "//sematic:abstract_future",
-        requirement("sqlalchemy"),
+    ],
+    pip_deps = [
+        "sqlalchemy",
     ],
 )
 
@@ -65,7 +73,9 @@ sematic_py_lib(
     deps = [
         ":base",
         ":json_encodable_mixin",
-        requirement("sqlalchemy"),
+    ],
+    pip_deps = [
+        "sqlalchemy",
     ],
 )
 
@@ -75,6 +85,8 @@ sematic_py_lib(
     deps = [
         ":base",
         ":json_encodable_mixin",
-        requirement("sqlalchemy"),
+    ],
+    pip_deps = [
+        "sqlalchemy",
     ],
 )

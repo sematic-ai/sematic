@@ -6,8 +6,10 @@ pytest_test(
         "//sematic/cli:process_utils",
         "//sematic:config",
         "//sematic/db/tests:fixtures",
-        requirement("click")
-    ]
+    ],
+    pip_deps = [
+        "click",
+    ],
 )
 
 pytest_test(
@@ -16,6 +18,8 @@ pytest_test(
     deps = [
         "//sematic/cli:new",
         "//sematic/cli:examples_utils",
-        requirement("click")
+    ],
+    pip_deps = [
+        "click",
     ]
 )
