@@ -2,8 +2,18 @@ import { Artifact } from "../Models";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import { renderSummary } from "../types/Types";
-import { Table, TableBody, TableCell, TableRow } from "@mui/material";
+import {
+  Box,
+  ButtonBase,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+  useTheme,
+} from "@mui/material";
 import { ErrorBoundary } from "react-error-boundary";
+import { ContentCopy, Help, HelpOutline } from "@mui/icons-material";
+import { useCallback, useState } from "react";
 
 function ArtifactError(props: { error: Error }) {
   return (
@@ -21,8 +31,36 @@ function ArtifactView(props: { artifact: Artifact }) {
   let { artifact } = props;
   return (
     <ErrorBoundary FallbackComponent={ArtifactError}>
-      {renderSummary(artifact.type_serialization, artifact.json_summary)}
+      <Box>
+        <Box sx={{ float: "right" }}>
+          <ArtifactID artifactId={artifact.id} />
+        </Box>
+        {renderSummary(artifact.type_serialization, artifact.json_summary)}
+      </Box>
     </ErrorBoundary>
+  );
+}
+
+function ArtifactID(props: { artifactId: string }) {
+  const { artifactId } = props;
+
+  const [content, setContent] = useState(artifactId.substring(0, 6));
+
+  const theme = useTheme();
+
+  const copy = useCallback(() => {
+    navigator.clipboard.writeText(artifactId);
+    setContent("Copied");
+    setTimeout(() => setContent(artifactId.substring(0, 6)), 1000);
+  }, [artifactId]);
+
+  return (
+    <ButtonBase
+      sx={{ color: theme.palette.grey[400], fontSize: 12 }}
+      onClick={copy}
+    >
+      <code>{content}</code>
+    </ButtonBase>
   );
 }
 
