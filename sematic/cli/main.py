@@ -1,5 +1,3 @@
-import sys
-
 # Sematic
 import sematic.cli.new  # noqa: F401
 import sematic.cli.run  # noqa: F401
