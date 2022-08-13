@@ -12,7 +12,6 @@ import {
   useTheme,
 } from "@mui/material";
 import { ErrorBoundary } from "react-error-boundary";
-import { ContentCopy, Help, HelpOutline } from "@mui/icons-material";
 import { useCallback, useState } from "react";
 
 function ArtifactError(props: { error: Error }) {
