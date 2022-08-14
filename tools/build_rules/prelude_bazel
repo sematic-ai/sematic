@@ -14,7 +14,6 @@ load(
     "sematic_py_binary",
     "sematic_example",
     "PY3",
-    "test_requirements",
     "requirement",
 )
 

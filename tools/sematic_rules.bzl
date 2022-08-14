@@ -78,7 +78,11 @@ def pytest_test(
     py_versions = sorted(py_versions)
     for i, py3_version in enumerate(py_versions):
         (pyenv, runfiles) = env_and_runfiles_for_python(py3_version)
-        final_deps = versioned_sematic_deps(deps, py3_version) + versioned_pip_deps(pip_deps + ["pytest"], py3_version)
+        final_deps = full_versioned_deps(
+            deps = deps,
+            pip_deps = pip_deps + ["pytest"],
+            py_version = py3_version,
+        )
 
         # Use the lowest python version provided for the default target,
         # all other python versions should have a suffix like _py39
@@ -113,6 +117,7 @@ def pytest_test(
                 **kwargs
             )
 
+
 def sematic_py_lib(name, srcs, deps, pip_deps = None, visibility = None, data = None):
     if pip_deps == None:
         pip_deps = []
@@ -121,53 +126,33 @@ def sematic_py_lib(name, srcs, deps, pip_deps = None, visibility = None, data = 
     if data == None:
         data = []
 
-    for i, py_version in enumerate(ALL_PY3_VERSIONS):
-        full_name = "{}_{}".format(name, py_version.lower())
-        (pyenv, runfiles) = env_and_runfiles_for_python(py_version)
+    def create_targets(target_name, pyenv, runfiles, py_version):
         py_library(
-            name = full_name,
+            name = target_name,
             srcs = srcs,
             visibility = visibility,
-            deps = versioned_sematic_deps(deps, py_version) + versioned_pip_deps(pip_deps, py_version),
+            deps = full_versioned_deps(deps, pip_deps, py_version),
             data = data + runfiles,
         )
 
         py_binary(
-            name = "{0}_ipython".format(full_name),
+            name = "{0}_ipython".format(target_name),
             main = "//tools/jupyter:ipython.py",
             srcs = ["//tools/jupyter:ipython.py"],
             deps = [
-                ":{0}".format(full_name),
+                ":{0}".format(target_name),
                 requirement("ipython"),
             ] + versioned_pip_deps(pip_deps, py_version),
             env = pyenv,
             tags = ["manual"],
             data = data + runfiles,
         )
-        if i == 0:
-            py_library(
-                name = name,
-                srcs = srcs,
-                visibility = visibility,
-                deps = deps + versioned_pip_deps(pip_deps, py_version),
-                data = data + runfiles,
-            )
+    create_multipy_targets(name, create_targets)
 
-            py_binary(
-                name = "{0}_ipython".format(name),
-                main = "//tools/jupyter:ipython.py",
-                srcs = ["//tools/jupyter:ipython.py"],
-                deps = [
-                    ":{0}".format(name),
-                    requirement("ipython"),
-                ] + versioned_pip_deps(pip_deps, py_version),
-                env = pyenv,
-                tags = ["manual"],
-                data = data + runfiles,
-            )
 
-# TODO: update for multiple python
 def sematic_example(name, requirements = None, data = None):
+    if data == None:
+        data = []
     sematic_py_lib(
         name = "{}_lib".format(name),
         srcs = native.glob(["*.py", "**/*.py"]),
@@ -186,51 +171,58 @@ def sematic_example(name, requirements = None, data = None):
         ],
     )
 
-    py_binary(
-        name = name,
-        main = "__main__.py",
-        srcs = ["__main__.py"],
-        deps = [
-            ":{}_lib".format(name),
-            ":requirements",
-        ],
-    )
+    def create_targets(target_name, pyenv, runfiles, py_version):
+        py_binary(
+            name = target_name,
+            main = "__main__.py",
+            srcs = ["__main__.py"],
+            env = pyenv,
+            deps = [
+                ":{}_lib_{}".format(name, py_version.lower()),
+                ":requirements",
+            ],
+            data = data + runfiles,
+        )
 
-    py_binary(
-        name = "{0}_ipython".format(name),
-        main = "//tools/jupyter:ipython.py",
-        srcs = ["//tools/jupyter:ipython.py"],
-        deps = [
-            ":{}_lib".format(name),
-            ":requirements",
-            requirement("ipython"),
-        ],
-        tags = ["manual"],
-        data = data,
-    )
+        py_binary(
+            name = "{0}_ipython".format(target_name),
+            main = "//tools/jupyter:ipython.py",
+            srcs = ["//tools/jupyter:ipython.py"],
+            env = pyenv,
+            deps = [
+                ":{}_lib_{}".format(name, py_version.lower()),
+                ":requirements",
+            ] + versioned_pip_deps(
+                pip_deps = ["ipython"],
+                py_version = py_version
+            ),
+            tags = ["manual"],
+            data = data + runfiles,
+        )
+    create_multipy_targets(name, create_targets)
 
-def sematic_py_binary(name, main, srcs, deps, data=None, env=None, **kwargs):
+
+def sematic_py_binary(name, main, srcs, deps, pip_deps=None, data=None, env=None, **kwargs):
     if data == None:
         data = []
     if env == None:
         env = {}
-    (pyenv, runfiles) = env_and_runfiles_for_python(DEFAULT_PY_VERSION)
-    py_binary(
-        name=name,
-        main=main,
-        srcs=srcs,
-        deps=deps,
-        data=data + runfiles,
-        env=dict(env, **pyenv),
-        **kwargs,
-    )
+    if pip_deps == None:
+        pip_deps = []
+    def create_targets(target_name, pyenv, runfiles, py_version):
+        full_deps = full_versioned_deps(deps, pip_deps, py_version)
 
-def test_requirements(reqs):
-    result_requirements = []
-    for req in reqs:
-        for py_version in _PYTHON_VERSION_INFO.values():
-            result_requirements.append(py_version.pip_requirement(req))
-    return result_requirements
+        py_binary(
+            name=target_name,
+            main=main,
+            srcs=srcs,
+            deps=full_deps,
+            data=data + runfiles,
+            env=dict(env, **pyenv),
+            **kwargs,
+        )
+    create_multipy_targets(name, create_targets)
+
 
 def versioned_pip_deps(pip_deps, py_version):
     final_deps = []
@@ -245,3 +237,16 @@ def versioned_sematic_deps(deps, py_version):
     for dep in deps:
         final_deps.append("{}_{}".format(dep, py_version.lower()))
     return final_deps
+
+
+def full_versioned_deps(deps, pip_deps, py_version):
+    return versioned_sematic_deps(deps, py_version) + versioned_pip_deps(pip_deps, py_version)
+
+
+def create_multipy_targets(base_name, target_creator):
+    for i, py_version in enumerate(ALL_PY3_VERSIONS):
+        full_name = "{}_{}".format(base_name, py_version.lower())
+        (pyenv, runfiles) = env_and_runfiles_for_python(py_version)
+        target_creator(full_name, pyenv, runfiles, py_version)
+        if i == 0:
+            target_creator(base_name, pyenv, runfiles, py_version)        
