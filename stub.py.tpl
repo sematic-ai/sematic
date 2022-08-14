@@ -1,8 +1,34 @@
 #! /usr/bin/env python3
-
+# This file is used to enable bazel to work with multiple python versions
+# within the context of one workspace. It is based on an approach from:
+# https://blog.aspect.dev/many-python-versions-one-bazel-build
+# The code itself, referenced in that blog, comes from this gist:
+# https://gist.github.com/mattem/57019db2e4e37e495879e734eaaa843a
+# Here is a high-level summary of how this 'multiple python' setup works:
+# - We register our python toolchain with bazel to point at a custom interpreter
+# - That custom interpreter is actually generated from this file (note that due
+# to the hash-bang, this file can be executed by the shell directly, like an
+# intepreter)
+# - It is *generated* from this file because we need to update
+# DEFAULT_PYTHON_INTERPRETER_PATH from within a bazel build, to point it at
+# a hermetic python interpreter (whose path is only known from within a bazel
+# build).
+# - This file itself will be executed by the host system's python, NOT a hermetic
+# python.
+# - What this file DOES, however, is forward execution to another python interpreter
+# which IS hermetic.
+# - The interpreter forwarded to is determined either by DEFAULT_PYTHON_INTERPRETER_PATH
+# (default case) OR by the WHICH_PYTHON env var
+# - The WHICH_PYTHON env var is overridden to point at an appropriate hermetic interpreter
+# based on the bazel target that was invoked. We define overrides for it in sematic_rules.bzl
+# - The available hermetic interpreters are set up, including 3rd party deps, in the WORKSPACE
 import os
 import sys
 
+# Other third party deps will not be available here. Bazel also doesn't need to
+# be installed for the system interpreter for this to work. My GUESS is that
+# when bazel invokes an interpreter, it modifies the python path to make this
+# available.
 from bazel_tools.tools.python.runfiles import runfiles
 
 DEFAULT_PYTHON_FLAGS = ["-B", "-s"]

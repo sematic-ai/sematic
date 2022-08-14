@@ -60,15 +60,24 @@ load("@rules_python//python:repositories.bzl", "python_register_toolchains")
 python_register_toolchains(
     name = "python3_8",
     python_version = "3.8",
+    # Setting this to False makes the python3_8 targets, platforms, etc.
+    # available to bazel but SKIPS the final part where it tells bazel
+    # "this is the interpreter I want you to always use." We need to skip
+    # that so we can give bazel our stub interpreter instead. See stub.py.tpl
+    # for an explanation.
     register_toolchains = False,
 )
 
 python_register_toolchains(
     name = "python3_9",
     python_version = "3.9",
+    # See above comment about why this is False.
     register_toolchains = False,
 )
 
+# Used to register a default toolchain in /WORKSPACE.bazel,
+# this is ultimately what makes it so bazel sees our stub
+# interpreter as the thing to use for python things.
 register_toolchains(
     "//:py_stub_toolchain"
 )
@@ -80,39 +89,33 @@ register_toolchains(
 # For xz linking
 # See https://qiita.com/ShotaMiyazaki94/items/d868855b379d797d605f
 
-# Canonical interpreter
+# <add python version>: This section will need to be updated when a python version is added
 load("@python3_8//:defs.bzl", interpreter38="interpreter")
 load("@python3_9//:defs.bzl", interpreter39="interpreter")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
     name = "pip_dependencies38",
-    # Cannonical
     python_interpreter_target = interpreter38,
-    # Custom
-    #python_interpreter_target = "@python_interpreter//:python_bin",
     requirements_lock = "//requirements:requirements.txt",
 )
 
 pip_parse(
     name = "pip_dependencies39",
-    # Cannonical
     python_interpreter_target = interpreter39,
-    # Custom
-    #python_interpreter_target = "@python_interpreter//:python_bin",
     requirements_lock = "//requirements:requirements.txt",
 )
 
 load("@pip_dependencies38//:requirements.bzl", install_deps38="install_deps")
 load("@pip_dependencies39//:requirements.bzl", install_deps39="install_deps")
 
+# Actually does the 3rd party dep installs for each of our
+# hermetic interpreters to use.
 install_deps38()
 install_deps39()
 
-### Multiple interpreters for tests
+# Used to enable multiple interpreters for tests
 # approach from https://blog.aspect.dev/many-python-versions-one-bazel-build
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
 http_archive(
     name = "aspect_bazel_lib",
     sha256 = "33332c0cd7b5238b5162b5177da7f45a05641f342cf6d04080b9775233900acf",

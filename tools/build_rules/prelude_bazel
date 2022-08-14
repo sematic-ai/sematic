@@ -3,6 +3,7 @@ This file gets loaded before every BUILD file
 """
 
 # @unused
+# <add python version>: This will need to be updated when a python version is added
 load("@pip_dependencies38//:requirements.bzl", requirement38="requirement")
 load("@pip_dependencies39//:requirements.bzl", requirement39="requirement")
 

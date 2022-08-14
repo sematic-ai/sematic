@@ -8,11 +8,13 @@ load(
     "py_library",
     "py_test",
 )
+# <add python version>: This will need to be updated when a python version is added
 load("@pip_dependencies38//:requirements.bzl", requirement38="requirement")
 load("@pip_dependencies39//:requirements.bzl", requirement39="requirement")
 load("@python3_8//:defs.bzl", interpreter38="interpreter")
 load("@python3_9//:defs.bzl", interpreter39="interpreter")
 
+# <add python version>: This section will need to be updated when a python version is added
 _PYTHON_VERSION_INFO = dict(
     PY38 = struct(
         workspace_name = "python3_8",
@@ -32,6 +34,9 @@ PY3 = struct(**{
     key: key
     for key in _PYTHON_VERSION_INFO.keys()
 })
+
+# <default py version change>: This line will need to be updated if we change the default
+# python version for sematic.
 DEFAULT_PY_VERSION = PY3.PY38
 requirement = _PYTHON_VERSION_INFO[DEFAULT_PY_VERSION].pip_requirement
 
