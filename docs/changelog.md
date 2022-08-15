@@ -1,5 +1,7 @@
 <!--- When updating the version, update versions.py and sematic/BUILD accordingly -->
 * HEAD
+* 0.10.0
+    * [improvement] Add support for python 3.8
     * [improvement] Friendly error message for unsupported Python version
     * [improvement] Friendly error message when clients don't match server version
 * 0.9.0
