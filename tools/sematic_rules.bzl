@@ -184,7 +184,7 @@ def sematic_example(name, requirements = None, data = None):
             env = pyenv,
             deps = [
                 ":{}_lib_{}".format(name, py_version.lower()),
-                ":requirements",
+                ":requirements_{}".format(py_version.lower()),
             ],
             data = data + runfiles,
         )
@@ -196,7 +196,7 @@ def sematic_example(name, requirements = None, data = None):
             env = pyenv,
             deps = [
                 ":{}_lib_{}".format(name, py_version.lower()),
-                ":requirements",
+                ":requirements_{}".format(py_version.lower()),
             ] + versioned_pip_deps(
                 pip_deps = ["ipython"],
                 py_version = py_version
