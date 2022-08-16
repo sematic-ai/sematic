@@ -27,6 +27,10 @@ in sync that way.
 load("@rules_python//python:packaging.bzl", "PyWheelInfo")
 load("//tools:stamp.bzl", "is_stamping_enabled")
 
+_ALWAYS_EXCLUDE_DEPENDENCIES = [
+    "pip",
+]
+
 def _path_inside_wheel(input_file):
     # input_file.short_path is sometimes relative ("../${repository_root}/foobar")
     # which is not a valid path within a zip file. Fix that.
@@ -92,10 +96,9 @@ def _sematic_py_wheel_impl(ctx):
 
     for input_file in inputs.to_list():
         file_path = _path_inside_wheel(input_file)
+        depedency_name = _extract_dependency_name(file_path)
 
-        if "dist-info/METADATA" in file_path:
-            depedency_name = file_path.split(".dist-info")[0].split("-")[0].replace("_", "-")
-
+        if depedency_name != None and depedency_name not in _ALWAYS_EXCLUDE_DEPENDENCIES:
             # Making sure we don't override requires passed manually
             already_in = False
             for require in requires:
@@ -213,6 +216,25 @@ def _sematic_py_wheel_impl(ctx):
             name_file = name_file,
         ),
     ]
+
+
+def _extract_dependency_name(path_within_wheel):
+    """For a path within the bazel deps, see whether it correponds to a python dep.
+
+    Return that dependency's name if so, otherwise return None.
+    """
+    # Bazel's build language doesn't support regex:
+    # https://community.influxdata.com/t/using-regex-in-starlark/18246
+    # will have to implement our own string parsing.
+    path_elements = path_within_wheel.split("/")
+    if len(path_elements) < 2:
+        return None
+    if not (path_elements[-1] == "METADATA" and path_elements[-2].endswith("dist-info")):
+        return None
+    dist_info_path_segment = path_elements[-2]
+    depedency_name = dist_info_path_segment.split(".dist-info")[0].split("-")[0].replace("_", "-")
+    return depedency_name
+
 
 def _concat_dicts(*dicts):
     result = {}

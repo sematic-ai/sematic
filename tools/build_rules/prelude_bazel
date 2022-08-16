@@ -3,14 +3,19 @@ This file gets loaded before every BUILD file
 """
 
 # @unused
-load("@pip_dependencies//:requirements.bzl", "requirement")
+# <add python version>: This will need to be updated when a python version is added
+load("@pip_dependencies38//:requirements.bzl", requirement38="requirement")
+load("@pip_dependencies39//:requirements.bzl", requirement39="requirement")
 
 # @unused
 load(
     "//tools:sematic_rules.bzl",
     "pytest_test",
     "sematic_py_lib",
+    "sematic_py_binary",
     "sematic_example",
+    "PY3",
+    "requirement",
 )
 
 # @unused

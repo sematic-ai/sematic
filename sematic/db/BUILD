@@ -3,8 +3,10 @@ sematic_py_lib(
     srcs = ["db.py"],
     deps = [
         "//sematic:config",
-        requirement("sqlalchemy"),
-        requirement("psycopg2-binary"),
+    ],
+    pip_deps = [
+        "sqlalchemy",
+        "psycopg2-binary",
     ],
 )
 
@@ -18,8 +20,10 @@ sematic_py_lib(
         "//sematic/db/models:note",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
-        requirement("sqlalchemy"),
     ],
+    pip_deps = [
+        "sqlalchemy",
+    ]
 )
 
 exports_files([
@@ -33,7 +37,7 @@ sematic_py_lib(
     data = glob(["migrations/*.sql"]),
     deps = [
         "//sematic:config",
-        "//sematic/db",
+        "//sematic/db:db",
     ],
 )
 

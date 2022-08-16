@@ -25,9 +25,11 @@ sematic_py_lib(
     deps = [
         "//sematic/types:registry",
         "//sematic/types:serialization",
-        requirement("cloudpickle"),
         # DO NOT ADD torch HERE
         # This code path is activated in init only if
         # torch is available
+    ],
+    pip_deps = [
+        "cloudpickle",
     ],
 )
