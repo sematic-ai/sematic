@@ -14,13 +14,11 @@ def test_changelog():
     changelog_versions = []
     with open("docs/changelog.md", "r") as fp:
         for line in fp:
-            if not line.startswith("*"):
-                continue
-            line = line.strip()
             # regex matches lines that start with a literal *, have a space,
             # and then MAJOR.MINOR.PATCH where MAJOR, MINOR, and PATCH consist
-            # only of digits (and at least one digit).
-            if re.match(r"\* \d+\.\d+.\d+$", line) is None:
+            # only of digits (and at least one digit). It also allows for space
+            # characters after the patch version before the end of the line.
+            if re.match(r"\* \d+\.\d+.\d+\s*$", line) is None:
                 continue
             version_string = line[len("* ") :]  # noqa: E203
             changelog_versions.append(tuple(int(v) for v in version_string.split(".")))
