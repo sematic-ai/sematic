@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { ErrorBoundary } from "react-error-boundary";
 import { useCallback, useState } from "react";
+import { ContentCopy } from "@mui/icons-material";
 
 function ArtifactError(props: { error: Error }) {
   return (
@@ -59,6 +60,7 @@ function ArtifactID(props: { artifactId: string }) {
       onClick={copy}
     >
       <code>{content}</code>
+      <ContentCopy fontSize="small" sx={{ ml: 1 }} />
     </ButtonBase>
   );
 }
