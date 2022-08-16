@@ -22,7 +22,7 @@ def test_changelog():
             # only of digits (and at least one digit).
             if re.match(r"\* \d+\.\d+.\d+$", line) is None:
                 continue
-            version_string = line[len("* ") :]
+            version_string = line[len("* ") :]  # noqa: E203
             changelog_versions.append(tuple(int(v) for v in version_string.split(".")))
 
     message = (
