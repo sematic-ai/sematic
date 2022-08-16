@@ -64,6 +64,8 @@ sematic_py_lib(
     deps = [
         ":generic_type",
         ":registry",
-        requirement("cloudpickle"),
+    ],
+    pip_deps = [
+        "cloudpickle",
     ],
 )

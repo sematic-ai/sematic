@@ -3,6 +3,8 @@ workspace(name = "sematic")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 ## NEEDED FOR M1 MAC SUPPORT
+# The docker rules do not use go in a way that supports M1s by default, so
+# this updates the go used.
 
 http_archive(
     name = "platforms",
@@ -42,14 +44,15 @@ gazelle_dependencies()
 
 ## PYTHON RULES
 
+### Standard python rules
 http_archive(
     name = "rules_python",
-    sha256 = "9fcf91dbcc31fde6d1edb15f117246d912c33c36f44cf681976bd886538deba6",
-    strip_prefix = "rules_python-0.8.0",
-    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.8.0.tar.gz",
+    sha256 = "a3a6e99f497be089f81ec082882e40246bfd435f52f4e82f37e89449b04573f6",
+    strip_prefix = "rules_python-0.10.2",
+    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.10.2.tar.gz",
 )
 
-## Canonical toolchain
+# Canonical toolchain
 # This fails to build wheels on M1 Macs so we use a custom toolchain
 
 load("@rules_python//python:repositories.bzl", "python_register_toolchains")
@@ -57,6 +60,26 @@ load("@rules_python//python:repositories.bzl", "python_register_toolchains")
 python_register_toolchains(
     name = "python3_8",
     python_version = "3.8",
+    # Setting this to False makes the python3_8 targets, platforms, etc.
+    # available to bazel but SKIPS the final part where it tells bazel
+    # "this is the interpreter I want you to always use." We need to skip
+    # that so we can give bazel our stub interpreter instead. See stub.py.tpl
+    # for an explanation.
+    register_toolchains = False,
+)
+
+python_register_toolchains(
+    name = "python3_9",
+    python_version = "3.9",
+    # See above comment about why this is False.
+    register_toolchains = False,
+)
+
+# Used to register a default toolchain in /WORKSPACE.bazel,
+# this is ultimately what makes it so bazel sees our stub
+# interpreter as the thing to use for python things.
+register_toolchains(
+    "//:py_stub_toolchain"
 )
 
 # Hermetic python from https://thethoughtfulkoala.com/posts/2020/05/16/bazel-hermetic-python.html
@@ -66,58 +89,39 @@ python_register_toolchains(
 # For xz linking
 # See https://qiita.com/ShotaMiyazaki94/items/d868855b379d797d605f
 
-_py_configure = """
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    prefix=$(brew --prefix)
-    export LDFLAGS="-L$prefix/opt/xz/lib $LDFLAGS"
-    export CPPFLAGS="-I$prefix/opt/xz/include $CPPFLAGS"
-    export PKG_CONFIG_PATH="$prefix/opt/xz/lib/pkgconfig:$PKG_CONFIG_PATH"
-    ./configure --enable-shared --prefix=$(pwd)/bazel_install --with-openssl=$(brew --prefix openssl)
-else
-    ./configure --prefix=$(pwd)/bazel_install
-fi
-"""
-
-#http_archive(
-#    name = "python_interpreter",
-#    build_file_content = """
-#exports_files(["python_bin"])
-#filegroup(
-#    name = "files",
-#    srcs = glob(["bazel_install/**"], exclude = ["**/* *"]),
-#    visibility = ["//visibility:public"],
-#)
-#""",
-#    patch_cmds = [
-#        "mkdir $(pwd)/bazel_install",
-#        _py_configure,
-#        "make",
-#        "make install",
-#        "ln -s bazel_install/bin/python3 python_bin",
-#    ],
-#    sha256 = "0a8fbfb5287ebc3a13e9baf3d54e08fa06778ffeccf6311aef821bb3a6586cc8",
-#    strip_prefix = "Python-3.9.10",
-#    urls = ["https://www.python.org/ftp/python/3.9.10/Python-3.9.10.tar.xz"],
-#)
-
-#register_toolchains("//:sematic_py_toolchain")
-
-# Canonical interpreter
-load("@python3_8//:defs.bzl", "interpreter")
+# <add python version>: This section will need to be updated when a python version is added
+load("@python3_8//:defs.bzl", interpreter38="interpreter")
+load("@python3_9//:defs.bzl", interpreter39="interpreter")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
-    name = "pip_dependencies",
-    # Cannonical
-    python_interpreter_target = interpreter,
-    # Custom
-    #python_interpreter_target = "@python_interpreter//:python_bin",
+    name = "pip_dependencies38",
+    python_interpreter_target = interpreter38,
     requirements_lock = "//requirements:requirements.txt",
 )
 
-load("@pip_dependencies//:requirements.bzl", "install_deps")
+pip_parse(
+    name = "pip_dependencies39",
+    python_interpreter_target = interpreter39,
+    requirements_lock = "//requirements:requirements.txt",
+)
 
-install_deps()
+load("@pip_dependencies38//:requirements.bzl", install_deps38="install_deps")
+load("@pip_dependencies39//:requirements.bzl", install_deps39="install_deps")
+
+# Actually does the 3rd party dep installs for each of our
+# hermetic interpreters to use.
+install_deps38()
+install_deps39()
+
+# Used to enable multiple interpreters for tests
+# approach from https://blog.aspect.dev/many-python-versions-one-bazel-build
+http_archive(
+    name = "aspect_bazel_lib",
+    sha256 = "33332c0cd7b5238b5162b5177da7f45a05641f342cf6d04080b9775233900acf",
+    strip_prefix = "bazel-lib-1.10.0",
+    url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.10.0.tar.gz",
+)
 
 ## DOCKER RULES
 

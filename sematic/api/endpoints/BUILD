@@ -5,15 +5,17 @@ sematic_py_lib(
         ":auth",
         ":request_parameters",
         "//sematic/api:app",
-        "//sematic/db",
+        "//sematic/db:db",
         "//sematic/db:queries",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
-        requirement("flask"),
-        requirement("sqlalchemy"),
-        requirement("flask-socketio"),
+    ],
+    pip_deps = [
+        "flask",
+        "sqlalchemy",
+        "flask-socketio",
     ],
 )
 
@@ -23,17 +25,20 @@ sematic_py_lib(
     deps = [
         "//sematic/api:app",
         "//sematic/db:queries",
-        requirement("flask"),
+    ],
+    pip_deps = [
+        "flask",
     ],
 )
 
 sematic_py_lib(
     name = "request_parameters",
     srcs = ["request_parameters.py"],
-    deps = [
-        requirement("sqlalchemy"),
-        requirement("flask"),
-    ],
+    deps = [],
+    pip_deps = [
+        "sqlalchemy",
+        "flask",
+    ]
 )
 
 sematic_py_lib(
@@ -42,11 +47,13 @@ sematic_py_lib(
     deps = [
         ":request_parameters",
         "//sematic/api:app",
-        "//sematic/db",
+        "//sematic/db:db",
         "//sematic/db/models:edge",
-        requirement("flask"),
-        requirement("sqlalchemy"),
     ],
+    pip_deps = [
+        "flask",
+        "sqlalchemy",
+    ]
 )
 
 sematic_py_lib(
@@ -55,8 +62,8 @@ sematic_py_lib(
     deps = [
         "//sematic/api:app",
         "//sematic:versions",
-        requirement("flask"),
     ],
+    pip_deps = ["flask"]
 )
 
 sematic_py_lib(
@@ -66,14 +73,16 @@ sematic_py_lib(
         ":auth",
         ":request_parameters",
         "//sematic/api:app",
-        "//sematic/db",
+        "//sematic/db:db",
         "//sematic/db:queries",
         "//sematic/db/models:note",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
-        requirement("flask"),
-        requirement("sqlalchemy"),
     ],
+    pip_deps = [
+        "flask",
+        "sqlalchemy",
+    ]
 )
 
 sematic_py_lib(
@@ -85,9 +94,11 @@ sematic_py_lib(
         "//sematic/api:app",
         "//sematic/db:queries",
         "//sematic/db/models:factories",
-        requirement("flask"),
-        requirement("google-auth"),
-        requirement("requests"),
-        requirement("sqlalchemy"),
     ],
+    pip_deps = [
+        "flask",
+        "google-auth",
+        "requests",
+        "sqlalchemy",
+    ]
 )

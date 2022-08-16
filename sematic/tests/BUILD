@@ -8,6 +8,23 @@ pytest_test(
     ],
 )
 
+# <add python version>: A new test will need to be added when a python version is added
+pytest_test(
+    name = "test_38_interpreter",
+    srcs = ["test_38_interpreter.py"],
+    deps = [],
+    pip_deps = ["requests"],
+    py_versions=[PY3.PY38],
+)
+
+pytest_test(
+    name = "test_39_interpreter",
+    srcs = ["test_39_interpreter.py"],
+    deps = [],
+    pip_deps = ["requests"],
+    py_versions=[PY3.PY39],
+)
+
 pytest_test(
     name = "test_api_client",
     srcs = ["test_api_client.py"],

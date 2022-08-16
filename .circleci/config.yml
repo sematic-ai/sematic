@@ -87,7 +87,11 @@ jobs:
           name: MyPy
           command: mypy sematic
       - run:
-          name: Run tests
+          name: Run Non-coverage Tests
+          # This assumes pytest is installed via the install-package step above
+          command: bazel test //sematic/... --test_output=all
+      - run:
+          name: Run Coverage Tests
           # This assumes pytest is installed via the install-package step above
           command: bazel coverage //sematic/... --test_output=all --combined_report=lcov --test_tag_filters=cov
       - run:
