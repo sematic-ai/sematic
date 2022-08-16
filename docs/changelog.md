@@ -1,4 +1,8 @@
-<!--- When updating the version, update versions.py and sematic/BUILD accordingly -->
+<!--
+When updating the version, update versions.py and wheel_version.bzl accordingly.
+Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
+with nothing else on the line.
+-->
 * HEAD
 * 0.10.0
     * [improvement] Add support for python 3.8
