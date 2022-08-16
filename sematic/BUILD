@@ -48,12 +48,21 @@ sematic_py_lib(
         "//sematic:versions",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
+        "//sematic/db/models:factories",
         "//sematic/db/models:run",
         "//sematic/utils:retry",
     ],
     pip_deps = [
         "requests",
     ]
+)
+
+sematic_py_lib(
+    name = "client",
+    srcs = ["client.py"],
+    deps = [
+        ":api_client",
+    ],
 )
 
 sematic_py_lib(
@@ -152,6 +161,7 @@ sematic_py_wheel(
     version = "0.10.0",  #+{BUILD_TIMESTAMP}",  # When updating this, also update versions.py and changelog.md
     visibility = ["//visibility:public"],
     deps = [
+        "//sematic:client",
         "//sematic:init",
         "//sematic/cli:main_lib",
     ],

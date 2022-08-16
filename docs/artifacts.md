@@ -28,9 +28,9 @@ In order to access an artifacts values from outside your pipeline, find the arti
 then simply do:
 
 ```python
-from sematic import get_artifact_value
+from sematic import client
 
-value = get_artifact_value("<artifact ID>")
+value = client.get_artifact_value("<artifact ID>")
 ```
 
 {% hint style="info" %}
