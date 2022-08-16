@@ -107,6 +107,9 @@ def pytest_test(
 
         if i == 0:
             # Only have coverage tests for the lowest version python interpreter
+            # These won't get run during a normal bazel test because of our .bazelrc which
+            # filters to tests with nocov set. You can execute coverage tests as:
+            # bazel coverage //sematic/... --test_output=all --combined_report=lcov --test_tag_filters=cov
             py_test(
                 name = "{}_coverage".format(name),
                 srcs = ["//tools:pytest_runner"] + srcs,
