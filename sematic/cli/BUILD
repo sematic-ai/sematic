@@ -1,3 +1,4 @@
+
 sematic_py_lib(
     name = "main_lib",
     srcs = ["main.py"],
@@ -22,8 +23,10 @@ sematic_py_lib(
     deps = [
         "//sematic:config",
         "//sematic/db:migrate_lib",
-        requirement("click"),
-    ]
+    ],
+    pip_deps=[
+        "click"
+    ],
 )
 
 sematic_py_lib(
@@ -34,8 +37,10 @@ sematic_py_lib(
         ":process_utils",
         "//sematic:config",
         "//sematic/api:server_lib",
-        requirement("click"),
-    ]
+    ],
+    pip_deps=[
+        "click"
+    ],
 )
 
 sematic_py_lib(
@@ -44,8 +49,10 @@ sematic_py_lib(
     deps = [
         ":process_utils",
         ":cli",
-        requirement("click"),
-    ]
+    ],
+    pip_deps=[
+        "click"
+    ],
 )
 
 sematic_py_lib(
@@ -55,8 +62,10 @@ sematic_py_lib(
         ":cli",
         ":process_utils",
         "//sematic:config",
-        requirement("click"),
-    ]
+    ],
+    pip_deps=[
+        "click"
+    ],
 )
 
 sematic_py_lib(
@@ -66,8 +75,10 @@ sematic_py_lib(
         ":cli",
         ":examples_utils",
         "//sematic:config",
-        requirement("click"),
-    ]
+    ],
+    pip_deps=[
+        "click"
+    ],
 )
 
 sematic_py_lib(
@@ -92,12 +103,14 @@ sematic_py_lib(
     deps = [
         ":cli",
         "//sematic:user_settings",
-        requirement("pyyaml"),
-        requirement("click"),
-    ]
+    ],
+    pip_deps=[
+        "click",
+        "pyyaml",
+    ],
 )
 
-py_binary(
+sematic_py_binary(
     name = "main",
     main = "main.py",
     srcs = ["main.py"],
@@ -106,5 +119,5 @@ py_binary(
         # This is to make sure we can test via Bazel
         "//sematic/examples/mnist/pytorch:requirements",
         "//sematic/examples/liver_cirrhosis:requirements",
-    ]
+    ],
 )
