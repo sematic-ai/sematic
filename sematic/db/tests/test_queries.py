@@ -8,9 +8,11 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
 )
 from sematic.calculator import func
+from sematic.db.models.artifact import Artifact
 from sematic.db.models.run import Run
 from sematic.db.queries import (
     count_runs,
+    get_artifact,
     get_root_graph,
     get_run,
     get_run_graph,
@@ -18,11 +20,13 @@ from sematic.db.queries import (
 )
 from sematic.db.tests.fixtures import (  # noqa: F401
     make_run,
+    persisted_artifact,
     persisted_run,
     pg_mock,
     run,
     test_db,
 )
+from sematic.tests.fixtures import test_storage  # noqa: F401
 
 
 def test_count_runs(test_db, run: Run):  # noqa: F811
@@ -52,6 +56,14 @@ def test_save_run(test_db, persisted_run: Run):  # noqa: F811
     fetched_run = get_run(persisted_run.id)
     assert fetched_run.name == "New Name"
     assert fetched_run.updated_at > old_updated_at
+
+
+def test_get_artifact(test_db, persisted_artifact: Artifact):  # noqa: F811
+    artifact = get_artifact(persisted_artifact.id)
+
+    assert artifact.id == persisted_artifact.id
+    assert artifact.type_serialization == persisted_artifact.type_serialization
+    assert artifact.json_summary == artifact.json_summary
 
 
 @func
