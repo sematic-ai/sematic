@@ -119,7 +119,7 @@ def pytest_test(
                 args = args + ["$(location :%s)" % x for x in srcs],
                 env = dict(
                     PYTHON_COVERAGE = "$(location //:python_coverage_tools)",
-                    **pyenv,
+                    **dict(env, **pyenv),
                 ),
                 tags = ["cov"],
                 **kwargs
