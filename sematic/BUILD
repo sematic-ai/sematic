@@ -1,3 +1,5 @@
+load("//sematic:wheel_version.bzl", "wheel_version_string")
+
 sematic_py_lib(
     name = "init",
     srcs = ["__init__.py"],
@@ -158,7 +160,7 @@ sematic_py_wheel(
         # how to fix versions
         "eventlet==0.30.2",
     ],
-    version = "0.10.0",  #+{BUILD_TIMESTAMP}",  # When updating this, also update versions.py and changelog.md
+    version = wheel_version_string,
     visibility = ["//visibility:public"],
     deps = [
         "//sematic:client",
