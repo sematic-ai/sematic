@@ -15,7 +15,6 @@ import { fetchJSON } from "../utils";
 import { NoteView } from "./Notes";
 
 export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
-  console.log("INIT");
   const theme = useTheme();
   const { user } = useContext(UserContext);
 
