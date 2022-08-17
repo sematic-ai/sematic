@@ -67,6 +67,8 @@ pytest_test(
         "//sematic/db/models:artifact",
         "//sematic/db/tests:fixtures",
         "//sematic/tests:fixtures",
-        requirement("flask"),
     ],
+    pip_deps = [
+        "flask",
+    ]
 )
