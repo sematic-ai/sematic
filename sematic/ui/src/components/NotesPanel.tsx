@@ -15,12 +15,16 @@ import { fetchJSON } from "../utils";
 import { NoteView } from "./Notes";
 
 export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
+  console.log("INIT");
   const theme = useTheme();
   const { user } = useContext(UserContext);
 
   const { rootRun, selectedRun } = props;
 
-  const calculatorPath = useMemo(() => rootRun.calculator_path, [rootRun]);
+  const calculatorPath = useMemo(
+    () => rootRun.calculator_path,
+    [rootRun.calculator_path]
+  );
 
   const anonymousUser: User = {
     email: "anonymous@acme.com",
@@ -121,6 +125,7 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
                   note={note}
                   key={idx}
                   author={authorsByEmail.get(note.author_id) || anonymousUser}
+                  rootRun={rootRun}
                 />
               ))}
             </Stack>

@@ -13,7 +13,7 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Run } from "../Models";
 import { RunListPayload } from "../Payloads";
 import { fetchJSON, pipelineSocket } from "../utils";
@@ -28,9 +28,12 @@ import { UserContext } from "..";
 export default function PipelineBar(props: {
   calculatorPath: string;
   onRootRunChange: (run: Run) => void;
+  setInitialRootRun: boolean;
+  initialRootRun?: Run;
 }) {
-  const { onRootRunChange, calculatorPath } = props;
-  const [rootRun, setRootRun] = useState<Run | undefined>(undefined);
+  const { onRootRunChange, calculatorPath, setInitialRootRun, initialRootRun } =
+    props;
+  const [rootRun, setRootRun] = useState<Run | undefined>(initialRootRun);
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
   const [latestRuns, setLatestRuns] = useState<Run[]>([]);
@@ -38,6 +41,10 @@ export default function PipelineBar(props: {
   const { user } = useContext(UserContext);
 
   const theme = useTheme();
+
+  useMemo(() => {
+    if (initialRootRun) setRootRun(initialRootRun);
+  }, [initialRootRun]);
 
   const fetchLatestRuns = useCallback(
     (calcPath: string, onResults: (runs: Run[]) => void) => {
@@ -49,7 +56,7 @@ export default function PipelineBar(props: {
       };
 
       fetchJSON({
-        url: "/api/v1/runs?limit=5&filters=" + JSON.stringify(runFilters),
+        url: "/api/v1/runs?limit=10&filters=" + JSON.stringify(runFilters),
         apiKey: user?.api_key,
         callback: (response: RunListPayload) => {
           onResults(response.content);
@@ -65,10 +72,12 @@ export default function PipelineBar(props: {
     if (calculatorPath === undefined) return;
     fetchLatestRuns(calculatorPath, (runs) => {
       setLatestRuns(runs);
-      setRootRun(runs[0]);
-      onRootRunChange(runs[0]);
+      if (setInitialRootRun) {
+        setRootRun(runs[0]);
+        onRootRunChange(runs[0]);
+      }
     });
-  }, [calculatorPath, fetchLatestRuns, onRootRunChange]);
+  }, [calculatorPath, fetchLatestRuns, onRootRunChange, setInitialRootRun]);
 
   useEffect(() => {
     pipelineSocket.removeAllListeners();
