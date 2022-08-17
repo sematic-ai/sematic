@@ -32,6 +32,8 @@ pytest_test(
         "//sematic:api_client",
         "//sematic:config",
         "//sematic:versions",
+        "//sematic/db/models:factories",
+        "//sematic/tests:fixtures",
     ],
 )
 
@@ -52,6 +54,14 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_client",
+    srcs = ["test_client.py"],
+    deps = [
+        "//sematic:client",
+    ],
+)
+
+pytest_test(
     name = "test_user_settings",
     srcs = ["test_user_settings.py"],
     deps = [
@@ -64,6 +74,7 @@ sematic_py_lib(
     name = "fixtures",
     srcs = ["fixtures.py"],
     deps = [
+        "//sematic:api_client",
         "//sematic:storage",
     ],
 )
