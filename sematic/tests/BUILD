@@ -1,3 +1,5 @@
+load("//sematic:wheel_version.bzl", "wheel_version_string")
+
 pytest_test(
     name = "test_calculator",
     srcs = ["test_calculator.py"],
@@ -68,6 +70,18 @@ pytest_test(
         "//sematic:config",
         "//sematic:user_settings",
     ],
+)
+
+pytest_test(
+    name = "test_versions",
+    srcs = ["test_versions.py"],
+    deps = [
+        "//sematic:versions",
+    ],
+    data = [
+        "//:docs/changelog.md",
+    ],
+    env = {"BAZEL_WHEEL_VERSION": wheel_version_string},
 )
 
 sematic_py_lib(
