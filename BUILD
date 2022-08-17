@@ -9,6 +9,7 @@ load("@python3_8//:defs.bzl", interpreter38="interpreter")
 
 
 exports_files(["README.rst"])
+exports_files(["docs/changelog.md"])
 
 stamp_build_setting(name = "stamp")
 
