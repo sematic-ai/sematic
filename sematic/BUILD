@@ -50,12 +50,21 @@ sematic_py_lib(
         "//sematic:versions",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
+        "//sematic/db/models:factories",
         "//sematic/db/models:run",
         "//sematic/utils:retry",
     ],
     pip_deps = [
         "requests",
     ]
+)
+
+sematic_py_lib(
+    name = "client",
+    srcs = ["client.py"],
+    deps = [
+        ":api_client",
+    ],
 )
 
 sematic_py_lib(
@@ -154,6 +163,7 @@ sematic_py_wheel(
     version = wheel_version_string,
     visibility = ["//visibility:public"],
     deps = [
+        "//sematic:client",
         "//sematic:init",
         "//sematic/cli:main_lib",
     ],

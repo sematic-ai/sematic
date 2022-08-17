@@ -2,6 +2,7 @@
 import pytest
 
 # Sematic
+import sematic.api_client as api_client
 import sematic.storage as storage
 
 
@@ -26,3 +27,15 @@ def test_storage():
     finally:
         storage.set = current_set
         storage.get = current_get
+
+
+@pytest.fixture
+def valid_client_version():
+    current_validated_client_version = api_client._validated_client_version
+
+    api_client._validated_client_version = True
+
+    try:
+        yield
+    finally:
+        api_client._validated_client_version = current_validated_client_version

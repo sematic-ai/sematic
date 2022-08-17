@@ -16,9 +16,8 @@
 * [Sematic Functions](functions.md)
 * [Type support](type-support.md)
 * [Future algebra](future-algebra.md)
-* [Graph resolution](coming-soon.md)
 * [Deploy Sematic](deploy.md)
-* [Debugging](coming-soon.md)
+* [Artifacts](artifacts.md)
 * [Glossary](glossary.md)
 
 ## Integrations
