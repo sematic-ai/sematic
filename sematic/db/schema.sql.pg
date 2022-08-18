@@ -59,6 +59,19 @@ CREATE TABLE public.notes (
 
 
 --
+-- Name: resolutions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.resolutions (
+    root_id text NOT NULL,
+    status text NOT NULL,
+    kind text NOT NULL,
+    docker_image_uri text,
+    settings_env_vars jsonb NOT NULL
+);
+
+
+--
 -- Name: runs; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -78,7 +91,8 @@ CREATE TABLE public.runs (
     tags text,
     source_code text,
     root_id character(32),
-    nested_future_id character(32)
+    nested_future_id character(32),
+    exception text
 );
 
 
@@ -88,6 +102,21 @@ CREATE TABLE public.runs (
 
 CREATE TABLE public.schema_migrations (
     version character varying(255) NOT NULL
+);
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.users (
+    email text NOT NULL,
+    first_name text,
+    last_name text,
+    avatar_url text,
+    api_key text NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
 );
 
 
@@ -116,6 +145,14 @@ ALTER TABLE ONLY public.notes
 
 
 --
+-- Name: resolutions resolutions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.resolutions
+    ADD CONSTRAINT resolutions_pkey PRIMARY KEY (root_id);
+
+
+--
 -- Name: runs runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -129,6 +166,14 @@ ALTER TABLE ONLY public.runs
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (email);
 
 
 --
@@ -164,6 +209,14 @@ ALTER TABLE ONLY public.notes
 
 
 --
+-- Name: resolutions resolutions_root_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.resolutions
+    ADD CONSTRAINT resolutions_root_id_fkey FOREIGN KEY (root_id) REFERENCES public.runs(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -181,4 +234,7 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20220522082435'),
     ('20220527000512'),
     ('20220610234559'),
-    ('20220714175433');
+    ('20220714175433'),
+    ('20220723010628'),
+    ('20220726001230'),
+    ('20220816235619');

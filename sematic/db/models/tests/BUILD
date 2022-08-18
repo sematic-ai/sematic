@@ -11,6 +11,14 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_resolution",
+    srcs = ["test_resolution.py"],
+    deps = [
+        "//sematic/db/models:resolution",
+    ],
+)
+
+pytest_test(
     name = "test_run",
     srcs = ["test_run.py"],
     deps = [

@@ -9,18 +9,22 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 )
 from sematic.calculator import func
 from sematic.db.models.artifact import Artifact
+from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import (
     count_runs,
     get_artifact,
+    get_resolution,
     get_root_graph,
     get_run,
     get_run_graph,
+    save_resolution,
     save_run,
 )
 from sematic.db.tests.fixtures import (  # noqa: F401
     make_run,
     persisted_artifact,
+    persisted_resolution,
     persisted_run,
     pg_mock,
     run,
@@ -56,6 +60,19 @@ def test_save_run(test_db, persisted_run: Run):  # noqa: F811
     fetched_run = get_run(persisted_run.id)
     assert fetched_run.name == "New Name"
     assert fetched_run.updated_at > old_updated_at
+
+
+def test_get_resolution(test_db, persisted_resolution: Resolution):  # noqa: F811
+    fetched_resolution = get_resolution(persisted_resolution.root_id)
+    assert fetched_resolution.root_id == persisted_resolution.root_id
+
+
+def test_save_resolution(test_db, persisted_resolution: Resolution):  # noqa: F811
+    assert persisted_resolution.status != ResolutionStatus.FAILED
+    persisted_resolution.status = ResolutionStatus.FAILED
+    save_resolution(persisted_resolution)
+    fetched_resolution = get_resolution(persisted_resolution.root_id)
+    assert fetched_resolution.status == ResolutionStatus.FAILED.value
 
 
 def test_get_artifact(test_db, persisted_artifact: Artifact):  # noqa: F811

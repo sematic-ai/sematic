@@ -20,6 +20,23 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "resolutions",
+    srcs = ["resolutions.py"],
+    deps = [
+        ":auth",
+        ":request_parameters",
+        "//sematic/api:app",
+        "//sematic/db:queries",
+        "//sematic/db/models:resolution",
+        "//sematic/db/models:user",
+    ],
+    pip_deps = [
+        "flask",
+        "sqlalchemy",
+    ],
+)
+
+sematic_py_lib(
     name = "artifacts",
     srcs = ["artifacts.py"],
     deps = [

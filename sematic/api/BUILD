@@ -22,6 +22,7 @@ sematic_py_lib(
         "//sematic/api/endpoints:edges",
         "//sematic/api/endpoints:meta",
         "//sematic/api/endpoints:notes",
+        "//sematic/api/endpoints:resolutions",
         "//sematic/api/endpoints:runs",
     ],
     pip_deps = [

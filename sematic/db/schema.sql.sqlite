@@ -64,6 +64,16 @@ CREATE TABLE users (
 
     PRIMARY KEY (email)
 );
+CREATE TABLE resolutions (
+    root_id TEXT NOT NULL,
+    status TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    docker_image_uri TEXT,
+    settings_env_vars JSONB NOT NULL,
+
+    PRIMARY KEY (root_id),
+    FOREIGN KEY (root_id) REFERENCES runs(id)
+);
 -- Dbmate schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
   ('20220424062956'),
@@ -76,4 +86,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20220610234559'),
   ('20220714175433'),
   ('20220723010628'),
-  ('20220726001230');
+  ('20220726001230'),
+  ('20220816235619');
