@@ -2,6 +2,7 @@
 pytest==7.1.1
 testing-postgresql
 git+https://github.com/ulfjack/coveragepy.git@lcov-support
+debugpy
 
 # System
 ipython==8.2.0

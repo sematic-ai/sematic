@@ -85,7 +85,7 @@ def pytest_test(
         (pyenv, runfiles) = env_and_runfiles_for_python(py3_version)
         final_deps = full_versioned_deps(
             deps = deps,
-            pip_deps = pip_deps + ["pytest"],
+            pip_deps = pip_deps + ["pytest", "debugpy"],
             py_version = py3_version,
         )
 
