@@ -14,6 +14,7 @@ from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.note import Note
+from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 
@@ -89,6 +90,44 @@ def save_run(run: Run) -> Run:
         session.refresh(run)
 
     return run
+
+
+def get_resolution(resolution_id: str) -> Resolution:
+    """Get a resolution from the database.
+
+    Parameters
+    ----------
+    resolution_id:
+        ID of resoution to retrieve.
+
+    Returns
+    -------
+    Fetched resolution
+    """
+    with db().get_session() as session:
+        return (
+            session.query(Resolution).filter(Resolution.root_id == resolution_id).one()
+        )
+
+
+def save_resolution(resolution: Resolution) -> Resolution:
+    """Save resolution to the database.
+
+    Parameters
+    ----------
+    resolution:
+        Resolution to save
+
+    Returns
+    -------
+    saved resolution
+    """
+    with db().get_session() as session:
+        session.add(resolution)
+        session.commit()
+        session.refresh(resolution)
+
+    return resolution
 
 
 def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):

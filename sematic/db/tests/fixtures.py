@@ -11,8 +11,9 @@ import testing.postgresql  # type: ignore
 import sematic.db.db as db
 from sematic.abstract_future import FutureState
 from sematic.db.models.factories import make_artifact, make_user
+from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
-from sematic.db.queries import save_run, save_user
+from sematic.db.queries import save_resolution, save_run, save_user
 from sematic.tests.fixtures import test_storage  # noqa: F401
 
 
@@ -111,6 +112,22 @@ def make_run(**kwargs) -> Run:
     return run
 
 
+def make_resolution(**kwargs) -> Resolution:
+    root_id = uuid.uuid4().hex
+    run = Resolution(
+        root_id=root_id,
+        status=ResolutionStatus.SCHEDULED,
+        kind=ResolutionKind.KUBERNETES,
+        docker_image_uri="some.uri",
+        settings_env_vars={"MY_SETTING": "MY_VALUE"},
+    )
+
+    for name, value in kwargs.items():
+        setattr(run, name, value)
+
+    return run
+
+
 @pytest.fixture
 def run() -> Run:
     return make_run()
@@ -119,6 +136,19 @@ def run() -> Run:
 @pytest.fixture
 def persisted_run(run, test_db) -> Run:
     return save_run(run)
+
+
+@pytest.fixture
+def resolution() -> Resolution:
+    return make_resolution()
+
+
+@pytest.fixture
+def persisted_resolution(persisted_run, test_db) -> Resolution:
+    # resolution's key is a foreign key to the runs table,
+    # so we need a persisted run to get a persisted resolution.
+    resolution = make_resolution(root_id=persisted_run.id)
+    return save_resolution(resolution)
 
 
 @pytest.fixture

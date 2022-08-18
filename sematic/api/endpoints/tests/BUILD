@@ -1,4 +1,18 @@
 pytest_test(
+    name = "test_resolutions",
+    srcs = ["test_resolutions.py"],
+    deps = [
+        "//sematic/api/tests:fixtures",
+        "//sematic/db/models:resolution",
+        "//sematic/db:queries",
+        "//sematic/db/tests:fixtures",
+    ],
+    pip_deps = [
+        "flask"
+    ],
+)
+
+pytest_test(
     name = "test_runs",
     srcs = ["test_runs.py"],
     deps = [
