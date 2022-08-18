@@ -68,6 +68,18 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "resolution",
+    srcs = ["resolution.py"],
+    deps = [
+        ":base",
+        ":json_encodable_mixin",
+    ],
+    pip_deps = [
+        "sqlalchemy",
+    ],
+)
+
+sematic_py_lib(
     name = "note",
     srcs = ["note.py"],
     deps = [
