@@ -15,11 +15,11 @@
 
 ## Hi 👋
 
-Sematic is an open-source development toolkit to help Data Scientists and
-Machine Learning (ML) Engineers prototype and productionize ML pipelines in days
-not weeks.
+[Sematic](https://sematic.dev) is an open-source development toolkit to help
+Data Scientists and Machine Learning (ML) Engineers prototype and productionize
+ML pipelines in days not weeks.
 
-Sematic is based on experience working at leading tech companies.
+Sematic is based on experience building ML infrastructure at leading tech companies.
 
 
 Find our docs at [docs.sematic.dev](https://docs.sematic.dev), and join us on
@@ -34,7 +34,7 @@ Sematic helps you
 * [soon] Clone/re-run your pipelines with different inputs/configs
 * [soon] Schedule your pipelines to keep your models fresh and relevant
 
-Sematic is an alternative to other ML pipeline tools, such as KubeFlow Pipelines.
+Sematic is an alternative to tools such as KubeFlow Pipelines.
 
 
 ## Installation
