@@ -54,6 +54,8 @@ cryptography==36.0.2
     #   snowflake-connector-python
 cycler==0.11.0
     # via matplotlib
+debugpy==1.6.3
+    # via -r requirements/requirements.in
 decorator==5.1.1
     # via ipython
 dnspython==1.16.0
