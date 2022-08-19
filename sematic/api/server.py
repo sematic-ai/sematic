@@ -9,10 +9,9 @@ from flask import jsonify, send_file
 from flask_socketio import Namespace, SocketIO  # type: ignore
 
 # Sematic
-import sematic.api.endpoints.artifacts  # noqa: F401
-
 # Endpoint modules need to be imported for endpoints
 # to be registered.
+import sematic.api.endpoints.artifacts  # noqa: F401
 import sematic.api.endpoints.auth  # noqa: F401
 import sematic.api.endpoints.edges  # noqa: F401
 import sematic.api.endpoints.meta  # noqa: F401
@@ -83,12 +82,49 @@ def run_wsgi(daemon: bool):
         "worker_class": "eventlet",
         "daemon": daemon,
         "pidfile": get_config().server_pid_file_path,
-        "accesslog": os.path.join(get_config().config_dir, "access.log"),
-        "errorlog": os.path.join(get_config().config_dir, "error.log"),
+        "logconfig_dict": make_log_config(),
         "certfile": os.environ.get("CERTIFICATE"),
         "keyfile": os.environ.get("PRIVATE_KEY"),
     }
     SematicWSGI(sematic_api, options).run()
+
+
+def make_log_config():
+    root_logger_config = {"level": "INFO", "handlers": ["default", "error"]}
+    log_rotation_settings = {
+        "formatter": "standard",
+        "class": "logging.handlers.RotatingFileHandler",
+        "maxBytes": 500 * 2**20,  # 500 MB
+        "backupCount": 20,
+    }
+    config = {
+        "version": 1,
+        "root": root_logger_config,
+        "disable_existing_loggers": True,
+        "formatters": {
+            "standard": {
+                "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            },
+        },
+        "handlers": {
+            "default": dict(
+                level="INFO",
+                filename=os.path.join(get_config().config_dir, "access.log"),
+                **log_rotation_settings,
+            ),
+            "error": dict(
+                level="ERROR",
+                filename=os.path.join(get_config().config_dir, "error.log"),
+                **log_rotation_settings,
+            ),
+        },
+        "loggers": {
+            "sematic": root_logger_config,
+            "gunicorn.error": {"level": "ERROR", "handlers": ["default", "error"]},
+            "gunicorn.access": {"level": "INFO", "handlers": ["default"]},
+        },
+    }
+    return config
 
 
 if __name__ == "__main__":
