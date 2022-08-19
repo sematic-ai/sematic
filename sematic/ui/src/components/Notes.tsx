@@ -1,10 +1,10 @@
-import { Avatar, Box, Typography, useTheme } from "@mui/material";
-import { Note, User } from "../Models";
+import { Box, Typography, useTheme } from "@mui/material";
+import { Note, Run, User } from "../Models";
 import TimeAgo from "./TimeAgo";
 import UserAvatar from "./UserAvatar";
 
-export function NoteView(props: { note: Note; author: User }) {
-  const { note, author } = props;
+export function NoteView(props: { note: Note; author: User; rootRun: Run }) {
+  const { note, author, rootRun } = props;
   const theme = useTheme();
 
   return (
@@ -50,7 +50,17 @@ export function NoteView(props: { note: Note; author: User }) {
           }}
         >
           <TimeAgo date={note.created_at} /> on run{" "}
-          <code style={{ fontSize: 12 }}>{note.root_id.substring(0, 6)}</code>
+          <code
+            style={{
+              fontSize: 12,
+              color:
+                rootRun.id == note.root_id
+                  ? theme.palette.grey[900]
+                  : undefined,
+            }}
+          >
+            {note.root_id.substring(0, 6)}
+          </code>
         </Typography>
       </Box>
     </Box>
