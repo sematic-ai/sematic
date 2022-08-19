@@ -112,6 +112,10 @@ function App() {
             <Route path="" element={<Home />} />
             <Route path="pipelines" element={<PipelineIndex />} />
             <Route
+              path="pipelines/:calculatorPath/:rootId"
+              element={<PipelineView />}
+            />
+            <Route
               path="pipelines/:calculatorPath"
               element={<PipelineView />}
             />
