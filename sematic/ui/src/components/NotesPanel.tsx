@@ -20,7 +20,10 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
 
   const { rootRun, selectedRun } = props;
 
-  const calculatorPath = useMemo(() => rootRun.calculator_path, [rootRun]);
+  const calculatorPath = useMemo(
+    () => rootRun.calculator_path,
+    [rootRun.calculator_path]
+  );
 
   const anonymousUser: User = {
     email: "anonymous@acme.com",
@@ -121,6 +124,7 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
                   note={note}
                   key={idx}
                   author={authorsByEmail.get(note.author_id) || anonymousUser}
+                  rootRun={rootRun}
                 />
               ))}
             </Stack>
