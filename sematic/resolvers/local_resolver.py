@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 # Sematic
 import sematic.api_client as api_client
+from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.config import get_config  # noqa: F401
 from sematic.db.models.artifact import Artifact
@@ -113,8 +114,7 @@ class LocalResolver(SilentResolver):
     def _resolution_will_start(self, future: AbstractFuture):
         self._populate_run_and_artifacts(future)
         self._save_graph()
-        if not api_client.resolution_exists(future.id):
-            self._create_resolution(future.id, detached=False)
+        self._create_resolution(future.id, detached=False)
         self._update_resolution_status(ResolutionStatus.RUNNING)
 
     def _get_resolution_image(self) -> Optional[str]:
@@ -214,11 +214,11 @@ class LocalResolver(SilentResolver):
         self._update_resolution_status(ResolutionStatus.COMPLETE)
         self._notify_pipeline_update()
 
-    def _resolution_did_fail(self, due_to_calculator_error: bool) -> None:
-        super()._resolution_did_fail(due_to_calculator_error)
+    def _resolution_did_fail(self, error: Exception) -> None:
+        super()._resolution_did_fail(error)
         resolution_status = (
             ResolutionStatus.COMPLETE
-            if due_to_calculator_error
+            if isinstance(error, CalculatorError)
             else ResolutionStatus.FAILED
         )
         self._update_resolution_status(resolution_status)

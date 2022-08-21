@@ -43,7 +43,7 @@ class CloudResolver(LocalResolver):
         will return when the entire pipeline has completed.
     """
 
-    def __init__(self, detach: bool = True):
+    def __init__(self, detach: bool = True, is_running_remotely: bool = False):
         super().__init__(detach=detach)
 
         try:
@@ -58,6 +58,7 @@ class CloudResolver(LocalResolver):
         self._store_artifacts = True
 
         self._output_artifacts_by_run_id: Dict[str, Artifact] = {}
+        self._is_running_remotely = is_running_remotely
 
     def set_graph(self, runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
         """
@@ -78,6 +79,13 @@ class CloudResolver(LocalResolver):
 
     def _get_resolution_kind(self, detached) -> ResolutionKind:
         return ResolutionKind.KUBERNETES if detached else ResolutionKind.LOCAL
+
+    def _create_resolution(self, root_future_id, detached):
+        if self._is_running_remotely:
+            # resolution should have been crated prior to the resolver
+            # actually starting its remote resolution.
+            return
+        super()._create_resolution(root_future_id, detached)
 
     def _detach_resolution(self, future: AbstractFuture) -> str:
         run = self._populate_run_and_artifacts(future)

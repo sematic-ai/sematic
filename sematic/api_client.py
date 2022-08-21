@@ -132,11 +132,6 @@ def get_resolution(root_id: str) -> Resolution:
     return Resolution.from_json_encodable(response["content"])
 
 
-def resolution_exists(root_id: str) -> bool:
-    """Determine whether a resolution with the given id exists"""
-    return _exists(f"/resolutions/{root_id}")
-
-
 def notify_pipeline_update(calculator_path: str):
     _notify_event("pipeline", "update", {"calculator_path": calculator_path})
 
@@ -160,24 +155,6 @@ def _get(endpoint) -> Any:
     response = _request(requests.get, endpoint)
 
     return response.json()
-
-
-@retry(
-    exceptions=(ServerError, APIConnectionError),
-    tries=4,
-    delay=1,
-    backoff=2,
-    jitter=0.1,
-)
-def _exists(endpoint) -> bool:
-    """Check whether the resource exists by doing a GET and checking for 404.
-
-    This should be used rather than using _get and try/except because it will
-    keep the logs cleaner and also allow errors besides 404s to still bubble up.
-    """
-    not_found = requests.codes.not_found
-    response = _request(requests.get, endpoint, expected_response_codes=[not_found])
-    return response.status_code != not_found
 
 
 @retry(
@@ -293,7 +270,6 @@ def _request(
     attempt_auth: bool = True,
     validate_version_compatibility: bool = True,
     validate_json: bool = False,
-    expected_response_codes: Optional[List[int]] = None,
 ):
     """Internal function for wrapping requests.<get/put/etc.>.
 
@@ -305,8 +281,6 @@ def _request(
     """
     if validate_version_compatibility:
         _validate_server_compatibility()
-    if expected_response_codes is None:
-        expected_response_codes = []
     kwargs = kwargs or {}
 
     headers = kwargs.get("headers", {})
@@ -329,14 +303,12 @@ def _request(
     if (
         response.status_code == requests.codes.unauthorized
         and headers["X-API-KEY"] is None
-        and response.status_code not in expected_response_codes
     ):
         raise MissingSettingsError(SettingsVar.SEMATIC_API_KEY)
 
     _raise_for_response(
         response,
         validate_json,
-        expected_response_codes,
     )
 
     return response
@@ -345,10 +317,7 @@ def _request(
 def _raise_for_response(
     response: requests.Response,
     validate_json: bool,
-    expected_response_codes: List[int],
 ) -> None:
-    if response.status_code in expected_response_codes:
-        return
     to_raise: Optional[Exception] = None
     url = response.url
     error_4xx = BadRequestError(

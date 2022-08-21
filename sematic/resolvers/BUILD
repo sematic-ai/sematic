@@ -3,6 +3,7 @@ sematic_py_lib(
     srcs = ["local_resolver.py"],
     deps = [
         ":silent_resolver",
+        "//sematic:abstract_calculator",
         "//sematic:abstract_future",
         "//sematic:api_client",
         "//sematic:config",

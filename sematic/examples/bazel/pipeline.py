@@ -27,7 +27,7 @@ def fail_nested() -> float:
 
 
 @sematic.func(inline=False)
-def pipeline(a: float, b: float, c: float) -> float:
+def pipeline() -> float:
     # return add(add3(a, b, c), add(a, b))
-    # return add(a, b)
+    return add(5, 10)
     return fail()

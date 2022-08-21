@@ -59,7 +59,7 @@ class StateMachineResolver(Resolver, abc.ABC):
             due_to_calculator_error = False
             if isinstance(e, CalculatorError):
                 due_to_calculator_error = True
-            self._resolution_did_fail(due_to_calculator_error)
+            self._resolution_did_fail(error=e)
             if due_to_calculator_error and hasattr(e, "__cause__"):
                 # this will simplify the stack trace so the user sees less
                 # from Sematic's stack and more from the error from their code.
@@ -135,7 +135,7 @@ class StateMachineResolver(Resolver, abc.ABC):
         """
         pass
 
-    def _resolution_did_fail(self, due_to_calculator_error: bool) -> None:
+    def _resolution_did_fail(self, error: Exception) -> None:
         """
         Callback allowing resolvers to implement custom actions.
 
@@ -143,8 +143,9 @@ class StateMachineResolver(Resolver, abc.ABC):
 
         Parameters
         ----------
-        due_to_calculator_error:
-            Was the resolution's failure the result of the failure of a child run?
+        error:
+            The error that led to the resolution's failure. If the error occurred
+            within a calculator, will be an instance of CalculatorError
         """
         pass
 

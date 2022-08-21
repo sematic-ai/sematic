@@ -58,7 +58,7 @@ def test_simulate_cloud_exec(
 
     runs, artifacts, edges = api_client.get_graph(future.id)
 
-    driver_resolver = CloudResolver(detach=False)
+    driver_resolver = CloudResolver(detach=False, is_running_remotely=True)
 
     driver_resolver.set_graph(runs=runs, artifacts=artifacts, edges=edges)
     assert (
