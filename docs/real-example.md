@@ -5,7 +5,7 @@ We will be implementing the model as it is in the [official Pytorch
 repository](https://github.com/pytorch/examples/blob/main/mnist/main.py).
 
 You can find the entire code for this example at
-[sematic/examples/mnist/pytorch](https://github.com/sematic-ai/sematic/blob/main/sematic/examples/mnist/pytorch/).
+[sematic/examples/mnist/pytorch](https://github.com/sematic-ai/sematic/tree/main/sematic/examples/mnist/pytorch).
 
 ## Let's create a new project
 
