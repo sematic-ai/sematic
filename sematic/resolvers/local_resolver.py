@@ -221,8 +221,18 @@ class LocalResolver(SilentResolver):
             if isinstance(error, CalculatorError)
             else ResolutionStatus.FAILED
         )
+        self._move_runs_to_terminal_state()
         self._update_resolution_status(resolution_status)
         self._notify_pipeline_update()
+
+    def _move_runs_to_terminal_state(self):
+        for run_id, run in self._runs.items():
+            state = FutureState.as_object(run.future_state)
+            if state.is_terminal():
+                continue
+            run.future_state = FutureState.FAILED
+            self._buffer_runs[run_id] = run
+        self._save_graph()
 
     def _update_resolution_status(self, status: ResolutionStatus):
         resolution = api_client.get_resolution(self._root_future.id)
