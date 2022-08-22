@@ -7,6 +7,7 @@ import logging
 import typing
 
 # Sematic
+from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.resolver import Resolver
 
@@ -18,37 +19,49 @@ class StateMachineResolver(Resolver, abc.ABC):
         self._futures: typing.List[AbstractFuture] = []
         self._detach = detach
 
+    @property
+    def _root_future(self) -> AbstractFuture:
+        return self._futures[0]
+
     def resolve(self, future: AbstractFuture) -> typing.Any:
-        resolved_kwargs = self._get_resolved_kwargs(future)
-        if not len(resolved_kwargs) == len(future.kwargs):
-            raise ValueError(
-                "All input arguments of your root function should be concrete."
-            )
+        try:
+            resolved_kwargs = self._get_resolved_kwargs(future)
+            if not len(resolved_kwargs) == len(future.kwargs):
+                raise ValueError(
+                    "All input arguments of your root function should be concrete."
+                )
 
-        future.resolved_kwargs = resolved_kwargs
+            future.resolved_kwargs = resolved_kwargs
 
-        self._resolution_will_start()
+            self._enqueue_future(future)
 
-        self._enqueue_future(future)
+            if self._detach:
+                return self._detach_resolution(future)
 
-        if self._detach:
-            return self._detach_resolution(future)
+            self._resolution_will_start()
 
-        while future.state != FutureState.RESOLVED:
-            for future_ in self._futures:
-                if future_.state == FutureState.CREATED:
-                    self._schedule_future_if_args_resolved(future_)
-                if future_.state == FutureState.RAN:
-                    self._resolve_nested_future(future_)
+            while future.state != FutureState.RESOLVED:
+                for future_ in self._futures:
+                    if future_.state == FutureState.CREATED:
+                        self._schedule_future_if_args_resolved(future_)
+                    if future_.state == FutureState.RAN:
+                        self._resolve_nested_future(future_)
 
-            self._wait_for_scheduled_run()
+                self._wait_for_scheduled_run()
 
-        self._resolution_did_succeed()
+            self._resolution_did_succeed()
 
-        if future.state != FutureState.RESOLVED:
-            raise RuntimeError("Unresolved Future after resolver call.")
+            if future.state != FutureState.RESOLVED:
+                raise RuntimeError("Unresolved Future after resolver call.")
 
-        return future.value
+            return future.value
+        except Exception as e:
+            self._resolution_did_fail(error=e)
+            if isinstance(e, CalculatorError) and hasattr(e, "__cause__"):
+                # this will simplify the stack trace so the user sees less
+                # from Sematic's stack and more from the error from their code.
+                raise e.__cause__  # type: ignore
+            raise e
 
     def _detach_resolution(self, future: AbstractFuture) -> str:
         raise NotImplementedError()
@@ -114,11 +127,17 @@ class StateMachineResolver(Resolver, abc.ABC):
         """
         pass
 
-    def _resolution_did_fail(self) -> None:
+    def _resolution_did_fail(self, error: Exception) -> None:
         """
         Callback allowing resolvers to implement custom actions.
 
         This is called after a future has failed and the exception is about to be raised.
+
+        Parameters
+        ----------
+        error:
+            The error that led to the resolution's failure. If the error occurred
+            within a calculator, will be an instance of CalculatorError
         """
         pass
 

@@ -24,6 +24,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
+from sematic.tests.fixtures import valid_client_version  # noqa: F401
 
 test_list_runs_auth = make_auth_test("/api/v1/runs")
 test_get_run_auth = make_auth_test("/api/v1/runs/123")
@@ -178,6 +179,7 @@ def test_get_run_graph_endpoint(
     edge_count: int,
     test_client: flask.testing.FlaskClient,  # noqa: F811
     mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     future = pipeline(1, 2)
     future.resolve()

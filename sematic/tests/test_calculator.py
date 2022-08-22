@@ -5,6 +5,7 @@ from typing import List, Union
 import pytest
 
 # Sematic
+from sematic.abstract_calculator import CalculatorError
 from sematic.calculator import Calculator, _convert_lists, _make_list, func
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.future import Future
@@ -233,3 +234,31 @@ def test_resource_requirements():
 
     assert f._resource_requirements == resource_requirements
     assert f().props.resource_requirements == resource_requirements
+
+
+def test_error():
+    @func()
+    def f():
+        raise ValueError("Intentional error")
+
+    raised_error = False
+    try:
+        # resolving should surface the underlying error
+        f().resolve(tracking=False)
+    except Exception as e:
+        raised_error = True
+        assert isinstance(e, ValueError)
+        assert "Intentional" in str(e)
+    assert raised_error
+
+    raised_error = False
+    try:
+        # calling calculate should surface the CalculatorError,
+        # with root cause as __cause__.
+        f.calculate()
+    except Exception as e:
+        raised_error = True
+        assert isinstance(e, CalculatorError)
+        assert isinstance(e.__cause__, ValueError)
+        assert "Intentional" in str(e.__cause__)
+    assert raised_error

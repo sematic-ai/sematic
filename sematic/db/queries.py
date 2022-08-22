@@ -123,9 +123,8 @@ def save_resolution(resolution: Resolution) -> Resolution:
     saved resolution
     """
     with db().get_session() as session:
-        session.add(resolution)
+        session.merge(resolution)
         session.commit()
-        session.refresh(resolution)
 
     return resolution
 

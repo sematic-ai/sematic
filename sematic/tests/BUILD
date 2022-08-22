@@ -4,6 +4,7 @@ pytest_test(
     name = "test_calculator",
     srcs = ["test_calculator.py"],
     deps = [
+        "//sematic:abstract_calculator",
         "//sematic:calculator",
         "//sematic:future",
         "//sematic/db/tests:fixtures",
