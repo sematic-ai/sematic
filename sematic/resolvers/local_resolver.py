@@ -7,13 +7,16 @@ from typing import Dict, List, Optional, Tuple, Union
 
 # Sematic
 import sematic.api_client as api_client
+from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.config import get_config  # noqa: F401
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact, make_run_from_future
+from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.resolvers.silent_resolver import SilentResolver
+from sematic.user_settings import get_all_user_settings
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +111,30 @@ class LocalResolver(SilentResolver):
 
         return run
 
+    def _resolution_will_start(self):
+        self._populate_run_and_artifacts(self._root_future)
+        self._save_graph()
+        self._create_resolution(self._root_future.id, detached=False)
+        self._update_resolution_status(ResolutionStatus.RUNNING)
+
+    def _get_resolution_image(self) -> Optional[str]:
+        return None
+
+    def _get_resolution_kind(self, detached) -> ResolutionKind:
+        return ResolutionKind.LOCAL
+
+    def _create_resolution(self, root_future_id, detached):
+        resolution = Resolution(
+            root_id=root_future_id,
+            status=ResolutionStatus.SCHEDULED,
+            kind=self._get_resolution_kind(detached),
+            docker_image_uri=self._get_resolution_image(),
+            settings_env_vars={
+                name: str(value) for name, value in get_all_user_settings().items()
+            },
+        )
+        api_client.save_resolution(resolution)
+
     def _future_will_schedule(self, future: AbstractFuture) -> None:
         super()._future_will_schedule(future)
 
@@ -184,11 +211,23 @@ class LocalResolver(SilentResolver):
 
     def _resolution_did_succeed(self) -> None:
         super()._resolution_did_succeed()
+        self._update_resolution_status(ResolutionStatus.COMPLETE)
         self._notify_pipeline_update()
 
-    def _resolution_did_fail(self) -> None:
-        super()._resolution_did_fail()
+    def _resolution_did_fail(self, error: Exception) -> None:
+        super()._resolution_did_fail(error)
+        resolution_status = (
+            ResolutionStatus.COMPLETE
+            if isinstance(error, CalculatorError)
+            else ResolutionStatus.FAILED
+        )
+        self._update_resolution_status(resolution_status)
         self._notify_pipeline_update()
+
+    def _update_resolution_status(self, status: ResolutionStatus):
+        resolution = api_client.get_resolution(self._root_future.id)
+        resolution.status = status
+        api_client.save_resolution(resolution)
 
     def _get_run(self, run_id) -> Run:
         # Should refresh from DB for remote exec

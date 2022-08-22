@@ -11,6 +11,7 @@ from sematic.config import get_config
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
+from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
 from sematic.utils.retry import retry
@@ -113,6 +114,22 @@ def get_graph(run_id: str) -> Tuple[List[Run], List[Artifact], List[Edge]]:
     edges = [Edge.from_json_encodable(edge) for edge in response["edges"]]
 
     return runs, artifacts, edges
+
+
+def save_resolution(resolution: Resolution):
+    payload = {
+        "resolution": resolution.to_json_encodable(),
+    }
+    _put(f"/resolutions/{resolution.root_id}", payload)
+
+
+def get_resolution(root_id: str) -> Resolution:
+    """
+    Get resolution
+    """
+    response = _get("/resolutions/{}".format(root_id))
+
+    return Resolution.from_json_encodable(response["content"])
 
 
 def notify_pipeline_update(calculator_path: str):

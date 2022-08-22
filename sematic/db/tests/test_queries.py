@@ -30,7 +30,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
-from sematic.tests.fixtures import test_storage  # noqa: F401
+from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 
 
 def test_count_runs(test_db, run: Run):  # noqa: F811
@@ -74,6 +74,12 @@ def test_save_resolution(test_db, persisted_resolution: Resolution):  # noqa: F8
     fetched_resolution = get_resolution(persisted_resolution.root_id)
     assert fetched_resolution.status == ResolutionStatus.FAILED.value
 
+    # multiple updates should be ok
+    persisted_resolution.status = ResolutionStatus.COMPLETE
+    save_resolution(persisted_resolution)
+    fetched_resolution = get_resolution(persisted_resolution.root_id)
+    assert fetched_resolution.status == ResolutionStatus.COMPLETE.value
+
 
 def test_get_artifact(test_db, persisted_artifact: Artifact):  # noqa: F811
     artifact = get_artifact(persisted_artifact.id)
@@ -104,6 +110,7 @@ def test_get_run_graph(
     artifact_count: int,
     edge_count: int,
     mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     future = pipeline(1, 2)
     future.resolve()

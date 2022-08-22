@@ -51,6 +51,7 @@ sematic_py_lib(
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
+        "//sematic/db/models:resolution",
         "//sematic/db/models:run",
         "//sematic/utils:retry",
     ],

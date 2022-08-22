@@ -3,6 +3,7 @@ sematic_py_lib(
     srcs = ["local_resolver.py"],
     deps = [
         ":silent_resolver",
+        "//sematic:abstract_calculator",
         "//sematic:abstract_future",
         "//sematic:api_client",
         "//sematic:config",
@@ -17,6 +18,7 @@ sematic_py_lib(
     name = "state_machine_resolver",
     srcs = ["state_machine_resolver.py"],
     deps = [
+        "//sematic:abstract_calculator",
         "//sematic:abstract_future",
         "//sematic:resolver",
     ],
@@ -39,6 +41,7 @@ sematic_py_lib(
         "//sematic:abstract_future",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
+        "//sematic/db/models:resolution",
         "//sematic/db/models:run",
     ],
     pip_deps = [

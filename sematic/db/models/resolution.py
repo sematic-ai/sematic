@@ -1,4 +1,5 @@
 # Standard Library
+import logging
 from enum import Enum, unique
 from typing import Dict, Optional, Union
 
@@ -9,6 +10,8 @@ from sqlalchemy.orm import validates
 # Sematic
 from sematic.db.models.base import Base
 from sematic.db.models.json_encodable_mixin import ENUM_KEY, JSONEncodableMixin
+
+logger = logging.getLogger(__name__)
 
 
 @unique
@@ -124,9 +127,11 @@ class Resolution(Base, JSONEncodableMixin):
         types.String(), nullable=False, info={ENUM_KEY: ResolutionStatus}
     )
     kind: ResolutionKind = Column(  # type: ignore
-        types.String(), nullable=False, info={ENUM_KEY: ResolutionStatus}
+        types.String(), nullable=False, info={ENUM_KEY: ResolutionKind}
     )
-    docker_image_uri: str = Column(types.String(), nullable=True, default=None)
+    docker_image_uri: Optional[str] = Column(
+        types.String(), nullable=True, default=None
+    )
     settings_env_vars: Dict[str, str] = Column(
         types.JSON, nullable=False, default=lambda: {}
     )
@@ -189,6 +194,12 @@ class Resolution(Base, JSONEncodableMixin):
                     f"Resolution {self.root_id} cannot be moved from the {self.status} "
                     f"state to the {other.status} state."
                 )
+            logger.info(
+                "Status of resolution %s changing from %s to %s",
+                self.root_id,
+                self.status,
+                other.status,
+            )
 
         for field in mutable_fields:
             setattr(self, field, getattr(other, field))
