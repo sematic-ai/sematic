@@ -9,6 +9,12 @@ import abc
 import typing
 
 
+class CalculatorError(Exception):
+    """Error when the exception originated inside user code"""
+
+    pass
+
+
 class AbstractCalculator(abc.ABC):
     def __init__(self) -> None:
         # Simply typing attributes

@@ -17,6 +17,7 @@ from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
+from sematic.db.models.resolution import ResolutionKind
 from sematic.db.models.run import Run
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
 from sematic.resolvers.resource_requirements import ResourceRequirements
@@ -42,7 +43,7 @@ class CloudResolver(LocalResolver):
         will return when the entire pipeline has completed.
     """
 
-    def __init__(self, detach: bool = True):
+    def __init__(self, detach: bool = True, is_running_remotely: bool = False):
         super().__init__(detach=detach)
 
         try:
@@ -57,6 +58,7 @@ class CloudResolver(LocalResolver):
         self._store_artifacts = True
 
         self._output_artifacts_by_run_id: Dict[str, Artifact] = {}
+        self._is_running_remotely = is_running_remotely
 
     def set_graph(self, runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
         """
@@ -72,12 +74,24 @@ class CloudResolver(LocalResolver):
         self._artifacts = {artifact.id: artifact for artifact in artifacts}
         self._edges = {make_edge_key(edge): edge for edge in edges}
 
+    def _get_resolution_image(self) -> Optional[str]:
+        return _get_image()
+
+    def _get_resolution_kind(self, detached) -> ResolutionKind:
+        return ResolutionKind.KUBERNETES if detached else ResolutionKind.LOCAL
+
+    def _create_resolution(self, root_future_id, detached):
+        if self._is_running_remotely:
+            # resolution should have been crated prior to the resolver
+            # actually starting its remote resolution.
+            return
+        super()._create_resolution(root_future_id, detached)
+
     def _detach_resolution(self, future: AbstractFuture) -> str:
         run = self._populate_run_and_artifacts(future)
-
-        run.root_id = future.id
-
         self._save_graph()
+        self._create_resolution(future.id, detached=True)
+        run.root_id = future.id
 
         api_client.notify_pipeline_update(run.calculator_path)
 

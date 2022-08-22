@@ -14,9 +14,11 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.calculator import func
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
-from sematic.db.queries import get_root_graph
+from sematic.db.models.resolution import ResolutionStatus
+from sematic.db.queries import get_resolution, get_root_graph
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.resolvers.local_resolver import LocalResolver
+from sematic.tests.fixtures import valid_client_version  # noqa: F401
 
 
 @func
@@ -37,7 +39,7 @@ def pipeline(a: float, b: float) -> float:
 
 
 @mock_no_auth
-def test_single_function(test_db, mock_requests):  # noqa: F811
+def test_single_function(test_db, mock_requests, valid_client_version):  # noqa: F811
     future = add(1, 2)
 
     result = future.set(name="AAA").resolve(LocalResolver())
@@ -87,7 +89,7 @@ def add_add_add(a: float, b: float) -> float:
 
 
 @mock_no_auth
-def test_add_add(test_db, mock_requests):  # noqa: F811
+def test_add_add(test_db, mock_requests, valid_client_version):  # noqa: F811
     future = add_add_add(1, 2)
 
     result = future.resolve(LocalResolver())
@@ -102,7 +104,7 @@ def test_add_add(test_db, mock_requests):  # noqa: F811
 
 
 @mock_no_auth
-def test_pipeline(test_db, mock_requests):  # noqa: F811
+def test_pipeline(test_db, mock_requests, valid_client_version):  # noqa: F811
     future = pipeline(3, 5)
 
     result = future.resolve(LocalResolver())
@@ -112,6 +114,7 @@ def test_pipeline(test_db, mock_requests):  # noqa: F811
     assert future.state == FutureState.RESOLVED
 
     runs, artifacts, edges = get_root_graph(future.id)
+    assert get_resolution(future.id).status == ResolutionStatus.COMPLETE.value
 
     assert len(runs) == 6
     assert len(artifacts) == 5
@@ -119,7 +122,7 @@ def test_pipeline(test_db, mock_requests):  # noqa: F811
 
 
 @mock_no_auth
-def test_failure(test_db, mock_requests):  # noqa: F811
+def test_failure(test_db, mock_requests, valid_client_version):  # noqa: F811
     class CustomException(Exception):
         pass
 
@@ -137,9 +140,11 @@ def test_failure(test_db, mock_requests):  # noqa: F811
 
     resolver = LocalResolver()
 
+    future = pipeline()
     with pytest.raises(CustomException, match="some message"):
-        pipeline().resolve(resolver)
+        future.resolve(resolver)
 
+    assert get_resolution(future.id).status == ResolutionStatus.COMPLETE.value
     expected_states = dict(
         pipeline=FutureState.NESTED_FAILED,
         success=FutureState.RESOLVED,
@@ -148,6 +153,31 @@ def test_failure(test_db, mock_requests):  # noqa: F811
 
     for future in resolver._futures:
         assert future.state == expected_states[future.calculator.__name__]
+
+
+@mock_no_auth
+def test_resolver_error(test_db, mock_requests, valid_client_version):  # noqa: F811
+    @func
+    def success():
+        return
+
+    @func
+    def pipeline():
+        return success()
+
+    resolver = LocalResolver()
+
+    def intentional_fail(*_, **__):
+        raise ValueError("some message")
+
+    # Random failure in resolution logic
+    resolver._wait_for_scheduled_run = intentional_fail
+
+    future = pipeline()
+    with pytest.raises(ValueError, match="some message"):
+        future.resolve(resolver)
+
+    assert get_resolution(future.id).status == ResolutionStatus.FAILED.value
 
 
 class DBStateMachineTestResolver(LocalResolver):
@@ -235,12 +265,12 @@ class DBStateMachineTestResolver(LocalResolver):
 
 
 @mock_no_auth
-def test_db_state_machine(test_db, mock_requests):  # noqa: F811
+def test_db_state_machine(test_db, mock_requests, valid_client_version):  # noqa: F811
     pipeline(1, 2).resolve(DBStateMachineTestResolver())
 
 
 @mock_no_auth
-def test_list_conversion(test_db, mock_requests):  # noqa: F811
+def test_list_conversion(test_db, mock_requests, valid_client_version):  # noqa: F811
     @func
     def alist(a: float, b: float) -> List[float]:
         return [add(a, b), add(a, b)]
@@ -249,7 +279,7 @@ def test_list_conversion(test_db, mock_requests):  # noqa: F811
 
 
 @mock_no_auth
-def test_exceptions(mock_requests):  # noqa: F811
+def test_exceptions(mock_requests, valid_client_version):  # noqa: F811
     @func
     def fail():
         raise Exception("FAIL!")

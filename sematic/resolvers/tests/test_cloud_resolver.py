@@ -9,9 +9,10 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
 )
 from sematic.calculator import func
+from sematic.db.models.resolution import ResolutionStatus
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.resolvers.cloud_resolver import CloudResolver
-from sematic.tests.fixtures import test_storage  # noqa: F401
+from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 
 
 @func
@@ -25,17 +26,21 @@ def pipeline() -> float:
     return add(1, 2)
 
 
+@mock.patch("sematic.resolvers.cloud_resolver._get_image")
 @mock.patch("sematic.resolvers.cloud_resolver._schedule_job")
 @mock.patch("kubernetes.config.load_kube_config")
 @mock_no_auth
 def test_simulate_cloud_exec(
     mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,
+    mock_get_image: mock.MagicMock,
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
     test_storage,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     # On the user's machine
+    mock_get_image.return_value = "some_image"
 
     resolver = CloudResolver(detach=True)
 
@@ -53,10 +58,15 @@ def test_simulate_cloud_exec(
 
     runs, artifacts, edges = api_client.get_graph(future.id)
 
-    driver_resolver = CloudResolver(detach=False)
+    driver_resolver = CloudResolver(detach=False, is_running_remotely=True)
 
     driver_resolver.set_graph(runs=runs, artifacts=artifacts, edges=edges)
-
+    assert (
+        api_client.get_resolution(future.id).status == ResolutionStatus.SCHEDULED.value
+    )
     output = driver_resolver.resolve(future)
 
     assert output == 3
+    assert (
+        api_client.get_resolution(future.id).status == ResolutionStatus.COMPLETE.value
+    )

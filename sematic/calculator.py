@@ -17,7 +17,7 @@ from typing import (
 )
 
 # Sematic
-from sematic.abstract_calculator import AbstractCalculator
+from sematic.abstract_calculator import AbstractCalculator, CalculatorError
 from sematic.future import Future
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.types.casting import can_cast_type, safe_cast
@@ -104,7 +104,10 @@ class Calculator(AbstractCalculator):
         return inspect.signature(self._func)
 
     def calculate(self, **kwargs) -> Any:
-        output = self.func(**kwargs)
+        try:
+            output = self.func(**kwargs)
+        except Exception as e:
+            raise CalculatorError(f"Error from running {self.func.__name__}") from e
 
         # Support for lists of futures
         if isinstance(output, list):

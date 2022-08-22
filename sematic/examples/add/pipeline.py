@@ -1,4 +1,3 @@
-# Standrd library
 # Standard Library
 import typing
 from dataclasses import dataclass
