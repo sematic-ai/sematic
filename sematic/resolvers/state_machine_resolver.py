@@ -38,7 +38,7 @@ class StateMachineResolver(Resolver, abc.ABC):
             if self._detach:
                 return self._detach_resolution(future)
 
-            self._resolution_will_start(future)
+            self._resolution_will_start()
 
             while future.state != FutureState.RESOLVED:
                 for future_ in self._futures:
@@ -56,11 +56,8 @@ class StateMachineResolver(Resolver, abc.ABC):
 
             return future.value
         except Exception as e:
-            due_to_calculator_error = False
-            if isinstance(e, CalculatorError):
-                due_to_calculator_error = True
             self._resolution_did_fail(error=e)
-            if due_to_calculator_error and hasattr(e, "__cause__"):
+            if isinstance(e, CalculatorError) and hasattr(e, "__cause__"):
                 # this will simplify the stack trace so the user sees less
                 # from Sematic's stack and more from the error from their code.
                 raise e.__cause__  # type: ignore
@@ -113,17 +110,12 @@ class StateMachineResolver(Resolver, abc.ABC):
 
     # State machine lifecycle hooks
 
-    def _resolution_will_start(self, root_future: AbstractFuture) -> None:
+    def _resolution_will_start(self) -> None:
         """
         Callback allowing resolvers to implement custom actions.
 
         This is called when `resolve` has been called and
         before any future get scheduled for resolution.
-
-        Parameters
-        ----------
-        root_future:
-            This is the root future that is being resolved.
         """
         pass
 

@@ -111,10 +111,10 @@ class LocalResolver(SilentResolver):
 
         return run
 
-    def _resolution_will_start(self, future: AbstractFuture):
-        self._populate_run_and_artifacts(future)
+    def _resolution_will_start(self):
+        self._populate_run_and_artifacts(self._root_future)
         self._save_graph()
-        self._create_resolution(future.id, detached=False)
+        self._create_resolution(self._root_future.id, detached=False)
         self._update_resolution_status(ResolutionStatus.RUNNING)
 
     def _get_resolution_image(self) -> Optional[str]:
