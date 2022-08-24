@@ -63,13 +63,13 @@ export default function SideBar() {
       >
         <Stack spacing={4} sx={{ paddingBottom: 4 }}>
           <Box>
-            <SiReadthedocs />
             <Link
-              href="https://decs.sematic.dev"
+              href="https://docs.sematic.dev"
               sx={{ color: "rgba(255, 255, 255, 0.5)" }}
               underline="none"
               target="_blank"
             >
+              <SiReadthedocs />
               <Typography fontSize={10}>Docs</Typography>
             </Link>
           </Box>
