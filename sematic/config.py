@@ -90,7 +90,7 @@ _SQLITE_FILE = "db.sqlite3"
 _LOCAL_CONFIG = Config(
     # If choosing localhost, the React app will not be able
     # To proxy requests to the socker io server. Unsure why.
-    server_address="127.0.0.1",
+    server_address="0.0.0.0",
     port=5001,
     api_version=1,
     db_url="sqlite:///{}/{}".format(get_config_dir(), _SQLITE_FILE),
