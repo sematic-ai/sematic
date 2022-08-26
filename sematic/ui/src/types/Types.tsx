@@ -219,28 +219,34 @@ function ListValueView(props: ValueViewProps) {
   }
 
   let elementTypeRepr: TypeRepr = typeRepr[2].args[0].type as TypeRepr;
+  const summaryIsEmpty = props.valueSummary["summary"].length === 0;
 
   const summaryIsComplete =
     props.valueSummary["summary"].length === props.valueSummary["length"];
 
-  const summary = (
-    <Typography display="inline" component="span">
-      [
-      {Array.from(props.valueSummary["summary"])
-        .map<React.ReactNode>((element, index) =>
-          renderSummary(
-            props.typeSerialization,
-            element,
-            elementTypeRepr,
-            index.toString()
+  var summary;
+  if (summaryIsEmpty) {
+    summary = (<Typography display="inline" component="span" fontStyle={"italic"}>Nothing to display</Typography>);
+  } else {
+    summary = (
+      <Typography display="inline" component="span">
+        [
+        {Array.from(props.valueSummary["summary"])
+          .map<React.ReactNode>((element, index) =>
+            renderSummary(
+              props.typeSerialization,
+              element,
+              elementTypeRepr,
+              index.toString()
+            )
           )
-        )
-        .reduce((prev, curr) => [prev, ", ", curr])}
-      ]
-    </Typography>
-  );
+          .reduce((prev, curr) => [prev, ", ", curr])}
+        ]
+      </Typography>
+    );
+  }
 
-  if (summaryIsComplete) return summary;
+  if (summaryIsComplete && !summaryIsEmpty) return summary;
 
   return (
     <Table>
