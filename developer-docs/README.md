@@ -7,7 +7,7 @@ and are published to https://docs.sematic.dev/
 **Note:** Actually pushing the released wheel can only be done if you have
 access to the PyPi repo, which is limited to employees of Sematic.
 
-- Bump the version in `sematic/BUILD` and `sematic/versions.py`
+- Bump the version in `wheel_version.bzl` and `sematic/versions.py`
 - Update `changelog.md` with the new version number
 - `make ui`
 - `make wheel`
