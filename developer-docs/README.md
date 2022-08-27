@@ -26,3 +26,13 @@ we are ready to push the release. Once you have pushed it to PyPi,
 git tag vMAJOR.MINOR.PATCH
 git push --tags
 ```
+
+Next, build and push the server image. Use the dockerfile at
+`docker/Dockerfile.server`. Use the wheel you built before in the directory
+you run.
+```
+$ cd docker
+$ RELEASE_VERSION=v$(python3 ../sematic/versions.py)
+$ docker build -t "sematicai/sematic-server:$RELEASE_VERSION" -f Dockerfile.server .
+$ docker push "sematicai/sematic-server:$RELEASE_VERSION"
+```
