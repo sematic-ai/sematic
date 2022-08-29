@@ -127,7 +127,8 @@ SEMATIC_API_ADDRESS: <web-app-server-address>
 
 If you have chosen to deploy Sematic in such a way that users of Sematic
 will use a different URL for the server from what should be used for
-jobs on your Kubernetes cluster, you may also need to set 
+jobs on your Kubernetes cluster (e.g. users access via a reverse proxy
+that's not needed on Kubernetes), you may also need to set 
 `SEMATIC_WORKER_API_ADDRESS`. That will set the URL to be used from
 Kubernetes, while `SEMATIC_API_ADDRESS` will be used from your machine.
 {% endhint %}
