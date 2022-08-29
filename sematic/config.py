@@ -90,15 +90,17 @@ _SQLITE_FILE = "db.sqlite3"
 _LOCAL_CONFIG = Config(
     # If choosing localhost, the React app will not be able
     # To proxy requests to the socker io server. Unsure why.
-    server_address="127.0.0.1",
-    port=5001,
+    server_address=os.environ.get("SEMATIC_SERVER_ADDRESS", "127.0.0.1"),
+    port=int(os.environ.get("PORT", 5001)),
     api_version=1,
-    db_url="sqlite:///{}/{}".format(get_config_dir(), _SQLITE_FILE),
+    db_url=os.environ.get(
+        "DATABASE_URL", "sqlite:///{}/{}".format(get_config_dir(), _SQLITE_FILE)
+    ),
 )
 
 
 _CLOUD_CONFIG = Config(
-    server_address="0.0.0.0",
+    server_address=os.environ.get("SEMATIC_SERVER_ADDRESS", "0.0.0.0"),
     api_version=1,
     port=int(os.environ.get("PORT", 80)),
     db_url=os.environ.get("DATABASE_URL", "NO_DB"),
@@ -108,6 +110,13 @@ _CLOUD_CONFIG = Config(
 class UserOverrideConfig(Config):
     @property
     def server_url(self) -> str:
+        # environment vars should take precedence over whatever is in the
+        # users settings file.
+        server_address = os.environ.get("SEMATIC_SERVER_ADDRESS", None)
+        if server_address is not None:
+            port = os.environ.get("PORT", 80)
+            return "http://{}:{}".format(self.server_address, port)
+
         try:
             return get_user_settings(SettingsVar.SEMATIC_API_ADDRESS)
         except MissingSettingsError:
