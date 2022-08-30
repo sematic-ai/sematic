@@ -27,9 +27,9 @@
    :alt: PyPI - License
 
 
-.. image:: https://img.shields.io/badge/Python-3.9+-blue?style=for-the-badge&logo=none
+.. image:: https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=none
    :target: https://python.org
-   :alt: Python 3.9+
+   :alt: Python 3.8+
 
 
 .. image:: https://img.shields.io/discord/983789877927747714?label=DISCORD&style=for-the-badge
@@ -50,11 +50,11 @@
 Hi 👋
 -----
 
-Sematic is an open-source development toolkit to help Data Scientists and
-Machine Learning (ML) Engineers prototype and productionize ML pipelines in days
-not weeks.
+`Sematic <https://sematic.dev>`_ is an open-source development toolkit to help
+Data Scientists and Machine Learning (ML) Engineers prototype and productionize
+ML pipelines in days not weeks.
 
-Sematic is based on experience working at leading tech companies.
+Sematic is based on experience building ML infrastructure at leading tech companies.
 
 Find our docs at `docs.sematic.dev <https://docs.sematic.dev>`_\ , and join us on
 `Discord <https://discord.gg/4KZJ6kYVax>`_.
@@ -69,7 +69,7 @@ Sematic helps you
 * [soon] Clone/re-run your pipelines with different inputs/configs
 * [soon] Schedule your pipelines to keep your models fresh and relevant
 
-Sematic is an alternative to other ML pipeline tools, such as KubeFlow Pipelines.
+Sematic is an alternative to tools such as KubeFlow Pipelines.
 
 Installation
 ------------
