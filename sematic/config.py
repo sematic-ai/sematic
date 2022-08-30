@@ -50,6 +50,12 @@ def _get_data_dir() -> str:
     return data_dir
 
 
+# Set whenever we're inside a cloud job
+ON_WORKER_ENV_VAR = "ON_SEMATIC_WORKER"
+SEMATIC_SERVER_ADDRESS_ENV_VAR = "SEMATIC_SERVER_ADDRESS"
+SEMATIC_WORKER_SERVER_ADDRESS_ENV_VAR = "SEMATIC_WORKER_API_ADDRESS"
+
+
 @dataclass
 class Config:
     """
@@ -69,6 +75,8 @@ class Config:
 
     @property
     def server_url(self) -> str:
+        if self.server_url_is_set_via_env_vars():
+            return self.server_url_from_env_vars()
         return "http://{}:{}".format(self.server_address, self.port)
 
     @property
@@ -82,6 +90,26 @@ class Config:
     def server_pid_file_path(self):
         return os.path.join(self.config_dir, "server.pid")
 
+    def server_url_is_set_via_env_vars(self):
+        return SEMATIC_SERVER_ADDRESS_ENV_VAR in os.environ or (
+            ON_WORKER_ENV_VAR in os.environ
+            and SEMATIC_WORKER_SERVER_ADDRESS_ENV_VAR in os.environ
+        )
+
+    def server_url_from_env_vars(self):
+        server_address = os.environ.get(SEMATIC_SERVER_ADDRESS_ENV_VAR, None)
+        if ON_WORKER_ENV_VAR in os.environ:
+            server_address = os.environ.get(
+                SEMATIC_WORKER_SERVER_ADDRESS_ENV_VAR, server_address
+            )
+        if server_address is None:
+            raise ValueError(
+                f"Cannot construct server URL from env vars if "
+                f"{SEMATIC_SERVER_ADDRESS_ENV_VAR} is not set."
+            )
+        port = os.environ.get("PORT", 80)
+        return "http://{}:{}".format(server_address, port)
+
 
 _SQLITE_FILE = "db.sqlite3"
 
@@ -90,15 +118,17 @@ _SQLITE_FILE = "db.sqlite3"
 _LOCAL_CONFIG = Config(
     # If choosing localhost, the React app will not be able
     # To proxy requests to the socker io server. Unsure why.
-    server_address="127.0.0.1",
-    port=5001,
+    server_address=os.environ.get(SEMATIC_SERVER_ADDRESS_ENV_VAR, "127.0.0.1"),
+    port=int(os.environ.get("PORT", 5001)),
     api_version=1,
-    db_url="sqlite:///{}/{}".format(get_config_dir(), _SQLITE_FILE),
+    db_url=os.environ.get(
+        "DATABASE_URL", "sqlite:///{}/{}".format(get_config_dir(), _SQLITE_FILE)
+    ),
 )
 
 
 _CLOUD_CONFIG = Config(
-    server_address="0.0.0.0",
+    server_address=os.environ.get(SEMATIC_SERVER_ADDRESS_ENV_VAR, "0.0.0.0"),
     api_version=1,
     port=int(os.environ.get("PORT", 80)),
     db_url=os.environ.get("DATABASE_URL", "NO_DB"),
@@ -108,6 +138,11 @@ _CLOUD_CONFIG = Config(
 class UserOverrideConfig(Config):
     @property
     def server_url(self) -> str:
+        # environment vars should take precedence over whatever is in the
+        # users settings file.
+        if self.server_url_is_set_via_env_vars():
+            return self.server_url_from_env_vars()
+
         try:
             return get_user_settings(SettingsVar.SEMATIC_API_ADDRESS)
         except MissingSettingsError:
