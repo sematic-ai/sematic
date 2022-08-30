@@ -21,6 +21,15 @@ This will open the app in your browser.
 {% hint style="info" %}
 This runs the Sematic app on your local machine. To
 deploy it within your cloud see [Deploying Sematic](deployment.md).
+If you want to run the local version of the app for yourself, but
+access it from a different machine (ex: if you are running the
+app from within a docker container or on a cloud development
+machine), you can launch with
+```shell
+$ SEMATIC_SERVER_ADDRESS=0.0.0.0 sematic start
+```
+but this mechanism of running the server is still only
+intended for single-user usage.
 {% endhint %}
 
 To stop the app, simply do
