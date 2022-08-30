@@ -7,7 +7,7 @@ and are published to https://docs.sematic.dev/
 **Note:** Actually pushing the released wheel can only be done if you have
 access to the PyPi repo, which is limited to employees of Sematic.
 
-- Bump the version in `sematic/BUILD` and `sematic/versions.py`
+- Bump the version in `wheel_version.bzl` and `sematic/versions.py`
 - Update `changelog.md` with the new version number
 - `make ui`
 - `make wheel`
@@ -25,4 +25,14 @@ we are ready to push the release. Once you have pushed it to PyPi,
 ```
 git tag vMAJOR.MINOR.PATCH
 git push --tags
+```
+
+Next, build and push the server image. Use the dockerfile at
+`docker/Dockerfile.server`. Use the wheel you built before in the directory
+you run.
+```
+$ cd docker
+$ RELEASE_VERSION=v$(python3 ../sematic/versions.py)
+$ docker build -t "sematicai/sematic-server:$RELEASE_VERSION" -f Dockerfile.server .
+$ docker push "sematicai/sematic-server:$RELEASE_VERSION"
 ```
