@@ -14,6 +14,7 @@ import kubernetes
 import sematic.api_client as api_client
 import sematic.storage as storage
 from sematic.abstract_future import AbstractFuture, FutureState
+from sematic.config import ON_WORKER_ENV_VAR
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
@@ -270,7 +271,11 @@ def _schedule_job(
                                 kubernetes.client.V1EnvVar(  # type: ignore
                                     name=_CONTAINER_IMAGE_ENV_VAR,
                                     value=image,
-                                )
+                                ),
+                                kubernetes.client.V1EnvVar(  # type: ignore
+                                    name=ON_WORKER_ENV_VAR,
+                                    value="1",
+                                ),
                             ]
                             + [
                                 kubernetes.client.V1EnvVar(  # type: ignore
