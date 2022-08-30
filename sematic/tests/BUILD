@@ -11,6 +11,15 @@ pytest_test(
     ],
 )
 
+pytest_test(
+    name = "test_config_dir",
+    srcs = ["test_config_dir.py"],
+    deps = [
+        "//sematic:config_dir",
+        "//sematic/tests:fixtures",
+    ],
+)
+
 # <add python version>: A new test will need to be added when a python version is added
 pytest_test(
     name = "test_38_interpreter",
