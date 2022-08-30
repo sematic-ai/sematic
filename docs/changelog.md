@@ -7,6 +7,8 @@ with nothing else on the line.
 * 0.11.0
     * [feature] Add a `get_artifact_value` API to retreive artifacts by ID
     * [feature] Add ability to link to individual runs on the UI, not just pipelines
+    * [feature] Add option to serve local server from 0.0.0.0
+    * [feature] Add capability to use different API URLs for local vs remote client usage
     * [improvement] Add exceptions and other improved app logs to the server log files
     * [bugfix] Solve a bug with displaying empty lists in the UI
 * 0.10.0
