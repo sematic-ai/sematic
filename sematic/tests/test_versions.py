@@ -7,7 +7,7 @@ from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 
 
 def test_min_client_version():
-    assert MIN_CLIENT_SERVER_SUPPORTS < CURRENT_VERSION
+    assert MIN_CLIENT_SERVER_SUPPORTS <= CURRENT_VERSION
 
 
 def test_changelog():
