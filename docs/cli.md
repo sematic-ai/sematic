@@ -69,3 +69,8 @@ Active settings:
 
 SNOWFLAKE_USER: notfoobar
 ```
+
+If you'd like, you can even change which directory Sematic uses to hold its
+settings by setting the environment variable `SEMATIC_CONFIG_DIR`. This can
+be either a relative path (it will be treated as relative to your home directory)
+or an absolute path.
