@@ -4,6 +4,7 @@ Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
 with nothing else on the line.
 -->
 * HEAD
+    * [bugfix] Pass API key to request to fetch root run
 * 0.11.0
     * [feature] Add a `get_artifact_value` API to retreive artifacts by ID
     * [feature] Add ability to link to individual runs on the UI, not just pipelines
