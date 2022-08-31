@@ -98,6 +98,10 @@ class Config:
 
     def server_url_from_env_vars(self):
         server_address = os.environ.get(SEMATIC_SERVER_ADDRESS_ENV_VAR, None)
+        if server_address.startswith("http://") or server_address.startswith(
+            "https://"
+        ):
+            return server_address
         if ON_WORKER_ENV_VAR in os.environ:
             server_address = os.environ.get(
                 SEMATIC_WORKER_SERVER_ADDRESS_ENV_VAR, server_address
