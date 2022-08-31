@@ -109,6 +109,13 @@ execution solution. Sematic lets each step in your pipeline run with the computi
 resources that are appropriate for it.
 
 ### ... Dagster
+* **Use case** – Dagster is designed to define data workflows, or lightweight
+  Data Science and Machine Learning workflows. Sematic is designed to Machine
+  Learning pipelines of arbitray complexity using heterogeneous compute. For
+  example, Sematic lets you chain data processing jobs (e.g. Spark, Beam) with
+  long-running GPU training jobs (e.g. Tensorflow, PyTorch), or steps using
+  platform custom-built by your company.
+
 * **Semantic UI** – Sematic has rich visualizations for the inputs and outputs at all levels
 of your pipelines. Instead of specifying configurations with yaml in your browser, you can
 fill out web forms that have just the fields expected, with appropriate validation
