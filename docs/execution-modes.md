@@ -123,7 +123,16 @@ from sematic import ResourceRequirements, KubernetesRequirements
 
 GPU_RESOURCE_REQS = ResourceRequirements(
     kubernetes=KubernetesRequirements(
-        node_selector={"node.kubernetes.io/instance-type": "g4dn.xlarge"}
+        # Note: the kind of node selector options that are valid will depend on
+        # your particular deployment of Kubernetes. Talk to the person who manages
+        # your Kubernetes cluster if you think you might need this. It is primarily
+        # useful in Sematic to gain access to nodes with GPUs.
+        node_selector={"node.kubernetes.io/instance-type": "g4dn.xlarge"},
+
+        # The resource requirements of the job. Information on the format of valid
+        # values can be found here: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+        # the dictionary provided here will be used for both "limits" and "requests"
+        requests={"cpu": "1", "memory": "1Gi"},
     )
 )
 
