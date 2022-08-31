@@ -288,9 +288,11 @@ def _schedule_job(
                                 for name, value in get_all_user_settings().items()
                             ],
                             volume_mounts=[],
-                            resources=kubernetes.V1ResourceRequirements(
-                                limits=resource_requests,
-                                requests=resource_requests,
+                            resources=(
+                                kubernetes.client.V1ResourceRequirements(  # type: ignore
+                                    limits=resource_requests,
+                                    requests=resource_requests,
+                                )
                             ),
                         )
                     ],
