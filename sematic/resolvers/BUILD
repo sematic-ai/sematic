@@ -11,6 +11,7 @@ sematic_py_lib(
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
         "//sematic/db/models:run",
+        "//sematic/utils:exceptions",
     ],
 )
 
@@ -62,11 +63,13 @@ sematic_py_lib(
     deps = [
         "//sematic:abstract_future",
         "//sematic:api_client",
+        "//sematic:calculator",
         "//sematic:future",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
         "//sematic/resolvers:cloud_resolver",
+        "//sematic/utils:exceptions",
     ],
     pip_deps = [
         "cloudpickle",
