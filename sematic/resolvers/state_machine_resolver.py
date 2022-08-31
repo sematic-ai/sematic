@@ -116,11 +116,6 @@ class StateMachineResolver(Resolver, abc.ABC):
 
         This is called when `resolve` has been called and
         before any future get scheduled for resolution.
-
-        Parameters
-        ----------
-        root_future:
-            This is the root future that is being resolved.
         """
         pass
 

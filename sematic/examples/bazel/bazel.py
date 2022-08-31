@@ -17,5 +17,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     logger.info("Starting bazel example...")
-    future = pipeline()
+    future = pipeline(1, 2, 3)
     future.resolve(sematic.CloudResolver(detach=args.detach))
