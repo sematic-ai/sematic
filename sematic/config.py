@@ -107,6 +107,11 @@ class Config:
                 f"Cannot construct server URL from env vars if "
                 f"{SEMATIC_SERVER_ADDRESS_ENV_VAR} is not set."
             )
+        if server_address is not None and (
+            server_address.startswith("http://")
+            or server_address.startswith("https://")
+        ):
+            return server_address
         port = os.environ.get("PORT", 80)
         return "http://{}:{}".format(server_address, port)
 
