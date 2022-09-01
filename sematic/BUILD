@@ -32,6 +32,12 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "docker_images",
+    srcs = ["docker_images.py"],
+    deps = [],
+)
+
+sematic_py_lib(
     name = "user_settings",
     srcs = ["user_settings.py"],
     deps = [
