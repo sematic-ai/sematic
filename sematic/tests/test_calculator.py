@@ -225,7 +225,7 @@ def test_inline():
 
 def test_resource_requirements():
     resource_requirements = ResourceRequirements(
-        kubernetes=KubernetesResourceRequirements(node_selector={"a": "b"})
+        kubernetes=KubernetesResourceRequirements(node_selector={"a": "b"}, requests={})
     )
 
     @func(resource_requirements=resource_requirements)
