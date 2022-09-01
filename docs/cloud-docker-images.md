@@ -21,7 +21,8 @@ a Sematic pipeline (we'll refer to the python script for this target your
 
 1. Include Sematic's GitHub repo as a bazel repository in your bazel WORKSPACE
 2. Load Sematic's base images in your WORKSPACE, using, for example
-`load("@rules_sematic//:pipeline.bzl", "base_images")`
+`load("@rules_sematic//:pipeline.bzl", "base_images")`, followed by
+`base_images()`
 3. Ensure you have a container registry where you can push your Docker images
 to
 4. In the bazel `BUILD` file where you have defined your launch script, load
