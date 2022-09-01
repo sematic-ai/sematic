@@ -250,9 +250,12 @@ def _schedule_job(
     image = _get_image()
 
     node_selector = {}
+    resource_requests = {}
     if resource_requirements is not None:
         node_selector = resource_requirements.kubernetes.node_selector
+        resource_requests = resource_requirements.kubernetes.requests
         logger.debug("kubernetes node_selector %s", node_selector)
+        logger.debug("kubernetes resource requests %s", resource_requests)
 
     job = kubernetes.client.V1Job(  # type: ignore
         api_version="batch/v1",
@@ -285,7 +288,12 @@ def _schedule_job(
                                 for name, value in get_all_user_settings().items()
                             ],
                             volume_mounts=[],
-                            resources=None,
+                            resources=(
+                                kubernetes.client.V1ResourceRequirements(  # type: ignore
+                                    limits=resource_requests,
+                                    requests=resource_requests,
+                                )
+                            ),
                         )
                     ],
                     volumes=[],
