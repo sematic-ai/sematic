@@ -124,8 +124,17 @@ doesn't run your script
 #### Custom base images
 The `sematic_pipeline` macro also allows you to specify a custom base image to
 cover any dependencies you have that aren't specified in bazel. You can do this
-by setting the `base` field of the `sematic_pipeline` macro, If, for
-example, your bazel setup assumes that it is running on a machine with a
+by setting the `base` field of the `sematic_pipeline` macro:
+
+```starlark
+sematic_pipeline(
+    name = "my_pipeline",
+    base = "uri://to/my/base/image",
+    ...
+)
+```
+
+If, for example, your bazel setup assumes that it is running on a machine with a
 particular version of Cuda, you can bake that into the base image but let
 Sematic's bazel hookup handle all the python and other native code you want in
 the image. Sematic also provides a couple base images out-of-the-box, which can
