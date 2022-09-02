@@ -4,9 +4,9 @@ Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
 with nothing else on the line.
 -->
 * HEAD
-    * [feature] Allow specifying resource requirements for Kubernetes jobs.
-    BREAKING CHANGE: `KubernetesResourceRequirements` has a new required field,
-    `requests`
+    * [feature] BREAKING CHANGE: Allow specifying resource requirements for Kubernetes
+    jobs. `KubernetesResourceRequirements` has a new required field, `requests`
+    * [feature] Add `has_container_image()` API for better control over launch workflows
     * [bugfix] Pass API key to request to fetch root run
 * 0.11.0
     * [feature] Add a `get_artifact_value` API to retreive artifacts by ID
