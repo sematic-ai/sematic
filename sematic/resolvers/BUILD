@@ -44,6 +44,7 @@ sematic_py_lib(
         "//sematic/db/models:edge",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+        "//sematic:container_images",
     ],
     pip_deps = [
         "kubernetes",

@@ -1,10 +1,7 @@
 # Standard Library
 import enum
 import logging
-import os
 from typing import Dict, List, Optional
-
-import __main__
 
 # Third-party
 import cloudpickle
@@ -15,6 +12,7 @@ import sematic.api_client as api_client
 import sematic.storage as storage
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.config import ON_WORKER_ENV_VAR
+from sematic.container_images import CONTAINER_IMAGE_ENV_VAR, get_image_uri
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
@@ -76,7 +74,7 @@ class CloudResolver(LocalResolver):
         self._edges = {make_edge_key(edge): edge for edge in edges}
 
     def _get_resolution_image(self) -> Optional[str]:
-        return _get_image()
+        return get_image_uri()
 
     def _get_resolution_kind(self, detached) -> ResolutionKind:
         return ResolutionKind.KUBERNETES if detached else ResolutionKind.LOCAL
@@ -247,7 +245,7 @@ def _schedule_job(
     if resolve:
         args.append("--resolve")
 
-    image = _get_image()
+    image = get_image_uri()
 
     node_selector = {}
     resource_requests = {}
@@ -272,7 +270,7 @@ def _schedule_job(
                             args=args,
                             env=[
                                 kubernetes.client.V1EnvVar(  # type: ignore
-                                    name=_CONTAINER_IMAGE_ENV_VAR,
+                                    name=CONTAINER_IMAGE_ENV_VAR,
                                     value=image,
                                 ),
                                 kubernetes.client.V1EnvVar(  # type: ignore
@@ -309,16 +307,3 @@ def _schedule_job(
     kubernetes.client.BatchV1Api().create_namespaced_job(  # type: ignore
         namespace=get_user_settings(SettingsVar.KUBERNETES_NAMESPACE), body=job
     )
-
-
-_CONTAINER_IMAGE_ENV_VAR = "SEMATIC_CONTAINER_IMAGE"
-
-
-def _get_image() -> str:
-    if _CONTAINER_IMAGE_ENV_VAR in os.environ:
-        return os.environ[_CONTAINER_IMAGE_ENV_VAR]
-
-    with open(
-        "{}_push_at_build.uri".format(os.path.splitext(__main__.__file__)[0])
-    ) as f:
-        return f.read()
