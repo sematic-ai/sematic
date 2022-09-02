@@ -26,7 +26,7 @@ def pipeline() -> float:
     return add(1, 2)
 
 
-@mock.patch("sematic.resolvers.cloud_resolver._get_image")
+@mock.patch("sematic.resolvers.cloud_resolver.get_image_uri")
 @mock.patch("sematic.resolvers.cloud_resolver._schedule_job")
 @mock.patch("kubernetes.config.load_kube_config")
 @mock_no_auth

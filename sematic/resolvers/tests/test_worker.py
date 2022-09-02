@@ -28,7 +28,7 @@ def pipeline(a: float, b: float) -> float:
     return add(a, b)
 
 
-@mock.patch("sematic.resolvers.cloud_resolver._get_image")
+@mock.patch("sematic.resolvers.cloud_resolver.get_image_uri")
 @mock.patch("sematic.resolvers.cloud_resolver._schedule_job")
 @mock.patch("kubernetes.config.load_kube_config")
 @mock_no_auth
@@ -65,7 +65,7 @@ def fail():
     raise Exception("FAIL!")
 
 
-@mock.patch("sematic.resolvers.cloud_resolver._get_image")
+@mock.patch("sematic.resolvers.cloud_resolver.get_image_uri")
 @mock.patch("sematic.resolvers.cloud_resolver._schedule_job")
 @mock.patch("kubernetes.config.load_kube_config")
 @mock_no_auth
