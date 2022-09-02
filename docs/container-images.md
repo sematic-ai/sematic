@@ -1,4 +1,4 @@
-# Sematic and Docker Images
+# Sematic and Container Images
 
 When Sematic runs your code in the cloud, it does so in a Docker container.
 Your code and all its dependencies need to be in that Docker image for it
@@ -10,19 +10,22 @@ usages if needed.
 
 ## Image Construction
 ### Bazel
-If you're using bazel, having Sematic create a cloud image containing your code
-is quite straightforward: we have a bazel macro that will allow you to create
-targets for building and pushing your image at the same time as creating a target
-to run the code locally. A complete example of this hookup can be found in our
+If you're using [**Bazel**](https://bazel.build), having Sematic create a cloud
+image containing your code is quite straightforward: we have a bazel macro that
+will allow you to create targets for building and pushing your image at the
+same time as creating a target to run the code locally. A complete example of
+this hookup can be found in our
 [bazel example repo](https://github.com/sematic-ai/example_bazel), but here's a
 summary of the steps. This assumes you already have a python bazel target to run
 a Sematic pipeline (we'll refer to the python script for this target your
 "launch script").
 
 1. Include Sematic's GitHub repo as a bazel repository in your bazel WORKSPACE
-2. Load Sematic's base images in your WORKSPACE, using, for example
-`load("@rules_sematic//:pipeline.bzl", "base_images")`, followed by
-`base_images()`
+2. Load Sematic's base images in your WORKSPACE, using, for example:
+```starlark
+load("@rules_sematic//:pipeline.bzl", "base_images")
+base_images()
+```
 3. Ensure you have a container registry where you can push your Docker images
 to
 4. In the bazel `BUILD` file where you have defined your launch script, load
@@ -32,6 +35,78 @@ Sematic's pipeline macro:
 `sematic_pipeline`, using the same `deps` as you use for the binary target
 6. Fill out the `registry` and `repository` fields of the `sematic_pipeline`
 with information about where to push your image.
+
+When you're done, your `WORKSPACE` should look something like:
+
+```starlark
+# Bazel WORKSPACE file
+
+# rules_python archive and toolchain
+
+# io_bazel_rules_docker archive
+
+load(
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
+    "repositories",
+)
+
+repositories()
+
+## SEMATIC RULES
+
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+git_repository(
+    name = "rules_sematic",
+    branch = "main",
+    remote = "git@github.com:sematic-ai/sematic.git",
+    strip_prefix = "bazel",
+)
+
+load("@rules_sematic//:pipeline.bzl", "base_images")
+
+base_images()
+
+```
+
+Your package's `BUILD` file should look something like:
+
+```
+# BUILD file at path/to/pipeline
+
+load("@rules_sematic//:pipeline.bzl", "sematic_pipeline")
+load(
+    "@rules_python//python:defs.bzl",
+    "py_library",
+)
+load("@<your-dependency-repo>//:requirements.bzl", "requirement")
+
+py_library(
+    name = "main_lib",
+    srcs = [
+        "main.py",
+        "pipeline.py",
+        ...
+    ],
+    deps = [
+        requirement("sematic"),
+        ...
+    ],
+)
+
+sematic_pipeline(
+    name = "main",  # the launch script of your pipeline is main.py
+    registry = "<container-registry-uri>",
+    repository = "<container-repository>",
+    deps = [
+        ":main_lib",
+    ],
+    # Optional base image to use
+    base = "<base-image>",
+    # Optional environment variables to set in the image
+    env = {"VAR": "VALUE"} 
+)
+```
 
 With that, you're done! Assuming the target for your launch script was
 `//my_repo/my_package:my_target`, you now have the following targets available:
