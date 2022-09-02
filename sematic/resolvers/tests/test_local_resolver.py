@@ -15,7 +15,7 @@ from sematic.calculator import func
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import ResolutionStatus
-from sematic.db.queries import get_resolution, get_root_graph
+from sematic.db.queries import get_resolution, get_root_graph, get_run
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.resolvers.local_resolver import LocalResolver
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
@@ -158,12 +158,12 @@ def test_failure(test_db, mock_requests, valid_client_version):  # noqa: F811
 @mock_no_auth
 def test_resolver_error(test_db, mock_requests, valid_client_version):  # noqa: F811
     @func
-    def success():
-        return
+    def add(x: int, y: int) -> int:
+        return x + y
 
     @func
-    def pipeline():
-        return success()
+    def pipeline() -> int:
+        return add(add(1, 2), add(3, 4))
 
     resolver = LocalResolver()
 
@@ -171,13 +171,23 @@ def test_resolver_error(test_db, mock_requests, valid_client_version):  # noqa: 
         raise ValueError("some message")
 
     # Random failure in resolution logic
-    resolver._wait_for_scheduled_run = intentional_fail
+    resolver._future_did_resolve = intentional_fail
 
     future = pipeline()
     with pytest.raises(ValueError, match="some message"):
         future.resolve(resolver)
 
     assert get_resolution(future.id).status == ResolutionStatus.FAILED.value
+    assert get_run(future.id).future_state == FutureState.NESTED_FAILED.value
+    assert get_run(future.nested_future.id).future_state == FutureState.FAILED.value
+    assert (
+        get_run(future.nested_future.kwargs["x"].id).future_state
+        == FutureState.FAILED.value
+    )
+    assert (
+        get_run(future.nested_future.kwargs["y"].id).future_state
+        == FutureState.FAILED.value
+    )
 
 
 class DBStateMachineTestResolver(LocalResolver):
