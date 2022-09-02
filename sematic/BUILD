@@ -5,6 +5,7 @@ sematic_py_lib(
     srcs = ["__init__.py"],
     deps = [
         ":calculator",
+        ":container_images",
         ":resolver",
         "//sematic/future_operators:init",
         "//sematic/resolvers:cloud_resolver",
@@ -32,8 +33,8 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "docker_images",
-    srcs = ["docker_images.py"],
+    name = "container_images",
+    srcs = ["container_images.py"],
     deps = [],
 )
 

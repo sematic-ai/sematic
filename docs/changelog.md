@@ -6,7 +6,7 @@ with nothing else on the line.
 * HEAD
     * [feature] BREAKING CHANGE: Allow specifying resource requirements for Kubernetes
     jobs. `KubernetesResourceRequirements` has a new required field, `requests`
-    * [feature] Add `has_cloud_image()` API for better control over launch workflows
+    * [feature] Add `has_container_image()` API for better control over launch workflows
     * [bugfix] Pass API key to request to fetch root run
 * 0.11.0
     * [feature] Add a `get_artifact_value` API to retreive artifacts by ID

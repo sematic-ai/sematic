@@ -12,12 +12,12 @@ import sematic.api_client as api_client
 import sematic.storage as storage
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.config import ON_WORKER_ENV_VAR
+from sematic.container_images import CONTAINER_IMAGE_ENV_VAR, get_image_uri
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import ResolutionKind
 from sematic.db.models.run import Run
-from sematic.docker_images import CONTAINER_IMAGE_ENV_VAR, get_image_uri
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.user_settings import SettingsVar, get_all_user_settings, get_user_settings

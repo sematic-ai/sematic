@@ -11,7 +11,7 @@ class MissingCloudImage(Exception):
     pass
 
 
-def has_cloud_image() -> bool:
+def has_container_image() -> bool:
     """Indicates whether Sematic has a Docker image that can be used for cloud execution.
 
     Returns

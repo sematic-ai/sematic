@@ -64,8 +64,8 @@ don't use GPUs in your pipeline).
 If you like, you can also specify another base image not provided by Sematic.
 There are a few requirements on this image though, so be sure to read through
 the ["Totally Custom Image"](#totally-custom-image) section below to understand
-what those are. Note that if you are using bazel, requirements 1 & 2 from that
-section will already be taken care of.
+what those are. Note that if you are using bazel, requirements 1, 2 & 3 from
+that section will already be taken care of.
 
 ### requirements.txt
 Coming soon!
@@ -79,22 +79,24 @@ use. There are some requirements on this image though:
 1. It must contain your source code and its dependencies
 2. It must be pushed to a container registry that can be accessed by the cluster
 where your code is going to run in the cloud
-3. `/usr/bin/python3` must be a valid python interpreter in the image
-4. The home directory inside the image must be writable
+3. The entrypoint must be set to a script which executes
+`/usr/bin/python3 -m sematic.resolvers.worker "$@"`
+4. `/usr/bin/python3` must be a valid python interpreter in the image
+5. The home directory inside the image must be writable
 
 ## Working with images
 When launching Sematic pipelines, there is always a python script that submits
 the job (either for local exection or execution in the cloud). We refer to this
 as the "launch script." You may want to have your launch script behave
 differently depending on whether a suitable cloud image is available. Sematic
-has provided `sematic.has_cloud_image` to enable this use case. A common pattern
+has provided `sematic.has_container_image` to enable this use case. A common pattern
 is to determine which resolver to use based on the result of this function:
 
 ```python
-from sematic import has_cloud_image, CloudResolver
+from sematic import has_container_image, CloudResolver
 
 from my_package import my_pipeline
 
-resolver = CloudResolver() if has_cloud_image() else None
+resolver = CloudResolver() if has_container_image() else None
 my_pipeline().resolve(resolver)
 ```
