@@ -185,7 +185,7 @@ class CloudResolver(LocalResolver):
         )
 
     def _wait_for_any_remote_job(self) -> Optional[str]:
-        scheduled_futures_by_id = {
+        scheduled_futures_by_id: Dict[str, AbstractFuture] = {
             future.id: future
             for future in self._futures
             if not future.props.inline and future.state == FutureState.SCHEDULED
@@ -196,9 +196,12 @@ class CloudResolver(LocalResolver):
 
         delay_between_updates = 1.0
         while True:
-            updated_states = api_client.update_run_future_states(
-                scheduled_futures_by_id.keys()
+            updated_states: Dict[
+                str, FutureState
+            ] = api_client.update_run_future_states(
+                list(scheduled_futures_by_id.keys())
             )
+            logger.error("Checking for updates on %s", scheduled_futures_by_id.keys())
             for run_id, new_state in updated_states.items():
                 future = scheduled_futures_by_id[run_id]
                 if new_state != FutureState.SCHEDULED:
@@ -206,6 +209,8 @@ class CloudResolver(LocalResolver):
                     # be handled by the post-processing logic once it is aware this
                     # future has changed
                     return future.id
+
+            logger.error("Sleeping for %s s", delay_between_updates)
             time.sleep(delay_between_updates)
             delay_between_updates = min(
                 _MAX_DELAY_BETWEEN_STATUS_UPDATES_SECONDS,

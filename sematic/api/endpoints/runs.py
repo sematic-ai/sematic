@@ -7,7 +7,7 @@ import base64
 import datetime
 import logging
 from http import HTTPStatus
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlencode, urlsplit, urlunsplit
 
 # Third-party
@@ -215,7 +215,7 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 @sematic_api.route("/api/v1/runs/future_states", methods=["POST"])
 @authenticate
 def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
-    input_payload = flask.request.json
+    input_payload: Dict[str, Any] = flask.request.json  # type: ignore
     if "run_ids" not in input_payload:
         return jsonify_error(
             "Call did not contain json with a 'run_ids' key", HTTPStatus.BAD_REQUEST
