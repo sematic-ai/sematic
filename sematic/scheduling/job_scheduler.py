@@ -30,7 +30,8 @@ def schedule_run(run: Run, resolution: Resolution) -> Run:
     """
     run.external_jobs = _refresh_external_jobs(run.external_jobs)
     _validate_scheduleable(run, resolution)
-    run.external_jobs.append(_schedule_job(run, resolution))
+    external_jobs_list = list(run.external_jobs) + [_schedule_job(run, resolution)]
+    run.external_jobs = tuple(external_jobs_list)
     run.future_state = FutureState.SCHEDULED
     return run
 
