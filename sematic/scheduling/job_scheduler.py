@@ -62,6 +62,8 @@ def update_run_status(
                 "Run is in an invalid state: it is marked as CREATED but it has "
                 "external jobs. Runs with external jobs should be SCHEDULED."
             )
+    if len(external_jobs) < 1:
+        raise ValueError("No external jobs for run")
     external_jobs = _refresh_external_jobs(external_jobs)
     if future_state.value == FutureState.SCHEDULED.value:
         if not any(job.is_active() for job in external_jobs):

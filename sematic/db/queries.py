@@ -2,6 +2,7 @@
 Module holding common DB queries.
 """
 # Standard Library
+import logging
 from typing import Dict, List, Set, Tuple
 
 # Third-party
@@ -20,6 +21,8 @@ from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.scheduling.external_job import ExternalJob
 from sematic.types.serialization import value_from_json_encodable
+
+logger = logging.getLogger(__name__)
 
 
 def count_runs() -> int:
@@ -102,6 +105,11 @@ def get_run_status_details(
         )
         result_dict = {}
         for run_id, state_string, jobs_enocdable in query_results:
+            logger.error(
+                "For run with id: %s, queried jobs encodable is %s",
+                run_id,
+                jobs_enocdable,
+            )
             if jobs_enocdable is None:
                 jobs = []
             else:
@@ -128,6 +136,11 @@ def save_run(run: Run) -> Run:
         saved run
     """
     with db().get_session() as session:
+        logger.error(
+            "Saving run with id %s and jobs %s",
+            run.id,
+            run.external_jobs_json_encodable,
+        )
         session.add(run)
         session.commit()
         session.refresh(run)
