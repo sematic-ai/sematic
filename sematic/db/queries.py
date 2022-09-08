@@ -2,7 +2,7 @@
 Module holding common DB queries.
 """
 # Standard Library
-from typing import List, Set, Tuple
+from typing import Dict, List, Set, Tuple
 
 # Third-party
 import sqlalchemy
@@ -10,6 +10,7 @@ import sqlalchemy.orm
 from sqlalchemy.sql.elements import ColumnElement
 
 # Sematic
+from sematic.abstract_future import FutureState
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
@@ -17,6 +18,8 @@ from sematic.db.models.note import Note
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
+from sematic.scheduling.external_job import ExternalJob
+from sematic.types.serialization import value_from_json_encodable
 
 
 def count_runs() -> int:
@@ -68,6 +71,46 @@ def get_run(run_id: str) -> Run:
     """
     with db().get_session() as session:
         return session.query(Run).filter(Run.id == run_id).one()
+
+
+def get_run_status_details(
+    run_ids: List[str],
+) -> Dict[str, Tuple[FutureState, List[ExternalJob]]]:
+    """
+    Get information about runs' statuses from the DB.
+
+    This is an optimization to enable getting only status-related information
+    about the runs, and should only be preferred to get_run when the query
+    happens often and only involves statuses.
+
+    Parameters
+    ----------
+    run_ids :
+        ID of runs whose status should be retrieved
+
+    Returns
+    -------
+    A dict whose keys are run ids. The values are tuples where the first element
+    is the future state for the run and the second element is a list of external
+    jobs for the run (if any exist)
+    """
+    with db().get_session() as session:
+        query_results = (
+            session.query(Run.id, Run.future_state, Run.external_jobs_json_encodable)
+            .filter(Run.id.in_(run_ids))
+            .all()
+        )
+        result_dict = {}
+        for run_id, state_string, jobs_enocdable in query_results:
+            if jobs_enocdable is None:
+                jobs = []
+            else:
+                jobs = [
+                    value_from_json_encodable(job, ExternalJob)
+                    for job in jobs_enocdable
+                ]
+            result_dict[run_id] = (FutureState[state_string], jobs)
+    return result_dict
 
 
 def save_run(run: Run) -> Run:

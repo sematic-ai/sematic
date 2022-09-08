@@ -21,6 +21,7 @@ sematic_py_lib(
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
+        "//sematic/scheduling:external_job",
     ],
     pip_deps = [
         "sqlalchemy",

@@ -1,6 +1,7 @@
 # Standard Library
 import enum
 import logging
+import time
 from typing import Dict, List, Optional
 
 # Third-party
@@ -23,6 +24,10 @@ from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.user_settings import SettingsVar, get_all_user_settings, get_user_settings
 
 logger = logging.getLogger(__name__)
+
+
+_MAX_DELAY_BETWEEN_STATUS_UPDATES_SECONDS = 600  # 600s => 10 min
+_DELAY_BETWEEN_STATUS_UPDATES_BACKOFF = 1.5
 
 
 class CloudResolver(LocalResolver):
@@ -180,29 +185,32 @@ class CloudResolver(LocalResolver):
         )
 
     def _wait_for_any_remote_job(self) -> Optional[str]:
-        job_names = [
-            _make_job_name(future, JobType.worker)
+        scheduled_futures_by_id = {
+            future.id: future
             for future in self._futures
             if not future.props.inline and future.state == FutureState.SCHEDULED
-        ]
+        }
 
-        if len(job_names) == 0:
+        if len(scheduled_futures_by_id) == 0:
             return None
 
+        delay_between_updates = 1.0
         while True:
-            watch = kubernetes.watch.Watch()  # type: ignore
-
-            for event in watch.stream(
-                kubernetes.client.BatchV1Api().list_namespaced_job,  # type: ignore
-                namespace=get_user_settings(SettingsVar.KUBERNETES_NAMESPACE),
-                label_selector="job-name in ({0})".format(", ".join(job_names)),
-                timeout_seconds=60,
-            ):
-                job = event["object"]
-
-                if job.status.succeeded or job.status.failed:
-                    watch.stop()
-                    return _get_run_id_from_name(job.metadata.name)
+            updated_states = api_client.update_run_future_states(
+                scheduled_futures_by_id.keys()
+            )
+            for run_id, new_state in updated_states.items():
+                future = scheduled_futures_by_id[run_id]
+                if new_state != FutureState.SCHEDULED:
+                    # no need to actually update the future's state here, that will
+                    # be handled by the post-processing logic once it is aware this
+                    # future has changed
+                    return future.id
+            time.sleep(delay_between_updates)
+            delay_between_updates = min(
+                _MAX_DELAY_BETWEEN_STATUS_UPDATES_SECONDS,
+                _DELAY_BETWEEN_STATUS_UPDATES_BACKOFF * delay_between_updates,
+            )
 
 
 class JobType(enum.Enum):

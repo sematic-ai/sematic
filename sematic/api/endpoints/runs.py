@@ -5,6 +5,7 @@ Module keeping all /api/v*/runs/* API endpoints.
 # Standard Library
 import base64
 import datetime
+import logging
 from http import HTTPStatus
 from typing import Dict, List, Optional
 from urllib.parse import urlencode, urlsplit, urlunsplit
@@ -32,10 +33,13 @@ from sematic.db.queries import (
     get_root_graph,
     get_run,
     get_run_graph,
+    get_run_status_details,
     save_graph,
     save_run,
 )
-from sematic.scheduling.job_scheduler import schedule_run
+from sematic.scheduling.job_scheduler import schedule_run, update_run_status
+
+logger = logging.getLogger(__name__)
 
 
 @sematic_api.route("/api/v1/runs", methods=["GET"])
@@ -204,6 +208,52 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     save_run(run)
     payload = dict(
         content=run.to_json_encodable(),
+    )
+    return flask.jsonify(payload)
+
+
+@sematic_api.route("/api/v1/runs/future_states", methods=["POST"])
+@authenticate
+def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
+    input_payload = flask.request.json
+    if "run_ids" not in input_payload:
+        return jsonify_error(
+            "Call did not contain json with a 'run_ids' key", HTTPStatus.BAD_REQUEST
+        )
+    run_ids = input_payload["run_ids"]
+
+    db_status_dict = get_run_status_details(run_ids)
+    missing_run_ids = set(run_ids).difference(db_status_dict.keys())
+    if len(missing_run_ids) != 0:
+        return jsonify_error(
+            f"Missing runs with ids: {','.join(missing_run_ids)}", HTTPStatus.NOT_FOUND
+        )
+
+    result_list = []
+    for run_id, (future_state, jobs) in db_status_dict.items():
+        new_future_state, message = update_run_status(future_state, jobs)
+        if new_future_state != future_state:
+            run = get_run(run_id)
+            run.future_state = new_future_state
+            if message is not None and run.exception is None:
+                run.exception = message
+            logger.info(
+                "Updating run %s from %s to %s. Message: %s",
+                run_id,
+                future_state,
+                new_future_state,
+                message,
+            )
+            save_run(run)
+        result_list.append(
+            dict(
+                run_id=run_id,
+                future_state=new_future_state.value,
+            )
+        )
+
+    payload = dict(
+        content=result_list,
     )
     return flask.jsonify(payload)
 

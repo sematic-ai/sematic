@@ -1,5 +1,5 @@
 # Standard Library
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 # Sematic
 from sematic.abstract_future import FutureState
@@ -29,6 +29,45 @@ def schedule_run(run: Run, resolution: Resolution) -> Run:
     _validate_scheduleable(run, resolution)
     run.external_jobs.append(_schedule_job(run, resolution))
     return run
+
+
+def update_run_status(
+    future_state: FutureState, external_jobs: List[ExternalJob]
+) -> Tuple[FutureState, Optional[str]]:
+    """Determine whether a new run state should be used based ONLY external job statuses
+
+    The external jobs themselves will have their state information refreshed before
+    determining whether the run needs its status changed.
+
+    Parameters
+    ----------
+    future_state:
+        The current state of the run
+    external_jobs:
+        The external jobs associated with the run.
+    """
+    if future_state.is_terminal():
+        return future_state, None
+    if future_state.value == FutureState.RAN.value:
+        return future_state, None
+    if future_state.value == FutureState.CREATED.value:
+        if len(external_jobs) == 0:
+            return future_state, None
+        else:
+            raise ValueError(
+                "Run is in an invalid state: it is marked as CREATED but it has "
+                "external jobs. Runs with external jobs should be SCHEDULED."
+            )
+    external_jobs = _refresh_external_jobs(external_jobs)
+    if future_state.value == FutureState.SCHEDULED.value:
+        if not any(job.is_active() for job in external_jobs):
+            return (
+                FutureState.FAILED,
+                "The kubernetes job(s) experienced an unknown failure",
+            )
+    raise ValueError(
+        f"Future is in a state not covered by update logic: {future_state}"
+    )
 
 
 def _validate_scheduleable(run: Run, resolution: Resolution):
