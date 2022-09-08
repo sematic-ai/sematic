@@ -28,6 +28,7 @@ def schedule_run(run: Run, resolution: Resolution) -> Run:
     run.external_jobs = _refresh_external_jobs(run.external_jobs)
     _validate_scheduleable(run, resolution)
     run.external_jobs.append(_schedule_job(run, resolution))
+    run.future_state = FutureState.SCHEDULED
     return run
 
 
