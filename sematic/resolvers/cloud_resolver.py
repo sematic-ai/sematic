@@ -113,7 +113,7 @@ class CloudResolver(LocalResolver):
     def _schedule_future(self, future: AbstractFuture) -> None:
         run = api_client.schedule_run(future.id)
         logger.error("Scheduled %s, setting state to %s", run.id, run.future_state)
-        self._set_future_state(future, run.future_state)
+        self._set_future_state(future, FutureState[run.future_state])
 
     def _wait_for_scheduled_run(self) -> None:
         run_id = self._wait_for_any_inline_run() or self._wait_for_any_remote_job()
@@ -176,7 +176,8 @@ class CloudResolver(LocalResolver):
             self._edges[make_edge_key(edge)] = edge
 
     def _wait_for_any_inline_run(self) -> Optional[str]:
-        return next(
+        logger.error("Waiting for any inline run")
+        result = next(
             (
                 future.id
                 for future in self._futures
@@ -184,6 +185,8 @@ class CloudResolver(LocalResolver):
             ),
             None,
         )
+        logger.error("Done waiting for any inline run")
+        return result
 
     def _wait_for_any_remote_job(self) -> Optional[str]:
         scheduled_futures_by_id: Dict[str, AbstractFuture] = {
@@ -193,6 +196,7 @@ class CloudResolver(LocalResolver):
         }
 
         if len(scheduled_futures_by_id) == 0:
+            logger.error("No futures to wait on")
             return None
 
         delay_between_updates = 1.0

@@ -47,6 +47,7 @@ class StateMachineResolver(Resolver, abc.ABC):
                     if future_.state == FutureState.RAN:
                         self._resolve_nested_future(future_)
 
+                logger.error("Waiting for any scheduled run...")
                 self._wait_for_scheduled_run()
 
             self._resolution_did_succeed()
