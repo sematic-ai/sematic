@@ -1,4 +1,5 @@
 # Standard Library
+import logging
 from typing import List, Optional, Tuple
 
 # Sematic
@@ -7,6 +8,8 @@ from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.scheduling import kubernetes as k8s
 from sematic.scheduling.external_job import KUBERNETES_JOB_KIND, ExternalJob
+
+logger = logging.getLogger(__name__)
 
 
 class RunStateNotSchedulable(Exception):
@@ -62,6 +65,10 @@ def update_run_status(
     external_jobs = _refresh_external_jobs(external_jobs)
     if future_state.value == FutureState.SCHEDULED.value:
         if not any(job.is_active() for job in external_jobs):
+            job_summary_str = "; ".join([repr(job) for job in external_jobs])
+            logger.warning(
+                "Job failed due to K8s job failure. Job states: %s", job_summary_str
+            )
             return (
                 FutureState.FAILED,
                 "The kubernetes job(s) experienced an unknown failure",
