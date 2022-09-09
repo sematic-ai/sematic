@@ -202,7 +202,7 @@ class LocalResolver(SilentResolver):
         run.future_state = failed_future.state
 
         # We do not propagate exceptions to parent runs
-        if failed_future.state == FutureState.FAILED:
+        if failed_future.state == FutureState.FAILED and run.exception is None:
             run.exception = format_exception_for_run()
 
         run.failed_at = datetime.datetime.utcnow()
