@@ -1,6 +1,8 @@
 # Standard Library
 import logging
+import time
 from dataclasses import dataclass
+from enum import Enum, unique
 from typing import Dict, List, Optional
 
 import kubernetes
@@ -18,16 +20,25 @@ logger = logging.getLogger(__name__)
 _kubeconfig_loaded = False
 
 
+@unique
+class KubernetesJobCondition(Enum):
+    Complete = "Complete"
+    Failed = "Failed"
+
+
 @dataclass
 class KubernetesExternalJob(ExternalJob):
 
     # See
     # github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1JobStatus.md
     # and: https://kubernetes.io/docs/concepts/workloads/controllers/job/
+    # Explanation of k8s status conditions:
+    # https://maelvls.dev/kubernetes-conditions/
 
     # pending_or_running_pod_count is the "active" property.
     pending_or_running_pod_count: int
     succeeded_pod_count: int
+    most_recent_condition: Optional[str]
     completion_time_string: Optional[str]
     has_started: bool
     still_exists: bool
@@ -68,8 +79,10 @@ class KubernetesExternalJob(ExternalJob):
             return True
         if not self.still_exists:
             return False
-        if self.completion_time_string is not None:
-            return True
+        if self.most_recent_condition in (
+            KubernetesJobCondition.Complete.value or KubernetesJobCondition.Failed.value
+        ):
+            return False
         return self.succeeded_pod_count == 0 and self.pending_or_running_pod_count > 0
 
 
@@ -120,6 +133,19 @@ def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
         if k8s_job.completion_time is not None
         else None
     )
+    if len(k8s_job.status.conditions) > 1:
+        conditions = sorted(
+            k8s_job.status.conditions, key=lambda c: c.lastTransitionTime, reverse=True
+        )
+        for condition in conditions:
+            if condition.status != "True":
+                # we're only interested in True conditions
+                continue
+            if condition.type in (
+                KubernetesJobCondition.Complete.value,
+                KubernetesJobCondition.Failed.value,
+            ):
+                job.most_recent_condition = condition.type
     return job
 
 
@@ -215,7 +241,9 @@ def schedule_run_job(
         succeeded_pod_count=0,
         has_started=False,
         still_exists=True,
+        last_transition_time_epoch_seconds=int(time.time()),
         completion_time_string=None,
+        most_recent_condition=None,
     )
     logger.info("Scheduling job %s", external_job.kubernetes_job_name)
     args = ["--run_id", run_id]
