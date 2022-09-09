@@ -241,7 +241,6 @@ def schedule_run_job(
         succeeded_pod_count=0,
         has_started=False,
         still_exists=True,
-        last_transition_time_epoch_seconds=int(time.time()),
         completion_time_string=None,
         most_recent_condition=None,
     )
