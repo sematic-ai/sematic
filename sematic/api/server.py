@@ -90,7 +90,9 @@ def run_wsgi(daemon: bool):
 
 
 def make_log_config():
-    root_logger_config = {"level": "INFO", "handlers": ["default", "error"]}
+    stdout_handler_list = ["stdout"] if get_config().server_log_to_stdout else []
+    full_handler_list = ["default", "error"] + stdout_handler_list
+    root_logger_config = {"level": "INFO", "handlers": full_handler_list}
     log_rotation_settings = {
         "formatter": "standard",
         "class": "logging.handlers.RotatingFileHandler",
@@ -117,11 +119,16 @@ def make_log_config():
                 filename=os.path.join(get_config().config_dir, "error.log"),
                 **log_rotation_settings,
             ),
+            "stdout": {
+                "formatter": "standard",
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stdout",
+            },
         },
         "loggers": {
             "sematic": root_logger_config,
-            "gunicorn.error": {"level": "ERROR", "handlers": ["default", "error"]},
-            "gunicorn.access": {"level": "INFO", "handlers": ["default"]},
+            "gunicorn.error": {"level": "ERROR", "handlers": full_handler_list},
+            "gunicorn.access": {"level": "INFO", "handlers": full_handler_list},
         },
     }
     return config

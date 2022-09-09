@@ -23,7 +23,8 @@ sematic run examples/mnist/pytorch
 Do this for all supported versions of python. If everything works fine,
 we are ready to push the release. Once you have pushed it to PyPi,
 ```
-git tag vMAJOR.MINOR.PATCH
+RELEASE_VERSION=v$(python3 ./sematic/versions.py)
+git tag $RELEASE_VERSION
 git push --tags
 ```
 
