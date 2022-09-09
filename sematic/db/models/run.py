@@ -144,13 +144,13 @@ class Run(Base, JSONEncodableMixin):
         return value
 
     @property
-    def external_jobs(self) -> Tuple[ExternalJob]:
+    def external_jobs(self) -> Tuple[ExternalJob, ...]:
         encodables = self.external_jobs_json_encodable
         encodables = encodables if encodables is not None else []
         return tuple(value_from_json_encodable(job, ExternalJob) for job in encodables)
 
     @external_jobs.setter
-    def external_jobs(self, jobs: Union[List[ExternalJob], Tuple[ExternalJob]]):
+    def external_jobs(self, jobs: Union[List[ExternalJob], Tuple[ExternalJob, ...]]):
         self.external_jobs_json_encodable = [
             value_to_json_encodable(job, ExternalJob) for job in jobs
         ]

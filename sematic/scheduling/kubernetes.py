@@ -85,7 +85,7 @@ def load_kube_config():
 
 
 @retry(exceptions=(ApiException, ConnectionError), tries=3, delay=5, jitter=2)
-def refresh_job(job):
+def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
     load_kube_config()
     if not isinstance(job, KubernetesExternalJob):
         raise ValueError(
@@ -105,11 +105,14 @@ def refresh_job(job):
         raise e
     job.has_started = True
     job.pending_or_running_pod_count = (
-        k8s_job.status.active if k8s_job.status.active is not None else 0
+        k8s_job.status.active if k8s_job.status.active is not None else 0  # type: ignore
     )
     job.succeeded_pod_count = (
-        k8s_job.status.succeeded if k8s_job.status.succeeded is not None else 0
+        k8s_job.status.succeeded  # type: ignore
+        if k8s_job.status.succeeded is not None  # type: ignore
+        else 0
     )
+    return job
 
 
 def _schedule_kubernetes_job(

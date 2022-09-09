@@ -113,7 +113,7 @@ class CloudResolver(LocalResolver):
     def _schedule_future(self, future: AbstractFuture) -> None:
         run = api_client.schedule_run(future.id)
         logger.error("Scheduled %s, setting state to %s", run.id, run.future_state)
-        self._set_future_state(future, FutureState[run.future_state])
+        self._set_future_state(future, FutureState[run.future_state])  # type: ignore
 
     def _wait_for_scheduled_run(self) -> None:
         run_id = self._wait_for_any_inline_run() or self._wait_for_any_remote_job()

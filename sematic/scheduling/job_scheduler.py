@@ -1,6 +1,6 @@
 # Standard Library
 import logging
-from typing import List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 # Sematic
 from sematic.abstract_future import FutureState
@@ -106,7 +106,7 @@ def _validate_scheduleable(run: Run, resolution: Resolution):
     # TODO(#98): assert run has resource requirements that are specified
 
 
-def _refresh_external_jobs(jobs: Optional[List[ExternalJob]]):
+def _refresh_external_jobs(jobs: Optional[Iterable[ExternalJob]]):
     jobs = jobs if jobs is not None else []
     refreshed = []
     for job in jobs:
