@@ -339,6 +339,8 @@ def save_graph_endpoint(user: Optional[User]):
     graph = flask.request.json["graph"]
 
     runs = [Run.from_json_encodable(run) for run in graph["runs"]]
+    for run in runs:
+        logger.info("Graph update, run %s is in state %s", run.id, run.future_state)
     artifacts = [
         Artifact.from_json_encodable(artifact) for artifact in graph["artifacts"]
     ]

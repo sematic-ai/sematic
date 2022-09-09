@@ -28,6 +28,8 @@ class KubernetesExternalJob(ExternalJob):
     # this is the "active" property.
     pending_or_running_pod_count: int
     succeeded_pod_count: int
+    uncounted_pods: List[str]
+    completion_time_string: Optional[str]
     has_started: bool
     still_exists: bool
 
@@ -67,6 +69,10 @@ class KubernetesExternalJob(ExternalJob):
             return True
         if not self.still_exists:
             return False
+        if self.completion_time_string is not None:
+            return True
+        if len(self.uncounted_pods) > 0:
+            return True
         return self.succeeded_pod_count == 0 and self.pending_or_running_pod_count > 0
 
 
@@ -111,6 +117,15 @@ def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
         k8s_job.status.succeeded  # type: ignore
         if k8s_job.status.succeeded is not None  # type: ignore
         else 0
+    )
+    job.uncounted_pods = (
+        k8s_job.uncounted_terminated_pods.failed
+        + k8s_job.uncounted_terminated_pods.succeeded
+    )
+    job.completion_time_string = (
+        k8s_job.completion_time.isoformat()
+        if k8s_job.completion_time is not None
+        else None
     )
     return job
 
@@ -207,6 +222,8 @@ def schedule_run_job(
         succeeded_pod_count=0,
         has_started=False,
         still_exists=True,
+        completion_time_string=None,
+        uncounted_pods=[],
     )
     logger.info("Scheduling job %s", external_job.kubernetes_job_name)
     args = ["--run_id", run_id]
