@@ -105,7 +105,7 @@ your jobs are running.
 |Parameter| Usage| `True` | `False` | default |
 |-|-|-|-|-|
 |`detach`| `CloudResolver(detach=<value>)`| The **driver job** will run in a remote Kubernetes job. This is the so-called "fire-and-forget" mode. Your console prompt will return as soon as the driver job is submitted. | The **driver job** will run on your local machine. The console prompt will return only after the entire pipeline has resolved. | `True` |
-|`inline`| `@sematic.func(inline=<value>)`| The corresponding Sematic Function will run in its own Kubernetes job, whose resource can be customized (see Resource Requirements). Note that nested functions do not inherit their parent's `inline` value. | The Sematic Function will run within the driver job, whether on your local machine or in a remote job (according to `detach`). | `True`
+|`inline`| `@sematic.func(inline=<value>)`| The Sematic Function will run within the driver job, whether on your local machine or in a remote job (according to `detach`). | The corresponding Sematic Function will run in its own Kubernetes job, whose resource can be customized (see Resource Requirements). Note that nested functions do not inherit their parent's `inline` value. | `True`
 
 To summarize, by default (`detach=True` and `inline=True`) your entire pipeline will run in a single Kubernetes job (the driver job). Then you can choose which functions should have their own Kubernetes job (and resources) by setting `inline=False` on the corresponding function.
 
