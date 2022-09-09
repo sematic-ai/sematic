@@ -105,11 +105,6 @@ def get_run_status_details(
         )
         result_dict = {}
         for run_id, state_string, jobs_enocdable in query_results:
-            logger.error(
-                "For run with id: %s, queried jobs encodable is %s",
-                run_id,
-                jobs_enocdable,
-            )
             if jobs_enocdable is None:
                 jobs = []
             else:

@@ -7,8 +7,10 @@ import base64
 import datetime
 import logging
 from http import HTTPStatus
+from http.client import INTERNAL_SERVER_ERROR
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlencode, urlsplit, urlunsplit
+from xmlrpc.client import SERVER_ERROR
 
 # Third-party
 import flask
@@ -38,8 +40,13 @@ from sematic.db.queries import (
     save_run,
 )
 from sematic.scheduling.job_scheduler import schedule_run, update_run_status
+from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
+
+
+class _DetectedRunRaceCondition(Exception):
+    pass
 
 
 @sematic_api.route("/api/v1/runs", methods=["GET"])
@@ -214,6 +221,7 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 
 @sematic_api.route("/api/v1/runs/future_states", methods=["POST"])
 @authenticate
+@retry(_DetectedRunRaceCondition, tries=3, delay=10, jitter=1)
 def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
     input_payload: Dict[str, Any] = flask.request.json  # type: ignore
     if "run_ids" not in input_payload:
@@ -223,7 +231,6 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
     run_ids = input_payload["run_ids"]
 
     db_status_dict = get_run_status_details(run_ids)
-    logger.error("Queried db status dict: %s", db_status_dict)
     missing_run_ids = set(run_ids).difference(db_status_dict.keys())
     if len(missing_run_ids) != 0:
         return jsonify_error(
@@ -232,10 +239,23 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
 
     result_list = []
     for run_id, (future_state, jobs) in db_status_dict.items():
-        logger.error("About to update %s: %s", run_id, jobs)
         new_future_state, message = update_run_status(future_state, jobs)
         if new_future_state != future_state:
             run = get_run(run_id)
+            if (
+                run.future_state != future_state.value
+                and run.future_state != new_future_state.value
+            ):
+                # future_state was pulled from the run right before we
+                # started doing our updates. The server logic to this
+                # point hasn't saved any status updates. The run status
+                # must have been changed by a call from the worker or
+                # resolver in the interim.
+                raise _DetectedRunRaceCondition(
+                    f"Run {run_id} was changed from {future_state} to "
+                    f"{run.future_state} out of band of the server. The "
+                    f"server wanted to update the run to {new_future_state}"
+                )
             run.future_state = new_future_state
             if message is not None and run.exception is None:
                 run.exception = message

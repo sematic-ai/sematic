@@ -112,7 +112,6 @@ class CloudResolver(LocalResolver):
 
     def _schedule_future(self, future: AbstractFuture) -> None:
         run = api_client.schedule_run(future.id)
-        logger.error("Scheduled %s, setting state to %s", run.id, run.future_state)
         self._set_future_state(future, FutureState[run.future_state])  # type: ignore
 
     def _wait_for_scheduled_run(self) -> None:
@@ -176,8 +175,7 @@ class CloudResolver(LocalResolver):
             self._edges[make_edge_key(edge)] = edge
 
     def _wait_for_any_inline_run(self) -> Optional[str]:
-        logger.error("Waiting for any inline run")
-        result = next(
+        return next(
             (
                 future.id
                 for future in self._futures
@@ -185,8 +183,6 @@ class CloudResolver(LocalResolver):
             ),
             None,
         )
-        logger.error("Done waiting for any inline run")
-        return result
 
     def _wait_for_any_remote_job(self) -> Optional[str]:
         scheduled_futures_by_id: Dict[str, AbstractFuture] = {
@@ -196,7 +192,7 @@ class CloudResolver(LocalResolver):
         }
 
         if len(scheduled_futures_by_id) == 0:
-            logger.error("No futures to wait on")
+            logger.info("No futures to wait on")
             return None
 
         delay_between_updates = 1.0
@@ -206,7 +202,7 @@ class CloudResolver(LocalResolver):
             ] = api_client.update_run_future_states(
                 list(scheduled_futures_by_id.keys())
             )
-            logger.error("Checking for updates on %s", scheduled_futures_by_id.keys())
+            logger.info("Checking for updates on %s", scheduled_futures_by_id.keys())
             for run_id, new_state in updated_states.items():
                 future = scheduled_futures_by_id[run_id]
                 if new_state != FutureState.SCHEDULED:
@@ -215,7 +211,7 @@ class CloudResolver(LocalResolver):
                     # future has changed
                     return future.id
 
-            logger.error("Sleeping for %s s", delay_between_updates)
+            logger.info("Sleeping for %s s", delay_between_updates)
             time.sleep(delay_between_updates)
             delay_between_updates = min(
                 _MAX_DELAY_BETWEEN_STATUS_UPDATES_SECONDS,
