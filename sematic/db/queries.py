@@ -99,7 +99,7 @@ def get_run_status_details(
     """
     with db().get_session() as session:
         query_results = (
-            session.query(Run.id, Run.future_state, Run.external_jobs_json_encodable)
+            session.query(Run.id, Run.future_state, Run.external_jobs_json)
             .filter(Run.id.in_(run_ids))
             .all()
         )
