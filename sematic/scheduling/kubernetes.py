@@ -78,6 +78,8 @@ class KubernetesExternalJob(ExternalJob):
             return True
         if not self.still_exists:
             return False
+        if self.most_recent_condition is None:
+            return True
         if self.most_recent_condition is not None and self.most_recent_condition in (
             KubernetesJobCondition.Complete.value or KubernetesJobCondition.Failed.value
         ):
