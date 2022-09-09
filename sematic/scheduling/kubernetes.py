@@ -127,7 +127,7 @@ def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
         if k8s_job.status.succeeded is not None  # type: ignore
         else 0
     )
-    if len(k8s_job.status.conditions) > 1:
+    if k8s_job.status.conditions is not None and len(k8s_job.status.conditions) > 1:
         conditions = sorted(
             k8s_job.status.conditions, key=lambda c: c.lastTransitionTime, reverse=True
         )
