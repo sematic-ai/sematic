@@ -39,7 +39,6 @@ class KubernetesExternalJob(ExternalJob):
     pending_or_running_pod_count: int
     succeeded_pod_count: int
     most_recent_condition: Optional[str]
-    completion_time_string: Optional[str]
     has_started: bool
     still_exists: bool
 
@@ -127,11 +126,6 @@ def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
         k8s_job.status.succeeded  # type: ignore
         if k8s_job.status.succeeded is not None  # type: ignore
         else 0
-    )
-    job.completion_time_string = (
-        k8s_job.completion_time.isoformat()
-        if k8s_job.completion_time is not None
-        else None
     )
     if len(k8s_job.status.conditions) > 1:
         conditions = sorted(
@@ -241,7 +235,6 @@ def schedule_run_job(
         succeeded_pod_count=0,
         has_started=False,
         still_exists=True,
-        completion_time_string=None,
         most_recent_condition=None,
     )
     logger.info("Scheduling job %s", external_job.kubernetes_job_name)
