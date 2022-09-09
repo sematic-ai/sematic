@@ -76,6 +76,7 @@ def update_run_status(
                 FutureState.FAILED,
                 "The kubernetes job(s) experienced an unknown failure",
             )
+        return FutureState.SCHEDULED, None
     raise ValueError(
         f"Future is in a state not covered by update logic: {future_state}"
     )
