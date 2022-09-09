@@ -223,6 +223,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
     run_ids = input_payload["run_ids"]
 
     db_status_dict = get_run_status_details(run_ids)
+    logger.error("Queried db status dict: %s", db_status_dict)
     missing_run_ids = set(run_ids).difference(db_status_dict.keys())
     if len(missing_run_ids) != 0:
         return jsonify_error(
@@ -231,6 +232,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
 
     result_list = []
     for run_id, (future_state, jobs) in db_status_dict.items():
+        logger.error("About to update %s: %s", run_id, jobs)
         new_future_state, message = update_run_status(future_state, jobs)
         if new_future_state != future_state:
             run = get_run(run_id)
