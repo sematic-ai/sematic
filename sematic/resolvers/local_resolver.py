@@ -197,7 +197,7 @@ class LocalResolver(SilentResolver):
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
         super()._future_did_fail(failed_future)
 
-        run = self._get_run(failed_future.id)
+        run = api_client.get_run(failed_future.id)
 
         run.future_state = failed_future.state
 
