@@ -67,6 +67,7 @@ def _fail_run(run: Run):
     run.future_state = FutureState.FAILED
     run.failed_at = datetime.datetime.utcnow()
     run.exception = format_exception_for_run()
+    print(f"Storing run exception as: {run.exception}")
     api_client.save_graph(run.id, [run], [], [])
 
 
