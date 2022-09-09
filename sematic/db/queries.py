@@ -131,11 +131,6 @@ def save_run(run: Run) -> Run:
         saved run
     """
     with db().get_session() as session:
-        logger.error(
-            "Saving run with id %s and jobs %s",
-            run.id,
-            run.external_jobs_json_encodable,
-        )
         session.add(run)
         session.commit()
         session.refresh(run)
