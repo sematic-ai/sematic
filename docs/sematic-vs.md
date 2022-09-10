@@ -141,6 +141,12 @@ def do_a_or_b(partial_result: MyPartialResult) -> MyResult:
 ```
 
 ### ... Prefect
+* **Use case** – Prefect targets Data Engineers who build data pipelines (e.g.
+  ETL), while Sematic targets ML Engineers building ML model training pipelines.
+  Arguably these two use cases can overlap at times, but Sematic really focuses
+  on ease-of-use and fast iterative development for users with no infrastructure
+  skills.
+
 * **Semantic UI** – Sematic has rich visualizations for the inputs and outputs at all levels
 of your pipelines. Instead of having to search through logs to find out what was executed or
 what the result was, you can see this information right on the page for the execution. You
