@@ -83,7 +83,8 @@ def test_simulate_cloud_exec(
 
 
 @mock.patch("sematic.resolvers.cloud_resolver.kubernetes.client.BatchV1Api")
-def test_schedule_job(k8s_batch_client):
+@mock.patch("sematic.user_settings.get_all_user_settings")
+def test_schedule_job(mock_user_settings, k8s_batch_client):
     run_id = "run_id"
     name = "the-name"
     requests = {"cpu": "42"}
@@ -92,6 +93,7 @@ def test_schedule_job(k8s_batch_client):
     file_secrets = {"api_key_2": "the_file.txt"}
     secret_root = "/the-secrets"
     image_uri = "the-image"
+    namespace = "the-namespace"
 
     resource_requirements = ResourceRequirements(
         kubernetes=KubernetesResourceRequirements(
@@ -104,6 +106,7 @@ def test_schedule_job(k8s_batch_client):
             ),
         )
     )
+    mock_user_settings.return_value = {"KUBERNETES_NAMESPACE": namespace}
     with environment_variables({"SEMATIC_CONTAINER_IMAGE": image_uri}):
         _schedule_job(
             run_id=run_id, name=name, resource_requirements=resource_requirements
@@ -111,6 +114,7 @@ def test_schedule_job(k8s_batch_client):
 
     k8s_batch_client.return_value.create_namespaced_job.assert_called_once()
     _, kwargs = k8s_batch_client.return_value.create_namespaced_job.call_args
+    assert kwargs["namespace"] == namespace
     job = kwargs["body"]
     assert job.spec.template.spec.node_selector == node_selector
     secret_volume = job.spec.template.spec.volumes[0]
