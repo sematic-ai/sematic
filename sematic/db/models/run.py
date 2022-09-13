@@ -145,6 +145,7 @@ class Run(Base, JSONEncodableMixin):
 
     @property
     def external_jobs(self) -> Tuple[ExternalJob, ...]:
+        """Representations of the external compute jobs used for the run."""
         encodables = self.external_jobs_json
         encodables = encodables if encodables is not None else []
         return tuple(value_from_json_encodable(job, ExternalJob) for job in encodables)

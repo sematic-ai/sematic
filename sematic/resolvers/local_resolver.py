@@ -202,7 +202,7 @@ class LocalResolver(SilentResolver):
         run.future_state = failed_future.state
 
         # We do not propagate exceptions to parent runs
-        logger.error(
+        logger.info(
             "Processing failure of run %s, state: %s",
             failed_future.id,
             failed_future.state,
@@ -211,7 +211,7 @@ class LocalResolver(SilentResolver):
             run.exception = format_exception_for_run()
         if failed_future.state == FutureState.NESTED_FAILED and run.exception is None:
             run.exception = "Failed because the child run failed"
-        logger.error(
+        logger.info(
             "Processing failure of run %s, set exception to: %s",
             failed_future.id,
             run.exception,

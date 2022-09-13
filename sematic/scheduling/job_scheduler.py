@@ -87,6 +87,7 @@ def update_run_status(
 
 
 def _validate_scheduleable(run: Run, resolution: Resolution):
+    """raise RunStateNotSchedulable if the state is not such that it can be scheduled"""
     if run.future_state != FutureState.CREATED.value:
         raise RunStateNotSchedulable(
             f"The run {run.id} was in the state {run.future_state}, and could "
@@ -112,6 +113,7 @@ def _validate_scheduleable(run: Run, resolution: Resolution):
 
 
 def _refresh_external_jobs(jobs: Iterable[ExternalJob]) -> Tuple[ExternalJob, ...]:
+    """For any external jobs that are still active, refresh them from external compute"""
     refreshed = []
     for job in jobs:
         if not job.is_active():
@@ -123,6 +125,7 @@ def _refresh_external_jobs(jobs: Iterable[ExternalJob]) -> Tuple[ExternalJob, ..
 
 
 def _refresh_external_job(job: ExternalJob) -> ExternalJob:
+    """Reach out to external compute to update the state of the external job"""
     if job.kind != KUBERNETES_JOB_KIND:
         raise RuntimeError("Can only support Kubernetes jobs to fulfill runs.")
     if not job.is_active():
@@ -131,6 +134,7 @@ def _refresh_external_job(job: ExternalJob) -> ExternalJob:
 
 
 def _schedule_job(run: Run, resolution: Resolution) -> ExternalJob:
+    """Reach out to external compute to start the execution of the run"""
     # k8s is the only thing we can submit jobs to at the moment.
 
     # should be impossible to fail this assert, but it makes mypy happy

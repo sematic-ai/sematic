@@ -200,6 +200,7 @@ def get_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 @sematic_api.route("/api/v1/runs/<run_id>/schedule", methods=["POST"])
 @authenticate
 def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+    """Schedule the run for execution on external compute, like k8s."""
     try:
         run = get_run(run_id)
     except NoResultFound:
@@ -221,6 +222,7 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 @authenticate
 @retry(_DetectedRunRaceCondition, tries=3, delay=10, jitter=1)
 def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
+    """Update the state of runs based on external job status, and return results"""
     input_payload: Dict[str, Any] = flask.request.json  # type: ignore
     if "run_ids" not in input_payload:
         return jsonify_error(

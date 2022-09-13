@@ -92,6 +92,7 @@ class KubernetesExternalJob(ExternalJob):
 
 
 def load_kube_config():
+    """Load the kubeconfig either from file or the in-cluster config"""
     global _kubeconfig_loaded
     if _kubeconfig_loaded:
         return
@@ -107,6 +108,7 @@ def load_kube_config():
 
 @retry(exceptions=(ApiException, ConnectionError), tries=3, delay=5, jitter=2)
 def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
+    """Reach out to K8s for updates on the status of the job"""
     load_kube_config()
     if not isinstance(job, KubernetesExternalJob):
         raise ValueError(
@@ -247,6 +249,7 @@ def schedule_run_job(
     resource_requirements: Optional[ResourceRequirements] = None,
     try_number: int = 0,
 ) -> ExternalJob:
+    """Schedule a job on k8s for a calculator execution."""
     # "User" in this case is the server.
     namespace = get_user_settings(SettingsVar.KUBERNETES_NAMESPACE)
     external_job_id = KubernetesExternalJob.make_external_job_id(
