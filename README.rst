@@ -120,3 +120,9 @@ Contribute
 ----------
 
 See our Contributor guide at `docs.sematic.dev <https://docs.sematic.dev>`_.
+
+
+.. image:: https://static.scarf.sh/a.png?x-pxid=80c3593f-25a0-4b06-90a1-0b670a6567d4
+   :target: https://static.scarf.sh/a.png?x-pxid=80c3593f-25a0-4b06-90a1-0b670a6567d4
+   :alt: scarf pixel
+
