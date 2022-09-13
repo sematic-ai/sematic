@@ -4,6 +4,7 @@ Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
 with nothing else on the line.
 -->
 * HEAD
+    * [bugfix] Dicitonary visualization was broken
     * [feature] When running in cloud mode, have the server log to stdout
 * 0.12.0
     * [feature] BREAKING CHANGE: Allow specifying resource requirements for Kubernetes
