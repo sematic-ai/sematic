@@ -7,10 +7,8 @@ import base64
 import datetime
 import logging
 from http import HTTPStatus
-from http.client import INTERNAL_SERVER_ERROR
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlencode, urlsplit, urlunsplit
-from xmlrpc.client import SERVER_ERROR
 
 # Third-party
 import flask

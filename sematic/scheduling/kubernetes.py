@@ -1,9 +1,9 @@
 # Standard Library
 import logging
-import time
+import pathlib
 from dataclasses import dataclass
 from enum import Enum, unique
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import kubernetes
 from kubernetes.client.exceptions import ApiException
@@ -12,7 +12,11 @@ from urllib3.exceptions import ConnectionError
 # Sematic
 from sematic.config import ON_WORKER_ENV_VAR, SettingsVar, get_user_settings
 from sematic.container_images import CONTAINER_IMAGE_ENV_VAR
-from sematic.resolvers.resource_requirements import ResourceRequirements
+from sematic.resolvers.resource_requirements import (
+    KUBERNETES_SECRET_NAME,
+    KubernetesSecretMount,
+    ResourceRequirements,
+)
 from sematic.scheduling.external_job import KUBERNETES_JOB_KIND, ExternalJob, JobType
 from sematic.utils.retry import retry
 
@@ -129,9 +133,14 @@ def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
         if k8s_job.status.succeeded is not None  # type: ignore
         else 0
     )
-    if k8s_job.status.conditions is not None and len(k8s_job.status.conditions) > 1:
+    if (
+        k8s_job.status.conditions is not None  # type: ignore
+        and len(k8s_job.status.conditions) > 1  # type: ignore
+    ):
         conditions = sorted(
-            k8s_job.status.conditions, key=lambda c: c.lastTransitionTime, reverse=True
+            k8s_job.status.conditions,  # type: ignore
+            key=lambda c: c.lastTransitionTime,
+            reverse=True,
         )
         for condition in conditions:
             if condition.status != "True":
@@ -157,11 +166,24 @@ def _schedule_kubernetes_job(
     args = args if args is not None else []
     node_selector = {}
     resource_requests = {}
+    volumes = []
+    volume_mounts = []
+    secret_env_vars = []
     if resource_requirements is not None:
         node_selector = resource_requirements.kubernetes.node_selector
         resource_requests = resource_requirements.kubernetes.requests
+        volume_info = _volume_secrets(resource_requirements.kubernetes.secret_mounts)
+        if volume_info is not None:
+            volume, mount = volume_info
+            volumes.append(volume)
+            volume_mounts.append(mount)
+        secret_env_vars.extend(
+            _environment_secrets(resource_requirements.kubernetes.secret_mounts)
+        )
         logger.debug("kubernetes node_selector %s", node_selector)
         logger.debug("kubernetes resource requests %s", resource_requests)
+        logger.debug("kubernetes volumes and mounts: %s, %s", volumes, volume_mounts)
+        logger.debug("kubernetes environment secrets: %s", secret_env_vars)
 
     job = kubernetes.client.V1Job(  # type: ignore
         api_version="batch/v1",
@@ -192,8 +214,9 @@ def _schedule_kubernetes_job(
                                     value=str(value),
                                 )
                                 for name, value in environment_vars.items()
-                            ],
-                            volume_mounts=[],
+                            ]
+                            + secret_env_vars,
+                            volume_mounts=volume_mounts,
                             resources=(
                                 kubernetes.client.V1ResourceRequirements(  # type: ignore
                                     limits=resource_requests,
@@ -202,7 +225,7 @@ def _schedule_kubernetes_job(
                             ),
                         )
                     ],
-                    volumes=[],
+                    volumes=volumes,
                     tolerations=[],
                     restart_policy="Never",
                 ),
@@ -251,3 +274,87 @@ def schedule_run_job(
         args=args,
     )
     return external_job
+
+
+def _volume_secrets(
+    secret_mount: KubernetesSecretMount,
+) -> Optional[  # type: ignore
+    Tuple[kubernetes.client.V1Volume, kubernetes.client.V1VolumeMount]
+]:
+    """Configure a volume and corresponding mount for secrets requested for a func
+
+    Parameters
+    ----------
+    secret_mount:
+        The request for how to mount secrets into the pod for a Sematic func
+
+    Returns
+    -------
+    None if no file secrets were requested. Otherwise a volume and a volume mount
+    for the secrets requested.
+    """
+    if len(secret_mount.file_secrets) == 0:
+        return None
+
+    for relative_path in secret_mount.file_secrets.values():
+        if pathlib.Path(relative_path).is_absolute():
+            raise ValueError(
+                f"Cannot mount secret to absolute path '{relative_path}'; "
+                "paths must be relative."
+            )
+
+    volume_name = "sematic-func-secrets-volume"
+
+    volume = kubernetes.client.V1Volume(  # type: ignore
+        name=volume_name,
+        secret=kubernetes.client.V1SecretVolumeSource(  # type: ignore
+            items=[
+                kubernetes.client.V1KeyToPath(  # type: ignore
+                    key=key,
+                    path=relative_path,
+                )
+                for key, relative_path in secret_mount.file_secrets.items()
+            ],
+            optional=False,
+            secret_name=KUBERNETES_SECRET_NAME,
+        ),
+    )
+
+    mount = kubernetes.client.V1VolumeMount(  # type: ignore
+        mount_path=secret_mount.file_secret_root_path,
+        name=volume_name,
+        read_only=True,
+    )
+
+    return volume, mount
+
+
+def _environment_secrets(
+    secret_mount: KubernetesSecretMount,
+) -> List[kubernetes.client.V1EnvVar]:  # type: ignore
+    """Configure environment variables for secrets requested for a func
+
+    Parameters
+    ----------
+    secret_mount:
+        The request for how to mount secrets into the pod for a Sematic func
+
+    Returns
+    -------
+    A list of configurations for Kubernetes environment variables that will get
+    their values from the "sematic-func-secrets" Kubernetes secret.
+    """
+    env_vars = []
+    for key, env_var_name in secret_mount.environment_secrets.items():
+        env_vars.append(
+            kubernetes.client.V1EnvVar(  # type: ignore
+                name=env_var_name,
+                value_from=kubernetes.client.V1EnvVarSource(  # type: ignore
+                    secret_key_ref=kubernetes.client.V1SecretKeySelector(  # type: ignore
+                        name=KUBERNETES_SECRET_NAME,
+                        key=key,
+                    )
+                ),
+            )
+        )
+    return env_vars
