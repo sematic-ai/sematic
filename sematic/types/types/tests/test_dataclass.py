@@ -201,3 +201,7 @@ def test_serialization():
     json_encodable = value_to_json_encodable(value, F)
 
     assert value_from_json_encodable(json_encodable, F) == value
+
+    d = D(a=3, d=4.5)
+    json_encodable = value_to_json_encodable(d, A)
+    assert value_from_json_encodable(json_encodable, A) == d
