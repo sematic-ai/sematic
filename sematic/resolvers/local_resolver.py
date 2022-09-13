@@ -204,6 +204,7 @@ class LocalResolver(SilentResolver):
         # We do not propagate exceptions to parent runs
         if failed_future.state == FutureState.FAILED and run.exception is None:
             run.exception = format_exception_for_run()
+            logger.error("Updated exception from _future_did_fail: %s", run.exception)
 
         run.failed_at = datetime.datetime.utcnow()
         self._add_run(run)
@@ -239,7 +240,9 @@ class LocalResolver(SilentResolver):
             if state.is_terminal():
                 continue
             run.future_state = FutureState.FAILED
-            run.exception = reason
+            if run.exception is None:
+                logger.error("Updating exception from move_runs_to_terminal_state: %s", reason)
+                run.exception = reason
             self._buffer_runs[run_id] = run
         self._save_graph()
 
