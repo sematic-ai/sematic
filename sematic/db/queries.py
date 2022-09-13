@@ -104,13 +104,13 @@ def get_run_status_details(
             .all()
         )
         result_dict = {}
-        for run_id, state_string, jobs_enocdable in query_results:
-            if jobs_enocdable is None:
+        for run_id, state_string, jobs_encodable in query_results:
+            if jobs_encodable is None:
                 jobs = []
             else:
                 jobs = [
                     value_from_json_encodable(job, ExternalJob)
-                    for job in jobs_enocdable
+                    for job in jobs_encodable
                 ]
             result_dict[run_id] = (FutureState[state_string], jobs)
     return result_dict

@@ -1,6 +1,6 @@
 # Standard Library
 import logging
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple, Union
 
 # Sematic
 from sematic.abstract_future import FutureState
@@ -37,7 +37,8 @@ def schedule_run(run: Run, resolution: Resolution) -> Run:
 
 
 def update_run_status(
-    future_state: FutureState, external_jobs: List[ExternalJob]
+    future_state: FutureState,
+    external_jobs: Union[List[ExternalJob], Tuple[ExternalJob, ...]],
 ) -> Tuple[FutureState, Optional[str]]:
     """Determine whether a new run state should be used based ONLY external job statuses
 
@@ -54,6 +55,9 @@ def update_run_status(
     if future_state.is_terminal():
         return future_state, None
     if future_state.value == FutureState.RAN.value:
+        # If the job already RAN, the only reason it's not
+        # terminal is because child runs have to complete.
+        # There should be no more external jobs for this run.
         return future_state, None
     if future_state.value == FutureState.CREATED.value:
         if len(external_jobs) == 0:
@@ -107,8 +111,7 @@ def _validate_scheduleable(run: Run, resolution: Resolution):
     # TODO(#98): assert run has resource requirements that are specified
 
 
-def _refresh_external_jobs(jobs: Optional[Iterable[ExternalJob]]):
-    jobs = jobs if jobs is not None else []
+def _refresh_external_jobs(jobs: Iterable[ExternalJob]) -> Tuple[ExternalJob, ...]:
     refreshed = []
     for job in jobs:
         if not job.is_active():
@@ -116,7 +119,7 @@ def _refresh_external_jobs(jobs: Optional[Iterable[ExternalJob]]):
             continue
         job = _refresh_external_job(job)
         refreshed.append(job)
-    return refreshed
+    return tuple(refreshed)
 
 
 def _refresh_external_job(job: ExternalJob) -> ExternalJob:
