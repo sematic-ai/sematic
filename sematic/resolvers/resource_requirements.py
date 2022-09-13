@@ -29,18 +29,19 @@ class KubernetesSecretMount:
     Attributes
     ----------
     environment_secrets:
-        A dict whose keys are the same as the subset of keys from the "sematic-func-secret"
-        that you want mounted for the func, and whose values are the name of the environment
-        variable where it should be exposed
+        A dict whose keys are the same as the subset of keys from the
+        "sematic-func-secret" that you want mounted for the func, and whose values are
+        the name of the environment variable where it should be exposed
     file_secrets:
-        A dict whose keys are the same as the subset of keys from the "sematic-func-secret"
-        that you want mounted for the func, and whose values are the path to the file within
-        the container where the secret should be exposed. These file paths should be RELATIVE
-        paths, they will be taken as relative to file_secret_root_path.
+        A dict whose keys are the same as the subset of keys from the
+        "sematic-func-secret" that you want mounted for the func, and whose values are
+        the path to the file within the container where the secret should be exposed.
+        These file paths should be RELATIVE paths, they will be taken as relative to
+        file_secret_root_path.
     file_secret_root_path:
-        File secrets must all be stored in the same directory. This gives the directory where
-        they will be stored. The directory must be a new directory, or the contents of the
-        existing directory will be overwritten.
+        File secrets must all be stored in the same directory. This gives the directory
+        where they will be stored. The directory must be a new directory, or the contents
+        of the existing directory will be overwritten.
     """
 
     environment_secrets: Dict[str, str] = field(default_factory=dict)

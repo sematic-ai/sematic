@@ -333,7 +333,9 @@ def _schedule_job(
 
 def _volume_secrets(
     secret_mount: KubernetesSecretMount,
-) -> Optional[Tuple[kubernetes.client.V1Volume, kubernetes.client.V1VolumeMount]]:
+) -> Optional[  # type: ignore
+    Tuple[kubernetes.client.V1Volume, kubernetes.client.V1VolumeMount]
+]:
     """Configure a volume and corresponding mount for secrets requested for a func
 
     Parameters
@@ -358,11 +360,11 @@ def _volume_secrets(
 
     volume_name = "sematic-func-secrets-volume"
 
-    volume = kubernetes.client.V1Volume(
+    volume = kubernetes.client.V1Volume(  # type: ignore
         name=volume_name,
-        secret=kubernetes.client.V1SecretVolumeSource(
+        secret=kubernetes.client.V1SecretVolumeSource(  # type: ignore
             items=[
-                kubernetes.client.V1KeyToPath(
+                kubernetes.client.V1KeyToPath(  # type: ignore
                     key=key,
                     path=relative_path,
                 )
@@ -373,7 +375,7 @@ def _volume_secrets(
         ),
     )
 
-    mount = kubernetes.client.V1VolumeMount(
+    mount = kubernetes.client.V1VolumeMount(  # type: ignore
         mount_path=secret_mount.file_secret_root_path,
         name=volume_name,
         read_only=True,
@@ -384,7 +386,7 @@ def _volume_secrets(
 
 def _environment_secrets(
     secret_mount: KubernetesSecretMount,
-) -> List[kubernetes.client.V1EnvVar]:
+) -> List[kubernetes.client.V1EnvVar]:  # type: ignore
     """Configure environment variables for secrets requested for a func
 
     Parameters
@@ -400,10 +402,10 @@ def _environment_secrets(
     env_vars = []
     for key, env_var_name in secret_mount.environment_secrets.items():
         env_vars.append(
-            kubernetes.client.V1EnvVar(
+            kubernetes.client.V1EnvVar(  # type: ignore
                 name=env_var_name,
-                value_from=kubernetes.client.V1EnvVarSource(
-                    secret_key_ref=kubernetes.client.V1SecretKeySelector(
+                value_from=kubernetes.client.V1EnvVarSource(  # type: ignore
+                    secret_key_ref=kubernetes.client.V1SecretKeySelector(  # type: ignore
                         name=KUBERNETES_SECRET_NAME,
                         key=key,
                     )
