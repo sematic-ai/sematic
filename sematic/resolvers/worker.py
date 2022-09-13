@@ -150,7 +150,16 @@ def main(run_id: str, resolve: bool):
         logger.error("Run failed:")
         logger.error("%s: %s", e.__class__.__name__, e)
 
-        _fail_run(run)
+        if resolve:
+            root_run = api_client.get_run(run_id)
+            if not FutureState[root_run.future_state].is_terminal():
+                # Only fail here if the the root run hasn't already been
+                # moved to a terminal state. It may contain a better
+                # exception message. If it completed somehow, then it
+                # should be in a valid state that we don't want to disrupt.
+                _fail_run(run)
+        else:
+            _fail_run(run)
 
         if resolve:
             api_client.notify_pipeline_update(run.calculator_path)
