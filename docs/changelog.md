@@ -6,6 +6,7 @@ with nothing else on the line.
 * HEAD
     * [bugfix] Dicitonary visualization was broken
     * [feature] When running in cloud mode, have the server log to stdout
+    * [feature] Enable mounting Kubernetes secrets into the container
 * 0.12.0
     * [feature] BREAKING CHANGE: Allow specifying resource requirements for Kubernetes
     jobs. `KubernetesResourceRequirements` has a new required field, `requests`

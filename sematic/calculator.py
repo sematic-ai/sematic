@@ -201,6 +201,11 @@ def func(
     """
     Sematic Function decorator.
     """
+    if inline and resource_requirements is not None:
+        raise ValueError(
+            "Inline functions cannot have resource requirements "
+            "Try using @sematic.func(inline=False, ...)"
+        )
 
     def _wrapper(func_):
 

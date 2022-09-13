@@ -33,6 +33,7 @@ pytest_test(
         "//sematic/db/tests:fixtures",
         "//sematic/db/models:resolution",
         "//sematic/resolvers:cloud_resolver",
+        "//sematic/resolvers:resource_requirements",
         "//sematic/tests:fixtures",
     ],
 )
