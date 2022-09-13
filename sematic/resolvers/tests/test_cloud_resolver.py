@@ -12,6 +12,7 @@ from sematic.calculator import func
 from sematic.db.models.resolution import ResolutionStatus
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.resolvers.cloud_resolver import CloudResolver
+from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 
 
 @func

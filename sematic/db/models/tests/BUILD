@@ -24,6 +24,7 @@ pytest_test(
     deps = [
         "//sematic:abstract_future",
         "//sematic/db/models:run",
+        "//sematic/scheduling:external_job",
     ],
 )
 
