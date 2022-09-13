@@ -202,12 +202,20 @@ class LocalResolver(SilentResolver):
         run.future_state = failed_future.state
 
         # We do not propagate exceptions to parent runs
-        logger.error("Processing failure of run %s, state: %s", failed_future.id, failed_future.state)
+        logger.error(
+            "Processing failure of run %s, state: %s",
+            failed_future.id,
+            failed_future.state,
+        )
         if failed_future.state == FutureState.FAILED and run.exception is None:
             run.exception = format_exception_for_run()
         if failed_future.state == FutureState.NESTED_FAILED and run.exception is None:
             run.exception = "Failed because the child run failed"
-        logger.error("Processing failure of run %s, set exception to: %s", failed_future.id, run.exception)
+        logger.error(
+            "Processing failure of run %s, set exception to: %s",
+            failed_future.id,
+            run.exception,
+        )
 
         run.failed_at = datetime.datetime.utcnow()
         self._add_run(run)
@@ -228,9 +236,7 @@ class LocalResolver(SilentResolver):
             reason = "Marked as failed because another run in the graph failed."
             resolution_status = ResolutionStatus.COMPLETE
         else:
-            reason = (
-                "Marked as failed because of an internal error resolving the graph."
-            )
+            reason = "Marked as failed because the rest of the graph failed to resolve."
             resolution_status = ResolutionStatus.FAILED
 
         self._move_runs_to_terminal_state(reason)
@@ -244,7 +250,9 @@ class LocalResolver(SilentResolver):
                 continue
             run.future_state = FutureState.FAILED
             if run.exception is None:
-                logger.error("Updating exception from move_runs_to_terminal_state: %s", reason)
+                logger.error(
+                    "Updating exception from move_runs_to_terminal_state: %s", reason
+                )
                 run.exception = reason
             self._buffer_runs[run_id] = run
         self._save_graph()

@@ -155,7 +155,7 @@ def main(run_id: str, resolve: bool):
             # refresh the run from the DB in case it was updated from
             # its worker job
             root_run = api_client.get_run(run_id)
-            if not FutureState[root_run.future_state].is_terminal():
+            if not FutureState[root_run.future_state].is_terminal():  # type: ignore
                 # Only fail here if the the root run hasn't already been
                 # moved to a terminal state. It may contain a better
                 # exception message. If it completed somehow, then it
