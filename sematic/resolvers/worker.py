@@ -66,8 +66,9 @@ def _fail_run(run: Run):
     """
     run.future_state = FutureState.FAILED
     run.failed_at = datetime.datetime.utcnow()
-    run.exception = format_exception_for_run()
-    logger.error(f"Storing run exception as: {run.exception}")
+    if run.exception is None:
+        run.exception = format_exception_for_run()
+        logger.error(f"Storing run exception as: {run.exception}")
     api_client.save_graph(run.id, [run], [], [])
 
 
@@ -151,13 +152,15 @@ def main(run_id: str, resolve: bool):
         logger.error("%s: %s", e.__class__.__name__, e)
 
         if resolve:
+            # refresh the run from the DB in case it was updated from
+            # its worker job
             root_run = api_client.get_run(run_id)
             if not FutureState[root_run.future_state].is_terminal():
                 # Only fail here if the the root run hasn't already been
                 # moved to a terminal state. It may contain a better
                 # exception message. If it completed somehow, then it
                 # should be in a valid state that we don't want to disrupt.
-                _fail_run(run)
+                _fail_run(root_run)
         else:
             _fail_run(run)
 

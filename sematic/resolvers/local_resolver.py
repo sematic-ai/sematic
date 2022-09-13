@@ -204,7 +204,8 @@ class LocalResolver(SilentResolver):
         # We do not propagate exceptions to parent runs
         if failed_future.state == FutureState.FAILED and run.exception is None:
             run.exception = format_exception_for_run()
-            logger.error("Updated exception from _future_did_fail: %s", run.exception)
+        if failed_future.state == FutureState.NESTED_FAILED and run.exception is None:
+            run.exception = "Failed because the child run failed"
 
         run.failed_at = datetime.datetime.utcnow()
         self._add_run(run)
