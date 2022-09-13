@@ -26,6 +26,7 @@ from sematic.resolvers.cloud_resolver import CloudResolver  # noqa: F401,E402
 from sematic.resolvers.local_resolver import LocalResolver  # noqa: F401,E402
 from sematic.resolvers.resource_requirements import (  # noqa: F401,E402
     KubernetesResourceRequirements,
+    KubernetesSecretMount,
     ResourceRequirements,
 )
 from sematic.versions import CURRENT_VERSION_STR as __version__  # noqa: F401,E402

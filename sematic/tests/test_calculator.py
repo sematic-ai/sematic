@@ -53,6 +53,21 @@ def test_not_a_function():
         Calculator("abc", {}, None)
 
 
+def test_inline_and_resource_reqs():
+    with pytest.raises(
+        ValueError, match="Inline functions cannot have resource requirements"
+    ):
+
+        @func(
+            inline=True,
+            resource_requirements=ResourceRequirements(
+                KubernetesResourceRequirements()
+            ),
+        )
+        def abc():
+            pass
+
+
 def test_types_not_specified():
     @func
     def f():
@@ -228,7 +243,7 @@ def test_resource_requirements():
         kubernetes=KubernetesResourceRequirements(node_selector={"a": "b"}, requests={})
     )
 
-    @func(resource_requirements=resource_requirements)
+    @func(resource_requirements=resource_requirements, inline=False)
     def f():
         pass
 
