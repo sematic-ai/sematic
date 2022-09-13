@@ -58,11 +58,9 @@ class StateMachineResolver(Resolver, abc.ABC):
         except Exception as e:
             self._resolution_did_fail(error=e)
             if isinstance(e, CalculatorError) and hasattr(e, "__cause__"):
-                logger.error("Found calculator error, re-raising as: %s", e.__cause__)
                 # this will simplify the stack trace so the user sees less
                 # from Sematic's stack and more from the error from their code.
                 raise e.__cause__  # type: ignore
-            logger.error("Not a calculator error, raising as: %s", e)
             raise e
 
     def _detach_resolution(self, future: AbstractFuture) -> str:

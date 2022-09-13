@@ -256,7 +256,6 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
                 )
             run.future_state = new_future_state
             if message is not None and run.exception is None:
-                logger.error("Updating exception from status update: %s", message)
                 run.exception = message
             logger.info(
                 "Updating run %s from %s to %s. Message: %s",

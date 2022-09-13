@@ -250,9 +250,6 @@ class LocalResolver(SilentResolver):
                 continue
             run.future_state = FutureState.FAILED
             if run.exception is None:
-                logger.error(
-                    "Updating exception from move_runs_to_terminal_state: %s", reason
-                )
                 run.exception = reason
             self._buffer_runs[run_id] = run
         self._save_graph()

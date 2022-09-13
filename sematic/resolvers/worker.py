@@ -68,7 +68,6 @@ def _fail_run(run: Run):
     run.failed_at = datetime.datetime.utcnow()
     if run.exception is None:
         run.exception = format_exception_for_run()
-        logger.error(f"Storing run exception as: {run.exception}")
     api_client.save_graph(run.id, [run], [], [])
 
 
