@@ -85,7 +85,8 @@ class KubernetesExternalJob(ExternalJob):
         if self.most_recent_condition is None:
             return True
         if self.most_recent_condition in (
-            KubernetesJobCondition.Complete.value or KubernetesJobCondition.Failed.value
+            KubernetesJobCondition.Complete.value,
+            KubernetesJobCondition.Failed.value,
         ):
             return False
         return self.succeeded_pod_count == 0 and self.pending_or_running_pod_count > 0
