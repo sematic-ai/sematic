@@ -226,7 +226,11 @@ function ListValueView(props: ValueViewProps) {
 
   var summary;
   if (summaryIsEmpty) {
-    summary = (<Typography display="inline" component="span" fontStyle={"italic"}>Nothing to display</Typography>);
+    summary = (
+      <Typography display="inline" component="span" fontStyle={"italic"}>
+        Nothing to display
+      </Typography>
+    );
   } else {
     summary = (
       <Typography display="inline" component="span">
@@ -468,10 +472,10 @@ function DictValueView(props: ValueViewProps) {
         {Array.from(valueSummary).map((pair, index) => (
           <TableRow key={index}>
             <TableCell>
-              {renderSummary(props.valueSummary, pair[0], keyTypeRepr)}
+              {renderSummary(props.typeSerialization, pair[0], keyTypeRepr)}
             </TableCell>
             <TableCell>
-              {renderSummary(props.valueSummary, pair[1], valueTypeRepr)}
+              {renderSummary(props.typeSerialization, pair[1], valueTypeRepr)}
             </TableCell>
           </TableRow>
         ))}
