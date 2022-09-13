@@ -70,3 +70,5 @@ many ways including the following:
 ## License
 
 Sematic is Apache 2.0 licensed.
+
+![scarf pixel](https://static.scarf.sh/a.png?x-pxid=a87446e5-0e13-40cd-af92-7dd8cd99d22d)
