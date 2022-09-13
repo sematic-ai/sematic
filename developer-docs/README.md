@@ -21,7 +21,15 @@ sematic run examples/mnist/pytorch
 ```
 
 Do this for all supported versions of python. If everything works fine,
-we are ready to push the release. Once you have pushed it to PyPi,
+we are ready to push the release.
+
+```
+make test-release
+make release
+```
+
+Once you have pushed it to PyPi, add the git tag
+
 ```
 RELEASE_VERSION=v$(python3 ./sematic/versions.py)
 git tag $RELEASE_VERSION
@@ -37,3 +45,5 @@ $ RELEASE_VERSION=v$(python3 ../sematic/versions.py)
 $ docker build -t "sematicai/sematic-server:$RELEASE_VERSION" -f Dockerfile.server .
 $ docker push "sematicai/sematic-server:$RELEASE_VERSION"
 ```
+
+Finally, draft the release on GitHub.
