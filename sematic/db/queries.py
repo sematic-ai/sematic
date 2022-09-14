@@ -131,6 +131,10 @@ def save_run(run: Run) -> Run:
         saved run
     """
     with db().get_session() as session:
+        existing_run = session.query(Run).filter(Run.id == run.id).one_or_none()
+        if existing_run is not None:
+            if len(run.external_jobs) >= len(existing_run.external_jobs):
+                raise ValueError("Cannot remove existing external jobs")
         session.add(run)
         session.commit()
         session.refresh(run)
@@ -181,6 +185,10 @@ def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
     """
     with db().get_session() as session:
         for run in runs:
+            existing_run = session.query(Run).filter(Run.id == run.id).one_or_none()
+            if existing_run is not None:
+                if len(run.external_jobs) >= len(existing_run.external_jobs):
+                    raise ValueError("Cannot remove existing external jobs")
             session.merge(run)
 
         for artifact in artifacts:

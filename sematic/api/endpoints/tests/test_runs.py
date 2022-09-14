@@ -200,6 +200,9 @@ def test_schedule_run(
         schedule_job_call_args["run_id"] == persisted_run.id
         schedule_job_call_args["image"] == persisted_resolution.docker_image_uri
 
+        run = get_run(persisted_run.id)
+        assert len(run.external_jobs) == 1
+
 
 @mock_no_auth
 def test_update_future_states(
