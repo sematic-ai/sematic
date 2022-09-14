@@ -167,13 +167,15 @@ class CloudResolver(LocalResolver):
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
         # Unlike LocalResolver._future_did_fail, we only care about
         # failing parent futures since runs are marked FAILED by worker.py
-        run = self._runs.get(failed_future.id, None)
+        run = self._get_run(failed_future.id)
         if (
             failed_future.state == FutureState.FAILED
             and run is not None
             and run.exception is None
         ):
             run.exception = format_exception_for_run()
+        self._add_run(run)
+        self._save_graph()
         if failed_future.state == FutureState.NESTED_FAILED:
             super()._future_did_fail(failed_future)
 
