@@ -244,8 +244,8 @@ class LocalResolver(SilentResolver):
         self._notify_pipeline_update()
 
     def _move_runs_to_terminal_state(self, reason):
-        for run_id, run in self._runs.keys():
-            run = api_client.get_run(run_id)
+        for run_id in self._runs.keys():
+            run = self._get_run(run_id)  # may have terminated remotely, re-get from api
             state = FutureState.as_object(run.future_state)
             if state.is_terminal():
                 continue

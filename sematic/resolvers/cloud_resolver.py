@@ -83,6 +83,12 @@ class CloudResolver(LocalResolver):
         self._runs = {run.id: run for run in runs}
         self._artifacts = {artifact.id: artifact for artifact in artifacts}
         self._edges = {make_edge_key(edge): edge for edge in edges}
+    
+    def _get_run(self, run_id) -> Run:
+        # Should refresh from DB for remote exec
+        run = api_client.get_run(run_id)
+        self._runs[run_id] = run
+        return run
 
     def _get_resolution_image(self) -> Optional[str]:
         return get_image_uri()
@@ -223,6 +229,7 @@ class CloudResolver(LocalResolver):
                     # no need to actually update the future's state here, that will
                     # be handled by the post-processing logic once it is aware this
                     # future has changed
+                    self._refresh_graph(future.id)
                     return future.id
 
             logger.info("Sleeping for %s s", delay_between_updates)
