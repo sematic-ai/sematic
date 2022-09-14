@@ -188,7 +188,11 @@ def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
             existing_run = session.query(Run).filter(Run.id == run.id).one_or_none()
             if existing_run is not None:
                 if len(run.external_jobs) >= len(existing_run.external_jobs):
-                    raise ValueError("Cannot remove existing external jobs")
+                    raise ValueError(
+                        f"Cannot remove existing external jobs from {run.id}. "
+                        f"Existing run had: {existing_run.external_jobs}. New "
+                        f"run had: {run.external_jobs}"
+                    )
             session.merge(run)
 
         for artifact in artifacts:
