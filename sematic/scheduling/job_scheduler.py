@@ -71,6 +71,7 @@ def update_run_status(
         raise ValueError("No external jobs for run")
     external_jobs = _refresh_external_jobs(external_jobs)
     if future_state.value == FutureState.SCHEDULED.value:
+        logger.error("External jobs for update: %s, active statuses: %s", external_jobs, [job.is_active() for job in external_jobs])
         if not any(job.is_active() for job in external_jobs):
             job_summary_str = "; ".join([repr(job) for job in external_jobs])
             logger.warning(

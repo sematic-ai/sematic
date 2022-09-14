@@ -253,6 +253,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
 
     result_list = []
     for run_id, (future_state, jobs) in db_status_dict.items():
+        logger.error("Updating run %s with external jobs: %s", run_id, jobs)
         new_future_state, message = update_run_status(future_state, jobs)
         if new_future_state != future_state:
             run = get_run(run_id)
