@@ -168,10 +168,10 @@ def test_get_run_404(test_client: flask.testing.FlaskClient):  # noqa: F811
 
 @mock_no_auth
 def test_schedule_run(
-    persisted_run: Run,
-    persisted_resolution: Resolution,
-    test_client: flask.testing.FlaskClient,
-):  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    persisted_resolution: Resolution,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
         mock_k8s.refresh_job.side_effect = lambda job: job
         mock_k8s.schedule_run_job.side_effect = lambda *_, **__: KubernetesExternalJob(
@@ -193,7 +193,7 @@ def test_schedule_run(
         assert response.status_code == 200
 
         payload = response.json
-        run = Run.from_json_encodable(payload["content"])
+        run = Run.from_json_encodable(payload["content"])  # type: ignore # noqa: F811
         assert run.future_state == FutureState.SCHEDULED.value
         mock_k8s.schedule_run_job.assert_called_once()
         schedule_job_call_args = mock_k8s.schedule_run_job.call_args[1]
@@ -206,13 +206,13 @@ def test_schedule_run(
 
 @mock_no_auth
 def test_update_future_states(
-    persisted_run: Run, test_client: flask.testing.FlaskClient
-):  # noqa: F811
+    persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
         persisted_run.future_state = FutureState.CREATED
         save_run(persisted_run)
         response = test_client.post(
-            f"/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
+            "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
         )
 
         assert response.status_code == 200
@@ -233,13 +233,13 @@ def test_update_future_states(
             still_exists=True,
         )
 
-        persisted_run.external_jobs = [job]
+        persisted_run.external_jobs = (job,)
         persisted_run.future_state = FutureState.SCHEDULED
         save_run(persisted_run)
 
         mock_k8s.refresh_job.side_effect = lambda job: job
         response = test_client.post(
-            f"/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
+            "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
         )
         assert response.status_code == 200
         payload = response.json
@@ -250,11 +250,11 @@ def test_update_future_states(
         # simulate the job disappearing while the run is still SCHEDULED
         job.still_exists = False
         assert not job.is_active()
-        persisted_run.external_jobs = [job]
+        persisted_run.external_jobs = (job,)
         persisted_run.future_state = FutureState.SCHEDULED
         save_run(persisted_run)
         response = test_client.post(
-            f"/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
+            "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
         )
         assert response.status_code == 200
         payload = response.json

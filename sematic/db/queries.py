@@ -140,7 +140,6 @@ def save_run(run: Run) -> Run:
                     f"run had: {run.external_jobs}"
                 )
     with db().get_session() as session:
-        logger.error("External jobs for %s: %s", run.id, run.external_jobs)
         session.add(run)
         session.commit()
         session.refresh(run)
@@ -201,7 +200,6 @@ def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
                     )
     with db().get_session() as session:
         for run in runs:
-            logger.error("External jobs for %s: %s", run.id, run.external_jobs)
             session.merge(run)
 
         for artifact in artifacts:

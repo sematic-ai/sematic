@@ -253,10 +253,19 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
 
     result_list = []
     for run_id, (future_state, jobs) in db_status_dict.items():
-        logger.error("Updating run %s with external jobs: %s", run_id, jobs)
-        new_future_state, message = update_run_status(future_state, jobs)
-        if new_future_state != future_state:
+        new_future_state, message, new_external_jobs = update_run_status(
+            future_state, jobs
+        )
+        run_modified = False
+        run = None
+        if new_external_jobs != jobs:
             run = get_run(run_id)
+            run.external_jobs = new_external_jobs
+            logger.info("Updating run's external jobs: %s", new_external_jobs)
+            run_modified = True
+        if new_future_state != future_state:
+            run = get_run(run_id) if run is None else run
+            run_modified = True
             if (
                 run.future_state != future_state.value
                 and run.future_state != new_future_state.value
@@ -281,6 +290,8 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
                 new_future_state,
                 message,
             )
+        if run_modified and run is not None:
+            # note: the "is not None" is redundant but pleases mypy
             save_run(run)
         result_list.append(
             dict(

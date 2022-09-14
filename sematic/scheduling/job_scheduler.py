@@ -1,5 +1,6 @@
 # Standard Library
 import logging
+from dataclasses import replace
 from typing import Iterable, List, Optional, Tuple, Union
 
 # Sematic
@@ -39,7 +40,7 @@ def schedule_run(run: Run, resolution: Resolution) -> Run:
 def update_run_status(
     future_state: FutureState,
     external_jobs: Union[List[ExternalJob], Tuple[ExternalJob, ...]],
-) -> Tuple[FutureState, Optional[str]]:
+) -> Tuple[FutureState, Optional[str], Tuple[ExternalJob, ...]]:
     """Determine whether a new run state should be used based ONLY external job statuses
 
     The external jobs themselves will have their state information refreshed before
@@ -51,17 +52,24 @@ def update_run_status(
         The current state of the run
     external_jobs:
         The external jobs associated with the run.
+
+    Returns
+    -------
+    A tuple with 3 elements. The first is the new future state (same state if unchanged).
+    The second is an optional message for why the state changed. The third is new external
+    jobs, updated.
     """
+    external_jobs = tuple(external_jobs)
     if future_state.is_terminal():
-        return future_state, None
+        return future_state, None, external_jobs
     if future_state.value == FutureState.RAN.value:
         # If the job already RAN, the only reason it's not
         # terminal is because child runs have to complete.
         # There should be no more external jobs for this run.
-        return future_state, None
+        return future_state, None, external_jobs
     if future_state.value == FutureState.CREATED.value:
         if len(external_jobs) == 0:
-            return future_state, None
+            return future_state, None, external_jobs
         else:
             raise ValueError(
                 "Run is in an invalid state: it is marked as CREATED but it has "
@@ -71,7 +79,6 @@ def update_run_status(
         raise ValueError("No external jobs for run")
     external_jobs = _refresh_external_jobs(external_jobs)
     if future_state.value == FutureState.SCHEDULED.value:
-        logger.error("External jobs for update: %s, active statuses: %s", external_jobs, [job.is_active() for job in external_jobs])
         if not any(job.is_active() for job in external_jobs):
             job_summary_str = "; ".join([repr(job) for job in external_jobs])
             logger.warning(
@@ -80,8 +87,9 @@ def update_run_status(
             return (
                 FutureState.FAILED,
                 "The kubernetes job(s) experienced an unknown failure",
+                external_jobs,
             )
-        return FutureState.SCHEDULED, None
+        return FutureState.SCHEDULED, None, external_jobs
     raise ValueError(
         f"Future is in a state not covered by update logic: {future_state}"
     )
@@ -129,6 +137,7 @@ def _refresh_external_job(job: ExternalJob) -> ExternalJob:
     """Reach out to external compute to update the state of the external job"""
     if job.kind != KUBERNETES_JOB_KIND:
         raise RuntimeError("Can only support Kubernetes jobs to fulfill runs.")
+    job = replace(job)  # modify new copy, not existing one
     if not job.is_active():
         return job
     return k8s.refresh_job(job)

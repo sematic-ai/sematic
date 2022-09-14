@@ -121,12 +121,14 @@ def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
         )
     except ApiException as e:
         if e.status == 404:
+            logger.error("Got 404 looking for %s", job.external_job_id)
             if not job.has_started:
                 return job  # still hasn't started
             else:
                 job.still_exists = False
                 return job
         raise e
+    logger.error("Setting has_started=True for %s", job.external_job_id)
     job.has_started = True
     job.pending_or_running_pod_count = (
         k8s_job.status.active if k8s_job.status.active is not None else 0  # type: ignore
