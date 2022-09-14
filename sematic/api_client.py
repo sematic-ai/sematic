@@ -139,6 +139,7 @@ def schedule_run(run_id: str) -> Run:
     return Run.from_json_encodable(response["content"])
 
 
+@retry(tries=3, delay=10, jitter=1)
 def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
     """Ask the server to update the status of given run ids if needed and return them.
 
