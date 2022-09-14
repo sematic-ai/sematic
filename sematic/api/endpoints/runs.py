@@ -17,6 +17,7 @@ import sqlalchemy
 from sqlalchemy.orm.exc import NoResultFound
 
 # Sematic
+from sematic.abstract_future import FutureState
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import (
@@ -208,8 +209,21 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
             "No runs with id {}".format(repr(run_id)), HTTPStatus.NOT_FOUND
         )
 
+    n_existing_jobs = len(run.external_jobs)
     resolution = get_resolution(run.root_id)
     run = schedule_run(run, resolution)
+    n_jobs_post_schedule = len(run.external_jobs)
+    if n_jobs_post_schedule <= n_existing_jobs:
+        return jsonify_error(
+            "Failed to schedule the run {}, no external jobs".format(repr(run_id)),
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+        )
+    logger.info("Scheduled run with external job: %s", run.external_jobs[-1])
+    if run.future_state != FutureState.SCHEDULED.value:
+        return jsonify_error(
+            "Failed to schedule the run {}".format(repr(run_id)),
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+        )
     run.started_at = datetime.datetime.utcnow()
     save_run(run)
     payload = dict(
