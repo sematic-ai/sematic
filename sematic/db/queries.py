@@ -139,6 +139,7 @@ def save_run(run: Run) -> Run:
                     f"Existing run had: {existing_run.external_jobs}. New "
                     f"run had: {run.external_jobs}"
                 )
+    with db().get_session() as session:
         session.add(run)
         session.commit()
         session.refresh(run)
@@ -197,6 +198,8 @@ def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
                         f"Existing run had: {existing_run.external_jobs}. New "
                         f"run had: {run.external_jobs}"
                     )
+    with db().get_session() as session:
+        for run in runs:
             session.merge(run)
 
         for artifact in artifacts:
