@@ -308,7 +308,7 @@ def test_exceptions(mock_requests, valid_client_version):  # noqa: F811
     runs_by_id = {run.id: run for run in runs}
 
     assert runs_by_id[future.id].future_state == FutureState.NESTED_FAILED.value
-    assert runs_by_id[future.id].exception is None
+    assert runs_by_id[future.id].exception == "Failed because the child run failed"
 
     assert runs_by_id[future.nested_future.id].future_state == FutureState.FAILED.value
     assert "FAIL!" in runs_by_id[future.nested_future.id].exception

@@ -27,6 +27,7 @@ from sematic.resolvers.resource_requirements import (
     ResourceRequirements,
 )
 from sematic.user_settings import SettingsVar, get_all_user_settings, get_user_settings
+from sematic.utils.exceptions import format_exception_for_run
 
 logger = logging.getLogger(__name__)
 
@@ -159,6 +160,13 @@ class CloudResolver(LocalResolver):
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
         # Unlike LocalResolver._future_did_fail, we only care about
         # failing parent futures since runs are marked FAILED by worker.py
+        run = self._runs.get(failed_future.id, None)
+        if (
+            failed_future.state == FutureState.FAILED
+            and run is not None
+            and run.exception is None
+        ):
+            run.exception = format_exception_for_run()
         if failed_future.state == FutureState.NESTED_FAILED:
             super()._future_did_fail(failed_future)
 
