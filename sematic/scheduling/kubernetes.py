@@ -196,6 +196,11 @@ def _schedule_kubernetes_job(
         metadata=kubernetes.client.V1ObjectMeta(name=name),  # type: ignore
         spec=kubernetes.client.V1JobSpec(  # type: ignore
             template=kubernetes.client.V1PodTemplateSpec(  # type: ignore
+                metadata=kubernetes.client.V1ObjectMeta(  # type: ignore
+                    annotations={
+                        "cluster-autoscaler.kubernetes.io/safe-to-evict": "false"
+                    },
+                ),
                 spec=kubernetes.client.V1PodSpec(  # type: ignore
                     node_selector=node_selector,
                     containers=[
