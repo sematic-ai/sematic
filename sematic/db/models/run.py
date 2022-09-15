@@ -2,7 +2,7 @@
 import datetime
 import json
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 # Third party
 from sqlalchemy import Column, types
@@ -16,6 +16,12 @@ from sematic.db.models.json_encodable_mixin import (
     ENUM_KEY,
     JSON_KEY,
     JSONEncodableMixin,
+)
+from sematic.resolvers.resource_requirements import ResourceRequirements
+from sematic.scheduling.external_job import ExternalJob
+from sematic.types.serialization import (
+    value_from_json_encodable,
+    value_to_json_encodable,
 )
 
 
@@ -73,7 +79,8 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
         returns a :class:`sematic.Future`.
     failed_at : Optional[datetime]
         Time at which the run has failed.
-
+    resource_requirements_json : Optional[Dict[str, Any]]
+        The compute resources requested for the execution.
     """
 
     __tablename__ = "runs"
@@ -111,6 +118,9 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
     ended_at: Optional[datetime.datetime] = Column(types.DateTime(), nullable=True)
     resolved_at: Optional[datetime.datetime] = Column(types.DateTime(), nullable=True)
     failed_at: Optional[datetime.datetime] = Column(types.DateTime(), nullable=True)
+    resource_requirements_json: Optional[str] = Column(
+        types.JSON(), nullable=True, info={JSON_KEY: True}
+    )
 
     @validates("future_state")
     def validate_future_state(self, key, value) -> str:
@@ -138,3 +148,33 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
             value = re.sub(r"\n\s{4}", "\n", value.strip())
 
         return value
+
+    @property
+    def external_jobs(self) -> Tuple[ExternalJob, ...]:
+        """Representations of the external compute jobs used for the run."""
+        encodables = self.external_jobs_json
+        encodables = encodables if encodables is not None else []
+        return tuple(value_from_json_encodable(job, ExternalJob) for job in encodables)
+
+    @external_jobs.setter
+    def external_jobs(self, jobs: Sequence[ExternalJob]):
+        self.external_jobs_json = [
+            value_to_json_encodable(job, ExternalJob) for job in jobs
+        ]
+
+    @property
+    def resource_requirements(self) -> Optional[ResourceRequirements]:
+        if self.resource_requirements_json is None:
+            return None
+
+        json_encodable = json.loads(self.resource_requirements_json)
+        return value_from_json_encodable(json_encodable, ResourceRequirements)
+
+    @resource_requirements.setter
+    def resource_requirements(self, value: Optional[ResourceRequirements]) -> None:
+        if value is None:
+            self.resource_requirements_json = None
+            return
+        self.resource_requirements_json = json.dumps(
+            value_to_json_encodable(value, ResourceRequirements)
+        )

@@ -14,6 +14,10 @@ from sematic.db.models.factories import (
     make_artifact,
     make_run_from_future,
 )
+from sematic.resolvers.resource_requirements import (
+    KubernetesResourceRequirements,
+    ResourceRequirements,
+)
 from sematic.tests.fixtures import test_storage  # noqa: F401
 from sematic.types.serialization import (
     get_json_encodable_summary,
@@ -34,6 +38,12 @@ def test_make_run_from_future():
     future = f()
     parent_future = f()
     future.parent_future = parent_future
+    resource_reqs = ResourceRequirements(
+        kubernetes=KubernetesResourceRequirements(
+            node_selector={"foo": "bar"},
+        )
+    )
+    future.props.resource_requirements = resource_reqs
     run = make_run_from_future(future)
 
     assert run.id == future.id
@@ -42,6 +52,8 @@ def test_make_run_from_future():
     assert run.name == "f"
     assert run.parent_id == parent_future.id
     assert run.description == "An informative docstring."
+    assert isinstance(run.resource_requirements, ResourceRequirements)
+    assert run.resource_requirements.kubernetes.node_selector == {"foo": "bar"}
     assert (
         run.source_code
         == """@func

@@ -73,6 +73,8 @@ sematic_py_lib(
         ":json_encodable_mixin",
         ":has_external_jobs_mixin",
         "//sematic:abstract_future",
+        "//sematic/scheduling:external_job",
+        "//sematic/types:serialization",
     ],
     pip_deps = [
         "sqlalchemy",
