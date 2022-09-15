@@ -4,6 +4,15 @@ Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
 with nothing else on the line.
 -->
 * HEAD
+* 0.13.0
+    * [bugfix] Bugfix for dicitonary visualization
+    * [feature] When running in cloud mode, have the server log to stdout
+    * [feature] Enable mounting Kubernetes secrets into the container
+* 0.12.0
+    * [feature] BREAKING CHANGE: Allow specifying resource requirements for Kubernetes
+    jobs. `KubernetesResourceRequirements` has a new required field, `requests`
+    * [feature] Add `has_container_image()` API for better control over launch workflows
+    * [bugfix] Pass API key to request to fetch root run
 * 0.11.0
     * [feature] Add a `get_artifact_value` API to retreive artifacts by ID
     * [feature] Add ability to link to individual runs on the UI, not just pipelines

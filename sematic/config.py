@@ -72,6 +72,7 @@ class Config:
     examples_dir: str = _get_examples_dir()
     project_template_dir: str = "{}/template".format(_get_examples_dir())
     data_dir: str = _get_data_dir()
+    server_log_to_stdout: bool = False
 
     @property
     def server_url(self) -> str:
@@ -107,6 +108,11 @@ class Config:
                 f"Cannot construct server URL from env vars if "
                 f"{SEMATIC_SERVER_ADDRESS_ENV_VAR} is not set."
             )
+        if server_address is not None and (
+            server_address.startswith("http://")
+            or server_address.startswith("https://")
+        ):
+            return server_address
         port = os.environ.get("PORT", 80)
         return "http://{}:{}".format(server_address, port)
 
@@ -124,6 +130,7 @@ _LOCAL_CONFIG = Config(
     db_url=os.environ.get(
         "DATABASE_URL", "sqlite:///{}/{}".format(get_config_dir(), _SQLITE_FILE)
     ),
+    server_log_to_stdout=False,
 )
 
 
@@ -132,6 +139,7 @@ _CLOUD_CONFIG = Config(
     api_version=1,
     port=int(os.environ.get("PORT", 80)),
     db_url=os.environ.get("DATABASE_URL", "NO_DB"),
+    server_log_to_stdout=True,
 )
 
 

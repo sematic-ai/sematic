@@ -22,10 +22,11 @@ Then, SSH into your remote server:
 $ ssh my-remote-server.dev
 ```
 
-Pull the latest server image
+Pull the server image for the release of Sematic you want to deploy
 
 ```shell
-$ sudo docker pull sematicai/sematic-server:latest
+$ DEPLOY_VERSION=v<MAJOR.MINOR.PATCH>  # use the actual version numbers here
+$ sudo docker pull sematicai/sematic-server:$DEPLOY_VERSION
 ```
 
 launch the server
@@ -37,7 +38,7 @@ $ sudo docker run -d -p 80:80 \
     [-e SEMATIC_AUTHENTICATE=1 -e GOOGLE_OAUTH_CLIENT_ID=123456789.apps.googleusercontent.com \]
     [-e SEMATIC_AUTHORIZED_EMAIL_DOMAIN=yourdomain.com \]
     [-p 443:443 -e CERTIFICATE=/path/to/certificate.pem -e PRIVATE_KEY=/path/to/private.key \]
-    sematicai/sematic-server:latest
+    sematicai/sematic-server:$DEPLOY_VERSION
 ```
 
 where `DATABASE_URL` is the fully-qualified URL of your Postgres database. It

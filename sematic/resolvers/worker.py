@@ -3,7 +3,6 @@ import argparse
 import datetime
 import importlib
 import logging
-import traceback
 from typing import Any, Dict, List
 
 # Third-party
@@ -23,6 +22,7 @@ from sematic.resolvers.cloud_resolver import (
     CloudResolver,
     make_nested_future_storage_key,
 )
+from sematic.utils.exceptions import format_exception_for_run
 
 
 def parse_args():
@@ -66,7 +66,7 @@ def _fail_run(run: Run):
     """
     run.future_state = FutureState.FAILED
     run.failed_at = datetime.datetime.utcnow()
-    run.exception = traceback.format_exc()
+    run.exception = format_exception_for_run()
     api_client.save_graph(run.id, [run], [], [])
 
 

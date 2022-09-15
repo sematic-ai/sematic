@@ -1,14 +1,17 @@
 import Box from "@mui/material/Box";
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Run } from "../Models";
 import { useParams } from "react-router-dom";
 import PipelineBar from "../components/PipelineBar";
 import PipelinePanels from "../components/PipelinePanels";
 import { fetchJSON } from "../utils";
 import { RunViewPayload } from "../Payloads";
+import { UserContext } from "..";
 
 export default function PipelineView() {
   const [rootRun, setRootRun] = useState<Run | undefined>(undefined);
+
+  const { user } = useContext(UserContext);
 
   const params = useParams();
 
@@ -18,6 +21,7 @@ export default function PipelineView() {
     if (!rootId) return;
     fetchJSON({
       url: "/api/v1/runs/" + rootId,
+      apiKey: user?.api_key,
       callback: (payload: RunViewPayload) => setRootRun(payload.content),
     });
   }, [rootId]);

@@ -105,7 +105,7 @@ your jobs are running.
 |Parameter| Usage| `True` | `False` | default |
 |-|-|-|-|-|
 |`detach`| `CloudResolver(detach=<value>)`| The **driver job** will run in a remote Kubernetes job. This is the so-called "fire-and-forget" mode. Your console prompt will return as soon as the driver job is submitted. | The **driver job** will run on your local machine. The console prompt will return only after the entire pipeline has resolved. | `True` |
-|`inline`| `@sematic.func(inline=<value>)`| The corresponding Sematic Function will run in its own Kubernetes job, whose resource can be customized (see Resource Requirements). Note that nested functions do not inherit their parent's `inline` value. | The Sematic Function will run within the driver job, whether on your local machine or in a remote job (according to `detach`). | `True`
+|`inline`| `@sematic.func(inline=<value>)`| The Sematic Function will run within the driver job, whether on your local machine or in a remote job (according to `detach`). | The corresponding Sematic Function will run in its own Kubernetes job, whose resource can be customized (see Resource Requirements). Note that nested functions do not inherit their parent's `inline` value. | `True`
 
 To summarize, by default (`detach=True` and `inline=True`) your entire pipeline will run in a single Kubernetes job (the driver job). Then you can choose which functions should have their own Kubernetes job (and resources) by setting `inline=False` on the corresponding function.
 
@@ -123,7 +123,16 @@ from sematic import ResourceRequirements, KubernetesRequirements
 
 GPU_RESOURCE_REQS = ResourceRequirements(
     kubernetes=KubernetesRequirements(
-        node_selector={"node.kubernetes.io/instance-type": "g4dn.xlarge"}
+        # Note: the kind of node selector options that are valid will depend on
+        # your particular deployment of Kubernetes. Talk to the person who manages
+        # your Kubernetes cluster if you think you might need this. It is primarily
+        # useful in Sematic to gain access to nodes with GPUs.
+        node_selector={"node.kubernetes.io/instance-type": "g4dn.xlarge"},
+
+        # The resource requirements of the job. Information on the format of valid
+        # values can be found here: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+        # the dictionary provided here will be used for both "limits" and "requests"
+        requests={"cpu": "1", "memory": "1Gi"},
     )
 )
 
@@ -143,117 +152,6 @@ Sematic cluster ahead of time.
 
 When Sematic submits Kubernetes jobs, it needs to package all your dependencies
 (e.g. your pipeline code, local Python modules, third-party pip packages, static
-libraries, etc) and ship them to the remote cluster.
-
-At this time, Sematic leverages [**Bazel**](https://bazel.build) to package and
-ship dependencies. This is convenient with users working in a monorepo that is
-already using Bazel. For others, Sematic will soon provide a native dependency
-packaging solution.
-
-#### Bazel macro
-
-Sematic offers a `sematic_pipeline` Bazel rule to pilot your pipelines.
-
-To use it, make sure that the `rules_python` `io_bazel_rules_docker` HTTP
-archives are set up and add the following directive are in your `WORKSPACE`
-file.
-
-```starlark
-# Bazel WORKSPACE file
-
-# rules_python archive and toolchain
-
-# io_bazel_rules_docker archive
-
-load(
-    "@io_bazel_rules_docker//repositories:repositories.bzl",
-    "repositories",
-)
-
-repositories()
-
-## SEMATIC RULES
-
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-
-git_repository(
-    name = "rules_sematic",
-    branch = "main",
-    remote = "git@github.com:sematic-ai/sematic.git",
-    strip_prefix = "bazel",
-)
-
-load("@rules_sematic//:pipeline.bzl", "base_images")
-
-base_images()
-
-```
-
-Then in your package's `BUILD` file do
-
-```
-# BUILD file at path/to/pipeline
-
-load("@rules_sematic//:pipeline.bzl", "sematic_pipeline")
-load(
-    "@rules_python//python:defs.bzl",
-    "py_library",
-)
-load("@<your-dependency-repo>//:requirements.bzl", "requirement")
-
-py_library(
-    name = "main_lib",
-    srcs = [
-        "main.py",
-        "pipeline.py",
-        ...
-    ],
-    deps = [
-        requirement("sematic"),
-        ...
-    ],
-)
-
-sematic_pipeline(
-    name = "main",  # the entry point of your pipeline is main.py
-    registry = "<container-registry-uri>",
-    repository = "<container-repository>",
-    deps = [
-        ":main_lib",
-    ],
-    # Optional base image to use
-    base = "<base-image>",
-    # Optional environment variables to set in the image
-    env = {"VAR": "VALUE"} 
-)
-```
-
-See a complete example at
-[github.com/sematic-ai/example_bazel](https://github.com/sematic-ai/example_bazel).
-
-You can then run the target with
-
-```
-$ bazel run //my_repo/path/to/pipeline:main -- --arg1 --arg2
-```
-
-where `--arg1` and `--arg2` are your entry point's (`main.py`) command line
-arguments.
-
-This will perform the following actions:
-
-* Package all declared dependencies into a Docker image (if they have changed)
-
-* Registers the image with your container registry
-
-* Execute your entry point
-
-Packaging dependencies can be somewhat slow, so if you want to simply test your
-pipeline locally, you can use the `<target-name>_local` target:
-
-```
-$ bazel run //my_repo/path/to/pipeline:main_local -- --arg1 --arg2
-```
-
-This will skip the dependency packaging and image registration parts. Note that
-in this case, if your code attempts to submit remote jobs, it will fail as no image was produced.
+libraries, etc) and ship them to the remote cluster. For more on how Sematic
+handles dependency packaging, see
+[Sematic and Container Images](./container-images.md)
