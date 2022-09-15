@@ -51,6 +51,7 @@ sematic_py_lib(
     deps = [
         "//sematic/scheduling:external_job",
         "//sematic/types:serialization",
+        "//sematic/types/types:dataclass",
     ],
 )
 

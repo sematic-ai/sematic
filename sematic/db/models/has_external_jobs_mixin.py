@@ -8,6 +8,9 @@ from sematic.types.serialization import (
     value_to_json_encodable,
 )
 
+# import dataclass to ensure dataclass serialization is registered
+from sematic.types.types import dataclass  # noqa: F401
+
 
 class HasExternalJobsMixin:
     """Mixin for ORM objects that have associated external compute jobs"""
