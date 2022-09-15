@@ -241,6 +241,15 @@ class LocalResolver(SilentResolver):
 
     def _update_resolution_status(self, status: ResolutionStatus):
         resolution = api_client.get_resolution(self._root_future.id)
+        current_status = ResolutionStatus[resolution.status]  # type: ignore
+        if (
+            status == ResolutionStatus.RUNNING
+            and current_status != ResolutionStatus.SCHEDULED
+        ):
+            raise RuntimeError(
+                "It appears that the resolver has restarted mid-execution. "
+                "The cluster may be under pressure."
+            )
         resolution.status = status
         api_client.save_resolution(resolution)
 
