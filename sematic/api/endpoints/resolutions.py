@@ -17,6 +17,7 @@ from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.db.models.resolution import InvalidResolution, Resolution
 from sematic.db.models.user import User
 from sematic.db.queries import get_resolution, get_run, save_resolution
+from sematic.scheduling.job_scheduler import schedule_resolution
 
 
 @sematic_api.route("/api/v1/resolutions/<resolution_id>", methods=["GET"])
@@ -92,3 +93,21 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
     save_resolution(resolution)
 
     return flask.jsonify({})
+
+
+@sematic_api.route("/api/v1/resolutions/<resolution_id>/schedule", methods=["POST"])
+@authenticate
+def schedule_resolution_endpoint(
+    user: Optional[User], resolution_id: str
+) -> flask.Response:
+    resolution = get_resolution(resolution_id)
+
+    resolution = schedule_resolution(resolution)
+
+    save_resolution(resolution)
+
+    payload = dict(
+        content=resolution.to_json_encodable(),
+    )
+
+    return flask.jsonify(payload)

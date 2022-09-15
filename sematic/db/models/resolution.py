@@ -1,7 +1,7 @@
 # Standard Library
 import logging
 from enum import Enum, unique
-from typing import Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 # Third party
 from sqlalchemy import Column, types
@@ -9,6 +9,7 @@ from sqlalchemy.orm import validates
 
 # Sematic
 from sematic.db.models.base import Base
+from sematic.db.models.has_external_jobs_mixin import HasExternalJobsMixin
 from sematic.db.models.json_encodable_mixin import ENUM_KEY, JSONEncodableMixin
 
 logger = logging.getLogger(__name__)
@@ -40,6 +41,7 @@ class ResolutionStatus(Enum):
         was canceled, so long as the cancellation was exited cleanly.
     """
 
+    CREATED = "CREATED"
     SCHEDULED = "SCHEDULED"
     RUNNING = "RUNNING"
     FAILED = "FAILED"
@@ -74,10 +76,12 @@ class ResolutionStatus(Enum):
 _ALLOWED_TRANSITIONS = {
     # Local resolver can jump straight to RUNNING
     None: {
+        ResolutionStatus.CREATED,
         ResolutionStatus.SCHEDULED,
         ResolutionStatus.RUNNING,
         ResolutionStatus.FAILED,
     },
+    ResolutionStatus.CREATED: {ResolutionStatus.SCHEDULED, ResolutionStatus.FAILED},
     ResolutionStatus.SCHEDULED: {ResolutionStatus.RUNNING, ResolutionStatus.FAILED},
     ResolutionStatus.RUNNING: {ResolutionStatus.COMPLETE, ResolutionStatus.FAILED},
     ResolutionStatus.COMPLETE: {},
@@ -97,7 +101,7 @@ class ResolutionKind(Enum):
     KUBERNETES = "KUBERNETES"  # for detached mode
 
 
-class Resolution(Base, JSONEncodableMixin):
+class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     """Represents a session of a resolver
 
     Attributes
@@ -134,6 +138,9 @@ class Resolution(Base, JSONEncodableMixin):
     )
     settings_env_vars: Dict[str, str] = Column(
         types.JSON, nullable=False, default=lambda: {}
+    )
+    external_jobs_json: Optional[List[Dict[str, Any]]] = Column(
+        types.JSON(), nullable=True
     )
 
     @validates("status")

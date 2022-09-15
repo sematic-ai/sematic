@@ -69,7 +69,7 @@ CREATE TABLE resolutions (
     status TEXT NOT NULL,
     kind TEXT NOT NULL,
     docker_image_uri TEXT,
-    settings_env_vars JSONB NOT NULL,
+    settings_env_vars JSONB NOT NULL, external_jobs_json JSONB,
 
     PRIMARY KEY (root_id),
     FOREIGN KEY (root_id) REFERENCES runs(id)
@@ -88,4 +88,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20220723010628'),
   ('20220726001230'),
   ('20220816235619'),
-  ('20220819172555');
+  ('20220819172555'),
+  ('20220915165621');

@@ -116,9 +116,8 @@ class CloudResolver(LocalResolver):
 
         api_client.notify_pipeline_update(run.calculator_path)
 
-        job_name = _make_job_name(future, JobType.driver)
-        # SUBMIT ORCHESTRATOR JOB
-        _schedule_job(future.id, job_name, resolve=True)
+        # SUBMIT RESOLUTION JOB
+        api_client.schedule_resolution(future.id)
 
         return run.id
 

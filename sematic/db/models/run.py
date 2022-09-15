@@ -2,7 +2,7 @@
 import datetime
 import json
 import re
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional
 
 # Third party
 from sqlalchemy import Column, types
@@ -11,19 +11,15 @@ from sqlalchemy.orm import validates
 # Sematic
 from sematic.abstract_future import FutureState
 from sematic.db.models.base import Base
+from sematic.db.models.has_external_jobs_mixin import HasExternalJobsMixin
 from sematic.db.models.json_encodable_mixin import (
     ENUM_KEY,
     JSON_KEY,
     JSONEncodableMixin,
 )
-from sematic.scheduling.external_job import ExternalJob
-from sematic.types.serialization import (
-    value_from_json_encodable,
-    value_to_json_encodable,
-)
 
 
-class Run(Base, JSONEncodableMixin):
+class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
     """
     SQLAlchemy model for runs.
 
@@ -142,16 +138,3 @@ class Run(Base, JSONEncodableMixin):
             value = re.sub(r"\n\s{4}", "\n", value.strip())
 
         return value
-
-    @property
-    def external_jobs(self) -> Tuple[ExternalJob, ...]:
-        """Representations of the external compute jobs used for the run."""
-        encodables = self.external_jobs_json
-        encodables = encodables if encodables is not None else []
-        return tuple(value_from_json_encodable(job, ExternalJob) for job in encodables)
-
-    @external_jobs.setter
-    def external_jobs(self, jobs: Sequence[ExternalJob]):
-        self.external_jobs_json = [
-            value_to_json_encodable(job, ExternalJob) for job in jobs
-        ]
