@@ -44,6 +44,11 @@ def make_run_from_future(future: AbstractFuture) -> Run:
         updated_at=datetime.datetime.utcnow(),
     )
 
+    # Set this outside the constructor because the constructor expects
+    # a json encodable, but this property will auto-update the json
+    # encodable field.
+    run.resource_requirements = future.props.resource_requirements
+
     return run
 
 
