@@ -30,7 +30,7 @@ def schedule_run(run: Run, resolution: Resolution) -> Run:
         The resolution associated with the run
     """
     run.external_jobs = _refresh_external_jobs(run.external_jobs)
-    _validate_scheduleable(run, resolution)
+    _assert_is_scheduleable(run, resolution)
     external_jobs_list = list(run.external_jobs) + [_schedule_job(run, resolution)]
     run.external_jobs = tuple(external_jobs_list)
     run.future_state = FutureState.SCHEDULED
@@ -95,7 +95,7 @@ def update_run_status(
     )
 
 
-def _validate_scheduleable(run: Run, resolution: Resolution):
+def _assert_is_scheduleable(run: Run, resolution: Resolution):
     """raise RunStateNotSchedulable if the state is not such that it can be scheduled"""
     if run.future_state != FutureState.CREATED.value:
         raise RunStateNotSchedulable(

@@ -2,7 +2,7 @@
 import datetime
 import json
 import re
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 # Third party
 from sqlalchemy import Column, types
@@ -151,7 +151,7 @@ class Run(Base, JSONEncodableMixin):
         return tuple(value_from_json_encodable(job, ExternalJob) for job in encodables)
 
     @external_jobs.setter
-    def external_jobs(self, jobs: Union[List[ExternalJob], Tuple[ExternalJob, ...]]):
+    def external_jobs(self, jobs: Sequence[ExternalJob]):
         self.external_jobs_json = [
             value_to_json_encodable(job, ExternalJob) for job in jobs
         ]

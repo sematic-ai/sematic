@@ -17,7 +17,6 @@ import sqlalchemy
 from sqlalchemy.orm.exc import NoResultFound
 
 # Sematic
-from sematic.abstract_future import FutureState
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import (
@@ -209,21 +208,9 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
             "No runs with id {}".format(repr(run_id)), HTTPStatus.NOT_FOUND
         )
 
-    n_existing_jobs = len(run.external_jobs)
     resolution = get_resolution(run.root_id)
     run = schedule_run(run, resolution)
-    n_jobs_post_schedule = len(run.external_jobs)
-    if n_jobs_post_schedule <= n_existing_jobs:
-        return jsonify_error(
-            "Failed to schedule the run {}, no external jobs".format(repr(run_id)),
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-        )
     logger.info("Scheduled run with external job: %s", run.external_jobs[-1])
-    if run.future_state != FutureState.SCHEDULED.value:
-        return jsonify_error(
-            "Failed to schedule the run {}".format(repr(run_id)),
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-        )
     run.started_at = datetime.datetime.utcnow()
     save_run(run)
     payload = dict(
@@ -264,6 +251,12 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
             logger.info("Updating run's external jobs: %s", new_external_jobs)
             run_modified = True
         if new_future_state != future_state:
+            # why have get_run both here and in the block above about
+            # external jobs? Why not just get the run outside both blocks?
+            # because this endpoint gets called A LOT, and we want to
+            # avoid loading the run from the DB unless we detect that something
+            # has changed and we need to load it to modify. The common case will
+            # be that nothing has changed and the run-reload is not needed.
             run = get_run(run_id) if run is None else run
             run_modified = True
             if (

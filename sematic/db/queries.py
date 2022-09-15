@@ -130,15 +130,7 @@ def save_run(run: Run) -> Run:
     Run
         saved run
     """
-    with db().get_session() as session:
-        existing_run = session.query(Run).filter(Run.id == run.id).one_or_none()
-        if existing_run is not None:
-            if len(run.external_jobs) < len(existing_run.external_jobs):
-                raise ValueError(
-                    f"Cannot remove existing external jobs from {run.id}. "
-                    f"Existing run had: {existing_run.external_jobs}. New "
-                    f"run had: {run.external_jobs}"
-                )
+    _assert_allowed_run_modifications([run])
     with db().get_session() as session:
         session.add(run)
         session.commit()
@@ -188,16 +180,7 @@ def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
     """
     Update a graph
     """
-    with db().get_session() as session:
-        for run in runs:
-            existing_run = session.query(Run).filter(Run.id == run.id).one_or_none()
-            if existing_run is not None:
-                if len(run.external_jobs) < len(existing_run.external_jobs):
-                    raise ValueError(
-                        f"Cannot remove existing external jobs from {run.id}. "
-                        f"Existing run had: {existing_run.external_jobs}. New "
-                        f"run had: {run.external_jobs}"
-                    )
+    _assert_allowed_run_modifications(runs)
     with db().get_session() as session:
         for run in runs:
             session.merge(run)
@@ -209,6 +192,19 @@ def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
             session.merge(edge)
 
         session.commit()
+
+
+def _assert_allowed_run_modifications(runs):
+    with db().get_session() as session:
+        for run in runs:
+            existing_run = session.query(Run).filter(Run.id == run.id).one_or_none()
+            if existing_run is not None:
+                if len(run.external_jobs) < len(existing_run.external_jobs):
+                    raise ValueError(
+                        f"Cannot remove existing external jobs from {run.id}. "
+                        f"Existing run had: {existing_run.external_jobs}. New "
+                        f"run had: {run.external_jobs}"
+                    )
 
 
 Graph = Tuple[List[Run], List[Artifact], List[Edge]]
