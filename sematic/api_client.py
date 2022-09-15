@@ -7,6 +7,7 @@ import requests
 from requests.exceptions import ConnectionError
 
 # Sematic
+from sematic.abstract_future import FutureState
 from sematic.config import get_config
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
@@ -130,6 +131,36 @@ def get_resolution(root_id: str) -> Resolution:
     response = _get("/resolutions/{}".format(root_id))
 
     return Resolution.from_json_encodable(response["content"])
+
+
+def schedule_run(run_id: str) -> Run:
+    """Ask the server to execute the calculator for the run."""
+    response = _post(f"/runs/{run_id}/schedule", json_payload={})
+    return Run.from_json_encodable(response["content"])
+
+
+@retry(tries=3, delay=10, jitter=1)
+def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
+    """Ask the server to update the status of given run ids if needed and return them.
+
+    The server will actively update run statuses based on the state of remote jobs
+    associated with the runs. It will NOT perform any updates to the run statuses
+    that result from result availability or calculator errors.
+
+    Parameters
+    ----------
+    run_ids:
+        The ids of the runs whose statuses are being requested
+
+    Returns
+    -------
+    A dict whose keys are run ids and whose values are the current state of the runs.
+    """
+    response = _post("/runs/future_states", json_payload={"run_ids": run_ids})
+    result_dict = {}
+    for run_result in response["content"]:
+        result_dict[run_result["run_id"]] = FutureState[run_result["future_state"]]
+    return result_dict
 
 
 def notify_pipeline_update(calculator_path: str):

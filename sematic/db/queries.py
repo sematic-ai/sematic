@@ -2,7 +2,8 @@
 Module holding common DB queries.
 """
 # Standard Library
-from typing import List, Set, Tuple
+import logging
+from typing import Dict, List, Set, Tuple
 
 # Third-party
 import sqlalchemy
@@ -10,6 +11,7 @@ import sqlalchemy.orm
 from sqlalchemy.sql.elements import ColumnElement
 
 # Sematic
+from sematic.abstract_future import FutureState
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
@@ -17,6 +19,10 @@ from sematic.db.models.note import Note
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
+from sematic.scheduling.external_job import ExternalJob
+from sematic.types.serialization import value_from_json_encodable
+
+logger = logging.getLogger(__name__)
 
 
 def count_runs() -> int:
@@ -70,6 +76,46 @@ def get_run(run_id: str) -> Run:
         return session.query(Run).filter(Run.id == run_id).one()
 
 
+def get_run_status_details(
+    run_ids: List[str],
+) -> Dict[str, Tuple[FutureState, List[ExternalJob]]]:
+    """
+    Get information about runs' statuses from the DB.
+
+    This is an optimization to enable getting only status-related information
+    about the runs, and should only be preferred to get_run when the query
+    happens often and only involves statuses.
+
+    Parameters
+    ----------
+    run_ids :
+        ID of runs whose status should be retrieved
+
+    Returns
+    -------
+    A dict whose keys are run ids. The values are tuples where the first element
+    is the future state for the run and the second element is a list of external
+    jobs for the run (if any exist)
+    """
+    with db().get_session() as session:
+        query_results = (
+            session.query(Run.id, Run.future_state, Run.external_jobs_json)
+            .filter(Run.id.in_(run_ids))
+            .all()
+        )
+        result_dict = {}
+        for run_id, state_string, jobs_encodable in query_results:
+            if jobs_encodable is None:
+                jobs = []
+            else:
+                jobs = [
+                    value_from_json_encodable(job, ExternalJob)
+                    for job in jobs_encodable
+                ]
+            result_dict[run_id] = (FutureState[state_string], jobs)
+    return result_dict
+
+
 def save_run(run: Run) -> Run:
     """
     Save run to the database.
@@ -84,6 +130,7 @@ def save_run(run: Run) -> Run:
     Run
         saved run
     """
+    _assert_external_jobs_not_removed([run])
     with db().get_session() as session:
         session.add(run)
         session.commit()
@@ -133,6 +180,7 @@ def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
     """
     Update a graph
     """
+    _assert_external_jobs_not_removed(runs)
     with db().get_session() as session:
         for run in runs:
             session.merge(run)
@@ -144,6 +192,35 @@ def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
             session.merge(edge)
 
         session.commit()
+
+
+def _assert_external_jobs_not_removed(runs):
+    run_ids = [run.id for run in runs]
+    runs_by_id = {run.id: run for run in runs}
+    with db().get_session() as session:
+        existing_run_jobs_all_runs = (
+            session.query(Run.id, Run.external_jobs_json)
+            .filter(Run.id.in_(run_ids))
+            .all()
+        )
+
+        # it's ok if there isn't an existing run for one of the passed-in runs.
+        # the passed-in runs may be new.
+        for existing_run_id, existing_run_jobs_json in existing_run_jobs_all_runs:
+            if existing_run_jobs_json is None:
+                existing_run_jobs = []
+            else:
+                existing_run_jobs = [
+                    value_from_json_encodable(job, ExternalJob)
+                    for job in existing_run_jobs_json
+                ]
+            run = runs_by_id[existing_run_id]
+            if len(run.external_jobs) < len(existing_run_jobs):
+                raise ValueError(
+                    f"Cannot remove existing external jobs from {run.id}. "
+                    f"Existing run had: {existing_run_jobs}. New "
+                    f"run had: {run.external_jobs}"
+                )
 
 
 Graph = Tuple[List[Run], List[Artifact], List[Edge]]

@@ -2,6 +2,7 @@
 import enum
 import logging
 import pathlib
+import time
 from typing import Dict, List, Optional, Tuple
 
 # Third-party
@@ -26,8 +27,13 @@ from sematic.resolvers.resource_requirements import (
     ResourceRequirements,
 )
 from sematic.user_settings import SettingsVar, get_all_user_settings, get_user_settings
+from sematic.utils.exceptions import format_exception_for_run
 
 logger = logging.getLogger(__name__)
+
+
+_MAX_DELAY_BETWEEN_STATUS_UPDATES_SECONDS = 600  # 600s => 10 min
+_DELAY_BETWEEN_STATUS_UPDATES_BACKOFF = 1.5
 
 
 class CloudResolver(LocalResolver):
@@ -78,6 +84,12 @@ class CloudResolver(LocalResolver):
         self._artifacts = {artifact.id: artifact for artifact in artifacts}
         self._edges = {make_edge_key(edge): edge for edge in edges}
 
+    def _get_run(self, run_id) -> Run:
+        # Should refresh from DB for remote exec
+        run = api_client.get_run(run_id)
+        self._runs[run_id] = run
+        return run
+
     def _get_resolution_image(self) -> Optional[str]:
         return get_image_uri()
 
@@ -86,10 +98,15 @@ class CloudResolver(LocalResolver):
 
     def _create_resolution(self, root_future_id, detached):
         if self._is_running_remotely:
-            # resolution should have been crated prior to the resolver
+            # resolution should have been created prior to the resolver
             # actually starting its remote resolution.
             return
         super()._create_resolution(root_future_id, detached)
+
+    def _update_run_and_future_pre_scheduling(self, run: Run, future: AbstractFuture):
+        # For the cloud resolver, the server will update the relevant
+        # run fields when it gets scheduled by the server.
+        pass
 
     def _detach_resolution(self, future: AbstractFuture) -> str:
         run = self._populate_run_and_artifacts(future)
@@ -106,14 +123,9 @@ class CloudResolver(LocalResolver):
         return run.id
 
     def _schedule_future(self, future: AbstractFuture) -> None:
-        self._set_future_state(future, FutureState.SCHEDULED)
-        job_name = _make_job_name(future, JobType.worker)
-        _schedule_job(
-            future.id,
-            job_name,
-            resolve=False,
-            resource_requirements=future.props.resource_requirements,
-        )
+        run = api_client.schedule_run(future.id)
+        self._runs[run.id] = run
+        self._set_future_state(future, FutureState[run.future_state])  # type: ignore
 
     def _wait_for_scheduled_run(self) -> None:
         run_id = self._wait_for_any_inline_run() or self._wait_for_any_remote_job()
@@ -155,6 +167,15 @@ class CloudResolver(LocalResolver):
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
         # Unlike LocalResolver._future_did_fail, we only care about
         # failing parent futures since runs are marked FAILED by worker.py
+        run = self._get_run(failed_future.id)
+        if (
+            failed_future.state == FutureState.FAILED
+            and run is not None
+            and run.exception is None
+        ):
+            run.exception = format_exception_for_run()
+        self._add_run(run)
+        self._save_graph()
         if failed_future.state == FutureState.NESTED_FAILED:
             super()._future_did_fail(failed_future)
 
@@ -186,28 +207,39 @@ class CloudResolver(LocalResolver):
         )
 
     def _wait_for_any_remote_job(self) -> Optional[str]:
-        job_names = [
-            _make_job_name(future, JobType.worker)
+        scheduled_futures_by_id: Dict[str, AbstractFuture] = {
+            future.id: future
             for future in self._futures
             if not future.props.inline and future.state == FutureState.SCHEDULED
-        ]
+        }
 
-        if len(job_names) == 0:
+        if len(scheduled_futures_by_id) == 0:
+            logger.info("No futures to wait on")
             return None
 
+        delay_between_updates = 1.0
         while True:
-            watch = kubernetes.watch.Watch()  # type: ignore
+            updated_states: Dict[
+                str, FutureState
+            ] = api_client.update_run_future_states(
+                list(scheduled_futures_by_id.keys())
+            )
+            logger.info("Checking for updates on %s", scheduled_futures_by_id.keys())
+            for run_id, new_state in updated_states.items():
+                future = scheduled_futures_by_id[run_id]
+                if new_state != FutureState.SCHEDULED:
+                    # no need to actually update the future's state here, that will
+                    # be handled by the post-processing logic once it is aware this
+                    # future has changed
+                    self._refresh_graph(future.id)
+                    return future.id
 
-            for event in watch.stream(
-                kubernetes.client.BatchV1Api().list_namespaced_job,  # type: ignore
-                namespace=get_user_settings(SettingsVar.KUBERNETES_NAMESPACE),
-                label_selector="job-name in ({0})".format(", ".join(job_names)),
-            ):
-                job = event["object"]
-
-                if job.status.succeeded or job.status.failed:
-                    watch.stop()
-                    return _get_run_id_from_name(job.metadata.name)
+            logger.info("Sleeping for %s s", delay_between_updates)
+            time.sleep(delay_between_updates)
+            delay_between_updates = min(
+                _MAX_DELAY_BETWEEN_STATUS_UPDATES_SECONDS,
+                _DELAY_BETWEEN_STATUS_UPDATES_BACKOFF * delay_between_updates,
+            )
 
 
 class JobType(enum.Enum):
