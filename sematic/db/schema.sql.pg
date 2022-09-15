@@ -92,7 +92,8 @@ CREATE TABLE public.runs (
     source_code text,
     root_id character(32),
     nested_future_id character(32),
-    exception text
+    exception text,
+    external_jobs_json jsonb
 );
 
 
@@ -237,4 +238,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20220714175433'),
     ('20220723010628'),
     ('20220726001230'),
-    ('20220816235619');
+    ('20220816235619'),
+    ('20220819172555');

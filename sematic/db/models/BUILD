@@ -61,6 +61,7 @@ sematic_py_lib(
         ":base",
         ":json_encodable_mixin",
         "//sematic:abstract_future",
+        "//sematic/scheduling:external_job",
         "//sematic/types:serialization",
     ],
     pip_deps = [
