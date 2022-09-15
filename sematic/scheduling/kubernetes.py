@@ -287,7 +287,7 @@ def schedule_resolution_job(
         job_type=JobType.driver,
     )
     logger.info("Scheduling job %s", external_job.kubernetes_job_name)
-    args = ["--run_id", "--resolve"]
+    args = ["--run_id", resolution_id, "--resolve"]
     _schedule_kubernetes_job(
         name=external_job.kubernetes_job_name,
         image=image,

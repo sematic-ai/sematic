@@ -48,7 +48,6 @@ sematic_py_lib(
         "//sematic/utils:exceptions",
     ],
     pip_deps = [
-        "kubernetes",
         "cloudpickle",
     ],
 )

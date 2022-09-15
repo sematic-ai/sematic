@@ -11,8 +11,8 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
 )
 from sematic.calculator import func
-from sematic.db.queries import get_root_graph, get_resolution, save_resolution
 from sematic.db.models.resolution import ResolutionStatus
+from sematic.db.queries import get_resolution, get_root_graph, save_resolution
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.resolvers.worker import main
