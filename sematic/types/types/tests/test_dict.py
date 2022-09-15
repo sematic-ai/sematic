@@ -10,7 +10,13 @@ from sematic.types.serialization import (
     get_json_encodable_summary,
     type_from_json_encodable,
     type_to_json_encodable,
+    value_from_json_encodable,
+    value_to_json_encodable,
 )
+
+
+class StringSubclass(str):
+    pass
 
 
 @pytest.mark.parametrize(
@@ -44,3 +50,24 @@ def test_dict_summary():
 def test_type_from_json_encodable(type_):
     json_encodable = type_to_json_encodable(type_)
     assert type_from_json_encodable(json_encodable) is type_
+
+
+SERIALIZATION_EXAMPLES = [
+    (dict(a=1.0), Dict[str, float], None),
+    (dict(a="b"), Dict[str, str], None),
+    ({1: "a", 2: "b"}, Dict[int, str], None),
+    (
+        {1: "a", 2: StringSubclass("b")},
+        Dict[int, str],
+        lambda deserialized: isinstance(deserialized[2], StringSubclass),
+    ),
+]
+
+
+@pytest.mark.parametrize("value, type_, deserialized_check", SERIALIZATION_EXAMPLES)
+def test_value_serdes(value, type_, deserialized_check):
+    serialized = value_to_json_encodable(value, type_)
+    deserialized = value_from_json_encodable(serialized, type_)
+    assert deserialized == value
+    if deserialized_check is not None:
+        assert deserialized_check(deserialized)
