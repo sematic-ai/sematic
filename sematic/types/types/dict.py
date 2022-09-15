@@ -1,5 +1,5 @@
 # Standard Library
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Type, get_args
+from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, Type, get_args
 
 # Sematic
 from sematic.types.casting import safe_cast
@@ -46,7 +46,9 @@ def _dict_safe_cast(value: Dict, type_: Type) -> Tuple[Optional[Dict], Optional[
 
 
 @register_to_json_encodable(dict)
-def _dict_to_json_encodable(value: Dict, type_: Type) -> List[Tuple[Any, Any]]:
+def _dict_to_json_encodable(
+    value: Dict, type_: Type
+) -> Dict[Literal["items"], List[Tuple[Any, Any]]]:
     """
     Dict serialization
     """

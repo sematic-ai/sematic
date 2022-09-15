@@ -2,7 +2,7 @@
 import datetime
 import json
 import re
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 # Third party
 from sqlalchemy import Column, types
