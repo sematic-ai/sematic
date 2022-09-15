@@ -100,6 +100,8 @@ def _can_cast_to_dataclass(from_type: Any, to_type: Any) -> Tuple[bool, Optional
 
 @register_to_json_encodable(DataclassKey)
 def _dataclass_to_json_encodable(value: Any, type_: Any) -> Any:
+    if value is None:
+        raise ValueError(f"Expected {type_}, got None")
     return _serialize_dataclass(value_to_json_encodable, value, type_)
 
 

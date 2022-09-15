@@ -1,15 +1,17 @@
 # Standard Library
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Type
+from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, Type, get_args
 
 # Sematic
 from sematic.types.casting import safe_cast
 from sematic.types.registry import (
+    register_from_json_encodable,
     register_safe_cast,
     register_to_json_encodable,
     register_to_json_encodable_summary,
 )
 from sematic.types.serialization import (
     get_json_encodable_summary,
+    value_from_json_encodable,
     value_to_json_encodable,
 )
 
@@ -24,7 +26,7 @@ def _dict_safe_cast(value: Dict, type_: Type) -> Tuple[Optional[Dict], Optional[
             repr(value), type_
         )
 
-    key_type, element_type = type_.__args__
+    key_type, element_type = get_args(type_)
 
     cast_value = dict()
 
@@ -44,7 +46,9 @@ def _dict_safe_cast(value: Dict, type_: Type) -> Tuple[Optional[Dict], Optional[
 
 
 @register_to_json_encodable(dict)
-def _dict_to_json_encodable(value: Dict, type_: Type) -> List[Tuple[Any, Any]]:
+def _dict_to_json_encodable(
+    value: Dict, type_: Type
+) -> Dict[Literal["items"], List[Tuple[Any, Any]]]:
     """
     Dict serialization
     """
@@ -53,13 +57,33 @@ def _dict_to_json_encodable(value: Dict, type_: Type) -> List[Tuple[Any, Any]]:
     # Sorting keys for determinism
     sorted_keys = sorted(value.keys())
 
-    return [
-        (
-            value_to_json_encodable(key, key_type),
-            value_to_json_encodable(value[key], element_type),
+    return {
+        "items": [
+            (
+                value_to_json_encodable(key, key_type),
+                value_to_json_encodable(value[key], element_type),
+            )
+            for key in sorted_keys
+        ]
+    }
+
+
+@register_from_json_encodable(dict)
+def _dict_from_json_encodable(
+    value: Dict[str, List[Tuple[Any, Any]]], type_: Type
+) -> Dict[Any, Any]:
+    """
+    Dict deserialization
+    """
+    key_type, element_type = get_args(type_)
+    items = value["items"]
+
+    return {
+        value_from_json_encodable(key, key_type): value_from_json_encodable(
+            element, element_type
         )
-        for key in sorted_keys
-    ]
+        for key, element in items
+    }
 
 
 @register_to_json_encodable_summary(dict)

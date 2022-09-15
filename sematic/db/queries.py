@@ -199,7 +199,9 @@ def _assert_external_jobs_not_removed(runs):
     runs_by_id = {run.id: run for run in runs}
     with db().get_session() as session:
         existing_run_jobs_all_runs = (
-            session.query(Run.id, Run.external_jobs_json).filter(Run.id.in_(run_ids)).all()
+            session.query(Run.id, Run.external_jobs_json)
+            .filter(Run.id.in_(run_ids))
+            .all()
         )
 
         # it's ok if there isn't an existing run for one of the passed-in runs.
