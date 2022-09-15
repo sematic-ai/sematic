@@ -139,13 +139,17 @@ class LocalResolver(SilentResolver):
         super()._future_will_schedule(future)
 
         run = self._populate_run_and_artifacts(future)
-
-        run.future_state = FutureState.SCHEDULED
+        self._update_run_and_future_pre_scheduling(run, future)
         run.root_id = self._futures[0].id
-        run.started_at = datetime.datetime.utcnow()
 
         self._add_run(run)
         self._save_graph()
+
+    def _update_run_and_future_pre_scheduling(self, run: Run, future: AbstractFuture):
+        """Perform any updates to run before saving it to the DB pre-scheduling"""
+        future.state = FutureState.SCHEDULED
+        run.future_state = FutureState.SCHEDULED
+        run.started_at = datetime.datetime.utcnow()
 
     def _future_did_schedule(self, future: AbstractFuture) -> None:
         super()._future_did_schedule(future)
@@ -198,8 +202,20 @@ class LocalResolver(SilentResolver):
         run.future_state = failed_future.state
 
         # We do not propagate exceptions to parent runs
-        if failed_future.state == FutureState.FAILED:
+        logger.info(
+            "Processing failure of run %s, state: %s",
+            failed_future.id,
+            failed_future.state,
+        )
+        if failed_future.state == FutureState.FAILED and run.exception is None:
             run.exception = format_exception_for_run()
+        if failed_future.state == FutureState.NESTED_FAILED and run.exception is None:
+            run.exception = "Failed because the child run failed"
+        logger.info(
+            "Processing failure of run %s, set exception to: %s",
+            failed_future.id,
+            run.exception,
+        )
 
         run.failed_at = datetime.datetime.utcnow()
         self._add_run(run)
@@ -220,9 +236,7 @@ class LocalResolver(SilentResolver):
             reason = "Marked as failed because another run in the graph failed."
             resolution_status = ResolutionStatus.COMPLETE
         else:
-            reason = (
-                "Marked as failed because of an internal error resolving the graph."
-            )
+            reason = "Marked as failed because the rest of the graph failed to resolve."
             resolution_status = ResolutionStatus.FAILED
 
         self._move_runs_to_terminal_state(reason)
@@ -230,12 +244,14 @@ class LocalResolver(SilentResolver):
         self._notify_pipeline_update()
 
     def _move_runs_to_terminal_state(self, reason):
-        for run_id, run in self._runs.items():
+        for run_id in self._runs.keys():
+            run = self._get_run(run_id)  # may have terminated remotely, re-get from api
             state = FutureState.as_object(run.future_state)
             if state.is_terminal():
                 continue
             run.future_state = FutureState.FAILED
-            run.exception = reason
+            if run.exception is None:
+                run.exception = reason
             self._buffer_runs[run_id] = run
         self._save_graph()
 

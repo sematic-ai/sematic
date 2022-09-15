@@ -109,10 +109,17 @@ def _dataclass_to_json_encodable(value: Any, type_: Any) -> Any:
 def _dataclass_from_json_encodable(value: Any, type_: Any) -> Any:
     types = value["types"]
     values = value["values"]
+    root_type_json = value["root_type"]
+    root_type = type_from_json_encodable(root_type_json)
+    if not issubclass(root_type, type_):
+        raise TypeError(
+            f"Serialized value was a {root_type}, "
+            f"could not deserialize to a {type_}"
+        )
 
     kwargs = {}
 
-    fields: Dict[str, dataclasses.Field] = type_.__dataclass_fields__
+    fields: Dict[str, dataclasses.Field] = root_type.__dataclass_fields__
 
     for name, field in fields.items():
         field_type = field.type
@@ -121,7 +128,7 @@ def _dataclass_from_json_encodable(value: Any, type_: Any) -> Any:
 
         kwargs[name] = value_from_json_encodable(values[name], field_type)
 
-    return type_(**kwargs)
+    return root_type(**kwargs)
 
 
 @register_to_json_encodable_summary(DataclassKey)
@@ -135,9 +142,9 @@ def _serialize_dataclass(serializer: ToJSONEncodableCallable, value: Any, _) -> 
     type_ = type(value)
 
     output: Dict[
-        Union[Literal["values"], Literal["types"]],
+        Union[Literal["values"], Literal["types"], Literal["root_type"]],
         Dict[str, Any],
-    ] = {"values": {}, "types": {}}
+    ] = {"values": {}, "types": {}, "root_type": type_to_json_encodable(type_)}
 
     fields: Dict[str, dataclasses.Field] = type_.__dataclass_fields__
 

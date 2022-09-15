@@ -2,12 +2,14 @@
 import json
 import typing
 import uuid
+from unittest import mock
 
 # Third-party
 import flask.testing
 import pytest
 
 # Sematic
+from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     make_auth_test,
     mock_no_auth,
@@ -15,15 +17,19 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
 )
 from sematic.calculator import func
+from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
-from sematic.db.queries import save_run
+from sematic.db.queries import get_run, save_resolution, save_run
 from sematic.db.tests.fixtures import (  # noqa: F401
     make_run,
+    persisted_resolution,
     persisted_run,
     pg_mock,
     run,
     test_db,
 )
+from sematic.scheduling.external_job import JobType
+from sematic.scheduling.kubernetes import KubernetesExternalJob
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
 
 test_list_runs_auth = make_auth_test("/api/v1/runs")
@@ -31,6 +37,8 @@ test_get_run_auth = make_auth_test("/api/v1/runs/123")
 test_get_run_graph_auth = make_auth_test("/api/v1/runs/123/graph")
 test_put_run_graph_auth = make_auth_test("/api/v1/graph", method="PUT")
 test_post_events_auth = make_auth_test("/api/v1/events/namespace/event", method="POST")
+test_schedule_run_auth = make_auth_test("/api/v1/runs/123/schedule", method="POST")
+test_future_states_auth = make_auth_test("/api/v1/runs/future_states", method="POST")
 
 
 @mock_no_auth
@@ -156,6 +164,110 @@ def test_get_run_404(test_client: flask.testing.FlaskClient):  # noqa: F811
     payload = typing.cast(typing.Dict[str, typing.Any], payload)
 
     assert payload == dict(error="No runs with id 'unknownid'")
+
+
+@mock_no_auth
+def test_schedule_run(
+    persisted_run: Run,  # noqa: F811
+    persisted_resolution: Resolution,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+):
+    with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
+        mock_k8s.refresh_job.side_effect = lambda job: job
+        mock_k8s.schedule_run_job.side_effect = lambda *_, **__: KubernetesExternalJob(
+            kind="k8s",
+            try_number=0,
+            external_job_id=KubernetesExternalJob.make_external_job_id(
+                persisted_run.id, namespace="foo", job_type=JobType.worker
+            ),
+            pending_or_running_pod_count=1,
+            succeeded_pod_count=0,
+            most_recent_condition=None,
+            has_started=False,
+            still_exists=True,
+        )
+        persisted_resolution.status = ResolutionStatus.RUNNING
+        save_resolution(persisted_resolution)
+        response = test_client.post(f"/api/v1/runs/{persisted_run.id}/schedule")
+
+        assert response.status_code == 200
+
+        payload = response.json
+        run = Run.from_json_encodable(payload["content"])  # type: ignore # noqa: F811
+        assert run.future_state == FutureState.SCHEDULED.value
+        mock_k8s.schedule_run_job.assert_called_once()
+        schedule_job_call_args = mock_k8s.schedule_run_job.call_args[1]
+        schedule_job_call_args["run_id"] == persisted_run.id
+        schedule_job_call_args["image"] == persisted_resolution.docker_image_uri
+        schedule_job_call_args[
+            "resource_requirements"
+        ] == persisted_run.resource_requirements
+
+        run = get_run(persisted_run.id)
+        assert len(run.external_jobs) == 1
+
+
+@mock_no_auth
+def test_update_future_states(
+    persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
+        persisted_run.future_state = FutureState.CREATED
+        save_run(persisted_run)
+        response = test_client.post(
+            "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
+        )
+
+        assert response.status_code == 200
+        payload = response.json
+        assert payload == {
+            "content": [{"future_state": "CREATED", "run_id": persisted_run.id}]
+        }
+        job = KubernetesExternalJob(
+            kind="k8s",
+            try_number=0,
+            external_job_id=KubernetesExternalJob.make_external_job_id(
+                persisted_run.id, namespace="foo", job_type=JobType.worker
+            ),
+            pending_or_running_pod_count=1,
+            succeeded_pod_count=0,
+            most_recent_condition=None,
+            has_started=True,
+            still_exists=True,
+        )
+
+        persisted_run.external_jobs = (job,)
+        persisted_run.future_state = FutureState.SCHEDULED
+        save_run(persisted_run)
+
+        mock_k8s.refresh_job.side_effect = lambda job: job
+        response = test_client.post(
+            "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
+        )
+        assert response.status_code == 200
+        payload = response.json
+        assert payload == {
+            "content": [{"future_state": "SCHEDULED", "run_id": persisted_run.id}]
+        }
+
+        # simulate the job disappearing while the run is still SCHEDULED
+        job.still_exists = False
+        assert not job.is_active()
+        persisted_run.external_jobs = (job,)
+        persisted_run.future_state = FutureState.SCHEDULED
+        save_run(persisted_run)
+        response = test_client.post(
+            "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
+        )
+        assert response.status_code == 200
+        payload = response.json
+        assert payload == {
+            "content": [{"future_state": "FAILED", "run_id": persisted_run.id}]
+        }
+        loaded = get_run(persisted_run.id)
+        assert (
+            loaded.exception == "The kubernetes job(s) experienced an unknown failure"
+        )
 
 
 @func
