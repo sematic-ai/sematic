@@ -14,6 +14,10 @@ from sematic.db.models.factories import make_artifact, make_user
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import save_resolution, save_run, save_user
+from sematic.resolvers.resource_requirements import (
+    KubernetesResourceRequirements,
+    ResourceRequirements,
+)
 from sematic.tests.fixtures import test_storage  # noqa: F401
 
 
@@ -104,6 +108,11 @@ def make_run(**kwargs) -> Run:
         name="test_run",
         calculator_path="path.to.test_run",
         root_id=id,
+    )
+    run.resource_requirements = ResourceRequirements(
+        kubernetes=KubernetesResourceRequirements(
+            requests={"cpu": "42"},
+        )
     )
 
     for name, value in kwargs.items():

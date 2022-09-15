@@ -153,6 +153,6 @@ def _schedule_job(run: Run, resolution: Resolution) -> ExternalJob:
         run_id=run.id,
         image=resolution.docker_image_uri,
         user_settings=resolution.settings_env_vars,
-        resource_requirements=None,
+        resource_requirements=run.resource_requirements,
         try_number=len(run.external_jobs),
     )
