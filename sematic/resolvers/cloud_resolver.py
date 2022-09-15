@@ -275,13 +275,19 @@ def _schedule_job(
         logger.debug("kubernetes resource requests %s", resource_requests)
         logger.debug("kubernetes volumes and mounts: %s, %s", volumes, volume_mounts)
         logger.debug("kubernetes environment secrets: %s", secret_env_vars)
-
     job = kubernetes.client.V1Job(  # type: ignore
         api_version="batch/v1",
         kind="Job",
-        metadata=kubernetes.client.V1ObjectMeta(name=name),  # type: ignore
+        metadata=kubernetes.client.V1ObjectMeta(  # type: ignore
+            name=name,
+        ),
         spec=kubernetes.client.V1JobSpec(  # type: ignore
             template=kubernetes.client.V1PodTemplateSpec(  # type: ignore
+                metadata=kubernetes.client.V1ObjectMeta(  # type: ignore
+                    annotations={
+                        "cluster-autoscaler.kubernetes.io/safe-to-evict": "false"
+                    },
+                ),
                 spec=kubernetes.client.V1PodSpec(  # type: ignore
                     node_selector=node_selector,
                     containers=[
