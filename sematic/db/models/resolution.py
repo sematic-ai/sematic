@@ -169,33 +169,21 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
         except Exception:
             raise ValueError("kind must be a ResolutionKind, got {}".format(value))
 
-    def update_with(
-        self, other: "Resolution", ignore_conflicts: Optional[List[str]] = None
-    ) -> None:
+    def update_with(self, other: "Resolution") -> None:
         """Use the other resolution to update this one.
 
         Parameters
         ----------
         other:
             The new resolution that is meant to update this one
-        ignore_conflicts:
-            A list of column names for which to always ignore conflicts between
-            the original resolution and the new one. The value from the original
-            will always be used. There will also be no error raised in the case
-            of a conflict.
 
         Raises
         ------
-        InvalidResolution if the update is not valid. This includes if the status
-        transition is not valid or if an attempt is made to mutate an immutable
-        field.
+        InvalidResolution if the update is not valid.
         """
-        ignore_conflicts = [] if ignore_conflicts is None else ignore_conflicts
         mutable_fields = {"status"}
         for column in Resolution.__table__.columns:
             column_key: str = column.key  # type: ignore
-            if column_key in ignore_conflicts:
-                continue
             if column_key in mutable_fields:
                 continue
             original_value = getattr(self, column_key)
@@ -221,8 +209,6 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
             )
 
         for field in mutable_fields:
-            if field in ignore_conflicts:
-                continue
             setattr(self, field, getattr(other, field))
 
     def validate_new(self):

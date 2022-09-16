@@ -91,12 +91,10 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
 
     try:
         if existing_resolution is not None:
-            existing_resolution.update_with(
-                resolution,
-                # This field is scrubbed on read, but should be immutable.
-                # ignore whatever the caller sent back this time.
-                ignore_conflicts=[Resolution.settings_env_vars.key]
-            )
+            # This field is scrubbed on read, but should be immutable.
+            # ignore whatever the caller sent back this time.
+            resolution.settings_env_vars = existing_resolution.settings_env_vars
+            existing_resolution.update_with(resolution)
             resolution = existing_resolution
         else:
             resolution.validate_new()
