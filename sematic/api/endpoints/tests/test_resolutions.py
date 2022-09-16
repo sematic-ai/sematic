@@ -55,6 +55,9 @@ def test_get_resolution_endpoint(
 
     assert payload["content"]["root_id"] == persisted_resolution.root_id
 
+    # Should have been scrubbed
+    assert payload["content"]["settings_env_vars"] == {}
+
 
 @mock_no_auth
 def test_get_resolution_404(test_client: flask.testing.FlaskClient):  # noqa: F811

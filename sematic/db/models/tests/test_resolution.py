@@ -31,7 +31,9 @@ UPDATE_CASES = [
             status=ResolutionStatus.SCHEDULED,
             kind=ResolutionKind.KUBERNETES,
             docker_image_uri="my.docker.registry.io/image/tag",
+            settings_env_vars={"FOO": "BAR"},
         ),
+        None,
         None,
     ),
     (
@@ -40,7 +42,9 @@ UPDATE_CASES = [
             status=ResolutionStatus.RUNNING,
             kind=ResolutionKind.KUBERNETES,
             docker_image_uri="my.docker.registry.io/image/tag",
+            settings_env_vars={"FOO": "BAR"},
         ),
+        None,
         None,
     ),
     (
@@ -49,7 +53,9 @@ UPDATE_CASES = [
             status=ResolutionStatus.SCHEDULED,
             kind=ResolutionKind.KUBERNETES,
             docker_image_uri="my.docker.registry.io/image/tag",
+            settings_env_vars={"FOO": "BAR"},
         ),
+        None,
         r"Cannot update root_id of resolution abc123 after it has been created.*zzz.*",
     ),
     (
@@ -58,7 +64,9 @@ UPDATE_CASES = [
             status=ResolutionStatus.COMPLETE,
             kind=ResolutionKind.KUBERNETES,
             docker_image_uri="my.docker.registry.io/image/tag",
+            settings_env_vars={"FOO": "BAR"},
         ),
+        None,
         r"Resolution abc123 cannot be moved from the SCHEDULED state to the "
         r"COMPLETE state.",
     ),
@@ -68,7 +76,9 @@ UPDATE_CASES = [
             status=ResolutionStatus.SCHEDULED,
             kind=ResolutionKind.LOCAL,
             docker_image_uri="my.docker.registry.io/image/tag",
+            settings_env_vars={"FOO": "BAR"},
         ),
+        None,
         r"Cannot update kind of resolution abc123 after it has been created.*LOCAL.*",
     ),
     (
@@ -77,22 +87,47 @@ UPDATE_CASES = [
             status=ResolutionStatus.SCHEDULED,
             kind=ResolutionKind.KUBERNETES,
             docker_image_uri="my.docker.registry.io/changed/tag",
+            settings_env_vars={"FOO": "BAR"},
         ),
+        None,
         r"Cannot update docker_image_uri of resolution abc123 .*changed/tag.*",
+    ),
+    (
+        Resolution(
+            root_id="abc123",
+            status=ResolutionStatus.SCHEDULED,
+            kind=ResolutionKind.KUBERNETES,
+            docker_image_uri="my.docker.registry.io/image/tag",
+            settings_env_vars={"FOO": "BARZ"},
+        ),
+        None,
+        r"Cannot update settings_env_vars of resolution abc123 .*BARZ.*",
+    ),
+    (
+        Resolution(
+            root_id="abc123",
+            status=ResolutionStatus.SCHEDULED,
+            kind=ResolutionKind.KUBERNETES,
+            docker_image_uri="my.docker.registry.io/image/tag",
+            settings_env_vars={},
+        ),
+        ["settings_env_vars"],
+        None,
     ),
 ]
 
 
-@pytest.mark.parametrize("update,expected_error", UPDATE_CASES)
-def test_updates(update, expected_error):
+@pytest.mark.parametrize("update,ignore,expected_error", UPDATE_CASES)
+def test_updates(update, ignore, expected_error):
     original = Resolution(
         root_id="abc123",
         status=ResolutionStatus.SCHEDULED,
         kind=ResolutionKind.KUBERNETES,
         docker_image_uri="my.docker.registry.io/image/tag",
+        settings_env_vars={"FOO": "BAR"},
     )
     try:
-        original.update_with(update)
+        original.update_with(update, ignore_conflicts=ignore)
         error = None
     except InvalidResolution as e:
         error = str(e)
