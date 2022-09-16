@@ -124,9 +124,12 @@ class LocalResolver(SilentResolver):
         return ResolutionKind.LOCAL
 
     def _create_resolution(self, root_future_id, detached):
+        starting_state = (
+            ResolutionStatus.CREATED if detached else ResolutionStatus.SCHEDULED
+        )
         resolution = Resolution(
             root_id=root_future_id,
-            status=ResolutionStatus.SCHEDULED,
+            status=starting_state,
             kind=self._get_resolution_kind(detached),
             docker_image_uri=self._get_resolution_image(),
             settings_env_vars={

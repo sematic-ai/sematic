@@ -47,6 +47,7 @@ pytest_test(
         "//sematic/api/tests:fixtures",
         "//sematic/db:queries",
         "//sematic/db/tests:fixtures",
+        "//sematic/db/models:resolution",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:worker",
         "//sematic/tests:fixtures",

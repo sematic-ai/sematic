@@ -1,32 +1,22 @@
 # Standard Library
-import enum
 import logging
-import pathlib
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 # Third-party
 import cloudpickle
-import kubernetes
 
 # Sematic
 import sematic.api_client as api_client
 import sematic.storage as storage
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.config import ON_WORKER_ENV_VAR
-from sematic.container_images import CONTAINER_IMAGE_ENV_VAR, get_image_uri
+from sematic.container_images import get_image_uri
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import ResolutionKind
 from sematic.db.models.run import Run
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
-from sematic.resolvers.resource_requirements import (
-    KUBERNETES_SECRET_NAME,
-    KubernetesSecretMount,
-    ResourceRequirements,
-)
-from sematic.user_settings import SettingsVar, get_all_user_settings, get_user_settings
 from sematic.utils.exceptions import format_exception_for_run
 
 logger = logging.getLogger(__name__)
@@ -55,14 +45,6 @@ class CloudResolver(LocalResolver):
 
     def __init__(self, detach: bool = True, is_running_remotely: bool = False):
         super().__init__(detach=detach)
-
-        try:
-            kubernetes.config.load_kube_config()  # type: ignore
-        except kubernetes.config.config_exception.ConfigException as e1:  # type: ignore
-            try:
-                kubernetes.config.load_incluster_config()  # type: ignore
-            except kubernetes.config.config_exception.ConfigException as e2:  # type: ignore # noqa: E501
-                raise RuntimeError("Unable to find kube config:\n{}\n{}".format(e1, e2))
 
         # TODO: Replace this with a cloud storage engine
         self._store_artifacts = True
@@ -116,9 +98,8 @@ class CloudResolver(LocalResolver):
 
         api_client.notify_pipeline_update(run.calculator_path)
 
-        job_name = _make_job_name(future, JobType.driver)
-        # SUBMIT ORCHESTRATOR JOB
-        _schedule_job(future.id, job_name, resolve=True)
+        # SUBMIT RESOLUTION JOB
+        api_client.schedule_resolution(future.id)
 
         return run.id
 
@@ -242,212 +223,5 @@ class CloudResolver(LocalResolver):
             )
 
 
-class JobType(enum.Enum):
-    driver = "driver"
-    worker = "worker"
-
-
 def make_nested_future_storage_key(future_id: str) -> str:
     return "futures/{}".format(future_id)
-
-
-def _make_job_name(future: AbstractFuture, job_type: JobType) -> str:
-    """
-    Make K8s job name.
-
-    Please keep in sync with `_get_run_id_from_name`.
-    """
-    job_name = "-".join(("sematic", job_type.value, future.id))
-    return job_name
-
-
-def _get_run_id_from_name(job_name: str) -> str:
-    """
-    Extract run ID from K8s job name.
-
-    Should be the reverse of `_make_job_name`.
-    """
-    return job_name.split("-")[-1]
-
-
-def _schedule_job(
-    run_id: str,
-    name: str,
-    resource_requirements: Optional[ResourceRequirements] = None,
-    resolve: bool = False,
-):
-    logger.info("Scheduling job %s", name)
-    args = ["--run_id", run_id]
-
-    if resolve:
-        args.append("--resolve")
-
-    image = get_image_uri()
-
-    node_selector = {}
-    resource_requests = {}
-    volumes = []
-    volume_mounts = []
-    secret_env_vars = []
-    if (
-        resource_requirements is not None
-        and resource_requirements.kubernetes is not None
-    ):
-        node_selector = resource_requirements.kubernetes.node_selector
-        resource_requests = resource_requirements.kubernetes.requests
-        volume_info = _volume_secrets(resource_requirements.kubernetes.secret_mounts)
-        if volume_info is not None:
-            volume, mount = volume_info
-            volumes.append(volume)
-            volume_mounts.append(mount)
-        secret_env_vars.extend(
-            _environment_secrets(resource_requirements.kubernetes.secret_mounts)
-        )
-        logger.debug("kubernetes node_selector %s", node_selector)
-        logger.debug("kubernetes resource requests %s", resource_requests)
-        logger.debug("kubernetes volumes and mounts: %s, %s", volumes, volume_mounts)
-        logger.debug("kubernetes environment secrets: %s", secret_env_vars)
-    job = kubernetes.client.V1Job(  # type: ignore
-        api_version="batch/v1",
-        kind="Job",
-        metadata=kubernetes.client.V1ObjectMeta(  # type: ignore
-            name=name,
-        ),
-        spec=kubernetes.client.V1JobSpec(  # type: ignore
-            template=kubernetes.client.V1PodTemplateSpec(  # type: ignore
-                metadata=kubernetes.client.V1ObjectMeta(  # type: ignore
-                    annotations={
-                        "cluster-autoscaler.kubernetes.io/safe-to-evict": "false"
-                    },
-                ),
-                spec=kubernetes.client.V1PodSpec(  # type: ignore
-                    node_selector=node_selector,
-                    containers=[
-                        kubernetes.client.V1Container(  # type: ignore
-                            name=name,
-                            image=image,
-                            args=args,
-                            env=[
-                                kubernetes.client.V1EnvVar(  # type: ignore
-                                    name=CONTAINER_IMAGE_ENV_VAR,
-                                    value=image,
-                                ),
-                                kubernetes.client.V1EnvVar(  # type: ignore
-                                    name=ON_WORKER_ENV_VAR,
-                                    value="1",
-                                ),
-                            ]
-                            + [
-                                kubernetes.client.V1EnvVar(  # type: ignore
-                                    name=name,
-                                    value=str(value),
-                                )
-                                for name, value in get_all_user_settings().items()
-                            ]
-                            + secret_env_vars,
-                            volume_mounts=volume_mounts,
-                            resources=(
-                                kubernetes.client.V1ResourceRequirements(  # type: ignore
-                                    limits=resource_requests,
-                                    requests=resource_requests,
-                                )
-                            ),
-                        )
-                    ],
-                    volumes=volumes,
-                    tolerations=[],
-                    restart_policy="Never",
-                ),
-            ),
-            backoff_limit=0,
-            ttl_seconds_after_finished=3600,
-        ),
-    )
-
-    kubernetes.client.BatchV1Api().create_namespaced_job(  # type: ignore
-        namespace=get_user_settings(SettingsVar.KUBERNETES_NAMESPACE), body=job
-    )
-
-
-def _volume_secrets(
-    secret_mount: KubernetesSecretMount,
-) -> Optional[  # type: ignore
-    Tuple[kubernetes.client.V1Volume, kubernetes.client.V1VolumeMount]
-]:
-    """Configure a volume and corresponding mount for secrets requested for a func
-
-    Parameters
-    ----------
-    secret_mount:
-        The request for how to mount secrets into the pod for a Sematic func
-
-    Returns
-    -------
-    None if no file secrets were requested. Otherwise a volume and a volume mount
-    for the secrets requested.
-    """
-    if len(secret_mount.file_secrets) == 0:
-        return None
-
-    for relative_path in secret_mount.file_secrets.values():
-        if pathlib.Path(relative_path).is_absolute():
-            raise ValueError(
-                f"Cannot mount secret to absolute path '{relative_path}'; "
-                "paths must be relative."
-            )
-
-    volume_name = "sematic-func-secrets-volume"
-
-    volume = kubernetes.client.V1Volume(  # type: ignore
-        name=volume_name,
-        secret=kubernetes.client.V1SecretVolumeSource(  # type: ignore
-            items=[
-                kubernetes.client.V1KeyToPath(  # type: ignore
-                    key=key,
-                    path=relative_path,
-                )
-                for key, relative_path in secret_mount.file_secrets.items()
-            ],
-            optional=False,
-            secret_name=KUBERNETES_SECRET_NAME,
-        ),
-    )
-
-    mount = kubernetes.client.V1VolumeMount(  # type: ignore
-        mount_path=secret_mount.file_secret_root_path,
-        name=volume_name,
-        read_only=True,
-    )
-
-    return volume, mount
-
-
-def _environment_secrets(
-    secret_mount: KubernetesSecretMount,
-) -> List[kubernetes.client.V1EnvVar]:  # type: ignore
-    """Configure environment variables for secrets requested for a func
-
-    Parameters
-    ----------
-    secret_mount:
-        The request for how to mount secrets into the pod for a Sematic func
-
-    Returns
-    -------
-    A list of configurations for Kubernetes environment variables that will get
-    their values from the "sematic-func-secrets" Kubernetes secret.
-    """
-    env_vars = []
-    for key, env_var_name in secret_mount.environment_secrets.items():
-        env_vars.append(
-            kubernetes.client.V1EnvVar(  # type: ignore
-                name=env_var_name,
-                value_from=kubernetes.client.V1EnvVarSource(  # type: ignore
-                    secret_key_ref=kubernetes.client.V1SecretKeySelector(  # type: ignore
-                        name=KUBERNETES_SECRET_NAME,
-                        key=key,
-                    )
-                ),
-            )
-        )
-    return env_vars

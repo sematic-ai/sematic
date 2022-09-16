@@ -27,7 +27,7 @@ def pipeline() -> float:
 
 
 @mock.patch("sematic.resolvers.cloud_resolver.get_image_uri")
-@mock.patch("sematic.resolvers.cloud_resolver._schedule_job")
+@mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
 @mock_no_auth
 def test_simulate_cloud_exec(
@@ -50,10 +50,11 @@ def test_simulate_cloud_exec(
 
     assert result == future.id
 
-    mock_schedule_job.assert_called_once_with(
-        future.id, "sematic-driver-{}".format(future.id), resolve=True
-    )
-    mock_load_kube_config.assert_called_once()
+    mock_schedule_job.assert_called_once_with(future.id)
+    assert api_client.get_resolution(future.id).status == ResolutionStatus.CREATED.value
+    resolution = api_client.get_resolution(future.id)
+    resolution.status = ResolutionStatus.SCHEDULED
+    api_client.save_resolution(resolution)
     # In the driver job
 
     runs, artifacts, edges = api_client.get_graph(future.id)
@@ -70,3 +71,6 @@ def test_simulate_cloud_exec(
     assert (
         api_client.get_resolution(future.id).status == ResolutionStatus.COMPLETE.value
     )
+
+    # cheap way of confirming no k8s calls were made
+    mock_load_kube_config.assert_not_called()
