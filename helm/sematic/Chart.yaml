@@ -2,7 +2,7 @@ apiVersion: v2
 name: sematic
 version: 0.1.0
 kubeVersion: ">=1.21.0-0"
-description: Build pipelines for prototype to production ML in days not weeks
+description: The open-source Continuous Learning tool
 home: https://sematic.dev
 icon: https://raw.githubusercontent.com/sematic-ai/sematic/main/sematic/ui/public/Fox.png
 keywords:

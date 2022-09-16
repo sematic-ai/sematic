@@ -5,19 +5,21 @@ and your pipelines run locally.
 
 Here is how to deploy Sematic to take full advantage of your cloud resources.
 Before you start, you will need to decide how you wish to use Sematic.
-Option 1 is to use Sematic to track and share your pipeline executions, but
+
+* Option 1 is to use Sematic to track and share your pipeline executions, but
 still have the pipelines execute locally. This setup is simpler, but less
-powerful. Option 2 is to deploy Sematic on Kubernetes, where the pipelines
+powerful.
+* Option 2 is to deploy Sematic on Kubernetes, where the pipelines
 can have access to more powerful compute by executing in the cloud. This
 setup is a little more complex and has more pre-requisites.
 
 ## Deployment Option 1: Shared Metadata Server
 
-If you like, you can deploy a shared Sematic server so that you and others
-can share the results of your Sematic executions with one another. With this
-option, you get all the experiment tracking functionality of Sematic's UI--
-including input/output visualization, chat, and more. However, you will still
-need to execute pipelines locally.
+You can deploy the Sematic server so that you and others
+can share results of Sematic pipelines. With this
+option, you get all the experiment tracking functionality of the Sematic UI –
+including input/output visualization, chat, and more.
+Your pipelines will still execute locally.
 
 ### Deploy the web app
 
