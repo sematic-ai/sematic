@@ -2,6 +2,8 @@
 import os
 import re
 
+import yaml
+
 # Sematic
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 
@@ -32,6 +34,22 @@ def test_changelog():
     # assert versions are in descending order
     for version, following_version in zip(changelog_versions, changelog_versions[1:]):
         assert version > following_version
+
+
+def test_helm_chart():
+    with open("helm/sematic/values.yaml", "r") as fp:
+        encodable = yaml.load(fp, yaml.Loader)
+
+    image = encodable["server"]["image"]
+    prefix = "sematicai/sematic-server:v"
+    assert image.startswith(prefix)
+    version_string = image.replace(prefix, "")
+    values_version = tuple(int(v) for v in version_string.split("."))
+    message = (
+        f"Latest version in values.yaml ({version_string}) doesn't "
+        f"match the version in versions.py ({CURRENT_VERSION})."
+    )
+    assert values_version == CURRENT_VERSION, message
 
 
 def test_bazel_wheel_version():

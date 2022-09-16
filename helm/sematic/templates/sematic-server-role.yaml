@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: sematic-server-role
+rules:
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "watch", "list", "create"]
+- apiGroups: ["batch"]
+  resources: ["jobs/status"]
+  verbs: ["get", "watch", "list"]
