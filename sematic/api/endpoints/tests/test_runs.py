@@ -202,7 +202,6 @@ def test_schedule_run(
         schedule_job_call_args[
             "resource_requirements"
         ] == persisted_run.resource_requirements
-
         run = get_run(persisted_run.id)
         assert len(run.external_jobs) == 1
 

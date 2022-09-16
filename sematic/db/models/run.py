@@ -11,6 +11,7 @@ from sqlalchemy.orm import validates
 # Sematic
 from sematic.abstract_future import FutureState
 from sematic.db.models.base import Base
+from sematic.db.models.has_external_jobs_mixin import HasExternalJobsMixin
 from sematic.db.models.json_encodable_mixin import (
     ENUM_KEY,
     JSON_KEY,
@@ -24,7 +25,7 @@ from sematic.types.serialization import (
 )
 
 
-class Run(Base, JSONEncodableMixin):
+class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
     """
     SQLAlchemy model for runs.
 

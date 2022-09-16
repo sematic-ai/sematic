@@ -44,6 +44,18 @@ sematic_py_lib(
     ],
 )
 
+
+sematic_py_lib(
+    name = "has_external_jobs_mixin",
+    srcs = ["has_external_jobs_mixin.py"],
+    deps = [
+        "//sematic/scheduling:external_job",
+        "//sematic/types:serialization",
+        "//sematic/types/types:dataclass",
+    ],
+)
+
+
 sematic_py_lib(
     name = "json_encodable_mixin",
     srcs = ["json_encodable_mixin.py"],
@@ -60,6 +72,7 @@ sematic_py_lib(
     deps = [
         ":base",
         ":json_encodable_mixin",
+        ":has_external_jobs_mixin",
         "//sematic:abstract_future",
         "//sematic/scheduling:external_job",
         "//sematic/types:serialization",
@@ -75,6 +88,7 @@ sematic_py_lib(
     deps = [
         ":base",
         ":json_encodable_mixin",
+        ":has_external_jobs_mixin",
     ],
     pip_deps = [
         "sqlalchemy",
