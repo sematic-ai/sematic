@@ -156,7 +156,6 @@ def _assert_is_scheduleable(run: Run, resolution: Resolution):
         raise StateNotSchedulable(
             f"The resolution {resolution.root_id} had no docker image URI"
         )
-    # TODO(#98): assert run has resource requirements that are specified
 
 
 def _refresh_external_jobs(jobs: Iterable[ExternalJob]) -> Tuple[ExternalJob, ...]:

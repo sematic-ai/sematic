@@ -6,6 +6,7 @@ sematic_py_lib(
         "//sematic:user_settings",
         "//sematic/api:server_lib",
         "//sematic/db/tests:fixtures",
+        "//sematic/scheduling:kubernetes",
     ],
     pip_deps = [
         "pytest",

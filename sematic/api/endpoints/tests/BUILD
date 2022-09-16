@@ -6,6 +6,8 @@ pytest_test(
         "//sematic/db/models:resolution",
         "//sematic/db:queries",
         "//sematic/db/tests:fixtures",
+        "//sematic/scheduling:external_job",
+        "//sematic/scheduling:kubernetes",
     ],
     pip_deps = [
         "flask"
