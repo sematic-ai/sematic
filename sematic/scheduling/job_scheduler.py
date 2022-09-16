@@ -13,8 +13,8 @@ from sematic.scheduling.external_job import KUBERNETES_JOB_KIND, ExternalJob
 logger = logging.getLogger(__name__)
 
 
-class RunStateNotSchedulable(Exception):
-    """The run is not in a state that would allow it to be scheduled."""
+class StateNotSchedulable(Exception):
+    """The run or resolution is not in a state that would allow it to be scheduled."""
 
     pass
 
@@ -35,6 +35,24 @@ def schedule_run(run: Run, resolution: Resolution) -> Run:
     run.external_jobs = tuple(external_jobs_list)
     run.future_state = FutureState.SCHEDULED
     return run
+
+
+def schedule_resolution(resolution: Resolution) -> Resolution:
+    """Start a resolution for the run on external compute.
+
+    Parameters
+    ----------
+    resolution:
+        The resolution associated with the run
+    """
+    resolution.external_jobs = _refresh_external_jobs(resolution.external_jobs)
+    _assert_resolution_is_scheduleable(resolution)
+    external_jobs_list = list(resolution.external_jobs) + [
+        _schedule_resolution_job(resolution)
+    ]
+    resolution.external_jobs = tuple(external_jobs_list)
+    resolution.status = ResolutionStatus.SCHEDULED
+    return resolution
 
 
 def update_run_status(
@@ -95,30 +113,49 @@ def update_run_status(
     )
 
 
+def _assert_resolution_is_scheduleable(resolution: Resolution):
+    """raise StateNotSchedulable if the state is not such that it can be scheduled"""
+    if resolution.status != ResolutionStatus.CREATED.value:
+        raise StateNotSchedulable(
+            f"The resolution {resolution.root_id} was in the state {resolution.status}, "
+            f"and could not be scheduled. Resolution can only be scheduled if they "
+            f"are in the {ResolutionStatus.CREATED} state."
+        )
+    for job in resolution.external_jobs:
+        if job.is_active():
+            raise StateNotSchedulable(
+                f"The resolution {resolution.root_id} already had an active external "
+                f"job {job.external_job_id} and thus could not be scheduled."
+            )
+    if resolution.docker_image_uri is None:
+        raise StateNotSchedulable(
+            f"The resolution {resolution.root_id} had no docker image URI"
+        )
+
+
 def _assert_is_scheduleable(run: Run, resolution: Resolution):
     """raise RunStateNotSchedulable if the state is not such that it can be scheduled"""
     if run.future_state != FutureState.CREATED.value:
-        raise RunStateNotSchedulable(
+        raise StateNotSchedulable(
             f"The run {run.id} was in the state {run.future_state}, and could "
             f"not be scheduled. Runs can only be scheduled if they are in the "
             f"{FutureState.CREATED} state."
         )
     for job in run.external_jobs:
         if job.is_active():
-            raise RunStateNotSchedulable(
+            raise StateNotSchedulable(
                 f"The run {run.id} already had an active external job "
                 f"{job.external_job_id} and thus could not be scheduled."
             )
     if resolution.status != ResolutionStatus.RUNNING.value:
-        raise RunStateNotSchedulable(
+        raise StateNotSchedulable(
             f"The run {run.id} was not schedulable because there "
             f"is no active resolution for it."
         )
     if resolution.docker_image_uri is None:
-        raise RunStateNotSchedulable(
+        raise StateNotSchedulable(
             f"The resolution {resolution.root_id} had no docker image URI"
         )
-    # TODO(#98): assert run has resource requirements that are specified
 
 
 def _refresh_external_jobs(jobs: Iterable[ExternalJob]) -> Tuple[ExternalJob, ...]:
@@ -155,4 +192,15 @@ def _schedule_job(run: Run, resolution: Resolution) -> ExternalJob:
         user_settings=resolution.settings_env_vars,
         resource_requirements=run.resource_requirements,
         try_number=len(run.external_jobs),
+    )
+
+
+def _schedule_resolution_job(resolution: Resolution) -> ExternalJob:
+    """Reach out to external compute to start the execution of the resolution"""
+    # should be impossible to fail this assert, but it makes mypy happy
+    assert resolution.docker_image_uri is not None
+    return k8s.schedule_resolution_job(
+        resolution_id=resolution.root_id,
+        image=resolution.docker_image_uri,
+        user_settings=resolution.settings_env_vars,
     )

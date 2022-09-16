@@ -11,7 +11,8 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
 )
 from sematic.calculator import func
-from sematic.db.queries import get_root_graph
+from sematic.db.models.resolution import ResolutionStatus
+from sematic.db.queries import get_resolution, get_root_graph, save_resolution
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.resolvers.worker import main
@@ -29,7 +30,7 @@ def pipeline(a: float, b: float) -> float:
 
 
 @mock.patch("sematic.resolvers.cloud_resolver.get_image_uri")
-@mock.patch("sematic.resolvers.cloud_resolver._schedule_job")
+@mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
 @mock_no_auth
 def test_main(
@@ -49,6 +50,9 @@ def test_main(
     future = pipeline(1, 2)
 
     future.resolve(resolver)
+    resolution = get_resolution(future.id)
+    resolution.status = ResolutionStatus.SCHEDULED
+    save_resolution(resolution)
 
     # In the driver job
 
@@ -66,7 +70,7 @@ def fail():
 
 
 @mock.patch("sematic.resolvers.cloud_resolver.get_image_uri")
-@mock.patch("sematic.resolvers.cloud_resolver._schedule_job")
+@mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
 @mock_no_auth
 def test_fail(
@@ -85,6 +89,9 @@ def test_fail(
     future = fail()
 
     future.resolve(resolver)
+    resolution = get_resolution(future.id)
+    resolution.status = ResolutionStatus.SCHEDULED
+    save_resolution(resolution)
 
     # In the driver job
     with pytest.raises(Exception, match="FAIL!"):

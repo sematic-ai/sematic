@@ -14,6 +14,7 @@ from sematic.config import ON_WORKER_ENV_VAR, SettingsVar, get_user_settings
 from sematic.container_images import CONTAINER_IMAGE_ENV_VAR
 from sematic.resolvers.resource_requirements import (
     KUBERNETES_SECRET_NAME,
+    KubernetesResourceRequirements,
     KubernetesSecretMount,
     ResourceRequirements,
 )
@@ -22,6 +23,13 @@ from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
 _kubeconfig_loaded = False
+
+
+RESOLUTION_RESOURCE_REQUIREMENTS = ResourceRequirements(
+    kubernetes=KubernetesResourceRequirements(
+        requests={"cpu": "500m", "memory": "2Gi"},
+    )
+)
 
 
 @unique
@@ -45,6 +53,22 @@ class KubernetesExternalJob(ExternalJob):
     most_recent_condition: Optional[str]
     has_started: bool
     still_exists: bool
+
+    @classmethod
+    def new(
+        cls, try_number: int, run_id: str, namespace: str, job_type: JobType
+    ) -> "KubernetesExternalJob":
+        """Get a job with an appropriate configuration for having just started"""
+        return KubernetesExternalJob(
+            kind=KUBERNETES_JOB_KIND,
+            try_number=try_number,
+            external_job_id=cls.make_external_job_id(run_id, namespace, job_type),
+            pending_or_running_pod_count=1,
+            succeeded_pod_count=0,
+            has_started=False,
+            still_exists=True,
+            most_recent_condition=None,
+        )
 
     @property
     def run_id(self) -> str:
@@ -250,6 +274,31 @@ def _schedule_kubernetes_job(
     )
 
 
+def schedule_resolution_job(
+    resolution_id: str,
+    image: str,
+    user_settings: Dict[str, str],
+) -> ExternalJob:
+    namespace = get_user_settings(SettingsVar.KUBERNETES_NAMESPACE)
+    external_job = KubernetesExternalJob.new(
+        try_number=0,
+        run_id=resolution_id,
+        namespace=namespace,
+        job_type=JobType.driver,
+    )
+    logger.info("Scheduling job %s", external_job.kubernetes_job_name)
+    args = ["--run_id", resolution_id, "--resolve"]
+    _schedule_kubernetes_job(
+        name=external_job.kubernetes_job_name,
+        image=image,
+        environment_vars=user_settings,
+        namespace=namespace,
+        resource_requirements=RESOLUTION_RESOURCE_REQUIREMENTS,
+        args=args,
+    )
+    return external_job
+
+
 def schedule_run_job(
     run_id: str,
     image: str,
@@ -260,18 +309,8 @@ def schedule_run_job(
     """Schedule a job on k8s for a calculator execution."""
     # "User" in this case is the server.
     namespace = get_user_settings(SettingsVar.KUBERNETES_NAMESPACE)
-    external_job_id = KubernetesExternalJob.make_external_job_id(
-        run_id, namespace, JobType.worker
-    )
-    external_job = KubernetesExternalJob(
-        kind=KUBERNETES_JOB_KIND,
-        try_number=try_number,
-        external_job_id=external_job_id,
-        pending_or_running_pod_count=1,
-        succeeded_pod_count=0,
-        has_started=False,
-        still_exists=True,
-        most_recent_condition=None,
+    external_job = KubernetesExternalJob.new(
+        try_number, run_id, namespace, JobType.worker
     )
     logger.info("Scheduling job %s", external_job.kubernetes_job_name)
     args = ["--run_id", run_id]
