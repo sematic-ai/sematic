@@ -1,0 +1,15 @@
+apiVersion: v1
+data:
+{{ if .Values.auth.enabled }}
+  GOOGLE_OAUTH_CLIENT_ID: {{ .Values.auth.google_oauth_client_id }}
+  SEMATIC_AUTHENTICATE: "1"
+  SEMATIC_AUTHORIZED_EMAIL_DOMAIN: {{ .Values.auth.authorized_email_domain }}
+{{ end }}
+  KUBERNETES_NAMESPACE: {{ .Values.namespace }}
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: sematic
+    app.kubernetes.io/name: generic
+  name: sematic-configs
+  namespace: {{ .Values.namespace }}

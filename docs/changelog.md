@@ -4,7 +4,14 @@ Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
 with nothing else on the line.
 -->
 * HEAD
+    * [feature] BREAKING CHANGE: For cloud execution, users submitting pipelines no
+      longer need Kubernetes access. Users who have deployed the Sematic server using
+      docker will need to either (a) switch to deploying the server on Kubernetes or
+      (b) use their Sematic deployment only for metadata tracking instead of metadata
+      tracking + cloud execution.
     * [bugfix] Remove job environment variables from resolution API response
+    * [improvement] Lower the probability of evictions of resolution jobs and improve
+      handling of that situation
 * 0.13.0
     * [bugfix] Bugfix for dicitonary visualization
     * [feature] When running in cloud mode, have the server log to stdout
