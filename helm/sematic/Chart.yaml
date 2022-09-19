@@ -1,0 +1,24 @@
+apiVersion: v2
+name: sematic
+version: 0.1.0
+kubeVersion: ">=1.21.0-0"
+description: The open-source Continuous Learning tool
+home: https://sematic.dev
+icon: https://raw.githubusercontent.com/sematic-ai/sematic/main/sematic/ui/public/Fox.png
+keywords:
+  - machine-learning
+  - ai
+  - data-science
+  - ml
+  - mlops
+  - ml-pipeline
+  - ml-ops
+  - orchestration
+sources:
+  - https://github.com/sematic-ai/sematic/
+maintainers:
+  - name: Emmanuel Turlay
+    url: https://github.com/neutralino1
+  - name: Josh Bauer
+    url: https://github.com/augray
+type: application

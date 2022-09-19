@@ -88,8 +88,12 @@ pytest_test(
     deps = [
         "//sematic:versions",
     ],
+    pip_deps = [
+        "pyyaml",
+    ],
     data = [
         "//:docs/changelog.md",
+        "//:helm/sematic/values.yaml",
     ],
     env = {"BAZEL_WHEEL_VERSION": wheel_version_string},
 )
