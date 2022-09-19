@@ -31,8 +31,16 @@ def get_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
             HTTPStatus.NOT_FOUND,
         )
 
+    resolution_json = resolution.to_json_encodable()
+
+    # Scrub the environment variables before returning from the
+    # API. They can contain sensitive info like API keys. On write,
+    # we consider this field to be immutable, so we will just re-use
+    # whatever was already in the DB for it
+    resolution_json[Resolution.settings_env_vars.key] = {}
+
     payload = dict(
-        content=resolution.to_json_encodable(),
+        content=resolution_json,
     )
 
     return flask.jsonify(payload)
@@ -83,6 +91,9 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
 
     try:
         if existing_resolution is not None:
+            # This field is scrubbed on read, but should be immutable.
+            # ignore whatever the caller sent back this time.
+            resolution.settings_env_vars = existing_resolution.settings_env_vars
             existing_resolution.update_with(resolution)
             resolution = existing_resolution
         else:
