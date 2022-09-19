@@ -123,7 +123,7 @@ def make_run(**kwargs) -> Run:
 
 def make_resolution(**kwargs) -> Resolution:
     root_id = uuid.uuid4().hex
-    run = Resolution(
+    resolution = Resolution(
         root_id=root_id,
         status=ResolutionStatus.SCHEDULED,
         kind=ResolutionKind.KUBERNETES,
@@ -132,9 +132,9 @@ def make_resolution(**kwargs) -> Resolution:
     )
 
     for name, value in kwargs.items():
-        setattr(run, name, value)
+        setattr(resolution, name, value)
 
-    return run
+    return resolution
 
 
 @pytest.fixture
