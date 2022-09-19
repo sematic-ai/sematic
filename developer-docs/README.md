@@ -16,7 +16,7 @@ access to the PyPi repo, which is limited to employees of Sematic.
 and use a virtual env to test:
 
 ```
-pip install sematic
+pip install <wheel path>
 sematic start
 sematic run examples/mnist/pytorch
 ```
