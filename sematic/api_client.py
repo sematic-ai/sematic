@@ -250,11 +250,16 @@ def _validate_server_compatibility(
 
 
 def _validate_server_compatibility_no_catch() -> None:
+    base_url = get_config().api_url.replace("/api/v1", "")
     unexpected_server_response_error = IncompatibleClientError(
         "The Sematic server did not provide information about its version "
-        "in the expected format. It could be that the server is too old to "
-        "provide this information. Consider upgrading your server if possible, "
-        "or reach out to Sematic for support."
+        "in the expected format. Most likely this means that your "
+        "SEMATIC_API_ADDRESS is pointing to a URL which resolves to something other "
+        "than your Sematic deployment. Please verify your deployment by running the "
+        "following curl command. The response should be html with a '🦊' emoji in it. "
+        "If it is not, please correct your Sematic deployment, networking or "
+        "SEMATIC_API_ADDRESS so that you can reach it from this host. "
+        f"CURL COMMAND: \n\n\tcurl {base_url}\n"
     )
 
     try:
