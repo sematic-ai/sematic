@@ -14,6 +14,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
 )
 from sematic.db.models.resolution import Resolution, ResolutionStatus
+from sematic.db.queries import get_resolution
 from sematic.db.tests.fixtures import (  # noqa: F401
     make_resolution,
     persisted_resolution,
@@ -54,6 +55,33 @@ def test_get_resolution_endpoint(
     payload = typing.cast(typing.Dict[str, typing.Any], payload)
 
     assert payload["content"]["root_id"] == persisted_resolution.root_id
+
+    # Should have been scrubbed
+    assert payload["content"]["settings_env_vars"] == {}
+
+
+@mock_no_auth
+def test_put_resolution_endpoint(
+    persisted_run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+):
+    resolution = make_resolution(root_id=persisted_run.id)  # noqa: F811
+    response = test_client.put(
+        "/api/v1/resolutions/{}".format(resolution.root_id),
+        json={"resolution": resolution.to_json_encodable()},
+    )
+    response = test_client.get("/api/v1/resolutions/{}".format(resolution.root_id))
+    encodable = response.json["content"]  # type: ignore
+    encodable["status"] = ResolutionStatus.FAILED.value
+
+    test_client.put(
+        "/api/v1/resolutions/{}".format(resolution.root_id),
+        json={"resolution": encodable},
+    )
+
+    read = get_resolution(resolution.root_id)
+    assert read.settings_env_vars == resolution.settings_env_vars
+    assert read.status == ResolutionStatus.FAILED.value
 
 
 @mock_no_auth
