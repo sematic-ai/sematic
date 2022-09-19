@@ -9,6 +9,9 @@ with nothing else on the line.
       docker will need to either (a) switch to deploying the server on Kubernetes or
       (b) use their Sematic deployment only for metadata tracking instead of metadata
       tracking + cloud execution.
+    * [bugfix] Remove job environment variables from resolution API response
+    * [improvement] Lower the probability of evictions of resolution jobs and improve
+      handling of that situation
 * 0.13.0
     * [bugfix] Bugfix for dicitonary visualization
     * [feature] When running in cloud mode, have the server log to stdout
