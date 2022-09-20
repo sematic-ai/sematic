@@ -141,12 +141,144 @@ def train_model(...):
     ...
 ```
 
-At this time this only allows you to pass a node selector to choose a node in
-your Kubernetes cluster. In the future, we will also surface CPU, memory, and
-ephemeral storage requirements.
-
 Note that the corresponding instances need to have been provisioned in your
 Sematic cluster ahead of time.
+
+### Understanding "Inline"
+
+Before understanding inline functions, it is first helpful to refresh yourself
+on the description of the "driver" job above. Note that this job is distinct
+from the container where the root run executes - it's best to think of the
+driver as an "extra" container for the overall pipeline.
+
+Given this understanding of the driver job, the behavior of inline executions
+can be summarized as follows. Every Sematic func executes in one of two places:
+
+(1) The driver container
+(2) Its own, dedicated container
+
+The *only* determining factor in which of these two is used for a given function
+is whether or not it has `inline=True`. For functions where `inline=True`, they
+will execute in the driver container. This is best used for very lightweight
+functions that execute quickly and don't make any calls to external services. For
+functions where `inline=False`, they execute in their own containers.
+
+A common source of confusion with inline functions is to think there's a
+relationship between nested functions and inline. Consider the following code:
+
+```python
+@sematic.func(inline=False)
+def calculate_average(a: float, b: float, c: float) -> float:
+  total = add(a, b, c)
+  average = divide(total, 3)
+
+@sematic.func(inline=False)
+def add(a: float, b: float, c: float) -> float:
+  return a + b + c
+
+@sematic.func(inline=True)
+def divide(a: float, b: int) -> float:
+  return a / b
+```
+
+Let's assume `calculate_average` and `add` are actually doing something
+"heavy" that requires a dedicated container, rather than just performing
+simple arithmetic operations.
+
+People sometimes assume that since `divide`
+is nested inside `calculate_average`, and `divide` is inline, `divide`
+must execute in the same container as `calculate_average`. This is NOT
+correct. This misunderstanding stems from a misunderstanding of how Sematic
+works with Futures. Recall that Sematic functions return futures when you
+call them. That means that `total` in `calculate_average`
+*actually holds a Future instead of a `float`*. So when `divide(total, 3)`
+is called above, the content of `total` is not even known. Therefore how
+could it be executed?
+
+Instead, what happens is this:
+
+1. `add` is called and immediately returns a Future without doing any work
+2. `divide` is called, given the Future from `add` and the constant `3`. It
+also returns immediately without doing any work.
+3. `calculate_average` returns the `Future` output by `divide`
+4. The driver job analyzes the `Future` coming from `calculate_average` and
+sees that to get the value for it, it must first execute `add` and then
+execute `divide`.
+5. Since `add` is non-inline, the driver starts a container within which to
+execute `add`. `add` returns an actual `float` which is the sum of `a`, `b`, and
+`c`.
+6. The driver sees that it now has everything required to execute `divide`, so
+it does so. Since `divide` is inline, the driver doesn't need to start a new
+container for it, and instead it executes `divide` in its own process.
+
+#### When to use inline?
+
+After walking through the above example, you may be wondering if there's a simple
+way to know when something should be marked as inline vs not. Even if you don't
+follow the above trace of the execution, you can still use `inline` correctly if
+you follow this guidance:
+
+- Any Sematic function doing something "trivial" that executes in a few seconds or
+less and requires negligible CPU or memory should be inline.
+- Any Sematic function which primarily calls other Sematic functions and doesn't
+do any work "of its own" aside from these calls should be inline
+- Any other Sematic functions should NOT be inline. In practice this usually means
+"leaf node" Sematic functions that don't call other Sematic functions and which
+do some "real work."
+
+Most Sematic functions tend to meet the first two criteria, so functions are inline
+by default.
+
+#### Can I make nested functions execute in the parent container?
+
+Let's suppose that you wanted `add` and `divide` to execute in the
+same container as `calculate_average` above. Is that possible? Yes!
+You can just remove the `@sematic.func` decorator from `add` and
+`divide` to make them regular python functions. In this case, they will
+execute just like any other python code--immediately at the time they
+are called, in the same process as the code that called them. In this case,
+Sematic will not track or visualize the functions.
+
+### When to call `.resolve()`
+
+Sometimes you will find yourself in the middle of a Sematic function
+with a Future that you wish to use as a regular python object. Given
+that calling `.resolve()` on a Future turns that `Future` into a
+concrete value, you may be tempted to do the following:
+
+```python
+@sematic.func
+def pipeline() -> int:
+    # intermediate_result will hold a Future
+    intermediate_result = nested_sematic_func()
+
+    # DON'T DO THIS!!!
+    return intermediate_result.resolve().some_method()
+```
+
+The reason you don't want to do this is that it will create an
+entirely separate pipeline, rooted at the `nested_sematic_func` call
+and independent of `pipeline`. In this case, `pipeline` will show up
+in the UI as an empty pipeline, and all the work for `nested_sematic_func`
+will happen in the container where `pipeline` executes. Instead, the way
+to use `some_method()` on the python object that `nested_sematic_func`
+produces is to use a wrapping sematic func:
+
+```python
+@sematic.func
+def pipeline() -> int:
+    # intermediate_result will hold a Future
+    intermediate_result = nested_sematic_func()
+
+    return call_some_method(intermediate_result)
+
+@sematic.func
+def call_some_method(value: MyType) -> int:
+    return value.some_method()
+```
+
+This way Sematic will ensure that it has a concrete result
+before it executes `call_some_method`.
 
 ### Dependency packaging
 
