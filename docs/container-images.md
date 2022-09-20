@@ -197,7 +197,7 @@ reasons to put everything in one image than to separate them:
 - It can actually speed up container download to re-use the same image, as Kubernetes
 nodes will only download the image once and have it cached for re-use in other steps in
 the pipeline.
-- It can quickly become tricky to remember what dependencies are goint to be available
+- It can quickly become tricky to remember what dependencies are going to be available
 in which step. When you have a single python interpreter executing all your code, all
 the dependencies are available everywhere. We want to bring this intuitive experience
 to the cloud.

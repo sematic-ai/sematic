@@ -147,22 +147,19 @@ Sematic cluster ahead of time.
 ### Understanding "Inline"
 
 Before understanding inline functions, it is first helpful to refresh yourself
-on resolvers. Recall that the resolver is the code responsible for controlling
-the execution of the rest of the pipeline. When using the `CloudResolver`, the
-resolver executes in its own dedicated container, distinct from the rest of the
-pipeline. Note that it is distinct from the container where the root run
-executes--it's best to think of the resolver as an "extra" container for the
-overall pipeline.
+on the description of the "driver" job above. Note that this job is distinct
+from the container where the root run executes - it's best to think of the
+driver as an "extra" container for the overall pipeline.
 
-Given this understanding of the resolver job, the behavior of inline executions
+Given this understanding of the driver job, the behavior of inline executions
 can be summarized as follows. Every Sematic func executes in one of two places:
 
-(1) The resolver container
+(1) The driver container
 (2) Its own, dedicated container
 
 The *only* determining factor in which of these two is used for a given function
 is whether or not it has `inline=True`. For functions where `inline=True`, they
-will execute in the resolver container. This is best used for very lightweight
+will execute in the driver container. This is best used for very lightweight
 functions that execute quickly and don't make any calls to external services. For
 functions where `inline=False`, they execute in their own containers.
 
@@ -204,14 +201,14 @@ Instead, what happens is this:
 2. `divide` is called, given the Future from `add` and the constant `3`. It
 also returns immediately without doing any work.
 3. `calculate_average` returns the `Future` output by `divide`
-4. The resolver job analyzes the `Future` coming from `calculate_average` and
+4. The driver job analyzes the `Future` coming from `calculate_average` and
 sees that to get the value for it, it must first execute `add` and then
 execute `divide`.
-5. Since `add` is non-inline, the resolver starts a container within which to
+5. Since `add` is non-inline, the driver starts a container within which to
 execute `add`. `add` returns an actual `float` which is the sum of `a`, `b`, and
 `c`.
-6. The resolver sees that it now has everything required to execute `divide`, so
-it does so. Since `divide` is inline, the resolver doesn't need to start a new
+6. The driver sees that it now has everything required to execute `divide`, so
+it does so. Since `divide` is inline, the driver doesn't need to start a new
 container for it, and instead it executes `divide` in its own process.
 
 #### When to use inline?
@@ -239,7 +236,8 @@ same container as `calculate_average` above. Is that possible? Yes!
 You can just remove the `@sematic.func` decorator from `add` and
 `divide` to make them regular python functions. In this case, they will
 execute just like any other python code--immediately at the time they
-are called, in the same process as the code that called them.
+are called, in the same process as the code that called them. In this case,
+Sematic will not track or visualize the functions.
 
 ### When to call `.resolve()`
 
