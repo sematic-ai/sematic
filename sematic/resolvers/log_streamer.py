@@ -19,6 +19,7 @@ def stream_logs_to_remote_from_file(
 
 
 def stream_logs_to_stdout_from_file(file_path: str):
+    print(f"Trying to stream from {file_path}")
     with open(file_path, "rb") as fp:
         for line in fp:
             print(line)
