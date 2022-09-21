@@ -3,6 +3,9 @@ import argparse
 import datetime
 import importlib
 import logging
+import os
+import pathlib
+import tempfile
 from typing import Any, Dict, List
 
 # Third-party
@@ -22,7 +25,11 @@ from sematic.resolvers.cloud_resolver import (
     CloudResolver,
     make_nested_future_storage_key,
 )
+from sematic.resolvers.log_streamer import do_upload, start_log_streamers_out_of_process
+from sematic.utils import stdout
 from sematic.utils.exceptions import format_exception_for_run
+
+LOG_UPLOAD_INTERVAL_SECONDS = 10
 
 
 def parse_args():
@@ -169,12 +176,35 @@ def main(run_id: str, resolve: bool):
         raise e
 
 
+def _create_log_file_path(file_name: str) -> str:
+    temp_dir = tempfile.gettempdir()
+    sematic_temp_logs_dir = pathlib.Path(temp_dir) / pathlib.Path("sematic_logs")
+    if not pathlib.Path(sematic_temp_logs_dir).exists():
+        os.mkdir(sematic_temp_logs_dir)
+    return (pathlib.Path(sematic_temp_logs_dir) / pathlib.Path(file_name)).as_posix()
+
+
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-
     args = parse_args()
+    log_kind = "resolve" if args.resolve else "calculation"
+    log_prefix = f"logs/run_id/{log_kind}/{args.run_id}"
+    path = _create_log_file_path("worker.log")
 
-    logger.info("Worker CLI args: run_id=%s", args.run_id)
-    logger.info("Worker CLI args:  resolve=%s", args.resolve)
+    # must be done before stdout redirection so the child
+    # process doesn't have its stdout redirected
+    start_log_streamers_out_of_process(
+        path,
+        upload_interval_seconds=LOG_UPLOAD_INTERVAL_SECONDS,
+        remote_prefix=log_prefix,
+    )
 
-    main(args.run_id, args.resolve)
+    with stdout.redirect_to_file(path):
+        try:
+            logging.basicConfig(level=logging.INFO)
+            logger.info("Worker CLI args: run_id=%s", args.run_id)
+            logger.info("Worker CLI args:  resolve=%s", args.resolve)
+
+            main(args.run_id, args.resolve)
+        finally:
+            # ensure there's a final log upload
+            do_upload(path, remote_prefix=log_prefix)

@@ -7,6 +7,7 @@ import botocore.exceptions
 
 # Sematic
 from sematic.user_settings import SettingsVar, get_user_settings
+from sematic.utils.retry import retry
 
 
 def _get_bucket() -> str:
@@ -14,8 +15,7 @@ def _get_bucket() -> str:
 
 
 def set(key: str, value: bytes):
-    """
-    Store value in S3
+    """Store value in S3
 
     TODO: modularize the F out of this to enable local/remote storage switch
     based on resolver. Also enable multiple storage clients (AWS, GCP, Azure)
@@ -26,9 +26,20 @@ def set(key: str, value: bytes):
         s3_client.upload_fileobj(file_obj, _get_bucket(), key)
 
 
-def get(key: str) -> bytes:
+def set_from_file(key: str, value_file_path: str):
+    """Store value in S3 using the contents of a file
+
+    see TODO in 'set'
     """
-    Get value from S3.
+    s3_client = boto3.client("s3")
+
+    with open(value_file_path, "r") as file_obj:
+        s3_client.upload_fileobj(file_obj, _get_bucket(), key)
+
+
+@retry(tries=3, delay=5)
+def get(key: str) -> bytes:
+    """Get value from S3.
 
     See TODO in `set`.
     """
