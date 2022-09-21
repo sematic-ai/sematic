@@ -33,7 +33,7 @@ def set_from_file(key: str, value_file_path: str):
     """
     s3_client = boto3.client("s3")
 
-    with open(value_file_path, "r") as file_obj:
+    with open(value_file_path, "rb") as file_obj:
         s3_client.upload_fileobj(file_obj, _get_bucket(), key)
 
 
