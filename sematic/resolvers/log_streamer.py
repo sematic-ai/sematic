@@ -20,10 +20,11 @@ def stream_logs_to_remote_from_file(
 
 
 def stream_logs_to_stdout_from_file(file_path: str, original_stdout: int):
-    os.write(original_stdout, "Streaming to original stdout...".encode("utf8"))
+    os.write(original_stdout, "Streaming to original stdout...\n".encode("utf8"))
     with open(file_path, "rb") as fp:
         for line in fp:
             os.write(original_stdout, line)
+            os.write(original_stdout, b"\n")
 
 
 @retry(tries=3, delay=5)

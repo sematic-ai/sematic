@@ -38,3 +38,8 @@ def redirect_to_file(file_path: str):
                 stderr.flush()
                 os.dup2(stdout_copied.fileno(), stdout_fd)
                 os.dup2(stderr_copied.fileno(), stderr_fd)
+
+if __name__ == "__main__":
+    print("hi")
+    with redirect_to_file("/tmp/foo") as original:
+        os.write(original, b"from within!\n")

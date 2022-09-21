@@ -197,6 +197,7 @@ if __name__ == "__main__":
     
 
     with stdout.redirect_to_file(path) as original_stdout:
+        os.write(original_stdout, "Checking stdout...\n".encode("utf8"))
         start_log_streamers_out_of_process(
             path,
             upload_interval_seconds=LOG_UPLOAD_INTERVAL_SECONDS,
@@ -208,7 +209,11 @@ if __name__ == "__main__":
             logger.info("Worker CLI args: run_id=%s", args.run_id)
             logger.info("Worker CLI args:  resolve=%s", args.resolve)
 
-            main(args.run_id, args.resolve)
+            try:
+                main(args.run_id, args.resolve)
+            except:
+                logger.exception("Exception from main")
+                raise
         finally:
             # ensure there's a final log upload
             sys.stdout.flush()
