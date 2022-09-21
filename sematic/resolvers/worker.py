@@ -5,6 +5,7 @@ import importlib
 import logging
 import os
 import pathlib
+import sys
 import tempfile
 from typing import Any, Dict, List
 
@@ -210,4 +211,6 @@ if __name__ == "__main__":
             main(args.run_id, args.resolve)
         finally:
             # ensure there's a final log upload
+            sys.stdout.flush()
+            sys.stderr.flush()
             do_upload(path, remote_prefix=log_prefix)
