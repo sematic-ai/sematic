@@ -18,6 +18,7 @@ def redirect_to_file(file_path: str):
     stdout = sys.stdout
     stderr = sys.stderr
     stdout_fd = _fileno(stdout)
+    os.set_inheritable(stdout_fd, True)
     stderr_fd = _fileno(stderr)
     # copy stdout_fd before it is overwritten
     with os.fdopen(os.dup(stdout_fd), "wb") as stdout_copied:
@@ -30,7 +31,7 @@ def redirect_to_file(file_path: str):
                 os.dup2(to_file.fileno(), stdout_fd)
                 os.dup2(to_file.fileno(), stderr_fd)
             try:
-                yield  stdout_copied.fileno() # allow code to be run with the redirected stdout
+                yield  # allow code to be run with the redirected stdout
             finally:
                 # restore stdout & stderr to previous values
                 # NOTE: dup2 makes stdout_fd inheritable unconditionally
@@ -38,8 +39,3 @@ def redirect_to_file(file_path: str):
                 stderr.flush()
                 os.dup2(stdout_copied.fileno(), stdout_fd)
                 os.dup2(stderr_copied.fileno(), stderr_fd)
-
-if __name__ == "__main__":
-    print("hi")
-    with redirect_to_file("/tmp/foo") as original:
-        os.write(original, b"from within!\n")
