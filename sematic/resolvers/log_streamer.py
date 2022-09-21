@@ -2,6 +2,7 @@
 import multiprocessing
 import threading
 import time
+import os
 
 # Sematic
 from sematic.storage import set_from_file
@@ -18,10 +19,10 @@ def stream_logs_to_remote_from_file(
         time.sleep(upload_interval_seconds)
 
 
-def stream_logs_to_stdout_from_file(file_path: str):
-    with open(file_path, "r") as fp:
+def stream_logs_to_stdout_from_file(file_path: str, original_stdout: int):
+    with open(file_path, "rb") as fp:
         for line in fp:
-            print(line)
+            os.write(original_stdout, line)
 
 
 @retry(tries=3, delay=5)
@@ -32,19 +33,22 @@ def do_upload(file_path: str, remote_prefix: str):
 
 
 def start_log_streamers_in_process(
-    file_path: str, upload_interval_seconds: int, remote_prefix: str
+    file_path: str, upload_interval_seconds: int, remote_prefix: str, original_stdout: int
 ):
-    threading.Thread(target=lambda: stream_logs_to_stdout_from_file(file_path))
+    thread = threading.Thread(target=lambda: stream_logs_to_stdout_from_file(file_path, original_stdout))
+    thread.setDaemon(True)
+    thread.start()
     stream_logs_to_remote_from_file(file_path, upload_interval_seconds, remote_prefix)
 
 
 def start_log_streamers_out_of_process(
-    file_path: str, upload_interval_seconds: int, remote_prefix: str
+    file_path: str, upload_interval_seconds: int, remote_prefix: str, original_stdout: int
 ):
     kwargs = dict(
         file_path=file_path,
         upload_interval_seconds=upload_interval_seconds,
         remote_prefix=remote_prefix,
+        original_stdout=original_stdout,
     )
     multiprocessing.Process(
         group=None,

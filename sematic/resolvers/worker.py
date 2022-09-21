@@ -193,13 +193,15 @@ if __name__ == "__main__":
 
     # must be done before stdout redirection so the child
     # process doesn't have its stdout redirected
-    start_log_streamers_out_of_process(
-        path,
-        upload_interval_seconds=LOG_UPLOAD_INTERVAL_SECONDS,
-        remote_prefix=log_prefix,
-    )
+    
 
-    with stdout.redirect_to_file(path):
+    with stdout.redirect_to_file(path) as original_stdout:
+        start_log_streamers_out_of_process(
+            path,
+            upload_interval_seconds=LOG_UPLOAD_INTERVAL_SECONDS,
+            remote_prefix=log_prefix,
+            original_stdout=original_stdout,
+        )
         try:
             logging.basicConfig(level=logging.INFO)
             logger.info("Worker CLI args: run_id=%s", args.run_id)

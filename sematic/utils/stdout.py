@@ -30,7 +30,7 @@ def redirect_to_file(file_path: str):
                 os.dup2(to_file.fileno(), stdout_fd)
                 os.dup2(to_file.fileno(), stderr_fd)
             try:
-                yield  # allow code to be run with the redirected stdout
+                yield  stdout_copied # allow code to be run with the redirected stdout
             finally:
                 # restore stdout & stderr to previous values
                 # NOTE: dup2 makes stdout_fd inheritable unconditionally
