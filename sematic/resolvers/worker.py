@@ -185,6 +185,7 @@ def _create_log_file_path(file_name: str) -> str:
 
 
 if __name__ == "__main__":
+    print("Starting Sematic Worker")
     args = parse_args()
     log_kind = "resolve" if args.resolve else "calculation"
     log_prefix = f"logs/run_id/{args.run_id}/{log_kind}"
