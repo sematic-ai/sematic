@@ -5,6 +5,7 @@ import time
 
 # Sematic
 from sematic.storage import set_from_file
+from sematic.utils.retry import retry
 
 
 def stream_logs_to_remote_from_file(
@@ -23,6 +24,7 @@ def stream_logs_to_stdout_from_file(file_path: str):
             print(line)
 
 
+@retry(tries=3, delay=5)
 def do_upload(file_path: str, remote_prefix: str):
     set_from_file(f"{remote_prefix}/{int(time.time() * 1000)}.log", file_path)
 
