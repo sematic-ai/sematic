@@ -26,7 +26,9 @@ def stream_logs_to_stdout_from_file(file_path: str):
 
 @retry(tries=3, delay=5)
 def do_upload(file_path: str, remote_prefix: str):
-    set_from_file(f"{remote_prefix}/{int(time.time() * 1000)}.log", file_path)
+    remote = f"{remote_prefix}/{int(time.time() * 1000)}.log"
+    print(f"Uploading {file_path} to {remote}")
+    set_from_file(remote, file_path)
 
 
 def start_log_streamers_in_process(
