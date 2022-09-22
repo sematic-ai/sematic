@@ -35,7 +35,7 @@ def do_upload(file_path: str, remote_prefix: str):
 def start_log_streamers_in_process(
     file_path: str, upload_interval_seconds: int, remote_prefix: str
 ):
-    print("Starting log streaming")
+    print("Starting log streaming in process")
     thread = threading.Thread(target=lambda: stream_logs_to_stdout_from_file(file_path))
     thread.setDaemon(True)
     thread.start()
@@ -49,6 +49,10 @@ def start_log_streamers_out_of_process(
         file_path=file_path,
         upload_interval_seconds=upload_interval_seconds,
         remote_prefix=remote_prefix,
+    )
+    print(f"Starting log streaming in subprocess to {file_path}")
+    print(
+        f"To tail these logs, try:\n\tkubectl exec -i <podname> -- tail -f {file_path}"
     )
     process = multiprocessing.Process(
         group=None,
