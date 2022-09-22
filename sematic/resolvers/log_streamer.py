@@ -3,6 +3,7 @@ import contextlib
 import logging
 import multiprocessing
 import os
+import stat
 import sys
 import time
 
@@ -139,17 +140,20 @@ def ingested_logs(
             # ensure there's a final log upload
             sys.stdout.flush()
             sys.stderr.flush()
-            _do_upload(file_path, remote_prefix=remote_prefix)
-    if max_tail_bytes <= 0:
-        return
 
-    n_bytes_in_file = os.path.stat(file_path).st_size
-    with open(file_path, "r") as fp:
-        print(
-            "Showing the tail of the logs for reference. For complete logs, please "
-            "use the UI.\n\t\t.\n\t\t.\n\t\t."
-        )
-        start_byte = max(0, n_bytes_in_file - max_tail_bytes)
-        fp.seek(start_byte)
-        for line in fp:
-            print(line)
+            try:
+                _do_upload(file_path, remote_prefix=remote_prefix)
+            finally:
+                if max_tail_bytes <= 0:
+                    return
+
+                n_bytes_in_file = os.stat(file_path)[stat.ST_SIZE]
+                with open(file_path, "r") as fp:
+                    print(
+                        "Showing the tail of the logs for reference. For complete "
+                        "logs, please use the UI.\n\t\t.\n\t\t.\n\t\t."
+                    )
+                    start_byte = max(0, n_bytes_in_file - max_tail_bytes)
+                    fp.seek(start_byte)
+                    for line in fp:
+                        print(line)
