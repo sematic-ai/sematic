@@ -164,9 +164,20 @@ def _tail_log_file(file_path, max_tail_bytes):
     with open(file_path, "r") as fp:
         print(
             "Showing the tail of the logs for reference. For complete "
-            "logs, please use the UI.\n\t\t.\n\t\t.\n\t\t."
+            "logs, please use the UI."
         )
         start_byte = max(0, n_bytes_in_file - max_tail_bytes)
+        if start_byte != 0:
+            print("\t\t.\n\t\t.\n\t\t.")  # vertical '...' to show there's truncation
+        
+        # Why seek rather than just iterate through lines until we're near the end?
+        # because log files may be GBs in size, and we want this operation to be
+        # a quick debugging aid, and not slow down container execution by a lot
+        # while we actually read the whole file.
         fp.seek(start_byte)
-        for line in fp:
+        for line_number, line in enumerate(fp):
+            if start_byte != 0 and line_number == 0:
+                # we may have done a seek mid-line. skip the first line so we don't show
+                # something partial.
+                continue
             print(line, end="")
