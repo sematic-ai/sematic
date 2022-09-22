@@ -18,8 +18,9 @@ def redirect_to_file(file_path: str):
     stdout = sys.stdout
     stderr = sys.stderr
     stdout_fd = _fileno(stdout)
-    os.set_inheritable(stdout_fd, True)
     stderr_fd = _fileno(stderr)
+    os.set_inheritable(stdout_fd, True)
+    os.set_inheritable(stderr_fd, True)
     # copy stdout_fd before it is overwritten
     with os.fdopen(os.dup(stdout_fd), "wb") as stdout_copied:
         stdout.flush()  # flush library buffers that dup2 knows nothing about
@@ -30,6 +31,7 @@ def redirect_to_file(file_path: str):
             with open(file_path, "wb") as to_file:
                 os.dup2(to_file.fileno(), stdout_fd)
                 os.dup2(to_file.fileno(), stderr_fd)
+                os.set_inheritable(to_file.fileno(), True)
             try:
                 yield  # allow code to be run with the redirected stdout
             finally:
