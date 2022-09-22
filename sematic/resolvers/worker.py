@@ -214,6 +214,8 @@ if __name__ == "__main__":
             try:
                 main(args.run_id, args.resolve)
             except Exception:
+                # make sure error is logged while logs are directed
+                # for ingestion
                 logger.exception("Exception from main")
                 raise
         finally:
