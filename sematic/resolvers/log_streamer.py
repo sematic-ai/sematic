@@ -169,4 +169,4 @@ def _tail_log_file(file_path, max_tail_bytes):
         start_byte = max(0, n_bytes_in_file - max_tail_bytes)
         fp.seek(start_byte)
         for line in fp:
-            print(line)
+            print(line, end="")
