@@ -135,13 +135,16 @@ def ingested_logs(
                 yield
             except Exception:
                 # make sure error is logged while logs are directed
-                # for ingestion. Re-raise so caller can handle/not
-                # as needed.
+                # for ingestion so the error gets ingested. Re-raise
+                # so caller can handle/not as needed.
                 logger.exception("Exception")
                 raise
             finally:
                 process.terminate()
-                # ensure there's a final log upload
+
+                # ensure there's a final log upload, and that it contains ALL the
+                # contents of stdout and stderr before we redirect them back to their
+                # originals.
                 sys.stdout.flush()
                 sys.stderr.flush()
 
@@ -154,9 +157,23 @@ def ingested_logs(
         # even if the code raised an error
         if final_upload_error is not None:
             print(f"Error with final log upload: {final_upload_error}", file=sys.stderr)
+
+        # Why is this tailing useful? Because in the situations where somebody
+        # is triaging some weird, complicated failure mode, it will be really helpful to
+        # have quick access to the last few lines of the logs directly when looking at
+        # the pod's output, without having to go to remote storage. This is ESPECIALLY
+        # true when the problem is something with the "normal" logging mechanisms, like
+        # a failure to upload the logs to remote. Having *some* way to see what the code
+        # was doing before it died will be essential.
         _tail_log_file(file_path, max_tail_bytes)
 
+
 def _tail_log_file(file_path, max_tail_bytes):
+    """Print the last lines of the log file.
+
+    The code will quickly traverse to the correct file location rather than reading
+    through the whole log.
+    """
     if max_tail_bytes <= 0:
         return
 
@@ -169,7 +186,7 @@ def _tail_log_file(file_path, max_tail_bytes):
         start_byte = max(0, n_bytes_in_file - max_tail_bytes)
         if start_byte != 0:
             print("\t\t.\n\t\t.\n\t\t.")  # vertical '...' to show there's truncation
-        
+
         # Why seek rather than just iterate through lines until we're near the end?
         # because log files may be GBs in size, and we want this operation to be
         # a quick debugging aid, and not slow down container execution by a lot
