@@ -35,6 +35,7 @@ def do_upload(file_path: str, remote_prefix: str):
 def start_log_streamers_in_process(
     file_path: str, upload_interval_seconds: int, remote_prefix: str
 ):
+    print("Starting log streaming")
     thread = threading.Thread(target=lambda: stream_logs_to_stdout_from_file(file_path))
     thread.setDaemon(True)
     thread.start()
