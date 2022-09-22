@@ -57,6 +57,9 @@ sematic_py_lib(
     srcs = ["log_streamer.py"],
     deps = [
         "//sematic:storage",
+        "//sematic/utils:retry",
+        "//sematic/utils:stdout",
+        "//sematic:config",
     ],
 )
 
@@ -80,7 +83,6 @@ sematic_py_lib(
         "//sematic/db/models:factories",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/utils:exceptions",
-        "//sematic/utils:stdout",
     ],
     pip_deps = [
         "cloudpickle",

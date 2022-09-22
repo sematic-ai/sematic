@@ -5,7 +5,6 @@ import importlib
 import logging
 import os
 import pathlib
-import sys
 import tempfile
 from typing import Any, Dict, List
 
@@ -17,7 +16,6 @@ import sematic.api_client as api_client
 import sematic.storage as storage
 from sematic.abstract_future import FutureState
 from sematic.calculator import Calculator
-from sematic.config import POD_NAME_ENV_VAR
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value, make_artifact
@@ -27,8 +25,7 @@ from sematic.resolvers.cloud_resolver import (
     CloudResolver,
     make_nested_future_storage_key,
 )
-from sematic.resolvers.log_streamer import do_upload, start_log_streamers_out_of_process
-from sematic.utils import stdout
+from sematic.resolvers.log_streamer import ingested_logs
 from sematic.utils.exceptions import format_exception_for_run
 
 LOG_UPLOAD_INTERVAL_SECONDS = 10
@@ -193,33 +190,9 @@ if __name__ == "__main__":
     log_prefix = f"logs/run_id/{args.run_id}/{log_kind}"
     path = _create_log_file_path("worker.log")
 
-    # must be done before stdout redirection so that it will show up
-    # in kubectl logs.
-    pod_name = os.getenv(POD_NAME_ENV_VAR)
-    if pod_name is not None:
-        print(
-            f"To follow these logs, try:\n\tkubectl exec -i {pod_name} -- tail -f {path}"
-        )
-    with stdout.redirect_to_file(path):
-        start_log_streamers_out_of_process(
-            path,
-            upload_interval_seconds=LOG_UPLOAD_INTERVAL_SECONDS,
-            remote_prefix=log_prefix,
-        )
-        try:
-            logging.basicConfig(level=logging.INFO)
-            logger.info("Worker CLI args: run_id=%s", args.run_id)
-            logger.info("Worker CLI args:  resolve=%s", args.resolve)
+    with ingested_logs(path, LOG_UPLOAD_INTERVAL_SECONDS, log_prefix):
+        logging.basicConfig(level=logging.INFO)
+        logger.info("Worker CLI args: run_id=%s", args.run_id)
+        logger.info("Worker CLI args:  resolve=%s", args.resolve)
 
-            try:
-                main(args.run_id, args.resolve)
-            except Exception:
-                # make sure error is logged while logs are directed
-                # for ingestion
-                logger.exception("Exception from main")
-                raise
-        finally:
-            # ensure there's a final log upload
-            sys.stdout.flush()
-            sys.stderr.flush()
-            do_upload(path, remote_prefix=log_prefix)
+        main(args.run_id, args.resolve)

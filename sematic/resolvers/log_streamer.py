@@ -1,31 +1,77 @@
 # Standard Library
+import contextlib
+import logging
 import multiprocessing
+import os
+import sys
 import time
 
 # Sematic
+from sematic.config import POD_NAME_ENV_VAR
 from sematic.storage import set_from_file
 from sematic.utils.retry import retry
+from sematic.utils.stdout import redirect_to_file
+
+"""
+An overview of how logging works:
+- stdout and stderr are redirected to a file from the Sematic worker
+- the Sematic worker on launch starts a child process that periodically
+    uses our storage abstraction to upload the log file to persistent storage
+- the name of the logs on the remote contain metadata about what run and job type
+   the logs came from
+- the server reads the logs from persistent storage for UI display
+- it's safe to assume that the worker will have write access to the persistent storage
+  because it's the same bucket used for artifacts.
+"""
+
+logger = logging.getLogger(__name__)
 
 
-def stream_logs_to_remote_from_file(
+def _stream_logs_to_remote_from_file(
     file_path: str, upload_interval_seconds: int, remote_prefix: str
 ):
     if remote_prefix.endswith("/"):
         remote_prefix = remote_prefix[:-1]
     while True:
-        do_upload(file_path, remote_prefix)
+        _do_upload(file_path, remote_prefix)
         time.sleep(upload_interval_seconds)
 
 
 @retry(tries=3, delay=5)
-def do_upload(file_path: str, remote_prefix: str):
+def _do_upload(file_path: str, remote_prefix: str):
+    """Upload a local file to remote storage
+
+    Parameters
+    ----------
+    file_path:
+        The path to the local file being uploaded
+    remote_prefix:
+        The prefix for the remote file. The full remote path will be
+        this concatenated with `/<epoch timestamp>.log`.
+    """
     remote = f"{remote_prefix}/{int(time.time() * 1000)}.log"
     set_from_file(remote, file_path)
 
 
-def start_log_streamers_out_of_process(
+def _start_log_streamer_out_of_process(
     file_path: str, upload_interval_seconds: int, remote_prefix: str
-):
+) -> multiprocessing.Process:
+    """Start a subprocess to periodically upload the log file to remote storage
+
+    Note that the caller should always call do_upload before terminating to ensure
+    that logs are not lost when the caller terminates between uploads.
+
+    Parameters
+    ----------
+    file_path:
+        The path to the local log file
+    upload_interval_seconds:
+        The interval between uploads.
+
+    Returns
+    -------
+    The process doing the logging
+    """
     kwargs = dict(
         file_path=file_path,
         upload_interval_seconds=upload_interval_seconds,
@@ -33,8 +79,77 @@ def start_log_streamers_out_of_process(
     )
     process = multiprocessing.Process(
         group=None,
-        target=stream_logs_to_remote_from_file,
+        target=_stream_logs_to_remote_from_file,
         kwargs=kwargs,
         daemon=True,
     )
     process.start()
+    return process
+
+
+@contextlib.contextmanager
+def ingested_logs(
+    file_path: str,
+    upload_interval_seconds: int,
+    remote_prefix: str,
+    max_tail_bytes: int = 2**13,
+):
+    """Code within context will have stdout/stderr (including subprocess) ingested
+
+    The ingestion will use file_path as an on-disk cache to capture the logs to, and
+    logs will be uploaded to remote storage with a storage path prefix given by
+    remote_prefix.
+
+    Parameters
+    ----------
+    file_path:
+        The path to the local cached log file
+    upload_interval_seconds:
+        The amount of time between uploads
+    remote_prefix:
+        The prefix for the remote storage location where ingested logs live
+    max_tail_bytes:
+        The maximum number of bytes of logs to print to the original stdout
+        when the context exits. To disable, set to <=0. Defaults to 8kb
+    """
+    # must be done before stdout redirection so that it will show up
+    # in kubectl logs.
+    pod_name = os.getenv(POD_NAME_ENV_VAR)
+    if pod_name is not None:
+        print(
+            f"To follow these logs, try:\n\t"
+            f"kubectl exec -i {pod_name} -- tail -f {file_path}"
+        )
+    with redirect_to_file(file_path):
+        process = _start_log_streamer_out_of_process(
+            file_path,
+            upload_interval_seconds=upload_interval_seconds,
+            remote_prefix=remote_prefix,
+        )
+        try:
+            yield
+        except Exception:
+            # make sure error is logged while logs are directed
+            # for ingestion. Re-raise so caller can handle/not
+            # as needed.
+            logger.exception("Exception")
+            raise
+        finally:
+            process.terminate()
+            # ensure there's a final log upload
+            sys.stdout.flush()
+            sys.stderr.flush()
+            _do_upload(file_path, remote_prefix=remote_prefix)
+    if max_tail_bytes <= 0:
+        return
+
+    n_bytes_in_file = os.path.stat(file_path).st_size
+    with open(file_path, "r") as fp:
+        print(
+            "Showing the tail of the logs for reference. For complete logs, please "
+            "use the UI.\n\t\t.\n\t\t.\n\t\t."
+        )
+        start_byte = max(0, n_bytes_in_file - max_tail_bytes)
+        fp.seek(start_byte)
+        for line in fp:
+            print(line)
