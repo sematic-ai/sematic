@@ -10,7 +10,12 @@ from kubernetes.client.exceptions import ApiException
 from urllib3.exceptions import ConnectionError
 
 # Sematic
-from sematic.config import ON_WORKER_ENV_VAR, SettingsVar, get_user_settings
+from sematic.config import (
+    ON_WORKER_ENV_VAR,
+    POD_NAME_ENV_VAR,
+    SettingsVar,
+    get_user_settings,
+)
 from sematic.container_images import CONTAINER_IMAGE_ENV_VAR
 from sematic.resolvers.resource_requirements import (
     KUBERNETES_SECRET_NAME,
@@ -214,6 +219,15 @@ def _schedule_kubernetes_job(
         logger.debug("kubernetes volumes and mounts: %s, %s", volumes, volume_mounts)
         logger.debug("kubernetes environment secrets: %s", secret_env_vars)
 
+    pod_name_env_var = kubernetes.client.V1EnvVar(  # type: ignore
+        name=POD_NAME_ENV_VAR,
+        value_from=kubernetes.client.V1EnvVarSource(  # type: ignore
+            field_ref=kubernetes.client.V1ObjectFieldSelector(  # type: ignore
+                field_path="metadata.name",
+            )
+        ),
+    )
+
     job = kubernetes.client.V1Job(  # type: ignore
         api_version="batch/v1",
         kind="Job",
@@ -241,6 +255,7 @@ def _schedule_kubernetes_job(
                                     name=ON_WORKER_ENV_VAR,
                                     value="1",
                                 ),
+                                pod_name_env_var,
                             ]
                             + [
                                 kubernetes.client.V1EnvVar(  # type: ignore

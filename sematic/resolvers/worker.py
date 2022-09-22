@@ -17,6 +17,7 @@ import sematic.api_client as api_client
 import sematic.storage as storage
 from sematic.abstract_future import FutureState
 from sematic.calculator import Calculator
+from sematic.config import POD_NAME_ENV_VAR
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value, make_artifact
@@ -192,15 +193,19 @@ if __name__ == "__main__":
     log_prefix = f"logs/run_id/{args.run_id}/{log_kind}"
     path = _create_log_file_path("worker.log")
 
-    # must be done before stdout redirection so the child
-    # process doesn't have its stdout redirected
-    start_log_streamers_out_of_process(
-        path,
-        upload_interval_seconds=LOG_UPLOAD_INTERVAL_SECONDS,
-        remote_prefix=log_prefix,
-    )
-
+    # must be done before stdout redirection so that it will show up
+    # in kubectl logs.
+    pod_name = os.getenv(POD_NAME_ENV_VAR)
+    if pod_name is not None:
+        print(
+            f"To follow these logs, try:\n\tkubectl exec -i {pod_name} -- tail -f {path}"
+        )
     with stdout.redirect_to_file(path):
+        start_log_streamers_out_of_process(
+            path,
+            upload_interval_seconds=LOG_UPLOAD_INTERVAL_SECONDS,
+            remote_prefix=log_prefix,
+        )
         try:
             logging.basicConfig(level=logging.INFO)
             logger.info("Worker CLI args: run_id=%s", args.run_id)
