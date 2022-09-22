@@ -124,34 +124,39 @@ def ingested_logs(
             f"kubectl exec -i {pod_name} -- tail -f {file_path}"
         )
     final_upload_error = None
-    with redirect_to_file(file_path):
-        process = _start_log_streamer_out_of_process(
-            file_path,
-            upload_interval_seconds=upload_interval_seconds,
-            remote_prefix=remote_prefix,
-        )
-        try:
-            yield
-        except Exception:
-            # make sure error is logged while logs are directed
-            # for ingestion. Re-raise so caller can handle/not
-            # as needed.
-            logger.exception("Exception")
-            raise
-        finally:
-            process.terminate()
-            # ensure there's a final log upload
-            sys.stdout.flush()
-            sys.stderr.flush()
-
+    try:
+        with redirect_to_file(file_path):
+            process = _start_log_streamer_out_of_process(
+                file_path,
+                upload_interval_seconds=upload_interval_seconds,
+                remote_prefix=remote_prefix,
+            )
             try:
-                _do_upload(file_path, remote_prefix=remote_prefix)
-            except Exception as e:
-                final_upload_error = e
+                yield
+            except Exception:
+                # make sure error is logged while logs are directed
+                # for ingestion. Re-raise so caller can handle/not
+                # as needed.
+                logger.exception("Exception")
+                raise
+            finally:
+                process.terminate()
+                # ensure there's a final log upload
+                sys.stdout.flush()
+                sys.stderr.flush()
 
-    if final_upload_error is not None:
-        print(f"Error with final log upload: {final_upload_error}", file=sys.stderr)
+                try:
+                    _do_upload(file_path, remote_prefix=remote_prefix)
+                except Exception as e:
+                    final_upload_error = e
+    finally:
+        # outermost try/finally is so we can tail logs to non-redirected stdout
+        # even if the code raised an error
+        if final_upload_error is not None:
+            print(f"Error with final log upload: {final_upload_error}", file=sys.stderr)
+        _tail_log_file(file_path, max_tail_bytes)
 
+def _tail_log_file(file_path, max_tail_bytes):
     if max_tail_bytes <= 0:
         return
 
