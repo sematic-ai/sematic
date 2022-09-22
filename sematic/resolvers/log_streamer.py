@@ -117,10 +117,13 @@ def ingested_logs(
     # in kubectl logs.
     pod_name = os.getenv(POD_NAME_ENV_VAR)
     if pod_name is not None:
+        # print is appropriate here because we want to write to actual stdout,
+        # with no logging machinary in between. This is *about* the logs.
         print(
             f"To follow these logs, try:\n\t"
             f"kubectl exec -i {pod_name} -- tail -f {file_path}"
         )
+    final_upload_error = None
     with redirect_to_file(file_path):
         process = _start_log_streamer_out_of_process(
             file_path,
@@ -143,17 +146,22 @@ def ingested_logs(
 
             try:
                 _do_upload(file_path, remote_prefix=remote_prefix)
-            finally:
-                if max_tail_bytes <= 0:
-                    return
+            except Exception as e:
+                final_upload_error = e
 
-                n_bytes_in_file = os.stat(file_path)[stat.ST_SIZE]
-                with open(file_path, "r") as fp:
-                    print(
-                        "Showing the tail of the logs for reference. For complete "
-                        "logs, please use the UI.\n\t\t.\n\t\t.\n\t\t."
-                    )
-                    start_byte = max(0, n_bytes_in_file - max_tail_bytes)
-                    fp.seek(start_byte)
-                    for line in fp:
-                        print(line)
+    if final_upload_error is not None:
+        print(f"Error with final log upload: {final_upload_error}", file=sys.stderr)
+
+    if max_tail_bytes <= 0:
+        return
+
+    n_bytes_in_file = os.stat(file_path)[stat.ST_SIZE]
+    with open(file_path, "r") as fp:
+        print(
+            "Showing the tail of the logs for reference. For complete "
+            "logs, please use the UI.\n\t\t.\n\t\t.\n\t\t."
+        )
+        start_byte = max(0, n_bytes_in_file - max_tail_bytes)
+        fp.seek(start_byte)
+        for line in fp:
+            print(line)
