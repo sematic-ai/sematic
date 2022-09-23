@@ -11,6 +11,7 @@ sematic_py_lib(
         "//sematic/db/models:edge",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
+        "//sematic:log_reader",
         "//sematic/scheduling:job_scheduler",
     ],
     pip_deps = [

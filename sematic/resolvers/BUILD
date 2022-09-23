@@ -75,6 +75,7 @@ sematic_py_lib(
     deps = [
         ":log_streamer",
         "//sematic:abstract_future",
+        "//sematic:log_reader",
         "//sematic:api_client",
         "//sematic:calculator",
         "//sematic:future",

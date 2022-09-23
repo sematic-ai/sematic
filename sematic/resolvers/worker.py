@@ -21,6 +21,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value, make_artifact
 from sematic.db.models.run import Run
 from sematic.future import Future
+from sematic.log_reader import log_prefix
 from sematic.resolvers.cloud_resolver import (
     CloudResolver,
     make_nested_future_storage_key,
@@ -187,10 +188,10 @@ if __name__ == "__main__":
     print("Starting Sematic Worker")
     args = parse_args()
     log_kind = "resolve" if args.resolve else "calculation"
-    log_prefix = f"logs/run_id/{args.run_id}/{log_kind}"
+    prefix = log_prefix(args.run_id, args.resolve)
     path = _create_log_file_path("worker.log")
 
-    with ingested_logs(path, LOG_UPLOAD_INTERVAL_SECONDS, log_prefix):
+    with ingested_logs(path, LOG_UPLOAD_INTERVAL_SECONDS, prefix):
         logging.basicConfig(level=logging.INFO)
         logger.info("Worker CLI args: run_id=%s", args.run_id)
         logger.info("Worker CLI args:  resolve=%s", args.resolve)

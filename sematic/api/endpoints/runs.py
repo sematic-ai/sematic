@@ -6,6 +6,7 @@ Module keeping all /api/v*/runs/* API endpoints.
 import base64
 import datetime
 import logging
+from dataclasses import asdict
 from http import HTTPStatus
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlencode, urlsplit, urlunsplit
@@ -37,6 +38,7 @@ from sematic.db.queries import (
     save_graph,
     save_run,
 )
+from sematic.log_reader import load_log_lines
 from sematic.scheduling.job_scheduler import schedule_run, update_run_status
 from sematic.utils.retry import retry
 
@@ -216,6 +218,31 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     payload = dict(
         content=run.to_json_encodable(),
     )
+    return flask.jsonify(payload)
+
+
+@sematic_api.route("/api/v1/runs/<run_id>/logs", methods=["PUT", "GET"])
+@authenticate
+def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+    """Get portions of the logs for the run if possible"""
+    input_payload: Dict[str, Any] = flask.request.json  # type: ignore
+    kwarg_overrides = input_payload.get("log_request", {})
+    kwargs = dict(
+        first_line_index=0,
+        max_lines=100,
+        filter_string=None,
+    )
+    for key in kwargs.keys():
+        # update the kwargs with any overrides, but only
+        # consider overrides for keys we actually expect.
+        if key in kwarg_overrides:
+            kwargs[key] = kwarg_overrides[key]
+
+    result = load_log_lines(
+        run_id=run_id,
+        **kwargs,  # type: ignore
+    )
+    payload = dict(content=asdict(result))
     return flask.jsonify(payload)
 
 
