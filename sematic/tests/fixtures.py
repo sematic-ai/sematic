@@ -24,7 +24,7 @@ def test_storage():
 
     def _get(key):
         return store[key]
-    
+
     def _set_from_file(key, file_path):
         with open(file_path, "rb") as fp:
             store[key] = b"".join(fp)

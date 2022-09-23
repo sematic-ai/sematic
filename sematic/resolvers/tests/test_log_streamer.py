@@ -1,21 +1,31 @@
-import sys
+# Standard Library
 import pathlib
+import sys
 import tempfile
 import time
 
-from sematic.resolvers.log_streamer import ingested_logs, _tail_log_file
+# Sematic
+from sematic.resolvers.log_streamer import _tail_log_file, ingested_logs
+
 
 def test_ingested_logs():
     with tempfile.NamedTemporaryFile() as log_file:
         remote_prefix = "foo/bar"
         upload_interval = 0.1
-        with ingested_logs(log_file.name, upload_interval_seconds=upload_interval, remote_prefix=remote_prefix, uploader=mock_uploader):
+        with ingested_logs(
+            log_file.name,
+            upload_interval_seconds=upload_interval,
+            remote_prefix=remote_prefix,
+            uploader=mock_uploader,
+        ):
             print("From stdout")
             print("From stderr", file=sys.stderr)
-            time.sleep(20 * upload_interval)  # ensure at least one upload happens before final flush
+            time.sleep(
+                20 * upload_interval
+            )  # ensure at least one upload happens before final flush
             print("From stdout late")
             print("From stderr late", file=sys.stderr)
-    
+
     upload_number = 0
     uploads = []
     while pathlib.Path(_upload_path(log_file.name, upload_number)).exists():
@@ -50,7 +60,12 @@ def test_ingested_logs_uncaught():
         with tempfile.NamedTemporaryFile() as log_file:
             remote_prefix = "foo/bar"
             upload_interval = 100  # should exit early despite the long interval
-            with ingested_logs(log_file.name, upload_interval_seconds=upload_interval, remote_prefix=remote_prefix, uploader=mock_uploader):
+            with ingested_logs(
+                log_file.name,
+                upload_interval_seconds=upload_interval,
+                remote_prefix=remote_prefix,
+                uploader=mock_uploader,
+            ):
                 raise ValueError(message)
     except ValueError:
         raised = True
@@ -70,6 +85,7 @@ def test_ingested_logs_uncaught():
 
 def test_tail_log_file():
     printed = []
+
     def print_func(to_print, end="\n", **kwargs):
         printed.append(to_print + end)
 
@@ -78,15 +94,38 @@ def test_tail_log_file():
         upload_interval = 0.1
         line_template = "This is line {}"
         n_lines = 100
-        with ingested_logs(log_file.name, upload_interval_seconds=upload_interval, remote_prefix=remote_prefix, uploader=mock_uploader):
+        with ingested_logs(
+            log_file.name,
+            upload_interval_seconds=upload_interval,
+            remote_prefix=remote_prefix,
+            uploader=mock_uploader,
+        ):
             for i in range(n_lines):
                 print(line_template.format(i))
         _tail_log_file(log_file.name, max_tail_bytes=0, print_func=print_func)
 
         assert len(printed) == 0
-        _tail_log_file(log_file.name, max_tail_bytes=3*len(line_template), print_func=print_func)
+        _tail_log_file(
+            log_file.name, max_tail_bytes=3 * len(line_template), print_func=print_func
+        )
         assert len(printed) > 0
-        assert printed[-1] == line_template.format(n_lines - 1)
+        assert printed[-1] == line_template.format(n_lines - 1) + "\n"
+        has_ellipsis = any(
+            line.replace("\n", "").replace("\t", "") == "..." for line in printed
+        )
+        assert has_ellipsis
+
+        printed.clear()
+
+        # all lines present
+        _tail_log_file(log_file.name, max_tail_bytes=2**30, print_func=print_func)
+        assert printed[-1 * n_lines] == line_template.format(0) + "\n"
+        assert printed[-1] == line_template.format(n_lines - 1) + "\n"
+        has_ellipsis = any(
+            line.replace("\n", "").replace("\t", "") == "..." for line in printed
+        )
+        assert not has_ellipsis
+
 
 def _upload_path(file_uploaded, upload_number):
     file_prefix = f"{file_uploaded}.uploaded_to"

@@ -1,11 +1,11 @@
 # Standard Library
 import contextlib
-import traceback
 import multiprocessing
 import os
 import stat
 import sys
 import time
+import traceback
 from typing import Callable, Optional
 
 # Sematic
@@ -28,7 +28,10 @@ An overview of how logging works:
 
 
 def _stream_logs_to_remote_from_file(
-    file_path: str, upload_interval_seconds: int, remote_prefix: str, uploader: Callable[[str, str], None],
+    file_path: str,
+    upload_interval_seconds: int,
+    remote_prefix: str,
+    uploader: Callable[[str, str], None],
 ):
     if remote_prefix.endswith("/"):
         remote_prefix = remote_prefix[:-1]
@@ -54,7 +57,10 @@ def _do_upload(file_path: str, remote_prefix: str):
 
 
 def _start_log_streamer_out_of_process(
-    file_path: str, upload_interval_seconds: int, remote_prefix: str, uploader: Callable[[str, str], None],
+    file_path: str,
+    upload_interval_seconds: int,
+    remote_prefix: str,
+    uploader: Callable[[str, str], None],
 ) -> multiprocessing.Process:
     """Start a subprocess to periodically upload the log file to remote storage
 
@@ -96,7 +102,7 @@ def ingested_logs(
     upload_interval_seconds: int,
     remote_prefix: str,
     max_tail_bytes: int = 2**13,
-    uploader: Optional[Callable[[str, str], None]]=None,
+    uploader: Optional[Callable[[str, str], None]] = None,
 ):
     """Code within context will have stdout/stderr (including subprocess) ingested
 
@@ -157,7 +163,7 @@ def ingested_logs(
                 sys.stderr.flush()
 
                 try:
-                    uploader(file_path, remote_prefix=remote_prefix)
+                    uploader(file_path, remote_prefix)
                 except Exception as e:
                     final_upload_error = e
     finally:
@@ -194,7 +200,9 @@ def _tail_log_file(file_path, max_tail_bytes, print_func=None):
         )
         start_byte = max(0, n_bytes_in_file - max_tail_bytes)
         if start_byte != 0:
-            print_func("\t\t.\n\t\t.\n\t\t.")  # vertical '...' to show there's truncation
+            print_func(
+                "\t\t.\n\t\t.\n\t\t."
+            )  # vertical '...' to show there's truncation
 
         # Why seek rather than just iterate through lines until we're near the end?
         # because log files may be GBs in size, and we want this operation to be
