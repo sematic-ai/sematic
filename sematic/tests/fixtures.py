@@ -15,6 +15,7 @@ import sematic.storage as storage
 def test_storage():
     current_set = storage.set
     current_get = storage.get
+    current_set_from_file = storage.set_from_file
 
     store = {}
 
@@ -23,15 +24,21 @@ def test_storage():
 
     def _get(key):
         return store[key]
+    
+    def _set_from_file(key, file_path):
+        with open(file_path, "rb") as fp:
+            store[key] = b"".join(fp)
 
     storage.set = _set
     storage.get = _get
+    storage.set_from_file = _set_from_file
 
     try:
-        yield
+        yield store
     finally:
         storage.set = current_set
         storage.get = current_get
+        storage.set_from_file = current_set_from_file
 
 
 @pytest.fixture

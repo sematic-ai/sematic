@@ -1,11 +1,12 @@
 # Standard Library
 import contextlib
-import logging
+import traceback
 import multiprocessing
 import os
 import stat
 import sys
 import time
+from typing import Callable, Optional
 
 # Sematic
 from sematic.config import POD_NAME_ENV_VAR
@@ -25,16 +26,14 @@ An overview of how logging works:
   because it's the same bucket used for artifacts.
 """
 
-logger = logging.getLogger(__name__)
-
 
 def _stream_logs_to_remote_from_file(
-    file_path: str, upload_interval_seconds: int, remote_prefix: str
+    file_path: str, upload_interval_seconds: int, remote_prefix: str, uploader: Callable[[str, str], None],
 ):
     if remote_prefix.endswith("/"):
         remote_prefix = remote_prefix[:-1]
     while True:
-        _do_upload(file_path, remote_prefix)
+        uploader(file_path, remote_prefix)
         time.sleep(upload_interval_seconds)
 
 
@@ -55,7 +54,7 @@ def _do_upload(file_path: str, remote_prefix: str):
 
 
 def _start_log_streamer_out_of_process(
-    file_path: str, upload_interval_seconds: int, remote_prefix: str
+    file_path: str, upload_interval_seconds: int, remote_prefix: str, uploader: Callable[[str, str], None],
 ) -> multiprocessing.Process:
     """Start a subprocess to periodically upload the log file to remote storage
 
@@ -68,6 +67,8 @@ def _start_log_streamer_out_of_process(
         The path to the local log file
     upload_interval_seconds:
         The interval between uploads.
+    uploader:
+        An optional custom uploader for the log data
 
     Returns
     -------
@@ -77,6 +78,7 @@ def _start_log_streamer_out_of_process(
         file_path=file_path,
         upload_interval_seconds=upload_interval_seconds,
         remote_prefix=remote_prefix,
+        uploader=uploader,
     )
     process = multiprocessing.Process(
         group=None,
@@ -94,6 +96,7 @@ def ingested_logs(
     upload_interval_seconds: int,
     remote_prefix: str,
     max_tail_bytes: int = 2**13,
+    uploader: Optional[Callable[[str, str], None]]=None,
 ):
     """Code within context will have stdout/stderr (including subprocess) ingested
 
@@ -112,7 +115,11 @@ def ingested_logs(
     max_tail_bytes:
         The maximum number of bytes of logs to print to the original stdout
         when the context exits. To disable, set to <=0. Defaults to 8kb
+    uploader:
+        An optional override for uploading the log file.
     """
+    uploader = uploader if uploader is not None else _do_upload
+
     # must be done before stdout redirection so that it will show up
     # in kubectl logs.
     pod_name = os.getenv(POD_NAME_ENV_VAR)
@@ -130,6 +137,7 @@ def ingested_logs(
                 file_path,
                 upload_interval_seconds=upload_interval_seconds,
                 remote_prefix=remote_prefix,
+                uploader=uploader,
             )
             try:
                 yield
@@ -137,7 +145,7 @@ def ingested_logs(
                 # make sure error is logged while logs are directed
                 # for ingestion so the error gets ingested. Re-raise
                 # so caller can handle/not as needed.
-                logger.exception("Exception")
+                traceback.print_exc()
                 raise
             finally:
                 process.terminate()
@@ -149,7 +157,7 @@ def ingested_logs(
                 sys.stderr.flush()
 
                 try:
-                    _do_upload(file_path, remote_prefix=remote_prefix)
+                    uploader(file_path, remote_prefix=remote_prefix)
                 except Exception as e:
                     final_upload_error = e
     finally:
@@ -168,24 +176,25 @@ def ingested_logs(
         _tail_log_file(file_path, max_tail_bytes)
 
 
-def _tail_log_file(file_path, max_tail_bytes):
+def _tail_log_file(file_path, max_tail_bytes, print_func=None):
     """Print the last lines of the log file.
 
     The code will quickly traverse to the correct file location rather than reading
     through the whole log.
     """
+    print_func = print_func if print_func is not None else print
     if max_tail_bytes <= 0:
         return
 
     n_bytes_in_file = os.stat(file_path)[stat.ST_SIZE]
     with open(file_path, "r") as fp:
-        print(
+        print_func(
             "Showing the tail of the logs for reference. For complete "
             "logs, please use the UI."
         )
         start_byte = max(0, n_bytes_in_file - max_tail_bytes)
         if start_byte != 0:
-            print("\t\t.\n\t\t.\n\t\t.")  # vertical '...' to show there's truncation
+            print_func("\t\t.\n\t\t.\n\t\t.")  # vertical '...' to show there's truncation
 
         # Why seek rather than just iterate through lines until we're near the end?
         # because log files may be GBs in size, and we want this operation to be
@@ -197,4 +206,4 @@ def _tail_log_file(file_path, max_tail_bytes):
                 # we may have done a seek mid-line. skip the first line so we don't show
                 # something partial.
                 continue
-            print(line, end="")
+            print_func(line, end="")
