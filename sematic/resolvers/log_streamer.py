@@ -124,6 +124,9 @@ def ingested_logs(
     uploader:
         An optional override for uploading the log file.
     """
+    # we will eventually want to switch to use a pipe instead of file as the
+    # buffer the subprocess reads from:
+    # https://stackoverflow.com/questions/73821235/python-file-truncate-with-one-writer-and-one-reader?noredirect=1#comment130351264_73821235
     uploader = uploader if uploader is not None else _do_upload
 
     # must be done before stdout redirection so that it will show up
