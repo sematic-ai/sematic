@@ -68,6 +68,21 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "log_reader",
+    srcs = ["log_reader.py"],
+    deps = [
+        "//sematic:storage",
+        "//sematic:abstract_future",
+        "//sematic/db:queries",
+        "//sematic/resolvers:cloud_resolver",
+    ],
+    pip_deps = [
+        "requests",
+    ]
+)
+
+
+sematic_py_lib(
     name = "client",
     srcs = ["client.py"],
     deps = [
