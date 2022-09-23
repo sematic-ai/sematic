@@ -15,6 +15,16 @@ def _fileno(file_or_fd):
 
 @contextmanager
 def redirect_to_file(file_path: str):
+    """Redirect stdout and stderr to the specified file path.
+
+    Non-python code and subprocesses will also have their stdout/stderr
+    redirected.
+
+    Parameters
+    ----------
+    file_path:
+        The file path to put stdout and stderr into
+    """
     stdout = sys.stdout
     stderr = sys.stderr
     stdout_fd = _fileno(stdout)
