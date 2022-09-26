@@ -2,7 +2,7 @@
 import logging
 
 # Sematic
-from sematic.examples.add.pipeline import pipeline
+from sematic.examples.add.pipeline import pipeline, raise_exception
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
@@ -10,6 +10,8 @@ if __name__ == "__main__":
     future = pipeline(1, 2, 3).set(
         name="Basic add example pipeline", tags=["example", "basic", "final"]
     )
-    result = future.resolve()
+    # result = future.resolve()
+
+    result = raise_exception().resolve()
 
     logging.info(result)

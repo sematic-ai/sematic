@@ -1,6 +1,8 @@
 # Sematic
+from sematic.abstract_future import FutureState
 from sematic.calculator import func
 from sematic.resolvers.silent_resolver import SilentResolver
+from sematic.retry_settings import RetrySettings
 
 
 @func
@@ -22,3 +24,31 @@ def pipeline(a: float, b: float) -> float:
 
 def test_silent_resolver():
     assert SilentResolver().resolve(pipeline(3, 5)) == 24
+
+
+_tried = 0
+
+
+class SomeException(Exception):
+    pass
+
+
+@func(retry=RetrySettings(exceptions=(SomeException,), times=3))
+def try_three_times():
+    global _tried
+    _tried += 1
+    raise SomeException()
+
+
+def test_retry():
+    future = try_three_times()
+    try:
+        SilentResolver().resolve(future)
+    except SomeException:
+        pass
+    else:
+        assert False
+
+    assert future.props.retry_settings.retry_count == 3
+    assert future.state == FutureState.FAILED
+    assert _tried == 4

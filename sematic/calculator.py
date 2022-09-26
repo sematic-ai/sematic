@@ -2,6 +2,7 @@
 import collections
 import inspect
 import types
+from copy import copy
 from typing import (
     Any,
     Callable,
@@ -20,6 +21,7 @@ from typing import (
 from sematic.abstract_calculator import AbstractCalculator, CalculatorError
 from sematic.future import Future
 from sematic.resolvers.resource_requirements import ResourceRequirements
+from sematic.retry_settings import RetrySettings
 from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.type import is_type
 
@@ -39,6 +41,7 @@ class Calculator(AbstractCalculator):
         output_type: type,
         resource_requirements: Optional[ResourceRequirements] = None,
         inline: bool = True,
+        retry_settings: Optional[RetrySettings] = None,
     ) -> None:
         if not inspect.isfunction(func):
             raise ValueError("{} is not a function".format(func))
@@ -50,6 +53,7 @@ class Calculator(AbstractCalculator):
 
         self._inline = inline
         self._resource_requirements = resource_requirements
+        self._retry_settings = retry_settings
 
         self.__doc__ = func.__doc__
         self.__module__ = func.__module__
@@ -98,6 +102,9 @@ class Calculator(AbstractCalculator):
             cast_arguments,
             inline=self._inline,
             resource_requirements=self._resource_requirements,
+            # copying because it will hold state for the particular
+            # future (retry_count)
+            retry_settings=copy(self._retry_settings),
         )
 
     def __signature__(self) -> inspect.Signature:
@@ -197,6 +204,7 @@ def func(
     func: Callable = None,
     inline: bool = True,
     resource_requirements: Optional[ResourceRequirements] = None,
+    retry: Optional[RetrySettings] = None,
 ) -> Union[Callable, Calculator]:
     """
     Sematic Function decorator.
@@ -239,6 +247,7 @@ def func(
             output_type=output_type,
             inline=inline,
             resource_requirements=resource_requirements,
+            retry_settings=retry,
         )
 
     if func is None:

@@ -10,7 +10,8 @@ CREATE TABLE runs (
     ended_at timestamp,
     resolved_at timestamp,
     failed_at timestamp,
-    parent_id character(32), description TEXT, tags TEXT, source_code TEXT, root_id character(32), nested_future_id character(32), exception TEXT, resource_requirements_json JSONB, external_jobs_json JSONB,
+    parent_id character(32), description TEXT, tags TEXT, source_code TEXT, root_id character(32), nested_future_id character(32), external_jobs_json JSONB, resource_requirements_json JSONB, exception_json JSONB,
+
     PRIMARY KEY (id)
 );
 CREATE TABLE artifacts (
@@ -88,5 +89,6 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20220726001230'),
   ('20220816235619'),
   ('20220819172555'),
+  ('20220830211101'),
   ('20220915165621'),
-  ('20220830211101');
+  ('20220921212247');
