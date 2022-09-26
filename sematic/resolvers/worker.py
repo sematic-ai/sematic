@@ -28,8 +28,6 @@ from sematic.resolvers.cloud_resolver import (
 from sematic.resolvers.log_streamer import ingested_logs
 from sematic.utils.exceptions import format_exception_for_run
 
-LOG_UPLOAD_INTERVAL_SECONDS = 10
-
 
 def parse_args():
     """
@@ -190,9 +188,9 @@ if __name__ == "__main__":
     log_prefix = f"logs/run_id/{args.run_id}/{log_kind}"
     path = _create_log_file_path("worker.log")
 
-    with ingested_logs(path, LOG_UPLOAD_INTERVAL_SECONDS, log_prefix):
+    with ingested_logs(path, log_prefix):
         logging.basicConfig(level=logging.INFO)
         logger.info("Worker CLI args: run_id=%s", args.run_id)
-        logger.info("Worker CLI args:  resolve=%s", args.resolve)
+        logger.info("Worker CLI args: resolve=%s", args.resolve)
 
         main(args.run_id, args.resolve)
