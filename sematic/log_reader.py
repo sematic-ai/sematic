@@ -1,12 +1,12 @@
 # Standard Library
-import io
 from dataclasses import dataclass
 from typing import Iterable, List, Optional
 
 # Sematic
 from sematic import storage
 from sematic.abstract_future import FutureState
-from sematic.db.queries import get_run
+from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
+from sematic.db.queries import get_resolution, get_run
 from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
     START_INLINE_RUN_INDICATOR,
@@ -65,6 +65,19 @@ def load_log_lines(
     filter_string: Optional[str] = None,
 ) -> LogLineResult:
     run = get_run(run_id)
+    resolution = get_resolution(run.root_id)
+    if ResolutionStatus[resolution.status] in (  # type: ignore
+        ResolutionStatus.CREATED,
+        ResolutionStatus.SCHEDULED,
+    ):
+        return LogLineResult(
+            start_index=-1,
+            end_index=-1,
+            more_before=False,
+            more_after=True,
+            lines=[],
+            log_unavaiable_reason="Resolution has not started yet.",
+        )
     filter_string = filter_string if filter_string is not None else ""
     if FutureState[run.future_state] == FutureState.CREATED:  # type: ignore
         return LogLineResult(
@@ -81,7 +94,7 @@ def load_log_lines(
     is_inline = len(run.external_jobs) == 0
     if is_inline:
         return _load_inline_logs(
-            run_id, run.root_id, first_line_index, max_lines, filter_string
+            run_id, resolution, first_line_index, max_lines, filter_string
         )
     return _load_non_inline_logs(run_id, first_line_index, max_lines, filter_string)
 
@@ -97,24 +110,40 @@ def _load_non_inline_logs(
             more_before=False,
             more_after=True,
             lines=[],
-            log_unavaiable_reason="No log files found.",
+            log_unavaiable_reason="No log files found",
         )
 
     # the file wth the highest timestamp has the full logs.
     latest_log_file = max(log_files)
 
-    buffer = io.BytesIO()
-    storage.get_stream(latest_log_file, buffer)
-    text_buffer = io.TextIOWrapper(buffer, encoding="utf8")
+    text_buffer = storage.get_line_stream(latest_log_file)
+
     return get_log_lines_from_text_buffer(
         text_buffer, first_line_index, max_lines, filter_string
     )
 
 
 def _load_inline_logs(
-    run_id: str, root_id: str, first_line_index: int, max_lines: int, filter_string: str
+    run_id: str,
+    resolution: Resolution,
+    first_line_index: int,
+    max_lines: int,
+    filter_string: str,
 ) -> LogLineResult:
-    log_files = storage.get_child_paths(log_prefix(root_id, is_resolve=True))
+    if ResolutionKind[resolution.kind] == ResolutionKind.LOCAL:  # type: ignore
+        return LogLineResult(
+            start_index=-1,
+            end_index=-1,
+            more_before=False,
+            more_after=True,
+            lines=[],
+            log_unavaiable_reason=(
+                "UI logs are only available for runs that "
+                "(a) are executed using the CloudResolver and "
+                "(b) are using the resolver in non-detached mode OR have inline=False."
+            ),
+        )
+    log_files = storage.get_child_paths(log_prefix(resolution.root_id, is_resolve=True))
     if len(log_files) < 1:
         return LogLineResult(
             start_index=-1,
@@ -128,9 +157,7 @@ def _load_inline_logs(
     # the file wth the highest timestamp has the full logs.
     latest_log_file = max(log_files)
 
-    buffer = io.BytesIO()
-    storage.get_stream(latest_log_file, buffer)
-    text_buffer: Iterable[str] = io.TextIOWrapper(buffer, encoding="utf8")
+    text_buffer: Iterable[str] = storage.get_line_stream(latest_log_file)
     text_buffer = _filter_for_inline(text_buffer, run_id)
 
     return get_log_lines_from_text_buffer(
@@ -171,23 +198,25 @@ def get_log_lines_from_text_buffer(
     while keep_going:
         try:
             line = next(ln for ln in buffer_iterator if filter_string in ln)
-            if first_line_index <= current_index:
-                if first_line_index < 0:
+            if current_index >= first_line_index:
+                if first_read_index < 0:
                     first_read_index = current_index
                 lines.append(line)
             else:
                 more_before = True
             current_index += 1
-            if current_index >= max_lines:
+            if len(lines) >= max_lines:
                 has_more = True
                 keep_going = False
         except StopIteration:
             keep_going = False
             has_more = False
+    missing_reason = None if len(lines) > 0 else "No matching log lines."
     return LogLineResult(
         start_index=first_read_index,
         end_index=current_index,
         more_before=more_before,
         more_after=has_more,
         lines=lines,
+        log_unavaiable_reason=missing_reason,
     )
