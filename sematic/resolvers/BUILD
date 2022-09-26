@@ -22,6 +22,7 @@ sematic_py_lib(
         "//sematic:abstract_calculator",
         "//sematic:abstract_future",
         "//sematic:resolver",
+        "//sematic/utils:exceptions",
     ],
 )
 
@@ -37,18 +38,18 @@ sematic_py_lib(
 sematic_py_lib(
     name = "cloud_resolver",
     srcs = ["cloud_resolver.py"],
+    pip_deps = [
+        "cloudpickle",
+    ],
     deps = [
         ":local_resolver",
         "//sematic:abstract_future",
+        "//sematic:container_images",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
-        "//sematic:container_images",
         "//sematic/utils:exceptions",
-    ],
-    pip_deps = [
-        "cloudpickle",
     ],
 )
 
@@ -72,6 +73,9 @@ sematic_py_lib(
 sematic_py_lib(
     name = "worker",
     srcs = ["worker.py"],
+    pip_deps = [
+        "cloudpickle",
+    ],
     deps = [
         ":log_streamer",
         "//sematic:abstract_future",
@@ -85,9 +89,6 @@ sematic_py_lib(
         "//sematic/resolvers:cloud_resolver",
         "//sematic/utils:exceptions",
         "//sematic/scheduling:external_job",
-    ],
-    pip_deps = [
-        "cloudpickle",
     ],
 )
 

@@ -16,7 +16,7 @@ from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionS
 from sematic.db.models.run import Run
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.user_settings import get_all_user_settings
-from sematic.utils.exceptions import format_exception_for_run
+from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
 
 logger = logging.getLogger(__name__)
 
@@ -213,11 +213,15 @@ class LocalResolver(SilentResolver):
         if failed_future.state == FutureState.FAILED and run.exception is None:
             run.exception = format_exception_for_run()
         if failed_future.state == FutureState.NESTED_FAILED and run.exception is None:
-            run.exception = "Failed because the child run failed"
+            run.exception = ExceptionMetadata(
+                repr="Failed because the child run failed",
+                name=Exception.__name__,
+                module=Exception.__module__,
+            )
+
         logger.info(
-            "Processing failure of run %s, set exception to: %s",
+            "Processing failure of run %s",
             failed_future.id,
-            run.exception,
         )
 
         run.failed_at = datetime.datetime.utcnow()
@@ -250,11 +254,17 @@ class LocalResolver(SilentResolver):
         for run_id in self._runs.keys():
             run = self._get_run(run_id)  # may have terminated remotely, re-get from api
             state = FutureState.as_object(run.future_state)
+
             if state.is_terminal():
                 continue
+
             run.future_state = FutureState.FAILED
+
             if run.exception is None:
-                run.exception = reason
+                run.exception = ExceptionMetadata(
+                    repr=reason, name=Exception.__name__, module=Exception.__module__
+                )
+
             self._buffer_runs[run_id] = run
         self._save_graph()
 

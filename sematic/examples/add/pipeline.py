@@ -1,4 +1,5 @@
 # Standard Library
+import time
 import typing
 from dataclasses import dataclass
 
@@ -61,3 +62,13 @@ def pipeline(a: float, b: float, c: float) -> float:
     sum2 = add(b, c)
     sum3 = add(a, c)
     return add3(sum1, sum2, sum3)
+
+
+class SomeException(Exception):
+    pass
+
+
+@sematic.func(retry=sematic.RetrySettings(exceptions=(SomeException,), times=5))
+def raise_exception():
+    time.sleep(5)
+    raise SomeException

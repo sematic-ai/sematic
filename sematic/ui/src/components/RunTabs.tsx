@@ -66,7 +66,7 @@ export default function RunTabs(props: {
           <Docstring docstring={run.description} />
         </TabPanel>
         <TabPanel value="logs">
-          {run.exception && <Exception exception={run.exception} />}
+          {run.exception_json && <Exception exception={run.exception_json} />}
           <GrafanaPanel run={run} />
         </TabPanel>
         <TabPanel value="source">
