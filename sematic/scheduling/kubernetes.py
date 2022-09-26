@@ -255,6 +255,13 @@ def _schedule_kubernetes_job(
                                     name=ON_WORKER_ENV_VAR,
                                     value="1",
                                 ),
+                                kubernetes.client.V1EnvVar(  # type: ignore
+                                    # this makes it such that stdout and stderr
+                                    # are less likely to interleave substantially
+                                    # out-of-order from when they were written to
+                                    name="PYTHONUNBUFFERED",
+                                    value="1",
+                                ),
                                 pod_name_env_var,
                             ]
                             + [

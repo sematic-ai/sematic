@@ -35,13 +35,13 @@ def redirect_to_file(file_path: str):
     os.set_inheritable(stdout_fd, True)
     os.set_inheritable(stderr_fd, True)
     # copy stdout_fd before it is overwritten
-    with os.fdopen(os.dup(stdout_fd), "wb", buffering=1) as stdout_copied:
+    with os.fdopen(os.dup(stdout_fd), "wb") as stdout_copied:
         stdout.flush()  # flush library buffers that dup2 knows nothing about
 
-        with os.fdopen(os.dup(stderr_fd), "wb", buffering=1) as stderr_copied:
+        with os.fdopen(os.dup(stderr_fd), "wb") as stderr_copied:
             stderr.flush()
 
-            with open(file_path, "wb", buffering=1) as to_file:
+            with open(file_path, "wb") as to_file:
                 os.dup2(to_file.fileno(), stdout_fd)
                 os.dup2(to_file.fileno(), stderr_fd)
                 os.set_inheritable(to_file.fileno(), True)
