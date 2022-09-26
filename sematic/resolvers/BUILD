@@ -88,7 +88,10 @@ sematic_py_lib(
         "//sematic/db/models:factories",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/utils:exceptions",
+<<<<<<< HEAD
         "//sematic/scheduling:external_job",
+=======
+>>>>>>> 867e0ac (Retry works)
     ],
 )
 
