@@ -9,7 +9,7 @@ import traceback
 from typing import Callable, Optional
 
 # Sematic
-from sematic.config import POD_NAME_ENV_VAR
+from sematic.config import KUBERNETES_POD_NAME_ENV_VAR
 from sematic.storage import set_from_file
 from sematic.utils.retry import retry
 from sematic.utils.stdout import redirect_to_file
@@ -27,12 +27,31 @@ An overview of how logging works:
 """
 
 
+DEFAULT_LOG_UPLOAD_INTERVAL_SECONDS = 10
+
+
 def _stream_logs_to_remote_from_file(
     file_path: str,
     upload_interval_seconds: int,
     remote_prefix: str,
     uploader: Callable[[str, str], None],
 ):
+    """Execute infinite loop to periodically upload from file_path to remote storage
+
+    Parameters
+    ----------
+    file_path:
+        The path to the local file that's being uploaded
+    upload_interval_seconds:
+        The amount of time between the end of one upload and the start of the next
+    remote_prefix:
+        The prefix for the remote storage location where the log files will be kept.
+        The actual file name will be unique for each upload, increasing monoatonically
+        with time
+    uploader:
+        A callable to perform the upload. It will be given the path to upload from and
+        the remote prefix as arguments.
+    """
     if remote_prefix.endswith("/"):
         remote_prefix = remote_prefix[:-1]
     while True:
@@ -99,8 +118,8 @@ def _start_log_streamer_out_of_process(
 @contextlib.contextmanager
 def ingested_logs(
     file_path: str,
-    upload_interval_seconds: int,
     remote_prefix: str,
+    upload_interval_seconds=DEFAULT_LOG_UPLOAD_INTERVAL_SECONDS,
     max_tail_bytes: int = 2**13,
     uploader: Optional[Callable[[str, str], None]] = None,
 ):
@@ -129,12 +148,12 @@ def ingested_logs(
     # https://stackoverflow.com/questions/73821235/python-file-truncate-with-one-writer-and-one-reader?noredirect=1#comment130351264_73821235
     uploader = uploader if uploader is not None else _do_upload
 
-    # must be done before stdout redirection so that it will show up
-    # in kubectl logs.
-    pod_name = os.getenv(POD_NAME_ENV_VAR)
+    pod_name = os.getenv(KUBERNETES_POD_NAME_ENV_VAR)
     if pod_name is not None:
         # print is appropriate here because we want to write to actual stdout,
-        # with no logging machinary in between. This is *about* the logs.
+        # with no logging machinary in between. This is *about* the logs. It
+        # will be shown when somebody does `kubectl logs <pod name>` because
+        # it will go to stdout before stdout gets redirected.
         print(
             f"To follow these logs, try:\n\t"
             f"kubectl exec -i {pod_name} -- tail -f {file_path}"

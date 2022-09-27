@@ -11,8 +11,8 @@ from urllib3.exceptions import ConnectionError
 
 # Sematic
 from sematic.config import (
+    KUBERNETES_POD_NAME_ENV_VAR,
     ON_WORKER_ENV_VAR,
-    POD_NAME_ENV_VAR,
     SettingsVar,
     get_user_settings,
 )
@@ -220,7 +220,7 @@ def _schedule_kubernetes_job(
         logger.debug("kubernetes environment secrets: %s", secret_env_vars)
 
     pod_name_env_var = kubernetes.client.V1EnvVar(  # type: ignore
-        name=POD_NAME_ENV_VAR,
+        name=KUBERNETES_POD_NAME_ENV_VAR,
         value_from=kubernetes.client.V1EnvVarSource(  # type: ignore
             field_ref=kubernetes.client.V1ObjectFieldSelector(  # type: ignore
                 field_path="metadata.name",
@@ -253,6 +253,13 @@ def _schedule_kubernetes_job(
                                 ),
                                 kubernetes.client.V1EnvVar(  # type: ignore
                                     name=ON_WORKER_ENV_VAR,
+                                    value="1",
+                                ),
+                                kubernetes.client.V1EnvVar(  # type: ignore
+                                    # this makes it such that stdout and stderr
+                                    # are less likely to interleave substantially
+                                    # out-of-order from when they were written to
+                                    name="PYTHONUNBUFFERED",
                                     value="1",
                                 ),
                                 pod_name_env_var,

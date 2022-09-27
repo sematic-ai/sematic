@@ -2,11 +2,14 @@
 import os
 import sys
 from contextlib import contextmanager
+from io import FileIO
+from typing import Union, cast
 
 # code adapted from: https://stackoverflow.com/a/22434262/2540669
 
 
-def _fileno(file_or_fd):
+def _fileno(file_or_fd: Union[FileIO, int]) -> int:
+    """Convenience func to convert a file descriptor OR file into a fie descriptor"""
     fd = getattr(file_or_fd, "fileno", lambda: file_or_fd)()
     if not isinstance(fd, int):
         raise ValueError("Expected a file (`.fileno()`) or a file descriptor")
@@ -25,8 +28,8 @@ def redirect_to_file(file_path: str):
     file_path:
         The file path to put stdout and stderr into
     """
-    stdout = sys.stdout
-    stderr = sys.stderr
+    stdout: FileIO = cast(FileIO, sys.stdout)
+    stderr: FileIO = cast(FileIO, sys.stderr)
     stdout_fd = _fileno(stdout)
     stderr_fd = _fileno(stderr)
     os.set_inheritable(stdout_fd, True)

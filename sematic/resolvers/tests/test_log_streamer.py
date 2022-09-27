@@ -93,6 +93,7 @@ def test_tail_log_file():
         remote_prefix = "foo/bar"
         upload_interval = 0.1
         line_template = "This is line {}"
+        stderr_line_template = "This is stderr line {}"
         n_lines = 100
         with ingested_logs(
             log_file.name,
@@ -102,14 +103,16 @@ def test_tail_log_file():
         ):
             for i in range(n_lines):
                 print(line_template.format(i))
+                print(stderr_line_template.format(i), file=sys.stderr)
         _tail_log_file(log_file.name, max_tail_bytes=0, print_func=print_func)
 
         assert len(printed) == 0
         _tail_log_file(
-            log_file.name, max_tail_bytes=3 * len(line_template), print_func=print_func
+            log_file.name, max_tail_bytes=6 * len(line_template), print_func=print_func
         )
         assert len(printed) > 0
-        assert printed[-1] == line_template.format(n_lines - 1) + "\n"
+        assert printed[-1] == stderr_line_template.format(n_lines - 1) + "\n"
+        assert printed[-2] == line_template.format(n_lines - 1) + "\n"
         has_ellipsis = any(
             line.replace("\n", "").replace("\t", "") == "..." for line in printed
         )
@@ -119,8 +122,10 @@ def test_tail_log_file():
 
         # all lines present
         _tail_log_file(log_file.name, max_tail_bytes=2**30, print_func=print_func)
-        assert printed[-1 * n_lines] == line_template.format(0) + "\n"
-        assert printed[-1] == line_template.format(n_lines - 1) + "\n"
+        assert printed[-2 * n_lines] == line_template.format(0) + "\n"
+        assert printed[-2 * n_lines + 1] == stderr_line_template.format(0) + "\n"
+        assert printed[-2] == line_template.format(n_lines - 1) + "\n"
+        assert printed[-1] == stderr_line_template.format(n_lines - 1) + "\n"
         has_ellipsis = any(
             line.replace("\n", "").replace("\t", "") == "..." for line in printed
         )
