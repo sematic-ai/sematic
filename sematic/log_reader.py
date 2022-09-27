@@ -226,7 +226,7 @@ def _load_non_inline_logs(
         )
 
     # the file wth the highest timestamp has the full logs.
-    if cursor_file not in log_files:
+    if cursor_file is not None and cursor_file not in log_files:
         raise RuntimeError(
             f"Trying to continue a log traversal from {cursor_file}, but "
             f"that file doesn't exist."
@@ -285,7 +285,7 @@ def _load_inline_logs(
             lines=[],
             log_unavaiable_reason="Resolver logs are missing",
         )
-    if cursor_file not in log_files:
+    if cursor_file is not None and cursor_file not in log_files:
         raise RuntimeError(
             f"Trying to continue a log traversal from {cursor_file}, but "
             f"that file doesn't exist."
