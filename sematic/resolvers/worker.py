@@ -3,6 +3,9 @@ import argparse
 import datetime
 import importlib
 import logging
+import os
+import pathlib
+import tempfile
 from typing import Any, Dict, List
 
 # Third-party
@@ -22,6 +25,7 @@ from sematic.resolvers.cloud_resolver import (
     CloudResolver,
     make_nested_future_storage_key,
 )
+from sematic.resolvers.log_streamer import ingested_logs
 from sematic.utils.exceptions import format_exception_for_run
 
 
@@ -169,12 +173,24 @@ def main(run_id: str, resolve: bool):
         raise e
 
 
+def _create_log_file_path(file_name: str) -> str:
+    temp_dir = tempfile.gettempdir()
+    sematic_temp_logs_dir = pathlib.Path(temp_dir) / pathlib.Path("sematic_logs")
+    if not pathlib.Path(sematic_temp_logs_dir).exists():
+        os.mkdir(sematic_temp_logs_dir)
+    return (pathlib.Path(sematic_temp_logs_dir) / pathlib.Path(file_name)).as_posix()
+
+
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-
+    print("Starting Sematic Worker")
     args = parse_args()
+    log_kind = "resolve" if args.resolve else "calculation"
+    log_prefix = f"logs/run_id/{args.run_id}/{log_kind}"
+    path = _create_log_file_path("worker.log")
 
-    logger.info("Worker CLI args: run_id=%s", args.run_id)
-    logger.info("Worker CLI args:  resolve=%s", args.resolve)
+    with ingested_logs(path, log_prefix):
+        logging.basicConfig(level=logging.INFO)
+        logger.info("Worker CLI args: run_id=%s", args.run_id)
+        logger.info("Worker CLI args: resolve=%s", args.resolve)
 
-    main(args.run_id, args.resolve)
+        main(args.run_id, args.resolve)

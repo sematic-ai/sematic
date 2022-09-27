@@ -53,6 +53,17 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "log_streamer",
+    srcs = ["log_streamer.py"],
+    deps = [
+        "//sematic:storage",
+        "//sematic/utils:retry",
+        "//sematic/utils:stdout",
+        "//sematic:config",
+    ],
+)
+
+sematic_py_lib(
     name = "resource_requirements",
     srcs = ["resource_requirements.py"],
     deps = [],
@@ -62,6 +73,7 @@ sematic_py_lib(
     name = "worker",
     srcs = ["worker.py"],
     deps = [
+        ":log_streamer",
         "//sematic:abstract_future",
         "//sematic:api_client",
         "//sematic:calculator",
