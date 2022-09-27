@@ -15,6 +15,12 @@ from sematic.resolvers.cloud_resolver import (
     START_INLINE_RUN_INDICATOR,
 )
 
+# Why the "V1"? Because we will likely want to change the structure of
+# the logs such that each file contains a different subset of logs. But
+# when we make this change, we will still want logs written in the old
+# structure to be readable, at least for a while. So we need to identify
+# which structure the files are in somehow, and a v1/v2 prefix is how we
+# can do it.
 V1_LOG_PATH_FORMAT = "logs/v1/run_id/{run_id}/{log_kind}/"
 
 
@@ -71,6 +77,10 @@ class Cursor:
         The run id that was being used for this log traversal.
     """
 
+    # Why include source log file? Because we will soon likely want to break up the logs for
+    # a single run such that each file contains a *different* portion of the logs, and we
+    # will need to know which file to go to in order to pick back up. The alternative would
+    # be to require re-traversing already traversed files when continuing.
     source_log_key: Optional[str]
     source_file_line_index: int
     filter_strings: List[str]
