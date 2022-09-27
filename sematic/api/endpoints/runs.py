@@ -232,7 +232,7 @@ def get_logs_endpoint(run_id: str) -> flask.Response:
 
     kwarg_overrides = input_payload.get("log_request", {})
     kwargs = dict(
-        first_line_index=0,
+        continuation_cursor=None,
         max_lines=100,
         filter_strings=None,
     )
@@ -241,7 +241,7 @@ def get_logs_endpoint(run_id: str) -> flask.Response:
         # consider overrides for keys we actually expect.
         if key in kwarg_overrides:
             kwargs[key] = kwarg_overrides[key]
-    
+
     result = load_log_lines(
         run_id=run_id,
         **kwargs,  # type: ignore
