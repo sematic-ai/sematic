@@ -17,3 +17,9 @@ sematic_py_lib(
     srcs = ["retry.py"],
     deps = []
 )
+
+sematic_py_lib(
+    name = "stdout",
+    srcs = ["stdout.py"],
+    deps = []
+)

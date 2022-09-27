@@ -130,6 +130,7 @@ sematic_py_lib(
     srcs = ["storage.py"],
     deps = [
         ":user_settings",
+        "//sematic/utils:retry",
     ],
     pip_deps = [
         "boto3",
