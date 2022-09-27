@@ -234,7 +234,7 @@ def get_logs_endpoint(run_id: str) -> flask.Response:
     kwargs = dict(
         first_line_index=0,
         max_lines=100,
-        filter_string=None,
+        filter_strings=["ERROR:"],
     )
     for key in kwargs.keys():
         # update the kwargs with any overrides, but only
