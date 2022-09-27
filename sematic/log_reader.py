@@ -102,7 +102,8 @@ def load_log_lines(
 def _load_non_inline_logs(
     run_id: str, first_line_index: int, max_lines: int, filter_string: str
 ) -> LogLineResult:
-    log_files = storage.get_child_paths(log_prefix(run_id, is_resolve=False))
+    prefix = log_prefix(run_id, is_resolve=False)
+    log_files = storage.get_child_paths(prefix)
     if len(log_files) < 1:
         return LogLineResult(
             start_index=-1,
@@ -114,8 +115,12 @@ def _load_non_inline_logs(
         )
 
     # the file wth the highest timestamp has the full logs.
-    latest_log_file = max(log_files)
-
+    latest_log_file = max(
+        log_files,
+        key=lambda path_key: int(
+            path_key.replace(prefix, "").replace(".log", "".replace("/", ""))
+        ),
+    )
     text_buffer = storage.get_line_stream(latest_log_file)
 
     return get_log_lines_from_text_buffer(
