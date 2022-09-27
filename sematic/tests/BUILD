@@ -77,7 +77,13 @@ pytest_test(
     name = "test_log_reader",
     srcs = ["test_log_reader.py"],
     deps = [
+        "//sematic:abstract_future",
         "//sematic:log_reader",
+        "//sematic:storage",
+        "//sematic/db:queries",
+        "//sematic/tests:fixtures",
+        "//sematic/db/tests:fixtures",
+        "//sematic/resolvers:cloud_resolver",
     ],
 )
 

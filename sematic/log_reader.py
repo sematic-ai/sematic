@@ -77,10 +77,11 @@ class Cursor:
         The run id that was being used for this log traversal.
     """
 
-    # Why include source log file? Because we will soon likely want to break up the logs for
-    # a single run such that each file contains a *different* portion of the logs, and we
-    # will need to know which file to go to in order to pick back up. The alternative would
-    # be to require re-traversing already traversed files when continuing.
+    # Why include source log file? Because we will soon likely want to break up
+    # the logs for a single run such that each file contains a *different*
+    # portion of the logs, and we will need to know which file to go to in
+    # order to pick back up. The alternative would be to require
+    # re-traversing already traversed files when continuing.
     source_log_key: Optional[str]
     source_file_line_index: int
     filter_strings: List[str]
@@ -205,25 +206,10 @@ def load_log_lines(
     )
 
 
-def _load_non_inline_logs(
-    run_id: str,
-    still_running: bool,
-    cursor_file: Optional[str],
-    cursor_line_index: int,
-    max_lines: int,
-    filter_strings: List[str],
-) -> LogLineResult:
-    """Load the lines for runs that are NOT inline"""
-    prefix = log_prefix(run_id, is_resolve=False)
+def _get_latest_log_file(prefix, cursor_file) -> Optional[str]:
     log_files = storage.get_child_paths(prefix)
     if len(log_files) < 1:
-        return LogLineResult(
-            more_before=False,
-            more_after=True,
-            lines=[],
-            continuation_cursor=Cursor.nothing_found(filter_strings, run_id).to_token(),
-            log_unavaiable_reason="No log files found",
-        )
+        return None
 
     # the file wth the highest timestamp has the full logs.
     if cursor_file is not None and cursor_file not in log_files:
@@ -237,6 +223,28 @@ def _load_non_inline_logs(
             path_key.replace(prefix, "").replace(".log", "".replace("/", ""))
         ),
     )
+    return latest_log_file
+
+
+def _load_non_inline_logs(
+    run_id: str,
+    still_running: bool,
+    cursor_file: Optional[str],
+    cursor_line_index: int,
+    max_lines: int,
+    filter_strings: List[str],
+) -> LogLineResult:
+    """Load the lines for runs that are NOT inline"""
+    prefix = log_prefix(run_id, is_resolve=False)
+    latest_log_file = _get_latest_log_file(prefix, cursor_file)
+    if latest_log_file is None:
+        return LogLineResult(
+            more_before=False,
+            more_after=True,
+            lines=[],
+            continuation_cursor=Cursor.nothing_found(filter_strings, run_id).to_token(),
+            log_unavaiable_reason="No log files found",
+        )
     text_stream = storage.get_line_stream(latest_log_file)
     line_stream = (
         LogLine(source_file=latest_log_file, source_file_index=i, line=ln)
@@ -276,8 +284,9 @@ def _load_inline_logs(
                 "(b) are using the resolver in non-detached mode OR have inline=False."
             ),
         )
-    log_files = storage.get_child_paths(log_prefix(resolution.root_id, is_resolve=True))
-    if len(log_files) < 1:
+    prefix = log_prefix(resolution.root_id, is_resolve=True)
+    latest_log_file = _get_latest_log_file(prefix, cursor_file)
+    if latest_log_file is None:
         return LogLineResult(
             more_before=False,
             more_after=True,
@@ -285,22 +294,13 @@ def _load_inline_logs(
             lines=[],
             log_unavaiable_reason="Resolver logs are missing",
         )
-    if cursor_file is not None and cursor_file not in log_files:
-        raise RuntimeError(
-            f"Trying to continue a log traversal from {cursor_file}, but "
-            f"that file doesn't exist."
-        )
-
-    # the file wth the highest timestamp has the full logs.
-    latest_log_file = max(log_files)
-
     text_stream: Iterable[str] = storage.get_line_stream(latest_log_file)
     line_stream = _filter_for_inline(text_stream, run_id, latest_log_file)
 
     return get_log_lines_from_line_stream(
         line_stream=line_stream,
         still_running=still_running,
-        cursor_source_file=latest_log_file,
+        cursor_source_file=cursor_file,
         cursor_line_index=cursor_line_index,
         max_lines=max_lines,
         filter_strings=filter_strings,
@@ -422,6 +422,8 @@ def get_log_lines_from_line_stream(
             source_file_line_index=source_file_line_index + 1,
             filter_strings=filter_strings,
             run_id=run_id,
-        ).to_token(),
+        ).to_token()
+        if has_more
+        else None,
         log_unavaiable_reason=missing_reason,
     )

@@ -16,6 +16,8 @@ def test_storage():
     current_set = storage.set
     current_get = storage.get
     current_set_from_file = storage.set_from_file
+    current_get_line_stream = storage.get_line_stream
+    current_get_child_paths = storage.get_child_paths
 
     store = {}
 
@@ -29,9 +31,22 @@ def test_storage():
         with open(file_path, "rb") as fp:
             store[key] = b"".join(fp)
 
+    def _get_line_stream(key):
+        as_bytes = _get(key)
+        as_str = str(as_bytes, encoding="utf8")
+        for line in as_str.split("\n"):
+            yield line
+
+    def _get_child_paths(key_prefix):
+        if not key_prefix.endswith("/"):
+            key_prefix = f"{key_prefix}/"
+        return [key for key in store.keys() if key.startswith(key_prefix)]
+
     storage.set = _set
     storage.get = _get
     storage.set_from_file = _set_from_file
+    storage.get_line_stream = _get_line_stream
+    storage.get_child_paths = _get_child_paths
 
     try:
         yield store
@@ -39,6 +54,8 @@ def test_storage():
         storage.set = current_set
         storage.get = current_get
         storage.set_from_file = current_set_from_file
+        storage.get_line_stream = current_get_line_stream
+        storage.get_child_paths = current_get_child_paths
 
 
 @pytest.fixture
