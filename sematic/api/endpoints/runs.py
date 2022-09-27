@@ -222,7 +222,7 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 
 
 @sematic_api.route("/api/v1/runs/<run_id>/logs", methods=["GET"])
-# @authenticate
+@authenticate
 def get_logs_endpoint(run_id: str) -> flask.Response:
     """Get portions of the logs for the run if possible"""
     try:
@@ -234,14 +234,14 @@ def get_logs_endpoint(run_id: str) -> flask.Response:
     kwargs = dict(
         first_line_index=0,
         max_lines=100,
-        filter_strings=["ERROR:"],
+        filter_strings=None,
     )
     for key in kwargs.keys():
         # update the kwargs with any overrides, but only
         # consider overrides for keys we actually expect.
         if key in kwarg_overrides:
             kwargs[key] = kwarg_overrides[key]
-
+    
     result = load_log_lines(
         run_id=run_id,
         **kwargs,  # type: ignore

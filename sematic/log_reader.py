@@ -64,6 +64,25 @@ def load_log_lines(
     max_lines: int,
     filter_strings: Optional[List[str]] = None,
 ) -> LogLineResult:
+    """Load a portion of the logs for a particular run
+    
+    Parameters
+    ----------
+    run_id:
+        The id of the run to get logs for
+    first_line_index:
+        The index of the first line to retrieve. Index should be relative
+        to the lines AFTER they are filtered.
+    max_lines:
+        The highest number of log lines that should be returned at once
+    filter_strings:
+        Only log lines that contain ALL of the strings in this list will
+        be included in the result
+    
+    Returns
+    -------
+    A subset of the logs for the given run
+    """
     run = get_run(run_id)
     run_state = FutureState[run.future_state]  # type: ignore
     still_running = run_state.is_terminal() or run_state == FutureState.RAN
@@ -119,6 +138,7 @@ def _load_non_inline_logs(
     max_lines: int,
     filter_strings: List[str],
 ) -> LogLineResult:
+    """Load the lines for runs that are NOT inline"""
     prefix = log_prefix(run_id, is_resolve=False)
     log_files = storage.get_child_paths(prefix)
     if len(log_files) < 1:
@@ -138,10 +158,10 @@ def _load_non_inline_logs(
             path_key.replace(prefix, "").replace(".log", "".replace("/", ""))
         ),
     )
-    text_buffer = storage.get_line_stream(latest_log_file)
+    text_stream = storage.get_line_stream(latest_log_file)
 
-    return get_log_lines_from_text_buffer(
-        text_buffer, still_running, first_line_index, max_lines, filter_strings
+    return get_log_lines_from_text_stream(
+        text_stream, still_running, first_line_index, max_lines, filter_strings
     )
 
 
@@ -153,6 +173,7 @@ def _load_inline_logs(
     max_lines: int,
     filter_strings: List[str],
 ) -> LogLineResult:
+    """Load the lines for runs that are NOT inline"""
     if ResolutionKind[resolution.kind] == ResolutionKind.LOCAL:  # type: ignore
         return LogLineResult(
             start_index=-1,
@@ -180,18 +201,19 @@ def _load_inline_logs(
     # the file wth the highest timestamp has the full logs.
     latest_log_file = max(log_files)
 
-    text_buffer: Iterable[str] = storage.get_line_stream(latest_log_file)
-    text_buffer = _filter_for_inline(text_buffer, run_id)
+    text_stream: Iterable[str] = storage.get_line_stream(latest_log_file)
+    text_stream = _filter_for_inline(text_stream, run_id)
 
-    return get_log_lines_from_text_buffer(
-        text_buffer, still_running, first_line_index, max_lines, filter_strings
+    return get_log_lines_from_text_stream(
+        text_stream, still_running, first_line_index, max_lines, filter_strings
     )
 
 
-def _filter_for_inline(text_buffer: Iterable[str], run_id: str) -> Iterable[str]:
+def _filter_for_inline(text_stream: Iterable[str], run_id: str) -> Iterable[str]:
+    """Stream resolver logs to make a new stream with only lines for a particular run"""
     expected_start = START_INLINE_RUN_INDICATOR.format(run_id)
     expected_end = END_INLINE_RUN_INDICATOR.format(run_id)
-    buffer_iterator = iter(text_buffer)
+    buffer_iterator = iter(text_stream)
     found_start = False
     while True:
         line = next(buffer_iterator)
@@ -205,14 +227,34 @@ def _filter_for_inline(text_buffer: Iterable[str], run_id: str) -> Iterable[str]
         yield line
 
 
-def get_log_lines_from_text_buffer(
-    text_buffer: Iterable[str],
+def get_log_lines_from_text_stream(
+    text_stream: Iterable[str],
     still_running: bool,
     first_line_index: int,
     max_lines: int,
     filter_strings: List[str],
 ) -> LogLineResult:
-    buffer_iterator = iter(text_buffer)
+    """Given a stream of log lines, produce an object containing the desired subset
+
+    Parameters
+    ----------
+    text_stream:
+        An iterable stream of log lines
+    still_running:
+        A boolean indicating whether the run these logs are for is still running or not
+    first_line_index:
+        The index of the first log line that should be returned
+    max_lines:
+        The maximum number of lines that should be returned
+    filter_strings:
+        A list of strings to filter log lines by. Only log lines that contain ALL of the
+        filters will be returned.
+    
+    Returns
+    -------
+    A subset of the logs for the given run
+    """
+    buffer_iterator = iter(text_stream)
     keep_going = True
     current_index = 0
     lines = []

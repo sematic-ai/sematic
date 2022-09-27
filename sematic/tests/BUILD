@@ -74,6 +74,14 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_log_reader",
+    srcs = ["test_log_reader.py"],
+    deps = [
+        "//sematic:log_reader",
+    ],
+)
+
+pytest_test(
     name = "test_user_settings",
     srcs = ["test_user_settings.py"],
     deps = [
