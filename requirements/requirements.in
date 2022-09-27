@@ -48,6 +48,10 @@ xgboost
 # Types
 ## Snowflake
 snowflake-connector-python
+
+# exclusion pinned because 22.1.0 gives a version
+# dependency conflict with snowflake 2.7.12
+pyOpenSSL!=22.1.0
 pyarrow
 
 # Cloud execution
