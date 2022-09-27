@@ -15,6 +15,14 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_log_streamer",
+    srcs = ["test_log_streamer.py"],
+    deps = [
+        "//sematic/resolvers:log_streamer",
+    ],
+)
+
+pytest_test(
     name = "test_silent_resolver",
     srcs = ["test_silent_resolver.py"],
     deps = [
