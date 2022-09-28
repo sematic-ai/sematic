@@ -221,19 +221,23 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     return flask.jsonify(payload)
 
 
-@sematic_api.route("/api/v1/runs/<run_id>/logs", methods=["GET", "PUT"])
+@sematic_api.route("/api/v1/runs/<run_id>/logs", methods=["GET"])
 @authenticate
 def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     """Get portions of the logs for the run if possible"""
-    try:
-        input_payload: Dict[str, Any] = flask.request.json  # type: ignore
-    except Exception:
-        input_payload = {}
 
-    kwarg_overrides = input_payload.get("log_request", {})
+    kwarg_overrides = dict(flask.request.args)
+    if "filter_string" in kwarg_overrides:
+        kwarg_overrides["filter_strings"] = [kwarg_overrides["filter_string"]]
     default_kwargs = dict(continuation_cursor=None, max_lines=100, filter_strings=None)
+    kwarg_converters = dict(
+        continuation_cursor=lambda v: v if v is None else str(v),
+        max_lines=int,
+        filter_strings=lambda v: [] if v is None else list(v),
+    )
     kwargs = {
-        k: kwarg_overrides.get(k, default_v) for k, default_v in default_kwargs.items()
+        k: kwarg_converters[k](kwarg_overrides.get(k, default_v))
+        for k, default_v in default_kwargs.items()
     }
 
     result = load_log_lines(

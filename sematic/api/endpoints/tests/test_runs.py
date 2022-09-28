@@ -302,16 +302,23 @@ def test_get_run_logs(
     kwargs = dict(
         continuation_cursor="continue...",
         max_lines=10,
-        filter_strings=["a", "b", "c"],
+        filter_string="a",
     )
 
-    response = test_client.put(
-        "/api/v1/runs/{}/logs".format(persisted_run.id),
-        json={"log_request": kwargs},
+    response = test_client.get(
+        "/api/v1/runs/{}/logs?{}".format(
+            persisted_run.id, "&".join(f"{k}={v}" for k, v in kwargs.items())
+        ),
+    )
+
+    modified_kwargs = dict(
+        continuation_cursor="continue...",
+        max_lines=10,
+        filter_strings=["a"],
     )
     mock_load_log_lines.assert_called_with(
         run_id=persisted_run.id,
-        **kwargs,
+        **modified_kwargs,
     )
 
 
