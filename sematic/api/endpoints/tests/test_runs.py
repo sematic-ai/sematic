@@ -290,7 +290,7 @@ def test_get_run_logs(
         more_after=True,
         lines=["Line 1", "Line 2"],
         continuation_cursor="abc",
-        log_unavaiable_reason=None,
+        log_unavailable_reason=None,
     )
     mock_load_log_lines.return_value = mock_result
     response = test_client.get("/api/v1/runs/{}/logs".format(persisted_run.id))

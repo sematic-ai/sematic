@@ -27,6 +27,7 @@ from sematic.resolvers.cloud_resolver import (
     make_nested_future_storage_key,
 )
 from sematic.resolvers.log_streamer import ingested_logs
+from sematic.scheduling.external_job import JobType
 from sematic.utils.exceptions import format_exception_for_run
 
 
@@ -186,7 +187,7 @@ if __name__ == "__main__":
     print("Starting Sematic Worker")
     args = parse_args()
     log_kind = "resolve" if args.resolve else "calculation"
-    prefix = log_prefix(args.run_id, args.resolve)
+    prefix = log_prefix(args.run_id, JobType.driver if args.resolve else JobType.worker)
     path = _create_log_file_path("worker.log")
 
     with ingested_logs(path, prefix):

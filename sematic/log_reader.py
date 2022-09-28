@@ -14,6 +14,7 @@ from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
     START_INLINE_RUN_INDICATOR,
 )
+from sematic.scheduling.external_job import JobType
 
 # Why the "V1"? Because we will likely want to change the structure of
 # the logs such that each file contains a different subset of logs. But
@@ -24,9 +25,8 @@ from sematic.resolvers.cloud_resolver import (
 V1_LOG_PATH_FORMAT = "logs/v1/run_id/{run_id}/{log_kind}/"
 
 
-def log_prefix(run_id: str, is_resolve: bool):
-    kind = "resolve" if is_resolve else "calculation"
-    return V1_LOG_PATH_FORMAT.format(run_id=run_id, log_kind=kind)
+def log_prefix(run_id: str, job_type: JobType):
+    return V1_LOG_PATH_FORMAT.format(run_id=run_id, log_kind=job_type.value)
 
 
 @dataclass
@@ -47,7 +47,7 @@ class LogLineResult:
     continuation_cursor:
         A string that can be used to continue traversing these logs from where you left
         off. If more_after is False, this will be set to None.
-    log_unavaiable_reason:
+    log_unavailable_reason:
         A human-readable reason why logs are not available.
     """
 
@@ -55,7 +55,7 @@ class LogLineResult:
     more_after: bool
     lines: List[str]
     continuation_cursor: Optional[str]
-    log_unavaiable_reason: Optional[str] = None
+    log_unavailable_reason: Optional[str] = None
 
 
 @dataclass
@@ -143,7 +143,7 @@ def load_log_lines(
     """
     run = get_run(run_id)
     run_state = FutureState[run.future_state]  # type: ignore
-    still_running = run_state.is_terminal() or run_state == FutureState.RAN
+    still_running = not (run_state.is_terminal() or run_state == FutureState.RAN)
     resolution = get_resolution(run.root_id)
     filter_strings = filter_strings if filter_strings is not None else []
     cursor = (
@@ -171,7 +171,7 @@ def load_log_lines(
             more_after=True,
             lines=[],
             continuation_cursor=cursor.to_token(),
-            log_unavaiable_reason="Resolution has not started yet.",
+            log_unavailable_reason="Resolution has not started yet.",
         )
     filter_strings = filter_strings if filter_strings is not None else []
     if FutureState[run.future_state] == FutureState.CREATED:  # type: ignore
@@ -180,7 +180,7 @@ def load_log_lines(
             more_after=True,
             lines=[],
             continuation_cursor=cursor.to_token(),
-            log_unavaiable_reason="The run has not yet started executing.",
+            log_unavailable_reason="The run has not yet started executing.",
         )
     # looking for external jobs to determine inline is only valid
     # since we know the run has at least reached SCHEDULED due to it
@@ -235,7 +235,7 @@ def _load_non_inline_logs(
     filter_strings: List[str],
 ) -> LogLineResult:
     """Load the lines for runs that are NOT inline"""
-    prefix = log_prefix(run_id, is_resolve=False)
+    prefix = log_prefix(run_id, JobType.worker)
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
     if latest_log_file is None:
         return LogLineResult(
@@ -243,7 +243,7 @@ def _load_non_inline_logs(
             more_after=True,
             lines=[],
             continuation_cursor=Cursor.nothing_found(filter_strings, run_id).to_token(),
-            log_unavaiable_reason="No log files found",
+            log_unavailable_reason="No log files found",
         )
     text_stream = storage.get_line_stream(latest_log_file)
     line_stream = (
@@ -278,13 +278,13 @@ def _load_inline_logs(
             more_after=False,
             lines=[],
             continuation_cursor=None,
-            log_unavaiable_reason=(
+            log_unavailable_reason=(
                 "UI logs are only available for runs that "
                 "(a) are executed using the CloudResolver and "
                 "(b) are using the resolver in non-detached mode OR have inline=False."
             ),
         )
-    prefix = log_prefix(resolution.root_id, is_resolve=True)
+    prefix = log_prefix(resolution.root_id, JobType.driver)
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
     if latest_log_file is None:
         return LogLineResult(
@@ -292,7 +292,7 @@ def _load_inline_logs(
             more_after=True,
             continuation_cursor=Cursor.nothing_found(filter_strings, run_id).to_token(),
             lines=[],
-            log_unavaiable_reason="Resolver logs are missing",
+            log_unavailable_reason="Resolver logs are missing",
         )
     text_stream: Iterable[str] = storage.get_line_stream(latest_log_file)
     line_stream = _filter_for_inline(text_stream, run_id, latest_log_file)
@@ -425,5 +425,5 @@ def get_log_lines_from_line_stream(
         ).to_token()
         if has_more
         else None,
-        log_unavaiable_reason=missing_reason,
+        log_unavailable_reason=missing_reason,
     )

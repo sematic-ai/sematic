@@ -75,6 +75,7 @@ sematic_py_lib(
         "//sematic:abstract_future",
         "//sematic/db:queries",
         "//sematic/resolvers:cloud_resolver",
+        "//sematic/scheduling:external_job",
     ],
     pip_deps = [
         "requests",

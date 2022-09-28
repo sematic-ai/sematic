@@ -84,6 +84,7 @@ sematic_py_lib(
         "//sematic/db/models:factories",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/utils:exceptions",
+        "//sematic/scheduling:external_job",
     ],
     pip_deps = [
         "cloudpickle",

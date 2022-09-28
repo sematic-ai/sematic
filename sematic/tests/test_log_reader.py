@@ -21,7 +21,7 @@ from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
     START_INLINE_RUN_INDICATOR,
 )
-from sematic.scheduling.external_job import ExternalJob
+from sematic.scheduling.external_job import ExternalJob, JobType
 from sematic.tests.fixtures import test_storage  # noqa: F401
 
 _streamed_lines: List[str] = []
@@ -73,7 +73,7 @@ def test_get_log_lines_from_line_stream_does_streaming():
         more_before=False,
         more_after=True,
         lines=[f"Line {i}" for i in range(max_lines)],
-        log_unavaiable_reason=None,
+        log_unavailable_reason=None,
     )
     assert _streamed_lines == result.lines
 
@@ -95,7 +95,7 @@ def test_get_log_lines_from_line_stream_does_streaming():
         more_before=True,
         more_after=True,
         lines=[f"Line {i}" for i in range(max_lines, 2 * max_lines)],
-        log_unavaiable_reason=None,
+        log_unavailable_reason=None,
     )
 
 
@@ -160,7 +160,7 @@ def test_get_log_lines_from_line_stream_filter():
             "Line 26",
             "Line 27",
         ],
-        log_unavaiable_reason=None,
+        log_unavailable_reason=None,
     )
 
     result = get_log_lines_from_line_stream(
@@ -190,7 +190,7 @@ def test_get_log_lines_from_line_stream_filter():
             "Line 92",
             "Line 102",
         ],
-        log_unavaiable_reason=None,
+        log_unavailable_reason=None,
     )
 
 
@@ -201,7 +201,7 @@ def test_load_non_inline_logs(test_storage):  # noqa: F811
     max_lines = 50
     text_lines = [line.line for line in finite_logs(100)]
     log_file_contents = bytes("\n".join(text_lines), encoding="utf8")
-    prefix = log_prefix(run.id, is_resolve=False)
+    prefix = log_prefix(run.id, JobType.worker)
     key = f"{prefix}12345.log"
 
     result = _load_non_inline_logs(
@@ -215,7 +215,7 @@ def test_load_non_inline_logs(test_storage):  # noqa: F811
     assert result.more_after
     assert result.lines == []
     assert result.continuation_cursor is not None
-    assert result.log_unavaiable_reason == "No log files found"
+    assert result.log_unavailable_reason == "No log files found"
     storage.set(key, log_file_contents)
 
     result = _load_non_inline_logs(
@@ -233,7 +233,7 @@ def test_load_non_inline_logs(test_storage):  # noqa: F811
         more_before=False,
         more_after=True,
         lines=text_lines[:max_lines],
-        log_unavaiable_reason=None,
+        log_unavailable_reason=None,
     )
 
     result = _load_non_inline_logs(
@@ -251,7 +251,7 @@ def test_load_non_inline_logs(test_storage):  # noqa: F811
         more_before=True,
         more_after=True,
         lines=text_lines[max_lines : 2 * max_lines],  # noqa: E203
-        log_unavaiable_reason=None,
+        log_unavailable_reason=None,
     )
 
     result = _load_non_inline_logs(
@@ -267,7 +267,7 @@ def test_load_non_inline_logs(test_storage):  # noqa: F811
         more_before=True,
         more_after=False,
         lines=[],
-        log_unavaiable_reason="No matching log lines.",
+        log_unavailable_reason="No matching log lines.",
     )
 
 
@@ -289,7 +289,7 @@ def test_load_inline_logs(test_storage):  # noqa: F811
     max_lines = 50
 
     log_file_contents = bytes("\n".join(text_lines), encoding="utf8")
-    prefix = log_prefix(resolution.root_id, is_resolve=True)
+    prefix = log_prefix(resolution.root_id, JobType.driver)
     key = f"{prefix}12345.log"
 
     result = _load_inline_logs(
@@ -304,7 +304,7 @@ def test_load_inline_logs(test_storage):  # noqa: F811
     assert result.more_after
     assert result.lines == []
     assert result.continuation_cursor is not None
-    assert result.log_unavaiable_reason == "Resolver logs are missing"
+    assert result.log_unavailable_reason == "Resolver logs are missing"
     storage.set(key, log_file_contents)
 
     result = _load_inline_logs(
@@ -324,7 +324,7 @@ def test_load_inline_logs(test_storage):  # noqa: F811
         more_before=False,
         more_after=True,
         lines=run_text_lines[:max_lines],
-        log_unavaiable_reason=None,
+        log_unavailable_reason=None,
     )
 
     result = _load_inline_logs(
@@ -344,7 +344,7 @@ def test_load_inline_logs(test_storage):  # noqa: F811
         more_before=True,
         more_after=True,
         lines=run_text_lines[max_lines:],
-        log_unavaiable_reason=None,
+        log_unavailable_reason=None,
     )
 
     result = _load_inline_logs(
@@ -362,7 +362,7 @@ def test_load_inline_logs(test_storage):  # noqa: F811
         more_before=True,
         more_after=False,
         lines=[],
-        log_unavaiable_reason="No matching log lines.",
+        log_unavailable_reason="No matching log lines.",
     )
 
 
@@ -385,7 +385,7 @@ def test_load_log_lines(test_storage, test_db):  # noqa: F811
         more_before=False,
         more_after=True,
         lines=[],
-        log_unavaiable_reason="Resolution has not started yet.",
+        log_unavailable_reason="Resolution has not started yet.",
     )
 
     resolution.status = ResolutionStatus.RUNNING
@@ -402,7 +402,7 @@ def test_load_log_lines(test_storage, test_db):  # noqa: F811
         more_before=False,
         more_after=True,
         lines=[],
-        log_unavaiable_reason="The run has not yet started executing.",
+        log_unavailable_reason="The run has not yet started executing.",
     )
 
     run.future_state = FutureState.SCHEDULED
@@ -410,7 +410,7 @@ def test_load_log_lines(test_storage, test_db):  # noqa: F811
     save_run(run)
     text_lines = [line.line for line in finite_logs(100)]
     log_file_contents = bytes("\n".join(text_lines), encoding="utf8")
-    prefix = log_prefix(run.id, is_resolve=False)
+    prefix = log_prefix(run.id, JobType.worker)
     key = f"{prefix}12345.log"
     storage.set(key, log_file_contents)
 
@@ -426,7 +426,7 @@ def test_load_log_lines(test_storage, test_db):  # noqa: F811
         more_before=False,
         more_after=True,
         lines=text_lines[:max_lines],
-        log_unavaiable_reason=None,
+        log_unavailable_reason=None,
     )
 
     result = load_log_lines(
@@ -441,7 +441,7 @@ def test_load_log_lines(test_storage, test_db):  # noqa: F811
         more_before=True,
         more_after=True,
         lines=text_lines[max_lines : 2 * max_lines],  # noqa: E203
-        log_unavaiable_reason=None,
+        log_unavailable_reason=None,
     )
 
     result = load_log_lines(
@@ -454,9 +454,9 @@ def test_load_log_lines(test_storage, test_db):  # noqa: F811
     assert result == LogLineResult(
         continuation_cursor=None,
         more_before=True,
-        more_after=False,
+        more_after=True,
         lines=[],
-        log_unavaiable_reason="No matching log lines.",
+        log_unavailable_reason="No matching log lines.",
     )
 
     result = load_log_lines(
