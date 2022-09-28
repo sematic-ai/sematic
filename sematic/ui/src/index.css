@@ -11,3 +11,23 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.ScrollingLogView {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+  font-size: small;
+  white-space: nowrap;
+  height: 40vh;
+  overflow:hidden; overflow-y:scroll;
+  background-color: #f0f0f0;
+  border-color: #c0c0c0;
+  border-style: solid;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.ScrollingLogView .no-more-indicator {
+  color: red;
+  font-weight: bold;
+  text-align: center;
+}

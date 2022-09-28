@@ -9,8 +9,7 @@ import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import Docstring from "./Docstring";
 import { Alert } from "@mui/material";
-import GrafanaPanel from "../addons/grafana/GrafanaPanel";
-import Exception from "./Exception";
+import LogPanel from "./LogPanel";
 
 export type IOArtifacts = {
   input: Map<string, Artifact | undefined>;
@@ -66,8 +65,7 @@ export default function RunTabs(props: {
           <Docstring docstring={run.description} />
         </TabPanel>
         <TabPanel value="logs">
-          {run.exception && <Exception exception={run.exception} />}
-          <GrafanaPanel run={run} />
+          <LogPanel run={run}/>
         </TabPanel>
         <TabPanel value="source">
           <SourceCode run={run} />
