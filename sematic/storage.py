@@ -38,6 +38,7 @@ def set_from_file(key: str, value_file_path: str):
         s3_client.upload_fileobj(file_obj, _get_bucket(), key)
 
 
+@retry(tries=3, delay=5)
 def get(key: str) -> bytes:
     """Get value from S3.
 
