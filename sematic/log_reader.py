@@ -207,6 +207,9 @@ def load_log_lines(
 
 
 def _get_latest_log_file(prefix, cursor_file) -> Optional[str]:
+    # recall that for v1 logs, each log file contains ALL the logs from
+    # the beginning of the run until the time that file was uploaded. So
+    # the latest log file contains all the logs we have for the run.
     log_files = storage.get_child_paths(prefix)
     if len(log_files) < 1:
         return None
