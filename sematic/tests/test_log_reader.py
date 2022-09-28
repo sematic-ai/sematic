@@ -194,7 +194,7 @@ def test_get_log_lines_from_line_stream_filter():
     )
 
 
-def test_load_non_inline_logs(test_storage):  # noqa: F811
+def test_load_non_inline_logs(test_storage, test_db):  # noqa: F811
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
 
@@ -271,7 +271,7 @@ def test_load_non_inline_logs(test_storage):  # noqa: F811
     )
 
 
-def test_load_inline_logs(test_storage):  # noqa: F811
+def test_load_inline_logs(test_storage, test_db):  # noqa: F811
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
     resolution = make_resolution(status=ResolutionStatus.COMPLETE)
