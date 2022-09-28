@@ -2,6 +2,7 @@
 import json
 import typing
 import uuid
+from dataclasses import asdict
 from unittest import mock
 
 # Third-party
@@ -28,6 +29,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
+from sematic.log_reader import LogLineResult
 from sematic.scheduling.external_job import JobType
 from sematic.scheduling.kubernetes import KubernetesExternalJob
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
@@ -35,10 +37,17 @@ from sematic.tests.fixtures import valid_client_version  # noqa: F401
 test_list_runs_auth = make_auth_test("/api/v1/runs")
 test_get_run_auth = make_auth_test("/api/v1/runs/123")
 test_get_run_graph_auth = make_auth_test("/api/v1/runs/123/graph")
+test_get_run_logs_graph_auth = make_auth_test("/api/v1/runs/123/logs")
 test_put_run_graph_auth = make_auth_test("/api/v1/graph", method="PUT")
 test_post_events_auth = make_auth_test("/api/v1/events/namespace/event", method="POST")
 test_schedule_run_auth = make_auth_test("/api/v1/runs/123/schedule", method="POST")
 test_future_states_auth = make_auth_test("/api/v1/runs/future_states", method="POST")
+
+
+@pytest.fixture
+def mock_load_log_lines():
+    with mock.patch("sematic.api.endpoints.runs.load_log_lines") as mock_load:
+        yield mock_load
 
 
 @mock_no_auth
@@ -267,6 +276,43 @@ def test_update_future_states(
         assert (
             loaded.exception == "The kubernetes job(s) experienced an unknown failure"
         )
+
+
+@mock_no_auth
+def test_get_run_logs(
+    mock_load_log_lines,
+    persisted_resolution: Resolution,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+):
+    mock_result = LogLineResult(
+        more_before=False,
+        more_after=True,
+        lines=["Line 1", "Line 2"],
+        continuation_cursor="abc",
+        log_unavaiable_reason=None,
+    )
+    mock_load_log_lines.return_value = mock_result
+    response = test_client.get("/api/v1/runs/{}/logs".format(persisted_run.id))
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert payload["content"] == asdict(mock_result)
+    kwargs = dict(
+        continuation_cursor="continue...",
+        max_lines=10,
+        filter_strings=["a", "b", "c"],
+    )
+
+    response = test_client.put(
+        "/api/v1/runs/{}/logs".format(persisted_run.id),
+        json={"log_request": kwargs},
+    )
+    mock_load_log_lines.assert_called_with(
+        run_id=persisted_run.id,
+        **kwargs,
+    )
 
 
 @func

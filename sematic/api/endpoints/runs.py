@@ -221,9 +221,9 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     return flask.jsonify(payload)
 
 
-@sematic_api.route("/api/v1/runs/<run_id>/logs", methods=["GET"])
+@sematic_api.route("/api/v1/runs/<run_id>/logs", methods=["GET", "PUT"])
 @authenticate
-def get_logs_endpoint(run_id: str) -> flask.Response:
+def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     """Get portions of the logs for the run if possible"""
     try:
         input_payload: Dict[str, Any] = flask.request.json  # type: ignore
