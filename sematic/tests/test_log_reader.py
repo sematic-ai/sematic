@@ -5,8 +5,8 @@ from typing import Iterable, List
 from sematic import storage
 from sematic.abstract_future import FutureState
 from sematic.db.models.resolution import ResolutionStatus
-from sematic.db.queries import save_run
-from sematic.db.tests.fixtures import make_resolution, make_run  # noqa: F401
+from sematic.db.queries import save_resolution, save_run
+from sematic.db.tests.fixtures import make_resolution, make_run, test_db  # noqa: F401
 from sematic.log_reader import (
     Cursor,
     LogLine,
@@ -14,12 +14,14 @@ from sematic.log_reader import (
     _load_inline_logs,
     _load_non_inline_logs,
     get_log_lines_from_line_stream,
+    load_log_lines,
     log_prefix,
 )
 from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
     START_INLINE_RUN_INDICATOR,
 )
+from sematic.scheduling.external_job import ExternalJob
 from sematic.tests.fixtures import test_storage  # noqa: F401
 
 _streamed_lines: List[str] = []
@@ -362,3 +364,110 @@ def test_load_inline_logs(test_storage):  # noqa: F811
         lines=[],
         log_unavaiable_reason="No matching log lines.",
     )
+
+
+def test_load_log_lines(test_storage, test_db):  # noqa: F811
+    run = make_run(future_state=FutureState.CREATED)
+    save_run(run)
+    resolution = make_resolution(status=ResolutionStatus.SCHEDULED)
+    resolution.root_id = run.root_id
+    save_resolution(resolution)
+    max_lines = 50
+
+    result = load_log_lines(
+        run_id=run.id,
+        continuation_cursor=None,
+        max_lines=max_lines,
+    )
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=False,
+        more_after=True,
+        lines=[],
+        log_unavaiable_reason="Resolution has not started yet.",
+    )
+
+    resolution.status = ResolutionStatus.RUNNING
+    save_resolution(resolution)
+
+    result = load_log_lines(
+        run_id=run.id,
+        continuation_cursor=None,
+        max_lines=max_lines,
+    )
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=False,
+        more_after=True,
+        lines=[],
+        log_unavaiable_reason="The run has not yet started executing.",
+    )
+
+    run.future_state = FutureState.SCHEDULED
+    run.external_jobs = [ExternalJob(kind="fake", try_number=0, external_job_id="fake")]
+    save_run(run)
+    text_lines = [line.line for line in finite_logs(100)]
+    log_file_contents = bytes("\n".join(text_lines), encoding="utf8")
+    prefix = log_prefix(run.id, is_resolve=False)
+    key = f"{prefix}12345.log"
+    storage.set(key, log_file_contents)
+
+    result = load_log_lines(
+        run_id=run.id,
+        continuation_cursor=None,
+        max_lines=max_lines,
+    )
+    token = result.continuation_cursor
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=False,
+        more_after=True,
+        lines=text_lines[:max_lines],
+        log_unavaiable_reason=None,
+    )
+
+    result = load_log_lines(
+        run_id=run.id,
+        continuation_cursor=token,
+        max_lines=max_lines,
+    )
+    token = result.continuation_cursor
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=True,
+        more_after=True,
+        lines=text_lines[max_lines : 2 * max_lines],  # noqa: E203
+        log_unavaiable_reason=None,
+    )
+
+    result = load_log_lines(
+        run_id=run.id,
+        continuation_cursor=token,
+        max_lines=max_lines,
+    )
+    token = result.continuation_cursor
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=True,
+        more_after=False,
+        lines=[],
+        log_unavaiable_reason="No matching log lines.",
+    )
+
+    result = load_log_lines(
+        run_id=run.id, continuation_cursor=None, max_lines=1, filter_strings=["2", "4"]
+    )
+    assert result.lines == ["Line 24"]
+
+    result = load_log_lines(
+        run_id=run.id,
+        continuation_cursor=result.continuation_cursor,
+        max_lines=1,
+        filter_strings=["2", "4"],
+    )
+    assert result.lines == ["Line 42"]

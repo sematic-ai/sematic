@@ -170,7 +170,7 @@ def load_log_lines(
             more_before=False,
             more_after=True,
             lines=[],
-            continuation_cursor=cursor,
+            continuation_cursor=cursor.to_token(),
             log_unavaiable_reason="Resolution has not started yet.",
         )
     filter_strings = filter_strings if filter_strings is not None else []
@@ -179,7 +179,7 @@ def load_log_lines(
             more_before=False,
             more_after=True,
             lines=[],
-            continuation_cursor=cursor,
+            continuation_cursor=cursor.to_token(),
             log_unavaiable_reason="The run has not yet started executing.",
         )
     # looking for external jobs to determine inline is only valid
