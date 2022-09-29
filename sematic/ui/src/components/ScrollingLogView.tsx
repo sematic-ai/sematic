@@ -1,14 +1,16 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Box, Button } from "@mui/material";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Loading from "./Loading";
 
 export type MoreLinesCallback = (
+  source: string,
   lines: string[],
   cursor: string | null,
   noLinesReason: string | null
 ) => void;
 export type GetLines = (
+  source: string,
   cursor: string | null,
   moreLinesCallback: MoreLinesCallback
 ) => void;
@@ -17,14 +19,10 @@ const DEFAULT_NO_LINES_REASON = "No more matching lines";
 
 export default function ScrollingLogView(props: {
   getLines: GetLines;
-  initialLines: string[];
-  initialCursor: string | null;
   logSource: string;
 }) {
-  const { getLines, initialLines, initialCursor, logSource } = props;
+  const { getLines, logSource } = props;
 
-  const [existingLines, setLines] = useState<string[]>(initialLines);
-  const [currentCursor, setCursor] = useState<string | null>(initialCursor);
   const [hasMore, setHasMore] = useState(true);
   const [fastForwarding, setFastForwarding] = useState(false);
   const [currentNoLinesReason, setNoLinesReason] = useState<string | null>(
@@ -32,13 +30,27 @@ export default function ScrollingLogView(props: {
   );
   const [loadingMessage, setLoadingMessage] = useState<string>("Loading...");
 
+  const [state, setState] = useState<{
+    existingLines: string[];
+    cursor: string | null;
+    source: string;
+  }>({ existingLines: [], cursor: null, source: logSource });
+
   const handleLogLines = useCallback(
-    (lines: string[], cursor: string | null, noLinesReason: string | null) => {
-      var newLines: string[] = fastForwarding
-        ? lines
-        : existingLines.concat(lines);
-      setLines(newLines);
-      setCursor(cursor);
+    (
+      source: string,
+      lines: string[],
+      cursor: string | null,
+      noLinesReason: string | null
+    ) => {
+      var newLines: string[] =
+        source === state.source ? state.existingLines.concat(lines) : lines;
+      setState({
+        ...state,
+        existingLines: newLines,
+        cursor: cursor,
+        source: source,
+      });
       setHasMore(cursor != null);
       setNoLinesReason(
         noLinesReason === "" || noLinesReason === null
@@ -46,30 +58,31 @@ export default function ScrollingLogView(props: {
           : noLinesReason
       );
     },
-    [existingLines, logSource, fastForwarding]
+    [state.existingLines, state.cursor, state.source, fastForwarding]
   );
 
   const next = useCallback(() => {
-    getLines(currentCursor, handleLogLines);
-  }, [getLines, currentCursor, handleLogLines, logSource]);
+    getLines(logSource, state.cursor, handleLogLines);
+  }, [getLines, state.cursor, handleLogLines, logSource]);
 
   useEffect(() => {
-    setCursor(null);
-    setLines([]);
-    setHasMore(true);
-    next();
-  }, [logSource]);
+    if (state.source != logSource || state.existingLines.length === 0) {
+      next();
+    }
+  });
 
   const noMoreLinesIndicator = (
     <div className="no-more-indicator">
       ------ {currentNoLinesReason} ------
     </div>
   );
-  const scrollerId = "scrolling-logs-" + logSource;
+  const scrollerId = "scrolling-logs-" + state.source;
 
-  const accumulateUntilEnd = () => {
+  const accumulateUntilEnd = useCallback(() => {
+    setFastForwarding(true);
     var accumulatedLines: string[] = [];
     const accumulate = function (
+      source: string,
       lines: string[],
       cursor: string | null,
       noLinesReason: string | null
@@ -81,26 +94,24 @@ export default function ScrollingLogView(props: {
       ) {
         setLoadingMessage("Rendering...");
 
-        // Set fast-forwarding to false asynchronously so
-        // it has time to render the lines before it removes
-        // the overlay.
-        setTimeout(() => setFastForwarding(false), 0);
+        setFastForwarding(false);
+        handleLogLines(source, accumulatedLines, cursor, noLinesReason);
 
-        handleLogLines(accumulatedLines, cursor, noLinesReason);
+        // start the scroll-to-bottom asynchronously so the lines have time
+        // to actually render before it scrolls.
+        setTimeout(() => {
+          const scroller = document.getElementById(scrollerId);
+          scroller?.scrollTo(0, scroller.scrollHeight);
+        }, 0);
       } else {
         setLoadingMessage("Loaded " + accumulatedLines.length + " lines...");
-        setTimeout(() => getLines(cursor, accumulate), 0);
+        getLines(source, cursor, accumulate);
       }
     };
-    accumulate([], null, null);
-  };
+    accumulate(logSource, [], null, null);
+  }, [state.source]);
 
-  const jumpToEnd = () => {
-    setFastForwarding(true);
-    accumulateUntilEnd();
-  };
-
-  useEffect(() => {
+  useMemo(() => {
     // scroll to the bottom when fast forwarding is done
     if (!fastForwarding) {
       const scroller = document.getElementById(scrollerId);
@@ -117,25 +128,34 @@ export default function ScrollingLogView(props: {
     <div></div>
   );
 
+  console.log(
+    "N existing lines: " +
+      state.existingLines.length +
+      " Source: " +
+      logSource +
+      " Cursor: " +
+      state.cursor
+  );
+
   return (
     <Box>
       <div className="ScrollingLogView">
         {overlay}
         <div id={scrollerId} className="scroller">
           <InfiniteScroll
-            dataLength={existingLines.length}
+            dataLength={state.existingLines.length}
             next={next}
             scrollableTarget={scrollerId}
             hasMore={hasMore}
             loader={<h4>Loading...</h4>}
             endMessage={noMoreLinesIndicator}
           >
-            {existingLines.map((line, index) => (
+            {state.existingLines.map((line, index) => (
               <div key={index}>{line}</div>
             ))}
           </InfiniteScroll>
         </div>
-        <Button className="jump-to-end" onClick={jumpToEnd}>
+        <Button className="jump-to-end" onClick={accumulateUntilEnd}>
           Jump to end...
         </Button>
       </div>
