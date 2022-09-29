@@ -16,7 +16,7 @@ export default function LogPanel(props: { run: Run }) {
   const [error, setError] = useState<Error | undefined>(undefined);
 
   const loadLogs = useCallback((cursor: string | null, callback: MoreLinesCallback) => {
-    var url = "/api/v1/runs/" + run.id + "/logs?maxLines=100";
+    var url = "/api/v1/runs/" + run.id + "/logs?max_lines=1000";
     if (cursor != null){
         url += "&continuation_cursor=" + cursor;
     }

@@ -12,7 +12,7 @@ code {
     monospace;
 }
 
-.ScrollingLogView {
+.ScrollingLogView .scroller {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
   font-size: small;
@@ -22,12 +22,49 @@ code {
   background-color: #f0f0f0;
   border-color: #c0c0c0;
   border-style: solid;
-  margin-top: 5px;
-  margin-bottom: 5px;
 }
 
-.ScrollingLogView .no-more-indicator {
+.ScrollingLogView {
+  margin-top: 5px;
+  margin-bottom: 5px;
+
+  /*
+    Make this positioned so the loading overlay can
+    be positioned using absolute positioning against
+    it.
+  */
+  position: relative;
+  left: 0px;
+  top: 0px;
+}
+
+.ScrollingLogView .scroller .no-more-indicator {
   color: red;
   font-weight: bold;
+  text-align: center;
+}
+
+.ScrollingLogView .jump-to-end {
+  width: 100%;
+  border-style: solid;
+  border-color: #376FD0;
+  border-width: 1px;
+  padding: 1px;
+}
+
+.loading-overlay {
+  z-index: 100;
+  left: 0px;
+  top: 0px;
+  background-color: white;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  opacity: 80%;
+}
+
+.loading-overlay p {
+  font-weight: bold;
+  font-size: large;
   text-align: center;
 }
