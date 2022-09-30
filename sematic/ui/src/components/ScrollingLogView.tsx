@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Box, Button } from "@mui/material";
+import { Box, Button, TextField } from "@mui/material";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Loading from "./Loading";
 
 export type MoreLinesCallback = (
   source: string,
+  usedFilter: string,
   lines: string[],
   cursor: string | null,
   noLinesReason: string | null
@@ -12,6 +13,7 @@ export type MoreLinesCallback = (
 export type GetLines = (
   source: string,
   cursor: string | null,
+  filterString: string,
   moreLinesCallback: MoreLinesCallback
 ) => void;
 
@@ -31,25 +33,32 @@ export default function ScrollingLogView(props: {
   const [loadingMessage, setLoadingMessage] = useState<string>("Loading...");
 
   const [lineState, setLineState] = useState<{
-    lines: string[];  // the log lines themselves
-    cursor: string | null;  // the cursor to continue getting more logs
-    source: string;  // the id of the source these log lines are for
-  }>({ lines: [], cursor: null, source: logSource });
+    lines: string[]; // the log lines themselves
+    cursor: string | null; // the cursor to continue getting the lines after these ones
+    source: string; // the id of the source these log lines are for
+    filterString: string; // the filter string that was used to produce these lines
+  }>({ lines: [], cursor: null, source: logSource, filterString: "" });
+  const [filterString, setFilterString] = useState<string>("");
 
   const handleLogLines = useCallback(
     (
       source: string,
+      usedFilter: string,
       lines: string[],
       cursor: string | null,
       noLinesReason: string | null
     ) => {
-      var newLines: string[] =
-        source === lineState.source ? lineState.lines.concat(lines) : lines;
+      const newSource =
+        source !== lineState.source || usedFilter !== lineState.filterString;
+      var newLines: string[] = newSource
+        ? lines
+        : lineState.lines.concat(lines);
       setLineState({
         ...lineState,
         lines: newLines,
         cursor: cursor,
         source: source,
+        filterString: usedFilter,
       });
       setHasMore(cursor != null);
       setNoLinesReason(
@@ -62,11 +71,22 @@ export default function ScrollingLogView(props: {
   );
 
   const next = useCallback(() => {
-    getLines(logSource, lineState.cursor, handleLogLines);
-  }, [getLines, lineState.cursor, handleLogLines, logSource]);
+    const sameSource =
+      lineState.source === logSource && lineState.filterString === filterString;
+    getLines(
+      logSource,
+      sameSource ? lineState.cursor : null,
+      filterString,
+      handleLogLines
+    );
+  }, [getLines, lineState.cursor, handleLogLines, logSource, filterString]);
 
   useEffect(() => {
-    if (lineState.source !== logSource || lineState.lines.length === 0) {
+    if (
+      lineState.source !== logSource ||
+      lineState.filterString != filterString ||
+      lineState.lines.length === 0
+    ) {
       next();
     }
   });
@@ -83,6 +103,7 @@ export default function ScrollingLogView(props: {
     var accumulatedLines: string[] = [];
     const accumulate = function (
       source: string,
+      usedFilter: string,
       lines: string[],
       cursor: string | null,
       noLinesReason: string | null
@@ -95,7 +116,13 @@ export default function ScrollingLogView(props: {
         setLoadingMessage("Rendering...");
 
         setFastForwarding(false);
-        handleLogLines(source, accumulatedLines, cursor, noLinesReason);
+        handleLogLines(
+          source,
+          usedFilter,
+          accumulatedLines,
+          cursor,
+          noLinesReason
+        );
 
         // start the scroll-to-bottom asynchronously so the lines have time
         // to actually render before it scrolls.
@@ -105,10 +132,10 @@ export default function ScrollingLogView(props: {
         }, 0);
       } else {
         setLoadingMessage("Loaded " + accumulatedLines.length + " lines...");
-        getLines(source, cursor, accumulate);
+        getLines(source, cursor, usedFilter, accumulate);
       }
     };
-    accumulate(logSource, [], null, null);
+    accumulate(logSource, filterString, [], null, null);
   }, [getLines, handleLogLines, logSource, scrollerId]);
 
   useMemo(() => {
@@ -128,10 +155,23 @@ export default function ScrollingLogView(props: {
     <div></div>
   );
 
+  const onFilterStringChange = useCallback(
+    (evt: any) => {
+      setFilterString(evt.target.value);
+    },
+    [filterString, next]
+  );
+
   return (
     <Box>
       <div className="ScrollingLogView">
         {overlay}
+        <TextField
+          fullWidth={true}
+          className="filter"
+          placeholder={"Filter..."}
+          onChange={onFilterStringChange}
+        />
         <div id={scrollerId} className="scroller">
           <InfiniteScroll
             dataLength={lineState.lines.length}

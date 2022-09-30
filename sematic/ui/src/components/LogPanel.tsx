@@ -15,10 +15,13 @@ export default function LogPanel(props: { run: Run }) {
   const [error, setError] = useState<Error | undefined>(undefined);
 
   const loadLogs = useCallback(
-    (source: string, cursor: string | null, callback: MoreLinesCallback) => {
+    (source: string, cursor: string | null, filterString: string, callback: MoreLinesCallback) => {
       var url = "/api/v1/runs/" + source + "/logs?max_lines=2000";
       if (cursor != null) {
         url += "&continuation_cursor=" + cursor;
+      }
+      if (filterString.length !== 0) {
+        url += "&filter_string=" + filterString;
       }
       fetchJSON({
         url: url,
@@ -26,6 +29,7 @@ export default function LogPanel(props: { run: Run }) {
         callback: (payload: LogLineRequestResponse) => {
           callback(
             source,
+            filterString,
             payload.content.lines,
             payload.content.continuation_cursor,
             payload.content.log_unavailable_reason

@@ -52,6 +52,11 @@ code {
   padding: 1px;
 }
 
+.ScrollingLogView .filter input {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
 .loading-overlay {
   z-index: 100;
   left: 0px;
