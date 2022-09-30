@@ -24,7 +24,7 @@ def up():
 
     for run_id, exception in exception_map.items():
         runs_by_id[run_id].exception = ExceptionMetadata(
-            repr=exception, name=Exception.__name__, module=Exception.__class__.__name__
+            repr=exception, name=Exception.__name__, module=Exception.__module__
         )
 
     with db().get_session() as session:
