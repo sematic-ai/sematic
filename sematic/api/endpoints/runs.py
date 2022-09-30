@@ -8,7 +8,7 @@ import datetime
 import logging
 from dataclasses import asdict
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlencode, urlsplit, urlunsplit
 
 # Third-party
@@ -226,9 +226,10 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     """Get portions of the logs for the run if possible"""
 
-    kwarg_overrides = dict(flask.request.args)
+    kwarg_overrides: Dict[str, Union[str, List[str]]] = dict(flask.request.args)
     if "filter_string" in kwarg_overrides:
-        kwarg_overrides["filter_strings"] = [kwarg_overrides["filter_string"]]
+        filter_string: str = kwarg_overrides["filter_string"]  # type: ignore
+        kwarg_overrides["filter_strings"] = [filter_string]
     default_kwargs = dict(continuation_cursor=None, max_lines=100, filter_strings=None)
     kwarg_converters = dict(
         continuation_cursor=lambda v: v if v is None else str(v),
@@ -236,7 +237,7 @@ def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
         filter_strings=lambda v: [] if v is None else list(v),
     )
     kwargs = {
-        k: kwarg_converters[k](kwarg_overrides.get(k, default_v))
+        k: kwarg_converters[k](kwarg_overrides.get(k, default_v))  # type: ignore
         for k, default_v in default_kwargs.items()
     }
 
