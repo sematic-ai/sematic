@@ -99,6 +99,10 @@ export default function ScrollingLogView(props: {
   const scrollerId = "scrolling-logs-" + lineState.source;
 
   const accumulateUntilEnd = useCallback(() => {
+    if (lineState.lines.length === 0) {
+      // run has no logs. No need to try to scroll to the end.
+      return;
+    }
     setFastForwarding(true);
     var accumulatedLines: string[] = [];
     const accumulate = function (
@@ -162,6 +166,24 @@ export default function ScrollingLogView(props: {
     [filterString, next]
   );
 
+  const onScroll = useCallback(
+    (evt: any) => {
+      // when the user is scrolling near the last line, and there might still
+      // be more lines, we want to refresh. This is a distinct situation from
+      // the normal "infinite scroll" because the normal infinite scroll will
+      // only do one "next" when near the bottom and not do another if it didn't
+      // get more lines. We still want to leave the normal infinite scroll on though:
+      // it makes it so if a user is scrolling, we pre-emptively load the end before
+      // the user gets too close to it which will provide a smoother experience.
+      const distanceFromScrollBottom =
+        evt.target.scrollHeight - evt.target.scrollTop;
+      if (lineState.cursor !== null && distanceFromScrollBottom < 1000) {
+        next();
+      }
+    },
+    [filterString, next]
+  );
+
   return (
     <Box>
       <div className="ScrollingLogView">
@@ -179,6 +201,7 @@ export default function ScrollingLogView(props: {
             scrollableTarget={scrollerId}
             hasMore={hasMore}
             loader={<h4>Loading...</h4>}
+            onScroll={onScroll}
             endMessage={noMoreLinesIndicator}
           >
             {lineState.lines.map((line, index) => (
