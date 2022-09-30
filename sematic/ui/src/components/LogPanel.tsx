@@ -34,7 +34,7 @@ export default function LogPanel(props: { run: Run }) {
         setError: setError,
       });
     },
-    [run, user?.api_key]
+    [user?.api_key]
   );
 
   const standardLogView = (
