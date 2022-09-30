@@ -162,9 +162,6 @@ sematic_py_lib(
     pip_deps=[
         "boto3",
     ],
-    deps=[
-        ":user_settings",
-    ],
 )
 
 sematic_py_lib(
