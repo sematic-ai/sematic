@@ -93,6 +93,7 @@ CREATE TABLE public.runs (
     root_id character(32),
     nested_future_id character(32),
     exception text,
+    exception_json jsonb,
     external_jobs_json jsonb
 );
 
