@@ -89,11 +89,11 @@ jobs:
       - run:
           name: Run Non-coverage Tests
           # This assumes pytest is installed via the install-package step above
-          command: bazel test //sematic/... --test_output=all
+          command: PYTHONUNBUFFERED=1 bazel test //sematic/... --test_output=all
       - run:
           name: Run Coverage Tests
           # This assumes pytest is installed via the install-package step above
-          command: bazel coverage //sematic/... --test_output=all --combined_report=lcov --test_tag_filters=cov
+          command: PYTHONUNBUFFERED=1 bazel coverage //sematic/... --test_output=all --combined_report=lcov --test_tag_filters=cov
       - run:
           name: Link to codecov output
           command: ln -s $(bazel info output_path)/_coverage/_coverage_report.dat coverage.dat
