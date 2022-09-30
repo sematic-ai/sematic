@@ -152,16 +152,6 @@ sematic_py_lib(
     ],
 )
 
-sematic_py_lib(
-    name="storage",
-    srcs=["storage.py"],
-    pip_deps=[
-        "boto3",
-    ],
-    deps=[
-        ":user_settings",
-    ],
-)
 
 sematic_py_lib(
     name="storage",
