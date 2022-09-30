@@ -34,7 +34,10 @@ def test_get_migration_files():
     migration_files = _get_migration_files()
 
     assert len(migration_files) > 0
-    assert all(migration_file.endswith(".sql") for migration_file in migration_files)
+    assert all(
+        migration_file.split(".")[-1] in ("sql", "py")
+        for migration_file in migration_files
+    )
 
 
 # Make sure return_value is unordered
