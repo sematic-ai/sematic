@@ -4,6 +4,7 @@ Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
 with nothing else on the line.
 -->
 * HEAD
+    * [feature] Display logs for cloud jobs in the UI.
 * 0.14.0
     * [feature] BREAKING CHANGE: For cloud execution, users submitting pipelines no
       longer need Kubernetes access. Users who have deployed the Sematic server using
