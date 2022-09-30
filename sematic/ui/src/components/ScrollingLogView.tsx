@@ -3,6 +3,7 @@ import { Box, Button, TextField } from "@mui/material";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Loading from "./Loading";
 
+// Callback to be used when more log lines are loaded.
 export type MoreLinesCallback = (
   source: string,
   usedFilter: string,
@@ -10,6 +11,9 @@ export type MoreLinesCallback = (
   cursor: string | null,
   noLinesReason: string | null
 ) => void;
+
+// Function to get more logs. It should call moreLinesCallback
+// once it has more log lines.
 export type GetLines = (
   source: string,
   cursor: string | null,
@@ -40,6 +44,7 @@ export default function ScrollingLogView(props: {
   }>({ lines: [], cursor: null, source: logSource, filterString: "" });
   const [filterString, setFilterString] = useState<string>("");
 
+  // display log lines once they have been loaded from the server.
   const handleLogLines = useCallback(
     (
       source: string,
@@ -70,6 +75,7 @@ export default function ScrollingLogView(props: {
     [lineState]
   );
 
+  // load the next log lines after the ones currently being displayed
   const next = useCallback(() => {
     const sameSource =
       lineState.source === logSource && lineState.filterString === filterString;
@@ -81,6 +87,8 @@ export default function ScrollingLogView(props: {
     );
   }, [getLines, lineState.cursor, handleLogLines, logSource, filterString]);
 
+  // on render: if the current lines didn't come from the source & filter that
+  // are currently set, load new logs with the current settings.
   useEffect(() => {
     if (
       lineState.source !== logSource ||
@@ -98,6 +106,8 @@ export default function ScrollingLogView(props: {
   );
   const scrollerId = "scrolling-logs-" + lineState.source;
 
+  // repeatedly query the server until we have loaded as many log lines as
+  // it will give us.
   const accumulateUntilEnd = useCallback(() => {
     if (lineState.lines.length === 0) {
       // run has no logs. No need to try to scroll to the end.
@@ -142,14 +152,15 @@ export default function ScrollingLogView(props: {
     accumulate(logSource, filterString, [], null, null);
   }, [getLines, handleLogLines, logSource, scrollerId]);
 
+  // scroll to the bottom when fast forwarding/jumping to end is done
   useMemo(() => {
-    // scroll to the bottom when fast forwarding is done
     if (!fastForwarding) {
       const scroller = document.getElementById(scrollerId);
       scroller?.scrollTo(0, scroller.scrollHeight);
     }
   }, [fastForwarding, scrollerId]);
 
+  // overlay with the load spinner and loading text while we are jumping to the end
   const overlay = fastForwarding ? (
     <div className="loading-overlay">
       <Loading error={undefined} isLoaded={false} />
