@@ -33,6 +33,7 @@ from sematic.log_reader import LogLineResult
 from sematic.scheduling.external_job import JobType
 from sematic.scheduling.kubernetes import KubernetesExternalJob
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
+from sematic.utils.exceptions import ExceptionMetadata
 
 test_list_runs_auth = make_auth_test("/api/v1/runs")
 test_get_run_auth = make_auth_test("/api/v1/runs/123")
@@ -273,8 +274,10 @@ def test_update_future_states(
             "content": [{"future_state": "FAILED", "run_id": persisted_run.id}]
         }
         loaded = get_run(persisted_run.id)
-        assert (
-            loaded.exception == "The kubernetes job(s) experienced an unknown failure"
+        assert loaded.exception == ExceptionMetadata(
+            repr="The kubernetes job(s) experienced an unknown failure",
+            name="InvalidStateTransitionError",
+            module="sematic.api.endpoints.runs",
         )
 
 
