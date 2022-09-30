@@ -11,6 +11,7 @@ pytest_test(
         "//sematic/resolvers:local_resolver",
         "//sematic/tests:fixtures",
         "//sematic/types:init",
+        "//sematic/utils:exceptions",
     ],
 )
 
