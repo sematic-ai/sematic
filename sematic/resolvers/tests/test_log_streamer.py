@@ -6,8 +6,10 @@ import time
 
 # Sematic
 from sematic.resolvers.log_streamer import _tail_log_file, ingested_logs
+from sematic.utils.retry import retry
 
 
+@retry(AssertionError, tries=3)  # this test is somewhat dependent on relative timings.
 def test_ingested_logs():
     with tempfile.NamedTemporaryFile() as log_file:
         remote_prefix = "foo/bar"
