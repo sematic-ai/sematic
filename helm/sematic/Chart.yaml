@@ -1,6 +1,6 @@
 apiVersion: v2
 name: sematic
-version: 0.1.0
+version: 0.2.0
 kubeVersion: ">=1.21.0-0"
 description: The open-source Continuous Learning tool
 home: https://sematic.dev
