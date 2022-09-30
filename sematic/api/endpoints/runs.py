@@ -6,8 +6,9 @@ Module keeping all /api/v*/runs/* API endpoints.
 import base64
 import datetime
 import logging
+from dataclasses import asdict
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlencode, urlsplit, urlunsplit
 
 # Third-party
@@ -37,6 +38,7 @@ from sematic.db.queries import (
     save_graph,
     save_run,
 )
+from sematic.log_reader import load_log_lines
 from sematic.scheduling.job_scheduler import schedule_run, update_run_status
 from sematic.utils.retry import retry
 
@@ -216,6 +218,34 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     payload = dict(
         content=run.to_json_encodable(),
     )
+    return flask.jsonify(payload)
+
+
+@sematic_api.route("/api/v1/runs/<run_id>/logs", methods=["GET"])
+@authenticate
+def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+    """Get portions of the logs for the run if possible"""
+
+    kwarg_overrides: Dict[str, Union[str, List[str]]] = dict(flask.request.args)
+    if "filter_string" in kwarg_overrides:
+        filter_string: str = kwarg_overrides["filter_string"]  # type: ignore
+        kwarg_overrides["filter_strings"] = [filter_string]
+    default_kwargs = dict(continuation_cursor=None, max_lines=100, filter_strings=None)
+    kwarg_converters = dict(
+        continuation_cursor=lambda v: v if v is None else str(v),
+        max_lines=int,
+        filter_strings=lambda v: [] if v is None else list(v),
+    )
+    kwargs = {
+        k: kwarg_converters[k](kwarg_overrides.get(k, default_v))  # type: ignore
+        for k, default_v in default_kwargs.items()
+    }
+
+    result = load_log_lines(
+        run_id=run_id,
+        **kwargs,  # type: ignore
+    )
+    payload = dict(content=asdict(result))
     return flask.jsonify(payload)
 
 

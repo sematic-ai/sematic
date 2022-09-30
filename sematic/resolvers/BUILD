@@ -75,6 +75,7 @@ sematic_py_lib(
     deps = [
         ":log_streamer",
         "//sematic:abstract_future",
+        "//sematic:log_reader",
         "//sematic:api_client",
         "//sematic:calculator",
         "//sematic:future",
@@ -83,6 +84,7 @@ sematic_py_lib(
         "//sematic/db/models:factories",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/utils:exceptions",
+        "//sematic/scheduling:external_job",
     ],
     pip_deps = [
         "cloudpickle",

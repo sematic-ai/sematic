@@ -25,6 +25,12 @@ logger = logging.getLogger(__name__)
 _MAX_DELAY_BETWEEN_STATUS_UPDATES_SECONDS = 600  # 600s => 10 min
 _DELAY_BETWEEN_STATUS_UPDATES_BACKOFF = 1.5
 
+# It is important not to change these! They are used for identifying the start/end of
+# inline run logs. If you change it, inline logs written with prior versions of Sematic
+# might not be readable for new versions of Sematic.
+START_INLINE_RUN_INDICATOR = "--------- Sematic Start Inline Run {} ---------"
+END_INLINE_RUN_INDICATOR = "--------- Sematic End Inline Run {} ---------"
+
 
 class CloudResolver(LocalResolver):
     """
@@ -221,6 +227,14 @@ class CloudResolver(LocalResolver):
                 _MAX_DELAY_BETWEEN_STATUS_UPDATES_SECONDS,
                 _DELAY_BETWEEN_STATUS_UPDATES_BACKOFF * delay_between_updates,
             )
+
+    def _start_inline_execution(self, future_id):
+        """Callback called before an inline execution"""
+        logger.info(START_INLINE_RUN_INDICATOR.format(future_id))
+
+    def _end_inline_execution(self, future_id):
+        """Callback called at the end of an inline execution"""
+        logger.info(END_INLINE_RUN_INDICATOR.format(future_id))
 
 
 def make_nested_future_storage_key(future_id: str) -> str:

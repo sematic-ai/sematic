@@ -52,8 +52,6 @@ def _stream_logs_to_remote_from_file(
         A callable to perform the upload. It will be given the path to upload from and
         the remote prefix as arguments.
     """
-    if remote_prefix.endswith("/"):
-        remote_prefix = remote_prefix[:-1]
     while True:
         uploader(file_path, remote_prefix)
         time.sleep(upload_interval_seconds)
@@ -71,6 +69,8 @@ def _do_upload(file_path: str, remote_prefix: str):
         The prefix for the remote file. The full remote path will be
         this concatenated with `/<epoch timestamp>.log`.
     """
+    if remote_prefix.endswith("/"):
+        remote_prefix = remote_prefix[:-1]
     remote = f"{remote_prefix}/{int(time.time() * 1000)}.log"
     set_from_file(remote, file_path)
 
