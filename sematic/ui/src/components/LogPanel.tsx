@@ -1,4 +1,3 @@
-import GrafanaPanel from "../addons/grafana/GrafanaPanel";
 import Exception from "./Exception";
 import { Box } from "@mui/material";
 import { Run } from "../Models";
@@ -52,7 +51,6 @@ export default function LogPanel(props: { run: Run }) {
   return (
     <Box>
       {run.exception && <Exception exception={run.exception} />}
-      <GrafanaPanel run={run} />
       {logView}
     </Box>
   );

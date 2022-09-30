@@ -92,7 +92,7 @@ export default function ScrollingLogView(props: {
   useEffect(() => {
     if (
       lineState.source !== logSource ||
-      lineState.filterString != filterString ||
+      lineState.filterString !== filterString ||
       lineState.lines.length === 0
     ) {
       next();
