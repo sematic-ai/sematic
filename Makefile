@@ -30,9 +30,6 @@ refresh-dependencies:
 ui:
 	cd sematic/ui; npm run build
 
-server-image:
-	docker build -t sematicai/sematic-server:dev .
-
 worker-image:
 	cd docker; docker build -t sematicai/sematic-worker-base:latest -f Dockerfile.worker .
 
