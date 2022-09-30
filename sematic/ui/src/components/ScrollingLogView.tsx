@@ -30,10 +30,10 @@ export default function ScrollingLogView(props: {
   );
   const [loadingMessage, setLoadingMessage] = useState<string>("Loading...");
 
-  const [state, setState] = useState<{
-    lines: string[];
-    cursor: string | null;
-    source: string;
+  const [lineState, setLineState] = useState<{
+    lines: string[];  // the log lines themselves
+    cursor: string | null;  // the cursor to continue getting more logs
+    source: string;  // the id of the source these log lines are for
   }>({ lines: [], cursor: null, source: logSource });
 
   const handleLogLines = useCallback(
@@ -44,9 +44,9 @@ export default function ScrollingLogView(props: {
       noLinesReason: string | null
     ) => {
       var newLines: string[] =
-        source === state.source ? state.lines.concat(lines) : lines;
-      setState({
-        ...state,
+        source === lineState.source ? lineState.lines.concat(lines) : lines;
+      setLineState({
+        ...lineState,
         lines: newLines,
         cursor: cursor,
         source: source,
@@ -58,15 +58,15 @@ export default function ScrollingLogView(props: {
           : noLinesReason
       );
     },
-    [state]
+    [lineState]
   );
 
   const next = useCallback(() => {
-    getLines(logSource, state.cursor, handleLogLines);
-  }, [getLines, state.cursor, handleLogLines, logSource]);
+    getLines(logSource, lineState.cursor, handleLogLines);
+  }, [getLines, lineState.cursor, handleLogLines, logSource]);
 
   useEffect(() => {
-    if (state.source !== logSource || state.lines.length === 0) {
+    if (lineState.source !== logSource || lineState.lines.length === 0) {
       next();
     }
   });
@@ -76,7 +76,7 @@ export default function ScrollingLogView(props: {
       ------ {currentNoLinesReason} ------
     </div>
   );
-  const scrollerId = "scrolling-logs-" + state.source;
+  const scrollerId = "scrolling-logs-" + lineState.source;
 
   const accumulateUntilEnd = useCallback(() => {
     setFastForwarding(true);
@@ -134,14 +134,14 @@ export default function ScrollingLogView(props: {
         {overlay}
         <div id={scrollerId} className="scroller">
           <InfiniteScroll
-            dataLength={state.lines.length}
+            dataLength={lineState.lines.length}
             next={next}
             scrollableTarget={scrollerId}
             hasMore={hasMore}
             loader={<h4>Loading...</h4>}
             endMessage={noMoreLinesIndicator}
           >
-            {state.lines.map((line, index) => (
+            {lineState.lines.map((line, index) => (
               <div key={index}>{line}</div>
             ))}
           </InfiniteScroll>
