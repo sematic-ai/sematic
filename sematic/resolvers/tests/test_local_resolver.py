@@ -316,4 +316,4 @@ def test_exceptions(mock_requests, valid_client_version):  # noqa: F811
     )
 
     assert runs_by_id[future.nested_future.id].future_state == FutureState.FAILED.value
-    assert "FAIL!" in runs_by_id[future.nested_future.id].exception
+    assert "FAIL!" in runs_by_id[future.nested_future.id].exception.repr
