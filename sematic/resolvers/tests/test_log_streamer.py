@@ -21,7 +21,7 @@ def test_ingested_logs():
             print("From stdout")
             print("From stderr", file=sys.stderr)
             time.sleep(
-                20 * upload_interval
+                50 * upload_interval
             )  # ensure at least one upload happens before final flush
             print("From stdout late")
             print("From stderr late", file=sys.stderr)
@@ -35,12 +35,16 @@ def test_ingested_logs():
 
     assert len(uploads) > 1  # should be at least one timed, and the final flush
 
-    # first upload should have only contained early writes
-    assert uploads[0] == [
-        f"{remote_prefix}\n",
-        "From stdout\n",
-        "From stderr\n",
-    ]
+    # early uploads should have only contained early writes
+    assert any(
+        upload
+        == [
+            f"{remote_prefix}\n",
+            "From stdout\n",
+            "From stderr\n",
+        ]
+        for upload in uploads
+    )
 
     # last upload should have everything
     assert uploads[-1] == [
@@ -79,7 +83,7 @@ def test_ingested_logs_uncaught():
             uploads.append(list(upload))
         upload_number += 1
 
-    assert len(uploads) == 1
+    assert len(uploads) >= 1
     assert message in "\n".join(uploads[0])
 
 
