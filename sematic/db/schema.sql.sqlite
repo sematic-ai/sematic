@@ -10,7 +10,16 @@ CREATE TABLE runs (
     ended_at timestamp,
     resolved_at timestamp,
     failed_at timestamp,
-    parent_id character(32), description TEXT, tags TEXT, source_code TEXT, root_id character(32), nested_future_id character(32), external_jobs_json JSONB, resource_requirements_json JSONB, exception TEXT,
+    parent_id character(32),
+    description TEXT,
+    tags TEXT,
+    source_code TEXT,
+    root_id character(32),
+    nested_future_id character(32),
+    external_jobs_json JSONB,
+    resource_requirements_json JSONB,
+    exception TEXT,
+    exception_json JSONB,
 
     PRIMARY KEY (id)
 );
