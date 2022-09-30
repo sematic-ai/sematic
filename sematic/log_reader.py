@@ -245,7 +245,9 @@ def _load_non_inline_logs(
             more_before=False,
             more_after=still_running,
             lines=[],
-            continuation_cursor=Cursor.nothing_found(filter_strings, run_id).to_token() if still_running else None,
+            continuation_cursor=Cursor.nothing_found(filter_strings, run_id).to_token()
+            if still_running
+            else None,
             log_unavailable_reason="No log files found",
         )
     text_stream = storage.get_line_stream(latest_log_file)
@@ -293,7 +295,9 @@ def _load_inline_logs(
         return LogLineResult(
             more_before=False,
             more_after=still_running,
-            continuation_cursor=Cursor.nothing_found(filter_strings, run_id).to_token() if still_running else None,
+            continuation_cursor=Cursor.nothing_found(filter_strings, run_id).to_token()
+            if still_running
+            else None,
             lines=[],
             log_unavailable_reason="Resolver logs are missing",
         )

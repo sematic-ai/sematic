@@ -212,9 +212,9 @@ def test_load_non_inline_logs(test_storage, test_db):  # noqa: F811
         max_lines=max_lines,
         filter_strings=[],
     )
-    assert result.more_after
+    assert not result.more_after  # run isn't running and there are no logfiles
     assert result.lines == []
-    assert result.continuation_cursor is not None
+    assert result.continuation_cursor is None
     assert result.log_unavailable_reason == "No log files found"
     storage.set(key, log_file_contents)
 
@@ -301,9 +301,9 @@ def test_load_inline_logs(test_storage, test_db):  # noqa: F811
         max_lines=max_lines,
         filter_strings=[],
     )
-    assert result.more_after
+    assert not result.more_after  # run isn't alive and resolver logs missing
     assert result.lines == []
-    assert result.continuation_cursor is not None
+    assert result.continuation_cursor is None
     assert result.log_unavailable_reason == "Resolver logs are missing"
     storage.set(key, log_file_contents)
 
