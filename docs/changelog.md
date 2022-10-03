@@ -6,6 +6,8 @@ with nothing else on the line.
 * HEAD
 * 0.15.0
     * [feature] Display logs for cloud jobs in the UI.
+    * [improvement] Ensure the push of docker images by bazel works with docker
+      credential helpers
 * 0.14.0
     * [feature] BREAKING CHANGE: For cloud execution, users submitting pipelines no
       longer need Kubernetes access. Users who have deployed the Sematic server using
