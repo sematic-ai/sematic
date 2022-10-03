@@ -2,11 +2,13 @@
 
 When Sematic runs your code in the cloud (in other words, when you are using
 `CloudResolver`), it does so in a Docker container. Your code and all its
-dependencies need to be in that Docker image for it to run. Where does this
-Docker image come from? There are a few options, but a general theme is that
-Sematic prefers to make the construction of the Docker image transparent to you
-for simple cases, hooking into existing build tooling when possible. However,
-we leave the flexibility to customize for advanced usages if needed.
+dependencies need to be in that Docker image for it to run.
+
+Where does this Docker image come from? There are a few options, but a general
+theme is that Sematic prefers to make the construction of the Docker image
+transparent to you for simple cases, hooking into existing build tooling when
+possible. However, we leave the flexibility to customize for advanced usages
+if needed.
 
 ## Image Construction
 
