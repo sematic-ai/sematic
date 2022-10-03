@@ -86,7 +86,7 @@ def test_ingested_logs_uncaught():
         upload_number += 1
 
     assert len(uploads) >= 1
-    assert message in "\n".join(uploads[0])
+    assert message in "\n".join(uploads[-1])
 
 
 def test_tail_log_file():
