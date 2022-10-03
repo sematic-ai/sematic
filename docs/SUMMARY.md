@@ -17,6 +17,7 @@
 * [Type support](type-support.md)
 * [Future algebra](future-algebra.md)
 * [Deploy Sematic](deploy.md)
+* [Container images](container-images.md)
 * [Artifacts](artifacts.md)
 * [Glossary](glossary.md)
 
