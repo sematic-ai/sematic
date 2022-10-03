@@ -9,8 +9,9 @@ export default function GrafanaPanel(props: { run: Run }) {
   const env: Map<string, string> = useContext(EnvContext);
   const grafanaPanelUrlSettings = env.get("GRAFANA_PANEL_URL");
 
+  // in principle this should never show because the tab shouldn't show up if Grafana is off.
   if (!grafanaPanelUrlSettings) {
-    return <></>;
+    return <p>Grafana not configured.</p>;
   }
 
   const grafanaPanelUrl: URL = new URL(grafanaPanelUrlSettings);

@@ -1,4 +1,7 @@
 namespace: default
+aws:
+    enabled: true
+    storage_bucket: sematic-dev
 server:
   image: sematicai/sematic-server:v0.14.0
   resources:

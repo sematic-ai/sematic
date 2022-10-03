@@ -191,7 +191,10 @@ if __name__ == "__main__":
     path = _create_log_file_path("worker.log")
 
     with ingested_logs(path, prefix):
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s - %(levelname)s - %(name)s: %(message)s",
+        )
         logger.info("Worker CLI args: run_id=%s", args.run_id)
         logger.info("Worker CLI args: resolve=%s", args.resolve)
 

@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Artifact, Edge, Run } from "../Models";
 import { ArtifactList } from "./Artifacts";
 import SourceCode from "./SourceCode";
@@ -9,8 +9,9 @@ import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import Docstring from "./Docstring";
 import { Alert } from "@mui/material";
+import LogPanel from "./LogPanel";
 import GrafanaPanel from "../addons/grafana/GrafanaPanel";
-import Exception from "./Exception";
+import { EnvContext } from "../";
 
 export type IOArtifacts = {
   input: Map<string, Artifact | undefined>;
@@ -37,6 +38,14 @@ export default function RunTabs(props: {
     setSelectedTab(newValue);
   };
 
+  const env: Map<string, string> = useContext(EnvContext);
+  const grafanaPanelUrlSettings = env.get("GRAFANA_PANEL_URL");
+  const grafanaTab = grafanaPanelUrlSettings ? (
+    <Tab label="Grafana" value="grafana" />
+  ) : (
+    <></>
+  );
+
   return (
     <>
       <TabContext value={selectedTab}>
@@ -46,6 +55,7 @@ export default function RunTabs(props: {
             <Tab label="Output" value="output" />
             <Tab label="Source" value="source" />
             <Tab label="Logs" value="logs" />
+            {grafanaTab}
           </TabList>
         </Box>
         <TabPanel value="input">
@@ -66,11 +76,13 @@ export default function RunTabs(props: {
           <Docstring docstring={run.description} />
         </TabPanel>
         <TabPanel value="logs">
-          {run.exception && <Exception exception={run.exception} />}
-          <GrafanaPanel run={run} />
+          <LogPanel run={run} />
         </TabPanel>
         <TabPanel value="source">
           <SourceCode run={run} />
+        </TabPanel>
+        <TabPanel value="grafana">
+          <GrafanaPanel run={run} />
         </TabPanel>
       </TabContext>
     </>

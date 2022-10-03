@@ -5,6 +5,9 @@ data:
   SEMATIC_AUTHENTICATE: "1"
   SEMATIC_AUTHORIZED_EMAIL_DOMAIN: {{ .Values.auth.authorized_email_domain }}
 {{ end }}
+{{ if .Values.aws.enabled }}
+  AWS_S3_BUCKET: {{ .Values.aws.storage_bucket }}
+{{ end }}
   KUBERNETES_NAMESPACE: {{ .Values.namespace }}
 kind: ConfigMap
 metadata:
