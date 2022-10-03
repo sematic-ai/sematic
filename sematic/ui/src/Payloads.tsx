@@ -35,6 +35,18 @@ export type RunGraphPayload = {
   artifacts: Artifact[];
 };
 
+export type LogLineResult = {
+    more_before: boolean
+    more_after: boolean
+    lines: string[]
+    continuation_cursor: string | null
+    log_unavailable_reason: string | null
+};
+
+export type LogLineRequestResponse = {
+  content: LogLineResult
+};
+
 export type NoteListPayload = {
   content: Note[];
   authors: User[];
