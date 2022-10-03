@@ -2,6 +2,14 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Running dev UI against deployed Sematic
+
+To run with a local copy of the UI but a remote API server, you can do:
+
+0. Make sure your local Sematic server is off
+1. `kctl port-forward <SEMATIC SERVER POD NAME> 5001:80`
+2. `cd sematic/ui && npm run`
+
 ## Available Scripts
 
 In the project directory, you can run:

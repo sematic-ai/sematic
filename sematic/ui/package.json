@@ -28,6 +28,7 @@
     "react-error-boundary": "^3.1.4",
     "react-flow-renderer": "^10.3.1",
     "react-icons": "^4.4.0",
+    "react-infinite-scroll-component": "^6.1.0",
     "react-markdown": "^8.0.3",
     "react-medium-image-zoom": "^4.4.3",
     "react-plotly.js": "^2.5.1",
