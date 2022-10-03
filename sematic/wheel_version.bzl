@@ -2,4 +2,4 @@
 # changelog.md.
 # This is the version that will be attached to the
 # wheel that bazel builds for sematic.
-wheel_version_string = "0.14.0"
+wheel_version_string = "0.15.0"
