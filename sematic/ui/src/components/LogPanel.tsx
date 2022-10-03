@@ -1,4 +1,5 @@
 import Exception from "./Exception";
+import { Alert } from "@mui/material";
 import { Box } from "@mui/material";
 import { Run } from "../Models";
 import { fetchJSON } from "../utils";
@@ -14,7 +15,12 @@ export default function LogPanel(props: { run: Run }) {
   const [error, setError] = useState<Error | undefined>(undefined);
 
   const loadLogs = useCallback(
-    (source: string, cursor: string | null, filterString: string, callback: MoreLinesCallback) => {
+    (
+      source: string,
+      cursor: string | null,
+      filterString: string,
+      callback: MoreLinesCallback
+    ) => {
       var url = "/api/v1/runs/" + source + "/logs?max_lines=2000";
       if (cursor != null) {
         url += "&continuation_cursor=" + cursor;
@@ -44,7 +50,9 @@ export default function LogPanel(props: { run: Run }) {
     <ScrollingLogView getLines={loadLogs} logSource={run.id} />
   );
   const logErrorView = (
-    <div>The server returned an error when asked for logs for this run.</div>
+    <Alert severity="error">
+      The server returned an error when asked for logs for this run.
+    </Alert>
   );
   const logView = error === undefined ? standardLogView : logErrorView;
 
