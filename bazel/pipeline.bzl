@@ -1,7 +1,6 @@
 """
 The sematic_pipeline Bazel macro.
 """
-
 load(
     "@io_bazel_rules_docker//python3:image.bzl",
     "py3_image",
@@ -11,6 +10,8 @@ load("@io_bazel_rules_docker//container:push.bzl", "container_push")
 load("@io_bazel_rules_docker//container:providers.bzl", "PushInfo")
 load("@io_bazel_rules_docker//container:pull.bzl", "container_pull")
 load("@rules_python//python:defs.bzl", "py_binary")
+
+
 
 def sematic_pipeline(
         name,
@@ -85,17 +86,19 @@ def sematic_pipeline(
         tags = ["manual"],
     )
 
-    container_push_at_build(
-        name = "{}_push_at_build".format(name),
-        container_push = ":{}_push".format(name),
-        tags = ["manual"],
+    native.genrule(
+        name = "{}_generate_image_uri".format(name),
+        srcs = [":{}_push.digest".format(name)],
+        outs = ["{}_push_at_build.uri".format(name)],
+        cmd = "echo -n {}/{}@`cat $(location {}_push.digest)` > $@".format(registry, repository, name),
     )
 
     py_binary(
-        name = name,
+        name = "{}_binary".format(name),
         srcs = ["{}.py".format(name)],
+        main = "{}.py".format(name),
         deps = deps,
-        data = [":{}_push_at_build".format(name)],
+        data = ["{}_generate_image_uri".format(name)],
         tags = ["manual"],
     )
 
@@ -107,54 +110,10 @@ def sematic_pipeline(
         deps = deps,
     )
 
-def _container_push_at_build(ctx):
-    marker = ctx.actions.declare_file("{0}.marker".format(ctx.label.name))
-    ctx.actions.run_shell(
-        command = "{} && touch {}".format(ctx.executable.container_push.path, marker.path),
-        tools = [ctx.executable.container_push],
-        outputs = [marker],
-        mnemonic = "ContainerImagePush",
-        use_default_shell_env = True,
-        execution_requirements = {"local": ""},
+    sematic_push_and_run(
+        name=name,
     )
 
-    uri = ctx.actions.declare_file("{0}.uri".format(ctx.label.name))
-    ctx.actions.run_shell(
-        command = "echo -n $1/$2@$(cat $3) > $4",
-        arguments = [
-            ctx.actions.args().add_all([
-                ctx.attr.container_push[PushInfo].registry,
-                ctx.attr.container_push[PushInfo].repository,
-                ctx.attr.container_push[PushInfo].digest,
-                uri,
-            ]),
-        ],
-        inputs = [ctx.attr.container_push[PushInfo].digest, marker],
-        outputs = [uri],
-        mnemonic = "PrintURI",
-    )
-
-    runfiles = ctx.runfiles(files = [uri])
-    return [DefaultInfo(files = depset([uri]), runfiles = runfiles)]
-
-container_push_at_build = rule(
-    doc = """
-      container_push is an executable rule. Building it produces an executable which pushes the
-      image, but the executable is not run at build time. If you depend on a container_push target,
-      it will only get built, but not run. container_push_at_build takes the output executable from
-      container_push and runs it at build time.
-    """,
-    implementation = _container_push_at_build,
-    attrs = {
-        "container_push": attr.label(
-            mandatory = True,
-            providers = [PushInfo],
-            executable = True,
-            cfg = "host",
-        ),
-    },
-    _skylark_testable = True,
-)
 
 def base_images():
     repositories()
@@ -183,3 +142,53 @@ def base_images():
         repository = "sematicai/sematic-worker-base",
         tag = "cuda",
     )
+
+def _sematic_push_and_run(ctx):
+    script = ctx.actions.declare_file("{0}.sh".format(ctx.label.name))
+
+    # the script it simple enough it doesn't really merit a template & template expansion
+    script_lines = [
+        "#!/bin/sh",
+
+        # A common pattern is to have the bazel binary checked into the root of the
+        # workspace. If that's present, use it instead of whatever is on the PATH.
+        "test -f \"$BUILD_WORKSPACE_DIRECTORY/bazel\" && BAZEL_BIN=\"$BUILD_WORKSPACE_DIRECTORY/bazel\" || BAZEL_BIN=\"$(which bazel)\"",
+        "if test -f \"$BAZEL_BIN\"; then",
+        "\tcd $BUILD_WORKING_DIRECTORY",
+        "\t\"$BAZEL_BIN\" run {}_push".format(ctx.label),
+        "\t\"$BAZEL_BIN\" run {}_binary -- $@".format(ctx.label),
+        "else",
+        # Should probably not happen unless somebody has an exotic bazel setup.
+        # At least make it clear what the problem is if it ever does happen.
+        "\techo \"!!! bazel executable not found on PATH or in $BUILD_WORKSPACE_DIRECTORY !!!\"",
+        "fi",
+    ]
+    command = "touch {}".format(script.path)
+    for script_line in script_lines:
+        command += " && echo '{}' >> {}".format(script_line, script.path)
+    
+    command = "{}".format(command)
+    ctx.actions.run_shell(
+        command = command,
+        outputs = [script],
+        mnemonic = "GenerateScript",
+        use_default_shell_env = True,
+        execution_requirements = {"local": "", "no-sandbox": "1"},
+    )
+    runfiles = ctx.runfiles(files = [script])
+
+    return [DefaultInfo(files = depset([script]), runfiles = runfiles , executable=script)]
+
+sematic_push_and_run = rule(
+    doc = (
+        """This rule should never be used directly, it is for internal Sematic use.
+
+        It combines `bazel run //my_package:my_target_push` and
+        `bazel run //my_package:my_target_binary` into a single `bazel run`-able target.
+        """
+    ),
+    implementation = _sematic_push_and_run,
+    attrs = {},
+    executable = True,
+    _skylark_testable = True,
+)
