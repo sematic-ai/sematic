@@ -146,6 +146,9 @@ sematic/ui/node_modules
 # production
 /build
 
+# IDEA
+.idea/*
+
 # misc
 .DS_Store
 .env.local
