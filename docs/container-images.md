@@ -1,15 +1,19 @@
 # Sematic and Container Images
 
-When Sematic runs your code in the cloud, it does so in a Docker container.
-Your code and all its dependencies need to be in that Docker image for it
-to run. Where does this Docker image come from? There are a few options, but
-a general theme is that Sematic prefers to make the construction of the Docker
-image transparent to you for simple cases, hooking into existing build tooling
-when possible. However, we leave the flexibility to customize for advanced
-usages if needed.
+When Sematic runs your code in the cloud (in other words, when you are using
+`CloudResolver`), it does so in a Docker container. Your code and all its
+dependencies need to be in that Docker image for it to run.
+
+Where does this Docker image come from? There are a few options, but a general
+theme is that Sematic prefers to make the construction of the Docker image
+transparent to you for simple cases, hooking into existing build tooling when
+possible. However, we leave the flexibility to customize for advanced usages
+if needed.
 
 ## Image Construction
+
 ### Bazel
+
 If you're using [**Bazel**](https://bazel.build), having Sematic create a cloud
 image containing your code is quite straightforward: we have a bazel macro that
 will allow you to create targets for building and pushing your image at the
@@ -22,19 +26,21 @@ a Sematic pipeline (we'll refer to the python script for this target your
 
 1. Include Sematic's GitHub repo as a bazel repository in your bazel WORKSPACE
 2. Load Sematic's base images in your WORKSPACE, using, for example:
+
 ```starlark
 load("@rules_sematic//:pipeline.bzl", "base_images")
 base_images()
 ```
+
 3. Ensure you have a container registry where you can push your Docker images
-to
+   to
 4. In the bazel `BUILD` file where you have defined your launch script, load
-Sematic's pipeline macro:
-`load("@rules_sematic//:pipeline.bzl", "sematic_pipeline")`
+   Sematic's pipeline macro:
+   `load("@rules_sematic//:pipeline.bzl", "sematic_pipeline")`
 5. Replace the python binary target for your launch script with
-`sematic_pipeline`, using the same `deps` as you use for the binary target
+   `sematic_pipeline`, using the same `deps` as you use for the binary target
 6. Fill out the `registry` and `repository` fields of the `sematic_pipeline`
-with information about where to push your image.
+   with information about where to push your image.
 
 When you're done, your `WORKSPACE` should look something like:
 
@@ -104,7 +110,7 @@ sematic_pipeline(
     # Optional base image to use
     base = "<base-image>",
     # Optional environment variables to set in the image
-    env = {"VAR": "VALUE"} 
+    env = {"VAR": "VALUE"}
 )
 ```
 
@@ -112,16 +118,17 @@ With that, you're done! Assuming the target for your launch script was
 `//my_repo/my_package:my_target`, you now have the following targets available:
 
 - `//my_repo/my_package:my_target`: still runs your target, but builds a Docker
-image with your code and its dependencies first
+  image with your code and its dependencies first
 - `//my_repo/my_package:my_target_local`: runs your target WITHOUT building and
-pushing the image. This can help for local development when you don't want the
-overhead of waiting for the build & push.
+  pushing the image. This can help for local development when you don't want the
+  overhead of waiting for the build & push.
 - `//my_repo/my_package:my_target_image`: builds the image, but doesn't push it
-or run your script
+  or run your script
 - `//my_repo/my_package:my_target_push`: builds and pushes the image, but
-doesn't run your script
+  doesn't run your script
 
 #### Custom base images
+
 The `sematic_pipeline` macro also allows you to specify a custom base image to
 cover any dependencies you have that aren't specified in bazel. You can do this
 by setting the `base` field of the `sematic_pipeline` macro:
@@ -152,9 +159,11 @@ what those are. Note that if you are using bazel, requirements 1, 2 & 3 from
 that section will already be taken care of.
 
 ### requirements.txt
+
 Coming soon!
 
 ### Totally Custom Image
+
 If you want full control over how your Docker image is produced, Sematic
 provides a hook to make that possible. Just set the `SEMATIC_CONTAINER_IMAGE`
 environment variable to the URI for the Docker image you want your pipeline to
@@ -162,13 +171,14 @@ use. There are some requirements on this image though:
 
 1. It must contain your source code and its dependencies
 2. It must be pushed to a container registry that can be accessed by the cluster
-where your code is going to run in the cloud
+   where your code is going to run in the cloud
 3. The entrypoint must be set to a script which executes
-`/usr/bin/python3 -m sematic.resolvers.worker "$@"`
+   `/usr/bin/python3 -m sematic.resolvers.worker "$@"`
 4. `/usr/bin/python3` must be a valid python interpreter in the image
 5. The home directory inside the image must be writable
 
 ## Working with images
+
 When launching Sematic pipelines, there is always a python script that submits
 the job (either for local exection or execution in the cloud). We refer to this
 as the "launch script." You may want to have your launch script behave
@@ -195,20 +205,20 @@ speed up the time to start the container for them. However, there are more good
 reasons to put everything in one image than to separate them:
 
 - It can actually speed up container download to re-use the same image, as Kubernetes
-nodes will only download the image once and have it cached for re-use in other steps in
-the pipeline.
+  nodes will only download the image once and have it cached for re-use in other steps in
+  the pipeline.
 - It can quickly become tricky to remember what dependencies are going to be available
-in which step. When you have a single python interpreter executing all your code, all
-the dependencies are available everywhere. We want to bring this intuitive experience
-to the cloud.
+  in which step. When you have a single python interpreter executing all your code, all
+  the dependencies are available everywhere. We want to bring this intuitive experience
+  to the cloud.
 - With different images for different steps comes the potential for variations in what
-versions of libraries are available in which step. For example, if `step_1` returns a
-Scikit-learn model using `scikit-learn==1.1.2`, you'll want to be sure that `step_2`
-isn't trying to use that model with `scikit-learn==0.24.2`
+  versions of libraries are available in which step. For example, if `step_1` returns a
+  Scikit-learn model using `scikit-learn==1.1.2`, you'll want to be sure that `step_2`
+  isn't trying to use that model with `scikit-learn==0.24.2`
 - Image builds are slow, and slow down the iteration loop of change code, push image,
-execute. Sematic aims to make this loop as tight as possible, and having to build multiple
-images every time (or remember which ones you need to rebuild when) would significantly
-damage this workflow.
+  execute. Sematic aims to make this loop as tight as possible, and having to build multiple
+  images every time (or remember which ones you need to rebuild when) would significantly
+  damage this workflow.
 - If you have a step which is really lightweight, there's a better option than having
-a small new container: *no* new container. This is a great case for inline functions.
-See the [execution mode docs](https://docs.sematic.dev/execution-modes) for more.
+  a small new container: _no_ new container. This is a great case for inline functions.
+  See the [execution mode docs](https://docs.sematic.dev/execution-modes) for more.

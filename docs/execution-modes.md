@@ -66,7 +66,8 @@ dedicated resources (e.g. GPUs).
 
 {% hint style="info" %}
 
-**Prerequisite:** To learn how to deploy Sematic in your cloud, read [Deploy Sematic](./deploy.md).
+**Prerequisite:** To learn how to deploy Sematic in your cloud, read
+[Deploy Sematic](./deploy.md) and [Container images](./container-images.md).
 
 {% endhint %}
 

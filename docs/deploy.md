@@ -6,12 +6,12 @@ and your pipelines run locally.
 Here is how to deploy Sematic to take full advantage of your cloud resources.
 Before you start, you will need to decide how you wish to use Sematic.
 
-* Option 1 is to use Sematic to track and share your pipeline executions, but
-still have the pipelines execute locally. This setup is simpler, but less
-powerful.
-* Option 2 is to deploy Sematic on Kubernetes, where the pipelines
-can have access to more powerful compute by executing in the cloud. This
-setup is a little more complex and has more pre-requisites.
+- Option 1 is to use Sematic to track and share your pipeline executions, but
+  still have the pipelines execute locally. This setup is simpler, but less
+  powerful.
+- Option 2 is to deploy Sematic on Kubernetes, where the pipelines
+  can have access to more powerful compute by executing in the cloud. This
+  setup is a little more complex and has more pre-requisites.
 
 ## Deployment Option 1: Shared Metadata Server
 
@@ -25,9 +25,9 @@ Your pipelines will still execute locally.
 
 Prerequisites:
 
-* A remote instance into which you can SSH
-* A Postgres database
-* [Install Docker](https://docs.docker.com/engine/install/) onto your remote instance
+- A remote instance into which you can SSH
+- A Postgres database
+- [Install Docker](https://docs.docker.com/engine/install/) onto your remote instance
 
 Then, SSH into your remote server:
 
@@ -72,11 +72,11 @@ behavior for your deployed app.
 If you don't pass any of them, your app will be available publicly and users will not need to
 authenticate to use it. Everyone will be the "Anonymous" user.
 
-* `SEMATIC_AUTHENTICATE` activates authentication. Users will need to sign in to user the web app,
+- `SEMATIC_AUTHENTICATE` activates authentication. Users will need to sign in to user the web app,
   and will need to set an API key in their local settings in order to submit jobs.
-* `GOOGLE_OAUTH_CLIENT_ID` is the client ID of your Google OAuth App. We will support more OAuth
+- `GOOGLE_OAUTH_CLIENT_ID` is the client ID of your Google OAuth App. We will support more OAuth
   providers int he future.
-* `SEMATIC_AUTHORIZED_EMAIL_DOMAIN` denies access to users whose email is not of said domain.
+- `SEMATIC_AUTHORIZED_EMAIL_DOMAIN` denies access to users whose email is not of said domain.
 
 ##### SSL
 
@@ -87,6 +87,7 @@ private key files are accessible within the container (e.g. place them in the
 `~/.sematic` directory). Also make sure to add `-p 443:443` to the forwarded ports.
 
 ## Deployment Option 2: Sematic with Cloud Execution
+
 If you wish to not only use your Sematic deployment to share the results
 of pipeline executions, but also to actually execute the pipelines, you
 will need to deploy it on Kubernetes.
@@ -95,12 +96,12 @@ will need to deploy it on Kubernetes.
 
 Prerequisites:
 
-* A Kubernetes cluster running Kubernetes >=1.21
-* A Postgres database
-* [Helm](https://helm.sh/docs/intro/install/#helm) &
+- A Kubernetes cluster running Kubernetes >=1.21
+- A Postgres database
+- [Helm](https://helm.sh/docs/intro/install/#helm) &
   [kubectl](https://kubernetes.io/docs/tasks/tools/) installed and
   able to access your Kubernetes cluster
-* Ingress configured on your cluster that allows accessing services deployed on it
+- Ingress configured on your cluster that allows accessing services deployed on it
 
 Run the following command to deploy a Kubernetes secret containing the database URL:
 
@@ -134,14 +135,14 @@ Once you have set all the values, deploy using `helm install sematic ./` from th
 In the `values.yaml` file above, three settings dictate the
 authentication behavior for your deployed app.
 
-* `auth.enabled` activates authentication. Users will need to sign in to
+- `auth.enabled` activates authentication. Users will need to sign in to
   user the web app, and will need to set an API key in their local settings in
   order to submit jobs.
 
-* `auth.google_oauth_client_id` is the client ID of your Google OAuth App.
+- `auth.google_oauth_client_id` is the client ID of your Google OAuth App.
   We will support more OAuth providers in the future.
 
-* `auth.authorized_email_domain` denies access to users whose email is not of
+- `auth.authorized_email_domain` denies access to users whose email is not of
   said domain.
 
 ##### SSL
@@ -152,6 +153,7 @@ that points to the service (named `sematic-service`) deployed by the helm chart,
 and set up your ingress to use SSL.
 
 ## Using your deployment
+
 ### Run pipelines against the deployed API
 
 At this point you should be able to run pipelines that are tracked by Sematic.
@@ -178,15 +180,26 @@ focuses support on **Amazon Web Services**. Other providers to follow soon.
 
 Before you proceed, the following must be true:
 
-* The Sematic web app is deployed. See
+- The Sematic web app is deployed. See
   [Deploy the web app](#deployment-option-2-sematic-with-cloud-execution).
 
-* You have an S3 bucket and you and nodes in your Kubernetes cluster have read
+- You have an S3 bucket and you and nodes in your Kubernetes cluster have read
   and write permissions to it.
 
-* You have a container registry (e.g. AWS Elastic Container Registry) and you
+- You have a container registry (e.g. AWS Elastic Container Registry) and you
   have write access, and nodes in yout Kubernetes cluster have read access to
   it.
+
+- You have `sematic_pipeline` bazel targets defined as described in
+  [Container Images](./container-images.md). This will enable `bazel run` commands
+  to execute the launch script to start your cloud jobs.
+
+{% hint style="warning" %}
+
+Sematic plans to support other ways to produce container images besides
+bazel, but for now it is required for cloud execution.
+
+{% endhint %}
 
 When you are set, the following settings should be visible to Sematic
 
@@ -203,11 +216,10 @@ SEMATIC_API_ADDRESS: <web-app-server-address>
 If you have chosen to deploy Sematic in such a way that users of Sematic
 will use a different URL for the server from what should be used for
 jobs on your Kubernetes cluster (e.g. users access via a reverse proxy
-that's not needed on Kubernetes), you may also need to set 
+that's not needed on Kubernetes), you may also need to set
 `SEMATIC_WORKER_API_ADDRESS`. That will set the URL to be used from
 Kubernetes, while `SEMATIC_API_ADDRESS` will be used from your machine.
 {% endhint %}
-
 
 #### Cloud storage bucket
 
