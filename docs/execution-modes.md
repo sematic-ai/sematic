@@ -4,11 +4,11 @@ It is quite typical to start iterating on a pipeline locally, e.g. on 1% of the
 data, and then run it at scale in the cloud.
 
 Sematic enables this seamlessly by aiming to guarantee a local-to-cloud parity.
-This means that if your pipeline runs succesfully locally, it should run
-succesfully at scale on the cloud.
+This means that if your pipeline runs successfully locally, it should run
+successfully at scale on the cloud.
 
 Of course there are many reasons why a cloud pipeline could fail that are not
-forseeable locally. For example: network failures, Out-of-memory issues,
+foreseeable locally. For example: network failures, Out-of-memory issues,
 differences in underlying hardware (CPU, GPU, etc.), invalid data not present in
 your local 1%, rare corner cases, etc.
 
@@ -191,9 +191,9 @@ is nested inside `calculate_average`, and `divide` is inline, `divide`
 must execute in the same container as `calculate_average`. This is NOT
 correct. This misunderstanding stems from a misunderstanding of how Sematic
 works with Futures. Recall that Sematic functions return futures when you
-call them. That means that `total` in `calculate_average`
+call them (see [Future Algebra](future-algebra.md)). That means that `total` in `calculate_average`
 *actually holds a Future instead of a `float`*. So when `divide(total, 3)`
-is called above, the content of `total` is not even known. Therefore how
+is called above, the content of `total` is not even known. Therefore, how
 could it be executed?
 
 Instead, what happens is this:
@@ -285,6 +285,6 @@ before it executes `call_some_method`.
 
 When Sematic submits Kubernetes jobs, it needs to package all your dependencies
 (e.g. your pipeline code, local Python modules, third-party pip packages, static
-libraries, etc) and ship them to the remote cluster. For more on how Sematic
+libraries, etc.) and ship them to the remote cluster. For more on how Sematic
 handles dependency packaging, see
 [Sematic and Container Images](./container-images.md)
