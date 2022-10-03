@@ -19,6 +19,7 @@ pytest_test(
     srcs = ["test_log_streamer.py"],
     deps = [
         "//sematic/resolvers:log_streamer",
+        "//sematic/utils:retry",
     ],
 )
 
