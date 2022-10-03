@@ -47,10 +47,32 @@ class CloudResolver(LocalResolver):
 
         When `False`, the driver job runs on the local machine. The shell prompt
         will return when the entire pipeline has completed.
+    is_running_remotely:
+        For Sematic internal usage. End users should always leave this at the default
+        value of False.
+    max_parallelism:
+        The maximum number of runs that this resolver will allow to be in the SCHEDULED
+        state at any one time. This is intended as a simple mechanism to limit the amount
+        of computing resources consumed by one pipeline execution for pipelines with a lot
+        of parallelism. Note that if other resolvers are active, runs from them
+        will not be considered in this parallelism limit. Note also that runs that are
+        in the RAN state do not contribute to the limit, since they do not consume
+        computing resources.
     """
 
-    def __init__(self, detach: bool = True, is_running_remotely: bool = False):
+    def __init__(
+        self,
+        detach: bool = True,
+        is_running_remotely: bool = False,
+        max_parallelism: Optional[int] = None,
+    ):
         super().__init__(detach=detach)
+        if max_parallelism is not None and max_parallelism < 1:
+            raise ValueError(
+                "max_parallelism must be a positive integer or None. Got: {}".format(
+                    max_parallelism
+                )
+            )
 
         # TODO: Replace this with a cloud storage engine
         self._store_artifacts = True
