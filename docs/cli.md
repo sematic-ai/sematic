@@ -37,7 +37,7 @@ Certain Sematic functionalities need certain settings variables to be set. For
 example, `SnowflakeTable` needs your Snowflake credentials to be able to query
 your data for you.
 
-You can set user settings as follow:
+You can set user settings as follows:
 
 ```shell
 $ sematic settings set VAR VALUE

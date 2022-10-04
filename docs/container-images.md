@@ -188,7 +188,7 @@ use. There are some requirements on this image though:
 ## Working with images
 
 When launching Sematic pipelines, there is always a python script that submits
-the job (either for local exection or execution in the cloud). We refer to this
+the job (either for local execution or execution in the cloud). We refer to this
 as the "launch script." You may want to have your launch script behave
 differently depending on whether a suitable cloud image is available. Sematic
 has provided `sematic.has_container_image` to enable this use case. A common pattern

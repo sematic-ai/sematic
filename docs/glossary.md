@@ -2,7 +2,7 @@ Here is a repository of definitions of terms we use throughout.
 
 ## Artifact
 
-Artifacts represents input and output values of Sematic Functions.
+Artifacts represent the input and output values of Sematic Functions.
 
 Each individual input argument is tracked as an artifact, and the output value
 is tracked as a single artifact.
@@ -60,13 +60,13 @@ def bar() -> str:
 
 Runs can have multiple children runs, but only one parent run.
 
-We sometimes use the following terms interchageably:
+We sometimes use the following terms interchangeably:
 
 * Parent/child function
 * Parent/child future
 * Parent/child run
 
-Children runs/functions/futures are also sometimes referred to as "nested".
+Child runs/functions/futures are also sometimes referred to as "nested".
 
 ## Pipeline
 
@@ -83,13 +83,13 @@ See [Root function](#root-entry-point-function).
 The root Sematic Function is the one on which you call `.resolve()`. It is the
 parent of all other functions and has no parent itself.
 
-It encapsulate your entire pipeline and all its input values must be
+It encapsulates your entire pipeline and all its input values must be
 [concrete](#concrete-inputs).
 
 It is the "entry-point" because it is the function you will import and call in
 your entry-point script, e.g. `__main__.py`.
 
-In general we try to call this function `pipeline`, but this is indeed up to you.
+In general, we try to call this function `pipeline`, but this is indeed up to you.
 
 ## Run
 
