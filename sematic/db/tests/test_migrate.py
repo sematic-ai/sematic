@@ -7,7 +7,12 @@ from sqlalchemy.exc import OperationalError
 
 # Sematic
 from sematic.db.db import db
-from sematic.db.migrate import _get_migration_files, migrate
+from sematic.db.migrate import (
+    _get_current_versions,
+    _get_migration_files,
+    migrate_down,
+    migrate_up,
+)
 from sematic.db.tests.fixtures import test_db_empty  # noqa: F401
 
 
@@ -18,14 +23,24 @@ def test_migrate(_, test_db_empty):  # noqa: F811
         with db().get_engine().connect() as conn:
             conn.execute("SELECT version FROM schema_migrations;")
 
-    migrate()
+    migrate_up()
+
+    current_versions = _get_current_versions()
+
+    assert len(current_versions) > 0
 
     # Test tables were created
     with db().get_engine().connect() as conn:
-        conn.execute("SELECT version FROM schema_migrations;")
         run_count = conn.execute("SELECT COUNT(*) from runs;")
 
     assert list(run_count)[0][0] == 0
+
+    migrate_down()
+
+    new_current_versions = _get_current_versions()
+
+    assert len(new_current_versions) == len(current_versions) - 1
+    assert set(current_versions) - set(new_current_versions) == {current_versions[-1]}
 
 
 def test_get_migration_files():
