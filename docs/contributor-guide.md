@@ -1,4 +1,4 @@
-There are many ways for you to contribute to Sematic.
+There are many ways for you to contribute to Sematic!
 
 Here are the main ones:
 

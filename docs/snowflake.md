@@ -25,7 +25,7 @@ your machine.
 
 ## `SnowflakeTable` type
 
-One you have set your credentials, use the `SnowflakeTable` type.
+Once you have set your credentials, use the `SnowflakeTable` type.
 
 ```
 >>> from sematic.types.types.snowflake import SnowflakeTable

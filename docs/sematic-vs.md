@@ -25,7 +25,7 @@ possible to provide an amazing turn-key onboarding experience with a very low
 barrier to entry for all sets of skills, from beginner padawan to advanced
 ninja.
 
-Sematic is commited to having you run your first pipelines in a matter of
+Sematic is committed to having you run your first pipelines in a matter of
 hours.
 
 ### The opinionated/flexibility tradeoff
@@ -37,7 +37,7 @@ We have found that some of them are so flexible and generic that additional
 layers need to be built on top, which is out of reach for users without a
 dedicated platform team.
 
-On the other hand, some tools are so opinionated that doing anything outside of
+On the other hand, some tools are so opinionated that doing anything outside
 the bounds prescribed by the framework is simply not possible.
 
 At Sematic, we strive to hit the right balance of constraints to make work fast
@@ -50,7 +50,7 @@ and effortless, and flexibility to not hinder our users' creativity.
 In this section we try to discuss Sematic's differentiators in the most candid
 and transparent way possible.
 
-Sematic is a brand new product (founded May 2022 👶), and is therefore obviously
+Sematic is a brand-new product (founded May 2022 👶), and is therefore obviously
 not as mature, reliable, or stable as some of these long-established products.
 
 But bear with us, we'll catch up fast!
@@ -100,7 +100,7 @@ typed artifacts is a first-class citizen. All inputs and outputs of all Sematic 
 templates. Sematic lets you build any pipeline structure you like.
 
 * **Pythonic SDK** - Using MLFlow requires using a yaml-based configuration combined with
-Jinja templating to enable hierachical config specifications. Sematic lets you stick with
+Jinja templating to enable hierarchical config specifications. Sematic lets you stick with
 simple python for constructing your pipeline and feeding in configurations and other inputs.
 
 * **Powerful compute access** - MLFlow pipelines run natively on Databricks VMs, or
@@ -111,7 +111,7 @@ resources that are appropriate for it.
 ### ... Dagster
 * **Use case** – Dagster is designed to define data workflows, or lightweight
   Data Science and Machine Learning workflows. Sematic is designed to Machine
-  Learning pipelines of arbitray complexity using heterogeneous compute. For
+  Learning pipelines of arbitrary complexity using heterogeneous compute. For
   example, Sematic lets you chain data processing jobs (e.g. Spark, Beam) with
   long-running GPU training jobs (e.g. Tensorflow, PyTorch), or steps using
   platform custom-built by your company.
