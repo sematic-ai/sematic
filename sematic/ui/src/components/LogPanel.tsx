@@ -7,6 +7,7 @@ import { UserContext } from "..";
 import { LogLineRequestResponse } from "../Payloads";
 import ScrollingLogView from "./ScrollingLogView";
 import { MoreLinesCallback } from "./ScrollingLogView";
+import { Alert } from "@mui/material";
 
 export default function LogPanel(props: { run: Run }) {
   const { run } = props;
@@ -14,7 +15,12 @@ export default function LogPanel(props: { run: Run }) {
   const [error, setError] = useState<Error | undefined>(undefined);
 
   const loadLogs = useCallback(
-    (source: string, cursor: string | null, filterString: string, callback: MoreLinesCallback) => {
+    (
+      source: string,
+      cursor: string | null,
+      filterString: string,
+      callback: MoreLinesCallback
+    ) => {
       var url = "/api/v1/runs/" + source + "/logs?max_lines=2000";
       if (cursor != null) {
         url += "&continuation_cursor=" + cursor;
@@ -44,7 +50,9 @@ export default function LogPanel(props: { run: Run }) {
     <ScrollingLogView getLines={loadLogs} logSource={run.id} />
   );
   const logErrorView = (
-    <div>The server returned an error when asked for logs for this run.</div>
+    <Alert severity="error">
+      The server returned an error when asked for logs for this run.
+    </Alert>
   );
   const logView = error === undefined ? standardLogView : logErrorView;
 
