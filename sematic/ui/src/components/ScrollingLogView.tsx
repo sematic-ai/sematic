@@ -41,7 +41,11 @@ export default function ScrollingLogView(props: {
     cursor: string | null; // the cursor to continue getting the lines after these ones
     source: string; // the id of the source these log lines are for
     filterString: string; // the filter string that was used to produce these lines
-  }>({ lines: [], cursor: null, source: logSource, filterString: "" });
+
+    // initialize the state to no logs from an unknown source/filter.
+    // An on-render effect will do the first load from the actual source.
+  }>({ lines: [], cursor: null, source: "", filterString: "" });
+
   const [filterString, setFilterString] = useState<string>("");
 
   // display log lines once they have been loaded from the server.
@@ -92,8 +96,7 @@ export default function ScrollingLogView(props: {
   useEffect(() => {
     if (
       lineState.source !== logSource ||
-      lineState.filterString !== filterString ||
-      lineState.lines.length === 0
+      lineState.filterString !== filterString
     ) {
       next();
     }
