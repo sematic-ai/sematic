@@ -183,7 +183,7 @@ def _create_log_file_path(file_name: str) -> str:
     return (pathlib.Path(sematic_temp_logs_dir) / pathlib.Path(file_name)).as_posix()
 
 
-def wrap_main():
+def wrap_main_with_logging():
     """Wrap the main function with log initialization and ingestion"""
     print("Starting Sematic Worker")
     args = parse_args()
@@ -204,4 +204,4 @@ def wrap_main():
 if __name__ == "__main__":
     # don't put anything here besides wrap_main()! It needs to match
     # bazel/worker.py
-    wrap_main()
+    wrap_main_with_logging()

@@ -325,7 +325,13 @@ def _filter_for_inline(
     found_start = False
     file_line_index = 0
     while True:
-        line = next(buffer_iterator)
+        try:
+            line = next(buffer_iterator)
+        except StopIteration:
+            # if a resolver dies mid-execution of an inline run,
+            # we should treat the end of the existing lines as
+            # the end of whatever inline we were looking for.
+            break
         if expected_start in line:
             found_start = True
             continue
