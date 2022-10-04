@@ -4,6 +4,10 @@ Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
 with nothing else on the line.
 -->
 * HEAD
+* 0.15.1
+    * [bugfix] Ensure log ingestion happens when using bazel cloud jobs and `dev=False`
+    * [bugfix] Avoid spamming the server with requests for logs for incomplete runs
+      without logs
 * 0.15.0
     * [feature] Display logs for cloud jobs in the UI.
     * [improvement] Ensure the push of docker images by bazel works with docker
