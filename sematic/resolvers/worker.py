@@ -183,10 +183,9 @@ def _create_log_file_path(file_name: str) -> str:
     return (pathlib.Path(sematic_temp_logs_dir) / pathlib.Path(file_name)).as_posix()
 
 
-if __name__ == "__main__":
+def wrap_main():
     print("Starting Sematic Worker")
     args = parse_args()
-    log_kind = "resolve" if args.resolve else "calculation"
     prefix = log_prefix(args.run_id, JobType.driver if args.resolve else JobType.worker)
     path = _create_log_file_path("worker.log")
 
@@ -199,3 +198,7 @@ if __name__ == "__main__":
         logger.info("Worker CLI args: resolve=%s", args.resolve)
 
         main(args.run_id, args.resolve)
+
+
+if __name__ == "__main__":
+    wrap_main()
