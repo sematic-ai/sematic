@@ -184,6 +184,7 @@ def _create_log_file_path(file_name: str) -> str:
 
 
 def wrap_main():
+    """Wrap the main function with log initialization and ingestion"""
     print("Starting Sematic Worker")
     args = parse_args()
     prefix = log_prefix(args.run_id, JobType.driver if args.resolve else JobType.worker)
@@ -201,4 +202,6 @@ def wrap_main():
 
 
 if __name__ == "__main__":
+    # don't put anything here besides wrap_main()! It needs to match
+    # bazel/worker.py
     wrap_main()
