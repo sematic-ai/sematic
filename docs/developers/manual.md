@@ -9,11 +9,6 @@ Install Bazel:
 $ brew install bazel
 ```
 
-Install Dbmate:
-```shell
-$ brew install dbmate
-```
-
 ### Create the dev database
 
 Add the following line to the `.env` file at the root of the
@@ -26,12 +21,12 @@ DATABASE_URL="sqlite3:/$HOME/.sematic/db.sqlite3"
 Then create the database:
 
 ```shell
-$ dbmate create
+$ touch $DATABASE_URL
 ```
 
 And run all migrations
 ```shell
-$ dbmate up
+$ bazel run //sematic/db:migrate -- up --verbose
 ```
 
 ## Add third-party pip dependency

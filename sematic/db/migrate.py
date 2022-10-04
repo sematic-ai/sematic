@@ -5,13 +5,6 @@ $ sematic start
 
 The SQLite DB should be migrated to the latest version
 automatically.
-
-On the dev side, we use dbmate to create and run migrations. One option would
-have been to package it with the wheel and run it in a subprocess, but Macs are
-not friendly with arbitrary binaries being downloaded and launched (need to
-activate permissions). The option chosen here is to replicate a simple UP script
-in Python that can be called by the CLI. The script only supports SQLite for
-now.
 """
 # Standard Library
 import enum
