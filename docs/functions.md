@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
 Resolving this pipeline yields the following graph:
 
-![Nested functiong graph](./images/NestedFunctions.png)
+![Nested functions graph](./images/NestedFunctions.png)
 
 As you can see:
 
@@ -64,10 +64,10 @@ def process_data(
 
 @sematic.func
 def train_eval(
-    training_datset: SnowflakeTable, config: TrainEvalConfig
+    training_dataset: SnowflakeTable, config: TrainEvalConfig
 ) -> Tuple[nn.Module, EvalMetrics]:
     # Model training pipeline
-    # launch traning job, run model evaluation
+    # launch training job, run model evaluation
 
 @sematic.func
 def generate_inferences(
@@ -83,7 +83,7 @@ def end_to_end_pipeline(
     config: PipelineConfig
 ) -> PipelineOutput:
     training_data = process_data(raw_data, config.data_processing_config)
-    trained_model, eval_metics = train_eval(training_data, config.train_eval_config)
+    trained_model, eval_metrics = train_eval(training_data, config.train_eval_config)
     inferences = generate_inferences(trained_model, production_features)
     return PipelineOutput(
         eval_metrics=eval_metrics,
@@ -100,11 +100,11 @@ inputs and outputs are not persisted, and no runtime type checking is performed.
 
 When you decorate a function with `@sematic.func`:
 
-* Calling the function will return a Future of its output value
+* Calling the function will return a Future of its output value. See [Future Algebra](future-algebra.md)
 * It will only be executed at Graph resolution time, once all its inputs have
   been resolved too. It will be executed either in-memory (local resolution) or
-  as an isolated cloud job with its own resources (cloud resolution). See [Graph
-  resolution](graph-resolution.md)
+  as an isolated cloud job with its own resources (cloud resolution). See
+  [Local and Cloud execution](execution-modes.md)
 * Its inputs and outputs will be type-checked against the declared type annotations
 * Its code and documentation are extracted, tracked and viewable in the UI
 * Its execution status is tracked and viewable in the UI. See [Execution status](#execution-status)
