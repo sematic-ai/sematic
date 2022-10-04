@@ -10,16 +10,7 @@ CREATE TABLE runs (
     ended_at timestamp,
     resolved_at timestamp,
     failed_at timestamp,
-    parent_id character(32),
-    description TEXT,
-    tags TEXT,
-    source_code TEXT,
-    root_id character(32),
-    nested_future_id character(32),
-    external_jobs_json JSONB,
-    resource_requirements_json JSONB,
-    exception TEXT,
-    exception_json JSONB,
+    parent_id character(32), description TEXT, tags TEXT, source_code TEXT, root_id character(32), nested_future_id character(32), external_jobs_json JSONB, resource_requirements_json JSONB, exception_json JSONB,
 
     PRIMARY KEY (id)
 );
@@ -83,7 +74,7 @@ CREATE TABLE resolutions (
     PRIMARY KEY (root_id),
     FOREIGN KEY (root_id) REFERENCES runs(id)
 );
--- Dbmate schema migrations
+--- schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
   ('20220424062956'),
   ('20220514015440'),
@@ -100,4 +91,6 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20220819172555'),
   ('20220830211101'),
   ('20220915165621'),
-  ('20220921212247');
+  ('20220921212247'),
+  ('20220930014400'),
+  ('20221004183943');

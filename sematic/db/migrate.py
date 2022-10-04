@@ -12,7 +12,9 @@ import functools
 import importlib
 import logging
 import os
+import subprocess
 from typing import List
+from urllib.parse import urlparse
 
 # Third-party
 import click
@@ -161,13 +163,15 @@ def _apply_common_options(env, verbose):
 
 @main.command("up", short_help="Apply outstanding migrations")
 @common_options
-def _migrate_up(env: str, verbose: bool):
+@click.option("--schema-file", "file", type=click.STRING, default="schema.sql")
+def _migrate_up(env: str, verbose: bool, file: str):
     """
     Migrate the DB to the latest version.
     """
     _apply_common_options(env, verbose)
     # Separate function to be able to invoke it outside of click
     migrate_up()
+    dump_schema(file)
 
 
 def migrate_up():
@@ -177,8 +181,6 @@ def migrate_up():
     logging.info("Running migrations on {}".format(get_config().db_url))
 
     versions = _get_current_versions()
-
-    logging.info("Already applied: {}".format(versions))
 
     migration_files = _get_migration_files()
 
@@ -194,13 +196,15 @@ def migrate_up():
 
 @main.command("down", short_help="Revert last migration")
 @common_options
-def _migrate_down(env: str, verbose: bool):
+@click.option("--schema-file", "file", type=click.STRING, default="schema.sql")
+def _migrate_down(env: str, verbose: bool, file: str):
     """
     Revert the last migration.
     """
     _apply_common_options(env, verbose)
     # Separate function to be able to invoke it outside of click
     migrate_down()
+    dump_schema(file)
 
 
 def migrate_down():
@@ -220,6 +224,46 @@ def migrate_down():
     )
 
     _run_migration(migration_file, latest_version, MigrationDirection.DOWN)
+
+
+@main.command("dump", short_help="Dump schema")
+@common_options
+@click.option("--schema-file", "file", type=click.STRING, default="schema.sql")
+def _dump_schema(env: str, verbose: bool, file: str):
+    _apply_common_options(env, verbose)
+    dump_schema(file)
+
+
+def dump_schema(file: str):
+    parsed_db_url = urlparse(get_config().db_url)
+
+    if parsed_db_url.scheme != "sqlite":
+        logging.warning("Not dumping schema, only SQLite supported at this time")
+        return
+
+    db_file_path = parsed_db_url.path
+
+    schema = (
+        subprocess.Popen(  # type: ignore
+            f"sqlite3 {db_file_path} .schema",
+            shell=True,
+            stdout=subprocess.PIPE,
+        )
+        .stdout.read()
+        .decode("utf-8")
+    )
+
+    current_versions = _get_current_versions()
+
+    schema += (
+        ("--- schema migrations\n" 'INSERT INTO "schema_migrations" (version) VALUES\n')
+        + ",\n".join(f"  ('{version}')" for version in current_versions)
+        + ";\n"
+    )
+
+    logging.info("Writing schema to %s", file)
+    with open(file, "w") as f:
+        f.write(schema)
 
 
 @main.command("status", short_help="Current migration status")
