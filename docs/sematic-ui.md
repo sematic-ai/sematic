@@ -52,7 +52,7 @@ The grey panel to the left is the Menu Panel. Three items are listed:
   [Graph Panel](#graph-panel).
 * [Coming soon] **Topline metrics** – this will display plots of the main
   metrics of your pipeline across successive executions
-* **Nested runs** – This lists all the nested runs of the your pipeline in a
+* **Nested runs** – This lists all the nested runs of your pipeline in a
   tree view. This is a summarized view of the execution graph visible in the
   [Graph Panel](#graph-panel). You can click and select any run to view it in
   the central [Run Panel](#run-panel)

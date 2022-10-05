@@ -35,17 +35,17 @@
 ## Contribute
 
 * [Code of Conduct](code-of-conduct.md)
-* [How to contribute](./contributor-guide.md)
-    * [Example pipelines](./contribute-example.md)
-* [Monorepo](coming-soon.md)
-* [Code style](coming-soon.md)
+* [How to contribute](contributor-guide.md)
+    * [Example pipelines](contribute-example.md)
+* [Monorepo](monorepo.md)
+* [Code style](code-style.md)
 
 ## Design
 
-* [Concepts](coming-soon.md)
-* [Architecture](coming-soon.md)
-* [Stack](coming-soon.md)
-* [Tooling](coming-soon.md)
+* [Concepts](concepts.md)
+* [Architecture](architecture.md)
+* [Stack](stack.md)
+* [Tooling](tooling.md)
 
 ## Project
 

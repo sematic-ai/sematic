@@ -41,7 +41,7 @@ Then copy your example's package in the example directory
 $ cp -rf path/to/my_package sematic/examples/
 ```
 
-In Sematic, we use absolute import paths every where. So you need to prefix all
+In Sematic, we use absolute import paths everywhere. So you need to prefix all
 your local imports with `sematic.examples`.
 
 Change
@@ -107,7 +107,7 @@ to add links to external docs.
 Add a `README` file at the root of your package with some baseline documentation.
 
 Add your personal info to an `AUTHORS` file. You can add whatever you want
-(email, twitter, Github profile, etc). This will be displayed to users when they run your example.
+(email, Twitter, GitHub profile, etc.). This will be displayed to users when they run your example.
 
 
 ### Create a Pull Request
@@ -118,11 +118,11 @@ Push your branch:
 $ git push origin your-branch-name
 ```
 
-Then head over to [Sematics' Pull
+Then head over to [Sematic's Pull
 Requests](https://github.com/sematic-ai/sematic/compare) to create one.
 
 To increase your chances of being merged fast:
 
 * Add a comprehensive description to your pipeline
 * Make sure the Circle CI build passes for your branch (Use `make pre_commit` to run the linter and code formatter)
-* Add `neutralino1` as a reviewer
+* Add a specific committer as a reviewer, such as `neutralino1`
