@@ -163,28 +163,6 @@ export default function ScrollingLogView(props: {
     }
   }, [fastForwarding, scrollerId]);
 
-  // overlay with the load spinner and loading text while we are jumping to the end
-  const overlay = fastForwarding ? (
-    <Box
-      sx={{
-        zIndex: 100,
-        left: 0,
-        top: 0,
-        position: "absolute",
-        height: "100%",
-        width: "100%",
-        backgroundColor: "white",
-        opacity: 0.8,
-        textAlign: "center",
-      }}
-    >
-      <Loading error={undefined} isLoaded={false} />
-      <p>{loadingMessage}</p>
-    </Box>
-  ) : (
-    <div></div>
-  );
-
   const onFilterStringChange = useCallback(
     (evt: any) => {
       setFilterString(evt.target.value);
@@ -211,21 +189,38 @@ export default function ScrollingLogView(props: {
   );
 
   return (
-    <Box sx={{ mt: 5, position: "relative", left: 0, top: 0 }}>
-      {overlay}
+    <Box
+      sx={{
+        mt: 5,
+        position: "relative",
+        left: 0,
+        top: 0,
+      }}
+    >
       <TextField
         variant="standard"
         fullWidth={true}
         placeholder={"Filter..."}
         onChange={onFilterStringChange}
       />
-      <Box id={scrollerId} sx={{ height: "40hv", my: 5, pt: 1 }}>
+      <Box
+        id={scrollerId}
+        sx={{
+          height: "400px",
+          my: 5,
+          pt: 1,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          overflowY: "scroll",
+          gridRow: 2,
+        }}
+      >
         <InfiniteScroll
           dataLength={lineState.lines.length}
           next={next}
           scrollableTarget={scrollerId}
           hasMore={hasMore}
-          loader={<h4>Loading...</h4>}
+          loader={<Loading isLoaded={false} />}
           onScroll={onScroll}
           endMessage={noMoreLinesIndicator}
         >
@@ -236,6 +231,7 @@ export default function ScrollingLogView(props: {
                 borderColor: theme.palette.grey[200],
                 fontSize: 12,
                 py: 2,
+                pl: 1,
                 color: theme.palette.grey[800],
                 backgroundColor:
                   index % 2 == 0 ? "white" : theme.palette.grey[50],
@@ -249,7 +245,7 @@ export default function ScrollingLogView(props: {
       </Box>
       {hasMore && (
         <Button onClick={accumulateUntilEnd} sx={{ width: "100%" }}>
-          Jump to end...
+          {fastForwarding ? loadingMessage : "Jump to the end"}
         </Button>
       )}
     </Box>
