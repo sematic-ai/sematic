@@ -109,9 +109,7 @@ class CloudResolver(LocalResolver):
             return True
         if future.props.inline:
             return True
-        active_runs = sum(
-            1 for f in self._futures if f.state == FutureState.SCHEDULED
-        )
+        active_runs = sum(1 for f in self._futures if f.state == FutureState.SCHEDULED)
         if active_runs < self._max_parallelism:
             return True
         logger.info(
