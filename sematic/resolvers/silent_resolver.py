@@ -3,6 +3,7 @@ import logging
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
+from sematic.future_context import SematicContext, set_context
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,10 @@ class SilentResolver(StateMachineResolver):
         self._set_future_state(future, FutureState.SCHEDULED)
         try:
             self._start_inline_execution(future.id)
-            value = future.calculator.calculate(**future.resolved_kwargs)
+            with set_context(
+                SematicContext(id=future.id, root_id=self._root_future.id)
+            ):
+                value = future.calculator.calculate(**future.resolved_kwargs)
             self._update_future_with_value(future, value)
         except Exception as exception:
             self._handle_future_failure(future, exception)

@@ -21,6 +21,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value, make_artifact
 from sematic.db.models.run import Run
 from sematic.future import Future
+from sematic.future_context import SematicContext, set_context
 from sematic.log_reader import log_prefix
 from sematic.resolvers.cloud_resolver import (
     CloudResolver,
@@ -139,7 +140,8 @@ def main(run_id: str, resolve: bool):
 
         if resolve:
             logger.info("Resolving %s", func.__name__)
-            future: Future = func(**kwargs)
+            with set_context(SematicContext(id=run.id, root_id=run.root_id)):
+                future: Future = func(**kwargs)
             future.id = run.id
 
             resolver = CloudResolver(detach=False, is_running_remotely=True)
@@ -149,7 +151,8 @@ def main(run_id: str, resolve: bool):
 
         else:
             logger.info("Executing %s", func.__name__)
-            output = func.func(**kwargs)
+            with set_context(SematicContext(id=run.id, root_id=run.root_id)):
+                output = func.func(**kwargs)
             _set_run_output(run, output, func.output_type, edges)
 
     except Exception as e:

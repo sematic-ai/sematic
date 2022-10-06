@@ -28,6 +28,7 @@ pytest_test(
     srcs = ["test_silent_resolver.py"],
     deps = [
         "//sematic:calculator",
+        "//sematic:future_context",
         "//sematic/resolvers:silent_resolver",
     ],
 )
