@@ -81,6 +81,7 @@ export default function ScrollingLogView(props: {
 
   // load the next log lines after the ones currently being displayed
   const next = useCallback(() => {
+    if (fastForwarding) return;
     const sameSource =
       lineState.source === logSource && lineState.filterString === filterString;
     getLines(
@@ -89,7 +90,14 @@ export default function ScrollingLogView(props: {
       filterString,
       handleLogLines
     );
-  }, [getLines, lineState.cursor, handleLogLines, logSource, filterString]);
+  }, [
+    getLines,
+    lineState.cursor,
+    handleLogLines,
+    logSource,
+    filterString,
+    fastForwarding,
+  ]);
 
   // on render: if the current lines didn't come from the source & filter that
   // are currently set, load new logs with the current settings.
@@ -181,7 +189,7 @@ export default function ScrollingLogView(props: {
       // the user gets too close to it which will provide a smoother experience.
       const distanceFromScrollBottom =
         evt.target.scrollHeight - evt.target.scrollTop;
-      if (lineState.cursor !== null && distanceFromScrollBottom < 1000) {
+      if (lineState.cursor !== null && distanceFromScrollBottom < 100) {
         next();
       }
     },
@@ -234,7 +242,7 @@ export default function ScrollingLogView(props: {
                 pl: 1,
                 color: theme.palette.grey[800],
                 backgroundColor:
-                  index % 2 == 0 ? "white" : theme.palette.grey[50],
+                  index % 2 === 0 ? "white" : theme.palette.grey[50],
               }}
               key={index}
             >
@@ -244,7 +252,11 @@ export default function ScrollingLogView(props: {
         </InfiniteScroll>
       </Box>
       {hasMore && (
-        <Button onClick={accumulateUntilEnd} sx={{ width: "100%" }}>
+        <Button
+          onClick={accumulateUntilEnd}
+          sx={{ width: "100%" }}
+          disabled={fastForwarding}
+        >
           {fastForwarding ? loadingMessage : "Jump to the end"}
         </Button>
       )}
