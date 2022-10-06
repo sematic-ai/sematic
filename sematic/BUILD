@@ -7,6 +7,7 @@ sematic_py_lib(
         ":calculator",
         ":container_images",
         ":resolver",
+        "//sematic:future_context",
         "//sematic/future_operators:init",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:local_resolver",
