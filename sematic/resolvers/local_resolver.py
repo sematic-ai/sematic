@@ -197,6 +197,16 @@ class LocalResolver(SilentResolver):
         self._add_run(run)
         self._save_graph()
 
+    def _future_did_get_retried(self, future: AbstractFuture) -> None:
+        super()._future_did_get_retried(future)
+
+        run = self._get_run(future.id)
+
+        run.future_state = FutureState.CREATED
+
+        self._add_run(run)
+        self._save_graph()
+
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
         super()._future_did_fail(failed_future)
 

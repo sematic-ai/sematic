@@ -1,4 +1,5 @@
 # Standard Library
+import logging
 import time
 import typing
 from dataclasses import dataclass
@@ -68,7 +69,12 @@ class SomeException(Exception):
     pass
 
 
-@sematic.func(retry=sematic.RetrySettings(exceptions=(SomeException,), times=5))
+@sematic.func(
+    inline=False,
+    retry=sematic.RetrySettings(exceptions=(SomeException,), times=5)
+)
 def raise_exception():
     time.sleep(5)
+    logging.basicConfig(level=logging.INFO)
+    logging.info("Running raise_exception haha")
     raise SomeException

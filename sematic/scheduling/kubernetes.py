@@ -4,6 +4,7 @@ import pathlib
 from dataclasses import dataclass
 from enum import Enum, unique
 from typing import Dict, List, Optional, Tuple
+import uuid
 
 import kubernetes
 from kubernetes.client.exceptions import ApiException
@@ -77,7 +78,7 @@ class KubernetesExternalJob(ExternalJob):
 
     @property
     def run_id(self) -> str:
-        return self.kubernetes_job_name.split("-")[-1]
+        return self.kubernetes_job_name.split("-")[-2]
 
     @property
     def namespace(self) -> str:
@@ -95,7 +96,7 @@ class KubernetesExternalJob(ExternalJob):
     def make_external_job_id(
         self, run_id: str, namespace: str, job_type: JobType
     ) -> str:
-        job_name = "-".join(("sematic", job_type.value, run_id))
+        job_name = "-".join(("sematic", job_type.value, run_id, uuid.uuid4().hex[:6]))
         return f"{namespace}/{job_name}"
 
     def is_active(self) -> bool:

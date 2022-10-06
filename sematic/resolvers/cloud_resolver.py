@@ -131,8 +131,9 @@ class CloudResolver(LocalResolver):
 
         if run.future_state not in {FutureState.RESOLVED.value, FutureState.RAN.value}:
             self._handle_future_failure(
-                future, Exception("Run failed, see exception in the UI.")
+                future, Exception("Run failed, see exception in the UI."), run.exception
             )
+            return
 
         if run.nested_future_id is not None:
             pickled_nested_future = storage.get(
@@ -211,7 +212,7 @@ class CloudResolver(LocalResolver):
             ] = api_client.update_run_future_states(
                 list(scheduled_futures_by_id.keys())
             )
-            logger.info("Checking for updates on %s", scheduled_futures_by_id.keys())
+            logger.debug("Checking for updates on %s", scheduled_futures_by_id.keys())
             for run_id, new_state in updated_states.items():
                 future = scheduled_futures_by_id[run_id]
                 if new_state != FutureState.SCHEDULED:
@@ -221,7 +222,7 @@ class CloudResolver(LocalResolver):
                     self._refresh_graph(future.id)
                     return future.id
 
-            logger.info("Sleeping for %s s", delay_between_updates)
+            logger.debug("Sleeping for %s s", delay_between_updates)
             time.sleep(delay_between_updates)
             delay_between_updates = min(
                 _MAX_DELAY_BETWEEN_STATUS_UPDATES_SECONDS,

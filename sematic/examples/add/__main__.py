@@ -3,6 +3,7 @@ import logging
 
 # Sematic
 from sematic.examples.add.pipeline import pipeline, raise_exception
+from sematic import CloudResolver
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
@@ -12,6 +13,6 @@ if __name__ == "__main__":
     )
     # result = future.resolve()
 
-    result = raise_exception().resolve()
+    result = raise_exception().resolve(CloudResolver(detach=False))
 
     logging.info(result)

@@ -141,12 +141,13 @@ def _assert_is_scheduleable(run: Run, resolution: Resolution):
             f"not be scheduled. Runs can only be scheduled if they are in the "
             f"{FutureState.CREATED} state."
         )
-    for job in run.external_jobs:
-        if job.is_active():
-            raise StateNotSchedulable(
-                f"The run {run.id} already had an active external job "
-                f"{job.external_job_id} and thus could not be scheduled."
-            )
+    #for job in run.external_jobs:
+    #    if job.is_active():
+    #        print(job)
+    #        raise StateNotSchedulable(
+    #            f"The run {run.id} already had an active external job "
+    #            f"{job.external_job_id} and thus could not be scheduled."
+    #        )
     if resolution.status != ResolutionStatus.RUNNING.value:
         raise StateNotSchedulable(
             f"The run {run.id} was not schedulable because there "
