@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Box, Button, TextField } from "@mui/material";
+import { Alert, Box, Button, TextField, useTheme } from "@mui/material";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Loading from "./Loading";
 
@@ -28,7 +28,7 @@ export default function ScrollingLogView(props: {
   logSource: string;
 }) {
   const { getLines, logSource } = props;
-
+  const theme = useTheme();
   const [hasMore, setHasMore] = useState(true);
   const [fastForwarding, setFastForwarding] = useState(false);
   const [currentNoLinesReason, setNoLinesReason] = useState<string | null>(
@@ -81,6 +81,7 @@ export default function ScrollingLogView(props: {
 
   // load the next log lines after the ones currently being displayed
   const next = useCallback(() => {
+    if (fastForwarding) return;
     const sameSource =
       lineState.source === logSource && lineState.filterString === filterString;
     getLines(
@@ -89,7 +90,14 @@ export default function ScrollingLogView(props: {
       filterString,
       handleLogLines
     );
-  }, [getLines, lineState.cursor, handleLogLines, logSource, filterString]);
+  }, [
+    getLines,
+    lineState.cursor,
+    handleLogLines,
+    logSource,
+    filterString,
+    fastForwarding,
+  ]);
 
   // on render: if the current lines didn't come from the source & filter that
   // are currently set, load new logs with the current settings.
@@ -103,9 +111,9 @@ export default function ScrollingLogView(props: {
   });
 
   const noMoreLinesIndicator = (
-    <div className="no-more-indicator">
-      ------ {currentNoLinesReason} ------
-    </div>
+    <Alert severity="info" sx={{ mt: 3 }}>
+      {currentNoLinesReason}
+    </Alert>
   );
   const scrollerId = "scrolling-logs-" + lineState.source;
 
@@ -163,16 +171,6 @@ export default function ScrollingLogView(props: {
     }
   }, [fastForwarding, scrollerId]);
 
-  // overlay with the load spinner and loading text while we are jumping to the end
-  const overlay = fastForwarding ? (
-    <div className="loading-overlay">
-      <Loading error={undefined} isLoaded={false} />
-      <p>{loadingMessage}</p>
-    </div>
-  ) : (
-    <div></div>
-  );
-
   const onFilterStringChange = useCallback(
     (evt: any) => {
       setFilterString(evt.target.value);
@@ -191,7 +189,7 @@ export default function ScrollingLogView(props: {
       // the user gets too close to it which will provide a smoother experience.
       const distanceFromScrollBottom =
         evt.target.scrollHeight - evt.target.scrollTop;
-      if (lineState.cursor !== null && distanceFromScrollBottom < 1000) {
+      if (lineState.cursor !== null && distanceFromScrollBottom < 100) {
         next();
       }
     },
@@ -199,34 +197,69 @@ export default function ScrollingLogView(props: {
   );
 
   return (
-    <Box>
-      <div className="ScrollingLogView">
-        {overlay}
-        <TextField
-          fullWidth={true}
-          className="filter"
-          placeholder={"Filter..."}
-          onChange={onFilterStringChange}
-        />
-        <div id={scrollerId} className="scroller">
-          <InfiniteScroll
-            dataLength={lineState.lines.length}
-            next={next}
-            scrollableTarget={scrollerId}
-            hasMore={hasMore}
-            loader={<h4>Loading...</h4>}
-            onScroll={onScroll}
-            endMessage={noMoreLinesIndicator}
-          >
-            {lineState.lines.map((line, index) => (
-              <div key={index}>{line}</div>
-            ))}
-          </InfiniteScroll>
-        </div>
-        <Button className="jump-to-end" onClick={accumulateUntilEnd}>
-          Jump to end...
+    <Box
+      sx={{
+        mt: 5,
+        position: "relative",
+        left: 0,
+        top: 0,
+      }}
+    >
+      <TextField
+        variant="standard"
+        fullWidth={true}
+        placeholder={"Filter..."}
+        onChange={onFilterStringChange}
+      />
+      <Box
+        id={scrollerId}
+        sx={{
+          height: "400px",
+          my: 5,
+          pt: 1,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          overflowY: "scroll",
+          gridRow: 2,
+        }}
+      >
+        <InfiniteScroll
+          dataLength={lineState.lines.length}
+          next={next}
+          scrollableTarget={scrollerId}
+          hasMore={hasMore}
+          loader={<Loading isLoaded={false} />}
+          onScroll={onScroll}
+          endMessage={noMoreLinesIndicator}
+        >
+          {lineState.lines.map((line, index) => (
+            <Box
+              sx={{
+                borderTop: 1,
+                borderColor: theme.palette.grey[200],
+                fontSize: 12,
+                py: 2,
+                pl: 1,
+                color: theme.palette.grey[800],
+                backgroundColor:
+                  index % 2 === 0 ? "white" : theme.palette.grey[50],
+              }}
+              key={index}
+            >
+              <code>{line}</code>
+            </Box>
+          ))}
+        </InfiniteScroll>
+      </Box>
+      {hasMore && (
+        <Button
+          onClick={accumulateUntilEnd}
+          sx={{ width: "100%" }}
+          disabled={fastForwarding}
+        >
+          {fastForwarding ? loadingMessage : "Jump to the end"}
         </Button>
-      </div>
+      )}
     </Box>
   );
 }
