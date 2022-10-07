@@ -13,7 +13,7 @@ import importlib
 import logging
 import os
 import subprocess
-from typing import List
+from typing import List, Optional
 from urllib.parse import urlparse
 
 # Third-party
@@ -184,7 +184,13 @@ def _apply_common_options(env, verbose):
 
 @main.command("up", short_help="Apply outstanding migrations")
 @common_options
-@click.option("--schema-file", "file", type=click.STRING, default="schema.sql")
+@click.option(
+    "--schema-file",
+    "file",
+    type=click.STRING,
+    default="schema.sql",
+    help="File into which to dump the new schema.",
+)
 def _migrate_up(env: str, verbose: bool, file: str):
     """
     Migrate the DB to the latest version.
@@ -205,6 +211,8 @@ def migrate_up():
 
     migration_files = _get_migration_files()
 
+    last_successful: Optional[str] = None
+
     for migration_file in migration_files:
         version = migration_file.split("_")[0]
 
@@ -212,12 +220,28 @@ def migrate_up():
             logging.info("Already applied {}".format(migration_file))
             continue
 
-        _run_migration(migration_file, version, MigrationDirection.UP)
+        try:
+            _run_migration(migration_file, version, MigrationDirection.UP)
+        except Exception as e:
+            logging.error(
+                f"{migration_file} failed with error:\n"
+                f"{e}\n"
+                f"Last successful migration is: {last_successful}"
+            )
+            return
+
+        last_successful = migration_file
 
 
 @main.command("down", short_help="Revert last migration")
 @common_options
-@click.option("--schema-file", "file", type=click.STRING, default="schema.sql")
+@click.option(
+    "--schema-file",
+    "file",
+    type=click.STRING,
+    default="schema.sql",
+    help="File into which to dump the new schema.",
+)
 def _migrate_down(env: str, verbose: bool, file: str):
     """
     Revert the last migration.
