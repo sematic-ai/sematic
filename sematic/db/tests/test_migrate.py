@@ -8,12 +8,45 @@ from sqlalchemy.exc import OperationalError
 # Sematic
 from sematic.db.db import db
 from sematic.db.migrate import (
+    InvalidMigrationError,
+    MigrationDirection,
     _get_current_versions,
     _get_migration_files,
+    _run_sql_migration,
     migrate_down,
     migrate_up,
 )
 from sematic.db.tests.fixtures import test_db_empty  # noqa: F401
+
+
+@patch("sematic.db.migrate._get_migration_sql", return_value="")
+def test_invalid_migration(_):
+    with pytest.raises(InvalidMigrationError):
+        _run_sql_migration("abc", "abc", MigrationDirection.UP)
+
+
+INVALID_SQL = """
+-- migrate:up
+
+SELECT;
+
+-- migrate:down
+
+"""
+
+
+@patch("sematic.db.migrate._get_migration_sql", return_value=INVALID_SQL)
+def test_invalid_sql(_, test_db_empty):  # noqa: F811
+    current_versions = _get_current_versions()
+
+    assert len(current_versions) == 0
+
+    with pytest.raises(OperationalError):
+        _run_sql_migration("abc", "abc", MigrationDirection.UP)
+
+    current_versions = _get_current_versions()
+
+    assert len(current_versions) == 0
 
 
 @patch("sematic.db.migrate._run_py_migration")

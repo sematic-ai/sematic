@@ -82,14 +82,35 @@ def _run_migration(migration_file: str, version: str, direction: MigrationDirect
         _run_py_migration(migration_file, version, direction)
 
 
+def _get_migration_sql(migration_file: str) -> str:
+    """
+    Read migration SQL from file.
+    """
+    with open(os.path.join(get_config().migrations_dir, migration_file), "r") as file:
+        return file.read()
+
+
+_DOWN_MARKER = "-- migrate:down"
+_UP_MARKER = "-- migrate:up"
+
+
+class InvalidMigrationError(ValueError):
+    pass
+
+
 def _run_sql_migration(
     migration_file: str, version: str, direction: MigrationDirection
 ):
-    with open(os.path.join(get_config().migrations_dir, migration_file), "r") as file:
-        sql = file.read()
+    sql = _get_migration_sql(migration_file)
 
-    up_sql, down_sql = sql.split("-- migrate:down")
-    up_sql = up_sql.split("-- migrate:up")[1].strip()
+    if not all(marker in sql for marker in (_DOWN_MARKER, _UP_MARKER)):
+        raise InvalidMigrationError(
+            f"{migration_file} does not contain the required markers: "
+            f"{_UP_MARKER} and {_DOWN_MARKER}"
+        )
+
+    up_sql, down_sql = sql.split(_DOWN_MARKER)
+    up_sql = up_sql.split(_UP_MARKER)[1].strip()
     down_sql = down_sql.strip()
 
     statements = (up_sql if direction == MigrationDirection.UP else down_sql).split(";")
