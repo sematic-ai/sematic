@@ -27,6 +27,8 @@ class FutureState(enum.Enum):
     SCHEDULED = "SCHEDULED"
     FAILED = "FAILED"
     NESTED_FAILED = "NESTED_FAILED"
+    # The future failed and is being queued for retrying
+    RETRYING = "RETRYING"
 
     @classmethod
     def as_object(cls, future_state: Union[str, "FutureState"]) -> "FutureState":

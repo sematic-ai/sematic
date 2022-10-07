@@ -1,5 +1,6 @@
 # Standard Library
 import logging
+from random import random
 import time
 import typing
 from dataclasses import dataclass
@@ -70,11 +71,15 @@ class SomeException(Exception):
 
 
 @sematic.func(
-    inline=False,
+    inline=True,
     retry=sematic.RetrySettings(exceptions=(SomeException,), times=5)
 )
-def raise_exception():
-    time.sleep(5)
+def raise_exception() -> float:
     logging.basicConfig(level=logging.INFO)
-    logging.info("Running raise_exception haha")
+    random_number = random()
+    logging.info("Random number {}".format(random_number))
+    if random_number < 0.1:
+        return random_number
+
+    logging.info("Raising exception")
     raise SomeException

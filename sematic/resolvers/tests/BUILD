@@ -12,6 +12,7 @@ pytest_test(
         "//sematic/tests:fixtures",
         "//sematic/types:init",
         "//sematic/utils:exceptions",
+        "//sematic:retry_settings",
     ],
 )
 

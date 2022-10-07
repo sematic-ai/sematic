@@ -202,7 +202,7 @@ class LocalResolver(SilentResolver):
 
         run = self._get_run(future.id)
 
-        run.future_state = FutureState.CREATED
+        run.future_state = FutureState.RETRYING
 
         self._add_run(run)
         self._save_graph()
