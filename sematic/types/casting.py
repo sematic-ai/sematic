@@ -1,12 +1,14 @@
 # Standard Library
 import dataclasses
 import typing
+from enum import Enum
 
 # Sematic
 from sematic.types.registry import (
     DataclassKey,
     get_can_cast_func,
     get_safe_cast_func,
+    is_enum,
     is_parameterized_generic,
 )
 
@@ -47,6 +49,11 @@ def can_cast_type(
     if can_cast_func is None and dataclasses.is_dataclass(to_type):
         can_cast_func = get_can_cast_func(DataclassKey)
 
+    if can_cast_func is None and is_enum(to_type):
+        # enum types can register their own handlers, but if they don't
+        # we can use the default enum handler
+        can_cast_func = get_can_cast_func(Enum)
+
     if can_cast_func is not None:
         return can_cast_func(from_type, to_type)
 
@@ -85,6 +92,9 @@ def safe_cast(
     # 1b. If this is a dataclass we fetch the datacalss casting logic
     if _safe_cast_func is None and dataclasses.is_dataclass(type_):
         _safe_cast_func = get_safe_cast_func(DataclassKey)
+
+    if _safe_cast_func is None and is_enum(type_):
+        _safe_cast_func = get_safe_cast_func(Enum)
 
     if _safe_cast_func is not None:
         return _safe_cast_func(value, type_)
