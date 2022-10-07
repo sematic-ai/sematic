@@ -8,6 +8,9 @@ from kubernetes.client.exceptions import ApiException
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     KubernetesSecretMount,
+    KubernetesToleration,
+    KubernetesTolerationEffect,
+    KubernetesTolerationOperator,
     ResourceRequirements,
 )
 from sematic.scheduling.kubernetes import (
@@ -47,6 +50,16 @@ def test_schedule_kubernetes_job(
                 file_secrets=file_secrets,
                 file_secret_root_path=secret_root,
             ),
+            tolerations=[
+                KubernetesToleration(
+                    key="foo",
+                    operator=KubernetesTolerationOperator.Equal,
+                    effect=KubernetesTolerationEffect.NoExecute,
+                    value="bar",
+                    toleration_seconds=42,
+                ),
+                KubernetesToleration(),
+            ],
         )
     )
     mock_user_settings.return_value = {"KUBERNETES_NAMESPACE": namespace}
@@ -85,6 +98,20 @@ def test_schedule_kubernetes_job(
     assert container.image == image_uri
     assert container.resources.limits == requests
     assert container.resources.requests == requests
+
+    tolerations = job.spec.template.spec.tolerations
+    assert len(tolerations) == 2
+    assert tolerations[0].key == "foo"
+    assert tolerations[0].value == "bar"
+    assert tolerations[0].effect == "NoExecute"
+    assert tolerations[0].operator == "Equal"
+    assert tolerations[0].toleration_seconds == 42
+
+    assert tolerations[1].key is None
+    assert tolerations[1].value is None
+    assert tolerations[1].effect is None
+    assert tolerations[1].operator == "Equal"
+    assert tolerations[1].toleration_seconds is None
 
 
 IS_ACTIVE_CASES = [
