@@ -1,8 +1,6 @@
 # Standard Library
-import logging
 import typing
 from dataclasses import dataclass
-from random import random
 
 # Sematic
 import sematic
@@ -63,21 +61,3 @@ def pipeline(a: float, b: float, c: float) -> float:
     sum2 = add(b, c)
     sum3 = add(a, c)
     return add3(sum1, sum2, sum3)
-
-
-class SomeException(Exception):
-    pass
-
-
-@sematic.func(
-    inline=True, retry=sematic.RetrySettings(exceptions=(SomeException,), times=5)
-)
-def raise_exception() -> float:
-    logging.basicConfig(level=logging.INFO)
-    random_number = random()
-    logging.info("Random number {}".format(random_number))
-    if random_number < 0.1:
-        return random_number
-
-    logging.info("Raising exception")
-    raise SomeException
