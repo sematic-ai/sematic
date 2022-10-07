@@ -1,7 +1,7 @@
 # Standard Library
 from dataclasses import dataclass, field
 from enum import Enum, unique
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 KUBERNETES_SECRET_NAME = "sematic-func-secrets"
 
@@ -135,6 +135,29 @@ class KubernetesToleration:
     effect: Optional[KubernetesTolerationEffect] = None
     value: Optional[str] = None
     toleration_seconds: Optional[int] = None
+
+    def to_api_keyword_args(self) -> Dict[str, Optional[Union[str, int]]]:
+        """Convert to the format for kwargs the API python client API for tolerations"""
+        effect: Optional[str] = None
+        if self.effect is not None:
+            # people may set with string values
+            effect = (
+                self.effect  # type: ignore
+                if isinstance(self.effect, str)
+                else self.effect.value
+            )
+        operator: str = (
+            self.operator
+            if isinstance(self.operator, str)
+            else self.operator.value  # type: ignore
+        )
+        return dict(
+            effect=effect,
+            key=self.key,
+            operator=operator,
+            toleration_seconds=self.toleration_seconds,
+            value=self.value,
+        )
 
 
 @dataclass
