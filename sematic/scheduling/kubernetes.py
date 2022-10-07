@@ -216,7 +216,9 @@ def _schedule_kubernetes_job(
         )
         tolerations = [
             kubernetes.client.V1Toleration(  # type: ignore
-                effect=toleration.effect.value,
+                effect=toleration.effect.value
+                if toleration.effect is not None
+                else None,
                 key=toleration.key,
                 operator=toleration.operator.value,
                 toleration_seconds=toleration.toleration_seconds,
