@@ -197,8 +197,8 @@ class LocalResolver(SilentResolver):
         self._add_run(run)
         self._save_graph()
 
-    def _future_did_get_retried(self, future: AbstractFuture) -> None:
-        super()._future_did_get_retried(future)
+    def _future_did_get_marked_for_retry(self, future: AbstractFuture) -> None:
+        super()._future_did_get_marked_for_retry(future)
 
         run = self._get_run(future.id)
 

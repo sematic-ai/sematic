@@ -212,7 +212,7 @@ class CloudResolver(LocalResolver):
             ] = api_client.update_run_future_states(
                 list(scheduled_futures_by_id.keys())
             )
-            logger.debug("Checking for updates on %s", scheduled_futures_by_id.keys())
+            logger.info("Checking for updates on %s", scheduled_futures_by_id.keys())
             for run_id, new_state in updated_states.items():
                 future = scheduled_futures_by_id[run_id]
                 if new_state != FutureState.SCHEDULED:
@@ -222,7 +222,7 @@ class CloudResolver(LocalResolver):
                     self._refresh_graph(future.id)
                     return future.id
 
-            logger.debug("Sleeping for %s s", delay_between_updates)
+            logger.info("Sleeping for %s s", delay_between_updates)
             time.sleep(delay_between_updates)
             delay_between_updates = min(
                 _MAX_DELAY_BETWEEN_STATUS_UPDATES_SECONDS,
