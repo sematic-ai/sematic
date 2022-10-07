@@ -6,6 +6,7 @@ sematic_py_lib(
         ":type",
         "//sematic/types/types:bool",
         "//sematic/types/types:dataclass",
+        "//sematic/types/types:enum",
         "//sematic/types/types:float",
         "//sematic/types/types:integer",
         "//sematic/types/types:none",

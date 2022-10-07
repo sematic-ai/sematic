@@ -8,6 +8,7 @@ be added here. Ideally only standard library.
 import sematic.types.types.bool  # noqa: F401
 import sematic.types.types.dataclass  # noqa: F401
 import sematic.types.types.dict  # noqa: F401
+import sematic.types.types.enum  # noqa: F401
 import sematic.types.types.float  # noqa: F401
 import sematic.types.types.integer  # noqa: F401
 import sematic.types.types.list  # noqa: F401

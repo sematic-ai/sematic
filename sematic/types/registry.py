@@ -1,4 +1,5 @@
 # Standard Library
+from enum import Enum
 from typing import (
     Any,
     Callable,
@@ -280,7 +281,11 @@ def validate_type_annotation(*types: TypeAnnotation) -> None:
             subclasses_type = issubclass(type_, type)
         except TypeError:
             subclasses_type = False
-        if type(type_) is type or subclasses_type:
+        try:
+            subclasses_enum = issubclass(type_, Enum)
+        except TypeError:
+            subclasses_enum = False
+        if type(type_) is type or subclasses_type or subclasses_enum:
             return
         if not is_parameterized_generic(type_, raise_for_unparameterized=True):
             raise TypeError(
@@ -360,8 +365,17 @@ def _is_supported_registry_key(type_: RegistryKey) -> bool:
         subclasses_type = issubclass(type_, type)
     except TypeError:
         subclasses_type = False
+    try:
+        subclasses_enum = issubclass(type_, Enum)
+    except TypeError:
+        subclasses_enum = False
     is_unparameterized_generic = type_ in SUPPORTED_GENERIC_TYPING_ANNOTATIONS.keys()
-    return type(type_) is type or subclasses_type or is_unparameterized_generic
+    return (
+        type(type_) is type
+        or subclasses_type
+        or is_unparameterized_generic
+        or subclasses_enum
+    )
 
 
 def _validate_registry_keys(*types_: RegistryKey):
