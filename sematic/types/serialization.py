@@ -10,6 +10,7 @@ import importlib
 import inspect
 import json
 import typing
+from enum import Enum
 
 # Third-party
 import cloudpickle  # type: ignore
@@ -39,6 +40,13 @@ def value_to_json_encodable(value: typing.Any, type_: typing.Any) -> typing.Any:
     if to_json_encodable_func is None and dataclasses.is_dataclass(type_):
         to_json_encodable_func = get_to_json_encodable_func(DataclassKey)
 
+    try:
+        is_enum = issubclass(type_, Enum)
+    except TypeError:
+        is_enum = False
+    if to_json_encodable_func is None and is_enum:
+        to_json_encodable_func = get_to_json_encodable_func(Enum)
+
     # If we have a serializer, we use it
     if to_json_encodable_func is not None:
         return to_json_encodable_func(value, type_)
@@ -66,6 +74,13 @@ def value_from_json_encodable(
     # Then we check if this is a dataclass
     if from_json_encodable_func is None and dataclasses.is_dataclass(type_):
         from_json_encodable_func = get_from_json_encodable_func(DataclassKey)
+
+    try:
+        is_enum = issubclass(type_, Enum)
+    except TypeError:
+        is_enum = False
+    if from_json_encodable_func is None and is_enum:
+        from_json_encodable_func = get_from_json_encodable_func(Enum)
 
     # If we have a deserializer we use it
     if from_json_encodable_func is not None:
@@ -96,6 +111,13 @@ def get_json_encodable_summary(value: typing.Any, type_: typing.Any) -> typing.A
         to_json_encodable_summary_func = get_to_json_encodable_summary_func(
             DataclassKey
         )
+
+    try:
+        is_enum = issubclass(type_, Enum)
+    except TypeError:
+        is_enum = False
+    if to_json_encodable_summary_func is None and is_enum:
+        to_json_encodable_summary_func = get_to_json_encodable_summary_func(Enum)
 
     if to_json_encodable_summary_func is not None:
         return to_json_encodable_summary_func(value, type_)

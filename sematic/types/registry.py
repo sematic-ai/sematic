@@ -246,14 +246,6 @@ def _get_registered_func(
     registry_type = get_origin_type(type_)
 
     registered = registry.get(registry_type)
-    try:
-        is_enum = issubclass(type_, Enum)
-    except TypeError:
-        is_enum = False
-    if registered is None and is_enum:
-        # enum types can register their own handlers, but if they don't
-        # we can use the default enum handler
-        registered = registry.get(Enum)
     return registered
 
 

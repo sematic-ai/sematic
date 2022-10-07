@@ -20,7 +20,7 @@ def can_cast_type(
 
     The types must be equal
     """
-    if issubclass(from_type, to_type) and issubclass(to_type, from_type):
+    if from_type is to_type:
         return True, None
 
     return False, "{} does not match {}".format(from_type, to_type)
