@@ -1,4 +1,4 @@
-import { Run, Artifact, Edge, Note, User } from "./Models";
+import { Artifact, Edge, Note, Resolution, Run, User } from "./Models";
 
 export type RunListPayload = {
   current_page_url: string;
@@ -11,6 +11,10 @@ export type RunListPayload = {
 
 export type RunViewPayload = {
   content: Run;
+};
+
+export type ResolutionPayload = {
+  content: Resolution;
 };
 
 export type ArtifactMap = {

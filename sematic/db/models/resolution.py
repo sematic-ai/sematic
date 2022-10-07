@@ -11,6 +11,7 @@ from sqlalchemy.orm import validates
 from sematic.db.models.base import Base
 from sematic.db.models.has_external_jobs_mixin import HasExternalJobsMixin
 from sematic.db.models.json_encodable_mixin import ENUM_KEY, JSONEncodableMixin
+from sematic.utils.git_integration import GitInfo
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +116,9 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     docker_image_uri:
         The docker image URI for the resolution. May be null when
         doing a non-detached (local) resolution
+    git_info:
+        Information about the git remote, branch, commit, and dirty bit
+        for the environment from which the resolution was submitted
     settings_env_vars:
         The Sematic settings from the user's environment for the user
         who launched this resolution.
@@ -135,6 +139,9 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     )
     docker_image_uri: Optional[str] = Column(
         types.String(), nullable=True, default=None
+    )
+    git_info: Optional[GitInfo] = Column(  # type: ignore
+        types.JSON, nullable=True
     )
     settings_env_vars: Dict[str, str] = Column(
         types.JSON, nullable=False, default=lambda: {}

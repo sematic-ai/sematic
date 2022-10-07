@@ -17,6 +17,7 @@ from sematic.db.models.run import Run
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.user_settings import get_all_user_settings
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
+from sematic.utils.git_integration import get_git_info
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class LocalResolver(SilentResolver):
         self._runs: Dict[str, Run] = {}
         self._artifacts: Dict[str, Artifact] = {}
 
-        # Buffers for persistency
+        # Buffers for persistence
         self._buffer_edges: Dict[str, Edge] = {}
         self._buffer_runs: Dict[str, Run] = {}
         self._buffer_artifacts: Dict[str, Artifact] = {}
@@ -114,7 +115,7 @@ class LocalResolver(SilentResolver):
     def _resolution_will_start(self):
         self._populate_run_and_artifacts(self._root_future)
         self._save_graph()
-        self._create_resolution(self._root_future.id, detached=False)
+        self._create_resolution(self._root_future, detached=False)
         self._update_resolution_status(ResolutionStatus.RUNNING)
 
     def _get_resolution_image(self) -> Optional[str]:
@@ -123,15 +124,16 @@ class LocalResolver(SilentResolver):
     def _get_resolution_kind(self, detached) -> ResolutionKind:
         return ResolutionKind.LOCAL
 
-    def _create_resolution(self, root_future_id, detached):
+    def _create_resolution(self, root_future, detached):
         starting_state = (
             ResolutionStatus.CREATED if detached else ResolutionStatus.SCHEDULED
         )
         resolution = Resolution(
-            root_id=root_future_id,
+            root_id=root_future.id,
             status=starting_state,
             kind=self._get_resolution_kind(detached),
             docker_image_uri=self._get_resolution_image(),
+            git_info=get_git_info(root_future.calculator.func),
             settings_env_vars={
                 name: str(value) for name, value in get_all_user_settings().items()
             },

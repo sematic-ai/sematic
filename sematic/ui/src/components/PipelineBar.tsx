@@ -1,4 +1,5 @@
 import { ChevronLeft } from "@mui/icons-material";
+import PostAddIcon from '@mui/icons-material/PostAdd';
 import {
   Box,
   Button,
@@ -10,15 +11,17 @@ import {
   Select,
   SelectChangeEvent,
   Snackbar,
+  Tooltip,
   Typography,
   useTheme,
 } from "@mui/material";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { Run } from "../Models";
-import { RunListPayload } from "../Payloads";
+import { Resolution, Run } from "../Models";
+import { ResolutionPayload, RunListPayload } from "../Payloads";
 import { fetchJSON, pipelineSocket } from "../utils";
 import CalculatorPath from "./CalculatorPath";
 import Loading from "./Loading";
+import GitInfoBox from "./GitInfo";
 import { RunFilterType } from "./RunList";
 import RunStateChip from "./RunStateChip";
 import TimeAgo from "./TimeAgo";
@@ -30,10 +33,12 @@ export default function PipelineBar(props: {
   onRootRunChange: (run: Run) => void;
   setInitialRootRun: boolean;
   initialRootRun?: Run;
+  initialResolution?: Resolution;
 }) {
-  const { onRootRunChange, calculatorPath, setInitialRootRun, initialRootRun } =
+  const { onRootRunChange, calculatorPath, setInitialRootRun, initialRootRun, initialResolution } =
     props;
   const [rootRun, setRootRun] = useState<Run | undefined>(initialRootRun);
+  const [resolution, setResolution] = useState<Resolution | undefined>(initialResolution);
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
   const [latestRuns, setLatestRuns] = useState<Run[]>([]);
@@ -45,6 +50,10 @@ export default function PipelineBar(props: {
   useMemo(() => {
     if (initialRootRun) setRootRun(initialRootRun);
   }, [initialRootRun]);
+
+  useMemo(() => {
+    if (initialResolution) setResolution(initialResolution);
+  }, [initialResolution]);
 
   const fetchLatestRuns = useCallback(
     (calcPath: string, onResults: (runs: Run[]) => void) => {
@@ -68,6 +77,25 @@ export default function PipelineBar(props: {
     []
   );
 
+  const fetchResolution = useCallback(
+    (run: Run | undefined, onResults: (resolution: Resolution | undefined) => void) => {
+      if (run) {
+        fetchJSON({
+          url: "/api/v1/resolutions/" + run.id,
+          apiKey: user?.api_key,
+          callback: (response: ResolutionPayload) => {
+            onResults(response.content);
+          },
+          setError: (error: Error | undefined) => {
+            // this means the pipeline resolution failed
+            onResults(undefined);
+          },
+        });
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     if (calculatorPath === undefined) return;
     fetchLatestRuns(calculatorPath, (runs) => {
@@ -75,9 +103,10 @@ export default function PipelineBar(props: {
       if (setInitialRootRun) {
         setRootRun(runs[0]);
         onRootRunChange(runs[0]);
+        fetchResolution(runs[0], setResolution);
       }
     });
-  }, [calculatorPath, fetchLatestRuns, onRootRunChange, setInitialRootRun]);
+  }, [calculatorPath, fetchLatestRuns, onRootRunChange, setInitialRootRun, setResolution, fetchResolution]);
 
   useEffect(() => {
     pipelineSocket.removeAllListeners();
@@ -100,17 +129,19 @@ export default function PipelineBar(props: {
         if (run.id === newRootRunId) {
           setRootRun(run);
           onRootRunChange(run);
+          fetchResolution(run, setResolution);
           setHasNewRun(false);
         }
       });
     },
-    [latestRuns, onRootRunChange]
+    [latestRuns, onRootRunChange, setResolution, fetchResolution]
   );
 
   const selectLatestRun = useCallback(() => {
     setRootRun(latestRuns[0]);
     onRootRunChange(latestRuns[0]);
-  }, [latestRuns, onRootRunChange]);
+    fetchResolution(latestRuns[0], setResolution);
+  }, [latestRuns, setRootRun, onRootRunChange, fetchResolution]);
 
   const snackBarAction = (
     <>
@@ -178,9 +209,10 @@ export default function PipelineBar(props: {
           <Typography variant="h4">{rootRun.name}</Typography>
           <CalculatorPath calculatorPath={rootRun.calculator_path} />
         </Box>
+        <GitInfoBox resolution={resolution} />
         <Box
           sx={{
-            gridColumn: 3,
+            gridColumn: 4,
             borderLeft: 1,
             borderColor: theme.palette.grey[200],
             paddingX: 10,

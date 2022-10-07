@@ -70,6 +70,13 @@ export type TypeSerialization = {
   registry: TypeRegistry;
 };
 
+export type TypeGitInfo = {
+  remote: string;
+  branch: string;
+  commit: string;
+  dirty: boolean;
+}
+
 interface TypeViewProps {
   typeRepr: TypeRepr;
 }
