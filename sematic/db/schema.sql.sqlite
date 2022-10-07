@@ -74,7 +74,7 @@ CREATE TABLE resolutions (
     PRIMARY KEY (root_id),
     FOREIGN KEY (root_id) REFERENCES runs(id)
 );
---- schema migrations
+-- schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
   ('20220424062956'),
   ('20220514015440'),

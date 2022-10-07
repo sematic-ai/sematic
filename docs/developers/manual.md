@@ -21,7 +21,8 @@ DATABASE_URL="sqlite3:/$HOME/.sematic/db.sqlite3"
 Then create the database:
 
 ```shell
-$ touch $DATABASE_URL
+$ mkdir ~/.sematic
+$ touch ~/.sematic/db.sqlite3
 ```
 
 And run all migrations

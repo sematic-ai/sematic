@@ -3,10 +3,10 @@ migrate_up_rds:
 	cd sematic; DATABASE_URL=${DATABASE_URL} dbmate -s db/schema.sql.pg up 
 
 migrate_up_sqlite:
-	bazel run //sematic/db:migrate -- up --verbose --schema-file ${PWD}/sematic/db/schema.sql.sqlite
+	bazel run //sematic/db:migrate -- up --verbose --env local --schema-file ${PWD}/sematic/db/schema.sql.sqlite
 
 migrate_down_sqlite:
-	bazel run //sematic/db:migrate -- down --verbose --schema-file ${PWD}/sematic/db/schema.sql.sqlite
+	bazel run //sematic/db:migrate -- down --verbose --env local --schema-file ${PWD}/sematic/db/schema.sql.sqlite
 
 clear_sqlite:
 	sqlite3 ~/.sematic/db.sqlite3 < sematic/db/scripts/clear_all.sql

@@ -103,7 +103,7 @@ class Calculator(AbstractCalculator):
             inline=self._inline,
             resource_requirements=self._resource_requirements,
             # copying because it will hold state for the particular
-            # future (retry_count)
+            # future (retry_count is mutable and increases with retries)
             retry_settings=copy(self._retry_settings),
         )
 

@@ -256,7 +256,7 @@ def dump_schema(file: str):
     current_versions = _get_current_versions()
 
     schema += (
-        ("--- schema migrations\n" 'INSERT INTO "schema_migrations" (version) VALUES\n')
+        ("-- schema migrations\n" 'INSERT INTO "schema_migrations" (version) VALUES\n')
         + ",\n".join(f"  ('{version}')" for version in current_versions)
         + ";\n"
     )

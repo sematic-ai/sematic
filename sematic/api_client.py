@@ -330,6 +330,7 @@ def _request(
     if attempt_auth:
         headers["X-API-KEY"] = _get_api_key()
     kwargs["headers"] = headers
+
     try:
         response = method(_url(endpoint), **kwargs)
     except ConnectionError:
