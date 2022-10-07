@@ -1,4 +1,5 @@
 # Standard Library
+import inspect
 import typing
 from enum import Enum
 from typing import (
@@ -73,10 +74,7 @@ def is_enum(type_: typing.Type[Any]) -> bool:
     -------
     True if the type is an enum type, False otherwise.
     """
-    try:
-        return issubclass(type_, Enum)
-    except TypeError:
-        return False
+    return inspect.isclass(type_) and issubclass(type_, Enum)
 
 
 def register_can_cast(
@@ -264,8 +262,7 @@ def _get_registered_func(
     validate_type_annotation(type_)
     registry_type = get_origin_type(type_)
 
-    registered = registry.get(registry_type)
-    return registered
+    return registry.get(registry_type)
 
 
 def get_origin_type(type_: TypeAnnotation) -> TypeAnnotation:
@@ -301,11 +298,7 @@ def validate_type_annotation(*types: TypeAnnotation) -> None:
             subclasses_type = issubclass(type_, type)
         except TypeError:
             subclasses_type = False
-        try:
-            subclasses_enum = issubclass(type_, Enum)
-        except TypeError:
-            subclasses_enum = False
-        if type(type_) is type or subclasses_type or subclasses_enum:
+        if type(type_) is type or subclasses_type or is_enum(type_):
             return
         if not is_parameterized_generic(type_, raise_for_unparameterized=True):
             raise TypeError(
