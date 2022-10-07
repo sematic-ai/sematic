@@ -273,7 +273,13 @@ def migrate_down():
 
 @main.command("dump", short_help="Dump schema")
 @common_options
-@click.option("--schema-file", "file", type=click.STRING, default="schema.sql")
+@click.option(
+    "--schema-file",
+    "file",
+    type=click.STRING,
+    default="schema.sql",
+    short_help="File to dump the schema to.",
+)
 def _dump_schema(env: str, verbose: bool, file: str):
     _apply_common_options(env, verbose)
     dump_schema(file)
