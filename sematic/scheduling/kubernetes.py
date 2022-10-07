@@ -203,6 +203,7 @@ def _schedule_kubernetes_job(
     volumes = []
     volume_mounts = []
     secret_env_vars = []
+    tolerations = []
     if resource_requirements is not None:
         node_selector = resource_requirements.kubernetes.node_selector
         resource_requests = resource_requirements.kubernetes.requests
@@ -214,10 +215,17 @@ def _schedule_kubernetes_job(
         secret_env_vars.extend(
             _environment_secrets(resource_requirements.kubernetes.secret_mounts)
         )
+        tolerations = [
+            kubernetes.client.V1Toleration(  # type: ignore
+                **toleration.to_api_keyword_args()  # type: ignore
+            )
+            for toleration in resource_requirements.kubernetes.tolerations
+        ]
         logger.debug("kubernetes node_selector %s", node_selector)
         logger.debug("kubernetes resource requests %s", resource_requests)
         logger.debug("kubernetes volumes and mounts: %s, %s", volumes, volume_mounts)
         logger.debug("kubernetes environment secrets: %s", secret_env_vars)
+        logger.debug("kubernetes tolerations: %s", tolerations)
 
     pod_name_env_var = kubernetes.client.V1EnvVar(  # type: ignore
         name=KUBERNETES_POD_NAME_ENV_VAR,
@@ -228,6 +236,8 @@ def _schedule_kubernetes_job(
         ),
     )
 
+    # See client documentation here:
+    # https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Job.md
     job = kubernetes.client.V1Job(  # type: ignore
         api_version="batch/v1",
         kind="Job",
@@ -282,7 +292,7 @@ def _schedule_kubernetes_job(
                         )
                     ],
                     volumes=volumes,
-                    tolerations=[],
+                    tolerations=tolerations,
                     restart_policy="Never",
                 ),
             ),

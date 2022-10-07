@@ -1,6 +1,6 @@
-# Standard
 # Standard Library
 from dataclasses import dataclass
+from enum import Enum, unique
 from typing import Any, List, Literal, Optional, Union
 
 # Third party
@@ -15,6 +15,13 @@ from sematic.types.registry import (
 )
 
 
+@unique
+class Color(Enum):
+    RED = "RED"
+    GREEN = "GREEN"
+    BLUE = "BLUE"
+
+
 @dataclass
 class FooDataclass:
     foo: int
@@ -26,6 +33,7 @@ class FooStandard:
 
 def test_validate_type_annotation():
     validate_type_annotation(int)
+    validate_type_annotation(Color)
     validate_type_annotation(FooDataclass)
     validate_type_annotation(FooStandard)
     validate_type_annotation(Union[int, float])
@@ -46,12 +54,14 @@ def test_validate_type_annotation():
 
 def test_is_supported_type_annotation():
     assert is_supported_type_annotation(FooDataclass)
+    assert is_supported_type_annotation(Color)
     assert not is_supported_type_annotation(Union)
 
 
 def test_is_parameterized_generic():
     assert not is_parameterized_generic(FooDataclass)
     assert not is_parameterized_generic(FooStandard)
+    assert not is_parameterized_generic(Color)
     assert is_parameterized_generic(Union[int, float])
     assert is_parameterized_generic(Optional[int])
     assert is_parameterized_generic(List[int])
@@ -65,6 +75,7 @@ def test_validate_registry_keys():
     _validate_registry_keys(int, int)
     _validate_registry_keys(FooDataclass)
     _validate_registry_keys(FooStandard)
+    _validate_registry_keys(Color)
     _validate_registry_keys(Union)
     _validate_registry_keys(List)
     with pytest.raises(

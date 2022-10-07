@@ -1,4 +1,7 @@
 # Standard Library
+import inspect
+import typing
+from enum import Enum
 from typing import (
     Any,
     Callable,
@@ -57,6 +60,21 @@ CanCastTypeCallable = Callable[
 
 
 _CAN_CAST_REGISTRY: Dict[RegistryKey, CanCastTypeCallable] = {}
+
+
+def is_enum(type_: typing.Type[Any]) -> bool:
+    """Determine if the given type is an enum type or not
+
+    Parameters
+    ----------
+    type_:
+        The type being checked
+
+    Returns
+    -------
+    True if the type is an enum type, False otherwise.
+    """
+    return inspect.isclass(type_) and issubclass(type_, Enum)
 
 
 def register_can_cast(
@@ -280,7 +298,7 @@ def validate_type_annotation(*types: TypeAnnotation) -> None:
             subclasses_type = issubclass(type_, type)
         except TypeError:
             subclasses_type = False
-        if type(type_) is type or subclasses_type:
+        if type(type_) is type or subclasses_type or is_enum(type_):
             return
         if not is_parameterized_generic(type_, raise_for_unparameterized=True):
             raise TypeError(
@@ -360,8 +378,17 @@ def _is_supported_registry_key(type_: RegistryKey) -> bool:
         subclasses_type = issubclass(type_, type)
     except TypeError:
         subclasses_type = False
+    try:
+        subclasses_enum = issubclass(type_, Enum)
+    except TypeError:
+        subclasses_enum = False
     is_unparameterized_generic = type_ in SUPPORTED_GENERIC_TYPING_ANNOTATIONS.keys()
-    return type(type_) is type or subclasses_type or is_unparameterized_generic
+    return (
+        type(type_) is type
+        or subclasses_type
+        or is_unparameterized_generic
+        or subclasses_enum
+    )
 
 
 def _validate_registry_keys(*types_: RegistryKey):

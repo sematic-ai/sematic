@@ -57,6 +57,15 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_enum",
+    srcs = ["test_enum.py"],
+    deps = [
+        "//sematic/types/types:enum",
+        "//sematic/types:serialization",
+    ],
+)
+
+pytest_test(
     name = "test_dict",
     srcs = ["test_dict.py"],
     deps = [
