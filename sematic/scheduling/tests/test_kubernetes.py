@@ -247,7 +247,8 @@ def test_refresh_job(mock_batch_api, mock_load_kube_config):
 
 @mock.patch("sematic.user_settings.get_all_user_settings")
 @mock.patch("sematic.scheduling.kubernetes._schedule_kubernetes_job")
-def test_schedule_run_job(mock_schedule_k8s_job, mock_user_settings):
+@mock.patch("sematic.scheduling.kubernetes._unique_job_id_suffix", return_value="foo")
+def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job, mock_user_settings):
     settings = {"SOME_SETTING": "SOME_VALUE"}
     resource_requests = ResourceRequirements(
         kubernetes=KubernetesResourceRequirements(),
@@ -264,7 +265,7 @@ def test_schedule_run_job(mock_schedule_k8s_job, mock_user_settings):
         try_number=1,
     )
     mock_schedule_k8s_job.assert_called_with(
-        name=f"sematic-worker-{run_id}",
+        name=f"sematic-worker-{run_id}-foo",
         image=image,
         environment_vars=settings,
         namespace=namespace,

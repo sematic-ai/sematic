@@ -97,7 +97,9 @@ class KubernetesExternalJob(ExternalJob):
     def make_external_job_id(
         self, run_id: str, namespace: str, job_type: JobType
     ) -> str:
-        job_name = "-".join(("sematic", job_type.value, run_id, uuid.uuid4().hex[:6]))
+        job_name = "-".join(
+            ("sematic", job_type.value, run_id, _unique_job_id_suffix())
+        )
         return f"{namespace}/{job_name}"
 
     def is_active(self) -> bool:
@@ -121,6 +123,13 @@ class KubernetesExternalJob(ExternalJob):
         ):
             return False
         return self.succeeded_pod_count == 0 and self.pending_or_running_pod_count > 0
+
+
+def _unique_job_id_suffix() -> str:
+    """
+    Jobs need to have unique names in case of retries.
+    """
+    return uuid.uuid4().hex[:6]
 
 
 def load_kube_config():
