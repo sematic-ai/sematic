@@ -1,11 +1,12 @@
 # Standard Library
 import logging
 import pathlib
+import uuid
 from dataclasses import dataclass
 from enum import Enum, unique
 from typing import Dict, List, Optional, Tuple
-import uuid
 
+# Third-party
 import kubernetes
 from kubernetes.client.exceptions import ApiException
 from urllib3.exceptions import ConnectionError
