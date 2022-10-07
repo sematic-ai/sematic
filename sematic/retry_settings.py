@@ -8,11 +8,26 @@ from sematic.utils.exceptions import ExceptionMetadata
 
 @dataclass
 class RetrySettings:
+    """
+    Configuration object to pass to `@sematic.func` to activate retries.
+
+    Parameters
+    ----------
+    exceptions: Tuple[Type[Exception]]
+        A tuple of exception types to retry for.
+
+    times: int
+        How may times to retry.
+    """
+
     exceptions: Tuple[Type[Exception]]
     times: int
     retry_count: int = field(default=0, init=False)
 
     def should_retry(self, exception_metadata: ExceptionMetadata) -> bool:
+        """
+        Should the given exception trigger a retry?
+        """
         if not self._matches_exceptions(exception_metadata):
             return False
 
