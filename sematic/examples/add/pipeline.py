@@ -1,9 +1,8 @@
 # Standard Library
 import logging
-from random import random
-import time
 import typing
 from dataclasses import dataclass
+from random import random
 
 # Sematic
 import sematic
