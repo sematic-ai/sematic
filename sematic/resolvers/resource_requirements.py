@@ -157,7 +157,7 @@ class KubernetesToleration:
             value=self.value,
         )
 
-    def assert_valid(self):
+    def __post_init__(self):
         """Ensure that the values in the toleration are valid; raise otherwise
 
         Raises
@@ -226,30 +226,9 @@ class KubernetesResourceRequirements:
     secret_mounts: KubernetesSecretMount = field(default_factory=KubernetesSecretMount)
     tolerations: List[KubernetesToleration] = field(default_factory=list)
 
-    def assert_valid(self):
-        """Ensure that the values in the resource requirement are valid; raise otherwise
-
-        Raises
-        ------
-        ValueError:
-           If the values are not valid
-        """
-        for toleration in self.tolerations:
-            toleration.assert_valid()
-
 
 @dataclass
 class ResourceRequirements:
     kubernetes: KubernetesResourceRequirements = field(
         default_factory=KubernetesResourceRequirements
     )
-
-    def assert_valid(self):
-        """Ensure that the values in the resource requirements are valid; raise otherwise
-
-        Raises
-        ------
-        ValueError:
-           If the values are not valid
-        """
-        self.kubernetes.assert_valid()

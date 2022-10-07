@@ -206,8 +206,6 @@ def func(
             "Inline functions cannot have resource requirements "
             "Try using @sematic.func(inline=False, ...)"
         )
-    if resource_requirements is not None:
-        resource_requirements.assert_valid()
 
     def _wrapper(func_):
 

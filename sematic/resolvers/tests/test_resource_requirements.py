@@ -41,48 +41,15 @@ def test_is_serializable():
     assert decoded == requirements
 
 
-def test_assert_is_valid():
-    valid_kwargs = dict(
-        node_selector={"foo": "bar"},
-        requests={"cpu": "500m", "memory": "100Gi"},
-        secret_mounts=KubernetesSecretMount(
-            environment_secrets={"a": "b"},
-            file_secret_root_path="/foo/bar",
-            file_secrets={"c": "d"},
-        ),
-    )
-    invalid_requirements = ResourceRequirements(
-        kubernetes=KubernetesResourceRequirements(
-            tolerations=[
-                KubernetesToleration(
-                    key="k",
-                    value="v",
-                    effect=KubernetesTolerationEffect.PreferNoSchedule,
-                    operator=KubernetesTolerationOperator.Equal,
-                    toleration_seconds=42,
-                )
-            ],
-            **valid_kwargs,
-        )
-    )
+def test_validation():
     with pytest.raises(
         ValueError,
         match="toleration_seconds should only be specified when the effect is NoExecute.",
     ):
-        invalid_requirements.assert_valid()
-
-    valid_requirements = ResourceRequirements(
-        kubernetes=KubernetesResourceRequirements(
-            tolerations=[
-                KubernetesToleration(
-                    key="k",
-                    value="v",
-                    effect=KubernetesTolerationEffect.NoExecute,
-                    operator=KubernetesTolerationOperator.Equal,
-                    toleration_seconds=42,
-                )
-            ],
-            **valid_kwargs,
+        KubernetesToleration(
+            key="k",
+            value="v",
+            effect=KubernetesTolerationEffect.PreferNoSchedule,
+            operator=KubernetesTolerationOperator.Equal,
+            toleration_seconds=42,
         )
-    )
-    valid_requirements.assert_valid()
