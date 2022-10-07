@@ -1,4 +1,5 @@
 # Standard Library
+from ast import operator
 from dataclasses import dataclass, field
 from enum import Enum, unique
 from typing import Dict, List, Optional, Union
@@ -130,7 +131,7 @@ class KubernetesToleration:
         If the operator is Equals, this value will be compared to the value
         on the node taint to see if this toleration applies.
     toleration_seconds:
-        Only considered when effect is NoExecute (otherwise is ignored). It
+        Only specified when effect is NoExecute (otherwise is an error). It
         specifies the amount of time the pod can continue executing on a node
         with a NoExecute taint
     """
@@ -156,6 +157,40 @@ class KubernetesToleration:
             toleration_seconds=self.toleration_seconds,
             value=self.value,
         )
+
+    def assert_valid(self):
+        """Ensure that the values in the toleration are valid; raise otherwise
+
+        Raises
+        ------
+        ValueError:
+           If the values are not valid
+        """
+        if not (self.key is None or isinstance(self.key, str)):
+            raise ValueError(f"key must be None or a string, got: {self.key}")
+        if not isinstance(self.operator, KubernetesTolerationOperator):
+            raise ValueError(
+                f"operator must be a {KubernetesTolerationOperator}, got {self.operator}"
+            )
+        if not isinstance(self.effect, KubernetesTolerationEffect):
+            raise ValueError(
+                f"effect must be a {KubernetesTolerationEffect}, got {self.effect}"
+            )
+        if not (self.value is None or isinstance(self.value, str)):
+            raise ValueError(f"value must be None or a string, got: {self.value}")
+        if not (
+            self.toleration_seconds is None or isinstance(self.toleration_seconds, int)
+        ):
+            raise ValueError(
+                f"toleration_seconds must be None or an int, got: {self.toleration_seconds}"
+            )
+        if (
+            self.toleration_seconds is not None
+            and self.effect != KubernetesTolerationEffect.NoExecute
+        ):
+            raise ValueError(
+                "toleration_seconds should only be specified when the effect is NoExecute."
+            )
 
 
 @dataclass
@@ -190,9 +225,30 @@ class KubernetesResourceRequirements:
     secret_mounts: KubernetesSecretMount = field(default_factory=KubernetesSecretMount)
     tolerations: List[KubernetesToleration] = field(default_factory=list)
 
+    def assert_valid(self):
+        """Ensure that the values in the resource requirement are valid; raise otherwise
+
+        Raises
+        ------
+        ValueError:
+           If the values are not valid
+        """
+        for toleration in self.tolerations:
+            toleration.assert_valid()
+
 
 @dataclass
 class ResourceRequirements:
     kubernetes: KubernetesResourceRequirements = field(
         default_factory=KubernetesResourceRequirements
     )
+
+    def assert_valid(self):
+        """Ensure that the values in the resource requirements are valid; raise otherwise
+
+        Raises
+        ------
+        ValueError:
+           If the values are not valid
+        """
+        self.kubernetes.assert_valid()
