@@ -1,4 +1,5 @@
 # Standard Library
+import typing
 from enum import Enum
 from typing import (
     Any,
@@ -58,6 +59,24 @@ CanCastTypeCallable = Callable[
 
 
 _CAN_CAST_REGISTRY: Dict[RegistryKey, CanCastTypeCallable] = {}
+
+
+def is_enum(type_: typing.Type[Any]) -> bool:
+    """Determine if the given type is an enum type or not
+
+    Parameters
+    ----------
+    type_:
+        The type being checked
+
+    Returns
+    -------
+    True if the type is an enum type, False otherwise.
+    """
+    try:
+        return issubclass(type_, Enum)
+    except TypeError:
+        return False
 
 
 def register_can_cast(

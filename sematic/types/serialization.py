@@ -23,6 +23,7 @@ from sematic.types.registry import (
     get_origin_type,
     get_to_json_encodable_func,
     get_to_json_encodable_summary_func,
+    is_enum,
     is_parameterized_generic,
     is_sematic_parametrized_generic_type,
     is_supported_type_annotation,
@@ -40,11 +41,7 @@ def value_to_json_encodable(value: typing.Any, type_: typing.Any) -> typing.Any:
     if to_json_encodable_func is None and dataclasses.is_dataclass(type_):
         to_json_encodable_func = get_to_json_encodable_func(DataclassKey)
 
-    try:
-        is_enum = issubclass(type_, Enum)
-    except TypeError:
-        is_enum = False
-    if to_json_encodable_func is None and is_enum:
+    if to_json_encodable_func is None and is_enum(type_):
         to_json_encodable_func = get_to_json_encodable_func(Enum)
 
     # If we have a serializer, we use it
@@ -75,11 +72,7 @@ def value_from_json_encodable(
     if from_json_encodable_func is None and dataclasses.is_dataclass(type_):
         from_json_encodable_func = get_from_json_encodable_func(DataclassKey)
 
-    try:
-        is_enum = issubclass(type_, Enum)
-    except TypeError:
-        is_enum = False
-    if from_json_encodable_func is None and is_enum:
+    if from_json_encodable_func is None and is_enum(type_):
         from_json_encodable_func = get_from_json_encodable_func(Enum)
 
     # If we have a deserializer we use it
@@ -112,11 +105,7 @@ def get_json_encodable_summary(value: typing.Any, type_: typing.Any) -> typing.A
             DataclassKey
         )
 
-    try:
-        is_enum = issubclass(type_, Enum)
-    except TypeError:
-        is_enum = False
-    if to_json_encodable_summary_func is None and is_enum:
+    if to_json_encodable_summary_func is None and is_enum(type_):
         to_json_encodable_summary_func = get_to_json_encodable_summary_func(Enum)
 
     if to_json_encodable_summary_func is not None:
