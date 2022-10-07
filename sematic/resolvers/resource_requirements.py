@@ -1,5 +1,4 @@
 # Standard Library
-from ast import operator
 from dataclasses import dataclass, field
 from enum import Enum, unique
 from typing import Dict, List, Optional, Union
@@ -182,14 +181,16 @@ class KubernetesToleration:
             self.toleration_seconds is None or isinstance(self.toleration_seconds, int)
         ):
             raise ValueError(
-                f"toleration_seconds must be None or an int, got: {self.toleration_seconds}"
+                "toleration_seconds must be None or an "
+                f"int, got: {self.toleration_seconds}"
             )
         if (
             self.toleration_seconds is not None
             and self.effect != KubernetesTolerationEffect.NoExecute
         ):
             raise ValueError(
-                "toleration_seconds should only be specified when the effect is NoExecute."
+                "toleration_seconds should only be specified when the effect "
+                "is NoExecute."
             )
 
 
