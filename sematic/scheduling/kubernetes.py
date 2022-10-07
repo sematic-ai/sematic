@@ -205,6 +205,8 @@ def _schedule_kubernetes_job(
     secret_env_vars = []
     tolerations = []
     if resource_requirements is not None:
+        logger.info("\n\nrr: %s\n\n", resource_requirements)
+
         node_selector = resource_requirements.kubernetes.node_selector
         resource_requests = resource_requirements.kubernetes.requests
         volume_info = _volume_secrets(resource_requirements.kubernetes.secret_mounts)
@@ -225,8 +227,6 @@ def _schedule_kubernetes_job(
         logger.debug("kubernetes resource requests %s", resource_requests)
         logger.debug("kubernetes volumes and mounts: %s, %s", volumes, volume_mounts)
         logger.debug("kubernetes environment secrets: %s", secret_env_vars)
-        logger.info("\n\nkubernetes tolerations: %s\n\n", tolerations)
-        logger.info("\n\nrr: %s\n\n", resource_requirements)
 
     pod_name_env_var = kubernetes.client.V1EnvVar(  # type: ignore
         name=KUBERNETES_POD_NAME_ENV_VAR,

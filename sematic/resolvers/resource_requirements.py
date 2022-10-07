@@ -96,11 +96,16 @@ class KubernetesTolerationEffect(Enum):
         The pod will not be evicted from the node even if the node has
         specified a NoExecute taint, assuming the rest of the toleration
         matches the taint.
+    All:
+        The pod will not be evicted from the node even if the node has
+        any kind of taint, assuming the rest of the toleration
+        matches the taint.
     """
 
     NoSchedule = "NoSchedule"
     PreferNoSchedule = "PreferNoSchedule"
     NoExecute = "NoExecute"
+    All = "All"
 
 
 @dataclass
@@ -132,25 +137,18 @@ class KubernetesToleration:
 
     key: Optional[str] = None
     operator: KubernetesTolerationOperator = KubernetesTolerationOperator.Equal
-    effect: Optional[KubernetesTolerationEffect] = None
+    effect: KubernetesTolerationEffect = KubernetesTolerationEffect.All
     value: Optional[str] = None
     toleration_seconds: Optional[int] = None
 
     def to_api_keyword_args(self) -> Dict[str, Optional[Union[str, int]]]:
         """Convert to the format for kwargs the API python client API for tolerations"""
-        effect: Optional[str] = None
-        if self.effect is not None:
-            # people may set with string values
-            effect = (
-                self.effect  # type: ignore
-                if isinstance(self.effect, str)
-                else self.effect.value
-            )
-        operator: str = (
-            self.operator
-            if isinstance(self.operator, str)
-            else self.operator.value  # type: ignore
-        )
+        effect: Optional[str] = self.effect.value
+        if self.effect == KubernetesTolerationEffect.All:
+            # the actual API makes "all" the default behavior with no other way to
+            # specify
+            effect = None
+        operator = self.operator.value
         return dict(
             effect=effect,
             key=self.key,
