@@ -38,16 +38,18 @@ exports_files(
 sematic_py_lib(
     name = "migrate_lib",
     srcs = ["migrate.py"],
-    data = glob([
-        "migrations/*.sql",
-        "migrations/*.py",
-    ]),
+    data = glob(
+        [
+            "migrations/*.sql",
+            "migrations/*.py",
+        ],
+    ),
     pip_deps = [
         "click",
     ],
     deps = [
+        ":db",
         "//sematic:config",
-        "//sematic/db",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:note",
