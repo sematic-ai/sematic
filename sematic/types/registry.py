@@ -245,7 +245,12 @@ def _get_registered_func(
     validate_type_annotation(type_)
     registry_type = get_origin_type(type_)
 
-    return registry.get(registry_type)
+    registered = registry.get(registry_type)
+    if registered is None and issubclass(type_, Enum):
+        # enum types can register their own handlers, but if they don't
+        # we can use the default enum handler
+        registered = registry.get(Enum)
+    return registered
 
 
 def get_origin_type(type_: TypeAnnotation) -> TypeAnnotation:

@@ -23,6 +23,16 @@ pytest_test(
     ],
 )
 
+
+pytest_test(
+    name = "test_resource_requirements",
+    srcs = ["test_resource_requirements.py"],
+    deps = [
+        "//sematic/resolvers:resource_requirements",
+        "//sematic/types:serialization",
+    ],
+)
+
 pytest_test(
     name = "test_silent_resolver",
     srcs = ["test_silent_resolver.py"],

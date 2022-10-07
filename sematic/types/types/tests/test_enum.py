@@ -4,6 +4,10 @@ from enum import Enum, unique
 import pytest
 
 # Sematic
+from sematic.types.serialization import (
+    value_from_json_encodable,
+    value_to_json_encodable,
+)
 from sematic.types.types.enum import (
     _enum_from_encodable,
     _enum_to_encodable,
@@ -32,7 +36,11 @@ class ExoticNumbers(Enum):
 def test_to_from_encodable():
     encoded = _enum_to_encodable(Color.RED, Color)
     assert encoded == "RED"
+
+    # ensures registration worked
+    assert encoded == value_to_json_encodable(Color.RED, Color)
     decoded = _enum_from_encodable(encoded, Color)
+    assert decoded == value_from_json_encodable(encoded, Color)
     assert decoded == Color.RED
 
     encoded = _enum_to_encodable(ExoticNumbers.LUCKY_NUMBER, ExoticNumbers)

@@ -4,6 +4,9 @@ Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
 with nothing else on the line.
 -->
 * HEAD
+    * [feature] Support Enums
+    * [feature] Allow specifying Kubernetes tolerations for cloud jobs
+    * [feature] Redesigned log UI
 * 0.15.1
     * [bugfix] Ensure log ingestion happens when using bazel cloud jobs and `dev=False`
     * [bugfix] Avoid spamming the server with requests for logs for incomplete runs
