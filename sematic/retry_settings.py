@@ -24,6 +24,10 @@ class RetrySettings:
     times: int
     retry_count: int = field(default=0, init=False)
 
+    def __post_init__(self):
+        if not isinstance(self.exceptions, (tuple, list, set)):
+            raise ValueError(f"exceptions should be a tuple, got {self.exceptions}")
+
     def should_retry(self, exception_metadata: ExceptionMetadata) -> bool:
         """
         Should the given exception trigger a retry?
