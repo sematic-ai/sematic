@@ -2,7 +2,6 @@ sematic_py_lib(
     name = "fixtures",
     srcs = ["fixtures.py"],
     data = [
-        "//sematic/db:schema.sql.pg",
         "//sematic/db:schema.sql.sqlite",
     ],
     pip_deps = [
@@ -12,7 +11,7 @@ sematic_py_lib(
     ],
     deps = [
         "//sematic:abstract_future",
-        "//sematic/db:db",
+        "//sematic/db",
         "//sematic/db:queries",
         "//sematic/db/models:factories",
         "//sematic/db/models:resolution",
@@ -38,7 +37,7 @@ pytest_test(
         ":fixtures",
         "//sematic:calculator",
         "//sematic/api/tests:fixtures",
-        "//sematic/db:db",
+        "//sematic/db",
         "//sematic/db:queries",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
@@ -55,7 +54,7 @@ pytest_test(
     srcs = ["test_migrate.py"],
     pip_deps = ["sqlalchemy"],
     deps = [
-        "//sematic/db:db",
+        "//sematic/db",
         "//sematic/db:migrate_lib",
         "//sematic/db/tests:fixtures",
     ],
