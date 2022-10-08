@@ -8,12 +8,10 @@ sematic_py_lib(
     ],
 )
 
-sematic_pipeline(
+sematic_py_binary(
     name = "__main__",
-    dev = True,
-    registry = "558717131297.dkr.ecr.us-west-2.amazonaws.com",
-    repository = "sematic-dev",
+    srcs = ["__main__.py"],
     deps = [
-        ":add_lib",
+        ":pipeline",
     ],
 )
