@@ -11,6 +11,7 @@ sematic_py_lib(
 sematic_py_binary(
     name = "__main__",
     srcs = ["__main__.py"],
+    main = "__main__.py",
     deps = [
         ":pipeline",
     ],
