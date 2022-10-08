@@ -3,6 +3,9 @@ load("//bazel:pipeline.bzl", "sematic_pipeline")
 sematic_py_lib(
     name = "pipeline",
     srcs = ["pipeline.py"],
+    deps = [
+        "//sematic:init",
+    ],
 )
 
 sematic_pipeline(
