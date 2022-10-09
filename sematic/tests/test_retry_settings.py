@@ -27,7 +27,7 @@ from sematic.utils.exceptions import ExceptionMetadata
     ),
 )
 def test_matches_exceptions(matches: bool, exception_metadata: ExceptionMetadata):
-    retry_settings = RetrySettings(exceptions=(ValueError,), times=1)
+    retry_settings = RetrySettings(exceptions=(ValueError,), retries=1)
 
     assert retry_settings._matches_exceptions(exception_metadata) is matches
 
@@ -42,7 +42,7 @@ def test_matches_exceptions(matches: bool, exception_metadata: ExceptionMetadata
                 module=ValueError.__module__,
                 repr="ValueError",
             ),
-            RetrySettings(exceptions=(ValueError,), times=2),
+            RetrySettings(exceptions=(ValueError,), retries=2),
             1,
         ),
         (
@@ -52,7 +52,7 @@ def test_matches_exceptions(matches: bool, exception_metadata: ExceptionMetadata
                 module=ValueError.__module__,
                 repr="ValueError",
             ),
-            RetrySettings(exceptions=(ValueError,), times=2),
+            RetrySettings(exceptions=(ValueError,), retries=2),
             2,
         ),
         (
@@ -62,7 +62,7 @@ def test_matches_exceptions(matches: bool, exception_metadata: ExceptionMetadata
                 module=ValueError.__module__,
                 repr="ValueError",
             ),
-            RetrySettings(exceptions=(ValueError,), times=2),
+            RetrySettings(exceptions=(ValueError,), retries=2),
             2,
         ),
     ),

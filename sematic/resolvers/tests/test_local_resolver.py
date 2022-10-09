@@ -327,7 +327,7 @@ class SomeException(Exception):
     pass
 
 
-@func(retry=RetrySettings(exceptions=(SomeException,), times=3))
+@func(retry=RetrySettings(exceptions=(SomeException,), retries=3))
 def try_three_times():
     global _tried
     _tried += 1

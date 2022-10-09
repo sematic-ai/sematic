@@ -16,12 +16,12 @@ class RetrySettings:
     exceptions: Tuple[Type[Exception]]
         A tuple of exception types to retry for.
 
-    times: int
+    retries: int
         How may times to retry.
     """
 
     exceptions: Tuple[Type[Exception]]
-    times: int
+    retries: int
     retry_count: int = field(default=0, init=False)
 
     def __post_init__(self):
@@ -35,7 +35,7 @@ class RetrySettings:
         if not self._matches_exceptions(exception_metadata):
             return False
 
-        return self.retry_count < self.times
+        return self.retry_count < self.retries
 
     def _matches_exceptions(self, exception_metadata: ExceptionMetadata) -> bool:
         return any(

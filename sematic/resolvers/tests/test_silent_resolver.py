@@ -33,15 +33,15 @@ class SomeException(Exception):
     pass
 
 
-@func(retry=RetrySettings(exceptions=(SomeException,), times=3))
-def try_three_times():
+@func(retry=RetrySettings(exceptions=(SomeException,), retries=3))
+def retry_three_times():
     global _tried
     _tried += 1
     raise SomeException()
 
 
 def test_retry():
-    future = try_three_times()
+    future = retry_three_times()
     try:
         SilentResolver().resolve(future)
     except SomeException:

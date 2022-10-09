@@ -15,7 +15,7 @@ class SomeException(Exception):
 
 
 @sematic.func(
-    inline=True, retry=sematic.RetrySettings(exceptions=(SomeException,), times=5)
+    inline=True, retry=sematic.RetrySettings(exceptions=(SomeException,), retries=5)
 )
 def raise_exception() -> float:
     """
