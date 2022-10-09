@@ -278,7 +278,7 @@ def migrate_down():
     "file",
     type=click.STRING,
     default="schema.sql",
-    short_help="File to dump the schema to.",
+    help="File to dump the schema to.",
 )
 def _dump_schema(env: str, verbose: bool, file: str):
     _apply_common_options(env, verbose)

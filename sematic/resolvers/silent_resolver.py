@@ -26,7 +26,6 @@ class SilentResolver(StateMachineResolver):
             self._handle_future_failure(future, exception)
         finally:
             self._end_inline_execution(future.id)
-            return
 
     def _start_inline_execution(self, future_id):
         """Callback called before an inline execution"""
