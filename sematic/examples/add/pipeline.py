@@ -1,7 +1,7 @@
 # Standard Library
+import time
 import typing
 from dataclasses import dataclass
-import time
 
 # Sematic
 import sematic
