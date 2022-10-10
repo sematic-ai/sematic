@@ -11,7 +11,6 @@ from sematic.cli.cli import cli
 def cancel(run_id: str):
     try:
         run = api_client.get_run(run_id)
-        root_run = api_client.get_run(run.root_id)
     except api_client.BadRequestError:
         click.echo(f"Could not find run {run_id}")
         return
@@ -25,7 +24,5 @@ def cancel(run_id: str):
     )
 
     api_client.cancel_resolution(run.root_id)
-
-    api_client.notify_pipeline_update(root_run.calculator_path)
 
     click.echo("Resolution was canceled succesfully.")

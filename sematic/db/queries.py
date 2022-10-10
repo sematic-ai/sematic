@@ -176,19 +176,6 @@ def save_resolution(resolution: Resolution) -> Resolution:
     return resolution
 
 
-def get_run_resolution(run_id: str) -> Resolution:
-    """
-    Get a run's resolution.
-    """
-    with db().get_session() as session:
-        return (
-            session.query(Resolution)
-            .join(Run, Resolution.root_id == Run.root_id)
-            .filter(Run.id == run_id)
-            .one()
-        )
-
-
 def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
     """
     Update a graph
@@ -249,17 +236,13 @@ def get_run_graph(run_id: str) -> Graph:
     return get_graph(Run.id == run_id)
 
 
-def get_root_graph(
-    root_id: str,
-) -> Graph:
+def get_root_graph(root_id: str) -> Graph:
     """
     Get entire graph for root_id.
 
     This will return the entire graph for a given root_id.
     """
-    return get_graph(
-        Run.root_id == root_id,
-    )
+    return get_graph(Run.root_id == root_id)
 
 
 def get_graph(
