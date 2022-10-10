@@ -7,6 +7,7 @@ sematic_py_lib(
         ":calculator",
         ":container_images",
         ":resolver",
+        ":retry_settings",
         "//sematic/future_operators:init",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:local_resolver",
@@ -41,17 +42,20 @@ sematic_py_lib(
 sematic_py_lib(
     name = "user_settings",
     srcs = ["user_settings.py"],
-    deps = [
-        ":config_dir",
-    ],
     pip_deps = [
         "pyyaml",
+    ],
+    deps = [
+        ":config_dir",
     ],
 )
 
 sematic_py_lib(
     name = "api_client",
     srcs = ["api_client.py"],
+    pip_deps = [
+        "requests",
+    ],
     deps = [
         ":config",
         "//sematic:versions",
@@ -62,26 +66,22 @@ sematic_py_lib(
         "//sematic/db/models:run",
         "//sematic/utils:retry",
     ],
-    pip_deps = [
-        "requests",
-    ]
 )
 
 sematic_py_lib(
     name = "log_reader",
     srcs = ["log_reader.py"],
+    pip_deps = [
+        "requests",
+    ],
     deps = [
-        "//sematic:storage",
         "//sematic:abstract_future",
+        "//sematic:storage",
         "//sematic/db:queries",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/scheduling:external_job",
     ],
-    pip_deps = [
-        "requests",
-    ]
 )
-
 
 sematic_py_lib(
     name = "client",
@@ -102,6 +102,7 @@ sematic_py_lib(
     srcs = ["abstract_future.py"],
     deps = [
         ":abstract_calculator",
+        ":retry_settings",
         "//sematic/resolvers:resource_requirements",
     ],
 )
@@ -112,6 +113,7 @@ sematic_py_lib(
     deps = [
         ":abstract_calculator",
         ":future",
+        ":retry_settings",
         "//sematic/resolvers:resource_requirements",
         "//sematic/types:casting",
         "//sematic/types:init",
@@ -142,14 +144,22 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "retry_settings",
+    srcs = ["retry_settings.py"],
+    deps = [
+        "//sematic/utils:exceptions",
+    ],
+)
+
+sematic_py_lib(
     name = "storage",
     srcs = ["storage.py"],
+    pip_deps = [
+        "boto3",
+    ],
     deps = [
         ":user_settings",
         "//sematic/utils:retry",
-    ],
-    pip_deps = [
-        "boto3",
     ],
 )
 

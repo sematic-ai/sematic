@@ -23,6 +23,7 @@ pytest_test(
         "//sematic/db:queries",
         "//sematic/db/tests:fixtures",
         "//sematic/tests:fixtures",
+        "//sematic/utils:exceptions",
     ],
     pip_deps = [
         "flask"

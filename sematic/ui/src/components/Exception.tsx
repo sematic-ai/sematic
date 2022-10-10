@@ -1,11 +1,12 @@
 import { Alert, AlertTitle } from "@mui/material";
+import { ExceptionMetadata } from "../Models";
 
-export default function Exception(props: { exception: string }) {
+export default function Exception(props: { exception: ExceptionMetadata }) {
   const { exception } = props;
   return (
     <Alert severity="error" icon={false}>
       <AlertTitle>
-        {exception.split("\n")[exception.split("\n").length - 2]}
+        {exception.repr.split("\n")[exception.repr.split("\n").length - 2]}
       </AlertTitle>
       <pre
         style={{
@@ -13,7 +14,7 @@ export default function Exception(props: { exception: string }) {
           overflowWrap: "anywhere",
         }}
       >
-        {exception}
+        {exception.repr}
       </pre>
     </Alert>
   );

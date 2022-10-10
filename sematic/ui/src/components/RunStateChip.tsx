@@ -38,6 +38,11 @@ function RunStateChip(props: { state?: string; variant?: string }) {
     color = theme.palette.error.light;
   }
 
+  if (state === "RETRYING") {
+    toolTipMessage = "Retrying";
+    color = theme.palette.warning.light;
+  }
+
   if (state === "CREATED") {
     toolTipMessage = "Created";
   }

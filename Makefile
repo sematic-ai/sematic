@@ -3,10 +3,10 @@ migrate_up_rds:
 	cd sematic; DATABASE_URL=${DATABASE_URL} dbmate -s db/schema.sql.pg up 
 
 migrate_up_sqlite:
-	cd sematic; DATABASE_URL="sqlite3:/${HOME}/.sematic/db.sqlite3" dbmate --schema-file db/schema.sql.sqlite up
+	bazel run //sematic/db:migrate -- up --verbose --env local --schema-file ${PWD}/sematic/db/schema.sql.sqlite
 
 migrate_down_sqlite:
-	cd sematic; DATABASE_URL="sqlite3:/${HOME}/.sematic/db.sqlite3" dbmate -s db/schema.sql.sqlite down
+	bazel run //sematic/db:migrate -- down --verbose --env local --schema-file ${PWD}/sematic/db/schema.sql.sqlite
 
 clear_sqlite:
 	sqlite3 ~/.sematic/db.sqlite3 < sematic/db/scripts/clear_all.sql
@@ -29,9 +29,6 @@ refresh-dependencies:
 
 ui:
 	cd sematic/ui; npm run build
-
-server-image:
-	docker build -t sematicai/sematic-server:dev .
 
 worker-image:
 	cd docker; docker build -t sematicai/sematic-worker-base:latest -f Dockerfile.worker .

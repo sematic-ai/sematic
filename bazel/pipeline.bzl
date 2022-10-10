@@ -155,8 +155,7 @@ def _sematic_push_and_run(ctx):
         "test -f \"$BUILD_WORKSPACE_DIRECTORY/bazel\" && BAZEL_BIN=\"$BUILD_WORKSPACE_DIRECTORY/bazel\" || BAZEL_BIN=\"$(which bazel)\"",
         "if test -f \"$BAZEL_BIN\"; then",
         "\tcd $BUILD_WORKING_DIRECTORY",
-        "\t\"$BAZEL_BIN\" run {}_push".format(ctx.label),
-        "\t\"$BAZEL_BIN\" run {}_binary -- $@".format(ctx.label),
+        "\t\"$BAZEL_BIN\" run {}_push && \"$BAZEL_BIN\" run {}_binary -- $@".format(ctx.label, ctx.label),
         "else",
         # Should probably not happen unless somebody has an exotic bazel setup.
         # At least make it clear what the problem is if it ever does happen.

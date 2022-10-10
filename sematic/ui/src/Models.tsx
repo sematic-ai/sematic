@@ -1,5 +1,11 @@
 import { TypeSerialization } from "./types/Types";
 
+export type ExceptionMetadata = {
+  repr: string;
+  name: string;
+  module: string;
+};
+
 export type Run = {
   id: string;
   future_state: string;
@@ -7,7 +13,7 @@ export type Run = {
   calculator_path: string;
   description: string | null;
   source_code: string;
-  exception: string | null;
+  exception_json: ExceptionMetadata | null;
   tags: Array<string>;
   parent_id: string | null;
   root_id: string;

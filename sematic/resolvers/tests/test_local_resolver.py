@@ -18,7 +18,9 @@ from sematic.db.models.resolution import ResolutionStatus
 from sematic.db.queries import get_resolution, get_root_graph, get_run
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.resolvers.local_resolver import LocalResolver
+from sematic.retry_settings import RetrySettings
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
+from sematic.utils.exceptions import ExceptionMetadata
 
 
 @func
@@ -308,7 +310,40 @@ def test_exceptions(mock_requests, valid_client_version):  # noqa: F811
     runs_by_id = {run.id: run for run in runs}
 
     assert runs_by_id[future.id].future_state == FutureState.NESTED_FAILED.value
-    assert runs_by_id[future.id].exception == "Failed because the child run failed"
+    assert runs_by_id[future.id].exception == ExceptionMetadata(
+        repr="Failed because the child run failed",
+        name="Exception",
+        module="builtins",
+    )
 
     assert runs_by_id[future.nested_future.id].future_state == FutureState.FAILED.value
-    assert "FAIL!" in runs_by_id[future.nested_future.id].exception
+    assert "FAIL!" in runs_by_id[future.nested_future.id].exception.repr
+
+
+_tried = 0
+
+
+class SomeException(Exception):
+    pass
+
+
+@func(retry=RetrySettings(exceptions=(SomeException,), retries=3))
+def try_three_times():
+    global _tried
+    _tried += 1
+    raise SomeException()
+
+
+@mock_no_auth
+def test_retry(test_db, mock_requests, valid_client_version):  # noqa: F811
+    future = try_three_times()
+    try:
+        future.resolve(LocalResolver())
+    except SomeException:
+        pass
+    else:
+        assert False
+
+    assert future.props.retry_settings.retry_count == 3
+    assert future.state == FutureState.FAILED
+    assert _tried == 4
