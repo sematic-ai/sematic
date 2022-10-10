@@ -7,6 +7,7 @@ import flask.testing
 import pytest
 
 # Sematic
+from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     make_auth_test,
     mock_no_auth,
@@ -14,7 +15,8 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
 )
 from sematic.db.models.resolution import Resolution, ResolutionStatus
-from sematic.db.queries import get_resolution
+from sematic.db.models.run import Run
+from sematic.db.queries import get_graph, get_resolution, save_resolution, save_run
 from sematic.db.tests.fixtures import (  # noqa: F401
     make_resolution,
     persisted_resolution,
@@ -128,3 +130,58 @@ def test_schedule_resolution_endpoint(
     scheduled_resolution = mock_schedule_resolution.call_args[0][0]
     assert isinstance(scheduled_resolution, Resolution)
     assert scheduled_resolution.root_id == persisted_resolution.root_id
+
+
+@mock.patch("sematic.api.endpoints.resolutions.cancel_job")
+@mock_no_auth
+def test_cancel_resolution(
+    mock_cancel_job: mock.MagicMock,
+    persisted_resolution: Resolution,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    test_db,  # noqa: F811
+):
+    persisted_resolution.external_jobs = (
+        KubernetesExternalJob.new(
+            try_number=0,
+            run_id="a",
+            namespace="foo",
+            job_type=JobType.driver,
+        ),
+    )
+    save_resolution(persisted_resolution)
+
+    runs, _, __ = get_graph(
+        Run.root_id == persisted_resolution.root_id,
+        include_artifacts=False,
+        include_edges=False,
+    )
+    runs[0].external_jobs = (
+        KubernetesExternalJob.new(
+            try_number=0,
+            run_id="a",
+            namespace="foo",
+            job_type=JobType.worker,
+        ),
+    )
+    save_run(runs[0])
+
+    response = test_client.put(
+        f"/api/v1/resolutions/{persisted_resolution.root_id}/cancel"
+    )
+
+    assert response.status_code == 200
+
+    canceled_resolution = get_resolution(persisted_resolution.root_id)
+
+    assert canceled_resolution.status == ResolutionStatus.CANCELLED.value
+
+    runs, _, __ = get_graph(
+        Run.root_id == canceled_resolution.root_id,
+        include_artifacts=False,
+        include_edges=False,
+    )
+
+    for canceled_run in runs:
+        assert canceled_run.future_state == FutureState.CANCELED.value
+
+    assert mock_cancel_job.call_count == 2
