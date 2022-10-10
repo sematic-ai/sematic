@@ -58,7 +58,7 @@ export default function LogPanel(props: { run: Run }) {
 
   return (
     <Box>
-      {run.exception && <Exception exception={run.exception} />}
+      {run.exception_json && <Exception exception={run.exception_json} />}
       {logView}
     </Box>
   );

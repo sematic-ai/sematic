@@ -40,6 +40,7 @@ from sematic.db.queries import (
 )
 from sematic.log_reader import load_log_lines
 from sematic.scheduling.job_scheduler import schedule_run, update_run_status
+from sematic.utils.exceptions import ExceptionMetadata
 from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
@@ -249,6 +250,10 @@ def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     return flask.jsonify(payload)
 
 
+class InvalidStateTransitionError(Exception):
+    pass
+
+
 @sematic_api.route("/api/v1/runs/future_states", methods=["POST"])
 @authenticate
 @retry(_DetectedRunRaceCondition, tries=3, delay=10, jitter=1)
@@ -304,8 +309,14 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
                     f"server wanted to update the run to {new_future_state}"
                 )
             run.future_state = new_future_state
+
             if message is not None and run.exception is None:
-                run.exception = message
+                run.exception = ExceptionMetadata(
+                    repr=message,
+                    name=InvalidStateTransitionError.__name__,
+                    module=InvalidStateTransitionError.__module__,
+                )
+
             logger.info(
                 "Updating run %s from %s to %s. Message: %s",
                 run_id,

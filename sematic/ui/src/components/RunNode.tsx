@@ -15,6 +15,9 @@ function getColor(futureState: string, theme: Theme): PaletteColor {
   if (futureState === "RESOLVED") {
     return theme.palette.success;
   }
+  if (futureState === "RETRYING") {
+    return theme.palette.warning;
+  }
   if (["SCHEDULED", "RAN"].includes(futureState)) {
     return theme.palette.info;
   }

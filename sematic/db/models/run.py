@@ -2,6 +2,7 @@
 import datetime
 import json
 import re
+from dataclasses import asdict
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 # Third party
@@ -23,6 +24,7 @@ from sematic.types.serialization import (
     value_from_json_encodable,
     value_to_json_encodable,
 )
+from sematic.utils.exceptions import ExceptionMetadata
 
 
 class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
@@ -98,11 +100,11 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
         types.String(), nullable=False, default="[]", info={JSON_KEY: True}
     )
     source_code: str = Column(types.String(), nullable=False)
-    exception: str = Column(types.String(), nullable=True)
     nested_future_id: str = Column(types.String(), nullable=True)
     external_jobs_json: Optional[List[Dict[str, Any]]] = Column(
         types.JSON(), nullable=True
     )
+    exception_json: Optional[Dict[str, str]] = Column(types.JSON(), nullable=True)
 
     # Lifecycle timestamps
     created_at: datetime.datetime = Column(
@@ -148,6 +150,24 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
             value = re.sub(r"\n\s{4}", "\n", value.strip())
 
         return value
+
+    @property
+    def exception(self) -> Optional[ExceptionMetadata]:
+        if self.exception_json is None:
+            return None
+
+        return ExceptionMetadata(
+            repr=self.exception_json["repr"],
+            name=self.exception_json["name"],
+            module=self.exception_json["module"],
+        )
+
+    @exception.setter
+    def exception(self, exception_metadata: Optional[ExceptionMetadata]):
+        if exception_metadata is None:
+            self.exception_json = None
+        else:
+            self.exception_json = asdict(exception_metadata)
 
     @property
     def external_jobs(self) -> Tuple[ExternalJob, ...]:

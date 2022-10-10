@@ -1,10 +1,12 @@
 # Standard Library
 import logging
 import pathlib
+import uuid
 from dataclasses import dataclass
 from enum import Enum, unique
 from typing import Dict, List, Optional, Tuple
 
+# Third-party
 import kubernetes
 from kubernetes.client.exceptions import ApiException
 from urllib3.exceptions import ConnectionError
@@ -77,7 +79,7 @@ class KubernetesExternalJob(ExternalJob):
 
     @property
     def run_id(self) -> str:
-        return self.kubernetes_job_name.split("-")[-1]
+        return self.kubernetes_job_name.split("-")[-2]
 
     @property
     def namespace(self) -> str:
@@ -95,7 +97,9 @@ class KubernetesExternalJob(ExternalJob):
     def make_external_job_id(
         self, run_id: str, namespace: str, job_type: JobType
     ) -> str:
-        job_name = "-".join(("sematic", job_type.value, run_id))
+        job_name = "-".join(
+            ("sematic", job_type.value, run_id, _unique_job_id_suffix())
+        )
         return f"{namespace}/{job_name}"
 
     def is_active(self) -> bool:
@@ -119,6 +123,13 @@ class KubernetesExternalJob(ExternalJob):
         ):
             return False
         return self.succeeded_pod_count == 0 and self.pending_or_running_pod_count > 0
+
+
+def _unique_job_id_suffix() -> str:
+    """
+    Jobs need to have unique names in case of retries.
+    """
+    return uuid.uuid4().hex[:6]
 
 
 def load_kube_config():

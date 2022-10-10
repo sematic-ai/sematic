@@ -10,6 +10,7 @@ import typing
 from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.resolver import Resolver
+from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,8 @@ class StateMachineResolver(Resolver, abc.ABC):
                 for future_ in self._futures:
                     if future_.state == FutureState.CREATED:
                         self._schedule_future_if_args_resolved(future_)
+                    if future_.state == FutureState.RETRYING:
+                        self._execute_future(future_)
                     if future_.state == FutureState.RAN:
                         self._resolve_nested_future(future_)
 
@@ -103,6 +106,7 @@ class StateMachineResolver(Resolver, abc.ABC):
             FutureState.FAILED: self._future_did_fail,
             FutureState.NESTED_FAILED: self._future_did_fail,
             FutureState.RESOLVED: self._future_did_resolve,
+            FutureState.RETRYING: self._future_did_get_marked_for_retry,
         }
 
         if state in CALLBACKS:
@@ -171,6 +175,12 @@ class StateMachineResolver(Resolver, abc.ABC):
         """
         pass
 
+    def _future_did_get_marked_for_retry(self, future: AbstractFuture) -> None:
+        """
+        Callback allowing specific resolvers to react when a future is about to
+        be retried.
+        """
+
     @staticmethod
     def _get_resolved_kwargs(future: AbstractFuture) -> typing.Dict[str, typing.Any]:
         """
@@ -194,13 +204,16 @@ class StateMachineResolver(Resolver, abc.ABC):
 
         if all_args_resolved:
             future.resolved_kwargs = resolved_kwargs
-            self._future_will_schedule(future)
-            if future.props.inline:
-                logger.info("Running inline {}".format(future.calculator))
-                self._run_inline(future)
-            else:
-                logger.info("Scheduling {}".format(future.calculator))
-                self._schedule_future(future)
+            self._execute_future(future)
+
+    def _execute_future(self, future: AbstractFuture) -> None:
+        self._future_will_schedule(future)
+        if future.props.inline:
+            logger.info("Running inline {}".format(future.calculator))
+            self._run_inline(future)
+        else:
+            logger.info("Scheduling {}".format(future.calculator))
+            self._schedule_future(future)
 
     @typing.final
     def _resolve_nested_future(self, future: AbstractFuture) -> None:
@@ -213,16 +226,33 @@ class StateMachineResolver(Resolver, abc.ABC):
             future.value = nested_future.value
             self._set_future_state(future, FutureState.RESOLVED)
 
-    def _handle_future_failure(self, future: AbstractFuture, exception: Exception):
+    def _handle_future_failure(
+        self,
+        future: AbstractFuture,
+        exception: Exception,
+        exception_metadata: typing.Optional[ExceptionMetadata] = None,
+    ):
         """
         When a future fails, its state machine as well as that of its parent
         futures need to be updated.
-
-        Additionally (not yet implemented) the stack trace needs to be persisted
-        in order to display in the UI.
         """
-        self._fail_future_and_parents(future)
-        raise exception
+        if (
+            future.props.retry_settings is not None
+            and future.props.retry_settings.should_retry(
+                exception_metadata or format_exception_for_run(exception)
+            )
+        ):
+            retries_left = (
+                future.props.retry_settings.retries
+                - future.props.retry_settings.retry_count
+            )
+            logger.info(f"Retrying {future.id}. " f"{retries_left} retries left.")
+            self._set_future_state(future, FutureState.RETRYING)
+            future.props.retry_settings.retry_count += 1
+        else:
+            logging.info(f"Retries exhausted for {future.id}, failing now.")
+            self._fail_future_and_parents(future)
+            raise exception
 
     def _fail_future_and_parents(
         self,
@@ -245,6 +275,7 @@ class StateMachineResolver(Resolver, abc.ABC):
             value = future.calculator.cast_output(value)
         except TypeError as exception:
             self._handle_future_failure(future, exception)
+            return
 
         if isinstance(value, AbstractFuture):
             self._set_nested_future(future, value)
