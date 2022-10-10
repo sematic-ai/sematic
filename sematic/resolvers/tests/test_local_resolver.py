@@ -1,5 +1,6 @@
 # Standard Library
 from typing import List
+from unittest import mock
 
 # Third-party
 import pytest
@@ -41,7 +42,10 @@ def pipeline(a: float, b: float) -> float:
 
 
 @mock_no_auth
-def test_single_function(test_db, mock_requests, valid_client_version):  # noqa: F811
+@mock.patch("socketio.Client.connect")
+def test_single_function(
+    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+):
     future = add(1, 2)
 
     result = future.set(name="AAA").resolve(LocalResolver())
@@ -91,7 +95,10 @@ def add_add_add(a: float, b: float) -> float:
 
 
 @mock_no_auth
-def test_add_add(test_db, mock_requests, valid_client_version):  # noqa: F811
+@mock.patch("socketio.Client.connect")
+def test_add_add(
+    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+):
     future = add_add_add(1, 2)
 
     result = future.resolve(LocalResolver())
@@ -106,7 +113,10 @@ def test_add_add(test_db, mock_requests, valid_client_version):  # noqa: F811
 
 
 @mock_no_auth
-def test_pipeline(test_db, mock_requests, valid_client_version):  # noqa: F811
+@mock.patch("socketio.Client.connect")
+def test_pipeline(
+    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+):
     future = pipeline(3, 5)
 
     result = future.resolve(LocalResolver())
@@ -124,7 +134,10 @@ def test_pipeline(test_db, mock_requests, valid_client_version):  # noqa: F811
 
 
 @mock_no_auth
-def test_failure(test_db, mock_requests, valid_client_version):  # noqa: F811
+@mock.patch("socketio.Client.connect")
+def test_failure(
+    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+):
     class CustomException(Exception):
         pass
 
@@ -158,7 +171,10 @@ def test_failure(test_db, mock_requests, valid_client_version):  # noqa: F811
 
 
 @mock_no_auth
-def test_resolver_error(test_db, mock_requests, valid_client_version):  # noqa: F811
+@mock.patch("socketio.Client.connect")
+def test_resolver_error(
+    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+):
     @func
     def add(x: int, y: int) -> int:
         return x + y
@@ -277,12 +293,18 @@ class DBStateMachineTestResolver(LocalResolver):
 
 
 @mock_no_auth
-def test_db_state_machine(test_db, mock_requests, valid_client_version):  # noqa: F811
+@mock.patch("socketio.Client.connect")
+def test_db_state_machine(
+    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+):
     pipeline(1, 2).resolve(DBStateMachineTestResolver())
 
 
 @mock_no_auth
-def test_list_conversion(test_db, mock_requests, valid_client_version):  # noqa: F811
+@mock.patch("socketio.Client.connect")
+def test_list_conversion(
+    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+):
     @func
     def alist(a: float, b: float) -> List[float]:
         return [add(a, b), add(a, b)]
@@ -291,7 +313,8 @@ def test_list_conversion(test_db, mock_requests, valid_client_version):  # noqa:
 
 
 @mock_no_auth
-def test_exceptions(mock_requests, valid_client_version):  # noqa: F811
+@mock.patch("socketio.Client.connect")
+def test_exceptions(mock_socketio, mock_requests, valid_client_version):  # noqa: F811
     @func
     def fail():
         raise Exception("FAIL!")

@@ -339,7 +339,9 @@ def pipeline(a: float, b: float) -> float:
     "root, run_count, artifact_count, edge_count", ((0, 1, 3, 3), (1, 3, 4, 8))
 )
 @mock_no_auth
+@mock.patch("socketio.Client.connect")
 def test_get_run_graph_endpoint(
+    mock_socketio,
     root: int,
     run_count: int,
     artifact_count: int,

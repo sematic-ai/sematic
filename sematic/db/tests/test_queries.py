@@ -1,4 +1,5 @@
 # Third-party
+from unittest import mock
 import pytest
 
 # Sematic
@@ -109,7 +110,9 @@ def pipeline(a: float, b: float) -> float:
     ((get_run_graph, 1, 3, 3), (get_root_graph, 3, 4, 8)),
 )
 @mock_no_auth
+@mock.patch("socketio.Client.connect")
 def test_get_run_graph(
+    mock_socketio,
     fn,
     run_count: int,
     artifact_count: int,
