@@ -32,4 +32,5 @@ from sematic.resolvers.resource_requirements import (  # noqa: F401,E402
     KubernetesTolerationOperator,
     ResourceRequirements,
 )
+from sematic.retry_settings import RetrySettings  # noqa: F401, E402
 from sematic.versions import CURRENT_VERSION_STR as __version__  # noqa: F401,E402

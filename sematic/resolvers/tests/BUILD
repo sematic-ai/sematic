@@ -8,9 +8,11 @@ pytest_test(
         "//sematic/db/models:edge",
         "//sematic/db/models:resolution",
         "//sematic/db/tests:fixtures",
-        "//sematic/tests:fixtures",
         "//sematic/resolvers:local_resolver",
+        "//sematic/tests:fixtures",
         "//sematic/types:init",
+        "//sematic/utils:exceptions",
+        "//sematic:retry_settings",
     ],
 )
 
@@ -38,6 +40,7 @@ pytest_test(
     srcs = ["test_silent_resolver.py"],
     deps = [
         "//sematic:calculator",
+        "//sematic:retry_settings",
         "//sematic/resolvers:silent_resolver",
     ],
 )
@@ -49,8 +52,8 @@ pytest_test(
         "//sematic:api_client",
         "//sematic:calculator",
         "//sematic/api/tests:fixtures",
-        "//sematic/db/tests:fixtures",
         "//sematic/db/models:resolution",
+        "//sematic/db/tests:fixtures",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:resource_requirements",
         "//sematic/tests:fixtures",
@@ -65,8 +68,8 @@ pytest_test(
         "//sematic:calculator",
         "//sematic/api/tests:fixtures",
         "//sematic/db:queries",
-        "//sematic/db/tests:fixtures",
         "//sematic/db/models:resolution",
+        "//sematic/db/tests:fixtures",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:worker",
         "//sematic/tests:fixtures",

@@ -2,7 +2,6 @@ sematic_py_lib(
     name = "fixtures",
     srcs = ["fixtures.py"],
     data = [
-        "//sematic/db:schema.sql.pg",
         "//sematic/db:schema.sql.sqlite",
     ],
     pip_deps = [

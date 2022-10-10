@@ -131,8 +131,9 @@ class CloudResolver(LocalResolver):
 
         if run.future_state not in {FutureState.RESOLVED.value, FutureState.RAN.value}:
             self._handle_future_failure(
-                future, Exception("Run failed, see exception in the UI.")
+                future, Exception("Run failed, see exception in the UI."), run.exception
             )
+            return
 
         if run.nested_future_id is not None:
             pickled_nested_future = storage.get(

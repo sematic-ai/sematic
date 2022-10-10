@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 # Sematic
 from sematic.abstract_calculator import AbstractCalculator
 from sematic.resolvers.resource_requirements import ResourceRequirements
+from sematic.retry_settings import RetrySettings
 
 
 class FutureState(enum.Enum):
@@ -26,6 +27,8 @@ class FutureState(enum.Enum):
     SCHEDULED = "SCHEDULED"
     FAILED = "FAILED"
     NESTED_FAILED = "NESTED_FAILED"
+    # The future failed and is being queued for retrying
+    RETRYING = "RETRYING"
 
     @classmethod
     def as_object(cls, future_state: Union[str, "FutureState"]) -> "FutureState":
@@ -77,6 +80,7 @@ class FutureProperties:
     name: str
     tags: List[str]
     resource_requirements: Optional[ResourceRequirements] = None
+    retry_settings: Optional[RetrySettings] = None
 
 
 class AbstractFuture(abc.ABC):
@@ -106,6 +110,7 @@ class AbstractFuture(abc.ABC):
         kwargs: Dict[str, Any],
         inline: bool,
         resource_requirements: Optional[ResourceRequirements] = None,
+        retry_settings: Optional[RetrySettings] = None,
     ):
         self.id: str = uuid.uuid4().hex
         self.calculator = calculator
@@ -123,6 +128,7 @@ class AbstractFuture(abc.ABC):
         self._props = FutureProperties(
             inline=inline,
             resource_requirements=resource_requirements,
+            retry_settings=retry_settings,
             name=calculator.__name__,
             tags=[],
         )
