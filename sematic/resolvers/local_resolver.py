@@ -17,7 +17,7 @@ from sematic.db.models.run import Run
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.user_settings import get_all_user_settings
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
-from sematic.utils.git_integration import get_git_info
+from sematic.utils.git import get_git_info
 
 logger = logging.getLogger(__name__)
 

@@ -40,11 +40,11 @@ export type RunGraphPayload = {
 };
 
 export type LogLineResult = {
-    more_before: boolean
-    more_after: boolean
-    lines: string[]
-    continuation_cursor: string | null
-    log_unavailable_reason: string | null
+  more_before: boolean
+  more_after: boolean
+  lines: string[]
+  continuation_cursor: string | null
+  log_unavailable_reason: string | null
 };
 
 export type LogLineRequestResponse = {

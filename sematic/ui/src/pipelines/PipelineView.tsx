@@ -1,12 +1,12 @@
 import Box from "@mui/material/Box";
 import { useContext, useEffect, useMemo, useState } from "react";
-import { Resolution, Run } from "../Models";
 import { useParams } from "react-router-dom";
+import { UserContext } from "..";
 import PipelineBar from "../components/PipelineBar";
 import PipelinePanels from "../components/PipelinePanels";
-import { fetchJSON } from "../utils";
+import { Resolution, Run } from "../Models";
 import { ResolutionPayload, RunViewPayload } from "../Payloads";
-import { UserContext } from "..";
+import { fetchJSON } from "../utils";
 
 export default function PipelineView() {
   const [rootRun, setRootRun] = useState<Run | undefined>(undefined);
@@ -62,7 +62,7 @@ export default function PipelineView() {
           initialRootRun={rootRun}
           initialResolution={resolution}
         />
-        {rootRun && <PipelinePanels rootRun={rootRun} />}
+        {rootRun && <PipelinePanels rootRun={rootRun}/>}
       </Box>
     );
   }

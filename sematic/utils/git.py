@@ -6,10 +6,10 @@ import inspect
 import logging
 import os
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 
 # Third-party
-from git import Repo  # type: ignore
+import git
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class GitInfo:
     dirty: Optional[bool]
 
 
-def get_git_info(object_):
+def get_git_info(object_: Any):
     """
     Returns git repository details for a given Python object.
     """
@@ -34,13 +34,13 @@ def get_git_info(object_):
         return None
 
     try:
-        repo = Repo(source, search_parent_directories=True)
+        repo = git.Repo(source, search_parent_directories=True)
         # when submitting a bazel script, the .git directory will be a symlink from the
         # bazel execroot to the source code workspace
         # this will mess up the dirty bit inspection, so we need to resolve the symlink
         if os.path.islink(repo.git_dir):
             resolved_git_dir = os.readlink(repo.git_dir)
-            repo = Repo(resolved_git_dir, search_parent_directories=True)
+            repo = git.Repo(resolved_git_dir, search_parent_directories=True)
     except Exception as e:
         logger.debug(f"Could not find git repo for source file '{source}'", exc_info=e)
         return None
@@ -57,7 +57,7 @@ def get_git_info(object_):
     )
 
 
-def _get_remote(repo):
+def _get_remote(repo: git.Repo):
     try:
         return repo.remote().config_reader.get_value("url", None)
     except Exception as e:
@@ -65,7 +65,7 @@ def _get_remote(repo):
         return None
 
 
-def _get_commit(repo):
+def _get_commit(repo: git.Repo):
     try:
         return repo.commit().hexsha
     except Exception as e:
@@ -73,7 +73,7 @@ def _get_commit(repo):
         return None
 
 
-def _get_branch(repo):
+def _get_branch(repo: git.Repo):
     try:
         return repo.active_branch.name
     except Exception:

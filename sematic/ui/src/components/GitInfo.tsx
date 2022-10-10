@@ -1,9 +1,9 @@
-import { useCallback, useState } from "react";
-import { Box, ButtonBase, Link, Tooltip, Typography, useTheme } from "@mui/material";
-import { ContentCopy, OpenInNew } from "@mui/icons-material";
+import { ContentCopy } from "@mui/icons-material";
 import PostAddIcon from '@mui/icons-material/PostAdd';
-import { RiGitBranchLine, RiGitCommitLine, RiGitRepositoryCommitsLine } from "react-icons/ri";
+import { Box, ButtonBase, Link, Tooltip, Typography, useTheme } from "@mui/material";
+import { useCallback, useState } from "react";
 import { FaGitSquare } from "react-icons/fa";
+import { RiGitBranchLine, RiGitCommitLine } from "react-icons/ri";
 import { Resolution } from "../Models";
 
 /**
@@ -18,35 +18,38 @@ function makeGithubLink(remote: string, path: string) {
   let domain = remote
     .replace(/^(git@)|(https:\/\/)/, "")
     .replace(/(\.git)$/, "")
-    .replace(/:/, "/")
-  return "https://" + domain + "/" + path
+    .replace(/:/, "/");
+  return "https://" + domain + "/" + path;
 }
 
 function GitInfo(props: {
-    text: string, tooltip: string, remote: string, path: string, children?: any
+  text: string, tooltip: string, remote: string, path: string, children?: any
 }) {
-
-  const [content, setContent] = useState(props.text);
+  const { text, tooltip, remote, path, children } = props;
+  const [content, setContent] = useState(text);
 
   const copy = useCallback(() => {
-    navigator.clipboard.writeText(props.text);
+    navigator.clipboard.writeText(text);
     // avoid temporary resizing by preserving the initial text length
     // by using non-breaking spaces
-    setContent("Copied".padStart(props.text.length, " "));
-    setTimeout(() => setContent(props.text), 1000);
-  }, [props.text]);
+    setContent("Copied".padStart(text.length, " "));
+    setTimeout(() => setContent(text), 1000);
+  }, [text]);
 
   return (
 
     <Typography color="GrayText" component="span">
-      <Tooltip title={props.tooltip}>
-        <ButtonBase onClick={copy}>
-          {props.children}: <code>{content}</code>
-          <ContentCopy fontSize="inherit" sx={{ ml: 1 }} />
-        </ButtonBase>
+      <Tooltip title={tooltip} arrow={true}>
+        <Box component="span">
+          {children}&nbsp;
+          <Link href={makeGithubLink(remote, path)} target="_blank">
+            <code>{content}</code>
+          </Link>
+          <ButtonBase onClick={copy}>
+            <ContentCopy fontSize="inherit" sx={{ ml: 1 }}/>
+          </ButtonBase>
+        </Box>
       </Tooltip>
-      <Link href={makeGithubLink(props.remote, props.path)} target="_blank">
-      <OpenInNew fontSize="inherit" sx={{ ml: 1 }} /></Link>
     </Typography>
 
   );
@@ -54,16 +57,16 @@ function GitInfo(props: {
 
 function DirtyBit(props: { dirty: boolean }) {
   if (!props.dirty) {
-    return <div />
+    return <div/>;
   }
 
   return (
-    <Tooltip title="The workspace had uncommitted changes">
+    <Tooltip title="The workspace had uncommitted changes" arrow={true}>
       <Typography color="GrayText" component="span">
-        <PostAddIcon fontSize="small" sx={{ ml: 4 }} />
+        <PostAddIcon fontSize="small" sx={{ ml: 4 }}/>
       </Typography>
     </Tooltip>
-  )
+  );
 }
 
 function GitInfoBox(props: { resolution: Resolution | undefined }) {
@@ -81,9 +84,9 @@ function GitInfoBox(props: { resolution: Resolution | undefined }) {
           borderColor: theme.palette.grey[200],
         }}
       >
-        <Tooltip title="Git info not found">
+        <Tooltip title="Git info not found" arrow={true}>
           <div>
-            <FaGitSquare size="40" color={theme.palette.grey[200]} />
+            <FaGitSquare size="40" color={theme.palette.grey[200]}/>
           </div>
         </Tooltip>
       </Box>
@@ -107,7 +110,7 @@ function GitInfoBox(props: { resolution: Resolution | undefined }) {
           remote={props.resolution.git_info.remote}
           path={"tree/" + props.resolution.git_info.branch}
         >
-          <RiGitBranchLine />
+          <RiGitBranchLine/>
         </GitInfo>
       </Box>
       <Box>
@@ -117,9 +120,9 @@ function GitInfoBox(props: { resolution: Resolution | undefined }) {
           remote={props.resolution.git_info.remote}
           path={"commit/" + props.resolution.git_info.commit}
         >
-          <RiGitCommitLine />
+          <RiGitCommitLine/>
         </GitInfo>
-        <DirtyBit dirty={props.resolution.git_info.dirty} />
+        <DirtyBit dirty={props.resolution.git_info.dirty}/>
       </Box>
     </Box>
   );

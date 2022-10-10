@@ -26,7 +26,7 @@ sematic_py_lib(
 
 sematic_py_lib(
     name = "git_integration",
-    srcs = ["git_integration.py"],
+    srcs = ["git.py"],
     deps = [],
     pip_deps = [
         "git-python",

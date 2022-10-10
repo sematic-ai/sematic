@@ -1,4 +1,11 @@
-import { TypeGitInfo, TypeSerialization } from "./types/Types";
+import { TypeSerialization } from "./types/Types";
+
+export type TypeGitInfo = {
+  remote: string;
+  branch: string;
+  commit: string;
+  dirty: boolean;
+}
 
 export type Resolution = {
   root_id: string,
