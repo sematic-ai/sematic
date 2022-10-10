@@ -9,11 +9,11 @@ from typing import Optional
 # Third-party
 import flask
 import flask_socketio  # type: ignore
-from sqlalchemy.orm.exc import NoResultFound
 import sqlalchemy
-from sematic.abstract_future import FutureState
+from sqlalchemy.orm.exc import NoResultFound
 
 # Sematic
+from sematic.abstract_future import FutureState
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
@@ -21,8 +21,8 @@ from sematic.db.models.resolution import InvalidResolution, Resolution, Resoluti
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
-    get_resolution,
     get_graph,
+    get_resolution,
     get_run,
     save_graph,
     save_resolution,
