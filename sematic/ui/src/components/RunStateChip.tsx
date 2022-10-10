@@ -1,27 +1,37 @@
-import { Box, Typography, useTheme } from "@mui/material";
+import { Box, Tooltip, Typography, useTheme } from "@mui/material";
+import React from "react";
+import { StringMappingType } from "typescript";
 
-function Pin(props: { color: any; size?: string }) {
-  const { color, size } = props;
-  return (
-    <span
-      style={{
-        height: size || "7px",
-        width: size || "7px",
-        backgroundColor: color,
-        borderRadius: "50%",
-        display: "inline-block",
-        marginRight: "5px",
-      }}
-    ></span>
-  );
-}
+const Pin = React.forwardRef<HTMLDivElement, { color: any; hollow?: boolean }>(
+  (props, ref) => {
+    const { color, hollow, ...otherProps } = props;
+    return (
+      <div
+        ref={ref}
+        {...otherProps}
+        style={{
+          height: "7px",
+          width: "7px",
+          backgroundColor: hollow === true ? null : color,
+          borderColor: hollow === true ? color : undefined,
+          borderWidth: hollow === true ? "1px" : undefined,
+          borderStyle: hollow === true ? "solid" : undefined,
+          borderRadius: "50%",
+          display: "inline-block",
+          marginRight: "5px",
+        }}
+      ></div>
+    );
+  }
+);
 
 function RunStateChip(props: { state?: string; variant?: string }) {
   const state = props.state || "undefined";
   const variant = props.variant || "mini";
-  let toolTipMessage = state ? state : "UNDEFINED";
+  let toolTipMessage = state ? state : "UNKNOWN";
   const theme = useTheme();
   let color = theme.palette.grey[300];
+  let hollow = false;
 
   if (state === "RESOLVED") {
     toolTipMessage = "Succeeded";
@@ -47,15 +57,30 @@ function RunStateChip(props: { state?: string; variant?: string }) {
     toolTipMessage = "Created";
   }
 
+  if (state === "CANCELED") {
+    toolTipMessage = "Canceled";
+    color = theme.palette.error.light;
+    hollow = true;
+  }
+
   if (variant === "mini") {
-    return <Pin color={color} />;
+    return (
+      <Tooltip title={toolTipMessage}>
+        <Pin color={color} hollow={hollow} />
+      </Tooltip>
+    );
   }
 
   return (
-    <Typography component="span" sx={{ display: "flex", alignItems: "center" }}>
-      <Pin color={color} />
-      {variant === "full" && <Box>{toolTipMessage}</Box>}
-    </Typography>
+    <Tooltip title={toolTipMessage}>
+      <Typography
+        component="span"
+        sx={{ display: "flex", alignItems: "center" }}
+      >
+        <Pin color={color} hollow={hollow} />
+        {variant === "full" && <Box>{toolTipMessage}</Box>}
+      </Typography>
+    </Tooltip>
   );
 }
 

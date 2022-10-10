@@ -167,23 +167,6 @@ class CloudResolver(LocalResolver):
         if failed_future.state == FutureState.NESTED_FAILED:
             super()._future_did_fail(failed_future)
 
-    def _refresh_graph(self, run_id):
-        """
-        Refresh graph for run ID.
-
-        Will only refresh artifacts and edges directly connected to run
-        """
-        runs, artifacts, edges = api_client.get_graph(run_id)
-
-        for run in runs:
-            self._runs[run.id] = run
-
-        for artifact in artifacts:
-            self._artifacts[artifact.id] = artifact
-
-        for edge in edges:
-            self._edges[make_edge_key(edge)] = edge
-
     def _wait_for_any_inline_run(self) -> Optional[str]:
         return next(
             (

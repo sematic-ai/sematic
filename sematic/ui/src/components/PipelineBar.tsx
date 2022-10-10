@@ -33,12 +33,23 @@ export default function PipelineBar(props: {
   initialRootRun?: Run;
   initialResolution?: Resolution;
 }) {
-  const { onRootRunChange, calculatorPath, setInitialRootRun, initialRootRun, initialResolution } =
-    props;
+  const {
+    onRootRunChange,
+    calculatorPath,
+    setInitialRootRun,
+    initialRootRun,
+    initialResolution,
+  } = props;
   const [rootRun, setRootRun] = useState<Run | undefined>(initialRootRun);
-  const [resolution, setResolution] = useState<Resolution | undefined>(initialResolution);
+  const [resolution, setResolution] = useState<Resolution | undefined>(
+    initialResolution
+  );
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isCanceling, setIsCanceling] = useState(false);
+  const [cancelSnackMessage, setCancelSnackMessage] = useState<
+    string | undefined
+  >(undefined);
   const [latestRuns, setLatestRuns] = useState<Run[]>([]);
   const [hasNewRun, setHasNewRun] = useState(false);
   const { user } = useContext(UserContext);
@@ -104,7 +115,14 @@ export default function PipelineBar(props: {
         fetchResolution(runs[0]);
       }
     });
-  }, [calculatorPath, fetchLatestRuns, onRootRunChange, setInitialRootRun, setResolution, fetchResolution]);
+  }, [
+    calculatorPath,
+    fetchLatestRuns,
+    onRootRunChange,
+    setInitialRootRun,
+    setResolution,
+    fetchResolution,
+  ]);
 
   useEffect(() => {
     pipelineSocket.removeAllListeners();
@@ -118,7 +136,21 @@ export default function PipelineBar(props: {
         });
       }
     });
-  }, [latestRuns, calculatorPath, fetchLatestRuns]);
+    pipelineSocket.on("cancel", (args: { calculator_path: string }) => {
+      if (args.calculator_path === calculatorPath) {
+        fetchLatestRuns(calculatorPath, (runs) => {
+          setLatestRuns(runs);
+          if (!rootRun) return;
+          runs.forEach((run) => {
+            if (run.id === rootRun.id) {
+              setRootRun(run);
+            }
+          });
+        });
+        setCancelSnackMessage("Pipeline run was canceled.");
+      }
+    });
+  }, [latestRuns, calculatorPath, fetchLatestRuns, rootRun]);
 
   const onSelect = useCallback(
     (event: SelectChangeEvent) => {
@@ -134,6 +166,23 @@ export default function PipelineBar(props: {
     },
     [latestRuns, onRootRunChange, setResolution, fetchResolution]
   );
+
+  const onCancel = useCallback(() => {
+    if (!rootRun) return;
+    setIsCanceling(true);
+    fetchJSON({
+      url: "/api/v1/resolutions/" + rootRun.id + "/cancel",
+      method: "PUT",
+      apiKey: user?.api_key,
+      callback: (payload) => {
+        setIsCanceling(false);
+      },
+      setError: (error) => {
+        setIsCanceling(false);
+        setCancelSnackMessage("Failed to cancel pipeline run.");
+      },
+    });
+  }, [rootRun, setIsCanceling]);
 
   const selectLatestRun = useCallback(() => {
     setRootRun(latestRuns[0]);
@@ -159,7 +208,7 @@ export default function PipelineBar(props: {
         color="inherit"
         onClick={() => setHasNewRun(false)}
       >
-        <CloseIcon fontSize="small"/>
+        <CloseIcon fontSize="small" />
       </IconButton>
     </>
   );
@@ -167,7 +216,7 @@ export default function PipelineBar(props: {
   if (error || !isLoaded) {
     return (
       <Box sx={{ p: 5 }}>
-        <Loading error={error} isLoaded={isLoaded}/>
+        <Loading error={error} isLoaded={isLoaded} />
       </Box>
     );
   } else if (rootRun) {
@@ -180,7 +229,7 @@ export default function PipelineBar(props: {
           borderColor: theme.palette.grey[200],
           paddingY: 3,
           display: "grid",
-          gridTemplateColumns: "70px 1fr auto",
+          gridTemplateColumns: "70px 1fr auto auto auto",
         }}
       >
         <Snackbar
@@ -189,6 +238,16 @@ export default function PipelineBar(props: {
           message="New run available"
           sx={{ marginTop: "50px" }}
           action={snackBarAction}
+        />
+        <Snackbar
+          open={cancelSnackMessage !== undefined}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+          message="Run was canceled"
+          sx={{ marginTop: "50px" }}
+          autoHideDuration={5000}
+          onClose={() => {
+            setCancelSnackMessage(undefined);
+          }}
         />
         <Box
           sx={{
@@ -200,17 +259,42 @@ export default function PipelineBar(props: {
           }}
         >
           <Link href="/pipelines">
-            <ChevronLeft fontSize="large"/>
+            <ChevronLeft fontSize="large" />
           </Link>
         </Box>
         <Box sx={{ gridColumn: 2, pl: 7 }}>
           <Typography variant="h4">{rootRun.name}</Typography>
-          <CalculatorPath calculatorPath={rootRun.calculator_path}/>
+          <CalculatorPath calculatorPath={rootRun.calculator_path} />
         </Box>
-        <GitInfoBox resolution={resolution}/>
+        <Box sx={{ gridColumn: 3, pt: 2, px: 7 }}>
+          {!["FAILED", "NESTED_FAIL", "RESOLVED", "CANCELED"].includes(
+            rootRun.future_state
+          ) && (
+            <Button
+              color="error"
+              size="small"
+              disabled={isCanceling}
+              onClick={onCancel}
+            >
+              {isCanceling ? "Canceling..." : "Cancel"}
+            </Button>
+          )}
+        </Box>
         <Box
           sx={{
             gridColumn: 4,
+            textAlign: "left",
+            paddingX: 10,
+            borderLeft: 1,
+            borderColor: theme.palette.grey[200],
+          }}
+        >
+          <GitInfoBox resolution={resolution} />
+        </Box>
+
+        <Box
+          sx={{
+            gridColumn: 5,
             borderLeft: 1,
             borderColor: theme.palette.grey[200],
             paddingX: 10,
@@ -233,14 +317,14 @@ export default function PipelineBar(props: {
                     component="span"
                     sx={{ display: "flex", alignItems: "center" }}
                   >
-                    <RunStateChip state={run.future_state}/>
+                    <RunStateChip state={run.future_state} />
                     <Box>
                       <Typography sx={{ fontSize: "small", color: "GrayText" }}>
                         <code>{run.id.substring(0, 6)}</code>
                       </Typography>
                     </Box>
                     <Box ml={3}>
-                      <TimeAgo date={run.created_at}/>
+                      <TimeAgo date={run.created_at} />
                     </Box>
                   </Typography>
                 </MenuItem>

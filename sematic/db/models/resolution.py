@@ -49,6 +49,7 @@ class ResolutionStatus(Enum):
     RUNNING = "RUNNING"
     FAILED = "FAILED"
     COMPLETE = "COMPLETE"
+    CANCELLED = "CANCELLED"
 
     @classmethod
     def is_allowed_transition(
@@ -83,10 +84,23 @@ _ALLOWED_TRANSITIONS = {
         ResolutionStatus.SCHEDULED,
         ResolutionStatus.RUNNING,
         ResolutionStatus.FAILED,
+        ResolutionStatus.CANCELLED,
     },
-    ResolutionStatus.CREATED: {ResolutionStatus.SCHEDULED, ResolutionStatus.FAILED},
-    ResolutionStatus.SCHEDULED: {ResolutionStatus.RUNNING, ResolutionStatus.FAILED},
-    ResolutionStatus.RUNNING: {ResolutionStatus.COMPLETE, ResolutionStatus.FAILED},
+    ResolutionStatus.CREATED: {
+        ResolutionStatus.SCHEDULED,
+        ResolutionStatus.FAILED,
+        ResolutionStatus.CANCELLED,
+    },
+    ResolutionStatus.SCHEDULED: {
+        ResolutionStatus.RUNNING,
+        ResolutionStatus.FAILED,
+        ResolutionStatus.CANCELLED,
+    },
+    ResolutionStatus.RUNNING: {
+        ResolutionStatus.COMPLETE,
+        ResolutionStatus.FAILED,
+        ResolutionStatus.CANCELLED,
+    },
     ResolutionStatus.COMPLETE: {},
     ResolutionStatus.FAILED: {},
 }

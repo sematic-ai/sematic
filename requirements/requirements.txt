@@ -225,7 +225,9 @@ python-dateutil==2.8.2
 python-engineio==4.3.4
     # via python-socketio
 python-socketio==5.7.1
-    # via flask-socketio
+    # via
+    #   -r requirements/requirements.in
+    #   flask-socketio
 pytz==2022.2.1
     # via
     #   pandas
@@ -320,7 +322,9 @@ urllib3==1.26.12
 wcwidth==0.2.5
     # via prompt-toolkit
 websocket-client==1.4.1
-    # via kubernetes
+    # via
+    #   -r requirements/requirements.in
+    #   kubernetes
 werkzeug==2.2.2
     # via
     #   -r requirements/requirements.in

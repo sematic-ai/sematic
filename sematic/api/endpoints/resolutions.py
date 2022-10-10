@@ -8,16 +8,27 @@ from typing import Optional
 
 # Third-party
 import flask
+import flask_socketio  # type: ignore
 from sqlalchemy.orm.exc import NoResultFound
+import sqlalchemy
+from sematic.abstract_future import FutureState
 
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
-from sematic.db.models.resolution import InvalidResolution, Resolution
+from sematic.db.models.resolution import InvalidResolution, Resolution, ResolutionStatus
+from sematic.db.models.run import Run
 from sematic.db.models.user import User
-from sematic.db.queries import get_resolution, get_run, save_resolution
+from sematic.db.queries import (
+    get_resolution,
+    get_graph,
+    get_run,
+    save_graph,
+    save_resolution,
+)
 from sematic.scheduling.job_scheduler import schedule_resolution
+from sematic.scheduling.kubernetes import cancel_job
 
 
 @sematic_api.route("/api/v1/resolutions/<resolution_id>", methods=["GET"])
@@ -122,3 +133,57 @@ def schedule_resolution_endpoint(
     )
 
     return flask.jsonify(payload)
+
+
+@sematic_api.route("/api/v1/resolutions/<resolution_id>/cancel", methods=["PUT"])
+@authenticate
+def cancel_resolution_endpoint(
+    user: Optional[User], resolution_id: str
+) -> flask.Response:
+    resolution = get_resolution(resolution_id)
+    root_run = get_run(resolution.root_id)
+
+    terminal_states = (
+        future_state.value for future_state in FutureState if future_state.is_terminal()
+    )
+
+    unfinished_runs, _, __ = get_graph(
+        sqlalchemy.and_(
+            Run.root_id == resolution.root_id,
+            sqlalchemy.not_(Run.future_state.in_(terminal_states)),  # type: ignore
+        ),
+        include_edges=False,
+        include_artifacts=False,
+    )
+
+    for external_job in resolution.external_jobs:
+        cancel_job(external_job)
+
+    resolution.status = ResolutionStatus.CANCELLED
+    save_resolution(resolution)
+
+    for run in unfinished_runs:
+        for external_job in run.external_jobs:
+            cancel_job(external_job)
+
+        run.future_state = FutureState.CANCELED
+
+    save_graph(unfinished_runs, [], [])
+
+    flask_socketio.emit(
+        "update",
+        dict(run_id=resolution.root_id),
+        namespace="/graph",
+        broadcast=True,
+    )
+
+    flask_socketio.emit(
+        "cancel",
+        dict(
+            resolution_id=resolution.root_id, calculator_path=root_run.calculator_path
+        ),
+        namespace="/pipeline",
+        broadcast=True,
+    )
+
+    return flask.jsonify(dict(content=resolution.to_json_encodable()))

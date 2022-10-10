@@ -1,6 +1,7 @@
 # Standard Library
 import typing
 from dataclasses import dataclass
+import time
 
 # Sematic
 import sematic
@@ -27,6 +28,7 @@ def add(a: float, b: float) -> float:
     """
     Adds two numbers.
     """
+    time.sleep(10)
     return a + b
 
 

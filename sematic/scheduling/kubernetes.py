@@ -148,6 +148,33 @@ def load_kube_config():
 
 
 @retry(exceptions=(ApiException, ConnectionError), tries=3, delay=5, jitter=2)
+def cancel_job(job: ExternalJob) -> KubernetesExternalJob:
+    """
+    Cancel a remote k8s job.
+    """
+    load_kube_config()
+    if not isinstance(job, KubernetesExternalJob):
+        raise ValueError(
+            f"Expected a {KubernetesExternalJob.__name__}, got a {type(job).__name__}"
+        )
+
+    try:
+        kubernetes.client.BatchV1Api().delete_namespaced_job(
+            namespace=job.namespace,
+            name=job.kubernetes_job_name,
+            grace_period_seconds=0,
+            propagation_policy="Background",
+        )
+    except ApiException as e:
+        if e.status == 404:
+            pass
+
+    job.still_exists = False
+
+    return job
+
+
+@retry(exceptions=(ApiException, ConnectionError), tries=3, delay=5, jitter=2)
 def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
     """Reach out to K8s for updates on the status of the job"""
     load_kube_config()

@@ -4,6 +4,9 @@ import logging
 import uuid
 from typing import Dict, List, Optional, Tuple, Union
 
+# Third-party
+import socketio  # type: ignore
+
 # Sematic
 import sematic.api_client as api_client
 from sematic.abstract_calculator import CalculatorError
@@ -43,6 +46,8 @@ class LocalResolver(SilentResolver):
 
         # TODO: Replace this with a local storage engine
         self._store_artifacts = False
+
+        self._sio_client = socketio.Client()
 
     def _update_edge(
         self,
@@ -113,10 +118,29 @@ class LocalResolver(SilentResolver):
         return run
 
     def _resolution_will_start(self):
+        self._sio_client.connect(get_config().server_url, namespaces=["/pipeline"])
+
+        @self._sio_client.on("cancel", namespace="/pipeline")
+        def _cancel(data):
+            if data["resolution_id"] != self._root_future.id:
+                return
+
+            logger.info("Received cancelation event")
+            self._cancel_futures()
+            self._refresh_graph(self._root_future.id)
+            self._sio_client.disconnect()
+            exit(1)
+
         self._populate_run_and_artifacts(self._root_future)
         self._save_graph()
         self._create_resolution(self._root_future, detached=False)
         self._update_resolution_status(ResolutionStatus.RUNNING)
+
+    def _resolution_did_cancel(self) -> None:
+        super()._resolution_did_cancel()
+        api_client.cancel_resolution(self._root_future.id)
+        self._refresh_graph(self._root_future.id)
+        self._sio_client.disconnect()
 
     def _get_resolution_image(self) -> Optional[str]:
         return None
@@ -241,13 +265,15 @@ class LocalResolver(SilentResolver):
         self._save_graph()
 
     def _notify_pipeline_update(self):
-        root_future = self._futures[0]
-        api_client.notify_pipeline_update(self._runs[root_future.id].calculator_path)
+        api_client.notify_pipeline_update(
+            self._runs[self._root_future.id].calculator_path
+        )
 
     def _resolution_did_succeed(self) -> None:
         super()._resolution_did_succeed()
         self._update_resolution_status(ResolutionStatus.COMPLETE)
         self._notify_pipeline_update()
+        self._sio_client.disconnect()
 
     def _resolution_did_fail(self, error: Exception) -> None:
         super()._resolution_did_fail(error)
@@ -442,6 +468,23 @@ class LocalResolver(SilentResolver):
         self._buffer_runs.clear()
         self._buffer_artifacts.clear()
         self._buffer_edges.clear()
+
+    def _refresh_graph(self, run_id: str, root: bool = False):
+        """
+        Refresh graph for run ID.
+
+        Will only refresh artifacts and edges directly connected to run
+        """
+        runs, artifacts, edges = api_client.get_graph(run_id, root=root)
+
+        for run in runs:
+            self._runs[run.id] = run
+
+        for artifact in artifacts:
+            self._artifacts[artifact.id] = artifact
+
+        for edge in edges:
+            self._edges[make_edge_key(edge)] = edge
 
 
 def make_edge_key(edge: Edge) -> str:
