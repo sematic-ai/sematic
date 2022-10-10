@@ -2,8 +2,8 @@
 import click
 
 # Sematic
-from sematic.cli.cli import cli
 import sematic.api_client as api_client
+from sematic.cli.cli import cli
 
 
 @cli.command("cancel", short_help="Cancel a run")
