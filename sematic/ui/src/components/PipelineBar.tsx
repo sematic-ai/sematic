@@ -169,6 +169,7 @@ export default function PipelineBar(props: {
 
   const onCancel = useCallback(() => {
     if (!rootRun) return;
+    if (!confirm("Are you sure you want to cancel this pipeline?")) return;
     setIsCanceling(true);
     fetchJSON({
       url: "/api/v1/resolutions/" + rootRun.id + "/cancel",

@@ -125,7 +125,7 @@ class LocalResolver(SilentResolver):
             if data["resolution_id"] != self._root_future.id:
                 return
 
-            logger.info("Received cancelation event")
+            logger.warning("Received cancelation event")
             self._cancel_futures()
             self._refresh_graph(self._root_future.id)
             self._sio_client.disconnect()
@@ -286,6 +286,7 @@ class LocalResolver(SilentResolver):
 
         self._move_runs_to_terminal_state(reason)
         self._update_resolution_status(resolution_status)
+        self._sio_client.disconnect()
         self._notify_pipeline_update()
 
     def _move_runs_to_terminal_state(self, reason):
