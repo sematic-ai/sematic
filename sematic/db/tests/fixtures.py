@@ -19,6 +19,7 @@ from sematic.resolvers.resource_requirements import (
     ResourceRequirements,
 )
 from sematic.tests.fixtures import test_storage  # noqa: F401
+from sematic.utils.git import GitInfo
 
 
 def handler(postgresql):
@@ -128,6 +129,7 @@ def make_resolution(**kwargs) -> Resolution:
         status=ResolutionStatus.SCHEDULED,
         kind=ResolutionKind.KUBERNETES,
         docker_image_uri="some.uri",
+        git_info=GitInfo(remote="remote", branch="branch", commit="commit", dirty=False),
         settings_env_vars={"MY_SETTING": "MY_VALUE"},
     )
 

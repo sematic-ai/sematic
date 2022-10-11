@@ -12,7 +12,7 @@ export type Resolution = {
   status: string,
   kind: string,
   docker_image_uri: string | null,
-  git_info: TypeGitInfo | null,
+  git_info_json: TypeGitInfo | null,
   settings_env_vars: Map<string, string>;
   external_jobs_json: Map<string, any> | null;
 }

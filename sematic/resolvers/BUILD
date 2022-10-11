@@ -12,7 +12,7 @@ sematic_py_lib(
         "//sematic/db/models:factories",
         "//sematic/db/models:run",
         "//sematic/utils:exceptions",
-        "//sematic/utils:git_integration",
+        "//sematic/utils:git",
     ],
 )
 

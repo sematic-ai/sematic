@@ -71,9 +71,10 @@ function DirtyBit(props: { dirty: boolean }) {
 
 function GitInfoBox(props: { resolution: Resolution | undefined }) {
 
+  const { resolution } = props;
   const theme = useTheme();
 
-  if (!props.resolution || !props.resolution.git_info) {
+  if (!resolution || !resolution.git_info_json) {
     return (
       <Box
         sx={{
@@ -105,24 +106,24 @@ function GitInfoBox(props: { resolution: Resolution | undefined }) {
     >
       <Box>
         <GitInfo
-          text={props.resolution.git_info.branch}
+          text={resolution.git_info_json.branch}
           tooltip="Git branch"
-          remote={props.resolution.git_info.remote}
-          path={"tree/" + props.resolution.git_info.branch}
+          remote={resolution.git_info_json.remote}
+          path={"tree/" + resolution.git_info_json.branch}
         >
           <RiGitBranchLine/>
         </GitInfo>
       </Box>
       <Box>
         <GitInfo
-          text={props.resolution.git_info.commit.substring(0, 7)}
+          text={resolution.git_info_json.commit.substring(0, 7)}
           tooltip="Git commit"
-          remote={props.resolution.git_info.remote}
-          path={"commit/" + props.resolution.git_info.commit}
+          remote={resolution.git_info_json.remote}
+          path={"commit/" + resolution.git_info_json.commit}
         >
           <RiGitCommitLine/>
         </GitInfo>
-        <DirtyBit dirty={props.resolution.git_info.dirty}/>
+        <DirtyBit dirty={resolution.git_info_json.dirty}/>
       </Box>
     </Box>
   );

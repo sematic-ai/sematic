@@ -91,7 +91,7 @@ sematic_py_lib(
         ":base",
         ":has_external_jobs_mixin",
         ":json_encodable_mixin",
-        "//sematic/utils:git_integration",
+        "//sematic/utils:git",
     ],
 )
 

@@ -1,4 +1,6 @@
 # Standard Library
+import dataclasses
+import json
 import logging
 from enum import Enum, unique
 from typing import Any, Dict, List, Optional, Union
@@ -10,7 +12,7 @@ from sqlalchemy.orm import validates
 # Sematic
 from sematic.db.models.base import Base
 from sematic.db.models.has_external_jobs_mixin import HasExternalJobsMixin
-from sematic.db.models.json_encodable_mixin import ENUM_KEY, JSONEncodableMixin
+from sematic.db.models.json_encodable_mixin import ENUM_KEY, JSONEncodableMixin, JSON_KEY
 from sematic.utils.git import GitInfo
 
 logger = logging.getLogger(__name__)
@@ -103,7 +105,7 @@ class ResolutionKind(Enum):
 
 
 class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
-    """Represents a session of a resolver
+    """Represents a session of a resolver.
 
     Attributes
     ----------
@@ -140,7 +142,9 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     docker_image_uri: Optional[str] = Column(
         types.String(), nullable=True, default=None
     )
-    git_info: Optional[GitInfo] = Column(types.JSON, nullable=True)  # type: ignore
+    git_info_json: Optional[str] = Column(  # type: ignore
+        types.JSON(), nullable=True, info={JSON_KEY: True}
+    )
     settings_env_vars: Dict[str, str] = Column(
         types.JSON, nullable=False, default=lambda: {}
     )
@@ -231,3 +235,23 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
             raise InvalidResolution(
                 f"New resolution {self.root_id} can't begin in the {self.status} state."
             )
+
+    @property
+    def git_info(self) -> Optional[GitInfo]:
+        if self.git_info_json is None:
+            return None
+
+        json_encodable = json.loads(self.git_info_json)
+        return GitInfo(**json_encodable)
+
+    @git_info.setter
+    def git_info(self, value: Optional[GitInfo]) -> None:
+        if value is None:
+            self.git_info_json = None
+            return
+
+        # git_info_json is not mutable, so any updated value posted to api_client will be rejected
+        # we therefore need to sort the keys
+        # for the same reason, we can't use value_to_json_encodable, because it imposes
+        # the values/types/root_type semantics
+        self.git_info_json = json.dumps(dataclasses.asdict(value), sort_keys=True)
