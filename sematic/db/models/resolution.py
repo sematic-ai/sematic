@@ -250,7 +250,7 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
             self.git_info_json = None
             return
 
-        # git_info_json is not mutable, so any updated value posted to api_client will be rejected
+        # git_info_json is not mutable; any update posted to api_client will be rejected
         # we therefore need to sort the keys
         # for the same reason, we can't use value_to_json_encodable, because it imposes
         # the values/types/root_type semantics

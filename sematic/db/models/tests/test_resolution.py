@@ -25,75 +25,90 @@ def test_is_allowed_transition():
     )
 
 
+def make_resolution(root_id, status, kind, docker_image_uri, git_info):
+    resolution = Resolution(
+        root_id=root_id,
+        status=status,
+        kind=kind,
+        docker_image_uri=docker_image_uri,
+    )
+
+    # Set this outside the constructor because the constructor expects
+    # a json encodable, but this property will auto-update the json
+    # encodable field.
+    resolution.git_info = git_info
+    return resolution
+
+
 UPDATE_CASES = [
     (
-        Resolution(
+        make_resolution(
             root_id="abc123",
             status=ResolutionStatus.SCHEDULED,
             kind=ResolutionKind.KUBERNETES,
             docker_image_uri="my.docker.registry.io/image/tag",
-            git_info=GitInfo(remote="remote", branch="branch", commit="commit", dirty=False),
+            git_info=GitInfo(remote="r", branch="b", commit="c", dirty=False),
         ),
         None,
     ),
     (
-        Resolution(
+        make_resolution(
             root_id="abc123",
             status=ResolutionStatus.RUNNING,
             kind=ResolutionKind.KUBERNETES,
             docker_image_uri="my.docker.registry.io/image/tag",
-            git_info=GitInfo(remote="remote", branch="branch", commit="commit", dirty=False),
+            git_info=GitInfo(remote="r", branch="b", commit="c", dirty=False),
         ),
         None,
     ),
     (
-        Resolution(
+        make_resolution(
             root_id="zzz",
             status=ResolutionStatus.SCHEDULED,
             kind=ResolutionKind.KUBERNETES,
             docker_image_uri="my.docker.registry.io/image/tag",
-            git_info=GitInfo(remote="remote", branch="branch", commit="commit", dirty=False),
+            git_info=GitInfo(remote="r", branch="b", commit="c", dirty=False),
         ),
         r"Cannot update root_id of resolution abc123 after it has been created.*zzz.*",
     ),
     (
-        Resolution(
+        make_resolution(
             root_id="abc123",
             status=ResolutionStatus.COMPLETE,
             kind=ResolutionKind.KUBERNETES,
             docker_image_uri="my.docker.registry.io/image/tag",
-            git_info=GitInfo(remote="remote", branch="branch", commit="commit", dirty=False),
+            git_info=GitInfo(remote="r", branch="b", commit="c", dirty=False),
         ),
         r"Resolution abc123 cannot be moved from the SCHEDULED state to the "
         r"COMPLETE state.",
     ),
     (
-        Resolution(
+        make_resolution(
             root_id="abc123",
             status=ResolutionStatus.SCHEDULED,
             kind=ResolutionKind.LOCAL,
             docker_image_uri="my.docker.registry.io/image/tag",
-            git_info=GitInfo(remote="remote", branch="branch", commit="commit", dirty=False),
+            git_info=GitInfo(remote="r", branch="b", commit="c", dirty=False),
         ),
         r"Cannot update kind of resolution abc123 after it has been created.*LOCAL.*",
     ),
     (
-        Resolution(
+        make_resolution(
             root_id="abc123",
             status=ResolutionStatus.SCHEDULED,
             kind=ResolutionKind.KUBERNETES,
             docker_image_uri="my.docker.registry.io/changed/tag",
-            git_info=GitInfo(remote="remote", branch="branch", commit="commit", dirty=False),
+            git_info=GitInfo(remote="r", branch="b", commit="c", dirty=False),
         ),
         r"Cannot update docker_image_uri of resolution abc123 .*changed/tag.*",
     ),
     (
-        Resolution(
+        make_resolution(
             root_id="abc123",
             status=ResolutionStatus.SCHEDULED,
             kind=ResolutionKind.KUBERNETES,
             docker_image_uri="my.docker.registry.io/image/tag",
-            git_info=GitInfo(remote="remote", branch="branch", commit="commit", dirty=True),
+            git_info=GitInfo(remote="r", branch="b", commit="c", dirty=True),
         ),
         r"Cannot update git_info_json of resolution abc123 .*\"dirty\": false.*",
     ),
@@ -102,12 +117,12 @@ UPDATE_CASES = [
 
 @pytest.mark.parametrize("update,expected_error", UPDATE_CASES)
 def test_updates(update, expected_error):
-    original = Resolution(
+    original = make_resolution(
         root_id="abc123",
         status=ResolutionStatus.SCHEDULED,
         kind=ResolutionKind.KUBERNETES,
         docker_image_uri="my.docker.registry.io/image/tag",
-        git_info=GitInfo(remote="remote", branch="branch", commit="commit", dirty=False),
+        git_info=GitInfo(remote="r", branch="b", commit="c", dirty=False),
     )
     try:
         original.update_with(update)
