@@ -1,25 +1,38 @@
 pytest_test(
     name = "test_main",
     srcs = ["test_main.py"],
-    deps = [
-        "//sematic/cli:main_lib",
-        "//sematic/cli:process_utils",
-        "//sematic:config",
-        "//sematic/db/tests:fixtures",
-    ],
     pip_deps = [
         "click",
+    ],
+    deps = [
+        "//sematic:config",
+        "//sematic/cli:main_lib",
+        "//sematic/cli:process_utils",
+        "//sematic/db/tests:fixtures",
     ],
 )
 
 pytest_test(
     name = "test_new",
     srcs = ["test_new.py"],
-    deps = [
-        "//sematic/cli:new",
-        "//sematic/cli:examples_utils",
-    ],
     pip_deps = [
         "click",
-    ]
+    ],
+    deps = [
+        "//sematic/cli:examples_utils",
+        "//sematic/cli:new",
+    ],
+)
+
+pytest_test(
+    name = "test_cancel",
+    srcs = ["test_cancel.py"],
+    pip_deps = [
+        "click",
+    ],
+    deps = [
+        "//sematic/cli:cancel",
+        "//sematic/db/models:run",
+        "//sematic/db/tests:fixtures",
+    ],
 )

@@ -148,7 +148,7 @@ def load_kube_config():
 
 
 @retry(exceptions=(ApiException, ConnectionError), tries=3, delay=5, jitter=2)
-def cancel_job(job: ExternalJob) -> KubernetesExternalJob:
+def cancel_job(job: KubernetesExternalJob) -> KubernetesExternalJob:
     """
     Cancel a remote k8s job.
     """
