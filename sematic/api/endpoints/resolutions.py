@@ -149,7 +149,7 @@ def cancel_resolution_endpoint(
         )
 
     if not ResolutionStatus.is_allowed_transition(
-        from_status=resolution.status, to_status=ResolutionStatus.CANCELLED
+        from_status=resolution.status, to_status=ResolutionStatus.CANCELED
     ):
         return jsonify_error(
             f"Resolution cannot be canceled. Current state: {resolution.status}",
@@ -174,7 +174,7 @@ def cancel_resolution_endpoint(
     for external_job in resolution.external_jobs:
         cancel_job(external_job)
 
-    resolution.status = ResolutionStatus.CANCELLED
+    resolution.status = ResolutionStatus.CANCELED
     save_resolution(resolution)
 
     for run in unfinished_runs:

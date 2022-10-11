@@ -7,8 +7,13 @@ from sematic.cli.cli import cli
 
 
 @cli.command("cancel", short_help="Cancel a run")
-@click.argument("run_id", type=click.STRING)
+@click.argument(
+    "run_id", type=click.STRING, help="ID of any run in the pipeline to cancel."
+)
 def cancel(run_id: str):
+    """
+    Cancel a pipeline execution.
+    """
     try:
         run = api_client.get_run(run_id)
     except api_client.BadRequestError:

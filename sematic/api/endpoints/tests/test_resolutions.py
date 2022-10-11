@@ -173,7 +173,7 @@ def test_cancel_resolution(
 
     canceled_resolution = get_resolution(persisted_resolution.root_id)
 
-    assert canceled_resolution.status == ResolutionStatus.CANCELLED.value
+    assert canceled_resolution.status == ResolutionStatus.CANCELED.value
 
     runs, _, __ = get_graph(
         Run.root_id == canceled_resolution.root_id,
