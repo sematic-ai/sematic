@@ -62,6 +62,7 @@ _TERMINAL_STATES = {
     FutureState.NESTED_FAILED,
     FutureState.FAILED,
     FutureState.RESOLVED,
+    FutureState.CANCELED,
 }
 
 
