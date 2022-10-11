@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 # Third-party
-import git
+import git  # type: ignore
 
 logger = logging.getLogger(__name__)
 
