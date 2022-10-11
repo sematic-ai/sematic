@@ -12,7 +12,7 @@ clear_sqlite:
 	sqlite3 ~/.sematic/db.sqlite3 < sematic/db/scripts/clear_all.sql
 
 install-dev-deps:
-	pip install -r requirements/ci-requirements.txt
+	pip3 install -r requirements/ci-requirements.txt
 
 pre-commit:
 	flake8
