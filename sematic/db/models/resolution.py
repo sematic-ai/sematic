@@ -51,6 +51,13 @@ class ResolutionStatus(Enum):
     COMPLETE = "COMPLETE"
     CANCELLED = "CANCELLED"
 
+    def is_terminal(self):
+        return self in {
+            ResolutionStatus.FAILED,
+            ResolutionStatus.COMPLETE,
+            ResolutionStatus.CANCELLED,
+        }
+
     @classmethod
     def is_allowed_transition(
         cls,

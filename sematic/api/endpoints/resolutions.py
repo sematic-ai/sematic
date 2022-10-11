@@ -140,7 +140,22 @@ def schedule_resolution_endpoint(
 def cancel_resolution_endpoint(
     user: Optional[User], resolution_id: str
 ) -> flask.Response:
-    resolution = get_resolution(resolution_id)
+    try:
+        resolution = get_resolution(resolution_id)
+    except NoResultFound:
+        return jsonify_error(
+            "No resolutions with id {}".format(repr(resolution_id)),
+            HTTPStatus.NOT_FOUND,
+        )
+
+    if not ResolutionStatus.is_allowed_transition(
+        from_status=resolution.status, to_status=ResolutionStatus.CANCELLED
+    ):
+        return jsonify_error(
+            f"Resolution cannot be canceled. Current state: {resolution.status}",
+            HTTPStatus.BAD_REQUEST,
+        )
+
     root_run = get_run(resolution.root_id)
 
     terminal_states = (
