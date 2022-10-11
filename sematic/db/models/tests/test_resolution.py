@@ -6,10 +6,10 @@ import pytest
 # Sematic
 from sematic.db.models.resolution import (
     InvalidResolution,
-    Resolution,
     ResolutionKind,
     ResolutionStatus,
 )
+from sematic.db.tests.fixtures import make_resolution
 from sematic.utils.git import GitInfo
 
 
@@ -23,21 +23,6 @@ def test_is_allowed_transition():
     assert not ResolutionStatus.is_allowed_transition(
         ResolutionStatus.COMPLETE, ResolutionStatus.FAILED
     )
-
-
-def make_resolution(root_id, status, kind, docker_image_uri, git_info):
-    resolution = Resolution(
-        root_id=root_id,
-        status=status,
-        kind=kind,
-        docker_image_uri=docker_image_uri,
-    )
-
-    # Set this outside the constructor because the constructor expects
-    # a json encodable, but this property will auto-update the json
-    # encodable field.
-    resolution.git_info = git_info
-    return resolution
 
 
 UPDATE_CASES = [

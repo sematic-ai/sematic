@@ -39,7 +39,7 @@ function GitInfo(props: {
   return (
 
     <Typography color="GrayText" component="span">
-      <Tooltip title={tooltip} arrow={true}>
+      <Tooltip title={tooltip}>
         <Box component="span">
           {children}&nbsp;
           <Link href={makeGithubLink(remote, path)} target="_blank">
@@ -61,7 +61,7 @@ function DirtyBit(props: { dirty: boolean }) {
   }
 
   return (
-    <Tooltip title="The workspace had uncommitted changes" arrow={true}>
+    <Tooltip title="The workspace had uncommitted changes">
       <Typography color="GrayText" component="span">
         <PostAddIcon fontSize="small" sx={{ ml: 4 }}/>
       </Typography>
@@ -76,21 +76,18 @@ function GitInfoBox(props: { resolution: Resolution | undefined }) {
 
   if (!resolution || !resolution.git_info_json) {
     return (
-      <Box
-        sx={{
-          gridColumn: 3,
-          paddingX: 10,
-          paddingTop: 1,
-          borderLeft: 1,
-          borderColor: theme.palette.grey[200],
-        }}
-      >
-        <Tooltip title="Git info not found" arrow={true}>
-          <div>
-            <FaGitSquare size="40" color={theme.palette.grey[200]}/>
-          </div>
-        </Tooltip>
-      </Box>
+        <Typography
+          color="GrayText"
+          sx={{
+            gridColumn: 3,
+            paddingX: 10,
+            paddingTop: 3,
+            borderLeft: 1,
+            borderColor: theme.palette.grey[200],
+          }}
+        >
+          Git info not found
+        </Typography>
     );
   }
 
