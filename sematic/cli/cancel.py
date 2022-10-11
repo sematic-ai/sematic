@@ -7,9 +7,7 @@ from sematic.cli.cli import cli
 
 
 @cli.command("cancel", short_help="Cancel a run")
-@click.argument(
-    "run_id", type=click.STRING, help="ID of any run in the pipeline to cancel."
-)
+@click.argument("run_id", type=click.STRING)
 def cancel(run_id: str):
     """
     Cancel a pipeline execution.

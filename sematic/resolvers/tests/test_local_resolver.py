@@ -358,7 +358,10 @@ def try_three_times():
 
 
 @mock_no_auth
-def test_retry(test_db, mock_requests, valid_client_version):  # noqa: F811
+@mock.patch("socketio.Client.connect")
+def test_retry(
+    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+):
     future = try_three_times()
     try:
         future.resolve(LocalResolver())
