@@ -141,6 +141,7 @@ export default function PipelineBar(props: {
         fetchLatestRuns(calculatorPath, (runs) => {
           setLatestRuns(runs);
           if (!rootRun) return;
+          // Re-rendering
           runs.forEach((run) => {
             if (run.id === rootRun.id) {
               setRootRun(run);
