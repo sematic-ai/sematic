@@ -166,6 +166,7 @@ def cancel_job(job: KubernetesExternalJob) -> KubernetesExternalJob:
             propagation_policy="Background",
         )
     except ApiException as e:
+        logging.warning("Error attempting to delete Kubernetes job: %s", e)
         if e.status == 404:
             pass
 
