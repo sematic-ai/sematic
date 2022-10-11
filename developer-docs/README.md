@@ -3,6 +3,14 @@ This directory contains documentation for people working on/developing Sematic
 itself. Documents intended for users of Sematic are in the `docs` directory,
 and are published to https://docs.sematic.dev/
 
+## Setup
+
+The developer tools need to be installed by running this command once (and subsequently whenever
+`requirements/ci-requirements.txt`) will be updated:
+```bash
+$ pip3 install -r requirements/ci-requirements.txt
+```
+
 ## Releasing
 **Note:** Actually pushing the released wheel can only be done if you have
 access to the PyPi repo, which is limited to employees of Sematic.
@@ -10,37 +18,43 @@ access to the PyPi repo, which is limited to employees of Sematic.
 - Bump the version in `wheel_version.bzl`, `sematic/versions.py`,
   and `helm/sematic/values.yaml`
 - Update `changelog.md` with the new version number
-- `make ui`
-- `make wheel`
+- Build the UI:
+```bash
+$ make ui
+```
+- Build the wheel:
+```bash
+$ make wheel
+```
 - copy wheel from `bazel-bin/sematic/sematic-....whl` into a scratch directory,
 and use a virtual env to test:
 
-```
-pip install <wheel path>
-sematic start
-sematic run examples/mnist/pytorch
+```bash
+$ pip3 install <wheel path>
+$ sematic start
+$ sematic run examples/mnist/pytorch
 ```
 
 Do this for all supported versions of python. If everything works fine,
 we are ready to push the release.
 
-```
-make test-release
-make release
+```bash
+$ make test-release
+$ make release
 ```
 
 Once you have pushed it to PyPi, add the git tag
 
-```
-RELEASE_VERSION=v$(python3 ./sematic/versions.py)
-git tag $RELEASE_VERSION
-git push --tags
+```bash
+$ export RELEASE_VERSION=v$(python3 ./sematic/versions.py)
+$ git tag $RELEASE_VERSION
+$ git push --tags
 ```
 
 Next, build and push the server image. Use the dockerfile at
 `docker/Dockerfile.server`. Use the wheel you built before in the directory
 you run.
-```
+```bash
 $ cd docker
 $ RELEASE_VERSION=v$(python3 ../sematic/versions.py)
 $ docker build -t "sematicai/sematic-server:$RELEASE_VERSION" -f Dockerfile.server .
