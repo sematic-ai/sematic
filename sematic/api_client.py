@@ -102,6 +102,7 @@ def save_graph(
 def get_graph(run_id: str) -> Tuple[List[Run], List[Artifact], List[Edge]]:
     """
     Get a graph for a run.
+
     This will return only the run's direct edges and artifacts
     TODO: implement root=True option to get all graph for root, not needed currently.
     """
