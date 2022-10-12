@@ -1,6 +1,13 @@
 import { ContentCopy } from "@mui/icons-material";
-import PostAddIcon from '@mui/icons-material/PostAdd';
-import { Box, ButtonBase, Link, Tooltip, Typography, useTheme } from "@mui/material";
+import PostAddIcon from "@mui/icons-material/PostAdd";
+import {
+  Box,
+  ButtonBase,
+  Link,
+  Tooltip,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import { useCallback, useState } from "react";
 import { FaGitSquare } from "react-icons/fa";
 import { RiGitBranchLine, RiGitCommitLine } from "react-icons/ri";
@@ -23,7 +30,11 @@ function makeGithubLink(remote: string, path: string) {
 }
 
 function GitInfo(props: {
-  text: string, tooltip: string, remote: string, path: string, children?: any
+  text: string;
+  tooltip: string;
+  remote: string;
+  path: string;
+  children?: any;
 }) {
   const { text, tooltip, remote, path, children } = props;
   const [content, setContent] = useState(text);
@@ -37,7 +48,6 @@ function GitInfo(props: {
   }, [text]);
 
   return (
-
     <Typography color="GrayText" component="span">
       <Tooltip title={tooltip}>
         <Box component="span">
@@ -46,61 +56,51 @@ function GitInfo(props: {
             <code>{content}</code>
           </Link>
           <ButtonBase onClick={copy}>
-            <ContentCopy fontSize="inherit" sx={{ ml: 1 }}/>
+            <ContentCopy fontSize="inherit" sx={{ ml: 1 }} />
           </ButtonBase>
         </Box>
       </Tooltip>
     </Typography>
-
   );
 }
 
 function DirtyBit(props: { dirty: boolean }) {
   if (!props.dirty) {
-    return <div/>;
+    return <div />;
   }
 
   return (
     <Tooltip title="The workspace had uncommitted changes">
       <Typography color="GrayText" component="span">
-        <PostAddIcon fontSize="small" sx={{ ml: 4 }}/>
+        <PostAddIcon fontSize="small" sx={{ ml: 4 }} />
       </Typography>
     </Tooltip>
   );
 }
 
 function GitInfoBox(props: { resolution: Resolution | undefined }) {
-
   const { resolution } = props;
   const theme = useTheme();
 
   if (!resolution || !resolution.git_info_json) {
     return (
-        <Typography
-          color="GrayText"
-          sx={{
-            gridColumn: 3,
-            paddingX: 10,
-            paddingTop: 3,
-            borderLeft: 1,
-            borderColor: theme.palette.grey[200],
-          }}
-        >
-          Git info not found
-        </Typography>
+      <Typography
+        color="GrayText"
+        sx={{
+          gridColumn: 3,
+          paddingX: 10,
+          paddingTop: 3,
+          borderLeft: 1,
+          borderColor: theme.palette.grey[200],
+        }}
+      >
+        Git info not found
+      </Typography>
     );
   }
 
   return (
-    <Box
-      sx={{
-        gridColumn: 3,
-        textAlign: "left",
-        paddingX: 10,
-        borderLeft: 1,
-        borderColor: theme.palette.grey[200],
-      }}
-    >
+    <>
       <Box>
         <GitInfo
           text={resolution.git_info_json.branch}
@@ -108,7 +108,7 @@ function GitInfoBox(props: { resolution: Resolution | undefined }) {
           remote={resolution.git_info_json.remote}
           path={"tree/" + resolution.git_info_json.branch}
         >
-          <RiGitBranchLine/>
+          <RiGitBranchLine />
         </GitInfo>
       </Box>
       <Box>
@@ -118,11 +118,11 @@ function GitInfoBox(props: { resolution: Resolution | undefined }) {
           remote={resolution.git_info_json.remote}
           path={"commit/" + resolution.git_info_json.commit}
         >
-          <RiGitCommitLine/>
+          <RiGitCommitLine />
         </GitInfo>
-        <DirtyBit dirty={resolution.git_info_json.dirty}/>
+        <DirtyBit dirty={resolution.git_info_json.dirty} />
       </Box>
-    </Box>
+    </>
   );
 }
 
