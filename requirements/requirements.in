@@ -15,6 +15,9 @@ psycopg2-binary
 # Code
 pyyaml
 
+# Git integration
+git-python
+
 # API server
 flask
 flask-cors

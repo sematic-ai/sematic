@@ -1,15 +1,16 @@
 import Box from "@mui/material/Box";
 import { useContext, useEffect, useMemo, useState } from "react";
-import { Run } from "../Models";
 import { useParams } from "react-router-dom";
+import { UserContext } from "..";
 import PipelineBar from "../components/PipelineBar";
 import PipelinePanels from "../components/PipelinePanels";
+import { Resolution, Run } from "../Models";
+import { ResolutionPayload, RunViewPayload } from "../Payloads";
 import { fetchJSON } from "../utils";
-import { RunViewPayload } from "../Payloads";
-import { UserContext } from "..";
 
 export default function PipelineView() {
   const [rootRun, setRootRun] = useState<Run | undefined>(undefined);
+  const [resolution, setResolution] = useState<Resolution | undefined>(undefined);
 
   const { user } = useContext(UserContext);
 
@@ -23,6 +24,11 @@ export default function PipelineView() {
       url: "/api/v1/runs/" + rootId,
       apiKey: user?.api_key,
       callback: (payload: RunViewPayload) => setRootRun(payload.content),
+    });
+    fetchJSON({
+      url: "/api/v1/resolutions/" + rootId,
+      apiKey: user?.api_key,
+      callback: (payload: ResolutionPayload) => setResolution(payload.content),
     });
   }, [rootId]);
 
@@ -54,8 +60,9 @@ export default function PipelineView() {
           onRootRunChange={setRootRun}
           setInitialRootRun={rootId === undefined}
           initialRootRun={rootRun}
+          initialResolution={resolution}
         />
-        {rootRun && <PipelinePanels rootRun={rootRun} />}
+        {rootRun && <PipelinePanels rootRun={rootRun}/>}
       </Box>
     );
   }
