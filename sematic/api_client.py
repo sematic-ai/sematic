@@ -99,21 +99,13 @@ def save_graph(
     notify_graph_update(root_id)
 
 
-def get_graph(
-    run_id: str, root: bool = False
-) -> Tuple[List[Run], List[Artifact], List[Edge]]:
+def get_graph(run_id: str) -> Tuple[List[Run], List[Artifact], List[Edge]]:
     """
     Get a graph for a run.
-
-    Parameters
-    ----------
-    run_id: str
-        ID of subgraph root
-    root: bool
-        Default is `False`. If `False` will only retrieve graph directly connected to
-        run. If `True`, will retrieve all runs whose `root_id` is `run_id`.
+    This will return only the run's direct edges and artifacts
+    TODO: implement root=True option to get all graph for root, not needed currently.
     """
-    response = _get(f"/runs/{run_id}/graph?root={int(root)}")
+    response = _get("/runs/{}/graph".format(run_id))
 
     runs = [Run.from_json_encodable(run) for run in response["runs"]]
     artifacts = [
