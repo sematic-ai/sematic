@@ -30,17 +30,18 @@ function makeGithubLink(remote: string, path: string) {
 
 function GitInfo(props: {
   text: string;
+  copyText?: string;
   tooltip: string;
   remote: string;
   path: string;
   extra?: JSX.Element;
   children?: any;
 }) {
-  const { text, tooltip, remote, path, children, extra } = props;
+  const { text, copyText, tooltip, remote, path, children, extra } = props;
   const [content, setContent] = useState(text);
   const theme = useTheme();
   const copy = useCallback(() => {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(copyText || text);
     // avoid temporary resizing by preserving the initial text length
     // by using non-breaking spaces
     setContent("Copied".padStart(text.length, " "));
@@ -56,7 +57,7 @@ function GitInfo(props: {
       {children}&nbsp;
       <Tooltip title={tooltip}>
         <Link href={makeGithubLink(remote, path)} target="_blank">
-          {content}
+          <code>{content}</code>
         </Link>
       </Tooltip>
       <ButtonBase onClick={copy}>
@@ -103,6 +104,7 @@ function GitInfoBox(props: { resolution: Resolution | undefined }) {
       <Box>
         <GitInfo
           text={resolution.git_info_json.commit.substring(0, 7)}
+          copyText={resolution.git_info_json.commit}
           tooltip="Git commit"
           remote={resolution.git_info_json.remote}
           path={"commit/" + resolution.git_info_json.commit}

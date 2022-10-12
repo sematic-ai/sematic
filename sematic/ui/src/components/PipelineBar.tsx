@@ -290,6 +290,7 @@ export default function PipelineBar(props: {
             px: 10,
             borderLeft: 1,
             borderColor: theme.palette.grey[200],
+            pt: 1,
           }}
         >
           <GitInfoBox resolution={resolution} />
