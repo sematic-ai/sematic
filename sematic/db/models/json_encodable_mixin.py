@@ -1,4 +1,5 @@
 # Standard Library
+import dataclasses
 import datetime
 import enum
 import json
@@ -65,6 +66,9 @@ def _to_json_encodable(value, column):
 
     if isinstance(value, enum.Enum):
         return value.value
+
+    if dataclasses.is_dataclass(value):
+        return dataclasses.asdict(value)
 
     if info.get(JSON_KEY, False) and value is not None:
         return json.loads(value)

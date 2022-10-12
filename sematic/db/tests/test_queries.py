@@ -65,6 +65,11 @@ def test_save_run(test_db, persisted_run: Run):  # noqa: F811
 def test_get_resolution(test_db, persisted_resolution: Resolution):  # noqa: F811
     fetched_resolution = get_resolution(persisted_resolution.root_id)
     assert fetched_resolution.root_id == persisted_resolution.root_id
+    assert fetched_resolution.status == persisted_resolution.status
+    assert fetched_resolution.kind == persisted_resolution.kind
+    assert fetched_resolution.docker_image_uri == persisted_resolution.docker_image_uri
+    assert fetched_resolution.git_info == persisted_resolution.git_info
+    assert fetched_resolution.settings_env_vars == persisted_resolution.settings_env_vars
 
 
 def test_save_resolution(test_db, persisted_resolution: Resolution):  # noqa: F811

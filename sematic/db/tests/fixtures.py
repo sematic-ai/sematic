@@ -19,6 +19,7 @@ from sematic.resolvers.resource_requirements import (
     ResourceRequirements,
 )
 from sematic.tests.fixtures import test_storage  # noqa: F401
+from sematic.utils.git import GitInfo
 
 
 def handler(postgresql):
@@ -129,6 +130,13 @@ def make_resolution(**kwargs) -> Resolution:
         kind=ResolutionKind.KUBERNETES,
         docker_image_uri="some.uri",
         settings_env_vars={"MY_SETTING": "MY_VALUE"},
+    )
+
+    # Set this outside the constructor because the constructor expects
+    # a json encodable, but this property will auto-update the json
+    # encodable field.
+    resolution.git_info = GitInfo(
+        remote="remote", branch="branch", commit="commit", dirty=False
     )
 
     for name, value in kwargs.items():
