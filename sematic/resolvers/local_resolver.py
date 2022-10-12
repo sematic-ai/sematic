@@ -127,7 +127,6 @@ class LocalResolver(SilentResolver):
 
             logger.warning("Received cancelation event")
             self._cancel_futures()
-            self._refresh_graph(self._root_future.id)
             self._sio_client.disconnect()
             exit(1)
 
@@ -139,7 +138,6 @@ class LocalResolver(SilentResolver):
     def _resolution_did_cancel(self) -> None:
         super()._resolution_did_cancel()
         api_client.cancel_resolution(self._root_future.id)
-        self._refresh_graph(self._root_future.id)
         self._sio_client.disconnect()
 
     def _get_resolution_image(self) -> Optional[str]:
@@ -297,7 +295,7 @@ class LocalResolver(SilentResolver):
             if state.is_terminal():
                 continue
 
-            run.future_state = FutureState.FAILED
+            run.future_state = FutureState.CANCELED
 
             if run.exception is None:
                 run.exception = ExceptionMetadata(
@@ -469,23 +467,6 @@ class LocalResolver(SilentResolver):
         self._buffer_runs.clear()
         self._buffer_artifacts.clear()
         self._buffer_edges.clear()
-
-    def _refresh_graph(self, run_id: str, root: bool = False):
-        """
-        Refresh graph for run ID.
-
-        Will only refresh artifacts and edges directly connected to run
-        """
-        runs, artifacts, edges = api_client.get_graph(run_id, root=root)
-
-        for run in runs:
-            self._runs[run.id] = run
-
-        for artifact in artifacts:
-            self._artifacts[artifact.id] = artifact
-
-        for edge in edges:
-            self._edges[make_edge_key(edge)] = edge
 
 
 def make_edge_key(edge: Edge) -> str:

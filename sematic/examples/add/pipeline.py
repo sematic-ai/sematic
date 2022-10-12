@@ -1,5 +1,4 @@
 # Standard Library
-import time
 import typing
 from dataclasses import dataclass
 
@@ -28,7 +27,6 @@ def add(a: float, b: float) -> float:
     """
     Adds two numbers.
     """
-    time.sleep(5)
     return a + b
 
 
