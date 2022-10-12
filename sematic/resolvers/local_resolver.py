@@ -295,14 +295,14 @@ class LocalResolver(SilentResolver):
             if state.is_terminal():
                 continue
 
-            run.future_state = FutureState.CANCELED
+            run.future_state = FutureState.FAILED
 
             if run.exception is None:
                 run.exception = ExceptionMetadata(
                     repr=reason, name=Exception.__name__, module=Exception.__module__
                 )
 
-            self._buffer_runs[run_id] = run
+            self._add_run(run)
         self._save_graph()
 
     def _update_resolution_status(self, status: ResolutionStatus):
@@ -320,8 +320,9 @@ class LocalResolver(SilentResolver):
         api_client.save_resolution(resolution)
 
     def _get_run(self, run_id) -> Run:
-        # Should refresh from DB for remote exec
-        return self._runs[run_id]
+        run = api_client.get_run(run_id)
+        self._runs[run_id] = run
+        return run
 
     def _add_run(self, run: Run):
         self._runs[run.id] = run

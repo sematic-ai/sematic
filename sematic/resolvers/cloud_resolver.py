@@ -72,12 +72,6 @@ class CloudResolver(LocalResolver):
         self._artifacts = {artifact.id: artifact for artifact in artifacts}
         self._edges = {make_edge_key(edge): edge for edge in edges}
 
-    def _get_run(self, run_id) -> Run:
-        # Should refresh from DB for remote exec
-        run = api_client.get_run(run_id)
-        self._runs[run_id] = run
-        return run
-
     def _get_resolution_image(self) -> Optional[str]:
         return get_image_uri()
 
