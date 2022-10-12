@@ -1,3 +1,6 @@
+# Standard Library
+from unittest import mock
+
 # Third-party
 import pytest
 
@@ -69,7 +72,9 @@ def test_get_resolution(test_db, persisted_resolution: Resolution):  # noqa: F81
     assert fetched_resolution.kind == persisted_resolution.kind
     assert fetched_resolution.docker_image_uri == persisted_resolution.docker_image_uri
     assert fetched_resolution.git_info == persisted_resolution.git_info
-    assert fetched_resolution.settings_env_vars == persisted_resolution.settings_env_vars
+    assert (
+        fetched_resolution.settings_env_vars == persisted_resolution.settings_env_vars
+    )
 
 
 def test_save_resolution(test_db, persisted_resolution: Resolution):  # noqa: F811
@@ -109,7 +114,9 @@ def pipeline(a: float, b: float) -> float:
     ((get_run_graph, 1, 3, 3), (get_root_graph, 3, 4, 8)),
 )
 @mock_no_auth
+@mock.patch("socketio.Client.connect")
 def test_get_run_graph(
+    mock_socketio,
     fn,
     run_count: int,
     artifact_count: int,

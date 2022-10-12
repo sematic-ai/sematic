@@ -26,6 +26,7 @@ def pipeline() -> float:
     return add(1, 2)
 
 
+@mock.patch("socketio.Client.connect")
 @mock.patch("sematic.resolvers.cloud_resolver.get_image_uri")
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
@@ -34,6 +35,7 @@ def test_simulate_cloud_exec(
     mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,
     mock_get_image: mock.MagicMock,
+    mock_socketio,
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
     test_storage,  # noqa: F811

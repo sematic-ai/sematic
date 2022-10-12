@@ -1,8 +1,8 @@
-
 sematic_py_lib(
     name = "main_lib",
     srcs = ["main.py"],
     deps = [
+        ":cancel",
         ":cli",
         ":start",
         ":stop",
@@ -15,70 +15,82 @@ sematic_py_lib(
         "//sematic/examples/add:add_lib",
         "//sematic/examples/mnist/pytorch:pytorch_lib",
         "//sematic/examples/liver_cirrhosis:liver_cirrhosis_lib",
-    ]
+    ],
 )
 
 sematic_py_lib(
     name = "cli",
     srcs = ["cli.py"],
+    pip_deps = [
+        "click",
+    ],
     deps = [
         "//sematic:config",
         "//sematic/db:migrate_lib",
     ],
-    pip_deps=[
-        "click"
+)
+
+sematic_py_lib(
+    name = "cancel",
+    srcs = ["cancel.py"],
+    pip_deps = [
+        "click",
+    ],
+    deps = [
+        ":cli",
+        "//sematic:api_client",
     ],
 )
 
 sematic_py_lib(
     name = "start",
     srcs = ["start.py"],
+    pip_deps = [
+        "click",
+    ],
     deps = [
         ":cli",
         ":process_utils",
         "//sematic:config",
         "//sematic/api:server_lib",
     ],
-    pip_deps=[
-        "click"
-    ],
 )
 
 sematic_py_lib(
     name = "stop",
     srcs = ["stop.py"],
-    deps = [
-        ":process_utils",
-        ":cli",
+    pip_deps = [
+        "click",
     ],
-    pip_deps=[
-        "click"
+    deps = [
+        ":cli",
+        ":process_utils",
     ],
 )
 
 sematic_py_lib(
     name = "run",
     srcs = ["run.py"],
+    pip_deps = [
+        "click",
+    ],
     deps = [
         ":cli",
         ":process_utils",
         "//sematic:config",
-    ],
-    pip_deps=[
-        "click"
     ],
 )
 
 sematic_py_lib(
     name = "new",
     srcs = ["new.py"],
+    pip_deps = [
+        "click",
+    ],
     deps = [
         ":cli",
         ":examples_utils",
         "//sematic:config",
-    ],
-    pip_deps=[
-        "click"
     ],
 )
 
@@ -87,7 +99,7 @@ sematic_py_lib(
     srcs = ["process_utils.py"],
     deps = [
         "//sematic:config",
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -95,26 +107,26 @@ sematic_py_lib(
     srcs = ["examples_utils.py"],
     deps = [
         "//sematic:config",
-    ]
+    ],
 )
 
 sematic_py_lib(
     name = "settings",
     srcs = ["settings.py"],
+    pip_deps = [
+        "click",
+        "pyyaml",
+    ],
     deps = [
         ":cli",
         "//sematic:user_settings",
-    ],
-    pip_deps=[
-        "click",
-        "pyyaml",
     ],
 )
 
 sematic_py_binary(
     name = "main",
-    main = "main.py",
     srcs = ["main.py"],
+    main = "main.py",
     deps = [
         ":main_lib",
         # This is to make sure we can test via Bazel

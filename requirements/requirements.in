@@ -18,6 +18,10 @@ pyyaml
 # Git integration
 git-python
 
+# Client
+websocket-client
+python-socketio
+
 # API server
 flask
 flask-cors

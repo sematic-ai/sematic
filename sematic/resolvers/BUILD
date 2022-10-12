@@ -1,6 +1,10 @@
 sematic_py_lib(
     name = "local_resolver",
     srcs = ["local_resolver.py"],
+    pip_deps = [
+        "python-socketio",
+        "websocket-client",
+    ],
     deps = [
         ":silent_resolver",
         "//sematic:abstract_calculator",
@@ -58,10 +62,10 @@ sematic_py_lib(
     name = "log_streamer",
     srcs = ["log_streamer.py"],
     deps = [
+        "//sematic:config",
         "//sematic:storage",
         "//sematic/utils:retry",
         "//sematic/utils:stdout",
-        "//sematic:config",
     ],
 )
 
@@ -80,16 +84,16 @@ sematic_py_lib(
     deps = [
         ":log_streamer",
         "//sematic:abstract_future",
-        "//sematic:log_reader",
         "//sematic:api_client",
         "//sematic:calculator",
         "//sematic:future",
+        "//sematic:log_reader",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
         "//sematic/resolvers:cloud_resolver",
-        "//sematic/utils:exceptions",
         "//sematic/scheduling:external_job",
+        "//sematic/utils:exceptions",
     ],
 )
 

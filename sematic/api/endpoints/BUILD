@@ -6,9 +6,11 @@ sematic_py_lib(
         "sqlalchemy",
         "flask-socketio",
     ],
+    # buildifier: leave-alone
     deps = [
         ":auth",
         ":request_parameters",
+        "//sematic:log_reader",
         "//sematic/api:app",
         "//sematic/db:db",
         "//sematic/db:queries",
@@ -16,7 +18,6 @@ sematic_py_lib(
         "//sematic/db/models:edge",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
-        "//sematic:log_reader",
         "//sematic/scheduling:job_scheduler",
         "//sematic/utils:exceptions",
     ],
@@ -28,6 +29,7 @@ sematic_py_lib(
     pip_deps = [
         "flask",
         "sqlalchemy",
+        "flask-socketio",
     ],
     deps = [
         ":auth",
@@ -68,6 +70,7 @@ sematic_py_lib(
         "flask",
         "sqlalchemy",
     ],
+    # buildifier: leave-alone
     deps = [
         ":request_parameters",
         "//sematic/api:app",
@@ -93,6 +96,7 @@ sematic_py_lib(
         "flask",
         "sqlalchemy",
     ],
+    # buildifier: leave-alone
     deps = [
         ":auth",
         ":request_parameters",

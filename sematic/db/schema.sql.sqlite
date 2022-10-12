@@ -69,9 +69,7 @@ CREATE TABLE resolutions (
     status TEXT NOT NULL,
     kind TEXT NOT NULL,
     docker_image_uri TEXT,
-    git_info_json JSONB,
-    settings_env_vars JSONB NOT NULL,
-    external_jobs_json JSONB,
+    settings_env_vars JSONB NOT NULL, external_jobs_json JSONB, git_info_json JSONB,
 
     PRIMARY KEY (root_id),
     FOREIGN KEY (root_id) REFERENCES runs(id)
