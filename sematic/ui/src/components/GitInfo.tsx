@@ -1,4 +1,4 @@
-import { ContentCopy } from "@mui/icons-material";
+import { Add, ContentCopy } from "@mui/icons-material";
 import PostAddIcon from "@mui/icons-material/PostAdd";
 import {
   Box,
@@ -9,7 +9,6 @@ import {
   useTheme,
 } from "@mui/material";
 import { useCallback, useState } from "react";
-import { FaGitSquare } from "react-icons/fa";
 import { RiGitBranchLine, RiGitCommitLine } from "react-icons/ri";
 import { Resolution } from "../Models";
 
@@ -34,11 +33,12 @@ function GitInfo(props: {
   tooltip: string;
   remote: string;
   path: string;
+  extra?: JSX.Element;
   children?: any;
 }) {
-  const { text, tooltip, remote, path, children } = props;
+  const { text, tooltip, remote, path, children, extra } = props;
   const [content, setContent] = useState(text);
-
+  const theme = useTheme();
   const copy = useCallback(() => {
     navigator.clipboard.writeText(text);
     // avoid temporary resizing by preserving the initial text length
@@ -48,33 +48,22 @@ function GitInfo(props: {
   }, [text]);
 
   return (
-    <Typography color="GrayText" component="span">
+    <Typography
+      color="GrayText"
+      component="span"
+      sx={{ display: "flex", alignItems: "center" }}
+    >
+      {children}&nbsp;
       <Tooltip title={tooltip}>
-        <Box component="span">
-          {children}&nbsp;
-          <Link href={makeGithubLink(remote, path)} target="_blank">
-            <code>{content}</code>
-          </Link>
-          <ButtonBase onClick={copy}>
-            <ContentCopy fontSize="inherit" sx={{ ml: 1 }} />
-          </ButtonBase>
-        </Box>
+        <Link href={makeGithubLink(remote, path)} target="_blank">
+          {content}
+        </Link>
       </Tooltip>
+      <ButtonBase onClick={copy}>
+        <ContentCopy fontSize="inherit" sx={{ ml: 1 }} />
+      </ButtonBase>
+      {extra}
     </Typography>
-  );
-}
-
-function DirtyBit(props: { dirty: boolean }) {
-  if (!props.dirty) {
-    return <div />;
-  }
-
-  return (
-    <Tooltip title="The workspace had uncommitted changes">
-      <Typography color="GrayText" component="span">
-        <PostAddIcon fontSize="small" sx={{ ml: 4 }} />
-      </Typography>
-    </Tooltip>
   );
 }
 
@@ -117,10 +106,19 @@ function GitInfoBox(props: { resolution: Resolution | undefined }) {
           tooltip="Git commit"
           remote={resolution.git_info_json.remote}
           path={"commit/" + resolution.git_info_json.commit}
+          extra={
+            resolution.git_info_json.dirty ? (
+              <Tooltip title="Uncommitted changes">
+                <PostAddIcon
+                  fontSize="inherit"
+                  sx={{ color: theme.palette.warning.light, ml: 2 }}
+                />
+              </Tooltip>
+            ) : undefined
+          }
         >
           <RiGitCommitLine />
         </GitInfo>
-        <DirtyBit dirty={resolution.git_info_json.dirty} />
       </Box>
     </>
   );
