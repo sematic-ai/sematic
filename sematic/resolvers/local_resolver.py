@@ -126,6 +126,11 @@ class LocalResolver(SilentResolver):
                 return
 
             logger.warning("Received cancelation event")
+
+            root_run = self._get_run(self._root_future.id)
+            if root_run.future_state != FutureState.CANCELED.value:
+                raise RuntimeError("Cancelation was not effective.")
+
             # If we are here, the cancelation was applied successfully server-side
             # so it is safe to mark non-terminal futures as CANCELED
             # This will precipipate the termination of the resolution loop.
