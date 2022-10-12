@@ -62,7 +62,9 @@ def resolution(run):
         status=ResolutionStatus.CREATED,
         kind=ResolutionKind.KUBERNETES,
         docker_image_uri="my.uri",
-        git_info=GitInfo(remote="remote", branch="branch", commit="commit", dirty=False),
+        git_info=GitInfo(
+            remote="remote", branch="branch", commit="commit", dirty=False
+        ),
         settings_env_vars={"SOME_ENV_VAR": "some_value"},
     )
 

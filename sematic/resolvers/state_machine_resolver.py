@@ -4,6 +4,7 @@ Abstract base class for a state machine-based resolution.
 # Standard Library
 import abc
 import logging
+import signal
 import typing
 
 # Sematic
@@ -39,9 +40,13 @@ class StateMachineResolver(Resolver, abc.ABC):
             if self._detach:
                 return self._detach_resolution(future)
 
+            self._register_signal_handlers()
+
+            logger.info(f"Starting resolution {future.id}")
+
             self._resolution_will_start()
 
-            while future.state != FutureState.RESOLVED:
+            while not future.state.is_terminal():
                 for future_ in self._futures:
                     if future_.state == FutureState.CREATED:
                         self._schedule_future_if_args_resolved(future_)
@@ -52,9 +57,11 @@ class StateMachineResolver(Resolver, abc.ABC):
 
                 self._wait_for_scheduled_run()
 
-            self._resolution_did_succeed()
-
-            if future.state != FutureState.RESOLVED:
+            if future.state == FutureState.RESOLVED:
+                self._resolution_did_succeed()
+            elif future.state == FutureState.CANCELED:
+                return
+            else:
                 raise RuntimeError("Unresolved Future after resolver call.")
 
             return future.value
@@ -65,6 +72,10 @@ class StateMachineResolver(Resolver, abc.ABC):
                 # from Sematic's stack and more from the error from their code.
                 raise e.__cause__  # type: ignore
             raise e
+
+    def _register_signal_handlers(self):
+        for signum in {signal.SIGINT, signal.SIGTERM}:
+            signal.signal(signum, self._handle_sig_cancel)
 
     def _detach_resolution(self, future: AbstractFuture) -> str:
         raise NotImplementedError()
@@ -91,6 +102,15 @@ class StateMachineResolver(Resolver, abc.ABC):
     @abc.abstractmethod
     def _wait_for_scheduled_run(self) -> None:
         pass
+
+    def _handle_sig_cancel(self, signum, frame):
+        logger.warning("Received SIGINT, canceling resolution...")
+        self._resolution_did_cancel()
+
+    def _cancel_non_terminal_futures(self):
+        for future in self._futures:
+            if not future.state.is_terminal():
+                self._set_future_state(future, FutureState.CANCELED)
 
     @typing.final
     def _set_future_state(self, future, state):
@@ -143,6 +163,9 @@ class StateMachineResolver(Resolver, abc.ABC):
             The error that led to the resolution's failure. If the error occurred
             within a calculator, will be an instance of CalculatorError
         """
+        pass
+
+    def _resolution_did_cancel(self) -> None:
         pass
 
     def _future_did_schedule(self, future: AbstractFuture) -> None:

@@ -29,6 +29,7 @@ def pipeline(a: float, b: float) -> float:
     return add(a, b)
 
 
+@mock.patch("socketio.Client.connect")
 @mock.patch("sematic.resolvers.cloud_resolver.get_image_uri")
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
@@ -37,6 +38,7 @@ def test_main(
     mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,
     mock_get_image: mock.MagicMock,
+    mock_socketio,
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
     test_storage,  # noqa: F811
@@ -69,6 +71,7 @@ def fail():
     raise Exception("FAIL!")
 
 
+@mock.patch("socketio.Client.connect")
 @mock.patch("sematic.resolvers.cloud_resolver.get_image_uri")
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
@@ -77,6 +80,7 @@ def test_fail(
     mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,
     mock_get_image: mock.MagicMock,
+    mock_socketio,
     mock_requests,  # noqa: F811
     test_storage,  # noqa: F811
     valid_client_version,  # noqa: F811

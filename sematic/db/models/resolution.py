@@ -12,7 +12,11 @@ from sqlalchemy.orm import validates
 # Sematic
 from sematic.db.models.base import Base
 from sematic.db.models.has_external_jobs_mixin import HasExternalJobsMixin
-from sematic.db.models.json_encodable_mixin import ENUM_KEY, JSONEncodableMixin, JSON_KEY
+from sematic.db.models.json_encodable_mixin import (
+    ENUM_KEY,
+    JSON_KEY,
+    JSONEncodableMixin,
+)
 from sematic.utils.git import GitInfo
 
 logger = logging.getLogger(__name__)
@@ -49,6 +53,7 @@ class ResolutionStatus(Enum):
     RUNNING = "RUNNING"
     FAILED = "FAILED"
     COMPLETE = "COMPLETE"
+    CANCELED = "CANCELED"
 
     @classmethod
     def is_allowed_transition(
@@ -83,12 +88,26 @@ _ALLOWED_TRANSITIONS = {
         ResolutionStatus.SCHEDULED,
         ResolutionStatus.RUNNING,
         ResolutionStatus.FAILED,
+        ResolutionStatus.CANCELED,
     },
-    ResolutionStatus.CREATED: {ResolutionStatus.SCHEDULED, ResolutionStatus.FAILED},
-    ResolutionStatus.SCHEDULED: {ResolutionStatus.RUNNING, ResolutionStatus.FAILED},
-    ResolutionStatus.RUNNING: {ResolutionStatus.COMPLETE, ResolutionStatus.FAILED},
+    ResolutionStatus.CREATED: {
+        ResolutionStatus.SCHEDULED,
+        ResolutionStatus.FAILED,
+        ResolutionStatus.CANCELED,
+    },
+    ResolutionStatus.SCHEDULED: {
+        ResolutionStatus.RUNNING,
+        ResolutionStatus.FAILED,
+        ResolutionStatus.CANCELED,
+    },
+    ResolutionStatus.RUNNING: {
+        ResolutionStatus.COMPLETE,
+        ResolutionStatus.FAILED,
+        ResolutionStatus.CANCELED,
+    },
     ResolutionStatus.COMPLETE: {},
     ResolutionStatus.FAILED: {},
+    ResolutionStatus.CANCELED: {},
 }
 
 

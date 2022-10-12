@@ -233,7 +233,7 @@ def get_run_graph(run_id: str) -> Graph:
     This will return the run's direct graph, meaning
     only edges directly connected to it, and their corresponding artifacts.
     """
-    return _get_graph(Run.id == run_id)
+    return get_graph(Run.id == run_id)
 
 
 def get_root_graph(root_id: str) -> Graph:
@@ -242,10 +242,14 @@ def get_root_graph(root_id: str) -> Graph:
 
     This will return the entire graph for a given root_id.
     """
-    return _get_graph(Run.root_id == root_id)
+    return get_graph(Run.root_id == root_id)
 
 
-def _get_graph(run_predicate: ColumnElement) -> Graph:
+def get_graph(
+    run_predicate: ColumnElement,
+    include_edges: bool = True,
+    include_artifacts: bool = True,
+) -> Graph:
     """
     Retrieve the graph for a run predicate
     (e.g. Run.root_id == root_id, or Run.id == run_id)
@@ -253,22 +257,28 @@ def _get_graph(run_predicate: ColumnElement) -> Graph:
     with db().get_session() as session:
         runs: List[Run] = session.query(Run).filter(run_predicate).all()
         run_ids = [run.id for run in runs]
-        edges: List[Edge] = (
-            session.query(Edge)
-            .filter(
-                sqlalchemy.or_(
-                    Edge.source_run_id.in_(run_ids),
-                    Edge.destination_run_id.in_(run_ids),
+
+        edges: List[Edge] = []
+        if include_edges:
+            edges = (
+                session.query(Edge)
+                .filter(
+                    sqlalchemy.or_(
+                        Edge.source_run_id.in_(run_ids),
+                        Edge.destination_run_id.in_(run_ids),
+                    )
                 )
+                .all()
             )
-            .all()
-        )
-        artifact_ids = {
-            edge.artifact_id for edge in edges if edge.artifact_id is not None
-        }
-        artifacts: List[Artifact] = (
-            session.query(Artifact).filter(Artifact.id.in_(artifact_ids)).all()
-        )
+
+        artifacts: List[Artifact] = []
+        if include_artifacts:
+            artifact_ids = {
+                edge.artifact_id for edge in edges if edge.artifact_id is not None
+            }
+            artifacts = (
+                session.query(Artifact).filter(Artifact.id.in_(artifact_ids)).all()
+            )
 
     return runs, artifacts, edges
 

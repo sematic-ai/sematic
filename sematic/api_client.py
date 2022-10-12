@@ -133,6 +133,12 @@ def get_resolution(root_id: str) -> Resolution:
     return Resolution.from_json_encodable(response["content"])
 
 
+def cancel_resolution(resolution_id: str) -> Resolution:
+    response = _put(f"/resolutions/{resolution_id}/cancel", {})
+
+    return Resolution.from_json_encodable(response["content"])
+
+
 def schedule_run(run_id: str) -> Run:
     """Ask the server to execute the calculator for the run."""
     response = _post(f"/runs/{run_id}/schedule", json_payload={})

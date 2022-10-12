@@ -18,10 +18,29 @@ from sematic.scheduling.kubernetes import (
     KubernetesExternalJob,
     KubernetesJobCondition,
     _schedule_kubernetes_job,
+    cancel_job,
     refresh_job,
     schedule_run_job,
 )
 from sematic.tests.fixtures import environment_variables  # noqa: F401
+
+
+@mock.patch("sematic.scheduling.kubernetes.load_kube_config")
+@mock.patch("sematic.scheduling.kubernetes.kubernetes.client.BatchV1Api")
+def test_cancel_job(k8s_batch_client: mock.MagicMock, mock_kube_config):
+    external_job = KubernetesExternalJob.new(
+        job_type=JobType.driver,
+        try_number=0,
+        run_id="abc",
+        namespace="some-namespace",
+    )
+    cancel_job(external_job)
+    k8s_batch_client.return_value.delete_namespaced_job.assert_called_once_with(
+        namespace="some-namespace",
+        name=external_job.kubernetes_job_name,
+        grace_period_seconds=0,
+        propagation_policy="Background",
+    )
 
 
 @mock.patch("sematic.scheduling.kubernetes.load_kube_config")
