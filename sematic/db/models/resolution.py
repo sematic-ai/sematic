@@ -12,7 +12,11 @@ from sqlalchemy.orm import validates
 # Sematic
 from sematic.db.models.base import Base
 from sematic.db.models.has_external_jobs_mixin import HasExternalJobsMixin
-from sematic.db.models.json_encodable_mixin import ENUM_KEY, JSONEncodableMixin, JSON_KEY
+from sematic.db.models.json_encodable_mixin import (
+    ENUM_KEY,
+    JSON_KEY,
+    JSONEncodableMixin,
+)
 from sematic.utils.git import GitInfo
 
 logger = logging.getLogger(__name__)

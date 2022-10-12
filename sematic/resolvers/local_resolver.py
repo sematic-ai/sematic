@@ -126,9 +126,11 @@ class LocalResolver(SilentResolver):
                 return
 
             logger.warning("Received cancelation event")
-            self._cancel_futures()
+            # If we are here, the cancelation was applied successfully server-side
+            # so it is safe to mark non-terminal futures as CANCELED
+            # This will precipipate the termination of the resolution loop.
+            self._cancel_non_terminal_futures()
             self._sio_client.disconnect()
-            exit(1)
 
         self._populate_run_and_artifacts(self._root_future)
         self._save_graph()
