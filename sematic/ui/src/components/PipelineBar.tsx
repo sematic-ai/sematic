@@ -287,7 +287,7 @@ export default function PipelineBar(props: {
           sx={{
             gridColumn: 4,
             textAlign: "left",
-            px: 10,
+            paddingX: 10,
             borderLeft: 1,
             borderColor: theme.palette.grey[200],
             pt: 1,
