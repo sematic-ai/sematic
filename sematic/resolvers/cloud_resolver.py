@@ -84,12 +84,12 @@ class CloudResolver(LocalResolver):
     def _get_resolution_kind(self, detached) -> ResolutionKind:
         return ResolutionKind.KUBERNETES if detached else ResolutionKind.LOCAL
 
-    def _create_resolution(self, root_future_id, detached):
+    def _create_resolution(self, root_future, detached):
         if self._is_running_remotely:
             # resolution should have been created prior to the resolver
             # actually starting its remote resolution.
             return
-        super()._create_resolution(root_future_id, detached)
+        super()._create_resolution(root_future, detached)
 
     def _update_run_and_future_pre_scheduling(self, run: Run, future: AbstractFuture):
         # For the cloud resolver, the server will update the relevant
@@ -99,7 +99,7 @@ class CloudResolver(LocalResolver):
     def _detach_resolution(self, future: AbstractFuture) -> str:
         run = self._populate_run_and_artifacts(future)
         self._save_graph()
-        self._create_resolution(future.id, detached=True)
+        self._create_resolution(future, detached=True)
         run.root_id = future.id
 
         api_client.notify_pipeline_update(run.calculator_path)

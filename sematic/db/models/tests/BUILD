@@ -15,6 +15,7 @@ pytest_test(
     srcs = ["test_resolution.py"],
     deps = [
         "//sematic/db/models:resolution",
+        "//sematic/db/tests:fixtures",
     ],
 )
 

@@ -23,3 +23,12 @@ sematic_py_lib(
     srcs = ["stdout.py"],
     deps = []
 )
+
+sematic_py_lib(
+    name = "git",
+    srcs = ["git.py"],
+    deps = [],
+    pip_deps = [
+        "git-python",
+    ],
+)

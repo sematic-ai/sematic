@@ -1,4 +1,5 @@
 import { ChevronLeft } from "@mui/icons-material";
+import CloseIcon from "@mui/icons-material/Close";
 import {
   Box,
   Button,
@@ -14,26 +15,28 @@ import {
   useTheme,
 } from "@mui/material";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { Run } from "../Models";
-import { RunListPayload } from "../Payloads";
+import { UserContext } from "..";
+import { Resolution, Run } from "../Models";
+import { ResolutionPayload, RunListPayload } from "../Payloads";
 import { fetchJSON, pipelineSocket } from "../utils";
 import CalculatorPath from "./CalculatorPath";
+import GitInfoBox from "./GitInfo";
 import Loading from "./Loading";
 import { RunFilterType } from "./RunList";
 import RunStateChip from "./RunStateChip";
 import TimeAgo from "./TimeAgo";
-import CloseIcon from "@mui/icons-material/Close";
-import { UserContext } from "..";
 
 export default function PipelineBar(props: {
   calculatorPath: string;
   onRootRunChange: (run: Run) => void;
   setInitialRootRun: boolean;
   initialRootRun?: Run;
+  initialResolution?: Resolution;
 }) {
-  const { onRootRunChange, calculatorPath, setInitialRootRun, initialRootRun } =
+  const { onRootRunChange, calculatorPath, setInitialRootRun, initialRootRun, initialResolution } =
     props;
   const [rootRun, setRootRun] = useState<Run | undefined>(initialRootRun);
+  const [resolution, setResolution] = useState<Resolution | undefined>(initialResolution);
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
   const [latestRuns, setLatestRuns] = useState<Run[]>([]);
@@ -45,6 +48,10 @@ export default function PipelineBar(props: {
   useMemo(() => {
     if (initialRootRun) setRootRun(initialRootRun);
   }, [initialRootRun]);
+
+  useMemo(() => {
+    if (initialResolution) setResolution(initialResolution);
+  }, [initialResolution]);
 
   const fetchLatestRuns = useCallback(
     (calcPath: string, onResults: (runs: Run[]) => void) => {
@@ -68,6 +75,25 @@ export default function PipelineBar(props: {
     []
   );
 
+  const fetchResolution = useCallback(
+    (run: Run | undefined) => {
+      if (run) {
+        fetchJSON({
+          url: "/api/v1/resolutions/" + run.id,
+          apiKey: user?.api_key,
+          callback: (response: ResolutionPayload) => {
+            setResolution(response.content);
+          },
+          setError: (_: Error | undefined) => {
+            // this means the pipeline resolution failed
+            setResolution(undefined);
+          },
+        });
+      }
+    },
+    [setResolution]
+  );
+
   useEffect(() => {
     if (calculatorPath === undefined) return;
     fetchLatestRuns(calculatorPath, (runs) => {
@@ -75,9 +101,10 @@ export default function PipelineBar(props: {
       if (setInitialRootRun) {
         setRootRun(runs[0]);
         onRootRunChange(runs[0]);
+        fetchResolution(runs[0]);
       }
     });
-  }, [calculatorPath, fetchLatestRuns, onRootRunChange, setInitialRootRun]);
+  }, [calculatorPath, fetchLatestRuns, onRootRunChange, setInitialRootRun, setResolution, fetchResolution]);
 
   useEffect(() => {
     pipelineSocket.removeAllListeners();
@@ -100,17 +127,19 @@ export default function PipelineBar(props: {
         if (run.id === newRootRunId) {
           setRootRun(run);
           onRootRunChange(run);
+          fetchResolution(run);
           setHasNewRun(false);
         }
       });
     },
-    [latestRuns, onRootRunChange]
+    [latestRuns, onRootRunChange, setResolution, fetchResolution]
   );
 
   const selectLatestRun = useCallback(() => {
     setRootRun(latestRuns[0]);
     onRootRunChange(latestRuns[0]);
-  }, [latestRuns, onRootRunChange]);
+    fetchResolution(latestRuns[0]);
+  }, [latestRuns, setRootRun, onRootRunChange, fetchResolution]);
 
   const snackBarAction = (
     <>
@@ -130,7 +159,7 @@ export default function PipelineBar(props: {
         color="inherit"
         onClick={() => setHasNewRun(false)}
       >
-        <CloseIcon fontSize="small" />
+        <CloseIcon fontSize="small"/>
       </IconButton>
     </>
   );
@@ -138,7 +167,7 @@ export default function PipelineBar(props: {
   if (error || !isLoaded) {
     return (
       <Box sx={{ p: 5 }}>
-        <Loading error={error} isLoaded={isLoaded} />
+        <Loading error={error} isLoaded={isLoaded}/>
       </Box>
     );
   } else if (rootRun) {
@@ -171,16 +200,17 @@ export default function PipelineBar(props: {
           }}
         >
           <Link href="/pipelines">
-            <ChevronLeft fontSize="large" />
+            <ChevronLeft fontSize="large"/>
           </Link>
         </Box>
         <Box sx={{ gridColumn: 2, pl: 7 }}>
           <Typography variant="h4">{rootRun.name}</Typography>
-          <CalculatorPath calculatorPath={rootRun.calculator_path} />
+          <CalculatorPath calculatorPath={rootRun.calculator_path}/>
         </Box>
+        <GitInfoBox resolution={resolution}/>
         <Box
           sx={{
-            gridColumn: 3,
+            gridColumn: 4,
             borderLeft: 1,
             borderColor: theme.palette.grey[200],
             paddingX: 10,
@@ -203,14 +233,14 @@ export default function PipelineBar(props: {
                     component="span"
                     sx={{ display: "flex", alignItems: "center" }}
                   >
-                    <RunStateChip state={run.future_state} />
+                    <RunStateChip state={run.future_state}/>
                     <Box>
                       <Typography sx={{ fontSize: "small", color: "GrayText" }}>
                         <code>{run.id.substring(0, 6)}</code>
                       </Typography>
                     </Box>
                     <Box ml={3}>
-                      <TimeAgo date={run.created_at} />
+                      <TimeAgo date={run.created_at}/>
                     </Box>
                   </Typography>
                 </MenuItem>
