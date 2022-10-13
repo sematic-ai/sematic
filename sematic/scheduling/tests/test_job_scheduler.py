@@ -5,6 +5,7 @@ import pytest
 
 # Sematic
 from sematic.abstract_future import FutureState
+from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.resolvers.resource_requirements import (
@@ -18,7 +19,6 @@ from sematic.scheduling.job_scheduler import (
     schedule_run,
 )
 from sematic.scheduling.kubernetes import KubernetesExternalJob
-from sematic.utils.git import GitInfo
 
 
 @pytest.fixture

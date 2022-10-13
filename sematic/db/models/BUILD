@@ -45,6 +45,15 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "git_info",
+    srcs = ["git_info.py"],
+    pip_deps = [],
+    deps = [
+        ":base",
+    ],
+)
+
+sematic_py_lib(
     name = "has_external_jobs_mixin",
     srcs = ["has_external_jobs_mixin.py"],
     deps = [
@@ -89,9 +98,9 @@ sematic_py_lib(
     ],
     deps = [
         ":base",
+        ":git_info",
         ":has_external_jobs_mixin",
         ":json_encodable_mixin",
-        "//sematic/utils:git",
     ],
 )
 
