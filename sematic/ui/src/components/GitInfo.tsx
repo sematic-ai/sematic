@@ -80,7 +80,6 @@ function GitInfoBox(props: { resolution: Resolution | undefined }) {
           gridColumn: 3,
           paddingX: 10,
           paddingTop: 3,
-          borderLeft: 1,
           borderColor: theme.palette.grey[200],
         }}
       >
