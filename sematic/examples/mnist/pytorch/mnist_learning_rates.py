@@ -1,5 +1,6 @@
 """
-This is an example implementation of the MNIST pipeline in PyTorch on sematic.
+This is an example implementation of the MNIST learning rates pipeline in PyTorch
+on Sematic, using the CloudResolver.
 """
 # Standard Library
 # MNIST example
@@ -12,7 +13,6 @@ from sematic.examples.mnist.pytorch.pipeline import (
     DataLoaderConfig,
     PipelineConfig,
     TrainConfig,
-    pipeline,
     scan_learning_rate,
 )
 
@@ -34,7 +34,7 @@ TRAIN_CONFIGS = [
 
 
 def main():
-    parser = argparse.ArgumentParser("MNIST PyTorch example")
+    parser = argparse.ArgumentParser("Scan MNIST learning rates")
     parser.add_argument("--detach", default=False, action="store_true")
     parser.add_argument("--epochs", type=int, default=1)
     parser.add_argument("--learning-rates", type=str, default="1")
@@ -50,18 +50,9 @@ def main():
         for learning_rate in learning_rates
     ]
 
-    if len(train_configs) == 1:
-        pipeline(
-            config=PipelineConfig(
-                dataloader_config=DataLoaderConfig(), train_config=train_configs[0]
-            )
-        ).set(name="PyTorch MNIST Example").resolve(CloudResolver(detach=args.detach))
-    else:
-        scan_learning_rate(
-            dataloader_config=DataLoaderConfig(), train_configs=train_configs
-        ).set(name="Scan MNIST learning rates").resolve(
-            CloudResolver(detach=args.detach)
-        )
+    scan_learning_rate(
+        dataloader_config=DataLoaderConfig(), train_configs=train_configs
+    ).set(name="Scan MNIST learning rates").resolve(CloudResolver(detach=args.detach))
 
 
 if __name__ == "__main__":
