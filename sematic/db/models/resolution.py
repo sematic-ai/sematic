@@ -170,6 +170,7 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     external_jobs_json: Optional[List[Dict[str, Any]]] = Column(
         types.JSON(), nullable=True
     )
+    container_image_uris: Optional[Dict[str, str]] = Column(types.JSON(), nullable=True)
 
     @validates("status")
     def validate_status(self, key, value) -> str:

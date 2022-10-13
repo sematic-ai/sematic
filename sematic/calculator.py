@@ -42,6 +42,7 @@ class Calculator(AbstractCalculator):
         resource_requirements: Optional[ResourceRequirements] = None,
         inline: bool = True,
         retry_settings: Optional[RetrySettings] = None,
+        base_image_tag: Optional[str] = None,
     ) -> None:
         if not inspect.isfunction(func):
             raise ValueError("{} is not a function".format(func))
@@ -54,6 +55,7 @@ class Calculator(AbstractCalculator):
         self._inline = inline
         self._resource_requirements = resource_requirements
         self._retry_settings = retry_settings
+        self._base_image_tag = base_image_tag
 
         self.__doc__ = func.__doc__
         self.__module__ = func.__module__
@@ -105,6 +107,7 @@ class Calculator(AbstractCalculator):
             # copying because it will hold state for the particular
             # future (retry_count is mutable and increases with retries)
             retry_settings=copy(self._retry_settings),
+            base_image_tag=self._base_image_tag,
         )
 
     def __signature__(self) -> inspect.Signature:
@@ -205,6 +208,7 @@ def func(
     inline: bool = True,
     resource_requirements: Optional[ResourceRequirements] = None,
     retry: Optional[RetrySettings] = None,
+    base_image_tag: Optional[str] = None,
 ) -> Union[Callable, Calculator]:
     """
     Sematic Function decorator.
@@ -241,6 +245,9 @@ def func(
                 ).format(_repr_str_iterable(missing_annotations))
             )
 
+        if inline and base_image_tag is not None:
+            raise ValueError("Inline functions cannot have custom base images")
+
         return Calculator(
             func_,
             input_types=input_types,
@@ -248,6 +255,7 @@ def func(
             inline=inline,
             resource_requirements=resource_requirements,
             retry_settings=retry,
+            base_image_tag=base_image_tag,
         )
 
     if func is None:

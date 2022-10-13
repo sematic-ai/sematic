@@ -186,10 +186,12 @@ def _schedule_job(run: Run, resolution: Resolution) -> ExternalJob:
     # k8s is the only thing we can submit jobs to at the moment.
 
     # should be impossible to fail this assert, but it makes mypy happy
-    assert resolution.docker_image_uri is not None
+    if run.container_image_uri is None:
+        raise ValueError(f"Run {run.id} is missing a container image")
+
     return k8s.schedule_run_job(
         run_id=run.id,
-        image=resolution.docker_image_uri,
+        image=run.container_image_uri,
         user_settings=resolution.settings_env_vars,
         resource_requirements=run.resource_requirements,
         try_number=len(run.external_jobs),

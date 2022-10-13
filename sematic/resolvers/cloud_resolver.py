@@ -10,7 +10,7 @@ import cloudpickle
 import sematic.api_client as api_client
 import sematic.storage as storage
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.container_images import get_image_uri
+from sematic.container_images import get_image_uris
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
@@ -98,8 +98,8 @@ class CloudResolver(LocalResolver):
         self._artifacts = {artifact.id: artifact for artifact in artifacts}
         self._edges = {make_edge_key(edge): edge for edge in edges}
 
-    def _get_resolution_image(self) -> Optional[str]:
-        return get_image_uri()
+    def _get_resolution_images(self) -> Optional[Dict[str, str]]:
+        return get_image_uris()
 
     def _get_resolution_kind(self, detached) -> ResolutionKind:
         return ResolutionKind.KUBERNETES if detached else ResolutionKind.LOCAL
