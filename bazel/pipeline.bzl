@@ -207,7 +207,7 @@ sematic_push_and_run = rule(
     ),
     implementation = _sematic_push_and_run,
     attrs = {
-        "push_rule_names": attr.bool(
+        "push_rule_names": attr.string_list(
             doc = "List of push rules to execute",
             mandatory = True,
         ),
