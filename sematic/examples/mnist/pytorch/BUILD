@@ -13,7 +13,7 @@ sematic_example(
 )
 
 py_library(
-    name = "mnist_pytorch_lib",
+    name = "mnist_train_lib",
     srcs = glob([
         "*.py",
         "**/*.py",
@@ -30,10 +30,38 @@ py_library(
 )
 
 sematic_pipeline(
-    name = "mnist_pytorch",
+    name = "mnist_train",
     dev = True,
     registry = "558717131297.dkr.ecr.us-west-2.amazonaws.com",
+    repository = "sematic-dev",
     deps = [
-        ":mnist_pytorch_lib",
+        ":mnist_train_lib",
+    ],
+)
+
+py_library(
+    name = "mnist_learning_rates_lib",
+    srcs = glob([
+        "*.py",
+        "**/*.py",
+    ]),
+    deps = [
+        "//sematic:init",
+        requirement("torch"),
+        requirement("torchvision"),
+        requirement("torchmetrics"),
+        requirement("plotly"),
+        requirement("pandas"),
+        requirement("scikit-learn"),
+    ],
+)
+
+sematic_pipeline(
+    name = "mnist_learning_rates",
+    dev = True,
+    registry = "558717131297.dkr.ecr.us-west-2.amazonaws.com",
+    repository = "sematic-dev",
+    deps = [
+        ":mnist_learning_rates_lib",
     ],
 )

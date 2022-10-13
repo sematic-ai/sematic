@@ -154,13 +154,13 @@ def pipeline(config: PipelineConfig) -> EvaluationResults:
         dataset=test_dataset, config=config.dataloader_config
     )
 
-    evaluation_resuts = train_eval(
+    evaluation_results = train_eval(
         train_dataloader=train_dataloader,
         test_dataloader=test_dataloader,
         train_config=config.train_config,
     )
 
-    return evaluation_resuts
+    return evaluation_results
 
 
 @sematic.func(inline=True)
