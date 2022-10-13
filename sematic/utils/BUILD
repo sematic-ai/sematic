@@ -27,7 +27,9 @@ sematic_py_lib(
 sematic_py_lib(
     name = "git",
     srcs = ["git.py"],
-    deps = [],
+    deps = [
+        "//sematic/db/models:git_info",
+    ],
     pip_deps = [
         "git-python",
     ],

@@ -11,6 +11,7 @@ import testing.postgresql  # type: ignore
 import sematic.db.db as db
 from sematic.abstract_future import FutureState
 from sematic.db.models.factories import make_artifact, make_user
+from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import save_resolution, save_run, save_user
@@ -19,7 +20,6 @@ from sematic.resolvers.resource_requirements import (
     ResourceRequirements,
 )
 from sematic.tests.fixtures import test_storage  # noqa: F401
-from sematic.utils.git import GitInfo
 
 
 def handler(postgresql):
