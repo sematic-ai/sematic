@@ -4,13 +4,13 @@ import re
 import pytest
 
 # Sematic
+from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import (
     InvalidResolution,
     ResolutionKind,
     ResolutionStatus,
 )
 from sematic.db.tests.fixtures import make_resolution
-from sematic.utils.git import GitInfo
 
 
 def test_is_allowed_transition():

@@ -5,27 +5,25 @@ Utility for extracting details about the git workspace.
 import inspect
 import logging
 import os
-from dataclasses import dataclass
 from typing import Any, Optional
 
-# Third-party
-import git  # type: ignore
+# Sematic
+from sematic.db.models.git_info import GitInfo
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class GitInfo:
-    remote: Optional[str]
-    branch: Optional[str]
-    commit: Optional[str]
-    dirty: Optional[bool]
-
-
-def get_git_info(object_: Any):
+def get_git_info(object_: Any) -> Optional["Repo"]:  # type: ignore # noqa: F821
     """
     Returns git repository details for a given Python object.
     """
+    try:
+        # if git is not installed on the user's system, this will fail to import
+        import git  # type: ignore
+    except ImportError as e:
+        logger.warn("Could not get git information", exc_info=e)
+        return None
+
     try:
         source = inspect.getsourcefile(object_)
         logger.debug(f"Found source file for {object_}: '{source}'")
@@ -57,7 +55,7 @@ def get_git_info(object_: Any):
     )
 
 
-def _get_remote(repo: git.Repo):
+def _get_remote(repo: "Repo") -> Optional[str]:  # type: ignore # noqa: F821
     try:
         return repo.remote().config_reader.get_value("url", None)
     except Exception as e:
@@ -65,7 +63,7 @@ def _get_remote(repo: git.Repo):
         return None
 
 
-def _get_commit(repo: git.Repo):
+def _get_commit(repo: "Repo") -> Optional[str]:  # type: ignore # noqa: F821
     try:
         return repo.commit().hexsha
     except Exception as e:
@@ -73,7 +71,7 @@ def _get_commit(repo: git.Repo):
         return None
 
 
-def _get_branch(repo: git.Repo):
+def _get_branch(repo: "Repo") -> Optional[str]:  # type: ignore # noqa: F821
     try:
         return repo.active_branch.name
     except Exception:
