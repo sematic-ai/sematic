@@ -29,6 +29,8 @@ def version_as_string(version: typing.Tuple[int, int, int]) -> str:
 
 
 CURRENT_VERSION_STR = version_as_string(CURRENT_VERSION)
+MIN_CLIENT_SERVER_SUPPORTS_STR = version_as_string(MIN_CLIENT_SERVER_SUPPORTS)
+
 
 if __name__ == "__main__":
     # It can be handy for deployment scripts and similar things to be able to get quick
