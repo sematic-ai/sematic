@@ -9,6 +9,7 @@ sematic_py_lib(
         ":run",
         ":new",
         ":settings",
+        ":version",
         # Examples
         "//sematic/examples/template:template_lib",
         # These do not add dependencies on 3rd party packages
@@ -120,6 +121,18 @@ sematic_py_lib(
     deps = [
         ":cli",
         "//sematic:user_settings",
+    ],
+)
+
+sematic_py_lib(
+    name = "version",
+    srcs = ["version.py"],
+    pip_deps = [
+        "click",
+    ],
+    deps = [
+        ":cli",
+        "//sematic:versions",
     ],
 )
 
