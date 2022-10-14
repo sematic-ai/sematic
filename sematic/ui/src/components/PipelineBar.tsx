@@ -124,6 +124,19 @@ export default function PipelineBar(props: {
     fetchResolution,
   ]);
 
+  const updateRootRun = useCallback(
+    (runs: Run[]) => {
+      if (!rootRun) return;
+      for (let i = 0; i < runs.length; i++) {
+        if (runs[i].id === rootRun.id) {
+          setRootRun(runs[i]);
+          break;
+        }
+      }
+    },
+    [rootRun, setRootRun]
+  );
+
   useEffect(() => {
     pipelineSocket.removeAllListeners();
     pipelineSocket.on("update", (args: { calculator_path: string }) => {
@@ -133,6 +146,7 @@ export default function PipelineBar(props: {
           if (runs[0].id !== latestRuns[0].id) {
             setHasNewRun(true);
           }
+          updateRootRun(runs);
         });
       }
     });
@@ -140,18 +154,12 @@ export default function PipelineBar(props: {
       if (args.calculator_path === calculatorPath) {
         fetchLatestRuns(calculatorPath, (runs) => {
           setLatestRuns(runs);
-          if (!rootRun) return;
-          // Re-rendering
-          runs.forEach((run) => {
-            if (run.id === rootRun.id) {
-              setRootRun(run);
-            }
-          });
+          updateRootRun(runs);
         });
         setCancelSnackMessage("Pipeline run was canceled.");
       }
     });
-  }, [latestRuns, calculatorPath, fetchLatestRuns, rootRun]);
+  }, [latestRuns, calculatorPath, fetchLatestRuns, updateRootRun]);
 
   const onSelect = useCallback(
     (event: SelectChangeEvent) => {
