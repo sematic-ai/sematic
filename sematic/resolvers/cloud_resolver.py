@@ -10,7 +10,7 @@ import cloudpickle
 import sematic.api_client as api_client
 import sematic.storage as storage
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.container_images import get_image_uris
+from sematic.container_images import MissingContainerImage, get_image_uris
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
@@ -18,6 +18,7 @@ from sematic.db.models.resolution import ResolutionKind
 from sematic.db.models.run import Run
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
 from sematic.utils.exceptions import format_exception_for_run
+from sematic.utils.memoized_property import memoized_property
 
 logger = logging.getLogger(__name__)
 
@@ -98,8 +99,31 @@ class CloudResolver(LocalResolver):
         self._artifacts = {artifact.id: artifact for artifact in artifacts}
         self._edges = {make_edge_key(edge): edge for edge in edges}
 
-    def _get_resolution_images(self) -> Optional[Dict[str, str]]:
+    @memoized_property
+    def _container_image_uris(self) -> Optional[Dict[str, str]]:
         return get_image_uris()
+
+    def _get_container_image(self, future: AbstractFuture) -> Optional[str]:
+        if self._container_image_uris is None:
+            return None
+
+        if future.props.inline and future is not self._root_future:
+            return self._runs[self._root_future.id].container_image_uri
+
+        base_image_tag = "default"
+        if future.props.base_image_tag is not None:
+            base_image_tag = future.props.base_image_tag
+
+        return self._get_tagged_image(base_image_tag)
+
+    def _get_tagged_image(self, tag: str) -> Optional[str]:
+        if self._container_image_uris is None:
+            return None
+        print(tag, self._container_image_uris)
+        try:
+            return self._container_image_uris[tag]
+        except KeyError:
+            raise MissingContainerImage(f"{tag} was not built.")
 
     def _get_resolution_kind(self, detached) -> ResolutionKind:
         return ResolutionKind.KUBERNETES if detached else ResolutionKind.LOCAL

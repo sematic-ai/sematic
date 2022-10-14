@@ -1,3 +1,5 @@
+load("//bazel:pipeline.bzl", "sematic_pipeline")
+
 sematic_example(
     name = "add",
 )

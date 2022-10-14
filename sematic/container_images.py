@@ -38,11 +38,13 @@ def get_image_uris() -> Dict[str, str]:
 
     tagged_uris_map = {}
 
+    dir_path, file_name = os.path.split(__main__.__file__)
+
     image_file_regex = r"{}_(.*)_push_at_build.uri".format(
-        os.path.splitext(__main__.__file__)[0]
+        os.path.splitext(file_name)[0]
     )
 
-    for file_path in os.listdir():
+    for file_path in os.listdir(dir_path):
         tag_matches = re.findall(image_file_regex, file_path)
         if len(tag_matches) == 1:
             tag = tag_matches[0]

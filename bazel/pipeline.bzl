@@ -60,7 +60,7 @@ def sematic_pipeline(
         bases["default"] = base
 
     if "default" not in bases:
-        fail("No default image specified")
+        fail("No default image specified to the base argument or tag a base as default")
 
     if dev:
         main = "@sematic//sematic/resolvers:worker.py"
@@ -163,7 +163,10 @@ def base_images():
 def _sematic_push_and_run(ctx):
     script = ctx.actions.declare_file("{0}.sh".format(ctx.label.name))
 
-    push_rule_runs = " && ".join("\"$BAZEL_BIN\" run {}".format(ctx.attrs.push_rule_names))
+    push_rule_runs = " && ".join([
+        "\"$BAZEL_BIN\" run {}:{}".format(ctx.label.package, rule_name)
+        for rule_name in ctx.attr.push_rule_names
+    ])
 
     # the script it simple enough it doesn't really merit a template & template expansion
     script_lines = [

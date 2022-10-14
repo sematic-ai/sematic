@@ -29,6 +29,7 @@ from sematic.storage import LocalStorage
 from sematic.user_settings import get_all_user_settings
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
 from sematic.utils.git import get_git_info
+from sematic.utils.memoized_property import memoized_property
 
 logger = logging.getLogger(__name__)
 
@@ -343,11 +344,11 @@ class LocalResolver(SilentResolver):
         api_client.cancel_resolution(self._root_future.id)
         self._sio_client.disconnect()
 
-    def _get_resolution_images(self) -> Optional[Dict[str, str]]:
-        return None
-
     def _get_resolution_kind(self, detached) -> ResolutionKind:
         return ResolutionKind.LOCAL
+
+    def _get_tagged_image(self, tag: str) -> Optional[str]:
+        return None
 
     def _create_resolution(self, root_future, detached):
         starting_state = (
@@ -358,7 +359,7 @@ class LocalResolver(SilentResolver):
             root_id=root_future.id,
             status=starting_state,
             kind=self._get_resolution_kind(detached),
-            container_image_uris=self._get_resolution_images(),
+            container_image_uris=self._container_image_uris,
             git_info=get_git_info(root_future.calculator.func),
             settings_env_vars={
                 name: str(value) for name, value in get_all_user_settings().items()
@@ -548,21 +549,12 @@ class LocalResolver(SilentResolver):
         self._edges[edge_key] = edge
         self._buffer_edges[edge_key] = edge
 
+    @memoized_property
+    def _container_image_uris(self) -> Optional[Dict[str, str]]:
+        return None
+
     def _get_container_image(self, future: AbstractFuture) -> Optional[str]:
-        if self._resolution.container_image_uris is None:
-            return None
-
-        if future.props.inline and future is not self._root_future:
-            return self._runs[self._root_future.id].container_image_uri
-
-        base_image_tag = "default"
-        if future.props.base_image_tag is not None:
-            base_image_tag = future.props.base_image_tag
-
-        try:
-            return self._resolution.container_image_uris[base_image_tag]
-        except KeyError:
-            raise MissingContainerImage(f"{base_image_tag} was not built.")
+        return None
 
     def _populate_graph(
         self,

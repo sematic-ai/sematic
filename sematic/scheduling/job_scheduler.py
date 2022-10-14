@@ -127,7 +127,7 @@ def _assert_resolution_is_scheduleable(resolution: Resolution):
                 f"The resolution {resolution.root_id} already had an active external "
                 f"job {job.external_job_id} and thus could not be scheduled."
             )
-    if resolution.docker_image_uri is None:
+    if resolution.container_image_uri is None:
         raise StateNotSchedulable(
             f"The resolution {resolution.root_id} had no docker image URI"
         )
@@ -153,7 +153,7 @@ def _assert_is_scheduleable(run: Run, resolution: Resolution):
             f"The run {run.id} was not schedulable because there "
             f"is no active resolution for it."
         )
-    if resolution.docker_image_uri is None:
+    if resolution.container_image_uri is None:
         raise StateNotSchedulable(
             f"The resolution {resolution.root_id} had no docker image URI"
         )
@@ -201,9 +201,9 @@ def _schedule_job(run: Run, resolution: Resolution) -> ExternalJob:
 def _schedule_resolution_job(resolution: Resolution) -> ExternalJob:
     """Reach out to external compute to start the execution of the resolution"""
     # should be impossible to fail this assert, but it makes mypy happy
-    assert resolution.docker_image_uri is not None
+    assert resolution.container_image_uri is not None
     return k8s.schedule_resolution_job(
         resolution_id=resolution.root_id,
-        image=resolution.docker_image_uri,
+        image=resolution.container_image_uri,
         user_settings=resolution.settings_env_vars,
     )

@@ -128,7 +128,7 @@ def make_resolution(**kwargs) -> Resolution:
         root_id=root_id,
         status=ResolutionStatus.SCHEDULED,
         kind=ResolutionKind.KUBERNETES,
-        docker_image_uri="some.uri",
+        container_image_uris={"default": "some.uri"},
         settings_env_vars={"MY_SETTING": "MY_VALUE"},
     )
 

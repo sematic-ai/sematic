@@ -158,9 +158,6 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     kind: ResolutionKind = Column(  # type: ignore
         types.String(), nullable=False, info={ENUM_KEY: ResolutionKind}
     )
-    docker_image_uri: Optional[str] = Column(
-        types.String(), nullable=True, default=None
-    )
     git_info_json: Optional[str] = Column(  # type: ignore
         types.JSON(), nullable=True, info={JSON_KEY: True}
     )
@@ -240,6 +237,13 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
         for field in mutable_fields:
             setattr(self, field, getattr(other, field))
 
+    @property
+    def container_image_uri(self) -> Optional[str]:
+        if self.container_image_uris is None:
+            return None
+
+        return self.container_image_uris.get("default")
+
     def validate_new(self):
         """Confirm that the resolution is valid for a resolution that is just beginning.
 
@@ -247,7 +251,7 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
         ------
         InvalidResolution if the resolution is not valid.
         """
-        if self.kind != ResolutionKind.LOCAL.value and self.docker_image_uri is None:
+        if self.kind != ResolutionKind.LOCAL.value and self.container_image_uri is None:
             raise InvalidResolution(
                 f"Non-local resolution {self.root_id} must have a docker URI"
             )
