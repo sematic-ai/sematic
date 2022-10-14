@@ -119,7 +119,7 @@ class CloudResolver(LocalResolver):
     def _get_tagged_image(self, tag: str) -> Optional[str]:
         if self._container_image_uris is None:
             return None
-        print(tag, self._container_image_uris)
+
         try:
             return self._container_image_uris[tag]
         except KeyError:
