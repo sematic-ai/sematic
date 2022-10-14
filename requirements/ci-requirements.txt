@@ -27,3 +27,6 @@ boto3-stubs
 mistune==0.8.4
 docutils==0.18.1
 m2r
+
+# Required by the release process
+twine

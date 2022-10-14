@@ -35,8 +35,9 @@ $ sematic start
 $ sematic run examples/mnist/pytorch
 ```
 
-Do this for all supported versions of python. If everything works fine,
-we are ready to push the release.
+Do this for all supported versions of python. You can check your virtual env Server and
+Python versions using `sematic version`.
+If everything works fine, we are ready to push the release.
 
 ```bash
 $ make test-release
@@ -48,17 +49,18 @@ Once you have pushed it to PyPi, add the git tag
 ```bash
 $ export RELEASE_VERSION=v$(python3 ./sematic/versions.py)
 $ git tag $RELEASE_VERSION
-$ git push --tags
+$ git push origin $RELEASE_VERSION
 ```
 
 Next, build and push the server image. Use the dockerfile at
-`docker/Dockerfile.server`. Use the wheel you built before in the directory
+`docker/Dockerfile.server`. Copy the wheel you built before in the directory
 you run.
 ```bash
 $ cd docker
-$ RELEASE_VERSION=v$(python3 ../sematic/versions.py)
+$ export RELEASE_VERSION=v$(python3 ../sematic/versions.py)
 $ docker build -t "sematicai/sematic-server:$RELEASE_VERSION" -f Dockerfile.server .
 $ docker push "sematicai/sematic-server:$RELEASE_VERSION"
 ```
 
-Finally, draft the release on GitHub.
+Finally, draft the release on GitHub. Add a "What's Changed" section, a "Full Changelog" link,
+and attach the wheel in the assets section.
