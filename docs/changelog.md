@@ -4,7 +4,10 @@ Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
 with nothing else on the line.
 -->
 * HEAD
+* 0.17.0
+    * [feature] Function Retry on failure
     * [feature] Expose pipeline git commit info in the UI
+    * [feature] Cancel resolution support
 * 0.16.0
     * [feature] Support Enums
     * [feature] Allow specifying Kubernetes tolerations for cloud jobs
