@@ -18,7 +18,7 @@ from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 
 
-@func
+@func(base_image_tag="cuda", inline=False)
 def add(a: float, b: float) -> float:
     return a + b
 
@@ -30,11 +30,16 @@ def pipeline() -> float:
 
 
 @mock.patch("socketio.Client.connect")
-@mock.patch("sematic.resolvers.cloud_resolver.get_image_uri", new=lambda: "some_image")
+@mock.patch(
+    "sematic.resolvers.cloud_resolver.get_image_uris",
+    return_value={"default": "foo", "cuda": "bar"},
+)
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
+@mock.patch("sematic.scheduling.job_scheduler.k8s.schedule_run_job")
 @mock_no_auth
 def test_simulate_cloud_exec(
+    mock_k8s_schedule_run_job: mock.MagicMock,
     mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,
     mock_socketio,
@@ -50,13 +55,20 @@ def test_simulate_cloud_exec(
 
     assert result == future.id
     mock_schedule_job.assert_called_once_with(future.id)
-    assert api_client.get_resolution(future.id).status == ResolutionStatus.CREATED.value
     resolution = api_client.get_resolution(future.id)
+    assert resolution.status == ResolutionStatus.CREATED.value
+    assert resolution.container_image_uris == {"default": "foo", "cuda": "bar"}
     resolution.status = ResolutionStatus.SCHEDULED
     api_client.save_resolution(resolution)
 
     # In the driver job:
     runs, artifacts, edges = api_client.get_graph(future.id)
+
+    root_run = next(run for run in runs if run.id == future.id)
+    assert root_run.container_image_uri == "foo"
+    add_run = next(run for run in runs if run.id != future.id)
+    assert add_run.container_image_uri == "bar"
+
     driver_resolver = CloudResolver(detach=False, is_running_remotely=True)
     driver_resolver.set_graph(runs=runs, artifacts=artifacts, edges=edges)
     assert (
@@ -67,6 +79,14 @@ def test_simulate_cloud_exec(
     assert output == 3
     assert (
         api_client.get_resolution(future.id).status == ResolutionStatus.COMPLETE.value
+    )
+
+    mock_k8s_schedule_run_job.assert_called_once_with(
+        run_id=add_run.id,
+        image="bar",
+        user_settings={},
+        resource_requirements=None,
+        try_number=0,
     )
 
     # cheap way of confirming no k8s calls were made
