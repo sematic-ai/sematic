@@ -1,6 +1,7 @@
 # Standard Library
 import collections
 import inspect
+import logging
 import types
 from copy import copy
 from typing import (
@@ -246,7 +247,14 @@ def func(
             )
 
         if inline and base_image_tag is not None:
-            raise ValueError("Inline functions cannot have custom base images")
+            # Not raising an exception because users may be setting `inline` dynamically
+            # from CLI args. It would be annoying to have to also change `base_image_tag`
+            # dynamically.
+            logging.warning(
+                "base_image_tag %s for %s will be ignored because inline is True",
+                base_image_tag,
+                func_.__name__,
+            )
 
         return Calculator(
             func_,
