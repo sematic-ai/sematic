@@ -246,3 +246,22 @@ $ aws ecr get-login-password --region <region> | docker login --username AWS --p
 ```
 
 You will likely need to issue this command every day.
+
+## Upgrading your deployments
+
+Eventually, you will want to access the latest features Sematic has
+To offer! Sematic essentially has two components to upgrade:
+- the server itself
+- the python library used by clients to define and launch jobs
+
+The server can be upgraded by re-deploying it using a Docker image
+with the appropriate version tag. Ex:
+`sematicai/sematic-server:v0.17.0`.
+You can do this with your Docker run command if you are just using
+the metadata server deployment option or using `helm upgrade` if
+you are using the full cloud deployment.
+
+The clients can be upgraded by bumping the
+pip package version for your environment
+(ex: in a requirements.txt file).
+
