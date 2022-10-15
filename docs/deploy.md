@@ -250,7 +250,7 @@ You will likely need to issue this command every day.
 ## Upgrading your deployments
 
 Eventually, you will want to access the latest features Sematic has
-To offer! Sematic essentially has two components to upgrade:
+to offer! Sematic essentially has two components to upgrade:
 - the server itself
 - the python library used by clients to define and launch jobs
 
