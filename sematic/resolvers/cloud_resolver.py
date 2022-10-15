@@ -1,7 +1,7 @@
 # Standard Library
 import logging
 import time
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 # Third-party
 import cloudpickle
@@ -14,7 +14,7 @@ from sematic.container_images import MissingContainerImage, get_image_uris
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
-from sematic.db.models.resolution import ResolutionKind
+from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
 from sematic.utils.exceptions import format_exception_for_run
@@ -72,6 +72,17 @@ class CloudResolver(LocalResolver):
     ):
         super().__init__(detach=detach)
 
+        # detach:
+        #   True: default, the user wants to submit a detached resolution
+        #   False: the user wants to keep resolution attached, i.e. running on their
+        #           machine
+        self._detach = detach
+
+        # is_running_remotely:
+        #   True: we are running in a remote driver job
+        #   False: default we are running on a local user machine
+        self._is_running_remotely = is_running_remotely
+
         if max_parallelism is not None and max_parallelism < 1:
             raise ValueError(
                 "max_parallelism must be a positive integer or None. "
@@ -83,7 +94,14 @@ class CloudResolver(LocalResolver):
         self._store_artifacts = True
 
         self._output_artifacts_by_run_id: Dict[str, Artifact] = {}
-        self._is_running_remotely = is_running_remotely
+
+    def resolve(self, future: AbstractFuture) -> Any:
+        if not self._detach:
+            return super().resolve(future)
+
+        with self._catch_resolution_errors():
+            self._enqueue_root_future(future)
+            return self._detach_resolution(future)
 
     def set_graph(self, runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
         """
@@ -125,15 +143,29 @@ class CloudResolver(LocalResolver):
         except KeyError:
             raise MissingContainerImage(f"{tag} was not built.")
 
-    def _get_resolution_kind(self, detached) -> ResolutionKind:
-        return ResolutionKind.KUBERNETES if detached else ResolutionKind.LOCAL
-
-    def _create_resolution(self, root_future, detached):
-        if self._is_running_remotely:
+    def _create_resolution(self, root_future):
+        if self._detached:
             # resolution should have been created prior to the resolver
             # actually starting its remote resolution.
             return
-        super()._create_resolution(root_future, detached)
+
+        return super()._create_resolution(root_future)
+
+    def _make_resolution(self, root_future):
+        resolution = super()._make_resolution(root_future)
+
+        resolution.container_image_uris = self._container_image_uris
+
+        if self._detach:
+            resolution.status = ResolutionStatus.CREATED
+            resolution.kind = ResolutionKind.KUBERNETES
+
+        return resolution
+
+    def _make_run(self, future: AbstractFuture) -> Run:
+        run = super()._make_run(future)
+        run.container_image_uri = self._get_container_image(future)
+        return run
 
     def _update_run_and_future_pre_scheduling(self, run: Run, future: AbstractFuture):
         # For the cloud resolver, the server will update the relevant
@@ -143,7 +175,7 @@ class CloudResolver(LocalResolver):
     def _detach_resolution(self, future: AbstractFuture) -> str:
         run = self._populate_run_and_artifacts(future)
         self._save_graph()
-        self._create_resolution(future, detached=True)
+        self._create_resolution(future)
         run.root_id = future.id
 
         api_client.notify_pipeline_update(run.calculator_path)
