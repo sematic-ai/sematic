@@ -241,8 +241,45 @@ $ sematic settings set AWS_S3_BUCKET <bucket-name>
 Make sure you have [Docker installed](https://docs.docker.com/engine/install/)
 on your machine, then authenticate with your container registry with
 
-```
-$ aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <aws-account-id>.dkr.ecr.<region>.amazonaws.com
+```bash
+aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <aws-account-id>.dkr.ecr.<region>.amazonaws.com
 ```
 
 You will likely need to issue this command every day.
+
+## Upgrading your deployments
+
+Eventually, you will want to access the latest features Sematic has
+to offer! Sematic essentially has two components to upgrade:
+
+- the server itself
+- the python library used by clients to define and launch jobs
+
+The server can be upgraded by re-deploying it using a Docker image with the
+appropriate version tag. Ex: `sematicai/sematic-server:v0.17.0`. You can do
+this with your Docker run command if you are just using the metadata server
+deployment option or using `helm upgrade` if you are using the full cloud
+deployment.
+
+The clients can be upgraded by bumping the pip package version for your
+environment (ex: in a `requirements.txt` file).
+
+You will always want to upgrade the server before upgrading the clients. If the
+server is being upgraded to a version that still supports the version being
+used by your clients, you can often upgrade the server without any downtime for
+users. This is one benefit of keeping up-to-date with regular upgrades! If you
+want to know what client versions a given server supports, you can look at
+[`versions.py`](https://github.com/sematic-ai/sematic/blob/main/sematic/versions.py).
+
+Often, you will need to upgrade the server beyond support for the clients
+currently in use. When this happens, a recommended upgrade workflow is:
+
+1. Draft a PR in your repo that upgrades the clients
+2. Notify users that there will be an upcoming maintenance window for upgrades
+   during which they may not be able to use Sematic.
+3. When the maintenance window arrives, upgrade the server.
+4. Test the clients using the branch for your upgrade PR. Assuming all goes
+   well, merge the PR. If not, roll back the server.
+5. Notify users that the maintenance window is now complete and that they will
+   need to merge the main branch into their feature branches to begin using the
+   latest version.
