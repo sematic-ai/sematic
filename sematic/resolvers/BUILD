@@ -11,6 +11,7 @@ sematic_py_lib(
         "//sematic:abstract_future",
         "//sematic:api_client",
         "//sematic:config",
+        "//sematic:graph",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
