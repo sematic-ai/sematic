@@ -169,6 +169,19 @@ sematic_py_lib(
     deps = [],
 )
 
+sematic_py_lib(
+    name = "graph",
+    srcs = ["graph.py"],
+    deps = [
+        ":abstract_future",
+        "//sematic/db/models:artifact",
+        "//sematic/db/models:edge",
+        "//sematic/db/models:factories",
+        "//sematic/db/models:run",
+        "//sematic/utils:memoized_property",
+    ],
+)
+
 sematic_py_wheel(
     name = "wheel",
     author = "Sematic AI, Inc.",

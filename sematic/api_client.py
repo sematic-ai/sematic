@@ -46,6 +46,10 @@ class BadRequestError(Exception):
     pass
 
 
+class ResourceNotFoundError(BadRequestError):
+    pass
+
+
 def get_artifact_value_by_id(artifact_id: str) -> Any:
     """
     Retrieve the value of an artifact by ID.
@@ -99,14 +103,15 @@ def save_graph(
     notify_graph_update(root_id)
 
 
-def get_graph(run_id: str) -> Tuple[List[Run], List[Artifact], List[Edge]]:
+def get_graph(
+    run_id: str, root: bool = False
+) -> Tuple[List[Run], List[Artifact], List[Edge]]:
     """
     Get a graph for a run.
 
     This will return only the run's direct edges and artifacts
-    TODO: implement root=True option to get all graph for root, not needed currently.
     """
-    response = _get("/runs/{}/graph".format(run_id))
+    response = _get(f"/runs/{run_id}/graph?root={int(root)}")
 
     runs = [Run.from_json_encodable(run) for run in response["runs"]]
     artifacts = [
@@ -366,35 +371,44 @@ def _raise_for_response(
     response: requests.Response,
     validate_json: bool,
 ) -> None:
-    to_raise: Optional[Exception] = None
-    url = response.url
-    error_4xx = BadRequestError(
-        f"The {response.request.method} request to {url} was invalid, "
-        f"response was {response.status_code}"
-    )
-    error_5xx = ServerError(
-        f"The Sematic server could not handle the "
-        f"{response.request.method} request to {url}",
-    )
+    exception: Optional[Exception] = None
+    url, method = response.url, response.request.method
 
-    if 400 <= response.status_code < 500:
-        to_raise = error_4xx
-    if response.status_code >= 500:
-        to_raise = error_5xx
-    if to_raise is None and validate_json:
+    if response.status_code == 404:
+        exception = ResourceNotFoundError(f"Resource {url} was not found")
+
+    elif 400 <= response.status_code < 500:
+        exception = BadRequestError(
+            f"The {method} request to {url} was invalid, "
+            f"response was {response.status_code}"
+        )
+
+    elif response.status_code >= 500:
+        exception = ServerError(
+            f"The Sematic server could not handle the " f"{method} request to {url}",
+        )
+
+    if exception is None and validate_json:
         try:
             response.json()
         except Exception:
-            to_raise = InvalidResponseError(
+            exception = InvalidResponseError(
                 f"The Sematic server was expected to return json for "
-                f"{response.request.method} request to {url}, but the "
+                f"{method} request to {url}, but the "
                 f"response was not json."
             )
-    if to_raise is None:
+
+    if exception is None:
         return
 
-    logger.error("Server returned %s: %s", response.status_code, response.text)
-    raise to_raise
+    logger.error(
+        "Server returned %s for %s %s: %s",
+        response.status_code,
+        method,
+        url,
+        response.text,
+    )
+    raise exception
 
 
 def _url(endpoint) -> str:
