@@ -38,7 +38,7 @@ class CloudResolver(LocalResolver):
 
     Parameters
     ----------
-    detach: Optional[bool]
+    detach: bool
         Defaults to `True`.
 
         When `True`, the driver job will run on the remote cluster. This is the so
@@ -47,10 +47,37 @@ class CloudResolver(LocalResolver):
 
         When `False`, the driver job runs on the local machine. The shell prompt
         will return when the entire pipeline has completed.
+    is_running_remotely: bool
+        For Sematic internal usage. End users should always leave this at the default
+        value of False.
+    max_parallelism: Optional[int]
+        The maximum number of non-inlined runs that this resolver will allow to be in the
+        SCHEDULED state at any one time. Must be a positive integer, or None for
+        unlimited runs. Defaults to None.
+
+        This is intended as a simple mechanism to limit the amount of computing resources
+        consumed by one pipeline execution for pipelines with a high degree of
+        parallelism. Note that if other resolvers are active, runs from them will not be
+        considered in this parallelism limit. Note also that runs that are in the RAN
+        state do not contribute to the limit, since they do not consume computing
+        resources.
     """
 
-    def __init__(self, detach: bool = True, is_running_remotely: bool = False):
+    def __init__(
+        self,
+        detach: bool = True,
+        is_running_remotely: bool = False,
+        max_parallelism: Optional[int] = None,
+    ):
         super().__init__(detach=detach)
+
+        if max_parallelism is not None and max_parallelism < 1:
+            raise ValueError(
+                "max_parallelism must be a positive integer or None. "
+                f"Got: {max_parallelism}"
+            )
+        self._max_parallelism = max_parallelism
+        self._remote_runs_count = 0
 
         # TODO: Replace this with a cloud storage engine
         self._store_artifacts = True
@@ -105,6 +132,7 @@ class CloudResolver(LocalResolver):
 
     def _schedule_future(self, future: AbstractFuture) -> None:
         run = api_client.schedule_run(future.id)
+        self._inc_remote_runs_count()
         self._runs[run.id] = run
         self._set_future_state(future, FutureState[run.future_state])  # type: ignore
 
@@ -123,6 +151,7 @@ class CloudResolver(LocalResolver):
 
         future = next(future for future in self._futures if future.id == run.id)
 
+        # if the external run is reported to not have completed successfully by the server
         if run.future_state not in {FutureState.RESOLVED.value, FutureState.RAN.value}:
             self._handle_future_failure(
                 future, Exception("Run failed, see exception in the UI."), run.exception
@@ -214,6 +243,7 @@ class CloudResolver(LocalResolver):
                     # be handled by the post-processing logic once it is aware this
                     # future has changed
                     self._refresh_graph(future.id)
+                    self._dec_remote_runs_count()
                     return future.id
 
             logger.info("Sleeping for %s s", delay_between_updates)
@@ -230,6 +260,39 @@ class CloudResolver(LocalResolver):
     def _end_inline_execution(self, future_id):
         """Callback called at the end of an inline execution"""
         logger.info(END_INLINE_RUN_INDICATOR.format(future_id))
+
+    def _can_schedule_future(self, _: AbstractFuture) -> bool:
+        """Return whether we can schedule an external run."""
+        return (
+            not self._max_parallelism or self._remote_runs_count < self._max_parallelism
+        )
+
+    def _inc_remote_runs_count(self, count: int = 1) -> int:
+        """
+        Increment the counter tracking the number of external runs.
+
+        The counter must reflect the runs state reported by the server, not the internal
+        futures state.
+        """
+        self._remote_runs_count = self._remote_runs_count + count
+        if self._max_parallelism and self._remote_runs_count > self._max_parallelism:
+            raise RuntimeError(
+                "fIllegal state: remote_runs_count={remote_runs_count} > "
+                "_max_parallelism={self._max_parallelism}"
+            )
+        return self._remote_runs_count
+
+    def _dec_remote_runs_count(self, count: int = 1) -> int:
+        """
+        Decrement the counter tracking the number of external runs.
+
+        The counter must reflect the runs state reported by the server, not the internal
+        futures state.
+        """
+        self._remote_runs_count = self._remote_runs_count - count
+        if self._remote_runs_count < 0:
+            raise RuntimeError("fIllegal state: remote_runs_count={remote_runs_count}")
+        return self._remote_runs_count
 
 
 def make_nested_future_storage_key(future_id: str) -> str:
