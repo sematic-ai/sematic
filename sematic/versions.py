@@ -10,7 +10,7 @@ CURRENT_VERSION = (0, 17, 0)
 # Represents the smallest client version that works with the server
 # at the CURRENT_VERSION. Should be updated any time a breaking change
 # is made to the web API.
-MIN_CLIENT_SERVER_SUPPORTS = (0, 11, 0)
+MIN_CLIENT_SERVER_SUPPORTS = (0, 17, 0)
 
 
 def version_as_string(version: typing.Tuple[int, int, int]) -> str:
