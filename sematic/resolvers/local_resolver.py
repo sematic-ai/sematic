@@ -57,10 +57,6 @@ class LocalResolver(SilentResolver):
         self._sio_client = socketio.Client()
 
         self._rerun_from_run_id = rerun_from
-        # self._original_graph: Graph
-        # self._original_run_id_to_future: Dict[str, AbstractFuture] = {}
-        # self._future_id_to_original_run_id: Dict[str, str] = {}
-        # self._original_run_ancestor_ids: List[str] = []
 
     def resolve(self, future: AbstractFuture) -> Any:
         if self._rerun_from_run_id is None:
