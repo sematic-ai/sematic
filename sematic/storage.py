@@ -17,6 +17,7 @@ def _get_bucket() -> str:
 
 def set(key: str, value: bytes):
     """Store value in S3
+
     TODO: modularize the F out of this to enable local/remote storage switch
     based on resolver. Also enable multiple storage clients (AWS, GCP, Azure)
     """
@@ -28,6 +29,7 @@ def set(key: str, value: bytes):
 
 def set_from_file(key: str, value_file_path: str):
     """Store value in S3 using the contents of a file
+
     see TODO in 'set'
     """
     s3_client = boto3.client("s3")
@@ -39,6 +41,7 @@ def set_from_file(key: str, value_file_path: str):
 @retry(tries=3, delay=5)
 def get(key: str) -> bytes:
     """Get value from S3.
+
     See TODO in `set`.
     """
     file_obj = io.BytesIO()
@@ -57,7 +60,9 @@ def get(key: str) -> bytes:
 @retry(tries=3, delay=5)
 def get_line_stream(key: str, encoding="utf8") -> Iterable[str]:
     """Get value from S3 into a stream of text lines.
+
     The encoding of the
+
     See TODO in `set`.
     """
     s3_client = boto3.client("s3")
@@ -81,12 +86,14 @@ def _bytes_buffer_to_text(bytes_buffer: Iterable[bytes], encoding) -> Iterable[s
 @retry(tries=3, delay=5)
 def get_child_paths(key_prefix: str) -> List[str]:
     """Get all descendants of the 'directory' specified by the prefix
+
     Parameters
     ----------
     key_prefix:
         The prefix to a key that would be used with 'get' or 'set'. The keys are
         treated as being like directories, with '/' in a key specifying an
         organizational unit for the objects.
+
     Returns
     -------
     A list of all keys that start with the prefix. You can think of this as getting

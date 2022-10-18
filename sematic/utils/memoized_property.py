@@ -32,18 +32,12 @@ def memoized_property(fget: typing.Callable) -> property:
     >>> c.load_name_count
     1
     """
-    cache_name = make_cache_name(fget.__name__)
+    attr_name = "_{0}".format(fget.__name__)
 
     @wraps(fget)
     def fget_memoized(self):
-        if not hasattr(self, cache_name):
-            setattr(self, cache_name, fget(self))
-        return getattr(self, cache_name)
-
-    fget_memoized.__annotations__ = fget.__annotations__
+        if not hasattr(self, attr_name):
+            setattr(self, attr_name, fget(self))
+        return getattr(self, attr_name)
 
     return property(fget_memoized)
-
-
-def make_cache_name(name: str):
-    return f"_{name}"

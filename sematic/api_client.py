@@ -49,9 +49,11 @@ class BadRequestError(Exception):
 def get_artifact_value_by_id(artifact_id: str) -> Any:
     """
     Retrieve the value of an artifact by ID.
+
     Parameters
     ----------
     artifact_id: str
+
     Returns
     -------
     Any
@@ -100,6 +102,7 @@ def save_graph(
 def get_graph(run_id: str) -> Tuple[List[Run], List[Artifact], List[Edge]]:
     """
     Get a graph for a run.
+
     This will return only the run's direct edges and artifacts
     TODO: implement root=True option to get all graph for root, not needed currently.
     """
@@ -151,13 +154,16 @@ def schedule_resolution(resolution_id: str) -> Resolution:
 @retry(tries=3, delay=10, jitter=1)
 def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
     """Ask the server to update the status of given run ids if needed and return them.
+
     The server will actively update run statuses based on the state of remote jobs
     associated with the runs. It will NOT perform any updates to the run statuses
     that result from result availability or calculator errors.
+
     Parameters
     ----------
     run_ids:
         The ids of the runs whose statuses are being requested
+
     Returns
     -------
     A dict whose keys are run ids and whose values are the current state of the runs.
@@ -230,6 +236,7 @@ def _validate_server_compatibility(
     tries: int = 5, seconds_between_tries: int = 10, use_cached: bool = True
 ):
     """Check that the client is compatible with the server.
+
     Raises an error if the server and client are incompatible, or if this can't be
     verified.
     """
@@ -313,8 +320,10 @@ def _request(
     validate_json: bool = False,
 ):
     """Internal function for wrapping requests.<get/put/etc.>.
+
     validate_version_compatibility indicates whether we should check that the
     Sematic server is compatible with this Sematic client.
+
     validate_json indicates whether the response is expected to contain
     valid json.
     """
