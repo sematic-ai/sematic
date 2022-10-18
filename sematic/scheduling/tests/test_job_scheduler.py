@@ -61,7 +61,8 @@ def resolution(run):
         root_id=run.id,
         status=ResolutionStatus.CREATED,
         kind=ResolutionKind.KUBERNETES,
-        docker_image_uri="my.uri",
+        container_image_uri="my.uri",
+        container_image_uris={"default": "my.uri"},
         git_info=GitInfo(
             remote="remote", branch="branch", commit="commit", dirty=False
         ),
@@ -69,8 +70,9 @@ def resolution(run):
     )
 
 
-def test_schedule_run(mock_k8s, run, resolution):
+def test_schedule_run(mock_k8s, run: Run, resolution: Resolution):
     resolution.status = ResolutionStatus.RUNNING
+    run.container_image_uri = resolution.container_image_uri
     scheduled = schedule_run(run, resolution)
     assert len(scheduled.external_jobs) == 1
     external_job = scheduled.external_jobs[0]
@@ -78,14 +80,14 @@ def test_schedule_run(mock_k8s, run, resolution):
     mock_k8s.schedule_run_job.assert_called_once()
     mock_k8s.schedule_run_job.assert_called_with(
         run_id=run.id,
-        image=resolution.docker_image_uri,
+        image=resolution.container_image_uri,
         user_settings=resolution.settings_env_vars,
         resource_requirements=run.resource_requirements,
         try_number=0,
     )
 
 
-def test_schedule_resolution(mock_k8s, resolution):
+def test_schedule_resolution(mock_k8s, resolution: Resolution):
     scheduled = schedule_resolution(resolution)
     assert len(scheduled.external_jobs) == 1
     external_job = scheduled.external_jobs[0]
@@ -93,7 +95,7 @@ def test_schedule_resolution(mock_k8s, resolution):
     mock_k8s.schedule_resolution_job.assert_called_once()
     mock_k8s.schedule_resolution_job.assert_called_with(
         resolution_id=resolution.root_id,
-        image=resolution.docker_image_uri,
+        image=resolution.container_image_uri,
         user_settings=resolution.settings_env_vars,
     )
 
