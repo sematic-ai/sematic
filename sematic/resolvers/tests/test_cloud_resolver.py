@@ -30,7 +30,7 @@ def pipeline() -> float:
 
 
 @mock.patch("socketio.Client.connect")
-@mock.patch("sematic.resolvers.cloud_resolver.get_image_uri", new=lambda: "some_image")
+@mock.patch("sematic.resolvers.cloud_resolver.get_image_uri", return_value="some_image")
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
 @mock_no_auth

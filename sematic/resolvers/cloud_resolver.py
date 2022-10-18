@@ -77,7 +77,6 @@ class CloudResolver(LocalResolver):
                 f"Got: {max_parallelism}"
             )
         self._max_parallelism = max_parallelism
-        self._remote_runs_count = 0
 
         # TODO: Replace this with a cloud storage engine
         self._store_artifacts = True
@@ -132,19 +131,16 @@ class CloudResolver(LocalResolver):
 
     def _schedule_future(self, future: AbstractFuture) -> None:
         run = api_client.schedule_run(future.id)
-        self._inc_remote_runs_count()
         self._runs[run.id] = run
         self._set_future_state(future, FutureState[run.future_state])  # type: ignore
 
-    def _wait_for_scheduled_run(self) -> None:
-        run_id = self._wait_for_any_inline_run() or self._wait_for_any_remote_job()
+    def _wait_for_scheduled_runs(self) -> None:
+        run_ids = self._wait_for_any_inline_runs() or self._wait_for_any_remote_jobs()
 
-        if run_id is None:
-            return
+        for run_id in run_ids:
+            self._process_run_output(run_id)
 
-        self._process_run_output(run_id)
-
-    def _process_run_output(self, run_id: str):
+    def _process_run_output(self, run_id: str) -> None:
         self._refresh_graph(run_id)
 
         run = self._get_run(run_id)
@@ -190,11 +186,11 @@ class CloudResolver(LocalResolver):
         if failed_future.state == FutureState.NESTED_FAILED:
             super()._future_did_fail(failed_future)
 
-    def _refresh_graph(self, run_id: str):
+    def _refresh_graph(self, run_id: str) -> None:
         """
         Refresh graph for run ID.
 
-        Will only refresh artifacts and edges directly connected to run
+        Will only refresh artifacts and edges directly connected to run.
         """
         runs, artifacts, edges = api_client.get_graph(run_id)
 
@@ -207,26 +203,23 @@ class CloudResolver(LocalResolver):
         for edge in edges:
             self._edges[make_edge_key(edge)] = edge
 
-    def _wait_for_any_inline_run(self) -> Optional[str]:
-        return next(
-            (
-                future.id
-                for future in self._futures
-                if future.props.inline and future.state == FutureState.SCHEDULED
-            ),
-            None,
-        )
+    def _wait_for_any_inline_runs(self) -> List[str]:
+        return [
+            future.id
+            for future in self._futures
+            if future.props.inline and future.state == FutureState.SCHEDULED
+        ]
 
-    def _wait_for_any_remote_job(self) -> Optional[str]:
+    def _wait_for_any_remote_jobs(self) -> List[str]:
         scheduled_futures_by_id: Dict[str, AbstractFuture] = {
             future.id: future
             for future in self._futures
             if not future.props.inline and future.state == FutureState.SCHEDULED
         }
 
-        if len(scheduled_futures_by_id) == 0:
+        if not scheduled_futures_by_id:
             logger.info("No futures to wait on")
-            return None
+            return []
 
         delay_between_updates = 1.0
         while True:
@@ -235,7 +228,11 @@ class CloudResolver(LocalResolver):
             ] = api_client.update_run_future_states(
                 list(scheduled_futures_by_id.keys())
             )
-            logger.info("Checking for updates on %s", scheduled_futures_by_id.keys())
+            logger.info(
+                "Checking for updates on run ids: %s",
+                list(scheduled_futures_by_id.keys()),
+            )
+            changed_job_ids = []
             for run_id, new_state in updated_states.items():
                 future = scheduled_futures_by_id[run_id]
                 if new_state != FutureState.SCHEDULED:
@@ -243,56 +240,42 @@ class CloudResolver(LocalResolver):
                     # be handled by the post-processing logic once it is aware this
                     # future has changed
                     self._refresh_graph(future.id)
-                    self._dec_remote_runs_count()
-                    return future.id
+                    changed_job_ids.append(future.id)
 
-            logger.info("Sleeping for %s s", delay_between_updates)
+            if changed_job_ids:
+                return changed_job_ids
+
+            logger.info("Sleeping for %ss", delay_between_updates)
             time.sleep(delay_between_updates)
             delay_between_updates = min(
                 _MAX_DELAY_BETWEEN_STATUS_UPDATES_SECONDS,
                 _DELAY_BETWEEN_STATUS_UPDATES_BACKOFF * delay_between_updates,
             )
 
-    def _start_inline_execution(self, future_id):
-        """Callback called before an inline execution"""
+    def _start_inline_execution(self, future_id) -> None:
+        """Callback called before an inline execution."""
         logger.info(START_INLINE_RUN_INDICATOR.format(future_id))
 
-    def _end_inline_execution(self, future_id):
-        """Callback called at the end of an inline execution"""
+    def _end_inline_execution(self, future_id) -> None:
+        """Callback called at the end of an inline execution."""
         logger.info(END_INLINE_RUN_INDICATOR.format(future_id))
 
     def _can_schedule_future(self, _: AbstractFuture) -> bool:
-        """Return whether we can schedule an external run."""
-        return (
-            not self._max_parallelism or self._remote_runs_count < self._max_parallelism
+        """Returns whether we can schedule an external run."""
+        if not self._max_parallelism:
+            return True
+
+        remote_runs = self._get_remote_runs_count()
+        logging.debug(
+            "Have %s remote runs scheduled out of a maximum of %s",
+            remote_runs,
+            self._max_parallelism,
         )
+        return remote_runs < self._max_parallelism
 
-    def _inc_remote_runs_count(self, count: int = 1) -> int:
-        """
-        Increment the counter tracking the number of external runs.
-
-        The counter must reflect the runs state reported by the server, not the internal
-        futures state.
-        """
-        self._remote_runs_count = self._remote_runs_count + count
-        if self._max_parallelism and self._remote_runs_count > self._max_parallelism:
-            raise RuntimeError(
-                "fIllegal state: remote_runs_count={remote_runs_count} > "
-                "_max_parallelism={self._max_parallelism}"
-            )
-        return self._remote_runs_count
-
-    def _dec_remote_runs_count(self, count: int = 1) -> int:
-        """
-        Decrement the counter tracking the number of external runs.
-
-        The counter must reflect the runs state reported by the server, not the internal
-        futures state.
-        """
-        self._remote_runs_count = self._remote_runs_count - count
-        if self._remote_runs_count < 0:
-            raise RuntimeError("fIllegal state: remote_runs_count={remote_runs_count}")
-        return self._remote_runs_count
+    def _get_remote_runs_count(self) -> int:
+        """Returns the known number of futures in the SCHEDULED state."""
+        return sum(map(lambda f: f.state == FutureState.SCHEDULED, self._futures))
 
 
 def make_nested_future_storage_key(future_id: str) -> str:
