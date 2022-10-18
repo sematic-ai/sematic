@@ -278,6 +278,7 @@ def test_update_future_states(
             repr="The kubernetes job(s) experienced an unknown failure",
             name="InvalidStateTransitionError",
             module="sematic.api.endpoints.runs",
+            ancestors=[f"{Exception.__module__}.{Exception.__name__}"],
         )
 
 

@@ -258,6 +258,7 @@ class LocalResolver(SilentResolver):
                 repr="Failed because the child run failed",
                 name=Exception.__name__,
                 module=Exception.__module__,
+                ancestors=ExceptionMetadata.ancestors_from_exception(Exception),
             )
 
         logger.info(
@@ -306,7 +307,10 @@ class LocalResolver(SilentResolver):
 
             if run.exception is None:
                 run.exception = ExceptionMetadata(
-                    repr=reason, name=Exception.__name__, module=Exception.__module__
+                    repr=reason,
+                    name=Exception.__name__,
+                    module=Exception.__module__,
+                    ancestors=ExceptionMetadata.ancestors_from_exception(Exception),
                 )
 
             self._add_run(run)
