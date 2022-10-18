@@ -4,6 +4,11 @@ Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
 with nothing else on the line.
 -->
 * HEAD
+* 0.17.1
+    * [feature] Add Sematic version cli command
+    * [bugfix] Fix cancel button upon completion 
+    * [bugfix] Bump minimum client version to 0.17.0
+    * [bugfix] Fix GitInfo for custom Bazel workspaces
 * 0.17.0
     * [feature] Function Retry on failure
     * [feature] Expose pipeline git commit info in the UI
