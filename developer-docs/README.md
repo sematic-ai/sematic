@@ -18,6 +18,7 @@ access to the PyPi repo, which is limited to employees of Sematic.
 - Bump the version in `wheel_version.bzl`, `sematic/versions.py`,
   and `helm/sematic/values.yaml`
 - Update `changelog.md` with the new version number
+- Make the bump commit
 - Build the UI:
 ```bash
 $ make ui
@@ -44,7 +45,7 @@ $ make test-release
 $ make release
 ```
 
-Once you have pushed it to PyPi, add the git tag
+Once you have pushed it to PyPi, add the git tag.
 
 ```bash
 $ export RELEASE_VERSION=v$(python3 ./sematic/versions.py)
@@ -55,7 +56,7 @@ $ git push origin $RELEASE_VERSION
 Next, build and push the server image. Use the dockerfile at `docker/Dockerfile.server`.
 Copy the wheel you built before in the `docker/` directory.
 ```bash
-$ TAG=v$(python3 ../sematic/versions.py) make release-server
+$ TAG=v$(python3 sematic/versions.py) make release-server
 ```
 
 Finally, draft the release on GitHub. Add a "What's Changed" section, a "Full Changelog" link,
