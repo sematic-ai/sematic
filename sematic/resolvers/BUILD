@@ -55,6 +55,7 @@ sematic_py_lib(
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
         "//sematic/utils:exceptions",
+        "//sematic/utils:memoized_property",
     ],
 )
 
