@@ -8,7 +8,7 @@ and are published to https://docs.sematic.dev/
 The developer tools need to be installed by running this command once (and subsequently whenever
 `requirements/ci-requirements.txt`) will be updated:
 ```bash
-$ pip3 install -r requirements/ci-requirements.txt
+$ make install-dev-deps
 ```
 
 ## Releasing
@@ -35,8 +35,8 @@ $ sematic start
 $ sematic run examples/mnist/pytorch
 ```
 
-Do this for all supported versions of python. You can check your virtual env Server and
-Python versions using `sematic version`.
+Do this for all supported versions of Python. You can check your virtual env Python version
+using `sematic version` (as well as the Server and Client version).
 If everything works fine, we are ready to push the release.
 
 ```bash
@@ -52,14 +52,10 @@ $ git tag $RELEASE_VERSION
 $ git push origin $RELEASE_VERSION
 ```
 
-Next, build and push the server image. Use the dockerfile at
-`docker/Dockerfile.server`. Copy the wheel you built before in the directory
-you run.
+Next, build and push the server image. Use the dockerfile at `docker/Dockerfile.server`.
+Copy the wheel you built before in the `docker/` directory.
 ```bash
-$ cd docker
-$ export RELEASE_VERSION=v$(python3 ../sematic/versions.py)
-$ docker build -t "sematicai/sematic-server:$RELEASE_VERSION" -f Dockerfile.server .
-$ docker push "sematicai/sematic-server:$RELEASE_VERSION"
+$ TAG=v$(python3 ../sematic/versions.py) make release-server
 ```
 
 Finally, draft the release on GitHub. Add a "What's Changed" section, a "Full Changelog" link,
