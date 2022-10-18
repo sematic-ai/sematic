@@ -42,7 +42,7 @@ def get_image_uris() -> Dict[str, str]:
 
     dir_path, file_name = os.path.split(__main__.__file__)
 
-    image_file_regex = r"{}_(.*)_push_at_build.uri".format(
+    image_file_regex = r"{}_(.*?)_push_at_build.uri".format(
         os.path.splitext(file_name)[0]
     )
 

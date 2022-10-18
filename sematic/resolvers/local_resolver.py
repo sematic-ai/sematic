@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 class LocalResolver(SilentResolver):
     """
     A resolver to resolver a graph in-memory.
+
     Each Future's resolution is tracked in the DB as a run. Each individual function's
     input argument and output value is tracked as an artifact.
     """
@@ -151,12 +152,12 @@ class LocalResolver(SilentResolver):
         return None
 
     def _create_resolution(self, root_future):
-        """Make a Resolution instance and perist it."""
+        """Make a Resolution instance and persist it."""
         resolution = self._make_resolution(root_future)
         api_client.save_resolution(resolution)
 
     def _make_resolution(self, root_future: AbstractFuture) -> Resolution:
-        """Make a Resolution instance"""
+        """Make a Resolution instance."""
         resolution = Resolution(
             root_id=root_future.id,
             status=ResolutionStatus.SCHEDULED,

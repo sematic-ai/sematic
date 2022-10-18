@@ -143,6 +143,12 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     settings_env_vars:
         The Sematic settings from the user's environment for the user
         who launched this resolution.
+    container_image_uri:
+        The image URI used for the driver job.
+    container_image_uris:
+        A mapping of tag to base images to be used for runs in the graph
+        based on the `base_image_tag` argument passed to the `sematic.func`
+        decorator.
     """
 
     __tablename__ = "resolutions"

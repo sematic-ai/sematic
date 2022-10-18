@@ -130,9 +130,9 @@ With that, you're done! Assuming the target for your launch script was
   that Sematic will not know how to reference a container image when executed this
   way, and thus won't work for remote execution even when combined with a
   `:my_target_push`.
-- `//my_repo/my_package:my_target_image`: builds the image, but doesn't push it
+- `//my_repo/my_package:my_target_default_image`: builds the image, but doesn't push it
   or run your script
-- `//my_repo/my_package:my_target_push`: builds and pushes the image, but
+- `//my_repo/my_package:my_target_default_push`: builds and pushes the image, but
   doesn't run your script
 
 #### Custom base images

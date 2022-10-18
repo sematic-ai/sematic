@@ -57,6 +57,7 @@ def make_artifact(
 ) -> Artifact:
     """
     Create an Artifact model instance from a value and type.
+
     `store` set to `True` will persist the artifact's serialization.
     TODO: replace with modular storage engine.
     """
