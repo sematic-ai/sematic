@@ -67,3 +67,12 @@ class Edge(Base, JSONEncodableMixin):
                 map(str, [getattr(self, field) for field in self._EQUALITY_FIELDS])
             )
         )
+
+    def __repr__(self) -> str:
+        return (
+            f"Edge(source_run_id={self.source_run_id}, "
+            f"destination_run_id={self.destination_run_id}, "
+            f"destination_name={self.destination_name}, "
+            f"artifact_id={self.artifact_id}, "
+            f"parent_id={self.parent_id})"
+        )

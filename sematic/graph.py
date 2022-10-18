@@ -93,9 +93,26 @@ class Graph:
     def runs_sorted_by_layer(self) -> List[Run]:
         runs: List[Run] = []
 
+        def _reverse_execution_order(layer_runs, downstream_run_ids):
+            if len(downstream_run_ids) == 0:
+                return []
+            runs_ = [
+                run
+                for run in layer_runs
+                if all(
+                    edge.destination_run_id in downstream_run_ids
+                    for edge in self.edges_by_source_id[run.id]
+                )
+            ]
+            return runs_ + _reverse_execution_order(
+                layer_runs, [run.id for run in runs_]
+            )
+
         def _add_layer_runs(parent_id: Optional[str]):
             layer_runs: List[Run] = self.runs_by_parent_id[parent_id]
-            runs.extend(layer_runs)
+            runs.extend(_reverse_execution_order(layer_runs, [None]))
+
+            # runs.extend(layer_runs)
             for run in layer_runs:
                 _add_layer_runs(run.id)
 
@@ -158,7 +175,8 @@ class Graph:
             str, Dict[str, str]
         ] = collections.defaultdict(dict)
 
-        # """
+        value_by_artifact_id: Dict[str, Any] = {}
+
         skip_run_ids: List[str] = []
 
         if reset_from is not None:
@@ -175,7 +193,9 @@ class Graph:
 
         # """
         # runs order guarantees parents come first
-        for run in self.runs_sorted_by_layer:
+        sorted_runs = self.runs_sorted_by_layer
+
+        for run in sorted_runs:
 
             if run.id in skip_run_ids:
                 continue
@@ -189,9 +209,15 @@ class Graph:
                     )
                     unresolved_sources_by_run_id[run.id][name] = edge.source_run_id
                 elif edge.artifact_id is not None:
-                    kwargs[name] = get_artifact_value(
-                        self.artifacts_by_id[edge.artifact_id], storage
+                    value = value_by_artifact_id.get(
+                        edge.artifact_id,
+                        get_artifact_value(
+                            self.artifacts_by_id[edge.artifact_id], storage
+                        ),
                     )
+                    value_by_artifact_id[edge.artifact_id] = value
+
+                    kwargs[name] = value
                 else:
                     raise RuntimeError("Should not happen")
 
@@ -260,4 +286,8 @@ class Graph:
         if reset_from is None and len(futures_by_original_id) != len(self.runs):
             raise RuntimeError("Not all futures duplicated")
 
-        return futures_by_original_id
+        return collections.OrderedDict(
+            ((run.id, futures_by_original_id[run.id]) for run in sorted_runs)
+        )
+
+        # return {run.id: futures_by_original_id
