@@ -130,6 +130,7 @@ def make_resolution(**kwargs) -> Resolution:
         status=ResolutionStatus.SCHEDULED,
         kind=ResolutionKind.KUBERNETES,
         container_image_uris={"default": "some.uri"},
+        container_image_uri="some.uri",
         settings_env_vars={"MY_SETTING": "MY_VALUE"},
     )
 

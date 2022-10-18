@@ -7,6 +7,8 @@ import __main__
 
 CONTAINER_IMAGE_ENV_VAR = "SEMATIC_CONTAINER_IMAGE"
 
+DEFAULT_BASE_IMAGE_TAG = "default"
+
 
 class MissingContainerImage(Exception):
     pass
@@ -34,7 +36,7 @@ def get_image_uris() -> Dict[str, str]:
     The URI of the image to be used in this execution.
     """
     if CONTAINER_IMAGE_ENV_VAR in os.environ:
-        return {CONTAINER_IMAGE_ENV_VAR: os.environ[CONTAINER_IMAGE_ENV_VAR]}
+        return {DEFAULT_BASE_IMAGE_TAG: os.environ[CONTAINER_IMAGE_ENV_VAR]}
 
     tagged_uris_map = {}
 

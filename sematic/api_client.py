@@ -46,18 +46,12 @@ class BadRequestError(Exception):
     pass
 
 
-class ResourceNotFoundError(BadRequestError):
-    pass
-
-
 def get_artifact_value_by_id(artifact_id: str) -> Any:
     """
     Retrieve the value of an artifact by ID.
-
     Parameters
     ----------
     artifact_id: str
-
     Returns
     -------
     Any
@@ -103,15 +97,13 @@ def save_graph(
     notify_graph_update(root_id)
 
 
-def get_graph(
-    run_id: str, root: bool = False
-) -> Tuple[List[Run], List[Artifact], List[Edge]]:
+def get_graph(run_id: str) -> Tuple[List[Run], List[Artifact], List[Edge]]:
     """
     Get a graph for a run.
-
     This will return only the run's direct edges and artifacts
+    TODO: implement root=True option to get all graph for root, not needed currently.
     """
-    response = _get(f"/runs/{run_id}/graph?root={int(root)}")
+    response = _get("/runs/{}/graph".format(run_id))
 
     runs = [Run.from_json_encodable(run) for run in response["runs"]]
     artifacts = [
@@ -159,16 +151,13 @@ def schedule_resolution(resolution_id: str) -> Resolution:
 @retry(tries=3, delay=10, jitter=1)
 def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
     """Ask the server to update the status of given run ids if needed and return them.
-
     The server will actively update run statuses based on the state of remote jobs
     associated with the runs. It will NOT perform any updates to the run statuses
     that result from result availability or calculator errors.
-
     Parameters
     ----------
     run_ids:
         The ids of the runs whose statuses are being requested
-
     Returns
     -------
     A dict whose keys are run ids and whose values are the current state of the runs.
@@ -241,7 +230,6 @@ def _validate_server_compatibility(
     tries: int = 5, seconds_between_tries: int = 10, use_cached: bool = True
 ):
     """Check that the client is compatible with the server.
-
     Raises an error if the server and client are incompatible, or if this can't be
     verified.
     """
@@ -325,10 +313,8 @@ def _request(
     validate_json: bool = False,
 ):
     """Internal function for wrapping requests.<get/put/etc.>.
-
     validate_version_compatibility indicates whether we should check that the
     Sematic server is compatible with this Sematic client.
-
     validate_json indicates whether the response is expected to contain
     valid json.
     """
@@ -371,44 +357,41 @@ def _raise_for_response(
     response: requests.Response,
     validate_json: bool,
 ) -> None:
-    exception: Optional[Exception] = None
-    url, method = response.url, response.request.method
+    to_raise: Optional[Exception] = None
+    url = response.url
+    error_4xx = BadRequestError(
+        f"The {response.request.method} request to {url} was invalid, "
+        f"response was {response.status_code}"
+    )
+    error_5xx = ServerError(
+        f"The Sematic server could not handle the "
+        f"{response.request.method} request to {url}",
+    )
 
-    if response.status_code == 404:
-        exception = ResourceNotFoundError(f"Resource {url} was not found")
-
-    elif 400 <= response.status_code < 500:
-        exception = BadRequestError(
-            f"The {method} request to {url} was invalid, "
-            f"response was {response.status_code}"
-        )
-
-    elif response.status_code >= 500:
-        exception = ServerError(
-            f"The Sematic server could not handle the " f"{method} request to {url}",
-        )
-
-    if exception is None and validate_json:
+    if 400 <= response.status_code < 500:
+        to_raise = error_4xx
+    if response.status_code >= 500:
+        to_raise = error_5xx
+    if to_raise is None and validate_json:
         try:
             response.json()
         except Exception:
-            exception = InvalidResponseError(
+            to_raise = InvalidResponseError(
                 f"The Sematic server was expected to return json for "
-                f"{method} request to {url}, but the "
+                f"{response.request.method} request to {url}, but the "
                 f"response was not json."
             )
-
-    if exception is None:
+    if to_raise is None:
         return
 
     logger.error(
         "Server returned %s for %s %s: %s",
         response.status_code,
-        method,
+        response.request.method,
         url,
         response.text,
     )
-    raise exception
+    raise to_raise
 
 
 def _url(endpoint) -> str:

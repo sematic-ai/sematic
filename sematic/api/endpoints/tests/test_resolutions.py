@@ -72,7 +72,9 @@ def test_put_resolution_endpoint(
         "/api/v1/resolutions/{}".format(resolution.root_id),
         json={"resolution": resolution.to_json_encodable()},
     )
+    print(response)
     response = test_client.get("/api/v1/resolutions/{}".format(resolution.root_id))
+    print(response)
     encodable = response.json["content"]  # type: ignore
     encodable["status"] = ResolutionStatus.FAILED.value
 

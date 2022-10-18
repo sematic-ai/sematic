@@ -168,6 +168,7 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
         types.JSON(), nullable=True
     )
     container_image_uris: Optional[Dict[str, str]] = Column(types.JSON(), nullable=True)
+    container_image_uri: Optional[str] = Column(types.String(), nullable=True)
 
     @validates("status")
     def validate_status(self, key, value) -> str:
@@ -236,13 +237,6 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
 
         for field in mutable_fields:
             setattr(self, field, getattr(other, field))
-
-    @property
-    def container_image_uri(self) -> Optional[str]:
-        if self.container_image_uris is None:
-            return None
-
-        return self.container_image_uris.get("default")
 
     def validate_new(self):
         """Confirm that the resolution is valid for a resolution that is just beginning.

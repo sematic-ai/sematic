@@ -1,4 +1,5 @@
 # Standard Library
+from typing import Optional
 from unittest import mock
 
 # Third-party
@@ -132,14 +133,20 @@ def test_make_run(_, base_image_tag, expected_image):
     return_value={"default": "foo", "cuda": "bar"},
 )
 @pytest.mark.parametrize(
-    "detach, expected_status, expected_kind",
+    "detach, expected_status, expected_kind, _base_image_tag, expected_resolution_container_image_uri",  # noqa: E501
     (
-        (False, ResolutionStatus.SCHEDULED, ResolutionKind.LOCAL),
-        (True, ResolutionStatus.CREATED, ResolutionKind.KUBERNETES),
+        (False, ResolutionStatus.SCHEDULED, ResolutionKind.LOCAL, "cuda", None),
+        (True, ResolutionStatus.CREATED, ResolutionKind.KUBERNETES, "cuda", "bar"),
+        (True, ResolutionStatus.CREATED, ResolutionKind.KUBERNETES, None, "foo"),
     ),
 )
 def test_make_resolution(
-    _, detach: bool, expected_status: ResolutionStatus, expected_kind: ResolutionKind
+    _,
+    detach: bool,
+    expected_status: ResolutionStatus,
+    expected_kind: ResolutionKind,
+    _base_image_tag: Optional[str],
+    expected_resolution_container_image_uri: Optional[str],
 ):
     @func
     def foo():
@@ -147,10 +154,15 @@ def test_make_resolution(
 
     future = foo()
 
-    resolver = CloudResolver(detach=detach)
+    resolver = (
+        CloudResolver(detach=detach, _base_image_tag=_base_image_tag)
+        if _base_image_tag
+        else CloudResolver(detach=detach)
+    )
 
     resolution = resolver._make_resolution(future)
 
     assert resolution.status == expected_status.value
     assert resolution.kind == expected_kind.value
     assert resolution.container_image_uris == {"default": "foo", "cuda": "bar"}
+    assert resolution.container_image_uri == expected_resolution_container_image_uri

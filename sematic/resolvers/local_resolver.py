@@ -2,7 +2,7 @@
 import datetime
 import logging
 import uuid
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 # Third-party
 import socketio  # type: ignore
@@ -14,17 +14,10 @@ from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.config import get_config
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.factories import (
-    get_artifact_value,
-    make_artifact,
-    make_func_path,
-    make_run_from_future,
-)
+from sematic.db.models.factories import make_artifact, make_run_from_future
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
-from sematic.graph import Graph
 from sematic.resolvers.silent_resolver import SilentResolver
-from sematic.storage import LocalStorage
 from sematic.user_settings import get_all_user_settings
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
 from sematic.utils.git import get_git_info
@@ -35,12 +28,11 @@ logger = logging.getLogger(__name__)
 class LocalResolver(SilentResolver):
     """
     A resolver to resolver a graph in-memory.
-
     Each Future's resolution is tracked in the DB as a run. Each individual function's
     input argument and output value is tracked as an artifact.
     """
 
-    def __init__(self, rerun_from: Optional[str] = None, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         self._edges: Dict[str, Edge] = {}
@@ -52,195 +44,10 @@ class LocalResolver(SilentResolver):
         self._buffer_runs: Dict[str, Run] = {}
         self._buffer_artifacts: Dict[str, Artifact] = {}
 
-        self._storage = LocalStorage()
+        # TODO: Replace this with a local storage engine
+        self._store_artifacts = False
 
         self._sio_client = socketio.Client()
-
-        self._rerun_from_run_id = rerun_from
-        # self._original_graph: Graph
-        # self._original_run_id_to_future: Dict[str, AbstractFuture] = {}
-        # self._future_id_to_original_run_id: Dict[str, str] = {}
-        # self._original_run_ancestor_ids: List[str] = []
-
-    def resolve(self, future: AbstractFuture) -> Any:
-        if self._rerun_from_run_id is None:
-            return super().resolve(future)
-
-        try:
-            run = api_client.get_run(self._rerun_from_run_id)
-        except api_client.ResourceNotFoundError:
-            raise ValueError(
-                f"Cannot restart from {self._rerun_from_run_id}: run cannot be found."
-            )
-
-        if self._rerun_from_run_id == run.root_id:
-            raise ValueError(
-                f"Cannot restart from {self._rerun_from_run_id}: "
-                "this is the root run, simply start over"
-            )
-
-        runs, artifacts, edges = api_client.get_graph(run.root_id, root=True)
-
-        graph = Graph(runs=runs, artifacts=artifacts, edges=edges)
-
-        if not graph.input_artifacts_ready(run.id):
-            raise ValueError(
-                f"Cannot restart from {self._rerun_from_run_id}: "
-                "upstream runs did not succeed."
-            )
-
-        # self._original_run_ancestor_ids = self._original_graph.get_run_ancestor_ids(
-        #    self._rerun_from_run_id
-        # )
-
-        # """
-        futures_by_original_id = graph.get_duplicate_futures_by_original_run_id(
-            storage=self._storage,
-            reset_from=self._rerun_from_run_id,
-        )
-
-        # Now setting the appropriate future states
-        ancestor_run_ids = graph.get_run_ancestor_ids(self._rerun_from_run_id)
-        all_downstream_run_ids = []
-        for ancestor_run_id in [self._rerun_from_run_id] + ancestor_run_ids:
-            all_downstream_run_ids += graph.get_run_downstream_ids(ancestor_run_id)
-
-        for original_run_id, future in futures_by_original_id.items():
-            if future.nested_future is not None:
-                future.state = FutureState.RAN
-
-            original_run = graph.runs_by_id[original_run_id]
-            if FutureState[original_run.future_state] == FutureState.RESOLVED:
-                if original_run_id in ancestor_run_ids:
-                    continue
-                if original_run_id in all_downstream_run_ids:
-                    continue
-                if original_run_id == self._rerun_from_run_id:
-                    continue
-                future.state = FutureState.RESOLVED
-                output_edges = graph.edges_by_source_id[original_run_id]
-                output_artifact = graph.artifacts_by_id[output_edges[0].artifact_id]
-                future.value = get_artifact_value(
-                    output_artifact, storage=self._storage
-                )
-
-        for original_run_id, future in futures_by_original_id.items():
-            print(original_run_id, future)
-            print("\tkwargs:")
-            for name, value in future.kwargs.items():
-                print(f"\t{name}: {value}")
-
-        self._futures = list(futures_by_original_id.values())
-        # """
-        future = self._root_future
-        resolved_kwargs = self._get_resolved_kwargs(future)
-        if not len(resolved_kwargs) == len(future.kwargs):
-            raise ValueError(
-                "All input arguments of your root function should be concrete."
-            )
-
-        future.resolved_kwargs = resolved_kwargs
-
-        self._register_signal_handlers()
-
-        logger.info(f"Starting resolution {future.id}")
-
-        self._resolution_will_start()
-
-        while not future.state.is_terminal():
-            for future_ in self._futures:
-                if future_.state == FutureState.CREATED:
-                    self._schedule_future_if_args_resolved(future_)
-                if future_.state == FutureState.RETRYING:
-                    self._execute_future(future_)
-                if future_.state == FutureState.RAN:
-                    self._resolve_nested_future(future_)
-
-            self._wait_for_scheduled_run()
-
-        if future.state == FutureState.RESOLVED:
-            self._resolution_did_succeed()
-        elif future.state == FutureState.CANCELED:
-            return
-        else:
-            raise RuntimeError("Unresolved Future after resolver call.")
-
-        return future.value
-
-    def _has_cache(self, future: AbstractFuture) -> bool:
-        if self._rerun_from_run_id is None:
-            return False
-
-        future_parent_id = (
-            future.parent_future.id if future.parent_future is not None else None
-        )
-        original_parent_run_id = (
-            self._future_id_to_original_run_id.get(future_parent_id)
-            if future_parent_id
-            else None
-        )
-        layer_runs = self._original_graph.runs_by_parent_id[original_parent_run_id]
-
-        def _run_matches_future(run: Run, future_: AbstractFuture):
-            if run.calculator_path != make_func_path(future_):
-                return False
-
-            input_edges = self._original_graph.run_input_edges(run.id)
-
-            if set(input_edges) != set(future_.kwargs):
-                return False
-
-            for name, value in future.kwargs.items():
-                input_edge = input_edges[name]
-                if isinstance(value, AbstractFuture):
-                    if input_edge.source_run_id is None:
-                        return False
-                    source_run = self._original_graph.runs_by_id[
-                        input_edge.source_run_id
-                    ]
-                    if not _run_matches_future(source_run, value):
-                        return False
-                else:
-                    if input_edge.source_run_id is not None:
-                        return False
-
-            return True
-
-        matching_runs = [
-            layer_run
-            for layer_run in layer_runs
-            if _run_matches_future(layer_run, future)
-        ]
-
-        if len(matching_runs) == 0:
-            return False
-
-        if len(matching_runs) > 1:
-            raise RuntimeError("Multiple matching runs")
-
-        original_run = matching_runs[0]
-
-        self._original_run_id_to_future[original_run.id] = future
-
-        if FutureState[original_run.future_state] == FutureState.FAILED:
-            return False
-
-        if original_run.id in self._original_run_ancestor_ids:
-            pass
-
-    def __execute_future(self, future: AbstractFuture) -> None:
-        self._future_will_schedule(future)
-
-        if self._has_cache(future):
-            self._set_cached_output(future)
-            return
-
-        if future.props.inline:
-            logger.info("Running inline {}".format(future.calculator))
-            self._run_inline(future)
-        else:
-            logger.info("Scheduling {}".format(future.calculator))
-            self._schedule_future(future)
 
     def _update_edge(
         self,
@@ -301,7 +108,7 @@ class LocalResolver(SilentResolver):
         input_artifacts = {}
         for name, value in future.resolved_kwargs.items():
             artifact = make_artifact(
-                value, future.calculator.input_types[name], storage=self._storage
+                value, future.calculator.input_types[name], store=self._store_artifacts
             )
             self._add_artifact(artifact)
             input_artifacts[name] = artifact
@@ -414,9 +221,7 @@ class LocalResolver(SilentResolver):
 
         output_artifact = self._get_output_artifact(future.id)
         if output_artifact is None:
-            output_artifact = make_artifact(
-                future.value, future.calculator.output_type, storage=self._storage
-            )
+            output_artifact = make_artifact(future.value, future.calculator.output_type)
             self._add_artifact(output_artifact)
 
         self._populate_graph(future, output_artifact=output_artifact)

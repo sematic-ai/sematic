@@ -9,11 +9,11 @@ import secrets
 import typing
 
 # Sematic
+import sematic.storage as storage
 from sematic.abstract_future import AbstractFuture
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
-from sematic.storage import Storage
 from sematic.types.serialization import (
     get_json_encodable_summary,
     type_from_json_encodable,
@@ -31,7 +31,9 @@ def make_run_from_future(future: AbstractFuture) -> Run:
         id=future.id,
         future_state=future.state,
         name=future.props.name,
-        calculator_path=make_func_path(future),
+        calculator_path="{}.{}".format(
+            future.calculator.__module__, future.calculator.__name__
+        ),
         parent_id=(
             future.parent_future.id if future.parent_future is not None else None
         ),
@@ -50,16 +52,11 @@ def make_run_from_future(future: AbstractFuture) -> Run:
     return run
 
 
-def make_func_path(future: AbstractFuture) -> str:
-    return f"{future.calculator.__module__}.{future.calculator.__name__}"
-
-
 def make_artifact(
-    value: typing.Any, type_: typing.Any, storage: typing.Optional[Storage]
+    value: typing.Any, type_: typing.Any, store: bool = False
 ) -> Artifact:
     """
     Create an Artifact model instance from a value and type.
-
     `store` set to `True` will persist the artifact's serialization.
     TODO: replace with modular storage engine.
     """
@@ -79,7 +76,7 @@ def make_artifact(
         updated_at=datetime.datetime.utcnow(),
     )
 
-    if storage is not None:
+    if store:
         storage.set(
             _make_artifact_storage_key(artifact),
             json.dumps(value_serialization, sort_keys=True).encode("utf-8"),
@@ -88,7 +85,7 @@ def make_artifact(
     return artifact
 
 
-def get_artifact_value(artifact: Artifact, storage: Storage) -> typing.Any:
+def get_artifact_value(artifact: Artifact) -> typing.Any:
     """
     Fetch artifact serialization from storage and deserialize.
     """

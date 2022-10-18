@@ -389,3 +389,4 @@ def test_make_resolution():
     assert resolution.status == ResolutionStatus.SCHEDULED.value
     assert resolution.kind == ResolutionKind.LOCAL.value
     assert resolution.container_image_uris is None
+    assert resolution.container_image_uri is None

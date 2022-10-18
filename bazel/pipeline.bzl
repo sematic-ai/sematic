@@ -8,7 +8,6 @@ load(
     "repositories",
 )
 load("@io_bazel_rules_docker//container:push.bzl", "container_push")
-load("@io_bazel_rules_docker//container:providers.bzl", "PushInfo")
 load("@io_bazel_rules_docker//container:pull.bzl", "container_pull")
 load("@rules_python//python:defs.bzl", "py_binary")
 
@@ -18,7 +17,7 @@ def sematic_pipeline(
         registry,
         repository,
         data = None,
-        base = "@sematic-worker-cuda//image",
+        base = "@sematic-worker-base//image",
         bases = None,
         env = None,
         dev = False):
@@ -56,11 +55,11 @@ def sematic_pipeline(
     if bases == None:
         bases = {}
 
-    if base != None:
-        bases["default"] = base
-
     if "default" not in bases:
-        fail("No default image specified to the base argument or tag a base as default")
+        if base != None:
+            bases["default"] = base
+        else:
+            fail("No default image specified. Set `base` or tag an image as default in `bases`.")
 
     if dev:
         main = "@sematic//sematic/resolvers:worker.py"

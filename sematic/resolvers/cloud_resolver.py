@@ -10,7 +10,11 @@ import cloudpickle
 import sematic.api_client as api_client
 import sematic.storage as storage
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.container_images import MissingContainerImage, get_image_uris
+from sematic.container_images import (
+    DEFAULT_BASE_IMAGE_TAG,
+    MissingContainerImage,
+    get_image_uris,
+)
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
@@ -67,10 +71,11 @@ class CloudResolver(LocalResolver):
     def __init__(
         self,
         detach: bool = True,
-        is_running_remotely: bool = False,
         max_parallelism: Optional[int] = None,
+        _is_running_remotely: bool = False,
+        _base_image_tag: str = "default",
     ):
-        super().__init__(detach=detach)
+        super().__init__()
 
         # detach:
         #   True: default, the user wants to submit a detached resolution
@@ -78,10 +83,10 @@ class CloudResolver(LocalResolver):
         #           machine
         self._detach = detach
 
-        # is_running_remotely:
+        # _is_running_remotely:
         #   True: we are running in a remote driver job
         #   False: default we are running on a local user machine
-        self._is_running_remotely = is_running_remotely
+        self._is_running_remotely = _is_running_remotely
 
         if max_parallelism is not None and max_parallelism < 1:
             raise ValueError(
@@ -89,6 +94,8 @@ class CloudResolver(LocalResolver):
                 f"Got: {max_parallelism}"
             )
         self._max_parallelism = max_parallelism
+
+        self._base_image_tag = _base_image_tag
 
         # TODO: Replace this with a cloud storage engine
         self._store_artifacts = True
@@ -125,14 +132,18 @@ class CloudResolver(LocalResolver):
         if self._container_image_uris is None:
             return None
 
-        if future.props.inline and future is not self._root_future:
-            return self._runs[self._root_future.id].container_image_uri
+        if future.props.inline:
+            return self._get_resolution_container_image()
 
-        base_image_tag = "default"
-        if future.props.base_image_tag is not None:
-            base_image_tag = future.props.base_image_tag
+        base_image_tag = future.props.base_image_tag or DEFAULT_BASE_IMAGE_TAG
 
         return self._get_tagged_image(base_image_tag)
+
+    def _get_resolution_container_image(self) -> Optional[str]:
+        if not self._detach:
+            return None
+
+        return self._get_tagged_image(self._base_image_tag or DEFAULT_BASE_IMAGE_TAG)
 
     def _get_tagged_image(self, tag: str) -> Optional[str]:
         if self._container_image_uris is None:
@@ -154,7 +165,10 @@ class CloudResolver(LocalResolver):
     def _make_resolution(self, root_future):
         resolution = super()._make_resolution(root_future)
 
+        # Mapping for the rest of the runs in the graph
         resolution.container_image_uris = self._container_image_uris
+        # Image for the resolution itself
+        resolution.container_image_uri = self._get_resolution_container_image()
 
         if self._detach:
             resolution.status = ResolutionStatus.CREATED
