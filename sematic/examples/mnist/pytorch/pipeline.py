@@ -132,7 +132,7 @@ def train_eval(
     return evaluation_results
 
 
-@sematic.func(inline=False)
+@sematic.func(inline=True)
 def pipeline(config: PipelineConfig) -> EvaluationResults:
     """
     # MNIST example in PyTorch
