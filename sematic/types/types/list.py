@@ -122,6 +122,10 @@ def list_to_json_encodable_summary(
 
     max_item = math.floor((1000 / estimated_total_char_len))
 
+    # ensure that at least one element is shown, if there is
+    # at least one element present.
+    max_item = max(max_item, min(1, len(value)))
+
     return {
         "length": len(value),
         "summary": complete_summary[:max_item],
