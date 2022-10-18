@@ -15,7 +15,13 @@ logger = logging.getLogger(__name__)
 
 def get_git_info(object_: Any) -> Optional["Repo"]:  # type: ignore # noqa: F821
     """
-    Returns git repository details for a given Python object.
+    Returns git repository details for the current workspace.
+
+    The following are tried, in order:
+    - attempt to get the git repo of the workspace that contains the specified
+    object's source code
+    - attempt to get the bazel workspace git repo
+    - attempt to get the current working directory's git repo
     """
     try:
         # if git is not installed on the user's system, this will fail to import
@@ -32,20 +38,32 @@ def get_git_info(object_: Any) -> Optional["Repo"]:  # type: ignore # noqa: F821
         logger.debug(f"Could not find source path for object '{object_}'", exc_info=e)
         return None
 
+    logger.debug(f"Trying source path of specified object: {source}")
     repo = _get_repo(git, source)
 
     # try to search the bazel workspace for a git repo
-    if not repo:
+    if repo is None:
         source = os.getenv("BUILD_WORKSPACE_DIRECTORY")
-        if not source:
+        if source is None:
             logger.debug("Could not find $BUILD_WORKSPACE_DIRECTORY")
             return None
 
         logger.debug(f"Trying $BUILD_WORKSPACE_DIRECTORY: {source}")
         repo = _get_repo(git, source)
 
+    # try to search the current working directory for a git repo
+    if repo is None:
+        try:
+            source = os.getcwd()
+        except Exception as e:
+            logger.debug("Could not get current working directory", exc_info=e)
+            return None
+
+        logger.debug(f"Trying current working directory: {source}")
+        repo = _get_repo(git, source)
+
     # give up
-    if not repo:
+    if repo is None:
         return None
 
     if repo.bare:
