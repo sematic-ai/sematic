@@ -45,12 +45,12 @@ def test_summaries():
         "length": 7,
     }
 
-    long_value = 10000 * "h"
-    long_list = [long_value for _ in range(100)]
+    long_value = 2**21 * "h"
+    long_list = [long_value for _ in range(5)]
     summary = get_json_encodable_summary(long_list, List[str])
     assert summary == {
         "summary": [long_value],
-        "length": 100,
+        "length": 5,
     }
 
 
