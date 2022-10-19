@@ -9,7 +9,7 @@ from sematic.examples.add.pipeline import pipeline
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Sematic add example")
     parser.add_argument("--cloud", type=bool, action="store_true", default=False)
-    parser.add_argument("--attach", type=bool, action="store_true", default=False)
+    parser.add_argument("--detach", type=bool, action="store_true", default=False)
 
     args = parser.parse_args()
 
@@ -19,9 +19,7 @@ if __name__ == "__main__":
         name="Basic add example pipeline", tags=["example", "basic", "final"]
     )
 
-    resolver = (
-        CloudResolver(detach=(not args.attach)) if args.cloud else LocalResolver()
-    )
+    resolver = CloudResolver(detach=args.detach) if args.cloud else LocalResolver()
 
     result = future.resolve(resolver)
 

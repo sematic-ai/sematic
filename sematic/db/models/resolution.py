@@ -1,3 +1,19 @@
+"""
+Module defining the Resolution data model.
+
+Notes regarding container images
+--------------------------------
+In the case of cloud resolution (using `CloudResolver`), the default behavior
+uses a single container image for remote jobs (driver job + worker jobs). See
+docs/multiple-base-images.md for the rationale behind this design choice.
+
+As an undocumented behavior, Sematic supports different **base** images per
+function. This works using a mapping of tag to base image specified by users in
+the build information (`bases` argument to the `sematic_pipeline` Bazel target
+at this time). Users then specify in the `sematic.func` decorator what base
+image to use with the `base_image_tag` argument that should correspond to one of
+the keys in the mapping passed to `sematic_pipeline`.
+"""
 # Standard Library
 import dataclasses
 import json
@@ -134,9 +150,6 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
         The state of the resolver session, see ResolutionStatus.
     kind:
         The kind of resolver session (ex: on k8s or not).
-    docker_image_uri:
-        The docker image URI for the resolution. May be null when
-        doing a non-detached (local) resolution
     git_info:
         Information about the git remote, branch, commit, and dirty bit
         for the environment from which the resolution was submitted

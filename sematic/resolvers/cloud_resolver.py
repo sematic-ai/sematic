@@ -155,7 +155,7 @@ class CloudResolver(LocalResolver):
             raise MissingContainerImage(f"{tag} was not built.")
 
     def _create_resolution(self, root_future):
-        if self._detached:
+        if self._is_running_remotely:
             # resolution should have been created prior to the resolver
             # actually starting its remote resolution.
             return
