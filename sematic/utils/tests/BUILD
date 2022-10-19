@@ -7,6 +7,14 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_exceptions",
+    srcs = ["test_exceptions.py"],
+    deps = [
+        "//sematic/utils:exceptions",
+    ],
+)
+
+pytest_test(
     name = "test_stdout",
     srcs = ["test_stdout.py"],
     deps = [
