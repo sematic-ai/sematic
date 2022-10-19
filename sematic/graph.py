@@ -31,7 +31,7 @@ class Graph:
             _runs_by_parent_ids[run.parent_id].append(run)
 
         setattr(self, make_cache_name("runs_by_id"), _runs_by_id)
-        setattr(self, make_cache_name("runs_by_parent_ids"), _runs_by_parent_ids)
+        setattr(self, make_cache_name("runs_by_parent_id"), _runs_by_parent_ids)
 
     @memoized_property
     def runs_by_id(self) -> Dict[str, Run]:
@@ -173,6 +173,7 @@ class Graph:
         reset_run_ids: List[str] = []
 
         if reset_from is not None:
+            reset_run_ids.append(reset_from)
             # We will skip descendants of all downstream of reset point
             # plus descendants of downstreams of ancestors
             ancestor_run_ids = self.get_run_ancestor_ids(reset_from)
@@ -193,6 +194,14 @@ class Graph:
             run_sorter=self._execution_order
         )
 
+        def _get_artifact_value(artifact: Artifact) -> Any:
+            if artifact.id not in value_by_artifact_id:
+                value_by_artifact_id[artifact.id] = get_artifact_value(
+                    artifact, storage
+                )
+
+            return value_by_artifact_id[artifact.id]
+
         for run_id in run_ids_by_execution_order:
 
             if run_id in skip_run_ids:
@@ -207,23 +216,19 @@ class Graph:
 
             run_input_artifacts: Dict[str, Artifact] = {}
 
-            for edge in input_edges:
+            for input_edge in input_edges:
                 value = None
-                if edge.artifact_id is not None:
-                    artifact = self.artifacts_by_id[edge.artifact_id]
-                    if edge.artifact_id not in value_by_artifact_id:
-                        value_by_artifact_id[edge.artifact_id] = get_artifact_value(
-                            artifact, storage
-                        )
-                    value = value_by_artifact_id[edge.artifact_id]
-                    run_input_artifacts[edge.destination_name] = artifact
+                if input_edge.artifact_id is not None:
+                    artifact = self.artifacts_by_id[input_edge.artifact_id]
+                    run_input_artifacts[input_edge.destination_name] = artifact
+                    value = _get_artifact_value(artifact)
 
-                if edge.source_run_id is not None:
-                    kwargs[edge.destination_name] = futures_by_original_id[
-                        edge.source_run_id
+                if input_edge.source_run_id is not None:
+                    kwargs[input_edge.destination_name] = futures_by_original_id[
+                        input_edge.source_run_id
                     ]
-                elif edge.artifact_id is not None:
-                    kwargs[edge.destination_name] = value
+                elif input_edge.artifact_id is not None:
+                    kwargs[input_edge.destination_name] = value
                 else:
                     raise RuntimeError("Should not happen")
 
@@ -236,19 +241,14 @@ class Graph:
             # Figuring out future output values and artifacts
             output_edges = self.edges_by_source_id[run.id]
 
-            for output_edge in output_edges:
-                if output_edge.artifact_id is not None:
-                    artifact = self.artifacts_by_id[output_edge.artifact_id]
-                    output_artifacts[future.id] = artifact
-                    value = value_by_artifact_id.get(
-                        edge.artifact_id,
-                        get_artifact_value(
-                            self.artifacts_by_id[edge.artifact_id], storage
-                        ),
-                    )
-                    future.value = value
-                    value_by_artifact_id[output_edge.artifact_id] = value
-                break
+            if run_id not in reset_run_ids:
+                for output_edge in output_edges:
+                    if output_edge.artifact_id is not None:
+                        artifact = self.artifacts_by_id[output_edge.artifact_id]
+                        output_artifacts[future.id] = artifact
+                        value = _get_artifact_value(artifact)
+                        future.value = value
+                    break
 
             if run.parent_id is not None:
                 parent_future = futures_by_original_id[run.parent_id]

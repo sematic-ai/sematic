@@ -93,7 +93,6 @@ class LocalResolver(SilentResolver):
             storage=self._storage,
             reset_from=self._rerun_from_run_id,
         )
-
         """
         # Now setting the appropriate future states
         ancestor_run_ids = graph.get_run_ancestor_ids(self._rerun_from_run_id)
@@ -133,7 +132,7 @@ class LocalResolver(SilentResolver):
                 output_artifact=run_output_artifact,
             )
 
-        # self._save_graph()
+        self._save_graph()
 
         future = self._root_future
 
