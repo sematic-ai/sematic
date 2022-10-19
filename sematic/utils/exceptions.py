@@ -1,8 +1,8 @@
 # Standard Library
 import sys
 import traceback
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import List, Optional, Type, Union
 
 # Sematic
 from sematic.abstract_calculator import CalculatorError
@@ -14,13 +14,73 @@ class ExceptionMetadata:
     name: str
     module: str
 
+    # defaults to empty list for backwards compatibility for 0.17.0
+    ancestors: List[str] = field(default_factory=list)
+
     @classmethod
     def from_exception(cls, exception: Exception) -> "ExceptionMetadata":
         return ExceptionMetadata(
             repr=str(exception),
             name=exception.__class__.__name__,
             module=exception.__class__.__module__,
+            ancestors=cls.ancestors_from_exception(exception),
         )
+
+    @classmethod
+    def ancestors_from_exception(
+        cls, exception: Union[BaseException, Type[BaseException]]
+    ) -> List[str]:
+        """For an Exception, return a list of all its base classes that inherit Exception
+
+        Parameters
+        ----------
+        exception:
+            The exception or exception class whose ancestors should be retrieved
+
+        Returns
+        -------
+        A list of all base classes (and their base classes, etc.) that inherit
+        from Exception. They will be in no particular order.
+        """
+        if isinstance(exception, BaseException):
+            exception_type = type(exception)
+        else:
+            exception_type = exception
+        ancestors = []
+        to_traverse = [exception_type]
+        self_classpath = f"{exception_type.__module__}.{exception_type.__name__}"
+        while len(to_traverse) > 0:
+            class_ = to_traverse.pop()
+            for base in class_.__bases__:
+                if not issubclass(base, Exception):
+                    # only interested in exception classes
+                    continue
+                classpath = f"{base.__module__}.{base.__name__}"
+                if classpath not in ancestors and self_classpath != classpath:
+                    ancestors.append(classpath)
+                    to_traverse.append(base)
+        return ancestors
+
+    def is_instance_of(self, exception_type: Type[Exception]) -> bool:
+        """Determine whether this exception corresponds to an instance of exception_type
+
+        Parameters
+        ----------
+        exception_type:
+           The type of the exception we are checking this against
+
+        Returns
+        -------
+        True if this exception is an instance of the given type, False otherwise
+        """
+        matches_self = (
+            self.name == exception_type.__name__
+            and self.module == exception_type.__module__
+        )
+        if matches_self:
+            return True
+        classpath = f"{exception_type.__module__}.{exception_type.__name__}"
+        return classpath in self.ancestors
 
 
 def format_exception_for_run(
@@ -46,8 +106,10 @@ def format_exception_for_run(
     else:
         repr_ = traceback.format_exc()
 
+    assert isinstance(cause_exception, BaseException)
     return ExceptionMetadata(
         repr=repr_,
         name=cause_exception.__class__.__name__,
         module=cause_exception.__class__.__module__,
+        ancestors=ExceptionMetadata.ancestors_from_exception(cause_exception),
     )

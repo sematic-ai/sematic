@@ -5,6 +5,23 @@ from sematic.retry_settings import RetrySettings
 from sematic.utils.exceptions import ExceptionMetadata
 
 
+class ParentError(Exception):
+    pass
+
+
+class Child1Error(ParentError):
+    pass
+
+
+class Child2Error(ParentError):
+    pass
+
+
+# for testing Diamond inheritance.
+class GrandChildError(Child1Error, Child2Error):
+    pass
+
+
 @pytest.mark.parametrize(
     "matches, exception_metadata",
     (
@@ -14,6 +31,7 @@ from sematic.utils.exceptions import ExceptionMetadata
                 name=ValueError.__name__,
                 module=ValueError.__module__,
                 repr="ValueError",
+                ancestors=ExceptionMetadata.ancestors_from_exception(ValueError),
             ),
         ),
         (
@@ -22,6 +40,7 @@ from sematic.utils.exceptions import ExceptionMetadata
                 name=AttributeError.__name__,
                 module=AttributeError.__module__,
                 repr="AttributeError",
+                ancestors=ExceptionMetadata.ancestors_from_exception(AttributeError),
             ),
         ),
     ),
@@ -41,6 +60,7 @@ def test_matches_exceptions(matches: bool, exception_metadata: ExceptionMetadata
                 name=ValueError.__name__,
                 module=ValueError.__module__,
                 repr="ValueError",
+                ancestors=ExceptionMetadata.ancestors_from_exception(ValueError),
             ),
             RetrySettings(exceptions=(ValueError,), retries=2),
             1,
@@ -51,6 +71,7 @@ def test_matches_exceptions(matches: bool, exception_metadata: ExceptionMetadata
                 name=ValueError.__name__,
                 module=ValueError.__module__,
                 repr="ValueError",
+                ancestors=ExceptionMetadata.ancestors_from_exception(ValueError),
             ),
             RetrySettings(exceptions=(ValueError,), retries=2),
             2,
@@ -61,9 +82,32 @@ def test_matches_exceptions(matches: bool, exception_metadata: ExceptionMetadata
                 name=ValueError.__name__,
                 module=ValueError.__module__,
                 repr="ValueError",
+                ancestors=ExceptionMetadata.ancestors_from_exception(ValueError),
             ),
             RetrySettings(exceptions=(ValueError,), retries=2),
             2,
+        ),
+        (
+            True,
+            ExceptionMetadata(
+                name=Child1Error.__name__,
+                module=Child1Error.__module__,
+                repr="Child1Error",
+                ancestors=ExceptionMetadata.ancestors_from_exception(Child1Error),
+            ),
+            RetrySettings(exceptions=(ParentError,), retries=2),
+            1,
+        ),
+        (
+            True,
+            ExceptionMetadata(
+                name=GrandChildError.__name__,
+                module=GrandChildError.__module__,
+                repr="GrandChildError",
+                ancestors=ExceptionMetadata.ancestors_from_exception(GrandChildError),
+            ),
+            RetrySettings(exceptions=(ParentError,), retries=2),
+            1,
         ),
     ),
 )

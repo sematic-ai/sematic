@@ -3,7 +3,7 @@ import datetime
 import json
 import re
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 # Third party
 from sqlalchemy import Column, types
@@ -104,7 +104,9 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
     external_jobs_json: Optional[List[Dict[str, Any]]] = Column(
         types.JSON(), nullable=True
     )
-    exception_json: Optional[Dict[str, str]] = Column(types.JSON(), nullable=True)
+    exception_json: Optional[Dict[str, Union[str, List[str]]]] = Column(
+        types.JSON(), nullable=True
+    )
 
     # Lifecycle timestamps
     created_at: datetime.datetime = Column(
@@ -157,9 +159,10 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
             return None
 
         return ExceptionMetadata(
-            repr=self.exception_json["repr"],
-            name=self.exception_json["name"],
-            module=self.exception_json["module"],
+            repr=self.exception_json["repr"],  # type: ignore
+            name=self.exception_json["name"],  # type: ignore
+            module=self.exception_json["module"],  # type: ignore
+            ancestors=self.exception_json.get("ancestors", []),  # type: ignore
         )
 
     @exception.setter
