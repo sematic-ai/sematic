@@ -260,8 +260,15 @@ class CloudResolver(LocalResolver):
         """Callback called at the end of an inline execution."""
         logger.info(END_INLINE_RUN_INDICATOR.format(future_id))
 
-    def _can_schedule_future(self, _: AbstractFuture) -> bool:
-        """Returns whether we can schedule an external run."""
+    def _can_schedule_future(self, future: AbstractFuture) -> bool:
+        """Returns whether the specified future can be scheduled.
+
+        Inline futures can always be scheduled. External futures can only be scheduled
+        if the maximum parallelism degree has not been exceeded.
+        """
+        if future.props.inline:
+            return True
+
         if not self._max_parallelism:
             return True
 
