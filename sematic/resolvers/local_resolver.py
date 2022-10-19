@@ -109,6 +109,12 @@ class LocalResolver(SilentResolver):
             if future.state == FutureState.RESOLVED:
                 run_output_artifact = cloned_graph.output_artifacts[future.id]
 
+        for future in futures_by_original_id.values():
+            future.resolved_kwargs = self._get_resolved_kwargs(future)
+            run_input_artifacts: Dict[str, Artifact] = {}
+            run_output_artifact = None
+            if future.state == FutureState.RESOLVED:
+                run_output_artifact = output_artifacts[future.id]
             if future.state in {FutureState.RESOLVED, FutureState.RAN}:
                 run_input_artifacts = cloned_graph.input_artifacts[future.id]
 
@@ -148,7 +154,6 @@ class LocalResolver(SilentResolver):
         if edge.artifact_id is None and artifact_id is not None:
             edge.artifact_id = artifact_id
 
-        print(edge)
         self._add_edge(edge)
 
     def _get_input_edge(self, destination_run_id, destination_name) -> Optional[Edge]:
@@ -439,7 +444,6 @@ class LocalResolver(SilentResolver):
         """
         Update the graph based on future.
         """
-        print(f"POPULATE GRAPH FOR {future.id}")
         if future.id not in self._runs:
             run = self._make_run(future)
             self._add_run(run)
@@ -500,8 +504,7 @@ class LocalResolver(SilentResolver):
         # - the output value is input to multiple futures
         # - the future is nested and the parent future has multiple output edges
         output_edges = self._get_output_edges(future.id)
-        print("OUTPUT EDGES")
-        print(output_edges)
+
         # It means we are creating it for the first time
         if len(output_edges) == 0:
             # Let's figure out if the parent future has output edges yet
