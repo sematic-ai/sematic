@@ -85,7 +85,11 @@ class LocalResolver(SilentResolver):
                 "upstream runs did not succeed."
             )
 
-        futures_by_original_id = graph.get_duplicate_futures_by_original_run_id(
+        (
+            futures_by_original_id,
+            input_artifacts,
+            output_artifacts,
+        ) = graph.get_duplicate_futures_by_original_run_id(
             storage=self._storage,
             reset_from=self._rerun_from_run_id,
         )
@@ -110,32 +114,25 @@ class LocalResolver(SilentResolver):
             if FutureState[original_run.future_state] == FutureState.RESOLVED:
                 if original_run_id not in run_ids_to_reset:
                     future.state = FutureState.RESOLVED
-                    output_edges = graph.edges_by_source_id[original_run_id]
-                    output_artifact = graph.artifacts_by_id[output_edges[0].artifact_id]
-                    future.value = get_artifact_value(
-                        output_artifact, storage=self._storage
-                    )
 
+        for future in futures_by_original_id.values():
+            future.resolved_kwargs = self._get_resolved_kwargs(future)
+            run_input_artifacts: Dict[str, Artifact] = {}
+            run_output_artifact = None
+            if future.state == FutureState.RESOLVED:
+                run_output_artifact = output_artifacts[future.id]
             if future.state in {FutureState.RESOLVED, FutureState.RAN}:
-                future.resolved_kwargs = self._get_resolved_kwargs(future)
-                self._populate_graph(future)
+                run_input_artifacts = input_artifacts[future.id]
 
-        self._save_graph()
-
-        for original_run_id, future in futures_by_original_id.items():
-            print(original_run_id, future)
-            print("\tkwargs:")
-            for name, value in future.kwargs.items():
-                print(f"\t{name}: {value}")
-        # return
-        future = self._root_future
-        resolved_kwargs = self._get_resolved_kwargs(future)
-        if not len(resolved_kwargs) == len(future.kwargs):
-            raise ValueError(
-                "All input arguments of your root function should be concrete."
+            self._populate_graph(
+                future,
+                input_artifacts=run_input_artifacts,
+                output_artifact=run_output_artifact,
             )
 
-        future.resolved_kwargs = resolved_kwargs
+        # self._save_graph()
+
+        future = self._root_future
 
         self._register_signal_handlers()
 
@@ -191,7 +188,6 @@ class LocalResolver(SilentResolver):
         if edge.artifact_id is None and artifact_id is not None:
             edge.artifact_id = artifact_id
 
-        print(edge)
         self._add_edge(edge)
 
     def _get_input_edge(self, destination_run_id, destination_name) -> Optional[Edge]:
@@ -480,7 +476,6 @@ class LocalResolver(SilentResolver):
         """
         Update the graph based on future.
         """
-        print(f"POPULATE GRAPH FOR {future.id}")
         if future.id not in self._runs:
             run = self._make_run(future)
             self._add_run(run)
@@ -541,8 +536,7 @@ class LocalResolver(SilentResolver):
         # - the output value is input to multiple futures
         # - the future is nested and the parent future has multiple output edges
         output_edges = self._get_output_edges(future.id)
-        print("OUTPUT EDGES")
-        print(output_edges)
+
         # It means we are creating it for the first time
         if len(output_edges) == 0:
             # Let's figure out if the parent future has output edges yet

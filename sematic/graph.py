@@ -2,7 +2,7 @@
 import collections
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, OrderedDict, Tuple
+from typing import Any, Callable, Dict, List, Optional, OrderedDict, Tuple
 
 # Sematic
 from sematic.abstract_future import AbstractFuture
@@ -36,7 +36,7 @@ class Graph:
         return _runs_by_parent_id
 
     def _populate_edge_mappings(self):
-        _edges_by_destination_id: Dict[str, Dict[str, Edge]] = defaultdict(dict)
+        _edges_by_destination_id: Dict[str, List[Edge]] = defaultdict(list)
 
         _edges_by_source_id: Dict[str, List[Edge]] = defaultdict(list)
 
@@ -46,9 +46,7 @@ class Graph:
             _edges_by_id[edge.id] = edge
 
             if edge.destination_run_id is not None:
-                _edges_by_destination_id[edge.destination_run_id][
-                    edge.destination_name
-                ] = edge
+                _edges_by_destination_id[edge.destination_run_id].append(edge)
 
             if edge.source_run_id is not None:
                 _edges_by_source_id[edge.source_run_id].append(edge)
@@ -62,7 +60,7 @@ class Graph:
     @memoized_property
     def edges_by_destination_id(
         self,
-    ) -> Dict[str, Dict[str, Edge]]:
+    ) -> Dict[str, List[Edge]]:
         self._populate_edge_mappings()
         return getattr(self, make_cache_name("edges_by_destination_id"))
 
@@ -83,37 +81,70 @@ class Graph:
     def input_artifacts_ready(self, run_id: str) -> bool:
         return all(
             edge.artifact_id is not None
-            for edge in self.edges_by_destination_id[run_id].values()
+            for edge in self.edges_by_destination_id[run_id]
         )
 
     def run_input_edges(self, run_id: str) -> Dict[str, Edge]:
         return self.edges_by_destination_id[run_id]
 
-    @memoized_property
-    def runs_sorted_by_layer(self) -> List[Run]:
-        runs: List[Run] = []
+    def _reverse_execution_order(
+        self, runs: List[Run], downstream_run_ids: Optional[List[Optional[str]]] = None
+    ):
+        if downstream_run_ids is None:
+            downstream_run_ids = [None]
 
-        def _reverse_execution_order(layer_runs, downstream_run_ids):
-            if len(downstream_run_ids) == 0:
-                return []
-            runs_ = [
-                run
-                for run in layer_runs
-                if all(
-                    edge.destination_run_id in downstream_run_ids
-                    for edge in self.edges_by_source_id[run.id]
-                )
-            ]
-            return runs_ + _reverse_execution_order(
-                layer_runs, [run.id for run in runs_]
+        upstream_runs = [
+            run
+            for run in runs
+            if all(
+                edge.destination_run_id in downstream_run_ids
+                for edge in self.edges_by_source_id[run.id]
             )
+            and run.id not in downstream_run_ids
+        ]
+
+        if len(upstream_runs) == 0:
+            return []
+
+        return upstream_runs + self._reverse_execution_order(
+            runs, downstream_run_ids + [run.id for run in upstream_runs]
+        )
+
+    def _execution_order(
+        self, runs: List[Run], upstream_run_ids: Optional[List[Optional[str]]] = None
+    ):
+        if upstream_run_ids is None:
+            upstream_run_ids = [None]
+
+        downstream_runs = [
+            run
+            for run in runs
+            if all(
+                edge.source_run_id in upstream_run_ids
+                for edge in self.edges_by_destination_id[run.id]
+            )
+            and run.id not in upstream_run_ids
+        ]
+        if len(downstream_runs) == 0:
+            return []
+
+        return downstream_runs + self._execution_order(
+            runs, upstream_run_ids + [run.id for run in downstream_runs]
+        )
+
+    def runs_sorted_by_layer(
+        self, run_sorter: Callable[[List[Run]], List[Run]]
+    ) -> List[Run]:
+        runs: List[Run] = []
 
         def _add_layer_runs(parent_id: Optional[str]):
             layer_runs: List[Run] = self.runs_by_parent_id[parent_id]
-            runs.extend(_reverse_execution_order(layer_runs, [None]))
+            ordered_layer_runs = run_sorter(layer_runs)
+            if len(ordered_layer_runs) != len(layer_runs):
+                raise RuntimeError("Missing runs in ordered layer runs list")
+            runs.extend(ordered_layer_runs)
 
-            # runs.extend(layer_runs)
-            for run in layer_runs:
+            for run in ordered_layer_runs:
                 _add_layer_runs(run.id)
 
         _add_layer_runs(None)
@@ -157,25 +188,16 @@ class Graph:
 
     def get_duplicate_futures_by_original_run_id(
         self, storage: Storage, reset_from: Optional[str] = None
-    ) -> OrderedDict[str, AbstractFuture]:
-        # First we create func/kwargs pairs
-        # Some kwargs may be resolved (an artifact exists)
-        # Some may be unresolved, we store the source run id to replace
-        # later with the corresponding future
-        func_kwargs_by_original_id = collections.OrderedDict()
-
-        # Map to find kwargs easily once the source is a future
-        unresolved_kwargs_by_source_id: Dict[
-            str, List[Tuple[str, str, Dict[str, Any]]]
-        ] = collections.defaultdict(list)
-
-        # Map to keep track of what func is not ready to become a future
-        # yet
-        unresolved_sources_by_run_id: Dict[
-            str, Dict[str, str]
-        ] = collections.defaultdict(dict)
-
+    ) -> Tuple[
+        OrderedDict[str, AbstractFuture],
+        Dict[str, Dict[str, Artifact]],
+        Dict[str, Artifact],
+    ]:
         value_by_artifact_id: Dict[str, Any] = {}
+
+        futures_by_original_id: Dict[str, AbstractFuture] = {}
+        input_artifacts: Dict[str, Dict[str, Artifact]] = defaultdict(dict)
+        output_artifacts: Dict[str, Artifact] = {}
 
         skip_run_ids: List[str] = []
 
@@ -191,103 +213,93 @@ class Graph:
                     )
                     skip_run_ids += downstream_descendant_ids
 
-        # """
         # runs order guarantees parents come first
-        sorted_runs = self.runs_sorted_by_layer
+        run_by_execution_order = self.runs_sorted_by_layer(self._execution_order)
 
-        for run in sorted_runs:
+        def _get_edge_artifact(edge: Edge):
+            if edge.artifact_id is None:
+                return None
+
+            return value_by_artifact_id.get(
+                edge.artifact_id,
+                get_artifact_value(self.artifacts_by_id[edge.artifact_id], storage),
+            )
+
+        for run in run_by_execution_order:
 
             if run.id in skip_run_ids:
                 continue
 
             kwargs: Dict[str, Any] = {}
+            func = run.get_func()
 
-            for name, edge in self.run_input_edges(run.id).items():
+            input_edges = self.edges_by_destination_id[run.id]
+            output_edges = self.edges_by_source_id[run.id]
+
+            run_input_artifacts: Dict[str, Artifact] = {}
+
+            for edge in input_edges:
+                value = None
+                if edge.artifact_id is not None:
+                    artifact = self.artifacts_by_id[edge.artifact_id]
+                    run_input_artifacts[edge.destination_name] = artifact
+                    if edge.artifact_id not in value_by_artifact_id:
+                        value_by_artifact_id[edge.artifact_id] = get_artifact_value(
+                            artifact, storage
+                        )
+                    value = value_by_artifact_id[edge.artifact_id]
+
                 if edge.source_run_id is not None:
-                    unresolved_kwargs_by_source_id[edge.source_run_id].append(
-                        (run.id, name, kwargs)
-                    )
-                    unresolved_sources_by_run_id[run.id][name] = edge.source_run_id
+                    kwargs[edge.destination_name] = futures_by_original_id[
+                        edge.source_run_id
+                    ]
                 elif edge.artifact_id is not None:
-                    value = value_by_artifact_id.get(
-                        edge.artifact_id,
-                        get_artifact_value(
-                            self.artifacts_by_id[edge.artifact_id], storage
-                        ),
-                    )
-                    value_by_artifact_id[edge.artifact_id] = value
-
-                    kwargs[name] = value
+                    kwargs[edge.destination_name] = value
                 else:
                     raise RuntimeError("Should not happen")
 
-            func = run.get_func()
-            func_kwargs_by_original_id[run.id] = (func, kwargs)
+            future = func(**kwargs)
 
-        # Now we recreate the future graph
+            input_artifacts[future.id] = run_input_artifacts
 
-        futures_by_original_id: OrderedDict[str, AbstractFuture] = OrderedDict()
+            for output_edge in output_edges:
+                if output_edge.artifact_id is not None:
+                    artifact = self.artifacts_by_id[output_edge.artifact_id]
+                    output_artifacts[future.id] = artifact
+                    value = _get_edge_artifact(output_edge)
+                    future.value = value
+                    value_by_artifact_id[output_edge.artifact_id] = value
+                break
 
-        some_unresolved = True
-
-        while some_unresolved:
-            some_unresolved = False
-            for original_run_id, (
-                func,
-                kwargs,
-            ) in func_kwargs_by_original_id.items():
-                if original_run_id in futures_by_original_id:
-                    continue
-
-                if len(unresolved_sources_by_run_id[original_run_id]) != 0:
-                    some_unresolved = True
-                    continue
-
-                # This func is ready to be converted to a future
-                # All inputs are either artifacts or other futures
-
-                future = func(**kwargs)
-
-                # This future is ready to be added to the graph
-                # and its func can be removed from the working map
-                futures_by_original_id[original_run_id] = future
-                # del func_kwargs_by_original_id[original_run_id]
-
-                # We also set this future as kwarg of whoever needs it
-                for run_id, name, kwargs in unresolved_kwargs_by_source_id[
-                    original_run_id
-                ]:
-                    kwargs[name] = future
-                    del unresolved_sources_by_run_id[run_id][name]
-
-                del unresolved_kwargs_by_source_id[original_run_id]
-
-        # Now we need to figure out the parent future,
-        # and whether this future is a nested future
-        for original_run_id, future in futures_by_original_id.items():
-            parent_id = self.runs_by_id[original_run_id].parent_id
-
-            if parent_id is not None:
-                # guaranteed to exist because we sort runs by layers
-                parent_future = futures_by_original_id[parent_id]
+            if run.parent_id is not None:
+                parent_future = futures_by_original_id[run.parent_id]
                 future.parent_future = parent_future
-
-                # Is `future` its parent's nested_future?
-                output_edges = self.edges_by_source_id[original_run_id]
                 for output_edge in output_edges:
                     if output_edge.parent_id is not None:
                         if (
                             self.edges_by_id[output_edge.parent_id].source_run_id
-                            == parent_id
+                            == run.parent_id
                         ):
                             parent_future.nested_future = future
                             break
 
+            futures_by_original_id[run.id] = future
+
         if reset_from is None and len(futures_by_original_id) != len(self.runs):
             raise RuntimeError("Not all futures duplicated")
 
-        return collections.OrderedDict(
-            ((run.id, futures_by_original_id[run.id]) for run in sorted_runs)
+        run_by_reverse_execution_order = self.runs_sorted_by_layer(
+            self._reverse_execution_order
         )
 
-        # return {run.id: futures_by_original_id
+        return (
+            collections.OrderedDict(
+                (
+                    (run.id, futures_by_original_id[run.id])
+                    for run in run_by_reverse_execution_order
+                    if run.id in futures_by_original_id
+                )
+            ),
+            input_artifacts,
+            output_artifacts,
+        )

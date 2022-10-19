@@ -213,3 +213,13 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
         )
         func = getattr(importlib.import_module(import_path), func_name)
         return func
+
+    def __repr__(self):
+        return ", ".join(
+            (
+                f"Run(id={self.id}",
+                f"calculator_path={self.calculator_path}",
+                f"future_state={self.future_state}",
+                f"parent_id={self.parent_id})",
+            )
+        )
