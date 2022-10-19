@@ -14,7 +14,7 @@ class ExceptionMetadata:
     name: str
     module: str
 
-    # defaults to empty list for backwards compatibility for 0.17.0 and after
+    # defaults to empty list for backwards compatibility for 0.17.0
     ancestors: List[str] = field(default_factory=list)
 
     @classmethod
