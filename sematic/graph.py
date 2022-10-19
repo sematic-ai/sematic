@@ -120,6 +120,17 @@ class Graph:
         self.edges = tuple(self.edges)
         self.artifacts = tuple(self.artifacts)
 
+    def _populate_run_mappings(self):
+        _runs_by_id: Dict[str, Run] = {}
+        _runs_by_parent_ids: Dict[Optional[str], List[Run]] = defaultdict(list)
+
+        for run in self.runs:
+            _runs_by_id[run.id] = run
+            _runs_by_parent_ids[run.parent_id].append(run)
+
+        setattr(self, make_cache_name("runs_by_id"), _runs_by_id)
+        setattr(self, make_cache_name("runs_by_parent_ids"), _runs_by_parent_ids)
+
     @memoized_property
     def _run_mappings(self) -> Tuple[RunsByID, RunsByParentID]:
         _runs_by_id: RunsByID = dict()
