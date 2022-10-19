@@ -315,6 +315,9 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
                     repr=message,
                     name=InvalidStateTransitionError.__name__,
                     module=InvalidStateTransitionError.__module__,
+                    ancestors=ExceptionMetadata.ancestors_from_exception(
+                        InvalidStateTransitionError
+                    ),
                 )
 
             logger.info(

@@ -337,6 +337,7 @@ def test_exceptions(mock_socketio, mock_requests, valid_client_version):  # noqa
         repr="Failed because the child run failed",
         name="Exception",
         module="builtins",
+        ancestors=[],
     )
 
     assert runs_by_id[future.nested_future.id].future_state == FutureState.FAILED.value
