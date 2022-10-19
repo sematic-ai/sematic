@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, OrderedDict, Tuple
 
 # Sematic
-from sematic.abstract_future import AbstractFuture
+from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
@@ -22,18 +22,26 @@ class Graph:
     artifacts: List[Artifact]
     parent_id: Optional[str] = None
 
+    def _populate_run_mappings(self):
+        _runs_by_id: Dict[str, Run] = {}
+        _runs_by_parent_ids: Dict[Optional[str], List[Run]] = defaultdict(list)
+
+        for run in self.runs:
+            _runs_by_id[run.id] = run
+            _runs_by_parent_ids[run.parent_id].append(run)
+
+        setattr(self, make_cache_name("runs_by_id"), _runs_by_id)
+        setattr(self, make_cache_name("runs_by_parent_ids"), _runs_by_parent_ids)
+
     @memoized_property
     def runs_by_id(self) -> Dict[str, Run]:
-        return {run.id: run for run in self.runs}
+        self._populate_run_mappings()
+        return self.runs_by_id
 
     @memoized_property
     def runs_by_parent_id(self) -> Dict[Optional[str], List[Run]]:
-        _runs_by_parent_id: Dict[Optional[str], List[Run]] = defaultdict(list)
-
-        for run in self.runs:
-            _runs_by_parent_id[run.parent_id].append(run)
-
-        return _runs_by_parent_id
+        self._populate_run_mappings()
+        return self.runs_by_parent_id
 
     def _populate_edge_mappings(self):
         _edges_by_destination_id: Dict[str, List[Edge]] = defaultdict(list)
@@ -62,17 +70,17 @@ class Graph:
         self,
     ) -> Dict[str, List[Edge]]:
         self._populate_edge_mappings()
-        return getattr(self, make_cache_name("edges_by_destination_id"))
+        return self.edges_by_destination_id
 
     @memoized_property
     def edges_by_source_id(self) -> Dict[str, List[Edge]]:
         self._populate_edge_mappings()
-        return getattr(self, make_cache_name("edges_by_source_id"))
+        return self.edges_by_source_id
 
     @memoized_property
     def edges_by_id(self) -> Dict[str, Edge]:
         self._populate_edge_mappings()
-        return getattr(self, make_cache_name("edges_id"))
+        return self.edges_by_id
 
     @memoized_property
     def artifacts_by_id(self) -> Dict[str, Artifact]:
@@ -84,72 +92,34 @@ class Graph:
             for edge in self.edges_by_destination_id[run_id]
         )
 
-    def run_input_edges(self, run_id: str) -> Dict[str, Edge]:
-        return self.edges_by_destination_id[run_id]
-
-    def _reverse_execution_order(
-        self, runs: List[Run], downstream_run_ids: Optional[List[Optional[str]]] = None
-    ):
-        if downstream_run_ids is None:
-            downstream_run_ids = [None]
-
-        upstream_runs = [
-            run
-            for run in runs
-            if all(
-                edge.destination_run_id in downstream_run_ids
-                for edge in self.edges_by_source_id[run.id]
-            )
-            and run.id not in downstream_run_ids
-        ]
-
-        if len(upstream_runs) == 0:
-            return []
-
-        return upstream_runs + self._reverse_execution_order(
-            runs, downstream_run_ids + [run.id for run in upstream_runs]
+    def _reverse_execution_order(self, layer_run_ids: List[str]):
+        return _sort_layer_runs(
+            layer_run_ids, _downstream_edge_filter(self.edges_by_source_id)
         )
 
-    def _execution_order(
-        self, runs: List[Run], upstream_run_ids: Optional[List[Optional[str]]] = None
-    ):
-        if upstream_run_ids is None:
-            upstream_run_ids = [None]
-
-        downstream_runs = [
-            run
-            for run in runs
-            if all(
-                edge.source_run_id in upstream_run_ids
-                for edge in self.edges_by_destination_id[run.id]
-            )
-            and run.id not in upstream_run_ids
-        ]
-        if len(downstream_runs) == 0:
-            return []
-
-        return downstream_runs + self._execution_order(
-            runs, upstream_run_ids + [run.id for run in downstream_runs]
+    def _execution_order(self, layer_run_ids: List[str]) -> List[str]:
+        return _sort_layer_runs(
+            layer_run_ids, _upstream_edge_filter(self.edges_by_destination_id)
         )
 
-    def runs_sorted_by_layer(
-        self, run_sorter: Callable[[List[Run]], List[Run]]
-    ) -> List[Run]:
-        runs: List[Run] = []
+    def run_ids_sorted_by_layer(
+        self, run_sorter: Callable[[List[str]], List[str]]
+    ) -> List[str]:
+        run_ids: List[str] = []
 
         def _add_layer_runs(parent_id: Optional[str]):
-            layer_runs: List[Run] = self.runs_by_parent_id[parent_id]
-            ordered_layer_runs = run_sorter(layer_runs)
-            if len(ordered_layer_runs) != len(layer_runs):
-                raise RuntimeError("Missing runs in ordered layer runs list")
-            runs.extend(ordered_layer_runs)
+            layer_run_ids: List[str] = [
+                run.id for run in self.runs_by_parent_id[parent_id]
+            ]
+            ordered_layer_run_ids = run_sorter(layer_run_ids)
+            run_ids.extend(ordered_layer_run_ids)
 
-            for run in ordered_layer_runs:
-                _add_layer_runs(run.id)
+            for run_id in ordered_layer_run_ids:
+                _add_layer_runs(run_id)
 
         _add_layer_runs(None)
 
-        return runs
+        return run_ids
 
     def get_run_ancestor_ids(self, run_id: str) -> List[str]:
         run = self.runs_by_id[run_id]
@@ -200,41 +170,40 @@ class Graph:
         output_artifacts: Dict[str, Artifact] = {}
 
         skip_run_ids: List[str] = []
+        reset_run_ids: List[str] = []
 
         if reset_from is not None:
             # We will skip descendants of all downstream of reset point
             # plus descendants of downstreams of ancestors
             ancestor_run_ids = self.get_run_ancestor_ids(reset_from)
+            reset_run_ids += ancestor_run_ids
+
             for ancestor_run_id in [reset_from] + ancestor_run_ids:
                 downstream_run_ids = self.get_run_downstream_ids(ancestor_run_id)
+                reset_run_ids += downstream_run_ids
+
                 for downstream_run_id in downstream_run_ids:
                     downstream_descendant_ids = self.get_run_descendant_ids(
                         downstream_run_id
                     )
                     skip_run_ids += downstream_descendant_ids
 
-        # runs order guarantees parents come first
-        run_by_execution_order = self.runs_sorted_by_layer(self._execution_order)
+        # run order guarantees parents and upstream come first
+        run_ids_by_execution_order = self.run_ids_sorted_by_layer(
+            run_sorter=self._execution_order
+        )
 
-        def _get_edge_artifact(edge: Edge):
-            if edge.artifact_id is None:
-                return None
+        for run_id in run_ids_by_execution_order:
 
-            return value_by_artifact_id.get(
-                edge.artifact_id,
-                get_artifact_value(self.artifacts_by_id[edge.artifact_id], storage),
-            )
-
-        for run in run_by_execution_order:
-
-            if run.id in skip_run_ids:
+            if run_id in skip_run_ids:
                 continue
 
+            run = self.runs_by_id[run_id]
+
+            # Figuring out input kwargs and artifacts
             kwargs: Dict[str, Any] = {}
-            func = run.get_func()
 
             input_edges = self.edges_by_destination_id[run.id]
-            output_edges = self.edges_by_source_id[run.id]
 
             run_input_artifacts: Dict[str, Artifact] = {}
 
@@ -242,12 +211,12 @@ class Graph:
                 value = None
                 if edge.artifact_id is not None:
                     artifact = self.artifacts_by_id[edge.artifact_id]
-                    run_input_artifacts[edge.destination_name] = artifact
                     if edge.artifact_id not in value_by_artifact_id:
                         value_by_artifact_id[edge.artifact_id] = get_artifact_value(
                             artifact, storage
                         )
                     value = value_by_artifact_id[edge.artifact_id]
+                    run_input_artifacts[edge.destination_name] = artifact
 
                 if edge.source_run_id is not None:
                     kwargs[edge.destination_name] = futures_by_original_id[
@@ -258,15 +227,25 @@ class Graph:
                 else:
                     raise RuntimeError("Should not happen")
 
+            func = run.get_func()
+
             future = func(**kwargs)
 
             input_artifacts[future.id] = run_input_artifacts
+
+            # Figuring out future output values and artifacts
+            output_edges = self.edges_by_source_id[run.id]
 
             for output_edge in output_edges:
                 if output_edge.artifact_id is not None:
                     artifact = self.artifacts_by_id[output_edge.artifact_id]
                     output_artifacts[future.id] = artifact
-                    value = _get_edge_artifact(output_edge)
+                    value = value_by_artifact_id.get(
+                        edge.artifact_id,
+                        get_artifact_value(
+                            self.artifacts_by_id[edge.artifact_id], storage
+                        ),
+                    )
                     future.value = value
                     value_by_artifact_id[output_edge.artifact_id] = value
                 break
@@ -281,25 +260,77 @@ class Graph:
                             == run.parent_id
                         ):
                             parent_future.nested_future = future
+                            parent_future.state = FutureState.RAN
                             break
+
+            if FutureState[run.future_state] == FutureState.RESOLVED:  # type: ignore
+                if run.id not in reset_run_ids:
+                    future.state = FutureState.RESOLVED
 
             futures_by_original_id[run.id] = future
 
         if reset_from is None and len(futures_by_original_id) != len(self.runs):
             raise RuntimeError("Not all futures duplicated")
 
-        run_by_reverse_execution_order = self.runs_sorted_by_layer(
-            self._reverse_execution_order
+        run_ids_by_reverse_execution_order = self.run_ids_sorted_by_layer(
+            run_sorter=self._reverse_execution_order
         )
 
         return (
             collections.OrderedDict(
                 (
-                    (run.id, futures_by_original_id[run.id])
-                    for run in run_by_reverse_execution_order
-                    if run.id in futures_by_original_id
+                    (run_id, futures_by_original_id[run_id])
+                    for run_id in run_ids_by_reverse_execution_order
+                    if run_id in futures_by_original_id
                 )
             ),
             input_artifacts,
             output_artifacts,
         )
+
+
+EdgeFilterCallable = Callable[[List[Optional[str]], str], bool]
+
+
+def _upstream_edge_filter(
+    edges_by_destination_id: Dict[str, List[Edge]]
+) -> EdgeFilterCallable:
+    def _edge_filter(upstream_run_ids: List[Optional[str]], run_id: str):
+        return all(
+            edge.source_run_id in upstream_run_ids
+            for edge in edges_by_destination_id[run_id]
+        )
+
+    return _edge_filter
+
+
+def _downstream_edge_filter(
+    edges_by_source_id: Dict[str, List[Edge]]
+) -> EdgeFilterCallable:
+    def _edge_filter(downstream_run_ids: List[Optional[str]], run_id: str):
+        return all(
+            edge.destination_run_id in downstream_run_ids
+            for edge in edges_by_source_id[run_id]
+        )
+
+    return _edge_filter
+
+
+def _sort_layer_runs(
+    layer_run_ids: List[str], edge_filter: EdgeFilterCallable
+) -> List[str]:
+    def _find_next_runs(previous_run_ids: List[Optional[str]]):
+        next_run_ids = [
+            run_id
+            for run_id in layer_run_ids
+            if edge_filter(previous_run_ids, run_id) and run_id not in previous_run_ids
+        ]
+
+        if len(next_run_ids) == 0:
+            return []
+
+        return next_run_ids + _find_next_runs(
+            previous_run_ids + next_run_ids  # type: ignore
+        )
+
+    return _find_next_runs([None])

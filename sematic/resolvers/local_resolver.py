@@ -94,6 +94,7 @@ class LocalResolver(SilentResolver):
             reset_from=self._rerun_from_run_id,
         )
 
+        """
         # Now setting the appropriate future states
         ancestor_run_ids = graph.get_run_ancestor_ids(self._rerun_from_run_id)
         all_downstream_run_ids = []
@@ -103,9 +104,11 @@ class LocalResolver(SilentResolver):
         run_ids_to_reset = (
             ancestor_run_ids + all_downstream_run_ids + [self._rerun_from_run_id]
         )
+        """
 
         self._futures = list(futures_by_original_id.values())
 
+        """
         for original_run_id, future in futures_by_original_id.items():
             if future.nested_future is not None:
                 future.state = FutureState.RAN
@@ -114,7 +117,7 @@ class LocalResolver(SilentResolver):
             if FutureState[original_run.future_state] == FutureState.RESOLVED:
                 if original_run_id not in run_ids_to_reset:
                     future.state = FutureState.RESOLVED
-
+        """
         for future in futures_by_original_id.values():
             future.resolved_kwargs = self._get_resolved_kwargs(future)
             run_input_artifacts: Dict[str, Artifact] = {}
