@@ -95,7 +95,9 @@ class CloudResolver(LocalResolver):
             )
         self._max_parallelism = max_parallelism
 
-        self._base_image_tag = _base_image_tag
+        # When multiple base images are specified through the build info (Bazel target)
+        # this is the tag we use to find the resolution image
+        self._base_image_tag = _base_image_tag or DEFAULT_BASE_IMAGE_TAG
 
         # TODO: Replace this with a cloud storage engine
         self._store_artifacts = True
@@ -143,7 +145,7 @@ class CloudResolver(LocalResolver):
         if not self._detach:
             return None
 
-        return self._get_tagged_image(self._base_image_tag or DEFAULT_BASE_IMAGE_TAG)
+        return self._get_tagged_image(self._base_image_tag)
 
     def _get_tagged_image(self, tag: str) -> Optional[str]:
         if self._container_image_uris is None:
