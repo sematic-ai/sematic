@@ -38,7 +38,7 @@ class CloudResolver(LocalResolver):
 
     Parameters
     ----------
-    detach: Optional[bool]
+    detach: bool
         Defaults to `True`.
 
         When `True`, the driver job will run on the remote cluster. This is the so
@@ -47,10 +47,36 @@ class CloudResolver(LocalResolver):
 
         When `False`, the driver job runs on the local machine. The shell prompt
         will return when the entire pipeline has completed.
+    is_running_remotely: bool
+        For Sematic internal usage. End users should always leave this at the default
+        value of False.
+    max_parallelism: Optional[int]
+        The maximum number of non-inlined runs that this resolver will allow to be in the
+        SCHEDULED state at any one time. Must be a positive integer, or None for
+        unlimited runs. Defaults to None.
+
+        This is intended as a simple mechanism to limit the amount of computing resources
+        consumed by one pipeline execution for pipelines with a high degree of
+        parallelism. Note that if other resolvers are active, runs from them will not be
+        considered in this parallelism limit. Note also that runs that are in the RAN
+        state do not contribute to the limit, since they do not consume computing
+        resources.
     """
 
-    def __init__(self, detach: bool = True, is_running_remotely: bool = False):
+    def __init__(
+        self,
+        detach: bool = True,
+        is_running_remotely: bool = False,
+        max_parallelism: Optional[int] = None,
+    ):
         super().__init__(detach=detach)
+
+        if max_parallelism is not None and max_parallelism < 1:
+            raise ValueError(
+                "max_parallelism must be a positive integer or None. "
+                f"Got: {max_parallelism}"
+            )
+        self._max_parallelism = max_parallelism
 
         # TODO: Replace this with a cloud storage engine
         self._store_artifacts = True
@@ -108,21 +134,20 @@ class CloudResolver(LocalResolver):
         self._runs[run.id] = run
         self._set_future_state(future, FutureState[run.future_state])  # type: ignore
 
-    def _wait_for_scheduled_run(self) -> None:
-        run_id = self._wait_for_any_inline_run() or self._wait_for_any_remote_job()
+    def _wait_for_scheduled_runs(self) -> None:
+        run_ids = self._wait_for_any_inline_runs() or self._wait_for_any_remote_jobs()
 
-        if run_id is None:
-            return
+        for run_id in run_ids:
+            self._process_run_output(run_id)
 
-        self._process_run_output(run_id)
-
-    def _process_run_output(self, run_id: str):
+    def _process_run_output(self, run_id: str) -> None:
         self._refresh_graph(run_id)
 
         run = self._get_run(run_id)
 
         future = next(future for future in self._futures if future.id == run.id)
 
+        # if the external run is reported to not have completed successfully by the server
         if run.future_state not in {FutureState.RESOLVED.value, FutureState.RAN.value}:
             self._handle_future_failure(
                 future, Exception("Run failed, see exception in the UI."), run.exception
@@ -161,11 +186,11 @@ class CloudResolver(LocalResolver):
         if failed_future.state == FutureState.NESTED_FAILED:
             super()._future_did_fail(failed_future)
 
-    def _refresh_graph(self, run_id: str):
+    def _refresh_graph(self, run_id: str) -> None:
         """
         Refresh graph for run ID.
 
-        Will only refresh artifacts and edges directly connected to run
+        Will only refresh artifacts and edges directly connected to run.
         """
         runs, artifacts, edges = api_client.get_graph(run_id)
 
@@ -178,26 +203,23 @@ class CloudResolver(LocalResolver):
         for edge in edges:
             self._edges[make_edge_key(edge)] = edge
 
-    def _wait_for_any_inline_run(self) -> Optional[str]:
-        return next(
-            (
-                future.id
-                for future in self._futures
-                if future.props.inline and future.state == FutureState.SCHEDULED
-            ),
-            None,
-        )
+    def _wait_for_any_inline_runs(self) -> List[str]:
+        return [
+            future.id
+            for future in self._futures
+            if future.props.inline and future.state == FutureState.SCHEDULED
+        ]
 
-    def _wait_for_any_remote_job(self) -> Optional[str]:
+    def _wait_for_any_remote_jobs(self) -> List[str]:
         scheduled_futures_by_id: Dict[str, AbstractFuture] = {
             future.id: future
             for future in self._futures
             if not future.props.inline and future.state == FutureState.SCHEDULED
         }
 
-        if len(scheduled_futures_by_id) == 0:
+        if not scheduled_futures_by_id:
             logger.info("No futures to wait on")
-            return None
+            return []
 
         delay_between_updates = 1.0
         while True:
@@ -206,7 +228,11 @@ class CloudResolver(LocalResolver):
             ] = api_client.update_run_future_states(
                 list(scheduled_futures_by_id.keys())
             )
-            logger.info("Checking for updates on %s", scheduled_futures_by_id.keys())
+            logger.info(
+                "Checking for updates on run ids: %s",
+                list(scheduled_futures_by_id.keys()),
+            )
+            changed_job_ids = []
             for run_id, new_state in updated_states.items():
                 future = scheduled_futures_by_id[run_id]
                 if new_state != FutureState.SCHEDULED:
@@ -214,22 +240,49 @@ class CloudResolver(LocalResolver):
                     # be handled by the post-processing logic once it is aware this
                     # future has changed
                     self._refresh_graph(future.id)
-                    return future.id
+                    changed_job_ids.append(future.id)
 
-            logger.info("Sleeping for %s s", delay_between_updates)
+            if changed_job_ids:
+                return changed_job_ids
+
+            logger.info("Sleeping for %ss", delay_between_updates)
             time.sleep(delay_between_updates)
             delay_between_updates = min(
                 _MAX_DELAY_BETWEEN_STATUS_UPDATES_SECONDS,
                 _DELAY_BETWEEN_STATUS_UPDATES_BACKOFF * delay_between_updates,
             )
 
-    def _start_inline_execution(self, future_id):
-        """Callback called before an inline execution"""
+    def _start_inline_execution(self, future_id) -> None:
+        """Callback called before an inline execution."""
         logger.info(START_INLINE_RUN_INDICATOR.format(future_id))
 
-    def _end_inline_execution(self, future_id):
-        """Callback called at the end of an inline execution"""
+    def _end_inline_execution(self, future_id) -> None:
+        """Callback called at the end of an inline execution."""
         logger.info(END_INLINE_RUN_INDICATOR.format(future_id))
+
+    def _can_schedule_future(self, future: AbstractFuture) -> bool:
+        """Returns whether the specified future can be scheduled.
+
+        Inline futures can always be scheduled. External futures can only be scheduled
+        if the maximum parallelism degree has not been exceeded.
+        """
+        if future.props.inline:
+            return True
+
+        if not self._max_parallelism:
+            return True
+
+        remote_runs = self._get_remote_runs_count()
+        logging.debug(
+            "Have %s remote runs scheduled out of a maximum of %s",
+            remote_runs,
+            self._max_parallelism,
+        )
+        return remote_runs < self._max_parallelism
+
+    def _get_remote_runs_count(self) -> int:
+        """Returns the known number of futures in the SCHEDULED state."""
+        return sum(map(lambda f: f.state == FutureState.SCHEDULED, self._futures))
 
 
 def make_nested_future_storage_key(future_id: str) -> str:

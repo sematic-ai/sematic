@@ -27,13 +27,13 @@ class SilentResolver(StateMachineResolver):
         finally:
             self._end_inline_execution(future.id)
 
-    def _start_inline_execution(self, future_id):
-        """Callback called before an inline execution"""
+    def _start_inline_execution(self, future_id) -> None:
+        """Callback called before an inline execution."""
         pass
 
-    def _end_inline_execution(self, future_id):
-        """Callback called at the end of an inline execution"""
+    def _end_inline_execution(self, future_id) -> None:
+        """Callback called at the end of an inline execution."""
         pass
 
-    def _wait_for_scheduled_run(self) -> None:
+    def _wait_for_scheduled_runs(self) -> None:
         pass
