@@ -129,7 +129,7 @@ class Graph:
             _runs_by_parent_ids[run.parent_id].append(run)
 
         setattr(self, make_cache_name("runs_by_id"), _runs_by_id)
-        setattr(self, make_cache_name("runs_by_parent_ids"), _runs_by_parent_ids)
+        setattr(self, make_cache_name("runs_by_parent_id"), _runs_by_parent_ids)
 
     @memoized_property
     def _run_mappings(self) -> Tuple[RunsByID, RunsByParentID]:
@@ -531,6 +531,14 @@ class Graph:
         run_ids_by_execution_order = self._sorted_run_ids_by_layer(
             run_sorter=self._execution_order
         )
+
+        def _get_artifact_value(artifact: Artifact) -> Any:
+            if artifact.id not in value_by_artifact_id:
+                value_by_artifact_id[artifact.id] = get_artifact_value(
+                    artifact, storage
+                )
+
+            return value_by_artifact_id[artifact.id]
 
         for run_id in run_ids_by_execution_order:
             if run_id in skip_run_ids:
