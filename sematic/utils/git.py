@@ -29,7 +29,12 @@ def get_git_info(object_: Any) -> Optional["Repo"]:  # type: ignore # noqa: F821
         logger.debug(f"Found source file for {object_}: '{source}'")
     except Exception as e:
         logger.debug(f"Could not find source file for object '{object_}'", exc_info=e)
-        return None
+        try:
+            source = os.environ["BUILD_WORKSPACE_DIRECTORY"]
+            logger.debug(f"Trying $BUILD_WORKSPACE_DIRECTORY: {source}")
+        except Exception as e:
+            logger.debug("Could not find $BUILD_WORKSPACE_DIRECTORY", exc_info=e)
+            return None
 
     try:
         repo = git.Repo(source, search_parent_directories=True)
