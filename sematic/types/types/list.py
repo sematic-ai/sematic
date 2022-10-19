@@ -17,7 +17,7 @@ from sematic.types.serialization import (
     value_to_json_encodable,
 )
 
-MAX_SUMMARY_BYTES = 2**20  # 1 MB
+MAX_SUMMARY_BYTES = 2**17  # 128 kB
 
 
 # Using `list` instead of `typing.List` here because
@@ -115,7 +115,7 @@ def list_to_json_encodable_summary(
     if len(complete_summary) > 0:
         # this logic doesn't account for the "length" and "summary"
         # keys or outer wrapping brackets, but those represent roughly
-        # 1 ten-thousandth of the payload in the max case, and thus can
+        # 1 thousandth of the payload in the max case, and thus can
         # be ignored
         max_element_byte_len = max(
             len(json.dumps(element).encode("utf8")) for element in complete_summary
