@@ -6,6 +6,7 @@ import abc
 import logging
 import signal
 import typing
+from contextlib import contextmanager
 
 # Sematic
 from sematic.abstract_calculator import CalculatorError
@@ -17,28 +18,16 @@ logger = logging.getLogger(__name__)
 
 
 class StateMachineResolver(Resolver, abc.ABC):
-    def __init__(self, detach: bool = False):
+    def __init__(self):
         self._futures: typing.List[AbstractFuture] = []
-        self._detach = detach
 
     @property
     def _root_future(self) -> AbstractFuture:
         return self._futures[0]
 
     def resolve(self, future: AbstractFuture) -> typing.Any:
-        try:
-            resolved_kwargs = self._get_resolved_kwargs(future)
-            if not len(resolved_kwargs) == len(future.kwargs):
-                raise ValueError(
-                    "All input arguments of your root function should be concrete."
-                )
-
-            future.resolved_kwargs = resolved_kwargs
-
-            self._enqueue_future(future)
-
-            if self._detach:
-                return self._detach_resolution(future)
+        with self._catch_resolution_errors():
+            self._enqueue_root_future(future)
 
             self._register_signal_handlers()
 
@@ -78,6 +67,11 @@ class StateMachineResolver(Resolver, abc.ABC):
                 raise RuntimeError("Unresolved Future after resolver call.")
 
             return future.value
+
+    @contextmanager
+    def _catch_resolution_errors(self):
+        try:
+            yield
         except Exception as e:
             self._resolution_did_fail(error=e)
             if isinstance(e, CalculatorError) and hasattr(e, "__cause__"):
@@ -86,12 +80,20 @@ class StateMachineResolver(Resolver, abc.ABC):
                 raise e.__cause__  # type: ignore
             raise e
 
+    def _enqueue_root_future(self, future: AbstractFuture):
+        resolved_kwargs = self._get_resolved_kwargs(future)
+        if not len(resolved_kwargs) == len(future.kwargs):
+            raise ValueError(
+                "All input arguments of your root function should be concrete."
+            )
+
+        future.resolved_kwargs = resolved_kwargs
+
+        self._enqueue_future(future)
+
     def _register_signal_handlers(self):
         for signum in {signal.SIGINT, signal.SIGTERM}:
             signal.signal(signum, self._handle_sig_cancel)
-
-    def _detach_resolution(self, future: AbstractFuture) -> str:
-        raise NotImplementedError()
 
     def _enqueue_future(self, future: AbstractFuture) -> None:
         if future in self._futures:

@@ -83,6 +83,7 @@ class FutureProperties:
     tags: List[str]
     resource_requirements: Optional[ResourceRequirements] = None
     retry_settings: Optional[RetrySettings] = None
+    base_image_tag: Optional[str] = None
 
 
 class AbstractFuture(abc.ABC):
@@ -113,6 +114,7 @@ class AbstractFuture(abc.ABC):
         inline: bool,
         resource_requirements: Optional[ResourceRequirements] = None,
         retry_settings: Optional[RetrySettings] = None,
+        base_image_tag: Optional[str] = None,
     ):
         self.id: str = uuid.uuid4().hex
         self.calculator = calculator
@@ -133,6 +135,7 @@ class AbstractFuture(abc.ABC):
             retry_settings=retry_settings,
             name=calculator.__name__,
             tags=[],
+            base_image_tag=base_image_tag,
         )
 
     @property

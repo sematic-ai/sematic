@@ -1,26 +1,5 @@
-# Standard Library
-import time
-import typing
-from dataclasses import dataclass
-
 # Sematic
 import sematic
-
-
-@dataclass
-class Bar:
-    barr: typing.List[int]
-
-
-@dataclass
-class Config:
-    foo: typing.List[float]
-    bar: Bar
-
-
-@sematic.func
-def using_dataclass(config: Config) -> Config:
-    return config
 
 
 @sematic.func
@@ -28,13 +7,7 @@ def add(a: float, b: float) -> float:
     """
     Adds two numbers.
     """
-    time.sleep(5)
     return a + b
-
-
-@sematic.func
-def sum_list(list_: typing.List[float], a: float) -> float:  # type: ignore
-    return sum(list_) + a
 
 
 @sematic.func

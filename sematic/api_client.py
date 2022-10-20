@@ -393,7 +393,13 @@ def _raise_for_response(
     if to_raise is None:
         return
 
-    logger.error("Server returned %s: %s", response.status_code, response.text)
+    logger.error(
+        "Server returned %s for %s %s: %s",
+        response.status_code,
+        response.request.method,
+        url,
+        response.text,
+    )
     raise to_raise
 
 
