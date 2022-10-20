@@ -4,6 +4,11 @@ Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
 with nothing else on the line.
 -->
 * HEAD
+* 0.18.0
+    * [feature] Add ability to limit the number of parallel runs within a pipeline
+    * [feature] Support for multiple bazel base container images
+    * [enhancement] Ensure at one list element is displayed and increase max number displayed
+    * [bugfix] Make sure retry works when parent exception class is specified 
 * 0.17.2
     * [bugfix] Correct fix GitInfo for custom Bazel workspaces
 * 0.17.1
