@@ -12,7 +12,7 @@ def up():
             "SELECT root_id, container_image_uri "
             "FROM resolutions "
             "WHERE container_image_uris IS NULL "
-            "AND container_image_uri IS NULL"
+            "AND container_image_uri IS NOT NULL"
         )
 
         for (
