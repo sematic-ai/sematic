@@ -1,4 +1,3 @@
-# Third-party
 # Standard Library
 import json
 
