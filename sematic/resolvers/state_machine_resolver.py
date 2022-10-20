@@ -23,19 +23,26 @@ class StateMachineResolver(Resolver, abc.ABC):
 
     @property
     def _root_future(self) -> AbstractFuture:
+        if len(self._futures) == 0:
+            raise RuntimeError("No root future: no futures were enqueued.")
+
         return self._futures[0]
 
     def resolve(self, future: AbstractFuture) -> typing.Any:
+        self._enqueue_root_future(future)
+        self._resolution_loop()
+        return self._root_future.value
+
+    def _resolution_loop(self):
         with self._catch_resolution_errors():
-            self._enqueue_root_future(future)
 
             self._register_signal_handlers()
 
-            logger.info(f"Starting resolution {future.id}")
+            logger.info(f"Starting resolution {self._root_future.id}")
 
             self._resolution_will_start()
 
-            while not future.state.is_terminal():
+            while not self._root_future.state.is_terminal():
                 for future_ in self._futures:
                     if future_.state == FutureState.CREATED:
                         self._schedule_future_if_args_resolved(future_)
@@ -59,14 +66,12 @@ class StateMachineResolver(Resolver, abc.ABC):
 
                 self._wait_for_scheduled_runs()
 
-            if future.state == FutureState.RESOLVED:
+            if self._root_future.state == FutureState.RESOLVED:
                 self._resolution_did_succeed()
-            elif future.state == FutureState.CANCELED:
+            elif self._root_future.state == FutureState.CANCELED:
                 return
             else:
                 raise RuntimeError("Unresolved Future after resolver call.")
-
-            return future.value
 
     @contextmanager
     def _catch_resolution_errors(self):
@@ -88,6 +93,9 @@ class StateMachineResolver(Resolver, abc.ABC):
             )
 
         future.resolved_kwargs = resolved_kwargs
+
+        # Cleaning up
+        self._futures.clear()
 
         self._enqueue_future(future)
 

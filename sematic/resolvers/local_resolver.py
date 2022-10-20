@@ -85,6 +85,8 @@ class LocalResolver(SilentResolver):
                 "upstream runs did not succeed."
             )
 
+        logger.info(f"Attempting to rerun from {self._rerun_from_run_id}")
+
         (
             futures_by_original_id,
             input_artifacts,
@@ -134,33 +136,8 @@ class LocalResolver(SilentResolver):
 
         self._save_graph()
 
-        future = self._root_future
-
-        self._register_signal_handlers()
-
-        logger.info(f"Starting resolution {future.id}")
-
-        self._resolution_will_start()
-
-        while not future.state.is_terminal():
-            for future_ in self._futures:
-                if future_.state == FutureState.CREATED:
-                    self._schedule_future_if_args_resolved(future_)
-                if future_.state == FutureState.RETRYING:
-                    self._execute_future(future_)
-                if future_.state == FutureState.RAN:
-                    self._resolve_nested_future(future_)
-
-            self._wait_for_scheduled_run()
-
-        if future.state == FutureState.RESOLVED:
-            self._resolution_did_succeed()
-        elif future.state == FutureState.CANCELED:
-            return
-        else:
-            raise RuntimeError("Unresolved Future after resolver call.")
-
-        return future.value
+        self._resolution_loop()
+        return self._root_future.value
 
     def _update_edge(
         self,

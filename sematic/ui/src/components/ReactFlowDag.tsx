@@ -131,8 +131,13 @@ function ReactFlowDag(props: ReactFlowDagProps) {
         });
       } else {
         let parentEdge = edgesById.get(edge.parent_id);
-        if (parentEdge) {
+        while (parentEdge !== undefined) {
           artifactNodeId = makeArtifactNodeId(parentEdge);
+          if (parentEdge.parent_id !== null) {
+            parentEdge = edgesById.get(parentEdge.parent_id);
+          } else {
+            parentEdge = undefined;
+          }
         }
       }
 

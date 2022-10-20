@@ -10,7 +10,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("Sematic add example")
     parser.add_argument("--cloud", action="store_true", default=False)
     parser.add_argument("--detach", action="store_true", default=False)
-    parser.add_argument("--rerun_from", default=None)
+    parser.add_argument("--rerun-from", default=None)
 
     args = parser.parse_args()
 

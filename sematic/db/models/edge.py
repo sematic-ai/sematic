@@ -69,10 +69,15 @@ class Edge(Base, JSONEncodableMixin):
         )
 
     def __repr__(self) -> str:
-        return (
-            f"Edge(source_run_id={self.source_run_id}, "
-            f"destination_run_id={self.destination_run_id}, "
-            f"destination_name={self.destination_name}, "
-            f"artifact_id={self.artifact_id}, "
-            f"parent_id={self.parent_id})"
+        fields = ", ".join(
+            f"{field}={getattr(self, field)}"
+            for field in (
+                "id",
+                "source_run_id",
+                "destination_run_id",
+                "destination_name",
+                "artifact_id",
+                "parent_id",
+            )
         )
+        return f"Edge({fields})"
