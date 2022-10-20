@@ -41,7 +41,7 @@ def pipeline() -> float:
 def test_simulate_cloud_exec(
     mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,
-    mock_get_image: mock.MagicMock,
+    mock_get_images: mock.MagicMock,
     mock_socketio,
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
@@ -52,6 +52,11 @@ def test_simulate_cloud_exec(
     resolver = CloudResolver(detach=True)
 
     future = pipeline()
+    images = {
+        "default": "default_image",
+        "cuda": "cuda_image",
+    }
+    mock_get_images.return_value = images
 
     result = future.resolve(resolver)
 
@@ -78,6 +83,8 @@ def test_simulate_cloud_exec(
     assert (
         api_client.get_resolution(future.id).status == ResolutionStatus.COMPLETE.value
     )
+    assert mock_get_images.call_count == 1
+    assert driver_resolver._get_tagged_image("cuda") == images["cuda"]
 
     # cheap way of confirming no k8s calls were made
     mock_load_kube_config.assert_not_called()
