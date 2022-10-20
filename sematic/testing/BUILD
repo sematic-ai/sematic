@@ -8,8 +8,8 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "mock_sematic_funcs",
-    srcs = ["mock_sematic_funcs.py"],
+    name = "mock_funcs",
+    srcs = ["mock_funcs.py"],
     pip_deps = [],
     deps = [
         ":local_resolver",

@@ -11,6 +11,20 @@ from sematic.calculator import Calculator
 
 @dataclass
 class SematicFuncMock:
+    """Object with info about a mocked Sematic func
+
+    Attributes
+    ----------
+    mock:
+        A unittest.mock.MagicMock which corresponds to the underlying function before the
+        @sematic.func decorator was applied to it
+    original:
+        The original (unmocked) underlying function before the @sematic.func decorator
+        was applied to it
+    signature:
+        The signature of the Sematic func
+    """
+
     mock: mock.MagicMock
     original: Callable
     signature: Signature
