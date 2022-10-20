@@ -1,32 +1,31 @@
 # Third-party
-import sqlalchemy
+# Standard Library
+import json
 
 # Sematic
-from sematic.container_images import DEFAULT_BASE_IMAGE_TAG
 from sematic.db.db import db
-from sematic.db.models.resolution import Resolution
 
 
 def up():
-    with db().get_session() as session:
-        resolutions = (
-            session.query(Resolution)
-            .filter(
-                sqlalchemy.and_(
-                    Resolution.container_image_uris.is_(None),
-                    Resolution.container_image_uri.is_not(None),
-                )
-            )
-            .all()
+    with db().get_engine().begin() as conn:
+        resolution_id_container_image_uri_pairs = conn.execute(
+            "SELECT root_id, container_image_uri "
+            "FROM resolutions "
+            "WHERE container_image_uris IS NULL "
+            "AND container_image_uri IS NULL"
         )
 
-        for resolution in resolutions:
-            resolution.container_image_uris = {
-                DEFAULT_BASE_IMAGE_TAG: resolution.container_image_uri
-            }
+        for (
+            resolution_id,
+            container_image_uri,
+        ) in resolution_id_container_image_uri_pairs:
+            container_image_uris = json.dumps({"default": container_image_uri})
 
-        session.add_all(resolutions)
-        session.commit()
+            conn.execute(
+                "UPDATE resolutions SET container_image_uris = ? WHERE root_id = ?",
+                container_image_uris,
+                resolution_id,
+            )
 
 
 def down():
