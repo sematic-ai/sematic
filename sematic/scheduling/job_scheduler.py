@@ -153,10 +153,8 @@ def _assert_is_scheduleable(run: Run, resolution: Resolution):
             f"The run {run.id} was not schedulable because there "
             f"is no active resolution for it."
         )
-    if resolution.container_image_uri is None:
-        raise StateNotSchedulable(
-            f"The resolution {resolution.root_id} had no docker image URI"
-        )
+    if run.container_image_uri is None:
+        raise StateNotSchedulable(f"Run {run.id} has no container image URI")
 
 
 def _refresh_external_jobs(jobs: Iterable[ExternalJob]) -> Tuple[ExternalJob, ...]:
