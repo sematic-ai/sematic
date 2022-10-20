@@ -2,9 +2,9 @@
 import sqlalchemy
 
 # Sematic
+from sematic.container_images import DEFAULT_BASE_IMAGE_TAG
 from sematic.db.db import db
 from sematic.db.models.resolution import Resolution
-from sematic.container_images import DEFAULT_BASE_IMAGE_TAG
 
 
 def up():
