@@ -49,6 +49,7 @@ sematic_py_lib(
     deps = [
         ":db",
         "//sematic:config",
+        "//sematic:container_images",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:note",

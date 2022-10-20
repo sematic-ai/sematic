@@ -15,7 +15,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.calculator import func
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
-from sematic.db.models.resolution import ResolutionStatus
+from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.queries import get_resolution, get_root_graph, get_run
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.resolvers.local_resolver import LocalResolver
@@ -374,3 +374,19 @@ def test_retry(
     assert future.props.retry_settings.retry_count == 3
     assert future.state == FutureState.FAILED
     assert _tried == 4
+
+
+def test_make_resolution():
+    @func
+    def foo():
+        pass
+
+    future = foo()
+
+    resolution = LocalResolver()._make_resolution(future)
+
+    assert resolution.root_id == future.id
+    assert resolution.status == ResolutionStatus.SCHEDULED.value
+    assert resolution.kind == ResolutionKind.LOCAL.value
+    assert resolution.container_image_uris is None
+    assert resolution.container_image_uri is None

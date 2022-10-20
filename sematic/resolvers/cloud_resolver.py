@@ -1,7 +1,7 @@
 # Standard Library
 import logging
 import time
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 # Third-party
 import cloudpickle
@@ -10,14 +10,19 @@ import cloudpickle
 import sematic.api_client as api_client
 import sematic.storage as storage
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.container_images import get_image_uri
+from sematic.container_images import (
+    DEFAULT_BASE_IMAGE_TAG,
+    MissingContainerImage,
+    get_image_uris,
+)
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
-from sematic.db.models.resolution import ResolutionKind
+from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
 from sematic.utils.exceptions import format_exception_for_run
+from sematic.utils.memoized_property import memoized_property
 
 logger = logging.getLogger(__name__)
 
@@ -66,10 +71,22 @@ class CloudResolver(LocalResolver):
     def __init__(
         self,
         detach: bool = True,
-        is_running_remotely: bool = False,
         max_parallelism: Optional[int] = None,
+        _is_running_remotely: bool = False,
+        _base_image_tag: str = "default",
     ):
-        super().__init__(detach=detach)
+        super().__init__()
+
+        # detach:
+        #   True: default, the user wants to submit a detached resolution
+        #   False: the user wants to keep resolution attached, i.e. running on their
+        #           machine
+        self._detach = detach
+
+        # _is_running_remotely:
+        #   True: we are running in a remote driver job
+        #   False: default we are running on a local user machine
+        self._is_running_remotely = _is_running_remotely
 
         if max_parallelism is not None and max_parallelism < 1:
             raise ValueError(
@@ -78,11 +95,22 @@ class CloudResolver(LocalResolver):
             )
         self._max_parallelism = max_parallelism
 
+        # When multiple base images are specified through the build info (Bazel target)
+        # this is the tag we use to find the resolution image
+        self._base_image_tag = _base_image_tag or DEFAULT_BASE_IMAGE_TAG
+
         # TODO: Replace this with a cloud storage engine
         self._store_artifacts = True
 
         self._output_artifacts_by_run_id: Dict[str, Artifact] = {}
-        self._is_running_remotely = is_running_remotely
+
+    def resolve(self, future: AbstractFuture) -> Any:
+        if not self._detach:
+            return super().resolve(future)
+
+        with self._catch_resolution_errors():
+            self._enqueue_root_future(future)
+            return self._detach_resolution(future)
 
     def set_graph(self, runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
         """
@@ -98,18 +126,62 @@ class CloudResolver(LocalResolver):
         self._artifacts = {artifact.id: artifact for artifact in artifacts}
         self._edges = {make_edge_key(edge): edge for edge in edges}
 
-    def _get_resolution_image(self) -> Optional[str]:
-        return get_image_uri()
+    @memoized_property
+    def _container_image_uris(self) -> Optional[Dict[str, str]]:
+        return get_image_uris()
 
-    def _get_resolution_kind(self, detached) -> ResolutionKind:
-        return ResolutionKind.KUBERNETES if detached else ResolutionKind.LOCAL
+    def _get_container_image(self, future: AbstractFuture) -> Optional[str]:
+        if self._container_image_uris is None:
+            return None
 
-    def _create_resolution(self, root_future, detached):
+        if future.props.inline:
+            return self._get_resolution_container_image()
+
+        base_image_tag = future.props.base_image_tag or DEFAULT_BASE_IMAGE_TAG
+
+        return self._get_tagged_image(base_image_tag)
+
+    def _get_resolution_container_image(self) -> Optional[str]:
+        if not self._detach:
+            return None
+
+        return self._get_tagged_image(self._base_image_tag)
+
+    def _get_tagged_image(self, tag: str) -> Optional[str]:
+        if self._container_image_uris is None:
+            return None
+
+        try:
+            return self._container_image_uris[tag]
+        except KeyError:
+            raise MissingContainerImage(f"{tag} was not built.")
+
+    def _create_resolution(self, root_future):
         if self._is_running_remotely:
             # resolution should have been created prior to the resolver
             # actually starting its remote resolution.
             return
-        super()._create_resolution(root_future, detached)
+
+        return super()._create_resolution(root_future)
+
+    def _make_resolution(self, root_future):
+        resolution = super()._make_resolution(root_future)
+
+        # Mapping for the rest of the runs in the graph
+        resolution.container_image_uris = self._container_image_uris
+        # Image for the resolution itself
+        resolution.container_image_uri = self._get_resolution_container_image()
+
+        if self._detach:
+            resolution.status = ResolutionStatus.CREATED
+            resolution.kind = ResolutionKind.KUBERNETES
+
+        return resolution
+
+    def _make_run(self, future: AbstractFuture) -> Run:
+        run = super()._make_run(future)
+        run.container_image_uri = self._get_container_image(future)
+        return run
 
     def _update_run_and_future_pre_scheduling(self, run: Run, future: AbstractFuture):
         # For the cloud resolver, the server will update the relevant
@@ -119,7 +191,7 @@ class CloudResolver(LocalResolver):
     def _detach_resolution(self, future: AbstractFuture) -> str:
         run = self._populate_run_and_artifacts(future)
         self._save_graph()
-        self._create_resolution(future, detached=True)
+        self._create_resolution(future)
         run.root_id = future.id
 
         api_client.notify_pipeline_update(run.calculator_path)

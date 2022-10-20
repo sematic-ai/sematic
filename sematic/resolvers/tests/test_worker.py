@@ -30,7 +30,9 @@ def pipeline(a: float, b: float) -> float:
 
 
 @mock.patch("socketio.Client.connect")
-@mock.patch("sematic.resolvers.cloud_resolver.get_image_uri")
+@mock.patch(
+    "sematic.resolvers.cloud_resolver.get_image_uris", return_value=dict(default="foo")
+)
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
 @mock_no_auth
@@ -44,8 +46,6 @@ def test_main(
     test_storage,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
-    mock_get_image.return_value = "some_image"
-
     # On the user's machine
     resolver = CloudResolver(detach=True)
 
@@ -72,7 +72,9 @@ def fail():
 
 
 @mock.patch("socketio.Client.connect")
-@mock.patch("sematic.resolvers.cloud_resolver.get_image_uri")
+@mock.patch(
+    "sematic.resolvers.cloud_resolver.get_image_uris", return_value=dict(default="foo")
+)
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
 @mock_no_auth
@@ -85,8 +87,6 @@ def test_fail(
     test_storage,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
-    mock_get_image.return_value = "some_image"
-
     # On the user's machine
     resolver = CloudResolver(detach=True)
 

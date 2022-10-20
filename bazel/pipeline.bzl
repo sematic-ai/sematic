@@ -1,25 +1,24 @@
 """
 The sematic_pipeline Bazel macro.
 """
+
 load(
     "@io_bazel_rules_docker//python3:image.bzl",
     "py3_image",
     "repositories",
 )
 load("@io_bazel_rules_docker//container:push.bzl", "container_push")
-load("@io_bazel_rules_docker//container:providers.bzl", "PushInfo")
 load("@io_bazel_rules_docker//container:pull.bzl", "container_pull")
 load("@rules_python//python:defs.bzl", "py_binary")
-
-
 
 def sematic_pipeline(
         name,
         deps,
         registry,
-        repository = None,
+        repository,
         data = None,
-        base = "@sematic-worker-cuda//image",
+        base = "@sematic-worker-base//image",
+        bases = None,
         env = None,
         dev = False):
     """
@@ -40,65 +39,84 @@ def sematic_pipeline(
         registry: URI of the container registry to use to register
             the container image
 
-        repository: (optional) container repository for the image
+        repository: container repository for the image
 
         data: (optional) data files to add to the image
 
         base: (optional) label of the base image to use.
+
+        bases: (optional)
 
         env: (optional) mapping of environment variables to set in the container
 
         dev: (optional) For Sematic dev only. switch between using worker in the installed
         wheel or in the current repo.
     """
+    if bases == None:
+        bases = {}
+
+    if "default" not in bases:
+        if base != None:
+            bases["default"] = base
+        else:
+            fail("No default image specified. Set `base` or tag an image as default in `bases`.")
+    elif bases["default"] != base:
+        fail("default image is ambiguous, as base and bases['default'] were specified with different values")
+
     if dev:
-        py3_image(
-            name = "{}_image".format(name),
-            main = "@sematic//sematic/resolvers:worker.py",
-            srcs = ["@sematic//sematic/resolvers:worker.py"],
-            data = data,
-            deps = deps + ["@sematic//sematic/resolvers:worker"],
-            visibility = ["//visibility:public"],
-            base = base,
-            env = env or {},
-            tags = ["manual"],
-        )
+        main = "@sematic//sematic/resolvers:worker.py"
+        srcs = ["@sematic//sematic/resolvers:worker.py"]
+        py3_image_deps = deps + ["@sematic//sematic/resolvers:worker"]
     else:
+        main = "@rules_sematic//:worker.py"
+        srcs = ["@rules_sematic//:worker.py"]
+        py3_image_deps = deps
+
+    image_uris = []
+    push_rule_names = []
+
+    for tag, base_image in bases.items():
         py3_image(
-            name = "{}_image".format(name),
-            main = "@rules_sematic//:worker.py",
-            srcs = ["@rules_sematic//:worker.py"],
+            name = "{}_{}_image".format(name, tag),
+            main = main,
+            srcs = srcs,
             data = data,
-            deps = deps,
+            deps = py3_image_deps,
             visibility = ["//visibility:public"],
-            base = base,
+            base = base_image,
             env = env or {},
             tags = ["manual"],
         )
 
-    container_push(
-        name = "{}_push".format(name),
-        image = "{}_image".format(name),
-        registry = registry,
-        repository = repository or "sematic-dev",
-        tag = name,
-        format = "Docker",
-        tags = ["manual"],
-    )
+        push_rule_name = "{}_{}_push".format(name, tag)
+        push_rule_names.append(push_rule_name)
 
-    native.genrule(
-        name = "{}_generate_image_uri".format(name),
-        srcs = [":{}_push.digest".format(name)],
-        outs = ["{}_push_at_build.uri".format(name)],
-        cmd = "echo -n {}/{}@`cat $(location {}_push.digest)` > $@".format(registry, repository, name),
-    )
+        container_push(
+            name = push_rule_name,
+            image = "{}_{}_image".format(name, tag),
+            registry = registry,
+            repository = repository,
+            tag = "{}_{}".format(name, tag),
+            format = "Docker",
+            tags = ["manual"],
+        )
+
+        uri_rule_name = "{}_{}_generate_image_uri".format(name, tag)
+        image_uris.append(uri_rule_name)
+
+        native.genrule(
+            name = uri_rule_name,
+            srcs = [":{}_{}_push.digest".format(name, tag)],
+            outs = ["{}_{}_push_at_build.uri".format(name, tag)],
+            cmd = "echo -n {}/{}@`cat $(location {}_{}_push.digest)` > $@".format(registry, repository, name, tag),
+        )
 
     py_binary(
         name = "{}_binary".format(name),
         srcs = ["{}.py".format(name)],
         main = "{}.py".format(name),
         deps = deps,
-        data = ["{}_generate_image_uri".format(name)],
+        data = image_uris,
         tags = ["manual"],
     )
 
@@ -111,9 +129,9 @@ def sematic_pipeline(
     )
 
     sematic_push_and_run(
-        name=name,
+        name = name,
+        push_rule_names = push_rule_names,
     )
-
 
 def base_images():
     repositories()
@@ -146,6 +164,11 @@ def base_images():
 def _sematic_push_and_run(ctx):
     script = ctx.actions.declare_file("{0}.sh".format(ctx.label.name))
 
+    push_rule_runs = " && ".join([
+        "\"$BAZEL_BIN\" run {}:{}".format(ctx.label.package, rule_name)
+        for rule_name in ctx.attr.push_rule_names
+    ])
+
     # the script it simple enough it doesn't really merit a template & template expansion
     script_lines = [
         "#!/bin/sh",
@@ -155,7 +178,7 @@ def _sematic_push_and_run(ctx):
         "test -f \"$BUILD_WORKSPACE_DIRECTORY/bazel\" && BAZEL_BIN=\"$BUILD_WORKSPACE_DIRECTORY/bazel\" || BAZEL_BIN=\"$(which bazel)\"",
         "if test -f \"$BAZEL_BIN\"; then",
         "\tcd $BUILD_WORKING_DIRECTORY",
-        "\t\"$BAZEL_BIN\" run {}_push && \"$BAZEL_BIN\" run {}_binary -- $@".format(ctx.label, ctx.label),
+        "\t{} && \"$BAZEL_BIN\" run {}_binary -- $@".format(push_rule_runs, ctx.label),
         "else",
         # Should probably not happen unless somebody has an exotic bazel setup.
         # At least make it clear what the problem is if it ever does happen.
@@ -165,7 +188,7 @@ def _sematic_push_and_run(ctx):
     command = "touch {}".format(script.path)
     for script_line in script_lines:
         command += " && echo '{}' >> {}".format(script_line, script.path)
-    
+
     command = "{}".format(command)
     ctx.actions.run_shell(
         command = command,
@@ -176,7 +199,7 @@ def _sematic_push_and_run(ctx):
     )
     runfiles = ctx.runfiles(files = [script])
 
-    return [DefaultInfo(files = depset([script]), runfiles = runfiles , executable=script)]
+    return [DefaultInfo(files = depset([script]), runfiles = runfiles, executable = script)]
 
 sematic_push_and_run = rule(
     doc = (
@@ -187,7 +210,12 @@ sematic_push_and_run = rule(
         """
     ),
     implementation = _sematic_push_and_run,
-    attrs = {},
+    attrs = {
+        "push_rule_names": attr.string_list(
+            doc = "List of push rules to execute",
+            mandatory = True,
+        ),
+    },
     executable = True,
     _skylark_testable = True,
 )

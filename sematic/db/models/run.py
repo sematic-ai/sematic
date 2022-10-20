@@ -107,6 +107,7 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
     exception_json: Optional[Dict[str, Union[str, List[str]]]] = Column(
         types.JSON(), nullable=True
     )
+    container_image_uri: Optional[str] = Column(types.String(), nullable=True)
 
     # Lifecycle timestamps
     created_at: datetime.datetime = Column(
