@@ -383,7 +383,9 @@ def schedule_run_job(
     external_job = KubernetesExternalJob.new(
         try_number, run_id, namespace, JobType.worker
     )
-    logger.info("Scheduling job %s", external_job.kubernetes_job_name)
+    logger.info(
+        "Scheduling job %s with image %s", external_job.kubernetes_job_name, image
+    )
     args = ["--run_id", run_id]
 
     _schedule_kubernetes_job(

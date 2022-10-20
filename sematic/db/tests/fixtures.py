@@ -109,6 +109,7 @@ def make_run(**kwargs) -> Run:
         name="test_run",
         calculator_path="path.to.test_run",
         root_id=id,
+        container_image_uri="foobar",
     )
     run.resource_requirements = ResourceRequirements(
         kubernetes=KubernetesResourceRequirements(
@@ -128,7 +129,8 @@ def make_resolution(**kwargs) -> Resolution:
         root_id=root_id,
         status=ResolutionStatus.SCHEDULED,
         kind=ResolutionKind.KUBERNETES,
-        docker_image_uri="some.uri",
+        container_image_uris={"default": "some.uri"},
+        container_image_uri="some.uri",
         settings_env_vars={"MY_SETTING": "MY_VALUE"},
     )
 

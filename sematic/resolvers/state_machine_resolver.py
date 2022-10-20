@@ -6,6 +6,7 @@ import abc
 import logging
 import signal
 import typing
+from contextlib import contextmanager
 
 # Sematic
 from sematic.abstract_calculator import CalculatorError
@@ -17,28 +18,16 @@ logger = logging.getLogger(__name__)
 
 
 class StateMachineResolver(Resolver, abc.ABC):
-    def __init__(self, detach: bool = False):
+    def __init__(self):
         self._futures: typing.List[AbstractFuture] = []
-        self._detach = detach
 
     @property
     def _root_future(self) -> AbstractFuture:
         return self._futures[0]
 
     def resolve(self, future: AbstractFuture) -> typing.Any:
-        try:
-            resolved_kwargs = self._get_resolved_kwargs(future)
-            if not len(resolved_kwargs) == len(future.kwargs):
-                raise ValueError(
-                    "All input arguments of your root function should be concrete."
-                )
-
-            future.resolved_kwargs = resolved_kwargs
-
-            self._enqueue_future(future)
-
-            if self._detach:
-                return self._detach_resolution(future)
+        with self._catch_resolution_errors():
+            self._enqueue_root_future(future)
 
             self._register_signal_handlers()
 
@@ -50,12 +39,25 @@ class StateMachineResolver(Resolver, abc.ABC):
                 for future_ in self._futures:
                     if future_.state == FutureState.CREATED:
                         self._schedule_future_if_args_resolved(future_)
+                        continue
                     if future_.state == FutureState.RETRYING:
                         self._execute_future(future_)
+                        continue
                     if future_.state == FutureState.RAN:
                         self._resolve_nested_future(future_)
+                        continue
 
-                self._wait_for_scheduled_run()
+                    # should be unreachable code, here for a sanity check
+                    if (
+                        future_.state != FutureState.SCHEDULED
+                        and not future_.state.is_terminal()
+                    ):
+                        raise RuntimeError(
+                            f"Illegal state: future {future_.id} in state {future_.state}"
+                            " when it should have been already processed"
+                        )
+
+                self._wait_for_scheduled_runs()
 
             if future.state == FutureState.RESOLVED:
                 self._resolution_did_succeed()
@@ -65,6 +67,11 @@ class StateMachineResolver(Resolver, abc.ABC):
                 raise RuntimeError("Unresolved Future after resolver call.")
 
             return future.value
+
+    @contextmanager
+    def _catch_resolution_errors(self):
+        try:
+            yield
         except Exception as e:
             self._resolution_did_fail(error=e)
             if isinstance(e, CalculatorError) and hasattr(e, "__cause__"):
@@ -73,12 +80,20 @@ class StateMachineResolver(Resolver, abc.ABC):
                 raise e.__cause__  # type: ignore
             raise e
 
+    def _enqueue_root_future(self, future: AbstractFuture):
+        resolved_kwargs = self._get_resolved_kwargs(future)
+        if not len(resolved_kwargs) == len(future.kwargs):
+            raise ValueError(
+                "All input arguments of your root function should be concrete."
+            )
+
+        future.resolved_kwargs = resolved_kwargs
+
+        self._enqueue_future(future)
+
     def _register_signal_handlers(self):
         for signum in {signal.SIGINT, signal.SIGTERM}:
             signal.signal(signum, self._handle_sig_cancel)
-
-    def _detach_resolution(self, future: AbstractFuture) -> str:
-        raise NotImplementedError()
 
     def _enqueue_future(self, future: AbstractFuture) -> None:
         if future in self._futures:
@@ -91,16 +106,20 @@ class StateMachineResolver(Resolver, abc.ABC):
                 value.parent_future = future.parent_future
                 self._enqueue_future(value)
 
+    def _can_schedule_future(self, _: AbstractFuture) -> bool:
+        """Returns whether the specified future can be scheduled."""
+        return True
+
     @abc.abstractmethod
-    def _schedule_future(self, future: AbstractFuture):
+    def _schedule_future(self, future: AbstractFuture) -> None:
         pass
 
     @abc.abstractmethod
-    def _run_inline(self, future: AbstractFuture):
+    def _run_inline(self, future: AbstractFuture) -> None:
         pass
 
     @abc.abstractmethod
-    def _wait_for_scheduled_run(self) -> None:
+    def _wait_for_scheduled_runs(self) -> None:
         pass
 
     def _handle_sig_cancel(self, signum, frame):
@@ -147,7 +166,7 @@ class StateMachineResolver(Resolver, abc.ABC):
         """
         Callback allowing resolvers to implement custom actions.
 
-        This is called after all futures have succesfully resolved.
+        This is called after all futures have successfully resolved.
         """
         pass
 
@@ -203,6 +222,7 @@ class StateMachineResolver(Resolver, abc.ABC):
         Callback allowing specific resolvers to react when a future is about to
         be retried.
         """
+        pass
 
     @staticmethod
     def _get_resolved_kwargs(future: AbstractFuture) -> typing.Dict[str, typing.Any]:
@@ -230,12 +250,17 @@ class StateMachineResolver(Resolver, abc.ABC):
             self._execute_future(future)
 
     def _execute_future(self, future: AbstractFuture) -> None:
+        if not self._can_schedule_future(future):
+            logger.info("Currently not scheduling %s", future.calculator)
+            return
+
         self._future_will_schedule(future)
+
         if future.props.inline:
-            logger.info("Running inline {}".format(future.calculator))
+            logger.info("Running inline %s", future.calculator)
             self._run_inline(future)
         else:
-            logger.info("Scheduling {}".format(future.calculator))
+            logger.info("Scheduling %s", future.calculator)
             self._schedule_future(future)
 
     @typing.final

@@ -1,13 +1,13 @@
 
 
-.. image:: ./docs/images/Logo_README.png
-   :target: ./docs/images/Logo_README.png
+.. image:: https://raw.githubusercontent.com/sematic-ai/sematic/main/docs/images/Logo_README.png
+   :target: https://raw.githubusercontent.com/sematic-ai/sematic/main/docs/images/Logo_README.png
    :alt: Sematic logo
 
 
 
-.. image:: ./docs/images/Screenshot_README_1_framed.png
-   :target: ./docs/images/Screenshot_README_1_framed.png
+.. image:: https://raw.githubusercontent.com/sematic-ai/sematic/main/docs/images/Screenshot_README_1_framed.png
+   :target: https://raw.githubusercontent.com/sematic-ai/sematic/main/docs/images/Screenshot_README_1_framed.png
    :alt: UI Screenshot
 
 
@@ -74,7 +74,7 @@ Sematic is an alternative to tools such as KubeFlow Pipelines.
 Installation
 ------------
 
-Instal Sematic with
+Install Sematic with
 
 .. code-block:: shell
 

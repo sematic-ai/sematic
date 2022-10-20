@@ -208,7 +208,7 @@ def test_schedule_run(
         mock_k8s.schedule_run_job.assert_called_once()
         schedule_job_call_args = mock_k8s.schedule_run_job.call_args[1]
         schedule_job_call_args["run_id"] == persisted_run.id
-        schedule_job_call_args["image"] == persisted_resolution.docker_image_uri
+        schedule_job_call_args["image"] == persisted_run.container_image_uri
         schedule_job_call_args[
             "resource_requirements"
         ] == persisted_run.resource_requirements
@@ -278,6 +278,7 @@ def test_update_future_states(
             repr="The kubernetes job(s) experienced an unknown failure",
             name="InvalidStateTransitionError",
             module="sematic.api.endpoints.runs",
+            ancestors=[f"{Exception.__module__}.{Exception.__name__}"],
         )
 
 

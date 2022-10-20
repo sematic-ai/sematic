@@ -39,7 +39,6 @@ class RetrySettings:
 
     def _matches_exceptions(self, exception_metadata: ExceptionMetadata) -> bool:
         return any(
-            exception_type.__name__ == exception_metadata.name
-            and exception_type.__module__ == exception_metadata.module
+            exception_metadata.is_instance_of(exception_type)
             for exception_type in self.exceptions
         )

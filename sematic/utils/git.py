@@ -15,7 +15,13 @@ logger = logging.getLogger(__name__)
 
 def get_git_info(object_: Any) -> Optional["Repo"]:  # type: ignore # noqa: F821
     """
-    Returns git repository details for a given Python object.
+    Returns git repository details for the current workspace.
+
+    The following are tried, in order:
+    - attempt to get the git repo of the workspace that contains the specified
+    object's source code
+    - attempt to get the bazel workspace git repo
+    - attempt to get the current working directory's git repo
     """
     try:
         # if git is not installed on the user's system, this will fail to import
@@ -24,32 +30,44 @@ def get_git_info(object_: Any) -> Optional["Repo"]:  # type: ignore # noqa: F821
         logger.warn("Could not get git information", exc_info=e)
         return None
 
+    # try to search the path ancestors of the given object's source code for a git repo
     try:
         source = inspect.getsourcefile(object_)
-        logger.debug(f"Found source file for {object_}: '{source}'")
+        logger.debug(f"Found source path for {object_}: '{source}'")
     except Exception as e:
-        logger.debug(f"Could not find source file for object '{object_}'", exc_info=e)
-        try:
-            source = os.environ["BUILD_WORKSPACE_DIRECTORY"]
-            logger.debug(f"Trying $BUILD_WORKSPACE_DIRECTORY: {source}")
-        except Exception as e:
-            logger.debug("Could not find $BUILD_WORKSPACE_DIRECTORY", exc_info=e)
+        logger.debug(f"Could not find source path for object '{object_}'", exc_info=e)
+        return None
+
+    logger.debug(f"Trying source path of specified object: {source}")
+    repo = _get_repo(git, source)
+
+    # try to search the bazel workspace for a git repo
+    if repo is None:
+        source = os.getenv("BUILD_WORKSPACE_DIRECTORY")
+        if source is None:
+            logger.debug("Could not find $BUILD_WORKSPACE_DIRECTORY")
             return None
 
-    try:
-        repo = git.Repo(source, search_parent_directories=True)
-        # when submitting a bazel script, the .git directory will be a symlink from the
-        # bazel execroot to the source code workspace
-        # this will mess up the dirty bit inspection, so we need to resolve the symlink
-        if os.path.islink(repo.git_dir):
-            resolved_git_dir = os.readlink(repo.git_dir)
-            repo = git.Repo(resolved_git_dir, search_parent_directories=True)
-    except Exception as e:
-        logger.debug(f"Could not find git repo for source file '{source}'", exc_info=e)
+        logger.debug(f"Trying $BUILD_WORKSPACE_DIRECTORY: {source}")
+        repo = _get_repo(git, source)
+
+    # try to search the current working directory for a git repo
+    if repo is None:
+        try:
+            source = os.getcwd()
+        except Exception as e:
+            logger.debug("Could not get current working directory", exc_info=e)
+            return None
+
+        logger.debug(f"Trying current working directory: {source}")
+        repo = _get_repo(git, source)
+
+    # give up
+    if repo is None:
         return None
 
     if repo.bare:
-        logger.debug(f"Found bare git repo for source file '{source}'")
+        logger.debug(f"Found bare git repo in '{repo.git_dir}'")
         return None
 
     return GitInfo(
@@ -58,6 +76,24 @@ def get_git_info(object_: Any) -> Optional["Repo"]:  # type: ignore # noqa: F821
         commit=_get_commit(repo),
         dirty=repo.is_dirty(),
     )
+
+
+def _get_repo(git: Any, source: Any) -> Optional["Repo"]:  # type: ignore # noqa: F821
+    try:
+        repo = git.Repo(source, search_parent_directories=True)
+        # when submitting a bazel script, the .git directory will be a symlink from the
+        # bazel execroot to the source code workspace
+        # this will mess up the dirty bit inspection, so we need to resolve the symlink
+        if os.path.islink(repo.git_dir):
+            resolved_git_dir = os.readlink(repo.git_dir)
+            repo = git.Repo(resolved_git_dir, search_parent_directories=True)
+
+        logger.debug(f"Found git repo in '{repo.git_dir}'")
+        return repo
+
+    except Exception as e:
+        logger.debug(f"Could not find git repo for source path '{source}'", exc_info=e)
+        return None
 
 
 def _get_remote(repo: "Repo") -> Optional[str]:  # type: ignore # noqa: F821

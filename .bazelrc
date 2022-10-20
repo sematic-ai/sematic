@@ -1,1 +1,1 @@
-test --test_tag_filters=nocov
+test --test_tag_filters=nocov --test_output=all

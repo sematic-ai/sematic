@@ -142,7 +142,7 @@ def main(run_id: str, resolve: bool):
             future: Future = func(**kwargs)
             future.id = run.id
 
-            resolver = CloudResolver(detach=False, is_running_remotely=True)
+            resolver = CloudResolver(detach=False, _is_running_remotely=True)
             resolver.set_graph(runs=runs, artifacts=artifacts, edges=edges)
 
             resolver.resolve(future)

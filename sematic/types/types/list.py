@@ -1,6 +1,5 @@
 # Standard Library
 import json
-import math
 import typing
 
 # Sematic
@@ -17,6 +16,8 @@ from sematic.types.serialization import (
     value_from_json_encodable,
     value_to_json_encodable,
 )
+
+MAX_SUMMARY_BYTES = 2**17  # 128 kB
 
 
 # Using `list` instead of `typing.List` here because
@@ -110,17 +111,20 @@ def list_to_json_encodable_summary(
         get_json_encodable_summary(item, element_type) for item in value
     ]
 
-    element_char_len = None
+    max_item = 0
     if len(complete_summary) > 0:
-        element_char_len = len(json.dumps(complete_summary[0]))
-
-    estimated_total_char_len = (
-        (0 if element_char_len is None else len(value) * element_char_len)
-        + 2
-        + 2 * len(value)
-    )
-
-    max_item = math.floor((1000 / estimated_total_char_len))
+        # this logic doesn't account for the "length" and "summary"
+        # keys or outer wrapping brackets, but those represent roughly
+        # 1 thousandth of the payload in the max case, and thus can
+        # be ignored
+        max_element_byte_len = max(
+            len(json.dumps(element).encode("utf8")) for element in complete_summary
+        )
+        max_element_byte_len += 2  # for the comma and space between elements
+        max_elements = int(MAX_SUMMARY_BYTES / max_element_byte_len)
+        max_item = max(
+            max_elements, 1
+        )  # ensure there's always at least 1 element for non-empty lists
 
     return {
         "length": len(value),
