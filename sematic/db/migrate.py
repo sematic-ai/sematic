@@ -7,6 +7,7 @@ The SQLite DB should be migrated to the latest version
 automatically.
 """
 # Standard Library
+import datetime
 import enum
 import functools
 import importlib
@@ -341,6 +342,28 @@ def status(env: str, verbose: bool):
 
     print(f"\nApplied:\t{applied_count:3}")
     print(f"Outstanding:\t{outstanding_count:3}")
+
+
+@main.command("new", short_help="Create new migration file")
+@click.argument("name")
+def new(name: str):
+    extension = os.path.splitext(name)[1]
+
+    if extension == ".sql":
+        content = f"{_UP_MARKER}\n\n\n{_DOWN_MARKER}\n"
+    elif extension == ".py":
+        content = "def up():\n    pass\n\ndef down():\n    pass\n"
+    else:
+        raise ValueError("Migration file extension must be .py or .sql")
+
+    timestamp = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
+
+    file_path = os.path.join(get_config().migrations_dir, f"{timestamp}_{name}")
+
+    with open(file_path, "w") as f:
+        f.write(content)
+
+    print(f"Created {file_path}")
 
 
 if __name__ == "__main__":

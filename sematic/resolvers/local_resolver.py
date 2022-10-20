@@ -11,7 +11,7 @@ import socketio  # type: ignore
 import sematic.api_client as api_client
 from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.config import get_config  # noqa: F401
+from sematic.config import get_config
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact, make_run_from_future
@@ -35,6 +35,7 @@ class LocalResolver(SilentResolver):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
         self._edges: Dict[str, Edge] = {}
         self._runs: Dict[str, Run] = {}
         self._artifacts: Dict[str, Artifact] = {}
@@ -139,7 +140,7 @@ class LocalResolver(SilentResolver):
 
         self._populate_run_and_artifacts(self._root_future)
         self._save_graph()
-        self._create_resolution(self._root_future, detached=False)
+        self._create_resolution(self._root_future)
         self._update_resolution_status(ResolutionStatus.RUNNING)
 
     def _resolution_did_cancel(self) -> None:
@@ -147,27 +148,27 @@ class LocalResolver(SilentResolver):
         api_client.cancel_resolution(self._root_future.id)
         self._sio_client.disconnect()
 
-    def _get_resolution_image(self) -> Optional[str]:
+    def _get_tagged_image(self, tag: str) -> Optional[str]:
         return None
 
-    def _get_resolution_kind(self, detached) -> ResolutionKind:
-        return ResolutionKind.LOCAL
+    def _create_resolution(self, root_future):
+        """Make a Resolution instance and persist it."""
+        resolution = self._make_resolution(root_future)
+        api_client.save_resolution(resolution)
 
-    def _create_resolution(self, root_future, detached):
-        starting_state = (
-            ResolutionStatus.CREATED if detached else ResolutionStatus.SCHEDULED
-        )
+    def _make_resolution(self, root_future: AbstractFuture) -> Resolution:
+        """Make a Resolution instance."""
         resolution = Resolution(
             root_id=root_future.id,
-            status=starting_state,
-            kind=self._get_resolution_kind(detached),
-            docker_image_uri=self._get_resolution_image(),
-            git_info=get_git_info(root_future.calculator.func),
+            status=ResolutionStatus.SCHEDULED,
+            kind=ResolutionKind.LOCAL,
+            git_info=get_git_info(root_future.calculator.func),  # type: ignore
             settings_env_vars={
                 name: str(value) for name, value in get_all_user_settings().items()
             },
         )
-        api_client.save_resolution(resolution)
+
+        return resolution
 
     def _future_will_schedule(self, future: AbstractFuture) -> None:
         super()._future_will_schedule(future)
@@ -348,6 +349,12 @@ class LocalResolver(SilentResolver):
         self._edges[edge_key] = edge
         self._buffer_edges[edge_key] = edge
 
+    def _make_run(self, future: AbstractFuture) -> Run:
+        """Create a run for give future."""
+        run = make_run_from_future(future)
+        run.root_id = self._root_future.id
+        return run
+
     def _populate_graph(
         self,
         future: AbstractFuture,
@@ -358,8 +365,7 @@ class LocalResolver(SilentResolver):
         Update the graph based on future.
         """
         if future.id not in self._runs:
-            run = make_run_from_future(future)
-            run.root_id = self._futures[0].id
+            run = self._make_run(future)
             self._add_run(run)
 
         # Updating input edges
