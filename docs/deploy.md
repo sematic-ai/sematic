@@ -256,7 +256,7 @@ to offer! Sematic essentially has two components to upgrade:
 - the python library used by clients to define and launch jobs
 
 The server can be upgraded by re-deploying it using a Docker image with the
-appropriate version tag. Ex: `sematicai/sematic-server:v0.17.0`. You can do
+appropriate version tag. Ex: `sematicai/sematic-server:v0.18.1`. You can do
 this with your Docker run command if you are just using the metadata server
 deployment option or using `helm upgrade` if you are using the full cloud
 deployment.
@@ -271,7 +271,7 @@ git_repository(
     name = "rules_sematic",
     remote = "https://github.com/sematic-ai/sematic.git",
     strip_prefix = "bazel",
-    tag = "v0.17.0",
+    tag = "v0.18.1",
 )
 ```
 
