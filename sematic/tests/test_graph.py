@@ -210,3 +210,73 @@ def test_reset_failed(
     assert root_future.nested_future.state is FutureState.CREATED
     assert root_future.nested_future.kwargs["a"].state is FutureState.CREATED
     assert root_future.nested_future.kwargs["b"].state is FutureState.CREATED
+
+
+@func
+def order_test() -> float:
+    return add3(add3(1, 2, 3), 2, 3)
+
+
+def test_run_execution_ordering(
+    mock_auth,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_local_resolver_storage,  # noqa: F811
+    mock_requests,  # noqa: F811
+):
+    future = order_test()
+    future.resolve(LocalResolver())
+
+    runs, artifacts, edges = api_client.get_graph(future.id, root=True)
+
+    graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
+
+    run_ids_by_execution_order = graph.run_ids_sorted_by_layer(
+        run_sorter=graph._execution_order
+    )
+
+    expected_order = [
+        future.id,
+        future.nested_future.kwargs["a"].id,
+        future.nested_future.id,
+        future.nested_future.kwargs["a"].nested_future.kwargs["a"].id,
+        future.nested_future.kwargs["a"].nested_future.id,
+        future.nested_future.nested_future.kwargs["a"].id,
+        future.nested_future.nested_future.id,
+    ]
+
+    assert run_ids_by_execution_order == expected_order
+
+
+def test_run_reverse_ordering(
+    mock_auth,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_local_resolver_storage,  # noqa: F811
+    mock_requests,  # noqa: F811
+):
+    future = order_test()
+    future.resolve(LocalResolver())
+
+    runs, artifacts, edges = api_client.get_graph(future.id, root=True)
+
+    graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
+
+    run_ids_by_reverse_order = graph.run_ids_sorted_by_layer(
+        run_sorter=graph._reverse_execution_order
+    )
+
+    expected_order = [
+        future.id,
+        future.nested_future.id,
+        future.nested_future.kwargs["a"].id,
+        future.nested_future.nested_future.id,
+        future.nested_future.nested_future.kwargs["a"].id,
+        future.nested_future.kwargs["a"].nested_future.id,
+        future.nested_future.kwargs["a"].nested_future.kwargs["a"].id,
+    ]
+
+    print(expected_order)
+    print(run_ids_by_reverse_order)
+
+    assert run_ids_by_reverse_order == expected_order
