@@ -2,7 +2,7 @@
 import datetime
 import logging
 import uuid
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 # Third-party
 import socketio  # type: ignore
@@ -14,12 +14,7 @@ from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.config import get_config
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.factories import (
-    get_artifact_value,
-    make_artifact,
-    make_func_path,
-    make_run_from_future,
-)
+from sematic.db.models.factories import make_artifact, make_run_from_future
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.graph import Graph
