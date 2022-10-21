@@ -130,3 +130,19 @@ sematic_py_lib(
         "//sematic:storage",
     ],
 )
+
+pytest_test(
+    name = "test_graph",
+    srcs = ["test_graph.py"],
+    deps = [
+        "//sematic:abstract_future",
+        "//sematic:api_client",
+        "//sematic:calculator",
+        "//sematic:graph",
+        "//sematic/api/tests:fixtures",
+        "//sematic/db/models:factories",
+        "//sematic/db/tests:fixtures",
+        "//sematic/resolvers:local_resolver",
+        "//sematic/resolvers/tests:fixtures",
+    ],
+)

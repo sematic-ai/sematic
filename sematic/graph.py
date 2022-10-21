@@ -260,7 +260,10 @@ class Graph:
                             == run.parent_id
                         ):
                             parent_future.nested_future = future
-                            parent_future.state = FutureState.RAN
+
+                            if run.id in reset_run_ids:
+                                parent_future.state = FutureState.RAN
+
                             break
 
             if FutureState[run.future_state] == FutureState.RESOLVED:  # type: ignore

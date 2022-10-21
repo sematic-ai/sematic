@@ -4,6 +4,7 @@ pytest_test(
     deps = [
         "//sematic:abstract_future",
         "//sematic:calculator",
+        "//sematic:retry_settings",
         "//sematic/api/tests:fixtures",
         "//sematic/db/models:edge",
         "//sematic/db/models:resolution",
@@ -12,7 +13,6 @@ pytest_test(
         "//sematic/tests:fixtures",
         "//sematic/types:init",
         "//sematic/utils:exceptions",
-        "//sematic:retry_settings",
     ],
 )
 
@@ -24,7 +24,6 @@ pytest_test(
         "//sematic/utils:retry",
     ],
 )
-
 
 pytest_test(
     name = "test_resource_requirements",
@@ -73,6 +72,17 @@ pytest_test(
         "//sematic/db/tests:fixtures",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:worker",
+        "//sematic/tests:fixtures",
+    ],
+)
+
+sematic_py_lib(
+    name = "fixtures",
+    srcs = ["fixtures.py"],
+    pip_deps = [
+        "pytest",
+    ],
+    deps = [
         "//sematic/tests:fixtures",
     ],
 )

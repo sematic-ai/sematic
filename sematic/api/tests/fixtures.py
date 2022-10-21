@@ -4,6 +4,7 @@ import functools
 import re
 from http import HTTPStatus
 from typing import Any, Callable, Dict
+from unittest import mock
 from urllib.parse import urljoin
 
 import flask.testing
@@ -109,3 +110,15 @@ def make_auth_test(endpoint: str, method: str = "GET"):
             assert response.status_code == HTTPStatus.UNAUTHORIZED
 
     return test_auth
+
+
+@pytest.fixture
+def mock_socketio():
+    with mock.patch("socketio.Client.connect"):
+        yield
+
+
+@pytest.fixture
+def mock_auth():
+    with mock_user_settings({user_settings.SettingsVar.SEMATIC_AUTHENTICATE: False}):
+        yield
