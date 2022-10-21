@@ -14,6 +14,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
+from sematic.storage import S3Storage, Storage
 from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
 from sematic.utils.retry import retry
 from sematic.versions import CURRENT_VERSION, version_as_string
@@ -50,21 +51,30 @@ class ResourceNotFoundError(BadRequestError):
     pass
 
 
-def get_artifact_value_by_id(artifact_id: str) -> Any:
+def get_artifact_value_by_id(
+    artifact_id: str, storage: Optional[Storage] = None
+) -> Any:
     """
     Retrieve the value of an artifact by ID.
 
     Parameters
     ----------
     artifact_id: str
+    storage: Optional[Storage]
+        Storage from which to retrieve the artifact value. Defaults to S3Storage.
 
     Returns
     -------
     Any
         The value of the requiested artifact.
     """
+    # TODO: Store storage type on artifact
+    if storage is None:
+        storage = S3Storage()
+
     artifact = _get_artifact(artifact_id)
-    return get_artifact_value(artifact)
+
+    return get_artifact_value(artifact, storage)
 
 
 def _get_artifact(artifact_id: str) -> Artifact:

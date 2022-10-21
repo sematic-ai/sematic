@@ -100,18 +100,17 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
     Persist run output, whether it is a nested future or a concrete output.
     """
     artifacts = []
+    storage = S3Storage()
 
     if isinstance(output, Future):
         pickled_nested_future = cloudpickle.dumps(output)
-        S3Storage().set(
-            make_nested_future_storage_key(output.id), pickled_nested_future
-        )
+        storage.set(make_nested_future_storage_key(output.id), pickled_nested_future)
         run.nested_future_id = output.id
         run.future_state = FutureState.RAN
         run.ended_at = datetime.datetime.utcnow()
 
     else:
-        artifacts.append(make_artifact(output, type_, store=True))
+        artifacts.append(make_artifact(output, type_, storage=storage))
 
         # Set output artifact on output edges
         for edge in edges:

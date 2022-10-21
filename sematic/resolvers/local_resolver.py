@@ -19,7 +19,7 @@ from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionS
 from sematic.db.models.run import Run
 from sematic.graph import Graph
 from sematic.resolvers.silent_resolver import SilentResolver
-from sematic.storage import LocalStorage
+from sematic.storage import LocalStorage, Storage
 from sematic.user_settings import get_all_user_settings
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
 from sematic.utils.git import get_git_info
@@ -47,7 +47,7 @@ class LocalResolver(SilentResolver):
         self._buffer_runs: Dict[str, Run] = {}
         self._buffer_artifacts: Dict[str, Artifact] = {}
 
-        self._storage = LocalStorage()
+        self._storage: Storage = LocalStorage()
 
         self._sio_client = socketio.Client()
 

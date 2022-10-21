@@ -58,6 +58,7 @@ sematic_py_lib(
     ],
     deps = [
         ":config",
+        "//sematic:storage",
         "//sematic:versions",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
