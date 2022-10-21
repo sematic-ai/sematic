@@ -105,9 +105,7 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
 
     if isinstance(output, Future):
         pickled_nested_future = cloudpickle.dumps(output)
-        S3Storage().set(
-            make_nested_future_storage_key(output.id), pickled_nested_future
-        )
+        storage.set(make_nested_future_storage_key(output.id), pickled_nested_future)
         run.nested_future_id = output.id
         run.future_state = FutureState.RAN
         run.ended_at = datetime.datetime.utcnow()
