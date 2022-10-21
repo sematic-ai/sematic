@@ -245,7 +245,7 @@ class CloudResolver(LocalResolver):
             return
 
         if run.nested_future_id is not None:
-            pickled_nested_future = storage.get(
+            pickled_nested_future = self._storage.get(
                 make_nested_future_storage_key(run.nested_future_id)
             )
             value = cloudpickle.loads(pickled_nested_future)
