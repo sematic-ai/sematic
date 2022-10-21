@@ -16,7 +16,7 @@ from sematic.api_client import (
 )
 from sematic.config import get_config
 from sematic.db.models.factories import make_artifact
-from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
+from sematic.tests.fixtures import MockStorage, valid_client_version  # noqa: F401
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 
 
@@ -136,16 +136,15 @@ def test_validate_server_compatibility_new_server_still_supports(mock_requests):
 
 
 @mock.patch("sematic.api_client.requests")
-def test_get_artifact_value_by_id(
-    mock_requests, test_storage, valid_client_version  # noqa: F811
-):
-    artifact = make_artifact(42, int, True)
+def test_get_artifact_value_by_id(mock_requests, valid_client_version):  # noqa: F811
+    mock_storage = MockStorage()
+    artifact = make_artifact(42, int, mock_storage)
     mock_requests.get.return_value = MockResponse(
         status_code=200,
         json_contents=dict(content=artifact.to_json_encodable()),
     )
 
-    value = get_artifact_value_by_id(artifact.id)
+    value = get_artifact_value_by_id(artifact.id, mock_storage)
 
     assert isinstance(value, int)
     assert value == 42

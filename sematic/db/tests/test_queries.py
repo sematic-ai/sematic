@@ -1,13 +1,11 @@
-# Standard Library
-from unittest import mock
-
 # Third-party
 import pytest
 
 # Sematic
 from sematic.api.tests.fixtures import (  # noqa: F401
-    mock_no_auth,
+    mock_auth,
     mock_requests,
+    mock_socketio,
     test_client,
 )
 from sematic.calculator import func
@@ -33,11 +31,8 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
-from sematic.tests.fixtures import (  # noqa: F401
-    MockStorage,
-    test_storage,
-    valid_client_version,
-)
+from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa: F401
+from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 
 
 def test_count_runs(test_db, run: Run):  # noqa: F811
@@ -120,12 +115,10 @@ def pipeline(a: float, b: float) -> float:
     "fn, run_count, artifact_count, edge_count",
     ((get_run_graph, 1, 3, 3), (get_root_graph, 3, 4, 8)),
 )
-@mock_no_auth
-@mock.patch("socketio.Client.connect")
-@mock.patch("sematic.resolvers.local_resolver.LocalStorage", return_value=MockStorage())
 def test_get_run_graph(
-    mock_storage,
-    mock_socketio,
+    mock_auth,  # noqa: F811
+    mock_local_resolver_storage,  # noqa: F811
+    mock_socketio,  # noqa: F811
     fn,
     run_count: int,
     artifact_count: int,

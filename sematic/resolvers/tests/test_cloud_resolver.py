@@ -9,8 +9,9 @@ import pytest
 import sematic.api_client as api_client
 from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
-    mock_no_auth,
+    mock_auth,
     mock_requests,
+    mock_socketio,
     test_client,
 )
 from sematic.calculator import func
@@ -18,6 +19,7 @@ from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.resolvers.cloud_resolver import CloudResolver
+from sematic.resolvers.tests.fixtures import mock_cloud_resolver_storage  # noqa: F401
 from sematic.tests.fixtures import (  # noqa: F401
     MockStorage,
     test_storage,
@@ -36,22 +38,16 @@ def pipeline() -> float:
     return add(1, 2)
 
 
-@mock.patch("socketio.Client.connect")
-@mock.patch("sematic.api_client.update_run_future_states")
 @mock.patch("sematic.resolvers.cloud_resolver.get_image_uris")
-@mock.patch("sematic.api_client.schedule_run")
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
-@mock.patch("sematic.resolvers.cloud_resolver.S3Storage", return_value=MockStorage())
-@mock_no_auth
 def test_simulate_cloud_exec(
-    mock_storage: mock.MagicMock,
     mock_load_kube_config: mock.MagicMock,
-    mock_schedule_resolution: mock.MagicMock,
-    mock_schedule_run: mock.MagicMock,
-    mock_get_images: mock.MagicMock,
-    mock_update_run_future_states: mock.MagicMock,
-    mock_socketio,
+    mock_schedule_job: mock.MagicMock,
+    mock_get_image: mock.MagicMock,
+    mock_cloud_resolver_storage,  # noqa: F811
+    mock_auth,  # noqa: F811
+    mock_socketio,  # noqa: F811
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
     valid_client_version,  # noqa: F811

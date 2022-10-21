@@ -2,6 +2,7 @@ pytest_test(
     name = "test_local_resolver",
     srcs = ["test_local_resolver.py"],
     deps = [
+        ":fixtures",
         "//sematic:abstract_future",
         "//sematic:calculator",
         "//sematic:retry_settings",
@@ -48,6 +49,7 @@ pytest_test(
     name = "test_cloud_resolver",
     srcs = ["test_cloud_resolver.py"],
     deps = [
+        ":fixtures",
         "//sematic:api_client",
         "//sematic:calculator",
         "//sematic/api/tests:fixtures",

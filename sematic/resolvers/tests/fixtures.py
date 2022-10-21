@@ -21,6 +21,6 @@ def mock_local_resolver_storage():
 def mock_cloud_resolver_storage():
     mock_storage = MockStorage()
     with mock.patch(
-        "sematic.resolvers.cloud_resolver.CloudStorage", return_value=mock_storage
+        "sematic.resolvers.cloud_resolver.S3Storage", return_value=mock_storage
     ):
         yield mock_storage

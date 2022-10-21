@@ -6,8 +6,9 @@ import pytest
 # Sematic
 from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
-    mock_no_auth,
+    mock_auth,
     mock_requests,
+    mock_socketio,
     test_client,
 )
 from sematic.calculator import func
@@ -36,7 +37,6 @@ def pipeline(a: float, b: float) -> float:
 _MOCK_STORAGE = MockStorage()
 
 
-@mock.patch("socketio.Client.connect")
 @mock.patch(
     "sematic.resolvers.cloud_resolver.get_image_uris", return_value=dict(default="foo")
 )
@@ -44,14 +44,14 @@ _MOCK_STORAGE = MockStorage()
 @mock.patch("kubernetes.config.load_kube_config")
 @mock.patch("sematic.resolvers.cloud_resolver.S3Storage", return_value=_MOCK_STORAGE)
 @mock.patch("sematic.resolvers.worker.S3Storage", return_value=_MOCK_STORAGE)
-@mock_no_auth
 def test_main(
     mock_worker_storage: mock.MagicMock,
     mock_storage: mock.MagicMock,
     mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,
     mock_get_image: mock.MagicMock,
-    mock_socketio,
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
     test_storage,  # noqa: F811
@@ -85,7 +85,6 @@ def fail():
 __MOCK_STORAGE = MockStorage()
 
 
-@mock.patch("socketio.Client.connect")
 @mock.patch(
     "sematic.resolvers.cloud_resolver.get_image_uris", return_value=dict(default="foo")
 )
@@ -93,14 +92,14 @@ __MOCK_STORAGE = MockStorage()
 @mock.patch("kubernetes.config.load_kube_config")
 @mock.patch("sematic.resolvers.cloud_resolver.S3Storage", return_value=__MOCK_STORAGE)
 @mock.patch("sematic.resolvers.worker.S3Storage", return_value=__MOCK_STORAGE)
-@mock_no_auth
 def test_fail(
     worker_mock_storage: mock.MagicMock,
     mock_storage: mock.MagicMock,
     mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,
     mock_get_image: mock.MagicMock,
-    mock_socketio,
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
     mock_requests,  # noqa: F811
     test_storage,  # noqa: F811
     valid_client_version,  # noqa: F811

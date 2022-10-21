@@ -1,8 +1,11 @@
 # Standard Library
 from typing import Iterable, List
+from unittest import mock
+
+# Third party
+import pytest
 
 # Sematic
-from sematic import storage
 from sematic.abstract_future import FutureState
 from sematic.db.models.resolution import ResolutionStatus
 from sematic.db.queries import save_resolution, save_run
@@ -22,11 +25,18 @@ from sematic.resolvers.cloud_resolver import (
     START_INLINE_RUN_INDICATOR,
 )
 from sematic.scheduling.external_job import ExternalJob, JobType
-from sematic.tests.fixtures import test_storage  # noqa: F401
+from sematic.tests.fixtures import MockStorage  # noqa: F401
 
 _streamed_lines: List[str] = []
 _DUMMY_LOGS_FILE = "logs.log"
 _DUMMY_RUN_ID = "abc123"
+
+
+@pytest.fixture
+def mock_storage():
+    storage = MockStorage()
+    with mock.patch("sematic.log_reader.S3Storage", return_value=storage):
+        yield storage
 
 
 # Using this should help ensure we're actually properly streaming.
@@ -194,7 +204,7 @@ def test_get_log_lines_from_line_stream_filter():
     )
 
 
-def test_load_non_inline_logs(test_storage, test_db):  # noqa: F811
+def test_load_non_inline_logs(test_db, mock_storage: MockStorage):  # noqa: F811
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
 
@@ -216,7 +226,7 @@ def test_load_non_inline_logs(test_storage, test_db):  # noqa: F811
     assert result.lines == []
     assert result.continuation_cursor is None
     assert result.log_unavailable_reason == "No log files found"
-    storage.set(key, log_file_contents)
+    mock_storage.set(key, log_file_contents)
 
     result = _load_non_inline_logs(
         run_id=run.id,
@@ -271,7 +281,7 @@ def test_load_non_inline_logs(test_storage, test_db):  # noqa: F811
     )
 
 
-def test_load_inline_logs(test_storage, test_db):  # noqa: F811
+def test_load_inline_logs(mock_storage: MockStorage, test_db):  # noqa: F811
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
     resolution = make_resolution(status=ResolutionStatus.COMPLETE)
@@ -305,7 +315,7 @@ def test_load_inline_logs(test_storage, test_db):  # noqa: F811
     assert result.lines == []
     assert result.continuation_cursor is None
     assert result.log_unavailable_reason == "Resolver logs are missing"
-    storage.set(key, log_file_contents)
+    mock_storage.set(key, log_file_contents)
 
     result = _load_inline_logs(
         run_id=run.id,
@@ -366,7 +376,7 @@ def test_load_inline_logs(test_storage, test_db):  # noqa: F811
     )
 
 
-def test_load_log_lines(test_storage, test_db):  # noqa: F811
+def test_load_log_lines(mock_storage: MockStorage, test_db):  # noqa: F811
     run = make_run(future_state=FutureState.CREATED)
     save_run(run)
     resolution = make_resolution(status=ResolutionStatus.SCHEDULED)
@@ -412,7 +422,7 @@ def test_load_log_lines(test_storage, test_db):  # noqa: F811
     log_file_contents = bytes("\n".join(text_lines), encoding="utf8")
     prefix = log_prefix(run.id, JobType.worker)
     key = f"{prefix}12345.log"
-    storage.set(key, log_file_contents)
+    mock_storage.set(key, log_file_contents)
 
     result = load_log_lines(
         run_id=run.id,

@@ -236,11 +236,15 @@ def test_run_execution_ordering(
     )
 
     expected_order = [
+        # Layer 0
         future.id,
+        # Layer 1
         future.nested_future.kwargs["a"].id,
         future.nested_future.id,
+        # Layer 1.1
         future.nested_future.kwargs["a"].nested_future.kwargs["a"].id,
         future.nested_future.kwargs["a"].nested_future.id,
+        # Layer 1.2
         future.nested_future.nested_future.kwargs["a"].id,
         future.nested_future.nested_future.id,
     ]
@@ -267,16 +271,17 @@ def test_run_reverse_ordering(
     )
 
     expected_order = [
+        # Layer 0
         future.id,
+        # Layer 1
         future.nested_future.id,
         future.nested_future.kwargs["a"].id,
+        # Layer 1.2
         future.nested_future.nested_future.id,
         future.nested_future.nested_future.kwargs["a"].id,
+        # Layer 1.1
         future.nested_future.kwargs["a"].nested_future.id,
         future.nested_future.kwargs["a"].nested_future.kwargs["a"].id,
     ]
-
-    print(expected_order)
-    print(run_ids_by_reverse_order)
 
     assert run_ids_by_reverse_order == expected_order
