@@ -18,7 +18,11 @@ from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.resolvers.cloud_resolver import CloudResolver
-from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
+from sematic.tests.fixtures import (  # noqa: F401
+    MockStorage,
+    test_storage,
+    valid_client_version,
+)
 
 
 @func(base_image_tag="cuda", inline=False)
@@ -38,8 +42,10 @@ def pipeline() -> float:
 @mock.patch("sematic.api_client.schedule_run")
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
+@mock.patch("sematic.resolvers.cloud_resolver.S3Storage", return_value=MockStorage())
 @mock_no_auth
 def test_simulate_cloud_exec(
+    mock_storage: mock.MagicMock,
     mock_load_kube_config: mock.MagicMock,
     mock_schedule_resolution: mock.MagicMock,
     mock_schedule_run: mock.MagicMock,
@@ -48,7 +54,6 @@ def test_simulate_cloud_exec(
     mock_socketio,
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
-    test_storage,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
     # On the user's machine

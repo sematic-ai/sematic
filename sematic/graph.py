@@ -156,7 +156,7 @@ class Graph:
 
         return list(set(downstream_ids))
 
-    def get_duplicate_futures_by_original_run_id(
+    def clone_futures_by_original_run_id(
         self, storage: Storage, reset_from: Optional[str] = None
     ) -> Tuple[
         OrderedDict[str, AbstractFuture],

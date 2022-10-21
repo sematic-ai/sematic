@@ -33,7 +33,11 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
-from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
+from sematic.tests.fixtures import (  # noqa: F401
+    MockStorage,
+    test_storage,
+    valid_client_version,
+)
 
 
 def test_count_runs(test_db, run: Run):  # noqa: F811
@@ -118,7 +122,9 @@ def pipeline(a: float, b: float) -> float:
 )
 @mock_no_auth
 @mock.patch("socketio.Client.connect")
+@mock.patch("sematic.resolvers.local_resolver.LocalStorage", return_value=MockStorage())
 def test_get_run_graph(
+    mock_storage,
     mock_socketio,
     fn,
     run_count: int,
@@ -127,6 +133,7 @@ def test_get_run_graph(
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
+
     future = pipeline(1, 2)
     future.resolve()
 

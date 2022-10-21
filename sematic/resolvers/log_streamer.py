@@ -10,7 +10,7 @@ from typing import Callable, Optional
 
 # Sematic
 from sematic.config import KUBERNETES_POD_NAME_ENV_VAR
-from sematic.storage import set_from_file
+from sematic.storage import S3Storage
 from sematic.utils.retry import retry
 from sematic.utils.stdout import redirect_to_file
 
@@ -72,7 +72,7 @@ def _do_upload(file_path: str, remote_prefix: str):
     if remote_prefix.endswith("/"):
         remote_prefix = remote_prefix[:-1]
     remote = f"{remote_prefix}/{int(time.time() * 1000)}.log"
-    set_from_file(remote, file_path)
+    S3Storage().set_from_file(remote, file_path)
 
 
 def _start_log_streamer_out_of_process(

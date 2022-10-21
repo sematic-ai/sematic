@@ -159,6 +159,7 @@ sematic_py_lib(
     ],
     deps = [
         ":user_settings",
+        "//sematic/utils:memoized_property",
         "//sematic/utils:retry",
     ],
 )

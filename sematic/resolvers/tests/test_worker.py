@@ -16,7 +16,11 @@ from sematic.db.queries import get_resolution, get_root_graph, save_resolution
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.resolvers.worker import main
-from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
+from sematic.tests.fixtures import (  # noqa: F401
+    MockStorage,
+    test_storage,
+    valid_client_version,
+)
 
 
 @func
@@ -29,14 +33,21 @@ def pipeline(a: float, b: float) -> float:
     return add(a, b)
 
 
+_MOCK_STORAGE = MockStorage()
+
+
 @mock.patch("socketio.Client.connect")
 @mock.patch(
     "sematic.resolvers.cloud_resolver.get_image_uris", return_value=dict(default="foo")
 )
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
+@mock.patch("sematic.resolvers.cloud_resolver.S3Storage", return_value=_MOCK_STORAGE)
+@mock.patch("sematic.resolvers.worker.S3Storage", return_value=_MOCK_STORAGE)
 @mock_no_auth
 def test_main(
+    mock_worker_storage: mock.MagicMock,
+    mock_storage: mock.MagicMock,
     mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,
     mock_get_image: mock.MagicMock,
@@ -71,14 +82,21 @@ def fail():
     raise Exception("FAIL!")
 
 
+__MOCK_STORAGE = MockStorage()
+
+
 @mock.patch("socketio.Client.connect")
 @mock.patch(
     "sematic.resolvers.cloud_resolver.get_image_uris", return_value=dict(default="foo")
 )
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
+@mock.patch("sematic.resolvers.cloud_resolver.S3Storage", return_value=__MOCK_STORAGE)
+@mock.patch("sematic.resolvers.worker.S3Storage", return_value=__MOCK_STORAGE)
 @mock_no_auth
 def test_fail(
+    worker_mock_storage: mock.MagicMock,
+    mock_storage: mock.MagicMock,
     mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,
     mock_get_image: mock.MagicMock,

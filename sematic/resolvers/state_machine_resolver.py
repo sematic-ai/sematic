@@ -29,49 +29,52 @@ class StateMachineResolver(Resolver, abc.ABC):
         return self._futures[0]
 
     def resolve(self, future: AbstractFuture) -> typing.Any:
-        self._enqueue_root_future(future)
-        self._resolution_loop()
+        with self._catch_resolution_errors():
+            self._seed_graph(future)
+            self._resolution_loop()
+
         return self._root_future.value
 
+    def _seed_graph(self, future):
+        self._enqueue_root_future(future)
+
     def _resolution_loop(self):
-        with self._catch_resolution_errors():
+        self._register_signal_handlers()
 
-            self._register_signal_handlers()
+        logger.info(f"Starting resolution {self._root_future.id}")
 
-            logger.info(f"Starting resolution {self._root_future.id}")
+        self._resolution_will_start()
 
-            self._resolution_will_start()
+        while not self._root_future.state.is_terminal():
+            for future_ in self._futures:
+                if future_.state == FutureState.CREATED:
+                    self._schedule_future_if_args_resolved(future_)
+                    continue
+                if future_.state == FutureState.RETRYING:
+                    self._execute_future(future_)
+                    continue
+                if future_.state == FutureState.RAN:
+                    self._resolve_nested_future(future_)
+                    continue
 
-            while not self._root_future.state.is_terminal():
-                for future_ in self._futures:
-                    if future_.state == FutureState.CREATED:
-                        self._schedule_future_if_args_resolved(future_)
-                        continue
-                    if future_.state == FutureState.RETRYING:
-                        self._execute_future(future_)
-                        continue
-                    if future_.state == FutureState.RAN:
-                        self._resolve_nested_future(future_)
-                        continue
+                # should be unreachable code, here for a sanity check
+                if (
+                    future_.state != FutureState.SCHEDULED
+                    and not future_.state.is_terminal()
+                ):
+                    raise RuntimeError(
+                        f"Illegal state: future {future_.id} in state {future_.state}"
+                        " when it should have been already processed"
+                    )
 
-                    # should be unreachable code, here for a sanity check
-                    if (
-                        future_.state != FutureState.SCHEDULED
-                        and not future_.state.is_terminal()
-                    ):
-                        raise RuntimeError(
-                            f"Illegal state: future {future_.id} in state {future_.state}"
-                            " when it should have been already processed"
-                        )
+            self._wait_for_scheduled_runs()
 
-                self._wait_for_scheduled_runs()
-
-            if self._root_future.state == FutureState.RESOLVED:
-                self._resolution_did_succeed()
-            elif self._root_future.state == FutureState.CANCELED:
-                return
-            else:
-                raise RuntimeError("Unresolved Future after resolver call.")
+        if self._root_future.state == FutureState.RESOLVED:
+            self._resolution_did_succeed()
+        elif self._root_future.state == FutureState.CANCELED:
+            return
+        else:
+            raise RuntimeError("Unresolved Future after resolver call.")
 
     @contextmanager
     def _catch_resolution_errors(self):

@@ -13,7 +13,6 @@ import cloudpickle
 
 # Sematic
 import sematic.api_client as api_client
-import sematic.storage as storage
 from sematic.abstract_future import FutureState
 from sematic.calculator import Calculator
 from sematic.db.models.artifact import Artifact
@@ -28,6 +27,7 @@ from sematic.resolvers.cloud_resolver import (
 )
 from sematic.resolvers.log_streamer import ingested_logs
 from sematic.scheduling.external_job import JobType
+from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
 
 
@@ -57,7 +57,9 @@ def _get_input_kwargs(
     artifacts_by_id = {artifact.id: artifact for artifact in artifacts}
 
     kwargs = {
-        edge.destination_name: get_artifact_value(artifacts_by_id[edge.artifact_id])
+        edge.destination_name: get_artifact_value(
+            artifacts_by_id[edge.artifact_id], storage=S3Storage()
+        )
         for edge in edges
         if edge.destination_run_id == run_id
         and edge.artifact_id is not None
@@ -101,7 +103,9 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
 
     if isinstance(output, Future):
         pickled_nested_future = cloudpickle.dumps(output)
-        storage.set(make_nested_future_storage_key(output.id), pickled_nested_future)
+        S3Storage().set(
+            make_nested_future_storage_key(output.id), pickled_nested_future
+        )
         run.nested_future_id = output.id
         run.future_state = FutureState.RAN
         run.ended_at = datetime.datetime.utcnow()

@@ -2,7 +2,7 @@
 import abc
 import io
 import os
-from typing import Dict, Iterable, List
+from typing import Any, Dict, Iterable, List
 
 # Third-party
 import boto3
@@ -25,6 +25,17 @@ class Storage(abc.ABC):
         pass
 
 
+class MemoryStorage(Storage):
+    def __init__(self):
+        self._store: Dict[str, Any] = {}
+
+    def set(self, key: str, value: bytes):
+        self._store[key] = value
+
+    def get(self, key: str) -> bytes:
+        return self._store[key]
+
+
 class LocalStorage(Storage):
     def set(self, key: str, value: bytes):
         dir_path = os.path.split(key)[0]
@@ -34,8 +45,11 @@ class LocalStorage(Storage):
             file.write(value)
 
     def get(self, key: str) -> bytes:
-        with open(os.path.join(get_config().data_dir, key), "rb") as file:
-            return file.read()
+        try:
+            with open(os.path.join(get_config().data_dir, key), "rb") as file:
+                return file.read()
+        except FileNotFoundError:
+            raise KeyError(f"No suck key: {key}")
 
 
 class S3Storage(Storage):

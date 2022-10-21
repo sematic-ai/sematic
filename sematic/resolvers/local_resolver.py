@@ -58,20 +58,23 @@ class LocalResolver(SilentResolver):
 
         self._rerun_from_run_id = rerun_from
 
-    def resolve(self, future: AbstractFuture) -> Any:
+    def _seed_graph(self, future: AbstractFuture):
         if self._rerun_from_run_id is None:
-            return super().resolve(future)
+            super()._seed_graph(future)
+        else:
+            self._seed_from_clone(self._rerun_from_run_id)
+            # Making sure we honor id of future passed from the outside.
+            self._root_future.id = future.id
 
+    def _seed_from_clone(self, from_run_id: str):
         try:
-            run = api_client.get_run(self._rerun_from_run_id)
+            run = api_client.get_run(from_run_id)
         except api_client.ResourceNotFoundError:
-            raise ValueError(
-                f"Cannot restart from {self._rerun_from_run_id}: run cannot be found."
-            )
+            raise ValueError(f"Cannot restart from {from_run_id}: run cannot be found.")
 
-        if self._rerun_from_run_id == run.root_id:
+        if from_run_id == run.root_id:
             raise ValueError(
-                f"Cannot restart from {self._rerun_from_run_id}: "
+                f"Cannot restart from {from_run_id}: "
                 "this is the root run, simply start over"
             )
 
@@ -81,19 +84,18 @@ class LocalResolver(SilentResolver):
 
         if not graph.input_artifacts_ready(run.id):
             raise ValueError(
-                f"Cannot restart from {self._rerun_from_run_id}: "
-                "upstream runs did not succeed."
+                f"Cannot start from {from_run_id}: " "upstream runs did not succeed."
             )
 
-        logger.info(f"Attempting to rerun from {self._rerun_from_run_id}")
+        logger.info(f"Attempting to rerun from {from_run_id}")
 
         (
             futures_by_original_id,
             input_artifacts,
             output_artifacts,
-        ) = graph.get_duplicate_futures_by_original_run_id(
+        ) = graph.clone_futures_by_original_run_id(
             storage=self._storage,
-            reset_from=self._rerun_from_run_id,
+            reset_from=from_run_id,
         )
 
         self._futures = list(futures_by_original_id.values())
@@ -114,9 +116,6 @@ class LocalResolver(SilentResolver):
             )
 
         self._save_graph()
-
-        self._resolution_loop()
-        return self._root_future.value
 
     def _update_edge(
         self,

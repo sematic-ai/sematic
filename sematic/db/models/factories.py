@@ -55,7 +55,7 @@ def make_func_path(future: AbstractFuture) -> str:
 
 
 def make_artifact(
-    value: typing.Any, type_: typing.Any, storage: typing.Optional[Storage]
+    value: typing.Any, type_: typing.Any, storage: typing.Optional[Storage] = None
 ) -> Artifact:
     """
     Create an Artifact model instance from a value and type.

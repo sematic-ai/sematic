@@ -32,7 +32,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
 from sematic.log_reader import LogLineResult
 from sematic.scheduling.external_job import JobType
 from sematic.scheduling.kubernetes import KubernetesExternalJob
-from sematic.tests.fixtures import valid_client_version  # noqa: F401
+from sematic.tests.fixtures import MockStorage, valid_client_version  # noqa: F401
 from sematic.utils.exceptions import ExceptionMetadata
 
 test_list_runs_auth = make_auth_test("/api/v1/runs")
@@ -341,7 +341,12 @@ def pipeline(a: float, b: float) -> float:
 )
 @mock_no_auth
 @mock.patch("socketio.Client.connect")
+@mock.patch(
+    "sematic.resolvers.local_resolver.LocalStorage",
+    return_value=MockStorage(),
+)
 def test_get_run_graph_endpoint(
+    mock_storage,
     mock_socketio,
     root: int,
     run_count: int,

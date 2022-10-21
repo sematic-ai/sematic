@@ -5,7 +5,6 @@ import json
 import pytest
 
 # Sematic
-import sematic.storage as storage
 from sematic.abstract_future import FutureState
 from sematic.calculator import func
 from sematic.db.models.factories import (
@@ -18,7 +17,7 @@ from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
 )
-from sematic.tests.fixtures import test_storage  # noqa: F401
+from sematic.storage import MemoryStorage
 from sematic.types.serialization import (
     get_json_encodable_summary,
     type_to_json_encodable,
@@ -100,27 +99,20 @@ def test_make_artifact_special_floats(value, expected_value):
     assert json.loads(artifact.json_summary) == expected_value
 
 
-def test_make_artifact_store_true(test_storage):  # noqa: F811
-    artifact = make_artifact(42, int, store=True)
+def test_make_artifact_store():
+    storage = MemoryStorage()
+    artifact = make_artifact(42, int, storage=storage)
 
     storage_key = _make_artifact_storage_key(artifact)
 
     assert storage.get(storage_key) == "42".encode("utf-8")
 
 
-def test_make_artifact_store_false(test_storage):  # noqa: F811
-    artifact = make_artifact(42, int, store=False)
+def test_get_artifact_value():
+    storage = MemoryStorage()
+    artifact = make_artifact(42, int, storage=storage)
 
-    storage_key = _make_artifact_storage_key(artifact)
-
-    with pytest.raises(KeyError):
-        storage.get(storage_key)
-
-
-def test_get_artifact_value(test_storage):  # noqa: F811
-    artifact = make_artifact(42, int, store=True)
-
-    value = get_artifact_value(artifact)
+    value = get_artifact_value(artifact, storage)
 
     assert value == 42
     assert isinstance(value, int)

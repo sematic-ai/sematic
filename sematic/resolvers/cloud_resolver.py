@@ -8,7 +8,6 @@ import cloudpickle
 
 # Sematic
 import sematic.api_client as api_client
-import sematic.storage as storage
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.container_images import (
     DEFAULT_BASE_IMAGE_TAG,
@@ -21,6 +20,7 @@ from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
+from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.utils.memoized_property import memoized_property
 
@@ -99,8 +99,7 @@ class CloudResolver(LocalResolver):
         # this is the tag we use to find the resolution image
         self._base_image_tag = _base_image_tag or DEFAULT_BASE_IMAGE_TAG
 
-        # TODO: Replace this with a cloud storage engine
-        self._store_artifacts = True
+        self._storage = S3Storage()
 
         self._output_artifacts_by_run_id: Dict[str, Artifact] = {}
 

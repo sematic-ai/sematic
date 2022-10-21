@@ -187,7 +187,7 @@ def persisted_artifact(test_db, test_storage):  # noqa: F811
     """
     Persisted artifact fixture.
     """
-    artifact = make_artifact(42, int, True)
+    artifact = make_artifact(42, int, storage=test_storage)
 
     with db.db().get_session() as session:
         session.add(artifact)

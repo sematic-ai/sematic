@@ -20,7 +20,7 @@ from sematic.db.queries import get_resolution, get_root_graph, get_run
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.resolvers.local_resolver import LocalResolver
 from sematic.retry_settings import RetrySettings
-from sematic.tests.fixtures import valid_client_version  # noqa: F401
+from sematic.tests.fixtures import MockStorage, valid_client_version  # noqa: F401
 from sematic.utils.exceptions import ExceptionMetadata
 
 
@@ -43,8 +43,13 @@ def pipeline(a: float, b: float) -> float:
 
 @mock_no_auth
 @mock.patch("socketio.Client.connect")
+@mock.patch("sematic.resolvers.local_resolver.LocalStorage", return_value=MockStorage())
 def test_single_function(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_storage,
+    mock_socketio,
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     future = add(1, 2)
 
@@ -96,8 +101,13 @@ def add_add_add(a: float, b: float) -> float:
 
 @mock_no_auth
 @mock.patch("socketio.Client.connect")
+@mock.patch("sematic.resolvers.local_resolver.LocalStorage", return_value=MockStorage())
 def test_add_add(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_storage,
+    mock_socketio,
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     future = add_add_add(1, 2)
 
@@ -114,8 +124,13 @@ def test_add_add(
 
 @mock_no_auth
 @mock.patch("socketio.Client.connect")
+@mock.patch("sematic.resolvers.local_resolver.LocalStorage", return_value=MockStorage())
 def test_pipeline(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_storage,
+    mock_socketio,
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     future = pipeline(3, 5)
 
@@ -135,8 +150,13 @@ def test_pipeline(
 
 @mock_no_auth
 @mock.patch("socketio.Client.connect")
+@mock.patch("sematic.resolvers.local_resolver.LocalStorage", return_value=MockStorage())
 def test_failure(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_storage,
+    mock_socketio,
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     class CustomException(Exception):
         pass
@@ -172,8 +192,13 @@ def test_failure(
 
 @mock_no_auth
 @mock.patch("socketio.Client.connect")
+@mock.patch("sematic.resolvers.local_resolver.LocalStorage", return_value=MockStorage())
 def test_resolver_error(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_storage,
+    mock_socketio,
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     @func
     def add(x: int, y: int) -> int:
@@ -294,16 +319,26 @@ class DBStateMachineTestResolver(LocalResolver):
 
 @mock_no_auth
 @mock.patch("socketio.Client.connect")
+@mock.patch("sematic.resolvers.local_resolver.LocalStorage", return_value=MockStorage())
 def test_db_state_machine(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_storage,
+    mock_socketio,
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     pipeline(1, 2).resolve(DBStateMachineTestResolver())
 
 
 @mock_no_auth
 @mock.patch("socketio.Client.connect")
+@mock.patch("sematic.resolvers.local_resolver.LocalStorage", return_value=MockStorage())
 def test_list_conversion(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_storage,
+    mock_socketio,
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     @func
     def alist(a: float, b: float) -> List[float]:
@@ -314,7 +349,10 @@ def test_list_conversion(
 
 @mock_no_auth
 @mock.patch("socketio.Client.connect")
-def test_exceptions(mock_socketio, mock_requests, valid_client_version):  # noqa: F811
+@mock.patch("sematic.resolvers.local_resolver.LocalStorage", return_value=MockStorage())
+def test_exceptions(
+    mock_storage, mock_socketio, mock_requests, valid_client_version  # noqa: F811
+):
     @func
     def fail():
         raise Exception("FAIL!")
@@ -360,8 +398,13 @@ def try_three_times():
 
 @mock_no_auth
 @mock.patch("socketio.Client.connect")
+@mock.patch("sematic.resolvers.local_resolver.LocalStorage", return_value=MockStorage())
 def test_retry(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_storage,
+    mock_socketio,
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     future = try_three_times()
     try:
