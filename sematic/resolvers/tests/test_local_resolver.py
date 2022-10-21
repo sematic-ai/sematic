@@ -22,7 +22,7 @@ from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.resolvers.local_resolver import LocalResolver
 from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa: F401
 from sematic.retry_settings import RetrySettings
-from sematic.tests.fixtures import valid_client_version  # noqa: F401
+from sematic.tests.fixtures import MockStorage, valid_client_version  # noqa: F401
 from sematic.utils.exceptions import ExceptionMetadata
 
 

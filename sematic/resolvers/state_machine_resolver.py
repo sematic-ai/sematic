@@ -29,9 +29,14 @@ class StateMachineResolver(Resolver, abc.ABC):
         return self._futures[0]
 
     def resolve(self, future: AbstractFuture) -> typing.Any:
-        self._enqueue_root_future(future)
-        self._resolution_loop()
+        with self._catch_resolution_errors():
+            self._seed_graph(future)
+            self._resolution_loop()
+
         return self._root_future.value
+
+    def _seed_graph(self, future):
+        self._enqueue_root_future(future)
 
     def _resolution_loop(self):
         with self._catch_resolution_errors():
