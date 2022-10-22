@@ -36,6 +36,7 @@ def pipeline() -> float:
 
 @mock.patch("sematic.api_client.update_run_future_states")
 @mock.patch("sematic.resolvers.cloud_resolver.get_image_uris")
+@mock.patch("sematic.api_client.schedule_run")
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
 def test_simulate_cloud_exec(
