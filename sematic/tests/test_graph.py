@@ -6,7 +6,6 @@ import sematic.api_client as api_client
 from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_auth,
-    mock_no_auth,
     mock_requests,
     mock_socketio,
     test_client,

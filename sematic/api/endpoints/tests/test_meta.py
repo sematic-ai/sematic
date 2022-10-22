@@ -9,7 +9,6 @@ import flask.testing
 import sematic.api.endpoints.meta  # noqa: F401
 from sematic.api.app import sematic_api  # noqa: F401
 from sematic.api.tests.fixtures import (  # noqa: F401
-    mock_no_auth,
     mock_requests,
     mock_user_settings,
     test_client,

@@ -1,9 +1,8 @@
 # Standard Library
 import contextlib
-import functools
 import re
 from http import HTTPStatus
-from typing import Any, Callable, Dict
+from typing import Any, Dict
 from unittest import mock
 from urllib.parse import urljoin
 
@@ -90,17 +89,6 @@ def mock_user_settings(settings: Dict[user_settings.SettingsVar, Any]):
         yield settings
     finally:
         user_settings._settings = original_settings
-
-
-def mock_no_auth(fn: Callable) -> Callable:
-    @functools.wraps(fn)
-    def no_auth_fn(*args, **kwargs):
-        with mock_user_settings(
-            {user_settings.SettingsVar.SEMATIC_AUTHENTICATE: False}
-        ):
-            fn(*args, **kwargs)
-
-    return no_auth_fn
 
 
 def make_auth_test(endpoint: str, method: str = "GET"):

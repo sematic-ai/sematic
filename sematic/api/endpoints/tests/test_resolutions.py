@@ -10,7 +10,7 @@ import pytest
 from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     make_auth_test,
-    mock_no_auth,
+    mock_auth,
     mock_requests,
     test_client,
 )
@@ -44,8 +44,8 @@ def mock_schedule_resolution():
         yield mock_schedule
 
 
-@mock_no_auth
 def test_get_resolution_endpoint(
+    mock_auth,  # noqa: F811
     persisted_resolution: Resolution,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
@@ -62,8 +62,8 @@ def test_get_resolution_endpoint(
     assert payload["content"]["settings_env_vars"] == {}
 
 
-@mock_no_auth
 def test_put_resolution_endpoint(
+    mock_auth,  # noqa: F811
     persisted_run,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
@@ -86,8 +86,9 @@ def test_put_resolution_endpoint(
     assert read.status == ResolutionStatus.FAILED.value
 
 
-@mock_no_auth
-def test_get_resolution_404(test_client: flask.testing.FlaskClient):  # noqa: F811
+def test_get_resolution_404(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
     response = test_client.get("/api/v1/resolutions/unknownid")
 
     assert response.status_code == 404
@@ -98,8 +99,8 @@ def test_get_resolution_404(test_client: flask.testing.FlaskClient):  # noqa: F8
     assert payload == dict(error="No resolutions with id 'unknownid'")
 
 
-@mock_no_auth
 def test_schedule_resolution_endpoint(
+    mock_auth,  # noqa: F811
     persisted_resolution: Resolution,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
     mock_schedule_resolution: mock.MagicMock,
@@ -135,12 +136,12 @@ def test_schedule_resolution_endpoint(
 
 
 @mock.patch("sematic.api.endpoints.resolutions.cancel_job")
-@mock_no_auth
 def test_cancel_resolution(
     mock_cancel_job: mock.MagicMock,
     persisted_resolution: Resolution,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
     test_db,  # noqa: F811
+    mock_auth,  # noqa: F811
 ):
     persisted_resolution.external_jobs = (
         KubernetesExternalJob.new(
