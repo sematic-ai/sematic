@@ -1,4 +1,4 @@
-import { ContentCopy, FileCopy, History, Insights } from "@mui/icons-material";
+import { FileCopy, History, Insights } from "@mui/icons-material";
 import {
   Box,
   FormControl,
@@ -107,7 +107,7 @@ export default function RunPanel(props: {
             <Box sx={{ paddingBottom: 3, gridColumn: 1 }}>
               <Box marginBottom={3}>
                 <Typography variant="h6">{selectedRun.name}</Typography>
-                <CalculatorPath calculatorPath={selectedRun.id} />
+                <CalculatorPath calculatorPath={"ID: " + selectedRun.id} />
                 <br />
                 <CalculatorPath calculatorPath={selectedRun.calculator_path} />
               </Box>
