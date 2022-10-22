@@ -236,6 +236,7 @@ def test_load_non_inline_logs(test_db, mock_storage: MockStorage):  # noqa: F811
         max_lines=max_lines,
         filter_strings=[],
     )
+    assert result.continuation_cursor is not None
     cursor = Cursor.from_token(result.continuation_cursor)
     result.continuation_cursor = None
     assert result == LogLineResult(
@@ -254,6 +255,7 @@ def test_load_non_inline_logs(test_db, mock_storage: MockStorage):  # noqa: F811
         max_lines=max_lines,
         filter_strings=[],
     )
+    assert result.continuation_cursor is not None
     cursor = Cursor.from_token(result.continuation_cursor)
     result.continuation_cursor = None
     assert result == LogLineResult(
@@ -326,7 +328,7 @@ def test_load_inline_logs(mock_storage: MockStorage, test_db):  # noqa: F811
         max_lines=max_lines,
         filter_strings=[],
     )
-
+    assert result.continuation_cursor is not None
     cursor = Cursor.from_token(result.continuation_cursor)
     result.continuation_cursor = None
     assert result == LogLineResult(
@@ -346,6 +348,8 @@ def test_load_inline_logs(mock_storage: MockStorage, test_db):  # noqa: F811
         max_lines=max_lines,
         filter_strings=[],
     )
+    assert result.continuation_cursor is not None
+
     cursor = Cursor.from_token(result.continuation_cursor)
     result.continuation_cursor = None
 
@@ -416,7 +420,9 @@ def test_load_log_lines(mock_storage: MockStorage, test_db):  # noqa: F811
     )
 
     run.future_state = FutureState.SCHEDULED
-    run.external_jobs = [ExternalJob(kind="fake", try_number=0, external_job_id="fake")]
+    run.external_jobs = (
+        ExternalJob(kind="fake", try_number=0, external_job_id="fake"),
+    )
     save_run(run)
     text_lines = [line.line for line in finite_logs(100)]
     log_file_contents = bytes("\n".join(text_lines), encoding="utf8")
