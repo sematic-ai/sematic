@@ -1,4 +1,5 @@
 # Standard Library
+from collections import defaultdict
 from typing import List
 
 # Third-party
@@ -419,3 +420,45 @@ def test_make_resolution():
     assert resolution.kind == ResolutionKind.LOCAL.value
     assert resolution.container_image_uris is None
     assert resolution.container_image_uri is None
+
+
+class RerunTestResolver(LocalResolver):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.scheduled_run_counts = defaultdict(lambda: 0)
+
+    def _future_will_schedule(self, future):
+        super()._future_will_schedule(future)
+        self.scheduled_run_counts[future.calculator.__name__] += 1
+
+
+def test_rerun_from_here(
+    mock_local_resolver_storage,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
+):
+    future = pipeline(1, 2)
+
+    output = future.resolve()
+
+    runs, _, __ = get_root_graph(future.id)
+
+    for run_id, expected_scheduled_run_counts in {
+        future.nested_future.id: dict(add=1),
+        future.nested_future.kwargs["a"].id: dict(add=4, add3=1),
+        future.nested_future.kwargs["b"].id: dict(add=3, add3=1),
+        future.nested_future.kwargs["b"].nested_future.id: dict(add=2),
+        future.nested_future.kwargs["b"].nested_future.kwargs["a"].id: dict(add=3),
+    }.items():
+        new_future = pipeline(1, 2)
+
+        resolver = RerunTestResolver(rerun_from=run_id)
+
+        new_output = new_future.resolve(resolver)
+
+        assert output == new_output
+
+        assert resolver.scheduled_run_counts == expected_scheduled_run_counts
