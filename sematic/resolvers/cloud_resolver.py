@@ -254,7 +254,7 @@ class CloudResolver(LocalResolver):
             output_edge = self._get_output_edges(run.id)[0]
             output_artifact = self._artifacts[output_edge.artifact_id]
             self._output_artifacts_by_run_id[run.id] = output_artifact
-            value = get_artifact_value(output_artifact)
+            value = get_artifact_value(output_artifact, storage=self._storage)
 
         self._update_future_with_value(future, value)
 

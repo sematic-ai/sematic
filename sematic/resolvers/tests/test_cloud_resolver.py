@@ -20,11 +20,7 @@ from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.resolvers.tests.fixtures import mock_cloud_resolver_storage  # noqa: F401
-from sematic.tests.fixtures import (  # noqa: F401
-    MockStorage,
-    test_storage,
-    valid_client_version,
-)
+from sematic.tests.fixtures import valid_client_version  # noqa: F401
 
 
 @func(base_image_tag="cuda", inline=False)
@@ -38,18 +34,22 @@ def pipeline() -> float:
     return add(1, 2)
 
 
+@mock.patch("sematic.api_client.update_run_future_states")
 @mock.patch("sematic.resolvers.cloud_resolver.get_image_uris")
+@mock.patch("sematic.api_client.schedule_run")
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
 def test_simulate_cloud_exec(
     mock_load_kube_config: mock.MagicMock,
-    mock_schedule_job: mock.MagicMock,
-    mock_get_image: mock.MagicMock,
-    mock_cloud_resolver_storage,  # noqa: F811
-    mock_auth,  # noqa: F811
+    mock_schedule_resolution: mock.MagicMock,
+    mock_schedule_run: mock.MagicMock,
+    mock_get_images: mock.MagicMock,
+    mock_update_run_future_states: mock.MagicMock,
     mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
+    mock_cloud_resolver_storage,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
     # On the user's machine
@@ -88,7 +88,7 @@ def test_simulate_cloud_exec(
             run.future_state = FutureState.RESOLVED
             updates[run.id] = FutureState.RESOLVED
             edge = driver_resolver._get_output_edges(run.id)[0]
-            artifact = make_artifact(3, int, store=True)
+            artifact = make_artifact(3, int, storage=mock_cloud_resolver_storage)
             edge.artifact_id = artifact.id
             api_client.save_graph(
                 run.id, runs=[run], artifacts=[artifact], edges=[edge]
