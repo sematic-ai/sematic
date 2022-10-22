@@ -1,4 +1,4 @@
-import { ContentCopy, FileCopy, History, Insights } from "@mui/icons-material";
+import { FileCopy, History, Insights } from "@mui/icons-material";
 import {
   Box,
   FormControl,
