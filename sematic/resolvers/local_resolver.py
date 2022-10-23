@@ -82,27 +82,32 @@ class LocalResolver(SilentResolver):
 
         logger.info(f"Attempting to rerun from {from_run_id}")
 
-        (
-            futures_by_original_id,
-            input_artifacts,
-            output_artifacts,
-        ) = graph.clone_futures_by_original_run_id(
+        cloned_futures, input_artifacts, output_artifacts = graph.clone_futures(
             storage=self._storage,
             reset_from=from_run_id,
         )
 
-        self._futures = list(futures_by_original_id.values())
-
         # Making sure we honor id of future passed from the outside
-        # This is also the resolution ID
-        self._root_future.id = future.id
+        cloned_root_future = cloned_futures[run.root_id]
 
-        for future in futures_by_original_id.values():
+        if cloned_root_future.id in input_artifacts:
+            input_artifacts[future.id] = input_artifacts[cloned_root_future.id]
+
+        if cloned_root_future.id in output_artifacts:
+            output_artifacts[future.id] = output_artifacts[cloned_root_future.id]
+
+        cloned_root_future.id = future.id
+
+        self._futures = list(cloned_futures.values())
+
+        for future in self._futures:
             future.resolved_kwargs = self._get_resolved_kwargs(future)
             run_input_artifacts: Dict[str, Artifact] = {}
             run_output_artifact = None
+
             if future.state == FutureState.RESOLVED:
                 run_output_artifact = output_artifacts[future.id]
+
             if future.state in {FutureState.RESOLVED, FutureState.RAN}:
                 run_input_artifacts = input_artifacts[future.id]
 

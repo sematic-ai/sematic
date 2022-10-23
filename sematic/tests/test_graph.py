@@ -57,7 +57,7 @@ def test_clone_futures(
         futures_by_original_id,
         input_artifacts,
         output_artifacts,
-    ) = graph.clone_futures_by_original_run_id(storage=mock_local_resolver_storage)
+    ) = graph.clone_futures(storage=mock_local_resolver_storage)
 
     assert len(futures_by_original_id) == len(runs)
 
@@ -117,11 +117,7 @@ def test_clone_futures_reset(
 
     reset_from_run_id = future.nested_future.kwargs["a"].nested_future.kwargs["a"].id
 
-    (
-        futures_by_original_id,
-        input_artifacts,
-        output_artifacts,
-    ) = graph.clone_futures_by_original_run_id(
+    futures_by_original_id, _, __ = graph.clone_futures(
         reset_from=reset_from_run_id, storage=mock_local_resolver_storage
     )
 
@@ -195,11 +191,7 @@ def test_reset_failed(
 
     reset_from_run_id = future.nested_future.kwargs["a"].id
 
-    (
-        futures_by_original_id,
-        input_artifacts,
-        output_artifacts,
-    ) = graph.clone_futures_by_original_run_id(
+    futures_by_original_id, _, __ = graph.clone_futures(
         reset_from=reset_from_run_id, storage=mock_local_resolver_storage
     )
 
@@ -230,7 +222,7 @@ def test_run_execution_ordering(
 
     graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
 
-    run_ids_by_execution_order = graph.run_ids_sorted_by_layer(
+    run_ids_by_execution_order = graph._run_ids_sorted_by_layer(
         run_sorter=graph._execution_order
     )
 
@@ -265,7 +257,7 @@ def test_run_reverse_ordering(
 
     graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
 
-    run_ids_by_reverse_order = graph.run_ids_sorted_by_layer(
+    run_ids_by_reverse_order = graph._run_ids_sorted_by_layer(
         run_sorter=graph._reverse_execution_order
     )
 

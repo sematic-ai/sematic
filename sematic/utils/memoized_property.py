@@ -47,3 +47,21 @@ def memoized_property(fget: typing.Callable) -> property:
 
 def make_cache_name(name: str):
     return f"_{name}"
+
+
+def memoized_indexed(fget: typing.Callable) -> typing.Callable:
+    cache_name = make_cache_name(fget.__name__)
+
+    @wraps(fget)
+    def fget_memoized(self, index: str):
+        cache = getattr(self, cache_name, {})
+        setattr(self, cache_name, cache)
+
+        if index not in cache:
+            cache[index] = fget(self, index)
+
+        return cache[index]
+
+    fget_memoized.__annotations__ = fget.__annotations__
+
+    return fget_memoized
