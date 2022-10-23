@@ -161,13 +161,18 @@ def schedule_run(run_id: str) -> Run:
 
 
 def schedule_resolution(
-    resolution_id: str, max_parallelism: Optional[int] = None
+    resolution_id: str,
+    max_parallelism: Optional[int] = None,
+    rerun_from: Optional[str] = None,
 ) -> Resolution:
     """Ask the server to start a detached resolution execution."""
     payload = {}
 
     if max_parallelism is not None:
         payload["max_parallelism"] = max_parallelism
+
+    if rerun_from is not None:
+        payload["rerun_from"] = rerun_from
 
     response = _post(f"/resolutions/{resolution_id}/schedule", json_payload=payload)
     return Resolution.from_json_encodable(response["content"])

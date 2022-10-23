@@ -105,7 +105,7 @@ def test_schedule_resolution_endpoint(
     test_client: flask.testing.FlaskClient,  # noqa: F811
     mock_schedule_resolution: mock.MagicMock,
 ):
-    def mock_schedule(resolution, max_parallelism=None):  # noqa: F811
+    def mock_schedule(resolution, max_parallelism=None, rerun_from=None):  # noqa: F811
         resolution.status = ResolutionStatus.SCHEDULED
         resolution.external_jobs = (
             KubernetesExternalJob.new(
@@ -120,7 +120,7 @@ def test_schedule_resolution_endpoint(
     mock_schedule_resolution.side_effect = mock_schedule
     response = test_client.post(
         "/api/v1/resolutions/{}/schedule".format(persisted_resolution.root_id),
-        json={"max_parallelism": 3},
+        json={"max_parallelism": 3, "rerun_from": "rerun_from_run_id"},
     )
 
     payload = response.json
@@ -133,6 +133,9 @@ def test_schedule_resolution_endpoint(
     assert isinstance(scheduled_resolution, Resolution)
     assert scheduled_resolution.root_id == persisted_resolution.root_id
     assert mock_schedule_resolution.call_args.kwargs["max_parallelism"] == 3
+    assert (
+        mock_schedule_resolution.call_args.kwargs["rerun_from"] == "rerun_from_run_id"
+    )
 
 
 @mock.patch("sematic.api.endpoints.resolutions.cancel_job")

@@ -39,6 +39,7 @@ def parse_args():
     parser.add_argument("--run_id", type=str, required=True)
     parser.add_argument("--resolve", default=False, action="store_true", required=False)
     parser.add_argument("--max-parallelism", type=int, default=None, required=False)
+    parser.add_argument("--rerun-from", type=str, default=None, required=False)
 
     args = parser.parse_args()
 
@@ -123,7 +124,12 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
     api_client.save_graph(run.root_id, [run], artifacts, edges)
 
 
-def main(run_id: str, resolve: bool, max_parallelism: Optional[int] = None):
+def main(
+    run_id: str,
+    resolve: bool,
+    max_parallelism: Optional[int] = None,
+    rerun_from: Optional[str] = None,
+):
     """
     Main job logic.
 
@@ -147,7 +153,10 @@ def main(run_id: str, resolve: bool, max_parallelism: Optional[int] = None):
             future.id = run.id
 
             resolver = CloudResolver(
-                detach=False, max_parallelism=max_parallelism, _is_running_remotely=True
+                detach=False,
+                max_parallelism=max_parallelism,
+                rerun_from=rerun_from,
+                _is_running_remotely=True,
             )
             resolver.set_graph(runs=runs, artifacts=artifacts, edges=edges)
 
@@ -209,6 +218,7 @@ def wrap_main_with_logging():
             run_id=args.run_id,
             resolve=args.resolve,
             max_parallelism=args.max_parallelism,
+            rerun_from=args.rerun_from,
         )
 
 

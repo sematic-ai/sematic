@@ -57,11 +57,9 @@ class LocalResolver(SilentResolver):
         if self._rerun_from_run_id is None:
             super()._seed_graph(future)
         else:
-            self._seed_from_clone(self._rerun_from_run_id)
-            # Making sure we honor id of future passed from the outside.
-            self._root_future.id = future.id
+            self._seed_from_clone(future, self._rerun_from_run_id)
 
-    def _seed_from_clone(self, from_run_id: str):
+    def _seed_from_clone(self, future: AbstractFuture, from_run_id: str):
         try:
             run = api_client.get_run(from_run_id)
         except api_client.ResourceNotFoundError:
@@ -94,6 +92,10 @@ class LocalResolver(SilentResolver):
         )
 
         self._futures = list(futures_by_original_id.values())
+
+        # Making sure we honor id of future passed from the outside
+        # This is also the resolution ID
+        self._root_future.id = future.id
 
         for future in futures_by_original_id.values():
             future.resolved_kwargs = self._get_resolved_kwargs(future)

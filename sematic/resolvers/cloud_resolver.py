@@ -74,8 +74,9 @@ class CloudResolver(LocalResolver):
         max_parallelism: Optional[int] = None,
         _is_running_remotely: bool = False,
         _base_image_tag: str = "default",
+        **kwargs,
     ):
-        super().__init__()
+        super().__init__(**kwargs)
 
         # detach:
         #   True: default, the user wants to submit a detached resolution
@@ -214,7 +215,9 @@ class CloudResolver(LocalResolver):
 
         # SUBMIT RESOLUTION JOB
         api_client.schedule_resolution(
-            resolution_id=future.id, max_parallelism=self._max_parallelism
+            future.id,
+            max_parallelism=self._max_parallelism,
+            rerun_from=self._rerun_from_run_id,
         )
 
         return run.id

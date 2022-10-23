@@ -38,7 +38,9 @@ def schedule_run(run: Run, resolution: Resolution) -> Run:
 
 
 def schedule_resolution(
-    resolution: Resolution, max_parallelism: Optional[int] = None
+    resolution: Resolution,
+    max_parallelism: Optional[int] = None,
+    rerun_from: Optional[str] = None,
 ) -> Resolution:
     """Start a resolution for the run on external compute.
 
@@ -53,7 +55,11 @@ def schedule_resolution(
     resolution.external_jobs = _refresh_external_jobs(resolution.external_jobs)
     _assert_resolution_is_scheduleable(resolution)
     external_jobs_list = list(resolution.external_jobs) + [
-        _schedule_resolution_job(resolution=resolution, max_parallelism=max_parallelism)
+        _schedule_resolution_job(
+            resolution=resolution,
+            max_parallelism=max_parallelism,
+            rerun_from=rerun_from,
+        )
     ]
     resolution.external_jobs = tuple(external_jobs_list)
     resolution.status = ResolutionStatus.SCHEDULED
@@ -202,7 +208,9 @@ def _schedule_job(run: Run, resolution: Resolution) -> ExternalJob:
 
 
 def _schedule_resolution_job(
-    resolution: Resolution, max_parallelism: Optional[int] = None
+    resolution: Resolution,
+    max_parallelism: Optional[int] = None,
+    rerun_from: Optional[str] = None,
 ) -> ExternalJob:
     """Reach out to external compute to start the execution of the resolution"""
     # should be impossible to fail this assert, but it makes mypy happy
@@ -212,4 +220,5 @@ def _schedule_resolution_job(
         image=resolution.container_image_uri,
         user_settings=resolution.settings_env_vars,
         max_parallelism=max_parallelism,
+        rerun_from=rerun_from,
     )
