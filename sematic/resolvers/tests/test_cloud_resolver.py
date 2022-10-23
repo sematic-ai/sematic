@@ -99,7 +99,7 @@ def test_simulate_cloud_exec(
     mock_update_run_future_states.side_effect = fake_update_run_future_states
 
     mock_schedule_resolution.assert_called_once_with(
-        resolution_id=future.id, max_parallelism=None
+        resolution_id=future.id, max_parallelism=None, rerun_from=None
     )
     assert api_client.get_resolution(future.id).status == ResolutionStatus.CREATED.value
 
