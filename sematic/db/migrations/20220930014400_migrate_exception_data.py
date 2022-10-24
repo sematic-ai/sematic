@@ -3,33 +3,25 @@ import json
 
 # Sematic
 from sematic.db.db import db
-from sematic.db.models.run import Run
-from sematic.utils.exceptions import ExceptionMetadata
 
 
 def up():
-    with db().get_engine().connect() as conn:
+    with db().get_engine().begin() as conn:
         run_id_exception_pairs = conn.execute(
             "SELECT id, exception FROM runs WHERE exception IS NOT NULL;"
         )
 
-        exception_map = {pair[0]: pair[1] for pair in run_id_exception_pairs}
+        for run_id, exception in run_id_exception_pairs:
+            exception_metadata = dict(
+                repr=exception, name=Exception.__name__, module=Exception.__module__
+            )
+            exception_json = json.dumps(exception_metadata)
 
-    with db().get_session() as session:
-        runs_with_exceptions = (
-            session.query(Run).filter(Run.id.in_(exception_map.keys())).all()
-        )
-
-    runs_by_id = {run.id: run for run in runs_with_exceptions}
-
-    for run_id, exception in exception_map.items():
-        runs_by_id[run_id].exception = ExceptionMetadata(
-            repr=exception, name=Exception.__name__, module=Exception.__module__
-        )
-
-    with db().get_session() as session:
-        session.add_all(runs_with_exceptions)
-        session.commit()
+            conn.execute(
+                "UPDATE runs SET exception_json = ? WHERE id = ?",
+                exception_json,
+                run_id,
+            )
 
 
 def down():

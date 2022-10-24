@@ -45,17 +45,15 @@ sematic_py_lib(
     ),
     pip_deps = [
         "click",
+        "sqlalchemy",
     ],
     deps = [
+        # DO NOT add any other dependencies
+        # or it may break the sequence of migrations
+        # Migrations are written at a specific point in time, whereas the
+        # codebase evolves.
         ":db",
         "//sematic:config",
-        "//sematic:container_images",
-        "//sematic/db/models:artifact",
-        "//sematic/db/models:edge",
-        "//sematic/db/models:note",
-        "//sematic/db/models:resolution",
-        "//sematic/db/models:run",
-        "//sematic/db/models:user",
     ],
 )
 

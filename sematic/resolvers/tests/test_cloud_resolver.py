@@ -7,19 +7,21 @@ import pytest
 
 # Sematic
 import sematic.api_client as api_client
+from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_no_auth,
     mock_requests,
     test_client,
 )
 from sematic.calculator import func
+from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 
 
-@func
+@func(base_image_tag="cuda", inline=False)
 def add(a: float, b: float) -> float:
     return a + b
 
@@ -31,17 +33,18 @@ def pipeline() -> float:
 
 
 @mock.patch("socketio.Client.connect")
-@mock.patch(
-    "sematic.resolvers.cloud_resolver.get_image_uris",
-    return_value={"default": "some_image"},
-)
+@mock.patch("sematic.api_client.update_run_future_states")
+@mock.patch("sematic.resolvers.cloud_resolver.get_image_uris")
+@mock.patch("sematic.api_client.schedule_run")
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
 @mock_no_auth
 def test_simulate_cloud_exec(
     mock_load_kube_config: mock.MagicMock,
-    mock_schedule_job: mock.MagicMock,
-    mock_get_image: mock.MagicMock,
+    mock_schedule_resolution: mock.MagicMock,
+    mock_schedule_run: mock.MagicMock,
+    mock_get_images: mock.MagicMock,
+    mock_update_run_future_states: mock.MagicMock,
     mock_socketio,
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
@@ -52,16 +55,57 @@ def test_simulate_cloud_exec(
     resolver = CloudResolver(detach=True)
 
     future = pipeline()
+    images = {
+        "default": "default_image",
+        "cuda": "cuda_image",
+    }
+    mock_get_images.return_value = images
 
     result = future.resolve(resolver)
+    add_run_ids = []
 
     assert result == future.id
 
-    mock_schedule_job.assert_called_once_with(future.id)
+    def fake_schedule(run_id):
+        if run_id == future.id:
+            raise RuntimeError("Root future should not need scheduling--it's inline!")
+        run = api_client.get_run(run_id)
+        if "add" in run.calculator_path:
+            add_run_ids.append(run_id)
+        run.future_state = FutureState.SCHEDULED
+        api_client.save_graph(run.id, runs=[run], artifacts=[], edges=[])
+        return run
+
+    mock_schedule_run.side_effect = fake_schedule
+
+    def fake_update_run_future_states(run_ids):
+        updates = {}
+        for run_id in run_ids:
+            if run_id == future.id:
+                raise RuntimeError("Root future should not need updating--it's inline!")
+            run = api_client.get_run(run_id)
+            run.future_state = FutureState.RESOLVED
+            updates[run.id] = FutureState.RESOLVED
+            edge = driver_resolver._get_output_edges(run.id)[0]
+            artifact = make_artifact(3, int, store=True)
+            edge.artifact_id = artifact.id
+            api_client.save_graph(
+                run.id, runs=[run], artifacts=[artifact], edges=[edge]
+            )
+            driver_resolver._refresh_graph(run.id)
+        return updates
+
+    mock_update_run_future_states.side_effect = fake_update_run_future_states
+
+    mock_schedule_resolution.assert_called_once_with(future.id)
     assert api_client.get_resolution(future.id).status == ResolutionStatus.CREATED.value
     resolution = api_client.get_resolution(future.id)
+    root_run = api_client.get_run(future.id)
+    assert root_run.container_image_uri == images["default"]
     resolution.status = ResolutionStatus.SCHEDULED
     api_client.save_resolution(resolution)
+    mock_schedule_run.assert_not_called()
+
     # In the driver job
 
     runs, artifacts, edges = api_client.get_graph(future.id)
@@ -78,6 +122,11 @@ def test_simulate_cloud_exec(
     assert (
         api_client.get_resolution(future.id).status == ResolutionStatus.COMPLETE.value
     )
+    assert mock_get_images.call_count == 1
+    assert driver_resolver._get_tagged_image("cuda") == images["cuda"]
+    assert len(add_run_ids) == 1
+    add_run = api_client.get_run(add_run_ids[0])
+    assert add_run.container_image_uri == images["cuda"]
 
     # cheap way of confirming no k8s calls were made
     mock_load_kube_config.assert_not_called()
