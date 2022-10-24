@@ -5,6 +5,9 @@ with nothing else on the line.
 -->
 * HEAD
     * [feature] Support for easier testing of Sematic pipelines
+* 0.18.1
+    * [bugfix] Remove SQLAlchemy model dependencies from Python migrations
+    * [bugfix] Enable usage of multiple base images in detached mode
 * 0.18.0
     * [feature] Add ability to limit the number of parallel runs within a pipeline
     * [feature] Support for multiple bazel base container images

@@ -128,7 +128,24 @@ class CloudResolver(LocalResolver):
 
     @memoized_property
     def _container_image_uris(self) -> Optional[Dict[str, str]]:
-        return get_image_uris()
+        # If we are launching a detached execution, we can get the image URIs
+        # from the environment/build. We then put them in the resolution we
+        # create. However, if we are *executing* a detached
+        # execution, the environment doesn't contain the image URIs. So we will
+        # need to get the image URIs frm the resolution we put them in earlier.
+        if self._is_running_remotely:
+            resolution = api_client.get_resolution(self._root_future.id)
+            uri_mapping = resolution.container_image_uris
+            if uri_mapping is None:
+                # probably shouldn't happen: the only resolutions without this
+                # should be from old runs. But this makes mypy happy and is a
+                # good sanity check
+                raise RuntimeError(
+                    "Resolution does not have mapping for custom base images"
+                )
+            return uri_mapping
+        else:
+            return get_image_uris()
 
     def _get_container_image(self, future: AbstractFuture) -> Optional[str]:
         if self._container_image_uris is None:
