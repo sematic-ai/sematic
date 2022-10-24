@@ -71,7 +71,8 @@ def do_something() -> str:
 def sleep_for(n_seconds: int) -> int:
     started = time.time()
     while time.time() < started + n_seconds:
-        print(f"Sleeping at {time.time()}...")
+        amount_slept = int(time.time() - started)
+        print(f"Sleeping at {amount_slept}s of {n_seconds}s...")
         time.sleep(1)
     return n_seconds
 
