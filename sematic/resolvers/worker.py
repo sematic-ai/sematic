@@ -6,7 +6,7 @@ import logging
 import os
 import pathlib
 import tempfile
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 # Third-party
 import cloudpickle
@@ -38,6 +38,7 @@ def parse_args():
     parser = argparse.ArgumentParser("Sematic cloud worker")
     parser.add_argument("--run_id", type=str, required=True)
     parser.add_argument("--resolve", default=False, action="store_true", required=False)
+    parser.add_argument("--max_parallelism", type=int, default=None, required=False)
 
     args = parser.parse_args()
 
@@ -51,7 +52,7 @@ def _get_input_kwargs(
     run_id: str, artifacts: List[Artifact], edges: List[Edge]
 ) -> Dict[str, Any]:
     """
-    Get input values for run
+    Get input values for run.
     """
     artifacts_by_id = {artifact.id: artifact for artifact in artifacts}
 
@@ -119,7 +120,7 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
     api_client.save_graph(run.root_id, [run], artifacts, edges)
 
 
-def main(run_id: str, resolve: bool):
+def main(run_id: str, resolve: bool, max_parallelism: Optional[int] = None):
     """
     Main job logic.
 
@@ -142,7 +143,9 @@ def main(run_id: str, resolve: bool):
             future: Future = func(**kwargs)
             future.id = run.id
 
-            resolver = CloudResolver(detach=False, _is_running_remotely=True)
+            resolver = CloudResolver(
+                detach=False, max_parallelism=max_parallelism, _is_running_remotely=True
+            )
             resolver.set_graph(runs=runs, artifacts=artifacts, edges=edges)
 
             resolver.resolve(future)
@@ -161,7 +164,7 @@ def main(run_id: str, resolve: bool):
             # its worker job
             root_run = api_client.get_run(run_id)
             if not FutureState[root_run.future_state].is_terminal():  # type: ignore
-                # Only fail here if the the root run hasn't already been
+                # Only fail here if the root run hasn't already been
                 # moved to a terminal state. It may contain a better
                 # exception message. If it completed somehow, then it
                 # should be in a valid state that we don't want to disrupt.
@@ -197,8 +200,13 @@ def wrap_main_with_logging():
         )
         logger.info("Worker CLI args: run_id=%s", args.run_id)
         logger.info("Worker CLI args: resolve=%s", args.resolve)
+        logger.info("Worker CLI args: max_parallelism=%s", args.max_parallelism)
 
-        main(args.run_id, args.resolve)
+        main(
+            run_id=args.run_id,
+            resolve=args.resolve,
+            max_parallelism=args.max_parallelism,
+        )
 
 
 if __name__ == "__main__":
