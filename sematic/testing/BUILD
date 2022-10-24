@@ -3,7 +3,7 @@ sematic_py_lib(
     srcs = ["__init__.py"],
     pip_deps = [],
     deps = [
-        ":mock_sematic_funcs",
+        ":mock_funcs",
     ],
 )
 
