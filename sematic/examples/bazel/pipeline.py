@@ -59,7 +59,7 @@ def pipeline(a: float, b: float, c: float) -> float:
     # return add(a, b)
     #return fail()
     sleep_time = 600
-    return int_sum([sleep_for(sleep_time) for _ in range(10)])
+    return int_sum([sleep_for(sleep_time, int(time.time())) for _ in range(10)])
 
 from typing import List
 
@@ -68,11 +68,12 @@ def do_something() -> str:
     return "42"
 
 @sematic.func(inline=False)
-def sleep_for(n_seconds: int) -> int:
+def sleep_for(n_seconds: int, scheduled_at: int) -> int:
     started = time.time()
     while time.time() < started + n_seconds:
         amount_slept = int(time.time() - started)
-        print(f"Sleeping at {amount_slept}s of {n_seconds}s...")
+        since_schedule = int(time.time() - scheduled_at)
+        print(f"Sleeping at {amount_slept}s of {n_seconds}s. Whole pipeline started {since_schedule}s ago...")
         time.sleep(1)
     return n_seconds
 
