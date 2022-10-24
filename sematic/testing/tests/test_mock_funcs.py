@@ -1,8 +1,11 @@
 # Standard Library
 from typing import List
 
+import pytest
+
 # Sematic
 from sematic.calculator import func
+from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.testing.mock_funcs import mock_sematic_funcs
 
 
@@ -27,4 +30,28 @@ def identity_func(x: int) -> int:
 
 
 def test_mock_sematic_funcs():
-    pass
+    with pytest.raises(ValueError, match=r"Oh no.*"):
+        pipeline().resolve(SilentResolver())
+
+    with mock_sematic_funcs([remote_only_func]) as mock_funcs:
+        mock_funcs[remote_only_func].mock.return_value = 1
+        result = pipeline().resolve(SilentResolver())
+        assert result == 5
+
+    with mock_sematic_funcs([remote_only_func, identity_func]) as mock_funcs:
+        mock_funcs[remote_only_func].mock.return_value = 1
+        mock_funcs[identity_func].mock.side_effect = mock_funcs[identity_func].original
+        result = pipeline().resolve(SilentResolver())
+        assert result == 5
+
+        mock_funcs[identity_func].mock.assert_called()
+
+    with pytest.raises(
+        TypeError,
+        match=r"for 'sematic.testing.tests.test_mock_funcs.remote_only_func'.*",
+    ):
+        with mock_sematic_funcs([remote_only_func]) as mock_funcs:
+            mock_funcs[remote_only_func].mock.return_value = "this is the wrong type!"
+            pipeline().resolve(SilentResolver())
+
+    assert identity_func(16).resolve(SilentResolver()) == 16

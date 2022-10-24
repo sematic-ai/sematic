@@ -12,7 +12,6 @@ sematic_py_lib(
     srcs = ["mock_funcs.py"],
     pip_deps = [],
     deps = [
-        ":local_resolver",
         "//sematic:calculator",
     ],
 )
