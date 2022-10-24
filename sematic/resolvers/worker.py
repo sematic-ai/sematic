@@ -38,7 +38,7 @@ def parse_args():
     parser = argparse.ArgumentParser("Sematic cloud worker")
     parser.add_argument("--run_id", type=str, required=True)
     parser.add_argument("--resolve", default=False, action="store_true", required=False)
-    parser.add_argument("--max_parallelism", type=int, default=None, required=False)
+    parser.add_argument("--max-parallelism", type=int, default=None, required=False)
 
     args = parser.parse_args()
 
@@ -200,7 +200,7 @@ def wrap_main_with_logging():
         )
         logger.info("Worker CLI args: run_id=%s", args.run_id)
         logger.info("Worker CLI args: resolve=%s", args.resolve)
-        logger.info("Worker CLI args: max_parallelism=%s", args.max_parallelism)
+        logger.info("Worker CLI args: max-parallelism=%s", args.max_parallelism)
 
         main(
             run_id=args.run_id,

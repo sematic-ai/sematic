@@ -364,7 +364,7 @@ def schedule_resolution_job(
     args = ["--run_id", resolution_id, "--resolve"]
 
     if max_parallelism is not None:
-        args += ["--max_parallelism", str(max_parallelism)]
+        args += ["--max-parallelism", str(max_parallelism)]
 
     _schedule_kubernetes_job(
         name=external_job.kubernetes_job_name,
