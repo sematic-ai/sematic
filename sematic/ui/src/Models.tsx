@@ -5,17 +5,17 @@ export type TypeGitInfo = {
   branch: string;
   commit: string;
   dirty: boolean;
-}
+};
 
 export type Resolution = {
-  root_id: string,
-  status: string,
-  kind: string,
-  docker_image_uri: string | null,
-  git_info_json: TypeGitInfo | null,
+  root_id: string;
+  status: string;
+  kind: string;
+  container_image_uri: string | null;
+  git_info_json: TypeGitInfo | null;
   settings_env_vars: Map<string, string>;
   external_jobs_json: Map<string, any> | null;
-}
+};
 
 export type ExceptionMetadata = {
   repr: string;

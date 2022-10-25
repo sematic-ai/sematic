@@ -106,6 +106,7 @@ export default function PipelinePanels(props: { rootRun: Run }) {
           selectedPanel={selectedPanelItem}
           graph={graph}
           selectedRun={selectedRun}
+          rootRun={rootRun}
           onSelectRun={(run) => {
             setSelectedRun(run);
             setSelectedPanelItem("run");

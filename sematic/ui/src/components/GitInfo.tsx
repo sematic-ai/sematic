@@ -8,9 +8,10 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { useCallback, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { RiGitBranchLine, RiGitCommitLine } from "react-icons/ri";
 import { Resolution } from "../Models";
+import { SnackBarContext } from "./SnackBarProvider";
 
 /**
  * Turns the following remote formats:
@@ -38,14 +39,11 @@ function GitInfo(props: {
   children?: any;
 }) {
   const { text, copyText, tooltip, remote, path, children, extra } = props;
-  const [content, setContent] = useState(text);
-  const theme = useTheme();
+  const { setSnackMessage } = useContext(SnackBarContext);
+
   const copy = useCallback(() => {
     navigator.clipboard.writeText(copyText || text);
-    // avoid temporary resizing by preserving the initial text length
-    // by using non-breaking spaces
-    setContent("Copied".padStart(text.length, " "));
-    setTimeout(() => setContent(text), 1000);
+    setSnackMessage({ message: "Copied." });
   }, [text]);
 
   return (
@@ -57,7 +55,7 @@ function GitInfo(props: {
       {children}&nbsp;
       <Tooltip title={tooltip}>
         <Link href={makeGithubLink(remote, path)} target="_blank">
-          <code>{content}</code>
+          <code>{text}</code>
         </Link>
       </Tooltip>
       <ButtonBase onClick={copy}>
@@ -77,13 +75,10 @@ function GitInfoBox(props: { resolution: Resolution | undefined }) {
       <Typography
         color="GrayText"
         sx={{
-          gridColumn: 3,
-          paddingX: 10,
           paddingTop: 3,
-          borderColor: theme.palette.grey[200],
         }}
       >
-        Git info not found
+        No Git information.
       </Typography>
     );
   }

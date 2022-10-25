@@ -12,8 +12,9 @@ import {
   useTheme,
 } from "@mui/material";
 import { ErrorBoundary } from "react-error-boundary";
-import { useCallback, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { ContentCopy } from "@mui/icons-material";
+import { SnackBarContext } from "./SnackBarProvider";
 
 function ArtifactError(props: { error: Error }) {
   return (
@@ -43,15 +44,13 @@ function ArtifactView(props: { artifact: Artifact }) {
 
 function ArtifactID(props: { artifactId: string }) {
   const { artifactId } = props;
-
-  const [content, setContent] = useState(artifactId.substring(0, 6));
+  const { setSnackMessage } = useContext(SnackBarContext);
 
   const theme = useTheme();
 
   const copy = useCallback(() => {
     navigator.clipboard.writeText(artifactId);
-    setContent("Copied");
-    setTimeout(() => setContent(artifactId.substring(0, 6)), 1000);
+    setSnackMessage({ message: "Artifact ID copied." });
   }, [artifactId]);
 
   return (
@@ -59,7 +58,7 @@ function ArtifactID(props: { artifactId: string }) {
       sx={{ color: theme.palette.grey[400], fontSize: 12 }}
       onClick={copy}
     >
-      <code>{content}</code>
+      <code>{artifactId.substring(0, 6)}</code>
       <ContentCopy fontSize="small" sx={{ ml: 1 }} />
     </ButtonBase>
   );

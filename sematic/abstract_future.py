@@ -116,7 +116,7 @@ class AbstractFuture(abc.ABC):
         retry_settings: Optional[RetrySettings] = None,
         base_image_tag: Optional[str] = None,
     ):
-        self.id: str = uuid.uuid4().hex
+        self.id: str = make_future_id()
         self.calculator = calculator
         self.kwargs = kwargs
         # We don't want to replace futures in kwargs, because it holds
@@ -156,3 +156,7 @@ class AbstractFuture(abc.ABC):
             f"state={self.state.value}, parent_id={parent_id}, "
             f"nested_id={nested_id}, value={self.value})"
         )
+
+
+def make_future_id() -> str:
+    return uuid.uuid4().hex

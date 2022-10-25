@@ -207,6 +207,7 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
 
     def get_func(self) -> AbstractCalculator:
         split_calculator_path = self.calculator_path.split(".")
+
         import_path, func_name = (
             ".".join(split_calculator_path[:-1]),
             split_calculator_path[-1],

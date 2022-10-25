@@ -6,11 +6,12 @@ import datetime
 import hashlib
 import json
 import secrets
-import typing
+from typing import Any, Optional
 
 # Sematic
-from sematic.abstract_future import AbstractFuture
+from sematic.abstract_future import AbstractFuture, FutureState, make_future_id
 from sematic.db.models.artifact import Artifact
+from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.storage import Storage
@@ -50,12 +51,47 @@ def make_run_from_future(future: AbstractFuture) -> Run:
     return run
 
 
+def clone_run(run: Run, parent_id: Optional[str] = None) -> Run:
+    cloned_run = Run(
+        id=make_future_id(),
+        future_state=FutureState.CREATED,
+        name=run.name,
+        calculator_path=run.calculator_path,
+        parent_id=parent_id,
+        description=run.description,
+        tags=run.tags,
+        source_code=run.source_code,
+        container_image_uri=run.container_image_uri,
+        created_at=datetime.datetime.utcnow(),
+        updated_at=datetime.datetime.utcnow(),
+    )
+
+    # Set this outside the constructor because the constructor expects
+    # a json encodable, but this property will auto-update the json
+    # encodable field.
+    run.resource_requirements = run.resource_requirements
+
+    return cloned_run
+
+
+def clone_resolution(resolution: Resolution, root_id: str) -> Resolution:
+    cloned_resolution = Resolution(
+        root_id=root_id,
+        status=ResolutionStatus.CREATED,
+        kind=resolution.kind,
+        git_info=resolution.git_info,
+        settings_env_vars=resolution.settings_env_vars,
+    )
+
+    return cloned_resolution
+
+
 def make_func_path(future: AbstractFuture) -> str:
     return f"{future.calculator.__module__}.{future.calculator.__name__}"
 
 
 def make_artifact(
-    value: typing.Any, type_: typing.Any, storage: typing.Optional[Storage] = None
+    value: Any, type_: Any, storage: Optional[Storage] = None
 ) -> Artifact:
     """
     Create an Artifact model instance from a value and type.
@@ -85,7 +121,7 @@ def make_artifact(
     return artifact
 
 
-def get_artifact_value(artifact: Artifact, storage: Storage) -> typing.Any:
+def get_artifact_value(artifact: Artifact, storage: Storage) -> Any:
     """
     Fetch artifact serialization from storage and deserialize.
     """
@@ -106,9 +142,9 @@ def _make_artifact_storage_key(artifact: Artifact) -> str:
 
 
 def _get_value_sha1_digest(
-    value_serialization: typing.Any,
-    type_serialization: typing.Any,
-    json_summary: typing.Any,
+    value_serialization: Any,
+    type_serialization: Any,
+    json_summary: Any,
 ) -> str:
     """
     Get sha1 digest for artifact value
@@ -151,9 +187,9 @@ def _fix_nan_inf(string: str) -> str:
 
 def make_user(
     email: str,
-    first_name: typing.Optional[str],
-    last_name: typing.Optional[str],
-    avatar_url: typing.Optional[str],
+    first_name: Optional[str],
+    last_name: Optional[str],
+    avatar_url: Optional[str],
 ) -> User:
     """
     Make a user

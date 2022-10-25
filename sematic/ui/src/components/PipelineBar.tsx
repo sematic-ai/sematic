@@ -25,6 +25,103 @@ import Loading from "./Loading";
 import { RunFilterType } from "./RunList";
 import RunStateChip from "./RunStateChip";
 import TimeAgo from "./TimeAgo";
+import { ActionMenu, ActionMenuItem } from "./ActionMenu";
+import { SnackBarContext } from "./SnackBarProvider";
+
+function PipelineActionMenu(props: {
+  rootRun: Run;
+  resolution: Resolution;
+  onCancel: () => void;
+}) {
+  const { rootRun, resolution, onCancel } = props;
+  const { user } = useContext(UserContext);
+  const theme = useTheme();
+  const { setSnackMessage } = useContext(SnackBarContext);
+
+  useEffect(() => {
+    pipelineSocket.removeAllListeners("cancel");
+    pipelineSocket.on("cancel", (args: { calculator_path: string }) => {
+      if (args.calculator_path === rootRun.calculator_path) {
+        setSnackMessage({ message: "Pipeline run was canceled." });
+        onCancel();
+      }
+    });
+  });
+
+  const onCancelClick = useCallback(() => {
+    if (!window.confirm("Are you sure you want to cancel this pipeline?"))
+      return;
+    fetchJSON({
+      url: "/api/v1/resolutions/" + rootRun.id + "/cancel",
+      method: "PUT",
+      apiKey: user?.api_key,
+      callback: (payload) => {},
+      setError: (error) => {
+        setSnackMessage({ message: "Failed to cancel pipeline run." });
+      },
+    });
+  }, [rootRun, setSnackMessage]);
+
+  const onRerunClick = useCallback(
+    (rerunFrom?: string) => {
+      fetchJSON({
+        url: "/api/v1/resolutions/" + rootRun.id + "/rerun",
+        method: "POST",
+        body: { rerun_from: rerunFrom },
+        apiKey: user?.api_key,
+        callback: (payload) => {},
+        setError: (error) => {
+          setSnackMessage({ message: "Failed to trigger rerun." });
+        },
+      });
+    },
+    [rootRun]
+  );
+
+  const onCopyShareClick = useCallback(() => {
+    navigator.clipboard.writeText(window.location.href);
+    setSnackMessage({ message: "Pipeline link copied." });
+  }, []);
+
+  const cancelEnabled = ![
+    "FAILED",
+    "NESTED_FAIL",
+    "RESOLVED",
+    "CANCELED",
+  ].includes(rootRun.future_state);
+
+  const rerunEnable = !!resolution.container_image_uri;
+
+  return (
+    <>
+      <ActionMenu title="Actions">
+        <ActionMenuItem
+          title="Rerun"
+          enabled={rerunEnable}
+          onClick={() => onRerunClick(rootRun.id)}
+        >
+          <Typography>Rerun pipeline from scratch.</Typography>
+          <Typography>Only available for remote resolutions.</Typography>
+        </ActionMenuItem>
+        <ActionMenuItem title="Retry from failure" enabled={false}>
+          <Typography>Rerun pipeline from where it failed.</Typography>
+          <Typography>Coming soon.</Typography>
+        </ActionMenuItem>
+        <ActionMenuItem title="Copy share link" onClick={onCopyShareClick}>
+          <Typography>Copy link to this exact pipeline execution.</Typography>
+        </ActionMenuItem>
+        <ActionMenuItem
+          title="Cancel Execution"
+          titleColor={theme.palette.error.dark}
+          enabled={cancelEnabled}
+          onClick={onCancelClick}
+        >
+          <Typography>Cancel all ongoing and upcoming runs.</Typography>
+        </ActionMenuItem>
+      </ActionMenu>
+    </>
+  );
+}
 
 export default function PipelineBar(props: {
   calculatorPath: string;
@@ -46,13 +143,9 @@ export default function PipelineBar(props: {
   );
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isCanceling, setIsCanceling] = useState(false);
-  const [cancelSnackMessage, setCancelSnackMessage] = useState<
-    string | undefined
-  >(undefined);
   const [latestRuns, setLatestRuns] = useState<Run[]>([]);
-  const [hasNewRun, setHasNewRun] = useState(false);
   const { user } = useContext(UserContext);
+  const { setSnackMessage } = useContext(SnackBarContext);
 
   const theme = useTheme();
 
@@ -138,25 +231,22 @@ export default function PipelineBar(props: {
   );
 
   useEffect(() => {
-    pipelineSocket.removeAllListeners();
+    pipelineSocket.removeAllListeners("update");
     pipelineSocket.on("update", (args: { calculator_path: string }) => {
       if (args.calculator_path === calculatorPath) {
         fetchLatestRuns(calculatorPath, (runs) => {
           setLatestRuns(runs);
           if (runs[0].id !== latestRuns[0].id) {
-            setHasNewRun(true);
+            setSnackMessage({
+              message: "New run available.",
+              actionName: "view",
+              autoHide: false,
+              closable: true,
+              onClick: () => selectLatestRun(),
+            });
           }
           updateRootRun(runs);
         });
-      }
-    });
-    pipelineSocket.on("cancel", (args: { calculator_path: string }) => {
-      if (args.calculator_path === calculatorPath) {
-        fetchLatestRuns(calculatorPath, (runs) => {
-          setLatestRuns(runs);
-          updateRootRun(runs);
-        });
-        setCancelSnackMessage("Pipeline run was canceled.");
       }
     });
   }, [latestRuns, calculatorPath, fetchLatestRuns, updateRootRun]);
@@ -169,7 +259,7 @@ export default function PipelineBar(props: {
           setRootRun(run);
           onRootRunChange(run);
           fetchResolution(run);
-          setHasNewRun(false);
+          setSnackMessage(undefined);
         }
       });
     },
@@ -177,52 +267,17 @@ export default function PipelineBar(props: {
   );
 
   const onCancel = useCallback(() => {
-    if (!rootRun) return;
-    if (!window.confirm("Are you sure you want to cancel this pipeline?"))
-      return;
-    setIsCanceling(true);
-    fetchJSON({
-      url: "/api/v1/resolutions/" + rootRun.id + "/cancel",
-      method: "PUT",
-      apiKey: user?.api_key,
-      callback: (payload) => {
-        setIsCanceling(false);
-      },
-      setError: (error) => {
-        setIsCanceling(false);
-        setCancelSnackMessage("Failed to cancel pipeline run.");
-      },
+    fetchLatestRuns(calculatorPath, (runs) => {
+      setLatestRuns(runs);
+      updateRootRun(runs);
     });
-  }, [rootRun, setIsCanceling]);
+  }, [setLatestRuns, fetchLatestRuns, updateRootRun]);
 
   const selectLatestRun = useCallback(() => {
     setRootRun(latestRuns[0]);
     onRootRunChange(latestRuns[0]);
     fetchResolution(latestRuns[0]);
   }, [latestRuns, setRootRun, onRootRunChange, fetchResolution]);
-
-  const snackBarAction = (
-    <>
-      <Button
-        color="secondary"
-        size="small"
-        onClick={() => {
-          selectLatestRun();
-          setHasNewRun(false);
-        }}
-      >
-        View
-      </Button>
-      <IconButton
-        size="small"
-        aria-label="close"
-        color="inherit"
-        onClick={() => setHasNewRun(false)}
-      >
-        <CloseIcon fontSize="small" />
-      </IconButton>
-    </>
-  );
 
   if (error || !isLoaded) {
     return (
@@ -243,23 +298,6 @@ export default function PipelineBar(props: {
           gridTemplateColumns: "70px 1fr auto auto auto",
         }}
       >
-        <Snackbar
-          open={hasNewRun}
-          anchorOrigin={{ vertical: "top", horizontal: "right" }}
-          message="New run available"
-          sx={{ marginTop: "50px" }}
-          action={snackBarAction}
-        />
-        <Snackbar
-          open={cancelSnackMessage !== undefined}
-          anchorOrigin={{ vertical: "top", horizontal: "right" }}
-          message="Run was canceled"
-          sx={{ marginTop: "50px" }}
-          autoHideDuration={5000}
-          onClose={() => {
-            setCancelSnackMessage(undefined);
-          }}
-        />
         <Box
           sx={{
             gridColumn: 1,
@@ -278,17 +316,12 @@ export default function PipelineBar(props: {
           <CalculatorPath calculatorPath={rootRun.calculator_path} />
         </Box>
         <Box sx={{ gridColumn: 3, pt: 2, px: 7 }}>
-          {!["FAILED", "NESTED_FAIL", "RESOLVED", "CANCELED"].includes(
-            rootRun.future_state
-          ) && (
-            <Button
-              color="error"
-              size="small"
-              disabled={isCanceling}
-              onClick={onCancel}
-            >
-              {isCanceling ? "Canceling..." : "Cancel"}
-            </Button>
+          {resolution && (
+            <PipelineActionMenu
+              rootRun={rootRun}
+              onCancel={onCancel}
+              resolution={resolution}
+            />
           )}
         </Box>
         <Box
