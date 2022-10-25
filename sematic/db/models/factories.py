@@ -59,9 +59,6 @@ def make_artifact(
 ) -> Artifact:
     """
     Create an Artifact model instance from a value and type.
-
-    `store` set to `True` will persist the artifact's serialization.
-    TODO: replace with modular storage engine.
     """
     type_serialization = type_to_json_encodable(type_)
     value_serialization = value_to_json_encodable(value, type_)
