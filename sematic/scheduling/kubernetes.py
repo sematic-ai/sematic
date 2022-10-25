@@ -208,7 +208,7 @@ def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
     )
     if (
         k8s_job.status.conditions is not None  # type: ignore
-        and len(k8s_job.status.conditions) > 1  # type: ignore
+        and len(k8s_job.status.conditions) >= 1  # type: ignore
     ):
         conditions = sorted(
             k8s_job.status.conditions,  # type: ignore

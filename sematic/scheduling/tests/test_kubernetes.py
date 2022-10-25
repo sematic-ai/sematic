@@ -291,6 +291,48 @@ def test_refresh_job(mock_batch_api, mock_load_kube_config):
     assert not job.still_exists
 
 
+@mock.patch("sematic.scheduling.kubernetes.load_kube_config")
+@mock.patch("sematic.scheduling.kubernetes.kubernetes.client.BatchV1Api")
+def test_refresh_job_single_condition(mock_batch_api, mock_load_kube_config):
+    mock_k8s_job = mock.MagicMock()
+    mock_batch_api.return_value.read_namespaced_job_status.return_value = mock_k8s_job
+    run_id = "the-run-id"
+    namespace = "the-namespace"
+    job = KubernetesExternalJob(
+        kind="k8s",
+        try_number=0,
+        external_job_id=KubernetesExternalJob.make_external_job_id(
+            run_id, namespace, JobType.worker
+        ),
+        pending_or_running_pod_count=0,
+        succeeded_pod_count=1,
+        most_recent_condition=None,
+        has_started=True,
+        still_exists=True,
+    )
+    mock_k8s_job.status.active = 0
+    mock_k8s_job.status.succeeded = 0
+
+    fail_condition = mock.MagicMock()
+    fail_condition.status = "True"
+    fail_condition.type = KubernetesJobCondition.Failed.value
+    fail_condition.lastTransitionTime = 1
+    mock_k8s_job.status.conditions = [
+        fail_condition,
+    ]
+    job = refresh_job(job)
+
+    assert job.has_started
+    assert job.pending_or_running_pod_count == 0
+    assert job.most_recent_condition == KubernetesJobCondition.Failed.value
+    assert job.still_exists
+
+    mock_batch_api.return_value.read_namespaced_job_status.side_effect = ApiException()
+    mock_batch_api.return_value.read_namespaced_job_status.side_effect.status = 404
+    job = refresh_job(job)
+    assert not job.still_exists
+
+
 @mock.patch("sematic.user_settings.get_all_user_settings")
 @mock.patch("sematic.scheduling.kubernetes._schedule_kubernetes_job")
 @mock.patch("sematic.scheduling.kubernetes._unique_job_id_suffix", return_value="foo")
