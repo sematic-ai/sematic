@@ -125,7 +125,7 @@ function PipelineActionMenu(props: {
 
 export default function PipelineBar(props: {
   calculatorPath: string;
-  onRootRunChange: (run: Run) => void;
+  onRootRunChange: (run: Run, resolution: Resolution) => void;
   setInitialRootRun: boolean;
   initialRootRun?: Run;
   initialResolution?: Resolution;
@@ -187,6 +187,7 @@ export default function PipelineBar(props: {
           apiKey: user?.api_key,
           callback: (response: ResolutionPayload) => {
             setResolution(response.content);
+            onRootRunChange(run, response.content);
           },
           setError: (_: Error | undefined) => {
             // this means the pipeline resolution failed
@@ -204,7 +205,6 @@ export default function PipelineBar(props: {
       setLatestRuns(runs);
       if (setInitialRootRun) {
         setRootRun(runs[0]);
-        onRootRunChange(runs[0]);
         fetchResolution(runs[0]);
       }
     });
@@ -257,7 +257,6 @@ export default function PipelineBar(props: {
       latestRuns.forEach((run) => {
         if (run.id === newRootRunId) {
           setRootRun(run);
-          onRootRunChange(run);
           fetchResolution(run);
           setSnackMessage(undefined);
         }
@@ -275,7 +274,6 @@ export default function PipelineBar(props: {
 
   const selectLatestRun = useCallback(() => {
     setRootRun(latestRuns[0]);
-    onRootRunChange(latestRuns[0]);
     fetchResolution(latestRuns[0]);
   }, [latestRuns, setRootRun, onRootRunChange, fetchResolution]);
 

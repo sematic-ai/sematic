@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { UserContext } from "..";
-import { Run } from "../Models";
+import { Run, Resolution } from "../Models";
 import { RunGraphPayload } from "../Payloads";
 import { fetchJSON, graphSocket } from "../utils";
 import Loading from "./Loading";
@@ -9,8 +9,11 @@ import MenuPanel from "./MenuPanel";
 import NotesPanel from "./NotesPanel";
 import RunPanel, { Graph } from "./RunPanel";
 
-export default function PipelinePanels(props: { rootRun: Run }) {
-  const { rootRun } = props;
+export default function PipelinePanels(props: {
+  rootRun: Run;
+  resolution: Resolution;
+}) {
+  const { rootRun, resolution } = props;
   const [selectedPanelItem, setSelectedPanelItem] = useState("run");
   const [graphsByRootId, setGraphsByRootId] = useState<Map<string, Graph>>(
     new Map()
@@ -106,7 +109,7 @@ export default function PipelinePanels(props: { rootRun: Run }) {
           selectedPanel={selectedPanelItem}
           graph={graph}
           selectedRun={selectedRun}
-          rootRun={rootRun}
+          resolution={resolution}
           onSelectRun={(run) => {
             setSelectedRun(run);
             setSelectedPanelItem("run");

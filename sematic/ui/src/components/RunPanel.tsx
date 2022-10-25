@@ -1,14 +1,7 @@
 import { FileCopy, History, Insights } from "@mui/icons-material";
-import {
-  Box,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Typography,
-} from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useCallback, useContext, useMemo } from "react";
-import { Artifact, Edge, Run } from "../Models";
+import { Artifact, Edge, Resolution, Run } from "../Models";
 import CalculatorPath from "./CalculatorPath";
 import RunTabs, { IOArtifacts } from "./RunTabs";
 import Docstring from "./Docstring";
@@ -19,9 +12,7 @@ import Tags from "./Tags";
 import { ActionMenu, ActionMenuItem } from "./ActionMenu";
 import { fetchJSON } from "../utils";
 import { UserContext } from "..";
-import { ResolutionPayload } from "../Payloads";
-import { redirect } from "react-router-dom";
-import { SnackBarContext } from "./SnackBarProvider";
+import { ModuleResolutionKind } from "typescript";
 
 export type Graph = {
   runs: Map<string, Run>;
@@ -32,11 +23,11 @@ export type Graph = {
 export default function RunPanel(props: {
   selectedPanel: string;
   graph: Graph;
-  rootRun: Run;
+  resolution: Resolution;
   selectedRun: Run;
   onSelectRun: (run: Run) => void;
 }) {
-  const { selectedPanel, graph, selectedRun, rootRun, onSelectRun } = props;
+  const { selectedPanel, graph, selectedRun, resolution, onSelectRun } = props;
 
   const runsById = useMemo(() => graph.runs, [graph]);
 
@@ -123,8 +114,8 @@ export default function RunPanel(props: {
             <Box sx={{ gridColumn: 2, pt: 3, pr: 10 }}>
               <RunActionMenu
                 run={selectedRun}
-                rootRun={rootRun}
                 edges={edges}
+                resolution={resolution}
               />
             </Box>
             <Box sx={{ gridColumn: 3, pt: 3, pr: 5 }}>
@@ -142,11 +133,14 @@ export default function RunPanel(props: {
   );
 }
 
-function RunActionMenu(props: { run: Run; rootRun: Run; edges: Edge[] }) {
-  const { run, rootRun, edges } = props;
+function RunActionMenu(props: {
+  run: Run;
+  edges: Edge[];
+  resolution: Resolution;
+}) {
+  const { run, edges, resolution } = props;
 
   const { user } = useContext(UserContext);
-  const { setSnackMessage } = useContext(SnackBarContext);
 
   const onRerunClick = useCallback(() => {
     fetchJSON({
@@ -160,19 +154,22 @@ function RunActionMenu(props: { run: Run; rootRun: Run; edges: Edge[] }) {
   }, []);
 
   const rerunEnabled = useMemo(
-    () => edges.every((edge) => !!edge.artifact_id),
-    [edges]
+    () =>
+      edges.every((edge) => !!edge.artifact_id) &&
+      resolution.container_image_uri !== null,
+    [edges, resolution]
   );
 
   return (
     <ActionMenu title="Actions">
       <ActionMenuItem
-        title="Rerun from here"
+        title="Rerun pipeline from this run"
         onClick={onRerunClick}
-        enabled={true || rerunEnabled}
+        enabled={rerunEnabled}
       >
         <Typography>Rerun this pipeline from this run in the graph.</Typography>
         <Typography>All upstream runs will use cached outputs.</Typography>
+        <Typography>Only available for cloud-ran pipelines.</Typography>
       </ActionMenuItem>
       {false && (
         <ActionMenuItem title="Copy share link">

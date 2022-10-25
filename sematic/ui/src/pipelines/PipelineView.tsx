@@ -10,7 +10,9 @@ import { fetchJSON } from "../utils";
 
 export default function PipelineView() {
   const [rootRun, setRootRun] = useState<Run | undefined>(undefined);
-  const [resolution, setResolution] = useState<Resolution | undefined>(undefined);
+  const [resolution, setResolution] = useState<Resolution | undefined>(
+    undefined
+  );
 
   const { user } = useContext(UserContext);
 
@@ -57,12 +59,17 @@ export default function PipelineView() {
       >
         <PipelineBar
           calculatorPath={calculatorPath}
-          onRootRunChange={setRootRun}
+          onRootRunChange={(run: Run, resolution: Resolution) => {
+            setRootRun(run);
+            setResolution(resolution);
+          }}
           setInitialRootRun={rootId === undefined}
           initialRootRun={rootRun}
           initialResolution={resolution}
         />
-        {rootRun && <PipelinePanels rootRun={rootRun}/>}
+        {rootRun && resolution && (
+          <PipelinePanels rootRun={rootRun} resolution={resolution} />
+        )}
       </Box>
     );
   }

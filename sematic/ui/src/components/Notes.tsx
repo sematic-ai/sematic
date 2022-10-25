@@ -1,5 +1,10 @@
-import { Box, Typography, useTheme } from "@mui/material";
+import { ContentCopy } from "@mui/icons-material";
+import { Box, ButtonBase, Tooltip, Typography, useTheme } from "@mui/material";
+import { useCallback, useContext } from "react";
+import { redirect, useNavigate } from "react-router-dom";
 import { Note, Run, User } from "../Models";
+import { CopyButton } from "./CopyButton";
+import { SnackBarContext } from "./SnackBarProvider";
 import TimeAgo from "./TimeAgo";
 import UserAvatar from "./UserAvatar";
 
@@ -50,19 +55,36 @@ export function NoteView(props: { note: Note; author: User; rootRun: Run }) {
           }}
         >
           <TimeAgo date={note.created_at} /> on run{" "}
-          <code
-            style={{
-              fontSize: 12,
-              color:
-                rootRun.id == note.root_id
-                  ? theme.palette.grey[900]
-                  : undefined,
-            }}
-          >
-            {note.root_id.substring(0, 6)}
-          </code>
+          <RunId
+            runId={note.root_id}
+            // Doesn't work yet
+            //link={"/pipelines/" + rootRun.calculator_path + "/" + note.root_id}
+            trim
+          />
         </Typography>
       </Box>
     </Box>
+  );
+}
+
+function RunId(props: { runId: string; link?: string; trim?: boolean }) {
+  const { runId, trim = true, link } = props;
+  const navigate = useNavigate();
+
+  return (
+    <>
+      <Tooltip title={"Navigate to run " + runId}>
+        <ButtonBase onClick={() => link && navigate(link)} disabled={!link}>
+          <code
+            style={{
+              fontSize: 12,
+            }}
+          >
+            {trim ? runId.substring(0, 6) : runId}
+          </code>
+        </ButtonBase>
+      </Tooltip>
+      <CopyButton text={runId} message="Copied run ID." />
+    </>
   );
 }
