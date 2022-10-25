@@ -9,8 +9,9 @@ important to make sure the pipeline itself is healthy. You don't want to
 have your pipeline execute for hours or days, and then have it fail near
 the end for a simple error!
 
-Sematic will perform some up-front checks, like performing some early type
-checking between the inputs and outputs of the funcs in your pipeline.
+Sematic will perform some up-front checks, like performing some early
+[type checking](https://docs.sematic.dev/diving-deeper/type-support)
+between the inputs and outputs of the funcs in your pipeline.
 However, there's nothing that replaces the value of a good, fast unit test.
 To aid in the creation of pipeline unit tests, Sematic provides
 `sematic.testing.mock_sematic_funcs`. It can be used as follows:

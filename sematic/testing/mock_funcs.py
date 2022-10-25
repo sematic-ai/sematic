@@ -11,7 +11,7 @@ from sematic.calculator import Calculator
 
 @dataclass
 class SematicFuncMock:
-    """Object with info about a mocked Sematic func
+    """Object with info about a mocked Sematic func.
 
     Attributes
     ----------
