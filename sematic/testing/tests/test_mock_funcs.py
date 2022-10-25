@@ -38,6 +38,8 @@ def test_mock_sematic_funcs():
         result = pipeline().resolve(SilentResolver())
         assert result == 5
 
+
+def test_mock_sematic_funcs_use_original():
     with mock_sematic_funcs([remote_only_func, identity_func]) as mock_funcs:
         mock_funcs[remote_only_func].mock.return_value = 1
         mock_funcs[identity_func].mock.side_effect = mock_funcs[identity_func].original
@@ -46,6 +48,10 @@ def test_mock_sematic_funcs():
 
         mock_funcs[identity_func].mock.assert_called()
 
+    assert identity_func(16).resolve(SilentResolver()) == 16
+
+
+def test_mock_sematic_funcs_still_type_checks():
     with pytest.raises(
         TypeError,
         match=r"for 'sematic.testing.tests.test_mock_funcs.remote_only_func'.*",
@@ -53,5 +59,3 @@ def test_mock_sematic_funcs():
         with mock_sematic_funcs([remote_only_func]) as mock_funcs:
             mock_funcs[remote_only_func].mock.return_value = "this is the wrong type!"
             pipeline().resolve(SilentResolver())
-
-    assert identity_func(16).resolve(SilentResolver()) == 16
