@@ -22,6 +22,18 @@ EdgesByID = Dict[str, Edge]
 
 @dataclass
 class Graph:
+    """
+    Represents an existing immutable graph.
+
+    Parameters
+    ----------
+    runs: List[Run]
+        The runs in the graph. Unordered.
+    edges: List[Edge]
+        Edges between runs. Unordered.
+    artifacts: List[Artifact]
+        Artifacts attached to edges. Unordered.
+    """
 
     runs: List[Run]
     edges: List[Edge]
@@ -74,7 +86,7 @@ class Graph:
         return self._edge_mappings[1]
 
     @property
-    def edges_by_id(self) -> EdgesByID:
+    def _edges_by_id(self) -> EdgesByID:
         return self._edge_mappings[0]
 
     @memoized_property
@@ -262,7 +274,9 @@ class Graph:
         Artifact]]
             A tuple whose first element is a list of cloned futures, grouped by
             nested layers (outermost first), and sorted by reverse execution
-            order within each layer. The second element is
+            order within each layer. The second element is a mapping of future
+            IDs to input artifacts. The third element is a mapping of future IDs
+            to output artifacts.
 
         """
         value_by_artifact_id: Dict[str, Any] = {}
@@ -368,7 +382,7 @@ class Graph:
             for output_edge in self._edges_by_source_id[run_id]:
                 if output_edge.parent_id is not None:
                     if (
-                        self.edges_by_id[output_edge.parent_id].source_run_id
+                        self._edges_by_id[output_edge.parent_id].source_run_id
                         == run.parent_id
                     ):
                         parent_future.nested_future = future
