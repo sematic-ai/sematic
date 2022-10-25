@@ -11,7 +11,7 @@ def add(a: float, b: float) -> float:
     Adds two numbers.
     """
     time.sleep(5)
-    return a + b + 1
+    return a + b
 
 
 @sematic.func
