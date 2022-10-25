@@ -152,7 +152,7 @@ class AbstractFuture(abc.ABC):
         parent_id = self.parent_future.id if self.parent_future is not None else None
         nested_id = self.nested_future.id if self.nested_future is not None else None
         return (
-            f"Future(id={self.id}, func={self.calculator.__name__}, "
+            f"Future(id={self.id}, func={self.calculator}, "
             f"state={self.state.value}, parent_id={parent_id}, "
             f"nested_id={nested_id}, value={self.value})"
         )
