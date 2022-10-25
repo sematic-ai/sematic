@@ -136,6 +136,9 @@ def main(
     `resolve` set to `True` will execute the driver logic.
     `resolve` set to `False` will execute the worker logic.
     """
+    if not resolve and rerun_from is not None:
+        raise ValueError("Can only have non-None rerun_from in resolve mode")
+
     runs, artifacts, edges = api_client.get_graph(run_id)
 
     if len(runs) == 0:
@@ -213,6 +216,7 @@ def wrap_main_with_logging():
         logger.info("Worker CLI args: run_id=%s", args.run_id)
         logger.info("Worker CLI args: resolve=%s", args.resolve)
         logger.info("Worker CLI args: max-parallelism=%s", args.max_parallelism)
+        logger.info("Worker CLI args: rerun_from=%s", args.rerun_from)
 
         main(
             run_id=args.run_id,
