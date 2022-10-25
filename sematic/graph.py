@@ -11,11 +11,13 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.run import Run
 from sematic.storage import Storage
-from sematic.utils.memoized_property import (
-    make_cache_name,
-    memoized_indexed,
-    memoized_property,
-)
+from sematic.utils.memoized_property import memoized_indexed, memoized_property
+
+RunID = str
+RunsByID = Dict[RunID, Run]
+RunsByParentID = Dict[Optional[RunID], List[Run]]
+EdgesByRunID = Dict[RunID, List[Edge]]
+EdgesByID = Dict[str, Edge]
 
 
 @dataclass
@@ -25,33 +27,32 @@ class Graph:
     edges: List[Edge]
     artifacts: List[Artifact]
 
-    def _populate_run_mappings(self):
-        _runs_by_id: Dict[str, Run] = {}
-        _runs_by_parent_ids: Dict[Optional[str], List[Run]] = defaultdict(list)
+    @memoized_property
+    def _run_mappings(self) -> Tuple[RunsByID, RunsByParentID]:
+        _runs_by_id: RunsByID = dict()
+        _runs_by_parent_ids: RunsByParentID = defaultdict(list)
 
         for run in self.runs:
             _runs_by_id[run.id] = run
             _runs_by_parent_ids[run.parent_id].append(run)
 
-        setattr(self, make_cache_name("runs_by_id"), _runs_by_id)
-        setattr(self, make_cache_name("runs_by_parent_id"), _runs_by_parent_ids)
+        return _runs_by_id, _runs_by_parent_ids
+
+    @property
+    def _runs_by_id(self) -> RunsByID:
+        return self._run_mappings[0]
+
+    @property
+    def _runs_by_parent_id(self) -> RunsByParentID:
+        return self._run_mappings[1]
 
     @memoized_property
-    def runs_by_id(self) -> Dict[str, Run]:
-        self._populate_run_mappings()
-        return self.runs_by_id
+    def _edge_mappings(self) -> Tuple[EdgesByID, EdgesByRunID, EdgesByRunID]:
+        _edges_by_destination_id: EdgesByRunID = defaultdict(list)
 
-    @memoized_property
-    def runs_by_parent_id(self) -> Dict[Optional[str], List[Run]]:
-        self._populate_run_mappings()
-        return self.runs_by_parent_id
+        _edges_by_source_id: EdgesByRunID = defaultdict(list)
 
-    def _populate_edge_mappings(self):
-        _edges_by_destination_id: Dict[str, List[Edge]] = defaultdict(list)
-
-        _edges_by_source_id: Dict[str, List[Edge]] = defaultdict(list)
-
-        _edges_by_id: Dict[str, Edge] = {}
+        _edges_by_id: EdgesByID = {}
 
         for edge in self.edges:
             _edges_by_id[edge.id] = edge
@@ -62,44 +63,35 @@ class Graph:
             if edge.source_run_id is not None:
                 _edges_by_source_id[edge.source_run_id].append(edge)
 
-        setattr(
-            self, make_cache_name("edges_by_destination_id"), _edges_by_destination_id
-        )
-        setattr(self, make_cache_name("edges_by_source_id"), _edges_by_source_id)
-        setattr(self, make_cache_name("edges_by_id"), _edges_by_id)
+        return _edges_by_id, _edges_by_source_id, _edges_by_destination_id
+
+    @property
+    def _edges_by_destination_id(self) -> EdgesByRunID:
+        return self._edge_mappings[2]
+
+    @property
+    def _edges_by_source_id(self) -> EdgesByRunID:
+        return self._edge_mappings[1]
+
+    @property
+    def edges_by_id(self) -> EdgesByID:
+        return self._edge_mappings[0]
 
     @memoized_property
-    def edges_by_destination_id(
-        self,
-    ) -> Dict[str, List[Edge]]:
-        self._populate_edge_mappings()
-        return self.edges_by_destination_id
-
-    @memoized_property
-    def edges_by_source_id(self) -> Dict[str, List[Edge]]:
-        self._populate_edge_mappings()
-        return self.edges_by_source_id
-
-    @memoized_property
-    def edges_by_id(self) -> Dict[str, Edge]:
-        self._populate_edge_mappings()
-        return self.edges_by_id
-
-    @memoized_property
-    def artifacts_by_id(self) -> Dict[str, Artifact]:
+    def _artifacts_by_id(self) -> Dict[str, Artifact]:
         return {artifact.id: artifact for artifact in self.artifacts}
 
-    def input_artifacts_ready(self, run_id: str) -> bool:
+    def input_artifacts_ready(self, run_id: RunID) -> bool:
         """
         Does run have all input artifacts ready, i.e. upstream runs have
         resolved?
         """
         return all(
             edge.artifact_id is not None
-            for edge in self.edges_by_destination_id[run_id]
+            for edge in self._edges_by_destination_id[run_id]
         )
 
-    def _execution_order(self, layer_run_ids: List[str]) -> List[str]:
+    def _execution_order(self, layer_run_ids: List[RunID]) -> List[RunID]:
         """
         For a given graph layer (all runs have the same parent_id), this will
         return run_ids in order of execution, i.e. upstream runs first,
@@ -114,10 +106,10 @@ class Graph:
             parent_id.
         """
         return _sort_layer_runs(
-            layer_run_ids, _upstream_edge_filter(self.edges_by_destination_id)
+            layer_run_ids, _upstream_edge_filter(self._edges_by_destination_id)
         )
 
-    def _reverse_execution_order(self, layer_run_ids: List[str]):
+    def _reverse_execution_order(self, layer_run_ids: List[RunID]):
         """
         For a given graph layer (all runs have the same parent_id), this will
         return run_ids in order of reverse execution, i.e. downstream first,
@@ -131,12 +123,12 @@ class Graph:
             parent_id.
         """
         return _sort_layer_runs(
-            layer_run_ids, _downstream_edge_filter(self.edges_by_source_id)
+            layer_run_ids, _downstream_edge_filter(self._edges_by_source_id)
         )
 
     def _run_ids_sorted_by_layer(
-        self, run_sorter: Callable[[List[str]], List[str]]
-    ) -> List[str]:
+        self, run_sorter: Callable[[List[RunID]], List[RunID]]
+    ) -> List[RunID]:
         """
         Run IDs grouped by parent_ids, with parent_ids sorted from outermost
         (None) to innermost. This is not deterministic as multiple layers may
@@ -156,9 +148,9 @@ class Graph:
         """
         run_ids: List[str] = []
 
-        def _add_layer_runs(parent_id: Optional[str]):
-            layer_run_ids: List[str] = [
-                run.id for run in self.runs_by_parent_id[parent_id]
+        def _add_layer_runs(parent_id: Optional[RunID]):
+            layer_run_ids: List[RunID] = [
+                run.id for run in self._runs_by_parent_id[parent_id]
             ]
             ordered_layer_run_ids = run_sorter(layer_run_ids)
             run_ids.extend(ordered_layer_run_ids)
@@ -171,7 +163,7 @@ class Graph:
         return run_ids
 
     @memoized_indexed
-    def _get_run_ancestor_ids(self, run_id: str) -> List[str]:
+    def _get_run_ancestor_ids(self, run_id: RunID) -> List[RunID]:
         """
         Get a run's ancestor IDs, sorter by increasing proximity, i.e. direct
         parent first, and going up.
@@ -186,24 +178,24 @@ class Graph:
         List[str]
             List of ancestor run IDs
         """
-        run = self.runs_by_id[run_id]
+        run = self._runs_by_id[run_id]
 
-        ancestor_ids: List[str] = []
+        ancestor_ids: List[RunID] = []
 
         while run.parent_id is not None:
             ancestor_ids.append(run.parent_id)
-            run = self.runs_by_id[run.parent_id]
+            run = self._runs_by_id[run.parent_id]
 
         return ancestor_ids
 
     @memoized_indexed
-    def _get_run_descendant_ids(self, run_id: str) -> List[str]:
+    def _get_run_descendant_ids(self, run_id: RunID) -> List[RunID]:
         """
         Get a run's descendant IDs, depth-first.
         """
-        descendant_ids: List[str] = []
+        descendant_ids: List[RunID] = []
 
-        child_runs: List[Run] = self.runs_by_parent_id[run_id]
+        child_runs: List[Run] = self._runs_by_parent_id[run_id]
 
         for child_run in child_runs:
             descendant_ids.append(child_run.id)
@@ -212,13 +204,13 @@ class Graph:
         return descendant_ids
 
     @memoized_indexed
-    def _get_run_downstream_ids(self, run_id: str) -> List[str]:
+    def _get_run_downstream_ids(self, run_id: RunID) -> List[RunID]:
         """
         Within a given layer, get a run's downstream run IDs, depth-first.
         """
-        output_edges: List[Edge] = self.edges_by_source_id.get(run_id, [])
+        output_edges: List[Edge] = self._edges_by_source_id.get(run_id, [])
 
-        downstream_ids: List[str] = []
+        downstream_ids: List[RunID] = []
 
         for output_edge in output_edges:
             if output_edge.destination_run_id is not None:
@@ -230,11 +222,11 @@ class Graph:
         return list(set(downstream_ids))
 
     def clone_futures(
-        self, storage: Storage, reset_from: Optional[str] = None
+        self, storage: Storage, reset_from: Optional[RunID] = None
     ) -> Tuple[
-        OrderedDict[str, AbstractFuture],
-        Dict[str, Dict[str, Artifact]],
-        Dict[str, Artifact],
+        OrderedDict[RunID, AbstractFuture],
+        Dict[RunID, Dict[str, Artifact]],
+        Dict[RunID, Artifact],
     ]:
         """
         Clones the current graph into new futures.
@@ -275,20 +267,20 @@ class Graph:
         """
         value_by_artifact_id: Dict[str, Any] = {}
 
-        futures_by_original_id: Dict[str, AbstractFuture] = {}
-        input_artifacts: Dict[str, Dict[str, Artifact]] = defaultdict(dict)
-        output_artifacts: Dict[str, Artifact] = {}
+        futures_by_original_id: Dict[RunID, AbstractFuture] = {}
+        input_artifacts: Dict[RunID, Dict[str, Artifact]] = defaultdict(dict)
+        output_artifacts: Dict[RunID, Artifact] = {}
 
         # We skip descendants of all downstream of reset point
         # plus descendants of downstreams of ancestors
         # The skipped futures will be naturally re-created by the new graph
         # resolution
-        skip_run_ids: List[str] = []
+        skip_run_ids: List[RunID] = []
 
         # reset = forcing future state to CREATED or RAN
         # Considering reset_from and ancestors runs, we reset the run and
         # all downstream
-        reset_run_ids: List[str] = []
+        reset_run_ids: List[RunID] = []
 
         if reset_from is not None:
             reset_run_ids.append(reset_from)
@@ -321,24 +313,23 @@ class Graph:
 
             return value_by_artifact_id[artifact.id]
 
-        for run_id in run_ids_by_execution_order:
-
-            if run_id in skip_run_ids:
-                continue
-
-            run = self.runs_by_id[run_id]
-
-            # Figuring out input kwargs and artifacts
+        def _get_run_inputs(
+            run_id: RunID,
+        ) -> Tuple[Dict[str, Any], Dict[str, Artifact]]:
             kwargs: Dict[str, Any] = {}
 
-            input_edges = self.edges_by_destination_id[run.id]
+            input_edges = self._edges_by_destination_id[run_id]
 
             run_input_artifacts: Dict[str, Artifact] = {}
 
             for input_edge in input_edges:
+                if input_edge.destination_name is None:
+                    raise RuntimeError("Input edge misses destination name")
+
                 value = None
+
                 if input_edge.artifact_id is not None:
-                    artifact = self.artifacts_by_id[input_edge.artifact_id]
+                    artifact = self._artifacts_by_id[input_edge.artifact_id]
                     run_input_artifacts[input_edge.destination_name] = artifact
                     value = _get_artifact_value(artifact)
 
@@ -351,40 +342,60 @@ class Graph:
                 else:
                     raise RuntimeError("Should not happen")
 
+            return kwargs, run_input_artifacts
+
+        def _get_run_output(run_id: RunID) -> Tuple[Any, Optional[Artifact]]:
+            output_edges = self._edges_by_source_id[run_id]
+
+            for output_edge in output_edges:
+                if output_edge.artifact_id is None:
+                    return None, None
+
+                artifact = self._artifacts_by_id[output_edge.artifact_id]
+                value = _get_artifact_value(artifact)
+                return value, artifact
+
+            return None, None
+
+        def _set_parent_nested(future: AbstractFuture, run: Run):
+            if run.parent_id is None:
+                return None, None
+
+            parent_future = futures_by_original_id[run.parent_id]
+
+            future.parent_future = parent_future
+
+            for output_edge in self._edges_by_source_id[run_id]:
+                if output_edge.parent_id is not None:
+                    if (
+                        self.edges_by_id[output_edge.parent_id].source_run_id
+                        == run.parent_id
+                    ):
+                        parent_future.nested_future = future
+
+                        if run.id in reset_run_ids:
+                            parent_future.state = FutureState.RAN
+
+                        return
+
+        def _clone_run(run_id: RunID):
+            run = self._runs_by_id[run_id]
+
+            kwargs, run_input_artifacts = _get_run_inputs(run_id)
+
             func = run.get_func()
 
             future = func(**kwargs)
 
             input_artifacts[future.id] = run_input_artifacts
 
-            # Figuring out future output values and artifacts
-            output_edges = self.edges_by_source_id[run.id]
-
             if run_id not in reset_run_ids:
-                for output_edge in output_edges:
-                    if output_edge.artifact_id is not None:
-                        artifact = self.artifacts_by_id[output_edge.artifact_id]
-                        output_artifacts[future.id] = artifact
-                        value = _get_artifact_value(artifact)
-                        future.value = value
-                    break
+                value, output_artifact = _get_run_output(run_id)
+                if output_artifact is not None:
+                    output_artifacts[future.id] = output_artifact
+                    future.value = value
 
-            # Figuring out parent and nested futures
-            if run.parent_id is not None:
-                parent_future = futures_by_original_id[run.parent_id]
-                future.parent_future = parent_future
-                for output_edge in output_edges:
-                    if output_edge.parent_id is not None:
-                        if (
-                            self.edges_by_id[output_edge.parent_id].source_run_id
-                            == run.parent_id
-                        ):
-                            parent_future.nested_future = future
-
-                            if run.id in reset_run_ids:
-                                parent_future.state = FutureState.RAN
-
-                            break
+            _set_parent_nested(future, run)
 
             # Settings state for resolved runs unless reset
             if FutureState[run.future_state] == FutureState.RESOLVED:  # type: ignore
@@ -392,6 +403,12 @@ class Graph:
                     future.state = FutureState.RESOLVED
 
             futures_by_original_id[run.id] = future
+
+        for run_id in run_ids_by_execution_order:
+            if run_id in skip_run_ids:
+                continue
+
+            _clone_run(run_id)
 
         if reset_from is None and len(futures_by_original_id) != len(self.runs):
             raise RuntimeError("Not all futures duplicated")
@@ -416,13 +433,13 @@ class Graph:
         )
 
 
-EdgeFilterCallable = Callable[[List[Optional[str]], str], bool]
+EdgeFilterCallable = Callable[[List[Optional[RunID]], RunID], bool]
 
 
 def _upstream_edge_filter(
-    edges_by_destination_id: Dict[str, List[Edge]]
+    edges_by_destination_id: Dict[RunID, List[Edge]]
 ) -> EdgeFilterCallable:
-    def _edge_filter(upstream_run_ids: List[Optional[str]], run_id: str):
+    def _edge_filter(upstream_run_ids: List[Optional[RunID]], run_id: RunID):
         return all(
             edge.source_run_id in upstream_run_ids
             for edge in edges_by_destination_id[run_id]
@@ -432,9 +449,9 @@ def _upstream_edge_filter(
 
 
 def _downstream_edge_filter(
-    edges_by_source_id: Dict[str, List[Edge]]
+    edges_by_source_id: Dict[RunID, List[Edge]]
 ) -> EdgeFilterCallable:
-    def _edge_filter(downstream_run_ids: List[Optional[str]], run_id: str):
+    def _edge_filter(downstream_run_ids: List[Optional[RunID]], run_id: RunID):
         return all(
             edge.destination_run_id in downstream_run_ids
             for edge in edges_by_source_id[run_id]
@@ -444,9 +461,9 @@ def _downstream_edge_filter(
 
 
 def _sort_layer_runs(
-    layer_run_ids: List[str], edge_filter: EdgeFilterCallable
+    layer_run_ids: List[RunID], edge_filter: EdgeFilterCallable
 ) -> List[str]:
-    def _find_next_runs(previous_run_ids: List[Optional[str]]):
+    def _find_next_runs(previous_run_ids: List[Optional[RunID]]):
         next_run_ids = [
             run_id
             for run_id in layer_run_ids

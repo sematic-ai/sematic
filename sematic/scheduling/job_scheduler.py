@@ -46,11 +46,13 @@ def schedule_resolution(
 
     Parameters
     ----------
-    resolution:
+    resolution: Resolution
         The resolution associated with the run
     max_parallelism:
         The maximum number of non-inlined runs that the resolver will allow to be in the
         SCHEDULED state at any one time.
+    rerun_from: Optional[str]
+        Start resolution from a particular point
     """
     resolution.external_jobs = _refresh_external_jobs(resolution.external_jobs)
     _assert_resolution_is_scheduleable(resolution)

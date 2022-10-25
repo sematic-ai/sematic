@@ -32,7 +32,7 @@ def memoized_property(fget: typing.Callable) -> property:
     >>> c.load_name_count
     1
     """
-    cache_name = make_cache_name(fget.__name__)
+    cache_name = _make_cache_name(fget.__name__)
 
     @wraps(fget)
     def fget_memoized(self):
@@ -45,12 +45,12 @@ def memoized_property(fget: typing.Callable) -> property:
     return property(fget_memoized)
 
 
-def make_cache_name(name: str):
+def _make_cache_name(name: str):
     return f"_{name}"
 
 
 def memoized_indexed(fget: typing.Callable) -> typing.Callable:
-    cache_name = make_cache_name(fget.__name__)
+    cache_name = _make_cache_name(fget.__name__)
 
     @wraps(fget)
     def fget_memoized(self, index: str):

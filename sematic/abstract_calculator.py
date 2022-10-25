@@ -45,3 +45,7 @@ class AbstractCalculator(abc.ABC):
     @abc.abstractmethod
     def get_source(self) -> str:
         pass
+
+    @abc.abstractmethod
+    def __call__(self, **kwargs) -> typing.Any:
+        pass
