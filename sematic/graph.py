@@ -25,6 +25,26 @@ class Graph:
     """
     Represents an existing immutable graph.
 
+    Nomenclature
+    ------------
+    Parent run
+        The run corresponding to the function calling the current run's function
+    Child run
+        The run corresponding to the function being called by the current run's
+        function
+    Ancestor runs
+        All parents going up to the root
+    Descendant runs
+        All children down to the leaves
+    Upstream runs
+        Within a given layer, runs corresponding to functions being called prior
+        to the current run's function. Current function depends on outputs of
+        upstream runs.
+    Downstream runs
+        Within a given layer, runs corresponding to functions being called after
+        the current run's function. Downstream runs depend on outputs of current
+        function.
+
     Parameters
     ----------
     runs: List[Run]
@@ -96,7 +116,7 @@ class Graph:
     def input_artifacts_ready(self, run_id: RunID) -> bool:
         """
         Does run have all input artifacts ready, i.e. upstream runs have
-        resolved?
+        resolved? Uses in-memory graph artifacts, does not fetch them from the DB.
         """
         return all(
             edge.artifact_id is not None
@@ -109,7 +129,8 @@ class Graph:
         return run_ids in order of execution, i.e. upstream runs first,
         downstream runs next. This is not deterministic, as multiple runs may
         have the same set of upstream runs, and thus can be executed in
-        parallel.
+        parallel. It thus is not suitable to determine whether one run is a
+        dependency of another.
 
         Parameters
         ----------
@@ -117,16 +138,20 @@ class Graph:
             IDs of runs in the layer. All runs are epxected to have the same
             parent_id.
         """
+        if len({self._runs_by_id[run_id].parent_id for run_id in layer_run_ids}) > 1:
+            raise ValueError("Runs are not all from the same layer")
+
         return _sort_layer_runs(
             layer_run_ids, _upstream_edge_filter(self._edges_by_destination_id)
         )
 
-    def _reverse_execution_order(self, layer_run_ids: List[RunID]):
+    def _reverse_execution_order(self, layer_run_ids: List[RunID]) -> List[RunID]:
         """
         For a given graph layer (all runs have the same parent_id), this will
         return run_ids in order of reverse execution, i.e. downstream first,
         upstream runs next. This is not deterministic, as runs may have multiple
-        upstream runs.
+        upstream runs. It thus is not suitable to determine whether one run is a
+        dependency of another.
 
         Parameters
         ----------
@@ -134,17 +159,20 @@ class Graph:
             IDs of runs in the layer. All runs are epxected to have the same
             parent_id.
         """
+        if len({self._runs_by_id[run_id].parent_id for run_id in layer_run_ids}) > 1:
+            raise ValueError("Runs are not all from the same layer")
+
         return _sort_layer_runs(
             layer_run_ids, _downstream_edge_filter(self._edges_by_source_id)
         )
 
-    def _run_ids_sorted_by_layer(
+    def _sorted_run_ids_by_layer(
         self, run_sorter: Callable[[List[RunID]], List[RunID]]
     ) -> List[RunID]:
         """
         Run IDs grouped by parent_ids, with parent_ids sorted from outermost
         (None) to innermost. This is not deterministic as multiple layers may
-        have the same parent_id.
+        have the same parent_id. Breadth-first sorting.
 
         Within a layer, runs are sorted with the run_sorter input callable.
 
@@ -233,6 +261,50 @@ class Graph:
 
         return list(set(downstream_ids))
 
+    def _get_skip_reset_run_ids(
+        self, reset_from: RunID
+    ) -> Tuple[List[RunID], List[RunID]]:
+        """
+        Figures out what run IDs to skip or reset based on rerun_from.
+
+        We skip descendants of all downstream of reset point plus descendants of
+        downstreams of ancestors. The skipped futures will be naturally
+        re-created by the new graph resolution.
+
+        reset = forcing future state to CREATED or RAN. Considering reset_from
+        and ancestors runs, we reset the run and all downstream.
+
+        Parameters
+        ----------
+        reset_from: RunID
+            ID of run from which to reset the graph
+
+        Returns
+        -------
+        Tuple[List[RunID], List[RunID]]
+            A tuple whose first element is the list of run IDs to skip when
+            cloning the graph. The second element is the list of run IDs whose
+            cloned future's state to reset to CREATED.
+        """
+        skip_run_ids: List[RunID] = []
+
+        reset_run_ids: List[RunID] = [reset_from]
+
+        ancestor_run_ids = self._get_run_ancestor_ids(reset_from)
+        reset_run_ids += ancestor_run_ids
+
+        for ancestor_run_id in [reset_from] + ancestor_run_ids:
+            downstream_run_ids = self._get_run_downstream_ids(ancestor_run_id)
+            reset_run_ids += downstream_run_ids
+
+            for downstream_run_id in downstream_run_ids:
+                downstream_descendant_ids = self._get_run_descendant_ids(
+                    downstream_run_id
+                )
+                skip_run_ids += downstream_descendant_ids
+
+        return skip_run_ids, reset_run_ids
+
     def clone_futures(
         self, storage: Storage, reset_from: Optional[RunID] = None
     ) -> Tuple[
@@ -246,7 +318,7 @@ class Graph:
         Future state is set as follows:
 
         - If run is RAN or RESOLVED, future state is set accordingly. If
-          reset_from, see behavior below.
+          reset_from is not None, see behavior below.
 
         - If run is FAILED, NESTED_FAILED, or CANCELED, future state is set to
           CREATED
@@ -285,37 +357,15 @@ class Graph:
         input_artifacts: Dict[RunID, Dict[str, Artifact]] = defaultdict(dict)
         output_artifacts: Dict[RunID, Artifact] = {}
 
-        # We skip descendants of all downstream of reset point
-        # plus descendants of downstreams of ancestors
-        # The skipped futures will be naturally re-created by the new graph
-        # resolution
-        skip_run_ids: List[RunID] = []
-
-        # reset = forcing future state to CREATED or RAN
-        # Considering reset_from and ancestors runs, we reset the run and
-        # all downstream
-        reset_run_ids: List[RunID] = []
-
-        if reset_from is not None:
-            reset_run_ids.append(reset_from)
-            ancestor_run_ids = self._get_run_ancestor_ids(reset_from)
-            reset_run_ids += ancestor_run_ids
-
-            for ancestor_run_id in [reset_from] + ancestor_run_ids:
-                downstream_run_ids = self._get_run_downstream_ids(ancestor_run_id)
-                reset_run_ids += downstream_run_ids
-
-                for downstream_run_id in downstream_run_ids:
-                    downstream_descendant_ids = self._get_run_descendant_ids(
-                        downstream_run_id
-                    )
-                    skip_run_ids += downstream_descendant_ids
+        skip_run_ids, reset_run_ids = (
+            ([], []) if reset_from is None else self._get_skip_reset_run_ids(reset_from)
+        )
 
         # run order guarantees parents and upstream come first
         # This is necessary because we want upstream cloned futures
         # to be created before downstreams so that the appropriate
         # kwargs can be built
-        run_ids_by_execution_order = self._run_ids_sorted_by_layer(
+        run_ids_by_execution_order = self._sorted_run_ids_by_layer(
             run_sorter=self._execution_order
         )
 
@@ -354,7 +404,9 @@ class Graph:
                 elif input_edge.artifact_id is not None:
                     kwargs[input_edge.destination_name] = value
                 else:
-                    raise RuntimeError("Should not happen")
+                    raise RuntimeError(
+                        "Invalid input edge had no source run or associated artifact"
+                    )
 
             return kwargs, run_input_artifacts
 
@@ -430,7 +482,7 @@ class Graph:
         # We return future sorted by how they would be sorted for a resolution
         # from scratch: grouped by layer (outermost first), and sorter in reverse
         # execution order within each layer
-        run_ids_by_reverse_execution_order = self._run_ids_sorted_by_layer(
+        run_ids_by_reverse_execution_order = self._sorted_run_ids_by_layer(
             run_sorter=self._reverse_execution_order
         )
 
@@ -477,6 +529,17 @@ def _downstream_edge_filter(
 def _sort_layer_runs(
     layer_run_ids: List[RunID], edge_filter: EdgeFilterCallable
 ) -> List[str]:
+    """
+    Sort runs within layer.
+
+    Parameters
+    ----------
+    layer_run_ids: List[RunID]
+        All run IDs in the layer
+    edge_filter: EdgeFilterCallable
+        A callable to determine the next set of run IDs based on their edges.
+    """
+
     def _find_next_runs(previous_run_ids: List[Optional[RunID]]):
         next_run_ids = [
             run_id

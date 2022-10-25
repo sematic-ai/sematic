@@ -222,7 +222,7 @@ def test_run_execution_ordering(
 
     graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
 
-    run_ids_by_execution_order = graph._run_ids_sorted_by_layer(
+    run_ids_by_execution_order = graph._sorted_run_ids_by_layer(
         run_sorter=graph._execution_order
     )
 
@@ -257,7 +257,7 @@ def test_run_reverse_ordering(
 
     graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
 
-    run_ids_by_reverse_order = graph._run_ids_sorted_by_layer(
+    run_ids_by_reverse_order = graph._sorted_run_ids_by_layer(
         run_sorter=graph._reverse_execution_order
     )
 
