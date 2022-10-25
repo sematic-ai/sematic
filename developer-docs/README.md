@@ -11,6 +11,14 @@ The developer tools need to be installed by running this command once (and subse
 $ make install-dev-deps
 ```
 
+## Testing
+
+Guideline for testing changes that might impact resolution:
+- the CI tests must pass
+- test locally
+- test remotely in non-detached mode
+- test remotely in detached mode
+
 ## Releasing
 **Note:** Actually pushing the released wheel can only be done if you have
 access to the PyPi repo, which is limited to employees of Sematic.
