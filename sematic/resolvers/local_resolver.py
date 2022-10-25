@@ -233,6 +233,7 @@ class LocalResolver(SilentResolver):
         """Make a Resolution instance and persist it."""
         resolution = self._make_resolution(root_future)
         api_client.save_resolution(resolution)
+        self._notify_pipeline_update()
 
     def _make_resolution(self, root_future: AbstractFuture) -> Resolution:
         """Make a Resolution instance."""
@@ -263,12 +264,6 @@ class LocalResolver(SilentResolver):
         future.state = FutureState.SCHEDULED
         run.future_state = FutureState.SCHEDULED
         run.started_at = datetime.datetime.utcnow()
-
-    def _future_did_schedule(self, future: AbstractFuture) -> None:
-        super()._future_did_schedule(future)
-        root_future = self._futures[0]
-        if root_future.id == future.id:
-            api_client.notify_pipeline_update(self._runs[future.id].calculator_path)
 
     def _future_did_run(self, future: AbstractFuture) -> None:
         super()._future_did_run(future)

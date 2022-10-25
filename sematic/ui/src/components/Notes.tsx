@@ -73,17 +73,15 @@ function RunId(props: { runId: string; link?: string; trim?: boolean }) {
 
   return (
     <>
-      <Tooltip title={"Navigate to run " + runId}>
-        <ButtonBase onClick={() => link && navigate(link)} disabled={!link}>
-          <code
-            style={{
-              fontSize: 12,
-            }}
-          >
-            {trim ? runId.substring(0, 6) : runId}
-          </code>
-        </ButtonBase>
-      </Tooltip>
+      <ButtonBase onClick={() => link && navigate(link)} disabled={!link}>
+        <code
+          style={{
+            fontSize: 12,
+          }}
+        >
+          {trim ? runId.substring(0, 6) : runId}
+        </code>
+      </ButtonBase>
       <CopyButton text={runId} message="Copied run ID." />
     </>
   );

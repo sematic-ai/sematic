@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { UserContext } from "..";
 import PipelineBar from "../components/PipelineBar";
@@ -18,34 +18,54 @@ export default function PipelineView() {
 
   const params = useParams();
 
-  const { calculatorPath, rootId } = params;
+  const { calculatorPath, rootIdParam } = params;
+
+  const fetchRootRun = useCallback(
+    (rootId: string) => {
+      fetchJSON({
+        url: "/api/v1/runs/" + rootId,
+        apiKey: user?.api_key,
+        callback: (payload: RunViewPayload) => setRootRun(payload.content),
+      });
+    },
+    [setRootRun]
+  );
+
+  const fetchResolution = useCallback(
+    (rootId: string) => {
+      fetchJSON({
+        url: "/api/v1/resolutions/" + rootId,
+        apiKey: user?.api_key,
+        callback: (payload: ResolutionPayload) =>
+          setResolution(payload.content),
+      });
+    },
+    [setResolution]
+  );
 
   useEffect(() => {
-    if (!rootId) return;
-    fetchJSON({
-      url: "/api/v1/runs/" + rootId,
-      apiKey: user?.api_key,
-      callback: (payload: RunViewPayload) => setRootRun(payload.content),
-    });
-    fetchJSON({
-      url: "/api/v1/resolutions/" + rootId,
-      apiKey: user?.api_key,
-      callback: (payload: ResolutionPayload) => setResolution(payload.content),
-    });
-  }, [rootId]);
+    if (!rootIdParam) return;
+    fetchRootRun(rootIdParam);
+    fetchResolution(rootIdParam);
+  }, []);
 
-  useMemo(() => {
-    if (rootRun === undefined) return;
-    var runURL =
-      window.location.protocol +
-      "//" +
-      window.location.host +
-      "/pipelines/" +
-      rootRun.calculator_path +
-      "/" +
-      rootRun.id;
-    window.history.pushState({ path: runURL }, "", runURL);
-  }, [rootRun]);
+  const changeRootRunId = useCallback(
+    (rootId: string) => {
+      if (rootRun && rootRun.id == rootId) return;
+      var runURL =
+        window.location.protocol +
+        "//" +
+        window.location.host +
+        "/pipelines/" +
+        calculatorPath +
+        "/" +
+        rootId;
+      window.history.pushState({ path: runURL }, "", runURL);
+      fetchRootRun(rootId);
+      fetchResolution(rootId);
+    },
+    [calculatorPath, rootRun]
+  );
 
   if (calculatorPath) {
     return (
@@ -59,13 +79,9 @@ export default function PipelineView() {
       >
         <PipelineBar
           calculatorPath={calculatorPath}
-          onRootRunChange={(run: Run, resolution: Resolution) => {
-            setRootRun(run);
-            setResolution(resolution);
-          }}
-          setInitialRootRun={rootId === undefined}
-          initialRootRun={rootRun}
-          initialResolution={resolution}
+          onRootIdChange={changeRootRunId}
+          rootRun={rootRun}
+          resolution={resolution}
         />
         {rootRun && resolution && (
           <PipelinePanels rootRun={rootRun} resolution={resolution} />

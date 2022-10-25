@@ -1,16 +1,12 @@
 import { ChevronLeft } from "@mui/icons-material";
-import CloseIcon from "@mui/icons-material/Close";
 import {
   Box,
-  Button,
   FormControl,
-  IconButton,
   InputLabel,
   Link,
   MenuItem,
   Select,
   SelectChangeEvent,
-  Snackbar,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -125,22 +121,11 @@ function PipelineActionMenu(props: {
 
 export default function PipelineBar(props: {
   calculatorPath: string;
-  onRootRunChange: (run: Run, resolution: Resolution) => void;
-  setInitialRootRun: boolean;
-  initialRootRun?: Run;
-  initialResolution?: Resolution;
+  onRootIdChange: (rootId: string) => void;
+  rootRun?: Run;
+  resolution?: Resolution;
 }) {
-  const {
-    onRootRunChange,
-    calculatorPath,
-    setInitialRootRun,
-    initialRootRun,
-    initialResolution,
-  } = props;
-  const [rootRun, setRootRun] = useState<Run | undefined>(initialRootRun);
-  const [resolution, setResolution] = useState<Resolution | undefined>(
-    initialResolution
-  );
+  const { calculatorPath, onRootIdChange, rootRun, resolution } = props;
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
   const [latestRuns, setLatestRuns] = useState<Run[]>([]);
@@ -148,14 +133,6 @@ export default function PipelineBar(props: {
   const { setSnackMessage } = useContext(SnackBarContext);
 
   const theme = useTheme();
-
-  useMemo(() => {
-    if (initialRootRun) setRootRun(initialRootRun);
-  }, [initialRootRun]);
-
-  useMemo(() => {
-    if (initialResolution) setResolution(initialResolution);
-  }, [initialResolution]);
 
   const fetchLatestRuns = useCallback(
     (calcPath: string, onResults: (runs: Run[]) => void) => {
@@ -179,103 +156,49 @@ export default function PipelineBar(props: {
     []
   );
 
-  const fetchResolution = useCallback(
-    (run: Run | undefined) => {
-      if (run) {
-        fetchJSON({
-          url: "/api/v1/resolutions/" + run.id,
-          apiKey: user?.api_key,
-          callback: (response: ResolutionPayload) => {
-            setResolution(response.content);
-            onRootRunChange(run, response.content);
-          },
-          setError: (_: Error | undefined) => {
-            // this means the pipeline resolution failed
-            setResolution(undefined);
-          },
-        });
-      }
-    },
-    [setResolution]
-  );
-
   useEffect(() => {
-    if (calculatorPath === undefined) return;
-    fetchLatestRuns(calculatorPath, (runs) => {
-      setLatestRuns(runs);
-      if (setInitialRootRun) {
-        setRootRun(runs[0]);
-        fetchResolution(runs[0]);
-      }
-    });
-  }, [
-    calculatorPath,
-    fetchLatestRuns,
-    onRootRunChange,
-    setInitialRootRun,
-    setResolution,
-    fetchResolution,
-  ]);
-
-  const updateRootRun = useCallback(
-    (runs: Run[]) => {
-      if (!rootRun) return;
-      for (let i = 0; i < runs.length; i++) {
-        if (runs[i].id === rootRun.id) {
-          setRootRun(runs[i]);
-          break;
+    if (rootRun === undefined) {
+      fetchLatestRuns(calculatorPath, (runs: Run[]) => {
+        setLatestRuns(runs);
+        if (runs.length > 0) {
+          onRootIdChange(runs[0].id);
         }
-      }
-    },
-    [rootRun, setRootRun]
-  );
+      });
+    }
+  }, [calculatorPath]);
 
   useEffect(() => {
     pipelineSocket.removeAllListeners("update");
     pipelineSocket.on("update", (args: { calculator_path: string }) => {
       if (args.calculator_path === calculatorPath) {
         fetchLatestRuns(calculatorPath, (runs) => {
-          setLatestRuns(runs);
           if (runs[0].id !== latestRuns[0].id) {
             setSnackMessage({
               message: "New run available.",
               actionName: "view",
               autoHide: false,
               closable: true,
-              onClick: () => selectLatestRun(),
+              onClick: () => onRootIdChange(runs[0].id),
             });
           }
-          updateRootRun(runs);
+          setLatestRuns(runs);
         });
       }
     });
-  }, [latestRuns, calculatorPath, fetchLatestRuns, updateRootRun]);
+  }, [latestRuns, calculatorPath, fetchLatestRuns]);
 
   const onSelect = useCallback(
     (event: SelectChangeEvent) => {
-      const newRootRunId = event.target.value;
-      latestRuns.forEach((run) => {
-        if (run.id === newRootRunId) {
-          setRootRun(run);
-          fetchResolution(run);
-          setSnackMessage(undefined);
-        }
-      });
+      onRootIdChange(event.target.value);
     },
-    [latestRuns, onRootRunChange, setResolution, fetchResolution]
+    [onRootIdChange]
   );
 
   const onCancel = useCallback(() => {
     fetchLatestRuns(calculatorPath, (runs) => {
       setLatestRuns(runs);
-      updateRootRun(runs);
     });
-  }, [setLatestRuns, fetchLatestRuns, updateRootRun]);
-
-  const selectLatestRun = useCallback(() => {
-    setRootRun(latestRuns[0]);
-    fetchResolution(latestRuns[0]);
-  }, [latestRuns, setRootRun, onRootRunChange, fetchResolution]);
+  }, [setLatestRuns, fetchLatestRuns]);
 
   if (error || !isLoaded) {
     return (
