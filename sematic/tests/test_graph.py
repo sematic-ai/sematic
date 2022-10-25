@@ -76,8 +76,8 @@ def test_clone_futures(
             assert futures_by_original_id[parent_run.id] is future_.parent_future
 
         # Making sure all future kwargs are correct
-        for input_edge in graph.edges_by_destination_id[original_run.id]:
-            artifact = graph.artifacts_by_id[input_edge.artifact_id]
+        for input_edge in graph._edges_by_destination_id[original_run.id]:
+            artifact = graph._artifacts_by_id[input_edge.artifact_id]
             assert input_artifacts[future_.id][input_edge.destination_name] is artifact
 
             if input_edge.source_run_id is None:
@@ -88,8 +88,8 @@ def test_clone_futures(
                 assert future_.kwargs[input_edge.destination_name] is upstream_future
 
         # Making sure output values are correct
-        for output_edge in graph.edges_by_source_id[original_run_id]:
-            artifact = graph.artifacts_by_id[output_edge.artifact_id]
+        for output_edge in graph._edges_by_source_id[original_run_id]:
+            artifact = graph._artifacts_by_id[output_edge.artifact_id]
             assert output_artifacts[future_.id] is artifact
 
             value = get_artifact_value(artifact, mock_local_resolver_storage)
