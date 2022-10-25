@@ -97,8 +97,11 @@ def test_simulate_cloud_exec(
 
     mock_update_run_future_states.side_effect = fake_update_run_future_states
 
-    mock_schedule_resolution.assert_called_once_with(future.id)
+    mock_schedule_resolution.assert_called_once_with(
+        resolution_id=future.id, max_parallelism=None
+    )
     assert api_client.get_resolution(future.id).status == ResolutionStatus.CREATED.value
+
     resolution = api_client.get_resolution(future.id)
     root_run = api_client.get_run(future.id)
     assert root_run.container_image_uri == images["default"]

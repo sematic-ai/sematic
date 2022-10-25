@@ -52,9 +52,6 @@ class CloudResolver(LocalResolver):
 
         When `False`, the driver job runs on the local machine. The shell prompt
         will return when the entire pipeline has completed.
-    is_running_remotely: bool
-        For Sematic internal usage. End users should always leave this at the default
-        value of False.
     max_parallelism: Optional[int]
         The maximum number of non-inlined runs that this resolver will allow to be in the
         SCHEDULED state at any one time. Must be a positive integer, or None for
@@ -66,6 +63,9 @@ class CloudResolver(LocalResolver):
         considered in this parallelism limit. Note also that runs that are in the RAN
         state do not contribute to the limit, since they do not consume computing
         resources.
+    _is_running_remotely: bool
+        For Sematic internal usage. End users should always leave this at the default
+        value of False.
     """
 
     def __init__(
@@ -214,7 +214,9 @@ class CloudResolver(LocalResolver):
         api_client.notify_pipeline_update(run.calculator_path)
 
         # SUBMIT RESOLUTION JOB
-        api_client.schedule_resolution(future.id)
+        api_client.schedule_resolution(
+            resolution_id=future.id, max_parallelism=self._max_parallelism
+        )
 
         return run.id
 
