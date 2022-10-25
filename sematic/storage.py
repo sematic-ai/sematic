@@ -35,6 +35,11 @@ class Storage(abc.ABC):
         pass
 
 
+class NoSuchStorageKey(KeyError):
+    def __init__(self, storage: Storage, key: str):
+        super().__init__(f"No such storage key for {storage.__class__.__name__}: {key}")
+
+
 class MemoryStorage(Storage):
     """
     An in-memory key/value store implementing the `Storage` interface.
@@ -47,7 +52,10 @@ class MemoryStorage(Storage):
         self._store[key] = value
 
     def get(self, key: str) -> bytes:
-        return self._store[key]
+        try:
+            return self._store[key]
+        except KeyError:
+            raise NoSuchStorageKey(self, key)
 
 
 class LocalStorage(Storage):
@@ -69,7 +77,7 @@ class LocalStorage(Storage):
             with open(os.path.join(get_config().data_dir, key), "rb") as file:
                 return file.read()
         except FileNotFoundError:
-            raise KeyError(f"No suck key: {key}")
+            raise NoSuchStorageKey(self, key)
 
 
 class S3Storage(Storage):
@@ -87,11 +95,7 @@ class S3Storage(Storage):
         return boto3.client("s3")
 
     def set(self, key: str, value: bytes):
-        """Store value in S3
-
-        TODO: modularize the F out of this to enable local/remote storage switch
-        based on resolver. Also enable multiple storage clients (AWS, GCP, Azure)
-        """
+        """Store value in S3"""
         with io.BytesIO(value) as file_obj:
             self._s3_client.upload_fileobj(file_obj, self._bucket, key)
 
@@ -107,7 +111,7 @@ class S3Storage(Storage):
         except botocore.exceptions.ClientError as e:
             # Standardizing "Not found" errors across storage backends
             if "404" in str(e):
-                raise KeyError("{}: {}".format(key, str(e)))
+                raise NoSuchStorageKey(self, key)
 
             raise e
         return file_obj.getvalue()
