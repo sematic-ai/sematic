@@ -120,6 +120,16 @@ def get_graph(
     Get a graph for a run.
 
     This will return only the run's direct edges and artifacts
+
+    Parameters
+    ----------
+    run_id: str
+        The ID whose graph to retrieve
+
+    root: bool
+        Defaults to `False`. If `True`, `run_id` is presumed to be a root run's ID
+        and the whole graph is retrieved. If `False`, only the immediate graph around
+        the run is retrieved (i.e. immediate edges and their artifacts).
     """
     response = _get(f"/runs/{run_id}/graph?root={int(root)}")
 
