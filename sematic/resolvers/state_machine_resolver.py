@@ -36,6 +36,10 @@ class StateMachineResolver(Resolver, abc.ABC):
         return self._root_future.value
 
     def _seed_graph(self, future):
+        """
+        Seeds the future graph with future, which is considered the root future.
+        Prior to calling this, `self._root_future` will raise.
+        """
         self._enqueue_root_future(future)
 
     def _resolution_loop(self):
