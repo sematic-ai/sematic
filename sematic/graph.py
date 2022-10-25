@@ -127,10 +127,9 @@ class Graph:
         """
         For a given graph layer (all runs have the same parent_id), this will
         return run_ids in order of execution, i.e. upstream runs first,
-        downstream runs next. This is not deterministic, as multiple runs may
-        have the same set of upstream runs, and thus can be executed in
-        parallel. It thus is not suitable to determine whether one run is a
-        dependency of another.
+        downstream runs next. Parallelizable run IDs are sorted alphabetically for
+        determinism. Returns a flat list, thus is not suitable to determine
+        whether one run is a dependency of another.
 
         Parameters
         ----------
@@ -149,9 +148,9 @@ class Graph:
         """
         For a given graph layer (all runs have the same parent_id), this will
         return run_ids in order of reverse execution, i.e. downstream first,
-        upstream runs next. This is not deterministic, as runs may have multiple
-        upstream runs. It thus is not suitable to determine whether one run is a
-        dependency of another.
+        upstream runs next. Parallelizable run IDs are sorted alphabetically for
+        determinism. Returns a flat list, thus is not suitable to determine
+        whether one run is a dependency of another.
 
         Parameters
         ----------
@@ -171,8 +170,7 @@ class Graph:
     ) -> List[RunID]:
         """
         Run IDs grouped by parent_ids, with parent_ids sorted from outermost
-        (None) to innermost. This is not deterministic as multiple layers may
-        have the same parent_id. Breadth-first sorting.
+        (None) to innermost. Breadth-first sorting.
 
         Within a layer, runs are sorted with the run_sorter input callable.
 
@@ -530,7 +528,8 @@ def _sort_layer_runs(
     layer_run_ids: List[RunID], edge_filter: EdgeFilterCallable
 ) -> List[str]:
     """
-    Sort runs within layer.
+    Sort runs topologically within layer. The order (upstream first or
+    downstream first) depends on edge_filter.
 
     Parameters
     ----------
@@ -541,11 +540,15 @@ def _sort_layer_runs(
     """
 
     def _find_next_runs(previous_run_ids: List[Optional[RunID]]):
-        next_run_ids = [
-            run_id
-            for run_id in layer_run_ids
-            if edge_filter(previous_run_ids, run_id) and run_id not in previous_run_ids
-        ]
+        # Sorting for determinism.
+        next_run_ids = sorted(
+            [
+                run_id
+                for run_id in layer_run_ids
+                if edge_filter(previous_run_ids, run_id)
+                and run_id not in previous_run_ids
+            ]
+        )
 
         if len(next_run_ids) == 0:
             return []
