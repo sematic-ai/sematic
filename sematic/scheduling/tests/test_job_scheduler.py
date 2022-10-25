@@ -88,7 +88,7 @@ def test_schedule_run(mock_k8s, run: Run, resolution: Resolution):
 
 
 def test_schedule_resolution(mock_k8s, resolution: Resolution):
-    scheduled = schedule_resolution(resolution)
+    scheduled = schedule_resolution(resolution, max_parallelism=3)
     assert len(scheduled.external_jobs) == 1
     external_job = scheduled.external_jobs[0]
     assert isinstance(external_job, KubernetesExternalJob)
@@ -97,6 +97,7 @@ def test_schedule_resolution(mock_k8s, resolution: Resolution):
         resolution_id=resolution.root_id,
         image=resolution.container_image_uri,
         user_settings=resolution.settings_env_vars,
+        max_parallelism=3,
     )
 
 
