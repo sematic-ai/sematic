@@ -211,7 +211,14 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
             ".".join(split_calculator_path[:-1]),
             split_calculator_path[-1],
         )
-        func = getattr(importlib.import_module(import_path), func_name)
+        try:
+            func = getattr(importlib.import_module(import_path), func_name)
+        except (ImportError, AttributeError) as e:
+            raise type(e)(
+                f"Unable to find this run's function at {import_path}.{func_name}, "
+                f"did it change location? {e}"
+            )
+
         return func
 
     def __repr__(self):
