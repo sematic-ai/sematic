@@ -16,16 +16,30 @@ from sematic.utils.retry import retry
 
 
 class Storage(abc.ABC):
+    """
+    Abstract base class to represent a key/value storage engine.
+    """
+
     @abc.abstractmethod
     def set(self, key: str, value: bytes):
+        """
+        Sets value for key.
+        """
         pass
 
     @abc.abstractmethod
     def get(self, key: str) -> bytes:
+        """
+        Gets value for key.
+        """
         pass
 
 
 class MemoryStorage(Storage):
+    """
+    An in-memory key/value store implementing the `Storage` interface.
+    """
+
     def __init__(self):
         self._store: Dict[str, Any] = {}
 
@@ -37,6 +51,12 @@ class MemoryStorage(Storage):
 
 
 class LocalStorage(Storage):
+    """
+    A local storage implementation of the `Storage` interface. Values are stores
+    in the data directory of the Sematic directory, typically at
+    `~/.sematic/data`.
+    """
+
     def set(self, key: str, value: bytes):
         dir_path = os.path.split(key)[0]
         os.makedirs(os.path.join(get_config().data_dir, dir_path), exist_ok=True)
@@ -53,6 +73,11 @@ class LocalStorage(Storage):
 
 
 class S3Storage(Storage):
+    """
+    Implementation of the `Storage` interface for AWS S3 storage. The bucket
+    where to store values is determined by the `AWS_S3_BUCKET` user settings.
+    """
+
     @memoized_property
     def _bucket(self) -> str:
         return get_user_settings(SettingsVar.AWS_S3_BUCKET)
