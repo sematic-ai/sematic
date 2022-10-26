@@ -81,6 +81,8 @@ def clone_resolution(resolution: Resolution, root_id: str) -> Resolution:
         kind=resolution.kind,
         git_info=resolution.git_info,
         settings_env_vars=resolution.settings_env_vars,
+        container_image_uri=resolution.container_image_uri,
+        container_image_uris=resolution.container_image_uris,
     )
 
     return cloned_resolution
