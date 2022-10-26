@@ -323,8 +323,8 @@ class Graph:
         """
         Figures out what run IDs to skip or reset based on rerun_from.
 
-        We skip descendants of all downstream of reset point plus descendants of
-        downstreams of ancestors. The skipped futures will be naturally
+        We skip descendants of reset point and descendants of downstreams of
+        reset point and ancestors. The skipped futures will be naturally
         re-created by the new graph resolution.
 
         reset = forcing future state to CREATED or RAN. Considering reset_from
@@ -342,7 +342,7 @@ class Graph:
             cloning the graph. The second element is the list of run IDs whose
             cloned future's state to reset to CREATED.
         """
-        skip_run_ids: List[RunID] = []
+        skip_run_ids: List[RunID] = self._get_run_descendant_ids(reset_from)
 
         reset_run_ids: List[RunID] = [reset_from]
 
