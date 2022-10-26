@@ -215,7 +215,7 @@ class CloudResolver(LocalResolver):
 
         # SUBMIT RESOLUTION JOB
         api_client.schedule_resolution(
-            future.id,
+            resolution_id=future.id,
             max_parallelism=self._max_parallelism,
             rerun_from=self._rerun_from_run_id,
         )
