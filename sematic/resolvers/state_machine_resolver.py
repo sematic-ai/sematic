@@ -37,8 +37,13 @@ class StateMachineResolver(Resolver, abc.ABC):
 
     def _seed_graph(self, future):
         """
-        Seeds the future graph with future, which is considered the root future.
-        Prior to calling this, `self._root_future` will raise.
+        Set the initial futures for the resolution.
+
+        This is a stub that can be
+        overridden by child classes. The resolver will evolve the DAG using this initial
+        set of futures. The root future should always be element 0 of `self._futures`,
+        there are no requirements on order of other futures. The default implementation
+        just seeds with the root future itself and no others.
         """
         self._enqueue_root_future(future)
 

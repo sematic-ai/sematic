@@ -128,8 +128,6 @@ class S3Storage(Storage):
     def get_line_stream(self, key: str, encoding="utf8") -> Iterable[str]:
         """Get value from S3 into a stream of text lines.
 
-        The encoding of the
-
         See TODO in `set`.
         """
         try:
