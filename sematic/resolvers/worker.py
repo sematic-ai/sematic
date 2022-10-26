@@ -13,7 +13,6 @@ import cloudpickle
 
 # Sematic
 import sematic.api_client as api_client
-import sematic.storage as storage
 from sematic.abstract_future import FutureState
 from sematic.calculator import Calculator
 from sematic.db.models.artifact import Artifact
@@ -28,6 +27,7 @@ from sematic.resolvers.cloud_resolver import (
 )
 from sematic.resolvers.log_streamer import ingested_logs
 from sematic.scheduling.external_job import JobType
+from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
 
 
@@ -39,6 +39,7 @@ def parse_args():
     parser.add_argument("--run_id", type=str, required=True)
     parser.add_argument("--resolve", default=False, action="store_true", required=False)
     parser.add_argument("--max-parallelism", type=int, default=None, required=False)
+    parser.add_argument("--rerun-from", type=str, default=None, required=False)
 
     args = parser.parse_args()
 
@@ -57,7 +58,9 @@ def _get_input_kwargs(
     artifacts_by_id = {artifact.id: artifact for artifact in artifacts}
 
     kwargs = {
-        edge.destination_name: get_artifact_value(artifacts_by_id[edge.artifact_id])
+        edge.destination_name: get_artifact_value(
+            artifacts_by_id[edge.artifact_id], storage=S3Storage()
+        )
         for edge in edges
         if edge.destination_run_id == run_id
         and edge.artifact_id is not None
@@ -98,6 +101,7 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
     Persist run output, whether it is a nested future or a concrete output.
     """
     artifacts = []
+    storage = S3Storage()
 
     if isinstance(output, Future):
         pickled_nested_future = cloudpickle.dumps(output)
@@ -107,7 +111,7 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
         run.ended_at = datetime.datetime.utcnow()
 
     else:
-        artifacts.append(make_artifact(output, type_, store=True))
+        artifacts.append(make_artifact(output, type_, storage=storage))
 
         # Set output artifact on output edges
         for edge in edges:
@@ -120,13 +124,21 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
     api_client.save_graph(run.root_id, [run], artifacts, edges)
 
 
-def main(run_id: str, resolve: bool, max_parallelism: Optional[int] = None):
+def main(
+    run_id: str,
+    resolve: bool,
+    max_parallelism: Optional[int] = None,
+    rerun_from: Optional[str] = None,
+):
     """
     Main job logic.
 
     `resolve` set to `True` will execute the driver logic.
     `resolve` set to `False` will execute the worker logic.
     """
+    if not resolve and rerun_from is not None:
+        raise ValueError("Can only have non-None rerun_from in resolve mode")
+
     runs, artifacts, edges = api_client.get_graph(run_id)
 
     if len(runs) == 0:
@@ -144,7 +156,10 @@ def main(run_id: str, resolve: bool, max_parallelism: Optional[int] = None):
             future.id = run.id
 
             resolver = CloudResolver(
-                detach=False, max_parallelism=max_parallelism, _is_running_remotely=True
+                detach=False,
+                max_parallelism=max_parallelism,
+                rerun_from=rerun_from,
+                _is_running_remotely=True,
             )
             resolver.set_graph(runs=runs, artifacts=artifacts, edges=edges)
 
@@ -201,11 +216,13 @@ def wrap_main_with_logging():
         logger.info("Worker CLI args: run_id=%s", args.run_id)
         logger.info("Worker CLI args: resolve=%s", args.resolve)
         logger.info("Worker CLI args: max-parallelism=%s", args.max_parallelism)
+        logger.info("Worker CLI args: rerun_from=%s", args.rerun_from)
 
         main(
             run_id=args.run_id,
             resolve=args.resolve,
             max_parallelism=args.max_parallelism,
+            rerun_from=args.rerun_from,
         )
 
 

@@ -6,7 +6,6 @@ pytest_test(
         "//sematic:calculator",
         "//sematic:storage",
         "//sematic/db/models:factories",
-        "//sematic/tests:fixtures",
     ],
 )
 

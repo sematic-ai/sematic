@@ -124,12 +124,17 @@ def schedule_resolution_endpoint(
 ) -> flask.Response:
     resolution = get_resolution(resolution_id)
 
-    max_parallelism = None
-    if flask.request.json and "max_parallelism" in flask.request.json:
-        max_parallelism = flask.request.json["max_parallelism"]
+    max_parallelism, rerun_from = None, None
+
+    if flask.request.json:
+        if "max_parallelism" in flask.request.json:
+            max_parallelism = flask.request.json["max_parallelism"]
+
+        if "rerun_from" in flask.request.json:
+            rerun_from = flask.request.json["rerun_from"]
 
     resolution = schedule_resolution(
-        resolution=resolution, max_parallelism=max_parallelism
+        resolution=resolution, max_parallelism=max_parallelism, rerun_from=rerun_from
     )
 
     save_resolution(resolution)

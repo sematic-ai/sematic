@@ -27,6 +27,7 @@ pytest_test(
         "//sematic/api/tests:fixtures",
         "//sematic/db:queries",
         "//sematic/db/tests:fixtures",
+        "//sematic/resolvers/tests:fixtures",
         "//sematic/tests:fixtures",
         "//sematic/utils:exceptions",
     ],
