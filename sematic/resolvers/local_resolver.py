@@ -66,14 +66,10 @@ class LocalResolver(SilentResolver):
         """
         try:
             run = api_client.get_run(from_run_id)
-        except api_client.ResourceNotFoundError:
-            raise ValueError(f"Cannot restart from {from_run_id}: run cannot be found.")
-
-        if from_run_id == run.root_id:
+        except api_client.ResourceNotFoundError as e:
             raise ValueError(
-                f"Cannot restart from {from_run_id}: "
-                "this is the root run, simply start over"
-            )
+                f"Cannot restart from {from_run_id}: run cannot be found."
+            ) from e
 
         runs, artifacts, edges = api_client.get_graph(run.root_id, root=True)
 
@@ -86,7 +82,7 @@ class LocalResolver(SilentResolver):
 
         if not graph.input_artifacts_ready(run.id):
             raise ValueError(
-                f"Cannot start from {from_run_id}: " "upstream runs did not succeed."
+                f"Cannot start from {from_run_id}: upstream runs did not succeed."
             )
 
         logger.info(f"Attempting to rerun from {from_run_id}")

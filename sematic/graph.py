@@ -83,6 +83,8 @@ class Graph:
     Child run
         The run corresponding to the function being called by the current run's
         function
+    Layer
+        Sibling runs. All runs with same parent.
     Ancestor runs
         All parents going up to the root
     Descendant runs
