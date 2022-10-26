@@ -1,8 +1,9 @@
 # Standard Library
-import collections
-from collections import defaultdict
-from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, OrderedDict, Tuple
+from collections import OrderedDict, defaultdict
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import OrderedDict as OrderedDictType
+from typing import Tuple
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
@@ -18,6 +19,55 @@ RunsByID = Dict[RunID, Run]
 RunsByParentID = Dict[Optional[RunID], List[Run]]
 EdgesByRunID = Dict[RunID, List[Edge]]
 EdgesByID = Dict[str, Edge]
+
+
+@dataclass
+class ClonedFutureGraph:
+    """
+    A cloned future graph. This graph is potentially partial, as it is meant to
+    be used as a resolution seed.
+    """
+
+    futures_by_original_id: OrderedDictType[RunID, AbstractFuture] = field(
+        init=False, default_factory=OrderedDict
+    )
+    input_artifacts: Dict[RunID, Dict[str, Artifact]] = field(
+        init=False, default_factory=lambda: defaultdict(dict)
+    )
+    output_artifacts: Dict[RunID, Artifact] = field(init=False, default_factory=dict)
+
+    def sort_by(self, run_ids: List[RunID]):
+        """
+        Sort futures according to the order of run_ids.
+        """
+        ordered_futures = OrderedDict(
+            (
+                (run_id, self.futures_by_original_id[run_id])
+                for run_id in run_ids
+                if run_id in self.futures_by_original_id
+            )
+        )
+        self.futures_by_original_id = ordered_futures
+
+    def set_root_future_id(self, root_id: str):
+        """
+        Set the root future ID
+        """
+        root_future = next(
+            future
+            for future in self.futures_by_original_id.values()
+            if future.parent_future is None
+        )
+
+        if root_future.id in self.input_artifacts:
+            self.input_artifacts[root_id] = self.input_artifacts[root_future.id]
+            del self.input_artifacts[root_future.id]
+
+        if root_future.id in self.output_artifacts:
+            self.output_artifacts[root_id] = self.output_artifacts[root_future.id]
+            del self.output_artifacts[root_future.id]
+
+        root_future.id = root_id
 
 
 @dataclass
@@ -55,9 +105,17 @@ class Graph:
         Artifacts attached to edges. Unordered.
     """
 
-    runs: List[Run]
-    edges: List[Edge]
-    artifacts: List[Artifact]
+    # Using Iterable to satisfy mypy when passing a list to __init__
+    # but post_init forces tuples for safety
+    runs: Iterable[Run]
+    edges: Iterable[Edge]
+    artifacts: Iterable[Artifact]
+    storage: Storage
+
+    def __post_init__(self):
+        self.runs = tuple(self.runs)
+        self.edges = tuple(self.edges)
+        self.artifacts = tuple(self.artifacts)
 
     @memoized_property
     def _run_mappings(self) -> Tuple[RunsByID, RunsByParentID]:
@@ -303,13 +361,111 @@ class Graph:
 
         return skip_run_ids, reset_run_ids
 
-    def clone_futures(
-        self, storage: Storage, reset_from: Optional[RunID] = None
-    ) -> Tuple[
-        OrderedDict[RunID, AbstractFuture],
-        Dict[RunID, Dict[str, Artifact]],
-        Dict[RunID, Artifact],
-    ]:
+    @memoized_indexed
+    def _get_artifact_value(self, artifact_id: str) -> Any:
+        artifact = self._artifacts_by_id[artifact_id]
+        return get_artifact_value(artifact, self.storage)
+
+    def _get_cloned_future_inputs(
+        self, run_id: RunID, cloned_graph: ClonedFutureGraph
+    ) -> Tuple[Dict[str, Any], Dict[str, Artifact]]:
+        kwargs: Dict[str, Any] = {}
+
+        input_edges = self._edges_by_destination_id[run_id]
+
+        run_input_artifacts: Dict[str, Artifact] = {}
+
+        for input_edge in input_edges:
+            if input_edge.destination_name is None:
+                raise RuntimeError("Input edge misses destination name")
+
+            value = None
+
+            if input_edge.artifact_id is not None:
+                artifact = self._artifacts_by_id[input_edge.artifact_id]
+                run_input_artifacts[input_edge.destination_name] = artifact
+                value = self._get_artifact_value(artifact.id)
+
+            if input_edge.source_run_id is not None:
+                # We set the input as the upstream future to mimick what
+                # happens in a greenfield resolution.
+                kwargs[
+                    input_edge.destination_name
+                ] = cloned_graph.futures_by_original_id[input_edge.source_run_id]
+            elif input_edge.artifact_id is not None:
+                kwargs[input_edge.destination_name] = value
+            else:
+                raise RuntimeError(
+                    "Invalid input edge had no source run or associated artifact"
+                )
+
+        return kwargs, run_input_artifacts
+
+    def _get_run_output(self, run_id: RunID) -> Tuple[Any, Optional[Artifact]]:
+        output_edges = self._edges_by_source_id[run_id]
+
+        for output_edge in output_edges:
+            if output_edge.artifact_id is None:
+                return None, None
+
+            artifact = self._artifacts_by_id[output_edge.artifact_id]
+            value = self._get_artifact_value(artifact.id)
+            return value, artifact
+
+        return None, None
+
+    def _set_cloned_parent_future(
+        self,
+        future: AbstractFuture,
+        run: Run,
+        cloned_graph: ClonedFutureGraph,
+        reset_run_ids: List[RunID],
+    ):
+        if run.parent_id is None:
+            return
+
+        parent_future = cloned_graph.futures_by_original_id[run.parent_id]
+
+        future.parent_future = parent_future
+
+        # Is future parent_future's nested future?
+        if self._runs_by_id[run.parent_id].nested_future_id == run.id:
+            parent_future.nested_future = future
+
+            if run.id in reset_run_ids:
+                parent_future.state = FutureState.RAN
+
+    def _clone_run(
+        self, run_id: RunID, cloned_graph: ClonedFutureGraph, reset_run_ids: List[RunID]
+    ) -> AbstractFuture:
+        run = self._runs_by_id[run_id]
+
+        kwargs, run_input_artifacts = self._get_cloned_future_inputs(
+            run_id, cloned_graph
+        )
+
+        func = run.get_func()
+
+        future = func(**kwargs)
+
+        cloned_graph.input_artifacts[future.id] = run_input_artifacts
+
+        if run_id not in reset_run_ids:
+            value, output_artifact = self._get_run_output(run_id)
+            if output_artifact is not None:
+                cloned_graph.output_artifacts[future.id] = output_artifact
+                future.value = value
+
+        self._set_cloned_parent_future(future, run, cloned_graph, reset_run_ids)
+
+        # Settings state for resolved runs unless reset
+        if FutureState[run.future_state] == FutureState.RESOLVED:  # type: ignore
+            if run.id not in reset_run_ids:
+                future.state = FutureState.RESOLVED
+
+        return future
+
+    def clone_futures(self, reset_from: Optional[RunID] = None) -> ClonedFutureGraph:
         """
         Clones the current graph into new futures.
 
@@ -349,11 +505,7 @@ class Graph:
             to output artifacts.
 
         """
-        value_by_artifact_id: Dict[str, Any] = {}
-
-        futures_by_original_id: Dict[RunID, AbstractFuture] = {}
-        input_artifacts: Dict[RunID, Dict[str, Artifact]] = defaultdict(dict)
-        output_artifacts: Dict[RunID, Artifact] = {}
+        cloned_graph = ClonedFutureGraph()
 
         skip_run_ids, reset_run_ids = (
             ([], []) if reset_from is None else self._get_skip_reset_run_ids(reset_from)
@@ -367,114 +519,17 @@ class Graph:
             run_sorter=self._execution_order
         )
 
-        def _get_artifact_value(artifact: Artifact) -> Any:
-            if artifact.id not in value_by_artifact_id:
-                value_by_artifact_id[artifact.id] = get_artifact_value(
-                    artifact, storage
-                )
-
-            return value_by_artifact_id[artifact.id]
-
-        def _get_run_inputs(
-            run_id: RunID,
-        ) -> Tuple[Dict[str, Any], Dict[str, Artifact]]:
-            kwargs: Dict[str, Any] = {}
-
-            input_edges = self._edges_by_destination_id[run_id]
-
-            run_input_artifacts: Dict[str, Artifact] = {}
-
-            for input_edge in input_edges:
-                if input_edge.destination_name is None:
-                    raise RuntimeError("Input edge misses destination name")
-
-                value = None
-
-                if input_edge.artifact_id is not None:
-                    artifact = self._artifacts_by_id[input_edge.artifact_id]
-                    run_input_artifacts[input_edge.destination_name] = artifact
-                    value = _get_artifact_value(artifact)
-
-                if input_edge.source_run_id is not None:
-                    kwargs[input_edge.destination_name] = futures_by_original_id[
-                        input_edge.source_run_id
-                    ]
-                elif input_edge.artifact_id is not None:
-                    kwargs[input_edge.destination_name] = value
-                else:
-                    raise RuntimeError(
-                        "Invalid input edge had no source run or associated artifact"
-                    )
-
-            return kwargs, run_input_artifacts
-
-        def _get_run_output(run_id: RunID) -> Tuple[Any, Optional[Artifact]]:
-            output_edges = self._edges_by_source_id[run_id]
-
-            for output_edge in output_edges:
-                if output_edge.artifact_id is None:
-                    return None, None
-
-                artifact = self._artifacts_by_id[output_edge.artifact_id]
-                value = _get_artifact_value(artifact)
-                return value, artifact
-
-            return None, None
-
-        def _set_parent_nested(future: AbstractFuture, run: Run):
-            if run.parent_id is None:
-                return None, None
-
-            parent_future = futures_by_original_id[run.parent_id]
-
-            future.parent_future = parent_future
-
-            for output_edge in self._edges_by_source_id[run_id]:
-                if output_edge.parent_id is not None:
-                    if (
-                        self._edges_by_id[output_edge.parent_id].source_run_id
-                        == run.parent_id
-                    ):
-                        parent_future.nested_future = future
-
-                        if run.id in reset_run_ids:
-                            parent_future.state = FutureState.RAN
-
-                        return
-
-        def _clone_run(run_id: RunID):
-            run = self._runs_by_id[run_id]
-
-            kwargs, run_input_artifacts = _get_run_inputs(run_id)
-
-            func = run.get_func()
-
-            future = func(**kwargs)
-
-            input_artifacts[future.id] = run_input_artifacts
-
-            if run_id not in reset_run_ids:
-                value, output_artifact = _get_run_output(run_id)
-                if output_artifact is not None:
-                    output_artifacts[future.id] = output_artifact
-                    future.value = value
-
-            _set_parent_nested(future, run)
-
-            # Settings state for resolved runs unless reset
-            if FutureState[run.future_state] == FutureState.RESOLVED:  # type: ignore
-                if run.id not in reset_run_ids:
-                    future.state = FutureState.RESOLVED
-
-            futures_by_original_id[run.id] = future
-
         for run_id in run_ids_by_execution_order:
             if run_id in skip_run_ids:
                 continue
 
-            _clone_run(run_id)
+            cloned_graph.futures_by_original_id[run_id] = self._clone_run(
+                run_id, cloned_graph, reset_run_ids
+            )
 
-        if reset_from is None and len(futures_by_original_id) != len(self.runs):
+        if reset_from is None and len(cloned_graph.futures_by_original_id) != len(
+            list(self.runs)
+        ):
             raise RuntimeError("Not all futures duplicated")
 
         # We return future sorted by how they would be sorted for a resolution
@@ -484,17 +539,9 @@ class Graph:
             run_sorter=self._reverse_execution_order
         )
 
-        return (
-            collections.OrderedDict(
-                (
-                    (run_id, futures_by_original_id[run_id])
-                    for run_id in run_ids_by_reverse_execution_order
-                    if run_id in futures_by_original_id
-                )
-            ),
-            input_artifacts,
-            output_artifacts,
-        )
+        cloned_graph.sort_by(run_ids_by_reverse_execution_order)
+
+        return cloned_graph
 
 
 EdgeFilterCallable = Callable[[List[Optional[RunID]], RunID], bool]

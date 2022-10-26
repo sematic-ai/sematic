@@ -51,21 +51,19 @@ def test_clone_futures(
 
     runs_by_id = {run.id: run for run in runs}
 
-    graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
+    graph = Graph(
+        runs=runs, edges=edges, artifacts=artifacts, storage=mock_local_resolver_storage
+    )
 
-    (
-        futures_by_original_id,
-        input_artifacts,
-        output_artifacts,
-    ) = graph.clone_futures(storage=mock_local_resolver_storage)
+    cloned_graph = graph.clone_futures()
 
-    assert len(futures_by_original_id) == len(runs)
+    assert len(cloned_graph.futures_by_original_id) == len(runs)
 
-    root_future = futures_by_original_id[future.id]
+    root_future = cloned_graph.futures_by_original_id[future.id]
     assert root_future.calculator._func is pipeline._func
     assert root_future.parent_future is None
 
-    for original_run_id, future_ in futures_by_original_id.items():
+    for original_run_id, future_ in cloned_graph.futures_by_original_id.items():
         original_run = runs_by_id[original_run_id]
         # No reset so state should be the same
         assert future.state.value == original_run.future_state
@@ -73,30 +71,40 @@ def test_clone_futures(
         # Parent future should exist and be the correct one
         if original_run.parent_id is not None:
             parent_run = runs_by_id[original_run.parent_id]
-            assert futures_by_original_id[parent_run.id] is future_.parent_future
+            assert (
+                cloned_graph.futures_by_original_id[parent_run.id]
+                is future_.parent_future
+            )
 
         # Making sure all future kwargs are correct
         for input_edge in graph._edges_by_destination_id[original_run.id]:
             artifact = graph._artifacts_by_id[input_edge.artifact_id]
-            assert input_artifacts[future_.id][input_edge.destination_name] is artifact
+            assert (
+                cloned_graph.input_artifacts[future_.id][input_edge.destination_name]
+                is artifact
+            )
 
             if input_edge.source_run_id is None:
                 value = get_artifact_value(artifact, mock_local_resolver_storage)
                 assert future_.kwargs[input_edge.destination_name] == value
             else:
-                upstream_future = futures_by_original_id[input_edge.source_run_id]
+                upstream_future = cloned_graph.futures_by_original_id[
+                    input_edge.source_run_id
+                ]
                 assert future_.kwargs[input_edge.destination_name] is upstream_future
 
         # Making sure output values are correct
         for output_edge in graph._edges_by_source_id[original_run_id]:
             artifact = graph._artifacts_by_id[output_edge.artifact_id]
-            assert output_artifacts[future_.id] is artifact
+            assert cloned_graph.output_artifacts[future_.id] is artifact
 
             value = get_artifact_value(artifact, mock_local_resolver_storage)
             assert future_.value == value
             if output_edge.destination_run_id is not None:
                 downstream_run = runs_by_id[output_edge.destination_run_id]
-                downstream_future = futures_by_original_id[downstream_run.id]
+                downstream_future = cloned_graph.futures_by_original_id[
+                    downstream_run.id
+                ]
                 assert downstream_future.kwargs[output_edge.destination_name] is future_
 
 
@@ -113,15 +121,15 @@ def test_clone_futures_reset(
 
     runs, artifacts, edges = api_client.get_graph(future.id, root=True)
 
-    graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
+    graph = Graph(
+        runs=runs, edges=edges, artifacts=artifacts, storage=mock_local_resolver_storage
+    )
 
     reset_from_run_id = future.nested_future.kwargs["a"].nested_future.kwargs["a"].id
 
-    futures_by_original_id, _, __ = graph.clone_futures(
-        reset_from=reset_from_run_id, storage=mock_local_resolver_storage
-    )
+    cloned_graph = graph.clone_futures(reset_from=reset_from_run_id)
 
-    root_future = futures_by_original_id[future.id]
+    root_future = cloned_graph.futures_by_original_id[future.id]
 
     assert root_future.state == FutureState.RAN
 
@@ -131,7 +139,7 @@ def test_clone_futures_reset(
     # Check that the second add3 future has no children
     assert not any(
         future_.parent_future is second_add3_future
-        for future_ in futures_by_original_id.values()
+        for future_ in cloned_graph.futures_by_original_id.values()
     )
 
     first_add3_future = second_add3_future.kwargs["a"]
@@ -139,7 +147,7 @@ def test_clone_futures_reset(
 
     first_add3_child_futures = [
         future_
-        for future_ in futures_by_original_id.values()
+        for future_ in cloned_graph.futures_by_original_id.values()
         if future_.parent_future is first_add3_future
     ]
 
@@ -150,7 +158,7 @@ def test_clone_futures_reset(
 
     top_level_add_futures = [
         future_
-        for future_ in futures_by_original_id.values()
+        for future_ in cloned_graph.futures_by_original_id.values()
         if future_.parent_future is root_future
         and future_ not in {first_add3_future, second_add3_future}
     ]
@@ -187,15 +195,15 @@ def test_reset_failed(
 
     runs, artifacts, edges = api_client.get_graph(future.id, root=True)
 
-    graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
+    graph = Graph(
+        runs=runs, edges=edges, artifacts=artifacts, storage=mock_local_resolver_storage
+    )
 
     reset_from_run_id = future.nested_future.kwargs["a"].id
 
-    futures_by_original_id, _, __ = graph.clone_futures(
-        reset_from=reset_from_run_id, storage=mock_local_resolver_storage
-    )
+    cloned_graph = graph.clone_futures(reset_from=reset_from_run_id)
 
-    root_future = futures_by_original_id[future.id]
+    root_future = cloned_graph.futures_by_original_id[future.id]
 
     assert root_future.state is FutureState.RAN
     assert root_future.nested_future.state is FutureState.CREATED
@@ -220,7 +228,9 @@ def test_run_execution_ordering(
 
     runs, artifacts, edges = api_client.get_graph(future.id, root=True)
 
-    graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
+    graph = Graph(
+        runs=runs, edges=edges, artifacts=artifacts, storage=mock_local_resolver_storage
+    )
 
     run_ids_by_execution_order = graph._sorted_run_ids_by_layer(
         run_sorter=graph._execution_order
@@ -255,7 +265,9 @@ def test_run_reverse_ordering(
 
     runs, artifacts, edges = api_client.get_graph(future.id, root=True)
 
-    graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
+    graph = Graph(
+        runs=runs, edges=edges, artifacts=artifacts, storage=mock_local_resolver_storage
+    )
 
     run_ids_by_reverse_order = graph._sorted_run_ids_by_layer(
         run_sorter=graph._reverse_execution_order

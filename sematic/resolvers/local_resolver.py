@@ -77,7 +77,12 @@ class LocalResolver(SilentResolver):
 
         runs, artifacts, edges = api_client.get_graph(run.root_id, root=True)
 
-        graph = Graph(runs=runs, artifacts=artifacts, edges=edges)
+        graph = Graph(
+            runs=runs,
+            artifacts=artifacts,
+            edges=edges,
+            storage=self._storage,
+        )
 
         if not graph.input_artifacts_ready(run.id):
             raise ValueError(
@@ -86,23 +91,14 @@ class LocalResolver(SilentResolver):
 
         logger.info(f"Attempting to rerun from {from_run_id}")
 
-        cloned_futures, input_artifacts, output_artifacts = graph.clone_futures(
-            storage=self._storage,
+        cloned_graph = graph.clone_futures(
             reset_from=from_run_id,
         )
 
         # Making sure we honor id of future passed from the outside
-        cloned_root_future = cloned_futures[run.root_id]
+        cloned_graph.set_root_future_id(future.id)
 
-        if cloned_root_future.id in input_artifacts:
-            input_artifacts[future.id] = input_artifacts[cloned_root_future.id]
-
-        if cloned_root_future.id in output_artifacts:
-            output_artifacts[future.id] = output_artifacts[cloned_root_future.id]
-
-        cloned_root_future.id = future.id
-
-        self._futures = list(cloned_futures.values())
+        self._futures = list(cloned_graph.futures_by_original_id.values())
 
         for future in self._futures:
             future.resolved_kwargs = self._get_resolved_kwargs(future)
@@ -110,10 +106,10 @@ class LocalResolver(SilentResolver):
             run_output_artifact = None
 
             if future.state == FutureState.RESOLVED:
-                run_output_artifact = output_artifacts[future.id]
+                run_output_artifact = cloned_graph.output_artifacts[future.id]
 
             if future.state in {FutureState.RESOLVED, FutureState.RAN}:
-                run_input_artifacts = input_artifacts[future.id]
+                run_input_artifacts = cloned_graph.input_artifacts[future.id]
 
             self._populate_graph(
                 future,
@@ -278,6 +274,8 @@ class LocalResolver(SilentResolver):
 
         if future.nested_future is None:
             raise Exception("Missing nested future")
+
+        run.nested_future_id = future.nested_future.id
 
         self._populate_graph(future.nested_future)
         self._add_run(run)
