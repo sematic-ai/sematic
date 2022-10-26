@@ -19,6 +19,9 @@ export function fetchJSON({
   method,
   body,
 }: IFetchJSON) {
+  if (process.env.NODE_ENV === "development") {
+    console.log("fetchJSON", method || "GET", url);
+  }
   setIsLoaded && setIsLoaded(false);
   setError && setError(undefined);
 

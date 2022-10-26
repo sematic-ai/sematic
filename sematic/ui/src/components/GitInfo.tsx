@@ -1,17 +1,8 @@
-import { Add, ContentCopy } from "@mui/icons-material";
 import PostAddIcon from "@mui/icons-material/PostAdd";
-import {
-  Box,
-  ButtonBase,
-  Link,
-  Tooltip,
-  Typography,
-  useTheme,
-} from "@mui/material";
-import { useCallback, useContext, useState } from "react";
+import { Box, Link, Tooltip, Typography, useTheme } from "@mui/material";
 import { RiGitBranchLine, RiGitCommitLine } from "react-icons/ri";
 import { Resolution } from "../Models";
-import { SnackBarContext } from "./SnackBarProvider";
+import { CopyButton } from "./CopyButton";
 
 /**
  * Turns the following remote formats:
@@ -37,14 +28,20 @@ function GitInfo(props: {
   path: string;
   extra?: JSX.Element;
   children?: any;
+  code?: boolean;
 }) {
-  const { text, copyText, tooltip, remote, path, children, extra } = props;
-  const { setSnackMessage } = useContext(SnackBarContext);
+  const {
+    text,
+    copyText,
+    tooltip,
+    remote,
+    path,
+    children,
+    extra,
+    code = false,
+  } = props;
 
-  const copy = useCallback(() => {
-    navigator.clipboard.writeText(copyText || text);
-    setSnackMessage({ message: "Copied." });
-  }, [text]);
+  const theme = useTheme();
 
   return (
     <Typography
@@ -55,12 +52,13 @@ function GitInfo(props: {
       {children}&nbsp;
       <Tooltip title={tooltip}>
         <Link href={makeGithubLink(remote, path)} target="_blank">
-          <code>{text}</code>
+          {!code && text}
+          {code && <code>{text}</code>}
         </Link>
       </Tooltip>
-      <ButtonBase onClick={copy}>
-        <ContentCopy fontSize="inherit" sx={{ ml: 1 }} />
-      </ButtonBase>
+      <Typography sx={{ color: theme.palette.grey[400] }}>
+        <CopyButton text={copyText || text} />
+      </Typography>
       {extra}
     </Typography>
   );
@@ -102,6 +100,7 @@ function GitInfoBox(props: { resolution: Resolution | undefined }) {
           tooltip="Git commit"
           remote={resolution.git_info_json.remote}
           path={"commit/" + resolution.git_info_json.commit}
+          code
           extra={
             resolution.git_info_json.dirty ? (
               <Tooltip title="Uncommitted changes">

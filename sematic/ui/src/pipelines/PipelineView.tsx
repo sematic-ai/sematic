@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { UserContext } from "..";
 import PipelineBar from "../components/PipelineBar";
@@ -18,7 +18,7 @@ export default function PipelineView() {
 
   const params = useParams();
 
-  const { calculatorPath, rootIdParam } = params;
+  const { calculatorPath, rootId } = params;
 
   const fetchRootRun = useCallback(
     (rootId: string) => {
@@ -44,10 +44,10 @@ export default function PipelineView() {
   );
 
   useEffect(() => {
-    if (!rootIdParam) return;
-    fetchRootRun(rootIdParam);
-    fetchResolution(rootIdParam);
-  }, []);
+    if (!rootId) return;
+    fetchRootRun(rootId);
+    fetchResolution(rootId);
+  }, [rootId]);
 
   const changeRootRunId = useCallback(
     (rootId: string) => {
@@ -82,6 +82,7 @@ export default function PipelineView() {
           onRootIdChange={changeRootRunId}
           rootRun={rootRun}
           resolution={resolution}
+          setRootRun={rootId === undefined}
         />
         {rootRun && resolution && (
           <PipelinePanels rootRun={rootRun} resolution={resolution} />
