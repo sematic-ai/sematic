@@ -217,7 +217,6 @@ def _schedule_resolution_job(
     """Reach out to external compute to start the execution of the resolution"""
     # should be impossible to fail this assert, but it makes mypy happy
     assert resolution.container_image_uri is not None
-
     return k8s.schedule_resolution_job(
         resolution_id=resolution.root_id,
         image=resolution.container_image_uri,

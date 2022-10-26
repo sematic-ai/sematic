@@ -19,9 +19,6 @@ export function fetchJSON({
   method,
   body,
 }: IFetchJSON) {
-  if (process.env.NODE_ENV === "development") {
-    console.log("fetchJSON", method || "GET", url);
-  }
   setIsLoaded && setIsLoaded(false);
   setError && setError(undefined);
 
@@ -35,6 +32,10 @@ export function fetchJSON({
   method = method || "GET";
 
   const reqBody: BodyInit | null = body ? JSON.stringify(body) : null;
+
+  if (process.env.NODE_ENV === "development") {
+    console.log("fetchJSON", method, url, reqBody);
+  }
 
   fetch(url, { method: method, headers: headers, body: reqBody })
     .then((response) => {
