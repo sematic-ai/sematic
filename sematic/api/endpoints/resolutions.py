@@ -29,6 +29,7 @@ from sematic.db.queries import (
     get_graph,
     get_resolution,
     get_run,
+    get_run_graph,
     save_graph,
     save_resolution,
     save_run,
@@ -173,10 +174,10 @@ def rerun_resolution_endpoint(
     if flask.request.json and "rerun_from" in flask.request.json:
         rerun_from = flask.request.json["rerun_from"]
 
-    original_root_run = get_run(original_resolution.root_id)
+    original_root_run, _, original_edges = get_run_graph(original_resolution.root_id)
 
-    root_run = clone_run(original_root_run)
-    save_run(root_run)
+    root_run, edges = clone_run(original_root_run[0], original_edges)
+    save_graph(runs=[root_run], edges=edges, artifacts=[])
 
     resolution = clone_resolution(original_resolution, root_id=root_run.id)
 

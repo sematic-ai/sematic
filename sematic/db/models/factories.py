@@ -6,11 +6,12 @@ import datetime
 import hashlib
 import json
 import secrets
-from typing import Any, Optional
+from typing import Any, List, Optional, Tuple
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState, make_future_id
 from sematic.db.models.artifact import Artifact
+from sematic.db.models.edge import Edge
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -51,9 +52,13 @@ def make_run_from_future(future: AbstractFuture) -> Run:
     return run
 
 
-def clone_run(run: Run, parent_id: Optional[str] = None) -> Run:
+def clone_run(
+    run: Run, edges: List[Edge], parent_id: Optional[str] = None
+) -> Tuple[Run, List[Edge]]:
+    run_id = make_future_id()
     cloned_run = Run(
-        id=make_future_id(),
+        id=run_id,
+        root_id=run_id,
         future_state=FutureState.CREATED,
         name=run.name,
         calculator_path=run.calculator_path,
@@ -62,8 +67,6 @@ def clone_run(run: Run, parent_id: Optional[str] = None) -> Run:
         tags=run.tags,
         source_code=run.source_code,
         container_image_uri=run.container_image_uri,
-        created_at=datetime.datetime.utcnow(),
-        updated_at=datetime.datetime.utcnow(),
     )
 
     # Set this outside the constructor because the constructor expects
@@ -71,7 +74,16 @@ def clone_run(run: Run, parent_id: Optional[str] = None) -> Run:
     # encodable field.
     run.resource_requirements = run.resource_requirements
 
-    return cloned_run
+    cloned_edges = [
+        Edge(
+            destination_run_id=run_id,
+            destination_name=edge.destination_name,
+            artifact_id=edge.artifact_id,
+        )
+        for edge in edges
+    ]
+
+    return cloned_run, cloned_edges
 
 
 def clone_resolution(resolution: Resolution, root_id: str) -> Resolution:
