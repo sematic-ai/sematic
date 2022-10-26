@@ -32,7 +32,6 @@ from sematic.db.queries import (
     get_run_graph,
     save_graph,
     save_resolution,
-    save_run,
 )
 from sematic.scheduling.job_scheduler import schedule_resolution
 from sematic.scheduling.kubernetes import cancel_job

@@ -81,6 +81,7 @@ def clone_run(
             artifact_id=edge.artifact_id,
         )
         for edge in edges
+        if edge.destination_run_id == run.id
     ]
 
     return cloned_run, cloned_edges
