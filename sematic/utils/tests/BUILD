@@ -21,3 +21,11 @@ pytest_test(
         "//sematic/utils:stdout",
     ],
 )
+
+pytest_test(
+    name = "test_sorting",
+    srcs = ["test_sorting.py"],
+    deps = [
+        "//sematic/utils:sorting",
+    ],
+)
