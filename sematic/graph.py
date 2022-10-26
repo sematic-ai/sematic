@@ -13,7 +13,7 @@ from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.run import Run
 from sematic.storage import Storage
 from sematic.utils.memoized_property import memoized_indexed, memoized_property
-from sematic.utils.sorting import topological_sort
+from sematic.utils.sorting import breadth_first, topological_sort
 
 RunID = str
 RunsByID = Dict[RunID, Run]
@@ -251,21 +251,12 @@ class Graph:
         List[str]
             A flat list of run IDs.
         """
-        run_ids: List[str] = []
+        layers = {
+            parent_id: [run.id for run in runs]
+            for parent_id, runs in self._runs_by_parent_id.items()
+        }
 
-        def _add_layer_runs(parent_id: Optional[RunID]):
-            layer_run_ids: List[RunID] = [
-                run.id for run in self._runs_by_parent_id[parent_id]
-            ]
-            ordered_layer_run_ids = run_sorter(layer_run_ids)
-            run_ids.extend(ordered_layer_run_ids)
-
-            for run_id in ordered_layer_run_ids:
-                _add_layer_runs(run_id)
-
-        _add_layer_runs(None)
-
-        return run_ids
+        return breadth_first(layers, run_sorter)
 
     @memoized_indexed
     def _get_run_ancestor_ids(self, run_id: RunID) -> List[RunID]:
