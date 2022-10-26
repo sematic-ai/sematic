@@ -13,8 +13,9 @@ import pytest
 from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     make_auth_test,
-    mock_no_auth,
+    mock_auth,
     mock_requests,
+    mock_socketio,
     test_client,
 )
 from sematic.calculator import func
@@ -30,9 +31,10 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     test_db,
 )
 from sematic.log_reader import LogLineResult
+from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa: F401
 from sematic.scheduling.external_job import JobType
 from sematic.scheduling.kubernetes import KubernetesExternalJob
-from sematic.tests.fixtures import valid_client_version  # noqa: F401
+from sematic.tests.fixtures import MockStorage, valid_client_version  # noqa: F401
 from sematic.utils.exceptions import ExceptionMetadata
 
 test_list_runs_auth = make_auth_test("/api/v1/runs")
@@ -51,8 +53,9 @@ def mock_load_log_lines():
         yield mock_load
 
 
-@mock_no_auth
-def test_list_runs_empty(test_client: flask.testing.FlaskClient):  # noqa: F811
+def test_list_runs_empty(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
     results = test_client.get("/api/v1/runs?limit=3")
 
     assert results.json == dict(
@@ -65,8 +68,7 @@ def test_list_runs_empty(test_client: flask.testing.FlaskClient):  # noqa: F811
     )
 
 
-@mock_no_auth
-def test_list_runs(test_client: flask.testing.FlaskClient):  # noqa: F811
+def test_list_runs(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: F811
     created_runs = [save_run(make_run()) for _ in range(5)]
 
     # Sort by latest
@@ -95,8 +97,7 @@ def test_list_runs(test_client: flask.testing.FlaskClient):  # noqa: F811
     assert payload["content"] == [run_.to_json_encodable() for run_ in created_runs[3:]]
 
 
-@mock_no_auth
-def test_group_by(test_client: flask.testing.FlaskClient):  # noqa: F811
+def test_group_by(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: F811
     runs = {key: [make_run(name=key), make_run(name=key)] for key in ("RUN_A", "RUN_B")}
 
     for name, runs_ in runs.items():
@@ -112,8 +113,7 @@ def test_group_by(test_client: flask.testing.FlaskClient):  # noqa: F811
     assert {run_["name"] for run_ in payload["content"]} == set(runs)
 
 
-@mock_no_auth
-def test_filters(test_client: flask.testing.FlaskClient):  # noqa: F811
+def test_filters(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: F811
     runs = make_run(), make_run()
     runs[0].parent_id = uuid.uuid4().hex
 
@@ -132,8 +132,7 @@ def test_filters(test_client: flask.testing.FlaskClient):  # noqa: F811
         assert payload["content"][0]["id"] == run_.id
 
 
-@mock_no_auth
-def test_and_filters(test_client: flask.testing.FlaskClient):  # noqa: F811
+def test_and_filters(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: F811
     run1 = make_run(name="abc", calculator_path="abc")
     run2 = make_run(name="def", calculator_path="abc")
     run3 = make_run(name="abc", calculator_path="def")
@@ -152,9 +151,8 @@ def test_and_filters(test_client: flask.testing.FlaskClient):  # noqa: F811
     assert payload["content"][0]["id"] == run1.id
 
 
-@mock_no_auth
 def test_get_run_endpoint(
-    persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     response = test_client.get("/api/v1/runs/{}".format(persisted_run.id))
 
@@ -164,8 +162,7 @@ def test_get_run_endpoint(
     assert payload["content"]["id"] == persisted_run.id
 
 
-@mock_no_auth
-def test_get_run_404(test_client: flask.testing.FlaskClient):  # noqa: F811
+def test_get_run_404(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: F811
     response = test_client.get("/api/v1/runs/unknownid")
 
     assert response.status_code == 404
@@ -176,8 +173,8 @@ def test_get_run_404(test_client: flask.testing.FlaskClient):  # noqa: F811
     assert payload == dict(error="No runs with id 'unknownid'")
 
 
-@mock_no_auth
 def test_schedule_run(
+    mock_auth,  # noqa: F811
     persisted_run: Run,  # noqa: F811
     persisted_resolution: Resolution,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
@@ -216,9 +213,8 @@ def test_schedule_run(
         assert len(run.external_jobs) == 1
 
 
-@mock_no_auth
 def test_update_future_states(
-    persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
         persisted_run.future_state = FutureState.CREATED
@@ -282,8 +278,8 @@ def test_update_future_states(
         )
 
 
-@mock_no_auth
 def test_get_run_logs(
+    mock_auth,  # noqa: F811
     mock_load_log_lines,
     persisted_resolution: Resolution,  # noqa: F811
     persisted_run: Run,  # noqa: F811
@@ -339,10 +335,10 @@ def pipeline(a: float, b: float) -> float:
 @pytest.mark.parametrize(
     "root, run_count, artifact_count, edge_count", ((0, 1, 3, 3), (1, 3, 4, 8))
 )
-@mock_no_auth
-@mock.patch("socketio.Client.connect")
 def test_get_run_graph_endpoint(
-    mock_socketio,
+    mock_local_resolver_storage,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
     root: int,
     run_count: int,
     artifact_count: int,

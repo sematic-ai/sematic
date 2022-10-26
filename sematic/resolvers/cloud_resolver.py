@@ -8,7 +8,6 @@ import cloudpickle
 
 # Sematic
 import sematic.api_client as api_client
-import sematic.storage as storage
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.container_images import (
     DEFAULT_BASE_IMAGE_TAG,
@@ -21,6 +20,7 @@ from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
+from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.utils.memoized_property import memoized_property
 
@@ -74,8 +74,9 @@ class CloudResolver(LocalResolver):
         max_parallelism: Optional[int] = None,
         _is_running_remotely: bool = False,
         _base_image_tag: str = "default",
+        **kwargs,
     ):
-        super().__init__()
+        super().__init__(**kwargs)
 
         # detach:
         #   True: default, the user wants to submit a detached resolution
@@ -99,8 +100,7 @@ class CloudResolver(LocalResolver):
         # this is the tag we use to find the resolution image
         self._base_image_tag = _base_image_tag or DEFAULT_BASE_IMAGE_TAG
 
-        # TODO: Replace this with a cloud storage engine
-        self._store_artifacts = True
+        self._storage = S3Storage()
 
         self._output_artifacts_by_run_id: Dict[str, Artifact] = {}
 
@@ -215,7 +215,9 @@ class CloudResolver(LocalResolver):
 
         # SUBMIT RESOLUTION JOB
         api_client.schedule_resolution(
-            resolution_id=future.id, max_parallelism=self._max_parallelism
+            resolution_id=future.id,
+            max_parallelism=self._max_parallelism,
+            rerun_from=self._rerun_from_run_id,
         )
 
         return run.id
@@ -246,7 +248,7 @@ class CloudResolver(LocalResolver):
             return
 
         if run.nested_future_id is not None:
-            pickled_nested_future = storage.get(
+            pickled_nested_future = self._storage.get(
                 make_nested_future_storage_key(run.nested_future_id)
             )
             value = cloudpickle.loads(pickled_nested_future)
@@ -255,7 +257,7 @@ class CloudResolver(LocalResolver):
             output_edge = self._get_output_edges(run.id)[0]
             output_artifact = self._artifacts[output_edge.artifact_id]
             self._output_artifacts_by_run_id[run.id] = output_artifact
-            value = get_artifact_value(output_artifact)
+            value = get_artifact_value(output_artifact, storage=self._storage)
 
         self._update_future_with_value(future, value)
 

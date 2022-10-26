@@ -1,5 +1,6 @@
 # Standard Library
 import datetime
+import importlib
 import json
 import re
 from dataclasses import asdict
@@ -10,6 +11,7 @@ from sqlalchemy import Column, types
 from sqlalchemy.orm import validates
 
 # Sematic
+from sematic.abstract_calculator import AbstractCalculator
 from sematic.abstract_future import FutureState
 from sematic.db.models.base import Base
 from sematic.db.models.has_external_jobs_mixin import HasExternalJobsMixin
@@ -201,4 +203,30 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
             return
         self.resource_requirements_json = json.dumps(
             value_to_json_encodable(value, ResourceRequirements)
+        )
+
+    def get_func(self) -> AbstractCalculator:
+        split_calculator_path = self.calculator_path.split(".")
+        import_path, func_name = (
+            ".".join(split_calculator_path[:-1]),
+            split_calculator_path[-1],
+        )
+        try:
+            func = getattr(importlib.import_module(import_path), func_name)
+        except (ImportError, AttributeError) as e:
+            raise type(e)(
+                f"Unable to find this run's function at {import_path}.{func_name}, "
+                f"did it change location? {e}"
+            )
+
+        return func
+
+    def __repr__(self):
+        return ", ".join(
+            (
+                f"Run(id={self.id}",
+                f"calculator_path={self.calculator_path}",
+                f"future_state={self.future_state}",
+                f"parent_id={self.parent_id})",
+            )
         )

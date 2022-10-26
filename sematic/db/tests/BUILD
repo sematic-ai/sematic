@@ -9,6 +9,7 @@ sematic_py_lib(
         "testing.postgresql",
         "psycopg2-binary",
     ],
+    # buildifier: leave-alone
     deps = [
         "//sematic:abstract_future",
         "//sematic/db:db",
@@ -33,6 +34,7 @@ pytest_test(
 pytest_test(
     name = "test_queries",
     srcs = ["test_queries.py"],
+    # buildifier: leave-alone
     deps = [
         ":fixtures",
         "//sematic:calculator",
@@ -44,6 +46,7 @@ pytest_test(
         "//sematic/db/models:factories",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+        "//sematic/resolvers/tests:fixtures",
         "//sematic/tests:fixtures",
         "//sematic/types:init",
     ],
@@ -53,6 +56,7 @@ pytest_test(
     name = "test_migrate",
     srcs = ["test_migrate.py"],
     pip_deps = ["sqlalchemy"],
+    # buildifier: leave-alone
     deps = [
         "//sematic/db:db",
         "//sematic/db:migrate_lib",

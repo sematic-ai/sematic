@@ -14,6 +14,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
+from sematic.storage import S3Storage, Storage
 from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
 from sematic.utils.retry import retry
 from sematic.versions import CURRENT_VERSION, version_as_string
@@ -46,21 +47,34 @@ class BadRequestError(Exception):
     pass
 
 
-def get_artifact_value_by_id(artifact_id: str) -> Any:
+class ResourceNotFoundError(BadRequestError):
+    pass
+
+
+def get_artifact_value_by_id(
+    artifact_id: str, storage: Optional[Storage] = None
+) -> Any:
     """
     Retrieve the value of an artifact by ID.
 
     Parameters
     ----------
     artifact_id: str
+    storage: Optional[Storage]
+        Storage from which to retrieve the artifact value. Defaults to S3Storage.
 
     Returns
     -------
     Any
         The value of the requiested artifact.
     """
+    # TODO: Store storage type on artifact
+    if storage is None:
+        storage = S3Storage()
+
     artifact = _get_artifact(artifact_id)
-    return get_artifact_value(artifact)
+
+    return get_artifact_value(artifact, storage)
 
 
 def _get_artifact(artifact_id: str) -> Artifact:
@@ -99,14 +113,25 @@ def save_graph(
     notify_graph_update(root_id)
 
 
-def get_graph(run_id: str) -> Tuple[List[Run], List[Artifact], List[Edge]]:
+def get_graph(
+    run_id: str, root: bool = False
+) -> Tuple[List[Run], List[Artifact], List[Edge]]:
     """
     Get a graph for a run.
 
     This will return only the run's direct edges and artifacts
-    TODO: implement root=True option to get all graph for root, not needed currently.
+
+    Parameters
+    ----------
+    run_id: str
+        The ID whose graph to retrieve
+
+    root: bool
+        Defaults to `False`. If `True`, `run_id` is presumed to be a root run's ID
+        and the whole graph is retrieved. If `False`, only the immediate graph around
+        the run is retrieved (i.e. immediate edges and their artifacts).
     """
-    response = _get("/runs/{}/graph".format(run_id))
+    response = _get(f"/runs/{run_id}/graph?root={int(root)}")
 
     runs = [Run.from_json_encodable(run) for run in response["runs"]]
     artifacts = [
@@ -146,13 +171,18 @@ def schedule_run(run_id: str) -> Run:
 
 
 def schedule_resolution(
-    resolution_id: str, max_parallelism: Optional[int] = None
+    resolution_id: str,
+    max_parallelism: Optional[int] = None,
+    rerun_from: Optional[str] = None,
 ) -> Resolution:
     """Ask the server to start a detached resolution execution."""
-    payload = {}
+    payload: Dict[str, Any] = {}
 
     if max_parallelism is not None:
         payload["max_parallelism"] = max_parallelism
+
+    if rerun_from is not None:
+        payload["rerun_from"] = rerun_from
 
     response = _post(f"/resolutions/{resolution_id}/schedule", json_payload=payload)
     return Resolution.from_json_encodable(response["content"])
@@ -373,41 +403,44 @@ def _raise_for_response(
     response: requests.Response,
     validate_json: bool,
 ) -> None:
-    to_raise: Optional[Exception] = None
-    url = response.url
-    error_4xx = BadRequestError(
-        f"The {response.request.method} request to {url} was invalid, "
-        f"response was {response.status_code}"
-    )
-    error_5xx = ServerError(
-        f"The Sematic server could not handle the "
-        f"{response.request.method} request to {url}",
-    )
+    exception: Optional[Exception] = None
+    url, method = response.url, response.request.method
 
-    if 400 <= response.status_code < 500:
-        to_raise = error_4xx
-    if response.status_code >= 500:
-        to_raise = error_5xx
-    if to_raise is None and validate_json:
+    if response.status_code == 404:
+        exception = ResourceNotFoundError(f"Resource {url} was not found")
+
+    elif 400 <= response.status_code < 500:
+        exception = BadRequestError(
+            f"The {method} request to {url} was invalid, "
+            f"response was {response.status_code}"
+        )
+
+    elif response.status_code >= 500:
+        exception = ServerError(
+            f"The Sematic server could not handle the " f"{method} request to {url}",
+        )
+
+    if exception is None and validate_json:
         try:
             response.json()
         except Exception:
-            to_raise = InvalidResponseError(
+            exception = InvalidResponseError(
                 f"The Sematic server was expected to return json for "
-                f"{response.request.method} request to {url}, but the "
+                f"{method} request to {url}, but the "
                 f"response was not json."
             )
-    if to_raise is None:
+
+    if exception is None:
         return
 
     logger.error(
         "Server returned %s for %s %s: %s",
         response.status_code,
-        response.request.method,
+        method,
         url,
         response.text,
     )
-    raise to_raise
+    raise exception
 
 
 def _url(endpoint) -> str:

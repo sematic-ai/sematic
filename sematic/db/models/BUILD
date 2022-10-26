@@ -83,6 +83,7 @@ sematic_py_lib(
         ":base",
         ":has_external_jobs_mixin",
         ":json_encodable_mixin",
+        "//sematic:abstract_calculator",
         "//sematic:abstract_future",
         "//sematic/scheduling:external_job",
         "//sematic/types:serialization",
