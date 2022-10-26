@@ -102,7 +102,7 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
         types.String(), nullable=False, default="[]", info={JSON_KEY: True}
     )
     source_code: str = Column(types.String(), nullable=False)
-    nested_future_id: str = Column(types.String(), nullable=True)
+    nested_future_id: Optional[str] = Column(types.String(), nullable=True)
     external_jobs_json: Optional[List[Dict[str, Any]]] = Column(
         types.JSON(), nullable=True
     )

@@ -37,6 +37,9 @@ def make_run_from_future(future: AbstractFuture) -> Run:
         parent_id=(
             future.parent_future.id if future.parent_future is not None else None
         ),
+        nested_future_id=(
+            future.nested_future.id if future.nested_future is not None else None
+        ),
         description=future.calculator.__doc__,
         tags=future.props.tags,
         source_code=future.calculator.get_source(),
