@@ -6,7 +6,6 @@ from dataclasses import asdict, dataclass
 from typing import Iterable, List, Optional
 
 # Sematic
-from sematic import storage
 from sematic.abstract_future import FutureState
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.queries import get_resolution, get_run
@@ -15,6 +14,7 @@ from sematic.resolvers.cloud_resolver import (
     START_INLINE_RUN_INDICATOR,
 )
 from sematic.scheduling.external_job import JobType
+from sematic.storage import S3Storage
 
 # Why the "V1"? Because we will likely want to change the structure of
 # the logs such that each file contains a different subset of logs. But
@@ -210,7 +210,7 @@ def _get_latest_log_file(prefix, cursor_file) -> Optional[str]:
     # recall that for v1 logs, each log file contains ALL the logs from
     # the beginning of the run until the time that file was uploaded. So
     # the latest log file contains all the logs we have for the run.
-    log_files = storage.get_child_paths(prefix)
+    log_files = S3Storage().get_child_paths(prefix)
     if len(log_files) < 1:
         return None
 
@@ -250,7 +250,7 @@ def _load_non_inline_logs(
             else None,
             log_unavailable_reason="No log files found",
         )
-    text_stream = storage.get_line_stream(latest_log_file)
+    text_stream = S3Storage().get_line_stream(latest_log_file)
     line_stream = (
         LogLine(source_file=latest_log_file, source_file_index=i, line=ln)
         for i, ln in zip(itertools.count(), text_stream)
@@ -301,7 +301,7 @@ def _load_inline_logs(
             lines=[],
             log_unavailable_reason="Resolver logs are missing",
         )
-    text_stream: Iterable[str] = storage.get_line_stream(latest_log_file)
+    text_stream: Iterable[str] = S3Storage().get_line_stream(latest_log_file)
     line_stream = _filter_for_inline(text_stream, run_id, latest_log_file)
 
     return get_log_lines_from_line_stream(

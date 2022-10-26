@@ -23,50 +23,71 @@ class StateMachineResolver(Resolver, abc.ABC):
 
     @property
     def _root_future(self) -> AbstractFuture:
+        if len(self._futures) == 0:
+            raise RuntimeError("No root future: no futures were enqueued.")
+
         return self._futures[0]
 
     def resolve(self, future: AbstractFuture) -> typing.Any:
         with self._catch_resolution_errors():
-            self._enqueue_root_future(future)
+            self._seed_graph(future)
+            self._resolution_loop()
 
-            self._register_signal_handlers()
+        return self._root_future.value
 
-            logger.info(f"Starting resolution {future.id}")
+    def _seed_graph(self, future):
+        """
+        Set the initial futures for the resolution.
 
-            self._resolution_will_start()
+        This is a stub that can be
+        overridden by child classes. The resolver will evolve the DAG using this initial
+        set of futures. The root future should always be element 0 of `self._futures`,
+        there are no requirements on order of other futures. The default implementation
+        just seeds with the root future itself and no others.
+        """
+        self._enqueue_root_future(future)
 
-            while not future.state.is_terminal():
-                for future_ in self._futures:
-                    if future_.state == FutureState.CREATED:
-                        self._schedule_future_if_args_resolved(future_)
-                        continue
-                    if future_.state == FutureState.RETRYING:
-                        self._execute_future(future_)
-                        continue
-                    if future_.state == FutureState.RAN:
-                        self._resolve_nested_future(future_)
-                        continue
+    def _resolution_loop(self):
+        """
+        Assuming that the future graph was seeded, this method will proceed
+        through the graph until the root future is resolved.
+        """
+        self._register_signal_handlers()
 
-                    # should be unreachable code, here for a sanity check
-                    if (
-                        future_.state != FutureState.SCHEDULED
-                        and not future_.state.is_terminal()
-                    ):
-                        raise RuntimeError(
-                            f"Illegal state: future {future_.id} in state {future_.state}"
-                            " when it should have been already processed"
-                        )
+        logger.info(f"Starting resolution {self._root_future.id}")
 
-                self._wait_for_scheduled_runs()
+        self._resolution_will_start()
 
-            if future.state == FutureState.RESOLVED:
-                self._resolution_did_succeed()
-            elif future.state == FutureState.CANCELED:
-                return
-            else:
-                raise RuntimeError("Unresolved Future after resolver call.")
+        while not self._root_future.state.is_terminal():
+            for future_ in self._futures:
+                if future_.state == FutureState.CREATED:
+                    self._schedule_future_if_args_resolved(future_)
+                    continue
+                if future_.state == FutureState.RETRYING:
+                    self._execute_future(future_)
+                    continue
+                if future_.state == FutureState.RAN:
+                    self._resolve_nested_future(future_)
+                    continue
 
-            return future.value
+                # should be unreachable code, here for a sanity check
+                if (
+                    future_.state != FutureState.SCHEDULED
+                    and not future_.state.is_terminal()
+                ):
+                    raise RuntimeError(
+                        f"Illegal state: future {future_.id} in state {future_.state}"
+                        " when it should have been already processed"
+                    )
+
+            self._wait_for_scheduled_runs()
+
+        if self._root_future.state == FutureState.RESOLVED:
+            self._resolution_did_succeed()
+        elif self._root_future.state == FutureState.CANCELED:
+            return
+        else:
+            raise RuntimeError("Unresolved Future after resolver call.")
 
     @contextmanager
     def _catch_resolution_errors(self):
@@ -88,6 +109,9 @@ class StateMachineResolver(Resolver, abc.ABC):
             )
 
         future.resolved_kwargs = resolved_kwargs
+
+        # Cleaning up
+        self._futures.clear()
 
         self._enqueue_future(future)
 

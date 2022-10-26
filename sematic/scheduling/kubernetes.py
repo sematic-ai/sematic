@@ -350,9 +350,11 @@ def schedule_resolution_job(
     image: str,
     user_settings: Dict[str, str],
     max_parallelism: Optional[int] = None,
+    rerun_from: Optional[str] = None,
 ) -> ExternalJob:
 
     namespace = get_user_settings(SettingsVar.KUBERNETES_NAMESPACE)
+
     external_job = KubernetesExternalJob.new(
         try_number=0,
         run_id=resolution_id,
@@ -361,10 +363,14 @@ def schedule_resolution_job(
     )
 
     logger.info("Scheduling job %s", external_job.kubernetes_job_name)
+
     args = ["--run_id", resolution_id, "--resolve"]
 
     if max_parallelism is not None:
         args += ["--max-parallelism", str(max_parallelism)]
+
+    if rerun_from is not None:
+        args += ["--rerun-from", rerun_from]
 
     _schedule_kubernetes_job(
         name=external_job.kubernetes_job_name,

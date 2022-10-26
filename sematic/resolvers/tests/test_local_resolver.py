@@ -1,6 +1,6 @@
 # Standard Library
+from collections import defaultdict
 from typing import List
-from unittest import mock
 
 # Third-party
 import pytest
@@ -8,8 +8,9 @@ import pytest
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
-    mock_no_auth,
+    mock_auth,
     mock_requests,
+    mock_socketio,
     test_client,
 )
 from sematic.calculator import func
@@ -19,6 +20,7 @@ from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.queries import get_resolution, get_root_graph, get_run
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.resolvers.local_resolver import LocalResolver
+from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa: F401
 from sematic.retry_settings import RetrySettings
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
 from sematic.utils.exceptions import ExceptionMetadata
@@ -41,10 +43,13 @@ def pipeline(a: float, b: float) -> float:
     return add(c, d)
 
 
-@mock_no_auth
-@mock.patch("socketio.Client.connect")
 def test_single_function(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_local_resolver_storage,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     future = add(1, 2)
 
@@ -94,10 +99,13 @@ def add_add_add(a: float, b: float) -> float:
     return add(bb, aa)
 
 
-@mock_no_auth
-@mock.patch("socketio.Client.connect")
 def test_add_add(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_local_resolver_storage,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     future = add_add_add(1, 2)
 
@@ -112,10 +120,13 @@ def test_add_add(
     assert len(edges) == 10
 
 
-@mock_no_auth
-@mock.patch("socketio.Client.connect")
 def test_pipeline(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_local_resolver_storage,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     future = pipeline(3, 5)
 
@@ -133,10 +144,13 @@ def test_pipeline(
     assert len(edges) == 16
 
 
-@mock_no_auth
-@mock.patch("socketio.Client.connect")
 def test_failure(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_local_resolver_storage,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     class CustomException(Exception):
         pass
@@ -170,10 +184,13 @@ def test_failure(
         assert future.state == expected_states[future.calculator.__name__]
 
 
-@mock_no_auth
-@mock.patch("socketio.Client.connect")
 def test_resolver_error(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_local_resolver_storage,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     @func
     def add(x: int, y: int) -> int:
@@ -292,18 +309,24 @@ class DBStateMachineTestResolver(LocalResolver):
         assert all(edge.artifact_id is None for edge in output_edges)
 
 
-@mock_no_auth
-@mock.patch("socketio.Client.connect")
 def test_db_state_machine(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_local_resolver_storage,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     pipeline(1, 2).resolve(DBStateMachineTestResolver())
 
 
-@mock_no_auth
-@mock.patch("socketio.Client.connect")
 def test_list_conversion(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_local_resolver_storage,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     @func
     def alist(a: float, b: float) -> List[float]:
@@ -312,9 +335,13 @@ def test_list_conversion(
     assert alist(1, 2).resolve() == [3, 3]
 
 
-@mock_no_auth
-@mock.patch("socketio.Client.connect")
-def test_exceptions(mock_socketio, mock_requests, valid_client_version):  # noqa: F811
+def test_exceptions(
+    mock_local_resolver_storage,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
+):
     @func
     def fail():
         raise Exception("FAIL!")
@@ -358,10 +385,13 @@ def try_three_times():
     raise SomeException()
 
 
-@mock_no_auth
-@mock.patch("socketio.Client.connect")
 def test_retry(
-    mock_socketio, test_db, mock_requests, valid_client_version  # noqa: F811
+    mock_local_resolver_storage,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
 ):
     future = try_three_times()
     try:
@@ -390,3 +420,45 @@ def test_make_resolution():
     assert resolution.kind == ResolutionKind.LOCAL.value
     assert resolution.container_image_uris is None
     assert resolution.container_image_uri is None
+
+
+class RerunTestResolver(LocalResolver):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.scheduled_run_counts = defaultdict(lambda: 0)
+
+    def _future_will_schedule(self, future):
+        super()._future_will_schedule(future)
+        self.scheduled_run_counts[future.calculator.__name__] += 1
+
+
+def test_rerun_from_here(
+    mock_local_resolver_storage,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
+):
+    future = pipeline(1, 2)
+
+    output = future.resolve()
+
+    runs, _, __ = get_root_graph(future.id)
+
+    for run_id, expected_scheduled_run_counts in {
+        future.nested_future.id: dict(add=1),
+        future.nested_future.kwargs["a"].id: dict(add=4, add3=1),
+        future.nested_future.kwargs["b"].id: dict(add=3, add3=1),
+        future.nested_future.kwargs["b"].nested_future.id: dict(add=2),
+        future.nested_future.kwargs["b"].nested_future.kwargs["a"].id: dict(add=3),
+    }.items():
+        new_future = pipeline(1, 2)
+
+        resolver = RerunTestResolver(rerun_from=run_id)
+
+        new_output = new_future.resolve(resolver)
+
+        assert output == new_output
+
+        assert resolver.scheduled_run_counts == expected_scheduled_run_counts

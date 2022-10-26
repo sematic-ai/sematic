@@ -1,9 +1,9 @@
 # Standard Library
 import contextlib
-import functools
 import re
 from http import HTTPStatus
-from typing import Any, Callable, Dict
+from typing import Any, Dict
+from unittest import mock
 from urllib.parse import urljoin
 
 import flask.testing
@@ -91,17 +91,6 @@ def mock_user_settings(settings: Dict[user_settings.SettingsVar, Any]):
         user_settings._settings = original_settings
 
 
-def mock_no_auth(fn: Callable) -> Callable:
-    @functools.wraps(fn)
-    def no_auth_fn(*args, **kwargs):
-        with mock_user_settings(
-            {user_settings.SettingsVar.SEMATIC_AUTHENTICATE: False}
-        ):
-            fn(*args, **kwargs)
-
-    return no_auth_fn
-
-
 def make_auth_test(endpoint: str, method: str = "GET"):
     def test_auth(test_client: flask.testing.FlaskClient):
         with mock_user_settings({user_settings.SettingsVar.SEMATIC_AUTHENTICATE: True}):
@@ -109,3 +98,15 @@ def make_auth_test(endpoint: str, method: str = "GET"):
             assert response.status_code == HTTPStatus.UNAUTHORIZED
 
     return test_auth
+
+
+@pytest.fixture
+def mock_socketio():
+    with mock.patch("socketio.Client.connect"):
+        yield
+
+
+@pytest.fixture
+def mock_auth():
+    with mock_user_settings({user_settings.SettingsVar.SEMATIC_AUTHENTICATE: False}):
+        yield

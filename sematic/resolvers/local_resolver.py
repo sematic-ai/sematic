@@ -17,7 +17,9 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact, make_run_from_future
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
+from sematic.graph import Graph
 from sematic.resolvers.silent_resolver import SilentResolver
+from sematic.storage import LocalStorage, Storage
 from sematic.user_settings import get_all_user_settings
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
 from sematic.utils.git import get_git_info
@@ -33,7 +35,7 @@ class LocalResolver(SilentResolver):
     input argument and output value is tracked as an artifact.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, rerun_from: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
 
         self._edges: Dict[str, Edge] = {}
@@ -45,10 +47,73 @@ class LocalResolver(SilentResolver):
         self._buffer_runs: Dict[str, Run] = {}
         self._buffer_artifacts: Dict[str, Artifact] = {}
 
-        # TODO: Replace this with a local storage engine
-        self._store_artifacts = False
+        self._storage: Storage = LocalStorage()
 
         self._sio_client = socketio.Client()
+
+        self._rerun_from_run_id = rerun_from
+
+    def _seed_graph(self, future: AbstractFuture):
+        if self._rerun_from_run_id is None:
+            super()._seed_graph(future)
+        else:
+            self._seed_from_clone(future, self._rerun_from_run_id)
+
+    def _seed_from_clone(self, future: AbstractFuture, from_run_id: str):
+        """
+        Instead of simply queuing the root future, this method seeds the future graph
+        from a clone of another execution of same pipeline.
+        """
+        try:
+            run = api_client.get_run(from_run_id)
+        except api_client.ResourceNotFoundError as e:
+            raise ValueError(
+                f"Cannot restart from {from_run_id}: run cannot be found."
+            ) from e
+
+        runs, artifacts, edges = api_client.get_graph(run.root_id, root=True)
+
+        graph = Graph(
+            runs=runs,
+            artifacts=artifacts,
+            edges=edges,
+            storage=self._storage,
+        )
+
+        if not graph.input_artifacts_ready(run.id):
+            raise ValueError(
+                f"Cannot start from {from_run_id}: upstream runs did not succeed."
+            )
+
+        logger.info(f"Attempting to rerun from {from_run_id}")
+
+        cloned_graph = graph.clone_futures(
+            reset_from=from_run_id,
+        )
+
+        # Making sure we honor id of future passed from the outside
+        cloned_graph.set_root_future_id(future.id)
+
+        self._futures = list(cloned_graph.futures_by_original_id.values())
+
+        for future in self._futures:
+            future.resolved_kwargs = self._get_resolved_kwargs(future)
+            run_input_artifacts: Dict[str, Artifact] = {}
+            run_output_artifact = None
+
+            if future.state == FutureState.RESOLVED:
+                run_output_artifact = cloned_graph.output_artifacts[future.id]
+
+            if future.state in {FutureState.RESOLVED, FutureState.RAN}:
+                run_input_artifacts = cloned_graph.input_artifacts[future.id]
+
+            self._populate_graph(
+                future,
+                input_artifacts=run_input_artifacts,
+                output_artifact=run_output_artifact,
+            )
+
+        self._save_graph()
 
     def _update_edge(
         self,
@@ -109,7 +174,7 @@ class LocalResolver(SilentResolver):
         input_artifacts = {}
         for name, value in future.resolved_kwargs.items():
             artifact = make_artifact(
-                value, future.calculator.input_types[name], store=self._store_artifacts
+                value, future.calculator.input_types[name], storage=self._storage
             )
             self._add_artifact(artifact)
             input_artifacts[name] = artifact
@@ -206,6 +271,8 @@ class LocalResolver(SilentResolver):
         if future.nested_future is None:
             raise Exception("Missing nested future")
 
+        run.nested_future_id = future.nested_future.id
+
         self._populate_graph(future.nested_future)
         self._add_run(run)
         self._save_graph()
@@ -222,7 +289,9 @@ class LocalResolver(SilentResolver):
 
         output_artifact = self._get_output_artifact(future.id)
         if output_artifact is None:
-            output_artifact = make_artifact(future.value, future.calculator.output_type)
+            output_artifact = make_artifact(
+                future.value, future.calculator.output_type, storage=self._storage
+            )
             self._add_artifact(output_artifact)
 
         self._populate_graph(future, output_artifact=output_artifact)

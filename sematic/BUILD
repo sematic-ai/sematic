@@ -58,6 +58,7 @@ sematic_py_lib(
     ],
     deps = [
         ":config",
+        "//sematic:storage",
         "//sematic:versions",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
@@ -159,6 +160,7 @@ sematic_py_lib(
     ],
     deps = [
         ":user_settings",
+        "//sematic/utils:memoized_property",
         "//sematic/utils:retry",
     ],
 )
@@ -167,6 +169,20 @@ sematic_py_lib(
     name = "versions",
     srcs = ["versions.py"],
     deps = [],
+)
+
+sematic_py_lib(
+    name = "graph",
+    srcs = ["graph.py"],
+    deps = [
+        ":abstract_future",
+        "//sematic/db/models:artifact",
+        "//sematic/db/models:edge",
+        "//sematic/db/models:factories",
+        "//sematic/db/models:run",
+        "//sematic/utils:memoized_property",
+        "//sematic/utils:sorting",
+    ],
 )
 
 sematic_py_wheel(
