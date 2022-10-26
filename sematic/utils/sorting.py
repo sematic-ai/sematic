@@ -11,7 +11,7 @@ def topological_sort(
     Parameters
     ----------
     dependencies: Dict[str, List[Optional[str]]]
-        A mapping of node to its dependencies. Roots has [None].
+        A mapping of node to its dependencies. The root nodes have [None] as dependencies.
 
     Returns
     -------
