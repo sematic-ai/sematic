@@ -176,7 +176,7 @@ def schedule_resolution(
     rerun_from: Optional[str] = None,
 ) -> Resolution:
     """Ask the server to start a detached resolution execution."""
-    payload = {}
+    payload: Dict[str, Any] = {}
 
     if max_parallelism is not None:
         payload["max_parallelism"] = max_parallelism
