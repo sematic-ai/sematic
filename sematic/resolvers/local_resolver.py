@@ -104,19 +104,6 @@ class LocalResolver(SilentResolver):
             if future.state == FutureState.RESOLVED:
                 run_output_artifact = cloned_graph.output_artifacts[future.id]
 
-        # Making sure we honor id of future passed from the outside
-        cloned_root_future = cloned_futures[run.root_id]
-
-        self._futures = list(cloned_graph.futures_by_original_id.values())
-
-        for future in self._futures:
-            future.resolved_kwargs = self._get_resolved_kwargs(future)
-            run_input_artifacts: Dict[str, Artifact] = {}
-            run_output_artifact = None
-
-            if future.state == FutureState.RESOLVED:
-                run_output_artifact = cloned_graph.output_artifacts[future.id]
-
             if future.state in {FutureState.RESOLVED, FutureState.RAN}:
                 run_input_artifacts = cloned_graph.input_artifacts[future.id]
 

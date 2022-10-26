@@ -140,25 +140,6 @@ class Graph:
         return self._run_mappings[1]
 
     @memoized_property
-    def _run_mappings(self) -> Tuple[RunsByID, RunsByParentID]:
-        _runs_by_id: RunsByID = dict()
-        _runs_by_parent_ids: RunsByParentID = defaultdict(list)
-
-        for run in self.runs:
-            _runs_by_id[run.id] = run
-            _runs_by_parent_ids[run.parent_id].append(run)
-
-        return _runs_by_id, _runs_by_parent_ids
-
-    @property
-    def _runs_by_id(self) -> RunsByID:
-        return self._run_mappings[0]
-
-    @property
-    def _runs_by_parent_id(self) -> RunsByParentID:
-        return self._run_mappings[1]
-
-    @memoized_property
     def _edge_mappings(self) -> Tuple[EdgesByID, EdgesByRunID, EdgesByRunID]:
         _edges_by_destination_id: EdgesByRunID = defaultdict(list)
 
@@ -539,14 +520,6 @@ class Graph:
         run_ids_by_execution_order = self._sorted_run_ids_by_layer(
             run_sorter=self._execution_order
         )
-
-        def _get_artifact_value(artifact: Artifact) -> Any:
-            if artifact.id not in value_by_artifact_id:
-                value_by_artifact_id[artifact.id] = get_artifact_value(
-                    artifact, storage
-                )
-
-            return value_by_artifact_id[artifact.id]
 
         for run_id in run_ids_by_execution_order:
             if run_id in skip_run_ids:
