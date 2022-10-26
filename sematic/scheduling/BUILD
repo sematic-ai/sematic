@@ -2,6 +2,7 @@ sematic_py_lib(
     name = "external_job",
     srcs = ["external_job.py"],
     deps = [
+        "//sematic/utils:exceptions",
     ],
 )
 
@@ -21,11 +22,12 @@ sematic_py_lib(
     name = "kubernetes",
     srcs = ["kubernetes.py"],
     deps = [
-        "//sematic/utils:retry",
         "//sematic:config",
         "//sematic:container_images",
         "//sematic/scheduling:external_job",
-        "//sematic/resolvers:resource_requirements"
+        "//sematic/resolvers:resource_requirements",
+        "//sematic/utils:exceptions",
+        "//sematic/utils:retry",
     ],
     pip_deps = [
         "kubernetes",

@@ -1,4 +1,4 @@
-import Exception from "./Exception";
+import { Exception, ExternalException } from "./Exception";
 import { Box } from "@mui/material";
 import { Run } from "../Models";
 import { fetchJSON } from "../utils";
@@ -57,9 +57,16 @@ export default function LogPanel(props: { run: Run }) {
   const logView = error === undefined ? standardLogView : logErrorView;
 
   return (
-    <Box>
-      {run.exception_json && <Exception exception={run.exception_json} />}
-      {logView}
+    <Box sx={{ display: "grid" }} >
+      <Box sx={{ gridRow: 1, paddingBottom: 4, }} >
+        {run.external_exception_json && <ExternalException exception_metadata={run.external_exception_json} />}
+      </Box>
+      <Box sx={{ gridRow: 2, paddingBottom: 4, }} >
+        {run.exception_json && <Exception exception_metadata={run.exception_json} />}
+      </Box>
+      <Box sx={{ gridRow: 3, paddingBottom: 4, }} >
+        {logView}
+      </Box>
     </Box>
   );
 }

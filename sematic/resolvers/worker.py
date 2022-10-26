@@ -70,14 +70,21 @@ def _get_input_kwargs(
     return kwargs
 
 
-def _fail_run(run: Run):
+def _fail_run(run: Run, e: BaseException) -> None:
     """
     Mark run as failed.
     """
     run.future_state = FutureState.FAILED
     run.failed_at = datetime.datetime.utcnow()
-    if run.exception is None:
-        run.exception = format_exception_for_run()
+
+    # if the run already has an exception marked on it, then it's the innermost cause
+    # of the failure; any other exception generated afterwards is done so while trying to
+    # handle the failure
+    if run.exception_metadata is not None:
+        logger.warning("Got exception while handling run failure", exc_info=e)
+    # this means the exception probably happened in the Resolver code
+    else:
+        run.exception_metadata = format_exception_for_run(e)
     api_client.save_graph(run.id, [run], [], [])
 
 
@@ -183,9 +190,9 @@ def main(
                 # moved to a terminal state. It may contain a better
                 # exception message. If it completed somehow, then it
                 # should be in a valid state that we don't want to disrupt.
-                _fail_run(root_run)
+                _fail_run(root_run, e)
         else:
-            _fail_run(run)
+            _fail_run(run, e)
 
         if resolve:
             api_client.notify_pipeline_update(run.calculator_path)

@@ -109,6 +109,12 @@ def test_matches_exceptions(matches: bool, exception_metadata: ExceptionMetadata
             RetrySettings(exceptions=(ParentError,), retries=2),
             1,
         ),
+        (
+            True,
+            None,
+            RetrySettings(exceptions=(ParentError,), retries=2),
+            1,
+        ),
     ),
 )
 def test_should_retry(

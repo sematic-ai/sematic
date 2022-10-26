@@ -1,12 +1,12 @@
 import { Alert, AlertTitle } from "@mui/material";
 import { ExceptionMetadata } from "../Models";
 
-export default function Exception(props: { exception: ExceptionMetadata }) {
-  const { exception } = props;
+export function Exception(props: { exception_metadata: ExceptionMetadata }) {
+  const { exception_metadata } = props;
   return (
     <Alert severity="error" icon={false}>
       <AlertTitle>
-        {exception.repr.split("\n")[exception.repr.split("\n").length - 2]}
+        {exception_metadata.repr.split("\n")[exception_metadata.repr.split("\n").length - 2]}
       </AlertTitle>
       <pre
         style={{
@@ -14,8 +14,25 @@ export default function Exception(props: { exception: ExceptionMetadata }) {
           overflowWrap: "anywhere",
         }}
       >
-        {exception.repr}
+        {exception_metadata.repr}
       </pre>
+    </Alert>
+  );
+}
+
+export function ExternalException(props: { exception_metadata: ExceptionMetadata }) {
+  return (
+    <Alert severity="error" variant="outlined" sx={{ alignItems: 'center' }} >
+      <AlertTitle>
+        <pre
+          style={{
+            whiteSpace: "pre-wrap",
+            overflowWrap: "anywhere",
+          }}
+        >
+          {props.exception_metadata.repr}
+        </pre>
+      </AlertTitle>
     </Alert>
   );
 }

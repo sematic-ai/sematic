@@ -4,14 +4,13 @@ import logging
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
+from sematic.utils.exceptions import format_exception_for_run
 
 logger = logging.getLogger(__name__)
 
 
 class SilentResolver(StateMachineResolver):
-    """
-    A resolver to resolver a DAG in memory, without tracking to the DB.
-    """
+    """A resolver to resolver a DAG in memory, without tracking to the DB."""
 
     def _schedule_future(self, future: AbstractFuture) -> None:
         self._run_inline(future)
@@ -22,8 +21,9 @@ class SilentResolver(StateMachineResolver):
             self._start_inline_execution(future.id)
             value = future.calculator.calculate(**future.resolved_kwargs)
             self._update_future_with_value(future, value)
-        except Exception as exception:
-            self._handle_future_failure(future, exception)
+        except Exception as e:
+            logger.error("Error executing future", exc_info=e)
+            self._handle_future_failure(future, format_exception_for_run(e))
         finally:
             self._end_inline_execution(future.id)
 

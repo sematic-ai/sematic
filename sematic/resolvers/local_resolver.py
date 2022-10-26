@@ -199,7 +199,7 @@ class LocalResolver(SilentResolver):
 
             # If we are here, the cancelation was applied successfully server-side
             # so it is safe to mark non-terminal futures as CANCELED
-            # This will precipipate the termination of the resolution loop.
+            # This will precipitate the termination of the resolution loop.
             self._cancel_non_terminal_futures()
             self._sio_client.disconnect()
 
@@ -312,7 +312,6 @@ class LocalResolver(SilentResolver):
         super()._future_did_fail(failed_future)
 
         run = self._get_run(failed_future.id)
-
         run.future_state = failed_future.state
 
         # We do not propagate exceptions to parent runs
@@ -321,20 +320,23 @@ class LocalResolver(SilentResolver):
             failed_future.id,
             failed_future.state,
         )
-        if failed_future.state == FutureState.FAILED and run.exception is None:
-            run.exception = format_exception_for_run()
-        if failed_future.state == FutureState.NESTED_FAILED and run.exception is None:
-            run.exception = ExceptionMetadata(
-                repr="Failed because the child run failed",
-                name=Exception.__name__,
-                module=Exception.__module__,
-                ancestors=ExceptionMetadata.ancestors_from_exception(Exception),
-            )
 
-        logger.info(
-            "Processing failure of run %s",
-            failed_future.id,
-        )
+        if run.exception_metadata is None:
+            if failed_future.state == FutureState.FAILED:
+                run.exception_metadata = format_exception_for_run()
+            elif failed_future.state == FutureState.NESTED_FAILED:
+                run.exception_metadata = ExceptionMetadata(
+                    repr="Failed because the child run failed",
+                    name=Exception.__name__,
+                    module=Exception.__module__,
+                    ancestors=ExceptionMetadata.ancestors_from_exception(Exception),
+                )
+            # should be unreachable code, here for a sanity check
+            else:
+                raise RuntimeError(
+                    f"Illegal state: future {failed_future.id} in state "
+                    f"{failed_future.state} when it should have been already processed"
+                )
 
         run.failed_at = datetime.datetime.utcnow()
         self._add_run(run)
@@ -375,8 +377,8 @@ class LocalResolver(SilentResolver):
 
             run.future_state = FutureState.FAILED
 
-            if run.exception is None:
-                run.exception = ExceptionMetadata(
+            if run.exception_metadata is None:
+                run.exception_metadata = ExceptionMetadata(
                     repr=reason,
                     name=Exception.__name__,
                     module=Exception.__module__,

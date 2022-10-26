@@ -189,9 +189,14 @@ def test_schedule_run(
             ),
             pending_or_running_pod_count=1,
             succeeded_pod_count=0,
-            most_recent_condition=None,
             has_started=False,
             still_exists=True,
+            start_time=None,
+            most_recent_condition=None,
+            most_recent_pod_phase=None,
+            most_recent_pod_condition_message=None,
+            most_recent_container_condition_message=None,
+            has_infra_failure=False,
         )
         persisted_resolution.status = ResolutionStatus.RUNNING
         save_resolution(persisted_resolution)
@@ -236,9 +241,14 @@ def test_update_future_states(
             ),
             pending_or_running_pod_count=1,
             succeeded_pod_count=0,
-            most_recent_condition=None,
             has_started=True,
             still_exists=True,
+            start_time=1.01,
+            most_recent_condition=None,
+            most_recent_pod_phase=None,
+            most_recent_pod_condition_message=None,
+            most_recent_container_condition_message=None,
+            has_infra_failure=False,
         )
 
         persisted_run.external_jobs = (job,)
@@ -255,12 +265,41 @@ def test_update_future_states(
             "content": [{"future_state": "SCHEDULED", "run_id": persisted_run.id}]
         }
 
-        # simulate the job disappearing while the run is still SCHEDULED
-        job.still_exists = False
-        assert not job.is_active()
+
+def test_update_run_disappeared(
+    persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
+
+        job = KubernetesExternalJob(
+            kind="k8s",
+            try_number=0,
+            external_job_id=KubernetesExternalJob.make_external_job_id(
+                persisted_run.id, namespace="foo", job_type=JobType.worker
+            ),
+            pending_or_running_pod_count=1,
+            succeeded_pod_count=0,
+            has_started=True,
+            still_exists=True,
+            start_time=1.01,
+            most_recent_condition=None,
+            most_recent_pod_phase=None,
+            most_recent_pod_condition_message=None,
+            most_recent_container_condition_message=None,
+            has_infra_failure=False,
+        )
+
         persisted_run.external_jobs = (job,)
         persisted_run.future_state = FutureState.SCHEDULED
         save_run(persisted_run)
+
+        # simulate the job disappearing while the run is still SCHEDULED
+        # this happens for example when the job is canceled
+        job.still_exists = False
+        assert not job.is_active()
+        job.has_infra_failure = True
+        mock_k8s.refresh_job.side_effect = lambda j: job
+
         response = test_client.post(
             "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
         )
@@ -270,11 +309,69 @@ def test_update_future_states(
             "content": [{"future_state": "FAILED", "run_id": persisted_run.id}]
         }
         loaded = get_run(persisted_run.id)
-        assert loaded.exception == ExceptionMetadata(
-            repr="The kubernetes job(s) experienced an unknown failure",
-            name="InvalidStateTransitionError",
-            module="sematic.api.endpoints.runs",
-            ancestors=[f"{Exception.__module__}.{Exception.__name__}"],
+        assert loaded.external_exception_metadata == ExceptionMetadata(
+            repr="The Kubernetes job state is unknown",
+            name="KubernetesError",
+            module="sematic.scheduling.kubernetes",
+            ancestors=[
+                f"{ValueError.__module__}.{ValueError.__name__}",
+                f"{Exception.__module__}.{Exception.__name__}",
+            ],
+        )
+
+
+def test_update_run_k8_pod_error(
+    persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
+
+        job = KubernetesExternalJob(
+            kind="k8s",
+            try_number=0,
+            external_job_id=KubernetesExternalJob.make_external_job_id(
+                persisted_run.id, namespace="foo", job_type=JobType.worker
+            ),
+            pending_or_running_pod_count=1,
+            succeeded_pod_count=0,
+            has_started=True,
+            still_exists=True,
+            start_time=1.01,
+            most_recent_condition=None,
+            most_recent_pod_phase=None,
+            most_recent_pod_condition_message=None,
+            most_recent_container_condition_message=None,
+            has_infra_failure=False,
+        )
+
+        persisted_run.external_jobs = (job,)
+        persisted_run.future_state = FutureState.SCHEDULED
+        save_run(persisted_run)
+
+        job.still_exists = False
+        assert not job.is_active()
+        job.has_infra_failure = True
+        job.most_recent_pod_phase = "Failed"
+        job.most_recent_pod_condition_message = "test pod condition"
+        job.most_recent_container_condition_message = "test container condition"
+        mock_k8s.refresh_job.side_effect = lambda j: job
+
+        response = test_client.post(
+            "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
+        )
+        assert response.status_code == 200
+        payload = response.json
+        assert payload == {
+            "content": [{"future_state": "FAILED", "run_id": persisted_run.id}]
+        }
+        loaded = get_run(persisted_run.id)
+        assert loaded.external_exception_metadata == ExceptionMetadata(
+            repr="Failed\ntest pod condition\ntest container condition",
+            name="KubernetesError",
+            module="sematic.scheduling.kubernetes",
+            ancestors=[
+                f"{ValueError.__module__}.{ValueError.__name__}",
+                f"{Exception.__module__}.{Exception.__name__}",
+            ],
         )
 
 
@@ -305,7 +402,7 @@ def test_get_run_logs(
         filter_string="a",
     )
 
-    response = test_client.get(
+    test_client.get(
         "/api/v1/runs/{}/logs?{}".format(
             persisted_run.id, "&".join(f"{k}={v}" for k, v in kwargs.items())
         ),

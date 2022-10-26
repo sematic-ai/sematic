@@ -10,7 +10,15 @@ CREATE TABLE runs (
     ended_at timestamp,
     resolved_at timestamp,
     failed_at timestamp,
-    parent_id character(32), description TEXT, tags TEXT, source_code TEXT, root_id character(32), nested_future_id character(32), external_jobs_json JSONB, resource_requirements_json JSONB, exception_json JSONB, container_image_uri TEXT,
+    parent_id character(32),
+    description TEXT, tags TEXT,
+    source_code TEXT, root_id character(32),
+    nested_future_id character(32),
+    external_jobs_json JSONB,
+    resource_requirements_json JSONB,
+    exception_json JSONB,
+    container_image_uri TEXT,
+    external_exception_json JSONB,
 
     PRIMARY KEY (id)
 );
@@ -19,7 +27,8 @@ CREATE TABLE artifacts (
     id character(40) NOT NULL,
     json_summary JSONB NOT NULL,
     created_at timestamp NOT NULL,
-    updated_at timestamp NOT NULL, type_serialization JSONB,
+    updated_at timestamp NOT NULL,
+    type_serialization JSONB,
 
     PRIMARY KEY (id)
 );
@@ -69,7 +78,10 @@ CREATE TABLE resolutions (
     status TEXT NOT NULL,
     kind TEXT NOT NULL,
     container_image_uri TEXT,
-    settings_env_vars JSONB NOT NULL, external_jobs_json JSONB, git_info_json JSONB, container_image_uris JSONB,
+    settings_env_vars JSONB NOT NULL,
+    external_jobs_json JSONB,
+    git_info_json JSONB,
+    container_image_uris JSONB,
 
     PRIMARY KEY (root_id),
     FOREIGN KEY (root_id) REFERENCES runs(id)
@@ -98,4 +110,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20221013060942'),
   ('20221013070256'),
   ('20221017233940'),
-  ('20221019225916');
+  ('20221019225916'),
+  ('20221025201847');

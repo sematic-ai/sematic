@@ -18,6 +18,7 @@ import sqlalchemy
 from sqlalchemy.orm.exc import NoResultFound
 
 # Sematic
+from sematic.abstract_future import FutureState
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import (
@@ -39,8 +40,8 @@ from sematic.db.queries import (
     save_run,
 )
 from sematic.log_reader import load_log_lines
+from sematic.scheduling.external_job import ExternalJob
 from sematic.scheduling.job_scheduler import schedule_run, update_run_status
-from sematic.utils.exceptions import ExceptionMetadata
 from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
@@ -83,8 +84,7 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
     next_cursor : Optional[str]
         Cursor to obtain next page. Already included in `next_page_url`.
     after_cursor_count : int
-        Number of items remain after the current cursos, i.e. including current
-        page.
+        Number of items remain after the current cursor, i.e. including the current page.
     content: List[Run]
         A list of run JSON payloads. The size of the list is `limit` or less if
         current page is last page.
@@ -250,15 +250,69 @@ def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     return flask.jsonify(payload)
 
 
-class InvalidStateTransitionError(Exception):
-    pass
+def _get_run_if_modified(
+    run_id: str, future_state: FutureState, jobs: List[ExternalJob]
+) -> Optional[Run]:
+    """Returns the updated run, if it has changed based on external job status, or None
+    if it hasn't.
+    """
+    new_future_state, new_external_jobs = update_run_status(future_state, jobs)
+    run = None
+
+    # TODO: implement safer comparison logic
+    # these jobs variables can be either tuples or lists of polymorphic dataclasses
+    if tuple(new_external_jobs) != tuple(jobs):
+        run = get_run(run_id)
+        run.external_jobs = new_external_jobs
+        run.external_exception_metadata = new_external_jobs[-1].get_exception_metadata()
+        logger.info("Updating run's external jobs: %s", new_external_jobs)
+
+    if new_future_state != future_state:
+        # why have get_run both here and in the block above about
+        # external jobs? Why not just get the run outside both blocks?
+        # because this endpoint gets called A LOT, and we want to
+        # avoid loading the run from the DB unless we detect that something
+        # has changed, and we need to load it to modify. The common case will
+        # be that nothing has changed and the run-reload is not needed.
+        run = get_run(run_id) if run is None else run
+
+        if (
+            run.future_state != future_state.value
+            and run.future_state != new_future_state.value
+        ):
+            # future_state was pulled from the run right before we
+            # started doing our updates. The server logic to this
+            # point hasn't saved any status updates. The run status
+            # must have been changed by a call from the worker or
+            # resolver in the interim.
+            raise _DetectedRunRaceCondition(
+                f"Run {run_id} was changed from {future_state} to "
+                f"{run.future_state} out of band of the server. The "
+                f"server wanted to update the run to {new_future_state}"
+            )
+        run.future_state = new_future_state
+
+        msg = (
+            run.external_exception_metadata.repr
+            if run.external_exception_metadata
+            else None
+        )
+        logger.info(
+            "Updating run %s from %s to %s. Message: %s",
+            run_id,
+            future_state,
+            new_future_state,
+            msg,
+        )
+
+    return run
 
 
 @sematic_api.route("/api/v1/runs/future_states", methods=["POST"])
 @authenticate
 @retry(_DetectedRunRaceCondition, tries=3, delay=10, jitter=1)
 def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
-    """Update the state of runs based on external job status, and return results"""
+    """Update the state of runs based on external job status, and return results."""
     input_payload: Dict[str, Any] = flask.request.json  # type: ignore
     if "run_ids" not in input_payload:
         return jsonify_error(
@@ -275,65 +329,17 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
 
     result_list = []
     for run_id, (future_state, jobs) in db_status_dict.items():
-        new_future_state, message, new_external_jobs = update_run_status(
-            future_state, jobs
-        )
-        run_modified = False
-        run = None
-        if new_external_jobs != jobs:
-            run = get_run(run_id)
-            run.external_jobs = new_external_jobs
-            logger.info("Updating run's external jobs: %s", new_external_jobs)
-            run_modified = True
-        if new_future_state != future_state:
-            # why have get_run both here and in the block above about
-            # external jobs? Why not just get the run outside both blocks?
-            # because this endpoint gets called A LOT, and we want to
-            # avoid loading the run from the DB unless we detect that something
-            # has changed and we need to load it to modify. The common case will
-            # be that nothing has changed and the run-reload is not needed.
-            run = get_run(run_id) if run is None else run
-            run_modified = True
-            if (
-                run.future_state != future_state.value
-                and run.future_state != new_future_state.value
-            ):
-                # future_state was pulled from the run right before we
-                # started doing our updates. The server logic to this
-                # point hasn't saved any status updates. The run status
-                # must have been changed by a call from the worker or
-                # resolver in the interim.
-                raise _DetectedRunRaceCondition(
-                    f"Run {run_id} was changed from {future_state} to "
-                    f"{run.future_state} out of band of the server. The "
-                    f"server wanted to update the run to {new_future_state}"
-                )
-            run.future_state = new_future_state
 
-            if message is not None and run.exception is None:
-                run.exception = ExceptionMetadata(
-                    repr=message,
-                    name=InvalidStateTransitionError.__name__,
-                    module=InvalidStateTransitionError.__module__,
-                    ancestors=ExceptionMetadata.ancestors_from_exception(
-                        InvalidStateTransitionError
-                    ),
-                )
-
-            logger.info(
-                "Updating run %s from %s to %s. Message: %s",
-                run_id,
-                future_state,
-                new_future_state,
-                message,
-            )
-        if run_modified and run is not None:
-            # note: the "is not None" is redundant but pleases mypy
+        new_future_state_value = future_state.value
+        run = _get_run_if_modified(run_id, future_state, jobs)
+        if run is not None:
+            new_future_state_value = run.future_state
             save_run(run)
+
         result_list.append(
             dict(
                 run_id=run_id,
-                future_state=new_future_state.value,
+                future_state=new_future_state_value,
             )
         )
 

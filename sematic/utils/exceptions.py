@@ -30,7 +30,8 @@ class ExceptionMetadata:
     def ancestors_from_exception(
         cls, exception: Union[BaseException, Type[BaseException]]
     ) -> List[str]:
-        """For an Exception, return a list of all its base classes that inherit Exception
+        """For an Exception, return a list of all its base classes that inherit from
+        Exception.
 
         Parameters
         ----------
@@ -86,7 +87,7 @@ class ExceptionMetadata:
 def format_exception_for_run(
     exception: Optional[BaseException] = None,
 ) -> ExceptionMetadata:
-    """Format an exception trace into a string for usage in a run
+    """Format an exception trace into a string for usage in a run.
 
     Returns
     -------
@@ -113,3 +114,44 @@ def format_exception_for_run(
         module=cause_exception.__class__.__module__,
         ancestors=ExceptionMetadata.ancestors_from_exception(cause_exception),
     )
+
+
+class ResolutionError(Exception):
+    """The pipeline resolution has failed.
+
+    Should only be generated to halt execution. Should not be handled.
+
+    Parameters
+    ----------
+    exception_metadata:
+        Metadata describing an exception which occurred during code execution
+        (Pipeline, Resolver, Driver)
+    external_exception_metadata:
+        Metadata describing an exception which occurred in external compute
+        infrastructure
+    """
+
+    def __init__(
+        self,
+        exception_metadata: Optional[ExceptionMetadata] = None,
+        external_exception_metadata: Optional[ExceptionMetadata] = None,
+    ):
+        exception_msg = ResolutionError._make_metadata_msg(
+            "\nPipeline failure: ", exception_metadata
+        )
+        external_exception_msg = ResolutionError._make_metadata_msg(
+            "\nExternal failure:\n", external_exception_metadata
+        )
+
+        super(ResolutionError, self).__init__(
+            "The pipeline resolution failed due to previous errors"
+            f"{exception_msg}{external_exception_msg}"
+        )
+
+    @staticmethod
+    def _make_metadata_msg(
+        msg_prefix: str, metadata: Optional[ExceptionMetadata]
+    ) -> str:
+        if metadata is not None and metadata.repr is not None:
+            return f"{msg_prefix}{metadata.repr}"
+        return ""

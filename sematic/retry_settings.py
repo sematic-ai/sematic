@@ -1,6 +1,6 @@
 # Standard Library
 from dataclasses import dataclass, field
-from typing import Tuple, Type
+from typing import Optional, Tuple, Type
 
 # Sematic
 from sematic.utils.exceptions import ExceptionMetadata
@@ -28,10 +28,13 @@ class RetrySettings:
         if not isinstance(self.exceptions, (tuple, list, set)):
             raise ValueError(f"exceptions should be a tuple, got {self.exceptions}")
 
-    def should_retry(self, exception_metadata: ExceptionMetadata) -> bool:
+    def should_retry(self, exception_metadata: Optional[ExceptionMetadata]) -> bool:
         """
         Should the given exception trigger a retry?
         """
+        if exception_metadata is None:
+            return True
+
         if not self._matches_exceptions(exception_metadata):
             return False
 

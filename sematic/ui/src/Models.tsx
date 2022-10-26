@@ -31,6 +31,7 @@ export type Run = {
   description: string | null;
   source_code: string;
   exception_json: ExceptionMetadata | null;
+  external_exception_json: ExceptionMetadata | null;
   tags: Array<string>;
   parent_id: string | null;
   root_id: string;
