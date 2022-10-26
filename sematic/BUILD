@@ -181,6 +181,7 @@ sematic_py_lib(
         "//sematic/db/models:factories",
         "//sematic/db/models:run",
         "//sematic/utils:memoized_property",
+        "//sematic/utils:sorting",
     ],
 )
 

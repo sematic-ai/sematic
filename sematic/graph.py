@@ -13,6 +13,7 @@ from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.run import Run
 from sematic.storage import Storage
 from sematic.utils.memoized_property import memoized_indexed, memoized_property
+from sematic.utils.sorting import topological_sort
 
 RunID = str
 RunsByID = Dict[RunID, Run]
@@ -198,9 +199,13 @@ class Graph:
         if len({self._runs_by_id[run_id].parent_id for run_id in layer_run_ids}) > 1:
             raise ValueError("Runs are not all from the same layer")
 
-        return _sort_layer_runs(
-            layer_run_ids, _upstream_edge_filter(self._edges_by_destination_id)
-        )
+        dependencies = {
+            run_id: [
+                edge.source_run_id for edge in self._edges_by_destination_id[run_id]
+            ]
+            for run_id in layer_run_ids
+        }
+        return topological_sort(dependencies)
 
     def _reverse_execution_order(self, layer_run_ids: List[RunID]) -> List[RunID]:
         """
@@ -219,9 +224,13 @@ class Graph:
         if len({self._runs_by_id[run_id].parent_id for run_id in layer_run_ids}) > 1:
             raise ValueError("Runs are not all from the same layer")
 
-        return _sort_layer_runs(
-            layer_run_ids, _downstream_edge_filter(self._edges_by_source_id)
-        )
+        dependencies = {
+            run_id: [
+                edge.destination_run_id for edge in self._edges_by_source_id[run_id]
+            ]
+            for run_id in layer_run_ids
+        }
+        return topological_sort(dependencies)
 
     def _sorted_run_ids_by_layer(
         self, run_sorter: Callable[[List[RunID]], List[RunID]]
@@ -542,66 +551,3 @@ class Graph:
         cloned_graph.sort_by(run_ids_by_reverse_execution_order)
 
         return cloned_graph
-
-
-EdgeFilterCallable = Callable[[List[Optional[RunID]], RunID], bool]
-
-
-def _upstream_edge_filter(
-    edges_by_destination_id: Dict[RunID, List[Edge]]
-) -> EdgeFilterCallable:
-    def _edge_filter(upstream_run_ids: List[Optional[RunID]], run_id: RunID):
-        return all(
-            edge.source_run_id in upstream_run_ids
-            for edge in edges_by_destination_id[run_id]
-        )
-
-    return _edge_filter
-
-
-def _downstream_edge_filter(
-    edges_by_source_id: Dict[RunID, List[Edge]]
-) -> EdgeFilterCallable:
-    def _edge_filter(downstream_run_ids: List[Optional[RunID]], run_id: RunID):
-        return all(
-            edge.destination_run_id in downstream_run_ids
-            for edge in edges_by_source_id[run_id]
-        )
-
-    return _edge_filter
-
-
-def _sort_layer_runs(
-    layer_run_ids: List[RunID], edge_filter: EdgeFilterCallable
-) -> List[str]:
-    """
-    Sort runs topologically within layer. The order (upstream first or
-    downstream first) depends on edge_filter.
-
-    Parameters
-    ----------
-    layer_run_ids: List[RunID]
-        All run IDs in the layer
-    edge_filter: EdgeFilterCallable
-        A callable to determine the next set of run IDs based on their edges.
-    """
-
-    def _find_next_runs(previous_run_ids: List[Optional[RunID]]):
-        # Sorting for determinism.
-        next_run_ids = sorted(
-            [
-                run_id
-                for run_id in layer_run_ids
-                if edge_filter(previous_run_ids, run_id)
-                and run_id not in previous_run_ids
-            ]
-        )
-
-        if len(next_run_ids) == 0:
-            return []
-
-        return next_run_ids + _find_next_runs(
-            previous_run_ids + next_run_ids  # type: ignore
-        )
-
-    return _find_next_runs([None])
