@@ -81,7 +81,7 @@ function PipelineActionMenu(props: {
 
   const cancelEnabled = ![
     "FAILED",
-    "NESTED_FAIL",
+    "NESTED_FAILED",
     "RESOLVED",
     "CANCELED",
   ].includes(rootRun.future_state);
