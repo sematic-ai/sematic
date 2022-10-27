@@ -13,7 +13,7 @@ import {
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { UserContext } from "..";
 import { Resolution, Run } from "../Models";
-import { ResolutionPayload, RunListPayload } from "../Payloads";
+import { RunListPayload } from "../Payloads";
 import { fetchJSON, pipelineSocket } from "../utils";
 import CalculatorPath from "./CalculatorPath";
 import GitInfoBox from "./GitInfo";
@@ -56,7 +56,7 @@ function PipelineActionMenu(props: {
         setSnackMessage({ message: "Failed to cancel pipeline run." });
       },
     });
-  }, [rootRun, setSnackMessage]);
+  }, [rootRun.id, setSnackMessage]);
 
   const onRerunClick = useCallback(
     (rerunFrom?: string) => {
@@ -67,11 +67,12 @@ function PipelineActionMenu(props: {
         apiKey: user?.api_key,
         callback: (payload) => {},
         setError: (error) => {
+          if (!error) return;
           setSnackMessage({ message: "Failed to trigger rerun." });
         },
       });
     },
-    [rootRun]
+    [rootRun.id]
   );
 
   const onCopyShareClick = useCallback(() => {
@@ -79,14 +80,18 @@ function PipelineActionMenu(props: {
     setSnackMessage({ message: "Pipeline link copied." });
   }, []);
 
-  const cancelEnabled = ![
-    "FAILED",
-    "NESTED_FAILED",
-    "RESOLVED",
-    "CANCELED",
-  ].includes(rootRun.future_state);
+  const cancelEnabled = useMemo(
+    () =>
+      !["FAILED", "NESTED_FAILED", "RESOLVED", "CANCELED"].includes(
+        rootRun.future_state
+      ),
+    [rootRun.future_state]
+  );
 
-  const rerunEnable = !!resolution.container_image_uri;
+  const rerunEnable = useMemo(
+    () => !!resolution.container_image_uri,
+    [resolution.container_image_uri]
+  );
 
   return (
     <>

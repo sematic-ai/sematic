@@ -79,12 +79,12 @@ def clone_run(
 
     cloned_edges = [
         Edge(
-            destination_run_id=run_id,
+            destination_run_id=(run_id if edge.destination_run_id == run.id else None),
+            source_run_id=(run_id if edge.source_run_id == run.id else None),
             destination_name=edge.destination_name,
             artifact_id=edge.artifact_id,
         )
         for edge in edges
-        if edge.destination_run_id == run.id
     ]
 
     return cloned_run, cloned_edges

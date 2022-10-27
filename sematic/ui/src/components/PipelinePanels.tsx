@@ -12,8 +12,9 @@ import RunPanel, { Graph } from "./RunPanel";
 export default function PipelinePanels(props: {
   rootRun: Run;
   resolution: Resolution;
+  onRootRunUpdate: (run: Run) => void;
 }) {
-  const { rootRun, resolution } = props;
+  const { rootRun, resolution, onRootRunUpdate } = props;
   const [selectedPanelItem, setSelectedPanelItem] = useState("run");
   const [graphsByRootId, setGraphsByRootId] = useState<Map<string, Graph>>(
     new Map()
@@ -37,19 +38,24 @@ export default function PipelinePanels(props: {
           currentMap.set(rootRun.id, graph);
           return new Map(currentMap);
         });
-        //setSelectedPanelItem("run");
+        for (let i = 0; i < payload.runs.length; i++) {
+          if (payload.runs[i].id == rootRun.id) {
+            onRootRunUpdate(payload.runs[i]);
+            break;
+          }
+        }
         setIsLoaded(true);
       },
       setError: setError,
     });
-  }, [rootRun]);
+  }, [rootRun.id]);
 
   useEffect(() => {
     if (!graphsByRootId.has(rootRun.id)) {
       setIsLoaded(false);
       loadGraph();
     }
-  }, [rootRun]);
+  }, [rootRun.id]);
 
   useEffect(() => {
     graphSocket.removeAllListeners();
@@ -58,7 +64,7 @@ export default function PipelinePanels(props: {
         loadGraph();
       }
     });
-  }, [rootRun]);
+  }, [rootRun.id]);
 
   const runs = useMemo(
     () => graphsByRootId.get(rootRun.id)?.runs,

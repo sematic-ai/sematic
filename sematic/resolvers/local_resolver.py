@@ -96,6 +96,8 @@ class LocalResolver(SilentResolver):
 
         self._futures = list(cloned_graph.futures_by_original_id.values())
 
+        self._runs.clear()
+
         for future in self._futures:
             future.resolved_kwargs = self._get_resolved_kwargs(future)
             run_input_artifacts: Dict[str, Artifact] = {}

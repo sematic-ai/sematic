@@ -85,7 +85,11 @@ export default function PipelineView() {
           setRootRun={rootId === undefined}
         />
         {rootRun && resolution && (
-          <PipelinePanels rootRun={rootRun} resolution={resolution} />
+          <PipelinePanels
+            rootRun={rootRun}
+            resolution={resolution}
+            onRootRunUpdate={setRootRun}
+          />
         )}
       </Box>
     );
