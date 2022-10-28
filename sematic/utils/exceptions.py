@@ -86,33 +86,38 @@ class ExceptionMetadata:
 
 def format_exception_for_run(
     exception: Optional[BaseException] = None,
-) -> ExceptionMetadata:
+) -> Optional[ExceptionMetadata]:
     """Format an exception trace into a string for usage in a run.
 
     Returns
     -------
-    ExceptionMetadata
+    Optional[ExceptionMetadata]
+        If an exceptions is found on the traceback, an `ExceptionMetadata` object is
+        instantiated to describe it. If not, None is returned.
     """
     if exception is None:
         _, exception, __ = sys.exc_info()
-
-    repr_, cause_exception = None, exception
+        if exception is None:
+            # the failure was caused by another issue,
+            # not by an exception on the traceback
+            return None
 
     if isinstance(exception, CalculatorError) and exception.__cause__ is not None:
         # Don't display to the user the parts of the stack from Sematic
         # resolver if the root cause was a failure in Calculator code.
         tb_exception = traceback.TracebackException.from_exception(exception.__cause__)
         repr_ = "\n".join(tb_exception.format())
-        cause_exception = exception.__cause__
+        exception = exception.__cause__
     else:
         repr_ = traceback.format_exc()
 
-    assert isinstance(cause_exception, BaseException)
+    assert isinstance(exception, BaseException)
+
     return ExceptionMetadata(
         repr=repr_,
-        name=cause_exception.__class__.__name__,
-        module=cause_exception.__class__.__module__,
-        ancestors=ExceptionMetadata.ancestors_from_exception(cause_exception),
+        name=exception.__class__.__name__,
+        module=exception.__class__.__module__,
+        ancestors=ExceptionMetadata.ancestors_from_exception(exception),
     )
 
 
@@ -143,16 +148,18 @@ class ResolutionError(Exception):
         external_exception_metadata: Optional[ExceptionMetadata] = None,
     ):
         exception_msg = ResolutionError._make_metadata_msg(
-            "\nPipeline failure: ", exception_metadata
+            "\n\nPipeline failure:\n", exception_metadata
         )
         external_exception_msg = ResolutionError._make_metadata_msg(
-            "\nExternal failure:\n", external_exception_metadata
+            "\n\nExternal failure:\n", external_exception_metadata
         )
 
-        super(ResolutionError, self).__init__(
-            "The pipeline resolution failed due to previous errors"
+        self._msg = (
+            "The pipeline resolution failed due to previous errors!"
             f"{exception_msg}{external_exception_msg}"
         )
+
+        super(ResolutionError, self).__init__(self._msg)
 
     @staticmethod
     def _make_metadata_msg(

@@ -22,7 +22,9 @@ class SilentResolver(StateMachineResolver):
             value = future.calculator.calculate(**future.resolved_kwargs)
             self._update_future_with_value(future, value)
         except ResolutionError:
-            # was already properly handled
+            # only we raise ResolutionError when determining a failure is unrecoverable
+            # if we got this exception type, then the failure has already been properly
+            # handled and all is left to do is to terminate the execution.
             raise
         except Exception as e:
             logger.error("Error executing future", exc_info=e)

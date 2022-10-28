@@ -5,7 +5,7 @@ import pytest
 
 # Sematic
 from sematic.retry_settings import RetrySettings
-from sematic.utils.exceptions import ExceptionMetadata
+from sematic.utils.exceptions import ExceptionMetadata, KubernetesError
 
 
 class ParentError(Exception):
@@ -224,6 +224,90 @@ def test_matches_exceptions(matches: bool, exception_metadata: ExceptionMetadata
                 ),
             ),
             RetrySettings(exceptions=(ValueError,), retries=2),
+            2,
+        ),
+        (
+            False,
+            (
+                ExceptionMetadata(
+                    name=KubernetesError.__name__,
+                    module=KubernetesError.__module__,
+                    repr="KubernetesError",
+                    ancestors=ExceptionMetadata.ancestors_from_exception(
+                        KubernetesError
+                    ),
+                ),
+                ExceptionMetadata(
+                    name=Exception.__name__,
+                    module=Exception.__module__,
+                    repr="Exception",
+                    ancestors=ExceptionMetadata.ancestors_from_exception(Exception),
+                ),
+            ),
+            RetrySettings(exceptions=(ValueError,), retries=2),
+            1,
+        ),
+        (
+            True,
+            (
+                ExceptionMetadata(
+                    name=KubernetesError.__name__,
+                    module=KubernetesError.__module__,
+                    repr="KubernetesError",
+                    ancestors=ExceptionMetadata.ancestors_from_exception(
+                        KubernetesError
+                    ),
+                ),
+                ExceptionMetadata(
+                    name=ValueError.__name__,
+                    module=ValueError.__module__,
+                    repr="ValueError",
+                    ancestors=ExceptionMetadata.ancestors_from_exception(ValueError),
+                ),
+            ),
+            RetrySettings(exceptions=(ValueError,), retries=2),
+            1,
+        ),
+        (
+            True,
+            (
+                ExceptionMetadata(
+                    name=KubernetesError.__name__,
+                    module=KubernetesError.__module__,
+                    repr="KubernetesError",
+                    ancestors=ExceptionMetadata.ancestors_from_exception(
+                        KubernetesError
+                    ),
+                ),
+                ExceptionMetadata(
+                    name=Exception.__name__,
+                    module=Exception.__module__,
+                    repr="Exception",
+                    ancestors=ExceptionMetadata.ancestors_from_exception(Exception),
+                ),
+            ),
+            RetrySettings(exceptions=(KubernetesError,), retries=2),
+            1,
+        ),
+        (
+            False,
+            (
+                ExceptionMetadata(
+                    name=KubernetesError.__name__,
+                    module=KubernetesError.__module__,
+                    repr="KubernetesError",
+                    ancestors=ExceptionMetadata.ancestors_from_exception(
+                        KubernetesError
+                    ),
+                ),
+                ExceptionMetadata(
+                    name=Exception.__name__,
+                    module=Exception.__module__,
+                    repr="Exception",
+                    ancestors=ExceptionMetadata.ancestors_from_exception(Exception),
+                ),
+            ),
+            RetrySettings(exceptions=(KubernetesError,), retries=2),
             2,
         ),
     ),

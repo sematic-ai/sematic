@@ -1,5 +1,18 @@
-import { Alert, AlertTitle } from "@mui/material";
+import { Alert, AlertTitle, Link } from "@mui/material";
 import { ExceptionMetadata } from "../Models";
+
+const DISCORD_MESSAGE = (
+  "For assistance with this error message, you can reach out to us on "
+);
+
+function DiscordHelp() {
+  return (
+    <pre>
+      {DISCORD_MESSAGE}
+      <Link href="https://discord.gg/4KZJ6kYVax">Discord</Link>.
+    </pre>
+  );
+}
 
 export function Exception(props: { exception_metadata: ExceptionMetadata }) {
   const { exception_metadata } = props;
@@ -20,9 +33,12 @@ export function Exception(props: { exception_metadata: ExceptionMetadata }) {
   );
 }
 
-export function ExternalException(props: { exception_metadata: ExceptionMetadata }) {
+export function ExternalException(
+  props: { exception_metadata: ExceptionMetadata, discord_reference?: Boolean }
+) {
+  const { exception_metadata, discord_reference = true } = props;
   return (
-    <Alert severity="error" icon={false} >
+    <Alert severity="error" icon={false}>
       <AlertTitle>
         <pre
           style={{
@@ -30,7 +46,8 @@ export function ExternalException(props: { exception_metadata: ExceptionMetadata
             overflowWrap: "anywhere",
           }}
         >
-          {props.exception_metadata.repr}
+          {exception_metadata.repr}
+          {discord_reference && <DiscordHelp/>}
         </pre>
       </AlertTitle>
     </Alert>

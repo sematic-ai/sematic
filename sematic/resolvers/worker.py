@@ -77,14 +77,14 @@ def _fail_run(run: Run, e: BaseException) -> None:
     run.future_state = FutureState.FAILED
     run.failed_at = datetime.datetime.utcnow()
 
-    if run.exception_metadata is not None:
+    if run.exception_metadata is None:
+        # this means the exception probably happened in the Resolver code
+        run.exception_metadata = format_exception_for_run(e)
+    else:
         # if the run already has an exception marked on it, then it's the innermost cause
         # of the failure; any other exception generated afterwards is done so while trying
         # to handle the failure
         logger.warning("Got exception while handling run failure", exc_info=e)
-    else:
-        # this means the exception probably happened in the Resolver code
-        run.exception_metadata = format_exception_for_run(e)
 
     api_client.save_graph(run.id, [run], [], [])
 

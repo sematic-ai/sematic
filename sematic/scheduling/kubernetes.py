@@ -380,7 +380,7 @@ def _get_most_recent_pod_details(
         # try to build a message based on the latest container status
         if _is_none_or_empty(most_recent_pod.status.container_statuses):
             most_recent_container_condition_message = "There is no container!"
-            has_infra_failure = True
+            has_infra_failure = most_recent_pod.status.phase != "Pending"
         else:
             # there can be only one
             most_recent_container_status = most_recent_pod.status.container_statuses[
@@ -391,7 +391,7 @@ def _get_most_recent_pod_details(
             )
 
             if _has_container_failure(most_recent_container_status):
-                has_infra_failure = True
+                has_infra_failure = most_recent_pod.status.phase != "Pending"
 
     except OpenApiException as e:
         has_infra_failure = True

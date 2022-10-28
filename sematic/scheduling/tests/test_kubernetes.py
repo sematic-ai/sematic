@@ -261,11 +261,8 @@ IS_ACTIVE_CASES = [
             start_time=datetime.now().timestamp(),
             most_recent_condition=KubernetesJobCondition.Failed.value,
             most_recent_pod_phase_message="Pod phase is 'Failed'",
-            most_recent_pod_condition_message=(
-                "Pod condition is NOT 'Ready': ContainersNotReady; "
-                "containers with unready status: [sematic-worker-XXX]"
-            ),
-            most_recent_container_condition_message="Container is terminated: Error",
+            most_recent_pod_condition_message="Pod condition is 'Initialized'",
+            most_recent_container_condition_message="Container is terminated: OOMKilled",
             has_infra_failure=True,
         ),
         False,  # job has failed
