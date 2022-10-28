@@ -447,10 +447,6 @@ class LocalResolver(SilentResolver):
                 source_run_id = value.id
 
             # Attempt to link edges across nested graphs
-            # This relies on value identity, it's ok for complex objects
-            # but `a is a` is true for e.g. int, but `a` may not be the value passed in
-            # from the parent input.
-            # The parent_id field is currently not used in the DAG view.
             parent_id = None
 
             if future.parent_future is not None:
@@ -458,14 +454,14 @@ class LocalResolver(SilentResolver):
                     parent_name,
                     parent_value,
                 ) in future.parent_future.resolved_kwargs.items():
-                    if value is parent_value:
-                        parent_edge = self._get_input_edge(
-                            destination_run_id=future.parent_future.id,
-                            destination_name=parent_name,
-                        )
-                        if parent_edge is None:
-                            raise RuntimeError("Missing parent edge")
+                    parent_edge = self._get_input_edge(
+                        destination_run_id=future.parent_future.id,
+                        destination_name=parent_name,
+                    )
+                    if parent_edge is None:
+                        raise RuntimeError("Missing parent edge")
 
+                    if value is parent_value or artifact_id == parent_edge.artifact_id:
                         parent_id = parent_edge.id
 
             # This is idempotent, edges are indexed by a unique key.

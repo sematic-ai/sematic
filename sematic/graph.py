@@ -449,6 +449,7 @@ class Graph:
         func = run.get_func()
 
         future = func(**kwargs)
+        future.name = run.name
 
         cloned_graph.input_artifacts[future.id] = run_input_artifacts
 

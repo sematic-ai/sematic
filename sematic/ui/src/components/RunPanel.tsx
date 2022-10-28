@@ -12,7 +12,6 @@ import Tags from "./Tags";
 import { ActionMenu, ActionMenuItem } from "./ActionMenu";
 import { fetchJSON } from "../utils";
 import { UserContext } from "..";
-import { ModuleResolutionKind } from "typescript";
 
 export type Graph = {
   runs: Map<string, Run>;
@@ -76,12 +75,6 @@ export default function RunPanel(props: {
     });
     return ioArtifacts;
   }, [edges, artifactsById, selectedRun]);
-
-  const actions = [
-    [<FileCopy />, "Clone"],
-    [<History />, "Schedule"],
-    [<Insights />, "Share"],
-  ];
 
   return (
     <Box sx={{ gridColumn: 2, gridRow: 2, overflowY: "scroll" }}>
