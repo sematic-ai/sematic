@@ -1,13 +1,11 @@
-import { Exception, ExternalException } from "./Exception";
-import { Box } from "@mui/material";
-import { Run } from "../Models";
-import { fetchJSON } from "../utils";
+import { Alert, Box } from "@mui/material";
 import { useCallback, useContext, useState } from "react";
 import { UserContext } from "..";
+import { Run } from "../Models";
 import { LogLineRequestResponse } from "../Payloads";
-import ScrollingLogView from "./ScrollingLogView";
-import { MoreLinesCallback } from "./ScrollingLogView";
-import { Alert } from "@mui/material";
+import { fetchJSON } from "../utils";
+import { Exception, ExternalException } from "./Exception";
+import ScrollingLogView, { MoreLinesCallback } from "./ScrollingLogView";
 
 export default function LogPanel(props: { run: Run }) {
   const { run } = props;
@@ -59,10 +57,12 @@ export default function LogPanel(props: { run: Run }) {
   return (
     <Box sx={{ display: "grid" }} >
       <Box sx={{ gridRow: 1, paddingBottom: 4, }} >
-        {run.external_exception_json && <ExternalException exception_metadata={run.external_exception_json} />}
+        {run.external_exception_metadata_json && <ExternalException
+            exception_metadata={run.external_exception_metadata_json} />}
       </Box>
       <Box sx={{ gridRow: 2, paddingBottom: 4, }} >
-        {run.exception_json && <Exception exception_metadata={run.exception_json} />}
+        {run.exception_metadata_json &&
+            <Exception exception_metadata={run.exception_metadata_json} />}
       </Box>
       <Box sx={{ gridRow: 3, paddingBottom: 4, }} >
         {logView}

@@ -1,5 +1,4 @@
 # Standard Library
-import functools
 import logging
 import pathlib
 import uuid
@@ -28,30 +27,35 @@ from sematic.resolvers.resource_requirements import (
     ResourceRequirements,
 )
 from sematic.scheduling.external_job import KUBERNETES_JOB_KIND, ExternalJob, JobType
-from sematic.utils.exceptions import ExceptionMetadata
+from sematic.utils.exceptions import ExceptionMetadata, KubernetesError
 from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
 _kubeconfig_loaded = False
 
-POD_PHASE_PRECEDENCE = ["Pending", "Running", "Succeeded", "Failed", "Unknown"]
+# ordered from highest to lowest precedence
+# to be interpreted as: pods with phases earlier in the list are newer
+# interpreted from the list from this resource:
+# https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-conditions
+# no official documentation exists regarding "Unknown"'s state transitions
+POD_PHASE_PRECEDENCE = ["Unknown", "Pending", "Running", "Succeeded", "Failed"]
 POD_FAILURE_PHASES = {"Failed", "Unknown"}
+# ordered from highest to lowest precedence
+# to be interpreted as: conditions earlier in the list are more recent
+# interpreted from the list from this resource:
+# https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-conditions
 POD_CONDITION_PRECEDENCE = [
-    "PodScheduled",
-    "PodHasNetwork",
-    "Initialized",
-    "ContainersReady",
     "Ready",
+    "ContainersReady",
+    "Initialized",
+    "PodHasNetwork",
+    "PodScheduled",
 ]
 RESOLUTION_RESOURCE_REQUIREMENTS = ResourceRequirements(
     kubernetes=KubernetesResourceRequirements(
         requests={"cpu": "500m", "memory": "2Gi"},
     )
 )
-
-
-class KubernetesError(Exception):
-    pass
 
 
 @unique
@@ -69,7 +73,7 @@ class KubernetesExternalJob(ExternalJob):
     # Explanation of k8s status conditions:
     # https://maelvls.dev/kubernetes-conditions/
 
-    # TODO: deduplicate and rename these properties for ergonomics
+    # TODO #271: deduplicate and rename these properties for ergonomics
     # this would require a python migration of the db
 
     # pending_or_running_pod_count is the "active" property.
@@ -79,7 +83,7 @@ class KubernetesExternalJob(ExternalJob):
     still_exists: bool
     start_time: Optional[float]
     most_recent_condition: Optional[str]
-    most_recent_pod_phase: Optional[str]
+    most_recent_pod_phase_message: Optional[str]
     most_recent_pod_condition_message: Optional[str]
     most_recent_container_condition_message: Optional[str]
     has_infra_failure: Optional[bool]
@@ -99,7 +103,7 @@ class KubernetesExternalJob(ExternalJob):
             still_exists=True,
             start_time=None,
             most_recent_condition=None,
-            most_recent_pod_phase=None,
+            most_recent_pod_phase_message=None,
             most_recent_pod_condition_message=None,
             most_recent_container_condition_message=None,
             has_infra_failure=False,
@@ -166,7 +170,7 @@ class KubernetesExternalJob(ExternalJob):
             [
                 message
                 for message in (
-                    self.most_recent_pod_phase,
+                    self.most_recent_pod_phase_message,
                     self.most_recent_pod_condition_message,
                     self.most_recent_container_condition_message,
                 )
@@ -215,24 +219,20 @@ def _v1_pod_precedence_key(pod: V1Pod) -> int:
 def _v1_pod_condition_precedence_key(condition: V1PodCondition) -> Any:
     """
     To be used as a sorting key when determining the precedence of `V1PodCondition`s.
+
+    Unknown conditions are first. True conditions follow. Then False conditions come last.
     """
+    key = -1
 
-    def condition_cmp(c1: V1PodCondition, c2: V1PodCondition) -> int:
-        c1_phase_index = (
-            POD_CONDITION_PRECEDENCE.index(c1.type)
-            if c1.type in POD_CONDITION_PRECEDENCE
-            else -1
-        )
+    if condition.type in POD_CONDITION_PRECEDENCE:
+        key = POD_CONDITION_PRECEDENCE.index(condition.type)
 
-        c2_phase_index = (
-            POD_CONDITION_PRECEDENCE.index(c2.type)
-            if c2.type in POD_CONDITION_PRECEDENCE
-            else -1
-        )
+        # conditions that are not True have not been achieved yet
+        # True conditions are considered to reflect the true state, if any
+        if condition.status != "True":
+            key += len(POD_CONDITION_PRECEDENCE)
 
-        return c2_phase_index - c1_phase_index
-
-    return functools.cmp_to_key(condition_cmp)(condition)
+    return key
 
 
 def _make_final_message(
@@ -253,7 +253,7 @@ def _has_container_failure(container_status: Optional[V1ContainerStatus]) -> boo
     Returns whether the `V1ContainerStatus` object indicates any failure or abnormality.
     """
     if container_status is None or container_status.state is None:
-        return True
+        return False
     return container_status.state.terminated is not None
 
 
@@ -266,17 +266,22 @@ def _get_standardized_container_state(
     """
     if container_status is None or container_status.state is None:
         return "Container state is unknown!", None, None
+
     state = container_status.state
+
     if state.waiting is not None:
         return "Container is waiting", state.waiting.reason, state.waiting.message
+
     if state.running is not None:
         return "Container is running", None, None
+
     if state.terminated is not None:
         return (
             "Container is terminated",
             state.terminated.reason,
             state.terminated.message,
         )
+
     return "Container state is unreadable!", None, None
 
 
@@ -349,7 +354,7 @@ def _get_most_recent_pod_details(
         if most_recent_pod.status is None:
             return None, None, None, True
 
-        most_recent_pod_phase_message = f"Pod phase is: {most_recent_pod.status.phase}"
+        most_recent_pod_phase_message = f"Pod phase is '{most_recent_pod.status.phase}'"
 
         # try to build a message based on the latest pod condition
         if _is_none_or_empty(most_recent_pod.status.conditions):
@@ -396,7 +401,7 @@ def _get_most_recent_pod_details(
             exc_info=e,
         )
 
-    except BaseException as e:
+    except Exception as e:
         has_infra_failure = True
         logger.error(
             "Got exception while extracting information from pods for job %s",
@@ -523,7 +528,7 @@ def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
 
     job.most_recent_condition = _get_most_recent_job_condition(job, k8s_job)
     (
-        job.most_recent_pod_phase,
+        job.most_recent_pod_phase_message,
         job.most_recent_pod_condition_message,
         job.most_recent_container_condition_message,
         job.has_infra_failure,

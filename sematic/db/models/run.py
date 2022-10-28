@@ -105,12 +105,12 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
     )
     source_code: str = Column(types.String(), nullable=False)
     nested_future_id: str = Column(types.String(), nullable=True)
-    exception_json: Optional[Dict[str, Union[str, List[str]]]] = Column(
+    exception_metadata_json: Optional[Dict[str, Union[str, List[str]]]] = Column(
         types.JSON(), nullable=True
     )
-    external_exception_json: Optional[Dict[str, Union[str, List[str]]]] = Column(
-        types.JSON(), nullable=True
-    )
+    external_exception_metadata_json: Optional[
+        Dict[str, Union[str, List[str]]]
+    ] = Column(types.JSON(), nullable=True)
     external_jobs_json: Optional[List[Dict[str, Any]]] = Column(
         types.JSON(), nullable=True
     )
@@ -163,45 +163,27 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
 
     @property
     def exception_metadata(self) -> Optional[ExceptionMetadata]:
-        if self.exception_json is None:
-            return None
-
-        return ExceptionMetadata(
-            repr=self.exception_json["repr"],  # type: ignore
-            name=self.exception_json["name"],  # type: ignore
-            module=self.exception_json["module"],  # type: ignore
-            ancestors=self.exception_json.get("ancestors", []),  # type: ignore
-        )
+        return Run._dict_to_exception_metadata(self.exception_metadata_json)
 
     @exception_metadata.setter
     def exception_metadata(
         self, exception_metadata: Optional[ExceptionMetadata]
     ) -> None:
-        if exception_metadata is None:
-            self.exception_json = None
-        else:
-            self.exception_json = asdict(exception_metadata)
+        self.exception_metadata_json = Run._exception_metadata_to_dict(
+            exception_metadata
+        )
 
     @property
     def external_exception_metadata(self) -> Optional[ExceptionMetadata]:
-        if self.external_exception_json is None:
-            return None
-
-        return ExceptionMetadata(
-            repr=self.external_exception_json["repr"],  # type: ignore
-            name=self.external_exception_json["name"],  # type: ignore
-            module=self.external_exception_json["module"],  # type: ignore
-            ancestors=self.external_exception_json.get("ancestors", []),  # type: ignore
-        )
+        return Run._dict_to_exception_metadata(self.external_exception_metadata_json)
 
     @external_exception_metadata.setter
     def external_exception_metadata(
         self, exception_metadata: Optional[ExceptionMetadata]
     ) -> None:
-        if exception_metadata is None:
-            self.external_exception_json = None
-        else:
-            self.external_exception_json = asdict(exception_metadata)
+        self.external_exception_metadata_json = Run._exception_metadata_to_dict(
+            exception_metadata
+        )
 
     @property
     def external_jobs(self) -> Tuple[ExternalJob, ...]:
@@ -257,4 +239,30 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
                 f"future_state={self.future_state}",
                 f"parent_id={self.parent_id})",
             )
+        )
+
+    @staticmethod
+    def _exception_metadata_to_dict(
+        exception_metadata: Optional[ExceptionMetadata],
+    ) -> Optional[Dict[str, Union[str, List[str]]]]:
+        """
+        Converts an `ExceptionMetadata` object to its Dict representation.
+        """
+        return asdict(exception_metadata) if exception_metadata is not None else None
+
+    @staticmethod
+    def _dict_to_exception_metadata(
+        dict_: Optional[Dict[str, Union[str, List[str]]]]
+    ) -> Optional[ExceptionMetadata]:
+        """
+        Instantiates an `ExceptionMetadata` object from a Dict representation.
+        """
+        if dict_ is None:
+            return None
+
+        return ExceptionMetadata(
+            repr=dict_["repr"],  # type: ignore
+            name=dict_["name"],  # type: ignore
+            module=dict_["module"],  # type: ignore
+            ancestors=dict_.get("ancestors", []),  # type: ignore
         )

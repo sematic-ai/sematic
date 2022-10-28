@@ -16,9 +16,9 @@ CREATE TABLE runs (
     nested_future_id character(32),
     external_jobs_json JSONB,
     resource_requirements_json JSONB,
-    exception_json JSONB,
+    exception_metadata_json JSONB,
     container_image_uri TEXT,
-    external_exception_json JSONB,
+    external_exception_metadata_json JSONB,
 
     PRIMARY KEY (id)
 );
@@ -111,4 +111,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20221013070256'),
   ('20221017233940'),
   ('20221019225916'),
-  ('20221025201847');
+  ('20221025201847'),
+  ('20221027233641');

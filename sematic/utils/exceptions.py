@@ -116,6 +116,12 @@ def format_exception_for_run(
     )
 
 
+class KubernetesError(Exception):
+    """An error originated in external Kubernetes compute infrastructure."""
+
+    pass
+
+
 class ResolutionError(Exception):
     """The pipeline resolution has failed.
 

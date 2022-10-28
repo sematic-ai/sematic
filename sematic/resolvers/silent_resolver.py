@@ -4,7 +4,7 @@ import logging
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
-from sematic.utils.exceptions import format_exception_for_run
+from sematic.utils.exceptions import ResolutionError, format_exception_for_run
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,9 @@ class SilentResolver(StateMachineResolver):
             self._start_inline_execution(future.id)
             value = future.calculator.calculate(**future.resolved_kwargs)
             self._update_future_with_value(future, value)
+        except ResolutionError:
+            # was already properly handled
+            raise
         except Exception as e:
             logger.error("Error executing future", exc_info=e)
             self._handle_future_failure(future, format_exception_for_run(e))

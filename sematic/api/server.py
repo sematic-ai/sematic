@@ -92,7 +92,7 @@ def run_wsgi(daemon: bool):
 def make_log_config():
     stdout_handler_list = ["stdout"] if get_config().server_log_to_stdout else []
     full_handler_list = ["default", "error"] + stdout_handler_list
-    root_logger_config = {"level": "DEBUG", "handlers": full_handler_list}
+    root_logger_config = {"level": "INFO", "handlers": full_handler_list}
     log_rotation_settings = {
         "formatter": "standard",
         "class": "logging.handlers.RotatingFileHandler",

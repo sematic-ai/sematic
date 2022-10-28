@@ -193,7 +193,7 @@ def test_schedule_run(
             still_exists=True,
             start_time=None,
             most_recent_condition=None,
-            most_recent_pod_phase=None,
+            most_recent_pod_phase_message=None,
             most_recent_pod_condition_message=None,
             most_recent_container_condition_message=None,
             has_infra_failure=False,
@@ -245,7 +245,7 @@ def test_update_future_states(
             still_exists=True,
             start_time=1.01,
             most_recent_condition=None,
-            most_recent_pod_phase=None,
+            most_recent_pod_phase_message=None,
             most_recent_pod_condition_message=None,
             most_recent_container_condition_message=None,
             has_infra_failure=False,
@@ -283,7 +283,7 @@ def test_update_run_disappeared(
             still_exists=True,
             start_time=1.01,
             most_recent_condition=None,
-            most_recent_pod_phase=None,
+            most_recent_pod_phase_message=None,
             most_recent_pod_condition_message=None,
             most_recent_container_condition_message=None,
             has_infra_failure=False,
@@ -312,11 +312,8 @@ def test_update_run_disappeared(
         assert loaded.external_exception_metadata == ExceptionMetadata(
             repr="The Kubernetes job state is unknown",
             name="KubernetesError",
-            module="sematic.scheduling.kubernetes",
-            ancestors=[
-                f"{ValueError.__module__}.{ValueError.__name__}",
-                f"{Exception.__module__}.{Exception.__name__}",
-            ],
+            module="sematic.utils.exceptions",
+            ancestors=[f"{Exception.__module__}.{Exception.__name__}"],
         )
 
 
@@ -337,7 +334,7 @@ def test_update_run_k8_pod_error(
             still_exists=True,
             start_time=1.01,
             most_recent_condition=None,
-            most_recent_pod_phase=None,
+            most_recent_pod_phase_message=None,
             most_recent_pod_condition_message=None,
             most_recent_container_condition_message=None,
             has_infra_failure=False,
@@ -350,7 +347,7 @@ def test_update_run_k8_pod_error(
         job.still_exists = False
         assert not job.is_active()
         job.has_infra_failure = True
-        job.most_recent_pod_phase = "Failed"
+        job.most_recent_pod_phase_message = "Failed"
         job.most_recent_pod_condition_message = "test pod condition"
         job.most_recent_container_condition_message = "test container condition"
         mock_k8s.refresh_job.side_effect = lambda j: job
@@ -367,11 +364,8 @@ def test_update_run_k8_pod_error(
         assert loaded.external_exception_metadata == ExceptionMetadata(
             repr="Failed\ntest pod condition\ntest container condition",
             name="KubernetesError",
-            module="sematic.scheduling.kubernetes",
-            ancestors=[
-                f"{ValueError.__module__}.{ValueError.__name__}",
-                f"{Exception.__module__}.{Exception.__name__}",
-            ],
+            module="sematic.utils.exceptions",
+            ancestors=[f"{Exception.__module__}.{Exception.__name__}"],
         )
 
 

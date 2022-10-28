@@ -259,8 +259,7 @@ def _get_run_if_modified(
     new_future_state, new_external_jobs = update_run_status(future_state, jobs)
     run = None
 
-    # TODO: implement safer comparison logic
-    # these jobs variables can be either tuples or lists of polymorphic dataclasses
+    # we standardize to tuples, but sometimes we get lists
     if tuple(new_external_jobs) != tuple(jobs):
         run = get_run(run_id)
         run.external_jobs = new_external_jobs

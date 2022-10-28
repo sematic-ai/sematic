@@ -22,7 +22,7 @@ export function Exception(props: { exception_metadata: ExceptionMetadata }) {
 
 export function ExternalException(props: { exception_metadata: ExceptionMetadata }) {
   return (
-    <Alert severity="error" variant="outlined" sx={{ alignItems: 'center' }} >
+    <Alert severity="error" icon={false} >
       <AlertTitle>
         <pre
           style={{
