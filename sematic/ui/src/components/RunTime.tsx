@@ -14,9 +14,9 @@ export function RunTime(props: { run: Run; prefix?: string }) {
     (endedAt.getTime() - startedAt.getTime()) / 1000
   );
   let displayH: number = Math.floor(durationS / 3600);
-  let displayM: number = Math.floor((durationS - displayH * 3600) / 60);
+  let displayM: number = Math.floor((durationS % 3600) / 60);
   let displayS: number = Math.round(
-    durationS - displayH * 3600 - displayM * 60
+    durationS % 60
   );
 
   return (
