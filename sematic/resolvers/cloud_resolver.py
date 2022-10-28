@@ -255,6 +255,11 @@ class CloudResolver(LocalResolver):
 
         else:
             output_edge = self._get_output_edges(run.id)[0]
+
+            # Pleasing mymy
+            if output_edge.artifact_id is None:
+                raise RuntimeError("Missing output artifact")
+
             output_artifact = self._artifacts[output_edge.artifact_id]
             self._output_artifacts_by_run_id[run.id] = output_artifact
             value = get_artifact_value(output_artifact, storage=self._storage)
