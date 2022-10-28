@@ -21,7 +21,7 @@ from sematic.api.endpoints.events import (
     broadcast_resolution_cancel,
 )
 from sematic.api.endpoints.request_parameters import jsonify_error
-from sematic.db.models.factories import clone_resolution, clone_run
+from sematic.db.models.factories import clone_resolution, clone_root_run
 from sematic.db.models.resolution import InvalidResolution, Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -175,7 +175,7 @@ def rerun_resolution_endpoint(
 
     original_root_run, _, original_edges = get_run_graph(original_resolution.root_id)
 
-    root_run, edges = clone_run(original_root_run[0], original_edges)
+    root_run, edges = clone_root_run(original_root_run[0], original_edges)
     save_graph(runs=[root_run], edges=edges, artifacts=[])
 
     resolution = clone_resolution(original_resolution, root_id=root_run.id)

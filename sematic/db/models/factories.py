@@ -55,11 +55,9 @@ def make_run_from_future(future: AbstractFuture) -> Run:
     return run
 
 
-def clone_run(
-    run: Run, edges: List[Edge], parent_id: Optional[str] = None
-) -> Tuple[Run, List[Edge]]:
+def clone_root_run(run: Run, edges: List[Edge]) -> Tuple[Run, List[Edge]]:
     """
-    Clone a run and its edges.
+    Clone a root run and its edges.
 
     Parameters
     ----------
@@ -67,9 +65,6 @@ def clone_run(
         Original run to clone.
     edges: List[Edge]
         Original run's input and output edges.
-    parent_id: Optional[str]
-        The parent run ID to assign to the cloned run. Should be None for root
-        runs.
 
     Returns
     -------
@@ -84,7 +79,7 @@ def clone_run(
         future_state=FutureState.CREATED,
         name=run.name,
         calculator_path=run.calculator_path,
-        parent_id=parent_id,
+        parent_id=None,
         description=run.description,
         tags=run.tags,
         source_code=run.source_code,
@@ -94,14 +89,14 @@ def clone_run(
     # Set this outside the constructor because the constructor expects
     # a json encodable, but this property will auto-update the json
     # encodable field.
-    run.resource_requirements = run.resource_requirements
+    cloned_run.resource_requirements = run.resource_requirements
 
     cloned_edges = [
         Edge(
             destination_run_id=(run_id if edge.destination_run_id == run.id else None),
             source_run_id=(run_id if edge.source_run_id == run.id else None),
             destination_name=edge.destination_name,
-            artifact_id=edge.artifact_id,
+            artifact_id=None,
         )
         for edge in edges
     ]
@@ -126,15 +121,19 @@ def clone_resolution(resolution: Resolution, root_id: str) -> Resolution:
     Resolution
         Cloned resolution.
     """
-    cloned_resolution = Resolution(  # type: ignore
+    cloned_resolution = Resolution(
         root_id=root_id,
         status=ResolutionStatus.CREATED,
         kind=resolution.kind,
-        git_info=resolution.git_info,
         settings_env_vars=resolution.settings_env_vars,
         container_image_uri=resolution.container_image_uri,
         container_image_uris=resolution.container_image_uris,
     )
+
+    # Set this outside the constructor because the constructor expects
+    # a json encodable, but this property will auto-update the json
+    # encodable field.
+    cloned_resolution.git_info = resolution.git_info
 
     return cloned_resolution
 

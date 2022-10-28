@@ -110,6 +110,9 @@ def make_run(**kwargs) -> Run:
         calculator_path="path.to.test_run",
         root_id=id,
         container_image_uri="foobar",
+        description="Foo Bar",
+        tags=["foo", "bar"],
+        source_code="def foo(): pass",
     )
     run.resource_requirements = ResourceRequirements(
         kubernetes=KubernetesResourceRequirements(
