@@ -24,6 +24,8 @@ sematic_py_lib(
     srcs = ["factories.py"],
     deps = [
         ":artifact",
+        ":edge",
+        ":resolution",
         ":run",
         ":user",
         "//sematic:abstract_future",
