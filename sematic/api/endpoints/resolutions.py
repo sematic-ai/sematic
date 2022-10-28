@@ -173,9 +173,10 @@ def rerun_resolution_endpoint(
     if flask.request.json and "rerun_from" in flask.request.json:
         rerun_from = flask.request.json["rerun_from"]
 
-    original_root_run, _, original_edges = get_run_graph(original_resolution.root_id)
+    original_runs, _, original_edges = get_run_graph(original_resolution.root_id)
+    original_root_runs = original_runs[0]
 
-    root_run, edges = clone_root_run(original_root_run[0], original_edges)
+    root_run, edges = clone_root_run(original_root_run, original_edges)
     save_graph(runs=[root_run], edges=edges, artifacts=[])
 
     resolution = clone_resolution(original_resolution, root_id=root_run.id)
