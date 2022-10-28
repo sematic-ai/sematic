@@ -58,6 +58,25 @@ def make_run_from_future(future: AbstractFuture) -> Run:
 def clone_run(
     run: Run, edges: List[Edge], parent_id: Optional[str] = None
 ) -> Tuple[Run, List[Edge]]:
+    """
+    Clone a run and its edges.
+
+    Parameters
+    ----------
+    run: Run
+        Original run to clone.
+    edges: List[Edge]
+        Original run's input and output edges.
+    parent_id: Optional[str]
+        The parent run ID to assign to the cloned run. Should be None for root
+        runs.
+
+    Returns
+    -------
+    Tuple[Run, List[Edge]]
+        A tuple whose first element is the cloned run, and the second element is
+        the list of cloned edges.
+    """
     run_id = make_future_id()
     cloned_run = Run(
         id=run_id,
@@ -91,7 +110,23 @@ def clone_run(
 
 
 def clone_resolution(resolution: Resolution, root_id: str) -> Resolution:
-    cloned_resolution = Resolution(
+    """
+    Clone a resolution.
+
+    Parameters
+    ----------
+    resolution: Resolution
+        Original resolution to clone.
+    root_id: str
+        The root ID for this resolution. Typically comes from the cloned root
+        run.
+
+    Returns
+    -------
+    Resolution
+        Cloned resolution.
+    """
+    cloned_resolution = Resolution(  # type: ignore
         root_id=root_id,
         status=ResolutionStatus.CREATED,
         kind=resolution.kind,
