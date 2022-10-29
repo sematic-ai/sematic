@@ -40,7 +40,8 @@ click
 
 # Examples
 torch
-torchvision
+torchvision==0.13.1  # Because 0.14.0 fails with
+# AssertionError: In torchvision-0.14.0-cp39-cp39-manylinux1_x86_64.whl, torchvision-0.14.0.dist-info/RECORD is not mentioned in RECORD
 torchmetrics
 plotly
 pandas
