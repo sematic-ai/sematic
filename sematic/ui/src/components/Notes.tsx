@@ -1,15 +1,15 @@
-import { ContentCopy } from "@mui/icons-material";
-import { Box, ButtonBase, Tooltip, Typography, useTheme } from "@mui/material";
-import { useCallback, useContext } from "react";
-import { redirect, useNavigate } from "react-router-dom";
-import { Note, Run, User } from "../Models";
+import { Box, ButtonBase, Typography, useTheme } from "@mui/material";
+import { Note, User } from "../Models";
 import { CopyButton } from "./CopyButton";
-import { SnackBarContext } from "./SnackBarProvider";
 import TimeAgo from "./TimeAgo";
 import UserAvatar from "./UserAvatar";
 
-export function NoteView(props: { note: Note; author: User; rootRun: Run }) {
-  const { note, author, rootRun } = props;
+export function NoteView(props: {
+  note: Note;
+  author: User;
+  onRootIdChange: (rootId: string) => void;
+}) {
+  const { note, author, onRootIdChange } = props;
   const theme = useTheme();
 
   return (
@@ -67,13 +67,17 @@ export function NoteView(props: { note: Note; author: User; rootRun: Run }) {
   );
 }
 
-function RunId(props: { runId: string; link?: string; trim?: boolean }) {
-  const { runId, trim = true, link } = props;
-  const navigate = useNavigate();
+function RunId(props: {
+  runId: string;
+  link?: string;
+  trim?: boolean;
+  onClick?: (runId: string) => void;
+}) {
+  const { runId, trim = true, link, onClick } = props;
 
   return (
     <>
-      <ButtonBase onClick={() => link && navigate(link)} disabled={!link}>
+      <ButtonBase onClick={() => onClick && onClick(runId)} disabled={!link}>
         <code
           style={{
             fontSize: 12,

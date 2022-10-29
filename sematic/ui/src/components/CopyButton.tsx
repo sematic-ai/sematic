@@ -8,7 +8,7 @@ export function CopyButton(props: {
   message?: string;
   children?: any;
 }) {
-  const { text, message = "Copied.", children } = props;
+  const { text, message = "Copied", children } = props;
 
   const { setSnackMessage } = useContext(SnackBarContext);
 

@@ -96,6 +96,10 @@ class LocalResolver(SilentResolver):
 
         self._futures = list(cloned_graph.futures_by_original_id.values())
 
+        # This is necessary, otherwise the root run will not be updated with its
+        # cloned status. In detached execution, or rerun, the root run is
+        # created outside the resolver (either by the server, or by the resolver
+        # submitting the detached resolution from the user's machine).
         self._runs.clear()
 
         for future in self._futures:

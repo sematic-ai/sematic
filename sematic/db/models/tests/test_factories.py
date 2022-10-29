@@ -139,10 +139,14 @@ def test_clone_root_run(run: Run):  # noqa: F811
     assert cloned_run.name == run.name
     assert cloned_run.calculator_path == run.calculator_path
     assert cloned_run.parent_id is None
+    assert cloned_run.description is not None
     assert cloned_run.description == run.description
     assert cloned_run.tags == run.tags
+    assert cloned_run.source_code is not None
     assert cloned_run.source_code == run.source_code
+    assert cloned_run.container_image_uri is not None
     assert cloned_run.container_image_uri == run.container_image_uri
+    assert cloned_run.resource_requirements is not None
     assert cloned_run.resource_requirements == run.resource_requirements
 
     assert cloned_edges[0].destination_run_id == cloned_run.id

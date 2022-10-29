@@ -13,8 +13,9 @@ export default function PipelinePanels(props: {
   rootRun: Run;
   resolution: Resolution;
   onRootRunUpdate: (run: Run) => void;
+  onRootIdChange: (rootId: string) => void;
 }) {
-  const { rootRun, resolution, onRootRunUpdate } = props;
+  const { rootRun, resolution, onRootRunUpdate, onRootIdChange } = props;
   const [selectedPanelItem, setSelectedPanelItem] = useState("run");
   const [graphsByRootId, setGraphsByRootId] = useState<Map<string, Graph>>(
     new Map()
@@ -121,7 +122,11 @@ export default function PipelinePanels(props: {
             setSelectedPanelItem("run");
           }}
         />
-        <NotesPanel rootRun={rootRun} selectedRun={selectedRun} />
+        <NotesPanel
+          rootRun={rootRun}
+          selectedRun={selectedRun}
+          onRootIdChange={onRootIdChange}
+        />
       </>
     );
   }
