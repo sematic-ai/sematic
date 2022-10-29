@@ -89,6 +89,7 @@ export default function PipelineView() {
             rootRun={rootRun}
             resolution={resolution}
             onRootRunUpdate={setRootRun}
+            onRootIdChange={changeRootRunId}
           />
         )}
       </Box>

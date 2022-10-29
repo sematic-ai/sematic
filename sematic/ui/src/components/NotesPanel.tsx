@@ -17,7 +17,7 @@ import { NoteView } from "./Notes";
 export default function NotesPanel(props: {
   rootRun: Run;
   selectedRun: Run;
-  onRootIdChange: string;
+  onRootIdChange: (rootId: string) => void;
 }) {
   const theme = useTheme();
   const { user } = useContext(UserContext);
