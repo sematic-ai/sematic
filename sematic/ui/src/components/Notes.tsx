@@ -55,12 +55,7 @@ export function NoteView(props: {
           }}
         >
           <TimeAgo date={note.created_at} /> on run{" "}
-          <RunId
-            runId={note.root_id}
-            // Doesn't work yet
-            //link={"/pipelines/" + rootRun.calculator_path + "/" + note.root_id}
-            trim
-          />
+          <RunId runId={note.root_id} onClick={onRootIdChange} trim />
         </Typography>
       </Box>
     </Box>
