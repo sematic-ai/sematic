@@ -64,15 +64,14 @@ export function NoteView(props: {
 
 function RunId(props: {
   runId: string;
-  link?: string;
   trim?: boolean;
   onClick?: (runId: string) => void;
 }) {
-  const { runId, trim = true, link, onClick } = props;
+  const { runId, trim = true, onClick } = props;
 
   return (
     <>
-      <ButtonBase onClick={() => onClick && onClick(runId)} disabled={!link}>
+      <ButtonBase onClick={() => onClick && onClick(runId)} disabled={!onClick}>
         <code
           style={{
             fontSize: 12,
