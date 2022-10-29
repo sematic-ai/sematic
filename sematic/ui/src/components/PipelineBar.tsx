@@ -109,7 +109,7 @@ function PipelineActionMenu(props: {
           <Typography>Coming soon.</Typography>
         </ActionMenuItem>
         <ActionMenuItem title="Copy share link" onClick={onCopyShareClick}>
-          <Typography>Copy link to this exact pipeline execution.</Typography>
+          <Typography>Copy link to this exact resolution.</Typography>
         </ActionMenuItem>
         <ActionMenuItem
           title="Cancel Execution"

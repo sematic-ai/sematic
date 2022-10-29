@@ -12,6 +12,7 @@ import Tags from "./Tags";
 import { ActionMenu, ActionMenuItem } from "./ActionMenu";
 import { fetchJSON } from "../utils";
 import { UserContext } from "..";
+import { SnackBarContext } from "./SnackBarProvider";
 
 export type Graph = {
   runs: Map<string, Run>;
@@ -135,6 +136,8 @@ function RunActionMenu(props: {
 
   const { user } = useContext(UserContext);
 
+  const { setSnackMessage } = useContext(SnackBarContext);
+
   const onRerunClick = useCallback(() => {
     fetchJSON({
       url: "/api/v1/resolutions/" + run.root_id + "/rerun",
@@ -142,7 +145,9 @@ function RunActionMenu(props: {
       body: { rerun_from: run.id },
       apiKey: user?.api_key,
       callback: (payload) => {},
-      setError: (error) => {},
+      setError: (error) => {
+        if (error) setSnackMessage("Failed to trigger a rerun");
+      },
     });
   }, []);
 
@@ -164,11 +169,13 @@ function RunActionMenu(props: {
         <Typography>All upstream runs will use cached outputs.</Typography>
         <Typography>Only available for cloud-ran pipelines.</Typography>
       </ActionMenuItem>
-      {false && (
-        <ActionMenuItem title="Copy share link">
+
+      {/* 
+      TODO: Implement nested run deep linking
+      <ActionMenuItem title="Copy share link">
           <Typography>Copy link to this exact run.</Typography>
-        </ActionMenuItem>
-      )}
+  </ActionMenuItem>
+  */}
     </ActionMenu>
   );
 }
