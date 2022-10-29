@@ -465,7 +465,7 @@ class LocalResolver(SilentResolver):
                     if parent_edge is None:
                         raise RuntimeError("Missing parent edge")
 
-                    if value is parent_value or artifact_id == parent_edge.artifact_id:
+                    if value is parent_value:
                         parent_id = parent_edge.id
 
             # This is idempotent, edges are indexed by a unique key.
