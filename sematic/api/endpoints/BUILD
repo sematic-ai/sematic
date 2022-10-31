@@ -19,7 +19,6 @@ sematic_py_lib(
         "//sematic/db/models:run",
         "//sematic/db/models:user",
         "//sematic/scheduling:job_scheduler",
-        "//sematic/utils:exceptions",
     ],
 )
 

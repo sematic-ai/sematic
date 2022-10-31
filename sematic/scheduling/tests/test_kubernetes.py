@@ -1,7 +1,10 @@
 # Standard Library
+from datetime import datetime
 from unittest import mock
 
 import pytest
+
+# Third-party
 from kubernetes.client.exceptions import ApiException
 
 # Sematic
@@ -143,9 +146,14 @@ IS_ACTIVE_CASES = [
             ),
             pending_or_running_pod_count=0,
             succeeded_pod_count=0,
-            most_recent_condition=None,
             has_started=False,
             still_exists=True,
+            start_time=None,
+            most_recent_condition=None,
+            most_recent_pod_phase_message=None,
+            most_recent_pod_condition_message=None,
+            most_recent_container_condition_message=None,
+            has_infra_failure=False,
         ),
         True,  # job hasn't started yet
     ),
@@ -158,9 +166,62 @@ IS_ACTIVE_CASES = [
             ),
             pending_or_running_pod_count=1,
             succeeded_pod_count=0,
-            most_recent_condition=None,
             has_started=True,
             still_exists=True,
+            start_time=datetime.now().timestamp(),
+            most_recent_condition=None,
+            most_recent_pod_phase_message="Pod phase is 'Pending'",
+            most_recent_pod_condition_message="Pod condition is 'Initialized'",
+            most_recent_container_condition_message=(
+                "Container is waiting: ContainerCreating"
+            ),
+            has_infra_failure=False,
+        ),
+        True,  # job has started and has pending pods
+    ),
+    (
+        KubernetesExternalJob(
+            kind="k8s",
+            try_number=0,
+            external_job_id=KubernetesExternalJob.make_external_job_id(
+                "a", "b", JobType.worker
+            ),
+            pending_or_running_pod_count=1,
+            succeeded_pod_count=0,
+            has_started=True,
+            still_exists=True,
+            start_time=datetime.now().timestamp(),
+            most_recent_condition=None,
+            most_recent_pod_phase_message="Pod phase is 'Pending'",
+            most_recent_pod_condition_message=(
+                "Pod condition is NOT 'PodScheduled': Unschedulable; "
+                "0/2 nodes are available: "
+                "1 Insufficient cpu, "
+                "1 Insufficient memory, "
+                "1 node(s) didn't match Pod's node affinity/selector."
+            ),
+            most_recent_container_condition_message=None,
+            has_infra_failure=False,
+        ),
+        True,  # job has started and has unschedulable pods
+    ),
+    (
+        KubernetesExternalJob(
+            kind="k8s",
+            try_number=0,
+            external_job_id=KubernetesExternalJob.make_external_job_id(
+                "a", "b", JobType.worker
+            ),
+            pending_or_running_pod_count=1,
+            succeeded_pod_count=0,
+            has_started=True,
+            still_exists=True,
+            start_time=datetime.now().timestamp(),
+            most_recent_condition=None,
+            most_recent_pod_phase_message="Pod phase is 'Running'",
+            most_recent_pod_condition_message="Pod condition is 'Ready'",
+            most_recent_container_condition_message="Container is running",
+            has_infra_failure=False,
         ),
         True,  # job has started and has active pods
     ),
@@ -173,9 +234,16 @@ IS_ACTIVE_CASES = [
             ),
             pending_or_running_pod_count=0,
             succeeded_pod_count=1,
-            most_recent_condition=KubernetesJobCondition.Complete.value,
             has_started=True,
             still_exists=True,
+            start_time=datetime.now().timestamp(),
+            most_recent_condition=KubernetesJobCondition.Complete.value,
+            # k8 reports the pods from our completed jobs ar running for a while
+            # probably a race condition
+            most_recent_pod_phase_message="Pod phase is 'Running'",
+            most_recent_pod_condition_message="Pod condition is 'Ready'",
+            most_recent_container_condition_message="...",
+            has_infra_failure=False,
         ),
         False,  # job has completed successfully
     ),
@@ -188,9 +256,14 @@ IS_ACTIVE_CASES = [
             ),
             pending_or_running_pod_count=0,
             succeeded_pod_count=0,
-            most_recent_condition=KubernetesJobCondition.Failed.value,
             has_started=True,
             still_exists=True,
+            start_time=datetime.now().timestamp(),
+            most_recent_condition=KubernetesJobCondition.Failed.value,
+            most_recent_pod_phase_message="Pod phase is 'Failed'",
+            most_recent_pod_condition_message="Pod condition is 'Initialized'",
+            most_recent_container_condition_message="Container is terminated: OOMKilled",
+            has_infra_failure=True,
         ),
         False,  # job has failed
     ),
@@ -203,9 +276,14 @@ IS_ACTIVE_CASES = [
             ),
             pending_or_running_pod_count=0,
             succeeded_pod_count=1,
-            most_recent_condition=KubernetesJobCondition.Complete.value,
             has_started=True,
             still_exists=False,
+            start_time=1.01,
+            most_recent_condition=KubernetesJobCondition.Complete.value,
+            most_recent_pod_phase_message="Pod phase is 'Succeeded'",
+            most_recent_pod_condition_message="...",
+            most_recent_container_condition_message="...",
+            has_infra_failure=False,
         ),
         False,  # job completed long ago and no longer exists
     ),
@@ -218,11 +296,16 @@ IS_ACTIVE_CASES = [
             ),
             pending_or_running_pod_count=0,
             succeeded_pod_count=0,
-            most_recent_condition=None,
             has_started=True,
             still_exists=False,
+            start_time=1.01,
+            most_recent_condition=None,
+            most_recent_pod_phase_message=None,
+            most_recent_pod_condition_message=None,
+            most_recent_container_condition_message=None,
+            has_infra_failure=False,
         ),
-        False,  # job was not updated between start and complete dissapearance
+        False,  # job was not updated between start and complete disappearance
     ),
 ]
 
@@ -250,9 +333,14 @@ def test_refresh_job(mock_batch_api, mock_load_kube_config):
         ),
         pending_or_running_pod_count=0,
         succeeded_pod_count=1,
-        most_recent_condition=None,
         has_started=True,
         still_exists=True,
+        start_time=1.01,
+        most_recent_condition=None,
+        most_recent_pod_phase_message=None,
+        most_recent_pod_condition_message=None,
+        most_recent_container_condition_message=None,
+        has_infra_failure=False,
     )
     mock_k8s_job.status.active = 1
 
@@ -265,7 +353,7 @@ def test_refresh_job(mock_batch_api, mock_load_kube_config):
     success_condition = mock.MagicMock()
     success_condition.status = "True"
     success_condition.type = KubernetesJobCondition.Complete.value
-    success_condition.lastTransitionTime = 1
+    success_condition.last_transition_time = 1
 
     fail_condition = mock.MagicMock()
     # aka, the Failed condition does NOT apply. K8s doesn't really set
@@ -273,7 +361,7 @@ def test_refresh_job(mock_batch_api, mock_load_kube_config):
     # the conditions is supposed to be.
     fail_condition.status = "False"
     fail_condition.type = KubernetesJobCondition.Failed.value
-    fail_condition.lastTransitionTime = 2
+    fail_condition.last_transition_time = 2
     mock_k8s_job.status.conditions = [
         success_condition,
         fail_condition,
@@ -306,9 +394,14 @@ def test_refresh_job_single_condition(mock_batch_api, mock_load_kube_config):
         ),
         pending_or_running_pod_count=0,
         succeeded_pod_count=1,
-        most_recent_condition=None,
         has_started=True,
         still_exists=True,
+        start_time=1.01,
+        most_recent_condition=None,
+        most_recent_pod_phase_message=None,
+        most_recent_pod_condition_message=None,
+        most_recent_container_condition_message=None,
+        has_infra_failure=False,
     )
     mock_k8s_job.status.active = 0
     mock_k8s_job.status.succeeded = 0

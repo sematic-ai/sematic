@@ -10,6 +10,7 @@ CURRENT_VERSION = (0, 18, 1)
 # Represents the smallest client version that works with the server
 # at the CURRENT_VERSION. Should be updated any time a breaking change
 # is made to the web API.
+# TODO: Bump for https://github.com/sematic-ai/sematic/pull/269
 MIN_CLIENT_SERVER_SUPPORTS = (0, 18, 0)
 
 
