@@ -7,12 +7,18 @@ import pytest
 # Sematic
 from sematic.abstract_future import FutureState
 from sematic.calculator import func
+from sematic.db.models.edge import Edge
 from sematic.db.models.factories import (
     _make_artifact_storage_key,
+    clone_resolution,
+    clone_root_run,
     get_artifact_value,
     make_artifact,
     make_run_from_future,
 )
+from sematic.db.models.resolution import Resolution, ResolutionStatus
+from sematic.db.models.run import Run
+from sematic.db.tests.fixtures import resolution, run  # noqa: F401
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
@@ -43,7 +49,7 @@ def test_make_run_from_future():
         )
     )
     future.props.resource_requirements = resource_reqs
-    run = make_run_from_future(future)
+    run = make_run_from_future(future)  # noqa: F811
 
     assert run.id == future.id
     assert run.future_state == FutureState.CREATED.value
@@ -116,3 +122,55 @@ def test_get_artifact_value():
 
     assert value == 42
     assert isinstance(value, int)
+
+
+def test_clone_root_run(run: Run):  # noqa: F811
+    edges = [
+        Edge(destination_run_id=run.id, destination_name="foo", artifact_id="abc123"),
+        Edge(destination_run_id=run.id, destination_name="bar", artifact_id="def456"),
+        Edge(source_run_id=run.id, artifact_id="ghi789"),
+    ]
+
+    cloned_run, cloned_edges = clone_root_run(run, edges)
+
+    assert cloned_run.id != run.id
+    assert cloned_run.root_id == cloned_run.id
+    assert cloned_run.future_state is FutureState.CREATED.value
+    assert cloned_run.name == run.name
+    assert cloned_run.calculator_path == run.calculator_path
+    assert cloned_run.parent_id is None
+    assert cloned_run.description is not None
+    assert cloned_run.description == run.description
+    assert cloned_run.tags == run.tags
+    assert cloned_run.source_code is not None
+    assert cloned_run.source_code == run.source_code
+    assert cloned_run.container_image_uri is not None
+    assert cloned_run.container_image_uri == run.container_image_uri
+    assert cloned_run.resource_requirements is not None
+    assert cloned_run.resource_requirements == run.resource_requirements
+
+    assert cloned_edges[0].destination_run_id == cloned_run.id
+    assert cloned_edges[0].source_run_id is None
+    assert cloned_edges[0].destination_name == "foo"
+    assert cloned_edges[0].artifact_id is None
+
+    assert cloned_edges[1].destination_run_id == cloned_run.id
+    assert cloned_edges[1].source_run_id is None
+    assert cloned_edges[1].destination_name == "bar"
+    assert cloned_edges[1].artifact_id is None
+
+    assert cloned_edges[2].destination_run_id is None
+    assert cloned_edges[2].source_run_id == cloned_run.id
+    assert cloned_edges[2].artifact_id is None
+
+
+def test_clone_resolution(resolution: Resolution):  # noqa: F811
+    cloned_resolution = clone_resolution(resolution, root_id="abc123")
+
+    assert cloned_resolution.root_id == "abc123"
+    assert cloned_resolution.status is ResolutionStatus.CREATED.value
+    assert cloned_resolution.kind is resolution.kind
+    assert cloned_resolution.git_info == resolution.git_info
+    assert cloned_resolution.settings_env_vars == resolution.settings_env_vars
+    assert cloned_resolution.container_image_uri == resolution.container_image_uri
+    assert cloned_resolution.container_image_uris == resolution.container_image_uris

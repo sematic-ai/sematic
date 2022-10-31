@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { UserContext } from "..";
 import PipelineBar from "../components/PipelineBar";
@@ -10,7 +10,9 @@ import { fetchJSON } from "../utils";
 
 export default function PipelineView() {
   const [rootRun, setRootRun] = useState<Run | undefined>(undefined);
-  const [resolution, setResolution] = useState<Resolution | undefined>(undefined);
+  const [resolution, setResolution] = useState<Resolution | undefined>(
+    undefined
+  );
 
   const { user } = useContext(UserContext);
 
@@ -18,32 +20,52 @@ export default function PipelineView() {
 
   const { calculatorPath, rootId } = params;
 
+  const fetchRootRun = useCallback(
+    (rootId: string) => {
+      fetchJSON({
+        url: "/api/v1/runs/" + rootId,
+        apiKey: user?.api_key,
+        callback: (payload: RunViewPayload) => setRootRun(payload.content),
+      });
+    },
+    [setRootRun]
+  );
+
+  const fetchResolution = useCallback(
+    (rootId: string) => {
+      fetchJSON({
+        url: "/api/v1/resolutions/" + rootId,
+        apiKey: user?.api_key,
+        callback: (payload: ResolutionPayload) =>
+          setResolution(payload.content),
+      });
+    },
+    [setResolution]
+  );
+
   useEffect(() => {
     if (!rootId) return;
-    fetchJSON({
-      url: "/api/v1/runs/" + rootId,
-      apiKey: user?.api_key,
-      callback: (payload: RunViewPayload) => setRootRun(payload.content),
-    });
-    fetchJSON({
-      url: "/api/v1/resolutions/" + rootId,
-      apiKey: user?.api_key,
-      callback: (payload: ResolutionPayload) => setResolution(payload.content),
-    });
+    fetchRootRun(rootId);
+    fetchResolution(rootId);
   }, [rootId]);
 
-  useMemo(() => {
-    if (rootRun === undefined) return;
-    var runURL =
-      window.location.protocol +
-      "//" +
-      window.location.host +
-      "/pipelines/" +
-      rootRun.calculator_path +
-      "/" +
-      rootRun.id;
-    window.history.pushState({ path: runURL }, "", runURL);
-  }, [rootRun]);
+  const changeRootRunId = useCallback(
+    (rootId: string) => {
+      if (rootRun && rootRun.id == rootId) return;
+      var runURL =
+        window.location.protocol +
+        "//" +
+        window.location.host +
+        "/pipelines/" +
+        calculatorPath +
+        "/" +
+        rootId;
+      window.history.pushState({ path: runURL }, "", runURL);
+      fetchRootRun(rootId);
+      fetchResolution(rootId);
+    },
+    [calculatorPath, rootRun]
+  );
 
   if (calculatorPath) {
     return (
@@ -57,12 +79,19 @@ export default function PipelineView() {
       >
         <PipelineBar
           calculatorPath={calculatorPath}
-          onRootRunChange={setRootRun}
-          setInitialRootRun={rootId === undefined}
-          initialRootRun={rootRun}
-          initialResolution={resolution}
+          onRootIdChange={changeRootRunId}
+          rootRun={rootRun}
+          resolution={resolution}
+          setRootRun={rootId === undefined}
         />
-        {rootRun && <PipelinePanels rootRun={rootRun}/>}
+        {rootRun && resolution && (
+          <PipelinePanels
+            rootRun={rootRun}
+            resolution={resolution}
+            onRootRunUpdate={setRootRun}
+            onRootIdChange={changeRootRunId}
+          />
+        )}
       </Box>
     );
   }

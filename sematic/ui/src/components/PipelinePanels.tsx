@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { UserContext } from "..";
-import { Run } from "../Models";
+import { Run, Resolution } from "../Models";
 import { RunGraphPayload } from "../Payloads";
 import { fetchJSON, graphSocket } from "../utils";
 import Loading from "./Loading";
@@ -9,8 +9,13 @@ import MenuPanel from "./MenuPanel";
 import NotesPanel from "./NotesPanel";
 import RunPanel, { Graph } from "./RunPanel";
 
-export default function PipelinePanels(props: { rootRun: Run }) {
-  const { rootRun } = props;
+export default function PipelinePanels(props: {
+  rootRun: Run;
+  resolution: Resolution;
+  onRootRunUpdate: (run: Run) => void;
+  onRootIdChange: (rootId: string) => void;
+}) {
+  const { rootRun, resolution, onRootRunUpdate, onRootIdChange } = props;
   const [selectedPanelItem, setSelectedPanelItem] = useState("run");
   const [graphsByRootId, setGraphsByRootId] = useState<Map<string, Graph>>(
     new Map()
@@ -34,19 +39,24 @@ export default function PipelinePanels(props: { rootRun: Run }) {
           currentMap.set(rootRun.id, graph);
           return new Map(currentMap);
         });
-        //setSelectedPanelItem("run");
+        for (let i = 0; i < payload.runs.length; i++) {
+          if (payload.runs[i].id == rootRun.id) {
+            onRootRunUpdate(payload.runs[i]);
+            break;
+          }
+        }
         setIsLoaded(true);
       },
       setError: setError,
     });
-  }, [rootRun]);
+  }, [rootRun.id]);
 
   useEffect(() => {
     if (!graphsByRootId.has(rootRun.id)) {
       setIsLoaded(false);
       loadGraph();
     }
-  }, [rootRun]);
+  }, [rootRun.id]);
 
   useEffect(() => {
     graphSocket.removeAllListeners();
@@ -55,7 +65,7 @@ export default function PipelinePanels(props: { rootRun: Run }) {
         loadGraph();
       }
     });
-  }, [rootRun]);
+  }, [rootRun.id]);
 
   const runs = useMemo(
     () => graphsByRootId.get(rootRun.id)?.runs,
@@ -106,12 +116,17 @@ export default function PipelinePanels(props: { rootRun: Run }) {
           selectedPanel={selectedPanelItem}
           graph={graph}
           selectedRun={selectedRun}
+          resolution={resolution}
           onSelectRun={(run) => {
             setSelectedRun(run);
             setSelectedPanelItem("run");
           }}
         />
-        <NotesPanel rootRun={rootRun} selectedRun={selectedRun} />
+        <NotesPanel
+          rootRun={rootRun}
+          selectedRun={selectedRun}
+          onRootIdChange={onRootIdChange}
+        />
       </>
     );
   }

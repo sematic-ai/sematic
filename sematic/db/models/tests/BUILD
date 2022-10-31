@@ -5,7 +5,13 @@ pytest_test(
         "//sematic:abstract_future",
         "//sematic:calculator",
         "//sematic:storage",
+        "//sematic/db/models:edge",
         "//sematic/db/models:factories",
+        "//sematic/db/models:resolution",
+        "//sematic/db/models:run",
+        "//sematic/db/tests:fixtures",
+        "//sematic/resolvers:resource_requirements",
+        "//sematic/types:serialization",
     ],
 )
 

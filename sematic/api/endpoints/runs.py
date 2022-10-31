@@ -13,7 +13,6 @@ from urllib.parse import urlencode, urlsplit, urlunsplit
 
 # Third-party
 import flask
-import flask_socketio  # type: ignore
 import sqlalchemy
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -381,18 +380,6 @@ def get_run_graph_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     )
 
     return flask.jsonify(payload)
-
-
-@sematic_api.route("/api/v1/events/<namespace>/<event>", methods=["POST"])
-@authenticate
-def events(user: Optional[User], namespace: str, event: str) -> flask.Response:
-    flask_socketio.emit(
-        event,
-        flask.request.json,
-        namespace="/{}".format(namespace),
-        broadcast=True,
-    )
-    return flask.jsonify({})
 
 
 @sematic_api.route("/api/v1/graph", methods=["PUT"])

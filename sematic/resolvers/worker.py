@@ -1,7 +1,6 @@
 # Standard Library
 import argparse
 import datetime
-import importlib
 import logging
 import os
 import pathlib
@@ -89,21 +88,6 @@ def _fail_run(run: Run, e: BaseException) -> None:
     api_client.save_graph(run.id, [run], [], [])
 
 
-def _get_func(run: Run) -> Calculator:
-    """
-    Get run's function.
-    """
-    function_path = run.calculator_path
-    logger.info("Importing function %s", function_path)
-
-    module_path = ".".join(function_path.split(".")[:-1])
-    function_name = function_path.split(".")[-1]
-
-    module = importlib.import_module(module_path)
-
-    return getattr(module, function_name)
-
-
 def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
     """
     Persist run output, whether it is a nested future or a concrete output.
@@ -155,7 +139,7 @@ def main(
     run = runs[0]
 
     try:
-        func = _get_func(run)
+        func: Calculator = run.get_func()  # type: ignore
         kwargs = _get_input_kwargs(run.id, artifacts, edges)
 
         if resolve:

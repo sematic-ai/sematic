@@ -14,11 +14,15 @@ import { NoteCreatePayload, NoteListPayload } from "../Payloads";
 import { fetchJSON } from "../utils";
 import { NoteView } from "./Notes";
 
-export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
+export default function NotesPanel(props: {
+  rootRun: Run;
+  selectedRun: Run;
+  onRootIdChange: (rootId: string) => void;
+}) {
   const theme = useTheme();
   const { user } = useContext(UserContext);
 
-  const { rootRun, selectedRun } = props;
+  const { rootRun, selectedRun, onRootIdChange } = props;
 
   const calculatorPath = useMemo(
     () => rootRun.calculator_path,
@@ -124,7 +128,7 @@ export default function NotesPanel(props: { rootRun: Run; selectedRun: Run }) {
                   note={note}
                   key={idx}
                   author={authorsByEmail.get(note.author_id) || anonymousUser}
-                  rootRun={rootRun}
+                  onRootIdChange={onRootIdChange}
                 />
               ))}
             </Stack>
