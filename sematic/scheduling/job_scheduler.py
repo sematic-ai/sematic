@@ -22,6 +22,9 @@ class StateNotSchedulable(Exception):
 def schedule_run(run: Run, resolution: Resolution) -> Run:
     """Start a job for the run on external compute.
 
+    A new `ExternalJob` object will be appended to the end of the run's `external_jobs`
+    field describing the new job details.
+
     Parameters
     ----------
     run:
@@ -29,6 +32,7 @@ def schedule_run(run: Run, resolution: Resolution) -> Run:
     resolution:
         The resolution associated with the run
     """
+    # before scheduling a new run, update the information about previous runs
     run.external_jobs = _refresh_external_jobs(run.external_jobs)
     _assert_is_scheduleable(run, resolution)
     external_jobs_list = list(run.external_jobs) + [_schedule_job(run, resolution)]
@@ -71,8 +75,9 @@ def schedule_resolution(
 def update_run_status(
     future_state: FutureState,
     external_jobs: Union[List[ExternalJob], Tuple[ExternalJob, ...]],
-) -> Tuple[FutureState, Optional[str], Tuple[ExternalJob, ...]]:
-    """Determine whether a new run state should be used based ONLY external job statuses
+) -> Tuple[FutureState, Tuple[ExternalJob, ...]]:
+    """Determine whether a new run state should be used based ONLY on external job
+    statuses.
 
     The external jobs themselves will have their state information refreshed before
     determining whether the run needs its status changed.
@@ -80,27 +85,28 @@ def update_run_status(
     Parameters
     ----------
     future_state:
-        The current state of the run
+        The current state of the run.
     external_jobs:
         The external jobs associated with the run.
 
     Returns
     -------
-    A tuple with 3 elements. The first is the new future state (same state if unchanged).
-    The second is an optional message for why the state changed. The third is new external
-    jobs, updated.
+    A tuple with 2 elements. The first is the new future state (same state if unchanged).
+    The second is the updated external jobs tuple.
     """
     external_jobs = tuple(external_jobs)
     if future_state.is_terminal():
-        return future_state, None, external_jobs
+        return future_state, external_jobs
+
     if future_state.value == FutureState.RAN.value:
         # If the job already RAN, the only reason it's not
         # terminal is because child runs have to complete.
         # There should be no more external jobs for this run.
-        return future_state, None, external_jobs
+        return future_state, external_jobs
+
     if future_state.value == FutureState.CREATED.value:
         if len(external_jobs) == 0:
-            return future_state, None, external_jobs
+            return future_state, external_jobs
         else:
             raise ValueError(
                 "Run is in an invalid state: it is marked as CREATED but it has "
@@ -108,19 +114,23 @@ def update_run_status(
             )
     if len(external_jobs) < 1:
         raise ValueError("No external jobs for run")
+
     external_jobs = _refresh_external_jobs(external_jobs)
+
     if future_state.value == FutureState.SCHEDULED.value:
-        if not any(job.is_active() for job in external_jobs):
-            job_summary_str = "; ".join([repr(job) for job in external_jobs])
-            logger.warning(
-                "Job failed due to K8s job failure. Job states: %s", job_summary_str
-            )
-            return (
-                FutureState.FAILED,
-                "The kubernetes job(s) experienced an unknown failure",
-                external_jobs,
-            )
-        return FutureState.SCHEDULED, None, external_jobs
+        if external_jobs[-1].is_active():
+            return FutureState.SCHEDULED, external_jobs
+
+        job_summary_str = "\n ".join([repr(job) for job in external_jobs])
+        exception_metadata = external_jobs[-1].get_exception_metadata()
+        logger.warning(
+            "Job failed due to K8s job failure:\n%s\nJob states:\n%s",
+            exception_metadata.repr if exception_metadata is not None else None,
+            job_summary_str,
+        )
+
+        return FutureState.FAILED, external_jobs
+
     raise ValueError(
         f"Future is in a state not covered by update logic: {future_state}"
     )

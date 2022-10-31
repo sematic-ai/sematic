@@ -15,6 +15,7 @@ sematic_py_lib(
         "//sematic/resolvers:worker",
         "//sematic/types:casting",
         "//sematic/types:init",
+        "//sematic/utils:exceptions",
     ],
 )
 

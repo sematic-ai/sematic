@@ -8,6 +8,7 @@ pytest_test(
         "//sematic:calculator",
         "//sematic:future",
         "//sematic/db/tests:fixtures",
+        "//sematic/utils:exceptions",
     ],
 )
 

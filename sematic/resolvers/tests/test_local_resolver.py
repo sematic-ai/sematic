@@ -6,6 +6,7 @@ from typing import List
 import pytest
 
 # Sematic
+from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_auth,
@@ -23,7 +24,7 @@ from sematic.resolvers.local_resolver import LocalResolver
 from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa: F401
 from sematic.retry_settings import RetrySettings
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
-from sematic.utils.exceptions import ExceptionMetadata
+from sematic.utils.exceptions import ExceptionMetadata, ResolutionError
 
 
 @func
@@ -168,12 +169,15 @@ def test_failure(
         return failure(success())
 
     resolver = LocalResolver()
-
     future = pipeline()
-    with pytest.raises(CustomException, match="some message"):
+
+    with pytest.raises(ResolutionError, match="some message") as exc_info:
         future.resolve(resolver)
 
-    assert get_resolution(future.id).status == ResolutionStatus.COMPLETE.value
+    assert isinstance(exc_info.value.__context__, CalculatorError)
+    assert isinstance(exc_info.value.__context__.__context__, CustomException)
+
+    assert get_resolution(future.id).status == ResolutionStatus.FAILED.value
     expected_states = dict(
         pipeline=FutureState.NESTED_FAILED,
         success=FutureState.RESOLVED,
@@ -207,10 +211,15 @@ def test_resolver_error(
 
     # Random failure in resolution logic
     resolver._future_did_resolve = intentional_fail
-
     future = pipeline()
-    with pytest.raises(ValueError, match="some message"):
+
+    with pytest.raises(ResolutionError, match="some message") as exc_info:
         future.resolve(resolver)
+
+    # this test doesn't really go through the entire Resolver logic due to
+    # the custom setting of _future_did_resolve above, so no CalculatorError here
+    # TODO: replace with testing logic that goes through the entire tested code logic
+    assert isinstance(exc_info.value.__context__, ValueError)
 
     assert get_resolution(future.id).status == ResolutionStatus.FAILED.value
     assert get_run(future.id).future_state == FutureState.NESTED_FAILED.value
@@ -352,15 +361,18 @@ def test_exceptions(
 
     future = pipeline()
 
-    with pytest.raises(Exception, match="FAIL!"):
+    with pytest.raises(ResolutionError, match="FAIL!") as exc_info:
         future.resolve()
+
+    assert isinstance(exc_info.value.__context__, CalculatorError)
+    assert isinstance(exc_info.value.__context__.__context__, Exception)
 
     runs, _, _ = get_root_graph(future.id)
 
     runs_by_id = {run.id: run for run in runs}
 
     assert runs_by_id[future.id].future_state == FutureState.NESTED_FAILED.value
-    assert runs_by_id[future.id].exception == ExceptionMetadata(
+    assert runs_by_id[future.id].exception_metadata == ExceptionMetadata(
         repr="Failed because the child run failed",
         name="Exception",
         module="builtins",
@@ -368,7 +380,7 @@ def test_exceptions(
     )
 
     assert runs_by_id[future.nested_future.id].future_state == FutureState.FAILED.value
-    assert "FAIL!" in runs_by_id[future.nested_future.id].exception.repr
+    assert "FAIL!" in runs_by_id[future.nested_future.id].exception_metadata.repr
 
 
 _tried = 0
@@ -394,12 +406,12 @@ def test_retry(
     valid_client_version,  # noqa: F811
 ):
     future = try_three_times()
-    try:
+
+    with pytest.raises(ResolutionError) as exc_info:
         future.resolve(LocalResolver())
-    except SomeException:
-        pass
-    else:
-        assert False
+
+    assert isinstance(exc_info.value.__context__, CalculatorError)
+    assert isinstance(exc_info.value.__context__.__context__, SomeException)
 
     assert future.props.retry_settings.retry_count == 3
     assert future.state == FutureState.FAILED

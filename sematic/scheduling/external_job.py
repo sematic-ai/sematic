@@ -1,6 +1,10 @@
 # Standard Library
 import enum
 from dataclasses import dataclass
+from typing import Optional
+
+# Sematic
+from sematic.utils.exceptions import ExceptionMetadata
 
 KUBERNETES_JOB_KIND = "k8s"
 
@@ -43,3 +47,9 @@ class ExternalJob:
         True if the job is still active, False otherwise.
         """
         raise NotImplementedError("Subclasses of ExternalJob should define is_active")
+
+    def get_exception_metadata(self) -> Optional[ExceptionMetadata]:
+        """Returns an `ExceptionMetadata` object in case the job has experienced a
+        failure.
+        """
+        return None
