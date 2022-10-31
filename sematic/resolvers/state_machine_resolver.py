@@ -285,10 +285,10 @@ class StateMachineResolver(Resolver, abc.ABC):
         self._future_will_schedule(future)
 
         if future.props.inline:
-            logger.info("Running inline %s", future.calculator)
+            logger.info("Running inline %s %s", future.id, future.calculator)
             self._run_inline(future)
         else:
-            logger.info("Scheduling %s", future.calculator)
+            logger.info("Scheduling %s %s", future.id, future.calculator)
             self._schedule_future(future)
 
     @typing.final

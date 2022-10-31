@@ -8,7 +8,6 @@ from typing import Optional
 
 # Third-party
 import flask
-import flask_socketio  # type: ignore
 import sqlalchemy
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -16,7 +15,13 @@ from sqlalchemy.orm.exc import NoResultFound
 from sematic.abstract_future import FutureState
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
+from sematic.api.endpoints.events import (
+    broadcast_graph_update,
+    broadcast_pipeline_update,
+    broadcast_resolution_cancel,
+)
 from sematic.api.endpoints.request_parameters import jsonify_error
+from sematic.db.models.factories import clone_resolution, clone_root_run
 from sematic.db.models.resolution import InvalidResolution, Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -24,6 +29,7 @@ from sematic.db.queries import (
     get_graph,
     get_resolution,
     get_run,
+    get_run_graph,
     save_graph,
     save_resolution,
 )
@@ -146,6 +152,48 @@ def schedule_resolution_endpoint(
     return flask.jsonify(payload)
 
 
+@sematic_api.route("/api/v1/resolutions/<resolution_id>/rerun", methods=["POST"])
+@authenticate
+def rerun_resolution_endpoint(
+    user: Optional[User], resolution_id: str
+) -> flask.Response:
+    original_resolution = get_resolution(resolution_id)
+
+    if original_resolution.container_image_uri is None:
+        return jsonify_error(
+            (
+                f"Resolution {original_resolution.root_id} cannot be re-run: "
+                "it was initially resolved locally, and therefore "
+                "no container image was built"
+            ),
+            HTTPStatus.BAD_REQUEST,
+        )
+
+    rerun_from = None
+    if flask.request.json and "rerun_from" in flask.request.json:
+        rerun_from = flask.request.json["rerun_from"]
+
+    original_runs, _, original_edges = get_run_graph(original_resolution.root_id)
+    original_root_run = original_runs[0]
+
+    root_run, edges = clone_root_run(original_root_run, original_edges)
+    save_graph(runs=[root_run], edges=edges, artifacts=[])
+
+    resolution = clone_resolution(original_resolution, root_id=root_run.id)
+
+    resolution = schedule_resolution(resolution, rerun_from=rerun_from)
+
+    save_resolution(resolution)
+
+    payload = dict(
+        content=resolution.to_json_encodable(),
+    )
+
+    broadcast_pipeline_update(calculator_path=root_run.calculator_path)
+
+    return flask.jsonify(payload)
+
+
 @sematic_api.route("/api/v1/resolutions/<resolution_id>/cancel", methods=["PUT"])
 @authenticate
 def cancel_resolution_endpoint(
@@ -196,20 +244,9 @@ def cancel_resolution_endpoint(
 
     save_graph(unfinished_runs, [], [])
 
-    flask_socketio.emit(
-        "update",
-        dict(run_id=resolution.root_id),
-        namespace="/graph",
-        broadcast=True,
-    )
-
-    flask_socketio.emit(
-        "cancel",
-        dict(
-            resolution_id=resolution.root_id, calculator_path=root_run.calculator_path
-        ),
-        namespace="/pipeline",
-        broadcast=True,
+    broadcast_graph_update(root_id=resolution.root_id)
+    broadcast_resolution_cancel(
+        root_id=resolution.root_id, calculator_path=root_run.calculator_path
     )
 
     return flask.jsonify(dict(content=resolution.to_json_encodable()))

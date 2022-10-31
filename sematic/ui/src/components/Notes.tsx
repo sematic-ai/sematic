@@ -1,10 +1,15 @@
-import { Box, Typography, useTheme } from "@mui/material";
-import { Note, Run, User } from "../Models";
+import { Box, ButtonBase, Typography, useTheme } from "@mui/material";
+import { Note, User } from "../Models";
+import { CopyButton } from "./CopyButton";
 import TimeAgo from "./TimeAgo";
 import UserAvatar from "./UserAvatar";
 
-export function NoteView(props: { note: Note; author: User; rootRun: Run }) {
-  const { note, author, rootRun } = props;
+export function NoteView(props: {
+  note: Note;
+  author: User;
+  onRootIdChange: (rootId: string) => void;
+}) {
+  const { note, author, onRootIdChange } = props;
   const theme = useTheme();
 
   return (
@@ -50,19 +55,32 @@ export function NoteView(props: { note: Note; author: User; rootRun: Run }) {
           }}
         >
           <TimeAgo date={note.created_at} /> on run{" "}
-          <code
-            style={{
-              fontSize: 12,
-              color:
-                rootRun.id == note.root_id
-                  ? theme.palette.grey[900]
-                  : undefined,
-            }}
-          >
-            {note.root_id.substring(0, 6)}
-          </code>
+          <RunId runId={note.root_id} onClick={onRootIdChange} trim />
         </Typography>
       </Box>
     </Box>
+  );
+}
+
+function RunId(props: {
+  runId: string;
+  trim?: boolean;
+  onClick?: (runId: string) => void;
+}) {
+  const { runId, trim = true, onClick } = props;
+
+  return (
+    <>
+      <ButtonBase onClick={() => onClick && onClick(runId)} disabled={!onClick}>
+        <code
+          style={{
+            fontSize: 12,
+          }}
+        >
+          {trim ? runId.substring(0, 6) : runId}
+        </code>
+      </ButtonBase>
+      <CopyButton text={runId} message="Copied run ID" />
+    </>
   );
 }

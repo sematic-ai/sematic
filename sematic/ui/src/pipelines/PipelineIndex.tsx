@@ -65,7 +65,7 @@ function PipelineRow(props: { run: Run }) {
         </TableCell>
         <TableCell key="last-run">
           <TimeAgo date={run.created_at} />
-          <RunTime run={run} />
+          <RunTime run={run} prefix="in" />
         </TableCell>
         <TableCell key="status" width={120}>
           <RecentStatuses runs={runs} />
