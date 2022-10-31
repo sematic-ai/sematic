@@ -15,17 +15,21 @@ export function RunTime(props: { run: Run; prefix?: string }) {
   );
   let displayH: number = Math.floor(durationS / 3600);
   let displayM: number = Math.floor((durationS % 3600) / 60);
-  let displayS: number = Math.round(
-    durationS % 60
-  );
+  let displayS: number = Math.round(durationS % 60);
+
+  let display = [
+    prefix,
+    displayH > 0 ? displayH.toString() + "h" : "",
+    displayM > 0 ? displayM.toString() + "m " : "",
+    displayS > 0 ? displayS.toString() + "s" : "",
+    durationS == 0 ? "<1s" : "",
+  ]
+    .join(" ")
+    .trim();
 
   return (
     <Typography fontSize="small" color="GrayText">
-      {prefix + " "}
-      {displayH > 0 ? displayH.toString() + "h " : ""}
-      {displayM > 0 ? displayM.toString() + "m " : ""}
-      {displayS > 0 ? displayS.toString() + "s" : ""}
-      {durationS == 0 ? "<1s" : ""}
+      {display}
     </Typography>
   );
 }
