@@ -156,11 +156,6 @@ function RunActionMenu(props: {
     });
   }, []);
 
-  const abc = useMemo(() => {
-    console.log(inputEdges.length);
-    console.log(inputEdges.every((edge) => !!edge.artifact_id));
-  }, [inputEdges, resolution]);
-
   const rerunEnabled = useMemo(
     () =>
       inputEdges.every((edge) => !!edge.artifact_id) &&
