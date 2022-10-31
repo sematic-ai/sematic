@@ -243,7 +243,7 @@ class CloudResolver(LocalResolver):
         # if the external run is reported to not have completed successfully by the server
         if run.future_state not in {FutureState.RESOLVED.value, FutureState.RAN.value}:
             self._handle_future_failure(
-                future, Exception("Run failed, see exception in the UI."), run.exception
+                future, run.exception_metadata, run.external_exception_metadata
             )
             return
 
@@ -271,9 +271,9 @@ class CloudResolver(LocalResolver):
         if (
             failed_future.state == FutureState.FAILED
             and run is not None
-            and run.exception is None
+            and run.exception_metadata is None
         ):
-            run.exception = format_exception_for_run()
+            run.exception_metadata = format_exception_for_run()
         self._add_run(run)
         self._save_graph()
         if failed_future.state == FutureState.NESTED_FAILED:

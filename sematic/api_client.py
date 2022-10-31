@@ -193,8 +193,7 @@ def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
     """Ask the server to update the status of given run ids if needed and return them.
 
     The server will actively update run statuses based on the state of remote jobs
-    associated with the runs. It will NOT perform any updates to the run statuses
-    that result from result availability or calculator errors.
+    associated with the runs.
 
     Parameters
     ----------

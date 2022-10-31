@@ -13,6 +13,7 @@ from sematic.resolvers.resource_requirements import (  # noqa: F401
     KubernetesResourceRequirements,
     ResourceRequirements,
 )
+from sematic.utils.exceptions import ResolutionError
 
 
 def test_decorator_no_params():
@@ -251,29 +252,32 @@ def test_resource_requirements():
     assert f().props.resource_requirements == resource_requirements
 
 
-def test_error():
+def test_resolve_error():
     @func()
     def f():
         raise ValueError("Intentional error")
 
-    raised_error = False
-    try:
-        # resolving should surface the underlying error
+    with pytest.raises(ResolutionError) as exc_info:
+        # resolving should surface the ResolutionError,
+        # with root cause as __context__
+        # see https://peps.python.org/pep-0409/#language-details
         f().resolve(tracking=False)
-    except Exception as e:
-        raised_error = True
-        assert isinstance(e, ValueError)
-        assert "Intentional" in str(e)
-    assert raised_error
 
-    raised_error = False
-    try:
+    assert isinstance(exc_info.value.__context__, CalculatorError)
+    assert isinstance(exc_info.value.__context__.__context__, ValueError)
+    assert "Intentional error" in str(exc_info.value.__context__.__context__)
+
+
+def test_calculate_error():
+    @func()
+    def f():
+        raise ValueError("Intentional error")
+
+    with pytest.raises(CalculatorError) as exc_info:
         # calling calculate should surface the CalculatorError,
-        # with root cause as __cause__.
+        # with root cause as __context__
+        # see https://peps.python.org/pep-0409/#language-details
         f.calculate()
-    except Exception as e:
-        raised_error = True
-        assert isinstance(e, CalculatorError)
-        assert isinstance(e.__cause__, ValueError)
-        assert "Intentional" in str(e.__cause__)
-    assert raised_error
+
+    assert isinstance(exc_info.value.__context__, ValueError)
+    assert "Intentional error" in str(exc_info.value.__context__)

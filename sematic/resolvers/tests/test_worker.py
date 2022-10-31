@@ -121,5 +121,5 @@ def test_fail(
     runs, _, _ = get_root_graph(future.id)
 
     assert runs[0].future_state == FutureState.FAILED.value
-    assert runs[0].exception is not None
-    assert "FAIL!" in runs[0].exception.repr
+    assert runs[0].exception_metadata is not None
+    assert "FAIL!" in runs[0].exception_metadata.repr

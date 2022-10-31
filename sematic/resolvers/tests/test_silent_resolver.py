@@ -1,8 +1,12 @@
+import pytest
+
 # Sematic
+from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import FutureState
 from sematic.calculator import func
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.retry_settings import RetrySettings
+from sematic.utils.exceptions import ResolutionError
 
 
 @func
@@ -42,13 +46,12 @@ def retry_three_times():
 
 def test_retry():
     future = retry_three_times()
-    try:
-        SilentResolver().resolve(future)
-    except SomeException:
-        pass
-    else:
-        assert False
 
+    with pytest.raises(ResolutionError) as exc_info:
+        SilentResolver().resolve(future)
+
+    assert isinstance(exc_info.value.__context__, CalculatorError)
+    assert isinstance(exc_info.value.__context__.__context__, SomeException)
     assert future.props.retry_settings.retry_count == 3
     assert future.state == FutureState.FAILED
     assert _tried == 4
