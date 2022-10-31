@@ -77,6 +77,11 @@ export default function RunPanel(props: {
     return ioArtifacts;
   }, [edges, artifactsById, selectedRun]);
 
+  const selectedRunInputEdges = useMemo(
+    () => edges.filter((edge) => edge.destination_run_id === selectedRun.id),
+    [edges, selectedRun.id]
+  );
+
   return (
     <Box sx={{ gridColumn: 2, gridRow: 2, overflowY: "scroll" }}>
       {selectedPanel === "graph" && (
@@ -108,7 +113,7 @@ export default function RunPanel(props: {
             <Box sx={{ gridColumn: 2, pt: 3, pr: 10 }}>
               <RunActionMenu
                 run={selectedRun}
-                edges={edges}
+                inputEdges={selectedRunInputEdges}
                 resolution={resolution}
               />
             </Box>
@@ -129,10 +134,10 @@ export default function RunPanel(props: {
 
 function RunActionMenu(props: {
   run: Run;
-  edges: Edge[];
+  inputEdges: Edge[];
   resolution: Resolution;
 }) {
-  const { run, edges, resolution } = props;
+  const { run, inputEdges, resolution } = props;
 
   const { user } = useContext(UserContext);
 
@@ -151,11 +156,16 @@ function RunActionMenu(props: {
     });
   }, []);
 
+  const abc = useMemo(() => {
+    console.log(inputEdges.length);
+    console.log(inputEdges.every((edge) => !!edge.artifact_id));
+  }, [inputEdges, resolution]);
+
   const rerunEnabled = useMemo(
     () =>
-      edges.every((edge) => !!edge.artifact_id) &&
+      inputEdges.every((edge) => !!edge.artifact_id) &&
       resolution.container_image_uri !== null,
-    [edges, resolution]
+    [inputEdges, resolution]
   );
 
   return (
@@ -166,9 +176,8 @@ function RunActionMenu(props: {
         enabled={rerunEnabled}
         beta
       >
-        <Typography>Rerun this pipeline from this run in the graph.</Typography>
         <Typography>All upstream runs will use cached outputs.</Typography>
-        <Typography>Only available for cloud-ran pipelines.</Typography>
+        <Typography>Only available for cloud resolution.</Typography>
       </ActionMenuItem>
 
       {/* 
