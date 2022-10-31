@@ -80,7 +80,7 @@ function RunId(props: {
           {trim ? runId.substring(0, 6) : runId}
         </code>
       </ButtonBase>
-      <CopyButton text={runId} message="Copied run ID." />
+      <CopyButton text={runId} message="Copied run ID" />
     </>
   );
 }

@@ -77,7 +77,7 @@ function PipelineActionMenu(props: {
 
   const onCopyShareClick = useCallback(() => {
     navigator.clipboard.writeText(window.location.href);
-    setSnackMessage({ message: "Pipeline link copied." });
+    setSnackMessage({ message: "Pipeline link copied" });
   }, []);
 
   const cancelEnabled = useMemo(
