@@ -1,5 +1,5 @@
 import { KeyboardArrowDown } from "@mui/icons-material";
-import { Box, Button, Menu, Typography, useTheme } from "@mui/material";
+import { Box, Button, Chip, Menu, Typography, useTheme } from "@mui/material";
 import React, { MouseEvent, useState } from "react";
 
 export function ActionMenuItem(props: {
@@ -9,12 +9,16 @@ export function ActionMenuItem(props: {
   titleColor?: string;
   children?: any;
   handleClose?: () => void;
+  beta?: boolean;
+  soon?: boolean;
 }) {
   const theme = useTheme();
   const {
     title,
     enabled = true,
     titleColor = theme.palette.primary.main,
+    beta = false,
+    soon = false,
     children,
     onClick,
     handleClose,
@@ -36,15 +40,37 @@ export function ActionMenuItem(props: {
         onClick && onClick();
       }}
     >
-      <Typography
-        sx={{
-          color: titleColor,
-          display: "block",
-          fontWeight: "inherit",
-        }}
-      >
-        {title}
-      </Typography>
+      <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto" }}>
+        <Box sx={{ gridColumn: 1 }}>
+          <Typography
+            sx={{
+              color: titleColor,
+              display: "block",
+              fontWeight: "inherit",
+            }}
+          >
+            {title}
+          </Typography>
+        </Box>
+        <Box sx={{ gridColumn: 2 }}>
+          {beta && (
+            <Chip
+              label="beta"
+              size="small"
+              color="warning"
+              variant="outlined"
+            />
+          )}
+          {soon && (
+            <Chip
+              label="coming soon"
+              size="small"
+              color="info"
+              variant="outlined"
+            />
+          )}
+        </Box>
+      </Box>
       <Box sx={{ color: "GrayText" }}>{children}</Box>
     </Button>
   );

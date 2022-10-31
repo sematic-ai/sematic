@@ -23,42 +23,42 @@ def plot_disease_across_features(df: pd.DataFrame) -> matplotlib.figure.Figure:
     figure = plt.figure(figsize=(21.2, 10))
 
     plt.subplot(2, 3, 1)
-    sns.countplot(x=df["Stage"], hue=df["Sex"], palette="Blues", alpha=0.9)
+    sns.countplot(data=df, x="Stage", hue="Sex", palette="Blues", alpha=0.9)
     sns.despine(top=True, right=True, bottom=True, left=True)
     plt.tick_params(axis="both", which="both", bottom=False, top=False, left=False)
     plt.xlabel("")
     plt.title("Disease Stage Across Gender")
 
     plt.subplot(2, 3, 2)
-    sns.countplot(x=df["Stage"], hue=df["Ascites"], palette="Purples", alpha=0.9)
+    sns.countplot(data=df, x="Stage", hue="Ascites", palette="Purples", alpha=0.9)
     sns.despine(top=True, right=True, bottom=True, left=True)
     plt.tick_params(axis="both", which="both", bottom=False, top=False, left=False)
     plt.xlabel("")
     plt.title("Ascites proportion across Stages")
 
     plt.subplot(2, 3, 3)
-    sns.countplot(x=df["Stage"], hue=df["Drug"], palette="Blues", alpha=0.9)
+    sns.countplot(data=df, x="Stage", hue="Drug", palette="Blues", alpha=0.9)
     sns.despine(top=True, right=True, bottom=True, left=True)
     plt.tick_params(axis="both", which="both", bottom=False, top=False, left=False)
     plt.xlabel("")
     plt.title("Medications prescribed across Stages")
 
     plt.subplot(2, 3, 4)
-    sns.countplot(x=df["Stage"], hue=df["Hepatomegaly"], palette="Purples", alpha=0.9)
+    sns.countplot(data=df, x="Stage", hue="Hepatomegaly", palette="Purples", alpha=0.9)
     sns.despine(top=True, right=True, bottom=True, left=True)
     plt.tick_params(axis="both", which="both", bottom=False, top=False, left=False)
     plt.xlabel("")
     plt.title("Hepatomegaly")
 
     plt.subplot(2, 3, 5)
-    sns.countplot(x=df["Stage"], hue=df["Spiders"], palette="Blues", alpha=0.9)
+    sns.countplot(data=df, x="Stage", hue="Spiders", palette="Blues", alpha=0.9)
     sns.despine(top=True, right=True, bottom=True, left=True)
     plt.tick_params(axis="both", which="both", bottom=False, top=False, left=False)
     plt.xlabel("")
     plt.title("Presence of Spiders across stages")
 
     plt.subplot(2, 3, 6)
-    sns.countplot(x=df["Stage"], hue=df["Edema"], palette="Purples", alpha=0.9)
+    sns.countplot(data=df, x="Stage", hue="Edema", palette="Purples", alpha=0.9)
     sns.despine(top=True, right=True, bottom=True, left=True)
     plt.tick_params(axis="both", which="both", bottom=False, top=False, left=False)
     plt.xlabel("")
@@ -69,10 +69,19 @@ def plot_disease_across_features(df: pd.DataFrame) -> matplotlib.figure.Figure:
 
 @sematic.func
 def plot_feature_distributions(df: pd.DataFrame) -> matplotlib.figure.Figure:
+    """
+    Plotting distribution of model features.
+
+    ### Parameters
+    df: `pd.Dataframe`
+
+    ### Returns
+    `matplotlib.figure.Figure`
+    """
     figure = plt.figure(figsize=(20.6, 15))
 
     plt.subplot(3, 3, 1)
-    sns.kdeplot(df["Cholesterol"], hue=df["Stage"], fill=True, palette="Purples")
+    sns.kdeplot(data=df, x="Cholesterol", hue="Stage", fill=True, palette="Purples")
     sns.despine(top=True, right=True, bottom=True, left=True)
     plt.tick_params(axis="both", which="both", bottom=False, top=False, left=False)
     plt.xlabel("")
@@ -80,7 +89,12 @@ def plot_feature_distributions(df: pd.DataFrame) -> matplotlib.figure.Figure:
 
     plt.subplot(3, 3, 2)
     sns.kdeplot(
-        df["Bilirubin"], hue=df["Stage"], fill=True, palette="Blues", common_norm=True
+        data=df,
+        x="Bilirubin",
+        hue="Stage",
+        fill=True,
+        palette="Blues",
+        common_norm=True,
     )
     sns.despine(top=True, right=True, bottom=True, left=True)
     plt.tick_params(axis="both", which="both", bottom=False, top=False, left=False)
@@ -89,8 +103,9 @@ def plot_feature_distributions(df: pd.DataFrame) -> matplotlib.figure.Figure:
 
     plt.subplot(3, 3, 3)
     sns.kdeplot(
-        df["Tryglicerides"],
-        hue=df["Stage"],
+        data=df,
+        x="Tryglicerides",
+        hue="Stage",
         fill=True,
         palette="Purples",
         common_norm=True,
@@ -102,7 +117,7 @@ def plot_feature_distributions(df: pd.DataFrame) -> matplotlib.figure.Figure:
 
     plt.subplot(3, 3, 4)
     sns.kdeplot(
-        df["Age"], hue=df["Stage"], fill=True, palette="Blues", common_norm=True
+        data=df, x="Age", hue="Stage", fill=True, palette="Blues", common_norm=True
     )
     sns.despine(top=True, right=True, bottom=True, left=True)
     plt.tick_params(axis="both", which="both", bottom=False, top=False, left=False)
@@ -111,8 +126,9 @@ def plot_feature_distributions(df: pd.DataFrame) -> matplotlib.figure.Figure:
 
     plt.subplot(3, 3, 5)
     sns.kdeplot(
-        df["Prothrombin"],
-        hue=df["Stage"],
+        data=df,
+        x="Prothrombin",
+        hue="Stage",
         fill=True,
         palette="Purples",
         common_norm=True,
@@ -124,7 +140,7 @@ def plot_feature_distributions(df: pd.DataFrame) -> matplotlib.figure.Figure:
 
     plt.subplot(3, 3, 6)
     sns.kdeplot(
-        df["Copper"], hue=df["Stage"], fill=True, palette="Blues", common_norm=True
+        data=df, x="Copper", hue="Stage", fill=True, palette="Blues", common_norm=True
     )
     sns.despine(top=True, right=True, bottom=True, left=True)
     plt.tick_params(axis="both", which="both", bottom=False, top=False, left=False)
@@ -132,7 +148,7 @@ def plot_feature_distributions(df: pd.DataFrame) -> matplotlib.figure.Figure:
     plt.title("Copper")
 
     plt.subplot(3, 3, 7)
-    sns.kdeplot(df["Platelets"], hue=df["Stage"], fill=True, palette="Purples")
+    sns.kdeplot(data=df, x="Platelets", hue="Stage", fill=True, palette="Purples")
     sns.despine(top=True, right=True, bottom=True, left=True)
     plt.tick_params(axis="both", which="both", bottom=False, top=False, left=False)
     plt.xlabel("")
@@ -140,7 +156,7 @@ def plot_feature_distributions(df: pd.DataFrame) -> matplotlib.figure.Figure:
 
     plt.subplot(3, 3, 8)
     sns.kdeplot(
-        df["Albumin"], hue=df["Stage"], fill=True, palette="Blues", common_norm=True
+        data=df, x="Albumin", hue="Stage", fill=True, palette="Blues", common_norm=True
     )
     sns.despine(top=True, right=True, bottom=True, left=True)
     plt.tick_params(axis="both", which="both", bottom=False, top=False, left=False)
@@ -149,7 +165,7 @@ def plot_feature_distributions(df: pd.DataFrame) -> matplotlib.figure.Figure:
 
     plt.subplot(3, 3, 9)
     sns.kdeplot(
-        df["SGOT"], hue=df["Stage"], fill=True, palette="Purples", common_norm=True
+        data=df, x="SGOT", hue="Stage", fill=True, palette="Purples", common_norm=True
     )
     sns.despine(top=True, right=True, bottom=True, left=True)
     plt.tick_params(axis="both", which="both", bottom=False, top=False, left=False)

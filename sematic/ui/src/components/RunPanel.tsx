@@ -117,7 +117,7 @@ export default function RunPanel(props: {
               <RunTime run={selectedRun} prefix="in " />
             </Box>
           </Box>
-          <Box sx={{ my: 10 }}>
+          <Box sx={{ mb: 10, mt: 5 }}>
             <Docstring docstring={selectedRun.description} />
           </Box>
           <RunTabs run={selectedRun} artifacts={selectedRunArtifacts} />
@@ -146,7 +146,7 @@ function RunActionMenu(props: {
       apiKey: user?.api_key,
       callback: (payload) => {},
       setError: (error) => {
-        if (error) setSnackMessage("Failed to trigger a rerun");
+        if (error) setSnackMessage({ message: "Failed to trigger a rerun" });
       },
     });
   }, []);
@@ -164,6 +164,7 @@ function RunActionMenu(props: {
         title="Rerun pipeline from this run"
         onClick={onRerunClick}
         enabled={rerunEnabled}
+        beta
       >
         <Typography>Rerun this pipeline from this run in the graph.</Typography>
         <Typography>All upstream runs will use cached outputs.</Typography>

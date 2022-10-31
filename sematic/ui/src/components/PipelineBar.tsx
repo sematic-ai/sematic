@@ -100,11 +100,12 @@ function PipelineActionMenu(props: {
           title="Rerun"
           enabled={rerunEnable}
           onClick={() => onRerunClick(rootRun.id)}
+          beta
         >
           <Typography>Rerun pipeline from scratch.</Typography>
           <Typography>Only available for remote resolutions.</Typography>
         </ActionMenuItem>
-        <ActionMenuItem title="Retry from failure" enabled={false}>
+        <ActionMenuItem title="Retry from failure" enabled={false} soon>
           <Typography>Rerun pipeline from where it failed.</Typography>
           <Typography>Coming soon.</Typography>
         </ActionMenuItem>
