@@ -6,11 +6,13 @@ import datetime
 import hashlib
 import json
 import secrets
-import typing
+from typing import Any, List, Optional, Tuple
 
 # Sematic
-from sematic.abstract_future import AbstractFuture
+from sematic.abstract_future import AbstractFuture, FutureState, make_future_id
 from sematic.db.models.artifact import Artifact
+from sematic.db.models.edge import Edge
+from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.storage import Storage
@@ -35,6 +37,9 @@ def make_run_from_future(future: AbstractFuture) -> Run:
         parent_id=(
             future.parent_future.id if future.parent_future is not None else None
         ),
+        nested_future_id=(
+            future.nested_future.id if future.nested_future is not None else None
+        ),
         description=future.calculator.__doc__,
         tags=future.props.tags,
         source_code=future.calculator.get_source(),
@@ -50,12 +55,95 @@ def make_run_from_future(future: AbstractFuture) -> Run:
     return run
 
 
+def clone_root_run(run: Run, edges: List[Edge]) -> Tuple[Run, List[Edge]]:
+    """
+    Clone a root run and its edges.
+
+    Parameters
+    ----------
+    run: Run
+        Original run to clone.
+    edges: List[Edge]
+        Original run's input and output edges.
+
+    Returns
+    -------
+    Tuple[Run, List[Edge]]
+        A tuple whose first element is the cloned run, and the second element is
+        the list of cloned edges.
+    """
+    run_id = make_future_id()
+    cloned_run = Run(
+        id=run_id,
+        root_id=run_id,
+        future_state=FutureState.CREATED,
+        name=run.name,
+        calculator_path=run.calculator_path,
+        parent_id=None,
+        description=run.description,
+        tags=run.tags,
+        source_code=run.source_code,
+        container_image_uri=run.container_image_uri,
+    )
+
+    # Set this outside the constructor because the constructor expects
+    # a json encodable, but this property will auto-update the json
+    # encodable field.
+    cloned_run.resource_requirements = run.resource_requirements
+
+    cloned_edges = [
+        Edge(
+            destination_run_id=(run_id if edge.destination_run_id == run.id else None),
+            source_run_id=(run_id if edge.source_run_id == run.id else None),
+            destination_name=edge.destination_name,
+            artifact_id=None,
+        )
+        for edge in edges
+    ]
+
+    return cloned_run, cloned_edges
+
+
+def clone_resolution(resolution: Resolution, root_id: str) -> Resolution:
+    """
+    Clone a resolution.
+
+    Parameters
+    ----------
+    resolution: Resolution
+        Original resolution to clone.
+    root_id: str
+        The root ID for this resolution. Typically comes from the cloned root
+        run.
+
+    Returns
+    -------
+    Resolution
+        Cloned resolution.
+    """
+    cloned_resolution = Resolution(
+        root_id=root_id,
+        status=ResolutionStatus.CREATED,
+        kind=resolution.kind,
+        settings_env_vars=resolution.settings_env_vars,
+        container_image_uri=resolution.container_image_uri,
+        container_image_uris=resolution.container_image_uris,
+    )
+
+    # Set this outside the constructor because the constructor expects
+    # a json encodable, but this property will auto-update the json
+    # encodable field.
+    cloned_resolution.git_info = resolution.git_info
+
+    return cloned_resolution
+
+
 def make_func_path(future: AbstractFuture) -> str:
     return f"{future.calculator.__module__}.{future.calculator.__name__}"
 
 
 def make_artifact(
-    value: typing.Any, type_: typing.Any, storage: typing.Optional[Storage] = None
+    value: Any, type_: Any, storage: Optional[Storage] = None
 ) -> Artifact:
     """
     Create an Artifact model instance from a value and type.
@@ -85,7 +173,7 @@ def make_artifact(
     return artifact
 
 
-def get_artifact_value(artifact: Artifact, storage: Storage) -> typing.Any:
+def get_artifact_value(artifact: Artifact, storage: Storage) -> Any:
     """
     Fetch artifact serialization from storage and deserialize.
     """
@@ -106,9 +194,9 @@ def _make_artifact_storage_key(artifact: Artifact) -> str:
 
 
 def _get_value_sha1_digest(
-    value_serialization: typing.Any,
-    type_serialization: typing.Any,
-    json_summary: typing.Any,
+    value_serialization: Any,
+    type_serialization: Any,
+    json_summary: Any,
 ) -> str:
     """
     Get sha1 digest for artifact value
@@ -151,9 +239,9 @@ def _fix_nan_inf(string: str) -> str:
 
 def make_user(
     email: str,
-    first_name: typing.Optional[str],
-    last_name: typing.Optional[str],
-    avatar_url: typing.Optional[str],
+    first_name: Optional[str],
+    last_name: Optional[str],
+    avatar_url: Optional[str],
 ) -> User:
     """
     Make a user

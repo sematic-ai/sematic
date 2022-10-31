@@ -96,6 +96,12 @@ class LocalResolver(SilentResolver):
 
         self._futures = list(cloned_graph.futures_by_original_id.values())
 
+        # This is necessary, otherwise the root run will not be updated with its
+        # cloned status. In detached execution, or rerun, the root run is
+        # created outside the resolver (either by the server, or by the resolver
+        # submitting the detached resolution from the user's machine).
+        self._runs.clear()
+
         for future in self._futures:
             future.resolved_kwargs = self._get_resolved_kwargs(future)
             run_input_artifacts: Dict[str, Artifact] = {}
@@ -220,6 +226,7 @@ class LocalResolver(SilentResolver):
         """Make a Resolution instance and persist it."""
         resolution = self._make_resolution(root_future)
         api_client.save_resolution(resolution)
+        self._notify_pipeline_update()
 
     def _make_resolution(self, root_future: AbstractFuture) -> Resolution:
         """Make a Resolution instance."""
@@ -250,12 +257,6 @@ class LocalResolver(SilentResolver):
         future.state = FutureState.SCHEDULED
         run.future_state = FutureState.SCHEDULED
         run.started_at = datetime.datetime.utcnow()
-
-    def _future_did_schedule(self, future: AbstractFuture) -> None:
-        super()._future_did_schedule(future)
-        root_future = self._futures[0]
-        if root_future.id == future.id:
-            api_client.notify_pipeline_update(self._runs[future.id].calculator_path)
 
     def _future_did_run(self, future: AbstractFuture) -> None:
         super()._future_did_run(future)
@@ -452,10 +453,6 @@ class LocalResolver(SilentResolver):
                 source_run_id = value.id
 
             # Attempt to link edges across nested graphs
-            # This relies on value identity, it's ok for complex objects
-            # but `a is a` is true for e.g. int, but `a` may not be the value passed in
-            # from the parent input.
-            # The parent_id field is currently not used in the DAG view.
             parent_id = None
 
             if future.parent_future is not None:
@@ -463,14 +460,14 @@ class LocalResolver(SilentResolver):
                     parent_name,
                     parent_value,
                 ) in future.parent_future.resolved_kwargs.items():
-                    if value is parent_value:
-                        parent_edge = self._get_input_edge(
-                            destination_run_id=future.parent_future.id,
-                            destination_name=parent_name,
-                        )
-                        if parent_edge is None:
-                            raise RuntimeError("Missing parent edge")
+                    parent_edge = self._get_input_edge(
+                        destination_run_id=future.parent_future.id,
+                        destination_name=parent_name,
+                    )
+                    if parent_edge is None:
+                        raise RuntimeError("Missing parent edge")
 
+                    if value is parent_value:
                         parent_id = parent_edge.id
 
             # This is idempotent, edges are indexed by a unique key.

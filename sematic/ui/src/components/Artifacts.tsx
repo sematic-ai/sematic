@@ -4,7 +4,6 @@ import AlertTitle from "@mui/material/AlertTitle";
 import { renderSummary } from "../types/Types";
 import {
   Box,
-  ButtonBase,
   Table,
   TableBody,
   TableCell,
@@ -12,8 +11,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { ErrorBoundary } from "react-error-boundary";
-import { useCallback, useState } from "react";
-import { ContentCopy } from "@mui/icons-material";
+import { CopyButton } from "./CopyButton";
 
 function ArtifactError(props: { error: Error }) {
   return (
@@ -44,24 +42,13 @@ function ArtifactView(props: { artifact: Artifact }) {
 function ArtifactID(props: { artifactId: string }) {
   const { artifactId } = props;
 
-  const [content, setContent] = useState(artifactId.substring(0, 6));
-
   const theme = useTheme();
 
-  const copy = useCallback(() => {
-    navigator.clipboard.writeText(artifactId);
-    setContent("Copied");
-    setTimeout(() => setContent(artifactId.substring(0, 6)), 1000);
-  }, [artifactId]);
-
   return (
-    <ButtonBase
-      sx={{ color: theme.palette.grey[400], fontSize: 12 }}
-      onClick={copy}
-    >
-      <code>{content}</code>
-      <ContentCopy fontSize="small" sx={{ ml: 1 }} />
-    </ButtonBase>
+    <Box sx={{ fontSize: "small", color: theme.palette.grey[400] }}>
+      <code>{artifactId.substring(0, 6)}</code>
+      <CopyButton text={artifactId} message="Copied Artifact ID." />
+    </Box>
   );
 }
 

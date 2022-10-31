@@ -1,14 +1,7 @@
 import { FileCopy, History, Insights } from "@mui/icons-material";
-import {
-  Box,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Typography,
-} from "@mui/material";
-import { useMemo } from "react";
-import { Artifact, Edge, Run } from "../Models";
+import { Box, Typography } from "@mui/material";
+import { useCallback, useContext, useMemo } from "react";
+import { Artifact, Edge, Resolution, Run } from "../Models";
 import CalculatorPath from "./CalculatorPath";
 import RunTabs, { IOArtifacts } from "./RunTabs";
 import Docstring from "./Docstring";
@@ -16,6 +9,10 @@ import { FlowWithProvider } from "./ReactFlowDag";
 import RunStateChip from "./RunStateChip";
 import { RunTime } from "./RunTime";
 import Tags from "./Tags";
+import { ActionMenu, ActionMenuItem } from "./ActionMenu";
+import { fetchJSON } from "../utils";
+import { UserContext } from "..";
+import { SnackBarContext } from "./SnackBarProvider";
 
 export type Graph = {
   runs: Map<string, Run>;
@@ -26,10 +23,11 @@ export type Graph = {
 export default function RunPanel(props: {
   selectedPanel: string;
   graph: Graph;
+  resolution: Resolution;
   selectedRun: Run;
   onSelectRun: (run: Run) => void;
 }) {
-  const { selectedPanel, graph, selectedRun, onSelectRun } = props;
+  const { selectedPanel, graph, selectedRun, resolution, onSelectRun } = props;
 
   const runsById = useMemo(() => graph.runs, [graph]);
 
@@ -79,12 +77,6 @@ export default function RunPanel(props: {
     return ioArtifacts;
   }, [edges, artifactsById, selectedRun]);
 
-  const actions = [
-    [<FileCopy />, "Clone"],
-    [<History />, "Schedule"],
-    [<Insights />, "Share"],
-  ];
-
   return (
     <Box sx={{ gridColumn: 2, gridRow: 2, overflowY: "scroll" }}>
       {selectedPanel === "graph" && (
@@ -103,7 +95,7 @@ export default function RunPanel(props: {
       )}
       {selectedPanel === "run" && (
         <Box sx={{ p: 5 }}>
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 150px" }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto auto" }}>
             <Box sx={{ paddingBottom: 3, gridColumn: 1 }}>
               <Box marginBottom={3}>
                 <Typography variant="h6">{selectedRun.name}</Typography>
@@ -113,42 +105,78 @@ export default function RunPanel(props: {
               </Box>
               <Tags tags={selectedRun.tags || []} />
             </Box>
-            <Box sx={{ gridColumn: 2 }}>
+            <Box sx={{ gridColumn: 2, pt: 3, pr: 10 }}>
+              <RunActionMenu
+                run={selectedRun}
+                edges={edges}
+                resolution={resolution}
+              />
+            </Box>
+            <Box sx={{ gridColumn: 3, pt: 3, pr: 5 }}>
               <RunStateChip state={selectedRun.future_state} variant="full" />
               <RunTime run={selectedRun} prefix="in " />
-              {process.env.NODE_ENV === "development" && (
-                <FormControl fullWidth size="small" sx={{ mt: 5 }}>
-                  <InputLabel id="actions-label">Actions</InputLabel>
-                  <Select
-                    labelId="actions-label"
-                    id="action-select"
-                    label="Actions"
-                    placeholder=""
-                  >
-                    {actions.map(([icon, label], idx) => (
-                      <MenuItem key={idx}>
-                        <Typography
-                          component="span"
-                          sx={{ display: "flex", alignItems: "center" }}
-                        >
-                          {icon}
-                          <Typography component="span" sx={{ ml: 3 }}>
-                            {label}
-                          </Typography>
-                        </Typography>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
             </Box>
           </Box>
-          <Box sx={{ my: 10 }}>
+          <Box sx={{ mb: 10, mt: 5 }}>
             <Docstring docstring={selectedRun.description} />
           </Box>
           <RunTabs run={selectedRun} artifacts={selectedRunArtifacts} />
         </Box>
       )}
     </Box>
+  );
+}
+
+function RunActionMenu(props: {
+  run: Run;
+  edges: Edge[];
+  resolution: Resolution;
+}) {
+  const { run, edges, resolution } = props;
+
+  const { user } = useContext(UserContext);
+
+  const { setSnackMessage } = useContext(SnackBarContext);
+
+  const onRerunClick = useCallback(() => {
+    fetchJSON({
+      url: "/api/v1/resolutions/" + run.root_id + "/rerun",
+      method: "POST",
+      body: { rerun_from: run.id },
+      apiKey: user?.api_key,
+      callback: (payload) => {},
+      setError: (error) => {
+        if (error) setSnackMessage({ message: "Failed to trigger a rerun" });
+      },
+    });
+  }, []);
+
+  const rerunEnabled = useMemo(
+    () =>
+      edges.every((edge) => !!edge.artifact_id) &&
+      resolution.container_image_uri !== null,
+    [edges, resolution]
+  );
+
+  return (
+    <ActionMenu title="Actions">
+      <ActionMenuItem
+        title="Rerun pipeline from this run"
+        onClick={onRerunClick}
+        enabled={rerunEnabled}
+        beta
+      >
+        <Typography>Rerun this pipeline from this run in the graph.</Typography>
+        <Typography>All upstream runs will use cached outputs.</Typography>
+        <Typography>Only available for cloud-ran pipelines.</Typography>
+      </ActionMenuItem>
+
+      {/* 
+      TODO: Implement nested run deep linking
+      <ActionMenuItem title="Copy share link">
+          <Typography>Copy link to this exact run.</Typography>
+  </ActionMenuItem>
+  */}
+    </ActionMenu>
   );
 }

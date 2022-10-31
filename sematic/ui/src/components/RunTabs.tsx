@@ -42,9 +42,7 @@ export default function RunTabs(props: {
   const grafanaPanelUrlSettings = env.get("GRAFANA_PANEL_URL");
   const grafanaTab = grafanaPanelUrlSettings ? (
     <Tab label="Grafana" value="grafana" />
-  ) : (
-    <></>
-  );
+  ) : null;
 
   return (
     <>

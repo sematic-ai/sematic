@@ -25,6 +25,7 @@ import { User } from "./Models";
 import { Alert, Paper } from "@mui/material";
 import logo from "./Fox.png";
 import { fetchJSON } from "./utils";
+import { SnackBarProvider } from "./components/SnackBarProvider";
 
 export const UserContext = React.createContext<{
   user: User | null;
@@ -107,20 +108,22 @@ function App() {
   return authenticate?.authenticate === false || user ? (
     <UserContext.Provider value={userContextValue}>
       <EnvContext.Provider value={envContextValue}>
-        <Routes>
-          <Route path="/" element={<Shell />}>
-            <Route path="" element={<Home />} />
-            <Route path="pipelines" element={<PipelineIndex />} />
-            <Route
-              path="pipelines/:calculatorPath/:rootId"
-              element={<PipelineView />}
-            />
-            <Route
-              path="pipelines/:calculatorPath"
-              element={<PipelineView />}
-            />
-          </Route>
-        </Routes>
+        <SnackBarProvider>
+          <Routes>
+            <Route path="/" element={<Shell />}>
+              <Route path="" element={<Home />} />
+              <Route path="pipelines" element={<PipelineIndex />} />
+              <Route
+                path="pipelines/:calculatorPath/:rootId"
+                element={<PipelineView />}
+              />
+              <Route
+                path="pipelines/:calculatorPath"
+                element={<PipelineView />}
+              />
+            </Route>
+          </Routes>
+        </SnackBarProvider>
       </EnvContext.Provider>
     </UserContext.Provider>
   ) : (

@@ -4,7 +4,6 @@ sematic_py_lib(
     pip_deps = [
         "flask",
         "sqlalchemy",
-        "flask-socketio",
     ],
     # buildifier: leave-alone
     deps = [
@@ -23,6 +22,20 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "events",
+    srcs = ["events.py"],
+    pip_deps = [
+        "flask",
+        "flask-socketio",
+    ],
+    deps = [
+        ":auth",
+        "//sematic/api:app",
+        "//sematic/db/models:user",
+    ],
+)
+
+sematic_py_lib(
     name = "resolutions",
     srcs = ["resolutions.py"],
     pip_deps = [
@@ -32,6 +45,7 @@ sematic_py_lib(
     ],
     deps = [
         ":auth",
+        ":events",
         ":request_parameters",
         "//sematic/api:app",
         "//sematic/db:queries",
