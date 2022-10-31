@@ -12,7 +12,11 @@ from contextlib import contextmanager
 from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.resolver import Resolver
-from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
+from sematic.utils.exceptions import (
+    ExceptionMetadata,
+    ResolutionError,
+    format_exception_for_run,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -251,7 +255,7 @@ class StateMachineResolver(Resolver, abc.ABC):
     @staticmethod
     def _get_resolved_kwargs(future: AbstractFuture) -> typing.Dict[str, typing.Any]:
         """
-        Extract only resolved/concrete kwargs
+        Extract only resolved/concrete kwargs.
         """
         resolved_kwargs = {}
         for name, value in future.kwargs.items():
@@ -301,35 +305,45 @@ class StateMachineResolver(Resolver, abc.ABC):
     def _handle_future_failure(
         self,
         future: AbstractFuture,
-        exception: Exception,
         exception_metadata: typing.Optional[ExceptionMetadata] = None,
-    ):
+        external_exception_metadata: typing.Optional[ExceptionMetadata] = None,
+    ) -> None:
         """
         When a future fails, its state machine as well as that of its parent
         futures need to be updated.
-        """
-        if (
-            future.props.retry_settings is not None
-            and future.props.retry_settings.should_retry(
-                exception_metadata or format_exception_for_run(exception)
-            )
-        ):
-            retries_left = (
-                future.props.retry_settings.retries
-                - future.props.retry_settings.retry_count
-            )
-            logger.info(f"Retrying {future.id}. " f"{retries_left} retries left.")
-            self._set_future_state(future, FutureState.RETRYING)
-            future.props.retry_settings.retry_count += 1
-        else:
-            logging.info(f"Retries exhausted for {future.id}, failing now.")
-            self._fail_future_and_parents(future)
-            raise exception
 
-    def _fail_future_and_parents(
-        self,
-        future: AbstractFuture,
-    ):
+        Parameters
+        ----------
+        exception_metadata:
+            Metadata describing an exception which occurred during code execution
+            (Pipeline, Resolver, Driver)
+        external_exception_metadata:
+            Metadata describing an exception which occurred in external compute
+            infrastructure
+        """
+        retry_settings = future.props.retry_settings
+
+        if retry_settings is None:
+            logging.info(f"No retries configured for {future.id}, failing now.")
+            self._fail_future_and_parents(future)
+            raise ResolutionError(exception_metadata, external_exception_metadata)
+
+        if not retry_settings.should_retry(
+            exception_metadata, external_exception_metadata
+        ):
+            logging.info(
+                "Retries exhausted or exception not retriable for "
+                f"{future.id}, failing now."
+            )
+            self._fail_future_and_parents(future)
+            raise ResolutionError(exception_metadata, external_exception_metadata)
+
+        retries_left = retry_settings.retries - retry_settings.retry_count
+        logger.info(f"Retrying {future.id}. {retries_left} retries left.")
+        self._set_future_state(future, FutureState.RETRYING)
+        retry_settings.retry_count += 1
+
+    def _fail_future_and_parents(self, future: AbstractFuture) -> None:
         """
         Mark the future FAILED and its parent futures NESTED_FAILED.
         """
@@ -345,8 +359,9 @@ class StateMachineResolver(Resolver, abc.ABC):
     ) -> None:
         try:
             value = future.calculator.cast_output(value)
-        except TypeError as exception:
-            self._handle_future_failure(future, exception)
+        except TypeError as e:
+            logger.error("Unable to process future value", exc_info=e)
+            self._handle_future_failure(future, format_exception_for_run(e))
             return
 
         if isinstance(value, AbstractFuture):
@@ -360,7 +375,7 @@ class StateMachineResolver(Resolver, abc.ABC):
         self, future: AbstractFuture, nested_future: AbstractFuture
     ) -> None:
         """
-        Setting a nested future on a RAN future
+        Setting a nested future on a RAN future.
         """
         future.nested_future = nested_future
         nested_future.parent_future = future

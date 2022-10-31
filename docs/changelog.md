@@ -5,6 +5,7 @@ with nothing else on the line.
 -->
 * HEAD
     * [feature] Support for easier testing of Sematic pipelines
+    * [feature] Expose Kubernetes infra failures in the Run panel
 * 0.18.1
     * [bugfix] Remove SQLAlchemy model dependencies from Python migrations
     * [bugfix] Enable usage of multiple base images in detached mode
