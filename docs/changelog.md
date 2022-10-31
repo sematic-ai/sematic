@@ -4,8 +4,9 @@ Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
 with nothing else on the line.
 -->
 * HEAD
-    * [feature] Support for easier testing of Sematic pipelines
+* 0.19.0
     * [feature] Expose Kubernetes infra failures in the Run panel
+    * [feature] Support for easier testing of Sematic pipelines
 * 0.18.1
     * [bugfix] Remove SQLAlchemy model dependencies from Python migrations
     * [bugfix] Enable usage of multiple base images in detached mode
