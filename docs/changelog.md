@@ -6,6 +6,7 @@ with nothing else on the line.
 * HEAD
 * 0.19.0
     * [feature] Expose Kubernetes infra failures in the Run panel
+    * [feature] Enable restarting resolutions from a particular run, using different code
     * [feature] Support for easier testing of Sematic pipelines
 * 0.18.1
     * [bugfix] Remove SQLAlchemy model dependencies from Python migrations
