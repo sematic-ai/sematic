@@ -284,11 +284,10 @@ def _getfullargspec(func_: Callable) -> inspect.FullArgSpec:
     for arg in (full_arg_spec.varargs, full_arg_spec.varkw):
         if arg is not None:
             raise ValueError(
-                (
-                    "Variadic arguments are not supported."
-                    " {} has variadic argument {}."
-                    " See https://docs."
-                ).format(func_, repr(arg))
+                "Variadic arguments are not supported. "
+                f"'{func_.__name__}' has variadic argument {repr(arg)}. Please see "
+                "https://docs.sematic.dev/diving-deeper/future-algebra#variadic-arguments"
+                " for more details."
             )
 
     return full_arg_spec
