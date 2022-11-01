@@ -4,6 +4,9 @@ Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
 with nothing else on the line.
 -->
 * HEAD
+* [0.19.1](https://pypi.org/project/sematic/0.19.1/)
+    * [improvement] Various minor documentation improvements
+    * [bugfix] Fix various bugs which prevented restarting resolutions from the UI
 * [0.19.0](https://pypi.org/project/sematic/0.19.0/)
     * [feature] Expose Kubernetes infra failures in the Run panel
     * [feature] Enable restarting resolutions from the command line from a particular run, using different code
