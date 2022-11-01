@@ -1,4 +1,5 @@
 # Standard Library
+import abc
 import inspect
 import typing
 from enum import Enum
@@ -298,7 +299,12 @@ def validate_type_annotation(*types: TypeAnnotation) -> None:
             subclasses_type = issubclass(type_, type)
         except TypeError:
             subclasses_type = False
-        if type(type_) is type or subclasses_type or is_enum(type_):
+        if (
+            type(type_) is type
+            or subclasses_type
+            or is_enum(type_)
+            or _has_abcmeta_class(type_)
+        ):
             return
         if not is_parameterized_generic(type_, raise_for_unparameterized=True):
             raise TypeError(
@@ -309,6 +315,10 @@ def validate_type_annotation(*types: TypeAnnotation) -> None:
 
     for t in types:
         assert_supported(t)
+
+
+def _has_abcmeta_class(type_: TypeAnnotation) -> bool:
+    return issubclass(type(type_), abc.ABCMeta)
 
 
 def is_supported_type_annotation(type_: TypeAnnotation) -> bool:
