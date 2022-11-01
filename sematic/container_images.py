@@ -3,8 +3,7 @@ import os
 import re
 from typing import Dict
 
-# Third-party
-import __main__
+import __main__  # isort:skip
 
 CONTAINER_IMAGE_ENV_VAR = "SEMATIC_CONTAINER_IMAGE"
 
