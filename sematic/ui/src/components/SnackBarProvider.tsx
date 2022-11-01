@@ -45,7 +45,6 @@ export function SnackBarProvider(props: { children: any }) {
     () => (
       <>
         <Button
-          color="secondary"
           size="small"
           onClick={() => {
             snackMessage && snackMessage.onClick && snackMessage.onClick();

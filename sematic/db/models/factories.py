@@ -96,7 +96,7 @@ def clone_root_run(run: Run, edges: List[Edge]) -> Tuple[Run, List[Edge]]:
             destination_run_id=(run_id if edge.destination_run_id == run.id else None),
             source_run_id=(run_id if edge.source_run_id == run.id else None),
             destination_name=edge.destination_name,
-            artifact_id=None,
+            artifact_id=edge.artifact_id,
         )
         for edge in edges
     ]

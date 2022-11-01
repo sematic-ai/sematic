@@ -152,16 +152,16 @@ def test_clone_root_run(run: Run):  # noqa: F811
     assert cloned_edges[0].destination_run_id == cloned_run.id
     assert cloned_edges[0].source_run_id is None
     assert cloned_edges[0].destination_name == "foo"
-    assert cloned_edges[0].artifact_id is None
+    assert cloned_edges[0].artifact_id == "abc123"
 
     assert cloned_edges[1].destination_run_id == cloned_run.id
     assert cloned_edges[1].source_run_id is None
     assert cloned_edges[1].destination_name == "bar"
-    assert cloned_edges[1].artifact_id is None
+    assert cloned_edges[1].artifact_id == "def456"
 
     assert cloned_edges[2].destination_run_id is None
     assert cloned_edges[2].source_run_id == cloned_run.id
-    assert cloned_edges[2].artifact_id is None
+    assert cloned_edges[2].artifact_id == "ghi789"
 
 
 def test_clone_resolution(resolution: Resolution):  # noqa: F811
