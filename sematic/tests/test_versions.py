@@ -13,27 +13,25 @@ def test_min_client_version():
 
 
 def test_changelog():
-    changelog_versions = []
+    changelog_version = None
     with open("docs/changelog.md", "r") as fp:
         for line in fp:
             # regex matches lines that start with a literal *, have a space,
             # and then MAJOR.MINOR.PATCH where MAJOR, MINOR, and PATCH consist
             # only of digits (and at least one digit). It also allows for space
             # characters after the patch version before the end of the line.
-            if re.match(r"\* \d+\.\d+.\d+\s*$", line) is None:
+            match = re.match(r"\* \[(\d+\.\d+\.\d+.*)\]\(.+\)$", line)
+            if match is None:
                 continue
-            version_string = line[len("* ") :]  # noqa: E203
-            changelog_versions.append(tuple(int(v) for v in version_string.split(".")))
+            version_string = match.groups()[0]
+            changelog_version = tuple(int(v) for v in version_string.split("."))
+            break
 
     message = (
-        f"Latest version in changelog.md ({changelog_versions[0]}) doesn't "
+        f"Latest version in changelog.md ({changelog_version}) doesn't "
         f"match the version in versions.py ({CURRENT_VERSION})."
     )
-    assert changelog_versions[0] == CURRENT_VERSION, message
-
-    # assert versions are in descending order
-    for version, following_version in zip(changelog_versions, changelog_versions[1:]):
-        assert version > following_version
+    assert changelog_version == CURRENT_VERSION, message
 
 
 def test_helm_chart():
