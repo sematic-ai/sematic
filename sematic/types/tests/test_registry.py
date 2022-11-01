@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum, unique
 from typing import Any, List, Literal, Optional, Union
 
-# Third party
+# Third-party
 import pytest
 
 # Sematic

@@ -10,7 +10,6 @@ import time
 from typing import List
 
 # Sematic
-# Third-party
 import sematic
 
 

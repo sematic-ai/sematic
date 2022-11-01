@@ -1,4 +1,4 @@
-# Third party
+# Third-party
 from flask import Flask
 from flask_cors import CORS
 
