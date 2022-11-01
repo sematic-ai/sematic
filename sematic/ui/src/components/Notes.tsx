@@ -40,7 +40,9 @@ export function NoteView(props: {
         </Typography>
       </Typography>
       <Box sx={{ my: 4 }}>
-        <Typography fontSize="small">{note.note}</Typography>
+        <Typography fontSize="small" sx={{ overflowWrap: "anywhere" }}>
+          {note.note}
+        </Typography>
       </Box>
       <Box sx={{ display: "grid", gridTemplateColumns: "auto 1fr auto" }}>
         <Box sx={{ gridColumn: 1, color: theme.palette.grey[300] }}>
