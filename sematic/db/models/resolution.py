@@ -21,7 +21,7 @@ import logging
 from enum import Enum, unique
 from typing import Any, Dict, List, Optional, Union
 
-# Third party
+# Third-party
 from sqlalchemy import Column, types
 from sqlalchemy.orm import validates
 

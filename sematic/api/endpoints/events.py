@@ -1,9 +1,8 @@
 # Standard Library
 from typing import Optional
 
+# Third-party
 import flask
-
-# Third party
 import flask_socketio  # type: ignore
 
 # Sematic

@@ -3,6 +3,7 @@ import os
 import re
 from typing import Dict
 
+# Third-party
 import __main__
 
 CONTAINER_IMAGE_ENV_VAR = "SEMATIC_CONTAINER_IMAGE"

@@ -1,4 +1,5 @@
 try:
+    # Third-party
     import matplotlib  # noqa: F401
 except ImportError:
     pass

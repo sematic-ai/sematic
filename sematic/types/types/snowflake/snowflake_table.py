@@ -4,8 +4,8 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Any, Generator, Type
 
-# Third-party
 try:
+    # Third-party
     import pandas
     import pyarrow  # type: ignore  # noqa: F401
     import snowflake.connector
