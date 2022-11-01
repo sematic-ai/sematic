@@ -61,7 +61,7 @@ export default function RunTabs(props: {
         </TabPanel>
         <TabPanel value="output" sx={{ pt: 5 }}>
           {["CREATED", "SCHEDULED", "RAN"].includes(run.future_state) && (
-            <Alert severity="info">No output yet. Run has not completed</Alert>
+            <Alert severity="info">No output yet. Run has not completed.</Alert>
           )}
           {["FAILED", "NESTED_FAILED"].includes(run.future_state) && (
             <Alert severity="error">Run has failed. No output.</Alert>
