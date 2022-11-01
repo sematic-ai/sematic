@@ -1,6 +1,9 @@
 # Standard Library
 import json
 
+# Third-party
+from sqlalchemy.sql import text
+
 # Sematic
 from sematic.db.db import db
 
@@ -21,9 +24,15 @@ def up():
             container_image_uris = json.dumps({"default": container_image_uri})
 
             conn.execute(
-                "UPDATE resolutions SET container_image_uris = ? WHERE root_id = ?",
-                container_image_uris,
-                resolution_id,
+                text(
+                    "UPDATE resolutions "
+                    "SET container_image_uris = :container_image_uris "
+                    "WHERE root_id = :root_id"
+                ),
+                dict(
+                    container_image_uris=container_image_uris,
+                    root_id=resolution_id,
+                ),
             )
 
 
