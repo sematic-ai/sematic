@@ -3,7 +3,7 @@ aws:
     enabled: true
     storage_bucket: sematic-dev
 server:
-  image: sematicai/sematic-server:v0.19.1
+  image: sematicai/sematic-server:v0.19.2
   resources:
     replicas: 1
     cpu: 500m
