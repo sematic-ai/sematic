@@ -74,11 +74,16 @@ export default function PipelinePanels(props: {
 
   useEffect(() => {
     if (selectedRun && runs) {
-      runs.forEach((run) => {
-        if (run.calculator_path === selectedRun.calculator_path) {
-          setSelectedRun(run);
-        }
-      });
+      let newSelectedRun = runs.get(selectedRun.id);
+      if (!newSelectedRun) {
+        newSelectedRun = rootRun;
+        runs.forEach((run: Run) => {
+          if (run.calculator_path === selectedRun.calculator_path) {
+            newSelectedRun = run;
+          }
+        });
+      }
+      setSelectedRun(newSelectedRun);
     }
   }, [runs]);
 
