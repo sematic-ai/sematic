@@ -6,7 +6,7 @@ import re
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
-# Third party
+# Third-party
 from sqlalchemy import Column, types
 from sqlalchemy.orm import validates
 

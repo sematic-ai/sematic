@@ -1,7 +1,6 @@
+# Third-party
 import matplotlib.figure
 import matplotlib.pyplot as plt
-
-# Third-party
 import pandas as pd
 import seaborn as sns
 

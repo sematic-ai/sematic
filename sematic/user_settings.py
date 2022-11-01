@@ -4,7 +4,7 @@ import logging
 import os
 from typing import Dict, Optional
 
-# Third-arty
+# Third-party
 import yaml
 
 # Sematic

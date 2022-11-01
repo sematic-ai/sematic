@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional
 from unittest import mock
 
-# Third party
+# Third-party
 import pytest
 
 # Sematic

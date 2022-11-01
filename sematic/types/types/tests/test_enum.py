@@ -1,6 +1,7 @@
 # Standard Library
 from enum import Enum, unique
 
+# Third-party
 import pytest
 
 # Sematic

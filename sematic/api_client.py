@@ -2,7 +2,7 @@
 import logging
 from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
-# Third party
+# Third-party
 import requests
 from requests.exceptions import ConnectionError
 

@@ -2,7 +2,7 @@
 from typing import Iterable, List
 from unittest import mock
 
-# Third party
+# Third-party
 import pytest
 
 # Sematic
