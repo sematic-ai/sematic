@@ -2,7 +2,7 @@
 import datetime
 import uuid
 
-# Third party
+# Third-party
 from sqlalchemy import Column, types
 
 # Sematic

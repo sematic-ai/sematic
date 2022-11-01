@@ -2,9 +2,8 @@
 from datetime import datetime
 from unittest import mock
 
-import pytest
-
 # Third-party
+import pytest
 from kubernetes.client.exceptions import ApiException
 
 # Sematic

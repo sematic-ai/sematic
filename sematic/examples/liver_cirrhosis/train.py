@@ -1,13 +1,12 @@
 # Standard Library
 from dataclasses import dataclass
 
+# Third-party
 import matplotlib.figure
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import sklearn
-
-# Third-party
 from sklearn.metrics import (
     auc,
     classification_report,

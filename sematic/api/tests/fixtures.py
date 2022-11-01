@@ -6,9 +6,8 @@ from typing import Any, Dict
 from unittest import mock
 from urllib.parse import urljoin
 
-import flask.testing
-
 # Third-party
+import flask.testing
 import pytest
 
 # responses 0.21.0 has type stubs but they break mypy

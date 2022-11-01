@@ -1,4 +1,4 @@
-# Third party
+# Third-party
 from sqlalchemy.ext.declarative import declarative_base
 
 

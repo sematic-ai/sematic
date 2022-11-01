@@ -1,7 +1,7 @@
 # Standard Library
 from unittest import mock
 
-# Third party
+# Third-party
 import pytest
 
 # Sematic

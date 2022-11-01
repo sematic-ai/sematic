@@ -25,6 +25,7 @@ def get_git_info(object_: Any) -> Optional["Repo"]:  # type: ignore # noqa: F821
     """
     try:
         # if git is not installed on the user's system, this will fail to import
+        # Third-party
         import git  # type: ignore
     except ImportError as e:
         logger.warn("Could not get git information", exc_info=e)
