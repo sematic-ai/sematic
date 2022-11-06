@@ -41,11 +41,11 @@ def test_any():
     with pytest.raises(TypeError, match=expected):
 
         @func
-        def f(x: Any) -> None:
+        def f1(x: Any) -> None:
             pass
 
     @func
-    def f(x: object) -> None:
+    def f2(x: object) -> None:
         pass
 
 
