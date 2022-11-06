@@ -67,8 +67,37 @@ def test_name():
 
 
 def test_not_a_function():
-    with pytest.raises(ValueError, match="not a function"):
+    with pytest.raises(
+        TypeError, match=r".*can only be used with functions. But 'abc' is a 'str'."
+    ):
         Calculator("abc", {}, None)
+
+    with pytest.raises(
+        TypeError, match=r".*can only be used with functions, not methods.*"
+    ):
+
+        class SomeClass:
+            @func
+            def some_method(self: object) -> None:
+                pass
+
+    with pytest.raises(
+        TypeError,
+        match=r".*can't be used with async functions, generators, or coroutines.*",
+    ):
+
+        @func
+        def a_generator() -> None:
+            yield 42
+
+    with pytest.raises(
+        TypeError,
+        match=r".*can't be used with async functions, generators, or coroutines.*",
+    ):
+
+        @func
+        async def an_async_func() -> int:
+            return 42
 
 
 def test_inline_and_resource_reqs():

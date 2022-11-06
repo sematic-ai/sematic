@@ -46,8 +46,7 @@ class Calculator(AbstractCalculator):
         retry_settings: Optional[RetrySettings] = None,
         base_image_tag: Optional[str] = None,
     ) -> None:
-        if not inspect.isfunction(func):
-            raise ValueError("{} is not a function".format(func))
+        self._validate_func(func)
         self._func = func
 
         self._input_types = input_types
@@ -75,6 +74,48 @@ class Calculator(AbstractCalculator):
             validate_type_annotation(self._output_type)
         except TypeError as e:
             raise TypeError(f"Invalid type annotation for output of {repr(self)}: {e}")
+
+    @classmethod
+    def _validate_func(cls, func):
+        is_method_like = (
+            inspect.ismethod(func)
+            or
+            # Why is this second check necessary? Because if somebody uses @func
+            # on a method inside the class itself, the method is not yet bound
+            # to the class, and inspect's ismethod won't pick it up.
+            (
+                hasattr(func, "__call__")
+                and len(inspect.signature(func).parameters.keys()) >= 1
+                and list(inspect.signature(func).parameters.keys())[0]
+                in {"self", "cls"}
+            )
+        )
+        if is_method_like:
+            raise TypeError(
+                "@sematic.func can only be used with functions, not methods. "
+                f"But {repr(func)} is a method. Instead, consider defining a "
+                "function where the first argument is the object currently being "
+                "passed as 'self' or 'cls'."
+            )
+        is_coroutine_like = (
+            inspect.isawaitable(func)
+            or inspect.isasyncgenfunction(func)
+            or inspect.isasyncgen(func)
+            or inspect.iscoroutine(func)
+            or inspect.iscoroutinefunction(func)
+            or inspect.isgenerator(func)
+            or inspect.isgeneratorfunction(func)
+        )
+        if is_coroutine_like:
+            raise TypeError(
+                "@sematic.func can't be used with async functions, generators, "
+                f"or coroutines. But {repr(func)} is one of these."
+            )
+        if not inspect.isfunction(func):
+            raise TypeError(
+                "@sematic.func can only be used with functions. "
+                f"But {repr(func)} is a '{type(func).__name__}'."
+            )
 
     def __repr__(self):
         return "{}.{}".format(self.__module__, self.__name__)
