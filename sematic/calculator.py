@@ -61,7 +61,10 @@ class Calculator(AbstractCalculator):
         self.__doc__ = func.__doc__
         self.__module__ = func.__module__
         self.__name__ = func.__name__
-        for key, annotation in input_types.items():
+        self._validate()
+
+    def _validate(self):
+        for key, annotation in self._input_types.items():
             try:
                 validate_type_annotation(annotation)
             except TypeError as e:
