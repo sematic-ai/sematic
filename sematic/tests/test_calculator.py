@@ -35,7 +35,7 @@ def test_decorator_with_params():
 def test_any():
     expected = (
         r"Invalid type annotation for argument 'x' "
-        r"of sematic.tests.test_calculator.f: 'Any' is "
+        r"of sematic.tests.test_calculator.f1: 'Any' is "
         r"not a Sematic-supported type. Use 'object' instead."
     )
     with pytest.raises(TypeError, match=expected):

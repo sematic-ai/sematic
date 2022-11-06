@@ -46,9 +46,11 @@ def test_validate_type_annotation():
         validate_type_annotation(List[int], 42)
     with pytest.raises(TypeError, match=r"Expected a Sematic-supported type here"):
         validate_type_annotation(Literal[42])
-    with pytest.raises(TypeError, match="Expected a Sematic-supported type here"):
+    with pytest.raises(
+        TypeError, match=r"'Any' is not a Sematic-supported.*'object' instead."
+    ):
         validate_type_annotation(Any)
-    with pytest.raises(TypeError, match="typing.Union must be parametrized"):
+    with pytest.raises(TypeError, match=r"typing.Union must be parametrized.*"):
         validate_type_annotation(Union)
 
 
