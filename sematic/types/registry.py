@@ -294,6 +294,10 @@ def validate_type_annotation(*types: TypeAnnotation) -> None:
     """
 
     def assert_supported(type_):
+        if type_ is Any:
+            raise TypeError(
+                "'Any' is not a Sematic-supported type. Use 'object' instead."
+            )
         try:
             subclasses_type = issubclass(type_, type)
         except TypeError:

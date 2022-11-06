@@ -24,6 +24,7 @@ from sematic.future import Future
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.retry_settings import RetrySettings
 from sematic.types.casting import can_cast_type, safe_cast
+from sematic.types.registry import validate_type_annotation
 from sematic.types.type import is_type
 
 
@@ -47,7 +48,6 @@ class Calculator(AbstractCalculator):
     ) -> None:
         if not inspect.isfunction(func):
             raise ValueError("{} is not a function".format(func))
-
         self._func = func
 
         self._input_types = input_types
@@ -61,6 +61,17 @@ class Calculator(AbstractCalculator):
         self.__doc__ = func.__doc__
         self.__module__ = func.__module__
         self.__name__ = func.__name__
+        for key, annotation in input_types.items():
+            try:
+                validate_type_annotation(annotation)
+            except TypeError as e:
+                raise TypeError(
+                    f"Invalid type annotation for argument '{key}' of {repr(self)}: {e}"
+                )
+        try:
+            validate_type_annotation(self._output_type)
+        except TypeError as e:
+            raise TypeError(f"Invalid type annotation for output of {repr(self)}: {e}")
 
     def __repr__(self):
         return "{}.{}".format(self.__module__, self.__name__)

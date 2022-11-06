@@ -1,5 +1,5 @@
 # Standard Library
-from typing import List, Union
+from typing import Any, List, Union
 
 # Third-party
 import pytest
@@ -30,6 +30,23 @@ def test_decorator_with_params():
         pass
 
     assert isinstance(f, Calculator)
+
+
+def test_any():
+    expected = (
+        r"Invalid type annotation for argument 'x' "
+        r"of sematic.tests.test_calculator.f: 'Any' is "
+        r"not a Sematic-supported type. Use 'object' instead."
+    )
+    with pytest.raises(TypeError, match=expected):
+
+        @func
+        def f(x: Any) -> None:
+            pass
+
+    @func
+    def f(x: object) -> None:
+        pass
 
 
 def test_doc():
