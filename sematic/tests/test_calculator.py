@@ -87,7 +87,7 @@ def test_not_a_function():
     ):
 
         @func
-        def a_generator() -> None:
+        def a_generator() -> object:
             yield 42
 
     with pytest.raises(
