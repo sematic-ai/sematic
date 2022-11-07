@@ -326,7 +326,7 @@ def _is_method_like(func) -> bool:
 def _is_coroutine_like(func) -> bool:
     """Return True if and only if 'func' appears to be async, a coroutine, or similar"""
     return any(
-        is_(func)
+        is_(func)  # type: ignore
         for is_ in (
             inspect.isawaitable,
             inspect.isasyncgenfunction,
