@@ -77,44 +77,24 @@ class Calculator(AbstractCalculator):
 
     @classmethod
     def _validate_func(cls, func):
-        is_method_like = (
-            inspect.ismethod(func)
-            or
-            # Why is this second check necessary? Because if somebody uses @func
-            # on a method inside the class itself, the method is not yet bound
-            # to the class, and inspect's ismethod won't pick it up.
-            (
-                hasattr(func, "__call__")
-                and len(inspect.signature(func).parameters.keys()) >= 1
-                and list(inspect.signature(func).parameters.keys())[0]
-                in {"self", "cls"}
-            )
-        )
-        if is_method_like:
-            raise TypeError(
-                "@sematic.func can only be used with functions, not methods. "
-                f"But {repr(func)} is a method. Instead, consider defining a "
-                "function where the first argument is the object currently being "
-                "passed as 'self' or 'cls'."
-            )
-        is_coroutine_like = (
-            inspect.isawaitable(func)
-            or inspect.isasyncgenfunction(func)
-            or inspect.isasyncgen(func)
-            or inspect.iscoroutine(func)
-            or inspect.iscoroutinefunction(func)
-            or inspect.isgenerator(func)
-            or inspect.isgeneratorfunction(func)
-        )
-        if is_coroutine_like:
-            raise TypeError(
-                "@sematic.func can't be used with async functions, generators, "
-                f"or coroutines. But {repr(func)} is one of these."
-            )
         if not inspect.isfunction(func):
             raise TypeError(
                 "@sematic.func can only be used with functions. "
                 f"But {repr(func)} is a '{type(func).__name__}'."
+            )
+
+        if _is_method_like(func):
+            raise TypeError(
+                "@sematic.func can only be used with functions, not methods. "
+                f"But {repr(func)} is a method. Instead, consider defining a "
+                "function where the first argument is the object currently being "
+                "passed as 'self' or 'cls'. You should also rename that parameter "
+                "to something more descriptive"
+            )
+        if _is_coroutine_like(func):
+            raise TypeError(
+                "@sematic.func can't be used with async functions, generators, "
+                f"or coroutines. But {repr(func)} is one of these."
             )
 
     def __repr__(self):
@@ -325,6 +305,38 @@ def func(
         return _wrapper
 
     return _wrapper(func)
+
+
+def _is_method_like(func) -> bool:
+    """Return True if and only if 'func' appears to be a method"""
+    return (
+        inspect.ismethod(func)
+        or
+        # Why is this second check necessary? Because if somebody uses @func
+        # on a method inside the class itself, the method is not yet bound
+        # to the class, and inspect's ismethod won't pick it up.
+        (
+            hasattr(func, "__call__")
+            and len(inspect.signature(func).parameters.keys()) >= 1
+            and list(inspect.signature(func).parameters.keys())[0] in {"self", "cls"}
+        )
+    )
+
+
+def _is_coroutine_like(func) -> bool:
+    """Return True if and only if 'func' appears to be async, a coroutine, or similar"""
+    return any(
+        is_(func)
+        for is_ in (
+            inspect.isawaitable,
+            inspect.isasyncgenfunction,
+            inspect.isasyncgen,
+            inspect.iscoroutine,
+            inspect.iscoroutinefunction,
+            inspect.isgenerator,
+            inspect.isgeneratorfunction,
+        )
+    )
 
 
 def _getfullargspec(func_: Callable) -> inspect.FullArgSpec:
