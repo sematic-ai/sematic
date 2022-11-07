@@ -253,7 +253,17 @@ def test_convert_lists():
 
 
 def test_convert_tuples():
-    pass
+    value = (42, [1, baz(), 3], (foo(), bar()), foo())
+    expected_type = Tuple[int, List[int], Tuple[str, str], str]
+    result = _convert_tuples(value, expected_type)
+    assert isinstance(result, Future)
+    assert result.props.inline is True
+
+    @func
+    def pipeline() -> expected_type:
+        return value
+
+    assert pipeline().resolve(tracking=False) == (42, [1, 42, 3], ("foo", "bar"), "foo")
 
 
 def test_inline_default():

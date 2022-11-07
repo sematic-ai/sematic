@@ -12,7 +12,6 @@ from typing import (
     List,
     Optional,
     Sequence,
-    Tuple,
     Type,
     TypeVar,
     Union,
@@ -390,7 +389,6 @@ def _make_tuple(
     if not isinstance(tuple_with_futures, collections.abc.Sequence):
         raise TypeError("tuple_with_futures must be a collections.Sequence.")
 
-    element0_type = get_args(type_)[0]  # type: ignore
     if len(get_args(type_)) > 1:
         if get_args(type_)[-1] is ...:
             raise TypeError("Sematic does not support Ellipsis in Tuples yet (...)")
