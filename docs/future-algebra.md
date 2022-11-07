@@ -111,7 +111,7 @@ turning `Tuple[Future[float], Future[str]]` into
 `Future[Tuple[float, str]]`. Note that using futures nested in
 tuples-in-lists is not supported. Other collections, such as `Dict`,
 `Set`, etc. do NOT currently perform these kinds of automatic
-conversions--you will need to do them explicitly.
+conversions; you will need to do them explicitly.
 
 ### Item access
 
