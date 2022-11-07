@@ -249,7 +249,7 @@ def _repr_str_iterable(str_iterable: Iterable[str]) -> str:
 
 
 def func(
-    func: Callable = None,
+    func: Optional[Callable] = None,
     inline: bool = True,
     resource_requirements: Optional[ResourceRequirements] = None,
     retry: Optional[RetrySettings] = None,

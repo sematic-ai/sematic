@@ -67,14 +67,6 @@ pytest_test(
 )
 
 pytest_test(
-    name = "test_client",
-    srcs = ["test_client.py"],
-    deps = [
-        "//sematic:client",
-    ],
-)
-
-pytest_test(
     name = "test_log_reader",
     srcs = ["test_log_reader.py"],
     deps = [

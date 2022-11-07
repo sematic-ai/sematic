@@ -143,7 +143,7 @@ def test_none_types():
 def test_types_specified():
     @func
     def f(a: float) -> int:
-        pass
+        return int(a)
 
     assert f.input_types == dict(a=float)
     assert f.output_type is int
