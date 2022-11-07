@@ -159,7 +159,7 @@ def main(
 
         else:
             logger.info("Executing %s", func.__name__)
-            output = func.func(**kwargs)
+            output = func.calculate(**kwargs)
             _set_run_output(run, output, func.output_type, edges)
 
     except Exception as e:
