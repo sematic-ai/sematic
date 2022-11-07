@@ -1,4 +1,5 @@
 # Standard Library
+import abc
 import inspect
 import typing
 from enum import Enum
@@ -298,11 +299,8 @@ def validate_type_annotation(*types: TypeAnnotation) -> None:
             raise TypeError(
                 "'Any' is not a Sematic-supported type. Use 'object' instead."
             )
-        try:
-            subclasses_type = issubclass(type_, type)
-        except TypeError:
-            subclasses_type = False
-        if type(type_) is type or subclasses_type or is_enum(type_):
+
+        if _is_type(type_) or _is_abc(type_) or is_enum(type_):
             return
         if not is_parameterized_generic(type_, raise_for_unparameterized=True):
             raise TypeError(
@@ -379,17 +377,13 @@ def is_parameterized_generic(
 
 def _is_supported_registry_key(type_: RegistryKey) -> bool:
     try:
-        subclasses_type = issubclass(type_, type)
-    except TypeError:
-        subclasses_type = False
-    try:
         subclasses_enum = issubclass(type_, Enum)
     except TypeError:
         subclasses_enum = False
     is_unparameterized_generic = type_ in SUPPORTED_GENERIC_TYPING_ANNOTATIONS.keys()
     return (
-        type(type_) is type
-        or subclasses_type
+        _is_type(type_)
+        or _is_abc(type_)
         or is_unparameterized_generic
         or subclasses_enum
     )
@@ -414,6 +408,44 @@ def is_sematic_parametrized_generic_type(type_: Any) -> bool:
         )
     except Exception:
         return False
+
+
+def _is_type(type_: Any) -> bool:
+    """Determine if type_ subclasses 'type' or has a type of 'type'
+
+    Parameters
+    ----------
+    type_:
+        The type to check
+
+    Returns
+    -------
+    True if type_ subclasses 'type' or has a type of 'type'. False otherwise
+    """
+    try:
+        subclasses_type = issubclass(type_, type)
+    except TypeError:
+        subclasses_type = False
+    return subclasses_type or type(type_) is type
+
+
+def _is_abc(type_: Any) -> bool:
+    """Determine if type_ subclasses 'ABC' or has a type of 'ABCMeta'
+
+    Parameters
+    ----------
+    type_:
+        The type to check
+
+    Returns
+    -------
+    True if type_ subclasses 'ABC' or has a type of 'ABCMeta'. False otherwise
+    """
+    try:
+        subclasses_abc = issubclass(type_, abc.ABC)
+    except TypeError:
+        subclasses_abc = False
+    return subclasses_abc or type(type_) is abc.ABCMeta
 
 
 class DataclassKey:

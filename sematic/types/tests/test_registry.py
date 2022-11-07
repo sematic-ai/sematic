@@ -1,4 +1,5 @@
 # Standard Library
+from abc import ABC, ABCMeta, abstractmethod
 from dataclasses import dataclass
 from enum import Enum, unique
 from typing import Any, List, Literal, Optional, Union
@@ -31,11 +32,25 @@ class FooStandard:
     pass
 
 
+class FooAbc(ABC):
+    @abstractmethod
+    def do_foo(self):
+        pass
+
+
+class FooAbcMeta(metaclass=ABCMeta):
+    @abstractmethod
+    def do_foo(self):
+        pass
+
+
 def test_validate_type_annotation():
     validate_type_annotation(int)
     validate_type_annotation(Color)
     validate_type_annotation(FooDataclass)
     validate_type_annotation(FooStandard)
+    validate_type_annotation(FooAbc)
+    validate_type_annotation(FooAbcMeta)
     validate_type_annotation(Union[int, float])
     validate_type_annotation(Optional[int])
     validate_type_annotation(List[int])
@@ -57,6 +72,8 @@ def test_validate_type_annotation():
 def test_is_supported_type_annotation():
     assert is_supported_type_annotation(FooDataclass)
     assert is_supported_type_annotation(Color)
+    assert is_supported_type_annotation(FooAbc)
+    assert is_supported_type_annotation(FooAbcMeta)
     assert not is_supported_type_annotation(Union)
 
 
@@ -64,6 +81,8 @@ def test_is_parameterized_generic():
     assert not is_parameterized_generic(FooDataclass)
     assert not is_parameterized_generic(FooStandard)
     assert not is_parameterized_generic(Color)
+    assert not is_parameterized_generic(FooAbc)
+    assert not is_parameterized_generic(FooAbcMeta)
     assert is_parameterized_generic(Union[int, float])
     assert is_parameterized_generic(Optional[int])
     assert is_parameterized_generic(List[int])
@@ -77,6 +96,8 @@ def test_validate_registry_keys():
     _validate_registry_keys(int, int)
     _validate_registry_keys(FooDataclass)
     _validate_registry_keys(FooStandard)
+    _validate_registry_keys(FooAbc)
+    _validate_registry_keys(FooAbcMeta)
     _validate_registry_keys(Color)
     _validate_registry_keys(Union)
     _validate_registry_keys(List)
