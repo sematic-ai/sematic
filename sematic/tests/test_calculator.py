@@ -1,5 +1,5 @@
 # Standard Library
-from typing import List, Tuple, Union
+from typing import Any, List, Tuple, Union
 
 # Third-party
 import pytest
@@ -39,6 +39,23 @@ def test_decorator_with_params():
     assert isinstance(f, Calculator)
 
 
+def test_any():
+    expected = (
+        r"Invalid type annotation for argument 'x' "
+        r"of sematic.tests.test_calculator.f1: 'Any' is "
+        r"not a Sematic-supported type. Use 'object' instead."
+    )
+    with pytest.raises(TypeError, match=expected):
+
+        @func
+        def f1(x: Any) -> None:
+            pass
+
+    @func
+    def f2(x: object) -> None:
+        pass
+
+
 def test_doc():
     @func
     def f():
@@ -57,8 +74,37 @@ def test_name():
 
 
 def test_not_a_function():
-    with pytest.raises(ValueError, match="not a function"):
+    with pytest.raises(
+        TypeError, match=r".*can only be used with functions. But 'abc' is a 'str'."
+    ):
         Calculator("abc", {}, None)
+
+    with pytest.raises(
+        TypeError, match=r".*can only be used with functions, not methods.*"
+    ):
+
+        class SomeClass:
+            @func
+            def some_method(self: object) -> None:
+                pass
+
+    with pytest.raises(
+        TypeError,
+        match=r".*can't be used with async functions, generators, or coroutines.*",
+    ):
+
+        @func
+        def a_generator() -> object:
+            yield 42
+
+    with pytest.raises(
+        TypeError,
+        match=r".*can't be used with async functions, generators, or coroutines.*",
+    ):
+
+        @func
+        async def an_async_func() -> int:
+            return 42
 
 
 def test_inline_and_resource_reqs():

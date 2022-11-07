@@ -25,6 +25,7 @@ from sematic.future import Future
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.retry_settings import RetrySettings
 from sematic.types.casting import can_cast_type, safe_cast
+from sematic.types.registry import validate_type_annotation
 from sematic.types.type import is_type
 
 
@@ -46,9 +47,7 @@ class Calculator(AbstractCalculator):
         retry_settings: Optional[RetrySettings] = None,
         base_image_tag: Optional[str] = None,
     ) -> None:
-        if not inspect.isfunction(func):
-            raise ValueError("{} is not a function".format(func))
-
+        self._validate_func(func)
         self._func = func
 
         self._input_types = input_types
@@ -62,6 +61,42 @@ class Calculator(AbstractCalculator):
         self.__doc__ = func.__doc__
         self.__module__ = func.__module__
         self.__name__ = func.__name__
+        self._validate()
+
+    def _validate(self):
+        for key, annotation in self._input_types.items():
+            try:
+                validate_type_annotation(annotation)
+            except TypeError as e:
+                raise TypeError(
+                    f"Invalid type annotation for argument '{key}' of {repr(self)}: {e}"
+                )
+        try:
+            validate_type_annotation(self._output_type)
+        except TypeError as e:
+            raise TypeError(f"Invalid type annotation for output of {repr(self)}: {e}")
+
+    @classmethod
+    def _validate_func(cls, func):
+        if not inspect.isfunction(func):
+            raise TypeError(
+                "@sematic.func can only be used with functions. "
+                f"But {repr(func)} is a '{type(func).__name__}'."
+            )
+
+        if _is_method_like(func):
+            raise TypeError(
+                "@sematic.func can only be used with functions, not methods. "
+                f"But {repr(func)} is a method. Instead, consider defining a "
+                "function where the first argument is the object currently being "
+                "passed as 'self' or 'cls'. You should also rename that parameter "
+                "to something more descriptive"
+            )
+        if _is_coroutine_like(func):
+            raise TypeError(
+                "@sematic.func can't be used with async functions, generators, "
+                f"or coroutines. But {repr(func)} is one of these."
+            )
 
     def __repr__(self):
         return "{}.{}".format(self.__module__, self.__name__)
@@ -279,6 +314,38 @@ def func(
         return _wrapper
 
     return _wrapper(func)
+
+
+def _is_method_like(func) -> bool:
+    """Return True if and only if 'func' appears to be a method"""
+    return (
+        inspect.ismethod(func)
+        or
+        # Why is this second check necessary? Because if somebody uses @func
+        # on a method inside the class itself, the method is not yet bound
+        # to the class, and inspect's ismethod won't pick it up.
+        (
+            hasattr(func, "__call__")
+            and len(inspect.signature(func).parameters.keys()) >= 1
+            and list(inspect.signature(func).parameters.keys())[0] in {"self", "cls"}
+        )
+    )
+
+
+def _is_coroutine_like(func) -> bool:
+    """Return True if and only if 'func' appears to be async, a coroutine, or similar"""
+    return any(
+        is_(func)  # type: ignore
+        for is_ in (
+            inspect.isawaitable,
+            inspect.isasyncgenfunction,
+            inspect.isasyncgen,
+            inspect.iscoroutine,
+            inspect.iscoroutinefunction,
+            inspect.isgenerator,
+            inspect.isgeneratorfunction,
+        )
+    )
 
 
 def _getfullargspec(func_: Callable) -> inspect.FullArgSpec:
