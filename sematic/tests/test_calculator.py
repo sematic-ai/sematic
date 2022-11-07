@@ -1,12 +1,19 @@
 # Standard Library
-from typing import Any, List, Union
+from typing import Any, List, Tuple, Union
 
 # Third-party
 import pytest
 
 # Sematic
 from sematic.abstract_calculator import CalculatorError
-from sematic.calculator import Calculator, _convert_lists, _make_list, func
+from sematic.calculator import (
+    Calculator,
+    _convert_lists,
+    _convert_tuples,
+    _make_list,
+    _make_tuple,
+    func,
+)
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.future import Future
 from sematic.resolvers.resource_requirements import (  # noqa: F401
@@ -209,6 +216,11 @@ def bar() -> str:
     return "bar"
 
 
+@func
+def baz() -> int:
+    return 42
+
+
 def test_make_list():
     future = _make_list(List[str], [foo(), bar()])
 
@@ -217,14 +229,33 @@ def test_make_list():
     assert len(future.calculator.input_types) == 2
 
 
+def test_make_tuple():
+    future = _make_tuple(Tuple[str, int], (bar(), baz()))
+
+    assert isinstance(future, Future)
+    assert future.calculator.output_type is Tuple[str, int]
+    assert len(future.calculator.input_types) == 2
+    assert future.calculator.calculate(v0="a", v1=42) == ("a", 42)
+
+
 @func
 def pipeline() -> List[str]:
     return [foo(), bar(), "baz"]
 
 
+@func
+def tuple_pipeline() -> Tuple[str, int, str]:
+    return (foo(), baz(), "qux")
+
+
 def test_pipeline():
     output = pipeline().resolve(tracking=False)
     assert output == ["foo", "bar", "baz"]
+
+
+def test_tuple_pipeline():
+    output = tuple_pipeline().resolve(tracking=False)
+    assert output == ("foo", 42, "qux")
 
 
 def test_convert_lists():
@@ -265,6 +296,20 @@ def test_convert_lists():
         3,
         [4, [5, "foo"]],
     ]
+
+
+def test_convert_tuples():
+    value = (42, [1, baz(), 3], (foo(), bar()), foo())
+    expected_type = Tuple[int, List[int], Tuple[str, str], str]
+    result = _convert_tuples(value, expected_type)
+    assert isinstance(result, Future)
+    assert result.props.inline is True
+
+    @func
+    def pipeline() -> expected_type:
+        return value
+
+    assert pipeline().resolve(tracking=False) == (42, [1, 42, 3], ("foo", "bar"), "foo")
 
 
 def test_inline_default():

@@ -15,6 +15,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    get_args,
     get_origin,
 )
 
@@ -133,6 +134,12 @@ class Calculator(AbstractCalculator):
             if isinstance(argument_map[name], list):
                 argument_map[name] = _convert_lists(argument_map[name])
 
+            if isinstance(argument_map[name], tuple):
+                argument_map[name] = _convert_tuples(
+                    argument_map[name],
+                    self._input_types[name],
+                )
+
         cast_arguments = self.cast_inputs(argument_map)
 
         return Future(
@@ -158,6 +165,8 @@ class Calculator(AbstractCalculator):
         # Support for lists of futures
         if isinstance(output, list):
             output = _convert_lists(output)
+        if isinstance(output, tuple):
+            output = _convert_tuples(output, self.output_type)
 
         return output
 
@@ -427,3 +436,71 @@ def _convert_lists(value_):
         return _make_list(List[output_type], value_)
 
     return value_
+
+
+TupleOutputType = TypeVar("TupleOutputType")
+
+
+def _make_tuple(
+    type_: Type[TupleOutputType], tuple_with_futures: Sequence[Any]
+) -> TupleOutputType:
+    """
+    Given a tuple with futures, returns a future Tuple.
+    """
+    if get_origin(type_) is not tuple:
+        raise TypeError(
+            "type_ must be a Tuple type, and it must be parameterized as "
+            f"Tuple[SomeTypeA, SomeTypeB]. Got: {type_}"
+        )
+
+    if not isinstance(tuple_with_futures, collections.abc.Sequence):
+        raise TypeError("tuple_with_futures must be a collections.Sequence.")
+
+    if len(get_args(type_)) > 1:
+        if get_args(type_)[-1] is ...:
+            raise TypeError("Sematic does not support Ellipsis in Tuples yet (...)")
+
+    input_types = {}
+    inputs = {}
+
+    for i, item in enumerate(tuple_with_futures):
+        element_type = get_args(type_)[i]
+        if isinstance(item, Future):
+            can_cast, error = can_cast_type(item.calculator.output_type, element_type)
+            if not can_cast:
+                raise TypeError("Invalid value: {}".format(error))
+        else:
+            _, error = safe_cast(item, element_type)
+            if error is not None:
+                raise TypeError("Invalid value: {}".format(error))
+
+        input_types["v{}".format(i)] = element_type
+        inputs["v{}".format(i)] = item
+
+    source_code = """
+def _make_tuple({inputs}):
+    return tuple([{inputs}])
+    """.format(
+        inputs=", ".join("v{}".format(i) for i in range(len(tuple_with_futures)))
+    )
+    scope: Dict[str, Any] = {"__name__": __name__}
+    exec(source_code, scope)
+    _make_tuple = scope["_make_tuple"]
+
+    return Calculator(
+        _make_tuple, input_types=input_types, output_type=type_, inline=True
+    )(**inputs)
+
+
+def _convert_tuples(value_, expected_type):
+    value_as_list = list(value_)
+    for idx, item in enumerate(value_as_list):
+        if isinstance(item, tuple):
+            value_as_list[idx] = _convert_tuples(item, get_args(expected_type)[idx])
+        elif isinstance(item, list):
+            value_as_list[idx] = _convert_lists(item)
+
+    if any(isinstance(item, Future) for item in value_as_list):
+        return _make_tuple(expected_type, tuple(value_as_list))
+
+    return tuple(value_as_list)

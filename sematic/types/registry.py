@@ -26,7 +26,7 @@ _SUPPORTED_TYPES_DOCS = (
 # this lists them. It also includes the "origin" types they
 # map to (which is essentially the unparameterized version
 # of them; see python typing docs). The origin types are
-# what we ant in the registry.
+# what we want in the registry.
 SUPPORTED_GENERIC_TYPING_ANNOTATIONS = {
     Tuple: get_origin(Tuple[int, int]),
     List: get_origin(List[int]),
