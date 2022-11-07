@@ -137,5 +137,6 @@ sematic_py_lib(
         "//sematic/api:app",
         "//sematic/db:queries",
         "//sematic/db/models:factories",
+        "//sematic/utils:init",
     ],
 )

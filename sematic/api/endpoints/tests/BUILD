@@ -62,6 +62,7 @@ pytest_test(
         "//sematic/db:queries",
         "//sematic/db/models:json_encodable_mixin",
         "//sematic/db/models:user",
+        "//sematic/utils:init",
     ],
 )
 

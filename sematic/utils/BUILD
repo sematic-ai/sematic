@@ -1,4 +1,10 @@
 sematic_py_lib(
+    name = "init",
+    srcs = ["__init__.py"],
+    deps = [],
+)
+
+sematic_py_lib(
     name = "exceptions",
     srcs = ["exceptions.py"],
     deps = [

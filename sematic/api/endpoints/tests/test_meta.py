@@ -20,7 +20,10 @@ from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 
 def test_env(test_client: flask.testing.FlaskClient):  # noqa: F811
     with mock_user_settings(
-        {SettingsVar.GRAFANA_PANEL_URL: "abc", SettingsVar.SEMATIC_AUTHENTICATE: False}
+        {
+            SettingsVar.GRAFANA_PANEL_URL: "abc",
+            SettingsVar.SEMATIC_AUTHENTICATE: "false",
+        }
     ):
         response = test_client.get("/api/v1/meta/env")
         payload = response.json

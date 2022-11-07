@@ -4,6 +4,7 @@ Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
 with nothing else on the line.
 -->
 * HEAD
+    * [improvement] Add the ability to switch between user settings profiles 
 * [0.19.2](https://pypi.org/project/sematic/0.19.2/)
     * [improvement] Various minor housekeeping improvements
     * [bugfix] Fix a bug in a DB migration script

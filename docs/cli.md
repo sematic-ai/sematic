@@ -53,6 +53,8 @@ Then you can check your stored settings with
 
 ```shell
 $ sematic settings show
+Active profile: 'default'
+
 Active settings:
 
 SNOWFLAKE_USER: foobar
@@ -65,6 +67,8 @@ You can always override them at runtime with an environment variable:
 
 ```shell
 $ SNOWFLAKE_USER="notfoobar" sematic settings show
+Active profile: 'default'
+
 Active settings:
 
 SNOWFLAKE_USER: notfoobar
@@ -74,6 +78,28 @@ If you'd like, you can even change which directory Sematic uses to hold its
 settings by setting the environment variable `SEMATIC_CONFIG_DIR`. This can
 be either a relative path (it will be treated as relative to your home directory)
 or an absolute path.
+
+### User profiles
+
+Settings can be grouped in different profiles, so if for example have different
+workspaces, such as Dev and Prod, or different clusters you'd like to connect to
+separately, you can switch between these profiles.
+
+```shell
+$ sematic settings show
+Active profile: 'default'
+Inactive profiles: ['dev', 'prod']
+
+Active settings:
+SEMATIC_API_ADDRESS: http://localhost:3000
+
+$ sematic settings switch-profile dev
+Successfully set 'dev' as the active profile
+
+Active settings:
+SEMATIC_API_ADDRESS: https://dev.my.cloud
+
+```
 
 ### Cancel pipelines
 

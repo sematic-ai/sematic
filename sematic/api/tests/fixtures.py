@@ -1,8 +1,9 @@
 # Standard Library
 import contextlib
 import re
+import tempfile
 from http import HTTPStatus
-from typing import Any, Dict
+from typing import Any, Generator, Optional
 from unittest import mock
 from urllib.parse import urljoin
 
@@ -74,25 +75,58 @@ def mock_requests(test_client):
 
 
 @contextlib.contextmanager
-def mock_user_settings(settings: Dict[user_settings.SettingsVar, Any]):
-    # Force load everything first
-    user_settings.get_all_user_settings()
+def _mock_settings_file(file_path: Optional[str]) -> Generator[Any, Any, None]:
 
-    original_settings = user_settings._settings
+    with tempfile.NamedTemporaryFile("w") as tf:
 
-    user_settings._settings = {
-        "default": {key.value: value for key, value in settings.items()}
-    }
+        if file_path is not None:
+            with open(file_path, "r") as f:
+                tf.write(f.read())
+                tf.flush()
 
-    try:
-        yield settings
-    finally:
-        user_settings._settings = original_settings
+        with mock.patch(
+            "sematic.user_settings._get_settings_file",
+            return_value=tf.name,
+            new_callable=mock.PropertyMock,
+        ):
+            # set up: invalidate the existing settings cache, if any
+            user_settings._settings = None
+
+            yield tf
+
+            # tear down: invalidate the mock settings cache
+            # it will be populated from the settings file on the next invocation
+            user_settings._settings = None
+
+
+@pytest.fixture(scope="function")
+def mock_settings_file(request: Any) -> Generator[Any, Any, None]:
+    file_path = None
+    # request.param will hold the name of the data file to use
+    # to populate the contents of the temp file
+    if request is not None and request.param is not None:
+        file_path = request.param
+
+    with _mock_settings_file(file_path):
+        yield
+
+
+@contextlib.contextmanager
+def mock_user_settings(settings: user_settings.ProfileSettingsType):
+    with _mock_settings_file(None):
+        # set up: invalidate the existing settings cache, if any,
+        # and build the mock settings
+        for var, value in settings.items():
+            user_settings.set_user_settings(var, value)
+
+        yield
 
 
 def make_auth_test(endpoint: str, method: str = "GET"):
     def test_auth(test_client: flask.testing.FlaskClient):
-        with mock_user_settings({user_settings.SettingsVar.SEMATIC_AUTHENTICATE: True}):
+        with mock_user_settings(
+            {user_settings.SettingsVar.SEMATIC_AUTHENTICATE: "true"}
+        ):
             response = getattr(test_client, method.lower())(endpoint)
             assert response.status_code == HTTPStatus.UNAUTHORIZED
 
@@ -107,5 +141,5 @@ def mock_socketio():
 
 @pytest.fixture
 def mock_auth():
-    with mock_user_settings({user_settings.SettingsVar.SEMATIC_AUTHENTICATE: False}):
+    with mock_user_settings({user_settings.SettingsVar.SEMATIC_AUTHENTICATE: "false"}):
         yield

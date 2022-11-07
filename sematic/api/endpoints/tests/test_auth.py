@@ -23,14 +23,22 @@ from sematic.db.models.user import User
 from sematic.db.queries import get_user
 from sematic.db.tests.fixtures import persisted_user, test_db  # noqa: F401
 from sematic.user_settings import SettingsVar
+from sematic.utils import str_to_bool
 
 
 @pytest.mark.parametrize(
     "authenticate_config, expected_providers",
-    ((True, {"GOOGLE_OAUTH_CLIENT_ID": "ABC123"}), (False, {})),
+    [
+        ("false", {}),
+        ("False", {}),
+        ("0", {}),
+        ("true", {"GOOGLE_OAUTH_CLIENT_ID": "ABC123"}),
+        ("True", {"GOOGLE_OAUTH_CLIENT_ID": "ABC123"}),
+        ("1", {"GOOGLE_OAUTH_CLIENT_ID": "ABC123"}),
+    ],
 )
 def test_authenticate_endpoint(
-    authenticate_config: bool,
+    authenticate_config: str,
     expected_providers: Dict[str, str],
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
@@ -43,7 +51,7 @@ def test_authenticate_endpoint(
         response = test_client.get("/authenticate")
 
         assert response.json == {
-            "authenticate": authenticate_config,
+            "authenticate": str_to_bool(authenticate_config),
             "providers": expected_providers,
         }
 
@@ -137,9 +145,11 @@ def test_login_invalid_domain(test_client: flask.testing.FlaskClient):  # noqa: 
 
 
 @pytest.mark.skip(reason="Creating on-the-fly endpoints is fickle")
-@pytest.mark.parametrize("authenticate_config", (True, False))
+@pytest.mark.parametrize(
+    "authenticate_config", ("True", "true", "1", "False", "false", "0")
+)
 def test_authenticate_decorator(
-    authenticate_config: bool,
+    authenticate_config: str,
     persisted_user: User,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
@@ -160,7 +170,11 @@ def test_authenticate_decorator(
 
         sematic_api.route("/test-{}".format(test_id))(authenticate(endpoint))
 
-        headers = {"X-API-KEY": persisted_user.api_key} if authenticate_config else {}
+        headers = (
+            {"X-API-KEY": persisted_user.api_key}
+            if str_to_bool(authenticate_config)
+            else {}
+        )
 
         response = test_client.get(
             "/test-{}".format(test_id),
@@ -178,7 +192,7 @@ def test_authenticate_decorator_fail(
 ):
     test_id = uuid.uuid4().hex
 
-    with mock_user_settings({SettingsVar.SEMATIC_AUTHENTICATE: True}):
+    with mock_user_settings({SettingsVar.SEMATIC_AUTHENTICATE: "true"}):
 
         def endpoint(user):
             assert False

@@ -1,5 +1,4 @@
 # Standard Library
-import distutils.util
 import functools
 from http import HTTPStatus
 from typing import Callable
@@ -17,6 +16,7 @@ from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.db.models.factories import make_user
 from sematic.db.queries import get_user, get_user_by_api_key, save_user
 from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
+from sematic.utils import str_to_bool
 
 
 @sematic_api.route("/authenticate", methods=["GET"])
@@ -28,10 +28,13 @@ def authenticate_endpoint() -> flask.Response:
     friction, we let users run locally without authentication.
     """
     providers = {}
-    authenticate = False
+    # Ideally we would do this normalization in user_settings.py,
+    # but it means we would need to type settings
+    authenticate = str_to_bool(
+        get_user_settings(SettingsVar.SEMATIC_AUTHENTICATE, False)
+    )
 
-    if get_user_settings(SettingsVar.SEMATIC_AUTHENTICATE, False):
-        authenticate = True
+    if authenticate:
         for var in (
             SettingsVar.GOOGLE_OAUTH_CLIENT_ID,
             # TODO: Github needs more work, npm package is broken
@@ -130,15 +133,13 @@ def authenticate(endpoint_fn: Callable) -> Callable:
 
     @functools.wraps(endpoint_fn)
     def endpoint(*args, **kwargs) -> flask.Response:
-        auth_settings = get_user_settings(SettingsVar.SEMATIC_AUTHENTICATE, False)
-        # Ideally we would do thisnormalization in user_settings
+        # Ideally we would do this normalization in user_settings.py,
         # but it means we would need to type settings
-        if isinstance(auth_settings, str):
-            auth_settings_bool = bool(distutils.util.strtobool(auth_settings))
-        else:
-            auth_settings_bool = auth_settings
+        authenticate = str_to_bool(
+            get_user_settings(SettingsVar.SEMATIC_AUTHENTICATE, False)
+        )
 
-        if not auth_settings_bool:
+        if not authenticate:
             return endpoint_fn(None, *args, **kwargs)
 
         request_api_key = flask.request.headers.get("X-API-KEY")

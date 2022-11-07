@@ -1,0 +1,2 @@
+dev:
+  AWS_S3_BUCKET: sematic-dev

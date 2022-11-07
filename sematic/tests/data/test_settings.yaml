@@ -1,0 +1,8 @@
+active_profile: default
+profiles:
+  default:
+    SNOWFLAKE_USER: foobar
+  dev1: {}
+  dev2:
+    AWS_S3_BUCKET: sematic-dev
+    KUBERNETES_NAMESPACE: dev2
