@@ -22,8 +22,7 @@ from sematic.db.models.json_encodable_mixin import REDACTED
 from sematic.db.models.user import User
 from sematic.db.queries import get_user
 from sematic.db.tests.fixtures import persisted_user, test_db  # noqa: F401
-from sematic.user_settings import SettingsVar
-from sematic.utils import str_to_bool
+from sematic.user_settings import SettingsVar, _as_bool
 
 
 @pytest.mark.parametrize(
@@ -51,7 +50,7 @@ def test_authenticate_endpoint(
         response = test_client.get("/authenticate")
 
         assert response.json == {
-            "authenticate": str_to_bool(authenticate_config),
+            "authenticate": _as_bool(authenticate_config),
             "providers": expected_providers,
         }
 
@@ -172,7 +171,7 @@ def test_authenticate_decorator(
 
         headers = (
             {"X-API-KEY": persisted_user.api_key}
-            if str_to_bool(authenticate_config)
+            if _as_bool(authenticate_config)
             else {}
         )
 

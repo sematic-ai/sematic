@@ -101,6 +101,35 @@ def _mock_settings_file(file_path: Optional[str]) -> Generator[Any, Any, None]:
 
 @pytest.fixture(scope="function")
 def mock_settings_file(request: Any) -> Generator[Any, Any, None]:
+    """
+    An indirect fixture used to create a temporary file copy of a user settings file which
+    will supplant the actual settings file, and which can be safely altered when invoking
+    user settings operations.
+
+    Example
+    -------
+    @pytest.mark.parametrize("mock_settings_file", ["/my/settings.yaml"], indirect=True)
+    def my_test(mock_settings_file):
+
+        # theoretical usage:
+        with open("~/.sematic/settings.yaml", "r") as f:
+            # this will find the contents of "/my/settings.yaml"
+            # in "~/.sematic/settings.yaml"
+            f.read()
+
+        # more realistic usage:
+        user_settings._load_settings()
+
+        # theoretical usage:
+        with open("~/.sematic/settings.yaml", "w") as f:
+            # this will write to the mock file copy
+            # after my_test finishes execution, the original "~/.sematic/settings.yaml"
+            # file will be untouched
+            f.write("ruin the mock file copy")
+
+        # more realistic usage:
+        user_settings._save_settings(UserSettings([...]))
+    """
     file_path = None
     # request.param will hold the name of the data file to use
     # to populate the contents of the temp file

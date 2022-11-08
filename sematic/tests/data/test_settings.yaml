@@ -6,3 +6,4 @@ profiles:
   dev2:
     AWS_S3_BUCKET: sematic-dev
     KUBERNETES_NAMESPACE: dev2
+schema_version: 1

@@ -60,7 +60,7 @@ Active settings:
 SNOWFLAKE_USER: foobar
 ```
 
-These settings are simply store in the `/.sematic/settings.yaml` file on
+These settings are simply stored in the `~/.sematic/settings.yaml` file on
 your machine.
 
 You can always override them at runtime with an environment variable:
@@ -79,7 +79,7 @@ settings by setting the environment variable `SEMATIC_CONFIG_DIR`. This can
 be either a relative path (it will be treated as relative to your home directory)
 or an absolute path.
 
-### User profiles
+#### User profiles
 
 Settings can be grouped in different profiles, so if for example have different
 workspaces, such as Dev and Prod, or different clusters you'd like to connect to
@@ -99,6 +99,20 @@ Successfully set 'dev' as the active profile
 Active settings:
 SEMATIC_API_ADDRESS: https://dev.my.cloud
 
+```
+
+#### User settings schema versions
+
+The `~/.sematic/settings.yaml` file's schema is versioned with an internal
+versioning number. When upgrading, we'll try to automatically upgrade the contents
+for you, saving the previous version as a backup if you ever want to downgrade the
+Sematic version. In this case, just manually copy the desired backup over
+`settings.yaml` when doing the downgrade.
+
+```shell
+$ ls ~/.sematic/*.yaml*
+/.../.sematic/settings.yaml
+/.../.sematic/settings.yaml.v0
 ```
 
 ### Cancel pipelines

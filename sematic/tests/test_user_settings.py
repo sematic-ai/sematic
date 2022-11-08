@@ -23,7 +23,7 @@ from sematic.user_settings import (
 )
 
 _TEST_FILE = "sematic/tests/data/test_settings.yaml"
-_TEST_DEPRECATED_FILE = "sematic/tests/data/test_deprecated_settings.yaml"
+_TEST_DEPRECATED_FILE = "sematic/tests/data/test_version_0_settings.yaml"
 
 
 @pytest.mark.parametrize("mock_settings_file", [_TEST_DEPRECATED_FILE], indirect=True)
@@ -33,6 +33,10 @@ def test_settings_migration(mock_settings_file):  # noqa: F811
         active_profile="dev",
         profiles={"dev": {SettingsVar.AWS_S3_BUCKET.value: "sematic-dev"}},
     )
+
+    settings_file_path = user_settings._get_settings_file()
+    # the archive will be created in the bazel workspace, not in the user home
+    assert os.path.exists(f"{settings_file_path}.v0")
 
 
 @pytest.mark.parametrize("mock_settings_file", [_TEST_FILE], indirect=True)

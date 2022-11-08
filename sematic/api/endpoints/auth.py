@@ -15,8 +15,12 @@ from sematic.api.app import sematic_api
 from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.db.models.factories import make_user
 from sematic.db.queries import get_user, get_user_by_api_key, save_user
-from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
-from sematic.utils import str_to_bool
+from sematic.user_settings import (
+    MissingSettingsError,
+    SettingsVar,
+    get_bool_user_settings,
+    get_user_settings,
+)
 
 
 @sematic_api.route("/authenticate", methods=["GET"])
@@ -28,11 +32,7 @@ def authenticate_endpoint() -> flask.Response:
     friction, we let users run locally without authentication.
     """
     providers = {}
-    # Ideally we would do this normalization in user_settings.py,
-    # but it means we would need to type settings
-    authenticate = str_to_bool(
-        get_user_settings(SettingsVar.SEMATIC_AUTHENTICATE, False)
-    )
+    authenticate = get_bool_user_settings(SettingsVar.SEMATIC_AUTHENTICATE, False)
 
     if authenticate:
         for var in (
@@ -133,12 +133,8 @@ def authenticate(endpoint_fn: Callable) -> Callable:
 
     @functools.wraps(endpoint_fn)
     def endpoint(*args, **kwargs) -> flask.Response:
-        # Ideally we would do this normalization in user_settings.py,
-        # but it means we would need to type settings
-        authenticate = str_to_bool(
-            get_user_settings(SettingsVar.SEMATIC_AUTHENTICATE, False)
-        )
 
+        authenticate = get_bool_user_settings(SettingsVar.SEMATIC_AUTHENTICATE, False)
         if not authenticate:
             return endpoint_fn(None, *args, **kwargs)
 

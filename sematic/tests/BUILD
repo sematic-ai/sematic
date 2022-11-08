@@ -93,14 +93,13 @@ pytest_test(
     name = "test_user_settings",
     srcs = ["test_user_settings.py"],
     data = [
-        "data/test_deprecated_settings.yaml",
+        "data/test_version_0_settings.yaml",
         "data/test_settings.yaml",
     ],
     deps = [
         "//sematic/api/tests:fixtures",
         "//sematic:config",
         "//sematic:user_settings",
-        "//sematic/utils:init",
     ],
 )
 

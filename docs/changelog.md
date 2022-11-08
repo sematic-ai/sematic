@@ -4,7 +4,9 @@ Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
 with nothing else on the line.
 -->
 * HEAD
-    * [improvement] Add the ability to switch between user settings profiles 
+    * [improvement] BREAKING CHANGE: Add the ability to switch between user settings profiles.
+      The settings file will be automatically upgraded to a new version. For manual reverts, please see
+      https://github.com/sematic-ai/sematic/blob/main/docs/cli.md#user-settings-schema-versions
 * [0.19.2](https://pypi.org/project/sematic/0.19.2/)
     * [improvement] Various minor housekeeping improvements
     * [bugfix] Fix a bug in a DB migration script

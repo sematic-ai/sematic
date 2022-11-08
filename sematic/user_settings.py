@@ -1,7 +1,9 @@
 # Standard Library
+import distutils.util
 import enum
 import logging
 import os
+import shutil
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -13,6 +15,10 @@ from sematic.config_dir import get_config_dir
 
 logger = logging.getLogger(__name__)
 
+# the version of the user settings schema
+# whenever a backwards- or forwards-incompatible update is made to the user settings,
+# this number must be incremented
+_CURRENT_SCHEMA_VERSION = 1
 _SETTINGS_FILE = "settings.yaml"
 _DEFAULT_PROFILE = "default"
 
@@ -54,7 +60,7 @@ class SettingsDumper(yaml.Dumper):
     Custom Dumper for `SettingsVar`.
 
     It serializes `SettingsVar`s as simple strings so that the values aren't represented
-    as class instances with type metadata
+    as class instances with type metadata.
 
     It also deactivates aliases, avoiding creating referential ids in the
     resulting yaml contents.
@@ -93,13 +99,18 @@ class UserSettings:
     Parameters
     ----------
     active_profile: str
-        The profile whose settings will actually be used
+        The profile whose settings will actually be used.
     profiles: Dict[str, ProfileSettingsType]
-        The settings for each defined profile
+        The settings for each defined profile.
+    schema_version: int
+        The version of the `UserSettings`' schema. Whenever a backwards- or
+        forwards-incompatible update is made to this class, this number must be
+        incremented.
     """
 
     active_profile: str
     profiles: Dict[str, ProfileSettingsType]
+    schema_version: int = _CURRENT_SCHEMA_VERSION
 
     def __post_init__(self):
         """
@@ -110,6 +121,14 @@ class UserSettings:
         ValueError:
             There is an incorrect value or state
         """
+        if self.schema_version != _CURRENT_SCHEMA_VERSION:
+            raise ValueError(
+                f"The expected user settings schema version is {_CURRENT_SCHEMA_VERSION}."
+                f" Got {self.schema_version}. Please see "
+                "https://github.com/sematic-ai/sematic/blob/main/docs/cli.md"
+                "#user-settings-schema-versions for more information."
+            )
+
         if len(self.active_profile) == 0:
             raise ValueError("The active profile cannot be empty!")
 
@@ -147,17 +166,22 @@ class UserSettings:
             if profile != self.active_profile
         ]
 
-    def set(self, var: SettingsVar, value: Optional[str]) -> None:
+    def set(self, var: SettingsVar, value: str) -> None:
         """
         Sets the specified value for the specified variable, for the active profile.
-
-        Deletes the entry if the value is None.
         """
         active_profile_settings = self.get_active_profile_settings()
 
-        if value is not None:
-            active_profile_settings[var] = value
-            return
+        if value is None:
+            value = ""
+
+        active_profile_settings[var] = value
+
+    def delete(self, var: SettingsVar) -> None:
+        """
+        Deletes the specified variable from the active profile.
+        """
+        active_profile_settings = self.get_active_profile_settings()
 
         if var not in active_profile_settings:
             raise ValueError(f"{var.value} is not present in the active profile!")
@@ -198,6 +222,23 @@ class UserSettings:
 _settings: Optional[UserSettings] = None
 
 
+def _as_bool(value: Optional[Any]) -> bool:
+    """
+    Returns a boolean interpretation of the contents of the specified value.
+    """
+    if isinstance(value, bool):
+        return value
+
+    if value is None:
+        return False
+
+    str_value = str(value)
+    if len(str_value) == 0:
+        return False
+
+    return bool(distutils.util.strtobool(str_value))
+
+
 def _get_settings_file() -> str:
     """
     Returns the path to the settings file according to the user configuration.
@@ -224,11 +265,8 @@ def _load_settings() -> UserSettings:
         return UserSettings(**raw_settings)
     except TypeError:
         # the settings file has an older syntax and should be corrected
-        settings = UserSettings(
-            active_profile=next(iter(raw_settings)), profiles=raw_settings
-        )
-        _save_settings(settings)
-        return settings
+        # if and when we have more versions, this mechanism can be fleshed out more
+        return _upgrade_settings_v0_to_v1(raw_settings)
 
 
 def _save_settings(settings: UserSettings) -> None:
@@ -239,6 +277,41 @@ def _save_settings(settings: UserSettings) -> None:
 
     with open(_get_settings_file(), "w") as f:
         f.write(yaml_output)
+
+
+def _archive_settings_file(extension: str) -> None:
+    """
+    Copies the user settings file to a backup with the extra extension added on.
+
+    extension: str
+        The extension to add to the file name; must not begin with a dot "."
+    """
+    src = _get_settings_file()
+    dst = f"{src}.{extension}"
+    shutil.copyfile(src, dst)
+
+
+def _upgrade_settings_v0_to_v1(raw_settings: Dict[str, Any]) -> UserSettings:
+    logger.warning("Attempting to upgrade the user settings file from v0 to v1")
+
+    try:
+        _archive_settings_file("v0")
+        settings = UserSettings(
+            active_profile=next(iter(raw_settings)), profiles=raw_settings
+        )
+        _save_settings(settings)
+
+        logger.info("Successfully upgraded the user settings file from v0 to v1")
+        return settings
+
+    except BaseException as e:
+        logger.error(
+            "Failed to upgrade the user settings file from v0 to v1! Please see "
+            "https://github.com/sematic-ai/sematic/blob/main/docs/cli.md"
+            "#user-settings-schema-versions for more information.",
+            exc_info=e,
+        )
+        raise
 
 
 def get_default_settings() -> UserSettings:
@@ -319,6 +392,25 @@ def get_user_settings(var: SettingsVar, *args) -> str:
     return str(value)
 
 
+def get_bool_user_settings(var: SettingsVar, *args) -> bool:
+    """
+    Main API to access individual settings.
+
+    Loads and returns the specified setting. If it does not exist, it falls back on the
+    first optional vararg as a default value. If that does not exist, it raises.
+    """
+    profile_settings = get_active_user_settings()
+    value = profile_settings.get(var)
+
+    if value is None:
+        if len(args) >= 1:
+            return args[0]
+
+        raise MissingSettingsError(var)
+
+    return _as_bool(value)
+
+
 def set_user_settings(var: SettingsVar, value: str) -> None:
     """
     Sets the specifies setting value and persists the settings.
@@ -341,7 +433,7 @@ def delete_user_settings(var: SettingsVar) -> None:
     if _settings is None:
         _settings = _load_settings()
 
-    _settings.set(var, None)
+    _settings.delete(var)
     _save_settings(_settings)
 
 
