@@ -1,3 +1,6 @@
+# Standard Library
+from typing import Any, Dict, Optional
+
 # Third-party
 import flask
 import gunicorn.app.base  # type: ignore
@@ -11,7 +14,9 @@ class SematicWSGI(gunicorn.app.base.BaseApplication):
 
     """
 
-    def __init__(self, app: flask.app.Flask, options: dict = None) -> None:
+    def __init__(
+        self, app: flask.app.Flask, options: Optional[Dict[Any, Any]] = None
+    ) -> None:
         """Initializer for the standalone application class for
         gunicorn.
 
