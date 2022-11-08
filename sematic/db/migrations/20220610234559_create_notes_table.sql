@@ -17,4 +17,4 @@ CREATE TABLE notes (
 
 -- migrate:down
 
-DELETE TABLE notes;
+DROP TABLE notes;
