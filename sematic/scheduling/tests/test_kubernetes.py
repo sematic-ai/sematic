@@ -25,6 +25,7 @@ from sematic.scheduling.kubernetes import (
     schedule_run_job,
 )
 from sematic.tests.fixtures import environment_variables  # noqa: F401
+from sematic.user_settings import SettingsVar
 
 
 @mock.patch("sematic.scheduling.kubernetes.load_kube_config")
@@ -47,10 +48,7 @@ def test_cancel_job(k8s_batch_client: mock.MagicMock, mock_kube_config):
 
 @mock.patch("sematic.scheduling.kubernetes.load_kube_config")
 @mock.patch("sematic.scheduling.kubernetes.kubernetes.client.BatchV1Api")
-@mock.patch("sematic.user_settings.get_all_user_settings")
-def test_schedule_kubernetes_job(
-    mock_user_settings, k8s_batch_client, mock_kube_config
-):
+def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     name = "the-name"
     requests = {"cpu": "42"}
     node_selector = {"foo": "bar"}
@@ -83,7 +81,6 @@ def test_schedule_kubernetes_job(
             ],
         )
     )
-    mock_user_settings.return_value = {"KUBERNETES_NAMESPACE": namespace}
     with environment_variables({"SEMATIC_CONTAINER_IMAGE": image_uri}):
         _schedule_kubernetes_job(
             name=name,
@@ -425,7 +422,7 @@ def test_refresh_job_single_condition(mock_batch_api, mock_load_kube_config):
     assert not job.still_exists
 
 
-@mock.patch("sematic.user_settings.get_all_user_settings")
+@mock.patch("sematic.user_settings.get_active_user_settings")
 @mock.patch("sematic.scheduling.kubernetes._schedule_kubernetes_job")
 @mock.patch("sematic.scheduling.kubernetes._unique_job_id_suffix", return_value="foo")
 def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job, mock_user_settings):
@@ -436,7 +433,7 @@ def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job, mock_user_settings):
     image = "the_image"
     run_id = "run_id"
     namespace = "the-namespace"
-    mock_user_settings.return_value = {"KUBERNETES_NAMESPACE": namespace}
+    mock_user_settings.return_value = {SettingsVar.KUBERNETES_NAMESPACE: namespace}
     schedule_run_job(
         run_id=run_id,
         image=image,

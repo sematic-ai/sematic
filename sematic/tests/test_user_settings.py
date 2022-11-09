@@ -7,6 +7,7 @@ import pytest
 # Sematic
 import sematic.user_settings as user_settings
 from sematic.api.tests.fixtures import mock_settings_file  # noqa: F401
+from sematic.tests.fixtures import environment_variables
 from sematic.user_settings import (
     MissingSettingsError,
     SettingsVar,
@@ -47,20 +48,17 @@ def test_get_active_user_settings(mock_settings_file):  # noqa: F811
 @pytest.mark.parametrize("mock_settings_file", [_TEST_FILE], indirect=True)
 def test_get_active_user_settings_env_override(mock_settings_file):  # noqa: F811
 
-    os.environ[str(SettingsVar.SNOWFLAKE_USER.value)] = "baz"
-    os.environ[str(SettingsVar.KUBERNETES_NAMESPACE.value)] = "quux"
-    os.environ["unrelated"] = "unrelated"
-
-    try:
+    with environment_variables(
+        {
+            str(SettingsVar.SNOWFLAKE_USER.value): "baz",
+            str(SettingsVar.KUBERNETES_NAMESPACE.value): "quux",
+            "unrelated": "unrelated",
+        }
+    ):
         assert get_active_user_settings() == {
             SettingsVar.SNOWFLAKE_USER: "baz",
             SettingsVar.KUBERNETES_NAMESPACE: "quux",
         }
-
-    finally:
-        del os.environ[str(SettingsVar.SNOWFLAKE_USER.value)]
-        del os.environ[str(SettingsVar.KUBERNETES_NAMESPACE.value)]
-        del os.environ["unrelated"]
 
 
 @pytest.mark.parametrize("mock_settings_file", [None], indirect=True)
@@ -71,20 +69,17 @@ def test_get_active_user_empty_settings(mock_settings_file):  # noqa: F811
 @pytest.mark.parametrize("mock_settings_file", [None], indirect=True)
 def test_get_active_user_empty_settings_env_override(mock_settings_file):  # noqa: F811
 
-    os.environ[str(SettingsVar.SNOWFLAKE_USER.value)] = "baz"
-    os.environ[str(SettingsVar.KUBERNETES_NAMESPACE.value)] = "quux"
-    os.environ["unrelated"] = "unrelated"
-
-    try:
+    with environment_variables(
+        {
+            str(SettingsVar.SNOWFLAKE_USER.value): "baz",
+            str(SettingsVar.KUBERNETES_NAMESPACE.value): "quux",
+            "unrelated": "unrelated",
+        }
+    ):
         assert get_active_user_settings() == {
             SettingsVar.SNOWFLAKE_USER: "baz",
             SettingsVar.KUBERNETES_NAMESPACE: "quux",
         }
-
-    finally:
-        del os.environ[str(SettingsVar.SNOWFLAKE_USER.value)]
-        del os.environ[str(SettingsVar.KUBERNETES_NAMESPACE.value)]
-        del os.environ["unrelated"]
 
 
 @pytest.mark.parametrize("mock_settings_file", [_TEST_FILE], indirect=True)
@@ -96,14 +91,11 @@ def test_get_settings(mock_settings_file):  # noqa: F811
 def test_get_settings_env_override(mock_settings_file):  # noqa: F811
 
     assert get_user_settings(SettingsVar.SNOWFLAKE_USER) == "foobar"
-    os.environ[str(SettingsVar.SNOWFLAKE_USER.value)] = "quux"
 
-    try:
+    with environment_variables({str(SettingsVar.SNOWFLAKE_USER.value): "quux"}):
         assert get_user_settings(SettingsVar.SNOWFLAKE_USER) == "foobar"
         user_settings._settings = None
         assert get_user_settings(SettingsVar.SNOWFLAKE_USER) == "quux"
-    finally:
-        del os.environ[str(SettingsVar.SNOWFLAKE_USER.value)]
 
 
 @pytest.mark.parametrize("mock_settings_file", [_TEST_FILE], indirect=True)
@@ -118,16 +110,12 @@ def test_get_missing_settings_env_override(mock_settings_file):  # noqa: F811
     with pytest.raises(MissingSettingsError):
         get_user_settings(SettingsVar.SEMATIC_API_ADDRESS)
 
-    os.environ[str(SettingsVar.SEMATIC_API_ADDRESS.value)] = "quux"
-
-    try:
+    with environment_variables({str(SettingsVar.SEMATIC_API_ADDRESS.value): "quux"}):
         with pytest.raises(MissingSettingsError):
             get_user_settings(SettingsVar.SEMATIC_API_ADDRESS)
 
         user_settings._settings = None
         assert get_user_settings(SettingsVar.SEMATIC_API_ADDRESS) == "quux"
-    finally:
-        del os.environ[str(SettingsVar.SEMATIC_API_ADDRESS.value)]
 
 
 @pytest.mark.parametrize("mock_settings_file", [_TEST_FILE], indirect=True)
@@ -149,14 +137,11 @@ def test_set_settings_env_override(mock_settings_file):  # noqa: F811
         get_user_settings(SettingsVar.SEMATIC_API_ADDRESS)
 
     set_user_settings(SettingsVar.SEMATIC_API_ADDRESS, "baz")
-    os.environ[str(SettingsVar.SEMATIC_API_ADDRESS.value)] = "quux"
 
-    try:
+    with environment_variables({str(SettingsVar.SEMATIC_API_ADDRESS.value): "quux"}):
         assert get_user_settings(SettingsVar.SEMATIC_API_ADDRESS) == "baz"
         user_settings._settings = None
         assert get_user_settings(SettingsVar.SEMATIC_API_ADDRESS) == "quux"
-    finally:
-        del os.environ[str(SettingsVar.SEMATIC_API_ADDRESS.value)]
 
 
 @pytest.mark.parametrize("mock_settings_file", [_TEST_FILE], indirect=True)
@@ -240,14 +225,11 @@ def test_set_empty_settings_env_override(mock_settings_file):  # noqa: F811
     with pytest.raises(MissingSettingsError):
         get_user_settings(SettingsVar.SEMATIC_API_ADDRESS)
     set_user_settings(SettingsVar.SEMATIC_API_ADDRESS, "baz")
-    os.environ[str(SettingsVar.SEMATIC_API_ADDRESS.value)] = "quux"
 
-    try:
+    with environment_variables({str(SettingsVar.SEMATIC_API_ADDRESS.value): "quux"}):
         assert get_user_settings(SettingsVar.SEMATIC_API_ADDRESS) == "baz"
         user_settings._settings = None
         assert get_user_settings(SettingsVar.SEMATIC_API_ADDRESS) == "quux"
-    finally:
-        del os.environ[str(SettingsVar.SEMATIC_API_ADDRESS.value)]
 
 
 @pytest.mark.parametrize("mock_settings_file", [None], indirect=True)
@@ -262,16 +244,12 @@ def test_get_missing_empty_settings_env_override(mock_settings_file):  # noqa: F
     with pytest.raises(MissingSettingsError):
         get_user_settings(SettingsVar.SEMATIC_API_ADDRESS)
 
-    os.environ[str(SettingsVar.SEMATIC_API_ADDRESS.value)] = "quux"
-
-    try:
+    with environment_variables({str(SettingsVar.SEMATIC_API_ADDRESS.value): "quux"}):
         with pytest.raises(MissingSettingsError):
             get_user_settings(SettingsVar.SEMATIC_API_ADDRESS)
 
         user_settings._settings = None
         assert get_user_settings(SettingsVar.SEMATIC_API_ADDRESS) == "quux"
-    finally:
-        del os.environ[str(SettingsVar.SEMATIC_API_ADDRESS.value)]
 
 
 @pytest.mark.parametrize("mock_settings_file", [None], indirect=True)
