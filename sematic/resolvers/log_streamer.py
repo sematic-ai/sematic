@@ -49,7 +49,9 @@ DEFAULT_LOG_UPLOAD_INTERVAL_SECONDS = 10
 _LAST_NON_EMPTY_DELTA_TEMPLATE = "{}.previous"
 
 
-def _flush_to_file(file_path, read_handle, uploader, remote_prefix, timeout_seconds=None):
+def _flush_to_file(
+    file_path, read_handle, uploader, remote_prefix, timeout_seconds=None
+):
     """Read from the read_handle dump to file_path and then remote.
 
     The read_handle is continuously streamed from onto disk. The remote upload will
@@ -83,7 +85,9 @@ def _flush_to_file(file_path, read_handle, uploader, remote_prefix, timeout_seco
     started_reading = time.time()
     # Use w+ mode; should overwrite whatever was in the prior delta file
     with open(file_path, "w+") as fp:
-        while timeout_seconds is None or time.time() - started_reading < timeout_seconds:
+        while (
+            timeout_seconds is None or time.time() - started_reading < timeout_seconds
+        ):
             line = read_handle.readline()
             if len(line) > 0:
                 # The line would at least have the newline char if it was a blank.
