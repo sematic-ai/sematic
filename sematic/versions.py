@@ -17,7 +17,7 @@ MIN_CLIENT_SERVER_SUPPORTS = (0, 19, 0)
 MIN_SQLITE_VERSION = (3, 35, 0)
 
 
-def assert_sqlite_version():
+def _assert_sqlite_version():
     version_tuple = sqlite3.sqlite_version.split(".")
 
     # get major/minor as ints. Patch can sometimes have non-digit chars
@@ -48,7 +48,7 @@ def version_as_string(version: typing.Tuple[int, int, int]) -> str:
 
 CURRENT_VERSION_STR = version_as_string(CURRENT_VERSION)
 MIN_CLIENT_SERVER_SUPPORTS_STR = version_as_string(MIN_CLIENT_SERVER_SUPPORTS)
-assert_sqlite_version()
+_assert_sqlite_version()
 
 if __name__ == "__main__":
     # It can be handy for deployment scripts and similar things to be able to get quick
