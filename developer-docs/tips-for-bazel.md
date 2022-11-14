@@ -116,7 +116,12 @@ On Macs this is often due to a problem with Xcode. If you are on a Mac:
 the License, try [this](https://stackoverflow.com/a/72115137/2540669)
 
 #### Missing c++ tooling for cross platform docker images
-Just do this:
+Try this:
 ```
 $ bazel test --@io_bazel_rules_docker//transitions:enable=false //sematic/...
 ```
+
+This flag will NOT enable actually building images for remote execution
+cross-platform, but WILL most likely unblock your ability to run tests.
+If this doesn't work, please try to debug what you can and update these
+tips!
