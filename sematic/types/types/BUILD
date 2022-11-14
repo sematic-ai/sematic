@@ -104,3 +104,9 @@ sematic_py_lib(
     srcs = ["link.py"],
     deps = [],
 )
+
+sematic_py_lib(
+    name = "datetime",
+    srcs = ["datetime.py"],
+    deps = [],
+)
