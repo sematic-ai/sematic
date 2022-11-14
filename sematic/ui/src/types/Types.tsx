@@ -27,6 +27,8 @@ import {
   Button,
 } from "@mui/material";
 import { OpenInNew } from "@mui/icons-material";
+import {format, isValid, parseISO} from "date-fns";
+
 const Plot = createPlotlyComponent(Plotly);
 
 type TypeCategory = "builtin" | "typing" | "dataclass" | "generic" | "class";
@@ -267,9 +269,8 @@ function ListValueView(props: ValueViewProps) {
           </TableCell>
           <TableCell>
             {summary} and{" "}
-            {props.valueSummary["length"] -
-              props.valueSummary["summary"].length}{" "}
-            more items.
+            {props.valueSummary["length"] - props.valueSummary["summary"].length}{" "}
+             more items.
           </TableCell>
         </TableRow>
       </TableBody>
@@ -691,6 +692,18 @@ function LinkValueView(props: ValueViewProps) {
   );
 }
 
+function DatetimeValueView(props: ValueViewProps) {
+  const {valueSummary} = props;
+  const date = parseISO(valueSummary)
+
+  if (!valueSummary || !isValid(date)) {
+      return <Alert severity="error">Incorrect date value.</Alert>;
+  }
+  return (
+      <Typography>{format(date, "LLLL d, yyyy h:mm:ss a xxx", )}</Typography>
+  );
+}
+
 type ComponentPair = {
   type: (props: TypeViewProps) => JSX.Element;
   value: (props: ValueViewProps) => JSX.Element;
@@ -709,6 +722,7 @@ const TypeComponents: Map<string, ComponentPair> = new Map([
   ["dataclass", { type: DataclassTypeView, value: DataclassValueView }],
   ["Union", { type: UnionTypeView, value: ValueView }],
   ["Link", { type: TypeView, value: LinkValueView }],
+  ["datetime.datetime", {type: TypeView, value: DatetimeValueView}],
   [
     "torch.utils.data.dataloader.DataLoader",
     { type: TypeView, value: TorchDataLoaderValueView },
