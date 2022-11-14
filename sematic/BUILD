@@ -20,35 +20,9 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "config",
-    srcs = ["config.py"],
-    deps = [
-        ":config_dir",
-        ":user_settings",
-    ],
-)
-
-sematic_py_lib(
-    name = "config_dir",
-    srcs = ["config_dir.py"],
-    deps = [],
-)
-
-sematic_py_lib(
     name = "container_images",
     srcs = ["container_images.py"],
     deps = [],
-)
-
-sematic_py_lib(
-    name = "user_settings",
-    srcs = ["user_settings.py"],
-    pip_deps = [
-        "pyyaml",
-    ],
-    deps = [
-        ":config_dir",
-    ],
 )
 
 sematic_py_lib(
@@ -58,9 +32,9 @@ sematic_py_lib(
         "requests",
     ],
     deps = [
-        ":config",
         "//sematic:storage",
         "//sematic:versions",
+        "//sematic/config:config",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
@@ -160,7 +134,7 @@ sematic_py_lib(
         "boto3",
     ],
     deps = [
-        ":user_settings",
+        "//sematic/config:user_settings",
         "//sematic/utils:memoized_property",
         "//sematic/utils:retry",
     ],

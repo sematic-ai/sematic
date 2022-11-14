@@ -72,11 +72,11 @@ pytest_test(
         "flask",
     ],
     deps = [
-        "//sematic:user_settings",
         "//sematic:versions",
         "//sematic/api:app",
         "//sematic/api/endpoints:meta",
         "//sematic/api/tests:fixtures",
+        "//sematic/config:user_settings",
     ],
 )
 

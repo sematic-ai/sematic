@@ -7,8 +7,12 @@ from typing import Optional
 from urllib.parse import urljoin
 
 # Sematic
-from sematic.config_dir import get_config_dir
-from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
+from sematic.config.config_dir import get_config_dir
+from sematic.config.user_settings import (
+    MissingSettingsError,
+    UserSettingsVar,
+    get_user_settings,
+)
 
 
 def _get_migrations_dir() -> str:
@@ -22,7 +26,9 @@ def _get_base_dir() -> str:
     """
     Build absolute path of directory where examples are stored.
     """
-    return os.path.dirname(os.path.realpath(__file__))
+    config_dir = os.path.dirname(os.path.realpath(__file__))
+    base_dir = os.path.join(config_dir, os.pardir)
+    return base_dir
 
 
 EXAMPLES_DIR = "examples"
@@ -82,23 +88,23 @@ class Config:
         return "http://{}:{}".format(self.server_address, self.port)
 
     @property
-    def api_url(self):
+    def api_url(self) -> str:
         return urljoin(
             self.server_url,
             "api/v{}".format(self.api_version),
         )
 
     @property
-    def server_pid_file_path(self):
+    def server_pid_file_path(self) -> str:
         return os.path.join(self.config_dir, "server.pid")
 
-    def server_url_is_set_via_env_vars(self):
+    def server_url_is_set_via_env_vars(self) -> bool:
         return SEMATIC_SERVER_ADDRESS_ENV_VAR in os.environ or (
             ON_WORKER_ENV_VAR in os.environ
             and SEMATIC_WORKER_SERVER_ADDRESS_ENV_VAR in os.environ
         )
 
-    def server_url_from_env_vars(self):
+    def server_url_from_env_vars(self) -> str:
         server_address = os.environ.get(SEMATIC_SERVER_ADDRESS_ENV_VAR, None)
         if ON_WORKER_ENV_VAR in os.environ:
             server_address = os.environ.get(
@@ -153,7 +159,7 @@ class UserOverrideConfig(Config):
             return self.server_url_from_env_vars()
 
         try:
-            return get_user_settings(SettingsVar.SEMATIC_API_ADDRESS)
+            return get_user_settings(UserSettingsVar.SEMATIC_API_ADDRESS)
         except MissingSettingsError:
             return "http://{}:{}".format(self.server_address, self.port)
 
@@ -170,7 +176,7 @@ class EnvironmentConfigurations(Enum):
 _active_config: Config = EnvironmentConfigurations.user.value
 
 
-def switch_env(env: str):
+def switch_env(env: str) -> None:
     """
     Switch environment.
     """
@@ -186,7 +192,7 @@ def switch_env(env: str):
     logger.info("Switch to env {} whose config is {}".format(env, get_config()))
 
 
-def set_config(config: Config):
+def set_config(config: Config) -> None:
     global _active_config
     _active_config = config
 

@@ -2,7 +2,7 @@
 import os
 
 # Sematic
-from sematic.config import EXAMPLES_DIR, get_config
+from sematic.config.config import EXAMPLES_DIR, get_config
 
 MIN_EXAMPLE_FILES = [
     "__main__.py",

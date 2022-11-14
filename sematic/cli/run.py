@@ -11,7 +11,7 @@ import click
 from sematic.cli.cli import cli
 from sematic.cli.examples_utils import is_example
 from sematic.cli.process_utils import server_is_running
-from sematic.config import get_config
+from sematic.config.config import get_config
 
 
 def _example_path_to_import_path(script_path: str) -> str:

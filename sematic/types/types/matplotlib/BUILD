@@ -2,8 +2,8 @@ sematic_py_lib(
     name = "figure",
     srcs = ["figure.py"],
     deps = [
+        "//sematic/config:config",
         "//sematic/types:registry",
-        "//sematic:config",
         # Do not add matplotlib here
     ]
 )
