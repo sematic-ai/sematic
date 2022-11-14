@@ -125,3 +125,14 @@ This flag will NOT enable actually building images for remote execution
 cross-platform, but WILL most likely unblock your ability to run tests.
 If this doesn't work, please try to debug what you can and update these
 tips!
+
+### Docker credential error
+
+If you get an error message like:
+```
+error getting credentials - err: exec: "docker-credential-desktop":
+```
+Then you likely need to install Docker. On Mac, some people have found
+that even if Docker does not work for them on their Mac, they need to
+do this install. If you are in this situation, you may also need to add
+`/Applications/Docker.app/Contents//Resources/bin` to your `PATH`.
