@@ -1,11 +1,18 @@
 # Standard Library
+import os
 import pathlib
+import signal
 import sys
 import tempfile
 import time
 
 # Sematic
-from sematic.resolvers.log_streamer import _tail_log_file, ingested_logs
+from sematic.resolvers.log_streamer import (
+    _send_signal_or_kill,
+    _start_log_streamer_out_of_process,
+    _tail_log_file,
+    ingested_logs,
+)
 from sematic.utils.retry import retry
 
 
@@ -53,6 +60,52 @@ def test_ingested_logs():
     # everything uploaded should contain all log lines, with
     # no duplicated lines.
     assert all_upload_contents == everything
+
+
+@retry(AssertionError, tries=3)  # this test is somewhat dependent on relative timings.
+def test_start_log_streamer_out_of_process():
+    remote_prefix = "foo/bar"
+    upload_interval = 100
+    started = time.time()
+    with tempfile.NamedTemporaryFile(delete=False) as log_file:
+        read_file_descriptor, write_file_descriptor = os.pipe()
+        os.set_blocking(read_file_descriptor, False)
+        os.set_inheritable(read_file_descriptor, True)
+        child_pid = _start_log_streamer_out_of_process(
+            file_path=log_file.name,
+            read_from_file_descriptor=read_file_descriptor,
+            upload_interval_seconds=upload_interval,
+            remote_prefix=remote_prefix,
+            uploader=mock_uploader,
+        )
+        write_handle = os.fdopen(write_file_descriptor, "w")
+        contents = "Hello, child!"
+        write_handle.write(contents)
+        write_handle.flush()
+
+        # give some time for the process to actually start up
+        # and register a handler
+        time.sleep(1)
+        _send_signal_or_kill(child_pid, signal.SIGTERM, timeout_seconds=5)
+
+    assert time.time() - started < upload_interval
+    try:
+        os.kill(child_pid, 0)
+    except OSError:
+        # Child should have exited
+        pass
+    else:
+        assert False, "Child process should have exited"
+
+    upload_number = 0
+    uploads = []
+    while pathlib.Path(_upload_path(log_file.name, upload_number)).exists():
+        with open(_upload_path(log_file.name, upload_number), "r") as upload:
+            uploads.append(list(upload))
+        upload_number += 1
+
+    assert len(uploads) >= 1
+    assert contents in "\n".join(concat_uploads(uploads))
 
 
 def test_ingested_logs_uncaught():
@@ -116,6 +169,26 @@ def test_tail_log_file():
         assert has_ellipsis
 
         assert printed[-1].replace("\n", "") == stderr_line_template.format(n_lines - 1)
+
+
+def test_tail_log_file_empty():
+    printed = []
+
+    def print_func(to_print, end="\n", **kwargs):
+        printed.append(to_print + end)
+
+    with tempfile.NamedTemporaryFile(delete=False) as log_file:
+        remote_prefix = "foo/bar"
+        upload_interval = 0.1
+        with ingested_logs(
+            log_file.name,
+            upload_interval_seconds=upload_interval,
+            remote_prefix=remote_prefix,
+            uploader=mock_uploader,
+        ):
+            pass
+        _tail_log_file(log_file.name, print_func=print_func)
+        assert printed[-1] == "<No lines in latest delta files>\n"
 
 
 def _upload_path(file_uploaded, upload_number):
