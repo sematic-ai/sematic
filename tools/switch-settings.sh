@@ -24,7 +24,10 @@ if [ ! -f "$ENV_FILE" ]; then
   exit_with_usage "The file $ENV_FILE does not exist!"
 fi
 
+echo -e "Copying previous settings to $BACKUP_LOCATION"
 cp "$SETTINGS_FILE" "$BACKUP_LOCATION"
+
+echo -e "Copying $ENV_FILE to $SETTINGS_FILE"
 cp "$ENV_FILE" "$SETTINGS_FILE"
 
-echo -e "Successfully switched to $1!\n"
+echo -e "\nSuccessfully switched to $1!\n"
