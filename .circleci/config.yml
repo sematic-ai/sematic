@@ -85,7 +85,7 @@ jobs:
           command: python3 -m flake8 --max-line-length=90
       - run:
           name: MyPy
-          command: mypy sematic
+          command: mypy --version && mypy sematic
       - run:
           name: Run Non-coverage Tests
           # This assumes pytest is installed via the install-package step above
