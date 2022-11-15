@@ -93,3 +93,10 @@ You can also do *this* with specific python interpreters:
 ```
 $ bazel run //sematic/cli:main_py39 -- --help
 ```
+
+## Miscellaneous
+To clear the Bazel cache, run:
+
+```
+$ bazel clean --expunge
+```
