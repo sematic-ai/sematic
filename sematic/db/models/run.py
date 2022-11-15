@@ -157,7 +157,7 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
     @validates("description")
     def strip_description(self, _, value) -> str:
         if value is not None:
-            value = re.sub(r"\n\s{4}", "\n", value.strip())
+            value = re.sub(r"\n( {4}|\t)", "\n", value.strip())
 
         return value
 
