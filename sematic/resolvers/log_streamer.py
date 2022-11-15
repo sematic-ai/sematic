@@ -1,7 +1,8 @@
 # Standard Library
 import contextlib
-import multiprocessing
+import logging
 import os
+import signal
 import stat
 import sys
 import time
@@ -12,36 +13,114 @@ from typing import Callable, Optional
 from sematic.config import KUBERNETES_POD_NAME_ENV_VAR
 from sematic.storage import S3Storage
 from sematic.utils.retry import retry
-from sematic.utils.stdout import redirect_to_file
+from sematic.utils.stdout import redirect_to_file_descriptor
 
 """
 An overview of how logging works:
-- stdout and stderr are redirected to a file from the Sematic worker
-- the Sematic worker on launch starts a child process that periodically
-    uses our storage abstraction to upload the log file to persistent storage
+- stdout and stderr are redirected to a pipe from the Sematic worker process
+- the Sematic worker on launch starts a child process that reads from the
+    pipe line-by-line and writes the result to a file on disk
+- periodically, the worker uses our storage abstraction to upload the log file
+    to persistent storage. The file is reset between uploads so that each upload
+    is a "delta" containing only the new lines since the last upload
+- when the worker exits, it does one final upload. The main process (aka the driver)
+    always tells the worker to exit after it is done redirecting its stdout
 - the name of the logs on the remote contain metadata about what run and job type
    the logs came from
 - the server reads the logs from persistent storage for UI display
 - it's safe to assume that the worker will have write access to the persistent storage
   because it's the same bucket used for artifacts.
+
+Q: Why do we use lower-level "os" mechanisms rather than subprocess/multiprocess?
+A: The pipe mechanisms for the "multiprocess" module assumes that the parent process
+    is the one capturing the stdout of its child. We want the child to capture the
+    stdout of its parent. Why? Because we want the parent process to represent the "real"
+    work. There are a few reasons for this. One is so that the exit code for the parent
+    process represents the exit code for the real work. Another is so that if other
+    infra (ex: k8s) sends signals to the parent process, they reach the process doing
+    the "real work" first, which means there is a lower chance of weird issues with
+    forwarding that signal to children and cleaning up properly afterwards. It also
+    just makes more sense from a mental-model standpoint to have the daemon-like
+    process be the child while the "parent" process and the "main" process are the
+    same.
 """
 
 
 DEFAULT_LOG_UPLOAD_INTERVAL_SECONDS = 10
+_LAST_NON_EMPTY_DELTA_TEMPLATE = "{}.previous"
+
+logger = logging.getLogger(__name__)
 
 
-def _stream_logs_to_remote_from_file(
+def _flush_to_file(
+    file_path, read_handle, uploader, remote_prefix, timeout_seconds=None
+):
+    """Read from the read_handle dump to file_path and then remote.
+
+    The read_handle is continuously streamed from onto disk. The remote upload will
+    only happen once (a) the timeout is reached OR (b) there are no more contents
+    from the read handle. Once a remote upload has been performed, this exits.
+
+    Parameters
+    ----------
+    file_path:
+        Path of the file to stream the read_handle contents to. This will contain the
+        log file "delta"
+    read_handle:
+        A readable object that can be streamed from. It should be configured such that
+        reads are non-blocking.
+    uploader:
+        The function to call for performing the remote upload
+    remote_prefix:
+        The prefix for the remote storage location where the log files will be kept.
+        The actual file name will be unique for each upload, increasing monotonically
+        with time (see _do_upload).
+    timeout_seconds:
+        The max number of seconds between when streaming from the read handle starts and
+        when the upload occurs.
+    """
+    if os.path.exists(file_path):
+        if os.stat(file_path)[stat.ST_SIZE] > 0:
+            # save the last non-empty delta file somewhere for tailing
+            os.rename(file_path, _LAST_NON_EMPTY_DELTA_TEMPLATE.format(file_path))
+        else:
+            os.remove(file_path)
+
+    started_reading = time.time()
+
+    # Use w+ mode; should overwrite whatever was in the prior delta file
+    with open(file_path, "w+") as fp:
+        while (
+            timeout_seconds is None or time.time() - started_reading < timeout_seconds
+        ):
+            line = read_handle.readline()
+            if len(line) == 0:
+                # The line would at least have the newline char if it was a blank.
+                break  # no more to read right now; go ahead and flush
+
+            fp.write(line)
+            fp.flush()
+
+    uploader(file_path, remote_prefix)
+
+
+def _stream_logs_to_remote_from_file_descriptor(
     file_path: str,
+    read_from_file_descriptor: int,
     upload_interval_seconds: int,
     remote_prefix: str,
     uploader: Callable[[str, str], None],
 ):
-    """Execute infinite loop to periodically upload from file_path to remote storage
+    """Execute infinite loop to periodically upload from file_path to remote storage.
+
+    Should ONLY be called from a process dedicated to log streaming.
 
     Parameters
     ----------
     file_path:
         The path to the local file that's being uploaded
+    read_from_file_descriptor:
+        The file descriptor that's being read from.
     upload_interval_seconds:
         The amount of time between the end of one upload and the start of the next
     remote_prefix:
@@ -52,9 +131,23 @@ def _stream_logs_to_remote_from_file(
         A callable to perform the upload. It will be given the path to upload from and
         the remote prefix as arguments.
     """
+    read_handle = os.fdopen(read_from_file_descriptor)
+
+    def do_exit(signal_num, frame):
+        # unregister so we don't do this multiple times
+        signal.signal(signal.SIGTERM, lambda *_, **__: None)
+        _flush_to_file(file_path, read_handle, uploader, remote_prefix)
+        os._exit(0)
+
+    signal.signal(signal.SIGTERM, do_exit)
     while True:
-        uploader(file_path, remote_prefix)
-        time.sleep(upload_interval_seconds)
+        _flush_to_file(
+            file_path,
+            read_handle,
+            uploader,
+            remote_prefix,
+            timeout_seconds=upload_interval_seconds,
+        )
 
 
 @retry(tries=3, delay=5)
@@ -77,10 +170,11 @@ def _do_upload(file_path: str, remote_prefix: str):
 
 def _start_log_streamer_out_of_process(
     file_path: str,
+    read_from_file_descriptor: int,
     upload_interval_seconds: int,
     remote_prefix: str,
     uploader: Callable[[str, str], None],
-) -> multiprocessing.Process:
+) -> int:
     """Start a subprocess to periodically upload the log file to remote storage
 
     Note that the caller should always call do_upload before terminating to ensure
@@ -90,6 +184,8 @@ def _start_log_streamer_out_of_process(
     ----------
     file_path:
         The path to the local log file
+    read_from_file_descriptor:
+        The file descriptor to read from; likely the "read" end of a pipe
     upload_interval_seconds:
         The interval between uploads.
     uploader:
@@ -97,22 +193,23 @@ def _start_log_streamer_out_of_process(
 
     Returns
     -------
-    The process doing the logging
+    The process id of the process doing the logging
     """
-    kwargs = dict(
+    pid = os.fork()
+    if pid > 0:
+        # in parent process
+        return pid
+
+    # in child process
+    _stream_logs_to_remote_from_file_descriptor(
         file_path=file_path,
+        read_from_file_descriptor=read_from_file_descriptor,
         upload_interval_seconds=upload_interval_seconds,
         remote_prefix=remote_prefix,
         uploader=uploader,
-    )
-    process = multiprocessing.Process(
-        group=None,
-        target=_stream_logs_to_remote_from_file,
-        kwargs=kwargs,
-        daemon=True,
-    )
-    process.start()
-    return process
+    )  # type: ignore
+    # can't ever reach here; the above is an infinite loop
+    raise RuntimeError("This code should be unreachable!")
 
 
 @contextlib.contextmanager
@@ -120,7 +217,6 @@ def ingested_logs(
     file_path: str,
     remote_prefix: str,
     upload_interval_seconds=DEFAULT_LOG_UPLOAD_INTERVAL_SECONDS,
-    max_tail_bytes: int = 2**13,
     uploader: Optional[Callable[[str, str], None]] = None,
 ):
     """Code within context will have stdout/stderr (including subprocess) ingested
@@ -137,15 +233,9 @@ def ingested_logs(
         The amount of time between uploads
     remote_prefix:
         The prefix for the remote storage location where ingested logs live
-    max_tail_bytes:
-        The maximum number of bytes of logs to print to the original stdout
-        when the context exits. To disable, set to <=0. Defaults to 8kb
     uploader:
         An optional override for uploading the log file.
     """
-    # we will eventually want to switch to use a pipe instead of file as the
-    # buffer the subprocess reads from:
-    # https://stackoverflow.com/questions/73821235/python-file-truncate-with-one-writer-and-one-reader?noredirect=1#comment130351264_73821235
     uploader = uploader if uploader is not None else _do_upload
 
     pod_name = os.getenv(KUBERNETES_POD_NAME_ENV_VAR)
@@ -156,13 +246,36 @@ def ingested_logs(
         # it will go to stdout before stdout gets redirected.
         print(
             f"To follow these logs, try:\n\t"
-            f"kubectl exec -i {pod_name} -- tail -f {file_path}"
+            f"kubectl exec -i {pod_name} -- tail {file_path}"
         )
-    final_upload_error = None
+
+    original_signal_handler = None
+    streamer_pid = None
+
+    def clean_up_streamer(signal_num, frame=None):
+        logger.info("Cleaning up log ingestor")
+        if streamer_pid is not None:
+            # forwarding the signal should trigger a final upload.
+            # use a timeout so the parent process can still exit if
+            # the child hangs for some reason (ex: during remote service call)
+            _send_signal_or_kill(streamer_pid, signal_num, timeout_seconds=20)
+
+        if original_signal_handler is not None and hasattr(
+            original_signal_handler, "__call__"
+        ):
+            original_signal_handler(signal_num, frame)
+
+    read_file_descriptor = None
+    write_file_descriptor = None
+    original_signal_handler = signal.signal(signal.SIGTERM, clean_up_streamer)
     try:
-        with redirect_to_file(file_path):
-            process = _start_log_streamer_out_of_process(
+        read_file_descriptor, write_file_descriptor = os.pipe()
+        os.set_blocking(read_file_descriptor, False)
+        os.set_inheritable(read_file_descriptor, True)
+        with redirect_to_file_descriptor(write_file_descriptor):
+            streamer_pid = _start_log_streamer_out_of_process(
                 file_path,
+                read_file_descriptor,
                 upload_interval_seconds=upload_interval_seconds,
                 remote_prefix=remote_prefix,
                 uploader=uploader,
@@ -176,7 +289,8 @@ def ingested_logs(
                 traceback.print_exc()
                 raise
             finally:
-                process.terminate()
+                signal.signal(signal.SIGTERM, original_signal_handler)
+                original_signal_handler = None
 
                 # ensure there's a final log upload, and that it contains ALL the
                 # contents of stdout and stderr before we redirect them back to their
@@ -184,15 +298,10 @@ def ingested_logs(
                 sys.stdout.flush()
                 sys.stderr.flush()
 
-                try:
-                    uploader(file_path, remote_prefix)
-                except Exception as e:
-                    final_upload_error = e
+                clean_up_streamer(signal.SIGTERM)
     finally:
         # outermost try/finally is so we can tail logs to non-redirected stdout
         # even if the code raised an error
-        if final_upload_error is not None:
-            print(f"Error with final log upload: {final_upload_error}", file=sys.stderr)
 
         # Why is this tailing useful? Because in the situations where somebody
         # is triaging some weird, complicated failure mode, it will be really helpful to
@@ -201,39 +310,71 @@ def ingested_logs(
         # true when the problem is something with the "normal" logging mechanisms, like
         # a failure to upload the logs to remote. Having *some* way to see what the code
         # was doing before it died will be essential.
-        _tail_log_file(file_path, max_tail_bytes)
+        _tail_log_file(file_path)
+
+        if read_file_descriptor is not None:
+            os.close(read_file_descriptor)
+
+        if write_file_descriptor is not None:
+            os.close(write_file_descriptor)
 
 
-def _tail_log_file(file_path, max_tail_bytes, print_func=None):
-    """Print the last lines of the log file.
+def _send_signal_or_kill(pid: int, signal_num: int, timeout_seconds: int):
+    """Send the signal to the given pid. If not exited by timeout, send SIGKILL
 
-    The code will quickly traverse to the correct file location rather than reading
-    through the whole log.
+    Parameters
+    ----------
+    pid:
+        The pid of the process to kill
+    signal_num:
+        The initial signal to send. Will be sent repeatedly until the process
+        terminates or the timeout occurs. The repeated send is so that if the
+        signal is first sent BEFORE the child has a chance to register a handler,
+        it will still get another chance after the handler has been registered.
+    timeout_seconds:
+        The maximum time to wait before sending a SIGKILL
     """
+    try:
+        started = time.time()
+        while time.time() - started < timeout_seconds:
+            os.kill(pid, signal_num)
+            wait_result = os.waitpid(pid, os.WNOHANG)
+            if wait_result is None:
+                return
+            elif wait_result[0] == pid and wait_result[1] != 0:
+                raise RuntimeError(
+                    f"Log streamer exited with error code: {wait_result[1]}"
+                )
+            time.sleep(0.1)
+        os.kill(pid, signal.SIGKILL)
+        pid, status_code = os.waitpid(pid, 0)
+        if status_code != 0:
+            raise RuntimeError(f"Log streamer exited with error code: {status_code}")
+    except (ProcessLookupError, ChildProcessError):
+        return  # process already gone
+
+
+def _tail_log_file(file_path, print_func=None):
+    """Print the last lines of the last 1 or 2 log file deltas."""
     print_func = print_func if print_func is not None else print
-    if max_tail_bytes <= 0:
-        return
+    print_func(
+        "Showing the tail of the logs for reference. For complete "
+        "logs, please use the UI. This contains the last file or two "
+        "of log line deltas uploaded to remote storage."
+    )
+    contained_lines = False
 
-    n_bytes_in_file = os.stat(file_path)[stat.ST_SIZE]
+    print_func("\t\t.\n\t\t.\n\t\t.")  # vertical '...' to show there's truncation
+    previous_path = _LAST_NON_EMPTY_DELTA_TEMPLATE.format(file_path)
+    if os.path.exists(previous_path):
+        with open(previous_path, "r") as fp:
+            for line in fp:
+                contained_lines = True
+                print_func(line, end="")
+
     with open(file_path, "r") as fp:
-        print_func(
-            "Showing the tail of the logs for reference. For complete "
-            "logs, please use the UI."
-        )
-        start_byte = max(0, n_bytes_in_file - max_tail_bytes)
-        if start_byte != 0:
-            print_func(
-                "\t\t.\n\t\t.\n\t\t."
-            )  # vertical '...' to show there's truncation
-
-        # Why seek rather than just iterate through lines until we're near the end?
-        # because log files may be GBs in size, and we want this operation to be
-        # a quick debugging aid, and not slow down container execution by a lot
-        # while we actually read the whole file.
-        fp.seek(start_byte)
-        for line_number, line in enumerate(fp):
-            if start_byte != 0 and line_number == 0:
-                # we may have done a seek mid-line. skip the first line so we don't show
-                # something partial.
-                continue
+        for line in fp:
+            contained_lines = True
             print_func(line, end="")
+    if not contained_lines:
+        print_func("<No lines in latest delta files>")
