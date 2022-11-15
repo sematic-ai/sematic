@@ -100,3 +100,46 @@ To clear the Bazel cache, run:
 ```
 $ bazel clean --expunge
 ```
+
+## Troubleshooting
+
+### CPP Toolchain Error
+If you get an error message like:
+
+`"No matching toolchains found for types @bazel_tools//tools/cpp:toolchain_type"`,
+this means bazel can't find your c++ tooling. This can either be due to the fact that
+bazel can't find ANY c++ tooling OR the fact that it can't find c++ tooling suitable
+for building linux docker images.
+
+#### Totally missing c++ tooling
+```
+$ bazel test --toolchain_resolution_debug=@bazel_tools//tools/cpp:toolchain_type //sematic/...
+```
+
+On Macs this is often due to a problem with Xcode. If you are on a Mac:
+- Make sure you have xcode installed
+- Execute `sudo xcodebuild -license` and agree to the license
+- If the above command gives you an error about CommandLineTools and won't show
+the License, try [this](https://stackoverflow.com/a/72115137/2540669)
+
+#### Missing c++ tooling for cross platform docker images
+Try this:
+```
+$ bazel test --@io_bazel_rules_docker//transitions:enable=false //sematic/...
+```
+
+This flag will NOT enable actually building images for remote execution
+cross-platform, but WILL most likely unblock your ability to run tests.
+If this doesn't work, please try to debug what you can and update these
+tips!
+
+### Docker credential error
+
+If you get an error message like:
+```
+error getting credentials - err: exec: "docker-credential-desktop":
+```
+Then you likely need to install Docker. On Mac, some people have found
+that even if Docker does not work for them on their Mac, they need to
+do this install. If you are in this situation, you may also need to add
+`/Applications/Docker.app/Contents//Resources/bin` to your `PATH`.
