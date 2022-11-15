@@ -1,1 +1,2 @@
 test --test_tag_filters=nocov --test_output=all
+test --spawn_strategy='processwrapper-sandbox'
