@@ -3,4 +3,4 @@ torchvision
 torchmetrics
 plotly
 pandas
-sklearn
+scikit-learn
