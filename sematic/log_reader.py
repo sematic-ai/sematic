@@ -2,6 +2,7 @@
 import base64
 import itertools
 import json
+import logging
 from dataclasses import asdict, dataclass
 from typing import Iterable, List, Optional
 
@@ -25,6 +26,9 @@ from sematic.storage import S3Storage
 V1_LOG_PREFIX = "logs/v1"
 V2_LOG_PREFIX = "logs/v2"
 LOG_PATH_FORMAT = "{prefix}/run_id/{run_id}/{log_kind}/"
+
+
+logger = logging.getLogger(__name__)
 
 
 def log_prefix(run_id: str, job_type: JobType):
@@ -151,6 +155,13 @@ def load_log_lines(
     -------
     A subset of the logs for the given run
     """
+    logger.info(
+        "Starting log line loading for: %s, %s, %s, %s",
+        run_id,
+        continuation_cursor,
+        max_lines,
+        filter_strings,
+    )
     run = get_run(run_id)
     run_state = FutureState[run.future_state]  # type: ignore
     still_running = not (run_state.is_terminal() or run_state == FutureState.RAN)
@@ -176,6 +187,13 @@ def load_log_lines(
         ResolutionStatus.CREATED,
         ResolutionStatus.SCHEDULED,
     ):
+        logger.info(
+            "Done log line loading for: %s, %s, %s, %s",
+            run_id,
+            continuation_cursor,
+            max_lines,
+            filter_strings,
+        )
         return LogLineResult(
             more_before=False,
             more_after=True,
@@ -185,19 +203,27 @@ def load_log_lines(
         )
     filter_strings = filter_strings if filter_strings is not None else []
     if FutureState[run.future_state] == FutureState.CREATED:  # type: ignore
-        return LogLineResult(
+        result = LogLineResult(
             more_before=False,
             more_after=True,
             lines=[],
             continuation_cursor=cursor.to_token(),
             log_unavailable_reason="The run has not yet started executing.",
         )
+        logger.info(
+            "Done log line loading for: %s, %s, %s, %s",
+            run_id,
+            continuation_cursor,
+            max_lines,
+            filter_strings,
+        )
+        return result
     # looking for external jobs to determine inline is only valid
     # since we know the run has at least reached SCHEDULED due to it
     # not being CREATED.
     is_inline = len(run.external_jobs) == 0
     if is_inline:
-        return _load_inline_logs(
+        result = _load_inline_logs(
             run_id=run_id,
             resolution=resolution,
             still_running=still_running,
@@ -207,7 +233,15 @@ def load_log_lines(
             max_lines=max_lines,
             filter_strings=filter_strings,
         )
-    return _load_non_inline_logs(
+        logger.info(
+            "Done log line loading for: %s, %s, %s, %s",
+            run_id,
+            continuation_cursor,
+            max_lines,
+            filter_strings,
+        )
+        return result
+    result = _load_non_inline_logs(
         run_id=run_id,
         still_running=still_running,
         cursor_file=cursor.source_log_key,
@@ -216,6 +250,14 @@ def load_log_lines(
         max_lines=max_lines,
         filter_strings=filter_strings,
     )
+    logger.info(
+        "Done log line loading for: %s, %s, %s, %s",
+        run_id,
+        continuation_cursor,
+        max_lines,
+        filter_strings,
+    )
+    return result
 
 
 def _get_latest_log_file(prefix, cursor_file) -> Optional[str]:

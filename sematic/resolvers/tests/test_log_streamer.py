@@ -8,6 +8,7 @@ import time
 
 # Sematic
 from sematic.resolvers.log_streamer import (
+    _TERMINATION_CHAR,
     _send_signal_or_kill,
     _start_log_streamer_out_of_process,
     _tail_log_file,
@@ -81,6 +82,7 @@ def test_start_log_streamer_out_of_process():
         write_handle = os.fdopen(write_file_descriptor, "w")
         contents = "Hello, child!"
         write_handle.write(contents)
+        write_handle.write(_TERMINATION_CHAR)
         write_handle.flush()
 
         # give some time for the process to actually start up
