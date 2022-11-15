@@ -14,3 +14,8 @@ py_library(
     # versioned pip dep to all pytest tests.
     deps = [],
 )
+
+sh_binary(
+    name = "switch-settings",
+    srcs = ["switch-settings.sh"],
+)
