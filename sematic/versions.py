@@ -1,6 +1,9 @@
 # Standard Library
+import logging
 import sqlite3
 import typing
+
+logger = logging.getLogger(__name__)
 
 # Represents the version of the client, server, and all other parts of
 # the sdk. Should be bumped any time a release is made. Should be set
@@ -17,17 +20,19 @@ MIN_CLIENT_SERVER_SUPPORTS = (0, 19, 0)
 MIN_SQLITE_VERSION = (3, 35, 0)
 
 
-def _assert_sqlite_version():
+def _check_sqlite_version():
     version_tuple = sqlite3.sqlite_version.split(".")
 
     # get major/minor as ints. Patch can sometimes have non-digit chars
     major, minor = int(version_tuple[0]), int(version_tuple[1])
     if (major, minor) < MIN_SQLITE_VERSION:
-        raise RuntimeError(
-            f"Sematic requires sqlite3 version to be at least "
-            f"{version_as_string(MIN_SQLITE_VERSION)}, but your python is using "
-            f"{sqlite3.sqlite_version}. Please upgrade. You may find this useful: "
-            f"https://stackoverflow.com/a/55729735/2540669"
+        # TODO #302: implement sustainable way to upgrade sqlite3 DBs
+        logger.warning(
+            "Sematic will soon require the sqlite3 version to be at least %s, but your "
+            "Python is using %s. Please upgrade. You may find this useful: "
+            "https://stackoverflow.com/a/55729735/2540669",
+            version_as_string(MIN_SQLITE_VERSION),
+            sqlite3.sqlite_version,
         )
 
 
@@ -48,7 +53,7 @@ def version_as_string(version: typing.Tuple[int, int, int]) -> str:
 
 CURRENT_VERSION_STR = version_as_string(CURRENT_VERSION)
 MIN_CLIENT_SERVER_SUPPORTS_STR = version_as_string(MIN_CLIENT_SERVER_SUPPORTS)
-_assert_sqlite_version()
+_check_sqlite_version()
 
 if __name__ == "__main__":
     # It can be handy for deployment scripts and similar things to be able to get quick
