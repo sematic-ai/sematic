@@ -85,15 +85,16 @@ class Cursor:
         The fillter strings that were used for this log traversal.
     run_id:
         The run id that was being used for this log traversal.
-    had_more_before:
-        Whether there were lines before this cursor that matched the filters
+    traversal_had_lines:
+        Will be True if this cursor corresponds to a result that has lines, or
+        if it continues from a chain of cursors that had found some lines
     """
 
     source_log_key: Optional[str]
     source_file_line_index: int
     filter_strings: List[str]
     run_id: str
-    had_more_before: bool = False
+    traversal_had_lines: bool = False
 
     def to_token(self) -> str:
         return str(
@@ -114,7 +115,7 @@ class Cursor:
             source_file_line_index=-1,
             filter_strings=filter_strings,
             run_id=run_id,
-            had_more_before=False,
+            traversal_had_lines=False,
         )
 
 
@@ -202,7 +203,7 @@ def load_log_lines(
             still_running=still_running,
             cursor_file=cursor.source_log_key,
             cursor_line_index=cursor.source_file_line_index,
-            cursor_had_more_before=cursor.had_more_before,
+            cursor_had_more_before=cursor.traversal_had_lines,
             max_lines=max_lines,
             filter_strings=filter_strings,
         )
@@ -211,7 +212,7 @@ def load_log_lines(
         still_running=still_running,
         cursor_file=cursor.source_log_key,
         cursor_line_index=cursor.source_file_line_index,
-        cursor_had_more_before=cursor.had_more_before,
+        cursor_had_more_before=cursor.traversal_had_lines,
         max_lines=max_lines,
         filter_strings=filter_strings,
     )
@@ -384,7 +385,12 @@ def _load_inline_logs(
     line_stream = _line_stream_from_log_directory(
         prefix, cursor_file=cursor_file, cursor_line_index=cursor_line_index
     )
-    line_stream = _filter_for_inline(line_stream, run_id)
+    line_stream = _filter_for_inline(
+        line_stream=line_stream,
+        run_id=run_id,
+        # we already found the indicator for the inline run start with the current cursor
+        skip_start=cursor_had_more_before,
+    )
 
     return get_log_lines_from_line_stream(
         line_stream=line_stream,
@@ -410,6 +416,7 @@ def _line_stream_from_log_directory(
         ),
     )
     found_cursor_file = cursor_file is None
+    found_cursor_line = cursor_line_index is None
     for log_file in log_files:
         if log_file == cursor_file:
             found_cursor_file = True
@@ -417,8 +424,13 @@ def _line_stream_from_log_directory(
             continue
         text_stream: Iterable[str] = S3Storage().get_line_stream(log_file)
         for i_line, line in enumerate(text_stream):
-            if cursor_line_index is not None and i_line < cursor_line_index:
+            if (
+                (not found_cursor_line)
+                and cursor_line_index is not None
+                and i_line < cursor_line_index
+            ):
                 continue
+            found_cursor_line = True
             yield LogLine(
                 source_file=log_file,
                 source_file_index=i_line,
@@ -454,7 +466,7 @@ def _load_inline_logs_v1(
         LogLine(source_file=latest_log_file, source_file_index=i, line=text)
         for i, text in zip(itertools.count(), text_stream)
     )
-    line_stream = _filter_for_inline(unfiltered_line_stream, run_id)
+    line_stream = _filter_for_inline(unfiltered_line_stream, run_id, skip_start=False)
 
     return get_log_lines_from_line_stream(
         line_stream=line_stream,
@@ -469,13 +481,13 @@ def _load_inline_logs_v1(
 
 
 def _filter_for_inline(
-    line_stream: Iterable[LogLine], run_id: str
+    line_stream: Iterable[LogLine], run_id: str, skip_start: bool
 ) -> Iterable[LogLine]:
     """Stream resolver logs to make a new stream with only lines for a particular run"""
     expected_start = START_INLINE_RUN_INDICATOR.format(run_id)
     expected_end = END_INLINE_RUN_INDICATOR.format(run_id)
     buffer_iterator = iter(line_stream)
-    found_start = False
+    found_start = skip_start
     while True:
         try:
             log_line: LogLine = next(buffer_iterator)
@@ -587,7 +599,7 @@ def get_log_lines_from_line_stream(
             source_file_line_index=source_file_line_index + 1,
             filter_strings=filter_strings,
             run_id=run_id,
-            had_more_before=more_before,
+            traversal_had_lines=more_before or len(lines) > 0,
         ).to_token()
         if has_more
         else None,

@@ -295,6 +295,11 @@ def validate_type_annotation(*types: TypeAnnotation) -> None:
     """
 
     def assert_supported(type_):
+        if type_ is Any:
+            raise TypeError(
+                "'Any' is not a Sematic-supported type. Use 'object' instead."
+            )
+
         if _is_type(type_) or _is_abc(type_) or is_enum(type_):
             return
         if not is_parameterized_generic(type_, raise_for_unparameterized=True):

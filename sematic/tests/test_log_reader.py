@@ -96,7 +96,7 @@ def test_get_log_lines_from_line_stream_does_streaming():
         still_running=True,
         cursor_source_file=cursor.source_log_key,
         cursor_line_index=cursor.source_file_line_index,
-        cursor_had_more_before=cursor.had_more_before,
+        cursor_had_more_before=cursor.traversal_had_lines,
         max_lines=max_lines,
         filter_strings=[],
         run_id=_DUMMY_RUN_ID,
@@ -184,7 +184,7 @@ def test_get_log_lines_from_line_stream_filter():
         still_running=True,
         cursor_source_file=cursor.source_log_key,
         cursor_line_index=cursor.source_file_line_index,
-        cursor_had_more_before=cursor.had_more_before,
+        cursor_had_more_before=cursor.traversal_had_lines,
         run_id=_DUMMY_RUN_ID,
         max_lines=max_lines,
         filter_strings=["2"],
@@ -211,26 +211,26 @@ def test_get_log_lines_from_line_stream_filter():
     )
 
 
-def prepare_non_inline_logs_v1(run_id, text_lines, mock_storage):
+def prepare_logs_v1(run_id, text_lines, mock_storage, job_type):
     log_file_contents = bytes("\n".join(text_lines), encoding="utf8")
-    prefix = v1_log_prefix(run_id, JobType.worker)
+    prefix = v1_log_prefix(run_id, job_type)
     key = f"{prefix}12345.log"
     mock_storage.set(key, log_file_contents)
     return prefix
 
 
-def prepare_non_inline_logs_v2(run_id, text_lines, mock_storage):
+def prepare_logs_v2(run_id, text_lines, mock_storage, job_type):
     break_at_line = 52
     lines_part_1 = text_lines[:break_at_line]
     lines_part_2 = text_lines[break_at_line:]
 
     log_file_contents_part_1 = bytes("\n".join(lines_part_1), encoding="utf8")
-    prefix = log_prefix(run_id, JobType.worker)
+    prefix = log_prefix(run_id, job_type)
     key_part_1 = f"{prefix}12345.log"
     mock_storage.set(key_part_1, log_file_contents_part_1)
 
     log_file_contents_part_2 = bytes("\n".join(lines_part_2), encoding="utf8")
-    prefix = log_prefix(run_id, JobType.worker)
+    prefix = log_prefix(run_id, job_type)
     key_part_2 = f"{prefix}12346.log"
     mock_storage.set(key_part_2, log_file_contents_part_2)
     return prefix
@@ -239,13 +239,13 @@ def prepare_non_inline_logs_v2(run_id, text_lines, mock_storage):
 @pytest.mark.parametrize(
     "log_preparation_function",
     (
-        prepare_non_inline_logs_v1,
-        prepare_non_inline_logs_v2,
+        prepare_logs_v1,
+        prepare_logs_v2,
     ),
 )
 def test_load_non_inline_logs(
-    test_db, mock_storage: MockStorage, log_preparation_function
-):  # noqa: F811
+    test_db, mock_storage: MockStorage, log_preparation_function  # noqa: F811
+):
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
 
@@ -265,7 +265,7 @@ def test_load_non_inline_logs(
     assert result.lines == []
     assert result.continuation_cursor is None
     assert result.log_unavailable_reason == "No log files found"
-    log_preparation_function(run.id, text_lines, mock_storage)
+    log_preparation_function(run.id, text_lines, mock_storage, JobType.worker)
 
     result = _load_non_inline_logs(
         run_id=run.id,
@@ -278,6 +278,7 @@ def test_load_non_inline_logs(
     )
     assert result.continuation_cursor is not None
     cursor = Cursor.from_token(result.continuation_cursor)
+    assert cursor.traversal_had_lines
     result.continuation_cursor = None
     assert result == LogLineResult(
         continuation_cursor=None,
@@ -292,7 +293,7 @@ def test_load_non_inline_logs(
         still_running=False,
         cursor_file=cursor.source_log_key,
         cursor_line_index=cursor.source_file_line_index,
-        cursor_had_more_before=cursor.had_more_before,
+        cursor_had_more_before=cursor.traversal_had_lines,
         max_lines=max_lines,
         filter_strings=[],
     )
@@ -312,7 +313,7 @@ def test_load_non_inline_logs(
         still_running=False,
         cursor_file=cursor.source_log_key,
         cursor_line_index=cursor.source_file_line_index,
-        cursor_had_more_before=cursor.had_more_before,
+        cursor_had_more_before=cursor.traversal_had_lines,
         max_lines=max_lines,
         filter_strings=[],
     )
@@ -326,14 +327,17 @@ def test_load_non_inline_logs(
 
 
 def test_line_stream_from_log_directory(
-    mock_storage: MockStorage, test_db
-):  # noqa: F811
+    mock_storage: MockStorage, test_db  # noqa: F811
+):
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
     n_lines = 500
     text_lines = [f"Line {i}" for i in range(n_lines)]
-    prefix = prepare_non_inline_logs_v2(
-        run_id=run.id, text_lines=text_lines, mock_storage=mock_storage
+    prefix = prepare_logs_v2(
+        run_id=run.id,
+        text_lines=text_lines,
+        mock_storage=mock_storage,
+        job_type=JobType.worker,
     )
     line_stream = _line_stream_from_log_directory(prefix, None, None)
     materialized_line_stream = list(line_stream)
@@ -344,8 +348,26 @@ def test_line_stream_from_log_directory(
     assert read_lines == text_lines
     assert len({line.source_file for line in materialized_line_stream}) > 1
 
+    start_index = 50
+    line_stream = _line_stream_from_log_directory(
+        directory=log_prefix(run.id, JobType.worker),
+        cursor_file=f"{log_prefix(run.id, JobType.worker)}12345.log",
+        cursor_line_index=start_index,
+    )
+    materialized_line_stream = list(line_stream)
+    assert [line.line for line in materialized_line_stream] == text_lines[start_index:]
 
-def test_load_inline_logs_v1(mock_storage: MockStorage, test_db):  # noqa: F811
+
+@pytest.mark.parametrize(
+    "log_preparation_function",
+    (
+        prepare_logs_v1,
+        prepare_logs_v2,
+    ),
+)
+def test_load_inline_logs(
+    mock_storage: MockStorage, test_db, log_preparation_function  # noqa: F811
+):
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
     resolution = make_resolution(status=ResolutionStatus.COMPLETE)
@@ -362,10 +384,6 @@ def test_load_inline_logs_v1(mock_storage: MockStorage, test_db):  # noqa: F811
     )
     max_lines = 50
 
-    log_file_contents = bytes("\n".join(text_lines), encoding="utf8")
-    prefix = v1_log_prefix(resolution.root_id, JobType.driver)
-    key = f"{prefix}12345.log"
-
     result = _load_inline_logs(
         run_id=run.id,
         resolution=resolution,
@@ -380,7 +398,8 @@ def test_load_inline_logs_v1(mock_storage: MockStorage, test_db):  # noqa: F811
     assert result.lines == []
     assert result.continuation_cursor is None
     assert result.log_unavailable_reason == "Resolver logs are missing"
-    mock_storage.set(key, log_file_contents)
+
+    log_preparation_function(run.id, text_lines, mock_storage, JobType.driver)
 
     result = _load_inline_logs(
         run_id=run.id,
@@ -409,7 +428,7 @@ def test_load_inline_logs_v1(mock_storage: MockStorage, test_db):  # noqa: F811
         still_running=False,
         cursor_file=cursor.source_log_key,
         cursor_line_index=cursor.source_file_line_index,
-        cursor_had_more_before=cursor.had_more_before,
+        cursor_had_more_before=cursor.traversal_had_lines,
         max_lines=max_lines,
         filter_strings=[],
     )
@@ -432,7 +451,7 @@ def test_load_inline_logs_v1(mock_storage: MockStorage, test_db):  # noqa: F811
         still_running=False,
         cursor_file=cursor.source_log_key,
         cursor_line_index=cursor.source_file_line_index,
-        cursor_had_more_before=cursor.had_more_before,
+        cursor_had_more_before=cursor.traversal_had_lines,
         max_lines=max_lines,
         filter_strings=[],
     )
@@ -446,7 +465,16 @@ def test_load_inline_logs_v1(mock_storage: MockStorage, test_db):  # noqa: F811
     )
 
 
-def test_load_log_lines_v1(mock_storage: MockStorage, test_db):  # noqa: F811
+@pytest.mark.parametrize(
+    "log_preparation_function",
+    (
+        prepare_logs_v1,
+        prepare_logs_v2,
+    ),
+)
+def test_load_log_lines(
+    mock_storage: MockStorage, test_db, log_preparation_function  # noqa: F811
+):
     run = make_run(future_state=FutureState.CREATED)
     save_run(run)
     resolution = make_resolution(status=ResolutionStatus.SCHEDULED)
@@ -491,10 +519,7 @@ def test_load_log_lines_v1(mock_storage: MockStorage, test_db):  # noqa: F811
     )
     save_run(run)
     text_lines = [line.line for line in finite_logs(100)]
-    log_file_contents = bytes("\n".join(text_lines), encoding="utf8")
-    prefix = v1_log_prefix(run.id, JobType.worker)
-    key = f"{prefix}12345.log"
-    mock_storage.set(key, log_file_contents)
+    log_preparation_function(run.id, text_lines, mock_storage, JobType.worker)
 
     result = load_log_lines(
         run_id=run.id,

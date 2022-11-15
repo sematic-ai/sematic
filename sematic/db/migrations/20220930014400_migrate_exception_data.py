@@ -26,8 +26,10 @@ def up():
 
 def down():
     with db().get_engine().connect() as conn:
+        # TODO #303: standardize NULL vs 'null'
         run_id_exception_json_pairs = conn.execute(
-            "SELECT id, exception_json FROM runs WHERE exception_json IS NOT NULL;"
+            "SELECT id, exception_json FROM runs "
+            "WHERE exception_json IS NOT NULL AND exception_json IS NOT 'null';"
         )
 
         for run_id, exception_json in run_id_exception_json_pairs:
