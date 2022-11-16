@@ -10,7 +10,7 @@ import traceback
 from typing import Callable, Optional
 
 # Sematic
-from sematic.config import KUBERNETES_POD_NAME_ENV_VAR
+from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR
 from sematic.storage import S3Storage
 from sematic.utils.retry import retry
 from sematic.utils.stdout import redirect_to_file_descriptor

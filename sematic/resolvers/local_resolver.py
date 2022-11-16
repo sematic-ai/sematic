@@ -11,7 +11,8 @@ import socketio  # type: ignore
 import sematic.api_client as api_client
 from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.config import get_config
+from sematic.config.config import get_config
+from sematic.config.user_settings import get_active_user_settings_strings
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact, make_run_from_future
@@ -20,7 +21,6 @@ from sematic.db.models.run import Run
 from sematic.graph import Graph
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.storage import LocalStorage, Storage
-from sematic.user_settings import get_all_user_settings
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
 from sematic.utils.git import get_git_info
 
@@ -235,9 +235,7 @@ class LocalResolver(SilentResolver):
             status=ResolutionStatus.SCHEDULED,
             kind=ResolutionKind.LOCAL,
             git_info=get_git_info(root_future.calculator.func),  # type: ignore
-            settings_env_vars={
-                name: str(value) for name, value in get_all_user_settings().items()
-            },
+            settings_env_vars=get_active_user_settings_strings(),
         )
 
         return resolution

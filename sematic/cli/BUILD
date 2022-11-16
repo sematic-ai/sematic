@@ -26,7 +26,7 @@ sematic_py_lib(
         "click",
     ],
     deps = [
-        "//sematic:config",
+        "//sematic/config:config",
         "//sematic/db:migrate_lib",
     ],
 )
@@ -52,8 +52,8 @@ sematic_py_lib(
     deps = [
         ":cli",
         ":process_utils",
-        "//sematic:config",
         "//sematic/api:server_lib",
+        "//sematic/config:config",
     ],
 )
 
@@ -78,7 +78,7 @@ sematic_py_lib(
     deps = [
         ":cli",
         ":process_utils",
-        "//sematic:config",
+        "//sematic/config:config",
     ],
 )
 
@@ -91,7 +91,7 @@ sematic_py_lib(
     deps = [
         ":cli",
         ":examples_utils",
-        "//sematic:config",
+        "//sematic/config:config",
     ],
 )
 
@@ -99,7 +99,7 @@ sematic_py_lib(
     name = "process_utils",
     srcs = ["process_utils.py"],
     deps = [
-        "//sematic:config",
+        "//sematic/config:config",
     ],
 )
 
@@ -107,7 +107,7 @@ sematic_py_lib(
     name = "examples_utils",
     srcs = ["examples_utils.py"],
     deps = [
-        "//sematic:config",
+        "//sematic/config:config",
     ],
 )
 
@@ -120,7 +120,7 @@ sematic_py_lib(
     ],
     deps = [
         ":cli",
-        "//sematic:user_settings",
+        "//sematic/config:user_settings",
     ],
 )
 

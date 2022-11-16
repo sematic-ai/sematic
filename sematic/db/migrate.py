@@ -23,7 +23,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
 # Sematic
-from sematic.config import get_config, switch_env
+from sematic.config.config import get_config, switch_env
 from sematic.db.db import db
 
 

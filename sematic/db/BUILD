@@ -6,7 +6,7 @@ sematic_py_lib(
         "psycopg2-binary",
     ],
     deps = [
-        "//sematic:config",
+        "//sematic/config:config",
     ],
 )
 
@@ -53,7 +53,7 @@ sematic_py_lib(
         # Migrations are written at a specific point in time, whereas the
         # codebase evolves.
         ":db",
-        "//sematic:config",
+        "//sematic/config:config",
     ],
 )
 

@@ -1,5 +1,4 @@
 # Standard Library
-import distutils.util
 import functools
 from http import HTTPStatus
 from typing import Callable
@@ -14,9 +13,14 @@ from sqlalchemy.orm.exc import NoResultFound
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.request_parameters import jsonify_error
+from sematic.config.user_settings import (
+    MissingSettingsError,
+    UserSettingsVar,
+    get_bool_user_settings,
+    get_user_settings,
+)
 from sematic.db.models.factories import make_user
 from sematic.db.queries import get_user, get_user_by_api_key, save_user
-from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
 
 
 @sematic_api.route("/authenticate", methods=["GET"])
@@ -28,14 +32,13 @@ def authenticate_endpoint() -> flask.Response:
     friction, we let users run locally without authentication.
     """
     providers = {}
-    authenticate = False
+    authenticate = get_bool_user_settings(UserSettingsVar.SEMATIC_AUTHENTICATE, False)
 
-    if get_user_settings(SettingsVar.SEMATIC_AUTHENTICATE, False):
-        authenticate = True
+    if authenticate:
         for var in (
-            SettingsVar.GOOGLE_OAUTH_CLIENT_ID,
+            UserSettingsVar.GOOGLE_OAUTH_CLIENT_ID,
             # TODO: Github needs more work, npm package is broken
-            # SettingsVar.GITHUB_OAUTH_CLIENT_ID,
+            # UserSettingsVar.GITHUB_OAUTH_CLIENT_ID,
         ):
             try:
                 providers[var.value] = get_user_settings(var)
@@ -76,7 +79,9 @@ def google_login() -> flask.Response:
     token = flask.request.json["token"]
 
     try:
-        google_oauth_client_id = get_user_settings(SettingsVar.GOOGLE_OAUTH_CLIENT_ID)
+        google_oauth_client_id = get_user_settings(
+            UserSettingsVar.GOOGLE_OAUTH_CLIENT_ID
+        )
     except MissingSettingsError:
         return jsonify_error("Missing oauth client ID", HTTPStatus.BAD_REQUEST)
 
@@ -88,7 +93,7 @@ def google_login() -> flask.Response:
         )
 
         authorized_email_domain = get_user_settings(
-            SettingsVar.SEMATIC_AUTHORIZED_EMAIL_DOMAIN, None
+            UserSettingsVar.SEMATIC_AUTHORIZED_EMAIL_DOMAIN, None
         )
 
         if authorized_email_domain is not None:
@@ -130,15 +135,10 @@ def authenticate(endpoint_fn: Callable) -> Callable:
 
     @functools.wraps(endpoint_fn)
     def endpoint(*args, **kwargs) -> flask.Response:
-        auth_settings = get_user_settings(SettingsVar.SEMATIC_AUTHENTICATE, False)
-        # Ideally we would do thisnormalization in user_settings
-        # but it means we would need to type settings
-        if isinstance(auth_settings, str):
-            auth_settings_bool = bool(distutils.util.strtobool(auth_settings))
-        else:
-            auth_settings_bool = auth_settings
-
-        if not auth_settings_bool:
+        authenticate = get_bool_user_settings(
+            UserSettingsVar.SEMATIC_AUTHENTICATE, False
+        )
+        if not authenticate:
             return endpoint_fn(None, *args, **kwargs)
 
         request_api_key = flask.request.headers.get("X-API-KEY")
