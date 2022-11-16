@@ -61,6 +61,14 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "type_utils",
+    srcs = ["type_utils.py"],
+    deps = [
+        "//sematic:abstract_future",
+    ],
+)
+
+sematic_py_lib(
     name = "log_streamer",
     srcs = ["log_streamer.py"],
     deps = [

@@ -49,6 +49,14 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_type_utils",
+    srcs = ["test_type_utils.py"],
+    deps = [
+        "//sematic/resolvers:type_utils",
+    ],
+)
+
+pytest_test(
     name = "test_cloud_resolver",
     srcs = ["test_cloud_resolver.py"],
     deps = [
@@ -56,12 +64,12 @@ pytest_test(
         "//sematic:api_client",
         "//sematic:calculator",
         "//sematic/api/tests:fixtures",
+        "//sematic/db/models:factories",
         "//sematic/db/models:resolution",
         "//sematic/db/tests:fixtures",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:resource_requirements",
         "//sematic/tests:fixtures",
-        "//sematic/db/models:factories",
     ],
 )
 

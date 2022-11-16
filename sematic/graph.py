@@ -11,6 +11,7 @@ from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.run import Run
+from sematic.resolvers.type_utils import make_list_type, make_tuple_type
 from sematic.storage import Storage
 from sematic.utils.memoized_property import memoized_indexed, memoized_property
 from sematic.utils.sorting import breadth_first, topological_sort
@@ -448,7 +449,17 @@ class Graph:
 
         func = run.get_func()
 
-        future = func(**kwargs)
+        if run.calculator_path == "sematic.calculator._make_list":
+            # Dict values insertion order guaranteed as of Python 3.7
+            input_list = list(kwargs.values())
+            future = func(make_list_type(input_list), input_list)  # type: ignore
+        elif run.calculator_path == "sematic.calculator._make_tuple":
+            # Dict values insertion order guaranteed as of Python 3.7
+            input_tuple = tuple(kwargs.values())
+            future = func(make_tuple_type(input_tuple), input_tuple)  # type: ignore
+        else:
+            future = func(**kwargs)
+
         future.name = run.name
 
         cloned_graph.input_artifacts[future.id] = run_input_artifacts
