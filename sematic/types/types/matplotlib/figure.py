@@ -7,7 +7,7 @@ from typing import Any
 import matplotlib.figure  # type: ignore
 
 # Sematic
-from sematic.config import get_config
+from sematic.config.config import get_config
 from sematic.types.registry import register_to_json_encodable_summary
 
 

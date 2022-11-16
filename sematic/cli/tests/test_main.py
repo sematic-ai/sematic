@@ -6,7 +6,7 @@ from dataclasses import asdict
 import pytest
 
 # Sematic
-from sematic.config import Config, get_config, set_config
+from sematic.config.config import Config, get_config, set_config
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 
 

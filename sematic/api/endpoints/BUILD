@@ -133,8 +133,8 @@ sematic_py_lib(
     ],
     deps = [
         ":request_parameters",
-        "//sematic:user_settings",
         "//sematic/api:app",
+        "//sematic/config:user_settings",
         "//sematic/db:queries",
         "//sematic/db/models:factories",
     ],

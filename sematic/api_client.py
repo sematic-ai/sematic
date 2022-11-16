@@ -8,14 +8,18 @@ from requests.exceptions import ConnectionError
 
 # Sematic
 from sematic.abstract_future import FutureState
-from sematic.config import get_config
+from sematic.config.config import get_config
+from sematic.config.user_settings import (
+    MissingSettingsError,
+    UserSettingsVar,
+    get_user_settings,
+)
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.storage import S3Storage, Storage
-from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
 from sematic.utils.retry import retry
 from sematic.versions import CURRENT_VERSION, version_as_string
 
@@ -381,14 +385,14 @@ def _request(
                 "Unable to connect to the Sematic API at {}.\n"
                 "Make sure the correct server address is set with\n"
                 "\t$ sematic settings set {} <address>"
-            ).format(get_config().server_url, SettingsVar.SEMATIC_API_ADDRESS.value)
+            ).format(get_config().server_url, UserSettingsVar.SEMATIC_API_ADDRESS.value)
         )
 
     if (
         response.status_code == requests.codes.unauthorized
         and headers["X-API-KEY"] is None
     ):
-        raise MissingSettingsError(SettingsVar.SEMATIC_API_KEY)
+        raise MissingSettingsError(UserSettingsVar.SEMATIC_API_KEY)
 
     _raise_for_response(
         response,
@@ -451,6 +455,6 @@ def _get_api_key() -> Optional[str]:
     Read the API key from user settings.
     """
     try:
-        return get_user_settings(SettingsVar.SEMATIC_API_KEY)
+        return get_user_settings(UserSettingsVar.SEMATIC_API_KEY)
     except MissingSettingsError:
         return None

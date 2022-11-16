@@ -14,7 +14,7 @@ from sematic.api_client import (
     _validate_server_compatibility,
     get_artifact_value_by_id,
 )
-from sematic.config import get_config
+from sematic.config.config import get_config
 from sematic.db.models.factories import make_artifact
 from sematic.tests.fixtures import MockStorage, valid_client_version  # noqa: F401
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS

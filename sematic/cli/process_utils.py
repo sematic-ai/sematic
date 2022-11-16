@@ -3,7 +3,7 @@ import os
 from typing import Optional
 
 # Sematic
-from sematic.config import get_config
+from sematic.config.config import get_config
 
 
 def get_server_pid() -> Optional[int]:

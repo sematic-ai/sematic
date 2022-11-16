@@ -12,15 +12,6 @@ pytest_test(
     ],
 )
 
-pytest_test(
-    name = "test_config_dir",
-    srcs = ["test_config_dir.py"],
-    deps = [
-        "//sematic:config_dir",
-        "//sematic/tests:fixtures",
-    ],
-)
-
 # <add python version>: A new test will need to be added when a python version is added
 pytest_test(
     name = "test_38_interpreter",
@@ -43,8 +34,8 @@ pytest_test(
     srcs = ["test_api_client.py"],
     deps = [
         "//sematic:api_client",
-        "//sematic:config",
         "//sematic:versions",
+        "//sematic/config:config",
         "//sematic/db/models:factories",
         "//sematic/tests:fixtures",
     ],
@@ -86,15 +77,6 @@ pytest_test(
         "//sematic/resolvers:cloud_resolver",
         "//sematic/scheduling:external_job",
         "//sematic/tests:fixtures",
-    ],
-)
-
-pytest_test(
-    name = "test_user_settings",
-    srcs = ["test_user_settings.py"],
-    deps = [
-        "//sematic:config",
-        "//sematic:user_settings",
     ],
 )
 

@@ -3,8 +3,8 @@ sematic_py_lib(
     srcs = ["fixtures.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//sematic:user_settings",
         "//sematic/api:server_lib",
+        "//sematic/config:user_settings",
         "//sematic/db/tests:fixtures",
         "//sematic/scheduling:kubernetes",
     ],
