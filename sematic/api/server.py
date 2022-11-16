@@ -21,7 +21,7 @@ import sematic.api.endpoints.resolutions  # noqa: F401
 import sematic.api.endpoints.runs  # noqa: F401
 from sematic.api.app import sematic_api
 from sematic.api.wsgi import SematicWSGI
-from sematic.config import get_config, switch_env  # noqa: F401
+from sematic.config.config import get_config, switch_env  # noqa: F401
 
 # Monkey-patching ssl
 # See https://eventlet.net/doc/patching.html

@@ -12,7 +12,7 @@ import click
 from sematic.api.server import run_wsgi
 from sematic.cli.cli import cli
 from sematic.cli.process_utils import server_is_running
-from sematic.config import get_config
+from sematic.config.config import get_config
 
 
 @cli.command("start", short_help="Start the Sematic app")
