@@ -460,6 +460,7 @@ def _line_stream_from_log_directory(
     found_cursor_file = cursor_file is None
     found_cursor_line = cursor_line_index is None
     for log_file in log_files:
+        logger.info("Reading %s from files: %s", log_file, log_files)
         if log_file == cursor_file:
             found_cursor_file = True
         if not found_cursor_file:
@@ -471,13 +472,26 @@ def _line_stream_from_log_directory(
                 and cursor_line_index is not None
                 and i_line < cursor_line_index
             ):
+                logger.info(
+                    "Haven't hit cursor line %s in %s; at %s in %s",
+                    cursor_line_index,
+                    cursor_file,
+                    i_line,
+                    log_file,
+                )
                 continue
             found_cursor_line = True
+            logger.info("Yielding line %s in %s", i_line, log_file)
             yield LogLine(
                 source_file=log_file,
                 source_file_index=i_line,
                 line=line,
             )
+        if cursor_file is not None and log_file >= cursor_file:
+            # we automatically know we hit the cursor line if we are at the end
+            # of the cursor file or in a file that comes after it.
+            found_cursor_line = True
+    logger.info("No more log files in %s", directory)
 
 
 def _load_inline_logs_v1(
@@ -603,6 +617,12 @@ def get_log_lines_from_line_stream(
             line = next(ln for ln in buffer_iterator)
             source_file = line.source_file
             source_file_line_index = line.source_file_index
+            logger.info(
+                "Processing line %s from %s: %s",
+                source_file_line_index,
+                source_file,
+                line.line,
+            )
 
             if not found_cursor:
                 if (
@@ -616,14 +636,33 @@ def get_log_lines_from_line_stream(
                     continue
 
             if not passes_filter(line):
+                logger.info(
+                    "Line %s from %s didn't pass filter: %s",
+                    source_file_line_index,
+                    source_file,
+                    line.line,
+                )
                 continue
 
+            logger.info(
+                "Using line %s from %s didn't pass filter: %s",
+                source_file_line_index,
+                source_file,
+                line.line,
+            )
             lines.append(line.line)
 
             if len(lines) >= max_lines:
+                logger.info(
+                    "Hit max at line %s from %s didn't pass filter: %s",
+                    source_file_line_index,
+                    source_file,
+                    line.line,
+                )
                 has_more = True
                 keep_going = False
         except StopIteration:
+            logger.info("No more lines")
             keep_going = False
 
             # hit the end of the logs produced so far. If the run is
@@ -631,7 +670,7 @@ def get_log_lines_from_line_stream(
             # up!
             has_more = still_running
     missing_reason = None if len(lines) > 0 else "No matching log lines."
-    return LogLineResult(
+    result = LogLineResult(
         more_before=more_before,
         more_after=has_more,
         lines=lines,
@@ -647,3 +686,11 @@ def get_log_lines_from_line_stream(
         else None,
         log_unavailable_reason=missing_reason,
     )
+    logger.info("Returning: %s", result)
+    if result.continuation_cursor is not None:
+        logger.info(
+            "Returned Cursor: %s", Cursor.from_token(result.continuation_cursor)
+        )
+    else:
+        logger.info("No Cursor")
+    return result

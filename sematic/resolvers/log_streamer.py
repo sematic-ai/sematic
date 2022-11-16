@@ -279,7 +279,9 @@ def ingested_logs(
     write_file_descriptor = None
 
     def clean_up_streamer(signal_num, frame=None):
+        print("Pre Cleanup")
         logger.info("Cleaning up log ingestor")
+        print("Post Cleanup")
         print(_TERMINATION_CHAR)  # tell the reader that the stream is done
 
         # ensure there's a final log upload, and that it contains ALL the
