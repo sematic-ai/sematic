@@ -7,7 +7,7 @@ with nothing else on the line.
 * HEAD
 * [0.20.0](https://pypi.org/project/sematic/0.20.0/)
     * [feature] Add datetime class and basic visualization
-    * [feature] Support switching between environment profiles
+    * [feature] Support for switching between environment profiles
     * [improvement] Replace deprecated sklearn dependency with scikit-learn
     * [improvement] Support abstract base classes in type annotations
     * [improvement] Support automatic conversion of tuple-of-futures to future-tuple
