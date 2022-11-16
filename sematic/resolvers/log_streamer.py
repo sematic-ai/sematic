@@ -279,6 +279,9 @@ def ingested_logs(
     write_file_descriptor = None
 
     def clean_up_streamer(signal_num, frame=None):
+        sys.stdout.flush()
+        sys.stderr.flush()
+        time.sleep(0.01)
         logger.info("Cleaning up log ingestor")
         print(_TERMINATION_CHAR)  # tell the reader that the stream is done
 
@@ -314,7 +317,6 @@ def ingested_logs(
             )
             try:
                 yield
-                print("Post yield")
             except Exception:
                 # make sure error is logged while logs are directed
                 # for ingestion so the error gets ingested. Re-raise
