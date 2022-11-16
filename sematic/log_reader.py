@@ -418,6 +418,7 @@ def _load_inline_logs(
 def _line_stream_from_log_directory(
     directory: str, cursor_file: Optional[str], cursor_line_index: Optional[int]
 ) -> Iterable[LogLine]:
+    """Stream lines from multiple files in a storage dir, starting from cursor"""
     log_files = S3Storage().get_child_paths(directory)
 
     log_files = sorted(
