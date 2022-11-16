@@ -16,6 +16,6 @@ py_library(
 )
 
 sh_binary(
-    name = "switch-settings",
-    srcs = ["switch-settings.sh"],
+    name = "switch-user-settings",
+    srcs = ["switch-user-settings.sh"],
 )

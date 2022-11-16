@@ -5,6 +5,11 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+    * [improvement] BREAKING CHANGE: The existing settings have been split into specific
+      user and server settings. User settings configure the Resolver and the pipeline
+      submission, and server settings configure the backend Server behavior. Instead of
+      the `sematic settings` command, you must now use either `sematic user-settings` or
+      `sematic server-settings`.
 * [0.20.0](https://pypi.org/project/sematic/0.20.0/)
     * [feature] Add datetime class and basic visualization
     * [feature] Support for switching between environment profiles

@@ -15,6 +15,7 @@ pytest_test(
     name = "test_kubernetes",
     srcs = ["test_kubernetes.py"],
     deps = [
+        "//sematic/config:server_settings",
         "//sematic/scheduling:kubernetes",
         "//sematic/resolvers:resource_requirements",
         "//sematic/tests:fixtures",
