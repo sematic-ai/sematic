@@ -2,7 +2,7 @@
 import click
 
 # Sematic
-from sematic.config import switch_env
+from sematic.config.config import switch_env
 from sematic.db.migrate import migrate_up
 
 

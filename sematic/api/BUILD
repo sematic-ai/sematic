@@ -20,7 +20,6 @@ sematic_py_lib(
         "eventlet",
     ],
     deps = [
-        "//sematic:config",
         "//sematic/api:app",
         "//sematic/api/endpoints:artifacts",
         "//sematic/api/endpoints:auth",
@@ -30,6 +29,7 @@ sematic_py_lib(
         "//sematic/api/endpoints:notes",
         "//sematic/api/endpoints:resolutions",
         "//sematic/api/endpoints:runs",
+        "//sematic/config:config",
     ],
 )
 

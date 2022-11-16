@@ -13,10 +13,10 @@ from kubernetes.client.models import V1ContainerStatus, V1Job, V1Pod, V1PodCondi
 from urllib3.exceptions import ConnectionError
 
 # Sematic
-from sematic.config import (
+from sematic.config.config import (
     KUBERNETES_POD_NAME_ENV_VAR,
     ON_WORKER_ENV_VAR,
-    SettingsVar,
+    UserSettingsVar,
     get_user_settings,
 )
 from sematic.container_images import CONTAINER_IMAGE_ENV_VAR
@@ -664,7 +664,7 @@ def schedule_resolution_job(
     rerun_from: Optional[str] = None,
 ) -> ExternalJob:
 
-    namespace = get_user_settings(SettingsVar.KUBERNETES_NAMESPACE)
+    namespace = get_user_settings(UserSettingsVar.KUBERNETES_NAMESPACE)
 
     external_job = KubernetesExternalJob.new(
         try_number=0,
@@ -703,7 +703,7 @@ def schedule_run_job(
 ) -> ExternalJob:
     """Schedule a job on k8s for a calculator execution."""
     # "User" in this case is the server.
-    namespace = get_user_settings(SettingsVar.KUBERNETES_NAMESPACE)
+    namespace = get_user_settings(UserSettingsVar.KUBERNETES_NAMESPACE)
     external_job = KubernetesExternalJob.new(
         try_number, run_id, namespace, JobType.worker
     )

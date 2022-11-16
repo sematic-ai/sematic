@@ -10,7 +10,7 @@ import sqlalchemy
 import sqlalchemy.orm
 
 # Sematic
-from sematic.config import get_config
+from sematic.config.config import get_config
 
 
 class DB:

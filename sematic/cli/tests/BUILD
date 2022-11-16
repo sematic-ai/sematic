@@ -5,9 +5,9 @@ pytest_test(
         "click",
     ],
     deps = [
-        "//sematic:config",
         "//sematic/cli:main_lib",
         "//sematic/cli:process_utils",
+        "//sematic/config:config",
         "//sematic/db/tests:fixtures",
     ],
 )

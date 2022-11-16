@@ -10,8 +10,12 @@ import flask
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
+from sematic.config.user_settings import (
+    MissingSettingsError,
+    UserSettingsVar,
+    get_user_settings,
+)
 from sematic.db.models.user import User
-from sematic.user_settings import MissingSettingsError, SettingsVar, get_user_settings
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 
 
@@ -42,9 +46,9 @@ def env_endpoint(user: Optional[User]) -> flask.Response:
     """Return a dictionary with information about the configuration of the server"""
     env = {}
     for settings in (
-        SettingsVar.GOOGLE_OAUTH_CLIENT_ID,
-        SettingsVar.KUBERNETES_NAMESPACE,
-        SettingsVar.GRAFANA_PANEL_URL,
+        UserSettingsVar.GOOGLE_OAUTH_CLIENT_ID,
+        UserSettingsVar.KUBERNETES_NAMESPACE,
+        UserSettingsVar.GRAFANA_PANEL_URL,
     ):
         try:
             env[settings.value] = get_user_settings(settings)

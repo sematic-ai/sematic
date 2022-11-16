@@ -10,7 +10,7 @@ import click
 # Sematic
 from sematic.cli.cli import cli
 from sematic.cli.examples_utils import all_examples, is_example
-from sematic.config import get_config
+from sematic.config.config import get_config
 
 
 @cli.command("new", short_help="Create new project")
