@@ -187,13 +187,6 @@ def load_log_lines(
         ResolutionStatus.CREATED,
         ResolutionStatus.SCHEDULED,
     ):
-        logger.info(
-            "Done log line loading for: %s, %s, %s, %s",
-            run_id,
-            continuation_cursor,
-            max_lines,
-            filter_strings,
-        )
         return LogLineResult(
             more_before=False,
             more_after=True,
@@ -203,27 +196,19 @@ def load_log_lines(
         )
     filter_strings = filter_strings if filter_strings is not None else []
     if FutureState[run.future_state] == FutureState.CREATED:  # type: ignore
-        result = LogLineResult(
+        return LogLineResult(
             more_before=False,
             more_after=True,
             lines=[],
             continuation_cursor=cursor.to_token(),
             log_unavailable_reason="The run has not yet started executing.",
         )
-        logger.info(
-            "Done log line loading for: %s, %s, %s, %s",
-            run_id,
-            continuation_cursor,
-            max_lines,
-            filter_strings,
-        )
-        return result
     # looking for external jobs to determine inline is only valid
     # since we know the run has at least reached SCHEDULED due to it
     # not being CREATED.
     is_inline = len(run.external_jobs) == 0
     if is_inline:
-        result = _load_inline_logs(
+        return _load_inline_logs(
             run_id=run_id,
             resolution=resolution,
             still_running=still_running,
@@ -233,15 +218,7 @@ def load_log_lines(
             max_lines=max_lines,
             filter_strings=filter_strings,
         )
-        logger.info(
-            "Done log line loading for: %s, %s, %s, %s",
-            run_id,
-            continuation_cursor,
-            max_lines,
-            filter_strings,
-        )
-        return result
-    result = _load_non_inline_logs(
+    return _load_non_inline_logs(
         run_id=run_id,
         still_running=still_running,
         cursor_file=cursor.source_log_key,
@@ -250,14 +227,6 @@ def load_log_lines(
         max_lines=max_lines,
         filter_strings=filter_strings,
     )
-    logger.info(
-        "Done log line loading for: %s, %s, %s, %s",
-        run_id,
-        continuation_cursor,
-        max_lines,
-        filter_strings,
-    )
-    return result
 
 
 def _get_latest_log_file(prefix, cursor_file) -> Optional[str]:
@@ -460,7 +429,6 @@ def _line_stream_from_log_directory(
     found_cursor_file = cursor_file is None
     found_cursor_line = cursor_line_index is None
     for log_file in log_files:
-        logger.info("Reading %s from files: %s", log_file, log_files)
         if log_file == cursor_file:
             found_cursor_file = True
         if not found_cursor_file:
@@ -472,16 +440,8 @@ def _line_stream_from_log_directory(
                 and cursor_line_index is not None
                 and i_line < cursor_line_index
             ):
-                logger.info(
-                    "Haven't hit cursor line %s in %s; at %s in %s",
-                    cursor_line_index,
-                    cursor_file,
-                    i_line,
-                    log_file,
-                )
                 continue
             found_cursor_line = True
-            logger.info("Yielding line %s in %s", i_line, log_file)
             yield LogLine(
                 source_file=log_file,
                 source_file_index=i_line,
@@ -491,7 +451,6 @@ def _line_stream_from_log_directory(
             # we automatically know we hit the cursor line if we are at the end
             # of the cursor file or in a file that comes after it.
             found_cursor_line = True
-    logger.info("No more log files in %s", directory)
 
 
 def _load_inline_logs_v1(
@@ -617,12 +576,6 @@ def get_log_lines_from_line_stream(
             line = next(ln for ln in buffer_iterator)
             source_file = line.source_file
             source_file_line_index = line.source_file_index
-            logger.info(
-                "Processing line %s from %s: %s",
-                source_file_line_index,
-                source_file,
-                line.line,
-            )
 
             if not found_cursor:
                 if (
@@ -636,33 +589,14 @@ def get_log_lines_from_line_stream(
                     continue
 
             if not passes_filter(line):
-                logger.info(
-                    "Line %s from %s didn't pass filter: %s",
-                    source_file_line_index,
-                    source_file,
-                    line.line,
-                )
                 continue
 
-            logger.info(
-                "Using line %s from %s didn't pass filter: %s",
-                source_file_line_index,
-                source_file,
-                line.line,
-            )
             lines.append(line.line)
 
             if len(lines) >= max_lines:
-                logger.info(
-                    "Hit max at line %s from %s didn't pass filter: %s",
-                    source_file_line_index,
-                    source_file,
-                    line.line,
-                )
                 has_more = True
                 keep_going = False
         except StopIteration:
-            logger.info("No more lines")
             keep_going = False
 
             # hit the end of the logs produced so far. If the run is
@@ -686,11 +620,4 @@ def get_log_lines_from_line_stream(
         else None,
         log_unavailable_reason=missing_reason,
     )
-    logger.info("Returning: %s", result)
-    if result.continuation_cursor is not None:
-        logger.info(
-            "Returned Cursor: %s", Cursor.from_token(result.continuation_cursor)
-        )
-    else:
-        logger.info("No Cursor")
     return result

@@ -49,7 +49,7 @@ A: The pipe mechanisms for the "multiprocess" module assumes that the parent pro
 
 DEFAULT_LOG_UPLOAD_INTERVAL_SECONDS = 10
 _LAST_NON_EMPTY_DELTA_TEMPLATE = "{}.previous"
-_TERMINATION_CHAR = chr(ascii.EOT)
+_TERMINATION_CHAR = chr(ascii.EOT)  # EOT => End Of Transmission
 
 logger = logging.getLogger(__name__)
 
@@ -281,7 +281,7 @@ def ingested_logs(
     def clean_up_streamer(signal_num, frame=None):
         sys.stdout.flush()
         sys.stderr.flush()
-        time.sleep(0.01)
+        time.sleep(1)
         logger.info("Cleaning up log ingestor")
         print(_TERMINATION_CHAR)  # tell the reader that the stream is done
 
