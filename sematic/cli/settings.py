@@ -29,12 +29,12 @@ def show_settings() -> None:
     click.echo(f"Active settings:\n{profile_settings_dump}")
 
 
-@settings.command("set", short_help="Set a setting value")
+@settings.command("set", short_help="Set a settings value")
 @click.argument("var", type=click.STRING)
 @click.argument("value", type=click.STRING)
 def set_settings(var: str, value: str) -> None:
     """
-    Set a setting value.
+    Set a settings value.
     """
     try:
         settings_var = UserSettingsVar[var]
@@ -48,11 +48,11 @@ def set_settings(var: str, value: str) -> None:
     click.echo(f"Successfully set {var} to {repr(value)}\n")
 
 
-@settings.command("delete", short_help="Delete a setting value")
+@settings.command("delete", short_help="Delete a settings value")
 @click.argument("var", type=click.STRING)
 def delete_settings(var: str) -> None:
     """
-    Delete a setting value
+    Delete a settings value
     """
     try:
         settings_var = UserSettingsVar[var]

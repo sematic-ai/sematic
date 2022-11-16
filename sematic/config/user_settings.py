@@ -254,10 +254,10 @@ def get_active_user_settings_strings() -> Dict[str, str]:
 
 def get_user_settings(var: UserSettingsVar, *args) -> str:
     """
-    Retrieves and returns the specified setting, with environment override.
+    Retrieves and returns the specified settings value, with environment override.
 
-    Loads and returns the specified setting. If it does not exist, it falls back on the
-    first optional vararg as a default value. If that does not exist, it raises.
+    Loads and returns the specified settings value. If it does not exist, it falls back
+    on the first optional vararg as a default value. If that does not exist, it raises.
     """
     value = get_active_user_settings().get(var)
 
@@ -272,17 +272,18 @@ def get_user_settings(var: UserSettingsVar, *args) -> str:
 
 def get_bool_user_settings(var: UserSettingsVar, *args) -> bool:
     """
-    Retrieves and returns the specified setting as a boolean, with environment override.
+    Retrieves and returns the specified settings value as a boolean, with environment
+    override.
 
-    Loads and returns the specified setting. If it does not exist, it falls back on the
-    first optional vararg as a default value. If that does not exist, it raises.
+    Loads and returns the specified settings value. If it does not exist, it falls back
+    on the first optional vararg as a default value. If that does not exist, it raises.
     """
     return _as_bool(get_user_settings(var, *args))
 
 
 def set_user_settings(var: UserSettingsVar, value: str) -> None:
     """
-    Sets the specifies setting value and persists the settings.
+    Sets the specifies settings value and persists the settings.
     """
     global _settings
 
@@ -295,7 +296,7 @@ def set_user_settings(var: UserSettingsVar, value: str) -> None:
 
 def delete_user_settings(var: UserSettingsVar) -> None:
     """
-    Deletes the specified setting value and persists the settings.
+    Deletes the specified settings value and persists the settings.
     """
     global _settings
 
