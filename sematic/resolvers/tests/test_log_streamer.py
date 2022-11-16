@@ -9,9 +9,9 @@ import time
 # Sematic
 from sematic.resolvers.log_streamer import (
     _TERMINATION_CHAR,
-    _send_signal_or_kill,
     _start_log_streamer_out_of_process,
     _tail_log_file,
+    _wait_or_kill,
     ingested_logs,
 )
 from sematic.utils.retry import retry
@@ -88,7 +88,7 @@ def test_start_log_streamer_out_of_process():
         # give some time for the process to actually start up
         # and register a handler
         time.sleep(1)
-        _send_signal_or_kill(child_pid, signal.SIGTERM, timeout_seconds=5)
+        _wait_or_kill(child_pid, timeout_seconds=5)
 
     assert time.time() - started < upload_interval
     try:

@@ -148,21 +148,6 @@ def _stream_logs_to_remote_from_file_descriptor(
         the remote prefix as arguments.
     """
     read_handle = os.fdopen(read_from_file_descriptor)
-
-    def do_exit(signal_num, frame):
-        # unregister so we don't do this multiple times
-        signal.signal(signal.SIGTERM, lambda *_, **__: None)
-        received_termination = _flush_to_file(
-            file_path, read_handle, uploader, remote_prefix
-        )
-        if received_termination:
-            os._exit(0)
-        else:
-            # was told to terminate, but didn't find an indicator that
-            # the stream was done. Exit with a non-zero exit code.
-            os._exit(signal_num)
-
-    signal.signal(signal.SIGTERM, do_exit)
     while True:
         received_termination = _flush_to_file(
             file_path,
@@ -279,7 +264,7 @@ def ingested_logs(
     read_file_descriptor = None
     write_file_descriptor = None
 
-    def clean_up_streamer(signal_num, frame=None):
+    def clean_up_streamer(signal_num=None, frame=None):
         logger.info("Cleaning up log ingestor")
         print(_TERMINATION_CHAR)  # tell the reader that the stream is done
 
@@ -293,7 +278,7 @@ def ingested_logs(
             # forwarding the signal should trigger a final upload.
             # use a timeout so the parent process can still exit if
             # the child hangs for some reason (ex: during remote service call)
-            _send_signal_or_kill(streamer_pid, signal_num, timeout_seconds=20)
+            _wait_or_kill(streamer_pid, timeout_seconds=20)
 
         if original_signal_handler is not None and hasattr(
             original_signal_handler, "__call__"
@@ -325,7 +310,7 @@ def ingested_logs(
                 signal.signal(signal.SIGTERM, original_signal_handler)
                 original_signal_handler = None
 
-                clean_up_streamer(signal.SIGTERM)
+                clean_up_streamer()
     finally:
         # outermost try/finally is so we can tail logs to non-redirected stdout
         # even if the code raised an error
@@ -346,25 +331,19 @@ def ingested_logs(
             os.close(write_file_descriptor)
 
 
-def _send_signal_or_kill(pid: int, signal_num: int, timeout_seconds: int):
-    """Send the signal to the given pid. If not exited by timeout, send SIGKILL
+def _wait_or_kill(pid: int, timeout_seconds: int):
+    """Wait on the given pid. If not exited by timeout, send SIGKILL
 
     Parameters
     ----------
     pid:
         The pid of the process to kill
-    signal_num:
-        The initial signal to send. Will be sent repeatedly until the process
-        terminates or the timeout occurs. The repeated send is so that if the
-        signal is first sent BEFORE the child has a chance to register a handler,
-        it will still get another chance after the handler has been registered.
     timeout_seconds:
         The maximum time to wait before sending a SIGKILL
     """
     try:
         started = time.time()
         while time.time() - started < timeout_seconds:
-            os.kill(pid, signal_num)
             wait_result = os.waitpid(pid, os.WNOHANG)
             if wait_result is None:
                 return
