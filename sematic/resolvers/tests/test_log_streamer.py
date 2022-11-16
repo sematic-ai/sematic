@@ -1,7 +1,6 @@
 # Standard Library
 import os
 import pathlib
-import signal
 import sys
 import tempfile
 import time

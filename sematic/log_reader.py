@@ -352,7 +352,7 @@ def _load_inline_logs(
     max_lines: int,
     filter_strings: List[str],
 ) -> LogLineResult:
-    """Load the lines for runs that are NOT inline"""
+    """Load the lines for runs that are inline."""
     if ResolutionKind[resolution.kind] == ResolutionKind.LOCAL:  # type: ignore
         return LogLineResult(
             more_before=False,
@@ -433,12 +433,6 @@ def _line_stream_from_log_directory(
         if log_file == cursor_file:
             found_cursor_file = True
         if not found_cursor_file:
-            logger.info(
-                "On file %s, haven't found cursor %s in %s",
-                log_file,
-                cursor_file,
-                log_files,
-            )
             continue
         text_stream: Iterable[str] = S3Storage().get_line_stream(log_file)
         for i_line, line in enumerate(text_stream):
@@ -447,15 +441,8 @@ def _line_stream_from_log_directory(
                 and cursor_line_index is not None
                 and i_line < cursor_line_index
             ):
-                logger.info(
-                    "On line %s in %s, haven't found cursor line %s",
-                    i_line,
-                    log_file,
-                    cursor_line_index,
-                )
                 continue
             found_cursor_line = True
-            logger.info("Yielding line %s in %s: %s", i_line, log_file, line)
             yield LogLine(
                 source_file=log_file,
                 source_file_index=i_line,
@@ -477,7 +464,7 @@ def _load_inline_logs_v1(
     max_lines: int,
     filter_strings: List[str],
 ) -> LogLineResult:
-    """Load the lines for runs that are NOT inline"""
+    """Load the lines for runs that are inline."""
     prefix = v1_log_prefix(resolution.root_id, JobType.driver)
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
     if latest_log_file is None:
@@ -604,7 +591,6 @@ def get_log_lines_from_line_stream(
                     continue
 
             if not passes_filter(line):
-                logger.info("Line doesn't pass filters: %s", line)
                 continue
 
             lines.append(line.line)
@@ -613,7 +599,6 @@ def get_log_lines_from_line_stream(
                 has_more = True
                 keep_going = False
         except StopIteration:
-            logger.info("Out of lines: %s")
             keep_going = False
 
             # hit the end of the logs produced so far. If the run is
@@ -621,7 +606,7 @@ def get_log_lines_from_line_stream(
             # up!
             has_more = still_running
     missing_reason = None if len(lines) > 0 else "No matching log lines."
-    result = LogLineResult(
+    return LogLineResult(
         more_before=more_before,
         more_after=has_more,
         lines=lines,
@@ -637,5 +622,3 @@ def get_log_lines_from_line_stream(
         else None,
         log_unavailable_reason=missing_reason,
     )
-    logger.info("Returning %s", result)
-    return result
