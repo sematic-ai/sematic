@@ -79,8 +79,9 @@ def _flush_to_file(
         with time (see _do_upload).
     timeout_seconds:
         The max number of seconds between when streaming from the read handle starts and
-        when the upload occurs. If set to "None", the read_handle will be read until there
-        are no more contents present, at which point the flush will immediately conclude.
+        when the upload occurs. If set to "None", the read_handle will be read until the
+        "end of transmission" character is present, at which point the flush will
+        immediately conclude.
     """
     if os.path.exists(file_path):
         if os.stat(file_path)[stat.ST_SIZE] > 0:
@@ -279,9 +280,6 @@ def ingested_logs(
     write_file_descriptor = None
 
     def clean_up_streamer(signal_num, frame=None):
-        sys.stdout.flush()
-        sys.stderr.flush()
-        time.sleep(1)
         logger.info("Cleaning up log ingestor")
         print(_TERMINATION_CHAR)  # tell the reader that the stream is done
 
