@@ -13,10 +13,15 @@ from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import CLI_COMMAND, UserSettingsVar, get_user_setting
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.factories import get_artifact_value
+from sematic.db.models.factories import deserialize_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
-from sematic.storage import S3Storage, Storage
+from sematic.storage import (
+    STORAGE_ENGINE_REGISTRY,
+    Storage,
+    StorageMode,
+    StorageSettingValue,
+)
 from sematic.utils.retry import retry
 from sematic.versions import CURRENT_VERSION, version_as_string
 
@@ -52,9 +57,7 @@ class ResourceNotFoundError(BadRequestError):
     pass
 
 
-def get_artifact_value_by_id(
-    artifact_id: str, storage: Optional[Storage] = None
-) -> Any:
+def get_artifact_value_by_id(artifact_id: str) -> Any:
     """
     Retrieve the value of an artifact by ID.
 
@@ -69,13 +72,29 @@ def get_artifact_value_by_id(
     Any
         The value of the requiested artifact.
     """
-    # TODO: Store storage type on artifact
-    if storage is None:
-        storage = S3Storage()
-
     artifact = _get_artifact(artifact_id)
 
-    return get_artifact_value(artifact, storage)
+    return get_artifact_value(artifact)
+
+
+def get_artifact_value(artifact: Artifact) -> Any:
+    storage_engine, location = get_artifact_location(artifact.id, mode=StorageMode.READ)
+    payload = storage_engine.get(location)
+
+    return deserialize_artifact_value(artifact, payload)
+
+
+def get_artifact_location(artifact_id: str, mode: StorageMode) -> Tuple[Storage, str]:
+    response = _get(f"/artifacts/{artifact_id}/location/{mode.value}")
+
+    try:
+        storage_engine = STORAGE_ENGINE_REGISTRY[
+            StorageSettingValue[response["storage_engine"]]
+        ]
+    except KeyError:
+        raise NotImplementedError(f"Unknown storage engine: {response['storage_engine']}")
+
+    return storage_engine(), response["location"]
 
 
 def _get_artifact(artifact_id: str) -> Artifact:

@@ -29,7 +29,6 @@ sematic_py_lib(
         ":run",
         ":user",
         "//sematic:abstract_future",
-        "//sematic:storage",
         "//sematic/types:serialization",
     ],
 )

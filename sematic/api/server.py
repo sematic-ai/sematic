@@ -40,6 +40,15 @@ def data(file: str):
     return send_file(path)
 
 
+@sematic_api.route("/data/artifacts/<artifact_id>")
+def artifacts_data(artifact_id: str):
+    """
+    Endpoint to serve images and large payloads stored on disc.
+    """
+    path = os.path.join(get_config().data_dir, artifact_id)
+    return send_file(path)
+
+
 @sematic_api.route("/")
 @sematic_api.route("/<path:path>")
 def index(path=""):

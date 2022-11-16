@@ -1,18 +1,24 @@
 # Standard Library
 import abc
-import io
 import os
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Type
+import enum
 
 # Third-party
 import boto3
 import botocore.exceptions
+import requests
 
 # Sematic
 from sematic.config.config import get_config
 from sematic.config.user_settings import UserSettingsVar, get_user_setting
 from sematic.utils.memoized_property import memoized_property
 from sematic.utils.retry import retry
+
+
+class StorageMode(enum.Enum):
+    READ = "read"
+    WRITE = "write"
 
 
 class Storage(abc.ABC):
@@ -33,6 +39,23 @@ class Storage(abc.ABC):
         Gets value for key.
         """
         pass
+
+    @abc.abstractmethod
+    def _get_write_location(self, namespace: str, key: str) -> str:
+        pass
+
+    @abc.abstractmethod
+    def _get_read_location(self, namespace: str, key: str) -> str:
+        pass
+
+    def get_location(self, namespace: str, key: str, mode: StorageMode) -> str:
+        if mode == StorageMode.READ:
+            return self._get_read_location(namespace, key)
+
+        if mode == StorageMode.WRITE:
+            return self._get_write_location(namespace, key)
+
+        raise KeyError(f"Unknown storage mode: {mode}")
 
 
 class NoSuchStorageKey(KeyError):
@@ -57,6 +80,12 @@ class MemoryStorage(Storage):
         except KeyError:
             raise NoSuchStorageKey(self, key)
 
+    def _get_write_location(self, namespace, key: str) -> str:
+        return f"{namespace}/{key}"
+
+    def _get_read_location(self, namespace: str, key: str) -> str:
+        return self._get_write_location(namespace, key)
+
 
 class LocalStorage(Storage):
     """
@@ -67,9 +96,9 @@ class LocalStorage(Storage):
 
     def set(self, key: str, value: bytes):
         dir_path = os.path.split(key)[0]
-        os.makedirs(os.path.join(get_config().data_dir, dir_path), exist_ok=True)
+        os.makedirs(dir_path, exist_ok=True)
 
-        with open(os.path.join(get_config().data_dir, key), "wb") as file:
+        with open(key, "wb") as file:
             file.write(value)
 
     def get(self, key: str) -> bytes:
@@ -78,6 +107,17 @@ class LocalStorage(Storage):
                 return file.read()
         except FileNotFoundError:
             raise NoSuchStorageKey(self, key)
+
+    def _get_write_location(self, namespace: str, key: str) -> str:
+        return os.path.join(get_config().data_dir, namespace, key)
+
+    def _get_read_location(self, namespace: str, key: str) -> str:
+        return f"sematic:///data/{namespace}/{key}"
+
+
+class S3ClientMethod(enum.Enum):
+    PUT = "put_object"
+    GET = "get_object"
 
 
 class S3Storage(Storage):
@@ -94,27 +134,37 @@ class S3Storage(Storage):
     def _s3_client(self):
         return boto3.client("s3")
 
+    def _make_presigned_url(self, client_method: S3ClientMethod, key: str) -> str:
+        presigned_url = self._s3_client.generate_presigned_url(
+            ClientMethod=client_method.value,
+            Params={"Bucket": self._bucket, "Key": key},
+            ExpiresIn=5 * 60,
+        )
+
+        return presigned_url
+
+    def _get_write_location(self, namespace: str, key: str) -> str:
+        return self._make_presigned_url(S3ClientMethod.PUT, f"{namespace}/{key}")
+
+    def _get_read_location(self, namespace: str, key: str) -> str:
+        return self._make_presigned_url(S3ClientMethod.GET, f"{namespace}/{key}")
+
     def set(self, key: str, value: bytes):
         """Store value in S3"""
-        with io.BytesIO(value) as file_obj:
-            self._s3_client.upload_fileobj(file_obj, self._bucket, key)
+        response = requests.put(key, data=value)
+        response.raise_for_status()
 
     @retry(tries=3, delay=5)
     def get(self, key: str) -> bytes:
-        """Get value from S3.
+        """Get value from S3."""
+        response = requests.get(key)
 
-        See TODO in `set`.
-        """
-        file_obj = io.BytesIO()
-        try:
-            self._s3_client.download_fileobj(self._bucket, key, file_obj)
-        except botocore.exceptions.ClientError as e:
-            # Standardizing "Not found" errors across storage backends
-            if "404" in str(e):
-                raise NoSuchStorageKey(self, key)
+        if response.status_code == 404:
+            raise NoSuchStorageKey(self, key)
 
-            raise e
-        return file_obj.getvalue()
+        response.raise_for_status()
+
+        return response.content
 
     def set_from_file(self, key: str, value_file_path: str):
         """Store value in S3 using the contents of a file
@@ -189,3 +239,22 @@ class S3Storage(Storage):
 def _bytes_buffer_to_text(bytes_buffer: Iterable[bytes], encoding) -> Iterable[str]:
     for line in bytes_buffer:
         yield str(line, encoding=encoding)
+
+
+class StorageSettingValue(enum.Enum):
+    """
+    Possible value for the SEMATIC_STORAGE setting
+    """
+
+    LOCAL = "LOCAL"
+    MEMORY = "MEMORY"
+    S3 = "S3"
+
+
+# This is and StorageSettingValue should be replaced by a proper
+# plugin-registry
+STORAGE_ENGINE_REGISTRY: Dict[StorageSettingValue, Type[Storage]] = {
+    StorageSettingValue.LOCAL: LocalStorage,
+    StorageSettingValue.MEMORY: MemoryStorage,
+    StorageSettingValue.S3: S3Storage,
+}

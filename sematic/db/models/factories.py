@@ -15,7 +15,6 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
-from sematic.storage import Storage
 from sematic.types.serialization import (
     get_json_encodable_summary,
     type_from_json_encodable,
@@ -34,9 +33,7 @@ def make_run_from_future(future: AbstractFuture) -> Run:
         future_state=future.state,
         name=future.props.name,
         calculator_path=make_func_path(future),
-        parent_id=(
-            future.parent_future.id if future.parent_future is not None else None
-        ),
+        parent_id=(future.parent_future.id if future.parent_future is not None else None),
         nested_future_id=(
             future.nested_future.id if future.nested_future is not None else None
         ),
@@ -143,9 +140,7 @@ def make_func_path(future: AbstractFuture) -> str:
     return f"{future.calculator.__module__}.{future.calculator.__name__}"
 
 
-def make_artifact(
-    value: Any, type_: Any, storage: Optional[Storage] = None
-) -> Artifact:
+def make_artifact(value: Any, type_: Any) -> Tuple[Artifact, bytes]:
     """
     Create an Artifact model instance from a value and type.
     """
@@ -154,32 +149,22 @@ def make_artifact(
     json_summary = get_json_encodable_summary(value, type_)
 
     artifact = Artifact(
-        id=_get_value_sha1_digest(
-            value_serialization, type_serialization, json_summary
-        ),
-        json_summary=_fix_nan_inf(
-            json.dumps(json_summary, sort_keys=True, default=str)
-        ),
+        id=_get_value_sha1_digest(value_serialization, type_serialization, json_summary),
+        json_summary=_fix_nan_inf(json.dumps(json_summary, sort_keys=True, default=str)),
         type_serialization=json.dumps(type_serialization, sort_keys=True),
         created_at=datetime.datetime.utcnow(),
         updated_at=datetime.datetime.utcnow(),
     )
 
-    if storage is not None:
-        storage.set(
-            _make_artifact_storage_key(artifact),
-            json.dumps(value_serialization, sort_keys=True).encode("utf-8"),
-        )
+    payload = json.dumps(value_serialization, sort_keys=True).encode("utf-8")
 
-    return artifact
+    return artifact, payload
 
 
-def get_artifact_value(artifact: Artifact, storage: Storage) -> Any:
+def deserialize_artifact_value(artifact: Artifact, payload: bytes) -> Any:
     """
     Fetch artifact serialization from storage and deserialize.
     """
-    payload = storage.get(_make_artifact_storage_key(artifact))
-
     value_serialization = json.loads(payload.decode("utf-8"))
     type_serialization = json.loads(artifact.type_serialization)
 
@@ -188,10 +173,6 @@ def get_artifact_value(artifact: Artifact, storage: Storage) -> Any:
     value = value_from_json_encodable(value_serialization, type_)
 
     return value
-
-
-def _make_artifact_storage_key(artifact: Artifact) -> str:
-    return "artifacts/{}".format(artifact.id)
 
 
 def _get_value_sha1_digest(

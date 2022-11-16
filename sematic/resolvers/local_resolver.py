@@ -21,7 +21,7 @@ from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionS
 from sematic.db.models.run import Run
 from sematic.graph import Graph
 from sematic.resolvers.silent_resolver import SilentResolver
-from sematic.storage import LocalStorage, Storage
+from sematic.storage import StorageMode
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
 from sematic.utils.git import get_git_info
 from sematic.versions import CURRENT_VERSION_STR
@@ -57,16 +57,14 @@ class LocalResolver(SilentResolver):
         # A cache of already created artifacts to avoid making them over again.
         # The key is run ID, the value is a dictionary where the key is input
         # name, or None for output and the value is the artifact.
-        self._artifacts_by_run_id: Dict[
-            str, Dict[Optional[str], Artifact]
-        ] = defaultdict(dict)
+        self._artifacts_by_run_id: Dict[str, Dict[Optional[str], Artifact]] = defaultdict(
+            dict
+        )
 
         # Buffers for persistence
         self._buffer_edges: Dict[str, Edge] = {}
         self._buffer_runs: Dict[str, Run] = {}
         self._buffer_artifacts: Dict[str, Artifact] = {}
-
-        self._storage: Storage = LocalStorage()
 
         self._sio_client = socketio.Client()
 

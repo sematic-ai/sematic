@@ -16,7 +16,6 @@ from sematic.container_images import (
 )
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
@@ -274,7 +273,7 @@ class CloudResolver(LocalResolver):
 
             output_artifact = self._artifacts[output_edge.artifact_id]
             self._artifacts_by_run_id[run.id][None] = output_artifact
-            value = get_artifact_value(output_artifact, storage=self._storage)
+            value = api_client.get_artifact_value(output_artifact)
 
         self._update_future_with_value(future, value)
 
@@ -330,9 +329,7 @@ class CloudResolver(LocalResolver):
 
         delay_between_updates = 1.0
         while True:
-            updated_states: Dict[
-                str, FutureState
-            ] = api_client.update_run_future_states(
+            updated_states: Dict[str, FutureState] = api_client.update_run_future_states(
                 list(scheduled_futures_by_id.keys())
             )
             logger.info(

@@ -16,7 +16,7 @@ from sematic.abstract_future import FutureState
 from sematic.calculator import Calculator
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.factories import get_artifact_value, make_artifact
+from sematic.db.models.factories import make_artifact
 from sematic.db.models.run import Run
 from sematic.future import Future
 from sematic.future_context import SematicContext, set_context
@@ -58,8 +58,8 @@ def _get_input_kwargs(
     artifacts_by_id = {artifact.id: artifact for artifact in artifacts}
 
     kwargs = {
-        edge.destination_name: get_artifact_value(
-            artifacts_by_id[edge.artifact_id], storage=S3Storage()
+        edge.destination_name: api_client.get_artifact_value(
+            artifacts_by_id[edge.artifact_id]
         )
         for edge in edges
         if edge.destination_run_id == run_id
