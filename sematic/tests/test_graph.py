@@ -102,9 +102,7 @@ def test_clone_futures(
             assert future_.value == value
             if output_edge.destination_run_id is not None:
                 downstream_run = runs_by_id[output_edge.destination_run_id]
-                downstream_future = cloned_graph.futures_by_original_id[
-                    downstream_run.id
-                ]
+                downstream_future = cloned_graph.futures_by_original_id[downstream_run.id]
                 assert downstream_future.kwargs[output_edge.destination_name] is future_
 
 
@@ -164,9 +162,7 @@ def test_clone_futures_reset(
     ]
 
     assert len(top_level_add_futures) == 3
-    assert all(
-        future_.state is FutureState.RESOLVED for future_ in top_level_add_futures
-    )
+    assert all(future_.state is FutureState.RESOLVED for future_ in top_level_add_futures)
 
 
 @func
@@ -317,66 +313,3 @@ def test_nested_fail(
     )
     for run in runs:
         graph.clone_futures(reset_from=run.id)
-
-
-"""
-b11a1bc4bfce4bb2b7bd9caa069d8d13
-5586162f0f9f4dd68d1ebce65e81f096
-564a74947532429f83faa5005aee43d1
-Edge(
-    id=f04255b451484770a10e17424e5a9e3b,
-    source_run_id=None,
-    destination_run_id=b11a1bc4bfce4bb2b7bd9caa069d8d13,
-    destination_name=a,
-    artifact_id=df56adbd1d6d197be682be18f527e8b4f311f9ae,
-    parent_id=None
-),
-Edge(
-    id=0755cb17414f493fb327e29e5b73555f,
-    source_run_id=b11a1bc4bfce4bb2b7bd9caa069d8d13,
-    destination_run_id=None,
-    destination_name=None,
-    artifact_id=None,
-    parent_id=None
-),
-Edge(
-    id=744b958798704dc1aa12f7da6fde4097,
-    source_run_id=None,
-    destination_run_id=564a74947532429f83faa5005aee43d1,
-    destination_name=a,
-    artifact_id=None,
-    parent_id=None
-),
-Edge(
-    id=9e941e9a3b854fa7a86e7b4b45bc7146,
-    source_run_id=5586162f0f9f4dd68d1ebce65e81f096,
-    destination_run_id=564a74947532429f83faa5005aee43d1,
-    destination_name=b,
-    artifact_id=None,
-    parent_id=None
-),
-Edge(
-    id=3969c572100b442297a7f5de517d8df1,
-    source_run_id=564a74947532429f83faa5005aee43d1,
-    destination_run_id=None,
-    destination_name=None,
-    artifact_id=None,
-    parent_id=0755cb17414f493fb327e29e5b73555f
-),
-Edge(
-    id=6d9d8224a4d042bda403d5e78c1429a7,
-    source_run_id=None,
-    destination_run_id=5586162f0f9f4dd68d1ebce65e81f096,
-    destination_name=a,
-    artifact_id=9eb1beb09bd13df4dd9e1847bab2adba006be8b8,
-    parent_id=None
-),
-Edge(
-    id=0274871099fa405f88d53b949ec2501b,
-    source_run_id=None,
-    destination_run_id=5586162f0f9f4dd68d1ebce65e81f096,
-    destination_name=b,
-    artifact_id=9eb1beb09bd13df4dd9e1847bab2adba006be8b8,
-    parent_id=None
-)
-"""
