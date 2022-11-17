@@ -9,7 +9,6 @@ from typing import (
     Callable,
     Dict,
     Iterable,
-    List,
     Optional,
     Sequence,
     Type,
@@ -23,6 +22,7 @@ from typing import (
 from sematic.abstract_calculator import AbstractCalculator, CalculatorError
 from sematic.future import Future
 from sematic.resolvers.resource_requirements import ResourceRequirements
+from sematic.resolvers.type_utils import make_list_type
 from sematic.retry_settings import RetrySettings
 from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.registry import validate_type_annotation
@@ -423,17 +423,7 @@ def _convert_lists(value_):
             value_[idx] = _convert_lists(item)
 
     if any(isinstance(item, Future) for item in value_):
-        output_type = None
-        for item in value_:
-            item_type = (
-                item.calculator.output_type if isinstance(item, Future) else type(item)
-            )
-            if output_type is None:
-                output_type = item_type
-            elif output_type != item_type:
-                output_type = Union[output_type, item_type]
-
-        return _make_list(List[output_type], value_)
+        return _make_list(make_list_type(value_), value_)
 
     return value_
 
