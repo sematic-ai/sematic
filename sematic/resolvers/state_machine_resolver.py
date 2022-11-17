@@ -98,7 +98,11 @@ class StateMachineResolver(Resolver, abc.ABC):
         try:
             yield
         except Exception as e:
-            self._resolution_did_fail(error=e)
+            try:
+                self._resolution_did_fail(error=e)
+            except Exception as ee:
+                logger.error("Unable to fail resolution: %s", ee)
+
             if isinstance(e, CalculatorError) and hasattr(e, "__cause__"):
                 # this will simplify the stack trace so the user sees less
                 # from Sematic's stack and more from the error from their code.

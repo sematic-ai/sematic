@@ -102,9 +102,7 @@ def test_clone_futures(
             assert future_.value == value
             if output_edge.destination_run_id is not None:
                 downstream_run = runs_by_id[output_edge.destination_run_id]
-                downstream_future = cloned_graph.futures_by_original_id[
-                    downstream_run.id
-                ]
+                downstream_future = cloned_graph.futures_by_original_id[downstream_run.id]
                 assert downstream_future.kwargs[output_edge.destination_name] is future_
 
 
@@ -164,9 +162,7 @@ def test_clone_futures_reset(
     ]
 
     assert len(top_level_add_futures) == 3
-    assert all(
-        future_.state is FutureState.RESOLVED for future_ in top_level_add_futures
-    )
+    assert all(future_.state is FutureState.RESOLVED for future_ in top_level_add_futures)
 
 
 @func
@@ -288,3 +284,32 @@ def test_run_reverse_ordering(
     ]
 
     assert run_ids_by_reverse_order == expected_order
+
+
+@func
+def pipeline_fail(a: int) -> int:
+    b = add_fail(a, a)
+    c = add(a, b)
+    return add(a, c)
+
+
+def test_nested_fail(
+    mock_auth,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_local_resolver_storage,  # noqa: F811
+    mock_requests,  # noqa: F811
+):
+    future = pipeline_fail(1)
+    resolver = LocalResolver()
+
+    with pytest.raises(Exception, match="fail"):
+        future.resolve(resolver)
+
+    runs, artifacts, edges = api_client.get_graph(future.id, root=True)
+
+    graph = Graph(
+        runs=runs, edges=edges, artifacts=artifacts, storage=mock_local_resolver_storage
+    )
+    for run in runs:
+        graph.clone_futures(reset_from=run.id)
