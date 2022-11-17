@@ -271,8 +271,8 @@ def ingested_logs(
         # ensure there's a final log upload, and that it contains ALL the
         # contents of stdout and stderr before we redirect them back to their
         # originals.
-        sys.stdout.flush()
         sys.stderr.flush()
+        sys.stdout.flush()
 
         if streamer_pid is not None:
             # forwarding the signal should trigger a final upload.
@@ -332,7 +332,7 @@ def ingested_logs(
 
 
 def _wait_or_kill(pid: int, timeout_seconds: int):
-    """Wait on the given pid. If not exited by timeout, send SIGKILL
+    """Wait on the given pid. If not exited by timeout, send SIGKILL.
 
     Parameters
     ----------

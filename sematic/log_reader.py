@@ -23,6 +23,8 @@ from sematic.storage import S3Storage
 # structure to be readable, at least for a while. So we need to identify
 # which structure the files are in somehow, and a v1/v2 prefix is how we
 # can do it.
+# TODO: remove support for V1 log reading
+# https://github.com/sematic-ai/sematic/issues/334
 V1_LOG_PREFIX = "logs/v1"
 V2_LOG_PREFIX = "logs/v2"
 LOG_PATH_FORMAT = "{prefix}/run_id/{run_id}/{log_kind}/"
@@ -261,7 +263,9 @@ def _load_non_inline_logs(
     max_lines: int,
     filter_strings: List[str],
 ) -> LogLineResult:
-    """Load the lines for runs that are NOT inline"""
+    """Load the lines for runs that are NOT inline."""
+
+    # See if there are logs in V1 format--if so, use them
     v1_prefix = v1_log_prefix(run_id, JobType.worker)
     latest_v1_log_file = _get_latest_log_file(v1_prefix, cursor_file)
     if latest_v1_log_file is not None:
@@ -274,6 +278,8 @@ def _load_non_inline_logs(
             max_lines=max_lines,
             filter_strings=filter_strings,
         )
+
+    # If logs aren't in V1 format, try v2
     prefix = log_prefix(run_id, JobType.worker)
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
     if latest_log_file is None:
@@ -365,6 +371,8 @@ def _load_inline_logs(
                 "(b) are using the resolver in non-detached mode OR have inline=False."
             ),
         )
+
+    # See if there are logs in V1 format--if so, use them
     v1_prefix = v1_log_prefix(resolution.root_id, JobType.driver)
     v1_latest_log_file = _get_latest_log_file(v1_prefix, cursor_file)
     if v1_latest_log_file is not None:
@@ -379,6 +387,7 @@ def _load_inline_logs(
             filter_strings=filter_strings,
         )
 
+    # If logs are not in V1 format, try V2
     prefix = log_prefix(resolution.root_id, JobType.driver)
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
     if latest_log_file is None:
@@ -418,7 +427,7 @@ def _load_inline_logs(
 def _line_stream_from_log_directory(
     directory: str, cursor_file: Optional[str], cursor_line_index: Optional[int]
 ) -> Iterable[LogLine]:
-    """Stream lines from multiple files in a storage dir, starting from cursor"""
+    """Stream lines from multiple files in a storage dir, starting from cursor."""
     log_files = S3Storage().get_child_paths(directory)
 
     log_files = sorted(
@@ -499,7 +508,7 @@ def _load_inline_logs_v1(
 def _filter_for_inline(
     line_stream: Iterable[LogLine], run_id: str, skip_start: bool
 ) -> Iterable[LogLine]:
-    """Stream resolver logs to make a new stream with only lines for a particular run"""
+    """Stream resolver logs to make a new stream with only lines for a particular run."""
     expected_start = START_INLINE_RUN_INDICATOR.format(run_id)
     expected_end = END_INLINE_RUN_INDICATOR.format(run_id)
     buffer_iterator = iter(line_stream)
