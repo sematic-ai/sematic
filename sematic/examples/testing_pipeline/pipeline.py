@@ -78,6 +78,24 @@ def add_fan_out(val: float, fan_out: int) -> float:
 
 
 @sematic.func(inline=False)
+def do_sleep(val: float, sleep_time: int) -> float:
+    """
+    Raises a ValueError, without retries.
+    """
+    logger.info("Executing: do_sleep(val=%s, sleep=%s)", val, sleep_time)
+    curr_time = time.time()
+    stop_time = curr_time + sleep_time
+
+    while curr_time < stop_time:
+        logger.info("do_sleep has %s more seconds to sleep", stop_time - curr_time)
+        time.sleep(1)
+        curr_time = time.time()
+
+    logger.info("do_sleep is done sleeping!")
+    return val
+
+
+@sematic.func(inline=False)
 def do_exit(val: float, exit_code: int) -> float:
     """
     Exits execution using the specified exit code.
@@ -134,6 +152,7 @@ def testing_pipeline(
     inline: bool = False,
     nested: bool = False,
     fan_out: int = 0,
+    sleep_time: int = 0,
     should_raise: bool = False,
     raise_retry_probability: Optional[float] = None,
     oom: bool = False,
@@ -150,6 +169,9 @@ def testing_pipeline(
         Whether to include inline functions in the pipeline. Defaults to False.
     nested: bool
         Whether to include nested functions in the pipeline. Defaults to False.
+    sleep_time: int
+        Includes a function which sleeps for the specified number of seconds, logging a
+        message every second. Defaults to 0.
     fan_out: int
         How many dynamically-generated functions to add in parallel. Defaults to 0.
     should_raise: bool
@@ -166,7 +188,7 @@ def testing_pipeline(
         Defaults to None.
     """
     # have an initial function whose output is used as inputs by all other functions
-    # this staggers the rest of the functions and allows the user a change to monitor and
+    # this staggers the rest of the functions and allows the user a chance to monitor and
     # visualize the unfolding execution
     initial_future = add(1, 2)
     futures = [initial_future]
@@ -176,6 +198,9 @@ def testing_pipeline(
 
     if nested:
         futures.append(add4_nested(initial_future, 1, 2, 3))
+
+    if sleep_time > 0:
+        futures.append(do_sleep(initial_future, sleep_time))
 
     if fan_out > 0:
         futures.append(add_fan_out(initial_future, fan_out))

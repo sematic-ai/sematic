@@ -49,6 +49,10 @@ INLINE_HELP = (
     "Whether to include an inline function in the pipeline. Defaults to False."
 )
 NESTED_HELP = "Whether to include nested functions in the pipeline. Defaults to False."
+SLEEP_HELP = (
+    "Includes a function which sleeps for the specified number of seconds, logging a "
+    "message every second. Defaults to 0."
+)
 FAN_OUT_HELP = (
     "How many dynamically-generated functions to add in parallel. Defaults to 0."
 )
@@ -116,6 +120,9 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--nested", action="store_true", default=False, help=NESTED_HELP
     )
+    parser.add_argument(
+        "--sleep", type=int, default=0, dest="sleep_time", help=SLEEP_HELP
+    )
     parser.add_argument("--fan-out", type=int, default=0, help=FAN_OUT_HELP)
     parser.add_argument(
         "--raise",
@@ -146,8 +153,14 @@ def _parse_args() -> argparse.Namespace:
 
     args = parser.parse_args()
 
-    # args values validation
+    # args values validations:
     logging._checkLevel(args.log_level)
+
+    if args.sleep_time < 0:
+        raise ValueError(f"Expected '--sleep' value to be >= 0; got: {args.sleep_time}")
+
+    if args.fan_out < 0:
+        raise ValueError(f"Expected '--fan-out' value to be >= 0; got: {args.fan_out}")
 
     return args
 
