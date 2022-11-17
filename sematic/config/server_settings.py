@@ -15,7 +15,7 @@ from sematic.config.settings import (
 
 logger = logging.getLogger(__name__)
 
-_SERVER_SETTINGS_FILE = "server-settings.yaml"
+_SERVER_SETTINGS_FILE = "server.yaml"
 
 
 class ServerSettingsVar(enum.Enum):
