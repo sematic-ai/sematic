@@ -2,7 +2,8 @@
 import datetime
 import logging
 import uuid
-from typing import Dict, List, Optional, Tuple, Union
+from collections import defaultdict
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Third-party
 import socketio  # type: ignore
@@ -41,6 +42,13 @@ class LocalResolver(SilentResolver):
         self._edges: Dict[str, Edge] = {}
         self._runs: Dict[str, Run] = {}
         self._artifacts: Dict[str, Artifact] = {}
+
+        # A cache of already created artifacts to avoid making them over again.
+        # The key is run ID, the value is a dictionary where the key is input
+        # name, or None for output and the value is the artifact.
+        self._artifacts_by_run_id: Dict[
+            str, Dict[Optional[str], Artifact]
+        ] = defaultdict(dict)
 
         # Buffers for persistence
         self._buffer_edges: Dict[str, Edge] = {}
@@ -104,20 +112,17 @@ class LocalResolver(SilentResolver):
 
         for future in self._futures:
             future.resolved_kwargs = self._get_resolved_kwargs(future)
-            run_input_artifacts: Dict[str, Artifact] = {}
-            run_output_artifact = None
 
             if future.state == FutureState.RESOLVED:
-                run_output_artifact = cloned_graph.output_artifacts[future.id]
+                self._artifacts_by_run_id[future.id][
+                    None
+                ] = cloned_graph.output_artifacts[future.id]
 
             if future.state in {FutureState.RESOLVED, FutureState.RAN}:
-                run_input_artifacts = cloned_graph.input_artifacts[future.id]
+                for name, artifact in cloned_graph.input_artifacts[future.id].items():
+                    self._artifacts_by_run_id[future.id][name] = artifact
 
-            self._populate_graph(
-                future,
-                input_artifacts=run_input_artifacts,
-                output_artifact=run_output_artifact,
-            )
+            self._populate_graph(future)
 
         self._save_graph()
 
@@ -177,15 +182,7 @@ class LocalResolver(SilentResolver):
         if len(future.kwargs) != len(future.resolved_kwargs):
             raise RuntimeError("Not all input arguments are resolved")
 
-        input_artifacts = {}
-        for name, value in future.resolved_kwargs.items():
-            artifact = make_artifact(
-                value, future.calculator.input_types[name], storage=self._storage
-            )
-            self._add_artifact(artifact)
-            input_artifacts[name] = artifact
-
-        run = self._populate_graph(future, input_artifacts=input_artifacts)
+        run = self._populate_graph(future)
 
         return run
 
@@ -276,9 +273,6 @@ class LocalResolver(SilentResolver):
         self._add_run(run)
         self._save_graph()
 
-    def _get_output_artifact(self, run_id: str) -> Optional[Artifact]:
-        return None
-
     def _future_did_resolve(self, future: AbstractFuture) -> None:
         super()._future_did_resolve(future)
 
@@ -286,14 +280,7 @@ class LocalResolver(SilentResolver):
         run.future_state = FutureState.RESOLVED
         run.resolved_at = datetime.datetime.utcnow()
 
-        output_artifact = self._get_output_artifact(future.id)
-        if output_artifact is None:
-            output_artifact = make_artifact(
-                future.value, future.calculator.output_type, storage=self._storage
-            )
-            self._add_artifact(output_artifact)
-
-        self._populate_graph(future, output_artifact=output_artifact)
+        self._populate_graph(future)
         self._add_run(run)
         self._save_graph()
 
@@ -425,11 +412,23 @@ class LocalResolver(SilentResolver):
         run.root_id = self._root_future.id
         return run
 
+    def _make_artifact(
+        self, run_id: str, value: Any, type_: Any, name: Optional[str]
+    ) -> Artifact:
+        artifact = self._artifacts_by_run_id.get(run_id, {}).get(name)
+        if artifact is not None:
+            return artifact
+
+        artifact = make_artifact(value, type_, storage=self._storage)
+
+        self._artifacts_by_run_id[run_id][name] = artifact
+        self._add_artifact(artifact)
+
+        return artifact
+
     def _populate_graph(
         self,
         future: AbstractFuture,
-        input_artifacts: Optional[Dict[str, Artifact]] = None,
-        output_artifact: Optional[Artifact] = None,
     ) -> Run:
         """
         Update the graph based on future.
@@ -442,8 +441,17 @@ class LocalResolver(SilentResolver):
         for name, value in future.kwargs.items():
             # Updating the input artifact
             artifact_id = None
-            if input_artifacts is not None and name in input_artifacts:
-                artifact_id = input_artifacts[name].id
+
+            maybe_resolved_value = future.resolved_kwargs.get(name, value)
+            if not isinstance(maybe_resolved_value, AbstractFuture):
+                artifact = self._make_artifact(
+                    run_id=future.id,
+                    value=maybe_resolved_value,
+                    type_=future.calculator.input_types[name],
+                    name=name,
+                )
+
+                artifact_id = artifact.id
 
             # If the input is a future, we connect the edge
             source_run_id = None
@@ -483,7 +491,13 @@ class LocalResolver(SilentResolver):
 
         # Updating the output artifact
         artifact_id = None
-        if output_artifact is not None:
+        if future.state == FutureState.RESOLVED:
+            output_artifact = self._make_artifact(
+                run_id=future.id,
+                value=future.value,
+                type_=future.calculator.output_type,
+                name=None,
+            )
             artifact_id = output_artifact.id
 
         # There can be multiple output edges:
