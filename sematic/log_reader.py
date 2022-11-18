@@ -2,6 +2,7 @@
 import base64
 import itertools
 import json
+import logging
 from dataclasses import asdict, dataclass
 from typing import Iterable, List, Optional
 
@@ -16,17 +17,32 @@ from sematic.resolvers.cloud_resolver import (
 from sematic.scheduling.external_job import JobType
 from sematic.storage import S3Storage
 
-# Why the "V1"? Because we will likely want to change the structure of
-# the logs such that each file contains a different subset of logs. But
-# when we make this change, we will still want logs written in the old
+# Why the "V1"/"V2"? Because we changed the structure of the logs. Originally,
+# each file on s3 held the entirety of the logs. Now each file contains a
+# different subset of logs. We still want logs written in the old
 # structure to be readable, at least for a while. So we need to identify
 # which structure the files are in somehow, and a v1/v2 prefix is how we
 # can do it.
-V1_LOG_PATH_FORMAT = "logs/v1/run_id/{run_id}/{log_kind}/"
+# TODO: remove support for V1 log reading
+# https://github.com/sematic-ai/sematic/issues/334
+V1_LOG_PREFIX = "logs/v1"
+V2_LOG_PREFIX = "logs/v2"
+LOG_PATH_FORMAT = "{prefix}/run_id/{run_id}/{log_kind}/"
+
+
+logger = logging.getLogger(__name__)
 
 
 def log_prefix(run_id: str, job_type: JobType):
-    return V1_LOG_PATH_FORMAT.format(run_id=run_id, log_kind=job_type.value)
+    return LOG_PATH_FORMAT.format(
+        prefix=V2_LOG_PREFIX, run_id=run_id, log_kind=job_type.value
+    )
+
+
+def v1_log_prefix(run_id: str, job_type: JobType):
+    return LOG_PATH_FORMAT.format(
+        prefix=V1_LOG_PREFIX, run_id=run_id, log_kind=job_type.value
+    )
 
 
 @dataclass
@@ -75,17 +91,16 @@ class Cursor:
         The fillter strings that were used for this log traversal.
     run_id:
         The run id that was being used for this log traversal.
+    traversal_had_lines:
+        Will be True if this cursor corresponds to a result that has lines, or
+        if it continues from a chain of cursors that had found some lines
     """
 
-    # Why include source log file? Because we will soon likely want to break up
-    # the logs for a single run such that each file contains a *different*
-    # portion of the logs, and we will need to know which file to go to in
-    # order to pick back up. The alternative would be to require
-    # re-traversing already traversed files when continuing.
     source_log_key: Optional[str]
     source_file_line_index: int
     filter_strings: List[str]
     run_id: str
+    traversal_had_lines: bool = False
 
     def to_token(self) -> str:
         return str(
@@ -106,6 +121,7 @@ class Cursor:
             source_file_line_index=-1,
             filter_strings=filter_strings,
             run_id=run_id,
+            traversal_had_lines=False,
         )
 
 
@@ -141,6 +157,13 @@ def load_log_lines(
     -------
     A subset of the logs for the given run
     """
+    logger.info(
+        "Starting log line loading for: %s, %s, %s, %s",
+        run_id,
+        continuation_cursor,
+        max_lines,
+        filter_strings,
+    )
     run = get_run(run_id)
     run_state = FutureState[run.future_state]  # type: ignore
     still_running = not (run_state.is_terminal() or run_state == FutureState.RAN)
@@ -193,6 +216,7 @@ def load_log_lines(
             still_running=still_running,
             cursor_file=cursor.source_log_key,
             cursor_line_index=cursor.source_file_line_index,
+            cursor_had_more_before=cursor.traversal_had_lines,
             max_lines=max_lines,
             filter_strings=filter_strings,
         )
@@ -201,6 +225,7 @@ def load_log_lines(
         still_running=still_running,
         cursor_file=cursor.source_log_key,
         cursor_line_index=cursor.source_file_line_index,
+        cursor_had_more_before=cursor.traversal_had_lines,
         max_lines=max_lines,
         filter_strings=filter_strings,
     )
@@ -234,11 +259,66 @@ def _load_non_inline_logs(
     still_running: bool,
     cursor_file: Optional[str],
     cursor_line_index: int,
+    cursor_had_more_before: bool,
+    max_lines: int,
+    filter_strings: List[str],
+) -> LogLineResult:
+    """Load the lines for runs that are NOT inline."""
+
+    # See if there are logs in V1 format--if so, use them
+    v1_prefix = v1_log_prefix(run_id, JobType.worker)
+    latest_v1_log_file = _get_latest_log_file(v1_prefix, cursor_file)
+    if latest_v1_log_file is not None:
+        return _load_non_inline_logs_v1(
+            run_id=run_id,
+            still_running=still_running,
+            cursor_file=cursor_file,
+            cursor_line_index=cursor_line_index,
+            cursor_had_more_before=cursor_had_more_before,
+            max_lines=max_lines,
+            filter_strings=filter_strings,
+        )
+
+    # If logs aren't in V1 format, try v2
+    prefix = log_prefix(run_id, JobType.worker)
+    latest_log_file = _get_latest_log_file(prefix, cursor_file)
+    if latest_log_file is None:
+        return LogLineResult(
+            more_before=False,
+            more_after=still_running,
+            lines=[],
+            continuation_cursor=Cursor.nothing_found(filter_strings, run_id).to_token()
+            if still_running
+            else None,
+            log_unavailable_reason="No log files found",
+        )
+    line_stream = _line_stream_from_log_directory(
+        prefix, cursor_file=cursor_file, cursor_line_index=cursor_line_index
+    )
+
+    return get_log_lines_from_line_stream(
+        line_stream=line_stream,
+        still_running=still_running,
+        cursor_source_file=cursor_file,
+        cursor_line_index=cursor_line_index,
+        cursor_had_more_before=cursor_had_more_before,
+        max_lines=max_lines,
+        filter_strings=filter_strings,
+        run_id=run_id,
+    )
+
+
+def _load_non_inline_logs_v1(
+    run_id: str,
+    still_running: bool,
+    cursor_file: Optional[str],
+    cursor_line_index: int,
+    cursor_had_more_before: bool,
     max_lines: int,
     filter_strings: List[str],
 ) -> LogLineResult:
     """Load the lines for runs that are NOT inline"""
-    prefix = log_prefix(run_id, JobType.worker)
+    prefix = v1_log_prefix(run_id, JobType.worker)
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
     if latest_log_file is None:
         return LogLineResult(
@@ -259,8 +339,9 @@ def _load_non_inline_logs(
     return get_log_lines_from_line_stream(
         line_stream=line_stream,
         still_running=still_running,
-        cursor_source_file=latest_log_file,
+        cursor_source_file=cursor_file,
         cursor_line_index=cursor_line_index,
+        cursor_had_more_before=cursor_had_more_before,
         max_lines=max_lines,
         filter_strings=filter_strings,
         run_id=run_id,
@@ -273,10 +354,11 @@ def _load_inline_logs(
     still_running: bool,
     cursor_file: Optional[str],
     cursor_line_index: int,
+    cursor_had_more_before: bool,
     max_lines: int,
     filter_strings: List[str],
 ) -> LogLineResult:
-    """Load the lines for runs that are NOT inline"""
+    """Load the lines for runs that are inline."""
     if ResolutionKind[resolution.kind] == ResolutionKind.LOCAL:  # type: ignore
         return LogLineResult(
             more_before=False,
@@ -289,6 +371,23 @@ def _load_inline_logs(
                 "(b) are using the resolver in non-detached mode OR have inline=False."
             ),
         )
+
+    # See if there are logs in V1 format--if so, use them
+    v1_prefix = v1_log_prefix(resolution.root_id, JobType.driver)
+    v1_latest_log_file = _get_latest_log_file(v1_prefix, cursor_file)
+    if v1_latest_log_file is not None:
+        return _load_inline_logs_v1(
+            run_id=run_id,
+            resolution=resolution,
+            still_running=still_running,
+            cursor_file=cursor_file,
+            cursor_line_index=cursor_line_index,
+            cursor_had_more_before=cursor_had_more_before,
+            max_lines=max_lines,
+            filter_strings=filter_strings,
+        )
+
+    # If logs are not in V1 format, try V2
     prefix = log_prefix(resolution.root_id, JobType.driver)
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
     if latest_log_file is None:
@@ -301,14 +400,105 @@ def _load_inline_logs(
             lines=[],
             log_unavailable_reason="Resolver logs are missing",
         )
-    text_stream: Iterable[str] = S3Storage().get_line_stream(latest_log_file)
-    line_stream = _filter_for_inline(text_stream, run_id, latest_log_file)
+
+    prefix = log_prefix(resolution.root_id, JobType.driver)
+    line_stream = _line_stream_from_log_directory(
+        prefix, cursor_file=cursor_file, cursor_line_index=cursor_line_index
+    )
+    line_stream = _filter_for_inline(
+        line_stream=line_stream,
+        run_id=run_id,
+        # we already found the indicator for the inline run start with the current cursor
+        skip_start=cursor_had_more_before,
+    )
 
     return get_log_lines_from_line_stream(
         line_stream=line_stream,
         still_running=still_running,
         cursor_source_file=cursor_file,
         cursor_line_index=cursor_line_index,
+        cursor_had_more_before=cursor_had_more_before,
+        max_lines=max_lines,
+        filter_strings=filter_strings,
+        run_id=run_id,
+    )
+
+
+def _line_stream_from_log_directory(
+    directory: str, cursor_file: Optional[str], cursor_line_index: Optional[int]
+) -> Iterable[LogLine]:
+    """Stream lines from multiple files in a storage dir, starting from cursor."""
+    log_files = S3Storage().get_child_paths(directory)
+
+    log_files = sorted(
+        log_files,
+        key=lambda path_key: int(
+            path_key.replace(directory, "").replace(".log", "".replace("/", ""))
+        ),
+    )
+    found_cursor_file = cursor_file is None
+    found_cursor_line = cursor_line_index is None
+    for log_file in log_files:
+        if log_file == cursor_file:
+            found_cursor_file = True
+        if not found_cursor_file:
+            continue
+        text_stream: Iterable[str] = S3Storage().get_line_stream(log_file)
+        for i_line, line in enumerate(text_stream):
+            if (
+                (not found_cursor_line)
+                and cursor_line_index is not None
+                and i_line < cursor_line_index
+            ):
+                continue
+            found_cursor_line = True
+            yield LogLine(
+                source_file=log_file,
+                source_file_index=i_line,
+                line=line,
+            )
+        if cursor_file is not None and log_file >= cursor_file:
+            # we automatically know we hit the cursor line if we are at the end
+            # of the cursor file or in a file that comes after it.
+            found_cursor_line = True
+
+
+def _load_inline_logs_v1(
+    run_id: str,
+    resolution: Resolution,
+    still_running: bool,
+    cursor_file: Optional[str],
+    cursor_line_index: int,
+    cursor_had_more_before: bool,
+    max_lines: int,
+    filter_strings: List[str],
+) -> LogLineResult:
+    """Load the lines for runs that are inline."""
+    prefix = v1_log_prefix(resolution.root_id, JobType.driver)
+    latest_log_file = _get_latest_log_file(prefix, cursor_file)
+    if latest_log_file is None:
+        return LogLineResult(
+            more_before=False,
+            more_after=still_running,
+            continuation_cursor=Cursor.nothing_found(filter_strings, run_id).to_token()
+            if still_running
+            else None,
+            lines=[],
+            log_unavailable_reason="Resolver logs are missing",
+        )
+    text_stream: Iterable[str] = S3Storage().get_line_stream(latest_log_file)
+    unfiltered_line_stream = (
+        LogLine(source_file=latest_log_file, source_file_index=i, line=text)
+        for i, text in zip(itertools.count(), text_stream)
+    )
+    line_stream = _filter_for_inline(unfiltered_line_stream, run_id, skip_start=False)
+
+    return get_log_lines_from_line_stream(
+        line_stream=line_stream,
+        still_running=still_running,
+        cursor_source_file=cursor_file,
+        cursor_line_index=cursor_line_index,
+        cursor_had_more_before=cursor_had_more_before,
         max_lines=max_lines,
         filter_strings=filter_strings,
         run_id=run_id,
@@ -316,33 +506,29 @@ def _load_inline_logs(
 
 
 def _filter_for_inline(
-    text_stream: Iterable[str], run_id: str, source_file: str
+    line_stream: Iterable[LogLine], run_id: str, skip_start: bool
 ) -> Iterable[LogLine]:
-    """Stream resolver logs to make a new stream with only lines for a particular run"""
+    """Stream resolver logs to make a new stream with only lines for a particular run."""
     expected_start = START_INLINE_RUN_INDICATOR.format(run_id)
     expected_end = END_INLINE_RUN_INDICATOR.format(run_id)
-    buffer_iterator = iter(text_stream)
-    found_start = False
-    file_line_index = 0
+    buffer_iterator = iter(line_stream)
+    found_start = skip_start
     while True:
         try:
-            line = next(buffer_iterator)
+            log_line: LogLine = next(buffer_iterator)
         except StopIteration:
             # if a resolver dies mid-execution of an inline run,
             # we should treat the end of the existing lines as
             # the end of whatever inline we were looking for.
             break
-        if expected_start in line:
+        if expected_start in log_line.line:
             found_start = True
             continue
         if not found_start:
             continue
-        if expected_end in line:
+        if expected_end in log_line.line:
             break
-        yield LogLine(
-            source_file=source_file, source_file_index=file_line_index, line=line
-        )
-        file_line_index += 1
+        yield log_line
 
 
 def get_log_lines_from_line_stream(
@@ -350,6 +536,7 @@ def get_log_lines_from_line_stream(
     still_running: bool,
     cursor_source_file: Optional[str],
     cursor_line_index: int,
+    cursor_had_more_before: bool,
     max_lines: int,
     filter_strings: List[str],
     run_id: str,
@@ -368,6 +555,8 @@ def get_log_lines_from_line_stream(
     cursor_line_index:
         The source file to continue from. No lines should be returned until this source
         file index is reached.
+    cursor_had_more_before:
+        Whether the cursor had matching lines before it
     max_lines:
         The maximum number of lines that should be returned
     filter_strings:
@@ -384,7 +573,7 @@ def get_log_lines_from_line_stream(
     keep_going = True
     lines = []
     has_more = True
-    more_before = False
+    more_before = cursor_had_more_before
     source_file = None
     source_file_line_index = -1
     found_cursor = False
@@ -401,6 +590,7 @@ def get_log_lines_from_line_stream(
             if not found_cursor:
                 if (
                     cursor_source_file is None
+                    or source_file > cursor_source_file
                     or source_file == cursor_source_file
                     and source_file_line_index >= cursor_line_index
                 ):
@@ -435,6 +625,7 @@ def get_log_lines_from_line_stream(
             source_file_line_index=source_file_line_index + 1,
             filter_strings=filter_strings,
             run_id=run_id,
+            traversal_had_lines=more_before or len(lines) > 0,
         ).to_token()
         if has_more
         else None,
