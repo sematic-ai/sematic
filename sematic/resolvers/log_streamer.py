@@ -7,6 +7,7 @@ import stat
 import sys
 import time
 import traceback
+from curses import ascii
 from typing import Callable, Optional
 
 # Sematic
@@ -48,6 +49,7 @@ A: The pipe mechanisms for the "multiprocess" module assumes that the parent pro
 
 DEFAULT_LOG_UPLOAD_INTERVAL_SECONDS = 10
 _LAST_NON_EMPTY_DELTA_TEMPLATE = "{}.previous"
+_TERMINATION_CHAR = chr(ascii.EOT)  # EOT => End Of Transmission
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +79,9 @@ def _flush_to_file(
         with time (see _do_upload).
     timeout_seconds:
         The max number of seconds between when streaming from the read handle starts and
-        when the upload occurs.
+        when the upload occurs. If set to "None", the read_handle will be read until the
+        "end of transmission" character is present, at which point the flush will
+        immediately conclude.
     """
     if os.path.exists(file_path):
         if os.stat(file_path)[stat.ST_SIZE] > 0:
@@ -87,6 +91,7 @@ def _flush_to_file(
             os.remove(file_path)
 
     started_reading = time.time()
+    received_stream_termination = False
 
     # Use w+ mode; should overwrite whatever was in the prior delta file
     with open(file_path, "w+") as fp:
@@ -94,14 +99,25 @@ def _flush_to_file(
             timeout_seconds is None or time.time() - started_reading < timeout_seconds
         ):
             line = read_handle.readline()
-            if len(line) == 0:
+            if _TERMINATION_CHAR in line:
+                # trigger final upload
+                line = line[: line.index(_TERMINATION_CHAR)]
+                received_stream_termination = True
+            elif len(line) == 0:
                 # The line would at least have the newline char if it was a blank.
-                break  # no more to read right now; go ahead and flush
+
+                # no more to read right now; just keep looping and trying to read
+                # until the timeout or the termination character tell us to stop
+                time.sleep(0.01)
+                continue
 
             fp.write(line)
             fp.flush()
+            if received_stream_termination:
+                break
 
     uploader(file_path, remote_prefix)
+    return received_stream_termination
 
 
 def _stream_logs_to_remote_from_file_descriptor(
@@ -132,22 +148,16 @@ def _stream_logs_to_remote_from_file_descriptor(
         the remote prefix as arguments.
     """
     read_handle = os.fdopen(read_from_file_descriptor)
-
-    def do_exit(signal_num, frame):
-        # unregister so we don't do this multiple times
-        signal.signal(signal.SIGTERM, lambda *_, **__: None)
-        _flush_to_file(file_path, read_handle, uploader, remote_prefix)
-        os._exit(0)
-
-    signal.signal(signal.SIGTERM, do_exit)
     while True:
-        _flush_to_file(
+        received_termination = _flush_to_file(
             file_path,
             read_handle,
             uploader,
             remote_prefix,
             timeout_seconds=upload_interval_seconds,
         )
+        if received_termination:
+            os._exit(0)
 
 
 @retry(tries=3, delay=5)
@@ -251,22 +261,30 @@ def ingested_logs(
 
     original_signal_handler = None
     streamer_pid = None
+    read_file_descriptor = None
+    write_file_descriptor = None
 
-    def clean_up_streamer(signal_num, frame=None):
+    def clean_up_streamer(signal_num=None, frame=None):
         logger.info("Cleaning up log ingestor")
+        print(_TERMINATION_CHAR)  # tell the reader that the stream is done
+
+        # ensure there's a final log upload, and that it contains ALL the
+        # contents of stdout and stderr before we redirect them back to their
+        # originals.
+        sys.stderr.flush()
+        sys.stdout.flush()
+
         if streamer_pid is not None:
             # forwarding the signal should trigger a final upload.
             # use a timeout so the parent process can still exit if
             # the child hangs for some reason (ex: during remote service call)
-            _send_signal_or_kill(streamer_pid, signal_num, timeout_seconds=20)
+            _wait_or_kill(streamer_pid, timeout_seconds=20)
 
         if original_signal_handler is not None and hasattr(
             original_signal_handler, "__call__"
         ):
             original_signal_handler(signal_num, frame)
 
-    read_file_descriptor = None
-    write_file_descriptor = None
     original_signal_handler = signal.signal(signal.SIGTERM, clean_up_streamer)
     try:
         read_file_descriptor, write_file_descriptor = os.pipe()
@@ -292,13 +310,7 @@ def ingested_logs(
                 signal.signal(signal.SIGTERM, original_signal_handler)
                 original_signal_handler = None
 
-                # ensure there's a final log upload, and that it contains ALL the
-                # contents of stdout and stderr before we redirect them back to their
-                # originals.
-                sys.stdout.flush()
-                sys.stderr.flush()
-
-                clean_up_streamer(signal.SIGTERM)
+                clean_up_streamer()
     finally:
         # outermost try/finally is so we can tail logs to non-redirected stdout
         # even if the code raised an error
@@ -319,25 +331,19 @@ def ingested_logs(
             os.close(write_file_descriptor)
 
 
-def _send_signal_or_kill(pid: int, signal_num: int, timeout_seconds: int):
-    """Send the signal to the given pid. If not exited by timeout, send SIGKILL
+def _wait_or_kill(pid: int, timeout_seconds: int):
+    """Wait on the given pid. If not exited by timeout, send SIGKILL.
 
     Parameters
     ----------
     pid:
         The pid of the process to kill
-    signal_num:
-        The initial signal to send. Will be sent repeatedly until the process
-        terminates or the timeout occurs. The repeated send is so that if the
-        signal is first sent BEFORE the child has a chance to register a handler,
-        it will still get another chance after the handler has been registered.
     timeout_seconds:
         The maximum time to wait before sending a SIGKILL
     """
     try:
         started = time.time()
         while time.time() - started < timeout_seconds:
-            os.kill(pid, signal_num)
             wait_result = os.waitpid(pid, os.WNOHANG)
             if wait_result is None:
                 return
