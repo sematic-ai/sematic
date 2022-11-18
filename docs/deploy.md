@@ -207,7 +207,6 @@ When you are set, the following settings should be visible to Sematic
 $ sematic settings show
 Active user settings:
 
-AWS_S3_BUCKET: <bucket-name>
 SEMATIC_API_ADDRESS: <web-app-server-address>
 ```
 
@@ -230,10 +229,10 @@ groups' IAM role has the following policy:
 arn:aws:iam::aws:policy/AmazonS3FullAccess
 ```
 
-then set the name of your bucket in your Sematic user settings:
+then set the name of your bucket in your Sematic server settings:
 
 ```
-$ sematic settings set AWS_S3_BUCKET <bucket-name>
+$ sematic server-settings set AWS_S3_BUCKET <bucket-name>
 ```
 
 #### Container registry

@@ -87,9 +87,9 @@ the `sematic server-settings` command instead:
 $ sematic server-settings show
 Active server settings:
 
-AWS_S3_BUCKET: sematic-dev
+AWS_S3_BUCKET: XXX
 KUBERNETES_NAMESPACE: default
-SEMATIC_AUTHORIZED_EMAIL_DOMAIN: sematic.ai
+SEMATIC_AUTHORIZED_EMAIL_DOMAIN: XXX
 SEMATIC_AUTHENTICATE: 'true'
 GOOGLE_OAUTH_CLIENT_ID: XXX
 GRAFANA_PANEL_URL: XXX

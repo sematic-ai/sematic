@@ -18,6 +18,12 @@ logger = logging.getLogger(__name__)
 
 _USER_SETTINGS_FILE = "settings.yaml"
 _DEFAULT_PROFILE = "default"
+# TODO: remove UserSettingsVar.AWS_S3_BUCKET
+AWS_S3_BUCKET_DEPRECATION_WARNING = (
+    "UserSettingsVar.AWS_S3_BUCKET is deprecated in favor of "
+    "ServerSettingsVar.AWS_S3_BUCKET and will be removed in an upcoming release! "
+    "Use that settings variable instead!"
+)
 
 
 class UserSettingsVar(enum.Enum):
@@ -31,6 +37,10 @@ class UserSettingsVar(enum.Enum):
     SNOWFLAKE_ACCOUNT = "SNOWFLAKE_ACCOUNT"
 
     # AWS
+    # TODO: remove UserSettingsVar.AWS_S3_BUCKET
+    # WARNING! UserSettingsVar.AWS_S3_BUCKET is deprecated in favor of
+    # ServerSettingsVar.AWS_S3_BUCKET and will be removed in an upcoming release!
+    # Use that settings variable instead!
     AWS_S3_BUCKET = "AWS_S3_BUCKET"
 
 
@@ -81,6 +91,10 @@ class UserSettings:
             normalized_var = _normalize_enum(UserSettingsVar, var)
 
             if normalized_var is not None:
+                # TODO: remove UserSettingsVar.AWS_S3_BUCKET
+                if normalized_var == UserSettingsVar.AWS_S3_BUCKET:
+                    logger.warning(AWS_S3_BUCKET_DEPRECATION_WARNING)
+
                 user_settings[normalized_var] = str(value)
             else:
                 # the user and server settings were split out from the same common
@@ -225,6 +239,10 @@ def set_user_settings(var: UserSettingsVar, value: str) -> None:
 
     if _settings is None:
         _settings = _load_user_settings()
+
+    # TODO: remove UserSettingsVar.AWS_S3_BUCKET
+    if var == UserSettingsVar.AWS_S3_BUCKET:
+        logger.warning(AWS_S3_BUCKET_DEPRECATION_WARNING)
 
     _settings.set(var, value)
     _save_user_settings(_settings)
