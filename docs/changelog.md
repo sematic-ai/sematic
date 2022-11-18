@@ -7,9 +7,11 @@ with nothing else on the line.
 * HEAD
     * [improvement] BREAKING CHANGE: The existing settings have been split into specific
       user and server settings. User settings configure the Resolver and the pipeline
-      submission, and server settings configure the backend Server behavior. Instead of
-      the `sematic settings` command, you must now use either `sematic user-settings` or
-      `sematic server-settings`.
+      submission, and server settings configure the backend Server behavior. User settings
+      are still specified in the `~/.sematic/settings.yaml` file and accessed through the
+      `sematic settings` command, and server settings are specified in the new
+      `~/.sematic/server.yaml` file and accessed through the `sematic server-settings`
+      command.
 * [0.20.0](https://pypi.org/project/sematic/0.20.0/)
     * [feature] Add datetime class and basic visualization
     * [feature] Support for switching between environment profiles

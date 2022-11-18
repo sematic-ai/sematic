@@ -34,7 +34,7 @@ default:
 These are accessible through the CLI commands for more user-friendliness:
 
 ```bash
-$ sematic user-settings show
+$ sematic settings show
 Active user settings:
 
 SEMATIC_API_ADDRESS: http://127.0.0.1:5001
@@ -45,19 +45,19 @@ When developing, we often need to switch the Server where we submit pipelines,
 sometimes bundled together with other settings as well. In order to avoid
 constantly editing this file manually, we can define one file per environment
 or profile, under the names `~/.sematic/settings.yaml.<profile>`, and switch
-between them using `bazel run //tools:switch-user-settings -- <profile>`.
+between them using `bazel run //tools:switch-settings -- <profile>`.
 
 This actually copies these profile files over the main settings file. Example:
 
 ```bash
-$ bazel run //tools:switch-user-settings -- prod1
+$ bazel run //tools:switch-settings -- prod1
 [...]
 Copying previous settings to /Users/tudorscurtu/.sematic/settings.yaml_bck
 Copying /Users/tudorscurtu/.sematic/settings.yaml.prod1 to /Users/tudorscurtu/.sematic/settings.yaml
 
 Successfully switched to prod1!
 
-$ sematic user-settings show
+$ sematic settings show
 Active user settings:
 
 SEMATIC_API_ADDRESS: https://<my_prod1_host:port>

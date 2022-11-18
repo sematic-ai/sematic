@@ -10,10 +10,10 @@ to access it.
 In a console do:
 
 ```
-$ sematic user-settings set SNOWFLAKE_USER "foobar"
-$ sematic user-settings set SNOWFLAKE_PASSWORD "foobar"
-$ sematic user-settings set SNOWFLAKE_ACCOUNT "foobar"
-$ sematic user-settings show
+$ sematic settings set SNOWFLAKE_USER "foobar"
+$ sematic settings set SNOWFLAKE_PASSWORD "foobar"
+$ sematic settings set SNOWFLAKE_ACCOUNT "foobar"
+$ sematic settings show
 Active user settings:
 
 SNOWFLAKE_USER: foobar

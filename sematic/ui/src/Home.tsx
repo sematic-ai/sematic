@@ -102,7 +102,7 @@ export default function Home() {
               To get started, set your API key:
             </Typography>
             <ShellCommand
-              command={"sematic user-settings set SEMATIC_API_KEY " + user.api_key}
+              command={"sematic settings set SEMATIC_API_KEY " + user.api_key}
             />
           </Box>
         ) : (

@@ -40,20 +40,20 @@ needs your Snowflake credentials to be able to query your data for you.
 You can set user settings as follows:
 
 ```shell
-$ sematic user-settings set VAR VALUE
+$ sematic settings set VAR VALUE
 ```
 
 For example:
 
 ```shell
-$ sematic user-settings set SNOWFLAKE_USER "foobar"
+$ sematic settings set SNOWFLAKE_USER "foobar"
 ```
 
 Then you can check your stored settings with:
 
 ```shell
-$ sematic user-settings show
-Active user-settings:
+$ sematic settings show
+Active user settings:
 
 SNOWFLAKE_USER: foobar
 ```
@@ -64,7 +64,7 @@ your machine.
 You can always override them at runtime with an environment variable:
 
 ```shell
-$ SNOWFLAKE_USER="notfoobar" sematic user-settings show
+$ SNOWFLAKE_USER="notfoobar" sematic settings show
 Active user settings:
 
 SNOWFLAKE_USER: notfoobar
@@ -81,7 +81,7 @@ The same way that certain settings need to be kept on the user side, certain
 ones need to configure the backend Server.
 
 These can be accessed and modified just like the user settings, but by using
-the `sematic user-settings` command instead:
+the `sematic server-settings` command instead:
 
 ```shell
 $ sematic server-settings show
@@ -96,9 +96,9 @@ GRAFANA_PANEL_URL: XXX
 
 ```
 
-These settings are simply stored in the `~/.sematic/server-settings.yaml` file
-on the machine which needs to start a backend Server. They can also be
-overridden via environment variables.
+These settings are simply stored in the `~/.sematic/server.yaml` file on the
+machine which needs to start a backend Server. They can also be overridden via
+environment variables.
 
 ### Cancel pipelines
 

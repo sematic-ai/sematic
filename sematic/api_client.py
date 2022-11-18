@@ -384,7 +384,7 @@ def _request(
             (
                 "Unable to connect to the Sematic API at {}.\n"
                 "Make sure the correct server address is set with\n"
-                "\t$ sematic user-settings set {} <address>"
+                "\t$ sematic settings set {} <address>"
             ).format(get_config().server_url, UserSettingsVar.SEMATIC_API_ADDRESS.value)
         )
 

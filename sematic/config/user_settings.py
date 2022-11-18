@@ -44,7 +44,7 @@ Missing settings: {}
 
 Set it with:
 
-    $ sematic user-settings set {} VALUE
+    $ sematic settings set {} VALUE
 """.format(
             missing_settings.value, missing_settings.value
         )

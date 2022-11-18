@@ -21,12 +21,12 @@ from sematic.config.user_settings import (
 )
 
 
-@cli.group("user-settings")
-def user_settings() -> None:
+@cli.group("settings")
+def settings() -> None:
     pass
 
 
-@user_settings.command("show", short_help="Show the currently active user settings")
+@settings.command("show", short_help="Show the currently active user settings")
 def show_user_settings_cli() -> None:
     """
     Show the currently active user settings.
@@ -35,7 +35,7 @@ def show_user_settings_cli() -> None:
     click.echo(f"Active user settings:\n\n{settings_dump}")
 
 
-@user_settings.command("set", short_help="Set a user settings value")
+@settings.command("set", short_help="Set a user settings value")
 @click.argument("var", type=click.STRING)
 @click.argument("value", type=click.STRING)
 def set_user_settings_cli(var: str, value: str) -> None:
@@ -54,7 +54,7 @@ def set_user_settings_cli(var: str, value: str) -> None:
     click.echo(f"Successfully set {var} to {repr(value)}\n")
 
 
-@user_settings.command("delete", short_help="Delete a user settings value")
+@settings.command("delete", short_help="Delete a user settings value")
 @click.argument("var", type=click.STRING)
 def delete_user_settings_cli(var: str) -> None:
     """

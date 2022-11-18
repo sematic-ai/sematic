@@ -204,7 +204,7 @@ bazel, but for now it is required for cloud execution.
 When you are set, the following settings should be visible to Sematic
 
 ```
-$ sematic user-settings show
+$ sematic settings show
 Active user settings:
 
 AWS_S3_BUCKET: <bucket-name>
@@ -233,7 +233,7 @@ arn:aws:iam::aws:policy/AmazonS3FullAccess
 then set the name of your bucket in your Sematic user settings:
 
 ```
-$ sematic user-settings set AWS_S3_BUCKET <bucket-name>
+$ sematic settings set AWS_S3_BUCKET <bucket-name>
 ```
 
 #### Container registry
