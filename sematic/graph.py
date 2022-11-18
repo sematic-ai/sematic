@@ -181,7 +181,8 @@ class Graph:
         resolved? Uses in-memory graph artifacts, does not fetch them from the DB.
         """
         return all(
-            edge.artifact_id is not None for edge in self._edges_by_destination_id[run_id]
+            edge.artifact_id is not None
+            for edge in self._edges_by_destination_id[run_id]
         )
 
     def _execution_order(self, layer_run_ids: List[RunID]) -> List[RunID]:
@@ -202,7 +203,9 @@ class Graph:
             raise ValueError("Runs are not all from the same layer")
 
         dependencies = {
-            run_id: [edge.source_run_id for edge in self._edges_by_destination_id[run_id]]
+            run_id: [
+                edge.source_run_id for edge in self._edges_by_destination_id[run_id]
+            ]
             for run_id in layer_run_ids
         }
         return topological_sort(dependencies)
@@ -225,7 +228,9 @@ class Graph:
             raise ValueError("Runs are not all from the same layer")
 
         dependencies = {
-            run_id: [edge.destination_run_id for edge in self._edges_by_source_id[run_id]]
+            run_id: [
+                edge.destination_run_id for edge in self._edges_by_source_id[run_id]
+            ]
             for run_id in layer_run_ids
         }
         return topological_sort(dependencies)
@@ -387,9 +392,9 @@ class Graph:
             if input_edge.source_run_id is not None:
                 # We set the input as the upstream future to mimick what
                 # happens in a greenfield resolution.
-                kwargs[input_edge.destination_name] = cloned_graph.futures_by_original_id[
-                    input_edge.source_run_id
-                ]
+                kwargs[
+                    input_edge.destination_name
+                ] = cloned_graph.futures_by_original_id[input_edge.source_run_id]
             elif input_edge.artifact_id is not None:
                 kwargs[input_edge.destination_name] = value
             else:
@@ -438,7 +443,9 @@ class Graph:
     ) -> AbstractFuture:
         run = self._runs_by_id[run_id]
 
-        kwargs, run_input_artifacts = self._get_cloned_future_inputs(run_id, cloned_graph)
+        kwargs, run_input_artifacts = self._get_cloned_future_inputs(
+            run_id, cloned_graph
+        )
 
         func = run.get_func()
 
