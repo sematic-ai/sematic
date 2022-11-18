@@ -66,11 +66,11 @@ def run(ctx, script_path: str):
         click.echo("Sematic is not started, issue `sematic start` first.")
         return
 
+    # This is ugly, better way to do this?
+    sys.argv = [sys.argv[0]] + ctx.args
+
     if is_example(script_path):
         _run_example(script_path)
         return
-
-    # This is ugly, better way to do this?
-    sys.argv = [sys.argv[0]] + ctx.args
 
     runpy.run_module(script_path, run_name="__main__")
