@@ -1,16 +1,16 @@
 # Standard Library
 import os
 import pathlib
-import signal
 import sys
 import tempfile
 import time
 
 # Sematic
 from sematic.resolvers.log_streamer import (
-    _send_signal_or_kill,
+    _TERMINATION_CHAR,
     _start_log_streamer_out_of_process,
     _tail_log_file,
+    _wait_or_kill,
     ingested_logs,
 )
 from sematic.utils.retry import retry
@@ -81,12 +81,13 @@ def test_start_log_streamer_out_of_process():
         write_handle = os.fdopen(write_file_descriptor, "w")
         contents = "Hello, child!"
         write_handle.write(contents)
+        write_handle.write(_TERMINATION_CHAR)
         write_handle.flush()
 
         # give some time for the process to actually start up
         # and register a handler
         time.sleep(1)
-        _send_signal_or_kill(child_pid, signal.SIGTERM, timeout_seconds=5)
+        _wait_or_kill(child_pid, timeout_seconds=5)
 
     assert time.time() - started < upload_interval
     try:
