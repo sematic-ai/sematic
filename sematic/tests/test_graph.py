@@ -102,7 +102,9 @@ def test_clone_futures(
             assert future_.value == value
             if output_edge.destination_run_id is not None:
                 downstream_run = runs_by_id[output_edge.destination_run_id]
-                downstream_future = cloned_graph.futures_by_original_id[downstream_run.id]
+                downstream_future = cloned_graph.futures_by_original_id[
+                    downstream_run.id
+                ]
                 assert downstream_future.kwargs[output_edge.destination_name] is future_
 
 
@@ -162,7 +164,9 @@ def test_clone_futures_reset(
     ]
 
     assert len(top_level_add_futures) == 3
-    assert all(future_.state is FutureState.RESOLVED for future_ in top_level_add_futures)
+    assert all(
+        future_.state is FutureState.RESOLVED for future_ in top_level_add_futures
+    )
 
 
 @func
