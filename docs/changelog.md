@@ -1,9 +1,26 @@
 <!--
 When updating the version, update versions.py and wheel_version.bzl accordingly.
-Lines for version numbers should always be formatted as `* MAJOR.MINOR.PATCH`
+Lines for version numbers should always be formatted as
+`* [MAJOR.MINOR.PATCH](https://pypi.org/project/sematic/MAJOR.MINOR.PATCH/)`
 with nothing else on the line.
 -->
 * HEAD
+* [0.20.0](https://pypi.org/project/sematic/0.20.0/)
+    * [feature] Add datetime class and basic visualization
+    * [feature] Support for switching between environment profiles
+    * [feature] Add dynamic-shape testing pipeline
+    * [improvement] Replace deprecated sklearn dependency with scikit-learn
+    * [improvement] Support abstract base classes in type annotations
+    * [improvement] Support automatic conversion of tuple-of-futures to future-tuple
+    * [improvement] Change log-ingestion to use deltas rather than full files
+    * [bugfix] Fix various DB migration script issues and add old sqlite3 version warning
+    * [bugfix] Workaround for DB migration when Python installation comes with old sqlite3 version
+    * [bugfix] Various minor build, execution, and code validation improvements and fixes
+    * [bugfix] Add missing server permission to Helm chart
+    * [bugfix] Fix various corner-case bugs which prevented re-running Resolutions
+    * [bugfix] Fix launching example pipeline which require cli args
+    * [bugfix] Fix rendering multi-line docstrings in the UI
+    * [bugfix] Make server not start if the DB migration fails
 * [0.19.2](https://pypi.org/project/sematic/0.19.2/)
     * [improvement] Various minor housekeeping improvements
     * [bugfix] Fix a bug in a DB migration script
