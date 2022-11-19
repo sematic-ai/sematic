@@ -34,11 +34,13 @@ class AbstractCalculator(abc.ABC):
     def cast_output(self, value: typing.Any) -> typing.Any:
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def input_types(self) -> typing.Dict[str, type]:
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def output_type(self) -> type:
         pass
 
