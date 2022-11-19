@@ -36,3 +36,17 @@ pytest_test(
         "//sematic/db/tests:fixtures",
     ],
 )
+
+pytest_test(
+    name = "test_logs",
+    srcs = ["test_logs.py"],
+    pip_deps = [
+        "click",
+    ],
+    deps = [
+        "//sematic/cli:logs",
+        "//sematic/db:queries",
+        "//sematic/db/tests:fixtures",
+        "//sematic/tests:fixtures",
+    ],
+)

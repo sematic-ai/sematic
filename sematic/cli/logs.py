@@ -63,7 +63,7 @@ def logs(run_id: str):
         cursor = loaded.continuation_cursor
         for line in loaded.lines:
             had_any = True
-            print(line)
+            click.echo(line)
 
 
 @advanced.command(
