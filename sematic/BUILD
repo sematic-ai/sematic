@@ -172,6 +172,7 @@ sematic_py_lib(
     srcs = ["graph.py"],
     deps = [
         ":abstract_future",
+        "//sematic:api_client",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",

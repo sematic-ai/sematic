@@ -9,6 +9,7 @@ sematic_py_lib(
     deps = [
         ":auth",
         ":request_parameters",
+        ":storage",
         "//sematic:log_reader",
         "//sematic/api:app",
         "//sematic/db:db",
@@ -60,9 +61,16 @@ sematic_py_lib(
     pip_deps = [
         "flask",
     ],
+    # buildifier: leave-alone
     deps = [
+        ":auth",
+        ":request_parameters",
+        ":storage",
         "//sematic/api:app",
+        "//sematic/db:db",
         "//sematic/db:queries",
+        "//sematic/db/models:artifact",
+        "//sematic/db/models:user",
     ],
 )
 
@@ -140,5 +148,14 @@ sematic_py_lib(
         "//sematic/config:settings",
         "//sematic/db:queries",
         "//sematic/db/models:factories",
+    ],
+)
+
+sematic_py_lib(
+    name = "storage",
+    srcs = ["storage.py"],
+    deps = [
+        "//sematic:storage",
+        "//sematic/config:user_settings",
     ],
 )

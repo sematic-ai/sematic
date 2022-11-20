@@ -1,8 +1,9 @@
 # Standard Library
 import abc
+import enum
+import logging
 import os
 from typing import Any, Dict, Iterable, List, Type
-import enum
 
 # Third-party
 import boto3
@@ -14,6 +15,8 @@ from sematic.config.config import get_config
 from sematic.config.user_settings import UserSettingsVar, get_user_setting
 from sematic.utils.memoized_property import memoized_property
 from sematic.utils.retry import retry
+
+logger = logging.getLogger(__name__)
 
 
 class StorageMode(enum.Enum):
@@ -95,6 +98,8 @@ class LocalStorage(Storage):
     """
 
     def set(self, key: str, value: bytes):
+        logger.debug(f"{self.__class__.__name__} Setting value for key: {key}")
+
         dir_path = os.path.split(key)[0]
         os.makedirs(dir_path, exist_ok=True)
 
@@ -151,6 +156,8 @@ class S3Storage(Storage):
 
     def set(self, key: str, value: bytes):
         """Store value in S3"""
+        logger.debug(f"{self.__class__.__name__} Setting value for key: {key}")
+
         response = requests.put(key, data=value)
         response.raise_for_status()
 
@@ -253,8 +260,12 @@ class StorageSettingValue(enum.Enum):
 
 # This is and StorageSettingValue should be replaced by a proper
 # plugin-registry
-STORAGE_ENGINE_REGISTRY: Dict[StorageSettingValue, Type[Storage]] = {
+_STORAGE_ENGINE_REGISTRY: Dict[StorageSettingValue, Type[Storage]] = {
     StorageSettingValue.LOCAL: LocalStorage,
     StorageSettingValue.MEMORY: MemoryStorage,
     StorageSettingValue.S3: S3Storage,
 }
+
+
+def get_storage(storage_setting: StorageSettingValue) -> Type[Storage]:
+    return _STORAGE_ENGINE_REGISTRY[storage_setting]

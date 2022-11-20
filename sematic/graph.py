@@ -6,13 +6,12 @@ from typing import OrderedDict as OrderedDictType
 from typing import Tuple
 
 # Sematic
+import sematic.api_client as api_client
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.run import Run
 from sematic.resolvers.type_utils import make_list_type, make_tuple_type
-from sematic.storage import Storage
 from sematic.utils.memoized_property import memoized_indexed, memoized_property
 from sematic.utils.sorting import breadth_first, topological_sort
 
@@ -114,7 +113,6 @@ class Graph:
     runs: Iterable[Run]
     edges: Iterable[Edge]
     artifacts: Iterable[Artifact]
-    storage: Storage
 
     def __post_init__(self):
         self.runs = tuple(self.runs)
@@ -181,8 +179,7 @@ class Graph:
         resolved? Uses in-memory graph artifacts, does not fetch them from the DB.
         """
         return all(
-            edge.artifact_id is not None
-            for edge in self._edges_by_destination_id[run_id]
+            edge.artifact_id is not None for edge in self._edges_by_destination_id[run_id]
         )
 
     def _execution_order(self, layer_run_ids: List[RunID]) -> List[RunID]:
@@ -203,9 +200,7 @@ class Graph:
             raise ValueError("Runs are not all from the same layer")
 
         dependencies = {
-            run_id: [
-                edge.source_run_id for edge in self._edges_by_destination_id[run_id]
-            ]
+            run_id: [edge.source_run_id for edge in self._edges_by_destination_id[run_id]]
             for run_id in layer_run_ids
         }
         return topological_sort(dependencies)
@@ -228,9 +223,7 @@ class Graph:
             raise ValueError("Runs are not all from the same layer")
 
         dependencies = {
-            run_id: [
-                edge.destination_run_id for edge in self._edges_by_source_id[run_id]
-            ]
+            run_id: [edge.destination_run_id for edge in self._edges_by_source_id[run_id]]
             for run_id in layer_run_ids
         }
         return topological_sort(dependencies)
@@ -367,7 +360,7 @@ class Graph:
     @memoized_indexed
     def _get_artifact_value(self, artifact_id: str) -> Any:
         artifact = self._artifacts_by_id[artifact_id]
-        return get_artifact_value(artifact, self.storage)
+        return api_client.get_artifact_value(artifact)
 
     def _get_cloned_future_inputs(
         self, run_id: RunID, cloned_graph: ClonedFutureGraph
@@ -392,9 +385,9 @@ class Graph:
             if input_edge.source_run_id is not None:
                 # We set the input as the upstream future to mimick what
                 # happens in a greenfield resolution.
-                kwargs[
-                    input_edge.destination_name
-                ] = cloned_graph.futures_by_original_id[input_edge.source_run_id]
+                kwargs[input_edge.destination_name] = cloned_graph.futures_by_original_id[
+                    input_edge.source_run_id
+                ]
             elif input_edge.artifact_id is not None:
                 kwargs[input_edge.destination_name] = value
             else:
@@ -443,9 +436,7 @@ class Graph:
     ) -> AbstractFuture:
         run = self._runs_by_id[run_id]
 
-        kwargs, run_input_artifacts = self._get_cloned_future_inputs(
-            run_id, cloned_graph
-        )
+        kwargs, run_input_artifacts = self._get_cloned_future_inputs(run_id, cloned_graph)
 
         func = run.get_func()
 
@@ -503,10 +494,6 @@ class Graph:
 
         Parameters
         ----------
-        storage: Storage
-            The storage class to retrieve artifact values and set future.value
-            and future.kwargs appropriately.
-
         reset_from: Optional[str]
             Force reset other runs than only failed ones.
 

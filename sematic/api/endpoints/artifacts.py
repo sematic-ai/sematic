@@ -1,4 +1,5 @@
 # Standard Library
+from dataclasses import asdict
 from http import HTTPStatus
 from typing import List, Optional
 
@@ -14,12 +15,15 @@ from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
 )
+from sematic.api.endpoints.storage import (
+    UnknownStorageEngineError,
+    UnknownStorageModeError,
+    get_storage_location,
+)
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.user import User
 from sematic.db.queries import get_artifact
-from sematic.storage import StorageSettingValue, STORAGE_ENGINE_REGISTRY, StorageMode
-from sematic.user_settings import get_user_settings, SettingsVar
 
 
 @sematic_api.route("/api/v1/artifacts", methods=["GET"])
@@ -48,34 +52,15 @@ def get_artifact_location(
     user: Optional[User], artifact_id: str, mode: str
 ) -> flask.Response:
     try:
-        storage_mode = StorageMode[mode.upper()]
-    except KeyError:
-        return jsonify_error(
-            f"mode should be on of {[m.value for m in StorageMode]}, got {mode}",
-            HTTPStatus.BAD_REQUEST,
+        payload = get_storage_location(
+            namespace="artifacts", mode=mode, object_id=artifact_id
         )
+    except UnknownStorageModeError as e:
+        return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
+    except UnknownStorageEngineError as e:
+        return jsonify_error(str(e), HTTPStatus.INTERNAL_SERVER_ERROR)
 
-    storage_setting_value = get_user_settings(
-        SettingsVar.SEMATIC_STORAGE, StorageSettingValue.LOCAL.value
-    )
-
-    try:
-        storage_engine_class = STORAGE_ENGINE_REGISTRY[
-            StorageSettingValue[storage_setting_value]
-        ]
-    except KeyError:
-        return jsonify_error(
-            f"Unknown storage engine: {storage_setting_value}",
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-        )
-
-    location = storage_engine_class().get_location(
-        namespace="artifacts", key=artifact_id, mode=storage_mode
-    )
-
-    payload = dict(storage_engine=storage_setting_value, location=location)
-
-    return flask.jsonify(payload)
+    return flask.jsonify(asdict(payload))
 
 
 @sematic_api.route("/api/v1/artifacts/<artifact_id>", methods=["GET"])

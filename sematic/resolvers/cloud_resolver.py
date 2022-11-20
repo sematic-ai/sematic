@@ -19,7 +19,6 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
-from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.utils.memoized_property import memoized_property
 
@@ -108,8 +107,6 @@ class CloudResolver(LocalResolver):
         # When multiple base images are specified through the build info (Bazel target)
         # this is the tag we use to find the resolution image
         self._base_image_tag = _base_image_tag or DEFAULT_BASE_IMAGE_TAG
-
-        self._storage = S3Storage()
 
     def resolve(self, future: AbstractFuture) -> Any:
         if not self._detach:
@@ -259,9 +256,8 @@ class CloudResolver(LocalResolver):
             return
 
         if run.nested_future_id is not None:
-            pickled_nested_future = self._storage.get(
-                make_nested_future_storage_key(run.nested_future_id)
-            )
+            pickled_nested_future = api_client.get_future_pickle(run.nested_future_id)
+
             value = cloudpickle.loads(pickled_nested_future)
 
         else:

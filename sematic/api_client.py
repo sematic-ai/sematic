@@ -16,12 +16,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import deserialize_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
-from sematic.storage import (
-    STORAGE_ENGINE_REGISTRY,
-    Storage,
-    StorageMode,
-    StorageSettingValue,
-)
+from sematic.storage import Storage, StorageMode, StorageSettingValue, get_storage
 from sematic.utils.retry import retry
 from sematic.versions import CURRENT_VERSION, version_as_string
 
@@ -78,19 +73,42 @@ def get_artifact_value_by_id(artifact_id: str) -> Any:
 
 
 def get_artifact_value(artifact: Artifact) -> Any:
-    storage_engine, location = get_artifact_location(artifact.id, mode=StorageMode.READ)
+    storage_engine, location = _get_artifact_location(artifact.id, mode=StorageMode.READ)
     payload = storage_engine.get(location)
 
     return deserialize_artifact_value(artifact, payload)
 
 
-def get_artifact_location(artifact_id: str, mode: StorageMode) -> Tuple[Storage, str]:
+def store_artifact_value(artifact_id: str, value: bytes):
+    storage_engine, location = _get_artifact_location(artifact_id, StorageMode.WRITE)
+    storage_engine.set(location, value)
+
+
+def _get_artifact_location(artifact_id: str, mode: StorageMode) -> Tuple[Storage, str]:
     response = _get(f"/artifacts/{artifact_id}/location/{mode.value}")
 
+    return _get_location_for_response(response)
+
+
+def store_future_pickle(future_id: str, pickle: bytes):
+    storage_engine, location = _get_future_location(future_id, StorageMode.WRITE)
+    storage_engine.set(location, pickle)
+
+
+def get_future_pickle(future_id: str) -> bytes:
+    storage_engine, location = _get_future_location(future_id, StorageMode.READ)
+    return storage_engine.get(location)
+
+
+def _get_future_location(future_id: str, mode: StorageMode) -> Tuple[Storage, str]:
+    response = _get(f"/runs/{future_id}/location/{mode.value}")
+
+    return _get_location_for_response(response)
+
+
+def _get_location_for_response(response: Dict[str, str]) -> Tuple[Storage, str]:
     try:
-        storage_engine = STORAGE_ENGINE_REGISTRY[
-            StorageSettingValue[response["storage_engine"]]
-        ]
+        storage_engine = get_storage(StorageSettingValue[response["storage_engine"]])
     except KeyError:
         raise NotImplementedError(f"Unknown storage engine: {response['storage_engine']}")
 

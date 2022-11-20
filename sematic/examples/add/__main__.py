@@ -11,10 +11,11 @@ if __name__ == "__main__":
     parser.add_argument("--cloud", action="store_true", default=False)
     parser.add_argument("--detach", action="store_true", default=False)
     parser.add_argument("--rerun-from", default=None)
+    parser.add_argument("--debug", default=False, action="store_true")
 
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO)
 
     future = pipeline(1, 2, 3).set(
         name="Basic add example pipeline", tags=["example", "basic", "final"]

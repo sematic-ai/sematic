@@ -25,6 +25,11 @@ from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
 )
+from sematic.api.endpoints.storage import (
+    UnknownStorageEngineError,
+    UnknownStorageModeError,
+    get_storage_location,
+)
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
@@ -413,3 +418,16 @@ def save_graph_endpoint(user: Optional[User]):
     #    return jsonify_error(str(e), HTTPStatus.INTERNAL_SERVER_ERROR)
 
     return flask.jsonify({})
+
+
+@sematic_api.route("/api/v1/runs/<run_id>/location/<mode>", methods=["GET"])
+@authenticate
+def get_future_location(user: Optional[User], run_id: str, mode: str) -> flask.Response:
+    try:
+        payload = get_storage_location(namespace="futures", mode=mode, object_id=run_id)
+    except UnknownStorageModeError as e:
+        return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
+    except UnknownStorageEngineError as e:
+        return jsonify_error(str(e), HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    return flask.jsonify(asdict(payload))
