@@ -36,7 +36,7 @@ def test_changelog():
 
 
 def test_helm_chart():
-    with open("helm/sematic/values.yaml", "r") as fp:
+    with open("helm/sematic-server/values.yaml", "r") as fp:
         encodable = yaml.load(fp, yaml.Loader)
 
     image = encodable["server"]["image"]
