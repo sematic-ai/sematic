@@ -2,21 +2,24 @@ auth:
   enabled: true
   google_oauth_client_id: 977722105393-257kdkrc5dfbpu0jcsd8etn1k4u4q4ut.apps.googleusercontent.com
   authorized_email_domain: sematic.ai
+
 aws:
   enabled: true
   storage_bucket: sematic-dev
 
-create_secret: true
+secret:
+  create: true
+
 database:
   url: postgres://postgresql:5432/postgres
 
 replicaCount: 1
 
 image:
-  repository: sematicai/sematic-server:v0.20.0
+  #repository: sematicai/sematic-server:v0.20.0
   pullPolicy: IfNotPresent
+  pullSecrets: []
 
-imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
@@ -60,7 +63,7 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-resources: 
+resources:
   limits:
     cpu: 500m
     memory: 4000Mi
@@ -91,6 +94,7 @@ livenessProbe:
   periodSeconds: 5
   successThreshold: 1
   timeoutSeconds: 1
+
 readinessProbe:
   failureThreshold: 6
   httpGet:
