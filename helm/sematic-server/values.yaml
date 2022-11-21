@@ -23,6 +23,9 @@ image:
 nameOverride: ""
 fullnameOverride: ""
 
+rbac:
+  create: true
+
 serviceAccount:
   # Annotations to add to the service account
   annotations: {}
