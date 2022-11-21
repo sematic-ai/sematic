@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import Plotly from "plotly.js-cartesian-dist";
 import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
@@ -27,7 +27,9 @@ import {
   Button,
 } from "@mui/material";
 import { OpenInNew } from "@mui/icons-material";
-import {format, isValid, parseISO} from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
+import "mpld3";
+import { v4 as uuidv4 } from "uuid";
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -269,8 +271,9 @@ function ListValueView(props: ValueViewProps) {
           </TableCell>
           <TableCell>
             {summary} and{" "}
-            {props.valueSummary["length"] - props.valueSummary["summary"].length}{" "}
-             more items.
+            {props.valueSummary["length"] -
+              props.valueSummary["summary"].length}{" "}
+            more items.
           </TableCell>
         </TableRow>
       </TableBody>
@@ -541,12 +544,26 @@ function PlotlyFigureValueView(props: ValueViewProps) {
 
 function MatplotlibFigureValueView(props: ValueViewProps) {
   let { valueSummary } = props;
-  let { path } = valueSummary;
-  return (
-    <Zoom>
-      <img src={path} width={"100%"} alt="matplotlib figure" />
-    </Zoom>
-  );
+
+  let figureId = uuidv4();
+
+  useEffect(() => {
+    const inlineScript = document.createElement("script");
+    inlineScript.innerHTML =
+      "mpld3.draw_figure('" +
+      figureId +
+      "', " +
+      JSON.stringify(valueSummary["mpld3"]) +
+      ");";
+
+    document.body.append(inlineScript);
+
+    return () => {
+      inlineScript.remove();
+    };
+  }, []);
+
+  return <div id={figureId}></div>;
 }
 
 function DataFrameTable(props: {
@@ -693,15 +710,13 @@ function LinkValueView(props: ValueViewProps) {
 }
 
 function DatetimeValueView(props: ValueViewProps) {
-  const {valueSummary} = props;
-  const date = parseISO(valueSummary)
+  const { valueSummary } = props;
+  const date = parseISO(valueSummary);
 
   if (!valueSummary || !isValid(date)) {
-      return <Alert severity="error">Incorrect date value.</Alert>;
+    return <Alert severity="error">Incorrect date value.</Alert>;
   }
-  return (
-      <Typography>{format(date, "LLLL d, yyyy h:mm:ss a xxx", )}</Typography>
-  );
+  return <Typography>{format(date, "LLLL d, yyyy h:mm:ss a xxx")}</Typography>;
 }
 
 type ComponentPair = {
@@ -722,7 +737,7 @@ const TypeComponents: Map<string, ComponentPair> = new Map([
   ["dataclass", { type: DataclassTypeView, value: DataclassValueView }],
   ["Union", { type: UnionTypeView, value: ValueView }],
   ["Link", { type: TypeView, value: LinkValueView }],
-  ["datetime.datetime", {type: TypeView, value: DatetimeValueView}],
+  ["datetime.datetime", { type: TypeView, value: DatetimeValueView }],
   [
     "torch.utils.data.dataloader.DataLoader",
     { type: TypeView, value: TorchDataLoaderValueView },
