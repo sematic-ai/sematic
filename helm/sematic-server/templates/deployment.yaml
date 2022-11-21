@@ -31,14 +31,13 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.image }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           envFrom:
           - configMapRef:
               name: {{ include "sematic-server.fullname" . }}
           - secretRef:
               name: {{ include "sematic-server.fullname" . }}
-              
           ports:
             - name: http
               containerPort: 80

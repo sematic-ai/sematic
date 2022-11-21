@@ -13,9 +13,8 @@ database:
 replicaCount: 1
 
 image:
-  repository: sematicai/sematic-server
+  repository: sematicai/sematic-server:v0.20.0
   pullPolicy: IfNotPresent
-  tag: v0.15.1
 
 imagePullSecrets: []
 nameOverride: ""
