@@ -108,7 +108,9 @@ itsdangerous==2.1.2
 jedi==0.18.1
     # via ipython
 jinja2==3.1.2
-    # via flask
+    # via
+    #   flask
+    #   mpld3
 jmespath==1.0.1
     # via
     #   boto3
@@ -126,9 +128,12 @@ markupsafe==2.1.1
 matplotlib==3.6.0
     # via
     #   -r requirements/requirements.in
+    #   mpld3
     #   seaborn
 matplotlib-inline==0.1.6
     # via ipython
+mpld3==0.5.8
+    # via -r requirements/requirements.in
 numpy==1.23.3
     # via
     #   -r requirements/requirements.in
