@@ -2,7 +2,7 @@
 import distutils.util
 import enum
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 # Third-party
 import yaml
@@ -65,7 +65,7 @@ def _normalize_enum(enum_type: EnumType, obj: Any):  # type: ignore
         return None
 
 
-def _load_settings(file_path: str) -> Dict[str, str]:
+def _load_settings(file_path: str) -> Dict[str, Union[str, Dict[str, str]]]:
     """
     Loads the settings from the specified settings file, returning their raw string
     representations, or an empty dict if the file is not found.

@@ -18,12 +18,6 @@ logger = logging.getLogger(__name__)
 
 _USER_SETTINGS_FILE = "settings.yaml"
 _DEFAULT_PROFILE = "default"
-# TODO: remove UserSettingsVar.AWS_S3_BUCKET
-AWS_S3_BUCKET_DEPRECATION_WARNING = (
-    "UserSettingsVar.AWS_S3_BUCKET is deprecated in favor of "
-    "ServerSettingsVar.AWS_S3_BUCKET and will be removed in an upcoming release! "
-    "Use that settings variable instead!"
-)
 
 
 class UserSettingsVar(enum.Enum):
@@ -35,13 +29,6 @@ class UserSettingsVar(enum.Enum):
     SNOWFLAKE_USER = "SNOWFLAKE_USER"
     SNOWFLAKE_PASSWORD = "SNOWFLAKE_PASSWORD"
     SNOWFLAKE_ACCOUNT = "SNOWFLAKE_ACCOUNT"
-
-    # AWS
-    # TODO: remove UserSettingsVar.AWS_S3_BUCKET
-    # WARNING! UserSettingsVar.AWS_S3_BUCKET is deprecated in favor of
-    # ServerSettingsVar.AWS_S3_BUCKET and will be removed in an upcoming release!
-    # Use that settings variable instead!
-    AWS_S3_BUCKET = "AWS_S3_BUCKET"
 
 
 class MissingUserSettingsError(Exception):
@@ -90,17 +77,10 @@ class UserSettings:
             # the vars are read from the yaml as strings, and we need to normalize them
             normalized_var = _normalize_enum(UserSettingsVar, var)
 
-            if normalized_var is not None:
-                # TODO: remove UserSettingsVar.AWS_S3_BUCKET
-                if normalized_var == UserSettingsVar.AWS_S3_BUCKET:
-                    logger.warning(AWS_S3_BUCKET_DEPRECATION_WARNING)
+            if normalized_var is None:
+                raise ValueError(f"Unknown user setting {var}!")
 
-                user_settings[normalized_var] = str(value)
-            else:
-                # the user and server settings were split out from the same common
-                # settings, and users might have them persisted in the wrong file still
-                # just warn and move on instead of providing a complicated migration
-                logger.warning("Skipping unknown user setting %s", var)
+            user_settings[normalized_var] = str(value)
 
         self.default = user_settings
 
@@ -239,10 +219,6 @@ def set_user_settings(var: UserSettingsVar, value: str) -> None:
 
     if _settings is None:
         _settings = _load_user_settings()
-
-    # TODO: remove UserSettingsVar.AWS_S3_BUCKET
-    if var == UserSettingsVar.AWS_S3_BUCKET:
-        logger.warning(AWS_S3_BUCKET_DEPRECATION_WARNING)
 
     _settings.set(var, value)
     _save_user_settings(_settings)

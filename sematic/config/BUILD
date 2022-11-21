@@ -50,6 +50,8 @@ sematic_py_lib(
     srcs = ["config.py"],
     deps = [
         ":config_dir",
+        ":server_settings",
+        ":settings",
         ":user_settings",
     ],
 )

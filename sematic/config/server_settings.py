@@ -62,6 +62,13 @@ ServerSettings = Dict[ServerSettingsVar, str]
 _settings: Optional[ServerSettings] = None
 
 
+def _get_default_server_settings() -> ServerSettings:
+    """
+    Returns modifiable default settings.
+    """
+    return {}
+
+
 def _get_server_settings_file() -> str:
     """
     Returns the path to the server settings file according to the configuration.
@@ -74,18 +81,19 @@ def _load_server_settings() -> ServerSettings:
     Loads the settings from the configured settings file.
     """
     raw_settings = _load_settings(_get_server_settings_file())
+
+    if raw_settings is None:
+        return _get_default_server_settings()
+
     server_settings = {}
 
     for var, value in raw_settings.items():
         normalized_var = _normalize_enum(ServerSettingsVar, var)
 
-        if normalized_var is not None:
-            server_settings[normalized_var] = str(value)
-        else:
-            # the user and server settings were split out from the same common
-            # settings, and users might have them persisted in the wrong file still
-            # just warn and move on instead of providing a complicated migration
-            logger.warning("Skipping unknown server setting %s", var)
+        if normalized_var is None:
+            raise ValueError(f"Unknown server setting {var}!")
+
+        server_settings[normalized_var] = str(value)
 
     return server_settings
 

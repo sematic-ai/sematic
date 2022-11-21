@@ -10,16 +10,7 @@ import botocore.exceptions
 
 # Sematic
 from sematic.config.config import get_config
-from sematic.config.server_settings import (
-    MissingServerSettingsError,
-    ServerSettingsVar,
-    get_server_settings,
-)
-from sematic.config.user_settings import (
-    MissingUserSettingsError,
-    UserSettingsVar,
-    get_user_settings,
-)
+from sematic.config.server_settings import ServerSettingsVar, get_server_settings
 from sematic.utils.memoized_property import memoized_property
 from sematic.utils.retry import retry
 
@@ -97,16 +88,7 @@ class S3Storage(Storage):
 
     @memoized_property
     def _bucket(self) -> str:
-        try:
-            # TODO: remove UserSettingsVar.AWS_S3_BUCKET
-            return get_server_settings(ServerSettingsVar.AWS_S3_BUCKET)
-
-        except MissingServerSettingsError as e:
-            try:
-                return get_user_settings(UserSettingsVar.AWS_S3_BUCKET)
-
-            except MissingUserSettingsError:
-                raise e
+        return get_server_settings(ServerSettingsVar.AWS_S3_BUCKET)
 
     @memoized_property
     def _s3_client(self):
