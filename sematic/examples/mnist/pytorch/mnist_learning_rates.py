@@ -1,5 +1,6 @@
 """
-This is an example implementation of the MNIST pipeline in PyTorch on sematic.
+This is an example implementation of the MNIST learning rates pipeline in PyTorch
+on Sematic, using the CloudResolver.
 """
 # Standard Library
 # MNIST example
@@ -33,7 +34,7 @@ TRAIN_CONFIGS = [
 
 
 def main():
-    parser = argparse.ArgumentParser("MNIST PyTorch example")
+    parser = argparse.ArgumentParser("Scan MNIST learning rates")
     parser.add_argument("--detach", default=False, action="store_true")
     parser.add_argument("--epochs", type=int, default=1)
     parser.add_argument("--learning-rates", type=str, default="1")

@@ -1,7 +1,7 @@
 # Standard Library
 import datetime
 
-# Third party
+# Third-party
 from sqlalchemy import Column, types
 
 # Sematic

@@ -7,6 +7,7 @@ import pytest
 # Sematic
 from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.serialization import (
+    get_json_encodable_summary,
     type_from_json_encodable,
     type_to_json_encodable,
     value_to_json_encodable,
@@ -35,6 +36,22 @@ def test_safe_cast(type_, value, expected_cast_value, expected_error):
 
     assert cast_value == expected_cast_value
     assert error == expected_error
+
+
+def test_summaries():
+    summary = get_json_encodable_summary([1, 2, 3, 4, 5, 6, 7], List[int])
+    assert summary == {
+        "summary": [1, 2, 3, 4, 5, 6, 7],
+        "length": 7,
+    }
+
+    long_value = 2**21 * "h"
+    long_list = [long_value for _ in range(5)]
+    summary = get_json_encodable_summary(long_list, List[str])
+    assert summary == {
+        "summary": [long_value],
+        "length": 5,
+    }
 
 
 @pytest.mark.parametrize(

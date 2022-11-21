@@ -12,5 +12,6 @@ exclude = [
 profile = "black"
 import_heading_stdlib="Standard Library"
 import_heading_firstparty="Sematic"
+import_heading_thirdparty="Third-party"
 known_third_party = ["flask", "psycopg2", "matplotlib", "cloudpickle"]
 multi_line_output = 3

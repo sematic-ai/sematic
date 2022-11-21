@@ -1,6 +1,7 @@
 # Standard Library
 import sys
 
+# Third-party
 # confirm that third party dependencies were installed
 import requests  # noqa: F401
 

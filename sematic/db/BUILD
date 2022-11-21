@@ -1,18 +1,21 @@
 sematic_py_lib(
     name = "db",
     srcs = ["db.py"],
-    deps = [
-        "//sematic:config",
-    ],
     pip_deps = [
         "sqlalchemy",
         "psycopg2-binary",
+    ],
+    deps = [
+        "//sematic/config:config",
     ],
 )
 
 sematic_py_lib(
     name = "queries",
     srcs = ["queries.py"],
+    pip_deps = [
+        "sqlalchemy",
+    ],
     deps = [
         ":db",
         "//sematic/db/models:artifact",
@@ -23,23 +26,34 @@ sematic_py_lib(
         "//sematic/db/models:user",
         "//sematic/scheduling:external_job",
     ],
-    pip_deps = [
-        "sqlalchemy",
-    ]
 )
 
-exports_files([
-    "schema.sql.pg",
-    "schema.sql.sqlite",
-])
+exports_files(
+    [
+        "schema.sql.sqlite",
+    ],
+)
 
 sematic_py_lib(
     name = "migrate_lib",
     srcs = ["migrate.py"],
-    data = glob(["migrations/*.sql"]),
+    data = glob(
+        [
+            "migrations/*.sql",
+            "migrations/*.py",
+        ],
+    ),
+    pip_deps = [
+        "click",
+        "sqlalchemy",
+    ],
     deps = [
-        "//sematic:config",
-        "//sematic/db:db",
+        # DO NOT add any other dependencies
+        # or it may break the sequence of migrations
+        # Migrations are written at a specific point in time, whereas the
+        # codebase evolves.
+        ":db",
+        "//sematic/config:config",
     ],
 )
 

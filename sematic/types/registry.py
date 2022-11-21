@@ -1,4 +1,8 @@
 # Standard Library
+import abc
+import inspect
+import typing
+from enum import Enum
 from typing import (
     Any,
     Callable,
@@ -22,7 +26,7 @@ _SUPPORTED_TYPES_DOCS = (
 # this lists them. It also includes the "origin" types they
 # map to (which is essentially the unparameterized version
 # of them; see python typing docs). The origin types are
-# what we ant in the registry.
+# what we want in the registry.
 SUPPORTED_GENERIC_TYPING_ANNOTATIONS = {
     Tuple: get_origin(Tuple[int, int]),
     List: get_origin(List[int]),
@@ -57,6 +61,21 @@ CanCastTypeCallable = Callable[
 
 
 _CAN_CAST_REGISTRY: Dict[RegistryKey, CanCastTypeCallable] = {}
+
+
+def is_enum(type_: typing.Type[Any]) -> bool:
+    """Determine if the given type is an enum type or not
+
+    Parameters
+    ----------
+    type_:
+        The type being checked
+
+    Returns
+    -------
+    True if the type is an enum type, False otherwise.
+    """
+    return inspect.isclass(type_) and issubclass(type_, Enum)
 
 
 def register_can_cast(
@@ -276,11 +295,12 @@ def validate_type_annotation(*types: TypeAnnotation) -> None:
     """
 
     def assert_supported(type_):
-        try:
-            subclasses_type = issubclass(type_, type)
-        except TypeError:
-            subclasses_type = False
-        if type(type_) is type or subclasses_type:
+        if type_ is Any:
+            raise TypeError(
+                "'Any' is not a Sematic-supported type. Use 'object' instead."
+            )
+
+        if _is_type(type_) or _is_abc(type_) or is_enum(type_):
             return
         if not is_parameterized_generic(type_, raise_for_unparameterized=True):
             raise TypeError(
@@ -357,11 +377,16 @@ def is_parameterized_generic(
 
 def _is_supported_registry_key(type_: RegistryKey) -> bool:
     try:
-        subclasses_type = issubclass(type_, type)
+        subclasses_enum = issubclass(type_, Enum)
     except TypeError:
-        subclasses_type = False
+        subclasses_enum = False
     is_unparameterized_generic = type_ in SUPPORTED_GENERIC_TYPING_ANNOTATIONS.keys()
-    return type(type_) is type or subclasses_type or is_unparameterized_generic
+    return (
+        _is_type(type_)
+        or _is_abc(type_)
+        or is_unparameterized_generic
+        or subclasses_enum
+    )
 
 
 def _validate_registry_keys(*types_: RegistryKey):
@@ -383,6 +408,44 @@ def is_sematic_parametrized_generic_type(type_: Any) -> bool:
         )
     except Exception:
         return False
+
+
+def _is_type(type_: Any) -> bool:
+    """Determine if type_ subclasses 'type' or has a type of 'type'
+
+    Parameters
+    ----------
+    type_:
+        The type to check
+
+    Returns
+    -------
+    True if type_ subclasses 'type' or has a type of 'type'. False otherwise
+    """
+    try:
+        subclasses_type = issubclass(type_, type)
+    except TypeError:
+        subclasses_type = False
+    return subclasses_type or type(type_) is type
+
+
+def _is_abc(type_: Any) -> bool:
+    """Determine if type_ subclasses 'ABC' or has a type of 'ABCMeta'
+
+    Parameters
+    ----------
+    type_:
+        The type to check
+
+    Returns
+    -------
+    True if type_ subclasses 'ABC' or has a type of 'ABCMeta'. False otherwise
+    """
+    try:
+        subclasses_abc = issubclass(type_, abc.ABC)
+    except TypeError:
+        subclasses_abc = False
+    return subclasses_abc or type(type_) is abc.ABCMeta
 
 
 class DataclassKey:

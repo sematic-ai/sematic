@@ -11,6 +11,7 @@ import testing.postgresql  # type: ignore
 import sematic.db.db as db
 from sematic.abstract_future import FutureState
 from sematic.db.models.factories import make_artifact, make_user
+from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import save_resolution, save_run, save_user
@@ -108,6 +109,10 @@ def make_run(**kwargs) -> Run:
         name="test_run",
         calculator_path="path.to.test_run",
         root_id=id,
+        container_image_uri="foobar",
+        description="Foo Bar",
+        tags=["foo", "bar"],
+        source_code="def foo(): pass",
     )
     run.resource_requirements = ResourceRequirements(
         kubernetes=KubernetesResourceRequirements(
@@ -127,8 +132,16 @@ def make_resolution(**kwargs) -> Resolution:
         root_id=root_id,
         status=ResolutionStatus.SCHEDULED,
         kind=ResolutionKind.KUBERNETES,
-        docker_image_uri="some.uri",
+        container_image_uris={"default": "some.uri"},
+        container_image_uri="some.uri",
         settings_env_vars={"MY_SETTING": "MY_VALUE"},
+    )
+
+    # Set this outside the constructor because the constructor expects
+    # a json encodable, but this property will auto-update the json
+    # encodable field.
+    resolution.git_info = GitInfo(
+        remote="remote", branch="branch", commit="commit", dirty=False
     )
 
     for name, value in kwargs.items():
@@ -177,7 +190,7 @@ def persisted_artifact(test_db, test_storage):  # noqa: F811
     """
     Persisted artifact fixture.
     """
-    artifact = make_artifact(42, int, True)
+    artifact = make_artifact(42, int, storage=test_storage)
 
     with db.db().get_session() as session:
         session.add(artifact)

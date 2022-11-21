@@ -1,18 +1,26 @@
 # Standard Library
-from typing import List, Union
+from typing import Any, List, Tuple, Union
 
 # Third-party
 import pytest
 
 # Sematic
 from sematic.abstract_calculator import CalculatorError
-from sematic.calculator import Calculator, _convert_lists, _make_list, func
+from sematic.calculator import (
+    Calculator,
+    _convert_lists,
+    _convert_tuples,
+    _make_list,
+    _make_tuple,
+    func,
+)
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.future import Future
 from sematic.resolvers.resource_requirements import (  # noqa: F401
     KubernetesResourceRequirements,
     ResourceRequirements,
 )
+from sematic.utils.exceptions import ResolutionError
 
 
 def test_decorator_no_params():
@@ -29,6 +37,23 @@ def test_decorator_with_params():
         pass
 
     assert isinstance(f, Calculator)
+
+
+def test_any():
+    expected = (
+        r"Invalid type annotation for argument 'x' "
+        r"of sematic.tests.test_calculator.f1: 'Any' is "
+        r"not a Sematic-supported type. Use 'object' instead."
+    )
+    with pytest.raises(TypeError, match=expected):
+
+        @func
+        def f1(x: Any) -> None:
+            pass
+
+    @func
+    def f2(x: object) -> None:
+        pass
 
 
 def test_doc():
@@ -49,8 +74,37 @@ def test_name():
 
 
 def test_not_a_function():
-    with pytest.raises(ValueError, match="not a function"):
+    with pytest.raises(
+        TypeError, match=r".*can only be used with functions. But 'abc' is a 'str'."
+    ):
         Calculator("abc", {}, None)
+
+    with pytest.raises(
+        TypeError, match=r".*can only be used with functions, not methods.*"
+    ):
+
+        class SomeClass:
+            @func
+            def some_method(self: object) -> None:
+                pass
+
+    with pytest.raises(
+        TypeError,
+        match=r".*can't be used with async functions, generators, or coroutines.*",
+    ):
+
+        @func
+        def a_generator() -> object:
+            yield 42
+
+    with pytest.raises(
+        TypeError,
+        match=r".*can't be used with async functions, generators, or coroutines.*",
+    ):
+
+        @func
+        async def an_async_func() -> int:
+            return 42
 
 
 def test_inline_and_resource_reqs():
@@ -89,7 +143,7 @@ def test_none_types():
 def test_types_specified():
     @func
     def f(a: float) -> int:
-        pass
+        return int(a)
 
     assert f.input_types == dict(a=float)
     assert f.output_type is int
@@ -162,6 +216,11 @@ def bar() -> str:
     return "bar"
 
 
+@func
+def baz() -> int:
+    return 42
+
+
 def test_make_list():
     future = _make_list(List[str], [foo(), bar()])
 
@@ -170,14 +229,33 @@ def test_make_list():
     assert len(future.calculator.input_types) == 2
 
 
+def test_make_tuple():
+    future = _make_tuple(Tuple[str, int], (bar(), baz()))
+
+    assert isinstance(future, Future)
+    assert future.calculator.output_type is Tuple[str, int]
+    assert len(future.calculator.input_types) == 2
+    assert future.calculator.calculate(v0="a", v1=42) == ("a", 42)
+
+
 @func
 def pipeline() -> List[str]:
     return [foo(), bar(), "baz"]
 
 
+@func
+def tuple_pipeline() -> Tuple[str, int, str]:
+    return (foo(), baz(), "qux")
+
+
 def test_pipeline():
     output = pipeline().resolve(tracking=False)
     assert output == ["foo", "bar", "baz"]
+
+
+def test_tuple_pipeline():
+    output = tuple_pipeline().resolve(tracking=False)
+    assert output == ("foo", 42, "qux")
 
 
 def test_convert_lists():
@@ -220,6 +298,20 @@ def test_convert_lists():
     ]
 
 
+def test_convert_tuples():
+    value = (42, [1, baz(), 3], (foo(), bar()), foo())
+    expected_type = Tuple[int, List[int], Tuple[str, str], str]
+    result = _convert_tuples(value, expected_type)
+    assert isinstance(result, Future)
+    assert result.props.inline is True
+
+    @func
+    def pipeline() -> expected_type:
+        return value
+
+    assert pipeline().resolve(tracking=False) == (42, [1, 42, 3], ("foo", "bar"), "foo")
+
+
 def test_inline_default():
     @func
     def f():
@@ -251,29 +343,32 @@ def test_resource_requirements():
     assert f().props.resource_requirements == resource_requirements
 
 
-def test_error():
+def test_resolve_error():
     @func()
     def f():
         raise ValueError("Intentional error")
 
-    raised_error = False
-    try:
-        # resolving should surface the underlying error
+    with pytest.raises(ResolutionError) as exc_info:
+        # resolving should surface the ResolutionError,
+        # with root cause as __context__
+        # see https://peps.python.org/pep-0409/#language-details
         f().resolve(tracking=False)
-    except Exception as e:
-        raised_error = True
-        assert isinstance(e, ValueError)
-        assert "Intentional" in str(e)
-    assert raised_error
 
-    raised_error = False
-    try:
+    assert isinstance(exc_info.value.__context__, CalculatorError)
+    assert isinstance(exc_info.value.__context__.__context__, ValueError)
+    assert "Intentional error" in str(exc_info.value.__context__.__context__)
+
+
+def test_calculate_error():
+    @func()
+    def f():
+        raise ValueError("Intentional error")
+
+    with pytest.raises(CalculatorError) as exc_info:
         # calling calculate should surface the CalculatorError,
-        # with root cause as __cause__.
+        # with root cause as __context__
+        # see https://peps.python.org/pep-0409/#language-details
         f.calculate()
-    except Exception as e:
-        raised_error = True
-        assert isinstance(e, CalculatorError)
-        assert isinstance(e.__cause__, ValueError)
-        assert "Intentional" in str(e.__cause__)
-    assert raised_error
+
+    assert isinstance(exc_info.value.__context__, ValueError)
+    assert "Intentional error" in str(exc_info.value.__context__)

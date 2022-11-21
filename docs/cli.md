@@ -74,3 +74,16 @@ If you'd like, you can even change which directory Sematic uses to hold its
 settings by setting the environment variable `SEMATIC_CONFIG_DIR`. This can
 be either a relative path (it will be treated as relative to your home directory)
 or an absolute path.
+
+### Cancel pipelines
+
+You can cancel pipelines using the `cancel` command:
+
+```shell
+$ sematic cancel <run-id>
+```
+
+where `run-id` is the ID of any run in the pipeline. You can get this ID from
+the console logs, or from the UI.
+
+Note that all unfinished runs in the pipeline will be canceled.

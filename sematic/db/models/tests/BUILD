@@ -5,8 +5,13 @@ pytest_test(
         "//sematic:abstract_future",
         "//sematic:calculator",
         "//sematic:storage",
+        "//sematic/db/models:edge",
         "//sematic/db/models:factories",
-        "//sematic/tests:fixtures",
+        "//sematic/db/models:resolution",
+        "//sematic/db/models:run",
+        "//sematic/db/tests:fixtures",
+        "//sematic/resolvers:resource_requirements",
+        "//sematic/types:serialization",
     ],
 )
 
@@ -15,6 +20,7 @@ pytest_test(
     srcs = ["test_resolution.py"],
     deps = [
         "//sematic/db/models:resolution",
+        "//sematic/db/tests:fixtures",
     ],
 )
 

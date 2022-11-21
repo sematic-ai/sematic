@@ -1,5 +1,28 @@
 import { TypeSerialization } from "./types/Types";
 
+export type TypeGitInfo = {
+  remote: string;
+  branch: string;
+  commit: string;
+  dirty: boolean;
+};
+
+export type Resolution = {
+  root_id: string;
+  status: string;
+  kind: string;
+  container_image_uri: string | null;
+  git_info_json: TypeGitInfo | null;
+  settings_env_vars: Map<string, string>;
+  external_jobs_json: Map<string, any> | null;
+};
+
+export type ExceptionMetadata = {
+  repr: string;
+  name: string;
+  module: string;
+};
+
 export type Run = {
   id: string;
   future_state: string;
@@ -7,7 +30,8 @@ export type Run = {
   calculator_path: string;
   description: string | null;
   source_code: string;
-  exception: string | null;
+  exception_metadata_json: ExceptionMetadata | null;
+  external_exception_metadata_json: ExceptionMetadata | null;
   tags: Array<string>;
   parent_id: string | null;
   root_id: string;

@@ -28,6 +28,23 @@ def redirect_to_file(file_path: str):
     file_path:
         The file path to put stdout and stderr into
     """
+    with open(file_path, "wb") as to_file:
+        with redirect_to_file_descriptor(to_file.fileno()):
+            yield
+
+
+@contextmanager
+def redirect_to_file_descriptor(file_descriptor: int):
+    """Redirect stdout and stderr to the specified file descriptor.
+
+    Non-python code and subprocesses will also have their stdout/stderr
+    redirected.
+
+    Parameters
+    ----------
+    connection:
+        A multiprocessing connection object to write to
+    """
     stdout: FileIO = cast(FileIO, sys.stdout)
     stderr: FileIO = cast(FileIO, sys.stderr)
     stdout_fd = _fileno(stdout)
@@ -41,10 +58,9 @@ def redirect_to_file(file_path: str):
         with os.fdopen(os.dup(stderr_fd), "wb") as stderr_copied:
             stderr.flush()
 
-            with open(file_path, "wb") as to_file:
-                os.dup2(to_file.fileno(), stdout_fd)
-                os.dup2(to_file.fileno(), stderr_fd)
-                os.set_inheritable(to_file.fileno(), True)
+            os.dup2(file_descriptor, stdout_fd)
+            os.dup2(file_descriptor, stderr_fd)
+            os.set_inheritable(file_descriptor, True)
             try:
                 yield  # allow code to be run with the redirected stdout
             finally:

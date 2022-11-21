@@ -1,19 +1,17 @@
 # Standard Library
 import argparse
 import datetime
-import importlib
 import logging
 import os
 import pathlib
 import tempfile
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 # Third-party
 import cloudpickle
 
 # Sematic
 import sematic.api_client as api_client
-import sematic.storage as storage
 from sematic.abstract_future import FutureState
 from sematic.calculator import Calculator
 from sematic.db.models.artifact import Artifact
@@ -28,6 +26,7 @@ from sematic.resolvers.cloud_resolver import (
 )
 from sematic.resolvers.log_streamer import ingested_logs
 from sematic.scheduling.external_job import JobType
+from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
 
 
@@ -38,6 +37,8 @@ def parse_args():
     parser = argparse.ArgumentParser("Sematic cloud worker")
     parser.add_argument("--run_id", type=str, required=True)
     parser.add_argument("--resolve", default=False, action="store_true", required=False)
+    parser.add_argument("--max-parallelism", type=int, default=None, required=False)
+    parser.add_argument("--rerun-from", type=str, default=None, required=False)
 
     args = parser.parse_args()
 
@@ -51,12 +52,14 @@ def _get_input_kwargs(
     run_id: str, artifacts: List[Artifact], edges: List[Edge]
 ) -> Dict[str, Any]:
     """
-    Get input values for run
+    Get input values for run.
     """
     artifacts_by_id = {artifact.id: artifact for artifact in artifacts}
 
     kwargs = {
-        edge.destination_name: get_artifact_value(artifacts_by_id[edge.artifact_id])
+        edge.destination_name: get_artifact_value(
+            artifacts_by_id[edge.artifact_id], storage=S3Storage()
+        )
         for edge in edges
         if edge.destination_run_id == run_id
         and edge.artifact_id is not None
@@ -66,30 +69,23 @@ def _get_input_kwargs(
     return kwargs
 
 
-def _fail_run(run: Run):
+def _fail_run(run: Run, e: BaseException) -> None:
     """
     Mark run as failed.
     """
     run.future_state = FutureState.FAILED
     run.failed_at = datetime.datetime.utcnow()
-    if run.exception is None:
-        run.exception = format_exception_for_run()
+
+    if run.exception_metadata is None:
+        # this means the exception probably happened in the Resolver code
+        run.exception_metadata = format_exception_for_run(e)
+    else:
+        # if the run already has an exception marked on it, then it's the innermost cause
+        # of the failure; any other exception generated afterwards is done so while trying
+        # to handle the failure
+        logger.warning("Got exception while handling run failure", exc_info=e)
+
     api_client.save_graph(run.id, [run], [], [])
-
-
-def _get_func(run: Run) -> Calculator:
-    """
-    Get run's function.
-    """
-    function_path = run.calculator_path
-    logger.info("Importing function %s", function_path)
-
-    module_path = ".".join(function_path.split(".")[:-1])
-    function_name = function_path.split(".")[-1]
-
-    module = importlib.import_module(module_path)
-
-    return getattr(module, function_name)
 
 
 def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
@@ -97,6 +93,7 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
     Persist run output, whether it is a nested future or a concrete output.
     """
     artifacts = []
+    storage = S3Storage()
 
     if isinstance(output, Future):
         pickled_nested_future = cloudpickle.dumps(output)
@@ -106,7 +103,7 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
         run.ended_at = datetime.datetime.utcnow()
 
     else:
-        artifacts.append(make_artifact(output, type_, store=True))
+        artifacts.append(make_artifact(output, type_, storage=storage))
 
         # Set output artifact on output edges
         for edge in edges:
@@ -119,13 +116,21 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
     api_client.save_graph(run.root_id, [run], artifacts, edges)
 
 
-def main(run_id: str, resolve: bool):
+def main(
+    run_id: str,
+    resolve: bool,
+    max_parallelism: Optional[int] = None,
+    rerun_from: Optional[str] = None,
+):
     """
     Main job logic.
 
     `resolve` set to `True` will execute the driver logic.
     `resolve` set to `False` will execute the worker logic.
     """
+    if not resolve and rerun_from is not None:
+        raise ValueError("Can only have non-None rerun_from in resolve mode")
+
     runs, artifacts, edges = api_client.get_graph(run_id)
 
     if len(runs) == 0:
@@ -134,7 +139,7 @@ def main(run_id: str, resolve: bool):
     run = runs[0]
 
     try:
-        func = _get_func(run)
+        func: Calculator = run.get_func()  # type: ignore
         kwargs = _get_input_kwargs(run.id, artifacts, edges)
 
         if resolve:
@@ -142,14 +147,19 @@ def main(run_id: str, resolve: bool):
             future: Future = func(**kwargs)
             future.id = run.id
 
-            resolver = CloudResolver(detach=False, is_running_remotely=True)
+            resolver = CloudResolver(
+                detach=False,
+                max_parallelism=max_parallelism,
+                rerun_from=rerun_from,
+                _is_running_remotely=True,
+            )
             resolver.set_graph(runs=runs, artifacts=artifacts, edges=edges)
 
             resolver.resolve(future)
 
         else:
             logger.info("Executing %s", func.__name__)
-            output = func.func(**kwargs)
+            output = func.calculate(**kwargs)
             _set_run_output(run, output, func.output_type, edges)
 
     except Exception as e:
@@ -161,13 +171,13 @@ def main(run_id: str, resolve: bool):
             # its worker job
             root_run = api_client.get_run(run_id)
             if not FutureState[root_run.future_state].is_terminal():  # type: ignore
-                # Only fail here if the the root run hasn't already been
+                # Only fail here if the root run hasn't already been
                 # moved to a terminal state. It may contain a better
                 # exception message. If it completed somehow, then it
                 # should be in a valid state that we don't want to disrupt.
-                _fail_run(root_run)
+                _fail_run(root_run, e)
         else:
-            _fail_run(run)
+            _fail_run(run, e)
 
         if resolve:
             api_client.notify_pipeline_update(run.calculator_path)
@@ -197,8 +207,15 @@ def wrap_main_with_logging():
         )
         logger.info("Worker CLI args: run_id=%s", args.run_id)
         logger.info("Worker CLI args: resolve=%s", args.resolve)
+        logger.info("Worker CLI args: max-parallelism=%s", args.max_parallelism)
+        logger.info("Worker CLI args: rerun_from=%s", args.rerun_from)
 
-        main(args.run_id, args.resolve)
+        main(
+            run_id=args.run_id,
+            resolve=args.resolve,
+            max_parallelism=args.max_parallelism,
+            rerun_from=args.rerun_from,
+        )
 
 
 if __name__ == "__main__":

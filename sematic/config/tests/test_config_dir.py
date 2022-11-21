@@ -1,10 +1,11 @@
 # Standard Library
 import pathlib
 
+# Third-party
 import pytest
 
 # Sematic
-from sematic.config_dir import _CONFIG_DIR_OVERRIDE_ENV_VAR, get_config_dir
+from sematic.config.config_dir import _CONFIG_DIR_OVERRIDE_ENV_VAR, get_config_dir
 from sematic.tests.fixtures import environment_variables
 
 

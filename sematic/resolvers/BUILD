@@ -1,17 +1,23 @@
 sematic_py_lib(
     name = "local_resolver",
     srcs = ["local_resolver.py"],
+    pip_deps = [
+        "python-socketio",
+        "websocket-client",
+    ],
     deps = [
         ":silent_resolver",
         "//sematic:abstract_calculator",
         "//sematic:abstract_future",
         "//sematic:api_client",
-        "//sematic:config",
+        "//sematic:graph",
+        "//sematic/config:config",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
         "//sematic/db/models:run",
         "//sematic/utils:exceptions",
+        "//sematic/utils:git",
     ],
 )
 
@@ -22,6 +28,7 @@ sematic_py_lib(
         "//sematic:abstract_calculator",
         "//sematic:abstract_future",
         "//sematic:resolver",
+        "//sematic/utils:exceptions",
     ],
 )
 
@@ -37,18 +44,27 @@ sematic_py_lib(
 sematic_py_lib(
     name = "cloud_resolver",
     srcs = ["cloud_resolver.py"],
+    pip_deps = [
+        "cloudpickle",
+    ],
     deps = [
         ":local_resolver",
         "//sematic:abstract_future",
+        "//sematic:container_images",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
-        "//sematic:container_images",
         "//sematic/utils:exceptions",
+        "//sematic/utils:memoized_property",
     ],
-    pip_deps = [
-        "cloudpickle",
+)
+
+sematic_py_lib(
+    name = "type_utils",
+    srcs = ["type_utils.py"],
+    deps = [
+        "//sematic:abstract_future",
     ],
 )
 
@@ -57,9 +73,9 @@ sematic_py_lib(
     srcs = ["log_streamer.py"],
     deps = [
         "//sematic:storage",
+        "//sematic/config:config",
         "//sematic/utils:retry",
         "//sematic/utils:stdout",
-        "//sematic:config",
     ],
 )
 
@@ -72,22 +88,22 @@ sematic_py_lib(
 sematic_py_lib(
     name = "worker",
     srcs = ["worker.py"],
+    pip_deps = [
+        "cloudpickle",
+    ],
     deps = [
         ":log_streamer",
         "//sematic:abstract_future",
-        "//sematic:log_reader",
         "//sematic:api_client",
         "//sematic:calculator",
         "//sematic:future",
+        "//sematic:log_reader",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
         "//sematic/resolvers:cloud_resolver",
-        "//sematic/utils:exceptions",
         "//sematic/scheduling:external_job",
-    ],
-    pip_deps = [
-        "cloudpickle",
+        "//sematic/utils:exceptions",
     ],
 )
 

@@ -57,6 +57,15 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_enum",
+    srcs = ["test_enum.py"],
+    deps = [
+        "//sematic/types/types:enum",
+        "//sematic/types:serialization",
+    ],
+)
+
+pytest_test(
     name = "test_dict",
     srcs = ["test_dict.py"],
     deps = [
@@ -71,5 +80,15 @@ pytest_test(
     srcs = ["test_link.py"],
     deps = [
         "//sematic/types/types:link",
+    ],
+)
+
+pytest_test(
+    name = "test_datetime",
+    srcs = ["test_datetime.py"],
+    deps = [
+        "//sematic/types/types:datetime",
+        "//sematic/types:init",
+        "//sematic/types:serialization",
     ],
 )

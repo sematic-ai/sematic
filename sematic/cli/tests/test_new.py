@@ -3,9 +3,8 @@ import os
 import random
 import string
 
-import pytest
-
 # Third-party
+import pytest
 from click.testing import CliRunner
 
 # Sematic

@@ -9,6 +9,14 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "enum",
+    srcs = ["enum.py"],
+    deps = [
+        "//sematic/types:registry",
+    ],
+)
+
+sematic_py_lib(
     name = "float",
     srcs = ["float.py"],
     deps = [
@@ -94,5 +102,11 @@ sematic_py_lib(
 sematic_py_lib(
     name = "link",
     srcs = ["link.py"],
+    deps = [],
+)
+
+sematic_py_lib(
+    name = "datetime",
+    srcs = ["datetime.py"],
     deps = [],
 )

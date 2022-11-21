@@ -8,11 +8,12 @@ load(
     "py_library",
     "py_test",
 )
+
 # <add python version>: This will need to be updated when a python version is added
-load("@pip_dependencies38//:requirements.bzl", requirement38="requirement")
-load("@pip_dependencies39//:requirements.bzl", requirement39="requirement")
-load("@python3_8//:defs.bzl", interpreter38="interpreter")
-load("@python3_9//:defs.bzl", interpreter39="interpreter")
+load("@pip_dependencies38//:requirements.bzl", requirement38 = "requirement")
+load("@pip_dependencies39//:requirements.bzl", requirement39 = "requirement")
+load("@python3_8//:defs.bzl", interpreter38 = "interpreter")
+load("@python3_9//:defs.bzl", interpreter39 = "interpreter")
 
 # <add python version>: This section will need to be updated when a python version is added
 _PYTHON_VERSION_INFO = dict(
@@ -57,16 +58,15 @@ def env_and_runfiles_for_python(version):
     return (env, runfiles)
 
 def pytest_test(
-    name,
-    srcs,
-    deps = [],
-    pip_deps = None,
-    args = None,
-    data=None,
-    env=None,
-    py_versions=None,
-    **kwargs
-    ):
+        name,
+        srcs,
+        deps = [],
+        pip_deps = None,
+        args = None,
+        data = None,
+        env = None,
+        py_versions = None,
+        **kwargs):
     if pip_deps == None:
         pip_deps = []
     if args == None:
@@ -77,7 +77,7 @@ def pytest_test(
         env = {}
     if py_versions == None:
         py_versions = PY3_DEFAULT_TEST_VERSIONS
-    
+
     if len(py_versions) < 1:
         fail("There must be at least one python version to test")
     py_versions = sorted(py_versions)
@@ -92,7 +92,7 @@ def pytest_test(
         # Use the lowest python version provided for the default target,
         # all other python versions should have a suffix like _py39
         name = name if i == 0 else "{}_{}".format(name, py3_version.lower())
-        
+
         py_test(
             name = name,
             srcs = ["//tools:pytest_runner"] + srcs,
@@ -101,7 +101,7 @@ def pytest_test(
             deps = final_deps,
             data = data + runfiles,
             args = args + ["$(location :%s)" % x for x in srcs],
-            tags = ["nocov"],
+            tags = ["nocov", py3_version.lower()],
             **kwargs
         )
 
@@ -119,12 +119,11 @@ def pytest_test(
                 args = args + ["$(location :%s)" % x for x in srcs],
                 env = dict(
                     PYTHON_COVERAGE = "$(location //:python_coverage_tools)",
-                    **dict(env, **pyenv),
+                    **dict(env, **pyenv)
                 ),
                 tags = ["cov"],
                 **kwargs
             )
-
 
 def sematic_py_lib(name, srcs, deps, pip_deps = None, visibility = None, data = None):
     if pip_deps == None:
@@ -155,8 +154,8 @@ def sematic_py_lib(name, srcs, deps, pip_deps = None, visibility = None, data = 
             tags = ["manual"],
             data = data + runfiles,
         )
-    create_multipy_targets(name, create_targets)
 
+    create_multipy_targets(name, create_targets)
 
 def sematic_example(name, requirements = None, data = None):
     if data == None:
@@ -175,7 +174,8 @@ def sematic_example(name, requirements = None, data = None):
         srcs = ["__main__.py"],
         deps = [],
         pip_deps = [
-            req for req in (requirements or [])
+            req
+            for req in (requirements or [])
         ],
     )
 
@@ -202,35 +202,36 @@ def sematic_example(name, requirements = None, data = None):
                 ":requirements_{}".format(py_version.lower()),
             ] + versioned_pip_deps(
                 pip_deps = ["ipython"],
-                py_version = py_version
+                py_version = py_version,
             ),
             tags = ["manual"],
             data = data + runfiles,
         )
+
     create_multipy_targets(name, create_targets)
 
-
-def sematic_py_binary(name, main, srcs, deps, pip_deps=None, data=None, env=None, **kwargs):
+def sematic_py_binary(name, main, srcs, deps, pip_deps = None, data = None, env = None, **kwargs):
     if data == None:
         data = []
     if env == None:
         env = {}
     if pip_deps == None:
         pip_deps = []
+
     def create_targets(target_name, pyenv, runfiles, py_version):
         full_deps = full_versioned_deps(deps, pip_deps, py_version)
 
         py_binary(
-            name=target_name,
-            main=main,
-            srcs=srcs,
-            deps=full_deps,
-            data=data + runfiles,
-            env=dict(env, **pyenv),
-            **kwargs,
+            name = target_name,
+            main = main,
+            srcs = srcs,
+            deps = full_deps,
+            data = data + runfiles,
+            env = dict(env, **pyenv),
+            **kwargs
         )
-    create_multipy_targets(name, create_targets)
 
+    create_multipy_targets(name, create_targets)
 
 def versioned_pip_deps(pip_deps, py_version):
     final_deps = []
@@ -239,17 +240,14 @@ def versioned_pip_deps(pip_deps, py_version):
         final_deps.append(requirement_func(pip_dep))
     return final_deps
 
-
 def versioned_sematic_deps(deps, py_version):
     final_deps = []
     for dep in deps:
         final_deps.append("{}_{}".format(dep, py_version.lower()))
     return final_deps
 
-
 def full_versioned_deps(deps, pip_deps, py_version):
     return versioned_sematic_deps(deps, py_version) + versioned_pip_deps(pip_deps, py_version)
-
 
 def create_multipy_targets(base_name, target_creator):
     for i, py_version in enumerate(ALL_PY3_VERSIONS):
@@ -257,4 +255,4 @@ def create_multipy_targets(base_name, target_creator):
         (pyenv, runfiles) = env_and_runfiles_for_python(py_version)
         target_creator(full_name, pyenv, runfiles, py_version)
         if i == 0:
-            target_creator(base_name, pyenv, runfiles, py_version)        
+            target_creator(base_name, pyenv, runfiles, py_version)

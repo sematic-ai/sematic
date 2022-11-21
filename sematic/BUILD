@@ -7,6 +7,7 @@ sematic_py_lib(
         ":calculator",
         ":container_images",
         ":resolver",
+        ":retry_settings",
         "//sematic/future_operators:init",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:local_resolver",
@@ -14,22 +15,8 @@ sematic_py_lib(
         "//sematic/resolvers:worker",
         "//sematic/types:casting",
         "//sematic/types:init",
+        "//sematic/utils:exceptions",
     ],
-)
-
-sematic_py_lib(
-    name = "config",
-    srcs = ["config.py"],
-    deps = [
-        ":config_dir",
-        ":user_settings",
-    ],
-)
-
-sematic_py_lib(
-    name = "config_dir",
-    srcs = ["config_dir.py"],
-    deps = [],
 )
 
 sematic_py_lib(
@@ -39,22 +26,15 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "user_settings",
-    srcs = ["user_settings.py"],
-    deps = [
-        ":config_dir",
-    ],
-    pip_deps = [
-        "pyyaml",
-    ],
-)
-
-sematic_py_lib(
     name = "api_client",
     srcs = ["api_client.py"],
+    pip_deps = [
+        "requests",
+    ],
     deps = [
-        ":config",
+        "//sematic:storage",
         "//sematic:versions",
+        "//sematic/config:config",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
@@ -62,26 +42,22 @@ sematic_py_lib(
         "//sematic/db/models:run",
         "//sematic/utils:retry",
     ],
-    pip_deps = [
-        "requests",
-    ]
 )
 
 sematic_py_lib(
     name = "log_reader",
     srcs = ["log_reader.py"],
+    pip_deps = [
+        "requests",
+    ],
     deps = [
-        "//sematic:storage",
         "//sematic:abstract_future",
+        "//sematic:storage",
         "//sematic/db:queries",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/scheduling:external_job",
     ],
-    pip_deps = [
-        "requests",
-    ]
 )
-
 
 sematic_py_lib(
     name = "client",
@@ -102,6 +78,7 @@ sematic_py_lib(
     srcs = ["abstract_future.py"],
     deps = [
         ":abstract_calculator",
+        ":retry_settings",
         "//sematic/resolvers:resource_requirements",
     ],
 )
@@ -112,7 +89,9 @@ sematic_py_lib(
     deps = [
         ":abstract_calculator",
         ":future",
+        ":retry_settings",
         "//sematic/resolvers:resource_requirements",
+        "//sematic/resolvers:type_utils",
         "//sematic/types:casting",
         "//sematic/types:init",
         "//sematic/types:registry",
@@ -142,14 +121,23 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "retry_settings",
+    srcs = ["retry_settings.py"],
+    deps = [
+        "//sematic/utils:exceptions",
+    ],
+)
+
+sematic_py_lib(
     name = "storage",
     srcs = ["storage.py"],
-    deps = [
-        ":user_settings",
-        "//sematic/utils:retry",
-    ],
     pip_deps = [
         "boto3",
+    ],
+    deps = [
+        "//sematic/config:user_settings",
+        "//sematic/utils:memoized_property",
+        "//sematic/utils:retry",
     ],
 )
 
@@ -157,6 +145,21 @@ sematic_py_lib(
     name = "versions",
     srcs = ["versions.py"],
     deps = [],
+)
+
+sematic_py_lib(
+    name = "graph",
+    srcs = ["graph.py"],
+    deps = [
+        ":abstract_future",
+        "//sematic/db/models:artifact",
+        "//sematic/db/models:edge",
+        "//sematic/db/models:factories",
+        "//sematic/db/models:run",
+        "//sematic/resolvers:type_utils",
+        "//sematic/utils:memoized_property",
+        "//sematic/utils:sorting",
+    ],
 )
 
 sematic_py_wheel(

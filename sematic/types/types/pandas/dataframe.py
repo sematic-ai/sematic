@@ -2,7 +2,7 @@
 import json
 from typing import Any, Dict, List
 
-# Third party
+# Third-party
 import pandas
 
 # Sematic

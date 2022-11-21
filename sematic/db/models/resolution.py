@@ -1,16 +1,39 @@
+"""
+Module defining the Resolution data model.
+
+Notes regarding container images
+--------------------------------
+In the case of cloud resolution (using `CloudResolver`), the default behavior
+uses a single container image for remote jobs (driver job + worker jobs). See
+docs/multiple-base-images.md for the rationale behind this design choice.
+
+As an undocumented behavior, Sematic supports different **base** images per
+function. This works using a mapping of tag to base image specified by users in
+the build information (`bases` argument to the `sematic_pipeline` Bazel target
+at this time). Users then specify in the `sematic.func` decorator what base
+image to use with the `base_image_tag` argument that should correspond to one of
+the keys in the mapping passed to `sematic_pipeline`.
+"""
 # Standard Library
+import dataclasses
+import json
 import logging
 from enum import Enum, unique
 from typing import Any, Dict, List, Optional, Union
 
-# Third party
+# Third-party
 from sqlalchemy import Column, types
 from sqlalchemy.orm import validates
 
 # Sematic
 from sematic.db.models.base import Base
+from sematic.db.models.git_info import GitInfo
 from sematic.db.models.has_external_jobs_mixin import HasExternalJobsMixin
-from sematic.db.models.json_encodable_mixin import ENUM_KEY, JSONEncodableMixin
+from sematic.db.models.json_encodable_mixin import (
+    ENUM_KEY,
+    JSON_KEY,
+    JSONEncodableMixin,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +69,7 @@ class ResolutionStatus(Enum):
     RUNNING = "RUNNING"
     FAILED = "FAILED"
     COMPLETE = "COMPLETE"
+    CANCELED = "CANCELED"
 
     @classmethod
     def is_allowed_transition(
@@ -80,12 +104,26 @@ _ALLOWED_TRANSITIONS = {
         ResolutionStatus.SCHEDULED,
         ResolutionStatus.RUNNING,
         ResolutionStatus.FAILED,
+        ResolutionStatus.CANCELED,
     },
-    ResolutionStatus.CREATED: {ResolutionStatus.SCHEDULED, ResolutionStatus.FAILED},
-    ResolutionStatus.SCHEDULED: {ResolutionStatus.RUNNING, ResolutionStatus.FAILED},
-    ResolutionStatus.RUNNING: {ResolutionStatus.COMPLETE, ResolutionStatus.FAILED},
+    ResolutionStatus.CREATED: {
+        ResolutionStatus.SCHEDULED,
+        ResolutionStatus.FAILED,
+        ResolutionStatus.CANCELED,
+    },
+    ResolutionStatus.SCHEDULED: {
+        ResolutionStatus.RUNNING,
+        ResolutionStatus.FAILED,
+        ResolutionStatus.CANCELED,
+    },
+    ResolutionStatus.RUNNING: {
+        ResolutionStatus.COMPLETE,
+        ResolutionStatus.FAILED,
+        ResolutionStatus.CANCELED,
+    },
     ResolutionStatus.COMPLETE: {},
     ResolutionStatus.FAILED: {},
+    ResolutionStatus.CANCELED: {},
 }
 
 
@@ -102,7 +140,7 @@ class ResolutionKind(Enum):
 
 
 class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
-    """Represents a session of a resolver
+    """Represents a session of a resolver.
 
     Attributes
     ----------
@@ -112,12 +150,18 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
         The state of the resolver session, see ResolutionStatus.
     kind:
         The kind of resolver session (ex: on k8s or not).
-    docker_image_uri:
-        The docker image URI for the resolution. May be null when
-        doing a non-detached (local) resolution
+    git_info:
+        Information about the git remote, branch, commit, and dirty bit
+        for the environment from which the resolution was submitted
     settings_env_vars:
         The Sematic settings from the user's environment for the user
         who launched this resolution.
+    container_image_uri:
+        The image URI used for the driver job.
+    container_image_uris:
+        A mapping of tag to base images to be used for runs in the graph
+        based on the `base_image_tag` argument passed to the `sematic.func`
+        decorator.
     """
 
     __tablename__ = "resolutions"
@@ -133,8 +177,8 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     kind: ResolutionKind = Column(  # type: ignore
         types.String(), nullable=False, info={ENUM_KEY: ResolutionKind}
     )
-    docker_image_uri: Optional[str] = Column(
-        types.String(), nullable=True, default=None
+    git_info_json: Optional[str] = Column(  # type: ignore
+        types.JSON(), nullable=True, info={JSON_KEY: True}
     )
     settings_env_vars: Dict[str, str] = Column(
         types.JSON, nullable=False, default=lambda: {}
@@ -142,6 +186,8 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     external_jobs_json: Optional[List[Dict[str, Any]]] = Column(
         types.JSON(), nullable=True
     )
+    container_image_uris: Optional[Dict[str, str]] = Column(types.JSON(), nullable=True)
+    container_image_uri: Optional[str] = Column(types.String(), nullable=True)
 
     @validates("status")
     def validate_status(self, key, value) -> str:
@@ -218,7 +264,7 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
         ------
         InvalidResolution if the resolution is not valid.
         """
-        if self.kind != ResolutionKind.LOCAL.value and self.docker_image_uri is None:
+        if self.kind != ResolutionKind.LOCAL.value and self.container_image_uri is None:
             raise InvalidResolution(
                 f"Non-local resolution {self.root_id} must have a docker URI"
             )
@@ -226,3 +272,23 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
             raise InvalidResolution(
                 f"New resolution {self.root_id} can't begin in the {self.status} state."
             )
+
+    @property
+    def git_info(self) -> Optional[GitInfo]:
+        if self.git_info_json is None:
+            return None
+
+        json_encodable = json.loads(self.git_info_json)
+        return GitInfo(**json_encodable)
+
+    @git_info.setter
+    def git_info(self, value: Optional[GitInfo]) -> None:
+        if value is None:
+            self.git_info_json = None
+            return
+
+        # git_info_json is not mutable; any update posted to api_client will be rejected
+        # we therefore need to sort the keys
+        # for the same reason, we can't use value_to_json_encodable, because it imposes
+        # the values/types/root_type semantics
+        self.git_info_json = json.dumps(dataclasses.asdict(value), sort_keys=True)

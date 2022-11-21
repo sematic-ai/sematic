@@ -56,7 +56,7 @@ to
 from sematic.examples.my_package.pipeline import pipeline
 ```
 
-### Intregrate in the build system.
+### Integrate in the build system.
 
 The Sematic codebase uses [Bazel](https://bazel.build/) as a build system.
 
@@ -124,5 +124,8 @@ Requests](https://github.com/sematic-ai/sematic/compare) to create one.
 To increase your chances of being merged fast:
 
 * Add a comprehensive description to your pipeline
-* Make sure the Circle CI build passes for your branch (Use `make pre_commit` to run the linter and code formatter)
+* Ensure your code is properly formatted and type checked
+  * Make sure you have the dev tools installed by running `pip3 install -r requirements/ci-requirements.txt` (you only ever need to do this once)
+  * Use `make pre-commit` to run the linter and code formatter
+* Make sure the Circle CI build passes for your branch (linked in the checks section at the bottom of the GitHub PR page)
 * Add a specific committer as a reviewer, such as `neutralino1`

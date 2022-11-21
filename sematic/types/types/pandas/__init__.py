@@ -1,4 +1,5 @@
 try:
+    # Third-party
     import pandas  # noqa: F401
 except ImportError:
     pass

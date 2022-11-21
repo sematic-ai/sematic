@@ -84,7 +84,7 @@ you call `.resolve()`) must all be [concrete](./glossary.md#concrete-inputs).
 {% endhint %}
 
 
-### Passing and returning lists of futures
+### Passing and returning collections of futures
 
 The following example is supported:
 
@@ -106,7 +106,12 @@ def pipeline(a: float, b: float) -> List[float]:
 ```
 
 Here Sematic will know how to convert `List[Future[float]]` into
-`Future[List[float]]`.
+`Future[List[float]]`. Sematic will perform analogous conversion for
+turning `Tuple[Future[float], Future[str]]` into
+`Future[Tuple[float, str]]`. Note that using futures nested in
+tuples-in-lists is not supported. Other collections, such as `Dict`,
+`Set`, etc. do NOT currently perform these kinds of automatic
+conversions; you will need to do them explicitly.
 
 ### Item access
 

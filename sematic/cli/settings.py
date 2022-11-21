@@ -1,45 +1,70 @@
+# Standard Library
+import sys
+
 # Third-party
 import click
-import yaml
 
 # Sematic
 from sematic.cli.cli import cli
-from sematic.user_settings import SettingsVar, get_all_user_settings, set_user_settings
+from sematic.config.user_settings import (
+    UserSettingsVar,
+    delete_user_settings,
+    dump_settings,
+    get_active_user_settings,
+    set_user_settings,
+)
 
 
 @cli.group("settings")
-def settings():
+def settings() -> None:
     pass
 
 
-@settings.command("show", short_help="Show active settings")
-def show_settings():
+@settings.command("show", short_help="Show the currently active settings")
+def show_settings() -> None:
     """
-    Show currently active settings.
+    Show the currently active settings.
     """
-    settings = get_all_user_settings()
-    click.echo("Active settings:\n")
-    click.echo(yaml.dump(settings, default_flow_style=False))
+    profile_settings_dump = dump_settings(get_active_user_settings())
+    click.echo(f"Active settings:\n{profile_settings_dump}")
 
 
-@settings.command("set", short_help="Set settings value")
+@settings.command("set", short_help="Set a settings value")
 @click.argument("var", type=click.STRING)
 @click.argument("value", type=click.STRING)
-def set_settings_cli(var, value):
+def set_settings(var: str, value: str) -> None:
     """
-    Set a settings value
+    Set a settings value.
     """
     try:
-        settings_var = SettingsVar[var]
+        settings_var = UserSettingsVar[var]
 
-        # Normalize booleans
-        value = {"true": True, "false": False}.get(value, value)
-
-        set_user_settings(settings_var, value)
-        click.echo("Successfully set {} to {}".format(var, repr(value)))
     except KeyError:
-        click.echo(
-            "Invalid settings key: {}\n\nAvailable keys are:\n{}".format(
-                var, "\n".join([m.value for m in SettingsVar.__members__.values()])
-            )
-        )
+        keys = "\n".join([var.value for var in UserSettingsVar])  # type: ignore
+        click.echo(f"Invalid settings key: {var}! Available keys:\n{keys}\n")
+        sys.exit(1)
+
+    set_user_settings(settings_var, value)
+    click.echo(f"Successfully set {var} to {repr(value)}\n")
+
+
+@settings.command("delete", short_help="Delete a settings value")
+@click.argument("var", type=click.STRING)
+def delete_settings(var: str) -> None:
+    """
+    Delete a settings value
+    """
+    try:
+        settings_var = UserSettingsVar[var]
+    except KeyError:
+        keys = "\n".join([var.value for var in UserSettingsVar])  # type: ignore
+        click.echo(f"Invalid settings key: {var}! Available keys:\n{keys}\n")
+        sys.exit(1)
+
+    try:
+        delete_user_settings(settings_var)
+    except ValueError as e:
+        click.echo(f"{e}\n")
+        sys.exit(1)
+
+    click.echo(f"Successfully deleted {var}\n")

@@ -6,6 +6,7 @@ sematic_py_lib(
         ":type",
         "//sematic/types/types:bool",
         "//sematic/types/types:dataclass",
+        "//sematic/types/types:enum",
         "//sematic/types/types:float",
         "//sematic/types/types:integer",
         "//sematic/types/types:none",
@@ -15,6 +16,7 @@ sematic_py_lib(
         "//sematic/types/types:tuple",
         "//sematic/types/types:dict",
         "//sematic/types/types:str",
+        "//sematic/types/types:datetime",
         # Does not actually create a dependency on torch
         "//sematic/types/types/pytorch:init",
         # Does not actually create a dependency on plotly

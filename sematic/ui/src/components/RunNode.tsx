@@ -15,6 +15,9 @@ function getColor(futureState: string, theme: Theme): PaletteColor {
   if (futureState === "RESOLVED") {
     return theme.palette.success;
   }
+  if (futureState === "RETRYING") {
+    return theme.palette.warning;
+  }
   if (["SCHEDULED", "RAN"].includes(futureState)) {
     return theme.palette.info;
   }
@@ -71,6 +74,7 @@ export default function RunNode(props: NodeProps) {
           cursor: "pointer",
           borderColor: lighten(color.light, props.selected ? 0.5 : 0.5),
           backgroundColor: lighten(color.light, props.selected ? 0.7 : 0.9),
+          color: color.dark,
           //"&:hover": {
           //  backgroundColor: lighten(color.light, props.selected ? 0.7 : 0.87),
           //},

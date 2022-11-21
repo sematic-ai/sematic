@@ -26,11 +26,11 @@
 * [Snowflake](snowflake.md)
 * [Grafana](grafana.md)
 * [Apache Spark](integrations.md)
-* [Google Dataflow](integrations.md)
-* [Google BigQuery](integrations.md)
-* [AWS Redshift](integrations.md)
-* [DBT](integrations.md)
-* [Slack](integrations.md)
+* [Google Dataflow](dataflow.md)
+* [Google BigQuery](bigquery.md)
+* [AWS Redshift](redshift.md)
+* [DBT](dbt.md)
+* [Slack](slack.md)
 
 ## Contribute
 

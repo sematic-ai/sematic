@@ -79,6 +79,12 @@ flask-socketio==5.3.1
     # via -r requirements/requirements.in
 fonttools==4.37.3
     # via matplotlib
+git-python==1.0.3
+    # via -r requirements/requirements.in
+gitdb==4.0.9
+    # via gitpython
+gitpython==3.1.27
+    # via git-python
 google-auth==2.11.1
     # via
     #   -r requirements/requirements.in
@@ -219,7 +225,9 @@ python-dateutil==2.8.2
 python-engineio==4.3.4
     # via python-socketio
 python-socketio==5.7.1
-    # via flask-socketio
+    # via
+    #   -r requirements/requirements.in
+    #   flask-socketio
 pytz==2022.2.1
     # via
     #   pandas
@@ -264,6 +272,8 @@ six==1.16.0
     #   kubernetes
     #   patsy
     #   python-dateutil
+smmap==5.0.0
+    # via gitdb
 snowflake-connector-python==2.7.12
     # via -r requirements/requirements.in
 sqlalchemy==1.4.36
@@ -312,7 +322,9 @@ urllib3==1.26.12
 wcwidth==0.2.5
     # via prompt-toolkit
 websocket-client==1.4.1
-    # via kubernetes
+    # via
+    #   -r requirements/requirements.in
+    #   kubernetes
 werkzeug==2.2.2
     # via
     #   -r requirements/requirements.in

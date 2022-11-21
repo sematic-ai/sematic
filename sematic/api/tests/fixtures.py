@@ -1,14 +1,13 @@
 # Standard Library
 import contextlib
-import functools
 import re
 from http import HTTPStatus
-from typing import Any, Callable, Dict
+from typing import Dict
+from unittest import mock
 from urllib.parse import urljoin
 
-import flask.testing
-
 # Third-party
+import flask.testing
 import pytest
 
 # responses 0.21.0 has type stubs but they break mypy
@@ -17,12 +16,12 @@ import responses  # type: ignore
 import werkzeug
 
 # Sematic
-import sematic.user_settings as user_settings
+import sematic.config.user_settings as user_settings
 
 # Importing from server instead of app to make sure
 # all endpoints are loaded
 from sematic.api.server import sematic_api
-from sematic.config import get_config, switch_env
+from sematic.config.config import get_config, switch_env
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 
 
@@ -75,15 +74,12 @@ def mock_requests(test_client):
 
 
 @contextlib.contextmanager
-def mock_user_settings(settings: Dict[user_settings.SettingsVar, Any]):
+def mock_user_settings(settings: Dict[user_settings.UserSettingsVar, str]):
     # Force load everything first
-    user_settings.get_all_user_settings()
+    user_settings.get_active_user_settings()
 
     original_settings = user_settings._settings
-
-    user_settings._settings = {
-        "default": {key.value: value for key, value in settings.items()}
-    }
+    user_settings._settings = user_settings.UserSettings(default=settings)
 
     try:
         yield settings
@@ -91,21 +87,26 @@ def mock_user_settings(settings: Dict[user_settings.SettingsVar, Any]):
         user_settings._settings = original_settings
 
 
-def mock_no_auth(fn: Callable) -> Callable:
-    @functools.wraps(fn)
-    def no_auth_fn(*args, **kwargs):
-        with mock_user_settings(
-            {user_settings.SettingsVar.SEMATIC_AUTHENTICATE: False}
-        ):
-            fn(*args, **kwargs)
-
-    return no_auth_fn
-
-
 def make_auth_test(endpoint: str, method: str = "GET"):
     def test_auth(test_client: flask.testing.FlaskClient):
-        with mock_user_settings({user_settings.SettingsVar.SEMATIC_AUTHENTICATE: True}):
+        with mock_user_settings(
+            {user_settings.UserSettingsVar.SEMATIC_AUTHENTICATE: "true"}
+        ):
             response = getattr(test_client, method.lower())(endpoint)
             assert response.status_code == HTTPStatus.UNAUTHORIZED
 
     return test_auth
+
+
+@pytest.fixture
+def mock_socketio():
+    with mock.patch("socketio.Client.connect"):
+        yield
+
+
+@pytest.fixture
+def mock_auth():
+    with mock_user_settings(
+        {user_settings.UserSettingsVar.SEMATIC_AUTHENTICATE: "false"}
+    ):
+        yield

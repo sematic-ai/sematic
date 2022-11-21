@@ -4,7 +4,7 @@
 Code should be formatted by Black and linted by flake8.
 
 ## External modules
-When possible, use full path to imported function/class to highlight that the
+When possible, use the full path to imported function/class to highlight that the
 object is imported.
 
 Example:

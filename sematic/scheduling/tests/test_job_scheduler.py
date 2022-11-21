@@ -1,10 +1,12 @@
 # Standard Library
 from unittest import mock
 
+# Third-party
 import pytest
 
 # Sematic
 from sematic.abstract_future import FutureState
+from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.resolvers.resource_requirements import (
@@ -60,13 +62,18 @@ def resolution(run):
         root_id=run.id,
         status=ResolutionStatus.CREATED,
         kind=ResolutionKind.KUBERNETES,
-        docker_image_uri="my.uri",
+        container_image_uri="my.uri",
+        container_image_uris={"default": "my.uri"},
+        git_info=GitInfo(
+            remote="remote", branch="branch", commit="commit", dirty=False
+        ),
         settings_env_vars={"SOME_ENV_VAR": "some_value"},
     )
 
 
-def test_schedule_run(mock_k8s, run, resolution):
+def test_schedule_run(mock_k8s, run: Run, resolution: Resolution):
     resolution.status = ResolutionStatus.RUNNING
+    run.container_image_uri = resolution.container_image_uri
     scheduled = schedule_run(run, resolution)
     assert len(scheduled.external_jobs) == 1
     external_job = scheduled.external_jobs[0]
@@ -74,23 +81,25 @@ def test_schedule_run(mock_k8s, run, resolution):
     mock_k8s.schedule_run_job.assert_called_once()
     mock_k8s.schedule_run_job.assert_called_with(
         run_id=run.id,
-        image=resolution.docker_image_uri,
+        image=resolution.container_image_uri,
         user_settings=resolution.settings_env_vars,
         resource_requirements=run.resource_requirements,
         try_number=0,
     )
 
 
-def test_schedule_resolution(mock_k8s, resolution):
-    scheduled = schedule_resolution(resolution)
+def test_schedule_resolution(mock_k8s, resolution: Resolution):
+    scheduled = schedule_resolution(resolution, max_parallelism=3, rerun_from="foobar")
     assert len(scheduled.external_jobs) == 1
     external_job = scheduled.external_jobs[0]
     assert isinstance(external_job, KubernetesExternalJob)
     mock_k8s.schedule_resolution_job.assert_called_once()
     mock_k8s.schedule_resolution_job.assert_called_with(
         resolution_id=resolution.root_id,
-        image=resolution.docker_image_uri,
+        image=resolution.container_image_uri,
         user_settings=resolution.settings_env_vars,
+        max_parallelism=3,
+        rerun_from="foobar",
     )
 
 

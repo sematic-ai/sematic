@@ -8,15 +8,7 @@ pytest_test(
         "//sematic:calculator",
         "//sematic:future",
         "//sematic/db/tests:fixtures",
-    ],
-)
-
-pytest_test(
-    name = "test_config_dir",
-    srcs = ["test_config_dir.py"],
-    deps = [
-        "//sematic:config_dir",
-        "//sematic/tests:fixtures",
+        "//sematic/utils:exceptions",
     ],
 )
 
@@ -24,17 +16,17 @@ pytest_test(
 pytest_test(
     name = "test_38_interpreter",
     srcs = ["test_38_interpreter.py"],
-    deps = [],
     pip_deps = ["requests"],
-    py_versions=[PY3.PY38],
+    py_versions = [PY3.PY38],
+    deps = [],
 )
 
 pytest_test(
     name = "test_39_interpreter",
     srcs = ["test_39_interpreter.py"],
-    deps = [],
     pip_deps = ["requests"],
-    py_versions=[PY3.PY39],
+    py_versions = [PY3.PY39],
+    deps = [],
 )
 
 pytest_test(
@@ -42,8 +34,8 @@ pytest_test(
     srcs = ["test_api_client.py"],
     deps = [
         "//sematic:api_client",
-        "//sematic:config",
         "//sematic:versions",
+        "//sematic/config:config",
         "//sematic/db/models:factories",
         "//sematic/tests:fixtures",
     ],
@@ -81,36 +73,36 @@ pytest_test(
         "//sematic:log_reader",
         "//sematic:storage",
         "//sematic/db:queries",
-        "//sematic/tests:fixtures",
         "//sematic/db/tests:fixtures",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/scheduling:external_job",
-    ],
-)
-
-pytest_test(
-    name = "test_user_settings",
-    srcs = ["test_user_settings.py"],
-    deps = [
-        "//sematic:config",
-        "//sematic:user_settings",
+        "//sematic/tests:fixtures",
     ],
 )
 
 pytest_test(
     name = "test_versions",
     srcs = ["test_versions.py"],
-    deps = [
-        "//sematic:versions",
-    ],
-    pip_deps = [
-        "pyyaml",
-    ],
     data = [
         "//:docs/changelog.md",
         "//:helm/sematic/values.yaml",
     ],
     env = {"BAZEL_WHEEL_VERSION": wheel_version_string},
+    pip_deps = [
+        "pyyaml",
+    ],
+    deps = [
+        "//sematic:versions",
+    ],
+)
+
+pytest_test(
+    name = "test_retry_settings",
+    srcs = ["test_retry_settings.py"],
+    deps = [
+        "//sematic:retry_settings",
+        "//sematic/utils:exceptions",
+    ],
 )
 
 sematic_py_lib(
@@ -119,5 +111,21 @@ sematic_py_lib(
     deps = [
         "//sematic:api_client",
         "//sematic:storage",
+    ],
+)
+
+pytest_test(
+    name = "test_graph",
+    srcs = ["test_graph.py"],
+    deps = [
+        "//sematic:abstract_future",
+        "//sematic:api_client",
+        "//sematic:calculator",
+        "//sematic:graph",
+        "//sematic/api/tests:fixtures",
+        "//sematic/db/models:factories",
+        "//sematic/db/tests:fixtures",
+        "//sematic/resolvers:local_resolver",
+        "//sematic/resolvers/tests:fixtures",
     ],
 )

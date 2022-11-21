@@ -15,6 +15,16 @@ def test_set_description():
     assert run.description == "abc"
 
 
+def test_description_format_indended_spaces():
+    run = Run(description="   line1\n\n    line2")
+    assert run.description == "line1\n\nline2"
+
+
+def test_description_format_remove_tab():
+    run = Run(description="   line1\n\n\tline2")
+    assert run.description == "line1\n\nline2"
+
+
 def test_external_jobs():
     run = Run()
     assert run.external_jobs_json is None

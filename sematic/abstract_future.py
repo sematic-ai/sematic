@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 # Sematic
 from sematic.abstract_calculator import AbstractCalculator
 from sematic.resolvers.resource_requirements import ResourceRequirements
+from sematic.retry_settings import RetrySettings
 
 
 class FutureState(enum.Enum):
@@ -26,6 +27,9 @@ class FutureState(enum.Enum):
     SCHEDULED = "SCHEDULED"
     FAILED = "FAILED"
     NESTED_FAILED = "NESTED_FAILED"
+    # The future failed and is being queued for retrying
+    RETRYING = "RETRYING"
+    CANCELED = "CANCELED"
 
     @classmethod
     def as_object(cls, future_state: Union[str, "FutureState"]) -> "FutureState":
@@ -58,6 +62,7 @@ _TERMINAL_STATES = {
     FutureState.NESTED_FAILED,
     FutureState.FAILED,
     FutureState.RESOLVED,
+    FutureState.CANCELED,
 }
 
 
@@ -77,6 +82,8 @@ class FutureProperties:
     name: str
     tags: List[str]
     resource_requirements: Optional[ResourceRequirements] = None
+    retry_settings: Optional[RetrySettings] = None
+    base_image_tag: Optional[str] = None
 
 
 class AbstractFuture(abc.ABC):
@@ -106,8 +113,10 @@ class AbstractFuture(abc.ABC):
         kwargs: Dict[str, Any],
         inline: bool,
         resource_requirements: Optional[ResourceRequirements] = None,
+        retry_settings: Optional[RetrySettings] = None,
+        base_image_tag: Optional[str] = None,
     ):
-        self.id: str = uuid.uuid4().hex
+        self.id: str = make_future_id()
         self.calculator = calculator
         self.kwargs = kwargs
         # We don't want to replace futures in kwargs, because it holds
@@ -123,8 +132,10 @@ class AbstractFuture(abc.ABC):
         self._props = FutureProperties(
             inline=inline,
             resource_requirements=resource_requirements,
+            retry_settings=retry_settings,
             name=calculator.__name__,
             tags=[],
+            base_image_tag=base_image_tag,
         )
 
     @property
@@ -136,3 +147,16 @@ class AbstractFuture(abc.ABC):
         TODO: Migrate all future properties to FutureProperties
         """
         return self._props
+
+    def __repr__(self):
+        parent_id = self.parent_future.id if self.parent_future is not None else None
+        nested_id = self.nested_future.id if self.nested_future is not None else None
+        return (
+            f"Future(id={self.id}, func={self.calculator}, "
+            f"state={self.state.value}, parent_id={parent_id}, "
+            f"nested_id={nested_id}, value={self.value})"
+        )
+
+
+def make_future_id() -> str:
+    return uuid.uuid4().hex

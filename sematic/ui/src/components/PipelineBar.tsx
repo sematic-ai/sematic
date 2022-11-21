@@ -1,50 +1,146 @@
 import { ChevronLeft } from "@mui/icons-material";
 import {
   Box,
-  Button,
   FormControl,
-  IconButton,
   InputLabel,
   Link,
   MenuItem,
   Select,
   SelectChangeEvent,
-  Snackbar,
   Typography,
   useTheme,
 } from "@mui/material";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { Run } from "../Models";
+import { UserContext } from "..";
+import { Resolution, Run } from "../Models";
 import { RunListPayload } from "../Payloads";
 import { fetchJSON, pipelineSocket } from "../utils";
 import CalculatorPath from "./CalculatorPath";
+import GitInfoBox from "./GitInfo";
 import Loading from "./Loading";
 import { RunFilterType } from "./RunList";
 import RunStateChip from "./RunStateChip";
 import TimeAgo from "./TimeAgo";
-import CloseIcon from "@mui/icons-material/Close";
-import { UserContext } from "..";
+import { ActionMenu, ActionMenuItem } from "./ActionMenu";
+import { SnackBarContext } from "./SnackBarProvider";
+
+function PipelineActionMenu(props: {
+  rootRun: Run;
+  resolution: Resolution;
+  onCancel: () => void;
+}) {
+  const { rootRun, resolution, onCancel } = props;
+  const { user } = useContext(UserContext);
+  const theme = useTheme();
+  const { setSnackMessage } = useContext(SnackBarContext);
+
+  useEffect(() => {
+    pipelineSocket.removeAllListeners("cancel");
+    pipelineSocket.on("cancel", (args: { calculator_path: string }) => {
+      if (args.calculator_path === rootRun.calculator_path) {
+        setSnackMessage({ message: "Pipeline run was canceled." });
+        onCancel();
+      }
+    });
+  });
+
+  const onCancelClick = useCallback(() => {
+    if (!window.confirm("Are you sure you want to cancel this pipeline?"))
+      return;
+    fetchJSON({
+      url: "/api/v1/resolutions/" + rootRun.id + "/cancel",
+      method: "PUT",
+      apiKey: user?.api_key,
+      callback: (payload) => {},
+      setError: (error) => {
+        setSnackMessage({ message: "Failed to cancel pipeline run." });
+      },
+    });
+  }, [rootRun.id, setSnackMessage]);
+
+  const onRerunClick = useCallback(
+    (rerunFrom?: string) => {
+      fetchJSON({
+        url: "/api/v1/resolutions/" + rootRun.id + "/rerun",
+        method: "POST",
+        body: { rerun_from: rerunFrom },
+        apiKey: user?.api_key,
+        callback: (payload) => {},
+        setError: (error) => {
+          if (!error) return;
+          setSnackMessage({ message: "Failed to trigger rerun." });
+        },
+      });
+    },
+    [rootRun.id]
+  );
+
+  const onCopyShareClick = useCallback(() => {
+    navigator.clipboard.writeText(window.location.href);
+    setSnackMessage({ message: "Pipeline link copied" });
+  }, []);
+
+  const cancelEnabled = useMemo(
+    () =>
+      !["FAILED", "NESTED_FAILED", "RESOLVED", "CANCELED"].includes(
+        rootRun.future_state
+      ),
+    [rootRun.future_state]
+  );
+
+  const rerunEnable = useMemo(
+    () => !!resolution.container_image_uri,
+    [resolution.container_image_uri]
+  );
+
+  return (
+    <>
+      <ActionMenu title="Actions">
+        <ActionMenuItem
+          title="Rerun"
+          enabled={rerunEnable}
+          onClick={() => onRerunClick(rootRun.id)}
+          beta
+        >
+          <Typography>Rerun pipeline from scratch.</Typography>
+          <Typography>Only available for remote resolutions.</Typography>
+        </ActionMenuItem>
+        <ActionMenuItem title="Retry from failure" enabled={false} soon>
+          <Typography>Rerun pipeline from where it failed.</Typography>
+          <Typography>Coming soon.</Typography>
+        </ActionMenuItem>
+        <ActionMenuItem title="Copy share link" onClick={onCopyShareClick}>
+          <Typography>Copy link to this exact resolution.</Typography>
+        </ActionMenuItem>
+        <ActionMenuItem
+          title="Cancel Execution"
+          titleColor={theme.palette.error.dark}
+          enabled={cancelEnabled}
+          onClick={onCancelClick}
+        >
+          <Typography>Cancel all ongoing and upcoming runs.</Typography>
+        </ActionMenuItem>
+      </ActionMenu>
+    </>
+  );
+}
 
 export default function PipelineBar(props: {
   calculatorPath: string;
-  onRootRunChange: (run: Run) => void;
-  setInitialRootRun: boolean;
-  initialRootRun?: Run;
+  onRootIdChange: (rootId: string) => void;
+  rootRun?: Run;
+  resolution?: Resolution;
+  setRootRun: boolean;
 }) {
-  const { onRootRunChange, calculatorPath, setInitialRootRun, initialRootRun } =
+  const { calculatorPath, onRootIdChange, setRootRun, rootRun, resolution } =
     props;
-  const [rootRun, setRootRun] = useState<Run | undefined>(initialRootRun);
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
   const [latestRuns, setLatestRuns] = useState<Run[]>([]);
-  const [hasNewRun, setHasNewRun] = useState(false);
   const { user } = useContext(UserContext);
+  const { setSnackMessage } = useContext(SnackBarContext);
 
   const theme = useTheme();
-
-  useMemo(() => {
-    if (initialRootRun) setRootRun(initialRootRun);
-  }, [initialRootRun]);
 
   const fetchLatestRuns = useCallback(
     (calcPath: string, onResults: (runs: Run[]) => void) => {
@@ -69,25 +165,29 @@ export default function PipelineBar(props: {
   );
 
   useEffect(() => {
-    if (calculatorPath === undefined) return;
-    fetchLatestRuns(calculatorPath, (runs) => {
+    fetchLatestRuns(calculatorPath, (runs: Run[]) => {
       setLatestRuns(runs);
-      if (setInitialRootRun) {
-        setRootRun(runs[0]);
-        onRootRunChange(runs[0]);
+      if (runs.length > 0 && setRootRun) {
+        onRootIdChange(runs[0].id);
       }
     });
-  }, [calculatorPath, fetchLatestRuns, onRootRunChange, setInitialRootRun]);
+  }, [setRootRun, calculatorPath]);
 
   useEffect(() => {
-    pipelineSocket.removeAllListeners();
+    pipelineSocket.removeAllListeners("update");
     pipelineSocket.on("update", (args: { calculator_path: string }) => {
       if (args.calculator_path === calculatorPath) {
         fetchLatestRuns(calculatorPath, (runs) => {
-          setLatestRuns(runs);
           if (runs[0].id !== latestRuns[0].id) {
-            setHasNewRun(true);
+            setSnackMessage({
+              message: "New run available.",
+              actionName: "view",
+              autoHide: false,
+              closable: true,
+              onClick: () => onRootIdChange(runs[0].id),
+            });
           }
+          setLatestRuns(runs);
         });
       }
     });
@@ -95,45 +195,16 @@ export default function PipelineBar(props: {
 
   const onSelect = useCallback(
     (event: SelectChangeEvent) => {
-      const newRootRunId = event.target.value;
-      latestRuns.forEach((run) => {
-        if (run.id === newRootRunId) {
-          setRootRun(run);
-          onRootRunChange(run);
-          setHasNewRun(false);
-        }
-      });
+      onRootIdChange(event.target.value);
     },
-    [latestRuns, onRootRunChange]
+    [onRootIdChange]
   );
 
-  const selectLatestRun = useCallback(() => {
-    setRootRun(latestRuns[0]);
-    onRootRunChange(latestRuns[0]);
-  }, [latestRuns, onRootRunChange]);
-
-  const snackBarAction = (
-    <>
-      <Button
-        color="secondary"
-        size="small"
-        onClick={() => {
-          selectLatestRun();
-          setHasNewRun(false);
-        }}
-      >
-        View
-      </Button>
-      <IconButton
-        size="small"
-        aria-label="close"
-        color="inherit"
-        onClick={() => setHasNewRun(false)}
-      >
-        <CloseIcon fontSize="small" />
-      </IconButton>
-    </>
-  );
+  const onCancel = useCallback(() => {
+    fetchLatestRuns(calculatorPath, (runs) => {
+      setLatestRuns(runs);
+    });
+  }, [setLatestRuns, fetchLatestRuns]);
 
   if (error || !isLoaded) {
     return (
@@ -151,16 +222,9 @@ export default function PipelineBar(props: {
           borderColor: theme.palette.grey[200],
           paddingY: 3,
           display: "grid",
-          gridTemplateColumns: "70px 1fr auto",
+          gridTemplateColumns: "70px 1fr auto auto auto",
         }}
       >
-        <Snackbar
-          open={hasNewRun}
-          anchorOrigin={{ vertical: "top", horizontal: "right" }}
-          message="New run available"
-          sx={{ marginTop: "50px" }}
-          action={snackBarAction}
-        />
         <Box
           sx={{
             gridColumn: 1,
@@ -178,9 +242,31 @@ export default function PipelineBar(props: {
           <Typography variant="h4">{rootRun.name}</Typography>
           <CalculatorPath calculatorPath={rootRun.calculator_path} />
         </Box>
+        <Box sx={{ gridColumn: 3, pt: 2, px: 7 }}>
+          {resolution && (
+            <PipelineActionMenu
+              rootRun={rootRun}
+              onCancel={onCancel}
+              resolution={resolution}
+            />
+          )}
+        </Box>
         <Box
           sx={{
-            gridColumn: 3,
+            gridColumn: 4,
+            textAlign: "left",
+            paddingX: 10,
+            borderLeft: 1,
+            borderColor: theme.palette.grey[200],
+            pt: 1,
+          }}
+        >
+          <GitInfoBox resolution={resolution} />
+        </Box>
+
+        <Box
+          sx={{
+            gridColumn: 5,
             borderLeft: 1,
             borderColor: theme.palette.grey[200],
             paddingX: 10,

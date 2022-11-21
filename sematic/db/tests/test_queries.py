@@ -3,8 +3,9 @@ import pytest
 
 # Sematic
 from sematic.api.tests.fixtures import (  # noqa: F401
-    mock_no_auth,
+    mock_auth,
     mock_requests,
+    mock_socketio,
     test_client,
 )
 from sematic.calculator import func
@@ -30,6 +31,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
+from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa: F401
 from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 
 
@@ -65,6 +67,16 @@ def test_save_run(test_db, persisted_run: Run):  # noqa: F811
 def test_get_resolution(test_db, persisted_resolution: Resolution):  # noqa: F811
     fetched_resolution = get_resolution(persisted_resolution.root_id)
     assert fetched_resolution.root_id == persisted_resolution.root_id
+    assert fetched_resolution.status == persisted_resolution.status
+    assert fetched_resolution.kind == persisted_resolution.kind
+    assert (
+        fetched_resolution.container_image_uris
+        == persisted_resolution.container_image_uris
+    )
+    assert fetched_resolution.git_info == persisted_resolution.git_info
+    assert (
+        fetched_resolution.settings_env_vars == persisted_resolution.settings_env_vars
+    )
 
 
 def test_save_resolution(test_db, persisted_resolution: Resolution):  # noqa: F811
@@ -103,8 +115,10 @@ def pipeline(a: float, b: float) -> float:
     "fn, run_count, artifact_count, edge_count",
     ((get_run_graph, 1, 3, 3), (get_root_graph, 3, 4, 8)),
 )
-@mock_no_auth
 def test_get_run_graph(
+    mock_auth,  # noqa: F811
+    mock_local_resolver_storage,  # noqa: F811
+    mock_socketio,  # noqa: F811
     fn,
     run_count: int,
     artifact_count: int,
@@ -112,6 +126,7 @@ def test_get_run_graph(
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
+
     future = pipeline(1, 2)
     future.resolve()
 

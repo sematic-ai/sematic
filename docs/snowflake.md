@@ -20,7 +20,7 @@ snowflake:
     SNOWFLAKE_ACCOUNT: foobar
 ```
 
-These settings are simply store in the `/.sematic/settings.yaml` file on
+These settings are simply store in the `~/.sematic/settings.yaml` file on
 your machine.
 
 ## `SnowflakeTable` type

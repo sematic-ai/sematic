@@ -1,14 +1,17 @@
 # Standard Library
 import datetime
+import importlib
 import json
 import re
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from dataclasses import asdict
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
-# Third party
+# Third-party
 from sqlalchemy import Column, types
 from sqlalchemy.orm import validates
 
 # Sematic
+from sematic.abstract_calculator import AbstractCalculator
 from sematic.abstract_future import FutureState
 from sematic.db.models.base import Base
 from sematic.db.models.has_external_jobs_mixin import HasExternalJobsMixin
@@ -23,6 +26,7 @@ from sematic.types.serialization import (
     value_from_json_encodable,
     value_to_json_encodable,
 )
+from sematic.utils.exceptions import ExceptionMetadata
 
 
 class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
@@ -55,15 +59,17 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
         The run's description. Defaults to the function's docstring.
     source_code: str
         The calculator's source code.
-    exception: Optional[str]
-        The exception from the calculator's execution
     nested_future_id:
         If the run resulted in returning a new future, this contains the id of that
-        future
+        future.
+    exception_metadata: Optional[ExceptionMetadata]
+        The metadata for the exception from the calculator's execution, if any.
+    external_exception_metadata: Optional[ExceptionMetadata]
+        The metadata for the exception from the external compute infrastructure, if any.
     external_jobs_json:
         A list of external compute jobs associated with the execution of this run.
         There may be multiple due to run retries. The field is a json string, but
-        the dataclass version of the jobs can be accessed with the external_jobs
+        the dataclass version of the jobs can be accessed with the `external_jobs`
         property.
     created_at : datetime
         Time of creating of the run record in the DB.
@@ -98,11 +104,17 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
         types.String(), nullable=False, default="[]", info={JSON_KEY: True}
     )
     source_code: str = Column(types.String(), nullable=False)
-    exception: str = Column(types.String(), nullable=True)
-    nested_future_id: str = Column(types.String(), nullable=True)
+    nested_future_id: Optional[str] = Column(types.String(), nullable=True)
+    exception_metadata_json: Optional[Dict[str, Union[str, List[str]]]] = Column(
+        types.JSON(), nullable=True
+    )
+    external_exception_metadata_json: Optional[
+        Dict[str, Union[str, List[str]]]
+    ] = Column(types.JSON(), nullable=True)
     external_jobs_json: Optional[List[Dict[str, Any]]] = Column(
         types.JSON(), nullable=True
     )
+    container_image_uri: Optional[str] = Column(types.String(), nullable=True)
 
     # Lifecycle timestamps
     created_at: datetime.datetime = Column(
@@ -123,7 +135,7 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
     )
 
     @validates("future_state")
-    def validate_future_state(self, key, value) -> str:
+    def validate_future_state(self, _, value) -> str:
         """
         Validates that the future_state value is allowed.
         """
@@ -136,18 +148,42 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
             raise ValueError("future_state must be a FutureState, got {}".format(value))
 
     @validates("tags")
-    def convert_tags_to_json(self, key, value) -> str:
+    def convert_tags_to_json(self, _, value) -> str:
         if isinstance(value, list):
             return json.dumps(value)
 
         return value
 
     @validates("description")
-    def strip_description(self, key, value) -> str:
+    def strip_description(self, _, value) -> str:
         if value is not None:
-            value = re.sub(r"\n\s{4}", "\n", value.strip())
+            value = re.sub(r"\n( {4}|\t)", "\n", value.strip())
 
         return value
+
+    @property
+    def exception_metadata(self) -> Optional[ExceptionMetadata]:
+        return Run._dict_to_exception_metadata(self.exception_metadata_json)
+
+    @exception_metadata.setter
+    def exception_metadata(
+        self, exception_metadata: Optional[ExceptionMetadata]
+    ) -> None:
+        self.exception_metadata_json = Run._exception_metadata_to_dict(
+            exception_metadata
+        )
+
+    @property
+    def external_exception_metadata(self) -> Optional[ExceptionMetadata]:
+        return Run._dict_to_exception_metadata(self.external_exception_metadata_json)
+
+    @external_exception_metadata.setter
+    def external_exception_metadata(
+        self, exception_metadata: Optional[ExceptionMetadata]
+    ) -> None:
+        self.external_exception_metadata_json = Run._exception_metadata_to_dict(
+            exception_metadata
+        )
 
     @property
     def external_jobs(self) -> Tuple[ExternalJob, ...]:
@@ -157,7 +193,7 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
         return tuple(value_from_json_encodable(job, ExternalJob) for job in encodables)
 
     @external_jobs.setter
-    def external_jobs(self, jobs: Sequence[ExternalJob]):
+    def external_jobs(self, jobs: Sequence[ExternalJob]) -> None:
         self.external_jobs_json = [
             value_to_json_encodable(job, ExternalJob) for job in jobs
         ]
@@ -177,4 +213,56 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
             return
         self.resource_requirements_json = json.dumps(
             value_to_json_encodable(value, ResourceRequirements)
+        )
+
+    def get_func(self) -> AbstractCalculator:
+        split_calculator_path = self.calculator_path.split(".")
+        import_path, func_name = (
+            ".".join(split_calculator_path[:-1]),
+            split_calculator_path[-1],
+        )
+        try:
+            func = getattr(importlib.import_module(import_path), func_name)
+        except (ImportError, AttributeError) as e:
+            raise type(e)(
+                f"Unable to find this run's function at {import_path}.{func_name}, "
+                f"did it change location? {e}"
+            )
+
+        return func
+
+    def __repr__(self):
+        return ", ".join(
+            (
+                f"Run(id={self.id}",
+                f"calculator_path={self.calculator_path}",
+                f"future_state={self.future_state}",
+                f"parent_id={self.parent_id})",
+            )
+        )
+
+    @staticmethod
+    def _exception_metadata_to_dict(
+        exception_metadata: Optional[ExceptionMetadata],
+    ) -> Optional[Dict[str, Union[str, List[str]]]]:
+        """
+        Converts an `ExceptionMetadata` object to its Dict representation.
+        """
+        return asdict(exception_metadata) if exception_metadata is not None else None
+
+    @staticmethod
+    def _dict_to_exception_metadata(
+        dict_: Optional[Dict[str, Union[str, List[str]]]]
+    ) -> Optional[ExceptionMetadata]:
+        """
+        Instantiates an `ExceptionMetadata` object from a Dict representation.
+        """
+        if dict_ is None:
+            return None
+
+        return ExceptionMetadata(
+            repr=dict_["repr"],  # type: ignore
+            name=dict_["name"],  # type: ignore
+            module=dict_["module"],  # type: ignore
+            ancestors=dict_.get("ancestors", []),  # type: ignore
         )

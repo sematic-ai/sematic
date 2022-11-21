@@ -11,7 +11,7 @@ import click
 from sematic.cli.cli import cli
 from sematic.cli.examples_utils import is_example
 from sematic.cli.process_utils import server_is_running
-from sematic.config import get_config
+from sematic.config.config import get_config
 
 
 def _example_path_to_import_path(script_path: str) -> str:
@@ -66,11 +66,11 @@ def run(ctx, script_path: str):
         click.echo("Sematic is not started, issue `sematic start` first.")
         return
 
+    # This is ugly, better way to do this?
+    sys.argv = [sys.argv[0]] + ctx.args
+
     if is_example(script_path):
         _run_example(script_path)
         return
-
-    # This is ugly, better way to do this?
-    sys.argv = [sys.argv[0]] + ctx.args
 
     runpy.run_module(script_path, run_name="__main__")
