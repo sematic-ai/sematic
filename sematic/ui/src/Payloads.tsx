@@ -75,3 +75,15 @@ export type AuthenticatePayload = {
 export type EnvPayload = {
   env: { [k: string]: string };
 };
+
+type Operator = "eq";
+type BooleanOperator = "AND" | "OR";
+
+type FilterCondition = {
+    [key: string]: {[op in Operator]: string}
+}
+
+export type Filter = FilterCondition | {
+    [op in BooleanOperator ] : Array<FilterCondition>
+}
+

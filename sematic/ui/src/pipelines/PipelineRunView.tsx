@@ -8,7 +8,7 @@ import { Resolution, Run } from "../Models";
 import { ResolutionPayload, RunViewPayload } from "../Payloads";
 import { fetchJSON } from "../utils";
 
-export default function PipelineView() {
+export default function PipelineRunView() {
   const [rootRun, setRootRun] = useState<Run | undefined>(undefined);
   const [resolution, setResolution] = useState<Resolution | undefined>(
     undefined
