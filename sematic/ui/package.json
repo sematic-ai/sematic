@@ -19,6 +19,7 @@
     "@types/node": "^16.11.34",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.3",
+    "d3": "^7.6.1",
     "dagre": "^0.8.5",
     "date-fns": "^2.29.3",
     "javascript-time-ago": "^2.3.13",
@@ -70,6 +71,7 @@
     ]
   },
   "devDependencies": {
+    "@types/d3": "^7.4.0",
     "@types/dagre": "^0.7.47",
     "@types/plotly.js": "^1.54.22",
     "@types/react-copy-to-clipboard": "^5.0.2",

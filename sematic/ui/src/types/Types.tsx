@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo } from "react";
 import Plotly from "plotly.js-cartesian-dist";
-import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import DataEditor, {
   Item,
@@ -28,8 +27,9 @@ import {
 } from "@mui/material";
 import { OpenInNew } from "@mui/icons-material";
 import { format, isValid, parseISO } from "date-fns";
-import "mpld3";
 import { v4 as uuidv4 } from "uuid";
+
+const mpld3 = require("mpld3");
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -545,25 +545,16 @@ function PlotlyFigureValueView(props: ValueViewProps) {
 function MatplotlibFigureValueView(props: ValueViewProps) {
   let { valueSummary } = props;
 
-  let figureId = uuidv4();
+  const figureId = useMemo(() => `fid-${uuidv4()}`, []);
 
   useEffect(() => {
-    const inlineScript = document.createElement("script");
-    inlineScript.innerHTML =
-      "mpld3.draw_figure('" +
-      figureId +
-      "', " +
-      JSON.stringify(valueSummary["mpld3"]) +
-      ");";
+    valueSummary["mpld3"].width = 1000;
+    valueSummary["mpld3"].height = 300;
+    mpld3.draw_figure(figureId, valueSummary["mpld3"], null, true);
 
-    document.body.append(inlineScript);
+  }, [figureId, valueSummary]);
 
-    return () => {
-      inlineScript.remove();
-    };
-  }, []);
-
-  return <div id={figureId}></div>;
+  return <div id={figureId} style={{width: "100%", height: "100%"}}>hi</div>;
 }
 
 function DataFrameTable(props: {
