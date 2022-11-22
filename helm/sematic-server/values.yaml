@@ -1,27 +1,24 @@
 auth:
   enabled: true
-  google_oauth_client_id: 977722105393-257kdkrc5dfbpu0jcsd8etn1k4u4q4ut.apps.googleusercontent.com
-  authorized_email_domain: sematic.ai
+  google_oauth_client_id: xxxxxxxx.apps.googleusercontent.com # REPLACE ME
+  authorized_email_domain: example.org # REPLACE ME
 
 aws:
   enabled: true
-  storage_bucket: sematic-dev
+  storage_bucket: my-s3-bucket # REPLACE ME
 
 secret:
   create: true
 
 database:
-  url: postgres://postgresql:5432/postgres
+  url: postgres://postgresql:5432/postgres # REPLACE ME
 
 replicaCount: 1
 
 image:
   #repository: sematicai/sematic-server:v0.20.0
   pullPolicy: IfNotPresent
-  pullSecrets: []
-
-nameOverride: ""
-fullnameOverride: ""
+  #pullSecrets: []
 
 rbac:
   create: true
@@ -30,8 +27,7 @@ serviceAccount:
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
+  name: sematic-server
 
 podAnnotations: {}
 

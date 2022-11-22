@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "sematic-server.fullname" . }}
+  name: {{ .Release.Name }}
   labels:
     {{- include "sematic-server.labels" . | nindent 4 }}
 spec:
@@ -24,20 +24,20 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "sematic-server.serviceAccountName" . }}
+      serviceAccountName: {{ .Values.serviceAccount.Name | default .Release.Name }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image | default (printf "sematicai/sematic-server:%s" (.Chart.appVersion)) }}"
+          image: "{{ .Values.image.repository | default (printf "sematicai/sematic-server:%s" .Chart.AppVersion) }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           envFrom:
           - configMapRef:
-              name: {{ include "sematic-server.fullname" . }}
+              name: {{ .Release.Name }}
           - secretRef:
-              name: {{ include "sematic-server.fullname" . }}
+              name: {{ .Release.Name }}
           ports:
             - name: http
               containerPort: 80
