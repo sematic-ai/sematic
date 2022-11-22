@@ -36,11 +36,11 @@ def test_changelog():
 
 
 def test_helm_chart():
-    with open("helm/sematic-server/values.yaml", "r") as fp:
+    with open("helm/sematic-server/Chart.yaml", "r") as fp:
         encodable = yaml.load(fp, yaml.Loader)
 
-    image = encodable["server"]["image"]
-    prefix = "sematicai/sematic-server:v"
+    image = encodable["appVersion"]
+    prefix = "v"
     assert image.startswith(prefix)
     version_string = image.replace(prefix, "")
     values_version = tuple(int(v) for v in version_string.split("."))
