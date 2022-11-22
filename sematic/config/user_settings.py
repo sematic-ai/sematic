@@ -6,7 +6,7 @@ from dataclasses import asdict, dataclass
 from typing import Dict, Optional
 
 # Sematic
-from sematic.config.config_dir import get_config_dir
+from sematic.config.config_dir import USER_SETTINGS_FILE, get_config_dir
 from sematic.config.settings import (
     _as_bool,
     _load_settings,
@@ -16,7 +16,6 @@ from sematic.config.settings import (
 
 logger = logging.getLogger(__name__)
 
-_USER_SETTINGS_FILE = "settings.yaml"
 _DEFAULT_PROFILE = "default"
 
 
@@ -130,7 +129,7 @@ def _get_user_settings_file() -> str:
     """
     Returns the path to the user settings file according to the configuration.
     """
-    return os.path.join(get_config_dir(), _USER_SETTINGS_FILE)
+    return os.path.join(get_config_dir(), USER_SETTINGS_FILE)
 
 
 def _load_user_settings() -> UserSettings:

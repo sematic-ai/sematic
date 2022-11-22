@@ -5,7 +5,7 @@ import os
 from typing import Dict, Optional
 
 # Sematic
-from sematic.config.config_dir import get_config_dir
+from sematic.config.config_dir import SERVER_SETTINGS_FILE, get_config_dir
 from sematic.config.settings import (
     _as_bool,
     _load_settings,
@@ -14,8 +14,6 @@ from sematic.config.settings import (
 )
 
 logger = logging.getLogger(__name__)
-
-_SERVER_SETTINGS_FILE = "server.yaml"
 
 
 class ServerSettingsVar(enum.Enum):
@@ -73,7 +71,7 @@ def _get_server_settings_file() -> str:
     """
     Returns the path to the server settings file according to the configuration.
     """
-    return os.path.join(get_config_dir(), _SERVER_SETTINGS_FILE)
+    return os.path.join(get_config_dir(), SERVER_SETTINGS_FILE)
 
 
 def _load_server_settings() -> ServerSettings:
