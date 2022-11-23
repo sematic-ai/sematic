@@ -135,6 +135,7 @@ sematic_py_lib(
         "boto3",
     ],
     deps = [
+        "//sematic/config:server_settings",
         "//sematic/config:user_settings",
         "//sematic/utils:memoized_property",
         "//sematic/utils:retry",

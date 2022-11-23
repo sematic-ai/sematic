@@ -35,10 +35,10 @@ These are accessible through the CLI commands for more user-friendliness:
 
 ```bash
 $ sematic settings show
-Active settings:
+Active user settings:
 
 SEMATIC_API_ADDRESS: http://127.0.0.1:5001
-SEMATIC_API_KEY: XXX
+SEMATIC_API_KEY: <my_local_api_key>
 ```
 
 When developing, we often need to switch the Server where we submit pipelines,
@@ -50,20 +50,18 @@ between them using `bazel run //tools:switch-settings -- <profile>`.
 This actually copies these profile files over the main settings file. Example:
 
 ```bash
-$ bazel run //tools:switch-settings -- dev1
+$ bazel run //tools:switch-settings -- prod1
 [...]
 Copying previous settings to /Users/tudorscurtu/.sematic/settings.yaml_bck
-Copying /Users/tudorscurtu/.sematic/settings.yaml.dev1 to /Users/tudorscurtu/.sematic/settings.yaml
+Copying /Users/tudorscurtu/.sematic/settings.yaml.prod1 to /Users/tudorscurtu/.sematic/settings.yaml
 
-Successfully switched to dev1!
+Successfully switched to prod1!
 
 $ sematic settings show
-Active settings:
+Active user settings:
 
-AWS_S3_BUCKET: XXX
-KUBERNETES_NAMESPACE: XXX
-SEMATIC_API_ADDRESS: https://XXX
-SEMATIC_API_KEY: XXX
+SEMATIC_API_ADDRESS: https://<my_prod1_host:port>
+SEMATIC_API_KEY: <my_prod1_api_key>
 ```
 
 ## Releasing

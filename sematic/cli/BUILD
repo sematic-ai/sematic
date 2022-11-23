@@ -120,6 +120,7 @@ sematic_py_lib(
     ],
     deps = [
         ":cli",
+        "//sematic/config:server_settings",
         "//sematic/config:user_settings",
     ],
 )
