@@ -29,6 +29,9 @@ class UserSettingsVar(enum.Enum):
     SNOWFLAKE_PASSWORD = "SNOWFLAKE_PASSWORD"
     SNOWFLAKE_ACCOUNT = "SNOWFLAKE_ACCOUNT"
 
+    # AWS
+    AWS_S3_BUCKET = "AWS_S3_BUCKET"
+
 
 class MissingUserSettingsError(Exception):
     def __init__(self, missing_settings: UserSettingsVar):

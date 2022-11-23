@@ -229,10 +229,10 @@ groups' IAM role has the following policy:
 arn:aws:iam::aws:policy/AmazonS3FullAccess
 ```
 
-then set the name of your bucket in your Sematic server settings:
+then set the name of your bucket in your Sematic user settings:
 
 ```
-$ sematic server-settings set AWS_S3_BUCKET <bucket-name>
+$ sematic settings set AWS_S3_BUCKET <bucket-name>
 ```
 
 #### Container registry

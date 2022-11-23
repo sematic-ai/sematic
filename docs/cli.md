@@ -92,6 +92,8 @@ This is the full list of supported user settings:
   pipelines that use Snowflake
 - `SNOWFLAKE_ACCOUNT`: the Snowflake account; required only if you have
   pipelines that use Snowflake
+- `AWS_S3_BUCKET`: the S3 bucket to use for persisting artifacts; required only
+  for cloud pipeline submissions
 
 ### Server settings
 
@@ -105,7 +107,6 @@ the `sematic server-settings` command instead:
 $ sematic server-settings show
 Active server settings:
 
-AWS_S3_BUCKET: XXX
 KUBERNETES_NAMESPACE: default
 SEMATIC_AUTHORIZED_EMAIL_DOMAIN: XXX
 SEMATIC_AUTHENTICATE: 'true'
@@ -147,8 +148,6 @@ This is the full list of supported server settings:
   only for cloud pipeline submissions
 - `GRAFANA_PANEL_URL`: the URL of the Grafana deployment that tracks jobs
   details
-- `AWS_S3_BUCKET`: the S3 bucket to use for persisting artifacts; required only
-  for cloud pipeline submissions
 
 ### Cancel pipelines
 

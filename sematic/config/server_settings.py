@@ -34,9 +34,6 @@ class ServerSettingsVar(enum.Enum):
     # GRAFANA
     GRAFANA_PANEL_URL = "GRAFANA_PANEL_URL"
 
-    # AWS
-    AWS_S3_BUCKET = "AWS_S3_BUCKET"
-
 
 class MissingServerSettingsError(Exception):
     def __init__(self, missing_settings: ServerSettingsVar):
