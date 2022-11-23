@@ -56,6 +56,7 @@ SERIALIZATION_EXAMPLES = [
     (dict(a=1.0), Dict[str, float], None),
     (dict(a="b"), Dict[str, str], None),
     ({1: "a", 2: "b"}, Dict[int, str], None),
+    ({1: "a", 2: "b"}, Union[Dict[int, str], None], None),
     (
         {1: "a", 2: StringSubclass("b")},
         Dict[int, str],

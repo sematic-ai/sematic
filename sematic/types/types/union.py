@@ -1,16 +1,18 @@
 # Standard Library
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union, get_args
 
 # Sematic
 from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.registry import (
     register_can_cast,
+    register_from_json_encodable,
     register_safe_cast,
     register_to_json_encodable,
     register_to_json_encodable_summary,
 )
 from sematic.types.serialization import (
     get_json_encodable_summary,
+    value_from_json_encodable,
     value_to_json_encodable,
 )
 
@@ -50,8 +52,28 @@ def _union_can_cast(from_type: Any, to_type: Any) -> Tuple[bool, Optional[str]]:
 @register_to_json_encodable(Union)
 def _union_to_json_encodable(value: Any, type_: Any) -> Any:
     # We assume that casting has already vetted type_
+    value_type = _get_value_type(value, type_)
+    value_type_index = -1
+    for i, unioned_type in enumerate(get_args(type_)):
+        if unioned_type == value_type:
+            value_type_index = i
+            break
+    return {
+        "value": value_to_json_encodable(value, value_type),
+        "value_type_index": value_type_index,
+    }
 
-    return value_to_json_encodable(value, _get_value_type(value, type_))
+
+@register_from_json_encodable(Union)
+def _union_from_json_encodable(json_encodable: Any, type_: Any) -> Any:
+    expected_keys = ("value", "value_type_index")
+    if not all(key in json_encodable for key in expected_keys):
+        raise ValueError(
+            f"Json should have keys : {expected_keys}, but got: {json_encodable}"
+        )
+    value_type = get_args(type_)[json_encodable["value_type_index"]]
+    value = value_from_json_encodable(json_encodable["value"], value_type)
+    return value
 
 
 @register_to_json_encodable_summary(Union)
@@ -60,7 +82,7 @@ def _union_to_summary(value: Any, type_: Any) -> Any:
 
 
 def _get_value_type(value: Any, type_: Any) -> Any:
-    for unioned_type in type_.__args__:
+    for unioned_type in get_args(type_):
         _, error = safe_cast(value, unioned_type)
         if error is None:
             return unioned_type
