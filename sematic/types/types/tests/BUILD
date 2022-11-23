@@ -92,3 +92,13 @@ pytest_test(
         "//sematic/types:serialization",
     ],
 )
+
+pytest_test(
+    name = "test_union",
+    srcs = ["test_union.py"],
+    deps = [
+        "//sematic/types:casting",
+        "//sematic/types:init",
+        "//sematic/types:serialization",
+    ],
+)
