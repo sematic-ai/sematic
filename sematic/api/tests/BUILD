@@ -4,6 +4,7 @@ sematic_py_lib(
     visibility = ["//visibility:public"],
     deps = [
         "//sematic/api:server_lib",
+        "//sematic/config:server_settings",
         "//sematic/config:user_settings",
         "//sematic/db/tests:fixtures",
         "//sematic/scheduling:kubernetes",

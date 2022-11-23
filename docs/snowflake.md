@@ -7,20 +7,21 @@ to access it.
 
 ## Set your Snowflake credentials
 
-In a console do
+In a console do:
 
 ```
 $ sematic settings set SNOWFLAKE_USER "foobar"
 $ sematic settings set SNOWFLAKE_PASSWORD "foobar"
 $ sematic settings set SNOWFLAKE_ACCOUNT "foobar"
 $ sematic settings show
-snowflake:
-    SNOWFLAKE_USER: foobar
-    SNOWFLAKE_PASSWORD: foobar
-    SNOWFLAKE_ACCOUNT: foobar
+Active user settings:
+
+SNOWFLAKE_USER: foobar
+SNOWFLAKE_PASSWORD: foobar
+SNOWFLAKE_ACCOUNT: foobar
 ```
 
-These settings are simply store in the `~/.sematic/settings.yaml` file on
+These settings are simply stored in the `~/.sematic/settings.yaml` file on
 your machine.
 
 ## `SnowflakeTable` type

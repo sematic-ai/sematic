@@ -13,11 +13,11 @@ from sqlalchemy.orm.exc import NoResultFound
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.request_parameters import jsonify_error
-from sematic.config.user_settings import (
-    MissingSettingsError,
-    UserSettingsVar,
-    get_bool_user_settings,
-    get_user_settings,
+from sematic.config.server_settings import (
+    MissingServerSettingsError,
+    ServerSettingsVar,
+    get_bool_server_settings,
+    get_server_settings,
 )
 from sematic.db.models.factories import make_user
 from sematic.db.queries import get_user, get_user_by_api_key, save_user
@@ -32,17 +32,19 @@ def authenticate_endpoint() -> flask.Response:
     friction, we let users run locally without authentication.
     """
     providers = {}
-    authenticate = get_bool_user_settings(UserSettingsVar.SEMATIC_AUTHENTICATE, False)
+    authenticate = get_bool_server_settings(
+        ServerSettingsVar.SEMATIC_AUTHENTICATE, False
+    )
 
     if authenticate:
         for var in (
-            UserSettingsVar.GOOGLE_OAUTH_CLIENT_ID,
+            ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID,
             # TODO: Github needs more work, npm package is broken
-            # UserSettingsVar.GITHUB_OAUTH_CLIENT_ID,
+            # ServerSettingsVar.GITHUB_OAUTH_CLIENT_ID,
         ):
             try:
-                providers[var.value] = get_user_settings(var)
-            except MissingSettingsError:
+                providers[var.value] = get_server_settings(var)
+            except MissingServerSettingsError:
                 continue
 
         if len(providers) == 0:
@@ -54,7 +56,7 @@ def authenticate_endpoint() -> flask.Response:
 @sematic_api.route("/login/google", methods=["POST"])
 def google_login() -> flask.Response:
     """
-    Google login
+    Google login.
 
     Schema returned by verify_oauth2_token:
     {'iss': 'https://accounts.google.com',
@@ -79,10 +81,10 @@ def google_login() -> flask.Response:
     token = flask.request.json["token"]
 
     try:
-        google_oauth_client_id = get_user_settings(
-            UserSettingsVar.GOOGLE_OAUTH_CLIENT_ID
+        google_oauth_client_id = get_server_settings(
+            ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID
         )
-    except MissingSettingsError:
+    except MissingServerSettingsError:
         return jsonify_error("Missing oauth client ID", HTTPStatus.BAD_REQUEST)
 
     try:
@@ -92,8 +94,8 @@ def google_login() -> flask.Response:
             google_oauth_client_id,
         )
 
-        authorized_email_domain = get_user_settings(
-            UserSettingsVar.SEMATIC_AUTHORIZED_EMAIL_DOMAIN, None
+        authorized_email_domain = get_server_settings(
+            ServerSettingsVar.SEMATIC_AUTHORIZED_EMAIL_DOMAIN, None
         )
 
         if authorized_email_domain is not None:
@@ -135,8 +137,8 @@ def authenticate(endpoint_fn: Callable) -> Callable:
 
     @functools.wraps(endpoint_fn)
     def endpoint(*args, **kwargs) -> flask.Response:
-        authenticate = get_bool_user_settings(
-            UserSettingsVar.SEMATIC_AUTHENTICATE, False
+        authenticate = get_bool_server_settings(
+            ServerSettingsVar.SEMATIC_AUTHENTICATE, False
         )
         if not authenticate:
             return endpoint_fn(None, *args, **kwargs)
