@@ -1,43 +1,25 @@
 # Standard Library
-import distutils.util
 import enum
 import logging
 import os
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, Optional
-
-# Third-party
-import yaml
+from typing import Dict, Optional
 
 # Sematic
-from sematic.config.config_dir import get_config_dir
+from sematic.config.config_dir import USER_SETTINGS_FILE, get_config_dir
+from sematic.config.settings import (
+    _as_bool,
+    _load_settings,
+    _normalize_enum,
+    _save_settings,
+)
 
 logger = logging.getLogger(__name__)
 
-_USER_SETTINGS_FILE = "settings.yaml"
 _DEFAULT_PROFILE = "default"
 
 
 class UserSettingsVar(enum.Enum):
-    # Server:
-    # Sematic
-    SEMATIC_AUTHENTICATE = "SEMATIC_AUTHENTICATE"
-    SEMATIC_AUTHORIZED_EMAIL_DOMAIN = "SEMATIC_AUTHORIZED_EMAIL_DOMAIN"
-    SEMATIC_WORKER_API_ADDRESS = "SEMATIC_WORKER_API_ADDRESS"
-
-    # Google
-    GOOGLE_OAUTH_CLIENT_ID = "GOOGLE_OAUTH_CLIENT_ID"
-
-    # Github
-    GITHUB_OAUTH_CLIENT_ID = "GITHUB_OAUTH_CLIENT_ID"
-
-    # Kubernetes
-    KUBERNETES_NAMESPACE = "KUBERNETES_NAMESPACE"
-
-    # GRAFANA
-    GRAFANA_PANEL_URL = "GRAFANA_PANEL_URL"
-
-    # User:
     # Sematic
     SEMATIC_API_ADDRESS = "SEMATIC_API_ADDRESS"
     SEMATIC_API_KEY = "SEMATIC_API_KEY"
@@ -51,33 +33,15 @@ class UserSettingsVar(enum.Enum):
     AWS_S3_BUCKET = "AWS_S3_BUCKET"
 
 
-class UserSettingsDumper(yaml.Dumper):
-    """
-    Custom Dumper for `UserSettingsVar`.
-
-    It serializes `UserSettingsVar`s as simple strings so that the values aren't
-    represented as class instances with type metadata.
-
-    It also deactivates aliases, avoiding creating referential ids in the resulting yaml
-    contents.
-    """
-
-    def __init__(self, stream, **kwargs):
-        super(UserSettingsDumper, self).__init__(stream, **kwargs)
-        self.add_multi_representer(
-            UserSettingsVar, lambda _, var: self.represent_str(str(var.value))
-        )
-
-    def ignore_aliases(self, data: Any) -> bool:
-        return True
-
-
-class MissingSettingsError(Exception):
+class MissingUserSettingsError(Exception):
     def __init__(self, missing_settings: UserSettingsVar):
+        # TODO #264: this bleeds cli implementations details
+        # this message should be set when triaging all exceptions before being surfaced
+        # to the user
         message = """
 Missing settings: {}
 
-Set it with
+Set it with:
 
     $ sematic settings set {} VALUE
 """.format(
@@ -108,16 +72,19 @@ class UserSettings:
         ValueError:
             There is an incorrect value or state
         """
-        # impose the enums over the settings values
-        # the vars are read from the yaml as strings, and we need to normalize them
-        self.default = {
-            UserSettings._normalize_var(var): str(value)
-            for var, value in self.default.items()
-        }
+        user_settings = {}
 
-    @classmethod
-    def _normalize_var(cls, var: Any):
-        return var if isinstance(var, UserSettingsVar) else UserSettingsVar[str(var)]
+        for var, value in self.default.items():
+            # impose the enums over the settings values
+            # the vars are read from the yaml as strings, and we need to normalize them
+            normalized_var = _normalize_enum(UserSettingsVar, var)
+
+            if normalized_var is None:
+                raise ValueError(f"Unknown user setting {var}!")
+
+            user_settings[normalized_var] = str(value)
+
+        self.default = user_settings
 
     @classmethod
     def get_default_settings(cls) -> "UserSettings":
@@ -161,65 +128,30 @@ class UserSettings:
 _settings: Optional[UserSettings] = None
 
 
-def _as_bool(value: Optional[Any]) -> bool:
+def _get_user_settings_file() -> str:
     """
-    Returns a boolean interpretation of the contents of the specified value.
+    Returns the path to the user settings file according to the configuration.
     """
-    if isinstance(value, bool):
-        return value
-
-    if value is None:
-        return False
-
-    str_value = str(value)
-    if len(str_value) == 0:
-        return False
-
-    return bool(distutils.util.strtobool(str_value))
+    return os.path.join(get_config_dir(), USER_SETTINGS_FILE)
 
 
-def _get_settings_file() -> str:
-    """
-    Returns the path to the settings file according to the user configuration.
-    """
-    return os.path.join(get_config_dir(), _USER_SETTINGS_FILE)
-
-
-def _load_settings() -> UserSettings:
+def _load_user_settings() -> UserSettings:
     """
     Loads the settings from the configured settings file.
     """
-    try:
-        with open(_get_settings_file(), "r") as f:
-            raw_settings = yaml.load(f, yaml.Loader)
+    raw_settings = _load_settings(_get_user_settings_file())
 
-    except FileNotFoundError:
-        logger.debug("Settings file %s not found", _get_settings_file())
+    if raw_settings is None or _DEFAULT_PROFILE not in raw_settings:
         return UserSettings.get_default_settings()
 
-    if raw_settings is None:
-        return UserSettings.get_default_settings()
-
-    return UserSettings(**raw_settings)
+    return UserSettings(**raw_settings)  # type: ignore
 
 
-def _save_settings(settings: UserSettings) -> None:
+def _save_user_settings(settings: UserSettings) -> None:
     """
     Persists the specified settings to the configured settings file.
     """
-    yaml_output = yaml.dump(asdict(settings), Dumper=UserSettingsDumper)
-
-    with open(_get_settings_file(), "w") as f:
-        f.write(yaml_output)
-
-
-def dump_settings(settings: UserSettings) -> str:
-    """
-    Dumps the specified settings to string.
-    """
-    return yaml.dump(
-        settings.default, default_flow_style=False, Dumper=UserSettingsDumper
-    )
+    _save_settings(_get_user_settings_file(), asdict(settings))
 
 
 def get_active_user_settings() -> UserSettings:
@@ -229,7 +161,7 @@ def get_active_user_settings() -> UserSettings:
     global _settings
 
     if _settings is None:
-        _settings = _load_settings()
+        _settings = _load_user_settings()
 
         # Override with env vars
         for var in UserSettingsVar:
@@ -267,7 +199,7 @@ def get_user_settings(var: UserSettingsVar, *args) -> str:
     if len(args) >= 1:
         return args[0]
 
-    raise MissingSettingsError(var)
+    raise MissingUserSettingsError(var)
 
 
 def get_bool_user_settings(var: UserSettingsVar, *args) -> bool:
@@ -288,10 +220,10 @@ def set_user_settings(var: UserSettingsVar, value: str) -> None:
     global _settings
 
     if _settings is None:
-        _settings = _load_settings()
+        _settings = _load_user_settings()
 
     _settings.set(var, value)
-    _save_settings(_settings)
+    _save_user_settings(_settings)
 
 
 def delete_user_settings(var: UserSettingsVar) -> None:
@@ -301,7 +233,7 @@ def delete_user_settings(var: UserSettingsVar) -> None:
     global _settings
 
     if _settings is None:
-        _settings = _load_settings()
+        _settings = _load_user_settings()
 
     _settings.delete(var)
-    _save_settings(_settings)
+    _save_user_settings(_settings)

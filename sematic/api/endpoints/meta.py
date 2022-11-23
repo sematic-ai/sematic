@@ -1,6 +1,5 @@
 """Metadata about the server itself."""
 
-# Standard
 # Standard Library
 from typing import Optional
 
@@ -10,10 +9,10 @@ import flask
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
-from sematic.config.user_settings import (
-    MissingSettingsError,
-    UserSettingsVar,
-    get_user_settings,
+from sematic.config.server_settings import (
+    MissingServerSettingsError,
+    ServerSettingsVar,
+    get_server_settings,
 )
 from sematic.db.models.user import User
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
@@ -21,7 +20,7 @@ from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 
 @sematic_api.route("/api/v1/meta/versions", methods=["GET"])
 def get_server_version_info() -> flask.Response:
-    """Get information about the server version and clients it supports
+    """Get information about the server version and clients it supports.
 
     Returns
     -------
@@ -43,16 +42,16 @@ def get_server_version_info() -> flask.Response:
 @sematic_api.route("/api/v1/meta/env", methods=["GET"])
 @authenticate
 def env_endpoint(user: Optional[User]) -> flask.Response:
-    """Return a dictionary with information about the configuration of the server"""
+    """Return a dictionary with information about the configuration of the server."""
     env = {}
     for settings in (
-        UserSettingsVar.GOOGLE_OAUTH_CLIENT_ID,
-        UserSettingsVar.KUBERNETES_NAMESPACE,
-        UserSettingsVar.GRAFANA_PANEL_URL,
+        ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID,
+        ServerSettingsVar.KUBERNETES_NAMESPACE,
+        ServerSettingsVar.GRAFANA_PANEL_URL,
     ):
         try:
-            env[settings.value] = get_user_settings(settings)
-        except MissingSettingsError:
+            env[settings.value] = get_server_settings(settings)
+        except MissingServerSettingsError:
             continue
 
     return flask.jsonify(dict(env=env))
