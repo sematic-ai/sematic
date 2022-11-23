@@ -85,7 +85,7 @@ pytest_test(
     srcs = ["test_versions.py"],
     data = [
         "//:docs/changelog.md",
-        "//:helm/sematic/values.yaml",
+        "//:helm/sematic-server/Chart.yaml",
     ],
     env = {"BAZEL_WHEEL_VERSION": wheel_version_string},
     pip_deps = [

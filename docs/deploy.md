@@ -75,7 +75,7 @@ authenticate to use it. Everyone will be the "Anonymous" user.
 - `SEMATIC_AUTHENTICATE` activates authentication. Users will need to sign in to user the web app,
   and will need to set an API key in their local settings in order to submit jobs.
 - `GOOGLE_OAUTH_CLIENT_ID` is the client ID of your Google OAuth App. We will support more OAuth
-  providers int he future.
+  providers in the future.
 - `SEMATIC_AUTHORIZED_EMAIL_DOMAIN` denies access to users whose email is not of said domain.
 
 ##### SSL
@@ -160,7 +160,7 @@ At this point you should be able to run pipelines that are tracked by Sematic.
 In order to write metadata to the deployed API, simply do:
 
 ```shell
-$ sematic settings set SEMATIC_API_ADDRESS http://my-remote-server.dev
+$ sematic server-settings set SEMATIC_API_ADDRESS http://my-remote-server.dev
 ```
 
 This is required regardless of whether you deployed using Option 1 or Option 2.
@@ -173,7 +173,7 @@ Sematic using deployment Option 2.
 
 {% hint style="warning" %}
 
-In theory Sematic can run in any cloud provider. However at this time, Sematic
+In theory Sematic can run in any cloud provider. However, at this time, Sematic
 focuses support on **Amazon Web Services**. Other providers to follow soon.
 
 {% endhint %}
@@ -187,7 +187,7 @@ Before you proceed, the following must be true:
   and write permissions to it.
 
 - You have a container registry (e.g. AWS Elastic Container Registry) and you
-  have write access, and nodes in yout Kubernetes cluster have read access to
+  have write access, and nodes in your Kubernetes cluster have read access to
   it.
 
 - You have `sematic_pipeline` bazel targets defined as described in
@@ -205,9 +205,8 @@ When you are set, the following settings should be visible to Sematic
 
 ```
 $ sematic settings show
-Active settings:
+Active user settings:
 
-AWS_S3_BUCKET: <bucket-name>
 SEMATIC_API_ADDRESS: <web-app-server-address>
 ```
 
@@ -216,9 +215,9 @@ SEMATIC_API_ADDRESS: <web-app-server-address>
 If you have chosen to deploy Sematic in such a way that users of Sematic
 will use a different URL for the server from what should be used for
 jobs on your Kubernetes cluster (e.g. users access via a reverse proxy
-that's not needed on Kubernetes), you may also need to set
-`SEMATIC_WORKER_API_ADDRESS`. That will set the URL to be used from
-Kubernetes, while `SEMATIC_API_ADDRESS` will be used from your machine.
+that's not needed on Kubernetes), you may also need to set the
+`SEMATIC_WORKER_API_ADDRESS` server setting. That will set the URL to be used
+from Kubernetes, while `SEMATIC_API_ADDRESS` will be used from your machine.
 {% endhint %}
 
 #### Cloud storage bucket
@@ -230,7 +229,7 @@ groups' IAM role has the following policy:
 arn:aws:iam::aws:policy/AmazonS3FullAccess
 ```
 
-then set the name of your bucket in your Sematic settings:
+then set the name of your bucket in your Sematic user settings:
 
 ```
 $ sematic settings set AWS_S3_BUCKET <bucket-name>

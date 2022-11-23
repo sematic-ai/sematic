@@ -59,6 +59,8 @@ pytest_test(
     deps = [
         "//sematic/api/endpoints:auth",
         "//sematic/api/tests:fixtures",
+        "//sematic/config:server_settings",
+        "//sematic/config:settings",
         "//sematic/db:queries",
         "//sematic/db/models:json_encodable_mixin",
         "//sematic/db/models:user",
@@ -76,7 +78,7 @@ pytest_test(
         "//sematic/api:app",
         "//sematic/api/endpoints:meta",
         "//sematic/api/tests:fixtures",
-        "//sematic/config:user_settings",
+        "//sematic/config:server_settings",
     ],
 )
 
