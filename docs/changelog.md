@@ -5,6 +5,9 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+    * [bugfix] Fix a bug deserializing `Union` values. Note that once you are using this release,
+      if you try to "rerun from here" using a pipeline that has `Union` values in it that were
+      produced prior to this version of Sematic, the rerun will likely fail with a serialization issue.
 * [0.20.0](https://pypi.org/project/sematic/0.20.0/)
     * [feature] Add datetime class and basic visualization
     * [feature] Support for switching between environment profiles
