@@ -445,7 +445,7 @@ def _is_abc(type_: Any) -> bool:
         subclasses_abc = issubclass(type_, abc.ABC)
     except TypeError:
         subclasses_abc = False
-    return subclasses_abc or type(type_) is abc.ABCMeta
+    return subclasses_abc or issubclass(type(type_), abc.ABCMeta)
 
 
 class DataclassKey:
