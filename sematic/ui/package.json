@@ -39,6 +39,7 @@
     "react-scripts": "5.0.1",
     "react-syntax-highlighter": "^15.5.0",
     "react-time-ago": "^7.1.9",
+    "react-use": "^17.4.0",
     "socket.io-client": "^4.5.1",
     "source-map-explorer": "^2.5.2",
     "typescript": "^4.6.4",
