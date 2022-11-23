@@ -163,7 +163,7 @@ def make_artifact(value: Any, type_: Any) -> Tuple[Artifact, bytes]:
 
 def deserialize_artifact_value(artifact: Artifact, payload: bytes) -> Any:
     """
-    Fetch artifact serialization from storage and deserialize.
+    Deserialize serialized artifact value.
     """
     value_serialization = json.loads(payload.decode("utf-8"))
     type_serialization = json.loads(artifact.type_serialization)

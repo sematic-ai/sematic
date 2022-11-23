@@ -131,6 +131,8 @@ class S3Storage(Storage):
     where to store values is determined by the `AWS_S3_BUCKET` user settings variable.
     """
 
+    PRESIGNED_URL_EXPIRATION = 5 * 60  # 5 minutes
+
     @memoized_property
     def _bucket(self) -> str:
         return get_user_setting(UserSettingsVar.AWS_S3_BUCKET)
@@ -143,7 +145,7 @@ class S3Storage(Storage):
         presigned_url = self._s3_client.generate_presigned_url(
             ClientMethod=client_method.value,
             Params={"Bucket": self._bucket, "Key": key},
-            ExpiresIn=5 * 60,
+            ExpiresIn=self.PRESIGNED_URL_EXPIRATION,
         )
 
         return presigned_url
@@ -250,7 +252,7 @@ def _bytes_buffer_to_text(bytes_buffer: Iterable[bytes], encoding) -> Iterable[s
 
 class StorageSettingValue(enum.Enum):
     """
-    Possible value for the SEMATIC_STORAGE setting
+    Possible value for the SEMATIC_STORAGE setting.
     """
 
     LOCAL = "LOCAL"
@@ -258,7 +260,7 @@ class StorageSettingValue(enum.Enum):
     S3 = "S3"
 
 
-# This is and StorageSettingValue should be replaced by a proper
+# This and StorageSettingValue should be replaced by a proper
 # plugin-registry
 _STORAGE_ENGINE_REGISTRY: Dict[StorageSettingValue, Type[Storage]] = {
     StorageSettingValue.LOCAL: LocalStorage,

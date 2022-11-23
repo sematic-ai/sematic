@@ -65,7 +65,7 @@ def get_artifact_value_by_id(artifact_id: str) -> Any:
     Returns
     -------
     Any
-        The value of the requiested artifact.
+        The value of the requested artifact.
     """
     artifact = _get_artifact(artifact_id)
 
@@ -73,6 +73,19 @@ def get_artifact_value_by_id(artifact_id: str) -> Any:
 
 
 def get_artifact_value(artifact: Artifact) -> Any:
+    """
+    Retrieve an artifact's deserialized value.
+
+    Parameters
+    ----------
+    artiract: Artifact
+        Artifact whose value to retrieve.
+
+    Returns
+    -------
+    Any
+        The value of the requested artifact.
+    """
     storage_engine, location = _get_artifact_location(artifact.id, mode=StorageMode.READ)
     payload = storage_engine.get(location)
 
@@ -80,6 +93,16 @@ def get_artifact_value(artifact: Artifact) -> Any:
 
 
 def store_artifact_value(artifact_id: str, value: bytes):
+    """
+    Store an artifact's serialized value.
+
+    Parameters
+    ----------
+    artifact_id: str
+        ID of artifact to store.
+    value: bytes
+        Bytes payload to store.
+    """
     storage_engine, location = _get_artifact_location(artifact_id, StorageMode.WRITE)
     storage_engine.set(location, value)
 
@@ -90,23 +113,59 @@ def _get_artifact_location(artifact_id: str, mode: StorageMode) -> Tuple[Storage
     return _get_location_for_response(response)
 
 
-def store_future_pickle(future_id: str, pickle: bytes):
+def store_future_bytes(future_id: str, bytes_: bytes):
+    """
+    Store a future's bytes payload.
+
+    This is currently exclusively used to store nested futures upon execution of
+    their parent future in cloud workers.
+
+    The bytes payload is typically the pickled future.
+
+    Parameters
+    ----------
+    future_id: str
+        ID of future whose bytes payload to store.
+    bytes_: bytes
+        Payload to store
+    """
     storage_engine, location = _get_future_location(future_id, StorageMode.WRITE)
-    storage_engine.set(location, pickle)
+    storage_engine.set(location, bytes_)
 
 
-def get_future_pickle(future_id: str) -> bytes:
+def get_future_bytes(future_id: str) -> bytes:
+    """
+    Retrieve a future's bytes payload.
+
+    Parameters
+    ----------
+    future_id: str
+        ID of future whose bytes payload to retrieve.
+    """
     storage_engine, location = _get_future_location(future_id, StorageMode.READ)
     return storage_engine.get(location)
 
 
 def _get_future_location(future_id: str, mode: StorageMode) -> Tuple[Storage, str]:
+    """
+    Retrieve storage location for future.
+
+    Parameters
+    ----------
+    future_id: str
+        ID of future to store
+    mode: StorageMode
+        READ or WRITE
+    """
     response = _get(f"/runs/{future_id}/location/{mode.value}")
 
     return _get_location_for_response(response)
 
 
 def _get_location_for_response(response: Dict[str, str]) -> Tuple[Storage, str]:
+    """
+    Prepare storage engine and location for give API response.
+    """
     try:
         storage_engine = get_storage(StorageSettingValue[response["storage_engine"]])
     except KeyError:

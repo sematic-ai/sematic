@@ -256,7 +256,7 @@ class CloudResolver(LocalResolver):
             return
 
         if run.nested_future_id is not None:
-            pickled_nested_future = api_client.get_future_pickle(run.nested_future_id)
+            pickled_nested_future = api_client.get_future_bytes(run.nested_future_id)
 
             value = cloudpickle.loads(pickled_nested_future)
 
@@ -383,7 +383,3 @@ class CloudResolver(LocalResolver):
     def _get_remote_runs_count(self) -> int:
         """Returns the known number of futures in the SCHEDULED state."""
         return sum(map(lambda f: f.state == FutureState.SCHEDULED, self._futures))
-
-
-def make_nested_future_storage_key(future_id: str) -> str:
-    return "futures/{}".format(future_id)

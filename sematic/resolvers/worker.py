@@ -94,7 +94,7 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
     if isinstance(output, Future):
         pickled_nested_future = cloudpickle.dumps(output)
 
-        api_client.store_future_pickle(output.id, pickled_nested_future)
+        api_client.store_future_bytes(output.id, pickled_nested_future)
 
         run.nested_future_id = output.id
         run.future_state = FutureState.RAN
