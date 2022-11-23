@@ -11,7 +11,7 @@ from sematic.cli.logs import dump_log_storage, logs
 from sematic.db.models.resolution import ResolutionStatus
 from sematic.db.queries import save_resolution, save_run
 from sematic.db.tests.fixtures import make_resolution, make_run, test_db  # noqa: F401
-from sematic.log_reader import log_prefix
+from sematic.log_reader import LogLineResult, log_prefix
 from sematic.scheduling.external_job import ExternalJob, JobType
 from sematic.tests.fixtures import MockStorage  # noqa: F401
 
@@ -30,6 +30,12 @@ def mock_api_client():
             "sematic.log_reader.api_client", new_callable=lambda: mock_api_client
         ):
             yield mock_api_client
+
+
+@pytest.fixture
+def mock_load_log_lines():
+    with mock.patch("sematic.cli.logs.load_log_lines") as mock_loader:
+        yield mock_loader
 
 
 MOCK_LINES = [f"Hello {i}" for i in range(1000)]
@@ -64,6 +70,72 @@ def test_logs(test_db, mock_storage, mock_api_client):  # noqa: F811
     result = runner.invoke(logs, [run.id])
     assert result.exit_code == 0
     assert list(result.output.split("\n"))[:-1] == MOCK_LINES
+
+
+def test_follow_logs(
+    test_db, mock_storage, mock_api_client, mock_load_log_lines  # noqa: F811
+):
+    run = make_run(future_state=FutureState.RESOLVED)
+    run.external_jobs = [ExternalJob(JobType.driver, 0, external_job_id="abc")]
+    resolution = make_resolution(root_id=run.id, status=ResolutionStatus.COMPLETE)
+    save_run(run)
+    save_resolution(resolution)
+    runner = CliRunner()
+    mock_api_client.get_run = lambda x: run
+    mock_api_client.get_resolution = lambda x: resolution
+    early_lines = ["out a", "out b", "out c"]
+    late_lines = ["out d", "out e"]
+
+    live_log_returns = [
+        LogLineResult(
+            more_before=False,
+            more_after=True,
+            lines=early_lines,
+            continuation_cursor="abc",
+            log_unavailable_reason=None,
+        ),
+        LogLineResult(
+            more_before=False,
+            more_after=True,
+            lines=[],  # simulate situation where more WILL be produced but isn't yet
+            continuation_cursor="abc",
+            log_unavailable_reason=None,
+        ),
+        LogLineResult(
+            more_before=False,
+            more_after=False,
+            lines=late_lines,
+            continuation_cursor=None,
+            log_unavailable_reason=None,
+        ),
+    ]
+    mock_returns = []
+
+    def fake_return_logs(*args, **kwargs):
+        result = mock_returns[0]
+        mock_returns.remove(result)
+        return result
+
+    mock_load_log_lines.side_effect = fake_return_logs
+
+    mock_returns.extend(live_log_returns)
+    result = runner.invoke(logs, [run.id])
+    assert result.exit_code == 0
+    # As soon as it got to the end of the lines that had been produced
+    # "so far" it should have stopped looking for more.
+    assert list(result.output.split("\n"))[:-1] == early_lines
+
+    mock_returns.clear()
+    mock_returns.extend(live_log_returns)
+    result = runner.invoke(logs, [run.id, "-f"])
+    assert result.exit_code == 0
+    assert list(result.output.split("\n"))[:-1] == early_lines + late_lines
+
+    mock_returns.clear()
+    mock_returns.extend(live_log_returns)
+    result = runner.invoke(logs, [run.id, "--follow"])
+    assert result.exit_code == 0
+    assert list(result.output.split("\n"))[:-1] == early_lines + late_lines
 
 
 def test_empty_logs(test_db, mock_storage, mock_api_client):  # noqa: F811

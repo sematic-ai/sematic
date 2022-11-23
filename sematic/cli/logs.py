@@ -28,7 +28,6 @@ def logs(run_id: str, follow: bool):
     no more log lines are being produced.
     """
     switch_env("user")  # only makes sense for this env
-    click.echo(f"Follow: {follow}")
 
     # Don't want Sematic logs interfering with the ones being pulled
     # from the remote
