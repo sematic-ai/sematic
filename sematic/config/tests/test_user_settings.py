@@ -20,7 +20,7 @@ from sematic.config.user_settings import (
 def settings_file():
     with tempfile.NamedTemporaryFile() as tf:
         with patch(
-            "sematic.config.user_settings._get_settings_file",
+            "sematic.config.user_settings._get_user_settings_file",
             return_value=tf.name,
             new_callable=PropertyMock,
         ):

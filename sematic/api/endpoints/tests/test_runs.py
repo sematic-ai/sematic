@@ -267,7 +267,7 @@ def test_update_future_states(
 
 
 def test_update_run_disappeared(
-    persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
 
@@ -318,7 +318,7 @@ def test_update_run_disappeared(
 
 
 def test_update_run_k8_pod_error(
-    persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
 

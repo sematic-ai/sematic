@@ -4,7 +4,7 @@ SETTINGS_FILE="$HOME/.sematic/settings.yaml"
 BACKUP_LOCATION="${SETTINGS_FILE}_bck"
 USAGE="\n
 Overwrites your $SETTINGS_FILE with the contents of a file that is expected to be found at $SETTINGS_FILE.<env_name>\n
-Usage: bazel run //bazel:switch-settings -- <env_name>
+Usage: bazel run //tools:switch-settings -- <env_name>
 \n"
 
 exit_with_usage() {

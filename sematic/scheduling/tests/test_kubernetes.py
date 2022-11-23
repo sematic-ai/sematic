@@ -7,7 +7,7 @@ import pytest
 from kubernetes.client.exceptions import ApiException
 
 # Sematic
-from sematic.config.user_settings import UserSettingsVar
+from sematic.config.server_settings import ServerSettingsVar
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     KubernetesSecretMount,
@@ -423,10 +423,10 @@ def test_refresh_job_single_condition(mock_batch_api, mock_load_kube_config):
     assert not job.still_exists
 
 
-@mock.patch("sematic.config.user_settings.get_active_user_settings")
+@mock.patch("sematic.config.server_settings.get_active_server_settings")
 @mock.patch("sematic.scheduling.kubernetes._schedule_kubernetes_job")
 @mock.patch("sematic.scheduling.kubernetes._unique_job_id_suffix", return_value="foo")
-def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job, mock_user_settings):
+def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job, mock_server_settings):
 
     settings = {"SOME_SETTING": "SOME_VALUE"}
     resource_requests = ResourceRequirements(
@@ -435,7 +435,9 @@ def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job, mock_user_settings):
     image = "the_image"
     run_id = "run_id"
     namespace = "the-namespace"
-    mock_user_settings.return_value = {UserSettingsVar.KUBERNETES_NAMESPACE: namespace}
+    mock_server_settings.return_value = {
+        ServerSettingsVar.KUBERNETES_NAMESPACE: namespace
+    }
 
     schedule_run_job(
         run_id=run_id,
