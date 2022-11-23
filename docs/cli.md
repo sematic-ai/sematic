@@ -83,12 +83,15 @@ directory) or an absolute path.
 
 This is the full list of supported user settings:
 - `SEMATIC_API_ADDRESS`: the address of the Sematic server to use for pipeline
-  executions
+  executions; optional
 - `SEMATIC_API_KEY`: the user's personal API key, used to associate pipeline
-  submissions
-- `SNOWFLAKE_USER`: the Snowflake user
-- `SNOWFLAKE_PASSWORD`: the Snowflake password
-- `SNOWFLAKE_ACCOUNT`: the Snowflake account
+  submissions; required
+- `SNOWFLAKE_USER`: the Snowflake user; required only if you have pipelines
+  that use Snowflake
+- `SNOWFLAKE_PASSWORD`: the Snowflake password; required only if you have
+  pipelines that use Snowflake
+- `SNOWFLAKE_ACCOUNT`: the Snowflake account; required only if you have
+  pipelines that use Snowflake
 
 ### Server settings
 
@@ -129,19 +132,23 @@ They can also be overridden via environment variables, just like the user
 settings.
 
 This is the full list of supported server settings:
-- `SEMATIC_AUTHENTICATE`: whether to require authentication on API calls
+- `SEMATIC_AUTHENTICATE`: whether to require authentication on API calls;
+  optional
 - `SEMATIC_AUTHORIZED_EMAIL_DOMAIN`: the email domain that is allowed to create
-  accounts in the UI
+  accounts in the UI; optional
 - `SEMATIC_WORKER_API_ADDRESS`: the address of the remote cloud worker API,
-  such as the Kubernetes API
+  such as the Kubernetes API; optional; if set, this should be set to the DNS
+  location of the Sematic service within Kubernetes
 - `GOOGLE_OAUTH_CLIENT_ID`: the Google OAuth client ID to use for
-  authentication
+  authentication; optional
 - `GITHUB_OAUTH_CLIENT_ID`: the GitHub OAuth client ID to use for
-  authentication
-- `KUBERNETES_NAMESPACE`: the namespace to use for Kubernetes jobs
+  authentication; optional
+- `KUBERNETES_NAMESPACE`: the namespace to use for Kubernetes jobs; required
+  only for cloud pipeline submissions
 - `GRAFANA_PANEL_URL`: the URL of the Grafana deployment that tracks jobs
   details
-- `AWS_S3_BUCKET`: the S3 bucket to use for persisting artifacts
+- `AWS_S3_BUCKET`: the S3 bucket to use for persisting artifacts; required only
+  for cloud pipeline submissions
 
 ### Cancel pipelines
 
