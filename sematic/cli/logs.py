@@ -19,14 +19,16 @@ DEFAULT_LOG_LOAD_MAX_SIZE = 1000
 
 
 @cli.command("logs", short_help="Read logs for a run")
+@click.option("-f", "--follow", default=False, is_flag=True)
 @click.argument("run_id", type=click.STRING)
-def logs(run_id: str):
+def logs(run_id: str, follow: bool):
     """Read the logs for the run directly from blob storage, and print to stdout.
 
     If the run is still producing logs, this will follow the logs "live" until
     no more log lines are being produced.
     """
     switch_env("user")  # only makes sense for this env
+    click.echo(f"Follow: {follow}")
 
     # Don't want Sematic logs interfering with the ones being pulled
     # from the remote
@@ -54,6 +56,8 @@ def logs(run_id: str):
         if len(loaded.lines) == 0:
             if not (had_any or has_more):
                 click.secho(loaded.log_unavailable_reason, fg="red")
+                break
+            if not follow:
                 break
 
             # give storage API a quick break while we wait for some logs to appear
