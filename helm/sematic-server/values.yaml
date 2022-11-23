@@ -24,6 +24,8 @@ rbac:
   create: true
 
 serviceAccount:
+  # Set to false and provide a name of an existing service account to reuse.
+  create: true
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use.
