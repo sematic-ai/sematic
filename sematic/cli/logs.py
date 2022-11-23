@@ -1,5 +1,6 @@
 # Standard Library
 import logging
+import sys
 import time
 
 # Third-party
@@ -32,6 +33,7 @@ def logs(run_id: str, follow: bool):
     # Don't want Sematic logs interfering with the ones being pulled
     # from the remote
     logging.basicConfig(level=logging.ERROR)
+
     try:
         api_client.get_run(run_id)
     except api_client.ResourceNotFoundError:
@@ -39,10 +41,12 @@ def logs(run_id: str, follow: bool):
             f"Could not find run with id '{run_id}' at {get_config().api_url}.",
             fg="red",
         )
-        return
+        sys.exit(1)
+
     has_more = True
     cursor = None
     had_any = False
+
     while has_more:
         loaded = load_log_lines(
             run_id,
@@ -52,10 +56,12 @@ def logs(run_id: str, follow: bool):
             object_source=ObjectSource.API,
         )
         has_more = loaded.more_after
+
         if len(loaded.lines) == 0:
+
             if not (had_any or has_more):
                 click.secho(loaded.log_unavailable_reason, fg="red")
-                break
+                sys.exit(1)
             if not follow:
                 break
 
@@ -64,6 +70,7 @@ def logs(run_id: str, follow: bool):
             continue
 
         cursor = loaded.continuation_cursor
+
         for line in loaded.lines:
             had_any = True
             click.echo(line)
@@ -74,7 +81,7 @@ def logs(run_id: str, follow: bool):
 )
 @click.argument("storage_key", type=click.STRING)
 def dump_log_storage(storage_key: str):
-    """Dumps all logs stored in a blob storage directory
+    """Dumps all logs stored in a blob storage directory.
 
     The logs will be concatenated and dumped to stdout. Logs will not be
     "followed;" whatever logs are present at the time the dump is initiated
@@ -94,8 +101,11 @@ def dump_log_storage(storage_key: str):
         storage_key, cursor_file=None, cursor_line_index=None
     )
     found_lines = False
+
     for log_line in line_stream:
         found_lines = True
         print(log_line.line)
+
     if not found_lines:
         click.secho(f"No logs found in storage at '{storage_key}'", fg="red")
+        sys.exit(1)

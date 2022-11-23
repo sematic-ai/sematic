@@ -48,20 +48,14 @@ class ObjectSource(Enum):
         Directly query the DB. Can only be used if you have direct access to the DB.
     """
 
-    API = "API"
-    DB = "DB"
+    API = (api_client,)
+    DB = (db_queries,)
 
     def get_resolution(self, resolution_id: str) -> Resolution:
-        return {
-            ObjectSource.DB: db_queries.get_resolution,
-            ObjectSource.API: api_client.get_resolution,
-        }[self](resolution_id)
+        return self.value[0].get_resolution(resolution_id)
 
     def get_run(self, run_id: str) -> Run:
-        return {
-            ObjectSource.DB: db_queries.get_run,
-            ObjectSource.API: api_client.get_run,
-        }[self](run_id)
+        return self.value[0].get_run(run_id)
 
 
 def log_prefix(run_id: str, job_type: JobType):

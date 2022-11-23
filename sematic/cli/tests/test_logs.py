@@ -29,7 +29,9 @@ def mock_api_client():
         with mock.patch(
             "sematic.log_reader.api_client", new_callable=lambda: mock_api_client
         ):
-            yield mock_api_client
+            with mock.patch("sematic.cli.logs.ObjectSource") as mock_source:
+                mock_source.API = mock_api_client
+                yield mock_api_client
 
 
 @pytest.fixture
