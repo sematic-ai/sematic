@@ -10,12 +10,13 @@ from urllib.parse import urljoin
 import flask.testing
 import pytest
 
-# responses 0.21.0 has type stubs but they break mypy
+# responses 0.21.0 has type stubs, but they break mypy
 # See https://github.com/getsentry/responses/issues/556
 import responses  # type: ignore
 import werkzeug
 
 # Sematic
+import sematic.config.server_settings as server_settings
 import sematic.config.user_settings as user_settings
 
 # Importing from server instead of app to make sure
@@ -87,10 +88,24 @@ def mock_user_settings(settings: Dict[user_settings.UserSettingsVar, str]):
         user_settings._settings = original_settings
 
 
+@contextlib.contextmanager
+def mock_server_settings(settings: Dict[server_settings.ServerSettingsVar, str]):
+    # Force load everything first
+    server_settings.get_active_server_settings()
+
+    original_settings = server_settings._settings
+    server_settings._settings = settings
+
+    try:
+        yield settings
+    finally:
+        server_settings._settings = original_settings
+
+
 def make_auth_test(endpoint: str, method: str = "GET"):
     def test_auth(test_client: flask.testing.FlaskClient):
-        with mock_user_settings(
-            {user_settings.UserSettingsVar.SEMATIC_AUTHENTICATE: "true"}
+        with mock_server_settings(
+            {server_settings.ServerSettingsVar.SEMATIC_AUTHENTICATE: "true"}
         ):
             response = getattr(test_client, method.lower())(endpoint)
             assert response.status_code == HTTPStatus.UNAUTHORIZED
@@ -106,7 +121,7 @@ def mock_socketio():
 
 @pytest.fixture
 def mock_auth():
-    with mock_user_settings(
-        {user_settings.UserSettingsVar.SEMATIC_AUTHENTICATE: "false"}
+    with mock_server_settings(
+        {server_settings.ServerSettingsVar.SEMATIC_AUTHENTICATE: "false"}
     ):
         yield

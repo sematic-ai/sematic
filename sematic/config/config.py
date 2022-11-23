@@ -9,7 +9,7 @@ from urllib.parse import urljoin
 # Sematic
 from sematic.config.config_dir import get_config_dir
 from sematic.config.user_settings import (
-    MissingSettingsError,
+    MissingUserSettingsError,
     UserSettingsVar,
     get_user_settings,
 )
@@ -160,7 +160,7 @@ class UserOverrideConfig(Config):
 
         try:
             return get_user_settings(UserSettingsVar.SEMATIC_API_ADDRESS)
-        except MissingSettingsError:
+        except MissingUserSettingsError:
             return "http://{}:{}".format(self.server_address, self.port)
 
 

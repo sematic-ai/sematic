@@ -83,7 +83,7 @@ class LocalStorage(Storage):
 class S3Storage(Storage):
     """
     Implementation of the `Storage` interface for AWS S3 storage. The bucket
-    where to store values is determined by the `AWS_S3_BUCKET` user settings.
+    where to store values is determined by the `AWS_S3_BUCKET` user settings variable.
     """
 
     @memoized_property
