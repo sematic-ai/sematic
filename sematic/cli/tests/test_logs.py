@@ -151,7 +151,7 @@ def test_empty_logs(test_db, mock_storage, mock_api_client):  # noqa: F811
     mock_api_client.get_resolution = lambda x: resolution
 
     result = runner.invoke(logs, [run.id])
-    assert result.exit_code == 0
+    assert result.exit_code == 1
     assert list(result.output.split("\n"))[:-1] == ["No log files found"]
 
 
@@ -168,7 +168,7 @@ def test_dump_empty_log_dir(mock_storage):
     random_dir = "blah/foo/"
     runner = CliRunner()
     result = runner.invoke(dump_log_storage, [random_dir])
-    assert result.exit_code == 0
+    assert result.exit_code == 1
     assert list(result.output.split("\n"))[:-1] == [
         "No logs found in storage at 'blah/foo/'"
     ]
