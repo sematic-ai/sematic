@@ -14,10 +14,10 @@ from sematic.log_reader import (
     Cursor,
     LogLine,
     LogLineResult,
-    _line_stream_from_log_directory,
     _load_inline_logs,
     _load_non_inline_logs,
     get_log_lines_from_line_stream,
+    line_stream_from_log_directory,
     load_log_lines,
     log_prefix,
     v1_log_prefix,
@@ -339,7 +339,7 @@ def test_line_stream_from_log_directory(
         mock_storage=mock_storage,
         job_type=JobType.worker,
     )
-    line_stream = _line_stream_from_log_directory(prefix, None, None)
+    line_stream = line_stream_from_log_directory(prefix, None, None)
     materialized_line_stream = list(line_stream)
     with pytest.raises(StopIteration):
         # if it was a generator as expected, we exhausted it when we materialized it
@@ -349,7 +349,7 @@ def test_line_stream_from_log_directory(
     assert len({line.source_file for line in materialized_line_stream}) > 1
 
     start_index = 50
-    line_stream = _line_stream_from_log_directory(
+    line_stream = line_stream_from_log_directory(
         directory=log_prefix(run.id, JobType.worker),
         cursor_file=f"{log_prefix(run.id, JobType.worker)}12345.log",
         cursor_line_index=start_index,

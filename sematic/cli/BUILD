@@ -4,6 +4,7 @@ sematic_py_lib(
     deps = [
         ":cancel",
         ":cli",
+        ":logs",
         ":start",
         ":stop",
         ":run",
@@ -40,6 +41,20 @@ sematic_py_lib(
     deps = [
         ":cli",
         "//sematic:api_client",
+    ],
+)
+
+sematic_py_lib(
+    name = "logs",
+    srcs = ["logs.py"],
+    pip_deps = [
+        "click",
+    ],
+    deps = [
+        ":cli",
+        "//sematic:api_client",
+        "//sematic/config:config",
+        "//sematic:log_reader",
     ],
 )
 
