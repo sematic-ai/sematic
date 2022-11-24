@@ -32,6 +32,9 @@ class ServerSettingsVar(AbstractSettingsVar):
     # GRAFANA
     GRAFANA_PANEL_URL = "GRAFANA_PANEL_URL"
 
+    # Plugins
+    AWS_S3_BUCKET = "AWS_S3_BUCKET"
+
 
 _SERVER_SETTINGS_SCOPE = SettingsScope(
     file_name="server.yaml",

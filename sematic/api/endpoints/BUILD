@@ -155,7 +155,8 @@ sematic_py_lib(
     name = "storage",
     srcs = ["storage.py"],
     deps = [
-        "//sematic:storage",
-        "//sematic/config:user_settings",
+        "//sematic:abstract_storage",
+        "//sematic:plugins",
+        "//sematic/storage:local_storage",
     ],
 )

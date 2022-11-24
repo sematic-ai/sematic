@@ -1,6 +1,6 @@
 # Standard Library
 import logging
-from typing import Any, Callable, Dict, List, Optional, Tuple, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, cast
 
 # Third-party
 import requests
@@ -8,6 +8,7 @@ from requests.exceptions import ConnectionError
 
 # Sematic
 from sematic.abstract_future import FutureState
+from sematic.abstract_storage import AbstractStorage, StorageMode
 from sematic.config.config import get_config
 from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import CLI_COMMAND, UserSettingsVar, get_user_setting
@@ -16,7 +17,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import deserialize_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
-from sematic.storage import Storage, StorageMode, StorageSettingValue, get_storage
+from sematic.plugins import PluginScope, get_registered_plugin
 from sematic.utils.retry import retry
 from sematic.versions import CURRENT_VERSION, version_as_string
 
@@ -107,7 +108,9 @@ def store_artifact_value(artifact_id: str, value: bytes):
     storage_engine.set(location, value)
 
 
-def _get_artifact_location(artifact_id: str, mode: StorageMode) -> Tuple[Storage, str]:
+def _get_artifact_location(
+    artifact_id: str, mode: StorageMode
+) -> Tuple[AbstractStorage, str]:
     response = _get(f"/artifacts/{artifact_id}/location/{mode.value}")
 
     return _get_location_for_response(response)
@@ -146,7 +149,9 @@ def get_future_bytes(future_id: str) -> bytes:
     return storage_engine.get(location)
 
 
-def _get_future_location(future_id: str, mode: StorageMode) -> Tuple[Storage, str]:
+def _get_future_location(
+    future_id: str, mode: StorageMode
+) -> Tuple[AbstractStorage, str]:
     """
     Retrieve storage location for future.
 
@@ -162,12 +167,17 @@ def _get_future_location(future_id: str, mode: StorageMode) -> Tuple[Storage, st
     return _get_location_for_response(response)
 
 
-def _get_location_for_response(response: Dict[str, str]) -> Tuple[Storage, str]:
+def _get_location_for_response(response: Dict[str, str]) -> Tuple[AbstractStorage, str]:
     """
     Prepare storage engine and location for give API response.
     """
     try:
-        storage_engine = get_storage(StorageSettingValue[response["storage_engine"]])
+        storage_plugin = get_registered_plugin(
+            PluginScope.STORAGE, response["storage_engine"]
+        )
+        storage_engine: Type[AbstractStorage] = cast(
+            Type[AbstractStorage], storage_plugin
+        )
     except KeyError:
         raise NotImplementedError(f"Unknown storage engine: {response['storage_engine']}")
 

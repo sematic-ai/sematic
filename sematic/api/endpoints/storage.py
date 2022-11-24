@@ -1,9 +1,11 @@
 # Standard Library
 from dataclasses import dataclass
+from typing import Type, cast
 
 # Sematic
-from sematic.config.user_settings import UserSettingsVar, get_user_settings
-from sematic.storage import StorageMode, StorageSettingValue, get_storage
+from sematic.abstract_storage import AbstractStorage, StorageMode
+from sematic.plugins import PluginScope, get_selected_plugin
+from sematic.storage.local_storage import LocalStorage
 
 
 @dataclass
@@ -30,19 +32,24 @@ def get_storage_location(
             f"Storage mode should be one of {[m.value for m in StorageMode]}, got {mode}"
         )
 
-    storage_setting_value = get_user_settings(
-        UserSettingsVar.SEMATIC_STORAGE, StorageSettingValue.LOCAL.value
-    ).upper()
-
     try:
-        storage_engine_class = get_storage(StorageSettingValue[storage_setting_value])
-    except KeyError:
-        raise UnknownStorageEngineError(
-            f"Unknown storage engine: {storage_setting_value}"
+        storage_engine_plugin = get_selected_plugin(
+            PluginScope.STORAGE, default=LocalStorage
         )
+    except KeyError as e:
+        raise UnknownStorageEngineError(f"Unknown storage engine: {e}")
+
+    # Ideally this would already be done by get_selected_plugin but I couldn't
+    # make it work, TypeVar typed args don't accept abstract classes
+    # https://github.com/python/mypy/issues/5374
+    storage_engine_class: Type[AbstractStorage] = cast(
+        Type[AbstractStorage], storage_engine_plugin
+    )
 
     location = storage_engine_class().get_location(
         namespace=namespace, key=object_id, mode=storage_mode
     )
 
-    return StorageLocationPayload(storage_engine=storage_setting_value, location=location)
+    return StorageLocationPayload(
+        storage_engine=storage_engine_class.__name__, location=location
+    )

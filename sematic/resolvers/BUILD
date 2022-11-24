@@ -5,6 +5,7 @@ sematic_py_lib(
         "python-socketio",
         "websocket-client",
     ],
+    # buildifier: leave-alone
     deps = [
         ":silent_resolver",
         "//sematic:abstract_calculator",
@@ -73,9 +74,10 @@ sematic_py_lib(
 sematic_py_lib(
     name = "log_streamer",
     srcs = ["log_streamer.py"],
+    # buildifier: leave-alone
     deps = [
-        "//sematic:storage",
         "//sematic/config:config",
+        "//sematic/storage:s3_storage",
         "//sematic/utils:retry",
         "//sematic/utils:stdout",
     ],

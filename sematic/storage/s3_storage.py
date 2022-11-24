@@ -1,9 +1,7 @@
 # Standard Library
-import abc
 import enum
 import logging
-import os
-from typing import Any, Dict, Iterable, List, Type
+from typing import Dict, Iterable, List
 
 # Third-party
 import boto3
@@ -11,113 +9,13 @@ import botocore.exceptions
 import requests
 
 # Sematic
-from sematic.config.config import get_config
-from sematic.config.user_settings import UserSettingsVar, get_user_setting
+from sematic.abstract_storage import AbstractStorage, NoSuchStorageKey
+from sematic.config.server_settings import ServerSettingsVar, get_server_setting
+from sematic.plugins import AbstractPlugin, PluginScope, register_plugin
 from sematic.utils.memoized_property import memoized_property
 from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
-
-
-class StorageMode(enum.Enum):
-    READ = "read"
-    WRITE = "write"
-
-
-class Storage(abc.ABC):
-    """
-    Abstract base class to represent a key/value storage engine.
-    """
-
-    @abc.abstractmethod
-    def set(self, key: str, value: bytes):
-        """
-        Sets value for key.
-        """
-        pass
-
-    @abc.abstractmethod
-    def get(self, key: str) -> bytes:
-        """
-        Gets value for key.
-        """
-        pass
-
-    @abc.abstractmethod
-    def _get_write_location(self, namespace: str, key: str) -> str:
-        pass
-
-    @abc.abstractmethod
-    def _get_read_location(self, namespace: str, key: str) -> str:
-        pass
-
-    def get_location(self, namespace: str, key: str, mode: StorageMode) -> str:
-        if mode == StorageMode.READ:
-            return self._get_read_location(namespace, key)
-
-        if mode == StorageMode.WRITE:
-            return self._get_write_location(namespace, key)
-
-        raise KeyError(f"Unknown storage mode: {mode}")
-
-
-class NoSuchStorageKey(KeyError):
-    def __init__(self, storage: Storage, key: str):
-        super().__init__(f"No such storage key for {storage.__class__.__name__}: {key}")
-
-
-class MemoryStorage(Storage):
-    """
-    An in-memory key/value store implementing the `Storage` interface.
-    """
-
-    def __init__(self):
-        self._store: Dict[str, Any] = {}
-
-    def set(self, key: str, value: bytes):
-        self._store[key] = value
-
-    def get(self, key: str) -> bytes:
-        try:
-            return self._store[key]
-        except KeyError:
-            raise NoSuchStorageKey(self, key)
-
-    def _get_write_location(self, namespace, key: str) -> str:
-        return f"{namespace}/{key}"
-
-    def _get_read_location(self, namespace: str, key: str) -> str:
-        return self._get_write_location(namespace, key)
-
-
-class LocalStorage(Storage):
-    """
-    A local storage implementation of the `Storage` interface. Values are stores
-    in the data directory of the Sematic directory, typically at
-    `~/.sematic/data`.
-    """
-
-    def set(self, key: str, value: bytes):
-        logger.debug(f"{self.__class__.__name__} Setting value for key: {key}")
-
-        dir_path = os.path.split(key)[0]
-        os.makedirs(dir_path, exist_ok=True)
-
-        with open(key, "wb") as file:
-            file.write(value)
-
-    def get(self, key: str) -> bytes:
-        try:
-            with open(os.path.join(get_config().data_dir, key), "rb") as file:
-                return file.read()
-        except FileNotFoundError:
-            raise NoSuchStorageKey(self, key)
-
-    def _get_write_location(self, namespace: str, key: str) -> str:
-        return os.path.join(get_config().data_dir, namespace, key)
-
-    def _get_read_location(self, namespace: str, key: str) -> str:
-        return f"sematic:///data/{namespace}/{key}"
 
 
 class S3ClientMethod(enum.Enum):
@@ -125,7 +23,8 @@ class S3ClientMethod(enum.Enum):
     GET = "get_object"
 
 
-class S3Storage(Storage):
+@register_plugin(scope=PluginScope.STORAGE, author="github.com/sematic-ai")
+class S3Storage(AbstractStorage, AbstractPlugin):
     """
     Implementation of the `Storage` interface for AWS S3 storage. The bucket
     where to store values is determined by the `AWS_S3_BUCKET` user settings variable.
@@ -135,7 +34,7 @@ class S3Storage(Storage):
 
     @memoized_property
     def _bucket(self) -> str:
-        return get_user_setting(UserSettingsVar.AWS_S3_BUCKET)
+        return get_server_setting(ServerSettingsVar.AWS_S3_BUCKET)
 
     @memoized_property
     def _s3_client(self):
@@ -248,26 +147,3 @@ class S3Storage(Storage):
 def _bytes_buffer_to_text(bytes_buffer: Iterable[bytes], encoding) -> Iterable[str]:
     for line in bytes_buffer:
         yield str(line, encoding=encoding)
-
-
-class StorageSettingValue(enum.Enum):
-    """
-    Possible value for the SEMATIC_STORAGE setting.
-    """
-
-    LOCAL = "LOCAL"
-    MEMORY = "MEMORY"
-    S3 = "S3"
-
-
-# This and StorageSettingValue should be replaced by a proper
-# plugin-registry
-_STORAGE_ENGINE_REGISTRY: Dict[StorageSettingValue, Type[Storage]] = {
-    StorageSettingValue.LOCAL: LocalStorage,
-    StorageSettingValue.MEMORY: MemoryStorage,
-    StorageSettingValue.S3: S3Storage,
-}
-
-
-def get_storage(storage_setting: StorageSettingValue) -> Type[Storage]:
-    return _STORAGE_ENGINE_REGISTRY[storage_setting]
