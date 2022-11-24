@@ -4,12 +4,15 @@ import itertools
 import json
 import logging
 from dataclasses import asdict, dataclass
+from enum import Enum, unique
 from typing import Iterable, List, Optional
 
 # Sematic
+from sematic import api_client
 from sematic.abstract_future import FutureState
+from sematic.db import queries as db_queries
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
-from sematic.db.queries import get_resolution, get_run
+from sematic.db.models.run import Run
 from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
     START_INLINE_RUN_INDICATOR,
@@ -31,6 +34,28 @@ LOG_PATH_FORMAT = "{prefix}/run_id/{run_id}/{log_kind}/"
 
 
 logger = logging.getLogger(__name__)
+
+
+@unique
+class ObjectSource(Enum):
+    """When getting objects like runs or resolutions, how should they be fetched?
+
+    Attributes
+    ----------
+    API:
+        Use the API client to query them. Will use your configured API key.
+    DB:
+        Directly query the DB. Can only be used if you have direct access to the DB.
+    """
+
+    API = (api_client,)
+    DB = (db_queries,)
+
+    def get_resolution(self, resolution_id: str) -> Resolution:
+        return self.value[0].get_resolution(resolution_id)
+
+    def get_run(self, run_id: str) -> Run:
+        return self.value[0].get_run(run_id)
 
 
 def log_prefix(run_id: str, job_type: JobType):
@@ -137,6 +162,7 @@ def load_log_lines(
     continuation_cursor: Optional[str],
     max_lines: int,
     filter_strings: Optional[List[str]] = None,
+    object_source: ObjectSource = ObjectSource.DB,
 ) -> LogLineResult:
     """Load a portion of the logs for a particular run
 
@@ -152,6 +178,8 @@ def load_log_lines(
     filter_strings:
         Only log lines that contain ALL of the strings in this list will
         be included in the result
+    object_source:
+        How to get runs/resolutions
 
     Returns
     -------
@@ -164,10 +192,10 @@ def load_log_lines(
         max_lines,
         filter_strings,
     )
-    run = get_run(run_id)
+    run = object_source.get_run(run_id)
     run_state = FutureState[run.future_state]  # type: ignore
     still_running = not (run_state.is_terminal() or run_state == FutureState.RAN)
-    resolution = get_resolution(run.root_id)
+    resolution = object_source.get_resolution(run.root_id)
     filter_strings = filter_strings if filter_strings is not None else []
     cursor = (
         Cursor.from_token(continuation_cursor)
@@ -292,7 +320,7 @@ def _load_non_inline_logs(
             else None,
             log_unavailable_reason="No log files found",
         )
-    line_stream = _line_stream_from_log_directory(
+    line_stream = line_stream_from_log_directory(
         prefix, cursor_file=cursor_file, cursor_line_index=cursor_line_index
     )
 
@@ -402,7 +430,7 @@ def _load_inline_logs(
         )
 
     prefix = log_prefix(resolution.root_id, JobType.driver)
-    line_stream = _line_stream_from_log_directory(
+    line_stream = line_stream_from_log_directory(
         prefix, cursor_file=cursor_file, cursor_line_index=cursor_line_index
     )
     line_stream = _filter_for_inline(
@@ -424,7 +452,7 @@ def _load_inline_logs(
     )
 
 
-def _line_stream_from_log_directory(
+def line_stream_from_log_directory(
     directory: str, cursor_file: Optional[str], cursor_line_index: Optional[int]
 ) -> Iterable[LogLine]:
     """Stream lines from multiple files in a storage dir, starting from cursor."""
