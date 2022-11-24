@@ -8,7 +8,9 @@ data:
 {{ if .Values.auth.enabled }}
   GOOGLE_OAUTH_CLIENT_ID: {{ .Values.auth.google_oauth_client_id | quote }}
   SEMATIC_AUTHENTICATE: "1"
+{{ if .Values.auth.authorized_email_domain }}
   SEMATIC_AUTHORIZED_EMAIL_DOMAIN: {{ .Values.auth.authorized_email_domain | quote }}
+{{ end }}
 {{ end }}
 {{ if .Values.aws.enabled }}
   AWS_S3_BUCKET: {{ .Values.aws.storage_bucket | quote }}
