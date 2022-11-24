@@ -52,8 +52,11 @@ sematic_py_lib(
     ],
     deps = [
         "//sematic:abstract_future",
+        "//sematic:api_client",
         "//sematic:storage",
         "//sematic/db:queries",
+        "//sematic/db/models:resolution",
+        "//sematic/db/models:run",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/scheduling:external_job",
     ],

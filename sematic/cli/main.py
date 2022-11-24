@@ -1,5 +1,6 @@
 # Sematic
 import sematic.cli.cancel  # noqa: F401
+import sematic.cli.logs  # noqa: F401
 import sematic.cli.new  # noqa: F401
 import sematic.cli.run  # noqa: F401
 import sematic.cli.settings  # noqa: F401

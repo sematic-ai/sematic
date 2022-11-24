@@ -5,6 +5,7 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+    * [feature] Add CLI for reading/following logs for a run
     * [improvement] BREAKING CHANGE: The existing settings have been split into specific
       user and server settings. User settings configure the Resolver and the pipeline
       submission, and server settings configure the backend Server behavior. User settings
