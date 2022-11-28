@@ -130,9 +130,8 @@ export default function PipelineBar(props: {
   onRootIdChange: (rootId: string) => void;
   rootRun?: Run;
   resolution?: Resolution;
-  setRootRun: boolean;
 }) {
-  const { calculatorPath, onRootIdChange, setRootRun, rootRun, resolution } =
+  const { calculatorPath, onRootIdChange, rootRun, resolution } =
     props;
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -167,11 +166,8 @@ export default function PipelineBar(props: {
   useEffect(() => {
     fetchLatestRuns(calculatorPath, (runs: Run[]) => {
       setLatestRuns(runs);
-      if (runs.length > 0 && setRootRun) {
-        onRootIdChange(runs[0].id);
-      }
     });
-  }, [setRootRun, calculatorPath]);
+  }, [calculatorPath]);
 
   useEffect(() => {
     pipelineSocket.removeAllListeners("update");

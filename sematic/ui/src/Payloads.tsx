@@ -77,13 +77,14 @@ export type EnvPayload = {
 };
 
 type Operator = "eq";
-type BooleanOperator = "AND" | "OR";
 
 type FilterCondition = {
-    [key: string]: {[op in Operator]: string}
+    [key: string]: {[eq in Operator]? : string | null} | undefined
 }
 
 export type Filter = FilterCondition | {
-    [op in BooleanOperator ] : Array<FilterCondition>
+    AND : Array<FilterCondition>
+} | {
+  OR : Array<FilterCondition>
 }
 

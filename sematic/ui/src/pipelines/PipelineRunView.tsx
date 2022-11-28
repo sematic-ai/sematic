@@ -28,7 +28,7 @@ export default function PipelineRunView() {
         callback: (payload: RunViewPayload) => setRootRun(payload.content),
       });
     },
-    [setRootRun]
+    [setRootRun, user?.api_key]
   );
 
   const fetchResolution = useCallback(
@@ -40,18 +40,17 @@ export default function PipelineRunView() {
           setResolution(payload.content),
       });
     },
-    [setResolution]
+    [setResolution, user?.api_key]
   );
 
   useEffect(() => {
-    if (!rootId) return;
-    fetchRootRun(rootId);
-    fetchResolution(rootId);
-  }, [rootId]);
+    fetchRootRun(rootId!);
+    fetchResolution(rootId!);
+  }, [rootId, fetchRootRun, fetchResolution]);
 
   const changeRootRunId = useCallback(
     (rootId: string) => {
-      if (rootRun && rootRun.id == rootId) return;
+      if (rootRun && rootRun.id === rootId) return;
       var runURL =
         window.location.protocol +
         "//" +
@@ -64,7 +63,7 @@ export default function PipelineRunView() {
       fetchRootRun(rootId);
       fetchResolution(rootId);
     },
-    [calculatorPath, rootRun]
+    [calculatorPath, rootRun, fetchRootRun, fetchResolution]
   );
 
   if (calculatorPath) {
@@ -82,7 +81,6 @@ export default function PipelineRunView() {
           onRootIdChange={changeRootRunId}
           rootRun={rootRun}
           resolution={resolution}
-          setRootRun={rootId === undefined}
         />
         {rootRun && resolution && (
           <PipelinePanels
