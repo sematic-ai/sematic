@@ -1,32 +1,30 @@
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useMemo } from "react";
 import { UserContext } from "../index";
 
 interface HttpClient {
-    fetch: (params: { url: string, method: string, body: any }) => Promise<any>;
+    fetch: (params: { url: string, method?: string, body?: any }) => Promise<any>;
 }
 
 export function useHttpClient(): HttpClient {
     const { user } = useContext(UserContext);
 
-    if (!user) {
-        throw Error('There is no provider who provide value for `UserContext`. '
-            + 'Please ensure a higher level `UserContext` provider exists in the '
-            + 'Component hierarchy.');
-    }
+    const headers = useMemo(() => {
+        const headers: HeadersInit = new Headers();
+        headers.set("Content-Type", "application/json");
 
-    const headers: HeadersInit = new Headers();
-    headers.set("Content-Type", "application/json");
+        if (user?.api_key) {
+            headers.set("X-API-KEY", user?.api_key);
+        }
 
-    if (user?.api_key) {
-        headers.set("X-API-KEY", user?.api_key);
-    }
+        return headers;
+    }, [user?.api_key]);
 
     return {
         fetch: useCallback(async ({
             url,
             method,
             body
-        }: { url: string, method: string, body: any }) => {
+        }: { url: string, method?: string, body?: any }) => {
             method = method || "GET";
 
             const reqBody: BodyInit | null = body ? JSON.stringify(body) : null;
@@ -42,6 +40,6 @@ export function useHttpClient(): HttpClient {
             }
 
             return response.json();
-        }, [])
+        }, [headers])
     };
 }
