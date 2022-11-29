@@ -26,7 +26,7 @@ import { Alert, Paper } from "@mui/material";
 import logo from "./Fox.png";
 import { fetchJSON } from "./utils";
 import { SnackBarProvider } from "./components/SnackBarProvider";
-import PipelineCalculatorView from "./pipelines/PipelineCalculatorView";
+import PipelineView from "./pipelines/PipelineView";
 
 export const UserContext = React.createContext<{
   user: User | null;
@@ -120,7 +120,7 @@ function App() {
               />
               <Route
                 path="pipelines/:calculatorPath"
-                element={<PipelineCalculatorView />}
+                element={<PipelineView />}
               />
             </Route>
           </Routes>

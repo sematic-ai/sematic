@@ -11,7 +11,7 @@ import { Alert } from "@mui/material";
  * 
  * @returns JSX.element
  */
-export default function PipelineCalculatorView() {
+export default function PipelineView() {
     const params = useParams();
     const { calculatorPath } = params;
 
