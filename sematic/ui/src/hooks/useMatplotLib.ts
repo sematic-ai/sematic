@@ -1,7 +1,7 @@
-import * as mpld3 from "mpld3";
+import { draw_figure } from "mpld3";
 
 export function useMatplotLib(elementId: string) {
     return (spec: any) => {
-        mpld3.draw_figure(elementId, spec, null, true);
+        draw_figure(elementId, spec, null, true);
     };
 }
