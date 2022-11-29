@@ -36,8 +36,8 @@ export function usePipelineNavigation(pipelinePath: string) {
             return
         }
 
-        navigate(`/pipelines/${calculatorPath}/${requestedRootId}`, {
+        navigate(`/pipelines/${pipelinePath}/${requestedRootId}`, {
             replace
         });
-    }, [calculatorPath, rootId, navigate]);
+    }, [pipelinePath, rootId, navigate]);
 }
