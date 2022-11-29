@@ -69,8 +69,9 @@ SEMATIC_API_KEY: <my_prod1_api_key>
 access to the PyPi repo, which is limited to employees of Sematic.
 
 - Bump the version in `wheel_version.bzl`, `sematic/versions.py`,
-  and `helm/sematic/values.yaml`
-- Update `changelog.md` with the new version number
+  `helm/sematic-server/values.yaml`, and `helm/sematic-server/Chart.yaml`
+- Update `changelog.md` with the new version number and any missing change
+  entries
 - Make the bump commit
 - Build the UI:
 ```bash
@@ -116,4 +117,5 @@ $ TAG=v$(python3 sematic/versions.py) make release-server
 ```
 
 Finally, draft the release on GitHub. Add a "What's Changed" section, a
-"Full Changelog" link, and attach the wheel in the assets section.
+"New Contributors" section, a "Full Changelog" link, and attach the wheel in
+the assets section.
