@@ -1,6 +1,5 @@
-import React, { useMemo } from "react";
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Plotly from "plotly.js-cartesian-dist";
-import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 import DataEditor, {
   Item,
@@ -27,7 +26,11 @@ import {
   Button,
 } from "@mui/material";
 import { OpenInNew } from "@mui/icons-material";
-import {format, isValid, parseISO} from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
+import { v4 as uuidv4 } from "uuid";
+import { useMatplotLib } from "../hooks/useMatplotLib";
+import useMeasure from "react-use/lib/useMeasure";
+import Zoom from "react-medium-image-zoom";
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -269,8 +272,9 @@ function ListValueView(props: ValueViewProps) {
           </TableCell>
           <TableCell>
             {summary} and{" "}
-            {props.valueSummary["length"] - props.valueSummary["summary"].length}{" "}
-             more items.
+            {props.valueSummary["length"] -
+              props.valueSummary["summary"].length}{" "}
+            more items.
           </TableCell>
         </TableRow>
       </TableBody>
@@ -541,12 +545,79 @@ function PlotlyFigureValueView(props: ValueViewProps) {
 
 function MatplotlibFigureValueView(props: ValueViewProps) {
   let { valueSummary } = props;
-  let { path } = valueSummary;
+
+  const hasFigureJsonData = useMemo(() => !!valueSummary['mpld3'], [valueSummary]);
+  
+  return hasFigureJsonData ? 
+    <MatplotlibFigureValueFigure key={valueSummary['mpld3']['id']} spec={valueSummary['mpld3']} />
+    : <MatplotlibFigureValueImage path={valueSummary['path']} /> ;
+}
+
+interface MatplotlibFigureValueImageProps{
+  path: string
+}
+
+function MatplotlibFigureValueImage(props: MatplotlibFigureValueImageProps) {
+  const { path } = props;
   return (
     <Zoom>
       <img src={path} width={"100%"} alt="matplotlib figure" />
     </Zoom>
   );
+}
+
+interface MatplotlibFigureValueFigureProps{
+  spec: any
+}
+
+function MatplotlibFigureValueFigure(props: MatplotlibFigureValueFigureProps) {
+  const { spec: specProp } = props;
+  const figureId = useMemo(() => `fig-${uuidv4()}`, []);
+
+  const drawFigure = useMatplotLib(figureId);
+
+  const [figDivRef, { width, height}] = useMeasure<HTMLDivElement>();
+
+  const hasFigureRendered = useRef(false)
+
+  const [scaleAndTranslate, setScaleAndTranslate] = useState({
+    scale: 1, translate: {x: 0, y: 0}
+  });
+
+  const [scaledHeight, setScaleHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    // wait for the element's final layout when its width is fully expanded.
+    if (!hasFigureRendered.current && width > 0) {
+      const spec = {
+        ...specProp,
+        plugins: []
+      };
+
+      const scaledHeight = width / spec.width * spec.height;
+      
+      drawFigure(spec);
+
+      const scale = width / spec.width;
+
+      setScaleHeight(scaledHeight);
+      setScaleAndTranslate({
+        scale: scale,
+        translate: {
+          x: (width - spec.width) / 2,
+          y: (scaledHeight - spec.height) / 2
+        }
+      })
+
+      hasFigureRendered.current = true;
+    }
+  }, [width, height, drawFigure, figureId, specProp]);
+
+  return <div ref={figDivRef} style={{width: "100%", height: `${scaledHeight}px`}} >
+      <div id={figureId} style={{width: "100%", height: '100%',
+      transform: `scale(${scaleAndTranslate.scale})` + 
+      ` translate(${scaleAndTranslate.translate.x}px, ${scaleAndTranslate.translate.y}px)`}}/>
+    </div>
 }
 
 function DataFrameTable(props: {
@@ -693,15 +764,13 @@ function LinkValueView(props: ValueViewProps) {
 }
 
 function DatetimeValueView(props: ValueViewProps) {
-  const {valueSummary} = props;
-  const date = parseISO(valueSummary)
+  const { valueSummary } = props;
+  const date = parseISO(valueSummary);
 
   if (!valueSummary || !isValid(date)) {
-      return <Alert severity="error">Incorrect date value.</Alert>;
+    return <Alert severity="error">Incorrect date value.</Alert>;
   }
-  return (
-      <Typography>{format(date, "LLLL d, yyyy h:mm:ss a xxx", )}</Typography>
-  );
+  return <Typography>{format(date, "LLLL d, yyyy h:mm:ss a xxx")}</Typography>;
 }
 
 type ComponentPair = {
@@ -722,7 +791,7 @@ const TypeComponents: Map<string, ComponentPair> = new Map([
   ["dataclass", { type: DataclassTypeView, value: DataclassValueView }],
   ["Union", { type: UnionTypeView, value: ValueView }],
   ["Link", { type: TypeView, value: LinkValueView }],
-  ["datetime.datetime", {type: TypeView, value: DatetimeValueView}],
+  ["datetime.datetime", { type: TypeView, value: DatetimeValueView }],
   [
     "torch.utils.data.dataloader.DataLoader",
     { type: TypeView, value: TorchDataLoaderValueView },
