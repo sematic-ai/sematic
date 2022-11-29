@@ -27,7 +27,7 @@ export function useFetchLatestRuns(runFilters: Filter | undefined = undefined) {
     return {isLoaded, error, latestRuns};
 }
 
-export function usePipelineNavigation(calculatorPath: string) {
+export function usePipelineNavigation(pipelinePath: string) {
     const navigate = useNavigate();
     const { rootId } = useParams();
 
