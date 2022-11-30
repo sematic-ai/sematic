@@ -91,7 +91,7 @@ export default function Home() {
       <Typography variant="h1">{h1}</Typography>
       <Box sx={{ mt: 15, mb: 10, minHeight: "1px" }}>
         {!!error && <Alert severity="error">
-          There is an error loading the latest runs {error.message}</Alert>}
+          Encountered an error loading the latest runs: {error.message}</Alert>}
         {prompt ? (
           prompt
         ) : user && isLoaded ? (
