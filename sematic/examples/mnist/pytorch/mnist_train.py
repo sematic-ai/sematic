@@ -10,7 +10,7 @@ import argparse
 import logging
 
 # Sematic
-from sematic import CloudResolver
+from sematic import CloudResolver, LocalResolver
 from sematic.examples.mnist.pytorch.pipeline import (
     DataLoaderConfig,
     PipelineConfig,
@@ -34,6 +34,8 @@ def main():
     parser.add_argument("--epochs", type=int, default=1)
     parser.add_argument("--learning-rate", type=float, default="1")
     parser.add_argument("--cuda", default=False, action="store_true")
+    parser.add_argument("--rerun-from", type=str, default=None)
+    parser.add_argument("--cloud", default=False, action="store_true")
 
     args = parser.parse_args()
 
@@ -45,9 +47,15 @@ def main():
         dataloader_config=DataLoaderConfig(), train_config=train_config
     )
 
+    resolver = (
+        CloudResolver(detach=args.detach, rerun_from=args.rerun_from)
+        if args.cloud
+        else LocalResolver(rerun_from=args.rerun_from)
+    )
+
     pipeline(config=config).set(
         name="PyTorch MNIST Example", tags=["pytorch", "example", "mnist"]
-    ).resolve(CloudResolver(detach=args.detach))
+    ).resolve(resolver)
 
 
 if __name__ == "__main__":
