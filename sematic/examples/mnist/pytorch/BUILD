@@ -31,6 +31,7 @@ py_library(
 
 sematic_pipeline(
     name = "mnist_train",
+    # base = "@sematic-worker-cuda//image",
     dev = True,
     registry = "558717131297.dkr.ecr.us-west-2.amazonaws.com",
     repository = "sematic-dev",

@@ -201,7 +201,10 @@ class CloudResolver(LocalResolver):
     def _update_run_and_future_pre_scheduling(self, run: Run, future: AbstractFuture):
         # For the cloud resolver, the server will update the relevant
         # run fields when it gets scheduled by the server.
-        pass
+        if not future.props.inline:
+            return
+
+        super()._update_run_and_future_pre_scheduling(run, future)
 
     def _detach_resolution(self, future: AbstractFuture) -> str:
         run = self._populate_run_and_artifacts(future)

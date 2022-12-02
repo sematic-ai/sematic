@@ -52,7 +52,8 @@ class PipelineConfig:
     use_cuda: bool = False
 
 
-GPU_RESOURCE_REQS = ResourceRequirements(
+GPU_RESOURCE_REQS = None
+ResourceRequirements(
     kubernetes=KubernetesResourceRequirements(
         node_selector={"node.kubernetes.io/instance-type": "g4dn.xlarge"},
         requests={"cpu": "2", "memory": "2Gi"},
@@ -60,7 +61,7 @@ GPU_RESOURCE_REQS = ResourceRequirements(
 )
 
 
-@sematic.func(inline=False, resource_requirements=GPU_RESOURCE_REQS)
+@sematic.func(inline=True, resource_requirements=GPU_RESOURCE_REQS)
 def train_model(
     config: TrainConfig,
     train_loader: DataLoader,
@@ -94,7 +95,7 @@ class EvaluationResults:
     confusion_matrix: plotly.graph_objs.Figure
 
 
-@sematic.func(inline=False, resource_requirements=GPU_RESOURCE_REQS)
+@sematic.func(inline=True, resource_requirements=GPU_RESOURCE_REQS)
 def evaluate_model(
     model: nn.Module, test_loader: DataLoader, device: torch.device
 ) -> EvaluationResults:

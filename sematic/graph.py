@@ -462,7 +462,7 @@ class Graph:
         else:
             future = func(**kwargs)
 
-        future.name = run.name
+        future.set(name=run.name)
 
         cloned_graph.input_artifacts[future.id] = run_input_artifacts
 

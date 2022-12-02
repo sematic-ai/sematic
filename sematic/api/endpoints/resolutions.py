@@ -3,6 +3,7 @@ Module keeping all /api/v*/runs/* API endpoints.
 """
 
 # Standard Library
+import logging
 from http import HTTPStatus
 from typing import Optional
 
@@ -35,6 +36,8 @@ from sematic.db.queries import (
 )
 from sematic.scheduling.job_scheduler import schedule_resolution
 from sematic.scheduling.kubernetes import cancel_job
+
+logger = logging.getLogger(__name__)
 
 
 @sematic_api.route("/api/v1/resolutions/<resolution_id>", methods=["GET"])
@@ -176,7 +179,12 @@ def rerun_resolution_endpoint(
     original_runs, _, original_edges = get_run_graph(original_resolution.root_id)
     original_root_run = original_runs[0]
 
+    logger.info("Original root run name %s", original_root_run.name)
+
     root_run, edges = clone_root_run(original_root_run, original_edges)
+
+    logger.info("Cloned root run name %s", root_run.name)
+
     save_graph(runs=[root_run], edges=edges, artifacts=[])
 
     resolution = clone_resolution(original_resolution, root_id=root_run.id)

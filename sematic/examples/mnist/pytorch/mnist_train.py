@@ -24,7 +24,7 @@ TRAIN_CONFIGS = [
     TrainConfig(epochs=1, learning_rate=0.2),
     TrainConfig(epochs=5, learning_rate=0.4),
     TrainConfig(epochs=5, learning_rate=0.6),
-    TrainConfig(epochs=5, learning_rate=0.8),
+    TrainConfig(epochs=5, learning_rate=0.9),
 ]
 
 

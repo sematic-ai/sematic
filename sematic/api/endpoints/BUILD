@@ -8,6 +8,7 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         ":auth",
+        ":events",
         ":request_parameters",
         "//sematic:log_reader",
         "//sematic/api:app",
