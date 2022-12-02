@@ -30,7 +30,7 @@ export function useHttpClient(): HttpClient {
             const reqBody: BodyInit | null = body ? JSON.stringify(body) : null;
 
             if (process.env.NODE_ENV === "development") {
-                console.log("fetchJSON", method, url, reqBody);
+                console.log("HttpClient.fetch", method, url, reqBody);
             }
 
             const response = await fetch(url, { method: method, headers: headers, body: reqBody });
