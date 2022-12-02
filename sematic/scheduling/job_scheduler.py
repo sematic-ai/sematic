@@ -9,6 +9,7 @@ from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.scheduling import kubernetes as k8s
 from sematic.scheduling.external_job import KUBERNETES_JOB_KIND, ExternalJob
+from sematic.versions import MIN_CLIENT_SERVER_SUPPORTS, string_version_to_tuple
 
 logger = logging.getLogger(__name__)
 
@@ -153,6 +154,19 @@ def _assert_resolution_is_scheduleable(resolution: Resolution):
     if resolution.container_image_uri is None:
         raise StateNotSchedulable(
             f"The resolution {resolution.root_id} had no docker image URI"
+        )
+    if (
+        resolution.client_version
+        and string_version_to_tuple(resolution.client_version)
+        < MIN_CLIENT_SERVER_SUPPORTS
+    ):
+        # You may wonder how we can get here given that clients check for server
+        # compatibility. This can still happen if somebody tries to rerun an old
+        # resolution (ex: from the UI).
+        raise StateNotSchedulable(
+            f"The resolution {resolution.root_id} uses Sematic version "
+            f"{resolution.client_version}, but the server requires at least "
+            f"version {MIN_CLIENT_SERVER_SUPPORTS}"
         )
 
 

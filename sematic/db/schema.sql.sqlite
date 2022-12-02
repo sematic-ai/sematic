@@ -82,6 +82,7 @@ CREATE TABLE resolutions (
     external_jobs_json JSONB,
     git_info_json JSONB,
     container_image_uris JSONB,
+    client_version TEXT,
 
     PRIMARY KEY (root_id),
     FOREIGN KEY (root_id) REFERENCES runs(id)

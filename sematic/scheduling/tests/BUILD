@@ -8,6 +8,7 @@ pytest_test(
         "//sematic/resolvers:resource_requirements",
         "//sematic/scheduling:job_scheduler",
         "//sematic/scheduling:kubernetes",
+        "//sematic:versions",
     ],
 )
 
