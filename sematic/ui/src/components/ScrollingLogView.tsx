@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { Alert, Box, Button, TextField, useTheme } from "@mui/material";
+import { useEffect, useCallback, useMemo } from "react";
+import { Alert, Box, Button, useTheme } from "@mui/material";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Loading from "./Loading";
 import { useAccumulateLogsUntilEnd, useLogStream } from "../hooks/logHooks";
@@ -8,12 +8,12 @@ const DEFAULT_NO_LINES_REASON = "No more matching lines";
 
 export default function ScrollingLogView(props: {
   logSource: string;
+  filterString: string;
   onError: (error: Error) => void
 }) {
-  const { logSource, onError } = props;
+  const { logSource, filterString, onError } = props;
   const theme = useTheme();
 
-  const [filterString, setFilterString] = useState<string>("");
   const scrollerId = useMemo(() => `scrolling-logs-${logSource}`, [logSource]) ;
 
   // Single pull logic
@@ -30,13 +30,6 @@ export default function ScrollingLogView(props: {
       onError(error);
     }
   }, [onError, error])
-
-  const onFilterStringChange = useCallback(
-    (evt: any) => {
-      setFilterString(evt.target.value);
-    },
-    [setFilterString]
-  );
 
   const onScroll = useCallback(
     (evt: any) => {
@@ -107,12 +100,7 @@ export default function ScrollingLogView(props: {
         top: 0,
       }}
     >
-      <TextField
-        variant="standard"
-        fullWidth={true}
-        placeholder={"Filter..."}
-        onChange={onFilterStringChange}
-      />
+      
       <Box
         id={scrollerId}
         sx={{
@@ -130,7 +118,7 @@ export default function ScrollingLogView(props: {
           next={infiniteScrollGetNext}
           scrollableTarget={scrollerId}
           hasMore={hasMore}
-          loader={<Loading isLoaded={false} />}
+          loader={<Loading isLoaded={!isLoading} />}
           onScroll={onScroll}
           endMessage={noMoreLinesIndicator}
         >

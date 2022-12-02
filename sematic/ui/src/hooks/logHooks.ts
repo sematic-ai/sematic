@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useAsyncFn from "react-use/lib/useAsyncFn";
 import useList from "react-use/lib/useList";
 import useLatest from "react-use/lib/useLatest";
@@ -12,7 +12,7 @@ export interface GetNextResult {
 }
 
 export function useLogStream(source: string, filterString: string) {
-    const [lines, {clear: clearLines, push: pushLines}] = useList<string>([]);
+    const [lines, {push: pushLines}] = useList<string>([]);
     const [cursor, setCursor] = useState<string | null>(null);
     const [noMoreLinesReason, setNoMoreLinesReason] = useState<string | null>(null);
     const [hasPulledData, setHasPulledData] = useState(false);
@@ -20,13 +20,6 @@ export function useLogStream(source: string, filterString: string) {
     const hasMore = useMemo(() => {
         return !hasPulledData || cursor != null;
     }, [cursor, hasPulledData]);
-
-    useEffect(() => {
-        // if source or filterString changed, clear the state
-        clearLines();
-        setCursor(null);
-        setHasPulledData(false);
-    }, [source, filterString, clearLines, setHasPulledData]);
 
     const { fetch } = useHttpClient();
     const { devLogger } = useLogger();
@@ -81,13 +74,34 @@ export function useAccumulateLogsUntilEnd(hasMore: boolean, getNext: () => Promi
     const [accumulatedLines, setAccumulatedLines] = useState<number>(0);
     const [isLoading, setIsLoading] = useState(false);
 
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const { devLogger } = useLogger();
+
+    const cancelAccumulation = useCallback(() => {
+        if (!!abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            devLogger('Logs accumulation aborted.')
+        }
+    }, [abortControllerRef, devLogger]);
+
     const accumulateLogsUntilEnd = useCallback(async () => {
         setIsAccumlating(true);
         let accumulatedLines = 0;
         setAccumulatedLines(accumulatedLines);
+
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
         while(latestHasMore.current === true) {
+            if (abortController.signal.aborted) {
+                break;
+            }
+
             setIsLoading(true);
             const {pulledLines} = await latestGetNext.current();
+
+            if (abortController.signal.aborted) {
+                break;
+            }
             setIsLoading(false);
             
             accumulatedLines += pulledLines;
@@ -100,6 +114,13 @@ export function useAccumulateLogsUntilEnd(hasMore: boolean, getNext: () => Promi
         }
         setIsAccumlating(false);
     }, [latestHasMore, latestGetNext]);
+
+    useEffect(() => {
+        // always cancel ongoing accumulation if the component will unmount
+        return () => {
+            cancelAccumulation();
+        }
+    }, [cancelAccumulation])
 
     return {
         accumulateLogsUntilEnd,
