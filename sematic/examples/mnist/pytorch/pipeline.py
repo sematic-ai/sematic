@@ -121,7 +121,9 @@ def train_eval(
     """
     device = torch.device("cuda" if train_config.cuda else "cpu")
 
-    model = train_model(config=train_config, train_loader=train_dataloader, device=device)
+    model = train_model(
+        config=train_config, train_loader=train_dataloader, device=device
+    )
 
     evaluation_results = evaluate_model(
         model=model, test_loader=test_dataloader, device=device

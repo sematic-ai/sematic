@@ -418,7 +418,7 @@ def _get_most_recent_pod_details(
 def load_kube_config():
     """Load the kubeconfig either from file or the in-cluster config"""
     global _kubeconfig_loaded
-    if _kubeconfig_loaded:
+    if False:  # _kubeconfig_loaded:
         return
     try:
         kubernetes.config.load_kube_config()  # type: ignore
