@@ -5,11 +5,22 @@ and are published to https://docs.sematic.dev/
 
 ## Setup
 
-The developer tools need to be installed by running this command once (and subsequently
-whenever `requirements/ci-requirements.txt`) will be updated:
+The developer tools need to be installed by running this command once (and
+subsequently whenever `requirements/ci-requirements.txt`) will be updated:
 ```bash
 $ make install-dev-deps
 ```
+
+## Development
+
+Simple issues can be self-contained inside PRs. Issues that implement or
+partially implement reported
+[issues](https://github.com/sematic-ai/sematic/issues) must reference that
+issue in the PR description.
+
+Large features or refactorings must come with a design which has gone through
+the process described
+[here](https://github.com/sematic-ai/sematic/tree/main/developer-docs/designs/README.md).
 
 ## Testing
 
