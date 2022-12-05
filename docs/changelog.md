@@ -6,6 +6,7 @@ with nothing else on the line.
 -->
 * HEAD
     * [feature] Add CLI for reading/following logs for a run
+    * [feature] Enable configuration for the Kubernetes service account the workers will use
     * [improvement] BREAKING CHANGE: The existing settings have been split into specific
       user and server settings. User settings configure the Resolver and the pipeline
       submission, and server settings configure the backend Server behavior. User settings
