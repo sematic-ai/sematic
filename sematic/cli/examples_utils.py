@@ -9,7 +9,7 @@ MIN_EXAMPLE_FILES = [
     "__init__.py",
     "requirements.txt",
     "AUTHORS",
-    "README",
+    "README.md",
 ]
 
 
