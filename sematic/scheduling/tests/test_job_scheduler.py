@@ -108,7 +108,7 @@ def test_schedule_resolution(mock_k8s, resolution: Resolution):
 
 def test_schedule_resolution_bad_version(mock_k8s, resolution: Resolution):
     resolution.client_version = "0.0.0"
-    with pytest.raises(StateNotSchedulable, match=r".*0.0.0.*"):
+    with pytest.raises(StateNotSchedulable, match=r".*0\.0\.0\.*"):
         schedule_resolution(resolution, max_parallelism=3, rerun_from="foobar")
     mock_k8s.schedule_resolution_job.assert_not_called()
 

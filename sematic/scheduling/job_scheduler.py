@@ -155,11 +155,13 @@ def _assert_resolution_is_scheduleable(resolution: Resolution):
         raise StateNotSchedulable(
             f"The resolution {resolution.root_id} had no docker image URI"
         )
-    if (
-        resolution.client_version
+
+    valid_client_version = (
+        resolution.client_version is not None
         and string_version_to_tuple(resolution.client_version)
         < MIN_CLIENT_SERVER_SUPPORTS
-    ):
+    )
+    if valid_client_version:
         # You may wonder how we can get here given that clients check for server
         # compatibility. This can still happen if somebody tries to rerun an old
         # resolution (ex: from the UI).
