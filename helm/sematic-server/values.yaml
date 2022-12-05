@@ -5,6 +5,8 @@ auth:
 aws:
   enabled: true
   storage_bucket: sematic-dev
+app_config:
+  worker_kubernetes_sa: default
 
 create_secret: true
 database:
