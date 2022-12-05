@@ -239,7 +239,6 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
             original_value = getattr(self, column_key)
             new_value = getattr(other, column_key)
             if original_value != new_value:
-                logger.exception("Couldn't update resolution")
                 raise InvalidResolution(
                     f"Cannot update {column_key} of resolution {self.root_id} after "
                     f"it has been created. Original value: '{original_value}', "
@@ -248,7 +247,6 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
 
         if other.status != self.status:
             if not ResolutionStatus.is_allowed_transition(self.status, other.status):
-                logger.warning("Invalid resolution state transition")
                 raise InvalidResolution(
                     f"Resolution {self.root_id} cannot be moved from the {self.status} "
                     f"state to the {other.status} state."

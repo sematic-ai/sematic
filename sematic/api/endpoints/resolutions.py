@@ -84,10 +84,13 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
     resolution = Resolution.from_json_encodable(resolution_json_encodable)
 
     if not resolution.root_id == resolution_id:
-        logger.warning("Mismatched resolution ids")
-        return jsonify_error(
+        message = (
             f"Id of resolution in the payload ({resolution.root_id}) does not match "
-            f"the one from the endpoint called ({resolution_id})",
+            f"the one from the endpoint called ({resolution_id})"
+        )
+        logger.warning(message)
+        return jsonify_error(
+            message,
             HTTPStatus.BAD_REQUEST,
         )
 
@@ -101,7 +104,7 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
                 HTTPStatus.BAD_REQUEST,
             )
     except NoResultFound:
-        logger.warning("No resolution with id")
+        logger.warning("No resolution with given id: %s", resolution_id)
         return jsonify_error(
             f"Resolutions can only be created when there is an existing run they "
             f"are resolving, but there is no run with id {resolution_id}",
@@ -123,7 +126,7 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
         else:
             resolution.validate_new()
     except InvalidResolution as e:
-        logger.exception("Could not update resolution")
+        logger.warning("Could not update resolution: %s", e)
         return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
 
     save_resolution(resolution)
