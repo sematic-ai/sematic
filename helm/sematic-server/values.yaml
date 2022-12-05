@@ -5,8 +5,6 @@ auth:
 aws:
   enabled: true
   storage_bucket: sematic-dev
-app_config:
-  worker_kubernetes_sa: default
 
 create_secret: true
 database:
@@ -22,6 +20,10 @@ image:
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
+
+worker:
+  service_account:
+    name: default
 
 serviceAccount:
   # Should a new service account be created? Or should we use
