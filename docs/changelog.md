@@ -13,9 +13,13 @@ with nothing else on the line.
       `sematic settings` command, and server settings are specified in the new
       `~/.sematic/server.yaml` file and accessed through the `sematic server-settings`
       command.
-    * [bugfix] Fix a bug deserializing `Union` values. Note that once you are using this release,
-      if you try to "rerun from here" using a pipeline that has `Union` values in it that were
-      produced prior to this version of Sematic, the rerun will likely fail with a serialization issue.
+    * [bugfix] BREAKING CHANGE: The examples' `README` files have been renamed to
+      `README.md` in order for them to correctly render as MarkDown files. This change is
+      required by the Bazel `example_pipeline` target as well
+    * [bugfix] Fix a bug deserializing `Union` values. Note that once you are using this
+      release, if you try to "rerun from here" using a pipeline that has `Union` values in
+      it that were produced prior to this version of Sematic, the rerun will likely fail
+      with a serialization issue.
 * [0.20.1](https://pypi.org/project/sematic/0.20.1/)
     * [bugfix] Add support for subclasses of ABCMeta
 * [0.20.0](https://pypi.org/project/sematic/0.20.0/)
