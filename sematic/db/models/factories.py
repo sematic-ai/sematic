@@ -23,7 +23,6 @@ from sematic.types.serialization import (
     value_from_json_encodable,
     value_to_json_encodable,
 )
-from sematic.versions import CURRENT_VERSION_STR
 
 
 def make_run_from_future(future: AbstractFuture) -> Run:
@@ -129,7 +128,7 @@ def clone_resolution(resolution: Resolution, root_id: str) -> Resolution:
         settings_env_vars=resolution.settings_env_vars,
         container_image_uri=resolution.container_image_uri,
         container_image_uris=resolution.container_image_uris,
-        client_version=CURRENT_VERSION_STR,
+        client_version=resolution.client_version,
     )
 
     # Set this outside the constructor because the constructor expects
