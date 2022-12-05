@@ -57,6 +57,7 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     secret_root = "/the-secrets"
     image_uri = "the-image"
     namespace = "the-namespace"
+    custom_service_account = "custom-sa"
     args = ["a", "b", "c"]
     configured_env_vars = {"SOME_ENV_VAR": "some-env-var-value"}
 
@@ -88,6 +89,7 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
             image=image_uri,
             environment_vars=configured_env_vars,
             namespace=namespace,
+            service_account=custom_service_account,
             resource_requirements=resource_requirements,
             args=args,
         )
@@ -101,6 +103,7 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     assert secret_volume.name == "sematic-func-secrets-volume"
     assert secret_volume.secret.items[0].key == next(iter(file_secrets.keys()))
     assert secret_volume.secret.items[0].path == next(iter(file_secrets.values()))
+    assert job.spec.template.spec.service_account_name == custom_service_account
     container = job.spec.template.spec.containers[0]
     assert container.args == args
     env_vars = container.env
@@ -435,8 +438,10 @@ def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job, mock_server_settings
     image = "the_image"
     run_id = "run_id"
     namespace = "the-namespace"
+    custom_service_account = "custom-sa"
     mock_server_settings.return_value = {
-        ServerSettingsVar.KUBERNETES_NAMESPACE: namespace
+        ServerSettingsVar.KUBERNETES_NAMESPACE: namespace,
+        ServerSettingsVar.SEMATIC_WORKER_KUBERNETES_SA: custom_service_account,
     }
 
     schedule_run_job(
@@ -452,6 +457,7 @@ def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job, mock_server_settings
         image=image,
         environment_vars=settings,
         namespace=namespace,
+        service_account=custom_service_account,
         resource_requirements=resource_requests,
         args=["--run_id", run_id],
     )

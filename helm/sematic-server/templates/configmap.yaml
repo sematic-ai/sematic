@@ -14,3 +14,4 @@ data:
   AWS_S3_BUCKET: {{ .Values.aws.storage_bucket | quote }}
 {{ end }}
   KUBERNETES_NAMESPACE: {{ .Release.Namespace }}
+  SEMATIC_WORKER_KUBERNETES_SA: {{ .Values.worker.service_account.name | quote }}
