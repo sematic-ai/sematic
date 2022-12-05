@@ -384,3 +384,7 @@ class StateMachineResolver(Resolver, abc.ABC):
         future.nested_future = nested_future
         nested_future.parent_future = future
         self._enqueue_future(nested_future)
+
+    @classmethod
+    def classpath(cls) -> str:
+        return f"{cls.__module__}.{cls.__name__}"

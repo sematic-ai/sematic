@@ -42,6 +42,7 @@ pytest_test(
     deps = [
         "//sematic:abstract_calculator",
         "//sematic:calculator",
+        "//sematic:future_context",
         "//sematic:retry_settings",
         "//sematic/resolvers:silent_resolver",
         "//sematic/utils:exceptions",
