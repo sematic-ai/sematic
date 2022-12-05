@@ -29,7 +29,14 @@ class ServerSettingsVar(enum.Enum):
     GITHUB_OAUTH_CLIENT_ID = "GITHUB_OAUTH_CLIENT_ID"
 
     # Kubernetes
+
+    # Controls the Kubernetes namespace that the server will launch
+    # jobs into
     KUBERNETES_NAMESPACE = "KUBERNETES_NAMESPACE"
+
+    # Controls which Kubernetes Service Account the server
+    # uses for jobs.
+    SEMATIC_WORKER_KUBERNETES_SA = "SEMATIC_WORKER_KUBERNETES_SA"
 
     # GRAFANA
     GRAFANA_PANEL_URL = "GRAFANA_PANEL_URL"
