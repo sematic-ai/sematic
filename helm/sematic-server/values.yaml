@@ -21,9 +21,18 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+worker:
+  service_account:
+    name: default
+
 serviceAccount:
+  # Should a new service account be created? Or should we use
+  # one that already exists
+  create: false
+
   # Annotations to add to the service account
   annotations: {}
+
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""

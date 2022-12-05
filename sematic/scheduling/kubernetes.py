@@ -53,6 +53,8 @@ RESOLUTION_RESOURCE_REQUIREMENTS = ResourceRequirements(
     )
 )
 
+DEFAULT_WORKER_SERVICE_ACCOUNT = "default"
+
 
 @unique
 class KubernetesJobCondition(Enum):
@@ -539,6 +541,7 @@ def _schedule_kubernetes_job(
     image: str,
     environment_vars: Dict[str, str],
     namespace: str,
+    service_account: str = DEFAULT_WORKER_SERVICE_ACCOUNT,
     resource_requirements: Optional[ResourceRequirements] = None,
     args: Optional[List[str]] = None,
 ):
@@ -640,6 +643,7 @@ def _schedule_kubernetes_job(
                     volumes=volumes,
                     tolerations=tolerations,
                     restart_policy="Never",
+                    service_account_name=service_account,
                 ),
             ),
             backoff_limit=0,
@@ -661,6 +665,9 @@ def schedule_resolution_job(
 ) -> ExternalJob:
 
     namespace = get_server_settings(ServerSettingsVar.KUBERNETES_NAMESPACE)
+    service_account = get_server_settings(
+        ServerSettingsVar.SEMATIC_WORKER_KUBERNETES_SA, DEFAULT_WORKER_SERVICE_ACCOUNT
+    )
 
     external_job = KubernetesExternalJob.new(
         try_number=0,
@@ -684,6 +691,7 @@ def schedule_resolution_job(
         image=image,
         environment_vars=user_settings,
         namespace=namespace,
+        service_account=service_account,
         resource_requirements=RESOLUTION_RESOURCE_REQUIREMENTS,
         args=args,
     )
@@ -700,6 +708,9 @@ def schedule_run_job(
     """Schedule a job on k8s for a calculator execution."""
     # "User" in this case is the server.
     namespace = get_server_settings(ServerSettingsVar.KUBERNETES_NAMESPACE)
+    service_account = get_server_settings(
+        ServerSettingsVar.SEMATIC_WORKER_KUBERNETES_SA, DEFAULT_WORKER_SERVICE_ACCOUNT
+    )
     external_job = KubernetesExternalJob.new(
         try_number, run_id, namespace, JobType.worker
     )
@@ -713,6 +724,7 @@ def schedule_run_job(
         image=image,
         environment_vars=user_settings,
         namespace=namespace,
+        service_account=service_account,
         resource_requirements=resource_requirements,
         args=args,
     )
