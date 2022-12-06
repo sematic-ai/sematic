@@ -3,6 +3,7 @@ Module keeping all /api/v*/runs/* API endpoints.
 """
 
 # Standard Library
+import logging
 from http import HTTPStatus
 from typing import Optional
 
@@ -35,6 +36,8 @@ from sematic.db.queries import (
 )
 from sematic.scheduling.job_scheduler import schedule_resolution
 from sematic.scheduling.kubernetes import cancel_job
+
+logger = logging.getLogger(__name__)
 
 
 @sematic_api.route("/api/v1/resolutions/<resolution_id>", methods=["GET"])
@@ -71,6 +74,7 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
         or not flask.request.json
         or "resolution" not in flask.request.json
     ):
+        logger.warning("No json resolution payload")
         return jsonify_error(
             "Please provide a resolution payload in JSON format.",
             HTTPStatus.BAD_REQUEST,
@@ -80,21 +84,27 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
     resolution = Resolution.from_json_encodable(resolution_json_encodable)
 
     if not resolution.root_id == resolution_id:
-        return jsonify_error(
+        message = (
             f"Id of resolution in the payload ({resolution.root_id}) does not match "
-            f"the one from the endpoint called ({resolution_id})",
+            f"the one from the endpoint called ({resolution_id})"
+        )
+        logger.warning(message)
+        return jsonify_error(
+            message,
             HTTPStatus.BAD_REQUEST,
         )
 
     try:
         root_run = get_run(resolution_id)
         if root_run.parent_id is not None:
+            logger.warning("Non-root run resolution reference")
             return jsonify_error(
                 f"Resolutions can only be created for root runs, but the run "
                 f"{root_run.id} has parent {root_run.parent_id}",
                 HTTPStatus.BAD_REQUEST,
             )
     except NoResultFound:
+        logger.warning("No resolution with given id: %s", resolution_id)
         return jsonify_error(
             f"Resolutions can only be created when there is an existing run they "
             f"are resolving, but there is no run with id {resolution_id}",
@@ -116,6 +126,7 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
         else:
             resolution.validate_new()
     except InvalidResolution as e:
+        logger.warning("Could not update resolution: %s", e)
         return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
 
     save_resolution(resolution)
