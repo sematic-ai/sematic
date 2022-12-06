@@ -20,6 +20,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sematic.abstract_future import FutureState
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
+from sematic.api.endpoints.events import broadcast_graph_update
 from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
@@ -214,7 +215,11 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     run = schedule_run(run, resolution)
     logger.info("Scheduled run with external job: %s", run.external_jobs[-1])
     run.started_at = datetime.datetime.utcnow()
+
     save_run(run)
+
+    broadcast_graph_update(root_id=run.root_id)
+
     payload = dict(
         content=run.to_json_encodable(),
     )
@@ -333,6 +338,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
         if run is not None:
             new_future_state_value = run.future_state
             save_run(run)
+            broadcast_graph_update(run.root_id)
 
         result_list.append(
             dict(
