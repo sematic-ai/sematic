@@ -19,6 +19,7 @@
 * [Deploy Sematic](deploy.md)
 * [Container images](container-images.md)
 * [Artifacts](artifacts.md)
+* [Advanced APIs](advanced-apis.md)
 * [Glossary](glossary.md)
 
 ## Integrations
