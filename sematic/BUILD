@@ -8,6 +8,7 @@ sematic_py_lib(
         ":container_images",
         ":resolver",
         ":retry_settings",
+        "//sematic:future_context",
         "//sematic/future_operators:init",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:local_resolver",
@@ -41,6 +42,14 @@ sematic_py_lib(
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
         "//sematic/utils:retry",
+    ],
+)
+
+sematic_py_lib(
+    name = "future_context",
+    srcs = ["future_context.py"],
+    deps = [
+        "//sematic:resolver"
     ],
 )
 
