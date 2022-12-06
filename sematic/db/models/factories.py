@@ -128,6 +128,7 @@ def clone_resolution(resolution: Resolution, root_id: str) -> Resolution:
         settings_env_vars=resolution.settings_env_vars,
         container_image_uri=resolution.container_image_uri,
         container_image_uris=resolution.container_image_uris,
+        client_version=resolution.client_version,
     )
 
     # Set this outside the constructor because the constructor expects

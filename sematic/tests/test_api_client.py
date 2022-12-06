@@ -133,6 +133,9 @@ def test_validate_server_compatibility_new_server_still_supports(mock_requests):
         ),
     )
     _validate_server_compatibility(tries=5, seconds_between_tries=0, use_cached=False)
+    _validate_server_compatibility(tries=5, seconds_between_tries=0, use_cached=True)
+
+    mock_requests.get.assert_called_once()
 
 
 @mock.patch("sematic.api_client.requests")
