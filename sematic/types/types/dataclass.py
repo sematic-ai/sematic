@@ -66,7 +66,12 @@ def _safe_cast_dataclass(value: Any, type_: Any) -> Tuple[Any, Optional[str]]:
         if create_instance_from_scratch:
             cast_value[name] = cast_field
         else:
-            setattr(cast_value, name, cast_field)
+            try:
+                setattr(cast_value, name, cast_field)
+            except dataclasses.FrozenInstanceError:
+                # it's frozen, and the casts all passed, so we're fine
+                # to just leave the object as-is.
+                pass
 
     if create_instance_from_scratch:
         cast_value = type_(**cast_value)
