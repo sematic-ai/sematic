@@ -1,30 +1,57 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { UserContext } from "../index";
-import { Run } from "../Models";
+import { useAsyncFn } from "react-use";
 import { Filter, RunListPayload } from "../Payloads";
-import { fetchJSON } from "../utils";
+import { useHttpClient } from "./httpHooks";
 
-export function useFetchLatestRuns(runFilters: Filter | undefined = undefined) {
-    const { user } = useContext(UserContext);
-    
-    const [latestRuns, setLatestRuns] = useState<Run[]>([]);
-    const [error, setError] = useState<Error | null>(null);
+export type QueryParams = {[key: string]: string};
+
+export function useFetchRunsFn(runFilters: Filter | undefined = undefined,
+    otherQueryParams: QueryParams = {}) {
     const [isLoaded, setIsLoaded] = useState(false);
 
-    useEffect(() => {
-        fetchJSON({
-            url: "/api/v1/runs?limit=10&filters=" + JSON.stringify(runFilters),
-            apiKey: user?.api_key,
-            callback: (response: RunListPayload) => {
-                setLatestRuns(response.content);
-            },
-            setError: (error => setError(error as React.SetStateAction<Error | null>)),
-            setIsLoaded,
-          });
-    }, [setLatestRuns, setError, setIsLoaded, user, runFilters])
+    const queryParams = useMemo(() => {
+        let params = {...otherQueryParams};
+        if (!!runFilters) {
+            params.filters = JSON.stringify(runFilters)
+        }
+        return params;
+    }, [otherQueryParams, runFilters]);
 
-    return {isLoaded, error, latestRuns};
+    const {fetch} = useHttpClient();
+
+    const [state, load] = useAsyncFn(async (overrideQueryParams: QueryParams = {}) => {
+        const finalQueryParams = {
+            ...queryParams,
+            ...overrideQueryParams
+        }
+        const qString = (new URLSearchParams(finalQueryParams)).toString();
+        const response = await fetch({
+            url: `/api/v1/runs?${qString}`
+        });
+        setIsLoaded(true);
+        return response as RunListPayload;
+    }, [queryParams, fetch]);
+
+    const {loading: isLoading, error, value: runs} = state;
+
+    return {isLoaded, isLoading, error, runs: runs as RunListPayload, load};
+}
+
+export function useFetchRuns(runFilters: Filter | undefined = undefined,
+    otherQueryParams: {[key: string]: string} = {}) {
+    const {isLoaded, isLoading, error, runs, load} = useFetchRunsFn(runFilters, otherQueryParams);
+
+    const reloadRuns = useCallback(async () => {
+        const payload = await load();
+        return payload.content;
+    }, [load]);
+
+    useEffect(() => {
+        load();
+    }, [load])
+
+    return {isLoaded, isLoading, error, runs: runs?.content, reloadRuns};
 }
 
 export function usePipelineNavigation(pipelinePath: string) {
