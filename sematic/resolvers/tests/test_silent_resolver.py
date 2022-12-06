@@ -5,6 +5,7 @@ import pytest
 from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import FutureState
 from sematic.calculator import func
+from sematic.future_context import SematicContext, context
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.retry_settings import RetrySettings
 from sematic.utils.exceptions import ResolutionError
@@ -27,8 +28,41 @@ def pipeline(a: float, b: float) -> float:
     return add(c, d)
 
 
+@func
+def context_pipeline() -> SematicContext:
+    return direct_context_func()
+
+
+@func
+def direct_context_func() -> SematicContext:
+    return context()
+
+
+@func
+def nested_resolve_func() -> int:
+    return add(1, 2).resolve()
+
+
 def test_silent_resolver():
     assert SilentResolver().resolve(pipeline(3, 5)) == 24
+
+
+def test_silent_resolver_context():
+    future = context_pipeline()
+    result = SilentResolver().resolve(future)
+    assert result.root_id == future.id
+    assert result.run_id != future.id
+    assert result.resolver_class() is SilentResolver
+
+    future = direct_context_func()
+    result = SilentResolver().resolve(future)
+    assert result.root_id == future.id
+    assert result.run_id == future.id
+
+
+def test_nested_resolve():
+    with pytest.raises(ResolutionError):
+        SilentResolver().resolve(nested_resolve_func())
 
 
 _tried = 0

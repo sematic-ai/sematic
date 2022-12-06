@@ -3,6 +3,7 @@ import logging
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
+from sematic.future_context import SematicContext, set_context
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
 from sematic.utils.exceptions import ResolutionError, format_exception_for_run
 
@@ -19,7 +20,14 @@ class SilentResolver(StateMachineResolver):
         self._set_future_state(future, FutureState.SCHEDULED)
         try:
             self._start_inline_execution(future.id)
-            value = future.calculator.calculate(**future.resolved_kwargs)
+            with set_context(
+                SematicContext(
+                    run_id=future.id,
+                    root_id=self._root_future.id,
+                    resolver_class_path=self.classpath(),
+                )
+            ):
+                value = future.calculator.calculate(**future.resolved_kwargs)
             self._update_future_with_value(future, value)
         except ResolutionError:
             # only we raise ResolutionError when determining a failure is unrecoverable

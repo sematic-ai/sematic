@@ -294,6 +294,8 @@ def _validate_server_compatibility(
         delay=seconds_between_tries,
     )(_validate_server_compatibility_no_catch)()
 
+    _validated_client_version = True
+
 
 def _validate_server_compatibility_no_catch() -> None:
     base_url = get_config().api_url.replace("/api/v1", "")

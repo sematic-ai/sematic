@@ -1,5 +1,6 @@
 import { ContentCopy } from "@mui/icons-material";
 import {
+  Alert,
   Box,
   ButtonBase,
   Container,
@@ -10,17 +11,15 @@ import {
   useTheme,
 } from "@mui/material";
 import {
-  ReactElement,
   useCallback,
   useContext,
-  useEffect,
+  useMemo,
   useState,
 } from "react";
 import { SiDiscord, SiReadthedocs, SiGithub } from "react-icons/si";
 import { UserContext } from ".";
 import RunStateChip from "./components/RunStateChip";
-import { RunListPayload } from "./Payloads";
-import { fetchJSON } from "./utils";
+import { useFetchRuns } from "./hooks/pipelineHooks";
 
 function ShellCommand(props: { command: string }) {
   const { command } = props;
@@ -57,35 +56,32 @@ function ShellCommand(props: { command: string }) {
 }
 
 export default function Home() {
-  const [prompt, setPrompt] = useState<ReactElement | undefined>(undefined);
-
   const { user } = useContext(UserContext);
 
-  useEffect(() => {
-    let filters = JSON.stringify({
-      parent_id: { eq: null },
-    });
+  const runFilters = useMemo(() => ({
+    parent_id: { eq: null },
+  }), []);
 
-    fetchJSON({
-      url: "/api/v1/runs?limit=1&filters=" + filters,
-      apiKey: user?.api_key,
-      callback: (payload: RunListPayload) => {
-        if (payload.content.length > 0) {
-          const run = payload.content[0];
-          setPrompt(
-            <Typography
-              fontSize="medium"
-              component="span"
-              sx={{ display: "flex", alignItems: "center" }}
-            >
-              Your latest run:&nbsp; <RunStateChip state={run.future_state} />
-              <Link href={"/pipelines/" + run.calculator_path}>{run.name}</Link>
-            </Typography>
-          );
-        }
-      },
-    });
-  }, []);
+  const otherQueryParams = useMemo(() => ({
+      limit: '1'
+  }), [])
+
+  const {isLoaded, error, runs} = useFetchRuns(runFilters, otherQueryParams);
+
+  const prompt = useMemo(() => {
+    if (!isLoaded || runs.length === 0) {
+      return null;
+    }
+    const run = runs[0];
+    return <Typography
+      fontSize="medium"
+      component="span"
+      sx={{ display: "flex", alignItems: "center" }}
+    >
+      Your latest run:&nbsp; <RunStateChip state={run.future_state} />
+      <Link href={"/pipelines/" + run.calculator_path}>{run.name}</Link>
+    </Typography>;
+  }, [isLoaded, runs]);
 
   const h1 = user ? "Hi " + user.first_name : "Welcome to Sematic";
 
@@ -94,9 +90,11 @@ export default function Home() {
       {/*sx={{ pt: 20, mx: 5, height: "100vh", overflowY: "scroll" }}>*/}
       <Typography variant="h1">{h1}</Typography>
       <Box sx={{ mt: 15, mb: 10, minHeight: "1px" }}>
+        {!!error && <Alert severity="error">
+          Encountered an error loading the latest runs: {error.message}</Alert>}
         {prompt ? (
           prompt
-        ) : user ? (
+        ) : user && isLoaded ? (
           <Box sx={{ width: 600 }}>
             <Typography variant="h4" sx={{ mb: 4 }}>
               To get started, set your API key:

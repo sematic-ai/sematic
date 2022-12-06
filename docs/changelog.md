@@ -6,6 +6,7 @@ with nothing else on the line.
 -->
 * HEAD
     * [feature] Add CLI for reading/following logs for a run
+    * [feature] Enable configuration for the Kubernetes service account the workers will use
     * [improvement] BREAKING CHANGE: The existing settings have been split into specific
       user and server settings. User settings configure the Resolver and the pipeline
       submission, and server settings configure the backend Server behavior. User settings
@@ -13,6 +14,11 @@ with nothing else on the line.
       `sematic settings` command, and server settings are specified in the new
       `~/.sematic/server.yaml` file and accessed through the `sematic server-settings`
       command.
+    * [bugfix] Fix a bug deserializing `Union` values. Note that once you are using this release,
+      if you try to "rerun from here" using a pipeline that has `Union` values in it that were
+      produced prior to this version of Sematic, the rerun will likely fail with a serialization issue.
+    * [improvement] Fail early if attempting to retry an execution older than the server
+      supports.
     * [bugfix] BREAKING CHANGE: The examples' `README` files have been renamed to
       `README.md` in order for them to correctly render as MarkDown files. This change is
       required by the Bazel `example_pipeline` target as well
@@ -20,6 +26,8 @@ with nothing else on the line.
       release, if you try to "rerun from here" using a pipeline that has `Union` values in
       it that were produced prior to this version of Sematic, the rerun will likely fail
       with a serialization issue.
+    * [bugfix] Missing broadcasts upon server-side run save
+    * [bugfix] Cache version check
 * [0.20.1](https://pypi.org/project/sematic/0.20.1/)
     * [bugfix] Add support for subclasses of ABCMeta
 * [0.20.0](https://pypi.org/project/sematic/0.20.0/)
