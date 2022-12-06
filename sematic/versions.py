@@ -51,6 +51,26 @@ def version_as_string(version: typing.Tuple[int, int, int]) -> str:
     return ".".join(str(v) for v in version)
 
 
+def string_version_to_tuple(version_string: str) -> typing.Tuple[int, int, int]:
+    """Given a version string, return its equivalent tuple.
+
+    Parameters
+    ----------
+    version_string:
+        A string formatted as <MAJOR>.<MINOR>.<PATCH>
+
+    Returns
+    -------
+    A tuple with three integers representing a semantic version
+    """
+    string_components = version_string.split(".")
+    if len(string_components) < 3:
+        raise ValueError(
+            f"Version strings should have at least three digits. Got: {version_string}"
+        )
+    return tuple(int(v) for v in string_components[:3])  # type: ignore
+
+
 CURRENT_VERSION_STR = version_as_string(CURRENT_VERSION)
 MIN_CLIENT_SERVER_SUPPORTS_STR = version_as_string(MIN_CLIENT_SERVER_SUPPORTS)
 _check_sqlite_version()

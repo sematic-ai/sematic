@@ -162,6 +162,9 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
         A mapping of tag to base images to be used for runs in the graph
         based on the `base_image_tag` argument passed to the `sematic.func`
         decorator.
+    client_version:
+        The version of Sematic that is in use by the container that this
+        resolution executes with.
     """
 
     __tablename__ = "resolutions"
@@ -188,6 +191,7 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     )
     container_image_uris: Optional[Dict[str, str]] = Column(types.JSON(), nullable=True)
     container_image_uri: Optional[str] = Column(types.String(), nullable=True)
+    client_version: Optional[str] = Column(types.String(), nullable=True)
 
     @validates("status")
     def validate_status(self, key, value) -> str:

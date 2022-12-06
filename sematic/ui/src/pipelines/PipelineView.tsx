@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import Loading from "../components/Loading";
-import { useFetchLatestRuns, usePipelineNavigation } from "../hooks/pipelineHooks";
+import { useFetchRuns, usePipelineNavigation } from "../hooks/pipelineHooks";
 import { Alert } from "@mui/material";
 
 /**
@@ -22,7 +22,11 @@ export default function PipelineView() {
         ]
       }), [calculatorPath]);
 
-    const {isLoaded, error, latestRuns} = useFetchLatestRuns(runFilters);
+    const otherQueryParams = useMemo(() => ({
+        limit: '10'
+    }), []);
+
+    const {isLoaded, error, runs: latestRuns} = useFetchRuns(runFilters, otherQueryParams);
 
     const navigate = usePipelineNavigation(calculatorPath!);
 

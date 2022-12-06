@@ -5,28 +5,21 @@ import TableBody from "@mui/material/TableBody";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
-import { useState, useEffect, useCallback, useContext } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import TablePagination from "@mui/material/TablePagination";
 import TableFooter from "@mui/material/TableFooter";
-import { RunListPayload } from "../Payloads";
+import { Filter, RunListPayload } from "../Payloads";
 import Loading from "./Loading";
 import { Run } from "../Models";
-import { fetchJSON } from "../utils";
-import { UserContext } from "..";
+import { useFetchRunsFn } from "../hooks/pipelineHooks";
 
 const defaultPageSize = 10;
-
-export type RunFilterType = {
-  [k: string]: Array<{
-    [v: string]: { [vv: string]: string | number | null };
-  }>;
-};
 
 type RunListProps = {
   columns: Array<string>;
   children: Function;
   groupBy?: string;
-  filters?: RunFilterType;
+  filters?: Filter;
   pageSize?: number;
   size?: "small" | "medium" | undefined;
   emptyAlert?: string;
@@ -35,13 +28,9 @@ type RunListProps = {
 };
 
 export function RunList(props: RunListProps) {
-  let { triggerRefresh } = props;
-  const [error, setError] = useState<Error | undefined>(undefined);
-  const [isLoaded, setIsLoaded] = useState(false);
+  let { triggerRefresh, filters, groupBy, onRunsLoaded } = props;
   const [pages, setPages] = useState<Array<RunListPayload>>([]);
   const [currentPage, setPage] = useState(0);
-
-  const { user } = useContext(UserContext);
 
   let pageSize = props.pageSize || defaultPageSize;
 
@@ -54,42 +43,39 @@ export function RunList(props: RunListProps) {
     if (triggerRefresh !== undefined) {
       triggerRefresh(refreshCallback);
     }
-  }, [triggerRefresh]);
+  }, [triggerRefresh, refreshCallback]);
+
+  const queryParams = useMemo(() => {
+    let queryParams: any = {
+      limit: pageSize.toString(),
+    }
+    if (!!groupBy) {
+      queryParams['group_by'] = groupBy;
+    }
+    return queryParams;
+  }, [pageSize, groupBy]);
+
+  const {isLoaded, error, load} = useFetchRunsFn(filters, queryParams);
 
   useEffect(() => {
     if (currentPage <= pages.length - 1) {
       return;
     }
 
-    let url = "/api/v1/runs?limit=" + pageSize;
+    (async () => {
+      let params: any = undefined;
 
-    if (pages.length > 0) {
-      let cursor = pages[pages.length - 1].next_cursor || "";
-      url = url + "&cursor=" + cursor;
-    }
+      if (pages.length > 0) {
+        let cursor = pages.at(-1)!.next_cursor || "";
+        params = { cursor };
+      }
 
-    if (props.groupBy) {
-      url = url + "&group_by=" + props.groupBy;
-    }
+      const payload = await load(params);
 
-    if (props.filters) {
-      let filters = JSON.stringify(props.filters);
-      url += "&filters=" + filters;
-    }
-
-    fetchJSON({
-      url: url,
-      callback: (result: RunListPayload) => {
-        setPages(pages.concat(result));
-        if (props.onRunsLoaded !== undefined) {
-          props.onRunsLoaded(result.content);
-        }
-      },
-      setError: setError,
-      setIsLoaded: setIsLoaded,
-      apiKey: user?.api_key,
-    });
-  }, [currentPage, pages, props.filters, props.groupBy, pageSize]);
+      setPages(pages.concat(payload));
+      onRunsLoaded?.(payload.content);
+    })().catch(console.error);
+  }, [currentPage, pages, load, onRunsLoaded]);
 
   let tableBody;
   let currentPayload = pages[currentPage];

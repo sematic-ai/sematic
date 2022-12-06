@@ -15,11 +15,13 @@ from sematic.resolvers.resource_requirements import (
 )
 from sematic.scheduling.external_job import JobType
 from sematic.scheduling.job_scheduler import (
+    StateNotSchedulable,
     _refresh_external_jobs,
     schedule_resolution,
     schedule_run,
 )
 from sematic.scheduling.kubernetes import KubernetesExternalJob
+from sematic.versions import CURRENT_VERSION_STR
 
 
 @pytest.fixture
@@ -68,6 +70,7 @@ def resolution(run):
             remote="remote", branch="branch", commit="commit", dirty=False
         ),
         settings_env_vars={"SOME_ENV_VAR": "some_value"},
+        client_version=CURRENT_VERSION_STR,
     )
 
 
@@ -101,6 +104,13 @@ def test_schedule_resolution(mock_k8s, resolution: Resolution):
         max_parallelism=3,
         rerun_from="foobar",
     )
+
+
+def test_schedule_resolution_bad_version(mock_k8s, resolution: Resolution):
+    resolution.client_version = "0.0.0"
+    with pytest.raises(StateNotSchedulable, match=r".*0\.0\.0\.*"):
+        schedule_resolution(resolution, max_parallelism=3, rerun_from="foobar")
+    mock_k8s.schedule_resolution_job.assert_not_called()
 
 
 def test_refresh_external_jobs(mock_k8s):
