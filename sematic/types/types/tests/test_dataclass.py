@@ -40,6 +40,11 @@ class E:
     a: float
 
 
+@dataclass
+class MyFrozenDataclass:
+    field: str
+
+
 @pytest.mark.parametrize(
     "from_type, to_type, expected_can_cast, expected_error",
     (
@@ -101,6 +106,13 @@ def test_can_cast_type(from_type, to_type, expected_can_cast, expected_error):
             None,
             None,
             "Cannot cast C(a='abc') to <class 'sematic.types.types.tests.test_dataclass.A'>: Cannot cast 'abc' to <class 'int'>",  # noqa: E501
+        ),
+        (
+            MyFrozenDataclass("some value"),
+            MyFrozenDataclass,
+            MyFrozenDataclass,
+            MyFrozenDataclass("some value"),
+            None,
         ),
     ),
 )

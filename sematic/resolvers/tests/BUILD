@@ -42,6 +42,7 @@ pytest_test(
     deps = [
         "//sematic:abstract_calculator",
         "//sematic:calculator",
+        "//sematic:future_context",
         "//sematic:retry_settings",
         "//sematic/resolvers:silent_resolver",
         "//sematic/utils:exceptions",
@@ -78,9 +79,13 @@ pytest_test(
     srcs = ["test_worker.py"],
     deps = [
         "//sematic:abstract_future",
+        "//sematic:api_client",
         "//sematic:calculator",
+        "//sematic:future_context",
         "//sematic/api/tests:fixtures",
         "//sematic/db:queries",
+        "//sematic/db/models:edge",
+        "//sematic/db/models:factories",
         "//sematic/db/models:resolution",
         "//sematic/db/tests:fixtures",
         "//sematic/resolvers:cloud_resolver",
