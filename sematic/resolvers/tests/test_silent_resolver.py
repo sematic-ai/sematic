@@ -62,7 +62,7 @@ def test_silent_resolver_context():
 
 def test_nested_resolve():
     with pytest.raises(ResolutionError):
-        nested_resolve_func().resolve()
+        SilentResolver().resolve(nested_resolve_func())
 
 
 _tried = 0
