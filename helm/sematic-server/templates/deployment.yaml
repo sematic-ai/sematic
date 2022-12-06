@@ -5,15 +5,15 @@ metadata:
   labels:
     {{- include "sematic-server.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
+  {{- if not .Values.deployment.autoscaling.enabled }}
+  replicas: {{ .Values.deployment.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
       {{- include "sematic-server.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
+      {{- with .Values.deployment.annotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -26,11 +26,11 @@ spec:
       {{- end }}
       serviceAccountName: {{ .Values.serviceAccount.Name | default .Release.Name }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml .Values.deployment.securityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+            {{- toYaml .Values.deployment.containerSecurityContext | nindent 12 }}
           image: "{{ .Values.image.repository | default (printf "sematicai/sematic-server:%s" .Chart.AppVersion) }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           envFrom:
@@ -43,20 +43,20 @@ spec:
               containerPort: 80
               protocol: TCP
           livenessProbe:
-            {{- toYaml .Values.livenessProbe | nindent 12 }}
+            {{- toYaml .Values.deployment.livenessProbe | nindent 12 }}
           readinessProbe:
-            {{- toYaml .Values.readinessProbe | nindent 12 }}
+            {{- toYaml .Values.deployment.readinessProbe | nindent 12 }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
+            {{- toYaml .Values.deployment.resources | nindent 12 }}
+      {{- with .Values.deployment.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- with .Values.deployment.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with .Values.deployment.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

@@ -13,7 +13,55 @@ secret:
 database:
   url: postgres://postgresql:5432/postgres # REPLACE ME
 
-replicaCount: 1
+deployment:
+  replicaCount: 1
+  affinity: {}
+  annorations: {}
+  tolerations: {}
+  nodeSelector: {}
+  securityContext: {}
+    # fsGroup: 2000
+  containerSecurityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+  livenessProbe:
+    failureThreshold: 6
+    httpGet:
+      path: /
+      port: http
+      scheme: HTTP
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 1
+  readinessProbe:
+    failureThreshold: 6
+    httpGet:
+      path: /
+      port: http
+      scheme: HTTP
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 4000Mi
+    requests:
+      cpu: 500m
+      memory: 4000Mi
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
 
 image:
   #repository: sematicai/sematic-server:v0.20.0
@@ -31,20 +79,8 @@ serviceAccount:
   # The name of the service account to use.
   name: sematic-server
 
-podAnnotations: {}
-
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
 service:
+  create: false
   type: ClusterIP
   port: 80
 
@@ -63,46 +99,3 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
-
-resources:
-  limits:
-    cpu: 500m
-    memory: 4000Mi
-  requests:
-    cpu: 500m
-    memory: 4000Mi
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
-
-livenessProbe:
-  failureThreshold: 6
-  httpGet:
-    path: /
-    port: http
-    scheme: HTTP
-  initialDelaySeconds: 10
-  periodSeconds: 5
-  successThreshold: 1
-  timeoutSeconds: 1
-
-readinessProbe:
-  failureThreshold: 6
-  httpGet:
-    path: /
-    port: http
-    scheme: HTTP
-  initialDelaySeconds: 10
-  periodSeconds: 5
-  successThreshold: 1
-  timeoutSeconds: 1
