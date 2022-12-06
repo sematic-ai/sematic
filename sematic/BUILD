@@ -48,7 +48,9 @@ sematic_py_lib(
 sematic_py_lib(
     name = "future_context",
     srcs = ["future_context.py"],
-    deps = [],
+    deps = [
+        "//sematic:resolver"
+    ],
 )
 
 sematic_py_lib(

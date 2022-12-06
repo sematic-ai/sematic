@@ -38,6 +38,11 @@ def direct_context_func() -> SematicContext:
     return context()
 
 
+@func
+def nested_resolve_func() -> int:
+    return add(1, 2).resolve()
+
+
 def test_silent_resolver():
     assert SilentResolver().resolve(pipeline(3, 5)) == 24
 
@@ -46,13 +51,18 @@ def test_silent_resolver_context():
     future = context_pipeline()
     result = SilentResolver().resolve(future)
     assert result.root_id == future.id
-    assert result.id != future.id
+    assert result.run_id != future.id
     assert result.resolver_class() is SilentResolver
 
     future = direct_context_func()
     result = SilentResolver().resolve(future)
     assert result.root_id == future.id
-    assert result.id == future.id
+    assert result.run_id == future.id
+
+
+def test_nested_resolve():
+    with pytest.raises(ResolutionError):
+        nested_resolve_func().resolve()
 
 
 _tried = 0

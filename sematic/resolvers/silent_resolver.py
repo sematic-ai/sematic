@@ -22,7 +22,7 @@ class SilentResolver(StateMachineResolver):
             self._start_inline_execution(future.id)
             with set_context(
                 SematicContext(
-                    id=future.id,
+                    run_id=future.id,
                     root_id=self._root_future.id,
                     resolver_class_path=self.classpath(),
                 )

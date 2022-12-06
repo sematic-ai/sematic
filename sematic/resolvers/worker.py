@@ -162,7 +162,7 @@ def main(
             logger.info("Executing %s", func.__name__)
             with set_context(
                 SematicContext(
-                    id=run.id,
+                    run_id=run.id,
                     root_id=run.root_id,
                     resolver_class_path=CloudResolver.classpath(),
                 )
