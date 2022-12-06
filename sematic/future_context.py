@@ -65,7 +65,7 @@ def set_context(ctx: SematicContext):
             f"Sematic will ensure that the future is resolved before it starts the "
             f"new func. For more information, read {FUTURE_ALGEBRA_DOC_LINK}"
         )
-    
+
     if not isinstance(ctx, SematicContext):
         raise ValueError(f"Expecting a `SematicContext`, got: {ctx}")
     _current_context = ctx
