@@ -3,6 +3,10 @@ import pytest
 
 # Sematic
 from sematic.calculator import func
+from sematic.resolvers.resource_requirements import (
+    KubernetesResourceRequirements,
+    ResourceRequirements,
+)
 
 
 @func
@@ -22,14 +26,43 @@ def test_set():
 def test_set_validate_name():
     future = foo()
 
-    with pytest.raises(ValueError, match="Invalid name"):
+    future.set(name="my_future")
+    assert future.props.name == "my_future"
+
+    with pytest.raises(ValueError, match="Invalid `name`"):
         future.set(name=123)
+
+
+def test_set_validate_inline():
+    future = foo()
+
+    future.set(inline=False)
+    assert future.props.inline is False
+
+    with pytest.raises(ValueError, match="Invalid `inline`"):
+        future.set(inline=123)
+
+
+def test_set_validate_resource_requirements():
+    future = foo()
+    my_resource_requirements = ResourceRequirements(
+        kubernetes=KubernetesResourceRequirements(node_selector={"foo": "bar"})
+    )
+
+    future.set(resource_requirements=my_resource_requirements)
+    assert future.props.resource_requirements == my_resource_requirements
+
+    with pytest.raises(ValueError, match="Invalid `resource_requirements`"):
+        future.set(resource_requirements=123)
 
 
 def test_set_validate_tags():
     future = foo()
 
-    with pytest.raises(ValueError, match="Invalid tags"):
+    future.set(tags=["my", "tags"])
+    assert future.props.tags == ["my", "tags"]
+
+    with pytest.raises(ValueError, match="Invalid `tags`"):
         future.set(tags=123)
 
 
