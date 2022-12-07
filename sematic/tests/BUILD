@@ -46,6 +46,7 @@ pytest_test(
     srcs = ["test_future.py"],
     deps = [
         "//sematic:calculator",
+        "//sematic/resolvers:resource_requirements",
     ],
 )
 

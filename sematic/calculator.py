@@ -258,9 +258,9 @@ def func(
     """
     The Sematic Function decorator.
 
-    This is used to instruct that the instrumented Python function is a
-    top-level step in the pipeline. The function's execution will be tracked
-    and its details exposed in the Sematic UI.
+    This identifies the function as a unit of work that Sematic knows about for
+    tracking and scheduling. The function's execution details will be exposed
+    in the Sematic UI.
 
     Parameters
     ----------

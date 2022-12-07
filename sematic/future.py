@@ -90,6 +90,14 @@ class Future(AbstractFuture):
             if not (isinstance(value, bool)):
                 raise ValueError(f"Invalid `inline`, must be a bool: {repr(value)}")
 
+        if "resource_requirements" in kwargs:
+            value = kwargs["resource_requirements"]
+            if not (isinstance(value, ResourceRequirements)):
+                raise ValueError(
+                    f"Invalid `resource_requirements`, must be a ResourceRequirements: "
+                    f"{repr(value)}"
+                )
+
         if "tags" in kwargs:
             value = kwargs["tags"]
             if not (
@@ -98,14 +106,6 @@ class Future(AbstractFuture):
             ):
                 raise ValueError(
                     f"Invalid `tags`, must be a list of non empty strings: {repr(value)}"
-                )
-
-        if "resource_requirements" in kwargs:
-            value = kwargs["resource_requirements"]
-            if not (isinstance(value, ResourceRequirements)):
-                raise ValueError(
-                    f"Invalid `resource_requirements`, must be a ResourceRequirements: "
-                    f"{repr(value)}"
                 )
 
         # at this point, kwargs contains only mutable properties,
