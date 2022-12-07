@@ -627,6 +627,11 @@ def test_cancel_non_terminal_futures(
     assert middle_func_callbacks == [
         "_future_did_schedule",
         "_future_did_terminate",
+
+        # final resolved here is just because of the weird way in which
+        # we cancel from within a func body. We should technically
+        # disallow this kind of transition, see:
+        # https://github.com/sematic-ai/sematic/issues/107
         "_future_did_resolve",
         "_future_did_terminate",
     ]
@@ -649,10 +654,8 @@ def test_cancel_non_terminal_futures(
     assert middle_func_states == [
         FutureState.SCHEDULED,
         FutureState.CANCELED,
-        # final resolved here is just because of the weird way in which
-        # we cancel from within a func body. We should technically
-        # disallow this kind of transition, see:
-        # https://github.com/sematic-ai/sematic/issues/107
+
+        # see comment in callback assetions above about why this is here
         FutureState.RESOLVED,
     ]
     assert last_func_states == [
