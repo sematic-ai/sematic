@@ -120,6 +120,7 @@ sematic_py_lib(
         ":abstract_future",
         "//sematic:resolver",
         "//sematic/resolvers:local_resolver",
+        "//sematic/resolvers:resource_requirements",
         "//sematic/resolvers:silent_resolver",
     ],
 )
