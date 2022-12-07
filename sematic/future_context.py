@@ -1,13 +1,46 @@
 # Standard Library
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from importlib import import_module
-from typing import Optional, Type
+from typing import Any, List, Optional, Type
 
-# Sematic
-from sematic.resolver import Resolver
+# To avoid a circular dependency of:
+# future_context -> resolver -> future -> future_context
+Resolver = Any
 
 FUTURE_ALGEBRA_DOC_LINK = "https://docs.sematic.dev/diving-deeper/future-algebra"
+
+
+@dataclass(frozen=True)
+class PrivateContext:
+    """Contextual info about the execution of the current function, not for end users.
+
+    This informstion may be used by the Sematic framework itself, but is not intended
+    for usage by users of Sematic.
+
+    Attributes
+    ----------
+    resolver_class_path:
+        The import path for the resolver being used.
+    external_resources:
+        Objects that represent external resources that can be used by futures.
+        Note that this list may be added to or removed from over the course of
+        one Sematic func execution, as 'with' blocks are entered and exited.
+    """
+
+    resolver_class_path: str
+
+    # futures will pull from this context when they are being
+    # instantiated
+    external_resources: List["AbstractExternalResource"] = field(default_factory=list)
+
+    def resolver_class(self) -> Type[Resolver]:
+        module_name, resolver_name = self.resolver_class_path.rsplit(".", maxsplit=1)
+        module = import_module(module_name)
+        resolver_class = getattr(module, resolver_name, None)
+        if resolver_class is None:
+            raise ImportError(f"No class named '{resolver_name}' in {module_name}")
+        return resolver_class
 
 
 @dataclass(frozen=True)
@@ -22,21 +55,11 @@ class SematicContext:
     root_id:
         The id of the root future for a resolution. For cloud executions, this is
         equivalent to the id for the root run.
-    resolver_class_path:
-        The import path for the resolver being used.
     """
 
     run_id: str
     root_id: str
-    resolver_class_path: str
-
-    def resolver_class(self) -> Type[Resolver]:
-        module_name, resolver_name = self.resolver_class_path.rsplit(".", maxsplit=1)
-        module = import_module(module_name)
-        resolver_class = getattr(module, resolver_name, None)
-        if resolver_class is None:
-            raise ImportError(f"No class named '{resolver_name}' in {module_name}")
-        return resolver_class
+    private: PrivateContext
 
 
 _current_context: Optional[SematicContext] = None
@@ -90,13 +113,33 @@ def context() -> SematicContext:
 
     Raises
     ------
-    RuntimeError:
+    NotInSematicFuncError:
         If this function is called outside the execution of a Sematic function.
     """
     global _current_context
     if _current_context is None:
-        raise RuntimeError(
+        raise NotInSematicFuncError(
             "context() must be called from within the execution of a Sematic function, "
             "in the root process that function was invoked from."
         )
     return _current_context
+
+
+class NotInSematicFuncError(RuntimeError):
+    pass
+
+
+class AbstractExternalResource:
+    def __enter__(self) -> "AbstractExternalResource":
+        if len(context().private.external_resources) != 0:
+            raise RuntimeError(
+                f"Sematic currently only allows one 'with' block resource "
+                f"to be active at a time. Already in context for "
+                f"{context().private.external_resources[0]}, cannot enter "
+                f"context for {self}"
+            )
+        context().private.external_resources.append(self)
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        context().private.external_resources.remove(self)

@@ -6,11 +6,13 @@ between `Future` and `Resolver`.
 import abc
 import enum
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Sematic
 from sematic.abstract_calculator import AbstractCalculator
+from sematic.external_resource import ExternalResource
+from sematic.future_context import NotInSematicFuncError, context
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.retry_settings import RetrySettings
 
@@ -84,6 +86,7 @@ class FutureProperties:
     resource_requirements: Optional[ResourceRequirements] = None
     retry_settings: Optional[RetrySettings] = None
     base_image_tag: Optional[str] = None
+    external_resources: List[ExternalResource] = field(default_factory=list)
 
 
 class AbstractFuture(abc.ABC):
@@ -129,6 +132,16 @@ class AbstractFuture(abc.ABC):
         self.parent_future: Optional["AbstractFuture"] = None
         self.nested_future: Optional["AbstractFuture"] = None
 
+        try:
+            external_resources: List[ExternalResource] = list(
+                context().private.external_resources  # type: ignore
+            )
+        except NotInSematicFuncError:
+            external_resources = []
+
+        # checks in future_context should ensure that this passes
+        assert len(external_resources) <= 1
+
         self._props = FutureProperties(
             inline=inline,
             resource_requirements=resource_requirements,
@@ -136,6 +149,7 @@ class AbstractFuture(abc.ABC):
             name=calculator.__name__,
             tags=[],
             base_image_tag=base_image_tag,
+            external_resources=external_resources,
         )
 
     @property

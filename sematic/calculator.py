@@ -9,7 +9,6 @@ from typing import (
     Callable,
     Dict,
     Iterable,
-    List,
     Optional,
     Sequence,
     Type,
@@ -37,11 +36,6 @@ class Calculator(AbstractCalculator):
     Functions decorated with the `@calculator` decorator become
     instances of `Calculator`.
     """
-    
-    # These callbacks are called any time a Sematic func
-    # has its __call__ method invoked. The callbacks are given
-    # the resulting Future object
-    _invocation_callbacks: List[Callable[[Future], None]] = []
 
     def __init__(
         self,
@@ -103,38 +97,6 @@ class Calculator(AbstractCalculator):
                 "@sematic.func can't be used with async functions, generators, "
                 f"or coroutines. But {repr(func)} is one of these."
             )
-    
-    @classmethod
-    def register_invocation_callback(cls, callback: Callable[[Future], None]) -> None:
-        """Register a callback that will be invoked when a Sematic func gets called.
-        
-        The callback should accept a future. Its output will be ignored.
-
-        Parameters
-        ----------
-        callback:
-            The callback to be invoked
-        """
-        cls._invocation_callbacks.append(callback)
-    
-    @classmethod
-    def unregister_invocation_callback(cls, callback: Callable[[Future], None]) -> None:
-        """Unregister a callback that would be invoked when a Sematic func gets called.
-
-        The callback should have been previously registered with
-        register_invocation_callback
-
-        Parameters
-        ----------
-        callback:
-            The callback to be deregistered
-        """
-        cls._invocation_callbacks.remove(callback)
-    
-    @classmethod
-    def _handle_call(cls, future: Future):
-        for callback in cls._invocation_callbacks:
-            callback(future)
 
     def __repr__(self):
         return "{}.{}".format(self.__module__, self.__name__)
@@ -191,9 +153,6 @@ class Calculator(AbstractCalculator):
             base_image_tag=self._base_image_tag,
         )
 
-        # use callbacks listening for calls
-        self._handle_call(future)
-        
         return future
 
     def __signature__(self) -> inspect.Signature:

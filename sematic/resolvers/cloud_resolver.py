@@ -381,6 +381,20 @@ class CloudResolver(LocalResolver):
         """Returns the known number of futures in the SCHEDULED state."""
         return sum(map(lambda f: f.state == FutureState.SCHEDULED, self._futures))
 
+    def _register_external_resources(self, future) -> None:
+        if len(future.props.external_resources) > 0:
+            # TODO: once this is implemented, the behavior will be:
+            # - resolver registers with the server that the run with the id future.id
+            #   uses the resource
+            # - when the resolver gets to the point where it's ready to schedule
+            #   the future, it will ask the server to execute resource.activate()
+            #   on the resource
+            # - the resolver will wait to schedule the actual future until the
+            #   resource shows up in an ACTIVE state
+            raise NotImplementedError(
+                "TODO: External resources not implemented for CloudResolver yet"
+            )
+
 
 def make_nested_future_storage_key(future_id: str) -> str:
     return "futures/{}".format(future_id)

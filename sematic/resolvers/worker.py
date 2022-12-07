@@ -19,7 +19,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value, make_artifact
 from sematic.db.models.run import Run
 from sematic.future import Future
-from sematic.future_context import SematicContext, set_context
+from sematic.future_context import PrivateContext, SematicContext, set_context
 from sematic.log_reader import log_prefix
 from sematic.resolvers.cloud_resolver import (
     CloudResolver,
@@ -164,7 +164,9 @@ def main(
                 SematicContext(
                     run_id=run.id,
                     root_id=run.root_id,
-                    resolver_class_path=CloudResolver.classpath(),
+                    private=PrivateContext(
+                        resolver_class_path=CloudResolver.classpath(),
+                    ),
                 )
             ):
                 output = func.calculate(**kwargs)

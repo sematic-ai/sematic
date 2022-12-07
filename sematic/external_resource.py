@@ -1,7 +1,12 @@
-from dataclasses import dataclass
+# Standard Library
+import time
+import uuid
+from dataclasses import dataclass, field
 from enum import Enum, unique
 
-from sematic.calculator import Calculator
+# Sematic
+from sematic.future_context import AbstractExternalResource
+
 
 @unique
 class ResourceStatusState(Enum):
@@ -20,21 +25,33 @@ class ResourceStatus:
 
 
 @dataclass(frozen=True)
-class ExternalResource:
-    id: str
-    status: ResourceStatus
+class ExternalResource(AbstractExternalResource):
+    id: str = field(default_factory=lambda: uuid.uuid4().hex)
+    status: ResourceStatus = field(
+        default_factory=lambda: ResourceStatus(
+            state=ResourceStatusState.CREATED,
+            message="Resource has not been activated yet",
+            last_update_epoch_time=int(time.time()),
+        )
+    )
 
-    def activate(self):
+    def __post_init__(self):
+        try:
+            uuid.UUID(hex=self.id)
+        except ValueError:
+            raise ValueError(f"ExternalResource had an invalid uuid: '{self.id}'")
+        if not isinstance(self.status, ResourceStatus):
+            raise ValueError(f"ExternalResource had invalid status: '{self.status}'")
+
+    def activate(self, is_local: bool) -> "ExternalResource":
+        raise NotImplementedError(
+            "Subclasses of ExternalResource should implement .activate(is_local)"
+        )
+
+    def deactivate(self) -> "ExternalResource":
         pass
 
-    def deactivate(self):
-        pass
-
-    def check_status(self) -> ResourceStatus:
-        pass
-
-    def __enter__(self) -> "ExternalResource":
-        pass
-
-    def __exit__(self):
-        pass
+    def update(self) -> "ExternalResource":
+        raise NotImplementedError(
+            "Subclasses of ExternalResource should implement .update()"
+        )

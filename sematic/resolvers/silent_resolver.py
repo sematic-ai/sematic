@@ -3,7 +3,7 @@ import logging
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.future_context import SematicContext, set_context
+from sematic.future_context import PrivateContext, SematicContext, set_context
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
 from sematic.utils.exceptions import ResolutionError, format_exception_for_run
 
@@ -14,7 +14,19 @@ class SilentResolver(StateMachineResolver):
     """A resolver to resolver a DAG in memory, without tracking to the DB."""
 
     def _schedule_future(self, future: AbstractFuture) -> None:
-        self._run_inline(future)
+        try:
+            self._activate_resources(future)
+            self._run_inline(future)
+        finally:
+            self._deactivate_resources(future)
+
+    def _activate_resources(self, future):
+        for resource in future.props.external_resources:
+            resource.activate(is_local=True)
+
+    def _deactivate_resources(self, future):
+        for resource in future.props.external_resources:
+            resource.deactivate()
 
     def _run_inline(self, future: AbstractFuture) -> None:
         self._set_future_state(future, FutureState.SCHEDULED)
@@ -24,7 +36,9 @@ class SilentResolver(StateMachineResolver):
                 SematicContext(
                     run_id=future.id,
                     root_id=self._root_future.id,
-                    resolver_class_path=self.classpath(),
+                    private=PrivateContext(
+                        resolver_class_path=self.classpath(),
+                    ),
                 )
             ):
                 value = future.calculator.calculate(**future.resolved_kwargs)
@@ -50,3 +64,25 @@ class SilentResolver(StateMachineResolver):
 
     def _wait_for_scheduled_runs(self) -> None:
         pass
+
+    def _register_external_resources(self, future) -> None:
+        for external_resource in future.props.external_resources:
+            used_resource_id = external_resource.id
+            for other_future in self._futures:
+                if other_future.id == future.id:
+                    continue
+                if any(
+                    r.id == used_resource_id
+                    for r in other_future.props.external_resources
+                ):
+                    # See https://github.com/sematic-ai/sematic/issues/382
+                    use_1 = other_future.calculator.__name__
+                    use_2 = future.calculator.__name__
+                    raise RuntimeError(
+                        f"There is more than one Sematic func in the `with` block for "
+                        f"the resource {external_resource}: "
+                        f"'{use_1}' and '{use_2}'. At this time, Sematic only supports "
+                        f"using resources in one Sematic func. If you like, you may wrap "
+                        f"the calls to '{use_1}' and '{use_2}' in an outer func, and "
+                        f"place that new func in the `with` block."
+                    )

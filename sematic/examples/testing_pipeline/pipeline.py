@@ -10,27 +10,50 @@ from typing import List, Optional
 
 # Sematic
 import sematic
+from sematic.external_resource import ExternalResource
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+class FakeExternalResource(ExternalResource):
+    def activate(self, is_local: bool):
+        print(f"Activating!!!! is_local={is_local}")
+
+    def deactivate(self):
+        print("Deactivating!!!!")
+
+    def check_status(self) -> None:
+        pass
+
+
 @sematic.func(inline=False)
-def add(a: float, b: float) -> float:
+def add(
+    a: float, b: float, external_resource: Optional[ExternalResource] = None
+) -> float:
     """
     Adds two numbers.
     """
-    logger.info("Executing: add(a=%s, b=%s)", a, b)
+    logger.info(
+        "Executing: add(a=%s, b=%s, external_resource=%s)", a, b, external_resource
+    )
     time.sleep(5)
     return a + b
 
 
 @sematic.func(inline=True)
-def add_inline(a: float, b: float) -> float:
+def add_inline(
+    a: float, b: float, external_resource: Optional[ExternalResource] = None
+) -> float:
     """
     Adds two numbers inline.
     """
-    logger.info("Executing: add_inline(a=%s, b=%s)", a, b)
+    logger.info(
+        "Executing: add_inline(a=%s, b=%s, external_resource=%s)",
+        a,
+        b,
+        external_resource,
+    )
     time.sleep(5)
     return a + b
 
@@ -157,6 +180,7 @@ def testing_pipeline(
     raise_retry_probability: Optional[float] = None,
     oom: bool = False,
     exit_code: Optional[int] = None,
+    external_resource: bool = False,
 ) -> float:
     """
     The root function of the testing pipeline.
@@ -186,15 +210,25 @@ def testing_pipeline(
     exit_code: Optional[int]
         If not None, includes a function which will exit with the specified code.
         Defaults to None.
+    external_resource: bool
+        Whether to use an external resource. Defaults to False
     """
     # have an initial function whose output is used as inputs by all other functions
     # this staggers the rest of the functions and allows the user a chance to monitor and
     # visualize the unfolding execution
-    initial_future = add(1, 2)
+    if external_resource:
+        with FakeExternalResource() as resource:
+            initial_future = add(1, 2, resource)
+    else:
+        initial_future = add(1, 2)
     futures = [initial_future]
 
     if inline:
-        futures.append(add_inline(initial_future, 3))
+        if external_resource:
+            with FakeExternalResource() as resource:
+                futures.append(add_inline(initial_future, 3, resource))
+        else:
+            futures.append(add_inline(initial_future, 3))
 
     if nested:
         futures.append(add4_nested(initial_future, 1, 2, 3))

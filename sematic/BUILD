@@ -46,11 +46,17 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "external_resource",
+    srcs = ["external_resource.py"],
+    deps = [
+        ":future_context",
+    ],
+)
+
+sematic_py_lib(
     name = "future_context",
     srcs = ["future_context.py"],
-    deps = [
-        "//sematic:resolver"
-    ],
+    deps = [],
 )
 
 sematic_py_lib(
@@ -90,7 +96,9 @@ sematic_py_lib(
     srcs = ["abstract_future.py"],
     deps = [
         ":abstract_calculator",
+        ":external_resource",
         ":retry_settings",
+        ":future_context",
         "//sematic/resolvers:resource_requirements",
     ],
 )
