@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Sematic
 from sematic.abstract_calculator import AbstractCalculator
-from sematic.external_resource import ExternalResource
+from sematic.external_resource import ExternalResource, ResourceState
 from sematic.future_context import NotInSematicFuncError, context
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.retry_settings import RetrySettings
@@ -83,10 +83,56 @@ class FutureProperties:
     inline: bool
     name: str
     tags: List[str]
+    kwargs: Dict[str, Any]
     resource_requirements: Optional[ResourceRequirements] = None
     retry_settings: Optional[RetrySettings] = None
     base_image_tag: Optional[str] = None
     external_resources: List[ExternalResource] = field(default_factory=list)
+    # We don't want to replace futures in kwargs, because it holds
+    # the source of truth for the future graph. Instead we have concrete
+    # values in resolved_kwargs
+    # It will be set only once all input values are resolved
+    # resolved_kwargs: Dict[str, Any] = field(default_factory=dict)
+
+    def get_resolved_kwargs(self) -> Dict[str, Any]:
+        """
+        Extract only resolved/concrete kwargs.
+
+        For external resources, only ones in the ACTIVE state can be used
+        and are considered resolved.
+        """
+        resources_by_id = {r.id: r for r in self.external_resources}
+        resolved_kwargs = {}
+        for name, value in self.kwargs.items():
+            if isinstance(value, AbstractFuture):
+                if value.state == FutureState.RESOLVED:
+                    resolved_kwargs[name] = value.value
+            elif isinstance(value, ExternalResource):
+                value = resources_by_id.get(value.id)
+                if value.status.state == ResourceState.ACTIVE:
+                    resolved_kwargs[name] = value
+            else:
+                resolved_kwargs[name] = value
+
+        return resolved_kwargs
+
+    def all_args_ready(self) -> bool:
+        """True if all args are sufficiently ready for the future to be scheduled.
+
+        External resources are scheduled along with the future and thus need not be
+        active for this to return True.
+        """
+        missing_kwarg_keys = set(self.kwargs.keys()).difference(
+            self.get_resolved_kwargs().keys()
+        )
+        for key in missing_kwarg_keys:
+            value = self.kwargs[key]
+            if not isinstance(value, ExternalResource):
+                # it's ok if there are args that aren't usable yet
+                # if they're external resources. Those will get scheduled
+                # along with the future.
+                return False
+        return True
 
 
 class AbstractFuture(abc.ABC):
@@ -121,12 +167,6 @@ class AbstractFuture(abc.ABC):
     ):
         self.id: str = make_future_id()
         self.calculator = calculator
-        self.kwargs = kwargs
-        # We don't want to replace futures in kwargs, because it holds
-        # the source of truth for the future graph. Instead we have concrete
-        # values in resolved_kwargs
-        # It will be set only once all input values are resolved
-        self.resolved_kwargs: Dict[str, Any] = {}
         self.value: Any = None
         self.state: FutureState = FutureState.CREATED
         self.parent_future: Optional["AbstractFuture"] = None
@@ -149,6 +189,7 @@ class AbstractFuture(abc.ABC):
             resource_requirements=resource_requirements,
             retry_settings=retry_settings,
             name=calculator.__name__,
+            kwargs=kwargs,
             tags=[],
             base_image_tag=base_image_tag,
             external_resources=external_resources,
@@ -163,6 +204,14 @@ class AbstractFuture(abc.ABC):
         TODO: Migrate all future properties to FutureProperties
         """
         return self._props
+
+    @property
+    def kwargs(self) -> Dict[str, Any]:
+        """The keyword arguments to pass into the Sematic func at execition time.
+
+        May contain Futures for argument values.
+        """
+        return self._props.kwargs
 
     def __repr__(self):
         parent_id = self.parent_future.id if self.parent_future is not None else None

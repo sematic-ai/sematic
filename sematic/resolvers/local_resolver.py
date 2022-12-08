@@ -112,8 +112,6 @@ class LocalResolver(SilentResolver):
         self._runs.clear()
 
         for future in self._futures:
-            future.resolved_kwargs = self._get_resolved_kwargs(future)
-
             if future.state == FutureState.RESOLVED:
                 self._artifacts_by_run_id[future.id][
                     None
@@ -180,7 +178,7 @@ class LocalResolver(SilentResolver):
         ]
 
     def _populate_run_and_artifacts(self, future: AbstractFuture) -> Run:
-        if len(future.kwargs) != len(future.resolved_kwargs):
+        if not future.props.all_args_ready():
             raise RuntimeError("Not all input arguments are resolved")
 
         run = self._populate_graph(future)
@@ -444,7 +442,7 @@ class LocalResolver(SilentResolver):
             # Updating the input artifact
             artifact_id = None
 
-            maybe_resolved_value = future.resolved_kwargs.get(name, value)
+            maybe_resolved_value = future.props.get_resolved_kwargs().get(name, value)
             if not isinstance(maybe_resolved_value, AbstractFuture):
                 artifact = self._make_artifact(
                     run_id=future.id,
@@ -467,7 +465,7 @@ class LocalResolver(SilentResolver):
                 for (
                     parent_name,
                     parent_value,
-                ) in future.parent_future.resolved_kwargs.items():
+                ) in future.parent_future.props.get_resolved_kwargs().items():
                     parent_edge = self._get_input_edge(
                         destination_run_id=future.parent_future.id,
                         destination_name=parent_name,

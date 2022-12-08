@@ -15,10 +15,10 @@ class SilentResolver(StateMachineResolver):
     """A resolver to resolver a DAG in memory, without tracking to the DB."""
 
     def _schedule_future(self, future: AbstractFuture) -> None:
-        self._activate_resources(future)
         self._run_inline(future)
 
     def _activate_resources(self, future):
+        updated_resources = []
         for resource in future.props.external_resources:
             resource = resource.activate(is_local=True)
             while not (
@@ -26,14 +26,20 @@ class SilentResolver(StateMachineResolver):
                 or resource.status.state.is_terminal()
             ):
                 resource = resource.update()
+            updated_resources.append(resource)
+        future.props.external_resources = updated_resources
 
     def _deactivate_resources(self, future):
+        updated_resources = []
         for resource in future.props.external_resources:
             resource = resource.deactivate()
             while not resource.status.state.is_terminal():
                 resource = resource.update()
+            updated_resources.append(resource)
+        future.props.external_resources = updated_resources
 
     def _run_inline(self, future: AbstractFuture) -> None:
+        self._activate_resources(future)
         self._set_future_state(future, FutureState.SCHEDULED)
         try:
             self._start_inline_execution(future.id)
@@ -46,7 +52,9 @@ class SilentResolver(StateMachineResolver):
                     ),
                 )
             ):
-                value = future.calculator.calculate(**future.resolved_kwargs)
+                value = future.calculator.calculate(
+                    **future.props.get_resolved_kwargs()
+                )
             self._update_future_with_value(future, value)
         except ResolutionError:
             # only we raise ResolutionError when determining a failure is unrecoverable

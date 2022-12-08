@@ -81,7 +81,7 @@ _ALLOWED_TRANSITIONS = {
         # Deactivating -> Deactivated: normal progression for deactivation
         ResourceState.DEACTIVATED,
     },
-    ResourceState.DEACTIVATING: {},
+    ResourceState.DEACTIVATED: {},
 }
 
 
@@ -200,7 +200,6 @@ class ExternalResource(AbstractExternalResource):
         )
 
     def _validate_transition(self, updated: "ExternalResource"):
-        updated = self._do_update()
         if (
             self.status.state != updated.status.state
             and not self.status.state.is_allowed_transition(updated.status.state)

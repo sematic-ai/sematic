@@ -50,6 +50,14 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_future_context",
+    srcs = ["test_future_context.py"],
+    deps = [
+        "//sematic:future_context",
+    ],
+)
+
+pytest_test(
     name = "test_init",
     srcs = ["test_init.py"],
     deps = [
