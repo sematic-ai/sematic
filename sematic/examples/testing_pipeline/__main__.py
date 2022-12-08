@@ -86,6 +86,15 @@ EXIT_HELP = (
     "Includes a function which will exit with the specified code. "
     "If specified without a value, defaults to 0."
 )
+CACHE_HELP = "The cache namespace to use for funcs whose outputs will be cached."
+
+
+class StoreCacheNamespace(argparse.Action):
+    """Custom action to store the cache namespace string and the cache flag."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values)
+        setattr(namespace, "cache", True)
 
 
 def _required_by(*args: str) -> Dict[str, bool]:
@@ -175,6 +184,13 @@ def _parse_args() -> argparse.Namespace:
         dest="exit_code",
         help=EXIT_HELP,
     )
+    parser.add_argument(
+        "--cache-namespace",
+        action=StoreCacheNamespace,
+        type=str,
+        default=None,
+        help=CACHE_HELP,
+    )
 
     args = parser.parse_args()
 
@@ -200,10 +216,13 @@ def _get_resolver(args: argparse.Namespace) -> StateMachineResolver:
     if args.silent:
         return SilentResolver()
     if not args.cloud:
-        return LocalResolver(rerun_from=args.rerun_from)
+        return LocalResolver(
+            rerun_from=args.rerun_from, cache_namespace=args.cache_namespace
+        )
 
     return CloudResolver(
         detach=args.detach,
+        cache_namespace=args.cache_namespace,
         max_parallelism=args.max_parallelism,
         rerun_from=args.rerun_from,
     )

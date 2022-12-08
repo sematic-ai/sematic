@@ -38,6 +38,7 @@ def parse_args():
     parser = argparse.ArgumentParser("Sematic cloud worker")
     parser.add_argument("--run_id", type=str, required=True)
     parser.add_argument("--resolve", default=False, action="store_true", required=False)
+    parser.add_argument("--cache-namespace", type=str, default=None, required=False)
     parser.add_argument("--max-parallelism", type=int, default=None, required=False)
     parser.add_argument("--rerun-from", type=str, default=None, required=False)
 
@@ -120,6 +121,7 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
 def main(
     run_id: str,
     resolve: bool,
+    cache_namespace: Optional[str] = None,
     max_parallelism: Optional[int] = None,
     rerun_from: Optional[str] = None,
 ):
@@ -150,6 +152,7 @@ def main(
 
             resolver = CloudResolver(
                 detach=False,
+                cache_namespace=cache_namespace,
                 max_parallelism=max_parallelism,
                 rerun_from=rerun_from,
                 _is_running_remotely=True,
@@ -217,12 +220,14 @@ def wrap_main_with_logging():
         )
         logger.info("Worker CLI args: run_id=%s", args.run_id)
         logger.info("Worker CLI args: resolve=%s", args.resolve)
+        logger.info("Worker CLI args: cache-namespace=%s", args.cache_namespace)
         logger.info("Worker CLI args: max-parallelism=%s", args.max_parallelism)
-        logger.info("Worker CLI args: rerun_from=%s", args.rerun_from)
+        logger.info("Worker CLI args: rerun-from=%s", args.rerun_from)
 
         main(
             run_id=args.run_id,
             resolve=args.resolve,
+            cache_namespace=args.cache_namespace,
             max_parallelism=args.max_parallelism,
             rerun_from=args.rerun_from,
         )

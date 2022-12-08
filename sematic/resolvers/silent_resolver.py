@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class SilentResolver(StateMachineResolver):
-    """A resolver to resolver a DAG in memory, without tracking to the DB."""
+    """A `Resolver` that resolves a pipeline in memory, without tracking to the DB."""
 
     _resource_manager: AbstractResourceManager = MemoryResourceManager()
 

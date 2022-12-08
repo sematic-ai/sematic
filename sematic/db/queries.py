@@ -61,6 +61,49 @@ def get_artifact(artifact_id: str) -> Artifact:
         return session.query(Artifact).filter(Artifact.id == artifact_id).one()
 
 
+def get_cached_artifact_and_run(cache_key: str) -> Optional[Tuple[Artifact, Run]]:
+    """
+    Retrieve a cached Artifact, along with the Run that originally produced it.
+
+    Parameters
+    ----------
+    cache_key : str
+        The cache key under which to look for the Artifact.
+
+    Returns
+    -------
+    A Tuple containing the Artifact and the Run that originally produced it, or None if
+    not found.
+    """
+    # Q: Why not filter based on RESOLVED future state to ensure successful runs'
+    # artifacts are used, and failed development runs are ignored?
+    # A: Only RESOLVED future runs have an associated artifact
+    #
+    # Q: Why not avoid the sorting and efficiently select the original run with:
+    # `GROUP BY artifact.id HAVING run.created_at = min(run.created_at)` ?
+    # A: Because as opposed to Sqlite, PostgreSQL requires run.id be included in the
+    # HAVING clause, resulting in several groups with one run each, which defeats the
+    # purpose of applying the min function on all the runs
+    #
+    with db().get_session() as session:
+        query = (
+            # we want the artifact and the run
+            session.query(Artifact, Run)
+            # the artifact is on the run's output edge
+            .join(Edge, Artifact.id == Edge.artifact_id)
+            # get the output edge from the run
+            .join(Run, Run.id == Edge.source_run_id)
+            # filter for the specified cache_key
+            .filter(Run.cache_key == cache_key)
+            # sort ascending by the run creating date
+            .order_by(Run.created_at.asc())
+            # and get the first run
+            .limit(1)
+        )
+
+        return query.one_or_none()
+
+
 def get_run(run_id: str) -> Run:
     """
     Get a run from the database.

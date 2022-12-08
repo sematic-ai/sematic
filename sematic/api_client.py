@@ -69,7 +69,7 @@ def get_artifact_value_by_id(
     Returns
     -------
     Any
-        The value of the requiested artifact.
+        The value of the requested artifact.
     """
     # TODO: Store storage type on artifact
     if storage is None:
@@ -91,11 +91,26 @@ def _get_artifact(artifact_id: str) -> Artifact:
 
 def get_run(run_id: str) -> Run:
     """
-    Get run
+    Get a specific run.
     """
     response = _get("/runs/{}".format(run_id))
 
     return Run.from_json_encodable(response["content"])
+
+
+def get_cached_artifact_and_run(cache_key: str) -> Optional[Tuple[Artifact, Run]]:
+    """
+    Retrieve an artifact and the original run that produced it from the cache.
+    """
+    response = _get("/artifacts/cache?cache_key={}".format(cache_key))
+
+    if response["content"] is None:
+        return None
+
+    artifact = Artifact.from_json_encodable(response["content"]["artifact"])
+    run = Run.from_json_encodable(response["content"]["run"])
+
+    return artifact, run
 
 
 def save_graph(
@@ -175,11 +190,15 @@ def schedule_run(run_id: str) -> Run:
 
 def schedule_resolution(
     resolution_id: str,
+    cache_namespace: Optional[str] = None,
     max_parallelism: Optional[int] = None,
     rerun_from: Optional[str] = None,
 ) -> Resolution:
     """Ask the server to start a detached resolution execution."""
     payload: Dict[str, Any] = {}
+
+    if cache_namespace is not None:
+        payload["cache_namespace"] = cache_namespace
 
     if max_parallelism is not None:
         payload["max_parallelism"] = max_parallelism

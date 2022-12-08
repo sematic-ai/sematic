@@ -671,6 +671,7 @@ def schedule_resolution_job(
     resolution_id: str,
     image: str,
     user_settings: Dict[str, str],
+    cache_namespace: Optional[str] = None,
     max_parallelism: Optional[int] = None,
     rerun_from: Optional[str] = None,
 ) -> ExternalJob:
@@ -693,6 +694,9 @@ def schedule_resolution_job(
     logger.info("Scheduling job %s", external_job.kubernetes_job_name)
 
     args = ["--run_id", resolution_id, "--resolve"]
+
+    if cache_namespace is not None:
+        args += ["--cache-namespace", cache_namespace]
 
     if max_parallelism is not None:
         args += ["--max-parallelism", str(max_parallelism)]
