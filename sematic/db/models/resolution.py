@@ -165,6 +165,9 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     client_version:
         The version of Sematic that is in use by the container that this
         resolution executes with.
+    cache_namespace:
+        The cache key namespace in which the executed funcs's outputs will
+        be cached, as long as they also have the `cache` flag activated.
     """
 
     __tablename__ = "resolutions"
@@ -192,6 +195,7 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     container_image_uris: Optional[Dict[str, str]] = Column(types.JSON(), nullable=True)
     container_image_uri: Optional[str] = Column(types.String(), nullable=True)
     client_version: Optional[str] = Column(types.String(), nullable=True)
+    cache_namespace: Optional[str] = Column(types.String(), nullable=True)
 
     @validates("status")
     def validate_status(self, key, value) -> str:

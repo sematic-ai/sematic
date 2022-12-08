@@ -104,7 +104,7 @@ def _get_artifact_bytes(artifact_id: str) -> bytes:
 
 def get_run(run_id: str) -> Run:
     """
-    Get run
+    Get a specific run.
     """
     response = _get("/runs/{}".format(run_id))
 
@@ -141,6 +141,21 @@ def get_runs(
     response = _get(query_string)
 
     return [Run.from_json_encodable(run_result) for run_result in response["content"]]
+
+
+def get_cached_artifact_and_run(cache_key: str) -> Optional[Tuple[Artifact, Run]]:
+    """
+    Retrieve an artifact and the original run that produced it from the cache.
+    """
+    response = _get("/artifacts/cache?cache_key={}".format(cache_key))
+
+    if response["content"] is None:
+        return None
+
+    artifact = Artifact.from_json_encodable(response["content"]["artifact"])
+    run = Run.from_json_encodable(response["content"]["run"])
+
+    return artifact, run
 
 
 def save_graph(

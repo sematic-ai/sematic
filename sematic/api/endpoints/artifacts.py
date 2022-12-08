@@ -1,7 +1,7 @@
 # Standard Library
 import logging
 from http import HTTPStatus
-from typing import List, Optional, Type, cast
+from typing import Callable, Dict, List, Optional, Type, cast
 
 # Third-party
 import flask
@@ -19,11 +19,13 @@ from sematic.config.settings import get_active_plugins
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.user import User
-from sematic.db.queries import get_artifact
+from sematic.db.queries import get_artifact, get_cached_artifact_and_run
 from sematic.plugins.abstract_storage import AbstractStorage, PayloadType
 from sematic.plugins.storage.local_storage import LocalStorage
 
 logger = logging.getLogger(__name__)
+
+CACHE_KEY = "cache_key"
 
 
 @sematic_api.route("/api/v1/artifacts", methods=["GET"])
@@ -72,6 +74,54 @@ def get_artifact_endpoint(user: Optional[User], artifact_id: str) -> flask.Respo
         )
 
     payload = dict(content=artifact.to_json_encodable())
+
+    return flask.jsonify(payload)
+
+
+@sematic_api.route("/api/v1/artifacts/cache", methods=["GET"])
+@authenticate
+def get_cached_artifact_endpoint(user: Optional[User]) -> flask.Response:
+    """
+    Retrieve an Artifact from the cache, along with the Run that originally produced it.
+
+    Request
+    -------
+    cache_key: str
+        The cache key under which to look for the Artifact.
+
+    Response
+    --------
+    artifact: Artifact
+        The found Artifact in JSON format.
+    run: Run
+        The Run that originally produced the Artifact, in JSON format.
+    """
+    if CACHE_KEY not in set(flask.request.args.keys()):
+        return jsonify_error(
+            f"Can only get artifacts using the query key {CACHE_KEY}",
+            HTTPStatus.BAD_REQUEST,
+        )
+
+    if len(flask.request.args.keys()) > 1:
+        unknown_keys = set(flask.request.args.keys()) - {CACHE_KEY}
+        return jsonify_error(
+            f"Unknown query keys: {unknown_keys}", HTTPStatus.BAD_REQUEST
+        )
+
+    cache_key = flask.request.args[CACHE_KEY]
+    payload: Dict[str, Optional[Dict[str, str]]] = dict(content=None)
+
+    artifact_and_run = get_cached_artifact_and_run(cache_key)
+
+    if artifact_and_run is None:
+        # not finding an artifact is part of the normal flow and not an error case
+        return flask.jsonify(payload)
+
+    artifact, run = artifact_and_run
+    payload["content"] = {
+        "artifact": artifact.to_json_encodable(),
+        "run": run.to_json_encodable(),
+    }
 
     return flask.jsonify(payload)
 

@@ -89,6 +89,8 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
         Time at which the run has failed.
     resource_requirements_json : Optional[Dict[str, Any]]
         The compute resources requested for the execution.
+    cache_key : Optional[str]
+        If present, the key under which the run's output artifact will be cached.
     """
 
     __tablename__ = "runs"
@@ -136,6 +138,7 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
     resource_requirements_json: Optional[str] = Column(
         types.JSON(), nullable=True, info={JSON_KEY: True}
     )
+    cache_key: Optional[str] = Column(types.String(), nullable=True)
 
     @validates("future_state")
     def validate_future_state(self, _, value) -> str:

@@ -33,7 +33,7 @@ class FutureState(enum.Enum):
 
     @classmethod
     def as_object(cls, future_state: Union[str, "FutureState"]) -> "FutureState":
-        """Return the provided argument as a FutureState
+        """Return the provided argument as a FutureState.
 
         Parameters
         ----------
@@ -54,7 +54,7 @@ class FutureState(enum.Enum):
         return tuple([future_state.value for future_state in cls.__members__.values()])
 
     def is_terminal(self):
-        """Return True if & only if the state represents one that can't be moved from"""
+        """Return True if & only if the state represents one that can't be moved from."""
         return self in _TERMINAL_STATES
 
 
@@ -81,6 +81,7 @@ class FutureProperties:
     inline: bool
     name: str
     tags: List[str]
+    cache: bool = False
     resource_requirements: Optional[ResourceRequirements] = None
     retry_settings: Optional[RetrySettings] = None
     base_image_tag: Optional[str] = None
@@ -111,6 +112,11 @@ class AbstractFuture(abc.ABC):
         itself.
     original_future_id: Optional[str]
         The id of the original future this future was cloned from, if any.
+    cache: bool
+        Whether to cache the function's output value under the `cache_namespace`
+        configured in the `Resolver`. Defaults to `False`.
+
+        Do not activate this on a non-deterministic function!
     resource_requirements: Optional[ResourceRequirements]
         When using the `CloudResolver`, specifies what special execution resources the
         function requires. Defaults to `None`.
@@ -125,6 +131,7 @@ class AbstractFuture(abc.ABC):
         kwargs: Dict[str, Any],
         inline: bool,
         original_future_id: Optional[str] = None,
+        cache: bool = False,
         resource_requirements: Optional[ResourceRequirements] = None,
         retry_settings: Optional[RetrySettings] = None,
         base_image_tag: Optional[str] = None,
@@ -145,6 +152,7 @@ class AbstractFuture(abc.ABC):
 
         self._props = FutureProperties(
             inline=inline,
+            cache=cache,
             resource_requirements=resource_requirements,
             retry_settings=retry_settings,
             name=calculator.__name__,

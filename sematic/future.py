@@ -1,5 +1,5 @@
 # Standard Library
-from typing import Any, List, Optional  # noqa: F401
+from typing import Any, Callable, List, Optional, Union  # noqa: F401
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
@@ -7,6 +7,8 @@ from sematic.resolver import Resolver
 from sematic.resolvers.local_resolver import LocalResolver
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.resolvers.silent_resolver import SilentResolver
+
+_MUTABLE_FIELDS = {"name", "inline", "cache", "resource_requirements", "tags"}
 
 
 class Future(AbstractFuture):
@@ -51,7 +53,6 @@ class Future(AbstractFuture):
         ----------
         name: str
             The future's name. This will be used to name the run in the UI.
-
         inline: bool
             When using the `CloudResolver`, whether the instrumented function
             should be executed inside the same process and worker that is executing
@@ -60,11 +61,14 @@ class Future(AbstractFuture):
             Defaults to `True`, as most pipeline functions are expected to be
             lightweight. Explicitly set this to `False` in order to distribute its
             execution to a worker and parallelize its execution.
+        cache: bool
+            Whether to cache the function's output value under the
+            `cache_namespace` configured in the `Resolver`. Defaults to `False`.
 
+            Do not activate this on a non-deterministic function!
         resource_requirements: ResourceRequirements
             When using the `CloudResolver`, specifies what special execution
             resources the function requires. Defaults to `None`.
-
         tags: List[str]
             A list of strings tags to attach to the resulting run.
 
@@ -73,8 +77,7 @@ class Future(AbstractFuture):
         Future
             The current `Future` object. This enables chaining.
         """
-        mutable_fields = {"name", "inline", "resource_requirements", "tags"}
-        invalid_fields = set(kwargs) - mutable_fields
+        invalid_fields = set(kwargs) - _MUTABLE_FIELDS
         if len(invalid_fields) > 0:
             raise ValueError(f"Cannot mutate fields: {invalid_fields}")
 
@@ -89,6 +92,11 @@ class Future(AbstractFuture):
             value = kwargs["inline"]
             if not (isinstance(value, bool)):
                 raise ValueError(f"Invalid `inline`, must be a bool: {repr(value)}")
+
+        if "cache" in kwargs:
+            value = kwargs["cache"]
+            if not (isinstance(value, bool)):
+                raise ValueError(f"Invalid `cache`, must be a bool: {repr(value)}")
 
         if "resource_requirements" in kwargs:
             value = kwargs["resource_requirements"]

@@ -160,7 +160,11 @@ def main(
             future: Future = func(**kwargs)
             future.id = run.id
 
+            # the resolution object has required configurations for the resolver
+            resolution = api_client.get_resolution(root_id=run.id)
+
             resolver = CloudResolver(
+                cache_namespace=resolution.cache_namespace,
                 detach=False,
                 max_parallelism=max_parallelism,
                 rerun_from=rerun_from,

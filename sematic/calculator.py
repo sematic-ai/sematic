@@ -52,8 +52,9 @@ class Calculator(AbstractCalculator):
         func: types.FunctionType,
         input_types: Dict[str, type],
         output_type: type,
-        resource_requirements: Optional[ResourceRequirements] = None,
         inline: bool = True,
+        cache: bool = False,
+        resource_requirements: Optional[ResourceRequirements] = None,
         retry_settings: Optional[RetrySettings] = None,
         base_image_tag: Optional[str] = None,
     ) -> None:
@@ -64,6 +65,7 @@ class Calculator(AbstractCalculator):
         self._output_type = output_type
 
         self._inline = inline
+        self._cache = cache
         self._resource_requirements = resource_requirements
         self._retry_settings = retry_settings
         self._base_image_tag = base_image_tag
@@ -162,6 +164,7 @@ class Calculator(AbstractCalculator):
             self,
             cast_arguments,
             inline=self._inline,
+            cache=self._cache,
             resource_requirements=self._resource_requirements,
             # copying because it will hold state for the particular
             # future (retry_count is mutable and increases with retries)
@@ -280,6 +283,7 @@ def _repr_str_iterable(str_iterable: Iterable[str]) -> str:
 def func(
     func: Optional[Callable] = None,
     inline: bool = True,
+    cache: bool = False,
     resource_requirements: Optional[ResourceRequirements] = None,
     retry: Optional[RetrySettings] = None,
     base_image_tag: Optional[str] = None,
@@ -295,7 +299,6 @@ def func(
     ----------
     func: Optional[Callable]
         The `Callable` to instrument; usually the decorated function.
-
     inline: bool
         When using the `CloudResolver`, whether the instrumented function
         should be executed inside the same process and worker that is executing
@@ -304,11 +307,14 @@ def func(
         Defaults to `True`, as most pipeline functions are expected to be
         lightweight. Explicitly set this to `False` in order to distribute its
         execution to a worker and parallelize its execution.
+    cache: bool
+        Whether to cache the function's output value under the
+        `cache_namespace` configured in the `Resolver`. Defaults to `False`.
 
+        Do not activate this on a non-deterministic function!
     resource_requirements: Optional[ResourceRequirements]
         When using the `CloudResolver`, specifies what special execution
         resources the function requires. Defaults to `None`.
-
     retry: Optional[RetrySettings]
         Specifies in case of which Exceptions the function's execution should
         be retried, and how many times. Defaults to `None`.
@@ -369,6 +375,7 @@ def func(
             input_types=input_types,
             output_type=output_type,
             inline=inline,
+            cache=cache,
             resource_requirements=resource_requirements,
             retry_settings=retry,
             base_image_tag=base_image_tag,
