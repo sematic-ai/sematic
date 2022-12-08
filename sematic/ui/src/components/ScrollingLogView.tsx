@@ -1,8 +1,10 @@
-import { useEffect, useCallback, useMemo } from "react";
-import { Alert, Box, Button, useTheme } from "@mui/material";
+import { useEffect, useCallback, useMemo, useRef } from "react";
+import { Alert, Box, Button, LinearProgress, useTheme } from "@mui/material";
+import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
 import InfiniteScroll from "react-infinite-scroll-component";
 import Loading from "./Loading";
 import { useAccumulateLogsUntilEnd, useLogStream } from "../hooks/logHooks";
+import { usePulldownTrigger } from "../hooks/scrollingHooks";
 
 const DEFAULT_LOG_INFO_MESSAGE = "No more matching lines";
 
@@ -29,25 +31,19 @@ export default function ScrollingLogView(props: {
     if (!!error) {
       onError(error);
     }
-  }, [onError, error])
+  }, [onError, error]);
 
-  const onScroll = useCallback(
-    (evt: any) => {
-      // when the user is scrolling near the last line, and there might still
-      // be more lines, we want to refresh. This is a distinct situation from
-      // the normal "infinite scroll" because the normal infinite scroll will
-      // only do one "next" when near the bottom and not do another if it didn't
-      // get more lines. We still want to leave the normal infinite scroll on though:
-      // it makes it so if a user is scrolling, we pre-emptively load the end before
-      // the user gets too close to it which will provide a smoother experience.
-      const distanceFromScrollBottom =
-        evt.target.scrollHeight - evt.target.scrollTop;
-      if (hasMore && distanceFromScrollBottom < 100) {
-        getNext();
-      }
-    },
-    [getNext, hasMore]
-  );
+  const scrollMonitorRef = useRef<HTMLElement>();
+
+  const pullDownCallback = useCallback(async () => {
+    if (isAccumulating || isLoading || !hasMore) {
+      return;
+    }
+    await getNext();
+  }, [isAccumulating, isLoading, getNext]);
+
+  const {pullDownProgress, pullDownTriggerEnabled} 
+    = usePulldownTrigger(scrollMonitorRef!, pullDownCallback);
 
   const infiniteScrollGetNext = useCallback(() => {
     // If the accumulator is under way, don't initiate a pull 
@@ -73,6 +69,29 @@ export default function ScrollingLogView(props: {
     }
     return "Rendering...";
   }, [isAccumulating, isAccumulatorLoading, accumulatedLines, hasMore]);
+
+  const pullDownTriggerSection = useMemo(() => {
+    if (!pullDownTriggerEnabled || isAccumulating || !hasMore) {
+      return <></>;
+    }
+    return (<>
+      <Alert severity="info" icon={<ArrowCircleDownIcon fontSize="inherit" />}>
+        Keep scrolling down to get more logs
+      </Alert>
+      {/* The progress bar is visual feedback for user interaction. It tells the user
+        * how much more to scroll to trigger log fetching. It urges the user to keep 
+        * scrolling down if re-fetching is what the user desires. 
+        * 
+        * It is not a loading indicator for I/O transmission like the spinner.
+        */}
+      <LinearProgress value={Math.floor(pullDownProgress)} variant={"determinate"}
+      sx={{
+        '& .MuiLinearProgress-bar': {
+          'transitionDuration': '10ms'
+        }
+      }} />
+    </>);
+  }, [pullDownTriggerEnabled, pullDownProgress, isAccumulating, hasMore]);
 
   // scroll to the bottom when fast forwarding/jumping to end 
   // (aka accumulating) has gotten data
@@ -103,6 +122,7 @@ export default function ScrollingLogView(props: {
       
       <Box
         id={scrollerId}
+        ref={scrollMonitorRef}
         sx={{
           height: "400px",
           my: 5,
@@ -119,7 +139,6 @@ export default function ScrollingLogView(props: {
           scrollableTarget={scrollerId}
           hasMore={hasMore}
           loader={<Loading isLoaded={!isLoading} />}
-          onScroll={onScroll}
           endMessage={logInfoMessageBanner}
         >
           {lines.map((line, index) => (
@@ -140,6 +159,9 @@ export default function ScrollingLogView(props: {
             </Box>
           ))}
         </InfiniteScroll>
+        <div style={{width: '100%', height: '40px', margin: '0.5em 0'}}>
+          {pullDownTriggerSection}
+        </div>
       </Box>
       {(hasMore && 
         <Button
