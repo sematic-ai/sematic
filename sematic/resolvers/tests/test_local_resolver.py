@@ -129,9 +129,10 @@ def test_pipeline(
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
+    resolver = CallbackTrackingResolver()
     future = pipeline(3, 5)
 
-    result = future.resolve(LocalResolver())
+    result = future.resolve(resolver)
 
     assert result == 24
     assert isinstance(result, float)
@@ -143,6 +144,19 @@ def test_pipeline(
     assert len(runs) == 6
     assert len(artifacts) == 5
     assert len(edges) == 16
+    pipeline_callbacks = resolver.callback_by_future_id(future.id)
+    final_add_callbacks = resolver.callback_by_future_id(future.nested_future.id)
+    assert pipeline_callbacks == [
+        "_future_did_schedule",
+        "_future_did_run",
+        "_future_did_resolve",
+        "_future_did_terminate",
+    ]
+    assert final_add_callbacks == [
+        "_future_did_schedule",
+        "_future_did_resolve",
+        "_future_did_terminate",
+    ]
 
 
 def test_failure(
@@ -318,6 +332,66 @@ class DBStateMachineTestResolver(LocalResolver):
         assert all(edge.artifact_id is None for edge in output_edges)
 
 
+class CallbackTrackingResolver(LocalResolver):
+    def __init__(self, rerun_from=None, **kwargs):
+        super().__init__(rerun_from, **kwargs)
+        # list of tuples: (callback name, future, future_state)
+        self._callback_invocations = []
+
+    def _future_did_schedule(self, future):
+        super()._future_did_schedule(future)
+        self._callback_invocations.append(
+            ("_future_did_schedule", future, future.state)
+        )
+
+    def _future_did_run(self, future):
+        super()._future_did_run(future)
+        self._callback_invocations.append(("_future_did_run", future, future.state))
+
+    def _future_did_fail(self, future):
+        super()._future_did_fail(future)
+        self._callback_invocations.append(("_future_did_fail", future, future.state))
+
+    def _future_did_resolve(self, future):
+        super()._future_did_resolve(future)
+        self._callback_invocations.append(("_future_did_resolve", future, future.state))
+
+    def _future_did_get_marked_for_retry(self, future):
+        super()._future_did_get_marked_for_retry(future)
+        self._callback_invocations.append(
+            ("_future_did_get_marked_for_retry", future, future.state)
+        )
+
+    def _future_did_terminate(self, future):
+        super()._future_did_terminate(future)
+        self._callback_invocations.append(
+            ("_future_did_terminate", future, future.state)
+        )
+
+    def callback_by_future_id(self, future_id) -> List[str]:
+        return [
+            callback
+            for callback, future, _ in self._callback_invocations
+            if future.id == future_id
+        ]
+
+    def state_sequence_by_future_id(self, future_id) -> List[FutureState]:
+        state_sequence = [
+            state
+            for _, future, state in self._callback_invocations
+            if future.id == future_id
+        ]
+
+        deduped_state_sequence = []
+        prior_state = None
+
+        for state in state_sequence:
+            if prior_state != state:
+                deduped_state_sequence.append(state)
+            prior_state = state
+        return deduped_state_sequence
+
+
 def test_db_state_machine(
     mock_local_resolver_storage,  # noqa: F811
     mock_socketio,  # noqa: F811
@@ -351,6 +425,8 @@ def test_exceptions(
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
+    resolver = CallbackTrackingResolver()
+
     @func
     def fail():
         raise Exception("FAIL!")
@@ -362,7 +438,7 @@ def test_exceptions(
     future = pipeline()
 
     with pytest.raises(ResolutionError, match="FAIL!") as exc_info:
-        future.resolve()
+        future.resolve(resolver)
 
     assert isinstance(exc_info.value.__context__, CalculatorError)
     assert isinstance(exc_info.value.__context__.__context__, Exception)
@@ -381,6 +457,20 @@ def test_exceptions(
 
     assert runs_by_id[future.nested_future.id].future_state == FutureState.FAILED.value
     assert "FAIL!" in runs_by_id[future.nested_future.id].exception_metadata.repr
+
+    parent_callbacks = resolver.callback_by_future_id(future.id)
+    nested_callbacks = resolver.callback_by_future_id(future.nested_future.id)
+    assert parent_callbacks == [
+        "_future_did_schedule",
+        "_future_did_run",
+        "_future_did_fail",
+        "_future_did_terminate",
+    ]
+    assert nested_callbacks == [
+        "_future_did_schedule",
+        "_future_did_fail",
+        "_future_did_terminate",
+    ]
 
 
 _tried = 0
@@ -406,9 +496,10 @@ def test_retry(
     valid_client_version,  # noqa: F811
 ):
     future = try_three_times()
+    resolver = CallbackTrackingResolver()
 
     with pytest.raises(ResolutionError) as exc_info:
-        future.resolve(LocalResolver())
+        future.resolve(resolver)
 
     assert isinstance(exc_info.value.__context__, CalculatorError)
     assert isinstance(exc_info.value.__context__.__context__, SomeException)
@@ -416,6 +507,18 @@ def test_retry(
     assert future.props.retry_settings.retry_count == 3
     assert future.state == FutureState.FAILED
     assert _tried == 4
+    callbacks = resolver.callback_by_future_id(future.id)
+    assert callbacks == [
+        "_future_did_schedule",
+        "_future_did_get_marked_for_retry",
+        "_future_did_schedule",
+        "_future_did_get_marked_for_retry",
+        "_future_did_schedule",
+        "_future_did_get_marked_for_retry",
+        "_future_did_schedule",
+        "_future_did_fail",
+        "_future_did_terminate",
+    ]
 
 
 def test_make_resolution():
@@ -474,3 +577,87 @@ def test_rerun_from_here(
         assert output == new_output
 
         assert resolver.scheduled_run_counts == expected_scheduled_run_counts
+
+
+def test_cancel_non_terminal_futures(
+    mock_local_resolver_storage,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
+):
+    resolver = CallbackTrackingResolver()
+
+    @func
+    def pass_through(x: int, cancel: bool) -> int:
+        if cancel:
+            resolver._cancel_non_terminal_futures()
+        return x
+
+    @func
+    def pipeline() -> int:
+        x = pass_through(42, cancel=False)
+        x = pass_through(x, cancel=True)
+        x = pass_through(x, cancel=False)
+        return x
+
+    future = pipeline()
+    future.resolve(resolver)
+    root_future_id = future.id
+    last_func_id = future.nested_future.id
+    middle_func_id = future.nested_future.kwargs["x"].id
+    first_func_id = future.nested_future.kwargs["x"].kwargs["x"].id
+
+    root_future_callbacks = resolver.callback_by_future_id(root_future_id)
+    first_func_callbacks = resolver.callback_by_future_id(first_func_id)
+    middle_func_callbacks = resolver.callback_by_future_id(middle_func_id)
+    last_func_callbacks = resolver.callback_by_future_id(last_func_id)
+
+    assert root_future_callbacks == [
+        "_future_did_schedule",
+        "_future_did_run",
+        "_future_did_terminate",
+    ]
+    assert first_func_callbacks == [
+        "_future_did_schedule",
+        "_future_did_resolve",
+        "_future_did_terminate",
+    ]
+    assert middle_func_callbacks == [
+        "_future_did_schedule",
+        "_future_did_terminate",
+
+        # final resolved here is just because of the weird way in which
+        # we cancel from within a func body. We should technically
+        # disallow this kind of transition, see:
+        # https://github.com/sematic-ai/sematic/issues/107
+        "_future_did_resolve",
+        "_future_did_terminate",
+    ]
+    assert last_func_callbacks == ["_future_did_terminate"]
+
+    root_future_states = resolver.state_sequence_by_future_id(root_future_id)
+    first_func_states = resolver.state_sequence_by_future_id(first_func_id)
+    middle_func_states = resolver.state_sequence_by_future_id(middle_func_id)
+    last_func_states = resolver.state_sequence_by_future_id(last_func_id)
+
+    assert root_future_states == [
+        FutureState.SCHEDULED,
+        FutureState.RAN,
+        FutureState.CANCELED,
+    ]
+    assert first_func_states == [
+        FutureState.SCHEDULED,
+        FutureState.RESOLVED,
+    ]
+    assert middle_func_states == [
+        FutureState.SCHEDULED,
+        FutureState.CANCELED,
+
+        # see comment in callback assetions above about why this is here
+        FutureState.RESOLVED,
+    ]
+    assert last_func_states == [
+        FutureState.CANCELED,
+    ]
