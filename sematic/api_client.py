@@ -9,11 +9,8 @@ from requests.exceptions import ConnectionError
 # Sematic
 from sematic.abstract_future import FutureState
 from sematic.config.config import get_config
-from sematic.config.user_settings import (
-    MissingUserSettingsError,
-    UserSettingsVar,
-    get_user_setting,
-)
+from sematic.config.settings import MissingSettingsError
+from sematic.config.user_settings import CLI_COMMAND, UserSettingsVar, get_user_setting
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
@@ -394,7 +391,7 @@ def _request(
         response.status_code == requests.codes.unauthorized
         and headers["X-API-KEY"] is None
     ):
-        raise MissingUserSettingsError(UserSettingsVar.SEMATIC_API_KEY)
+        raise MissingSettingsError(UserSettingsVar.SEMATIC_API_KEY, CLI_COMMAND)
 
     _raise_for_response(
         response,
@@ -458,5 +455,5 @@ def _get_api_key() -> Optional[str]:
     """
     try:
         return get_user_setting(UserSettingsVar.SEMATIC_API_KEY)
-    except MissingUserSettingsError:
+    except MissingSettingsError:
         return None

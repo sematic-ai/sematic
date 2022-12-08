@@ -4,7 +4,6 @@ from typing import Dict
 # Sematic
 from sematic.config.settings import (
     AbstractSettingsVar,
-    MissingSettingsError,
     ProfileSettings,
     SettingsScope,
     as_bool,
@@ -25,11 +24,17 @@ class UserSettingsVar(AbstractSettingsVar):
     AWS_S3_BUCKET = "AWS_S3_BUCKET"
 
 
+CLI_COMMAND = "settings"
+
 _USER_SETTINGS_SCOPE = SettingsScope(
     file_name="settings.yaml",
-    cli_command="settings",
+    cli_command=CLI_COMMAND,
     vars=UserSettingsVar,
 )
+
+
+def get_user_settings_scope() -> SettingsScope:
+    return _USER_SETTINGS_SCOPE
 
 
 def get_active_user_settings_strings() -> Dict[str, str]:
@@ -83,8 +88,3 @@ def get_user_settings_file_path() -> str:
     Required for automated migration
     """
     return _USER_SETTINGS_SCOPE.settings_file_path
-
-
-class MissingUserSettingsError(MissingSettingsError):
-    def __init__(self, var: UserSettingsVar):
-        super().__init__(var, _USER_SETTINGS_SCOPE.cli_command)

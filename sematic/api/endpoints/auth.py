@@ -14,11 +14,11 @@ from sqlalchemy.orm.exc import NoResultFound
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.config.server_settings import (
-    MissingServerSettingsError,
     ServerSettingsVar,
     get_bool_server_setting,
     get_server_setting,
 )
+from sematic.config.settings import MissingSettingsError
 from sematic.db.models.factories import make_user
 from sematic.db.queries import get_user, get_user_by_api_key, save_user
 
@@ -44,7 +44,7 @@ def authenticate_endpoint() -> flask.Response:
         ):
             try:
                 providers[var.value] = get_server_setting(var)
-            except MissingServerSettingsError:
+            except MissingSettingsError:
                 continue
 
         if len(providers) == 0:
@@ -84,7 +84,7 @@ def google_login() -> flask.Response:
         google_oauth_client_id = get_server_setting(
             ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID
         )
-    except MissingServerSettingsError:
+    except MissingSettingsError:
         return jsonify_error("Missing oauth client ID", HTTPStatus.BAD_REQUEST)
 
     try:

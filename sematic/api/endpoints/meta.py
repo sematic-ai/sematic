@@ -9,11 +9,8 @@ import flask
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
-from sematic.config.server_settings import (
-    MissingSettingsError,
-    ServerSettingsVar,
-    get_server_setting,
-)
+from sematic.config.server_settings import ServerSettingsVar, get_server_setting
+from sematic.config.settings import MissingSettingsError
 from sematic.db.models.user import User
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 

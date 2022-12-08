@@ -1,16 +1,10 @@
-# Standard Library
-import os
-import shutil
-
 # Sematic
 from sematic.config.settings import (
     AbstractSettingsVar,
-    MissingSettingsError,
     ProfileSettings,
     SettingsScope,
     as_bool,
 )
-from sematic.config.user_settings import get_user_settings_file_path
 
 
 class ServerSettingsVar(AbstractSettingsVar):
@@ -39,31 +33,15 @@ class ServerSettingsVar(AbstractSettingsVar):
     GRAFANA_PANEL_URL = "GRAFANA_PANEL_URL"
 
 
-class ServerSettingsScope(SettingsScope):
-    @property
-    def settings_file_path(self) -> str:
-        """
-        Temporary override to enable smooth transition from one file
-        to one file per scope.
-
-        TODO: Remove this code.
-        """
-        expected_path = super().settings_file_path
-
-        user_settings_file_path = get_user_settings_file_path()
-        if not os.path.isfile(expected_path) and os.path.isfile(
-            user_settings_file_path
-        ):
-            shutil.copy(user_settings_file_path, expected_path)
-
-        return expected_path
-
-
-_SERVER_SETTINGS_SCOPE = ServerSettingsScope(
+_SERVER_SETTINGS_SCOPE = SettingsScope(
     file_name="server.yaml",
     cli_command="server-settings",
     vars=ServerSettingsVar,
 )
+
+
+def get_server_settings_scope() -> SettingsScope:
+    return _SERVER_SETTINGS_SCOPE
 
 
 def get_active_server_settings() -> ProfileSettings:
@@ -103,8 +81,3 @@ def delete_server_settings(var: ServerSettingsVar) -> None:
     Deletes the specified settings value and persists the settings.
     """
     _SERVER_SETTINGS_SCOPE.delete_setting(var)
-
-
-class MissingServerSettingsError(MissingSettingsError):
-    def __init__(self, var: ServerSettingsVar):
-        super().__init__(var, _SERVER_SETTINGS_SCOPE.cli_command)

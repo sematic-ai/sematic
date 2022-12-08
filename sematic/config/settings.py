@@ -36,7 +36,7 @@ class ProfileSettings(Dict[AbstractSettingsVar, str]):
 
 class Settings(Dict[str, ProfileSettings]):
     """
-    Mapping of profile name to ProfileSettins.
+    Mapping of profile name to ProfileSettings.
     """
 
     pass
@@ -155,7 +155,7 @@ class SettingsScope:
 
         settings[DEFAULT_PROFILE][var] = value
 
-        self.save_settings()
+        self.save_settings(settings)
 
         # Void cache to force refresh
         self._active_settings = None
@@ -177,16 +177,16 @@ class SettingsScope:
         if var in settings[DEFAULT_PROFILE]:
             del settings[DEFAULT_PROFILE][var]
 
-        self.save_settings()
+        self.save_settings(settings)
 
         # Void cache to force refresh
         self._active_settings = None
 
-    def save_settings(self) -> None:
+    def save_settings(self, settings: Settings) -> None:
         """
         Persists the specified settings to the specified settings file.
         """
-        yaml_output = yaml.dump(self.get_settings(), Dumper=EnumDumper)
+        yaml_output = yaml.dump(settings, Dumper=EnumDumper)
 
         with open(self.settings_file_path, "w") as f:
             f.write(yaml_output)
@@ -271,7 +271,9 @@ def _load_settings(file_path: str, vars: Type[AbstractSettingsVar]) -> Settings:
         for key in list(profile_settings):
             normalized_key = _normalize_enum(vars, key)
 
-            if normalized_key is not None:
+            if normalized_key is None:
+                logger.warning("Unknown setting: %s", key)
+            else:
                 profile_settings[normalized_key] = profile_settings[key]
 
             del profile_settings[key]

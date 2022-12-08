@@ -20,11 +20,7 @@ pytest_test(
 pytest_test(
     name = "test_server_settings",
     srcs = ["test_server_settings.py"],
-    pip_deps = [
-        "pyyaml",
-    ],
     deps = [
         "//sematic/config:server_settings",
-        "//sematic/config:user_settings",
     ],
 )
