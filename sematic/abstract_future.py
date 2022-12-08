@@ -88,11 +88,6 @@ class FutureProperties:
     retry_settings: Optional[RetrySettings] = None
     base_image_tag: Optional[str] = None
     external_resources: List[ExternalResource] = field(default_factory=list)
-    # We don't want to replace futures in kwargs, because it holds
-    # the source of truth for the future graph. Instead we have concrete
-    # values in resolved_kwargs
-    # It will be set only once all input values are resolved
-    # resolved_kwargs: Dict[str, Any] = field(default_factory=dict)
 
     def get_resolved_kwargs(self) -> Dict[str, Any]:
         """
