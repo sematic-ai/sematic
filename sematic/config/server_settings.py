@@ -50,8 +50,11 @@ class ServerSettingsScope(SettingsScope):
         """
         expected_path = super().settings_file_path
 
-        if not os.path.isfile(expected_path):
-            shutil.copy(get_user_settings_file_path(), expected_path)
+        user_settings_file_path = get_user_settings_file_path()
+        if not os.path.isfile(expected_path) and os.path.isfile(
+            user_settings_file_path
+        ):
+            shutil.copy(user_settings_file_path, expected_path)
 
         return expected_path
 
