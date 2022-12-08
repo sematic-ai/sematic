@@ -19,7 +19,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
 )
 from sematic.config.server_settings import ServerSettingsVar
-from sematic.config.settings import _as_bool
+from sematic.config.settings import as_bool
 from sematic.db.models.json_encodable_mixin import REDACTED
 from sematic.db.models.user import User
 from sematic.db.queries import get_user
@@ -51,7 +51,7 @@ def test_authenticate_endpoint(
         response = test_client.get("/authenticate")
 
         assert response.json == {
-            "authenticate": _as_bool(authenticate_config),
+            "authenticate": as_bool(authenticate_config),
             "providers": expected_providers,
         }
 
@@ -174,7 +174,7 @@ def test_authenticate_decorator(
 
         headers = (
             {"X-API-KEY": persisted_user.api_key}
-            if _as_bool(authenticate_config)
+            if as_bool(authenticate_config)
             else {}
         )
 

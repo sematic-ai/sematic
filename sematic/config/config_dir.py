@@ -7,16 +7,6 @@ logger = logging.getLogger(__name__)
 
 _DEFAULT_CONFIG_DIR = ".sematic"
 _CONFIG_DIR_OVERRIDE_ENV_VAR = "SEMATIC_CONFIG_DIR"
-SERVER_SETTINGS_FILE = "server.yaml"
-USER_SETTINGS_FILE = "settings.yaml"
-MISSING_SERVER_SETTINGS_TEMPLATE = (
-    "\nThe server settings have been split out from the user settings. If a user "
-    "settings file is configured, then a server settings file must also be present. "
-    "Please create the '%s' file locally and move any server-specific settings from '%s' "
-    "to this new file, top-level, without the 'default' qualifier. "
-    "For more details please see https://docs.sematic.dev/cli#user-settings and "
-    "https://docs.sematic.dev/cli#server-settings\n"
-)
 
 
 def get_config_dir() -> str:
@@ -40,26 +30,7 @@ def get_config_dir() -> str:
             f"'{config_dir_path.parent.as_posix()}' does not exist."
         )
 
-    if os.path.isdir(config_dir_path.as_posix()):
-        _check_config_dir_schema(config_dir_path.as_posix())
-    else:
+    if not os.path.isdir(config_dir_path.as_posix()):
         config_dir_path.mkdir()
 
     return config_dir_path.as_posix()
-
-
-def _check_config_dir_schema(config_dir_path: str) -> None:
-    """
-    Validates that the config dir has the expected schema - i.e. has all required files.
-    """
-    server_file = os.path.join(config_dir_path, SERVER_SETTINGS_FILE)
-    server_file_present = os.path.isfile(server_file)
-    user_file = os.path.join(config_dir_path, USER_SETTINGS_FILE)
-    user_file_present = os.path.isfile(user_file)
-
-    if server_file_present and user_file_present:
-        return
-
-    if user_file_present:
-        logger.error(MISSING_SERVER_SETTINGS_TEMPLATE, server_file, user_file)
-        os._exit(1)

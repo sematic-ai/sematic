@@ -10,9 +10,9 @@ import flask
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.config.server_settings import (
-    MissingServerSettingsError,
+    MissingSettingsError,
     ServerSettingsVar,
-    get_server_settings,
+    get_server_setting,
 )
 from sematic.db.models.user import User
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
@@ -50,8 +50,8 @@ def env_endpoint(user: Optional[User]) -> flask.Response:
         ServerSettingsVar.GRAFANA_PANEL_URL,
     ):
         try:
-            env[settings.value] = get_server_settings(settings)
-        except MissingServerSettingsError:
+            env[settings.value] = get_server_setting(settings)
+        except MissingSettingsError:
             continue
 
     return flask.jsonify(dict(env=env))

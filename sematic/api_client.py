@@ -12,7 +12,7 @@ from sematic.config.config import get_config
 from sematic.config.user_settings import (
     MissingUserSettingsError,
     UserSettingsVar,
-    get_user_settings,
+    get_user_setting,
 )
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
@@ -457,6 +457,6 @@ def _get_api_key() -> Optional[str]:
     Read the API key from user settings.
     """
     try:
-        return get_user_settings(UserSettingsVar.SEMATIC_API_KEY)
+        return get_user_setting(UserSettingsVar.SEMATIC_API_KEY)
     except MissingUserSettingsError:
         return None

@@ -11,7 +11,7 @@ from sematic.config.config_dir import get_config_dir
 from sematic.config.user_settings import (
     MissingUserSettingsError,
     UserSettingsVar,
-    get_user_settings,
+    get_user_setting,
 )
 
 
@@ -159,7 +159,7 @@ class UserOverrideConfig(Config):
             return self.server_url_from_env_vars()
 
         try:
-            return get_user_settings(UserSettingsVar.SEMATIC_API_ADDRESS)
+            return get_user_setting(UserSettingsVar.SEMATIC_API_ADDRESS)
         except MissingUserSettingsError:
             return "http://{}:{}".format(self.server_address, self.port)
 

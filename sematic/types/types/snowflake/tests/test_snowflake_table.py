@@ -12,7 +12,7 @@ from sematic.types.types.snowflake.snowflake_table import SnowflakeTable
 @pytest.fixture
 def credentials():
     with patch(
-        "sematic.types.types.snowflake.snowflake_table.get_user_settings",
+        "sematic.types.types.snowflake.snowflake_table.get_user_setting",
         return_value="dummy",
     ):
         yield
