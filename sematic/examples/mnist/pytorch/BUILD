@@ -32,6 +32,7 @@ py_library(
 sematic_pipeline(
     name = "mnist_train",
     dev = True,
+    base = "@sematic-worker-cuda//image",
     registry = "558717131297.dkr.ecr.us-west-2.amazonaws.com",
     repository = "sematic-dev",
     deps = [
@@ -59,6 +60,7 @@ py_library(
 sematic_pipeline(
     name = "mnist_learning_rates",
     dev = True,
+    base = "@sematic-worker-cuda//image",
     registry = "558717131297.dkr.ecr.us-west-2.amazonaws.com",
     repository = "sematic-dev",
     deps = [
