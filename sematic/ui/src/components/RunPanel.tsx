@@ -106,6 +106,15 @@ export default function RunPanel(props: {
                 <Typography variant="h6">{selectedRun.name}</Typography>
                 <CalculatorPath calculatorPath={"ID: " + selectedRun.id} />
                 <br />
+                {selectedRun.cloned_from_run_id && (
+                  <>
+                    <CalculatorPath
+                      // TODO: add link to the original id
+                      calculatorPath={"Cloned from ID: " + selectedRun.cloned_from_run_id}
+                    />
+                    <br />
+                  </>
+                )}
                 <CalculatorPath calculatorPath={selectedRun.calculator_path} />
               </Box>
               <Tags tags={selectedRun.tags || []} />

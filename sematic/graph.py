@@ -438,7 +438,7 @@ class Graph:
             if run.id in reset_run_ids:
                 parent_future.state = FutureState.RAN
 
-    def _clone_run(
+    def _clone_future(
         self, run_id: RunID, cloned_graph: ClonedFutureGraph, reset_run_ids: List[RunID]
     ) -> AbstractFuture:
         run = self._runs_by_id[run_id]
@@ -463,6 +463,7 @@ class Graph:
             future = func(**kwargs)
 
         future.name = run.name
+        future.cloned_from_future_id = run_id
 
         cloned_graph.input_artifacts[future.id] = run_input_artifacts
 
@@ -512,14 +513,12 @@ class Graph:
 
         Returns
         -------
-        Tuple[List[AbstractFuture], Dict[str, Dict[str, Artifact]], Dict[str,
-        Artifact]]
-            A tuple whose first element is a list of cloned futures, grouped by
-            nested layers (outermost first), and sorted by reverse execution
-            order within each layer. The second element is a mapping of future
+        ClonedFutureGraph
+            A dataclass containing an ordered mapping of original run ids to cloned
+            futures, grouped by nested layers (outermost first), and sorted by reverse
+            execution order within each layer. The second field is a mapping of future
             IDs to input artifacts. The third element is a mapping of future IDs
             to output artifacts.
-
         """
         cloned_graph = ClonedFutureGraph()
 
@@ -539,7 +538,7 @@ class Graph:
             if run_id in skip_run_ids:
                 continue
 
-            cloned_graph.futures_by_original_id[run_id] = self._clone_run(
+            cloned_graph.futures_by_original_id[run_id] = self._clone_future(
                 run_id, cloned_graph, reset_run_ids
             )
 
