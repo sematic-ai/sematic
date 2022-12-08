@@ -6,25 +6,70 @@ import logging
 import os
 import random
 import time
+from dataclasses import replace
 from typing import List, Optional
 
 # Sematic
 import sematic
-from sematic.external_resource import ExternalResource
+from sematic.external_resource import ExternalResource, ResourceState, ResourceStatus
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class FakeExternalResource(ExternalResource):
-    def activate(self, is_local: bool):
-        print(f"Activating!!!! is_local={is_local}")
+    """Simple external resource just for demonstration purposes"""
 
-    def deactivate(self):
-        print("Deactivating!!!!")
+    def _do_activate(self, is_local: bool):
+        logger.info(f"Activating {self.id}!!!! is_local={is_local}")
+        return replace(
+            self,
+            status=ResourceStatus(
+                state=ResourceState.ACTIVATING,
+                message="Allocating fake resource",
+                last_update_epoch_time=int(time.time()),
+            ),
+        )
 
-    def check_status(self) -> None:
-        pass
+    def _do_deactivate(self):
+        logger.info(f"Deactivating {self.id}!!!!")
+        return replace(
+            self,
+            status=ResourceStatus(
+                state=ResourceState.DEACTIVATING,
+                message="Deallocating fake resource",
+                last_update_epoch_time=int(time.time()),
+            ),
+        )
+
+    def _do_update(self) -> "FakeExternalResource":
+        logger.info(f"Updating state of {self.id}!!!!")
+        if self.status.state == ResourceState.ACTIVATING:
+            return replace(
+                self,
+                status=ResourceStatus(
+                    state=ResourceState.ACTIVE,
+                    message="Resource is ready!",
+                    last_update_epoch_time=int(time.time()),
+                ),
+            )
+        elif self.status.state == ResourceState.DEACTIVATING:
+            return replace(
+                self,
+                status=ResourceStatus(
+                    state=ResourceState.INACTIVE,
+                    message="Resource is cleaned!",
+                    last_update_epoch_time=int(time.time()),
+                ),
+            )
+        return replace(
+            self,
+            status=ResourceStatus(
+                state=self.status.state,
+                message="Nothing has changed...!",
+                last_update_epoch_time=int(time.time()),
+            ),
+        )
 
 
 @sematic.func(inline=False)

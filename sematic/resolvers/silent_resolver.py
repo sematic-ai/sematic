@@ -3,6 +3,7 @@ import logging
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
+from sematic.external_resource import ResourceState
 from sematic.future_context import PrivateContext, SematicContext, set_context
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
 from sematic.utils.exceptions import ResolutionError, format_exception_for_run
@@ -14,19 +15,23 @@ class SilentResolver(StateMachineResolver):
     """A resolver to resolver a DAG in memory, without tracking to the DB."""
 
     def _schedule_future(self, future: AbstractFuture) -> None:
-        try:
-            self._activate_resources(future)
-            self._run_inline(future)
-        finally:
-            self._deactivate_resources(future)
+        self._activate_resources(future)
+        self._run_inline(future)
 
     def _activate_resources(self, future):
         for resource in future.props.external_resources:
-            resource.activate(is_local=True)
+            resource = resource.activate(is_local=True)
+            while not (
+                resource.status.state == ResourceState.ACTIVE
+                or resource.status.state.is_terminal()
+            ):
+                resource = resource.update()
 
     def _deactivate_resources(self, future):
         for resource in future.props.external_resources:
-            resource.deactivate()
+            resource = resource.deactivate()
+            while not resource.status.state.is_terminal():
+                resource = resource.update()
 
     def _run_inline(self, future: AbstractFuture) -> None:
         self._set_future_state(future, FutureState.SCHEDULED)
@@ -61,6 +66,9 @@ class SilentResolver(StateMachineResolver):
     def _end_inline_execution(self, future_id) -> None:
         """Callback called at the end of an inline execution."""
         pass
+
+    def _future_did_terminate(self, future):
+        self._deactivate_resources(future)
 
     def _wait_for_scheduled_runs(self) -> None:
         pass

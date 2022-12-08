@@ -50,6 +50,7 @@ sematic_py_lib(
     srcs = ["external_resource.py"],
     deps = [
         ":future_context",
+        "//sematic/utils:exceptions",
     ],
 )
 
