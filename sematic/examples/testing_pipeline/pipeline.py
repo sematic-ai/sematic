@@ -93,6 +93,36 @@ def add4_nested(a: float, b: float, c: float, d: float) -> float:
     return add2_nested(add2_nested(a, b), add2_nested(c, d))
 
 
+@sematic.func(inline=True, cache=True)
+def add_inline_cached(a: float, b: float) -> float:
+    """
+    Adds two numbers inline, attempting to source the value from the cache.
+    """
+    logger.info("Executing: add_inline_cached(a=%s, b=%s)", a, b)
+    time.sleep(5)
+    return a + b
+
+
+@sematic.func(inline=False, cache=True)
+def add2_nested_cached(a: float, b: float) -> float:
+    """
+    Adds two numbers using a nested structure, attempting to source the value from the
+    cache.
+    """
+    logger.info("Executing: add2_nested_cached(a=%s, b=%s)", a, b)
+    return add_inline_cached(a, b)
+
+
+@sematic.func(inline=False, cache=True)
+def add4_nested_cached(a: float, b: float, c: float, d: float) -> float:
+    """
+    Adds four numbers using a nested structure, attempting to source the value from the
+    cache.
+    """
+    logger.info("Executing: add4_nested_cached(a=%s, b=%s, c=%s, d=%s)", a, b, c, d)
+    return add2_nested_cached(add2_nested_cached(a, b), add2_nested_cached(c, d))
+
+
 @sematic.func(inline=False)
 def add_all(values: List[float]) -> float:
     """
@@ -196,6 +226,7 @@ def testing_pipeline(
     should_raise: bool = False,
     raise_retry_probability: Optional[float] = None,
     oom: bool = False,
+    cache: bool = False,
     exit_code: Optional[int] = None,
     external_resource: bool = False,
 ) -> float:
@@ -223,6 +254,9 @@ def testing_pipeline(
         probability, with a total of 10 retries. Defaults to None.
     oom: bool
         Whether to include a function that causes an Out of Memory error.
+        Defaults to False.
+    cache: bool
+        Whether to include nested functions which will have the `cache` flag activated.
         Defaults to False.
     exit_code: Optional[int]
         If not None, includes a function which will exit with the specified code.
@@ -261,6 +295,9 @@ def testing_pipeline(
 
     if oom:
         futures.append(do_oom(initial_future))
+
+    if cache:
+        futures.append(add4_nested_cached(initial_future, 1, 2, 3))
 
     if exit_code is not None:
         futures.append(do_exit(initial_future, exit_code))

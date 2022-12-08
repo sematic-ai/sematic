@@ -21,6 +21,7 @@ sematic_py_lib(
         "//sematic/resolvers:abstract_resource_manager",
         "//sematic/resolvers/resource_managers:server_manager",
         "//sematic:graph",
+        "//sematic/caching:init",
         "//sematic/config:config",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",

@@ -53,7 +53,12 @@ test_list_external_resource_auth = make_auth_test(
 )
 
 
-def mock_schedule(resolution, max_parallelism=None, rerun_from=None):  # noqa: F811
+def mock_schedule(
+    resolution,  # noqa: F811
+    cache_namespace=None,
+    max_parallelism=None,
+    rerun_from=None,
+):
     resolution.status = ResolutionStatus.SCHEDULED
     resolution.external_jobs = (
         KubernetesExternalJob.new(

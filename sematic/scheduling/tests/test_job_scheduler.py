@@ -71,6 +71,7 @@ def resolution(run):
         ),
         settings_env_vars={"SOME_ENV_VAR": "some_value"},
         client_version=CURRENT_VERSION_STR,
+        cache_namespace=None,
     )
 
 
@@ -101,6 +102,7 @@ def test_schedule_resolution(mock_k8s, resolution: Resolution):
         resolution_id=resolution.root_id,
         image=resolution.container_image_uri,
         user_settings=resolution.settings_env_vars,
+        cache_namespace=None,
         max_parallelism=3,
         rerun_from="foobar",
     )

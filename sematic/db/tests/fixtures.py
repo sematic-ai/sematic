@@ -122,6 +122,7 @@ def make_run(**kwargs) -> Run:
         description="Foo Bar",
         tags=["foo", "bar"],
         source_code="def foo(): pass",
+        cache_key=None,
     )
     run.resource_requirements = ResourceRequirements(
         kubernetes=KubernetesResourceRequirements(

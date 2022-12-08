@@ -48,6 +48,7 @@ def make_run_from_future(future: AbstractFuture) -> Run:
         source_code=future.calculator.get_source(),
         created_at=datetime.datetime.utcnow(),
         updated_at=datetime.datetime.utcnow(),
+        cache_key=None,
     )
 
     # Set this outside the constructor because the constructor expects
@@ -88,6 +89,7 @@ def clone_root_run(run: Run, edges: List[Edge]) -> Tuple[Run, List[Edge]]:
         tags=run.tags,
         source_code=run.source_code,
         container_image_uri=run.container_image_uri,
+        cache_key=run.cache_key,
     )
 
     # Set this outside the constructor because the constructor expects
@@ -133,6 +135,7 @@ def clone_resolution(resolution: Resolution, root_id: str) -> Resolution:
         container_image_uri=resolution.container_image_uri,
         container_image_uris=resolution.container_image_uris,
         client_version=resolution.client_version,
+        cache_namespace=resolution.cache_namespace,
     )
 
     # Set this outside the constructor because the constructor expects
