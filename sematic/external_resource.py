@@ -1,4 +1,5 @@
 # Standard Library
+import logging
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -9,10 +10,12 @@ from typing import final
 from sematic.future_context import AbstractExternalResource
 from sematic.utils.exceptions import IllegalStateTransitionError
 
+logger = logging.getLogger(__name__)
+
 
 @unique
 class ResourceState(Enum):
-    """Represents the state of an external resource
+    """Represents the state of an external resource.
 
     Attributes
     ----------
@@ -26,7 +29,7 @@ class ResourceState(Enum):
         The resource is allocated and ready for use.
     DEACTIVATING:
         The resource is being deactivated, and likely is no longer usable.
-    INACTIVE:
+    DEACTIVATED:
         The resource has been deactivated and may not even exist anymore.
         It is not usable.
     """
@@ -35,9 +38,9 @@ class ResourceState(Enum):
     ACTIVATING = "ACTIVATING"
     ACTIVE = "ACTIVE"
     DEACTIVATING = "DEACTIVATING"
-    INACTIVE = "INACTIVE"
+    DEACTIVATED = "DEACTIVATED"
 
-    def is_allowed_transition(self, other_state: "ResourceStatus") -> bool:
+    def is_allowed_transition(self, other_state: "ResourceState") -> bool:
         """True if going from the current state to the other is allowed, otherwise False.
 
         Parameters
@@ -75,8 +78,8 @@ _ALLOWED_TRANSITIONS = {
         ResourceState.DEACTIVATING,
     },
     ResourceState.DEACTIVATING: {
-        # Deactivating -> Inactive: normal progression for deactivation
-        ResourceState.INACTIVE,
+        # Deactivating -> Deactivated: normal progression for deactivation
+        ResourceState.DEACTIVATED,
     },
     ResourceState.DEACTIVATING: {},
 }
@@ -84,7 +87,7 @@ _ALLOWED_TRANSITIONS = {
 
 @dataclass(frozen=True)
 class ResourceStatus:
-    """The status of the resource
+    """The status of the resource.
 
     Attributes
     ----------
@@ -158,6 +161,7 @@ class ExternalResource(AbstractExternalResource):
         -------
         An updated copy of the object
         """
+        logger.debug("Activating %s", self)
         updated = self._do_activate(is_local)
         self._validate_transition(updated)
         if updated.status.state != ResourceState.ACTIVATING:
@@ -167,7 +171,7 @@ class ExternalResource(AbstractExternalResource):
             )
         return updated
 
-    def _do_activate(self) -> "ExternalResource":
+    def _do_activate(self, is_local: bool) -> "ExternalResource":
         raise NotImplementedError(
             "Subclasses of ExternalResource should implement ._do_activate(is_local)"
         )
@@ -180,6 +184,7 @@ class ExternalResource(AbstractExternalResource):
         -------
         An updated copy of the object
         """
+        logger.debug("Deactivating %s", self)
         updated = self._do_deactivate()
         self._validate_transition(updated)
         if updated.status.state != ResourceState.DEACTIVATING:
@@ -201,9 +206,9 @@ class ExternalResource(AbstractExternalResource):
             and not self.status.state.is_allowed_transition(updated.status.state)
         ):
             raise IllegalStateTransitionError(
-                f"Cannout transition resource {self.id} from state "
+                f"Cannot transition resource {self.id} from state "
                 f"{self.status.state.name} to state: "
-                f"{updated.status.state}"
+                f"{updated.status.state.name}"
             )
         if self.status.last_update_epoch_time > updated.status.last_update_epoch_time:
             raise IllegalStateTransitionError(
@@ -214,6 +219,7 @@ class ExternalResource(AbstractExternalResource):
 
     @final
     def update(self) -> "ExternalResource":
+        logger.debug("Updating %s", self)
         updated = self._do_update()
         self._validate_transition(updated)
         return updated

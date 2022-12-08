@@ -129,9 +129,13 @@ class NotInSematicFuncError(RuntimeError):
     pass
 
 
+# Note: this helps resolve circular imports. Otherwise we'd have:
+# future_context -> external_resource -> future_context
+# this approach cuts the first dependency in the above
 class AbstractExternalResource:
     def __enter__(self) -> "AbstractExternalResource":
         if len(context().private.external_resources) != 0:
+            # See: https://github.com/sematic-ai/sematic/issues/388
             raise RuntimeError(
                 f"Sematic currently only allows one 'with' block resource "
                 f"to be active at a time. Already in context for "

@@ -137,9 +137,11 @@ class AbstractFuture(abc.ABC):
                 context().private.external_resources  # type: ignore
             )
         except NotInSematicFuncError:
+            # the root future is not created inside another func
             external_resources = []
 
         # checks in future_context should ensure that this passes
+        # see: https://github.com/sematic-ai/sematic/issues/388
         assert len(external_resources) <= 1
 
         self._props = FutureProperties(

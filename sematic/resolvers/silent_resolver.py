@@ -75,12 +75,11 @@ class SilentResolver(StateMachineResolver):
 
     def _register_external_resources(self, future) -> None:
         for external_resource in future.props.external_resources:
-            used_resource_id = external_resource.id
             for other_future in self._futures:
                 if other_future.id == future.id:
                     continue
                 if any(
-                    r.id == used_resource_id
+                    r.id == external_resource.id
                     for r in other_future.props.external_resources
                 ):
                     # See https://github.com/sematic-ai/sematic/issues/382
