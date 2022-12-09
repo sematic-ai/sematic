@@ -104,7 +104,7 @@ jobs:
           when: << pipeline.parameters.run_coverage >>
           name: Link to codecov output
           command: ln -s $(bazel info output_path)/_coverage/_coverage_report.dat coverage.dat
-      - codecov/upload
+      - codecov/upload:
           when: << pipeline.parameters.run_coverage >>
       - run:
           name: Build wheel
