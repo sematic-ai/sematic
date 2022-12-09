@@ -40,32 +40,16 @@ commands:
       - run:
           name: MyPy
           command: mypy --version && mypy sematic
-
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
-jobs:
-  build-and-test: # This is the name of the job, feel free to change it to better match what you're trying to do!
-    # These next lines defines a Docker executors: https://circleci.com/docs/2.0/executor-types/
-    # You can specify an image from Dockerhub or use one of the convenience images from CircleCI's Developer Hub
-    # A list of available CircleCI Docker convenience images are available here: https://circleci.com/developer/images/image/cimg/python
-    # The executor is the environment in which the steps below will be executed - below will use a python 3.10.2 container
-    # Change the version below to your required version of python
-    docker:
-      - image: sematicai/sematic-ci:latest
-    #  - image: cimg/python:3.9.10
-    # Checkout the code as the first step. This is a dedicated CircleCI step.
-    # The python orb's install-packages step will install the dependencies from a Pipfile via Pipenv by default.
-    # Here we're making sure we use just use the system-wide pip. By default it uses the project root's requirements.txt.
-    # Then run your tests!
-    # CircleCI will report the results back to your VCS provider.
+  non-coverage-tests:
+    description: Do tests without tracking code coverage
     steps:
-      - checkout
-      - install-ci-pip-deps
-      - do-static-analysis
       - run:
           name: Run Non-coverage Tests
           # This assumes pytest is installed via the install-package step above
           command: PYTHONUNBUFFERED=1 bazel test //sematic/... --test_output=all
+  coverage-tests:
+    description: Do tests with coverage and upload coverage results
+    steps:
       - run:
           name: Run Coverage Tests
           # This assumes pytest is installed via the install-package step above
@@ -74,6 +58,18 @@ jobs:
           name: Link to codecov output
           command: ln -s $(bazel info output_path)/_coverage/_coverage_report.dat coverage.dat
       - codecov/upload
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
+jobs:
+  build-and-test:
+    docker:
+      - image: sematicai/sematic-ci:latest
+    steps:
+      - checkout
+      - install-ci-pip-deps
+      - do-static-analysis
+      - non-coverage-tests
+      - coverage-tests
       - run:
           name: Build wheel
           command: make wheel
