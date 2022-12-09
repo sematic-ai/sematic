@@ -463,7 +463,6 @@ class Graph:
             future = func(**kwargs)
 
         future.name = run.name
-        future.cloned_from_future_id = run_id
 
         cloned_graph.input_artifacts[future.id] = run_input_artifacts
 
@@ -477,8 +476,12 @@ class Graph:
 
         # Settings state for resolved runs unless reset
         if FutureState[run.future_state] == FutureState.RESOLVED:  # type: ignore
-            if run.id not in reset_run_ids:
+            if run_id not in reset_run_ids:
                 future.state = FutureState.RESOLVED
+                # if the original run was cloned as well, get the first ever run id
+                future.original_future_id = (
+                    run.original_run_id if run.original_run_id is not None else run_id
+                )
 
         return future
 

@@ -11,7 +11,17 @@ import { Handle, NodeProps, Position } from "react-flow-renderer";
 import { Run } from "../Models";
 import RunStateChip from "./RunStateChip";
 
-function getColor(futureState: string, theme: Theme): PaletteColor {
+function getColor(
+    futureState: string, isCloned: boolean, theme: Theme
+): PaletteColor {
+  if (isCloned) {
+    return {
+       light: "#155020",
+       main: "#103515",
+       dark: "#052010",
+       contrastText: "#fff",
+    };
+  }
   if (futureState === "RESOLVED") {
     return theme.palette.success;
   }
@@ -35,7 +45,7 @@ function getColor(futureState: string, theme: Theme): PaletteColor {
 export default function RunNode(props: NodeProps) {
   const run: Run = props.data.run;
   const theme = useTheme();
-  let color = getColor(run.future_state, theme);
+  let color = getColor(run.future_state, !!run.original_run_id, theme);
 
   return (
     <>

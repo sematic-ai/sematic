@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS "schema_migrations" (version varchar(255) primary key);
 CREATE TABLE runs (
     id character(32) NOT NULL,
-    cloned_from_run_id character(32),
+    original_run_id character(32),
     future_state TEXT NOT NULL,
     name TEXT,
     calculator_path TEXT,

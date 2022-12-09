@@ -40,7 +40,7 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
     ----------
     id : str
         The UUID4 of the run.
-    cloned_from_run_id : Optional[str]
+    original_run_id : Optional[str]
         The id of the original run this run was cloned from, if any.
     future_state : str
         The state of the corresponding :class:`sematic.Future`. See
@@ -94,7 +94,7 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
     __tablename__ = "runs"
 
     id: str = Column(types.String(), primary_key=True)
-    cloned_from_run_id: Optional[str] = Column(types.String(), nullable=True)
+    original_run_id: Optional[str] = Column(types.String(), nullable=True)
     future_state: FutureState = Column(  # type: ignore
         types.String(), nullable=False, info={ENUM_KEY: FutureState}
     )

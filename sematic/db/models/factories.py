@@ -31,7 +31,7 @@ def make_run_from_future(future: AbstractFuture) -> Run:
     """
     run = Run(
         id=future.id,
-        cloned_from_run_id=future.cloned_from_future_id,
+        original_run_id=future.original_future_id,
         future_state=future.state,
         name=future.props.name,
         calculator_path=make_func_path(future),

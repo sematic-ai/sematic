@@ -113,7 +113,7 @@ class Cursor:
         It will be the first line that HASN'T yet been read. If no logs have been found,
         will be -1.
     filter_strings:
-        The fillter strings that were used for this log traversal.
+        The filter strings that were used for this log traversal.
     run_id:
         The run id that was being used for this log traversal.
     traversal_had_lines:
@@ -164,7 +164,7 @@ def load_log_lines(
     filter_strings: Optional[List[str]] = None,
     object_source: ObjectSource = ObjectSource.DB,
 ) -> LogLineResult:
-    """Load a portion of the logs for a particular run
+    """Load a portion of the logs for a particular run.
 
     Parameters
     ----------
@@ -193,6 +193,18 @@ def load_log_lines(
         filter_strings,
     )
     run = object_source.get_run(run_id)
+
+    if run.original_run_id is not None:
+        return LogLineResult(
+            more_before=False,
+            more_after=False,
+            lines=[],
+            continuation_cursor=None,
+            log_unavailable_reason=(
+                f"Run output sourced from original run {run.original_run_id}."
+            ),
+        )
+
     run_state = FutureState[run.future_state]  # type: ignore
     still_running = not (run_state.is_terminal() or run_state == FutureState.RAN)
     resolution = object_source.get_resolution(run.root_id)
@@ -202,6 +214,7 @@ def load_log_lines(
         if continuation_cursor is not None
         else Cursor.nothing_found(filter_strings, run_id)
     )
+
     if cursor.run_id != run_id:
         raise ValueError(
             f"Tried to continue a log search of {run_id} using a "
@@ -224,6 +237,7 @@ def load_log_lines(
             continuation_cursor=cursor.to_token(),
             log_unavailable_reason="Resolution has not started yet.",
         )
+
     filter_strings = filter_strings if filter_strings is not None else []
     if FutureState[run.future_state] == FutureState.CREATED:  # type: ignore
         return LogLineResult(
@@ -233,6 +247,7 @@ def load_log_lines(
             continuation_cursor=cursor.to_token(),
             log_unavailable_reason="The run has not yet started executing.",
         )
+
     # looking for external jobs to determine inline is only valid
     # since we know the run has at least reached SCHEDULED due to it
     # not being CREATED.
@@ -248,6 +263,7 @@ def load_log_lines(
             max_lines=max_lines,
             filter_strings=filter_strings,
         )
+
     return _load_non_inline_logs(
         run_id=run_id,
         still_running=still_running,
