@@ -58,7 +58,7 @@ export function usePipelineNavigation(pipelinePath: string) {
     const navigate = useNavigate();
     const { rootId } = useParams();
 
-    return useCallback((requestedRootId: string, replace: boolean) => {
+    return useCallback((requestedRootId: string, replace: boolean = false) => {
         if ( rootId === requestedRootId ) {
             return
         }

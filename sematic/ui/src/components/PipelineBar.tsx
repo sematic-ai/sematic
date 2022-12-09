@@ -21,7 +21,7 @@ import RunStateChip from "./RunStateChip";
 import TimeAgo from "./TimeAgo";
 import { ActionMenu, ActionMenuItem } from "./ActionMenu";
 import { SnackBarContext } from "./SnackBarProvider";
-import { useFetchRuns } from "../hooks/pipelineHooks";
+import { useFetchRuns, usePipelineNavigation } from "../hooks/pipelineHooks";
 
 function PipelineActionMenu(props: {
   rootRun: Run;
@@ -126,12 +126,10 @@ function PipelineActionMenu(props: {
 
 export default function PipelineBar(props: {
   calculatorPath: string;
-  onRootIdChange: (rootId: string) => void;
   rootRun?: Run;
   resolution?: Resolution;
 }) {
-  const { calculatorPath, onRootIdChange, rootRun, resolution } =
-    props;
+  const { calculatorPath, rootRun, resolution } = props;
   const { setSnackMessage } = useContext(SnackBarContext);
 
   const theme = useTheme();
@@ -149,6 +147,12 @@ export default function PipelineBar(props: {
 
   const {isLoaded, error, runs: latestRuns, reloadRuns } = useFetchRuns(runFilters, otherQueryParams);
 
+  const navigate = usePipelineNavigation(calculatorPath!);
+
+  const changeRootId = useCallback((runId: string) => {
+    navigate(runId);
+  }, [navigate]);
+
   useEffect(() => {
     pipelineSocket.removeAllListeners("update");
     pipelineSocket.on("update", async (args: { calculator_path: string }) => {
@@ -160,18 +164,18 @@ export default function PipelineBar(props: {
             actionName: "view",
             autoHide: false,
             closable: true,
-            onClick: () => onRootIdChange(runs[0].id),
+            onClick: () => changeRootId(runs[0].id),
           });
         }
       }
     });
-  }, [latestRuns, calculatorPath, onRootIdChange, reloadRuns, setSnackMessage]);
+  }, [latestRuns, calculatorPath, changeRootId, reloadRuns, setSnackMessage]);
 
   const onSelect = useCallback(
-    (event: SelectChangeEvent) => {
-      onRootIdChange(event.target.value);
+    ({ target: { value } }: SelectChangeEvent) => {
+      changeRootId(value);
     },
-    [onRootIdChange]
+    [changeRootId]
   );
 
   const onCancel = reloadRuns;
@@ -253,20 +257,20 @@ export default function PipelineBar(props: {
               label="Latest runs"
               onChange={onSelect}
             >
-              {latestRuns.map((run) => (
-                <MenuItem value={run.id} key={run.id}>
+              {latestRuns.map(({id, future_state, created_at}) => (
+                <MenuItem value={id} key={id}>
                   <Typography
                     component="span"
                     sx={{ display: "flex", alignItems: "center" }}
                   >
-                    <RunStateChip state={run.future_state} />
+                    <RunStateChip state={future_state} />
                     <Box>
                       <Typography sx={{ fontSize: "small", color: "GrayText" }}>
-                        <code>{run.id.substring(0, 6)}</code>
+                        <code>{id.substring(0, 6)}</code>
                       </Typography>
                     </Box>
                     <Box ml={3}>
-                      <TimeAgo date={run.created_at} />
+                      <TimeAgo date={created_at} />
                     </Box>
                   </Typography>
                 </MenuItem>
