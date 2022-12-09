@@ -13,11 +13,6 @@ orbs:
   slack: circleci/slack@4.9.3
   codecov: codecov/codecov@3.2.3
 
-parameters:
-  run_coverage:
-    type: boolean
-    default: false
-
 commands:
   install-postgres:
     description: Install PostgreSQL
@@ -52,8 +47,6 @@ commands:
           command: |
             sudo apt install default-jre default-jdk
             export JAVA_HOME=/usr/lib/jvm/default-java
-
-
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
@@ -96,16 +89,13 @@ jobs:
           # This assumes pytest is installed via the install-package step above
           command: PYTHONUNBUFFERED=1 bazel test //sematic/... --test_output=all
       - run:
-          when: << pipeline.parameters.run_coverage >>
           name: Run Coverage Tests
           # This assumes pytest is installed via the install-package step above
           command: PYTHONUNBUFFERED=1 bazel coverage //sematic/... --test_output=all --combined_report=lcov --test_tag_filters=cov
       - run:
-          when: << pipeline.parameters.run_coverage >>
           name: Link to codecov output
           command: ln -s $(bazel info output_path)/_coverage/_coverage_report.dat coverage.dat
       - codecov/upload
-          when: << pipeline.parameters.run_coverage >>
       - run:
           name: Build wheel
           command: make wheel
