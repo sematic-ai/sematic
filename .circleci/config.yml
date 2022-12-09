@@ -58,6 +58,21 @@ commands:
           name: Link to codecov output
           command: ln -s $(bazel info output_path)/_coverage/_coverage_report.dat coverage.dat
       - codecov/upload
+  installation-tests:
+    description: Do a test of installing sematic via wheel
+    steps:
+      - run:
+          name: Build wheel
+          command: make wheel
+      - run:
+          name: Test pip install
+          command: bazel run //sematic/tests/integration:test_pip_install
+  notify-completion:
+    description: Send a notification to Slack about job completion
+    steps:
+      - slack/notify:
+          channel: C03CPMXA1QU
+          event: always
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
@@ -70,15 +85,8 @@ jobs:
       - do-static-analysis
       - non-coverage-tests
       - coverage-tests
-      - run:
-          name: Build wheel
-          command: make wheel
-      - run:
-          name: Test pip install
-          command: bazel run //sematic/tests/integration:test_pip_install
-      - slack/notify:
-          channel: C03CPMXA1QU
-          event: always
+      - installation-tests
+      - notify-completion
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
