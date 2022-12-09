@@ -85,7 +85,7 @@ jobs:
       - do-static-analysis
       - non-coverage-tests
       - when:
-          condition: true
+          condition: << pipeline.parameters.run_coverage >>
           steps:
             - coverage-tests
       - installation-tests
