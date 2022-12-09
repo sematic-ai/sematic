@@ -643,7 +643,7 @@ def get_log_lines_from_line_stream(
             # up!
             has_more = still_running
     missing_reason = None if len(lines) > 0 else "No matching log lines."
-    
+
     if not has_more:
         cursor_token = None
     elif found_cursor:
@@ -664,7 +664,7 @@ def get_log_lines_from_line_stream(
             run_id=run_id,
             traversal_had_lines=cursor_had_more_before,
         ).to_token()
-    
+
     return LogLineResult(
         more_before=more_before,
         more_after=has_more,
