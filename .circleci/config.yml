@@ -19,6 +19,13 @@ parameters:
     default: false
 
 commands:
+  install-ci-pip-deps:
+    description: Install CI pip deps
+    steps:
+      - python/install-packages:
+        pkg-manager: pip
+        app-dir: ~/project/requirements  # If you're requirements.txt isn't in the root directory.
+        pip-dependency-file: ci-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
   install-postgres:
     description: Install PostgreSQL
     steps:
@@ -72,14 +79,8 @@ jobs:
     # Then run your tests!
     # CircleCI will report the results back to your VCS provider.
     steps:
-      # - install-postgres
       - checkout
-      #- setup-bazel
-      #- install-java
-      - python/install-packages:
-          pkg-manager: pip
-          app-dir: ~/project/requirements  # If you're requirements.txt isn't in the root directory.
-          pip-dependency-file: ci-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
+      - install-ci-pip-deps
       - run:
           # This is necessary because some packages have platform-dependent dependencies
           # For example sqlalchemy requires greenlet only on certain platforms
