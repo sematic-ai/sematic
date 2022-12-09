@@ -31,40 +31,15 @@ commands:
           # For example sqlalchemy requires greenlet only on certain platforms
           name: Freeze requirements
           command: pip-compile --allow-unsafe ~/project/requirements/requirements.in > ~/project/requirements/requirements.txt
-  install-postgres:
-    description: Install PostgreSQL
+  do-static-analysis:
+    description: Do linting and other static analysis
     steps:
       - run:
-          name: Add PG 14 repository
-          command: |
-            sudo apt install wget gnupg
-            sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-            wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          name: Linting
+          command: python3 -m flake8 --max-line-length=90
       - run:
-          name: Install PostgreSQL
-          command: sudo apt update && sudo apt install postgresql-14
-  setup-bazel:
-    description: |
-      Setup the Bazel build system used for building Android projects
-    steps:
-      - run:
-          name: Add Bazel Apt repository
-          command: |
-            sudo apt install curl gnupg
-            curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg
-            sudo mv bazel.gpg /etc/apt/trusted.gpg.d/
-            echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
-      - run:
-          name: Install Bazel from Apt
-          command: sudo apt update && sudo apt install bazel
-  install-java:
-    description: Install JAVA JDK
-    steps:
-      - run:
-          command: |
-            sudo apt install default-jre default-jdk
-            export JAVA_HOME=/usr/lib/jvm/default-java
-
+          name: MyPy
+          command: mypy --version && mypy sematic
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -86,12 +61,7 @@ jobs:
     steps:
       - checkout
       - install-ci-pip-deps
-      - run:
-          name: Linting
-          command: python3 -m flake8 --max-line-length=90
-      - run:
-          name: MyPy
-          command: mypy --version && mypy sematic
+      - do-static-analysis
       - run:
           name: Run Non-coverage Tests
           # This assumes pytest is installed via the install-package step above
