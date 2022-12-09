@@ -56,22 +56,22 @@ commands:
       - run:
           name: Set Up Coverage Tests
           # This assumes pytest is installed via the install-package step above
-          command: do_coverage () { bazel coverage //sematic/... --test_output=all --combined_report=lcov --test_tag_filters=cov; }
+          command: echo "bazel coverage //sematic/... --test_output=all --combined_report=lcov --test_tag_filters=cov" > ./do_coverage && chmod +x ./do_coverage
       - run:
           name: Run Coverage Tests
-          command: PYTHONUNBUFFERED=1 do_coverage
+          command: PYTHONUNBUFFERED=1 bash do_coverage
       - run:
           when: on_fail
           name: Retry Coverage Tests (1)
-          command: PYTHONUNBUFFERED=1 do_coverage
+          command: PYTHONUNBUFFERED=1 bash do_coverage
       - run:
           when: on_fail
           name: Retry Coverage Tests (2)
-          command: PYTHONUNBUFFERED=1 do_coverage
+          command: PYTHONUNBUFFERED=1 bash do_coverage
       - run:
           when: on_fail
           name: Retry Coverage Tests (3)
-          command: PYTHONUNBUFFERED=1 do_coverage
+          command: PYTHONUNBUFFERED=1 bash do_coverage
       - run:
           name: Link to codecov output
           command: ln -s $(bazel info output_path)/_coverage/_coverage_report.dat coverage.dat
