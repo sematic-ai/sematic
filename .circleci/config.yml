@@ -84,7 +84,10 @@ jobs:
       - install-ci-pip-deps
       - do-static-analysis
       - non-coverage-tests
-      - coverage-tests
+      - when:
+          condition: true
+          steps:
+            - coverage-tests
       - installation-tests
       - notify-completion
 
