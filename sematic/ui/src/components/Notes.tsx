@@ -1,4 +1,7 @@
 import { Box, ButtonBase, Typography, useTheme } from "@mui/material";
+import { useCallback } from "react";
+import { useParams } from "react-router-dom";
+import { usePipelineNavigation } from "../hooks/pipelineHooks";
 import { Note, User } from "../Models";
 import { CopyButton } from "./CopyButton";
 import TimeAgo from "./TimeAgo";
@@ -7,9 +10,8 @@ import UserAvatar from "./UserAvatar";
 export function NoteView(props: {
   note: Note;
   author: User;
-  onRootIdChange: (rootId: string) => void;
 }) {
-  const { note, author, onRootIdChange } = props;
+  const { note, author } = props;
   const theme = useTheme();
 
   return (
@@ -57,7 +59,7 @@ export function NoteView(props: {
           }}
         >
           <TimeAgo date={note.created_at} /> on run{" "}
-          <RunId runId={note.root_id} onClick={onRootIdChange} trim />
+          <RunId runId={note.root_id} trim />
         </Typography>
       </Box>
     </Box>
@@ -67,13 +69,20 @@ export function NoteView(props: {
 function RunId(props: {
   runId: string;
   trim?: boolean;
-  onClick?: (runId: string) => void;
 }) {
-  const { runId, trim = true, onClick } = props;
+  const { runId, trim = true } = props;
+
+  const { calculatorPath } = useParams();
+
+  const navigate = usePipelineNavigation(calculatorPath!);
+
+  const onClick = useCallback(() => {
+    navigate(runId);
+  }, [navigate, runId]);
 
   return (
     <>
-      <ButtonBase onClick={() => onClick && onClick(runId)} disabled={!onClick}>
+      <ButtonBase onClick={onClick} disabled={false}>
         <code
           style={{
             fontSize: 12,
