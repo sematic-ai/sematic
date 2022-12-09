@@ -48,24 +48,6 @@ export default function PipelineRunView() {
     fetchResolution(rootId!);
   }, [rootId, fetchRootRun, fetchResolution]);
 
-  const changeRootRunId = useCallback(
-    (rootId: string) => {
-      if (rootRun && rootRun.id === rootId) return;
-      var runURL =
-        window.location.protocol +
-        "//" +
-        window.location.host +
-        "/pipelines/" +
-        calculatorPath +
-        "/" +
-        rootId;
-      window.history.pushState({ path: runURL }, "", runURL);
-      fetchRootRun(rootId);
-      fetchResolution(rootId);
-    },
-    [calculatorPath, rootRun, fetchRootRun, fetchResolution]
-  );
-
   if (calculatorPath) {
     return (
       <Box
@@ -78,7 +60,6 @@ export default function PipelineRunView() {
       >
         <PipelineBar
           calculatorPath={calculatorPath}
-          onRootIdChange={changeRootRunId}
           rootRun={rootRun}
           resolution={resolution}
         />
@@ -87,7 +68,6 @@ export default function PipelineRunView() {
             rootRun={rootRun}
             resolution={resolution}
             onRootRunUpdate={setRootRun}
-            onRootIdChange={changeRootRunId}
           />
         )}
       </Box>
