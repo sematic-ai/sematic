@@ -219,7 +219,14 @@ def prepare_logs_v1(run_id, text_lines, mock_storage, job_type):
     return prefix
 
 
-def prepare_logs_v2(run_id, text_lines, mock_storage, job_type, break_at_line=52, emulate_pending_more_lines=False):
+def prepare_logs_v2(
+    run_id,
+    text_lines,
+    mock_storage,
+    job_type,
+    break_at_line=52,
+    emulate_pending_more_lines=False,
+):
     lines_part_1 = text_lines[:break_at_line]
     lines_part_2 = text_lines[break_at_line:]
 
@@ -602,7 +609,14 @@ def test_continue_from_end_with_no_new_logs(
     # - 50 more lines requested
     # - lines 52-100 returned
 
-    prepare_logs_v2(run.id, text_lines, mock_storage, JobType.worker, break_at_line=break_at_line, emulate_pending_more_lines=True)
+    prepare_logs_v2(
+        run.id,
+        text_lines,
+        mock_storage,
+        JobType.worker,
+        break_at_line=break_at_line,
+        emulate_pending_more_lines=True,
+    )
 
     # 50 lines requested, 50 returned
     result = _load_non_inline_logs(
@@ -643,7 +657,7 @@ def test_continue_from_end_with_no_new_logs(
         continuation_cursor=None,
         more_before=True,
         more_after=True,
-        lines=text_lines[max_lines : break_at_line],  # noqa: E203
+        lines=text_lines[max_lines:break_at_line],  # noqa: E203
         log_unavailable_reason=None,
     )
 
@@ -669,7 +683,14 @@ def test_continue_from_end_with_no_new_logs(
     )
 
     # upload more logs
-    prepare_logs_v2(run.id, text_lines, mock_storage, JobType.worker, break_at_line=break_at_line, emulate_pending_more_lines=False)
+    prepare_logs_v2(
+        run.id,
+        text_lines,
+        mock_storage,
+        JobType.worker,
+        break_at_line=break_at_line,
+        emulate_pending_more_lines=False,
+    )
 
     # 50 more lines requested, 48 more available
     result = _load_non_inline_logs(
@@ -688,6 +709,6 @@ def test_continue_from_end_with_no_new_logs(
         continuation_cursor=None,
         more_before=True,
         more_after=True,
-        lines=text_lines[break_at_line: total_lines],  # noqa: E203
+        lines=text_lines[break_at_line:total_lines],  # noqa: E203
         log_unavailable_reason=None,
     )
