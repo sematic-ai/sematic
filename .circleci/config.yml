@@ -57,7 +57,17 @@ commands:
       - run:
           name: Link to codecov output
           command: ln -s $(bazel info output_path)/_coverage/_coverage_report.dat coverage.dat
+          when: on_fail
+      # try uploading up to 4 times in a row. Weirdly, Circle doesn't
+      # have a formal retry mechanism:
+      # https://support.circleci.com/hc/en-us/articles/360043188514-How-to-Retry-a-Failed-Step-with-when-Attribute-
       - codecov/upload
+      - codecov/upload:
+          when: on_fail
+      - codecov/upload:
+          when: on_fail
+      - codecov/upload:
+          when: on_fail
   installation-tests:
     description: Do a test of installing sematic via wheel
     steps:
