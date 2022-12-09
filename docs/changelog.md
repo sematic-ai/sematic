@@ -28,6 +28,7 @@ with nothing else on the line.
       with a serialization issue.
     * [bugfix] Missing broadcasts upon server-side run save
     * [bugfix] Cache version check
+    * [bugfix] Fix a bug with loading logs with in-progress runs when you have reached the end
 * [0.20.1](https://pypi.org/project/sematic/0.20.1/)
     * [bugfix] Add support for subclasses of ABCMeta
 * [0.20.0](https://pypi.org/project/sematic/0.20.0/)
