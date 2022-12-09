@@ -1,5 +1,5 @@
 # Standard Library
-from typing import Iterable, List, Optional
+from typing import Iterable, List
 from unittest import mock
 
 # Third-party
@@ -65,7 +65,7 @@ def fake_streamer(to_stream: Iterable[LogLine]) -> Iterable[LogLine]:
         yield line
 
 
-def tZest_get_log_lines_from_line_stream_does_streaming():
+def test_get_log_lines_from_line_stream_does_streaming():
     _streamed_lines.clear()
     max_lines = 200
     result = get_log_lines_from_line_stream(
@@ -113,7 +113,7 @@ def tZest_get_log_lines_from_line_stream_does_streaming():
     )
 
 
-def tZest_get_log_lines_from_line_stream_more_after():
+def test_get_log_lines_from_line_stream_more_after():
     max_lines = 200
     kwargs = dict(
         cursor_source_file=None,
@@ -145,7 +145,7 @@ def tZest_get_log_lines_from_line_stream_more_after():
     assert not result.more_after
 
 
-def tZest_get_log_lines_from_line_stream_filter():
+def test_get_log_lines_from_line_stream_filter():
     max_lines = 10
     result = get_log_lines_from_line_stream(
         line_stream=fake_streamer(infinite_logs()),
@@ -252,7 +252,7 @@ def prepare_logs_v2(
         prepare_logs_v2,
     ),
 )
-def tZest_load_non_inline_logs(
+def test_load_non_inline_logs(
     test_db, mock_storage: MockStorage, log_preparation_function  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
@@ -335,7 +335,7 @@ def tZest_load_non_inline_logs(
     )
 
 
-def tZest_line_stream_from_log_directory(
+def test_line_stream_from_log_directory(
     mock_storage: MockStorage, test_db  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
@@ -374,7 +374,7 @@ def tZest_line_stream_from_log_directory(
         prepare_logs_v2,
     ),
 )
-def tZest_load_inline_logs(
+def test_load_inline_logs(
     mock_storage: MockStorage, test_db, log_preparation_function  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
@@ -481,7 +481,7 @@ def tZest_load_inline_logs(
         prepare_logs_v2,
     ),
 )
-def tZest_load_log_lines(
+def test_load_log_lines(
     mock_storage: MockStorage, test_db, log_preparation_function  # noqa: F811
 ):
     run = make_run(future_state=FutureState.CREATED)
