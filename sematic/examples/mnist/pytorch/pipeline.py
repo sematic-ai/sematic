@@ -55,7 +55,7 @@ class PipelineConfig:
 GPU_RESOURCE_REQS = ResourceRequirements(
     kubernetes=KubernetesResourceRequirements(
         node_selector={"node.kubernetes.io/instance-type": "g4dn.xlarge"},
-        requests={"cpu": "2", "memory": "2Gi"},
+        requests={"cpu": "2", "memory": "4Gi"},
     )
 )
 

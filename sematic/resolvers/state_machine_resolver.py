@@ -183,6 +183,9 @@ class StateMachineResolver(Resolver, abc.ABC):
         if state in CALLBACKS:
             CALLBACKS[state](future)
 
+        if state.is_terminal():
+            self._future_did_terminate(future)
+
     # State machine lifecycle hooks
 
     def _resolution_will_start(self) -> None:
@@ -233,6 +236,17 @@ class StateMachineResolver(Resolver, abc.ABC):
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
         """
         Callback allowing specific resolvers to react when a future is marked failed.
+        """
+        pass
+
+    def _future_did_terminate(self, failed_future: AbstractFuture) -> None:
+        """Callback for resolvers to react when a future is marked in a terminal state.
+
+        This should be used instead of callbacks like future_did_fail, future_did_resolve
+        if you want to ensure that the callback happens regardless of which terminal state
+        the future entered.
+
+        It will be called AFTER the more specific future state callbacks.
         """
         pass
 

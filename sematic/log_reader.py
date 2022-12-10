@@ -643,11 +643,11 @@ def get_log_lines_from_line_stream(
             # up!
             has_more = still_running
     missing_reason = None if len(lines) > 0 else "No matching log lines."
-    return LogLineResult(
-        more_before=more_before,
-        more_after=has_more,
-        lines=lines,
-        continuation_cursor=Cursor(
+
+    if not has_more:
+        cursor_token = None
+    elif found_cursor:
+        cursor_token = Cursor(
             source_log_key=source_file,
             # +1: next time we want to start AFTER where we last read
             source_file_line_index=source_file_line_index + 1,
@@ -655,7 +655,20 @@ def get_log_lines_from_line_stream(
             run_id=run_id,
             traversal_had_lines=more_before or len(lines) > 0,
         ).to_token()
-        if has_more
-        else None,
+    else:
+        # didn't find anything new, just use the existing cursor values
+        cursor_token = Cursor(
+            source_log_key=cursor_source_file,
+            source_file_line_index=cursor_line_index,
+            filter_strings=filter_strings,
+            run_id=run_id,
+            traversal_had_lines=cursor_had_more_before,
+        ).to_token()
+
+    return LogLineResult(
+        more_before=more_before,
+        more_after=has_more,
+        lines=lines,
+        continuation_cursor=cursor_token,
         log_unavailable_reason=missing_reason,
     )
