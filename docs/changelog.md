@@ -7,13 +7,7 @@ with nothing else on the line.
 * HEAD
     * [feature] Add CLI for reading/following logs for a run
     * [feature] Enable configuration for the Kubernetes service account the workers will use
-    * [improvement] BREAKING CHANGE: The existing settings have been split into specific
-      user and server settings. User settings configure the Resolver and the pipeline
-      submission, and server settings configure the backend Server behavior. User settings
-      are still specified in the `~/.sematic/settings.yaml` file and accessed through the
-      `sematic settings` command, and server settings are specified in the new
-      `~/.sematic/server.yaml` file and accessed through the `sematic server-settings`
-      command.
+    * [improvement] Settings file split between user settings `settings.yaml` and server settings `server.yaml`
     * [bugfix] Fix a bug deserializing `Union` values. Note that once you are using this release,
       if you try to "rerun from here" using a pipeline that has `Union` values in it that were
       produced prior to this version of Sematic, the rerun will likely fail with a serialization issue.
