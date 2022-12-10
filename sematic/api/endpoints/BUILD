@@ -100,6 +100,7 @@ sematic_py_lib(
         "//sematic:versions",
         "//sematic/api:app",
         "//sematic/config:server_settings",
+        "//sematic/config:settings",
     ],
 )
 
@@ -136,6 +137,7 @@ sematic_py_lib(
         ":request_parameters",
         "//sematic/api:app",
         "//sematic/config:server_settings",
+        "//sematic/config:settings",
         "//sematic/db:queries",
         "//sematic/db/models:factories",
     ],
