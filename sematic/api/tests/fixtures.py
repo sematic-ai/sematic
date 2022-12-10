@@ -23,6 +23,7 @@ import sematic.config.user_settings as user_settings
 # all endpoints are loaded
 from sematic.api.server import sematic_api
 from sematic.config.config import get_config, switch_env
+from sematic.config.settings import DEFAULT_PROFILE
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 
 
@@ -79,13 +80,17 @@ def mock_user_settings(settings: Dict[user_settings.UserSettingsVar, str]):
     # Force load everything first
     user_settings.get_active_user_settings()
 
-    original_settings = user_settings._settings
-    user_settings._settings = user_settings.UserSettings(default=settings)
+    original_settings = user_settings._USER_SETTINGS_SCOPE._settings
+    user_settings._USER_SETTINGS_SCOPE._settings = {  # type: ignore
+        DEFAULT_PROFILE: settings
+    }
+    user_settings._USER_SETTINGS_SCOPE._active_settings = None
 
     try:
         yield settings
     finally:
-        user_settings._settings = original_settings
+        user_settings._USER_SETTINGS_SCOPE._settings = original_settings
+        user_settings._USER_SETTINGS_SCOPE._active_settings = None
 
 
 @contextlib.contextmanager
@@ -93,13 +98,18 @@ def mock_server_settings(settings: Dict[server_settings.ServerSettingsVar, str])
     # Force load everything first
     server_settings.get_active_server_settings()
 
-    original_settings = server_settings._settings
-    server_settings._settings = settings
+    original_settings = server_settings._SERVER_SETTINGS_SCOPE._settings
+    server_settings._SERVER_SETTINGS_SCOPE._settings = {  # type: ignore
+        DEFAULT_PROFILE: settings
+    }
+
+    server_settings._SERVER_SETTINGS_SCOPE._active_settings = None
 
     try:
         yield settings
     finally:
-        server_settings._settings = original_settings
+        server_settings._SERVER_SETTINGS_SCOPE._settings = original_settings
+        server_settings._SERVER_SETTINGS_SCOPE._active_settings = None
 
 
 def make_auth_test(endpoint: str, method: str = "GET"):
