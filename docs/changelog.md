@@ -5,8 +5,11 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.21.0](https://pypi.org/project/sematic/0.21.0/)
     * [feature] Add CLI for reading/following logs for a run
     * [feature] Enable configuration for the Kubernetes service account the workers will use
+    * [feature] Enable getting the id of the current run and root run from inside a Sematic func
+    * [feature] Add custom display for Enum objects
     * [improvement] Settings file split between user settings `settings.yaml` and server settings `server.yaml`
     * [bugfix] Fix a bug deserializing `Union` values. Note that once you are using this release,
       if you try to "rerun from here" using a pipeline that has `Union` values in it that were
@@ -16,13 +19,11 @@ with nothing else on the line.
     * [bugfix] BREAKING CHANGE: The examples' `README` files have been renamed to
       `README.md` in order for them to correctly render as MarkDown files. This change is
       required by the Bazel `example_pipeline` target as well
-    * [bugfix] Fix a bug deserializing `Union` values. Note that once you are using this
-      release, if you try to "rerun from here" using a pipeline that has `Union` values in
-      it that were produced prior to this version of Sematic, the rerun will likely fail
-      with a serialization issue.
     * [bugfix] Missing broadcasts upon server-side run save
     * [bugfix] Cache version check
     * [bugfix] Fix a bug with loading logs with in-progress runs when you have reached the end
+    * [bugfix] Fix a bug with displaying matplotlib figures in cloud deployments
+
 * [0.20.1](https://pypi.org/project/sematic/0.20.1/)
     * [bugfix] Add support for subclasses of ABCMeta
 * [0.20.0](https://pypi.org/project/sematic/0.20.0/)
