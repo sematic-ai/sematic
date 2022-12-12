@@ -1,13 +1,11 @@
 # Standard Library
-from typing import Any, Dict, List, Type, cast
+from typing import Any, Dict, List, Type
 
 # Sematic
-from sematic.abstract_plugin import AbstractPlugin, PluginScope, import_plugin
+from sematic.abstract_plugin import AbstractPlugin, PluginScope
 from sematic.config.settings import (
-    PLUGINS_SCOPES_KEY,
     PLUGINS_SETTINGS_KEY,
     AbstractSettingsVar,
-    PluginsSettings,
     ProfileSettings,
     SettingsScope,
     as_bool,

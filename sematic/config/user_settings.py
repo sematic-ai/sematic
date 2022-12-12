@@ -1,9 +1,10 @@
 # Standard Library
-from typing import Dict
+from typing import Dict, Union
 
 # Sematic
 from sematic.config.settings import (
     AbstractSettingsVar,
+    PluginsSettings,
     ProfileSettings,
     SettingsScope,
     as_bool,
@@ -37,7 +38,7 @@ def get_user_settings_scope() -> SettingsScope:
     return _USER_SETTINGS_SCOPE
 
 
-def get_active_user_settings_strings() -> Dict[str, str]:
+def get_active_user_settings_strings() -> Dict[str, Union[str, PluginsSettings]]:
     """
     Returns a safe strings-only representation of the active user settings.
     """

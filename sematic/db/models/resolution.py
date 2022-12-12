@@ -183,7 +183,7 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     git_info_json: Optional[str] = Column(  # type: ignore
         types.JSON(), nullable=True, info={JSON_KEY: True}
     )
-    settings_env_vars: Dict[str, str] = Column(
+    settings_env_vars: Dict[str, Any] = Column(
         types.JSON, nullable=False, default=lambda: {}
     )
     external_jobs_json: Optional[List[Dict[str, Any]]] = Column(
