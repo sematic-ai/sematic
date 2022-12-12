@@ -3,6 +3,7 @@ import { Box, Typography } from "@mui/material";
 import { useCallback, useContext, useMemo } from "react";
 import { Artifact, Edge, Resolution, Run } from "../Models";
 import CalculatorPath from "./CalculatorPath";
+import { RunId } from "./Notes";
 import RunTabs, { IOArtifacts } from "./RunTabs";
 import Docstring from "./Docstring";
 import { FlowWithProvider } from "./ReactFlowDag";
@@ -104,23 +105,20 @@ export default function RunPanel(props: {
             <Box sx={{ paddingBottom: 3, gridColumn: 1 }}>
               <Box marginBottom={3}>
                 <Typography variant="h6">{selectedRun.name}</Typography>
-                <CalculatorPath calculatorPath={"Run ID: " + selectedRun.id} />
-                <br />
-                {selectedRun.original_run_id && (
-                  <>
-                    <CalculatorPath
-                      // TODO #278: add link to the original run id panel
-                      calculatorPath={
-                        "Original Run ID: " + selectedRun.original_run_id
-                      }
-                    />
-                    <br />
-                  </>
-                )}
-                <CalculatorPath calculatorPath={
-                    "Function Path: " + selectedRun.calculator_path
+                <Typography fontSize="small" color="GrayText" component="span">
+                  <code style={{ fontSize: 12 }}>
+                  ID: {selectedRun.id}
+                  {
+                    selectedRun.original_run_id &&
+                    <>
+                      &nbsp;(cloned from&nbsp;
+                      <RunId runId={selectedRun.original_run_id} trim />)
+                    </>
                   }
-                />
+                  </code>
+                </Typography>
+                <br />
+                <CalculatorPath calculatorPath={selectedRun.calculator_path} />
               </Box>
               <Tags tags={selectedRun.tags || []} />
             </Box>
