@@ -14,13 +14,14 @@ import RunStateChip from "./RunStateChip";
 function getColor(
     futureState: string, isCloned: boolean, theme: Theme
 ): PaletteColor {
+  var greyPaletteColor = {
+    light: theme.palette.grey[400],
+    dark: theme.palette.grey[600],
+    main: theme.palette.grey[400],
+    contrastText: "",
+  }
   if (isCloned) {
-    return {
-       light: "#155020",
-       main: "#103515",
-       dark: "#052010",
-       contrastText: "#fff",
-    };
+    return greyPaletteColor;
   }
   if (futureState === "RESOLVED") {
     return theme.palette.success;
@@ -34,12 +35,7 @@ function getColor(
   if (["FAILED", "NESTED_FAILED"].includes(futureState)) {
     return theme.palette.error;
   }
-  return {
-    light: theme.palette.grey[400],
-    dark: theme.palette.grey[600],
-    main: theme.palette.grey[400],
-    contrastText: "",
-  };
+  return greyPaletteColor;
 }
 
 export default function RunNode(props: NodeProps) {
