@@ -20,6 +20,7 @@ sematic_py_lib(
     ],
     deps = [
         ":config_dir",
+        "//sematic:abstract_plugin",
     ],
 )
 
@@ -28,6 +29,7 @@ sematic_py_lib(
     srcs = ["server_settings.py"],
     deps = [
         ":settings",
+        "//sematic:abstract_plugin",
     ],
 )
 

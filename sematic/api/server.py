@@ -22,6 +22,10 @@ import sematic.api.endpoints.runs  # noqa: F401
 from sematic.api.app import sematic_api
 from sematic.api.wsgi import SematicWSGI
 from sematic.config.config import get_config, switch_env  # noqa: F401
+from sematic.config.server_settings import import_server_plugins
+
+# Some plugins may register endpoints
+import_server_plugins()
 
 # Monkey-patching ssl
 # See https://eventlet.net/doc/patching.html

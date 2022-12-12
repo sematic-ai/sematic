@@ -4,12 +4,13 @@ import enum
 import logging
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Literal, Optional, Type, Union, cast
 
 # Third-party
 import yaml
 
 # Sematic
+from sematic.abstract_plugin import MissingPluginError, PluginScope, import_plugin
 from sematic.config.config_dir import get_config_dir
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,23 @@ class AbstractSettingsVar(enum.Enum):
     pass
 
 
-class ProfileSettings(Dict[AbstractSettingsVar, str]):
+# Plugins section sub-keys
+# Scopes is where users select which plug-ins to activate for a particular scope
+# In that section, keys are plug-in scopes (see sematic.abstrac_plugin.PluginScope)
+# values are lists of full import paths of activated plugins for scope.
+# Multiple plugins can be active (e.g. AUTH scope).
+PLUGINS_SCOPES_KEY: Literal["scopes"] = "scopes"
+# Plug-in specific settings. Keys are plug-in names, values are mappings of
+# settings name to settings value. settings name should be unique across all
+# namespaces so as to be overridable from the CLI.
+PLUGINS_SETTINGS_KEY: Literal["settings"] = "settings"
+
+# Unfortunately we cannot use the above constants to define the literal below
+# Literal must be statically defined
+PluginsSettings = Dict[Union[Literal["scopes"], Literal["settings"]], Any]
+
+
+class ProfileSettings(Dict[AbstractSettingsVar, Union[str, PluginsSettings]]):
     """
     Settings for a given profile (e.g. default).
     """
@@ -48,12 +65,25 @@ class MissingSettingsError(Exception):
         # this message should be set when triaging all exceptions before being surfaced
         # to the user
         message = f"""
-Missing settings: {missing_settings.value}
-
+Missing setting: {missing_settings.value}
 Set it with:
-
     $ sematic {cli_command} set {missing_settings.value} VALUE
 """
+        super().__init__(message)
+
+
+class MissingPluginSettingsError(Exception):
+    """
+    An exception separate from MissingSettingsError because we currently don't
+    support settings plug-in settings from the CLI.
+    """
+
+    def __init__(self, plugin_name: str, missing_setting_name: str):
+        message = f"""
+Missing setting: {missing_setting_name} for plugin {plugin_name}.
+See https://docs.sematic.dev/plugins.
+"""
+
         super().__init__(message)
 
 
@@ -62,17 +92,13 @@ class SettingsScope:
     """
     Dataclass to contain information about a certain settings scope (e.g. user,
     server, etc).
-
     Instances of this classes also contain the cached settings value.
-
     Parameters
     ----------
     file_name: str
         Name of the YAML file containing settings value for this scope.
-
     cli_command: str
         Command to set/get settings values for this scope.
-
     vars: Type[AbstractSettingsVar]
         Enum of available settings for this scope
     """
@@ -103,7 +129,6 @@ class SettingsScope:
     def get_active_settings(self) -> ProfileSettings:
         """
         Get and cache effective settings value for current profile (default).
-
         This also applies env var overrides.
         """
         if self._active_settings is None:
@@ -112,7 +137,7 @@ class SettingsScope:
 
         return self._active_settings
 
-    def get_active_settings_as_dict(self) -> Dict[str, str]:
+    def get_active_settings_as_dict(self) -> Dict[str, Union[str, PluginsSettings]]:
         """
         Active settings as a dictionary.
         """
@@ -122,7 +147,6 @@ class SettingsScope:
         """
         Retrieves and returns the specified settings value, with environment
         override.
-
         Loads and returns the specified settings value. If it does not exist, it
         falls back on the first optional vararg as a default value. If that does
         not exist, it raises.
@@ -137,10 +161,43 @@ class SettingsScope:
 
         raise MissingSettingsError(var, self.cli_command)
 
+    def get_plugin_settings(self, var: AbstractSettingsVar) -> PluginsSettings:
+        """
+        Get the plugin section of the settings file.
+        """
+        value = self.get_active_settings().get(var)
+
+        if not isinstance(value, dict) or set(value) != {
+            PLUGINS_SCOPES_KEY,
+            PLUGINS_SETTINGS_KEY,
+        }:
+            raise ValueError(f"{var.value} does not point to a plugins setting group")
+
+        return cast(PluginsSettings, value)
+
+    def import_plugins(self, var: AbstractSettingsVar) -> None:
+        """
+        Import all plugins for the current settings scope.
+
+        This is useful when plug-ins have initialization code that
+        needs to be executed at import time (e.g. registering an endpoint).
+        """
+        plugin_scopes = self.get_plugin_settings(var)[PLUGINS_SCOPES_KEY]
+
+        for plugin_scope in PluginScope:
+            if plugin_scope.value not in plugin_scopes:
+                continue
+
+            plugin_import_paths = plugin_scopes[plugin_scope.value]
+            for plugin_import_path in plugin_import_paths:
+                try:
+                    import_plugin(plugin_import_path)
+                except MissingPluginError:
+                    logger.warning(f"Cannot find plugin: {plugin_import_path}")
+
     def set_setting(self, var: AbstractSettingsVar, value: str) -> None:
         """
         Set value for setting.
-
         Parameters
         ----------
         var: AbstractSettingsVar
@@ -163,7 +220,6 @@ class SettingsScope:
     def delete_setting(self, var: AbstractSettingsVar) -> None:
         """
         Delete setting value.
-
         Parameters
         ----------
         var: AbstractSettingsVar
@@ -195,10 +251,8 @@ class SettingsScope:
 class EnumDumper(yaml.Dumper):
     """
     Custom Dumper for Enum values.
-
     It serializes Enums as simple strings so that the values aren't represented as class
     instances with type metadata.
-
     It also deactivates aliases, avoiding creating referential ids in the resulting yaml
     contents.
     """

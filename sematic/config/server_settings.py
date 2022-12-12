@@ -1,6 +1,13 @@
+# Standard Library
+from typing import Any, Dict, List, Type, cast
+
 # Sematic
+from sematic.abstract_plugin import AbstractPlugin, PluginScope, import_plugin
 from sematic.config.settings import (
+    PLUGINS_SCOPES_KEY,
+    PLUGINS_SETTINGS_KEY,
     AbstractSettingsVar,
+    PluginsSettings,
     ProfileSettings,
     SettingsScope,
     as_bool,
@@ -32,6 +39,9 @@ class ServerSettingsVar(AbstractSettingsVar):
     # GRAFANA
     GRAFANA_PANEL_URL = "GRAFANA_PANEL_URL"
 
+    # Server-side plug-ins section
+    plugins = "plugins"
+
 
 _SERVER_SETTINGS_SCOPE = SettingsScope(
     file_name="server.yaml",
@@ -51,7 +61,6 @@ def get_active_server_settings() -> ProfileSettings:
 def get_server_setting(var: ServerSettingsVar, *args) -> str:
     """
     Retrieves and returns the specified settings value, with environment override.
-
     Loads and returns the specified settings value. If it does not exist, it falls back
     on the first optional vararg as a default value. If that does not exist, it raises.
     """
@@ -62,7 +71,6 @@ def get_bool_server_setting(var: ServerSettingsVar, *args) -> bool:
     """
     Retrieves and returns the specified settings value as a boolean, with environment
     override.
-
     Loads and returns the specified settings value. If it does not exist, it falls back
     on the first optional vararg as a default value. If that does not exist, it raises.
     """
@@ -81,3 +89,65 @@ def delete_server_settings(var: ServerSettingsVar) -> None:
     Deletes the specified settings value and persists the settings.
     """
     _SERVER_SETTINGS_SCOPE.delete_setting(var)
+
+
+def get_selected_plugins(
+    scope: PluginScope, default: List[Type[AbstractPlugin]]
+) -> List[Type[AbstractPlugin]]:
+    """
+    Get the list of selected plug-ins for a given scope.
+
+    Selected plug-ins are set in the server settings YAML file.
+
+    Parameters
+    ----------
+    scope: PluginScope
+        Scope whose selected plug-ins to return.
+    default: List[Type[AbstractPlugin]]
+        If no plug-ins were selected for scope, use these.
+
+    Returns
+    -------
+    List[AbstractPlugin]
+        List of selected plug-ins for scope.
+    """
+    active_settings = get_active_server_settings()
+
+    plugins_settings = cast(
+        PluginsSettings,
+        active_settings.get(ServerSettingsVar.plugins, {PLUGINS_SCOPES_KEY: {}}),
+    )
+
+    plugin_paths: List[str] = plugins_settings.get(PLUGINS_SCOPES_KEY, {}).get(
+        scope.value, []
+    )
+
+    if len(plugin_paths) == 0:
+        return default
+
+    return [import_plugin(plugin_path) for plugin_path in plugin_paths]
+
+
+def get_plugin_settings(plugin_name: str) -> Dict[str, Any]:
+    """
+    Get settings map for plug-in.
+
+    Parameters
+    ----------
+    plugin_name: str
+        Name of plug-in.
+
+    Returns
+    -------
+    Dict[str, Any]
+        mapping of settings name to value.
+    """
+    plugin_settings = _SERVER_SETTINGS_SCOPE.get_plugin_settings(
+        ServerSettingsVar.plugins
+    )
+
+    return plugin_settings[PLUGINS_SETTINGS_KEY].get(plugin_name, [])
+
+
+def import_server_plugins() -> None:
+    _SERVER_SETTINGS_SCOPE.import_plugins(ServerSettingsVar.plugins)
