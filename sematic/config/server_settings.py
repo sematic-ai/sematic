@@ -75,6 +75,7 @@ def get_bool_server_setting(var: ServerSettingsVar, *args) -> bool:
     """
     Retrieves and returns the specified settings value as a boolean, with environment
     override.
+
     Loads and returns the specified settings value. If it does not exist, it falls back
     on the first optional vararg as a default value. If that does not exist, it raises.
     """

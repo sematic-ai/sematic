@@ -247,8 +247,10 @@ def save_settings(settings: Settings) -> None:
 class EnumDumper(yaml.Dumper):
     """
     Custom Dumper for Enum values.
+
     It serializes Enums as simple strings so that the values aren't represented as class
     instances with type metadata.
+
     It also deactivates aliases, avoiding creating referential ids in the resulting yaml
     contents.
     """
