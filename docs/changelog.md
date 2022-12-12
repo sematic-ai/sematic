@@ -11,11 +11,12 @@ with nothing else on the line.
     * [feature] Enable getting the id of the current run and root run from inside a Sematic func
     * [feature] Add custom display for Enum objects
     * [improvement] Settings file split between user settings `settings.yaml` and server settings `server.yaml`
+    * [improvement] Make the run links in notes more obvious
+    * [improvement] Fail early if attempting to retry an execution older than the server
+      supports.
     * [bugfix] Fix a bug deserializing `Union` values. Note that once you are using this release,
       if you try to "rerun from here" using a pipeline that has `Union` values in it that were
       produced prior to this version of Sematic, the rerun will likely fail with a serialization issue.
-    * [improvement] Fail early if attempting to retry an execution older than the server
-      supports.
     * [bugfix] BREAKING CHANGE: The examples' `README` files have been renamed to
       `README.md` in order for them to correctly render as MarkDown files. This change is
       required by the Bazel `example_pipeline` target as well
