@@ -28,6 +28,10 @@ class TestPlugin(AbstractPlugin):
     def get_author() -> str:
         return "The Knights who say ni"
 
+    @staticmethod
+    def get_version():
+        return (0, 1, 0)
+
 
 @contextmanager
 def settings(settings_dict):

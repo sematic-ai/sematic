@@ -12,7 +12,7 @@ import enum
 import logging
 import sys
 from importlib import import_module
-from typing import Type, final
+from typing import Tuple, Type, final
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +48,18 @@ class AbstractPlugin(abc.ABC):
 
         Can be an arbitrary string containing contact info (e.g. GitHub profile,
         email address, etc.)
+        """
+        pass
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_version() -> Tuple[int, int, int]:
+        """
+        Plug-in version: MAJOR.minor.patch
+
+        increment patch for bug fixes
+        increment minor for new functionalities
+        increment MAJOR for breaking API changes (0 means unstable)
         """
         pass
 

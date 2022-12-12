@@ -7,6 +7,10 @@ class TestPlugin(AbstractPlugin):
     def get_author() -> str:
         return "The Knights who say ni"
 
+    @staticmethod
+    def get_version():
+        return (0, 1, 0)
+
 
 def test_plugin_path():
     assert TestPlugin.get_path() == "sematic.tests.test_abstract_plugin.TestPlugin"
