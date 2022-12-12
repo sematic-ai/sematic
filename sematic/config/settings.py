@@ -185,6 +185,12 @@ class SettingsScope:
         value[PLUGINS_SCOPES_KEY] = value.get(PLUGINS_SCOPES_KEY, {})
         value[PLUGINS_SETTINGS_KEY] = value.get(PLUGINS_SETTINGS_KEY, {})
 
+        for map in value[PLUGINS_SETTINGS_KEY].values():
+            for key in map:
+                if key in os.environ:
+                    logger.debug("Overriding %s from environment variable", key)
+                    map[key] = os.environ[key]
+
         return cast(PluginsSettings, value)
 
     def import_plugins(self, var: AbstractSettingsVar) -> None:
@@ -404,7 +410,7 @@ def _apply_env_var_overrides(
 
         if key in os.environ:
             new_value = os.environ[key]
-            logger.debug("Overriding %s with %s", key, new_value)
+            logger.debug("Overriding %s from environment variable", key)
 
             settings[var] = new_value
 

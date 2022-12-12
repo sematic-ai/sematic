@@ -73,6 +73,12 @@ def test_plugins_scopes():
             TestPlugin.get_name(): {"TEST_PLUGIN_SETTING": "bar"}
         }
 
+        os.environ["TEST_PLUGIN_SETTING"] = "CLI_OVERRIDE"
+
+        assert settings_scope.get_plugin_settings(TestSettingsVar.plugins)[
+            PLUGINS_SETTINGS_KEY
+        ] == {TestPlugin.get_name(): {"TEST_PLUGIN_SETTING": "CLI_OVERRIDE"}}
+
         auth_plugins = settings_scope.get_selected_plugins(
             scope=PluginScope.AUTH, default=[], var=TestSettingsVar.plugins
         )
