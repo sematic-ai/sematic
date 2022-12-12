@@ -773,6 +773,11 @@ function DatetimeValueView(props: ValueViewProps) {
   return <Typography>{format(date, "LLLL d, yyyy h:mm:ss a xxx")}</Typography>;
 }
 
+function EnumValueView(props: ValueViewProps) {
+  const { valueSummary } = props;
+  return <Chip label={valueSummary} variant="outlined" />;
+}
+
 type ComponentPair = {
   type: (props: TypeViewProps) => JSX.Element;
   value: (props: ValueViewProps) => JSX.Element;
@@ -792,6 +797,7 @@ const TypeComponents: Map<string, ComponentPair> = new Map([
   ["Union", { type: UnionTypeView, value: ValueView }],
   ["Link", { type: TypeView, value: LinkValueView }],
   ["datetime.datetime", { type: TypeView, value: DatetimeValueView }],
+  ["enum.Enum", { type: TypeView, value: EnumValueView }],
   [
     "torch.utils.data.dataloader.DataLoader",
     { type: TypeView, value: TorchDataLoaderValueView },
