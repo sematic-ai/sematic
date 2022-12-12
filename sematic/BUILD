@@ -96,6 +96,14 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "external_resource",
+    srcs = ["external_resource.py"],
+    deps = [
+        "//sematic/utils:exceptions",
+    ],
+)
+
+sematic_py_lib(
     name = "calculator",
     srcs = ["calculator.py"],
     deps = [
