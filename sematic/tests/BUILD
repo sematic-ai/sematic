@@ -36,7 +36,7 @@ pytest_test(
     deps = [
         "//sematic:api_client",
         "//sematic:versions",
-        "//sematic/config:config",
+        "//sematic/config",
         "//sematic/db/models:factories",
         "//sematic/tests:fixtures",
     ],
