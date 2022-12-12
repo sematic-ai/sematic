@@ -1,7 +1,6 @@
-import { Box, ButtonBase, Typography, useTheme } from "@mui/material";
-import { useCallback } from "react";
-import { useParams } from "react-router-dom";
-import { usePipelineNavigation } from "../hooks/pipelineHooks";
+import { Box, Typography, useTheme } from "@mui/material";
+import { Link, useParams } from "react-router-dom";
+import { getPipelineUrlPattern } from "../hooks/pipelineHooks";
 import { Note, User } from "../Models";
 import { CopyButton } from "./CopyButton";
 import TimeAgo from "./TimeAgo";
@@ -74,23 +73,13 @@ function RunId(props: {
 
   const { calculatorPath } = useParams();
 
-  const navigate = usePipelineNavigation(calculatorPath!);
-
-  const onClick = useCallback(() => {
-    navigate(runId);
-  }, [navigate, runId]);
-
   return (
     <>
-      <ButtonBase onClick={onClick} disabled={false}>
-        <code
-          style={{
-            fontSize: 12,
-          }}
-        >
+      <Link to={getPipelineUrlPattern(calculatorPath!, runId)} style={
+        {fontSize: '12px'}
+      }>
           {trim ? runId.substring(0, 6) : runId}
-        </code>
-      </ButtonBase>
+      </Link>
       <CopyButton text={runId} message="Copied run ID" />
     </>
   );
