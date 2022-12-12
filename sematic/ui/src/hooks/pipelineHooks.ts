@@ -54,6 +54,10 @@ export function useFetchRuns(runFilters: Filter | undefined = undefined,
     return {isLoaded, isLoading, error, runs: runs?.content, reloadRuns};
 }
 
+export function getPipelineUrlPattern(pipelinePath: string, requestedRootId: string) {
+    return `/pipelines/${pipelinePath}/${requestedRootId}`;
+}
+
 export function usePipelineNavigation(pipelinePath: string) {
     const navigate = useNavigate();
     const { rootId } = useParams();
@@ -63,7 +67,7 @@ export function usePipelineNavigation(pipelinePath: string) {
             return
         }
 
-        navigate(`/pipelines/${pipelinePath}/${requestedRootId}`, {
+        navigate(getPipelineUrlPattern(pipelinePath, requestedRootId), {
             replace
         });
     }, [pipelinePath, rootId, navigate]);
