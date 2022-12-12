@@ -166,7 +166,7 @@ class ExternalResource(AbstractExternalResource):
         self._validate_transition(updated)
         if updated.status.state != ResourceState.ACTIVATING:
             raise IllegalStateTransitionError(
-                "Calling .activate() should always leave the resource in the "
+                "Calling .activate() did not leave the resource in the "
                 "ACTIVATING state."
             )
         return updated
@@ -189,7 +189,7 @@ class ExternalResource(AbstractExternalResource):
         self._validate_transition(updated)
         if updated.status.state != ResourceState.DEACTIVATING:
             raise IllegalStateTransitionError(
-                "Calling .deactivate() should always leave the resource in the "
+                "Calling .deactivate() did not leave the resource in the "
                 "DEACTIVATING state."
             )
         return updated
@@ -200,6 +200,11 @@ class ExternalResource(AbstractExternalResource):
         )
 
     def _validate_transition(self, updated: "ExternalResource"):
+        if self.id != updated.id:
+            raise IllegalStateTransitionError(
+                f"Cannot change id of resource from {self.id} to "
+                f"{updated.id}"
+            )
         if (
             self.status.state != updated.status.state
             and not self.status.state.is_allowed_transition(updated.status.state)
@@ -218,6 +223,16 @@ class ExternalResource(AbstractExternalResource):
 
     @final
     def update(self) -> "ExternalResource":
+        """Query the external resource for any updates and return the updated object.
+
+        If no properties have changed since the last time update was called, the object
+        should be returned as-is, except for the `status.last_updated_epoch_time` property
+        (which should be set to the current epoch time).
+
+        Returns
+        -------
+        A clone of this object with any changes in state applied.
+        """
         logger.debug("Updating %s", self)
         updated = self._do_update()
         self._validate_transition(updated)

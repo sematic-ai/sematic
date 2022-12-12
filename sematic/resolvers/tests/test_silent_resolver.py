@@ -51,12 +51,17 @@ def add_to_resource(x: int, r: FakeExternalResource) -> int:
 
 
 @func
+def nested_add_to_resource(x: int, r: FakeExternalResource) -> int:
+    return add_to_resource(x, r)
+
+
+@func
 def custom_resource_pipeline() -> int:
     """42 + 1 + 101 = 144"""
     with FakeExternalResource(some_field=42) as r1:
         value = add_to_resource(1, r1)
     with FakeExternalResource(some_field=101) as r2:
-        value = add_to_resource(value, r2)
+        value = nested_add_to_resource(value, r2)
     return value
 
 

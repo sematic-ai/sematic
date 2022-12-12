@@ -23,6 +23,9 @@ class SilentResolver(StateMachineResolver):
             resource = resource.activate(is_local=True)
             while not (
                 resource.status.state == ResourceState.ACTIVE
+
+                # If the resource fails to activate, it may go from
+                # activating -> deactivating -> deactivated
                 or resource.status.state.is_terminal()
             ):
                 resource = resource.update()

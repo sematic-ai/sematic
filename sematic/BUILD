@@ -101,6 +101,7 @@ sematic_py_lib(
         ":retry_settings",
         ":future_context",
         "//sematic/resolvers:resource_requirements",
+        "//sematic/utils:exceptions",
     ],
 )
 

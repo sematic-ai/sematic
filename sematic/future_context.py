@@ -6,6 +6,8 @@ from typing import Any, List, Optional, Type
 
 # To avoid a circular dependency of:
 # future_context -> resolver -> future -> future_context
+# This is to satisfy mypy while also giving the reader of the
+# code more info about what is going on
 Resolver = Any
 
 FUTURE_ALGEBRA_DOC_LINK = "https://docs.sematic.dev/diving-deeper/future-algebra"
