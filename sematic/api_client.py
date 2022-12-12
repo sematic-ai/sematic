@@ -8,7 +8,7 @@ from requests.exceptions import ConnectionError
 
 # Sematic
 from sematic.abstract_future import FutureState
-from sematic.abstract_storage import AbstractStorage, StorageMode
+from sematic.abstract_plugin import PluginScope, import_plugin
 from sematic.config.config import get_config
 from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import CLI_COMMAND, UserSettingsVar, get_user_setting
@@ -17,7 +17,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import deserialize_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
-from sematic.plugins import PluginScope, get_registered_plugin
+from sematic.plugins.abstract_storage import AbstractStorage, StorageMode
 from sematic.utils.retry import retry
 from sematic.versions import CURRENT_VERSION, version_as_string
 
@@ -87,7 +87,9 @@ def get_artifact_value(artifact: Artifact) -> Any:
     Any
         The value of the requested artifact.
     """
-    storage_engine, location = _get_artifact_location(artifact.id, mode=StorageMode.READ)
+    storage_engine, location = _get_artifact_location(
+        artifact.id, mode=StorageMode.READ
+    )
     payload = storage_engine.get(location)
 
     return deserialize_artifact_value(artifact, payload)
@@ -171,17 +173,10 @@ def _get_location_for_response(response: Dict[str, str]) -> Tuple[AbstractStorag
     """
     Prepare storage engine and location for give API response.
     """
-    try:
-        storage_plugin = get_registered_plugin(
-            PluginScope.STORAGE, response["storage_engine"]
-        )
-        storage_engine: Type[AbstractStorage] = cast(
-            Type[AbstractStorage], storage_plugin
-        )
-    except KeyError:
-        raise NotImplementedError(f"Unknown storage engine: {response['storage_engine']}")
+    storage_plugin = import_plugin(response["storage_engine"])
+    storage_class: Type[AbstractStorage] = cast(Type[AbstractStorage], storage_plugin)
 
-    return storage_engine(), response["location"]
+    return storage_class(), response["location"]
 
 
 def _get_artifact(artifact_id: str) -> Artifact:

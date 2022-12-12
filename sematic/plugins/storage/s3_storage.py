@@ -9,9 +9,10 @@ import botocore.exceptions
 import requests
 
 # Sematic
-from sematic.abstract_storage import AbstractStorage, NoSuchStorageKey
-from sematic.config.server_settings import ServerSettingsVar, get_server_setting
-from sematic.plugins import AbstractPlugin, PluginScope, register_plugin
+from sematic.abstract_plugin import AbstractPlugin
+from sematic.config.server_settings import get_plugin_settings
+from sematic.config.settings import MissingPluginSettingsError
+from sematic.plugins.abstract_storage import AbstractStorage, NoSuchStorageKey
 from sematic.utils.memoized_property import memoized_property
 from sematic.utils.retry import retry
 
@@ -23,7 +24,9 @@ class S3ClientMethod(enum.Enum):
     GET = "get_object"
 
 
-@register_plugin(scope=PluginScope.STORAGE, author="github.com/sematic-ai")
+_AWS_S3_BUCKET_KEY = "AWS_S3_BUCKET"
+
+
 class S3Storage(AbstractStorage, AbstractPlugin):
     """
     Implementation of the `Storage` interface for AWS S3 storage. The bucket
@@ -32,9 +35,17 @@ class S3Storage(AbstractStorage, AbstractPlugin):
 
     PRESIGNED_URL_EXPIRATION = 5 * 60  # 5 minutes
 
+    @staticmethod
+    def get_author() -> str:
+        return "github.com/sematic-ai"
+
     @memoized_property
     def _bucket(self) -> str:
-        return get_server_setting(ServerSettingsVar.AWS_S3_BUCKET)
+        plugin_settings = get_plugin_settings(self.get_name())
+        try:
+            return plugin_settings[_AWS_S3_BUCKET_KEY]
+        except KeyError:
+            raise MissingPluginSettingsError(self.get_name(), _AWS_S3_BUCKET_KEY)
 
     @memoized_property
     def _s3_client(self):

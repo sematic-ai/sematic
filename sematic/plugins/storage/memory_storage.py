@@ -2,15 +2,18 @@
 from typing import Any, Dict
 
 # Sematic
-from sematic.abstract_storage import AbstractStorage, NoSuchStorageKey
-from sematic.plugins import AbstractPlugin, PluginScope, register_plugin
+from sematic.abstract_plugin import AbstractPlugin
+from sematic.plugins.abstract_storage import AbstractStorage, NoSuchStorageKey
 
 
-@register_plugin(scope=PluginScope.STORAGE, author="github.com/sematic-ai")
 class MemoryStorage(AbstractStorage, AbstractPlugin):
     """
     An in-memory key/value store implementing the `Storage` interface.
     """
+
+    @staticmethod
+    def get_author() -> str:
+        return "github.com/sematic-ai"
 
     def __init__(self):
         self._store: Dict[str, Any] = {}

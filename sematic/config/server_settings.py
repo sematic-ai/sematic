@@ -1,6 +1,13 @@
+# Standard Library
+from typing import Any, Dict, List, Type, cast
+
 # Sematic
+from sematic.abstract_plugin import AbstractPlugin, PluginScope, import_plugin
 from sematic.config.settings import (
+    PLUGINS_SCOPES_KEY,
+    PLUGINS_SETTINGS_KEY,
     AbstractSettingsVar,
+    PluginsSettings,
     ProfileSettings,
     SettingsScope,
     as_bool,
@@ -32,8 +39,7 @@ class ServerSettingsVar(AbstractSettingsVar):
     # GRAFANA
     GRAFANA_PANEL_URL = "GRAFANA_PANEL_URL"
 
-    # Plugins
-    AWS_S3_BUCKET = "AWS_S3_BUCKET"
+    PLUGINS = "plugins"
 
 
 _SERVER_SETTINGS_SCOPE = SettingsScope(
@@ -84,3 +90,35 @@ def delete_server_settings(var: ServerSettingsVar) -> None:
     Deletes the specified settings value and persists the settings.
     """
     _SERVER_SETTINGS_SCOPE.delete_setting(var)
+
+
+def get_selected_plugins(
+    scope: PluginScope, default: List[Type[AbstractPlugin]]
+) -> List[Type[AbstractPlugin]]:
+    active_settings = get_active_server_settings()
+
+    plugins_settings = cast(
+        PluginsSettings,
+        active_settings.get(ServerSettingsVar.PLUGINS, {PLUGINS_SCOPES_KEY: {}}),
+    )
+
+    plugin_paths: List[str] = plugins_settings.get(PLUGINS_SCOPES_KEY, {}).get(
+        scope.value, []
+    )
+
+    if len(plugin_paths) == 0:
+        return default
+
+    return [import_plugin(plugin_path) for plugin_path in plugin_paths]
+
+
+def get_plugin_settings(plugin_name: str) -> Dict[str, Any]:
+    plugin_settings = _SERVER_SETTINGS_SCOPE.get_plugin_settings(
+        ServerSettingsVar.PLUGINS
+    )
+
+    return plugin_settings[PLUGINS_SETTINGS_KEY].get(plugin_name, [])
+
+
+def import_server_plugins() -> None:
+    _SERVER_SETTINGS_SCOPE.import_plugins(ServerSettingsVar.PLUGINS)

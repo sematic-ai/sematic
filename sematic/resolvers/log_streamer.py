@@ -12,7 +12,7 @@ from typing import Callable, Optional
 
 # Sematic
 from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR
-from sematic.storage.s3_storage import S3Storage
+from sematic.plugins.storage.s3_storage import S3Storage
 from sematic.utils.retry import retry
 from sematic.utils.stdout import redirect_to_file_descriptor
 
@@ -54,7 +54,9 @@ _TERMINATION_CHAR = chr(ascii.EOT)  # EOT => End Of Transmission
 logger = logging.getLogger(__name__)
 
 
-def _flush_to_file(file_path, read_handle, uploader, remote_prefix, timeout_seconds=None):
+def _flush_to_file(
+    file_path, read_handle, uploader, remote_prefix, timeout_seconds=None
+):
     """Read from the read_handle dump to file_path and then remote.
 
     The read_handle is continuously streamed from onto disk. The remote upload will
@@ -93,7 +95,9 @@ def _flush_to_file(file_path, read_handle, uploader, remote_prefix, timeout_seco
 
     # Use w+ mode; should overwrite whatever was in the prior delta file
     with open(file_path, "w+") as fp:
-        while timeout_seconds is None or time.time() - started_reading < timeout_seconds:
+        while (
+            timeout_seconds is None or time.time() - started_reading < timeout_seconds
+        ):
             line = read_handle.readline()
             if _TERMINATION_CHAR in line:
                 # trigger final upload

@@ -3,20 +3,23 @@ import logging
 import os
 
 # Sematic
-from sematic.abstract_storage import AbstractStorage, NoSuchStorageKey
+from sematic.abstract_plugin import AbstractPlugin
 from sematic.config.config import get_config
-from sematic.plugins import AbstractPlugin, PluginScope, register_plugin
+from sematic.plugins.abstract_storage import AbstractStorage, NoSuchStorageKey
 
 logger = logging.getLogger(__name__)
 
 
-@register_plugin(scope=PluginScope.STORAGE, author="github.com/sematic-ai")
 class LocalStorage(AbstractStorage, AbstractPlugin):
     """
     A local storage implementation of the `Storage` interface. Values are stores
     in the data directory of the Sematic directory, typically at
     `~/.sematic/data`.
     """
+
+    @staticmethod
+    def get_author() -> str:
+        return "github.com/sematic-ai"
 
     def set(self, key: str, value: bytes):
         logger.debug(f"{self.__class__.__name__} Setting value for key: {key}")

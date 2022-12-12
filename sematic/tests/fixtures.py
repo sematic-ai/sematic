@@ -8,10 +8,10 @@ import pytest
 
 # Sematic
 import sematic.api_client as api_client
-import sematic.storage as storage
+from sematic.plugins.storage.memory_storage import MemoryStorage
 
 
-class MockStorage(storage.MemoryStorage):
+class MockStorage(MemoryStorage):
     def set_from_file(self, key, file_path):
         with open(file_path, "rb") as fp:
             self._store[key] = b"".join(fp)

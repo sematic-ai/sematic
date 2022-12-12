@@ -4,12 +4,13 @@ import enum
 import logging
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Literal, Optional, Type, Union, cast
 
 # Third-party
 import yaml
 
 # Sematic
+from sematic.abstract_plugin import MissingPluginError, PluginScope, import_plugin
 from sematic.config.config_dir import get_config_dir
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,15 @@ class AbstractSettingsVar(enum.Enum):
     pass
 
 
-class ProfileSettings(Dict[AbstractSettingsVar, str]):
+PLUGINS_SCOPES_KEY: Literal["scopes"] = "scopes"
+PLUGINS_SETTINGS_KEY: Literal["settings"] = "settings"
+
+# Unfortunately we cannot use the above constants to define the literal below
+# Literal must be statically defined
+PluginsSettings = Dict[Union[Literal["scopes"], Literal["settings"]], Any]
+
+
+class ProfileSettings(Dict[AbstractSettingsVar, Union[str, PluginsSettings]]):
     """
     Settings for a given profile (e.g. default).
     """
@@ -48,12 +57,23 @@ class MissingSettingsError(Exception):
         # this message should be set when triaging all exceptions before being surfaced
         # to the user
         message = f"""
-Missing settings: {missing_settings.value}
+Missing setting: {missing_settings.value}
 
 Set it with:
 
     $ sematic {cli_command} set {missing_settings.value} VALUE
 """
+        super().__init__(message)
+
+
+class MissingPluginSettingsError(Exception):
+    def __init__(self, plugin_name: str, missing_setting_name: str):
+        message = f"""
+Missing setting: {missing_setting_name} for plugin {plugin_name}.
+
+See https://docs.sematic.dev/plugins.
+"""
+
         super().__init__(message)
 
 
@@ -112,7 +132,7 @@ class SettingsScope:
 
         return self._active_settings
 
-    def get_active_settings_as_dict(self) -> Dict[str, str]:
+    def get_active_settings_as_dict(self) -> Dict[str, Union[str, PluginsSettings]]:
         """
         Active settings as a dictionary.
         """
@@ -136,6 +156,31 @@ class SettingsScope:
             return args[0]
 
         raise MissingSettingsError(var, self.cli_command)
+
+    def get_plugin_settings(self, var: AbstractSettingsVar) -> PluginsSettings:
+        value = self.get_active_settings().get(var)
+
+        if not isinstance(value, dict) or set(value) != {
+            PLUGINS_SCOPES_KEY,
+            PLUGINS_SETTINGS_KEY,
+        }:
+            raise ValueError(f"{var.value} does not point to a plugins setting group")
+
+        return cast(PluginsSettings, value)
+
+    def import_plugins(self, var: AbstractSettingsVar) -> None:
+        plugin_scopes = self.get_plugin_settings(var)[PLUGINS_SCOPES_KEY]
+
+        for plugin_scope in PluginScope:
+            if plugin_scope.value not in plugin_scopes:
+                continue
+
+            plugin_import_paths = plugin_scopes[plugin_scope.value]
+            for plugin_import_path in plugin_import_paths:
+                try:
+                    import_plugin(plugin_import_path)
+                except MissingPluginError:
+                    logger.warning(f"Cannot find plugin: {plugin_import_path}")
 
     def set_setting(self, var: AbstractSettingsVar, value: str) -> None:
         """

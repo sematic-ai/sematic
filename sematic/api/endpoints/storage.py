@@ -3,9 +3,10 @@ from dataclasses import dataclass
 from typing import Type, cast
 
 # Sematic
-from sematic.abstract_storage import AbstractStorage, StorageMode
-from sematic.plugins import PluginScope, get_selected_plugin
-from sematic.storage.local_storage import LocalStorage
+from sematic.abstract_plugin import PluginScope
+from sematic.config.server_settings import get_selected_plugins
+from sematic.plugins.abstract_storage import AbstractStorage, StorageMode
+from sematic.plugins.storage.local_storage import LocalStorage
 
 
 @dataclass
@@ -33,23 +34,21 @@ def get_storage_location(
         )
 
     try:
-        storage_engine_plugin = get_selected_plugin(
-            PluginScope.STORAGE, default=LocalStorage
-        )
+        storage_engine_plugin = get_selected_plugins(
+            PluginScope.STORAGE, default=[LocalStorage]
+        )[0]
     except KeyError as e:
         raise UnknownStorageEngineError(f"Unknown storage engine: {e}")
 
     # Ideally this would already be done by get_selected_plugin but I couldn't
     # make it work, TypeVar typed args don't accept abstract classes
     # https://github.com/python/mypy/issues/5374
-    storage_engine_class: Type[AbstractStorage] = cast(
-        Type[AbstractStorage], storage_engine_plugin
-    )
+    storage_engine_class = cast(Type[AbstractStorage], storage_engine_plugin)
 
     location = storage_engine_class().get_location(
         namespace=namespace, key=object_id, mode=storage_mode
     )
 
     return StorageLocationPayload(
-        storage_engine=storage_engine_class.__name__, location=location
+        storage_engine=storage_engine_plugin.get_path(), location=location
     )

@@ -20,11 +20,11 @@ from sematic.db.models.factories import (
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.tests.fixtures import resolution, run  # noqa: F401
+from sematic.plugins.storage.memory_storage import MemoryStorage
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
 )
-from sematic.storage import MemoryStorage
 from sematic.types.serialization import (
     get_json_encodable_summary,
     type_to_json_encodable,
