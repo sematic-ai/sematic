@@ -127,6 +127,12 @@ class KubernetesError(Exception):
     pass
 
 
+class IllegalStateTransitionError(Exception):
+    """A state-machine object made a state transition that was not allowed."""
+
+    pass
+
+
 class ResolutionError(Exception):
     """The pipeline resolution has failed.
 
