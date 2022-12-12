@@ -4,13 +4,18 @@ import enum
 import logging
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, Literal, Optional, Type, Union, cast
+from typing import Any, Dict, List, Literal, Optional, Type, Union, cast
 
 # Third-party
 import yaml
 
 # Sematic
-from sematic.abstract_plugin import MissingPluginError, PluginScope, import_plugin
+from sematic.abstract_plugin import (
+    AbstractPlugin,
+    MissingPluginError,
+    PluginScope,
+    import_plugin,
+)
 from sematic.config.config_dir import get_config_dir
 
 logger = logging.getLogger(__name__)
@@ -172,13 +177,13 @@ class SettingsScope:
         """
         Get the plugin section of the settings file.
         """
-        value = self.get_active_settings().get(var)
+        value = self.get_active_settings().get(var, {})
 
-        if not isinstance(value, dict) or set(value) != {
-            PLUGINS_SCOPES_KEY,
-            PLUGINS_SETTINGS_KEY,
-        }:
+        if value is not None and not isinstance(value, dict):
             raise ValueError(f"{var.value} does not point to a plugins setting group")
+
+        value[PLUGINS_SCOPES_KEY] = value.get(PLUGINS_SCOPES_KEY, {})
+        value[PLUGINS_SETTINGS_KEY] = value.get(PLUGINS_SETTINGS_KEY, {})
 
         return cast(PluginsSettings, value)
 
@@ -201,6 +206,48 @@ class SettingsScope:
                     import_plugin(plugin_import_path)
                 except MissingPluginError:
                     logger.warning(f"Cannot find plugin: {plugin_import_path}")
+
+    def get_selected_plugins(
+        self,
+        scope: PluginScope,
+        default: List[Type[AbstractPlugin]],
+        var: AbstractSettingsVar,
+    ) -> List[Type[AbstractPlugin]]:
+        """
+        Get the list of selected plug-ins for a given scope.
+
+        Selected plug-ins are set in the server settings YAML file.
+
+        Parameters
+        ----------
+        scope: PluginScope
+            Scope whose selected plug-ins to return.
+        default: List[Type[AbstractPlugin]]
+            If no plug-ins were selected for scope, use these.
+        var: AbstractSettingsVar
+            Plugins settings section
+
+        Returns
+        -------
+        List[AbstractPlugin]
+            List of selected plug-ins for scope.
+        """
+
+        active_settings = self.get_active_settings()
+
+        plugins_settings = cast(
+            PluginsSettings,
+            active_settings.get(var, {PLUGINS_SCOPES_KEY: {}}),
+        )
+
+        plugin_paths: List[str] = plugins_settings.get(PLUGINS_SCOPES_KEY, {}).get(
+            scope.value, []
+        )
+
+        if len(plugin_paths) == 0:
+            return default
+
+        return [import_plugin(plugin_path) for plugin_path in plugin_paths]
 
     def set_setting(self, var: AbstractSettingsVar, value: str) -> None:
         """

@@ -35,9 +35,17 @@ pytest_test(
     deps = [
         "//sematic:api_client",
         "//sematic:versions",
-        "//sematic/config:config",
+        "//sematic/config",
         "//sematic/db/models:factories",
         "//sematic/tests:fixtures",
+    ],
+)
+
+pytest_test(
+    name = "test_abstract_plugin",
+    srcs = ["test_abstract_plugin.py"],
+    deps = [
+        "//sematic:abstract_plugin",
     ],
 )
 

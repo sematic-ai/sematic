@@ -24,3 +24,15 @@ pytest_test(
         "//sematic/config:server_settings",
     ],
 )
+
+pytest_test(
+    name = "test_settings",
+    srcs = ["test_settings.py"],
+    pip_deps = [
+        "pyyaml",
+    ],
+    deps = [
+        "//sematic:abstract_plugin",
+        "//sematic/config:settings",
+    ],
+)

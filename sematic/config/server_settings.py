@@ -96,38 +96,9 @@ def delete_server_settings(var: ServerSettingsVar) -> None:
 def get_selected_plugins(
     scope: PluginScope, default: List[Type[AbstractPlugin]]
 ) -> List[Type[AbstractPlugin]]:
-    """
-    Get the list of selected plug-ins for a given scope.
-
-    Selected plug-ins are set in the server settings YAML file.
-
-    Parameters
-    ----------
-    scope: PluginScope
-        Scope whose selected plug-ins to return.
-    default: List[Type[AbstractPlugin]]
-        If no plug-ins were selected for scope, use these.
-
-    Returns
-    -------
-    List[AbstractPlugin]
-        List of selected plug-ins for scope.
-    """
-    active_settings = get_active_server_settings()
-
-    plugins_settings = cast(
-        PluginsSettings,
-        active_settings.get(ServerSettingsVar.plugins, {PLUGINS_SCOPES_KEY: {}}),
+    return _SERVER_SETTINGS_SCOPE.get_selected_plugins(
+        scope=scope, default=default, var=ServerSettingsVar.plugins
     )
-
-    plugin_paths: List[str] = plugins_settings.get(PLUGINS_SCOPES_KEY, {}).get(
-        scope.value, []
-    )
-
-    if len(plugin_paths) == 0:
-        return default
-
-    return [import_plugin(plugin_path) for plugin_path in plugin_paths]
 
 
 def get_plugin_settings(plugin_name: str) -> Dict[str, Any]:
