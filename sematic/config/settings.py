@@ -66,7 +66,9 @@ class MissingSettingsError(Exception):
         # to the user
         message = f"""
 Missing setting: {missing_settings.value}
+
 Set it with:
+
     $ sematic {cli_command} set {missing_settings.value} VALUE
 """
         super().__init__(message)
@@ -81,6 +83,7 @@ class MissingPluginSettingsError(Exception):
     def __init__(self, plugin_name: str, missing_setting_name: str):
         message = f"""
 Missing setting: {missing_setting_name} for plugin {plugin_name}.
+
 See https://docs.sematic.dev/plugins.
 """
 
@@ -92,7 +95,9 @@ class SettingsScope:
     """
     Dataclass to contain information about a certain settings scope (e.g. user,
     server, etc).
+
     Instances of this classes also contain the cached settings value.
+
     Parameters
     ----------
     file_name: str
@@ -129,6 +134,7 @@ class SettingsScope:
     def get_active_settings(self) -> ProfileSettings:
         """
         Get and cache effective settings value for current profile (default).
+
         This also applies env var overrides.
         """
         if self._active_settings is None:
@@ -147,6 +153,7 @@ class SettingsScope:
         """
         Retrieves and returns the specified settings value, with environment
         override.
+
         Loads and returns the specified settings value. If it does not exist, it
         falls back on the first optional vararg as a default value. If that does
         not exist, it raises.
@@ -198,6 +205,7 @@ class SettingsScope:
     def set_setting(self, var: AbstractSettingsVar, value: str) -> None:
         """
         Set value for setting.
+
         Parameters
         ----------
         var: AbstractSettingsVar
@@ -220,6 +228,7 @@ class SettingsScope:
     def delete_setting(self, var: AbstractSettingsVar) -> None:
         """
         Delete setting value.
+
         Parameters
         ----------
         var: AbstractSettingsVar
@@ -251,8 +260,10 @@ class SettingsScope:
 class EnumDumper(yaml.Dumper):
     """
     Custom Dumper for Enum values.
+
     It serializes Enums as simple strings so that the values aren't represented as class
     instances with type metadata.
+
     It also deactivates aliases, avoiding creating referential ids in the resulting yaml
     contents.
     """
