@@ -589,6 +589,56 @@ def test_load_log_lines(
     assert result.lines == ["Line 42"]
 
 
+@pytest.mark.parametrize(
+    "log_preparation_function",
+    (
+        prepare_logs_v1,
+        prepare_logs_v2,
+    ),
+)
+def test_load_cloned_run_log_lines(
+    mock_storage: MockStorage, test_db, log_preparation_function  # noqa: F811
+):
+    original_id = "0" * 32
+    run = make_run(future_state=FutureState.CREATED, original_run_id=original_id)
+    save_run(run)
+    resolution = make_resolution(status=ResolutionStatus.SCHEDULED)
+    resolution.root_id = run.root_id
+    save_resolution(resolution)
+    max_lines = 50
+
+    result = load_log_lines(
+        run_id=run.id,
+        continuation_cursor=None,
+        max_lines=max_lines,
+    )
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=False,
+        more_after=False,
+        lines=[],
+        log_unavailable_reason=f"Run output sourced from original run {original_id}.",
+    )
+
+    run.future_state = FutureState.RESOLVED
+    save_run(run)
+
+    result = load_log_lines(
+        run_id=run.id,
+        continuation_cursor=None,
+        max_lines=max_lines,
+    )
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=False,
+        more_after=False,
+        lines=[],
+        log_unavailable_reason=f"Run output sourced from original run {original_id}.",
+    )
+
+
 def test_continue_from_end_with_no_new_logs(
     test_db, mock_storage: MockStorage  # noqa: F811
 ):

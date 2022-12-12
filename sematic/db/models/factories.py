@@ -76,6 +76,7 @@ def clone_root_run(run: Run, edges: List[Edge]) -> Tuple[Run, List[Edge]]:
     run_id = make_future_id()
     cloned_run = Run(
         id=run_id,
+        original_run_id=run.original_run_id,
         root_id=run_id,
         future_state=FutureState.CREATED,
         name=run.name,
