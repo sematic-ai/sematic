@@ -39,7 +39,7 @@ class ServerSettingsVar(AbstractSettingsVar):
     # GRAFANA
     GRAFANA_PANEL_URL = "GRAFANA_PANEL_URL"
 
-    PLUGINS = "plugins"
+    plugins = "plugins"
 
 
 _SERVER_SETTINGS_SCOPE = SettingsScope(
@@ -99,7 +99,7 @@ def get_selected_plugins(
 
     plugins_settings = cast(
         PluginsSettings,
-        active_settings.get(ServerSettingsVar.PLUGINS, {PLUGINS_SCOPES_KEY: {}}),
+        active_settings.get(ServerSettingsVar.plugins, {PLUGINS_SCOPES_KEY: {}}),
     )
 
     plugin_paths: List[str] = plugins_settings.get(PLUGINS_SCOPES_KEY, {}).get(
@@ -114,11 +114,11 @@ def get_selected_plugins(
 
 def get_plugin_settings(plugin_name: str) -> Dict[str, Any]:
     plugin_settings = _SERVER_SETTINGS_SCOPE.get_plugin_settings(
-        ServerSettingsVar.PLUGINS
+        ServerSettingsVar.plugins
     )
 
     return plugin_settings[PLUGINS_SETTINGS_KEY].get(plugin_name, [])
 
 
 def import_server_plugins() -> None:
-    _SERVER_SETTINGS_SCOPE.import_plugins(ServerSettingsVar.PLUGINS)
+    _SERVER_SETTINGS_SCOPE.import_plugins(ServerSettingsVar.plugins)

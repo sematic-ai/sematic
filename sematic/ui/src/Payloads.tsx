@@ -66,10 +66,7 @@ export type GoogleLoginPayload = {
 
 export type AuthenticatePayload = {
   authenticate: boolean;
-  providers: {
-    GOOGLE_OAUTH_CLIENT_ID?: string;
-    GITHUB_OAUTH_CLIENT_ID?: string;
-  };
+  providers: { [key: string]: { [key: string]: string } };
 };
 
 export type EnvPayload = {
@@ -79,12 +76,14 @@ export type EnvPayload = {
 type Operator = "eq";
 
 type FilterCondition = {
-    [key: string]: {[eq in Operator]? : string | null} | undefined
-}
+  [key: string]: { [eq in Operator]?: string | null } | undefined;
+};
 
-export type Filter = FilterCondition | {
-    AND : Array<FilterCondition>
-} | {
-  OR : Array<FilterCondition>
-}
-
+export type Filter =
+  | FilterCondition
+  | {
+      AND: Array<FilterCondition>;
+    }
+  | {
+      OR: Array<FilterCondition>;
+    };

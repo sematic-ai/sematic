@@ -14,9 +14,6 @@ sematic_py_lib(
         "//sematic/resolvers:local_resolver",
         "//sematic/resolvers:resource_requirements",
         "//sematic/resolvers:worker",
-        "//sematic/storage:local_storage",
-        "//sematic/storage:memory_storage",
-        "//sematic/storage:s3_storage",
         "//sematic/types:casting",
         "//sematic/types:init",
         "//sematic/utils:exceptions",
@@ -38,7 +35,7 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         "//sematic:abstract_future",
-        "//sematic:plugins",
+        "//sematic:abstract_plugin",
         "//sematic:versions",
         "//sematic/config:config",
         "//sematic/config:settings",
@@ -72,9 +69,9 @@ sematic_py_lib(
         "//sematic/db:queries",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+        "//sematic/plugins/storage:s3_storage",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/scheduling:external_job",
-        "//sematic/storage:s3_storage",
     ],
 )
 
@@ -155,10 +152,11 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "plugins",
-    srcs = ["plugins.py"],
+    name = "abstract_plugin",
+    srcs = ["abstract_plugin.py"],
+    # buildifier: leave-alone
     deps = [
-        "//sematic/config",
+        "//sematic/config:config",
         "//sematic/config:server_settings",
         "//sematic/config:user_settings",
     ],

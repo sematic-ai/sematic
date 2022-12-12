@@ -137,8 +137,6 @@ sematic_py_lib(
     srcs = ["auth.py"],
     pip_deps = [
         "flask",
-        "google-auth",
-        "requests",
         "sqlalchemy",
     ],
     deps = [
@@ -148,6 +146,8 @@ sematic_py_lib(
         "//sematic/config:settings",
         "//sematic/db:queries",
         "//sematic/db/models:factories",
+        "//sematic/plugins:abstract_auth",
+        "//sematic/plugins/auth:google_auth",
     ],
 )
 
@@ -155,8 +155,8 @@ sematic_py_lib(
     name = "storage",
     srcs = ["storage.py"],
     deps = [
-        "//sematic:abstract_storage",
-        "//sematic:plugins",
-        "//sematic/storage:local_storage",
+        "//sematic:abstract_plugin",
+        "//sematic/plugins:abstract_storage",
+        "//sematic/plugins/storage:local_storage",
     ],
 )

@@ -77,7 +77,7 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         "//sematic/config:config",
-        "//sematic/storage:s3_storage",
+        "//sematic/plugins/storage:s3_storage",
         "//sematic/utils:retry",
         "//sematic/utils:stdout",
     ],

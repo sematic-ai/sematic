@@ -2,6 +2,7 @@
 import abc
 import enum
 import logging
+import sys
 from importlib import import_module
 from typing import Type
 
@@ -43,6 +44,11 @@ def import_plugin(plugin_import_path: str) -> Type[AbstractPlugin]:
         raise ValueError(f"Incorrect plugin import path: {plugin_import_path}")
 
     try:
+        if import_path not in sys.modules:
+            logger.info("Importing plugin %s", plugin_import_path)
+
+        # module imports are cached so this is idempotent (i.e. no need to be in
+        # the if statement above)
         module = import_module(import_path)
         plugin = getattr(module, plugin_name)
     except (ImportError, AttributeError):
