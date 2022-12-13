@@ -60,7 +60,11 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     namespace = "the-namespace"
     custom_service_account = "custom-sa"
     args = ["a", "b", "c"]
-    configured_env_vars = {"SOME_ENV_VAR": "some-env-var-value"}
+    configured_env_vars = {
+        "SOME_ENV_VAR": "some-env-var-value",
+        "SEMATIC_API_ADDRESS": "http://theurl.com",
+    }
+    api_url_override = "http://urloverride.com"
 
     resource_requirements = ResourceRequirements(
         kubernetes=KubernetesResourceRequirements(
@@ -92,6 +96,7 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
             namespace=namespace,
             service_account=custom_service_account,
             resource_requirements=resource_requirements,
+            api_address_override=api_url_override,
             args=args,
         )
 
@@ -114,6 +119,11 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     assert secret_env_var.value_from.secret_key_ref.key == next(
         iter(environment_secrets)
     )
+    final_api_url_var = next(
+        var.value for var in env_vars if var.name == "SEMATIC_API_ADDRESS"
+    )
+    assert final_api_url_var == api_url_override
+    del configured_env_vars["SEMATIC_API_ADDRESS"]
     normal_env_var = next(
         var for var in env_vars if var.name == next(iter(configured_env_vars.keys()))
     )
@@ -439,10 +449,12 @@ def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job):
     run_id = "run_id"
     namespace = "the-namespace"
     custom_service_account = "custom-sa"
+    custom_url = "http://customurl.com"
 
     server_settings = {
         ServerSettingsVar.KUBERNETES_NAMESPACE: namespace,
         ServerSettingsVar.SEMATIC_WORKER_KUBERNETES_SA: custom_service_account,
+        ServerSettingsVar.SEMATIC_WORKER_API_ADDRESS: custom_url,
     }
 
     with mock_server_settings(server_settings):
@@ -460,6 +472,7 @@ def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job):
         environment_vars=settings,
         namespace=namespace,
         service_account=custom_service_account,
+        api_address_override=custom_url,
         resource_requirements=resource_requests,
         args=["--run_id", run_id],
     )

@@ -15,3 +15,4 @@ data:
 {{ end }}
   KUBERNETES_NAMESPACE: {{ .Release.Namespace }}
   SEMATIC_WORKER_KUBERNETES_SA: {{ .Values.worker.service_account.name | quote }}
+  SEMATIC_WORKER_API_ADDRESS: "http://{{ include "sematic-server.fullname" . }}"
