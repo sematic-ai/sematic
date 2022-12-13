@@ -3,7 +3,6 @@ import { Box, Typography } from "@mui/material";
 import { useCallback, useContext, useMemo } from "react";
 import { Artifact, Edge, Resolution, Run } from "../Models";
 import CalculatorPath from "./CalculatorPath";
-import { RunId } from "./Notes";
 import RunTabs, { IOArtifacts } from "./RunTabs";
 import Docstring from "./Docstring";
 import { FlowWithProvider } from "./ReactFlowDag";
@@ -110,10 +109,11 @@ export default function RunPanel(props: {
                   ID: {selectedRun.id}
                   {
                     selectedRun.original_run_id &&
-                    <>
-                      &nbsp;(cloned from&nbsp;
-                      <RunId runId={selectedRun.original_run_id} trim />)
-                    </>
+                    /*
+                      TODO #278: replace full id with a 6-character trimmed
+                      link using "./Notes/RunId"
+                    */
+                    <> (cloned from {selectedRun.original_run_id})</>
                   }
                   </code>
                 </Typography>
