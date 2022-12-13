@@ -7,7 +7,8 @@ from enum import Enum, unique
 from typing import final
 
 # Sematic
-from sematic.utils.exceptions import IllegalStateTransitionError
+from sematic.future_context import SematicContext, context
+from sematic.utils.exceptions import IllegalStateTransitionError, NotInSematicFuncError
 
 logger = logging.getLogger(__name__)
 
@@ -201,8 +202,7 @@ class ExternalResource:
     def _validate_transition(self, updated: "ExternalResource"):
         if self.id != updated.id:
             raise IllegalStateTransitionError(
-                f"Cannot change id of resource from {self.id} to "
-                f"{updated.id}"
+                f"Cannot change id of resource from {self.id} to " f"{updated.id}"
             )
         if (
             self.status.state != updated.status.state
@@ -241,9 +241,29 @@ class ExternalResource:
         raise NotImplementedError(
             "Subclasses of ExternalResource should implement _do_update"
         )
-    
+
     def __enter__(self) -> "ExternalResource":
-        return self
-    
+        try:
+            ctx: SematicContext = context()
+        except NotInSematicFuncError:
+            raise NotInSematicFuncError(
+                f"Called `with {type(self).__name__}(...)`, but the call was not "
+                f"made while executing a Sematic func."
+            )
+        activated = ctx.private.resolver_class().activate_resource_for_run(
+            resource=self, run_id=ctx.run_id, root_id=ctx.root_id
+        )
+        if activated.status.state != ResourceState.ACTIVE:
+            raise IllegalStateTransitionError(
+                f"Resolver {ctx.private.resolver_class()} failed to activate {activated}."
+            )
+        return activated
+
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        pass
+        ctx: SematicContext = context()
+        deactivated = ctx.private.resolver_class().deactivate_resource(self.id)
+        if deactivated.status.state != ResourceState.DEACTIVATED:
+            raise IllegalStateTransitionError(
+                f"Resolver {ctx.private.resolver_class()} failed to "
+                f"deactivate {deactivated}."
+            )
