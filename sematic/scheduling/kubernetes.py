@@ -553,7 +553,6 @@ def _schedule_kubernetes_job(
     environment_vars = dict(environment_vars)
 
     if api_address_override is not None:
-        logger.warning(f"\n\n\nBLUEBERRY: '{api_address_override}'")
         environment_vars[
             UserSettingsVar.SEMATIC_API_ADDRESS.value
         ] = api_address_override
