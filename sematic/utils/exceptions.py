@@ -121,7 +121,13 @@ def format_exception_for_run(
     )
 
 
-class KubernetesError(Exception):
+class InfrastructureError(Exception):
+    """An error originated in compute infrastructure such as Kubernetes."""
+
+    pass
+
+
+class KubernetesError(InfrastructureError):
     """An error originated in external Kubernetes compute infrastructure."""
 
     pass
@@ -129,6 +135,12 @@ class KubernetesError(Exception):
 
 class IllegalStateTransitionError(Exception):
     """A state-machine object made a state transition that was not allowed."""
+
+    pass
+
+
+class NotInSematicFuncError(RuntimeError):
+    """An API intended for usage in a Sematic func was used outside a Sematic func."""
 
     pass
 

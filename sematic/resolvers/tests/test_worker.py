@@ -26,7 +26,7 @@ from sematic.db.queries import (
     save_resolution,
 )
 from sematic.db.tests.fixtures import test_db  # noqa: F401
-from sematic.future_context import SematicContext
+from sematic.future_context import PrivateContext, SematicContext
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.resolvers.worker import main
 from sematic.tests.fixtures import (  # noqa: F401
@@ -93,7 +93,9 @@ def test_main(
         SematicContext(
             run_id=future.id,
             root_id=future.id,
-            resolver_class_path=CloudResolver.classpath(),
+            private=PrivateContext(
+                resolver_class_path=CloudResolver.classpath(),
+            ),
         )
     )
 
@@ -180,7 +182,9 @@ def test_main_func(
         SematicContext(
             run_id=future.id,
             root_id=future.id,
-            resolver_class_path=CloudResolver.classpath(),
+            private=PrivateContext(
+                resolver_class_path=CloudResolver.classpath(),
+            ),
         )
     )
 

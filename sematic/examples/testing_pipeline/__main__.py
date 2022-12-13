@@ -4,11 +4,12 @@ Entry point for the testing pipeline.
 # Standard Library
 import argparse
 import logging
+import os
 import sys
 from typing import Dict
 
 # Sematic
-from sematic import CloudResolver, LocalResolver
+from sematic import CloudResolver, LocalResolver, SilentResolver
 from sematic.examples.testing_pipeline.pipeline import testing_pipeline
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
 
@@ -28,6 +29,11 @@ DESCRIPTION = (
 LOG_LEVEL_HELP = "The log level for the pipeline and Resolver. Defaults to INFO."
 CLOUD_HELP = (
     "Whether to run the resolution in the cloud, or locally. Defaults to False."
+    "Only one of --silent or --cloud are allowed."
+)
+SILENT_HELP = (
+    "Whether to run the resolution using the SilentResolver. Defaults to False. "
+    "Only one of --silent or --cloud are allowed."
 )
 DETACH_HELP = (
     "When in `cloud` mode, whether to detach the execution of the driver job and have it "
@@ -69,6 +75,10 @@ OOM_HELP = (
     "Whether to include a function that causes an Out of Memory error. "
     "Defaults to False."
 )
+EXTERNAL_RESOURCE_HELP = (
+    "Whether to use an artificial external resource when executing some of "
+    "the 'add' functions."
+)
 EXIT_HELP = (
     "Includes a function which will exit with the specified code. "
     "If specified without a value, defaults to 0."
@@ -92,6 +102,12 @@ def _parse_args() -> argparse.Namespace:
         default=False,
         help=CLOUD_HELP,
         **_required_by("--detach", "--max-parallelism", "--oom"),
+    )
+    parser.add_argument(
+        "--silent",
+        action="store_true",
+        default=False,
+        help=SILENT_HELP,
     )
     parser.add_argument(
         "--detach",
@@ -142,6 +158,12 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--oom", action="store_true", default=False, help=OOM_HELP)
     parser.add_argument(
+        "--external-resource",
+        action="store_true",
+        default=False,
+        help=EXTERNAL_RESOURCE_HELP,
+    )
+    parser.add_argument(
         "--exit",
         type=int,
         nargs="?",
@@ -162,11 +184,18 @@ def _parse_args() -> argparse.Namespace:
     if args.fan_out < 0:
         raise ValueError(f"Expected '--fan-out' value to be >= 0; got: {args.fan_out}")
 
+    if args.silent and args.cloud:
+        raise ValueError(
+            "Only one of '--silent' or '--cloud' can be used, but both were specified"
+        )
+
     return args
 
 
 def _get_resolver(args: argparse.Namespace) -> StateMachineResolver:
     """Instantiates the Resolver based on the passed arguments."""
+    if args.silent:
+        return SilentResolver()
     if not args.cloud:
         return LocalResolver(rerun_from=args.rerun_from)
 
@@ -178,6 +207,17 @@ def _get_resolver(args: argparse.Namespace) -> StateMachineResolver:
 
 
 def main() -> None:
+    if os.environ.get("DEBUGPY", None) is not None:
+        try:
+            # Third-party
+            import debugpy
+
+            debugpy.listen(5724)
+
+            # blocks execution until client is attached
+            debugpy.wait_for_client()
+        except ImportError:
+            logger.error("debugpy is not installed, not waiting for debugger to attach")
     args = _parse_args()
     logging.basicConfig(level=args.log_level)
     logger.info("Command line arguments: %s", args)
