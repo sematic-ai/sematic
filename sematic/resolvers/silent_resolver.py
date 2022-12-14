@@ -73,10 +73,19 @@ class SilentResolver(StateMachineResolver):
         cls._resource_manager.save_resource(resource)
         cls._resource_manager.link_resource_to_run(resource.id, run_id, root_id)
         time_started = time.time()
-        resource = resource.activate(is_local=True)
+        try:
+            resource = resource.activate(is_local=True)
+        except Exception as e:
+            raise InfrastructureError(
+                f"Could not activate resource with id {resource.id}: {e}"
+            ) from e
         cls._resource_manager.save_resource(resource)
         while resource.status.state != ResourceState.ACTIVE:
-            resource = resource.update()
+            try:
+                resource = resource.update()
+            except Exception as e:
+                logger.error("Error getting latest state from resource %s: %s", resource.id, e)
+                continue
             cls._resource_manager.save_resource(resource)
             if resource.status.state.is_terminal():
                 raise InfrastructureError(
@@ -96,10 +105,19 @@ class SilentResolver(StateMachineResolver):
         if resource.status.state.is_terminal():
             return resource
         time_started = time.time()
-        resource = resource.deactivate()
+        try:
+            resource = resource.deactivate()
+        except Exception as e:
+            raise InfrastructureError(
+                f"Could not deactivate resource with id {resource.id}: {e}"
+            ) from e
         cls._resource_manager.save_resource(resource)
         while not resource.status.state.is_terminal():
-            resource = resource.update()
+            try:
+                resource = resource.update()
+            except Exception as e:
+                logger.error("Error getting latest state from resource %s: %s", resource.id, e)
+                continue
             cls._resource_manager.save_resource(resource)
             if time.time() - time_started > _RESOURCE_ACTIVATION_TIMEOUT_SECONDS:
                 raise InfrastructureError(

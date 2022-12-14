@@ -45,6 +45,7 @@ pytest_test(
     name = "test_external_resource",
     srcs = ["test_external_resource.py"],
     deps = [
+        "//sematic:calculator",
         "//sematic:external_resource",
     ],
 )

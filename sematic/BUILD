@@ -100,6 +100,7 @@ sematic_py_lib(
     srcs = ["external_resource.py"],
     deps = [
         "//sematic:future_context",
+        "//sematic/types:registry",
         "//sematic/utils:exceptions",
     ],
 )
