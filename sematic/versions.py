@@ -14,7 +14,7 @@ CURRENT_VERSION = (0, 21, 1)
 # Represents the smallest client version that works with the server
 # at the CURRENT_VERSION. Should be updated any time a breaking change
 # is made to the web API.
-MIN_CLIENT_SERVER_SUPPORTS = (0, 19, 0)
+MIN_CLIENT_SERVER_SUPPORTS = (0, 21, 1)
 
 # Support for dropping columns added in 3.35.0
 MIN_SQLITE_VERSION = (3, 35, 0)
