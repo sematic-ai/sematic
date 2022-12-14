@@ -40,8 +40,10 @@ pytest_test(
     name = "test_silent_resolver",
     srcs = ["test_silent_resolver.py"],
     deps = [
+        ":fixtures",
         "//sematic:abstract_calculator",
         "//sematic:calculator",
+        "//sematic:external_resource",
         "//sematic:future_context",
         "//sematic:retry_settings",
         "//sematic/resolvers:silent_resolver",
@@ -102,5 +104,6 @@ sematic_py_lib(
     ],
     deps = [
         "//sematic/tests:fixtures",
+        "//sematic:external_resource",
     ],
 )

@@ -1,5 +1,4 @@
 # Standard Library
-import time
 from dataclasses import dataclass, replace
 
 # Third-party
@@ -13,6 +12,7 @@ from sematic.external_resource import (
     ResourceState,
     ResourceStatus,
 )
+from sematic.resolvers.silent_resolver import SilentResolver
 
 
 def test_update():
@@ -25,7 +25,6 @@ def test_update():
                 status=ResourceStatus(
                     state=ResourceState.DEACTIVATED,
                     message=updated_message,
-                    last_update_epoch_time=int(time.time()),
                 ),
             )
 
@@ -36,7 +35,6 @@ def test_update():
         status=ResourceStatus(
             state=ResourceState.DEACTIVATING,
             message="tearing down the whatever",
-            last_update_epoch_time=int(time.time()),
         )
     ).update()
     assert updated.status.message == updated_message
@@ -54,7 +52,6 @@ def test_activate():
                 status=ResourceStatus(
                     state=ResourceState.ACTIVATING,
                     message="updating",
-                    last_update_epoch_time=int(time.time()),
                 ),
             )
 
@@ -74,7 +71,6 @@ def test_activate():
                 status=ResourceStatus(
                     state=ResourceState.DEACTIVATING,
                     message="updating",
-                    last_update_epoch_time=int(time.time()),
                 ),
             )
 
@@ -91,7 +87,6 @@ def test_deactivate():
                 status=ResourceStatus(
                     state=ResourceState.DEACTIVATING,
                     message="updating",
-                    last_update_epoch_time=int(time.time()),
                 ),
             )
 
@@ -102,7 +97,6 @@ def test_deactivate():
         status=ResourceStatus(
             state=ResourceState.ACTIVE,
             message="",
-            last_update_epoch_time=int(time.time()),
         )
     ).deactivate()
     assert deactivating.status.state == ResourceState.DEACTIVATING
@@ -115,7 +109,6 @@ def test_deactivate():
                 status=ResourceStatus(
                     state=ResourceState.ACTIVE,
                     message="updating",
-                    last_update_epoch_time=int(time.time()),
                 ),
             )
 
@@ -125,6 +118,7 @@ def test_deactivate():
 
 def test_valid_transitions():
     assert ResourceState.CREATED.is_allowed_transition(ResourceState.ACTIVATING)
+    assert ResourceState.CREATED.is_allowed_transition(ResourceState.DEACTIVATED)
     assert not ResourceState.CREATED.is_allowed_transition(ResourceState.ACTIVE)
 
     assert ResourceState.ACTIVATING.is_allowed_transition(ResourceState.ACTIVE)
@@ -152,3 +146,40 @@ def test_use_in_func():
         @func
         def my_func(resource: ExternalResource) -> int:
             return 42
+
+
+@dataclass(frozen=True)
+class SomeImpl(ExternalResource):
+    my_field: int = 42
+
+    def _do_activate(self, is_local):
+        return replace(
+            self,
+            status=ResourceStatus(
+                state=ResourceState.ACTIVATING,
+                message="updating",
+            ),
+        )
+
+
+@func
+def pass_through_int(x: int) -> int:
+    return x
+
+
+@func
+def invalid_use_in_pipeline() -> int:
+    intermediate = pass_through_int(42)
+    with SomeImpl(my_field=intermediate):
+        return pass_through_int(intermediate)
+
+
+def test_using_future():
+    error = None
+    try:
+        invalid_use_in_pipeline().resolve(SilentResolver())
+    except Exception as e:
+        error = e
+    assert "SomeImpl" in str(error)
+    assert "my_field" in str(error)
+    assert "pass_through_int" in str(error)

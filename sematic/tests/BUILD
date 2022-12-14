@@ -47,6 +47,7 @@ pytest_test(
     deps = [
         "//sematic:calculator",
         "//sematic:external_resource",
+        "//sematic/resolvers:silent_resolver",
     ],
 )
 

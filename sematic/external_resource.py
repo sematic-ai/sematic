@@ -2,14 +2,19 @@
 import logging
 import time
 import uuid
-from dataclasses import dataclass, field, is_dataclass
+from dataclasses import dataclass, field, fields, is_dataclass, replace
 from enum import Enum, unique
-from typing import final
+from typing import TypeVar, final
 
 # Sematic
+from sematic.abstract_future import AbstractFuture
 from sematic.future_context import SematicContext, context
 from sematic.types.registry import register_type_assertion
-from sematic.utils.exceptions import IllegalStateTransitionError, NotInSematicFuncError
+from sematic.utils.exceptions import (
+    IllegalStateTransitionError,
+    IllegalUseOfFutureError,
+    NotInSematicFuncError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +70,12 @@ _ALLOWED_TRANSITIONS = {
     ResourceState.CREATED: {
         # Created -> Activating: normal progression for activation
         ResourceState.ACTIVATING,
+        # Created -> Deactivated: after creating the resource,
+        # but before starting to activate it, it was decided
+        # to not activate the resource after all. Since no activation
+        # was performed, there is no need to do anything for deactivation
+        # so we can skip DEACTIVATING.
+        ResourceState.DEACTIVATED,
     },
     ResourceState.ACTIVATING: {
         # Activating -> Active: normal progression for successful activation
@@ -102,7 +113,10 @@ class ResourceStatus:
 
     state: ResourceState
     message: str
-    last_update_epoch_time: int
+    last_update_epoch_time: int = field(default_factory=lambda: int(time.time()))
+
+
+T = TypeVar("T")
 
 
 @dataclass(frozen=True)
@@ -134,11 +148,24 @@ class ExternalResource:
         default_factory=lambda: ResourceStatus(
             state=ResourceState.CREATED,
             message="Resource has not been activated yet",
-            last_update_epoch_time=int(time.time()),
         )
     )
 
     def __post_init__(self):
+        for field_ in fields(self):
+            field_value = getattr(self, field_.name)
+            if isinstance(field_value, AbstractFuture):
+                func_name = {field_value.calculator.__name__}
+                type_name = type(self).__name__
+                raise IllegalUseOfFutureError(
+                    f"Tried to instantiate {type_name} with a future for the "
+                    f"value of the field '{field_.name}'. The future appears to be the "
+                    f"return value from a call to '{func_name}'. "
+                    f"If you wish to use {type_name} downstream from "
+                    f"'{func_name}', consider wrapping the code "
+                    f"using {type_name} in a new Sematic func and passing the "
+                    f"output of {func_name} to that new func."
+                )
         try:
             uuid.UUID(hex=self.id)
         except ValueError:
@@ -185,14 +212,26 @@ class ExternalResource:
         -------
         An updated copy of the object
         """
-        logger.debug("Deactivating %s", self)
-        updated = self._do_deactivate()
-        self._validate_transition(updated)
-        if updated.status.state != ResourceState.DEACTIVATING:
-            raise IllegalStateTransitionError(
-                "Calling .deactivate() did not leave the resource in the "
-                "DEACTIVATING state."
+        if self.status.state == ResourceState.CREATED:
+            logger.warning(
+                "Deactivating resource before it was ever activated: %s", self.id
             )
+            updated = replace(
+                self,
+                status=ResourceStatus(
+                    state=ResourceState.DEACTIVATED,
+                    message="Resource activation was canceled.",
+                ),
+            )
+        else:
+            logger.debug("Deactivating %s", self)
+            updated = self._do_deactivate()
+            if updated.status.state != ResourceState.DEACTIVATING:
+                raise IllegalStateTransitionError(
+                    "Calling .deactivate() did not leave the resource in the "
+                    "DEACTIVATING state."
+                )
+        self._validate_transition(updated)
         return updated
 
     def _do_deactivate(self) -> "ExternalResource":
@@ -243,7 +282,10 @@ class ExternalResource:
             "Subclasses of ExternalResource should implement _do_update"
         )
 
-    def __enter__(self) -> "ExternalResource":
+    # type annotation with the type var so mypy knows that
+    # what is returned is an instance of the same subclass
+    # as is used when entering the 'with' context.
+    def __enter__(self: T) -> T:
         try:
             ctx: SematicContext = context()
         except NotInSematicFuncError:
@@ -251,16 +293,22 @@ class ExternalResource:
                 f"Called `with {type(self).__name__}(...)`, but the call was not "
                 f"made while executing a Sematic func."
             )
-        activated = ctx.private.resolver_class().activate_resource_for_run(
-            resource=self, run_id=ctx.run_id, root_id=ctx.root_id
-        )
-        if activated.status.state != ResourceState.ACTIVE:
-            raise IllegalStateTransitionError(
-                f"Resolver {ctx.private.resolver_class()} failed to activate {activated}."
+        try:
+            activated = ctx.private.resolver_class().activate_resource_for_run(
+                resource=self, run_id=ctx.run_id, root_id=ctx.root_id
             )
-        return activated
+            if activated.status.state != ResourceState.ACTIVE:
+                raise IllegalStateTransitionError(
+                    f"Resolver {ctx.private.resolver_class()} failed to "
+                    f"activate {activated}."
+                )
+            return activated
+        except Exception:
+            assert isinstance(self, ExternalResource)  # satisfies mypy
+            self.__exit__()
+            raise
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
+    def __exit__(self, exc_type=None, exc_value=None, exc_traceback=None):
         ctx: SematicContext = context()
         deactivated = ctx.private.resolver_class().deactivate_resource(self.id)
         if deactivated.status.state != ResourceState.DEACTIVATED:
