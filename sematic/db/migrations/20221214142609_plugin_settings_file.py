@@ -19,7 +19,7 @@ def up():
 
     schema_version = user_loaded_yaml.get("version", 0)
 
-    if schema_version >= THIS_MIGRATION_SCHEMA_VERSION:
+    if schema_version != THIS_MIGRATION_SCHEMA_VERSION - 1:
         raise RuntimeError("Exception ran in incorrect order")
 
     new_settings = {
