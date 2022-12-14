@@ -12,9 +12,10 @@ from sematic.types.registry import (
     _validate_registry_keys,
     is_parameterized_generic,
     is_supported_type_annotation,
-    validate_type_annotation,
     register_type_assertion,
+    validate_type_annotation,
 )
+
 
 @unique
 class Color(Enum):
@@ -42,6 +43,7 @@ class FooAbcMeta(metaclass=ABCMeta):
     @abstractmethod
     def do_foo(self):
         pass
+
 
 class TypeWithCustomSupportMessage:
     pass

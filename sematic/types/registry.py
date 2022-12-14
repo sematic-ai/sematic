@@ -66,6 +66,7 @@ _CAN_CAST_REGISTRY: Dict[RegistryKey, CanCastTypeCallable] = {}
 
 _TYPE_ASSERTIONS: List[TypeAssertionCallable] = []
 
+
 def is_enum(type_: typing.Type[Any]) -> bool:
     """Determine if the given type is an enum type or not
 
@@ -241,7 +242,9 @@ def register_to_json_encodable_summary(
     return _register_to_json_encodable_summary
 
 
-def register_type_assertion(type_assertion: TypeAssertionCallable) -> TypeAssertionCallable:
+def register_type_assertion(
+    type_assertion: TypeAssertionCallable,
+) -> TypeAssertionCallable:
     """Register an assertion that can raise a helpful error message for specific types.
 
     Intended to be used as a decorator on a callable.
@@ -254,6 +257,7 @@ def register_type_assertion(type_assertion: TypeAssertionCallable) -> TypeAssert
         (b) raise a specific helpful TypeError message if the type is not valid
     """
     _TYPE_ASSERTIONS.append(type_assertion)
+    return type_assertion
 
 
 def get_to_json_encodable_summary_func(
@@ -317,7 +321,7 @@ def validate_type_annotation(*types: TypeAnnotation) -> None:
             raise TypeError(
                 "'Any' is not a Sematic-supported type. Use 'object' instead."
             )
-        
+
         if _is_type(type_):
             for assertion in _TYPE_ASSERTIONS:
                 assertion(type_)

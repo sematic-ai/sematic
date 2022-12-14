@@ -8,8 +8,8 @@ from typing import final
 
 # Sematic
 from sematic.future_context import SematicContext, context
-from sematic.utils.exceptions import IllegalStateTransitionError, NotInSematicFuncError
 from sematic.types.registry import register_type_assertion
+from sematic.utils.exceptions import IllegalStateTransitionError, NotInSematicFuncError
 
 logger = logging.getLogger(__name__)
 
@@ -268,6 +268,7 @@ class ExternalResource:
                 f"Resolver {ctx.private.resolver_class()} failed to "
                 f"deactivate {deactivated}."
             )
+
 
 @register_type_assertion
 def assert_supported_sematic_type(type_annotation) -> None:
