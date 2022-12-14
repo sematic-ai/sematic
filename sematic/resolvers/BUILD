@@ -54,6 +54,7 @@ sematic_py_lib(
     deps = [
         ":local_resolver",
         "//sematic:abstract_future",
+        "//sematic:external_resource",
         "//sematic:container_images",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",

@@ -12,6 +12,7 @@ from sematic.external_resource import (
     ResourceState,
     ResourceStatus,
 )
+from sematic.calculator import func
 
 
 def test_update():
@@ -139,3 +140,14 @@ def test_valid_transitions():
     assert not ResourceState.DEACTIVATED.is_allowed_transition(
         ResourceState.DEACTIVATING
     )
+
+
+def test_use_in_func():
+    error_regex = (
+        r".*for argument 'resource' of sematic.tests.test_external_resource.my_func"
+        r".* inside the body.*"
+    )
+    with pytest.raises(TypeError, match=error_regex):
+        @func
+        def my_func(resource: ExternalResource) -> int:
+            return 42

@@ -13,8 +13,8 @@ from sematic.types.registry import (
     is_parameterized_generic,
     is_supported_type_annotation,
     validate_type_annotation,
+    register_type_assertion,
 )
-
 
 @unique
 class Color(Enum):
@@ -43,6 +43,16 @@ class FooAbcMeta(metaclass=ABCMeta):
     def do_foo(self):
         pass
 
+class TypeWithCustomSupportMessage:
+    pass
+
+
+@register_type_assertion
+def check_for_custom_support_type(type_):
+    if not issubclass(type_, TypeWithCustomSupportMessage):
+        return
+    raise TypeError("This type is not supported because blah blah blah.")
+
 
 def test_validate_type_annotation():
     validate_type_annotation(int)
@@ -67,6 +77,8 @@ def test_validate_type_annotation():
         validate_type_annotation(Any)
     with pytest.raises(TypeError, match=r"typing.Union must be parametrized.*"):
         validate_type_annotation(Union)
+    with pytest.raises(TypeError, match=r".*blah blah blah.*"):
+        validate_type_annotation(TypeWithCustomSupportMessage)
 
 
 def test_is_supported_type_annotation():

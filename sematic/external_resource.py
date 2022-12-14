@@ -2,13 +2,14 @@
 import logging
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, is_dataclass
 from enum import Enum, unique
 from typing import final
 
 # Sematic
 from sematic.future_context import SematicContext, context
 from sematic.utils.exceptions import IllegalStateTransitionError, NotInSematicFuncError
+from sematic.types.registry import register_type_assertion
 
 logger = logging.getLogger(__name__)
 
@@ -267,3 +268,15 @@ class ExternalResource:
                 f"Resolver {ctx.private.resolver_class()} failed to "
                 f"deactivate {deactivated}."
             )
+
+@register_type_assertion
+def assert_supported_sematic_type(type_annotation) -> None:
+    if not is_dataclass(type_annotation):
+        return
+    if not issubclass(type_annotation, ExternalResource):
+        return
+    raise TypeError(
+        "ExternalResource objects can't be passed into or out of "
+        "Sematic funcs. They are only intended to be used inside "
+        "the body of a Sematic func."
+    )
