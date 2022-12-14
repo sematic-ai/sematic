@@ -6,13 +6,13 @@ from dataclasses import dataclass, replace
 import pytest
 
 # Sematic
+from sematic.calculator import func
 from sematic.external_resource import (
     ExternalResource,
     IllegalStateTransitionError,
     ResourceState,
     ResourceStatus,
 )
-from sematic.calculator import func
 
 
 def test_update():
@@ -148,6 +148,7 @@ def test_use_in_func():
         r".* inside the body.*"
     )
     with pytest.raises(TypeError, match=error_regex):
+
         @func
         def my_func(resource: ExternalResource) -> int:
             return 42

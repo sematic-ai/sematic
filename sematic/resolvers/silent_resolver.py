@@ -67,7 +67,7 @@ class SilentResolver(StateMachineResolver):
         pass
 
     @classmethod
-    def activate_resource_for_run(
+    def activate_resource_for_run(  # type: ignore
         cls, resource: ExternalResource, run_id: str, root_id: str
     ) -> ExternalResource:
         cls._resource_manager.save_resource(resource)
@@ -84,7 +84,9 @@ class SilentResolver(StateMachineResolver):
             try:
                 resource = resource.update()
             except Exception as e:
-                logger.error("Error getting latest state from resource %s: %s", resource.id, e)
+                logger.error(
+                    "Error getting latest state from resource %s: %s", resource.id, e
+                )
                 continue
             cls._resource_manager.save_resource(resource)
             if resource.status.state.is_terminal():
@@ -100,7 +102,7 @@ class SilentResolver(StateMachineResolver):
         return resource
 
     @classmethod
-    def deactivate_resource(cls, resource_id: str) -> ExternalResource:
+    def deactivate_resource(cls, resource_id: str) -> ExternalResource:  # type: ignore
         resource = cls._resource_manager.get_resource_for_id(resource_id)
         if resource.status.state.is_terminal():
             return resource
@@ -116,7 +118,9 @@ class SilentResolver(StateMachineResolver):
             try:
                 resource = resource.update()
             except Exception as e:
-                logger.error("Error getting latest state from resource %s: %s", resource.id, e)
+                logger.error(
+                    "Error getting latest state from resource %s: %s", resource.id, e
+                )
                 continue
             cls._resource_manager.save_resource(resource)
             if time.time() - time_started > _RESOURCE_ACTIVATION_TIMEOUT_SECONDS:

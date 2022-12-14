@@ -19,12 +19,11 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
+from sematic.external_resource import ExternalResource
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
 from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.utils.memoized_property import memoized_property
-from sematic.external_resource import ExternalResource
-
 
 logger = logging.getLogger(__name__)
 
@@ -392,12 +391,14 @@ class CloudResolver(LocalResolver):
     def _get_remote_runs_count(self) -> int:
         """Returns the known number of futures in the SCHEDULED state."""
         return sum(map(lambda f: f.state == FutureState.SCHEDULED, self._futures))
-    
+
     @classmethod
-    def activate_resource_for_run(
+    def activate_resource_for_run(  # type: ignore
         cls, resource: ExternalResource, run_id: str, root_id: str
     ) -> ExternalResource:
-        raise NotImplementedError("External resources not implemented for CloudResolver yet")
+        raise NotImplementedError(
+            "External resources not implemented for CloudResolver yet"
+        )
 
 
 def make_nested_future_storage_key(future_id: str) -> str:
