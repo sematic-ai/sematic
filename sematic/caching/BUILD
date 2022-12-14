@@ -18,3 +18,13 @@ sematic_py_lib(
         "//sematic/types:serialization",
     ],
 )
+
+sematic_py_lib(
+    name = "git",
+    srcs = ["git.py"],
+    pip_deps = [],
+    deps = [
+        "//sematic:abstract_future",
+        "//sematic/utils:git",
+    ],
+)
