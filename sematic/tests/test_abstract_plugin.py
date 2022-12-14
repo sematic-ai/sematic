@@ -1,8 +1,12 @@
 # Sematic
-from sematic.abstract_plugin import AbstractPlugin
+from sematic.abstract_plugin import AbstractPlugin, AbstractPluginSettingsVar
 
 
-class TestPlugin(AbstractPlugin):
+class FooPluginSettingsVar(AbstractPluginSettingsVar):
+    pass
+
+
+class FooPlugin(AbstractPlugin):
     @staticmethod
     def get_author() -> str:
         return "The Knights who say ni"
@@ -11,10 +15,14 @@ class TestPlugin(AbstractPlugin):
     def get_version():
         return (0, 1, 0)
 
+    @classmethod
+    def get_settings_vars(cls):
+        return FooPluginSettingsVar
+
 
 def test_plugin_path():
-    assert TestPlugin.get_path() == "sematic.tests.test_abstract_plugin.TestPlugin"
+    assert FooPlugin.get_path() == "sematic.tests.test_abstract_plugin.FooPlugin"
 
 
 def test_name():
-    assert TestPlugin.get_name() == "TestPlugin"
+    assert FooPlugin.get_name() == "FooPlugin"

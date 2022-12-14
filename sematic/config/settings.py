@@ -3,8 +3,8 @@ import distutils.util
 import enum
 import logging
 import os
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal, Optional, Type, Union, cast
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 # Third-party
 import yaml
@@ -12,7 +12,7 @@ import yaml
 # Sematic
 from sematic.abstract_plugin import (
     AbstractPlugin,
-    MissingPluginError,
+    AbstractPluginSettingsVar,
     PluginScope,
     import_plugin,
 )
@@ -22,292 +22,174 @@ logger = logging.getLogger(__name__)
 
 
 DEFAULT_PROFILE = "default"
+CURRENT_SETTINGS_SCHEMA_VERSION = 0
 
-
-class AbstractSettingsVar(enum.Enum):
-    """
-    Abstract base class for lists of settings vars
-    """
-
-    pass
-
-
-# Plugins section sub-keys
-# Scopes is where users select which plug-ins to activate for a particular scope
-# In that section, keys are plug-in scopes (see sematic.abstrac_plugin.PluginScope)
-# values are lists of full import paths of activated plugins for scope.
-# Multiple plugins can be active (e.g. AUTH scope).
-PLUGINS_SCOPES_KEY: Literal["scopes"] = "scopes"
-# Plug-in specific settings. Keys are plug-in names, values are mappings of
-# settings name to settings value. settings name should be unique across all
-# namespaces so as to be overridable from the CLI.
-PLUGINS_SETTINGS_KEY: Literal["settings"] = "settings"
-
-# Unfortunately we cannot use the above constants to define the literal below
-# Literal must be statically defined
-PluginsSettings = Dict[Union[Literal["scopes"], Literal["settings"]], Any]
-
-
-class ProfileSettings(Dict[AbstractSettingsVar, Union[str, PluginsSettings]]):
-    """
-    Settings for a given profile (e.g. default).
-    """
-
-    pass
-
-
-class Settings(Dict[str, ProfileSettings]):
-    """
-    Mapping of profile name to ProfileSettings.
-    """
-
-    pass
-
-
-class MissingSettingsError(Exception):
-    def __init__(self, missing_settings: AbstractSettingsVar, cli_command: str):
-        # TODO #264: this bleeds cli implementations details
-        # this message should be set when triaging all exceptions before being surfaced
-        # to the user
-        message = f"""
-Missing setting: {missing_settings.value}
-
-Set it with:
-
-    $ sematic {cli_command} set {missing_settings.value} VALUE
-"""
-        super().__init__(message)
-
-
-class MissingPluginSettingsError(Exception):
-    """
-    An exception separate from MissingSettingsError because we currently don't
-    support settings plug-in settings from the CLI.
-    """
-
-    def __init__(self, plugin_name: str, missing_setting_name: str):
-        message = f"""
-Missing setting: {missing_setting_name} for plugin {plugin_name}.
-
-See https://docs.sematic.dev/plugins.
-"""
-
-        super().__init__(message)
+PluginScopes = Dict[PluginScope, List[str]]
+PluginSettings = Dict[AbstractPluginSettingsVar, str]
+PluginsSettings = Dict[str, PluginSettings]
 
 
 @dataclass
-class SettingsScope:
-    """
-    Dataclass to contain information about a certain settings scope (e.g. user,
-    server, etc).
+class ProfileSettings:
+    scopes: PluginScopes
+    settings: PluginsSettings
 
-    Instances of this classes also contain the cached settings value.
 
-    Parameters
-    ----------
-    file_name: str
-        Name of the YAML file containing settings value for this scope.
-    cli_command: str
-        Command to set/get settings values for this scope.
-    vars: Type[AbstractSettingsVar]
-        Enum of available settings for this scope
-    """
+@dataclass
+class Settings:
+    version: int
+    profiles: Dict[str, ProfileSettings]
 
-    file_name: str
-    cli_command: str
-    vars: Type[AbstractSettingsVar]
-    _settings: Optional[Settings] = field(init=False, default=None)
-    _active_settings: Optional[ProfileSettings] = field(init=False, default=None)
+    @classmethod
+    def make_default(cls):
+        return Settings(
+            version=CURRENT_SETTINGS_SCHEMA_VERSION,
+            profiles={DEFAULT_PROFILE: ProfileSettings(scopes={}, settings={})},
+        )
 
-    @property
-    def settings_file_path(self) -> str:
-        """
-        Full path of settings YAML file.
-        """
-        return os.path.join(get_config_dir(), self.file_name)
 
-    def get_settings(self) -> Settings:
-        """
-        Get and cache content of settings file filtered to available settings
-        for this scope.
-        """
-        if self._settings is None:
-            self._settings = _load_settings(self.settings_file_path, self.vars)
+class MissingSettingsError(Exception):
+    def __init__(
+        self,
+        plugin: Type[AbstractPlugin],
+        var: Optional[AbstractPluginSettingsVar] = None,
+    ):
+        # TODO #264: this bleeds cli implementations details
+        # this message should be set when triaging all exceptions before being surfaced
+        # to the user
+        command = (
+            "server-settings" if plugin.get_name() == "ServerSettings" else "settings"
+        )
+        option = (
+            ""
+            if plugin.get_name() in ("UserSettings", "ServerSettings")
+            else f"-p {plugin.get_path()}"
+        )
+        var_str = "VAR" if var is None else var.value
 
-        return self._settings
+        message = f"""
+Missing setting:
 
-    def get_active_settings(self) -> ProfileSettings:
-        """
-        Get and cache effective settings value for current profile (default).
+Set it with:
 
-        This also applies env var overrides.
-        """
-        if self._active_settings is None:
-            self._active_settings = self.get_settings()[DEFAULT_PROFILE]
-            _apply_env_var_overrides(self._active_settings, self.vars)
+    $ sematic {command} set {var_str} VALUE {option}
+"""
+        super().__init__(message)
 
-        return self._active_settings
 
-    def get_active_settings_as_dict(self) -> Dict[str, Union[str, PluginsSettings]]:
-        """
-        Active settings as a dictionary.
-        """
-        return {var.value: value for var, value in self.get_active_settings().items()}
+_SETTINGS: Optional[Settings] = None
 
-    def get_setting(self, var: AbstractSettingsVar, *args) -> str:
-        """
-        Retrieves and returns the specified settings value, with environment
-        override.
 
-        Loads and returns the specified settings value. If it does not exist, it
-        falls back on the first optional vararg as a default value. If that does
-        not exist, it raises.
-        """
-        value = self.get_active_settings().get(var)
+def get_settings_file_path():
+    return os.path.join(get_config_dir(), "settings.yaml")
 
-        if value is not None:
-            return str(value)
 
-        if len(args) >= 1:
+def get_settings() -> Settings:
+    global _SETTINGS
+
+    if _SETTINGS is None:
+        _SETTINGS = _load_settings(get_settings_file_path())
+
+    return _SETTINGS
+
+
+def get_active_settings() -> ProfileSettings:
+    global _SETTINGS
+
+    if _SETTINGS is None:
+        settings = get_settings()
+
+        profile_settings = settings.profiles[DEFAULT_PROFILE]
+
+        for plugin_path, plugin_settings in profile_settings.settings.items():
+            plugin_settings_vars = _get_plugin_settings_vars(plugin_path)
+            _apply_env_var_overrides(plugin_settings, plugin_settings_vars)
+
+    return get_settings().profiles[DEFAULT_PROFILE]
+
+
+def get_active_plugins(
+    scope: PluginScope, default: List[Type[AbstractPlugin]]
+) -> List[Type[AbstractPlugin]]:
+    scopes = get_active_settings().scopes
+
+    if scope not in scopes:
+        return default
+
+    imported_plugins = [import_plugin(plugin_path) for plugin_path in scopes[scope]]
+
+    return imported_plugins
+
+
+def get_plugin_settings(
+    plugin: Type[AbstractPlugin],
+) -> Dict[AbstractPluginSettingsVar, str]:
+    settings = get_active_settings().settings
+
+    plugin_path = plugin.get_path()
+
+    if plugin_path not in settings:
+        raise MissingSettingsError(plugin)
+
+    return settings[plugin_path]
+
+
+def get_plugin_setting(
+    plugin: Type[AbstractPlugin], var: AbstractPluginSettingsVar, *args
+) -> str:
+    try:
+        plugin_settings = get_plugin_settings(plugin)
+    except MissingSettingsError:
+        plugin_settings = {}
+
+    if var not in plugin_settings:
+        if len(args) > 0:
             return args[0]
 
-        raise MissingSettingsError(var, self.cli_command)
+        raise MissingSettingsError(plugin, var)
 
-    def get_plugin_settings(self, var: AbstractSettingsVar) -> PluginsSettings:
-        """
-        Get the plugin section of the settings file.
-        """
-        value = self.get_active_settings().get(var, {})
+    return plugin_settings[var]
 
-        if value is not None and not isinstance(value, dict):
-            raise ValueError(f"{var.value} does not point to a plugins setting group")
 
-        value[PLUGINS_SCOPES_KEY] = value.get(PLUGINS_SCOPES_KEY, {})
-        value[PLUGINS_SETTINGS_KEY] = value.get(PLUGINS_SETTINGS_KEY, {})
+def import_plugins():
+    scopes = get_active_settings().scopes
 
-        for map in value[PLUGINS_SETTINGS_KEY].values():
-            for key in map:
-                if key in os.environ:
-                    logger.debug("Overriding %s from environment variable", key)
-                    map[key] = os.environ[key]
+    for selected_plugins in scopes.values():
+        for plugin_path in selected_plugins:
+            import_plugin(plugin_path)
 
-        return cast(PluginsSettings, value)
 
-    def import_plugins(self, var: AbstractSettingsVar) -> None:
-        """
-        Import all plugins for the current settings scope.
+def set_plugin_setting(
+    plugin: Type[AbstractPlugin], var: AbstractPluginSettingsVar, value: str
+):
+    try:
+        plugin_settings = get_plugin_settings(plugin)
+    except MissingSettingsError:
+        plugin_settings = {}
+        get_active_settings().settings[plugin.get_path()] = plugin_settings
 
-        This is useful when plug-ins have initialization code that
-        needs to be executed at import time (e.g. registering an endpoint).
-        """
-        plugin_scopes = self.get_plugin_settings(var)[PLUGINS_SCOPES_KEY]
+    plugin_settings[var] = value
 
-        for plugin_scope in PluginScope:
-            if plugin_scope.value not in plugin_scopes:
-                continue
+    save_settings(get_settings())
 
-            plugin_import_paths = plugin_scopes[plugin_scope.value]
-            for plugin_import_path in plugin_import_paths:
-                try:
-                    import_plugin(plugin_import_path)
-                except MissingPluginError:
-                    logger.warning(f"Cannot find plugin: {plugin_import_path}")
 
-    def get_selected_plugins(
-        self,
-        scope: PluginScope,
-        default: List[Type[AbstractPlugin]],
-        var: AbstractSettingsVar,
-    ) -> List[Type[AbstractPlugin]]:
-        """
-        Get the list of selected plug-ins for a given scope.
+def delete_plugin_setting(plugin: Type[AbstractPlugin], var: AbstractPluginSettingsVar):
+    try:
+        plugin_settings = get_plugin_settings(plugin)
+    except MissingSettingsError:
+        return
 
-        Selected plug-ins are set in the server settings YAML file.
+    if var in plugin_settings:
+        del plugin_settings[var]
 
-        Parameters
-        ----------
-        scope: PluginScope
-            Scope whose selected plug-ins to return.
-        default: List[Type[AbstractPlugin]]
-            If no plug-ins were selected for scope, use these.
-        var: AbstractSettingsVar
-            Plugins settings section
+    save_settings(get_settings())
 
-        Returns
-        -------
-        List[AbstractPlugin]
-            List of selected plug-ins for scope.
-        """
 
-        active_settings = self.get_active_settings()
+def save_settings(settings: Settings):
+    yaml_output = yaml.dump(settings, Dumper=EnumDumper)
 
-        plugins_settings = cast(
-            PluginsSettings,
-            active_settings.get(var, {PLUGINS_SCOPES_KEY: {}}),
-        )
-
-        plugin_paths: List[str] = plugins_settings.get(PLUGINS_SCOPES_KEY, {}).get(
-            scope.value, []
-        )
-
-        if len(plugin_paths) == 0:
-            return default
-
-        return [import_plugin(plugin_path) for plugin_path in plugin_paths]
-
-    def set_setting(self, var: AbstractSettingsVar, value: str) -> None:
-        """
-        Set value for setting.
-
-        Parameters
-        ----------
-        var: AbstractSettingsVar
-            setting to set
-        value: str
-            value to set
-        """
-        if var not in self.vars:
-            raise ValueError(f"Unknown setting {var.value}")
-
-        settings = self.get_settings()
-
-        settings[DEFAULT_PROFILE][var] = value
-
-        self.save_settings(settings)
-
-        # Void cache to force refresh
-        self._active_settings = None
-
-    def delete_setting(self, var: AbstractSettingsVar) -> None:
-        """
-        Delete setting value.
-
-        Parameters
-        ----------
-        var: AbstractSettingsVar
-            Setting to delete
-        """
-        if var not in self.vars:
-            raise ValueError(f"Unknown setting {var.value}")
-
-        settings = self.get_settings()
-
-        if var in settings[DEFAULT_PROFILE]:
-            del settings[DEFAULT_PROFILE][var]
-
-        self.save_settings(settings)
-
-        # Void cache to force refresh
-        self._active_settings = None
-
-    def save_settings(self, settings: Settings) -> None:
-        """
-        Persists the specified settings to the specified settings file.
-        """
-        yaml_output = yaml.dump(settings, Dumper=EnumDumper)
-
-        with open(self.settings_file_path, "w") as f:
-            f.write(yaml_output)
+    with open(get_settings_file_path(), "w") as f:
+        f.write(yaml_output)
 
 
 class EnumDumper(yaml.Dumper):
@@ -348,7 +230,67 @@ def as_bool(value: Optional[Any]) -> bool:
     return bool(distutils.util.strtobool(str_value))
 
 
-def _normalize_enum(enum_type: Type[AbstractSettingsVar], obj: Any):
+def _load_settings(file_path: str) -> Settings:
+    """
+    Loads the settings from the specified settings file, returning their raw string
+    representations, or an empty dict if the file is not found.
+    """
+    loaded_settings: Dict[str, Any] = {}
+
+    try:
+        with open(file_path, "r") as f:
+            loaded_yaml = yaml.load(f, yaml.Loader)
+
+        if loaded_yaml is not None:
+            loaded_settings = loaded_yaml
+    except FileNotFoundError:
+        logger.debug("Settings file %s not found", file_path)
+
+    settings = Settings.make_default()
+
+    settings.version = loaded_settings.get("version", CURRENT_SETTINGS_SCHEMA_VERSION)
+    settings.profiles = loaded_settings.get("profiles", settings.profiles)
+
+    # Normalizing settings to only have expected values and format as enum
+    for profile_name, profile_settings in settings.profiles.items():
+        if not isinstance(profile_settings, ProfileSettings):
+            profile_settings = ProfileSettings(
+                scopes=profile_settings.get("scopes", {}),
+                settings=profile_settings.get("settings", {}),
+            )
+            settings.profiles[profile_name] = profile_settings
+
+        _normalize_enum_keys(profile_settings.scopes, PluginScope)
+
+        for plugin_path, plugin_settings in profile_settings.settings.items():
+            plugin_settings_vars = _get_plugin_settings_vars(plugin_path)
+
+            _normalize_enum_keys(plugin_settings, plugin_settings_vars)
+
+    return settings
+
+
+def _get_plugin_settings_vars(plugin_path: str) -> Type[AbstractPluginSettingsVar]:
+    plugin_class = import_plugin(plugin_path)
+
+    return plugin_class.get_settings_vars()
+
+
+def _normalize_enum_keys(dict_, vars: Type[enum.Enum]):
+    for key in list(dict_):
+        normalized_key = _normalize_enum(vars, key)
+        if normalized_key is None:
+            logger.warning("Unknown key: %s", key)
+        else:
+            dict_[normalized_key] = dict_[key]
+
+        del dict_[key]
+
+
+EnumType = TypeVar("EnumType", bound=enum.Enum)
+
+
+def _normalize_enum(enum_type: Type[EnumType], obj: Any) -> Optional[EnumType]:
     """
     Returns a value belonging to the specified enum which corresponds to the specified
     object, if possible.
@@ -362,45 +304,8 @@ def _normalize_enum(enum_type: Type[AbstractSettingsVar], obj: Any):
         return None
 
 
-def _load_settings(file_path: str, vars: Type[AbstractSettingsVar]) -> Settings:
-    """
-    Loads the settings from the specified settings file, returning their raw string
-    representations, or an empty dict if the file is not found.
-    """
-    settings = Settings()
-
-    try:
-        with open(file_path, "r") as f:
-            settings = yaml.load(f, yaml.Loader)
-
-    except FileNotFoundError:
-        logger.debug("Settings file %s not found", file_path)
-
-    if settings is None:
-        settings = Settings()
-
-    if DEFAULT_PROFILE not in settings:
-        settings[DEFAULT_PROFILE] = ProfileSettings()
-
-    # Normalizing settings to only have expected values and format as enum
-    for profile_settings in settings.values():
-        # Doing this instead of usual .items iteration because we mutate the keys
-        # as we go
-        for key in list(profile_settings):
-            normalized_key = _normalize_enum(vars, key)
-
-            if normalized_key is None:
-                logger.warning("Unknown setting: %s", key)
-            else:
-                profile_settings[normalized_key] = profile_settings[key]
-
-            del profile_settings[key]
-
-    return settings
-
-
 def _apply_env_var_overrides(
-    settings: ProfileSettings, vars: Type[AbstractSettingsVar]
+    settings: PluginSettings, vars: Type[AbstractPluginSettingsVar]
 ) -> None:
     """
     Apply env var overrides on settings.
@@ -420,3 +325,12 @@ def dump_settings(settings: ProfileSettings) -> str:
     Dumps the specified settings to string.
     """
     return yaml.dump(settings, default_flow_style=False, Dumper=EnumDumper)
+
+
+def _clear_cache():
+    """
+    Only for testing.
+    """
+    global _SETTINGS
+
+    _SETTINGS = None

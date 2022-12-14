@@ -26,11 +26,23 @@ class PluginScope(enum.Enum):
     This enum is expected to be updated as more plug-in scopes are supported.
     """
 
+    # Core plug-in scope. Will only ever have a single plug-in.
+    # This is useful to keep core settings symmetrical with plug-in settings
+    SEMATIC = "SEMATIC"
+
     # Storage plug-in scope for artifact data, future pickles, etc.
     STORAGE = "STORAGE"
 
     # Server-side authentication plug-in scope
     AUTH = "AUTH"
+
+
+class AbstractPluginSettingsVar(enum.Enum):
+    """
+    Abstract base class for lists of settings vars
+    """
+
+    pass
 
 
 class AbstractPlugin(abc.ABC):
@@ -61,6 +73,11 @@ class AbstractPlugin(abc.ABC):
         increment minor for new functionalities
         increment MAJOR for breaking API changes (0 means unstable)
         """
+        pass
+
+    @classmethod
+    @abc.abstractmethod
+    def get_settings_vars(cls) -> Type[AbstractPluginSettingsVar]:
         pass
 
     @final

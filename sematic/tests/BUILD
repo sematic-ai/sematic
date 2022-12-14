@@ -32,10 +32,11 @@ pytest_test(
 pytest_test(
     name = "test_api_client",
     srcs = ["test_api_client.py"],
+    # buildifier: leave-alone
     deps = [
         "//sematic:api_client",
         "//sematic:versions",
-        "//sematic/config",
+        "//sematic/config:config",
         "//sematic/db/models:factories",
         "//sematic/tests:fixtures",
     ],

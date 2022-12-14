@@ -1,26 +1,27 @@
-# Standard Library
-import os
-import tempfile
-import uuid
-from contextlib import contextmanager
-from unittest.mock import patch
-
 # Third-party
-import yaml
+import pytest
 
 # Sematic
-from sematic.abstract_plugin import AbstractPlugin, PluginScope
-from sematic.config.settings import (
-    PLUGINS_SETTINGS_KEY,
-    AbstractSettingsVar,
-    SettingsScope,
+from sematic.abstract_plugin import (
+    AbstractPlugin,
+    AbstractPluginSettingsVar,
+    PluginScope,
 )
+from sematic.config.settings import (
+    DEFAULT_PROFILE,
+    MissingSettingsError,
+    get_active_plugins,
+    get_active_settings,
+    get_plugin_setting,
+    get_plugin_settings,
+    get_settings,
+)
+from sematic.config.tests.fixtures import mock_settings
 
 
-class TestSettingsVar(AbstractSettingsVar):
+class SettingsVar(AbstractPluginSettingsVar):
     SOME_SETTING = "SOME_SETTING"
-
-    plugins = "plugins"
+    OTHER_SETTING = "OTHER_SETTING"
 
 
 class TestPlugin(AbstractPlugin):
@@ -32,77 +33,91 @@ class TestPlugin(AbstractPlugin):
     def get_version():
         return (0, 1, 0)
 
-
-@contextmanager
-def settings(settings_dict):
-    with tempfile.TemporaryDirectory() as td:
-        with patch(
-            "sematic.config.settings.get_config_dir",
-            return_value=td,
-            # new_callable=PropertyMock,
-        ):
-            settings_file_name = uuid.uuid4().hex
-            with open(os.path.join(td, settings_file_name), "w") as settings_file:
-                yaml.dump(settings_dict, settings_file)
-
-            yield settings_file_name
+    @classmethod
+    def get_settings_vars(cls):
+        return SettingsVar
 
 
-def test_plugins_scopes():
+@pytest.fixture
+def plugin_settings():
     test_settings = {
-        "default": {
-            "SOME_SETTING": "foo",
-            "plugins": {
+        "version": 0,
+        "profiles": {
+            "default": {
                 "scopes": {PluginScope.STORAGE.value: [TestPlugin.get_path()]},
-                "settings": {TestPlugin.get_name(): {"TEST_PLUGIN_SETTING": "bar"}},
-            },
-        }
+                "settings": {
+                    TestPlugin.get_path(): {SettingsVar.SOME_SETTING.value: "bar"}
+                },
+            }
+        },
     }
-    with settings(test_settings) as settings_file_name:
-        settings_scope = SettingsScope(
-            file_name=settings_file_name, cli_command="foo", vars=TestSettingsVar
-        )
-
-        selected_plugins = settings_scope.get_selected_plugins(
-            scope=PluginScope.STORAGE, default=[], var=TestSettingsVar.plugins
-        )
-
-        assert selected_plugins == [TestPlugin]
-
-        test_plugin_settings = settings_scope.get_plugin_settings(
-            TestSettingsVar.plugins
-        )
-
-        assert test_plugin_settings[PLUGINS_SETTINGS_KEY] == {
-            TestPlugin.get_name(): {"TEST_PLUGIN_SETTING": "bar"}
-        }
-
-        os.environ["TEST_PLUGIN_SETTING"] = "CLI_OVERRIDE"
-
-        assert settings_scope.get_plugin_settings(TestSettingsVar.plugins)[
-            PLUGINS_SETTINGS_KEY
-        ] == {TestPlugin.get_name(): {"TEST_PLUGIN_SETTING": "CLI_OVERRIDE"}}
-
-        auth_plugins = settings_scope.get_selected_plugins(
-            scope=PluginScope.AUTH, default=[], var=TestSettingsVar.plugins
-        )
-
-        assert auth_plugins == []
+    with mock_settings(test_settings) as settings_file_name:
+        yield settings_file_name
 
 
-def test_from_scratch():
-    settings_scope = SettingsScope(
-        file_name=uuid.uuid4().hex, cli_command="foo", vars=TestSettingsVar
+def test_get_active_plugins(plugin_settings):
+    assert get_active_plugins(scope=PluginScope.STORAGE, default=[]) == [TestPlugin]
+    assert get_active_plugins(scope=PluginScope.AUTH, default=[]) == []
+
+
+def test_get_active_settings(plugin_settings):
+    active_settings = get_active_settings()
+
+    assert active_settings.scopes == {PluginScope.STORAGE: [TestPlugin.get_path()]}
+
+    assert active_settings.settings == {
+        TestPlugin.get_path(): {SettingsVar.SOME_SETTING: "bar"}
+    }
+
+
+def test_get_plugin_setting(plugin_settings):
+    assert get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING) == "bar"
+    assert (
+        get_plugin_setting(TestPlugin, SettingsVar.OTHER_SETTING, "default")
+        == "default"
     )
+    with pytest.raises(MissingSettingsError):
+        get_plugin_setting(TestPlugin, SettingsVar.OTHER_SETTING)
+
+
+def test_get_plugin_settings(plugin_settings):
+    assert get_plugin_settings(TestPlugin) == {SettingsVar.SOME_SETTING: "bar"}
+
+
+def test_get_settings(plugin_settings):
+    settings = get_settings()
+    print(settings)
+    assert settings.version == 0
+    settings_profile = settings.profiles[DEFAULT_PROFILE]
+
+    assert settings_profile.scopes == {PluginScope.STORAGE: [TestPlugin.get_path()]}
+
+    assert settings_profile.settings == {
+        TestPlugin.get_path(): {SettingsVar.SOME_SETTING: "bar"}
+    }
+
+
+@pytest.fixture
+def no_settings_file():
+    with mock_settings(None):
+        yield
+
+
+def test_from_scratch(no_settings_file):
+    settings = get_settings()
+
+    assert settings.version == 0
+
+    settings_profile = settings.profiles[DEFAULT_PROFILE]
+
+    assert settings_profile.scopes == {}
+
+    assert settings_profile.settings == {}
+
+    assert get_active_plugins(scope=PluginScope.STORAGE, default=[TestPlugin]) == [
+        TestPlugin
+    ]
 
     assert (
-        settings_scope.get_selected_plugins(
-            PluginScope.STORAGE, default=[], var=TestSettingsVar.plugins
-        )
-        == []
+        get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING, "default") == "default"
     )
-
-    assert settings_scope.get_plugin_settings(TestSettingsVar.plugins) == {
-        "scopes": {},
-        "settings": {},
-    }
