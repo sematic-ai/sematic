@@ -26,6 +26,10 @@ class PluginScope(enum.Enum):
     This enum is expected to be updated as more plug-in scopes are supported.
     """
 
+    # Core plug-in scope. Will only ever have a single plug-in.
+    # This is useful to keep core settings symmetrical with plug-in settings
+    SEMATIC = "SEMATIC"
+
     # Storage plug-in scope for artifact data, future pickles, etc.
     STORAGE = "STORAGE"
 

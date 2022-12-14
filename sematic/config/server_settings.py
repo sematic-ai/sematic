@@ -39,9 +39,6 @@ class ServerSettingsVar(AbstractPluginSettingsVar):
     # GRAFANA
     GRAFANA_PANEL_URL = "GRAFANA_PANEL_URL"
 
-    # Server-side plug-ins section
-    plugins = "plugins"
-
 
 class ServerSettings(AbstractPlugin):
     @staticmethod

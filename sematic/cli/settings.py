@@ -106,7 +106,7 @@ def show_server_settings_cli() -> None:
 @server_settings.command("set", short_help="Set a server setting value")
 @click.argument("var", type=click.STRING)
 @click.argument("value", type=click.STRING)
-def set_server_settings_cli(var: str, value: str) -> None:
+def set_server_settings_cli(var: str, value: str, plugin_path: str) -> None:
     """
     Set a server setting value.
     """
