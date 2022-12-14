@@ -31,7 +31,7 @@ def show_user_settings_cli() -> None:
     """
     Show the currently active user settings.
     """
-    settings_dump = dump_settings(get_active_user_settings().get_all_settings())
+    settings_dump = dump_settings(get_active_user_settings())
     click.echo(f"Active user settings:\n\n{settings_dump}")
 
 

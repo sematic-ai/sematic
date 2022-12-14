@@ -15,7 +15,7 @@ replicaCount: 1
 image:
   repository: sematicai/sematic-server
   pullPolicy: IfNotPresent
-  tag: v0.20.1
+  tag: v0.21.0
 
 imagePullSecrets: []
 nameOverride: ""

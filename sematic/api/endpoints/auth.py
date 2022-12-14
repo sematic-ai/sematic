@@ -14,11 +14,11 @@ from sqlalchemy.orm.exc import NoResultFound
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.config.server_settings import (
-    MissingServerSettingsError,
     ServerSettingsVar,
-    get_bool_server_settings,
-    get_server_settings,
+    get_bool_server_setting,
+    get_server_setting,
 )
+from sematic.config.settings import MissingSettingsError
 from sematic.db.models.factories import make_user
 from sematic.db.queries import get_user, get_user_by_api_key, save_user
 
@@ -32,7 +32,7 @@ def authenticate_endpoint() -> flask.Response:
     friction, we let users run locally without authentication.
     """
     providers = {}
-    authenticate = get_bool_server_settings(
+    authenticate = get_bool_server_setting(
         ServerSettingsVar.SEMATIC_AUTHENTICATE, False
     )
 
@@ -43,8 +43,8 @@ def authenticate_endpoint() -> flask.Response:
             # ServerSettingsVar.GITHUB_OAUTH_CLIENT_ID,
         ):
             try:
-                providers[var.value] = get_server_settings(var)
-            except MissingServerSettingsError:
+                providers[var.value] = get_server_setting(var)
+            except MissingSettingsError:
                 continue
 
         if len(providers) == 0:
@@ -81,10 +81,10 @@ def google_login() -> flask.Response:
     token = flask.request.json["token"]
 
     try:
-        google_oauth_client_id = get_server_settings(
+        google_oauth_client_id = get_server_setting(
             ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID
         )
-    except MissingServerSettingsError:
+    except MissingSettingsError:
         return jsonify_error("Missing oauth client ID", HTTPStatus.BAD_REQUEST)
 
     try:
@@ -94,7 +94,7 @@ def google_login() -> flask.Response:
             google_oauth_client_id,
         )
 
-        authorized_email_domain = get_server_settings(
+        authorized_email_domain = get_server_setting(
             ServerSettingsVar.SEMATIC_AUTHORIZED_EMAIL_DOMAIN, None
         )
 
@@ -137,7 +137,7 @@ def authenticate(endpoint_fn: Callable) -> Callable:
 
     @functools.wraps(endpoint_fn)
     def endpoint(*args, **kwargs) -> flask.Response:
-        authenticate = get_bool_server_settings(
+        authenticate = get_bool_server_setting(
             ServerSettingsVar.SEMATIC_AUTHENTICATE, False
         )
         if not authenticate:

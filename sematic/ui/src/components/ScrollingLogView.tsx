@@ -1,182 +1,35 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { Alert, Box, Button, TextField, useTheme } from "@mui/material";
+import { useEffect, useCallback, useMemo } from "react";
+import { Alert, Box, Button, useTheme } from "@mui/material";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Loading from "./Loading";
-
-// Callback to be used when more log lines are loaded.
-export type MoreLinesCallback = (
-  source: string,
-  usedFilter: string,
-  lines: string[],
-  cursor: string | null,
-  noLinesReason: string | null
-) => void;
-
-// Function to get more logs. It should call moreLinesCallback
-// once it has more log lines.
-export type GetLines = (
-  source: string,
-  cursor: string | null,
-  filterString: string,
-  moreLinesCallback: MoreLinesCallback
-) => void;
+import { useAccumulateLogsUntilEnd, useLogStream } from "../hooks/logHooks";
 
 const DEFAULT_NO_LINES_REASON = "No more matching lines";
 
 export default function ScrollingLogView(props: {
-  getLines: GetLines;
   logSource: string;
+  filterString: string;
+  onError: (error: Error) => void
 }) {
-  const { getLines, logSource } = props;
+  const { logSource, filterString, onError } = props;
   const theme = useTheme();
-  const [hasMore, setHasMore] = useState(true);
-  const [fastForwarding, setFastForwarding] = useState(false);
-  const [currentNoLinesReason, setNoLinesReason] = useState<string | null>(
-    DEFAULT_NO_LINES_REASON
-  );
-  const [loadingMessage, setLoadingMessage] = useState<string>("Loading...");
 
-  const [lineState, setLineState] = useState<{
-    lines: string[]; // the log lines themselves
-    cursor: string | null; // the cursor to continue getting the lines after these ones
-    source: string; // the id of the source these log lines are for
-    filterString: string; // the filter string that was used to produce these lines
+  const scrollerId = useMemo(() => `scrolling-logs-${logSource}`, [logSource]) ;
 
-    // initialize the state to no logs from an unknown source/filter.
-    // An on-render effect will do the first load from the actual source.
-  }>({ lines: [], cursor: null, source: "", filterString: "" });
-
-  const [filterString, setFilterString] = useState<string>("");
-
-  // display log lines once they have been loaded from the server.
-  const handleLogLines = useCallback(
-    (
-      source: string,
-      usedFilter: string,
-      lines: string[],
-      cursor: string | null,
-      noLinesReason: string | null
-    ) => {
-      const newSource =
-        source !== lineState.source || usedFilter !== lineState.filterString;
-      var newLines: string[] = newSource
-        ? lines
-        : lineState.lines.concat(lines);
-      setLineState({
-        ...lineState,
-        lines: newLines,
-        cursor: cursor,
-        source: source,
-        filterString: usedFilter,
-      });
-      setHasMore(cursor != null);
-      setNoLinesReason(
-        noLinesReason === "" || noLinesReason === null
-          ? DEFAULT_NO_LINES_REASON
-          : noLinesReason
-      );
-    },
-    [lineState]
-  );
-
-  // load the next log lines after the ones currently being displayed
-  const next = useCallback(() => {
-    if (fastForwarding) return;
-    const sameSource =
-      lineState.source === logSource && lineState.filterString === filterString;
-    getLines(
-      logSource,
-      sameSource ? lineState.cursor : null,
-      filterString,
-      handleLogLines
-    );
-  }, [
-    getLines,
-    lineState.cursor,
-    handleLogLines,
-    logSource,
-    filterString,
-    fastForwarding,
-  ]);
-
-  // on render: if the current lines didn't come from the source & filter that
-  // are currently set, load new logs with the current settings.
-  useEffect(() => {
-    if (
-      lineState.source !== logSource ||
-      lineState.filterString !== filterString
-    ) {
-      next();
+  // Single pull logic
+  const { lines, isLoading, error, hasMore, 
+    noMoreLinesReason, getNext, hasPulledData } = useLogStream(logSource, filterString);
+  
+  // Accumulator (logs draining) logic
+  const { accumulateLogsUntilEnd, isLoading: isAccumulatorLoading,
+    isAccumulating, accumulatedLines } = useAccumulateLogsUntilEnd(hasMore, getNext);
+  
+  // report to parent in case of errors.
+  useEffect(()=> {
+    if (!!error) {
+      onError(error);
     }
-  });
-
-  const noMoreLinesIndicator = (
-    <Alert severity="info" sx={{ mt: 3 }}>
-      {currentNoLinesReason}
-    </Alert>
-  );
-  const scrollerId = "scrolling-logs-" + lineState.source;
-
-  // repeatedly query the server until we have loaded as many log lines as
-  // it will give us.
-  const accumulateUntilEnd = useCallback(() => {
-    if (lineState.lines.length === 0) {
-      // run has no logs. No need to try to scroll to the end.
-      return;
-    }
-    setFastForwarding(true);
-    var accumulatedLines: string[] = [];
-    const accumulate = function (
-      source: string,
-      usedFilter: string,
-      lines: string[],
-      cursor: string | null,
-      noLinesReason: string | null
-    ) {
-      accumulatedLines.push(...lines);
-      if (
-        (cursor === null || lines.length === 0) &&
-        accumulatedLines.length > 0
-      ) {
-        setLoadingMessage("Rendering...");
-
-        setFastForwarding(false);
-        handleLogLines(
-          source,
-          usedFilter,
-          accumulatedLines,
-          cursor,
-          noLinesReason
-        );
-
-        // start the scroll-to-bottom asynchronously so the lines have time
-        // to actually render before it scrolls.
-        setTimeout(() => {
-          const scroller = document.getElementById(scrollerId);
-          scroller?.scrollTo(0, scroller.scrollHeight);
-        }, 0);
-      } else {
-        setLoadingMessage("Loaded " + accumulatedLines.length + " lines...");
-        getLines(source, cursor, usedFilter, accumulate);
-      }
-    };
-    accumulate(logSource, filterString, [], null, null);
-  }, [getLines, handleLogLines, logSource, scrollerId]);
-
-  // scroll to the bottom when fast forwarding/jumping to end is done
-  useMemo(() => {
-    if (!fastForwarding) {
-      const scroller = document.getElementById(scrollerId);
-      scroller?.scrollTo(0, scroller.scrollHeight);
-    }
-  }, [fastForwarding, scrollerId]);
-
-  const onFilterStringChange = useCallback(
-    (evt: any) => {
-      setFilterString(evt.target.value);
-    },
-    [filterString, next]
-  );
+  }, [onError, error])
 
   const onScroll = useCallback(
     (evt: any) => {
@@ -189,12 +42,54 @@ export default function ScrollingLogView(props: {
       // the user gets too close to it which will provide a smoother experience.
       const distanceFromScrollBottom =
         evt.target.scrollHeight - evt.target.scrollTop;
-      if (lineState.cursor !== null && distanceFromScrollBottom < 100) {
-        next();
+      if (hasMore && distanceFromScrollBottom < 100) {
+        getNext();
       }
     },
-    [filterString, next]
+    [getNext, hasMore]
   );
+
+  const infiniteScrollGetNext = useCallback(() => {
+    // If the accumulator is under way, don't initiate a pull 
+    // from the <InfiniteScroll />
+    if (isAccumulating) {
+      return;
+    }
+    getNext();
+  }, [getNext, isAccumulating]);
+
+  const noMoreLinesIndicator = useMemo(() =>
+    <Alert severity="info" sx={{ mt: 3 }}>
+      {isLoading? "Loading..." : (noMoreLinesReason || DEFAULT_NO_LINES_REASON)}
+    </Alert>
+    , [noMoreLinesReason, isLoading]);
+
+  const accumulatorButtonMessage = useMemo(() => {
+    if (!isAccumulating && hasMore) {
+      return "Jump to the end";
+    }
+    if (isAccumulatorLoading) {
+      return `Loaded ${accumulatedLines} lines...`;
+    }
+    return "Rendering...";
+  }, [isAccumulating, isAccumulatorLoading, accumulatedLines, hasMore]);
+
+  // scroll to the bottom when fast forwarding/jumping to end 
+  // (aka accumulating) has gotten data
+  useEffect(() => {
+    if (!isAccumulatorLoading) {
+      const scroller = document.getElementById(scrollerId);
+      scroller?.scrollTo(0, scroller.scrollHeight);
+    }
+  }, [isAccumulatorLoading, scrollerId]);
+
+  useEffect(() => {
+    // not sure why <InfiniteScroll /> does not do an initial pull,
+    // this mitigates that issue.
+    if (!hasPulledData) { 
+      getNext();
+    }
+  }, [getNext, hasPulledData]);
 
   return (
     <Box
@@ -205,12 +100,7 @@ export default function ScrollingLogView(props: {
         top: 0,
       }}
     >
-      <TextField
-        variant="standard"
-        fullWidth={true}
-        placeholder={"Filter..."}
-        onChange={onFilterStringChange}
-      />
+      
       <Box
         id={scrollerId}
         sx={{
@@ -224,15 +114,15 @@ export default function ScrollingLogView(props: {
         }}
       >
         <InfiniteScroll
-          dataLength={lineState.lines.length}
-          next={next}
+          dataLength={lines.length}
+          next={infiniteScrollGetNext}
           scrollableTarget={scrollerId}
           hasMore={hasMore}
-          loader={<Loading isLoaded={false} />}
+          loader={<Loading isLoaded={!isLoading} />}
           onScroll={onScroll}
           endMessage={noMoreLinesIndicator}
         >
-          {lineState.lines.map((line, index) => (
+          {lines.map((line, index) => (
             <Box
               sx={{
                 borderTop: 1,
@@ -251,13 +141,13 @@ export default function ScrollingLogView(props: {
           ))}
         </InfiniteScroll>
       </Box>
-      {hasMore && (
+      {(hasMore && 
         <Button
-          onClick={accumulateUntilEnd}
+          onClick={accumulateLogsUntilEnd}
           sx={{ width: "100%" }}
-          disabled={fastForwarding}
+          disabled={isAccumulating || isLoading}
         >
-          {fastForwarding ? loadingMessage : "Jump to the end"}
+          {accumulatorButtonMessage}
         </Button>
       )}
     </Box>

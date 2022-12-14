@@ -8,11 +8,8 @@ from urllib.parse import urljoin
 
 # Sematic
 from sematic.config.config_dir import get_config_dir
-from sematic.config.user_settings import (
-    MissingUserSettingsError,
-    UserSettingsVar,
-    get_user_settings,
-)
+from sematic.config.settings import MissingSettingsError
+from sematic.config.user_settings import UserSettingsVar, get_user_setting
 
 
 def _get_migrations_dir() -> str:
@@ -159,8 +156,8 @@ class UserOverrideConfig(Config):
             return self.server_url_from_env_vars()
 
         try:
-            return get_user_settings(UserSettingsVar.SEMATIC_API_ADDRESS)
-        except MissingUserSettingsError:
+            return get_user_setting(UserSettingsVar.SEMATIC_API_ADDRESS)
+        except MissingSettingsError:
             return "http://{}:{}".format(self.server_address, self.port)
 
 
