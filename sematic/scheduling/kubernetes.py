@@ -14,7 +14,8 @@ from urllib3.exceptions import ConnectionError
 
 # Sematic
 from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR, ON_WORKER_ENV_VAR
-from sematic.config.server_settings import ServerSettingsVar, get_server_settings
+from sematic.config.server_settings import ServerSettingsVar, get_server_setting
+from sematic.config.user_settings import UserSettingsVar
 from sematic.container_images import CONTAINER_IMAGE_ENV_VAR
 from sematic.resolvers.resource_requirements import (
     KUBERNETES_SECRET_NAME,
@@ -542,10 +543,20 @@ def _schedule_kubernetes_job(
     environment_vars: Dict[str, str],
     namespace: str,
     service_account: str = DEFAULT_WORKER_SERVICE_ACCOUNT,
+    api_address_override: Optional[str] = None,
     resource_requirements: Optional[ResourceRequirements] = None,
     args: Optional[List[str]] = None,
 ):
     load_kube_config()
+
+    # clone so we can modify without changing the original
+    environment_vars = dict(environment_vars)
+
+    if api_address_override is not None:
+        environment_vars[
+            UserSettingsVar.SEMATIC_API_ADDRESS.value
+        ] = api_address_override
+
     args = args if args is not None else []
     node_selector = {}
     resource_requests = {}
@@ -664,9 +675,12 @@ def schedule_resolution_job(
     rerun_from: Optional[str] = None,
 ) -> ExternalJob:
 
-    namespace = get_server_settings(ServerSettingsVar.KUBERNETES_NAMESPACE)
-    service_account = get_server_settings(
+    namespace = get_server_setting(ServerSettingsVar.KUBERNETES_NAMESPACE)
+    service_account = get_server_setting(
         ServerSettingsVar.SEMATIC_WORKER_KUBERNETES_SA, DEFAULT_WORKER_SERVICE_ACCOUNT
+    )
+    api_address_override = get_server_setting(
+        ServerSettingsVar.SEMATIC_WORKER_API_ADDRESS, None
     )
 
     external_job = KubernetesExternalJob.new(
@@ -692,6 +706,7 @@ def schedule_resolution_job(
         environment_vars=user_settings,
         namespace=namespace,
         service_account=service_account,
+        api_address_override=api_address_override,
         resource_requirements=RESOLUTION_RESOURCE_REQUIREMENTS,
         args=args,
     )
@@ -707,10 +722,14 @@ def schedule_run_job(
 ) -> ExternalJob:
     """Schedule a job on k8s for a calculator execution."""
     # "User" in this case is the server.
-    namespace = get_server_settings(ServerSettingsVar.KUBERNETES_NAMESPACE)
-    service_account = get_server_settings(
+    namespace = get_server_setting(ServerSettingsVar.KUBERNETES_NAMESPACE)
+    service_account = get_server_setting(
         ServerSettingsVar.SEMATIC_WORKER_KUBERNETES_SA, DEFAULT_WORKER_SERVICE_ACCOUNT
     )
+    api_address_override = get_server_setting(
+        ServerSettingsVar.SEMATIC_WORKER_API_ADDRESS, None
+    )
+
     external_job = KubernetesExternalJob.new(
         try_number, run_id, namespace, JobType.worker
     )
@@ -725,6 +744,7 @@ def schedule_run_job(
         environment_vars=user_settings,
         namespace=namespace,
         service_account=service_account,
+        api_address_override=api_address_override,
         resource_requirements=resource_requirements,
         args=args,
     )

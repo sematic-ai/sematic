@@ -24,6 +24,7 @@ sematic_py_lib(
     deps = [
         "//sematic:container_images",
         "//sematic/config:config",
+        "//sematic/config:user_settings",
         "//sematic/config:server_settings",
         "//sematic/scheduling:external_job",
         "//sematic/resolvers:resource_requirements",

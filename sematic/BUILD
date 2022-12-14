@@ -32,10 +32,14 @@ sematic_py_lib(
     pip_deps = [
         "requests",
     ],
+    # buildifier: leave-alone
     deps = [
+        "//sematic:abstract_future",
         "//sematic:storage",
         "//sematic:versions",
         "//sematic/config:config",
+        "//sematic/config:settings",
+        "//sematic/config:user_settings",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
@@ -157,6 +161,7 @@ sematic_py_lib(
     pip_deps = [
         "boto3",
     ],
+    # buildifier: leave-alone
     deps = [
         "//sematic/config:config",
         "//sematic/config:server_settings",

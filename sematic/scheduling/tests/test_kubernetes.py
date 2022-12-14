@@ -7,6 +7,7 @@ import pytest
 from kubernetes.client.exceptions import ApiException
 
 # Sematic
+from sematic.api.tests.fixtures import mock_server_settings
 from sematic.config.server_settings import ServerSettingsVar
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
@@ -59,7 +60,11 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     namespace = "the-namespace"
     custom_service_account = "custom-sa"
     args = ["a", "b", "c"]
-    configured_env_vars = {"SOME_ENV_VAR": "some-env-var-value"}
+    configured_env_vars = {
+        "SOME_ENV_VAR": "some-env-var-value",
+        "SEMATIC_API_ADDRESS": "http://theurl.com",
+    }
+    api_url_override = "http://urloverride.com"
 
     resource_requirements = ResourceRequirements(
         kubernetes=KubernetesResourceRequirements(
@@ -91,6 +96,7 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
             namespace=namespace,
             service_account=custom_service_account,
             resource_requirements=resource_requirements,
+            api_address_override=api_url_override,
             args=args,
         )
 
@@ -113,6 +119,11 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     assert secret_env_var.value_from.secret_key_ref.key == next(
         iter(environment_secrets)
     )
+    final_api_url_var = next(
+        var.value for var in env_vars if var.name == "SEMATIC_API_ADDRESS"
+    )
+    assert final_api_url_var == api_url_override
+    del configured_env_vars["SEMATIC_API_ADDRESS"]
     normal_env_var = next(
         var for var in env_vars if var.name == next(iter(configured_env_vars.keys()))
     )
@@ -426,10 +437,9 @@ def test_refresh_job_single_condition(mock_batch_api, mock_load_kube_config):
     assert not job.still_exists
 
 
-@mock.patch("sematic.config.server_settings.get_active_server_settings")
 @mock.patch("sematic.scheduling.kubernetes._schedule_kubernetes_job")
 @mock.patch("sematic.scheduling.kubernetes._unique_job_id_suffix", return_value="foo")
-def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job, mock_server_settings):
+def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job):
 
     settings = {"SOME_SETTING": "SOME_VALUE"}
     resource_requests = ResourceRequirements(
@@ -439,18 +449,22 @@ def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job, mock_server_settings
     run_id = "run_id"
     namespace = "the-namespace"
     custom_service_account = "custom-sa"
-    mock_server_settings.return_value = {
+    custom_url = "http://customurl.com"
+
+    server_settings = {
         ServerSettingsVar.KUBERNETES_NAMESPACE: namespace,
         ServerSettingsVar.SEMATIC_WORKER_KUBERNETES_SA: custom_service_account,
+        ServerSettingsVar.SEMATIC_WORKER_API_ADDRESS: custom_url,
     }
 
-    schedule_run_job(
-        run_id=run_id,
-        image=image,
-        user_settings=settings,
-        resource_requirements=resource_requests,
-        try_number=1,
-    )
+    with mock_server_settings(server_settings):
+        schedule_run_job(
+            run_id=run_id,
+            image=image,
+            user_settings=settings,
+            resource_requirements=resource_requests,
+            try_number=1,
+        )
 
     mock_schedule_k8s_job.assert_called_with(
         name=f"sematic-worker-{run_id}-foo",
@@ -458,6 +472,7 @@ def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job, mock_server_settings
         environment_vars=settings,
         namespace=namespace,
         service_account=custom_service_account,
+        api_address_override=custom_url,
         resource_requirements=resource_requests,
         args=["--run_id", run_id],
     )
