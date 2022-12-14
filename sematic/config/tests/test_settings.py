@@ -41,7 +41,7 @@ class TestPlugin(AbstractPlugin):
 @pytest.fixture
 def plugin_settings():
     test_settings = {
-        "version": 0,
+        "version": 1,
         "profiles": {
             "default": {
                 "scopes": {PluginScope.STORAGE.value: [TestPlugin.get_path()]},
@@ -86,8 +86,8 @@ def test_get_plugin_settings(plugin_settings):
 
 def test_get_settings(plugin_settings):
     settings = get_settings()
-    print(settings)
-    assert settings.version == 0
+
+    assert settings.version == 1
     settings_profile = settings.profiles[DEFAULT_PROFILE]
 
     assert settings_profile.scopes == {PluginScope.STORAGE: [TestPlugin.get_path()]}
@@ -106,7 +106,7 @@ def no_settings_file():
 def test_from_scratch(no_settings_file):
     settings = get_settings()
 
-    assert settings.version == 0
+    assert settings.version == 1
 
     settings_profile = settings.profiles[DEFAULT_PROFILE]
 
