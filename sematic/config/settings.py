@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 DEFAULT_PROFILE = "default"
-CURRENT_SETTINGS_SCHEMA_VERSION = 0
+CURRENT_SETTINGS_SCHEMA_VERSION = 1
 
 PluginScopes = Dict[PluginScope, List[str]]
 PluginSettings = Dict[AbstractPluginSettingsVar, str]
