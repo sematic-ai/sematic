@@ -17,14 +17,12 @@ from sematic.utils.exceptions import (
 logger = logging.getLogger(__name__)
 
 
-_RESOURCE_ACTIVATION_TIMEOUT_SECONDS = 600  # 600s => 10 min
-_RESOURCE_DEACTIVATION_TIMEOUT_SECONDS = 60  # 60s => 1 min
-
-
 class SilentResolver(StateMachineResolver):
     """A resolver to resolver a DAG in memory, without tracking to the DB."""
 
     _resource_manager: ResourceManager = InMemoryResourceManager()
+    _RESOURCE_ACTIVATION_TIMEOUT_SECONDS = 600  # 600s => 10 min
+    _RESOURCE_DEACTIVATION_TIMEOUT_SECONDS = 60  # 60s => 1 min
 
     def _schedule_future(self, future: AbstractFuture) -> None:
         self._run_inline(future)
@@ -105,14 +103,14 @@ class SilentResolver(StateMachineResolver):
                 logger.error(
                     "Error getting latest state from resource %s: %s", resource.id, e
                 )
-                continue
+                time.sleep(1)
             cls._resource_manager.save_resource(resource)
             if resource.status.state.is_terminal():
                 raise InfrastructureError(
                     f"Could not activate resource with id {resource.id}: "
                     f"{resource.status.message}"
                 )
-            if time.time() - time_started > _RESOURCE_DEACTIVATION_TIMEOUT_SECONDS:
+            if time.time() - time_started > cls._RESOURCE_DEACTIVATION_TIMEOUT_SECONDS:
                 raise InfrastructureError(
                     f"Timed out activating resource with id {resource.id}. "
                     f"Last update message: {resource.status.message}"
@@ -139,9 +137,9 @@ class SilentResolver(StateMachineResolver):
                 logger.error(
                     "Error getting latest state from resource %s: %s", resource.id, e
                 )
-                continue
+                time.sleep(1)
             cls._resource_manager.save_resource(resource)
-            if time.time() - time_started > _RESOURCE_ACTIVATION_TIMEOUT_SECONDS:
+            if time.time() - time_started > cls._RESOURCE_ACTIVATION_TIMEOUT_SECONDS:
                 raise InfrastructureError(
                     f"Timed out deactivating resource with id {resource.id}. "
                     f"Last update message: {resource.status.message}"

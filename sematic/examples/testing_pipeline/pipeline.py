@@ -27,7 +27,6 @@ class FakeExternalResource(ExternalResource):
             status=ResourceStatus(
                 state=ResourceState.ACTIVATING,
                 message="Allocating fake resource",
-                last_update_epoch_time=int(time.time()),
             ),
         )
 
@@ -38,7 +37,6 @@ class FakeExternalResource(ExternalResource):
             status=ResourceStatus(
                 state=ResourceState.DEACTIVATING,
                 message="Deallocating fake resource",
-                last_update_epoch_time=int(time.time()),
             ),
         )
 
@@ -50,7 +48,6 @@ class FakeExternalResource(ExternalResource):
                 status=ResourceStatus(
                     state=ResourceState.ACTIVE,
                     message="Resource is ready!",
-                    last_update_epoch_time=int(time.time()),
                 ),
             )
         elif self.status.state == ResourceState.DEACTIVATING:
@@ -59,7 +56,6 @@ class FakeExternalResource(ExternalResource):
                 status=ResourceStatus(
                     state=ResourceState.DEACTIVATED,
                     message="Resource is cleaned!",
-                    last_update_epoch_time=int(time.time()),
                 ),
             )
         return replace(
@@ -67,7 +63,6 @@ class FakeExternalResource(ExternalResource):
             status=ResourceStatus(
                 state=self.status.state,
                 message="Nothing has changed...",
-                last_update_epoch_time=int(time.time()),
             ),
         )
 

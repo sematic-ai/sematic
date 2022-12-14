@@ -139,6 +139,12 @@ class IllegalStateTransitionError(Exception):
     pass
 
 
+class IllegalUseOfFutureError(Exception):
+    """A future was given where one was not expected."""
+
+    pass
+
+
 class NotInSematicFuncError(RuntimeError):
     """An API intended for usage in a Sematic func was used outside a Sematic func."""
 
