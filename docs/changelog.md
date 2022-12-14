@@ -5,6 +5,8 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.21.1](https://pypi.org/project/sematic/0.21.1/)
+    * [bugfix] Add back feature allowing configuration of custom API URL to be used by workers
 * [0.21.0](https://pypi.org/project/sematic/0.21.0/)
     * [feature] Add CLI for reading/following logs for a run
     * [feature] Enable configuration for the Kubernetes service account the workers will use
