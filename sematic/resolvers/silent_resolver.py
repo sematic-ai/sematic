@@ -66,6 +66,24 @@ class SilentResolver(StateMachineResolver):
     def _wait_for_scheduled_runs(self) -> None:
         pass
 
+    def _resolution_did_fail(self, error: Exception) -> None:
+        self._deactivate_all_resources()
+
+    def _deactivate_all_resources(self) -> None:
+        resources = self._resource_manager.resources_by_root_id(self._root_future.id)
+        logger.info("Deactivating all resources due to resolution failure.")
+        failed_to_deactivate = []
+        for resource in resources:
+            try:
+                self.deactivate_resource(resource.id)
+            except Exception:
+                failed_to_deactivate.append(resource.id)
+        if len(failed_to_deactivate) > 0:
+            logger.error(
+                "Failed to deactivate resources with ids: %s",
+                ", ".join(failed_to_deactivate),
+            )
+
     @classmethod
     def activate_resource_for_run(  # type: ignore
         cls, resource: ExternalResource, run_id: str, root_id: str
