@@ -20,7 +20,10 @@ def up():
     schema_version = user_loaded_yaml.get("version", 0)
 
     if schema_version != THIS_MIGRATION_SCHEMA_VERSION - 1:
-        raise RuntimeError("Exception ran in incorrect order")
+        raise RuntimeError(
+            f"Cannot upgrade settings file from version {schema_version} "
+            "to version {THIS_MIGRATION_SCHEMA_VERSION}"
+        )
 
     new_settings = {
         "version": THIS_MIGRATION_SCHEMA_VERSION,
@@ -51,7 +54,10 @@ def down():
     schema_version = loaded_yaml.get("version", 0)
 
     if schema_version != THIS_MIGRATION_SCHEMA_VERSION:
-        raise RuntimeError("Exception ran in incorrect order")
+        raise RuntimeError(
+            f"Cannot downgrade settings file from version {schema_version} "
+            f"to version {THIS_MIGRATION_SCHEMA_VERSION}"
+        )
 
     old_user_settings = {
         "default": loaded_yaml.get("profiles", {})

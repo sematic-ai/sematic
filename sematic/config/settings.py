@@ -3,7 +3,7 @@ import distutils.util
 import enum
 import logging
 import os
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union
 
 # Third-party
@@ -397,7 +397,7 @@ def dump_settings(settings: ProfileSettings) -> str:
     """
     Dumps the specified settings to string.
     """
-    return yaml.dump(settings, default_flow_style=False, Dumper=EnumDumper)
+    return yaml.dump(asdict(settings), default_flow_style=False, Dumper=EnumDumper)
 
 
 def _clear_cache():
