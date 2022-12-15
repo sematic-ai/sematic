@@ -114,7 +114,9 @@ class MissingPluginError(Exception):
     Exception to indicate a missing plug-in.
     """
 
-    pass
+    def __init__(self, plugin_path: str):
+        message = f"Unable to find plug-in {plugin_path}. Module or class is missing."
+        super().__init__(message)
 
 
 def import_plugin(plugin_import_path: str) -> Type[AbstractPlugin]:
@@ -141,13 +143,19 @@ def import_plugin(plugin_import_path: str) -> Type[AbstractPlugin]:
         raise ValueError(f"Incorrect plugin import path: {plugin_import_path}")
 
     try:
-        if import_path not in sys.modules:
-            logger.info("Importing plugin %s", plugin_import_path)
+        first_import = import_path not in sys.modules
 
-        # module imports are cached so this is idempotent (i.e. no need to be in
-        # the if statement above)
+        # module imports are cached so this is idempotent
         module = import_module(import_path)
-        plugin = getattr(module, plugin_name)
+        plugin: Type[AbstractPlugin] = getattr(module, plugin_name)
+
+        if first_import:
+            logger.info(
+                "Imported plugin %s, version %s",
+                plugin.get_path(),
+                plugin.get_version(),
+            )
+
     except (ImportError, AttributeError):
         raise MissingPluginError(plugin_import_path)
 
