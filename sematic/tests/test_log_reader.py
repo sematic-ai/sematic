@@ -661,7 +661,7 @@ def test_load_cloned_run_log_lines(
         more_before=False,
         more_after=True,
         lines=text_lines[:max_lines],
-        log_info_message=f"Run output sourced from original run {run.id}.",
+        log_info_message=f"Run logs sourced from original run {run.id}.",
     )
 
     result = load_log_lines(
@@ -676,7 +676,7 @@ def test_load_cloned_run_log_lines(
         more_before=True,
         more_after=True,
         lines=text_lines[max_lines : 2 * max_lines],  # noqa: E203
-        log_info_message=f"Run output sourced from original run {run.id}.",
+        log_info_message=f"Run logs sourced from original run {run.id}.",
     )
 
     result = load_log_lines(

@@ -198,7 +198,7 @@ def load_log_lines(
         # we source the logs from the original run, and also inform the user of this
         run_id = run.original_run_id
         run = object_source.get_run(run_id)
-        default_log_info_message = f"Run output sourced from original run {run_id}."
+        default_log_info_message = f"Run logs sourced from original run {run_id}."
 
     run_state = FutureState[run.future_state]  # type: ignore
     still_running = not (run_state.is_terminal() or run_state == FutureState.RAN)

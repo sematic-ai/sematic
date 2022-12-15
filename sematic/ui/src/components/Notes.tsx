@@ -65,7 +65,7 @@ export function NoteView(props: {
   );
 }
 
-export function RunId(props: {
+function RunId(props: {
   runId: string;
   trim?: boolean;
 }) {
