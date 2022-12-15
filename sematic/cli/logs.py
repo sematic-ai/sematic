@@ -60,7 +60,7 @@ def logs(run_id: str, follow: bool):
         if len(loaded.lines) == 0:
 
             if not (had_any or has_more):
-                click.secho(loaded.log_unavailable_reason, fg="red")
+                click.secho(loaded.log_info_message, fg="red")
                 sys.exit(1)
             if not follow:
                 break
