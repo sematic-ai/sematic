@@ -133,6 +133,12 @@ class KubernetesError(InfrastructureError):
     pass
 
 
+class ExternalResourceError(InfrastructureError):
+    """An error originated in compute infrastructure for an external resource."""
+
+    pass
+
+
 class IllegalStateTransitionError(Exception):
     """A state-machine object made a state transition that was not allowed."""
 

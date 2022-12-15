@@ -20,7 +20,7 @@ class Resolver(abc.ABC):
 
         This call will block until the resource is in either the ACTIVE state
         or a terminal state (in the case of failure to activate the resource).
-        If the resource can't be activated, will raise InfrastructureError.
+        If the resource can't be activated, will raise ExternalResourceError.
 
         Parameters
         ----------
@@ -37,7 +37,7 @@ class Resolver(abc.ABC):
 
         Raises
         ------
-        InfrastructureError:
+        ExternalResourceError:
             If the external resource could not be activated
         """
         pass
@@ -48,7 +48,7 @@ class Resolver(abc.ABC):
 
         This call should block until the resource is deactivated or the
         resource has failed to deactivate. If the resource fails to deactivate,
-        will raise an InfrastructureError.
+        will raise an ExternalResourceError.
 
         This may be called even if the resource is already deactivated.
 
@@ -63,7 +63,7 @@ class Resolver(abc.ABC):
 
         Raises
         ------
-        InfrastructureError:
+        ExternalResourceError:
             If the resource fails to deactivate.
         """
         pass
