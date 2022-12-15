@@ -7,7 +7,7 @@ from sematic.abstract_future import FutureState
 from sematic.calculator import func
 from sematic.external_resource import ResourceState
 from sematic.future_context import PrivateContext, SematicContext, context, set_context
-from sematic.resolvers.silent_resolver import InfrastructureError, SilentResolver
+from sematic.resolvers.silent_resolver import ExternalResourceError, SilentResolver
 from sematic.resolvers.tests.fixtures import FakeExternalResource
 from sematic.retry_settings import RetrySettings
 from sematic.utils.exceptions import ResolutionError
@@ -202,7 +202,7 @@ def test_activation_failures_for_resource(short_timeouts):
     FakeExternalResource.reset_history()
     run_id = "abc1232"
     root_id = "xyz7892"
-    with pytest.raises(InfrastructureError, match=r".*Intentional fail.*"):
+    with pytest.raises(ExternalResourceError, match=r".*Intentional fail.*"):
         with set_context(
             SematicContext(
                 run_id=run_id,
@@ -219,7 +219,7 @@ def test_activation_failures_for_resource(short_timeouts):
 
     run_id = "abc1233"
     root_id = "xyz7893"
-    with pytest.raises(InfrastructureError, match=r"Timed out deactivating.*"):
+    with pytest.raises(ExternalResourceError, match=r"Timed out deactivating.*"):
         with set_context(
             SematicContext(
                 run_id=run_id,
@@ -244,7 +244,7 @@ def test_deactivation_failures_for_resource(short_timeouts):
     root_id = "xyz7894"
     reached_inside_with_block = False
     with pytest.raises(
-        InfrastructureError, match=r"Could not deactivate.*Intentional fail.*"
+        ExternalResourceError, match=r"Could not deactivate.*Intentional fail.*"
     ):
         with set_context(
             SematicContext(

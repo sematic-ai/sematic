@@ -35,7 +35,7 @@ from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa
 from sematic.scheduling.external_job import JobType
 from sematic.scheduling.kubernetes import KubernetesExternalJob
 from sematic.tests.fixtures import MockStorage, valid_client_version  # noqa: F401
-from sematic.utils.exceptions import ExceptionMetadata
+from sematic.utils.exceptions import ExceptionMetadata, InfrastructureError
 
 test_list_runs_auth = make_auth_test("/api/v1/runs")
 test_get_run_auth = make_auth_test("/api/v1/runs/123")
@@ -324,7 +324,10 @@ def test_update_run_disappeared(
             repr="The Kubernetes job state is unknown",
             name="KubernetesError",
             module="sematic.utils.exceptions",
-            ancestors=[f"{Exception.__module__}.{Exception.__name__}"],
+            ancestors=[
+                f"{InfrastructureError.__module__}.{InfrastructureError.__name__}",
+                f"{Exception.__module__}.{Exception.__name__}",
+            ],
         )
 
 
@@ -376,7 +379,10 @@ def test_update_run_k8_pod_error(
             repr="Failed\ntest pod condition\ntest container condition",
             name="KubernetesError",
             module="sematic.utils.exceptions",
-            ancestors=[f"{Exception.__module__}.{Exception.__name__}"],
+            ancestors=[
+                f"{InfrastructureError.__module__}.{InfrastructureError.__name__}",
+                f"{Exception.__module__}.{Exception.__name__}",
+            ],
         )
 
 

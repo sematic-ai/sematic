@@ -6,10 +6,10 @@ import time
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.external_resource import ExternalResource, ResourceState
 from sematic.future_context import PrivateContext, SematicContext, set_context
-from sematic.resolvers.resource_manager import InMemoryResourceManager, ResourceManager
+from sematic.resolvers.resource_managers import InMemoryResourceManager, ResourceManager
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
 from sematic.utils.exceptions import (
-    InfrastructureError,
+    ExternalResourceError,
     ResolutionError,
     format_exception_for_run,
 )
@@ -95,7 +95,7 @@ class SilentResolver(StateMachineResolver):
         try:
             resource = resource.activate(is_local=True)
         except Exception as e:
-            raise InfrastructureError(
+            raise ExternalResourceError(
                 f"Could not activate resource with id {resource.id}: {e}"
             ) from e
         cls._resource_manager.save_resource(resource)
@@ -109,12 +109,12 @@ class SilentResolver(StateMachineResolver):
             time.sleep(cls._RESOURCE_UPDATE_INTERVAL_SECONDS)
             cls._resource_manager.save_resource(resource)
             if resource.status.state.is_terminal():
-                raise InfrastructureError(
+                raise ExternalResourceError(
                     f"Could not activate resource with id {resource.id}: "
                     f"{resource.status.message}"
                 )
             if time.time() - time_started > cls._RESOURCE_DEACTIVATION_TIMEOUT_SECONDS:
-                raise InfrastructureError(
+                raise ExternalResourceError(
                     f"Timed out activating resource with id {resource.id}. "
                     f"Last update message: {resource.status.message}"
                 )
@@ -129,7 +129,7 @@ class SilentResolver(StateMachineResolver):
         try:
             resource = resource.deactivate()
         except Exception as e:
-            raise InfrastructureError(
+            raise ExternalResourceError(
                 f"Could not deactivate resource with id {resource.id}: {e}"
             ) from e
         cls._resource_manager.save_resource(resource)
@@ -143,7 +143,7 @@ class SilentResolver(StateMachineResolver):
             time.sleep(cls._RESOURCE_UPDATE_INTERVAL_SECONDS)
             cls._resource_manager.save_resource(resource)
             if time.time() - time_started > cls._RESOURCE_ACTIVATION_TIMEOUT_SECONDS:
-                raise InfrastructureError(
+                raise ExternalResourceError(
                     f"Timed out deactivating resource with id {resource.id}. "
                     f"Last update message: {resource.status.message}"
                 )
