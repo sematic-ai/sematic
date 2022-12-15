@@ -83,7 +83,7 @@ def mock_user_settings(settings: Dict[UserSettingsVar, str]):
 
     original_settings_copy = copy(original_settings)
     if original_settings_copy is None:
-        original_settings_copy = Settings.make_default()
+        original_settings_copy = Settings()
 
     plugin_settings = cast(PluginSettings, settings)
     user_settings = original_settings_copy.profiles[_DEFAULT_PROFILE].settings.get(
@@ -111,7 +111,7 @@ def mock_server_settings(settings: Dict[ServerSettingsVar, str]):
 
     original_settings_copy = copy(original_settings)
     if original_settings_copy is None:
-        original_settings_copy = Settings.make_default()
+        original_settings_copy = Settings()
 
     plugin_settings = cast(PluginSettings, settings)
     user_settings = original_settings_copy.profiles[_DEFAULT_PROFILE].settings.get(

@@ -3,7 +3,7 @@ import distutils.util
 import enum
 import logging
 import os
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union
 
 # Third-party
@@ -34,21 +34,24 @@ PluginsSettings = Dict[str, PluginSettings]
 
 @dataclass
 class ProfileSettings:
-    scopes: PluginScopes
-    settings: PluginsSettings
+    """
+    Settings for one profile.
+    """
+
+    scopes: PluginScopes = field(default_factory=dict)
+    settings: PluginsSettings = field(default_factory=dict)
 
 
 @dataclass
 class Settings:
-    version: int
-    profiles: Dict[str, ProfileSettings]
+    """
+    Represents the entire content of the settings file.
+    """
 
-    @classmethod
-    def make_default(cls):
-        return Settings(
-            version=_CURRENT_SETTINGS_SCHEMA_VERSION,
-            profiles={_DEFAULT_PROFILE: ProfileSettings(scopes={}, settings={})},
-        )
+    version: int = field(default_factory=lambda: _CURRENT_SETTINGS_SCHEMA_VERSION)
+    profiles: Dict[str, ProfileSettings] = field(
+        default_factory=lambda: {_DEFAULT_PROFILE: ProfileSettings()}
+    )
 
 
 class MissingSettingsError(Exception):
@@ -292,7 +295,7 @@ def _load_settings(file_path: str) -> Settings:
     except FileNotFoundError:
         logger.debug("Settings file %s not found", file_path)
 
-    settings = Settings.make_default()
+    settings = Settings()
 
     settings.version = loaded_settings.get("version", _CURRENT_SETTINGS_SCHEMA_VERSION)
     settings.profiles = loaded_settings.get("profiles", settings.profiles)
