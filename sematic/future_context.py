@@ -32,7 +32,7 @@ class PrivateContext:
 
     resolver_class_path: str
 
-    def resolver_class(self) -> Type[Resolver]:
+    def load_resolver_class(self) -> Type[Resolver]:
         module_name, resolver_name = self.resolver_class_path.rsplit(".", maxsplit=1)
         module = import_module(module_name)
         resolver_class = getattr(module, resolver_name, None)

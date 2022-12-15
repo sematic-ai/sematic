@@ -105,7 +105,6 @@ sematic_py_lib(
     deps = [
         "//sematic:abstract_future",
         "//sematic:future_context",
-        "//sematic/types:registry",
         "//sematic/utils:exceptions",
     ],
 )

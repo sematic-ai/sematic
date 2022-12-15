@@ -21,8 +21,11 @@ class SilentResolver(StateMachineResolver):
     """A resolver to resolver a DAG in memory, without tracking to the DB."""
 
     _resource_manager: ResourceManager = InMemoryResourceManager()
+
+    # TODO: consider making these user settings
     _RESOURCE_ACTIVATION_TIMEOUT_SECONDS = 600  # 600s => 10 min
     _RESOURCE_DEACTIVATION_TIMEOUT_SECONDS = 60  # 60s => 1 min
+    _RESOURCE_UPDATE_INTERVAL_SECONDS = 1
 
     def _schedule_future(self, future: AbstractFuture) -> None:
         self._run_inline(future)
@@ -69,7 +72,7 @@ class SilentResolver(StateMachineResolver):
 
     def _deactivate_all_resources(self) -> None:
         resources = self._resource_manager.resources_by_root_id(self._root_future.id)
-        logger.info("Deactivating all resources due to resolution failure.")
+        logger.warning("Deactivating all resources due to resolution failure.")
         failed_to_deactivate = []
         for resource in resources:
             try:
@@ -103,7 +106,7 @@ class SilentResolver(StateMachineResolver):
                 logger.error(
                     "Error getting latest state from resource %s: %s", resource.id, e
                 )
-                time.sleep(1)
+            time.sleep(cls._RESOURCE_UPDATE_INTERVAL_SECONDS)
             cls._resource_manager.save_resource(resource)
             if resource.status.state.is_terminal():
                 raise InfrastructureError(
@@ -137,7 +140,7 @@ class SilentResolver(StateMachineResolver):
                 logger.error(
                     "Error getting latest state from resource %s: %s", resource.id, e
                 )
-                time.sleep(1)
+            time.sleep(cls._RESOURCE_UPDATE_INTERVAL_SECONDS)
             cls._resource_manager.save_resource(resource)
             if time.time() - time_started > cls._RESOURCE_ACTIVATION_TIMEOUT_SECONDS:
                 raise InfrastructureError(

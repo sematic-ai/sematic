@@ -8,6 +8,9 @@ import os
 import sys
 from typing import Dict
 
+# Third-party
+import debugpy
+
 # Sematic
 from sematic import CloudResolver, LocalResolver, SilentResolver
 from sematic.examples.testing_pipeline.pipeline import testing_pipeline
@@ -206,18 +209,17 @@ def _get_resolver(args: argparse.Namespace) -> StateMachineResolver:
     )
 
 
+def _wait_for_debugger():
+    debugpy.listen(5724)
+
+    print("Waiting for debugger to attach...")
+    debugpy.wait_for_client()
+    print("Debugger attached")
+
+
 def main() -> None:
     if os.environ.get("DEBUGPY", None) is not None:
-        try:
-            # Third-party
-            import debugpy
-
-            debugpy.listen(5724)
-
-            # blocks execution until client is attached
-            debugpy.wait_for_client()
-        except ImportError:
-            logger.error("debugpy is not installed, not waiting for debugger to attach")
+        _wait_for_debugger()
     args = _parse_args()
     logging.basicConfig(level=args.log_level)
     logger.info("Command line arguments: %s", args)

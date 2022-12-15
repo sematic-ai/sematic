@@ -2,14 +2,13 @@
 import logging
 import time
 import uuid
-from dataclasses import dataclass, field, fields, is_dataclass, replace
+from dataclasses import dataclass, field, fields, replace
 from enum import Enum, unique
 from typing import TypeVar, final
 
 # Sematic
 from sematic.abstract_future import AbstractFuture
 from sematic.future_context import SematicContext, context
-from sematic.types.registry import register_type_assertion
 from sematic.utils.exceptions import (
     IllegalStateTransitionError,
     IllegalUseOfFutureError,
@@ -294,38 +293,24 @@ class ExternalResource:
                 f"made while executing a Sematic func."
             )
         try:
-            activated = ctx.private.resolver_class().activate_resource_for_run(
+            updated = ctx.private.load_resolver_class().activate_resource_for_run(
                 resource=self, run_id=ctx.run_id, root_id=ctx.root_id
             )
-            if activated.status.state != ResourceState.ACTIVE:
+            if updated.status.state != ResourceState.ACTIVE:
                 raise IllegalStateTransitionError(
-                    f"Resolver {ctx.private.resolver_class()} failed to "
-                    f"activate {activated}."
+                    f"Resolver {ctx.private.load_resolver_class()} failed to "
+                    f"activate {updated}."
                 )
-            return activated
+            return updated
         except Exception:
-            assert isinstance(self, ExternalResource)  # satisfies mypy
-            self.__exit__()
+            self.__exit__()  # type: ignore
             raise
 
     def __exit__(self, exc_type=None, exc_value=None, exc_traceback=None):
         ctx: SematicContext = context()
-        deactivated = ctx.private.resolver_class().deactivate_resource(self.id)
+        deactivated = ctx.private.load_resolver_class().deactivate_resource(self.id)
         if deactivated.status.state != ResourceState.DEACTIVATED:
             raise IllegalStateTransitionError(
-                f"Resolver {ctx.private.resolver_class()} failed to "
+                f"Resolver {ctx.private.load_resolver_class()} failed to "
                 f"deactivate {deactivated}."
             )
-
-
-@register_type_assertion
-def assert_supported_sematic_type(type_annotation) -> None:
-    if not is_dataclass(type_annotation):
-        return
-    if not issubclass(type_annotation, ExternalResource):
-        return
-    raise TypeError(
-        "ExternalResource objects can't be passed into or out of "
-        "Sematic funcs. They are only intended to be used inside "
-        "the body of a Sematic func."
-    )
