@@ -16,14 +16,14 @@ from sematic.resolvers.silent_resolver import SilentResolver
 
 
 def test_update():
-    updated_message = "jumping straight to deactivated"
+    updated_message = "jumping straight to ACTIVE"
 
     class FakeImpl(ExternalResource):
         def _do_update(self):
             return replace(
                 self,
                 status=ResourceStatus(
-                    state=ResourceState.DEACTIVATED,
+                    state=ResourceState.ACTIVE,
                     message=updated_message,
                 ),
             )
@@ -33,8 +33,8 @@ def test_update():
 
     updated = FakeImpl(
         status=ResourceStatus(
-            state=ResourceState.DEACTIVATING,
-            message="tearing down the whatever",
+            state=ResourceState.ACTIVATING,
+            message="spinning up the whatever",
         )
     ).update()
     assert updated.status.message == updated_message
@@ -90,9 +90,6 @@ def test_deactivate():
                 ),
             )
 
-    with pytest.raises(IllegalStateTransitionError):
-        ValidImpl().deactivate()
-
     deactivating = ValidImpl(
         status=ResourceStatus(
             state=ResourceState.ACTIVE,
@@ -113,7 +110,12 @@ def test_deactivate():
             )
 
     with pytest.raises(IllegalStateTransitionError):
-        InvalidImpl().deactivate()
+        InvalidImpl(
+            status=ResourceStatus(
+                state=ResourceState.ACTIVE,
+                message="",
+            )
+        ).deactivate()
 
 
 def test_valid_transitions():

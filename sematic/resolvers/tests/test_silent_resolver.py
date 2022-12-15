@@ -57,19 +57,22 @@ def custom_resource_func() -> int:
 
 @pytest.fixture
 def short_timeouts():
-    original_timeouts = (
+    original_values = (
         SilentResolver._RESOURCE_ACTIVATION_TIMEOUT_SECONDS,
         SilentResolver._RESOURCE_DEACTIVATION_TIMEOUT_SECONDS,
+        SilentResolver._RESOURCE_UPDATE_INTERVAL_SECONDS,
     )
     SilentResolver._RESOURCE_ACTIVATION_TIMEOUT_SECONDS = 0.1
     SilentResolver._RESOURCE_DEACTIVATION_TIMEOUT_SECONDS = 0.1
+    SilentResolver._RESOURCE_UPDATE_INTERVAL_SECONDS = 0.001
     try:
         yield
     finally:
         (
             SilentResolver._RESOURCE_ACTIVATION_TIMEOUT_SECONDS,
             SilentResolver._RESOURCE_DEACTIVATION_TIMEOUT_SECONDS,
-        ) = original_timeouts
+            SilentResolver._RESOURCE_UPDATE_INTERVAL_SECONDS,
+        ) = original_values
 
 
 def test_silent_resolver():
@@ -81,7 +84,7 @@ def test_silent_resolver_context():
     result = SilentResolver().resolve(future)
     assert result.root_id == future.id
     assert result.run_id != future.id
-    assert result.private.resolver_class() is SilentResolver
+    assert result.private.load_resolver_class() is SilentResolver
 
     future = direct_context_func()
     result = SilentResolver().resolve(future)
