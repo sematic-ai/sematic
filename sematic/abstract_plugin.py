@@ -45,6 +45,9 @@ class AbstractPluginSettingsVar(enum.Enum):
     pass
 
 
+PluginVersion = Tuple[int, int, int]
+
+
 class AbstractPlugin(abc.ABC):
     """
     Abstract base class for plugins.
@@ -65,7 +68,7 @@ class AbstractPlugin(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def get_version() -> Tuple[int, int, int]:
+    def get_version() -> PluginVersion:
         """
         Plug-in version: MAJOR.MINOR.PATCH
 
@@ -76,7 +79,6 @@ class AbstractPlugin(abc.ABC):
         pass
 
     @classmethod
-    @abc.abstractmethod
     def get_settings_vars(cls) -> Type[AbstractPluginSettingsVar]:
         """
         Returns the Settings var enum for this plug-in.
@@ -84,7 +86,7 @@ class AbstractPlugin(abc.ABC):
         The class must inherit from `AbstractPluginSettingsVar` and list all
         available settings for this plug-in.
         """
-        pass
+        return AbstractPluginSettingsVar
 
     @final
     @classmethod
