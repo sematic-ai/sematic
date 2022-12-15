@@ -301,8 +301,8 @@ def _load_settings(file_path: str) -> Settings:
     for profile_name, profile_settings in settings.profiles.items():
         if not isinstance(profile_settings, ProfileSettings):
             profile_settings = ProfileSettings(
-                scopes=profile_settings.get("scopes", {}),
-                settings=profile_settings.get("settings", {}),
+                scopes=profile_settings.get("scopes") or {},
+                settings=profile_settings.get("settings") or {},
             )
             settings.profiles[profile_name] = profile_settings
 
