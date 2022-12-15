@@ -2,8 +2,10 @@
 from typing import Any, Dict
 
 # Sematic
-from sematic.abstract_plugin import AbstractPlugin
+from sematic.abstract_plugin import AbstractPlugin, PluginVersion
 from sematic.plugins.abstract_storage import AbstractStorage, NoSuchStorageKey
+
+_PLUGIN_VERSION = (0, 1, 0)
 
 
 class MemoryStorage(AbstractStorage, AbstractPlugin):
@@ -14,6 +16,10 @@ class MemoryStorage(AbstractStorage, AbstractPlugin):
     @staticmethod
     def get_author() -> str:
         return "github.com/sematic-ai"
+
+    @staticmethod
+    def get_version() -> PluginVersion:
+        return _PLUGIN_VERSION
 
     def __init__(self):
         self._store: Dict[str, Any] = {}

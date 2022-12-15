@@ -9,6 +9,8 @@ from sematic.plugins.abstract_storage import AbstractStorage, NoSuchStorageKey
 
 logger = logging.getLogger(__name__)
 
+_PLUGIN_VERSION = (0, 1, 0)
+
 
 class LocalStorage(AbstractStorage, AbstractPlugin):
     """
@@ -23,7 +25,7 @@ class LocalStorage(AbstractStorage, AbstractPlugin):
 
     @staticmethod
     def get_version() -> PluginVersion:
-        return 0, 1, 0
+        return _PLUGIN_VERSION
 
     def set(self, key: str, value: bytes):
         logger.debug(f"{self.__class__.__name__} Setting value for key: {key}")

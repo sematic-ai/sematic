@@ -21,6 +21,8 @@ from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
 
+_PLUGIN_VERSION = (0, 1, 0)
+
 
 class S3ClientMethod(enum.Enum):
     PUT = "put_object"
@@ -46,7 +48,7 @@ class S3Storage(AbstractStorage, AbstractPlugin):
 
     @staticmethod
     def get_version() -> PluginVersion:
-        return 0, 1, 0
+        return _PLUGIN_VERSION
 
     @classmethod
     def get_settings_vars(cls) -> Type[AbstractPluginSettingsVar]:
