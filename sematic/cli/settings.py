@@ -11,7 +11,6 @@ from sematic.config.settings import (
     delete_plugin_setting,
     dump_settings,
     get_active_settings,
-    import_plugin,
     set_plugin_setting,
 )
 from sematic.config.user_settings import UserSettings
