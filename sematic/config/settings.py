@@ -4,7 +4,7 @@ import enum
 import logging
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union
 
 # Third-party
 import yaml
@@ -13,6 +13,7 @@ import yaml
 from sematic.abstract_plugin import (
     AbstractPlugin,
     AbstractPluginSettingsVar,
+    MissingPluginError,
     PluginScope,
     import_plugin,
 )
@@ -21,11 +22,13 @@ from sematic.config.config_dir import get_config_dir
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_PROFILE = "default"
-CURRENT_SETTINGS_SCHEMA_VERSION = 1
+_DEFAULT_PROFILE = "default"
+_SETTINGS_FILE_NAME = "settings.yaml"
+_CURRENT_SETTINGS_SCHEMA_VERSION = 1
+_PLUGIN_VERSION_KEY: Literal["__version__"] = "__version__"
 
 PluginScopes = Dict[PluginScope, List[str]]
-PluginSettings = Dict[AbstractPluginSettingsVar, str]
+PluginSettings = Dict[Union[AbstractPluginSettingsVar, Literal["__version__"]], str]
 PluginsSettings = Dict[str, PluginSettings]
 
 
@@ -43,8 +46,8 @@ class Settings:
     @classmethod
     def make_default(cls):
         return Settings(
-            version=CURRENT_SETTINGS_SCHEMA_VERSION,
-            profiles={DEFAULT_PROFILE: ProfileSettings(scopes={}, settings={})},
+            version=_CURRENT_SETTINGS_SCHEMA_VERSION,
+            profiles={_DEFAULT_PROFILE: ProfileSettings(scopes={}, settings={})},
         )
 
 
@@ -78,13 +81,20 @@ Set it with:
 
 
 _SETTINGS: Optional[Settings] = None
+_ACTIVE_SETTINGS: Optional[ProfileSettings] = None
 
 
-def get_settings_file_path():
-    return os.path.join(get_config_dir(), "settings.yaml")
+def get_settings_file_path() -> str:
+    """
+    Get full patch to settings file.
+    """
+    return os.path.join(get_config_dir(), _SETTINGS_FILE_NAME)
 
 
 def get_settings() -> Settings:
+    """
+    Get entire cached settings file payload, no CLI override.
+    """
     global _SETTINGS
 
     if _SETTINGS is None:
@@ -94,23 +104,33 @@ def get_settings() -> Settings:
 
 
 def get_active_settings() -> ProfileSettings:
-    global _SETTINGS
+    """
+    Gets cached currently active settings.
 
-    if _SETTINGS is None:
+    Gets the default profile settings and applies CLI overrides.
+    """
+    global _ACTIVE_SETTINGS
+
+    if _ACTIVE_SETTINGS is None:
         settings = get_settings()
 
-        profile_settings = settings.profiles[DEFAULT_PROFILE]
+        profile_settings = settings.profiles[_DEFAULT_PROFILE]
 
         for plugin_path, plugin_settings in profile_settings.settings.items():
             plugin_settings_vars = _get_plugin_settings_vars(plugin_path)
             _apply_env_var_overrides(plugin_settings, plugin_settings_vars)
 
-    return get_settings().profiles[DEFAULT_PROFILE]
+        _ACTIVE_SETTINGS = profile_settings
+
+    return _ACTIVE_SETTINGS
 
 
 def get_active_plugins(
     scope: PluginScope, default: List[Type[AbstractPlugin]]
 ) -> List[Type[AbstractPlugin]]:
+    """
+    Gets the active plugins for scope.
+    """
     scopes = get_active_settings().scopes
 
     if scope not in scopes:
@@ -123,7 +143,10 @@ def get_active_plugins(
 
 def get_plugin_settings(
     plugin: Type[AbstractPlugin],
-) -> Dict[AbstractPluginSettingsVar, str]:
+) -> PluginSettings:
+    """
+    Gets active settings for plugin.
+    """
     settings = get_active_settings().settings
 
     plugin_path = plugin.get_path()
@@ -137,6 +160,9 @@ def get_plugin_settings(
 def get_plugin_setting(
     plugin: Type[AbstractPlugin], var: AbstractPluginSettingsVar, *args
 ) -> str:
+    """
+    Gets var setting value for plugin.
+    """
     try:
         plugin_settings = get_plugin_settings(plugin)
     except MissingSettingsError:
@@ -152,6 +178,9 @@ def get_plugin_setting(
 
 
 def import_plugins():
+    """
+    Imports all configured plugins.
+    """
     scopes = get_active_settings().scopes
 
     for selected_plugins in scopes.values():
@@ -162,18 +191,32 @@ def import_plugins():
 def set_plugin_setting(
     plugin: Type[AbstractPlugin], var: AbstractPluginSettingsVar, value: str
 ):
+    """
+    Sets a plug-in setting value.
+    """
     try:
         plugin_settings = get_plugin_settings(plugin)
     except MissingSettingsError:
         plugin_settings = {}
         get_active_settings().settings[plugin.get_path()] = plugin_settings
 
+    if _normalize_enum(plugin.get_settings_vars(), var) is None:
+        raise ValueError(
+            f"Unknown setting for plug-in {plugin.get_path()}: {var.value}"
+        )
+
     plugin_settings[var] = value
+    plugin_settings[_PLUGIN_VERSION_KEY] = ".".join(
+        str(v) for v in plugin.get_version()
+    )
 
     save_settings(get_settings())
 
 
 def delete_plugin_setting(plugin: Type[AbstractPlugin], var: AbstractPluginSettingsVar):
+    """
+    Deletes a plug-in setting value.
+    """
     try:
         plugin_settings = get_plugin_settings(plugin)
     except MissingSettingsError:
@@ -186,6 +229,9 @@ def delete_plugin_setting(plugin: Type[AbstractPlugin], var: AbstractPluginSetti
 
 
 def save_settings(settings: Settings):
+    """
+    Persists settings to file.
+    """
     yaml_output = yaml.dump(settings, Dumper=EnumDumper)
 
     with open(get_settings_file_path(), "w") as f:
@@ -248,7 +294,7 @@ def _load_settings(file_path: str) -> Settings:
 
     settings = Settings.make_default()
 
-    settings.version = loaded_settings.get("version", CURRENT_SETTINGS_SCHEMA_VERSION)
+    settings.version = loaded_settings.get("version", _CURRENT_SETTINGS_SCHEMA_VERSION)
     settings.profiles = loaded_settings.get("profiles", settings.profiles)
 
     # Normalizing settings to only have expected values and format as enum
@@ -262,8 +308,35 @@ def _load_settings(file_path: str) -> Settings:
 
         _normalize_enum_keys(profile_settings.scopes, PluginScope)
 
-        for plugin_path, plugin_settings in profile_settings.settings.items():
+        # We are mutating the dictionary as we iterate so iterate on keys.
+        for plugin_path in list(profile_settings.settings):
+            try:
+                plugin = import_plugin(plugin_path)
+            except MissingPluginError as e:
+                # It's important to not fail when plug-ins cannot be found as users
+                # may exchange settings files for different installs
+                logger.warning(str(e))
+                del profile_settings.settings[plugin_path]
+                continue
+
             plugin_settings_vars = _get_plugin_settings_vars(plugin_path)
+
+            plugin_settings = profile_settings.settings[plugin_path]
+
+            plugin_settings_version = plugin_settings.get(_PLUGIN_VERSION_KEY)
+            if plugin_settings_version is not None:
+                major_plugin_version = plugin.get_version()[0]
+                if int(plugin_settings_version.split(".")[0]) < major_plugin_version:
+                    logger.warning(
+                        (
+                            "Settings for plug-in %s "
+                            "have lower major version number (%s) "
+                            "than the plug-in (%s)"
+                        ),
+                        plugin_path,
+                        plugin_settings_version,
+                        major_plugin_version,
+                    )
 
             _normalize_enum_keys(plugin_settings, plugin_settings_vars)
 
@@ -331,6 +404,6 @@ def _clear_cache():
     """
     Only for testing.
     """
-    global _SETTINGS
+    global _SETTINGS, _ACTIVE_SETTINGS
 
-    _SETTINGS = None
+    _SETTINGS, _ACTIVE_SETTINGS = None, None

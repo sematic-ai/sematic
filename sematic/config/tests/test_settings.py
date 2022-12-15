@@ -8,7 +8,7 @@ from sematic.abstract_plugin import (
     PluginScope,
 )
 from sematic.config.settings import (
-    DEFAULT_PROFILE,
+    _DEFAULT_PROFILE,
     MissingSettingsError,
     get_active_plugins,
     get_active_settings,
@@ -88,7 +88,7 @@ def test_get_settings(plugin_settings):
     settings = get_settings()
 
     assert settings.version == 1
-    settings_profile = settings.profiles[DEFAULT_PROFILE]
+    settings_profile = settings.profiles[_DEFAULT_PROFILE]
 
     assert settings_profile.scopes == {PluginScope.STORAGE: [TestPlugin.get_path()]}
 
@@ -108,7 +108,7 @@ def test_from_scratch(no_settings_file):
 
     assert settings.version == 1
 
-    settings_profile = settings.profiles[DEFAULT_PROFILE]
+    settings_profile = settings.profiles[_DEFAULT_PROFILE]
 
     assert settings_profile.scopes == {}
 

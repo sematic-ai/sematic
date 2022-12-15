@@ -24,7 +24,7 @@ import sematic.config.settings as settings_module
 from sematic.api.server import sematic_api
 from sematic.config.config import get_config, switch_env
 from sematic.config.server_settings import ServerSettings, ServerSettingsVar
-from sematic.config.settings import DEFAULT_PROFILE, PluginSettings, Settings
+from sematic.config.settings import _DEFAULT_PROFILE, PluginSettings, Settings
 from sematic.config.user_settings import UserSettings, UserSettingsVar
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 
@@ -86,14 +86,14 @@ def mock_user_settings(settings: Dict[UserSettingsVar, str]):
         original_settings_copy = Settings.make_default()
 
     plugin_settings = cast(PluginSettings, settings)
-    user_settings = original_settings_copy.profiles[DEFAULT_PROFILE].settings.get(
+    user_settings = original_settings_copy.profiles[_DEFAULT_PROFILE].settings.get(
         UserSettings.get_path(), {}
     )
 
     for key, value in plugin_settings.items():
         user_settings[key] = value
 
-    original_settings_copy.profiles[DEFAULT_PROFILE].settings[
+    original_settings_copy.profiles[_DEFAULT_PROFILE].settings[
         UserSettings.get_path()
     ] = plugin_settings
 
@@ -114,14 +114,14 @@ def mock_server_settings(settings: Dict[ServerSettingsVar, str]):
         original_settings_copy = Settings.make_default()
 
     plugin_settings = cast(PluginSettings, settings)
-    user_settings = original_settings_copy.profiles[DEFAULT_PROFILE].settings.get(
+    user_settings = original_settings_copy.profiles[_DEFAULT_PROFILE].settings.get(
         ServerSettings.get_path(), {}
     )
 
     for key, value in plugin_settings.items():
         user_settings[key] = value
 
-    original_settings_copy.profiles[DEFAULT_PROFILE].settings[
+    original_settings_copy.profiles[_DEFAULT_PROFILE].settings[
         ServerSettings.get_path()
     ] = plugin_settings
 
