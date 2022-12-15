@@ -8,7 +8,7 @@ from sematic.plugins.abstract_storage import AbstractStorage, NoSuchStorageKey
 
 class MemoryStorage(AbstractStorage, AbstractPlugin):
     """
-    An in-memory key/value store implementing the `Storage` interface.
+    An in-memory key/value store implementing the `AbstractStorage` interface.
     """
 
     @staticmethod

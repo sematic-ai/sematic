@@ -33,8 +33,9 @@ class S3StorageSettingsVar(AbstractPluginSettingsVar):
 
 class S3Storage(AbstractStorage, AbstractPlugin):
     """
-    Implementation of the `Storage` interface for AWS S3 storage. The bucket
-    where to store values is determined by the `AWS_S3_BUCKET` user settings variable.
+    Implementation of the `AbstractStorage` interface for AWS S3 storage. The
+    bucket where to store values is determined by the `AWS_S3_BUCKET` plug-in
+    setting.
     """
 
     PRESIGNED_URL_EXPIRATION = 5 * 60  # 5 minutes
