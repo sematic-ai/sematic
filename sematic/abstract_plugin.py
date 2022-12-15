@@ -67,10 +67,10 @@ class AbstractPlugin(abc.ABC):
     @abc.abstractmethod
     def get_version() -> Tuple[int, int, int]:
         """
-        Plug-in version: MAJOR.minor.patch
+        Plug-in version: MAJOR.MINOR.PATCH
 
-        increment patch for bug fixes
-        increment minor for new functionalities
+        increment PATCH for bug fixes
+        increment MINOR for new functionalities
         increment MAJOR for breaking API changes (0 means unstable)
         """
         pass
@@ -78,6 +78,12 @@ class AbstractPlugin(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def get_settings_vars(cls) -> Type[AbstractPluginSettingsVar]:
+        """
+        Returns the Settings var enum for this plug-in.
+
+        The class must inherit from `AbstractPluginSettingsVar` and list all
+        available settings for this plug-in.
+        """
         pass
 
     @final
