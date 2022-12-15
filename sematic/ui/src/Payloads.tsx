@@ -44,7 +44,7 @@ export type LogLineResult = {
   more_after: boolean;
   lines: string[];
   continuation_cursor: string | null;
-  log_unavailable_reason: string | null;
+  log_info_message: string | null;
 };
 
 export type LogLineRequestResponse = {
