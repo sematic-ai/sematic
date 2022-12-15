@@ -104,7 +104,19 @@ export default function RunPanel(props: {
             <Box sx={{ paddingBottom: 3, gridColumn: 1 }}>
               <Box marginBottom={3}>
                 <Typography variant="h6">{selectedRun.name}</Typography>
-                <CalculatorPath calculatorPath={"ID: " + selectedRun.id} />
+                <Typography fontSize="small" color="GrayText" component="span">
+                  <code style={{ fontSize: 12 }}>
+                  ID: {selectedRun.id}
+                  {
+                    selectedRun.original_run_id &&
+                    /*
+                      TODO #278: replace full id with a 6-character trimmed
+                      link using "./Notes/RunId"
+                    */
+                    <> (cloned from {selectedRun.original_run_id})</>
+                  }
+                  </code>
+                </Typography>
                 <br />
                 <CalculatorPath calculatorPath={selectedRun.calculator_path} />
               </Box>

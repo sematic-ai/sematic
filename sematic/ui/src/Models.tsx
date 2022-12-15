@@ -25,6 +25,7 @@ export type ExceptionMetadata = {
 
 export type Run = {
   id: string;
+  original_run_id: string | null;
   future_state: string;
   name: string;
   calculator_path: string;
