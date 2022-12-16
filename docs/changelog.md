@@ -10,6 +10,8 @@ with nothing else on the line.
 * [0.21.0](https://pypi.org/project/sematic/0.21.0/)
     * [feature] Add CLI for reading/following logs for a run
     * [feature] Enable configuration for the Kubernetes service account the workers will use
+    * [improvement] Settings file schema changed to accomodate plug-in settings,
+      files are migrated automatically.
     * [feature] Enable getting the id of the current run and root run from inside a Sematic func
     * [feature] Add custom display for Enum objects
     * [improvement] Settings file split between user settings `settings.yaml` and server settings `server.yaml`
