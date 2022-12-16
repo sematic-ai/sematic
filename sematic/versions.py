@@ -19,6 +19,9 @@ MIN_CLIENT_SERVER_SUPPORTS = (0, 21, 1)
 # Support for dropping columns added in 3.35.0
 MIN_SQLITE_VERSION = (3, 35, 0)
 
+# Version of the settings file schema
+SETTINGS_SCHEMA_VERSION = 1
+
 
 def _check_sqlite_version():
     version_tuple = sqlite3.sqlite_version.split(".")
