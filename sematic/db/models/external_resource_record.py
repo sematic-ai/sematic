@@ -1,5 +1,5 @@
 # Standard Library
-from typing import Any, Dict, Tuple, Type, TypedDict
+from typing import Any, Dict, Tuple, Type
 
 # Third-party
 from sqlalchemy import Column, types
@@ -15,9 +15,7 @@ from sematic.types.serialization import (
     value_to_json_encodable,
 )
 
-
-class TypeSerialization(TypedDict):
-    type: Tuple[str, str, Any]
+TypeSerialization = Dict[str, Any]
 
 
 class ExternalResourceRecord(Base, JSONEncodableMixin):
@@ -59,14 +57,14 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
     __tablename__ = "external_resources"
 
     id: str = Column(types.String(), primary_key=True)
-    resource_state: str = Column(
+    resource_state: str = Column(  # type: ignore
         types.String(), nullable=False, info={ENUM_KEY: ResourceState}
     )
     status_message: str = Column(types.String(), nullable=False)
     last_updated_epoch_seconds: int = Column(types.BIGINT(), nullable=False)
     type_serialization: TypeSerialization = Column(types.JSON(), nullable=False)
     value_serialization: Dict[str, Any] = Column(types.JSON(), nullable=False)
-    history_serializations: Tuple[Dict[str, Any], ...] = Column(
+    history_serializations: Tuple[Dict[str, Any], ...] = Column(  # type: ignore
         types.JSON(), nullable=False
     )
 
@@ -78,22 +76,20 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
                 f"ExternalResource. Was: {resource}"
             )
         type_serialization = type_to_json_encodable(type(resource))
-        value_serialization = value_to_json_encodable(resource, type_serialization)
+        value_serialization = value_to_json_encodable(resource, type(resource))
         return ExternalResourceRecord(
             id=resource.id,
-            resource_state=resource.status.state,
+            resource_state=resource.status.state.value,
             status_message=resource.status.message,
             last_updated_epoch_seconds=resource.status.last_update_epoch_time,
             type_serialization=type_serialization,
             value_serialization=value_serialization,
-            history_serializations=[value_serialization],
+            history_serializations=(value_serialization,),
         )
 
-    @property
-    def resource_type(self) -> Type[ExternalResource]:
+    def get_resource_type(self) -> Type[ExternalResource]:
         return type_from_json_encodable(self.type_serialization)
 
-    @resource_type.setter
     def set_resource_type(self, type_: Type[ExternalResource]) -> None:
         if not issubclass(type_, ExternalResource):
             raise ValueError(
@@ -101,11 +97,11 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
             )
         self.type_serialization = type_to_json_encodable(type_)
 
-    @property
-    def resource(self) -> ExternalResource:
+    resource_type = property(get_resource_type, set_resource_type)
+
+    def get_resource(self) -> ExternalResource:
         return value_from_json_encodable(self.value_serialization, self.resource_type)
 
-    @resource.setter
     def set_resource(self, resource: ExternalResource) -> None:
         if not isinstance(resource, ExternalResource):
             raise ValueError(
@@ -117,14 +113,16 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
         serialization = value_to_json_encodable(resource, type(resource))
         if resource != current_resource:
             history = list(self.history_serializations)
-            history.append(serialization)
+            history.insert(0, serialization)
             self.history_serializations = tuple(history)
 
-        self.resource_state = resource.status.state
+        self.resource_state = resource.status.state.value
         self.status_message = resource.status.message
         self.last_updated_epoch_seconds = resource.status.last_update_epoch_time
 
         self.value_serialization = serialization
+
+    resource = property(get_resource, set_resource)
 
     @property
     def history(self) -> Tuple[ExternalResource, ...]:

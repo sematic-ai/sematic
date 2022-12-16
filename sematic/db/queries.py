@@ -3,7 +3,7 @@ Module holding common DB queries.
 """
 # Standard Library
 import logging
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 # Third-party
 import sqlalchemy
@@ -142,29 +142,34 @@ def save_run(run: Run) -> Run:
 
 
 def save_external_resource_record(record: ExternalResourceRecord):
-    if record.resource_state == ResourceState.CREATED:
+    existing_record = get_external_resource_record(record.id)
+    if existing_record is None:
+        if record.resource_state != ResourceState.CREATED.value:
+            raise ValueError(
+                f"Cannot create an external resource in a state other than 'CREATED'. "
+                f"{record.id} was in state '{record.resource_state}'."
+            )
+
         # this ensures that all the fields are consistent
         record = ExternalResourceRecord.from_resource(record.resource)
     else:
         # this ensures that the update properly updates history
         # and keeps data consistent
-        existing_record = get_external_resource_record(record.id)
         existing_record.resource = record.resource
         record = existing_record
     with db().get_session() as session:
         session.merge(record)
         session.commit()
-        session.refresh(record)
 
         return record
 
 
-def get_external_resource_record(resource_id: str) -> ExternalResourceRecord:
+def get_external_resource_record(resource_id: str) -> Optional[ExternalResourceRecord]:
     with db().get_session() as session:
         return (
             session.query(ExternalResourceRecord)
             .filter(ExternalResourceRecord.id == resource_id)
-            .one()
+            .one_or_none()
         )
 
 
