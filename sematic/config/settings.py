@@ -18,13 +18,13 @@ from sematic.abstract_plugin import (
     import_plugin,
 )
 from sematic.config.config_dir import get_config_dir
+from sematic.versions import SETTINGS_SCHEMA_VERSION
 
 logger = logging.getLogger(__name__)
 
 
 _DEFAULT_PROFILE = "default"
 _SETTINGS_FILE_NAME = "settings.yaml"
-_CURRENT_SETTINGS_SCHEMA_VERSION = 1
 _PLUGIN_VERSION_KEY: Literal["__version__"] = "__version__"
 
 PluginScopes = Dict[PluginScope, List[str]]
@@ -48,7 +48,7 @@ class Settings:
     Represents the entire content of the settings file.
     """
 
-    version: int = field(default_factory=lambda: _CURRENT_SETTINGS_SCHEMA_VERSION)
+    version: int = field(default_factory=lambda: SETTINGS_SCHEMA_VERSION)
     profiles: Dict[str, ProfileSettings] = field(
         default_factory=lambda: {_DEFAULT_PROFILE: ProfileSettings()}
     )
@@ -180,7 +180,7 @@ def get_plugin_setting(
     return plugin_settings[var]
 
 
-def import_plugins():
+def import_plugins() -> None:
     """
     Imports all configured plugins.
     """
@@ -193,7 +193,7 @@ def import_plugins():
 
 def set_plugin_setting(
     plugin: Type[AbstractPlugin], var: AbstractPluginSettingsVar, value: str
-):
+) -> None:
     """
     Sets a plug-in setting value.
     """
@@ -216,13 +216,16 @@ def set_plugin_setting(
     save_settings(get_settings())
 
 
-def delete_plugin_setting(plugin: Type[AbstractPlugin], var: AbstractPluginSettingsVar):
+def delete_plugin_setting(
+    plugin: Type[AbstractPlugin], var: AbstractPluginSettingsVar
+) -> None:
     """
     Deletes a plug-in setting value.
     """
     try:
         plugin_settings = get_plugin_settings(plugin)
     except MissingSettingsError:
+        logger.warning("%s has no saved settings", plugin.get_path())
         return
 
     if var in plugin_settings:
@@ -231,7 +234,7 @@ def delete_plugin_setting(plugin: Type[AbstractPlugin], var: AbstractPluginSetti
     save_settings(get_settings())
 
 
-def save_settings(settings: Settings):
+def save_settings(settings: Settings) -> None:
     """
     Persists settings to file.
     """
@@ -297,7 +300,7 @@ def _load_settings(file_path: str) -> Settings:
 
     settings = Settings()
 
-    settings.version = loaded_settings.get("version", _CURRENT_SETTINGS_SCHEMA_VERSION)
+    settings.version = loaded_settings.get("version", SETTINGS_SCHEMA_VERSION)
     settings.profiles = loaded_settings.get("profiles", settings.profiles)
 
     # Normalizing settings to only have expected values and format as enum
@@ -309,9 +312,11 @@ def _load_settings(file_path: str) -> Settings:
             )
             settings.profiles[profile_name] = profile_settings
 
-        _normalize_enum_keys(profile_settings.scopes, PluginScope)
+        profile_settings.scopes = _normalize_enum_keys(
+            profile_settings.scopes, PluginScope
+        )
 
-        # We are mutating the dictionary as we iterate so iterate on keys.
+        # We are mutating the dictionary as we iterate so we iterate on keys.
         for plugin_path in list(profile_settings.settings):
             try:
                 plugin = import_plugin(plugin_path)
@@ -341,7 +346,9 @@ def _load_settings(file_path: str) -> Settings:
                         major_plugin_version,
                     )
 
-            _normalize_enum_keys(plugin_settings, plugin_settings_vars)
+            profile_settings.settings[plugin_path] = _normalize_enum_keys(
+                plugin_settings, plugin_settings_vars
+            )
 
     return settings
 
@@ -352,18 +359,22 @@ def _get_plugin_settings_vars(plugin_path: str) -> Type[AbstractPluginSettingsVa
     return plugin_class.get_settings_vars()
 
 
-def _normalize_enum_keys(dict_, vars: Type[enum.Enum]):
+EnumType = TypeVar("EnumType", bound=enum.Enum)
+
+
+def _normalize_enum_keys(
+    dict_: Dict[Union[str, EnumType], Any], vars: Type[EnumType]
+) -> Dict[EnumType, Any]:
+    normalized_dict: Dict[EnumType, Any] = {}
+
     for key in list(dict_):
         normalized_key = _normalize_enum(vars, key)
         if normalized_key is None:
             logger.warning("Unknown key: %s", key)
         else:
-            dict_[normalized_key] = dict_[key]
+            normalized_dict[normalized_key] = dict_[key]
 
-        del dict_[key]
-
-
-EnumType = TypeVar("EnumType", bound=enum.Enum)
+    return normalized_dict
 
 
 def _normalize_enum(enum_type: Type[EnumType], obj: Any) -> Optional[EnumType]:
@@ -401,12 +412,3 @@ def dump_settings(settings: ProfileSettings) -> str:
     Dumps the specified settings to string.
     """
     return yaml.dump(asdict(settings), default_flow_style=False, Dumper=EnumDumper)
-
-
-def _clear_cache():
-    """
-    Only for testing.
-    """
-    global _SETTINGS, _ACTIVE_SETTINGS
-
-    _SETTINGS, _ACTIVE_SETTINGS = None, None

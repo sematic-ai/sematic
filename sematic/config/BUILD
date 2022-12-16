@@ -21,6 +21,7 @@ sematic_py_lib(
     deps = [
         ":config_dir",
         "//sematic:abstract_plugin",
+        "//sematic:versions",
     ],
 )
 

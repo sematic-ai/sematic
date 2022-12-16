@@ -51,7 +51,10 @@ def up():
 def down():
     loaded_yaml = _load_settings_yaml("settings.yaml")
 
-    schema_version = loaded_yaml.get("version", 0)
+    if len(loaded_yaml) == 0:
+        return
+
+    schema_version = loaded_yaml.get("version", "'unknown'")
 
     if schema_version != THIS_MIGRATION_SCHEMA_VERSION:
         raise RuntimeError(
