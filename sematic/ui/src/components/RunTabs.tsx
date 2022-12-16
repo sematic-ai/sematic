@@ -1,27 +1,30 @@
-import Box from "@mui/material/Box";
-import { useState, useContext } from "react";
-import { Artifact, Edge, Run } from "../Models";
-import { ArtifactList } from "./Artifacts";
-import SourceCode from "./SourceCode";
-import Tab from "@mui/material/Tab";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
-import Docstring from "./Docstring";
 import { Alert } from "@mui/material";
-import LogPanel from "./LogPanel";
-import GrafanaPanel from "../addons/grafana/GrafanaPanel";
+import Box from "@mui/material/Box";
+import Tab from "@mui/material/Tab";
+import { styled } from '@mui/system';
+import { useContext, useState } from "react";
 import { EnvContext } from "../";
+import GrafanaPanel from "../addons/grafana/GrafanaPanel";
+import { Artifact, Run } from "../Models";
+import { ArtifactList } from "./Artifacts";
+import Docstring from "./Docstring";
+import LogPanel from "./LogPanel";
+import SourceCode from "./SourceCode";
+
+const ExpandedTabPanel = styled(TabPanel)<{hidden: boolean}>( 
+  ({hidden}) => hidden ? {} : {
+    display: 'flex',
+    flexGrow: 1,
+    paddingBottom: 0
+  });
+
 
 export type IOArtifacts = {
   input: Map<string, Artifact | undefined>;
   output: Map<string, Artifact | undefined>;
-};
-
-type Graph = {
-  runs: Map<string, Run>;
-  edges: Edge[];
-  artifacts: Artifact[];
 };
 
 export default function RunTabs(props: {
@@ -47,7 +50,7 @@ export default function RunTabs(props: {
   return (
     <>
       <TabContext value={selectedTab}>
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider", flexShrink: 1 }}>
           <TabList onChange={handleChange} aria-label="Selected run tabs">
             <Tab label="Input" value="input" />
             <Tab label="Output" value="output" />
@@ -73,9 +76,9 @@ export default function RunTabs(props: {
         <TabPanel value="documentation">
           <Docstring docstring={run.description} />
         </TabPanel>
-        <TabPanel value="logs">
+        <ExpandedTabPanel hidden={selectedTab != "logs"} value="logs">
           <LogPanel run={run} />
-        </TabPanel>
+        </ExpandedTabPanel>
         <TabPanel value="source">
           <SourceCode run={run} />
         </TabPanel>

@@ -111,26 +111,20 @@ export default function ScrollingLogView(props: {
   }, [getNext, hasPulledData]);
 
   return (
-    <Box
-      sx={{
-        mt: 5,
-        position: "relative",
-        left: 0,
-        top: 0,
-      }}
-    >
-      
+    <>
       <Box
         id={scrollerId}
         ref={scrollMonitorRef}
         sx={{
-          height: "400px",
-          my: 5,
+          height: 0,
+          mt: 5,
           pt: 1,
-          whiteSpace: "nowrap",
+          whiteSpace: "break-spaces",
           overflow: "hidden",
           overflowY: "scroll",
-          gridRow: 2,
+          width: `100%`,
+          lineBreak: 'anywhere',
+          flexGrow: 1,
         }}
       >
         <InfiniteScroll
@@ -152,6 +146,7 @@ export default function ScrollingLogView(props: {
                 color: theme.palette.grey[800],
                 backgroundColor:
                   index % 2 === 0 ? "white" : theme.palette.grey[50],
+                paddingRight: 1
               }}
               key={index}
             >
@@ -168,10 +163,11 @@ export default function ScrollingLogView(props: {
           onClick={accumulateLogsUntilEnd}
           sx={{ width: "100%" }}
           disabled={isAccumulating || isLoading}
+          style={{flexShrink: 1}}
         >
           {accumulatorButtonMessage}
         </Button>
       )}
-    </Box>
+    </>
   );
 }
