@@ -38,11 +38,13 @@ pytest_test(
     deps = [
         ":fixtures",
         "//sematic:calculator",
+        "//sematic:external_resource",
         "//sematic/api/tests:fixtures",
         "//sematic/db:db",
         "//sematic/db:queries",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
+        "//sematic/db/models:external_resource_record",
         "//sematic/db/models:factories",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",

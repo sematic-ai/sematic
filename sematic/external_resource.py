@@ -112,7 +112,9 @@ class ResourceStatus:
 
     state: ResourceState
     message: str
-    last_update_epoch_time: int = field(default_factory=lambda: int(time.time()))
+    last_update_epoch_time: int = field(
+        default_factory=lambda: int(time.time()), compare=False
+    )
 
 
 T = TypeVar("T")
@@ -190,7 +192,7 @@ class ExternalResource:
         """
         logger.debug("Activating %s", self)
         updated = self._do_activate(is_local)
-        self._validate_transition(updated)
+        self.validate_transition(updated)
         if updated.status.state != ResourceState.ACTIVATING:
             raise IllegalStateTransitionError(
                 "Calling .activate() did not leave the resource in the "
@@ -230,7 +232,7 @@ class ExternalResource:
                     "Calling .deactivate() did not leave the resource in the "
                     "DEACTIVATING state."
                 )
-        self._validate_transition(updated)
+        self.validate_transition(updated)
         return updated
 
     def _do_deactivate(self) -> "ExternalResource":
@@ -238,7 +240,19 @@ class ExternalResource:
             "Subclasses of ExternalResource should implement ._do_deactivate()"
         )
 
-    def _validate_transition(self, updated: "ExternalResource"):
+    def validate_transition(self, updated: "ExternalResource"):
+        """Confirm that the resource can go from its current state to the updated one.
+
+        Parameters
+        ----------
+        updated:
+            The new version of the resource
+
+        Raises
+        ------
+        IllegalStateTransitionError:
+            If the transition is not allowed
+        """
         if self.id != updated.id:
             raise IllegalStateTransitionError(
                 f"Cannot change id of resource from {self.id} to " f"{updated.id}"
@@ -273,7 +287,7 @@ class ExternalResource:
         """
         logger.debug("Updating %s", self)
         updated = self._do_update()
-        self._validate_transition(updated)
+        self.validate_transition(updated)
         return updated
 
     def _do_update(self) -> "ExternalResource":
