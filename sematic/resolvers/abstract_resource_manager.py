@@ -6,7 +6,7 @@ from typing import List
 from sematic.external_resource import ExternalResource
 
 
-class ResourceManager(abc.ABC):
+class AbstractResourceManager(abc.ABC):
     """A store for information about external resources and their metadata.
 
     Notably, this abstraction only covers storage and retrieval of resource
