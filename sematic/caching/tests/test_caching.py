@@ -11,8 +11,8 @@ from sematic.caching.caching import get_future_cache_key, resolve_cache_namespac
 
 # these values were calculated by hand on paper to validate the algorithm
 # (they were all correct on the first try)
-MY_CACHE_KEY = "3056b3ba8b7aea0c5821168fdc5b6ddde7bb9b14_my_namespace"
-MY_OTHER_CACHE_KEY = "3056b3ba8b7aea0c5821168fdc5b6ddde7bb9b14_my_other_namespace"
+MY_CACHE_KEY = "ec8eaec9ea3bd0315d5bd0839380ed2cab6bf526_my_namespace"
+MY_OTHER_CACHE_KEY = "ec8eaec9ea3bd0315d5bd0839380ed2cab6bf526_my_other_namespace"
 
 
 @func

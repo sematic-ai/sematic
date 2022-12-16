@@ -1,4 +1,5 @@
 # Standard Library
+import json
 import logging
 from typing import Callable, Optional, Union
 
@@ -123,7 +124,7 @@ def _get_input_args_hash(future: AbstractFuture) -> str:
     # order to avoid keeping references to the resulting strings, so that they can be
     # deallocated quickly
     # TODO #403: do these things in a sustainable and efficient way
-    serialized_input_arg_tuples = []
+    input_arg_hashes = {}
     for name, value in future.kwargs.items():
 
         type_ = future.calculator.input_types[name]
@@ -134,8 +135,10 @@ def _get_input_args_hash(future: AbstractFuture) -> str:
         hashed_value = get_value_and_type_sha1_digest(
             value_serialization, type_serialization, json_summary
         )
-        serialized_input_arg_tuples.append((name, hashed_value))
+        input_arg_hashes[name] = hashed_value
 
     # we rely on the registered value serializers to provide
     # respective recursive deterministic sorted representations
-    return get_str_sha1_digest(str(sorted(serialized_input_arg_tuples)))
+    input_arg_hashes_dump = json.dumps(input_arg_hashes, sort_keys=True, default=str)
+
+    return get_str_sha1_digest(input_arg_hashes_dump)
