@@ -1,12 +1,17 @@
 # Standard Library
-import hashlib
-import json
 import logging
-from typing import Any, Callable, Optional, Union
+from typing import Callable, Optional, Union
 
 # Sematic
 from sematic.abstract_future import AbstractFuture
-from sematic.types.serialization import value_to_json_encodable
+from sematic.types.serialization import (
+    get_json_encodable_summary,
+    type_to_json_encodable,
+    value_to_json_encodable,
+)
+from sematic.utils.hashing import get_str_sha1_digest, get_value_and_type_sha1_digest
+
+CACHE_NAMESPACE_MAX_LENGTH = 50
 
 CacheNamespaceCallable = Callable[[AbstractFuture], str]
 CacheNamespace = Optional[Union[str, CacheNamespaceCallable]]
@@ -14,38 +19,98 @@ CacheNamespace = Optional[Union[str, CacheNamespaceCallable]]
 logger = logging.getLogger(__name__)
 
 
-def get_future_cache_key(
-    cache_namespace: CacheNamespace, future: AbstractFuture
+def resolve_cache_namespace(
+    cache_namespace: CacheNamespace, root_future: AbstractFuture
 ) -> str:
     """
-    Generates a cache key that can be used to uniquely identify the output value of a
-    deterministic function.
+    Returns a string cache namespace from a `CacheNamespace`, executing the `Callable`
+    instances of this type, if it is the case.
+
+    The string representation is truncated to 50 characters, in order to be a
+    human-readable part of the final cache key for each `Future` execution.
 
     Parameters
     ----------
     cache_namespace: CacheNamespace
         A string or a `Callable` which returns a string, which is used as the cache key
         namespace.
+    root_future: AbstractFuture
+        The root Future of the pipeline for which to look up the code git commit status.
+
+    Returns
+    -------
+    A string of maximum length 50.
+    """
+    if cache_namespace is None:
+        raise ValueError("`cache_namespace` cannot be None!")
+
+    if isinstance(cache_namespace, str):
+        return _truncate_namespace(cache_namespace)
+
+    logger.debug("Calling cache_namespace %s", cache_namespace)
+
+    # TODO: ponder async execution with a timeout
+    namespace = str(cache_namespace(root_future))
+
+    logger.debug(
+        "Finished calling cache_namespace %s with result: %s",
+        cache_namespace,
+        namespace,
+    )
+
+    return _truncate_namespace(namespace)
+
+
+def get_future_cache_key(cache_namespace: str, future: AbstractFuture) -> str:
+    """
+    Generates a cache key that can be used to uniquely identify the output value of a
+    deterministic function.
+
+    Parameters
+    ----------
+    cache_namespace: str
+        A string which is used as the cache key namespace.
     future: AbstractFuture
         The future for which to calculate the cache key.
 
     Returns
     -------
     A cache key string that can be used to uniquely identify the output value of a
-    deterministic function.
+    deterministic function. It is under the form "<SHA1>_<cache_namespace>".
     """
-    # this may raise, so do it early
-    cache_namespace = _resolve_namespace(cache_namespace=cache_namespace, future=future)
+    # even if the type hint does not include Optional,
+    # this code is critical and must be properly sanitized
+    if cache_namespace is None:
+        raise ValueError("`cache_namespace` cannot be None!")
 
-    func_fqpn = future.calculator.get_func_fqpn()  # type: ignore # noqa: ignore
+    func_fqpn = future.calculator.get_func_fqpn()  # type: ignore
     output_type_repr = repr(future.calculator.output_type)
     input_args_hash = _get_input_args_hash(future)
 
-    hash_base = f"{cache_namespace}|{func_fqpn}|{output_type_repr}|{input_args_hash}"
-    cache_key = _hash(hash_base)
+    hash_base = f"{func_fqpn}|{output_type_repr}|{input_args_hash}"
+    hashed_base = get_str_sha1_digest(hash_base)
+    cache_key = f"{hashed_base}_{cache_namespace}"
 
     logger.debug("Generated cache key `%s` from base: %s", cache_key, hash_base)
     return cache_key
+
+
+def _truncate_namespace(
+    namespace: str, max_length: int = CACHE_NAMESPACE_MAX_LENGTH
+) -> str:
+    """
+    Ensures that the namespace is right-truncated to the specified length, and logs a
+    warning message if it was actually modified.
+    """
+    if len(namespace) <= max_length:
+        return namespace
+
+    namespace = namespace[:max_length]
+    logger.warning(
+        "Truncated the cache namespace to %s characters: %s", max_length, namespace
+    )
+
+    return namespace
 
 
 def _get_input_args_hash(future: AbstractFuture) -> str:
@@ -60,47 +125,17 @@ def _get_input_args_hash(future: AbstractFuture) -> str:
     # TODO #403: do these things in a sustainable and efficient way
     serialized_input_arg_tuples = []
     for name, value in future.kwargs.items():
-        json_value = value_to_json_encodable(value, future.calculator.input_types[name])
-        hashed_value = _hash(json.dumps(json_value, sort_keys=True))
+
+        type_ = future.calculator.input_types[name]
+        type_serialization = type_to_json_encodable(type_)
+        value_serialization = value_to_json_encodable(value, type_)
+        json_summary = get_json_encodable_summary(value, type_)
+
+        hashed_value = get_value_and_type_sha1_digest(
+            value_serialization, type_serialization, json_summary
+        )
         serialized_input_arg_tuples.append((name, hashed_value))
 
     # we rely on the registered value serializers to provide
     # respective recursive deterministic sorted representations
-    return _hash(str(sorted(serialized_input_arg_tuples)))
-
-
-def _resolve_namespace(cache_namespace: CacheNamespace, future: AbstractFuture) -> str:
-    """
-    Returns a string cache namespace from a `CacheNamespace`, executing the `Callable`
-    instances of this type, if it is the case.
-    """
-    if cache_namespace is None:
-        raise ValueError("`cache_namespace` cannot be None!")
-
-    if isinstance(cache_namespace, str):
-        return str(cache_namespace)
-
-    logger.debug("Calling cache_namespace %s", cache_namespace)
-
-    # TODO: ponder async execution with a timeout
-    namespace = str(cache_namespace(future))
-
-    logger.debug(
-        "Finished calling cache_namespace %s with result: %s",
-        cache_namespace,
-        namespace,
-    )
-
-    return namespace
-
-
-def _hash(value: Any) -> str:
-    """
-    Utility method for performing the actual hashing of a value.
-    """
-    # we don't need a cryptographic hash, but we do need a fast hash
-    # unfortunately the builtin hash is initialized with a random salt seed on program
-    # initialization, and this cannot be reset,
-    # so we use sha1 for now
-    # https://automationrhapsody.com/md5-sha-1-sha-256-sha-512-speed-performance/
-    return hashlib.sha1(str(value).encode("utf-8")).hexdigest()
+    return get_str_sha1_digest(str(sorted(serialized_input_arg_tuples)))

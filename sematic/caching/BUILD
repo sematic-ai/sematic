@@ -6,6 +6,7 @@ sematic_py_lib(
         ":caching",
         "//sematic:abstract_future",
         "//sematic/types:serialization",
+        "//sematic/utils:hashing",
     ],
 )
 
@@ -16,6 +17,7 @@ sematic_py_lib(
     deps = [
         "//sematic:abstract_future",
         "//sematic/types:serialization",
+        "//sematic/utils:hashing",
     ],
 )
 
