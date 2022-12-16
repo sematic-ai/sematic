@@ -171,6 +171,12 @@ class AbstractFuture(abc.ABC):
             f"nested_id={nested_id}, value={self.value})"
         )
 
+    def is_root_future(self):
+        """
+        Returns whether this is the root Future of a pipeline Resolution.
+        """
+        return self.parent_future is None
+
 
 def make_future_id() -> str:
     return uuid.uuid4().hex
