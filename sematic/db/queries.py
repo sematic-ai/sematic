@@ -19,6 +19,7 @@ from sematic.db.models.external_resource_record import ExternalResourceRecord
 from sematic.db.models.note import Note
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
+from sematic.db.models.run_external_resource import RunExternalResource
 from sematic.db.models.user import User
 from sematic.external_resource import ResourceState
 from sematic.scheduling.external_job import ExternalJob
@@ -171,6 +172,24 @@ def get_external_resource_record(resource_id: str) -> Optional[ExternalResourceR
             .filter(ExternalResourceRecord.id == resource_id)
             .one_or_none()
         )
+
+
+def save_run_external_resource_link(resource_id: str, run_id: str):
+    with db().get_session() as session:
+        session.merge(RunExternalResource(resource_id=resource_id, run_id=run_id))
+        session.commit()
+
+
+def get_resource_ids_by_root_id(root_run_id: str) -> List[str]:
+    with db().get_session() as session:
+        results = (
+            session.query(ExternalResourceRecord.id)
+            .filter(ExternalResourceRecord.id == RunExternalResource.resource_id)
+            .filter(Run.id == RunExternalResource.run_id)
+            .filter(Run.root_id == root_run_id)
+            .all()
+        )
+        return list(set(r[0] for r in results))
 
 
 def get_resolution(resolution_id: str) -> Resolution:

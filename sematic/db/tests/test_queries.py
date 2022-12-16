@@ -20,12 +20,14 @@ from sematic.db.queries import (
     count_runs,
     get_artifact,
     get_resolution,
+    get_resource_ids_by_root_id,
     get_root_graph,
     get_run,
     get_run_graph,
     save_external_resource_record,
     save_resolution,
     save_run,
+    save_run_external_resource_link,
 )
 from sematic.db.tests.fixtures import (  # noqa: F401
     make_run,
@@ -208,3 +210,32 @@ def test_save_external_resource_record(test_db):  # noqa: F811
     record5 = ExternalResourceRecord.from_resource(resource5)
     with pytest.raises(IllegalStateTransitionError):
         save_external_resource_record(record5)
+
+
+def test_run_resource_links(test_db):  # noqa: F811
+    root_run = make_run()
+    child_run_1 = make_run(root_id=root_run.id)
+    child_run_2 = make_run(root_id=root_run.id)
+    child_run_3 = make_run(root_id=root_run.id)
+    other_root_run = make_run()
+    for r in [root_run, child_run_1, child_run_2, child_run_3, other_root_run]:
+        save_run(r)
+
+    resource_1 = SomeResource(some_field=1)
+    resource_2 = SomeResource(some_field=2)
+    resource_3 = SomeResource(some_field=3)
+    resource_4 = SomeResource(some_field=4)
+
+    for resource in [resource_1, resource_2, resource_3, resource_4]:
+        save_external_resource_record(ExternalResourceRecord.from_resource(resource))
+
+    save_run_external_resource_link(resource_1.id, child_run_1.id)
+    save_run_external_resource_link(resource_2.id, child_run_2.id)
+
+    # multiple resources linked with one run
+    save_run_external_resource_link(resource_3.id, child_run_2.id)
+
+    save_run_external_resource_link(resource_4.id, other_root_run.id)
+
+    resource_ids = get_resource_ids_by_root_id(root_run.id)
+    assert set(resource_ids) == {resource_1.id, resource_2.id, resource_3.id}
