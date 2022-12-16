@@ -34,7 +34,7 @@ export function useHttpClient(): HttpClient {
 
         const reqBody: BodyInit | null = body ? JSON.stringify(body) : null;
 
-        devLogger("fetch() ", method, url, reqBody);
+        devLogger("HttpClient.fetch ", method, url, reqBody);
 
         const abortController = new AbortController();
         abortControllerRef.current = (abortController);
