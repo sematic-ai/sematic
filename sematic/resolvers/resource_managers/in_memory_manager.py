@@ -4,7 +4,7 @@ from typing import Dict, FrozenSet, List, Tuple
 
 # Sematic
 from sematic.external_resource import ExternalResource
-from sematic.resolvers.resource_managers.resource_manager import ResourceManager
+from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 
 
 @dataclass(frozen=True)
@@ -29,7 +29,7 @@ class _InMemoryResourceRecord:
 
 
 @dataclass
-class InMemoryResourceManager(ResourceManager):
+class InMemoryResourceManager(AbstractResourceManager):
     resource_id_to_record: Dict[str, _InMemoryResourceRecord] = field(
         default_factory=dict
     )
