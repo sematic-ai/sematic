@@ -139,10 +139,7 @@ def test_valid_transitions():
 
 
 def test_use_in_func():
-    error_regex = (
-        r".*for argument 'resource' of sematic.tests.test_external_resource.my_func"
-        r".* inside the body.*"
-    )
+    error_regex = r".* inside the body.*parameter 'resource'.*"
     with pytest.raises(TypeError, match=error_regex):
 
         @func

@@ -300,23 +300,6 @@ def validate_type_annotation(*types: TypeAnnotation) -> None:
                 "'Any' is not a Sematic-supported type. Use 'object' instead."
             )
 
-        if _is_type(type_):
-            try:
-                # Sematic
-                from sematic.external_resource import ExternalResource
-
-                if issubclass(type_, ExternalResource):
-                    raise TypeError(
-                        "ExternalResource objects can't be passed into or out of "
-                        "Sematic funcs. They are only intended to be used inside "
-                        "the body of a Sematic func."
-                    )
-            except ImportError:
-                # there is no way type_ is a subclass of ExternalResource
-                # if we reached here; if it was then it would have been
-                # possible to import ExternalResource.
-                pass
-
         if _is_type(type_) or _is_abc(type_) or is_enum(type_):
             return
         if not is_parameterized_generic(type_, raise_for_unparameterized=True):
