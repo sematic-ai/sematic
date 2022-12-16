@@ -25,6 +25,7 @@ sematic_py_lib(
         "//sematic/api/endpoints:auth",
         "//sematic/api/endpoints:edges",
         "//sematic/api/endpoints:events",
+        "//sematic/api/endpoints:external_resources",
         "//sematic/api/endpoints:meta",
         "//sematic/api/endpoints:notes",
         "//sematic/api/endpoints:resolutions",
