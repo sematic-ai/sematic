@@ -1,10 +1,12 @@
 # Standard Library
 import sys
+from typing import Type
 
 # Third-party
 import click
 
 # Sematic
+from sematic.abstract_plugin import AbstractPlugin
 from sematic.cli.cli import cli
 from sematic.config.server_settings import ServerSettings
 from sematic.config.settings import (
@@ -35,9 +37,15 @@ def show_settings_cli() -> None:
 @click.argument("value", type=click.STRING)
 def set_settings_cli(var: str, value: str) -> None:
     """
-    Set a settings value.
+    Set a setting value.
     """
-    settings_vars = UserSettings.get_settings_vars()
+    _set_plugin_settings_cli(var, value, UserSettings)
+
+
+def _set_plugin_settings_cli(
+    var: str, value: str, plugin: Type[AbstractPlugin]
+) -> None:
+    settings_vars = plugin.get_settings_vars()
 
     try:
         settings_var = settings_vars[var]
@@ -45,12 +53,12 @@ def set_settings_cli(var: str, value: str) -> None:
     except KeyError:
         keys = "\n".join([var.value for var in settings_vars])
         click.echo(
-            f"Invalid settings key for {UserSettings.get_path()}: "
+            f"Invalid settings key for {plugin.get_path()}: "
             f"{var}! Available keys:\n{keys}\n"
         )
         sys.exit(1)
 
-    set_plugin_setting(UserSettings, settings_var, value)
+    set_plugin_setting(plugin, settings_var, value)
     click.echo(f"Successfully set {var} to {repr(value)}\n")
 
 
@@ -58,8 +66,12 @@ def set_settings_cli(var: str, value: str) -> None:
 @click.argument("var", type=click.STRING)
 def delete_settings_cli(var: str) -> None:
     """
-    Delete a user settings value.
+    Delete a user setting value.
     """
+    _delete_plugin_settings_cli(var, UserSettings)
+
+
+def _delete_plugin_settings_cli(var: str, plugin: Type[AbstractPlugin]) -> None:
     settings_vars = UserSettings.get_settings_vars()
 
     try:
@@ -96,15 +108,15 @@ def show_server_settings_cli() -> None:
 @click.argument("value", type=click.STRING)
 def set_server_settings_cli(var: str, value: str) -> None:
     """
-    Set a server settings value.
+    Set a server setting value.
     """
-    set_settings_cli(var=var, value=value, plugin_path=ServerSettings.get_path())
+    _set_plugin_settings_cli(var=var, value=value, plugin=ServerSettings)
 
 
 @server_settings.command("delete", short_help="Delete a server settings value")
 @click.argument("var", type=click.STRING)
 def delete_server_settings_cli(var: str) -> None:
     """
-    Delete a server settings value.
+    Delete a server setting value.
     """
-    delete_settings_cli(var=var, plugin_path=ServerSettings.get_path())
+    _delete_plugin_settings_cli(var=var, plugin=ServerSettings)
