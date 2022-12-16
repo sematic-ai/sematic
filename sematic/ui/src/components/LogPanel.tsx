@@ -21,7 +21,7 @@ export default function LogPanel(props: { run: Run }) {
       filterString={filterString} />
   );
   const logErrorView = (
-    <Alert severity="error">
+    <Alert severity="error" sx={{ my: 5 }}>
       The server returned an error when asked for logs for this run.
     </Alert>
   );
