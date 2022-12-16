@@ -41,12 +41,23 @@ def resolve_cache_namespace(
     Returns
     -------
     A string of maximum length 50.
+
+    Raises
+    ------
+    ValueError:
+        If `cache_namespace` is `None` or if `cache_namespace` is a `Callable` and
+        `root_future` is not an actual root `Future`.
     """
     if cache_namespace is None:
         raise ValueError("`cache_namespace` cannot be None!")
 
     if isinstance(cache_namespace, str):
         return _truncate_namespace(cache_namespace)
+
+    if root_future is None:
+        raise ValueError("`root_future` cannot be None!")
+    if not root_future.is_root_future():
+        raise ValueError("`root_future` must be a Resolution root Future!")
 
     logger.debug("Calling cache_namespace %s", cache_namespace)
 
@@ -66,6 +77,11 @@ def get_future_cache_key(cache_namespace: str, future: AbstractFuture) -> str:
     """
     Generates a cache key that can be used to uniquely identify the output value of a
     deterministic function.
+
+    The cache key is under the form "<SHA1>_<cache_namespace>". The first part is a hash
+    over the `Future` func fully qualified path name, its output type, and its effective
+    input arguments names, types, and values. Consequently, modifying any of these between
+    calls to the func will modify the resulting cache key, and result in a miss.
 
     Parameters
     ----------

@@ -1,5 +1,6 @@
 # Standard Library
 from typing import Dict
+from unittest import mock
 
 # Third-party
 import pytest
@@ -27,6 +28,14 @@ def my_other_pipeline(a: int) -> int:
     return a
 
 
+def my_namespace(_: AbstractFuture) -> str:
+    return "my_namespace"
+
+
+def my_other_namespace(_: AbstractFuture) -> str:
+    return "my_other_namespace"
+
+
 def test_none_namespace():
     with pytest.raises(ValueError, match="cannot be None"):
         get_future_cache_key(None, my_pipeline(1, {"test_key": 2}))
@@ -46,14 +55,8 @@ def test_resolve_namespace_str_happy_path():
 
 
 def test_resolve_namespace_callable_happy_path():
-    def my_namespace(_: AbstractFuture) -> str:
-        return "my_namespace"
-
     actual = resolve_cache_namespace(my_namespace, my_pipeline(1, {"test_key": 2}))
     assert actual == "my_namespace"
-
-    def my_other_namespace(_: AbstractFuture) -> str:
-        return "my_other_namespace"
 
     actual = resolve_cache_namespace(
         my_other_namespace, my_pipeline(1, {"test_key": 2})
@@ -70,10 +73,12 @@ def test_resolve_namespace_str_truncated():
 
 
 def test_resolve_namespace_callable_truncated():
-    def my_namespace(_: AbstractFuture) -> str:
+    def my_custom_namespace(_: AbstractFuture) -> str:
         return "01234567890123456789012345678901234567890123456789extra"
 
-    actual = resolve_cache_namespace(my_namespace, my_pipeline(1, {"test_key": 2}))
+    actual = resolve_cache_namespace(
+        my_custom_namespace, my_pipeline(1, {"test_key": 2})
+    )
     assert actual == "01234567890123456789012345678901234567890123456789"
 
 
@@ -98,17 +103,33 @@ def test_custom_resolve_namespace():
     assert actual == "my_other_namespace"
 
 
+def test_invalid_args_resolve_namespace():
+    with pytest.raises(ValueError, match="cannot be None"):
+        resolve_cache_namespace(None, my_pipeline(1, {"test_key": 2}))
+
+    actual = resolve_cache_namespace("my_namespace", None)
+    assert actual == "my_namespace"
+
+    with pytest.raises(ValueError, match="cannot be None"):
+        resolve_cache_namespace(my_namespace, None)
+
+    nested_future = mock.MagicMock()
+    nested_future.is_root_future.return_value = False
+    with pytest.raises(ValueError, match="must be a Resolution root Future"):
+        resolve_cache_namespace(my_namespace, nested_future)
+
+
 def test_malformed_resolve_namespace():
-    def my_namespace() -> str:
+    def my_malformed_namespace() -> str:
         return "my_namespace"
 
     with pytest.raises(TypeError, match="takes 0 positional arguments but 1 was given"):
-        resolve_cache_namespace(my_namespace, my_pipeline(1, {"test_key": 2}))
+        resolve_cache_namespace(my_malformed_namespace, my_pipeline(1, {"test_key": 2}))
 
 
 def test_resolve_namespace_error_raised():
-    def my_namespace(_: AbstractFuture) -> str:
+    def my_error_namespace(_: AbstractFuture) -> str:
         raise ValueError("test error")
 
     with pytest.raises(ValueError, match="test error"):
-        resolve_cache_namespace(my_namespace, my_pipeline(1, {"test_key": 2}))
+        resolve_cache_namespace(my_error_namespace, my_pipeline(1, {"test_key": 2}))
