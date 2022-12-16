@@ -26,10 +26,10 @@ def settings() -> None:
 @settings.command("show", short_help="Show the currently active settings")
 def show_settings_cli() -> None:
     """
-    Show the currently active user settings.
+    Show the currently active profile settings.
     """
     settings_dump = dump_settings(get_active_settings())
-    click.echo(f"Active user settings:\n\n{settings_dump}")
+    click.echo(f"Active profile settings:\n\n{settings_dump}")
 
 
 @settings.command("set", short_help="Set a user settings value")
