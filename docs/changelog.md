@@ -7,7 +7,8 @@ with nothing else on the line.
 * HEAD
     * [feature] Add CLI for reading/following logs for a run
     * [feature] Enable configuration for the Kubernetes service account the workers will use
-    * [improvement] Settings file split between user settings `settings.yaml` and server settings `server.yaml`
+    * [improvement] Settings file schema changed to accomodate plug-in settings,
+      files are migrated automatically.
     * [bugfix] Fix a bug deserializing `Union` values. Note that once you are using this release,
       if you try to "rerun from here" using a pipeline that has `Union` values in it that were
       produced prior to this version of Sematic, the rerun will likely fail with a serialization issue.
