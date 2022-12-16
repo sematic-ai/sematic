@@ -17,6 +17,8 @@ class AbstractStorage(abc.ABC):
     def set(self, key: str, value: bytes):
         """
         Sets value for key.
+
+        This is a client-side API. Key will typically be provided by the server.
         """
         pass
 
@@ -24,6 +26,8 @@ class AbstractStorage(abc.ABC):
     def get(self, key: str) -> bytes:
         """
         Gets value for key.
+
+        This is a client-side API. Key will typically be provided by the server.
         """
         pass
 
@@ -36,6 +40,12 @@ class AbstractStorage(abc.ABC):
         pass
 
     def get_location(self, namespace: str, key: str, mode: StorageMode) -> str:
+        """
+        This is a server-side API.
+
+        Server has storage permissions and returns permitted storage locations
+        (e.g. pre-signed URLs) to clients.
+        """
         if mode == StorageMode.READ:
             return self._get_read_location(namespace, key)
 

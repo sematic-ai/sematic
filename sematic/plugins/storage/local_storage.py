@@ -30,7 +30,7 @@ class LocalStorage(AbstractStorage, AbstractPlugin):
     def set(self, key: str, value: bytes):
         logger.debug(f"{self.__class__.__name__} Setting value for key: {key}")
 
-        dir_path = os.path.split(key)[0]
+        dir_path = os.path.dirname(key)
         os.makedirs(dir_path, exist_ok=True)
 
         with open(key, "wb") as file:
