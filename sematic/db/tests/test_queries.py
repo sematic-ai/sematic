@@ -39,6 +39,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
 from sematic.external_resource import ExternalResource, ResourceState, ResourceStatus
 from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa: F401
 from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
+from sematic.utils.exceptions import IllegalStateTransitionError
 
 
 def test_count_runs(test_db, run: Run):  # noqa: F811
@@ -148,10 +149,11 @@ class SomeResource(ExternalResource):
     some_field: int = 0
 
 
-def test_get_external_resource_record(test_db):  # noqa: F811
+def test_save_external_resource_record(test_db):  # noqa: F811
     resource1 = SomeResource(some_field=42)
     record1 = ExternalResourceRecord.from_resource(resource1)
-    save_external_resource_record(record1)
+    saved_record1 = save_external_resource_record(record1)
+    assert saved_record1.resource_state == resource1.status.state.value
 
     resource2 = replace(
         resource1,
@@ -162,4 +164,47 @@ def test_get_external_resource_record(test_db):  # noqa: F811
     )
     record2 = ExternalResourceRecord.from_resource(resource2)
     saved_record2 = save_external_resource_record(record2)
-    assert saved_record2.history == [resource1, resource2]
+    assert saved_record2.history == (resource2, resource1)
+
+    resource3 = replace(
+        resource2,
+        status=replace(
+            resource2.status,
+            last_update_epoch_time=resource2.status.last_update_epoch_time + 1,
+        ),
+    )
+    record3 = ExternalResourceRecord.from_resource(resource3)
+    saved_record3 = save_external_resource_record(record3)
+    assert (
+        saved_record3.last_updated_epoch_seconds
+        == resource3.status.last_update_epoch_time
+    )
+
+    # history is not updated when the object is unchanged except for
+    # timestamp
+    assert saved_record3.history == (resource2, resource1)
+
+    resource4 = replace(
+        resource3,
+        status=replace(
+            resource3.status,
+            last_update_epoch_time=resource3.status.last_update_epoch_time + 1,
+        ),
+        some_field=43,
+    )
+    record4 = ExternalResourceRecord.from_resource(resource4)
+    saved_record4 = save_external_resource_record(record4)
+
+    # history is updated for changes in other fields
+    assert saved_record4.history == (resource4, resource2, resource1)
+
+    resource5 = replace(
+        resource4,
+        status=replace(
+            resource4.status,
+            state=ResourceState.CREATED,
+        ),
+    )
+    record5 = ExternalResourceRecord.from_resource(resource5)
+    with pytest.raises(IllegalStateTransitionError):
+        save_external_resource_record(record5)
