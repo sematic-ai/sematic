@@ -1,3 +1,20 @@
+
+pytest_test(
+    name = "test_external_resources",
+    srcs = ["test_external_resources.py"],
+    pip_deps = [
+        "flask",
+    ],
+    deps = [
+        "//sematic/api/tests:fixtures",
+        "//sematic/db/models:external_resource_record",
+        "//sematic/db/models:user",
+        "//sematic/db:queries",
+        "//sematic/db/tests:fixtures",
+        "//sematic:external_resource",
+    ],
+)
+
 pytest_test(
     name = "test_resolutions",
     srcs = ["test_resolutions.py"],

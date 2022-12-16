@@ -6,8 +6,8 @@ from sqlalchemy import Column, types
 
 # Sematic
 from sematic.db.models.base import Base
-from sematic.db.models.json_encodable_mixin import ENUM_KEY, JSONEncodableMixin
-from sematic.external_resource import ExternalResource, ResourceState
+from sematic.db.models.json_encodable_mixin import JSONEncodableMixin
+from sematic.external_resource import ExternalResource
 from sematic.types.serialization import (
     type_from_json_encodable,
     type_to_json_encodable,
@@ -58,7 +58,8 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
 
     id: str = Column(types.String(), primary_key=True)
     resource_state: str = Column(  # type: ignore
-        types.String(), nullable=False, info={ENUM_KEY: ResourceState}
+        types.String(),
+        nullable=False,
     )
     status_message: str = Column(types.String(), nullable=False)
     last_updated_epoch_seconds: int = Column(types.BIGINT(), nullable=False)
