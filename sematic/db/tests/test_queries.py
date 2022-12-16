@@ -1,3 +1,6 @@
+# Standard Library
+from dataclasses import dataclass, replace
+
 # Third-party
 import pytest
 
@@ -10,6 +13,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 )
 from sematic.calculator import func
 from sematic.db.models.artifact import Artifact
+from sematic.db.models.external_resource_record import ExternalResourceRecord
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import (
@@ -19,6 +23,7 @@ from sematic.db.queries import (
     get_root_graph,
     get_run,
     get_run_graph,
+    save_external_resource_record,
     save_resolution,
     save_run,
 )
@@ -31,6 +36,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
+from sematic.external_resource import ExternalResource, ResourceState, ResourceStatus
 from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa: F401
 from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 
@@ -135,3 +141,25 @@ def test_get_run_graph(
     assert len(runs) == run_count
     assert len(artifacts) == artifact_count
     assert len(edges) == edge_count
+
+
+@dataclass(frozen=True)
+class SomeResource(ExternalResource):
+    some_field: int = 0
+
+
+def test_get_external_resource_record(test_db):  # noqa: F811
+    resource1 = SomeResource(some_field=42)
+    record1 = ExternalResourceRecord.from_resource(resource1)
+    save_external_resource_record(record1)
+
+    resource2 = replace(
+        resource1,
+        status=ResourceStatus(
+            state=ResourceState.ACTIVATING,
+            message="Activating",
+        ),
+    )
+    record2 = ExternalResourceRecord.from_resource(resource2)
+    saved_record2 = save_external_resource_record(record2)
+    assert saved_record2.history == [resource1, resource2]

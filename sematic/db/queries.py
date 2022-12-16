@@ -15,10 +15,12 @@ from sematic.abstract_future import FutureState
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
+from sematic.db.models.external_resource_record import ExternalResourceRecord
 from sematic.db.models.note import Note
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
+from sematic.external_resource import ResourceState
 from sematic.scheduling.external_job import ExternalJob
 from sematic.types.serialization import value_from_json_encodable
 
@@ -137,6 +139,33 @@ def save_run(run: Run) -> Run:
         session.refresh(run)
 
     return run
+
+
+def save_external_resource_record(record: ExternalResourceRecord):
+    if record.resource_state == ResourceState.CREATED:
+        # this ensures that all the fields are consistent
+        record = ExternalResourceRecord.from_resource(record.resource)
+    else:
+        # this ensures that the update properly updates history
+        # and keeps data consistent
+        existing_record = get_external_resource_record(record.id)
+        existing_record.resource = record.resource
+        record = existing_record
+    with db().get_session() as session:
+        session.merge(record)
+        session.commit()
+        session.refresh(record)
+
+        return record
+
+
+def get_external_resource_record(resource_id: str) -> ExternalResourceRecord:
+    with db().get_session() as session:
+        return (
+            session.query(ExternalResourceRecord)
+            .filter(ExternalResourceRecord.id == resource_id)
+            .one()
+        )
 
 
 def get_resolution(resolution_id: str) -> Resolution:
