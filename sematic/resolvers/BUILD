@@ -1,4 +1,12 @@
 sematic_py_lib(
+    name = "abstract_resource_manager",
+    srcs = ["abstract_resource_manager.py"],
+    deps = [
+        "//sematic:external_resource",
+    ],
+)
+
+sematic_py_lib(
     name = "local_resolver",
     srcs = ["local_resolver.py"],
     pip_deps = [
@@ -40,7 +48,8 @@ sematic_py_lib(
         "//sematic:abstract_future",
         "//sematic:external_resource",
         "//sematic:future_context",
-        "//sematic/resolvers/resource_managers:init",
+        "//sematic/resolvers:abstract_resource_manager",
+        "//sematic/resolvers/resource_managers:in_memory_manager",
         "//sematic/resolvers:state_machine_resolver",
     ],
 )
