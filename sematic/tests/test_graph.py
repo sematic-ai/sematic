@@ -63,7 +63,7 @@ def test_clone_futures(
 
     assert root_future.state == FutureState.RESOLVED
     assert root_future.calculator._func is pipeline._func
-    assert root_future.parent_future is None
+    assert root_future.is_root_future()
     # the entire pipeline resolution was cloned,
     # so the root run was never actually executed
     assert root_future.original_future_id == future.id
@@ -139,7 +139,7 @@ def test_clone_futures_reset(
 
     assert root_future.state == FutureState.RAN
     assert root_future.calculator._func is pipeline._func
-    assert root_future.parent_future is None
+    assert root_future.is_root_future()
     assert root_future.original_future_id is None
 
     second_add3_future = root_future.nested_future

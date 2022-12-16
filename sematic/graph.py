@@ -58,7 +58,7 @@ class ClonedFutureGraph:
         root_future = next(
             future
             for future in self.futures_by_original_id.values()
-            if future.parent_future is None
+            if future.is_root_future()
         )
 
         if root_future.id in self.input_artifacts:
