@@ -4,7 +4,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import Loading from "./Loading";
 import { useAccumulateLogsUntilEnd, useLogStream } from "../hooks/logHooks";
 
-const DEFAULT_NO_LINES_REASON = "No more matching lines";
+const DEFAULT_LOG_INFO_MESSAGE = "No more matching lines";
 
 export default function ScrollingLogView(props: {
   logSource: string;
@@ -18,7 +18,7 @@ export default function ScrollingLogView(props: {
 
   // Single pull logic
   const { lines, isLoading, error, hasMore, 
-    noMoreLinesReason, getNext, hasPulledData } = useLogStream(logSource, filterString);
+    logInfoMessage, getNext, hasPulledData } = useLogStream(logSource, filterString);
   
   // Accumulator (logs draining) logic
   const { accumulateLogsUntilEnd, isLoading: isAccumulatorLoading,
@@ -58,11 +58,11 @@ export default function ScrollingLogView(props: {
     getNext();
   }, [getNext, isAccumulating]);
 
-  const noMoreLinesIndicator = useMemo(() =>
+  const logInfoMessageBanner = useMemo(() =>
     <Alert severity="info" sx={{ mt: 3 }}>
-      {isLoading? "Loading..." : (noMoreLinesReason || DEFAULT_NO_LINES_REASON)}
+      {isLoading? "Loading..." : (logInfoMessage || DEFAULT_LOG_INFO_MESSAGE)}
     </Alert>
-    , [noMoreLinesReason, isLoading]);
+    , [logInfoMessage, isLoading]);
 
   const accumulatorButtonMessage = useMemo(() => {
     if (!isAccumulating && hasMore) {
@@ -120,7 +120,7 @@ export default function ScrollingLogView(props: {
           hasMore={hasMore}
           loader={<Loading isLoaded={!isLoading} />}
           onScroll={onScroll}
-          endMessage={noMoreLinesIndicator}
+          endMessage={logInfoMessageBanner}
         >
           {lines.map((line, index) => (
             <Box

@@ -14,7 +14,7 @@ export interface GetNextResult {
 export function useLogStream(source: string, filterString: string) {
     const [lines, {push: pushLines}] = useList<string>([]);
     const [cursor, setCursor] = useState<string | null>(null);
-    const [noMoreLinesReason, setNoMoreLinesReason] = useState<string | null>(null);
+    const [logInfoMessage, setlogInfoMessage] = useState<string | null>(null);
     const [hasPulledData, setHasPulledData] = useState(false);
 
     const hasMore = useMemo(() => {
@@ -44,33 +44,32 @@ export function useLogStream(source: string, filterString: string) {
 
             const payload: LogLineRequestResponse = await fetch({ url });
 
-            const { content: { lines, continuation_cursor,
-                log_unavailable_reason } } = payload;
+            const { content: { lines, continuation_cursor, log_info_message } } = payload;
 
             devLogger(`logHooks.ts getNext() ${url} completed. `
                 + `# of lines: ${(lines && lines.length) || NaN} `
                 + `continuation_cursor: ${continuation_cursor?.slice(0, 15)} `
-                + `noLinesReason: ${log_unavailable_reason || 'N/A'} `);
+                + `log_info_message: ${log_info_message || 'N/A'} `);
 
             pushLines(...lines);
             setCursor(continuation_cursor);
-            setNoMoreLinesReason(log_unavailable_reason);
+            setlogInfoMessage(log_info_message);
             setHasPulledData(true);
             return {
                 pulledLines: lines.length
             }
         }, [source, setHasPulledData, hasMore, filterString, cursor, MAX_LINES, devLogger]);
 
-    return { lines, isLoading, error, hasMore, noMoreLinesReason, getNext, hasPulledData };
+    return { lines, isLoading, error, hasMore, logInfoMessage, getNext, hasPulledData };
 }
 
 export function useAccumulateLogsUntilEnd(hasMore: boolean, getNext: () => Promise<GetNextResult>) {
     // useLatest() ensures that the multi-stage async function always see the 
     // latest state of those variables, instead of the state attached to the 
-    // function clousure at the beginning.
+    // function closure at the beginning.
     const latestHasMore = useLatest(hasMore);
     const latestGetNext = useLatest(getNext);
-    const [isAccumulating, setIsAccumlating] = useState(false);
+    const [isAccumulating, setIsAccumulating] = useState(false);
     const [accumulatedLines, setAccumulatedLines] = useState<number>(0);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -85,7 +84,7 @@ export function useAccumulateLogsUntilEnd(hasMore: boolean, getNext: () => Promi
     }, [abortControllerRef, devLogger]);
 
     const accumulateLogsUntilEnd = useCallback(async () => {
-        setIsAccumlating(true);
+        setIsAccumulating(true);
         let accumulatedLines = 0;
         setAccumulatedLines(accumulatedLines);
 
@@ -112,7 +111,7 @@ export function useAccumulateLogsUntilEnd(hasMore: boolean, getNext: () => Promi
                 resolve => setTimeout(resolve, 10)
             );
         }
-        setIsAccumlating(false);
+        setIsAccumulating(false);
     }, [latestHasMore, latestGetNext]);
 
     useEffect(() => {

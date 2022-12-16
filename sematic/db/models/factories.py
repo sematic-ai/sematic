@@ -31,6 +31,7 @@ def make_run_from_future(future: AbstractFuture) -> Run:
     """
     run = Run(
         id=future.id,
+        original_run_id=future.original_future_id,
         future_state=future.state,
         name=future.props.name,
         calculator_path=make_func_path(future),
@@ -75,6 +76,7 @@ def clone_root_run(run: Run, edges: List[Edge]) -> Tuple[Run, List[Edge]]:
     run_id = make_future_id()
     cloned_run = Run(
         id=run_id,
+        original_run_id=run.original_run_id,
         root_id=run_id,
         future_state=FutureState.CREATED,
         name=run.name,

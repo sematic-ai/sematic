@@ -99,7 +99,7 @@ def google_login() -> flask.Response:
         )
 
         if authorized_email_domain is not None:
-            if idinfo.get("hd") != authorized_email_domain:
+            if idinfo.get("hd") not in authorized_email_domain.split(","):
                 raise ValueError("Incorrect email domain")
 
     except (ValueError, GoogleAuthError):

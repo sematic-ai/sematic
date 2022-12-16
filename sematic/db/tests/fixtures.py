@@ -105,6 +105,7 @@ def make_run(**kwargs) -> Run:
     id = uuid.uuid4().hex
     run = Run(
         id=id,
+        original_run_id=None,
         future_state=FutureState.CREATED,
         name="test_run",
         calculator_path="path.to.test_run",
