@@ -238,7 +238,7 @@ def save_settings(settings: Settings) -> None:
     """
     Persists settings to file.
     """
-    yaml_output = yaml.dump(settings, Dumper=EnumDumper)
+    yaml_output = yaml.dump(asdict(settings), Dumper=EnumDumper)
 
     with open(get_settings_file_path(), "w") as f:
         f.write(yaml_output)
@@ -364,11 +364,14 @@ EnumType = TypeVar("EnumType", bound=enum.Enum)
 
 def _normalize_enum_keys(
     dict_: Dict[Union[str, EnumType], Any], vars: Type[EnumType]
-) -> Dict[EnumType, Any]:
-    normalized_dict: Dict[EnumType, Any] = {}
+) -> Dict[Union[EnumType, Literal["__version__"]], Any]:
+    normalized_dict: Dict[Union[EnumType, Literal["__version__"]], Any] = {}
 
     for key in list(dict_):
-        normalized_key = _normalize_enum(vars, key)
+        normalized_key = (
+            key if key == _PLUGIN_VERSION_KEY else _normalize_enum(vars, key)
+        )
+
         if normalized_key is None:
             logger.warning("Unknown key: %s", key)
         else:

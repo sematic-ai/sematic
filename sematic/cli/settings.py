@@ -62,7 +62,7 @@ def _set_plugin_settings_cli(
     click.echo(f"Successfully set {var} to {repr(value)}\n")
 
 
-@settings.command("delete", short_help="Delete a user settings value")
+@settings.command("delete", short_help="Delete a user setting value")
 @click.argument("var", type=click.STRING)
 def delete_settings_cli(var: str) -> None:
     """
@@ -72,17 +72,17 @@ def delete_settings_cli(var: str) -> None:
 
 
 def _delete_plugin_settings_cli(var: str, plugin: Type[AbstractPlugin]) -> None:
-    settings_vars = UserSettings.get_settings_vars()
+    settings_vars = plugin.get_settings_vars()
 
     try:
         settings_var = settings_vars[var]
     except KeyError:
         keys = "\n".join([var.value for var in settings_vars])
-        click.echo(f"Invalid user settings key: {var}! Available keys:\n{keys}\n")
+        click.echo(f"Invalid user setting key: {var}! Available keys:\n{keys}\n")
         sys.exit(1)
 
     try:
-        delete_plugin_setting(UserSettings, settings_var)
+        delete_plugin_setting(plugin, settings_var)
     except ValueError as e:
         click.echo(f"{e}\n")
         sys.exit(1)
@@ -103,7 +103,7 @@ def show_server_settings_cli() -> None:
     show_settings_cli()
 
 
-@server_settings.command("set", short_help="Set a server settings value")
+@server_settings.command("set", short_help="Set a server setting value")
 @click.argument("var", type=click.STRING)
 @click.argument("value", type=click.STRING)
 def set_server_settings_cli(var: str, value: str) -> None:
@@ -113,7 +113,7 @@ def set_server_settings_cli(var: str, value: str) -> None:
     _set_plugin_settings_cli(var=var, value=value, plugin=ServerSettings)
 
 
-@server_settings.command("delete", short_help="Delete a server settings value")
+@server_settings.command("delete", short_help="Delete a server setting value")
 @click.argument("var", type=click.STRING)
 def delete_server_settings_cli(var: str) -> None:
     """
