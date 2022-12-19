@@ -94,21 +94,21 @@ def test_follow_logs(
             more_after=True,
             lines=early_lines,
             continuation_cursor="abc",
-            log_unavailable_reason=None,
+            log_info_message=None,
         ),
         LogLineResult(
             more_before=False,
             more_after=True,
             lines=[],  # simulate situation where more WILL be produced but isn't yet
             continuation_cursor="abc",
-            log_unavailable_reason=None,
+            log_info_message=None,
         ),
         LogLineResult(
             more_before=False,
             more_after=False,
             lines=late_lines,
             continuation_cursor=None,
-            log_unavailable_reason=None,
+            log_info_message=None,
         ),
     ]
     mock_returns = []

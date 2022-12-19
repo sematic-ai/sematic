@@ -60,13 +60,19 @@ def test_clone_futures(
     assert len(cloned_graph.futures_by_original_id) == len(runs)
 
     root_future = cloned_graph.futures_by_original_id[future.id]
+
+    assert root_future.state == FutureState.RESOLVED
     assert root_future.calculator._func is pipeline._func
-    assert root_future.parent_future is None
+    assert root_future.is_root_future()
+    # the entire pipeline resolution was cloned,
+    # so the root run was never actually executed
+    assert root_future.original_future_id == future.id
 
     for original_run_id, future_ in cloned_graph.futures_by_original_id.items():
         original_run = runs_by_id[original_run_id]
         # No reset so state should be the same
         assert future.state.value == original_run.future_state
+        assert future.original_future_id == original_run.original_run_id
 
         # Parent future should exist and be the correct one
         if original_run.parent_id is not None:
@@ -132,9 +138,13 @@ def test_clone_futures_reset(
     root_future = cloned_graph.futures_by_original_id[future.id]
 
     assert root_future.state == FutureState.RAN
+    assert root_future.calculator._func is pipeline._func
+    assert root_future.is_root_future()
+    assert root_future.original_future_id is None
 
     second_add3_future = root_future.nested_future
     assert second_add3_future.state == FutureState.CREATED
+    assert second_add3_future.original_future_id is None
 
     # Check that the second add3 future has no children
     assert not any(
@@ -144,6 +154,7 @@ def test_clone_futures_reset(
 
     first_add3_future = second_add3_future.kwargs["a"]
     assert first_add3_future.state is FutureState.RAN
+    assert first_add3_future.original_future_id is None
 
     first_add3_child_futures = [
         future_
@@ -154,6 +165,9 @@ def test_clone_futures_reset(
     assert len(first_add3_child_futures) == 2
     assert all(
         future_.state is FutureState.CREATED for future_ in first_add3_child_futures
+    )
+    assert all(
+        future_.original_future_id is None for future_ in first_add3_child_futures
     )
 
     top_level_add_futures = [
@@ -167,6 +181,18 @@ def test_clone_futures_reset(
     assert all(
         future_.state is FutureState.RESOLVED for future_ in top_level_add_futures
     )
+
+    top_level_add_futures_ids = {
+        id
+        for id, future_ in cloned_graph.futures_by_original_id.items()
+        if future_.calculator._func is add._func
+    }
+    top_level_add_futures_original_ids = {
+        future_.original_future_id for future_ in top_level_add_futures
+    }
+
+    assert len(top_level_add_futures_original_ids) == 3
+    assert top_level_add_futures_original_ids.issubset(top_level_add_futures_ids)
 
 
 @func

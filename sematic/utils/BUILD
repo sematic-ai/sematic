@@ -40,3 +40,17 @@ sematic_py_lib(
     srcs = ["sorting.py"],
     deps = [],
 )
+
+sematic_py_lib(
+    name = "json",
+    srcs = ["json.py"],
+    deps = [],
+)
+
+sematic_py_lib(
+    name = "hashing",
+    srcs = ["hashing.py"],
+    deps = [
+        ":json",
+    ],
+)
