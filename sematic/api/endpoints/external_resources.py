@@ -18,6 +18,8 @@ from sematic.db.queries import (
     save_run_external_resource_link,
 )
 
+ROOT_ID_KEY = "root_id"
+
 
 # Allow getting a list of external resource ids.
 # Q: Why not just return the actual resources?
@@ -31,14 +33,13 @@ from sematic.db.queries import (
 @sematic_api.route("/api/v1/external_resources/ids", methods=["GET"])
 @authenticate
 def get_resources_endpoint(user: Optional[User]) -> flask.Response:
-    root_id_key = "root_id"
-    if set(flask.request.args.keys()) != {root_id_key}:
+    if set(flask.request.args.keys()) != {ROOT_ID_KEY}:
         return jsonify_error(
-            f"Can only get external resources using the query key {root_id_key} ",
+            f"Can only get external resources using the query key {ROOT_ID_KEY} ",
             HTTPStatus.BAD_REQUEST,
         )
 
-    resource_ids = get_resource_ids_by_root_id(flask.request.args[root_id_key])
+    resource_ids = get_resource_ids_by_root_id(flask.request.args[ROOT_ID_KEY])
     payload = dict(resource_ids=resource_ids)
     return flask.jsonify(payload)
 

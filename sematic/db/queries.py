@@ -144,8 +144,9 @@ def save_run(run: Run) -> Run:
 
 def save_external_resource_record(record: ExternalResourceRecord):
     existing_record = get_external_resource_record(record.id)
+
     if existing_record is None:
-        if record.resource_state != ResourceState.CREATED.value:
+        if record.resource_state != ResourceState.CREATED:
             raise ValueError(
                 f"Cannot create an external resource in a state other than 'CREATED'. "
                 f"{record.id} was in state '{record.resource_state}'."
@@ -158,6 +159,7 @@ def save_external_resource_record(record: ExternalResourceRecord):
         # and keeps data consistent
         existing_record.resource = record.resource
         record = existing_record
+
     with db().get_session() as session:
         session.merge(record)
         session.commit()
