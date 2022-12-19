@@ -155,7 +155,7 @@ def test_save_external_resource_record(test_db):  # noqa: F811
     resource1 = SomeResource(some_field=42)
     record1 = ExternalResourceRecord.from_resource(resource1)
     saved_record1 = save_external_resource_record(record1)
-    assert saved_record1.resource_state == resource1.status.state.value
+    assert saved_record1.resource_state == resource1.status.state
 
     resource2 = replace(
         resource1,

@@ -1,13 +1,14 @@
 # Standard Library
-from typing import Any, Dict, Tuple, Type
+from typing import Any, Dict, Tuple, Type, Union
 
 # Third-party
 from sqlalchemy import Column, types
+from sqlalchemy.orm import validates
 
 # Sematic
 from sematic.db.models.base import Base
 from sematic.db.models.json_encodable_mixin import JSONEncodableMixin
-from sematic.external_resource import ExternalResource
+from sematic.external_resource import ExternalResource, ResourceState
 from sematic.types.serialization import (
     type_from_json_encodable,
     type_to_json_encodable,
@@ -19,7 +20,7 @@ TypeSerialization = Dict[str, Any]
 
 
 class ExternalResourceRecord(Base, JSONEncodableMixin):
-    """A DB record for an ExternalResource and its history
+    """A DB record for an ExternalResource and its history.
 
     Attributes
     ----------
@@ -57,8 +58,8 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
     __tablename__ = "external_resources"
 
     id: str = Column(types.String(), primary_key=True)
-    resource_state: str = Column(  # type: ignore
-        types.String(),
+    resource_state: ResourceState = Column(  # type: ignore
+        types.Enum(ResourceState),
         nullable=False,
     )
     status_message: str = Column(types.String(), nullable=False)
@@ -69,18 +70,29 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
         types.JSON(), nullable=False
     )
 
+    @validates("resource_state")
+    def validate_resource_state(
+        self, key: Any, resource_state: Union[str, ResourceState]
+    ) -> ResourceState:
+        if isinstance(resource_state, str):
+            return ResourceState[resource_state]
+        elif isinstance(resource_state, ResourceState):
+            return resource_state
+        raise ValueError(f"Cannot make a ResourceState from {resource_state}")
+
     @classmethod
     def from_resource(cls, resource: ExternalResource) -> "ExternalResourceRecord":
         if not isinstance(resource, ExternalResource):
             raise ValueError(
                 f"resource must be an instance of a subclass of "
-                f"ExternalResource. Was: {resource}"
+                f"ExternalResource. Was: {resource} of type "
+                f"'{type(resource)}'"
             )
         type_serialization = type_to_json_encodable(type(resource))
         value_serialization = value_to_json_encodable(resource, type(resource))
         return ExternalResourceRecord(
             id=resource.id,
-            resource_state=resource.status.state.value,
+            resource_state=resource.status.state,
             status_message=resource.status.message,
             last_updated_epoch_seconds=resource.status.last_update_epoch_time,
             type_serialization=type_serialization,
@@ -117,7 +129,7 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
             history.insert(0, serialization)
             self.history_serializations = tuple(history)
 
-        self.resource_state = resource.status.state.value
+        self.resource_state = resource.status.state
         self.status_message = resource.status.message
         self.last_updated_epoch_seconds = resource.status.last_update_epoch_time
 
