@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS "schema_migrations" (version varchar(255) primary key);
 CREATE TABLE runs (
     id character(32) NOT NULL,
+    original_run_id character(32),
     future_state TEXT NOT NULL,
     name TEXT,
     calculator_path TEXT,
@@ -120,4 +121,6 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20221027233641'),
   ('20221202221000'),
   ('20221208183307'),
+  ('20221212110018'),
+  ('20221214142609'),
   ('20221215212459');

@@ -100,6 +100,12 @@ class Calculator(AbstractCalculator):
             )
 
     def __repr__(self):
+        return self.get_func_fqpn()
+
+    def get_func_fqpn(self):
+        """
+        Returns the fully qualified path name of the func.
+        """
         return "{}.{}".format(self.__module__, self.__name__)
 
     def get_source(self) -> str:

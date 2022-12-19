@@ -1,16 +1,20 @@
 # Standard Library
-from typing import Dict
+import functools
+from typing import Dict, Tuple, Type, cast
 
 # Sematic
+from sematic.abstract_plugin import AbstractPlugin, AbstractPluginSettingsVar
 from sematic.config.settings import (
-    AbstractSettingsVar,
-    ProfileSettings,
-    SettingsScope,
+    MissingSettingsError,
     as_bool,
+    delete_plugin_setting,
+    get_plugin_setting,
+    get_plugin_settings,
+    set_plugin_setting,
 )
 
 
-class UserSettingsVar(AbstractSettingsVar):
+class UserSettingsVar(AbstractPluginSettingsVar):
     # Sematic
     SEMATIC_API_ADDRESS = "SEMATIC_API_ADDRESS"
     SEMATIC_API_KEY = "SEMATIC_API_KEY"
@@ -24,38 +28,37 @@ class UserSettingsVar(AbstractSettingsVar):
     AWS_S3_BUCKET = "AWS_S3_BUCKET"
 
 
-CLI_COMMAND = "settings"
+class UserSettings(AbstractPlugin):
+    @staticmethod
+    def get_author() -> str:
+        return "github.com/sematic-ai"
 
-_USER_SETTINGS_SCOPE = SettingsScope(
-    file_name="settings.yaml",
-    cli_command=CLI_COMMAND,
-    vars=UserSettingsVar,
-)
+    @staticmethod
+    def get_version() -> Tuple[int, int, int]:
+        return 0, 1, 0
+
+    @classmethod
+    def get_settings_vars(cls) -> Type[AbstractPluginSettingsVar]:
+        return UserSettingsVar
 
 
-def get_user_settings_scope() -> SettingsScope:
-    return _USER_SETTINGS_SCOPE
+def get_active_user_settings() -> Dict[UserSettingsVar, str]:
+    try:
+        user_settings = get_plugin_settings(UserSettings)
+    except MissingSettingsError:
+        user_settings = {}
+
+    return cast(Dict[UserSettingsVar, str], user_settings)
 
 
 def get_active_user_settings_strings() -> Dict[str, str]:
-    """
-    Returns a safe strings-only representation of the active user settings.
-    """
-    return _USER_SETTINGS_SCOPE.get_active_settings_as_dict()
+    active_user_settings = get_active_user_settings()
+    return {var.value: value for var, value in active_user_settings.items()}
 
 
-def get_active_user_settings() -> ProfileSettings:
-    return _USER_SETTINGS_SCOPE.get_active_settings()
-
-
-def get_user_setting(var: UserSettingsVar, *args) -> str:
-    """
-    Retrieves and returns the specified settings value, with environment override.
-
-    Loads and returns the specified settings value. If it does not exist, it falls back
-    on the first optional vararg as a default value. If that does not exist, it raises.
-    """
-    return _USER_SETTINGS_SCOPE.get_setting(var, *args)
+get_user_setting = functools.partial(get_plugin_setting, UserSettings)
+set_user_setting = functools.partial(set_plugin_setting, UserSettings)
+delete_user_setting = functools.partial(delete_plugin_setting, UserSettings)
 
 
 def get_bool_user_setting(var: UserSettingsVar, *args) -> bool:
@@ -67,24 +70,3 @@ def get_bool_user_setting(var: UserSettingsVar, *args) -> bool:
     on the first optional vararg as a default value. If that does not exist, it raises.
     """
     return as_bool(get_user_setting(var, *args))
-
-
-def set_user_settings(var: UserSettingsVar, value: str) -> None:
-    """
-    Sets the specifies settings value and persists the settings.
-    """
-    _USER_SETTINGS_SCOPE.set_setting(var, value)
-
-
-def delete_user_settings(var: UserSettingsVar) -> None:
-    """
-    Deletes the specified settings value and persists the settings.
-    """
-    _USER_SETTINGS_SCOPE.delete_setting(var)
-
-
-def get_user_settings_file_path() -> str:
-    """
-    Required for automated migration
-    """
-    return _USER_SETTINGS_SCOPE.settings_file_path

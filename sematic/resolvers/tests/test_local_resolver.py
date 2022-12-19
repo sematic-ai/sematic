@@ -261,7 +261,7 @@ class DBStateMachineTestResolver(LocalResolver):
             future.calculator.__module__, future.calculator.__name__
         )
         assert run.parent_id == (
-            future.parent_future.id if future.parent_future is not None else None
+            future.parent_future.id if not future.is_root_future() else None
         )
         assert run.started_at is not None
 

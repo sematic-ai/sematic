@@ -1,16 +1,39 @@
-# Standard Library
-import tempfile
-from unittest.mock import PropertyMock, patch
-
 # Sematic
-from sematic.config.server_settings import get_active_server_settings
+from sematic.config.server_settings import (
+    ServerSettings,
+    ServerSettingsVar,
+    get_active_server_settings,
+    get_server_setting,
+)
+from sematic.config.tests.fixtures import mock_settings
+
+
+def test_get_empty_settings():
+    with mock_settings(None):
+        assert get_active_server_settings() == {}
+
+
+def test_get_settings():
+    with mock_settings(
+        {
+            "version": 0,
+            "profiles": {
+                "default": {
+                    "settings": {
+                        ServerSettings.get_path(): {
+                            ServerSettingsVar.KUBERNETES_NAMESPACE.value: "foobar"
+                        }
+                    }
+                }
+            },
+        }
+    ):
+        assert get_server_setting(ServerSettingsVar.KUBERNETES_NAMESPACE) == "foobar"
 
 
 def test_fresh_start():
-    with tempfile.TemporaryDirectory() as td:
-        with patch(
-            "sematic.config.settings.get_config_dir",
-            return_value=td,
-            new_callable=PropertyMock,
-        ):
-            assert get_active_server_settings() == {}
+    with mock_settings(None):
+        assert (
+            get_server_setting(ServerSettingsVar.KUBERNETES_NAMESPACE, "default")
+            == "default"
+        )

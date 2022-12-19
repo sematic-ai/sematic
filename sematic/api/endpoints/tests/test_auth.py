@@ -56,14 +56,18 @@ def test_authenticate_endpoint(
         }
 
 
-def test_login_new_user(test_client: flask.testing.FlaskClient):  # noqa: F811
-    idinfo = {
+@pytest.fixture
+def idinfo():
+    return {
         "hd": "example.com",
         "given_name": "Ringo",
         "family_name": "Starr",
         "email": "ringo@example.com",
         "picture": "https://picture",
     }
+
+
+def test_login_new_user(idinfo, test_client: flask.testing.FlaskClient):  # noqa: F811
     with mock_server_settings({ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID: "ABC123"}):
         with mock.patch(
             "google.oauth2.id_token.verify_oauth2_token", return_value=idinfo
@@ -132,16 +136,38 @@ def test_login_invalid_domain(test_client: flask.testing.FlaskClient):  # noqa: 
     with mock_server_settings(
         {
             ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID: "ABC123",
-            ServerSettingsVar.SEMATIC_AUTHORIZED_EMAIL_DOMAIN: "example.com",
+            ServerSettingsVar.SEMATIC_AUTHORIZED_EMAIL_DOMAIN: (
+                "example1.com,example2.com"
+            ),
         }
     ):
         with mock.patch(
             "google.oauth2.id_token.verify_oauth2_token",
-            retur_value={"hd": "wrong.domain"},
+            return_value={"hd": "wrong.domain"},
         ):
             response = test_client.post("/login/google", json={"token": "abc"})
 
             assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_login_valid_domain(
+    idinfo, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    with mock_server_settings(
+        {
+            ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID: "ABC123",
+            ServerSettingsVar.SEMATIC_AUTHORIZED_EMAIL_DOMAIN: (
+                "example.com,example2.com"
+            ),
+        }
+    ):
+        with mock.patch(
+            "google.oauth2.id_token.verify_oauth2_token",
+            return_value=idinfo,
+        ):
+            response = test_client.post("/login/google", json={"token": "abc"})
+
+            assert response.status_code == HTTPStatus.OK
 
 
 @pytest.mark.skip(reason="Creating on-the-fly endpoints is fickle")

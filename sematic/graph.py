@@ -58,7 +58,7 @@ class ClonedFutureGraph:
         root_future = next(
             future
             for future in self.futures_by_original_id.values()
-            if future.parent_future is None
+            if future.is_root_future()
         )
 
         if root_future.id in self.input_artifacts:
@@ -438,7 +438,7 @@ class Graph:
             if run.id in reset_run_ids:
                 parent_future.state = FutureState.RAN
 
-    def _clone_run(
+    def _clone_future(
         self, run_id: RunID, cloned_graph: ClonedFutureGraph, reset_run_ids: List[RunID]
     ) -> AbstractFuture:
         run = self._runs_by_id[run_id]
@@ -476,8 +476,12 @@ class Graph:
 
         # Settings state for resolved runs unless reset
         if FutureState[run.future_state] == FutureState.RESOLVED:  # type: ignore
-            if run.id not in reset_run_ids:
+            if run_id not in reset_run_ids:
                 future.state = FutureState.RESOLVED
+                # if the original run was cloned as well, get the first ever run id
+                future.original_future_id = (
+                    run.original_run_id if run.original_run_id is not None else run_id
+                )
 
         return future
 
@@ -512,14 +516,12 @@ class Graph:
 
         Returns
         -------
-        Tuple[List[AbstractFuture], Dict[str, Dict[str, Artifact]], Dict[str,
-        Artifact]]
-            A tuple whose first element is a list of cloned futures, grouped by
-            nested layers (outermost first), and sorted by reverse execution
-            order within each layer. The second element is a mapping of future
+        ClonedFutureGraph
+            A dataclass containing an ordered mapping of original run ids to cloned
+            futures, grouped by nested layers (outermost first), and sorted by reverse
+            execution order within each layer. The second field is a mapping of future
             IDs to input artifacts. The third element is a mapping of future IDs
             to output artifacts.
-
         """
         cloned_graph = ClonedFutureGraph()
 
@@ -539,7 +541,7 @@ class Graph:
             if run_id in skip_run_ids:
                 continue
 
-            cloned_graph.futures_by_original_id[run_id] = self._clone_run(
+            cloned_graph.futures_by_original_id[run_id] = self._clone_future(
                 run_id, cloned_graph, reset_run_ids
             )
 

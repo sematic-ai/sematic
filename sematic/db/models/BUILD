@@ -31,6 +31,8 @@ sematic_py_lib(
         "//sematic:abstract_future",
         "//sematic:storage",
         "//sematic/types:serialization",
+        "//sematic/utils:json",
+        "//sematic/utils:hashing",
     ],
 )
 

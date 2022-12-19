@@ -263,13 +263,18 @@ def migrate_down():
         logging.warning("No migrations to rollback")
         return
 
-    latest_version = current_versions[-1]
+    current_versions.reverse()
 
-    migration_file = next(
-        f for f in _get_migration_files() if f.startswith(latest_version)
-    )
+    for version in current_versions:
+        try:
+            migration_file = next(
+                f for f in _get_migration_files() if f.startswith(version)
+            )
 
-    _run_migration(migration_file, latest_version, MigrationDirection.DOWN)
+            _run_migration(migration_file, version, MigrationDirection.DOWN)
+            return
+        except StopIteration:
+            continue
 
 
 @main.command("dump", short_help="Dump schema")

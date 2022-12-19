@@ -102,9 +102,21 @@ class AbstractFuture(abc.ABC):
     Parameters
     ----------
     calculator: AbstractCalculator
-        The calculator this is a future of
-    kwargs: typing.Dict[str, typing.Any]
+        The calculator this is a future of.
+    kwargs: Dict[str, Any]
         The input arguments to the calculator. Can be concrete values or other futures.
+    inline: bool
+        When using the `CloudResolver`, whether the instrumented function should be
+        executed inside the same process and worker that is executing the `Resolver`
+        itself.
+    original_future_id: Optional[str]
+        The id of the original future this future was cloned from, if any.
+    resource_requirements: Optional[ResourceRequirements]
+        When using the `CloudResolver`, specifies what special execution resources the
+        function requires. Defaults to `None`.
+    retry_settings: Optional[RetrySettings]
+        Specifies in case of which Exceptions the function's execution should be retried,
+        and how many times. Defaults to `None`.
     """
 
     def __init__(
@@ -112,15 +124,17 @@ class AbstractFuture(abc.ABC):
         calculator: AbstractCalculator,
         kwargs: Dict[str, Any],
         inline: bool,
+        original_future_id: Optional[str] = None,
         resource_requirements: Optional[ResourceRequirements] = None,
         retry_settings: Optional[RetrySettings] = None,
         base_image_tag: Optional[str] = None,
     ):
         self.id: str = make_future_id()
+        self.original_future_id = original_future_id
         self.calculator = calculator
         self.kwargs = kwargs
         # We don't want to replace futures in kwargs, because it holds
-        # the source of truth for the future graph. Instead we have concrete
+        # the source of truth for the future graph. Instead, we have concrete
         # values in resolved_kwargs
         # It will be set only once all input values are resolved
         self.resolved_kwargs: Dict[str, Any] = {}
@@ -156,6 +170,12 @@ class AbstractFuture(abc.ABC):
             f"state={self.state.value}, parent_id={parent_id}, "
             f"nested_id={nested_id}, value={self.value})"
         )
+
+    def is_root_future(self):
+        """
+        Returns whether this is the root Future of a pipeline Resolution.
+        """
+        return self.parent_future is None
 
 
 def make_future_id() -> str:
