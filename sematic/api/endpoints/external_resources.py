@@ -1,4 +1,5 @@
 # Standard Library
+import logging
 from http import HTTPStatus
 from typing import Optional
 
@@ -18,7 +19,10 @@ from sematic.db.queries import (
     save_run_external_resource_link,
 )
 
+logger = logging.getLogger(__name__)
+
 ROOT_ID_KEY = "root_id"
+EXECUTE_UPDATE_KEY = "execute_update"
 
 
 # Allow getting a list of external resource ids.
@@ -47,11 +51,50 @@ def get_resources_endpoint(user: Optional[User]) -> flask.Response:
 @sematic_api.route("/api/v1/external_resources/<resource_id>", methods=["GET"])
 @authenticate
 def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Response:
+    if len(flask.request.args.keys()) > 1 or (
+        len(flask.request.args.keys()) == 1
+        and EXECUTE_UPDATE_KEY not in flask.request.args.keys()
+    ):
+        return jsonify_error(
+            f"Only request query parameter allowed is '{EXECUTE_UPDATE_KEY}' ",
+            HTTPStatus.BAD_REQUEST,
+        )
+    execute_update = False
+    if EXECUTE_UPDATE_KEY in flask.request.args.keys():
+        if flask.request.args[EXECUTE_UPDATE_KEY].lower() == "true":
+            execute_update = True
+
     record = get_external_resource_record(resource_id=resource_id)
     if record is None:
         return jsonify_error(
             "No such resource: {}".format(resource_id), HTTPStatus.NOT_FOUND
         )
+
+    updated_resource = None
+    if execute_update:
+        logger.info(
+            "Updating resource '%s', currently in state '%s'",
+            record.id,
+            record.resource_state.value,
+        )
+        try:
+            updated_resource = record.resource.update()
+            logger.info(
+                "Done updating resource '%s', now in state '%s': %s",
+                record.id,
+                record.resource_state.value,
+                record.status_message,
+            )
+        except Exception as e:
+            logger.exception("Error updating resource '%s': %s", record.id, e)
+            return jsonify_error(
+                "Error updating resource: {}".format(resource_id),
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+
+    if updated_resource is not None:
+        record = ExternalResourceRecord.from_resource(updated_resource)
+        save_external_resource_record(record)
 
     payload = dict(record=record.to_json_encodable())
 

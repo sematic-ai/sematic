@@ -21,6 +21,9 @@ import sematic.future_operators  # noqa: F401,E402
 import sematic.types  # noqa: F401,E402
 from sematic.calculator import func  # noqa: F401,E402
 from sematic.container_images import has_container_image  # noqa: F401,E402
+from sematic.external_resource_plugins.timed_message import (  # noqa: F401,E402
+    TimedMessage,
+)
 from sematic.future_context import SematicContext, context  # noqa: F401,E402
 from sematic.resolver import Resolver  # noqa: F401,E402
 from sematic.resolvers.cloud_resolver import CloudResolver  # noqa: F401,E402
