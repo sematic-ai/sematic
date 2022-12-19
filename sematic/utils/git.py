@@ -13,7 +13,7 @@ from sematic.db.models.git_info import GitInfo
 logger = logging.getLogger(__name__)
 
 
-def get_git_info(object_: Any) -> Optional["Repo"]:  # type: ignore # noqa: F821
+def get_git_info(object_: Any) -> Optional[GitInfo]:
     """
     Returns git repository details for the current workspace.
 

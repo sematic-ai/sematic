@@ -1,13 +1,20 @@
+# Standard Library
+import functools
+from typing import Dict, Tuple, Type, cast
+
 # Sematic
+from sematic.abstract_plugin import AbstractPlugin, AbstractPluginSettingsVar
 from sematic.config.settings import (
-    AbstractSettingsVar,
-    ProfileSettings,
-    SettingsScope,
+    MissingSettingsError,
     as_bool,
+    delete_plugin_setting,
+    get_plugin_setting,
+    get_plugin_settings,
+    set_plugin_setting,
 )
 
 
-class ServerSettingsVar(AbstractSettingsVar):
+class ServerSettingsVar(AbstractPluginSettingsVar):
     # Sematic
     SEMATIC_AUTHENTICATE = "SEMATIC_AUTHENTICATE"
     SEMATIC_AUTHORIZED_EMAIL_DOMAIN = "SEMATIC_AUTHORIZED_EMAIL_DOMAIN"
@@ -33,29 +40,32 @@ class ServerSettingsVar(AbstractSettingsVar):
     GRAFANA_PANEL_URL = "GRAFANA_PANEL_URL"
 
 
-_SERVER_SETTINGS_SCOPE = SettingsScope(
-    file_name="server.yaml",
-    cli_command="server-settings",
-    vars=ServerSettingsVar,
-)
+class ServerSettings(AbstractPlugin):
+    @staticmethod
+    def get_author() -> str:
+        return "github.com/sematic-ai"
+
+    @staticmethod
+    def get_version() -> Tuple[int, int, int]:
+        return 0, 1, 0
+
+    @classmethod
+    def get_settings_vars(cls) -> Type[AbstractPluginSettingsVar]:
+        return ServerSettingsVar
 
 
-def get_server_settings_scope() -> SettingsScope:
-    return _SERVER_SETTINGS_SCOPE
+def get_active_server_settings() -> Dict[ServerSettingsVar, str]:
+    try:
+        server_settings = get_plugin_settings(ServerSettings)
+    except MissingSettingsError:
+        server_settings = {}
+
+    return cast(Dict[ServerSettingsVar, str], server_settings)
 
 
-def get_active_server_settings() -> ProfileSettings:
-    return _SERVER_SETTINGS_SCOPE.get_active_settings()
-
-
-def get_server_setting(var: ServerSettingsVar, *args) -> str:
-    """
-    Retrieves and returns the specified settings value, with environment override.
-
-    Loads and returns the specified settings value. If it does not exist, it falls back
-    on the first optional vararg as a default value. If that does not exist, it raises.
-    """
-    return _SERVER_SETTINGS_SCOPE.get_setting(var, *args)
+get_server_setting = functools.partial(get_plugin_setting, ServerSettings)
+set_server_setting = functools.partial(set_plugin_setting, ServerSettings)
+delete_server_setting = functools.partial(delete_plugin_setting, ServerSettings)
 
 
 def get_bool_server_setting(var: ServerSettingsVar, *args) -> bool:
@@ -67,17 +77,3 @@ def get_bool_server_setting(var: ServerSettingsVar, *args) -> bool:
     on the first optional vararg as a default value. If that does not exist, it raises.
     """
     return as_bool(get_server_setting(var, *args))
-
-
-def set_server_settings(var: ServerSettingsVar, value: str) -> None:
-    """
-    Sets the specifies settings value and persists the settings.
-    """
-    _SERVER_SETTINGS_SCOPE.set_setting(var, value)
-
-
-def delete_server_settings(var: ServerSettingsVar) -> None:
-    """
-    Deletes the specified settings value and persists the settings.
-    """
-    _SERVER_SETTINGS_SCOPE.delete_setting(var)

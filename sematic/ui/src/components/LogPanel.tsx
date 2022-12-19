@@ -21,28 +21,29 @@ export default function LogPanel(props: { run: Run }) {
       filterString={filterString} />
   );
   const logErrorView = (
-    <Alert severity="error">
+    <Alert severity="error" sx={{ my: 5 }}>
       The server returned an error when asked for logs for this run.
     </Alert>
   );
   const logView = error === undefined ? standardLogView : logErrorView;
 
   return (
-    <Box sx={{ display: "grid" }} >
-      <Box sx={{ gridRow: 1, paddingBottom: 4, }} >
-        {run.external_exception_metadata_json && <ExternalException
-            exception_metadata={run.external_exception_metadata_json} />}
-      </Box>
-      <Box sx={{ gridRow: 2, paddingBottom: 4, }} >
-        {run.exception_metadata_json &&
-            <Exception exception_metadata={run.exception_metadata_json} />}
-      </Box>
-      <Box sx={{ gridRow: 3, paddingBottom: 4, }} >
+    <Box sx={{ display: "flex", flexGrow: 1 }} >
+      {run.external_exception_metadata_json && <Box sx={{ paddingBottom: 4, }} >
+        <ExternalException
+          exception_metadata={run.external_exception_metadata_json} />
+      </Box>}
+
+      {run.exception_metadata_json && <Box sx={{ paddingBottom: 4, }} >
+        <Exception exception_metadata={run.exception_metadata_json} /></Box>}
+
+      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column'}} >
         <TextField
           variant="standard"
           fullWidth={true}
           placeholder={"Filter..."}
           onChange={onFilterStringChange}
+          style={{ flexShrink: 1 }}
         />
         {logView}
       </Box>

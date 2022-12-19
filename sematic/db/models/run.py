@@ -40,6 +40,8 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
     ----------
     id : str
         The UUID4 of the run.
+    original_run_id : Optional[str]
+        The id of the original run this run was cloned from, if any.
     future_state : str
         The state of the corresponding :class:`sematic.Future`. See
         :class:`sematic.abstract_future.FutureState` for possible values.
@@ -55,18 +57,18 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
         ID of the root run of the current graph. The root run corresponds to the
         entry point of the graph, i.e. the one corresponding to the future on which
         `resolve` was called.
-    description: Optional[str]
+    description : Optional[str]
         The run's description. Defaults to the function's docstring.
-    source_code: str
+    source_code : str
         The calculator's source code.
-    nested_future_id:
+    nested_future_id : Optional[str]
         If the run resulted in returning a new future, this contains the id of that
         future.
-    exception_metadata: Optional[ExceptionMetadata]
+    exception_metadata : Optional[ExceptionMetadata]
         The metadata for the exception from the calculator's execution, if any.
-    external_exception_metadata: Optional[ExceptionMetadata]
+    external_exception_metadata : Optional[ExceptionMetadata]
         The metadata for the exception from the external compute infrastructure, if any.
-    external_jobs_json:
+    external_jobs_json : Optional[List[Dict[str, Any]]]
         A list of external compute jobs associated with the execution of this run.
         There may be multiple due to run retries. The field is a json string, but
         the dataclass version of the jobs can be accessed with the `external_jobs`
@@ -92,6 +94,7 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
     __tablename__ = "runs"
 
     id: str = Column(types.String(), primary_key=True)
+    original_run_id: Optional[str] = Column(types.String(), nullable=True)
     future_state: FutureState = Column(  # type: ignore
         types.String(), nullable=False, info={ENUM_KEY: FutureState}
     )

@@ -1,4 +1,3 @@
-import { FileCopy, History, Insights } from "@mui/icons-material";
 import { Box, Typography } from "@mui/material";
 import { useCallback, useContext, useMemo } from "react";
 import { Artifact, Edge, Resolution, Run } from "../Models";
@@ -99,12 +98,25 @@ export default function RunPanel(props: {
         </>
       )}
       {selectedPanel === "run" && (
-        <Box sx={{ p: 5 }}>
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto auto" }}>
+        <Box sx={{ p: 5, height: '100%', 'boxSizing': 'border-box', display: 'flex', 
+          flexFlow: 'column'}}>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto auto", flexShrink: 1 }}>
             <Box sx={{ paddingBottom: 3, gridColumn: 1 }}>
               <Box marginBottom={3}>
                 <Typography variant="h6">{selectedRun.name}</Typography>
-                <CalculatorPath calculatorPath={"ID: " + selectedRun.id} />
+                <Typography fontSize="small" color="GrayText" component="span">
+                  <code style={{ fontSize: 12 }}>
+                  ID: {selectedRun.id}
+                  {
+                    selectedRun.original_run_id &&
+                    /*
+                      TODO #278: replace full id with a 6-character trimmed
+                      link using "./Notes/RunId"
+                    */
+                    <> (cloned from {selectedRun.original_run_id})</>
+                  }
+                  </code>
+                </Typography>
                 <br />
                 <CalculatorPath calculatorPath={selectedRun.calculator_path} />
               </Box>
@@ -122,7 +134,7 @@ export default function RunPanel(props: {
               <RunTime run={selectedRun} prefix="in " />
             </Box>
           </Box>
-          <Box sx={{ mb: 10, mt: 5 }}>
+          <Box sx={{ mb: 10, mt: 5, flexShrink: 1}}>
             <Docstring docstring={selectedRun.description} />
           </Box>
           <RunTabs run={selectedRun} artifacts={selectedRunArtifacts} />
