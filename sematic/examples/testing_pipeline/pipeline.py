@@ -6,65 +6,14 @@ import logging
 import os
 import random
 import time
-from dataclasses import replace
 from typing import List, Optional
 
 # Sematic
 import sematic
-from sematic.external_resource import ExternalResource, ResourceState, ResourceStatus
+from sematic.external_resource_plugins.timed_message import TimedMessage
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-class FakeExternalResource(ExternalResource):
-    """Simple external resource just for demonstration purposes"""
-
-    def _do_activate(self, is_local: bool):
-        logger.info(f"Activating {self.id}! is_local={is_local}")
-        return replace(
-            self,
-            status=ResourceStatus(
-                state=ResourceState.ACTIVATING,
-                message="Allocating fake resource",
-            ),
-        )
-
-    def _do_deactivate(self):
-        logger.info(f"Deactivating {self.id}!")
-        return replace(
-            self,
-            status=ResourceStatus(
-                state=ResourceState.DEACTIVATING,
-                message="Deallocating fake resource",
-            ),
-        )
-
-    def _do_update(self) -> "FakeExternalResource":
-        logger.info(f"Updating state of {self.id}!")
-        if self.status.state == ResourceState.ACTIVATING:
-            return replace(
-                self,
-                status=ResourceStatus(
-                    state=ResourceState.ACTIVE,
-                    message="Resource is ready!",
-                ),
-            )
-        elif self.status.state == ResourceState.DEACTIVATING:
-            return replace(
-                self,
-                status=ResourceStatus(
-                    state=ResourceState.DEACTIVATED,
-                    message="Resource is cleaned!",
-                ),
-            )
-        return replace(
-            self,
-            status=ResourceStatus(
-                state=self.status.state,
-                message="Nothing has changed...",
-            ),
-        )
 
 
 @sematic.func(inline=False)
@@ -96,11 +45,15 @@ def add_inline_using_resource(a: float, b: float) -> float:
     """
     Adds two numbers and logs info about a custom resource.
     """
-    with FakeExternalResource() as external_resource:
+    with TimedMessage(
+        message="some message", allocation_seconds=2, deallocation_seconds=2
+    ) as timed_message:
         logger.info(
-            "Executing: add(a=%s, b=%s, external_resource=%s)", a, b, external_resource
+            "Executing: add(a=%s, b=%s, timed_message='%s')",
+            a,
+            b,
+            timed_message.read_message(),
         )
-        time.sleep(5)
         return a + b
 
 
@@ -109,9 +62,14 @@ def add_using_resource(a: float, b: float) -> float:
     """
     Adds two numbers and logs info about a custom resource.
     """
-    with FakeExternalResource() as external_resource:
+    with TimedMessage(
+        message="Some message", allocation_seconds=2, deallocation_seconds=2
+    ) as timed_message:
         logger.info(
-            "Executing: add(a=%s, b=%s, external_resource=%s)", a, b, external_resource
+            "Executing: add(a=%s, b=%s, timed_message='%s')",
+            a,
+            b,
+            timed_message.read_message(),
         )
         time.sleep(5)
         return a + b

@@ -15,6 +15,7 @@ from sematic.types.serialization import (
     value_from_json_encodable,
     value_to_json_encodable,
 )
+from sematic.utils.exceptions import MissingPluginError
 
 TypeSerialization = Dict[str, Any]
 
@@ -101,7 +102,12 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
         )
 
     def get_resource_type(self) -> Type[ExternalResource]:
-        return type_from_json_encodable(self.type_serialization)
+        try:
+            return type_from_json_encodable(self.type_serialization)
+        except Exception:
+            type_name = self.type_serialization["type"][1]
+            import_path = self.type_serialization["type"][2]["import_path"]
+            raise MissingPluginError(f"{import_path}.{type_name}")
 
     def set_resource_type(self, type_: Type[ExternalResource]) -> None:
         if not issubclass(type_, ExternalResource):
