@@ -30,7 +30,7 @@ class S3ClientMethod(enum.Enum):
 
 
 class S3StorageSettingsVar(AbstractPluginSettingsVar):
-    AWS_S3_BUCKET_KEY = "AWS_S3_BUCKET"
+    AWS_S3_BUCKET = "AWS_S3_BUCKET"
 
 
 class S3Storage(AbstractStorage, AbstractPlugin):
@@ -56,9 +56,7 @@ class S3Storage(AbstractStorage, AbstractPlugin):
 
     @memoized_property
     def _bucket(self) -> str:
-        return get_plugin_setting(
-            self.__class__, S3StorageSettingsVar.AWS_S3_BUCKET_KEY
-        )
+        return get_plugin_setting(self.__class__, S3StorageSettingsVar.AWS_S3_BUCKET)
 
     @memoized_property
     def _s3_client(self):
