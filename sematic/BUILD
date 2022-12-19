@@ -21,6 +21,12 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "abstract_plugin",
+    srcs = ["abstract_plugin.py"],
+    deps = [],
+)
+
+sematic_py_lib(
     name = "container_images",
     srcs = ["container_images.py"],
     deps = [],

@@ -29,3 +29,12 @@ pytest_test(
         "//sematic/utils:sorting",
     ],
 )
+
+pytest_test(
+    name = "test_hashing",
+    srcs = ["test_hashing.py"],
+    deps = [
+        "//sematic/types:serialization",
+        "//sematic/utils:hashing",
+    ],
+)

@@ -10,9 +10,9 @@ pytest_test(
 pytest_test(
     name = "test_user_settings",
     srcs = ["test_user_settings.py"],
+    # buildifier: leave-alone
     deps = [
-        # buildifier: leave-alone
-        "//sematic/config:config",
+        ":fixtures",
         "//sematic/config:user_settings",
     ],
 )
@@ -21,6 +21,28 @@ pytest_test(
     name = "test_server_settings",
     srcs = ["test_server_settings.py"],
     deps = [
+        ":fixtures",
         "//sematic/config:server_settings",
+    ],
+)
+
+pytest_test(
+    name = "test_settings",
+    srcs = ["test_settings.py"],
+    deps = [
+        ":fixtures",
+        "//sematic:abstract_plugin",
+        "//sematic/config:settings",
+    ],
+)
+
+sematic_py_lib(
+    name = "fixtures",
+    srcs = ["fixtures.py"],
+    pip_deps = [
+        "pyyaml",
+    ],
+    deps = [
+        "//sematic/config:settings",
     ],
 )
