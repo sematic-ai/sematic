@@ -204,8 +204,8 @@ def save_external_resource(resource: ExternalResource) -> ExternalResource:
     The resource as saved by the server.
     """
     record = ExternalResourceRecord.from_resource(resource)
-    payload = {"record": record}
-    response = _post(f"/api/v1/external_resources/{resource.id}", json_payload=payload)
+    payload = {"record": record.to_json_encodable()}
+    response = _post(f"/external_resources/{resource.id}", json_payload=payload)
     return ExternalResourceRecord.from_json_encodable(response["record"]).resource
 
 
@@ -227,7 +227,7 @@ def get_external_resource(resource_id: str, execute_update: bool) -> ExternalRes
     The latest update of the external resource.
     """
     response = _get(
-        f"/api/v1/external_resources/{resource_id}?execute_update={execute_update}"
+        f"/external_resources/{resource_id}?execute_update={execute_update}"
     )
     return ExternalResourceRecord.from_json_encodable(response["record"]).resource
 
@@ -242,7 +242,7 @@ def save_resource_run_link(resource_id: str, run_id: str) -> None:
     run_id:
         The id of the run to record a link for.
     """
-    _post(f"/api/v1/external_resources/{resource_id}/linked_run/{run_id}")
+    _post(f"/external_resources/{resource_id}/linked_run/{run_id}", json_payload={})
 
 
 def get_resource_ids_by_root_run_id(root_run_id: str) -> List[str]:
@@ -257,7 +257,7 @@ def get_resource_ids_by_root_run_id(root_run_id: str) -> List[str]:
     -------
     A list of external resources used by runs underneath the specified root run.
     """
-    response = _get(f"/api/v1/external_resources/ids?root_id={root_run_id}")
+    response = _get(f"/external_resources/ids?root_id={root_run_id}")
     return response["resource_ids"]
 
 

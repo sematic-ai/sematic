@@ -18,6 +18,8 @@ sematic_py_lib(
         "//sematic:abstract_calculator",
         "//sematic:abstract_future",
         "//sematic:api_client",
+        "//sematic/resolvers:abstract_resource_manager",
+        "//sematic/resolvers/resource_managers:cloud_manager",
         "//sematic:graph",
         "//sematic/config:config",
         "//sematic/db/models:artifact",
