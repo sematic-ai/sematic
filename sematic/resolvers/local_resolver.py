@@ -20,6 +20,8 @@ from sematic.db.models.factories import make_artifact, make_run_from_future
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.graph import Graph
+from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
+from sematic.resolvers.resource_managers.cloud_manager import CloudResourceManager
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.storage import LocalStorage, Storage
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
@@ -46,6 +48,10 @@ class LocalResolver(SilentResolver):
         meant to be used for retries or for hotfixes, without needing to re-run the
         entire pipeline again.
     """
+
+    _resource_manager: AbstractResourceManager = CloudResourceManager(
+        update_on_get=False
+    )
 
     def __init__(self, rerun_from: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
