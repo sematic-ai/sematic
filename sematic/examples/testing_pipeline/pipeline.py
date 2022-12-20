@@ -6,13 +6,65 @@ import logging
 import os
 import random
 import time
+from dataclasses import replace
 from typing import List, Optional
 
 # Sematic
 import sematic
+from sematic.external_resource import ExternalResource, ResourceState, ResourceStatus
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+class FakeExternalResource(ExternalResource):
+    """Simple external resource just for demonstration purposes"""
+
+    def _do_activate(self, is_local: bool):
+        logger.info(f"Activating {self.id}! is_local={is_local}")
+        return replace(
+            self,
+            status=ResourceStatus(
+                state=ResourceState.ACTIVATING,
+                message="Allocating fake resource",
+            ),
+        )
+
+    def _do_deactivate(self):
+        logger.info(f"Deactivating {self.id}!")
+        return replace(
+            self,
+            status=ResourceStatus(
+                state=ResourceState.DEACTIVATING,
+                message="Deallocating fake resource",
+            ),
+        )
+
+    def _do_update(self) -> "FakeExternalResource":
+        logger.info(f"Updating state of {self.id}!")
+        if self.status.state == ResourceState.ACTIVATING:
+            return replace(
+                self,
+                status=ResourceStatus(
+                    state=ResourceState.ACTIVE,
+                    message="Resource is ready!",
+                ),
+            )
+        elif self.status.state == ResourceState.DEACTIVATING:
+            return replace(
+                self,
+                status=ResourceStatus(
+                    state=ResourceState.DEACTIVATED,
+                    message="Resource is cleaned!",
+                ),
+            )
+        return replace(
+            self,
+            status=ResourceStatus(
+                state=self.status.state,
+                message="Nothing has changed...",
+            ),
+        )
 
 
 @sematic.func(inline=False)
@@ -30,9 +82,39 @@ def add_inline(a: float, b: float) -> float:
     """
     Adds two numbers inline.
     """
-    logger.info("Executing: add_inline(a=%s, b=%s)", a, b)
+    logger.info(
+        "Executing: add_inline(a=%s, b=%s)",
+        a,
+        b,
+    )
     time.sleep(5)
     return a + b
+
+
+@sematic.func(inline=True)
+def add_inline_using_resource(a: float, b: float) -> float:
+    """
+    Adds two numbers and logs info about a custom resource.
+    """
+    with FakeExternalResource() as external_resource:
+        logger.info(
+            "Executing: add(a=%s, b=%s, external_resource=%s)", a, b, external_resource
+        )
+        time.sleep(5)
+        return a + b
+
+
+@sematic.func(inline=False)
+def add_using_resource(a: float, b: float) -> float:
+    """
+    Adds two numbers and logs info about a custom resource.
+    """
+    with FakeExternalResource() as external_resource:
+        logger.info(
+            "Executing: add(a=%s, b=%s, external_resource=%s)", a, b, external_resource
+        )
+        time.sleep(5)
+        return a + b
 
 
 @sematic.func(inline=False)
@@ -157,6 +239,7 @@ def testing_pipeline(
     raise_retry_probability: Optional[float] = None,
     oom: bool = False,
     exit_code: Optional[int] = None,
+    external_resource: bool = False,
 ) -> float:
     """
     The root function of the testing pipeline.
@@ -186,15 +269,22 @@ def testing_pipeline(
     exit_code: Optional[int]
         If not None, includes a function which will exit with the specified code.
         Defaults to None.
+    external_resource: bool
+        Whether to use an external resource. Defaults to False.
     """
     # have an initial function whose output is used as inputs by all other functions
     # this staggers the rest of the functions and allows the user a chance to monitor and
     # visualize the unfolding execution
+
     initial_future = add(1, 2)
     futures = [initial_future]
 
     if inline:
         futures.append(add_inline(initial_future, 3))
+
+    if external_resource:
+        futures.append(add_using_resource(initial_future, 1.0))
+        futures.append(add_inline_using_resource(initial_future, 1.0))
 
     if nested:
         futures.append(add4_nested(initial_future, 1, 2, 3))
