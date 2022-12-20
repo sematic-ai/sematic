@@ -4,6 +4,7 @@ import inspect
 import logging
 import types
 from copy import copy
+from dataclasses import is_dataclass
 from typing import (
     Any,
     Callable,
@@ -337,6 +338,10 @@ def func(
                 func_.__name__,
             )
 
+        all_type_annotations = dict(input_types)
+        all_type_annotations["<output>"] = output_type
+        _validate_type_annotations(all_type_annotations)
+
         return Calculator(
             func_,
             input_types=input_types,
@@ -351,6 +356,35 @@ def func(
         return _wrapper
 
     return _wrapper(func)
+
+
+def _validate_type_annotations(all_type_annotations: Dict[str, Type[Any]]):
+    """Perform any validation for types that are forbidden from usage in funcs
+
+    The logic in the type registry will only ensure that Sematic can use the types
+    in type checks and serialization. This validation is for anything that can
+    be used for those purposes, but CAN'T be used as inputs/outputs to/from a
+    Sematic func.
+    """
+    try:
+        # Sematic
+        from sematic.external_resource import ExternalResource
+    except ImportError:
+        # there is no way the annotations are subclasses of
+        # ExternalResource if we reached here; if it was then
+        # it would have been possible to import ExternalResource.
+        return
+
+    for parameter_name, type_ in all_type_annotations.items():
+        if not is_dataclass(type_):
+            continue
+        if issubclass(type_, ExternalResource):
+            raise TypeError(
+                f"{type_.__name__} objects can't be passed into or out of "
+                f"Sematic funcs. They are only intended to be used inside "
+                f"the body of a Sematic func. Attempted to use with parameter "
+                f"'{parameter_name}'"
+            )
 
 
 def _is_method_like(func) -> bool:
