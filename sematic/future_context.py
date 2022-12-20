@@ -2,12 +2,43 @@
 from contextlib import contextmanager
 from dataclasses import dataclass
 from importlib import import_module
-from typing import Optional, Type
+from typing import Any, Optional, Type
 
 # Sematic
-from sematic.resolver import Resolver
+from sematic.utils.exceptions import NotInSematicFuncError
 
 FUTURE_ALGEBRA_DOC_LINK = "https://docs.sematic.dev/diving-deeper/future-algebra"
+
+
+# We can't depend on Resolver without creating the dependency cycle:
+# future_context -> resolver -> external_resource -> future_context
+# This alias is just to satisfy mypy while also giving code readers
+# a sense of what's going on for the type hints in this module.
+Resolver = Any
+
+
+@dataclass(frozen=True)
+class PrivateContext:
+    """Contextual info about the execution of the current function, not for end users.
+
+    This informstion may be used by the Sematic framework itself, but is not intended
+    for usage by users of Sematic.
+
+    Attributes
+    ----------
+    resolver_class_path:
+        The import path for the resolver being used.
+    """
+
+    resolver_class_path: str
+
+    def load_resolver_class(self) -> Type[Resolver]:
+        module_name, resolver_name = self.resolver_class_path.rsplit(".", maxsplit=1)
+        module = import_module(module_name)
+        resolver_class = getattr(module, resolver_name, None)
+        if resolver_class is None:
+            raise ImportError(f"No class named '{resolver_name}' in {module_name}")
+        return resolver_class
 
 
 @dataclass(frozen=True)
@@ -22,21 +53,11 @@ class SematicContext:
     root_id:
         The id of the root future for a resolution. For cloud executions, this is
         equivalent to the id for the root run.
-    resolver_class_path:
-        The import path for the resolver being used.
     """
 
     run_id: str
     root_id: str
-    resolver_class_path: str
-
-    def resolver_class(self) -> Type[Resolver]:
-        module_name, resolver_name = self.resolver_class_path.rsplit(".", maxsplit=1)
-        module = import_module(module_name)
-        resolver_class = getattr(module, resolver_name, None)
-        if resolver_class is None:
-            raise ImportError(f"No class named '{resolver_name}' in {module_name}")
-        return resolver_class
+    private: PrivateContext
 
 
 _current_context: Optional[SematicContext] = None
@@ -90,12 +111,12 @@ def context() -> SematicContext:
 
     Raises
     ------
-    RuntimeError:
+    NotInSematicFuncError:
         If this function is called outside the execution of a Sematic function.
     """
     global _current_context
     if _current_context is None:
-        raise RuntimeError(
+        raise NotInSematicFuncError(
             "context() must be called from within the execution of a Sematic function, "
             "in the root process that function was invoked from."
         )
