@@ -1,55 +1,42 @@
 import Box from "@mui/material/Box";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { UserContext } from "..";
+import Loading from "../components/Loading";
 import PipelineBar from "../components/PipelineBar";
 import PipelinePanels from "../components/PipelinePanels";
-import { Resolution, Run } from "../Models";
-import { ResolutionPayload, RunViewPayload } from "../Payloads";
-import { fetchJSON } from "../utils";
+import { ExtractContextType } from "../components/utils/typings";
+import { useFetchResolution, useFetchRun } from "../hooks/pipelineHooks";
+import PipelineRunViewContext from './PipelineRunViewContext'
 
 export default function PipelineRunView() {
-  const [rootRun, setRootRun] = useState<Run | undefined>(undefined);
-  const [resolution, setResolution] = useState<Resolution | undefined>(
-    undefined
-  );
+  const { pipelinePath, rootId } = useParams();
 
-  const { user } = useContext(UserContext);
+  for (const [key, value] of Object.entries({pipelinePath, rootId})) {
+    if (!value) {
+      throw new Error(
+        `\`${key}\` is expected from the URL. This component might be used with wrong route.`);
+    }
+  }
 
-  const params = useParams();
+  const [rootRun, isRootRunLoading, rootRunLoadError] = useFetchRun(rootId!);
+  const [resolution, isResolutionLoading, resolutionLoadError] = useFetchResolution(rootId!);
 
-  const { calculatorPath, rootId } = params;
+  const isLoading = useMemo(() => isRootRunLoading || isResolutionLoading, 
+    [isRootRunLoading, isResolutionLoading])
+  
+  const error = useMemo(() => rootRunLoadError || resolutionLoadError, 
+    [rootRunLoadError, resolutionLoadError])
 
-  const fetchRootRun = useCallback(
-    (rootId: string) => {
-      fetchJSON({
-        url: "/api/v1/runs/" + rootId,
-        apiKey: user?.api_key,
-        callback: (payload: RunViewPayload) => setRootRun(payload.content),
-      });
-    },
-    [setRootRun, user?.api_key]
-  );
+  const context = useMemo<ExtractContextType<typeof PipelineRunViewContext>>(() => ({
+    rootRun, resolution, isLoading, pipelinePath: pipelinePath!
+  }), [rootRun, resolution, isLoading, pipelinePath]);
 
-  const fetchResolution = useCallback(
-    (rootId: string) => {
-      fetchJSON({
-        url: "/api/v1/resolutions/" + rootId,
-        apiKey: user?.api_key,
-        callback: (payload: ResolutionPayload) =>
-          setResolution(payload.content),
-      });
-    },
-    [setResolution, user?.api_key]
-  );
+  if (error || isLoading) {
+    return <Loading error={error} isLoaded={!isLoading} />
+  }
 
-  useEffect(() => {
-    fetchRootRun(rootId!);
-    fetchResolution(rootId!);
-  }, [rootId, fetchRootRun, fetchResolution]);
-
-  if (calculatorPath) {
-    return (
+  return (
+    <PipelineRunViewContext.Provider value={context}>
       <Box
         sx={{
           display: "grid",
@@ -58,20 +45,9 @@ export default function PipelineRunView() {
           height: "100vh",
         }}
       >
-        <PipelineBar
-          calculatorPath={calculatorPath}
-          rootRun={rootRun}
-          resolution={resolution}
-        />
-        {rootRun && resolution && (
-          <PipelinePanels
-            rootRun={rootRun}
-            resolution={resolution}
-            onRootRunUpdate={setRootRun}
-          />
-        )}
+        <PipelineBar />
+        <PipelinePanels />
       </Box>
-    );
-  }
-  return <></>;
+    </PipelineRunViewContext.Provider>
+  );
 }

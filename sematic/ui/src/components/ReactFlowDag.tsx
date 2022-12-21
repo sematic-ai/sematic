@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import buildDagLayout from "./utils/buildDagLayout";
 import RunNode from "./RunNode";
 import ArtifactNode from "./ArtifactNode";
+import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
 
 var util = require("dagre/lib/util");
 var graphlib = require("graphlib");
@@ -42,8 +43,6 @@ interface ReactFlowDagProps {
   runs: Run[];
   edges: Edge[];
   artifactsById: Map<string, Artifact>;
-  onSelectRun: (run: Run) => void;
-  selectedRunId: string;
 }
 
 const nodeTypes = {
@@ -52,7 +51,14 @@ const nodeTypes = {
 };
 
 function ReactFlowDag(props: ReactFlowDagProps) {
-  const { runs, edges, artifactsById, onSelectRun, selectedRunId } = props;
+  const { runs, edges, artifactsById } = props;
+
+  const { selectedRun, setSelectedPanelItem, setSelectedRun } = usePipelinePanelsContext();
+
+  const onSelectRun = useCallback((run: Run) => {
+    setSelectedRun(run);
+    setSelectedPanelItem("run");
+  }, [setSelectedRun, setSelectedPanelItem]);
 
   const runsById = useMemo(
     () => new Map(runs.map((run) => [run.id, run])),
@@ -95,7 +101,7 @@ function ReactFlowDag(props: ReactFlowDagProps) {
         id: run.id,
         data: { label: run.name, run: run, argNames: runArgNames },
         parentNode: run.parent_id === null ? undefined : run.parent_id,
-        selected: run.id === selectedRunId,
+        selected: run.id === selectedRun.id,
         position: { x: 0, y: 0 },
         extent: run.parent_id === null ? undefined : "parent",
         // Always render below edges.
