@@ -157,7 +157,11 @@ def get_plugin_settings(
     if plugin_path not in settings:
         raise MissingSettingsError(plugin)
 
-    return settings[plugin_path]
+    return {
+        key: value
+        for key, value in settings[plugin_path].items()
+        if key != _PLUGIN_VERSION_KEY
+    }
 
 
 def get_plugin_setting(

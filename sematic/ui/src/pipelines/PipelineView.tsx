@@ -13,14 +13,14 @@ import { Alert } from "@mui/material";
  */
 export default function PipelineView() {
     const params = useParams();
-    const { calculatorPath } = params;
+    const { pipelinePath } = params;
 
     const runFilters = useMemo(() => ({
         "AND": [
           { parent_id: { eq: null } },
-          { calculator_path: { eq: calculatorPath! } },
+          { calculator_path: { eq: pipelinePath! } },
         ]
-      }), [calculatorPath]);
+      }), [pipelinePath]);
 
     const otherQueryParams = useMemo(() => ({
         limit: '10'
@@ -28,7 +28,7 @@ export default function PipelineView() {
 
     const {isLoaded, error, runs: latestRuns} = useFetchRuns(runFilters, otherQueryParams);
 
-    const navigate = usePipelineNavigation(calculatorPath!);
+    const navigate = usePipelineNavigation(pipelinePath!);
 
     useEffect(() => {
         if (!isLoaded || !!error) {
