@@ -387,6 +387,20 @@ def unused_results_pipeline() -> int:
     return y
 
 
+@func
+def unused_results_list_pipeline(create_unused: bool) -> List[int]:
+    x = pass_through(42)
+    y = pass_through(43)
+    z = pass_through(44)
+    if create_unused:
+        return [x, y]
+    else:
+        return [x, y, z]
+
+
 def test_unused_future():
     with pytest.raises(ResolutionError, match=r".*output.*does not depend on.*"):
         unused_results_pipeline().resolve(tracking=False)
+    with pytest.raises(ResolutionError, match=r".*output.*does not depend on.*"):
+        unused_results_list_pipeline(True).resolve(tracking=False)
+    unused_results_list_pipeline(False).resolve(tracking=False)

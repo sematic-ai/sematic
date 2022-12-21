@@ -593,13 +593,16 @@ def _check_for_extra_futures(
     calculator_name: str, output: Future, created_futures: List[Future]
 ):
     futures_by_id = {f.id: f for f in created_futures}
+
     if isinstance(output, Future):
         dependency_ids = _get_ids_of_dependencies(output)
         extra_ids = set(futures_by_id.keys()).difference(dependency_ids)
     else:
         extra_ids = set(futures_by_id.keys())
+
     if len(extra_ids) == 0:
         return
+
     sample_extra = futures_by_id[next(iter(extra_ids))]
     message = (
         f"The output of '{calculator_name}' does not depend on the output of "
