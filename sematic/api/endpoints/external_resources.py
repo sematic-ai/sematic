@@ -22,7 +22,6 @@ from sematic.db.queries import (
 logger = logging.getLogger(__name__)
 
 ROOT_ID_KEY = "root_id"
-EXECUTE_UPDATE_KEY = "execute_update"
 
 
 # Allow getting a list of external resource ids.
@@ -51,18 +50,6 @@ def get_resources_endpoint(user: Optional[User]) -> flask.Response:
 @sematic_api.route("/api/v1/external_resources/<resource_id>", methods=["GET"])
 @authenticate
 def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Response:
-    if len(flask.request.args.keys()) > 1 or (
-        len(flask.request.args.keys()) == 1
-        and EXECUTE_UPDATE_KEY not in flask.request.args.keys()
-    ):
-        return jsonify_error(
-            f"Only request query parameter allowed is '{EXECUTE_UPDATE_KEY}' ",
-            HTTPStatus.BAD_REQUEST,
-        )
-    execute_update = False
-    if EXECUTE_UPDATE_KEY in flask.request.args.keys():
-        if flask.request.args[EXECUTE_UPDATE_KEY].lower() == "true":
-            execute_update = True
 
     record = get_external_resource_record(resource_id=resource_id)
     if record is None:
@@ -71,7 +58,7 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
         )
 
     updated_resource = None
-    if execute_update:
+    if not record.locally_allocated:
         logger.info(
             "Updating resource '%s', currently in state '%s'",
             record.id,
@@ -93,7 +80,9 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
             )
 
     if updated_resource is not None:
-        record = ExternalResourceRecord.from_resource(updated_resource)
+        record = ExternalResourceRecord.from_resource(
+            updated_resource, record.locally_allocated
+        )
         save_external_resource_record(record)
 
     payload = dict(record=record.to_json_encodable())
