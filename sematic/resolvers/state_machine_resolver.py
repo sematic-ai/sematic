@@ -498,3 +498,18 @@ class StateMachineResolver(Resolver, abc.ABC):
                     f"Last update message: {resource.status.message}"
                 )
         return resource
+    
+    def _deactivate_all_resources(self) -> None:
+        resources = self._get_resource_manager().resources_by_root_id(self._root_future.id)
+        logger.warning("Deactivating all resources due to resolution failure.")
+        failed_to_deactivate = []
+        for resource in resources:
+            try:
+                self._do_resource_deactivate(resource=resource)
+            except Exception:
+                failed_to_deactivate.append(resource.id)
+        if len(failed_to_deactivate) > 0:
+            logger.error(
+                "Failed to deactivate resources with ids: %s",
+                ", ".join(failed_to_deactivate),
+            )
