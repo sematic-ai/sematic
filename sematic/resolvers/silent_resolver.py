@@ -92,16 +92,17 @@ class SilentResolver(StateMachineResolver):
     def activate_resource_for_run(  # type: ignore
         cls, resource: ExternalResource, run_id: str, root_id: str
     ) -> ExternalResource:
-        cls._resource_manager.save_resource(resource)
+        is_local = True
+        cls._resource_manager.save_resource(resource, locally_manage=is_local)
         cls._resource_manager.link_resource_to_run(resource.id, run_id, root_id)
         time_started = time.time()
         try:
-            resource = resource.activate(is_local=True)
+            resource = resource.activate(is_local=is_local)
         except Exception as e:
             raise ExternalResourceError(
                 f"Could not activate resource with id {resource.id}: {e}"
             ) from e
-        cls._resource_manager.save_resource(resource)
+        cls._resource_manager.save_resource(resource, is_local)
         while resource.status.state != ResourceState.ACTIVE:
             try:
                 resource = resource.update()
@@ -110,7 +111,7 @@ class SilentResolver(StateMachineResolver):
                     "Error getting latest state from resource %s: %s", resource.id, e
                 )
             time.sleep(cls._RESOURCE_UPDATE_INTERVAL_SECONDS)
-            cls._resource_manager.save_resource(resource)
+            cls._resource_manager.save_resource(resource, is_local)
             if resource.status.state.is_terminal():
                 raise ExternalResourceError(
                     f"Could not activate resource with id {resource.id}: "
@@ -125,6 +126,7 @@ class SilentResolver(StateMachineResolver):
 
     @classmethod
     def deactivate_resource(cls, resource_id: str) -> ExternalResource:  # type: ignore
+        is_local = True
         resource = cls._resource_manager.get_resource_for_id(resource_id)
         if resource.status.state.is_terminal():
             return resource
@@ -135,7 +137,7 @@ class SilentResolver(StateMachineResolver):
             raise ExternalResourceError(
                 f"Could not deactivate resource with id {resource.id}: {e}"
             ) from e
-        cls._resource_manager.save_resource(resource)
+        cls._resource_manager.save_resource(resource, is_local)
         while not resource.status.state.is_terminal():
             try:
                 resource = resource.update()
@@ -144,7 +146,7 @@ class SilentResolver(StateMachineResolver):
                     "Error getting latest state from resource %s: %s", resource.id, e
                 )
             time.sleep(cls._RESOURCE_UPDATE_INTERVAL_SECONDS)
-            cls._resource_manager.save_resource(resource)
+            cls._resource_manager.save_resource(resource, is_local)
             if time.time() - time_started > cls._RESOURCE_ACTIVATION_TIMEOUT_SECONDS:
                 raise ExternalResourceError(
                     f"Timed out deactivating resource with id {resource.id}. "

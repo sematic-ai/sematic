@@ -191,25 +191,31 @@ def schedule_resolution(
     return Resolution.from_json_encodable(response["content"])
 
 
-def save_external_resource(resource: ExternalResource) -> ExternalResource:
+def save_external_resource(
+    resource: ExternalResource, locally_manage: bool
+) -> ExternalResource:
     """Save the external resource to the server, return the result.
 
     Parameters
     ----------
     resource:
         The resource to save.
+    locally_manage:
+        Whether or not the resource is locally managed.
 
     Returns
     -------
     The resource as saved by the server.
     """
-    record = ExternalResourceRecord.from_resource(resource)
+    record = ExternalResourceRecord.from_resource(
+        resource, locally_allocated=locally_manage
+    )
     payload = {"record": record.to_json_encodable()}
     response = _post(f"/external_resources/{resource.id}", json_payload=payload)
     return ExternalResourceRecord.from_json_encodable(response["record"]).resource
 
 
-def get_external_resource(resource_id: str, execute_update: bool) -> ExternalResource:
+def get_external_resource(resource_id: str) -> ExternalResource:
     """Get the external resource, updating the status if required.
 
     Will actively interact with the external resource if necessary to get its status.
@@ -218,17 +224,12 @@ def get_external_resource(resource_id: str, execute_update: bool) -> ExternalRes
     ----------
     resource_id:
         The id of the resource to retrieve.
-    execute_update:
-        Whether or not the server should update the resource state against remote
-        compute on the "get" query.
 
     Returns
     -------
     The latest update of the external resource.
     """
-    response = _get(
-        f"/external_resources/{resource_id}?execute_update={execute_update}"
-    )
+    response = _get(f"/external_resources/{resource_id}")
     return ExternalResourceRecord.from_json_encodable(response["record"]).resource
 
 

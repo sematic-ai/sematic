@@ -49,9 +49,7 @@ class LocalResolver(SilentResolver):
         entire pipeline again.
     """
 
-    _resource_manager: AbstractResourceManager = CloudResourceManager(
-        update_on_get=False
-    )
+    _resource_manager: AbstractResourceManager = CloudResourceManager()
 
     def __init__(self, rerun_from: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
