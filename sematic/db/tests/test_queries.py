@@ -153,7 +153,7 @@ class SomeResource(ExternalResource):
 
 def test_save_external_resource_record(test_db):  # noqa: F811
     resource1 = SomeResource(some_field=42)
-    record1 = ExternalResourceRecord.from_resource(resource1)
+    record1 = ExternalResourceRecord.from_resource(resource1, locally_allocated=True)
     saved_record1 = save_external_resource_record(record1)
     assert saved_record1.resource_state == resource1.status.state
 
@@ -164,7 +164,7 @@ def test_save_external_resource_record(test_db):  # noqa: F811
             message="Activating",
         ),
     )
-    record2 = ExternalResourceRecord.from_resource(resource2)
+    record2 = ExternalResourceRecord.from_resource(resource2, locally_allocated=True)
     saved_record2 = save_external_resource_record(record2)
     assert saved_record2.history == (resource2, resource1)
 
@@ -175,7 +175,7 @@ def test_save_external_resource_record(test_db):  # noqa: F811
             last_update_epoch_time=resource2.status.last_update_epoch_time + 1,
         ),
     )
-    record3 = ExternalResourceRecord.from_resource(resource3)
+    record3 = ExternalResourceRecord.from_resource(resource3, locally_allocated=True)
     saved_record3 = save_external_resource_record(record3)
     assert (
         saved_record3.last_updated_epoch_seconds
@@ -194,7 +194,7 @@ def test_save_external_resource_record(test_db):  # noqa: F811
         ),
         some_field=43,
     )
-    record4 = ExternalResourceRecord.from_resource(resource4)
+    record4 = ExternalResourceRecord.from_resource(resource4, locally_allocated=True)
     saved_record4 = save_external_resource_record(record4)
 
     # history is updated for changes in other fields
@@ -207,7 +207,7 @@ def test_save_external_resource_record(test_db):  # noqa: F811
             state=ResourceState.CREATED,
         ),
     )
-    record5 = ExternalResourceRecord.from_resource(resource5)
+    record5 = ExternalResourceRecord.from_resource(resource5, locally_allocated=True)
     with pytest.raises(IllegalStateTransitionError):
         save_external_resource_record(record5)
 
@@ -227,7 +227,9 @@ def test_run_resource_links(test_db):  # noqa: F811
     resource_4 = SomeResource(some_field=4)
 
     for resource in [resource_1, resource_2, resource_3, resource_4]:
-        save_external_resource_record(ExternalResourceRecord.from_resource(resource))
+        save_external_resource_record(
+            ExternalResourceRecord.from_resource(resource, locally_allocated=True)
+        )
 
     save_run_external_resource_link(resource_1.id, child_run_1.id)
     save_run_external_resource_link(resource_2.id, child_run_2.id)
