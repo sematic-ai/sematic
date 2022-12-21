@@ -14,6 +14,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.calculator import func
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.external_resource_record import ExternalResourceRecord
+from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import (
@@ -25,6 +26,7 @@ from sematic.db.queries import (
     get_run,
     get_run_graph,
     save_external_resource_record,
+    save_graph,
     save_resolution,
     save_run,
     save_run_external_resource_link,
@@ -108,6 +110,68 @@ def test_get_artifact(test_db, persisted_artifact: Artifact):  # noqa: F811
     assert artifact.id == persisted_artifact.id
     assert artifact.type_serialization == persisted_artifact.type_serialization
     assert artifact.json_summary == artifact.json_summary
+
+
+def test_save_artifact(test_db, test_storage):  # noqa: F811
+    artifact = make_artifact(42, int, storage=test_storage)
+    save_graph(artifacts=[artifact], runs=[], edges=[])
+    persisted_artifact = get_artifact(artifact.id)  # noqa: F811
+
+    assert persisted_artifact.id == artifact.id
+    assert persisted_artifact.type_serialization == artifact.type_serialization
+    assert persisted_artifact.json_summary == artifact.json_summary
+    assert persisted_artifact.created_at == artifact.created_at
+    assert persisted_artifact.updated_at == artifact.updated_at
+
+
+def test_update_artifact(test_db, test_storage):  # noqa: F811
+    original_artifact = make_artifact(42, int, storage=test_storage)
+    # create copies of these values, as sqlalchemy updates models in-place
+    original_created_at = original_artifact.created_at
+    original_updated_at = original_artifact.updated_at
+    save_graph(artifacts=[original_artifact], runs=[], edges=[])
+
+    updated_artifact = make_artifact(42, int, storage=test_storage)
+    assert updated_artifact.created_at != original_created_at
+
+    save_graph(artifacts=[updated_artifact], runs=[], edges=[])
+
+    persisted_artifact = get_artifact(original_artifact.id)  # noqa: F811
+
+    assert persisted_artifact.id == original_artifact.id
+    assert persisted_artifact.type_serialization == original_artifact.type_serialization
+    assert persisted_artifact.json_summary == original_artifact.json_summary
+
+    assert persisted_artifact.created_at == original_created_at
+    assert persisted_artifact.updated_at == original_updated_at
+
+
+def test_update_artifact_changed_content(test_db, test_storage):  # noqa: F811
+    original_artifact = make_artifact(42, int, storage=test_storage)
+    # create copies of these values, as sqlalchemy updates models in-place
+    original_created_at = original_artifact.created_at
+    original_updated_at = original_artifact.updated_at
+    save_graph(artifacts=[original_artifact], runs=[], edges=[])
+
+    updated_artifact = make_artifact(42, int, storage=test_storage)
+
+    # json of " 42" still deserializes to 42, but this change
+    # helps us validate immutability
+    updated_artifact.json_summary = f" {updated_artifact.json_summary}"
+
+    with pytest.raises(
+        ValueError, match="Artifact content change detected for field 'json_summary'"
+    ):
+        save_graph(artifacts=[updated_artifact], runs=[], edges=[])
+
+    persisted_artifact = get_artifact(original_artifact.id)  # noqa: F811
+
+    assert persisted_artifact.id == original_artifact.id
+    assert persisted_artifact.type_serialization == original_artifact.type_serialization
+    assert persisted_artifact.json_summary == original_artifact.json_summary
+
+    assert persisted_artifact.created_at == original_created_at
+    assert persisted_artifact.updated_at == original_updated_at
 
 
 @func

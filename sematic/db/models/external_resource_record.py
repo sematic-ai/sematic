@@ -116,6 +116,10 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
         except Exception:
             type_name = self.type_serialization["type"][1]
             import_path = self.type_serialization["type"][2]["import_path"]
+
+            # We are unable to load the type for the external resource.
+            # This means the type must not be present, which is tantamount
+            # to a missing plugin for that external resource type.
             raise MissingPluginError(f"{import_path}.{type_name}")
 
     def set_resource_type(self, type_: Type[ExternalResource]) -> None:
