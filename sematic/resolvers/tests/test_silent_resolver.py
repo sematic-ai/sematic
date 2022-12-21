@@ -7,10 +7,10 @@ from sematic.abstract_future import FutureState
 from sematic.calculator import func
 from sematic.external_resource import ResourceState
 from sematic.future_context import PrivateContext, SematicContext, context, set_context
-from sematic.resolvers.silent_resolver import ExternalResourceError, SilentResolver
+from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.resolvers.tests.fixtures import FakeExternalResource
 from sematic.retry_settings import RetrySettings
-from sematic.utils.exceptions import ResolutionError
+from sematic.utils.exceptions import ExternalResourceError, ResolutionError
 
 
 @func

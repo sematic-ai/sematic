@@ -5,15 +5,19 @@ Abstract base class for a state machine-based resolution.
 import abc
 import logging
 import signal
+import time
 import typing
 from contextlib import contextmanager
 
 # Sematic
 from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import AbstractFuture, FutureState
+from sematic.external_resource import ExternalResource, ResourceState
 from sematic.resolver import Resolver
+from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 from sematic.utils.exceptions import (
     ExceptionMetadata,
+    ExternalResourceError,
     ResolutionError,
     format_exception_for_run,
 )
@@ -22,6 +26,12 @@ logger = logging.getLogger(__name__)
 
 
 class StateMachineResolver(Resolver, abc.ABC):
+
+    # TODO: consider making these user settings
+    _RESOURCE_ACTIVATION_TIMEOUT_SECONDS = 600  # 600s => 10 min
+    _RESOURCE_DEACTIVATION_TIMEOUT_SECONDS = 60  # 60s => 1 min
+    _RESOURCE_UPDATE_INTERVAL_SECONDS = 1
+
     def __init__(self):
         self._futures: typing.List[AbstractFuture] = []
 
@@ -402,3 +412,89 @@ class StateMachineResolver(Resolver, abc.ABC):
     @classmethod
     def classpath(cls) -> str:
         return f"{cls.__module__}.{cls.__name__}"
+
+    @classmethod
+    def _get_resource_manager(cls) -> AbstractResourceManager:
+        raise NotImplementedError("Child classes must implement _get_resource_manager")
+
+    @classmethod
+    def _do_resource_activate(cls, resource: ExternalResource) -> ExternalResource:
+        raise NotImplementedError("Child classes must implement _do_resource_activate")
+
+    @classmethod
+    def _do_resource_deactivate(cls, resource: ExternalResource) -> ExternalResource:
+        raise NotImplementedError(
+            "Child classes must implement _do_resource_deactivate"
+        )
+
+    @classmethod
+    def _do_resource_update(cls, resource: ExternalResource) -> ExternalResource:
+        raise NotImplementedError("Child classes must implement _do_resource_update")
+
+    @classmethod
+    def _save_resource(cls, resource: ExternalResource):
+        raise NotImplementedError("Child classes must implement _save_resource")
+
+    @classmethod
+    def activate_resource_for_run(  # type: ignore
+        cls, resource: ExternalResource, run_id: str, root_id: str
+    ) -> ExternalResource:
+        cls._save_resource(resource)
+        cls._get_resource_manager().link_resource_to_run(resource.id, run_id, root_id)
+        time_started = time.time()
+        try:
+            resource = cls._do_resource_activate(resource=resource)
+        except Exception as e:
+            raise ExternalResourceError(
+                f"Could not activate resource with id {resource.id}: {e}"
+            ) from e
+        cls._save_resource(resource=resource)
+        while resource.status.state != ResourceState.ACTIVE:
+            try:
+                resource = cls._do_resource_update(resource)
+            except Exception as e:
+                logger.error(
+                    "Error getting latest state from resource %s: %s", resource.id, e
+                )
+            time.sleep(cls._RESOURCE_UPDATE_INTERVAL_SECONDS)
+            cls._save_resource(resource)
+            if resource.status.state.is_terminal():
+                raise ExternalResourceError(
+                    f"Could not activate resource with id {resource.id}: "
+                    f"{resource.status.message}"
+                )
+            if time.time() - time_started > cls._RESOURCE_DEACTIVATION_TIMEOUT_SECONDS:
+                raise ExternalResourceError(
+                    f"Timed out activating resource with id {resource.id}. "
+                    f"Last update message: {resource.status.message}"
+                )
+        return resource
+
+    @classmethod
+    def deactivate_resource(cls, resource_id: str) -> ExternalResource:  # type: ignore
+        resource = cls._get_resource_manager().get_resource_for_id(resource_id)
+        if resource.status.state.is_terminal():
+            return resource
+        time_started = time.time()
+        try:
+            resource = cls._do_resource_deactivate(resource=resource)
+        except Exception as e:
+            raise ExternalResourceError(
+                f"Could not deactivate resource with id {resource.id}: {e}"
+            ) from e
+        cls._save_resource(resource)
+        while not resource.status.state.is_terminal():
+            try:
+                resource = cls._do_resource_update(resource=resource)
+            except Exception as e:
+                logger.error(
+                    "Error getting latest state from resource %s: %s", resource.id, e
+                )
+            time.sleep(cls._RESOURCE_UPDATE_INTERVAL_SECONDS)
+            cls._save_resource(resource=resource)
+            if time.time() - time_started > cls._RESOURCE_ACTIVATION_TIMEOUT_SECONDS:
+                raise ExternalResourceError(
+                    f"Timed out deactivating resource with id {resource.id}. "
+                    f"Last update message: {resource.status.message}"
+                )
+        return resource
