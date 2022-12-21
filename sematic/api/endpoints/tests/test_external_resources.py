@@ -67,7 +67,7 @@ def test_save_read(
     my_resource = ExternalResource(
         status=ResourceStatus(state=ResourceState.CREATED, message="hi!")
     )
-    record = ExternalResourceRecord.from_resource(my_resource)
+    record = ExternalResourceRecord.from_resource(my_resource, locally_allocated=True)
     payload = {"record": record.to_json_encodable()}
     response = test_client.post(f"/api/v1/external_resources/{record.id}", json=payload)
     assert response.status_code == 200
@@ -86,7 +86,9 @@ def test_save_read(
         ),
     )
     assert my_resource_activating != my_resource
-    record = ExternalResourceRecord.from_resource(my_resource_activating)
+    record = ExternalResourceRecord.from_resource(
+        my_resource_activating, locally_allocated=True
+    )
     payload = {"record": record.to_json_encodable()}
     response = test_client.post(f"/api/v1/external_resources/{record.id}", json=payload)
     assert response.status_code == 200
