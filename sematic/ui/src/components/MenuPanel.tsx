@@ -9,18 +9,16 @@ import {
   useTheme,
 } from "@mui/material";
 import { useMemo } from "react";
+import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
 import { Run } from "../Models";
 import RunTree from "./RunTree";
 
 export default function MenuPanel(props: {
   runsById: Map<string, Run>;
-  selectedRun: Run;
-  selectedPanel: string;
-  onPanelSelect: (panel: string) => void;
-  onRunSelect: (run: Run) => void;
 }) {
-  const { runsById, selectedRun, selectedPanel, onPanelSelect, onRunSelect } =
-    props;
+  const { runsById } = props;
+  
+  const { selectedPanelItem, setSelectedPanelItem } = usePipelinePanelsContext();
 
   const theme = useTheme();
 
@@ -37,15 +35,14 @@ export default function MenuPanel(props: {
       label: "graph",
       title: "Execution graph",
       icon: <BubbleChart />,
-      onClick: () => onPanelSelect("graph"),
+      onClick: () => setSelectedPanelItem("graph"),
     },
     {
       label: "run",
       title: "Nested runs",
       icon: <FormatListBulleted />,
       onClick: () => {
-        onPanelSelect("run");
-        onRunSelect(selectedRun);
+        setSelectedPanelItem("run");
       },
     },
   ];
@@ -76,7 +73,7 @@ export default function MenuPanel(props: {
             <ListItemButton
               onClick={panel.onClick}
               sx={{ height: "4em" }}
-              selected={selectedPanel === panel.label}
+              selected={selectedPanelItem === panel.label}
             >
               <ListItemIcon sx={{ minWidth: "40px" }}>
                 {panel.icon}
@@ -97,11 +94,6 @@ export default function MenuPanel(props: {
         <RunTree
           runsByParentId={runsByParentId}
           parentId={null}
-          selectedRunId={selectedRun?.id}
-          onSelectRun={(run) => {
-            onPanelSelect("run");
-            onRunSelect(run);
-          }}
         />
       </Box>
     </Box>
