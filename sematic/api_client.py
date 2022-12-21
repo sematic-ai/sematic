@@ -233,6 +233,42 @@ def get_external_resource(resource_id: str) -> ExternalResource:
     return ExternalResourceRecord.from_json_encodable(response["record"]).resource
 
 
+def activate_external_resource(
+    resource_id: str
+) -> ExternalResource:
+    """Activate the external resource on the server, return the result.
+
+    Parameters
+    ----------
+    resource_id:
+        The id of the resource to activate.
+
+    Returns
+    -------
+    The resource as saved by the server.
+    """
+    response = _post(f"/external_resources/{resource_id}/activate", json_payload={})
+    return ExternalResourceRecord.from_json_encodable(response["record"]).resource
+
+
+def deactivate_external_resource(
+    resource_id: str
+) -> ExternalResource:
+    """Deactivate the external resource on the server, return the result.
+
+    Parameters
+    ----------
+    resource_id:
+        The id of the resource to deactivate.
+
+    Returns
+    -------
+    The resource as saved by the server.
+    """
+    response = _post(f"/external_resources/{resource_id}/deactivate", json_payload={})
+    return ExternalResourceRecord.from_json_encodable(response["record"]).resource
+
+
 def save_resource_run_link(resource_id: str, run_id: str) -> None:
     """Save that the run with the given id is using the resource with the given id.
 

@@ -75,6 +75,8 @@ sematic_py_lib(
         "//sematic/db/models:run",
         "//sematic/utils:exceptions",
         "//sematic/utils:memoized_property",
+        "//sematic/resolvers:abstract_resource_manager",
+        "//sematic/resolvers/resource_managers:cloud_manager",
     ],
 )
 

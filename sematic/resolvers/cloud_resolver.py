@@ -24,6 +24,8 @@ from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
 from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.utils.memoized_property import memoized_property
+from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
+from sematic.resolvers.resource_managers.cloud_manager import CloudResourceManager
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +80,7 @@ class CloudResolver(LocalResolver):
         For Sematic internal usage. End users should always leave this at the default
         value of `False`.
     """
+    _resource_manager: AbstractResourceManager = CloudResourceManager()
 
     def __init__(
         self,
@@ -393,12 +396,19 @@ class CloudResolver(LocalResolver):
         return sum(map(lambda f: f.state == FutureState.SCHEDULED, self._futures))
 
     @classmethod
-    def activate_resource_for_run(  # type: ignore
-        cls, resource: ExternalResource, run_id: str, root_id: str
-    ) -> ExternalResource:
-        raise NotImplementedError(
-            "External resources not implemented for CloudResolver yet"
-        )
+    def _do_resource_activate(cls, resource: ExternalResource) -> ExternalResource:
+        resource = api_client.activate_external_resource(resource.id)
+        return resource
+
+    @classmethod
+    def _do_resource_deactivate(cls, resource: ExternalResource) -> ExternalResource:
+        resource = api_client.deactivate_external_resource(resource.id)
+        return resource
+
+    @classmethod
+    def _do_resource_update(cls, resource: ExternalResource) -> ExternalResource:
+        resource = api_client.get_external_resource(resource.id)
+        return resource
 
 
 def make_nested_future_storage_key(future_id: str) -> str:
