@@ -23,7 +23,6 @@ from sematic.db.queries import (
     save_user,
 )
 from sematic.external_resource import ExternalResource
-
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
