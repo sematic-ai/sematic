@@ -205,7 +205,7 @@ sematic_push_and_run = rule(
     doc = (
         """This rule should never be used directly, it is for internal Sematic use.
 
-        It combines `bazel run //my_package:my_target_push` and
+        It combines `bazel run //my_package:my_target_default_push` and
         `bazel run //my_package:my_target_binary` into a single `bazel run`-able target.
         """
     ),
