@@ -15,7 +15,7 @@ from sematic.abstract_plugin import (
     PluginVersion,
 )
 from sematic.config.settings import get_plugin_setting
-from sematic.plugins.abstract_storage import AbstractStorage, NoSuchStorageKey
+from sematic.plugins.abstract_storage import AbstractStorage, PayloadType, ReadPayload
 from sematic.utils.memoized_property import memoized_property
 from sematic.utils.retry import retry
 
@@ -71,11 +71,14 @@ class S3Storage(AbstractStorage, AbstractPlugin):
 
         return presigned_url
 
-    def _get_write_location(self, namespace: str, key: str) -> str:
+    def get_write_location(self, namespace: str, key: str) -> str:
         return self._make_presigned_url(S3ClientMethod.PUT, f"{namespace}/{key}")
 
-    def _get_read_location(self, namespace: str, key: str) -> str:
-        return self._make_presigned_url(S3ClientMethod.GET, f"{namespace}/{key}")
+    def get_read_payload(self, namespace: str, key: str) -> ReadPayload:
+        return ReadPayload(
+            type_=PayloadType.URL,
+            content=self._make_presigned_url(S3ClientMethod.GET, f"{namespace}/{key}"),
+        )
 
     def set(self, key: str, value: bytes):
         """Store value in S3"""
@@ -83,18 +86,6 @@ class S3Storage(AbstractStorage, AbstractPlugin):
 
         response = requests.put(key, data=value)
         response.raise_for_status()
-
-    @retry(tries=3, delay=5)
-    def get(self, key: str) -> bytes:
-        """Get value from S3."""
-        response = requests.get(key)
-
-        if response.status_code == 404:
-            raise NoSuchStorageKey(self, key)
-
-        response.raise_for_status()
-
-        return response.content
 
     def set_from_file(self, key: str, value_file_path: str):
         """Store value in S3 using the contents of a file

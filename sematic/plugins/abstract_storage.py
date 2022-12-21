@@ -1,11 +1,19 @@
 # Standard Library
 import abc
 import enum
+from dataclasses import dataclass
+from typing import Any
 
 
-class StorageMode(enum.Enum):
-    READ = "read"
-    WRITE = "write"
+class PayloadType(enum.Enum):
+    URL = "URL"
+    BYTES = "BYTES"
+
+
+@dataclass
+class ReadPayload:
+    type_: PayloadType
+    content: Any
 
 
 class AbstractStorage(abc.ABC):
@@ -18,41 +26,30 @@ class AbstractStorage(abc.ABC):
         """
         Sets value for key.
 
-        This is a client-side API. Key will typically be provided by the server.
+        This is a resolver-side API. Key will be provided by the server and will
+        be the output of get_write_location.
         """
         pass
 
     @abc.abstractmethod
-    def get(self, key: str) -> bytes:
+    def get_write_location(self, namespace: str, key: str) -> str:
         """
-        Gets value for key.
+        Gets write location for namespace/key.
 
-        This is a client-side API. Key will typically be provided by the server.
+        This is a server-side API. It is used to return write locations to the resolver.
         """
         pass
 
     @abc.abstractmethod
-    def _get_write_location(self, namespace: str, key: str) -> str:
-        pass
-
-    @abc.abstractmethod
-    def _get_read_location(self, namespace: str, key: str) -> str:
-        pass
-
-    def get_location(self, namespace: str, key: str, mode: StorageMode) -> str:
+    def get_read_payload(self, namespace: str, key: str) -> ReadPayload:
         """
-        This is a server-side API.
+        Get a read payload for namespace/key.
 
-        Server has storage permissions and returns permitted storage locations
-        (e.g. pre-signed URLs) to clients.
+        This is a server-side API. It is used to return data to the resolver.
+        The returned payload can be a URL to redirect to (PayloadType.URL) or a
+        binary content to return as is to the resolver (PayloadType.BYTES).
         """
-        if mode == StorageMode.READ:
-            return self._get_read_location(namespace, key)
-
-        if mode == StorageMode.WRITE:
-            return self._get_write_location(namespace, key)
-
-        raise KeyError(f"Unknown storage mode: {mode}")
+        pass
 
 
 class NoSuchStorageKey(KeyError):

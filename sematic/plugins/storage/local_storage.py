@@ -5,7 +5,12 @@ import os
 # Sematic
 from sematic.abstract_plugin import AbstractPlugin, PluginVersion
 from sematic.config.config import get_config
-from sematic.plugins.abstract_storage import AbstractStorage, NoSuchStorageKey
+from sematic.plugins.abstract_storage import (
+    AbstractStorage,
+    NoSuchStorageKey,
+    PayloadType,
+    ReadPayload,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,15 +41,14 @@ class LocalStorage(AbstractStorage, AbstractPlugin):
         with open(key, "wb") as file:
             file.write(value)
 
-    def get(self, key: str) -> bytes:
+    def get_write_location(self, namespace: str, key: str) -> str:
+        return os.path.join(get_config().data_dir, namespace, key)
+
+    def get_read_payload(self, namespace: str, key: str) -> ReadPayload:
         try:
-            with open(os.path.join(get_config().data_dir, key), "rb") as file:
-                return file.read()
+            with open(self.get_write_location(namespace, key), "rb") as file:
+                content = file.read()
         except FileNotFoundError:
             raise NoSuchStorageKey(self, key)
 
-    def _get_write_location(self, namespace: str, key: str) -> str:
-        return os.path.join(get_config().data_dir, namespace, key)
-
-    def _get_read_location(self, namespace: str, key: str) -> str:
-        return f"sematic:///data/{namespace}/{key}"
+        return ReadPayload(type_=PayloadType.BYTES, content=content)
