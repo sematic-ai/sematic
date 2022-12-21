@@ -21,17 +21,19 @@ import RunStateChip from "./RunStateChip";
 import TimeAgo from "./TimeAgo";
 import { ActionMenu, ActionMenuItem } from "./ActionMenu";
 import { SnackBarContext } from "./SnackBarProvider";
-import { useFetchRuns, usePipelineNavigation } from "../hooks/pipelineHooks";
+import { useFetchRuns, usePipelineNavigation, usePipelineRunContext } from "../hooks/pipelineHooks";
+import { ExtractContextType } from "./utils/typings";
+import PipelineRunViewContext from "../pipelines/PipelineRunViewContext";
 
 function PipelineActionMenu(props: {
-  rootRun: Run;
-  resolution: Resolution;
   onCancel: () => void;
 }) {
-  const { rootRun, resolution, onCancel } = props;
+  const { onCancel } = props;
   const { user } = useContext(UserContext);
   const theme = useTheme();
   const { setSnackMessage } = useContext(SnackBarContext);
+
+  const { rootRun, resolution } = usePipelineRunContext() as {rootRun: Run, resolution: Resolution};
 
   useEffect(() => {
     pipelineSocket.removeAllListeners("cancel");
@@ -124,22 +126,22 @@ function PipelineActionMenu(props: {
   );
 }
 
-export default function PipelineBar(props: {
-  calculatorPath: string;
-  rootRun?: Run;
-  resolution?: Resolution;
-}) {
-  const { calculatorPath, rootRun, resolution } = props;
+export default function PipelineBar() {
   const { setSnackMessage } = useContext(SnackBarContext);
+
+  const { rootRun, resolution, pipelinePath } 
+  = usePipelineRunContext() as ExtractContextType<typeof PipelineRunViewContext> & {
+    rootRun: Run, resolution: Resolution
+  };;
 
   const theme = useTheme();
 
   const runFilters = useMemo(() => ({
     AND: [
       { parent_id: { eq: null } },
-      { calculator_path: { eq: calculatorPath } },
+      { calculator_path: { eq: pipelinePath } },
     ],
-  }), [calculatorPath]);
+  }), [pipelinePath]);
 
   const otherQueryParams = useMemo(() => ({
       limit: '10'
@@ -147,7 +149,7 @@ export default function PipelineBar(props: {
 
   const {isLoaded, error, runs: latestRuns, reloadRuns } = useFetchRuns(runFilters, otherQueryParams);
 
-  const navigate = usePipelineNavigation(calculatorPath!);
+  const navigate = usePipelineNavigation(pipelinePath!);
 
   const changeRootId = useCallback((runId: string) => {
     navigate(runId);
@@ -156,7 +158,7 @@ export default function PipelineBar(props: {
   useEffect(() => {
     pipelineSocket.removeAllListeners("update");
     pipelineSocket.on("update", async (args: { calculator_path: string }) => {
-      if (args.calculator_path === calculatorPath) {
+      if (args.calculator_path === pipelinePath) {
         const runs = await reloadRuns();
         if (runs[0].id !== latestRuns[0].id) {
           setSnackMessage({
@@ -169,7 +171,7 @@ export default function PipelineBar(props: {
         }
       }
     });
-  }, [latestRuns, calculatorPath, changeRootId, reloadRuns, setSnackMessage]);
+  }, [latestRuns, pipelinePath, changeRootId, reloadRuns, setSnackMessage]);
 
   const onSelect = useCallback(
     ({ target: { value } }: SelectChangeEvent) => {
@@ -218,11 +220,7 @@ export default function PipelineBar(props: {
         </Box>
         <Box sx={{ gridColumn: 3, pt: 2, px: 7 }}>
           {resolution && (
-            <PipelineActionMenu
-              rootRun={rootRun}
-              onCancel={onCancel}
-              resolution={resolution}
-            />
+            <PipelineActionMenu onCancel={onCancel} />
           )}
         </Box>
         <Box
