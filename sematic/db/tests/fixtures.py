@@ -14,7 +14,7 @@ from sematic.db.models.factories import make_artifact, make_user
 from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
-from sematic.db.queries import save_resolution, save_run, save_user
+from sematic.db.queries import _save_artifact, save_resolution, save_run, save_user
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
@@ -194,7 +194,7 @@ def persisted_artifact(test_db, test_storage):  # noqa: F811
     artifact = make_artifact(42, int, storage=test_storage)
 
     with db.db().get_session() as session:
-        session.add(artifact)
+        artifact = _save_artifact(artifact=artifact, session=session)
         session.commit()
         session.refresh(artifact)
 

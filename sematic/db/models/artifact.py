@@ -10,6 +10,13 @@ from sematic.db.models.json_encodable_mixin import JSON_KEY, JSONEncodableMixin
 
 
 class Artifact(Base, JSONEncodableMixin):
+    # we use content-addressed values for artifacts, with the id being
+    # generated from the type and value themselves
+    # when a resolution generates an artifact which has been seen before and which is
+    # present in the db, only the updated_at field is actually updated
+    # if you need to add new fields, these probably need to be handled in an appropriate
+    # manner in the location where artifacts are saved to the db, which at the time of
+    # writing is `sematic.db.queries.py`
 
     __tablename__ = "artifacts"
 
