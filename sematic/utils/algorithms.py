@@ -6,7 +6,7 @@ T = TypeVar("T")
 
 
 def breadth_first_search(
-    start: T,
+    start: List[T],
     get_next: Callable[[T], List[T]],
     visit: Callable[[T], None],
     key_func: Optional[Callable[[T], Hashable]] = None,
@@ -16,7 +16,7 @@ def breadth_first_search(
     Parameters
     ----------
     start:
-        The graph element to start from.
+        The graph elements to start from.
     get_next:
         Given an element in the graph, get a list of the next elements in the graph.
     visit:
@@ -28,7 +28,7 @@ def breadth_first_search(
         which returns a hashable value when given an element of the graph.
     """
     visited_keys = set()
-    to_visit = deque([start])
+    to_visit = deque(start)
     while len(to_visit) != 0:
         visiting = to_visit.popleft()
         key = visiting if key_func is None else key_func(visiting)

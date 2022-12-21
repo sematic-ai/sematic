@@ -44,7 +44,7 @@ sematic_py_lib(
 sematic_py_lib(
     name = "sorting",
     srcs = ["sorting.py"],
-    deps = [],
+    deps = [":algorithms"],
 )
 
 sematic_py_lib(

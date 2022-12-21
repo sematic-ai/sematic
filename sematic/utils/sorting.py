@@ -1,5 +1,8 @@
 # Standard Library
-from typing import Callable, Dict, List, Optional
+from typing import Dict, List, Optional
+
+# Sematic
+from sematic.utils.algorithms import breadth_first_search
 
 
 def topological_sort(
@@ -18,57 +21,19 @@ def topological_sort(
     List[str]
         IDs sorted topologically.
     """
+    sorted_ids: List[Optional[str]] = []
 
-    def _find_next_ids(previous_ids: List[Optional[str]]):
+    def visit(id_):
+        sorted_ids.append(id_)
+
+    def find_next_ids(previous_id):
         # Sorting for determinism.
         next_ids = sorted(
-            [
-                id_
-                for id_, deps in dependencies.items()
-                if id_ not in previous_ids
-                and all(dependency in previous_ids for dependency in deps)
-            ]
+            element for element, deps in dependencies.items() if previous_id in deps
         )
+        return next_ids
 
-        if len(next_ids) == 0:
-            return []
+    start_nodes = [element for element, deps in dependencies.items() if deps == [None]]
 
-        return next_ids + _find_next_ids(previous_ids + next_ids)  # type: ignore
-
-    return _find_next_ids([None])
-
-
-def breadth_first(
-    layers: Dict[Optional[str], List[str]],
-    layer_sorter: Callable[[List[str]], List[str]] = sorted,
-) -> List[str]:
-    """
-    Breadth-first sorting.
-
-    Parameters
-    ----------
-    layers: Dict[Optional[str], List[str]]
-        A mapping of parent node to list of child nodes.
-    layer_sorter: Callable[[List[str]], List[str]]
-        A sorter to sort ids within a given layer.
-
-    Returns
-    -------
-    List[str]
-        IDs ordered breadth first and according to layer_sorter with a given
-        layer.
-    """
-    ids: List[str] = []
-
-    def _add_layer_ids(parent_id: Optional[str]):
-        layer_ids: List[str] = layers.get(parent_id, [])
-
-        ordered_layer_ids = layer_sorter(layer_ids)
-        ids.extend(ordered_layer_ids)
-
-        for id_ in ordered_layer_ids:
-            _add_layer_ids(id_)
-
-    _add_layer_ids(None)
-
-    return ids
+    breadth_first_search(start=start_nodes, get_next=find_next_ids, visit=visit)
+    return sorted_ids

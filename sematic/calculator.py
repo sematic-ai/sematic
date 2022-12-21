@@ -638,7 +638,7 @@ def _get_dependency_ids(future: Future) -> List[str]:
         dependency_ids.append(future.id)
 
     breadth_first_search(
-        start=future,
+        start=[future],
         get_next=lambda f: [
             arg for arg in f.kwargs.values() if isinstance(arg, Future)
         ],

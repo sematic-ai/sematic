@@ -34,7 +34,7 @@ def test_breadth_first_search():
         visited.append(val)
 
     breadth_first_search(
-        start="j",
+        start=["j"],
         get_next=get_next,
         visit=visit,
     )
@@ -44,6 +44,16 @@ def test_breadth_first_search():
     assert set(visited[1:4]) == {"g", "h", "i"}
     assert set(visited[4:7]) == {"d", "e", "f"}
     assert set(visited[7:10]) == {"a", "b", "c"}
+
+    visited = []
+    breadth_first_search(
+        start=["g", "h", "i"],
+        get_next=get_next,
+        visit=visit,
+    )
+    assert set(visited[0:3]) == {"g", "h", "i"}
+    assert set(visited[3:6]) == {"d", "e", "f"}
+    assert set(visited[6:9]) == {"a", "b", "c"}
 
 
 def test_breadth_first_search_key_func():
@@ -87,7 +97,7 @@ def test_breadth_first_search_key_func():
         visited.append(element)
 
     breadth_first_search(
-        start={None},
+        start=[{None}],
         get_next=get_next,
         visit=visit,
         key_func=get_key,
