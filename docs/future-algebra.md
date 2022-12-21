@@ -338,7 +338,8 @@ on some database table that is modified by the write. Note that it is not
 necessary for `read_from_db_func` to actually *use* the table name inside its
 definition, so a dummy value could have been used as well. However, using a
 value that signals the reason the downstream func has a dependency on the upstream
-one is a best practice.
+one is a best practice. In general, this also aligns with Sematic's philosophy
+that data contracts should always be explicit rather than implicit.
 
 ## Unsupported behaviors
 

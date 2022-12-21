@@ -193,7 +193,7 @@ class Calculator(AbstractCalculator):
         try:
             ctx = context()
             created_futures: List[Future] = ctx.private.created_futures  # type: ignore
-            _check_for_extra_futures(self.__name__, output, created_futures)
+            _check_for_unused_futures(self.__name__, output, created_futures)
         except NotInSematicFuncError:
             logger.warning("Sematic func executed outside of a Sematic context")
 
@@ -589,21 +589,35 @@ def _convert_tuples(value_, expected_type):
     return tuple(value_as_list)
 
 
-def _check_for_extra_futures(
+def _check_for_unused_futures(
     calculator_name: str, output: Future, created_futures: List[Future]
 ):
     futures_by_id = {f.id: f for f in created_futures}
 
     if isinstance(output, Future):
-        dependency_ids = _get_ids_of_dependencies(output)
-        extra_ids = set(futures_by_id.keys()).difference(dependency_ids)
+        dependency_ids = _get_dependency_ids(output)
+        possible_extra_ids = set(futures_by_id.keys()).difference(dependency_ids)
     else:
-        extra_ids = set(futures_by_id.keys())
+        possible_extra_ids = set(futures_by_id.keys())
 
-    if len(extra_ids) == 0:
+    sample_extra = None
+    for possible_extra_id in possible_extra_ids:
+        possible_extra_future = futures_by_id[possible_extra_id]
+        if possible_extra_future.calculator.__module__ == Future.__getitem__.__module__:
+            # It is ok for a "getitem" future to be unused, there are legitimate
+            # reasons to have this pattern: tuple unpacking from a future return is
+            # one example (_, foo = my_func()). The whole purpose of the unused
+            # future check is to make sure users aren't surprised when a func isn't
+            # executed, in case they were expecting its side effects to take place.
+            # But getitem has no side effects anyway, so nobody should be surprised
+            # or even notice if it doesn't run.
+            continue
+        sample_extra = possible_extra_future
+        break
+
+    if sample_extra is None:
         return
 
-    sample_extra = futures_by_id[next(iter(extra_ids))]
     message = (
         f"The output of '{calculator_name}' does not depend on the output of "
         f" '{sample_extra.calculator.__name__}', thus "
@@ -616,7 +630,7 @@ def _check_for_extra_futures(
     raise CalculatorError(message) from RuntimeError(message)
 
 
-def _get_ids_of_dependencies(future: Future) -> List[str]:
+def _get_dependency_ids(future: Future) -> List[str]:
     """Given a future, get the ids of futures it depends on"""
     dependency_ids = []
 
