@@ -372,3 +372,21 @@ def test_calculate_error():
 
     assert isinstance(exc_info.value.__context__, ValueError)
     assert "Intentional error" in str(exc_info.value.__context__)
+
+
+@func
+def pass_through(x: int) -> int:
+    return x
+
+
+@func
+def unused_results_pipeline() -> int:
+    x = pass_through(42)
+    y = pass_through(x)
+    pass_through(y)
+    return y
+
+
+def test_unused_future():
+    with pytest.raises(ResolutionError, match=r".*output.*does not depend on.*"):
+        unused_results_pipeline().resolve(tracking=False)

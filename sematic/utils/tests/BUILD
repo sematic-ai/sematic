@@ -1,4 +1,12 @@
 pytest_test(
+    name = "test_algorithms",
+    srcs = ["test_algorithms.py"],
+    deps = [
+        "//sematic/utils:algorithms",
+    ],
+)
+
+pytest_test(
     name = "test_git",
     srcs = ["test_git.py"],
     deps = [

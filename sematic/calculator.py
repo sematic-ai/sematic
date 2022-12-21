@@ -10,6 +10,7 @@ from typing import (
     Callable,
     Dict,
     Iterable,
+    List,
     Optional,
     Sequence,
     Type,
@@ -22,12 +23,20 @@ from typing import (
 # Sematic
 from sematic.abstract_calculator import AbstractCalculator, CalculatorError
 from sematic.future import Future
+from sematic.future_context import NotInSematicFuncError, context
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.resolvers.type_utils import make_list_type
 from sematic.retry_settings import RetrySettings
 from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.registry import validate_type_annotation
 from sematic.types.type import is_type
+from sematic.utils.algorithms import breadth_first_search
+
+_EXTRA_FUTURE_DOCS_LINK = (
+    "https://docs.sematic.dev/diving-deeper/future-algebra#unused-futures"
+)
+
+logger = logging.getLogger(__name__)
 
 
 class Calculator(AbstractCalculator):
@@ -149,7 +158,7 @@ class Calculator(AbstractCalculator):
 
         cast_arguments = self.cast_inputs(argument_map)
 
-        return Future(
+        future = Future(
             self,
             cast_arguments,
             inline=self._inline,
@@ -159,6 +168,12 @@ class Calculator(AbstractCalculator):
             retry_settings=copy(self._retry_settings),
             base_image_tag=self._base_image_tag,
         )
+        try:
+            ctx = context()
+            ctx.private.created_futures.append(future)
+        except NotInSematicFuncError:
+            pass  # not unusual; root future is usually created this way.
+        return future
 
     def __signature__(self) -> inspect.Signature:
         return inspect.signature(self._func)
@@ -174,6 +189,13 @@ class Calculator(AbstractCalculator):
             output = _convert_lists(output)
         if isinstance(output, tuple):
             output = _convert_tuples(output, self.output_type)
+
+        try:
+            ctx = context()
+            created_futures: List[Future] = ctx.private.created_futures  # type: ignore
+            _check_for_extra_futures(self.__name__, output, created_futures)
+        except NotInSematicFuncError:
+            logger.warning("Sematic func executed outside of a Sematic context")
 
         return output
 
@@ -565,3 +587,46 @@ def _convert_tuples(value_, expected_type):
         return _make_tuple(expected_type, tuple(value_as_list))
 
     return tuple(value_as_list)
+
+
+def _check_for_extra_futures(
+    calculator_name: str, output: Future, created_futures: List[Future]
+):
+    futures_by_id = {f.id: f for f in created_futures}
+    if isinstance(output, Future):
+        dependency_ids = _get_ids_of_dependencies(output)
+        extra_ids = set(futures_by_id.keys()).difference(dependency_ids)
+    else:
+        extra_ids = set(futures_by_id.keys())
+    if len(extra_ids) == 0:
+        return
+    sample_extra = futures_by_id[next(iter(extra_ids))]
+    message = (
+        f"The output of '{calculator_name}' does not depend on the output of "
+        f" '{sample_extra.calculator.__name__}', thus "
+        f"'{sample_extra.calculator.__name__}' "
+        f"will not be executed. See {_EXTRA_FUTURE_DOCS_LINK} for details on "
+        f"what you can do in this situation."
+    )
+
+    # since this is from user code
+    raise CalculatorError(message) from RuntimeError(message)
+
+
+def _get_ids_of_dependencies(future: Future) -> List[str]:
+    """Given a future, get the ids of futures it depends on"""
+    dependency_ids = []
+
+    def record_dependency(future):
+        dependency_ids.append(future.id)
+
+    breadth_first_search(
+        start=future,
+        get_next=lambda f: [
+            arg for arg in f.kwargs.values() if isinstance(arg, Future)
+        ],
+        visit=record_dependency,
+        key_func=lambda f: f.id,
+    )
+
+    return dependency_ids
