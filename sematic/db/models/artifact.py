@@ -51,6 +51,8 @@ class Artifact(Base, JSONEncodableMixin):
         for column in Artifact.__table__.columns:
             if column.key in ignore_fields:
                 continue
+            if column.key is None:
+                continue
             current_val = getattr(self, column.key)
             other_val = getattr(other, column.key)
             if current_val != other_val:
