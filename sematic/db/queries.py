@@ -153,10 +153,16 @@ def save_external_resource_record(record: ExternalResourceRecord):
             )
 
         # this ensures that all the fields are consistent
-        record = ExternalResourceRecord.from_resource(record.resource)
+        record = ExternalResourceRecord.from_resource(
+            record.resource, record.locally_allocated
+        )
     else:
         # this ensures that the update properly updates history
         # and keeps data consistent
+        if existing_record.locally_allocated != record.locally_allocated:
+            raise ValueError(
+                "Cannot modify locally_allocated field of external resource record."
+            )
         existing_record.resource = record.resource
         record = existing_record
 
