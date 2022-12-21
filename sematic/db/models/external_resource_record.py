@@ -29,6 +29,8 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
         The unique id of the external resource
     resource_state:
         The current state of the resource
+    locally_allocated:
+        Whether or not the resource was locally allocated
     status_message:
         The most recent status message for the resource
     last_updated_epoch_seconds:
@@ -63,6 +65,10 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
         types.Enum(ResourceState),
         nullable=False,
     )
+    locally_allocated: bool = Column(  # type: ignore
+        types.BOOLEAN,
+        nullable=False,
+    )
     status_message: str = Column(types.String(), nullable=False)
     last_updated_epoch_seconds: int = Column(types.BIGINT(), nullable=False)
     type_serialization: TypeSerialization = Column(types.JSON(), nullable=False)
@@ -82,7 +88,9 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
         raise ValueError(f"Cannot make a ResourceState from {resource_state}")
 
     @classmethod
-    def from_resource(cls, resource: ExternalResource) -> "ExternalResourceRecord":
+    def from_resource(
+        cls, resource: ExternalResource, locally_allocated: bool
+    ) -> "ExternalResourceRecord":
         if not isinstance(resource, ExternalResource):
             raise ValueError(
                 f"resource must be an instance of a subclass of "
@@ -94,6 +102,7 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
         return ExternalResourceRecord(
             id=resource.id,
             resource_state=resource.status.state,
+            locally_allocated=locally_allocated,
             status_message=resource.status.message,
             last_updated_epoch_seconds=resource.status.last_update_epoch_time,
             type_serialization=type_serialization,
