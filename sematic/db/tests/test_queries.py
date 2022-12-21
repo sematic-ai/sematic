@@ -126,7 +126,6 @@ def test_update_artifact(test_db, test_storage):  # noqa: F811
     assert updated_artifact.created_at != original_created_at
 
     save_graph(artifacts=[updated_artifact], runs=[], edges=[])
-    assert updated_artifact.created_at == original_created_at
 
     persisted_artifact = get_artifact(original_artifact.id)  # noqa: F811
 
@@ -135,9 +134,35 @@ def test_update_artifact(test_db, test_storage):  # noqa: F811
     assert persisted_artifact.json_summary == original_artifact.json_summary
 
     assert persisted_artifact.created_at == original_created_at
+    assert persisted_artifact.updated_at == original_updated_at
 
-    assert persisted_artifact.updated_at == updated_artifact.updated_at
-    assert persisted_artifact.updated_at != original_updated_at
+
+def test_update_artifact_changed_content(test_db, test_storage):  # noqa: F811
+    original_artifact = make_artifact(42, int, storage=test_storage)
+    # create copies of these values, as sqlalchemy updates models in-place
+    original_created_at = original_artifact.created_at
+    original_updated_at = original_artifact.updated_at
+    save_graph(artifacts=[original_artifact], runs=[], edges=[])
+
+    updated_artifact = make_artifact(42, int, storage=test_storage)
+
+    # json of " 42" still deserializes to 42, but this change
+    # helps us validate immutability
+    updated_artifact.json_summary = f" {updated_artifact.json_summary}"
+
+    with pytest.raises(
+        ValueError, match="Artifact content change detected for field 'json_summary'"
+    ):
+        save_graph(artifacts=[updated_artifact], runs=[], edges=[])
+
+    persisted_artifact = get_artifact(original_artifact.id)  # noqa: F811
+
+    assert persisted_artifact.id == original_artifact.id
+    assert persisted_artifact.type_serialization == original_artifact.type_serialization
+    assert persisted_artifact.json_summary == original_artifact.json_summary
+
+    assert persisted_artifact.created_at == original_created_at
+    assert persisted_artifact.updated_at == original_updated_at
 
 
 @func

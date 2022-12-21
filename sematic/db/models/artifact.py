@@ -34,3 +34,27 @@ class Artifact(Base, JSONEncodableMixin):
         default=datetime.datetime.utcnow,
         onupdate=datetime.datetime.utcnow,
     )
+
+    def assert_matches(self, other: "Artifact") -> None:
+        """Ensure the content of this artifact matches the content of the other.
+
+        Ignore timestamp fields, as these do not represent differences in the
+        artifact itself (but rather metadata about it).
+
+        Parameters
+        ----------
+        other:
+            The artifact to compare against.
+        """
+        ignore_fields = {"created_at", "updated_at"}
+
+        for column in Artifact.__table__.columns:
+            if column.key in ignore_fields:
+                continue
+            current_val = getattr(self, column.key)
+            other_val = getattr(other, column.key)
+            if current_val != other_val:
+                raise ValueError(
+                    f"Artifact content change detected for field '{column.key}': "
+                    f" original: '{current_val}' new: '{other_val}'"
+                )

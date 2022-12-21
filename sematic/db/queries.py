@@ -205,7 +205,8 @@ def _save_artifact(artifact: Artifact, session: sqlalchemy.orm.Session) -> Artif
         # generated from the type and value themselves
         # there are currently no other fields that can be updated
         logger.debug("Updating existing artifact %s", artifact.id)
-        artifact.created_at = previous_artifact.created_at
+        previous_artifact.assert_matches(artifact)
+        return previous_artifact
 
     return session.merge(artifact)
 
