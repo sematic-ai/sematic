@@ -9,19 +9,24 @@ import {
   useState,
 } from "react";
 import { UserContext } from "..";
+import { usePipelinePanelsContext, usePipelineRunContext } from "../hooks/pipelineHooks";
 import { Note, Run, User } from "../Models";
 import { NoteCreatePayload, NoteListPayload } from "../Payloads";
+import PipelineRunViewContext from "../pipelines/PipelineRunViewContext";
 import { fetchJSON } from "../utils";
 import { NoteView } from "./Notes";
+import { ExtractContextType } from "./utils/typings";
 
-export default function NotesPanel(props: {
-  rootRun: Run;
-  selectedRun: Run;
-}) {
+export default function NotesPanel() {
   const theme = useTheme();
   const { user } = useContext(UserContext);
 
-  const { rootRun, selectedRun } = props;
+  const { rootRun } 
+    = usePipelineRunContext() as ExtractContextType<typeof PipelineRunViewContext> & {
+      rootRun: Run
+  };;
+  const { selectedRun } = usePipelinePanelsContext();
+
 
   const calculatorPath = useMemo(
     () => rootRun.calculator_path,

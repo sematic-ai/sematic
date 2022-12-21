@@ -1,27 +1,37 @@
 import { Box } from "@mui/material";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { UserContext } from "..";
-import { Run, Resolution } from "../Models";
-import { RunGraphPayload } from "../Payloads";
-import { fetchJSON, graphSocket } from "../utils";
 import Loading from "./Loading";
 import MenuPanel from "./MenuPanel";
 import NotesPanel from "./NotesPanel";
 import RunPanel, { Graph } from "./RunPanel";
+import { ExtractContextType } from "./utils/typings";
+import { usePipelineRunContext } from "../hooks/pipelineHooks";
+import { Run } from "../Models";
+import { RunGraphPayload } from "../Payloads";
+import { fetchJSON, graphSocket } from "../utils";
+import PipelinePanelsContext from "../pipelines/PipelinePanelsContext";
+import PipelineRunViewContext from "../pipelines/PipelineRunViewContext";
 
-export default function PipelinePanels(props: {
-  rootRun: Run;
-  resolution: Resolution;
-  onRootRunUpdate: (run: Run) => void;
-}) {
-  const { rootRun, resolution, onRootRunUpdate } = props;
-  const [selectedPanelItem, setSelectedPanelItem] = useState("run");
+export default function PipelinePanels() {
   const [graphsByRootId, setGraphsByRootId] = useState<Map<string, Graph>>(
     new Map()
   );
+  const { rootRun }
+    = usePipelineRunContext() as ExtractContextType<typeof PipelineRunViewContext> 
+    & {
+      rootRun: Run
+    };
   const [error, setError] = useState<Error | undefined>(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  const [selectedPanelItem, setSelectedPanelItem] = useState("run");
   const [selectedRun, setSelectedRun] = useState<Run>(rootRun);
+  const context = useMemo<ExtractContextType<typeof PipelinePanelsContext>>(() => ({
+    selectedPanelItem, setSelectedPanelItem,
+    selectedRun, setSelectedRun
+  }), [selectedPanelItem, setSelectedPanelItem, selectedRun, setSelectedRun])
+
   const { user } = useContext(UserContext);
 
   const loadGraph = useCallback(() => {
@@ -38,12 +48,6 @@ export default function PipelinePanels(props: {
           currentMap.set(rootRun.id, graph);
           return new Map(currentMap);
         });
-        for (let i = 0; i < payload.runs.length; i++) {
-          if (payload.runs[i].id == rootRun.id) {
-            onRootRunUpdate(payload.runs[i]);
-            break;
-          }
-        }
         setIsLoaded(true);
       },
       setError: setError,
@@ -71,6 +75,7 @@ export default function PipelinePanels(props: {
     [graphsByRootId, rootRun]
   );
 
+  // Update the selectedRun with the data coming from the graph
   useEffect(() => {
     if (selectedRun && runs) {
       let newSelectedRun = runs.get(selectedRun.id);
@@ -84,7 +89,7 @@ export default function PipelinePanels(props: {
       }
       setSelectedRun(newSelectedRun);
     }
-  }, [runs]);
+  }, [runs, rootRun, selectedRun]);
 
   const runsByParentId = useMemo(() => {
     if (runs === undefined) return;
@@ -108,29 +113,11 @@ export default function PipelinePanels(props: {
     );
   } else if (runs && runsByParentId && graph) {
     return (
-      <>
-        <MenuPanel
-          runsById={runs}
-          selectedRun={selectedRun}
-          selectedPanel={selectedPanelItem}
-          onPanelSelect={setSelectedPanelItem}
-          onRunSelect={setSelectedRun}
-        />
-        <RunPanel
-          selectedPanel={selectedPanelItem}
-          graph={graph}
-          selectedRun={selectedRun}
-          resolution={resolution}
-          onSelectRun={(run) => {
-            setSelectedRun(run);
-            setSelectedPanelItem("run");
-          }}
-        />
-        <NotesPanel
-          rootRun={rootRun}
-          selectedRun={selectedRun}
-        />
-      </>
+      <PipelinePanelsContext.Provider value={context}>
+        <MenuPanel runsById={runs} />
+        <RunPanel graph={graph} />
+        <NotesPanel />
+      </PipelinePanelsContext.Provider>
     );
   }
   return <></>;
