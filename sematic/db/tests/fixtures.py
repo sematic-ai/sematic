@@ -161,7 +161,7 @@ def make_resolution(**kwargs) -> Resolution:
 @pytest.fixture
 def persisted_external_resource(test_db) -> ExternalResource:
     return save_external_resource_record(
-        ExternalResourceRecord.from_resource(ExternalResource())
+        ExternalResourceRecord.from_resource(ExternalResource(), locally_allocated=True)
     )
 
 
