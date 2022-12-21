@@ -9,6 +9,7 @@ from sematic.abstract_plugin import (
 )
 from sematic.config.settings import (
     _DEFAULT_PROFILE,
+    _PLUGIN_VERSION_KEY,
     MissingSettingsError,
     get_active_plugins,
     get_active_settings,
@@ -46,7 +47,10 @@ def plugin_settings():
             "default": {
                 "scopes": {PluginScope.STORAGE.value: [TestPlugin.get_path()]},
                 "settings": {
-                    TestPlugin.get_path(): {SettingsVar.SOME_SETTING.value: "bar"}
+                    TestPlugin.get_path(): {
+                        SettingsVar.SOME_SETTING.value: "bar",
+                        _PLUGIN_VERSION_KEY: "0.1.0",
+                    }
                 },
             }
         },
@@ -66,7 +70,10 @@ def test_get_active_settings(plugin_settings):
     assert active_settings.scopes == {PluginScope.STORAGE: [TestPlugin.get_path()]}
 
     assert active_settings.settings == {
-        TestPlugin.get_path(): {SettingsVar.SOME_SETTING: "bar"}
+        TestPlugin.get_path(): {
+            SettingsVar.SOME_SETTING: "bar",
+            _PLUGIN_VERSION_KEY: "0.1.0",
+        }
     }
 
 
@@ -93,7 +100,10 @@ def test_get_settings(plugin_settings):
     assert settings_profile.scopes == {PluginScope.STORAGE: [TestPlugin.get_path()]}
 
     assert settings_profile.settings == {
-        TestPlugin.get_path(): {SettingsVar.SOME_SETTING: "bar"}
+        TestPlugin.get_path(): {
+            SettingsVar.SOME_SETTING: "bar",
+            _PLUGIN_VERSION_KEY: "0.1.0",
+        }
     }
 
 

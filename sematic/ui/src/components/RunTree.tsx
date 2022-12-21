@@ -5,7 +5,8 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import { Fragment, useMemo } from "react";
+import { Fragment, useCallback, useMemo } from "react";
+import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
 import { Run } from "../Models";
 import RunStateChip from "./RunStateChip";
 
@@ -17,10 +18,15 @@ function getTime(run: Run) {
 export default function RunTree(props: {
   runsByParentId: Map<string | null, Run[]>;
   parentId: string | null;
-  selectedRunId: string | undefined;
-  onSelectRun: (run: Run) => void;
 }) {
-  let { runsByParentId, parentId, selectedRunId, onSelectRun } = props;
+  let { runsByParentId, parentId } = props;
+
+  const { selectedRun, setSelectedPanelItem, setSelectedRun } = usePipelinePanelsContext();
+
+  const onSelectRun = useCallback((run: Run) => {
+    setSelectedRun(run);
+    setSelectedPanelItem('run');
+  }, [setSelectedPanelItem, setSelectedRun]);
 
   const directChildren = useMemo(() => {
     let runs = runsByParentId.get(parentId);
@@ -52,7 +58,7 @@ export default function RunTree(props: {
             onClick={() => onSelectRun(run)}
             key={run.id}
             sx={{ height: "30px" }}
-            selected={selectedRunId === run.id}
+            selected={selectedRun.id === run.id}
           >
             <ListItemIcon sx={{ minWidth: "20px" }}>
               <RunStateChip state={run.future_state} />
@@ -64,8 +70,6 @@ export default function RunTree(props: {
               <RunTree
                 runsByParentId={runsByParentId}
                 parentId={run.id}
-                selectedRunId={selectedRunId}
-                onSelectRun={onSelectRun}
               />
             </Box>
           )}
