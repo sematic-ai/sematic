@@ -1,10 +1,17 @@
 # Standard Library
 import logging
 import os
+from typing import Optional
+
+# Third-party
+import flask
 
 # Sematic
 from sematic.abstract_plugin import AbstractPlugin, PluginVersion
+from sematic.api.app import sematic_api
+from sematic.api.endpoints.auth import authenticate
 from sematic.config.config import get_config
+from sematic.db.models.user import User
 from sematic.plugins.abstract_storage import (
     AbstractStorage,
     NoSuchStorageKey,
@@ -32,24 +39,29 @@ class LocalStorage(AbstractStorage, AbstractPlugin):
     def get_version() -> PluginVersion:
         return _PLUGIN_VERSION
 
-    def set(self, key: str, value: bytes):
-        logger.debug(f"{self.__class__.__name__} Setting value for key: {key}")
-
-        dir_path = os.path.dirname(key)
-        os.makedirs(dir_path, exist_ok=True)
-
-        with open(key, "wb") as file:
-            file.write(value)
-
     def get_write_location(self, namespace: str, key: str) -> str:
-        # return os.path.join(get_config().data_dir, namespace, key)
-        return f"/api/v1/upload/{namespace}/{key}"
+        return f"{get_config().api_url}/upload/{namespace}/{key}"
 
     def get_read_payload(self, namespace: str, key: str) -> ReadPayload:
         try:
-            with open(self.get_write_location(namespace, key), "rb") as file:
+            with open(
+                os.path.join(get_config().data_dir, namespace, key), "rb"
+            ) as file:
                 content = file.read()
         except FileNotFoundError:
             raise NoSuchStorageKey(self, key)
 
         return ReadPayload(type_=PayloadType.BYTES, content=content)
+
+
+@sematic_api.route("/api/v1/upload/<namespace>/<key>", methods=["PUT"])
+@authenticate
+def upload_endpoint(user: Optional[User], namespace: str, key: str) -> flask.Response:
+    # TODO: Validate that user has permissions to upload.
+    # TODO: Breakdown into two different endpoints for artifacts and futures
+    payload = flask.request.data
+
+    with open(os.path.join(get_config().data_dir, namespace, key), "wb") as file:
+        file.write(payload)
+
+    return flask.jsonify({})

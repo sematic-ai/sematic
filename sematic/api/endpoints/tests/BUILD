@@ -92,6 +92,8 @@ pytest_test(
         "//sematic/api/tests:fixtures",
         "//sematic/db/models:artifact",
         "//sematic/db/tests:fixtures",
+        "//sematic/plugins/storage:memory_storage",
+        "//sematic/plugins/storage:s3_storage",
         "//sematic/tests:fixtures",
     ],
 )

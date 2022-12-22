@@ -1,8 +1,14 @@
 # Standard Library
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+
+# Third-party
+import flask
 
 # Sematic
 from sematic.abstract_plugin import AbstractPlugin, PluginVersion
+from sematic.api.app import sematic_api
+from sematic.api.endpoints.auth import authenticate
+from sematic.db.models.user import User
 from sematic.plugins.abstract_storage import (
     AbstractStorage,
     NoSuchStorageKey,
@@ -29,20 +35,14 @@ class MemoryStorage(AbstractStorage, AbstractPlugin):
     def get_version() -> PluginVersion:
         return _PLUGIN_VERSION
 
-    def __init__(self):
-        self._store: Dict[str, Any] = {}
+    _store: Dict[str, Any] = {}
 
-    def set(self, key: str, value: bytes):
-        self._store[key] = value
+    @classmethod
+    def set(cls, key: str, value: bytes):
+        cls._store[key] = value
 
-    def get(self, key: str) -> bytes:
-        try:
-            return self._store[key]
-        except KeyError:
-            raise NoSuchStorageKey(self, key)
-
-    def get_write_location(self, namespace, key: str) -> str:
-        return f"{namespace}/{key}"
+    def get_write_location(self, namespace: str, key: str) -> str:
+        return f"api/v1/memory_upload/{namespace}/{key}"
 
     def get_read_payload(self, namespace: str, key: str) -> ReadPayload:
         try:
@@ -51,3 +51,16 @@ class MemoryStorage(AbstractStorage, AbstractPlugin):
             raise NoSuchStorageKey(self, key)
 
         return ReadPayload(type_=PayloadType.BYTES, content=content)
+
+
+# This endpoint should only be registered for test purposes
+@sematic_api.route("/api/v1/memory_upload/<namespace>/<key>", methods=["PUT"])
+@authenticate
+def memory_upload_endpoint(
+    user: Optional[User], namespace: str, key: str
+) -> flask.Response:
+    payload = flask.request.data
+
+    MemoryStorage.set(MemoryStorage().get_write_location(namespace, key), payload)
+
+    return flask.jsonify({})

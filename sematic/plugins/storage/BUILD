@@ -1,10 +1,14 @@
 sematic_py_lib(
     name = "local_storage",
     srcs = ["local_storage.py"],
+    pip_deps = ["flask"],
     # buildifier: leave-alone
     deps = [
         "//sematic:abstract_plugin",
+        "//sematic/api:app",
+        "//sematic/api/endpoints:auth",
         "//sematic/config:config",
+        "//sematic/db/models:user",
         "//sematic/plugins:abstract_storage",
     ],
 )
@@ -12,8 +16,12 @@ sematic_py_lib(
 sematic_py_lib(
     name = "memory_storage",
     srcs = ["memory_storage.py"],
+    pip_deps = ["flask"],
     deps = [
         "//sematic:abstract_plugin",
+        "//sematic/api:app",
+        "//sematic/api/endpoints:auth",
+        "//sematic/db/models:user",
         "//sematic/plugins:abstract_storage",
     ],
 )
@@ -22,7 +30,6 @@ sematic_py_lib(
     name = "s3_storage",
     srcs = ["s3_storage.py"],
     pip_deps = [
-        "requests",
         "boto3",
     ],
     deps = [

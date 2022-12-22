@@ -6,7 +6,6 @@ from typing import Dict, Iterable, List, Type
 # Third-party
 import boto3
 import botocore.exceptions
-import requests
 
 # Sematic
 from sematic.abstract_plugin import (
@@ -79,13 +78,6 @@ class S3Storage(AbstractStorage, AbstractPlugin):
             type_=PayloadType.URL,
             content=self._make_presigned_url(S3ClientMethod.GET, f"{namespace}/{key}"),
         )
-
-    def set(self, key: str, value: bytes):
-        """Store value in S3"""
-        logger.debug(f"{self.__class__.__name__} Setting value for key: {key}")
-
-        response = requests.put(key, data=value)
-        response.raise_for_status()
 
     def set_from_file(self, key: str, value_file_path: str):
         """Store value in S3 using the contents of a file

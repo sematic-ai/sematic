@@ -22,21 +22,13 @@ class AbstractStorage(abc.ABC):
     """
 
     @abc.abstractmethod
-    def set(self, key: str, value: bytes):
-        """
-        Sets value for key.
-
-        This is a resolver-side API. Key will be provided by the server and will
-        be the output of get_write_location.
-        """
-        pass
-
-    @abc.abstractmethod
     def get_write_location(self, namespace: str, key: str) -> str:
         """
         Gets write location for namespace/key.
 
         This is a server-side API. It is used to return write locations to the resolver.
+
+        This is expected to be a URL which clients will PUT to.
         """
         pass
 
