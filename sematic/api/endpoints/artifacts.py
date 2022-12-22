@@ -113,7 +113,7 @@ class NoActivePluginError(Exception):
     pass
 
 
-def _get_storage_plugin():
+def _get_storage_plugin() -> Type[AbstractStorage]:
     try:
         storage_plugin = get_active_plugins(
             PluginScope.STORAGE, default=[LocalStorage]
