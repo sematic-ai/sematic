@@ -45,7 +45,8 @@ def up():
     with open(user_settings_file_path, "w") as f:
         f.write(yaml.dump(new_settings, Dumper=yaml.Dumper))
 
-    os.remove(server_settings_file_path)
+    if os.path.isfile(server_settings_file_path):
+        os.remove(server_settings_file_path)
 
 
 def down():
