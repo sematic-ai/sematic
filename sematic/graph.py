@@ -412,7 +412,7 @@ class Graph:
                 kwargs[
                     input_edge.destination_name
                 ] = cloned_graph.futures_by_original_id[input_edge.source_run_id]
-                
+
             elif input_edge.artifact_id is not None:
                 kwargs[input_edge.destination_name] = value
             else:
