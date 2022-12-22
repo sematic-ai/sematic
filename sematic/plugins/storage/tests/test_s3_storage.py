@@ -14,8 +14,6 @@ def test_upload_download(
     mock_auth,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
-    value = b"foo"
-
     s3_storage = S3Storage()
 
     with mock.patch(

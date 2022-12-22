@@ -79,17 +79,13 @@ def get_artifact_endpoint(user: Optional[User], artifact_id: str) -> flask.Respo
 def get_artifact_location_endpoint(user: Optional[User], artifact_id: str):
     # TODO: Validate that user has permission to access artifact
     try:
-        storage_plugin = get_active_plugins(
-            PluginScope.STORAGE, default=[LocalStorage]
-        )[0]
-    except IndexError:
+        storage_class = _get_storage_plugin()
+    except NoActivePluginError:
         return jsonify_error(
             "Incorrect storage plugin scope", HTTPStatus.INTERNAL_SERVER_ERROR
         )
 
-    storage_plugin = cast(Type[AbstractStorage], storage_plugin)
-
-    location = storage_plugin().get_write_location("artifacts", artifact_id)
+    location = storage_class().get_write_location("artifacts", artifact_id)
 
     return flask.jsonify(dict(location=location))
 
@@ -99,19 +95,32 @@ def get_artifact_location_endpoint(user: Optional[User], artifact_id: str):
 def get_artifact_data_endpoint(user: Optional[User], artifact_id: str):
     # TODO: Validate that user has permission to access artifact
     try:
-        storage_plugin = get_active_plugins(
-            PluginScope.STORAGE, default=[LocalStorage]
-        )[0]
-    except IndexError:
+        storage_class = _get_storage_plugin()
+    except NoActivePluginError:
         return jsonify_error(
             "Incorrect storage plugin scope", HTTPStatus.INTERNAL_SERVER_ERROR
         )
 
-    storage_plugin = cast(Type[AbstractStorage], storage_plugin)
-
-    read_payload = storage_plugin().get_read_payload("artifacts", artifact_id)
+    read_payload = storage_class().get_read_payload("artifacts", artifact_id)
 
     if read_payload.type_ is PayloadType.URL:
         return flask.redirect(read_payload.content, code=HTTPStatus.FOUND)
 
     return flask.Response(read_payload.content)
+
+
+class NoActivePluginError(Exception):
+    pass
+
+
+def _get_storage_plugin():
+    try:
+        storage_plugin = get_active_plugins(
+            PluginScope.STORAGE, default=[LocalStorage]
+        )[0]
+    except IndexError:
+        raise NoActivePluginError()
+
+    storage_class = cast(Type[AbstractStorage], storage_plugin)
+
+    return storage_class
