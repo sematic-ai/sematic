@@ -31,14 +31,6 @@ pytest_test(
 )
 
 pytest_test(
-    name = "test_sorting",
-    srcs = ["test_sorting.py"],
-    deps = [
-        "//sematic/utils:sorting",
-    ],
-)
-
-pytest_test(
     name = "test_hashing",
     srcs = ["test_hashing.py"],
     deps = [

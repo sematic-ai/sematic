@@ -1,5 +1,5 @@
 # Sematic
-from sematic.utils.algorithms import breadth_first_search
+from sematic.utils.algorithms import breadth_first_search, topological_sort
 
 
 def test_breadth_first_search():
@@ -8,9 +8,9 @@ def test_breadth_first_search():
     #  "a"  "b"  "c"
     #     \ / \    \
     #     "d" "e"  "f"
-    #     /    | \  /
-    #    "g"  "h" "i"
-    #      \   |  /
+    #     /    | \  / \
+    #    "g"  "h" "i"  |
+    #      \   |  /____|
     #        "j"
     graph = {
         "a": [],
@@ -22,7 +22,7 @@ def test_breadth_first_search():
         "g": ["d"],
         "h": ["e"],
         "i": ["e", "f"],
-        "j": ["g", "h", "i"],
+        "j": ["g", "h", "f", "i"],
     }
 
     def get_next(val):
@@ -41,8 +41,8 @@ def test_breadth_first_search():
 
     assert len(visited) == len(graph.keys())
     assert visited[0] == "j"
-    assert set(visited[1:4]) == {"g", "h", "i"}
-    assert set(visited[4:7]) == {"d", "e", "f"}
+    assert set(visited[1:5]) == {"g", "h", "i", "f"}
+    assert set(visited[5:7]) == {"d", "e"}
     assert set(visited[7:10]) == {"a", "b", "c"}
 
     visited = []
@@ -110,3 +110,23 @@ def test_breadth_first_search_key_func():
     else:
         assert visited[1:3] == [{"a", "b", "c"}, {True, False}]
     assert visited[3] == {1, 2, 3}
+
+
+def test_topological_sort():
+    # Represents:
+    #       A
+    #     / | \
+    #    C  B  |
+    #    |  \  |
+    #     \    E
+    #      \   |
+    #        D
+    dependencies = {
+        "A": [None],
+        "B": ["A"],
+        "C": ["A"],
+        "D": ["C", "E"],
+        "E": ["B", "A"],
+    }
+
+    assert topological_sort(dependencies) == ["A", "B", "C", "E", "D"]

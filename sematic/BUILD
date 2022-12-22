@@ -197,7 +197,7 @@ sematic_py_lib(
         "//sematic/db/models:run",
         "//sematic/resolvers:type_utils",
         "//sematic/utils:memoized_property",
-        "//sematic/utils:sorting",
+        "//sematic/utils:algorithms",
     ],
 )
 
