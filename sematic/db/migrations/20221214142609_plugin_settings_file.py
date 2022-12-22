@@ -22,7 +22,7 @@ def up():
     if schema_version != THIS_MIGRATION_SCHEMA_VERSION - 1:
         raise RuntimeError(
             f"Cannot upgrade settings file from version {schema_version} "
-            "to version {THIS_MIGRATION_SCHEMA_VERSION}"
+            f"to version {THIS_MIGRATION_SCHEMA_VERSION}"
         )
 
     new_settings = {
