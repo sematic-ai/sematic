@@ -2,6 +2,9 @@ load("//bazel:pipeline.bzl", "sematic_pipeline")
 
 sematic_example(
     name = "testing_pipeline",
+    requirements = [
+        "debugpy",
+    ],
 )
 
 sematic_pipeline(

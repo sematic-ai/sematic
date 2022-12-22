@@ -9,6 +9,7 @@ from sematic.abstract_plugin import (
 )
 from sematic.config.settings import (
     _DEFAULT_PROFILE,
+    _PLUGIN_VERSION_KEY,
     MissingSettingsError,
     get_active_plugins,
     get_active_settings,
@@ -17,6 +18,7 @@ from sematic.config.settings import (
     get_settings,
 )
 from sematic.config.tests.fixtures import mock_settings
+from sematic.tests.fixtures import environment_variables
 
 
 class SettingsVar(AbstractPluginSettingsVar):
@@ -46,7 +48,10 @@ def plugin_settings():
             "default": {
                 "scopes": {PluginScope.STORAGE.value: [TestPlugin.get_path()]},
                 "settings": {
-                    TestPlugin.get_path(): {SettingsVar.SOME_SETTING.value: "bar"}
+                    TestPlugin.get_path(): {
+                        SettingsVar.SOME_SETTING.value: "bar",
+                        _PLUGIN_VERSION_KEY: "0.1.0",
+                    }
                 },
             }
         },
@@ -66,7 +71,10 @@ def test_get_active_settings(plugin_settings):
     assert active_settings.scopes == {PluginScope.STORAGE: [TestPlugin.get_path()]}
 
     assert active_settings.settings == {
-        TestPlugin.get_path(): {SettingsVar.SOME_SETTING: "bar"}
+        TestPlugin.get_path(): {
+            SettingsVar.SOME_SETTING: "bar",
+            _PLUGIN_VERSION_KEY: "0.1.0",
+        }
     }
 
 
@@ -93,7 +101,10 @@ def test_get_settings(plugin_settings):
     assert settings_profile.scopes == {PluginScope.STORAGE: [TestPlugin.get_path()]}
 
     assert settings_profile.settings == {
-        TestPlugin.get_path(): {SettingsVar.SOME_SETTING: "bar"}
+        TestPlugin.get_path(): {
+            SettingsVar.SOME_SETTING: "bar",
+            _PLUGIN_VERSION_KEY: "0.1.0",
+        }
     }
 
 
@@ -121,3 +132,8 @@ def test_from_scratch(no_settings_file):
     assert (
         get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING, "default") == "default"
     )
+
+
+def test_env_override(no_settings_file):
+    with environment_variables({"SOME_SETTING": "override"}):
+        assert get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING) == "override"

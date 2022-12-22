@@ -178,7 +178,7 @@ def save_resolution(resolution: Resolution) -> Resolution:
 
 def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
     """
-    Update a graph
+    Update a graph.
     """
     _assert_external_jobs_not_removed(runs)
     with db().get_session() as session:
@@ -186,12 +186,29 @@ def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
             session.merge(run)
 
         for artifact in artifacts:
-            session.merge(artifact)
+            _save_artifact(artifact=artifact, session=session)
 
         for edge in edges:
             session.merge(edge)
 
         session.commit()
+
+
+def _save_artifact(artifact: Artifact, session: sqlalchemy.orm.Session) -> Artifact:
+    """
+    Saves or updates an Artifact, returning the actual persisted Artifact element.
+    """
+    previous_artifact = session.get(entity=Artifact, ident=artifact.id)
+
+    if previous_artifact is not None:
+        # we use content-addressed values for artifacts, with the id being
+        # generated from the type and value themselves
+        # there are currently no other fields that can be updated
+        logger.debug("Updating existing artifact %s", artifact.id)
+        previous_artifact.assert_matches(artifact)
+        return previous_artifact
+
+    return session.merge(artifact)
 
 
 def _assert_external_jobs_not_removed(runs):

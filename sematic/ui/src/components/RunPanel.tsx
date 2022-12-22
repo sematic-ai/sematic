@@ -12,6 +12,9 @@ import { ActionMenu, ActionMenuItem } from "./ActionMenu";
 import { fetchJSON } from "../utils";
 import { UserContext } from "..";
 import { SnackBarContext } from "./SnackBarProvider";
+import { usePipelinePanelsContext, usePipelineRunContext } from "../hooks/pipelineHooks";
+import { ExtractContextType } from "./utils/typings";
+import PipelineRunViewContext from "../pipelines/PipelineRunViewContext";
 
 export type Graph = {
   runs: Map<string, Run>;
@@ -19,15 +22,10 @@ export type Graph = {
   artifacts: Artifact[];
 };
 
-export default function RunPanel(props: {
-  selectedPanel: string;
-  graph: Graph;
-  resolution: Resolution;
-  selectedRun: Run;
-  onSelectRun: (run: Run) => void;
-}) {
-  const { selectedPanel, graph, selectedRun, resolution, onSelectRun } = props;
-
+export default function RunPanel(props: { graph: Graph;}) {
+  const { graph } = props;
+  const { selectedRun, selectedPanelItem } = usePipelinePanelsContext();
+  
   const runsById = useMemo(() => graph.runs, [graph]);
 
   const edges = useMemo(() => graph.edges, [graph]);
@@ -83,7 +81,7 @@ export default function RunPanel(props: {
 
   return (
     <Box sx={{ gridColumn: 2, gridRow: 2, overflowY: "scroll" }}>
-      {selectedPanel === "graph" && (
+      {selectedPanelItem === "graph" && (
         <>
           <FlowWithProvider
             // Nasty hack to make sure the DAG is remounted each time to trigger a ReactFlow onInit
@@ -92,12 +90,10 @@ export default function RunPanel(props: {
             runs={Array.from(runsById.values())}
             edges={edges}
             artifactsById={artifactsById}
-            onSelectRun={onSelectRun}
-            selectedRunId={selectedRun.id}
           />
         </>
       )}
-      {selectedPanel === "run" && (
+      {selectedPanelItem === "run" && (
         <Box sx={{ p: 5, height: '100%', 'boxSizing': 'border-box', display: 'flex', 
           flexFlow: 'column'}}>
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto auto", flexShrink: 1 }}>
@@ -126,7 +122,6 @@ export default function RunPanel(props: {
               <RunActionMenu
                 run={selectedRun}
                 inputEdges={selectedRunInputEdges}
-                resolution={resolution}
               />
             </Box>
             <Box sx={{ gridColumn: 3, pt: 3, pr: 5 }}>
@@ -147,10 +142,12 @@ export default function RunPanel(props: {
 function RunActionMenu(props: {
   run: Run;
   inputEdges: Edge[];
-  resolution: Resolution;
 }) {
-  const { run, inputEdges, resolution } = props;
-
+  const { run, inputEdges } = props;
+  const { resolution } 
+    = usePipelineRunContext() as ExtractContextType<typeof PipelineRunViewContext> & {
+    resolution: Resolution
+  };
   const { user } = useContext(UserContext);
 
   const { setSnackMessage } = useContext(SnackBarContext);

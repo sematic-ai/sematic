@@ -157,7 +157,11 @@ def get_plugin_settings(
     if plugin_path not in settings:
         raise MissingSettingsError(plugin)
 
-    return settings[plugin_path]
+    return {
+        key: value
+        for key, value in settings[plugin_path].items()
+        if key != _PLUGIN_VERSION_KEY
+    }
 
 
 def get_plugin_setting(
@@ -172,6 +176,13 @@ def get_plugin_setting(
         plugin_settings = {}
 
     if var not in plugin_settings:
+        # _apply_env_var_overrides only applies overrides
+        # to settings present in the settings file
+        # This ensures env var overrides are still applied
+        # if the setting was not set in the file
+        if var.value in os.environ:
+            return os.environ[var.value]
+
         if len(args) > 0:
             return args[0]
 
@@ -201,7 +212,6 @@ def set_plugin_setting(
         plugin_settings = get_plugin_settings(plugin)
     except MissingSettingsError:
         plugin_settings = {}
-        get_active_settings().settings[plugin.get_path()] = plugin_settings
 
     if _normalize_enum(plugin.get_settings_vars(), var) is None:
         raise ValueError(
@@ -212,6 +222,8 @@ def set_plugin_setting(
     plugin_settings[_PLUGIN_VERSION_KEY] = ".".join(
         str(v) for v in plugin.get_version()
     )
+
+    get_active_settings().settings[plugin.get_path()] = plugin_settings
 
     save_settings(get_settings())
 
@@ -230,6 +242,8 @@ def delete_plugin_setting(
 
     if var in plugin_settings:
         del plugin_settings[var]
+
+    get_active_settings().settings[plugin.get_path()] = plugin_settings
 
     save_settings(get_settings())
 
