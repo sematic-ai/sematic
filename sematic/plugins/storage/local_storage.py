@@ -42,7 +42,8 @@ class LocalStorage(AbstractStorage, AbstractPlugin):
             file.write(value)
 
     def get_write_location(self, namespace: str, key: str) -> str:
-        return os.path.join(get_config().data_dir, namespace, key)
+        # return os.path.join(get_config().data_dir, namespace, key)
+        return f"/api/v1/upload/{namespace}/{key}"
 
     def get_read_payload(self, namespace: str, key: str) -> ReadPayload:
         try:
