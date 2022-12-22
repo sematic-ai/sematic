@@ -64,9 +64,18 @@ def topological_sort(
         sorted_ids.append(id_)
 
     def find_next_ids(previous_id):
+        # nobody should care about this dependency anymore
+        for deps in dependencies.values():
+            if previous_id in deps:
+                deps.remove(previous_id)
+
         # Sorting for determinism.
         next_ids = sorted(
-            element for element, deps in dependencies.items() if previous_id in deps
+            [
+                element
+                for element, deps in dependencies.items()
+                if remove_nones(deps) == []
+            ]
         )
         return next_ids
 

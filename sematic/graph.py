@@ -410,9 +410,13 @@ class Graph:
             if input_edge.source_run_id is not None:
                 # We set the input as the upstream future to mimick what
                 # happens in a greenfield resolution.
-                kwargs[
-                    input_edge.destination_name
-                ] = cloned_graph.futures_by_original_id[input_edge.source_run_id]
+                try:
+                    kwargs[
+                        input_edge.destination_name
+                    ] = cloned_graph.futures_by_original_id[input_edge.source_run_id]
+                except KeyError as e:
+                    print(e)
+                    raise
             elif input_edge.artifact_id is not None:
                 kwargs[input_edge.destination_name] = value
             else:
