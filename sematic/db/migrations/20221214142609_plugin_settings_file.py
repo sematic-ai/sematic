@@ -94,7 +94,7 @@ def _load_settings_yaml(file_name: str) -> Dict[str, Any]:
 
     if os.path.isfile(settings_file_path):
         with open(settings_file_path, "r") as f:
-            return yaml.load(f, yaml.Loader)
+            return yaml.load(f, yaml.Loader) or {}
 
     return {}
 
