@@ -176,15 +176,15 @@ def get_plugin_setting(
         plugin_settings = {}
 
     if var not in plugin_settings:
-        if len(args) > 0:
-            return args[0]
-
         # _apply_env_var_overrides only applies overrides
         # to settings present in the settings file
         # This ensures env var overrides are still applied
         # if the setting was not set in the file
         if var.value in os.environ:
             return os.environ[var.value]
+
+        if len(args) > 0:
+            return args[0]
 
         raise MissingSettingsError(plugin, var)
 
