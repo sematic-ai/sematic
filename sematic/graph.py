@@ -208,8 +208,7 @@ class Graph:
             ]
             for run_id in layer_run_ids
         }
-        sorted = topological_sort(dependencies)
-        return sorted
+        return topological_sort(dependencies)
 
     def _reverse_execution_order(self, layer_run_ids: List[RunID]) -> List[RunID]:
         """
