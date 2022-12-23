@@ -64,9 +64,14 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
 
     return flask.jsonify(payload)
 
-@sematic_api.route("/api/v1/external_resources/<resource_id>/activate", methods=["POST"])
+
+@sematic_api.route(
+    "/api/v1/external_resources/<resource_id>/activate", methods=["POST"]
+)
 @authenticate
-def activate_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Response:
+def activate_resource_endpoint(
+    user: Optional[User], resource_id: str
+) -> flask.Response:
 
     record = get_external_resource_record(resource_id=resource_id)
     if record is None:
@@ -77,18 +82,23 @@ def activate_resource_endpoint(user: Optional[User], resource_id: str) -> flask.
         activated = record.resource.activate()
     except Exception as e:
         return jsonify_error(
-            "Error activating resource {}: {}".format(resource_id, e), HTTPStatus.INTERNAL_SERVER_ERROR,
+            "Error activating resource {}: {}".format(resource_id, e),
+            HTTPStatus.INTERNAL_SERVER_ERROR,
         )
-    record = ExternalResourceRecord.from_resource(activated, locally_allocated=False)
+    record = ExternalResourceRecord.from_resource(activated)
     record = save_external_resource_record(record)
-    payload = dict(record=record.to_json_encodable())
+    payload = dict(record=record.to_json_encodable())  # type: ignore
 
     return flask.jsonify(payload)
 
 
-@sematic_api.route("/api/v1/external_resources/<resource_id>/deactivate", methods=["POST"])
+@sematic_api.route(
+    "/api/v1/external_resources/<resource_id>/deactivate", methods=["POST"]
+)
 @authenticate
-def deactivate_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Response:
+def deactivate_resource_endpoint(
+    user: Optional[User], resource_id: str
+) -> flask.Response:
 
     record = get_external_resource_record(resource_id=resource_id)
     if record is None:
@@ -99,11 +109,12 @@ def deactivate_resource_endpoint(user: Optional[User], resource_id: str) -> flas
         activated = record.resource.deactivate()
     except Exception as e:
         return jsonify_error(
-            "Error deactivating resource {}: {}".format(resource_id, e), HTTPStatus.INTERNAL_SERVER_ERROR,
+            "Error deactivating resource {}: {}".format(resource_id, e),
+            HTTPStatus.INTERNAL_SERVER_ERROR,
         )
-    record = ExternalResourceRecord.from_resource(activated, locally_allocated=False)
+    record = ExternalResourceRecord.from_resource(activated)
     record = save_external_resource_record(record)
-    payload = dict(record=record.to_json_encodable())
+    payload = dict(record=record.to_json_encodable())  # type: ignore
 
     return flask.jsonify(payload)
 
