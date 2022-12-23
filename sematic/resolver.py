@@ -68,6 +68,7 @@ class Resolver(abc.ABC):
         """
         pass
 
+    @classmethod
     def entering_resource_context(cls, resource: ExternalResource):
         """A hook resolvers may use to take action once a resource is activated.
 
@@ -76,6 +77,7 @@ class Resolver(abc.ABC):
         """
         pass
 
+    @classmethod
     def exiting_resource_context(cls, resource_id: str):
         """A hook resolvers may use to take action once a resource is no longer used.
 
