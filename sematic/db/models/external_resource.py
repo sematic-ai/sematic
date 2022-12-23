@@ -8,7 +8,8 @@ from sqlalchemy.orm import validates
 # Sematic
 from sematic.db.models.base import Base
 from sematic.db.models.json_encodable_mixin import JSONEncodableMixin
-from sematic.external_resource import ExternalResource, ResourceState
+from sematic.external_resource import ExternalResource as ExternalResourceDataclass
+from sematic.external_resource import ManagedBy, ResourceState
 from sematic.types.serialization import (
     type_from_json_encodable,
     type_to_json_encodable,
@@ -19,8 +20,11 @@ from sematic.types.serialization import (
 TypeSerialization = Dict[str, Any]
 
 
-class ExternalResourceRecord(Base, JSONEncodableMixin):
-    """A DB record for an ExternalResource and its history.
+class ExternalResource(Base, JSONEncodableMixin):
+    """A DB record for an ExternalResource (dataclass) and its history.
+
+    For the remainder of this docstring, ExternalResource will correspond
+    to the non-orm representation (aka the dataclass representation).
 
     Attributes
     ----------
@@ -28,8 +32,9 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
         The unique id of the external resource
     resource_state:
         The current state of the resource
-    locally_allocated:
-        Whether or not the resource was locally allocated
+    managed_by:
+        Whether the resource is managed locally, remotely, or its management
+        state is not known.
     status_message:
         The most recent status message for the resource
     last_updated_epoch_seconds:
@@ -64,8 +69,8 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
         types.Enum(ResourceState),
         nullable=False,
     )
-    locally_allocated: bool = Column(  # type: ignore
-        types.BOOLEAN,
+    managed_by: ManagedBy = Column(  # type: ignore
+        types.Enum(ManagedBy),
         nullable=False,
     )
     status_message: str = Column(types.String(), nullable=False)
@@ -86,11 +91,19 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
             return resource_state
         raise ValueError(f"Cannot make a ResourceState from {resource_state}")
 
+    @validates("managed_by")
+    def validate_managed_by(
+        self, key: Any, managed_by: Union[str, ManagedBy]
+    ) -> ManagedBy:
+        if isinstance(managed_by, str):
+            return ManagedBy[managed_by]
+        elif isinstance(managed_by, ManagedBy):
+            return managed_by
+        raise ValueError(f"Cannot make a ManagedBy from {managed_by}")
+
     @classmethod
-    def from_resource(
-        cls, resource: ExternalResource, locally_allocated: bool
-    ) -> "ExternalResourceRecord":
-        if not isinstance(resource, ExternalResource):
+    def from_resource(cls, resource: ExternalResourceDataclass) -> "ExternalResource":
+        if not isinstance(resource, ExternalResourceDataclass):
             raise ValueError(
                 f"resource must be an instance of a subclass of "
                 f"ExternalResource. Was: {resource} of type "
@@ -98,10 +111,10 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
             )
         type_serialization = type_to_json_encodable(type(resource))
         value_serialization = value_to_json_encodable(resource, type(resource))
-        return ExternalResourceRecord(
+        return ExternalResource(
             id=resource.id,
             resource_state=resource.status.state,
-            locally_allocated=locally_allocated,
+            managed_by=resource.status.managed_by,
             status_message=resource.status.message,
             last_updated_epoch_seconds=resource.status.last_update_epoch_time,
             type_serialization=type_serialization,
@@ -109,11 +122,11 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
             history_serializations=(value_serialization,),
         )
 
-    def get_resource_type(self) -> Type[ExternalResource]:
+    def get_resource_type(self) -> Type[ExternalResourceDataclass]:
         return type_from_json_encodable(self.type_serialization)
 
-    def set_resource_type(self, type_: Type[ExternalResource]) -> None:
-        if not issubclass(type_, ExternalResource):
+    def set_resource_type(self, type_: Type[ExternalResourceDataclass]) -> None:
+        if not issubclass(type_, ExternalResourceDataclass):
             raise ValueError(
                 f"type_ must be a subclass of ExternalResource. Was: {type_}"
             )
@@ -121,11 +134,11 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
 
     resource_type = property(get_resource_type, set_resource_type)
 
-    def get_resource(self) -> ExternalResource:
+    def get_resource(self) -> ExternalResourceDataclass:
         return value_from_json_encodable(self.value_serialization, self.resource_type)
 
-    def set_resource(self, resource: ExternalResource) -> None:
-        if not isinstance(resource, ExternalResource):
+    def set_resource(self, resource: ExternalResourceDataclass) -> None:
+        if not isinstance(resource, ExternalResourceDataclass):
             raise ValueError(
                 f"resource must be a subclass of ExternalResource. Was: {type(resource)}"
             )
@@ -140,6 +153,7 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
 
         self.resource_state = resource.status.state
         self.status_message = resource.status.message
+        self.managed_by = resource.status.managed_by
         self.last_updated_epoch_seconds = resource.status.last_update_epoch_time
 
         self.value_serialization = serialization
@@ -147,7 +161,7 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
     resource = property(get_resource, set_resource)
 
     @property
-    def history(self) -> Tuple[ExternalResource, ...]:
+    def history(self) -> Tuple[ExternalResourceDataclass, ...]:
         type_ = self.resource_type
         return tuple(
             value_from_json_encodable(r, type_) for r in self.history_serializations
@@ -165,4 +179,4 @@ class ExternalResourceRecord(Base, JSONEncodableMixin):
         key_value_strings.append(f"resource_type={self.type_serialization['type'][1]}")
 
         fields = ", ".join(key_value_strings)
-        return f"ExternalResourceRecord({fields}, ...)"
+        return f"ExternalResource({fields}, ...)"

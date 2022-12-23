@@ -9,7 +9,9 @@ import flask
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
-from sematic.db.models.external_resource_record import ExternalResourceRecord
+from sematic.db.models.external_resource import (
+    ExternalResource as ExternalResourceRecord,
+)
 from sematic.db.models.user import User
 from sematic.db.queries import (
     get_external_resource_record,

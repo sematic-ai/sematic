@@ -3,7 +3,7 @@
 CREATE TABLE external_resources (
     id character(32) NOT NULL,
     resource_state TEXT NOT NULL,
-    locally_allocated BOOLEAN NOT NULL,
+    managed_by TEXT NOT NULL,
     status_message TEXT NOT NULL,
     last_updated_epoch_seconds int8 NOT NULL,
     type_serialization JSONB NOT NULL,
