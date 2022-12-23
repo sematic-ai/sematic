@@ -413,8 +413,8 @@ class CloudResolver(LocalResolver):
     def entering_resource_context(cls, resource: ExternalResource):
         cls._resource_manager.poll_for_updates_by_resource_id(resource.id)
 
-    def exiting_resource_context(cls, resource: ExternalResource):
-        cls._resource_manager.stop_poll_for_updates_by_resource_id(resource.id)
+    def exiting_resource_context(cls, resource_id: str):
+        cls._resource_manager.stop_poll_for_updates_by_resource_id(resource_id)
 
 
 def make_nested_future_storage_key(future_id: str) -> str:
