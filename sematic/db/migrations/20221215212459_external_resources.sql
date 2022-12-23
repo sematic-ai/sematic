@@ -9,6 +9,8 @@ CREATE TABLE external_resources (
     type_serialization JSONB NOT NULL,
     value_serialization JSONB NOT NULL,
     history_serializations JSONB NOT NULL,
+    created_at timestamp WITH time zone NOT NULL,
+    updated_at timestamp WITH time zone NOT NULL,
     PRIMARY KEY (id)
 );
 

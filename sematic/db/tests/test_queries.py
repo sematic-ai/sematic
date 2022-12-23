@@ -22,6 +22,7 @@ from sematic.db.models.run import Run
 from sematic.db.queries import (
     count_runs,
     get_artifact,
+    get_external_resource_record,
     get_resolution,
     get_resource_ids_by_root_id,
     get_root_graph,
@@ -220,7 +221,11 @@ class SomeResource(ExternalResource):
 def test_save_external_resource_record(test_db):  # noqa: F811
     resource1 = SomeResource(some_field=42)
     record1 = ExternalResourceRecord.from_resource(resource1)
-    saved_record1 = save_external_resource_record(record1)
+    save_external_resource_record(record1)
+    saved_record1 = get_external_resource_record(record1.id)
+
+    assert saved_record1.updated_at is not None
+    assert saved_record1.created_at is not None
     assert saved_record1.resource_state == resource1.status.state
 
     resource2 = replace(
@@ -233,8 +238,13 @@ def test_save_external_resource_record(test_db):  # noqa: F811
         ),
     )
     record2 = ExternalResourceRecord.from_resource(resource2)
-    saved_record2 = save_external_resource_record(record2)
+    save_external_resource_record(record2)
+    saved_record2 = get_external_resource_record(record2.id)
     assert saved_record2.history == (resource2, resource1)
+    assert saved_record2.updated_at is not None
+    assert saved_record2.created_at is not None
+    assert saved_record2.updated_at > saved_record1.updated_at
+    assert saved_record2.created_at == saved_record1.created_at
 
     resource3 = replace(
         resource2,
