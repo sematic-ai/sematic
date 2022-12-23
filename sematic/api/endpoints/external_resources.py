@@ -79,10 +79,12 @@ def activate_resource_endpoint(
             "No such resource: {}".format(resource_id), HTTPStatus.NOT_FOUND
         )
     try:
-        activated = record.resource.activate()
+        activated = record.resource.activate(is_local=False)
     except Exception as e:
+        message = "Error activating resource {}: {}".format(resource_id, e)
+        logger.exception(message)
         return jsonify_error(
-            "Error activating resource {}: {}".format(resource_id, e),
+            message,
             HTTPStatus.INTERNAL_SERVER_ERROR,
         )
     record = ExternalResourceRecord.from_resource(activated)
@@ -108,8 +110,10 @@ def deactivate_resource_endpoint(
     try:
         activated = record.resource.deactivate()
     except Exception as e:
+        message = "Error deactivating resource {}: {}".format(resource_id, e)
+        logger.exception(message)
         return jsonify_error(
-            "Error deactivating resource {}: {}".format(resource_id, e),
+            message,
             HTTPStatus.INTERNAL_SERVER_ERROR,
         )
     record = ExternalResourceRecord.from_resource(activated)
