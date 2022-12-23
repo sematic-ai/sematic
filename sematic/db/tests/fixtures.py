@@ -10,7 +10,9 @@ import testing.postgresql  # type: ignore
 # Sematic
 import sematic.db.db as db
 from sematic.abstract_future import FutureState
-from sematic.db.models.external_resource_record import ExternalResourceRecord
+from sematic.db.models.external_resource import (
+    ExternalResource as ExternalResourceRecord,
+)
 from sematic.db.models.factories import make_artifact, make_user
 from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
@@ -162,7 +164,7 @@ def make_resolution(**kwargs) -> Resolution:
 @pytest.fixture
 def persisted_external_resource(test_db) -> ExternalResource:
     return save_external_resource_record(
-        ExternalResourceRecord.from_resource(ExternalResource(), locally_allocated=True)
+        ExternalResourceRecord.from_resource(ExternalResource())
     )
 
 

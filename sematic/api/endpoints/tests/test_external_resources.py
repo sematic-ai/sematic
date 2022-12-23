@@ -10,7 +10,9 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     mock_auth,
     test_client,
 )
-from sematic.db.models.external_resource_record import ExternalResourceRecord
+from sematic.db.models.external_resource import (
+    ExternalResource as ExternalResourceRecord,
+)
 from sematic.db.models.user import User  # noqa: F401
 from sematic.db.queries import (  # noqa: F401
     save_external_resource_record,
@@ -23,7 +25,12 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
-from sematic.external_resource import ExternalResource, ResourceState, ResourceStatus
+from sematic.external_resource import (
+    ExternalResource,
+    ManagedBy,
+    ResourceState,
+    ResourceStatus,
+)
 
 test_list_external_resource_auth = make_auth_test(
     "/api/v1/external_resources/ids", method="GET"
@@ -67,7 +74,7 @@ def test_save_read(
     my_resource = ExternalResource(
         status=ResourceStatus(state=ResourceState.CREATED, message="hi!")
     )
-    record = ExternalResourceRecord.from_resource(my_resource, locally_allocated=True)
+    record = ExternalResourceRecord.from_resource(my_resource)
     payload = {"record": record.to_json_encodable()}
     response = test_client.post(f"/api/v1/external_resources/{record.id}", json=payload)
     assert response.status_code == 200
@@ -82,13 +89,13 @@ def test_save_read(
     my_resource_activating = replace(
         my_resource,
         status=ResourceStatus(
-            state=ResourceState.ACTIVATING, message="firing up my lasers"
+            state=ResourceState.ACTIVATING,
+            message="firing up my lasers",
+            managed_by=ManagedBy.REMOTE,
         ),
     )
     assert my_resource_activating != my_resource
-    record = ExternalResourceRecord.from_resource(
-        my_resource_activating, locally_allocated=True
-    )
+    record = ExternalResourceRecord.from_resource(my_resource_activating)
     payload = {"record": record.to_json_encodable()}
     response = test_client.post(f"/api/v1/external_resources/{record.id}", json=payload)
     assert response.status_code == 200

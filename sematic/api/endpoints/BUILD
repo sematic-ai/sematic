@@ -45,7 +45,7 @@ sematic_py_lib(
             "//sematic/api:app",
             "//sematic/api/endpoints:auth",
             "//sematic/api/endpoints:request_parameters",
-            "//sematic/db/models:external_resource_record",
+            "//sematic/db/models:external_resource",
             "//sematic/db/models:user",
             "//sematic/db:queries",
     ],

@@ -49,8 +49,8 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "external_resource_record",
-    srcs = ["external_resource_record.py"],
+    name = "external_resource",
+    srcs = ["external_resource.py"],
     pip_deps = [
         "sqlalchemy",
     ],
