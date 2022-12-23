@@ -7,7 +7,7 @@ pytest_test(
     ],
     deps = [
         "//sematic/api/tests:fixtures",
-        "//sematic/db/models:external_resource_record",
+        "//sematic/db/models:external_resource",
         "//sematic/db/models:user",
         "//sematic/db:queries",
         "//sematic/db/tests:fixtures",

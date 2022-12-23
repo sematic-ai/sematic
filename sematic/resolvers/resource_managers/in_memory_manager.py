@@ -3,7 +3,7 @@ from dataclasses import dataclass, field, replace
 from typing import Dict, FrozenSet, List, Tuple
 
 # Sematic
-from sematic.external_resource import ExternalResource
+from sematic.external_resource import ExternalResource, ManagedBy
 from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 
 
@@ -37,8 +37,8 @@ class InMemoryResourceManager(AbstractResourceManager):
     def get_resource_for_id(self, resource_id: str) -> ExternalResource:
         return self.resource_id_to_record[resource_id].resource
 
-    def save_resource(self, resource: ExternalResource, locally_manage: bool) -> None:
-        if not locally_manage:
+    def save_resource(self, resource: ExternalResource) -> None:
+        if resource.status.managed_by == ManagedBy.REMOTE:
             raise ValueError(
                 "In-memory resource manager can't manage remotely managed resources"
             )

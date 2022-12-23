@@ -75,7 +75,8 @@ class TimedMessage(ExternalResource):
         if transition_time_remaining < 0:
             return replace(
                 self,
-                status=ResourceStatus(
+                status=replace(
+                    self.status,
                     state=final_state,
                     message=final_state_message,
                 ),
@@ -88,7 +89,8 @@ class TimedMessage(ExternalResource):
             logger.info(message)
             return replace(
                 self,
-                status=ResourceStatus(
+                status=replace(
+                    self.status,
                     state=self.status.state,
                     message=message,
                 ),
@@ -100,7 +102,8 @@ class TimedMessage(ExternalResource):
         return replace(
             self,
             epoch_time_activation_began=now,
-            status=ResourceStatus(
+            status=replace(
+                self.status,
                 state=ResourceState.ACTIVATING,
                 message=f"Allocating, should take {self.allocation_seconds}s to activate",
             ),
@@ -116,7 +119,8 @@ class TimedMessage(ExternalResource):
         return replace(
             self,
             epoch_time_deactivation_began=now,
-            status=ResourceStatus(
+            status=replace(
+                self.status,
                 state=ResourceState.DEACTIVATING,
                 message=status_message,
             ),
@@ -147,7 +151,8 @@ class TimedMessage(ExternalResource):
 
         return replace(
             self,
-            status=ResourceStatus(
+            status=replace(
+                self.status,
                 state=self.status.state,
                 message="Nothing has changed...",
             ),

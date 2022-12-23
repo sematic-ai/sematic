@@ -15,11 +15,13 @@ from sematic.abstract_future import FutureState
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.external_resource_record import ExternalResourceRecord
+from sematic.db.models.external_resource import (
+    ExternalResource as ExternalResourceRecord,
+)
 from sematic.db.models.note import Note
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
-from sematic.db.models.run_external_resource import RunExternalResource
+from sematic.db.models.runs_external_resource import RunExternalResource
 from sematic.db.models.user import User
 from sematic.external_resource import ResourceState
 from sematic.scheduling.external_job import ExternalJob
@@ -153,16 +155,10 @@ def save_external_resource_record(record: ExternalResourceRecord):
             )
 
         # this ensures that all the fields are consistent
-        record = ExternalResourceRecord.from_resource(
-            record.resource, record.locally_allocated
-        )
+        record = ExternalResourceRecord.from_resource(record.resource)
     else:
         # this ensures that the update properly updates history
         # and keeps data consistent
-        if existing_record.locally_allocated != record.locally_allocated:
-            raise ValueError(
-                "Cannot modify locally_allocated field of external resource record."
-            )
         existing_record.resource = record.resource
         record = existing_record
 
