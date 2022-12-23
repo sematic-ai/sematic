@@ -18,6 +18,7 @@ from sematic.config.settings import (
     get_settings,
 )
 from sematic.config.tests.fixtures import mock_settings
+from sematic.tests.fixtures import environment_variables
 
 
 class SettingsVar(AbstractPluginSettingsVar):
@@ -131,3 +132,8 @@ def test_from_scratch(no_settings_file):
     assert (
         get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING, "default") == "default"
     )
+
+
+def test_env_override(no_settings_file):
+    with environment_variables({"SOME_SETTING": "override"}):
+        assert get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING) == "override"
