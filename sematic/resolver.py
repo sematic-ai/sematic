@@ -76,7 +76,7 @@ class Resolver(abc.ABC):
         """
         pass
 
-    def exiting_resource_context(cls, resource: ExternalResource):
+    def exiting_resource_context(cls, resource_id: str):
         """A hook resolvers may use to take action once a resource is no longer used.
 
         This will be called as the "with" block for the resource is being exited. There
