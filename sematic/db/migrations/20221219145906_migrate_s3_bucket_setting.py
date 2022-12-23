@@ -22,6 +22,9 @@ def up():
     with open(settings_file_path, "r") as f:
         settings = yaml.load(f, Loader=yaml.Loader)
 
+    if settings is None:
+        return
+
     s3_bucket_setting = (
         settings.get("default", {})
         .get("settings", {})
