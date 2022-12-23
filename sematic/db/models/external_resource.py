@@ -1,4 +1,5 @@
 # Standard Library
+import datetime
 from typing import Any, Dict, Tuple, Type, Union
 
 # Third-party
@@ -79,6 +80,15 @@ class ExternalResource(Base, JSONEncodableMixin):
     value_serialization: Dict[str, Any] = Column(types.JSON(), nullable=False)
     history_serializations: Tuple[Dict[str, Any], ...] = Column(  # type: ignore
         types.JSON(), nullable=False
+    )
+    created_at: datetime.datetime = Column(
+        types.DateTime(), nullable=False, default=datetime.datetime.utcnow
+    )
+    updated_at: datetime.datetime = Column(
+        types.DateTime(),
+        nullable=False,
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
     )
 
     @validates("resource_state")
