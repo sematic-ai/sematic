@@ -5,7 +5,7 @@ from dataclasses import dataclass, replace
 from typing import Optional
 
 # Sematic
-from sematic.external_resource import ExternalResource, ResourceState, ResourceStatus
+from sematic.external_resource import ExternalResource, ResourceState
 
 logger = logging.getLogger(__name__)
 

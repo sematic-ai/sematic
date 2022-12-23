@@ -126,7 +126,6 @@ class SilentResolver(StateMachineResolver):
 
     @classmethod
     def deactivate_resource(cls, resource_id: str) -> ExternalResource:  # type: ignore
-        is_local = True
         resource = cls._resource_manager.get_resource_for_id(resource_id)
         if resource.status.state.is_terminal():
             return resource
