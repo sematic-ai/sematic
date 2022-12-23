@@ -26,6 +26,7 @@ from sematic.db.queries import (
 )
 from sematic.db.tests.fixtures import (  # noqa: F401
     make_resolution,
+    persisted_external_resource,
     persisted_resolution,
     persisted_run,
     pg_mock,
