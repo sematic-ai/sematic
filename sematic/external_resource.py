@@ -140,9 +140,13 @@ class ResourceStatus:
     managed_by: ManagedBy = ManagedBy.UNKNOWN
 
     def __post_init__(self):
-        if self.state != ResourceState.CREATED and self.managed_by == ManagedBy.UNKNOWN:
+        if (
+            self.state not in {ResourceState.CREATED, ResourceState.DEACTIVATED}
+            and self.managed_by == ManagedBy.UNKNOWN
+        ):
             raise IllegalStateTransitionError(
-                "Only resources in the CREATED state can have managed_by==UNKNOWN"
+                "Only resources in the CREATED and DEACTIVATED states "
+                "can have managed_by==UNKNOWN"
             )
 
 
@@ -225,6 +229,7 @@ class ExternalResource:
             status=replace(
                 self.status,
                 managed_by=ManagedBy.LOCAL if is_local else ManagedBy.REMOTE,
+                last_update_epoch_time=int(time.time()),
             ),
         )
         updated = managed_by_updated._do_activate(is_local)
@@ -255,9 +260,11 @@ class ExternalResource:
             )
             updated = replace(
                 self,
-                status=ResourceStatus(
+                status=replace(
+                    self.status,
                     state=ResourceState.DEACTIVATED,
                     message="Resource activation was canceled.",
+                    last_update_epoch_time=int(time.time()),
                 ),
             )
         else:
@@ -332,6 +339,10 @@ class ExternalResource:
         """
         logger.debug("Updating %s", self)
         updated = self._do_update()
+        updated = replace(
+            updated,
+            status=replace(updated.status, last_update_epoch_time=int(time.time())),
+        )
         self.validate_transition(updated)
         return updated
 
