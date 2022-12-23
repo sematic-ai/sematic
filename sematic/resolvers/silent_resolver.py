@@ -80,7 +80,7 @@ class SilentResolver(StateMachineResolver):
 
     @classmethod
     def _save_resource(cls, resource: ExternalResource):
-        cls._resource_manager.save_resource(resource, locally_manage=True)
+        cls._resource_manager.save_resource(resource)
 
     @classmethod
     def _get_resource_manager(cls) -> AbstractResourceManager:

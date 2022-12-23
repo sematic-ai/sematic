@@ -20,12 +20,12 @@ from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.external_resource import ExternalResource
+from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
+from sematic.resolvers.resource_managers.cloud_manager import CloudResourceManager
 from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.utils.memoized_property import memoized_property
-from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
-from sematic.resolvers.resource_managers.cloud_manager import CloudResourceManager
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +80,7 @@ class CloudResolver(LocalResolver):
         For Sematic internal usage. End users should always leave this at the default
         value of `False`.
     """
+
     _resource_manager: AbstractResourceManager = CloudResourceManager()
 
     def __init__(
