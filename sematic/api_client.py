@@ -13,7 +13,7 @@ from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import UserSettings, UserSettingsVar, get_user_setting
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.external_resource_record import ExternalResourceRecord
+from sematic.db.models.external_resource import ExternalResource as ExternalResourceRecord
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
@@ -192,7 +192,7 @@ def schedule_resolution(
 
 
 def save_external_resource(
-    resource: ExternalResource, locally_manage: bool
+    resource: ExternalResource
 ) -> ExternalResource:
     """Save the external resource to the server, return the result.
 
@@ -200,15 +200,13 @@ def save_external_resource(
     ----------
     resource:
         The resource to save.
-    locally_manage:
-        Whether or not the resource is locally managed.
 
     Returns
     -------
     The resource as saved by the server.
     """
     record = ExternalResourceRecord.from_resource(
-        resource, locally_allocated=locally_manage
+        resource
     )
     payload = {"record": record.to_json_encodable()}
     response = _post(f"/external_resources/{resource.id}", json_payload=payload)
@@ -258,7 +256,7 @@ def get_resource_ids_by_root_run_id(root_run_id: str) -> List[str]:
     -------
     A list of external resources used by runs underneath the specified root run.
     """
-    response = _get(f"/external_resources/ids?root_id={root_run_id}")
+    response = _get(f"/resolutions/{root_run_id}/external_resource_ids")
     return response["resource_ids"]
 
 

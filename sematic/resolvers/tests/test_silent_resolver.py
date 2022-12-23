@@ -130,8 +130,7 @@ def test_custom_resources():
     assert result == 144
     ids = FakeExternalResource.all_resource_ids()
     assert len(ids) == 2
-    resource_history = FakeExternalResource.history_by_id(ids[0])
-    state_history = [r.status.state for r in resource_history]
+    state_history = FakeExternalResource.state_history_by_id(ids[0])
     expected_state_history = [
         ResourceState.CREATED,
         ResourceState.ACTIVATING,
@@ -141,8 +140,7 @@ def test_custom_resources():
     ]
     assert state_history == expected_state_history
 
-    resource_history = FakeExternalResource.history_by_id(ids[1])
-    state_history = [r.status.state for r in resource_history]
+    state_history = FakeExternalResource.state_history_by_id(ids[1])
     expected_state_history = [
         ResourceState.CREATED,
         ResourceState.ACTIVATING,
