@@ -11,7 +11,7 @@ from typing import List, Optional
 
 # Sematic
 import sematic
-from sematic.external_resource import ExternalResource, ResourceState, ResourceStatus
+from sematic.external_resource import ExternalResource, ResourceState
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

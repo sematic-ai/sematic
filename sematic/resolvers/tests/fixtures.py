@@ -7,7 +7,7 @@ from unittest import mock
 import pytest
 
 # Sematic
-from sematic.external_resource import ExternalResource, ResourceState, ResourceStatus
+from sematic.external_resource import ExternalResource, ResourceState
 from sematic.tests.fixtures import MockStorage
 
 
