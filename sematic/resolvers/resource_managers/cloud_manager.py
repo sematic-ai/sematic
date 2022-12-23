@@ -18,7 +18,7 @@ class CloudResourceManager(AbstractResourceManager):
     def __init__(self, update_poll_interval_seconds: int = 600) -> None:
         super().__init__()
         self._update_poll_interval_seconds = update_poll_interval_seconds
-        self._root_ids_updating: Set[str] = set()
+        self._resource_ids_updating: Set[str] = set()
 
     def get_resource_for_id(self, resource_id: str) -> ExternalResource:
         return api_client.get_external_resource(resource_id)
@@ -37,28 +37,22 @@ class CloudResourceManager(AbstractResourceManager):
             resources.append(resource)
         return resources
 
-    def poll_for_updates_by_root_id(self, root_id: str):
+    def poll_for_updates_by_resource_id(self, resource_id: str):
         """Poll the server for resource state updates on a regular interval.
 
-        Will continue for a given root id until all resources are in a terminal state.
-        for that root id. If more resources are added for it later, polling will need
-        to be started again.
+        Will continue for a given resource until the resource is in a terminal
+        state or polling is explicitly stopped.
         """
-        start_thread = len(self._root_ids_updating) == 0
-        self._root_ids_updating.add(root_id)
+        start_thread = len(self._resource_ids_updating) == 0
+        self._resource_ids_updating.add(resource_id)
 
         def do_poll():
-            while len(self._root_ids_updating) != 0:
-                for id_ in self._root_ids_updating:
-                    logger.info(f"Updating resource states for {id_}")
-                    # query all the resources individually, so we get
-                    # up-to-date states. This forces the server to
-                    # update the states in the DB.
-                    resources = self.resources_by_root_id(id_)
-                    if all(
-                        resource.status.state.is_terminal() for resource in resources
-                    ):
-                        self.stop_poll_for_updates_by_root_id(id_)
+            while len(self._resource_ids_updating) != 0:
+                for id_ in self._resource_ids_updating:
+                    logger.info(f"Updating resource state for {id_}")
+                    resource = self.get_resource_for_id(id_)
+                    if resource.status.state.is_terminal():
+                        self.stop_poll_for_updates_by_resource_id(id_)
                 time.sleep(self._update_poll_interval_seconds)
 
         if start_thread:
@@ -66,6 +60,6 @@ class CloudResourceManager(AbstractResourceManager):
             thread.setDaemon(True)
             thread.start()
 
-    def stop_poll_for_updates_by_root_id(self, root_id: str):
-        if root_id in self._root_ids_updating:
-            self._root_ids_updating.remove(root_id)
+    def stop_poll_for_updates_by_resource_id(self, resource_id: str):
+        if resource_id in self._resource_ids_updating:
+            self._resource_ids_updating.remove(resource_id)

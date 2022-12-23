@@ -396,15 +396,6 @@ class CloudResolver(LocalResolver):
         return sum(map(lambda f: f.state == FutureState.SCHEDULED, self._futures))
 
     @classmethod
-    def activate_resource_for_run(  # type: ignore
-        cls, resource: ExternalResource, run_id: str, root_id: str
-    ) -> ExternalResource:
-        super().activate_resource_for_run(
-            resource=resource, run_id=run_id, root_id=root_id
-        )
-        cls._resource_manager.poll_for_updates_by_root_id(root_id)
-
-    @classmethod
     def _do_resource_activate(cls, resource: ExternalResource) -> ExternalResource:
         resource = api_client.activate_external_resource(resource.id)
         return resource
@@ -418,6 +409,12 @@ class CloudResolver(LocalResolver):
     def _do_resource_update(cls, resource: ExternalResource) -> ExternalResource:
         resource = api_client.get_external_resource(resource.id)
         return resource
+
+    def entering_resource_context(cls, resource: ExternalResource):
+        cls._resource_manager.poll_for_updates_by_resource_id(resource.id)
+
+    def exiting_resource_context(cls, resource: ExternalResource):
+        cls._resource_manager.stop_poll_for_updates_by_resource_id(resource.id)
 
 
 def make_nested_future_storage_key(future_id: str) -> str:
