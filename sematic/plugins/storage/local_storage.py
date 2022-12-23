@@ -44,9 +44,7 @@ class LocalStorage(AbstractStorage, AbstractPlugin):
 
     def get_read_payload(self, namespace: str, key: str) -> ReadPayload:
         try:
-            with open(
-                os.path.join(get_config().data_dir, namespace, key), "rb"
-            ) as file:
+            with open(os.path.join(_get_data_dir(), namespace, key), "rb") as file:
                 content = file.read()
         except FileNotFoundError:
             raise NoSuchStorageKey(self, key)
@@ -61,7 +59,14 @@ def upload_endpoint(user: Optional[User], namespace: str, key: str) -> flask.Res
     # TODO: Breakdown into two different endpoints for artifacts and futures
     payload = flask.request.data
 
-    with open(os.path.join(get_config().data_dir, namespace, key), "wb") as file:
+    os.makedirs(os.path.join(_get_data_dir(), namespace), exist_ok=True)
+
+    with open(os.path.join(_get_data_dir(), namespace, key), "wb") as file:
         file.write(payload)
 
     return flask.jsonify({})
+
+
+# For easier mocking
+def _get_data_dir() -> str:
+    return get_config().data_dir

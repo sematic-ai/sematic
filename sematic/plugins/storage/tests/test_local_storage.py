@@ -21,7 +21,7 @@ def test_upload_download(
 
     with tempfile.TemporaryDirectory() as tempdir:
         with mock.patch(
-            "sematic.config.config_dir.get_config_dir", return_value=tempdir
+            "sematic.plugins.storage.local_storage._get_data_dir", return_value=tempdir
         ):
             response = test_client.put(
                 local_storage.get_write_location("artifacts", "123"), data=value
