@@ -13,7 +13,9 @@ from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import UserSettings, UserSettingsVar, get_user_setting
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.external_resource import ExternalResource as ExternalResourceRecord
+from sematic.db.models.external_resource import (
+    ExternalResource as ExternalResourceRecord,
+)
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
@@ -191,9 +193,7 @@ def schedule_resolution(
     return Resolution.from_json_encodable(response["content"])
 
 
-def save_external_resource(
-    resource: ExternalResource
-) -> ExternalResource:
+def save_external_resource(resource: ExternalResource) -> ExternalResource:
     """Save the external resource to the server, return the result.
 
     Parameters
@@ -205,9 +205,7 @@ def save_external_resource(
     -------
     The resource as saved by the server.
     """
-    record = ExternalResourceRecord.from_resource(
-        resource
-    )
+    record = ExternalResourceRecord.from_resource(resource)
     payload = {"record": record.to_json_encodable()}
     response = _post(f"/external_resources/{resource.id}", json_payload=payload)
     return ExternalResourceRecord.from_json_encodable(response["record"]).resource
