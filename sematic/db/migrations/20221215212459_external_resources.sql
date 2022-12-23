@@ -12,7 +12,7 @@ CREATE TABLE external_resources (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE run_external_resources (
+CREATE TABLE runs_external_resources (
     resource_id character(32) NOT NULL,
     run_id character(32) NOT NULL,
     PRIMARY KEY (resource_id, run_id),
@@ -22,5 +22,5 @@ CREATE TABLE run_external_resources (
 
 -- migrate:down
 
-DROP TABLE run_external_resources;
+DROP TABLE runs_external_resources;
 DROP TABLE external_resources;

@@ -86,7 +86,7 @@ CREATE TABLE external_resources (
     history_serializations JSONB NOT NULL,
     PRIMARY KEY (id)
 );
-CREATE TABLE run_external_resources (
+CREATE TABLE runs_external_resources (
     resource_id character(32) NOT NULL,
     run_id character(32) NOT NULL,
     PRIMARY KEY (resource_id, run_id),

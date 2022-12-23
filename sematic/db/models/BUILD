@@ -110,8 +110,8 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "run_external_resource",
-    srcs = ["run_external_resource.py"],
+    name = "runs_external_resource",
+    srcs = ["runs_external_resource.py"],
     pip_deps = [
         "sqlalchemy",
     ],

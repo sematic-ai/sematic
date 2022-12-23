@@ -21,7 +21,7 @@ from sematic.db.models.external_resource import (
 from sematic.db.models.note import Note
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
-from sematic.db.models.run_external_resource import RunExternalResource
+from sematic.db.models.runs_external_resource import RunExternalResource
 from sematic.db.models.user import User
 from sematic.external_resource import ResourceState
 from sematic.scheduling.external_job import ExternalJob
