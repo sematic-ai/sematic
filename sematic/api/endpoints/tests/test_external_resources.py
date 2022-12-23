@@ -32,39 +32,12 @@ from sematic.external_resource import (
     ResourceStatus,
 )
 
-test_list_external_resource_auth = make_auth_test(
-    "/api/v1/external_resources/ids", method="GET"
-)
 test_get_external_resource_auth = make_auth_test(
     "/api/v1/external_resources/abc123", method="GET"
 )
 test_set_external_resource_auth = make_auth_test(
     "/api/v1/external_resources/abc123", method="POST"
 )
-
-
-def test_list_external_resources_empty(
-    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
-):
-    response = test_client.get("/api/v1/external_resources/ids?root_id=abc123")
-    assert response.status_code == 200
-
-    assert response.json == dict(resource_ids=[])
-
-
-def test_list_external_resource_ids(
-    mock_auth,  # noqa: F811
-    persisted_run,  # noqa: F811
-    persisted_external_resource,  # noqa: F811
-    test_client: flask.testing.FlaskClient,  # noqa: F811
-):
-    save_run_external_resource_link(persisted_external_resource.id, persisted_run.id)
-    response = test_client.get(
-        f"/api/v1/external_resources/ids?root_id={persisted_run.id}"
-    )
-    assert response.status_code == 200
-
-    assert response.json == dict(resource_ids=[persisted_external_resource.id])
 
 
 def test_save_read(
