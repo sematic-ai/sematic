@@ -29,6 +29,7 @@ from sematic.db.models.user import User
 from sematic.db.queries import (
     get_graph,
     get_resolution,
+    get_resource_ids_by_root_id,
     get_run,
     get_run_graph,
     save_graph,
@@ -261,3 +262,22 @@ def cancel_resolution_endpoint(
     )
 
     return flask.jsonify(dict(content=resolution.to_json_encodable()))
+
+
+# Allow getting a list of external resource ids.
+# Q: Why not just return the actual resources?
+# A: Because we should have the endpoint for getting an external resource
+#    hooked up such that it actually interacts with the external compute
+#    to get the most up-to-date status of the records. It would be too much work
+#    for one service call to have to do that for a *list* of resources.
+# Q: Ok, then why not just return the resources without updating them for this?
+# A: Because it would be weird to have the server return stale states when queried
+#    in a list but up-to-date ones when queried one-by-one.
+@sematic_api.route(
+    "/api/v1/resolutions/<resolution_id>/external_resource_ids", methods=["GET"]
+)
+@authenticate
+def get_resources_endpoint(user: Optional[User], resolution_id: str) -> flask.Response:
+    resource_ids = get_resource_ids_by_root_id(resolution_id)
+    payload = dict(resource_ids=resource_ids)
+    return flask.jsonify(payload)

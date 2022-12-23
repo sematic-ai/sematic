@@ -21,7 +21,7 @@ class RunExternalResource(Base, JSONEncodableMixin):
         The id of the run using the resource.
     """
 
-    __tablename__ = "run_external_resources"
+    __tablename__ = "runs_external_resources"
 
     resource_id: str = Column(
         types.String(), ForeignKey("external_resources.id"), primary_key=True
