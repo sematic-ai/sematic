@@ -371,7 +371,9 @@ class ExternalResource:
                     f"Resolver {ctx.private.load_resolver_class()} failed to "
                     f"activate {updated}."
                 )
-            ctx.private.load_resolver_class().entering_resource_context(updated)
+            ctx.private.load_resolver_class().entering_resource_context(
+                resource=updated
+            )
             return updated
         except Exception:
             self.__exit__()  # type: ignore

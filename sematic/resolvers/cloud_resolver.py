@@ -410,9 +410,11 @@ class CloudResolver(LocalResolver):
         resource = api_client.get_external_resource(resource.id)
         return resource
 
+    @classmethod
     def entering_resource_context(cls, resource: ExternalResource):
         cls._resource_manager.poll_for_updates_by_resource_id(resource.id)
 
+    @classmethod
     def exiting_resource_context(cls, resource_id: str):
         cls._resource_manager.stop_poll_for_updates_by_resource_id(resource_id)
 
