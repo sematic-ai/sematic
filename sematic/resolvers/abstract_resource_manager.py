@@ -21,7 +21,7 @@ class AbstractResourceManager(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def save_resource(self, resource: ExternalResource, locally_manage: bool) -> None:
+    def save_resource(self, resource: ExternalResource) -> None:
         pass
 
     @abc.abstractmethod

@@ -52,7 +52,7 @@ sematic_py_lib(
         "//sematic/config:user_settings",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
-        "//sematic/db/models:external_resource_record",
+        "//sematic/db/models:external_resource",
         "//sematic/db/models:factories",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",

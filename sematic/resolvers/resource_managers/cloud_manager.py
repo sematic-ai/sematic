@@ -13,8 +13,8 @@ class CloudResourceManager(AbstractResourceManager):
     def get_resource_for_id(self, resource_id: str) -> ExternalResource:
         return api_client.get_external_resource(resource_id)
 
-    def save_resource(self, resource: ExternalResource, locally_manage: bool) -> None:
-        api_client.save_external_resource(resource, locally_manage)
+    def save_resource(self, resource: ExternalResource) -> None:
+        api_client.save_external_resource(resource)
 
     def link_resource_to_run(self, resource_id: str, run_id: str, root_id: str) -> None:
         api_client.save_resource_run_link(resource_id, run_id)
