@@ -13,14 +13,13 @@ from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.db.models.external_resource import (
     ExternalResource as ExternalResourceRecord,
 )
-from sematic.external_resource import ManagedBy
 from sematic.db.models.user import User
 from sematic.db.queries import (
     get_external_resource_record,
     save_external_resource_record,
     save_run_external_resource_link,
 )
-
+from sematic.external_resource import ManagedBy
 
 logger = logging.getLogger(__name__)
 
@@ -58,9 +57,7 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
             )
 
     if updated_resource is not None:
-        record = ExternalResourceRecord.from_resource(
-            updated_resource
-        )
+        record = ExternalResourceRecord.from_resource(updated_resource)
         save_external_resource_record(record)
 
     payload = dict(record=record.to_json_encodable())

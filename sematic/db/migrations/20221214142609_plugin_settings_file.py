@@ -22,7 +22,7 @@ def up():
     if schema_version != THIS_MIGRATION_SCHEMA_VERSION - 1:
         raise RuntimeError(
             f"Cannot upgrade settings file from version {schema_version} "
-            "to version {THIS_MIGRATION_SCHEMA_VERSION}"
+            f"to version {THIS_MIGRATION_SCHEMA_VERSION}"
         )
 
     new_settings = {
@@ -45,7 +45,8 @@ def up():
     with open(user_settings_file_path, "w") as f:
         f.write(yaml.dump(new_settings, Dumper=yaml.Dumper))
 
-    os.remove(server_settings_file_path)
+    if os.path.isfile(server_settings_file_path):
+        os.remove(server_settings_file_path)
 
 
 def down():
@@ -93,7 +94,7 @@ def _load_settings_yaml(file_name: str) -> Dict[str, Any]:
 
     if os.path.isfile(settings_file_path):
         with open(settings_file_path, "r") as f:
-            return yaml.load(f, yaml.Loader)
+            return yaml.load(f, yaml.Loader) or {}
 
     return {}
 
