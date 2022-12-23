@@ -260,7 +260,7 @@ def test_list_external_resource_ids(
 ):
     save_run_external_resource_link(persisted_external_resource.id, persisted_run.id)
     response = test_client.get(
-        f"/api/v1/external_resources/ids?root_id={persisted_run.id}"
+        f"/api/v1/resolutions/{persisted_run.id}/external_resource_ids"
     )
     assert response.status_code == 200
 
