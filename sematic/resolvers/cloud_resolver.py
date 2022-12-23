@@ -20,7 +20,6 @@ from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.external_resource import ExternalResource
-from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
 from sematic.resolvers.resource_managers.cloud_manager import CloudResourceManager
 from sematic.storage import S3Storage
@@ -81,7 +80,7 @@ class CloudResolver(LocalResolver):
         value of `False`.
     """
 
-    _resource_manager: AbstractResourceManager = CloudResourceManager()
+    _resource_manager: CloudResourceManager = CloudResourceManager()
 
     def __init__(
         self,
@@ -395,6 +394,15 @@ class CloudResolver(LocalResolver):
     def _get_remote_runs_count(self) -> int:
         """Returns the known number of futures in the SCHEDULED state."""
         return sum(map(lambda f: f.state == FutureState.SCHEDULED, self._futures))
+
+    @classmethod
+    def activate_resource_for_run(  # type: ignore
+        cls, resource: ExternalResource, run_id: str, root_id: str
+    ) -> ExternalResource:
+        super().activate_resource_for_run(
+            resource=resource, run_id=run_id, root_id=root_id
+        )
+        cls._resource_manager.poll_for_updates_by_root_id(root_id)
 
     @classmethod
     def _do_resource_activate(cls, resource: ExternalResource) -> ExternalResource:

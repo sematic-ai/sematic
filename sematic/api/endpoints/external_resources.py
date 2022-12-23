@@ -35,7 +35,10 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
         )
 
     updated_resource = None
-    if record.managed_by == ManagedBy.REMOTE:
+    if (
+        record.managed_by == ManagedBy.REMOTE
+        and not record.resource_state.is_terminal()
+    ):
         logger.info(
             "Updating resource '%s', currently in state '%s'",
             record.id,
