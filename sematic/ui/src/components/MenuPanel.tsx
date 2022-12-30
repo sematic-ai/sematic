@@ -8,27 +8,19 @@ import {
   ListItemText,
   useTheme,
 } from "@mui/material";
-import { useMemo } from "react";
+import { useRunsTree, useGraphContext } from "../hooks/graphHooks";
 import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
-import { Run } from "../Models";
+import Loading from "./Loading";
 import RunTree from "./RunTree";
 
-export default function MenuPanel(props: {
-  runsById: Map<string, Run>;
-}) {
-  const { runsById } = props;
-  
+export default function MenuPanel() {
   const { selectedPanelItem, setSelectedPanelItem } = usePipelinePanelsContext();
 
-  const theme = useTheme();
+  const { graph, isLoading } = useGraphContext();
 
-  const runsByParentId = useMemo(() => {
-    let map: Map<string | null, Run[]> = new Map();
-    Array.from(runsById.values()).forEach((run) => {
-      map.set(run.parent_id, [...(map.get(run.parent_id) || []), run]);
-    });
-    return map;
-  }, [runsById]);
+  const runTreeMetaNode = useRunsTree(graph);
+
+  const theme = useTheme();
 
   let panelList = [
     {
@@ -91,10 +83,8 @@ export default function MenuPanel(props: {
           pt: 3,
         }}
       >
-        <RunTree
-          runsByParentId={runsByParentId}
-          parentId={null}
-        />
+        <Loading isLoaded={!isLoading} />
+        {!isLoading && <RunTree runTreeNodes={runTreeMetaNode!.children}/>}
       </Box>
     </Box>
   );
