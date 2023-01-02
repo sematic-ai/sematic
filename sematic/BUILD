@@ -59,6 +59,7 @@ sematic_py_lib(
     name = "future_context",
     srcs = ["future_context.py"],
     deps = [
+        "//sematic:abstract_future",
         "//sematic/utils:exceptions",
     ],
 )
@@ -122,12 +123,14 @@ sematic_py_lib(
         ":abstract_calculator",
         ":future",
         ":retry_settings",
+        "//sematic:future_context",
         "//sematic/resolvers:resource_requirements",
         "//sematic/resolvers:type_utils",
         "//sematic/types:casting",
         "//sematic/types:init",
         "//sematic/types:registry",
         "//sematic/types:type",
+        "//sematic/utils:algorithms",
         "//sematic/utils:memoized_property",
     ],
 )
@@ -194,7 +197,7 @@ sematic_py_lib(
         "//sematic/db/models:run",
         "//sematic/resolvers:type_utils",
         "//sematic/utils:memoized_property",
-        "//sematic/utils:sorting",
+        "//sematic/utils:algorithms",
     ],
 )
 
