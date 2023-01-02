@@ -50,7 +50,7 @@ contourpy==1.0.5
     # via matplotlib
 coverage @ git+https://github.com/ulfjack/coveragepy.git@lcov-support
     # via -r requirements/requirements.in
-cryptography==36.0.2
+cryptography==38.0.4
     # via
     #   pyopenssl
     #   snowflake-connector-python
@@ -210,7 +210,7 @@ pygments==2.13.0
     # via ipython
 pyjwt==2.5.0
     # via snowflake-connector-python
-pyopenssl==22.0.0
+pyopenssl==22.1.0
     # via
     #   -r requirements/requirements.in
     #   snowflake-connector-python
@@ -279,7 +279,7 @@ six==1.16.0
     #   python-dateutil
 smmap==5.0.0
     # via gitdb
-snowflake-connector-python==2.7.12
+snowflake-connector-python==2.9.0
     # via -r requirements/requirements.in
 sqlalchemy==1.4.36
     # via -r requirements/requirements.in
