@@ -268,34 +268,78 @@ def pipeline() -> float:
     return add(float_future, 1)
 ```
 
-### Unreturned futures
+### Unused futures
 
 If a future is not passed as input to a Sematic Function or returned as output
 of a parent future, it will not be resolved.
 
-For example, in the following case:
+For example, consider the following case:
 
 ```python
 @sematic.func
-def pipeline() -> str:
+def pipeline1() -> str:
     future = some_sematic_func()
     return "foo"
 ```
 
-`some_sematic_func` will never be executed. That is because at the current time,
+In `pipeline1`, `some_sematic_func` will never be executed. That is because
 Sematic builds the execution graph by looking for futures that are returned by,
-or passed as input arguments to other Sematic Functions.
+or passed as input arguments to other Sematic Functions. Ultimately, the final
+returned value from a func must depend on every future created in that func.
 
-Here is a workaround, assuming `some_sematic_func` returns a `str`:
+For the case in `pipeline1`, here's a simple workaround. It assumes
+`some_sematic_func` returns a `str`:
 
 ```python
 @sematic.func
-def pipeline() -> List[str]:
+def pipeline1() -> Tuple[str, str]:
     future = some_sematic_func()
     return [future, "foo"]
 ```
 
-This issue is tracked in [Github Issue #56](https://github.com/sematic-ai/sematic/issues/56).
+In other words, make the final output of `pipeline1` depend on the result of
+`some_sematic_func` directly.
+
+Now, let's look at another example:
+
+```python
+@sematic.func
+def pipeline2() -> str:
+    write_to_db_func()
+    return read_from_db_func()
+```
+
+Here, `write_to_db_func` will not be called because the output of `pipeline2`
+doesn't depend on it in any (explicit) way. You could try the workaround above:
+
+```python
+# A not-so-great workaround: write is not guaranteed to happen first.
+@sematic.func
+def pipeline2() -> Tuple[str, str]:
+    future = write_to_db_func()
+    return (future, read_from_db_func())
+```
+
+However, this does not guarantee that the database "write" happens before the
+database "read." Sematic has no way to know that one depends on the other, so
+it may try to parallelize them. If you want to ensure that the "write" completes
+before the "read" begins, you will need to do something like this:
+
+```python
+@sematic.func
+def pipeline2() -> str:
+    name_of_table_written_to = write_to_db_func()
+    return read_from_db_func(name_of_table_written_to)
+```
+
+This is much better: not only does Sematic know that the read depends on the
+write, but you have made it explicit in your code that the read is depending
+on some database table that is modified by the write. Note that it is not
+necessary for `read_from_db_func` to actually *use* the table name inside its
+definition, so a dummy value could have been used as well. However, using a
+value that signals the reason the downstream func has a dependency on the upstream
+one is a best practice. In general, this also aligns with Sematic's philosophy
+that data contracts should always be explicit rather than implicit.
 
 ## Unsupported behaviors
 
