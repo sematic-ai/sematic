@@ -1,4 +1,10 @@
 sematic_py_lib(
+    name = "algorithms",
+    srcs = ["algorithms.py"],
+    deps = [],
+)
+
+sematic_py_lib(
     name = "exceptions",
     srcs = ["exceptions.py"],
     deps = [
@@ -33,12 +39,6 @@ sematic_py_lib(
     deps = [
         "//sematic/db/models:git_info",
     ],
-)
-
-sematic_py_lib(
-    name = "sorting",
-    srcs = ["sorting.py"],
-    deps = [],
 )
 
 sematic_py_lib(
