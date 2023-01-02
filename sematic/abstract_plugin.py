@@ -26,10 +26,6 @@ class PluginScope(enum.Enum):
     This enum is expected to be updated as more plug-in scopes are supported.
     """
 
-    # Core plug-in scope. Will only ever have a single plug-in.
-    # This is useful to keep core settings symmetrical with plug-in settings
-    SEMATIC = "SEMATIC"
-
     # Storage plug-in scope for artifact data, future pickles, etc.
     STORAGE = "STORAGE"
 
@@ -43,6 +39,9 @@ class AbstractPluginSettingsVar(enum.Enum):
     """
 
     pass
+
+
+PluginVersion = Tuple[int, int, int]
 
 
 class AbstractPlugin(abc.ABC):
@@ -65,7 +64,7 @@ class AbstractPlugin(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def get_version() -> Tuple[int, int, int]:
+    def get_version() -> PluginVersion:
         """
         Plug-in version: MAJOR.MINOR.PATCH
 
@@ -76,7 +75,6 @@ class AbstractPlugin(abc.ABC):
         pass
 
     @classmethod
-    @abc.abstractmethod
     def get_settings_vars(cls) -> Type[AbstractPluginSettingsVar]:
         """
         Returns the Settings var enum for this plug-in.
@@ -84,7 +82,7 @@ class AbstractPlugin(abc.ABC):
         The class must inherit from `AbstractPluginSettingsVar` and list all
         available settings for this plug-in.
         """
-        pass
+        return AbstractPluginSettingsVar
 
     @final
     @classmethod
