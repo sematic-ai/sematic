@@ -213,7 +213,7 @@ def save_external_resource(resource: ExternalResource) -> ExternalResource:
     ).resource
 
 
-def get_external_resource(resource_id: str) -> ExternalResource:
+def get_external_resource(resource_id: str, refresh_remote: bool) -> ExternalResource:
     """Get the external resource, updating the status if required.
 
     Will actively interact with the external resource if necessary to get its status.
@@ -222,12 +222,18 @@ def get_external_resource(resource_id: str) -> ExternalResource:
     ----------
     resource_id:
         The id of the resource to retrieve.
+    refresh_remote:
+        If true: refresh the state of the resource with the remote objects it represents.
+        Locally managed objects will NOT have their state refreshed. If False, the
+        external resource will be returned directly from the DB.
 
     Returns
     -------
     The latest update of the external resource.
     """
-    response = _get(f"/external_resources/{resource_id}")
+    response = _get(
+        f"/external_resources/{resource_id}?refresh_remote={str(refresh_remote).lower()}"
+    )
     return ExternalResourceRecord.from_json_encodable(
         response["external_resource"]
     ).resource

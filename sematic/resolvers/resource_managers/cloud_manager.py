@@ -11,7 +11,7 @@ class CloudResourceManager(AbstractResourceManager):
     """ResourceManager which uses server APIs to manage external resource metadata"""
 
     def get_resource_for_id(self, resource_id: str) -> ExternalResource:
-        return api_client.get_external_resource(resource_id)
+        return api_client.get_external_resource(resource_id, refresh_remote=True)
 
     def save_resource(self, resource: ExternalResource) -> None:
         api_client.save_external_resource(resource)
