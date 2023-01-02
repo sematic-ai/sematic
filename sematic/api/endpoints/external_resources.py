@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 @sematic_api.route("/api/v1/external_resources/<resource_id>", methods=["GET"])
 @authenticate
 def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Response:
+    refresh_remote = flask.request.args.get("refresh_remote", "false").lower() == "true"
 
     record = get_external_resource_record(resource_id=resource_id)
     if record is None:
@@ -34,7 +35,7 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
         )
 
     updated_resource = None
-    if record.managed_by == ManagedBy.REMOTE:
+    if record.managed_by == ManagedBy.REMOTE and refresh_remote:
         logger.info(
             "Updating resource '%s', currently in state '%s'",
             record.id,

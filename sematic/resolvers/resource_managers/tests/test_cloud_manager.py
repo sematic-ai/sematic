@@ -27,7 +27,7 @@ def test_resources_by_root_id(mock_api_client):
         assert run_id == expected_root_id
         return resources_by_id.values()
 
-    def mock_get_external_resource(resource_id):
+    def mock_get_external_resource(resource_id, refresh_remote):
         return resources_by_id[resource_id]
 
     mock_api_client.get_resources_by_root_run_id = mock_get_resources_by_root
