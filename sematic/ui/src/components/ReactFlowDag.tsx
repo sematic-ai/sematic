@@ -1,4 +1,4 @@
-import { Run, Edge, Artifact } from "../Models";
+import { Run, Edge } from "../Models";
 import ReactFlow, {
   Node,
   Edge as RFEdge,
@@ -15,6 +15,7 @@ import buildDagLayout from "./utils/buildDagLayout";
 import RunNode from "./RunNode";
 import ArtifactNode from "./ArtifactNode";
 import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
+import { useGraphContext } from "../hooks/graphHooks";
 
 var util = require("dagre/lib/util");
 var graphlib = require("graphlib");
@@ -39,19 +40,15 @@ util.asNonCompoundGraph = function asNonCompoundGraph(g: any) {
   return simplified;
 };
 
-interface ReactFlowDagProps {
-  runs: Run[];
-  edges: Edge[];
-  artifactsById: Map<string, Artifact>;
-}
-
 const nodeTypes = {
   runNode: RunNode,
   artifactNode: ArtifactNode,
 };
 
-function ReactFlowDag(props: ReactFlowDagProps) {
-  const { runs, edges, artifactsById } = props;
+function ReactFlowDag() {
+  const { graph } = useGraphContext();
+
+  const { runs, edges } = graph!;
 
   const { selectedRun, setSelectedPanelItem, setSelectedRun } = usePipelinePanelsContext();
 
@@ -69,22 +66,8 @@ function ReactFlowDag(props: ReactFlowDagProps) {
     [edges]
   );
 
-  const [rfNodes, setRFNodes, onNodesChange] = useNodesState([]);
-  const [rfEdges, setRFEdges, onEdgesChange] = useEdgesState([]);
-
-  const getEdgeLabel = useCallback(
-    (edge: Edge) => {
-      if (edge.artifact_id !== null) {
-        let artifact = artifactsById.get(edge.artifact_id);
-        if (artifact !== undefined) {
-          let typeKey = artifact.type_serialization.type[1];
-          return edge.destination_name + ": " + typeKey;
-        }
-      }
-      return edge.destination_name;
-    },
-    [artifactsById]
-  );
+  const [rfNodes, setRFNodes] = useNodesState([]);
+  const [rfEdges, setRFEdges] = useEdgesState([]);
 
   const getNodesEdges = useCallback(() => {
     let node_data: Node[] = [];
@@ -187,13 +170,13 @@ function ReactFlowDag(props: ReactFlowDagProps) {
       }*/
     });
     return { nodes: node_data, edges: edge_data };
-  }, [runs, edges, getEdgeLabel, runsById]);
+  }, [runs, edges, runsById, edgesById, selectedRun.id]);
 
   useEffect(() => {
     let nodesEdges = getNodesEdges();
     setRFNodes(nodesEdges.nodes);
     setRFEdges(nodesEdges.edges);
-  }, [runs]);
+  }, [runs, getNodesEdges, setRFNodes, setRFEdges]);
 
   const onInit = useCallback(
     (instance: ReactFlowInstance) => {
@@ -205,7 +188,7 @@ function ReactFlowDag(props: ReactFlowDagProps) {
       setRFNodes(orderedNodes);
       setRFEdges(instance.getEdges());
     },
-    [getNodesEdges, setRFNodes, setRFEdges]
+    [setRFNodes, setRFEdges]
   );
 
   const onNodeClick = useCallback(
@@ -215,7 +198,7 @@ function ReactFlowDag(props: ReactFlowDagProps) {
         onSelectRun(selectedRun);
       }
     },
-    [runsById]
+    [runsById, onSelectRun]
   );
 
   return (
@@ -254,7 +237,7 @@ function ReactFlowDag(props: ReactFlowDagProps) {
   );
 }
 
-export function FlowWithProvider(props: ReactFlowDagProps) {
+export function FlowWithProvider(props: any) {
   return (
     <ReactFlowProvider>
       <ReactFlowDag {...props} />
