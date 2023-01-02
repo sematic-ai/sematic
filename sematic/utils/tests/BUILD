@@ -1,4 +1,12 @@
 pytest_test(
+    name = "test_algorithms",
+    srcs = ["test_algorithms.py"],
+    deps = [
+        "//sematic/utils:algorithms",
+    ],
+)
+
+pytest_test(
     name = "test_git",
     srcs = ["test_git.py"],
     deps = [
@@ -19,14 +27,6 @@ pytest_test(
     srcs = ["test_stdout.py"],
     deps = [
         "//sematic/utils:stdout",
-    ],
-)
-
-pytest_test(
-    name = "test_sorting",
-    srcs = ["test_sorting.py"],
-    deps = [
-        "//sematic/utils:sorting",
     ],
 )
 
