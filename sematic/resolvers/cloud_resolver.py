@@ -407,7 +407,7 @@ class CloudResolver(LocalResolver):
 
     @classmethod
     def _do_resource_update(cls, resource: ExternalResource) -> ExternalResource:
-        resource = api_client.get_external_resource(resource.id)
+        resource = api_client.get_external_resource(resource.id, refresh_remote=True)
         return resource
 
     @classmethod
