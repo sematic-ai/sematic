@@ -1,10 +1,11 @@
 # Standard Library
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from importlib import import_module
-from typing import Any, Optional, Type
+from typing import Any, List, Optional, Type
 
 # Sematic
+from sematic.abstract_future import AbstractFuture
 from sematic.utils.exceptions import NotInSematicFuncError
 
 FUTURE_ALGEBRA_DOC_LINK = "https://docs.sematic.dev/diving-deeper/future-algebra"
@@ -28,9 +29,12 @@ class PrivateContext:
     ----------
     resolver_class_path:
         The import path for the resolver being used.
+    created_futures:
+        Futures created while the context was active.
     """
 
     resolver_class_path: str
+    created_futures: List[AbstractFuture] = field(default_factory=list)
 
     def load_resolver_class(self) -> Type[Resolver]:
         module_name, resolver_name = self.resolver_class_path.rsplit(".", maxsplit=1)
