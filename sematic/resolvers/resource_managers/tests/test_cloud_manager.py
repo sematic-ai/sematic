@@ -23,14 +23,14 @@ def test_resources_by_root_id(mock_api_client):
         "c": TimedMessage(message="c"),
     }
 
-    def mock_get_ids(run_id):
+    def mock_get_resources_by_root(run_id):
         assert run_id == expected_root_id
-        return resources_by_id.keys()
+        return resources_by_id.values()
 
-    def mock_get_external_resource(resource_id):
+    def mock_get_external_resource(resource_id, refresh_remote):
         return resources_by_id[resource_id]
 
-    mock_api_client.get_resource_ids_by_root_run_id = mock_get_ids
+    mock_api_client.get_resources_by_root_run_id = mock_get_resources_by_root
     mock_api_client.get_external_resource = mock_get_external_resource
 
     resources = CloudResourceManager().resources_by_root_id(expected_root_id)

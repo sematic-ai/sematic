@@ -206,12 +206,14 @@ def save_external_resource(resource: ExternalResource) -> ExternalResource:
     The resource as saved by the server.
     """
     record = ExternalResourceRecord.from_resource(resource)
-    payload = {"record": record.to_json_encodable()}
-    response = _post(f"/external_resources/{resource.id}", json_payload=payload)
-    return ExternalResourceRecord.from_json_encodable(response["record"]).resource
+    payload = {"external_resource": record.to_json_encodable()}
+    response = _post("/external_resources", json_payload=payload)
+    return ExternalResourceRecord.from_json_encodable(
+        response["external_resource"]
+    ).resource
 
 
-def get_external_resource(resource_id: str) -> ExternalResource:
+def get_external_resource(resource_id: str, refresh_remote: bool) -> ExternalResource:
     """Get the external resource, updating the status if required.
 
     Will actively interact with the external resource if necessary to get its status.
@@ -220,13 +222,21 @@ def get_external_resource(resource_id: str) -> ExternalResource:
     ----------
     resource_id:
         The id of the resource to retrieve.
+    refresh_remote:
+        If true: refresh the state of the resource with the remote objects it represents.
+        Locally managed objects will NOT have their state refreshed. If False, the
+        external resource will be returned directly from the DB.
 
     Returns
     -------
     The latest update of the external resource.
     """
-    response = _get(f"/external_resources/{resource_id}")
-    return ExternalResourceRecord.from_json_encodable(response["record"]).resource
+    response = _get(
+        f"/external_resources/{resource_id}?refresh_remote={str(refresh_remote).lower()}"
+    )
+    return ExternalResourceRecord.from_json_encodable(
+        response["external_resource"]
+    ).resource
 
 
 def activate_external_resource(resource_id: str) -> ExternalResource:
@@ -261,21 +271,24 @@ def deactivate_external_resource(resource_id: str) -> ExternalResource:
     return ExternalResourceRecord.from_json_encodable(response["record"]).resource
 
 
-def save_resource_run_link(resource_id: str, run_id: str) -> None:
+def save_resource_run_links(resource_ids: List[str], run_id: str) -> None:
     """Save that the run with the given id is using the resource with the given id.
 
     Parameters
     ----------
-    resource_id:
-        The id of the resource to record a link for.
+    resource_ids:
+        The ids of the resources to record a link for.
     run_id:
         The id of the run to record a link for.
     """
-    _post(f"/external_resources/{resource_id}/linked_run/{run_id}", json_payload={})
+    _post(
+        f"/runs/{run_id}/external_resources",
+        json_payload={"external_resource_ids": resource_ids},
+    )
 
 
-def get_resource_ids_by_root_run_id(root_run_id: str) -> List[str]:
-    """Get a list of ids of external resources associated with the given root run.
+def get_resources_by_root_run_id(root_run_id: str) -> List[ExternalResource]:
+    """Get a list of external resources associated with the given root run.
 
     Parameters
     ----------
@@ -286,8 +299,11 @@ def get_resource_ids_by_root_run_id(root_run_id: str) -> List[str]:
     -------
     A list of external resources used by runs underneath the specified root run.
     """
-    response = _get(f"/resolutions/{root_run_id}/external_resource_ids")
-    return response["resource_ids"]
+    response = _get(f"/resolutions/{root_run_id}/external_resources")
+    return [
+        ExternalResourceRecord.from_json_encodable(resource).resource
+        for resource in response["external_resources"]
+    ]
 
 
 @retry(tries=3, delay=10, jitter=1)

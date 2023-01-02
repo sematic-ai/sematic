@@ -21,21 +21,16 @@ class CloudResourceManager(AbstractResourceManager):
         self._resource_ids_updating: Set[str] = set()
 
     def get_resource_for_id(self, resource_id: str) -> ExternalResource:
-        return api_client.get_external_resource(resource_id)
+        return api_client.get_external_resource(resource_id, refresh_remote=True)
 
     def save_resource(self, resource: ExternalResource) -> None:
         api_client.save_external_resource(resource)
 
     def link_resource_to_run(self, resource_id: str, run_id: str, root_id: str) -> None:
-        api_client.save_resource_run_link(resource_id, run_id)
+        api_client.save_resource_run_links([resource_id], run_id)
 
     def resources_by_root_id(self, root_id: str) -> List[ExternalResource]:
-        ids = api_client.get_resource_ids_by_root_run_id(root_id)
-        resources = []
-        for resource_id in ids:
-            resource = api_client.get_external_resource(resource_id)
-            resources.append(resource)
-        return resources
+        return api_client.get_resources_by_root_run_id(root_id)
 
     def poll_for_updates_by_resource_id(self, resource_id: str):
         """Poll the server for resource state updates on a regular interval.
