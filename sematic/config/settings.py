@@ -119,6 +119,8 @@ def get_active_settings() -> ProfileSettings:
 
         profile_settings = settings.profiles[_DEFAULT_PROFILE]
 
+        _apply_scopes_overrides(profile_settings.scopes)
+
         for plugin_path, plugin_settings in profile_settings.settings.items():
             plugin_settings_vars = _get_plugin_settings_vars(plugin_path)
             _apply_env_var_overrides(plugin_settings, plugin_settings_vars)
@@ -422,6 +424,14 @@ def _apply_env_var_overrides(
             logger.debug("Overriding %s from environment variable", key)
 
             settings[var] = new_value
+
+
+def _apply_scopes_overrides(plugin_scopes: PluginScopes):
+    for scope in PluginScope:
+        if scope.value in os.environ:
+            logger.debug("Overriding scope %s from environment variables", scope.value)
+
+            plugin_scopes[scope] = os.environ[scope.value].split(",")
 
 
 def dump_settings(settings: ProfileSettings) -> str:

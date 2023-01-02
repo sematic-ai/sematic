@@ -76,9 +76,19 @@ sematic_py_lib(
     pip_deps = [
         "flask",
     ],
+    # buildifier: leave-alone
     deps = [
+        ":auth",
+        ":request_parameters",
+        "//sematic:abstract_plugin",
         "//sematic/api:app",
+        "//sematic/config:settings",
+        "//sematic/db:db",
         "//sematic/db:queries",
+        "//sematic/db/models:artifact",
+        "//sematic/db/models:user",
+        "//sematic/plugins:abstract_storage",
+        "//sematic/plugins/storage:local_storage",
     ],
 )
 
