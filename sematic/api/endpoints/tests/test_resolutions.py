@@ -49,7 +49,7 @@ test_rerun_resolution_auth = make_auth_test(
     "/api/v1/resolutions/123/rerun", method="POST"
 )
 test_list_external_resource_auth = make_auth_test(
-    "/api/v1/resolutions/123/external_resource_ids", method="GET"
+    "/api/v1/resolutions/123/external_resources", method="GET"
 )
 
 
@@ -246,10 +246,10 @@ def test_rerun_resolution_endpoint(
 def test_list_external_resources_empty(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
-    response = test_client.get("/api/v1/resolutions/abc123/external_resource_ids")
+    response = test_client.get("/api/v1/resolutions/abc123/external_resources")
     assert response.status_code == 200
 
-    assert response.json == dict(resource_ids=[])
+    assert response.json == dict(external_resources=[])
 
 
 def test_list_external_resource_ids(
@@ -260,8 +260,12 @@ def test_list_external_resource_ids(
 ):
     save_run_external_resource_link(persisted_external_resource.id, persisted_run.id)
     response = test_client.get(
-        f"/api/v1/resolutions/{persisted_run.id}/external_resource_ids"
+        f"/api/v1/resolutions/{persisted_run.id}/external_resources"
     )
     assert response.status_code == 200
 
-    assert response.json == dict(resource_ids=[persisted_external_resource.id])
+    result_ids = [
+        resource["id"]
+        for resource in response.json["external_resources"]  # type: ignore
+    ]
+    assert result_ids == [persisted_external_resource.id]
