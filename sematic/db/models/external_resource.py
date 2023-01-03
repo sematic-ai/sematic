@@ -9,8 +9,11 @@ from sqlalchemy.orm import validates
 # Sematic
 from sematic.db.models.base import Base
 from sematic.db.models.json_encodable_mixin import JSONEncodableMixin
-from sematic.external_resource import ExternalResource as ExternalResourceDataclass
-from sematic.external_resource import ManagedBy, ResourceState
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
+    ManagedBy,
+    ResourceState,
+)
 from sematic.types.serialization import (
     type_from_json_encodable,
     type_to_json_encodable,
@@ -23,10 +26,7 @@ TypeSerialization = Dict[str, Any]
 
 
 class ExternalResource(Base, JSONEncodableMixin):
-    """A DB record for an ExternalResource (dataclass) and its history.
-
-    For the remainder of this docstring, ExternalResource will correspond
-    to the non-orm representation (aka the dataclass representation).
+    """A DB record for an AbstractExternalResource (dataclass) and its history.
 
     Attributes
     ----------
@@ -40,31 +40,41 @@ class ExternalResource(Base, JSONEncodableMixin):
     status_message:
         The most recent status message for the resource
     last_updated_epoch_seconds:
-        The time that the resource was last updated, expressed as epoch seconds
+        The time that the resource was last updated against the resource objects
+        it represnets, expressed as epoch seconds. Ex: the last time Spark was
+        queried for whether the cluster was alive. This differs from updated_at
+        in that it relates to the updates against the external resources, while
+        updated_at relates to updates of the DB record. It is in epoch seconds
+        rather than as a datetime object because it will primarily be used in
+        arithmetic operations with time (ex: comparing which value is more recent,
+        amount of elapsed time since last update) rather than for human-readability
+        of absolute time.
     type_serialization:
         The Sematic serialization of the type. This may be different from the
-        serialization for ExternalResource itself, since the resource will be a
-        subclass of ExternalResource.
+        serialization for AbstractExternalResource itself, since the resource will
+        be a subclass of AbstractExternalResource.
     value_serialization:
         The Sematic serialization of the object. This will contain extra fields
-        unique to the subclasses of ExternalResource. It also does contain
+        unique to the subclasses of AbstractExternalResource. It also does contain
         json variants of some of the status fields above, but the duplicated values
         should match.
     history_serializations:
-        The Sematic serialization of the objects. Any time the ExternalResource object
-        changes in such a way as to make the instances compare as not equal, a new
-        entry will be added to this list. Element 0 is the most recent, element N
+        The Sematic serialization of the objects. Any time the AbstractExternalResource
+        object changes in such a way as to make the instances compare as not equal, a
+        new entry will be added to this list. Element 0 is the most recent, element N
         the oldest.
     created_at:
         The time this record was created.
     updated_at:
-        The time this record was last updated
+        The time this record was last updated in the DB. See documentation in
+        last_updated_epoch_seconds for how this relates to that field.
     """
 
     # Q: Why duplicate data that's already in the json of value_serialization as columns?
     # A: For two reasons:
-    #    1. It gives us freedom to refactor the dataclass for ExternalResource later
-    #    to move fields around, while allowing the database columns to stay stable.
+    #    1. It gives us freedom to refactor the dataclass for AbstractExternalResource
+    #    later to move fields around, while allowing the database columns to stay
+    #    stable.
     #    2. It allows for more efficient queries on the explicit columns rather than
     #    requiring json traversal.
 
@@ -117,8 +127,8 @@ class ExternalResource(Base, JSONEncodableMixin):
         raise ValueError(f"Cannot make a ManagedBy from {managed_by}")
 
     @classmethod
-    def from_resource(cls, resource: ExternalResourceDataclass) -> "ExternalResource":
-        if not isinstance(resource, ExternalResourceDataclass):
+    def from_resource(cls, resource: AbstractExternalResource) -> "ExternalResource":
+        if not isinstance(resource, AbstractExternalResource):
             raise ValueError(
                 f"resource must be an instance of a subclass of "
                 f"ExternalResource. Was: {resource} of type "
@@ -137,10 +147,10 @@ class ExternalResource(Base, JSONEncodableMixin):
             history_serializations=(value_serialization,),
         )
 
-    def get_resource_type(self) -> Type[ExternalResourceDataclass]:
+    def get_resource_type(self) -> Type[AbstractExternalResource]:
         try:
             return type_from_json_encodable(self.type_serialization)
-        except Exception:
+        except ImportError:
             type_name = self.type_serialization["type"][1]
             import_path = self.type_serialization["type"][2]["import_path"]
 
@@ -149,8 +159,8 @@ class ExternalResource(Base, JSONEncodableMixin):
             # to a missing plugin for that external resource type.
             raise MissingPluginError(f"{import_path}.{type_name}")
 
-    def set_resource_type(self, type_: Type[ExternalResourceDataclass]) -> None:
-        if not issubclass(type_, ExternalResourceDataclass):
+    def set_resource_type(self, type_: Type[AbstractExternalResource]) -> None:
+        if not issubclass(type_, AbstractExternalResource):
             raise ValueError(
                 f"type_ must be a subclass of ExternalResource. Was: {type_}"
             )
@@ -158,11 +168,11 @@ class ExternalResource(Base, JSONEncodableMixin):
 
     resource_type = property(get_resource_type, set_resource_type)
 
-    def get_resource(self) -> ExternalResourceDataclass:
+    def get_resource(self) -> AbstractExternalResource:
         return value_from_json_encodable(self.value_serialization, self.resource_type)
 
-    def set_resource(self, resource: ExternalResourceDataclass) -> None:
-        if not isinstance(resource, ExternalResourceDataclass):
+    def set_resource(self, resource: AbstractExternalResource) -> None:
+        if not isinstance(resource, AbstractExternalResource):
             raise ValueError(
                 f"resource must be a subclass of ExternalResource. Was: {type(resource)}"
             )
@@ -185,7 +195,7 @@ class ExternalResource(Base, JSONEncodableMixin):
     resource = property(get_resource, set_resource)
 
     @property
-    def history(self) -> Tuple[ExternalResourceDataclass, ...]:
+    def history(self) -> Tuple[AbstractExternalResource, ...]:
         type_ = self.resource_type
         return tuple(
             value_from_json_encodable(r, type_) for r in self.history_serializations

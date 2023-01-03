@@ -26,8 +26,8 @@ sematic_py_lib(
         "//sematic/db/models:run",
         "//sematic/db/models:runs_external_resource",
         "//sematic/db/models:user",
+        "//sematic/plugins:abstract_external_resource",
         "//sematic/scheduling:external_job",
-        "//sematic:external_resource",
     ],
 )
 

@@ -8,7 +8,7 @@ sematic_py_lib(
         ":container_images",
         ":resolver",
         ":retry_settings",
-        "//sematic/external_resource_plugins:timed_message",
+        "//sematic/plugins/external_resource:timed_message",
         "//sematic:future_context",
         "//sematic/future_operators:init",
         "//sematic/resolvers:cloud_resolver",
@@ -44,7 +44,6 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         "//sematic:abstract_future",
-        "//sematic:external_resource",
         "//sematic:storage",
         "//sematic:versions",
         "//sematic/config:config",
@@ -56,6 +55,7 @@ sematic_py_lib(
         "//sematic/db/models:factories",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+        "//sematic/plugins:abstract_external_resource",
         "//sematic/utils:retry",
     ],
 )
@@ -108,16 +108,6 @@ sematic_py_lib(
         ":abstract_calculator",
         ":retry_settings",
         "//sematic/resolvers:resource_requirements",
-    ],
-)
-
-sematic_py_lib(
-    name = "external_resource",
-    srcs = ["external_resource.py"],
-    deps = [
-        "//sematic:abstract_future",
-        "//sematic:future_context",
-        "//sematic/utils:exceptions",
     ],
 )
 

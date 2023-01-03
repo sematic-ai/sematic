@@ -12,7 +12,10 @@ from contextlib import contextmanager
 # Sematic
 from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.external_resource import ExternalResource, ResourceState
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
+    ResourceState,
+)
 from sematic.resolver import Resolver
 from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 from sematic.utils.exceptions import (
@@ -418,27 +421,33 @@ class StateMachineResolver(Resolver, abc.ABC):
         raise NotImplementedError("Child classes must implement _get_resource_manager")
 
     @classmethod
-    def _do_resource_activate(cls, resource: ExternalResource) -> ExternalResource:
+    def _do_resource_activate(
+        cls, resource: AbstractExternalResource
+    ) -> AbstractExternalResource:
         raise NotImplementedError("Child classes must implement _do_resource_activate")
 
     @classmethod
-    def _do_resource_deactivate(cls, resource: ExternalResource) -> ExternalResource:
+    def _do_resource_deactivate(
+        cls, resource: AbstractExternalResource
+    ) -> AbstractExternalResource:
         raise NotImplementedError(
             "Child classes must implement _do_resource_deactivate"
         )
 
     @classmethod
-    def _do_resource_update(cls, resource: ExternalResource) -> ExternalResource:
+    def _do_resource_update(
+        cls, resource: AbstractExternalResource
+    ) -> AbstractExternalResource:
         raise NotImplementedError("Child classes must implement _do_resource_update")
 
     @classmethod
-    def _save_resource(cls, resource: ExternalResource):
+    def _save_resource(cls, resource: AbstractExternalResource):
         raise NotImplementedError("Child classes must implement _save_resource")
 
     @classmethod
     def activate_resource_for_run(  # type: ignore
-        cls, resource: ExternalResource, run_id: str, root_id: str
-    ) -> ExternalResource:
+        cls, resource: AbstractExternalResource, run_id: str, root_id: str
+    ) -> AbstractExternalResource:
         cls._save_resource(resource)
         cls._get_resource_manager().link_resource_to_run(resource.id, run_id, root_id)
         time_started = time.time()
@@ -471,7 +480,9 @@ class StateMachineResolver(Resolver, abc.ABC):
         return resource
 
     @classmethod
-    def deactivate_resource(cls, resource_id: str) -> ExternalResource:  # type: ignore
+    def deactivate_resource(  # type: ignore
+        cls, resource_id: str
+    ) -> AbstractExternalResource:
         resource = cls._get_resource_manager().get_resource_for_id(resource_id)
         if resource.status.state.is_terminal():
             return resource
