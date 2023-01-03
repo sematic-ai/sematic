@@ -24,9 +24,7 @@ from sematic.db.queries import (
 def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Response:
     record = get_external_resource_record(resource_id=resource_id)
     if record is None:
-        return jsonify_error(
-            "No such resource: {}".format(resource_id), HTTPStatus.NOT_FOUND
-        )
+        return jsonify_error(f"No such resource: {resource_id}", HTTPStatus.NOT_FOUND)
 
     payload = dict(external_resource=record.to_json_encodable())
 

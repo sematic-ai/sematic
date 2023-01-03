@@ -22,7 +22,7 @@ from sematic.db.queries import (
     get_run,
     save_resolution,
     save_run,
-    save_run_external_resource_link,
+    save_run_external_resource_links,
 )
 from sematic.db.tests.fixtures import (  # noqa: F401
     make_resolution,
@@ -258,7 +258,7 @@ def test_list_external_resource_ids(
     persisted_external_resource,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
-    save_run_external_resource_link(persisted_external_resource.id, persisted_run.id)
+    save_run_external_resource_links([persisted_external_resource.id], persisted_run.id)
     response = test_client.get(
         f"/api/v1/resolutions/{persisted_run.id}/external_resources"
     )
