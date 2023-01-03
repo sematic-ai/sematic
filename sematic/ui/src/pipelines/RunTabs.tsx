@@ -6,13 +6,13 @@ import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import { styled } from '@mui/system';
 import { useContext, useState } from "react";
-import { EnvContext } from "../";
+import { EnvContext } from "..";
 import GrafanaPanel from "../addons/grafana/GrafanaPanel";
 import { Artifact, Run } from "../Models";
 import { ArtifactList } from "./Artifacts";
-import Docstring from "./Docstring";
+import Docstring from "../components/Docstring";
 import LogPanel from "./LogPanel";
-import SourceCode from "./SourceCode";
+import SourceCode from "../components/SourceCode";
 
 const ExpandedTabPanel = styled(TabPanel)<{hidden: boolean}>( 
   ({hidden}) => hidden ? {} : {
