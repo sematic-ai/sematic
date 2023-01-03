@@ -51,7 +51,7 @@ sematic_py_lib(
 
             # Included so there is always an ExternalResource implementation
             # the server can use for demonstrating the feature/API.
-            "//sematic/external_resource_plugins:timed_message",
+            "//sematic/plugins/external_resource:timed_message",
     ],
 )
 

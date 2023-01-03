@@ -57,7 +57,7 @@ sematic_py_lib(
     deps = [
         ":base",
         ":json_encodable_mixin",
-        "//sematic:external_resource",
+        "//sematic/plugins:abstract_external_resource",
         "//sematic/types:serialization",
     ],
 )

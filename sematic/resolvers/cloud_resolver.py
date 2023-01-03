@@ -19,7 +19,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
-from sematic.external_resource import ExternalResource
+from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
 from sematic.resolvers.resource_managers.cloud_manager import CloudResourceManager
 from sematic.storage import S3Storage
@@ -396,22 +396,28 @@ class CloudResolver(LocalResolver):
         return sum(map(lambda f: f.state == FutureState.SCHEDULED, self._futures))
 
     @classmethod
-    def _do_resource_activate(cls, resource: ExternalResource) -> ExternalResource:
+    def _do_resource_activate(
+        cls, resource: AbstractExternalResource
+    ) -> AbstractExternalResource:
         resource = api_client.activate_external_resource(resource.id)
         return resource
 
     @classmethod
-    def _do_resource_deactivate(cls, resource: ExternalResource) -> ExternalResource:
+    def _do_resource_deactivate(
+        cls, resource: AbstractExternalResource
+    ) -> AbstractExternalResource:
         resource = api_client.deactivate_external_resource(resource.id)
         return resource
 
     @classmethod
-    def _do_resource_update(cls, resource: ExternalResource) -> ExternalResource:
+    def _do_resource_update(
+        cls, resource: AbstractExternalResource
+    ) -> AbstractExternalResource:
         resource = api_client.get_external_resource(resource.id, refresh_remote=True)
         return resource
 
     @classmethod
-    def entering_resource_context(cls, resource: ExternalResource):
+    def entering_resource_context(cls, resource: AbstractExternalResource):
         cls._resource_manager.poll_for_updates_by_resource_id(resource.id)
 
     @classmethod
