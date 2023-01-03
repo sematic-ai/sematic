@@ -55,6 +55,10 @@ class ExternalResource(Base, JSONEncodableMixin):
         changes in such a way as to make the instances compare as not equal, a new
         entry will be added to this list. Element 0 is the most recent, element N
         the oldest.
+    created_at:
+        The time this record was created.
+    updated_at:
+        The time this record was last updated
     """
 
     # Q: Why duplicate data that's already in the json of value_serialization as columns?
