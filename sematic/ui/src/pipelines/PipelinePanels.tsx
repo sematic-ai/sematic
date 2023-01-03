@@ -1,14 +1,14 @@
 import { Box } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import Loading from "./Loading";
+import Loading from "../components/Loading";
 import MenuPanel from "./MenuPanel";
 import NotesPanel from "./NotesPanel";
 import RunPanel from "./RunPanel";
-import { ExtractContextType } from "./utils/typings";
+import { ExtractContextType } from "../components/utils/typings";
 import { usePipelineRunContext } from "../hooks/pipelineHooks";
 import { Run } from "../Models";
-import PipelinePanelsContext from "../pipelines/PipelinePanelsContext";
-import PipelineRunViewContext from "../pipelines/PipelineRunViewContext";
+import PipelinePanelsContext from "./PipelinePanelsContext";
+import PipelineRunViewContext from "./PipelineRunViewContext";
 import GraphContext from "./graph/graphContext";
 import { useGraph } from "../hooks/graphHooks";
 

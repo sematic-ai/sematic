@@ -12,10 +12,10 @@ import { UserContext } from "..";
 import { usePipelinePanelsContext, usePipelineRunContext } from "../hooks/pipelineHooks";
 import { Note, Run, User } from "../Models";
 import { NoteCreatePayload, NoteListPayload } from "../Payloads";
-import PipelineRunViewContext from "../pipelines/PipelineRunViewContext";
+import PipelineRunViewContext from "./PipelineRunViewContext";
 import { fetchJSON } from "../utils";
-import { NoteView } from "./Notes";
-import { ExtractContextType } from "./utils/typings";
+import { NoteView } from "../components/Notes";
+import { ExtractContextType } from "../components/utils/typings";
 
 export default function NotesPanel() {
   const theme = useTheme();
