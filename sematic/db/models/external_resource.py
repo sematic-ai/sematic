@@ -40,7 +40,15 @@ class ExternalResource(Base, JSONEncodableMixin):
     status_message:
         The most recent status message for the resource
     last_updated_epoch_seconds:
-        The time that the resource was last updated, expressed as epoch seconds
+        The time that the resource was last updated against the resource objects
+        it represnets, expressed as epoch seconds. Ex: the last time Spark was
+        queried for whether the cluster was alive. This differs from updated_at
+        in that it relates to the updates against the external resources, while
+        updated_at relates to updates of the DB record. It is in epoch seconds
+        rather than as a datetime object because it will primarily be used in
+        arithmetic operations with time (ex: comparing which value is more recent,
+        amount of elapsed time since last update) rather than for human-readability
+        of absolute time.
     type_serialization:
         The Sematic serialization of the type. This may be different from the
         serialization for ExternalResource itself, since the resource will be a
@@ -58,7 +66,8 @@ class ExternalResource(Base, JSONEncodableMixin):
     created_at:
         The time this record was created.
     updated_at:
-        The time this record was last updated
+        The time this record was last updated in the DB. See documentation in
+        last_updated_epoch_seconds for how this relates to that field.
     """
 
     # Q: Why duplicate data that's already in the json of value_serialization as columns?
