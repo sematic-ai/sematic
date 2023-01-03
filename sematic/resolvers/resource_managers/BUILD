@@ -3,7 +3,7 @@ sematic_py_lib(
     srcs = ["cloud_manager.py"],
     deps = [
         "//sematic:api_client",
-        "//sematic:external_resource",
+        "//sematic/plugins:abstract_external_resource",
         "//sematic/resolvers:abstract_resource_manager",
     ],
 )
@@ -14,6 +14,6 @@ sematic_py_lib(
     srcs = ["in_memory_manager.py"],
     deps = [
         "//sematic/resolvers:abstract_resource_manager",
-        "//sematic:external_resource",
+        "//sematic/plugins:abstract_external_resource",
     ],
 )

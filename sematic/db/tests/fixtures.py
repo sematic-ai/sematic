@@ -24,7 +24,7 @@ from sematic.db.queries import (
     save_run,
     save_user,
 )
-from sematic.external_resource import ExternalResource
+from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
@@ -162,9 +162,9 @@ def make_resolution(**kwargs) -> Resolution:
 
 
 @pytest.fixture
-def persisted_external_resource(test_db) -> ExternalResource:
+def persisted_external_resource(test_db) -> AbstractExternalResource:
     return save_external_resource_record(
-        ExternalResourceRecord.from_resource(ExternalResource())
+        ExternalResourceRecord.from_resource(AbstractExternalResource())
     )
 
 

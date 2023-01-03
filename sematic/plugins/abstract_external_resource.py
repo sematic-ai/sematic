@@ -154,7 +154,7 @@ T = TypeVar("T")
 
 
 @dataclass(frozen=True)
-class ExternalResource:
+class AbstractExternalResource:
     """Represents a resource tracked by Sematic for usage in Sematic funcs.
 
     Examples of possible external resources include small data processing
@@ -208,7 +208,7 @@ class ExternalResource:
             raise ValueError(f"ExternalResource had invalid status: '{self.status}'")
 
     @final
-    def activate(self, is_local: bool) -> "ExternalResource":
+    def activate(self, is_local: bool) -> "AbstractExternalResource":
         """Perform the initialization of the resource.
 
         Parameters
@@ -241,13 +241,13 @@ class ExternalResource:
             )
         return updated
 
-    def _do_activate(self, is_local: bool) -> "ExternalResource":
+    def _do_activate(self, is_local: bool) -> "AbstractExternalResource":
         raise NotImplementedError(
             "Subclasses of ExternalResource should implement ._do_activate(is_local)"
         )
 
     @final
-    def deactivate(self) -> "ExternalResource":
+    def deactivate(self) -> "AbstractExternalResource":
         """Clean up the resource.
 
         Returns
@@ -278,12 +278,12 @@ class ExternalResource:
         self.validate_transition(updated)
         return updated
 
-    def _do_deactivate(self) -> "ExternalResource":
+    def _do_deactivate(self) -> "AbstractExternalResource":
         raise NotImplementedError(
             "Subclasses of ExternalResource should implement ._do_deactivate()"
         )
 
-    def validate_transition(self, updated: "ExternalResource"):
+    def validate_transition(self, updated: "AbstractExternalResource"):
         """Confirm that the resource can go from its current state to the updated one.
 
         Parameters
@@ -326,7 +326,7 @@ class ExternalResource:
             )
 
     @final
-    def update(self) -> "ExternalResource":
+    def update(self) -> "AbstractExternalResource":
         """Query the external resource for any updates and return the updated object.
 
         If no properties have changed since the last time update was called, the object
@@ -346,7 +346,7 @@ class ExternalResource:
         self.validate_transition(updated)
         return updated
 
-    def _do_update(self) -> "ExternalResource":
+    def _do_update(self) -> "AbstractExternalResource":
         raise NotImplementedError(
             "Subclasses of ExternalResource should implement _do_update"
         )

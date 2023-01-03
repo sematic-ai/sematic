@@ -7,7 +7,10 @@ from unittest import mock
 import pytest
 
 # Sematic
-from sematic.external_resource import ExternalResource, ResourceState
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
+    ResourceState,
+)
 from sematic.tests.fixtures import MockStorage
 
 
@@ -34,7 +37,7 @@ _fake_resource_call_history: List[Tuple["FakeExternalResource", str]] = []
 
 
 @dataclass(frozen=True)
-class FakeExternalResource(ExternalResource):
+class FakeExternalResource(AbstractExternalResource):
     some_field: int = 0
     raise_on_activate: bool = False
     raise_on_deactivate: bool = False

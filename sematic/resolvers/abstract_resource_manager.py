@@ -3,7 +3,7 @@ import abc
 from typing import List
 
 # Sematic
-from sematic.external_resource import ExternalResource
+from sematic.plugins.abstract_external_resource import AbstractExternalResource
 
 
 class AbstractResourceManager(abc.ABC):
@@ -17,11 +17,11 @@ class AbstractResourceManager(abc.ABC):
     """
 
     @abc.abstractmethod
-    def get_resource_for_id(self, resource_id: str) -> ExternalResource:
+    def get_resource_for_id(self, resource_id: str) -> AbstractExternalResource:
         pass
 
     @abc.abstractmethod
-    def save_resource(self, resource: ExternalResource) -> None:
+    def save_resource(self, resource: AbstractExternalResource) -> None:
         pass
 
     @abc.abstractmethod
@@ -29,5 +29,5 @@ class AbstractResourceManager(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def resources_by_root_id(self, root_id: str) -> List[ExternalResource]:
+    def resources_by_root_id(self, root_id: str) -> List[AbstractExternalResource]:
         pass

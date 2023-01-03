@@ -19,7 +19,7 @@ from sematic.db.models.external_resource import (
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
-from sematic.external_resource import ExternalResource
+from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.storage import S3Storage, Storage
 from sematic.utils.retry import retry
 from sematic.versions import CURRENT_VERSION, version_as_string
@@ -193,7 +193,9 @@ def schedule_resolution(
     return Resolution.from_json_encodable(response["content"])
 
 
-def save_external_resource(resource: ExternalResource) -> ExternalResource:
+def save_external_resource(
+    resource: AbstractExternalResource,
+) -> AbstractExternalResource:
     """Save the external resource to the server, return the result.
 
     Parameters
@@ -213,7 +215,9 @@ def save_external_resource(resource: ExternalResource) -> ExternalResource:
     ).resource
 
 
-def get_external_resource(resource_id: str, refresh_remote: bool) -> ExternalResource:
+def get_external_resource(
+    resource_id: str, refresh_remote: bool
+) -> AbstractExternalResource:
     """Get the external resource, updating the status if required.
 
     Will actively interact with the external resource if necessary to get its status.
@@ -255,7 +259,7 @@ def save_resource_run_links(resource_ids: List[str], run_id: str) -> None:
     )
 
 
-def get_resources_by_root_run_id(root_run_id: str) -> List[ExternalResource]:
+def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResource]:
     """Get a list of external resources associated with the given root run.
 
     Parameters

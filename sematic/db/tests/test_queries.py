@@ -44,7 +44,11 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
-from sematic.external_resource import ExternalResource, ManagedBy, ResourceState
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
+    ManagedBy,
+    ResourceState,
+)
 from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa: F401
 from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 from sematic.utils.exceptions import IllegalStateTransitionError
@@ -215,7 +219,7 @@ def test_get_run_graph(
 
 
 @dataclass(frozen=True)
-class SomeResource(ExternalResource):
+class SomeResource(AbstractExternalResource):
     some_field: int = 0
 
 

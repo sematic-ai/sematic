@@ -20,8 +20,8 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
-from sematic.external_resource import (
-    ExternalResource,
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
     ManagedBy,
     ResourceState,
     ResourceStatus,
@@ -39,7 +39,7 @@ def test_save_read(
     mock_auth,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
-    my_resource = ExternalResource(
+    my_resource = AbstractExternalResource(
         status=ResourceStatus(state=ResourceState.CREATED, message="hi!")
     )
     record = ExternalResourceRecord.from_resource(my_resource)
