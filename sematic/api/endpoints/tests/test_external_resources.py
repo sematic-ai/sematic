@@ -13,11 +13,6 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.db.models.external_resource import (
     ExternalResource as ExternalResourceRecord,
 )
-from sematic.db.models.user import User  # noqa: F401
-from sematic.db.queries import (  # noqa: F401
-    save_external_resource_record,
-    save_run_external_resource_link,
-)
 from sematic.db.tests.fixtures import (  # noqa: F401
     persisted_external_resource,
     persisted_run,
@@ -64,7 +59,7 @@ def test_save_read(
         status=ResourceStatus(
             state=ResourceState.ACTIVATING,
             message="firing up my lasers",
-            managed_by=ManagedBy.REMOTE,
+            managed_by=ManagedBy.SERVER,
         ),
     )
     assert my_resource_activating != my_resource

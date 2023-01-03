@@ -102,17 +102,17 @@ class ManagedBy(Enum):
 
     Attributes
     ----------
-    LOCAL:
-        The resource's state is being managed locally.
-    REMOTE:
+    RESOLVER:
+        The resource's state is being managed by the resolver.
+    SERVER:
         The resource's state is being managed by the server.
     UNKNOWN:
         It's unknown what entity is managing the resource's state. Can only
         be used when resource is in the CREATED state.
     """
 
-    LOCAL = "LOCAL"
-    REMOTE = "REMOTE"
+    RESOLVER = "RESOLVER"
+    SERVER = "SERVER"
     UNKNOWN = "UNKNOWN"
 
 
@@ -228,7 +228,7 @@ class ExternalResource:
             self,
             status=replace(
                 self.status,
-                managed_by=ManagedBy.LOCAL if is_local else ManagedBy.REMOTE,
+                managed_by=ManagedBy.RESOLVER if is_local else ManagedBy.SERVER,
                 last_update_epoch_time=int(time.time()),
             ),
         )

@@ -30,13 +30,11 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
 
     record = get_external_resource_record(resource_id=resource_id)
     if record is None:
-        return jsonify_error(
-            "No such resource: {}".format(resource_id), HTTPStatus.NOT_FOUND
-        )
+        return jsonify_error(f"No such resource: {resource_id}", HTTPStatus.NOT_FOUND)
 
     updated_resource = None
     if (
-        record.managed_by == ManagedBy.REMOTE
+        record.managed_by == ManagedBy.SERVER
         and refresh_remote
         and not record.resource_state.is_terminal()
     ):
