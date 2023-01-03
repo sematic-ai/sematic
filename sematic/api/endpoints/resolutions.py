@@ -27,10 +27,8 @@ from sematic.db.models.resolution import InvalidResolution, Resolution, Resoluti
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
-    get_external_resource_record,
     get_graph,
     get_resolution,
-    get_resource_ids_by_root_id,
     get_resources_by_root_id,
     get_run,
     get_run_graph,
