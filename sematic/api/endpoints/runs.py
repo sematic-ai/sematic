@@ -38,7 +38,7 @@ from sematic.db.queries import (
     get_run_status_details,
     save_graph,
     save_run,
-    save_run_external_resource_link,
+    save_run_external_resource_links,
 )
 from sematic.log_reader import load_log_lines
 from sematic.scheduling.external_job import ExternalJob
@@ -429,6 +429,5 @@ def link_resource_endpoint(user: Optional[User], run_id: str) -> flask.Response:
             HTTPStatus.BAD_REQUEST,
         )
     external_resource_ids = flask.request.json["external_resource_ids"]
-    for resource_id in external_resource_ids:
-        save_run_external_resource_link(resource_id=resource_id, run_id=run_id)
+    save_run_external_resource_links(resource_ids=external_resource_ids, run_id=run_id)
     return flask.jsonify({})
