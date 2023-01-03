@@ -1,8 +1,8 @@
 import { Box } from "@mui/material";
-import { FlowWithProvider } from "./ReactFlowDag";
+import { FlowWithProvider } from "./graph/ReactFlowDag";
 import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
 import { useGraphContext } from "../hooks/graphHooks";
-import { RunDetailsPanel } from "../pipelines/RunDetailsPanel";
+import { RunDetailsPanel } from "./RunDetailsPanel";
 
 export default function RunPanel() {
   const { graph } = useGraphContext();

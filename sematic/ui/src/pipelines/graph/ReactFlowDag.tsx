@@ -1,4 +1,4 @@
-import { Run, Edge } from "../Models";
+import { Run, Edge } from "../../Models";
 import ReactFlow, {
   Node,
   Edge as RFEdge,
@@ -11,11 +11,11 @@ import ReactFlow, {
 } from "react-flow-renderer";
 import { Box } from "@mui/material";
 import { useCallback, useEffect, useMemo } from "react";
-import buildDagLayout from "./utils/buildDagLayout";
+import buildDagLayout from "../../components/utils/buildDagLayout";
 import RunNode from "./RunNode";
 import ArtifactNode from "./ArtifactNode";
-import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
-import { useGraphContext } from "../hooks/graphHooks";
+import { usePipelinePanelsContext } from "../../hooks/pipelineHooks";
+import { useGraphContext } from "../../hooks/graphHooks";
 
 var util = require("dagre/lib/util");
 var graphlib = require("graphlib");

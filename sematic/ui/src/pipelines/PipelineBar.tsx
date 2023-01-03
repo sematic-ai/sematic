@@ -14,16 +14,16 @@ import { useCallback, useContext, useEffect, useMemo } from "react";
 import { UserContext } from "..";
 import { Resolution, Run } from "../Models";
 import { fetchJSON, pipelineSocket } from "../utils";
-import CalculatorPath from "./CalculatorPath";
-import GitInfoBox from "./GitInfo";
-import Loading from "./Loading";
-import RunStateChip from "./RunStateChip";
-import TimeAgo from "./TimeAgo";
-import { ActionMenu, ActionMenuItem } from "./ActionMenu";
-import { SnackBarContext } from "./SnackBarProvider";
+import CalculatorPath from "../components/CalculatorPath";
+import GitInfoBox from "../components/GitInfo";
+import Loading from "../components/Loading";
+import RunStateChip from "../components/RunStateChip";
+import TimeAgo from "../components/TimeAgo";
+import { ActionMenu, ActionMenuItem } from "../components/ActionMenu";
+import { SnackBarContext } from "../components/SnackBarProvider";
 import { useFetchRuns, usePipelineNavigation, usePipelineRunContext } from "../hooks/pipelineHooks";
-import { ExtractContextType } from "./utils/typings";
-import PipelineRunViewContext from "../pipelines/PipelineRunViewContext";
+import { ExtractContextType } from "../components/utils/typings";
+import PipelineRunViewContext from "./PipelineRunViewContext";
 
 function PipelineActionMenu(props: {
   onCancel: () => void;
