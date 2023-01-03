@@ -5,13 +5,16 @@ from dataclasses import dataclass, replace
 from typing import Optional
 
 # Sematic
-from sematic.external_resource import ExternalResource, ResourceState
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
+    ResourceState,
+)
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
-class TimedMessage(ExternalResource):
+class TimedMessage(AbstractExternalResource):
     """A simple external resource to be used for demonstration purposes.
 
     The resource represents a message which can be accessed only for a limited

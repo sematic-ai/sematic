@@ -4,8 +4,11 @@ import time
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.external_resource import ExternalResource, ResourceState
 from sematic.future_context import PrivateContext, SematicContext, set_context
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
+    ResourceState,
+)
 from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 from sematic.resolvers.resource_managers.in_memory_manager import (
     InMemoryResourceManager,
@@ -90,8 +93,8 @@ class SilentResolver(StateMachineResolver):
 
     @classmethod
     def activate_resource_for_run(  # type: ignore
-        cls, resource: ExternalResource, run_id: str, root_id: str
-    ) -> ExternalResource:
+        cls, resource: AbstractExternalResource, run_id: str, root_id: str
+    ) -> AbstractExternalResource:
         is_local = True
         cls._resource_manager.save_resource(resource)
         cls._resource_manager.link_resource_to_run(resource.id, run_id, root_id)
@@ -125,7 +128,9 @@ class SilentResolver(StateMachineResolver):
         return resource
 
     @classmethod
-    def deactivate_resource(cls, resource_id: str) -> ExternalResource:  # type: ignore
+    def deactivate_resource(  # type: ignore
+        cls, resource_id: str
+    ) -> AbstractExternalResource:
         resource = cls._resource_manager.get_resource_for_id(resource_id)
         if resource.status.state.is_terminal():
             return resource

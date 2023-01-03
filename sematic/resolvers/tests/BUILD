@@ -43,8 +43,8 @@ pytest_test(
         ":fixtures",
         "//sematic:abstract_calculator",
         "//sematic:calculator",
-        "//sematic:external_resource",
         "//sematic:future_context",
+        "//sematic/plugins:abstract_external_resource",
         "//sematic:retry_settings",
         "//sematic/resolvers:silent_resolver",
         "//sematic/utils:exceptions",
@@ -104,6 +104,6 @@ sematic_py_lib(
     ],
     deps = [
         "//sematic/tests:fixtures",
-        "//sematic:external_resource",
+        "//sematic/plugins:abstract_external_resource",
     ],
 )

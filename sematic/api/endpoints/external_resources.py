@@ -18,7 +18,7 @@ from sematic.db.queries import (
     get_external_resource_record,
     save_external_resource_record,
 )
-from sematic.external_resource import ManagedBy
+from sematic.plugins.abstract_external_resource import ManagedBy
 
 logger = logging.getLogger(__name__)
 

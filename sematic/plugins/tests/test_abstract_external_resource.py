@@ -6,8 +6,8 @@ import pytest
 
 # Sematic
 from sematic.calculator import func
-from sematic.external_resource import (
-    ExternalResource,
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
     IllegalStateTransitionError,
     ManagedBy,
     ResourceState,
@@ -19,7 +19,7 @@ from sematic.resolvers.silent_resolver import SilentResolver
 def test_update():
     updated_message = "jumping straight to ACTIVE"
 
-    class FakeImpl(ExternalResource):
+    class FakeImpl(AbstractExternalResource):
         def _do_update(self):
             return replace(
                 self,
@@ -45,7 +45,7 @@ def test_update():
 
 def test_activate():
     @dataclass(frozen=True)
-    class ValidImpl(ExternalResource):
+    class ValidImpl(AbstractExternalResource):
         is_local: bool = False
 
         def _do_activate(self, is_local):
@@ -65,7 +65,7 @@ def test_activate():
     assert not activating_remote.is_local
 
     @dataclass(frozen=True)
-    class InvalidImpl(ExternalResource):
+    class InvalidImpl(AbstractExternalResource):
         is_local: bool = False
 
         def _do_activate(self, is_local):
@@ -85,7 +85,7 @@ def test_activate():
 
 def test_deactivate():
     @dataclass(frozen=True)
-    class ValidImpl(ExternalResource):
+    class ValidImpl(AbstractExternalResource):
         def _do_deactivate(self):
             return replace(
                 self,
@@ -106,7 +106,7 @@ def test_deactivate():
     assert deactivating.status.state == ResourceState.DEACTIVATING
 
     @dataclass(frozen=True)
-    class InvalidImpl(ExternalResource):
+    class InvalidImpl(AbstractExternalResource):
         def _do_deactivate(self):
             return replace(
                 self,
@@ -152,12 +152,12 @@ def test_use_in_func():
     with pytest.raises(TypeError, match=error_regex):
 
         @func
-        def my_func(resource: ExternalResource) -> int:
+        def my_func(resource: AbstractExternalResource) -> int:
             return 42
 
 
 @dataclass(frozen=True)
-class SomeImpl(ExternalResource):
+class SomeImpl(AbstractExternalResource):
     my_field: int = 42
 
     def _do_activate(self, is_local):
