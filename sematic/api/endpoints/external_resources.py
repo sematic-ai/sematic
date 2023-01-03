@@ -87,7 +87,7 @@ def activate_resource_endpoint(
             message,
             HTTPStatus.INTERNAL_SERVER_ERROR,
         )
-    record = ExternalResourceRecord.from_resource(activated)
+    record = ExternalResource.from_resource(activated)
     record = save_external_resource_record(record)
     payload = dict(record=record.to_json_encodable())  # type: ignore
 
@@ -116,7 +116,7 @@ def deactivate_resource_endpoint(
             message,
             HTTPStatus.INTERNAL_SERVER_ERROR,
         )
-    record = ExternalResourceRecord.from_resource(activated)
+    record = ExternalResource.from_resource(activated)
     record = save_external_resource_record(record)
     payload = dict(record=record.to_json_encodable())  # type: ignore
 
