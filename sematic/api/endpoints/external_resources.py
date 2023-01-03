@@ -10,9 +10,7 @@ import flask
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
-from sematic.db.models.external_resource import (
-    ExternalResource as ExternalResourceRecord,
-)
+from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.user import User
 from sematic.db.queries import (
     get_external_resource_record,
@@ -59,7 +57,7 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
             )
 
     if updated_resource is not None:
-        record = ExternalResourceRecord.from_resource(updated_resource)
+        record = ExternalResource.from_resource(updated_resource)
         save_external_resource_record(record)
 
     payload = dict(external_resource=record.to_json_encodable())
@@ -138,7 +136,7 @@ def save_resource_endpoint(user: Optional[User]) -> flask.Response:
         )
 
     record_json_encodable = flask.request.json["external_resource"]
-    record = ExternalResourceRecord.from_json_encodable(record_json_encodable)
+    record = ExternalResource.from_json_encodable(record_json_encodable)
     record = save_external_resource_record(record)
     payload = dict(external_resource=record.to_json_encodable())
 

@@ -13,9 +13,7 @@ from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import UserSettings, UserSettingsVar, get_user_setting
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.external_resource import (
-    ExternalResource as ExternalResourceRecord,
-)
+from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
@@ -207,12 +205,10 @@ def save_external_resource(
     -------
     The resource as saved by the server.
     """
-    record = ExternalResourceRecord.from_resource(resource)
+    record = ExternalResource.from_resource(resource)
     payload = {"external_resource": record.to_json_encodable()}
     response = _post("/external_resources", json_payload=payload)
-    return ExternalResourceRecord.from_json_encodable(
-        response["external_resource"]
-    ).resource
+    return ExternalResource.from_json_encodable(response["external_resource"]).resource
 
 
 def get_external_resource(
@@ -238,9 +234,7 @@ def get_external_resource(
     response = _get(
         f"/external_resources/{resource_id}?refresh_remote={str(refresh_remote).lower()}"
     )
-    return ExternalResourceRecord.from_json_encodable(
-        response["external_resource"]
-    ).resource
+    return ExternalResource.from_json_encodable(response["external_resource"]).resource
 
 
 def activate_external_resource(resource_id: str) -> AbstractExternalResource:
@@ -305,7 +299,7 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
     """
     response = _get(f"/resolutions/{root_run_id}/external_resources")
     return [
-        ExternalResourceRecord.from_json_encodable(resource).resource
+        ExternalResource.from_json_encodable(resource).resource
         for resource in response["external_resources"]
     ]
 
