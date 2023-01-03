@@ -5,7 +5,7 @@ import { ActionMenu, ActionMenuItem } from "../components/ActionMenu";
 import CalculatorPath from "../components/CalculatorPath";
 import Docstring from "../components/Docstring";
 import RunStateChip from "../components/RunStateChip";
-import RunTabs, { IOArtifacts } from "../components/RunTabs";
+import RunTabs, { IOArtifacts } from "./RunTabs";
 import { RunTime } from "../components/RunTime";
 import { SnackBarContext } from "../components/SnackBarProvider";
 import Tags from "../components/Tags";
