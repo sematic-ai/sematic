@@ -10,9 +10,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     mock_auth,
     test_client,
 )
-from sematic.db.models.external_resource import (
-    ExternalResource as ExternalResourceRecord,
-)
+from sematic.db.models.external_resource import ExternalResource
 from sematic.db.tests.fixtures import (  # noqa: F401
     persisted_external_resource,
     persisted_run,
@@ -42,14 +40,14 @@ def test_save_read(
     my_resource = AbstractExternalResource(
         status=ResourceStatus(state=ResourceState.CREATED, message="hi!")
     )
-    record = ExternalResourceRecord.from_resource(my_resource)
+    record = ExternalResource.from_resource(my_resource)
     payload = {"external_resource": record.to_json_encodable()}
     response = test_client.post("/api/v1/external_resources", json=payload)
     assert response.status_code == 200
 
     response = test_client.get(f"/api/v1/external_resources/{record.id}")
     assert response.status_code == 200
-    from_api_record = ExternalResourceRecord.from_json_encodable(
+    from_api_record = ExternalResource.from_json_encodable(
         response.json["external_resource"]  # type: ignore
     )
     assert from_api_record.resource == my_resource
@@ -63,11 +61,11 @@ def test_save_read(
         ),
     )
     assert my_resource_activating != my_resource
-    record = ExternalResourceRecord.from_resource(my_resource_activating)
+    record = ExternalResource.from_resource(my_resource_activating)
     payload = {"external_resource": record.to_json_encodable()}
     response = test_client.post("/api/v1/external_resources", json=payload)
     assert response.status_code == 200
-    from_api_record = ExternalResourceRecord.from_json_encodable(
+    from_api_record = ExternalResource.from_json_encodable(
         response.json["external_resource"]  # type: ignore
     )
     assert from_api_record.history == (my_resource_activating, my_resource)

@@ -15,9 +15,7 @@ from sematic.abstract_future import FutureState
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.external_resource import (
-    ExternalResource as ExternalResourceRecord,
-)
+from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.note import Note
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
@@ -144,8 +142,8 @@ def save_run(run: Run) -> Run:
     return run
 
 
-def save_external_resource_record(record: ExternalResourceRecord):
-    """Save an ExternalResourceRecord to the DB"""
+def save_external_resource_record(record: ExternalResource):
+    """Save an ExternalResource to the DB"""
     existing_record = get_external_resource_record(record.id)
 
     if existing_record is None:
@@ -156,7 +154,7 @@ def save_external_resource_record(record: ExternalResourceRecord):
             )
 
         # this ensures that all the fields are consistent
-        record = ExternalResourceRecord.from_resource(record.resource)
+        record = ExternalResource.from_resource(record.resource)
     else:
         # this ensures that the update properly updates history
         # and keeps data consistent
@@ -170,12 +168,12 @@ def save_external_resource_record(record: ExternalResourceRecord):
         return record
 
 
-def get_external_resource_record(resource_id: str) -> Optional[ExternalResourceRecord]:
-    """Get an ExternalResourceRecord from the DB"""
+def get_external_resource_record(resource_id: str) -> Optional[ExternalResource]:
+    """Get an ExternalResource from the DB"""
     with db().get_session() as session:
         return (
-            session.query(ExternalResourceRecord)
-            .filter(ExternalResourceRecord.id == resource_id)
+            session.query(ExternalResource)
+            .filter(ExternalResource.id == resource_id)
             .one_or_none()
         )
 
@@ -192,8 +190,8 @@ def get_resource_ids_by_root_id(root_run_id: str) -> List[str]:
     """Get a list of ids of external resources associated with a particular root run"""
     with db().get_session() as session:
         results = (
-            session.query(ExternalResourceRecord.id)
-            .filter(ExternalResourceRecord.id == RunExternalResource.resource_id)
+            session.query(ExternalResource.id)
+            .filter(ExternalResource.id == RunExternalResource.resource_id)
             .filter(Run.id == RunExternalResource.run_id)
             .filter(Run.root_id == root_run_id)
             .all()
@@ -203,12 +201,12 @@ def get_resource_ids_by_root_id(root_run_id: str) -> List[str]:
 
 def get_external_resource_records(
     resource_ids: List[str],
-) -> List[ExternalResourceRecord]:
+) -> List[ExternalResource]:
     """Given a list of resource ids, return a corresponding list of resource records"""
     with db().get_session() as session:
         records = list(
-            session.query(ExternalResourceRecord)
-            .filter(ExternalResourceRecord.id.in_(resource_ids))
+            session.query(ExternalResource)
+            .filter(ExternalResource.id.in_(resource_ids))
             .all()
         )
     records_by_id = {r.id: r for r in records}
@@ -223,7 +221,7 @@ def get_external_resource_records(
     return results
 
 
-def get_resources_by_root_id(root_run_id: str) -> List[ExternalResourceRecord]:
+def get_resources_by_root_id(root_run_id: str) -> List[ExternalResource]:
     """Get a list of external resources associated with a particular root run"""
     resource_ids = get_resource_ids_by_root_id(root_run_id)
     return get_external_resource_records(resource_ids)
