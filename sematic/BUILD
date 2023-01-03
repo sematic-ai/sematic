@@ -8,7 +8,7 @@ sematic_py_lib(
         ":container_images",
         ":resolver",
         ":retry_settings",
-        "//sematic/external_resource_plugins:timed_message",
+        "//sematic/plugins/external_resource:timed_message",
         "//sematic:future_context",
         "//sematic/future_operators:init",
         "//sematic/resolvers:cloud_resolver",

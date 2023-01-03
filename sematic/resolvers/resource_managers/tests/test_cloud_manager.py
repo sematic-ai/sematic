@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 # Sematic
-from sematic.external_resource_plugins.timed_message import TimedMessage
+from sematic.plugins.external_resource.timed_message import TimedMessage
 from sematic.resolvers.resource_managers.cloud_manager import CloudResourceManager
 
 

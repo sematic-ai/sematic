@@ -10,7 +10,7 @@ from typing import List, Optional
 
 # Sematic
 import sematic
-from sematic.external_resource_plugins.timed_message import TimedMessage
+from sematic.plugins.external_resource.timed_message import TimedMessage
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

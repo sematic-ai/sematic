@@ -140,7 +140,7 @@ class ExternalResource(Base, JSONEncodableMixin):
     def get_resource_type(self) -> Type[ExternalResourceDataclass]:
         try:
             return type_from_json_encodable(self.type_serialization)
-        except Exception:
+        except ImportError:
             type_name = self.type_serialization["type"][1]
             import_path = self.type_serialization["type"][2]["import_path"]
 
