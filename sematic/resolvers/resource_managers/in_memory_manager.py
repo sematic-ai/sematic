@@ -38,7 +38,7 @@ class InMemoryResourceManager(AbstractResourceManager):
         return self.resource_id_to_record[resource_id].resource
 
     def save_resource(self, resource: ExternalResource) -> None:
-        if resource.status.managed_by == ManagedBy.REMOTE:
+        if resource.status.managed_by == ManagedBy.SERVER:
             raise ValueError(
                 "In-memory resource manager can't manage remotely managed resources"
             )
