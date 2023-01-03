@@ -250,7 +250,7 @@ def activate_external_resource(resource_id: str) -> AbstractExternalResource:
     The resource as saved by the server.
     """
     response = _post(f"/external_resources/{resource_id}/activate", json_payload={})
-    return ExternalResourceRecord.from_json_encodable(response["record"]).resource
+    return ExternalResource.from_json_encodable(response["record"]).resource
 
 
 def deactivate_external_resource(resource_id: str) -> AbstractExternalResource:
@@ -266,7 +266,7 @@ def deactivate_external_resource(resource_id: str) -> AbstractExternalResource:
     The resource as saved by the server.
     """
     response = _post(f"/external_resources/{resource_id}/deactivate", json_payload={})
-    return ExternalResourceRecord.from_json_encodable(response["record"]).resource
+    return ExternalResource.from_json_encodable(response["record"]).resource
 
 
 def save_resource_run_links(resource_ids: List[str], run_id: str) -> None:
