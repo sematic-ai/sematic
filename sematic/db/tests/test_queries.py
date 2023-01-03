@@ -25,6 +25,7 @@ from sematic.db.queries import (
     get_external_resource_record,
     get_resolution,
     get_resource_ids_by_root_id,
+    get_resources_by_root_id,
     get_root_graph,
     get_run,
     get_run_graph,
@@ -32,7 +33,7 @@ from sematic.db.queries import (
     save_graph,
     save_resolution,
     save_run,
-    save_run_external_resource_link,
+    save_run_external_resource_links,
 )
 from sematic.db.tests.fixtures import (  # noqa: F401
     make_run,
@@ -234,7 +235,7 @@ def test_save_external_resource_record(test_db):  # noqa: F811
             resource1.status,
             state=ResourceState.ACTIVATING,
             message="Activating",
-            managed_by=ManagedBy.REMOTE,
+            managed_by=ManagedBy.SERVER,
         ),
     )
     record2 = ExternalResourceRecord.from_resource(resource2)
@@ -307,13 +308,17 @@ def test_run_resource_links(test_db):  # noqa: F811
     for resource in [resource_1, resource_2, resource_3, resource_4]:
         save_external_resource_record(ExternalResourceRecord.from_resource(resource))
 
-    save_run_external_resource_link(resource_1.id, child_run_1.id)
-    save_run_external_resource_link(resource_2.id, child_run_2.id)
+    save_run_external_resource_links([resource_1.id], child_run_1.id)
+    save_run_external_resource_links([resource_2.id], child_run_2.id)
 
     # multiple resources linked with one run
-    save_run_external_resource_link(resource_3.id, child_run_2.id)
+    save_run_external_resource_links([resource_3.id], child_run_2.id)
 
-    save_run_external_resource_link(resource_4.id, other_root_run.id)
+    save_run_external_resource_links([resource_4.id], other_root_run.id)
 
     resource_ids = get_resource_ids_by_root_id(root_run.id)
     assert set(resource_ids) == {resource_1.id, resource_2.id, resource_3.id}
+
+    resources = get_resources_by_root_id(root_run.id)
+    assert len(resources) == 3
+    assert all(isinstance(record, ExternalResourceRecord) for record in resources)
