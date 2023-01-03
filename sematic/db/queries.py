@@ -145,6 +145,7 @@ def save_run(run: Run) -> Run:
 
 
 def save_external_resource_record(record: ExternalResourceRecord):
+    """Save an ExternalResourceRecord to the DB"""
     existing_record = get_external_resource_record(record.id)
 
     if existing_record is None:
@@ -170,6 +171,7 @@ def save_external_resource_record(record: ExternalResourceRecord):
 
 
 def get_external_resource_record(resource_id: str) -> Optional[ExternalResourceRecord]:
+    """Get an ExternalResourceRecord from the DB"""
     with db().get_session() as session:
         return (
             session.query(ExternalResourceRecord)
@@ -178,13 +180,16 @@ def get_external_resource_record(resource_id: str) -> Optional[ExternalResourceR
         )
 
 
-def save_run_external_resource_link(resource_id: str, run_id: str):
+def save_run_external_resource_links(resource_ids: List[str], run_id: str):
+    """Save the relationship between external resources and a run to the DB."""
     with db().get_session() as session:
-        session.merge(RunExternalResource(resource_id=resource_id, run_id=run_id))
+        for resource_id in resource_ids:
+            session.merge(RunExternalResource(resource_id=resource_id, run_id=run_id))
         session.commit()
 
 
 def get_resource_ids_by_root_id(root_run_id: str) -> List[str]:
+    """Get a list of ids of external resources associated with a particular root run"""
     with db().get_session() as session:
         results = (
             session.query(ExternalResourceRecord.id)
@@ -194,6 +199,34 @@ def get_resource_ids_by_root_id(root_run_id: str) -> List[str]:
             .all()
         )
         return list(set(r[0] for r in results))
+
+
+def get_external_resource_records(
+    resource_ids: List[str],
+) -> List[ExternalResourceRecord]:
+    """Given a list of resource ids, return a corresponding list of resource records"""
+    with db().get_session() as session:
+        records = list(
+            session.query(ExternalResourceRecord)
+            .filter(ExternalResourceRecord.id.in_(resource_ids))
+            .all()
+        )
+    records_by_id = {r.id: r for r in records}
+    results = []
+    for resource_id in resource_ids:
+        record = records_by_id.get(resource_id)
+        if record is None:
+            raise RuntimeError(
+                f"Requested non-existent external resource '{resource_id}'"
+            )
+        results.append(record)
+    return results
+
+
+def get_resources_by_root_id(root_run_id: str) -> List[ExternalResourceRecord]:
+    """Get a list of external resources associated with a particular root run"""
+    resource_ids = get_resource_ids_by_root_id(root_run_id)
+    return get_external_resource_records(resource_ids)
 
 
 def get_resolution(resolution_id: str) -> Resolution:

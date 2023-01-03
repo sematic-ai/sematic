@@ -31,6 +31,7 @@ from sematic.db.queries import (
     get_graph,
     get_resolution,
     get_resource_ids_by_root_id,
+    get_resources_by_root_id,
     get_run,
     get_run_graph,
     save_graph,
@@ -270,14 +271,8 @@ def cancel_resolution_endpoint(
 )
 @authenticate
 def get_resources_endpoint(user: Optional[User], resolution_id: str) -> flask.Response:
-    resource_ids = get_resource_ids_by_root_id(resolution_id)
-    resources = []
-    for resource_id in resource_ids:
-        resource = get_external_resource_record(resource_id)
-        assert resource is not None  # should be impossible since ids came from the DB
-
-        # TODO: update state if refresh=True is provided as a parameter and
-        # the state for the resource is managed remotely.
-        resources.append(resource.to_json_encodable())
-    payload = dict(external_resources=resources)
+    resources = get_resources_by_root_id(resolution_id)
+    payload = dict(
+        external_resources=[resource.to_json_encodable() for resource in resources]
+    )
     return flask.jsonify(payload)
