@@ -235,7 +235,7 @@ def test_save_external_resource_record(test_db):  # noqa: F811
             resource1.status,
             state=ResourceState.ACTIVATING,
             message="Activating",
-            managed_by=ManagedBy.REMOTE,
+            managed_by=ManagedBy.SERVER,
         ),
     )
     record2 = ExternalResourceRecord.from_resource(resource2)

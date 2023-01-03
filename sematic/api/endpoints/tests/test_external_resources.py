@@ -59,7 +59,7 @@ def test_save_read(
         status=ResourceStatus(
             state=ResourceState.ACTIVATING,
             message="firing up my lasers",
-            managed_by=ManagedBy.REMOTE,
+            managed_by=ManagedBy.SERVER,
         ),
     )
     assert my_resource_activating != my_resource
