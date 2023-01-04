@@ -68,10 +68,12 @@ def sematic_pipeline(
     if dev:
         main = "@sematic//sematic/resolvers:worker.py"
         srcs = ["@sematic//sematic/resolvers:worker.py"]
+        script_data = ["@sematic//sematic/resolvers:ray"]
         py3_image_deps = deps + ["@sematic//sematic/resolvers:worker"]
     else:
         main = "@rules_sematic//:worker.py"
         srcs = ["@rules_sematic//:worker.py"]
+        script_data = ["@rules_sematic//:ray"]
         py3_image_deps = deps
 
     image_uris = []
@@ -82,7 +84,7 @@ def sematic_pipeline(
             name = "{}_{}_image".format(name, tag),
             main = main,
             srcs = srcs,
-            data = data + [":ray"],
+            data = data + script_data,
             deps = py3_image_deps,
             visibility = ["//visibility:public"],
             base = base_image,
