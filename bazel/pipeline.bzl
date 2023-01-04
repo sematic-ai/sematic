@@ -5,6 +5,7 @@ The sematic_pipeline Bazel macro.
 load(
     "@io_bazel_rules_docker//python3:image.bzl",
     "py3_image",
+    "app_layer",
     "repositories",
 )
 load("@io_bazel_rules_docker//container:push.bzl", "container_push")
@@ -80,14 +81,21 @@ def sematic_pipeline(
     push_rule_names = []
 
     for tag, base_image in bases.items():
+        with_tools_layer = "{}_{}_image_with_tools".format(name, tag),
+        app_layer(
+            name = with_tools_layer,
+            base = base_image,
+            data = script_data,
+            directory = "/sematic_bin/",
+        )
         py3_image(
             name = "{}_{}_image".format(name, tag),
             main = main,
             srcs = srcs,
-            data = data + script_data,
+            data = data,
             deps = py3_image_deps,
             visibility = ["//visibility:public"],
-            base = base_image,
+            base = ":{}".format(with_tools_layer),
             env = env or {},
             tags = ["manual"],
         )
