@@ -227,6 +227,7 @@ sematic_py_wheel(
     deps = [
         "//sematic:client",
         "//sematic:init",
+        "//sematic/testing:init",
         "//sematic/cli:main_lib",
     ],
 )
