@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo } from "react";
 import useAsyncRetry from "react-use/lib/useAsyncRetry";
-import GraphContext from "../components/graph/graphContext";
+import GraphContext from "../pipelines/graph/graphContext";
 import { Graph, RunTreeNode } from "../interfaces/graph";
 import { RunGraphPayload } from "../Payloads";
 import { graphSocket } from "../utils";
