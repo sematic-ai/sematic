@@ -88,7 +88,7 @@ def sematic_pipeline(
             name = with_tools_layer,
             files = script_data,
             directory = "/sematic_bin/",
-            env={"PATH": "/sematic_bin/:$(PATH)"},
+            #env={"PATH": "/sematic_bin/:$(PATH)"},
         )
         container_image(
             name = with_tools_image,
