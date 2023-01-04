@@ -2,8 +2,8 @@ import Box from "@mui/material/Box";
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import Loading from "../components/Loading";
-import PipelineBar from "../components/PipelineBar";
-import PipelinePanels from "../components/PipelinePanels";
+import PipelineBar from "./PipelineBar";
+import PipelinePanels from "./PipelinePanels";
 import { ExtractContextType } from "../components/utils/typings";
 import { useFetchResolution, useFetchRun } from "../hooks/pipelineHooks";
 import PipelineRunViewContext from './PipelineRunViewContext'
