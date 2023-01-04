@@ -90,6 +90,7 @@ def get_value_type(value: Any, type_: Any) -> Any:
 
     return type(value)
 
+
 def is_union(type_: Any) -> bool:
     origin_type = get_origin_type(type_)
 

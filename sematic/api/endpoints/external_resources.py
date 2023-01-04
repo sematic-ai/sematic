@@ -32,7 +32,7 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
 
     updated_resource = None
     if (
-        record.managed_by == ManagedBy.SERVER
+        record.managed_by is ManagedBy.SERVER
         and refresh_remote
         and not record.resource_state.is_terminal()
     ):

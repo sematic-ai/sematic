@@ -21,7 +21,7 @@ from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
-from sematic.resolvers.resource_managers.cloud_manager import CloudResourceManager
+from sematic.resolvers.resource_managers.server_manager import ServerResourceManager
 from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.utils.memoized_property import memoized_property
@@ -80,7 +80,7 @@ class CloudResolver(LocalResolver):
         value of `False`.
     """
 
-    _resource_manager: CloudResourceManager = CloudResourceManager()
+    _resource_manager: ServerResourceManager = ServerResourceManager()
 
     def __init__(
         self,
