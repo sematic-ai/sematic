@@ -82,7 +82,7 @@ def sematic_pipeline(
 
     for tag, base_image in bases.items():
         with_tools_layer = "{}_{}_image_with_tools".format(name, tag)
-        build_layer(
+        tools_tar, _ = build_layer(
             name = with_tools_layer,
             output_layer = "{}_layer".format(with_tools_layer),
             base = base_image,
@@ -93,10 +93,10 @@ def sematic_pipeline(
             name = "{}_{}_image".format(name, tag),
             main = main,
             srcs = srcs,
-            data = data,
+            data = data + [tools_tar],
             deps = py3_image_deps,
             visibility = ["//visibility:public"],
-            base = ":{}".format(with_tools_layer),
+            base = base_image,
             env = env or {},
             tags = ["manual"],
         )
