@@ -96,6 +96,26 @@ _ALLOWED_TRANSITIONS = {
 }
 
 
+@unique
+class ManagedBy(Enum):
+    """Represents what entity is managing the state of the resource
+
+    Attributes
+    ----------
+    RESOLVER:
+        The resource's state is being managed by the resolver.
+    SERVER:
+        The resource's state is being managed by the server.
+    UNKNOWN:
+        It's unknown what entity is managing the resource's state. Can only
+        be used when resource is in the CREATED state.
+    """
+
+    RESOLVER = "RESOLVER"
+    SERVER = "SERVER"
+    UNKNOWN = "UNKNOWN"
+
+
 @dataclass(frozen=True)
 class ResourceStatus:
     """The status of the resource.
@@ -108,11 +128,26 @@ class ResourceStatus:
         A human-readable message about why the resource entered this state
     last_update_epoch_time:
         The last time this status was checked against the actual external resource
+    managed_by:
+        Whether the resource is managed locally, remotely, or not known.
     """
 
     state: ResourceState
     message: str
-    last_update_epoch_time: int = field(default_factory=lambda: int(time.time()))
+    last_update_epoch_time: int = field(
+        default_factory=lambda: int(time.time()), compare=False
+    )
+    managed_by: ManagedBy = ManagedBy.UNKNOWN
+
+    def __post_init__(self):
+        if (
+            self.state not in {ResourceState.CREATED, ResourceState.DEACTIVATED}
+            and self.managed_by == ManagedBy.UNKNOWN
+        ):
+            raise IllegalStateTransitionError(
+                "Only resources in the CREATED and DEACTIVATED states "
+                "can have managed_by==UNKNOWN"
+            )
 
 
 T = TypeVar("T")
@@ -189,8 +224,16 @@ class ExternalResource:
         An updated copy of the object
         """
         logger.debug("Activating %s", self)
-        updated = self._do_activate(is_local)
-        self._validate_transition(updated)
+        managed_by_updated = replace(
+            self,
+            status=replace(
+                self.status,
+                managed_by=ManagedBy.RESOLVER if is_local else ManagedBy.SERVER,
+                last_update_epoch_time=int(time.time()),
+            ),
+        )
+        updated = managed_by_updated._do_activate(is_local)
+        self.validate_transition(updated)
         if updated.status.state != ResourceState.ACTIVATING:
             raise IllegalStateTransitionError(
                 "Calling .activate() did not leave the resource in the "
@@ -217,9 +260,11 @@ class ExternalResource:
             )
             updated = replace(
                 self,
-                status=ResourceStatus(
+                status=replace(
+                    self.status,
                     state=ResourceState.DEACTIVATED,
                     message="Resource activation was canceled.",
+                    last_update_epoch_time=int(time.time()),
                 ),
             )
         else:
@@ -230,7 +275,7 @@ class ExternalResource:
                     "Calling .deactivate() did not leave the resource in the "
                     "DEACTIVATING state."
                 )
-        self._validate_transition(updated)
+        self.validate_transition(updated)
         return updated
 
     def _do_deactivate(self) -> "ExternalResource":
@@ -238,7 +283,19 @@ class ExternalResource:
             "Subclasses of ExternalResource should implement ._do_deactivate()"
         )
 
-    def _validate_transition(self, updated: "ExternalResource"):
+    def validate_transition(self, updated: "ExternalResource"):
+        """Confirm that the resource can go from its current state to the updated one.
+
+        Parameters
+        ----------
+        updated:
+            The new version of the resource
+
+        Raises
+        ------
+        IllegalStateTransitionError:
+            If the transition is not allowed
+        """
         if self.id != updated.id:
             raise IllegalStateTransitionError(
                 f"Cannot change id of resource from {self.id} to " f"{updated.id}"
@@ -258,6 +315,15 @@ class ExternalResource:
                 f"Current update time: {self.status.last_update_epoch_time}. New "
                 f"update time: {updated.status.last_update_epoch_time}"
             )
+        if (
+            self.status.managed_by != updated.status.managed_by
+            and self.status.managed_by != ManagedBy.UNKNOWN
+        ):
+            raise IllegalStateTransitionError(
+                f"Cannot change managed_by once it is no longer UNKNOWN"
+                f"Current managed_by: {self.status.managed_by}. New "
+                f"managed_by: {updated.status.managed_by}"
+            )
 
     @final
     def update(self) -> "ExternalResource":
@@ -273,7 +339,11 @@ class ExternalResource:
         """
         logger.debug("Updating %s", self)
         updated = self._do_update()
-        self._validate_transition(updated)
+        updated = replace(
+            updated,
+            status=replace(updated.status, last_update_epoch_time=int(time.time())),
+        )
+        self.validate_transition(updated)
         return updated
 
     def _do_update(self) -> "ExternalResource":

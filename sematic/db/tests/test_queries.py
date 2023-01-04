@@ -1,3 +1,6 @@
+# Standard Library
+from dataclasses import dataclass, replace
+
 # Third-party
 import pytest
 
@@ -10,19 +13,26 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 )
 from sematic.calculator import func
 from sematic.db.models.artifact import Artifact
+from sematic.db.models.external_resource import (
+    ExternalResource as ExternalResourceRecord,
+)
 from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import (
     count_runs,
     get_artifact,
+    get_external_resource_record,
     get_resolution,
+    get_resources_by_root_id,
     get_root_graph,
     get_run,
     get_run_graph,
+    save_external_resource_record,
     save_graph,
     save_resolution,
     save_run,
+    save_run_external_resource_links,
 )
 from sematic.db.tests.fixtures import (  # noqa: F401
     make_run,
@@ -33,8 +43,10 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
+from sematic.external_resource import ExternalResource, ManagedBy, ResourceState
 from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa: F401
 from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
+from sematic.utils.exceptions import IllegalStateTransitionError
 
 
 def test_count_runs(test_db, run: Run):  # noqa: F811
@@ -199,3 +211,112 @@ def test_get_run_graph(
     assert len(runs) == run_count
     assert len(artifacts) == artifact_count
     assert len(edges) == edge_count
+
+
+@dataclass(frozen=True)
+class SomeResource(ExternalResource):
+    some_field: int = 0
+
+
+def test_save_external_resource_record(test_db):  # noqa: F811
+    resource1 = SomeResource(some_field=42)
+    record1 = ExternalResourceRecord.from_resource(resource1)
+    save_external_resource_record(record1)
+    saved_record1 = get_external_resource_record(record1.id)
+
+    assert saved_record1.updated_at is not None
+    assert saved_record1.created_at is not None
+    assert saved_record1.resource_state == resource1.status.state
+
+    resource2 = replace(
+        resource1,
+        status=replace(
+            resource1.status,
+            state=ResourceState.ACTIVATING,
+            message="Activating",
+            managed_by=ManagedBy.SERVER,
+        ),
+    )
+    record2 = ExternalResourceRecord.from_resource(resource2)
+    save_external_resource_record(record2)
+    saved_record2 = get_external_resource_record(record2.id)
+    assert saved_record2.history == (resource2, resource1)
+    assert saved_record2.updated_at is not None
+    assert saved_record2.created_at is not None
+    assert saved_record2.updated_at > saved_record1.updated_at
+    assert saved_record2.created_at == saved_record1.created_at
+
+    resource3 = replace(
+        resource2,
+        status=replace(
+            resource2.status,
+            last_update_epoch_time=resource2.status.last_update_epoch_time + 1,
+        ),
+    )
+    record3 = ExternalResourceRecord.from_resource(resource3)
+    saved_record3 = save_external_resource_record(record3)
+    assert (
+        saved_record3.last_updated_epoch_seconds
+        == resource3.status.last_update_epoch_time
+    )
+
+    # history is not updated when the object is unchanged except for
+    # timestamp
+    assert saved_record3.history == (resource2, resource1)
+
+    resource4 = replace(
+        resource3,
+        status=replace(
+            resource3.status,
+            last_update_epoch_time=resource3.status.last_update_epoch_time + 1,
+        ),
+        some_field=43,
+    )
+    record4 = ExternalResourceRecord.from_resource(resource4)
+    saved_record4 = save_external_resource_record(record4)
+
+    # history is updated for changes in other fields
+    assert saved_record4.history == (resource4, resource2, resource1)
+
+    resource5 = replace(
+        resource4,
+        status=replace(
+            resource4.status,
+            state=ResourceState.CREATED,
+        ),
+    )
+    record5 = ExternalResourceRecord.from_resource(resource5)
+    with pytest.raises(IllegalStateTransitionError):
+        save_external_resource_record(record5)
+
+
+def test_run_resource_links(test_db):  # noqa: F811
+    root_run = make_run()
+    child_run_1 = make_run(root_id=root_run.id)
+    child_run_2 = make_run(root_id=root_run.id)
+    child_run_3 = make_run(root_id=root_run.id)
+    other_root_run = make_run()
+    for r in [root_run, child_run_1, child_run_2, child_run_3, other_root_run]:
+        save_run(r)
+
+    resource_1 = SomeResource(some_field=1)
+    resource_2 = SomeResource(some_field=2)
+    resource_3 = SomeResource(some_field=3)
+    resource_4 = SomeResource(some_field=4)
+
+    for resource in [resource_1, resource_2, resource_3, resource_4]:
+        save_external_resource_record(ExternalResourceRecord.from_resource(resource))
+
+    save_run_external_resource_links([resource_1.id], child_run_1.id)
+    save_run_external_resource_links([resource_2.id], child_run_2.id)
+
+    # multiple resources linked with one run
+    save_run_external_resource_links([resource_3.id], child_run_2.id)
+
+    save_run_external_resource_links([resource_4.id], other_root_run.id)
+
+    resources = get_resources_by_root_id(root_run.id)
+    assert len(resources) == 3
+    assert all(isinstance(record, ExternalResourceRecord) for record in resources)
+    resource_ids = {resource.id for resource in resources}
+    assert resource_ids == {resource_1.id, resource_2.id, resource_3.id}
