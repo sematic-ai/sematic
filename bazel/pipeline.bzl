@@ -68,7 +68,7 @@ def sematic_pipeline(
     if dev:
         main = "@sematic//sematic/resolvers:worker.py"
         srcs = ["@sematic//sematic/resolvers:worker.py"]
-        script_data = ["@sematic//sematic/resolvers:ray"]
+        script_data = ["@sematic//bazel:ray"]
         py3_image_deps = deps + ["@sematic//sematic/resolvers:worker"]
     else:
         main = "@rules_sematic//:worker.py"
