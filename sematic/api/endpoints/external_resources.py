@@ -52,7 +52,7 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
         except Exception as e:
             logger.exception("Error updating resource '%s': %s", record.id, e)
             return jsonify_error(
-                "Error updating resource: {}".format(resource_id),
+                f"Error updating resource: {resource_id}",
                 HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
