@@ -10,11 +10,21 @@ import testing.postgresql  # type: ignore
 # Sematic
 import sematic.db.db as db
 from sematic.abstract_future import FutureState
+from sematic.db.models.external_resource import (
+    ExternalResource as ExternalResourceRecord,
+)
 from sematic.db.models.factories import make_artifact, make_user
 from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
-from sematic.db.queries import _save_artifact, save_resolution, save_run, save_user
+from sematic.db.queries import (
+    _save_artifact,
+    save_external_resource_record,
+    save_resolution,
+    save_run,
+    save_user,
+)
+from sematic.external_resource import ExternalResource
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
@@ -149,6 +159,13 @@ def make_resolution(**kwargs) -> Resolution:
         setattr(resolution, name, value)
 
     return resolution
+
+
+@pytest.fixture
+def persisted_external_resource(test_db) -> ExternalResource:
+    return save_external_resource_record(
+        ExternalResourceRecord.from_resource(ExternalResource())
+    )
 
 
 @pytest.fixture

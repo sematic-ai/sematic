@@ -11,7 +11,7 @@ from typing import List, Optional
 
 # Sematic
 import sematic
-from sematic.external_resource import ExternalResource, ResourceState, ResourceStatus
+from sematic.external_resource import ExternalResource, ResourceState
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -24,7 +24,8 @@ class FakeExternalResource(ExternalResource):
         logger.info(f"Activating {self.id}! is_local={is_local}")
         return replace(
             self,
-            status=ResourceStatus(
+            status=replace(
+                self.status,
                 state=ResourceState.ACTIVATING,
                 message="Allocating fake resource",
             ),
@@ -34,7 +35,8 @@ class FakeExternalResource(ExternalResource):
         logger.info(f"Deactivating {self.id}!")
         return replace(
             self,
-            status=ResourceStatus(
+            status=replace(
+                self.status,
                 state=ResourceState.DEACTIVATING,
                 message="Deallocating fake resource",
             ),
@@ -45,7 +47,8 @@ class FakeExternalResource(ExternalResource):
         if self.status.state == ResourceState.ACTIVATING:
             return replace(
                 self,
-                status=ResourceStatus(
+                status=replace(
+                    self.status,
                     state=ResourceState.ACTIVE,
                     message="Resource is ready!",
                 ),
@@ -53,14 +56,16 @@ class FakeExternalResource(ExternalResource):
         elif self.status.state == ResourceState.DEACTIVATING:
             return replace(
                 self,
-                status=ResourceStatus(
+                status=replace(
+                    self.status,
                     state=ResourceState.DEACTIVATED,
                     message="Resource is cleaned!",
                 ),
             )
         return replace(
             self,
-            status=ResourceStatus(
+            status=replace(
+                self.status,
                 state=self.status.state,
                 message="Nothing has changed...",
             ),

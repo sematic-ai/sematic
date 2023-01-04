@@ -9,6 +9,7 @@ from sematic.calculator import func
 from sematic.external_resource import (
     ExternalResource,
     IllegalStateTransitionError,
+    ManagedBy,
     ResourceState,
     ResourceStatus,
 )
@@ -25,6 +26,7 @@ def test_update():
                 status=ResourceStatus(
                     state=ResourceState.ACTIVE,
                     message=updated_message,
+                    managed_by=ManagedBy.RESOLVER,
                 ),
             )
 
@@ -35,6 +37,7 @@ def test_update():
         status=ResourceStatus(
             state=ResourceState.ACTIVATING,
             message="spinning up the whatever",
+            managed_by=ManagedBy.RESOLVER,
         )
     ).update()
     assert updated.status.message == updated_message
@@ -52,6 +55,7 @@ def test_activate():
                 status=ResourceStatus(
                     state=ResourceState.ACTIVATING,
                     message="updating",
+                    managed_by=ManagedBy.RESOLVER if is_local else ManagedBy.SERVER,
                 ),
             )
 
@@ -71,6 +75,7 @@ def test_activate():
                 status=ResourceStatus(
                     state=ResourceState.DEACTIVATING,
                     message="updating",
+                    managed_by=ManagedBy.RESOLVER if is_local else ManagedBy.SERVER,
                 ),
             )
 
@@ -87,6 +92,7 @@ def test_deactivate():
                 status=ResourceStatus(
                     state=ResourceState.DEACTIVATING,
                     message="updating",
+                    managed_by=ManagedBy.RESOLVER,
                 ),
             )
 
@@ -94,6 +100,7 @@ def test_deactivate():
         status=ResourceStatus(
             state=ResourceState.ACTIVE,
             message="",
+            managed_by=ManagedBy.RESOLVER,
         )
     ).deactivate()
     assert deactivating.status.state == ResourceState.DEACTIVATING
@@ -106,6 +113,7 @@ def test_deactivate():
                 status=ResourceStatus(
                     state=ResourceState.ACTIVE,
                     message="updating",
+                    managed_by=ManagedBy.RESOLVER,
                 ),
             )
 
@@ -114,6 +122,7 @@ def test_deactivate():
             status=ResourceStatus(
                 state=ResourceState.ACTIVE,
                 message="",
+                managed_by=ManagedBy.RESOLVER,
             )
         ).deactivate()
 
@@ -157,6 +166,7 @@ class SomeImpl(ExternalResource):
             status=ResourceStatus(
                 state=ResourceState.ACTIVATING,
                 message="updating",
+                managed_by=ManagedBy.RESOLVER,
             ),
         )
 

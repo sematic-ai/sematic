@@ -36,6 +36,22 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "external_resources",
+    srcs = ["external_resources.py"],
+    pip_deps = [
+        "flask",
+    ],
+    deps = [
+            "//sematic/api:app",
+            "//sematic/api/endpoints:auth",
+            "//sematic/api/endpoints:request_parameters",
+            "//sematic/db/models:external_resource",
+            "//sematic/db/models:user",
+            "//sematic/db:queries",
+    ],
+)
+
+sematic_py_lib(
     name = "resolutions",
     srcs = ["resolutions.py"],
     pip_deps = [

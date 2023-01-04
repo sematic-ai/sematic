@@ -15,6 +15,7 @@ import sematic.api.endpoints.artifacts  # noqa: F401
 import sematic.api.endpoints.auth  # noqa: F401
 import sematic.api.endpoints.edges  # noqa: F401
 import sematic.api.endpoints.events  # noqa: F401
+import sematic.api.endpoints.external_resources  # noqa: F401
 import sematic.api.endpoints.meta  # noqa: F401
 import sematic.api.endpoints.notes  # noqa: F401
 import sematic.api.endpoints.resolutions  # noqa: F401

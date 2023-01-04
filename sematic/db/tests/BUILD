@@ -12,8 +12,10 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         "//sematic:abstract_future",
+        "//sematic:external_resource",
         "//sematic/db:db",
         "//sematic/db:queries",
+        "//sematic/db/models:external_resource",
         "//sematic/db/models:factories",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
@@ -38,11 +40,13 @@ pytest_test(
     deps = [
         ":fixtures",
         "//sematic:calculator",
+        "//sematic:external_resource",
         "//sematic/api/tests:fixtures",
         "//sematic/db:db",
         "//sematic/db:queries",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
+        "//sematic/db/models:external_resource",
         "//sematic/db/models:factories",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
