@@ -1,16 +1,18 @@
 import { Box } from "@mui/material";
+import { useAtom } from "jotai";
+import { RESET } from 'jotai/utils';
 import { useEffect, useMemo, useState } from "react";
 import Loading from "../components/Loading";
+import { ExtractContextType } from "../components/utils/typings";
+import { useGraph } from "../hooks/graphHooks";
+import { selectedRunHashAtom, usePipelineRunContext } from "../hooks/pipelineHooks";
+import { Run } from "../Models";
+import GraphContext from "./graph/graphContext";
 import MenuPanel from "./MenuPanel";
 import NotesPanel from "./NotesPanel";
-import RunPanel from "./RunPanel";
-import { ExtractContextType } from "../components/utils/typings";
-import { usePipelineRunContext } from "../hooks/pipelineHooks";
-import { Run } from "../Models";
 import PipelinePanelsContext from "./PipelinePanelsContext";
 import PipelineRunViewContext from "./PipelineRunViewContext";
-import GraphContext from "./graph/graphContext";
-import { useGraph } from "../hooks/graphHooks";
+import RunPanel from "./RunPanel";
 
 export default function PipelinePanels() {
   const { rootRun }
@@ -18,13 +20,9 @@ export default function PipelinePanels() {
     & {
       rootRun: Run
     };
-
+    
+  const [selectedRunId, setSelectedRunId] = useAtom(selectedRunHashAtom);
   const [selectedPanelItem, setSelectedPanelItem] = useState("run");
-  const [selectedRun, setSelectedRun] = useState<Run>(rootRun);
-  const pipelinePanelsContext = useMemo<ExtractContextType<typeof PipelinePanelsContext>>(() => ({
-    selectedPanelItem, setSelectedPanelItem,
-    selectedRun, setSelectedRun
-  }), [selectedPanelItem, setSelectedPanelItem, selectedRun, setSelectedRun]);
 
   const [graph, isGraphLoading, error] = useGraph(rootRun.id);
   const graphContext = useMemo<ExtractContextType<typeof GraphContext>>(() => ({
@@ -32,24 +30,29 @@ export default function PipelinePanels() {
     isLoading: isGraphLoading
   }), [graph, isGraphLoading]);
 
-  // Update the selectedRun with the data coming from the graph
-  useEffect(() => {
+  const selectedRun = useMemo(() => {
+    let runId = selectedRunId;
+    if (!runId) {
+      runId = rootRun.id;
+    }
     if (!graph) {
+      return undefined;
+    }
+    return graph.runsById.get(runId) || rootRun;
+  }, [selectedRunId, graph, rootRun]);
+
+  const pipelinePanelsContext = useMemo<ExtractContextType<typeof PipelinePanelsContext>>(() => ({
+    selectedPanelItem, setSelectedPanelItem,
+    selectedRun, setSelectedRunId
+  }), [selectedPanelItem, setSelectedPanelItem, selectedRun, setSelectedRunId]);
+
+  useEffect(()=> {
+    if (selectedRunId === rootRun.id || 
+      (!!graph && !graph.runsById.get(selectedRunId))) {
+      setSelectedRunId(RESET);
       return;
     }
-    if (selectedRun && graph.runs) {
-      let newSelectedRun = graph.runsById.get(selectedRun.id);
-      if (!newSelectedRun) {
-        newSelectedRun = rootRun;
-        graph.runs.forEach((run: Run) => {
-          if (run.calculator_path === selectedRun.calculator_path) {
-            newSelectedRun = run;
-          }
-        });
-      }
-      setSelectedRun(newSelectedRun);
-    }
-  }, [graph, graph?.runs, rootRun, selectedRun]);
+  }, [selectedRunId, graph, rootRun, setSelectedRunId])
 
   if (error || isGraphLoading) {
     return (

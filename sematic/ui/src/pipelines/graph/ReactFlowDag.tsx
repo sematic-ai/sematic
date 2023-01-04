@@ -16,6 +16,8 @@ import RunNode from "./RunNode";
 import ArtifactNode from "./ArtifactNode";
 import { usePipelinePanelsContext } from "../../hooks/pipelineHooks";
 import { useGraphContext } from "../../hooks/graphHooks";
+import { ExtractContextType } from "../../components/utils/typings";
+import PipelinePanelsContext from "../PipelinePanelsContext";
 
 var util = require("dagre/lib/util");
 var graphlib = require("graphlib");
@@ -50,12 +52,15 @@ function ReactFlowDag() {
 
   const { runs, edges } = graph!;
 
-  const { selectedRun, setSelectedPanelItem, setSelectedRun } = usePipelinePanelsContext();
+  const { selectedRun, setSelectedPanelItem, setSelectedRunId } 
+  = usePipelinePanelsContext() as ExtractContextType<typeof PipelinePanelsContext> & {
+    selectedRun: Run
+  };
 
-  const onSelectRun = useCallback((run: Run) => {
-    setSelectedRun(run);
+  const onSelectRun = useCallback((runId: string) => {
+    setSelectedRunId(runId);
     setSelectedPanelItem("run");
-  }, [setSelectedRun, setSelectedPanelItem]);
+  }, [setSelectedRunId, setSelectedPanelItem]);
 
   const runsById = useMemo(
     () => new Map(runs.map((run) => [run.id, run])),
@@ -195,7 +200,7 @@ function ReactFlowDag() {
     (event: any, node: Node) => {
       let selectedRun = runsById.get(node.id);
       if (selectedRun) {
-        onSelectRun(selectedRun);
+        onSelectRun(selectedRun.id);
       }
     },
     [runsById, onSelectRun]
