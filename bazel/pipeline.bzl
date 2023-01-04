@@ -91,7 +91,7 @@ def sematic_pipeline(
             name = "{}_{}_image".format(name, tag),
             main = main,
             srcs = srcs,
-            data = data + [tools_tar],
+            data = data,
             deps = [with_tools_layer] + py3_image_deps,
             visibility = ["//visibility:public"],
             base = base_image,
