@@ -49,6 +49,20 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "external_resource",
+    srcs = ["external_resource.py"],
+    pip_deps = [
+        "sqlalchemy",
+    ],
+    deps = [
+        ":base",
+        ":json_encodable_mixin",
+        "//sematic:external_resource",
+        "//sematic/types:serialization",
+    ],
+)
+
+sematic_py_lib(
     name = "git_info",
     srcs = ["git_info.py"],
     pip_deps = [],
@@ -92,6 +106,18 @@ sematic_py_lib(
         "//sematic/scheduling:external_job",
         "//sematic/types:serialization",
         "//sematic/utils:exceptions",
+    ],
+)
+
+sematic_py_lib(
+    name = "runs_external_resource",
+    srcs = ["runs_external_resource.py"],
+    pip_deps = [
+        "sqlalchemy",
+    ],
+    deps = [
+        ":base",
+        ":json_encodable_mixin",
     ],
 )
 

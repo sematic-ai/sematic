@@ -38,6 +38,7 @@ from sematic.db.queries import (
     get_run_status_details,
     save_graph,
     save_run,
+    save_run_external_resource_links,
 )
 from sematic.log_reader import load_log_lines
 from sematic.scheduling.external_job import ExternalJob
@@ -412,4 +413,21 @@ def save_graph_endpoint(user: Optional[User]):
     # except Exception as e:
     #    return jsonify_error(str(e), HTTPStatus.INTERNAL_SERVER_ERROR)
 
+    return flask.jsonify({})
+
+
+@sematic_api.route("/api/v1/runs/<run_id>/external_resources", methods=["POST"])
+@authenticate
+def link_resource_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+    if (
+        not flask.request
+        or not flask.request.json
+        or "external_resource_ids" not in flask.request.json
+    ):
+        return jsonify_error(
+            "Please provide an external_resource_id payload with the request",
+            HTTPStatus.BAD_REQUEST,
+        )
+    external_resource_ids = flask.request.json["external_resource_ids"]
+    save_run_external_resource_links(resource_ids=external_resource_ids, run_id=run_id)
     return flask.jsonify({})
