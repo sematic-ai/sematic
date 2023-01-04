@@ -5,10 +5,10 @@ The sematic_pipeline Bazel macro.
 load(
     "@io_bazel_rules_docker//python3:image.bzl",
     "py3_image",
-    "app_layer",
     "repositories",
 )
 load("@io_bazel_rules_docker//container:push.bzl", "container_push")
+load("@io_bazel_rules_docker//container:image.bzl", "app_layer")
 load("@io_bazel_rules_docker//container:pull.bzl", "container_pull")
 load("@rules_python//python:defs.bzl", "py_binary")
 
