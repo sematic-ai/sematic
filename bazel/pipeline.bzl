@@ -85,7 +85,6 @@ def sematic_pipeline(
         tools_tar, _ = build_layer(
             name = with_tools_layer,
             output_layer = "{}_layer".format(with_tools_layer),
-            base = base_image,
             files = script_data,
             directory = "/sematic_bin/",
         )
