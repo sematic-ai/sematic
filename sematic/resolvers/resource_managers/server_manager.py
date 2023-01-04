@@ -8,7 +8,7 @@ from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 
 
 class ServerResourceManager(AbstractResourceManager):
-    """ResourceManager which uses server APIs to manage external resource metadata"""
+    """ResourceManager which uses server APIs to manage external resource metadata."""
 
     def get_resource_for_id(self, resource_id: str) -> AbstractExternalResource:
         return api_client.get_external_resource(resource_id, refresh_remote=True)

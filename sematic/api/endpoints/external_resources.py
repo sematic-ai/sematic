@@ -31,7 +31,7 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
         return jsonify_error(f"No such resource: {resource_id}", HTTPStatus.NOT_FOUND)
 
     updated_resource = None
-    if record.managed_by == ManagedBy.SERVER and refresh_remote:
+    if record.managed_by is ManagedBy.SERVER and refresh_remote:
         logger.info(
             "Updating resource '%s', currently in state '%s'",
             record.id,
@@ -48,7 +48,7 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
         except Exception as e:
             logger.exception("Error updating resource '%s': %s", record.id, e)
             return jsonify_error(
-                "Error updating resource: {}".format(resource_id),
+                f"Error updating resource: {resource_id}",
                 HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
