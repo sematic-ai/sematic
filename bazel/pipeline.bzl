@@ -8,7 +8,7 @@ load(
     "repositories",
 )
 load("@io_bazel_rules_docker//container:push.bzl", "container_push")
-load("@io_bazel_rules_docker//container:layer.bzl", "build_layer")
+load("@io_bazel_rules_docker//container:layer.bzl", "layer")
 load("@io_bazel_rules_docker//container:pull.bzl", "container_pull")
 load("@rules_python//python:defs.bzl", "py_binary")
 
@@ -82,9 +82,8 @@ def sematic_pipeline(
 
     for tag, base_image in bases.items():
         with_tools_layer = "{}_{}_image_with_tools".format(name, tag)
-        tools_tar, _ = build_layer(
+        layer(
             name = with_tools_layer,
-            output_layer = "{}_layer".format(with_tools_layer),
             files = script_data,
             directory = "/sematic_bin/",
         )
@@ -93,7 +92,7 @@ def sematic_pipeline(
             main = main,
             srcs = srcs,
             data = data + [tools_tar],
-            deps = py3_image_deps,
+            deps = [with_tools_layer] + py3_image_deps,
             visibility = ["//visibility:public"],
             base = base_image,
             env = env or {},
