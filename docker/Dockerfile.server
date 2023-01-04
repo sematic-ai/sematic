@@ -6,6 +6,11 @@
 # for why --platform
 FROM --platform=linux/amd64 python:3.9-bullseye
 
+RUN apt-get -y update
+RUN apt-get -y upgrade
+RUN apt-get install -y sqlite3
+COPY install_sqlite3.sh .
+RUN bash install_sqlite3.sh
 RUN python3 -m pip install --upgrade pip
 
 # RUN pip install sematic
@@ -14,4 +19,5 @@ COPY sematic-*.whl .
 RUN pip install sematic-*.whl
 
 EXPOSE 80
-CMD python3 -m sematic.db.migrate up --verbose --env cloud && python3 -m sematic.api.server --env cloud
+CMD python3 -m sematic.db.migrate up --verbose --env cloud; python3 -m sematic.api.server --env cloud
+
