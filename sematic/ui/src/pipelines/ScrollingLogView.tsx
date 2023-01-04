@@ -2,9 +2,9 @@ import { useEffect, useCallback, useMemo, useRef } from "react";
 import { Alert, Box, Button, LinearProgress, useTheme } from "@mui/material";
 import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
 import InfiniteScroll from "react-infinite-scroll-component";
-import Loading from "./Loading";
 import { useAccumulateLogsUntilEnd, useLogStream } from "../hooks/logHooks";
 import { usePulldownTrigger } from "../hooks/scrollingHooks";
+import Loading from "../components/Loading";
 
 const DEFAULT_LOG_INFO_MESSAGE = "No more matching lines";
 
