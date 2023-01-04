@@ -32,7 +32,7 @@ class _InMemoryResourceRecord:
 
 
 @dataclass
-class InMemoryResourceManager(AbstractResourceManager):
+class MemoryResourceManager(AbstractResourceManager):
     resource_id_to_record: Dict[str, _InMemoryResourceRecord] = field(
         default_factory=dict
     )

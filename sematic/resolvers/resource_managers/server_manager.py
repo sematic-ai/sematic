@@ -7,7 +7,7 @@ from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 
 
-class CloudResourceManager(AbstractResourceManager):
+class ServerResourceManager(AbstractResourceManager):
     """ResourceManager which uses server APIs to manage external resource metadata"""
 
     def get_resource_for_id(self, resource_id: str) -> AbstractExternalResource:
