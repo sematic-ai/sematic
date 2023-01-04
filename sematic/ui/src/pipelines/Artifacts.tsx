@@ -11,7 +11,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { ErrorBoundary } from "react-error-boundary";
-import { CopyButton } from "./CopyButton";
+import { CopyButton } from "../components/CopyButton";
 
 function ArtifactError(props: { error: Error }) {
   return (

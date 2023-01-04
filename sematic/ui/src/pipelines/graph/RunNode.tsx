@@ -8,8 +8,8 @@ import {
   useTheme,
 } from "@mui/material";
 import { Handle, NodeProps, Position } from "react-flow-renderer";
-import { Run } from "../Models";
-import RunStateChip from "./RunStateChip";
+import { Run } from "../../Models";
+import RunStateChip from "../../components/RunStateChip";
 
 function getColor(futureState: string, theme: Theme): PaletteColor {
   if (futureState === "RESOLVED") {

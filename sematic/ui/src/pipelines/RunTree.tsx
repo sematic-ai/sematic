@@ -9,7 +9,7 @@ import { Fragment, useCallback } from "react";
 import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
 import { RunTreeNode } from "../interfaces/graph";
 import { Run } from "../Models";
-import RunStateChip from "./RunStateChip";
+import RunStateChip from "../components/RunStateChip";
 
 export default function RunTree(props: {
   runTreeNodes: Array<RunTreeNode>;

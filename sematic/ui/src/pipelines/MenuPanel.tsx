@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { useRunsTree, useGraphContext } from "../hooks/graphHooks";
 import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
-import Loading from "./Loading";
+import Loading from "../components/Loading";
 import RunTree from "./RunTree";
 
 export default function MenuPanel() {
