@@ -3,7 +3,10 @@ from dataclasses import dataclass, field, replace
 from typing import Dict, FrozenSet, List, Tuple
 
 # Sematic
-from sematic.external_resource import ExternalResource
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
+    ManagedBy,
+)
 from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 
 
@@ -19,7 +22,7 @@ class _InMemoryResourceRecord:
         A FrozenSet where each element is a tuple of (<run id>, <root id>)
     """
 
-    resource: ExternalResource
+    resource: AbstractExternalResource
 
     # For now, resources can only be used by one run. However, this might
     # be changed at some point, so we want the database to allow for multiple
@@ -29,15 +32,19 @@ class _InMemoryResourceRecord:
 
 
 @dataclass
-class InMemoryResourceManager(AbstractResourceManager):
+class MemoryResourceManager(AbstractResourceManager):
     resource_id_to_record: Dict[str, _InMemoryResourceRecord] = field(
         default_factory=dict
     )
 
-    def get_resource_for_id(self, resource_id: str) -> ExternalResource:
+    def get_resource_for_id(self, resource_id: str) -> AbstractExternalResource:
         return self.resource_id_to_record[resource_id].resource
 
-    def save_resource(self, resource: ExternalResource) -> None:
+    def save_resource(self, resource: AbstractExternalResource) -> None:
+        if resource.status.managed_by == ManagedBy.SERVER:
+            raise ValueError(
+                "In-memory resource manager can't manage remotely managed resources"
+            )
         if resource.id in self.resource_id_to_record:
             mapping = self.resource_id_to_record[resource.id]
         else:
@@ -55,7 +62,7 @@ class InMemoryResourceManager(AbstractResourceManager):
             mapping, run_id_root_id_pairs=frozenset(run_id_root_id_pairs)
         )
 
-    def resources_by_root_id(self, root_id: str) -> List[ExternalResource]:
+    def resources_by_root_id(self, root_id: str) -> List[AbstractExternalResource]:
         resources = []
         for record in self.resource_id_to_record.values():
             for _, associated_root_id in record.run_id_root_id_pairs:

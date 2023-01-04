@@ -4,12 +4,13 @@ import time
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
-from sematic.external_resource import ExternalResource, ResourceState
 from sematic.future_context import PrivateContext, SematicContext, set_context
-from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
-from sematic.resolvers.resource_managers.in_memory_manager import (
-    InMemoryResourceManager,
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
+    ResourceState,
 )
+from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
+from sematic.resolvers.resource_managers.memory_manager import MemoryResourceManager
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
 from sematic.utils.exceptions import (
     ExternalResourceError,
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 class SilentResolver(StateMachineResolver):
     """A resolver to resolver a DAG in memory, without tracking to the DB."""
 
-    _resource_manager: AbstractResourceManager = InMemoryResourceManager()
+    _resource_manager: AbstractResourceManager = MemoryResourceManager()
 
     # TODO: consider making these user settings
     _RESOURCE_ACTIVATION_TIMEOUT_SECONDS = 600  # 600s => 10 min
@@ -90,13 +91,14 @@ class SilentResolver(StateMachineResolver):
 
     @classmethod
     def activate_resource_for_run(  # type: ignore
-        cls, resource: ExternalResource, run_id: str, root_id: str
-    ) -> ExternalResource:
+        cls, resource: AbstractExternalResource, run_id: str, root_id: str
+    ) -> AbstractExternalResource:
+        is_local = True
         cls._resource_manager.save_resource(resource)
         cls._resource_manager.link_resource_to_run(resource.id, run_id, root_id)
         time_started = time.time()
         try:
-            resource = resource.activate(is_local=True)
+            resource = resource.activate(is_local=is_local)
         except Exception as e:
             raise ExternalResourceError(
                 f"Could not activate resource with id {resource.id}: {e}"
@@ -124,7 +126,9 @@ class SilentResolver(StateMachineResolver):
         return resource
 
     @classmethod
-    def deactivate_resource(cls, resource_id: str) -> ExternalResource:  # type: ignore
+    def deactivate_resource(  # type: ignore
+        cls, resource_id: str
+    ) -> AbstractExternalResource:
         resource = cls._resource_manager.get_resource_for_id(resource_id)
         if resource.status.state.is_terminal():
             return resource

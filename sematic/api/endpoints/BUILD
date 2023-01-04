@@ -48,6 +48,10 @@ sematic_py_lib(
             "//sematic/db/models:external_resource",
             "//sematic/db/models:user",
             "//sematic/db:queries",
+
+            # Included so there is always an ExternalResource implementation
+            # the server can use for demonstrating the feature/API.
+            "//sematic/plugins/external_resource:timed_message",
     ],
 )
 

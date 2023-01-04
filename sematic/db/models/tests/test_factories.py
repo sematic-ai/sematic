@@ -1,6 +1,7 @@
 # Standard Library
 import hashlib
 import json
+from typing import List, Optional, Union
 
 # Third-party
 import pytest
@@ -30,7 +31,6 @@ from sematic.types.serialization import (
     type_to_json_encodable,
     value_to_json_encodable,
 )
-from typing import Optional, Union, List
 
 
 @func
@@ -92,6 +92,7 @@ def test_make_artifact():
     assert artifact.json_summary == json.dumps(json_summary, sort_keys=True)
     assert artifact.type_serialization == json.dumps(type_serialization, sort_keys=True)
 
+
 def test_make_artifact_with_optional_type_hint():
     artifact = make_artifact([42], Optional[List[int]])
 
@@ -111,6 +112,7 @@ def test_make_artifact_with_optional_type_hint():
     assert artifact.json_summary == json.dumps(json_summary, sort_keys=True)
     assert artifact.type_serialization == json.dumps(type_serialization, sort_keys=True)
 
+
 def test_make_artifact_with_nested_union_type_hint():
     artifact = make_artifact([42], Union[Union[List[int], str], List[str]])
 
@@ -129,6 +131,7 @@ def test_make_artifact_with_nested_union_type_hint():
     assert artifact.id == sha1.hexdigest()
     assert artifact.json_summary == json.dumps(json_summary, sort_keys=True)
     assert artifact.type_serialization == json.dumps(type_serialization, sort_keys=True)
+
 
 @pytest.mark.parametrize(
     "value, expected_value",
