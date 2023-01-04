@@ -21,7 +21,7 @@ from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionS
 from sematic.db.models.run import Run
 from sematic.graph import Graph
 from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
-from sematic.resolvers.resource_managers.cloud_manager import CloudResourceManager
+from sematic.resolvers.resource_managers.server_manager import ServerResourceManager
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.storage import LocalStorage, Storage
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
@@ -49,7 +49,7 @@ class LocalResolver(SilentResolver):
         entire pipeline again.
     """
 
-    _resource_manager: AbstractResourceManager = CloudResourceManager()
+    _resource_manager: AbstractResourceManager = ServerResourceManager()
 
     def __init__(self, rerun_from: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)

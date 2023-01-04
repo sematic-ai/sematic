@@ -22,7 +22,6 @@ from sematic.types.serialization import (
     value_from_json_encodable,
     value_to_json_encodable,
 )
-
 from sematic.types.types.union import get_value_type, is_union
 from sematic.utils.hashing import get_value_and_type_sha1_digest
 from sematic.utils.json import fix_nan_inf

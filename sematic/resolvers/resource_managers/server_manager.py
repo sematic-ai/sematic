@@ -12,8 +12,8 @@ from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 logger = logging.getLogger(__name__)
 
 
-class CloudResourceManager(AbstractResourceManager):
-    """ResourceManager which uses server APIs to manage external resource metadata"""
+class ServerResourceManager(AbstractResourceManager):
+    """ResourceManager which uses server APIs to manage external resource metadata."""
 
     def __init__(self, update_poll_interval_seconds: int = 600) -> None:
         super().__init__()
