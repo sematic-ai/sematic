@@ -61,7 +61,7 @@ def sematic_pipeline(
         else:
             fail("No default image specified. Set `base` or tag an image as default in `bases`.")
     elif bases["default"] != base:
-        fail("default image is ambiguous, as base and bases['default'] were specified with different values")
+        fail("Default image is ambiguous, as `base` and `bases['default']` were specified with different values.")
 
     if dev:
         main = "@sematic//sematic/resolvers:worker.py"
