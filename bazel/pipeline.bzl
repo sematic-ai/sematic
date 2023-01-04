@@ -85,6 +85,7 @@ def sematic_pipeline(
         app_layer(
             name = with_tools_layer,
             base = base_image,
+            deps = [],
             data = script_data,
             directory = "/sematic_bin/",
         )
