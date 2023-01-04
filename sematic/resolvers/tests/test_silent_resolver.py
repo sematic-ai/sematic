@@ -5,8 +5,8 @@ import pytest
 from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import FutureState
 from sematic.calculator import func
-from sematic.external_resource import ResourceState
 from sematic.future_context import PrivateContext, SematicContext, context, set_context
+from sematic.plugins.abstract_external_resource import ResourceState
 from sematic.resolvers.silent_resolver import ExternalResourceError, SilentResolver
 from sematic.resolvers.tests.fixtures import FakeExternalResource
 from sematic.retry_settings import RetrySettings

@@ -1,4 +1,5 @@
 # Standard Library
+import logging
 from http import HTTPStatus
 from typing import Optional
 
@@ -9,22 +10,51 @@ import flask
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
-from sematic.db.models.external_resource import (
-    ExternalResource as ExternalResourceRecord,
-)
+from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.user import User
 from sematic.db.queries import (
     get_external_resource_record,
     save_external_resource_record,
 )
+from sematic.plugins.abstract_external_resource import ManagedBy
+
+logger = logging.getLogger(__name__)
 
 
 @sematic_api.route("/api/v1/external_resources/<resource_id>", methods=["GET"])
 @authenticate
 def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Response:
+    refresh_remote = flask.request.args.get("refresh_remote", "false").lower() == "true"
+
     record = get_external_resource_record(resource_id=resource_id)
     if record is None:
         return jsonify_error(f"No such resource: {resource_id}", HTTPStatus.NOT_FOUND)
+
+    updated_resource = None
+    if record.managed_by is ManagedBy.SERVER and refresh_remote:
+        logger.info(
+            "Updating resource '%s', currently in state '%s'",
+            record.id,
+            record.resource_state.value,
+        )
+        try:
+            updated_resource = record.resource.update()
+            logger.info(
+                "Done updating resource '%s', now in state '%s': %s",
+                record.id,
+                record.resource_state.value,
+                record.status_message,
+            )
+        except Exception as e:
+            logger.exception("Error updating resource '%s': %s", record.id, e)
+            return jsonify_error(
+                f"Error updating resource: {resource_id}",
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+
+    if updated_resource is not None:
+        record = ExternalResource.from_resource(updated_resource)
+        save_external_resource_record(record)
 
     payload = dict(external_resource=record.to_json_encodable())
 
@@ -44,7 +74,7 @@ def save_resource_endpoint(user: Optional[User]) -> flask.Response:
         )
 
     record_json_encodable = flask.request.json["external_resource"]
-    record = ExternalResourceRecord.from_json_encodable(record_json_encodable)
+    record = ExternalResource.from_json_encodable(record_json_encodable)
     record = save_external_resource_record(record)
     payload = dict(external_resource=record.to_json_encodable())
 

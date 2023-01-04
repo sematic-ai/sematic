@@ -390,7 +390,7 @@ def _validate_type_annotations(all_type_annotations: Dict[str, Type[Any]]):
     """
     try:
         # Sematic
-        from sematic.external_resource import ExternalResource
+        from sematic.plugins.abstract_external_resource import AbstractExternalResource
     except ImportError:
         # there is no way the annotations are subclasses of
         # ExternalResource if we reached here; if it was then
@@ -400,7 +400,7 @@ def _validate_type_annotations(all_type_annotations: Dict[str, Type[Any]]):
     for parameter_name, type_ in all_type_annotations.items():
         if not is_dataclass(type_):
             continue
-        if issubclass(type_, ExternalResource):
+        if issubclass(type_, AbstractExternalResource):
             raise TypeError(
                 f"{type_.__name__} objects can't be passed into or out of "
                 f"Sematic funcs. They are only intended to be used inside "

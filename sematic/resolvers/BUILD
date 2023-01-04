@@ -2,7 +2,7 @@ sematic_py_lib(
     name = "abstract_resource_manager",
     srcs = ["abstract_resource_manager.py"],
     deps = [
-        "//sematic:external_resource",
+        "//sematic/plugins:abstract_external_resource",
     ],
 )
 
@@ -18,6 +18,8 @@ sematic_py_lib(
         "//sematic:abstract_calculator",
         "//sematic:abstract_future",
         "//sematic:api_client",
+        "//sematic/resolvers:abstract_resource_manager",
+        "//sematic/resolvers/resource_managers:server_manager",
         "//sematic:graph",
         "//sematic/config:config",
         "//sematic/db/models:artifact",
@@ -46,10 +48,10 @@ sematic_py_lib(
     srcs = ["silent_resolver.py"],
     deps = [
         "//sematic:abstract_future",
-        "//sematic:external_resource",
         "//sematic:future_context",
+        "//sematic/plugins:abstract_external_resource",
         "//sematic/resolvers:abstract_resource_manager",
-        "//sematic/resolvers/resource_managers:in_memory_manager",
+        "//sematic/resolvers/resource_managers:memory_manager",
         "//sematic/resolvers:state_machine_resolver",
     ],
 )
@@ -63,12 +65,12 @@ sematic_py_lib(
     deps = [
         ":local_resolver",
         "//sematic:abstract_future",
-        "//sematic:external_resource",
         "//sematic:container_images",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+        "//sematic/plugins:abstract_external_resource",
         "//sematic/utils:exceptions",
         "//sematic/utils:memoized_property",
     ],

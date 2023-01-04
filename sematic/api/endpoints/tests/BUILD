@@ -10,7 +10,7 @@ pytest_test(
         "//sematic/db/models:external_resource",
         "//sematic/db/models:user",
         "//sematic/db/tests:fixtures",
-        "//sematic:external_resource",
+        "//sematic/plugins:abstract_external_resource",
     ],
 )
 

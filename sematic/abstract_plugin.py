@@ -14,6 +14,9 @@ import sys
 from importlib import import_module
 from typing import Tuple, Type, final
 
+# Sematic
+from sematic.utils.exceptions import MissingPluginError
+
 logger = logging.getLogger(__name__)
 
 
@@ -105,16 +108,6 @@ class AbstractPlugin(abc.ABC):
         to use (e.g. server-prescribed upload locations),
         """
         return ".".join([cls.__module__, cls.__name__])
-
-
-class MissingPluginError(Exception):
-    """
-    Exception to indicate a missing plug-in.
-    """
-
-    def __init__(self, plugin_path: str):
-        message = f"Unable to find plug-in {plugin_path}. Module or class is missing."
-        super().__init__(message)
 
 
 def import_plugin(plugin_import_path: str) -> Type[AbstractPlugin]:

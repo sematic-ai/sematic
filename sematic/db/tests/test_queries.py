@@ -13,9 +13,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 )
 from sematic.calculator import func
 from sematic.db.models.artifact import Artifact
-from sematic.db.models.external_resource import (
-    ExternalResource as ExternalResourceRecord,
-)
+from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
@@ -43,7 +41,11 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
-from sematic.external_resource import ExternalResource, ManagedBy, ResourceState
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
+    ManagedBy,
+    ResourceState,
+)
 from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa: F401
 from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 from sematic.utils.exceptions import IllegalStateTransitionError
@@ -214,13 +216,13 @@ def test_get_run_graph(
 
 
 @dataclass(frozen=True)
-class SomeResource(ExternalResource):
+class SomeResource(AbstractExternalResource):
     some_field: int = 0
 
 
 def test_save_external_resource_record(test_db):  # noqa: F811
     resource1 = SomeResource(some_field=42)
-    record1 = ExternalResourceRecord.from_resource(resource1)
+    record1 = ExternalResource.from_resource(resource1)
     save_external_resource_record(record1)
     saved_record1 = get_external_resource_record(record1.id)
 
@@ -237,7 +239,7 @@ def test_save_external_resource_record(test_db):  # noqa: F811
             managed_by=ManagedBy.SERVER,
         ),
     )
-    record2 = ExternalResourceRecord.from_resource(resource2)
+    record2 = ExternalResource.from_resource(resource2)
     save_external_resource_record(record2)
     saved_record2 = get_external_resource_record(record2.id)
     assert saved_record2.history == (resource2, resource1)
@@ -253,7 +255,7 @@ def test_save_external_resource_record(test_db):  # noqa: F811
             last_update_epoch_time=resource2.status.last_update_epoch_time + 1,
         ),
     )
-    record3 = ExternalResourceRecord.from_resource(resource3)
+    record3 = ExternalResource.from_resource(resource3)
     saved_record3 = save_external_resource_record(record3)
     assert (
         saved_record3.last_updated_epoch_seconds
@@ -272,7 +274,7 @@ def test_save_external_resource_record(test_db):  # noqa: F811
         ),
         some_field=43,
     )
-    record4 = ExternalResourceRecord.from_resource(resource4)
+    record4 = ExternalResource.from_resource(resource4)
     saved_record4 = save_external_resource_record(record4)
 
     # history is updated for changes in other fields
@@ -285,7 +287,7 @@ def test_save_external_resource_record(test_db):  # noqa: F811
             state=ResourceState.CREATED,
         ),
     )
-    record5 = ExternalResourceRecord.from_resource(resource5)
+    record5 = ExternalResource.from_resource(resource5)
     with pytest.raises(IllegalStateTransitionError):
         save_external_resource_record(record5)
 
@@ -305,7 +307,7 @@ def test_run_resource_links(test_db):  # noqa: F811
     resource_4 = SomeResource(some_field=4)
 
     for resource in [resource_1, resource_2, resource_3, resource_4]:
-        save_external_resource_record(ExternalResourceRecord.from_resource(resource))
+        save_external_resource_record(ExternalResource.from_resource(resource))
 
     save_run_external_resource_links([resource_1.id], child_run_1.id)
     save_run_external_resource_links([resource_2.id], child_run_2.id)
@@ -317,6 +319,6 @@ def test_run_resource_links(test_db):  # noqa: F811
 
     resources = get_resources_by_root_id(root_run.id)
     assert len(resources) == 3
-    assert all(isinstance(record, ExternalResourceRecord) for record in resources)
+    assert all(isinstance(record, ExternalResource) for record in resources)
     resource_ids = {resource.id for resource in resources}
     assert resource_ids == {resource_1.id, resource_2.id, resource_3.id}
