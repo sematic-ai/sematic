@@ -54,6 +54,8 @@ def sematic_pipeline(
     """
     if bases == None:
         bases = {}
+    if data == None:
+        data = []
 
     if "default" not in bases:
         if base != None:
