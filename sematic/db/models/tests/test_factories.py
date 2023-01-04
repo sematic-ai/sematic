@@ -30,6 +30,7 @@ from sematic.types.serialization import (
     type_to_json_encodable,
     value_to_json_encodable,
 )
+from typing import Optional, Union, List
 
 
 @func
@@ -91,6 +92,43 @@ def test_make_artifact():
     assert artifact.json_summary == json.dumps(json_summary, sort_keys=True)
     assert artifact.type_serialization == json.dumps(type_serialization, sort_keys=True)
 
+def test_make_artifact_with_optional_type_hint():
+    artifact = make_artifact([42], Optional[List[int]])
+
+    value_serialization = value_to_json_encodable([42], List[int])
+    type_serialization = type_to_json_encodable(List[int])
+    json_summary = get_json_encodable_summary([42], List[int])
+
+    payload = {
+        "value": value_serialization,
+        "type": type_serialization,
+        "summary": json_summary,
+    }
+
+    sha1 = hashlib.sha1(json.dumps(payload, sort_keys=True).encode("utf-8"))
+
+    assert artifact.id == sha1.hexdigest()
+    assert artifact.json_summary == json.dumps(json_summary, sort_keys=True)
+    assert artifact.type_serialization == json.dumps(type_serialization, sort_keys=True)
+
+def test_make_artifact_with_nested_union_type_hint():
+    artifact = make_artifact([42], Union[Union[List[int], str], List[str]])
+
+    value_serialization = value_to_json_encodable([42], List[int])
+    type_serialization = type_to_json_encodable(List[int])
+    json_summary = get_json_encodable_summary([42], List[int])
+
+    payload = {
+        "value": value_serialization,
+        "type": type_serialization,
+        "summary": json_summary,
+    }
+
+    sha1 = hashlib.sha1(json.dumps(payload, sort_keys=True).encode("utf-8"))
+
+    assert artifact.id == sha1.hexdigest()
+    assert artifact.json_summary == json.dumps(json_summary, sort_keys=True)
+    assert artifact.type_serialization == json.dumps(type_serialization, sort_keys=True)
 
 @pytest.mark.parametrize(
     "value, expected_value",

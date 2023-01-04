@@ -4,6 +4,7 @@ from typing import Any, Optional, Tuple, Union, get_args
 # Sematic
 from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.registry import (
+    get_origin_type,
     register_can_cast,
     register_from_json_encodable,
     register_safe_cast,
@@ -52,7 +53,7 @@ def _union_can_cast(from_type: Any, to_type: Any) -> Tuple[bool, Optional[str]]:
 @register_to_json_encodable(Union)
 def _union_to_json_encodable(value: Any, type_: Any) -> Any:
     # We assume that casting has already vetted type_
-    value_type = _get_value_type(value, type_)
+    value_type = get_value_type(value, type_)
     value_type_index = -1
     for i, unioned_type in enumerate(get_args(type_)):
         if unioned_type == value_type:
@@ -78,13 +79,18 @@ def _union_from_json_encodable(json_encodable: Any, type_: Any) -> Any:
 
 @register_to_json_encodable_summary(Union)
 def _union_to_summary(value: Any, type_: Any) -> Any:
-    return get_json_encodable_summary(value, _get_value_type(value, type_))
+    return get_json_encodable_summary(value, get_value_type(value, type_))
 
 
-def _get_value_type(value: Any, type_: Any) -> Any:
+def get_value_type(value: Any, type_: Any) -> Any:
     for unioned_type in get_args(type_):
         _, error = safe_cast(value, unioned_type)
         if error is None:
             return unioned_type
 
     return type(value)
+
+def is_union(type_: Any) -> bool:
+    origin_type = get_origin_type(type_)
+
+    return origin_type is Union
