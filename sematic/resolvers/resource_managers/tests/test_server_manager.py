@@ -6,12 +6,12 @@ import pytest
 
 # Sematic
 from sematic.plugins.external_resource.timed_message import TimedMessage
-from sematic.resolvers.resource_managers.cloud_manager import CloudResourceManager
+from sematic.resolvers.resource_managers.server_manager import ServerResourceManager
 
 
 @pytest.fixture
 def mock_api_client():
-    with patch("sematic.resolvers.resource_managers.cloud_manager.api_client") as api:
+    with patch("sematic.resolvers.resource_managers.server_manager.api_client") as api:
         yield api
 
 
@@ -33,7 +33,7 @@ def test_resources_by_root_id(mock_api_client):
     mock_api_client.get_resources_by_root_run_id = mock_get_resources_by_root
     mock_api_client.get_external_resource = mock_get_external_resource
 
-    resources = CloudResourceManager().resources_by_root_id(expected_root_id)
+    resources = ServerResourceManager().resources_by_root_id(expected_root_id)
     resources = sorted(resources, key=lambda r: r.message)
 
     expected_resources = sorted(list(resources_by_id.values()), key=lambda r: r.message)

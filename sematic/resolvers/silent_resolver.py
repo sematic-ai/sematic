@@ -10,9 +10,7 @@ from sematic.plugins.abstract_external_resource import (
     ResourceState,
 )
 from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
-from sematic.resolvers.resource_managers.in_memory_manager import (
-    InMemoryResourceManager,
-)
+from sematic.resolvers.resource_managers.memory_manager import MemoryResourceManager
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
 from sematic.utils.exceptions import (
     ExternalResourceError,
@@ -26,7 +24,7 @@ logger = logging.getLogger(__name__)
 class SilentResolver(StateMachineResolver):
     """A resolver to resolver a DAG in memory, without tracking to the DB."""
 
-    _resource_manager: AbstractResourceManager = InMemoryResourceManager()
+    _resource_manager: AbstractResourceManager = MemoryResourceManager()
 
     # TODO: consider making these user settings
     _RESOURCE_ACTIVATION_TIMEOUT_SECONDS = 600  # 600s => 10 min
