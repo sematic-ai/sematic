@@ -64,7 +64,7 @@ class ExternalResource(Base, JSONEncodableMixin):
         new entry will be added to this list. Element 0 is the most recent, element N
         the oldest.
     created_at:
-        The time this record was created.
+        The time this record was created in the DB.
     updated_at:
         The time this record was last updated in the DB. See documentation in
         last_updated_epoch_seconds for how this relates to that field.

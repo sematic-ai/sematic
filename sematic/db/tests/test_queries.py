@@ -22,7 +22,6 @@ from sematic.db.queries import (
     get_artifact,
     get_external_resource_record,
     get_resolution,
-    get_resource_ids_by_root_id,
     get_resources_by_root_id,
     get_root_graph,
     get_run,
@@ -318,9 +317,8 @@ def test_run_resource_links(test_db):  # noqa: F811
 
     save_run_external_resource_links([resource_4.id], other_root_run.id)
 
-    resource_ids = get_resource_ids_by_root_id(root_run.id)
-    assert set(resource_ids) == {resource_1.id, resource_2.id, resource_3.id}
-
     resources = get_resources_by_root_id(root_run.id)
     assert len(resources) == 3
     assert all(isinstance(record, ExternalResource) for record in resources)
+    resource_ids = {resource.id for resource in resources}
+    assert resource_ids == {resource_1.id, resource_2.id, resource_3.id}
