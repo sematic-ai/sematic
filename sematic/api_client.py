@@ -13,9 +13,11 @@ from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import UserSettings, UserSettingsVar, get_user_setting
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
+from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
+from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.storage import S3Storage, Storage
 from sematic.utils.retry import retry
 from sematic.versions import CURRENT_VERSION, version_as_string
@@ -187,6 +189,87 @@ def schedule_resolution(
 
     response = _post(f"/resolutions/{resolution_id}/schedule", json_payload=payload)
     return Resolution.from_json_encodable(response["content"])
+
+
+def save_external_resource(
+    resource: AbstractExternalResource,
+) -> AbstractExternalResource:
+    """Save the external resource to the server, return the result.
+
+    Parameters
+    ----------
+    resource:
+        The resource to save.
+
+    Returns
+    -------
+    The resource as saved by the server.
+    """
+    record = ExternalResource.from_resource(resource)
+    payload = {"external_resource": record.to_json_encodable()}
+    response = _post("/external_resources", json_payload=payload)
+    return ExternalResource.from_json_encodable(response["external_resource"]).resource
+
+
+def get_external_resource(
+    resource_id: str, refresh_remote: bool
+) -> AbstractExternalResource:
+    """Get the external resource, updating the status if required.
+
+    Will actively interact with the external resource if necessary to get its status.
+
+    Parameters
+    ----------
+    resource_id:
+        The id of the resource to retrieve.
+    refresh_remote:
+        If true: refresh the state of the resource with the remote objects it represents.
+        Locally managed objects will NOT have their state refreshed. If False, the
+        external resource will be returned directly from the DB.
+
+    Returns
+    -------
+    The latest update of the external resource.
+    """
+    response = _get(
+        f"/external_resources/{resource_id}?refresh_remote={str(refresh_remote).lower()}"
+    )
+    return ExternalResource.from_json_encodable(response["external_resource"]).resource
+
+
+def save_resource_run_links(resource_ids: List[str], run_id: str) -> None:
+    """Save that the run with the given id is using the resource with the given id.
+
+    Parameters
+    ----------
+    resource_ids:
+        The ids of the resources to record a link for.
+    run_id:
+        The id of the run to record a link for.
+    """
+    _post(
+        f"/runs/{run_id}/external_resources",
+        json_payload={"external_resource_ids": resource_ids},
+    )
+
+
+def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResource]:
+    """Get a list of external resources associated with the given root run.
+
+    Parameters
+    ----------
+    root_run_id:
+        The id of the root run of a resolution.
+
+    Returns
+    -------
+    A list of external resources used by runs underneath the specified root run.
+    """
+    response = _get(f"/resolutions/{root_run_id}/external_resources")
+    return [
+        ExternalResource.from_json_encodable(resource).resource
+        for resource in response["external_resources"]
+    ]
 
 
 @retry(tries=3, delay=10, jitter=1)

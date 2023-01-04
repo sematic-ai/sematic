@@ -30,6 +30,7 @@ sematic_py_lib(
         ":user",
         "//sematic:abstract_future",
         "//sematic:storage",
+        "//sematic/types/types:union",
         "//sematic/types:serialization",
         "//sematic/utils:json",
         "//sematic/utils:hashing",
@@ -57,7 +58,7 @@ sematic_py_lib(
     deps = [
         ":base",
         ":json_encodable_mixin",
-        "//sematic:external_resource",
+        "//sematic/plugins:abstract_external_resource",
         "//sematic/types:serialization",
     ],
 )

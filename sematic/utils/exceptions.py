@@ -198,3 +198,13 @@ class ResolutionError(Exception):
         if metadata is not None and metadata.repr is not None:
             return f"{msg_prefix}{metadata.repr}"
         return ""
+
+
+class MissingPluginError(Exception):
+    """
+    Exception to indicate a missing plug-in.
+    """
+
+    def __init__(self, plugin_path: str):
+        message = f"Unable to find plug-in {plugin_path}. Module or class is missing."
+        super().__init__(message)
