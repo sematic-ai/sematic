@@ -81,7 +81,7 @@ def sematic_pipeline(
     push_rule_names = []
 
     for tag, base_image in bases.items():
-        with_tools_layer = "{}_{}_image_with_tools".format(name, tag),
+        with_tools_layer = "{}_{}_image_with_tools".format(name, tag)
         app_layer(
             name = with_tools_layer,
             base = base_image,
