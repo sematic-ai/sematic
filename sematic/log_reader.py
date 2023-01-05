@@ -13,12 +13,12 @@ from sematic.abstract_future import FutureState
 from sematic.db import queries as db_queries
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
+from sematic.plugins.storage.s3_storage import S3Storage
 from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
     START_INLINE_RUN_INDICATOR,
 )
 from sematic.scheduling.external_job import JobType
-from sematic.storage import S3Storage
 
 # Why the "V1"/"V2"? Because we changed the structure of the logs. Originally,
 # each file on s3 held the entirety of the logs. Now each file contains a
