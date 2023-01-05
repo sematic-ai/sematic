@@ -1,62 +1,99 @@
 auth:
   enabled: true
-  google_oauth_client_id: 977722105393-257kdkrc5dfbpu0jcsd8etn1k4u4q4ut.apps.googleusercontent.com
-  authorized_email_domain: sematic.ai
+  google_oauth_client_id: xxxxxxxx.apps.googleusercontent.com # REPLACE ME
+  authorized_email_domain: example.org # REPLACE ME
+
 aws:
   enabled: true
-  storage_bucket: sematic-dev
+  storage_bucket: my-s3-bucket # REPLACE ME
 
-create_secret: true
+secret:
+  create: true
+
 database:
-  url: postgres://postgresql:5432/postgres
+  url: postgres://postgresql:5432/postgres # REPLACE ME
 
-replicaCount: 1
+deployment:
+  replica_count: 1
+  affinity: {}
+  annorations: {}
+  tolerations: {}
+  node_selector: {}
+  resources:
+    limits:
+      cpu: 500m
+      memory: 4000Mi
+    requests:
+      cpu: 500m
+      memory: 4000Mi
+  autoscaling:
+    enabled: false
+    min_replicas: 1
+    max_replicas: 100
+    target_cpu_utilization_pct: 80
+    # target_memory_utilization_pct: 80
+  security_context: {}
+    # fs_group: 2000
+  container_security_context: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # read_only_root_filesystem: true
+    # run_as_non_root: true
+    # run_as_user: 1000
+  liveness_probe:
+    failureThreshold: 6
+    httpGet:
+      path: /
+      port: http
+      scheme: HTTP
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 1
+  readiness_probe:
+    failureThreshold: 6
+    httpGet:
+      path: /
+      port: http
+      scheme: HTTP
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 1
 
 image:
   repository: sematicai/sematic-server
-  pullPolicy: IfNotPresent
-  tag: v0.21.1
+  #tag: vX.XX.X
+  pull_policy: IfNotPresent
+  #pull_secrets: []
 
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
+rbac:
+  create: true
+
+service_account:
+  # Should a new service account be created? Or should we use
+  # one that already exists
+  create: true
 
 worker:
   service_account:
     name: default
 
-serviceAccount:
-  # Should a new service account be created? Or should we use
-  # one that already exists
-  create: false
-
   # Annotations to add to the service account
   annotations: {}
 
   # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
-
-podAnnotations: {}
-
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+  name: sematic-server
 
 service:
+  create: false
   type: ClusterIP
   port: 80
 
 ingress:
   enabled: false
-  className: ""
+  class_name: ""
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
@@ -66,48 +103,6 @@ ingress:
         - path: /
           pathType: ImplementationSpecific
   tls: []
-  #  - secretName: chart-example-tls
+  #  - secret_name: chart-example-tls
   #    hosts:
   #      - chart-example.local
-
-resources: 
-  limits:
-    cpu: 500m
-    memory: 4000Mi
-  requests:
-    cpu: 500m
-    memory: 4000Mi
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
-
-livenessProbe:
-  failureThreshold: 6
-  httpGet:
-    path: /
-    port: http
-    scheme: HTTP
-  initialDelaySeconds: 10
-  periodSeconds: 5
-  successThreshold: 1
-  timeoutSeconds: 1
-readinessProbe:
-  failureThreshold: 6
-  httpGet:
-    path: /
-    port: http
-    scheme: HTTP
-  initialDelaySeconds: 10
-  periodSeconds: 5
-  successThreshold: 1
-  timeoutSeconds: 1
