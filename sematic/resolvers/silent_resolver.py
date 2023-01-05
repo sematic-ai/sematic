@@ -32,7 +32,6 @@ class SilentResolver(StateMachineResolver):
     _RESOURCE_UPDATE_INTERVAL_SECONDS = 1
 
     def _schedule_future(self, future: AbstractFuture) -> None:
-        print("_schedule_future")
         self._run_inline(future)
 
     def _run_inline(self, future: AbstractFuture) -> None:
@@ -76,7 +75,6 @@ class SilentResolver(StateMachineResolver):
         self._deactivate_all_resources()
 
     def _deactivate_all_resources(self) -> None:
-        print("_deactivate_all_resources")
         resources = self._resource_manager.resources_by_root_id(self._root_future.id)
         logger.warning("Deactivating all resources due to resolution failure.")
         failed_to_deactivate = []
@@ -95,7 +93,6 @@ class SilentResolver(StateMachineResolver):
     def activate_resource_for_run(  # type: ignore
         cls, resource: AbstractExternalResource, run_id: str, root_id: str
     ) -> AbstractExternalResource:
-        print("activate_resource_for_run")
         is_local = True
         cls._resource_manager.save_resource(resource)
         cls._resource_manager.link_resource_to_run(resource.id, run_id, root_id)
@@ -132,7 +129,6 @@ class SilentResolver(StateMachineResolver):
     def deactivate_resource(  # type: ignore
         cls, resource_id: str
     ) -> AbstractExternalResource:
-        print("deactivate_resource")
         resource = cls._resource_manager.get_resource_for_id(resource_id)
         if resource.status.state.is_terminal():
             return resource
