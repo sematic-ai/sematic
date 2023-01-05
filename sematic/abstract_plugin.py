@@ -124,8 +124,6 @@ def import_plugin(plugin_import_path: str) -> Type[AbstractPlugin]:
     MissingPluginError
         The requested plug-in cannot be found.
     """
-    logger.info("Importing plug-in %s", plugin_import_path)
-
     try:
         split_import_path = plugin_import_path.split(".")
         import_path, plugin_name = (
