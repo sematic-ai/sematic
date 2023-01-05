@@ -100,6 +100,9 @@ def get_future_cache_key(cache_namespace: str, future: AbstractFuture) -> str:
     if cache_namespace is None:
         raise ValueError("`cache_namespace` cannot be None!")
 
+    if len(future.kwargs) != len(future.resolved_kwargs):
+        raise ValueError("Not all input arguments are resolved!")
+
     func_fqpn = future.calculator.get_func_fqpn()  # type: ignore
     output_type_repr = repr(future.calculator.output_type)
     input_args_hash = _get_input_args_hash(future)
@@ -141,7 +144,7 @@ def _get_input_args_hash(future: AbstractFuture) -> str:
     # deallocated quickly
     # TODO #403: do these things in a sustainable and efficient way
     input_arg_hashes = {}
-    for name, value in future.kwargs.items():
+    for name, value in future.resolved_kwargs.items():
 
         type_ = future.calculator.input_types[name]
         type_serialization = type_to_json_encodable(type_)
@@ -156,5 +159,6 @@ def _get_input_args_hash(future: AbstractFuture) -> str:
     # we rely on the registered value serializers to provide
     # respective recursive deterministic sorted representations
     input_arg_hashes_dump = json.dumps(input_arg_hashes, sort_keys=True, default=str)
+    logger.debug("Input arg hashes: %s", input_arg_hashes)
 
     return get_str_sha1_digest(input_arg_hashes_dump)
