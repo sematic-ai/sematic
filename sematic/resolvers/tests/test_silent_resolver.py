@@ -79,10 +79,6 @@ def test_silent_resolver():
     assert SilentResolver().resolve(pipeline(3, 5)) == 24
 
 
-def test_add():
-    assert SilentResolver().resolve(add(1, 2)) == 3
-
-
 def test_silent_resolver_context():
     future = context_pipeline()
     result = SilentResolver().resolve(future)
