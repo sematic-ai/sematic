@@ -1,14 +1,16 @@
+{{ if .Values.rbac.create }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "sematic-server.serviceAccountName" . }}
+  name: {{ .Values.service_account.name | default .Release.Name }}
   labels:
     {{- include "sematic-server.labels" . | nindent 4 }}
 subjects:
 - kind: ServiceAccount
-  name: {{ include "sematic-server.serviceAccountName" . }}
+  name: {{ .Values.service_account.name | default .Release.Name }}
   namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role
-  name: {{ include "sematic-server.serviceAccountName" . }}-orchestrator
+  name: {{ .Values.service_account.name | default .Release.Name }}
   apiGroup: rbac.authorization.k8s.io
+{{ end }}
