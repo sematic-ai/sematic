@@ -15,7 +15,7 @@ from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
 )
-from sematic.config.settings import get_active_plugins, get_active_settings
+from sematic.config.settings import get_active_plugins
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.user import User

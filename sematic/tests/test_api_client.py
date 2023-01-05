@@ -11,7 +11,7 @@ import pytest
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_requests as mock_requests_fixture,
 )
-from sematic.api.tests.fixtures import test_client
+from sematic.api.tests.fixtures import test_client  # noqa: F401
 from sematic.api_client import (
     IncompatibleClientError,
     ServerError,
