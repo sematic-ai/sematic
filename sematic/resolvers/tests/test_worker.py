@@ -29,11 +29,7 @@ from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.future_context import PrivateContext, SematicContext
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.resolvers.worker import main
-from sematic.tests.fixtures import (  # noqa: F401
-    MockStorage,
-    test_storage,
-    valid_client_version,
-)
+from sematic.tests.fixtures import valid_client_version  # noqa: F401
 
 
 @func
@@ -46,20 +42,13 @@ def pipeline(a: float, b: float) -> float:
     return add(a, b)
 
 
-_MOCK_STORAGE = MockStorage()
-
-
 @mock.patch(
     "sematic.resolvers.cloud_resolver.get_image_uris", return_value=dict(default="foo")
 )
 @mock.patch("sematic.resolvers.silent_resolver.set_context")
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
-@mock.patch("sematic.resolvers.cloud_resolver.S3Storage", return_value=_MOCK_STORAGE)
-@mock.patch("sematic.resolvers.worker.S3Storage", return_value=_MOCK_STORAGE)
 def test_main(
-    mock_worker_storage: mock.MagicMock,
-    mock_storage: mock.MagicMock,
     mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,
     mock_set_context: mock.MagicMock,
@@ -68,7 +57,6 @@ def test_main(
     mock_auth,  # noqa: F811
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
-    test_storage,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
     # On the user's machine
@@ -106,11 +94,7 @@ def test_main(
 @mock.patch("sematic.resolvers.worker.set_context")
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
-@mock.patch("sematic.resolvers.cloud_resolver.S3Storage")
-@mock.patch("sematic.resolvers.worker.S3Storage")
 def test_main_func(
-    mock_worker_storage: mock.MagicMock,
-    mock_storage: mock.MagicMock,
     mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,
     mock_set_context: mock.MagicMock,
@@ -119,14 +103,13 @@ def test_main_func(
     mock_auth,  # noqa: F811
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
-    test_storage,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
-    mock_storage.return_value = test_storage
-    mock_worker_storage.return_value = test_storage
     future = add(1, 1)
-    artifact_1 = make_artifact(1, int, test_storage)
-    artifact_2 = make_artifact(1, int, test_storage)
+    artifact_1, bytes_ = make_artifact(1, int)
+    api_client.store_artifact_bytes(artifact_1.id, bytes_)
+    artifact_2, _ = make_artifact(1, int)
+    api_client.store_artifact_bytes(artifact_2.id, bytes_)
 
     edge_1 = Edge(
         id=uuid.uuid4().hex,
@@ -175,7 +158,7 @@ def test_main_func(
         for artifact in artifacts
         if artifact.id not in (artifact_1.id, artifact_2.id)
     ][0]
-    value = api_client.get_artifact_value_by_id(output_artifact_id, test_storage)
+    value = api_client.get_artifact_value_by_id(output_artifact_id)
     assert value == 2  # 1+1==2. Rest assured that math is intact!
 
     mock_set_context.assert_called_once_with(
@@ -194,26 +177,18 @@ def fail():
     raise Exception("FAIL!")
 
 
-__MOCK_STORAGE = MockStorage()
-
-
 @mock.patch(
     "sematic.resolvers.cloud_resolver.get_image_uris", return_value=dict(default="foo")
 )
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
-@mock.patch("sematic.resolvers.cloud_resolver.S3Storage", return_value=__MOCK_STORAGE)
-@mock.patch("sematic.resolvers.worker.S3Storage", return_value=__MOCK_STORAGE)
 def test_fail(
-    worker_mock_storage: mock.MagicMock,
-    mock_storage: mock.MagicMock,
     mock_load_kube_config: mock.MagicMock,
     mock_schedule_job: mock.MagicMock,
     mock_get_image: mock.MagicMock,
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     mock_requests,  # noqa: F811
-    test_storage,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
     # On the user's machine

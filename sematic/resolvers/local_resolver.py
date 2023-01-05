@@ -23,7 +23,6 @@ from sematic.graph import Graph
 from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 from sematic.resolvers.resource_managers.server_manager import ServerResourceManager
 from sematic.resolvers.silent_resolver import SilentResolver
-from sematic.storage import LocalStorage, Storage
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
 from sematic.utils.git import get_git_info
 from sematic.versions import CURRENT_VERSION_STR
@@ -70,8 +69,6 @@ class LocalResolver(SilentResolver):
         self._buffer_runs: Dict[str, Run] = {}
         self._buffer_artifacts: Dict[str, Artifact] = {}
 
-        self._storage: Storage = LocalStorage()
-
         self._sio_client = socketio.Client()
 
         self._rerun_from_run_id = rerun_from
@@ -100,7 +97,6 @@ class LocalResolver(SilentResolver):
             runs=runs,
             artifacts=artifacts,
             edges=edges,
-            storage=self._storage,
         )
 
         if not graph.input_artifacts_ready(run.id):
@@ -435,7 +431,8 @@ class LocalResolver(SilentResolver):
         if artifact is not None:
             return artifact
 
-        artifact = make_artifact(value, type_, storage=self._storage)
+        artifact, payload = make_artifact(value, type_)
+        api_client.store_artifact_bytes(artifact.id, payload)
 
         self._artifacts_by_run_id[run_id][name] = artifact
         self._add_artifact(artifact)

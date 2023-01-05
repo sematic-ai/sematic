@@ -46,7 +46,6 @@ from sematic.plugins.abstract_external_resource import (
     ManagedBy,
     ResourceState,
 )
-from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa: F401
 from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 from sematic.utils.exceptions import IllegalStateTransitionError
 
@@ -117,8 +116,8 @@ def test_get_artifact(test_db, persisted_artifact: Artifact):  # noqa: F811
     assert artifact.json_summary == artifact.json_summary
 
 
-def test_save_artifact(test_db, test_storage):  # noqa: F811
-    artifact = make_artifact(42, int, storage=test_storage)
+def test_save_artifact(test_db):  # noqa: F811
+    artifact, _ = make_artifact(42, int)
     save_graph(artifacts=[artifact], runs=[], edges=[])
     persisted_artifact = get_artifact(artifact.id)  # noqa: F811
 
@@ -129,14 +128,14 @@ def test_save_artifact(test_db, test_storage):  # noqa: F811
     assert persisted_artifact.updated_at == artifact.updated_at
 
 
-def test_update_artifact(test_db, test_storage):  # noqa: F811
-    original_artifact = make_artifact(42, int, storage=test_storage)
+def test_update_artifact(test_db):  # noqa: F811
+    original_artifact, _ = make_artifact(42, int)
     # create copies of these values, as sqlalchemy updates models in-place
     original_created_at = original_artifact.created_at
     original_updated_at = original_artifact.updated_at
     save_graph(artifacts=[original_artifact], runs=[], edges=[])
 
-    updated_artifact = make_artifact(42, int, storage=test_storage)
+    updated_artifact, _ = make_artifact(42, int)
     assert updated_artifact.created_at != original_created_at
 
     save_graph(artifacts=[updated_artifact], runs=[], edges=[])
@@ -151,14 +150,14 @@ def test_update_artifact(test_db, test_storage):  # noqa: F811
     assert persisted_artifact.updated_at == original_updated_at
 
 
-def test_update_artifact_changed_content(test_db, test_storage):  # noqa: F811
-    original_artifact = make_artifact(42, int, storage=test_storage)
+def test_update_artifact_changed_content(test_db):  # noqa: F811
+    original_artifact, _ = make_artifact(42, int)
     # create copies of these values, as sqlalchemy updates models in-place
     original_created_at = original_artifact.created_at
     original_updated_at = original_artifact.updated_at
     save_graph(artifacts=[original_artifact], runs=[], edges=[])
 
-    updated_artifact = make_artifact(42, int, storage=test_storage)
+    updated_artifact, _ = make_artifact(42, int)
 
     # json of " 42" still deserializes to 42, but this change
     # helps us validate immutability
@@ -195,7 +194,6 @@ def pipeline(a: float, b: float) -> float:
 )
 def test_get_run_graph(
     mock_auth,  # noqa: F811
-    mock_local_resolver_storage,  # noqa: F811
     mock_socketio,  # noqa: F811
     fn,
     run_count: int,

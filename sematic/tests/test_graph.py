@@ -11,11 +11,9 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
 )
 from sematic.calculator import func
-from sematic.db.models.factories import get_artifact_value
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.graph import Graph
 from sematic.resolvers.local_resolver import LocalResolver
-from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa: F401
 
 
 @func
@@ -38,7 +36,6 @@ def test_clone_futures(
     mock_auth,  # noqa: F811
     mock_socketio,  # noqa: F811
     test_db,  # noqa: F811
-    mock_local_resolver_storage,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
     future = pipeline(1, 2, 3)
@@ -51,9 +48,7 @@ def test_clone_futures(
 
     runs_by_id = {run.id: run for run in runs}
 
-    graph = Graph(
-        runs=runs, edges=edges, artifacts=artifacts, storage=mock_local_resolver_storage
-    )
+    graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
 
     cloned_graph = graph.clone_futures()
 
@@ -91,7 +86,7 @@ def test_clone_futures(
             )
 
             if input_edge.source_run_id is None:
-                value = get_artifact_value(artifact, mock_local_resolver_storage)
+                value = api_client.get_artifact_value(artifact)
                 assert future_.kwargs[input_edge.destination_name] == value
             else:
                 upstream_future = cloned_graph.futures_by_original_id[
@@ -104,7 +99,7 @@ def test_clone_futures(
             artifact = graph._artifacts_by_id[output_edge.artifact_id]
             assert cloned_graph.output_artifacts[future_.id] is artifact
 
-            value = get_artifact_value(artifact, mock_local_resolver_storage)
+            value = api_client.get_artifact_value(artifact)
             assert future_.value == value
             if output_edge.destination_run_id is not None:
                 downstream_run = runs_by_id[output_edge.destination_run_id]
@@ -118,7 +113,6 @@ def test_clone_futures_reset(
     mock_auth,  # noqa: F811
     mock_socketio,  # noqa: F811
     test_db,  # noqa: F811
-    mock_local_resolver_storage,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
     future = pipeline(1, 2, 3)
@@ -127,9 +121,7 @@ def test_clone_futures_reset(
 
     runs, artifacts, edges = api_client.get_graph(future.id, root=True)
 
-    graph = Graph(
-        runs=runs, edges=edges, artifacts=artifacts, storage=mock_local_resolver_storage
-    )
+    graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
 
     reset_from_run_id = future.nested_future.kwargs["a"].nested_future.kwargs["a"].id
 
@@ -209,7 +201,6 @@ def test_reset_failed(
     mock_auth,  # noqa: F811
     mock_socketio,  # noqa: F811
     test_db,  # noqa: F811
-    mock_local_resolver_storage,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
     resolver = LocalResolver()
@@ -221,9 +212,7 @@ def test_reset_failed(
 
     runs, artifacts, edges = api_client.get_graph(future.id, root=True)
 
-    graph = Graph(
-        runs=runs, edges=edges, artifacts=artifacts, storage=mock_local_resolver_storage
-    )
+    graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
 
     reset_from_run_id = future.nested_future.kwargs["a"].id
 
@@ -246,7 +235,6 @@ def test_run_execution_ordering(
     mock_auth,  # noqa: F811
     mock_socketio,  # noqa: F811
     test_db,  # noqa: F811
-    mock_local_resolver_storage,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
     future = order_test()
@@ -254,9 +242,7 @@ def test_run_execution_ordering(
 
     runs, artifacts, edges = api_client.get_graph(future.id, root=True)
 
-    graph = Graph(
-        runs=runs, edges=edges, artifacts=artifacts, storage=mock_local_resolver_storage
-    )
+    graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
 
     run_ids_by_execution_order = graph._sorted_run_ids_by_layer(
         run_sorter=graph._execution_order
@@ -283,7 +269,6 @@ def test_run_reverse_ordering(
     mock_auth,  # noqa: F811
     mock_socketio,  # noqa: F811
     test_db,  # noqa: F811
-    mock_local_resolver_storage,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
     future = order_test()
@@ -291,9 +276,7 @@ def test_run_reverse_ordering(
 
     runs, artifacts, edges = api_client.get_graph(future.id, root=True)
 
-    graph = Graph(
-        runs=runs, edges=edges, artifacts=artifacts, storage=mock_local_resolver_storage
-    )
+    graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
 
     run_ids_by_reverse_order = graph._sorted_run_ids_by_layer(
         run_sorter=graph._reverse_execution_order
@@ -327,7 +310,6 @@ def test_nested_fail(
     mock_auth,  # noqa: F811
     mock_socketio,  # noqa: F811
     test_db,  # noqa: F811
-    mock_local_resolver_storage,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
     future = pipeline_fail(1)
@@ -338,8 +320,6 @@ def test_nested_fail(
 
     runs, artifacts, edges = api_client.get_graph(future.id, root=True)
 
-    graph = Graph(
-        runs=runs, edges=edges, artifacts=artifacts, storage=mock_local_resolver_storage
-    )
+    graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
     for run in runs:
         graph.clone_futures(reset_from=run.id)

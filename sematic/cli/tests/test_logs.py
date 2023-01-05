@@ -19,6 +19,7 @@ from sematic.tests.fixtures import MockStorage  # noqa: F401
 @pytest.fixture
 def mock_storage():
     storage = MockStorage()
+    storage._store.clear()
     with mock.patch("sematic.log_reader.S3Storage", return_value=storage):
         yield storage
 
