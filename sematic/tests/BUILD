@@ -32,6 +32,7 @@ pytest_test(
 pytest_test(
     name = "test_api_client",
     srcs = ["test_api_client.py"],
+    # buildifier: leave-alone
     deps = [
         "//sematic:api_client",
         "//sematic:versions",
@@ -42,10 +43,19 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_abstract_plugin",
+    srcs = ["test_abstract_plugin.py"],
+    deps = [
+        "//sematic:abstract_plugin",
+    ],
+)
+
+pytest_test(
     name = "test_future",
     srcs = ["test_future.py"],
     deps = [
         "//sematic:calculator",
+        "//sematic/resolvers:resource_requirements",
     ],
 )
 

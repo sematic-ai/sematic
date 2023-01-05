@@ -19,6 +19,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
+from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
 from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
@@ -52,10 +53,11 @@ class CloudResolver(LocalResolver):
 
         When `False`, the driver job runs on the local machine. The shell prompt
         will return when the entire pipeline has completed.
+
     max_parallelism: Optional[int]
         The maximum number of non-inlined runs that this resolver will allow to be in the
-        SCHEDULED state at any one time. Must be a positive integer, or None for
-        unlimited runs. Defaults to None.
+        `SCHEDULED` state at any one time. Must be a positive integer, or `None` for
+        unlimited runs. Defaults to `None`.
 
         This is intended as a simple mechanism to limit the amount of computing resources
         consumed by one pipeline execution for pipelines with a high degree of
@@ -63,9 +65,18 @@ class CloudResolver(LocalResolver):
         considered in this parallelism limit. Note also that runs that are in the RAN
         state do not contribute to the limit, since they do not consume computing
         resources.
+
+    rerun_from: Optional[str]
+        When `None`, the pipeline is resolved from scratch, as normally. When not `None`,
+        must be the id of a `Run` from a previous resolution. Instead of running from
+        scratch, parts of that previous resolution is cloned up until and including the
+        specified `Run`, and only nested and downstream `Future`s are executed. This is
+        meant to be used for retries or for hotfixes, without needing to re-run the
+        entire pipeline again.
+
     _is_running_remotely: bool
         For Sematic internal usage. End users should always leave this at the default
-        value of False.
+        value of `False`.
     """
 
     def __init__(
@@ -201,7 +212,11 @@ class CloudResolver(LocalResolver):
     def _update_run_and_future_pre_scheduling(self, run: Run, future: AbstractFuture):
         # For the cloud resolver, the server will update the relevant
         # run fields when it gets scheduled by the server.
-        pass
+        # Inline futures still need the updates.
+        if not future.props.inline:
+            return
+
+        super()._update_run_and_future_pre_scheduling(run, future)
 
     def _detach_resolution(self, future: AbstractFuture) -> str:
         run = self._populate_run_and_artifacts(future)
@@ -376,6 +391,14 @@ class CloudResolver(LocalResolver):
     def _get_remote_runs_count(self) -> int:
         """Returns the known number of futures in the SCHEDULED state."""
         return sum(map(lambda f: f.state == FutureState.SCHEDULED, self._futures))
+
+    @classmethod
+    def activate_resource_for_run(  # type: ignore
+        cls, resource: AbstractExternalResource, run_id: str, root_id: str
+    ) -> AbstractExternalResource:
+        raise NotImplementedError(
+            "External resources not implemented for CloudResolver yet"
+        )
 
 
 def make_nested_future_storage_key(future_id: str) -> str:

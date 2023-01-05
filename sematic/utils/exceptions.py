@@ -121,8 +121,38 @@ def format_exception_for_run(
     )
 
 
-class KubernetesError(Exception):
+class InfrastructureError(Exception):
+    """An error originated in compute infrastructure such as Kubernetes."""
+
+    pass
+
+
+class KubernetesError(InfrastructureError):
     """An error originated in external Kubernetes compute infrastructure."""
+
+    pass
+
+
+class ExternalResourceError(InfrastructureError):
+    """An error originated in compute infrastructure for an external resource."""
+
+    pass
+
+
+class IllegalStateTransitionError(Exception):
+    """A state-machine object made a state transition that was not allowed."""
+
+    pass
+
+
+class IllegalUseOfFutureError(Exception):
+    """A future was given where one was not expected."""
+
+    pass
+
+
+class NotInSematicFuncError(RuntimeError):
+    """An API intended for usage in a Sematic func was used outside a Sematic func."""
 
     pass
 
@@ -168,3 +198,13 @@ class ResolutionError(Exception):
         if metadata is not None and metadata.repr is not None:
             return f"{msg_prefix}{metadata.repr}"
         return ""
+
+
+class MissingPluginError(Exception):
+    """
+    Exception to indicate a missing plug-in.
+    """
+
+    def __init__(self, plugin_path: str):
+        message = f"Unable to find plug-in {plugin_path}. Module or class is missing."
+        super().__init__(message)

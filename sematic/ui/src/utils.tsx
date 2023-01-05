@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import io from "socket.io-client";
 
 interface IFetchJSON {
@@ -55,6 +56,16 @@ export function fetchJSON({
       }
     );
 }
+
+export function useLogger() {
+  const devLogger = useMemo(() => process.env.NODE_ENV === "development" ?
+    (...args: any[]) => console.log("DEV DEBUG: ", ...args) :
+    () => { }, []);
+
+  return {
+    devLogger
+  }
+} 
 
 export const graphSocket = io("/graph");
 

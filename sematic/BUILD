@@ -8,6 +8,8 @@ sematic_py_lib(
         ":container_images",
         ":resolver",
         ":retry_settings",
+        "//sematic/plugins/external_resource:timed_message",
+        "//sematic:future_context",
         "//sematic/future_operators:init",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:local_resolver",
@@ -15,6 +17,14 @@ sematic_py_lib(
         "//sematic/resolvers:worker",
         "//sematic/types:casting",
         "//sematic/types:init",
+        "//sematic/utils:exceptions",
+    ],
+)
+
+sematic_py_lib(
+    name = "abstract_plugin",
+    srcs = ["abstract_plugin.py"],
+    deps = [
         "//sematic/utils:exceptions",
     ],
 )
@@ -31,16 +41,31 @@ sematic_py_lib(
     pip_deps = [
         "requests",
     ],
+    # buildifier: leave-alone
     deps = [
+        "//sematic:abstract_future",
         "//sematic:storage",
         "//sematic:versions",
         "//sematic/config:config",
+        "//sematic/config:settings",
+        "//sematic/config:user_settings",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
+        "//sematic/db/models:external_resource",
         "//sematic/db/models:factories",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+        "//sematic/plugins:abstract_external_resource",
         "//sematic/utils:retry",
+    ],
+)
+
+sematic_py_lib(
+    name = "future_context",
+    srcs = ["future_context.py"],
+    deps = [
+        "//sematic:abstract_future",
+        "//sematic/utils:exceptions",
     ],
 )
 
@@ -52,8 +77,11 @@ sematic_py_lib(
     ],
     deps = [
         "//sematic:abstract_future",
+        "//sematic:api_client",
         "//sematic:storage",
         "//sematic/db:queries",
+        "//sematic/db/models:resolution",
+        "//sematic/db/models:run",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/scheduling:external_job",
     ],
@@ -90,12 +118,14 @@ sematic_py_lib(
         ":abstract_calculator",
         ":future",
         ":retry_settings",
+        "//sematic:future_context",
         "//sematic/resolvers:resource_requirements",
         "//sematic/resolvers:type_utils",
         "//sematic/types:casting",
         "//sematic/types:init",
         "//sematic/types:registry",
         "//sematic/types:type",
+        "//sematic/utils:algorithms",
         "//sematic/utils:memoized_property",
     ],
 )
@@ -108,6 +138,7 @@ sematic_py_lib(
         ":abstract_future",
         "//sematic:resolver",
         "//sematic/resolvers:local_resolver",
+        "//sematic/resolvers:resource_requirements",
         "//sematic/resolvers:silent_resolver",
     ],
 )
@@ -134,7 +165,10 @@ sematic_py_lib(
     pip_deps = [
         "boto3",
     ],
+    # buildifier: leave-alone
     deps = [
+        "//sematic/config:config",
+        "//sematic/config:server_settings",
         "//sematic/config:user_settings",
         "//sematic/utils:memoized_property",
         "//sematic/utils:retry",
@@ -158,7 +192,7 @@ sematic_py_lib(
         "//sematic/db/models:run",
         "//sematic/resolvers:type_utils",
         "//sematic/utils:memoized_property",
-        "//sematic/utils:sorting",
+        "//sematic/utils:algorithms",
     ],
 )
 
@@ -193,6 +227,7 @@ sematic_py_wheel(
     deps = [
         "//sematic:client",
         "//sematic:init",
+        "//sematic/testing:init",
         "//sematic/cli:main_lib",
     ],
 )

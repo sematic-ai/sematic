@@ -1,4 +1,12 @@
 pytest_test(
+    name = "test_algorithms",
+    srcs = ["test_algorithms.py"],
+    deps = [
+        "//sematic/utils:algorithms",
+    ],
+)
+
+pytest_test(
     name = "test_git",
     srcs = ["test_git.py"],
     deps = [
@@ -23,9 +31,10 @@ pytest_test(
 )
 
 pytest_test(
-    name = "test_sorting",
-    srcs = ["test_sorting.py"],
+    name = "test_hashing",
+    srcs = ["test_hashing.py"],
     deps = [
-        "//sematic/utils:sorting",
+        "//sematic/types:serialization",
+        "//sematic/utils:hashing",
     ],
 )

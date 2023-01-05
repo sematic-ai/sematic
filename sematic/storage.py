@@ -10,7 +10,7 @@ import botocore.exceptions
 
 # Sematic
 from sematic.config.config import get_config
-from sematic.config.user_settings import UserSettingsVar, get_user_settings
+from sematic.config.user_settings import UserSettingsVar, get_user_setting
 from sematic.utils.memoized_property import memoized_property
 from sematic.utils.retry import retry
 
@@ -83,12 +83,12 @@ class LocalStorage(Storage):
 class S3Storage(Storage):
     """
     Implementation of the `Storage` interface for AWS S3 storage. The bucket
-    where to store values is determined by the `AWS_S3_BUCKET` user settings.
+    where to store values is determined by the `AWS_S3_BUCKET` user settings variable.
     """
 
     @memoized_property
     def _bucket(self) -> str:
-        return get_user_settings(UserSettingsVar.AWS_S3_BUCKET)
+        return get_user_setting(UserSettingsVar.AWS_S3_BUCKET)
 
     @memoized_property
     def _s3_client(self):

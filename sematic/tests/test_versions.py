@@ -6,7 +6,12 @@ import re
 import yaml
 
 # Sematic
-from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
+from sematic.versions import (
+    CURRENT_VERSION,
+    MIN_CLIENT_SERVER_SUPPORTS,
+    string_version_to_tuple,
+    version_as_string,
+)
 
 
 def test_min_client_version():
@@ -59,3 +64,10 @@ def test_bazel_wheel_version():
         f"with the version in versions.py ({CURRENT_VERSION})"
     )
     assert bazel_wheel_version == CURRENT_VERSION, message
+
+
+def test_string_version_to_tuple():
+    as_string = "1.2.3"
+    as_tuple = (1, 2, 3)
+    assert version_as_string(as_tuple) == as_string
+    assert string_version_to_tuple(as_string) == as_tuple

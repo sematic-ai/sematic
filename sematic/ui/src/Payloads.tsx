@@ -44,7 +44,7 @@ export type LogLineResult = {
   more_after: boolean;
   lines: string[];
   continuation_cursor: string | null;
-  log_unavailable_reason: string | null;
+  log_info_message: string | null;
 };
 
 export type LogLineRequestResponse = {
@@ -75,3 +75,16 @@ export type AuthenticatePayload = {
 export type EnvPayload = {
   env: { [k: string]: string };
 };
+
+type Operator = "eq";
+
+type FilterCondition = {
+    [key: string]: {[eq in Operator]? : string | null} | undefined
+}
+
+export type Filter = FilterCondition | {
+    AND : Array<FilterCondition>
+} | {
+  OR : Array<FilterCondition>
+}
+

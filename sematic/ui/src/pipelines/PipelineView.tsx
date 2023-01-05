@@ -1,99 +1,48 @@
-import Box from "@mui/material/Box";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { UserContext } from "..";
-import PipelineBar from "../components/PipelineBar";
-import PipelinePanels from "../components/PipelinePanels";
-import { Resolution, Run } from "../Models";
-import { ResolutionPayload, RunViewPayload } from "../Payloads";
-import { fetchJSON } from "../utils";
+import Loading from "../components/Loading";
+import { useFetchRuns, usePipelineNavigation } from "../hooks/pipelineHooks";
+import { Alert } from "@mui/material";
 
+/**
+ * This page doesn't do detailed rendering, its main focus is to 
+ * load the latest runs, pick the first run, then redirect to that
+ * run's detail view.
+ * 
+ * @returns JSX.element
+ */
 export default function PipelineView() {
-  const [rootRun, setRootRun] = useState<Run | undefined>(undefined);
-  const [resolution, setResolution] = useState<Resolution | undefined>(
-    undefined
-  );
+    const params = useParams();
+    const { pipelinePath } = params;
 
-  const { user } = useContext(UserContext);
+    const runFilters = useMemo(() => ({
+        "AND": [
+          { parent_id: { eq: null } },
+          { calculator_path: { eq: pipelinePath! } },
+        ]
+      }), [pipelinePath]);
 
-  const params = useParams();
+    const otherQueryParams = useMemo(() => ({
+        limit: '10'
+    }), []);
 
-  const { calculatorPath, rootId } = params;
+    const {isLoaded, error, runs: latestRuns} = useFetchRuns(runFilters, otherQueryParams);
 
-  const fetchRootRun = useCallback(
-    (rootId: string) => {
-      fetchJSON({
-        url: "/api/v1/runs/" + rootId,
-        apiKey: user?.api_key,
-        callback: (payload: RunViewPayload) => setRootRun(payload.content),
-      });
-    },
-    [setRootRun]
-  );
+    const navigate = usePipelineNavigation(pipelinePath!);
 
-  const fetchResolution = useCallback(
-    (rootId: string) => {
-      fetchJSON({
-        url: "/api/v1/resolutions/" + rootId,
-        apiKey: user?.api_key,
-        callback: (payload: ResolutionPayload) =>
-          setResolution(payload.content),
-      });
-    },
-    [setResolution]
-  );
+    useEffect(() => {
+        if (!isLoaded || !!error) {
+            return;
+        }
 
-  useEffect(() => {
-    if (!rootId) return;
-    fetchRootRun(rootId);
-    fetchResolution(rootId);
-  }, [rootId]);
+        if (latestRuns.length > 0) {
+            navigate(latestRuns[0].root_id, true);
+        }
 
-  const changeRootRunId = useCallback(
-    (rootId: string) => {
-      if (rootRun && rootRun.id == rootId) return;
-      var runURL =
-        window.location.protocol +
-        "//" +
-        window.location.host +
-        "/pipelines/" +
-        calculatorPath +
-        "/" +
-        rootId;
-      window.history.pushState({ path: runURL }, "", runURL);
-      fetchRootRun(rootId);
-      fetchResolution(rootId);
-    },
-    [calculatorPath, rootRun]
-  );
+    }, [isLoaded, error, latestRuns, navigate])
 
-  if (calculatorPath) {
-    return (
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "250px 1fr 350px",
-          gridTemplateRows: "70px 1fr",
-          height: "100vh",
-        }}
-      >
-        <PipelineBar
-          calculatorPath={calculatorPath}
-          onRootIdChange={changeRootRunId}
-          rootRun={rootRun}
-          resolution={resolution}
-          setRootRun={rootId === undefined}
-        />
-        {rootRun && resolution && (
-          <PipelinePanels
-            rootRun={rootRun}
-            resolution={resolution}
-            onRootRunUpdate={setRootRun}
-            onRootIdChange={changeRootRunId}
-          />
-        )}
-      </Box>
-    );
-  }
-  return <></>;
+    return <>
+        { !isLoaded && <Loading isLoaded={false} /> }
+        { !!error && <Alert severity="error">{error.message}</Alert> }
+    </>;
 }

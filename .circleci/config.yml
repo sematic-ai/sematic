@@ -13,64 +13,15 @@ orbs:
   slack: circleci/slack@4.9.3
   codecov: codecov/codecov@3.2.3
 
+parameters:
+  run_coverage:
+    type: boolean
+    default: false
+
 commands:
-  install-postgres:
-    description: Install PostgreSQL
+  install-ci-pip-deps:
+    description: Install CI pip deps
     steps:
-      - run:
-          name: Add PG 14 repository
-          command: |
-            sudo apt install wget gnupg
-            sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-            wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-      - run:
-          name: Install PostgreSQL
-          command: sudo apt update && sudo apt install postgresql-14
-  setup-bazel:
-    description: |
-      Setup the Bazel build system used for building Android projects
-    steps:
-      - run:
-          name: Add Bazel Apt repository
-          command: |
-            sudo apt install curl gnupg
-            curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg
-            sudo mv bazel.gpg /etc/apt/trusted.gpg.d/
-            echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
-      - run:
-          name: Install Bazel from Apt
-          command: sudo apt update && sudo apt install bazel
-  install-java:
-    description: Install JAVA JDK
-    steps:
-      - run:
-          command: |
-            sudo apt install default-jre default-jdk
-            export JAVA_HOME=/usr/lib/jvm/default-java
-
-
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
-jobs:
-  build-and-test: # This is the name of the job, feel free to change it to better match what you're trying to do!
-    # These next lines defines a Docker executors: https://circleci.com/docs/2.0/executor-types/
-    # You can specify an image from Dockerhub or use one of the convenience images from CircleCI's Developer Hub
-    # A list of available CircleCI Docker convenience images are available here: https://circleci.com/developer/images/image/cimg/python
-    # The executor is the environment in which the steps below will be executed - below will use a python 3.10.2 container
-    # Change the version below to your required version of python
-    docker:
-      - image: sematicai/sematic-ci:latest
-    #  - image: cimg/python:3.9.10
-    # Checkout the code as the first step. This is a dedicated CircleCI step.
-    # The python orb's install-packages step will install the dependencies from a Pipfile via Pipenv by default.
-    # Here we're making sure we use just use the system-wide pip. By default it uses the project root's requirements.txt.
-    # Then run your tests!
-    # CircleCI will report the results back to your VCS provider.
-    steps:
-      # - install-postgres
-      - checkout
-      #- setup-bazel
-      #- install-java
       - python/install-packages:
           pkg-manager: pip
           app-dir: ~/project/requirements  # If you're requirements.txt isn't in the root directory.
@@ -80,33 +31,84 @@ jobs:
           # For example sqlalchemy requires greenlet only on certain platforms
           name: Freeze requirements
           command: pip-compile --allow-unsafe ~/project/requirements/requirements.in > ~/project/requirements/requirements.txt
+  do-static-analysis:
+    description: Do linting and other static analysis
+    steps:
       - run:
           name: Linting
           command: python3 -m flake8 --max-line-length=90
       - run:
           name: MyPy
           command: mypy --version && mypy sematic
+  non-coverage-tests:
+    description: Do tests without tracking code coverage
+    steps:
       - run:
           name: Run Non-coverage Tests
           # This assumes pytest is installed via the install-package step above
           command: PYTHONUNBUFFERED=1 bazel test //sematic/... --test_output=all
+  coverage-tests:
+    description: Do tests with coverage and upload coverage results
+    steps:
+      # try running coverage up to 4 times in a row. Weirdly, Circle doesn't
+      # have a formal retry mechanism:
+      # https://support.circleci.com/hc/en-us/articles/360043188514-How-to-Retry-a-Failed-Step-with-when-Attribute-
+      - run:
+          name: Set Up Coverage Tests
+          # This assumes pytest is installed via the install-package step above
+          command: echo "bazel coverage //sematic/... --test_output=all --combined_report=lcov --test_tag_filters=cov" > ./do_coverage && chmod +x ./do_coverage
       - run:
           name: Run Coverage Tests
-          # This assumes pytest is installed via the install-package step above
-          command: PYTHONUNBUFFERED=1 bazel coverage //sematic/... --test_output=all --combined_report=lcov --test_tag_filters=cov
+          command: PYTHONUNBUFFERED=1 bash do_coverage
+      - run:
+          when: on_fail
+          name: Retry Coverage Tests (1)
+          command: PYTHONUNBUFFERED=1 bash do_coverage
+      - run:
+          when: on_fail
+          name: Retry Coverage Tests (2)
+          command: PYTHONUNBUFFERED=1 bash do_coverage
+      - run:
+          when: on_fail
+          name: Retry Coverage Tests (3)
+          command: PYTHONUNBUFFERED=1 bash do_coverage
       - run:
           name: Link to codecov output
           command: ln -s $(bazel info output_path)/_coverage/_coverage_report.dat coverage.dat
+          when: on_fail
       - codecov/upload
+  installation-tests:
+    description: Do a test of installing sematic via wheel
+    steps:
       - run:
           name: Build wheel
           command: make wheel
       - run:
           name: Test pip install
           command: bazel run //sematic/tests/integration:test_pip_install
+  notify-completion:
+    description: Send a notification to Slack about job completion
+    steps:
       - slack/notify:
           channel: C03CPMXA1QU
           event: always
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
+jobs:
+  build-and-test:
+    docker:
+      - image: sematicai/sematic-ci:latest
+    steps:
+      - checkout
+      - install-ci-pip-deps
+      - do-static-analysis
+      - non-coverage-tests
+      - when:
+          condition: << pipeline.parameters.run_coverage >>
+          steps:
+            - coverage-tests
+      - installation-tests
+      - notify-completion
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows

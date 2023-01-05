@@ -30,7 +30,10 @@ sematic_py_lib(
         ":user",
         "//sematic:abstract_future",
         "//sematic:storage",
+        "//sematic/types/types:union",
         "//sematic/types:serialization",
+        "//sematic/utils:json",
+        "//sematic/utils:hashing",
     ],
 )
 
@@ -43,6 +46,20 @@ sematic_py_lib(
     deps = [
         ":base",
         ":json_encodable_mixin",
+    ],
+)
+
+sematic_py_lib(
+    name = "external_resource",
+    srcs = ["external_resource.py"],
+    pip_deps = [
+        "sqlalchemy",
+    ],
+    deps = [
+        ":base",
+        ":json_encodable_mixin",
+        "//sematic/plugins:abstract_external_resource",
+        "//sematic/types:serialization",
     ],
 )
 
@@ -90,6 +107,18 @@ sematic_py_lib(
         "//sematic/scheduling:external_job",
         "//sematic/types:serialization",
         "//sematic/utils:exceptions",
+    ],
+)
+
+sematic_py_lib(
+    name = "runs_external_resource",
+    srcs = ["runs_external_resource.py"],
+    pip_deps = [
+        "sqlalchemy",
+    ],
+    deps = [
+        ":base",
+        ":json_encodable_mixin",
     ],
 )
 

@@ -14,10 +14,10 @@ from sematic.log_reader import (
     Cursor,
     LogLine,
     LogLineResult,
-    _line_stream_from_log_directory,
     _load_inline_logs,
     _load_non_inline_logs,
     get_log_lines_from_line_stream,
+    line_stream_from_log_directory,
     load_log_lines,
     log_prefix,
     v1_log_prefix,
@@ -86,7 +86,7 @@ def test_get_log_lines_from_line_stream_does_streaming():
         more_before=False,
         more_after=True,
         lines=[f"Line {i}" for i in range(max_lines)],
-        log_unavailable_reason=None,
+        log_info_message=None,
     )
     assert _streamed_lines == result.lines
 
@@ -101,7 +101,6 @@ def test_get_log_lines_from_line_stream_does_streaming():
         filter_strings=[],
         run_id=_DUMMY_RUN_ID,
     )
-    cursor = Cursor.from_token(result.continuation_cursor)
     result.continuation_cursor = None
 
     assert result == LogLineResult(
@@ -109,7 +108,7 @@ def test_get_log_lines_from_line_stream_does_streaming():
         more_before=True,
         more_after=True,
         lines=[f"Line {i}" for i in range(max_lines, 2 * max_lines)],
-        log_unavailable_reason=None,
+        log_info_message=None,
     )
 
 
@@ -176,7 +175,7 @@ def test_get_log_lines_from_line_stream_filter():
             "Line 26",
             "Line 27",
         ],
-        log_unavailable_reason=None,
+        log_info_message=None,
     )
 
     result = get_log_lines_from_line_stream(
@@ -189,7 +188,7 @@ def test_get_log_lines_from_line_stream_filter():
         max_lines=max_lines,
         filter_strings=["2"],
     )
-    cursor = Cursor.from_token(result.continuation_cursor)
+
     result.continuation_cursor = None
     assert result == LogLineResult(
         continuation_cursor=None,
@@ -207,7 +206,7 @@ def test_get_log_lines_from_line_stream_filter():
             "Line 92",
             "Line 102",
         ],
-        log_unavailable_reason=None,
+        log_info_message=None,
     )
 
 
@@ -219,8 +218,14 @@ def prepare_logs_v1(run_id, text_lines, mock_storage, job_type):
     return prefix
 
 
-def prepare_logs_v2(run_id, text_lines, mock_storage, job_type):
-    break_at_line = 52
+def prepare_logs_v2(
+    run_id,
+    text_lines,
+    mock_storage,
+    job_type,
+    break_at_line=52,
+    emulate_pending_more_lines=False,
+):
     lines_part_1 = text_lines[:break_at_line]
     lines_part_2 = text_lines[break_at_line:]
 
@@ -229,6 +234,9 @@ def prepare_logs_v2(run_id, text_lines, mock_storage, job_type):
     key_part_1 = f"{prefix}12345.log"
     mock_storage.set(key_part_1, log_file_contents_part_1)
 
+    if emulate_pending_more_lines:
+        # act as if the second file hasn't been produced yet
+        return prefix
     log_file_contents_part_2 = bytes("\n".join(lines_part_2), encoding="utf8")
     prefix = log_prefix(run_id, job_type)
     key_part_2 = f"{prefix}12346.log"
@@ -264,7 +272,7 @@ def test_load_non_inline_logs(
     assert not result.more_after  # run isn't running and there are no logfiles
     assert result.lines == []
     assert result.continuation_cursor is None
-    assert result.log_unavailable_reason == "No log files found"
+    assert result.log_info_message == "No log files found"
     log_preparation_function(run.id, text_lines, mock_storage, JobType.worker)
 
     result = _load_non_inline_logs(
@@ -285,7 +293,7 @@ def test_load_non_inline_logs(
         more_before=False,
         more_after=True,
         lines=text_lines[:max_lines],
-        log_unavailable_reason=None,
+        log_info_message=None,
     )
 
     result = _load_non_inline_logs(
@@ -305,7 +313,7 @@ def test_load_non_inline_logs(
         more_before=True,
         more_after=True,
         lines=text_lines[max_lines : 2 * max_lines],  # noqa: E203
-        log_unavailable_reason=None,
+        log_info_message=None,
     )
 
     result = _load_non_inline_logs(
@@ -322,7 +330,7 @@ def test_load_non_inline_logs(
         more_before=True,
         more_after=False,
         lines=[],
-        log_unavailable_reason="No matching log lines.",
+        log_info_message="No matching log lines.",
     )
 
 
@@ -339,7 +347,7 @@ def test_line_stream_from_log_directory(
         mock_storage=mock_storage,
         job_type=JobType.worker,
     )
-    line_stream = _line_stream_from_log_directory(prefix, None, None)
+    line_stream = line_stream_from_log_directory(prefix, None, None)
     materialized_line_stream = list(line_stream)
     with pytest.raises(StopIteration):
         # if it was a generator as expected, we exhausted it when we materialized it
@@ -349,7 +357,7 @@ def test_line_stream_from_log_directory(
     assert len({line.source_file for line in materialized_line_stream}) > 1
 
     start_index = 50
-    line_stream = _line_stream_from_log_directory(
+    line_stream = line_stream_from_log_directory(
         directory=log_prefix(run.id, JobType.worker),
         cursor_file=f"{log_prefix(run.id, JobType.worker)}12345.log",
         cursor_line_index=start_index,
@@ -397,7 +405,7 @@ def test_load_inline_logs(
     assert not result.more_after  # run isn't alive and resolver logs missing
     assert result.lines == []
     assert result.continuation_cursor is None
-    assert result.log_unavailable_reason == "Resolver logs are missing"
+    assert result.log_info_message == "Resolver logs are missing"
 
     log_preparation_function(run.id, text_lines, mock_storage, JobType.driver)
 
@@ -419,7 +427,7 @@ def test_load_inline_logs(
         more_before=False,
         more_after=True,
         lines=run_text_lines[:max_lines],
-        log_unavailable_reason=None,
+        log_info_message=None,
     )
 
     result = _load_inline_logs(
@@ -442,7 +450,7 @@ def test_load_inline_logs(
         more_before=True,
         more_after=True,
         lines=run_text_lines[max_lines:],
-        log_unavailable_reason=None,
+        log_info_message=None,
     )
 
     result = _load_inline_logs(
@@ -461,7 +469,7 @@ def test_load_inline_logs(
         more_before=True,
         more_after=False,
         lines=[],
-        log_unavailable_reason="No matching log lines.",
+        log_info_message="No matching log lines.",
     )
 
 
@@ -493,7 +501,7 @@ def test_load_log_lines(
         more_before=False,
         more_after=True,
         lines=[],
-        log_unavailable_reason="Resolution has not started yet.",
+        log_info_message="Resolution has not started yet.",
     )
 
     resolution.status = ResolutionStatus.RUNNING
@@ -510,7 +518,7 @@ def test_load_log_lines(
         more_before=False,
         more_after=True,
         lines=[],
-        log_unavailable_reason="The run has not yet started executing.",
+        log_info_message="The run has not yet started executing.",
     )
 
     run.future_state = FutureState.SCHEDULED
@@ -533,7 +541,7 @@ def test_load_log_lines(
         more_before=False,
         more_after=True,
         lines=text_lines[:max_lines],
-        log_unavailable_reason=None,
+        log_info_message=None,
     )
 
     result = load_log_lines(
@@ -548,7 +556,7 @@ def test_load_log_lines(
         more_before=True,
         more_after=True,
         lines=text_lines[max_lines : 2 * max_lines],  # noqa: E203
-        log_unavailable_reason=None,
+        log_info_message=None,
     )
 
     result = load_log_lines(
@@ -556,14 +564,13 @@ def test_load_log_lines(
         continuation_cursor=token,
         max_lines=max_lines,
     )
-    token = result.continuation_cursor
     result.continuation_cursor = None
     assert result == LogLineResult(
         continuation_cursor=None,
         more_before=True,
         more_after=True,
         lines=[],
-        log_unavailable_reason="No matching log lines.",
+        log_info_message="No matching log lines.",
     )
 
     result = load_log_lines(
@@ -578,3 +585,250 @@ def test_load_log_lines(
         filter_strings=["2", "4"],
     )
     assert result.lines == ["Line 42"]
+
+
+@pytest.mark.parametrize(
+    "log_preparation_function",
+    (
+        prepare_logs_v1,
+        prepare_logs_v2,
+    ),
+)
+def test_load_cloned_run_log_lines(
+    mock_storage: MockStorage, test_db, log_preparation_function  # noqa: F811
+):
+    run = make_run(future_state=FutureState.CREATED)
+    save_run(run)
+    resolution = make_resolution(status=ResolutionStatus.SCHEDULED)
+    resolution.root_id = run.root_id
+    save_resolution(resolution)
+    max_lines = 50
+
+    cloned_run = make_run(future_state=FutureState.CREATED, original_run_id=run.id)
+    save_run(cloned_run)
+    cloned_resolution = make_resolution(status=ResolutionStatus.SCHEDULED)
+    cloned_resolution.root_id = cloned_run.root_id
+    save_resolution(cloned_resolution)
+
+    result = load_log_lines(
+        run_id=cloned_run.id,
+        continuation_cursor=None,
+        max_lines=max_lines,
+    )
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=False,
+        more_after=True,
+        lines=[],
+        log_info_message="Resolution has not started yet.",
+    )
+
+    resolution.status = ResolutionStatus.RUNNING
+    save_resolution(resolution)
+
+    result = load_log_lines(
+        run_id=cloned_run.id,
+        continuation_cursor=None,
+        max_lines=max_lines,
+    )
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=False,
+        more_after=True,
+        lines=[],
+        log_info_message="The run has not yet started executing.",
+    )
+
+    run.future_state = FutureState.SCHEDULED
+    run.external_jobs = (
+        ExternalJob(kind="fake", try_number=0, external_job_id="fake"),
+    )
+    save_run(run)
+    text_lines = [line.line for line in finite_logs(100)]
+    log_preparation_function(run.id, text_lines, mock_storage, JobType.worker)
+
+    result = load_log_lines(
+        run_id=cloned_run.id,
+        continuation_cursor=None,
+        max_lines=max_lines,
+    )
+    token = result.continuation_cursor
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=False,
+        more_after=True,
+        lines=text_lines[:max_lines],
+        log_info_message=f"Run logs sourced from original run {run.id}.",
+    )
+
+    result = load_log_lines(
+        run_id=cloned_run.id,
+        continuation_cursor=token,
+        max_lines=max_lines,
+    )
+    token = result.continuation_cursor
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=True,
+        more_after=True,
+        lines=text_lines[max_lines : 2 * max_lines],  # noqa: E203
+        log_info_message=f"Run logs sourced from original run {run.id}.",
+    )
+
+    result = load_log_lines(
+        run_id=cloned_run.id,
+        continuation_cursor=token,
+        max_lines=max_lines,
+    )
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=True,
+        more_after=True,
+        lines=[],
+        log_info_message="No matching log lines.",
+    )
+
+    result = load_log_lines(
+        run_id=cloned_run.id,
+        continuation_cursor=None,
+        max_lines=1,
+        filter_strings=["2", "4"],
+    )
+    assert result.lines == ["Line 24"]
+
+    result = load_log_lines(
+        run_id=cloned_run.id,
+        continuation_cursor=result.continuation_cursor,
+        max_lines=1,
+        filter_strings=["2", "4"],
+    )
+    assert result.lines == ["Line 42"]
+
+
+def test_continue_from_end_with_no_new_logs(
+    test_db, mock_storage: MockStorage  # noqa: F811
+):
+    run = make_run(future_state=FutureState.SCHEDULED)
+    save_run(run)
+
+    max_lines = 50
+    break_at_line = 52
+    total_lines = 100
+    text_lines = [line.line for line in finite_logs(total_lines)]
+
+    # Emulate a scenario where:
+    # - 50 lines requested, 52 lines produced
+    # - return lines 0-50
+    # - 50 more lines requested
+    # - return lines 50-52
+    # - lines 52-100 produced
+    # - 50 more lines requested
+    # - lines 52-100 returned
+
+    prepare_logs_v2(
+        run.id,
+        text_lines,
+        mock_storage,
+        JobType.worker,
+        break_at_line=break_at_line,
+        emulate_pending_more_lines=True,
+    )
+
+    # 50 lines requested, 50 returned
+    result = _load_non_inline_logs(
+        run_id=run.id,
+        still_running=True,
+        cursor_file=None,
+        cursor_line_index=-1,
+        cursor_had_more_before=False,
+        max_lines=max_lines,
+        filter_strings=[],
+    )
+    assert result.continuation_cursor is not None
+    cursor = Cursor.from_token(result.continuation_cursor)
+    assert cursor.traversal_had_lines
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=False,
+        more_after=True,
+        lines=text_lines[:max_lines],
+        log_info_message=None,
+    )
+
+    # 50 more lines requested, only 2 more available
+    result = _load_non_inline_logs(
+        run_id=run.id,
+        still_running=True,
+        cursor_file=cursor.source_log_key,
+        cursor_line_index=cursor.source_file_line_index,
+        cursor_had_more_before=cursor.traversal_had_lines,
+        max_lines=max_lines,
+        filter_strings=[],
+    )
+    assert result.continuation_cursor is not None
+    cursor = Cursor.from_token(result.continuation_cursor)
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=True,
+        more_after=True,
+        lines=text_lines[max_lines:break_at_line],  # noqa: E203
+        log_info_message=None,
+    )
+
+    # 50 more lines requested, no more available
+    result = _load_non_inline_logs(
+        run_id=run.id,
+        still_running=True,
+        cursor_file=cursor.source_log_key,
+        cursor_line_index=cursor.source_file_line_index,
+        cursor_had_more_before=cursor.traversal_had_lines,
+        max_lines=max_lines,
+        filter_strings=[],
+    )
+    assert result.continuation_cursor is not None
+    cursor = Cursor.from_token(result.continuation_cursor)
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=True,
+        more_after=True,
+        lines=[],  # noqa: E203
+        log_info_message="No matching log lines.",
+    )
+
+    # upload more logs
+    prepare_logs_v2(
+        run.id,
+        text_lines,
+        mock_storage,
+        JobType.worker,
+        break_at_line=break_at_line,
+        emulate_pending_more_lines=False,
+    )
+
+    # 50 more lines requested, 48 more available
+    result = _load_non_inline_logs(
+        run_id=run.id,
+        still_running=True,
+        cursor_file=cursor.source_log_key,
+        cursor_line_index=cursor.source_file_line_index,
+        cursor_had_more_before=cursor.traversal_had_lines,
+        max_lines=max_lines,
+        filter_strings=[],
+    )
+    assert result.continuation_cursor is not None
+    result.continuation_cursor = None
+    assert result == LogLineResult(
+        continuation_cursor=None,
+        more_before=True,
+        more_after=True,
+        lines=text_lines[break_at_line:total_lines],  # noqa: E203
+        log_info_message=None,
+    )

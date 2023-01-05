@@ -1,6 +1,9 @@
 # Standard Library
+import logging
 import os
 import pathlib
+
+logger = logging.getLogger(__name__)
 
 _DEFAULT_CONFIG_DIR = ".sematic"
 _CONFIG_DIR_OVERRIDE_ENV_VAR = "SEMATIC_CONFIG_DIR"
@@ -16,17 +19,18 @@ def get_config_dir() -> str:
     """
     config_dir = os.environ.get(_CONFIG_DIR_OVERRIDE_ENV_VAR, _DEFAULT_CONFIG_DIR)
     config_dir_path = pathlib.Path(config_dir)
+
     if not config_dir_path.is_absolute():
         home_dir = pathlib.Path.home()
         config_dir_path = home_dir / config_dir_path
+
     if not config_dir_path.parent.exists():
         raise ValueError(
             f"Cannot use '{config_dir_path.as_posix()}' as Sematic config path because "
             f"'{config_dir_path.parent.as_posix()}' does not exist."
         )
-    try:
+
+    if not os.path.isdir(config_dir_path.as_posix()):
         config_dir_path.mkdir()
-    except FileExistsError:
-        pass
 
     return config_dir_path.as_posix()

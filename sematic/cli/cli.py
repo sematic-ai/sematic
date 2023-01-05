@@ -19,3 +19,13 @@ def cli():
     """
     switch_env("local")
     migrate_up()
+
+
+@cli.group("advanced")
+def advanced():
+    """
+    Advanced operations with the CLI that are primarily useful for
+    infrastructure engineers and/or those with deep knowledge of
+    Sematic.
+    """
+    pass

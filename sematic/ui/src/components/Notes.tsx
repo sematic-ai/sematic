@@ -1,4 +1,6 @@
-import { Box, ButtonBase, Typography, useTheme } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
+import { Link, useParams } from "react-router-dom";
+import { getPipelineUrlPattern } from "../hooks/pipelineHooks";
 import { Note, User } from "../Models";
 import { CopyButton } from "./CopyButton";
 import TimeAgo from "./TimeAgo";
@@ -7,9 +9,8 @@ import UserAvatar from "./UserAvatar";
 export function NoteView(props: {
   note: Note;
   author: User;
-  onRootIdChange: (rootId: string) => void;
 }) {
-  const { note, author, onRootIdChange } = props;
+  const { note, author } = props;
   const theme = useTheme();
 
   return (
@@ -57,7 +58,7 @@ export function NoteView(props: {
           }}
         >
           <TimeAgo date={note.created_at} /> on run{" "}
-          <RunId runId={note.root_id} onClick={onRootIdChange} trim />
+          <RunId runId={note.root_id} trim />
         </Typography>
       </Box>
     </Box>
@@ -67,21 +68,18 @@ export function NoteView(props: {
 function RunId(props: {
   runId: string;
   trim?: boolean;
-  onClick?: (runId: string) => void;
 }) {
-  const { runId, trim = true, onClick } = props;
+  const { runId, trim = true } = props;
+
+  const { calculatorPath } = useParams();
 
   return (
     <>
-      <ButtonBase onClick={() => onClick && onClick(runId)} disabled={!onClick}>
-        <code
-          style={{
-            fontSize: 12,
-          }}
-        >
+      <Link to={getPipelineUrlPattern(calculatorPath!, runId)} style={
+        {fontSize: '12px'}
+      }>
           {trim ? runId.substring(0, 6) : runId}
-        </code>
-      </ButtonBase>
+      </Link>
       <CopyButton text={runId} message="Copied run ID" />
     </>
   );

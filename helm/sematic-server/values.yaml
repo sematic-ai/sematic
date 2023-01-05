@@ -63,7 +63,8 @@ deployment:
     timeoutSeconds: 1
 
 image:
-  #repository: sematicai/sematic-server:v0.20.0
+  repository: sematicai/sematic-server
+  tag: v0.21.1
   pull_policy: IfNotPresent
   #pull_secrets: []
 
@@ -71,10 +72,17 @@ rbac:
   create: true
 
 service_account:
-  # Set to false and provide a name of an existing service account to reuse.
+  # Should a new service account be created? Or should we use
+  # one that already exists
   create: true
+
+worker:
+  service_account:
+    name: default
+
   # Annotations to add to the service account
   annotations: {}
+
   # The name of the service account to use.
   name: sematic-server
 
@@ -98,10 +106,3 @@ ingress:
   #  - secret_name: chart-example-tls
   #    hosts:
   #      - chart-example.local
-
-autoscaling:
-  enabled: false
-  min_replicas: 1
-  max_replicas: 1
-  target_cpu_utilization_pct: 100
-  target_memory_utilization_pct: 100

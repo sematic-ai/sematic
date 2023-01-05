@@ -2,73 +2,71 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { RunList } from "../components/RunList";
 import Tags from "../components/Tags";
 import { Run } from "../Models";
 import Link from "@mui/material/Link";
-import { RunListPayload } from "../Payloads";
 import RunStateChip from "../components/RunStateChip";
 import { Alert, AlertTitle, Container } from "@mui/material";
 import { InfoOutlined } from "@mui/icons-material";
 import { RunTime } from "../components/RunTime";
-import { fetchJSON, pipelineSocket } from "../utils";
+import { pipelineSocket } from "../utils";
 import CalculatorPath from "../components/CalculatorPath";
 import TimeAgo from "../components/TimeAgo";
-import { UserContext } from "..";
+import { useFetchRuns } from "../hooks/pipelineHooks";
+import Loading from "../components/Loading";
 
-function RecentStatuses(props: { runs: Array<Run> | undefined }) {
+function RecentStatuses(props: { calculatorPath: string }) {
   let state: string | undefined = undefined;
+  const { calculatorPath } = props;
+
+  const runFilters = useMemo(() => ({
+    calculator_path: { eq: calculatorPath },
+  }), [calculatorPath]);
+
+  const otherQueryParams = useMemo(() => ({
+      limit: '5'
+  }), []);
+
+  const {isLoading, runs } = useFetchRuns(runFilters, otherQueryParams);
+
   function statusChip(index: number) {
-    if (props.runs && props.runs.length > index) {
-      state = props.runs[index].future_state;
+    if (runs && runs.length > index) {
+      state = runs[index].future_state;
     } else {
       state = "undefined";
     }
     return <RunStateChip state={state} key={index} />;
   }
+  if (isLoading) {
+    return <Loading isLoaded={false} /> 
+  }
   return <>{[...Array(5)].map((e, i) => statusChip(i))}</>;
 }
 
 function PipelineRow(props: { run: Run }) {
-  let run = props.run;
-
-  const { user } = useContext(UserContext);
-
-  const [runs, setRuns] = useState<Array<Run> | undefined>(undefined);
-
-  useEffect(() => {
-    let filters = JSON.stringify({
-      calculator_path: { eq: run.calculator_path },
-    });
-
-    fetchJSON({
-      url: "/api/v1/runs?limit=5&filters=" + filters,
-      callback: (result: RunListPayload) => {
-        setRuns(result.content);
-      },
-      apiKey: user?.api_key,
-    });
-  }, [run.calculator_path]);
+  let { run }  = props;
+  let { id, name, tags, calculator_path, created_at} = run;
 
   return (
     <>
-      <TableRow key={run.id}>
+      <TableRow key={id}>
         <TableCell key="name">
           <Box sx={{ mb: 3 }}>
-            <Link href={"/pipelines/" + run.calculator_path} underline="hover">
-              <Typography variant="h6">{run.name}</Typography>
+            <Link href={"/pipelines/" + calculator_path} underline="hover">
+              <Typography variant="h6">{name}</Typography>
             </Link>
-            <CalculatorPath calculatorPath={run.calculator_path} />
+            <CalculatorPath calculatorPath={calculator_path} />
           </Box>
-          <Tags tags={run.tags || []} />
+          <Tags tags={tags || []} />
         </TableCell>
         <TableCell key="last-run">
-          <TimeAgo date={run.created_at} />
+          <TimeAgo date={created_at} />
           <RunTime run={run} prefix="in" />
         </TableCell>
         <TableCell key="status" width={120}>
-          <RecentStatuses runs={runs} />
+          <RecentStatuses calculatorPath={calculator_path} />
         </TableCell>
       </TableRow>
     </>

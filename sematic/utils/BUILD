@@ -1,4 +1,10 @@
 sematic_py_lib(
+    name = "algorithms",
+    srcs = ["algorithms.py"],
+    deps = [],
+)
+
+sematic_py_lib(
     name = "exceptions",
     srcs = ["exceptions.py"],
     deps = [
@@ -36,7 +42,15 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "sorting",
-    srcs = ["sorting.py"],
+    name = "json",
+    srcs = ["json.py"],
     deps = [],
+)
+
+sematic_py_lib(
+    name = "hashing",
+    srcs = ["hashing.py"],
+    deps = [
+        ":json",
+    ],
 )

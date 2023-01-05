@@ -20,6 +20,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sematic.abstract_future import FutureState
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
+from sematic.api.endpoints.events import broadcast_graph_update
 from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
@@ -37,6 +38,7 @@ from sematic.db.queries import (
     get_run_status_details,
     save_graph,
     save_run,
+    save_run_external_resource_links,
 )
 from sematic.log_reader import load_log_lines
 from sematic.scheduling.external_job import ExternalJob
@@ -214,7 +216,11 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     run = schedule_run(run, resolution)
     logger.info("Scheduled run with external job: %s", run.external_jobs[-1])
     run.started_at = datetime.datetime.utcnow()
+
     save_run(run)
+
+    broadcast_graph_update(root_id=run.root_id)
+
     payload = dict(
         content=run.to_json_encodable(),
     )
@@ -333,6 +339,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
         if run is not None:
             new_future_state_value = run.future_state
             save_run(run)
+            broadcast_graph_update(run.root_id)
 
         result_list.append(
             dict(
@@ -406,4 +413,21 @@ def save_graph_endpoint(user: Optional[User]):
     # except Exception as e:
     #    return jsonify_error(str(e), HTTPStatus.INTERNAL_SERVER_ERROR)
 
+    return flask.jsonify({})
+
+
+@sematic_api.route("/api/v1/runs/<run_id>/external_resources", methods=["POST"])
+@authenticate
+def link_resource_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+    if (
+        not flask.request
+        or not flask.request.json
+        or "external_resource_ids" not in flask.request.json
+    ):
+        return jsonify_error(
+            "Please provide an external_resource_id payload with the request",
+            HTTPStatus.BAD_REQUEST,
+        )
+    external_resource_ids = flask.request.json["external_resource_ids"]
+    save_run_external_resource_links(resource_ids=external_resource_ids, run_id=run_id)
     return flask.jsonify({})

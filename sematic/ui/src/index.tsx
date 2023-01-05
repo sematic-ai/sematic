@@ -6,7 +6,7 @@ import "@fontsource/roboto/700.css";
 import "./index.css";
 import { Route, BrowserRouter, Routes, useNavigate } from "react-router-dom";
 import PipelineIndex from "./pipelines/PipelineIndex";
-import PipelineView from "./pipelines/PipelineView";
+import PipelineRunView from "./pipelines/PipelineRunView";
 import Shell from "./components/Shell";
 import Loading from "./components/Loading";
 import Home from "./Home";
@@ -26,6 +26,7 @@ import { Alert, Paper } from "@mui/material";
 import logo from "./Fox.png";
 import { fetchJSON } from "./utils";
 import { SnackBarProvider } from "./components/SnackBarProvider";
+import PipelineView from "./pipelines/PipelineView";
 
 export const UserContext = React.createContext<{
   user: User | null;
@@ -114,12 +115,10 @@ function App() {
               <Route path="" element={<Home />} />
               <Route path="pipelines" element={<PipelineIndex />} />
               <Route
-                path="pipelines/:calculatorPath/:rootId"
-                element={<PipelineView />}
+                path="pipelines/:pipelinePath/:rootId" element={<PipelineRunView />}
               />
               <Route
-                path="pipelines/:calculatorPath"
-                element={<PipelineView />}
+                path="pipelines/:pipelinePath" element={<PipelineView />}
               />
             </Route>
           </Routes>

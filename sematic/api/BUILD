@@ -19,17 +19,20 @@ sematic_py_lib(
         "flask-socketio",
         "eventlet",
     ],
+    # buildifier: leave-alone
     deps = [
         "//sematic/api:app",
         "//sematic/api/endpoints:artifacts",
         "//sematic/api/endpoints:auth",
         "//sematic/api/endpoints:edges",
         "//sematic/api/endpoints:events",
+        "//sematic/api/endpoints:external_resources",
         "//sematic/api/endpoints:meta",
         "//sematic/api/endpoints:notes",
         "//sematic/api/endpoints:resolutions",
         "//sematic/api/endpoints:runs",
         "//sematic/config:config",
+        "//sematic/config:server_settings",
     ],
 )
 

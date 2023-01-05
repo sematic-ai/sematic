@@ -4,11 +4,13 @@ import inspect
 import logging
 import types
 from copy import copy
+from dataclasses import is_dataclass
 from typing import (
     Any,
     Callable,
     Dict,
     Iterable,
+    List,
     Optional,
     Sequence,
     Type,
@@ -21,12 +23,20 @@ from typing import (
 # Sematic
 from sematic.abstract_calculator import AbstractCalculator, CalculatorError
 from sematic.future import Future
+from sematic.future_context import NotInSematicFuncError, context
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.resolvers.type_utils import make_list_type
 from sematic.retry_settings import RetrySettings
 from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.registry import validate_type_annotation
 from sematic.types.type import is_type
+from sematic.utils.algorithms import breadth_first_search
+
+_EXTRA_FUTURE_DOCS_LINK = (
+    "https://docs.sematic.dev/diving-deeper/future-algebra#unused-futures"
+)
+
+logger = logging.getLogger(__name__)
 
 
 class Calculator(AbstractCalculator):
@@ -99,6 +109,12 @@ class Calculator(AbstractCalculator):
             )
 
     def __repr__(self):
+        return self.get_func_fqpn()
+
+    def get_func_fqpn(self):
+        """
+        Returns the fully qualified path name of the func.
+        """
         return "{}.{}".format(self.__module__, self.__name__)
 
     def get_source(self) -> str:
@@ -142,7 +158,7 @@ class Calculator(AbstractCalculator):
 
         cast_arguments = self.cast_inputs(argument_map)
 
-        return Future(
+        future = Future(
             self,
             cast_arguments,
             inline=self._inline,
@@ -152,6 +168,12 @@ class Calculator(AbstractCalculator):
             retry_settings=copy(self._retry_settings),
             base_image_tag=self._base_image_tag,
         )
+        try:
+            ctx = context()
+            ctx.private.created_futures.append(future)
+        except NotInSematicFuncError:
+            pass  # not unusual; root future is usually created this way.
+        return future
 
     def __signature__(self) -> inspect.Signature:
         return inspect.signature(self._func)
@@ -167,6 +189,13 @@ class Calculator(AbstractCalculator):
             output = _convert_lists(output)
         if isinstance(output, tuple):
             output = _convert_tuples(output, self.output_type)
+
+        try:
+            ctx = context()
+            created_futures: List[Future] = ctx.private.created_futures  # type: ignore
+            _check_for_unused_futures(self.__name__, output, created_futures)
+        except NotInSematicFuncError:
+            logger.warning("Sematic func executed outside of a Sematic context")
 
         return output
 
@@ -254,9 +283,40 @@ def func(
     resource_requirements: Optional[ResourceRequirements] = None,
     retry: Optional[RetrySettings] = None,
     base_image_tag: Optional[str] = None,
-) -> Union[Callable, Calculator]:
+) -> Union[Calculator, Callable]:
     """
-    Sematic Function decorator.
+    The Sematic Function decorator.
+
+    This identifies the function as a unit of work that Sematic knows about for
+    tracking and scheduling. The function's execution details will be exposed
+    in the Sematic UI.
+
+    Parameters
+    ----------
+    func: Optional[Callable]
+        The `Callable` to instrument; usually the decorated function.
+
+    inline: bool
+        When using the `CloudResolver`, whether the instrumented function
+        should be executed inside the same process and worker that is executing
+        the `Resolver` itself.
+
+        Defaults to `True`, as most pipeline functions are expected to be
+        lightweight. Explicitly set this to `False` in order to distribute its
+        execution to a worker and parallelize its execution.
+
+    resource_requirements: Optional[ResourceRequirements]
+        When using the `CloudResolver`, specifies what special execution
+        resources the function requires. Defaults to `None`.
+
+    retry: Optional[RetrySettings]
+        Specifies in case of which Exceptions the function's execution should
+        be retried, and how many times. Defaults to `None`.
+
+    Returns
+    -------
+    Union[Calculator, Callable]
+        An internal instrumentation wrapper over the decorated function.
     """
     if inline and resource_requirements is not None:
         raise ValueError(
@@ -300,6 +360,10 @@ def func(
                 func_.__name__,
             )
 
+        all_type_annotations = dict(input_types)
+        all_type_annotations["<output>"] = output_type
+        _validate_type_annotations(all_type_annotations)
+
         return Calculator(
             func_,
             input_types=input_types,
@@ -314,6 +378,35 @@ def func(
         return _wrapper
 
     return _wrapper(func)
+
+
+def _validate_type_annotations(all_type_annotations: Dict[str, Type[Any]]):
+    """Perform any validation for types that are forbidden from usage in funcs
+
+    The logic in the type registry will only ensure that Sematic can use the types
+    in type checks and serialization. This validation is for anything that can
+    be used for those purposes, but CAN'T be used as inputs/outputs to/from a
+    Sematic func.
+    """
+    try:
+        # Sematic
+        from sematic.plugins.abstract_external_resource import AbstractExternalResource
+    except ImportError:
+        # there is no way the annotations are subclasses of
+        # ExternalResource if we reached here; if it was then
+        # it would have been possible to import ExternalResource.
+        return
+
+    for parameter_name, type_ in all_type_annotations.items():
+        if not is_dataclass(type_):
+            continue
+        if issubclass(type_, AbstractExternalResource):
+            raise TypeError(
+                f"{type_.__name__} objects can't be passed into or out of "
+                f"Sematic funcs. They are only intended to be used inside "
+                f"the body of a Sematic func. Attempted to use with parameter "
+                f"'{parameter_name}'"
+            )
 
 
 def _is_method_like(func) -> bool:
@@ -494,3 +587,63 @@ def _convert_tuples(value_, expected_type):
         return _make_tuple(expected_type, tuple(value_as_list))
 
     return tuple(value_as_list)
+
+
+def _check_for_unused_futures(
+    calculator_name: str, output: Future, created_futures: List[Future]
+):
+    futures_by_id = {f.id: f for f in created_futures}
+
+    if isinstance(output, Future):
+        dependency_ids = _get_dependency_ids(output)
+        possible_extra_ids = set(futures_by_id.keys()).difference(dependency_ids)
+    else:
+        possible_extra_ids = set(futures_by_id.keys())
+
+    sample_extra = None
+    for possible_extra_id in possible_extra_ids:
+        possible_extra_future = futures_by_id[possible_extra_id]
+        if possible_extra_future.calculator.__module__ == Future.__getitem__.__module__:
+            # It is ok for a "getitem" future to be unused, there are legitimate
+            # reasons to have this pattern: tuple unpacking from a future return is
+            # one example (_, foo = my_func()). The whole purpose of the unused
+            # future check is to make sure users aren't surprised when a func isn't
+            # executed, in case they were expecting its side effects to take place.
+            # But getitem has no side effects anyway, so nobody should be surprised
+            # or even notice if it doesn't run.
+            continue
+        sample_extra = possible_extra_future
+        break
+
+    if sample_extra is None:
+        return
+
+    message = (
+        f"The output of '{calculator_name}' does not depend on the output of "
+        f" '{sample_extra.calculator.__name__}', thus "
+        f"'{sample_extra.calculator.__name__}' "
+        f"will not be executed. See {_EXTRA_FUTURE_DOCS_LINK} for details on "
+        f"what you can do in this situation."
+    )
+
+    # since this is from user code
+    raise CalculatorError(message) from RuntimeError(message)
+
+
+def _get_dependency_ids(future: Future) -> List[str]:
+    """Given a future, get the ids of futures it depends on"""
+    dependency_ids = []
+
+    def record_dependency(future):
+        dependency_ids.append(future.id)
+
+    breadth_first_search(
+        start=[future],
+        get_next=lambda f: [
+            arg for arg in f.kwargs.values() if isinstance(arg, Future)
+        ],
+        visit=record_dependency,
+        key_func=lambda f: f.id,
+    )
+
+    return dependency_ids

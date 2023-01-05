@@ -1,8 +1,9 @@
 # Standard Library
 import contextlib
 import re
+from copy import copy
 from http import HTTPStatus
-from typing import Dict
+from typing import Dict, cast
 from unittest import mock
 from urllib.parse import urljoin
 
@@ -10,18 +11,21 @@ from urllib.parse import urljoin
 import flask.testing
 import pytest
 
-# responses 0.21.0 has type stubs but they break mypy
+# responses 0.21.0 has type stubs, but they break mypy
 # See https://github.com/getsentry/responses/issues/556
 import responses  # type: ignore
 import werkzeug
 
 # Sematic
-import sematic.config.user_settings as user_settings
+import sematic.config.settings as settings_module
 
 # Importing from server instead of app to make sure
 # all endpoints are loaded
 from sematic.api.server import sematic_api
 from sematic.config.config import get_config, switch_env
+from sematic.config.server_settings import ServerSettings, ServerSettingsVar
+from sematic.config.settings import _DEFAULT_PROFILE, PluginSettings, Settings
+from sematic.config.user_settings import UserSettings, UserSettingsVar
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 
 
@@ -74,24 +78,64 @@ def mock_requests(test_client):
 
 
 @contextlib.contextmanager
-def mock_user_settings(settings: Dict[user_settings.UserSettingsVar, str]):
-    # Force load everything first
-    user_settings.get_active_user_settings()
+def mock_user_settings(settings: Dict[UserSettingsVar, str]):
+    original_settings = settings_module._SETTINGS
 
-    original_settings = user_settings._settings
-    user_settings._settings = user_settings.UserSettings(default=settings)
+    original_settings_copy = copy(original_settings)
+    if original_settings_copy is None:
+        original_settings_copy = Settings()
+
+    plugin_settings = cast(PluginSettings, settings)
+    user_settings = original_settings_copy.profiles[_DEFAULT_PROFILE].settings.get(
+        UserSettings.get_path(), {}
+    )
+
+    for key, value in plugin_settings.items():
+        user_settings[key] = value
+
+    original_settings_copy.profiles[_DEFAULT_PROFILE].settings[
+        UserSettings.get_path()
+    ] = plugin_settings
+
+    settings_module._SETTINGS = original_settings_copy
 
     try:
         yield settings
     finally:
-        user_settings._settings = original_settings
+        settings_module._SETTINGS = original_settings
+
+
+@contextlib.contextmanager
+def mock_server_settings(settings: Dict[ServerSettingsVar, str]):
+    original_settings = settings_module._SETTINGS
+
+    original_settings_copy = copy(original_settings)
+    if original_settings_copy is None:
+        original_settings_copy = Settings()
+
+    plugin_settings = cast(PluginSettings, settings)
+    user_settings = original_settings_copy.profiles[_DEFAULT_PROFILE].settings.get(
+        ServerSettings.get_path(), {}
+    )
+
+    for key, value in plugin_settings.items():
+        user_settings[key] = value
+
+    original_settings_copy.profiles[_DEFAULT_PROFILE].settings[
+        ServerSettings.get_path()
+    ] = plugin_settings
+
+    settings_module._SETTINGS = original_settings_copy
+
+    try:
+        yield settings
+    finally:
+        settings_module._SETTINGS = original_settings
 
 
 def make_auth_test(endpoint: str, method: str = "GET"):
     def test_auth(test_client: flask.testing.FlaskClient):
-        with mock_user_settings(
-            {user_settings.UserSettingsVar.SEMATIC_AUTHENTICATE: "true"}
-        ):
+        with mock_server_settings({ServerSettingsVar.SEMATIC_AUTHENTICATE: "true"}):
             response = getattr(test_client, method.lower())(endpoint)
             assert response.status_code == HTTPStatus.UNAUTHORIZED
 
@@ -106,7 +150,5 @@ def mock_socketio():
 
 @pytest.fixture
 def mock_auth():
-    with mock_user_settings(
-        {user_settings.UserSettingsVar.SEMATIC_AUTHENTICATE: "false"}
-    ):
+    with mock_server_settings({ServerSettingsVar.SEMATIC_AUTHENTICATE: "false"}):
         yield
