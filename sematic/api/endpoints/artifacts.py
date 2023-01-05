@@ -88,7 +88,7 @@ def get_artifact_location_endpoint(user: Optional[User], artifact_id: str):
             "Incorrect storage plugin scope", HTTPStatus.INTERNAL_SERVER_ERROR
         )
 
-    logger.info("Using storage plug-in %s", repr(storage_class))
+    logger.info("Using storage plug-in %s", storage_class)
 
     location = storage_class().get_write_location("artifacts", artifact_id)
 
@@ -105,6 +105,8 @@ def get_artifact_data_endpoint(user: Optional[User], artifact_id: str):
         return jsonify_error(
             "Incorrect storage plugin scope", HTTPStatus.INTERNAL_SERVER_ERROR
         )
+
+    logger.info("Using storage plug-in %s", storage_class)
 
     read_payload = storage_class().get_read_payload("artifacts", artifact_id)
 
