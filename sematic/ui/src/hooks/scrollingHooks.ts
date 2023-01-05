@@ -4,6 +4,15 @@ import { useSetTimeout } from "./setTimeoutHooks";
 
 const SCROLL_EVENTS = ['mousewheel', 'DOMMouseScroll', 'wheel', 'MozMousePixelScroll'];
 const SCROLL_DOWN_CONTINUATION = 800;
+
+function _hasElementScrolledToBottom(refElement: HTMLElement | undefined) {
+    if (!refElement) {
+        return false;
+    }
+    const {scrollTop, clientHeight, scrollHeight } = refElement;
+
+    return scrollHeight - scrollTop - clientHeight < 10;
+};
 /**
  * A hook tracks that whether `refElement` has scrolled down to the bottom,
  * and then user has kept scrolling down for SCROLL_DOWN_CONTINUATION consecutive
@@ -20,12 +29,7 @@ export function usePulldownTrigger(
 ) {
     const { devLogger } = useLogger();
     const hasElementScrolledToBottom = useCallback(() => {
-        if (!refElement.current) {
-            return;
-        }
-        const {scrollTop, clientHeight, scrollHeight } = refElement.current;
-
-        return scrollHeight - scrollTop - clientHeight < 10;
+        return _hasElementScrolledToBottom(refElement.current);
     }, [refElement]);
 
     const [pullDownTriggerEnabled, setPullDownTriggerEnabled] = useState(false);
@@ -119,21 +123,60 @@ export function usePulldownTrigger(
         startDroppingPulldownTrigger, cancelDroppingPulldownTrigger, cancelPulldownTriggerEnabled,
         pullDownTriggerEnabled, setPullDownTriggerEnabled]);
     
-    const attachedDomElement = useRef<HTMLElement | undefined>(undefined);
 
     useEffect(() => {
-        attachedDomElement.current = refElement.current;
+        const attachedDomElement = refElement.current;
 
         SCROLL_EVENTS.forEach(eventName => {
-            attachedDomElement.current?.addEventListener(eventName, onScroll);
+            attachedDomElement?.addEventListener(eventName, onScroll, {passive: true});
         });
 
         return () => {
             SCROLL_EVENTS.forEach(eventName => {
-                attachedDomElement.current?.removeEventListener(eventName, onScroll);
+                attachedDomElement?.removeEventListener(eventName, onScroll);
             });
         };
-    }, [refElement, onScroll, attachedDomElement]);
+    }, [refElement, onScroll]);
 
     return {pullDownProgress, pullDownTriggerEnabled};
+}
+
+export function useScrollTracker(
+    refElement: React.MutableRefObject<HTMLElement | undefined>
+    ) {
+    
+    const [hasReachedBottom, setHasReachedBottom] = useState(false);
+
+    const checkHasScrolledToBottom = useCallback(() => {
+        setHasReachedBottom(
+            _hasElementScrolledToBottom(refElement.current)
+        );
+    }, [hasReachedBottom, setHasReachedBottom, refElement]);
+
+    const onScroll = useCallback(checkHasScrolledToBottom, [checkHasScrolledToBottom]);
+
+    const scrollToBottom = useCallback(() => {
+        const scroller = refElement.current;
+        scroller?.scrollTo(0, scroller.scrollHeight);
+        checkHasScrolledToBottom();
+    }, [refElement, checkHasScrolledToBottom]);
+
+    useEffect(() => {
+        const attachedDomElement = refElement.current;
+
+        SCROLL_EVENTS.forEach(eventName => {
+            attachedDomElement?.addEventListener(eventName, onScroll, {passive: true});
+        });
+
+        return () => {
+            SCROLL_EVENTS.forEach(eventName => {
+                attachedDomElement?.removeEventListener(eventName, onScroll);
+            });
+        };
+    }, [refElement, onScroll]);
+
+    return {
+        hasReachedBottom,
+        scrollToBottom
+    }
 }
