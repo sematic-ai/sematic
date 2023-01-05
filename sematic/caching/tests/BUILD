@@ -6,6 +6,7 @@ pytest_test(
         "//sematic:abstract_future",
         "//sematic:init",
         "//sematic/caching:caching",
+        "//sematic/resolvers:state_machine_resolver",
         "//sematic/types:serialization",
     ],
 )
