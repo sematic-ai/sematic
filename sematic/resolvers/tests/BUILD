@@ -98,11 +98,7 @@ pytest_test(
 sematic_py_lib(
     name = "fixtures",
     srcs = ["fixtures.py"],
-    pip_deps = [
-        "pytest",
-    ],
     deps = [
         "//sematic/plugins:abstract_external_resource",
-        "//sematic/tests:fixtures",
     ],
 )

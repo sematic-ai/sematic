@@ -1,17 +1,12 @@
 # Standard Library
 from dataclasses import dataclass, replace
 from typing import List, Optional, Tuple
-from unittest import mock
-
-# Third-party
-import pytest
 
 # Sematic
 from sematic.plugins.abstract_external_resource import (
     AbstractExternalResource,
     ResourceState,
 )
-from sematic.tests.fixtures import MockStorage
 
 _fake_resource_history: List["FakeExternalResource"] = []
 _fake_resource_call_history: List[Tuple["FakeExternalResource", str]] = []
