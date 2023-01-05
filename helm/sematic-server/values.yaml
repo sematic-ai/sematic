@@ -14,40 +14,11 @@ database:
   url: postgres://postgresql:5432/postgres # REPLACE ME
 
 deployment:
-  replicaCount: 1
+  replica_count: 1
   affinity: {}
   annorations: {}
   tolerations: {}
-  nodeSelector: {}
-  securityContext: {}
-    # fsGroup: 2000
-  containerSecurityContext: {}
-    # capabilities:
-    #   drop:
-    #   - ALL
-    # readOnlyRootFilesystem: true
-    # runAsNonRoot: true
-    # runAsUser: 1000
-  livenessProbe:
-    failureThreshold: 6
-    httpGet:
-      path: /
-      port: http
-      scheme: HTTP
-    initialDelaySeconds: 10
-    periodSeconds: 5
-    successThreshold: 1
-    timeoutSeconds: 1
-  readinessProbe:
-    failureThreshold: 6
-    httpGet:
-      path: /
-      port: http
-      scheme: HTTP
-    initialDelaySeconds: 10
-    periodSeconds: 5
-    successThreshold: 1
-    timeoutSeconds: 1
+  node_selector: {}
   resources:
     limits:
       cpu: 500m
@@ -57,21 +28,49 @@ deployment:
       memory: 4000Mi
   autoscaling:
     enabled: false
-    minReplicas: 1
-    maxReplicas: 100
-    targetCPUUtilizationPercentage: 80
-    # targetMemoryUtilizationPercentage: 80
-
+    min_replicas: 1
+    max_replicas: 100
+    target_cpu_utilization_pct: 80
+    # target_memory_utilization_pct: 80
+  security_context: {}
+    # fs_group: 2000
+  container_security_context: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # read_only_root_filesystem: true
+    # run_as_non_root: true
+    # run_as_user: 1000
+  liveness_probe:
+    failureThreshold: 6
+    httpGet:
+      path: /
+      port: http
+      scheme: HTTP
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 1
+  readiness_probe:
+    failureThreshold: 6
+    httpGet:
+      path: /
+      port: http
+      scheme: HTTP
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 1
 
 image:
   #repository: sematicai/sematic-server:v0.20.0
-  pullPolicy: IfNotPresent
-  #pullSecrets: []
+  pull_policy: IfNotPresent
+  #pull_secrets: []
 
 rbac:
   create: true
 
-serviceAccount:
+service_account:
   # Set to false and provide a name of an existing service account to reuse.
   create: true
   # Annotations to add to the service account
@@ -86,7 +85,7 @@ service:
 
 ingress:
   enabled: false
-  className: ""
+  class_name: ""
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
@@ -96,6 +95,13 @@ ingress:
         - path: /
           pathType: ImplementationSpecific
   tls: []
-  #  - secretName: chart-example-tls
+  #  - secret_name: chart-example-tls
   #    hosts:
   #      - chart-example.local
+
+autoscaling:
+  enabled: false
+  min_replicas: 1
+  max_replicas: 1
+  target_cpu_utilization_pct: 100
+  target_memory_utilization_pct: 100
