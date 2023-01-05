@@ -64,7 +64,7 @@ deployment:
 
 image:
   repository: sematicai/sematic-server
-  tag: v0.21.1
+  #tag: vX.XX.X
   pull_policy: IfNotPresent
   #pull_secrets: []
 
