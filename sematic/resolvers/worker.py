@@ -3,9 +3,11 @@ import argparse
 import datetime
 import logging
 import os
+import sys
 import pathlib
 import tempfile
 from typing import Any, Dict, List, Optional
+import subprocess
 
 # Third-party
 import cloudpickle
@@ -30,6 +32,9 @@ from sematic.scheduling.external_job import JobType
 from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
 
+# Argument to cause worker.py to emulate a normal python interpreter.
+# If used, all other args will be passed to the emulated interpreter.
+_EMULATE_INTERPRETER_ARG = "--emulate-interpreter"
 
 def parse_args():
     """
@@ -38,6 +43,7 @@ def parse_args():
     parser = argparse.ArgumentParser("Sematic cloud worker")
     parser.add_argument("--run_id", type=str, required=True)
     parser.add_argument("--resolve", default=False, action="store_true", required=False)
+    parser.add_argument(_EMULATE_INTERPRETER_ARG, default=False, action="store_true", required=False)
     parser.add_argument("--max-parallelism", type=int, default=None, required=False)
     parser.add_argument("--rerun-from", type=str, default=None, required=False)
 
@@ -203,8 +209,19 @@ def _create_log_file_path(file_name: str) -> str:
     return (pathlib.Path(sematic_temp_logs_dir) / pathlib.Path(file_name)).as_posix()
 
 
+def _emulate_interpreter(interpreter_args: List[str]) -> int:
+    full_args = [sys.executable] + interpreter_args
+    full_args = [arg for arg in full_args if arg != _EMULATE_INTERPRETER_ARG]
+    print(f"Command: {full_args}")
+    completed_process = subprocess.run(full_args)
+    return completed_process.returncode
+
+
 def wrap_main_with_logging():
     """Wrap the main function with log initialization and ingestion"""
+    if _EMULATE_INTERPRETER_ARG in sys.argv:
+        exit_code = _emulate_interpreter(sys.argv[1:])
+        os._exit(exit_code)
     print("Starting Sematic Worker")
     args = parse_args()
     prefix = log_prefix(args.run_id, JobType.driver if args.resolve else JobType.worker)

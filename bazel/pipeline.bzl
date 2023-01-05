@@ -70,12 +70,12 @@ def sematic_pipeline(
     if dev:
         main = "@sematic//sematic/resolvers:worker.py"
         srcs = ["@sematic//sematic/resolvers:worker.py"]
-        script_data = ["@sematic//bazel:ray"]
+        script_data = ["@sematic//bazel:ray", "@sematic//bazel:bazel_python"]
         py3_image_deps = deps + ["@sematic//sematic/resolvers:worker"]
     else:
         main = "@rules_sematic//:worker.py"
         srcs = ["@rules_sematic//:worker.py"]
-        script_data = ["@rules_sematic//:ray"]
+        script_data = ["@rules_sematic//:ray", "@rules_sematic//:bazel_python"]
         py3_image_deps = deps
 
     image_uris = []
@@ -88,13 +88,14 @@ def sematic_pipeline(
             name = with_tools_layer,
             files = script_data,
             directory = "/sematic_bin/",
-            #env={"PATH": "/sematic_bin/:$(PATH)"},
         )
         container_image(
             name = with_tools_image,
             base = base_image,
             layers = [with_tools_layer],
         )
+        env = env or {}
+        env["BAZEL_BUILT_IMAGE"] = "1"
         py3_image(
             name = "{}_{}_image".format(name, tag),
             main = main,
@@ -103,7 +104,7 @@ def sematic_pipeline(
             deps = py3_image_deps,
             visibility = ["//visibility:public"],
             base = with_tools_image,
-            env = env or {},
+            env = env,
             tags = ["manual"],
         )
 
@@ -166,7 +167,7 @@ def base_images():
 
     container_pull(
         name = "sematic-worker-base",
-        digest = "sha256:d0c0e15f4f20dc60e844523a012c9cc927acbd4c5187b943a4a4a90b0ed70eee",
+        digest = "sha256:1da54320378516cc3050d7a516bca7dcd4078e4900d9f0c453af69d96bc327ee",
         registry = "index.docker.io",
         repository = "sematicai/sematic-worker-base",
         tag = "latest",
@@ -174,7 +175,7 @@ def base_images():
 
     container_pull(
         name = "sematic-worker-cuda",
-        digest = "sha256:6cbedeffdbf8ef0e5182819b4ae05a12972f61a4cd862fe41e4b3aaca01888da",
+        digest = "sha256:95691e3b51fb1c9ca9d4e2ab06101628e1aeb9205ae36c2568be61b6fc51ebed",
         registry = "index.docker.io",
         repository = "sematicai/sematic-worker-base",
         tag = "cuda",

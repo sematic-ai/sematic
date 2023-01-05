@@ -15,7 +15,6 @@ import debugpy
 from sematic import CloudResolver, LocalResolver, SilentResolver
 from sematic.examples.testing_pipeline.pipeline import testing_pipeline
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
-from sematic import api_client as api
 
 logger = logging.getLogger(__name__)
 
@@ -219,15 +218,6 @@ def _wait_for_debugger():
 
 
 def main() -> None:
-    from sematic.config.config import switch_env  # noqa: F401
-    switch_env("user")
-    root_id = "e29fa4fef7b946c7bf0ff0e91994880e"
-    resolution = api.get_resolution(root_id)
-    root_run = api.get_run(root_id)
-    print(f"id: {root_id}")
-    print(f"resolution state: {resolution.status}")
-    print(f"run state: {root_run.future_state}")
-    print(f"image: {resolution.container_image_uri}")
     return
     if os.environ.get("DEBUGPY", None) is not None:
         _wait_for_debugger()
