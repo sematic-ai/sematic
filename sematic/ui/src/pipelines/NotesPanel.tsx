@@ -16,6 +16,7 @@ import PipelineRunViewContext from "./PipelineRunViewContext";
 import { fetchJSON } from "../utils";
 import { NoteView } from "../components/Notes";
 import { ExtractContextType } from "../components/utils/typings";
+import PipelinePanelsContext from "./PipelinePanelsContext";
 
 export default function NotesPanel() {
   const theme = useTheme();
@@ -24,8 +25,10 @@ export default function NotesPanel() {
   const { rootRun } 
     = usePipelineRunContext() as ExtractContextType<typeof PipelineRunViewContext> & {
       rootRun: Run
-  };;
-  const { selectedRun } = usePipelinePanelsContext();
+  };
+  const { selectedRun } = usePipelinePanelsContext() as ExtractContextType<typeof PipelinePanelsContext> & {
+    selectedRun: Run
+  };
 
 
   const calculatorPath = useMemo(
