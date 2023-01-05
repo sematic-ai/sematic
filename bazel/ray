@@ -1,2 +1,14 @@
 #!/bin/bash
-echo "Emulating Ray CLI!"
+
+PYTHON_EXE=$(which python3)
+if (( $BAZEL_BUILT_IMAGE == 1 )); then
+    PYTHON_EXE=$(which bazel_python)
+fi
+
+$PYTHON_EXE -c "import ray" &> /dev/null
+RAY_CHECK_EXIT_CODE=$?
+if (( $RAY_CHECK_EXIT_CODE != 0 )); then
+    >&2 echo "Ray is not installed. Please add it as a dependency of your code"
+    exit $RAY_CHECK_EXIT_CODE
+fi
+$PYTHON_EXE -m ray "$@"
