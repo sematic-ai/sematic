@@ -10,18 +10,23 @@ import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
 import { RunTreeNode } from "../interfaces/graph";
 import { Run } from "../Models";
 import RunStateChip from "../components/RunStateChip";
+import { ExtractContextType } from "../components/utils/typings";
+import PipelinePanelsContext from "./PipelinePanelsContext";
 
 export default function RunTree(props: {
   runTreeNodes: Array<RunTreeNode>;
 }) {
   let { runTreeNodes } = props;
 
-  const { selectedRun, setSelectedPanelItem, setSelectedRun } = usePipelinePanelsContext();
+  const { selectedRun, setSelectedPanelItem, setSelectedRunId } 
+  = usePipelinePanelsContext() as ExtractContextType<typeof PipelinePanelsContext> & {
+    selectedRun: Run
+  };
 
-  const onSelectRun = useCallback((run: Run) => {
-    setSelectedRun(run);
+  const onSelectRun = useCallback((runId: string) => {
+    setSelectedRunId(runId);
     setSelectedPanelItem('run');
-  }, [setSelectedPanelItem, setSelectedRun]);
+  }, [setSelectedPanelItem, setSelectedRunId]);
 
   if (runTreeNodes.length === 0) {
     return <></>;
@@ -35,7 +40,7 @@ export default function RunTree(props: {
       {runTreeNodes.map(({run, children}) => (
         <Fragment key={run!.id}>
           <ListItemButton
-            onClick={() => onSelectRun(run!)}
+            onClick={() => onSelectRun(run!.id)}
             key={run!.id}
             sx={{ height: "30px" }}
             selected={selectedRun.id === run!.id}

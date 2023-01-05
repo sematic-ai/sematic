@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import useAsync from "react-use/lib/useAsync";
 import useAsyncFn from "react-use/lib/useAsyncFn";
 import { Resolution, Run } from "../Models";
@@ -7,8 +7,11 @@ import { Filter, ResolutionPayload, RunListPayload, RunViewPayload } from "../Pa
 import PipelinePanelsContext from "../pipelines/PipelinePanelsContext";
 import PipelineRunViewContext from "../pipelines/PipelineRunViewContext";
 import { useHttpClient } from "./httpHooks";
+import { atomWithHash } from 'jotai-location'
 
 export type QueryParams = {[key: string]: string};
+
+export const selectedRunHashAtom = atomWithHash('run', '')
 
 export function usePipelineRunContext() {
     const contextValue = useContext(PipelineRunViewContext);
@@ -115,14 +118,18 @@ export function getPipelineUrlPattern(pipelinePath: string, requestedRootId: str
 export function usePipelineNavigation(pipelinePath: string) {
     const navigate = useNavigate();
     const { rootId } = useParams();
+    const { hash } = useLocation();
 
     return useCallback((requestedRootId: string, replace: boolean = false) => {
         if ( rootId === requestedRootId ) {
             return
         }
 
-        navigate(getPipelineUrlPattern(pipelinePath, requestedRootId), {
+        navigate({
+            pathname: getPipelineUrlPattern(pipelinePath, requestedRootId),
+            hash
+        }, {
             replace
         });
-    }, [pipelinePath, rootId, navigate]);
+    }, [pipelinePath, rootId, hash, navigate]);
 }
