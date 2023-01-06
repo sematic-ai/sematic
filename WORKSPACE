@@ -48,9 +48,9 @@ gazelle_dependencies()
 ### Standard python rules
 http_archive(
     name = "rules_python",
-    sha256 = "a3a6e99f497be089f81ec082882e40246bfd435f52f4e82f37e89449b04573f6",
-    strip_prefix = "rules_python-0.10.2",
-    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.10.2.tar.gz",
+    sha256 = "497ca47374f48c8b067d786b512ac10a276211810f4a580178ee9b9ad139323a",
+    strip_prefix = "rules_python-0.16.1",
+    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.16.1.tar.gz",
 )
 
 # Canonical toolchain
@@ -98,13 +98,13 @@ load("@rules_python//python:pip.bzl", "pip_parse")
 pip_parse(
     name = "pip_dependencies38",
     python_interpreter_target = interpreter38,
-    requirements_lock = "//requirements:requirements.txt",
+    requirements_lock = "//requirements:requirements38.txt",
 )
 
 pip_parse(
     name = "pip_dependencies39",
     python_interpreter_target = interpreter39,
-    requirements_lock = "//requirements:requirements.txt",
+    requirements_lock = "//requirements:requirements39.txt",
 )
 
 load("@pip_dependencies38//:requirements.bzl", install_deps38="install_deps")
