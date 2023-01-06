@@ -45,7 +45,7 @@ export function PipelineRunViewPresentation({
   );
 }
 
-export default function PipelineRunViewDirector() {
+export default function PipelineRunViewRouter() {
   const { pipelinePath, rootId } = useParams();
 
   for (const [key, value] of Object.entries({pipelinePath, rootId})) {
