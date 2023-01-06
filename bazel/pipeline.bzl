@@ -70,6 +70,10 @@ def sematic_pipeline(
     if dev:
         main = "@sematic//sematic/resolvers:worker.py"
         srcs = ["@sematic//sematic/resolvers:worker.py"]
+
+        # note that this is only adding a script that wraps Ray
+        # if it's there. It doesn't add an actual dependency on real
+        # ray stuff.
         script_data = ["@sematic//bazel:ray", "@sematic//bazel:bazel_python"]
         py3_image_deps = deps + ["@sematic//sematic/resolvers:worker"]
     else:
