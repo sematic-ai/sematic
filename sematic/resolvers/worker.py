@@ -215,7 +215,6 @@ def _create_log_file_path(file_name: str) -> str:
 def _emulate_interpreter(interpreter_args: List[str]) -> int:
     full_args = [sys.executable] + interpreter_args
     full_args = [arg for arg in full_args if arg != _EMULATE_INTERPRETER_ARG]
-    print(f"Command: {full_args}")
     completed_process = subprocess.run(full_args)
     return completed_process.returncode
 
