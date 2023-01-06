@@ -5,9 +5,10 @@ import { Alert } from "@mui/material";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import { styled } from '@mui/system';
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { EnvContext } from "..";
 import GrafanaPanel from "../addons/grafana/GrafanaPanel";
+import { usePipelinePanelsContext} from "../hooks/pipelineHooks";
 import { Artifact, Run } from "../Models";
 import { ArtifactList } from "./Artifacts";
 import Docstring from "../components/Docstring";
@@ -33,12 +34,10 @@ export default function RunTabs(props: {
 }) {
   const { run, artifacts } = props;
 
-  const defaultTab = run.future_state === "FAILED" ? "logs" : "output";
-
-  const [selectedTab, setSelectedTab] = useState(defaultTab);
-
+  const {selectedRunTab, setSelectedRunTab, setSelectedArtifactName} = usePipelinePanelsContext();
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-    setSelectedTab(newValue);
+    setSelectedArtifactName("");
+    setSelectedRunTab(newValue);
   };
 
   const env: Map<string, string> = useContext(EnvContext);
@@ -49,7 +48,7 @@ export default function RunTabs(props: {
 
   return (
     <>
-      <TabContext value={selectedTab}>
+      <TabContext value={selectedRunTab}>
         <Box sx={{ borderBottom: 1, borderColor: "divider", flexShrink: 1 }}>
           <TabList onChange={handleChange} aria-label="Selected run tabs">
             <Tab label="Input" value="input" />
@@ -76,7 +75,7 @@ export default function RunTabs(props: {
         <TabPanel value="documentation">
           <Docstring docstring={run.description} />
         </TabPanel>
-        <ExpandedTabPanel hidden={selectedTab != "logs"} value="logs">
+        <ExpandedTabPanel hidden={selectedRunTab !== "logs"} value="logs">
           <LogPanel run={run} />
         </ExpandedTabPanel>
         <TabPanel value="source">
