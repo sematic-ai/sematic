@@ -65,3 +65,7 @@ boto3
 
 # Matplotlib
 mpld3
+
+# External Resource Plugins
+## Ray
+ray>=2.2.0

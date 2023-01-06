@@ -11,4 +11,5 @@ if (( $RAY_CHECK_EXIT_CODE != 0 )); then
     >&2 echo "Ray is not installed. Please add it as a dependency of your code"
     exit $RAY_CHECK_EXIT_CODE
 fi
-$PYTHON_EXE -m ray "$@"
+$PYTHON_EXE -m ray.scripts.scripts "$@"
+exit $?
