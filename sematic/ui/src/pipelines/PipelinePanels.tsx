@@ -60,7 +60,7 @@ export default function PipelinePanels() {
     }
   }, [selectedRunId, graph, rootRun, setSelectedRunId])
 
-  if (error || isGraphLoading) {
+  if (error || (!graph && isGraphLoading)) {
     return (
       <Box sx={{ p: 5, gridColumn: "1 / 4" }}>
         <Loading error={error} isLoaded={false} />
