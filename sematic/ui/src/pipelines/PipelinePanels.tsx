@@ -41,10 +41,16 @@ export default function PipelinePanels() {
     return graph.runsById.get(runId) || rootRun;
   }, [selectedRunId, graph, rootRun]);
 
+  const defaultTab = selectedRun?.future_state === "FAILED" ? "logs" : "output";
+  const [selectedRunTab, setSelectedRunTab] = useState(defaultTab);
+  const [selectedArtifactName, setSelectedArtifactName] = useState("");
+
   const pipelinePanelsContext = useMemo<ExtractContextType<typeof PipelinePanelsContext>>(() => ({
     selectedPanelItem, setSelectedPanelItem,
-    selectedRun, setSelectedRunId
-  }), [selectedPanelItem, setSelectedPanelItem, selectedRun, setSelectedRunId]);
+    selectedRun, setSelectedRunId,
+    selectedRunTab, setSelectedRunTab,
+    selectedArtifactName, setSelectedArtifactName
+  }), [selectedPanelItem, selectedRun, setSelectedRunId, selectedRunTab, selectedArtifactName]);
 
   useEffect(()=> {
     if (selectedRunId === rootRun.id || 
