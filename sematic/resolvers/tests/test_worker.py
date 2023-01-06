@@ -28,7 +28,7 @@ from sematic.db.queries import (
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.future_context import PrivateContext, SematicContext
 from sematic.resolvers.cloud_resolver import CloudResolver
-from sematic.resolvers.worker import main
+from sematic.resolvers.worker import _emulate_interpreter, main
 from sematic.tests.fixtures import (  # noqa: F401
     MockStorage,
     test_storage,
@@ -235,3 +235,10 @@ def test_fail(
     assert runs[0].future_state == FutureState.FAILED.value
     assert runs[0].exception_metadata is not None
     assert "FAIL!" in runs[0].exception_metadata.repr
+
+
+def test_emulate_interpreter():
+    # if the sematic import failed, we wouldn't reach the sys.exit, and we'd
+    # get a different exit code.
+    exit_code = _emulate_interpreter(["-c", "import sematic; import sys; sys.exit(42)"])
+    assert exit_code == 42

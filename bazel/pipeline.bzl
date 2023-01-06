@@ -95,6 +95,10 @@ def sematic_pipeline(
             layers = [with_tools_layer],
         )
         env = env or {}
+
+        # Leveraged by scripts in the image to determine
+        # which python environment to use: the host python
+        # env or the bazel-managed one.
         env["BAZEL_BUILT_IMAGE"] = "1"
         py3_image(
             name = "{}_{}_image".format(name, tag),
