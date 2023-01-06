@@ -3,11 +3,11 @@ import argparse
 import datetime
 import logging
 import os
-import sys
 import pathlib
+import subprocess
+import sys
 import tempfile
 from typing import Any, Dict, List, Optional
-import subprocess
 
 # Third-party
 import cloudpickle
@@ -36,6 +36,7 @@ from sematic.utils.exceptions import format_exception_for_run
 # If used, all other args will be passed to the emulated interpreter.
 _EMULATE_INTERPRETER_ARG = "--emulate-interpreter"
 
+
 def parse_args():
     """
     Get worker CLI arguments, passed to image by K8s job.
@@ -43,7 +44,9 @@ def parse_args():
     parser = argparse.ArgumentParser("Sematic cloud worker")
     parser.add_argument("--run_id", type=str, required=True)
     parser.add_argument("--resolve", default=False, action="store_true", required=False)
-    parser.add_argument(_EMULATE_INTERPRETER_ARG, default=False, action="store_true", required=False)
+    parser.add_argument(
+        _EMULATE_INTERPRETER_ARG, default=False, action="store_true", required=False
+    )
     parser.add_argument("--max-parallelism", type=int, default=None, required=False)
     parser.add_argument("--rerun-from", type=str, default=None, required=False)
 

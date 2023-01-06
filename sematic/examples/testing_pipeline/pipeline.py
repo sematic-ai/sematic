@@ -8,6 +8,9 @@ import random
 import time
 from typing import List, Optional
 
+# Third-party
+import ray
+
 # Sematic
 import sematic
 from sematic.plugins.external_resource.timed_message import TimedMessage
@@ -15,7 +18,6 @@ from sematic.plugins.external_resource.timed_message import TimedMessage
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-import ray
 
 @sematic.func(inline=False)
 def add(a: float, b: float) -> float:
@@ -26,16 +28,20 @@ def add(a: float, b: float) -> float:
     time.sleep(5)
     return a + b
 
+
 @sematic.func(inline=False)
 def add_with_ray(a: float, b: float, cluster_address: str) -> float:
     """
     Adds two numbers, using a Ray cluster
     """
-    logger.info("Executing: add_with_ray(a=%s, b=%s, cluster_address=%s)", a, b, cluster_address)
+    logger.info(
+        "Executing: add_with_ray(a=%s, b=%s, cluster_address=%s)", a, b, cluster_address
+    )
     ray.init(address=cluster_address)
     result = ray.get([add_ray_task.remote(a, b)])[0]
     logger.info("Result from ray for %s + %s: %s", a, b, result)
     return result
+
 
 @ray.remote
 def add_ray_task(x, y):
@@ -44,6 +50,7 @@ def add_ray_task(x, y):
     logger = logging.getLogger(__name__)
     logger.info("Adding from Ray: %s, %s", x, y)
     return x + y
+
 
 @sematic.func(inline=True)
 def add_inline(a: float, b: float) -> float:
@@ -287,7 +294,7 @@ def testing_pipeline(
 
     if exit_code is not None:
         futures.append(do_exit(initial_future, exit_code))
-    
+
     if ray_cluster_address is not None:
         futures.append(add_with_ray(initial_future, 1.0, ray_cluster_address))
 
