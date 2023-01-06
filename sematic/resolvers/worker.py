@@ -213,6 +213,18 @@ def _create_log_file_path(file_name: str) -> str:
 
 
 def _emulate_interpreter(interpreter_args: List[str]) -> int:
+    """Spin off a python interpreter as a subprocess, and pass along the provided args
+
+    Parameters
+    ----------
+    interpreter_args:
+        The arguments to pass to the interpreter. Should not include the interpreter
+        itself.
+
+    Returns
+    -------
+    The exit code from the interpreter subprocess
+    """
     full_args = [sys.executable] + interpreter_args
     full_args = [arg for arg in full_args if arg != _EMULATE_INTERPRETER_ARG]
     completed_process = subprocess.run(full_args)

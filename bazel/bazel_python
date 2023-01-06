@@ -1,4 +1,13 @@
 #!/bin/bash
+
+# This file allows for entering the python environment
+# created by bazel for a Sematic Docker image. You can
+# use it like you would any other python interpreter.
+# Ex:
+# $ bazel_python -c "print('Hello from bazel python')"
+# It works by leveraging our worker.py file, which can
+# emulate a python interpreter.
+
 if (( $BAZEL_BUILT_IMAGE != 1 )); then
     >&2 echo "This image wasn't built by Bazel in Sematic. bazel_python not available."
     exit 1
