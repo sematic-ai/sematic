@@ -1,31 +1,24 @@
 import Box from "@mui/material/Box";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import Loading from "../components/Loading";
 import PipelineBar from "./PipelineBar";
 import PipelinePanels from "./PipelinePanels";
 import { ExtractContextType } from "../components/utils/typings";
-import { useFetchResolution, useFetchRun } from "../hooks/pipelineHooks";
+import { selectedRunHashAtom, useFetchResolution, useFetchRun, usePipelineNavigation } from "../hooks/pipelineHooks";
 import PipelineRunViewContext from './PipelineRunViewContext'
+import { Run } from "../Models";
+import { useAtom } from "jotai";
+interface PipelineRunViewPresentationProps {
+  pipelinePath: string
+  rootRun: Run
+}
+export function PipelineRunViewPresentation({
+  pipelinePath, rootRun
+}: PipelineRunViewPresentationProps ) {
+  const { id: rootId } = rootRun;
 
-export default function PipelineRunView() {
-  const { pipelinePath, rootId } = useParams();
-
-  for (const [key, value] of Object.entries({pipelinePath, rootId})) {
-    if (!value) {
-      throw new Error(
-        `\`${key}\` is expected from the URL. This component might be used with wrong route.`);
-    }
-  }
-
-  const [rootRun, isRootRunLoading, rootRunLoadError] = useFetchRun(rootId!);
-  const [resolution, isResolutionLoading, resolutionLoadError] = useFetchResolution(rootId!);
-
-  const isLoading = useMemo(() => isRootRunLoading || isResolutionLoading, 
-    [isRootRunLoading, isResolutionLoading])
-  
-  const error = useMemo(() => rootRunLoadError || resolutionLoadError, 
-    [rootRunLoadError, resolutionLoadError])
+  const [resolution, isLoading, error] = useFetchResolution(rootId!);
 
   const context = useMemo<ExtractContextType<typeof PipelineRunViewContext>>(() => ({
     rootRun, resolution, isLoading, pipelinePath: pipelinePath!
@@ -50,4 +43,45 @@ export default function PipelineRunView() {
       </Box>
     </PipelineRunViewContext.Provider>
   );
+}
+
+export default function PipelineRunViewRouter() {
+  const { pipelinePath, rootId } = useParams();
+
+  for (const [key, value] of Object.entries({pipelinePath, rootId})) {
+    if (!value) {
+      throw new Error(
+        `\`${key}\` is expected from the URL. This component might be used with wrong route.`);
+    }
+  }
+  const navigate = usePipelineNavigation(pipelinePath!);
+  const [run, isLoading, error] = useFetchRun(rootId!);
+  const [_, setSelectedRunId] = useAtom(selectedRunHashAtom);
+
+  useEffect(() => {
+    if (!run) {
+      return;
+    }
+    if (rootId !== run.root_id) { 
+      // in case `rootId` is actually a nested run. Navigate to new URL
+      const nestedRunId = rootId!;
+      setSelectedRunId(nestedRunId);
+      setTimeout(() => { // use `setTimeout` so setSelectedRunId has a chance to update URL hash.
+        navigate(run.root_id);
+      });
+    }
+  }, [run, rootId, navigate, setSelectedRunId]);
+
+  if (error || isLoading) {
+    return <Loading error={error} isLoaded={!isLoading} />
+  }
+
+  if (rootId !== run!.root_id) { 
+    // in case `rootId` is actually a nested run. Render nothing. Page
+    // will be redirected soon.
+    return <></>;
+  }
+
+  // Otherwise, load `PipelineRunViewPresentation` to actually render root run.
+  return <PipelineRunViewPresentation pipelinePath={pipelinePath!} rootRun={run!} />
 }
