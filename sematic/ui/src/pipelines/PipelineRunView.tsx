@@ -59,7 +59,9 @@ export default function PipelineRunViewRouter() {
   const [_, setSelectedRunId] = useAtom(selectedRunHashAtom);
 
   useEffect(() => {
-    if (!run) {
+    // The new run might be loading, so we have to wait for run.id == rootId
+    // to get the updated `run`
+    if (!run || run.id !== rootId) {
       return;
     }
     if (rootId !== run.root_id) { 
@@ -70,7 +72,7 @@ export default function PipelineRunViewRouter() {
         navigate(run.root_id);
       });
     }
-  }, [run, rootId, navigate, setSelectedRunId]);
+  }, [run, rootId, isLoading, navigate, setSelectedRunId]);
 
   if (error || isLoading) {
     return <Loading error={error} isLoaded={!isLoading} />
