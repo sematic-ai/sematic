@@ -14,7 +14,7 @@ from sematic.config.config import get_config
 from sematic.db.models.user import User
 from sematic.plugins.abstract_storage import (
     AbstractStorage,
-    NoSuchStorageKey,
+    NoSuchStorageKeyError,
     PayloadType,
     ReadPayload,
 )
@@ -40,14 +40,14 @@ class LocalStorage(AbstractStorage, AbstractPlugin):
         return _PLUGIN_VERSION
 
     def get_write_location(self, namespace: str, key: str) -> str:
-        return f"{get_config().api_url}/upload/{namespace}/{key}"
+        return f"/upload/{namespace}/{key}"
 
     def get_read_payload(self, namespace: str, key: str) -> ReadPayload:
         try:
             with open(os.path.join(_get_data_dir(), namespace, key), "rb") as file:
                 content = file.read()
         except FileNotFoundError:
-            raise NoSuchStorageKey(self, key)
+            raise NoSuchStorageKeyError(self.__class__, key)
 
         return ReadPayload(type_=PayloadType.BYTES, content=content)
 

@@ -15,9 +15,9 @@ def test_upload(
 
     memory_storage = MemoryStorage()
 
-    response = test_client.put(
-        memory_storage.get_write_location("artifacts", "123"), data=value
-    )
+    location = memory_storage.get_write_location("artifacts", "123")
+
+    response = test_client.put(f"/api/v1{location}", data=value)
 
     assert response.status_code == 200
 

@@ -14,6 +14,7 @@ data:
 {{ end }}
 {{ if .Values.aws.enabled }}
   AWS_S3_BUCKET: {{ .Values.aws.storage_bucket | quote }}
+  STORAGE: "sematic.plugins.storage.s3_storage.S3Storage"
 {{ end }}
   KUBERNETES_NAMESPACE: {{ .Release.Namespace }}
   SEMATIC_WORKER_KUBERNETES_SA: {{ .Values.worker.service_account.name | quote }}
