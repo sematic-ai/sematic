@@ -11,7 +11,7 @@ from sematic.api.endpoints.auth import authenticate
 from sematic.db.models.user import User
 from sematic.plugins.abstract_storage import (
     AbstractStorage,
-    NoSuchStorageKey,
+    NoSuchStorageKeyError,
     PayloadType,
     ReadPayload,
 )
@@ -38,17 +38,24 @@ class MemoryStorage(AbstractStorage, AbstractPlugin):
     _store: Dict[str, Any] = {}
 
     @classmethod
+    def get(cls, key: str):
+        try:
+            return cls._store[key]
+        except KeyError:
+            raise NoSuchStorageKeyError(cls, key)
+
+    @classmethod
     def set(cls, key: str, value: bytes):
         cls._store[key] = value
 
     def get_write_location(self, namespace: str, key: str) -> str:
-        return f"api/v1/memory_upload/{namespace}/{key}"
+        return f"/memory_upload/{namespace}/{key}"
 
     def get_read_payload(self, namespace: str, key: str) -> ReadPayload:
         try:
             content = self._store[self.get_write_location(namespace, key)]
         except KeyError:
-            raise NoSuchStorageKey(self, key)
+            raise NoSuchStorageKeyError(self.__class__, key)
 
         return ReadPayload(type_=PayloadType.BYTES, content=content)
 

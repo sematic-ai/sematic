@@ -14,11 +14,10 @@ from sematic.config.user_settings import UserSettings, UserSettingsVar, get_user
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
-from sematic.db.models.factories import get_artifact_value
+from sematic.db.models.factories import deserialize_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
-from sematic.storage import S3Storage, Storage
 from sematic.utils.retry import retry
 from sematic.versions import CURRENT_VERSION, version_as_string
 
@@ -54,9 +53,7 @@ class ResourceNotFoundError(BadRequestError):
     pass
 
 
-def get_artifact_value_by_id(
-    artifact_id: str, storage: Optional[Storage] = None
-) -> Any:
+def get_artifact_value_by_id(artifact_id: str) -> Any:
     """
     Retrieve the value of an artifact by ID.
 
@@ -71,13 +68,15 @@ def get_artifact_value_by_id(
     Any
         The value of the requiested artifact.
     """
-    # TODO: Store storage type on artifact
-    if storage is None:
-        storage = S3Storage()
-
     artifact = _get_artifact(artifact_id)
 
-    return get_artifact_value(artifact, storage)
+    return get_artifact_value(artifact)
+
+
+def get_artifact_value(artifact: Artifact) -> Any:
+    payload = _get_artifact_bytes(artifact.id)
+
+    return deserialize_artifact_value(artifact, payload)
 
 
 def _get_artifact(artifact_id: str) -> Artifact:
@@ -87,6 +86,20 @@ def _get_artifact(artifact_id: str) -> Artifact:
     response = _get("/artifacts/{}".format(artifact_id))
 
     return Artifact.from_json_encodable(response["content"])
+
+
+def store_artifact_bytes(artifact_id: str, bytes_: bytes) -> None:
+    response = _get(f"/artifacts/{artifact_id}/location")
+
+    location: str = response["location"]
+
+    put = requests.put if location.startswith("https://") else _put
+
+    put(location, data=bytes_)
+
+
+def _get_artifact_bytes(artifact_id: str) -> bytes:
+    return _get(f"/artifacts/{artifact_id}/data", decode_json=False)
 
 
 def get_run(run_id: str) -> Run:
@@ -314,10 +327,24 @@ def _notify_event(namespace: str, event: str, payload: Any = None):
     backoff=2,
     jitter=0.1,
 )
-def _get(endpoint) -> Any:
+def _get(endpoint: str, decode_json: bool = True) -> Any:
+    """
+    Get a payload from the API server.
+
+    Parameters
+    ----------
+    endpoint: str
+        Endpoint to query. `/api/v1` will be prepended and authentication
+        headers will be added.
+    decode_json: bool
+        Defaults to `True`. Whether the returned payload should be JSON-decoded.
+    """
     response = _request(requests.get, endpoint)
 
-    return response.json()
+    if decode_json:
+        return response.json()
+
+    return response.content
 
 
 @retry(
@@ -343,8 +370,12 @@ def _post(endpoint, json_payload) -> Any:
     backoff=2,
     jitter=0.1,
 )
-def _put(endpoint, json_payload) -> Any:
-    response = _request(requests.put, endpoint, dict(json=json_payload))
+def _put(
+    endpoint: str,
+    json_payload: Optional[Dict[str, Any]] = None,
+    data: Optional[bytes] = None,
+) -> Any:
+    response = _request(requests.put, endpoint, dict(json=json_payload, data=data))
 
     if len(response.content) == 0:
         return None
