@@ -125,7 +125,7 @@ Now you can prepare the Helm chart release.
 Update the file `helm/sematic-server/Chart.yaml` to:
 1) Set the `appVersion` field to match the version of the new release.
 2) Increment the minor version of the `version` field, i.e. if it's currently
-   1.3.5, make it 1.3.6.
+   `1.3.5`, make it `1.3.6`.
 
 Next you can generate the Helm package and publish it to the Helm repository.
 Clone the `github.com/sematic-ai/helm-charts` repo, and check out the `gh-pages`
