@@ -44,7 +44,6 @@ pytest_test(
         "//sematic/db:db",
         "//sematic/db:queries",
         "//sematic/db/models:artifact",
-        "//sematic/db/models:edge",
         "//sematic/db/models:external_resource",
         "//sematic/db/models:factories",
         "//sematic/db/models:resolution",
@@ -53,6 +52,7 @@ pytest_test(
         "//sematic/resolvers/tests:fixtures",
         "//sematic/tests:fixtures",
         "//sematic/types:init",
+        "//sematic/utils:exceptions",
     ],
 )
 

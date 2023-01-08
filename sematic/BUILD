@@ -8,9 +8,9 @@ sematic_py_lib(
         ":container_images",
         ":resolver",
         ":retry_settings",
-        "//sematic/plugins/external_resource:timed_message",
         "//sematic:future_context",
         "//sematic/future_operators:init",
+        "//sematic/plugins/external_resource:timed_message",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:local_resolver",
         "//sematic/resolvers:resource_requirements",
@@ -44,7 +44,6 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         "//sematic:abstract_future",
-        "//sematic:storage",
         "//sematic:versions",
         "//sematic/config:config",
         "//sematic/config:settings",
@@ -78,10 +77,10 @@ sematic_py_lib(
     deps = [
         "//sematic:abstract_future",
         "//sematic:api_client",
-        "//sematic:storage",
         "//sematic/db:queries",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+        "//sematic/plugins/storage:s3_storage",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/scheduling:external_job",
     ],
@@ -186,13 +185,14 @@ sematic_py_lib(
     srcs = ["graph.py"],
     deps = [
         ":abstract_future",
+        ":api_client",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
         "//sematic/db/models:run",
         "//sematic/resolvers:type_utils",
-        "//sematic/utils:memoized_property",
         "//sematic/utils:algorithms",
+        "//sematic/utils:memoized_property",
     ],
 )
 

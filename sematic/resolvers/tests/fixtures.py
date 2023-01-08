@@ -1,36 +1,12 @@
 # Standard Library
 from dataclasses import dataclass, replace
 from typing import List, Optional, Tuple
-from unittest import mock
-
-# Third-party
-import pytest
 
 # Sematic
 from sematic.plugins.abstract_external_resource import (
     AbstractExternalResource,
     ResourceState,
 )
-from sematic.tests.fixtures import MockStorage
-
-
-@pytest.fixture
-def mock_local_resolver_storage():
-    mock_storage = MockStorage()
-    with mock.patch(
-        "sematic.resolvers.local_resolver.LocalStorage", return_value=mock_storage
-    ):
-        yield mock_storage
-
-
-@pytest.fixture
-def mock_cloud_resolver_storage():
-    mock_storage = MockStorage()
-    with mock.patch(
-        "sematic.resolvers.cloud_resolver.S3Storage", return_value=mock_storage
-    ):
-        yield mock_storage
-
 
 _fake_resource_history: List["FakeExternalResource"] = []
 _fake_resource_call_history: List[Tuple["FakeExternalResource", str]] = []
