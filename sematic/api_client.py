@@ -99,7 +99,7 @@ def store_artifact_bytes(artifact_id: str, bytes_: bytes) -> None:
 
 
 def _get_artifact_bytes(artifact_id: str) -> bytes:
-    return _get(f"/artifacts/{artifact_id}/data", content=True)
+    return _get(f"/artifacts/{artifact_id}/data", decode_json=False)
 
 
 def get_run(run_id: str) -> Run:
@@ -327,13 +327,24 @@ def _notify_event(namespace: str, event: str, payload: Any = None):
     backoff=2,
     jitter=0.1,
 )
-def _get(endpoint: str, content: bool = False) -> Any:
+def _get(endpoint: str, decode_json: bool = True) -> Any:
+    """
+    Get a payload from the API server.
+
+    Parameters
+    ----------
+    endpoint: str
+        Endpoint to query. `/api/v1` will be prepended and authentication
+        headers will be added.
+    decode_json: bool
+        Defaults to `True`. Whether the returned payload should be JSON-decoded.
+    """
     response = _request(requests.get, endpoint)
 
-    if content:
-        return response.content
+    if decode_json:
+        return response.json()
 
-    return response.json()
+    return response.content
 
 
 @retry(
