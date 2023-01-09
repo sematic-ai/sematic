@@ -7,3 +7,5 @@ RUN echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.
 RUN sudo apt update
 RUN sudo apt install -y bazel default-jre default-jdk
 ENV JAVA_HOME=/usr/lib/jvm/default-java
+RUN curl -fsSL https://deb.nodesource.com/setup_19.x | sudo -E bash - &&\
+    sudo apt-get install -y nodejs
