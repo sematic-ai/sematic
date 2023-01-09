@@ -16,6 +16,8 @@ import RunNode from "./RunNode";
 import ArtifactNode from "./ArtifactNode";
 import { usePipelinePanelsContext } from "../../hooks/pipelineHooks";
 import { useGraphContext } from "../../hooks/graphHooks";
+import { ExtractContextType } from "../../components/utils/typings";
+import PipelinePanelsContext from "../PipelinePanelsContext";
 
 var util = require("dagre/lib/util");
 var graphlib = require("graphlib");
@@ -50,12 +52,16 @@ function ReactFlowDag() {
 
   const { runs, edges } = graph!;
 
-  const { selectedRun, setSelectedPanelItem, setSelectedRun } = usePipelinePanelsContext();
+  const { selectedRun, setSelectedPanelItem, setSelectedRunId, setSelectedRunTab, setSelectedArtifactName } 
+  = usePipelinePanelsContext() as ExtractContextType<typeof PipelinePanelsContext> & {
+    selectedRun: Run
+  };
 
-  const onSelectRun = useCallback((run: Run) => {
-    setSelectedRun(run);
+  const onSelectRun = useCallback((runId: string) => {
+    setSelectedRunTab("output");
+    setSelectedRunId(runId);
     setSelectedPanelItem("run");
-  }, [setSelectedRun, setSelectedPanelItem]);
+  }, [setSelectedRunTab, setSelectedRunId, setSelectedPanelItem]);
 
   const runsById = useMemo(
     () => new Map(runs.map((run) => [run.id, run])),
@@ -65,6 +71,19 @@ function ReactFlowDag() {
     () => new Map(edges.map((edge) => [edge.id, edge])),
     [edges]
   );
+
+  const onSelectArtifact = useCallback((node: Node) => {
+    const runId = node.data.sourceRunId || node.data.destinationRunId;
+    const artifactRun = graph?.runsById.get(runId);
+
+    if (artifactRun) {
+      setSelectedRunTab(node.data.sourceRunId ? "output" : "input");
+      //Labels do not exist for output artifacts and they are labelled as null.
+      setSelectedArtifactName(node.data.label || "null");
+      setSelectedRunId(artifactRun.id);
+      setSelectedPanelItem("run");
+    }
+  }, [graph, setSelectedRunTab, setSelectedRunId, setSelectedPanelItem, setSelectedArtifactName]);
 
   const [rfNodes, setRFNodes] = useNodesState([]);
   const [rfEdges, setRFEdges] = useEdgesState([]);
@@ -111,6 +130,7 @@ function ReactFlowDag() {
           data: {
             label: edge.destination_name,
             nodeId: artifactNodeId,
+            artifactId: edge.artifact_id,
             sourceRunId: edge.source_run_id,
             destinationRunId: edge.destination_run_id,
           }, //getEdgeLabel(edge) },
@@ -193,13 +213,15 @@ function ReactFlowDag() {
 
   const onNodeClick = useCallback(
     (event: any, node: Node) => {
-      let selectedRun = runsById.get(node.id);
-      if (selectedRun) {
-        onSelectRun(selectedRun);
-      }
-    },
-    [runsById, onSelectRun]
-  );
+      if (node.type === "artifactNode") {
+        onSelectArtifact(node);
+      } else {
+        let selectedRun = runsById.get(node.id);
+        if (selectedRun) {
+          onSelectRun(selectedRun.id);
+        }
+    }
+  },[runsById, onSelectRun, onSelectArtifact]);
 
   return (
     <>

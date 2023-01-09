@@ -13,6 +13,7 @@ sematic_py_lib(
         "python-socketio",
         "websocket-client",
     ],
+    # buildifier: leave-alone
     deps = [
         ":silent_resolver",
         "//sematic:abstract_calculator",
@@ -20,14 +21,17 @@ sematic_py_lib(
         "//sematic:api_client",
         "//sematic/resolvers/resource_managers:server_manager",
         "//sematic:graph",
+        "//sematic:versions",
         "//sematic/config:config",
+        "//sematic/config:user_settings",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
         "//sematic/db/models:run",
+        "//sematic/resolvers:abstract_resource_manager",
+        "//sematic/resolvers/resource_managers:server_manager",
         "//sematic/utils:exceptions",
         "//sematic/utils:git",
-        "//sematic:versions",
     ],
 )
 
@@ -52,8 +56,8 @@ sematic_py_lib(
         "//sematic:future_context",
         "//sematic/plugins:abstract_external_resource",
         "//sematic/resolvers:abstract_resource_manager",
-        "//sematic/resolvers/resource_managers:memory_manager",
         "//sematic/resolvers:state_machine_resolver",
+        "//sematic/resolvers/resource_managers:memory_manager",
     ],
 )
 
@@ -66,7 +70,9 @@ sematic_py_lib(
     deps = [
         ":local_resolver",
         "//sematic:abstract_future",
+        "//sematic:api_client",
         "//sematic:container_images",
+        "//sematic:storage",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:resolution",
@@ -88,9 +94,10 @@ sematic_py_lib(
 sematic_py_lib(
     name = "log_streamer",
     srcs = ["log_streamer.py"],
+    # buildifier: leave-alone
     deps = [
-        "//sematic:storage",
         "//sematic/config:config",
+        "//sematic/plugins/storage:s3_storage",
         "//sematic/utils:retry",
         "//sematic/utils:stdout",
     ],

@@ -12,6 +12,8 @@ import {
 } from "@mui/material";
 import { ErrorBoundary } from "react-error-boundary";
 import { CopyButton } from "../components/CopyButton";
+import { useEffect, useMemo, useRef } from "react";
+import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
 
 function ArtifactError(props: { error: Error }) {
   return (
@@ -57,18 +59,31 @@ export function ArtifactList(props: {
 }) {
   let { artifacts } = props;
 
+  const { selectedArtifactName } = usePipelinePanelsContext();
+
+  const refs = useRef(new Array(artifacts.size));
+  const artifactIds = useMemo(()=>Array.from(artifacts.keys()), [artifacts]);
+
+  useEffect(()=>{
+    if (selectedArtifactName !== "") {
+      const selectedRefIdx = artifactIds.indexOf(selectedArtifactName);
+      refs.current[selectedRefIdx]?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [artifactIds, selectedArtifactName]);
+
   if (artifacts.size === 0) {
     return <Alert severity="info">No values</Alert>;
   }
+
   if (artifacts.size === 1 && Array.from(artifacts.keys())[0] === "null") {
     let artifact = artifacts.get("null");
-    return <>{artifact && <ArtifactView artifact={artifact} />}</>;
+    return <>{artifact && <div ref={el => refs.current[0] = el} ><ArtifactView artifact={artifact} /></div>}</>;
   } else {
     return (
       <Table>
         <TableBody>
-          {Array.from(artifacts).map(([name, artifact]) => (
-            <TableRow key={name}>
+          {Array.from(artifacts).map(([name, artifact], idx) => (
+            <TableRow key={name} ref={el => refs.current[idx] = el}>
               <TableCell sx={{ verticalAlign: "top" }}>
                 <b>{name}</b>
               </TableCell>

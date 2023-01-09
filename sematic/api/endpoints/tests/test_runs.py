@@ -31,7 +31,6 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     test_db,
 )
 from sematic.log_reader import LogLineResult
-from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa: F401
 from sematic.scheduling.external_job import JobType
 from sematic.scheduling.kubernetes import KubernetesExternalJob
 from sematic.tests.fixtures import MockStorage, valid_client_version  # noqa: F401
@@ -444,7 +443,6 @@ def pipeline(a: float, b: float) -> float:
     "root, run_count, artifact_count, edge_count", ((0, 1, 3, 3), (1, 3, 4, 8))
 )
 def test_get_run_graph_endpoint(
-    mock_local_resolver_storage,  # noqa: F811
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     root: int,

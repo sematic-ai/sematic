@@ -3,36 +3,34 @@ import { Alert, Box, Button, LinearProgress, useTheme } from "@mui/material";
 import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useAccumulateLogsUntilEnd, useLogStream } from "../hooks/logHooks";
-import { usePulldownTrigger } from "../hooks/scrollingHooks";
+import { usePulldownTrigger, useScrollTracker } from "../hooks/scrollingHooks";
 import Loading from "../components/Loading";
+import { ExceptionMetadata } from "../Models";
+import { Exception, ExternalException } from "../components/Exception";
+import usePrevious from "react-use/lib/usePrevious";
 
 const DEFAULT_LOG_INFO_MESSAGE = "No more matching lines";
 
 export default function ScrollingLogView(props: {
   logSource: string;
   filterString: string;
-  onError: (error: Error) => void
+  external_exception_metadata_json: ExceptionMetadata | null;
+  exception_metadata_json: ExceptionMetadata | null;
 }) {
-  const { logSource, filterString, onError } = props;
+  const { logSource, filterString, external_exception_metadata_json, 
+    exception_metadata_json } = props;
   const theme = useTheme();
 
   const scrollerId = useMemo(() => `scrolling-logs-${logSource}`, [logSource]) ;
 
   // Single pull logic
-  const { lines, isLoading, error, hasMore, 
+  const { lines, isLoading, error: logLoadError, hasMore, 
     logInfoMessage, getNext, hasPulledData } = useLogStream(logSource, filterString);
   
   // Accumulator (logs draining) logic
   const { accumulateLogsUntilEnd, isLoading: isAccumulatorLoading,
     isAccumulating, accumulatedLines } = useAccumulateLogsUntilEnd(hasMore, getNext);
   
-  // report to parent in case of errors.
-  useEffect(()=> {
-    if (!!error) {
-      onError(error);
-    }
-  }, [onError, error]);
-
   const scrollMonitorRef = useRef<HTMLElement>();
 
   const pullDownCallback = useCallback(async () => {
@@ -40,7 +38,7 @@ export default function ScrollingLogView(props: {
       return;
     }
     await getNext();
-  }, [isAccumulating, isLoading, getNext]);
+  }, [isAccumulating, isLoading, getNext, hasMore]);
 
   const {pullDownProgress, pullDownTriggerEnabled} 
     = usePulldownTrigger(scrollMonitorRef!, pullDownCallback);
@@ -53,6 +51,8 @@ export default function ScrollingLogView(props: {
     }
     getNext();
   }, [getNext, isAccumulating]);
+
+  const { hasReachedBottom, scrollToBottom } = useScrollTracker(scrollMonitorRef);
 
   const logInfoMessageBanner = useMemo(() =>
     <Alert severity="info" sx={{ mt: 3 }}>
@@ -93,22 +93,25 @@ export default function ScrollingLogView(props: {
     </>);
   }, [pullDownTriggerEnabled, pullDownProgress, isAccumulating, hasMore]);
 
+  const prevIsAccumulating = usePrevious(isAccumulating)
   // scroll to the bottom when fast forwarding/jumping to end 
   // (aka accumulating) has gotten data
   useEffect(() => {
-    if (!isAccumulatorLoading) {
-      const scroller = document.getElementById(scrollerId);
-      scroller?.scrollTo(0, scroller.scrollHeight);
+    if (prevIsAccumulating === true && isAccumulatorLoading === false) {
+      scrollToBottom();
     }
-  }, [isAccumulatorLoading, scrollerId]);
+  }, [isAccumulatorLoading, scrollToBottom]);
 
   useEffect(() => {
-    // not sure why <InfiniteScroll /> does not do an initial pull,
-    // this mitigates that issue.
-    if (!hasPulledData) { 
+    const hasContainerScrolled = scrollMonitorRef.current!.scrollTop > 0;
+    // If <InfiniteScroll /> has not scrolled, the initial pull will not be triggered
+    // this drives an initial data pull.
+    // If <InfiniteScroll /> has scrolled, the initial pull will be triggered by the 
+    // component itself.
+    if (!hasPulledData && !hasContainerScrolled) { 
       getNext();
     }
-  }, [getNext, hasPulledData]);
+  }, [getNext, hasPulledData, scrollMonitorRef]);
 
   return (
     <>
@@ -117,7 +120,7 @@ export default function ScrollingLogView(props: {
         ref={scrollMonitorRef}
         sx={{
           height: 0,
-          mt: 5,
+          mt: 1.5,
           pt: 1,
           whiteSpace: "break-spaces",
           overflow: "hidden",
@@ -135,6 +138,18 @@ export default function ScrollingLogView(props: {
           loader={<Loading isLoaded={!isLoading} />}
           endMessage={logInfoMessageBanner}
         >
+          {external_exception_metadata_json && <Box sx={{ paddingBottom: 4, }} >
+            <ExternalException
+              exception_metadata={external_exception_metadata_json} />
+          </Box>}
+
+          {exception_metadata_json && <Box sx={{ paddingBottom: 4, }} >
+            <Exception exception_metadata={exception_metadata_json} /></Box>}
+          
+          {logLoadError!! && <Alert severity="error" sx={{ my: 5 }}>
+            The server returned an error when asked for logs for this run.
+          </Alert>}
+
           {lines.map((line, index) => (
             <Box
               sx={{
@@ -168,6 +183,16 @@ export default function ScrollingLogView(props: {
           {accumulatorButtonMessage}
         </Button>
       )}
+      {
+        (!hasMore && !hasReachedBottom && 
+          <Button
+            onClick={scrollToBottom}
+            sx={{ width: "100%" }}
+            style={{flexShrink: 1}}
+          >
+            "Jump to the end"
+          </Button>)
+      }
     </>
   );
 }

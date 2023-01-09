@@ -1,4 +1,5 @@
 # Standard Library
+import logging
 from http import HTTPStatus
 from typing import List, Optional, Type, cast
 
@@ -22,6 +23,8 @@ from sematic.db.models.user import User
 from sematic.db.queries import get_artifact
 from sematic.plugins.abstract_storage import AbstractStorage, PayloadType
 from sematic.plugins.storage.local_storage import LocalStorage
+
+logger = logging.getLogger(__name__)
 
 
 @sematic_api.route("/api/v1/artifacts", methods=["GET"])
@@ -85,6 +88,8 @@ def get_artifact_location_endpoint(user: Optional[User], artifact_id: str):
             "Incorrect storage plugin scope", HTTPStatus.INTERNAL_SERVER_ERROR
         )
 
+    logger.info("Using storage plug-in %s", storage_class)
+
     location = storage_class().get_write_location("artifacts", artifact_id)
 
     return flask.jsonify(dict(location=location))
@@ -100,6 +105,8 @@ def get_artifact_data_endpoint(user: Optional[User], artifact_id: str):
         return jsonify_error(
             "Incorrect storage plugin scope", HTTPStatus.INTERNAL_SERVER_ERROR
         )
+
+    logger.info("Using storage plug-in %s", storage_class)
 
     read_payload = storage_class().get_read_payload("artifacts", artifact_id)
 

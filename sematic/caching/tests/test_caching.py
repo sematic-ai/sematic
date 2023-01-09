@@ -9,6 +9,7 @@ import pytest
 from sematic import func
 from sematic.abstract_future import AbstractFuture
 from sematic.caching.caching import get_future_cache_key, resolve_cache_namespace
+from sematic.resolvers.state_machine_resolver import StateMachineResolver
 
 # these values were calculated by hand on paper to validate the algorithm
 # (they were all correct on the first try)
@@ -36,53 +37,70 @@ def my_other_namespace(_: AbstractFuture) -> str:
     return "my_other_namespace"
 
 
-def test_none_namespace():
+@pytest.fixture(scope="function")
+def my_future() -> AbstractFuture:
+    future = my_pipeline(1, {"test_key": 2})
+    future.resolved_kwargs = StateMachineResolver._get_resolved_kwargs(future)
+    return future
+
+
+@pytest.fixture(scope="function")
+def my_other_future() -> AbstractFuture:
+    future = my_other_pipeline(1)
+    future.resolved_kwargs = StateMachineResolver._get_resolved_kwargs(future)
+    return future
+
+
+def test_none_namespace(my_future: AbstractFuture):
     with pytest.raises(ValueError, match="cannot be None"):
-        get_future_cache_key(None, my_pipeline(1, {"test_key": 2}))
+        get_future_cache_key(None, my_future)  # type: ignore
 
 
-def test_namespace_str_happy_path():
-    actual = get_future_cache_key("my_namespace", my_pipeline(1, {"test_key": 2}))
+def test_unresolved_args_namespace():
+    with pytest.raises(ValueError, match="Not all input arguments are resolved"):
+        get_future_cache_key("my_namespace", my_pipeline(1, {"test_key": 2}))
+
+
+def test_namespace_str_happy_path(my_future: AbstractFuture):
+    actual = get_future_cache_key("my_namespace", my_future)
     assert actual == MY_CACHE_KEY
 
-    actual = get_future_cache_key("my_other_namespace", my_pipeline(1, {"test_key": 2}))
+    actual = get_future_cache_key("my_other_namespace", my_future)
     assert actual == MY_OTHER_CACHE_KEY
 
 
-def test_resolve_namespace_str_happy_path():
-    actual = resolve_cache_namespace("my_namespace", my_pipeline(1, {"test_key": 2}))
+def test_resolve_namespace_str_happy_path(my_future: AbstractFuture):
+    actual = resolve_cache_namespace("my_namespace", my_future)
     assert actual == "my_namespace"
 
 
-def test_resolve_namespace_callable_happy_path():
-    actual = resolve_cache_namespace(my_namespace, my_pipeline(1, {"test_key": 2}))
+def test_resolve_namespace_callable_happy_path(my_future: AbstractFuture):
+    actual = resolve_cache_namespace(my_namespace, my_future)
     assert actual == "my_namespace"
 
-    actual = resolve_cache_namespace(
-        my_other_namespace, my_pipeline(1, {"test_key": 2})
-    )
+    actual = resolve_cache_namespace(my_other_namespace, my_future)
     assert actual == "my_other_namespace"
 
 
-def test_resolve_namespace_str_truncated():
+def test_resolve_namespace_str_truncated(my_future: AbstractFuture):
     actual = resolve_cache_namespace(
         "01234567890123456789012345678901234567890123456789extra",
-        my_pipeline(1, {"test_key": 2}),
+        my_future,
     )
     assert actual == "01234567890123456789012345678901234567890123456789"
 
 
-def test_resolve_namespace_callable_truncated():
+def test_resolve_namespace_callable_truncated(my_future: AbstractFuture):
     def my_custom_namespace(_: AbstractFuture) -> str:
         return "01234567890123456789012345678901234567890123456789extra"
 
-    actual = resolve_cache_namespace(
-        my_custom_namespace, my_pipeline(1, {"test_key": 2})
-    )
+    actual = resolve_cache_namespace(my_custom_namespace, my_future)
     assert actual == "01234567890123456789012345678901234567890123456789"
 
 
-def test_custom_resolve_namespace():
+def test_custom_resolve_namespace(
+    my_future: AbstractFuture, my_other_future: AbstractFuture
+):
     def my_custom_namespace(future: AbstractFuture) -> str:
         fqpn = future.calculator.get_func_fqpn()  # type: ignore # noqa: ignore
 
@@ -94,24 +112,22 @@ def test_custom_resolve_namespace():
 
         return "whatever"
 
-    actual = resolve_cache_namespace(
-        my_custom_namespace, my_pipeline(1, {"test_key": 2})
-    )
+    actual = resolve_cache_namespace(my_custom_namespace, my_future)
     assert actual == "my_namespace"
 
-    actual = resolve_cache_namespace(my_custom_namespace, my_other_pipeline(1))
+    actual = resolve_cache_namespace(my_custom_namespace, my_other_future)
     assert actual == "my_other_namespace"
 
 
-def test_invalid_args_resolve_namespace():
+def test_invalid_args_resolve_namespace(my_future: AbstractFuture):
     with pytest.raises(ValueError, match="cannot be None"):
-        resolve_cache_namespace(None, my_pipeline(1, {"test_key": 2}))
+        resolve_cache_namespace(None, my_future)
 
-    actual = resolve_cache_namespace("my_namespace", None)
+    actual = resolve_cache_namespace("my_namespace", None)  # type: ignore
     assert actual == "my_namespace"
 
     with pytest.raises(ValueError, match="cannot be None"):
-        resolve_cache_namespace(my_namespace, None)
+        resolve_cache_namespace(my_namespace, None)  # type: ignore
 
     nested_future = mock.MagicMock()
     nested_future.is_root_future.return_value = False
@@ -119,17 +135,17 @@ def test_invalid_args_resolve_namespace():
         resolve_cache_namespace(my_namespace, nested_future)
 
 
-def test_malformed_resolve_namespace():
+def test_malformed_resolve_namespace(my_future: AbstractFuture):
     def my_malformed_namespace() -> str:
         return "my_namespace"
 
     with pytest.raises(TypeError, match="takes 0 positional arguments but 1 was given"):
-        resolve_cache_namespace(my_malformed_namespace, my_pipeline(1, {"test_key": 2}))
+        resolve_cache_namespace(my_malformed_namespace, my_future)  # type: ignore
 
 
-def test_resolve_namespace_error_raised():
+def test_resolve_namespace_error_raised(my_future: AbstractFuture):
     def my_error_namespace(_: AbstractFuture) -> str:
         raise ValueError("test error")
 
     with pytest.raises(ValueError, match="test error"):
-        resolve_cache_namespace(my_error_namespace, my_pipeline(1, {"test_key": 2}))
+        resolve_cache_namespace(my_error_namespace, my_future)
