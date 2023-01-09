@@ -21,7 +21,6 @@ from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
-from sematic.resolvers.resource_managers.server_manager import ServerResourceManager
 from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.utils.memoized_property import memoized_property
@@ -79,8 +78,6 @@ class CloudResolver(LocalResolver):
         For Sematic internal usage. End users should always leave this at the default
         value of `False`.
     """
-
-    _resource_manager: ServerResourceManager = ServerResourceManager()
 
     def __init__(
         self,
@@ -418,11 +415,11 @@ class CloudResolver(LocalResolver):
 
     @classmethod
     def entering_resource_context(cls, resource: AbstractExternalResource):
-        cls._resource_manager.poll_for_updates_by_resource_id(resource.id)
+        cls._get_resource_manager().poll_for_updates_by_resource_id(resource.id)
 
     @classmethod
     def exiting_resource_context(cls, resource_id: str):
-        cls._resource_manager.stop_poll_for_updates_by_resource_id(resource_id)
+        cls._get_resource_manager().stop_poll_for_updates_by_resource_id(resource_id)
 
 
 def make_nested_future_storage_key(future_id: str) -> str:

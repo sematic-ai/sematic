@@ -18,7 +18,6 @@ sematic_py_lib(
         "//sematic:abstract_calculator",
         "//sematic:abstract_future",
         "//sematic:api_client",
-        "//sematic/resolvers:abstract_resource_manager",
         "//sematic/resolvers/resource_managers:server_manager",
         "//sematic:graph",
         "//sematic/config:config",
@@ -75,7 +74,6 @@ sematic_py_lib(
         "//sematic/plugins:abstract_external_resource",
         "//sematic/utils:exceptions",
         "//sematic/utils:memoized_property",
-        "//sematic/resolvers/resource_managers:server_manager",
     ],
 )
 
