@@ -79,6 +79,9 @@ class CloudResolver(LocalResolver):
         value of `False`.
     """
 
+    # Time between external resource updates *during activation and deactivation*
+    _RESOURCE_UPDATE_INTERVAL_SECONDS = 10
+
     def __init__(
         self,
         detach: bool = True,

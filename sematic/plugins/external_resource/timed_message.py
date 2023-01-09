@@ -41,7 +41,7 @@ class TimedMessage(AbstractExternalResource):
     epoch_time_deactivation_began: Optional[float] = None
     allocation_seconds: float = 1.0
     deallocation_seconds: float = 1.0
-    max_active_seconds: float = 10.0
+    max_active_seconds: float = 30.0
     message: str = ""
 
     def read_message(self) -> str:

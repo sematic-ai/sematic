@@ -89,7 +89,7 @@ def activate_resource_endpoint(
         )
     record = ExternalResource.from_resource(activated)
     record = save_external_resource_record(record)
-    payload = dict(record=record.to_json_encodable())  # type: ignore
+    payload = dict(external_resource=record.to_json_encodable())  # type: ignore
 
     return flask.jsonify(payload)
 
@@ -107,8 +107,13 @@ def deactivate_resource_endpoint(
         return jsonify_error(
             "No such resource: {}".format(resource_id), HTTPStatus.NOT_FOUND
         )
+
+    if record.resource_state.is_terminal():
+        payload = dict(external_resource=record.to_json_encodable())  # type: ignore
+        return flask.jsonify(payload)
+
     try:
-        activated = record.resource.deactivate()
+        deactivated = record.resource.deactivate()
     except Exception as e:
         message = "Error deactivating resource {}: {}".format(resource_id, e)
         logger.exception(message)
@@ -116,9 +121,9 @@ def deactivate_resource_endpoint(
             message,
             HTTPStatus.INTERNAL_SERVER_ERROR,
         )
-    record = ExternalResource.from_resource(activated)
+    record = ExternalResource.from_resource(deactivated)
     record = save_external_resource_record(record)
-    payload = dict(record=record.to_json_encodable())  # type: ignore
+    payload = dict(external_resource=record.to_json_encodable())  # type: ignore
 
     return flask.jsonify(payload)
 

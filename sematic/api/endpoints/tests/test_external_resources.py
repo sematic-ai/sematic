@@ -1,4 +1,5 @@
 # Standard Library
+import time
 from dataclasses import replace
 
 # Third-party
@@ -24,6 +25,7 @@ from sematic.plugins.abstract_external_resource import (
     ResourceState,
     ResourceStatus,
 )
+from sematic.plugins.external_resource.timed_message import TimedMessage
 
 test_get_external_resource_auth = make_auth_test(
     "/api/v1/external_resources/abc123", method="GET"
@@ -69,3 +71,76 @@ def test_save_read(
         response.json["external_resource"]  # type: ignore
     )
     assert from_api_record.history == (my_resource_activating, my_resource)
+
+
+def test_activate_deactivate(
+    mock_auth,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+):
+    my_resource = TimedMessage(
+        allocation_seconds=0.0,
+        deallocation_seconds=0.0,
+        max_active_seconds=30.0,
+    )
+    record = ExternalResource.from_resource(my_resource)
+    payload = {"external_resource": record.to_json_encodable()}
+    response = test_client.post("/api/v1/external_resources", json=payload)
+    assert response.status_code == 200
+
+    activating_response = test_client.post(
+        f"/api/v1/external_resources/{my_resource.id}/activate"
+    )
+    assert activating_response.status_code == 200
+    activating = ExternalResource.from_json_encodable(
+        activating_response.json["external_resource"]  # type: ignore
+    )
+    assert activating.resource_state == ResourceState.ACTIVATING
+
+    is_active = False
+    time_started = time.time()
+
+    while not is_active:
+        time_passed = time.time() - time_started
+        assert time_passed < 5
+        response = test_client.get(
+            f"/api/v1/external_resources/{record.id}?refresh_remote=true"
+        )
+        assert response.status_code == 200
+        from_api_record = ExternalResource.from_json_encodable(
+            response.json["external_resource"]  # type: ignore
+        )
+        is_active = from_api_record.resource_state == ResourceState.ACTIVE
+
+    deactivating_response = test_client.post(
+        f"/api/v1/external_resources/{my_resource.id}/deactivate"
+    )
+    assert deactivating_response.status_code == 200
+    deactivating = ExternalResource.from_json_encodable(
+        deactivating_response.json["external_resource"]  # type: ignore
+    )
+    assert deactivating.resource_state == ResourceState.DEACTIVATING
+
+    is_deactivated = False
+    time_started = time.time()
+
+    while not is_deactivated:
+        time_passed = time.time() - time_started
+        assert time_passed < 5
+        response = test_client.get(
+            f"/api/v1/external_resources/{record.id}?refresh_remote=true"
+        )
+        assert response.status_code == 200
+        from_api_record = ExternalResource.from_json_encodable(
+            response.json["external_resource"]  # type: ignore
+        )
+        is_deactivated = from_api_record.resource_state == ResourceState.DEACTIVATED
+
+    # trying to deactivate again should leave it unmodified
+    deactivated_response = test_client.post(
+        f"/api/v1/external_resources/{my_resource.id}/deactivate"
+    )
+    assert deactivated_response.status_code == 200
+    deactivated = ExternalResource.from_json_encodable(
+        deactivated_response.json["external_resource"]  # type: ignore
+    )
+    assert deactivated.resource_state == ResourceState.DEACTIVATED

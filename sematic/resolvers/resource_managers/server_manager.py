@@ -43,11 +43,16 @@ class ServerResourceManager(AbstractResourceManager):
     def resources_by_root_id(self, root_id: str) -> List[AbstractExternalResource]:
         return api_client.get_resources_by_root_run_id(root_id)
 
-    def poll_for_updates_by_resource_id(self, resource_id: str):
+    def poll_for_updates_by_resource_id(self, resource_id: str) -> Optional[Thread]:
         """Poll the server for resource state updates on a regular interval.
 
         Will continue for a given resource until the resource is in a terminal
         state or polling is explicitly stopped.
+
+        Returns
+        -------
+        The thread the updates are being requested on, if a new thread was created.
+        If there was already a thread running, None will be returned.
         """
         start_thread = len(self._resource_ids_updating) == 0
         self._resource_ids_updating.add(resource_id)
@@ -71,6 +76,8 @@ class ServerResourceManager(AbstractResourceManager):
             thread = Thread(group=None, name="resource-state-updates", target=do_poll)
             thread.setDaemon(True)
             thread.start()
+
+        return thread
 
     def stop_poll_for_updates_by_resource_id(self, resource_id: str):
         if resource_id in self._resource_ids_updating:

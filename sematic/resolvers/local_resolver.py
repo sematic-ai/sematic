@@ -583,6 +583,7 @@ class LocalResolver(SilentResolver):
 
     @classmethod
     def _get_resource_manager(cls) -> ServerResourceManager:
+        # lazy init because ServerResourceManager may call the API on init
         if cls._resource_manager is None:
             cls._resource_manager = ServerResourceManager()
         return cls._resource_manager
