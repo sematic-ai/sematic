@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo } from "react";
+import { useContext, useEffect, useMemo, useRef } from "react";
 import useAsyncRetry from "react-use/lib/useAsyncRetry";
 import GraphContext from "../pipelines/graph/graphContext";
 import { Graph, RunTreeNode } from "../interfaces/graph";
@@ -13,12 +13,18 @@ export function useGraph(runRootId: string): [
 ] {
     const {fetch} = useHttpClient();
 
+    const loadResultPromise = useRef<Promise<RunGraphPayload> | null>(null);
+
     const {value: graphPayload, loading, error, retry} = useAsyncRetry(async () => {
-        const response: RunGraphPayload = await fetch({
-            url: `/api/v1/runs/${runRootId}/graph?root=1`,
+        loadResultPromise.current = new Promise(async (resolve) => {
+            const response: RunGraphPayload = await fetch({
+                url: `/api/v1/runs/${runRootId}/graph?root=1`,
+            });
+            resolve(response);
         });
-        return response;
-    }, [runRootId]);
+
+        return await loadResultPromise.current;
+    }, [runRootId, loadResultPromise]);
 
     const graph = useMemo<Graph | undefined >(() => {
         if (!graphPayload) {
@@ -42,10 +48,15 @@ export function useGraph(runRootId: string): [
         graphSocket.removeAllListeners();
         graphSocket.on("update", (args: { run_id: string }) => {
           if (args.run_id === runRootId) {
-            retry();
+            setTimeout(async () => {
+                if (loadResultPromise.current) {
+                    await loadResultPromise.current;
+                }
+                retry();
+            });
           }
         });
-      }, [runRootId, retry])
+      }, [runRootId, retry, loadResultPromise])
 
     return [graph, loading, error];
 }
