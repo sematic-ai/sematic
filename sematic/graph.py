@@ -1,7 +1,7 @@
 # Standard Library
+import json
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass, field
-import json
 from typing import Any, Callable, Dict, Iterable, List, Optional
 from typing import OrderedDict as OrderedDictType
 from typing import Tuple
@@ -482,7 +482,7 @@ class Graph:
         future.name = run.name
 
         future.props.name = run.name
-        future.props.tags = json.loads(run.tags)
+        future.props.tags = json.loads(str(run.tags))
 
         cloned_graph.input_artifacts[future.id] = run_input_artifacts
 
