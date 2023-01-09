@@ -54,7 +54,12 @@ class ServerResourceManager(AbstractResourceManager):
 
         def do_poll():
             while len(self._resource_ids_updating) != 0:
-                for id_ in self._resource_ids_updating:
+
+                # freeze beforehand, since the original list may have elements
+                # removed as we iterate
+                to_update = list(self._resource_ids_updating)
+
+                for id_ in to_update:
                     logger.info(f"Updating resource state for {id_}")
                     resource = self.get_resource_for_id(id_)
                     if resource.status.state.is_terminal():
