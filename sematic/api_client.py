@@ -304,6 +304,21 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
     ]
 
 
+def get_server_env_settings() -> Dict[str, str]:
+    """Get a subset of the server's settings as key/value strings.
+
+    The server determines a subset of settings to expose based on what
+    may be needed by its clients.
+
+    Returns
+    -------
+    A dictionary where the keys are selected elements from the ServerSettingsVar
+    enum, and the values are the string values for those settings.
+    """
+    response = _get("/meta/env")
+    return response["env"]
+
+
 @retry(tries=3, delay=10, jitter=1)
 def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
     """Ask the server to update the status of given run ids if needed and return them.

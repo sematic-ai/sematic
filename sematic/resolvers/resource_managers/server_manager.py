@@ -2,21 +2,32 @@
 import logging
 import time
 from threading import Thread
-from typing import List, Set
+from typing import List, Optional, Set
 
 # Sematic
 from sematic import api_client
+from sematic.config.server_settings import ServerSettingsVar
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 
 logger = logging.getLogger(__name__)
 
 
+_DEFAULT_INTERVAL_BETWEEN_UPDATES_SECONDS = 60
+
+
 class ServerResourceManager(AbstractResourceManager):
     """ResourceManager which uses server APIs to manage external resource metadata."""
 
-    def __init__(self, update_poll_interval_seconds: int = 600) -> None:
+    def __init__(self, update_poll_interval_seconds: Optional[int] = None) -> None:
         super().__init__()
+        if update_poll_interval_seconds is None:
+            update_poll_interval_seconds_str = api_client.get_server_env_settings().get(
+                ServerSettingsVar.SEMATIC_RESOURCE_UPDATE_POLL_INTERVAL_SECONDS.value,
+                str(_DEFAULT_INTERVAL_BETWEEN_UPDATES_SECONDS),
+            )
+            update_poll_interval_seconds = int(update_poll_interval_seconds_str)
+
         self._update_poll_interval_seconds = update_poll_interval_seconds
         self._resource_ids_updating: Set[str] = set()
 
@@ -49,6 +60,7 @@ class ServerResourceManager(AbstractResourceManager):
                     if resource.status.state.is_terminal():
                         self.stop_poll_for_updates_by_resource_id(id_)
                 time.sleep(self._update_poll_interval_seconds)
+            logger.info("No more resources to get updates for. Stopping poll.")
 
         if start_thread:
             thread = Thread(group=None, name="resource-state-updates", target=do_poll)

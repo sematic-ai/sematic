@@ -448,16 +448,21 @@ class StateMachineResolver(Resolver, abc.ABC):
     def activate_resource_for_run(  # type: ignore
         cls, resource: AbstractExternalResource, run_id: str, root_id: str
     ) -> AbstractExternalResource:
+        logger.debug("Activating resource '%s' for run '%s'", resource.id, run_id)
+
         cls._save_resource(resource)
         cls._get_resource_manager().link_resource_to_run(resource.id, run_id, root_id)
         time_started = time.time()
+
         try:
             resource = cls._do_resource_activate(resource=resource)
         except Exception as e:
             raise ExternalResourceError(
                 f"Could not activate resource with id {resource.id}: {e}"
             ) from e
+
         cls._save_resource(resource=resource)
+
         while resource.status.state != ResourceState.ACTIVE:
             try:
                 resource = cls._do_resource_update(resource)
@@ -467,11 +472,13 @@ class StateMachineResolver(Resolver, abc.ABC):
                 )
             time.sleep(cls._RESOURCE_UPDATE_INTERVAL_SECONDS)
             cls._save_resource(resource)
+
             if resource.status.state.is_terminal():
                 raise ExternalResourceError(
                     f"Could not activate resource with id {resource.id}: "
                     f"{resource.status.message}"
                 )
+
             if time.time() - time_started > cls._RESOURCE_DEACTIVATION_TIMEOUT_SECONDS:
                 raise ExternalResourceError(
                     f"Timed out activating resource with id {resource.id}. "
@@ -483,9 +490,13 @@ class StateMachineResolver(Resolver, abc.ABC):
     def deactivate_resource(  # type: ignore
         cls, resource_id: str
     ) -> AbstractExternalResource:
+        logger.debug("Deactivating resource '%s'", resource_id)
+
         resource = cls._get_resource_manager().get_resource_for_id(resource_id)
+
         if resource.status.state.is_terminal():
             return resource
+
         time_started = time.time()
         try:
             resource = cls._do_resource_deactivate(resource=resource)
@@ -493,7 +504,9 @@ class StateMachineResolver(Resolver, abc.ABC):
             raise ExternalResourceError(
                 f"Could not deactivate resource with id {resource.id}: {e}"
             ) from e
+
         cls._save_resource(resource)
+
         while not resource.status.state.is_terminal():
             try:
                 resource = cls._do_resource_update(resource=resource)
@@ -501,26 +514,37 @@ class StateMachineResolver(Resolver, abc.ABC):
                 logger.error(
                     "Error getting latest state from resource %s: %s", resource.id, e
                 )
+
             time.sleep(cls._RESOURCE_UPDATE_INTERVAL_SECONDS)
             cls._save_resource(resource=resource)
+
             if time.time() - time_started > cls._RESOURCE_ACTIVATION_TIMEOUT_SECONDS:
                 raise ExternalResourceError(
                     f"Timed out deactivating resource with id {resource.id}. "
                     f"Last update message: {resource.status.message}"
                 )
+
         return resource
 
     def _deactivate_all_resources(self) -> None:
         resources = self._get_resource_manager().resources_by_root_id(
             self._root_future.id
         )
-        logger.warning("Deactivating all resources due to resolution failure.")
+
+        if len(resources) == 0:
+            return
+
+        logger.warning(
+            "Deactivating all %s resource(s) due to resolution failure.", len(resources)
+        )
+
         failed_to_deactivate = []
         for resource in resources:
             try:
                 self._do_resource_deactivate(resource=resource)
             except Exception:
                 failed_to_deactivate.append(resource.id)
+
         if len(failed_to_deactivate) > 0:
             logger.error(
                 "Failed to deactivate resources with ids: %s",

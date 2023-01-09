@@ -25,6 +25,11 @@ worker:
   service_account:
     name: default
 
+  # If you are using external resources (such as Ray/Spark) in a
+  # way that's managed by the Sematic server, this sets the interval
+  # that workers will use between requests for updates on those resources 
+  resource_update_poll_interval_seconds: 60
+
 serviceAccount:
   # Should a new service account be created? Or should we use
   # one that already exists
