@@ -119,9 +119,12 @@ directory.
 $ TAG=v$(python3 sematic/versions.py) make release-server
 ```
 
-Finally, draft the release on GitHub. Add a "What's Changed" section, a
-"New Contributors" section, a "Full Changelog" link, and attach the wheel in
-the assets section.
+Finally, draft the release on GitHub:
+- Add a "What's Changed" section.
+- Add a warning that the client version will need to be upgraded, if this applies.
+- Add a "New Contributors" section, if this applies.
+- Add a "Full Changelog" link.
+- Attach the wheel in the "Assets" section.
 
 ### Special Releases
 
