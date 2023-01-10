@@ -19,7 +19,6 @@ sematic_py_lib(
         "//sematic:abstract_calculator",
         "//sematic:abstract_future",
         "//sematic:api_client",
-        "//sematic/resolvers/resource_managers:server_manager",
         "//sematic:graph",
         "//sematic:versions",
         "//sematic/config:config",
