@@ -57,7 +57,7 @@ export function PipelineRunViewRouter() {
   }
   const navigate = usePipelineNavigation(pipelinePath!);
   const [run, isLoading, error] = useFetchRun(rootId!);
-  const [_, setSelectedRunId] = useAtom(selectedRunHashAtom);
+  const [, setSelectedRunId] = useAtom(selectedRunHashAtom);
 
   useEffect(() => {
     if (!run) {

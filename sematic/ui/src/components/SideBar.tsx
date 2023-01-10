@@ -17,7 +17,6 @@ import { useContext, useState } from "react";
 import { SiDiscord, SiReadthedocs } from "react-icons/si";
 import { UserContext } from "..";
 import logo from "../Fox.png";
-import { User } from "../Models";
 import UserAvatar from "./UserAvatar";
 
 export default function SideBar() {
