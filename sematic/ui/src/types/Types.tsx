@@ -685,7 +685,7 @@ function DataFrameTable(props: {
       displayData: displayData,
       data: data,
     };
-  }, []);
+  }, [dataframe, dtypesByColumn, index, orderedCols]);
 
   return (
     <DataEditor getCellContent={getContent} columns={columns} rows={length} />
