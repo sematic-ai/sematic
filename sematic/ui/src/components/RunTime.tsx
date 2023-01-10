@@ -22,7 +22,7 @@ export function RunTime(props: { run: Run; prefix?: string }) {
     displayH > 0 ? displayH.toString() + "h" : "",
     displayM > 0 ? displayM.toString() + "m " : "",
     displayS > 0 ? displayS.toString() + "s" : "",
-    durationS == 0 ? "<1s" : "",
+    durationS === 0 ? "<1s" : "",
   ]
     .join(" ")
     .trim();

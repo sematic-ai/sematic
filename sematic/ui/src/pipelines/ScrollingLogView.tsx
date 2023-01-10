@@ -100,7 +100,7 @@ export default function ScrollingLogView(props: {
     if (prevIsAccumulating === true && isAccumulatorLoading === false) {
       scrollToBottom();
     }
-  }, [isAccumulatorLoading, scrollToBottom]);
+  }, [prevIsAccumulating, isAccumulatorLoading, scrollToBottom]);
 
   useEffect(() => {
     const hasContainerScrolled = scrollMonitorRef.current!.scrollTop > 0;
