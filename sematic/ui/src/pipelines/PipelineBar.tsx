@@ -57,7 +57,7 @@ function PipelineActionMenu(props: {
         setSnackMessage({ message: "Failed to cancel pipeline run." });
       },
     });
-  }, [rootRun.id, setSnackMessage]);
+  }, [rootRun.id, setSnackMessage, user?.api_key]);
 
   const onRerunClick = useCallback(
     (rerunFrom?: string) => {
@@ -73,13 +73,13 @@ function PipelineActionMenu(props: {
         },
       });
     },
-    [rootRun.id]
+    [rootRun.id, setSnackMessage, user?.api_key]
   );
 
   const onCopyShareClick = useCallback(() => {
     navigator.clipboard.writeText(window.location.href);
     setSnackMessage({ message: "Pipeline link copied" });
-  }, []);
+  }, [setSnackMessage]);
 
   const cancelEnabled = useMemo(
     () =>
