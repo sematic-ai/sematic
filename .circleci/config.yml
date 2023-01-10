@@ -12,6 +12,7 @@ orbs:
   python: circleci/python@1.5.0
   slack: circleci/slack@4.9.3
   codecov: codecov/codecov@3.2.3
+  node: circleci/node@5.0.3
 
 parameters:
   run_coverage:
@@ -40,6 +41,13 @@ commands:
       - run:
           name: MyPy
           command: mypy --version && mypy sematic
+      - node/install-packages:
+          app-dir: ./sematic/ui
+      - run:
+          name: ESlint
+          working_directory: ./sematic/ui
+          command: npm run lint
+
   non-coverage-tests:
     description: Do tests without tracking code coverage
     steps:
