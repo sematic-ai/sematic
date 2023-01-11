@@ -220,7 +220,7 @@ class KubernetesResourceRequirements:
         interacts with these node taints. More information can be found here:
         https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
     mount_expanded_shared_memory:
-        By default Docker uses a 64MB /dev/shm partition. If this flag is set, a
+        By default, Docker uses a 64MB /dev/shm partition. If this flag is set, a
         memory-backed tmpfs that expands up to half of the available memory file is used
         instead. Defaults to False. If that file is expanded to more than that limit
         (through external action), then the pod will be terminated.

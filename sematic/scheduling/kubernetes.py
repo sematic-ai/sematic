@@ -599,8 +599,8 @@ def _schedule_kubernetes_job(
 
         logger.debug("kubernetes node_selector %s", node_selector)
         logger.debug("kubernetes resource requests %s", resource_requests)
-        logger.info("kubernetes volumes: %s", volumes)
-        logger.info("kubernetes volume mounts: %s", volume_mounts)
+        logger.debug("kubernetes volumes: %s", volumes)
+        logger.debug("kubernetes volume mounts: %s", volume_mounts)
         logger.debug("kubernetes environment secrets: %s", secret_env_vars)
         logger.debug("kubernetes tolerations: %s", tolerations)
 
