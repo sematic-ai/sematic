@@ -1,6 +1,6 @@
 import { OpenInNew } from "@mui/icons-material";
 import { Box, Button } from "@mui/material";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { EnvContext } from "../..";
 import { Run } from "../../Models";
 
@@ -8,6 +8,7 @@ export default function GrafanaPanel(props: { run: Run }) {
   const { run } = props;
   const env: Map<string, string> = useContext(EnvContext);
   const grafanaPanelUrlSettings = env.get("GRAFANA_PANEL_URL");
+  const iframeTitle = useMemo(() => `Grafana panel for run ${run.id}`, [run]);
 
   // in principle this should never show because the tab shouldn't show up if Grafana is off.
   if (!grafanaPanelUrlSettings) {
@@ -28,6 +29,7 @@ export default function GrafanaPanel(props: { run: Run }) {
   grafanaPanelUrl.searchParams.set("var-container", "sematic-worker-" + run.id);
   grafanaPanelUrl.searchParams.set("theme", "light");
 
+
   return (
     <>
       <Box sx={{ my: 10 }}>
@@ -41,6 +43,7 @@ export default function GrafanaPanel(props: { run: Run }) {
       </Box>
       <Box>
         <iframe
+          title={iframeTitle}
           src={grafanaPanelUrl.toString()}
           style={{ border: 0, width: "100%", height: 1000 }}
         ></iframe>

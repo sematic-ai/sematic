@@ -21,7 +21,6 @@ from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.queries import get_resolution, get_root_graph, get_run
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.resolvers.local_resolver import LocalResolver
-from sematic.resolvers.tests.fixtures import mock_local_resolver_storage  # noqa: F401
 from sematic.retry_settings import RetrySettings
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
 from sematic.utils.exceptions import ExceptionMetadata, ResolutionError
@@ -45,7 +44,6 @@ def pipeline(a: float, b: float) -> float:
 
 
 def test_single_function(
-    mock_local_resolver_storage,  # noqa: F811
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
@@ -64,9 +62,9 @@ def test_single_function(
     assert len(artifacts) == 3
     assert len(edges) == 3
 
-    artifact_a = make_artifact(1.0, float)
-    artifact_b = make_artifact(2.0, float)
-    artifact_output = make_artifact(3.0, float)
+    artifact_a, _ = make_artifact(1.0, float)
+    artifact_b, _ = make_artifact(2.0, float)
+    artifact_output, _ = make_artifact(3.0, float)
 
     assert set(edges) == {
         Edge(
@@ -101,7 +99,6 @@ def add_add_add(a: float, b: float) -> float:
 
 
 def test_add_add(
-    mock_local_resolver_storage,  # noqa: F811
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
@@ -122,7 +119,6 @@ def test_add_add(
 
 
 def test_pipeline(
-    mock_local_resolver_storage,  # noqa: F811
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
@@ -160,7 +156,6 @@ def test_pipeline(
 
 
 def test_failure(
-    mock_local_resolver_storage,  # noqa: F811
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
@@ -203,7 +198,6 @@ def test_failure(
 
 
 def test_resolver_error(
-    mock_local_resolver_storage,  # noqa: F811
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
@@ -393,7 +387,6 @@ class CallbackTrackingResolver(LocalResolver):
 
 
 def test_db_state_machine(
-    mock_local_resolver_storage,  # noqa: F811
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
@@ -404,7 +397,6 @@ def test_db_state_machine(
 
 
 def test_list_conversion(
-    mock_local_resolver_storage,  # noqa: F811
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
@@ -419,7 +411,6 @@ def test_list_conversion(
 
 
 def test_exceptions(
-    mock_local_resolver_storage,  # noqa: F811
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     mock_requests,  # noqa: F811
@@ -488,7 +479,6 @@ def try_three_times():
 
 
 def test_retry(
-    mock_local_resolver_storage,  # noqa: F811
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
@@ -548,7 +538,6 @@ class RerunTestResolver(LocalResolver):
 
 
 def test_rerun_from_here(
-    mock_local_resolver_storage,  # noqa: F811
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
@@ -580,7 +569,6 @@ def test_rerun_from_here(
 
 
 def test_cancel_non_terminal_futures(
-    mock_local_resolver_storage,  # noqa: F811
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811

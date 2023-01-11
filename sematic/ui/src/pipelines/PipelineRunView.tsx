@@ -9,6 +9,7 @@ import { selectedRunHashAtom, useFetchResolution, useFetchRun, usePipelineNaviga
 import PipelineRunViewContext from './PipelineRunViewContext'
 import { Run } from "../Models";
 import { useAtom } from "jotai";
+
 interface PipelineRunViewPresentationProps {
   pipelinePath: string
   rootRun: Run
@@ -45,7 +46,7 @@ export function PipelineRunViewPresentation({
   );
 }
 
-export default function PipelineRunViewRouter() {
+export function PipelineRunViewRouter() {
   const { pipelinePath, rootId } = useParams();
 
   for (const [key, value] of Object.entries({pipelinePath, rootId})) {
@@ -56,7 +57,7 @@ export default function PipelineRunViewRouter() {
   }
   const navigate = usePipelineNavigation(pipelinePath!);
   const [run, isLoading, error] = useFetchRun(rootId!);
-  const [_, setSelectedRunId] = useAtom(selectedRunHashAtom);
+  const [, setSelectedRunId] = useAtom(selectedRunHashAtom);
 
   useEffect(() => {
     if (!run) {
@@ -85,3 +86,10 @@ export default function PipelineRunViewRouter() {
   // Otherwise, load `PipelineRunViewPresentation` to actually render root run.
   return <PipelineRunViewPresentation pipelinePath={pipelinePath!} rootRun={run!} />
 }
+
+export default function PipelineRunViewWraper() {
+  const { pipelinePath, rootId } = useParams();
+  const key = `${pipelinePath}--${rootId}`;
+  return <PipelineRunViewRouter key={key}/>
+}
+

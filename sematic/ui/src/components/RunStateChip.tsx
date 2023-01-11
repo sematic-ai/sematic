@@ -1,6 +1,5 @@
 import { Box, Tooltip, Typography, useTheme } from "@mui/material";
 import React from "react";
-import { StringMappingType } from "typescript";
 
 const Pin = React.forwardRef<HTMLDivElement, { color: any; hollow?: boolean }>(
   (props, ref) => {

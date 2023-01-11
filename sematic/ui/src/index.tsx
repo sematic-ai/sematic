@@ -62,7 +62,7 @@ function App() {
     localStorage.removeItem("user");
     setUser(null);
     navigate("");
-  }, []);
+  }, [navigate]);
 
   const userContextValue = useMemo(
     () => ({

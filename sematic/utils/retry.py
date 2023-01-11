@@ -10,6 +10,7 @@ import logging
 import random
 import time
 from functools import partial, wraps
+from typing import Optional, Tuple, Type, Union
 
 logging_logger = logging.getLogger(__name__)
 
@@ -35,13 +36,13 @@ def decorator(caller):
 
 def __retry_internal(
     f,
-    exceptions=Exception,
-    tries=-1,
-    delay=0,
-    max_delay=None,
-    backoff=1,
-    jitter=0,
-    logger=logging_logger,
+    exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]] = Exception,
+    tries: int = -1,
+    delay: float = 0,
+    max_delay: Optional[float] = None,
+    backoff: float = 1,
+    jitter: float = 0,
+    logger: Optional[logging.Logger] = logging_logger,
 ):
     """Executes a function and retries it if it failed.
 
@@ -95,13 +96,13 @@ def __retry_internal(
 
 
 def retry(
-    exceptions=Exception,
-    tries=-1,
-    delay=0,
-    max_delay=None,
-    backoff=1,
-    jitter=0,
-    logger=logging_logger,
+    exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]] = Exception,
+    tries: int = -1,
+    delay: float = 0,
+    max_delay: Optional[float] = None,
+    backoff: float = 1,
+    jitter: float = 0,
+    logger: Optional[logging.Logger] = logging_logger,
 ):
     """Returns a retry decorator.
 

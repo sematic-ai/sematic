@@ -23,9 +23,8 @@ def test_upload_download(
         with mock.patch(
             "sematic.plugins.storage.local_storage._get_data_dir", return_value=tempdir
         ):
-            response = test_client.put(
-                local_storage.get_write_location("artifacts", "123"), data=value
-            )
+            location = local_storage.get_write_location("artifacts", "123")
+            response = test_client.put(f"/api/v1{location}", data=value)
 
             assert response.status_code == 200
 

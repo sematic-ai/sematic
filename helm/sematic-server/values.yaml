@@ -16,7 +16,7 @@ database:
 deployment:
   replica_count: 1
   affinity: {}
-  annorations: {}
+  annotations: {}
   tolerations: {}
   node_selector: {}
   resources:
@@ -29,7 +29,7 @@ deployment:
   autoscaling:
     enabled: false
     min_replicas: 1
-    max_replicas: 100
+    max_replicas: 1
     target_cpu_utilization_pct: 80
     # target_memory_utilization_pct: 80
   security_context: {}
@@ -83,16 +83,13 @@ worker:
   # Annotations to add to the service account
   annotations: {}
 
-  # The name of the service account to use.
-  name: sematic-server
-
 service:
   create: false
   type: ClusterIP
   port: 80
 
 ingress:
-  enabled: false
+  create: false
   class_name: ""
   annotations: {}
     # kubernetes.io/ingress.class: nginx
