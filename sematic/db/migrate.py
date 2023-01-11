@@ -318,6 +318,12 @@ def dump_schema(file: str):
         + ";\n"
     )
 
+    # make sure the file is created in the workspace, and not in the bazel runtime dir
+    if not os.path.isabs(file):
+        workspace = os.getenv("BUILD_WORKSPACE_DIRECTORY")
+        if workspace is not None:
+            file = os.path.join(workspace, file)
+
     logging.info("Writing schema to %s", file)
     with open(file, "w") as f:
         f.write(schema)
