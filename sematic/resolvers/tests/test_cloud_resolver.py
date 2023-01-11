@@ -19,7 +19,6 @@ from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.resolvers.cloud_resolver import CloudResolver
-from sematic.resolvers.tests.fixtures import mock_cloud_resolver_storage  # noqa: F401
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
 
 
@@ -49,7 +48,6 @@ def test_simulate_cloud_exec(
     mock_auth,  # noqa: F811
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
-    mock_cloud_resolver_storage,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
     # On the user's machine
@@ -88,11 +86,12 @@ def test_simulate_cloud_exec(
             run.future_state = FutureState.RESOLVED
             updates[run.id] = FutureState.RESOLVED
             edge = driver_resolver._get_output_edges(run.id)[0]
-            artifact = make_artifact(3, int, storage=mock_cloud_resolver_storage)
+            artifact, bytes_ = make_artifact(3, int)
             edge.artifact_id = artifact.id
             api_client.save_graph(
                 run.id, runs=[run], artifacts=[artifact], edges=[edge]
             )
+            api_client.store_artifact_bytes(artifact.id, bytes_)
             driver_resolver._refresh_graph(run.id)
         return updates
 

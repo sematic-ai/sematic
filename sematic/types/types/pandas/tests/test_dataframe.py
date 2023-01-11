@@ -34,7 +34,7 @@ def test_dataframe_datetime():
     timestamp = datetime.datetime.now()
     df = pandas.DataFrame([dict(a=timestamp)])
 
-    artifact = make_artifact(df, pandas.DataFrame)
+    artifact, _ = make_artifact(df, pandas.DataFrame)
 
     assert json.loads(artifact.json_summary)["dataframe"] == {
         "a": {"0": str(timestamp)}

@@ -145,9 +145,12 @@ You should now have a new `sematic-server/sematic-server-X.X.X.tgz` in the
 `helm-charts` repo, and a modified `index.yaml`.  Commit and push both of
 these to the `gh-pages` branch, creating a PR for the change if necessary.
 
-Finally, draft the release on GitHub. Add a "What's Changed" section, a
-"New Contributors" section, a "Full Changelog" link, and attach the wheel in
-the assets section.
+Finally, draft the release on GitHub:
+- Add a "What's Changed" section.
+- Add a warning that the client version will need to be upgraded, if this applies.
+- Add a "New Contributors" section, if this applies.
+- Add a "Full Changelog" link.
+- Attach the wheel in the "Assets" section.
 
 ### Special Releases
 

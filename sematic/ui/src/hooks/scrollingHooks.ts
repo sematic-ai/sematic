@@ -151,7 +151,7 @@ export function useScrollTracker(
         setHasReachedBottom(
             _hasElementScrolledToBottom(refElement.current)
         );
-    }, [hasReachedBottom, setHasReachedBottom, refElement]);
+    }, [setHasReachedBottom, refElement]);
 
     const onScroll = useCallback(checkHasScrolledToBottom, [checkHasScrolledToBottom]);
 

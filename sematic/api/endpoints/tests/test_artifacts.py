@@ -43,7 +43,7 @@ def test_upload_download(
 
     location = response.json["location"]  # type: ignore
 
-    response = test_client.put(location, data=value)
+    response = test_client.put(f"/api/v1{location}", data=value)
     assert response.status_code == 200
 
     response = test_client.get("/api/v1/artifacts/123/data")
