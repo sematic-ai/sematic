@@ -426,7 +426,7 @@ def _get_most_recent_pod_details(
 
 
 def load_kube_config():
-    """Load the kubeconfig either from file or the in-cluster config"""
+    """Load the kubeconfig either from file or the in-cluster config."""
     global _kubeconfig_loaded
     if _kubeconfig_loaded:
         return
@@ -470,7 +470,7 @@ def cancel_job(job: KubernetesExternalJob) -> KubernetesExternalJob:
 
 @retry(exceptions=(ApiException, ConnectionError), tries=3, delay=5, jitter=2)
 def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
-    """Reach out to K8s for updates on the status of the job"""
+    """Reach out to K8s for updates on the status of the job."""
     load_kube_config()
     if not isinstance(job, KubernetesExternalJob):
         raise ValueError(
@@ -771,7 +771,7 @@ def schedule_run_job(
 def _volume_secrets(
     secret_mount: KubernetesSecretMount,
 ) -> Optional[Tuple[V1Volume, V1VolumeMount]]:
-    """Configure a volume and corresponding mount for secrets requested for a func
+    """Configure a volume and corresponding mount for secrets requested for a func.
 
     Parameters
     ----------
@@ -780,7 +780,7 @@ def _volume_secrets(
 
     Returns
     -------
-    None if no file secrets were requested. Otherwise a volume and a volume mount
+    None if no file secrets were requested. Otherwise, a volume and a volume mount
     for the secrets requested.
     """
     if len(secret_mount.file_secrets) == 0:
@@ -851,6 +851,9 @@ def _environment_secrets(
 
 
 def _shared_memory() -> Tuple[V1Volume, V1VolumeMount]:
+    """
+    Returns a memory-backed shared memory partition and mount with a default size.
+    """
     # the "Memory" medium cannot have a size_limit specified by default;
     # it requires the SizeMemoryBackedVolumes feature gate be activated by the
     # cluster admin - please see
