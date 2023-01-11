@@ -75,6 +75,26 @@ CREATE TABLE resolutions (
     PRIMARY KEY (root_id),
     FOREIGN KEY (root_id) REFERENCES runs(id)
 );
+CREATE TABLE external_resources (
+    id character(32) NOT NULL,
+    resource_state TEXT NOT NULL,
+    managed_by TEXT NOT NULL,
+    status_message TEXT NOT NULL,
+    last_updated_epoch_seconds int8 NOT NULL,
+    type_serialization JSONB NOT NULL,
+    value_serialization JSONB NOT NULL,
+    history_serializations JSONB NOT NULL,
+    created_at timestamp WITH time zone NOT NULL,
+    updated_at timestamp WITH time zone NOT NULL,
+    PRIMARY KEY (id)
+);
+CREATE TABLE runs_external_resources (
+    resource_id character(32) NOT NULL,
+    run_id character(32) NOT NULL,
+    PRIMARY KEY (resource_id, run_id),
+    FOREIGN KEY(resource_id) REFERENCES external_resources (id),
+    FOREIGN KEY(run_id) REFERENCES runs (id)
+);
 -- schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
   ('20220424062956'),
@@ -105,4 +125,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20221202221000'),
   ('20221208183307'),
   ('20221212110018'),
-  ('20221214142609');
+  ('20221214142609'),
+  ('20221215212459');

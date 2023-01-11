@@ -20,10 +20,13 @@ sematic_py_lib(
         ":db",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
+        "//sematic/db/models:external_resource",
         "//sematic/db/models:note",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+        "//sematic/db/models:runs_external_resource",
         "//sematic/db/models:user",
+        "//sematic/plugins:abstract_external_resource",
         "//sematic/scheduling:external_job",
     ],
 )

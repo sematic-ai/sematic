@@ -1,4 +1,5 @@
 # Standard Library
+import json
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Iterable, List, Optional
@@ -6,15 +7,14 @@ from typing import OrderedDict as OrderedDictType
 from typing import Tuple
 
 # Sematic
+import sematic.api_client as api_client
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.run import Run
 from sematic.resolvers.type_utils import make_list_type, make_tuple_type
-from sematic.storage import Storage
+from sematic.utils.algorithms import breadth_first_search, topological_sort
 from sematic.utils.memoized_property import memoized_indexed, memoized_property
-from sematic.utils.sorting import breadth_first, topological_sort
 
 RunID = str
 RunsByID = Dict[RunID, Run]
@@ -114,7 +114,6 @@ class Graph:
     runs: Iterable[Run]
     edges: Iterable[Edge]
     artifacts: Iterable[Artifact]
-    storage: Storage
 
     def __post_init__(self):
         self.runs = tuple(self.runs)
@@ -259,7 +258,24 @@ class Graph:
             for parent_id, runs in self._runs_by_parent_id.items()
         }
 
-        return breadth_first(layers, run_sorter)
+        run_ids = []
+
+        start_nodes = [r.id for r in self._runs_by_parent_id[None]]
+
+        def get_next(run_id):
+            sorted = run_sorter(layers.get(run_id, []))
+            return sorted
+
+        def visit(run_id):
+            run_ids.append(run_id)
+
+        breadth_first_search(
+            start=start_nodes,
+            get_next=get_next,
+            visit=visit,
+        )
+
+        return run_ids
 
     @memoized_indexed
     def _get_run_ancestor_ids(self, run_id: RunID) -> List[RunID]:
@@ -367,7 +383,7 @@ class Graph:
     @memoized_indexed
     def _get_artifact_value(self, artifact_id: str) -> Any:
         artifact = self._artifacts_by_id[artifact_id]
-        return get_artifact_value(artifact, self.storage)
+        return api_client.get_artifact_value(artifact)
 
     def _get_cloned_future_inputs(
         self, run_id: RunID, cloned_graph: ClonedFutureGraph
@@ -395,6 +411,7 @@ class Graph:
                 kwargs[
                     input_edge.destination_name
                 ] = cloned_graph.futures_by_original_id[input_edge.source_run_id]
+
             elif input_edge.artifact_id is not None:
                 kwargs[input_edge.destination_name] = value
             else:
@@ -463,6 +480,9 @@ class Graph:
             future = func(**kwargs)
 
         future.name = run.name
+
+        future.props.name = run.name
+        future.props.tags = json.loads(str(run.tags))
 
         cloned_graph.input_artifacts[future.id] = run_input_artifacts
 

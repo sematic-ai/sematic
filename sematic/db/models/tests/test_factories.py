@@ -1,6 +1,7 @@
 # Standard Library
 import hashlib
 import json
+from typing import List, Optional, Union
 
 # Third-party
 import pytest
@@ -10,10 +11,8 @@ from sematic.abstract_future import FutureState
 from sematic.calculator import func
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import (
-    _make_artifact_storage_key,
     clone_resolution,
     clone_root_run,
-    get_artifact_value,
     make_artifact,
     make_run_from_future,
 )
@@ -24,7 +23,6 @@ from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
 )
-from sematic.storage import MemoryStorage
 from sematic.types.serialization import (
     get_json_encodable_summary,
     type_to_json_encodable,
@@ -73,11 +71,51 @@ def f():
 
 
 def test_make_artifact():
-    artifact = make_artifact(42, int)
+    artifact, _ = make_artifact(42, int)
 
     value_serialization = value_to_json_encodable(42, int)
     type_serialization = type_to_json_encodable(int)
     json_summary = get_json_encodable_summary(42, int)
+
+    payload = {
+        "value": value_serialization,
+        "type": type_serialization,
+        "summary": json_summary,
+    }
+
+    sha1 = hashlib.sha1(json.dumps(payload, sort_keys=True).encode("utf-8"))
+
+    assert artifact.id == sha1.hexdigest()
+    assert artifact.json_summary == json.dumps(json_summary, sort_keys=True)
+    assert artifact.type_serialization == json.dumps(type_serialization, sort_keys=True)
+
+
+def test_make_artifact_with_optional_type_hint():
+    artifact, _ = make_artifact([42], Optional[List[int]])
+
+    value_serialization = value_to_json_encodable([42], List[int])
+    type_serialization = type_to_json_encodable(List[int])
+    json_summary = get_json_encodable_summary([42], List[int])
+
+    payload = {
+        "value": value_serialization,
+        "type": type_serialization,
+        "summary": json_summary,
+    }
+
+    sha1 = hashlib.sha1(json.dumps(payload, sort_keys=True).encode("utf-8"))
+
+    assert artifact.id == sha1.hexdigest()
+    assert artifact.json_summary == json.dumps(json_summary, sort_keys=True)
+    assert artifact.type_serialization == json.dumps(type_serialization, sort_keys=True)
+
+
+def test_make_artifact_with_nested_union_type_hint():
+    artifact, _ = make_artifact([42], Union[Union[List[int], str], List[str]])
+
+    value_serialization = value_to_json_encodable([42], List[int])
+    type_serialization = type_to_json_encodable(List[int])
+    json_summary = get_json_encodable_summary([42], List[int])
 
     payload = {
         "value": value_serialization,
@@ -101,28 +139,9 @@ def test_make_artifact():
     ),
 )
 def test_make_artifact_special_floats(value, expected_value):
-    artifact = make_artifact(value, float)
+    artifact, _ = make_artifact(value, float)
 
     assert json.loads(artifact.json_summary) == expected_value
-
-
-def test_make_artifact_store():
-    storage = MemoryStorage()
-    artifact = make_artifact(42, int, storage=storage)
-
-    storage_key = _make_artifact_storage_key(artifact)
-
-    assert storage.get(storage_key) == "42".encode("utf-8")
-
-
-def test_get_artifact_value():
-    storage = MemoryStorage()
-    artifact = make_artifact(42, int, storage=storage)
-
-    value = get_artifact_value(artifact, storage)
-
-    assert value == 42
-    assert isinstance(value, int)
 
 
 def test_clone_root_run(run: Run):  # noqa: F811

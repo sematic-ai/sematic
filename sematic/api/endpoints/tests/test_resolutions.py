@@ -22,9 +22,11 @@ from sematic.db.queries import (
     get_run,
     save_resolution,
     save_run,
+    save_run_external_resource_links,
 )
 from sematic.db.tests.fixtures import (  # noqa: F401
     make_resolution,
+    persisted_external_resource,
     persisted_resolution,
     persisted_run,
     pg_mock,
@@ -45,6 +47,9 @@ test_cancel_resolution_auth = make_auth_test(
 )
 test_rerun_resolution_auth = make_auth_test(
     "/api/v1/resolutions/123/rerun", method="POST"
+)
+test_list_external_resource_auth = make_auth_test(
+    "/api/v1/resolutions/123/external_resources", method="GET"
 )
 
 
@@ -236,3 +241,31 @@ def test_rerun_resolution_endpoint(
     mock_schedule_resolution.call_args.kwargs[
         "rerun_from"
     ] == persisted_resolution.root_id
+
+
+def test_list_external_resources_empty(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    response = test_client.get("/api/v1/resolutions/abc123/external_resources")
+    assert response.status_code == 200
+
+    assert response.json == dict(external_resources=[])
+
+
+def test_list_external_resource_ids(
+    mock_auth,  # noqa: F811
+    persisted_run,  # noqa: F811
+    persisted_external_resource,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+):
+    save_run_external_resource_links([persisted_external_resource.id], persisted_run.id)
+    response = test_client.get(
+        f"/api/v1/resolutions/{persisted_run.id}/external_resources"
+    )
+    assert response.status_code == 200
+
+    result_ids = [
+        resource["id"]
+        for resource in response.json["external_resources"]  # type: ignore
+    ]
+    assert result_ids == [persisted_external_resource.id]

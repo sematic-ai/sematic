@@ -119,6 +119,8 @@ def get_active_settings() -> ProfileSettings:
 
         profile_settings = settings.profiles[_DEFAULT_PROFILE]
 
+        _apply_scopes_overrides(profile_settings.scopes)
+
         for plugin_path, plugin_settings in profile_settings.settings.items():
             plugin_settings_vars = _get_plugin_settings_vars(plugin_path)
             _apply_env_var_overrides(plugin_settings, plugin_settings_vars)
@@ -176,6 +178,13 @@ def get_plugin_setting(
         plugin_settings = {}
 
     if var not in plugin_settings:
+        # _apply_env_var_overrides only applies overrides
+        # to settings present in the settings file
+        # This ensures env var overrides are still applied
+        # if the setting was not set in the file
+        if var.value in os.environ:
+            return os.environ[var.value]
+
         if len(args) > 0:
             return args[0]
 
@@ -205,7 +214,6 @@ def set_plugin_setting(
         plugin_settings = get_plugin_settings(plugin)
     except MissingSettingsError:
         plugin_settings = {}
-        get_active_settings().settings[plugin.get_path()] = plugin_settings
 
     if _normalize_enum(plugin.get_settings_vars(), var) is None:
         raise ValueError(
@@ -216,6 +224,8 @@ def set_plugin_setting(
     plugin_settings[_PLUGIN_VERSION_KEY] = ".".join(
         str(v) for v in plugin.get_version()
     )
+
+    get_active_settings().settings[plugin.get_path()] = plugin_settings
 
     save_settings(get_settings())
 
@@ -234,6 +244,8 @@ def delete_plugin_setting(
 
     if var in plugin_settings:
         del plugin_settings[var]
+
+    get_active_settings().settings[plugin.get_path()] = plugin_settings
 
     save_settings(get_settings())
 
@@ -412,6 +424,14 @@ def _apply_env_var_overrides(
             logger.debug("Overriding %s from environment variable", key)
 
             settings[var] = new_value
+
+
+def _apply_scopes_overrides(plugin_scopes: PluginScopes):
+    for scope in PluginScope:
+        if scope.value in os.environ:
+            logger.debug("Overriding scope %s from environment variables", scope.value)
+
+            plugin_scopes[scope] = os.environ[scope.value].split(",")
 
 
 def dump_settings(settings: ProfileSettings) -> str:

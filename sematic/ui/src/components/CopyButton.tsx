@@ -15,7 +15,7 @@ export function CopyButton(props: {
   const copy = useCallback(() => {
     navigator.clipboard.writeText(text);
     setSnackMessage({ message: message });
-  }, [text]);
+  }, [text, message, setSnackMessage]);
   return (
     <Tooltip title={"Copy " + text}>
       <ButtonBase onClick={copy}>

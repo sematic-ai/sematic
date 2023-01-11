@@ -14,9 +14,11 @@ sematic_py_lib(
         "//sematic:abstract_future",
         "//sematic/db:db",
         "//sematic/db:queries",
+        "//sematic/db/models:external_resource",
         "//sematic/db/models:factories",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+        "//sematic/plugins:abstract_external_resource",
         "//sematic/tests:fixtures",
     ],
 )
@@ -42,13 +44,15 @@ pytest_test(
         "//sematic/db:db",
         "//sematic/db:queries",
         "//sematic/db/models:artifact",
-        "//sematic/db/models:edge",
+        "//sematic/db/models:external_resource",
         "//sematic/db/models:factories",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+        "//sematic/plugins:abstract_external_resource",
         "//sematic/resolvers/tests:fixtures",
         "//sematic/tests:fixtures",
         "//sematic/types:init",
+        "//sematic/utils:exceptions",
     ],
 )
 

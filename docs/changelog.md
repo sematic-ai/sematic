@@ -5,6 +5,7 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+    * [bugfix] Add `sematic.testing` to python wheel
 * [0.21.1](https://pypi.org/project/sematic/0.21.1/)
     * [bugfix] Add back feature allowing configuration of custom API URL to be used by workers
 * [0.21.0](https://pypi.org/project/sematic/0.21.0/)

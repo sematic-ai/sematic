@@ -36,6 +36,26 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "external_resources",
+    srcs = ["external_resources.py"],
+    pip_deps = [
+        "flask",
+    ],
+    deps = [
+            "//sematic/api:app",
+            "//sematic/api/endpoints:auth",
+            "//sematic/api/endpoints:request_parameters",
+            "//sematic/db/models:external_resource",
+            "//sematic/db/models:user",
+            "//sematic/db:queries",
+
+            # Included so there is always an ExternalResource implementation
+            # the server can use for demonstrating the feature/API.
+            "//sematic/plugins/external_resource:timed_message",
+    ],
+)
+
+sematic_py_lib(
     name = "resolutions",
     srcs = ["resolutions.py"],
     pip_deps = [
@@ -60,9 +80,19 @@ sematic_py_lib(
     pip_deps = [
         "flask",
     ],
+    # buildifier: leave-alone
     deps = [
+        ":auth",
+        ":request_parameters",
+        "//sematic:abstract_plugin",
         "//sematic/api:app",
+        "//sematic/config:settings",
+        "//sematic/db:db",
         "//sematic/db:queries",
+        "//sematic/db/models:artifact",
+        "//sematic/db/models:user",
+        "//sematic/plugins:abstract_storage",
+        "//sematic/plugins/storage:local_storage",
     ],
 )
 

@@ -6,9 +6,10 @@ import pytest
 
 # Sematic
 from sematic.calculator import func
-from sematic.external_resource import (
-    ExternalResource,
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
     IllegalStateTransitionError,
+    ManagedBy,
     ResourceState,
     ResourceStatus,
 )
@@ -18,13 +19,14 @@ from sematic.resolvers.silent_resolver import SilentResolver
 def test_update():
     updated_message = "jumping straight to ACTIVE"
 
-    class FakeImpl(ExternalResource):
+    class FakeImpl(AbstractExternalResource):
         def _do_update(self):
             return replace(
                 self,
                 status=ResourceStatus(
                     state=ResourceState.ACTIVE,
                     message=updated_message,
+                    managed_by=ManagedBy.RESOLVER,
                 ),
             )
 
@@ -35,6 +37,7 @@ def test_update():
         status=ResourceStatus(
             state=ResourceState.ACTIVATING,
             message="spinning up the whatever",
+            managed_by=ManagedBy.RESOLVER,
         )
     ).update()
     assert updated.status.message == updated_message
@@ -42,7 +45,7 @@ def test_update():
 
 def test_activate():
     @dataclass(frozen=True)
-    class ValidImpl(ExternalResource):
+    class ValidImpl(AbstractExternalResource):
         is_local: bool = False
 
         def _do_activate(self, is_local):
@@ -52,6 +55,7 @@ def test_activate():
                 status=ResourceStatus(
                     state=ResourceState.ACTIVATING,
                     message="updating",
+                    managed_by=ManagedBy.RESOLVER if is_local else ManagedBy.SERVER,
                 ),
             )
 
@@ -61,7 +65,7 @@ def test_activate():
     assert not activating_remote.is_local
 
     @dataclass(frozen=True)
-    class InvalidImpl(ExternalResource):
+    class InvalidImpl(AbstractExternalResource):
         is_local: bool = False
 
         def _do_activate(self, is_local):
@@ -71,6 +75,7 @@ def test_activate():
                 status=ResourceStatus(
                     state=ResourceState.DEACTIVATING,
                     message="updating",
+                    managed_by=ManagedBy.RESOLVER if is_local else ManagedBy.SERVER,
                 ),
             )
 
@@ -80,13 +85,14 @@ def test_activate():
 
 def test_deactivate():
     @dataclass(frozen=True)
-    class ValidImpl(ExternalResource):
+    class ValidImpl(AbstractExternalResource):
         def _do_deactivate(self):
             return replace(
                 self,
                 status=ResourceStatus(
                     state=ResourceState.DEACTIVATING,
                     message="updating",
+                    managed_by=ManagedBy.RESOLVER,
                 ),
             )
 
@@ -94,18 +100,20 @@ def test_deactivate():
         status=ResourceStatus(
             state=ResourceState.ACTIVE,
             message="",
+            managed_by=ManagedBy.RESOLVER,
         )
     ).deactivate()
     assert deactivating.status.state == ResourceState.DEACTIVATING
 
     @dataclass(frozen=True)
-    class InvalidImpl(ExternalResource):
+    class InvalidImpl(AbstractExternalResource):
         def _do_deactivate(self):
             return replace(
                 self,
                 status=ResourceStatus(
                     state=ResourceState.ACTIVE,
                     message="updating",
+                    managed_by=ManagedBy.RESOLVER,
                 ),
             )
 
@@ -114,6 +122,7 @@ def test_deactivate():
             status=ResourceStatus(
                 state=ResourceState.ACTIVE,
                 message="",
+                managed_by=ManagedBy.RESOLVER,
             )
         ).deactivate()
 
@@ -143,12 +152,12 @@ def test_use_in_func():
     with pytest.raises(TypeError, match=error_regex):
 
         @func
-        def my_func(resource: ExternalResource) -> int:
+        def my_func(resource: AbstractExternalResource) -> int:
             return 42
 
 
 @dataclass(frozen=True)
-class SomeImpl(ExternalResource):
+class SomeImpl(AbstractExternalResource):
     my_field: int = 42
 
     def _do_activate(self, is_local):
@@ -157,6 +166,7 @@ class SomeImpl(ExternalResource):
             status=ResourceStatus(
                 state=ResourceState.ACTIVATING,
                 message="updating",
+                managed_by=ManagedBy.RESOLVER,
             ),
         )
 

@@ -29,6 +29,7 @@ from sematic.db.models.user import User
 from sematic.db.queries import (
     get_graph,
     get_resolution,
+    get_resources_by_root_id,
     get_run,
     get_run_graph,
     save_graph,
@@ -261,3 +262,15 @@ def cancel_resolution_endpoint(
     )
 
     return flask.jsonify(dict(content=resolution.to_json_encodable()))
+
+
+@sematic_api.route(
+    "/api/v1/resolutions/<resolution_id>/external_resources", methods=["GET"]
+)
+@authenticate
+def get_resources_endpoint(user: Optional[User], resolution_id: str) -> flask.Response:
+    resources = get_resources_by_root_id(resolution_id)
+    payload = dict(
+        external_resources=[resource.to_json_encodable() for resource in resources]
+    )
+    return flask.jsonify(payload)

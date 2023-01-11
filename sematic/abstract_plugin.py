@@ -14,6 +14,9 @@ import sys
 from importlib import import_module
 from typing import Tuple, Type, final
 
+# Sematic
+from sematic.utils.exceptions import MissingPluginError
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,10 +28,6 @@ class PluginScope(enum.Enum):
 
     This enum is expected to be updated as more plug-in scopes are supported.
     """
-
-    # Core plug-in scope. Will only ever have a single plug-in.
-    # This is useful to keep core settings symmetrical with plug-in settings
-    SEMATIC = "SEMATIC"
 
     # Storage plug-in scope for artifact data, future pickles, etc.
     STORAGE = "STORAGE"
@@ -43,6 +42,9 @@ class AbstractPluginSettingsVar(enum.Enum):
     """
 
     pass
+
+
+PluginVersion = Tuple[int, int, int]
 
 
 class AbstractPlugin(abc.ABC):
@@ -65,7 +67,7 @@ class AbstractPlugin(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def get_version() -> Tuple[int, int, int]:
+    def get_version() -> PluginVersion:
         """
         Plug-in version: MAJOR.MINOR.PATCH
 
@@ -76,7 +78,6 @@ class AbstractPlugin(abc.ABC):
         pass
 
     @classmethod
-    @abc.abstractmethod
     def get_settings_vars(cls) -> Type[AbstractPluginSettingsVar]:
         """
         Returns the Settings var enum for this plug-in.
@@ -84,7 +85,7 @@ class AbstractPlugin(abc.ABC):
         The class must inherit from `AbstractPluginSettingsVar` and list all
         available settings for this plug-in.
         """
-        pass
+        return AbstractPluginSettingsVar
 
     @final
     @classmethod
@@ -107,16 +108,6 @@ class AbstractPlugin(abc.ABC):
         to use (e.g. server-prescribed upload locations),
         """
         return ".".join([cls.__module__, cls.__name__])
-
-
-class MissingPluginError(Exception):
-    """
-    Exception to indicate a missing plug-in.
-    """
-
-    def __init__(self, plugin_path: str):
-        message = f"Unable to find plug-in {plugin_path}. Module or class is missing."
-        super().__init__(message)
 
 
 def import_plugin(plugin_import_path: str) -> Type[AbstractPlugin]:

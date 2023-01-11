@@ -10,11 +10,19 @@ import testing.postgresql  # type: ignore
 # Sematic
 import sematic.db.db as db
 from sematic.abstract_future import FutureState
+from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.factories import make_artifact, make_user
 from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
-from sematic.db.queries import save_resolution, save_run, save_user
+from sematic.db.queries import (
+    _save_artifact,
+    save_external_resource_record,
+    save_resolution,
+    save_run,
+    save_user,
+)
+from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
@@ -152,6 +160,13 @@ def make_resolution(**kwargs) -> Resolution:
 
 
 @pytest.fixture
+def persisted_external_resource(test_db) -> AbstractExternalResource:
+    return save_external_resource_record(
+        ExternalResource.from_resource(AbstractExternalResource())
+    )
+
+
+@pytest.fixture
 def run() -> Run:
     return make_run()
 
@@ -191,11 +206,15 @@ def persisted_artifact(test_db, test_storage):  # noqa: F811
     """
     Persisted artifact fixture.
     """
-    artifact = make_artifact(42, int, storage=test_storage)
+    artifact, bytes_ = make_artifact(42, int)
 
     with db.db().get_session() as session:
-        session.add(artifact)
+        artifact = _save_artifact(artifact=artifact, session=session)
         session.commit()
         session.refresh(artifact)
+
+    test_storage.set(
+        test_storage().get_write_location("artifacts", artifact.id), bytes_
+    )
 
     return artifact

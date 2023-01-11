@@ -12,7 +12,7 @@ from typing import Callable, Optional
 
 # Sematic
 from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR
-from sematic.storage import S3Storage
+from sematic.plugins.storage.s3_storage import S3Storage
 from sematic.utils.retry import retry
 from sematic.utils.stdout import redirect_to_file_descriptor
 
@@ -172,6 +172,11 @@ def _do_upload(file_path: str, remote_prefix: str):
         The prefix for the remote file. The full remote path will be
         this concatenated with `/<epoch timestamp>.log`.
     """
+    file_has_contents = (
+        os.path.exists(file_path) and os.stat(file_path)[stat.ST_SIZE] > 0
+    )
+    if not file_has_contents:
+        return
     if remote_prefix.endswith("/"):
         remote_prefix = remote_prefix[:-1]
     remote = f"{remote_prefix}/{int(time.time() * 1000)}.log"

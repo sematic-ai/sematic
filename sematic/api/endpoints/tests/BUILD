@@ -1,3 +1,19 @@
+
+pytest_test(
+    name = "test_external_resources",
+    srcs = ["test_external_resources.py"],
+    pip_deps = [
+        "flask",
+    ],
+    deps = [
+        "//sematic/api/tests:fixtures",
+        "//sematic/db/models:external_resource",
+        "//sematic/db/models:user",
+        "//sematic/db/tests:fixtures",
+        "//sematic/plugins:abstract_external_resource",
+    ],
+)
+
 pytest_test(
     name = "test_resolutions",
     srcs = ["test_resolutions.py"],
@@ -92,6 +108,8 @@ pytest_test(
         "//sematic/api/tests:fixtures",
         "//sematic/db/models:artifact",
         "//sematic/db/tests:fixtures",
+        "//sematic/plugins/storage:memory_storage",
+        "//sematic/plugins/storage:s3_storage",
         "//sematic/tests:fixtures",
     ],
 )

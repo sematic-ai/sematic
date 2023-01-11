@@ -5,8 +5,8 @@ import pytest
 from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import FutureState
 from sematic.calculator import func
-from sematic.external_resource import ResourceState
 from sematic.future_context import PrivateContext, SematicContext, context, set_context
+from sematic.plugins.abstract_external_resource import ResourceState
 from sematic.resolvers.silent_resolver import ExternalResourceError, SilentResolver
 from sematic.resolvers.tests.fixtures import FakeExternalResource
 from sematic.retry_settings import RetrySettings
@@ -130,8 +130,7 @@ def test_custom_resources():
     assert result == 144
     ids = FakeExternalResource.all_resource_ids()
     assert len(ids) == 2
-    resource_history = FakeExternalResource.history_by_id(ids[0])
-    state_history = [r.status.state for r in resource_history]
+    state_history = FakeExternalResource.state_history_by_id(ids[0])
     expected_state_history = [
         ResourceState.CREATED,
         ResourceState.ACTIVATING,
@@ -141,8 +140,7 @@ def test_custom_resources():
     ]
     assert state_history == expected_state_history
 
-    resource_history = FakeExternalResource.history_by_id(ids[1])
-    state_history = [r.status.state for r in resource_history]
+    state_history = FakeExternalResource.state_history_by_id(ids[1])
     expected_state_history = [
         ResourceState.CREATED,
         ResourceState.ACTIVATING,

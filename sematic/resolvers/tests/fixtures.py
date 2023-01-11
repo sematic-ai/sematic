@@ -1,40 +1,19 @@
 # Standard Library
 from dataclasses import dataclass, replace
 from typing import List, Optional, Tuple
-from unittest import mock
-
-# Third-party
-import pytest
 
 # Sematic
-from sematic.external_resource import ExternalResource, ResourceState, ResourceStatus
-from sematic.tests.fixtures import MockStorage
-
-
-@pytest.fixture
-def mock_local_resolver_storage():
-    mock_storage = MockStorage()
-    with mock.patch(
-        "sematic.resolvers.local_resolver.LocalStorage", return_value=mock_storage
-    ):
-        yield mock_storage
-
-
-@pytest.fixture
-def mock_cloud_resolver_storage():
-    mock_storage = MockStorage()
-    with mock.patch(
-        "sematic.resolvers.cloud_resolver.S3Storage", return_value=mock_storage
-    ):
-        yield mock_storage
-
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
+    ResourceState,
+)
 
 _fake_resource_history: List["FakeExternalResource"] = []
 _fake_resource_call_history: List[Tuple["FakeExternalResource", str]] = []
 
 
 @dataclass(frozen=True)
-class FakeExternalResource(ExternalResource):
+class FakeExternalResource(AbstractExternalResource):
     some_field: int = 0
     raise_on_activate: bool = False
     raise_on_deactivate: bool = False
@@ -56,6 +35,18 @@ class FakeExternalResource(ExternalResource):
             for r in _fake_resource_history
             if resource_id is None or r.id == resource_id
         ]
+
+    @classmethod
+    def state_history_by_id(cls, resource_id: Optional[str]) -> List[ResourceState]:
+        history = cls.history_by_id(resource_id)
+        states = []
+        previous_state = None
+        for resource in history:
+            state = resource.status.state
+            if state != previous_state:
+                states.append(state)
+            previous_state = state
+        return states
 
     @classmethod
     def call_history_by_id(cls, resource_id: Optional[str]) -> List[str]:
@@ -82,7 +73,8 @@ class FakeExternalResource(ExternalResource):
             raise ValueError("Intentional fail")
         return replace(
             self,
-            status=ResourceStatus(
+            status=replace(
+                self.status,
                 state=ResourceState.ACTIVATING,
                 message="Allocating fake resource",
             ),
@@ -94,7 +86,8 @@ class FakeExternalResource(ExternalResource):
         _fake_resource_call_history.append((self, "_do_deactivate()"))
         return replace(
             self,
-            status=ResourceStatus(
+            status=replace(
+                self.status,
                 state=ResourceState.DEACTIVATING,
                 message="Deallocating fake resource",
             ),
@@ -107,7 +100,8 @@ class FakeExternalResource(ExternalResource):
         if self.status.state == ResourceState.ACTIVATING:
             return replace(
                 self,
-                status=ResourceStatus(
+                status=replace(
+                    self.status,
                     state=ResourceState.ACTIVE,
                     message="Resource is ready!",
                 ),
@@ -115,14 +109,16 @@ class FakeExternalResource(ExternalResource):
         elif self.status.state == ResourceState.DEACTIVATING:
             return replace(
                 self,
-                status=ResourceStatus(
+                status=replace(
+                    self.status,
                     state=ResourceState.DEACTIVATED,
                     message="Resource is cleaned!",
                 ),
             )
         return replace(
             self,
-            status=ResourceStatus(
+            status=replace(
+                self.status,
                 state=self.status.state,
                 message="Nothing has changed...",
             ),

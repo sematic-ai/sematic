@@ -37,7 +37,8 @@ pytest_test(
         "//sematic:api_client",
         "//sematic:versions",
         "//sematic/config:config",
-        "//sematic/db/models:factories",
+        "//sematic/api/tests:fixtures",
+        "//sematic/db/tests:fixtures",
         "//sematic/tests:fixtures",
     ],
 )
@@ -47,16 +48,6 @@ pytest_test(
     srcs = ["test_abstract_plugin.py"],
     deps = [
         "//sematic:abstract_plugin",
-    ],
-)
-
-pytest_test(
-    name = "test_external_resource",
-    srcs = ["test_external_resource.py"],
-    deps = [
-        "//sematic:calculator",
-        "//sematic:external_resource",
-        "//sematic/resolvers:silent_resolver",
     ],
 )
 
@@ -130,7 +121,7 @@ sematic_py_lib(
     srcs = ["fixtures.py"],
     deps = [
         "//sematic:api_client",
-        "//sematic:storage",
+        "//sematic/plugins/storage:memory_storage",
     ],
 )
 
@@ -146,6 +137,5 @@ pytest_test(
         "//sematic/db/models:factories",
         "//sematic/db/tests:fixtures",
         "//sematic/resolvers:local_resolver",
-        "//sematic/resolvers/tests:fixtures",
     ],
 )
