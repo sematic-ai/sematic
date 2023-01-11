@@ -185,13 +185,6 @@ def _apply_common_options(env, verbose):
 
 @main.command("up", short_help="Apply outstanding migrations")
 @common_options
-@click.option(
-    "--schema-file",
-    "file",
-    type=click.STRING,
-    default="schema.sql",
-    help="File into which to dump the new schema.",
-)
 def _migrate_up(env: str, verbose: bool, file: str):
     """
     Migrate the DB to the latest version.
@@ -236,13 +229,6 @@ def migrate_up():
 
 @main.command("down", short_help="Revert last migration")
 @common_options
-@click.option(
-    "--schema-file",
-    "file",
-    type=click.STRING,
-    default="schema.sql",
-    help="File into which to dump the new schema.",
-)
 def _migrate_down(env: str, verbose: bool, file: str):
     """
     Revert the last migration.
