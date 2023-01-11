@@ -63,9 +63,7 @@ def _tuple_to_json_encodable(value: Tuple, type_: Type) -> List:
 
 @register_from_json_encodable(tuple)
 def _tuple_from_json_encodable(value: Tuple, type_: Type) -> Tuple[Any, ...]:
-    """
-    Serialization of tuples
-    """
+    """Deserialize a tuple."""
     return tuple(
         [
             value_from_json_encodable(element, element_type)
