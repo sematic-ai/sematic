@@ -1,5 +1,5 @@
 # Standard Library
-from typing import Tuple
+from typing import Optional, Tuple
 
 # Third-party
 import pytest
@@ -10,6 +10,8 @@ from sematic.types.serialization import (
     get_json_encodable_summary,
     type_from_json_encodable,
     type_to_json_encodable,
+    value_from_json_encodable,
+    value_to_json_encodable,
 )
 
 
@@ -50,3 +52,17 @@ def test_type_from_json_encodable():
     json_encodable = type_to_json_encodable(Tuple[float, str])
     type_ = type_from_json_encodable(json_encodable)
     assert type_ is Tuple[float, str]
+
+
+@pytest.mark.parametrize(
+    "value, type_",
+    (
+        ((42, "foo"), Tuple[float, str]),
+        (("foo", "bar"), Tuple[str, Optional[str]]),
+        (("foo", None), Tuple[str, Optional[str]]),
+    ),
+)
+def test_serdes(value, type_):
+    serialized = value_to_json_encodable(value, type_)
+    deserialized = value_from_json_encodable(serialized, type_)
+    assert value == deserialized
