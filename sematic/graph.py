@@ -482,7 +482,7 @@ class Graph:
         future.name = run.name
 
         future.props.name = run.name
-        future.props.tags = json.loads(run.tags)
+        future.props.tags = json.loads(str(run.tags))
 
         cloned_graph.input_artifacts[future.id] = run_input_artifacts
 

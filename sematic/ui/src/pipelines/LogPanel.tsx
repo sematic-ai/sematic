@@ -1,7 +1,6 @@
 import { Box, TextField } from "@mui/material";
 import { useCallback, useState } from "react";
 import { Run } from "../Models";
-import { Exception, ExternalException } from "../components/Exception";
 import ScrollingLogView from "./ScrollingLogView";
 
 export default function LogPanel(props: { run: Run }) {

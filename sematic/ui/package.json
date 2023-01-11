@@ -53,7 +53,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "analyze": "source-map-explorer 'build/static/js/*.js'"
+    "analyze": "source-map-explorer 'build/static/js/*.js'",
+    "lint": "eslint --config node_modules/eslint-config-react-app/index.js --ext .ts,.tsx --max-warnings=0 ./src"
   },
   "eslintConfig": {
     "extends": [
