@@ -56,6 +56,7 @@ class ServerResourceManager(AbstractResourceManager):
         """
         start_thread = len(self._resource_ids_updating) == 0
         self._resource_ids_updating.add(resource_id)
+        thread: Optional[Thread] = None
 
         def do_poll():
             while len(self._resource_ids_updating) != 0:
