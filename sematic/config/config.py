@@ -1,6 +1,7 @@
 # Standard Library
 import logging
 import os
+import sqlite3
 from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Optional
@@ -10,6 +11,28 @@ from urllib.parse import urljoin
 from sematic.config.config_dir import get_config_dir
 from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import UserSettingsVar, get_user_setting
+from sematic.versions import version_as_string
+
+logger = logging.getLogger(__name__)
+
+# Support for dropping columns added in 3.35.0
+MIN_SQLITE_VERSION = (3, 35, 0)
+
+
+def _check_sqlite_version():
+    version_tuple = sqlite3.sqlite_version.split(".")
+
+    # get major/minor as ints. Patch can sometimes have non-digit chars
+    major, minor = int(version_tuple[0]), int(version_tuple[1])
+    if (major, minor) < MIN_SQLITE_VERSION:
+        # TODO #302: implement sustainable way to upgrade sqlite3 DBs
+        logger.warning(
+            "Sematic will soon require the sqlite3 version to be at least %s, but your "
+            "Python is using %s. Please upgrade. You may find this useful: "
+            "https://stackoverflow.com/a/55729735/2540669",
+            version_as_string(MIN_SQLITE_VERSION),
+            sqlite3.sqlite_version,
+        )
 
 
 def _get_migrations_dir() -> str:
@@ -185,8 +208,11 @@ def switch_env(env: str) -> None:
         )
 
     set_config(EnvironmentConfigurations[env].value)
-    logger = logging.getLogger(__name__)
     logger.info("Switch to env {} whose config is {}".format(env, get_config()))
+
+    # TODO #302: implement sustainable way to upgrade sqlite3 DBs
+    if _active_config.db_url.startswith("sqlite"):
+        _check_sqlite_version()
 
 
 def set_config(config: Config) -> None:
