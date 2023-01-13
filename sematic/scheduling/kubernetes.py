@@ -9,7 +9,14 @@ from typing import Any, Dict, List, Optional, Tuple
 # Third-party
 import kubernetes
 from kubernetes.client.exceptions import ApiException, OpenApiException
-from kubernetes.client.models import V1ContainerStatus, V1Job, V1Pod, V1PodCondition
+from kubernetes.client.models import (
+    V1ContainerStatus,
+    V1Job,
+    V1Pod,
+    V1PodCondition,
+    V1Volume,
+    V1VolumeMount,
+)
 from urllib3.exceptions import ConnectionError
 
 # Sematic
@@ -419,7 +426,7 @@ def _get_most_recent_pod_details(
 
 
 def load_kube_config():
-    """Load the kubeconfig either from file or the in-cluster config"""
+    """Load the kubeconfig either from file or the in-cluster config."""
     global _kubeconfig_loaded
     if _kubeconfig_loaded:
         return
@@ -463,7 +470,7 @@ def cancel_job(job: KubernetesExternalJob) -> KubernetesExternalJob:
 
 @retry(exceptions=(ApiException, ConnectionError), tries=3, delay=5, jitter=2)
 def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
-    """Reach out to K8s for updates on the status of the job"""
+    """Reach out to K8s for updates on the status of the job."""
     load_kube_config()
     if not isinstance(job, KubernetesExternalJob):
         raise ValueError(
@@ -564,14 +571,22 @@ def _schedule_kubernetes_job(
     volume_mounts = []
     secret_env_vars = []
     tolerations = []
+
     if resource_requirements is not None:
         node_selector = resource_requirements.kubernetes.node_selector
         resource_requests = resource_requirements.kubernetes.requests
         volume_info = _volume_secrets(resource_requirements.kubernetes.secret_mounts)
+
         if volume_info is not None:
             volume, mount = volume_info
             volumes.append(volume)
             volume_mounts.append(mount)
+
+        if resource_requirements.kubernetes.mount_expanded_shared_memory:
+            volume, mount = _shared_memory()
+            volumes.append(volume)
+            volume_mounts.append(mount)
+
         secret_env_vars.extend(
             _environment_secrets(resource_requirements.kubernetes.secret_mounts)
         )
@@ -581,9 +596,11 @@ def _schedule_kubernetes_job(
             )
             for toleration in resource_requirements.kubernetes.tolerations
         ]
+
         logger.debug("kubernetes node_selector %s", node_selector)
         logger.debug("kubernetes resource requests %s", resource_requests)
-        logger.debug("kubernetes volumes and mounts: %s, %s", volumes, volume_mounts)
+        logger.debug("kubernetes volumes: %s", volumes)
+        logger.debug("kubernetes volume mounts: %s", volume_mounts)
         logger.debug("kubernetes environment secrets: %s", secret_env_vars)
         logger.debug("kubernetes tolerations: %s", tolerations)
 
@@ -753,10 +770,8 @@ def schedule_run_job(
 
 def _volume_secrets(
     secret_mount: KubernetesSecretMount,
-) -> Optional[  # type: ignore
-    Tuple[kubernetes.client.V1Volume, kubernetes.client.V1VolumeMount]
-]:
-    """Configure a volume and corresponding mount for secrets requested for a func
+) -> Optional[Tuple[V1Volume, V1VolumeMount]]:
+    """Configure a volume and corresponding mount for secrets requested for a func.
 
     Parameters
     ----------
@@ -765,7 +780,7 @@ def _volume_secrets(
 
     Returns
     -------
-    None if no file secrets were requested. Otherwise a volume and a volume mount
+    None if no file secrets were requested. Otherwise, a volume and a volume mount
     for the secrets requested.
     """
     if len(secret_mount.file_secrets) == 0:
@@ -780,7 +795,7 @@ def _volume_secrets(
 
     volume_name = "sematic-func-secrets-volume"
 
-    volume = kubernetes.client.V1Volume(  # type: ignore
+    volume = V1Volume(
         name=volume_name,
         secret=kubernetes.client.V1SecretVolumeSource(  # type: ignore
             items=[
@@ -795,7 +810,7 @@ def _volume_secrets(
         ),
     )
 
-    mount = kubernetes.client.V1VolumeMount(  # type: ignore
+    mount = V1VolumeMount(
         mount_path=secret_mount.file_secret_root_path,
         name=volume_name,
         read_only=True,
@@ -833,3 +848,24 @@ def _environment_secrets(
             )
         )
     return env_vars
+
+
+def _shared_memory() -> Tuple[V1Volume, V1VolumeMount]:
+    """
+    Returns a memory-backed shared memory partition and mount with a default size.
+    """
+    # the "Memory" medium cannot have a size_limit specified by default;
+    # it requires the SizeMemoryBackedVolumes feature gate be activated by the
+    # cluster admin - please see
+    # https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
+    # without that, it will default to half the available memory
+    empty_dir = kubernetes.client.V1EmptyDirVolumeSource(
+        medium="Memory",
+    )
+
+    volume_name = "expanded-shared-memory-volume"
+
+    volume = V1Volume(name=volume_name, empty_dir=empty_dir)
+    volume_mount = V1VolumeMount(mount_path="/dev/shm", name=volume_name)
+
+    return volume, volume_mount

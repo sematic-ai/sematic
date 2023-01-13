@@ -50,5 +50,6 @@ sematic_py_lib(
         ":server_settings",
         ":settings",
         ":user_settings",
+        "//sematic:versions"
     ],
 )

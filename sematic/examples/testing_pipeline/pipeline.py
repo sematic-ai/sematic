@@ -14,6 +14,7 @@ import ray
 # Sematic
 import sematic
 from sematic.plugins.external_resource.timed_message import TimedMessage
+from sematic.resolvers.resource_requirements import ResourceRequirements
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -99,6 +100,20 @@ def add_using_resource(a: float, b: float) -> float:
         )
         time.sleep(5)
         return a + b
+
+
+@sematic.func(inline=False)
+def add_with_resource_requirements(a: float, b: float) -> float:
+    """
+    Adds two numbers with ResourceRequirements.
+    """
+    # Disclaimer: Does not come with ResourceRequirements!
+    # You need to specify your own by doing:
+    #   function = add_with_resource_requirements(...)
+    #   function.set(resource_requirements=my_resource_requirements)
+    logger.info("Executing: add_with_resource_requirements(a=%s, b=%s)", a, b)
+    time.sleep(5)
+    return a + b
 
 
 @sematic.func(inline=False)
@@ -222,9 +237,10 @@ def testing_pipeline(
     should_raise: bool = False,
     raise_retry_probability: Optional[float] = None,
     oom: bool = False,
-    exit_code: Optional[int] = None,
     external_resource: bool = False,
     ray_cluster_address: Optional[str] = None,
+    resource_requirements: Optional[ResourceRequirements] = None,
+    exit_code: Optional[int] = None,
 ) -> float:
     """
     The root function of the testing pipeline.
@@ -251,6 +267,11 @@ def testing_pipeline(
     oom: bool
         Whether to include a function that causes an Out of Memory error.
         Defaults to False.
+    external_resource: bool
+        Whether to use an external resource. Defaults to False.
+    resource_requirements: Optional[ResourceRequirements]
+        If not None, includes a function that runs with the specified requirements.
+        Defaults to False.
     exit_code: Optional[int]
         If not None, includes a function which will exit with the specified code.
         Defaults to None.
@@ -270,10 +291,6 @@ def testing_pipeline(
     if inline:
         futures.append(add_inline(initial_future, 3))
 
-    if external_resource:
-        futures.append(add_using_resource(initial_future, 1.0))
-        futures.append(add_inline_using_resource(initial_future, 1.0))
-
     if nested:
         futures.append(add4_nested(initial_future, 1, 2, 3))
 
@@ -291,6 +308,15 @@ def testing_pipeline(
 
     if oom:
         futures.append(do_oom(initial_future))
+
+    if external_resource:
+        futures.append(add_using_resource(initial_future, 1.0))
+        futures.append(add_inline_using_resource(initial_future, 1.0))
+
+    if resource_requirements is not None:
+        function = add_with_resource_requirements(initial_future, 3)
+        function.set(resource_requirements=resource_requirements)
+        futures.append(function)
 
     if exit_code is not None:
         futures.append(do_exit(initial_future, exit_code))
