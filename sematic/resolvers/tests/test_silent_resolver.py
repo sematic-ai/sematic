@@ -42,7 +42,7 @@ def direct_context_func() -> SematicContext:
 
 @func
 def nested_resolve_func() -> int:
-    return add(1, 2).resolve()
+    return add(1, 2).resolve(SilentResolver())
 
 
 @func
