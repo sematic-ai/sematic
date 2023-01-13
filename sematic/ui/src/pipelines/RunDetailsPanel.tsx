@@ -5,19 +5,22 @@ import { ActionMenu, ActionMenuItem } from "../components/ActionMenu";
 import CalculatorPath from "../components/CalculatorPath";
 import Docstring from "../components/Docstring";
 import RunStateChip from "../components/RunStateChip";
-import RunTabs, { IOArtifacts } from "./RunTabs";
 import { RunTime } from "../components/RunTime";
 import { SnackBarContext } from "../components/SnackBarProvider";
 import Tags from "../components/Tags";
 import { ExtractContextType } from "../components/utils/typings";
 import { useGraphContext } from "../hooks/graphHooks";
 import { usePipelinePanelsContext, usePipelineRunContext } from "../hooks/pipelineHooks";
-import { Artifact, Run, Resolution, Edge } from "../Models";
+import { Artifact, Edge, Resolution, Run } from "../Models";
 import { fetchJSON } from "../utils";
+import PipelinePanelsContext from "./PipelinePanelsContext";
 import PipelineRunViewContext from "./PipelineRunViewContext";
+import RunTabs, { IOArtifacts } from "./RunTabs";
 
 export function RunDetailsPanel() {
-    const { selectedRun } = usePipelinePanelsContext();
+    const { selectedRun } = usePipelinePanelsContext() as ExtractContextType<typeof PipelinePanelsContext> & {
+      selectedRun: Run
+    };
     const { graph } = useGraphContext();
 
     const { edges, artifactsById } = graph!;

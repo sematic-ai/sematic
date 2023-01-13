@@ -23,6 +23,8 @@
     "dagre": "^0.8.5",
     "date-fns": "^2.29.3",
     "javascript-time-ago": "^2.3.13",
+    "jotai": "^1.12.1",
+    "jotai-location": "^0.3.2",
     "mpld3": "^0.5.8",
     "plotly.js-cartesian-dist": "^2.12.1",
     "react": "^18.1.0",
@@ -51,7 +53,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "analyze": "source-map-explorer 'build/static/js/*.js'"
+    "analyze": "source-map-explorer 'build/static/js/*.js'",
+    "lint": "eslint --config node_modules/eslint-config-react-app/index.js --ext .ts,.tsx --max-warnings=0 ./src"
   },
   "eslintConfig": {
     "extends": [

@@ -4,10 +4,12 @@ import pathlib
 import sys
 import tempfile
 import time
+from unittest.mock import patch
 
 # Sematic
 from sematic.resolvers.log_streamer import (
     _TERMINATION_CHAR,
+    _do_upload,
     _start_log_streamer_out_of_process,
     _tail_log_file,
     _wait_or_kill,
@@ -60,6 +62,20 @@ def test_ingested_logs():
     # everything uploaded should contain all log lines, with
     # no duplicated lines.
     assert all_upload_contents == everything
+
+
+@patch("sematic.resolvers.log_streamer.S3Storage")
+def test_no_empty_uploads(mock_s3_storage):
+    with tempfile.NamedTemporaryFile(delete=False) as log_file:
+        log_file.flush()
+        _do_upload(log_file.name, "foo_bar")
+    mock_s3_storage.return_value.set_from_file.assert_not_called()
+
+    with tempfile.NamedTemporaryFile(delete=False) as log_file:
+        log_file.write(b"hi!")
+        log_file.flush()
+        _do_upload(log_file.name, "foo_bar")
+    mock_s3_storage.return_value.set_from_file.assert_called_once()
 
 
 @retry(AssertionError, tries=3)  # this test is somewhat dependent on relative timings.

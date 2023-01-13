@@ -115,13 +115,42 @@ $ git push origin $RELEASE_VERSION
 Next, build and push the server image. Use the dockerfile at
 `docker/Dockerfile.server`. Copy the wheel you built before in the `docker/`
 directory.
+
 ```bash
 $ TAG=v$(python3 sematic/versions.py) make release-server
 ```
 
-Finally, draft the release on GitHub. Add a "What's Changed" section, a
-"New Contributors" section, a "Full Changelog" link, and attach the wheel in
-the assets section.
+Now you can prepare the Helm chart release.
+
+Update the file `helm/sematic-server/Chart.yaml` to:
+1) Set the `appVersion` field to match the version of the new release.
+2) Increment the minor version of the `version` field, i.e. if it's currently
+   `1.3.5`, make it `1.3.6`.
+
+Next you can generate the Helm package and publish it to the Helm repository.
+Clone the `github.com/sematic-ai/helm-charts` repo, and check out the `gh-pages`
+branch in it.  The commands below assume the `helm-charts` repo has been cloned
+into the `~/code/helm-charts` directory, but they should be run from the root
+of the `github.com/sematic-ai/sematic` repo directory.
+
+```bash
+helm package helm/sematic-server
+helm repo index . --url https://sematic-ai.github.io/helm-charts/ \
+         --merge ~/code/helm-charts/index.yaml
+mv index.yaml ~/code/helm-charts/index.yaml
+mv *.tgz ~/code/helm-charts/sematic-server/
+```
+
+You should now have a new `sematic-server/sematic-server-X.X.X.tgz` in the
+`helm-charts` repo, and a modified `index.yaml`.  Commit and push both of
+these to the `gh-pages` branch, creating a PR for the change if necessary.
+
+Finally, draft the release on GitHub:
+- Add a "What's Changed" section.
+- Add a warning that the client version will need to be upgraded, if this applies.
+- Add a "New Contributors" section, if this applies.
+- Add a "Full Changelog" link.
+- Attach the wheel in the "Assets" section.
 
 ### Special Releases
 

@@ -8,6 +8,10 @@ from unittest import mock
 import pytest
 
 # Sematic
+from sematic.api.tests.fixtures import (  # noqa: F401
+    mock_requests as mock_requests_fixture,
+)
+from sematic.api.tests.fixtures import test_client  # noqa: F401
 from sematic.api_client import (
     IncompatibleClientError,
     ServerError,
@@ -15,8 +19,12 @@ from sematic.api_client import (
     get_artifact_value_by_id,
 )
 from sematic.config.config import get_config
-from sematic.db.models.factories import make_artifact
-from sematic.tests.fixtures import MockStorage, valid_client_version  # noqa: F401
+from sematic.db.tests.fixtures import (  # noqa: F401
+    persisted_artifact,
+    test_db,
+    test_storage,
+)
+from sematic.tests.fixtures import valid_client_version  # noqa: F401
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 
 
@@ -138,16 +146,10 @@ def test_validate_server_compatibility_new_server_still_supports(mock_requests):
     mock_requests.get.assert_called_once()
 
 
-@mock.patch("sematic.api_client.requests")
-def test_get_artifact_value_by_id(mock_requests, valid_client_version):  # noqa: F811
-    mock_storage = MockStorage()
-    artifact = make_artifact(42, int, mock_storage)
-    mock_requests.get.return_value = MockResponse(
-        status_code=200,
-        json_contents=dict(content=artifact.to_json_encodable()),
-    )
-
-    value = get_artifact_value_by_id(artifact.id, mock_storage)
+def test_get_artifact_value_by_id(
+    mock_requests_fixture, persisted_artifact  # noqa: F811
+):
+    value = get_artifact_value_by_id(persisted_artifact.id)
 
     assert isinstance(value, int)
     assert value == 42

@@ -40,13 +40,13 @@ pytest_test(
     name = "test_silent_resolver",
     srcs = ["test_silent_resolver.py"],
     deps = [
-        ":fixtures",
         "//sematic:abstract_calculator",
         "//sematic:calculator",
         "//sematic:future_context",
-        "//sematic/plugins:abstract_external_resource",
         "//sematic:retry_settings",
+        "//sematic/plugins:abstract_external_resource",
         "//sematic/resolvers:silent_resolver",
+        "//sematic/resolvers/tests:fixtures",
         "//sematic/utils:exceptions",
     ],
 )
@@ -63,7 +63,6 @@ pytest_test(
     name = "test_cloud_resolver",
     srcs = ["test_cloud_resolver.py"],
     deps = [
-        ":fixtures",
         "//sematic:api_client",
         "//sematic:calculator",
         "//sematic/api/tests:fixtures",
@@ -99,11 +98,7 @@ pytest_test(
 sematic_py_lib(
     name = "fixtures",
     srcs = ["fixtures.py"],
-    pip_deps = [
-        "pytest",
-    ],
     deps = [
-        "//sematic/tests:fixtures",
         "//sematic/plugins:abstract_external_resource",
     ],
 )

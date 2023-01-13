@@ -1,4 +1,5 @@
 # Standard Library
+import json
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Iterable, List, Optional
@@ -6,13 +7,12 @@ from typing import OrderedDict as OrderedDictType
 from typing import Tuple
 
 # Sematic
+import sematic.api_client as api_client
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.factories import get_artifact_value
 from sematic.db.models.run import Run
 from sematic.resolvers.type_utils import make_list_type, make_tuple_type
-from sematic.storage import Storage
 from sematic.utils.algorithms import breadth_first_search, topological_sort
 from sematic.utils.memoized_property import memoized_indexed, memoized_property
 
@@ -114,7 +114,6 @@ class Graph:
     runs: Iterable[Run]
     edges: Iterable[Edge]
     artifacts: Iterable[Artifact]
-    storage: Storage
 
     def __post_init__(self):
         self.runs = tuple(self.runs)
@@ -384,7 +383,7 @@ class Graph:
     @memoized_indexed
     def _get_artifact_value(self, artifact_id: str) -> Any:
         artifact = self._artifacts_by_id[artifact_id]
-        return get_artifact_value(artifact, self.storage)
+        return api_client.get_artifact_value(artifact)
 
     def _get_cloned_future_inputs(
         self, run_id: RunID, cloned_graph: ClonedFutureGraph
@@ -481,6 +480,9 @@ class Graph:
             future = func(**kwargs)
 
         future.name = run.name
+
+        future.props.name = run.name
+        future.props.tags = json.loads(str(run.tags))
 
         cloned_graph.input_artifacts[future.id] = run_input_artifacts
 

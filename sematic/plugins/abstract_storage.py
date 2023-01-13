@@ -2,7 +2,7 @@
 import abc
 import enum
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Type
 
 
 class PayloadType(enum.Enum):
@@ -44,6 +44,6 @@ class AbstractStorage(abc.ABC):
         pass
 
 
-class NoSuchStorageKey(KeyError):
-    def __init__(self, storage: AbstractStorage, key: str):
-        super().__init__(f"No such storage key for {storage.__class__.__name__}: {key}")
+class NoSuchStorageKeyError(KeyError):
+    def __init__(self, storage: Type[AbstractStorage], key: str):
+        super().__init__(f"No such storage key for {storage.__name__}: {key}")

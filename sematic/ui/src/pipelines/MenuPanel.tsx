@@ -83,8 +83,8 @@ export default function MenuPanel() {
           pt: 3,
         }}
       >
-        <Loading isLoaded={!isLoading} />
-        {!isLoading && <RunTree runTreeNodes={runTreeMetaNode!.children}/>}
+        {!graph && <Loading isLoaded={!isLoading} />}
+        {!!runTreeMetaNode && <RunTree runTreeNodes={runTreeMetaNode!.children}/>}
       </Box>
     </Box>
   );

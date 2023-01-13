@@ -4,12 +4,14 @@ from typing import Any, Iterable, List, Optional, Tuple, Type
 # Sematic
 from sematic.types.casting import safe_cast
 from sematic.types.registry import (
+    register_from_json_encodable,
     register_safe_cast,
     register_to_json_encodable,
     register_to_json_encodable_summary,
 )
 from sematic.types.serialization import (
     get_json_encodable_summary,
+    value_from_json_encodable,
     value_to_json_encodable,
 )
 
@@ -57,6 +59,17 @@ def _tuple_to_json_encodable(value: Tuple, type_: Type) -> List:
         value_to_json_encodable(element, element_type)
         for element, element_type in zip(value, type_.__args__)
     ]
+
+
+@register_from_json_encodable(tuple)
+def _tuple_from_json_encodable(value: Tuple, type_: Type) -> Tuple[Any, ...]:
+    """Deserialize a tuple."""
+    return tuple(
+        [
+            value_from_json_encodable(element, element_type)
+            for element, element_type in zip(value, type_.__args__)
+        ]
+    )
 
 
 @register_to_json_encodable_summary(tuple)

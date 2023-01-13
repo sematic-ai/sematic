@@ -16,6 +16,7 @@ import PipelineRunViewContext from "./PipelineRunViewContext";
 import { fetchJSON } from "../utils";
 import { NoteView } from "../components/Notes";
 import { ExtractContextType } from "../components/utils/typings";
+import PipelinePanelsContext from "./PipelinePanelsContext";
 
 export default function NotesPanel() {
   const theme = useTheme();
@@ -24,8 +25,10 @@ export default function NotesPanel() {
   const { rootRun } 
     = usePipelineRunContext() as ExtractContextType<typeof PipelineRunViewContext> & {
       rootRun: Run
-  };;
-  const { selectedRun } = usePipelinePanelsContext();
+  };
+  const { selectedRun } = usePipelinePanelsContext() as ExtractContextType<typeof PipelinePanelsContext> & {
+    selectedRun: Run
+  };
 
 
   const calculatorPath = useMemo(
@@ -33,13 +36,13 @@ export default function NotesPanel() {
     [rootRun.calculator_path]
   );
 
-  const anonymousUser: User = {
+  const anonymousUser: User = useMemo(() => ({
     email: "anonymous@acme.com",
     first_name: "Anonymous",
     last_name: null,
     avatar_url: null,
     api_key: null,
-  };
+  }), []);
 
   const [notes, setNotes] = useState<Note[]>([]);
   const [authorsByEmail, setAuthorsByEmail] = useState<Map<string, User>>(
@@ -61,7 +64,7 @@ export default function NotesPanel() {
         setAuthorsByEmail(currentAuthors);
       },
     });
-  }, [calculatorPath]);
+  }, [calculatorPath, authorsByEmail, user?.api_key]);
 
   const submitNote = useCallback(
     (event: KeyboardEvent) => {
@@ -89,7 +92,7 @@ export default function NotesPanel() {
         },
       });
     },
-    [composedNote, rootRun, selectedRun, notes]
+    [composedNote, rootRun, selectedRun, notes, anonymousUser, user]
   );
 
   const bottomRef = useRef<null | HTMLDivElement>(null);

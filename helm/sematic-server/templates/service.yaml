@@ -1,9 +1,12 @@
+{{- if not .Values.service.create }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "sematic-server.fullname" . }}
+  name: {{ .Release.Name }}
   labels:
     {{- include "sematic-server.labels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.service.annotations | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -13,3 +16,4 @@ spec:
       name: http
   selector:
     {{- include "sematic-server.selectorLabels" . | nindent 4 }}
+{{- end }}
