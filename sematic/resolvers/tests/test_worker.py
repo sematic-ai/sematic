@@ -1,5 +1,6 @@
 # Standard Library
 import datetime
+import sys
 import uuid
 from unittest import mock
 
@@ -219,5 +220,7 @@ def test_fail(
 def test_emulate_interpreter():
     # if the sematic import failed, we wouldn't reach the sys.exit, and we'd
     # get a different exit code.
-    exit_code = _emulate_interpreter(["-c", "import sematic; import sys; sys.exit(42)"])
+    exit_code = _emulate_interpreter(
+        [sys.executable, "-c", "import sematic; import sys; sys.exit(42)"]
+    )
     assert exit_code == 42
