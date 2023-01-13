@@ -97,6 +97,12 @@ EXIT_HELP = (
     "If specified without a value, defaults to 0. Defaults to None."
 )
 
+RAY_HELP = (
+    "Includes a function that is executed on the specified external Ray cluster. "
+    "using a remote Ray cluster. If not provided, Ray will not be used. "
+    "Example: 'ray://raycluster-complete-head-svc:10001'"
+)
+
 
 def _required_by(*args: str) -> Dict[str, bool]:
     """Syntactic sugar to specify argparse dependencies between arguments."""
@@ -192,6 +198,11 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         dest="exit_code",
         help=EXIT_HELP,
+    )
+    parser.add_argument(
+        "--ray-cluster-address",
+        default=None,
+        help=RAY_HELP,
     )
 
     args = parser.parse_args()
