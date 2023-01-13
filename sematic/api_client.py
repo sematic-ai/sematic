@@ -317,19 +317,16 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
     ]
 
 
-def get_server_env_settings() -> Dict[str, str]:
-    """Get a subset of the server's settings as key/value strings.
-
-    The server determines a subset of settings to expose based on what
-    may be needed by its clients.
+def get_resource_poll_interval_seconds() -> int:
+    """Get the interval between polls for updates to external resource state
 
     Returns
     -------
     A dictionary where the keys are selected elements from the ServerSettingsVar
     enum, and the values are the string values for those settings.
     """
-    response = _get("/meta/env")
-    return response["env"]
+    response = _get("/meta/env/resource_poll_interval_seconds")
+    return response["value"]
 
 
 @retry(tries=3, delay=10, jitter=1)

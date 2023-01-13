@@ -14,6 +14,8 @@ from sematic.config.settings import MissingSettingsError
 from sematic.db.models.user import User
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 
+_DEFAULT_INTERVAL_BETWEEN_RESOURCE_UPDATES_SECONDS = 60
+
 
 @sematic_api.route("/api/v1/meta/versions", methods=["GET"])
 def get_server_version_info() -> flask.Response:
@@ -52,3 +54,20 @@ def env_endpoint(user: Optional[User]) -> flask.Response:
             continue
 
     return flask.jsonify(dict(env=env))
+
+
+@sematic_api.route("/api/v1/meta/env/resource_poll_interval_seconds", methods=["GET"])
+@authenticate
+def resource_poll_interval_seconds_endpoint(user: Optional[User]) -> flask.Response:
+    """Return a dict containing the interval between polls for resource updates."""
+    interval = _DEFAULT_INTERVAL_BETWEEN_RESOURCE_UPDATES_SECONDS
+    try:
+        interval = int(
+            get_server_setting(
+                ServerSettingsVar.SEMATIC_RESOURCE_UPDATE_POLL_INTERVAL_SECONDS
+            )
+        )
+    except MissingSettingsError:
+        pass
+
+    return flask.jsonify(dict(value=interval))

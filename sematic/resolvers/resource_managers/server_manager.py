@@ -6,14 +6,10 @@ from typing import List, Optional, Set
 
 # Sematic
 from sematic import api_client
-from sematic.config.server_settings import ServerSettingsVar
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 
 logger = logging.getLogger(__name__)
-
-
-_DEFAULT_INTERVAL_BETWEEN_UPDATES_SECONDS = 60
 
 
 class ServerResourceManager(AbstractResourceManager):
@@ -22,11 +18,9 @@ class ServerResourceManager(AbstractResourceManager):
     def __init__(self, update_poll_interval_seconds: Optional[int] = None) -> None:
         super().__init__()
         if update_poll_interval_seconds is None:
-            update_poll_interval_seconds_str = api_client.get_server_env_settings().get(
-                ServerSettingsVar.SEMATIC_RESOURCE_UPDATE_POLL_INTERVAL_SECONDS.value,
-                str(_DEFAULT_INTERVAL_BETWEEN_UPDATES_SECONDS),
+            update_poll_interval_seconds = (
+                api_client.get_resource_poll_interval_seconds()
             )
-            update_poll_interval_seconds = int(update_poll_interval_seconds_str)
 
         self._update_poll_interval_seconds = update_poll_interval_seconds
         self._resource_ids_updating: Set[str] = set()
