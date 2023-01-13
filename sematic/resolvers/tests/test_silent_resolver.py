@@ -42,6 +42,8 @@ def direct_context_func() -> SematicContext:
 
 @func
 def nested_resolve_func() -> int:
+    # If you don't use SilentResolver() here, the test process
+    # takes MUCH longer to complete
     return add(1, 2).resolve(SilentResolver())
 
 
