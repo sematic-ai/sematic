@@ -319,6 +319,7 @@ def dump_schema(file: str):
     )
 
     # make sure the file is created in the workspace, and not in the bazel runtime dir
+    # TODO #462: cwd for all cli commands when running bazel
     if not os.path.isabs(file):
         workspace = os.getenv("BUILD_WORKSPACE_DIRECTORY")
         if workspace is not None:
