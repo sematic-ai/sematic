@@ -175,7 +175,7 @@ def base_images():
 
     container_pull(
         name = "sematic-worker-base",
-        digest = "sha256:2107e7d68e103dd90a3bb25e28f0ddc56242e9162a5ae20aae7612311979232d",
+        digest = "sha256:e929213c8219562a48e82264569298e3ad79e97888e1e7521bd64587f37eceb3",
         registry = "index.docker.io",
         repository = "sematicai/sematic-worker-base",
         tag = "latest",
@@ -183,7 +183,7 @@ def base_images():
 
     container_pull(
         name = "sematic-worker-cuda",
-        digest = "sha256:3146eaf3822646f335ea98e6b9c662471e982822e0dfd31a8476983a4e73f6d3",
+        digest = "sha256:bea3926876a3024c33fe08e0a6b2c0377a7eb600d7b3061a3f3f39d711152e3c",
         registry = "index.docker.io",
         repository = "sematicai/sematic-worker-base",
         tag = "cuda",
