@@ -18,18 +18,16 @@ export default function RunTree(props: {
 }) {
   let { runTreeNodes } = props;
 
-  const { selectedRun, setSelectedPanelItem, setSelectedRunId, setSelectedRunTab, setSelectedArtifactName  } 
+  const { selectedRun, setSelectedPanelItem, setSelectedRunId, setSelectedArtifactName  } 
   = usePipelinePanelsContext() as ExtractContextType<typeof PipelinePanelsContext> & {
     selectedRun: Run
   };
 
   const onSelectRun = useCallback((runId: string) => {
-    const defaultTab = selectedRun.future_state === "FAILED" ? "logs" : "output";
-    setSelectedRunTab(defaultTab);
     setSelectedArtifactName("");
     setSelectedRunId(runId);
     setSelectedPanelItem('run');
-  }, [selectedRun.future_state, setSelectedArtifactName, setSelectedPanelItem, setSelectedRunId, setSelectedRunTab]);
+  }, [setSelectedArtifactName, setSelectedPanelItem, setSelectedRunId]);
 
   if (runTreeNodes.length === 0) {
     return <></>;

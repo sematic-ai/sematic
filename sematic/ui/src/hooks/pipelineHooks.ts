@@ -7,11 +7,12 @@ import { Filter, ResolutionPayload, RunListPayload, RunViewPayload } from "../Pa
 import PipelinePanelsContext from "../pipelines/PipelinePanelsContext";
 import PipelineRunViewContext from "../pipelines/PipelineRunViewContext";
 import { useHttpClient } from "./httpHooks";
-import { atomWithHash } from 'jotai-location'
+import { atomWithHashCustomSerialization } from "../utils";
 
 export type QueryParams = {[key: string]: string};
 
-export const selectedRunHashAtom = atomWithHash('run', '')
+export const selectedRunHashAtom = atomWithHashCustomSerialization('run', '')
+export const selectedTabHashAtom = atomWithHashCustomSerialization('tab', '')
 
 export function usePipelineRunContext() {
     const contextValue = useContext(PipelineRunViewContext);

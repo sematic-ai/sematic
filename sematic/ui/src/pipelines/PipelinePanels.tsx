@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import Loading from "../components/Loading";
 import { ExtractContextType } from "../components/utils/typings";
 import { useGraph } from "../hooks/graphHooks";
-import { selectedRunHashAtom, usePipelineRunContext } from "../hooks/pipelineHooks";
+import { selectedRunHashAtom, selectedTabHashAtom, usePipelineRunContext } from "../hooks/pipelineHooks";
 import { Run } from "../Models";
 import GraphContext from "./graph/graphContext";
 import MenuPanel from "./MenuPanel";
@@ -41,8 +41,20 @@ export default function PipelinePanels() {
     return graph.runsById.get(runId) || rootRun;
   }, [selectedRunId, graph, rootRun]);
 
-  const defaultTab = selectedRun?.future_state === "FAILED" ? "logs" : "output";
-  const [selectedRunTab, setSelectedRunTab] = useState(defaultTab);
+  const [selectedTabHash, setSelectedRunTab] = useAtom(selectedTabHashAtom);
+
+  const selectedRunTab = useMemo(() => {
+    if (!!selectedTabHash) {
+      return selectedTabHash;
+    }
+    // in case there is no previously selected tab, decide what default tab is.
+    const run = selectedRun || rootRun;
+    // if there is a substential run available (either selected run or root run)
+    // check its state. If it failed, show the logs for investigating failures
+    // otherwise, show the output(result) tab by default.
+    return run?.future_state === "FAILED" ? "logs" : "output";
+  }, [selectedTabHash, selectedRun, rootRun]);
+
   const [selectedArtifactName, setSelectedArtifactName] = useState("");
 
   const pipelinePanelsContext = useMemo<ExtractContextType<typeof PipelinePanelsContext>>(() => ({
@@ -50,7 +62,7 @@ export default function PipelinePanels() {
     selectedRun, setSelectedRunId,
     selectedRunTab, setSelectedRunTab,
     selectedArtifactName, setSelectedArtifactName
-  }), [selectedPanelItem, selectedRun, setSelectedRunId, selectedRunTab, selectedArtifactName]);
+  }), [selectedPanelItem, selectedRun, setSelectedRunId, selectedRunTab, selectedArtifactName, setSelectedRunTab]);
 
   useEffect(()=> {
     if (selectedRunId === rootRun.id || 
