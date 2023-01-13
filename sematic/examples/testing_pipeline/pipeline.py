@@ -8,6 +8,9 @@ import random
 import time
 from typing import List, Optional
 
+# Third-party
+import ray
+
 # Sematic
 import sematic
 from sematic.plugins.external_resource.timed_message import TimedMessage
@@ -25,6 +28,29 @@ def add(a: float, b: float) -> float:
     logger.info("Executing: add(a=%s, b=%s)", a, b)
     time.sleep(5)
     return a + b
+
+
+@sematic.func(inline=False)
+def add_with_ray(a: float, b: float, cluster_address: str) -> float:
+    """
+    Adds two numbers, using a Ray cluster.
+    """
+    logger.info(
+        "Executing: add_with_ray(a=%s, b=%s, cluster_address=%s)", a, b, cluster_address
+    )
+    ray.init(address=cluster_address)
+    result = ray.get([add_ray_task.remote(a, b)])[0]
+    logger.info("Result from ray for %s + %s: %s", a, b, result)
+    return result
+
+
+@ray.remote
+def add_ray_task(x, y):
+    # create new logger due to this:
+    # https://stackoverflow.com/a/55286452/2540669
+    logger = logging.getLogger(__name__)
+    logger.info("Adding from Ray: %s, %s", x, y)
+    return x + y
 
 
 @sematic.func(inline=True)
@@ -212,6 +238,7 @@ def testing_pipeline(
     raise_retry_probability: Optional[float] = None,
     oom: bool = False,
     external_resource: bool = False,
+    ray_cluster_address: Optional[str] = None,
     resource_requirements: Optional[ResourceRequirements] = None,
     exit_code: Optional[int] = None,
 ) -> float:
@@ -248,6 +275,11 @@ def testing_pipeline(
     exit_code: Optional[int]
         If not None, includes a function which will exit with the specified code.
         Defaults to None.
+    external_resource: bool
+        Whether to use an external resource. Defaults to False.
+    ray_cluster_address:
+        The address of a Ray cluster. `None` if Ray should not be used. If specified,
+        two numbers will be added using a Ray task that executes on the remote cluster.
     """
     # have an initial function whose output is used as inputs by all other functions
     # this staggers the rest of the functions and allows the user a chance to monitor and
@@ -288,6 +320,9 @@ def testing_pipeline(
 
     if exit_code is not None:
         futures.append(do_exit(initial_future, exit_code))
+
+    if ray_cluster_address is not None:
+        futures.append(add_with_ray(initial_future, 1.0, ray_cluster_address))
 
     # collect all values
     result = add_all(futures) if len(futures) > 1 else futures[0]

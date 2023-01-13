@@ -8,6 +8,8 @@ load(
     "repositories",
 )
 load("@io_bazel_rules_docker//container:push.bzl", "container_push")
+load("@io_bazel_rules_docker//container:layer.bzl", "container_layer")
+load("@io_bazel_rules_docker//container:image.bzl", "container_image")
 load("@io_bazel_rules_docker//container:pull.bzl", "container_pull")
 load("@rules_python//python:defs.bzl", "py_binary")
 
@@ -54,6 +56,8 @@ def sematic_pipeline(
     """
     if bases == None:
         bases = {}
+    if data == None:
+        data = []
 
     if "default" not in bases:
         if base != None:
@@ -66,16 +70,40 @@ def sematic_pipeline(
     if dev:
         main = "@sematic//sematic/resolvers:worker.py"
         srcs = ["@sematic//sematic/resolvers:worker.py"]
+
+        # note that this is only adding a script that wraps Ray
+        # if it's there. It doesn't add an actual dependency on real
+        # ray stuff.
+        script_data = ["@sematic//bazel:ray", "@sematic//bazel:bazel_python"]
         py3_image_deps = deps + ["@sematic//sematic/resolvers:worker"]
     else:
         main = "@rules_sematic//:worker.py"
         srcs = ["@rules_sematic//:worker.py"]
+        script_data = ["@rules_sematic//:ray", "@rules_sematic//:bazel_python"]
         py3_image_deps = deps
 
     image_uris = []
     push_rule_names = []
 
     for tag, base_image in bases.items():
+        with_tools_image = "{}_{}_image_with_tools".format(name, tag)
+        with_tools_layer = "{}_layer".format(with_tools_image)
+        container_layer(
+            name = with_tools_layer,
+            files = script_data,
+            directory = "/sematic/bin/",
+        )
+        container_image(
+            name = with_tools_image,
+            base = base_image,
+            layers = [with_tools_layer],
+        )
+        env = env or {}
+
+        # Leveraged by scripts in the image to determine
+        # which python environment to use: the host python
+        # env or the bazel-managed one.
+        env["BAZEL_BUILT_IMAGE"] = "1"
         py3_image(
             name = "{}_{}_image".format(name, tag),
             main = main,
@@ -83,8 +111,8 @@ def sematic_pipeline(
             data = data,
             deps = py3_image_deps,
             visibility = ["//visibility:public"],
-            base = base_image,
-            env = env or {},
+            base = with_tools_image,
+            env = env,
             tags = ["manual"],
         )
 
@@ -147,7 +175,7 @@ def base_images():
 
     container_pull(
         name = "sematic-worker-base",
-        digest = "sha256:d0c0e15f4f20dc60e844523a012c9cc927acbd4c5187b943a4a4a90b0ed70eee",
+        digest = "sha256:e929213c8219562a48e82264569298e3ad79e97888e1e7521bd64587f37eceb3",
         registry = "index.docker.io",
         repository = "sematicai/sematic-worker-base",
         tag = "latest",
@@ -155,7 +183,7 @@ def base_images():
 
     container_pull(
         name = "sematic-worker-cuda",
-        digest = "sha256:6cbedeffdbf8ef0e5182819b4ae05a12972f61a4cd862fe41e4b3aaca01888da",
+        digest = "sha256:bea3926876a3024c33fe08e0a6b2c0377a7eb600d7b3061a3f3f39d711152e3c",
         registry = "index.docker.io",
         repository = "sematicai/sematic-worker-base",
         tag = "cuda",
