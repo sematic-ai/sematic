@@ -228,6 +228,7 @@ def _emulate_interpreter(interpreter_args: List[str]) -> int:
     -------
     The exit code from the interpreter subprocess
     """
+    print(f"Executing: {interpreter_args}")
     completed_process = subprocess.run(interpreter_args)
     return completed_process.returncode
 
