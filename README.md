@@ -1,9 +1,4 @@
-![Sematic logo](https://raw.githubusercontent.com/sematic-ai/sematic/main/docs/images/Logo_README.png)
-
-
-<p font-size="2em" align="center">Prototype-to-production ML in days not weeks</p>
-
-![UI Screenshot](https://raw.githubusercontent.com/sematic-ai/sematic/main/docs/images/Screenshot_README_1_framed.png)
+![UI Screenshot](https://raw.githubusercontent.com/sematic-ai/sematic/main/docs/images/README_header.png)
 
 ![PyPI](https://img.shields.io/pypi/v/sematic?style=for-the-badge)
 [![CircleCI](https://img.shields.io/circleci/build/github/sematic-ai/sematic/main?label=CircleCI&style=for-the-badge&token=c8e0115ddccadc17b98ab293b32cad27026efb25)](https://app.circleci.com/pipelines/github/sematic-ai/sematic?branch=main&filter=all)
@@ -30,7 +25,7 @@ Sematic helps you
 * Develop and run ML pipelines using native Python functions, no new DSL to learn
 * Monitor, visualize, and track all inputs and outputs of all pipeline steps in a slick UI
 * Collaborate with your team to keep the discussion close to the pipeline as opposed to scattered elsewhere
-* Execute your pipelines locally or in your cloud
+* Execute your pipelines locally or in your cloud environment
 * [soon] Clone/re-run your pipelines with different inputs/configs
 * [soon] Schedule your pipelines to keep your models fresh and relevant
 
