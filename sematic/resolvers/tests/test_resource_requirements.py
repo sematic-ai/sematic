@@ -35,6 +35,7 @@ def test_is_serializable():
                     toleration_seconds=42,
                 )
             ],
+            mount_expanded_shared_memory=True,
         )
     )
     encoded = value_to_json_encodable(requirements, ResourceRequirements)
