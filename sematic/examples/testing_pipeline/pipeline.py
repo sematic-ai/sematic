@@ -32,7 +32,7 @@ def add(a: float, b: float) -> float:
 @sematic.func(inline=False)
 def add_with_ray(a: float, b: float, cluster_address: str) -> float:
     """
-    Adds two numbers, using a Ray cluster
+    Adds two numbers, using a Ray cluster.
     """
     logger.info(
         "Executing: add_with_ray(a=%s, b=%s, cluster_address=%s)", a, b, cluster_address
@@ -45,7 +45,7 @@ def add_with_ray(a: float, b: float, cluster_address: str) -> float:
 
 @ray.remote
 def add_ray_task(x, y):
-    # create new loger due to this:
+    # create new logger due to this:
     # https://stackoverflow.com/a/55286452/2540669
     logger = logging.getLogger(__name__)
     logger.info("Adding from Ray: %s, %s", x, y)

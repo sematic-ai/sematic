@@ -91,7 +91,7 @@ def sematic_pipeline(
         container_layer(
             name = with_tools_layer,
             files = script_data,
-            directory = "/sematic_bin/",
+            directory = "/sematic/bin/",
         )
         container_image(
             name = with_tools_image,

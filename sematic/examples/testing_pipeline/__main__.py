@@ -88,7 +88,7 @@ EXIT_HELP = (
 )
 
 RAY_HELP = (
-    "The address of a Ray cluster to use if you wish to perform an 'add' "
+    "Includes a function that is executed on the specified external Ray cluster. "
     "using a remote Ray cluster. If not provided, Ray will not be used. "
     "Example: 'ray://raycluster-complete-head-svc:10001'"
 )

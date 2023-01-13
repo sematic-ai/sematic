@@ -213,28 +213,32 @@ def _create_log_file_path(file_name: str) -> str:
 
 
 def _emulate_interpreter(interpreter_args: List[str]) -> int:
-    """Spin off a python interpreter as a subprocess, and pass along the provided args
+    """Spin off a python interpreter as a subprocess, and pass along the provided args.
 
     Parameters
     ----------
     interpreter_args:
-        The arguments to pass to the interpreter. Should not include the interpreter
+        The arguments to pass to the interpreter. Should include the interpreter
         itself.
 
     Returns
     -------
     The exit code from the interpreter subprocess
     """
-    full_args = [sys.executable] + interpreter_args
-    full_args = [arg for arg in full_args if arg != _EMULATE_INTERPRETER_ARG]
-    completed_process = subprocess.run(full_args)
+    completed_process = subprocess.run(interpreter_args)
     return completed_process.returncode
+
+
+def _sanitize_interpreter_args(args) -> List[str]:
+    full_args = [sys.executable] + args[1:]
+    full_args = [arg for arg in full_args if arg != _EMULATE_INTERPRETER_ARG]
+    return full_args
 
 
 def wrap_main_with_logging():
     """Wrap the main function with log initialization and ingestion"""
     if _EMULATE_INTERPRETER_ARG in sys.argv:
-        exit_code = _emulate_interpreter(sys.argv[1:])
+        exit_code = _emulate_interpreter(_sanitize_interpreter_args(sys.argv))
         os._exit(exit_code)
     print("Starting Sematic Worker")
     args = parse_args()
