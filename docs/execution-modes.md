@@ -120,10 +120,10 @@ You can select what hardware resources are available to each job by passing a
 For example:
 
 ```python
-from sematic import ResourceRequirements, KubernetesRequirements
+from sematic import ResourceRequirements, KubernetesResourceRequirements
 
 GPU_RESOURCE_REQS = ResourceRequirements(
-    kubernetes=KubernetesRequirements(
+    kubernetes=KubernetesResourceRequirements(
         # Note: the kind of node selector options that are valid will depend on
         # your particular deployment of Kubernetes. Talk to the person who manages
         # your Kubernetes cluster if you think you might need this. It is primarily
@@ -132,11 +132,15 @@ GPU_RESOURCE_REQS = ResourceRequirements(
 
         # The resource requirements of the job. Information on the format of valid
         # values can be found here: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-        # the dictionary provided here will be used for both "limits" and "requests"
+        # the dictionary provided here will be used for both "limits" and "requests".
         requests={"cpu": "1", "memory": "1Gi"},
+
+        # By default, Docker uses a 64MB /dev/shm partition. If this flag is set,
+        # a memory-backed tmpfs that expands up to half of the available memory file
+        # is used instead.
+        mount_expanded_shared_memory=True,
     )
 )
-
 @sematic.func(resource_requirements=GPU_RESOURCE_REQS)
 def train_model(...):
     ...

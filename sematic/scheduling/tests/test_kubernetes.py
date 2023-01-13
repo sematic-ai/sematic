@@ -85,6 +85,7 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
                 ),
                 KubernetesToleration(),
             ],
+            mount_expanded_shared_memory=True,
         )
     )
 
@@ -105,11 +106,17 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     assert kwargs["namespace"] == namespace
     job = kwargs["body"]
     assert job.spec.template.spec.node_selector == node_selector
+
     secret_volume = job.spec.template.spec.volumes[0]
     assert secret_volume.name == "sematic-func-secrets-volume"
     assert secret_volume.secret.items[0].key == next(iter(file_secrets.keys()))
     assert secret_volume.secret.items[0].path == next(iter(file_secrets.values()))
     assert job.spec.template.spec.service_account_name == custom_service_account
+
+    shared_memory_volume = job.spec.template.spec.volumes[1]
+    assert shared_memory_volume.name == "expanded-shared-memory-volume"
+    assert shared_memory_volume.empty_dir.medium == "Memory"
+
     container = job.spec.template.spec.containers[0]
     assert container.args == args
     env_vars = container.env
@@ -119,10 +126,12 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     assert secret_env_var.value_from.secret_key_ref.key == next(
         iter(environment_secrets)
     )
+
     final_api_url_var = next(
         var.value for var in env_vars if var.name == "SEMATIC_API_ADDRESS"
     )
     assert final_api_url_var == api_url_override
+
     del configured_env_vars["SEMATIC_API_ADDRESS"]
     normal_env_var = next(
         var for var in env_vars if var.name == next(iter(configured_env_vars.keys()))
