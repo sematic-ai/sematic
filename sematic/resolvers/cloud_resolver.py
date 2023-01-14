@@ -78,6 +78,9 @@ class CloudResolver(LocalResolver):
         value of `False`.
     """
 
+    # Time between external resource updates *during activation and deactivation*
+    _RESOURCE_UPDATE_INTERVAL_SECONDS = 10
+
     def __init__(
         self,
         detach: bool = True,
@@ -390,12 +393,33 @@ class CloudResolver(LocalResolver):
         return sum(map(lambda f: f.state == FutureState.SCHEDULED, self._futures))
 
     @classmethod
-    def activate_resource_for_run(  # type: ignore
-        cls, resource: AbstractExternalResource, run_id: str, root_id: str
+    def _do_resource_activate(
+        cls, resource: AbstractExternalResource
     ) -> AbstractExternalResource:
-        raise NotImplementedError(
-            "External resources not implemented for CloudResolver yet"
-        )
+        resource = api_client.activate_external_resource(resource.id)
+        return resource
+
+    @classmethod
+    def _do_resource_deactivate(
+        cls, resource: AbstractExternalResource
+    ) -> AbstractExternalResource:
+        resource = api_client.deactivate_external_resource(resource.id)
+        return resource
+
+    @classmethod
+    def _do_resource_update(
+        cls, resource: AbstractExternalResource
+    ) -> AbstractExternalResource:
+        resource = api_client.get_external_resource(resource.id, refresh_remote=True)
+        return resource
+
+    @classmethod
+    def entering_resource_context(cls, resource: AbstractExternalResource):
+        cls._get_resource_manager().poll_for_updates_by_resource_id(resource.id)
+
+    @classmethod
+    def exiting_resource_context(cls, resource_id: str):
+        cls._get_resource_manager().stop_poll_for_updates_by_resource_id(resource_id)
 
 
 def make_nested_future_storage_key(future_id: str) -> str:
