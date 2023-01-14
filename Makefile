@@ -25,7 +25,8 @@ fix:
 	black sematic
 
 refresh-dependencies:
-	pip-compile --allow-unsafe requirements/requirements.in
+	bazel run //requirements:requirements38.update
+	bazel run //requirements:requirements39.update
 
 ui:
 	cd sematic/ui; npm run build

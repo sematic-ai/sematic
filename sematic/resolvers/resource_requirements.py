@@ -219,12 +219,18 @@ class KubernetesResourceRequirements:
         get scheduled on which nodes, this enables control over how your workload
         interacts with these node taints. More information can be found here:
         https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+    mount_expanded_shared_memory:
+        By default, Docker uses a 64MB /dev/shm partition. If this flag is set, a
+        memory-backed tmpfs that expands up to half of the available memory file is used
+        instead. Defaults to False. If that file is expanded to more than that limit
+        (through external action), then the pod will be terminated.
     """
 
     node_selector: Dict[str, str] = field(default_factory=dict)
     requests: Dict[str, str] = field(default_factory=dict)
     secret_mounts: KubernetesSecretMount = field(default_factory=KubernetesSecretMount)
     tolerations: List[KubernetesToleration] = field(default_factory=list)
+    mount_expanded_shared_memory: bool = field(default=False)
 
 
 @dataclass

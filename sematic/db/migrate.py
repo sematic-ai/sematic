@@ -185,13 +185,6 @@ def _apply_common_options(env, verbose):
 
 @main.command("up", short_help="Apply outstanding migrations")
 @common_options
-@click.option(
-    "--schema-file",
-    "file",
-    type=click.STRING,
-    default="schema.sql",
-    help="File into which to dump the new schema.",
-)
 def _migrate_up(env: str, verbose: bool, file: str):
     """
     Migrate the DB to the latest version.
@@ -236,13 +229,6 @@ def migrate_up():
 
 @main.command("down", short_help="Revert last migration")
 @common_options
-@click.option(
-    "--schema-file",
-    "file",
-    type=click.STRING,
-    default="schema.sql",
-    help="File into which to dump the new schema.",
-)
 def _migrate_down(env: str, verbose: bool, file: str):
     """
     Revert the last migration.
@@ -317,6 +303,13 @@ def dump_schema(file: str):
         + ",\n".join(f"  ('{version}')" for version in current_versions)
         + ";\n"
     )
+
+    # make sure the file is created in the workspace, and not in the bazel runtime dir
+    # TODO #462: cwd for all cli commands when running bazel
+    if not os.path.isabs(file):
+        workspace = os.getenv("BUILD_WORKSPACE_DIRECTORY")
+        if workspace is not None:
+            file = os.path.join(workspace, file)
 
     logging.info("Writing schema to %s", file)
     with open(file, "w") as f:

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# This file allows for entering the python environment
+# created by bazel for a Sematic Docker image. You can
+# use it like you would any other python interpreter.
+# Ex:
+# $ bazel_python -c "print('Hello from bazel python')"
+# It works by leveraging our worker.py file, which can
+# emulate a python interpreter.
+
+if (( $BAZEL_BUILT_IMAGE != 1 )); then
+    >&2 echo "This image wasn't built by Bazel in Sematic. bazel_python not available."
+    exit 1
+fi
+
+# bazel builds the following structure:
+# /app/<bazel package of target>/<image target name>.binary
+# /app/<bazel package of target>/<image target name>.binary.runfiles/
+# and then sets the CWD as a subdirectory of the runfiles dir.
+# So to get the binary location, go up two dirs and get the file ending in .binary
+WORKER_PY_WRAPPER_PATH=$(python3 -c "from pathlib import Path; import os; print(list(Path(os.getcwd()).parent.parent.glob('*.binary'))[0].as_posix())")
+
+$WORKER_PY_WRAPPER_PATH --emulate-interpreter "$@"
+exit $?
