@@ -67,3 +67,21 @@ class Resolver(abc.ABC):
             If the resource fails to deactivate.
         """
         pass
+
+    @classmethod
+    def entering_resource_context(cls, resource: AbstractExternalResource):
+        """A hook resolvers may use to take action once a resource is activated.
+
+        This will be called after the resource is in the ACTIVE state, but before
+        the "with" block for the resource is entered.
+        """
+        pass
+
+    @classmethod
+    def exiting_resource_context(cls, resource_id: str):
+        """A hook resolvers may use to take action once a resource is no longer used.
+
+        This will be called as the "with" block for the resource is being exited. There
+        are no guarantees about the status of the resource in this case.
+        """
+        pass

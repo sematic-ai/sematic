@@ -20,7 +20,6 @@ from sematic.db.models.factories import make_artifact, make_run_from_future
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.graph import Graph
-from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 from sematic.resolvers.resource_managers.server_manager import ServerResourceManager
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
@@ -48,7 +47,7 @@ class LocalResolver(SilentResolver):
         entire pipeline again.
     """
 
-    _resource_manager: AbstractResourceManager = ServerResourceManager()
+    _resource_manager: Optional[ServerResourceManager] = None  # type: ignore
 
     def __init__(self, rerun_from: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
@@ -578,6 +577,13 @@ class LocalResolver(SilentResolver):
         self._buffer_runs.clear()
         self._buffer_artifacts.clear()
         self._buffer_edges.clear()
+
+    @classmethod
+    def _get_resource_manager(cls) -> ServerResourceManager:
+        # lazy init because ServerResourceManager may call the API on init
+        if cls._resource_manager is None:
+            cls._resource_manager = ServerResourceManager()
+        return cls._resource_manager
 
 
 def make_edge_key(edge: Edge) -> str:

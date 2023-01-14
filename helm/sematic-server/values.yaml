@@ -76,12 +76,12 @@ service_account:
   # one that already exists
   create: true
 
+  # Annotations to add to the service account
+  annotations: {}
+
 worker:
   service_account:
     name: default
-
-  # Annotations to add to the service account
-  annotations: {}
 
 service:
   create: false

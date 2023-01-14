@@ -31,7 +31,11 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
         return jsonify_error(f"No such resource: {resource_id}", HTTPStatus.NOT_FOUND)
 
     updated_resource = None
-    if record.managed_by is ManagedBy.SERVER and refresh_remote:
+    if (
+        record.managed_by is ManagedBy.SERVER
+        and refresh_remote
+        and not record.resource_state.is_terminal()
+    ):
         logger.info(
             "Updating resource '%s', currently in state '%s'",
             record.id,
@@ -57,6 +61,69 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
         save_external_resource_record(record)
 
     payload = dict(external_resource=record.to_json_encodable())
+
+    return flask.jsonify(payload)
+
+
+@sematic_api.route(
+    "/api/v1/external_resources/<resource_id>/activate", methods=["POST"]
+)
+@authenticate
+def activate_resource_endpoint(
+    user: Optional[User], resource_id: str
+) -> flask.Response:
+
+    record = get_external_resource_record(resource_id=resource_id)
+    if record is None:
+        return jsonify_error(
+            "No such resource: {}".format(resource_id), HTTPStatus.NOT_FOUND
+        )
+    try:
+        activated = record.resource.activate(is_local=False)
+    except Exception as e:
+        message = "Error activating resource {}: {}".format(resource_id, e)
+        logger.exception(message)
+        return jsonify_error(
+            message,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+        )
+    record = ExternalResource.from_resource(activated)
+    record = save_external_resource_record(record)
+    payload = dict(external_resource=record.to_json_encodable())  # type: ignore
+
+    return flask.jsonify(payload)
+
+
+@sematic_api.route(
+    "/api/v1/external_resources/<resource_id>/deactivate", methods=["POST"]
+)
+@authenticate
+def deactivate_resource_endpoint(
+    user: Optional[User], resource_id: str
+) -> flask.Response:
+
+    record = get_external_resource_record(resource_id=resource_id)
+    if record is None:
+        return jsonify_error(
+            "No such resource: {}".format(resource_id), HTTPStatus.NOT_FOUND
+        )
+
+    if record.resource_state.is_terminal():
+        payload = dict(external_resource=record.to_json_encodable())  # type: ignore
+        return flask.jsonify(payload)
+
+    try:
+        deactivated = record.resource.deactivate()
+    except Exception as e:
+        message = "Error deactivating resource {}: {}".format(resource_id, e)
+        logger.exception(message)
+        return jsonify_error(
+            message,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+        )
+    record = ExternalResource.from_resource(deactivated)
+    record = save_external_resource_record(record)
+    payload = dict(external_resource=record.to_json_encodable())  # type: ignore
 
     return flask.jsonify(payload)
 
