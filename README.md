@@ -82,6 +82,8 @@ Then run it with:
 $ python3 -m my_new_project
 ```
 
+To deploy Sematic to Kubernetes and leverage cloud resources, see our [documentation](https://docs.sematic.dev).
+
 ## Features
 
 - **Lightweight Python SDK** – define arbitrarily complex end-to-end pipelines
