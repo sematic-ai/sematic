@@ -86,7 +86,7 @@ To deploy Sematic to Kubernetes and leverage cloud resources, see our [documenta
 
 - **Lightweight Python SDK** – define arbitrarily complex end-to-end pipelines
 - **Pipeline nesting** – arbitrarily nest pipelines into larger pipelines
-- **Dynamic graphs** – Python-defined graphds allow for iterations, conditional branching, etc.
+- **Dynamic graphs** – Python-defined graphs allow for iterations, conditional branching, etc.
 - **Lineage tracking** – all inputs and outputs of all steps are persisted and tracked
 - **Runtime type-checking** – fail early with run-time type checking
 - **Web dashboard** – Monitor, track, and visualize pipelines in a modern web UI
