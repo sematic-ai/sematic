@@ -11,7 +11,11 @@ from sematic.plugins.abstract_kuberay_wrapper import (
     RayNodeConfig,
     ScalingGroup,
 )
-from sematic.plugins.kuberay_wrapper.basic import BasicKuberayWrapper
+from sematic.plugins.kuberay_wrapper.basic import (
+    BasicKuberaySettingsVar,
+    BasicKuberayWrapper,
+)
+from sematic.tests.fixtures import environment_variables
 from sematic.utils.exceptions import UnsupportedError, UnsupportedVersionError
 
 _TEST_IMAGE_URI = "test_image_uri"
@@ -109,6 +113,8 @@ _EXPECTED_HEAD_ONLY_MANIFEST = {
                             },
                         }
                     ],
+                    "tolerations": [],
+                    "nodeSelector": {},
                     "volumes": [{"name": "ray-logs", "emptyDir": {}}],
                 },
             },
@@ -154,6 +160,8 @@ _EXPECTED_SINGLE_WORKER_GROUP = {
                     ],
                 }
             ],
+            "tolerations": [],
+            "nodeSelector": {},
             "volumes": [{"name": "ray-logs", "emptyDir": {}}],
         }
     },
@@ -223,7 +231,7 @@ def test_unsupported_kuberay():
         )
 
 
-def test_gpus():
+def test_gpus_not_supported():
     with pytest.raises(UnsupportedError):
         BasicKuberayWrapper.create_cluster_manifest(  # type: ignore
             image_uri=_TEST_IMAGE_URI,
@@ -258,3 +266,48 @@ def test_gpus():
             ),
             kuberay_version=_TEST_KUBERAY_VERSION,
         )
+
+
+def test_head_node_gpus():
+    expected_tolerations = [
+        dict(
+            key="nvidia.com/gpu",
+            operator="Equal",
+            value="true",
+            effect="NoSchedule",
+        )
+    ]
+    expected_node_selector = {
+        "nvidia.com/gpu": "true",
+    }
+    with environment_variables(
+        {
+            BasicKuberaySettingsVar.RAY_SUPPORTS_GPUS.value: "true",
+            BasicKuberaySettingsVar.RAY_GPU_TOLERATIONS.value: json.dumps(
+                expected_tolerations
+            ),
+            BasicKuberaySettingsVar.RAY_GPU_NODE_SELECTOR.value: json.dumps(
+                expected_node_selector
+            ),
+        }
+    ):
+        manifest = BasicKuberayWrapper.create_cluster_manifest(  # type: ignore
+            image_uri=_TEST_IMAGE_URI,
+            cluster_name=_TEST_CLUSTER_NAME,
+            cluster_config=replace(
+                _MULTIPLE_WORKER_GROUP_CONFIG,
+                head_node=replace(
+                    _MULTIPLE_WORKER_GROUP_CONFIG.head_node,
+                    gpu_count=1,
+                ),
+            ),
+            kuberay_version=_TEST_KUBERAY_VERSION,
+        )
+    assert (
+        manifest["spec"]["headGroupSpec"]["template"]["spec"]["nodeSelector"]
+        == expected_node_selector
+    )
+    assert (
+        manifest["spec"]["headGroupSpec"]["template"]["spec"]["tolerations"]
+        == expected_tolerations
+    )

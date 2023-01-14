@@ -1,9 +1,11 @@
 # Standard Library
+import json
 from copy import deepcopy
-from typing import Any, Dict, Union
+from typing import Any, Dict, Type, Union
 
 # Sematic
 from sematic.abstract_plugin import AbstractPluginSettingsVar
+from sematic.config.settings import get_plugin_setting
 from sematic.plugins.abstract_kuberay_wrapper import (
     AbstractKuberayWrapper,
     RayClusterConfig,
@@ -16,8 +18,11 @@ from sematic.utils.exceptions import UnsupportedError, UnsupportedVersionError
 
 class BasicKuberaySettingsVar(AbstractPluginSettingsVar):
     RAY_GPU_NODE_SELECTOR = "RAY_GPU_NODE_SELECTOR"
+    RAY_BASE_NODE_SELECTOR = "RAY_BASE_NODE_SELECTOR"
     RAY_GPU_TOLERATIONS = "RAY_GPU_TOLERATIONS"
+    RAY_BASE_TOLERATIONS = "RAY_BASE_TOLERATIONS"
     RAY_GPU_RESOURCE_REQUEST_KEY = "RAY_GPU_RESOURCE_REQUEST_KEY"
+    RAY_SUPPORTS_GPUS = "RAY_SUPPORTS_GPUS"
 
 
 class _NeedsOverride:
@@ -66,6 +71,8 @@ _WORKER_GROUP_TEMPLATE: Dict[str, Any] = {
                     ],
                 }
             ],
+            "tolerations": _NeedsOverride,
+            "nodeSelector": _NeedsOverride,
             "volumes": [{"name": "ray-logs", "emptyDir": {}}],
         }
     },
@@ -109,6 +116,8 @@ _MANIFEST_TEMPLATE: Dict[str, Any] = {
                             },
                         }
                     ],
+                    "tolerations": _NeedsOverride,
+                    "nodeSelector": _NeedsOverride,
                     "volumes": [{"name": "ray-logs", "emptyDir": {}}],
                 },
             },
@@ -121,6 +130,10 @@ _MANIFEST_TEMPLATE: Dict[str, Any] = {
 class BasicKuberayWrapper(AbstractKuberayWrapper):
     _manifest_template = _MANIFEST_TEMPLATE
     _worker_group_template = _WORKER_GROUP_TEMPLATE
+
+    @classmethod
+    def get_settings_vars(cls) -> Type[AbstractPluginSettingsVar]:
+        return BasicKuberaySettingsVar
 
     @classmethod
     def create_cluster_manifest(  # type: ignore
@@ -140,7 +153,6 @@ class BasicKuberayWrapper(AbstractKuberayWrapper):
             image_uri, cluster_config.head_node, manifest["spec"]["headGroupSpec"]
         )
         manifest["spec"]["headGroupSpec"] = head_group_spec
-
         manifest["spec"]["workerGroupSpecs"] = [
             cls._make_worker_group_spec(image_uri, group, i)
             for i, group in enumerate(cluster_config.scaling_groups)
@@ -164,6 +176,12 @@ class BasicKuberayWrapper(AbstractKuberayWrapper):
         group_manifest["template"]["spec"]["containers"][0]["resources"][
             "requests"
         ] = cls._requests_for_node(worker_group.worker_nodes)
+        group_manifest["template"]["spec"]["nodeSelector"] = cls._get_node_selector(
+            worker_group.worker_nodes
+        )
+        group_manifest["template"]["spec"]["tolerations"] = cls._get_tolerations(
+            worker_group.worker_nodes
+        )
 
         return group_manifest
 
@@ -191,9 +209,11 @@ class BasicKuberayWrapper(AbstractKuberayWrapper):
         requires_gpus = cluster_config.head_node.gpu_count != 0 or any(
             group.worker_nodes.gpu_count != 0 for group in cluster_config.scaling_groups
         )
-        if requires_gpus:
+        supports_gpus = _get_setting(BasicKuberaySettingsVar.RAY_SUPPORTS_GPUS, False)
+        if requires_gpus and not supports_gpus:
             raise UnsupportedError(
-                f"The Kuberay plugin {cls.__name__} does not support nodes with GPUs"
+                f"The Kuberay plugin {cls.__name__} is not configured "
+                "to support nodes with GPUs"
             )
 
     @classmethod
@@ -214,8 +234,40 @@ class BasicKuberayWrapper(AbstractKuberayWrapper):
         head_group_template["template"]["spec"]["containers"][0]["resources"][
             "requests"
         ] = cls._requests_for_node(node_config)
+        head_group_template["template"]["spec"][
+            "nodeSelector"
+        ] = cls._get_node_selector(node_config)
+        head_group_template["template"]["spec"]["tolerations"] = cls._get_tolerations(
+            node_config
+        )
 
         return head_group_template
+
+    @classmethod
+    def _get_node_selector(cls, node_config: RayNodeConfig) -> Dict[str, Any]:
+        node_selector = {}
+        base_selector = _get_setting(BasicKuberaySettingsVar.RAY_BASE_NODE_SELECTOR, {})
+        node_selector.update(base_selector)
+        if node_config.gpu_count > 0:
+            gpu_selector = _get_setting(
+                BasicKuberaySettingsVar.RAY_GPU_NODE_SELECTOR, {}
+            )
+            node_selector.update(gpu_selector)
+        return node_selector
+
+    @classmethod
+    def _get_tolerations(cls, node_config: RayNodeConfig) -> Dict[str, Any]:
+        tolerations = []
+        base_tolerations = _get_setting(
+            BasicKuberaySettingsVar.RAY_BASE_TOLERATIONS, []
+        )
+        tolerations.extend(base_tolerations)
+        if node_config.gpu_count > 0:
+            gpu_tolerations = _get_setting(
+                BasicKuberaySettingsVar.RAY_GPU_TOLERATIONS, []
+            )
+            tolerations.extend(gpu_tolerations)
+        return tolerations
 
     @classmethod
     def _limits_for_node(cls, node_config: RayNodeConfig) -> Dict[str, Union[str, int]]:
@@ -226,9 +278,31 @@ class BasicKuberayWrapper(AbstractKuberayWrapper):
     def _requests_for_node(
         cls, node_config: RayNodeConfig
     ) -> Dict[str, Union[str, int]]:
+        gpu_requests = {}
+        if node_config.gpu_count > 0:
+            gpu_request_key = _get_setting(
+                BasicKuberaySettingsVar.RAY_GPU_RESOURCE_REQUEST_KEY, None
+            )
+            if gpu_request_key is None:
+                if node_config.gpu_count > 1:
+                    raise UnsupportedError(
+                        "You are requesting more than one GPU per node, but the server "
+                        "is not configured to support more than one GPU per node."
+                    )
+            else:
+                gpu_requests[gpu_request_key] = node_config.gpu_count
+
         milli_cpu = int(1000 * node_config.cpu)
         memory_mb = int(1024 * node_config.memory_gb)
-        return {
+        requests = {
             "cpu": f"{milli_cpu}m",
             "memory": f"{memory_mb}M",
         }
+        requests.update(gpu_requests)
+        return requests
+
+
+def _get_setting(setting, default):
+    return json.loads(
+        get_plugin_setting(BasicKuberayWrapper, setting, json.dumps(default))
+    )

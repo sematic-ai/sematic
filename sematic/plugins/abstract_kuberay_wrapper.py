@@ -1,7 +1,9 @@
 # Standard Library
-from abc import ABC, abstractclassmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+
+# Sematic
+from sematic.abstract_plugin import AbstractPlugin
 
 # This should be the manifest that can be passed to the
 # Kubernetes API for the RayCluster CRD here:
@@ -132,10 +134,18 @@ def SimpleRayCluster(
     )
 
 
-class AbstractKuberayWrapper(ABC):
+class AbstractKuberayWrapper(AbstractPlugin):
     """Plugin to convert between a RayClusterConfig & a k8s manifest for the cluster."""
 
-    @abstractclassmethod
+    @staticmethod
+    def get_author() -> str:
+        return "github.com/sematic-ai"
+
+    @staticmethod
+    def get_version() -> Tuple[int, int, int]:
+        return 0, 1, 0
+
+    @classmethod
     def create_cluster_manifest(
         cls,
         image_uri: str,
@@ -168,4 +178,6 @@ class AbstractKuberayWrapper(ABC):
         UnsupportedError:
             If GPUs are requested but the plugin doesn't support configuring for GPUs.
         """
-        pass
+        raise NotImplementedError(
+            "Child classes should implement create_cluster_manifest"
+        )
