@@ -11,6 +11,21 @@ RayClusterManifest = Dict[str, Any]
 
 @dataclass(frozen=True)
 class RayNodeConfig:
+    """Configuration for an individual Ray Head/Worker compute node
+
+    Attributes
+    ----------
+    cpu:
+        Number of CPUs for each node (supports fractional CPUs).
+    memory_gb:
+        Gigabytes of memory for each node (supports fractional values).
+    gpu_count:
+        The number of GPUs to attach. Not all deployments support GPUs.
+    gpu_kind:
+        A string describing the kind of GPU desired. Valid values differ
+        for different Kuberay plugin wrappers.
+    """
+
     cpu: float
     memory_gb: float
     gpu_count: int = 0
@@ -19,7 +34,21 @@ class RayNodeConfig:
 
 @dataclass(frozen=True)
 class ScalingGroup:
-    """Configuration for a group of Ray workers that will scale as a unit"""
+    """Configuration for a group of Ray workers that will scale as a unit.
+
+    Attributes
+    ----------
+    worker_nodes:
+        A description of the compute resources available for each node in the
+        scaling group.
+    min_workers:
+        The minimum number of workers the scaling group can scale to. Must be
+        non-negative.
+    max_workers:
+        The maximum number of workers the scaling group can scale to. Must be
+        equal to or greater than min_workers. For a fixed-size scaling group,
+        set this equal to min_workers.
+    """
 
     worker_nodes: RayNodeConfig
     min_workers: int = 1
@@ -47,12 +76,65 @@ def _get_ray_version() -> str:
 
 @dataclass(frozen=True)
 class RayClusterConfig:
+    """Description of a Ray Cluster
+
+    Attributes
+    ----------
+    head_node:
+        The configuration for the head node
+    scaling_groups:
+        A list of scaling groups. Each scaling group may have different
+        properties for the nodes in the group.
+    ray_version:
+        The version of Ray the cluster should use. This will be populated
+        automatically to the version of Ray currently installed, if Ray
+        is already installed
+    """
+
     head_node: RayNodeConfig
     scaling_groups: List[ScalingGroup] = field(default_factory=list)
     ray_version: str = field(default_factory=_get_ray_version)
 
 
+def SimpleRayCluster(
+    n_nodes: int, node_config: RayNodeConfig, ray_version: Optional[str] = None
+) -> RayClusterConfig:
+    """Configuration for a RayCluster with a fixed number of identical compute nodes
+
+    Parameters
+    ----------
+    n_nodes:
+        The number of nodes in the cluster, including the head node
+    node_config:
+        The configuration for each node in the cluster
+    ray_version:
+        The version of Ray used by the cluster. Will be populated automatically
+        if Ray is installed. Otherwise it must be explicitly configured.
+    """
+    if ray_version is None:
+        ray_version = _get_ray_version()
+    if n_nodes < 1:
+        raise ValueError("There must be at least one node in the Ray Cluster")
+    n_workers = n_nodes - 1
+    scaling_groups = []
+    if n_workers > 0:
+        scaling_groups.append(
+            ScalingGroup(
+                worker_nodes=node_config,
+                min_workers=n_workers,
+                max_workers=n_workers,
+            )
+        )
+    return RayClusterConfig(
+        head_node=node_config,
+        scaling_groups=scaling_groups,
+        ray_version=ray_version,
+    )
+
+
 class AbstractKuberayWrapper(ABC):
+    """Plugin to convert between a RayClusterConfig & a k8s manifest for the cluster."""
+
     @abstractclassmethod
     def create_cluster_manifest(
         cls,
@@ -60,7 +142,6 @@ class AbstractKuberayWrapper(ABC):
         cluster_name: str,
         cluster_config: RayClusterConfig,
         kuberay_version: str,
-        ray_version: str,
     ) -> RayClusterManifest:
         """Create a kubernetes manifest for a Ray cluster.
 
@@ -83,6 +164,8 @@ class AbstractKuberayWrapper(ABC):
         Raises
         ------
         UnsupportedVersionError:
-            If the provided version of Kuberay is not one that's supported by this plugin
+            If the provided version of Kuberay is not one that's supported by this plugin.
+        UnsupportedError:
+            If GPUs are requested but the plugin doesn't support configuring for GPUs.
         """
         pass

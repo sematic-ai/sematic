@@ -166,7 +166,6 @@ def test_head_node_only_cluster():
         cluster_name=_TEST_CLUSTER_NAME,
         cluster_config=_HEAD_NODE_ONLY_CONFIG,
         kuberay_version=_TEST_KUBERAY_VERSION,
-        ray_version=_TEST_RAY_VERSION,
     )
 
     # completed manifest should be json encodable
@@ -180,7 +179,6 @@ def test_single_worker_cluster():
         cluster_name=_TEST_CLUSTER_NAME,
         cluster_config=_SINGLE_WORKER_GROUP_CONFIG,
         kuberay_version=_TEST_KUBERAY_VERSION,
-        ray_version=_TEST_RAY_VERSION,
     )
 
     # completed manifest should be json encodable
@@ -198,7 +196,6 @@ def test_multiple_worker_cluster():
         cluster_name=_TEST_CLUSTER_NAME,
         cluster_config=_MULTIPLE_WORKER_GROUP_CONFIG,
         kuberay_version=_TEST_KUBERAY_VERSION,
-        ray_version=_TEST_RAY_VERSION,
     )
 
     # completed manifest should be json encodable
@@ -223,7 +220,6 @@ def test_unsupported_kuberay():
             cluster_name=_TEST_CLUSTER_NAME,
             cluster_config=_MULTIPLE_WORKER_GROUP_CONFIG,
             kuberay_version="v0.3.0",
-            ray_version=_TEST_RAY_VERSION,
         )
 
 
@@ -240,7 +236,6 @@ def test_gpus():
                 ),
             ),
             kuberay_version=_TEST_KUBERAY_VERSION,
-            ray_version=_TEST_RAY_VERSION,
         )
 
     with pytest.raises(UnsupportedError):
@@ -262,5 +257,4 @@ def test_gpus():
                 ],
             ),
             kuberay_version=_TEST_KUBERAY_VERSION,
-            ray_version=_TEST_RAY_VERSION,
         )

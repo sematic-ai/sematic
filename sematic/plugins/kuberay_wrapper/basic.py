@@ -3,6 +3,7 @@ from copy import deepcopy
 from typing import Any, Dict, Union
 
 # Sematic
+from sematic.abstract_plugin import AbstractPluginSettingsVar
 from sematic.plugins.abstract_kuberay_wrapper import (
     AbstractKuberayWrapper,
     RayClusterConfig,
@@ -11,6 +12,12 @@ from sematic.plugins.abstract_kuberay_wrapper import (
     ScalingGroup,
 )
 from sematic.utils.exceptions import UnsupportedError, UnsupportedVersionError
+
+
+class BasicKuberaySettingsVar(AbstractPluginSettingsVar):
+    RAY_GPU_NODE_SELECTOR = "RAY_GPU_NODE_SELECTOR"
+    RAY_GPU_TOLERATIONS = "RAY_GPU_TOLERATIONS"
+    RAY_GPU_RESOURCE_REQUEST_KEY = "RAY_GPU_RESOURCE_REQUEST_KEY"
 
 
 class _NeedsOverride:
@@ -122,13 +129,12 @@ class BasicKuberayWrapper(AbstractKuberayWrapper):
         cluster_name: str,
         cluster_config: RayClusterConfig,
         kuberay_version: str,
-        ray_version: str,
     ) -> RayClusterManifest:
         cls._check_kuberay_version(kuberay_version)
         cls._validate_cluster_config(cluster_config=cluster_config)
         manifest = deepcopy(cls._manifest_template)
         manifest["metadata"]["name"] = cluster_name
-        manifest["spec"]["rayVersion"] = ray_version
+        manifest["spec"]["rayVersion"] = cluster_config.ray_version
 
         head_group_spec = cls._make_head_group_spec(
             image_uri, cluster_config.head_node, manifest["spec"]["headGroupSpec"]
