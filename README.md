@@ -30,9 +30,7 @@
 
 Sematic is an open-source ML development platform. It lets ML Engineers and Data Scientists write arbitrarily complex end-to-end pipelines with simple Python and execute them on their local machine, in a cloud VM, or on a Kubernetes cluster to leverage cloud resources.
 
-Sematic is based on learnings gathered at top self-driving cars companies. It enables chaining data processing jobs (e.g. Apache Spark) with model training (e.g. PyTorch, Tensorflow), or any other arbitrary Python business logic.
-
-Sematic pipelines are type-safe, traceable, reproducible, and visualizable in a modern web dashboard.
+Sematic is based on learnings gathered at top self-driving cars companies. It enables chaining data processing jobs (e.g. Apache Spark) with model training (e.g. PyTorch, Tensorflow), or any other arbitrary Python business logic into type-safe, traceable, reproducible end-to-end pipelines that can be monitored and visualized in a modern web dashboard.
 
 Read our [documentation](https://docs.sematic.dev) and join our [Discord channel](https://discord.gg/4KZJ6kYVax).
 
@@ -107,7 +105,7 @@ To deploy Sematic to Kubernetes and leverage cloud resources, see our [documenta
 
 - **Apache Spark** – on-demand in-cluster Spark cluster
 - **Ray** – on-demand Ray in-cluster Ray resources
-- **Snowflake** – easily query your data warehouse
+- **Snowflake** – easily query your data warehouse (other warehouses supported too)
 - **Plotly, Matplotlib** – visualize plot artifacts in the web dashboard
 - **Pandas** – visualize dataframe artifacts in the dashboard
 - **Grafana** – embed Grafana panels in the web dashboard
