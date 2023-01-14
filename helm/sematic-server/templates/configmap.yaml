@@ -18,5 +18,4 @@ data:
 {{ end }}
   KUBERNETES_NAMESPACE: {{ .Release.Namespace }}
   SEMATIC_WORKER_KUBERNETES_SA: {{ .Values.worker.service_account.name | quote }}
-  SEMATIC_RESOURCE_UPDATE_POLL_INTERVAL_SECONDS: {{.Values.worker.resource_update_poll_interval_seconds | quote }}
   SEMATIC_WORKER_API_ADDRESS: "http://{{ .Release.Name }}"

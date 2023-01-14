@@ -317,18 +317,6 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
     ]
 
 
-def get_resource_poll_interval_seconds() -> int:
-    """Get the interval between polls for updates to external resource state
-
-    Returns
-    -------
-    A dictionary where the keys are selected elements from the ServerSettingsVar
-    enum, and the values are the string values for those settings.
-    """
-    response = _get("/meta/env/resource_poll_interval_seconds")
-    return response["value"]
-
-
 @retry(tries=3, delay=10, jitter=1)
 def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
     """Ask the server to update the status of given run ids if needed and return them.

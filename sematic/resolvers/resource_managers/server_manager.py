@@ -12,15 +12,16 @@ from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 logger = logging.getLogger(__name__)
 
 
+_DEFAULT_UPDATE_POLL_INTERVAL_SECONDS = 60
+
+
 class ServerResourceManager(AbstractResourceManager):
     """ResourceManager which uses server APIs to manage external resource metadata."""
 
-    def __init__(self, update_poll_interval_seconds: Optional[int] = None) -> None:
+    def __init__(
+        self, update_poll_interval_seconds: int = _DEFAULT_UPDATE_POLL_INTERVAL_SECONDS
+    ) -> None:
         super().__init__()
-        if update_poll_interval_seconds is None:
-            update_poll_interval_seconds = (
-                api_client.get_resource_poll_interval_seconds()
-            )
 
         self._update_poll_interval_seconds = update_poll_interval_seconds
         self._resource_ids_updating: Set[str] = set()

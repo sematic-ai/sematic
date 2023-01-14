@@ -83,11 +83,6 @@ worker:
   service_account:
     name: default
 
-  # If you are using external resources (such as Ray/Spark) in a
-  # way that's managed by the Sematic server, this sets the interval
-  # that workers will use between requests for updates on those resources 
-  resource_update_poll_interval_seconds: 60
-
 service:
   create: false
   type: ClusterIP
