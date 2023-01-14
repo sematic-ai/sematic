@@ -101,22 +101,11 @@ def sematic_pipeline(
             tags = ["manual"],
         )
 
-        uri_rule_name = "{}_{}_generate_image_uri".format(name, tag)
-        image_uris.append(uri_rule_name)
-
-        native.genrule(
-            name = uri_rule_name,
-            srcs = [":{}_{}_push.digest".format(name, tag)],
-            outs = ["{}_{}_push_at_build.uri".format(name, tag)],
-            cmd = "echo -n {}/{}@`cat $(location {}_{}_push.digest)` > $@".format(registry, repository, name, tag),
-        )
-
     py_binary(
         name = "{}_binary".format(name),
         srcs = ["{}.py".format(name)],
         main = "{}.py".format(name),
         deps = deps,
-        data = image_uris,
         tags = ["manual"],
     )
 
@@ -131,6 +120,7 @@ def sematic_pipeline(
     sematic_push_and_run(
         name = name,
         push_rule_names = push_rule_names,
+        registry = registry
     )
 
 def base_images():
@@ -176,14 +166,15 @@ def _sematic_push_and_run(ctx):
         # A common pattern is to have the bazel binary checked into the root of the
         # workspace. If that's present, use it instead of whatever is on the PATH.
         "test -f \"$BUILD_WORKSPACE_DIRECTORY/bazel\" && BAZEL_BIN=\"$BUILD_WORKSPACE_DIRECTORY/bazel\" || BAZEL_BIN=\"$(which bazel)\"",
-        "if test -f \"$BAZEL_BIN\"; then",
-        "\tcd $BUILD_WORKING_DIRECTORY",
-        "\t{} && \"$BAZEL_BIN\" run {}_binary -- $@".format(push_rule_runs, ctx.label),
-        "else",
-        # Should probably not happen unless somebody has an exotic bazel setup.
-        # At least make it clear what the problem is if it ever does happen.
-        "\techo \"!!! bazel executable not found on PATH or in $BUILD_WORKSPACE_DIRECTORY !!!\"",
-        "fi",
+        "echo {} $BAZEL_BIN/{}.digest".format(ctx.attr.registry, ctx.label),
+        #"if test -f \"$BAZEL_BIN\"; then",
+        #"\tcd $BUILD_WORKING_DIRECTORY",
+        #"\t{} && \"$BAZEL_BIN\" run {}_binary -- $@".format(push_rule_runs, ctx.label),
+        #"else",
+        ## Should probably not happen unless somebody has an exotic bazel setup.
+        ## At least make it clear what the problem is if it ever does happen.
+        #"\techo \"!!! bazel executable not found on PATH or in $BUILD_WORKSPACE_DIRECTORY !!!\"",
+        #"fi",
     ]
     command = "touch {}".format(script.path)
     for script_line in script_lines:
