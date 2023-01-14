@@ -43,7 +43,6 @@ def env_endpoint(user: Optional[User]) -> flask.Response:
     env = {}
     for settings in (
         ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID,
-        ServerSettingsVar.KUBERNETES_NAMESPACE,
         ServerSettingsVar.GRAFANA_PANEL_URL,
     ):
         try:

@@ -7,10 +7,10 @@ from sematic.abstract_future import FutureState
 from sematic.calculator import func
 from sematic.future_context import PrivateContext, SematicContext, context, set_context
 from sematic.plugins.abstract_external_resource import ResourceState
-from sematic.resolvers.silent_resolver import ExternalResourceError, SilentResolver
+from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.resolvers.tests.fixtures import FakeExternalResource
 from sematic.retry_settings import RetrySettings
-from sematic.utils.exceptions import ResolutionError
+from sematic.utils.exceptions import ExternalResourceError, ResolutionError
 
 
 @func
@@ -42,7 +42,9 @@ def direct_context_func() -> SematicContext:
 
 @func
 def nested_resolve_func() -> int:
-    return add(1, 2).resolve()
+    # If you don't use SilentResolver() here, the test process
+    # takes MUCH longer to complete
+    return add(1, 2).resolve(SilentResolver())
 
 
 @func
