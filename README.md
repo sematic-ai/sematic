@@ -94,7 +94,7 @@ To deploy Sematic to Kubernetes and leverage cloud resources, see our [documenta
 - **Local execution** – run pipelines on your local machine without any deployment necessary
 - **Cloud orchestration** – run pipelines on Kubernetes to access GPUs and other cloud resources
 - **Heterogeneous compute resources** – run different steps on different machines *e.g. CPUs, memory, GPU, Spark, etc.)
-- **Helm chart deployment**
+- **Helm chart deployment** – install Sematic on your Kubernetes cluster
 - **Pipeline reruns** – rerun pipelines from the UI from an arbitrary point in the graph
 - **Step caching** – cache expensive pipeline steps for faster iteration
 - **Step retry** – recover from transient failures with step retries
