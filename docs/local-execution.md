@@ -20,7 +20,7 @@ server.
 
 Whether the metadata is tracked and visualizable in a local server running on
 your machine or a remote one deployed in your cloud environment is dictated by
-the value of the `SEMATIC_API_ADDRESS` setting, which you can set as such:
+the value of the `SEMATIC_API_ADDRESS` setting, which you can set using the following:
 
 ```shell
 $ sematic set SEMATIC_API_ADDRESS https://address.to.deployed.server

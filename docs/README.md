@@ -4,7 +4,7 @@ Welcome to Sematic.
 
 Sematic is an open-source development platform for Machine Learning (ML) and
 Data Science (DS). It lets users develop arbitrarily complex end-to-end
-pipelines using nothing else than Python, then execute them on a laptop or on
+pipelines using nothing other than Python, then execute them on a laptop or on
 Kubernetes with no code changes.
 
 Sematic comes with the following guarantees:
@@ -19,7 +19,7 @@ Sematic comes with the following guarantees:
   reproducible for guaranteed debuggability.
 * **Local-to-cloud parity** – Sematic aims to make it seamless to scale a local
   prototype into a large-scale cloud pipeline. The same code can run on a laptop
-  and on a Kubernetes cluster without change.
+  and on a Kubernetes cluster with little to no changes.
 
 Sematic comprises the following components:
 
