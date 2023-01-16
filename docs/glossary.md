@@ -78,6 +78,27 @@ Sematic Function on which you called `.resolve()`.
 
 See [Root function](#root-entry-point-function).
 
+## Resolvers
+
+Resolvers dictate how your pipeline gets "resolved". Resolving a pipeline means
+going through its DAG (in-memory graph of `Future` objects), and proceeding to
+executing each step as its inputs are available.
+
+Different resolvers offer different resolution strategies:
+
+- **`SilentResolver`** – will resolve a pipeline without persisting anything to
+  disk or the database. This is ideal for testing or iterating without poluting
+  the database. This also means that pipelines resolved with `SilentResolver`
+  are not tracked and therefore not visualizable in the web dashboard.
+- **`LocalResolver`** – will resolve a pipeline on the machine where it was
+  called (typically you local dev machine). It will persist artifacts and track
+  metadata in the database. Runs will be visualizable in the dashboard. No
+  parallelization is applied, the graph is topologically sorted. See [Local
+  execution](./local-execution.md).
+- **`CloudResolver`** – will submit a pipeline to execute on a Kubernetes
+  cluster. This can be used to leverage step-dependent cloud resources (e.g.
+  GPUs, high-memory VMs, etc.). See [Cloud resolver](./cloud-resolver.md).
+
 ## Root, entry-point function
 
 The root Sematic Function is the one on which you call `.resolve()`. It is the

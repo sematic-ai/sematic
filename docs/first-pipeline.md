@@ -2,7 +2,7 @@
 
 ## Create a new project
 
-To write your own pipeline, start by creating a project:
+To write your first pipeline, start by creating a project:
 
 ```shell
 $ sematic new hello_world
@@ -90,8 +90,8 @@ Now you can run it with
 $ python3 -m hello_world --name "Knight who says Nee"
 ```
 
-You can now follow execution of the pipeline in the UI. For a tour of the UI
-see [Sematic UI](sematic-ui.md).
+You can now follow execution of the pipeline in the dashboard. For a tour,
+see [Web dashboard](sematic-ui.md).
 
 {% hint style="info" %}
 
@@ -105,28 +105,29 @@ can do in Sematic functions:
 * Query a database or data warehouse
 * Query an API
 
-Really anything you can do in Python 🙂.
+Really anything you can do in Python 🙂. See [Capabilities](./capabilities.md)
+for a discussion of what Sematic can support.
 
-Check out [A real ML pipeline](./real-example.md).
+For a more realistic pipeline, see [The MNIST pipeline](./real-example.md).
 
 {% endhint %}
 
 ## What happens when I decorate a function with `@sematic.func`?
 
 The `@sematic.func` decorator converts any plain Python function into a
-so-called ["Sematic Function"](glossary.md). Sematic functions are tracked by
+so-called ["Sematic Function"](functions.md). Sematic functions are tracked by
 Sematic as pipeline steps. This means that their inputs and outputs are
-type-checked and tracked as [Artifacts](glossary.md#artifact), and that you will be able
-to inspect and visualize the function's execution in the UI.
+type-checked and tracked as [Artifacts](glossary.md#artifact), and that you will
+be able to inspect and visualize the function's execution in the UI.
 
-In the case of [cloud execution](glossary.md#cloud-execution), each function can run as its own
-isolated job with its own set of resources.
+In the case of [cloud execution](glossary.md#cloud-execution), each function can
+run as its own isolated container with its own set of resources.
 
 {% hint style="info" %}
 
 Note that calling a Sematic Function returns a **Future** instead of the actual
-value returned by the decorated Python function. Read more about Futures in the
-[Glossary](glossary.md#future).
+value returned by the decorated Python function. Read more about Futures in
+[Future algebra](future-algebra.md).
 
 Futures are the way Sematic constructs the execution graph of your pipeline.
 Futures support a subset of native Python's operation, although we are adding

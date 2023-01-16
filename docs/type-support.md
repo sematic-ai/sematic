@@ -136,6 +136,7 @@ By default, Sematic tries to be smart enough to support all types:
   `Union[T, ...]`, etc.
 * dataclasses: class decorated with `@dataclass` are the recommended way to
   group configuration values
+* `datatime.datetime`
 * Arbitrary classes
 
 For the latter, Sematic provides baseline type-checking (`issubclass`,
