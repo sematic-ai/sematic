@@ -1,16 +1,23 @@
 # Standard Library
 import json
+import logging
 from http import HTTPStatus
-from typing import Dict, List, Literal, Optional, Tuple, Union, cast
+from typing import Callable, Dict, List, Literal, Optional, Tuple, Union, cast
 
 # Third-party
 import flask
 import sqlalchemy
 from sqlalchemy.sql.elements import BooleanClauseList, ColumnElement
 
+logger = logging.getLogger(__name__)
+
 # Default page size
 DEFAULT_LIMIT = 20
 
+ORDER_BY_DIRECTIONS = {
+    "asc": sqlalchemy.asc,
+    "desc": sqlalchemy.desc,
+}
 
 ColumnMapping = Dict[str, sqlalchemy.Column]
 
@@ -25,9 +32,15 @@ Filters = Union[
 
 
 def get_request_parameters(
-    args: Dict[str, str], model: type
+    args: Dict[str, str],
+    model: type,
+    default_order: Literal["asc", "desc"] = "desc",
 ) -> Tuple[
-    int, Optional[str], Optional[sqlalchemy.Column], Optional[BooleanClauseList]
+    int,
+    Callable,
+    Optional[str],
+    Optional[sqlalchemy.Column],
+    Optional[BooleanClauseList],
 ]:
     """
     Extract, validate, and format query parameters.
@@ -35,15 +48,28 @@ def get_request_parameters(
     Parameters
     ----------
     args : Dict[str, str]
-        request argument as returned by `flask.request.args`.
+        The request argument as returned by `flask.request.args`.
+    model : type
+        The Sqlalchemy model for which to tailor the parameters.
+    default_order : Literal["asc", "desc"]
+        The default order to return in case the arguments do not specify an explicit
+        order. Defaults to "desc".
 
     Returns
-    Tuple[int, Optional[str], Optional[str], List[ColumnElement]]
-        limit, custor, group_by, filters
+    -------
+    Tuple[
+        int,
+        Callable,
+        Optional[str],
+        Optional[sqlalchemy.Column],
+        List[ColumnElement]
+    ] : limit, order, cursor, group_by, filters
     """
+    logger.debug("Raw request parameters: %s; model: %s", args, model)
+
     limit: int = int(args.get("limit", DEFAULT_LIMIT))
     if not (limit == -1 or limit > 0):
-        raise Exception("limit must be greater than 0 or -1")
+        raise ValueError("limit must be greater than 0 or -1")
 
     def _none_if_empty(name: str) -> Optional[str]:
         value = args.get(name)
@@ -60,22 +86,28 @@ def get_request_parameters(
 
     if group_by is not None:
         if group_by not in column_mapping:
-            raise ValueError("Unsupported group_by value {}".format(repr(group_by)))
+            raise ValueError(f"Unsupported group_by value {repr(group_by)}")
 
         group_by_column = column_mapping[group_by]
 
     filters_json: str = args.get("filters", "{}")
-    filters: Dict = {}
     try:
-        filters = json.loads(filters_json)
+        filters: Dict = json.loads(filters_json)
     except Exception as e:
-        raise Exception("Malformed filters: {}, error: {}".format(filters_json, e))
+        raise ValueError(f"Malformed filters: {filters_json}, error: {e}")
 
     sql_predicates = (
         _get_sql_predicates(filters, column_mapping) if len(filters) > 0 else None
     )
 
-    return limit, cursor, group_by_column, sql_predicates
+    order = ORDER_BY_DIRECTIONS.get(args.get("order", default_order))
+    if order is None:
+        raise ValueError(
+            f"invalid value for 'order'; expected one of: "
+            f"{list(ORDER_BY_DIRECTIONS.keys())}; got: '{args.get('order')}'"
+        )
+
+    return limit, order, cursor, group_by_column, sql_predicates
 
 
 def jsonify_error(error: str, status: HTTPStatus):
@@ -97,7 +129,7 @@ def _get_sql_predicates(
     filters: Filters, column_mapping: ColumnMapping
 ) -> BooleanClauseList:
     """
-    Basic support for a AND filter predicate.
+    Basic support for AND and OR filter predicates.
 
     filters are of the form:
     ```
@@ -105,6 +137,13 @@ def _get_sql_predicates(
     OR
     {
         "AND": [
+            {"column_name": {"operator": "value"}},
+            {"column_name": {"operator": "value"}}
+        ]
+    }
+    OR
+    {
+        "OR": [
             {"column_name": {"operator": "value"}},
             {"column_name": {"operator": "value"}}
         ]
@@ -119,37 +158,37 @@ def _get_sql_predicates(
         operator = dict(AND=sqlalchemy.and_, OR=sqlalchemy.or_)[operand]
         return operator(
             *[
-                _extract_single_predicate(filter, column_mapping)
-                for filter in filters[operand]
+                _extract_single_predicate(filter_, column_mapping)
+                for filter_ in filters[operand]
             ]
         )
     else:
-        filters = cast(ColumnPredicate, filters)
-        return sqlalchemy.and_(_extract_single_predicate(filters, column_mapping))
+        filter_ = cast(ColumnPredicate, filters)
+        return sqlalchemy.and_(_extract_single_predicate(filter_, column_mapping))
 
 
 def _extract_single_predicate(
-    filter: ColumnPredicate, column_mapping: ColumnMapping
+    filter_: ColumnPredicate, column_mapping: ColumnMapping
 ) -> ColumnElement:
-    column_name = list(filter.keys())[0]
+    column_name = list(filter_.keys())[0]
 
     try:
         column = column_mapping[column_name]
     except KeyError:
-        raise Exception("Unknown filter field: {}".format(column_name))
+        raise Exception(f"Unknown filter field: {column_name}")
 
-    condition = filter[column_name]
+    condition = filter_[column_name]
     if len(condition) == 0:
-        raise Exception("Empty filter: {}".format(filter))
+        raise Exception(f"Empty filter: {filter_}")
 
     operator = list(condition.keys())[0]
     value = condition[operator]
 
-    # Will obviously need to add more, only supporting eq for now
+    # Will obviously need to add more, only supporting eq and in for now
     if operator == "eq":
         return column == value
 
     if operator == "in":
         return column.in_(value)
 
-    raise NotImplementedError("Unsupported filter: {}".format(filter))
+    raise NotImplementedError(f"Unsupported filter: {filter_}")
