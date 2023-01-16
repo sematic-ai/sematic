@@ -13,7 +13,11 @@ RayClusterManifest = Dict[str, Any]
 
 @dataclass(frozen=True)
 class RayNodeConfig:
-    """Configuration for an individual Ray Head/Worker compute node
+    """Configuration for an individual Ray Head/Worker compute node.
+
+    Custom implementations of AbstractKuberayWrapper that allow for
+    more advanced configuration (e.g. selecting among multiple kinds
+    of GPU) can subclass this class and add extra configuration fields.
 
     Attributes
     ----------
@@ -23,15 +27,11 @@ class RayNodeConfig:
         Gigabytes of memory for each node (supports fractional values).
     gpu_count:
         The number of GPUs to attach. Not all deployments support GPUs.
-    gpu_kind:
-        A string describing the kind of GPU desired. Valid values differ
-        for different Kuberay plugin wrappers.
     """
 
     cpu: float
     memory_gb: float
     gpu_count: int = 0
-    gpu_kind: Optional[str] = None
 
 
 @dataclass(frozen=True)
