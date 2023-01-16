@@ -102,9 +102,9 @@ When you decorate a function with `@sematic.func`:
 
 * Calling the function will return a Future of its output value. See [Future Algebra](future-algebra.md)
 * It will only be executed at Graph resolution time, once all its inputs have
-  been resolved too. It will be executed either in-memory (local resolution) or
-  as an isolated cloud job with its own resources (cloud resolution). See
-  [Local and Cloud execution](execution-modes.md)
+  been resolved too. It will be executed either in-memory (see [Local
+  resolution](./local-execution.md)) or as an isolated cloud job with its own
+  resources (See [Cloud resolver](./cloud-resolver.md)).
 * Its inputs and outputs will be type-checked against the declared type annotations
 * Its code and documentation are extracted, tracked and viewable in the UI
 * Its execution status is tracked and viewable in the UI. See [Execution status](#execution-status)
