@@ -348,9 +348,29 @@ class LocalResolver(SilentResolver):
 
         # attempt to directly resolve the run based on previous executions:
         try:
-            original_artifact_and_run = api_client.get_cached_artifact_and_run(
-                cache_key=run.cache_key
+            run_results = api_client.get_runs(
+                limit=1,  # get the original run
+                order="asc",  # it's the oldest
+                cache_key=run.cache_key,  # must hit the cache key
+                future_state="RESOLVED",  # only resolved runs have associated artifacts
             )
+
+            if len(run_results) == 0:
+                logger.debug("Cache key %s did not hit any artifact", run.cache_key)
+                super()._execute_future(future=future)
+                return
+
+            original_run = run_results[0]
+            _, artifacts, edges = api_client.get_graph(
+                run_id=original_run.id, root=False
+            )
+
+            # the above query returns all input and output artifacts, so we try to find
+            # the artifact which belongs to the run's output value
+            original_artifact = self._get_output_artifact(
+                run_id=original_run.id, artifacts=artifacts, edges=edges
+            )
+
         except Exception:
             logger.warning(
                 "Error fetching an artifact for cache key %s; "
@@ -363,13 +383,6 @@ class LocalResolver(SilentResolver):
 
             super()._execute_future(future=future)
             return
-
-        if original_artifact_and_run is None:
-            logger.debug("Cache key %s did not hit any artifact", run.cache_key)
-            super()._execute_future(future=future)
-            return
-
-        original_artifact, original_run = original_artifact_and_run
 
         logger.debug(
             "Cache key %s hit run %s with output artifact %s",
@@ -403,6 +416,18 @@ class LocalResolver(SilentResolver):
 
         value = api_client.get_artifact_value(artifact=original_artifact)
         self._update_future_with_value(future=future, value=value)
+
+    def _get_output_artifact(
+        self, run_id: str, artifacts: List[Artifact], edges: List[Edge]
+    ) -> Artifact:
+
+        for edge in edges:
+            if edge.source_run_id == run_id:
+                for artifact in artifacts:
+                    if artifact.id == edge.artifact_id:
+                        return artifact
+
+        raise ValueError(f"Output Artifact not found in Run {run_id} subgraph")
 
     def _future_did_run(self, future: AbstractFuture) -> None:
         super()._future_did_run(future)
