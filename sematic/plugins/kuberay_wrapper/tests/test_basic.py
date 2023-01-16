@@ -269,6 +269,79 @@ def test_gpus_not_supported():
 
 
 def test_head_node_gpus():
+    gpu_tolerations = [
+        dict(
+            key="nvidia.com/gpu",
+            operator="Equal",
+            value="true",
+            effect="NoSchedule",
+        )
+    ]
+    gpu_node_selector = {
+        "nvidia.com/gpu": "true",
+    }
+    non_gpu_tolerations = [
+        dict(
+            key="foo",
+            operator="Equal",
+            value="bar",
+            effect="NoSchedule",
+        )
+    ]
+    non_gpu_node_selector = {
+        "baz": "qux",
+    }
+    with environment_variables(
+        {
+            BasicKuberaySettingsVar.RAY_SUPPORTS_GPUS.value: "true",
+            BasicKuberaySettingsVar.RAY_GPU_TOLERATIONS.value: json.dumps(
+                gpu_tolerations
+            ),
+            BasicKuberaySettingsVar.RAY_GPU_NODE_SELECTOR.value: json.dumps(
+                gpu_node_selector
+            ),
+            BasicKuberaySettingsVar.RAY_NON_GPU_TOLERATIONS.value: json.dumps(
+                non_gpu_tolerations
+            ),
+            BasicKuberaySettingsVar.RAY_NON_GPU_NODE_SELECTOR.value: json.dumps(
+                non_gpu_node_selector
+            ),
+        }
+    ):
+        manifest = BasicKuberayWrapper.create_cluster_manifest(  # type: ignore
+            image_uri=_TEST_IMAGE_URI,
+            cluster_name=_TEST_CLUSTER_NAME,
+            cluster_config=replace(
+                _MULTIPLE_WORKER_GROUP_CONFIG,
+                head_node=replace(
+                    _MULTIPLE_WORKER_GROUP_CONFIG.head_node,
+                    gpu_count=1,
+                ),
+            ),
+            kuberay_version=_TEST_KUBERAY_VERSION,
+        )
+    assert (
+        manifest["spec"]["headGroupSpec"]["template"]["spec"]["nodeSelector"]
+        == gpu_node_selector
+    )
+    assert (
+        manifest["spec"]["headGroupSpec"]["template"]["spec"]["tolerations"]
+        == gpu_tolerations
+    )
+    assert manifest["spec"]["headGroupSpec"]["template"]["spec"]["containers"][0][
+        "resources"
+    ]["requests"] == {"cpu": "2000m", "memory": "4096M"}
+    assert (
+        manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"]["nodeSelector"]
+        == non_gpu_node_selector
+    )
+    assert (
+        manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"]["tolerations"]
+        == non_gpu_tolerations
+    )
+
+
+def test_worker_node_gpus():
     expected_tolerations = [
         dict(
             key="nvidia.com/gpu",
@@ -289,6 +362,9 @@ def test_head_node_gpus():
             BasicKuberaySettingsVar.RAY_GPU_NODE_SELECTOR.value: json.dumps(
                 expected_node_selector
             ),
+            BasicKuberaySettingsVar.RAY_GPU_RESOURCE_REQUEST_KEY.value: json.dumps(
+                "nvidia.com/gpu"
+            ),
         }
     ):
         manifest = BasicKuberayWrapper.create_cluster_manifest(  # type: ignore
@@ -296,18 +372,28 @@ def test_head_node_gpus():
             cluster_name=_TEST_CLUSTER_NAME,
             cluster_config=replace(
                 _MULTIPLE_WORKER_GROUP_CONFIG,
-                head_node=replace(
-                    _MULTIPLE_WORKER_GROUP_CONFIG.head_node,
-                    gpu_count=1,
-                ),
+                scaling_groups=[
+                    replace(
+                        _MULTIPLE_WORKER_GROUP_CONFIG.scaling_groups[0],
+                        worker_nodes=replace(
+                            _MULTIPLE_WORKER_GROUP_CONFIG.scaling_groups[
+                                0
+                            ].worker_nodes,
+                            gpu_count=2,
+                        ),
+                    )
+                ],
             ),
             kuberay_version=_TEST_KUBERAY_VERSION,
         )
     assert (
-        manifest["spec"]["headGroupSpec"]["template"]["spec"]["nodeSelector"]
+        manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"]["nodeSelector"]
         == expected_node_selector
     )
     assert (
-        manifest["spec"]["headGroupSpec"]["template"]["spec"]["tolerations"]
+        manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"]["tolerations"]
         == expected_tolerations
     )
+    assert manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"]["containers"][0][
+        "resources"
+    ]["requests"] == {"cpu": "1000m", "nvidia.com/gpu": 2, "memory": "2048M"}

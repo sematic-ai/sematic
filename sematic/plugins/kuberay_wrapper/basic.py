@@ -1,7 +1,7 @@
 # Standard Library
 import json
 from copy import deepcopy
-from typing import Any, Dict, Type, Union
+from typing import Any, Dict, Type
 
 # Sematic
 from sematic.abstract_plugin import AbstractPluginSettingsVar
@@ -17,10 +17,36 @@ from sematic.utils.exceptions import UnsupportedError, UnsupportedVersionError
 
 
 class BasicKuberaySettingsVar(AbstractPluginSettingsVar):
+    """Settings for the Kubray wrapper.
+
+    Attributes
+    ----------
+    RAY_GPU_NODE_SELECTOR:
+        The Kubernetes node selector that will be used for Ray nodes
+        that use GPUs. Value should be json encoded into a string.
+    RAY_NON_GPU_NODE_SELECTOR:
+        The Kubernetes node selector that will be used for Ray nodes
+        that don't use GPUs. Value should be json encoded into a string.
+    RAY_GPU_TOLERATIONS:
+        The Kubernetes tokerations that will be used for Ray nodes
+        that use GPUs. Value should be json encoded into a string.
+    RAY_NON_GPU_TOLERATIONS:
+        The Kubernetes tokerations that will be used for Ray nodes
+        that don't use GPUs. Value should be json encoded into a string.
+    RAY_GPU_RESOURCE_REQUEST_KEY:
+        The key that will be used in the Kubernetes resource requests/
+        limits fields to indicate how many GPUs are required for Ray
+        head/worker nodes. If not specified, requests for more than one
+        GPU will be denied. Value should be json encoded into a string.
+    RAY_SUPPORTS_GPUS:
+        Whether Ray heads/workers can be assigned to Kubernetes nodes with
+        GPUs. Should be either set to "true" or "false".
+    """
+
     RAY_GPU_NODE_SELECTOR = "RAY_GPU_NODE_SELECTOR"
-    RAY_BASE_NODE_SELECTOR = "RAY_BASE_NODE_SELECTOR"
+    RAY_NON_GPU_NODE_SELECTOR = "RAY_NON_GPU_NODE_SELECTOR"
     RAY_GPU_TOLERATIONS = "RAY_GPU_TOLERATIONS"
-    RAY_BASE_TOLERATIONS = "RAY_BASE_TOLERATIONS"
+    RAY_NON_GPU_TOLERATIONS = "RAY_NON_GPU_TOLERATIONS"
     RAY_GPU_RESOURCE_REQUEST_KEY = "RAY_GPU_RESOURCE_REQUEST_KEY"
     RAY_SUPPORTS_GPUS = "RAY_SUPPORTS_GPUS"
 
@@ -128,6 +154,16 @@ _MANIFEST_TEMPLATE: Dict[str, Any] = {
 
 
 class BasicKuberayWrapper(AbstractKuberayWrapper):
+    """Implementation designed for conventional K8s setups and recent Kuberay versions
+
+    This implementation is structured so as to be subclassed to customize specific
+    behaviors if more complex setups are required (e.g. mounting custom volumes to
+    Ray nodes, additional pod lifecycle hooks, resource requests differing from resource
+    limits, etc.).
+
+    It supports GPUs, but only if configured to do so (see BasicKuberaySettingsVar).
+    """
+
     _manifest_template = _MANIFEST_TEMPLATE
     _worker_group_template = _WORKER_GROUP_TEMPLATE
 
@@ -245,39 +281,35 @@ class BasicKuberayWrapper(AbstractKuberayWrapper):
 
     @classmethod
     def _get_node_selector(cls, node_config: RayNodeConfig) -> Dict[str, Any]:
-        node_selector = {}
-        base_selector = _get_setting(BasicKuberaySettingsVar.RAY_BASE_NODE_SELECTOR, {})
-        node_selector.update(base_selector)
-        if node_config.gpu_count > 0:
-            gpu_selector = _get_setting(
-                BasicKuberaySettingsVar.RAY_GPU_NODE_SELECTOR, {}
-            )
-            node_selector.update(gpu_selector)
+        uses_gpus = node_config.gpu_count > 0
+        setting = (
+            BasicKuberaySettingsVar.RAY_GPU_NODE_SELECTOR
+            if uses_gpus
+            else BasicKuberaySettingsVar.RAY_NON_GPU_NODE_SELECTOR
+        )
+
+        node_selector = _get_setting(setting, {})
+
         return node_selector
 
     @classmethod
     def _get_tolerations(cls, node_config: RayNodeConfig) -> Dict[str, Any]:
-        tolerations = []
-        base_tolerations = _get_setting(
-            BasicKuberaySettingsVar.RAY_BASE_TOLERATIONS, []
+        uses_gpus = node_config.gpu_count > 0
+        setting = (
+            BasicKuberaySettingsVar.RAY_GPU_TOLERATIONS
+            if uses_gpus
+            else BasicKuberaySettingsVar.RAY_NON_GPU_TOLERATIONS
         )
-        tolerations.extend(base_tolerations)
-        if node_config.gpu_count > 0:
-            gpu_tolerations = _get_setting(
-                BasicKuberaySettingsVar.RAY_GPU_TOLERATIONS, []
-            )
-            tolerations.extend(gpu_tolerations)
+        tolerations = _get_setting(setting, [])
         return tolerations
 
     @classmethod
-    def _limits_for_node(cls, node_config: RayNodeConfig) -> Dict[str, Union[str, int]]:
+    def _limits_for_node(cls, node_config: RayNodeConfig) -> Dict[str, str]:
         # The basic plugin always makes requests & limits the same
         return cls._requests_for_node(node_config)
 
     @classmethod
-    def _requests_for_node(
-        cls, node_config: RayNodeConfig
-    ) -> Dict[str, Union[str, int]]:
+    def _requests_for_node(cls, node_config: RayNodeConfig) -> Dict[str, str]:
         gpu_requests = {}
         if node_config.gpu_count > 0:
             gpu_request_key = _get_setting(
