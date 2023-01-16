@@ -27,7 +27,7 @@ def train(config: TrainingConfig, dataset: FeatureDataset) -> Model:
     return model
   
 @sematic.func
-def eval(config: EvaluationConfig, dataset: FeatureDataset) -> EvaluationMetrics:
+def eval_model(config: EvaluationConfig, dataset: FeatureDataset) -> EvaluationMetrics:
     ...
     return eval_metrics
 
@@ -40,7 +40,7 @@ def train_eval(
 ) -> EvaluationMetrics:
     """Train/eval sub-pipeline."""
     model = train(train_config, train_data)
-    eval_metrics = eval(eval_config, eval_dataset, model)
+    eval_metrics = eval_model(eval_config, eval_dataset, model)
     return eval_metrics
 
 @sematic.func
@@ -57,7 +57,7 @@ See [Sematic functions](./functions.md) for more details.
 ### Futures
 
 Futures are the way Sematic builds a pipeline's execution graph as an in-memory
-DAG. Essentially, when you cann a Sematic Function, it's business logic does not
+DAG. Essentially, when you call a Sematic Function, its business logic does not
 get executed. Instead, a `Future` object is returned and used to create the
 graph.
 
@@ -123,4 +123,4 @@ Different resolvers offer different resolution strategies:
   execution](./local-execution.md).
 - **`CloudResolver`** – will submit a pipeline to execute on a Kubernetes
   cluster. This can be used to leverage step-dependent cloud resources (e.g.
-  GPUs, high-memory VMs, etc.). See [Cloud resolver](./cloud-resolver.md).
+  GPUs, high-memory VMs, etc.). See [Cloud resolver](./cloud-resolver.md). Note that to submit cloud pipelines, you need to [Deploy Sematic](./deploy.md).
