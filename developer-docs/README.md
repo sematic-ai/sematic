@@ -89,6 +89,7 @@ and use a virtual env to test:
 
 ```bash
 $ pip3 install <wheel path>
+$ sematic stop
 $ sematic start
 $ sematic run examples/mnist/pytorch
 ```
