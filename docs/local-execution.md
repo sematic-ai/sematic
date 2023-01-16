@@ -1,5 +1,7 @@
 Sematic lets you iterate on your pipeline locally before submitting it for
-execution on a Kubernetes cluster in your cloud environment.
+execution on a Kubernetes cluster in your cloud environment. Even locally, you
+get some great Sematic perks such as the web dashboard, traceability, and
+visualizations of artifacts.
 
 To do so, select and pass an instance of the `LocalResolver` to your top-level
 pipeline function's `resolve` method.
