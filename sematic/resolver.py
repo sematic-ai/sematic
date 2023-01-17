@@ -20,7 +20,7 @@ class Resolver(abc.ABC):
         ----------
         future: AbstractFuture
             Root future of the graph to resolve.
-        
+
         Returns
         -------
         Any
