@@ -1,6 +1,7 @@
 # Third-party
 import click
 
+
 @click.group("sematic")
 def cli():
     """
