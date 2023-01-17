@@ -4,7 +4,7 @@ from typing import Any, List, Union
 try:
     # Python 3.9
     # Standard Library
-    from types import GenericAlias
+    from types import GenericAlias  # type: ignore
 except ImportError:
     # Python 3.8
     from typing import _GenericAlias as GenericAlias  # type: ignore
