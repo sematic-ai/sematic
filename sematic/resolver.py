@@ -8,8 +8,24 @@ from sematic.plugins.abstract_external_resource import AbstractExternalResource
 
 
 class Resolver(abc.ABC):
+    """
+    Abstract base class for all resolvers. Defines the `Resolver` interfaces.
+    """
     @abc.abstractmethod
     def resolve(self, future: AbstractFuture) -> typing.Any:
+        """
+        Abstract method. Entry-point for the resolution algorithm.
+
+        Parameters
+        ----------
+        future: AbstractFuture
+            Root future of the graph to resolve.
+        
+        Returns
+        -------
+        Any
+            output of the pipeline.
+        """
         pass
 
     @abc.abstractclassmethod
