@@ -25,6 +25,18 @@ def up():
             f"to version {THIS_MIGRATION_SCHEMA_VERSION}"
         )
 
+    # Recover from 0.21.1 corrupted settings files
+    if "dictitems" in user_loaded_yaml:
+        user_loaded_yaml = dict(
+            default=user_loaded_yaml["dictitems"].get(
+                "default", {}
+            ).get("dictitems", {}))
+
+    if "dictitems" in user_loaded_yaml:
+        server_loaded_yaml = dict(default=server_loaded_yaml["dictitems"].get(
+            "default", {}
+            ).get("dictitems", {}))
+
     new_settings = {
         "version": THIS_MIGRATION_SCHEMA_VERSION,
         "profiles": {
@@ -88,9 +100,23 @@ def down():
         f.write(yaml.dump(old_server_settings, Dumper=yaml.Dumper))
 
 
+def _settings_constructor(loader: yaml.Loader, node: yaml.MappingNode):
+    return loader.construct_mapping(node)
+
+
 def _load_settings_yaml(file_name: str) -> Dict[str, Any]:
     config_dir_path = _get_config_dir()
     settings_file_path = os.path.join(config_dir_path, file_name)
+
+    # Enables loading corrupted settings files from 0.21.1 release
+    yaml.Loader.add_constructor(
+        "tag:yaml.org,2002:python/object/new:sematic.config.settings.Settings",
+        _settings_constructor
+    )
+    yaml.Loader.add_constructor(
+        "tag:yaml.org,2002:python/object/new:sematic.config.settings.ProfileSettings",
+        _settings_constructor
+    )
 
     if os.path.isfile(settings_file_path):
         with open(settings_file_path, "r") as f:
