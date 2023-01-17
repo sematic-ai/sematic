@@ -33,7 +33,7 @@ def up():
             .get("dictitems", {})
         )
 
-    if "dictitems" in user_loaded_yaml:
+    if "dictitems" in server_loaded_yaml:
         server_loaded_yaml = dict(
             default=server_loaded_yaml["dictitems"]
             .get("default", {})
