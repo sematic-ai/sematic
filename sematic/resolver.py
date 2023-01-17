@@ -11,6 +11,7 @@ class Resolver(abc.ABC):
     """
     Abstract base class for all resolvers. Defines the `Resolver` interfaces.
     """
+
     @abc.abstractmethod
     def resolve(self, future: AbstractFuture) -> typing.Any:
         """
