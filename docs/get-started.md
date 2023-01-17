@@ -40,7 +40,7 @@ but this mechanism of running the server is still only
 intended for single-user usage.
 {% endhint %}
 
-To stop the server, simply do
+To stop the server, simply do:
 
 ```shell
 $ sematic stop

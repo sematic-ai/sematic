@@ -24,7 +24,7 @@ Sematic is meant to support end-to-end ML training pipelines. End-to-end means
 the ability to produce a final model artifact from raw, labelled data sitting in
 a data warehouse.
 
-The steps in your pipelines could be
+The steps in your pipelines could be:
 
 * **Data mining** – select the data on which you want to train, remove outliers,
   apply selection criteria. This could be implemented e.g. as a Python function
@@ -59,12 +59,12 @@ You can use Sematic as part of your CI pipelines to trigger regression testing j
 
 Every time you make changes to your data processing or training code, you want
 to trigger a pipeline to train your model and generate inferences on a golden
-dataset and ensure no regression were introduced.
+dataset and ensure no regressions were introduced.
 
 This can be achieved by launching a Sematic pipeline from a CI build tool.
 
 ## Data Science pipelines
 
 Even if you're not training models, you can use Sematic to implement Data
-Science pipelines that run statistical modelling and extract plots and metrics
+Science pipelines that run statistical modeling and extract plots and metrics
 from your production data.

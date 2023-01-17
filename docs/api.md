@@ -67,7 +67,7 @@ output of the pipeline.
 A resolver to resolver a graph in-memory.
 
 Each Future's resolution is tracked in the DB as a run. Each individual function's
-input argument and output value is tracked as an artifact.
+input arguments and output value are tracked as artifacts.
 
 #### Parameters
 
@@ -130,14 +130,14 @@ Information on the Kubernetes resources required.
 
 - `node_selector`: Dict[str, str]
 
-    The kind of Kubernetes node that the job must run on. More detail can be
+    The kind of Kubernetes node that the job must run on. More details can be
     found here:
     https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ The
     value of this field will be used as the nodeSelector described there.
 
 - `requests`: Dict[str, str]
 
-    Requests for resources on a kubernetes pod. More detail can be found here:
+    Requests for resources on a kubernetes pod. More details can be found here:
     https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     The values used here will apply to both the "requests" and the "limits" of
     the job.
@@ -265,6 +265,7 @@ https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
     The pod will not be evicted from the node even if the node has
     specified a NoExecute taint, assuming the rest of the toleration
     matches the taint.
+
 - `KubernetesTolerationEffect.All`
 
     The pod will not be evicted from the node even if the node has
@@ -361,6 +362,7 @@ button in the UI.
 - `label`: str
 
     The label of the button that will be displayed in the UI
+
 - `url`: str
 
     The URL to link to

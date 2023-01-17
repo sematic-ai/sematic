@@ -32,10 +32,11 @@ images](./container-images.md).
 
 Sematic will run two types of pods for each pipeline:
 
-* **Resolver pod** – this is where the graph of your pipeline gets processed.
-  You can see this as a "driver" job.
+* **Driver pod** – this is where the graph of your pipeline gets processed,
+  and where the `Resolver` and `inline=True` pipeline steps run. This pod
+  has the word "driver" in its name.
 * **Worker pods** – this is where individual pipeline steps will be run if they
-  are marked as `inline=False`.
+  are marked as `inline=False`. These pods have the work "worker" in their name.
 
 By default, the resolution of the graph and all pipeline steps will run in a
 single pod, the resolver pod. This is fine for minor pipeline steps that take up

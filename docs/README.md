@@ -39,7 +39,7 @@ Sematic comes with the following features:
 - **Artifact visualization** – visualize all inputs and outputs of all steps in the web dashboard
 - **Local execution** – run pipelines on your local machine without any deployment necessary
 - **Cloud orchestration** – run pipelines on Kubernetes to access GPUs and other cloud resources
-- **Heterogeneous compute resources** – run different steps on different machines *e.g. CPUs, memory, GPU, Spark, etc.)
+- **Heterogeneous compute resources** – run different steps on different machines (e.g. CPUs, memory, GPU, Spark, etc.)
 - **Helm chart deployment** – install Sematic on your Kubernetes cluster
 - **Pipeline reruns** – rerun pipelines from the UI from an arbitrary point in the graph
 - **Step caching** – cache expensive pipeline steps for faster iteration
