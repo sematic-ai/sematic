@@ -103,6 +103,7 @@ EXIT_HELP = (
     "If specified without a value, defaults to 0. Defaults to None."
 )
 
+
 class StoreCacheNamespace(argparse.Action):
     """Custom action to store the cache namespace string and the cache flag."""
 
