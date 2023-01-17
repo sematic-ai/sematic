@@ -5,6 +5,47 @@
    :alt: Sematic Banner
 
 
+
+.. image:: https://img.shields.io/pypi/v/sematic?style=for-the-badge
+   :target: https://img.shields.io/pypi/v/sematic?style=for-the-badge
+   :alt: PyPI
+
+
+.. image:: https://img.shields.io/circleci/build/github/sematic-ai/sematic/main?label=CircleCI&style=for-the-badge&token=c8e0115ddccadc17b98ab293b32cad27026efb25
+   :target: https://app.circleci.com/pipelines/github/sematic-ai/sematic?branch=main&filter=all
+   :alt: CircleCI
+
+
+.. image:: https://img.shields.io/pypi/l/sematic?style=for-the-badge
+   :target: https://img.shields.io/pypi/l/sematic?style=for-the-badge
+   :alt: PyPI - License
+
+
+.. image:: https://img.shields.io/badge/Python-3.8-blue?style=for-the-badge&logo=none
+   :target: https://python.org
+   :alt: Python 3.8
+
+
+.. image:: https://img.shields.io/badge/Python-3.9-blue?style=for-the-badge&logo=none
+   :target: https://python.org
+   :alt: Python 3.9
+
+
+.. image:: https://img.shields.io/discord/983789877927747714?label=DISCORD&style=for-the-badge
+   :target: https://img.shields.io/discord/983789877927747714?label=DISCORD&style=for-the-badge
+   :alt: Discord
+
+
+.. image:: https://img.shields.io/badge/Made_by-Sematic_🦊-E19632?style=for-the-badge&logo=none
+   :target: https://sematic.dev
+   :alt: Made By Sematic
+
+
+.. image:: https://img.shields.io/pypi/dm/sematic?style=for-the-badge
+   :target: https://img.shields.io/pypi/dm/sematic?style=for-the-badge
+   :alt: PyPI - Downloads
+
+
 Sematic is an open-source ML development platform. It lets ML Engineers and Data Scientists write arbitrarily complex end-to-end pipelines with simple Python and execute them on their local machine, in a cloud VM, or on a Kubernetes cluster to leverage cloud resources.
 
 Sematic is based on learnings gathered at top self-driving car companies. It enables chaining data processing jobs (e.g. Apache Spark) with model training (e.g. PyTorch, Tensorflow), or any other arbitrary Python business logic into type-safe, traceable, reproducible end-to-end pipelines that can be monitored and visualized in a modern web dashboard.
