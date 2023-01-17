@@ -201,9 +201,10 @@ def pipeline(config: PipelineConfig) -> EvaluationResults:
     return evaluation_resuts
 ```
 
-## The module entry point
+## The launch script
 
-Now we want to be able to execute this pipeline so we create the entry point script in `my_mnist_example/__main__.py`:
+Now we want to be able to execute this pipeline so we create the launch
+script in `my_mnist_example/__main__.py`:
 
 ```python
 import argparse

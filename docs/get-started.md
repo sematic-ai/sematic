@@ -4,31 +4,31 @@
 
 Sematic currently supports Linux and Mac. If you're using Windows, you can
 run Sematic in
-[Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/about)
+[Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/about).
 
-We support Python versions 3.8 & 3.9
+Python versions 3.8 and 3.9 are supported.
 
 ## Installation
 
-Make sure you are using a supported platform, then install Sematic:
+Install Sematic in your local Python enviroment with:
 
 ```shell
 $ pip install sematic
 ```
 
-## Starting the app
+## Starting the web dashboard
 
-Now you should be able to launch the Sematic App on your local machine with
+Before running pipelines, you need to start the metadata server and web dashboard with:
 
 ```shell
 $ sematic start
 ```
 
-This will open the app in your browser.
+This will launch the dashboard in your browser.
 
 {% hint style="info" %}
 This runs the Sematic app on your local machine. To
-deploy it within your cloud see [Deploying Sematic](deployment.md).
+deploy it within your cloud environment, see [Deploying Sematic](deployment.md).
 If you want to run the local version of the app for yourself, but
 access it from a different machine (ex: if you are running the
 app from within a docker container or on a cloud development
@@ -40,7 +40,7 @@ but this mechanism of running the server is still only
 intended for single-user usage.
 {% endhint %}
 
-To stop the app, simply do
+To stop the server, simply do:
 
 ```shell
 $ sematic stop
@@ -67,7 +67,7 @@ of the box. If they are missing on your machine, Sematic will let you know how
 to install them.
 {% endhint %}
 
-You can follow execution of the pipeline in the [Sematic UI](sematic-ui.md), visualize inputs, outputs,
+You can follow execution of the pipeline in the [web dashboard](sematic-ui.md), visualize inputs, outputs,
 markdown docstrings, etc.
 
 If you want to contribute examples to the Sematic code base, see our

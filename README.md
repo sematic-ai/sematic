@@ -19,6 +19,9 @@
 <a href="https://python.org">
 <img src="https://img.shields.io/badge/Python-3.8-blue?style=for-the-badge&logo=none" alt="Python 3.8">
 </a>
+<a href="https://python.org">
+<img src="https://img.shields.io/badge/Python-3.9-blue?style=for-the-badge&logo=none" alt="Python 3.9">
+</a>
 <a href="https://discord.gg/4KZJ6kYVax">
 <img src="https://img.shields.io/discord/983789877927747714?label=DISCORD&style=for-the-badge" alt="Discord">
 </a>
