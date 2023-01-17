@@ -45,7 +45,7 @@ export default function NotesPanel() {
   }), []);
 
   const [notes, setNotes] = useState<Note[]>([]);
-  const [authorsByEmail, setAuthorsByEmail] = useState<Map<string, User>>(
+  const authorsByEmailRef = useRef<Map<string, User>>(
     new Map(user ? [[user.email, user]] : [])
   );
   const [inputDisabled, setInputDisabled] = useState(false);
@@ -57,14 +57,14 @@ export default function NotesPanel() {
       apiKey: user?.api_key,
       callback: (payload: NoteListPayload) => {
         setNotes(payload.content);
-        let currentAuthors = new Map(authorsByEmail);
+        let currentAuthors = new Map(authorsByEmailRef.current);
         payload.authors.forEach((user: User) =>
           currentAuthors.set(user.email, user)
         );
-        setAuthorsByEmail(currentAuthors);
+        authorsByEmailRef.current = currentAuthors;
       },
     });
-  }, [calculatorPath, authorsByEmail, user?.api_key]);
+  }, [calculatorPath, authorsByEmailRef, user?.api_key]);
 
   const submitNote = useCallback(
     (event: KeyboardEvent) => {
@@ -134,7 +134,7 @@ export default function NotesPanel() {
                 <NoteView
                   note={note}
                   key={idx}
-                  author={authorsByEmail.get(note.author_id) || anonymousUser}
+                  author={authorsByEmailRef.current.get(note.author_id) || anonymousUser}
                 />
               ))}
             </Stack>
