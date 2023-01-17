@@ -123,4 +123,5 @@ Different resolvers offer different resolution strategies:
   execution](./local-execution.md).
 - **`CloudResolver`** – will submit a pipeline to execute on a Kubernetes
   cluster. This can be used to leverage step-dependent cloud resources (e.g.
-  GPUs, high-memory VMs, etc.). See [Cloud resolver](./cloud-resolver.md). Note that to submit cloud pipelines, you need to [Deploy Sematic](./deploy.md).
+  GPUs, high-memory VMs, etc.). See [Cloud resolver](./cloud-resolver.md). Note
+  that to submit cloud pipelines, you need to [Deploy Sematic](./deploy.md).
