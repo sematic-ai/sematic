@@ -24,3 +24,19 @@ and the following button will show up in the UI:
 
 Note that you can also return an instance of `Link` as part of a dataclass,
 list, tuple, or dictionary as well.
+
+## Pandas dataframes
+
+See [Pandas integration](./pandas.md).
+
+## Snowflake tables
+
+See [Snowflake integration](./snowflake.md).
+
+## Plotly figures
+
+See [Plotly integration](./plotly.md).
+
+## Matplotlib plots
+
+See [Matplotlib integration](./matplotlib.md).
