@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import io from "socket.io-client";
+import { atomWithHash } from 'jotai-location'
 
 interface IFetchJSON {
   url: string;
@@ -66,6 +67,18 @@ export function useLogger() {
     devLogger
   }
 } 
+
+
+export function atomWithHashCustomSerialization(
+  name: string, initialValue: string, 
+  options: Parameters<typeof atomWithHash>[2] = {}) {
+  let overridenOptions = options || {};
+  // Use custom serialization function to avoid generating `"`(%22) in the hash
+  overridenOptions.serialize = (value: unknown) => (value as any).toString() ;
+  overridenOptions.deserialize = (value: unknown) => value as string ;
+
+  return atomWithHash<string>(name, initialValue, options as any); 
+}
 
 export const graphSocket = io("/graph");
 
