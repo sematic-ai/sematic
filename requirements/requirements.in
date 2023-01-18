@@ -52,6 +52,9 @@ statsmodels
 scikit-learn
 numpy
 xgboost
+opencv-python
+tqdm
+psutil
 
 # Types
 ## Snowflake

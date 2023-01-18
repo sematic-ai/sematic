@@ -146,6 +146,6 @@ load(
 
 _py_image_repos()
 
-load("@sematic//bazel:pipeline.bzl", "base_images")
+#load("@sematic//bazel:pipeline.bzl", "base_images")
 
-base_images()
+#base_images()
