@@ -1,37 +1,14 @@
 import {
-  Alert,
-  AlertTitle,
   lighten,
-  PaletteColor,
-  Theme,
+  Paper,
   useTheme,
 } from "@mui/material";
+import SettingsIcon from '@mui/icons-material/Settings';
 import { Handle, NodeProps, Position } from "react-flow-renderer";
 import { Run } from "../../Models";
-import RunStateChip from "../../components/RunStateChip";
+import { getColor } from "../../components/utils/graphUtils";
 
-function getColor(futureState: string, theme: Theme): PaletteColor {
-  if (futureState === "RESOLVED") {
-    return theme.palette.success;
-  }
-  if (futureState === "RETRYING") {
-    return theme.palette.warning;
-  }
-  if (["SCHEDULED", "RAN"].includes(futureState)) {
-    return theme.palette.info;
-  }
-  if (["FAILED", "NESTED_FAILED"].includes(futureState)) {
-    return theme.palette.error;
-  }
-  return {
-    light: theme.palette.grey[400],
-    dark: theme.palette.grey[600],
-    main: theme.palette.grey[400],
-    contrastText: "",
-  };
-}
-
-export default function RunNode(props: NodeProps) {
+export default function HiddenRunNode(props: NodeProps) {
   const run: Run = props.data.run;
   const theme = useTheme();
   let color = getColor(run.future_state, theme);
@@ -51,31 +28,25 @@ export default function RunNode(props: NodeProps) {
           }}
         />
       ))}
-      <Alert
-        //severity="success"
+      
+      <Paper
         variant="outlined"
-        icon={false}
         id={props.data.run.id}
         style={{
           height: "-webkit-fill-available",
         }}
         sx={{
-          paddingX: 3,
+          paddingX: 2,
+          marginX: 0.5,
+          paddingY: 1,
           cursor: "pointer",
           borderColor: lighten(color.light, 0.5),
           backgroundColor: lighten(color.light, props.selected ? 0.7 : 0.9),
-          color: color.dark,
-          //"&:hover": {
-          //  backgroundColor: lighten(color.light, props.selected ? 0.7 : 0.87),
-          //},
-          //display: "-webkit-inline-flex",
+          color: color.dark
         }}
       >
-        <AlertTitle>
-          <RunStateChip state={run.future_state} />
-          {run.name}
-        </AlertTitle>
-      </Alert>
+        <SettingsIcon />
+      </Paper>
       <Handle
         id={run.id}
         isConnectable={false}
