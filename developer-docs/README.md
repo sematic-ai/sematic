@@ -139,7 +139,7 @@ of the `github.com/sematic-ai/sematic` repo directory.
 ```bash
 HELM_REPO=~/code/helm-charts
 helm package helm/sematic-server
-helm repo index . --url https://sematic-ai.github.io/helm-charts/ \
+helm repo index . --url https://sematic-ai.github.io/helm-charts/sematic-server \
          --merge $HELM_REPO/index.yaml
 mv index.yaml $HELM_REPO/index.yaml
 mv *.tgz $HELM_REPO/sematic-server/
