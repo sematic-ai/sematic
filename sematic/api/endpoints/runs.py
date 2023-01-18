@@ -63,15 +63,17 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
     Parameters
     ----------
     limit : Optional[int]
-        maximum number of results in one page. Defaults to 20.
+        Maximum number of results in one page. Defaults to 20.
+    order : Optional[Literal["asc", "desc"]]
+        Direction to order the `created_at` column by. By default, will sort in
+        descending order.
     cursor : Optional[str]
-        pagination cursor
+        The pagination cursor. Defaults to None.
     group_by : Optional[str]
-        value to group runs by. If none null, the endpoint will return
+        Value to group runs by. If not None, the endpoint will return
         a single run by unique value of the field passed in `group_by`.
     filters : Optional[str]
-        filters of the form `{"column_name": {"operator": "value"}}`
-        Only single filter supporter for now.
+        Filters of the form `{"column_name": {"operator": "value"}}`. Defaults to None.
 
     Response
     --------
@@ -90,9 +92,12 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
         A list of run JSON payloads. The size of the list is `limit` or less if
         current page is last page.
     """
-    limit, cursor, group_by_column, sql_predicates = get_request_parameters(
-        flask.request.args, Run
-    )
+    try:
+        limit, order, cursor, group_by_column, sql_predicates = get_request_parameters(
+            args=flask.request.args, model=Run
+        )
+    except ValueError as e:
+        return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
 
     decoded_cursor: Optional[str] = None
     if cursor is not None:
@@ -100,8 +105,8 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
             decoded_cursor = base64.urlsafe_b64decode(bytes(cursor, "utf-8")).decode(
                 "utf-8"
             )
-        except Exception:
-            raise Exception("invalid cursor")
+        except BaseException:
+            return jsonify_error("invalid value for 'cursor'", HTTPStatus.BAD_REQUEST)
 
     with db().get_session() as session:
         query = session.query(Run)
@@ -141,7 +146,7 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
                 )
             )
 
-        query = query.order_by(sqlalchemy.desc(Run.created_at))
+        query = query.order_by(order(Run.created_at))
 
         runs: List[Run] = query.limit(limit).all()
         after_cursor_count: int = query.count()
@@ -362,6 +367,12 @@ def get_run_graph_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 
     This will return the run's direct graph, meaning
     only edges directly connected to it, and their corresponding artifacts.
+
+    Request
+    -------
+    root: Optional[bool]
+        Whether to get the entire graph, or the direct graph, meaning only the edges
+        directly connected to it, and their corresponding artifacts.
 
     Response
     --------

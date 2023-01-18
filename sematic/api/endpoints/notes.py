@@ -5,7 +5,6 @@ from typing import List, Optional
 
 # Third-party
 import flask
-import sqlalchemy
 from sqlalchemy.orm.exc import NoResultFound
 
 # Sematic
@@ -25,10 +24,10 @@ from sematic.db.queries import delete_note, get_note, save_note
 @sematic_api.route("/api/v1/notes", methods=["GET"])
 @authenticate
 def list_notes_endpoint(user: Optional[User]) -> flask.Response:
-    limit, _, _, sql_predicates = get_request_parameters(
-        flask.request.args,
-        Note,
+    limit, order, _, _, sql_predicates = get_request_parameters(
+        args=flask.request.args, model=Note, default_order="asc"
     )
+
     with db().get_session() as session:
         query = session.query(Note)
 
@@ -40,7 +39,7 @@ def list_notes_endpoint(user: Optional[User]) -> flask.Response:
                 Run.calculator_path == flask.request.args["calculator_path"]
             )
 
-        query = query.order_by(sqlalchemy.asc(Note.created_at))
+        query = query.order_by(order(Note.created_at))
 
         # query = query.limit(limit)
 
