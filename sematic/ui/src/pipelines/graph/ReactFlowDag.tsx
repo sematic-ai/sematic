@@ -18,6 +18,8 @@ import { usePipelinePanelsContext } from "../../hooks/pipelineHooks";
 import { useGraphContext } from "../../hooks/graphHooks";
 import { ExtractContextType } from "../../components/utils/typings";
 import PipelinePanelsContext from "../PipelinePanelsContext";
+import HiddenRunNode from "./HiddenRunNode";
+import { HIDDEN_RUN_NAME_LIST } from "../../constants";
 
 var util = require("dagre/lib/util");
 var graphlib = require("graphlib");
@@ -44,6 +46,7 @@ util.asNonCompoundGraph = function asNonCompoundGraph(g: any) {
 
 const nodeTypes = {
   runNode: RunNode,
+  hiddenRunNode: HiddenRunNode,
   artifactNode: ArtifactNode,
 };
 
@@ -93,13 +96,16 @@ function ReactFlowDag() {
     let edge_data: RFEdge[] = [];
     node_data = runs.map((run) => {
       let runArgNames: string[] = [];
+      const isHiddenRun = HIDDEN_RUN_NAME_LIST.indexOf(run.name) !== -1;
+
       edges.forEach((edge) => {
         if (edge.destination_run_id === run.id) {
           runArgNames.push(edge.destination_name || "");
         }
       });
+
       return {
-        type: "runNode",
+        type: isHiddenRun ? "hiddenRunNode" : "runNode",
         id: run.id,
         data: { label: run.name, run: run, argNames: runArgNames },
         parentNode: run.parent_id === null ? undefined : run.parent_id,

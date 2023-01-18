@@ -64,9 +64,7 @@ function RunStateChip(props: { state?: string; variant?: string }) {
 
   if (variant === "mini") {
     return (
-      <Tooltip title={toolTipMessage}>
-        <Pin color={color} hollow={hollow} />
-      </Tooltip>
+      <Tooltip title={toolTipMessage}><Pin color={color} hollow={hollow} /></Tooltip>
     );
   }
 

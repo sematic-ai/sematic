@@ -12,11 +12,16 @@ import { Run } from "../Models";
 import RunStateChip from "../components/RunStateChip";
 import { ExtractContextType } from "../components/utils/typings";
 import PipelinePanelsContext from "./PipelinePanelsContext";
+import { HIDDEN_RUN_NAME_LIST } from "../constants";
 
 export default function RunTree(props: {
   runTreeNodes: Array<RunTreeNode>;
 }) {
   let { runTreeNodes } = props;
+
+  // We need to filter out runs whose functions are present in the hidden run name list.
+  // The default "" value is required since indexOf does not accept an undefined value.
+  runTreeNodes = runTreeNodes.filter(({run}) => HIDDEN_RUN_NAME_LIST.indexOf(run?.name ?? "")===-1);
 
   const { selectedRun, setSelectedPanelItem, setSelectedRunId, setSelectedArtifactName  } 
   = usePipelinePanelsContext() as ExtractContextType<typeof PipelinePanelsContext> & {
