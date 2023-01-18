@@ -102,7 +102,7 @@ Do this for all supported versions of Python. You can check your virtual env
 Python version using `sematic version` (as well as the Server and Client
 version).
 
-At this point, you should also deploy to one of the dev environments and execute
+At this point, you should also deploy to a cloud Dev environment using the Helm chart and execute
 at least one pipeline. You will likely also want to smoke test new features that
 were included in the release.
 
