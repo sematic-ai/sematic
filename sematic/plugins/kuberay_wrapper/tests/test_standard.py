@@ -11,9 +11,9 @@ from sematic.plugins.abstract_kuberay_wrapper import (
     RayNodeConfig,
     ScalingGroup,
 )
-from sematic.plugins.kuberay_wrapper.basic import (
-    BasicKuberaySettingsVar,
-    BasicKuberayWrapper,
+from sematic.plugins.kuberay_wrapper.standard import (
+    StandardKuberaySettingsVar,
+    StandardKuberayWrapper,
 )
 from sematic.tests.fixtures import environment_variables
 from sematic.utils.exceptions import UnsupportedError, UnsupportedVersionError
@@ -169,7 +169,7 @@ _EXPECTED_SINGLE_WORKER_GROUP = {
 
 
 def test_head_node_only_cluster():
-    manifest = BasicKuberayWrapper.create_cluster_manifest(  # type: ignore
+    manifest = StandardKuberayWrapper.create_cluster_manifest(  # type: ignore
         image_uri=_TEST_IMAGE_URI,
         cluster_name=_TEST_CLUSTER_NAME,
         cluster_config=_HEAD_NODE_ONLY_CONFIG,
@@ -182,7 +182,7 @@ def test_head_node_only_cluster():
 
 
 def test_single_worker_cluster():
-    manifest = BasicKuberayWrapper.create_cluster_manifest(  # type: ignore
+    manifest = StandardKuberayWrapper.create_cluster_manifest(  # type: ignore
         image_uri=_TEST_IMAGE_URI,
         cluster_name=_TEST_CLUSTER_NAME,
         cluster_config=_SINGLE_WORKER_GROUP_CONFIG,
@@ -199,7 +199,7 @@ def test_single_worker_cluster():
 
 
 def test_multiple_worker_cluster():
-    manifest = BasicKuberayWrapper.create_cluster_manifest(  # type: ignore
+    manifest = StandardKuberayWrapper.create_cluster_manifest(  # type: ignore
         image_uri=_TEST_IMAGE_URI,
         cluster_name=_TEST_CLUSTER_NAME,
         cluster_config=_MULTIPLE_WORKER_GROUP_CONFIG,
@@ -223,7 +223,7 @@ def test_multiple_worker_cluster():
 
 def test_unsupported_kuberay():
     with pytest.raises(UnsupportedVersionError):
-        BasicKuberayWrapper.create_cluster_manifest(  # type: ignore
+        StandardKuberayWrapper.create_cluster_manifest(  # type: ignore
             image_uri=_TEST_IMAGE_URI,
             cluster_name=_TEST_CLUSTER_NAME,
             cluster_config=_MULTIPLE_WORKER_GROUP_CONFIG,
@@ -233,7 +233,7 @@ def test_unsupported_kuberay():
 
 def test_gpus_not_supported():
     with pytest.raises(UnsupportedError):
-        BasicKuberayWrapper.create_cluster_manifest(  # type: ignore
+        StandardKuberayWrapper.create_cluster_manifest(  # type: ignore
             image_uri=_TEST_IMAGE_URI,
             cluster_name=_TEST_CLUSTER_NAME,
             cluster_config=replace(
@@ -247,7 +247,7 @@ def test_gpus_not_supported():
         )
 
     with pytest.raises(UnsupportedError):
-        BasicKuberayWrapper.create_cluster_manifest(  # type: ignore
+        StandardKuberayWrapper.create_cluster_manifest(  # type: ignore
             image_uri=_TEST_IMAGE_URI,
             cluster_name=_TEST_CLUSTER_NAME,
             cluster_config=replace(
@@ -293,22 +293,22 @@ def test_head_node_gpus():
     }
     with environment_variables(
         {
-            BasicKuberaySettingsVar.RAY_SUPPORTS_GPUS.value: "true",
-            BasicKuberaySettingsVar.RAY_GPU_TOLERATIONS.value: json.dumps(
+            StandardKuberaySettingsVar.RAY_SUPPORTS_GPUS.value: "true",
+            StandardKuberaySettingsVar.RAY_GPU_TOLERATIONS.value: json.dumps(
                 gpu_tolerations
             ),
-            BasicKuberaySettingsVar.RAY_GPU_NODE_SELECTOR.value: json.dumps(
+            StandardKuberaySettingsVar.RAY_GPU_NODE_SELECTOR.value: json.dumps(
                 gpu_node_selector
             ),
-            BasicKuberaySettingsVar.RAY_NON_GPU_TOLERATIONS.value: json.dumps(
+            StandardKuberaySettingsVar.RAY_NON_GPU_TOLERATIONS.value: json.dumps(
                 non_gpu_tolerations
             ),
-            BasicKuberaySettingsVar.RAY_NON_GPU_NODE_SELECTOR.value: json.dumps(
+            StandardKuberaySettingsVar.RAY_NON_GPU_NODE_SELECTOR.value: json.dumps(
                 non_gpu_node_selector
             ),
         }
     ):
-        manifest = BasicKuberayWrapper.create_cluster_manifest(  # type: ignore
+        manifest = StandardKuberayWrapper.create_cluster_manifest(  # type: ignore
             image_uri=_TEST_IMAGE_URI,
             cluster_name=_TEST_CLUSTER_NAME,
             cluster_config=replace(
@@ -355,19 +355,19 @@ def test_worker_node_gpus():
     }
     with environment_variables(
         {
-            BasicKuberaySettingsVar.RAY_SUPPORTS_GPUS.value: "true",
-            BasicKuberaySettingsVar.RAY_GPU_TOLERATIONS.value: json.dumps(
+            StandardKuberaySettingsVar.RAY_SUPPORTS_GPUS.value: "true",
+            StandardKuberaySettingsVar.RAY_GPU_TOLERATIONS.value: json.dumps(
                 expected_tolerations
             ),
-            BasicKuberaySettingsVar.RAY_GPU_NODE_SELECTOR.value: json.dumps(
+            StandardKuberaySettingsVar.RAY_GPU_NODE_SELECTOR.value: json.dumps(
                 expected_node_selector
             ),
-            BasicKuberaySettingsVar.RAY_GPU_RESOURCE_REQUEST_KEY.value: json.dumps(
+            StandardKuberaySettingsVar.RAY_GPU_RESOURCE_REQUEST_KEY.value: json.dumps(
                 "nvidia.com/gpu"
             ),
         }
     ):
-        manifest = BasicKuberayWrapper.create_cluster_manifest(  # type: ignore
+        manifest = StandardKuberayWrapper.create_cluster_manifest(  # type: ignore
             image_uri=_TEST_IMAGE_URI,
             cluster_name=_TEST_CLUSTER_NAME,
             cluster_config=replace(

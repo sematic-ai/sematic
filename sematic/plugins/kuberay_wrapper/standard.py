@@ -16,7 +16,7 @@ from sematic.plugins.abstract_kuberay_wrapper import (
 from sematic.utils.exceptions import UnsupportedError, UnsupportedVersionError
 
 
-class BasicKuberaySettingsVar(AbstractPluginSettingsVar):
+class StandardKuberaySettingsVar(AbstractPluginSettingsVar):
     """Settings for the Kubray wrapper.
 
     Attributes
@@ -153,7 +153,7 @@ _MANIFEST_TEMPLATE: Dict[str, Any] = {
 }
 
 
-class BasicKuberayWrapper(AbstractKuberayWrapper):
+class StandardKuberayWrapper(AbstractKuberayWrapper):
     """Implementation designed for conventional K8s setups and recent Kuberay versions
 
     This implementation is structured so as to be subclassed to customize specific
@@ -161,7 +161,7 @@ class BasicKuberayWrapper(AbstractKuberayWrapper):
     Ray nodes, additional pod lifecycle hooks, resource requests differing from resource
     limits, etc.).
 
-    It supports GPUs, but only if configured to do so (see BasicKuberaySettingsVar).
+    It supports GPUs, but only if configured to do so (see StandardKuberaySettingsVar).
     """
 
     _manifest_template = _MANIFEST_TEMPLATE
@@ -169,7 +169,7 @@ class BasicKuberayWrapper(AbstractKuberayWrapper):
 
     @classmethod
     def get_settings_vars(cls) -> Type[AbstractPluginSettingsVar]:
-        return BasicKuberaySettingsVar
+        return StandardKuberaySettingsVar
 
     @classmethod
     def create_cluster_manifest(  # type: ignore
@@ -245,7 +245,7 @@ class BasicKuberayWrapper(AbstractKuberayWrapper):
         requires_gpus = cluster_config.head_node.gpu_count != 0 or any(
             group.worker_nodes.gpu_count != 0 for group in cluster_config.scaling_groups
         )
-        supports_gpus = _get_setting(BasicKuberaySettingsVar.RAY_SUPPORTS_GPUS, False)
+        supports_gpus = _get_setting(StandardKuberaySettingsVar.RAY_SUPPORTS_GPUS, False)
         if requires_gpus and not supports_gpus:
             raise UnsupportedError(
                 f"The Kuberay plugin {cls.__name__} is not configured "
@@ -283,9 +283,9 @@ class BasicKuberayWrapper(AbstractKuberayWrapper):
     def _get_node_selector(cls, node_config: RayNodeConfig) -> Dict[str, Any]:
         uses_gpus = node_config.gpu_count > 0
         setting = (
-            BasicKuberaySettingsVar.RAY_GPU_NODE_SELECTOR
+            StandardKuberaySettingsVar.RAY_GPU_NODE_SELECTOR
             if uses_gpus
-            else BasicKuberaySettingsVar.RAY_NON_GPU_NODE_SELECTOR
+            else StandardKuberaySettingsVar.RAY_NON_GPU_NODE_SELECTOR
         )
 
         node_selector = _get_setting(setting, {})
@@ -296,16 +296,16 @@ class BasicKuberayWrapper(AbstractKuberayWrapper):
     def _get_tolerations(cls, node_config: RayNodeConfig) -> Dict[str, Any]:
         uses_gpus = node_config.gpu_count > 0
         setting = (
-            BasicKuberaySettingsVar.RAY_GPU_TOLERATIONS
+            StandardKuberaySettingsVar.RAY_GPU_TOLERATIONS
             if uses_gpus
-            else BasicKuberaySettingsVar.RAY_NON_GPU_TOLERATIONS
+            else StandardKuberaySettingsVar.RAY_NON_GPU_TOLERATIONS
         )
         tolerations = _get_setting(setting, [])
         return tolerations
 
     @classmethod
     def _limits_for_node(cls, node_config: RayNodeConfig) -> Dict[str, str]:
-        # The basic plugin always makes requests & limits the same
+        # The standard plugin always makes requests & limits the same
         return cls._requests_for_node(node_config)
 
     @classmethod
@@ -313,7 +313,7 @@ class BasicKuberayWrapper(AbstractKuberayWrapper):
         gpu_requests = {}
         if node_config.gpu_count > 0:
             gpu_request_key = _get_setting(
-                BasicKuberaySettingsVar.RAY_GPU_RESOURCE_REQUEST_KEY, None
+                StandardKuberaySettingsVar.RAY_GPU_RESOURCE_REQUEST_KEY, None
             )
             if gpu_request_key is None:
                 if node_config.gpu_count > 1:
@@ -336,5 +336,5 @@ class BasicKuberayWrapper(AbstractKuberayWrapper):
 
 def _get_setting(setting, default):
     return json.loads(
-        get_plugin_setting(BasicKuberayWrapper, setting, json.dumps(default))
+        get_plugin_setting(StandardKuberayWrapper, setting, json.dumps(default))
     )

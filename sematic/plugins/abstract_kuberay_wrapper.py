@@ -64,7 +64,7 @@ class ScalingGroup:
 
 
 def _get_ray_version() -> str:
-    """Default factory for the field ray_version in RayClusterConfig"""
+    """Default factory for the field ray_version in RayClusterConfig."""
     try:
         # Third-party
         import ray  # type: ignore
