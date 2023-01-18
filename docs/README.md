@@ -55,7 +55,7 @@ If you want to dig deeper, check out the [Sematic Concepts](concepts.md), or the
 
 ## Who we are
 
-The [Sematic team](https://sematic.dev/about-us) hails from around the world and
+The [Sematic team](https://sematic.dev/about-sematic) hails from around the world and
 has extensive industry experience in software development, cloud infrastructure,
 and Machine Learning tooling.
 
