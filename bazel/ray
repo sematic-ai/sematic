@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# This file allows for emulating the Ray CLI inside a Sematic Docker image.
+# It can use either a regular python environment within the image or the
+# python environment managed by bazel (if the latter is available). If Ray
+# is not installed in the python environment in question, an error message
+# will be shown.
+
+PYTHON_EXE=$(which python3)
+if (( $BAZEL_BUILT_IMAGE == 1 )); then
+    PYTHON_EXE=$(which bazel_python)
+fi
+
+$PYTHON_EXE -c "import ray" &> /dev/null
+RAY_CHECK_EXIT_CODE=$?
+if (( $RAY_CHECK_EXIT_CODE != 0 )); then
+    >&2 echo "Ray is not installed. Please add it as a dependency of your code."
+    exit $RAY_CHECK_EXIT_CODE
+fi
+$PYTHON_EXE -m ray.scripts.scripts "$@"
+exit $?

@@ -1,6 +1,7 @@
 sematic_py_lib(
     name = "main_lib",
     srcs = ["main.py"],
+    # buildifier: leave-alone
     deps = [
         ":cancel",
         ":cli",
@@ -8,9 +9,12 @@ sematic_py_lib(
         ":start",
         ":stop",
         ":run",
+        ":migrate",
         ":new",
         ":settings",
         ":version",
+        "//sematic/config:config",
+        "//sematic/db:migrate_lib",
         # Examples
         "//sematic/examples/template:template_lib",
         # These do not add dependencies on 3rd party packages
@@ -26,10 +30,7 @@ sematic_py_lib(
     pip_deps = [
         "click",
     ],
-    deps = [
-        "//sematic/config:config",
-        "//sematic/db:migrate_lib",
-    ],
+    deps = [],
 )
 
 sematic_py_lib(
@@ -50,11 +51,12 @@ sematic_py_lib(
     pip_deps = [
         "click",
     ],
+    # buildifier: leave-alone
     deps = [
         ":cli",
         "//sematic:api_client",
-        "//sematic/config:config",
         "//sematic:log_reader",
+        "//sematic/config:config",
     ],
 )
 
@@ -64,6 +66,7 @@ sematic_py_lib(
     pip_deps = [
         "click",
     ],
+    # buildifier: leave-alone
     deps = [
         ":cli",
         ":process_utils",
@@ -90,10 +93,19 @@ sematic_py_lib(
     pip_deps = [
         "click",
     ],
+    # buildifier: leave-alone
     deps = [
         ":cli",
         ":process_utils",
         "//sematic/config:config",
+    ],
+)
+
+sematic_py_lib(
+    name = "migrate",
+    srcs = ["migrate.py"],
+    deps = [
+        ":cli",
     ],
 )
 
@@ -103,6 +115,7 @@ sematic_py_lib(
     pip_deps = [
         "click",
     ],
+    # buildifier: leave-alone
     deps = [
         ":cli",
         ":examples_utils",
@@ -113,6 +126,7 @@ sematic_py_lib(
 sematic_py_lib(
     name = "process_utils",
     srcs = ["process_utils.py"],
+    # buildifier: leave-alone
     deps = [
         "//sematic/config:config",
     ],
@@ -121,6 +135,7 @@ sematic_py_lib(
 sematic_py_lib(
     name = "examples_utils",
     srcs = ["examples_utils.py"],
+    # buildifier: leave-alone
     deps = [
         "//sematic/config:config",
     ],

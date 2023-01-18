@@ -40,7 +40,9 @@ sematic_py_lib(
     deps = [
         "//sematic:abstract_calculator",
         "//sematic:abstract_future",
+        "//sematic/plugins:abstract_external_resource",
         "//sematic:resolver",
+        "//sematic/resolvers:abstract_resource_manager",
         "//sematic/utils:exceptions",
     ],
 )

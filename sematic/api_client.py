@@ -1,6 +1,7 @@
 # Standard Library
+import json
 import logging
-from typing import Any, Callable, Dict, List, Optional, Tuple, cast
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, cast
 
 # Third-party
 import requests
@@ -60,13 +61,12 @@ def get_artifact_value_by_id(artifact_id: str) -> Any:
     Parameters
     ----------
     artifact_id: str
-    storage: Optional[Storage]
-        Storage from which to retrieve the artifact value. Defaults to S3Storage.
+        The ID of the artifact.
 
     Returns
     -------
-    Any
-        The value of the requiested artifact.
+    Any:
+        The value of the requested artifact.
     """
     artifact = _get_artifact(artifact_id)
 
@@ -109,6 +109,38 @@ def get_run(run_id: str) -> Run:
     response = _get("/runs/{}".format(run_id))
 
     return Run.from_json_encodable(response["content"])
+
+
+def get_runs(
+    limit: Optional[int] = None,
+    order: Optional[Literal["asc", "desc"]] = None,
+    **filters,
+) -> List[Run]:
+    """
+    Get runs based on filter expressions.
+
+    Parameters
+    ----------
+    limit: Optional[int]
+        The maximum number of runs to return. Defaults to None.
+    order: Optional[Literal["asc", "desc"]]
+        Direction to order the `created_at` column by. Defaults to None, where it will
+        sort in descending order.
+    filters
+        Column names and values by which to filter the runs. Defaults to empty dict.
+
+    Returns
+    -------
+    A list of Runs which fit the filters.
+    """
+    # update this function whenever you need to add more query parameters
+    query_filters = _get_encoded_query_filters(filters)
+    query_string = f"/runs?limit={limit}&order={order}&filters={query_filters}"
+    logger.debug("Fetching runs with query string: %s", query_string)
+
+    response = _get(query_string)
+
+    return [Run.from_json_encodable(run_result) for run_result in response["content"]]
 
 
 def save_graph(
@@ -250,6 +282,38 @@ def get_external_resource(
     return ExternalResource.from_json_encodable(response["external_resource"]).resource
 
 
+def activate_external_resource(resource_id: str) -> AbstractExternalResource:
+    """Activate the external resource on the server, return the result.
+
+    Parameters
+    ----------
+    resource_id:
+        The id of the resource to activate.
+
+    Returns
+    -------
+    The resource as saved by the server.
+    """
+    response = _post(f"/external_resources/{resource_id}/activate", json_payload={})
+    return ExternalResource.from_json_encodable(response["external_resource"]).resource
+
+
+def deactivate_external_resource(resource_id: str) -> AbstractExternalResource:
+    """Deactivate the external resource on the server, return the result.
+
+    Parameters
+    ----------
+    resource_id:
+        The id of the resource to deactivate.
+
+    Returns
+    -------
+    The resource as saved by the server.
+    """
+    response = _post(f"/external_resources/{resource_id}/deactivate", json_payload={})
+    return ExternalResource.from_json_encodable(response["external_resource"]).resource
+
+
 def save_resource_run_links(resource_ids: List[str], run_id: str) -> None:
     """Save that the run with the given id is using the resource with the given id.
 
@@ -340,6 +404,7 @@ def _get(endpoint: str, decode_json: bool = True) -> Any:
         Defaults to `True`. Whether the returned payload should be JSON-decoded.
     """
     response = _request(requests.get, endpoint)
+    logger.debug("Got response with raw content: %s", response.content)
 
     if decode_json:
         return response.json()
@@ -571,3 +636,18 @@ def _get_api_key() -> Optional[str]:
         return get_user_setting(UserSettingsVar.SEMATIC_API_KEY)
     except MissingSettingsError:
         return None
+
+
+def _get_encoded_query_filters(filters: Dict[str, Any]) -> str:
+    """
+    Returns the encoded "filters" parameter value that can be given to `_request` from a
+    freeform key-value dict.
+    """
+    if len(filters) == 1:
+        col = next(iter(filters))
+        return json.dumps({col: {"eq": filters[col]}})
+
+    if len(filters) > 1:
+        return json.dumps({"AND": [{col: {"eq": filters[col]}} for col in filters]})
+
+    return json.dumps(None)

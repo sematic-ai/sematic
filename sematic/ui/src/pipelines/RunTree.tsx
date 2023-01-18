@@ -12,24 +12,27 @@ import { Run } from "../Models";
 import RunStateChip from "../components/RunStateChip";
 import { ExtractContextType } from "../components/utils/typings";
 import PipelinePanelsContext from "./PipelinePanelsContext";
+import { HIDDEN_RUN_NAME_LIST } from "../constants";
 
 export default function RunTree(props: {
   runTreeNodes: Array<RunTreeNode>;
 }) {
   let { runTreeNodes } = props;
 
-  const { selectedRun, setSelectedPanelItem, setSelectedRunId, setSelectedRunTab, setSelectedArtifactName  } 
+  // We need to filter out runs whose functions are present in the hidden run name list.
+  // The default "" value is required since indexOf does not accept an undefined value.
+  runTreeNodes = runTreeNodes.filter(({run}) => HIDDEN_RUN_NAME_LIST.indexOf(run?.name ?? "")===-1);
+
+  const { selectedRun, setSelectedPanelItem, setSelectedRunId, setSelectedArtifactName  } 
   = usePipelinePanelsContext() as ExtractContextType<typeof PipelinePanelsContext> & {
     selectedRun: Run
   };
 
   const onSelectRun = useCallback((runId: string) => {
-    const defaultTab = selectedRun.future_state === "FAILED" ? "logs" : "output";
-    setSelectedRunTab(defaultTab);
     setSelectedArtifactName("");
     setSelectedRunId(runId);
     setSelectedPanelItem('run');
-  }, [selectedRun.future_state, setSelectedArtifactName, setSelectedPanelItem, setSelectedRunId, setSelectedRunTab]);
+  }, [setSelectedArtifactName, setSelectedPanelItem, setSelectedRunId]);
 
   if (runTreeNodes.length === 0) {
     return <></>;

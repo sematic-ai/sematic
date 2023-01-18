@@ -184,6 +184,8 @@ use. There are some requirements on this image though:
    `/usr/bin/python3 -m sematic.resolvers.worker "$@"`
 4. `/usr/bin/python3` must be a valid python interpreter in the image
 5. The home directory inside the image must be writable
+6. The `/sematic/bin/` directory inside the image must be writable
+7. `/sematic/bin` must be on your `PATH`
 
 ## Working with images
 

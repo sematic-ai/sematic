@@ -29,17 +29,17 @@ class KubernetesSecretMount:
 
     Attributes
     ----------
-    environment_secrets:
+    environment_secrets: Dict[str, str]
         A dict whose keys are the same as the subset of keys from the
         "sematic-func-secret" that you want mounted for the func, and whose values are
         the name of the environment variable where it should be exposed
-    file_secrets:
+    file_secrets: Dict[str, str]
         A dict whose keys are the same as the subset of keys from the
         "sematic-func-secret" that you want mounted for the func, and whose values are
         the path to the file within the container where the secret should be exposed.
         These file paths should be RELATIVE paths, they will be taken as relative to
         file_secret_root_path.
-    file_secret_root_path:
+    file_secret_root_path: str
         File secrets must all be stored in the same directory. This gives the directory
         where they will be stored. The directory must be a new directory, or the contents
         of the existing directory will be overwritten.
@@ -117,19 +117,19 @@ class KubernetesToleration:
 
     Attributes
     ----------
-    key:
+    key: Optional[str]
         The key for the node taint intended to be tolerated. If empty, means
         to match all keys AND all values
-    operator:
+    operator: KubernetesTolerationOperator
         The way to compare the key/value pair to the node taint's key/value pair
         to see if the toleration applies
-    effect:
+    effect: KubernetesTolerationEffect
         The effect of the node taint the toleration is intended to tolerate.
         Leaving it empty means to tolerate all effects.
-    value:
+    value: Optional[str]
         If the operator is Equals, this value will be compared to the value
         on the node taint to see if this toleration applies.
-    toleration_seconds:
+    toleration_seconds: Optional[int]
         Only specified when effect is NoExecute (otherwise is an error). It
         specifies the amount of time the pod can continue executing on a node
         with a NoExecute taint
@@ -200,31 +200,37 @@ class KubernetesResourceRequirements:
 
     Attributes
     ----------
-    node_selector:
+    node_selector: Dict[str, str]
         The kind of Kubernetes node that the job must run on. More detail can
         be found here:
         https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
         The value of this field will be used as the nodeSelector described there.
-    requests:
+    requests: Dict[str, str]
         Requests for resources on a kubernetes pod. More detail can be found
         here:
         https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
         The values used here will apply to both the "requests" and the "limits" of the
         job.
-    secret_mounts:
+    secret_mounts: KubernetesSecretMount
         Requests to take the contents of Kubernetes secrets and expose them as
         environment variables or files on disk when running in the cloud.
-    tolerations:
+    tolerations: List[KubernetesToleration]
         If your Kubernetes configuration uses node taints to control which workloads
         get scheduled on which nodes, this enables control over how your workload
         interacts with these node taints. More information can be found here:
         https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+    mount_expanded_shared_memory: bool
+        By default, Docker uses a 64MB /dev/shm partition. If this flag is set, a
+        memory-backed tmpfs that expands up to half of the available memory file is used
+        instead. Defaults to False. If that file is expanded to more than that limit
+        (through external action), then the pod will be terminated.
     """
 
     node_selector: Dict[str, str] = field(default_factory=dict)
     requests: Dict[str, str] = field(default_factory=dict)
     secret_mounts: KubernetesSecretMount = field(default_factory=KubernetesSecretMount)
     tolerations: List[KubernetesToleration] = field(default_factory=list)
+    mount_expanded_shared_memory: bool = field(default=False)
 
 
 @dataclass

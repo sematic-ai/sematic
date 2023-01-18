@@ -51,10 +51,10 @@ class SematicContext:
 
     Attributes
     ----------
-    run_id:
+    run_id: str
         The id of the future for the current execution. For cloud executions, this
         is equivalent to the id for the existing run.
-    root_id:
+    root_id: str
         The id of the root future for a resolution. For cloud executions, this is
         equivalent to the id for the root run.
     """

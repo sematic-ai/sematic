@@ -1,18 +1,53 @@
 # Hi 👋
 
-We're glad you're here!
+Welcome to Sematic.
 
-Whether you're a Machine Learning (ML) or Data Science (DS) developer, Sematic
-makes you work faster by:
+Sematic is an open-source development platform for Machine Learning (ML) and
+Data Science (DS). It lets users develop arbitrarily complex end-to-end
+pipelines using nothing other than Python, then execute them on a laptop or on
+Kubernetes with no code changes.
 
-* Facilitating the transition from Jupyter Notebook prototype code to steady
-  production-grade pipelines
-* Helping you iterate, investigate, debug, and collaborate directly on
-  production pipelines
-* Automating ML/DS pipelines to keep models and metrics fresh and relevant as
-  market and world conditions change
+Sematic comes with the following guarantees:
 
-If you're new, read how to [Get Started](get-started.md) or join our [Discord
+* **Ease-of-use** – Sematic aims to provide the easiest onboarding, and to get
+  you started in a few minutes. No deployment needed, you can get started on
+  your local machine.
+* **Traceability** – Sematic pipelines are tracked and can be monitored and
+  visualized in a modern web dashboard. All artifacts (inputs/outputs of all
+  pipeline steps) are persisted and visualizable.
+* **Reproducibility** – Pipelines that are executed in the cloud are
+  reproducible for guaranteed debuggability.
+* **Local-to-cloud parity** – Sematic aims to make it seamless to scale a local
+  prototype into a large-scale cloud pipeline. The same code can run on a laptop
+  and on a Kubernetes cluster with little to no changes.
+
+Sematic comprises the following components:
+
+* **A lightweight Python SDK** to define dynamic pipelines of arbitrary complexity
+* **An execution backend** to orchestrate pipelines locally or in the cloud
+* **A CLI** to interact with Sematic
+* **A web dashboard** to monitor pipelines and visualize artifacts
+
+Sematic comes with the following features:
+
+- **Lightweight Python SDK** – define arbitrarily complex end-to-end pipelines
+- **Pipeline nesting** – arbitrarily nest pipelines into larger pipelines
+- **Dynamic graphs** – Python-defined graphs allow for iterations, conditional branching, etc.
+- **Lineage tracking** – all inputs and outputs of all steps are persisted and tracked
+- **Runtime type-checking** – fail early with run-time type checking
+- **Web dashboard** – Monitor, track, and visualize pipelines in a modern web UI
+- **Artifact visualization** – visualize all inputs and outputs of all steps in the web dashboard
+- **Local execution** – run pipelines on your local machine without any deployment necessary
+- **Cloud orchestration** – run pipelines on Kubernetes to access GPUs and other cloud resources
+- **Heterogeneous compute resources** – run different steps on different machines (e.g. CPUs, memory, GPU, Spark, etc.)
+- **Helm chart deployment** – install Sematic on your Kubernetes cluster
+- **Pipeline reruns** – rerun pipelines from the UI from an arbitrary point in the graph
+- **Step caching** – cache expensive pipeline steps for faster iteration
+- **Step retry** – recover from transient failures with step retries
+- **Metadata and collaboration** – Tags, source code visualization, docstrings, notes, etc.
+- **Numerous integrations** – See below
+
+Read how to [Get Started](get-started.md) or join our [Discord
 Server](https://discord.gg/4KZJ6kYVax).
 
 If you want to dig deeper, check out the [Sematic Concepts](concepts.md), or the
@@ -20,52 +55,27 @@ If you want to dig deeper, check out the [Sematic Concepts](concepts.md), or the
 
 ## Who we are
 
-The Sematic team hails from around the world and has extensive industry
-experience in software development, cloud infrastructure, and Machine Learning
-tooling.
+The [Sematic team](https://sematic.dev/about-sematic) hails from around the world and
+has extensive industry experience in software development, cloud infrastructure,
+and Machine Learning tooling.
 
 While searching for the Higgs boson at CERN, developing payment infrastructure
 for Instacart, or building ML tooling for Cruise, we encountered a wide variety
 of systems, practices, and patterns, which inform the design of Sematic every
 day.
 
-Notably, we spent the last four years building the infrastructure behind
-Cruise's [Continuous Learning
-Machine](https://medium.com/cruise/cruise-continuous-learning-machine-30d60f4c691b),
-which ensures safety-critical models keep learning as world conditions change.
-We encountered all sorts of use cases from statistical modeling to performance
-intensive data processing, and deep learning.
-
 We are dedicated to bringing the most powerful tools and infrastructure to DS
 and ML developers of all skills and background.
-
-## What is Sematic?
-
-Sematic is an easy-to-use, lightweight development toolkit for Machine Learning
-(ML), Data Science (DS), or other workloads.
-
-It aims to accelerate the prototyping, reporting, and productionization of ML
-and DS workflows by abstracting away many infrastructure details and bringing
-forth higher-level semantics.
-
-Sematic's features include:
-
-* An extremely lightweight Python SDK to define nestable and dynamic
-  computational workflows
-* Pseudo-static and runtime type checking
-* Execution backends: local and cloud
-* A semantic UI to monitor, inspect, and share pipelines and their artifacts
-* End-to-end lineage tracking of all artifacts and assets for reproducibility
-  and traceability
 
 ## Sematic contributors
 
 We would be thrilled to have you contribute to Sematic. You can contribute in
 many ways including the following:
 
+* [List of good first issues](https://github.com/sematic-ai/sematic/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 * [Contribute examples](https://docs.sematic.ai/contribute/contributor-guide/contribute-example)
-* Contribute to type support
-* Contribute features
+
+Get in touch with us on [Discord](https://discord.gg/4KZJ6kYVax) to get more info on how to contribute.
 
 ## License
 

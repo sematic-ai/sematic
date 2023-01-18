@@ -69,10 +69,18 @@ def _escape_filename_segment(segment):
             escaped += "_"
     return escaped
 
+def _replace_make_variables(flag, ctx):
+    """Replace $(VERSION) etc make variables in flag"""
+    if "$" in flag:
+        for varname, varsub in ctx.var.items():
+            flag = flag.replace("$(%s)" % varname, varsub)
+    return flag
+
 def _sematic_py_wheel_impl(ctx):
+    version = _replace_make_variables(ctx.attr.version, ctx)
     outfile = ctx.actions.declare_file("-".join([
         _escape_filename_segment(ctx.attr.distribution),
-        _escape_filename_segment(ctx.attr.version),
+        _escape_filename_segment(version),
         _escape_filename_segment(ctx.attr.python_tag),
         _escape_filename_segment(ctx.attr.abi),
         _escape_filename_segment(ctx.attr.platform),
@@ -129,9 +137,8 @@ def _sematic_py_wheel_impl(ctx):
 
     args = ctx.actions.args()
     args.add("--name", ctx.attr.distribution)
-    args.add("--version", ctx.attr.version)
+    args.add("--version", version)
     args.add("--python_tag", ctx.attr.python_tag)
-    args.add("--python_requires", ctx.attr.python_requires)
     args.add("--abi", ctx.attr.abi)
     args.add("--platform", ctx.attr.platform)
     args.add("--out", outfile)
@@ -146,28 +153,42 @@ def _sematic_py_wheel_impl(ctx):
 
     args.add("--input_file_list", packageinputfile)
 
-    extra_headers = []
-    if ctx.attr.author:
-        extra_headers.append("Author: %s" % ctx.attr.author)
-    if ctx.attr.author_email:
-        extra_headers.append("Author-email: %s" % ctx.attr.author_email)
-    if ctx.attr.homepage:
-        extra_headers.append("Home-page: %s" % ctx.attr.homepage)
-    if ctx.attr.license:
-        extra_headers.append("License: %s" % ctx.attr.license)
+    # Note: Description file and version are not embedded into metadata.txt yet,
+    # it will be done later by wheelmaker script.
+    metadata_file = ctx.actions.declare_file(ctx.attr.name + ".metadata.txt")
+    metadata_contents = ["Metadata-Version: 2.1"]
+    metadata_contents.append("Name: %s" % ctx.attr.distribution)
+    metadata_contents.append("Version: %s" % version)
 
-    for h in extra_headers:
-        args.add("--header", h)
+    if ctx.attr.author:
+        metadata_contents.append("Author: %s" % ctx.attr.author)
+    if ctx.attr.author_email:
+        metadata_contents.append("Author-email: %s" % ctx.attr.author_email)
+    if ctx.attr.homepage:
+        metadata_contents.append("Home-page: %s" % ctx.attr.homepage)
+    if ctx.attr.license:
+        metadata_contents.append("License: %s" % ctx.attr.license)
 
     for c in ctx.attr.classifiers:
-        args.add("--classifier", c)
+        metadata_contents.append("Classifier: %s" % c)
 
-    for r in requires:
-        args.add("--requires", r)
+    if ctx.attr.python_requires:
+        metadata_contents.append("Requires-Python: %s" % ctx.attr.python_requires)
+    for requirement in requires:  # PATCHED LINE
+        metadata_contents.append("Requires-Dist: %s" % requirement)
 
-    for option, requirements in ctx.attr.extra_requires.items():
-        for r in requirements:
-            args.add("--extra_requires", r + ";" + option)
+    for option, option_requirements in sorted(ctx.attr.extra_requires.items()):
+        metadata_contents.append("Provides-Extra: %s" % option)
+        for requirement in option_requirements:
+            metadata_contents.append(
+                "Requires-Dist: %s; extra == '%s'" % (requirement, option),
+            )
+    ctx.actions.write(
+        output = metadata_file,
+        content = "\n".join(metadata_contents) + "\n",
+    )
+    other_inputs.append(metadata_file)
+    args.add("--metadata_file", metadata_file)
 
     # Merge console_scripts into entry_points.
     entrypoints = dict(ctx.attr.entry_points)  # Copy so we can mutate it
@@ -199,12 +220,25 @@ def _sematic_py_wheel_impl(ctx):
         args.add("--description_file", description_file)
         other_inputs.append(description_file)
 
+    for target, filename in ctx.attr.extra_distinfo_files.items():
+        target_files = target.files.to_list()
+        if len(target_files) != 1:
+            fail(
+                "Multi-file target listed in extra_distinfo_files %s",
+                filename,
+            )
+        other_inputs.extend(target_files)
+        args.add(
+            "--extra_distinfo_file",
+            filename + ";" + target_files[0].path,
+        )
+
     ctx.actions.run(
         inputs = depset(direct = other_inputs, transitive = [inputs_to_package]),
         outputs = [outfile, name_file],
         arguments = [args],
         executable = ctx.executable._wheelmaker,
-        progress_message = "Building wheel",
+        progress_message = "Building wheel {}".format(ctx.label),
     )
     return [
         DefaultInfo(
@@ -296,7 +330,8 @@ Stamped targets are not rebuilt unless their dependencies change.
         mandatory = True,
         doc = (
             "Version number of the package. Note that this attribute " +
-            "supports stamp format strings. Eg `1.2.3-{BUILD_TIMESTAMP}`"
+            "supports stamp format strings (eg. `1.2.3-{BUILD_TIMESTAMP}`) " +
+            "as well as 'make variables' (e.g. `1.2.3-$(VERSION)`)."
         ),
     ),
     "_stamp_flag": attr.label(
@@ -310,7 +345,9 @@ _requirement_attrs = {
         doc = "List of optional requirements for this package",
     ),
     "requires": attr.string_list(
-        doc = "List of requirements for this package",
+        doc = ("List of requirements for this package. See the section on " +
+               "[Declaring required dependency](https://setuptools.readthedocs.io/en/latest/userguide/dependency_management.html#declaring-dependencies) " +
+               "for details and examples of the format of this argument."),
     ),
 }
 
@@ -341,8 +378,12 @@ _other_attrs = {
         doc = "A list of strings describing the categories for the package. For valid classifiers see https://pypi.org/classifiers",
     ),
     "description_file": attr.label(
-        doc = "A file containing text describing the package in a single line.",
+        doc = "A file containing text describing the package.",
         allow_single_file = True,
+    ),
+    "extra_distinfo_files": attr.label_keyed_string_dict(
+        doc = "Extra files to add to distinfo directory in the archive.",
+        allow_files = True,
     ),
     "homepage": attr.string(
         doc = "A string specifying the URL for the package homepage.",
@@ -354,10 +395,7 @@ _other_attrs = {
     ),
     "python_requires": attr.string(
         doc = (
-            "A string specifying what other distributions need to be installed " +
-            "when this one is. See the section on " +
-            "[Declaring required dependency](https://setuptools.readthedocs.io/en/latest/userguide/dependency_management.html#declaring-dependencies) " +
-            "for details and examples of the format of this argument."
+            "Python versions required by this distribution, e.g. '>=3.5,<3.7'"
         ),
         default = "",
     ),

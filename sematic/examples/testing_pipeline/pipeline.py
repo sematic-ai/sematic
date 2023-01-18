@@ -8,9 +8,13 @@ import random
 import time
 from typing import List, Optional
 
+# Third-party
+import ray
+
 # Sematic
 import sematic
 from sematic.plugins.external_resource.timed_message import TimedMessage
+from sematic.resolvers.resource_requirements import ResourceRequirements
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -24,6 +28,29 @@ def add(a: float, b: float) -> float:
     logger.info("Executing: add(a=%s, b=%s)", a, b)
     time.sleep(5)
     return a + b
+
+
+@sematic.func(inline=False)
+def add_with_ray(a: float, b: float, cluster_address: str) -> float:
+    """
+    Adds two numbers, using a Ray cluster.
+    """
+    logger.info(
+        "Executing: add_with_ray(a=%s, b=%s, cluster_address=%s)", a, b, cluster_address
+    )
+    ray.init(address=cluster_address)
+    result = ray.get([add_ray_task.remote(a, b)])[0]
+    logger.info("Result from ray for %s + %s: %s", a, b, result)
+    return result
+
+
+@ray.remote
+def add_ray_task(x, y):
+    # create new logger due to this:
+    # https://stackoverflow.com/a/55286452/2540669
+    logger = logging.getLogger(__name__)
+    logger.info("Adding from Ray: %s, %s", x, y)
+    return x + y
 
 
 @sematic.func(inline=True)
@@ -73,6 +100,20 @@ def add_using_resource(a: float, b: float) -> float:
         )
         time.sleep(5)
         return a + b
+
+
+@sematic.func(inline=False)
+def add_with_resource_requirements(a: float, b: float) -> float:
+    """
+    Adds two numbers with ResourceRequirements.
+    """
+    # Disclaimer: Does not come with ResourceRequirements!
+    # You need to specify your own by doing:
+    #   function = add_with_resource_requirements(...)
+    #   function.set(resource_requirements=my_resource_requirements)
+    logger.info("Executing: add_with_resource_requirements(a=%s, b=%s)", a, b)
+    time.sleep(5)
+    return a + b
 
 
 @sematic.func(inline=False)
@@ -196,8 +237,10 @@ def testing_pipeline(
     should_raise: bool = False,
     raise_retry_probability: Optional[float] = None,
     oom: bool = False,
-    exit_code: Optional[int] = None,
     external_resource: bool = False,
+    ray_cluster_address: Optional[str] = None,
+    resource_requirements: Optional[ResourceRequirements] = None,
+    exit_code: Optional[int] = None,
 ) -> float:
     """
     The root function of the testing pipeline.
@@ -224,11 +267,19 @@ def testing_pipeline(
     oom: bool
         Whether to include a function that causes an Out of Memory error.
         Defaults to False.
+    external_resource: bool
+        Whether to use an external resource. Defaults to False.
+    resource_requirements: Optional[ResourceRequirements]
+        If not None, includes a function that runs with the specified requirements.
+        Defaults to False.
     exit_code: Optional[int]
         If not None, includes a function which will exit with the specified code.
         Defaults to None.
     external_resource: bool
         Whether to use an external resource. Defaults to False.
+    ray_cluster_address:
+        The address of a Ray cluster. `None` if Ray should not be used. If specified,
+        two numbers will be added using a Ray task that executes on the remote cluster.
     """
     # have an initial function whose output is used as inputs by all other functions
     # this staggers the rest of the functions and allows the user a chance to monitor and
@@ -239,10 +290,6 @@ def testing_pipeline(
 
     if inline:
         futures.append(add_inline(initial_future, 3))
-
-    if external_resource:
-        futures.append(add_using_resource(initial_future, 1.0))
-        futures.append(add_inline_using_resource(initial_future, 1.0))
 
     if nested:
         futures.append(add4_nested(initial_future, 1, 2, 3))
@@ -262,8 +309,20 @@ def testing_pipeline(
     if oom:
         futures.append(do_oom(initial_future))
 
+    if external_resource:
+        futures.append(add_using_resource(initial_future, 1.0))
+        futures.append(add_inline_using_resource(initial_future, 1.0))
+
+    if resource_requirements is not None:
+        function = add_with_resource_requirements(initial_future, 3)
+        function.set(resource_requirements=resource_requirements)
+        futures.append(function)
+
     if exit_code is not None:
         futures.append(do_exit(initial_future, exit_code))
+
+    if ray_cluster_address is not None:
+        futures.append(add_with_ray(initial_future, 1.0, ray_cluster_address))
 
     # collect all values
     result = add_all(futures) if len(futures) > 1 else futures[0]

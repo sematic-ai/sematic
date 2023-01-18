@@ -6,7 +6,7 @@ import argparse
 import logging
 import os
 import sys
-from typing import Dict
+from typing import Dict, Optional
 
 # Third-party
 import debugpy
@@ -14,6 +14,10 @@ import debugpy
 # Sematic
 from sematic import CloudResolver, LocalResolver, SilentResolver
 from sematic.examples.testing_pipeline.pipeline import testing_pipeline
+from sematic.resolvers.resource_requirements import (
+    KubernetesResourceRequirements,
+    ResourceRequirements,
+)
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
 
 logger = logging.getLogger(__name__)
@@ -31,7 +35,7 @@ DESCRIPTION = (
 )
 LOG_LEVEL_HELP = "The log level for the pipeline and Resolver. Defaults to INFO."
 CLOUD_HELP = (
-    "Whether to run the resolution in the cloud, or locally. Defaults to False."
+    "Whether to run the resolution in the cloud, or locally. Defaults to False. "
     "Only one of --silent or --cloud are allowed."
 )
 SILENT_HELP = (
@@ -82,9 +86,21 @@ EXTERNAL_RESOURCE_HELP = (
     "Whether to use an artificial external resource when executing some of "
     "the 'add' functions."
 )
+EXPAND_SHARED_MEMORY_HELP = (
+    "Whether to include a function that runs on a Kubernetes pod which uses an expanded "
+    "shared memory partition. This option is added to a shared function which uses one "
+    "KubernetesResourceRequirements configuration containing all the relevant specified "
+    "CLI parameters. Defaults to False."
+)
 EXIT_HELP = (
     "Includes a function which will exit with the specified code. "
-    "If specified without a value, defaults to 0."
+    "If specified without a value, defaults to 0. Defaults to None."
+)
+
+RAY_HELP = (
+    "Includes a function that is executed on the specified external Ray cluster. "
+    "using a remote Ray cluster. If not provided, Ray will not be used. "
+    "Example: 'ray://raycluster-complete-head-svc:10001'"
 )
 
 
@@ -104,7 +120,9 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         default=False,
         help=CLOUD_HELP,
-        **_required_by("--detach", "--max-parallelism", "--oom"),
+        **_required_by(
+            "--detach", "--expand-shared-memory", "--max-parallelism", "--oom"
+        ),
     )
     parser.add_argument(
         "--silent",
@@ -167,6 +185,12 @@ def _parse_args() -> argparse.Namespace:
         help=EXTERNAL_RESOURCE_HELP,
     )
     parser.add_argument(
+        "--expand-shared-memory",
+        action="store_true",
+        default=False,
+        help=EXPAND_SHARED_MEMORY_HELP,
+    )
+    parser.add_argument(
         "--exit",
         type=int,
         nargs="?",
@@ -174,6 +198,11 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         dest="exit_code",
         help=EXIT_HELP,
+    )
+    parser.add_argument(
+        "--ray-cluster-address",
+        default=None,
+        help=RAY_HELP,
     )
 
     args = parser.parse_args()
@@ -192,6 +221,10 @@ def _parse_args() -> argparse.Namespace:
             "Only one of '--silent' or '--cloud' can be used, but both were specified"
         )
 
+    resource_requirements = _get_resource_requirements(args)
+    if resource_requirements is not None:
+        args.resource_requirements = resource_requirements
+
     return args
 
 
@@ -209,6 +242,21 @@ def _get_resolver(args: argparse.Namespace) -> StateMachineResolver:
     )
 
 
+def _get_resource_requirements(
+    args: argparse.Namespace,
+) -> Optional[ResourceRequirements]:
+    """Instantiates ResourceRequirements based on the passed arguments."""
+    # add all new resource requirements here
+    if not args.expand_shared_memory:
+        return None
+
+    k8_resource_requirements = KubernetesResourceRequirements(
+        mount_expanded_shared_memory=args.expand_shared_memory
+    )
+
+    return ResourceRequirements(kubernetes=k8_resource_requirements)
+
+
 def _wait_for_debugger():
     debugpy.listen(5724)
 
@@ -220,6 +268,7 @@ def _wait_for_debugger():
 def main() -> None:
     if os.environ.get("DEBUGPY", None) is not None:
         _wait_for_debugger()
+
     args = _parse_args()
     logging.basicConfig(level=args.log_level)
     logger.info("Command line arguments: %s", args)
@@ -229,8 +278,10 @@ def main() -> None:
     logger.info("Pipeline arguments: %s", effective_args)
 
     resolver = _get_resolver(args)
+
     future = testing_pipeline(**effective_args).set(
-        name="Sematic Testing Pipeline", tags=["example", "testing"]
+        name="Sematic Testing Pipeline",
+        tags=["example", "testing"],
     )
 
     logger.info("Invoking the pipeline...")

@@ -371,6 +371,9 @@ class AbstractExternalResource:
                     f"Resolver {ctx.private.load_resolver_class()} failed to "
                     f"activate {updated}."
                 )
+            ctx.private.load_resolver_class().entering_resource_context(
+                resource=updated
+            )
             return updated
         except Exception:
             self.__exit__()  # type: ignore
@@ -378,6 +381,7 @@ class AbstractExternalResource:
 
     def __exit__(self, exc_type=None, exc_value=None, exc_traceback=None):
         ctx: SematicContext = context()
+        ctx.private.load_resolver_class().exiting_resource_context(self.id)
         deactivated = ctx.private.load_resolver_class().deactivate_resource(self.id)
         if deactivated.status.state != ResourceState.DEACTIVATED:
             raise IllegalStateTransitionError(

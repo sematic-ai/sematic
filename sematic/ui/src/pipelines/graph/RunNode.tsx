@@ -1,7 +1,6 @@
 import {
   Alert,
   AlertTitle,
-  Box,
   lighten,
   PaletteColor,
   Theme,
@@ -47,20 +46,11 @@ export default function RunNode(props: NodeProps) {
           position={Position.Top}
           type="target"
           style={{
-            backgroundColor: lighten(color.light, props.selected ? 0.5 : 0.5),
+            backgroundColor: lighten(color.light, 0.5),
             border: 0,
           }}
         />
       ))}
-      {/*<Handle
-        isConnectable={false}
-        type="target"
-        position={Position.Top}
-        style={{
-          backgroundColor: lighten(color.light, props.selected ? 0.5 : 0.5),
-          border: 0,
-        }}
-      />*/}
       <Alert
         //severity="success"
         variant="outlined"
@@ -72,7 +62,7 @@ export default function RunNode(props: NodeProps) {
         sx={{
           paddingX: 3,
           cursor: "pointer",
-          borderColor: lighten(color.light, props.selected ? 0.5 : 0.5),
+          borderColor: lighten(color.light, 0.5),
           backgroundColor: lighten(color.light, props.selected ? 0.7 : 0.9),
           color: color.dark,
           //"&:hover": {
@@ -85,14 +75,6 @@ export default function RunNode(props: NodeProps) {
           <RunStateChip state={run.future_state} />
           {run.name}
         </AlertTitle>
-        {/*<CalculatorPath calculatorPath={shortCalculatorPath} />*/}
-        <Box marginTop={1}>
-          {/*
-          <Tags
-            tags={run.tags}
-            chipProps={{ color: getChipColor(run.future_state) }}
-          />*/}
-        </Box>
       </Alert>
       <Handle
         id={run.id}
@@ -100,7 +82,7 @@ export default function RunNode(props: NodeProps) {
         type="source"
         position={Position.Bottom}
         style={{
-          backgroundColor: lighten(color.light, props.selected ? 0.5 : 0.5),
+          backgroundColor: lighten(color.light, 0.5),
           border: 0,
         }}
       />

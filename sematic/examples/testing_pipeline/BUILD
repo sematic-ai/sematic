@@ -4,6 +4,7 @@ sematic_example(
     name = "testing_pipeline",
     requirements = [
         "debugpy",
+        "ray",
     ],
 )
 
@@ -15,5 +16,6 @@ sematic_pipeline(
     deps = [
         ":testing_pipeline_lib",
         requirement("debugpy"),
+        requirement("ray"),
     ],
 )
