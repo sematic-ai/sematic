@@ -3,7 +3,6 @@ from typing import List
 
 # Third-party
 import flask
-import sqlalchemy
 
 # Sematic
 from sematic.api.app import sematic_api
@@ -14,7 +13,9 @@ from sematic.db.models.edge import Edge
 
 @sematic_api.route("/api/v1/edges", methods=["GET"])
 def list_edges_endpoint() -> flask.Response:
-    limit, _, _, sql_predicates = get_request_parameters(flask.request.args, Edge)
+    limit, order, _, _, sql_predicates = get_request_parameters(
+        args=flask.request.args, model=Edge
+    )
 
     with db().get_session() as session:
         query = session.query(Edge)
@@ -22,7 +23,7 @@ def list_edges_endpoint() -> flask.Response:
         if sql_predicates is not None:
             query = query.filter(sql_predicates)
 
-        query = query.order_by(sqlalchemy.desc(Edge.created_at))
+        query = query.order_by(order(Edge.created_at))
 
         edges: List[Edge] = query.limit(limit).all()
 
