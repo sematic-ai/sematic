@@ -5,6 +5,9 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.22.1](https://pypi.org/project/sematic/0.22.1/)
+    * [bugfix] To the script to allow auto-upgrading settings files.
+      **IMPORTANT**: Users should run `sematic migrate` upon install.
 * [0.22.0](https://pypi.org/project/sematic/0.22.0/)
     * [feature] Expose in the dashboard when a run is cloned from another
     * [feature] Allow specifying multiple e-mail domains that can authenticate to Sematic
