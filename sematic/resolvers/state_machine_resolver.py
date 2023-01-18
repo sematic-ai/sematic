@@ -311,6 +311,9 @@ class StateMachineResolver(Resolver, abc.ABC):
             self._execute_future(future)
 
     def _execute_future(self, future: AbstractFuture) -> None:
+        """
+        Attempts to execute the given Future.
+        """
         if not self._can_schedule_future(future):
             logger.info("Currently not scheduling %s", future.calculator)
             return
