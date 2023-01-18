@@ -73,6 +73,10 @@ We cut releases from the `main` branch, following these steps:
 
 - Bump the version in `wheel_version.bzl`, `sematic/versions.py`,
   and `helm/sematic-server/Chart.yaml`
+- Increment the minor version of the `version` field in
+  `helm/sematic-server/Chart.yaml`. Note that this will be DIFFERENT
+  from the Sematic version you changed in prior steps (chart version
+  will be 1.X.Y, Sematic version is 0.M.N).
 - Update `changelog.md` with the new version number and any missing change
   entries
 - Make the bump commit
@@ -98,6 +102,10 @@ Do this for all supported versions of Python. You can check your virtual env
 Python version using `sematic version` (as well as the Server and Client
 version).
 
+At this point, you should also deploy to a cloud Dev environment using the Helm chart and execute
+at least one pipeline. You will likely also want to smoke test new features that
+were included in the release.
+
 If everything works fine, we are ready to push the release.
 
 ```bash
@@ -120,13 +128,6 @@ directory.
 ```bash
 $ TAG=v$(python3 sematic/versions.py) make release-server
 ```
-
-Now you can prepare the Helm chart release.
-
-Update the file `helm/sematic-server/Chart.yaml` to:
-1) Confirm that the `appVersion` field matches the version of the new release.
-2) Increment the minor version of the `version` field, i.e. if it's currently
-   `1.3.5`, make it `1.3.6`.
 
 Next you can generate the Helm package and publish it to the Helm repository.
 Clone the repo with `git clone git@github.com:sematic-ai/helm-charts.git`, and
