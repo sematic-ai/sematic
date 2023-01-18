@@ -36,12 +36,23 @@ worker-image:
 
 wheel:
 	rm -f bazel-bin/sematic/*.whl
-	cat README.md | grep -v "<img" | grep -v "<p" > README.nohtml
+	cat README.md | \
+		grep -v "<img" | \
+		grep -v "<p" | \
+		grep -v "/p>" | \
+		grep -v "<h2" | \
+		grep -v "/h2>" | \
+		grep -v "<h3" | \
+		grep -v "/h3>" | \
+		grep -v "<a" | \
+		grep -v "/a>" | \
+		grep -v "/img>" > README.nohtml
 	m2r --overwrite README.nohtml
 	rm README.nohtml
 	bazel build //sematic:wheel
 
 test-release:
+	python3 -m twine check bazel-bin/sematic/*.whl
 	python3 -m twine upload --repository testpypi bazel-bin/sematic/*.whl
 
 release:
