@@ -1,4 +1,5 @@
 # Standard Library
+import datetime
 import json
 import typing
 import uuid
@@ -96,7 +97,9 @@ def test_list_runs(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: 
     assert payload["content"] == [run_.to_json_encodable() for run_ in created_runs[3:]]
 
 
-def test_group_by(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: F811
+def test_list_runs_group_by(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
     runs = {key: [make_run(name=key), make_run(name=key)] for key in ("RUN_A", "RUN_B")}
 
     for name, runs_ in runs.items():
@@ -112,7 +115,9 @@ def test_group_by(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: F
     assert {run_["name"] for run_ in payload["content"]} == set(runs)
 
 
-def test_filters(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: F811
+def test_list_runs_filters(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
     runs = make_run(), make_run()
     runs[0].parent_id = uuid.uuid4().hex
 
@@ -122,7 +127,7 @@ def test_filters(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: F8
     for run_ in runs:
         filters = json.dumps({"parent_id": {"eq": run_.parent_id}})
 
-        results = test_client.get("/api/v1/runs?filters={}".format(filters))
+        results = test_client.get(f"/api/v1/runs?filters={filters}")
 
         payload = results.json
         payload = typing.cast(typing.Dict[str, typing.Any], payload)
@@ -131,7 +136,28 @@ def test_filters(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: F8
         assert payload["content"][0]["id"] == run_.id
 
 
-def test_and_filters(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: F811
+def test_list_runs_filters_empty(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    run1 = make_run(name="abc", calculator_path="abc")
+    run2 = make_run(name="def", calculator_path="def")
+
+    for run_ in [run1, run2]:
+        save_run(run_)
+
+    filters = json.dumps({"name": {"eq": "ghi"}})
+
+    results = test_client.get(f"/api/v1/runs?filters={filters}")
+
+    payload = results.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == 0
+
+
+def test_list_runs_and_filters(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
     run1 = make_run(name="abc", calculator_path="abc")
     run2 = make_run(name="def", calculator_path="abc")
     run3 = make_run(name="abc", calculator_path="def")
@@ -141,7 +167,7 @@ def test_and_filters(mock_auth, test_client: flask.testing.FlaskClient):  # noqa
 
     filters = {"AND": [{"name": {"eq": "abc"}}, {"calculator_path": {"eq": "abc"}}]}
 
-    results = test_client.get("/api/v1/runs?filters={}".format(json.dumps(filters)))
+    results = test_client.get(f"/api/v1/runs?filters={json.dumps(filters)}")
 
     payload = results.json
     payload = typing.cast(typing.Dict[str, typing.Any], payload)
@@ -150,10 +176,135 @@ def test_and_filters(mock_auth, test_client: flask.testing.FlaskClient):  # noqa
     assert payload["content"][0]["id"] == run1.id
 
 
+def test_list_runs_or_filters(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    run1 = make_run(name="abc", calculator_path="abc")
+    run2 = make_run(name="def", calculator_path="abc")
+    run3 = make_run(name="def", calculator_path="def")
+
+    for run_ in [run1, run2, run3]:
+        save_run(run_)
+
+    filters = {"OR": [{"name": {"eq": "abc"}}, {"calculator_path": {"eq": "def"}}]}
+
+    results = test_client.get(f"/api/v1/runs?filters={json.dumps(filters)}")
+
+    payload = results.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == 2
+    assert payload["content"][0]["id"] == run3.id
+    assert payload["content"][1]["id"] == run1.id
+
+
+def test_list_runs_limit(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    run1, run2, run3 = make_run(), make_run(), make_run()
+
+    for run_ in [run1, run2, run3]:
+        save_run(run_)
+
+    results = test_client.get("/api/v1/runs?limit=2")
+
+    payload = results.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == 2
+    assert payload["content"][0]["id"] == run3.id
+    assert payload["content"][1]["id"] == run2.id
+
+
+def test_list_runs_order_asc(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    now = datetime.datetime.utcnow()
+    run1 = make_run(created_at=now + datetime.timedelta(seconds=1))
+    run2 = make_run(created_at=now + datetime.timedelta(seconds=2))
+    run3 = make_run(created_at=now + datetime.timedelta(seconds=3))
+
+    for run_ in [run1, run2, run3]:
+        save_run(run_)
+
+    results = test_client.get("/api/v1/runs?order=asc")
+
+    payload = results.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == 3
+    assert payload["content"][0]["id"] == run1.id
+    assert payload["content"][1]["id"] == run2.id
+    assert payload["content"][2]["id"] == run3.id
+
+
+def test_list_runs_order_desc(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    now = datetime.datetime.utcnow()
+    run1 = make_run(created_at=now + datetime.timedelta(seconds=1))
+    run2 = make_run(created_at=now + datetime.timedelta(seconds=2))
+    run3 = make_run(created_at=now + datetime.timedelta(seconds=3))
+
+    for run_ in [run1, run2, run3]:
+        save_run(run_)
+
+    results = test_client.get("/api/v1/runs?order=desc")
+
+    payload = results.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == 3
+    assert payload["content"][0]["id"] == run3.id
+    assert payload["content"][1]["id"] == run2.id
+    assert payload["content"][2]["id"] == run1.id
+
+
+def test_list_runs_limit_400(
+    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    response = test_client.get("/api/v1/runs?limit=bad")
+
+    assert response.status_code == 400
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert payload == dict(error="invalid literal for int() with base 10: 'bad'")
+
+
+def test_list_runs_order_400(
+    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    response = test_client.get("/api/v1/runs?order=bad")
+
+    assert response.status_code == 400
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert payload == dict(
+        error="invalid value for 'order'; expected one of: ['asc', 'desc']; got: 'bad'"
+    )
+
+
+def test_list_runs_cursor_400(
+    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    response = test_client.get("/api/v1/runs?cursor=///////")
+
+    assert response.status_code == 400
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert payload == dict(error="invalid value for 'cursor'")
+
+
 def test_get_run_endpoint(
     mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
-    response = test_client.get("/api/v1/runs/{}".format(persisted_run.id))
+    response = test_client.get(f"/api/v1/runs/{persisted_run.id}")
 
     payload = response.json
     payload = typing.cast(typing.Dict[str, typing.Any], payload)
@@ -400,7 +551,7 @@ def test_get_run_logs(
         log_info_message=None,
     )
     mock_load_log_lines.return_value = mock_result
-    response = test_client.get("/api/v1/runs/{}/logs".format(persisted_run.id))
+    response = test_client.get(f"/api/v1/runs/{persisted_run.id}/logs")
 
     payload = response.json
     payload = typing.cast(typing.Dict[str, typing.Any], payload)
@@ -412,11 +563,8 @@ def test_get_run_logs(
         filter_string="a",
     )
 
-    test_client.get(
-        "/api/v1/runs/{}/logs?{}".format(
-            persisted_run.id, "&".join(f"{k}={v}" for k, v in kwargs.items())
-        ),
-    )
+    query_string = "&".join(f"{k}={v}" for k, v in kwargs.items())
+    test_client.get(f"/api/v1/runs/{persisted_run.id}/logs?{query_string}")
 
     modified_kwargs = dict(
         continuation_cursor="continue...",
@@ -456,7 +604,7 @@ def test_get_run_graph_endpoint(
     future = pipeline(1, 2)
     future.resolve()
 
-    response = test_client.get("/api/v1/runs/{}/graph?root={}".format(future.id, root))
+    response = test_client.get(f"/api/v1/runs/{future.id}/graph?root={root}")
 
     assert response.status_code == 200
 

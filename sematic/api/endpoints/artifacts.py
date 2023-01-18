@@ -5,7 +5,6 @@ from typing import List, Optional, Type, cast
 
 # Third-party
 import flask
-import sqlalchemy
 from sqlalchemy.orm.exc import NoResultFound
 
 # Sematic
@@ -30,7 +29,9 @@ logger = logging.getLogger(__name__)
 @sematic_api.route("/api/v1/artifacts", methods=["GET"])
 @authenticate
 def list_artifacts_endpoint(user: Optional[User] = None) -> flask.Response:
-    limit, _, _, sql_predicates = get_request_parameters(flask.request.args, Artifact)
+    limit, order, _, _, sql_predicates = get_request_parameters(
+        args=flask.request.args, model=Artifact
+    )
 
     with db().get_session() as session:
         query = session.query(Artifact)
@@ -38,7 +39,7 @@ def list_artifacts_endpoint(user: Optional[User] = None) -> flask.Response:
         if sql_predicates is not None:
             query = query.filter(sql_predicates)
 
-        query = query.order_by(sqlalchemy.desc(Artifact.created_at))
+        query = query.order_by(order(Artifact.created_at))
 
         artifacts: List[Artifact] = query.limit(limit).all()
 
@@ -51,15 +52,15 @@ def list_artifacts_endpoint(user: Optional[User] = None) -> flask.Response:
 @authenticate
 def get_artifact_endpoint(user: Optional[User], artifact_id: str) -> flask.Response:
     """
-    Retrive an artifact.
+    Retrieve an artifact by its ID.
 
     Parameters
     ----------
     artifact_id: str
         ID of artifact to retrieve
 
-    Returns
-    -------
+    Response
+    --------
     content: Artifact
         The requested artifact in JSON format
     """
@@ -70,9 +71,7 @@ def get_artifact_endpoint(user: Optional[User], artifact_id: str) -> flask.Respo
             "No Artifact with id {}".format(repr(artifact_id)), HTTPStatus.NOT_FOUND
         )
 
-    payload = dict(
-        content=artifact.to_json_encodable(),
-    )
+    payload = dict(content=artifact.to_json_encodable())
 
     return flask.jsonify(payload)
 
