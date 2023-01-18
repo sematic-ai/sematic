@@ -255,13 +255,14 @@ export default function PipelineBar() {
               label="Latest runs"
               onChange={onSelect}
             >
-              {latestRuns.map(({id, future_state, created_at}) => (
-                <MenuItem value={id} key={id}>
+              {latestRuns.map((run) => {
+                const {id, created_at} = run;
+                return <MenuItem value={id} key={id}>
                   <Typography
                     component="span"
                     sx={{ display: "flex", alignItems: "center" }}
                   >
-                    <RunStateChip state={future_state} />
+                    <RunStateChip run={run} />
                     <Box>
                       <Typography sx={{ fontSize: "small", color: "GrayText" }}>
                         <code>{id.substring(0, 6)}</code>
@@ -272,7 +273,7 @@ export default function PipelineBar() {
                     </Box>
                   </Typography>
                 </MenuItem>
-              ))}
+              })}
             </Select>
           </FormControl>
         </Box>

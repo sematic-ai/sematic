@@ -52,7 +52,7 @@ export default function RunTree(props: {
             selected={selectedRun.id === run!.id}
           >
             <ListItemIcon sx={{ minWidth: "20px" }}>
-              <RunStateChip state={run!.future_state} />
+              <RunStateChip run={run!} />
             </ListItemIcon>
             <ListItemText primary={run!.name} />
           </ListItemButton>

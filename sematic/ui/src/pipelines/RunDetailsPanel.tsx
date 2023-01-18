@@ -1,9 +1,12 @@
 import { Box, Typography } from "@mui/material";
+import { styled } from "@mui/system";
 import { useCallback, useContext, useMemo } from "react";
 import { UserContext } from "..";
 import { ActionMenu, ActionMenuItem } from "../components/ActionMenu";
 import CalculatorPath from "../components/CalculatorPath";
+import { CopyButton } from "../components/CopyButton";
 import Docstring from "../components/Docstring";
+import RunId from "../components/RunId";
 import RunStateChip from "../components/RunStateChip";
 import { RunTime } from "../components/RunTime";
 import { SnackBarContext } from "../components/SnackBarProvider";
@@ -16,6 +19,12 @@ import { fetchJSON } from "../utils";
 import PipelinePanelsContext from "./PipelinePanelsContext";
 import PipelineRunViewContext from "./PipelineRunViewContext";
 import RunTabs, { IOArtifacts } from "./RunTabs";
+
+const StyledText = styled('span')`
+  font-size: small;
+  margin-left: 1em;
+  color: grey;
+`;
 
 export function RunDetailsPanel() {
     const { selectedRun } = usePipelinePanelsContext() as ExtractContextType<typeof PipelinePanelsContext> & {
@@ -73,18 +82,16 @@ export function RunDetailsPanel() {
               <Box marginBottom={3}>
                 <Typography variant="h6">{selectedRun.name}</Typography>
                 <Typography fontSize="small" color="GrayText" component="span">
-                  <code style={{ fontSize: 12 }}>
-                  ID: {selectedRun.id}
-                  {
-                    selectedRun.original_run_id &&
-                    /*
-                      TODO #278: replace full id with a 6-character trimmed
-                      link using "./Notes/RunId"
-                    */
-                    <> (cloned from {selectedRun.original_run_id})</>
-                  }
-                  </code>
+                  {'ID: '}
+                  <code style={{ fontSize: 12 }}>{selectedRun.id}</code>
                 </Typography>
+                <CopyButton text={selectedRun.id} message="Copied run ID" color={"grey"} />
+                {
+                    selectedRun.original_run_id &&
+                    <StyledText>
+                      cloned from <RunId runId={selectedRun.original_run_id} copy={false} />
+                    </StyledText>
+                }
                 <br />
                 <CalculatorPath calculatorPath={selectedRun.calculator_path} />
               </Box>
@@ -97,7 +104,7 @@ export function RunDetailsPanel() {
               />
             </Box>
             <Box sx={{ gridColumn: 3, pt: 3, pr: 5 }}>
-              <RunStateChip state={selectedRun.future_state} variant="full" />
+              <RunStateChip run={selectedRun} variant="full" />
               <RunTime run={selectedRun} prefix="in " />
             </Box>
           </Box>

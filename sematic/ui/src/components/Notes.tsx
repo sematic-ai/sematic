@@ -1,8 +1,6 @@
 import { Box, Typography, useTheme } from "@mui/material";
-import { Link, useParams } from "react-router-dom";
-import { getPipelineUrlPattern } from "../hooks/pipelineHooks";
 import { Note, User } from "../Models";
-import { CopyButton } from "./CopyButton";
+import RunId from "./RunId";
 import TimeAgo from "./TimeAgo";
 import UserAvatar from "./UserAvatar";
 
@@ -65,22 +63,3 @@ export function NoteView(props: {
   );
 }
 
-function RunId(props: {
-  runId: string;
-  trim?: boolean;
-}) {
-  const { runId, trim = true } = props;
-
-  const { calculatorPath } = useParams();
-
-  return (
-    <>
-      <Link to={getPipelineUrlPattern(calculatorPath!, runId)} style={
-        {fontSize: '12px'}
-      }>
-          {trim ? runId.substring(0, 6) : runId}
-      </Link>
-      <CopyButton text={runId} message="Copied run ID" />
-    </>
-  );
-}

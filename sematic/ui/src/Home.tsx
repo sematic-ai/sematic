@@ -78,7 +78,7 @@ export default function Home() {
       component="span"
       sx={{ display: "flex", alignItems: "center" }}
     >
-      Your latest run:&nbsp; <RunStateChip state={run.future_state} />
+      Your latest run:&nbsp; <RunStateChip run={run} />
       <Link href={"/pipelines/" + run.calculator_path}>{run.name}</Link>
     </Typography>;
   }, [isLoaded, runs]);
