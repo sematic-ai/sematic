@@ -121,14 +121,25 @@ export function usePipelineNavigation(pipelinePath: string) {
     const { rootId } = useParams();
     const { hash } = useLocation();
 
-    return useCallback((requestedRootId: string, replace: boolean = false) => {
+    return useCallback((requestedRootId: string, replace: boolean = false,
+        hashOverrideValues: Record<string, string> | undefined = undefined) => {
         if ( rootId === requestedRootId ) {
             return
         }
 
+        let newHashValue = hash;
+
+        if (hashOverrideValues) {
+            const searchParams = new URLSearchParams(hash);
+            for (const key of Object.keys(hashOverrideValues)) {
+                searchParams.set(key, hashOverrideValues[key]);
+            }
+            newHashValue = searchParams.toString();
+        }
+
         navigate({
             pathname: getPipelineUrlPattern(pipelinePath, requestedRootId),
-            hash
+            hash: newHashValue
         }, {
             replace
         });

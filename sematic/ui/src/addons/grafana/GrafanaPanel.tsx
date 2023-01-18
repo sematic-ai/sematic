@@ -2,10 +2,11 @@ import { OpenInNew } from "@mui/icons-material";
 import { Box, Button } from "@mui/material";
 import { useContext, useMemo } from "react";
 import { EnvContext } from "../..";
-import { Run } from "../../Models";
+import { usePipelinePanelsContext } from "../../hooks/pipelineHooks";
 
-export default function GrafanaPanel(props: { run: Run }) {
-  const { run } = props;
+export default function GrafanaPanel() {
+  const { selectedRun } = usePipelinePanelsContext();
+  const run = selectedRun!;
   const env: Map<string, string> = useContext(EnvContext);
   const grafanaPanelUrlSettings = env.get("GRAFANA_PANEL_URL");
   const iframeTitle = useMemo(() => `Grafana panel for run ${run.id}`, [run]);

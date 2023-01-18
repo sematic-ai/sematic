@@ -104,7 +104,7 @@ export function RunDetailsPanel() {
           <Box sx={{ mb: 10, mt: 5, flexShrink: 1}}>
             <Docstring docstring={selectedRun.description} />
           </Box>
-          <RunTabs run={selectedRun} artifacts={selectedRunArtifacts} />
+          <RunTabs artifacts={selectedRunArtifacts!} />
         </Box>);
 }
 

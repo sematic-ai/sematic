@@ -66,12 +66,9 @@ export function PipelineRunViewRouter() {
     if (rootId !== run.root_id) { 
       // in case `rootId` is actually a nested run. Navigate to new URL
       const nestedRunId = rootId!;
-      setSelectedRunId(nestedRunId);
-      setTimeout(() => { // use `setTimeout` so setSelectedRunId has a chance to update URL hash.
-        navigate(run.root_id);
-      });
+      navigate(run.root_id, true, {'run': nestedRunId});
     }
-  }, [run, rootId, navigate, setSelectedRunId]);
+  }, [run, rootId, pipelinePath, navigate, setSelectedRunId]);
 
   if (error || isLoading) {
     return <Loading error={error} isLoaded={!isLoading} />
