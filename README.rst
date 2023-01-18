@@ -143,7 +143,7 @@ Features
 * **Cloud orchestration** – run pipelines on Kubernetes to access GPUs and other
   cloud resources
 * **Heterogeneous compute resources** – run different steps on different
-  machines *e.g. CPUs, memory, GPU, Spark, etc.)
+  machines (e.g. CPUs, memory, GPU, Spark, etc.)
 * **Helm chart deployment** – install Sematic on your Kubernetes cluster
 * **Pipeline reruns** – rerun pipelines from the UI from an arbitrary point in
   the graph
