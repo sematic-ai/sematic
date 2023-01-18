@@ -3,7 +3,7 @@ name: sematic-server
 description: Sematic AI Server
 type: application
 version: 1.0.1
-appVersion: v0.22.0
+appVersion: v0.22.1
 maintainers:
   - name: sematic-ai
     url: https://github.com/sematic-ai/sematic/
