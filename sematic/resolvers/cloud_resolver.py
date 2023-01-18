@@ -52,19 +52,25 @@ class CloudResolver(LocalResolver):
 
         When `False`, the driver job runs on the local machine. The shell prompt
         will return when the entire pipeline has completed.
+    cache_namespace: CacheNamespace
+        A string or a `Callable` which takes a root `Future` and returns a string, which
+        will be used as the cache key namespace in which the executed funcs's outputs will
+        be cached, as long as they also have the `cache` flag activated. Defaults to
+        `None`.
 
+        The `Callable` option takes as input the `Resolution` root `Future`. All the other
+        required variables must be enclosed in the `Callables`'s context. The `Callable`
+        must have a small memory footprint and must return immediately!
     max_parallelism: Optional[int]
         The maximum number of non-inlined runs that this resolver will allow to be in the
         `SCHEDULED` state at any one time. Must be a positive integer, or `None` for
         unlimited runs. Defaults to `None`.
-
         This is intended as a simple mechanism to limit the amount of computing resources
         consumed by one pipeline execution for pipelines with a high degree of
         parallelism. Note that if other resolvers are active, runs from them will not be
         considered in this parallelism limit. Note also that runs that are in the RAN
         state do not contribute to the limit, since they do not consume computing
         resources.
-
     rerun_from: Optional[str]
         When `None`, the pipeline is resolved from scratch, as normally. When not `None`,
         must be the id of a `Run` from a previous resolution. Instead of running from
@@ -72,7 +78,6 @@ class CloudResolver(LocalResolver):
         specified `Run`, and only nested and downstream `Future`s are executed. This is
         meant to be used for retries or for hotfixes, without needing to re-run the
         entire pipeline again.
-
     _is_running_remotely: bool
         For Sematic internal usage. End users should always leave this at the default
         value of `False`.
@@ -221,6 +226,7 @@ class CloudResolver(LocalResolver):
     def _detach_resolution(self, future: AbstractFuture) -> str:
         run = self._populate_run_and_artifacts(future)
         self._save_graph()
+        self._cache_namespace_str = self._make_cache_namespace()
         self._create_resolution(future)
         run.root_id = future.id
 
