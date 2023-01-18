@@ -72,7 +72,7 @@ access to the PyPi repo, which is limited to employees of Sematic.
 We cut releases from the `main` branch, following these steps:
 
 - Bump the version in `wheel_version.bzl`, `sematic/versions.py`,
-  `helm/sematic-server/values.yaml`, and `helm/sematic-server/Chart.yaml`
+  and `helm/sematic-server/Chart.yaml`
 - Update `changelog.md` with the new version number and any missing change
   entries
 - Make the bump commit
@@ -89,6 +89,7 @@ and use a virtual env to test:
 
 ```bash
 $ pip3 install <wheel path>
+$ sematic stop
 $ sematic start
 $ sematic run examples/mnist/pytorch
 ```
@@ -123,27 +124,30 @@ $ TAG=v$(python3 sematic/versions.py) make release-server
 Now you can prepare the Helm chart release.
 
 Update the file `helm/sematic-server/Chart.yaml` to:
-1) Set the `appVersion` field to match the version of the new release.
+1) Confirm that the `appVersion` field matches the version of the new release.
 2) Increment the minor version of the `version` field, i.e. if it's currently
    `1.3.5`, make it `1.3.6`.
 
 Next you can generate the Helm package and publish it to the Helm repository.
-Clone the `github.com/sematic-ai/helm-charts` repo, and check out the `gh-pages`
-branch in it.  The commands below assume the `helm-charts` repo has been cloned
+Clone the repo with `git clone git@github.com:sematic-ai/helm-charts.git`, and
+check out the `gh-pages` branch in it.  The commands below assume the
+`helm-charts` repo has been cloned
 into the `~/code/helm-charts` directory, but they should be run from the root
 of the `github.com/sematic-ai/sematic` repo directory.
 
 ```bash
+HELM_REPO=~/code/helm-charts
 helm package helm/sematic-server
 helm repo index . --url https://sematic-ai.github.io/helm-charts/ \
-         --merge ~/code/helm-charts/index.yaml
-mv index.yaml ~/code/helm-charts/index.yaml
-mv *.tgz ~/code/helm-charts/sematic-server/
+         --merge $HELM_REPO/index.yaml
+mv index.yaml $HELM_REPO/index.yaml
+mv *.tgz $HELM_REPO/sematic-server/
 ```
 
 You should now have a new `sematic-server/sematic-server-X.X.X.tgz` in the
 `helm-charts` repo, and a modified `index.yaml`.  Commit and push both of
-these to the `gh-pages` branch, creating a PR for the change if necessary.
+these to a new branch, and create a PR for the change based on `gh-pages`
+necessary.
 
 Finally, draft the release on GitHub:
 - Add a "What's Changed" section.
