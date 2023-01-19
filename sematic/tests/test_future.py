@@ -36,11 +36,23 @@ def test_set_validate_name():
 def test_set_validate_inline():
     future = foo()
 
+    assert future.props.inline is True
     future.set(inline=False)
     assert future.props.inline is False
 
     with pytest.raises(ValueError, match="Invalid `inline`"):
         future.set(inline=123)
+
+
+def test_set_validate_cache():
+    future = foo()
+
+    assert future.props.cache is False
+    future.set(cache=True)
+    assert future.props.cache is True
+
+    with pytest.raises(ValueError, match="Invalid `cache`"):
+        future.set(cache=123)
 
 
 def test_set_validate_resource_requirements():

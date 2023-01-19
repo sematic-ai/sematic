@@ -21,6 +21,7 @@ sematic_py_lib(
         "//sematic:api_client",
         "//sematic:graph",
         "//sematic:versions",
+        "//sematic/caching:init",
         "//sematic/config:config",
         "//sematic/config:user_settings",
         "//sematic/db/models:artifact",
@@ -128,6 +129,7 @@ sematic_py_lib(
         "//sematic/resolvers:cloud_resolver",
         "//sematic/scheduling:external_job",
         "//sematic/utils:exceptions",
+        "//sematic:versions",
     ],
 )
 

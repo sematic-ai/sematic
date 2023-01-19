@@ -16,6 +16,7 @@ import cloudpickle
 import sematic.api_client as api_client
 from sematic.abstract_future import FutureState
 from sematic.calculator import Calculator
+from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
@@ -31,6 +32,7 @@ from sematic.resolvers.log_streamer import ingested_logs
 from sematic.scheduling.external_job import JobType
 from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
+from sematic.versions import CURRENT_VERSION_STR
 
 # Argument to cause worker.py to emulate a normal python interpreter.
 # If used, all other args will be passed to the emulated interpreter.
@@ -160,7 +162,11 @@ def main(
             future: Future = func(**kwargs)
             future.id = run.id
 
+            # the resolution object has required configurations for the resolver
+            resolution = api_client.get_resolution(root_id=run.id)
+
             resolver = CloudResolver(
+                cache_namespace=resolution.cache_namespace,
                 detach=False,
                 max_parallelism=max_parallelism,
                 rerun_from=rerun_from,
@@ -253,6 +259,9 @@ def wrap_main_with_logging():
             level=logging.INFO,
             format="%(asctime)s - %(levelname)s - %(name)s: %(message)s",
         )
+        pod_name = os.getenv(KUBERNETES_POD_NAME_ENV_VAR)
+        logger.info("Worker pod: %s", pod_name)
+        logger.info("Worker Sematic Version: %s", CURRENT_VERSION_STR)
         logger.info("Worker CLI args: run_id=%s", args.run_id)
         logger.info("Worker CLI args: resolve=%s", args.resolve)
         logger.info("Worker CLI args: max-parallelism=%s", args.max_parallelism)

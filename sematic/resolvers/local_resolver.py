@@ -12,6 +12,11 @@ import socketio  # type: ignore
 import sematic.api_client as api_client
 from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import AbstractFuture, FutureState
+from sematic.caching import (
+    CacheNamespace,
+    get_future_cache_key,
+    resolve_cache_namespace,
+)
 from sematic.config.config import get_config
 from sematic.config.user_settings import get_active_user_settings_strings
 from sematic.db.models.artifact import Artifact
@@ -31,13 +36,22 @@ logger = logging.getLogger(__name__)
 
 class LocalResolver(SilentResolver):
     """
-    A resolver to resolver a graph in-memory.
+    A `Resolver` that resolves a pipeline locally.
 
-    Each Future's resolution is tracked in the DB as a run. Each individual function's
-    input argument and output value is tracked as an artifact.
+    Each `Future`'s `Resolution` is tracked in the DB as a run. Each individual function's
+    input argument and output value is tracked as an `Artifact`.
 
     Parameters
     ----------
+    cache_namespace: CacheNamespace
+        A string or a `Callable` which takes a root `Future` and returns a string, which
+        will be used as the cache key namespace in which the executed funcs's outputs will
+        be cached, as long as they also have the `cache` flag activated. Defaults to
+        `None`.
+
+        The `Callable` option takes as input the `Resolution` root `Future`. All the other
+        required variables must be enclosed in the `Callables`'s context. The `Callable`
+        must have a small memory footprint and must return immediately!
     rerun_from: Optional[str]
         When `None`, the pipeline is resolved from scratch, as normally. When not `None`,
         must be the id of a `Run` from a previous resolution. Instead of running from
@@ -49,7 +63,12 @@ class LocalResolver(SilentResolver):
 
     _resource_manager: Optional[ServerResourceManager] = None  # type: ignore
 
-    def __init__(self, rerun_from: Optional[str] = None, **kwargs):
+    def __init__(
+        self,
+        cache_namespace: Optional[CacheNamespace] = None,
+        rerun_from: Optional[str] = None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
 
         self._edges: Dict[str, Edge] = {}
@@ -71,6 +90,11 @@ class LocalResolver(SilentResolver):
         self._sio_client = socketio.Client()
 
         self._rerun_from_run_id = rerun_from
+
+        # this parameter needs to be resolved after the root future is enqueued
+        # and before the resolution is created
+        self._cache_namespace_str: Optional[str] = None
+        self._raw_cache_namespace = cache_namespace
 
     def _seed_graph(self, future: AbstractFuture):
         if self._rerun_from_run_id is None:
@@ -196,7 +220,7 @@ class LocalResolver(SilentResolver):
 
         return run
 
-    def _resolution_will_start(self):
+    def _resolution_will_start(self) -> None:
         self._sio_client.connect(get_config().server_url, namespaces=["/pipeline"])
 
         @self._sio_client.on("cancel", namespace="/pipeline")
@@ -218,8 +242,49 @@ class LocalResolver(SilentResolver):
 
         self._populate_run_and_artifacts(self._root_future)
         self._save_graph()
+        self._cache_namespace_str = self._make_cache_namespace()
         self._create_resolution(self._root_future)
         self._update_resolution_status(ResolutionStatus.RUNNING)
+
+    def _make_cache_namespace(self) -> Optional[str]:
+        """
+        Attempts to produce a string cache namespace for the Resolution.
+
+        If the user-supplied cache namespace parameter is:
+          - None - returns None
+          - a string - returns this string
+          - a Callable - invokes it and returns the resulting string
+
+        Must be called after the root future is enqueued, and before the Resolution is
+        created.
+
+        Returns
+        -------
+        A string cache namespace, or None.
+        """
+        if self._raw_cache_namespace is None:
+            logger.debug("The Resolution is not configured to use cached values")
+            return None
+
+        try:
+            cache_namespace = resolve_cache_namespace(
+                cache_namespace=self._raw_cache_namespace,
+                root_future=self._root_future,
+            )
+
+            logger.info(
+                "The Resolution will use the cache namespace: %s", cache_namespace
+            )
+
+            return cache_namespace
+
+        except Exception:
+            logger.warning(
+                "The Resolution is unable to use cached values! "
+                "Falling back to execution for all funcs!",
+                exc_info=1,  # type: ignore
+            )
+            return None
 
     def _resolution_did_cancel(self) -> None:
         super()._resolution_did_cancel()
@@ -244,6 +309,7 @@ class LocalResolver(SilentResolver):
             git_info=get_git_info(root_future.calculator.func),  # type: ignore
             settings_env_vars=get_active_user_settings_strings(),
             client_version=CURRENT_VERSION_STR,
+            cache_namespace=self._cache_namespace_str,
         )
 
         return resolution
@@ -263,6 +329,105 @@ class LocalResolver(SilentResolver):
         future.state = FutureState.SCHEDULED
         run.future_state = FutureState.SCHEDULED
         run.started_at = datetime.datetime.utcnow()
+
+    def _execute_future(self, future: AbstractFuture) -> None:
+        """
+        Attempts to execute the given Future.
+
+        If the wrapped func is configured for caching, this function attempts to look up
+        an Artifact in the cache for the Run, and directly resolves the Future given that
+        value, without actually executing it.
+        """
+        run = self._get_run(future.id)
+        # we are certain all input args have been resolved and can compute the cache key
+        run.cache_key = self._get_cache_key(future=future)
+
+        if run.cache_key is None:
+            super()._execute_future(future=future)
+            return
+
+        # attempt to directly resolve the run based on previous executions:
+        try:
+            run_results = api_client.get_runs(
+                limit=1,  # get the original run
+                order="asc",  # it's the oldest
+                cache_key=run.cache_key,  # must hit the cache key
+                future_state="RESOLVED",  # only resolved runs have associated artifacts
+            )
+
+            if len(run_results) == 0:
+                logger.debug("Cache key %s did not hit any artifact", run.cache_key)
+                super()._execute_future(future=future)
+                return
+
+            original_run = run_results[0]
+            _, artifacts, edges = api_client.get_graph(
+                run_id=original_run.id, root=False
+            )
+
+            # the above query returns all input and output artifacts, so we try to find
+            # the artifact which belongs to the run's output value
+            original_artifact = self._get_output_artifact(
+                run_id=original_run.id, artifacts=artifacts, edges=edges
+            )
+
+        except Exception:
+            logger.warning(
+                "Error fetching an artifact for cache key %s; "
+                "Falling back to execution for %s %s",
+                run.cache_key,
+                future.id,
+                future.calculator,
+                exc_info=1,  # type: ignore
+            )
+
+            super()._execute_future(future=future)
+            return
+
+        logger.debug(
+            "Cache key %s hit run %s with output artifact %s",
+            run.cache_key,
+            original_run.id,
+            original_artifact.id,
+        )
+        logger.info(
+            "Future %s %s will be resolved from a cached value",
+            future.id,
+            future.calculator,
+        )
+
+        # we remember the original artifact in order to reuse it, and not create
+        # new copies in the db for each new cached run;
+        # the None key corresponds to the run's output artifact
+        self._artifacts_by_run_id[run.id][None] = original_artifact
+
+        # _future_did_resolve() will be executed at the end of _update_future_with_value()
+        # below, and will re-fetch and overwrite the run in the db;
+        # consequently, we need to save the cache_key and original_run fields now;
+        # we can only save the run as part of a graph save, so we call _save_graph()
+        # TODO: the run is created and updated as a side effect of updating the graph;
+        #  the run and future should be atomically updated, if not the same concept;
+        #  the run lifecycle should be the main flow the resolver deals with, and the
+        #  graph should be a consequence of this, without being updated through lateral
+        #  effect such as the run is now, and without this disjointed partial save
+        run.original_run_id = original_run.id
+        self._add_run(run)
+        self._save_graph()
+
+        value = api_client.get_artifact_value(artifact=original_artifact)
+        self._update_future_with_value(future=future, value=value)
+
+    def _get_output_artifact(
+        self, run_id: str, artifacts: List[Artifact], edges: List[Edge]
+    ) -> Artifact:
+
+        for edge in edges:
+            if edge.source_run_id == run_id:
+                for artifact in artifacts:
+                    if artifact.id == edge.artifact_id:
+                        return artifact
+
+        raise ValueError(f"Output Artifact not found in Run {run_id} subgraph")
 
     def _future_did_run(self, future: AbstractFuture) -> None:
         super()._future_did_run(future)
@@ -418,32 +583,88 @@ class LocalResolver(SilentResolver):
         self._buffer_edges[edge_key] = edge
 
     def _make_run(self, future: AbstractFuture) -> Run:
-        """Create a run for give future."""
-        run = make_run_from_future(future)
+        """
+        Create a Run for the given Future.
+        """
+        run = make_run_from_future(future=future)
         run.root_id = self._root_future.id
+
+        logger.debug("Created run %s for %s", run.id, future.calculator)
         return run
+
+    def _get_cache_key(self, future: AbstractFuture) -> Optional[str]:
+        """
+        Computes a cache key for the specified Future, if configured.
+        """
+        if self._cache_namespace_str is None:
+            return None
+
+        if not future.props.cache:
+            logger.debug(
+                "Future %s %s is not configured to use the cache",
+                future.id,
+                future.calculator,
+            )
+            return None
+
+        try:
+            cache_key = get_future_cache_key(
+                cache_namespace=self._cache_namespace_str, future=future
+            )
+        except Exception:
+            logger.warning(
+                "Unable to compute the cache key for %s %s",
+                future.id,
+                future.calculator,
+                exc_info=1,  # type: ignore
+            )
+            return None
+
+        logger.debug(
+            "Future %s %s will use the cache key: %s",
+            future.id,
+            future.calculator,
+            cache_key,
+        )
+
+        return cache_key
 
     def _make_artifact(
         self, run_id: str, value: Any, type_: Any, name: Optional[str]
     ) -> Artifact:
-        artifact = self._artifacts_by_run_id.get(run_id, {}).get(name)
+
+        # _artifacts_by_run_id is a defaultdict;
+        # this lookup will create the entry if missing
+        artifact = self._artifacts_by_run_id[run_id].get(name)
+
         if artifact is not None:
+            logger.debug(
+                "Found %s with id %s for run %s",
+                "output artifact" if name is None else f"artifact '{name}'",
+                artifact.id,
+                run_id,
+            )
+
             return artifact
 
         artifact, payload = make_artifact(value, type_)
         api_client.store_artifact_bytes(artifact.id, payload)
+
+        logger.debug(
+            "Created %s with id %s for run %s",
+            "output artifact" if name is None else f"artifact '{name}'",
+            artifact.id,
+            run_id,
+        )
 
         self._artifacts_by_run_id[run_id][name] = artifact
         self._add_artifact(artifact)
 
         return artifact
 
-    def _populate_graph(
-        self,
-        future: AbstractFuture,
-    ) -> Run:
+    def _populate_graph(self, future: AbstractFuture) -> Run:
         """
-        Update the graph based on future.
+        Update the graph to include the given Future.
         """
         if future.id not in self._runs:
             run = self._make_run(future)

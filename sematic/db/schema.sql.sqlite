@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS "schema_migrations" (version varchar(255) primary key);
 CREATE TABLE runs (
     id character(32) NOT NULL,
-    original_run_id character(32),
     future_state TEXT NOT NULL,
     name TEXT,
     calculator_path TEXT,
@@ -11,7 +10,20 @@ CREATE TABLE runs (
     ended_at timestamp,
     resolved_at timestamp,
     failed_at timestamp,
-    parent_id character(32), description TEXT, tags TEXT, source_code TEXT, root_id character(32), nested_future_id character(32), external_jobs_json JSONB, resource_requirements_json JSONB, exception_metadata_json JSONB, container_image_uri TEXT, external_exception_metadata_json JSONB,
+    parent_id character(32),
+    description TEXT,
+    tags TEXT,
+    source_code TEXT,
+    root_id character(32),
+    nested_future_id character(32),
+    external_jobs_json JSONB,
+    resource_requirements_json JSONB,
+    exception TEXT,
+    exception_metadata_json JSONB,
+    container_image_uri TEXT,
+    external_exception_metadata_json JSONB,
+    original_run_id character(32),
+    cache_key TEXT,
 
     PRIMARY KEY (id)
 );
@@ -70,11 +82,17 @@ CREATE TABLE resolutions (
     status TEXT NOT NULL,
     kind TEXT NOT NULL,
     container_image_uri TEXT,
-    settings_env_vars JSONB NOT NULL, external_jobs_json JSONB, git_info_json JSONB, container_image_uris JSONB, client_version TEXT,
+    settings_env_vars JSONB NOT NULL,
+    external_jobs_json JSONB,
+    git_info_json JSONB,
+    container_image_uris JSONB,
+    client_version TEXT,
+    cache_namespace TEXT,
 
     PRIMARY KEY (root_id),
     FOREIGN KEY (root_id) REFERENCES runs(id)
 );
+CREATE INDEX runs_cache_key_index ON runs(cache_key);
 CREATE TABLE external_resources (
     id character(32) NOT NULL,
     resource_state TEXT NOT NULL,
@@ -126,4 +144,6 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20221208183307'),
   ('20221212110018'),
   ('20221214142609'),
-  ('20221215212459');
+  ('20221215212459'),
+  ('20230105163857'),
+  ('20230105170402');

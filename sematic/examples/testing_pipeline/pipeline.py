@@ -134,6 +134,36 @@ def add4_nested(a: float, b: float, c: float, d: float) -> float:
     return add2_nested(add2_nested(a, b), add2_nested(c, d))
 
 
+@sematic.func(inline=True, cache=True)
+def add_inline_cached(a: float, b: float) -> float:
+    """
+    Adds two numbers inline, attempting to source the value from the cache.
+    """
+    logger.info("Executing: add_inline_cached(a=%s, b=%s)", a, b)
+    time.sleep(5)
+    return a + b
+
+
+@sematic.func(inline=False, cache=True)
+def add2_nested_cached(a: float, b: float) -> float:
+    """
+    Adds two numbers using a nested structure, attempting to source the value from the
+    cache.
+    """
+    logger.info("Executing: add2_nested_cached(a=%s, b=%s)", a, b)
+    return add_inline_cached(a, b)
+
+
+@sematic.func(inline=False, cache=True)
+def add4_nested_cached(a: float, b: float, c: float, d: float) -> float:
+    """
+    Adds four numbers using a nested structure, attempting to source the value from the
+    cache.
+    """
+    logger.info("Executing: add4_nested_cached(a=%s, b=%s, c=%s, d=%s)", a, b, c, d)
+    return add2_nested_cached(add2_nested_cached(a, b), add2_nested_cached(c, d))
+
+
 @sematic.func(inline=False)
 def add_all(values: List[float]) -> float:
     """
@@ -240,6 +270,7 @@ def testing_pipeline(
     external_resource: bool = False,
     ray_cluster_address: Optional[str] = None,
     resource_requirements: Optional[ResourceRequirements] = None,
+    cache: bool = False,
     exit_code: Optional[int] = None,
 ) -> float:
     """
@@ -271,6 +302,9 @@ def testing_pipeline(
         Whether to use an external resource. Defaults to False.
     resource_requirements: Optional[ResourceRequirements]
         If not None, includes a function that runs with the specified requirements.
+        Defaults to False.
+    cache: bool
+        Whether to include nested functions which will have the `cache` flag activated.
         Defaults to False.
     exit_code: Optional[int]
         If not None, includes a function which will exit with the specified code.
@@ -317,6 +351,9 @@ def testing_pipeline(
         function = add_with_resource_requirements(initial_future, 3)
         function.set(resource_requirements=resource_requirements)
         futures.append(function)
+
+    if cache:
+        futures.append(add4_nested_cached(initial_future, 1, 2, 3))
 
     if exit_code is not None:
         futures.append(do_exit(initial_future, exit_code))
