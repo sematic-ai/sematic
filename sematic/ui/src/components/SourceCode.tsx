@@ -1,13 +1,15 @@
 import Box from "@mui/material/Box";
-import { Run } from "../Models";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import docco from "react-syntax-highlighter/dist/esm/styles/hljs/docco";
 import python from "react-syntax-highlighter/dist/esm/languages/hljs/python";
+import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
 
 SyntaxHighlighter.registerLanguage("python", python);
 
-function SourceCode(props: { run: Run }) {
-  let run = props.run;
+function SourceCode() {
+  const { selectedRun } = usePipelinePanelsContext();
+
+  let run = selectedRun!;
 
   return (
     <Box key={run.calculator_path} sx={{ marginTop: 2 }}>
