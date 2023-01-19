@@ -50,3 +50,16 @@ pytest_test(
         "//sematic/tests:fixtures",
     ],
 )
+
+pytest_test(
+    name = "test_settings",
+    srcs = ["test_settings.py"],
+    pip_deps = [
+        "click",
+    ],
+    deps = [
+        "//sematic/cli:settings",
+        "//sematic/config:user_settings",
+        "//sematic/plugins/storage:s3_storage",
+    ],
+)
