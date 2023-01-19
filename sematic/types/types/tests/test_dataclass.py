@@ -217,3 +217,30 @@ def test_serialization():
     d = D(a=3, d=4.5)
     json_encodable = value_to_json_encodable(d, A)
     assert value_from_json_encodable(json_encodable, A) == d
+
+
+@dataclass
+class OldVersionOfDataclass:
+    field1: int
+
+
+@dataclass
+class NewVersionOfDataclass:
+    """Simulate if OldVersionOfDataclass was different in a newer commit of the code."""
+
+    field1: int
+    field2: int = 42
+
+
+def test_backwards_compatibility():
+    encodable = value_to_json_encodable(
+        OldVersionOfDataclass(field1=1), OldVersionOfDataclass
+    )
+
+    # In reality, if there was a new version of code trying to deserialize a value
+    # written with the old version, the root_type would not be changed. But since
+    # we have only one commit of code to work with in the test, we have to emulate
+    # a changed class definition by using a different class in the same commit.
+    encodable["root_type"] = type_to_json_encodable(NewVersionOfDataclass)
+    decoded = value_from_json_encodable(encodable, NewVersionOfDataclass)
+    assert decoded == NewVersionOfDataclass(field1=1, field2=42)

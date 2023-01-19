@@ -131,7 +131,12 @@ def _dataclass_from_json_encodable(value: Any, type_: Any) -> Any:
         if name in types:
             field_type = type_from_json_encodable(types[name])
 
-        kwargs[name] = value_from_json_encodable(values[name], field_type)
+        if name in values:
+            # if the values were written with an older version of
+            # the dataclass, there may not be a value for certain
+            # fields. In such cases, we will rely on the defaults
+            # in the dataclass constructor.
+            kwargs[name] = value_from_json_encodable(values[name], field_type)
 
     return root_type(**kwargs)
 
