@@ -27,6 +27,7 @@ import logo from "./Fox.png";
 import { fetchJSON } from "./utils";
 import { SnackBarProvider } from "./components/SnackBarProvider";
 import PipelineView from "./pipelines/PipelineView";
+import { RunIndex } from "./runs/RunIndex";
 
 export const UserContext = React.createContext<{
   user: User | null;
@@ -114,6 +115,7 @@ function App() {
             <Route path="/" element={<Shell />}>
               <Route path="" element={<Home />} />
               <Route path="pipelines" element={<PipelineIndex />} />
+              <Route path="runs" element={<RunIndex />} />
               <Route
                 path="pipelines/:pipelinePath/:rootId" element={<PipelineRunView />}
               />

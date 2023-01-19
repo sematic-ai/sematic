@@ -99,6 +99,17 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
     except ValueError as e:
         return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
 
+    search_string, search_predicates = flask.request.args.get("search"), None
+    if search_string is not None:
+        search_predicates = sqlalchemy.or_(
+            Run.name.ilike(f"%{search_string}%"),
+            Run.calculator_path.ilike(f"%{search_string}%"),
+            Run.description.ilike(f"%{search_string}%"),
+            Run.source_code.ilike(f"%{search_string}%"),
+            Run.id.ilike(f"%{search_string}%"),
+            Run.tags.ilike(f"%{search_string}%"),
+        )
+
     decoded_cursor: Optional[str] = None
     if cursor is not None:
         try:
@@ -134,6 +145,9 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
 
         if sql_predicates is not None:
             query = query.filter(sql_predicates)
+
+        if search_predicates is not None:
+            query = query.filter(search_predicates)
 
         if decoded_cursor is not None:
             query = query.filter(

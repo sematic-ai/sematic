@@ -5,11 +5,12 @@ import Link from "@mui/material/Link";
 import { Run } from "../Models";
 import { RunList } from "../components/RunList";
 import RunStateChip from "../components/RunStateChip";
-import React from "react";
+import React, { useCallback, useState } from "react";
 import Tags from "../components/Tags";
 import CalculatorPath from "../components/CalculatorPath";
 import Id from "../components/Id";
 import TimeAgo from "../components/TimeAgo";
+import { Box, Container, TextField } from "@mui/material";
 
 type RunRowProps = {
   run: Run;
@@ -69,14 +70,31 @@ export function RunRow(props: RunRowProps) {
 }
 
 export function RunIndex() {
+
+  const [searchString, setSearchString] = useState<string | undefined>(undefined);
+  
+  const onChange = useCallback((value: string) => {
+    console.log(value);
+    setSearchString(value);
+  }, []);
+
   return (
-    <>
+    <Container sx={{ pt: 10, height: "100vh", overflowY: "scroll" }}>
       <Typography variant="h4" component="h2">
         Run list
       </Typography>
-      <RunList columns={["ID", "Name", "Tags", "Time", "Status"]}>
+      <Box sx={{py: 10}}>
+      <TextField 
+        id="outlined-basic"
+        label="Search"
+        variant="outlined"
+        sx={{width: "100%"}}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      </Box>
+      <RunList columns={["ID", "Name", "Tags", "Time", "Status"]} search={searchString}>
         {(run: Run) => <RunRow run={run} key={run.id} />}
       </RunList>
-    </>
+    </Container>
   );
 }
