@@ -1,12 +1,12 @@
 # Standard Library
 import sys
-from typing import Type
+from typing import Optional, Type
 
 # Third-party
 import click
 
 # Sematic
-from sematic.abstract_plugin import AbstractPlugin
+from sematic.abstract_plugin import AbstractPlugin, import_plugin
 from sematic.cli.cli import cli
 from sematic.config.server_settings import ServerSettings
 from sematic.config.settings import (
@@ -35,11 +35,22 @@ def show_settings_cli() -> None:
 @settings.command("set", short_help="Set a user settings value")
 @click.argument("var", type=click.STRING)
 @click.argument("value", type=click.STRING)
-def set_settings_cli(var: str, value: str) -> None:
+@click.option(
+    "-p",
+    "--plugin",
+    "plugin",
+    type=click.STRING,
+    help="Import path to a plugin to configure a setting for.",
+    default=None,
+)
+def set_settings_cli(var: str, value: str, plugin: Optional[str]) -> None:
     """
     Set a setting value.
     """
-    _set_plugin_settings_cli(var, value, UserSettings)
+    plugin_class: Type[AbstractPlugin] = UserSettings
+    if plugin is not None:
+        plugin_class = import_plugin(plugin)
+    _set_plugin_settings_cli(var, value, plugin_class)
 
 
 def _set_plugin_settings_cli(
