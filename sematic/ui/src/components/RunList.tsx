@@ -19,6 +19,7 @@ type RunListProps = {
   columns: Array<string>;
   children: Function;
   groupBy?: string;
+  search?: string;
   filters?: Filter;
   pageSize?: number;
   size?: "small" | "medium" | undefined;
@@ -28,7 +29,7 @@ type RunListProps = {
 };
 
 export function RunList(props: RunListProps) {
-  let { triggerRefresh, filters, groupBy, onRunsLoaded } = props;
+  let { triggerRefresh, filters, groupBy, onRunsLoaded, search } = props;
   const [pages, setPages] = useState<Array<RunListPayload>>([]);
   const [currentPage, setPage] = useState(0);
 
@@ -51,6 +52,9 @@ export function RunList(props: RunListProps) {
     }
     if (!!groupBy) {
       queryParams['group_by'] = groupBy;
+    }
+    if (!!search && search.length > 0) {
+      queryParams['search'] = search;
     }
     return queryParams;
   }, [pageSize, groupBy]);
