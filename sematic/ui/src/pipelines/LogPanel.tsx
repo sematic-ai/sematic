@@ -1,11 +1,11 @@
 import { Box, TextField } from "@mui/material";
 import { useCallback, useState } from "react";
-import { Run } from "../Models";
+import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
 import ScrollingLogView from "./ScrollingLogView";
 
-export default function LogPanel(props: { run: Run }) {
-  const { run } = props;
-  const { id, external_exception_metadata_json, exception_metadata_json} = run;
+export default function LogPanel() {
+  const { selectedRun } = usePipelinePanelsContext();
+  const { id, external_exception_metadata_json, exception_metadata_json} = selectedRun!;
   const [filterString, setFilterString] = useState<string>("");
 
   const onFilterStringChange = useCallback(
