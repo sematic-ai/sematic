@@ -23,7 +23,6 @@ from sematic.versions import SETTINGS_SCHEMA_VERSION
 logger = logging.getLogger(__name__)
 
 
-_DEFAULT_PROFILE = "default"
 _SETTINGS_FILE_NAME = "settings.yaml"
 _PLUGIN_VERSION_KEY: Literal["__version__"] = "__version__"
 
@@ -42,6 +41,18 @@ class ProfileSettings:
     settings: PluginsSettings = field(default_factory=dict)
 
 
+_DEFAULT_PROFILE = "default"
+_DEFAULT_PROFILE_SETTINGS = ProfileSettings(
+    scopes={},
+    settings={
+        # providing textual path instead of importing in order to avoid a dependency cycle
+        # these plugins are "known" and will always be part of the server deployment
+        "sematic.config.server_settings.ServerSettings": {},
+        "sematic.config.user_settings.UserSettings": {},
+    },
+)
+
+
 @dataclass
 class Settings:
     """
@@ -50,7 +61,7 @@ class Settings:
 
     version: int = field(default_factory=lambda: SETTINGS_SCHEMA_VERSION)
     profiles: Dict[str, ProfileSettings] = field(
-        default_factory=lambda: {_DEFAULT_PROFILE: ProfileSettings()}
+        default_factory=lambda: {_DEFAULT_PROFILE: _DEFAULT_PROFILE_SETTINGS}
     )
 
 
