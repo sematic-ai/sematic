@@ -20,7 +20,6 @@ from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
-from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.utils.memoized_property import memoized_property
 
@@ -267,9 +266,7 @@ class CloudResolver(LocalResolver):
             return
 
         if run.nested_future_id is not None:
-            pickled_nested_future = S3Storage().get(
-                make_nested_future_storage_key(run.nested_future_id)
-            )
+            pickled_nested_future = api_client.get_future_bytes(run.nested_future_id)
             value = cloudpickle.loads(pickled_nested_future)
 
         else:
@@ -426,7 +423,3 @@ class CloudResolver(LocalResolver):
     @classmethod
     def exiting_resource_context(cls, resource_id: str):
         cls._get_resource_manager().stop_poll_for_updates_by_resource_id(resource_id)
-
-
-def make_nested_future_storage_key(future_id: str) -> str:
-    return "futures/{}".format(future_id)

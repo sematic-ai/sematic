@@ -21,10 +21,11 @@ from sematic.abstract_future import FutureState
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.events import broadcast_graph_update
-from sematic.api.endpoints.request_parameters import (
+from sematic.api.endpoints.utils.request_parameters import (
     get_request_parameters,
     jsonify_error,
 )
+from sematic.api.endpoints.utils.storage import NoActivePluginError, get_storage_plugin
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
@@ -41,6 +42,7 @@ from sematic.db.queries import (
     save_run_external_resource_links,
 )
 from sematic.log_reader import load_log_lines
+from sematic.plugins.abstract_storage import PayloadType
 from sematic.scheduling.external_job import ExternalJob
 from sematic.scheduling.job_scheduler import schedule_run, update_run_status
 from sematic.utils.retry import retry
@@ -230,6 +232,49 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
         content=run.to_json_encodable(),
     )
     return flask.jsonify(payload)
+
+
+@sematic_api.route("/api/v1/runs/<run_id>/location", methods=["GET"])
+@authenticate
+def get_run_location_endpoint(user: Optional[User], run_id: str):
+    """
+    This endpoint is used to store a run's future pickle. This is necessary for
+    nested futures returned by functions ran by worker.py
+    """
+    # TODO: Validate that user has permission to store future pickle
+    try:
+        storage_class = get_storage_plugin()
+    except NoActivePluginError:
+        return jsonify_error(
+            "Incorrect storage plugin scope", HTTPStatus.INTERNAL_SERVER_ERROR
+        )
+
+    logger.info("Using storage plug-in %s", storage_class)
+
+    location = storage_class().get_write_location("futures", run_id)
+
+    return flask.jsonify(dict(location=location))
+
+
+@sematic_api.route("/api/v1/runs/<run_id>/data", methods=["GET"])
+@authenticate
+def get_run_data_endpoint(user: Optional[User], run_id: str):
+    # TODO: Validate that user has permission to access run data
+    try:
+        storage_class = get_storage_plugin()
+    except NoActivePluginError:
+        return jsonify_error(
+            "Incorrect storage plugin scope", HTTPStatus.INTERNAL_SERVER_ERROR
+        )
+
+    logger.info("Using storage plug-in %s", storage_class)
+
+    read_payload = storage_class().get_read_payload("futures", run_id)
+
+    if read_payload.type_ is PayloadType.URL:
+        return flask.redirect(read_payload.content, code=HTTPStatus.FOUND)
+
+    return flask.Response(read_payload.content)
 
 
 @sematic_api.route("/api/v1/runs/<run_id>/logs", methods=["GET"])

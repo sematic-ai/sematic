@@ -6,7 +6,7 @@ import flask
 
 # Sematic
 from sematic.api.app import sematic_api
-from sematic.api.endpoints.request_parameters import get_request_parameters
+from sematic.api.endpoints.utils.request_parameters import get_request_parameters
 from sematic.db.db import db
 from sematic.db.models.edge import Edge
 

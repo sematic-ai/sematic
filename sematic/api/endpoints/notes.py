@@ -10,7 +10,7 @@ from sqlalchemy.orm.exc import NoResultFound
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
-from sematic.api.endpoints.request_parameters import (
+from sematic.api.endpoints.utils.request_parameters import (
     get_request_parameters,
     jsonify_error,
 )

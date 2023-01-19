@@ -102,6 +102,26 @@ def _get_artifact_bytes(artifact_id: str) -> bytes:
     return _get(f"/artifacts/{artifact_id}/data", decode_json=False)
 
 
+def store_future_bytes(run_id: str, bytes_: bytes) -> None:
+    """
+    Store a run's pickled future.
+    """
+    response = _get(f"/runs/{run_id}/location")
+
+    location: str = response["location"]
+
+    put = requests.put if location.startswith("https://") else _put
+
+    put(location, data=bytes_)
+
+
+def get_future_bytes(run_id: str) -> bytes:
+    """
+    Get a run's pickled future.
+    """
+    return _get(f"/runs/{run_id}/data", decode_json=False)
+
+
 def get_run(run_id: str) -> Run:
     """
     Get run

@@ -8,9 +8,9 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         ":auth",
-        ":request_parameters",
         "//sematic:log_reader",
         "//sematic/api:app",
+        "//sematic/api/endpoints/utils:request_parameters",
         "//sematic/db:db",
         "//sematic/db:queries",
         "//sematic/db/models:artifact",
@@ -44,7 +44,7 @@ sematic_py_lib(
     deps = [
             "//sematic/api:app",
             "//sematic/api/endpoints:auth",
-            "//sematic/api/endpoints:request_parameters",
+            "//sematic/api/endpoints/utils:request_parameters",
             "//sematic/db/models:external_resource",
             "//sematic/db/models:user",
             "//sematic/db:queries",
@@ -66,8 +66,8 @@ sematic_py_lib(
     deps = [
         ":auth",
         ":events",
-        ":request_parameters",
         "//sematic/api:app",
+        "//sematic/api/endpoints/utils:request_parameters",
         "//sematic/db:queries",
         "//sematic/db/models:resolution",
         "//sematic/db/models:user",
@@ -83,28 +83,17 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         ":auth",
-        ":request_parameters",
-        "//sematic:abstract_plugin",
         "//sematic/api:app",
-        "//sematic/config:settings",
+        "//sematic/api/endpoints/utils:request_parameters",
+        "//sematic/api/endpoints/utils:storage",
         "//sematic/db:db",
         "//sematic/db:queries",
         "//sematic/db/models:artifact",
         "//sematic/db/models:user",
         "//sematic/plugins:abstract_storage",
-        "//sematic/plugins/storage:local_storage",
     ],
 )
 
-sematic_py_lib(
-    name = "request_parameters",
-    srcs = ["request_parameters.py"],
-    pip_deps = [
-        "sqlalchemy",
-        "flask",
-    ],
-    deps = [],
-)
 
 sematic_py_lib(
     name = "edges",
@@ -115,8 +104,8 @@ sematic_py_lib(
     ],
     # buildifier: leave-alone
     deps = [
-        ":request_parameters",
         "//sematic/api:app",
+        "//sematic/api/endpoints/utils:request_parameters",
         "//sematic/db:db",
         "//sematic/db/models:edge",
     ],
@@ -144,8 +133,8 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         ":auth",
-        ":request_parameters",
         "//sematic/api:app",
+        "//sematic/api/endpoints/utils:request_parameters",
         "//sematic/db:db",
         "//sematic/db:queries",
         "//sematic/db/models:note",
@@ -164,8 +153,8 @@ sematic_py_lib(
         "sqlalchemy",
     ],
     deps = [
-        ":request_parameters",
         "//sematic/api:app",
+        "//sematic/api/endpoints/utils:request_parameters",
         "//sematic/config:server_settings",
         "//sematic/config:settings",
         "//sematic/db:queries",

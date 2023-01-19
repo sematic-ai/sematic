@@ -9,7 +9,7 @@ import flask
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
-from sematic.api.endpoints.request_parameters import jsonify_error
+from sematic.api.endpoints.utils.request_parameters import jsonify_error
 from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.user import User
 from sematic.db.queries import (

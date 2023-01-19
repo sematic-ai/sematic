@@ -160,7 +160,7 @@ At this point you should be able to run pipelines that are tracked by Sematic.
 In order to write metadata to the deployed API, simply do:
 
 ```shell
-$ sematic server-settings set SEMATIC_API_ADDRESS http://my-remote-server.dev
+$ sematic settings set SEMATIC_API_ADDRESS http://my-remote-server.dev
 ```
 
 This is required regardless of whether you deployed using Option 1 or Option 2.
