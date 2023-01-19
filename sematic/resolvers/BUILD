@@ -129,6 +129,7 @@ sematic_py_lib(
         "//sematic/resolvers:cloud_resolver",
         "//sematic/scheduling:external_job",
         "//sematic/utils:exceptions",
+        "//sematic:versions",
     ],
 )
 
