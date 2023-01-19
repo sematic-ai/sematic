@@ -9,6 +9,7 @@ from sematic.abstract_plugin import (
 )
 from sematic.config.settings import (
     _DEFAULT_PROFILE,
+    _DEFAULT_PROFILE_SETTINGS,
     _PLUGIN_VERSION_KEY,
     MissingSettingsError,
     get_active_plugins,
@@ -109,31 +110,77 @@ def test_get_settings(plugin_settings):
 
 
 @pytest.fixture
-def no_settings_file():
-    with mock_settings(None):
+def empty_settings_file():
+    with mock_settings({}):
         yield
 
 
-def test_from_scratch(no_settings_file):
+def test_get_empty_file(empty_settings_file):
     settings = get_settings()
-
     assert settings.version == 1
 
     settings_profile = settings.profiles[_DEFAULT_PROFILE]
+    assert settings_profile == _DEFAULT_PROFILE_SETTINGS
 
-    assert settings_profile.scopes == {}
 
-    assert settings_profile.settings == {}
+def test_get_specific_plugin_empty_file(empty_settings_file):
+    get_settings()
 
     assert get_active_plugins(scope=PluginScope.STORAGE, default=[TestPlugin]) == [
         TestPlugin
     ]
-
     assert (
         get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING, "default") == "default"
     )
 
 
-def test_env_override(no_settings_file):
+def test_env_override_specific_plugin_empty_file(empty_settings_file):
     with environment_variables({"SOME_SETTING": "override"}):
         assert get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING) == "override"
+
+
+def test_env_override_absent_plugin_empty_file(empty_settings_file):
+    with environment_variables({"SOME_SETTING": "override"}):
+        active_settings = get_active_settings()
+
+        # the plugin is not present in the scope, so its variables won't be even loaded
+        assert active_settings == _DEFAULT_PROFILE_SETTINGS
+
+
+@pytest.fixture
+def no_settings_file():
+    with mock_settings(None):
+        yield
+
+
+def test_get_no_file(no_settings_file):
+    settings = get_settings()
+    assert settings.version == 1
+
+    settings_profile = settings.profiles[_DEFAULT_PROFILE]
+    assert settings_profile == _DEFAULT_PROFILE_SETTINGS
+
+
+def test_get_specific_plugin_no_file(no_settings_file):
+    get_settings()
+
+    assert get_active_plugins(scope=PluginScope.STORAGE, default=[TestPlugin]) == [
+        TestPlugin
+    ]
+    assert (
+        get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING, "default") == "default"
+    )
+
+
+def test_env_override_specific_plugin_no_file(no_settings_file):
+    with environment_variables({"SOME_SETTING": "override"}):
+        # the plugin is not present in the scope, so its variables won't be even loaded
+        assert get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING) == "override"
+
+
+def test_env_override_absent_plugin_no_file(no_settings_file):
+    with environment_variables({"SOME_SETTING": "override"}):
+        active_settings = get_active_settings()
+
+        # the plugin is not present in the scope, so its variables won't be even loaded
+        assert active_settings == _DEFAULT_PROFILE_SETTINGS

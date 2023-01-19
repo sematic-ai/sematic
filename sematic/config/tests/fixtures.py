@@ -2,6 +2,7 @@
 import os
 import tempfile
 from contextlib import contextmanager
+from typing import Any, Dict, Optional
 from unittest.mock import patch
 
 # Third-party
@@ -12,7 +13,13 @@ import sematic.config.settings as settings_module
 
 
 @contextmanager
-def mock_settings(settings_dict):
+def mock_settings(settings_dict: Optional[Dict[str, Any]]):
+    """
+    Returns the path to a mock settings file.
+
+    If the `settings_dict` parameter is empty, the settings file will be initialized with
+    an empty structure. If it is None, the file will not exist.
+    """
     with tempfile.TemporaryDirectory() as td:
         with patch(
             "sematic.config.settings.get_config_dir",
