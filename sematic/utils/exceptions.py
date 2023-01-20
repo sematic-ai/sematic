@@ -208,3 +208,23 @@ class MissingPluginError(Exception):
     def __init__(self, plugin_path: str):
         message = f"Unable to find plug-in {plugin_path}. Module or class is missing."
         super().__init__(message)
+
+
+class UnsupportedUsageError(Exception):
+    """A library is being used in an unsupported context
+
+    Some examples of when this might be used:
+    - something tries to use a feature that is only available for cloud runs,
+      but with a non-cloud run
+    - something tries to use GPUs when the server is not able to launch jobs
+      using GPUs
+    - something tries to interface with a component with a non-supported version
+    """
+
+    pass
+
+
+class UnsupportedVersionError(UnsupportedUsageError):
+    """Code is being asked to interface with a component with a non-supported version."""
+
+    pass
