@@ -210,7 +210,7 @@ class MissingPluginError(Exception):
         super().__init__(message)
 
 
-class UnsupportedError(Exception):
+class UnsupportedUsageError(Exception):
     """A library is being used in an unsupported context
 
     Some examples of when this might be used:
@@ -224,7 +224,7 @@ class UnsupportedError(Exception):
     pass
 
 
-class UnsupportedVersionError(UnsupportedError):
+class UnsupportedVersionError(UnsupportedUsageError):
     """Code is being asked to interface with a component with a non-supported version."""
 
     pass

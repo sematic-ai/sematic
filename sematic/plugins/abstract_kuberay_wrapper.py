@@ -175,7 +175,7 @@ class AbstractKuberayWrapper(AbstractPlugin):
         ------
         UnsupportedVersionError:
             If the provided version of Kuberay is not one that's supported by this plugin.
-        UnsupportedError:
+        UnsupportedUsageError:
             If GPUs are requested but the plugin doesn't support configuring for GPUs.
         """
         raise NotImplementedError(

@@ -16,7 +16,7 @@ from sematic.plugins.kuberay_wrapper.standard import (
     StandardKuberayWrapper,
 )
 from sematic.tests.fixtures import environment_variables
-from sematic.utils.exceptions import UnsupportedError, UnsupportedVersionError
+from sematic.utils.exceptions import UnsupportedUsageError, UnsupportedVersionError
 
 _TEST_IMAGE_URI = "test_image_uri"
 _TEST_CLUSTER_NAME = "test_cluster_name"
@@ -232,7 +232,7 @@ def test_unsupported_kuberay():
 
 
 def test_gpus_not_supported():
-    with pytest.raises(UnsupportedError):
+    with pytest.raises(UnsupportedUsageError):
         StandardKuberayWrapper.create_cluster_manifest(  # type: ignore
             image_uri=_TEST_IMAGE_URI,
             cluster_name=_TEST_CLUSTER_NAME,
@@ -246,7 +246,7 @@ def test_gpus_not_supported():
             kuberay_version=_TEST_KUBERAY_VERSION,
         )
 
-    with pytest.raises(UnsupportedError):
+    with pytest.raises(UnsupportedUsageError):
         StandardKuberayWrapper.create_cluster_manifest(  # type: ignore
             image_uri=_TEST_IMAGE_URI,
             cluster_name=_TEST_CLUSTER_NAME,

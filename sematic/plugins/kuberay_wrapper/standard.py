@@ -13,7 +13,7 @@ from sematic.plugins.abstract_kuberay_wrapper import (
     RayNodeConfig,
     ScalingGroup,
 )
-from sematic.utils.exceptions import UnsupportedError, UnsupportedVersionError
+from sematic.utils.exceptions import UnsupportedUsageError, UnsupportedVersionError
 
 
 class StandardKuberaySettingsVar(AbstractPluginSettingsVar):
@@ -249,7 +249,7 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
             StandardKuberaySettingsVar.RAY_SUPPORTS_GPUS, False
         )
         if requires_gpus and not supports_gpus:
-            raise UnsupportedError(
+            raise UnsupportedUsageError(
                 f"The Kuberay plugin {cls.__name__} is not configured "
                 "to support nodes with GPUs"
             )
@@ -322,7 +322,7 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
             )
             if gpu_request_key is None:
                 if node_config.gpu_count > 1:
-                    raise UnsupportedError(
+                    raise UnsupportedUsageError(
                         "You are requesting more than one GPU per node, but the server "
                         "is not configured to support more than one GPU per node."
                     )
