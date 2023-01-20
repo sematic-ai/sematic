@@ -255,24 +255,29 @@ def wrap_main_with_logging():
     path = _create_log_file_path("worker.log")
 
     with ingested_logs(path, prefix):
-        logging.basicConfig(
-            level=logging.INFO,
-            format="%(asctime)s - %(levelname)s - %(name)s: %(message)s",
-        )
         pod_name = os.getenv(KUBERNETES_POD_NAME_ENV_VAR)
-        logger.info("Worker pod: %s", pod_name)
-        logger.info("Worker Sematic Version: %s", CURRENT_VERSION_STR)
-        logger.info("Worker CLI args: run_id=%s", args.run_id)
-        logger.info("Worker CLI args: resolve=%s", args.resolve)
-        logger.info("Worker CLI args: max-parallelism=%s", args.max_parallelism)
-        logger.info("Worker CLI args: rerun_from=%s", args.rerun_from)
-
-        main(
-            run_id=args.run_id,
-            resolve=args.resolve,
-            max_parallelism=args.max_parallelism,
-            rerun_from=args.rerun_from,
+        print(
+            f"UI Logs not available. Sematic is not redirecting logs; check "
+            f"the logs of the pod {pod_name}."
         )
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(name)s: %(message)s",
+    )
+    pod_name = os.getenv(KUBERNETES_POD_NAME_ENV_VAR)
+    logger.info("Worker pod: %s", pod_name)
+    logger.info("Worker Sematic Version: %s", CURRENT_VERSION_STR)
+    logger.info("Worker CLI args: run_id=%s", args.run_id)
+    logger.info("Worker CLI args: resolve=%s", args.resolve)
+    logger.info("Worker CLI args: max-parallelism=%s", args.max_parallelism)
+    logger.info("Worker CLI args: rerun_from=%s", args.rerun_from)
+
+    main(
+        run_id=args.run_id,
+        resolve=args.resolve,
+        max_parallelism=args.max_parallelism,
+        rerun_from=args.rerun_from,
+    )
 
 
 if __name__ == "__main__":
