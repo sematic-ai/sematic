@@ -88,6 +88,7 @@ def _get_artifact(artifact_id: str) -> Artifact:
     return Artifact.from_json_encodable(response["content"])
 
 
+@retry(tries=3, delay=10, jitter=1)
 def store_artifact_bytes(artifact_id: str, bytes_: bytes) -> None:
     response = _get(f"/artifacts/{artifact_id}/location")
 
