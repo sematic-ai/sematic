@@ -8,7 +8,12 @@ from sematic.config.user_settings import (
 )
 
 
-def test_get_empty_settings():
+def test_get_empty_settings_file():
+    with mock_settings({}):
+        assert get_active_user_settings() == {}
+
+
+def test_get_no_settings_file():
     with mock_settings(None):
         assert get_active_user_settings() == {}
 
