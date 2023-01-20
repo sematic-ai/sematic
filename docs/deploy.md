@@ -118,6 +118,11 @@ $ helm install sematic-server sematic/sematic-server \
         -f <PATH TO YOUR CONFIGURED VALUES YAML FILE>
 ```
 
+Once the command above completes, it can take a few minutes for all of the Sematic
+resources to be created in your Kubernetes cluster.  You should see the Sematic
+Dashboard landing page when you open the Ingress host path in your browser when
+deployment is complete.
+
 #### Configuration
 
 ##### Database
