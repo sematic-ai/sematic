@@ -136,6 +136,8 @@ def SimpleRayCluster(
 
 class AbstractKuberayWrapper(AbstractPlugin):
     """Plugin to convert between a RayClusterConfig & a k8s manifest for the cluster."""
+    KUBERAY_DEPLOYMENT_NAME = "kuberay-operator"
+    KUBERAY_CONTAINER_NAME = "kuberay-operator"
 
     @staticmethod
     def get_author() -> str:
