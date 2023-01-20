@@ -198,7 +198,7 @@ specifying the ingress domain information like so in the `ingress.hosts` setting
 
 There are several other configuration options that can be used to customize the
 Sematic Helm installation to your specific needs.  While we've chosen reasonable
-default values for these, you can explore them further by <<TODO: link to Helm values README.md>>.
+default values for these, you can explore them further in the [Helm chart docs](https://sematic-ai.github.io/helm-charts/).
 
 ## Using your deployment
 
