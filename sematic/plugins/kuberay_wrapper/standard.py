@@ -28,10 +28,10 @@ class StandardKuberaySettingsVar(AbstractPluginSettingsVar):
         The Kubernetes node selector that will be used for Ray nodes
         that don't use GPUs. Value should be json encoded into a string.
     RAY_GPU_TOLERATIONS:
-        The Kubernetes tokerations that will be used for Ray nodes
+        The Kubernetes tolerations that will be used for Ray nodes
         that use GPUs. Value should be json encoded into a string.
     RAY_NON_GPU_TOLERATIONS:
-        The Kubernetes tokerations that will be used for Ray nodes
+        The Kubernetes tolerations that will be used for Ray nodes
         that don't use GPUs. Value should be json encoded into a string.
     RAY_GPU_RESOURCE_REQUEST_KEY:
         The key that will be used in the Kubernetes resource requests/
@@ -179,7 +179,7 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         cluster_config: RayClusterConfig,
         kuberay_version: str,
     ) -> RayClusterManifest:
-        cls._check_kuberay_version(kuberay_version)
+        cls._validate_kuberay_version(kuberay_version)
         cls._validate_cluster_config(cluster_config=cluster_config)
         manifest = deepcopy(cls._manifest_template)
         manifest["metadata"]["name"] = cluster_name
@@ -222,7 +222,7 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         return group_manifest
 
     @classmethod
-    def _check_kuberay_version(cls, kuberay_version: str):
+    def _validate_kuberay_version(cls, kuberay_version: str):
         int_tuple_version = tuple(
             int(v) for v in kuberay_version.replace("v", "").split(".")
         )
@@ -245,7 +245,9 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         requires_gpus = cluster_config.head_node.gpu_count != 0 or any(
             group.worker_nodes.gpu_count != 0 for group in cluster_config.scaling_groups
         )
-        supports_gpus = _get_setting(StandardKuberaySettingsVar.RAY_SUPPORTS_GPUS, False)
+        supports_gpus = _get_setting(
+            StandardKuberaySettingsVar.RAY_SUPPORTS_GPUS, False
+        )
         if requires_gpus and not supports_gpus:
             raise UnsupportedError(
                 f"The Kuberay plugin {cls.__name__} is not configured "
@@ -254,7 +256,10 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
 
     @classmethod
     def _validate_ray_version(cls, ray_version: str) -> None:
-        pass
+        if not ray_version.replace("v", "").startswith("2"):
+            raise UnsupportedVersionError(
+                "Only ray versions 2.0 or higher are supported."
+            )
 
     @classmethod
     def _make_head_group_spec(
