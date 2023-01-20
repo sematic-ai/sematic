@@ -103,10 +103,46 @@ Prerequisites:
   able to access your Kubernetes cluster
 - Ingress configured on your cluster that allows accessing services deployed on it
 
-Run the following command to deploy a Kubernetes secret containing the database URL:
+Add the Sematic Helm repository to your cluster:
 
 ```shell
-$ kubectl create secret generic db-secret \
+$ helm repo add sematic-ai https://sematic-ai.github.io/helm-charts
+```
+
+Configure the contents of `helm/sematic/values.yaml` (see the sections below).
+Once you have set all the values, deploy the Sematic Helm chart to your cluster:
+
+```
+$ helm install sematic-server sematic/sematic-server \
+        -n <NAMESPACE FOR DEPLOYING> \
+        -f <PATH TO YOUR CONFIGURED VALUES YAML FILE>
+```
+
+Once the command above completes, it can take a few minutes for all of the Sematic
+resources to be created in your Kubernetes cluster.  You should see the Sematic
+Dashboard landing page when you open the Ingress host path in your browser when
+deployment is complete.
+
+#### Configuration
+
+##### Database
+
+In the `values.yaml` file above, the setting `database.url` can be set to the
+fully-qualified URL of your Postgres instance.  It should look similar to the following:
+
+```
+postgresql://<username>:<password>@<hostname>:<port>/<database>
+```
+
+If the `database.url` setting is valid, you can set the `secret.create` setting
+to `true`, and the Helm chart will automatically create a secret named `sematic-server`
+for you.
+
+Alternatively, you can set `secret.create` to `false`, and create the secret
+yourself:
+
+```shell
+$ kubectl create secret generic sematic-server \
     --namespace=<NAMESPACE FOR DEPLOYING> \
     --from-literal=DATABASE_URL=<YOUR DATABASE URL>
 ```
@@ -114,21 +150,16 @@ $ kubectl create secret generic db-secret \
 For example:
 
 ```shell
-$ kubectl create secret generic db-secret \
+$ kubectl create secret generic sematic-server \
     --namespace=default
     --from-literal=DATABASE_URL=postgresql://postgres:mYdBpA55worD@my.db.url.com:5432/my-database-name
 ```
 
-Copy the helm chart from https://github.com/sematic-ai/sematic/tree/main/helm
+##### Cloud storage bucket
 
-If you like, examine the charts in `helm/sematic/templates` and modify to suit
-your needs.
-
-Configure the contents of `helm/sematic/values.yaml` (see the sections below).
-Once you have set all the values, deploy using `helm install sematic ./` from the
-`helm/sematic` directory.
-
-#### Configuration
+When deployed in the cloud, Sematic artifacts need to be stored in an AWS S3
+bucket.  You'll need to set the `aws.enabled` setting to `true`, as well as set
+the `aws.storage_bucket` value to the name of your AWS S3 bucket.
 
 ##### Authentication
 
@@ -149,8 +180,25 @@ authentication behavior for your deployed app.
 
 If you wish to put your Kubernetes Sematic deployment behind SSL, the recommended way to do
 this is to set up an [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/)
-that points to the service (named `sematic-service`) deployed by the helm chart,
+that points to the service (named `sematic-server`) deployed by the Helm chart,
 and set up your ingress to use SSL.
+
+The Helm chart can create an ingress for you by setting `ingress.create` to `true`, and by
+specifying the ingress domain information like so in the `ingress.hosts` setting:
+
+```
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+```
+
+##### Additional configuration options
+
+There are several other configuration options that can be used to customize the
+Sematic Helm installation to your specific needs.  While we've chosen reasonable
+default values for these, you can explore them further in the [Helm chart docs](https://sematic-ai.github.io/helm-charts/).
 
 ## Using your deployment
 
