@@ -138,8 +138,8 @@ If the `database.url` setting is valid, you can set the `secret.create` setting
 to `true`, and the Helm chart will automatically create a secret named `sematic-server`
 for you.
 
-Alternatively, if you can set `secret.create` to `false`, and create the
-secret yourself:
+Alternatively, you can set `secret.create` to `false`, and create the secret
+yourself:
 
 ```shell
 $ kubectl create secret generic sematic-server \
