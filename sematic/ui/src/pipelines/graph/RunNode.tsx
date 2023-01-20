@@ -72,7 +72,7 @@ export default function RunNode(props: NodeProps) {
         }}
       >
         <AlertTitle>
-          <RunStateChip state={run.future_state} />
+          <RunStateChip run={run} />
           {run.name}
         </AlertTitle>
       </Alert>
