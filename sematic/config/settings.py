@@ -23,12 +23,20 @@ from sematic.versions import SETTINGS_SCHEMA_VERSION
 logger = logging.getLogger(__name__)
 
 
+_DEFAULT_PROFILE = "default"
 _SETTINGS_FILE_NAME = "settings.yaml"
 _PLUGIN_VERSION_KEY: Literal["__version__"] = "__version__"
 
 PluginScopes = Dict[PluginScope, List[str]]
 PluginSettings = Dict[Union[AbstractPluginSettingsVar, Literal["__version__"]], str]
 PluginsSettings = Dict[str, PluginSettings]
+
+# providing textual path instead of importing in order to avoid a dependency cycle
+# these plugins are "known" and will always be part of the server deployment
+_MANDATORY_SYSTEM_PLUGIN_PATHS = [
+    "sematic.config.server_settings.ServerSettings",
+    "sematic.config.user_settings.UserSettings",
+]
 
 
 @dataclass
@@ -41,18 +49,6 @@ class ProfileSettings:
     settings: PluginsSettings = field(default_factory=dict)
 
 
-_DEFAULT_PROFILE = "default"
-_DEFAULT_PROFILE_SETTINGS = ProfileSettings(
-    scopes={},
-    settings={
-        # providing textual path instead of importing in order to avoid a dependency cycle
-        # these plugins are "known" and will always be part of the server deployment
-        "sematic.config.server_settings.ServerSettings": {},
-        "sematic.config.user_settings.UserSettings": {},
-    },
-)
-
-
 @dataclass
 class Settings:
     """
@@ -61,7 +57,7 @@ class Settings:
 
     version: int = field(default_factory=lambda: SETTINGS_SCHEMA_VERSION)
     profiles: Dict[str, ProfileSettings] = field(
-        default_factory=lambda: {_DEFAULT_PROFILE: _DEFAULT_PROFILE_SETTINGS}
+        default_factory=lambda: {_DEFAULT_PROFILE: ProfileSettings()}
     )
 
 
@@ -131,6 +127,7 @@ def get_active_settings() -> ProfileSettings:
         profile_settings = settings.profiles[_DEFAULT_PROFILE]
 
         _apply_scopes_overrides(profile_settings.scopes)
+        _ensure_mandatory_plugins(profile_settings.settings)
 
         for plugin_path, plugin_settings in profile_settings.settings.items():
             plugin_settings_vars = _get_plugin_settings_vars(plugin_path)
@@ -437,12 +434,24 @@ def _apply_env_var_overrides(
             settings[var] = new_value
 
 
-def _apply_scopes_overrides(plugin_scopes: PluginScopes):
+def _apply_scopes_overrides(plugin_scopes: PluginScopes) -> None:
+    """
+    Adds system plugins that are declared in env variables, but not in the settings file.
+    """
     for scope in PluginScope:
         if scope.value in os.environ:
             logger.debug("Overriding scope %s from environment variables", scope.value)
 
             plugin_scopes[scope] = os.environ[scope.value].split(",")
+
+
+def _ensure_mandatory_plugins(plugin_settings: PluginsSettings) -> None:
+    """
+    Adds the mandatory system plugins to the parameter, if not present.
+    """
+    for plugin_path in _MANDATORY_SYSTEM_PLUGIN_PATHS:
+        if plugin_path not in plugin_settings:
+            plugin_settings[plugin_path] = {}
 
 
 def dump_settings(settings: ProfileSettings) -> str:

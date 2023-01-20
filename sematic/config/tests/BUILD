@@ -44,6 +44,8 @@ sematic_py_lib(
         "pyyaml",
     ],
     deps = [
+        "//sematic/config:server_settings",
         "//sematic/config:settings",
+        "//sematic/config:user_settings",
     ],
 )
