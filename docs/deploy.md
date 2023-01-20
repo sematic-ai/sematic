@@ -178,7 +178,16 @@ this is to set up an [ingress](https://kubernetes.io/docs/concepts/services-netw
 that points to the service (named `sematic-server`) deployed by the Helm chart,
 and set up your ingress to use SSL.
 
-The Helm chart can create an ingress for you by setting `ingress.create` to `true`.
+The Helm chart can create an ingress for you by setting `ingress.create` to `true`, and by
+specifying the ingress domain information like so in the `ingress.hosts` setting:
+
+```
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+```
 
 ##### Additional configuration options
 
