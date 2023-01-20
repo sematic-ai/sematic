@@ -62,7 +62,7 @@ export function RunRow(props: RunRowProps) {
         {createdAt}
       </TableCell>
       <TableCell onClick={props.onClick}>
-        <RunStateChip state={run.future_state} />
+        <RunStateChip run={run} />
       </TableCell>
     </TableRow>
   );

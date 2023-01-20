@@ -7,8 +7,9 @@ export function CopyButton(props: {
   text: string;
   message?: string;
   children?: any;
+  color?: string;
 }) {
-  const { text, message = "Copied", children } = props;
+  const { text, message = "Copied", children, color = undefined } = props;
 
   const { setSnackMessage } = useContext(SnackBarContext);
 
@@ -20,7 +21,7 @@ export function CopyButton(props: {
     <Tooltip title={"Copy " + text}>
       <ButtonBase onClick={copy}>
         {children}
-        <ContentCopy fontSize="inherit" sx={{ ml: 1 }} />
+        <ContentCopy htmlColor={color} fontSize="inherit" sx={{ ml: 1 }} />
       </ButtonBase>
     </Tooltip>
   );
