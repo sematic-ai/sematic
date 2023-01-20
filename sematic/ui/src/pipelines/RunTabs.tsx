@@ -1,7 +1,6 @@
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
-import { Alert } from "@mui/material";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import { styled } from '@mui/system';
@@ -9,11 +8,12 @@ import { useContext } from "react";
 import { EnvContext } from "..";
 import GrafanaPanel from "../addons/grafana/GrafanaPanel";
 import { usePipelinePanelsContext} from "../hooks/pipelineHooks";
-import { Artifact, Run } from "../Models";
+import { Artifact } from "../Models";
 import { ArtifactList } from "./Artifacts";
-import Docstring from "../components/Docstring";
 import LogPanel from "./LogPanel";
 import SourceCode from "../components/SourceCode";
+import DocumentationPanel from "./DocumentationPanel";
+import OutputPanel from "./OutputPanel";
 
 const ExpandedTabPanel = styled(TabPanel)<{hidden: boolean}>( 
   ({hidden}) => hidden ? {} : {
@@ -29,10 +29,9 @@ export type IOArtifacts = {
 };
 
 export default function RunTabs(props: {
-  run: Run;
-  artifacts: IOArtifacts | undefined;
+  artifacts: IOArtifacts;
 }) {
-  const { run, artifacts } = props;
+  const { artifacts } = props;
 
   const {selectedRunTab, setSelectedRunTab, setSelectedArtifactName} = usePipelinePanelsContext();
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
@@ -59,30 +58,22 @@ export default function RunTabs(props: {
           </TabList>
         </Box>
         <TabPanel value="input">
-          {artifacts && <ArtifactList artifacts={artifacts.input} />}
+          <ArtifactList artifacts={artifacts.input} />
         </TabPanel>
         <TabPanel value="output" sx={{ pt: 5 }}>
-          {["CREATED", "SCHEDULED", "RAN"].includes(run.future_state) && (
-            <Alert severity="info">No output yet. Run has not completed.</Alert>
-          )}
-          {["FAILED", "NESTED_FAILED"].includes(run.future_state) && (
-            <Alert severity="error">Run has failed. No output.</Alert>
-          )}
-          {artifacts && run.future_state === "RESOLVED" && (
-            <ArtifactList artifacts={artifacts.output} />
-          )}
+          <OutputPanel outputArtifacts={artifacts.output} />
         </TabPanel>
         <TabPanel value="documentation">
-          <Docstring docstring={run.description} />
+          <DocumentationPanel />
         </TabPanel>
         <ExpandedTabPanel hidden={selectedRunTab !== "logs"} value="logs">
-          <LogPanel run={run} />
+          <LogPanel />
         </ExpandedTabPanel>
         <TabPanel value="source">
-          <SourceCode run={run} />
+          <SourceCode />
         </TabPanel>
         <TabPanel value="grafana">
-          <GrafanaPanel run={run} />
+          <GrafanaPanel />
         </TabPanel>
       </TabContext>
     </>
