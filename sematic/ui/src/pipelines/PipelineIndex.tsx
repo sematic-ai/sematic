@@ -7,7 +7,7 @@ import { RunList } from "../components/RunList";
 import Tags from "../components/Tags";
 import { Run } from "../Models";
 import Link from "@mui/material/Link";
-import RunStateChip from "../components/RunStateChip";
+import RunStateChip, { RunStateChipUndefinedStyle } from "../components/RunStateChip";
 import { Alert, AlertTitle, Container } from "@mui/material";
 import { InfoOutlined } from "@mui/icons-material";
 import { RunTime } from "../components/RunTime";
@@ -16,9 +16,14 @@ import CalculatorPath from "../components/CalculatorPath";
 import TimeAgo from "../components/TimeAgo";
 import { useFetchRuns } from "../hooks/pipelineHooks";
 import Loading from "../components/Loading";
+import { styled } from "@mui/system";
+
+const RecentStatusesWithStyles = styled('span')`
+  flex-direction: row;
+  display: flex;
+`;
 
 function RecentStatuses(props: { calculatorPath: string }) {
-  let state: string | undefined = undefined;
   const { calculatorPath } = props;
 
   const runFilters = useMemo(() => ({
@@ -33,16 +38,17 @@ function RecentStatuses(props: { calculatorPath: string }) {
 
   function statusChip(index: number) {
     if (runs && runs.length > index) {
-      state = runs[index].future_state;
+      return <RunStateChip run={runs[index]} key={index} />;
     } else {
-      state = "undefined";
+      return <RunStateChipUndefinedStyle key={index} />;
     }
-    return <RunStateChip state={state} key={index} />;
   }
   if (isLoading) {
     return <Loading isLoaded={false} /> 
   }
-  return <>{[...Array(5)].map((e, i) => statusChip(i))}</>;
+  return <RecentStatusesWithStyles>
+    {[...Array(5)].map((e, i) => statusChip(i))}
+    </RecentStatusesWithStyles>;
 }
 
 function PipelineRow(props: { run: Run }) {

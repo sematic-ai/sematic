@@ -1,5 +1,6 @@
 import { Box, Tooltip, Typography, useTheme } from "@mui/material";
 import React from "react";
+import { Run } from "../Models";
 
 const Pin = React.forwardRef<HTMLDivElement, { color: any; hollow?: boolean }>(
   (props, ref) => {
@@ -24,16 +25,39 @@ const Pin = React.forwardRef<HTMLDivElement, { color: any; hollow?: boolean }>(
   }
 );
 
-function RunStateChip(props: { state?: string; variant?: string }) {
-  const state = props.state || "undefined";
-  const variant = props.variant || "mini";
+function RunStateChipCommonPresentation({
+  toolTipMessage, color, variant, hollow
+}: {
+  toolTipMessage: string,
+  color: string,
+  variant?: string,
+  hollow: boolean
+}) {
+  return <Tooltip title={toolTipMessage}>
+    <Typography
+      component="span"
+      sx={{ display: "flex", alignItems: "center" }}
+    >
+      <Pin color={color} hollow={hollow} />
+      {variant === "full" && <Box>{toolTipMessage}</Box>}
+    </Typography>
+  </Tooltip>
+}
+
+function RunStateChip({run, variant = "mini"}: { run: Run; variant?: string }) {
+  const state = run.future_state || "undefined";
   let toolTipMessage = state ? state : "UNKNOWN";
   const theme = useTheme();
   let color = theme.palette.grey[300];
   let hollow = false;
 
   if (state === "RESOLVED") {
-    toolTipMessage = "Succeeded";
+    if (run.original_run_id !== null) {
+      toolTipMessage = "Cloned";
+      hollow = true;
+    } else {
+      toolTipMessage = "Succeeded";
+    }
     color = theme.palette.success.light;
   }
 
@@ -69,15 +93,18 @@ function RunStateChip(props: { state?: string; variant?: string }) {
   }
 
   return (
-    <Tooltip title={toolTipMessage}>
-      <Typography
-        component="span"
-        sx={{ display: "flex", alignItems: "center" }}
-      >
-        <Pin color={color} hollow={hollow} />
-        {variant === "full" && <Box>{toolTipMessage}</Box>}
-      </Typography>
-    </Tooltip>
+    <RunStateChipCommonPresentation {...{
+      toolTipMessage, color, hollow, variant
+    }} />
+  );
+}
+
+export function RunStateChipUndefinedStyle() {
+  const theme = useTheme();
+
+  return (
+    <RunStateChipCommonPresentation toolTipMessage={"UNKNOWN"} 
+    color={theme.palette.grey[300]} hollow={false} variant={undefined} />
   );
 }
 
