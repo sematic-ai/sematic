@@ -157,9 +157,9 @@ $ kubectl create secret generic sematic-server \
 
 ##### Cloud storage bucket
 
-If you'd like to use the cloud storage feature and store objects in an AWS S3 bucket,
-you'll need to set the `aws.enabled` setting to `true`, as well as set the
-`aws.storage_bucket` value to the name of your AWS S3 bucket.
+When deployed in the cloud, Sematic artifacts need to be stored in an AWS S3
+bucket.  You'll need to set the `aws.enabled` setting to `true`, as well as set
+the `aws.storage_bucket` value to the name of your AWS S3 bucket.
 
 ##### Authentication
 
