@@ -8,8 +8,13 @@ from sematic.config.server_settings import (
 from sematic.config.tests.fixtures import mock_settings
 
 
-def test_get_empty_settings():
-    with mock_settings(None):
+def test_get_empty_settings_file():
+    with mock_settings({}):
+        assert get_active_server_settings() == {}
+
+
+def test_get_no_settings_file():
+    with mock_settings({}):
         assert get_active_server_settings() == {}
 
 
