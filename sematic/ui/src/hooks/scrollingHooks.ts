@@ -122,21 +122,30 @@ export function usePulldownTrigger(
         isPullDownTriggerCallInitiated, cancelPulldownTriggerCall, startPullDownTriggerCall, 
         startDroppingPulldownTrigger, cancelDroppingPulldownTrigger, cancelPulldownTriggerEnabled,
         pullDownTriggerEnabled, setPullDownTriggerEnabled]);
-    
+
+    const onScrollRefWrapper = useRef(onScroll);
+
+    useEffect(() => {
+        onScrollRefWrapper.current = onScroll;
+    }, [onScrollRefWrapper, onScroll]);
+
+    const onScrollEventListener = useCallback((event: Event) => {
+        onScrollRefWrapper.current?.(event);
+    }, []);
 
     useEffect(() => {
         const attachedDomElement = refElement.current;
 
         SCROLL_EVENTS.forEach(eventName => {
-            attachedDomElement?.addEventListener(eventName, onScroll, {passive: true});
+            attachedDomElement?.addEventListener(eventName, onScrollEventListener, {passive: true});
         });
 
         return () => {
             SCROLL_EVENTS.forEach(eventName => {
-                attachedDomElement?.removeEventListener(eventName, onScroll);
+                attachedDomElement?.removeEventListener(eventName, onScrollEventListener);
             });
         };
-    }, [refElement, onScroll]);
+    }, [refElement, onScrollEventListener]);
 
     return {pullDownProgress, pullDownTriggerEnabled};
 }

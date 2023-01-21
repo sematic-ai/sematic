@@ -1,15 +1,20 @@
-import { useEffect, useCallback, useMemo, useRef } from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import { Alert, Box, Button, LinearProgress, useTheme } from "@mui/material";
 import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useAccumulateLogsUntilEnd, useLogStream } from "../hooks/logHooks";
 import { usePulldownTrigger, useScrollTracker } from "../hooks/scrollingHooks";
-import Loading from "../components/Loading";
 import { ExceptionMetadata } from "../Models";
 import { Exception, ExternalException } from "../components/Exception";
 import usePrevious from "react-use/lib/usePrevious";
+import { useRunPanelContext } from "../hooks/runDetailsHooks";
+import { styled } from "@mui/system";
 
 const DEFAULT_LOG_INFO_MESSAGE = "No more matching lines";
+
+const FooterContainer = styled(Box)(({theme}) => ({
+  backgroundColor: theme.palette.background.paper
+}));
 
 export default function ScrollingLogView(props: {
   logSource: string;
@@ -21,18 +26,17 @@ export default function ScrollingLogView(props: {
     exception_metadata_json } = props;
   const theme = useTheme();
 
-  const scrollerId = useMemo(() => `scrolling-logs-${logSource}`, [logSource]) ;
-
   // Single pull logic
   const { lines, isLoading, error: logLoadError, hasMore, 
     logInfoMessage, getNext, hasPulledData } = useLogStream(logSource, filterString);
-  
+
   // Accumulator (logs draining) logic
   const { accumulateLogsUntilEnd, isLoading: isAccumulatorLoading,
     isAccumulating, accumulatedLines } = useAccumulateLogsUntilEnd(hasMore, getNext);
-  
-  const scrollMonitorRef = useRef<HTMLElement>();
 
+  const { setFooterRenderProp, scrollerId, scrollContainerRef, setIsLoading } = useRunPanelContext();
+
+  
   const pullDownCallback = useCallback(async () => {
     if (isAccumulating || isLoading || !hasMore) {
       return;
@@ -41,7 +45,7 @@ export default function ScrollingLogView(props: {
   }, [isAccumulating, isLoading, getNext, hasMore]);
 
   const {pullDownProgress, pullDownTriggerEnabled} 
-    = usePulldownTrigger(scrollMonitorRef!, pullDownCallback);
+    = usePulldownTrigger(scrollContainerRef!, pullDownCallback);
 
   const infiniteScrollGetNext = useCallback(() => {
     // If the accumulator is under way, don't initiate a pull 
@@ -52,7 +56,8 @@ export default function ScrollingLogView(props: {
     getNext();
   }, [getNext, isAccumulating]);
 
-  const { hasReachedBottom, scrollToBottom } = useScrollTracker(scrollMonitorRef);
+  const { hasReachedBottom, scrollToBottom } = useScrollTracker(scrollContainerRef);
+
 
   const logInfoMessageBanner = useMemo(() =>
     <Alert severity="info" sx={{ mt: 3 }}>
@@ -93,7 +98,42 @@ export default function ScrollingLogView(props: {
     </>);
   }, [pullDownTriggerEnabled, pullDownProgress, isAccumulating, hasMore]);
 
-  const prevIsAccumulating = usePrevious(isAccumulating)
+  const prevIsAccumulating = usePrevious(isAccumulating);
+
+  const renderNextButton = useCallback(() => {
+    return <FooterContainer>
+      {(hasMore && 
+        <Button
+          onClick={accumulateLogsUntilEnd}
+          sx={{ width: "100%" }}
+          disabled={isAccumulating || isLoading}
+          style={{flexShrink: 1}}
+        >
+          {accumulatorButtonMessage}
+        </Button>
+      )}
+      {
+        (!hasMore && !hasReachedBottom && 
+          <Button
+            onClick={scrollToBottom}
+            sx={{ width: "100%" }}
+            style={{flexShrink: 1}}
+          >
+            "Jump to the end"
+          </Button>)
+      }
+    </FooterContainer>;
+  }, [hasMore, hasReachedBottom, isAccumulating, isLoading, 
+    accumulatorButtonMessage, scrollToBottom, accumulateLogsUntilEnd]);
+
+  useEffect(()=> {
+    setFooterRenderProp(renderNextButton);
+
+    return () => {
+      setFooterRenderProp(null);
+    }
+  }, [setFooterRenderProp, renderNextButton]);
+
   // scroll to the bottom when fast forwarding/jumping to end 
   // (aka accumulating) has gotten data
   useEffect(() => {
@@ -103,7 +143,7 @@ export default function ScrollingLogView(props: {
   }, [prevIsAccumulating, isAccumulatorLoading, scrollToBottom]);
 
   useEffect(() => {
-    const hasContainerScrolled = scrollMonitorRef.current!.scrollTop > 0;
+    const hasContainerScrolled = scrollContainerRef.current!.scrollTop > 0;
     // If <InfiniteScroll /> has not scrolled, the initial pull will not be triggered
     // this drives an initial data pull.
     // If <InfiniteScroll /> has scrolled, the initial pull will be triggered by the 
@@ -111,20 +151,20 @@ export default function ScrollingLogView(props: {
     if (!hasPulledData && !hasContainerScrolled) { 
       getNext();
     }
-  }, [getNext, hasPulledData, scrollMonitorRef]);
+  }, [getNext, hasPulledData, scrollContainerRef]);
+
+  useEffect(() => {
+    setIsLoading(isLoading);
+  }, [setIsLoading, isLoading]);
 
   return (
     <>
       <Box
-        id={scrollerId}
-        ref={scrollMonitorRef}
         sx={{
-          height: 0,
           mt: 1.5,
           pt: 1,
           whiteSpace: "break-spaces",
-          overflow: "hidden",
-          overflowY: "scroll",
+          overflowY: "visible",
           width: `100%`,
           lineBreak: 'anywhere',
           flexGrow: 1,
@@ -135,7 +175,7 @@ export default function ScrollingLogView(props: {
           next={infiniteScrollGetNext}
           scrollableTarget={scrollerId}
           hasMore={hasMore}
-          loader={<Loading isLoaded={!isLoading} />}
+          loader={null}
           endMessage={logInfoMessageBanner}
         >
           {external_exception_metadata_json && <Box sx={{ paddingBottom: 4, }} >
@@ -169,30 +209,10 @@ export default function ScrollingLogView(props: {
             </Box>
           ))}
         </InfiniteScroll>
-        <div style={{width: '100%', height: '40px', margin: '0.5em 0'}}>
+        <div style={{width: '100%', height: '60px', margin: '0.5em 0'}}>
           {pullDownTriggerSection}
         </div>
       </Box>
-      {(hasMore && 
-        <Button
-          onClick={accumulateLogsUntilEnd}
-          sx={{ width: "100%" }}
-          disabled={isAccumulating || isLoading}
-          style={{flexShrink: 1}}
-        >
-          {accumulatorButtonMessage}
-        </Button>
-      )}
-      {
-        (!hasMore && !hasReachedBottom && 
-          <Button
-            onClick={scrollToBottom}
-            sx={{ width: "100%" }}
-            style={{flexShrink: 1}}
-          >
-            "Jump to the end"
-          </Button>)
-      }
     </>
   );
 }
