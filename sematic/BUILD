@@ -12,6 +12,7 @@ sematic_py_lib(
         "//sematic/future_operators:init",
         "//sematic/plugins/external_resource:timed_message",
         "//sematic/plugins/kuberay_wrapper:standard",
+        "//sematic/plugins/external_resource/ray:cluster",  # TODO: don't merge!!!
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:local_resolver",
         "//sematic/resolvers:resource_requirements",
