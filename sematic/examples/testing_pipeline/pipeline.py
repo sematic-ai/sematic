@@ -40,7 +40,7 @@ def add_with_ray(a: float, b: float) -> float:
     logger.info("Executing: add_with_ray(a=%s, b=%s)", a, b)
     with RayCluster(
         config=SimpleRayCluster(
-            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=0.25)
+            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2)
         )
     ):
         result = ray.get([add_ray_task.remote(a, b)])[0]

@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 _ray_init_called = False
 
 _VALIDATION_INT = 1
-_VALIDATION_TIMEOUT_SECONDS = 30.0
+_VALIDATION_TIMEOUT_SECONDS = 10.0
 
 
 @unique
