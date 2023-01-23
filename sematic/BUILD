@@ -21,6 +21,9 @@ sematic_py_lib(
         "//sematic/types:init",
         "//sematic/utils:exceptions",
     ],
+    pip_deps = [
+        "ray"  # TODO: don't merge!!!
+    ],
 )
 
 sematic_py_lib(
