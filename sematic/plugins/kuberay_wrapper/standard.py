@@ -338,6 +338,11 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         requests.update(gpu_requests)
         return requests
 
+    @classmethod
+    def head_uri(cls, manifest: RayClusterManifest) -> str:
+        name = manifest["metadata"]["name"]
+        return f"ray://{name}-head-svc:10001"
+
 
 def _get_setting(setting, default):
     return json.loads(

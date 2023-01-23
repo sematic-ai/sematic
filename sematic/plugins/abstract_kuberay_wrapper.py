@@ -33,6 +33,14 @@ class RayNodeConfig:
     memory_gb: float
     gpu_count: int = 0
 
+    def __post_init__(self):
+        if not isinstance(self.cpu, (int, float)):
+            raise ValueError("cpu field must be a float or int")
+        if not isinstance(self.memory_gb, (int, float)):
+            raise ValueError("memory_gb field must be a float or int")
+        if not isinstance(self.gpu_count, int):
+            raise ValueError("gpu_count field must be an int")
+
 
 @dataclass(frozen=True)
 class ScalingGroup:
@@ -136,6 +144,7 @@ def SimpleRayCluster(
 
 class AbstractKuberayWrapper(AbstractPlugin):
     """Plugin to convert between a RayClusterConfig & a k8s manifest for the cluster."""
+
     KUBERAY_DEPLOYMENT_NAME = "kuberay-operator"
     KUBERAY_CONTAINER_NAME = "kuberay-operator"
 
@@ -183,3 +192,7 @@ class AbstractKuberayWrapper(AbstractPlugin):
         raise NotImplementedError(
             "Child classes should implement create_cluster_manifest"
         )
+
+    @classmethod
+    def head_uri(cls, manifest: RayClusterManifest) -> str:
+        raise NotImplementedError("Child classes should implement client_uri")

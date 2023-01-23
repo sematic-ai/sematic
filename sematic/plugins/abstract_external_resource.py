@@ -234,10 +234,13 @@ class AbstractExternalResource:
         )
         updated = managed_by_updated._do_activate(is_local)
         self.validate_transition(updated)
-        if updated.status.state != ResourceState.ACTIVATING:
+        if updated.status.state not in (
+            ResourceState.ACTIVATING,
+            ResourceState.DEACTIVATING,
+        ):
             raise IllegalStateTransitionError(
                 "Calling .activate() did not leave the resource in the "
-                "ACTIVATING state."
+                "ACTIVATING or DEACTIVATING state."
             )
         return updated
 
@@ -258,14 +261,8 @@ class AbstractExternalResource:
             logger.warning(
                 "Deactivating resource before it was ever activated: %s", self.id
             )
-            updated = replace(
-                self,
-                status=replace(
-                    self.status,
-                    state=ResourceState.DEACTIVATED,
-                    message="Resource activation was canceled.",
-                    last_update_epoch_time=int(time.time()),
-                ),
+            updated = self._with_status(
+                ResourceState.DEACTIVATED, "Resource activation was canceled."
             )
         else:
             logger.debug("Deactivating %s", self)
@@ -388,3 +385,14 @@ class AbstractExternalResource:
                 f"Resolver {ctx.private.load_resolver_class()} failed to "
                 f"deactivate {deactivated}."
             )
+
+    def _with_status(self: T, state: ResourceState, message: str) -> T:
+        return replace(
+            self,
+            status=replace(
+                self.status,  # type: ignore
+                last_update_epoch_time=int(time.time()),
+                state=state,
+                message=message,
+            ),
+        )

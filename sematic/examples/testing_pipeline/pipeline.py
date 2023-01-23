@@ -13,6 +13,8 @@ import ray
 
 # Sematic
 import sematic
+from sematic.plugins.abstract_external_resource.ray.cluster import RayCluster
+from sematic.plugins.abstract_kuberay_wrapper import RayNodeConfig, SimpleRayCluster
 from sematic.plugins.external_resource.timed_message import TimedMessage
 from sematic.resolvers.resource_requirements import ResourceRequirements
 
@@ -31,15 +33,17 @@ def add(a: float, b: float) -> float:
 
 
 @sematic.func(inline=False)
-def add_with_ray(a: float, b: float, cluster_address: str) -> float:
+def add_with_ray(a: float, b: float) -> float:
     """
     Adds two numbers, using a Ray cluster.
     """
-    logger.info(
-        "Executing: add_with_ray(a=%s, b=%s, cluster_address=%s)", a, b, cluster_address
-    )
-    ray.init(address=cluster_address)
-    result = ray.get([add_ray_task.remote(a, b)])[0]
+    logger.info("Executing: add_with_ray(a=%s, b=%s)", a, b)
+    with RayCluster(
+        config=SimpleRayCluster(
+            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=0.25)
+        )
+    ):
+        result = ray.get([add_ray_task.remote(a, b)])[0]
     logger.info("Result from ray for %s + %s: %s", a, b, result)
     return result
 
@@ -359,7 +363,7 @@ def testing_pipeline(
         futures.append(do_exit(initial_future, exit_code))
 
     if ray_cluster_address is not None:
-        futures.append(add_with_ray(initial_future, 1.0, ray_cluster_address))
+        futures.append(add_with_ray(initial_future, 1.0))
 
     # collect all values
     result = add_all(futures) if len(futures) > 1 else futures[0]

@@ -25,7 +25,9 @@ from sematic.future_context import SematicContext, context  # noqa: F401,E402
 from sematic.plugins.external_resource.timed_message import (  # noqa: F401,E402
     TimedMessage,
 )
-from sematic.plugins.kuberay_wrapper.standard import StandardKuberayWrapper
+from sematic.plugins.kuberay_wrapper.standard import (  # noqa: F401,E402
+    StandardKuberayWrapper,
+)
 from sematic.resolver import Resolver  # noqa: F401,E402
 from sematic.resolvers.cloud_resolver import CloudResolver  # noqa: F401,E402
 from sematic.resolvers.local_resolver import LocalResolver  # noqa: F401,E402
