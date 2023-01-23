@@ -200,6 +200,19 @@ def get_resources_by_root_id(root_run_id: str) -> List[ExternalResource]:
         return list(set(r[0] for r in results))
 
 
+def get_run_ids_for_resource(external_resource_id: str) -> List[str]:
+    with db().get_session() as session:
+        results = (
+            session.query(Run.id)
+            .filter(ExternalResource.id == external_resource_id)
+            .filter(ExternalResource.id == RunExternalResource.resource_id)
+            .filter(Run.id == RunExternalResource.run_id)
+            .distinct()
+            .all()
+        )
+        return list(set(r[0] for r in results))
+
+
 def get_resolution(resolution_id: str) -> Resolution:
     """Get a resolution from the database.
 

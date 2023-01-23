@@ -11,11 +11,10 @@ import kubernetes
 from kubernetes.client.rest import ApiException  # type: ignore
 
 # Sematic
-from sematic import api_client
 from sematic.abstract_plugin import PluginScope
 from sematic.config.server_settings import ServerSettingsVar, get_server_setting
 from sematic.config.settings import get_active_plugins
-from sematic.future_context import context
+from sematic.db.queries import get_run, get_run_ids_for_resource
 from sematic.plugins.abstract_external_resource import (
     AbstractExternalResource,
     ManagedBy,
@@ -160,8 +159,10 @@ class RayCluster(AbstractExternalResource):
         self, kuberay_version: str, namespace: str, image_uri: Optional[str] = None
     ) -> "RayCluster":
         try:
-            run_id = context().run_id
-            run = api_client.get_run(run_id)
+            run_ids = get_run_ids_for_resource(self.id)
+
+            # should be exactly one run when we activate the cluster
+            run = get_run(run_ids[0])
         except Exception as e:
             message = f"Unable to get run when before creating Ray cluster: {e}"
             logger.exception(message)
