@@ -109,6 +109,7 @@ class RayCluster(AbstractExternalResource):
         if _ray_init_called:
             return self
         if self._cluster_name is not None:
+            logger.info("Connecting to Ray using URI '%s'", self._head_uri)
             ray.init(address=self._head_uri)
         else:
             ray.init()
@@ -244,11 +245,7 @@ class RayCluster(AbstractExternalResource):
         try:
             api_instance = kubernetes.client.AppsV1Api(cls._k8s_client())
             name = cls._kuberay_wrapper().KUBERAY_DEPLOYMENT_NAME
-            logger.error(f"BLUEBERRY: reading '{name}' from namespace '{namespace}'")
             api_response = api_instance.read_namespaced_deployment(name, namespace)
-            logger.error(
-                f"BLUEBERRY: DONE reading '{name}' from namespace '{namespace}'"
-            )
             ready: Optional[int] = api_response.status.ready_replicas  # type: ignore
 
             if ready is None:

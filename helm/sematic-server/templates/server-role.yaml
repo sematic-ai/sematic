@@ -17,3 +17,8 @@ rules:
 - apiGroups: ["apps"]
   resources: ["deployments"]
   verbs: ["get", "watch", "list"]
+{{- if .Values.rbac.manage_ray }}
+- apiGroups: ["ray.io"]
+  resources: ["rayclusters"]
+  verbs: ["get", "watch", "list", "create", "delete"]
+{{- end }}

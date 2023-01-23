@@ -70,6 +70,11 @@ image:
 
 rbac:
   create: true
+  
+  # Should the server be allowed to manage Ray clusters?
+  # Should be 'true' if using Sematic's Ray or Spark
+  # integrations.
+  manage_ray: false
 
 service_account:
   # Should a new service account be created? Or should we use
