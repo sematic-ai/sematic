@@ -15,6 +15,7 @@ sematic_pipeline(
     repository = "sematic-dev",
     deps = [
         ":testing_pipeline_lib",
+        "//sematic/plugins/external_resource/ray:cluster"
         requirement("debugpy"),
         requirement("ray"),
     ],

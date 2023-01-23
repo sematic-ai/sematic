@@ -13,8 +13,8 @@ import ray
 
 # Sematic
 import sematic
-from sematic.plugins.abstract_external_resource.ray.cluster import RayCluster
 from sematic.plugins.abstract_kuberay_wrapper import RayNodeConfig, SimpleRayCluster
+from sematic.plugins.external_resource.ray.cluster import RayCluster
 from sematic.plugins.external_resource.timed_message import TimedMessage
 from sematic.resolvers.resource_requirements import ResourceRequirements
 
