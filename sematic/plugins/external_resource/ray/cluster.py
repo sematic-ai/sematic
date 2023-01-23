@@ -113,6 +113,7 @@ class RayCluster(AbstractExternalResource):
             ray.init(address=self._head_uri)
         else:
             ray.init()
+        logger.info("Initialized connection to Ray for cluster resource %s", self.id)
         _ray_init_called = True
         return self
 
@@ -357,15 +358,25 @@ def _validation_task() -> int:
 def _validate_ray_in_subprocess(cluster: RayCluster) -> bool:
     cluster._do_ray_init()
     try:
+        logger.info("Executing validation task on Ray cluster %s", cluster.id)
         result = ray.get(
             [_validation_task.remote()], timeout=_VALIDATION_TIMEOUT_SECONDS
         )[0]
+        logger.info("Done executing validation task on Ray cluster %s", cluster.id)
     except GetTimeoutError:
+        logger.info(
+            "Timeout while executing validation task on Ray cluster %s", cluster.id
+        )
         sys.exit(_ValidationExitCodes.TIMEOUT)
-    except Exception:
-        logger.exception("Exception during Ray cluster validation")
+    except Exception as e:
+        logger.exception(
+            "Exception during Ray cluster validation for %s: %s", cluster.id, e
+        )
         sys.exit(_ValidationExitCodes.UNKNOWN_ERROR)
     if result != _VALIDATION_INT:
+        logger.error(
+            "Unexpected result from validation task on Ray cluster %s", cluster.id
+        )
         sys.exit(_ValidationExitCodes.UNKNOWN_ERROR)
     sys.exit(_ValidationExitCodes.OK)
 
@@ -377,6 +388,10 @@ def _validate_ray(cluster: RayCluster) -> Tuple[bool, Optional[str]]:
     process.join(1.5 * _VALIDATION_TIMEOUT_SECONDS)
     exit_code = process.exitcode
     if exit_code is None:
+        logger.info(
+            "Validation process did not terminate on time for Ray cluster %s",
+            cluster.id,
+        )
         process.kill()
         exit_code = _ValidationExitCodes.TIMEOUT.value
     return (
