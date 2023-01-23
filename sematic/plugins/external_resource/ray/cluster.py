@@ -371,7 +371,6 @@ def _validate_ray_in_subprocess(cluster: RayCluster) -> bool:
 
 
 def _validate_ray(cluster: RayCluster) -> Tuple[bool, Optional[str]]:
-    return True, None
     process = Process(target=_validate_ray_in_subprocess, args=(cluster,), daemon=True)
     process.start()
 
