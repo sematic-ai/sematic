@@ -1,9 +1,6 @@
 # Standard Library
 import logging
-import sys
 from dataclasses import dataclass, field, replace
-from enum import Enum, unique
-from multiprocessing import Process
 from typing import Optional, Tuple, Type
 
 # Third-party
@@ -47,26 +44,6 @@ logger = logging.getLogger(__name__)
 _ray_init_called = False
 
 _VALIDATION_INT = 1
-_VALIDATION_TIMEOUT_SECONDS = 10.0
-
-
-@unique
-class _ValidationExitCodes(Enum):
-    OK = 0
-    TIMEOUT = 1
-    UNKNOWN_ERROR = 2
-
-    @classmethod
-    def message(cls, code: int) -> Optional[str]:
-        return {
-            _ValidationExitCodes.OK.value: None,
-            _ValidationExitCodes.TIMEOUT.value: (
-                "Timed out waiting for health validation result."
-            ),
-            _ValidationExitCodes.UNKNOWN_ERROR.value: (
-                "Unknown error when validating cluster health."
-            ),
-        }[code]
 
 
 def _no_default_cluster() -> RayClusterConfig:
@@ -291,7 +268,7 @@ class RayCluster(AbstractExternalResource):
                 ResourceState.ACTIVE, "Ready to use Ray in a local process cluster."
             )
         else:
-            is_active, _ = _validate_ray(self)
+            is_active, _ = self._validate_ray()
             if is_active:
                 return self._with_status(
                     ResourceState.ACTIVE, "Ready to use remote Ray cluster."
@@ -299,7 +276,7 @@ class RayCluster(AbstractExternalResource):
             return self
 
     def _update_from_active(self) -> "RayCluster":
-        is_active, message = _validate_ray(self)
+        is_active, message = self._validate_ray()
         if is_active:
             return self._with_status(ResourceState.ACTIVE, "Ray cluster is active")
         else:
@@ -349,52 +326,48 @@ class RayCluster(AbstractExternalResource):
     def _do_deactivate(self) -> "RayCluster":
         return self._continue_deactivation("Deactivation requested via Sematic API")
 
+    def _validate_ray(self) -> Tuple[bool, Optional[str]]:
+        if self.status.managed_by == ManagedBy.RESOLVER:
+            return _validate_local_ray(self)
+
+        namespace = get_server_setting(ServerSettingsVar.KUBERNETES_NAMESPACE)
+
+        try:
+            cluster_k8s_rep = self._cluster_api().get(
+                self._cluster_name, namespace=namespace
+            )
+        except Exception as e:
+            return False, f"Could not get RayCluster: {e}"
+
+        has_workers = cluster_k8s_rep.status.availableWorkerReplicas >= 1
+        return (
+            has_workers,
+            None if has_workers else "RayCluster has no available workers.",
+        )
+
 
 @ray.remote
 def _validation_task() -> int:
     return _VALIDATION_INT
 
 
-def _validate_ray_in_subprocess(cluster: RayCluster) -> bool:
-    cluster._do_ray_init()
+def _validate_local_ray(cluster: RayCluster) -> Tuple[bool, Optional[str]]:
     try:
-        logger.info("Executing validation task on Ray cluster %s", cluster.id)
-        result = ray.get(
-            [_validation_task.remote()], timeout=_VALIDATION_TIMEOUT_SECONDS
-        )[0]
-        logger.info("Done executing validation task on Ray cluster %s", cluster.id)
-    except GetTimeoutError:
-        logger.info(
-            "Timeout while executing validation task on Ray cluster %s", cluster.id
-        )
-        sys.exit(_ValidationExitCodes.TIMEOUT)
+        cluster._do_ray_init()
     except Exception as e:
-        logger.exception(
-            "Exception during Ray cluster validation for %s: %s", cluster.id, e
-        )
-        sys.exit(_ValidationExitCodes.UNKNOWN_ERROR)
+        return False, f"Could not call ray.init(): {e}"
+    try:
+        result = ray.get([_validation_task.remote()], timeout=30)[0]
+    except GetTimeoutError as e:
+        message = f"Timeout while executing validation task on Ray cluster: {e}"
+        logger.exception(message)
+        return False, message
+    except Exception as e:
+        message = f"Exception during Ray cluster validation: {e}"
+        logger.exception(message)
+        return False, message
     if result != _VALIDATION_INT:
-        logger.error(
-            "Unexpected result from validation task on Ray cluster %s", cluster.id
-        )
-        sys.exit(_ValidationExitCodes.UNKNOWN_ERROR)
-    sys.exit(_ValidationExitCodes.OK)
-
-
-def _validate_ray(cluster: RayCluster) -> Tuple[bool, Optional[str]]:
-    process = Process(target=_validate_ray_in_subprocess, args=(cluster,), daemon=True)
-    process.start()
-
-    process.join(1.5 * _VALIDATION_TIMEOUT_SECONDS)
-    exit_code = process.exitcode
-    if exit_code is None:
-        logger.info(
-            "Validation process did not terminate on time for Ray cluster %s",
-            cluster.id,
-        )
-        process.kill()
-        exit_code = _ValidationExitCodes.TIMEOUT.value
-    return (
-        exit_code == _ValidationExitCodes.OK,
-        _ValidationExitCodes.message(exit_code),
-    )
+        message = f"Unexpected result from validation task: '{result}'"
+        logger.error(message)
+        return False, message
+    return True, None
