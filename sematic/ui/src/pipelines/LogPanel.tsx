@@ -16,8 +16,8 @@ export default function LogPanel() {
   );
 
   return (
-    <Box sx={{ display: "flex", flexGrow: 1 }} >
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column'}} >
+    <Box >
+      <Box sx={{ display: 'flex', flexDirection: 'column'}} >
         <TextField
           variant="standard"
           fullWidth={true}
