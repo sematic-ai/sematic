@@ -342,6 +342,7 @@ class RayCluster(AbstractExternalResource):
         n_workers = cluster_k8s_rep.status.availableWorkerReplicas
         n_workers = n_workers if n_workers is not None else 0
         has_workers = n_workers >= 1
+        logger.info(f"Ray cluster {self.id} has {n_workers} workers")
         return (
             has_workers,
             None if has_workers else "RayCluster has no available workers.",
