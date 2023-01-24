@@ -138,7 +138,7 @@ class RayCluster(AbstractExternalResource):
             # should be exactly one run when we activate the cluster
             run = get_run(run_ids[0])
         except Exception as e:
-            message = f"Unable to get run when before creating Ray cluster: {e}"
+            message = f"Unable to get run before creating Ray cluster: {e}"
             logger.exception(message)
             return self._with_status(
                 ResourceState.DEACTIVATING,
