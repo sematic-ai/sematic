@@ -35,6 +35,9 @@ class PluginScope(enum.Enum):
     # Server-side authentication plug-in scope
     AUTH = "AUTH"
 
+    # Event external publishing plug-in scope
+    PUBLISH = "PUBLISH"
+
 
 class AbstractPluginSettingsVar(enum.Enum):
     """

@@ -7,6 +7,11 @@ aws:
   enabled: true
   storage_bucket: my-s3-bucket # REPLACE ME
 
+slack:
+  enabled: true
+  slack_webhook_token: XXX/YYY/ZZZ # REPLACE ME
+  slack_external_url: https://my.sematic # REPLACE ME
+
 secret:
   create: true
 
