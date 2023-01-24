@@ -5,8 +5,10 @@ from typing import Dict, Optional
 
 @dataclass
 class DatasetConfig:
+    path: str
     train: str
     val: str
+    image_size: int
     names: Dict[int, str]
     location: str
     test: Optional[str] = None
@@ -97,8 +99,10 @@ CLASSES = {
 
 
 COCO128 = DatasetConfig(
-    train="images/train2017",
-    val="images/train2017",
+    path="/tmp/coco128",
+    train="coco128/images/train2017",
+    val="coco128/images/train2017",
     names=CLASSES,
     location="https://ultralytics.com/assets/coco128.zip",
+    image_size=640,
 )

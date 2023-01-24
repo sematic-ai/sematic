@@ -6,6 +6,7 @@ sematic_py_lib(
     ]),
     deps = [
         "//sematic:init",
+        "//sematic:client"
     ],
     pip_deps = [
         "torch",

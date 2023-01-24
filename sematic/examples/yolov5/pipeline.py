@@ -1,11 +1,13 @@
 # Standard Library
 import logging
+import os
+import pathlib
 import time
 from dataclasses import asdict, dataclass
-from types import ModuleType
-from typing import Any, List, Literal, Tuple, Union
+from typing import Dict, List, Optional
 
 # Third-party
+import matplotlib.figure
 import numpy as np
 import torch
 from torch.optim import lr_scheduler
@@ -16,20 +18,28 @@ import sematic
 
 # Yolov5
 from sematic.examples.yolov5.configs.dataset import DatasetConfig
-from sematic.examples.yolov5.configs.hyperparameters import HyperParametersConfig
+from sematic.examples.yolov5.configs.evaluation import EvaluationConfig
+from sematic.examples.yolov5.configs.hyperparameters import HyperParameters
 from sematic.examples.yolov5.configs.model import ModelConfig
 from sematic.examples.yolov5.models.yolo import DetectionModel
 from sematic.examples.yolov5.utils.autoanchor import check_anchors
 from sematic.examples.yolov5.utils.dataloaders import create_dataloader
 from sematic.examples.yolov5.utils.general import (
     TQDM_BAR_FORMAT,
+    Profile,
     check_amp,
     check_img_size,
+    coco80_to_coco91_class,
     download,
     init_seeds,
     labels_to_class_weights,
+    non_max_suppression,
+    scale_boxes,
+    xywh2xyxy,
 )
 from sematic.examples.yolov5.utils.loss import ComputeLoss
+from sematic.examples.yolov5.utils.metrics import ConfusionMatrix, ap_per_class
+from sematic.examples.yolov5.utils.plots import output_to_target, plot_images
 from sematic.examples.yolov5.utils.torch_utils import (
     EarlyStopping,
     ModelEMA,
@@ -37,6 +47,7 @@ from sematic.examples.yolov5.utils.torch_utils import (
     select_device,
     smart_optimizer,
 )
+from sematic.examples.yolov5.val import process_batch
 
 logger = logging.getLogger(__name__)
 RANK = -1
@@ -50,7 +61,6 @@ class TrainingConfig:
     optimizer: str = "SGD"
     epochs: int = 1
     batch_size: int = 16
-    image_size: int = 640
     seed: int = 0
 
 
@@ -59,29 +69,54 @@ class PipelineConfig:
     # weights: str
     model_config: ModelConfig
     dataset_config: DatasetConfig
-    hyperparameters: HyperParametersConfig
+    hyperparameters: HyperParameters
     training_config: TrainingConfig
+    evaluation_config: EvaluationConfig
     device: str
+
+
+@dataclass
+class CocoDataset:
+    train_path: str
+    val_path: str
+    classes: Dict[int, str]
+    image_size: int
+
+
+@sematic.func
+def get_dataset(dataset_config: DatasetConfig) -> CocoDataset:
+    """
+    Download COCO dataset to local filesystem.
+    """
+    download(dataset_config.location, dataset_config.path)
+
+    return CocoDataset(
+        train_path=os.path.join(dataset_config.path, dataset_config.train),
+        val_path=os.path.join(dataset_config.path, dataset_config.val),
+        classes=dataset_config.names,
+        image_size=dataset_config.image_size,
+    )
 
 
 @sematic.func
 def train_model(
     device: str,
     train_config: TrainingConfig,
-    dataset_config: DatasetConfig,
+    input_dataset: CocoDataset,
     model_config: ModelConfig,
-    hyperparameters_config: HyperParametersConfig,
+    hyperparameters: HyperParameters,
 ) -> DetectionModel:
+    """
+    Train YOLO model.
+    """
     device = select_device(device, train_config.batch_size)
-    cuda = device.type != "cpu"
     init_seeds(train_config.seed + 1, deterministic=True)
-    download(dataset_config.location)
-    train_path, val_path = dataset_config.train, dataset_config.val
+
     model = DetectionModel(
         asdict(model_config),
         ch=3,
-        nc=len(dataset_config.names),
-        anchors=hyperparameters_config.anchors,
+        nc=len(input_dataset.classes),
+        anchors=hyperparameters.anchors,
     ).to(device)
     amp = check_amp(model)
 
@@ -99,7 +134,7 @@ def train_model(
     # Image size
     gs = max(int(model.stride.max()), 32)  # grid size (max stride)
     imgsz = check_img_size(
-        train_config.image_size, gs, floor=gs * 2
+        input_dataset.image_size, gs, floor=gs * 2
     )  # verify imgsz is gs-multiple
 
     # Optimizer
@@ -107,21 +142,21 @@ def train_model(
     accumulate = max(
         round(nbs / train_config.batch_size), 1
     )  # accumulate loss before optimizing
-    hyperparameters_config.weight_decay *= (
+    hyperparameters.weight_decay *= (
         train_config.batch_size * accumulate / nbs
     )  # scale weight_decay
     optimizer = smart_optimizer(
         model,
         train_config.optimizer,
-        hyperparameters_config.lr0,
-        hyperparameters_config.momentum,
-        hyperparameters_config.weight_decay,
+        hyperparameters.lr0,
+        hyperparameters.momentum,
+        hyperparameters.weight_decay,
     )
 
     # Scheduler
     lf = (
-        lambda x: (1 - x / train_config.epochs) * (1.0 - hyperparameters_config.lrf)
-        + hyperparameters_config.lrf
+        lambda x: (1 - x / train_config.epochs) * (1.0 - hyperparameters.lrf)
+        + hyperparameters.lrf
     )  # linear
     scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
 
@@ -132,12 +167,12 @@ def train_model(
     best_fitness, start_epoch = 0.0, 0
     single_cls = False
     train_loader, dataset = create_dataloader(
-        train_path,
+        input_dataset.train_path,
         imgsz,
         train_config.batch_size,
         gs,
         single_cls,
-        hyp=asdict(hyperparameters_config),
+        hyp=asdict(hyperparameters),
         augment=True,
         cache=None,
         rect=train_config.rectangular_training,
@@ -154,45 +189,29 @@ def train_model(
         mlc < model_config.nc
     ), f"Label class {mlc} exceeds nc={model_config.nc}. Possible class labels are 0-{model_config.nc - 1}"
 
-    val_loader = create_dataloader(
-        val_path,
-        imgsz,
-        train_config.batch_size * 2,
-        gs,
-        single_cls,
-        hyp=asdict(hyperparameters_config),
-        rect=True,
-        rank=-1,
-        pad=0.5,
-    )[0]
-
     check_anchors(
-        dataset, model=model, thr=hyperparameters_config.anchor_t, imgsz=imgsz
+        dataset, model=model, thr=hyperparameters.anchor_t, imgsz=imgsz
     )  # run AutoAnchor
     model.half().float()  # pre-reduce anchor precision
 
     # Model attributes
     nl = de_parallel(model).model[-1].nl  # number of detection layers (to scale hyps)
-    hyperparameters_config.box *= 3 / nl  # scale to layers
-    hyperparameters_config.cls *= (
-        model_config.nc / 80 * 3 / nl
-    )  # scale to classes and layers
-    hyperparameters_config.obj *= (
-        (imgsz / 640) ** 2 * 3 / nl
-    )  # scale to image size and layers
+    hyperparameters.box *= 3 / nl  # scale to layers
+    hyperparameters.cls *= model_config.nc / 80 * 3 / nl  # scale to classes and layers
+    hyperparameters.obj *= (imgsz / 640) ** 2 * 3 / nl  # scale to image size and layers
     model.nc = model_config.nc  # attach number of classes to model
-    model.hyp = asdict(hyperparameters_config)  # attach hyperparameters to model
+    model.hyp = asdict(hyperparameters)  # attach hyperparameters to model
     model.class_weights = (
         labels_to_class_weights(dataset.labels, model_config.nc).to(device)
         * model_config.nc
     )  # attach class weights
-    model.names = dataset_config.names
+    model.names = input_dataset.classes
 
     # Start training
     t0 = time.time()
     nb = len(train_loader)  # number of batches
     nw = max(
-        round(hyperparameters_config.warmup_epochs * nb), 100
+        round(hyperparameters.warmup_epochs * nb), 100
     )  # number of warmup iterations, max(3 epochs, 100 iterations)
     # nw = min(nw, (epochs - start_epoch) / 2 * nb)  # limit warmup to < 1/2 of training
     last_opt_step = -1
@@ -257,7 +276,7 @@ def train_model(
                         ni,
                         xi,
                         [
-                            hyperparameters_config.warmup_bias_lr if j == 0 else 0.0,
+                            hyperparameters.warmup_bias_lr if j == 0 else 0.0,
                             x["initial_lr"] * lf(epoch),
                         ],
                     )
@@ -266,8 +285,8 @@ def train_model(
                             ni,
                             xi,
                             [
-                                hyperparameters_config.warmup_momentum,
-                                hyperparameters_config.momentum,
+                                hyperparameters.warmup_momentum,
+                                hyperparameters.momentum,
                             ],
                         )
 
@@ -313,19 +332,277 @@ def train_model(
             # end batch ------------------------------------------------------------------------------------------------
 
         # Scheduler
-        lr = [x["lr"] for x in optimizer.param_groups]  # for loggers
         scheduler.step()
 
     torch.cuda.empty_cache()
     return model
 
 
+@dataclass
+class EvaluationMetrics:
+    mean_precision: float
+    mean_recall: float
+    mean_ap50: float
+    mean_ap: float
+    average_loss: List[float]
+
+
+@dataclass
+class EvaluationResults:
+    images: List[object]
+    confusion_matrix: Optional[matplotlib.figure.Figure]
+    precision_recall: Optional[matplotlib.figure.Figure]
+    f1_score: Optional[matplotlib.figure.Figure]
+    precision: Optional[matplotlib.figure.Figure]
+    recall: Optional[matplotlib.figure.Figure]
+    metrics: EvaluationMetrics
+
+
 @sematic.func
-def pipeline(config: PipelineConfig) -> DetectionModel:
-    return train_model(
-        device=config.device,
+def evaluate_model(
+    model: DetectionModel,
+    dataset: CocoDataset,
+    config: EvaluationConfig,
+    train_config: TrainingConfig,
+    hyperparameters: HyperParameters,
+) -> EvaluationResults:
+    # strip_optimizer_model(model)  # strip optimizers
+    device, pt, jit, engine = (
+        next(model.parameters()).device,
+        True,
+        False,
+        False,
+    )  # get model device, PyTorch model
+    cuda = device.type != "cpu"
+    half = config.half and cuda  # half precision only supported on CUDA
+
+    model.half() if half else model.float()
+    for p in model.parameters():
+        p.requires_grad = False
+
+    model.eval()
+    nc = len(dataset.classes)  # number of classes
+    iouv = torch.linspace(0.5, 0.95, 10, device=device)  # iou vector for mAP@0.5:0.95
+    niou = iouv.numel()
+
+    gs = max(int(model.stride.max()), 32)  # grid size (max stride)
+    imgsz = check_img_size(
+        dataset.image_size, gs, floor=gs * 2
+    )  # verify imgsz is gs-multiple
+
+    dataloader = create_dataloader(
+        dataset.val_path,
+        imgsz,
+        train_config.batch_size * 2,
+        gs,
+        False,
+        hyp=asdict(hyperparameters),
+        rect=train_config.rectangular_training,
+        rank=-1,
+        pad=0.5,
+        # workers=8,
+    )[0]
+
+    seen = 0
+    confusion_matrix = ConfusionMatrix(nc=nc)
+    names = (
+        model.names if hasattr(model, "names") else model.module.names
+    )  # get class names
+    if isinstance(names, (list, tuple)):  # old format
+        names = dict(enumerate(names))
+    # class_map = coco80_to_coco91_class()
+    s = ("%22s" + "%11s" * 6) % (
+        "Class",
+        "Images",
+        "Instances",
+        "P",
+        "R",
+        "mAP50",
+        "mAP50-95",
+    )
+    tp, fp, p, r, f1, mp, mr, map50, ap50, map = (
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+    )
+    # dt = Profile(), Profile(), Profile()  # profiling times
+    loss = torch.zeros(3, device=device)
+    jdict, stats, ap, ap_class = [], [], [], []
+    pbar = tqdm(dataloader, desc=s, bar_format=TQDM_BAR_FORMAT)  # progress bar
+
+    compute_loss = ComputeLoss(model)  # init loss class
+
+    images = []
+
+    for batch_i, (im, targets, paths, shapes) in enumerate(pbar):
+        # with dt[0]:
+        if cuda:
+            im = im.to(device, non_blocking=True)
+            targets = targets.to(device)
+        im = im.half() if half else im.float()  # uint8 to fp16/32
+        im /= 255  # 0 - 255 to 0.0 - 1.0
+        nb, _, height, width = im.shape  # batch size, channels, height, width
+
+        # Inference
+        # with dt[1]:
+        preds, train_out = (
+            model(im) if compute_loss else (model(im, augment=config.augment), None)
+        )
+
+        # Loss
+        loss += compute_loss(train_out, targets)[1]  # box, obj, cls
+
+        # NMS
+        targets[:, 2:] *= torch.tensor(
+            (width, height, width, height), device=device
+        )  # to pixels
+        lb = (
+            [targets[targets[:, 0] == i, 1:] for i in range(nb)] if False else []
+        )  # for autolabelling
+        # with dt[2]:
+        preds = non_max_suppression(
+            preds,
+            config.conf_thres,
+            config.iou_thres,
+            labels=lb,
+            multi_label=True,
+            agnostic=False,
+            max_det=config.max_det,
+        )
+
+        # Metrics
+        for si, pred in enumerate(preds):
+            labels = targets[targets[:, 0] == si, 1:]
+            nl, npr = labels.shape[0], pred.shape[0]  # number of labels, predictions
+            path, shape = pathlib.Path(paths[si]), shapes[si][0]
+            correct = torch.zeros(npr, niou, dtype=torch.bool, device=device)  # init
+            seen += 1
+
+            if npr == 0:
+                if nl:
+                    stats.append(
+                        (correct, *torch.zeros((2, 0), device=device), labels[:, 0])
+                    )
+                    confusion_matrix.process_batch(detections=None, labels=labels[:, 0])
+                continue
+
+            # Predictions
+            if config.single_cls:
+                pred[:, 5] = 0
+            predn = pred.clone()
+            scale_boxes(
+                im[si].shape[1:], predn[:, :4], shape, shapes[si][1]
+            )  # native-space pred
+
+            # Evaluate
+            if nl:
+                tbox = xywh2xyxy(labels[:, 1:5])  # target boxes
+                scale_boxes(
+                    im[si].shape[1:], tbox, shape, shapes[si][1]
+                )  # native-space labels
+                labelsn = torch.cat((labels[:, 0:1], tbox), 1)  # native-space labels
+                correct = process_batch(predn, labelsn, iouv)
+                confusion_matrix.process_batch(predn, labelsn)
+            stats.append(
+                (correct, pred[:, 4], pred[:, 5], labels[:, 0])
+            )  # (correct, conf, pcls, tcls)
+
+        # Plot images
+        if batch_i < 3:
+            images += [
+                plot_images(im, targets, paths, f"val_batch{batch_i}_labels.jpg", names)
+            ]  # labels
+            images += [
+                plot_images(
+                    im,
+                    output_to_target(preds),
+                    paths,
+                    f"val_batch{batch_i}_pred.jpg",
+                    names,
+                )
+            ]  # pred
+
+    # Compute metrics
+    stats = [torch.cat(x, 0).cpu().numpy() for x in zip(*stats)]  # to numpy
+
+    plots = {}
+    if len(stats) and stats[0].any():
+        tp, fp, p, r, f1, ap, ap_class, plots = ap_per_class(
+            *stats, plot=True, save_dir="", names=names
+        )
+        ap50, ap = ap[:, 0], ap.mean(1)  # AP@0.5, AP@0.5:0.95
+        mp, mr, map50, map = p.mean(), r.mean(), ap50.mean(), ap.mean()
+    nt = np.bincount(stats[3].astype(int), minlength=nc)  # number of targets per class
+
+    # Print results
+    pf = "%22s" + "%11i" * 2 + "%11.3g" * 4  # print format
+    logger.info(pf % ("all", seen, nt.sum(), mp, mr, map50, map))
+
+    if nt.sum() == 0:
+        logger.warning(
+            "WARNING ⚠️ no labels found in set, can not compute metrics without labels"
+        )
+
+    # Print speeds
+    # t = tuple(x.t / seen * 1e3 for x in dt)  # speeds per image
+
+    # Plots
+    confusion_matrix_plot = confusion_matrix.plot(
+        save_dir="", names=list(names.values())
+    )
+
+    # Return results
+    model.float()  # for training
+
+    maps = np.zeros(nc) + map
+    for i, c in enumerate(ap_class):
+        maps[c] = ap[i]
+    # return (mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t
+
+    metrics = EvaluationMetrics(
+        mean_precision=mp,
+        mean_recall=mr,
+        mean_ap50=map50,
+        mean_ap=map,
+        average_loss=(loss.cpu() / len(dataloader)).tolist(),
+    )
+
+    return EvaluationResults(
+        images=images,
+        confusion_matrix=confusion_matrix_plot,
+        precision_recall=plots.get("PR"),
+        f1_score=plots.get("F1"),
+        precision=plots.get("P"),
+        recall=plots.get("R"),
+        metrics=metrics,
+    )
+
+
+@sematic.func
+def pipeline(
+    config: PipelineConfig, model: Optional[DetectionModel] = None
+) -> EvaluationResults:
+    dataset = get_dataset(config.dataset_config)
+    if model is None:
+        model = train_model(
+            device=config.device,
+            train_config=config.training_config,
+            input_dataset=dataset,
+            model_config=config.model_config,
+            hyperparameters=config.hyperparameters,
+        )
+
+    return evaluate_model(
+        model=model,
+        dataset=dataset,
+        config=config.evaluation_config,
         train_config=config.training_config,
-        dataset_config=config.dataset_config,
-        model_config=config.model_config,
-        hyperparameters_config=config.hyperparameters,
+        hyperparameters=config.hyperparameters,
     )

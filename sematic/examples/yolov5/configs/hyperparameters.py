@@ -4,7 +4,7 @@ from typing import Optional
 
 
 @dataclass
-class HyperParametersConfig:
+class HyperParameters:
     lr0: float  # initial learning rate (SGD=1E-2, Adam=1E-3)
     lrf: float  # final OneCycleLR learning rate (lr0 * lrf)
     momentum: float  # SGD momentum/Adam beta1
@@ -38,7 +38,7 @@ class HyperParametersConfig:
     anchors: Optional[float] = None
 
 
-SCRATCH_LOW = HyperParametersConfig(
+SCRATCH_LOW = HyperParameters(
     lr0=0.01,  # initial learning rate (SGD=1E-2, Adam=1E-3)
     lrf=0.01,  # final OneCycleLR learning rate (lr0 * lrf)
     momentum=0.937,  # SGD momentum/Adam beta1
