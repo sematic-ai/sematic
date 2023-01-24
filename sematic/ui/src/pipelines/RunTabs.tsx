@@ -15,12 +15,12 @@ import SourceCode from "../components/SourceCode";
 import DocumentationPanel from "./DocumentationPanel";
 import OutputPanel from "./OutputPanel";
 
-const ExpandedTabPanel = styled(TabPanel)<{hidden: boolean}>( 
-  ({hidden}) => hidden ? {} : {
-    display: 'flex',
-    flexGrow: 1,
-    paddingBottom: 0
-  });
+const StickyHeader = styled(Box)`
+  position: sticky;
+  top: 70px;
+  background: white;
+  z-index: 200;
+`;
 
 
 export type IOArtifacts = {
@@ -48,7 +48,7 @@ export default function RunTabs(props: {
   return (
     <>
       <TabContext value={selectedRunTab}>
-        <Box sx={{ borderBottom: 1, borderColor: "divider", flexShrink: 1 }}>
+        <StickyHeader sx={{ borderBottom: 1, borderColor: "divider", flexShrink: 1 }}>
           <TabList onChange={handleChange} aria-label="Selected run tabs">
             <Tab label="Input" value="input" />
             <Tab label="Output" value="output" />
@@ -56,7 +56,7 @@ export default function RunTabs(props: {
             <Tab label="Logs" value="logs" />
             {grafanaTab}
           </TabList>
-        </Box>
+        </StickyHeader>
         <TabPanel value="input">
           <ArtifactList artifacts={artifacts.input} />
         </TabPanel>
@@ -66,9 +66,9 @@ export default function RunTabs(props: {
         <TabPanel value="documentation">
           <DocumentationPanel />
         </TabPanel>
-        <ExpandedTabPanel hidden={selectedRunTab !== "logs"} value="logs">
+        <TabPanel hidden={selectedRunTab !== "logs"} value="logs">
           <LogPanel />
-        </ExpandedTabPanel>
+        </TabPanel>
         <TabPanel value="source">
           <SourceCode />
         </TabPanel>

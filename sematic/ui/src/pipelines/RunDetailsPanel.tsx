@@ -26,6 +26,20 @@ const StyledText = styled('span')`
   color: grey;
 `;
 
+const EnclosingBoxContainer = styled(Box)`
+  box-sizing: border-box;
+`
+
+const HeaderBox = styled(Box)`
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 200;
+  padding-top: 10px;
+  margin-top: -10px;
+`;
+
+
 export function RunDetailsPanel() {
     const { selectedRun } = usePipelinePanelsContext() as ExtractContextType<typeof PipelinePanelsContext> & {
       selectedRun: Run
@@ -75,9 +89,8 @@ export function RunDetailsPanel() {
         [edges, selectedRun.id]
     );
 
-    return (<Box sx={{ p: 5, height: '100%', 'boxSizing': 'border-box', display: 'flex', 
-          flexFlow: 'column'}}>
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto auto", flexShrink: 1 }}>
+    return (<EnclosingBoxContainer sx={{ p: 5}}>
+          <HeaderBox sx={{ display: "grid", gridTemplateColumns: "1fr auto auto", flexShrink: 1 }}>
             <Box sx={{ paddingBottom: 3, gridColumn: 1 }}>
               <Box marginBottom={3}>
                 <Typography variant="h6">{selectedRun.name}</Typography>
@@ -107,12 +120,12 @@ export function RunDetailsPanel() {
               <RunStateChip run={selectedRun} variant="full" />
               <RunTime run={selectedRun} prefix="in " />
             </Box>
-          </Box>
+          </HeaderBox>
           <Box sx={{ mb: 10, mt: 5, flexShrink: 1}}>
             <Docstring docstring={selectedRun.description} />
           </Box>
           <RunTabs artifacts={selectedRunArtifacts!} />
-        </Box>);
+        </EnclosingBoxContainer>);
 }
 
 function RunActionMenu(props: {
