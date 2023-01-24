@@ -1,5 +1,6 @@
 # Standard Library
 import logging
+import time
 from dataclasses import dataclass, field, replace
 from typing import Optional, Tuple, Type
 
@@ -37,11 +38,6 @@ except ImportError as e:
 
 logger = logging.getLogger(__name__)
 
-
-# ray.init should only be called once in any given python
-# interpreter. This tracks whether we have done it from the
-# current process, to prevent us from doing it multiple times.
-_ray_init_called = False
 
 _VALIDATION_INT = 1
 
@@ -82,16 +78,15 @@ class RayCluster(AbstractExternalResource):
         return plugins[0]
 
     def _do_ray_init(self) -> "RayCluster":
-        global _ray_init_called
-        if _ray_init_called:
+        if ray.is_initialized():
             return self
         if self._cluster_name is not None:
             logger.info("Connecting to Ray using URI '%s'", self._head_uri)
             ray.init(address=self._head_uri)
         else:
             ray.init()
+
         logger.info("Initialized connection to Ray for cluster resource %s", self.id)
-        _ray_init_called = True
         return self
 
     def __enter__(self: "RayCluster") -> "RayCluster":
@@ -285,10 +280,26 @@ class RayCluster(AbstractExternalResource):
             )
 
     def _continue_deactivation(self, reason: str) -> "RayCluster":
-        if self.status.managed_by == ManagedBy.RESOLVER or self._deleted_cluster:
+        try:
+            # ray docs say it is ok to run ray.shutdown() multiple
+            # times in a row. Sleep briefly before shutdown to give
+            # workers a little bit of time to forward their final
+            # logs to the driver process.
+            time.sleep(1)
+            ray.shutdown()
+        except Exception as e:
             return self._with_status(
-                ResourceState.DEACTIVATING, f"Deactivating cluster because: {reason}"
+                ResourceState.DEACTIVATING,
+                f"While attempting to shutdown cluster because: {reason}, "
+                f"could not disconnect from ray: {e}",
             )
+        if self.status.managed_by == ManagedBy.RESOLVER or self._deleted_cluster:
+            state = (
+                ResourceState.DEACTIVATED
+                if self.status.state == ResourceState.DEACTIVATING
+                else ResourceState.DEACTIVATING
+            )
+            return self._with_status(state, f"Deactivating cluster because: {reason}")
 
         try:
             namespace = get_server_setting(ServerSettingsVar.KUBERNETES_NAMESPACE)

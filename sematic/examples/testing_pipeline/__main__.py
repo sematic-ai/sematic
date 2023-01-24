@@ -92,11 +92,7 @@ EXPAND_SHARED_MEMORY_HELP = (
     "KubernetesResourceRequirements configuration containing all the relevant specified "
     "CLI parameters. Defaults to False."
 )
-RAY_HELP = (
-    "Includes a function that is executed on the specified external Ray cluster. "
-    "using a remote Ray cluster. If not provided, Ray will not be used. "
-    "Example: 'ray://raycluster-complete-head-svc:10001'."
-)
+RAY_HELP = "Includes a function that is executed on an external Ray cluster. "
 CACHE_HELP = "The cache namespace to use for funcs whose outputs will be cached."
 EXIT_HELP = (
     "Includes a function which will exit with the specified code. "
@@ -199,8 +195,9 @@ def _parse_args() -> argparse.Namespace:
         help=EXPAND_SHARED_MEMORY_HELP,
     )
     parser.add_argument(
-        "--ray-cluster-address",
-        default=None,
+        "--ray-resource",
+        action="store_true",
+        default=False,
         help=RAY_HELP,
     )
     parser.add_argument(

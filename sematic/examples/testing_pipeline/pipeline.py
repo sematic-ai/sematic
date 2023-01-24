@@ -52,6 +52,7 @@ def add_with_ray(a: float, b: float) -> float:
 def add_ray_task(x, y):
     # create new logger due to this:
     # https://stackoverflow.com/a/55286452/2540669
+    logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
     logger.info("Adding from Ray: %s, %s", x, y)
     return x + y
@@ -272,7 +273,7 @@ def testing_pipeline(
     raise_retry_probability: Optional[float] = None,
     oom: bool = False,
     external_resource: bool = False,
-    ray_cluster_address: Optional[str] = None,
+    ray_resource: bool = False,
     resource_requirements: Optional[ResourceRequirements] = None,
     cache: bool = False,
     exit_code: Optional[int] = None,
@@ -315,9 +316,9 @@ def testing_pipeline(
         Defaults to None.
     external_resource: bool
         Whether to use an external resource. Defaults to False.
-    ray_cluster_address:
-        The address of a Ray cluster. `None` if Ray should not be used. If specified,
-        two numbers will be added using a Ray task that executes on the remote cluster.
+    ray_resource:
+        If True, two numbers will be added using a Ray task that executes on
+        a remote cluster.
     """
     # have an initial function whose output is used as inputs by all other functions
     # this staggers the rest of the functions and allows the user a chance to monitor and
@@ -362,7 +363,7 @@ def testing_pipeline(
     if exit_code is not None:
         futures.append(do_exit(initial_future, exit_code))
 
-    if ray_cluster_address is not None:
+    if ray_resource:
         futures.append(add_with_ray(initial_future, 1.0))
 
     # collect all values
