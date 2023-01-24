@@ -21,6 +21,7 @@ from sematic.db.queries import (
     count_runs,
     get_artifact,
     get_external_resource_record,
+    get_external_resources_by_run_id,
     get_resolution,
     get_resources_by_root_id,
     get_root_graph,
@@ -320,3 +321,29 @@ def test_run_resource_links(test_db):  # noqa: F811
     assert all(isinstance(record, ExternalResource) for record in resources)
     resource_ids = {resource.id for resource in resources}
     assert resource_ids == {resource_1.id, resource_2.id, resource_3.id}
+
+
+def test_get_external_resources_by_run_id(test_db):  # noqa: F811
+    root_run = make_run()
+    child_run_1 = make_run(root_id=root_run.id)
+    other_root_run = make_run()
+    for r in [root_run, child_run_1, other_root_run]:
+        save_run(r)
+
+    resource_1 = SomeResource(some_field=1)
+    resource_2 = SomeResource(some_field=2)
+    resource_3 = SomeResource(some_field=3)
+
+    for resource in [resource_1, resource_2, resource_3]:
+        save_external_resource_record(ExternalResource.from_resource(resource))
+
+    # multiple resources linked with one run
+    save_run_external_resource_links([resource_1.id], child_run_1.id)
+    save_run_external_resource_links([resource_2.id], child_run_1.id)
+    save_run_external_resource_links([resource_3.id], other_root_run.id)
+
+    resources = get_external_resources_by_run_id(child_run_1.id)
+    assert len(resources) == 2
+    assert all(isinstance(record, ExternalResource) for record in resources)
+    resource_ids = {resource.id for resource in resources}
+    assert resource_ids == {resource_1.id, resource_2.id}
