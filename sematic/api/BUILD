@@ -33,6 +33,8 @@ sematic_py_lib(
         "//sematic/api/endpoints:runs",
         "//sematic/config:config",
         "//sematic/config:server_settings",
+        "//sematic/plugins:abstract_publisher",
+        "//sematic/plugins/publishing:slack",
     ],
 )
 
