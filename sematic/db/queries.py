@@ -205,15 +205,18 @@ def get_external_resources_by_run_id(run_id: str) -> List[ExternalResource]:
     Get the external resources used by a run.
     """
     with db().get_session() as session:
-        result = (
-            session.query(RunExternalResource, ExternalResource)
-            .filter(RunExternalResource.run_id == run_id)
+        external_resources = (
+            session.query(ExternalResource)
             .join(
-                ExternalResource, ExternalResource.id == RunExternalResource.resource_id
+                RunExternalResource,
+                sqlalchemy.and_(
+                    run_id == RunExternalResource.run_id,
+                    ExternalResource.id == RunExternalResource.resource_id,
+                ),
             )
             .all()
         )
-    return [row[ExternalResource] for row in result]
+    return external_resources
 
 
 def get_resolution(resolution_id: str) -> Resolution:
