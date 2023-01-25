@@ -2,7 +2,12 @@
 import abc
 import enum
 from dataclasses import dataclass
-from typing import Any, Type
+from typing import Any, List, Type, cast
+
+# Sematic
+from sematic.abstract_plugin import AbstractPlugin, PluginScope
+from sematic.config.settings import get_active_plugins
+from sematic.utils.exceptions import NoActivePluginError
 
 
 class PayloadType(enum.Enum):
@@ -47,3 +52,20 @@ class AbstractStorage(abc.ABC):
 class NoSuchStorageKeyError(KeyError):
     def __init__(self, storage: Type[AbstractStorage], key: str):
         super().__init__(f"No such storage key for {storage.__name__}: {key}")
+
+
+def get_storage_plugins(
+    default: List[Type[AbstractPlugin]],
+) -> List[Type[AbstractStorage]]:
+    """
+    Return all configured "STORAGE" scope plugins.
+    """
+    storage_plugins = get_active_plugins(scope=PluginScope.STORAGE, default=default)
+
+    if len(storage_plugins) == 0:
+        raise NoActivePluginError()
+
+    storage_classes = [
+        cast(Type[AbstractStorage], plugin) for plugin in storage_plugins
+    ]
+    return storage_classes

@@ -210,6 +210,14 @@ class MissingPluginError(Exception):
         super().__init__(message)
 
 
+class NoActivePluginError(Exception):
+    """
+    Exception to indicate that no plugin has been configured for a required scope.
+    """
+
+    pass
+
+
 class UnsupportedUsageError(Exception):
     """A library is being used in an unsupported context
 
