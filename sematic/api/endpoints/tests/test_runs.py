@@ -22,9 +22,15 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.calculator import func
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
-from sematic.db.queries import get_run, save_resolution, save_run
+from sematic.db.queries import (
+    get_run,
+    save_resolution,
+    save_run,
+    save_run_external_resource_links,
+)
 from sematic.db.tests.fixtures import (  # noqa: F401
     make_run,
+    persisted_external_resource,
     persisted_resolution,
     persisted_run,
     pg_mock,
@@ -45,6 +51,9 @@ test_put_run_graph_auth = make_auth_test("/api/v1/graph", method="PUT")
 test_post_events_auth = make_auth_test("/api/v1/events/namespace/event", method="POST")
 test_schedule_run_auth = make_auth_test("/api/v1/runs/123/schedule", method="POST")
 test_future_states_auth = make_auth_test("/api/v1/runs/future_states", method="POST")
+test_get_run_external_resource_auth = make_auth_test(
+    "/api/v1/runs/abc123/external_resources", method="GET"
+)
 
 
 @pytest.fixture
@@ -616,3 +625,21 @@ def test_get_run_graph_endpoint(
     assert payload["runs"][0]["id"] == future.id
     assert len(payload["artifacts"]) == artifact_count
     assert len(payload["edges"]) == edge_count
+
+
+def test_get_run_external_resources(
+    persisted_run,  # noqa: F811
+    persisted_external_resource,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+):
+    save_run_external_resource_links([persisted_external_resource.id], persisted_run.id)
+
+    response = test_client.get(f"/api/v1/runs/{persisted_run.id}/external_resources")
+    assert response.status_code == 200
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+    payload = payload["content"]
+
+    assert len(payload) == 1
+    assert payload[0]["id"] == persisted_external_resource.id
