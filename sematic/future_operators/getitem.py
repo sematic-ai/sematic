@@ -59,4 +59,10 @@ def __getitem__(self: Future, key: Any):
     return _getitem(self, key)
 
 
+# the func is externally-referred to as `_get_item`,
+# and needs to be importable under this name when cloning the graph
+def _getitem(container: Future, key: Any):
+    return __getitem__(self=container, key=key)  # type: ignore
+
+
 Future.__getitem__ = __getitem__  # type: ignore
