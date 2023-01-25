@@ -53,9 +53,17 @@ def redirect_to_file_descriptor(file_descriptor: int):
     os.set_inheritable(stderr_fd, True)
     # copy stdout_fd before it is overwritten
     with os.fdopen(os.dup(stdout_fd), "wb") as stdout_copied:
+
+        # Make extra sure that child processes will be able to inherit
+        # the ability to write to the redirected descriptors
+        os.set_inheritable(stdout_copied.fileno(), True)
+
         stdout.flush()  # flush library buffers that dup2 knows nothing about
 
         with os.fdopen(os.dup(stderr_fd), "wb") as stderr_copied:
+            # Make extra sure that child processes will be able to inherit
+            # the ability to write to the redirected descriptors
+            os.set_inheritable(stderr_copied.fileno(), True)
             stderr.flush()
 
             os.dup2(file_descriptor, stdout_fd)
