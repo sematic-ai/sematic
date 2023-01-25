@@ -12,6 +12,7 @@ from typing import Callable, Optional
 
 # Sematic
 from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR
+from sematic.config.user_settings import UserSettingsVar, get_user_setting
 from sematic.plugins.storage.s3_storage import S3Storage
 from sematic.utils.retry import retry
 from sematic.utils.stdout import redirect_to_file_descriptor
@@ -51,7 +52,19 @@ DEFAULT_LOG_UPLOAD_INTERVAL_SECONDS = 10
 _LAST_NON_EMPTY_DELTA_TEMPLATE = "{}.previous"
 _TERMINATION_CHAR = chr(ascii.EOT)  # EOT => End Of Transmission
 
+_INGESTION_ENABLED_MODE = "storage"
+_INGESTION_DISABLED_MODE = "off"
+
+
 logger = logging.getLogger(__name__)
+
+
+def log_ingestion_enabled() -> bool:
+    """Determine whether log ingestion is enabled based on user settings."""
+    mode = get_user_setting(
+        UserSettingsVar.SEMATIC_LOG_INGESTION_MODE, _INGESTION_ENABLED_MODE
+    )
+    return mode != _INGESTION_DISABLED_MODE
 
 
 def _flush_to_file(
@@ -294,7 +307,15 @@ def ingested_logs(
     try:
         read_file_descriptor, write_file_descriptor = os.pipe()
         os.set_blocking(read_file_descriptor, False)
+
+        # The log streamer subprocess needs to use this descriptor
+        # to read from logs
         os.set_inheritable(read_file_descriptor, True)
+
+        # We want child subprocesses to also have their output redirected
+        # for ingestion
+        os.set_inheritable(write_file_descriptor, True)
+
         with redirect_to_file_descriptor(write_file_descriptor):
             streamer_pid = _start_log_streamer_out_of_process(
                 file_path,

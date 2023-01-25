@@ -7,6 +7,7 @@ import pathlib
 import subprocess
 import sys
 import tempfile
+from contextlib import nullcontext
 from typing import Any, Dict, List, Optional
 
 # Third-party
@@ -17,6 +18,7 @@ import sematic.api_client as api_client
 from sematic.abstract_future import FutureState
 from sematic.calculator import Calculator
 from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR
+from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
@@ -28,7 +30,7 @@ from sematic.resolvers.cloud_resolver import (
     CloudResolver,
     make_nested_future_storage_key,
 )
-from sematic.resolvers.log_streamer import ingested_logs
+from sematic.resolvers.log_streamer import ingested_logs, log_ingestion_enabled
 from sematic.scheduling.external_job import JobType
 from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
@@ -254,7 +256,16 @@ def wrap_main_with_logging():
     prefix = log_prefix(args.run_id, JobType.driver if args.resolve else JobType.worker)
     path = _create_log_file_path("worker.log")
 
-    with ingested_logs(path, prefix):
+    if not log_ingestion_enabled():
+        with ingested_logs(path, prefix):
+            print(
+                f"Log ingestion has been disabled for this run via the user setting "
+                f"{UserSettingsVar.SEMATIC_LOG_INGESTION_MODE.value}. To view these "
+                f"logs, please use kubectl or whatever other mechanisms you use to "
+                f"view Kubernetes logs."
+            )
+
+    with ingested_logs(path, prefix) if log_ingestion_enabled() else nullcontext():
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(levelname)s - %(name)s: %(message)s",

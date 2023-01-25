@@ -18,6 +18,7 @@ class UserSettingsVar(AbstractPluginSettingsVar):
     # Sematic
     SEMATIC_API_ADDRESS = "SEMATIC_API_ADDRESS"
     SEMATIC_API_KEY = "SEMATIC_API_KEY"
+    SEMATIC_LOG_INGESTION_MODE = "SEMATIC_LOG_INGESTION_MODE"
 
     # Snowflake
     SNOWFLAKE_USER = "SNOWFLAKE_USER"
