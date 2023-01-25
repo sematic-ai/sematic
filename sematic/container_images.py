@@ -30,9 +30,13 @@ def has_container_image() -> bool:
 def get_image_uris() -> Dict[str, str]:
     """Get the URI of the docker image associated with this execution.
 
+    Reads the encoded string in the container image uris env var of the format
+    'tag1##image_uri1::tag2##image_uri2' and returns a dict of the tag to image
+    uri mappings.
+
     Returns
     -------
-    The URI of the image to be used in this execution.
+    Dict of tag to image uri mappings.
     """
 
     if CONTAINER_IMAGE_ENV_VAR in os.environ:
@@ -41,14 +45,12 @@ def get_image_uris() -> Dict[str, str]:
     tagged_uris_map = {}
 
     if CONTAINER_IMAGE_URIS_ENV_VAR in os.environ:
-        logger.debug("Reading container image mappings from environment: %s='%s'", CONTAINER_IMAGE_URIS_ENV_VAR, os.environ[CONTAINER_IMAGE_URIS_ENV_VAR])
         image_uris = os.environ[CONTAINER_IMAGE_URIS_ENV_VAR].split('::')
 
         for image_uri in image_uris:
-            if not image_uri:
-                continue
-            tag, uri = image_uri.split('##')
-            tagged_uris_map[tag] = uri
+            if len(image_uri) > 0:
+                tag, uri = image_uri.split('##')
+                tagged_uris_map[tag] = uri
 
     if len(tagged_uris_map) == 0:
         raise MissingContainerImage(
