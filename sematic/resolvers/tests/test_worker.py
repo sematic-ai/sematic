@@ -1,7 +1,10 @@
 # Standard Library
 import datetime
+import os
 import sys
+import tempfile
 import uuid
+from typing import List
 from unittest import mock
 
 # Third-party
@@ -17,6 +20,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
 )
 from sematic.calculator import func
+from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact, make_run_from_future
 from sematic.db.models.resolution import ResolutionStatus
@@ -29,12 +33,14 @@ from sematic.db.queries import (
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.future_context import PrivateContext, SematicContext
 from sematic.resolvers.cloud_resolver import CloudResolver
-from sematic.resolvers.worker import _emulate_interpreter, main
+from sematic.resolvers.worker import _emulate_interpreter, main, wrap_main_with_logging
 from sematic.tests.fixtures import (  # noqa: F401
     MockStorage,
+    environment_variables,
     test_storage,
     valid_client_version,
 )
+from sematic.utils.stdout import redirect_to_file
 
 
 @func
@@ -224,3 +230,50 @@ def test_emulate_interpreter():
         [sys.executable, "-c", "import sematic; import sys; sys.exit(42)"]
     )
     assert exit_code == 42
+
+
+class MockLogIngestor:
+    def __init__(self) -> None:
+        self._tempfile_path = None
+        self._redirection_context = None
+        self.logs: List[str] = []
+
+    def __enter__(self, *args, **kwargs):
+        self._tempfile_path = tempfile.NamedTemporaryFile(mode="w+", delete=False).name
+        self._redirection_context = redirect_to_file(self._tempfile_path)
+        return self._redirection_context.__enter__()
+
+    def __exit__(self, *args, **kwargs):
+        with open(self._tempfile_path, "r") as fp:
+            self.logs = [line.strip() for line in fp]
+        os.remove(self._tempfile_path)
+        self._redirection_context.__exit__(*args, **kwargs)
+        self._tempfile_path = None
+        self._redirection_context = None
+
+
+@mock.patch(f"{main.__module__}.parse_args")
+@mock.patch(f"{main.__module__}.ingested_logs")
+@mock.patch(f"{main.__module__}.{main.__name__}")
+def test_wrap_main_with_logging(mock_main, mock_ingested_logs, mock_parse_args):
+    mock_ingestor = MockLogIngestor()
+    mock_ingested_logs.return_value = mock_ingestor
+
+    logs_from_main = "Hello from main"
+    mock_main.side_effect = lambda *args, **kwargs: print(logs_from_main)
+
+    with environment_variables(
+        {UserSettingsVar.SEMATIC_LOG_INGESTION_MODE.value: "off"}
+    ):
+        wrap_main_with_logging()
+    assert logs_from_main not in mock_ingestor.logs
+
+    # Check the message about ingestion being disabled
+    assert any("disabled" in line for line in mock_ingestor.logs)
+    assert any(
+        UserSettingsVar.SEMATIC_LOG_INGESTION_MODE.value in line
+        for line in mock_ingestor.logs
+    )
+
+    wrap_main_with_logging()
+    assert logs_from_main in mock_ingestor.logs
