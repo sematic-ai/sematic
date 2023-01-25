@@ -86,18 +86,27 @@ EXTERNAL_RESOURCE_HELP = (
     "Whether to use an artificial external resource when executing some of "
     "the 'add' functions."
 )
+RAY_HELP = (
+    "Includes a function that is executed on the specified external Ray cluster. "
+    "If not provided, Ray will not be used. Defaults to None. "
+    "Example: 'ray://raycluster-complete-head-svc:10001'."
+)
 EXPAND_SHARED_MEMORY_HELP = (
     "Whether to include a function that runs on a Kubernetes pod which uses an expanded "
     "shared memory partition. This option is added to a shared function which uses one "
     "KubernetesResourceRequirements configuration containing all the relevant specified "
     "CLI parameters. Defaults to False."
 )
-RAY_HELP = (
-    "Includes a function that is executed on the specified external Ray cluster. "
-    "using a remote Ray cluster. If not provided, Ray will not be used. "
-    "Example: 'ray://raycluster-complete-head-svc:10001'."
+CACHE_HELP = (
+    "The cache namespace to use for funcs whose outputs will be cached. "
+    "Defaults to None, which deactivates caching."
 )
-CACHE_HELP = "The cache namespace to use for funcs whose outputs will be cached."
+VIRTUAL_FUNCS_HELP = (
+    "Whether to explicitly include the `_make_list`, `_make_tuple`, and `_getitem` "
+    "virtual functions. Defaults to False. Note: If this pipeline is invoked with any "
+    "parameters, `_make_list` is automatically included at the end of the execution "
+    "anyway, in order to collect all intermediate results."
+)
 EXIT_HELP = (
     "Includes a function which will exit with the specified code. "
     "If specified without a value, defaults to 0. Defaults to None."
@@ -209,6 +218,12 @@ def _parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help=CACHE_HELP,
+    )
+    parser.add_argument(
+        "--virtual-funcs",
+        action="store_true",
+        default=False,
+        help=VIRTUAL_FUNCS_HELP,
     )
     parser.add_argument(
         "--exit",
