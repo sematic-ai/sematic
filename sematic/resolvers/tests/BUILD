@@ -82,6 +82,7 @@ pytest_test(
         "//sematic:abstract_future",
         "//sematic:api_client",
         "//sematic:calculator",
+        "//sematic/config:user_settings",
         "//sematic:future_context",
         "//sematic/api/tests:fixtures",
         "//sematic/db:queries",
@@ -92,6 +93,7 @@ pytest_test(
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:worker",
         "//sematic/tests:fixtures",
+        "//sematic/utils:stdout",
     ],
 )
 
