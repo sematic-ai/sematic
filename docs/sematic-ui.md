@@ -81,7 +81,7 @@ In this panel you can inspect and visualize:
   status and wall time
 * Run inputs and outputs
 * Source code
-* [soon] logs
+* logs
 
 ### Notes Panel
 

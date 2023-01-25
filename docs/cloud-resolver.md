@@ -77,5 +77,17 @@ If there is a corresponding node available in your Kubernetes cluster, this
 function will be executed on that node.
 
 Note that `inline=False` is necessary for these resource requirements to be
-honored, otherwise, they will be ignore.
+honored, otherwise, they will be ignored.
 
+{% hint style="info" %}
+
+### Logging
+
+By default Sematic will ingest logs for remote runs and display them
+in the dashboard. However, if you wish to have the logs from remote
+executions go directly to the pod's stdout/stderr without Sematic
+attempting to ingest them, you can configure the user setting
+`SEMATIC_LOG_INGESTION_MODE=off`. Like all other user settings, this
+can be overridden by environment variables.
+
+{% endhint %}
