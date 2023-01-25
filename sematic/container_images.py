@@ -41,7 +41,7 @@ def get_image_uris() -> Dict[str, str]:
     tagged_uris_map = {}
 
     if CONTAINER_IMAGE_URIS_ENV_VAR in os.environ:
-        print(os.environ[CONTAINER_IMAGE_URIS_ENV_VAR])
+        logger.debug("Reading container image mappings from environment: %s='%s'", CONTAINER_IMAGE_URIS_ENV_VAR, os.environ[CONTAINER_IMAGE_URIS_ENV_VAR])
         image_uris = os.environ[CONTAINER_IMAGE_URIS_ENV_VAR].split('::')
 
         for image_uri in image_uris:
