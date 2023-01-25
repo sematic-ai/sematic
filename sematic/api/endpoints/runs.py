@@ -31,6 +31,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
+    get_external_resources_by_run_id,
     get_resolution,
     get_root_graph,
     get_run,
@@ -439,6 +440,21 @@ def save_graph_endpoint(user: Optional[User]):
     #    return jsonify_error(str(e), HTTPStatus.INTERNAL_SERVER_ERROR)
 
     return flask.jsonify({})
+
+
+@sematic_api.route("/api/v1/runs/<run_id>/external_resources", methods=["GET"])
+@authenticate
+def get_run_external_resources(user: Optional[User], run_id):
+    external_resources = get_external_resources_by_run_id(run_id)
+
+    return flask.jsonify(
+        dict(
+            content=[
+                external_resource.to_json_encodable()
+                for external_resource in external_resources
+            ],
+        )
+    )
 
 
 @sematic_api.route("/api/v1/runs/<run_id>/external_resources", methods=["POST"])
