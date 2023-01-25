@@ -5,7 +5,7 @@ pytest_test(
         "ray",
     ],
     deps = [
-        "//sematic/plugins/external_resource/ray:cluster",
+        "//sematic/ee/plugins/external_resource/ray:cluster",
         "//sematic:calculator",
     ],
 )

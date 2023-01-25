@@ -100,6 +100,22 @@ class RayCluster(AbstractExternalResource):
             self.__exit__()
             raise
 
+    def __exit__(self, exc_type=None, exc_value=None, exc_traceback=None):
+        try:
+            # Sleep briefly before shutdown to give
+            # workers a little bit of time to forward their final
+            # logs to the driver process.
+            time.sleep(1)
+
+            # note that this shuts down the cluster for a local cluster,
+            # or simply disconnects from it for a remote one.
+            ray.shutdown()
+        except Exception as e:
+            logger.exception(
+                "While exiting Ray context, could not disconnect from ray: %s", e
+            )
+        super().__exit__(exc_type, exc_value, exc_traceback)
+
     def _do_activate(self, is_local: bool) -> "RayCluster":
         if is_local:
             # no activation needs to happen to just
@@ -282,17 +298,13 @@ class RayCluster(AbstractExternalResource):
     def _continue_deactivation(self, reason: str) -> "RayCluster":
         try:
             # ray docs say it is ok to run ray.shutdown() multiple
-            # times in a row. Sleep briefly before shutdown to give
-            # workers a little bit of time to forward their final
-            # logs to the driver process.
-            time.sleep(1)
+            # times in a row. Call it here to ensure it ALWAYS gets called,
+            # although we should have called it when exiting the 'with'
+            # context.
             ray.shutdown()
         except Exception as e:
-            return self._with_status(
-                ResourceState.DEACTIVATING,
-                f"While attempting to shutdown cluster because: {reason}, "
-                f"could not disconnect from ray: {e}",
-            )
+            logger.exception("Error disconnecting from Ray: %s", e)
+
         if self.status.managed_by == ManagedBy.RESOLVER or self._deleted_cluster:
             state = (
                 ResourceState.DEACTIVATED
