@@ -202,7 +202,7 @@ def get_resources_by_root_id(root_run_id: str) -> List[ExternalResource]:
 
 def get_external_resources_by_run_id(run_id: str) -> List[ExternalResource]:
     """
-    Get the external resources used by a run
+    Get the external resources used by a run.
     """
     with db().get_session() as session:
         result = (
