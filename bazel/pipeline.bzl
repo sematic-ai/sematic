@@ -146,8 +146,7 @@ def sematic_pipeline(
 
     sematic_push_and_run(
         name = name,
-        push_rule_names = push_rule_names,
-        registry = registry
+        push_rule_names = push_rule_names
     )
 
 def base_images():
@@ -238,10 +237,6 @@ sematic_push_and_run = rule(
     attrs = {
         "push_rule_names": attr.string_list_dict(
             doc = "Dict of push rules to execute and image names and tags",
-            mandatory = True,
-        ),
-        "registry": attr.string(
-            doc = "Docker registry to push to",
             mandatory = True,
         ),
     },
