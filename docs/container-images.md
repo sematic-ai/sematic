@@ -119,17 +119,17 @@ With that, you're done! Assuming the target for your launch script was
 
 - `//my_repo/my_package:my_target`: still runs your target, but builds and pushes
   a Docker image with your code and its dependencies first. It's essentially an
-  alias for `bazel run //my_repo/my_package:my_target_push` followed by
+  alias for `bazel run //my_repo/my_package:my_target_default_push` followed by
   `bazel run //my_repo/my_package:my_target_binary`.
 - `bazel run //my_repo/my_package:my_target_binary`: builds the image, does NOT
   push it, and executes your launch script. Generally this is only useful when
-  combined with `bazel run //my_repo/my_package:my_target_push`.
+  combined with `bazel run //my_repo/my_package:my_target_default_push`.
 - `//my_repo/my_package:my_target_local`: runs your target WITHOUT building and
   pushing the image. This can help for local development when you don't want the
   overhead of waiting for the build & push. Differs from `:my_target_binary` in
   that Sematic will not know how to reference a container image when executed this
   way, and thus won't work for remote execution even when combined with a
-  `:my_target_push`.
+  `:my_target_default_push`.
 - `//my_repo/my_package:my_target_default_image`: builds the image, but doesn't push it
   or run your script
 - `//my_repo/my_package:my_target_default_push`: builds and pushes the image, but
