@@ -7,6 +7,14 @@ from sematic import CloudResolver, LocalResolver
 from sematic.examples.add.pipeline import pipeline
 
 if __name__ == "__main__":
+    from sematic import api_client as api
+    import sys
+    n_events = 1000
+    for i in range(n_events):
+        api._post("/events/testing/update", {"i": i, "n": n_events})
+    sys.exit(0)
+
+
     parser = argparse.ArgumentParser("Sematic add example")
     parser.add_argument("--cloud", action="store_true", default=False)
     parser.add_argument("--detach", action="store_true", default=False)

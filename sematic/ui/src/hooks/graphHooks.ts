@@ -3,7 +3,7 @@ import useAsyncRetry from "react-use/lib/useAsyncRetry";
 import GraphContext from "../pipelines/graph/graphContext";
 import { Graph, RunTreeNode } from "../interfaces/graph";
 import { RunGraphPayload } from "../Payloads";
-import { graphSocket } from "../utils";
+import { graphSocket, testingSocket } from "../utils";
 import { useHttpClient } from "./httpHooks";
 
 export function useGraph(runRootId: string): [
@@ -45,6 +45,14 @@ export function useGraph(runRootId: string): [
 
     // Auto manage reloading by hooking up with graphSocket.
     useEffect(() => {
+        testingSocket.removeAllListeners();
+        var received = [];
+        testingSocket.on("update", (args: any) => {
+            received.push(1);
+            console.log(args);
+            console.log("Received " + received.length + " of " + args.n);
+        });
+
         graphSocket.removeAllListeners();
         graphSocket.on("update", (args: { run_id: string }) => {
           if (args.run_id === runRootId) {

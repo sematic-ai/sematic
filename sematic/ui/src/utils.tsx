@@ -81,5 +81,5 @@ export function atomWithHashCustomSerialization(
 }
 
 export const graphSocket = io("/graph");
-
+export const testingSocket = io("/testing");
 export const pipelineSocket = io("/pipeline");

@@ -71,6 +71,7 @@ socketio = SocketIO(sematic_api, cors_allowed_origins="*")
 # accept connections to undeclared namespaces
 socketio.on_namespace(Namespace("/pipeline"))
 socketio.on_namespace(Namespace("/graph"))
+socketio.on_namespace(Namespace("/testing"))
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -84,7 +85,7 @@ def parse_arguments() -> argparse.Namespace:
 def run_wsgi(daemon: bool):
     options = {
         "bind": "{}:{}".format(get_config().server_address, get_config().port),
-        "workers": 1,
+        "workers": 2,
         "worker_class": "eventlet",
         "daemon": daemon,
         "pidfile": get_config().server_pid_file_path,
