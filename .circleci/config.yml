@@ -14,11 +14,6 @@ orbs:
   codecov: codecov/codecov@3.2.3
   node: circleci/node@5.0.3
 
-parameters:
-  run_coverage:
-    type: boolean
-    default: false
-
 commands:
   install-ci-pip-deps:
     description: Install CI pip deps
@@ -55,36 +50,6 @@ commands:
           name: Run Non-coverage Tests
           # This assumes pytest is installed via the install-package step above
           command: PYTHONUNBUFFERED=1 bazel test //sematic/... --test_output=all
-  coverage-tests:
-    description: Do tests with coverage and upload coverage results
-    steps:
-      # try running coverage up to 4 times in a row. Weirdly, Circle doesn't
-      # have a formal retry mechanism:
-      # https://support.circleci.com/hc/en-us/articles/360043188514-How-to-Retry-a-Failed-Step-with-when-Attribute-
-      - run:
-          name: Set Up Coverage Tests
-          # This assumes pytest is installed via the install-package step above
-          command: echo "bazel coverage //sematic/... --test_output=all --combined_report=lcov --test_tag_filters=cov" > ./do_coverage && chmod +x ./do_coverage
-      - run:
-          name: Run Coverage Tests
-          command: PYTHONUNBUFFERED=1 bash do_coverage
-      - run:
-          when: on_fail
-          name: Retry Coverage Tests (1)
-          command: PYTHONUNBUFFERED=1 bash do_coverage
-      - run:
-          when: on_fail
-          name: Retry Coverage Tests (2)
-          command: PYTHONUNBUFFERED=1 bash do_coverage
-      - run:
-          when: on_fail
-          name: Retry Coverage Tests (3)
-          command: PYTHONUNBUFFERED=1 bash do_coverage
-      - run:
-          name: Link to codecov output
-          command: ln -s $(bazel info output_path)/_coverage/_coverage_report.dat coverage.dat
-          when: on_fail
-      - codecov/upload
   installation-tests:
     description: Do a test of installing sematic via wheel
     steps:
@@ -111,10 +76,6 @@ jobs:
       - install-ci-pip-deps
       - do-static-analysis
       - non-coverage-tests
-      - when:
-          condition: << pipeline.parameters.run_coverage >>
-          steps:
-            - coverage-tests
       - installation-tests
       - notify-completion
 
