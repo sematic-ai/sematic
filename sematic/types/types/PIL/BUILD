@@ -1,16 +1,16 @@
 sematic_py_lib(
-    name = "figure",
-    srcs = ["figure.py"],
+    name = "image",
+    srcs = ["image.py"],
     deps = [
         "//sematic/types:registry",
         "//sematic/types:serialization",
-    ],
+    ]
 )
 
 sematic_py_lib(
     name = "init",
     srcs = ["__init__.py"],
     deps = [
-        ":figure",
+        ":image",
     ],
 )

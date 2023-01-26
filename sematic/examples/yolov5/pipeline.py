@@ -8,7 +8,9 @@ from typing import Dict, List, Optional
 
 # Third-party
 import matplotlib.figure
+import matplotlib.pyplot as plt
 import numpy as np
+import PIL.Image
 import torch
 from torch.optim import lr_scheduler
 from tqdm import tqdm
@@ -83,7 +85,7 @@ class CocoDataset:
     image_size: int
 
 
-@sematic.func
+@sematic.func(cache=True)
 def get_dataset(dataset_config: DatasetConfig) -> CocoDataset:
     """
     Download COCO dataset to local filesystem.
@@ -98,7 +100,7 @@ def get_dataset(dataset_config: DatasetConfig) -> CocoDataset:
     )
 
 
-@sematic.func
+@sematic.func(cache=True)
 def train_model(
     device: str,
     train_config: TrainingConfig,
@@ -335,7 +337,10 @@ def train_model(
         scheduler.step()
 
     torch.cuda.empty_cache()
-    return model
+    for p in model.parameters():
+        p.requires_grad = False
+
+    return model.half()
 
 
 @dataclass
@@ -349,7 +354,7 @@ class EvaluationMetrics:
 
 @dataclass
 class EvaluationResults:
-    images: List[object]
+    images: PIL.Image.Image
     confusion_matrix: Optional[matplotlib.figure.Figure]
     precision_recall: Optional[matplotlib.figure.Figure]
     f1_score: Optional[matplotlib.figure.Figure]
@@ -375,10 +380,9 @@ def evaluate_model(
     )  # get model device, PyTorch model
     cuda = device.type != "cpu"
     half = config.half and cuda  # half precision only supported on CUDA
-
-    model.half() if half else model.float()
     for p in model.parameters():
         p.requires_grad = False
+    model.half() if half else model.float()
 
     model.eval()
     nc = len(dataset.classes)  # number of classes
@@ -467,9 +471,10 @@ def evaluate_model(
             [targets[targets[:, 0] == i, 1:] for i in range(nb)] if False else []
         )  # for autolabelling
         # with dt[2]:
+
         preds = non_max_suppression(
             preds,
-            config.conf_thres,
+            0,  # config.conf_thres,
             config.iou_thres,
             labels=lb,
             multi_label=True,
@@ -575,7 +580,7 @@ def evaluate_model(
     )
 
     return EvaluationResults(
-        images=images,
+        images=images[0],
         confusion_matrix=confusion_matrix_plot,
         precision_recall=plots.get("PR"),
         f1_score=plots.get("F1"),
@@ -606,3 +611,19 @@ def pipeline(
         train_config=config.training_config,
         hyperparameters=config.hyperparameters,
     )
+
+
+@sematic.func
+def make_matplotlib_plot() -> matplotlib.figure.Figure:
+    # make data
+    x = np.linspace(0, 10, 100)
+    y = 4 + 2 * np.sin(2 * x)
+
+    # plot
+    fig, ax = plt.subplots()
+
+    ax.plot(x, y, linewidth=2.0)
+
+    ax.set(xlim=(0, 8), xticks=np.arange(1, 8), ylim=(0, 8), yticks=np.arange(1, 8))
+
+    return fig

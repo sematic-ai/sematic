@@ -71,7 +71,14 @@ def _to_json_encodable(value, column):
         return dataclasses.asdict(value)
 
     if info.get(JSON_KEY, False) and value is not None:
-        return json.loads(value)
+        try:
+            return json.loads(value)
+        except Exception:
+            # Standard Library
+            import pdb
+
+            pdb.set_trace()
+            return json.loads(value)
 
     return value
 

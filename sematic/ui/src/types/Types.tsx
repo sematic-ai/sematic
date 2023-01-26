@@ -7,7 +7,6 @@ import DataEditor, {
   GridColumn,
   GridCellKind,
 } from "@glideapps/glide-data-grid";
-
 import createPlotlyComponent from "react-plotly.js/factory";
 import {
   Stack,
@@ -543,14 +542,24 @@ function PlotlyFigureValueView(props: ValueViewProps) {
   return <Plot data={data} layout={layout} config={config} />;
 }
 
-function MatplotlibFigureValueView(props: ValueViewProps) {
-  let { valueSummary } = props;
+type MatplotlibPayload = {
+  figure_bytes: string;
+  image_bytes: string;
+}
 
-  const hasFigureJsonData = useMemo(() => !!valueSummary['mpld3'], [valueSummary]);
+function MatplotlibFigureValueView(props: ValueViewProps) {
+  let { valueSummary} = props;
+
+  let imageB64 = valueSummary["image_base64"];
+
+  return <img src={"data:image/png;base64," + imageB64}/>;
+  //return <pre>{imageBinary}</pre>;
+
+  //const hasFigureJsonData = useMemo(() => !!valueSummary['mpld3'], [valueSummary]);
   
-  return hasFigureJsonData ? 
-    <MatplotlibFigureValueFigure key={valueSummary['mpld3']['id']} spec={valueSummary['mpld3']} />
-    : <MatplotlibFigureValueImage path={valueSummary['path']} /> ;
+  //return hasFigureJsonData ? 
+  //  <MatplotlibFigureValueFigure key={valueSummary['mpld3']['id']} spec={valueSummary['mpld3']} />
+  //  : <MatplotlibFigureValueImage path={valueSummary['path']} /> ;
 }
 
 interface MatplotlibFigureValueImageProps{
@@ -817,6 +826,12 @@ const TypeComponents: Map<string, ComponentPair> = new Map([
       value: DataFrameValueView,
     },
   ],
+  [
+    "PIL.Image.Image", {
+      type: TypeView,
+      value: MatplotlibFigureValueView,
+    }
+  ]
 ]);
 
 function getComponentPair(typeRepr: TypeRepr) {

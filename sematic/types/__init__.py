@@ -37,4 +37,8 @@ import sematic.types.types.plotly  # noqa: F401
 # Only activates if torch is available
 import sematic.types.types.pytorch  # noqa: F401
 
+# PIL/Pillow
+# Only activates if PIL/Pillow is available
+import sematic.types.types.PIL  # noqa: F401
+
 # isort: on

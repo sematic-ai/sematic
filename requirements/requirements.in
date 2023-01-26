@@ -55,6 +55,7 @@ xgboost
 opencv-python
 tqdm
 psutil
+Pillow
 
 # Types
 ## Snowflake
@@ -65,9 +66,6 @@ pyarrow
 # Cloud execution
 kubernetes
 boto3
-
-# Matplotlib
-mpld3
 
 # External Resource Plugins
 ## Ray

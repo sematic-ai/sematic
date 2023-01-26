@@ -16,7 +16,8 @@ sematic_py_lib(
         "numpy",
         "tqdm",
         "psutil",
-        "seaborn"
+        "seaborn",
+        "Pillow",
     ]
 )
 

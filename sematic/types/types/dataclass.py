@@ -1,7 +1,7 @@
 # Standard Library
 import copy
 import dataclasses
-from typing import Any, Dict, Literal, Optional, Tuple, Union
+from typing import Any, Dict, Literal, Optional, Tuple, Union, get_origin
 
 # Sematic
 from sematic.types.casting import can_cast_type, safe_cast
@@ -171,7 +171,9 @@ def _serialize_dataclass(serializer: ToJSONEncodableCallable, value: Any, _) -> 
         # `typing` generics are excluded as they will always be different since the type
         # parametrization (e.g. `int` for `List[int]`) is not conserved on
         # instances
-        if not (value_type is field_type) and not is_parameterized_generic(field_type):
+        if not (value_type is field_type) and (
+            not is_parameterized_generic(field_type) or get_origin(field_type) is Union
+        ):
             output["types"][name] = type_to_json_encodable(value_type)
             value_serialization_type = value_type
 

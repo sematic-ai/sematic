@@ -10,7 +10,12 @@ from sematic.examples.yolov5.configs.dataset import COCO128
 from sematic.examples.yolov5.configs.evaluation import EvaluationConfig
 from sematic.examples.yolov5.configs.hyperparameters import SCRATCH_LOW
 from sematic.examples.yolov5.configs.model import YOLOV5L
-from sematic.examples.yolov5.pipeline import PipelineConfig, TrainingConfig, pipeline
+from sematic.examples.yolov5.pipeline import (
+    PipelineConfig,
+    TrainingConfig,
+    make_matplotlib_plot,
+    pipeline,
+)
 
 CONFIG = PipelineConfig(
     device="",
@@ -24,13 +29,18 @@ CONFIG = PipelineConfig(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("YOLO example")
-    parser.add_argument("--silent", action="store_true")
+    parser.add_argument("--silent", action="store_true", default=False)
     parser.add_argument("--model-id", type=str, default=None)
     parser.add_argument("--epochs", type=int, default=1)
+    parser.add_argument("--cache-namespace", type=str, default=None)
 
     args = parser.parse_args()
 
-    resolver = SilentResolver() if args.silent else LocalResolver()
+    resolver = (
+        SilentResolver()
+        if args.silent
+        else LocalResolver(cache_namespace=args.cache_namespace)
+    )
 
     CONFIG.training_config.epochs = args.epochs
 

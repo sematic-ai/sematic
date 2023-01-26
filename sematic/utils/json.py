@@ -7,7 +7,7 @@ def fix_nan_inf(string: str) -> str:
     """
     # TODO: find a more sustainable solution
     return (
-        string.replace("NaN", '"NaN"')
-        .replace("Infinity", '"Infinity"')
-        .replace('-"Infinity"', '"-Infinity"')
+        string.replace(": NaN", ': "NaN"')
+        .replace(": Infinity", ': "Infinity"')
+        .replace(": -Infinity", ': "-Infinity"')
     )
