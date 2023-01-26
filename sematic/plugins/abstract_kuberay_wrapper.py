@@ -195,4 +195,4 @@ class AbstractKuberayWrapper(AbstractPlugin):
 
     @classmethod
     def head_uri(cls, manifest: RayClusterManifest) -> str:
-        raise NotImplementedError("Child classes should implement client_uri")
+        raise NotImplementedError("Child classes should implement head_uri")

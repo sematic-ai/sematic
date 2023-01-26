@@ -35,7 +35,7 @@ class PluginScope(enum.Enum):
     # Server-side authentication plug-in scope
     AUTH = "AUTH"
 
-    # Storage plug-in scope for wrapping Kuberay
+    # Plug-in scope for wrapping Kuberay
     KUBERAY = "KUBERAY"
 
 

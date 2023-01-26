@@ -210,7 +210,7 @@ def get_run_ids_for_resource(external_resource_id: str) -> List[str]:
             .distinct()
             .all()
         )
-        return list(set(r[0] for r in results))
+        return list(r[0] for r in results)
 
 
 def get_resolution(resolution_id: str) -> Resolution:
