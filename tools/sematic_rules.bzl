@@ -157,9 +157,15 @@ def sematic_py_lib(name, srcs, deps, pip_deps = None, visibility = None, data = 
 
     create_multipy_targets(name, create_targets)
 
-def sematic_example(name, requirements = None, data = None):
+def sematic_example(name, requirements = None, data = None, uses_ee = False):
     if data == None:
         data = []
+    
+    sematic_deps = [
+        "//sematic:init"
+    ]
+    if uses_ee:
+        sematic_deps.append("//sematic/ee:init")
     sematic_py_lib(
         name = "{}_lib".format(name),
         srcs = native.glob(["*.py", "**/*.py"]),

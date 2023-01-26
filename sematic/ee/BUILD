@@ -3,7 +3,7 @@ sematic_py_lib(
     srcs = ["__init__.py"],
     deps = [
         "//sematic/ee/plugins/external_resource/ray:cluster",
-        "//sematic/plugins/abstract_kuberay_wrapper",
+        "//sematic/plugins:abstract_kuberay_wrapper",
     ],
     pip_deps = [
         "ray",
