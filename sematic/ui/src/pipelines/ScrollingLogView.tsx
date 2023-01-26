@@ -155,6 +155,9 @@ export default function ScrollingLogView(props: {
 
   useEffect(() => {
     setIsLoading(isLoading);
+    return () => {
+      setIsLoading(false);
+    }
   }, [setIsLoading, isLoading]);
 
   return (

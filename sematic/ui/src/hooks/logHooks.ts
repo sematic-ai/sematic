@@ -7,6 +7,7 @@ import { useLogger } from "../utils";
 import { useHttpClient } from "./httpHooks";
 
 const MAX_LINES = 2000;
+const POLLING_INTERVAL = 5000;
 export interface GetNextResult {
     pulledLines: number
 }
@@ -108,7 +109,7 @@ export function useAccumulateLogsUntilEnd(hasMore: boolean, getNext: () => Promi
 
             // Yield to rendering cycles
             await new Promise(
-                resolve => setTimeout(resolve, 10)
+                resolve => setTimeout(resolve, POLLING_INTERVAL)
             );
         }
         setIsAccumulating(false);

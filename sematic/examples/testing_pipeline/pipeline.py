@@ -6,15 +6,15 @@ import logging
 import os
 import random
 import time
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 # Third-party
 import ray
 
 # Sematic
 import sematic
-from sematic.plugins.abstract_kuberay_wrapper import RayNodeConfig, SimpleRayCluster
-from sematic.ee.plugins.external_resource.ray.cluster import RayCluster
+from sematic.calculator import _make_tuple
+from sematic.ee import RayCluster, RayNodeConfig, SimpleRayCluster
 from sematic.plugins.external_resource.timed_message import TimedMessage
 from sematic.resolvers.resource_requirements import ResourceRequirements
 
@@ -263,6 +263,17 @@ def do_retry(val: float, failure_probability: float = 0.5) -> float:
     return val
 
 
+@sematic.func(inline=False)
+def do_virtual_funcs(a: float, b: float, c: float) -> float:
+    """
+    Adds three numbers while explicitly including _make_tuple, _make_list, and _getitem.
+    """
+    logger.info("Executing: do_virtual_funcs(a=%s, b=%s, c=%s)", a, b, c)
+    time.sleep(5)
+    d, e, f = _make_tuple(Tuple[float, float, float], (a, b, c))
+    return add_all([d, e, f])
+
+
 @sematic.func(inline=True)
 def testing_pipeline(
     inline: bool = False,
@@ -276,6 +287,7 @@ def testing_pipeline(
     ray_resource: bool = False,
     resource_requirements: Optional[ResourceRequirements] = None,
     cache: bool = False,
+    virtual_funcs: bool = False,
     exit_code: Optional[int] = None,
 ) -> float:
     """
@@ -305,12 +317,18 @@ def testing_pipeline(
         Defaults to False.
     external_resource: bool
         Whether to use an external resource. Defaults to False.
+    ray_cluster_address:
+        The address of a Ray cluster. `None` if Ray should not be used. If specified,
+        two numbers will be added using a Ray task that executes on the remote cluster.
     resource_requirements: Optional[ResourceRequirements]
         If not None, includes a function that runs with the specified requirements.
         Defaults to False.
     cache: bool
         Whether to include nested functions which will have the `cache` flag activated.
         Defaults to False.
+    virtual_funcs: bool
+        Whether to include the `_make_list`, `_make_tuple`, and `_getitem` virtual
+        functions. Defaults to False.
     exit_code: Optional[int]
         If not None, includes a function which will exit with the specified code.
         Defaults to None.
@@ -359,6 +377,9 @@ def testing_pipeline(
 
     if cache:
         futures.append(add4_nested_cached(initial_future, 1, 2, 3))
+
+    if virtual_funcs:
+        futures.append(do_virtual_funcs(initial_future, 2, 3))
 
     if exit_code is not None:
         futures.append(do_exit(initial_future, exit_code))

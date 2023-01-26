@@ -15,6 +15,7 @@ sematic_pipeline(
     repository = "sematic-dev",
     deps = [
         ":testing_pipeline_lib",
+        "//sematic/ee:init",
         requirement("debugpy"),
         requirement("ray"),
     ],

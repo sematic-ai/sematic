@@ -97,6 +97,7 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         "//sematic/config:config",
+        "//sematic/config:user_settings",
         "//sematic/plugins/storage:s3_storage",
         "//sematic/utils:retry",
         "//sematic/utils:stdout",
@@ -120,6 +121,7 @@ sematic_py_lib(
         "//sematic:abstract_future",
         "//sematic:api_client",
         "//sematic:calculator",
+        "//sematic/config:user_settings",
         "//sematic:future",
         "//sematic:future_context",
         "//sematic:log_reader",

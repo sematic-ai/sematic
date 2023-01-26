@@ -1,1 +1,1 @@
-export const HIDDEN_RUN_NAME_LIST = ["_make_list", "_make_tuple"];
+export const HIDDEN_RUN_NAME_LIST = ["_make_list", "_make_tuple", "_getitem"];
