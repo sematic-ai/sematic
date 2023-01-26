@@ -1,6 +1,6 @@
 # Standard Library
 import logging
-from typing import Type
+from typing import Any, Type, cast
 
 # Third-party
 import requests
@@ -11,6 +11,7 @@ from sematic.abstract_plugin import (
     AbstractPluginSettingsVar,
     PluginVersion,
 )
+from sematic.config.server_settings import ServerSettingsVar, get_server_setting
 from sematic.config.settings import get_plugin_setting
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.queries import get_run
@@ -36,7 +37,6 @@ _MESSAGE_TEMPLATE = (
 
 class SlackPublisherSettingsVar(AbstractPluginSettingsVar):
     SLACK_WEBHOOK_TOKEN = "SLACK_WEBHOOK_TOKEN"
-    SLACK_EXTERNAL_URL = "SLACK_EXTERNAL_URL"
 
 
 class SlackPublisher(AbstractPublisher, AbstractPlugin):
@@ -63,9 +63,7 @@ class SlackPublisher(AbstractPublisher, AbstractPlugin):
         """
         Returns the message to publish.
         """
-        external_url = get_plugin_setting(
-            self.__class__, SlackPublisherSettingsVar.SLACK_EXTERNAL_URL
-        )
+        external_url = get_server_setting(ServerSettingsVar.SEMATIC_DASHBOARD_URL)
         # TODO: in the future we might either have a gnostic server-side component build
         #  this url for us (e.g. have resolutions.py build a path to the specific
         #  resolution panel), or have a url which only contains the resolution root id
@@ -86,13 +84,18 @@ class SlackPublisher(AbstractPublisher, AbstractPlugin):
 
         return message
 
-    def publish(self, resolution: Resolution) -> None:
+    def publish(self, event: Any) -> None:
         """
         Publishes a message to the configured Slack channel in case the Resolution failed.
         """
+        if not isinstance(event, Resolution):
+            logger.debug("The received event is not a resolution event")
+            return
+
         # we are currently publishing only on failure events
+        resolution = cast(Resolution, event)
         if resolution.status != ResolutionStatus.FAILED.value:
-            logger.debug("Not publishing resolution")
+            logger.debug("Not publishing resolution event")
             return
 
         try:

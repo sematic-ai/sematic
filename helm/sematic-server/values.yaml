@@ -1,3 +1,6 @@
+server:
+  sematic_dashboard_url: https://my.sematic # REPLACE ME
+
 auth:
   enabled: true
   google_oauth_client_id: xxxxxxxx.apps.googleusercontent.com # REPLACE ME
@@ -10,7 +13,6 @@ aws:
 slack:
   enabled: true
   slack_webhook_token: XXX/YYY/ZZZ # REPLACE ME
-  slack_external_url: https://my.sematic # REPLACE ME
 
 secret:
   create: true
@@ -78,7 +80,7 @@ rbac:
 
 service_account:
   # Should a new service account be created? Or should we use
-  # one that already exists
+  # one that already exists?
   create: true
 
   # Annotations to add to the service account

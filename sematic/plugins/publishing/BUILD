@@ -4,6 +4,7 @@ sematic_py_lib(
     pip_deps = [],
     deps = [
         "//sematic:abstract_plugin",
+        "//sematic/config:server_settings",
         "//sematic/config:settings",
         "//sematic/db:queries",
         "//sematic/db/models:resolution",

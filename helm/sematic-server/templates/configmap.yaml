@@ -18,8 +18,10 @@ data:
 {{ end }}
 {{ if .Values.slack.enabled }}
   SLACK_WEBHOOK_TOKEN: {{ .Values.slack.slack_webhook_token | quote }}
-  SLACK_EXTERNAL_URL: {{ .Values.slack.slack_external_url | quote }}
 {{ end }}
   KUBERNETES_NAMESPACE: {{ .Release.Namespace }}
   SEMATIC_WORKER_KUBERNETES_SA: {{ .Values.worker.service_account.name | quote }}
   SEMATIC_WORKER_API_ADDRESS: "http://{{ .Release.Name }}"
+{{ if .Values.server.sematic_dashboard_url }}
+  SEMATIC_DASHBOARD_URL: {{ .Values.server.sematic_dashboard_url | quote }}
+{{ end }}
