@@ -65,7 +65,7 @@ def sematic_pipeline(
         else:
             fail("No default image specified. Set `base` or tag an image as default in `bases`.")
     elif bases["default"] != base:
-        fail("default image is ambiguous, as base and bases['default'] were specified with different values")
+        fail("Default image is ambiguous, as `base` and `bases['default']` were specified with different values.")
 
     if dev:
         main = "@sematic//sematic/resolvers:worker.py"
@@ -82,8 +82,7 @@ def sematic_pipeline(
         script_data = ["@rules_sematic//:ray", "@rules_sematic//:bazel_python"]
         py3_image_deps = deps
 
-    image_uris = []
-    push_rule_names = []
+    push_rule_names = {}
 
     for tag, base_image in bases.items():
         with_tools_image = "{}_{}_image_with_tools".format(name, tag)
@@ -117,7 +116,7 @@ def sematic_pipeline(
         )
 
         push_rule_name = "{}_{}_push".format(name, tag)
-        push_rule_names.append(push_rule_name)
+        push_rule_names[tag] = [push_rule_name, "{}/{}".format(registry, repository)]
 
         container_push(
             name = push_rule_name,
@@ -129,22 +128,11 @@ def sematic_pipeline(
             tags = ["manual"],
         )
 
-        uri_rule_name = "{}_{}_generate_image_uri".format(name, tag)
-        image_uris.append(uri_rule_name)
-
-        native.genrule(
-            name = uri_rule_name,
-            srcs = [":{}_{}_push.digest".format(name, tag)],
-            outs = ["{}_{}_push_at_build.uri".format(name, tag)],
-            cmd = "echo -n {}/{}@`cat $(location {}_{}_push.digest)` > $@".format(registry, repository, name, tag),
-        )
-
     py_binary(
         name = "{}_binary".format(name),
         srcs = ["{}.py".format(name)],
         main = "{}.py".format(name),
         deps = deps,
-        data = image_uris,
         tags = ["manual"],
     )
 
@@ -158,7 +146,7 @@ def sematic_pipeline(
 
     sematic_push_and_run(
         name = name,
-        push_rule_names = push_rule_names,
+        push_rule_names = push_rule_names
     )
 
 def base_images():
@@ -192,12 +180,20 @@ def base_images():
 def _sematic_push_and_run(ctx):
     script = ctx.actions.declare_file("{0}.sh".format(ctx.label.name))
 
-    push_rule_runs = " && ".join([
-        "\"$BAZEL_BIN\" run {}:{}".format(ctx.label.package, rule_name)
-        for rule_name in ctx.attr.push_rule_names
-    ])
+    push_rule_runs = ''
+    digest_runs = ''
 
-    # the script it simple enough it doesn't really merit a template & template expansion
+    for tag, pushes in ctx.attr.push_rule_names.items():
+        rule_name = pushes[0]
+        image_name = pushes[1]
+
+        push_rule_runs += " && \"$BAZEL_BIN\" run {}:{}".format(ctx.label.package, rule_name)
+
+        # Bazel writes the image digest to a file after push, we read this digest and build
+        # an encoded string containing the tag, image, and digest to pass to the run_binary
+        # script below.
+        digest_runs += "&& SEMATIC_CONTAINER_IMAGE_URIS=$SEMATIC_CONTAINER_IMAGE_URIS::{}##{}@`cat $(bazel info bazel-bin)/{}/{}.digest`".format(tag, image_name, ctx.label.package, rule_name)
+
     script_lines = [
         "#!/bin/sh",
 
@@ -205,14 +201,14 @@ def _sematic_push_and_run(ctx):
         # workspace. If that's present, use it instead of whatever is on the PATH.
         "test -f \"$BUILD_WORKSPACE_DIRECTORY/bazel\" && BAZEL_BIN=\"$BUILD_WORKSPACE_DIRECTORY/bazel\" || BAZEL_BIN=\"$(which bazel)\"",
         "if test -f \"$BAZEL_BIN\"; then",
-        "\tcd $BUILD_WORKING_DIRECTORY",
-        "\t{} && \"$BAZEL_BIN\" run {}_binary -- $@".format(push_rule_runs, ctx.label),
+        "\tcd $BUILD_WORKING_DIRECTORY {} {} && SEMATIC_CONTAINER_IMAGE_URIS=$SEMATIC_CONTAINER_IMAGE_URIS \"$BAZEL_BIN\" run {}_binary -- $@".format(push_rule_runs, digest_runs, ctx.label),
         "else",
         # Should probably not happen unless somebody has an exotic bazel setup.
         # At least make it clear what the problem is if it ever does happen.
         "\techo \"!!! bazel executable not found on PATH or in $BUILD_WORKSPACE_DIRECTORY !!!\"",
         "fi",
     ]
+
     command = "touch {}".format(script.path)
     for script_line in script_lines:
         command += " && echo '{}' >> {}".format(script_line, script.path)
@@ -233,14 +229,14 @@ sematic_push_and_run = rule(
     doc = (
         """This rule should never be used directly, it is for internal Sematic use.
 
-        It combines `bazel run //my_package:my_target_push` and
+        It combines `bazel run //my_package:my_target_default_push` and
         `bazel run //my_package:my_target_binary` into a single `bazel run`-able target.
         """
     ),
     implementation = _sematic_push_and_run,
     attrs = {
-        "push_rule_names": attr.string_list(
-            doc = "List of push rules to execute",
+        "push_rule_names": attr.string_list_dict(
+            doc = "Dict of push rules to execute and image names and tags",
             mandatory = True,
         ),
     },
