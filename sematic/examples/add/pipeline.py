@@ -14,7 +14,7 @@ def add(a: float, b: float) -> float:
     return a + b
 
 
-@sematic.func
+@sematic.func(base_image_tag="cuda")
 def add3(a: float, b: float, c: float) -> float:
     """
     Adds three numbers.
