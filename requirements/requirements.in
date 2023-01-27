@@ -69,3 +69,6 @@ mpld3
 # External Resource Plugins
 ## Ray
 ray>=2.2.0
+pyspark
+raydp
+typing>=3.8.0

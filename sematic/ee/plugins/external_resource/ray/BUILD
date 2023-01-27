@@ -14,5 +14,18 @@ sematic_py_lib(
     ],
     pip_deps=[
         "kubernetes",
+        "ray",
+    ],
+)
+
+sematic_py_lib(
+    name = "spark_cluster",
+    srcs = ["spark_cluster.py"],
+    deps = [
+        ":cluster",
+    ],
+    pip_deps=[
+        "raydp",
+        "pyspark",
     ],
 )

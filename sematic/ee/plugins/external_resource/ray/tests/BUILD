@@ -12,3 +12,13 @@ pytest_test(
         "//sematic/tests:fixtures",
     ],
 )
+
+pytest_test(
+    name = "test_spark_cluster",
+    srcs = ["test_spark_cluster.py"],
+    pip_deps = [
+    ],
+    deps = [
+        "//sematic/ee/plugins/external_resource/ray:spark_cluster",
+    ],
+)
