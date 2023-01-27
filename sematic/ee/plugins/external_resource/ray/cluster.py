@@ -25,6 +25,7 @@ from sematic.plugins.abstract_kuberay_wrapper import (
 from sematic.plugins.kuberay_wrapper.standard import StandardKuberayWrapper
 from sematic.scheduling.kubernetes import load_kube_config
 from sematic.utils.exceptions import UnsupportedUsageError
+from sematic.utils.retry import retry
 
 try:
     # Third-party
@@ -76,11 +77,17 @@ class RayCluster(AbstractExternalResource):
         A configuration for the RayCluster that will be started. If using
         LocalResolver or SilentResolver, this will be ignored and a local
         cluster will be started instead.
+    forward_logs:
+        Whether or not to have logs from Ray workers returned back to the
+        stdout of the Sematic func this resource is used in. Sets
+        log_to_driver in ray.init:
+        https://docs.ray.io/en/latest/ray-core/package-ref.html?highlight=init#ray.init
     """
 
     # Since the parent class has defaults, all params here must technically
     # have defaults. Here we raise an error if no value is provided though.
     config: RayClusterConfig = field(default_factory=_no_default_cluster)
+    forward_logs: bool = True
     _cluster_name: Optional[str] = None
     _head_uri: Optional[str] = None
 
@@ -102,15 +109,16 @@ class RayCluster(AbstractExternalResource):
             )
         return plugins[0]
 
+    @retry(exceptions=(ConnectionError,), tries=8, delay=1, backoff=2)
     def _do_ray_init(self) -> "RayCluster":
         """Connect to Ray if not already connected"""
         if ray.is_initialized():
             return self
         if self._cluster_name is not None:
             logger.info("Connecting to Ray using URI '%s'", self._head_uri)
-            ray.init(address=self._head_uri)
+            ray.init(address=self._head_uri, log_to_driver=self.forward_logs)
         else:
-            ray.init()
+            ray.init(log_to_driver=self.forward_logs)
 
         logger.info("Initialized connection to Ray for cluster resource %s", self.id)
         return self

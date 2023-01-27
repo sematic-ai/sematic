@@ -11,8 +11,10 @@ sematic_py_lib(
         "//sematic/db:queries",
         "//sematic/utils:exceptions",
         "//sematic/config:server_settings",
+        "//sematic/utils:retry",
     ],
     pip_deps=[
         "kubernetes",
+        "ray",
     ],
 )

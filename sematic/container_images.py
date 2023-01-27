@@ -2,7 +2,6 @@
 import os
 from typing import Dict
 
-
 CONTAINER_IMAGE_ENV_VAR = "SEMATIC_CONTAINER_IMAGE"
 CONTAINER_IMAGE_URIS_ENV_VAR = "SEMATIC_CONTAINER_IMAGE_URIS"
 
@@ -45,11 +44,11 @@ def get_image_uris() -> Dict[str, str]:
     tagged_uris_map = {}
 
     if CONTAINER_IMAGE_URIS_ENV_VAR in os.environ:
-        image_uris = os.environ[CONTAINER_IMAGE_URIS_ENV_VAR].split('::')
+        image_uris = os.environ[CONTAINER_IMAGE_URIS_ENV_VAR].split("::")
 
         for image_uri in image_uris:
             if len(image_uri) > 0:
-                tag, uri = image_uri.split('##')
+                tag, uri = image_uri.split("##")
                 tagged_uris_map[tag] = uri
 
     if len(tagged_uris_map) == 0:
