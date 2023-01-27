@@ -114,11 +114,16 @@ class RayCluster(AbstractExternalResource):
         """Connect to Ray if not already connected"""
         if ray.is_initialized():
             return self
-        if self._cluster_name is not None:
-            logger.info("Connecting to Ray using URI '%s'", self._head_uri)
-            ray.init(address=self._head_uri, log_to_driver=self.forward_logs)
-        else:
-            ray.init(log_to_driver=self.forward_logs)
+        try:
+            if self._cluster_name is not None:
+                logger.info("Connecting to Ray using URI '%s'", self._head_uri)
+                ray.init(address=self._head_uri, log_to_driver=self.forward_logs)
+            else:
+                ray.init(log_to_driver=self.forward_logs)
+        except ConnectionError:
+            logger.error("Could not connect to Ray...")
+            ray.shutdown()
+            raise
 
         logger.info("Initialized connection to Ray for cluster resource %s", self.id)
         return self

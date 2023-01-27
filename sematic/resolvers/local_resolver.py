@@ -238,6 +238,7 @@ class LocalResolver(SilentResolver):
             # so it is safe to mark non-terminal futures as CANCELED
             # This will precipitate the termination of the resolution loop.
             self._cancel_non_terminal_futures()
+            self._deactivate_all_resources()
             self._sio_client.disconnect()
 
         self._populate_run_and_artifacts(self._root_future)
