@@ -20,7 +20,7 @@ from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
 
-_PLUGIN_VERSION = (0, 1, 0)
+_PLUGIN_VERSION = (0, 2, 0)
 
 
 class S3ClientMethod(enum.Enum):
