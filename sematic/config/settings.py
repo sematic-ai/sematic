@@ -38,6 +38,10 @@ _MANDATORY_SYSTEM_PLUGIN_PATHS = [
     "sematic.config.user_settings.UserSettings",
 ]
 
+_DEFAULT_SCOPES = {
+    PluginScope.STORAGE: ["sematic.plugins.storage.local_storage.LocalStorage"]
+}
+
 
 @dataclass
 class ProfileSettings:
@@ -126,6 +130,7 @@ def get_active_settings() -> ProfileSettings:
 
         profile_settings = settings.profiles[_DEFAULT_PROFILE]
 
+        _apply_default_scopes(profile_settings.scopes)
         _apply_scopes_overrides(profile_settings.scopes)
         _ensure_mandatory_plugins(profile_settings.settings)
 
@@ -432,6 +437,11 @@ def _apply_env_var_overrides(
             logger.debug("Overriding %s from environment variable", key)
 
             settings[var] = new_value
+
+
+def _apply_default_scopes(plugin_scopes: PluginScopes) -> None:
+    for scope, plugins in _DEFAULT_SCOPES.items():
+        plugin_scopes[scope] = plugins
 
 
 def _apply_scopes_overrides(plugin_scopes: PluginScopes) -> None:

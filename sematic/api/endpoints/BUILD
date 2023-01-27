@@ -42,16 +42,16 @@ sematic_py_lib(
         "flask",
     ],
     deps = [
-            "//sematic/api:app",
-            "//sematic/api/endpoints:auth",
-            "//sematic/api/endpoints:request_parameters",
-            "//sematic/db/models:external_resource",
-            "//sematic/db/models:user",
-            "//sematic/db:queries",
+        "//sematic/api:app",
+        "//sematic/api/endpoints:auth",
+        "//sematic/api/endpoints:request_parameters",
+        "//sematic/db/models:external_resource",
+        "//sematic/db/models:user",
+        "//sematic/db:queries",
 
-            # Included so there is always an ExternalResource implementation
-            # the server can use for demonstrating the feature/API.
-            "//sematic/plugins/external_resource:timed_message",
+        # Included so there is always an ExternalResource implementation
+        # the server can use for demonstrating the feature/API.
+        "//sematic/plugins/external_resource:timed_message",
     ],
 )
 
@@ -84,15 +84,11 @@ sematic_py_lib(
     deps = [
         ":auth",
         ":request_parameters",
-        "//sematic:abstract_plugin",
         "//sematic/api:app",
-        "//sematic/config:settings",
         "//sematic/db:db",
         "//sematic/db:queries",
         "//sematic/db/models:artifact",
         "//sematic/db/models:user",
-        "//sematic/plugins:abstract_storage",
-        "//sematic/plugins/storage:local_storage",
     ],
 )
 
@@ -170,5 +166,23 @@ sematic_py_lib(
         "//sematic/config:settings",
         "//sematic/db:queries",
         "//sematic/db/models:factories",
+    ],
+)
+
+sematic_py_lib(
+    name = "uploads",
+    srcs = ["uploads.py"],
+    pip_deps = [
+        "flask",
+    ],
+    deps = [
+        ":auth",
+        ":request_parameters",
+        "//sematic:abstract_plugin",
+        "//sematic/api:app",
+        "//sematic/config:settings",
+        "//sematic/db/models:user",
+        "//sematic/plugins:abstract_storage",
+        "//sematic/plugins/storage:local_storage",
     ],
 )
