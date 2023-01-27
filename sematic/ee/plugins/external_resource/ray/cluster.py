@@ -51,13 +51,38 @@ def _no_default_cluster() -> RayClusterConfig:
 
 @dataclass(frozen=True)
 class RayCluster(AbstractExternalResource):
+    """Represents an distributed Ray cluster.
+
+    For local execution, a local Ray cluster will be used. This class
+    is intended to be used via Sematic's "with" api:
+
+    ```python
+    @sematic.func(inline=False)
+    def use_ray() -> int:
+        with RayCluster(config=CLUSTER_CONFIG):
+            return ray.get(some_ray_task.remote())[0]
+    ```
+
+    To use it, you must have configured Sematic to use an instance of
+    sematic.plugins.abstract_kuberay_wrapper.AbstractKuberayWrapper
+    such as sematic.plugins.kuberay_wrapper.standard.StandardKuberayWrapper.
+
+    A cluster will be created before entering the "with" context, and will
+    be torn down when that context is exited.
+
+    Attributes
+    ----------
+    config:
+        A configuration for the RayCluster that will be started. If using
+        LocalResolver or SilentResolver, this will be ignored and a local
+        cluster will be started instead.
+    """
 
     # Since the parent class has defaults, all params here must technically
     # have defaults. Here we raise an error if no value is provided though.
     config: RayClusterConfig = field(default_factory=_no_default_cluster)
     _cluster_name: Optional[str] = None
     _head_uri: Optional[str] = None
-    _deleted_cluster: bool = False
 
     @classmethod
     def _kuberay_wrapper(cls) -> Type[AbstractKuberayWrapper]:
@@ -78,6 +103,7 @@ class RayCluster(AbstractExternalResource):
         return plugins[0]
 
     def _do_ray_init(self) -> "RayCluster":
+        """Connect to Ray if not already connected"""
         if ray.is_initialized():
             return self
         if self._cluster_name is not None:
@@ -117,6 +143,7 @@ class RayCluster(AbstractExternalResource):
         super().__exit__(exc_type, exc_value, exc_traceback)
 
     def _do_activate(self, is_local: bool) -> "RayCluster":
+        """No-op for local clusters; request a RayCluster from Kuberay for remote."""
         if is_local:
             # no activation needs to happen to just
             # use ray.init() locally
@@ -145,9 +172,8 @@ class RayCluster(AbstractExternalResource):
         assert kuberay_version is not None
         return self._request_cluster(kuberay_version, namespace)
 
-    def _request_cluster(
-        self, kuberay_version: str, namespace: str, image_uri: Optional[str] = None
-    ) -> "RayCluster":
+    def _request_cluster(self, kuberay_version: str, namespace: str) -> "RayCluster":
+        """Request a new cluster from Kuberay"""
         try:
             run_ids = get_run_ids_for_resource(self.id)
 
@@ -163,7 +189,7 @@ class RayCluster(AbstractExternalResource):
 
         try:
             cluster_name = f"ray-{self.id}"
-            image_uri = run.container_image_uri if image_uri is None else image_uri
+            image_uri = run.container_image_uri
             assert image_uri is not None  # please mypy
             manifest = self._kuberay_wrapper().create_cluster_manifest(
                 image_uri=image_uri,
@@ -196,13 +222,7 @@ class RayCluster(AbstractExternalResource):
         except Exception as e:
             message = f"Unable to request RayCluster with name {cluster_name}: {e}"
             logger.exception(message)
-            return replace(
-                self._with_status(
-                    ResourceState.DEACTIVATING,
-                    message,
-                ),
-                _cluster_name=cluster_name,
-            )
+            return self._continue_deactivation(message)
 
         return replace(
             self._with_status(
@@ -228,11 +248,29 @@ class RayCluster(AbstractExternalResource):
         return api
 
     @classmethod
+    def _apps_api(cls) -> kubernetes.client.AppsV1Api:  # type: ignore
+        return kubernetes.client.AppsV1Api(cls._k8s_client())
+
+    @classmethod
     def _get_kuberay_version(
         cls, namespace: str
     ) -> Tuple[Optional[str], Optional[str]]:
+        """Get the version of Kuberay that's currently present on the cluster.
+
+        Parameters
+        ----------
+        namespace:
+            The Kubernetes namespace Kuberay is running in
+
+        Returns
+        -------
+        A tuple where the two elements will be:
+        - the kuberay version as a string, None: if the Kuberay version can be found
+        - None, an error message: if the Kuberay version can't be found (ex: Kuberay
+        is not installed in the cluster).
+        """
         try:
-            api_instance = kubernetes.client.AppsV1Api(cls._k8s_client())
+            api_instance = cls._apps_api()
             name = cls._kuberay_wrapper().KUBERAY_DEPLOYMENT_NAME
             api_response = api_instance.read_namespaced_deployment(name, namespace)
             ready: Optional[int] = api_response.status.ready_replicas  # type: ignore
@@ -254,6 +292,16 @@ class RayCluster(AbstractExternalResource):
                 if container.name == cls._kuberay_wrapper().KUBERAY_CONTAINER_NAME:
                     image_tag = container.image.split(":")[-1]  # type: ignore
                     return image_tag, None
+        except ApiException as e:
+            if e.status == 404:
+                message = (
+                    "Kuberay does not appear to be installed in your Kubernetes "
+                    "cluster. Please ask your cluster administrator to install it "
+                    "before proceeding."
+                )
+                logger.error(message)
+                return None, message
+            return None, str(e)
         except Exception as e:
             logger.exception("Error getting Kuberay version: %s", e)
             return None, str(e)
@@ -269,7 +317,7 @@ class RayCluster(AbstractExternalResource):
         elif self.status.state == ResourceState.ACTIVE:
             return self._update_from_active()
         elif self.status.state == ResourceState.DEACTIVATING:
-            return self._continue_deactivation("Continuing deactivation")
+            return self._continue_deactivation("finalizing deactivation")
 
         return self
 
@@ -284,9 +332,12 @@ class RayCluster(AbstractExternalResource):
                 return self._with_status(
                     ResourceState.ACTIVE, "Ready to use remote Ray cluster."
                 )
+
+            # must be still activating
             return self
 
     def _update_from_active(self) -> "RayCluster":
+        """Given that this resource is in the ACTIVE state, update the state."""
         is_active, message = self._validate_ray()
         if is_active:
             return self._with_status(ResourceState.ACTIVE, "Ray cluster is active")
@@ -296,16 +347,12 @@ class RayCluster(AbstractExternalResource):
             )
 
     def _continue_deactivation(self, reason: str) -> "RayCluster":
-        try:
-            # ray docs say it is ok to run ray.shutdown() multiple
-            # times in a row. Call it here to ensure it ALWAYS gets called,
-            # although we should have called it when exiting the 'with'
-            # context.
-            ray.shutdown()
-        except Exception as e:
-            logger.exception("Error disconnecting from Ray: %s", e)
+        """Given that the cluster is in the DEACTIVATING state, update the state.
 
-        if self.status.managed_by == ManagedBy.RESOLVER or self._deleted_cluster:
+        If the Kuberay cluster has not been deleted, delete it. If it has been,
+        move this object to the DEACTIVATED state.
+        """
+        if self.status.managed_by == ManagedBy.RESOLVER or self._cluster_name is None:
             state = (
                 ResourceState.DEACTIVATED
                 if self.status.state == ResourceState.DEACTIVATING
@@ -318,13 +365,15 @@ class RayCluster(AbstractExternalResource):
             self._cluster_api().delete(self._cluster_name, namespace=namespace)
             return self._with_status(
                 ResourceState.DEACTIVATING,
-                f"Requested deletion of RayCluster with name {self._cluster_name}",
+                f"Requested deletion of RayCluster with name {self._cluster_name} "
+                f"because: {reason}",
             )
         except ApiException as e:
             if e.status == 404:
                 return self._with_status(
                     ResourceState.DEACTIVATED,
-                    f"Ray cluster with name '{self._cluster_name}' deleted",
+                    f"Ray cluster with name '{self._cluster_name}' "
+                    f"deleted because: {reason}",
                 )
             message = (
                 f"While attempting to deactivate Ray cluster because '{reason}', "
@@ -350,6 +399,18 @@ class RayCluster(AbstractExternalResource):
         return self._continue_deactivation("Deactivation requested via Sematic API")
 
     def _validate_ray(self) -> Tuple[bool, Optional[str]]:
+        """Confirm that the Ray cluster is up and appears healthy.
+
+        For local ray, runs a simple task and confirms the expected result
+        is obtained. For remote Ray, confirms that the cluster exists and has
+        at least 1 available worker (counting the head).
+
+        Returns
+        -------
+        A tuple where the first element is a boolean indicating whether Ray
+        is up and healthy. The second element is None if the cluster is
+        healthy, and an error message if not.
+        """
         if self.status.managed_by == ManagedBy.RESOLVER:
             return _validate_local_ray(self)
 
@@ -374,6 +435,7 @@ class RayCluster(AbstractExternalResource):
 
 @ray.remote
 def _validation_task() -> int:
+    """Simple task just to confirm Ray is usable"""
     return _VALIDATION_INT
 
 
