@@ -31,8 +31,10 @@ sematic_py_lib(
         "//sematic/api/endpoints:notes",
         "//sematic/api/endpoints:resolutions",
         "//sematic/api/endpoints:runs",
+        "//sematic/api/endpoints:uploads",
         "//sematic/config:config",
         "//sematic/config:server_settings",
+        "//sematic/plugins/storage:local_storage",
     ],
 )
 

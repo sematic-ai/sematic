@@ -8,6 +8,7 @@ sematic_py_lib(
         "//sematic/api:app",
         "//sematic/api/endpoints:auth",
         "//sematic/config:config",
+        "//sematic/config:server_settings",
         "//sematic/db/models:user",
         "//sematic/plugins:abstract_storage",
     ],
