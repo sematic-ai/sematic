@@ -112,14 +112,22 @@ class Config:
 
     @property
     def api_url(self) -> str:
+<<<<<<< HEAD
         return urljoin(self.server_url, f"api/v{self.api_version}")
+=======
+        return urljoin(self.server_url, "api/v{}".format(self.api_version))
+>>>>>>> bccd4a3 (Extract the socket.io notification endpoint to a separate path)
 
     @property
     def socket_io_url(self) -> str:
         socket_io_base_address = os.environ.get(
             SEMATIC_SOCKET_IO_ADDRESS, self.server_url
         )
+<<<<<<< HEAD
         return urljoin(socket_io_base_address, f"api/v{self.api_version}")
+=======
+        return urljoin(socket_io_base_address, "api/v{}".format(self.api_version))
+>>>>>>> bccd4a3 (Extract the socket.io notification endpoint to a separate path)
 
     @property
     def server_pid_file_path(self) -> str:
