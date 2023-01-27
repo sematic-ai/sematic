@@ -23,17 +23,13 @@ def get_upload_location(
     user: Optional[User], namespace: str, key: str
 ) -> flask.Response:
     try:
-        storage_plugin = get_active_plugins(
-            PluginScope.STORAGE, default=[LocalStorage]
-        )[0]
-    except IndexError:
+        storage_plugin = _get_storage_plugin()
+    except MissingStoragePluginError:
         return jsonify_error(
             "Incorrect storage plugin scope", HTTPStatus.INTERNAL_SERVER_ERROR
         )
 
-    storage_class = cast(Type[AbstractStorage], storage_plugin)
-
-    location = storage_class().get_write_location(namespace, key, user)
+    location = storage_plugin().get_write_location(namespace, key, user)
 
     return flask.jsonify(asdict(location))
 
@@ -42,17 +38,13 @@ def get_upload_location(
 @authenticate
 def get_upload_data(user: Optional[User], namespace: str, key: str):
     try:
-        storage_plugin = get_active_plugins(
-            PluginScope.STORAGE, default=[LocalStorage]
-        )[0]
-    except IndexError:
+        storage_plugin = _get_storage_plugin()
+    except MissingStoragePluginError:
         return jsonify_error(
             "Incorrect storage plugin scope", HTTPStatus.INTERNAL_SERVER_ERROR
         )
 
-    storage_class = cast(Type[AbstractStorage], storage_plugin)
-
-    location = storage_class().get_read_location(namespace, key, user)
+    location = storage_plugin().get_read_location(namespace, key, user)
 
     response = flask.redirect(location.location, code=HTTPStatus.FOUND)
 
@@ -60,3 +52,18 @@ def get_upload_data(user: Optional[User], namespace: str, key: str):
         response.headers.set(key, value)
 
     return response
+
+
+class MissingStoragePluginError(Exception):
+    pass
+
+
+def _get_storage_plugin() -> Type[AbstractStorage]:
+    try:
+        storage_plugin = get_active_plugins(
+            PluginScope.STORAGE, default=[LocalStorage]
+        )[0]
+    except IndexError:
+        raise MissingStoragePluginError()
+
+    return cast(Type[AbstractStorage], storage_plugin)
