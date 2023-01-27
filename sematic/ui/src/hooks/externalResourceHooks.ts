@@ -4,7 +4,7 @@ import { ExternalResource, ExternalResourceState, Run } from "../Models";
 import { useHttpClient } from "./httpHooks";
 
 export const TERMINATE_STATE: ExternalResourceState = 'DEACTIVATED';
-const PULL_EXTERNAL_RESOURCE_INTERVAL = 1000;
+const POLL_EXTERNAL_RESOURCE_INTERVAL = 1000;
 
 export function useExternalResource(run: Run) {
     const {fetch} = useHttpClient();
@@ -25,7 +25,7 @@ export function useExternalResource(run: Run) {
     useEffect(() => {
         if (!loading && !!value) {
             if (value.length === 0 || value[0].resource_state !== TERMINATE_STATE) {
-                timerHandler.current = window.setTimeout(retry, PULL_EXTERNAL_RESOURCE_INTERVAL);
+                timerHandler.current = window.setTimeout(retry, POLL_EXTERNAL_RESOURCE_INTERVAL);
             }
         }
 
