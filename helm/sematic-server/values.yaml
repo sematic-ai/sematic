@@ -1,5 +1,6 @@
 server:
   sematic_dashboard_url: https://my.sematic # REPLACE ME
+  socket_io_address: https://my.sematic/socket/io/path # REPLACE ME
 
 auth:
   enabled: true

@@ -81,6 +81,7 @@ ON_WORKER_ENV_VAR = "ON_SEMATIC_WORKER"
 KUBERNETES_POD_NAME_ENV_VAR = "KUBERNETES_POD_NAME"
 SEMATIC_SERVER_ADDRESS_ENV_VAR = "SEMATIC_SERVER_ADDRESS"
 SEMATIC_WORKER_SERVER_ADDRESS_ENV_VAR = "SEMATIC_WORKER_API_ADDRESS"
+SEMATIC_SOCKET_IO_ADDRESS = "SEMATIC_SOCKET_IO_ADDRESS"
 
 
 @dataclass
@@ -109,10 +110,14 @@ class Config:
 
     @property
     def api_url(self) -> str:
-        return urljoin(
-            self.server_url,
-            "api/v{}".format(self.api_version),
+        return urljoin(self.server_url, "api/v{}".format(self.api_version))
+
+    @property
+    def socket_io_url(self) -> str:
+        socket_io_base_address = os.environ.get(
+            SEMATIC_SOCKET_IO_ADDRESS, self.server_url
         )
+        return urljoin(socket_io_base_address, "api/v{}".format(self.api_version))
 
     @property
     def server_pid_file_path(self) -> str:
