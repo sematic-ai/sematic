@@ -226,6 +226,7 @@ sematic_py_wheel(
         # Specifying this by hand because sematic_py_wheel doesn't know
         # how to fix versions
         "eventlet==0.30.2",
+        "SQLAlchemy<2.0.0",
     ],
     version = wheel_version_string,
     visibility = ["//visibility:public"],

@@ -1,11 +1,10 @@
 # Standard Library
 import os
-import re
 from typing import Dict
 
-import __main__  # isort:skip
 
 CONTAINER_IMAGE_ENV_VAR = "SEMATIC_CONTAINER_IMAGE"
+CONTAINER_IMAGE_URIS_ENV_VAR = "SEMATIC_CONTAINER_IMAGE_URIS"
 
 DEFAULT_BASE_IMAGE_TAG = "default"
 
@@ -31,31 +30,27 @@ def has_container_image() -> bool:
 def get_image_uris() -> Dict[str, str]:
     """Get the URI of the docker image associated with this execution.
 
+    Reads the encoded string in the container image uris env var of the format
+    'tag1##image_uri1::tag2##image_uri2' and returns a dict of the tag to image
+    uri mappings.
+
     Returns
     -------
-    The URI of the image to be used in this execution.
+    Dict of tag to image uri mappings.
     """
+
     if CONTAINER_IMAGE_ENV_VAR in os.environ:
         return {DEFAULT_BASE_IMAGE_TAG: os.environ[CONTAINER_IMAGE_ENV_VAR]}
 
     tagged_uris_map = {}
 
-    dir_path, file_name = os.path.split(__main__.__file__)
+    if CONTAINER_IMAGE_URIS_ENV_VAR in os.environ:
+        image_uris = os.environ[CONTAINER_IMAGE_URIS_ENV_VAR].split('::')
 
-    image_file_regex = r"{}_(.*?)_push_at_build.uri".format(
-        os.path.splitext(file_name)[0]
-    )
-
-    for file_path in os.listdir(dir_path):
-        tag_matches = re.findall(image_file_regex, file_path)
-        if len(tag_matches) == 1:
-            tag = tag_matches[0]
-            absolute_file_path = (
-                f"{os.path.splitext(__main__.__file__)[0]}_{tag}_push_at_build.uri"
-            )
-
-            with open(absolute_file_path) as f:
-                tagged_uris_map[tag] = f.read()
+        for image_uri in image_uris:
+            if len(image_uri) > 0:
+                tag, uri = image_uri.split('##')
+                tagged_uris_map[tag] = uri
 
     if len(tagged_uris_map) == 0:
         raise MissingContainerImage(
