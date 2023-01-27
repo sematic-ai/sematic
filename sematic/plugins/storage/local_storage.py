@@ -1,6 +1,7 @@
 # Standard Library
 import logging
 import os
+from http import HTTPStatus
 from typing import Dict, Optional
 
 # Third-party
@@ -10,14 +11,11 @@ import flask
 from sematic.abstract_plugin import AbstractPlugin, PluginVersion
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import API_KEY_HEADER, authenticate
+from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.config.config import get_config
 from sematic.config.server_settings import get_api_address
 from sematic.db.models.user import User
-from sematic.plugins.abstract_storage import (
-    AbstractStorage,
-    Location,
-    NoSuchStorageKeyError,
-)
+from sematic.plugins.abstract_storage import AbstractStorage, Location
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +86,10 @@ def download_endpoint(user: Optional[User], namespace: str, key: str) -> flask.R
         with open(os.path.join(_get_data_dir(), namespace, key), "rb") as file:
             content = file.read()
     except FileNotFoundError:
-        raise NoSuchStorageKeyError(LocalStorage, key)
+        return jsonify_error(
+            error="No such namespace or key: {namespace} {key}",
+            status=HTTPStatus.NOT_FOUND,
+        )
 
     return flask.Response(content)
 

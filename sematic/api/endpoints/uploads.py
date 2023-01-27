@@ -22,6 +22,9 @@ from sematic.plugins.storage.local_storage import LocalStorage
 def get_upload_location(
     user: Optional[User], namespace: str, key: str
 ) -> flask.Response:
+    """
+    Get the URL to which to PUT the payload to store.
+    """
     try:
         storage_plugin = _get_storage_plugin()
     except MissingStoragePluginError:
@@ -37,6 +40,9 @@ def get_upload_location(
 @sematic_api.route("/api/v1/uploads/<namespace>/<key>/data", methods=["GET"])
 @authenticate
 def get_upload_data(user: Optional[User], namespace: str, key: str):
+    """
+    Redirect to the location of the stored payload.
+    """
     try:
         storage_plugin = _get_storage_plugin()
     except MissingStoragePluginError:
