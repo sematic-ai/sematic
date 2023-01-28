@@ -1,3 +1,7 @@
+"""
+The module that contains the definition of the AbstractPublisher plugin, which is used
+to publish notifications externally.
+"""
 # Standard Library
 import abc
 from typing import Any, List, Type, cast

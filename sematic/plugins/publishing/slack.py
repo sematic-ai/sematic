@@ -1,5 +1,9 @@
+"""
+The Slack Publisher plugin implementation.
+"""
 # Standard Library
 import logging
+import re
 from typing import Any, Type, cast
 
 # Third-party
@@ -16,11 +20,11 @@ from sematic.config.settings import get_plugin_setting
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.queries import get_run
 from sematic.plugins.abstract_publisher import AbstractPublisher
-from sematic.utils.memoized_property import memoized_property
 
 logger = logging.getLogger(__name__)
 
 _PLUGIN_VERSION = (0, 1, 0)
+_SLACK_TOKEN_PATTERN = "[a-zA-Z0-9]+/[a-zA-Z0-9]+/[a-zA-Z0-9]+"
 _SLACK_HEADERS = {"Content-Type": "application/json"}
 _SLACK_URL_TEMPLATE = "https://hooks.slack.com/services/{webhook_token}"
 # TODO: implement server-side gnostic components that build urls that point to specific
@@ -52,11 +56,24 @@ class SlackPublisher(AbstractPublisher, AbstractPlugin):
     def get_settings_vars(cls) -> Type[AbstractPluginSettingsVar]:
         return SlackPublisherSettingsVar
 
-    @memoized_property
-    def _slack_url(self) -> str:
+    def _get_slack_url(self) -> str:
         webhook_token = get_plugin_setting(
             self.__class__, SlackPublisherSettingsVar.SLACK_WEBHOOK_TOKEN
         )
+
+        # validate that this conforms to an expected token structure
+        # we want to avoid spamming the slack backend service with incorrect calls,
+        # or we might get blacklisted
+        # TODO: one of the advantages of having a long-lived plugin instance is that
+        #  validation can be done on initialization, then all publication calls ignored
+        #  in case this failed, instead of spamming with stack traces
+        if re.match(_SLACK_TOKEN_PATTERN, webhook_token) is None:
+            raise ValueError(
+                f"Configured value '{webhook_token}' for setting "
+                f"{SlackPublisherSettingsVar.SLACK_WEBHOOK_TOKEN.value} does not "
+                f"conform to the expected token format: '{_SLACK_TOKEN_PATTERN}'"
+            )
+
         return _SLACK_URL_TEMPLATE.format(webhook_token=webhook_token)
 
     def _get_message(self, resolution: Resolution) -> str:
@@ -64,12 +81,12 @@ class SlackPublisher(AbstractPublisher, AbstractPlugin):
         Returns the message to publish.
         """
         external_url = get_server_setting(ServerSettingsVar.SEMATIC_DASHBOARD_URL)
+        root_run = get_run(run_id=resolution.root_id)
+
         # TODO: in the future we might either have a gnostic server-side component build
         #  this url for us (e.g. have resolutions.py build a path to the specific
         #  resolution panel), or have a url which only contains the resolution root id
         #  redirect to the full url path
-        root_run = get_run(run_id=resolution.root_id)
-
         resolution_url = _RESOLUTION_URL_TEMPLATE.format(
             external_url=external_url,
             pipeline_import_path=root_run.calculator_path,
@@ -95,20 +112,21 @@ class SlackPublisher(AbstractPublisher, AbstractPlugin):
         # we are currently publishing only on failure events
         resolution = cast(Resolution, event)
         if resolution.status != ResolutionStatus.FAILED.value:
-            logger.debug("Not publishing resolution event")
+            logger.debug("The received resolution event is not a failure")
             return
 
         try:
             json_data = {"text": self._get_message(resolution=resolution)}
             kwargs = dict(headers=_SLACK_HEADERS)
+            slack_url = self._get_slack_url()
 
             logger.debug(
                 "Publishing resolution failure to Slack: url=`%s` json=`%s` kwargs=`%s`",
-                self._slack_url,
+                slack_url,
                 json_data,
                 kwargs,
             )
-            requests.post(url=self._slack_url, json=json_data, **kwargs)  # type: ignore
+            requests.post(url=slack_url, json=json_data, **kwargs)  # type: ignore
             logger.info("Published resolution failure to Slack")
 
         except Exception:

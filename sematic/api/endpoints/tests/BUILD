@@ -22,13 +22,16 @@ pytest_test(
     ],
     deps = [
         "//sematic:abstract_future",
+        "//sematic:abstract_plugin",
         "//sematic/api/tests:fixtures",
         "//sematic/db:queries",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
         "//sematic/db/tests:fixtures",
+        "//sematic/plugins:abstract_publisher",
         "//sematic/scheduling:external_job",
         "//sematic/scheduling:kubernetes",
+        "//sematic/tests:fixtures",
     ],
 )
 
