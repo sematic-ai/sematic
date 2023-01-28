@@ -80,13 +80,13 @@ export function useHttpClient(): HttpClient {
 }
 
 /**
- * Mock series of server side responses
+ * Simulate series of server side responses
  * 
  * @param data The series of HTTP Response JOSN
  * @param interval delay before a request is fulfilled.
  * @returns 
  */
-export function useMockHttpClient<T>(data: Array<T> = [], interval: number) {
+export function useDebuggingHttpClient<T>(data: Array<T> = [], interval: number) {
     let n = 0;
 
     const fetchCallback = useCallback(async (args: any) => {

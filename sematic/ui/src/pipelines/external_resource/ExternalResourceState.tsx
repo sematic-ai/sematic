@@ -20,9 +20,9 @@ const SpacedText = styled(Typography)`
     margin: 4px 0;
 `;
 
-const StyledChip = styled(Chip)`
-    margin-right: 4px;
-`
+function StyledChip(props: React.ComponentProps<typeof Chip>) {
+    return <Chip {...props} sx={{mr: 1}}/>
+};
 
 function StyledChipWithColor(props:
     React.ComponentProps<typeof StyledChip> & {

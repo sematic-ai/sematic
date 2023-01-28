@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import useAsyncRetry from "react-use/lib/useAsyncRetry";
+import usePreviousDistinct from "react-use/lib/usePreviousDistinct";
 import { ExternalResource, ExternalResourceState, Run } from "../Models";
 import { useHttpClient } from "./httpHooks";
 
@@ -19,12 +20,14 @@ export function useExternalResource(run: Run) {
         }
 
         return response['content'] as Array<ExternalResource>
-    }, [fetch, run]);
+    }, [fetch, run.id]);
 
     const timerHandler = useRef<number>();
+    const prevLoading = usePreviousDistinct(loading);
     useEffect(() => {
-        if (!loading && !!value) {
-            if (value.length === 0 || value[0].resource_state !== TERMINATE_STATE) {
+        // monitors when loading changes from `true` to `false`
+        if (prevLoading && !loading) {
+            if (!!value && (value.length === 0 || value[0].resource_state !== TERMINATE_STATE)) {
                 timerHandler.current = window.setTimeout(retry, POLL_EXTERNAL_RESOURCE_INTERVAL);
             }
         }
@@ -35,7 +38,7 @@ export function useExternalResource(run: Run) {
                 clearTimeout(timerHandler.current);
             }
         }
-    }, [timerHandler, loading, value, retry]);
+    }, [timerHandler, prevLoading, loading, value, retry]);
 
     return {value, loading, error};
 }

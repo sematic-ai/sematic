@@ -38,6 +38,16 @@ export default function ExternalResourcePanel() {
                 Array<ExternalResourceHistorySerialization> || [];
             return history.reverse();
         }, [externalResources]);
+    
+    const extraResourcesInfoSection = useMemo(() => {
+        if ((externalResources?.length || 0) > 1) {
+            return <Alert severity="info">
+                The run uses more than 1 external resources. Here is only the first one.
+            </Alert>
+        }
+        return <></>;
+
+    }, [externalResources]);
 
     useRunPanelLoadingIndicator(loading);
 
@@ -51,11 +61,14 @@ export default function ExternalResourcePanel() {
         return <Alert severity="error" sx={{ mt: 3 }}> {error.message} </Alert>
     }
 
-    return <ThinTimetime key={selectedRun?.id}>
+    return <>
+        {extraResourcesInfoSection}
+        <ThinTimetime key={selectedRun?.id}>
             {historyRecords?.map(
                 (state, index) => 
                 <ExternalResourceState 
                     historyRecord={state} key={index} isLast={historyRecords.length - 1 === index}/>
             )}
         </ThinTimetime>
+    </>
 }
