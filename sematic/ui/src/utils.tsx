@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import io from "socket.io-client";
 import { atomWithHash } from 'jotai-location'
+import { useLocation } from "react-router-dom";
 
 interface IFetchJSON {
   url: string;
@@ -59,9 +60,23 @@ export function fetchJSON({
 }
 
 export function useLogger() {
-  const devLogger = useMemo(() => process.env.NODE_ENV === "development" ?
-    (...args: any[]) => console.log("DEV DEBUG: ", ...args) :
-    () => { }, []);
+  const { search } = useLocation();
+
+  const isLoggingExplicitlyTurnedOn = useMemo(
+    () => (new URLSearchParams(search)).has('debug'), [search]);
+
+  const devLogger = useMemo(
+    () => {
+      if (process.env.NODE_ENV === "development" || isLoggingExplicitlyTurnedOn) {
+        return (...args: any[]) => {
+          console.log(
+            `${(new Date()).toString().replace(/\sGMT.+$/, '')}  DEV DEBUG: `,
+            ...args
+          );
+        }
+      }
+      return () => { };
+    }, [isLoggingExplicitlyTurnedOn]);
 
   return {
     devLogger
