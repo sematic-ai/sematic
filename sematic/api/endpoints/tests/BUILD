@@ -107,6 +107,7 @@ pytest_test(
         "//sematic/api/tests:fixtures",
         "//sematic/db/models:artifact",
         "//sematic/db/tests:fixtures",
+        "//sematic/tests:fixtures",
     ],
 )
 

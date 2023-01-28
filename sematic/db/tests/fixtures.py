@@ -214,8 +214,6 @@ def persisted_artifact(test_db, test_storage):  # noqa: F811
         session.commit()
         session.refresh(artifact)
 
-    test_storage.set(
-        test_storage().get_write_location("artifacts", artifact.id), bytes_
-    )
+    test_storage.set(f"artifacts/{artifact.id}", bytes_)
 
     return artifact
