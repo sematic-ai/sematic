@@ -33,6 +33,7 @@ pytest_test(
         ":fixtures",
         "//sematic:abstract_plugin",
         "//sematic/config:settings",
+        "//sematic/plugins/storage:local_storage",
         "//sematic/tests:fixtures",
     ],
 )

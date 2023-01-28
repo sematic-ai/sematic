@@ -8,6 +8,7 @@ import flask.testing
 from sematic.api.tests.fixtures import mock_auth, test_client  # noqa: F401
 from sematic.db.models.artifact import Artifact
 from sematic.db.tests.fixtures import persisted_artifact, test_db  # noqa: F401
+from sematic.tests.fixtures import test_storage  # noqa: F401
 
 
 def test_get_artifact_endpoint(
