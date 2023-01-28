@@ -1,10 +1,11 @@
-import { useContext, useEffect, useMemo, useRef } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import useAsyncRetry from "react-use/lib/useAsyncRetry";
 import GraphContext from "../pipelines/graph/graphContext";
 import { Graph, RunTreeNode } from "../interfaces/graph";
 import { RunGraphPayload } from "../Payloads";
-import { graphSocket } from "../utils";
+import { graphSocket, useLogger } from "../utils";
 import { useHttpClient } from "./httpHooks";
+import usePrevious from "react-use/lib/usePrevious";
 
 export function useGraph(runRootId: string): [
     Graph | undefined,
@@ -12,19 +13,13 @@ export function useGraph(runRootId: string): [
     Error | undefined
 ] {
     const {fetch} = useHttpClient();
-
-    const loadResultPromise = useRef<Promise<RunGraphPayload> | null>(null);
+    const { devLogger } = useLogger();
 
     const {value: graphPayload, loading, error, retry} = useAsyncRetry(async () => {
-        loadResultPromise.current = new Promise(async (resolve) => {
-            const response: RunGraphPayload = await fetch({
-                url: `/api/v1/runs/${runRootId}/graph?root=1`,
-            });
-            resolve(response);
-        });
-
-        return await loadResultPromise.current;
-    }, [runRootId, loadResultPromise]);
+        return await fetch({
+            url: `/api/v1/runs/${runRootId}/graph?root=1`,
+        }) as RunGraphPayload;
+    }, [runRootId]);
 
     const graph = useMemo<Graph | undefined >(() => {
         if (!graphPayload) {
@@ -43,20 +38,50 @@ export function useGraph(runRootId: string): [
 
     }, [graphPayload]);
 
+    const retryPending = useRef(false);
+
+    const prevLoading = usePrevious(loading);
+
+    useEffect(() => {
+        if (prevLoading&& !loading && retryPending.current) {
+            retryPending.current = false;
+            devLogger('Loading state has switched from true to false,' 
+                + ' and reloading was requested. reloading now...');
+            retry();
+        }
+    }, [loading, prevLoading, retry, devLogger]);
+
+    const graphSocketUpdateHandler = useCallback(async (args: { run_id: string }) => {
+        devLogger("Handler triggered with:", args);
+        if (args.run_id === runRootId) {
+            if (loading) {
+                devLogger('Reloading is requested but an ongoing loading process is present.' +
+                ' Mark the state for retrying later.');
+                retryPending.current = true;
+            } else {
+                devLogger('There was no ongoing loading process. Directly reload.')
+                retry();
+            }
+        }
+    }, [runRootId, loading, retry, devLogger]); 
+
+    const graphSocketCallbackRef = useRef<(args: { run_id: string })=> Promise<void>>(
+        async() => {}
+    );
+
+    const onGraphUpdate = useCallback((args: { run_id: string }) => {
+        graphSocketCallbackRef.current(args);
+    }, [graphSocketCallbackRef]);
+
+    useEffect(() => {
+        graphSocketCallbackRef.current = graphSocketUpdateHandler;
+    }, [graphSocketUpdateHandler])
+
     // Auto manage reloading by hooking up with graphSocket.
     useEffect(() => {
         graphSocket.removeAllListeners();
-        graphSocket.on("update", (args: { run_id: string }) => {
-          if (args.run_id === runRootId) {
-            setTimeout(async () => {
-                if (loadResultPromise.current) {
-                    await loadResultPromise.current;
-                }
-                retry();
-            });
-          }
-        });
-      }, [runRootId, retry, loadResultPromise])
+        graphSocket.on("update", onGraphUpdate);
+      }, [onGraphUpdate]);
 
     return [graph, loading, error];
 }
