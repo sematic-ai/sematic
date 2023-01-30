@@ -10,8 +10,6 @@ from sematic.abstract_plugin import AbstractPlugin, PluginVersion
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import API_KEY_HEADER, authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
-from sematic.config.config import get_config
-from sematic.config.server_settings import get_api_address
 from sematic.db.models.user import User
 from sematic.plugins.abstract_storage import (
     AbstractStorage,

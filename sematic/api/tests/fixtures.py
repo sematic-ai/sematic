@@ -5,7 +5,6 @@ from copy import copy
 from http import HTTPStatus
 from typing import Dict, cast
 from unittest import mock
-from urllib.parse import urljoin
 
 # Third-party
 import flask.testing
