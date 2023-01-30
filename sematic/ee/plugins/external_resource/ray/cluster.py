@@ -384,7 +384,7 @@ class RayCluster(AbstractExternalResource):
                     pod.status.phase,
                 )
                 return False
-            return all(status.ready for status in pod.status.containerStatuses)
+            return all(status.ready for status in pod.status.container_statuses)
 
         if len(pods.items) == 0:
             return replace(self, _n_pods=0)
