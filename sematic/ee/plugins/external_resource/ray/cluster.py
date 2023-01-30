@@ -480,12 +480,24 @@ class RayCluster(AbstractExternalResource):
             return _validate_local_ray(self)
 
         n_workers = self._n_pods if self._n_pods is not None else 0
-        has_workers = n_workers > 0
+        min_workers = self._min_required_workers()
+        has_enough_workers = n_workers >= min_workers
         logger.info(f"Ray cluster {self.id} has {n_workers} workers")
         return (
-            has_workers,
-            None if has_workers else "RayCluster has no available workers.",
+            has_enough_workers,
+            None
+            if has_enough_workers
+            else (
+                f"RayCluster has {n_workers} available workers "
+                f"(counting the head), but requires at least {min_workers}."
+            ),
         )
+
+    def _min_required_workers(self) -> int:
+        n_required = 1  # start with 1 for head node
+        for group in self.config.scaling_groups:
+            n_required += group.min_workers
+        return n_required
 
 
 @ray.remote
