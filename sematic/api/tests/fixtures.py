@@ -23,7 +23,7 @@ from sematic.abstract_plugin import PluginScope
 # Importing from server instead of app to make sure
 # all endpoints are loaded
 from sematic.api.server import sematic_api
-from sematic.config.config import get_config, switch_env
+from sematic.config.config import switch_env
 from sematic.config.server_settings import ServerSettings, ServerSettingsVar
 from sematic.config.settings import (
     _DEFAULT_PROFILE,
@@ -73,18 +73,16 @@ def mock_requests(test_client):
         if "Content-Length" in request.headers:
             environ["CONTENT_LENGTH"] = request.headers["Content-Length"]
 
-        response = test_client.open(environ)
+        response = test_client.open(environ, follow_redirects=True)
 
         return response.status_code, dict(response.headers), response.data
 
-    api_url = get_config().api_url
     with responses.RequestsMock(assert_all_requests_are_fired=False) as request_mock:
         for rule in sematic_api.url_map.iter_rules():
             path_to_match = re.sub(
                 pattern=r"<\w+>", repl="\\\w+", string=rule.rule  # noqa: W605
             )
-            pattern = urljoin(api_url, path_to_match)
-            url = re.compile(pattern)
+            url = re.compile(r"http:\/\/[\w\.]+:\d{1,5}" + path_to_match)
             for method in rule.methods:
                 request_mock.add_callback(
                     callback=_request_callback, method=method, url=url

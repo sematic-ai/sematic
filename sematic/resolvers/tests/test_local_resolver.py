@@ -22,7 +22,7 @@ from sematic.db.queries import get_resolution, get_root_graph, get_run
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.resolvers.local_resolver import LocalResolver
 from sematic.retry_settings import RetrySettings
-from sematic.tests.fixtures import valid_client_version  # noqa: F401
+from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 from sematic.utils.exceptions import ExceptionMetadata, ResolutionError
 
 
@@ -543,6 +543,7 @@ def test_rerun_from_here(
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811
+    test_storage,  # noqa: F811
 ):
     future = pipeline(1, 2)
 
