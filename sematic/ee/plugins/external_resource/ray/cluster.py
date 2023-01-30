@@ -363,7 +363,13 @@ class RayCluster(AbstractExternalResource):
                 )
 
             # must be still activating
-            return cluster
+            return cluster._with_status(
+                ResourceState.ACTIVATING,
+                (
+                    f"Ray cluster has {cluster._n_pods} ready workers (counting head) "
+                    f"out of minimum {cluster._min_required_workers()}."
+                ),
+            )
 
     def _update_n_pods(self) -> "RayCluster":
         if self.status.managed_by == ManagedBy.RESOLVER:
