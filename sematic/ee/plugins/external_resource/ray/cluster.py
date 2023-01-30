@@ -366,8 +366,9 @@ class RayCluster(AbstractExternalResource):
             return cluster._with_status(
                 ResourceState.ACTIVATING,
                 (
-                    f"Ray cluster has {cluster._n_pods} ready workers (counting head) "
-                    f"out of minimum {cluster._min_required_workers()}."
+                    f"Ray cluster has {cluster._n_pods} ready workers "
+                    f"(counting the head) out of minimum "
+                    f"{cluster._min_required_workers()}."
                 ),
             )
 

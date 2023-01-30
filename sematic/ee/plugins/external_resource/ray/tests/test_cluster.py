@@ -20,6 +20,7 @@ from sematic.tests.fixtures import environment_variables
 class RayClusterClientsMocked(RayCluster):
     _apps_api_mock = MagicMock(name="apps_api")
     _cluster_api_mock = MagicMock(name="cluster_api")
+    _k8s_core_client_mock = MagicMock(name="k8s_core_client")
 
     @classmethod
     def reset_mocks(cls):
@@ -33,6 +34,10 @@ class RayClusterClientsMocked(RayCluster):
     @classmethod
     def _cluster_api(cls):
         return cls._cluster_api_mock
+
+    @classmethod
+    def _k8s_core_client(cls):
+        return cls._k8s_core_client_mock
 
 
 @ray.remote
@@ -178,3 +183,84 @@ def test_request_cluster(mock_get_run_ids, mock_get_run):
         f"Deactivating cluster because: Unable to request "
         f"RayCluster with name {cluster_name}: (500)"
     ) in cluster.status.message
+
+
+def test_update_from_activating():
+    RayClusterClientsMocked.reset_mocks()
+
+    cluster_name = "cluster-name"
+    cluster = RayClusterClientsMocked(
+        config=SimpleRayCluster(
+            n_nodes=3, node_config=RayNodeConfig(cpu=1, memory_gb=1)
+        ),
+        status=ResourceStatus(
+            state=ResourceState.ACTIVATING,
+            message="fake message",
+            managed_by=ManagedBy.SERVER,
+        ),
+        _cluster_name=cluster_name,
+    )
+
+    namespace = "test"
+    with environment_variables(dict(KUBERNETES_NAMESPACE=namespace)):
+        cluster = cluster._update_from_activating()
+
+    assert cluster.status.message == (
+        "Ray cluster has 0 ready workers (counting the head) out of minimum 3."
+    )
+    assert cluster.status.state == ResourceState.ACTIVATING
+
+    mock_head = MagicMock(name="mock-head")
+    mock_head.status.phase = "Running"
+    mock_head.status.container_statuses = [
+        MagicMock(ready=True),
+    ]
+
+    mock_worker0 = MagicMock(name="mock-worker-0")
+    mock_worker0.status.phase = "Running"
+    mock_worker0.status.container_statuses = [
+        MagicMock(ready=True),
+    ]
+
+    mock_worker1 = MagicMock(name="mock-worker-1")
+    mock_worker1.status.phase = "Pending"
+    mock_worker1.status.container_statuses = [
+        MagicMock(ready=False),
+    ]
+
+    cluster._k8s_core_client().list_namespaced_pod.return_value = MagicMock(
+        name="pod_list",
+        items=[
+            mock_head,
+            mock_worker0,
+            mock_worker1,
+        ],
+    )
+
+    with environment_variables(dict(KUBERNETES_NAMESPACE=namespace)):
+        cluster = cluster._update_from_activating()
+
+    assert cluster.status.message == (
+        "Ray cluster has 2 ready workers (counting the head) out of minimum 3."
+    )
+    assert cluster.status.state == ResourceState.ACTIVATING
+
+    # try just moving to running--shouldn't change since pod is not ready yet
+    mock_worker1.status.phase = "Running"
+    with environment_variables(dict(KUBERNETES_NAMESPACE=namespace)):
+        cluster = cluster._update_from_activating()
+
+    assert cluster.status.message == (
+        "Ray cluster has 2 ready workers (counting the head) out of minimum 3."
+    )
+    assert cluster.status.state == ResourceState.ACTIVATING
+
+    # make final pod ready
+    mock_worker1.status.container_statuses = [
+        MagicMock(ready=True),
+    ]
+    with environment_variables(dict(KUBERNETES_NAMESPACE=namespace)):
+        cluster = cluster._update_from_activating()
+
+    assert cluster.status.message == ("Ready to use remote Ray cluster.")
+    assert cluster.status.state == ResourceState.ACTIVE
