@@ -82,6 +82,7 @@ KUBERNETES_POD_NAME_ENV_VAR = "KUBERNETES_POD_NAME"
 SEMATIC_SERVER_ADDRESS_ENV_VAR = "SEMATIC_SERVER_ADDRESS"
 SEMATIC_WORKER_SERVER_ADDRESS_ENV_VAR = "SEMATIC_WORKER_API_ADDRESS"
 SEMATIC_SOCKET_IO_ADDRESS = "SEMATIC_SOCKET_IO_ADDRESS"
+SEMATIC_WSGI_WORKERS_COUNT = "SEMATIC_WSGI_WORKERS_COUNT"
 
 
 @dataclass
@@ -101,6 +102,7 @@ class Config:
     project_template_dir: str = "{}/template".format(_get_examples_dir())
     data_dir: str = _get_data_dir()
     server_log_to_stdout: bool = False
+    _wsgi_workers_count: int = 1
 
     @property
     def server_url(self) -> str:
@@ -122,6 +124,10 @@ class Config:
     @property
     def server_pid_file_path(self) -> str:
         return os.path.join(self.config_dir, "server.pid")
+
+    @property
+    def wsgi_workers_count(self) -> int:
+        return int(os.environ.get(SEMATIC_WSGI_WORKERS_COUNT, self._wsgi_workers_count))
 
     def server_url_is_set_via_env_vars(self) -> bool:
         return SEMATIC_SERVER_ADDRESS_ENV_VAR in os.environ or (
