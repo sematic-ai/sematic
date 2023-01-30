@@ -88,8 +88,16 @@ class RayCluster(AbstractExternalResource):
     # have defaults. Here we raise an error if no value is provided though.
     config: RayClusterConfig = field(default_factory=_no_default_cluster)
     forward_logs: bool = True
+
+    # The name of the remote cluster, if a remote cluster has been requested
     _cluster_name: Optional[str] = None
+
+    # The in-cluster URI of the head node
     _head_uri: Optional[str] = None
+
+    # If the job is remote, this holds the number of pods that are in the "ready"
+    # state for the cluster.
+    _n_pods: Optional[int] = None
 
     @classmethod
     def _kuberay_wrapper(cls) -> Type[AbstractKuberayWrapper]:
@@ -253,6 +261,12 @@ class RayCluster(AbstractExternalResource):
         return api_client
 
     @classmethod
+    def _k8s_core_client(cls) -> kubernetes.client.CoreV1Api:  # type: ignore
+        load_kube_config()
+        api_client = kubernetes.client.CoreV1Api()  # type: ignore
+        return api_client
+
+    @classmethod
     def _cluster_api(cls) -> kubernetes.dynamic.DynamicClient:  # type: ignore
         load_kube_config()
         api = kubernetes.dynamic.DynamicClient(  # type: ignore
@@ -335,27 +349,65 @@ class RayCluster(AbstractExternalResource):
         return self
 
     def _update_from_activating(self) -> "RayCluster":
-        if self.status.managed_by == ManagedBy.RESOLVER:
-            return self._with_status(
+        cluster = self
+        if cluster.status.managed_by == ManagedBy.RESOLVER:
+            return cluster._with_status(
                 ResourceState.ACTIVE, "Ready to use Ray in a local process cluster."
             )
         else:
-            is_active, _ = self._validate_ray()
+            cluster = cluster._update_n_pods()
+            is_active, _ = cluster._validate_ray()
             if is_active:
-                return self._with_status(
+                return cluster._with_status(
                     ResourceState.ACTIVE, "Ready to use remote Ray cluster."
                 )
 
             # must be still activating
+            return cluster
+
+    def _update_n_pods(self) -> "RayCluster":
+        if self.status.managed_by == ManagedBy.RESOLVER:
             return self
+        api = self._k8s_core_client()
+        namespace = get_server_setting(ServerSettingsVar.KUBERNETES_NAMESPACE)
+        pods = api.list_namespaced_pod(
+            namespace=namespace,
+            label_selector=f"ray.io/cluster={self._cluster_name}",
+        )
+
+        def pod_is_ready(pod):
+            if pod.status.phase != "Running":
+                logger.info(
+                    "Pod '%s' in cluster '%s' is in phase: %s",
+                    pod.metadata.name,
+                    self._cluster_name,
+                    pod.status.phase,
+                )
+                return False
+            return all(status.ready for status in pod.status.containerStatuses)
+
+        if len(pods.items) == 0:
+            return replace(self, _n_pods=0)
+        pod_count = sum(1 if pod_is_ready(pod) else 0 for pod in pods.items)
+        return replace(self, _n_pods=pod_count)
 
     def _update_from_active(self) -> "RayCluster":
         """Given that this resource is in the ACTIVE state, update the state."""
-        is_active, message = self._validate_ray()
+        cluster = self._update_n_pods()
+        is_active, message = cluster._validate_ray()
         if is_active:
-            return self._with_status(ResourceState.ACTIVE, "Ray cluster is active")
+            if cluster._n_pods is None:
+                return cluster._with_status(
+                    ResourceState.ACTIVE, "Ray cluster is active"
+                )
+            else:
+                return cluster._with_status(
+                    ResourceState.ACTIVE,
+                    f"Ray cluster is active with {cluster._n_pods} "
+                    f"ready workers (including the head)",
+                )
         else:
-            return self._continue_deactivation(
+            return cluster._continue_deactivation(
                 f"Cluster appeared to be unhealthy: {message}."
             )
 
@@ -427,18 +479,8 @@ class RayCluster(AbstractExternalResource):
         if self.status.managed_by == ManagedBy.RESOLVER:
             return _validate_local_ray(self)
 
-        namespace = get_server_setting(ServerSettingsVar.KUBERNETES_NAMESPACE)
-
-        try:
-            cluster_k8s_rep = self._cluster_api().get(
-                self._cluster_name, namespace=namespace
-            )
-        except Exception as e:
-            return False, f"Could not get RayCluster: {e}"
-
-        n_workers = cluster_k8s_rep.status.availableWorkerReplicas
-        n_workers = n_workers if n_workers is not None else 0
-        has_workers = n_workers >= 1
+        n_workers = self._n_pods if self._n_pods is not None else 0
+        has_workers = n_workers > 0
         logger.info(f"Ray cluster {self.id} has {n_workers} workers")
         return (
             has_workers,
