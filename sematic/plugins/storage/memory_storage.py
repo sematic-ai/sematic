@@ -54,7 +54,7 @@ class MemoryStorage(AbstractStorage, AbstractPlugin):
         self, namespace: str, key: str, user: Optional[User]
     ) -> StorageDestination:
         return StorageDestination(
-            url=f"{get_config().api_url}/uploads/{namespace}/{key}/memory",
+            url=f"{get_config().api_url}/storage/{namespace}/{key}/memory",
             request_headers=_make_headers(user),
         )
 
@@ -62,7 +62,7 @@ class MemoryStorage(AbstractStorage, AbstractPlugin):
         self, namespace: str, key: str, user: Optional[User]
     ) -> StorageDestination:
         return StorageDestination(
-            url=f"{get_config().api_url}/uploads/{namespace}/{key}/memory",
+            url=f"{get_config().api_url}/storage/{namespace}/{key}/memory",
             request_headers=_make_headers(user),
         )
 
@@ -79,7 +79,7 @@ def _make_headers(user: Optional[User]) -> Dict[str, str]:
 # These endpoints should only be registered for test purposes
 
 
-@sematic_api.route("/api/v1/uploads/<namespace>/<key>/memory", methods=["GET"])
+@sematic_api.route("/api/v1/storage/<namespace>/<key>/memory", methods=["GET"])
 @authenticate
 def memory_download_endpoint(
     user: Optional[User], namespace: str, key: str
@@ -94,7 +94,7 @@ def memory_download_endpoint(
     return flask.Response(content)
 
 
-@sematic_api.route("/api/v1/uploads/<namespace>/<key>/memory", methods=["PUT"])
+@sematic_api.route("/api/v1/storage/<namespace>/<key>/memory", methods=["PUT"])
 @authenticate
 def memory_upload_endpoint(
     user: Optional[User], namespace: str, key: str

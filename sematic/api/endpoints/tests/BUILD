@@ -112,8 +112,8 @@ pytest_test(
 )
 
 pytest_test(
-    name = "test_uploads",
-    srcs = ["test_uploads.py"],
+    name = "test_storage",
+    srcs = ["test_storage.py"],
     pip_deps = [
         "flask",
     ],

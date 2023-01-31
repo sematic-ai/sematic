@@ -14,7 +14,7 @@ from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
 )
-from sematic.api.endpoints.uploads import get_storage_plugin, get_upload_data
+from sematic.api.endpoints.storage import get_storage_plugin, get_upload_data
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.user import User

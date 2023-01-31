@@ -13,7 +13,7 @@ def test_upload_download(
 ):
     value = b"foo"
 
-    response = test_client.get("/api/v1/uploads/artifacts/123/location")
+    response = test_client.get("/api/v1/storage/artifacts/123/location")
     assert response.status_code == 200
 
     url = response.json["url"]  # type: ignore
@@ -21,9 +21,9 @@ def test_upload_download(
     response = test_client.put(url, data=value)
     assert response.status_code == 200
 
-    response = test_client.get("/api/v1/uploads/artifacts/123/data")
+    response = test_client.get("/api/v1/storage/artifacts/123/data")
     assert response.status_code == 302
 
-    response = test_client.get("/api/v1/uploads/artifacts/123/memory")
+    response = test_client.get("/api/v1/storage/artifacts/123/memory")
 
     assert response.data == value
