@@ -18,10 +18,9 @@ sematic_py_lib(
     name = "abstract_storage",
     srcs = ["abstract_storage.py"],
     deps = [
-        "//sematic/db/models:user",
-    ],
         "//sematic:abstract_plugin",
         "//sematic/config:settings",
+        "//sematic/db/models:user",
         "//sematic/utils:exceptions",
     ],
 )
