@@ -120,6 +120,5 @@ pytest_test(
     deps = [
         "//sematic/api/tests:fixtures",
         "//sematic/db/tests:fixtures",
-        "//sematic/plugins/storage:memory_storage",
     ],
 )
