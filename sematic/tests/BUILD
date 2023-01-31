@@ -1,5 +1,21 @@
 load("//sematic:wheel_version.bzl", "wheel_version_string")
 
+sematic_py_lib(
+    name = "fixtures",
+    srcs = ["fixtures.py"],
+    deps = [
+        "//sematic:api_client",
+        "//sematic/plugins/storage:memory_storage",
+    ],
+)
+
+sematic_py_lib(
+    name = "utils",
+    srcs = ["utils.py"],
+    pip_deps = ["pytest"],
+    deps = [],
+)
+
 pytest_test(
     name = "test_calculator",
     srcs = ["test_calculator.py"],
@@ -113,15 +129,6 @@ pytest_test(
     deps = [
         "//sematic:retry_settings",
         "//sematic/utils:exceptions",
-    ],
-)
-
-sematic_py_lib(
-    name = "fixtures",
-    srcs = ["fixtures.py"],
-    deps = [
-        "//sematic:api_client",
-        "//sematic/plugins/storage:memory_storage",
     ],
 )
 

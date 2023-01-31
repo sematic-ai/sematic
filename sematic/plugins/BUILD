@@ -17,5 +17,15 @@ sematic_py_lib(
 sematic_py_lib(
     name = "abstract_storage",
     srcs = ["abstract_storage.py"],
+    deps = [
+        "//sematic:abstract_plugin",
+        "//sematic/config:settings",
+        "//sematic/utils:exceptions",
+    ],
+)
+
+sematic_py_lib(
+    name = "abstract_publisher",
+    srcs = ["abstract_publisher.py"],
     deps = [],
 )

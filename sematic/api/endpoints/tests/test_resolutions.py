@@ -1,5 +1,6 @@
 # Standard Library
 import typing
+from http import HTTPStatus
 from unittest import mock
 
 # Third-party
@@ -8,6 +9,7 @@ import pytest
 
 # Sematic
 from sematic.abstract_future import FutureState
+from sematic.abstract_plugin import AbstractPlugin, PluginScope, PluginVersion
 from sematic.api.tests.fixtures import (  # noqa: F401
     make_auth_test,
     mock_auth,
@@ -34,8 +36,10 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
+from sematic.plugins.abstract_publisher import AbstractPublisher
 from sematic.scheduling.external_job import JobType
 from sematic.scheduling.kubernetes import KubernetesExternalJob
+from sematic.tests.fixtures import environment_variables
 
 test_get_resolution_auth = make_auth_test("/api/v1/resolutions/123")
 test_put_resolution_auth = make_auth_test("/api/v1/resolutions/123", method="PUT")
@@ -51,6 +55,23 @@ test_rerun_resolution_auth = make_auth_test(
 test_list_external_resource_auth = make_auth_test(
     "/api/v1/resolutions/123/external_resources", method="GET"
 )
+
+
+class MockPublisher(AbstractPublisher, AbstractPlugin):
+    # can't use assert_called* on a mock because the class is independently
+    # re-instantiated on every resolution publish event
+    call_counter = 0
+
+    @staticmethod
+    def get_author() -> str:
+        return "github.com/sematic-ai"
+
+    @staticmethod
+    def get_version() -> PluginVersion:
+        return 0, 1, 0
+
+    def publish(self, event: typing.Any) -> None:
+        MockPublisher.call_counter += 1
 
 
 def mock_schedule(resolution, max_parallelism=None, rerun_from=None):  # noqa: F811
@@ -103,18 +124,58 @@ def test_put_resolution_endpoint(
         "/api/v1/resolutions/{}".format(resolution.root_id),
         json={"resolution": resolution.to_json_encodable()},
     )
+
+    assert response.status_code == HTTPStatus.OK
+
     response = test_client.get("/api/v1/resolutions/{}".format(resolution.root_id))
     encodable = response.json["content"]  # type: ignore
-    encodable["status"] = ResolutionStatus.FAILED.value
 
-    test_client.put(
+    read = get_resolution(resolution.root_id)
+    assert read.settings_env_vars == resolution.settings_env_vars
+    assert read.status == ResolutionStatus.SCHEDULED.value
+
+    encodable["status"] = ResolutionStatus.COMPLETE.value
+    response = test_client.put(
         "/api/v1/resolutions/{}".format(resolution.root_id),
         json={"resolution": encodable},
     )
 
+    # check an incorrect transition was ignored
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     read = get_resolution(resolution.root_id)
-    assert read.settings_env_vars == resolution.settings_env_vars
-    assert read.status == ResolutionStatus.FAILED.value
+    assert read.status == ResolutionStatus.SCHEDULED.value
+
+    encodable["status"] = ResolutionStatus.RUNNING.value
+    response = test_client.put(
+        "/api/v1/resolutions/{}".format(resolution.root_id),
+        json={"resolution": encodable},
+    )
+
+    # check the resolution was updated
+    assert response.status_code == HTTPStatus.OK
+    read = get_resolution(resolution.root_id)
+    assert read.status == ResolutionStatus.RUNNING.value
+
+
+def test_resolution_event_publishing(
+    mock_auth,  # noqa: F811
+    persisted_run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811,
+):
+    resolution = make_resolution(  # noqa: F811
+        root_id=persisted_run.id, status=ResolutionStatus.FAILED
+    )
+
+    with environment_variables({PluginScope.PUBLISH.value: MockPublisher.get_path()}):
+        assert MockPublisher.call_counter == 0
+
+        response = test_client.put(
+            "/api/v1/resolutions/{}".format(resolution.root_id),
+            json={"resolution": resolution.to_json_encodable()},
+        )
+
+        assert response.status_code == HTTPStatus.OK
+        assert MockPublisher.call_counter == 1
 
 
 def test_get_resolution_404(
@@ -122,7 +183,7 @@ def test_get_resolution_404(
 ):
     response = test_client.get("/api/v1/resolutions/unknownid")
 
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
     payload = response.json
     payload = typing.cast(typing.Dict[str, typing.Any], payload)
@@ -193,7 +254,7 @@ def test_cancel_resolution(
         f"/api/v1/resolutions/{persisted_resolution.root_id}/cancel"
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
 
     canceled_resolution = get_resolution(persisted_resolution.root_id)
 
@@ -223,7 +284,7 @@ def test_rerun_resolution_endpoint(
         json={"rerun_from": persisted_resolution.root_id},
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
 
     payload = response.json
     payload = typing.cast(typing.Dict[str, typing.Any], payload)
@@ -238,16 +299,17 @@ def test_rerun_resolution_endpoint(
     assert run.future_state == FutureState.CREATED.value
 
     mock_schedule_resolution.assert_called_once()
-    mock_schedule_resolution.call_args.kwargs[
-        "rerun_from"
-    ] == persisted_resolution.root_id
+    assert (
+        mock_schedule_resolution.call_args.kwargs["rerun_from"]
+        == persisted_resolution.root_id
+    )
 
 
 def test_list_external_resources_empty(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     response = test_client.get("/api/v1/resolutions/abc123/external_resources")
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
 
     assert response.json == dict(external_resources=[])
 
@@ -262,7 +324,7 @@ def test_list_external_resource_ids(
     response = test_client.get(
         f"/api/v1/resolutions/{persisted_run.id}/external_resources"
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
 
     result_ids = [
         resource["id"]
