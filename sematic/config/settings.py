@@ -4,7 +4,7 @@ import enum
 import logging
 import os
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union
+from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union, cast
 
 # Third-party
 import yaml
@@ -136,6 +136,25 @@ def get_active_settings() -> ProfileSettings:
         _ACTIVE_SETTINGS = profile_settings
 
     return _ACTIVE_SETTINGS
+
+
+T = TypeVar("T", bound=Type[AbstractPlugin])
+
+
+def get_plugins_with_interface(
+    interface: T, scope: PluginScope, default: List[Type[AbstractPlugin]]
+) -> List[T]:
+    """Gets active plugins for a scope, but only ones implementing a given interface."""
+    for plugin in default:
+        if not issubclass(plugin, interface):
+            raise ValueError(f"{plugin} is not a subclass of {interface}")
+    plugins = get_active_plugins(scope, default=[])
+    plugins = [
+        plugin for plugin in plugins if issubclass(plugin, interface)  # type: ignore
+    ]
+    if len(plugins) == 0:
+        return cast(List[T], default)
+    return cast(List[T], plugins)
 
 
 def get_active_plugins(

@@ -317,9 +317,6 @@ def testing_pipeline(
         Defaults to False.
     external_resource: bool
         Whether to use an external resource. Defaults to False.
-    ray_cluster_address:
-        The address of a Ray cluster. `None` if Ray should not be used. If specified,
-        two numbers will be added using a Ray task that executes on the remote cluster.
     resource_requirements: Optional[ResourceRequirements]
         If not None, includes a function that runs with the specified requirements.
         Defaults to False.
@@ -381,11 +378,11 @@ def testing_pipeline(
     if virtual_funcs:
         futures.append(do_virtual_funcs(initial_future, 2, 3))
 
-    if exit_code is not None:
-        futures.append(do_exit(initial_future, exit_code))
-
     if ray_resource:
         futures.append(add_with_ray(initial_future, 1.0))
+
+    if exit_code is not None:
+        futures.append(do_exit(initial_future, exit_code))
 
     # collect all values
     result = add_all(futures) if len(futures) > 1 else futures[0]

@@ -6,12 +6,14 @@ from typing import Optional, Tuple, Type
 
 # Third-party
 import kubernetes
+import ray  # type: ignore
 from kubernetes.client.rest import ApiException  # type: ignore
+from ray.exceptions import GetTimeoutError  # type: ignore
 
 # Sematic
 from sematic.abstract_plugin import PluginScope
 from sematic.config.server_settings import ServerSettingsVar, get_server_setting
-from sematic.config.settings import get_active_plugins
+from sematic.config.settings import get_plugins_with_interface
 from sematic.db.queries import get_run, get_run_ids_for_resource
 from sematic.plugins.abstract_external_resource import (
     AbstractExternalResource,
@@ -27,16 +29,6 @@ from sematic.scheduling.kubernetes import load_kube_config
 from sematic.utils.exceptions import UnsupportedUsageError
 from sematic.utils.retry import retry
 
-try:
-    # Third-party
-    import ray  # type: ignore
-    from ray.exceptions import GetTimeoutError  # type: ignore
-except ImportError as e:
-    raise ImportError(
-        "RayCluster can only be used in Sematic if your code has a dependency on Ray"
-    ) from e
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -46,13 +38,13 @@ _VALIDATION_INT = 1
 def _no_default_cluster() -> RayClusterConfig:
     raise ValueError(
         f"RayCluster must be initialized with a {RayClusterConfig.__name__} "
-        "for 'cluster'"
+        f"for 'cluster'"
     )
 
 
 @dataclass(frozen=True)
 class RayCluster(AbstractExternalResource):
-    """Represents an distributed Ray cluster.
+    """Represents a distributed Ray cluster.
 
     For local execution, a local Ray cluster will be used. This class
     is intended to be used via Sematic's "with" api:
@@ -68,7 +60,7 @@ class RayCluster(AbstractExternalResource):
     sematic.plugins.abstract_kuberay_wrapper.AbstractKuberayWrapper
     such as sematic.plugins.kuberay_wrapper.standard.StandardKuberayWrapper.
 
-    A cluster will be created before entering the "with" context, and will
+    A Ray cluster will be created before entering the "with" context, and will
     be torn down when that context is exited.
 
     Attributes
@@ -80,7 +72,7 @@ class RayCluster(AbstractExternalResource):
     forward_logs:
         Whether or not to have logs from Ray workers returned back to the
         stdout of the Sematic func this resource is used in. Sets
-        log_to_driver in ray.init:
+        `log_to_driver` in `ray.init`:
         https://docs.ray.io/en/latest/ray-core/package-ref.html?highlight=init#ray.init
     """
 
@@ -101,8 +93,10 @@ class RayCluster(AbstractExternalResource):
 
     @classmethod
     def _kuberay_wrapper(cls) -> Type[AbstractKuberayWrapper]:
-        plugins = get_active_plugins(
-            PluginScope.KUBERAY, default=[StandardKuberayWrapper]
+        plugins = get_plugins_with_interface(
+            AbstractKuberayWrapper,
+            PluginScope.EXTERNAL_RESOURCE,
+            default=[StandardKuberayWrapper],
         )
         if len(plugins) == 0:
             raise UnsupportedUsageError(
@@ -110,16 +104,11 @@ class RayCluster(AbstractExternalResource):
                 f"{AbstractKuberayWrapper.__name__} "
                 f"plugin active. Check your settings.yaml file."
             )
-        if not issubclass(plugins[0], AbstractKuberayWrapper):
-            raise UnsupportedUsageError(
-                f"Expected an implementation of '{AbstractKuberayWrapper.__name__}', "
-                f"but got: '{plugins[0].__name__}'."
-            )
         return plugins[0]
 
     @retry(exceptions=(ConnectionError,), tries=8, delay=1, backoff=2)
     def _do_ray_init(self) -> "RayCluster":
-        """Connect to Ray if not already connected"""
+        """Connect to Ray if not already connected."""
         if ray.is_initialized():
             return self
         try:
@@ -130,7 +119,13 @@ class RayCluster(AbstractExternalResource):
                 ray.init(log_to_driver=self.forward_logs)
         except ConnectionError:
             logger.error("Could not connect to Ray...")
-            ray.shutdown()
+            try:
+                ray.shutdown()
+            except Exception as e:
+                logger.exception(
+                    "Error disconnecting from Ray while handling connection error: %s",
+                    e,
+                )
             raise
 
         logger.info("Initialized connection to Ray for cluster resource %s", self.id)
@@ -194,7 +189,7 @@ class RayCluster(AbstractExternalResource):
         return self._request_cluster(kuberay_version, namespace)
 
     def _request_cluster(self, kuberay_version: str, namespace: str) -> "RayCluster":
-        """Request a new cluster from Kuberay"""
+        """Request a new cluster from Kuberay."""
         try:
             run_ids = get_run_ids_for_resource(self.id)
 
@@ -312,8 +307,11 @@ class RayCluster(AbstractExternalResource):
                     "and refer to Kuberay docs for troubleshooting: "
                     "https://ray-project.github.io/kuberay/"
                 )
-                logger.error("Kuberay is not healthy. Status: %s", api_response.status)
-                logger.error("Kuberay is not healthy. Message: %s", message)
+                logger.error(
+                    "Kuberay is not healthy. Status: %s. Message: %s",
+                    api_response.status,
+                    message,
+                )
                 return (None, message)
             for container in api_response.spec.template.spec.containers:  # type: ignore
                 if container.name == cls._kuberay_wrapper().KUBERAY_CONTAINER_NAME:
@@ -324,7 +322,7 @@ class RayCluster(AbstractExternalResource):
                 message = (
                     "Kuberay does not appear to be installed in your Kubernetes "
                     "cluster. Please ask your cluster administrator to install it "
-                    "before proceeding."
+                    "in order to proceed."
                 )
                 logger.error(message)
                 return None, message
@@ -509,7 +507,7 @@ class RayCluster(AbstractExternalResource):
 
 @ray.remote
 def _validation_task() -> int:
-    """Simple task just to confirm Ray is usable"""
+    """Simple task just to confirm Ray is usable."""
     return _VALIDATION_INT
 
 
@@ -518,6 +516,7 @@ def _validate_local_ray(cluster: RayCluster) -> Tuple[bool, Optional[str]]:
         cluster._do_ray_init()
     except Exception as e:
         return False, f"Could not call ray.init(): {e}"
+
     try:
         result = ray.get([_validation_task.remote()], timeout=30)[0]
     except GetTimeoutError as e:
@@ -528,8 +527,10 @@ def _validate_local_ray(cluster: RayCluster) -> Tuple[bool, Optional[str]]:
         message = f"Exception during Ray cluster validation: {e}"
         logger.exception(message)
         return False, message
+
     if result != _VALIDATION_INT:
         message = f"Unexpected result from validation task: '{result}'"
         logger.error(message)
         return False, message
+
     return True, None

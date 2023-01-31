@@ -35,9 +35,9 @@ class PluginScope(enum.Enum):
     # Server-side authentication plug-in scope
     AUTH = "AUTH"
 
-    # Plug-in scope for wrapping Kuberay
-    KUBERAY = "KUBERAY"
-    
+    # Plug-in scope for external resources
+    EXTERNAL_RESOURCE = "EXTERNAL_RESOURCE"
+
     # Event external publishing plug-in scope
     PUBLISH = "PUBLISH"
 
