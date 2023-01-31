@@ -12,8 +12,8 @@ import { Artifact } from "../Models";
 import { ArtifactList } from "./Artifacts";
 import LogPanel from "./LogPanel";
 import SourceCode from "../components/SourceCode";
-import DocumentationPanel from "./DocumentationPanel";
 import OutputPanel from "./OutputPanel";
+import ExternalResourcePanel from "./external_resource/ExternalResource";
 
 const StickyHeader = styled(Box)`
   position: sticky;
@@ -55,6 +55,7 @@ export default function RunTabs(props: {
             <Tab label="Source" value="source" />
             <Tab label="Logs" value="logs" />
             {grafanaTab}
+            <Tab label="Resources" value="ext_res" />
           </TabList>
         </StickyHeader>
         <TabPanel value="input">
@@ -62,9 +63,6 @@ export default function RunTabs(props: {
         </TabPanel>
         <TabPanel value="output" sx={{ pt: 5 }}>
           <OutputPanel outputArtifacts={artifacts.output} />
-        </TabPanel>
-        <TabPanel value="documentation">
-          <DocumentationPanel />
         </TabPanel>
         <TabPanel hidden={selectedRunTab !== "logs"} value="logs">
           <LogPanel />
@@ -74,6 +72,9 @@ export default function RunTabs(props: {
         </TabPanel>
         <TabPanel value="grafana">
           <GrafanaPanel />
+        </TabPanel>
+        <TabPanel hidden={selectedRunTab !== "ext_res"} value="ext_res">
+            <ExternalResourcePanel />
         </TabPanel>
       </TabContext>
     </>
