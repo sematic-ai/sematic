@@ -19,7 +19,7 @@ from sematic.plugins.storage.local_storage import LocalStorage
 logger = logging.getLogger(__name__)
 
 
-@sematic_api.route("/api/v1/uploads/<namespace>/<key>/location", methods=["GET"])
+@sematic_api.route("/api/v1/storage/<namespace>/<key>/location", methods=["GET"])
 @authenticate
 def get_upload_location(
     user: Optional[User], namespace: str, key: str
@@ -53,7 +53,7 @@ def get_upload_location(
     )
 
 
-@sematic_api.route("/api/v1/uploads/<namespace>/<key>/data", methods=["GET"])
+@sematic_api.route("/api/v1/storage/<namespace>/<key>/data", methods=["GET"])
 @authenticate
 def get_upload_data_endpoint(user: Optional[User], namespace: str, key: str):
     """

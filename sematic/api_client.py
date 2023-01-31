@@ -91,7 +91,7 @@ def _get_artifact(artifact_id: str) -> Artifact:
 
 @retry(tries=3, delay=10, jitter=1)
 def store_artifact_bytes(artifact_id: str, bytes_: bytes) -> None:
-    response = _get(f"/uploads/artifacts/{artifact_id}/location")
+    response = _get(f"/storage/artifacts/{artifact_id}/location")
 
     url: str = response["url"]
     headers: Dict[str, str] = response["request_headers"]
@@ -100,7 +100,7 @@ def store_artifact_bytes(artifact_id: str, bytes_: bytes) -> None:
 
 
 def _get_artifact_bytes(artifact_id: str) -> bytes:
-    return _get(f"/uploads/artifacts/{artifact_id}/data", decode_json=False)
+    return _get(f"/storage/artifacts/{artifact_id}/data", decode_json=False)
 
 
 def get_run(run_id: str) -> Run:

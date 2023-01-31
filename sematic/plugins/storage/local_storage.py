@@ -41,7 +41,7 @@ class LocalStorage(AbstractStorage, AbstractPlugin):
     ) -> StorageDestination:
 
         return StorageDestination(
-            url=f"{get_config().api_url}/uploads/{namespace}/{key}/local",
+            url=f"{get_config().api_url}/storage/{namespace}/{key}/local",
             request_headers=_make_headers(user),
         )
 
@@ -49,7 +49,7 @@ class LocalStorage(AbstractStorage, AbstractPlugin):
         self, namespace: str, key: str, user: Optional[User]
     ) -> StorageDestination:
         return StorageDestination(
-            url=f"{get_config().api_url}/uploads/{namespace}/{key}/local",
+            url=f"{get_config().api_url}/storage/{namespace}/{key}/local",
             request_headers=_make_headers(user),
         )
 
@@ -63,7 +63,7 @@ def _make_headers(user: Optional[User]) -> Dict[str, str]:
     return headers
 
 
-@sematic_api.route("/api/v1/uploads/<namespace>/<key>/local", methods=["PUT"])
+@sematic_api.route("/api/v1/storage/<namespace>/<key>/local", methods=["PUT"])
 @authenticate
 def upload_endpoint(user: Optional[User], namespace: str, key: str) -> flask.Response:
     # TODO: Validate that user has permissions to upload.
@@ -78,7 +78,7 @@ def upload_endpoint(user: Optional[User], namespace: str, key: str) -> flask.Res
     return flask.jsonify({})
 
 
-@sematic_api.route("/api/v1/uploads/<namespace>/<key>/local", methods=["GET"])
+@sematic_api.route("/api/v1/storage/<namespace>/<key>/local", methods=["GET"])
 @authenticate
 def download_endpoint(user: Optional[User], namespace: str, key: str) -> flask.Response:
     try:

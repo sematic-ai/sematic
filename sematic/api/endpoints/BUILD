@@ -83,6 +83,7 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         ":auth",
+        ":storage",
         ":request_parameters",
         "//sematic/api:app",
         "//sematic/db:db",
@@ -170,8 +171,8 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "uploads",
-    srcs = ["uploads.py"],
+    name = "storage",
+    srcs = ["storage.py"],
     pip_deps = [
         "flask",
     ],
