@@ -35,6 +35,7 @@ from sematic.db.queries import (
     save_graph,
     save_resolution,
 )
+from sematic.plugins.abstract_publisher import get_publishing_plugins
 from sematic.scheduling.job_scheduler import schedule_resolution
 from sematic.scheduling.kubernetes import cancel_job
 
@@ -131,6 +132,7 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
         return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
 
     save_resolution(resolution)
+    _publish_resolution_event(resolution)
 
     return flask.jsonify({})
 
@@ -274,3 +276,18 @@ def get_resources_endpoint(user: Optional[User], resolution_id: str) -> flask.Re
         external_resources=[resource.to_json_encodable() for resource in resources]
     )
     return flask.jsonify(payload)
+
+
+def _publish_resolution_event(resolution: Resolution) -> None:
+    """
+    Publishes information about the Resolution state change event to all configured
+    external publishers, if any.
+    """
+    publisher_classes = get_publishing_plugins(default=[])
+    if len(publisher_classes) == 0:
+        logger.debug("No external Resolution event publishers configured")
+
+    for publisher_class in publisher_classes:
+        # TODO: components such as these should be instantiated once at startup and made
+        #  available as a server-internal first-class citizen component API
+        publisher_class().publish(resolution)
