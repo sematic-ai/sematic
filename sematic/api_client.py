@@ -83,7 +83,7 @@ def _get_artifact(artifact_id: str) -> Artifact:
     """
     Retrieve and deserialize artifact.
     """
-    response = _get("/artifacts/{}".format(artifact_id))
+    response = _get(f"/artifacts/{artifact_id}")
 
     return Artifact.from_json_encodable(response["content"])
 
@@ -107,7 +107,7 @@ def get_run(run_id: str) -> Run:
     """
     Get run
     """
-    response = _get("/runs/{}".format(run_id))
+    response = _get(f"/runs/{run_id}")
 
     return Run.from_json_encodable(response["content"])
 
@@ -202,7 +202,7 @@ def get_resolution(root_id: str) -> Resolution:
     """
     Get resolution
     """
-    response = _get("/resolutions/{}".format(root_id))
+    response = _get(f"/resolutions/{root_id}")
 
     return Resolution.from_json_encodable(response["content"])
 
@@ -382,9 +382,7 @@ def notify_graph_update(run_id: str):
 
 
 def _notify_event(namespace: str, event: str, payload: Any = None):
-    # we sent socket.io notifications to a dedicated endpoint, if it is configured
-    endpoint = f"{get_config().socket_io_url}/events/{namespace}/{event}"
-    _post(endpoint, payload)
+    _post("/events/{}/{}".format(namespace, event), payload)
 
 
 @retry(
@@ -563,10 +561,11 @@ def _request(
     except ConnectionError:
         raise APIConnectionError(
             (
-                "Unable to connect to the Sematic API at {}.\n"
-                "Make sure the correct server address is set with\n"
-                "\t$ sematic settings set {} <address>"
-            ).format(get_config().server_url, UserSettingsVar.SEMATIC_API_ADDRESS.value)
+                f"Unable to connect to the Sematic API at {get_config().server_url}.\n"
+                f"Make sure the correct server address is set with\n"
+                f"\t$ sematic settings set {UserSettingsVar.SEMATIC_API_ADDRESS.value} "
+                f"<address>"
+            )
         )
 
     if (
@@ -628,10 +627,10 @@ def _raise_for_response(
 
 
 def _url(endpoint: str) -> str:
-    # if the full url is specified, use it
-    if endpoint.startswith("http://") or endpoint.startswith("https://"):
-        return endpoint
-    # if only a path is specified, compose the full url using the server api address
+    # we send socket.io notifications to a dedicated endpoint/instance
+    if endpoint.startswith("/events/"):
+        return f"{get_config().socket_io_url}{endpoint}"
+
     return f"{get_config().api_url}{endpoint}"
 
 

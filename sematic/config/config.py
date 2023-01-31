@@ -99,7 +99,7 @@ class Config:
     migrations_dir: str = _get_migrations_dir()
     base_dir: str = _get_base_dir()
     examples_dir: str = _get_examples_dir()
-    project_template_dir: str = "{}/template".format(_get_examples_dir())
+    project_template_dir: str = f"{_get_examples_dir()}/template"
     data_dir: str = _get_data_dir()
     server_log_to_stdout: bool = False
     _wsgi_workers_count: int = 1
@@ -108,18 +108,18 @@ class Config:
     def server_url(self) -> str:
         if self.server_url_is_set_via_env_vars():
             return self.server_url_from_env_vars()
-        return "http://{}:{}".format(self.server_address, self.port)
+        return f"http://{self.server_address}:{self.port}"
 
     @property
     def api_url(self) -> str:
-        return urljoin(self.server_url, "api/v{}".format(self.api_version))
+        return urljoin(self.server_url, f"api/v{self.api_version}")
 
     @property
     def socket_io_url(self) -> str:
         socket_io_base_address = os.environ.get(
             SEMATIC_SOCKET_IO_ADDRESS, self.server_url
         )
-        return urljoin(socket_io_base_address, "api/v{}".format(self.api_version))
+        return urljoin(socket_io_base_address, f"api/v{self.api_version}")
 
     @property
     def server_pid_file_path(self) -> str:
@@ -152,7 +152,7 @@ class Config:
         ):
             return server_address
         port = os.environ.get("PORT", 80)
-        return "http://{}:{}".format(server_address, port)
+        return f"http://{server_address}:{port}"
 
 
 _SQLITE_FILE = "db.sqlite3"
@@ -166,7 +166,7 @@ _LOCAL_CONFIG = Config(
     port=int(os.environ.get("PORT", 5001)),
     api_version=1,
     db_url=os.environ.get(
-        "DATABASE_URL", "sqlite:///{}/{}".format(get_config_dir(), _SQLITE_FILE)
+        "DATABASE_URL", f"sqlite:///{get_config_dir()}/{_SQLITE_FILE}"
     ),
     server_log_to_stdout=False,
 )
@@ -192,7 +192,7 @@ class UserOverrideConfig(Config):
         try:
             return get_user_setting(UserSettingsVar.SEMATIC_API_ADDRESS)
         except MissingSettingsError:
-            return "http://{}:{}".format(self.server_address, self.port)
+            return f"http://{self.server_address}:{self.port}"
 
 
 _USER_OVERRIDE_CONFIG = UserOverrideConfig(**asdict(_LOCAL_CONFIG))
@@ -212,14 +212,11 @@ def switch_env(env: str) -> None:
     Switch environment.
     """
     if env not in EnvironmentConfigurations.__members__:
-        raise ValueError(
-            "Unknown env {}, expecting one of {}".format(
-                repr(env), tuple(EnvironmentConfigurations.__members__.keys())
-            )
-        )
+        members = tuple(EnvironmentConfigurations.__members__.keys())
+        raise ValueError(f"Unknown env {repr(env)}, expecting one of {members}")
 
     set_config(EnvironmentConfigurations[env].value)
-    logger.info("Switch to env {} whose config is {}".format(env, get_config()))
+    logger.info("Switch to env %s whose config is %s", env, get_config())
 
     # TODO #302: implement sustainable way to upgrade sqlite3 DBs
     if _active_config.db_url.startswith("sqlite"):
