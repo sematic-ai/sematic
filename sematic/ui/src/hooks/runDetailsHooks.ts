@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import RunPanelContext from "../pipelines/RunDetailsContext";
 
 export function useRunPanelContext() {
@@ -9,4 +9,15 @@ export function useRunPanelContext() {
     }
 
     return contextValue;
+}
+
+export function useRunPanelLoadingIndicator(isLoading: boolean) {
+    const { setIsLoading } = useRunPanelContext();
+
+    useEffect(() => {
+        setIsLoading(isLoading);
+        return () => {
+            setIsLoading(false);
+        }
+    }, [setIsLoading, isLoading]);
 }
