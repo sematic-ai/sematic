@@ -13,9 +13,8 @@ from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import API_KEY_HEADER, authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.config.config import get_config
-from sematic.config.server_settings import get_api_address
 from sematic.db.models.user import User
-from sematic.plugins.abstract_storage import AbstractStorage, Location
+from sematic.plugins.abstract_storage import AbstractStorage, StorageDestination
 
 logger = logging.getLogger(__name__)
 
@@ -37,21 +36,21 @@ class LocalStorage(AbstractStorage, AbstractPlugin):
     def get_version() -> PluginVersion:
         return _PLUGIN_VERSION
 
-    def get_write_location(
+    def get_write_destination(
         self, namespace: str, key: str, user: Optional[User]
-    ) -> Location:
+    ) -> StorageDestination:
 
-        return Location(
-            location=f"{get_api_address()}/api/v1/uploads/{namespace}/{key}/local",
-            headers=_make_headers(user),
+        return StorageDestination(
+            url=f"{get_config().api_url}/uploads/{namespace}/{key}/local",
+            request_headers=_make_headers(user),
         )
 
-    def get_read_location(
+    def get_read_destination(
         self, namespace: str, key: str, user: Optional[User]
-    ) -> Location:
-        return Location(
-            location=f"{get_api_address()}/api/v1/uploads/{namespace}/{key}/local",
-            headers=_make_headers(user),
+    ) -> StorageDestination:
+        return StorageDestination(
+            url=f"{get_config().api_url}/uploads/{namespace}/{key}/local",
+            request_headers=_make_headers(user),
         )
 
 

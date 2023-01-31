@@ -93,10 +93,10 @@ def _get_artifact(artifact_id: str) -> Artifact:
 def store_artifact_bytes(artifact_id: str, bytes_: bytes) -> None:
     response = _get(f"/uploads/artifacts/{artifact_id}/location")
 
-    location: str = response["location"]
-    headers: Dict[str, str] = response["headers"]
+    url: str = response["url"]
+    headers: Dict[str, str] = response["request_headers"]
 
-    requests.put(location, data=bytes_, headers=headers)
+    requests.put(url, data=bytes_, headers=headers)
 
 
 def _get_artifact_bytes(artifact_id: str) -> bytes:

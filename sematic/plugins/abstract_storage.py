@@ -8,9 +8,9 @@ from sematic.db.models.user import User
 
 
 @dataclass
-class Location:
-    location: str
-    headers: Dict[str, str] = field(default_factory=dict)
+class StorageDestination:
+    url: str
+    request_headers: Dict[str, str] = field(default_factory=dict)
 
 
 class AbstractStorage(abc.ABC):
@@ -19,9 +19,9 @@ class AbstractStorage(abc.ABC):
     """
 
     @abc.abstractmethod
-    def get_write_location(
+    def get_write_destination(
         self, namespace: str, key: str, user: Optional[User]
-    ) -> Location:
+    ) -> StorageDestination:
         """
         Gets write location for namespace/key.
 
@@ -32,9 +32,9 @@ class AbstractStorage(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_read_location(
+    def get_read_destination(
         self, namespace: str, key: str, user: Optional[User]
-    ) -> Location:
+    ) -> StorageDestination:
         """
         Get a read payload for namespace/key.
 

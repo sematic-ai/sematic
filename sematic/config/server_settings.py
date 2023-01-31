@@ -78,15 +78,3 @@ def get_bool_server_setting(var: ServerSettingsVar, *args) -> bool:
     on the first optional vararg as a default value. If that does not exist, it raises.
     """
     return as_bool(get_server_setting(var, *args))
-
-
-# TODO: use this in config.py
-def get_api_address() -> str:
-    server_settings = get_active_server_settings()
-
-    return server_settings.get(
-        ServerSettingsVar.SEMATIC_WORKER_API_ADDRESS,
-        server_settings.get(
-            ServerSettingsVar.SEMATIC_API_ADDRESS, "http://127.0.0.1:5001"
-        ),
-    )
