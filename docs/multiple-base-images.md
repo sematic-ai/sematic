@@ -27,7 +27,7 @@ them:
   damage this workflow.
 - If you have a step which is really lightweight, there's a better option than having
   a small new container: _no_ new container. This is a great case for inline functions.
-  See the [execution mode docs](https://docs.sematic.dev/execution-modes) for more.
+  See the [CloudResolver docs](cloud-resolver.md#when-to-use-inline) for more.
 
 ### Multiple images if you must
 
@@ -85,4 +85,3 @@ Notes:
   passed can be specified either by setting the `base` argument like in the
   single image case above, or setting an image target with the `"default"` key
   to `bases`.
-

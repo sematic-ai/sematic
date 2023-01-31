@@ -16,6 +16,7 @@
 * [The Dashboard](sematic-ui.md)
 * [Future algebra](future-algebra.md)
 * [Artifacts](artifacts.md)
+* [Advanced features](advanced-features.md)
 * [Glossary](glossary.md)
 
 ## Cloud execution

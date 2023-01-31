@@ -151,12 +151,12 @@ Since they are Python functions, your imagination is the limit. Some examples of
 
 ## Execution status
 
-The execution status of Sematic Functions is tracked and visualizable in the UI. There are 4 statuses:
+The execution status of Sematic Functions is tracked and visualizable in the Dashboard. There are 4 statuses:
 
 * **Pending** – The function is waiting for upstream functions to complete
 * **Running** – The function or some of its nested functions are currently executing
 * **Succeeded** – The function has completed and has a concrete output (not a future), you can view it in the UI
-* **Failed** – The function has failed. The exception can be inspected in the UI (coming soon).
+* **Failed** – The function has failed. The exception can be inspected in the Dashboard logs tab.
 
 ## Artifact tracking
 

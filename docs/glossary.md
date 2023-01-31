@@ -99,6 +99,10 @@ Different resolvers offer different resolution strategies:
   cluster. This can be used to leverage step-dependent cloud resources (e.g.
   GPUs, high-memory VMs, etc.). See [Cloud resolver](./cloud-resolver.md).
 
+## Resolution
+
+A Resolution is one specific execution of a pipeline.
+
 ## Root, entry-point function
 
 The root Sematic Function is the one on which you call `.resolve()`. It is the
