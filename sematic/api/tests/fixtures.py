@@ -58,7 +58,7 @@ def test_client(test_db):  # noqa: F811
 def mock_requests(test_client):
     # This mock will place calls to an in-memory server, local configurations
     # are the appropriate match.
-    switch_env("local")
+    switch_env("test")
 
     def _request_callback(request):
         environ_builder = werkzeug.test.EnvironBuilder(
