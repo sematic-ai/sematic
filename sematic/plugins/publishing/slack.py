@@ -27,7 +27,7 @@ _PLUGIN_VERSION = (0, 1, 0)
 _SLACK_TOKEN_PATTERN = "[a-zA-Z0-9]+/[a-zA-Z0-9]+/[a-zA-Z0-9]+"
 _SLACK_HEADERS = {"Content-Type": "application/json"}
 _SLACK_URL_TEMPLATE = "https://hooks.slack.com/services/{webhook_token}"
-# TODO: implement server-side gnostic components that build urls that point to specific
+# TODO: implement server-side dedicated components that build urls that point to specific
 #  resources - e.g. have resolutions.py build this url for us
 # currently, this needs to be updated here whenever the endpoints change
 _RESOLUTION_URL_TEMPLATE = (
@@ -63,7 +63,7 @@ class SlackPublisher(AbstractPublisher, AbstractPlugin):
 
         # validate that this conforms to an expected token structure
         # we want to avoid spamming the slack backend service with incorrect calls,
-        # or we might get blacklisted
+        # or we might get blocked
         # TODO: one of the advantages of having a long-lived plugin instance is that
         #  validation can be done on initialization, then all publication calls ignored
         #  in case this failed, instead of spamming with stack traces
@@ -83,7 +83,7 @@ class SlackPublisher(AbstractPublisher, AbstractPlugin):
         external_url = get_server_setting(ServerSettingsVar.SEMATIC_DASHBOARD_URL)
         root_run = get_run(run_id=resolution.root_id)
 
-        # TODO: in the future we might either have a gnostic server-side component build
+        # TODO: in the future we might either have a url-aware server-side component build
         #  this url for us (e.g. have resolutions.py build a path to the specific
         #  resolution panel), or have a url which only contains the resolution root id
         #  redirect to the full url path
