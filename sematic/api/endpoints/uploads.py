@@ -1,5 +1,5 @@
 # Standard Library
-from dataclasses import asdict
+import logging
 from http import HTTPStatus
 from typing import Optional, Type, cast
 
@@ -16,6 +16,8 @@ from sematic.db.models.user import User
 from sematic.plugins.abstract_storage import AbstractStorage
 from sematic.plugins.storage.local_storage import LocalStorage
 
+logger = logging.getLogger(__name__)
+
 
 @sematic_api.route("/api/v1/uploads/<namespace>/<key>/location", methods=["GET"])
 @authenticate
@@ -26,50 +28,54 @@ def get_upload_location(
     Get the URL to which to PUT the payload to store.
     """
     try:
-        storage_plugin = _get_storage_plugin()
-    except MissingStoragePluginError:
+        storage_plugin = get_storage_plugin()
+    except Exception as e:
+        logger.error(e)
+
         return jsonify_error(
             "Incorrect storage plugin scope", HTTPStatus.INTERNAL_SERVER_ERROR
         )
 
-    location = storage_plugin().get_write_location(namespace, key, user)
+    destination = storage_plugin().get_write_destination(namespace, key, user)
 
-    return flask.jsonify(asdict(location))
+    return flask.jsonify(
+        dict(
+            url=destination.url,
+            request_headers=destination.request_headers,
+        )
+    )
 
 
 @sematic_api.route("/api/v1/uploads/<namespace>/<key>/data", methods=["GET"])
 @authenticate
-def get_upload_data(user: Optional[User], namespace: str, key: str):
+def get_upload_data_endpoint(user: Optional[User], namespace: str, key: str):
     """
     Redirect to the location of the stored payload.
     """
+    return get_upload_data(user, namespace, key)
+
+
+def get_upload_data(user: Optional[User], namespace: str, key: str):
     try:
-        storage_plugin = _get_storage_plugin()
-    except MissingStoragePluginError:
+        storage_plugin = get_storage_plugin()
+    except Exception as e:
+        logger.error(e)
+
         return jsonify_error(
             "Incorrect storage plugin scope", HTTPStatus.INTERNAL_SERVER_ERROR
         )
 
-    location = storage_plugin().get_read_location(namespace, key, user)
+    destination = storage_plugin().get_read_destination(namespace, key, user)
 
-    response = flask.redirect(location.location, code=HTTPStatus.FOUND)
+    response = flask.redirect(destination.url, code=HTTPStatus.FOUND)
 
-    for key, value in location.headers.items():
+    for key, value in destination.request_headers.items():
         response.headers.set(key, value)
 
     return response
 
 
-class MissingStoragePluginError(Exception):
-    pass
-
-
-def _get_storage_plugin() -> Type[AbstractStorage]:
-    try:
-        storage_plugin = get_active_plugins(
-            PluginScope.STORAGE, default=[LocalStorage]
-        )[0]
-    except IndexError:
-        raise MissingStoragePluginError()
+def get_storage_plugin() -> Type[AbstractStorage]:
+    storage_plugin = get_active_plugins(PluginScope.STORAGE, default=[LocalStorage])[0]
 
     return cast(Type[AbstractStorage], storage_plugin)

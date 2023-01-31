@@ -38,10 +38,6 @@ _MANDATORY_SYSTEM_PLUGIN_PATHS = [
     "sematic.config.user_settings.UserSettings",
 ]
 
-_DEFAULT_SCOPES = {
-    PluginScope.STORAGE: ["sematic.plugins.storage.local_storage.LocalStorage"]
-}
-
 
 @dataclass
 class ProfileSettings:
@@ -211,10 +207,8 @@ def import_plugins() -> None:
     """
     scopes = get_active_settings().scopes
 
-    for scope in PluginScope:
-        plugin_paths = scopes.get(scope, _DEFAULT_SCOPES.get(scope, []))
-
-        for plugin_path in plugin_paths:
+    for selected_plugins in scopes.values():
+        for plugin_path in selected_plugins:
             import_plugin(plugin_path)
 
 

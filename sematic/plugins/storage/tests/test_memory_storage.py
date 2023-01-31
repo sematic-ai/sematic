@@ -15,14 +15,14 @@ def test_upload(
 
     memory_storage = MemoryStorage()
 
-    location = memory_storage.get_write_location("artifacts", "123", None)
+    destination = memory_storage.get_write_destination("artifacts", "123", None)
 
-    response = test_client.put(location.location, data=value)
+    response = test_client.put(destination.url, data=value)
 
     assert response.status_code == 200
 
-    read_location = memory_storage.get_read_location("artifacts", "123", None)
+    destination = memory_storage.get_read_destination("artifacts", "123", None)
 
-    response = test_client.get(read_location.location)
+    response = test_client.get(destination.url)
 
     assert response.data == value

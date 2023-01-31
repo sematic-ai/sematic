@@ -13,8 +13,8 @@ from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.db.models.user import User
 from sematic.plugins.abstract_storage import (
     AbstractStorage,
-    Location,
     NoSuchStorageKeyError,
+    StorageDestination,
 )
 
 _PLUGIN_VERSION = (0, 2, 0)
@@ -49,20 +49,20 @@ class MemoryStorage(AbstractStorage, AbstractPlugin):
     def set(cls, key: str, value: bytes):
         cls._store[key] = value
 
-    def get_write_location(
+    def get_write_destination(
         self, namespace: str, key: str, user: Optional[User]
-    ) -> Location:
-        return Location(
-            location=f"http://localhost:5001/api/v1/uploads/{namespace}/{key}/memory",
-            headers=_make_headers(user),
+    ) -> StorageDestination:
+        return StorageDestination(
+            url=f"http://localhost:5001/api/v1/uploads/{namespace}/{key}/memory",
+            request_headers=_make_headers(user),
         )
 
-    def get_read_location(
+    def get_read_destination(
         self, namespace: str, key: str, user: Optional[User]
-    ) -> Location:
-        return Location(
-            location=f"http://localhost:5001/api/v1/uploads/{namespace}/{key}/memory",
-            headers=_make_headers(user),
+    ) -> StorageDestination:
+        return StorageDestination(
+            url=f"http://localhost:5001/api/v1/uploads/{namespace}/{key}/memory",
+            request_headers=_make_headers(user),
         )
 
 

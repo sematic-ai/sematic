@@ -14,7 +14,7 @@ from sematic.abstract_plugin import (
     PluginVersion,
 )
 from sematic.config.settings import get_plugin_setting
-from sematic.plugins.abstract_storage import AbstractStorage, Location
+from sematic.plugins.abstract_storage import AbstractStorage, StorageDestination
 from sematic.utils.memoized_property import memoized_property
 from sematic.utils.retry import retry
 
@@ -70,14 +70,14 @@ class S3Storage(AbstractStorage, AbstractPlugin):
 
         return presigned_url
 
-    def get_write_location(self, namespace: str, key: str, _) -> Location:
-        return Location(
-            location=self._make_presigned_url(S3ClientMethod.PUT, f"{namespace}/{key}")
+    def get_write_destination(self, namespace: str, key: str, _) -> StorageDestination:
+        return StorageDestination(
+            url=self._make_presigned_url(S3ClientMethod.PUT, f"{namespace}/{key}")
         )
 
-    def get_read_location(self, namespace: str, key: str, _) -> Location:
-        return Location(
-            location=self._make_presigned_url(S3ClientMethod.GET, f"{namespace}/{key}")
+    def get_read_destination(self, namespace: str, key: str, _) -> StorageDestination:
+        return StorageDestination(
+            url=self._make_presigned_url(S3ClientMethod.GET, f"{namespace}/{key}")
         )
 
     def set_from_file(self, key: str, value_file_path: str):
