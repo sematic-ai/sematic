@@ -21,4 +21,7 @@ pytest_test(
     deps = [
         "//sematic/ee/plugins/external_resource/ray:spark_cluster",
     ],
+    data=[
+        "//:sitecustomize.py",
+    ]
 )

@@ -2,11 +2,12 @@ from dataclasses import replace, dataclass
 from subprocess import Popen
 import os
 
-# try:
-#     import raydp
-#     import pyspark
-# except ImportError as e:
-#     raise ImportError("To use RaySparkCluster you must depend on raydp and pyspark") from e
+try:
+    import raydp
+    import pyspark
+    import ray
+except ImportError as e:
+    raise ImportError("To use RaySparkCluster you must depend on raydp and pyspark") from e
 
 from sematic.ee.plugins.external_resource.ray.cluster import RayCluster
 
