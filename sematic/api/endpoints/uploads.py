@@ -26,6 +26,13 @@ def get_upload_location(
 ) -> flask.Response:
     """
     Get the URL to which to PUT the payload to store.
+
+    Response
+    --------
+    url: str
+        URL to PUT to to store a binary payload.
+    request_headers: Dict[str, str]
+        Headers to set on the PUT request.
     """
     try:
         storage_plugin = get_storage_plugin()
@@ -51,6 +58,10 @@ def get_upload_location(
 def get_upload_data_endpoint(user: Optional[User], namespace: str, key: str):
     """
     Redirect to the location of the stored payload.
+
+    Response
+    --------
+    A redirection to the actual binary payload.
     """
     return get_upload_data(user, namespace, key)
 
