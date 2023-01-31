@@ -37,6 +37,9 @@ class PluginScope(enum.Enum):
 
     # Plug-in scope for wrapping Kuberay
     KUBERAY = "KUBERAY"
+    
+    # Event external publishing plug-in scope
+    PUBLISH = "PUBLISH"
 
 
 class AbstractPluginSettingsVar(enum.Enum):

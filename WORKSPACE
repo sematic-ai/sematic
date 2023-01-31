@@ -119,9 +119,9 @@ install_deps39()
 # approach from https://blog.aspect.dev/many-python-versions-one-bazel-build
 http_archive(
     name = "aspect_bazel_lib",
-    sha256 = "33332c0cd7b5238b5162b5177da7f45a05641f342cf6d04080b9775233900acf",
-    strip_prefix = "bazel-lib-1.10.0",
-    url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.10.0.tar.gz",
+    sha256 = "79623d656aa23ad3fd4692ab99786c613cd36e49f5566469ed97bc9b4c655f03",
+    strip_prefix = "bazel-lib-1.23.3",
+    url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.23.3.tar.gz",
 )
 
 ## DOCKER RULES

@@ -82,6 +82,7 @@ pytest_test(
         "//sematic:abstract_future",
         "//sematic:api_client",
         "//sematic:calculator",
+        "//sematic/config/tests:fixtures",
         "//sematic/config:user_settings",
         "//sematic:future_context",
         "//sematic/api/tests:fixtures",

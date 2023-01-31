@@ -152,6 +152,7 @@ sematic_py_lib(
         ":cli",
         "//sematic/config:server_settings",
         "//sematic/config:user_settings",
+        "//sematic/plugins/publishing:slack",
     ],
 )
 
