@@ -91,6 +91,7 @@ sematic_py_lib(
         "//sematic/db:queries",
         "//sematic/db/models:artifact",
         "//sematic/db/models:user",
+        "//sematic/plugins:abstract_publisher",
         "//sematic/plugins:abstract_storage",
         "//sematic/plugins/storage:local_storage",
     ],
