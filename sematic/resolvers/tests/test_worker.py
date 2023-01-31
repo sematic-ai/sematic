@@ -20,6 +20,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
 )
 from sematic.calculator import func
+from sematic.config.tests.fixtures import mock_settings
 from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact, make_run_from_future
@@ -262,10 +263,11 @@ def test_wrap_main_with_logging(mock_main, mock_ingested_logs, mock_parse_args):
     logs_from_main = "Hello from main"
     mock_main.side_effect = lambda *args, **kwargs: print(logs_from_main)
 
-    with environment_variables(
-        {UserSettingsVar.SEMATIC_LOG_INGESTION_MODE.value: "off"}
-    ):
-        wrap_main_with_logging()
+    with mock_settings(None):
+        with environment_variables(
+            {UserSettingsVar.SEMATIC_LOG_INGESTION_MODE.value: "off"}
+        ):
+            wrap_main_with_logging()
     assert logs_from_main not in mock_ingestor.logs
 
     # Check the message about ingestion being disabled
@@ -275,5 +277,6 @@ def test_wrap_main_with_logging(mock_main, mock_ingested_logs, mock_parse_args):
         for line in mock_ingestor.logs
     )
 
-    wrap_main_with_logging()
+    with mock_settings(None):
+        wrap_main_with_logging()
     assert logs_from_main in mock_ingestor.logs

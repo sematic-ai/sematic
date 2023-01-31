@@ -35,6 +35,8 @@ sematic_py_lib(
         "//sematic/config:config",
         "//sematic/config:server_settings",
         "//sematic/plugins/storage:local_storage",
+        "//sematic/plugins:abstract_publisher",
+        "//sematic/plugins/publishing:slack",
     ],
 )
 

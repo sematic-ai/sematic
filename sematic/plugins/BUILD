@@ -20,4 +20,14 @@ sematic_py_lib(
     deps = [
         "//sematic/db/models:user",
     ],
+        "//sematic:abstract_plugin",
+        "//sematic/config:settings",
+        "//sematic/utils:exceptions",
+    ],
+)
+
+sematic_py_lib(
+    name = "abstract_publisher",
+    srcs = ["abstract_publisher.py"],
+    deps = [],
 )
