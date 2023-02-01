@@ -7,7 +7,7 @@ metadata:
 rules:
 - apiGroups: ["batch"]
   resources: ["jobs"]
-  verbs: ["get", "watch", "list", "create"]
+  verbs: ["get", "watch", "list", "create", "delete"]
 - apiGroups: ["batch"]
   resources: ["jobs/status"]
   verbs: ["get", "watch", "list"]

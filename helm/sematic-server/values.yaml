@@ -10,7 +10,6 @@ aws:
 slack:
   enabled: true
   slack_webhook_token: XXX/YYY/ZZZ # REPLACE ME
-  dashboard_url: https://my.sematic # REPLACE ME
 
 secret:
   create: true
@@ -99,6 +98,7 @@ service:
 
 ingress:
   create: false
+  dashboard_url: https://my.sematic # REPLACE ME
   class_name: ""
   annotations: {}
     # kubernetes.io/ingress.class: nginx
