@@ -382,9 +382,7 @@ def notify_graph_update(run_id: str):
 
 
 def _notify_event(namespace: str, event: str, payload: Any = None):
-    # we sent socket.io notifications to a dedicated endpoint, if it is configured
-    endpoint = f"{get_config().socket_io_url}/events/{namespace}/{event}"
-    _post(endpoint, payload)
+    _post("/events/{}/{}".format(namespace, event), payload)
 
 
 @retry(
@@ -629,10 +627,10 @@ def _raise_for_response(
 
 
 def _url(endpoint: str) -> str:
-    # if the full url is specified, use it
-    if endpoint.startswith("http://") or endpoint.startswith("https://"):
-        return endpoint
-    # if only a path is specified, compose the full url using the server api address
+    # we send socket.io notifications to a dedicated endpoint/instance
+    if endpoint.startswith("/events/"):
+        return f"{get_config().socket_io_url}{endpoint}"
+
     return f"{get_config().api_url}{endpoint}"
 
 
