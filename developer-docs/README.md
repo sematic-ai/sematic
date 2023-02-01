@@ -71,7 +71,7 @@ access to the PyPi repo, which is limited to employees of Sematic.
 
 We cut releases from the `main` branch, following these steps:
 
-- Bump the version in `wheel_version.bzl`, `sematic/versions.py`,
+- Bump the version in `wheel_constants.bzl`, `sematic/versions.py`,
   and `helm/sematic-server/Chart.yaml`
 - Increment the minor version of the `version` field in
   `helm/sematic-server/Chart.yaml`. Note that this will be DIFFERENT
