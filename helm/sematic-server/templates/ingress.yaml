@@ -45,6 +45,15 @@ spec:
                 name: {{ $socketioServiceName }}
                 port:
                   number: {{ $servicePort }}
+          - path: {{ printf "%s/api/v1/events" (.path | trimSuffix "/") }}
+            {{- if .pathType }}
+            pathType: {{ .pathType }}
+            {{- end }}
+            backend:
+              service:
+                name: {{ $socketioServiceName }}
+                port:
+                  number: {{ $servicePort }}
           {{- end }}
           {{- end }}
     {{- end }}

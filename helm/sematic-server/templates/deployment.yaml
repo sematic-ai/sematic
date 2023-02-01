@@ -1,11 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  {{- if .Values.deployment.socket_io.dedicated }}
-  name: {{ .Release.Name }}-api
-  {{- else }}
   name: {{ .Release.Name }}
-  {{- end }}
   labels:
     {{- include "sematic-server.labels" . | nindent 4 }}
     {{- if .Values.deployment.socket_io.dedicated }}

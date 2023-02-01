@@ -72,7 +72,7 @@ deployment:
 
 image:
   repository: sematicai/sematic-server
-  #tag: vX.XX.X
+  tag: "1675295243"
   pull_policy: IfNotPresent
   #pull_secrets: []
 

@@ -7,9 +7,7 @@ metadata:
     {{- include "sematic-server.labels" . | nindent 4 }}
     app.kubernetes.io/component: socket_io
 spec:
-  {{- if not .Values.deployment.autoscaling.enabled }}
-  replicas: {{ .Values.deployment.replica_count }}
-  {{- end }}
+  replicas: 1
   selector:
     matchLabels:
       {{- include "sematic-server.selectorLabels" . | nindent 6 }}
