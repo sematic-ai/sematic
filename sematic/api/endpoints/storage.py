@@ -17,7 +17,8 @@ from sematic.plugins.abstract_storage import AbstractStorage
 from sematic.plugins.storage.local_storage import LocalStorage
 
 logger = logging.getLogger(__name__)
-
+# Other endpoints under the /api/v1/storage path may be added by individual
+# storage plugins (e.g. /api/v1/storage/<namespace>/<key>/memory by memory_storage)
 
 @sematic_api.route("/api/v1/storage/<namespace>/<key>/location", methods=["GET"])
 @authenticate
