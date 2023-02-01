@@ -36,7 +36,7 @@ spec:
                 port:
                   number: {{ $servicePort }}
           {{- if $.Values.deployment.socket_io.dedicated }}
-          - path: {{ printf "%s/socket.io" .path | replace "//" "/" }}
+          - path: {{ printf "%s/socket.io" (.path | trimSuffix "/") }}
             {{- if .pathType }}
             pathType: {{ .pathType }}
             {{- end }}
