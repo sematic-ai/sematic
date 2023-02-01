@@ -18,6 +18,10 @@ database:
   url: postgres://postgresql:5432/postgres # REPLACE ME
 
 deployment:
+  socket_io:
+    dedicated: false
+    worker_count: 1
+    address: https://my.sematic/socket/io/path # REPLACE ME
   replica_count: 1
   affinity: {}
   annotations: {}
