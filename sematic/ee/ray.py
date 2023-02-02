@@ -7,14 +7,10 @@ try:
         RayCluster,
     )
     from sematic.plugins.abstract_kuberay_wrapper import (  # noqa: F401,E402
-        SimpleRayCluster,
-    )
-    from sematic.plugins.abstract_kuberay_wrapper import (  # noqa: F401,E402
         RayClusterConfig,
         RayNodeConfig,
-    )
-    from sematic.plugins.abstract_kuberay_wrapper import (  # noqa: F401,E402
-        ScalingGroup as RayScalingGroup,
+        ScalingGroup,
+        SimpleRayCluster,
     )
 except ImportError:
     raise ImportError(
