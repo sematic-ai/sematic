@@ -34,7 +34,9 @@ data:
   RAY_SUPPORTS_GPUS: {{ toJson .Values.ray.supports_gpus | quote }}
 {{ end }}
   # Each configurable external resource can be added as an element
-  # in this string list
+  # in this string list. Leading comma ensures the string is
+  # interpreted as such even when no external resource plugins are
+  # acticvated.
   EXTERNAL_RESOURCE: >
     ,
 {{ if .Values.ray.enabled }}
