@@ -87,7 +87,7 @@ ray:
   # The Kubernetes node selector that will be used for Ray nodes
   # that don't use GPUs.
   non_gpu_node_selector: {}
-  #gpu_node_selector: {"node.kubernetes.io/instance-type": "t3.large"}
+  #non_gpu_node_selector: {"node.kubernetes.io/instance-type": "t3.large"}
   
   # The Kubernetes tolerations that will be used for Ray nodes
   # that use GPUs.
@@ -112,7 +112,7 @@ ray:
   # head/worker nodes. If not specified, requests for more than one
   # GPU will be denied.
   gpu_resource_request_key: null
-  # gpu_resource_request_key: "nvidia.com/gpu"
+  #gpu_resource_request_key: "nvidia.com/gpu"
 
 rbac:
   create: true
