@@ -168,4 +168,4 @@ node_modules
 *.whl
 
 # Cypress Captured Video
-sematic/ui/cypress_video
+sematic/ui/tests/cypress_video
