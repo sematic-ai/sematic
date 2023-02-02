@@ -80,7 +80,7 @@ jobs:
             - .pyenv
             - project
 
-  build-and-lint:
+  lint:
     docker:
       - image: sematicai/sematic-ci:latest
     steps:
@@ -96,13 +96,19 @@ jobs:
           at: /home/circleci
       - non-coverage-tests
 
-  integration-test:
+  installation:
     docker:
       - image: sematicai/sematic-ci:latest
     steps:
       - attach_workspace:
           at: /home/circleci
       - installation-tests
+  
+  integration-test:
+    docker:
+      - image: sematicai/sematic-ci:latest
+    steps:
+      - run: echo "no op for now"
       
   finalize:
     docker:
@@ -118,17 +124,20 @@ workflows:
   sematic-test:
     jobs:
       - init
-      - build-and-lint:
+      - lint:
           requires:
             - init
       - unit-tests:
           requires:
             - init
-      - integration-test:
+      - installation:
           requires:
             - init
+      - integration-test:
+          requires:
+            - installation
       - finalize:
           requires:
-            - build-and-lint
+            - lint
             - unit-tests
             - integration-test
