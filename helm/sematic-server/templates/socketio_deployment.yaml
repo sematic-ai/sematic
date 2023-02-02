@@ -35,6 +35,9 @@ spec:
             {{- toYaml .Values.deployment.container_security_context | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pull_policy }}
+          env:
+          - name: SEMATIC_WSGI_WORKERS_COUNT
+            value: "1"
           envFrom:
           - configMapRef:
               name: {{ .Release.Name }}

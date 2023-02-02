@@ -50,7 +50,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pull_policy }}
           env:
           - name: SEMATIC_WSGI_WORKERS_COUNT
-            value: "{{ .Values.deployment.socket_io.worker_count }}"
+            value: "{{ .Values.deployment.worker_count }}"
           envFrom:
           - configMapRef:
               name: {{ .Release.Name }}
