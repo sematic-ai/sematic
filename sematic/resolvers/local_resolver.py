@@ -223,6 +223,8 @@ class LocalResolver(SilentResolver):
     def _resolution_will_start(self) -> None:
         self._sio_client.connect(get_config().socket_io_url, namespaces=["/pipeline"])
 
+        logger.error("## SIO connection_url: %", self._sio_client.connection_url)
+
         @self._sio_client.on("cancel", namespace="/pipeline")
         def _cancel(data):
             if data["resolution_id"] != self._root_future.id:
