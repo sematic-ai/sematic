@@ -1,6 +1,5 @@
 # Standard Library
 import json
-import logging
 from copy import deepcopy
 from typing import Any, Dict, Type
 
@@ -15,8 +14,6 @@ from sematic.plugins.abstract_kuberay_wrapper import (
     ScalingGroup,
 )
 from sematic.utils.exceptions import UnsupportedUsageError, UnsupportedVersionError
-
-logger = logging.getLogger(__name__)
 
 
 class StandardKuberaySettingsVar(AbstractPluginSettingsVar):
@@ -351,5 +348,4 @@ def _get_setting(setting, default):
     value = json.loads(get_plugin_setting(StandardKuberayWrapper, setting, "null"))
     if value is None:
         value = default
-    logger.info(f"Kuberay setting: {setting}: {value}")
     return value
