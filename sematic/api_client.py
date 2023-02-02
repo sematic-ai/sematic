@@ -375,7 +375,6 @@ def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
 
 
 def notify_pipeline_update(calculator_path: str):
-    logger.error("## notifying pipeline update", )
     _notify_event("pipeline", "update", {"calculator_path": calculator_path})
 
 
@@ -384,6 +383,12 @@ def notify_graph_update(run_id: str):
 
 
 def _notify_event(namespace: str, event: str, payload: Any = None):
+    logger.debug(
+        "Notifying update: namespace=%s; event=%s; payload=%s",
+        namespace,
+        event,
+        payload,
+    )
     _post("/events/{}/{}".format(namespace, event), payload)
 
 
@@ -406,7 +411,7 @@ def _get(endpoint: str, decode_json: bool = True) -> Any:
     decode_json: bool
         Defaults to `True`. Whether the returned payload should be JSON-decoded.
     """
-    response = _request(requests.get, endpoint)
+    response = request(requests.get, endpoint)
     logger.debug("Got response with raw content: %s", response.content)
 
     if decode_json:
@@ -423,7 +428,7 @@ def _get(endpoint: str, decode_json: bool = True) -> Any:
     jitter=0.1,
 )
 def _post(endpoint, json_payload) -> Any:
-    response = _request(requests.post, endpoint, dict(json=json_payload))
+    response = request(requests.post, endpoint, dict(json=json_payload))
 
     if len(response.content) == 0:
         return None
@@ -443,7 +448,7 @@ def _put(
     json_payload: Optional[Dict[str, Any]] = None,
     data: Optional[bytes] = None,
 ) -> Any:
-    response = _request(requests.put, endpoint, dict(json=json_payload, data=data))
+    response = request(requests.put, endpoint, dict(json=json_payload, data=data))
 
     if len(response.content) == 0:
         return None
@@ -490,7 +495,7 @@ def _validate_server_compatibility_no_catch() -> None:
     )
 
     try:
-        response = _request(
+        response = request(
             method=requests.get,
             endpoint="/meta/versions",
             attempt_auth=False,
@@ -532,7 +537,7 @@ def _validate_server_compatibility_no_catch() -> None:
     )
 
 
-def _request(
+def request(
     method: Callable[[Any], requests.Response],
     endpoint: str,
     kwargs: Optional[Dict[str, Any]] = None,
@@ -630,18 +635,23 @@ def _raise_for_response(
 
 
 def _url(endpoint: str) -> str:
-    # we send socket.io notifications to a dedicated endpoint/instance
+    # we send socket.io notifications to a dedicated address, if configured
     if endpoint.startswith("/events/"):
-        logger.error("#### calling %s", f"{get_config().socket_io_url}{endpoint}")
-        return f"{get_config().socket_io_url}{endpoint}"
+        url = f"{get_config().socket_io_url}{endpoint}"
+        logger.debug("Constructed socketio url: %s", url)
+    else:
+        url = f"{get_config().api_url}{endpoint}"
+        logger.debug("Constructed server url: %s", url)
 
-    logger.error("#### calling %s", f"{get_config().api_url}{endpoint}")
-    return f"{get_config().api_url}{endpoint}"
+    return url
 
 
 def _get_api_key(user: Optional[User] = None) -> Optional[str]:
     """
     Read the API key from user settings.
+
+    If a User dataclass is passed, then the key is taken from its fields. If not, then
+    the key is taken from the user settings.
     """
     if user is not None and user.api_key is not None:
         return user.api_key

@@ -20,8 +20,8 @@ database:
 deployment:
   socket_io:
     dedicated: false
-    address: https://my.sematic/socket/io/path # REPLACE ME
-  worker_count: 1
+    address: https://my.sematic-socketio # REPLACE ME
+  worker_count: 1 # if you want to increase this, enable socket_io.dedicated above
   replica_count: 1
   affinity: {}
   annotations: {}
@@ -72,7 +72,7 @@ deployment:
 
 image:
   repository: sematicai/sematic-server
-  tag: vX.X.X
+  tag: vX.XX.X # REPLACE ME
   pull_policy: IfNotPresent
   #pull_secrets: []
 
