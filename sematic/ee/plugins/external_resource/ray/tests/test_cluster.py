@@ -105,7 +105,7 @@ def test_get_kuberay_version():
     assert error == (
         "Kuberay does not appear to be installed in your Kubernetes "
         "cluster. Please ask your cluster administrator to install it "
-        "before proceeding."
+        "in order to proceed."
     )
 
 
