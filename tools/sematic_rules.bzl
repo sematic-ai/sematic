@@ -170,9 +170,7 @@ def sematic_example(name, requirements = None, data = None, extras = None):
         name = "{}_lib".format(name),
         srcs = native.glob(["*.py", "**/*.py"]),
         data = ["requirements.txt", "README.md", "AUTHORS"] + (data or []),
-        deps = [
-            "//sematic:init",
-        ],
+        deps = sematic_deps,
     )
 
     sematic_py_lib(
