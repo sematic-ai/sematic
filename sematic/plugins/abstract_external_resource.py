@@ -4,10 +4,11 @@ import time
 import uuid
 from dataclasses import dataclass, field, fields, replace
 from enum import Enum, unique
-from typing import TypeVar, final
+from typing import Type, TypeVar, final
 
 # Sematic
 from sematic.abstract_future import AbstractFuture
+from sematic.abstract_plugin import AbstractPluginSettingsVar
 from sematic.future_context import SematicContext, context
 from sematic.utils.exceptions import (
     IllegalStateTransitionError,
@@ -206,6 +207,16 @@ class AbstractExternalResource:
             raise ValueError(f"ExternalResource had an invalid uuid: '{self.id}'")
         if not isinstance(self.status, ResourceStatus):
             raise ValueError(f"ExternalResource had invalid status: '{self.status}'")
+
+    @classmethod
+    def get_settings_vars(cls) -> Type[AbstractPluginSettingsVar]:
+        """
+        Returns the Settings var enum for this plug-in.
+
+        The class must inherit from `AbstractPluginSettingsVar` and list all
+        available settings for this plug-in.
+        """
+        return AbstractPluginSettingsVar
 
     @final
     def activate(self, is_local: bool) -> "AbstractExternalResource":
