@@ -30,8 +30,8 @@ sematic_py_lib(
     ],
     deps = [
         ":auth",
+        "//sematic:api_client",
         "//sematic/api:app",
-        "//sematic/config:config",
         "//sematic/db/models:user",
     ],
 )

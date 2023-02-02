@@ -8,9 +8,9 @@ import flask_socketio  # type: ignore
 import requests
 
 # Sematic
+from sematic import api_client
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
-from sematic.config.config import get_config
 from sematic.db.models.user import User
 
 logger = logging.getLogger(__name__)
@@ -29,10 +29,16 @@ def events(user: Optional[User], namespace: str, event: str) -> flask.Response:
     return flask.jsonify({})
 
 
-def broadcast_graph_update(root_id: str) -> None:
-    url = f"{get_config().socket_io_url}/events/graph/update"
+def broadcast_graph_update(
+    root_id: str, user: Optional[User] = None,
+) -> requests.Response:
+    # url = f"{get_config().socket_io_url}/events/graph/update"
+    url = "/events/graph/update"
     logger.error("Calling broadcast: run_id=%s; url=%s", root_id, url)
-    requests.post(url, json=dict(run_id=root_id))
+    json_payload = dict(run_id=root_id)
+    return api_client._request(
+        method=requests.post, endpoint=url, kwargs=dict(json=json_payload), user=user
+    )
 
     # flask_socketio.emit(
     #     "update",
@@ -42,10 +48,16 @@ def broadcast_graph_update(root_id: str) -> None:
     # )
 
 
-def broadcast_resolution_cancel(root_id: str, calculator_path: str) -> None:
-    url = f"{get_config().socket_io_url}/events/pipeline/cancel"
+def broadcast_resolution_cancel(
+    root_id: str, calculator_path: str, user: Optional[User] = None
+) -> requests.Response:
+    # url = f"{get_config().socket_io_url}/events/pipeline/cancel"
+    url = "/events/pipeline/cancel"
     logger.error("Calling broadcast: resolution_id=%s; url=%s", root_id, url)
-    requests.post(url, json=dict(resolution_id=root_id, calculator_path=calculator_path))
+    json_payload = dict(resolution_id=root_id, calculator_path=calculator_path)
+    return api_client._request(
+        method=requests.post, endpoint=url, kwargs=dict(json=json_payload), user=user
+    )
 
     # flask_socketio.emit(
     #     "cancel",
@@ -55,10 +67,16 @@ def broadcast_resolution_cancel(root_id: str, calculator_path: str) -> None:
     # )
 
 
-def broadcast_pipeline_update(calculator_path: str) -> None:
-    url = f"{get_config().socket_io_url}/events/pipeline/update"
+def broadcast_pipeline_update(
+    calculator_path: str, user: Optional[User] = None,
+) -> requests.Response:
+    # url = f"{get_config().socket_io_url}/events/pipeline/update"
+    url = "/events/pipeline/update"
     logger.error("Calling broadcast: calculator_path=%s; url=%s", calculator_path, url)
-    requests.post(url, json=dict(calculator_path=calculator_path))
+    json_payload = dict(calculator_path=calculator_path)
+    return api_client._request(
+        method=requests.post, endpoint=url, kwargs=dict(json=json_payload), user=user
+    )
 
     # flask_socketio.emit(
     #     "update",

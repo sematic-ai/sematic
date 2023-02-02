@@ -18,6 +18,7 @@ from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.factories import deserialize_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
+from sematic.db.models.user import User
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.utils.retry import retry
 from sematic.versions import CURRENT_VERSION, version_as_string
@@ -538,6 +539,7 @@ def _request(
     attempt_auth: bool = True,
     validate_version_compatibility: bool = True,
     validate_json: bool = False,
+    user: Optional[User] = None,
 ):
     """Internal function for wrapping requests.<get/put/etc.>.
 
@@ -554,7 +556,7 @@ def _request(
     headers = kwargs.get("headers", {})
     headers["Content-Type"] = "application/json"
     if attempt_auth:
-        headers["X-API-KEY"] = _get_api_key()
+        headers["X-API-KEY"] = _get_api_key(user)
     kwargs["headers"] = headers
 
     try:
@@ -637,10 +639,12 @@ def _url(endpoint: str) -> str:
     return f"{get_config().api_url}{endpoint}"
 
 
-def _get_api_key() -> Optional[str]:
+def _get_api_key(user: Optional[User] = None) -> Optional[str]:
     """
     Read the API key from user settings.
     """
+    if user is not None and user.api_key is not None:
+        return user.api_key
     try:
         return get_user_setting(UserSettingsVar.SEMATIC_API_KEY)
     except MissingSettingsError:
