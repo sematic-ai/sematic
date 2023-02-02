@@ -12,6 +12,11 @@ load("//sematic:wheel_constants.bzl",
     "wheel_requires",
     "wheel_deps",
 )
+load(
+    "//sematic/ee:extras.bzl",
+    "EXTRA_REQUIRES",
+    "EXTRA_SEMATIC_DEPS",
+)
 
 sematic_py_lib(
     name = "init",
@@ -225,6 +230,7 @@ sematic_py_wheel(
     python_tag = wheel_python_tag,
     requires = wheel_requires,
     version = wheel_version_string,
+    extra_requires = EXTRA_REQUIRES,
     visibility = ["//visibility:public"],
-    deps = wheel_deps,
+    deps = wheel_deps + EXTRA_SEMATIC_DEPS,
 )

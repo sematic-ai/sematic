@@ -51,27 +51,19 @@ wheel:
 	m2r --overwrite README.nohtml
 	rm README.nohtml
 	bazel build //sematic:wheel
-	bazel build //sematic/ee:wheel
 
 test-release:
 	python3 -m twine check bazel-bin/sematic/*.whl
-	python3 -m twine check bazel-bin/sematic/ee/*.whl
 	python3 -m twine upload --repository testpypi bazel-bin/sematic/*.whl
-	python3 -m twine upload --repository testpypi bazel-bin/sematic/ee/*.whl
 
 release:
 	python3 -m twine upload bazel-bin/sematic/*.whl
-	python3 -m twine upload bazel-bin/sematic/ee/*.whl
 
 release-server:
 	rm -f docker/*.whl
 	cp bazel-bin/sematic/*.whl docker/
 	cd docker; docker build -t sematic/sematic-server:${TAG} -f Dockerfile.server .
 	docker push sematic/sematic-server:${TAG}
-	rm -f docker/*.whl
-	cp bazel-bin/sematic/ee/*.whl docker/
-	cd docker; docker build -t sematic/sematic-server-ee:${TAG} -f Dockerfile.server .
-	docker push sematic/sematic-server-ee:${TAG}
 
 test:
 	bazel test //sematic/... --test_tag_filters=nocov --test_output=all
