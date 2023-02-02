@@ -374,6 +374,7 @@ def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
 
 
 def notify_pipeline_update(calculator_path: str):
+    logger.error("## notifying pipeline update", )
     _notify_event("pipeline", "update", {"calculator_path": calculator_path})
 
 
@@ -629,8 +630,10 @@ def _raise_for_response(
 def _url(endpoint: str) -> str:
     # we send socket.io notifications to a dedicated endpoint/instance
     if endpoint.startswith("/events/"):
+        logger.error("#### calling %s", f"{get_config().socket_io_url}{endpoint}")
         return f"{get_config().socket_io_url}{endpoint}"
 
+    logger.error("#### calling %s", f"{get_config().api_url}{endpoint}")
     return f"{get_config().api_url}{endpoint}"
 
 

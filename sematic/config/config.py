@@ -81,7 +81,7 @@ ON_WORKER_ENV_VAR = "ON_SEMATIC_WORKER"
 KUBERNETES_POD_NAME_ENV_VAR = "KUBERNETES_POD_NAME"
 SEMATIC_SERVER_ADDRESS_ENV_VAR = "SEMATIC_SERVER_ADDRESS"
 SEMATIC_WORKER_SERVER_ADDRESS_ENV_VAR = "SEMATIC_WORKER_API_ADDRESS"
-SEMATIC_SOCKET_IO_ADDRESS = "SEMATIC_SOCKET_IO_ADDRESS"
+SEMATIC_WORKER_SOCKET_IO_ADDRESS = "SEMATIC_WORKER_SOCKET_IO_ADDRESS"
 SEMATIC_WSGI_WORKERS_COUNT = "SEMATIC_WSGI_WORKERS_COUNT"
 
 
@@ -117,7 +117,7 @@ class Config:
     @property
     def socket_io_url(self) -> str:
         socket_io_base_address = os.environ.get(
-            SEMATIC_SOCKET_IO_ADDRESS, self.server_url
+            SEMATIC_WORKER_SOCKET_IO_ADDRESS, self.server_url
         )
         return urljoin(socket_io_base_address, f"api/v{self.api_version}")
 
