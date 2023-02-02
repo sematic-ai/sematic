@@ -70,7 +70,7 @@ deployment:
     timeoutSeconds: 1
 
 image:
-  repository: sematicai/sematic-server
+  repository: sematic/sematic-server
   #tag: vX.XX.X
   pull_policy: IfNotPresent
   #pull_secrets: []

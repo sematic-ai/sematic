@@ -118,8 +118,7 @@ $ git push origin $RELEASE_VERSION
 ```
 
 Next, build and push the server image. Use the dockerfile at
-`docker/Dockerfile.server`. Copy the wheel you built before in the `docker/`
-directory.
+`docker/Dockerfile.server`.
 
 ```bash
 $ TAG=v$(python3 sematic/versions.py) make release-server

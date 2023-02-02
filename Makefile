@@ -62,8 +62,10 @@ release:
 release-server:
 	rm -f docker/*.whl
 	cp bazel-bin/sematic/*.whl docker/
-	cd docker; docker build -t sematic/sematic-server:${TAG} -f Dockerfile.server .
+	cd docker; docker build --build-arg EXTRA=default -t sematic/sematic-server:${TAG} -f Dockerfile.server .
 	docker push sematic/sematic-server:${TAG}
+	cd docker; docker build --build-arg EXTRA=all -t sematic/sematic-server-ee:${TAG} -f Dockerfile.server .
+	docker push sematic/sematic-server-ee:${TAG}
 
 test:
 	bazel test //sematic/... --test_tag_filters=nocov --test_output=all
