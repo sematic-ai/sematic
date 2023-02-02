@@ -97,6 +97,9 @@ def _sematic_py_wheel_impl(ctx):
     requires = list(ctx.attr.requires)
     deps_files = []
 
+    # We handle "ee" and "non-ee" deps distinctly, because we don't want "ee"
+    # dependencies to add requirements to the base wheel. Extra third-party
+    # deps for ee are all handled via "extra_requires"
     non_ee_deps = [dep for dep in ctx.attr.deps if "sematic/ee" not in dep.label.package]
     non_ee_inputs = depset(
         transitive = [dep[DefaultInfo].data_runfiles.files for dep in non_ee_deps] +
