@@ -5,7 +5,14 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.23.0](https://pypi.org/project/sematic/0.23.0/)
+    * [feature] Ability to deploy socket.io micro-service separately.
+    * [feature] Expose external resources in the dashboard.
+    * [feature] Slack notification integration for failed resolutions.
     * [feature] Support the `debug` query parameter which can be added to any URL to enforce the front-end application to emit logs.
+    * [improvement] Minor dependency and CI improvement.
+    * [improvement] Minor development documentation improvements.
+    * [bugfix] Fix a bug in the dashboard which prevents successful resolution of status update.
 * [0.22.2](https://pypi.org/project/sematic/0.22.2/)
     * [feature] Add the ability to cache the output of a function and avoid its re-execution in
       the future
