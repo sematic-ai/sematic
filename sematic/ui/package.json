@@ -54,7 +54,11 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "analyze": "source-map-explorer 'build/static/js/*.js'",
-    "lint": "eslint --config node_modules/eslint-config-react-app/index.js --ext .ts,.tsx --max-warnings=0 ./src"
+    "lint:app": "eslint --config node_modules/eslint-config-react-app/index.js --ext .ts,.tsx --max-warnings=0 ./src",
+    "lint:ui-tests": "eslint --ext .ts ./tests",
+    "lint": "npm run lint:app && npm run lint:ui-tests",
+    "cypress:open": "cypress open --project tests",
+    "cypress:run": "cypress run --headless --project tests"
   },
   "eslintConfig": {
     "extends": [
@@ -77,10 +81,13 @@
   "devDependencies": {
     "@types/d3": "^7.4.0",
     "@types/dagre": "^0.7.47",
+    "@types/mocha": "^10.0.1",
     "@types/plotly.js": "^1.54.22",
     "@types/react-copy-to-clipboard": "^5.0.2",
     "@types/react-plotly.js": "^2.5.0",
     "@types/react-syntax-highlighter": "^15.5.1",
-    "@types/uuid": "^8.3.4"
+    "@types/uuid": "^8.3.4",
+    "cypress": "^12.5.0",
+    "eslint-plugin-cypress": "^2.12.1"
   }
 }
