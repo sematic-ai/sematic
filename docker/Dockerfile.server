@@ -5,13 +5,14 @@
 # see https://stackoverflow.com/questions/65612411/forcing-docker-to-use-linux-amd64-platform-by-default-on-macos/69636473#69636473
 # for why --platform
 FROM --platform=linux/amd64 python:3.9-bullseye
+ARG EXTRA
 
 RUN python3 -m pip install --upgrade pip
 
 # RUN pip install sematic
 # When debugging use the wheel directly
 COPY sematic-*.whl .
-RUN pip install sematic-*.whl
+RUN pip install $(ls ./sematic-*.whl)["${EXTRA}"]
 
 EXPOSE 80
 CMD python3 -m sematic.db.migrate up --verbose --env cloud && python3 -m sematic.api.server --env cloud

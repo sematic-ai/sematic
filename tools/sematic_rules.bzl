@@ -157,22 +157,20 @@ def sematic_py_lib(name, srcs, deps, pip_deps = None, visibility = None, data = 
 
     create_multipy_targets(name, create_targets)
 
-def sematic_example(name, requirements = None, data = None, uses_ee = False):
+def sematic_example(name, requirements = None, data = None, extras = None):
     if data == None:
         data = []
+    if extras == None:
+        extras = []
     
     sematic_deps = [
         "//sematic:init"
-    ]
-    if uses_ee:
-        sematic_deps.append("//sematic/ee:init")
+    ] + extras
     sematic_py_lib(
         name = "{}_lib".format(name),
         srcs = native.glob(["*.py", "**/*.py"]),
         data = ["requirements.txt", "README.md", "AUTHORS"] + (data or []),
-        deps = [
-            "//sematic:init",
-        ],
+        deps = sematic_deps,
     )
 
     sematic_py_lib(

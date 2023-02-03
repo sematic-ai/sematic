@@ -18,6 +18,7 @@ from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.factories import deserialize_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
+from sematic.db.models.user import User
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.utils.retry import retry
 from sematic.versions import CURRENT_VERSION, version_as_string
@@ -83,7 +84,7 @@ def _get_artifact(artifact_id: str) -> Artifact:
     """
     Retrieve and deserialize artifact.
     """
-    response = _get("/artifacts/{}".format(artifact_id))
+    response = _get(f"/artifacts/{artifact_id}")
 
     return Artifact.from_json_encodable(response["content"])
 
@@ -107,7 +108,7 @@ def get_run(run_id: str) -> Run:
     """
     Get run
     """
-    response = _get("/runs/{}".format(run_id))
+    response = _get(f"/runs/{run_id}")
 
     return Run.from_json_encodable(response["content"])
 
@@ -202,7 +203,7 @@ def get_resolution(root_id: str) -> Resolution:
     """
     Get resolution
     """
-    response = _get("/resolutions/{}".format(root_id))
+    response = _get(f"/resolutions/{root_id}")
 
     return Resolution.from_json_encodable(response["content"])
 
@@ -382,6 +383,12 @@ def notify_graph_update(run_id: str):
 
 
 def _notify_event(namespace: str, event: str, payload: Any = None):
+    logger.debug(
+        "Notifying update: namespace=%s; event=%s; payload=%s",
+        namespace,
+        event,
+        payload,
+    )
     _post("/events/{}/{}".format(namespace, event), payload)
 
 
@@ -404,7 +411,7 @@ def _get(endpoint: str, decode_json: bool = True) -> Any:
     decode_json: bool
         Defaults to `True`. Whether the returned payload should be JSON-decoded.
     """
-    response = _request(requests.get, endpoint)
+    response = request(requests.get, endpoint)
     logger.debug("Got response with raw content: %s", response.content)
 
     if decode_json:
@@ -421,7 +428,7 @@ def _get(endpoint: str, decode_json: bool = True) -> Any:
     jitter=0.1,
 )
 def _post(endpoint, json_payload) -> Any:
-    response = _request(requests.post, endpoint, dict(json=json_payload))
+    response = request(requests.post, endpoint, dict(json=json_payload))
 
     if len(response.content) == 0:
         return None
@@ -441,7 +448,7 @@ def _put(
     json_payload: Optional[Dict[str, Any]] = None,
     data: Optional[bytes] = None,
 ) -> Any:
-    response = _request(requests.put, endpoint, dict(json=json_payload, data=data))
+    response = request(requests.put, endpoint, dict(json=json_payload, data=data))
 
     if len(response.content) == 0:
         return None
@@ -488,7 +495,7 @@ def _validate_server_compatibility_no_catch() -> None:
     )
 
     try:
-        response = _request(
+        response = request(
             method=requests.get,
             endpoint="/meta/versions",
             attempt_auth=False,
@@ -530,13 +537,14 @@ def _validate_server_compatibility_no_catch() -> None:
     )
 
 
-def _request(
+def request(
     method: Callable[[Any], requests.Response],
     endpoint: str,
     kwargs: Optional[Dict[str, Any]] = None,
     attempt_auth: bool = True,
     validate_version_compatibility: bool = True,
     validate_json: bool = False,
+    user: Optional[User] = None,
 ):
     """Internal function for wrapping requests.<get/put/etc.>.
 
@@ -553,7 +561,7 @@ def _request(
     headers = kwargs.get("headers", {})
     headers["Content-Type"] = "application/json"
     if attempt_auth:
-        headers["X-API-KEY"] = _get_api_key()
+        headers["X-API-KEY"] = _get_api_key(user)
     kwargs["headers"] = headers
 
     try:
@@ -561,10 +569,11 @@ def _request(
     except ConnectionError:
         raise APIConnectionError(
             (
-                "Unable to connect to the Sematic API at {}.\n"
-                "Make sure the correct server address is set with\n"
-                "\t$ sematic settings set {} <address>"
-            ).format(get_config().server_url, UserSettingsVar.SEMATIC_API_ADDRESS.value)
+                f"Unable to connect to the Sematic API at {get_config().server_url}.\n"
+                f"Make sure the correct server address is set with\n"
+                f"\t$ sematic settings set {UserSettingsVar.SEMATIC_API_ADDRESS.value} "
+                f"<address>"
+            )
         )
 
     if (
@@ -625,14 +634,27 @@ def _raise_for_response(
     raise exception
 
 
-def _url(endpoint) -> str:
-    return "{}{}".format(get_config().api_url, endpoint)
+def _url(endpoint: str) -> str:
+    # we send socket.io notifications to a dedicated address, if configured
+    if endpoint.startswith("/events/"):
+        url = f"{get_config().socket_io_url}{endpoint}"
+        logger.debug("Constructed socketio url: %s", url)
+    else:
+        url = f"{get_config().api_url}{endpoint}"
+        logger.debug("Constructed server url: %s", url)
+
+    return url
 
 
-def _get_api_key() -> Optional[str]:
+def _get_api_key(user: Optional[User] = None) -> Optional[str]:
     """
     Read the API key from user settings.
+
+    If a User dataclass is passed, then the key is taken from its fields. If not, then
+    the key is taken from the user settings.
     """
+    if user is not None and user.api_key is not None:
+        return user.api_key
     try:
         return get_user_setting(UserSettingsVar.SEMATIC_API_KEY)
     except MissingSettingsError:

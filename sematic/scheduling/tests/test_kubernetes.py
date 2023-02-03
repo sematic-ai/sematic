@@ -458,12 +458,14 @@ def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job):
     run_id = "run_id"
     namespace = "the-namespace"
     custom_service_account = "custom-sa"
-    custom_url = "http://customurl.com"
+    custom_api_address = "http://customurl.com"
+    custom_socketio_address = "http//customurl-socketio.com"
 
     server_settings = {
         ServerSettingsVar.KUBERNETES_NAMESPACE: namespace,
         ServerSettingsVar.SEMATIC_WORKER_KUBERNETES_SA: custom_service_account,
-        ServerSettingsVar.SEMATIC_WORKER_API_ADDRESS: custom_url,
+        ServerSettingsVar.SEMATIC_WORKER_API_ADDRESS: custom_api_address,
+        ServerSettingsVar.SEMATIC_WORKER_SOCKET_IO_ADDRESS: custom_socketio_address,
     }
 
     with mock_server_settings(server_settings):
@@ -481,7 +483,8 @@ def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job):
         environment_vars=settings,
         namespace=namespace,
         service_account=custom_service_account,
-        api_address_override=custom_url,
+        api_address_override=custom_api_address,
+        socketio_address_override=custom_socketio_address,
         resource_requirements=resource_requests,
         args=["--run_id", run_id],
     )
