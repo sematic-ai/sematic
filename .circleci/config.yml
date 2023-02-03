@@ -68,20 +68,76 @@ commands:
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  build-and-test:
+  init:
     docker:
       - image: sematicai/sematic-ci:latest
     steps:
       - checkout
       - install-ci-pip-deps
+      - persist_to_workspace:
+          root: /home/circleci
+          paths:
+            - .pyenv
+            - project
+
+  lint:
+    docker:
+      - image: sematicai/sematic-ci:latest
+    steps:
+      - attach_workspace:
+          at: /home/circleci
       - do-static-analysis
+      
+  unit-tests:
+    docker:
+      - image: sematicai/sematic-ci:latest
+    steps:
+      - attach_workspace:
+          at: /home/circleci
       - non-coverage-tests
+
+  installation:
+    docker:
+      - image: sematicai/sematic-ci:latest
+    steps:
+      - attach_workspace:
+          at: /home/circleci
       - installation-tests
+  
+  integration-test:
+    docker:
+      - image: sematicai/sematic-ci:latest
+    steps:
+      - run: echo "no op for now"
+      
+  finalize:
+    docker:
+      - image: cimg/base:2023.01
+    steps:
       - notify-completion
+
+
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   sematic-test:
     jobs:
-      - build-and-test
+      - init
+      - lint:
+          requires:
+            - init
+      - unit-tests:
+          requires:
+            - init
+      - installation:
+          requires:
+            - init
+      - integration-test:
+          requires:
+            - installation
+      - finalize:
+          requires:
+            - lint
+            - unit-tests
+            - integration-test
