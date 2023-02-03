@@ -19,8 +19,8 @@ database:
 
 deployment:
   socket_io:
-    dedicated: true
-  worker_count: 1
+    dedicated: false
+  worker_count: 1 # if you want to increase this, enable socket_io.dedicated above
   replica_count: 1
   affinity: {}
   annotations: {}
