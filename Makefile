@@ -19,6 +19,7 @@ pre-commit:
 	mypy sematic
 	black sematic --check
 	isort sematic --diff
+	pushd sematic/ui && npm run lint && popd
 
 fix:
 	isort sematic
