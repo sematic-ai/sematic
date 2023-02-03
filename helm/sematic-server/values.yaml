@@ -19,9 +19,8 @@ database:
 
 deployment:
   socket_io:
-    dedicated: false
-    address: https://my.sematic-socketio # REPLACE ME
-  worker_count: 1 # if you want to increase this, enable socket_io.dedicated above
+    dedicated: true
+  worker_count: 1
   replica_count: 1
   affinity: {}
   annotations: {}
