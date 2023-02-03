@@ -1,7 +1,9 @@
 # Developer Guidelines
 
 ## Code formatting
-Code should be formatted by Black and linted by flake8.
+Python code should be formatted by Black and linted by flake8. Typescript code is linted by ESLint. 
+
+A developer can run `make pre-commit` to check formating and auto-fix some of them.
 
 ## External modules
 When possible, use the full path to imported function/class to highlight that the
