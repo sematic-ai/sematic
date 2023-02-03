@@ -2,14 +2,27 @@
 
 pip install virtualenv
 
-VENV_NAME=$RANDOM
+if [ -z "$CI_VENV_NAME" ]
+then
+    VENV_NAME=$RANDOM
+else
+    VENV_NAME=$CI_VENV_NAME
+    cd ~/project
+fi
 
 virtualenv $VENV_NAME
 
+pwd
+
 source ./$VENV_NAME/bin/activate
 
-pip install sematic/sematic-0.0.2.alpha._BUILD_TIMESTAMP_-py3-none-any.whl
+pip install bazel-bin/sematic/sematic-*.whl
 
 deactivate
 
-rm -rf $VENV_NAME
+# Only purge the VENV in non-CI environments
+if [ -z "$CI_VENV_NAME" ]
+then
+    rm -rf $VENV_NAME
+fi
+

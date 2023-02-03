@@ -11,5 +11,11 @@ export default defineConfig({
   },
   fileServerFolder: ".",
   fixturesFolder: "fixtures",
-  videosFolder: "cypress_video"
+  screenshotsFolder: "cypress_screenshots",
+  videosFolder: "cypress_video",
+  reporter: 'junit',
+  reporterOptions: {
+    "mochaFile": "cypress_results/tests-[hash].xml",
+    "toConsole": true
+  }
 });
