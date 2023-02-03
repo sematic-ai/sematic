@@ -237,14 +237,20 @@ class LocalResolver(SilentResolver):
             # If we are here, the cancelation was applied successfully server-side
             # so it is safe to mark non-terminal futures as CANCELED
             # This will precipitate the termination of the resolution loop.
-            self._cancel_non_terminal_futures()
-            self._sio_client.disconnect()
+            self._clean_up_resolution(save_graph=False)
 
         self._populate_run_and_artifacts(self._root_future)
         self._save_graph()
         self._cache_namespace_str = self._make_cache_namespace()
         self._create_resolution(self._root_future)
         self._update_resolution_status(ResolutionStatus.RUNNING)
+    
+    def _clean_up_resolution(self, save_graph: bool) -> None:
+        self._cancel_non_terminal_futures()
+        self._deactivate_all_resources()
+        self._sio_client.disconnect()
+        if save_graph:
+            self._save_graph()
 
     def _make_cache_namespace(self) -> Optional[str]:
         """
@@ -537,7 +543,7 @@ class LocalResolver(SilentResolver):
             if state.is_terminal():
                 continue
 
-            run.future_state = FutureState.FAILED
+            run.future_state = FutureState.CANCELED
 
             if run.exception_metadata is None:
                 run.exception_metadata = ExceptionMetadata(
