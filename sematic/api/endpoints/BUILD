@@ -27,9 +27,11 @@ sematic_py_lib(
     pip_deps = [
         "flask",
         "flask-socketio",
+        "requests",
     ],
     deps = [
         ":auth",
+        "//sematic:api_client",
         "//sematic/api:app",
         "//sematic/db/models:user",
     ],
