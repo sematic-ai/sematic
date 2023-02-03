@@ -244,7 +244,7 @@ class LocalResolver(SilentResolver):
         self._cache_namespace_str = self._make_cache_namespace()
         self._create_resolution(self._root_future)
         self._update_resolution_status(ResolutionStatus.RUNNING)
-    
+
     def _clean_up_resolution(self, save_graph: bool) -> None:
         self._cancel_non_terminal_futures()
         self._deactivate_all_resources()

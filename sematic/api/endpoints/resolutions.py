@@ -130,9 +130,12 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
     except InvalidResolution as e:
         logger.warning("Could not update resolution: %s", e)
         return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
-    
-    if existing_resolution is not None and existing_resolution.status.is_terminal():
-        _cancel_non_terminal_runs(resolution.root_id)
+
+    if ResolutionStatus[resolution.status].is_terminal():
+        try:
+            _cancel_non_terminal_runs(resolution.root_id)
+        except Exception as e:
+            logger.exception("Error when trying to cancel runs in resolution: %s", e)
 
     save_resolution(resolution)
     _publish_resolution_event(resolution)
@@ -237,7 +240,7 @@ def cancel_resolution_endpoint(
     jobs = []
     for external_job in resolution.external_jobs:
         jobs.append(cancel_job(external_job))
-    resolution.external_jobs = jobs
+    resolution.external_jobs = jobs  # type: ignore
 
     resolution.status = ResolutionStatus.CANCELED
     save_resolution(resolution)

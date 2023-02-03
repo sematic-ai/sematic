@@ -453,7 +453,7 @@ def cancel_job(job: KubernetesExternalJob) -> KubernetesExternalJob:
     if not job.still_exists:
         logger.info(
             "No need to cancel Kubernetes job %s, as it no longer exists",
-            job.external_job_id
+            job.external_job_id,
         )
         return job
 
