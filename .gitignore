@@ -166,3 +166,6 @@ node_modules
 
 # Python wheels
 *.whl
+
+# Cypress Captured Video
+sematic/ui/tests/cypress_video
