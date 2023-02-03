@@ -1,6 +1,3 @@
-server:
-  sematic_dashboard_url: https://my.sematic # REPLACE ME
-
 auth:
   enabled: true
   google_oauth_client_id: xxxxxxxx.apps.googleusercontent.com # REPLACE ME
@@ -21,6 +18,9 @@ database:
   url: postgres://postgresql:5432/postgres # REPLACE ME
 
 deployment:
+  socket_io:
+    dedicated: false
+  worker_count: 1 # if you want to increase this, enable socket_io.dedicated above
   replica_count: 1
   affinity: {}
   annotations: {}
@@ -71,7 +71,7 @@ deployment:
 
 image:
   repository: sematicai/sematic-server
-  #tag: vX.XX.X
+  tag: vX.XX.X # REPLACE ME
   pull_policy: IfNotPresent
   #pull_secrets: []
 
@@ -97,6 +97,7 @@ service:
 
 ingress:
   create: false
+  dashboard_url: https://my.sematic # REPLACE ME
   class_name: ""
   annotations: {}
     # kubernetes.io/ingress.class: nginx

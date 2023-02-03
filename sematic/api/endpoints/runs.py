@@ -225,7 +225,7 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 
     save_run(run)
 
-    broadcast_graph_update(root_id=run.root_id)
+    broadcast_graph_update(root_id=run.root_id, user=user)
 
     payload = dict(
         content=run.to_json_encodable(),
@@ -345,7 +345,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
         if run is not None:
             new_future_state_value = run.future_state
             save_run(run)
-            broadcast_graph_update(run.root_id)
+            broadcast_graph_update(run.root_id, user=user)
 
         result_list.append(
             dict(

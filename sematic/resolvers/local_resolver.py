@@ -221,7 +221,7 @@ class LocalResolver(SilentResolver):
         return run
 
     def _resolution_will_start(self) -> None:
-        self._sio_client.connect(get_config().server_url, namespaces=["/pipeline"])
+        self._sio_client.connect(get_config().socket_io_url, namespaces=["/pipeline"])
 
         @self._sio_client.on("cancel", namespace="/pipeline")
         def _cancel(data):

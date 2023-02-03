@@ -54,7 +54,7 @@ function PipelineActionMenu(props: {
       apiKey: user?.api_key,
       callback: (payload) => {},
       setError: (error) => {
-        setSnackMessage({ message: "Failed to cancel pipeline run." });
+        if (error) setSnackMessage({ message: "Failed to cancel pipeline run." });
       },
     });
   }, [rootRun.id, setSnackMessage, user?.api_key]);

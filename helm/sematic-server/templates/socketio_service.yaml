@@ -1,15 +1,12 @@
 {{- if .Values.service.create }}
+{{- if .Values.deployment.socket_io.dedicated }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-socketio
   labels:
     {{- include "sematic-server.labels" . | nindent 4 }}
-    {{- if .Values.deployment.socket_io.dedicated }}
-    app.kubernetes.io/component: api
-    {{- else }}
-    app.kubernetes.io/component: all
-    {{- end }}
+    app.kubernetes.io/component: socket_io
   annotations:
     {{- toYaml .Values.service.annotations | nindent 4 }}
 spec:
@@ -21,9 +18,6 @@ spec:
       name: http
   selector:
     {{- include "sematic-server.selectorLabels" . | nindent 4 }}
-    {{- if .Values.deployment.socket_io.dedicated }}
-    sematic.ai/component: api
-    {{- else }}
-    sematic.ai/component: all
-    {{- end }}
+    sematic.ai/component: socket_io
+{{- end }}
 {{- end }}
