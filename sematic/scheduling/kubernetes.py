@@ -551,6 +551,7 @@ def _schedule_kubernetes_job(
     namespace: str,
     service_account: str = DEFAULT_WORKER_SERVICE_ACCOUNT,
     api_address_override: Optional[str] = None,
+    socketio_address_override: Optional[str] = None,
     resource_requirements: Optional[ResourceRequirements] = None,
     args: Optional[List[str]] = None,
 ):
@@ -563,6 +564,10 @@ def _schedule_kubernetes_job(
         environment_vars[
             UserSettingsVar.SEMATIC_API_ADDRESS.value
         ] = api_address_override
+    if socketio_address_override is not None:
+        environment_vars[
+            ServerSettingsVar.SEMATIC_WORKER_SOCKET_IO_ADDRESS.value
+        ] = socketio_address_override
 
     args = args if args is not None else []
     node_selector = {}
@@ -699,6 +704,9 @@ def schedule_resolution_job(
     api_address_override = get_server_setting(
         ServerSettingsVar.SEMATIC_WORKER_API_ADDRESS, None
     )
+    socketio_address_override = get_server_setting(
+        ServerSettingsVar.SEMATIC_WORKER_SOCKET_IO_ADDRESS, None
+    )
 
     external_job = KubernetesExternalJob.new(
         try_number=0,
@@ -724,6 +732,7 @@ def schedule_resolution_job(
         namespace=namespace,
         service_account=service_account,
         api_address_override=api_address_override,
+        socketio_address_override=socketio_address_override,
         resource_requirements=RESOLUTION_RESOURCE_REQUIREMENTS,
         args=args,
     )
@@ -746,6 +755,9 @@ def schedule_run_job(
     api_address_override = get_server_setting(
         ServerSettingsVar.SEMATIC_WORKER_API_ADDRESS, None
     )
+    socketio_address_override = get_server_setting(
+        ServerSettingsVar.SEMATIC_WORKER_SOCKET_IO_ADDRESS, None
+    )
 
     external_job = KubernetesExternalJob.new(
         try_number, run_id, namespace, JobType.worker
@@ -762,6 +774,7 @@ def schedule_run_job(
         namespace=namespace,
         service_account=service_account,
         api_address_override=api_address_override,
+        socketio_address_override=socketio_address_override,
         resource_requirements=resource_requirements,
         args=args,
     )
