@@ -58,7 +58,7 @@ function PipelineRow(props: { run: Run }) {
   return (
     <>
       <TableRow key={id}>
-        <TableCell key="name">
+        <TableCell key="name" data-cy={"pipeline-row"}>
           <Box sx={{ mb: 3 }}>
             <Link href={"/pipelines/" + calculator_path} underline="hover">
               <Typography variant="h6">{name}</Typography>
