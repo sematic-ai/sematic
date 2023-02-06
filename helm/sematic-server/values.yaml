@@ -78,41 +78,11 @@ image:
 ray:
   enabled: false
   supports_gpus: false
-
-  # The Kubernetes node selector that will be used for Ray nodes
-  # that use GPUs. Value should be json encoded into a string.
   gpu_node_selector: {}
-  #gpu_node_selector: {"node.kubernetes.io/instance-type": "g4dn.xlarge"}
-  
-  # The Kubernetes node selector that will be used for Ray nodes
-  # that don't use GPUs.
   non_gpu_node_selector: {}
-  #non_gpu_node_selector: {"node.kubernetes.io/instance-type": "t3.large"}
-  
-  # The Kubernetes tolerations that will be used for Ray nodes
-  # that use GPUs.
   gpu_tolerations: []
-  #gpu_tolerations:
-  #  - key: "nvidia.com/gpu"
-  #    operator: Equal
-  #    effect: NoSchedule
-  #    value: "true"
-  
-  # The Kubernetes tolerations that will be used for Ray nodes
-  # that don't use GPUs.
   non_gpu_tolerations: []
-  #non_gpu_tolerations:
-  #  - key: "foo"
-  #    operator: Equal
-  #    effect: NoSchedule
-  #    value: "true"
-  
-  # The key that will be used in the Kubernetes resource requests/
-  # limits fields to indicate how many GPUs are required for Ray
-  # head/worker nodes. If not specified, requests for more than one
-  # GPU will be denied.
   gpu_resource_request_key: null
-  #gpu_resource_request_key: "nvidia.com/gpu"
 
 rbac:
   create: true
