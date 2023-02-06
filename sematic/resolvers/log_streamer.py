@@ -11,7 +11,6 @@ from curses import ascii
 from typing import Callable, Optional
 
 # Sematic
-from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR
 from sematic.config.user_settings import UserSettingsVar, get_user_setting
 from sematic.plugins.storage.s3_storage import S3Storage
 from sematic.utils.retry import retry
@@ -68,7 +67,12 @@ def log_ingestion_enabled() -> bool:
 
 
 def _flush_to_file(
-    file_path, read_handle, uploader, remote_prefix, timeout_seconds=None
+    file_path,
+    read_handle,
+    tee_write_handle,
+    uploader,
+    remote_prefix,
+    timeout_seconds=None,
 ):
     """Read from the read_handle dump to file_path and then remote.
 
@@ -84,6 +88,8 @@ def _flush_to_file(
     read_handle:
         A readable object that can be streamed from. It should be configured such that
         reads are non-blocking.
+    tee_write_handle:
+        A writable object to "tee" the read_handle contents to.
     uploader:
         The function to call for performing the remote upload
     remote_prefix:
@@ -125,6 +131,8 @@ def _flush_to_file(
                 continue
 
             fp.write(line)
+            tee_write_handle.write(line)
+            tee_write_handle.flush()
             fp.flush()
             if received_stream_termination:
                 break
@@ -136,6 +144,7 @@ def _flush_to_file(
 def _stream_logs_to_remote_from_file_descriptor(
     file_path: str,
     read_from_file_descriptor: int,
+    original_stdout_fd: int,
     upload_interval_seconds: int,
     remote_prefix: str,
     uploader: Callable[[str, str], None],
@@ -150,6 +159,8 @@ def _stream_logs_to_remote_from_file_descriptor(
         The path to the local file that's being uploaded
     read_from_file_descriptor:
         The file descriptor that's being read from.
+    original_stdout_fd:
+        The file descriptor for the original stdout (likely a TTY)
     upload_interval_seconds:
         The amount of time between the end of one upload and the start of the next
     remote_prefix:
@@ -161,12 +172,14 @@ def _stream_logs_to_remote_from_file_descriptor(
         the remote prefix as arguments.
     """
     read_handle = os.fdopen(read_from_file_descriptor)
+    tee_write_handle = os.fdopen(original_stdout_fd, "w")
     while True:
         received_termination = _flush_to_file(
-            file_path,
-            read_handle,
-            uploader,
-            remote_prefix,
+            file_path=file_path,
+            read_handle=read_handle,
+            tee_write_handle=tee_write_handle,
+            uploader=uploader,
+            remote_prefix=remote_prefix,
             timeout_seconds=upload_interval_seconds,
         )
         if received_termination:
@@ -199,6 +212,7 @@ def _do_upload(file_path: str, remote_prefix: str):
 def _start_log_streamer_out_of_process(
     file_path: str,
     read_from_file_descriptor: int,
+    original_stdout_fd: int,
     upload_interval_seconds: int,
     remote_prefix: str,
     uploader: Callable[[str, str], None],
@@ -214,6 +228,8 @@ def _start_log_streamer_out_of_process(
         The path to the local log file
     read_from_file_descriptor:
         The file descriptor to read from; likely the "read" end of a pipe
+    original_stdout_fd:
+        The file descriptor for the original stdout before redirection (likely a TTY)
     upload_interval_seconds:
         The interval between uploads.
     uploader:
@@ -232,6 +248,7 @@ def _start_log_streamer_out_of_process(
     _stream_logs_to_remote_from_file_descriptor(
         file_path=file_path,
         read_from_file_descriptor=read_from_file_descriptor,
+        original_stdout_fd=original_stdout_fd,
         upload_interval_seconds=upload_interval_seconds,
         remote_prefix=remote_prefix,
         uploader=uploader,
@@ -265,18 +282,6 @@ def ingested_logs(
         An optional override for uploading the log file.
     """
     uploader = uploader if uploader is not None else _do_upload
-
-    pod_name = os.getenv(KUBERNETES_POD_NAME_ENV_VAR)
-    if pod_name is not None:
-        # print is appropriate here because we want to write to actual stdout,
-        # with no logging machinary in between. This is *about* the logs. It
-        # will be shown when somebody does `kubectl logs <pod name>` because
-        # it will go to stdout before stdout gets redirected.
-        print(
-            f"To follow these logs, try:\n\t"
-            f"kubectl exec -i {pod_name} -- tail {file_path}"
-        )
-
     original_signal_handler = None
     streamer_pid = None
     read_file_descriptor = None
@@ -316,10 +321,14 @@ def ingested_logs(
         # for ingestion
         os.set_inheritable(write_file_descriptor, True)
 
-        with redirect_to_file_descriptor(write_file_descriptor):
+        with redirect_to_file_descriptor(write_file_descriptor) as (
+            original_stdout_fd,
+            _,
+        ):
             streamer_pid = _start_log_streamer_out_of_process(
                 file_path,
                 read_file_descriptor,
+                original_stdout_fd,
                 upload_interval_seconds=upload_interval_seconds,
                 remote_prefix=remote_prefix,
                 uploader=uploader,
