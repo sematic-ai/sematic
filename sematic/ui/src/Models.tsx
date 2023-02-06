@@ -82,3 +82,48 @@ export type User = {
   // only returned if user is self
   api_key: string | null;
 };
+
+export type ExternalResourceState = 
+"CREATED" |
+"ACTIVATING" |
+"ACTIVE" |
+"DEACTIVATING" |
+"DEACTIVATED";
+
+export type ExternalResource = {
+  id: string,
+  resource_state: ExternalResourceState,
+  managed_by: string,
+  status_message: string,
+  last_updated_epoch_seconds: Date,
+  type_serialization: TypeSerialization,
+  value_serialization: any,
+  history_serializations: any,
+  created_at: Date
+  updated_at: Date
+};
+
+export type ExternalResourceHistorySerialization = {
+  root_type: TypeSerialization,
+  types: unknown,
+  values: {
+    allocation_seconds: number,
+    deallocation_seconds: number,
+    epoch_time_activation_began: any,
+    epoch_time_deactivation_began: any,
+    id: string,
+    max_active_seconds: number,
+    message: string,
+    status: {
+      root_type: TypeSerialization,
+      values: {
+        last_update_epoch_time: number,
+        managed_by: string,
+        message: string,
+        state: ExternalResourceState
+      }
+    }
+  }
+};
+
+

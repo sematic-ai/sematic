@@ -203,7 +203,7 @@ def rerun_resolution_endpoint(
         content=resolution.to_json_encodable(),
     )
 
-    broadcast_pipeline_update(calculator_path=root_run.calculator_path)
+    broadcast_pipeline_update(calculator_path=root_run.calculator_path, user=user)
 
     return flask.jsonify(payload)
 
@@ -258,9 +258,9 @@ def cancel_resolution_endpoint(
 
     save_graph(unfinished_runs, [], [])
 
-    broadcast_graph_update(root_id=resolution.root_id)
+    broadcast_graph_update(root_id=resolution.root_id, user=user)
     broadcast_resolution_cancel(
-        root_id=resolution.root_id, calculator_path=root_run.calculator_path
+        root_id=resolution.root_id, calculator_path=root_run.calculator_path, user=user
     )
 
     return flask.jsonify(dict(content=resolution.to_json_encodable()))

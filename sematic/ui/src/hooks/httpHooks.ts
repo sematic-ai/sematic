@@ -78,3 +78,30 @@ export function useHttpClient(): HttpClient {
         cancel
     };
 }
+
+/**
+ * Simulate series of server side responses
+ * 
+ * @param data The series of HTTP Response JOSN
+ * @param interval delay before a request is fulfilled.
+ * @returns 
+ */
+export function useDebuggingHttpClient<T>(data: Array<T> = [], interval: number) {
+    let n = 0;
+
+    const fetchCallback = useCallback(async (args: any) => {
+        if (n >= data.length) {
+            return;
+        }
+        await new Promise((resolve) => {
+            setTimeout(resolve, interval);
+        });
+
+        return data[n++];
+    }, [data, interval, n]);
+
+    return {
+        fetch: fetchCallback,
+        cancel: () => {}
+    };
+}
