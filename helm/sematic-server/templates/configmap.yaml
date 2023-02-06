@@ -39,7 +39,7 @@ data:
   # Each configurable external resource can be added as an element
   # in this string list. Leading comma ensures the string is
   # interpreted as such even when no external resource plugins are
-  # acticvated.
+  # activated.
   EXTERNAL_RESOURCE: >
     ,
 {{ if .Values.ray.enabled }}
