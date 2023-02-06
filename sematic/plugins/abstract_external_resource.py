@@ -4,11 +4,11 @@ import time
 import uuid
 from dataclasses import dataclass, field, fields, replace
 from enum import Enum, unique
-from typing import Type, TypeVar, final
+from typing import TypeVar, final
 
 # Sematic
 from sematic.abstract_future import AbstractFuture
-from sematic.abstract_plugin import AbstractPluginSettingsVar
+from sematic.abstract_plugin import SEMATIC_PLUGIN_AUTHOR, AbstractPlugin, PluginVersion
 from sematic.future_context import SematicContext, context
 from sematic.utils.exceptions import (
     IllegalStateTransitionError,
@@ -17,6 +17,9 @@ from sematic.utils.exceptions import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+_PLUGIN_VERSION = (0, 1, 0)
 
 
 @unique
@@ -155,7 +158,7 @@ T = TypeVar("T")
 
 
 @dataclass(frozen=True)
-class AbstractExternalResource:
+class AbstractExternalResource(AbstractPlugin):
     """Represents a resource tracked by Sematic for usage in Sematic funcs.
 
     Examples of possible external resources include small data processing
@@ -208,15 +211,26 @@ class AbstractExternalResource:
         if not isinstance(self.status, ResourceStatus):
             raise ValueError(f"ExternalResource had invalid status: '{self.status}'")
 
-    @classmethod
-    def get_settings_vars(cls) -> Type[AbstractPluginSettingsVar]:
+    @staticmethod
+    def get_author() -> str:
         """
-        Returns the Settings var enum for this plug-in.
+        The plug-in's author.
 
-        The class must inherit from `AbstractPluginSettingsVar` and list all
-        available settings for this plug-in.
+        Can be an arbitrary string containing contact info (e.g. GitHub profile,
+        email address, etc.)
         """
-        return AbstractPluginSettingsVar
+        return SEMATIC_PLUGIN_AUTHOR
+
+    @staticmethod
+    def get_version() -> PluginVersion:
+        """
+        Plug-in version: MAJOR.MINOR.PATCH
+
+        increment PATCH for bug fixes
+        increment MINOR for new functionalities
+        increment MAJOR for breaking API changes (0 means unstable)
+        """
+        pass
 
     @final
     def activate(self, is_local: bool) -> "AbstractExternalResource":

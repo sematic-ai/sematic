@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
 # Sematic
-from sematic.abstract_plugin import AbstractPlugin
+from sematic.abstract_plugin import SEMATIC_PLUGIN_AUTHOR, AbstractPlugin
 
 # This should be the manifest that can be passed to the
 # Kubernetes API for the RayCluster CRD here:
@@ -150,7 +150,7 @@ class AbstractKuberayWrapper(AbstractPlugin):
 
     @staticmethod
     def get_author() -> str:
-        return "github.com/sematic-ai"
+        return SEMATIC_PLUGIN_AUTHOR
 
     @staticmethod
     def get_version() -> Tuple[int, int, int]:

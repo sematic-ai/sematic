@@ -11,6 +11,7 @@ import requests
 
 # Sematic
 from sematic.abstract_plugin import (
+    SEMATIC_PLUGIN_AUTHOR,
     AbstractPlugin,
     AbstractPluginSettingsVar,
     PluginVersion,
@@ -46,7 +47,7 @@ class SlackPublisherSettingsVar(AbstractPluginSettingsVar):
 class SlackPublisher(AbstractPublisher, AbstractPlugin):
     @staticmethod
     def get_author() -> str:
-        return "github.com/sematic-ai"
+        return SEMATIC_PLUGIN_AUTHOR
 
     @staticmethod
     def get_version() -> PluginVersion:
