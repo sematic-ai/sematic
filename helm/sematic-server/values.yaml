@@ -75,6 +75,15 @@ image:
   pull_policy: IfNotPresent
   #pull_secrets: []
 
+ray:
+  enabled: false
+  supports_gpus: false
+  gpu_node_selector: {}
+  non_gpu_node_selector: {}
+  gpu_tolerations: []
+  non_gpu_tolerations: []
+  gpu_resource_request_key: null
+
 rbac:
   create: true
   

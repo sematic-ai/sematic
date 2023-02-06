@@ -20,6 +20,9 @@ from sematic.utils.exceptions import MissingPluginError
 logger = logging.getLogger(__name__)
 
 
+SEMATIC_PLUGIN_AUTHOR = "github.com/sematic-ai"
+
+
 class PluginScope(enum.Enum):
     """
     Enum of available plugin scopes.

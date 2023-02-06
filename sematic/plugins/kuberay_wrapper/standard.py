@@ -345,6 +345,7 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
 
 
 def _get_setting(setting, default):
-    return json.loads(
-        get_plugin_setting(StandardKuberayWrapper, setting, json.dumps(default))
-    )
+    value = json.loads(get_plugin_setting(StandardKuberayWrapper, setting, "null"))
+    if value is None:
+        value = default
+    return value
