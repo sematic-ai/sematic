@@ -1,0 +1,15 @@
+describe("Sematic application", () => {
+  it("renders the pipeline index page", () => {
+    cy.visit("/");
+    cy.contains("Welcome to Sematic");
+
+    cy.visit("/pipelines");
+
+    const table = cy.getBySel("RunList");
+    table.should("exist");
+
+    table.within(() => {
+      cy.getBySel("pipeline-row").its("length").should("be.greaterThan", 1);
+    });
+  })
+})
