@@ -1,6 +1,5 @@
 # Standard Library
 from dataclasses import dataclass
-from typing import Dict
 
 # Third-party
 import pytest
