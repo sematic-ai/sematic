@@ -163,3 +163,9 @@ node_modules
 
 # Vim
 .*swp
+
+# Python wheels
+*.whl
+
+# Cypress Captured Video
+sematic/ui/tests/cypress_video

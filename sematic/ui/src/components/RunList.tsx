@@ -116,7 +116,7 @@ export function RunList(props: RunListProps) {
   return (
     <>
       <TableContainer>
-        <Table size={props.size}>
+        <Table size={props.size} data-cy={"RunList"}>
           <TableHead>
             <TableRow>
               {props.columns.map((column) => (

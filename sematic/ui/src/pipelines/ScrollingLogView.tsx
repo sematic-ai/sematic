@@ -7,7 +7,7 @@ import { usePulldownTrigger, useScrollTracker } from "../hooks/scrollingHooks";
 import { ExceptionMetadata } from "../Models";
 import { Exception, ExternalException } from "../components/Exception";
 import usePrevious from "react-use/lib/usePrevious";
-import { useRunPanelContext } from "../hooks/runDetailsHooks";
+import { useRunPanelContext, useRunPanelLoadingIndicator } from "../hooks/runDetailsHooks";
 import { styled } from "@mui/system";
 
 const DEFAULT_LOG_INFO_MESSAGE = "No more matching lines";
@@ -34,7 +34,7 @@ export default function ScrollingLogView(props: {
   const { accumulateLogsUntilEnd, isLoading: isAccumulatorLoading,
     isAccumulating, accumulatedLines } = useAccumulateLogsUntilEnd(hasMore, getNext);
 
-  const { setFooterRenderProp, scrollerId, scrollContainerRef, setIsLoading } = useRunPanelContext();
+  const { setFooterRenderProp, scrollerId, scrollContainerRef } = useRunPanelContext();
 
   
   const pullDownCallback = useCallback(async () => {
@@ -153,12 +153,7 @@ export default function ScrollingLogView(props: {
     }
   }, [getNext, hasPulledData, scrollContainerRef]);
 
-  useEffect(() => {
-    setIsLoading(isLoading);
-    return () => {
-      setIsLoading(false);
-    }
-  }, [setIsLoading, isLoading]);
+  useRunPanelLoadingIndicator(isLoading);
 
   return (
     <>

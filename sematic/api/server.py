@@ -84,8 +84,8 @@ def parse_arguments() -> argparse.Namespace:
 
 def run_wsgi(daemon: bool):
     options = {
-        "bind": "{}:{}".format(get_config().server_address, get_config().port),
-        "workers": 1,
+        "bind": f"{get_config().server_address}:{get_config().port}",
+        "workers": get_config().wsgi_workers_count,
         "worker_class": "eventlet",
         "daemon": daemon,
         "pidfile": get_config().server_pid_file_path,
