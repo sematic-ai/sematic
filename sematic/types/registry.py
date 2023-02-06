@@ -19,7 +19,7 @@ from typing import (
 from sematic.types.generic_type import GenericType
 
 _SUPPORTED_TYPES_DOCS = (
-    "https://docs.sematic.dev/" "diving-deeper/type-support#what-types-are-supported"
+    "https://docs.sematic.dev/type-support/type-support#what-types-are-supported"
 )
 
 # We only support a certain subset of annotations in typing,

@@ -10,7 +10,7 @@ have your pipeline execute for hours or days, and then have it fail near
 the end for a simple error!
 
 Sematic will perform some up-front checks, like performing some early
-[type checking](https://docs.sematic.dev/diving-deeper/type-support)
+[type checking](https://docs.sematic.dev/type-support/type-support)
 between the inputs and outputs of the funcs in your pipeline.
 However, there's nothing that replaces the value of a good, fast unit test.
 To aid in the creation of pipeline unit tests, Sematic provides

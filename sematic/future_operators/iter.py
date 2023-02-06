@@ -27,7 +27,7 @@ def __iter__(self: Future):
 
     if not is_tuple_future:
         raise NotImplementedError(
-            "Future.__iter__ is only supported on Tuple futures. Find a workaround at https://docs.sematic.dev/diving-deeper/future-algebra#unpacking-and-iteration"  # noqa: E501
+            "Future.__iter__ is only supported on Tuple futures. Find a workaround at https://docs.sematic.dev/diving-deeper/future-algebra#unpacking-and-iteration-on-lists"  # noqa: E501
         )
 
     yield from [__getitem__(self, idx) for idx, _ in enumerate(get_args(future_type))]
