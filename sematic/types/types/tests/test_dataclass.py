@@ -45,6 +45,11 @@ class MyFrozenDataclass:
     field: str
 
 
+@dataclass
+class BadDictField:
+    bad_dict_field: dict
+
+
 @pytest.mark.parametrize(
     "from_type, to_type, expected_can_cast, expected_error",
     (
@@ -105,7 +110,9 @@ def test_can_cast_type(from_type, to_type, expected_can_cast, expected_error):
             A,
             None,
             None,
-            "Cannot cast C(a='abc') to <class 'sematic.types.types.tests.test_dataclass.A'>: Cannot cast 'abc' to <class 'int'>",  # noqa: E501
+            "Cannot cast field 'a' of C(a='abc') to "
+            "<class 'sematic.types.types.tests.test_dataclass.A'>: "
+            "Cannot cast 'abc' to <class 'int'>",  # noqa: E501
         ),
         (
             MyFrozenDataclass("some value"),
@@ -113,6 +120,18 @@ def test_can_cast_type(from_type, to_type, expected_can_cast, expected_error):
             MyFrozenDataclass,
             MyFrozenDataclass("some value"),
             None,
+        ),
+        (
+            BadDictField({"foo": "bar"}),
+            BadDictField,
+            BadDictField,
+            None,
+            "Cannot cast field 'bad_dict_field' of "
+            "BadDictField(bad_dict_field={'foo': 'bar'}) to "
+            "<class 'sematic.types.types.tests.test_dataclass.BadDictField'>:"
+            " Dictionary doesn't have key/value types specified. Please use "
+            "'Dict[KType, VType]' instead of 'Dict' or 'dict'. "
+            "Dict[object, object] can be used for arbitrary dictionaries.",
         ),
     ),
 )
