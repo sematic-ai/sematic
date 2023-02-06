@@ -61,7 +61,9 @@ def _safe_cast_dataclass(value: Any, type_: Any) -> Tuple[Any, Optional[str]]:
 
         cast_field, error = safe_cast(field_value, field.type)
         if error is not None:
-            return None, "Cannot cast {} to {}: {}".format(repr(value), type_, error)
+            return None, "Cannot cast field '{}' of {} to {}: {}".format(
+                name, repr(value), type_, error
+            )
 
         if create_instance_from_scratch:
             cast_value[name] = cast_field
