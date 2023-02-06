@@ -1,5 +1,6 @@
 # Standard Library
 from dataclasses import dataclass
+from typing import Dict
 
 # Third-party
 import pytest
@@ -43,6 +44,11 @@ class E:
 @dataclass
 class MyFrozenDataclass:
     field: str
+
+
+@dataclass
+class BadDictField:
+    bad_dict_field: dict
 
 
 @pytest.mark.parametrize(
@@ -113,6 +119,17 @@ def test_can_cast_type(from_type, to_type, expected_can_cast, expected_error):
             MyFrozenDataclass,
             MyFrozenDataclass("some value"),
             None,
+        ),
+        (
+            BadDictField({"foo": "bar"}),
+            BadDictField,
+            BadDictField,
+            None,
+            "Cannot cast BadDictField(bad_dict_field={'foo': 'bar'}) to "
+            "<class 'sematic.types.types.tests.test_dataclass.BadDictField'>:"
+            " Dictionary doesn't have key/value types specified. Please use "
+            "'Dict[KType, VType]' instead of 'Dict' or 'dict'. "
+            "Dict[object, object] can be used for arbitrary dictionaries",
         ),
     ),
 )
