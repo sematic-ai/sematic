@@ -26,7 +26,14 @@ def _dict_safe_cast(value: Dict, type_: Type) -> Tuple[Optional[Dict], Optional[
             repr(value), type_
         )
 
-    key_type, element_type = get_args(type_)
+    type_args = get_args(type_)
+    if type_args is None or type_args == ():
+        return None, (
+            "Dictionary doesn't have key/value types specified. Please use "
+            "'Dict[KType, VType]' instead of 'Dict' or 'dict'. Dict[object, object] "
+            "can be used for arbitrary dictionaries."
+        )
+    key_type, element_type = type_args
 
     cast_value = dict()
 
