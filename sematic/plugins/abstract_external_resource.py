@@ -230,7 +230,7 @@ class AbstractExternalResource(AbstractPlugin):
         increment MINOR for new functionalities
         increment MAJOR for breaking API changes (0 means unstable)
         """
-        pass
+        return _PLUGIN_VERSION
 
     @final
     def activate(self, is_local: bool) -> "AbstractExternalResource":
