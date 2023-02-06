@@ -84,21 +84,23 @@ def test_start_log_streamer_out_of_process():
     upload_interval = 100
     started = time.time()
     with tempfile.NamedTemporaryFile(delete=False) as log_file:
-        read_file_descriptor, write_file_descriptor = os.pipe()
-        os.set_blocking(read_file_descriptor, False)
-        os.set_inheritable(read_file_descriptor, True)
-        child_pid = _start_log_streamer_out_of_process(
-            file_path=log_file.name,
-            read_from_file_descriptor=read_file_descriptor,
-            upload_interval_seconds=upload_interval,
-            remote_prefix=remote_prefix,
-            uploader=mock_uploader,
-        )
-        write_handle = os.fdopen(write_file_descriptor, "w")
-        contents = "Hello, child!"
-        write_handle.write(contents)
-        write_handle.write(_TERMINATION_CHAR)
-        write_handle.flush()
+        with tempfile.NamedTemporaryFile(delete=False) as tee_file:
+            read_file_descriptor, write_file_descriptor = os.pipe()
+            os.set_blocking(read_file_descriptor, False)
+            os.set_inheritable(read_file_descriptor, True)
+            child_pid = _start_log_streamer_out_of_process(
+                file_path=log_file.name,
+                read_from_file_descriptor=read_file_descriptor,
+                original_stdout_fd=tee_file.fileno(),
+                upload_interval_seconds=upload_interval,
+                remote_prefix=remote_prefix,
+                uploader=mock_uploader,
+            )
+            write_handle = os.fdopen(write_file_descriptor, "w")
+            contents = "Hello, child!"
+            write_handle.write(contents)
+            write_handle.write(_TERMINATION_CHAR)
+            write_handle.flush()
 
         # give some time for the process to actually start up
         # and register a handler
@@ -123,6 +125,9 @@ def test_start_log_streamer_out_of_process():
 
     assert len(uploads) >= 1
     assert contents in "\n".join(concat_uploads(uploads))
+
+    with open(tee_file.name, "r") as tee_file_handle:
+        assert contents in "\n".join(tee_file_handle)
 
 
 def test_ingested_logs_uncaught():
