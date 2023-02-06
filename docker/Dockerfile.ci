@@ -5,7 +5,7 @@ RUN curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel
 RUN sudo mv bazel.gpg /etc/apt/trusted.gpg.d/
 RUN echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
 RUN sudo apt update
-RUN sudo apt install -y bazel default-jre default-jdk
+RUN sudo apt install -y bazel default-jre default-jdk xvfb libgtk-3-0 libgtk-3-0 libgbm-dev
 ENV JAVA_HOME=/usr/lib/jvm/default-java
 RUN curl -fsSL https://deb.nodesource.com/setup_19.x | sudo -E bash - &&\
     sudo apt-get install -y nodejs
