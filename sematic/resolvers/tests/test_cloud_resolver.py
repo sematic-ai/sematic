@@ -1,5 +1,5 @@
 # Standard Library
-from typing import Optional
+from typing import List, Optional
 from unittest import mock
 
 # Third-party
@@ -17,9 +17,18 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.calculator import func
 from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
+from sematic.db.queries import get_root_graph, get_run, save_resolution, save_run
+from sematic.db.tests.fixtures import make_run  # noqa: F401
+from sematic.db.tests.fixtures import persisted_resolution  # noqa: F401
+from sematic.db.tests.fixtures import persisted_run  # noqa: F401
+from sematic.db.tests.fixtures import pg_mock  # noqa: F401
+from sematic.db.tests.fixtures import run  # noqa: F401
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.resolvers.cloud_resolver import CloudResolver
-from sematic.tests.fixtures import valid_client_version  # noqa: F401
+from sematic.tests.fixtures import (  # noqa: F401
+    environment_variables,
+    valid_client_version,
+)
 
 
 @func(base_image_tag="cuda", inline=False)
@@ -68,7 +77,7 @@ def test_simulate_cloud_exec(
     def fake_schedule(run_id):
         if run_id == future.id:
             raise RuntimeError("Root future should not need scheduling--it's inline!")
-        run = api_client.get_run(run_id)
+        run = api_client.get_run(run_id)  # noqa: F811
         if "add" in run.calculator_path:
             add_run_ids.append(run_id)
         run.future_state = FutureState.SCHEDULED
@@ -82,7 +91,7 @@ def test_simulate_cloud_exec(
         for run_id in run_ids:
             if run_id == future.id:
                 raise RuntimeError("Root future should not need updating--it's inline!")
-            run = api_client.get_run(run_id)
+            run = api_client.get_run(run_id)  # noqa: F811
             run.future_state = FutureState.RESOLVED
             updates[run.id] = FutureState.RESOLVED
             edge = driver_resolver._get_output_edges(run.id)[0]
@@ -176,7 +185,7 @@ def test_make_run(_, base_image_tag, expected_image):
         "sematic.resolvers.cloud_resolver.CloudResolver._root_future",
         return_value=future,
     ):
-        run = CloudResolver()._make_run(future)
+        run = CloudResolver()._make_run(future)  # noqa: F811
         assert run.container_image_uri == expected_image
 
 
@@ -218,3 +227,62 @@ def test_make_resolution(
     assert resolution.kind == expected_kind.value
     assert resolution.container_image_uris == {"default": "foo", "cuda": "bar"}
     assert resolution.container_image_uri == expected_resolution_container_image_uri
+
+
+def test_resolver_restart(
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
+    persisted_resolution,  # noqa: F811
+):
+    # Emulate the state of a resolution which was partially
+    # done already
+    persisted_resolution.status = ResolutionStatus.RUNNING
+    save_resolution(persisted_resolution)
+
+    @func
+    def bar() -> int:
+        return 1
+
+    @func
+    def foo() -> List[int]:
+        child1 = bar()
+        child2 = bar()
+        child3 = bar()
+        return [child1, child2, child3]
+
+    root_run = get_run(persisted_resolution.root_id)
+    root_run.future_state = FutureState.RAN
+    child_run1 = make_run(
+        future_state=FutureState.RAN,
+        parent_id=persisted_resolution.root_id,
+        root_id=persisted_resolution.root_id,
+    )
+    child_run2 = make_run(
+        future_state=FutureState.RESOLVED,
+        parent_id=persisted_resolution.root_id,
+        root_id=persisted_resolution.root_id,
+    )
+    child_run3 = make_run(
+        future_state=FutureState.CREATED,
+        parent_id=persisted_resolution.root_id,
+        root_id=persisted_resolution.root_id,
+    )
+    for run in [root_run, child_run1, child_run2, child_run3]:  # noqa: F402
+        save_run(run)
+
+    # Now that we have a partially executed resolution, see
+    # what would happen if the resolver restarted.
+    future = foo()
+    future.id = root_run.id
+    with environment_variables({"SEMATIC_CONTAINER_IMAGE": "foo:bar"}):
+        with pytest.raises(Exception):
+            CloudResolver(_is_running_remotely=True, detach=False).resolve(future)
+    runs, _, __ = get_root_graph(root_run.id)
+    read_run_state_by_id = {run.id: run.future_state for run in runs}
+    assert read_run_state_by_id[child_run1.id] == FutureState.CANCELED.value
+    assert read_run_state_by_id[child_run2.id] == FutureState.RESOLVED.value
+    assert read_run_state_by_id[child_run3.id] == FutureState.CANCELED.value
+    assert read_run_state_by_id[root_run.id] == FutureState.CANCELED.value
