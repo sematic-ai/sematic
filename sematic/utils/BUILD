@@ -30,6 +30,16 @@ sematic_py_lib(
     deps = [],
 )
 
+sematic_py_binary(
+    name = "stdout_bin",
+    srcs = ["stdout.py"],
+    main = "stdout.py",
+    deps = [
+        ":stdout",
+    ],
+)
+
+
 sematic_py_lib(
     name = "git",
     srcs = ["git.py"],
