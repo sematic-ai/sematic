@@ -315,7 +315,6 @@ def testing_pipeline(
     oom: bool
         Whether to include a function that causes an Out of Memory error.
         Defaults to False.
-    external_resource: bool
         Whether to use an external resource. Defaults to False.
     resource_requirements: Optional[ResourceRequirements]
         If not None, includes a function that runs with the specified requirements.
