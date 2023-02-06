@@ -11,7 +11,6 @@ from curses import ascii
 from typing import Callable, Optional
 
 # Sematic
-from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR
 from sematic.config.user_settings import UserSettingsVar, get_user_setting
 from sematic.plugins.storage.s3_storage import S3Storage
 from sematic.utils.retry import retry
@@ -283,18 +282,6 @@ def ingested_logs(
         An optional override for uploading the log file.
     """
     uploader = uploader if uploader is not None else _do_upload
-
-    pod_name = os.getenv(KUBERNETES_POD_NAME_ENV_VAR)
-    if pod_name is not None:
-        # print is appropriate here because we want to write to actual stdout,
-        # with no logging machinary in between. This is *about* the logs. It
-        # will be shown when somebody does `kubectl logs <pod name>` because
-        # it will go to stdout before stdout gets redirected.
-        print(
-            f"To follow these logs, try:\n\t"
-            f"kubectl exec -i {pod_name} -- tail {file_path}"
-        )
-
     original_signal_handler = None
     streamer_pid = None
     read_file_descriptor = None

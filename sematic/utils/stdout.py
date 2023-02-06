@@ -83,16 +83,3 @@ def redirect_to_file_descriptor(file_descriptor: int):
                 stderr.flush()
                 os.dup2(stdout_copied.fileno(), stdout_fd)
                 os.dup2(stderr_copied.fileno(), stderr_fd)
-
-
-#######################################
-def main():
-    with redirect_to_file("/tmp/testee") as (stdout_fd, stderr_fd):
-        stdout = os.fdopen(stdout_fd, "wb")
-        stdout.write(b"Wow!")
-        stdout.flush()
-        print("Hi")
-
-
-if __name__ == "__main__":
-    main()
