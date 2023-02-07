@@ -268,10 +268,10 @@ def test_cancel_resolution(
     response = test_client.put(
         f"/api/v1/resolutions/{persisted_resolution.root_id}/cancel"
     )
-    mock_broadcast_update.assert_called()
-    mock_broadcast_cancel.assert_called()
 
     assert response.status_code == HTTPStatus.OK
+    mock_broadcast_update.assert_called()
+    mock_broadcast_cancel.assert_called()
 
     canceled_resolution = get_resolution(persisted_resolution.root_id)
     for job in canceled_resolution.external_jobs:
@@ -289,6 +289,18 @@ def test_cancel_resolution(
         assert canceled_run.future_state == FutureState.CANCELED.value
 
     assert mock_cancel_job.call_count == 2
+
+    # double tap
+    response = test_client.put(
+        f"/api/v1/resolutions/{persisted_resolution.root_id}/cancel"
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert mock_broadcast_update.call_count == 1
+    assert mock_broadcast_cancel.call_count == 1
+
+    canceled_resolution = get_resolution(persisted_resolution.root_id)
+    assert canceled_resolution.status == ResolutionStatus.CANCELED.value
 
 
 @mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
