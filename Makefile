@@ -29,13 +29,17 @@ refresh-dependencies:
 	bazel run //requirements:requirements38.update
 	bazel run //requirements:requirements39.update
 
+.PHONY: ui
 ui:
 	cd sematic/ui; npm run build
 
 worker-image:
 	cd docker; docker build -t sematicai/sematic-worker-base:latest -f Dockerfile.worker .
 
-wheel:
+sematic/ui/build:
+	@$(MAKE) ui
+
+wheel : sematic/ui/build
 	rm -f bazel-bin/sematic/*.whl
 	rm -f bazel-bin/sematic/ee/*.whl
 	cat README.md | \
