@@ -21,7 +21,7 @@ sematic_py_lib(
     ],
     # buildifier: leave-alone
     deps = [
-        "//sematic/api:app",
+        ":app",
         "//sematic/api/endpoints:artifacts",
         "//sematic/api/endpoints:auth",
         "//sematic/api/endpoints:edges",
@@ -31,8 +31,10 @@ sematic_py_lib(
         "//sematic/api/endpoints:notes",
         "//sematic/api/endpoints:resolutions",
         "//sematic/api/endpoints:runs",
+        "//sematic/api/endpoints:storage",
         "//sematic/config:config",
         "//sematic/config:server_settings",
+        "//sematic/plugins/storage:local_storage",
         "//sematic/plugins:abstract_publisher",
         "//sematic/plugins/publishing:slack",
     ],

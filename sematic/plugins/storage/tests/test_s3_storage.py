@@ -20,10 +20,10 @@ def test_upload_download(
         "sematic.plugins.storage.s3_storage.S3Storage._make_presigned_url",
         return_value="https://presigned-url",
     ):
-        write_location = s3_storage.get_write_location("artifacts", "123")
+        destination = s3_storage.get_write_destination("artifacts", "123", None)
 
-        assert write_location == "https://presigned-url"
+        assert destination.url == "https://presigned-url"
 
-        read_payload = s3_storage.get_read_payload("artifacts", "123")
+        destination = s3_storage.get_read_destination("artifacts", "123", None)
 
-        assert read_payload.content == "https://presigned-url"
+        assert destination.url == "https://presigned-url"

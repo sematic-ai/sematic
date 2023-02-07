@@ -26,6 +26,7 @@ from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.resolvers.local_resolver import LocalResolver
 from sematic.retry_settings import RetrySettings
 from sematic.tests.fixtures import (  # noqa: F401
+    test_storage,
     DIVERSE_VALUES_WITH_TYPES,
     valid_client_version,
 )
@@ -549,6 +550,7 @@ def test_rerun_from_here(
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811
+    test_storage,  # noqa: F811
 ):
     future = pipeline(1, 2)
 

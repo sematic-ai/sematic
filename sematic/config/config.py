@@ -171,6 +171,7 @@ _LOCAL_CONFIG = Config(
     server_log_to_stdout=False,
 )
 
+TEST_CONFIG = Config(server_address="localhost", api_version=1, port=5001, db_url="")
 
 _CLOUD_CONFIG = Config(
     server_address=os.environ.get(SEMATIC_SERVER_ADDRESS_ENV_VAR, "0.0.0.0"),
@@ -202,6 +203,7 @@ class EnvironmentConfigurations(Enum):
     local = _LOCAL_CONFIG
     cloud = _CLOUD_CONFIG
     user = _USER_OVERRIDE_CONFIG
+    test = TEST_CONFIG
 
 
 _active_config: Config = EnvironmentConfigurations.user.value

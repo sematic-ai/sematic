@@ -21,6 +21,7 @@ sematic_py_lib(
     deps = [
         "//sematic:abstract_plugin",
         "//sematic/config:settings",
+        "//sematic/db/models:user",
         "//sematic/utils:exceptions",
     ],
 )

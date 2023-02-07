@@ -1,4 +1,3 @@
-
 pytest_test(
     name = "test_external_resources",
     srcs = ["test_external_resources.py"],
@@ -111,8 +110,18 @@ pytest_test(
         "//sematic/api/tests:fixtures",
         "//sematic/db/models:artifact",
         "//sematic/db/tests:fixtures",
-        "//sematic/plugins/storage:memory_storage",
-        "//sematic/plugins/storage:s3_storage",
         "//sematic/tests:fixtures",
+    ],
+)
+
+pytest_test(
+    name = "test_storage",
+    srcs = ["test_storage.py"],
+    pip_deps = [
+        "flask",
+    ],
+    deps = [
+        "//sematic/api/tests:fixtures",
+        "//sematic/db/tests:fixtures",
     ],
 )
