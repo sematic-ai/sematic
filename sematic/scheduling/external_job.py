@@ -2,7 +2,7 @@
 import enum
 import time
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional
 
 # Sematic
 from sematic.utils.exceptions import ExceptionMetadata
@@ -31,6 +31,7 @@ class JobStatus:
     last_update_epoch_time:
         The time this status object was generated, as epoch seconds.
     """
+
     state_name: str
     description: str
     last_update_epoch_time: int = field(
@@ -77,7 +78,7 @@ class ExternalJob:
         failure.
         """
         return None
-    
+
     def get_status(self) -> JobStatus:
         """Get a simple status describing the state of the job.
 
