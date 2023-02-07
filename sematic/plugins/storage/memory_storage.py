@@ -88,7 +88,7 @@ def memory_download_endpoint(
         content = MemoryStorage.get(f"{namespace}/{key}")
     except NoSuchStorageKeyError:
         return jsonify_error(
-            f"No such namespace or key: {namespace} {key}", HTTPStatus.NOT_FOUND
+            f"No such namespace or key: {namespace}/{key}", HTTPStatus.NOT_FOUND
         )
 
     return flask.Response(content)

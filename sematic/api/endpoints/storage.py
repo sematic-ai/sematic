@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 @sematic_api.route("/api/v1/storage/<namespace>/<key>/location", methods=["GET"])
 @authenticate
-def get_upload_location(
+def get_storage_location(
     user: Optional[User], namespace: str, key: str
 ) -> flask.Response:
     """
@@ -58,7 +58,7 @@ def get_upload_location(
 
 @sematic_api.route("/api/v1/storage/<namespace>/<key>/data", methods=["GET"])
 @authenticate
-def get_upload_data_endpoint(user: Optional[User], namespace: str, key: str):
+def get_storage_data_endpoint(user: Optional[User], namespace: str, key: str):
     """
     Redirect to the location of the stored payload.
 
