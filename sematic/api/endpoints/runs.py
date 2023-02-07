@@ -421,6 +421,17 @@ def save_graph_endpoint(user: Optional[User]):
             jobs = []
             for external_job in run.external_jobs:
                 jobs.append(cancel_job(external_job))
+            remaining_active_jobs = [job for job in jobs if job.is_active()]
+            if len(remaining_active_jobs) > 0:
+                # *Should* be unreachable, if cancellation always works. Better
+                # to know about it if it fails though.
+                logger.error(
+                    "There are still active jobs for run %s after "
+                    "attempted cancellation.",
+                    run.id,
+                )
+            else:
+                logger.info("All jobs for run %s are stopped", run.id)
             run.external_jobs = jobs
     artifacts = [
         Artifact.from_json_encodable(artifact) for artifact in graph["artifacts"]

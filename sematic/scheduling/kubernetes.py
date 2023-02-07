@@ -293,7 +293,7 @@ class KubernetesExternalJob(ExternalJob):
             # if pod restart timing works out strangely.
             pod_summaries = [pod.string_summary() for pod in self.current_pods]
             return JobStatus(
-                state_name=KubernetesJobState.Restarting,
+                state_name=KubernetesJobState.Restarting.value,
                 description=(
                     f"There are currently {self.pending_or_running_pod_count} "
                     f"pending/runnings pods: {' | '.join(pod_summaries)}"
