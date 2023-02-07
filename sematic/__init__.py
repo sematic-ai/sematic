@@ -2,7 +2,21 @@
 Sematic Public API
 """
 # Standard Library
+import os
+import platform
 import sys
+
+# `urllib` invokes the underlying OS framework to get configured system proxies.
+# On MacOS, this call causes the OS to immediately kill the `gunicorn` WSGI worker because
+# it had not immediately performed `exec()` after `fork()`.
+# This is a feature intended to prevent fork bombs.
+#
+# Setting the below sys env avoids this Mac feature by deactivating the proxy lookup.
+# In order to deactivate this deactivation, set this env var: NO_PROXY=""
+#
+# This issue is described here: https://bugs.python.org/issue33725
+if platform.system() == "Darwin" and "NO_PROXY" not in os.environ:
+    os.environ["NO_PROXY"] = "*"
 
 MIN_PYTHON_VERSION = (3, 8, 0)
 _CURRENT_PYTHON_VERSION = sys.version_info[0:3]
