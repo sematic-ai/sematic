@@ -14,7 +14,7 @@ from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
 )
-from sematic.api.endpoints.storage import get_storage_plugin, get_upload_data
+from sematic.api.endpoints.storage import get_storage_plugin, get_stored_data_redirect
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.user import User
@@ -80,7 +80,7 @@ def get_artifact_location_endpoint(user: Optional[User], artifact_id: str):
     try:
         storage_plugin = get_storage_plugin()
     except Exception as e:
-        logger.exception("Unable to load the storage plugin")
+        logger.exception("Unable to load the storage plugin: %s", str(e))
 
         return jsonify_error(
             "Incorrect storage plugin scope", HTTPStatus.INTERNAL_SERVER_ERROR
@@ -103,4 +103,4 @@ def get_artifact_location_endpoint(user: Optional[User], artifact_id: str):
 @sematic_api.route("/api/v1/artifacts/<artifact_id>/data", methods=["GET"])
 @authenticate
 def get_artifact_data_endpoint(user: Optional[User], artifact_id: str):
-    return get_upload_data(user, "artifacts", artifact_id)
+    return get_stored_data_redirect(user, "artifacts", artifact_id)

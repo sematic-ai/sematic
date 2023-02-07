@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 # Other endpoints under the /api/v1/storage path may be added by individual
 # storage plugins (e.g. /api/v1/storage/<namespace>/<key>/memory by memory_storage)
 
+
 @sematic_api.route("/api/v1/storage/<namespace>/<key>/location", methods=["GET"])
 @authenticate
 def get_storage_location(
@@ -66,10 +67,10 @@ def get_storage_data_endpoint(user: Optional[User], namespace: str, key: str):
     --------
     A redirection to the actual binary payload.
     """
-    return get_upload_data(user, namespace, key)
+    return get_stored_data_redirect(user, namespace, key)
 
 
-def get_upload_data(user: Optional[User], namespace: str, key: str):
+def get_stored_data_redirect(user: Optional[User], namespace: str, key: str):
     try:
         storage_plugin = get_storage_plugin()
     except Exception as e:
