@@ -189,7 +189,7 @@ def test_get_specific_plugin_empty_file(empty_settings_file):
     get_settings()
 
     assert get_active_plugins(scope=PluginScope.STORAGE, default=[TestPlugin]) == [
-        TestPlugin
+        TestPlugin,
     ]
     assert (
         get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING, "default") == "default"

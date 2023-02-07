@@ -1,19 +1,16 @@
 # Standard Library
 import abc
-import enum
-from dataclasses import dataclass
-from typing import Any, Type
+from dataclasses import dataclass, field
+from typing import Dict, Optional, Type
 
-
-class PayloadType(enum.Enum):
-    URL = "URL"
-    BYTES = "BYTES"
+# Sematic
+from sematic.db.models.user import User
 
 
 @dataclass
-class ReadPayload:
-    type_: PayloadType
-    content: Any
+class StorageDestination:
+    url: str
+    request_headers: Dict[str, str] = field(default_factory=dict)
 
 
 class AbstractStorage(abc.ABC):
@@ -22,7 +19,9 @@ class AbstractStorage(abc.ABC):
     """
 
     @abc.abstractmethod
-    def get_write_location(self, namespace: str, key: str) -> str:
+    def get_write_destination(
+        self, namespace: str, key: str, user: Optional[User]
+    ) -> StorageDestination:
         """
         Gets write location for namespace/key.
 
@@ -33,7 +32,9 @@ class AbstractStorage(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_read_payload(self, namespace: str, key: str) -> ReadPayload:
+    def get_read_destination(
+        self, namespace: str, key: str, user: Optional[User]
+    ) -> StorageDestination:
         """
         Get a read payload for namespace/key.
 
