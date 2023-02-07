@@ -131,6 +131,12 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
         logger.warning("Could not update resolution: %s", e)
         return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
 
+    if ResolutionStatus[resolution.status].is_terminal():
+        try:
+            _cancel_non_terminal_runs(resolution.root_id)
+        except Exception as e:
+            logger.exception("Error when trying to cancel runs in resolution: %s", e)
+
     save_resolution(resolution)
     _publish_resolution_event(resolution)
 
@@ -231,32 +237,15 @@ def cancel_resolution_endpoint(
 
     root_run = get_run(resolution.root_id)
 
-    terminal_states = (
-        future_state.value for future_state in FutureState if future_state.is_terminal()
-    )
-
-    unfinished_runs, _, __ = get_graph(
-        sqlalchemy.and_(
-            Run.root_id == resolution.root_id,
-            sqlalchemy.not_(Run.future_state.in_(terminal_states)),  # type: ignore
-        ),
-        include_edges=False,
-        include_artifacts=False,
-    )
-
+    jobs = []
     for external_job in resolution.external_jobs:
-        cancel_job(external_job)
+        jobs.append(cancel_job(external_job))
+    resolution.external_jobs = jobs  # type: ignore
 
     resolution.status = ResolutionStatus.CANCELED
     save_resolution(resolution)
 
-    for run in unfinished_runs:
-        for external_job in run.external_jobs:
-            cancel_job(external_job)
-
-        run.future_state = FutureState.CANCELED
-
-    save_graph(unfinished_runs, [], [])
+    _cancel_non_terminal_runs(resolution.root_id)
 
     broadcast_graph_update(root_id=resolution.root_id, user=user)
     broadcast_resolution_cancel(
@@ -291,3 +280,26 @@ def _publish_resolution_event(resolution: Resolution) -> None:
         # TODO: components such as these should be instantiated once at startup and made
         #  available as a server-internal first-class citizen component API
         publisher_class().publish(resolution)
+
+
+def _cancel_non_terminal_runs(root_id):
+    terminal_states = FutureState.terminal_state_strings()
+
+    unfinished_runs, _, __ = get_graph(
+        sqlalchemy.and_(
+            Run.root_id == root_id,
+            sqlalchemy.not_(Run.future_state.in_(terminal_states)),  # type: ignore
+        ),
+        include_edges=False,
+        include_artifacts=False,
+    )
+
+    for run in unfinished_runs:
+        jobs = []
+        for external_job in run.external_jobs:
+            jobs.append(cancel_job(external_job))
+        run.external_jobs = jobs
+
+        run.future_state = FutureState.CANCELED
+
+    save_graph(unfinished_runs, [], [])

@@ -581,6 +581,12 @@ def cancel_job(job: KubernetesExternalJob) -> KubernetesExternalJob:
         raise ValueError(
             f"Expected a {KubernetesExternalJob.__name__}, got a {type(job).__name__}"
         )
+    if not job.still_exists:
+        logger.info(
+            "No need to cancel Kubernetes job %s, as it no longer exists",
+            job.external_job_id,
+        )
+        return job
 
     try:
         kubernetes.client.BatchV1Api().delete_namespaced_job(
