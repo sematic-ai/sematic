@@ -18,7 +18,7 @@ from sematic.plugins.abstract_storage import (
     StorageDestination,
 )
 
-_PLUGIN_VERSION = (0, 2, 0)
+_PLUGIN_VERSION = (0, 1, 0)
 
 
 class MemoryStorage(AbstractStorage, AbstractPlugin):
