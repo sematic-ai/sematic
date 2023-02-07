@@ -61,6 +61,10 @@ class FutureState(enum.Enum):
     def terminal_states(cls) -> FrozenSet["FutureState"]:
         return _TERMINAL_STATES
 
+    @classmethod
+    def terminal_state_strings(cls) -> FrozenSet[str]:
+        return _TERMINAL_STATE_STRINGS
+
 
 _TERMINAL_STATES = frozenset(
     {
@@ -70,6 +74,8 @@ _TERMINAL_STATES = frozenset(
         FutureState.CANCELED,
     }
 )
+
+_TERMINAL_STATE_STRINGS = frozenset(state.value for state in _TERMINAL_STATES)
 
 
 @dataclass

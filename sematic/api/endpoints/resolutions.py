@@ -283,7 +283,7 @@ def _publish_resolution_event(resolution: Resolution) -> None:
 
 
 def _cancel_non_terminal_runs(root_id):
-    terminal_states = list(FutureState.terminal_states())
+    terminal_states = FutureState.terminal_state_strings()
 
     unfinished_runs, _, __ = get_graph(
         sqlalchemy.and_(
