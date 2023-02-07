@@ -15,6 +15,7 @@ from sematic.abstract_plugin import PluginScope
 from sematic.config.server_settings import ServerSettingsVar, get_server_setting
 from sematic.config.settings import get_plugins_with_interface
 from sematic.db.queries import get_run, get_run_ids_for_resource
+from sematic.ee.plugins.tracked_plugin_mixin import TrackedPluginMixin
 from sematic.plugins.abstract_external_resource import (
     AbstractExternalResource,
     ManagedBy,
@@ -43,7 +44,7 @@ def _no_default_cluster() -> RayClusterConfig:
 
 
 @dataclass(frozen=True)
-class RayCluster(AbstractExternalResource):
+class RayCluster(TrackedPluginMixin, AbstractExternalResource):
     """Represents a distributed Ray cluster.
 
     For local execution, a local Ray cluster will be used. This class

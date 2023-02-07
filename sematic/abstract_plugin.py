@@ -118,6 +118,13 @@ class AbstractPlugin(abc.ABC):
         """
         return ".".join([cls.__module__, cls.__name__])
 
+    @classmethod
+    def track_usage(cls, **kwargs) -> None:
+        """
+        This interface is meant for EE plug-ins to implement usage tracking.
+        """
+        pass
+
 
 def import_plugin(plugin_import_path: str) -> Type[AbstractPlugin]:
     """

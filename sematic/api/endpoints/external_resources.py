@@ -16,7 +16,10 @@ from sematic.db.queries import (
     get_external_resource_record,
     save_external_resource_record,
 )
-from sematic.plugins.abstract_external_resource import ManagedBy
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
+    ManagedBy,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +82,9 @@ def activate_resource_endpoint(
             "No such resource: {}".format(resource_id), HTTPStatus.NOT_FOUND
         )
     try:
-        activated = record.resource.activate(is_local=False)
+        resource: AbstractExternalResource = record.resource
+        activated = resource.activate(is_local=False)
+        resource.track_usage(user=user, event="activated")
         logger.info(
             "After calling 'activate' resource %s is in state: %s",
             activated.id,
@@ -118,7 +123,9 @@ def deactivate_resource_endpoint(
         return flask.jsonify(payload)
 
     try:
-        deactivated = record.resource.deactivate()
+        resource: AbstractExternalResource = record.resource
+        deactivated = resource.deactivate()
+        resource.track_usage(user=user, event="deactivated")
     except Exception as e:
         message = "Error deactivating resource {}: {}".format(resource_id, e)
         logger.exception(message)
