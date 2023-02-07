@@ -7,7 +7,7 @@ import abc
 import enum
 import uuid
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, FrozenSet, List, Optional, Tuple, Union
 
 # Sematic
 from sematic.abstract_calculator import AbstractCalculator
@@ -57,13 +57,25 @@ class FutureState(enum.Enum):
         """Return True if & only if the state represents one that can't be moved from."""
         return self in _TERMINAL_STATES
 
+    @classmethod
+    def terminal_states(cls) -> FrozenSet["FutureState"]:
+        return _TERMINAL_STATES
 
-_TERMINAL_STATES = {
-    FutureState.NESTED_FAILED,
-    FutureState.FAILED,
-    FutureState.RESOLVED,
-    FutureState.CANCELED,
-}
+    @classmethod
+    def terminal_state_strings(cls) -> FrozenSet[str]:
+        return _TERMINAL_STATE_STRINGS
+
+
+_TERMINAL_STATES = frozenset(
+    {
+        FutureState.NESTED_FAILED,
+        FutureState.FAILED,
+        FutureState.RESOLVED,
+        FutureState.CANCELED,
+    }
+)
+
+_TERMINAL_STATE_STRINGS = frozenset(state.value for state in _TERMINAL_STATES)
 
 
 @dataclass
