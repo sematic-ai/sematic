@@ -44,6 +44,7 @@ from sematic.db.queries import (
 from sematic.log_reader import load_log_lines
 from sematic.scheduling.external_job import ExternalJob
 from sematic.scheduling.job_scheduler import schedule_run, update_run_status
+from sematic.scheduling.kubernetes import cancel_job
 from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
@@ -415,6 +416,12 @@ def save_graph_endpoint(user: Optional[User]):
     runs = [Run.from_json_encodable(run) for run in graph["runs"]]
     for run in runs:
         logger.info("Graph update, run %s is in state %s", run.id, run.future_state)
+        if FutureState[run.future_state].is_terminal():
+            logger.info("Ensuring jobs for %s are stopped %s", run.id, run.future_state)
+            jobs = []
+            for external_job in run.external_jobs:
+                jobs.append(cancel_job(external_job))
+            run.external_jobs = jobs
     artifacts = [
         Artifact.from_json_encodable(artifact) for artifact in graph["artifacts"]
     ]

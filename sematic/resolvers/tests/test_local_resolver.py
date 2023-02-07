@@ -231,14 +231,14 @@ def test_resolver_error(
 
     assert get_resolution(future.id).status == ResolutionStatus.FAILED.value
     assert get_run(future.id).future_state == FutureState.NESTED_FAILED.value
-    assert get_run(future.nested_future.id).future_state == FutureState.FAILED.value
+    assert get_run(future.nested_future.id).future_state == FutureState.CANCELED.value
     assert (
         get_run(future.nested_future.kwargs["x"].id).future_state
         == FutureState.FAILED.value
     )
     assert (
         get_run(future.nested_future.kwargs["y"].id).future_state
-        == FutureState.FAILED.value
+        == FutureState.CANCELED.value
     )
 
 
