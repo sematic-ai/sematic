@@ -1,4 +1,4 @@
-# Each key in this dict will add a new "extra" that 
+# Each key in this dict will add a new "extra" that
 # can be installed with Sematic. Ex: the "ray" entry
 # allows `pip install sematic[ray]`. There will also
 # be an "all" entry added that allows installing all
@@ -6,8 +6,8 @@
 # the ray extra and any others.
 EXTRAS = {
     "ray": dict(
-        sematic_module="//sematic/ee:ray",
-        requires=["ray>=2.1.0"]
+        sematic_module = "//sematic/ee:ray",
+        requires = ["ray>=2.1.0", "posthog"],
     ),
 }
 
