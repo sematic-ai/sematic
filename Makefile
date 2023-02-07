@@ -37,6 +37,7 @@ worker-image:
 
 wheel:
 	rm -f bazel-bin/sematic/*.whl
+	rm -f bazel-bin/sematic/ee/*.whl
 	cat README.md | \
 		grep -v "<img" | \
 		grep -v "<p" | \
@@ -60,8 +61,12 @@ release:
 	python3 -m twine upload bazel-bin/sematic/*.whl
 
 release-server:
-	cd docker; docker build -t sematicai/sematic-server:${TAG} -f Dockerfile.server .
-	docker push sematicai/sematic-server:${TAG}
+	rm -f docker/*.whl
+	cp bazel-bin/sematic/*.whl docker/
+	cd docker; docker build --build-arg EXTRA=default -t sematic/sematic-server:${TAG} -f Dockerfile.server .
+	docker push sematic/sematic-server:${TAG}
+	cd docker; docker build --build-arg EXTRA=all -t sematic/sematic-server-ee:${TAG} -f Dockerfile.server .
+	docker push sematic/sematic-server-ee:${TAG}
 
 test:
 	bazel test //sematic/... --test_tag_filters=nocov --test_output=all

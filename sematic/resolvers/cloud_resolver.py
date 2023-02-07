@@ -295,6 +295,7 @@ class CloudResolver(LocalResolver):
             and run.exception_metadata is None
         ):
             run.exception_metadata = format_exception_for_run()
+        run.future_state = failed_future.state
         self._add_run(run)
         self._save_graph()
         if failed_future.state == FutureState.NESTED_FAILED:

@@ -96,6 +96,9 @@ class ResolutionStatus(Enum):
             to_status = ResolutionStatus[to_status]
         return to_status in _ALLOWED_TRANSITIONS[from_status]
 
+    def is_terminal(self) -> bool:
+        return len(_ALLOWED_TRANSITIONS[self]) == 0
+
 
 _ALLOWED_TRANSITIONS = {
     # Local resolver can jump straight to RUNNING

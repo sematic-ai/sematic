@@ -1,5 +1,6 @@
 # Standard Library
 import typing
+from dataclasses import replace
 from http import HTTPStatus
 from unittest import mock
 
@@ -9,7 +10,12 @@ import pytest
 
 # Sematic
 from sematic.abstract_future import FutureState
-from sematic.abstract_plugin import AbstractPlugin, PluginScope, PluginVersion
+from sematic.abstract_plugin import (
+    SEMATIC_PLUGIN_AUTHOR,
+    AbstractPlugin,
+    PluginScope,
+    PluginVersion,
+)
 from sematic.api.tests.fixtures import (  # noqa: F401
     make_auth_test,
     mock_auth,
@@ -64,7 +70,7 @@ class MockPublisher(AbstractPublisher, AbstractPlugin):
 
     @staticmethod
     def get_author() -> str:
-        return "github.com/sematic-ai"
+        return SEMATIC_PLUGIN_AUTHOR
 
     @staticmethod
     def get_version() -> PluginVersion:
@@ -217,14 +223,23 @@ def test_schedule_resolution_endpoint(
     )
 
 
+@mock.patch("sematic.api.endpoints.resolutions.broadcast_resolution_cancel")
+@mock.patch("sematic.api.endpoints.resolutions.broadcast_graph_update")
 @mock.patch("sematic.api.endpoints.resolutions.cancel_job")
 def test_cancel_resolution(
     mock_cancel_job: mock.MagicMock,
+    mock_broadcast_update: mock.MagicMock,
+    mock_broadcast_cancel: mock.MagicMock,
     persisted_resolution: Resolution,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
     test_db,  # noqa: F811
     mock_auth,  # noqa: F811
 ):
+    def fake_cancel(job):
+        return replace(job, still_exists=False, has_started=True)
+
+    mock_cancel_job.side_effect = fake_cancel
+
     persisted_resolution.external_jobs = (
         KubernetesExternalJob.new(
             try_number=0,
@@ -253,10 +268,14 @@ def test_cancel_resolution(
     response = test_client.put(
         f"/api/v1/resolutions/{persisted_resolution.root_id}/cancel"
     )
+    mock_broadcast_update.assert_called()
+    mock_broadcast_cancel.assert_called()
 
     assert response.status_code == HTTPStatus.OK
 
     canceled_resolution = get_resolution(persisted_resolution.root_id)
+    for job in canceled_resolution.external_jobs:
+        assert not job.is_active()
 
     assert canceled_resolution.status == ResolutionStatus.CANCELED.value
 
@@ -272,7 +291,9 @@ def test_cancel_resolution(
     assert mock_cancel_job.call_count == 2
 
 
+@mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
 def test_rerun_resolution_endpoint(
+    mock_broadcast_update: mock.MagicMock,
     persisted_resolution: Resolution,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
     test_db,  # noqa: F811
@@ -283,6 +304,7 @@ def test_rerun_resolution_endpoint(
         f"/api/v1/resolutions/{persisted_resolution.root_id}/rerun",
         json={"rerun_from": persisted_resolution.root_id},
     )
+    mock_broadcast_update.assert_called()
 
     assert response.status_code == HTTPStatus.OK
 

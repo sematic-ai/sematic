@@ -3,6 +3,7 @@ sematic_py_lib(
     srcs = ["abstract_external_resource.py"],
     deps = [
         "//sematic:abstract_future",
+        "//sematic:abstract_plugin",
         "//sematic:future_context",
         "//sematic/utils:exceptions",
     ],

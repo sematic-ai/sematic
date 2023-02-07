@@ -71,7 +71,7 @@ access to the PyPi repo, which is limited to employees of Sematic.
 
 We cut releases from the `main` branch, following these steps:
 
-- Bump the version in `wheel_version.bzl`, `sematic/versions.py`,
+- Bump the version in `wheel_constants.bzl`, `sematic/versions.py`,
   and `helm/sematic-server/Chart.yaml`
 - Increment the minor version of the `version` field in
   `helm/sematic-server/Chart.yaml`. Note that this will be DIFFERENT
@@ -118,8 +118,7 @@ $ git push origin $RELEASE_VERSION
 ```
 
 Next, build and push the server image. Use the dockerfile at
-`docker/Dockerfile.server`. Copy the wheel you built before in the `docker/`
-directory.
+`docker/Dockerfile.server`.
 
 ```bash
 $ TAG=v$(python3 sematic/versions.py) make release-server

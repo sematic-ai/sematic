@@ -1,5 +1,5 @@
 <!--
-When updating the version, update versions.py and wheel_version.bzl accordingly.
+When updating the version, update versions.py and wheel_constants.bzl accordingly.
 Lines for version numbers should always be formatted as
 `* [MAJOR.MINOR.PATCH](https://pypi.org/project/sematic/MAJOR.MINOR.PATCH/)`
 with nothing else on the line.

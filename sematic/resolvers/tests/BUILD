@@ -8,6 +8,7 @@ pytest_test(
         "//sematic:calculator",
         "//sematic:retry_settings",
         "//sematic/api/tests:fixtures",
+        "//sematic/db:db",
         "//sematic/db/models:edge",
         "//sematic/db/models:resolution",
         "//sematic/db/tests:fixtures",

@@ -1,7 +1,9 @@
 # Standard Library
 import contextlib
+import enum
 import os
-from typing import Dict, Optional
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 # Third-party
 import pytest
@@ -76,3 +78,62 @@ def environment_variables(to_set: Dict[str, Optional[str]]):
         yield
     finally:
         update_environ_with(backup_of_changed_keys)
+
+
+class MyEnum(enum.Enum):
+    A = "a"
+    B = "b"
+
+
+@dataclass
+class MyDataclass:
+    a: int
+    b: str
+
+    def __hash__(self):
+        return self.a + len(self.b)
+
+
+DIVERSE_VALUES_WITH_TYPES: List[Tuple[Optional[Any], Type[Any]]] = [
+    (None, object),
+    (None, Optional[int]),  # type: ignore
+    (1, int),
+    ("a", str),
+    (MyEnum.A, type(MyEnum.A)),
+    (MyDataclass(a=1, b="b"), MyDataclass),
+    ([], List[object]),
+    ([None], List[object]),
+    ([None], List[Optional[int]]),
+    ([1, 2, 3], List[int]),
+    (["a", "b", "c"], List[str]),
+    ([MyEnum.A, MyEnum.B], List[type(MyEnum.A)]),  # type: ignore
+    ([MyDataclass(a=1, b="b"), MyDataclass(a=0, b="")], List[MyDataclass]),
+    ([None, 1, "a", MyEnum.A, MyDataclass(a=1, b="b")], List[object]),
+    (  # type: ignore
+        (None, None, 1, "a", MyEnum.A, MyDataclass(a=1, b="b")),
+        Tuple[object, Optional[int], int, str, type(MyEnum.A), MyDataclass],
+    ),
+    (dict(), Dict[int, int]),
+    ({None: None}, Dict[object, object]),
+    ({None: None}, Dict[Optional[int], Optional[int]]),
+    ({"a": 1, "b": 2}, Dict[str, int]),
+    ({1: "a", 2: "b"}, Dict[int, str]),
+    (
+        {MyEnum.A: MyEnum.A, MyEnum.B: MyEnum.B},
+        Dict[type(MyEnum.A), type(MyEnum.A)],  # type: ignore
+    ),
+    (
+        {MyDataclass(a=1, b="b"): MyDataclass(a=1, b="b")},
+        Dict[MyDataclass, MyDataclass],
+    ),
+    (
+        {
+            None: None,
+            1: 1,
+            "a": "a",
+            MyEnum.A: MyEnum.A,
+            MyDataclass(a=1, b="b"): MyDataclass(a=1, b="b"),
+        },
+        Dict[object, object],
+    ),
+]
