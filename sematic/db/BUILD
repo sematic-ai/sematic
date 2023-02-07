@@ -28,6 +28,7 @@ sematic_py_lib(
         "//sematic/db/models:user",
         "//sematic/plugins:abstract_external_resource",
         "//sematic/scheduling:external_job",
+        "//sematic/utils:exceptions",
     ],
 )
 
