@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
 # Sematic
-from sematic.abstract_plugin import AbstractPlugin
+from sematic.abstract_plugin import SEMATIC_PLUGIN_AUTHOR, AbstractPlugin
 
 # This should be the manifest that can be passed to the
 # Kubernetes API for the RayCluster CRD here:
@@ -32,6 +32,14 @@ class RayNodeConfig:
     cpu: float
     memory_gb: float
     gpu_count: int = 0
+
+    def __post_init__(self):
+        if not isinstance(self.cpu, (int, float)):
+            raise ValueError("cpu field must be a float or int")
+        if not isinstance(self.memory_gb, (int, float)):
+            raise ValueError("memory_gb field must be a float or int")
+        if not isinstance(self.gpu_count, int):
+            raise ValueError("gpu_count field must be an int")
 
 
 @dataclass(frozen=True)
@@ -137,9 +145,12 @@ def SimpleRayCluster(
 class AbstractKuberayWrapper(AbstractPlugin):
     """Plugin to convert between a RayClusterConfig & a k8s manifest for the cluster."""
 
+    KUBERAY_DEPLOYMENT_NAME = "kuberay-operator"
+    KUBERAY_CONTAINER_NAME = "kuberay-operator"
+
     @staticmethod
     def get_author() -> str:
-        return "github.com/sematic-ai"
+        return SEMATIC_PLUGIN_AUTHOR
 
     @staticmethod
     def get_version() -> Tuple[int, int, int]:
@@ -181,3 +192,7 @@ class AbstractKuberayWrapper(AbstractPlugin):
         raise NotImplementedError(
             "Child classes should implement create_cluster_manifest"
         )
+
+    @classmethod
+    def head_uri(cls, manifest: RayClusterManifest) -> str:
+        raise NotImplementedError("Child classes should implement head_uri")

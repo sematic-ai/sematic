@@ -60,7 +60,7 @@ def test_bazel_wheel_version():
     version_string = os.environ["BAZEL_WHEEL_VERSION"]
     bazel_wheel_version = tuple(int(v) for v in version_string.split("."))
     message = (
-        f"Version in wheel_version.bzl ({bazel_wheel_version}) is inconsistent "
+        f"Version in wheel_constants.bzl ({bazel_wheel_version}) is inconsistent "
         f"with the version in versions.py ({CURRENT_VERSION})"
     )
     assert bazel_wheel_version == CURRENT_VERSION, message
