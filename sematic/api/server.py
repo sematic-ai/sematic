@@ -20,6 +20,7 @@ import sematic.api.endpoints.meta  # noqa: F401
 import sematic.api.endpoints.notes  # noqa: F401
 import sematic.api.endpoints.resolutions  # noqa: F401
 import sematic.api.endpoints.runs  # noqa: F401
+import sematic.api.endpoints.storage  # noqa: F401
 from sematic.api.app import sematic_api
 from sematic.api.wsgi import SematicWSGI
 from sematic.config.config import get_config, switch_env  # noqa: F401
