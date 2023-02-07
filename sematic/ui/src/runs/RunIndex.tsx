@@ -5,12 +5,14 @@ import Link from "@mui/material/Link";
 import { Run } from "../Models";
 import { RunList } from "../components/RunList";
 import RunStateChip from "../components/RunStateChip";
-import React, { useCallback, useState } from "react";
+import React, { ChangeEvent, FormEvent, FormEventHandler, useCallback, useState } from "react";
 import Tags from "../components/Tags";
 import CalculatorPath from "../components/CalculatorPath";
 import Id from "../components/Id";
 import TimeAgo from "../components/TimeAgo";
-import { Box, Container, TextField } from "@mui/material";
+import { Box, Button, Container, TextField } from "@mui/material";
+import { RunTime } from "../components/RunTime";
+import { SearchOutlined } from "@mui/icons-material";
 
 type RunRowProps = {
   run: Run;
@@ -27,7 +29,7 @@ export function RunRow(props: RunRowProps) {
   let createdAt: React.ReactElement | undefined;
 
   if (props.variant !== "skinny") {
-    calculatorPath = <CalculatorPath calculatorPath={run.calculator_path} />;
+    calculatorPath = <Box><CalculatorPath calculatorPath={run.calculator_path}/></Box>;
 
     createdAt = (
       <Typography fontSize="small" color="GrayText">
@@ -47,23 +49,24 @@ export function RunRow(props: RunRowProps) {
         <Id id={run.id} trimTo={8} />
       </TableCell>
       <TableCell onClick={props.onClick}>
+      <Typography variant="h6">
         {props.noRunLink && run.name}
         {!props.noRunLink && (
           <Link href={"/runs/" + run.id} underline="hover">
             {run.name}
           </Link>
         )}
+        </Typography>
         {calculatorPath}
       </TableCell>
       <TableCell>
         <Tags tags={run.tags || []} />
       </TableCell>
       <TableCell onClick={props.onClick}>
-        <TimeAgo date={run.created_at} />
-        {createdAt}
+        <TimeAgo date={run.created_at} /><RunTime run={run} prefix="in" />
       </TableCell>
       <TableCell onClick={props.onClick}>
-        <RunStateChip run={run} />
+        <RunStateChip run={run} variant="full"/>
       </TableCell>
     </TableRow>
   );
@@ -72,29 +75,48 @@ export function RunRow(props: RunRowProps) {
 export function RunIndex() {
 
   const [searchString, setSearchString] = useState<string | undefined>(undefined);
-  
-  const onChange = useCallback((value: string) => {
-    console.log(value);
-    setSearchString(value);
+  const [submitedSearchString, setSubmitedSearchString] = useState<string | undefined>(undefined);
+
+  const onChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setSearchString(event.target.value);
   }, []);
 
+  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    console.log(searchString);
+    setSubmitedSearchString(searchString);
+  }, [searchString]);
+
   return (
-    <Container sx={{ pt: 10, height: "100vh", overflowY: "scroll" }}>
+    <Container sx={{ pt: 10, height: "100vh", overflowY: "scroll", display: "grid", gridTemplateRows: "auto 1fr" }}>
+
+      <Box sx={{gridRow: 1}}>
+
       <Typography variant="h4" component="h2">
-        Run list
+        Runs
       </Typography>
-      <Box sx={{py: 10}}>
-      <TextField 
+      <form onSubmit={onSubmit}>
+      <Box sx={{py: 10, display: "grid", gridTemplateColumns: "1fr auto"}}>
+        <Box sx={{gridColumn: 1, pr: 10}}>
+        <TextField 
         id="outlined-basic"
         label="Search"
         variant="outlined"
         sx={{width: "100%"}}
-        onChange={(event) => onChange(event.target.value)}
-      />
+        onChange={onChange}
+        />
+        </Box>
+        <Box sx={{gridColumn: 2}}>
+          <Button variant="contained" size="large" startIcon={<SearchOutlined/>} sx={{height: "100%"}} type="submit">SEARCH</Button>
+        </Box>
       </Box>
-      <RunList columns={["ID", "Name", "Tags", "Time", "Status"]} search={searchString}>
-        {(run: Run) => <RunRow run={run} key={run.id} />}
+      </form>
+        </Box>
+        <Box sx={{gridRow: 2}}>
+      <RunList columns={["ID", "Name", "Tags", "Time", "Status"]} search={submitedSearchString}>
+        {(run: Run) => <RunRow run={run} key={run.id} onClick={() => null}/>}
       </RunList>
+        </Box>
     </Container>
   );
 }

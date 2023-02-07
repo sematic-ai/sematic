@@ -57,7 +57,7 @@ export function RunList(props: RunListProps) {
       queryParams['search'] = search;
     }
     return queryParams;
-  }, [pageSize, groupBy]);
+  }, [pageSize, groupBy, search]);
 
   const {isLoaded, error, load} = useFetchRunsFn(filters, queryParams);
 
@@ -79,7 +79,7 @@ export function RunList(props: RunListProps) {
       setPages(pages.concat(payload));
       onRunsLoaded?.(payload.content);
     })().catch(console.error);
-  }, [currentPage, pages, load, onRunsLoaded]);
+  }, [currentPage, pages, load, onRunsLoaded, search]);
 
   let tableBody;
   let currentPayload = pages[currentPage];
