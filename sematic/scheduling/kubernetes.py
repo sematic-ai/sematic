@@ -2,7 +2,7 @@
 import logging
 import pathlib
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, unique
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -30,7 +30,7 @@ from sematic.resolvers.resource_requirements import (
     KubernetesSecretMount,
     ResourceRequirements,
 )
-from sematic.scheduling.external_job import KUBERNETES_JOB_KIND, ExternalJob, JobType
+from sematic.scheduling.external_job import KUBERNETES_JOB_KIND, ExternalJob, JobType, JobStatus
 from sematic.utils.exceptions import ExceptionMetadata, KubernetesError
 from sematic.utils.retry import retry
 
@@ -69,6 +69,69 @@ class KubernetesJobCondition(Enum):
     Complete = "Complete"
     Failed = "Failed"
 
+@unique
+class KubernetesJobState(Enum):
+    """Simple strings describing the K8s job state.
+
+    Though it is meant to be associated with the *job* it draws
+    from details relating to the *pod*, as the latter is more
+    information-rich. A "Job" may show up as active for both a pending
+    and a running pod, for example.
+    
+    Drawn from the docs for pod lifecycle:
+    https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/
+
+    Some additional states are added to represent the extra tracking
+    Sematic is performing. Extra states not covered in pod lifecycle
+    include:
+    - Requested
+    - Deleted
+    - Restarting
+    - Terminated
+
+    Attributes
+    ----------
+    Requested:
+    Pending:
+    Running:
+    Restarting:
+    Succeeded:
+    Failed:
+        The job ended with no pods in a succeeded state.
+    Deleted:
+        The job once existed, but does no longer.
+    """
+    Requested = "Requested"
+    Pending = "Pending"
+    Running = "Running"
+    Restarting = "Restarting"
+    Succeeded = "Succeeded"
+    Failed = "Failed"
+    Deleted = "Deleted"
+
+    def is_active(self) -> bool:
+        return self in {
+            KubernetesJobState.Requested,
+            KubernetesJobState.Pending,
+            KubernetesJobState.Running,
+            KubernetesJobState.Restarting,
+        }
+
+@dataclass
+class PodSummary:
+    pod_name: str
+    pod_restart_count: Optional[int] = None
+    phase_message: Optional[str] = None
+    condition_message: Optional[str] = None
+    container_condition_message: Optional[str] = None
+    start_time_epoch_seconds: Optional[int] = None
+
+    def string_summary(self) -> str:
+        return (
+            f"{self.pod_name} in phase '{self.phase_message}' "
+            f"with pod condition '{self.condition_message}' "
+            f"and container condition: '{self.container_condition_message}'."
+        )
 
 @dataclass
 class KubernetesExternalJob(ExternalJob):
@@ -93,6 +156,7 @@ class KubernetesExternalJob(ExternalJob):
     most_recent_pod_condition_message: Optional[str]
     most_recent_container_condition_message: Optional[str]
     has_infra_failure: Optional[bool]
+    current_pods: List[PodSummary] = field(default_factory=list)
 
     @classmethod
     def new(
@@ -141,6 +205,21 @@ class KubernetesExternalJob(ExternalJob):
         return f"{namespace}/{job_name}"
 
     def is_active(self) -> bool:
+        status = self.get_status()
+        logger.info("Job %s status: %s", self.external_job_id, status)
+        return KubernetesJobState[status.state_name].is_active()
+    
+    def get_status(self) -> JobStatus:
+        """Get a simple status describing the state of the job.
+
+        Note that the returned status should be based on the in-memory
+        fields of the ExternalJob, and should not reach out to the external
+        job source.
+
+        Returns
+        -------
+        A job status.
+        """
         # According to the docs:
         # github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1JobStatus.md
         # a job's "active" field holds the number of pending or running pods.
@@ -150,17 +229,69 @@ class KubernetesExternalJob(ExternalJob):
         # a pod can briefly show up as failed even when another one is
         # going to be scheduled in its place.
         if not self.has_started:
-            return True
-        if not self.still_exists:
-            return False
-        if self.most_recent_condition is None:
-            return True
-        if self.most_recent_condition in (
-            KubernetesJobCondition.Complete.value,
-            KubernetesJobCondition.Failed.value,
-        ):
-            return False
-        return self.succeeded_pod_count == 0 and self.pending_or_running_pod_count > 0
+            description = "The job has been requested, but no pods are created yet."
+            if self.try_number != 0:
+                description += (
+                    f"Sematic has retried the job, this is try number {self.try_number}"
+                )
+            return JobStatus(
+                state_name=KubernetesJobState.Requested.value,
+                description=description,
+            )
+        elif not self.still_exists:
+            return JobStatus(
+                state_name=KubernetesJobState.Deleted.value,
+                description="The job no longer exists",
+            )
+        elif self.most_recent_condition is None:
+            logger.error("TODO: state: %s", self)
+            return JobStatus(
+                state_name=KubernetesJobState.Running.value,
+                description="TODO",
+            )
+        elif self.most_recent_condition == KubernetesJobCondition.Complete.value:
+            return JobStatus(
+                state_name=KubernetesJobState.Succeeded.value,
+                description="The job has completed successfully",
+            )
+        elif self.most_recent_condition == KubernetesJobCondition.Failed.value:
+            logger.error("TODO (more detail): state: %s", self)
+            return JobStatus(
+                state_name=KubernetesJobState.Failed.value,
+                description="The job has failed",
+            )
+        elif self.succeeded_pod_count != 0:
+            return JobStatus(
+                state_name=KubernetesJobState.Succeeded.value,
+                description=(
+                    "The job has completed successfully, "
+                    "but the final status on the pod was not set"
+                ),
+            )
+        elif self.pending_or_running_pod_count == 0:
+            return JobStatus(
+                state_name=KubernetesJobState.Failed.value,
+                description="No pods were considered succeeded, but none are running"
+            )
+        elif self.pending_or_running_pod_count == 1:
+            logger.error("TODO (more detail): %s", self)
+            return JobStatus(
+                state_name=KubernetesJobState.Running.value,
+                description="Pod is running",
+            )
+        else:
+            # multiple pods can sometimes simultaneously be active
+            # if pod restart timing works out strangely.
+            pod_summaries = [
+                pod.string_summary() for pod in self.current_pods
+            ]
+            return JobStatus(
+                state_name=KubernetesJobState.Restarting,
+                description=(
+                    f"There are currently {self.pending_or_running_pod_count} "
+                    f"pending/runnings pods: {' | '.join(pod_summaries)}"
+                ),
+            )
 
     def get_exception_metadata(self) -> Optional[ExceptionMetadata]:
         """
@@ -336,7 +467,7 @@ def _get_most_recent_pod_details(
     - a human-readable message describing the container status
     - and whether ot not the above should be interpreted as an external failure
     """
-
+    logger.error("TODO: refactor to return list of pod summaries")
     most_recent_pod_phase_message = None
     most_recent_pod_condition_message = None
     most_recent_container_condition_message = None
