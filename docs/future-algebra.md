@@ -255,7 +255,7 @@ At this time, arithmetic operations are not supported on futures.
 
 If `future` is of type `Future[float]`, you cannot do `future + 1`.
 
-Here is a workaround
+Here is a workaround:
 
 ```python
 @sematic.func
