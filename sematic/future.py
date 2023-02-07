@@ -125,12 +125,12 @@ class Future(AbstractFuture):
 
     def __getitem__(self, index):
         raise NotImplementedError(
-            "Future.__getitem__ is not supported yet. Find a workaround at https://docs.sematic.dev/diving-deeper/future-algebra#attribute-and-item-access"  # noqa: E501
+            "Future.__getitem__ is not supported yet. Find a workaround at https://docs.sematic.dev/diving-deeper/future-algebra#attribute-access"  # noqa: E501
         )
 
     def __iter__(self):
         raise NotImplementedError(
-            "Future.__iter__ is not supported yet. Find a workaround at https://docs.sematic.dev/diving-deeper/future-algebra#unpacking-and-iteration"  # noqa: E501
+            "Future.__iter__ is not supported yet. Find a workaround at https://docs.sematic.dev/diving-deeper/future-algebra#unpacking-and-iteration-on-lists"  # noqa: E501
         )
 
     def __bool__(self):

@@ -24,6 +24,13 @@ in the Sematic UI.
     lightweight. Explicitly set this to `False` in order to distribute its
     execution to a worker and parallelize its execution.
 
+- `cache`: bool
+
+    Whether to cache the function's output value under the `cache_namespace`
+    configured in the `Resolver`. Defaults to `False`.
+
+    Do not activate this on a non-deterministic function!
+
 - `resource_requirements`: Optional[ResourceRequirements]
 
     When using the `CloudResolver`, specifies what special execution
@@ -71,6 +78,17 @@ input arguments and output value are tracked as artifacts.
 
 #### Parameters
 
+- `cache_namespace`: CacheNamespace
+
+    A string or a `Callable` which takes a root `Future` and returns a string, which
+    will be used as the cache key namespace in which the executed funcs' outputs will
+    be cached, as long as they also have the `cache` flag activated. Defaults to
+    `None`.
+
+    The `Callable` option takes as input the `Resolution` root `Future`. All the other
+    required variables must be enclosed in the `Callables`' context. The `Callable`
+    must have a small memory footprint and must return immediately!
+
 - `rerun_from`: Optional[str]
     
     When `None`, the pipeline is resolved from scratch, as normally. When not `None`,
@@ -85,6 +103,17 @@ input arguments and output value are tracked as artifacts.
 Resolves a pipeline on a Kubernetes cluster.
 
 #### Parameters
+
+- `cache_namespace`: CacheNamespace
+
+    A string or a `Callable` which takes a root `Future` and returns a string, which
+    will be used as the cache key namespace in which the executed funcs' outputs will
+    be cached, as long as they also have the `cache` flag activated. Defaults to
+    `None`.
+
+    The `Callable` option takes as input the `Resolution` root `Future`. All the other
+    required variables must be enclosed in the `Callables`' context. The `Callable`
+    must have a small memory footprint and must return immediately!
 
 - `max_parallelism`: Optional[int]
 
