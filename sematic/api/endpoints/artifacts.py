@@ -80,7 +80,7 @@ def get_artifact_location_endpoint(user: Optional[User], artifact_id: str):
     try:
         storage_plugin = get_storage_plugin()
     except Exception as e:
-        logger.error(e)
+        logger.exception("Unable to load the storage plugin")
 
         return jsonify_error(
             "Incorrect storage plugin scope", HTTPStatus.INTERNAL_SERVER_ERROR
