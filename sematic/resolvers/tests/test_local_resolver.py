@@ -26,8 +26,8 @@ from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.resolvers.local_resolver import LocalResolver
 from sematic.retry_settings import RetrySettings
 from sematic.tests.fixtures import (  # noqa: F401
-    test_storage,
     DIVERSE_VALUES_WITH_TYPES,
+    test_storage,
     valid_client_version,
 )
 from sematic.utils.exceptions import ExceptionMetadata, ResolutionError
