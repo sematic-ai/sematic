@@ -8,6 +8,7 @@ from typing import TypeVar, final
 
 # Sematic
 from sematic.abstract_future import AbstractFuture
+from sematic.abstract_plugin import SEMATIC_PLUGIN_AUTHOR, AbstractPlugin, PluginVersion
 from sematic.future_context import SematicContext, context
 from sematic.utils.exceptions import (
     IllegalStateTransitionError,
@@ -16,6 +17,9 @@ from sematic.utils.exceptions import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+_PLUGIN_VERSION = (0, 1, 0)
 
 
 @unique
@@ -154,7 +158,7 @@ T = TypeVar("T")
 
 
 @dataclass(frozen=True)
-class AbstractExternalResource:
+class AbstractExternalResource(AbstractPlugin):
     """Represents a resource tracked by Sematic for usage in Sematic funcs.
 
     Examples of possible external resources include small data processing
@@ -207,6 +211,27 @@ class AbstractExternalResource:
         if not isinstance(self.status, ResourceStatus):
             raise ValueError(f"ExternalResource had invalid status: '{self.status}'")
 
+    @staticmethod
+    def get_author() -> str:
+        """
+        The plug-in's author.
+
+        Can be an arbitrary string containing contact info (e.g. GitHub profile,
+        email address, etc.)
+        """
+        return SEMATIC_PLUGIN_AUTHOR
+
+    @staticmethod
+    def get_version() -> PluginVersion:
+        """
+        Plug-in version: MAJOR.MINOR.PATCH
+
+        increment PATCH for bug fixes
+        increment MINOR for new functionalities
+        increment MAJOR for breaking API changes (0 means unstable)
+        """
+        return _PLUGIN_VERSION
+
     @final
     def activate(self, is_local: bool) -> "AbstractExternalResource":
         """Perform the initialization of the resource.
@@ -234,10 +259,13 @@ class AbstractExternalResource:
         )
         updated = managed_by_updated._do_activate(is_local)
         self.validate_transition(updated)
-        if updated.status.state != ResourceState.ACTIVATING:
+        if updated.status.state not in (
+            ResourceState.ACTIVATING,
+            ResourceState.DEACTIVATING,
+        ):
             raise IllegalStateTransitionError(
                 "Calling .activate() did not leave the resource in the "
-                "ACTIVATING state."
+                "ACTIVATING or DEACTIVATING state."
             )
         return updated
 
@@ -258,14 +286,8 @@ class AbstractExternalResource:
             logger.warning(
                 "Deactivating resource before it was ever activated: %s", self.id
             )
-            updated = replace(
-                self,
-                status=replace(
-                    self.status,
-                    state=ResourceState.DEACTIVATED,
-                    message="Resource activation was canceled.",
-                    last_update_epoch_time=int(time.time()),
-                ),
+            updated = self._with_status(
+                ResourceState.DEACTIVATED, "Resource activation was canceled."
             )
         else:
             logger.debug("Deactivating %s", self)
@@ -388,3 +410,14 @@ class AbstractExternalResource:
                 f"Resolver {ctx.private.load_resolver_class()} failed to "
                 f"deactivate {deactivated}."
             )
+
+    def _with_status(self: T, state: ResourceState, message: str) -> T:
+        return replace(
+            self,
+            status=replace(
+                self.status,  # type: ignore
+                last_update_epoch_time=int(time.time()),
+                state=state,
+                message=message,
+            ),
+        )

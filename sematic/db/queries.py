@@ -200,6 +200,17 @@ def get_resources_by_root_id(root_run_id: str) -> List[ExternalResource]:
         return list(set(r[0] for r in results))
 
 
+def get_run_ids_for_resource(external_resource_id: str) -> List[str]:
+    with db().get_session() as session:
+        results = (
+            session.query(RunExternalResource.run_id)
+            .filter(external_resource_id == RunExternalResource.resource_id)
+            .distinct()
+            .all()
+        )
+        return list(r[0] for r in results)
+
+
 def get_external_resources_by_run_id(run_id: str) -> List[ExternalResource]:
     """
     Get the external resources used by a run.

@@ -1,4 +1,4 @@
-load("//sematic:wheel_version.bzl", "wheel_version_string")
+load("//sematic:wheel_constants.bzl", "wheel_version_string")
 
 sematic_py_lib(
     name = "fixtures",

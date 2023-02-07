@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 import flask
 
 # Sematic
-from sematic.abstract_plugin import AbstractPlugin, PluginVersion
+from sematic.abstract_plugin import SEMATIC_PLUGIN_AUTHOR, AbstractPlugin, PluginVersion
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.db.models.user import User
@@ -29,7 +29,7 @@ class MemoryStorage(AbstractStorage, AbstractPlugin):
 
     @staticmethod
     def get_author() -> str:
-        return "github.com/sematic-ai"
+        return SEMATIC_PLUGIN_AUTHOR
 
     @staticmethod
     def get_version() -> PluginVersion:

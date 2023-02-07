@@ -9,7 +9,12 @@ import pytest
 
 # Sematic
 from sematic.abstract_future import FutureState
-from sematic.abstract_plugin import AbstractPlugin, PluginScope, PluginVersion
+from sematic.abstract_plugin import (
+    SEMATIC_PLUGIN_AUTHOR,
+    AbstractPlugin,
+    PluginScope,
+    PluginVersion,
+)
 from sematic.api.tests.fixtures import (  # noqa: F401
     make_auth_test,
     mock_auth,
@@ -64,7 +69,7 @@ class MockPublisher(AbstractPublisher, AbstractPlugin):
 
     @staticmethod
     def get_author() -> str:
-        return "github.com/sematic-ai"
+        return SEMATIC_PLUGIN_AUTHOR
 
     @staticmethod
     def get_version() -> PluginVersion:
