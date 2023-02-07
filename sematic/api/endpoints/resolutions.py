@@ -227,13 +227,16 @@ def cancel_resolution_endpoint(
             HTTPStatus.NOT_FOUND,
         )
 
+    if resolution.status == ResolutionStatus.CANCELED.value:
+        logger.info("Resolution is already canceled")
+        return flask.jsonify(dict(content=resolution.to_json_encodable()))
+
     if not ResolutionStatus.is_allowed_transition(
         from_status=resolution.status, to_status=ResolutionStatus.CANCELED
     ):
-        return jsonify_error(
-            f"Resolution cannot be canceled. Current state: {resolution.status}",
-            HTTPStatus.BAD_REQUEST,
-        )
+        message = f"Resolution cannot be canceled. Current state: {resolution.status}"
+        logger.warning(message)
+        return jsonify_error(message, HTTPStatus.BAD_REQUEST)
 
     root_run = get_run(resolution.root_id)
 
