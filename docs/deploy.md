@@ -39,7 +39,7 @@ Pull the server image for the release of Sematic you want to deploy
 
 ```shell
 $ DEPLOY_VERSION=v<MAJOR.MINOR.PATCH>  # use the actual version numbers here
-$ sudo docker pull sematicai/sematic-server:$DEPLOY_VERSION
+$ sudo docker pull sematic/sematic-server:$DEPLOY_VERSION
 ```
 
 launch the server
@@ -51,7 +51,7 @@ $ sudo docker run -d -p 80:80 \
     [-e SEMATIC_AUTHENTICATE=1 -e GOOGLE_OAUTH_CLIENT_ID=123456789.apps.googleusercontent.com \]
     [-e SEMATIC_AUTHORIZED_EMAIL_DOMAIN=yourdomain.com \]
     [-p 443:443 -e CERTIFICATE=/path/to/certificate.pem -e PRIVATE_KEY=/path/to/private.key \]
-    sematicai/sematic-server:$DEPLOY_VERSION
+    sematic/sematic-server:$DEPLOY_VERSION
 ```
 
 where DATABASE_URL is the fully-qualified URL of your Postgres database. It should be of the form:
@@ -303,7 +303,7 @@ to offer! Sematic essentially has two components to upgrade:
 - the python library used by clients to define and launch jobs
 
 The server can be upgraded by re-deploying it using a Docker image with the
-appropriate version tag. Ex: `sematicai/sematic-server:v0.18.1`. You can do
+appropriate version tag. Ex: `sematic/sematic-server:v0.22.2`. You can do
 this with your Docker run command if you are just using the metadata server
 deployment option or using `helm upgrade` if you are using the full cloud
 deployment.

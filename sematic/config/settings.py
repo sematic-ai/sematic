@@ -4,7 +4,7 @@ import enum
 import logging
 import os
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union
+from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union, cast
 
 # Third-party
 import yaml
@@ -128,6 +128,7 @@ def get_active_settings() -> ProfileSettings:
 
         _apply_scopes_overrides(profile_settings.scopes)
         _ensure_mandatory_plugins(profile_settings.settings)
+        _ensure_scoped_plugins(profile_settings.settings, profile_settings.scopes)
 
         for plugin_path, plugin_settings in profile_settings.settings.items():
             plugin_settings_vars = _get_plugin_settings_vars(plugin_path)
@@ -136,6 +137,25 @@ def get_active_settings() -> ProfileSettings:
         _ACTIVE_SETTINGS = profile_settings
 
     return _ACTIVE_SETTINGS
+
+
+T = TypeVar("T", bound=Type[AbstractPlugin])
+
+
+def get_plugins_with_interface(
+    interface: T, scope: PluginScope, default: List[Type[AbstractPlugin]]
+) -> List[T]:
+    """Gets active plugins for a scope, but only ones implementing a given interface."""
+    for plugin in default:
+        if not issubclass(plugin, interface):
+            raise ValueError(f"{plugin} is not a subclass of {interface}")
+    plugins = get_active_plugins(scope, default=[])
+    plugins = [
+        plugin for plugin in plugins if issubclass(plugin, interface)  # type: ignore
+    ]
+    if len(plugins) == 0:
+        return cast(List[T], default)
+    return cast(List[T], plugins)
 
 
 def get_active_plugins(
@@ -442,7 +462,11 @@ def _apply_scopes_overrides(plugin_scopes: PluginScopes) -> None:
         if scope.value in os.environ:
             logger.debug("Overriding scope %s from environment variables", scope.value)
 
-            plugin_scopes[scope] = os.environ[scope.value].split(",")
+            plugin_scopes[scope] = [
+                plugin_path.strip()
+                for plugin_path in os.environ[scope.value].split(",")
+                if plugin_path.strip() != ""
+            ]
 
 
 def _ensure_mandatory_plugins(plugin_settings: PluginsSettings) -> None:
@@ -452,6 +476,16 @@ def _ensure_mandatory_plugins(plugin_settings: PluginsSettings) -> None:
     for plugin_path in _MANDATORY_SYSTEM_PLUGIN_PATHS:
         if plugin_path not in plugin_settings:
             plugin_settings[plugin_path] = {}
+
+
+def _ensure_scoped_plugins(plugin_settings, scopes):
+    """
+    Adds any plugins that are in a scope to the parameter, if not present.
+    """
+    for scope_plugins in scopes.values():
+        for plugin_path in scope_plugins:
+            if plugin_path not in plugin_settings:
+                plugin_settings[plugin_path] = {}
 
 
 def dump_settings(settings: ProfileSettings) -> str:

@@ -80,6 +80,11 @@ def activate_resource_endpoint(
         )
     try:
         activated = record.resource.activate(is_local=False)
+        logger.info(
+            "After calling 'activate' resource %s is in state: %s",
+            activated.id,
+            activated.status.state,
+        )
     except Exception as e:
         message = "Error activating resource {}: {}".format(resource_id, e)
         logger.exception(message)

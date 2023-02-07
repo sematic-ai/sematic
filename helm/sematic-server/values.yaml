@@ -70,13 +70,27 @@ deployment:
     timeoutSeconds: 1
 
 image:
-  repository: sematicai/sematic-server
-  #tag: vX.XX.X # REPLACE ME
+  repository: sematic/sematic-server
+  tag: vX.XX.X # REPLACE ME
   pull_policy: IfNotPresent
   #pull_secrets: []
 
+ray:
+  enabled: false
+  supports_gpus: false
+  gpu_node_selector: {}
+  non_gpu_node_selector: {}
+  gpu_tolerations: []
+  non_gpu_tolerations: []
+  gpu_resource_request_key: null
+
 rbac:
   create: true
+  
+  # Should the server be allowed to manage Ray clusters?
+  # Should be 'true' if using Sematic's Ray or Spark
+  # integrations.
+  manage_ray: false
 
 service_account:
   # Should a new service account be created? Or should we use

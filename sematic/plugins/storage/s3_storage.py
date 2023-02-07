@@ -9,6 +9,7 @@ import botocore.exceptions
 
 # Sematic
 from sematic.abstract_plugin import (
+    SEMATIC_PLUGIN_AUTHOR,
     AbstractPlugin,
     AbstractPluginSettingsVar,
     PluginVersion,
@@ -43,7 +44,7 @@ class S3Storage(AbstractStorage, AbstractPlugin):
 
     @staticmethod
     def get_author() -> str:
-        return "github.com/sematic-ai"
+        return SEMATIC_PLUGIN_AUTHOR
 
     @staticmethod
     def get_version() -> PluginVersion:

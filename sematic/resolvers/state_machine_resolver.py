@@ -32,7 +32,7 @@ class StateMachineResolver(Resolver, abc.ABC):
 
     # TODO: consider making these user settings
     _RESOURCE_ACTIVATION_TIMEOUT_SECONDS = 600  # 600s => 10 min
-    _RESOURCE_DEACTIVATION_TIMEOUT_SECONDS = 60  # 60s => 1 min
+    _RESOURCE_DEACTIVATION_TIMEOUT_SECONDS = 180  # 180s => 3 min
 
     # Time between resource updates *during activation and deactivation*
     _RESOURCE_UPDATE_INTERVAL_SECONDS = 1
@@ -484,7 +484,7 @@ class StateMachineResolver(Resolver, abc.ABC):
                     f"{resource.status.message}"
                 )
 
-            if time.time() - time_started > cls._RESOURCE_DEACTIVATION_TIMEOUT_SECONDS:
+            if time.time() - time_started > cls._RESOURCE_ACTIVATION_TIMEOUT_SECONDS:
                 raise ExternalResourceError(
                     f"Timed out activating resource with id {resource.id}. "
                     f"Last update message: {resource.status.message}"
