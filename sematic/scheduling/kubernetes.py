@@ -32,7 +32,12 @@ from sematic.resolvers.resource_requirements import (
     KubernetesSecretMount,
     ResourceRequirements,
 )
-from sematic.scheduling.external_job import KUBERNETES_JOB_KIND, ExternalJob, JobType, JobStatus
+from sematic.scheduling.external_job import (
+    KUBERNETES_JOB_KIND,
+    ExternalJob,
+    JobStatus,
+    JobType,
+)
 from sematic.utils.exceptions import ExceptionMetadata, KubernetesError
 from sematic.utils.retry import retry
 
@@ -71,6 +76,7 @@ class KubernetesJobCondition(Enum):
     Complete = "Complete"
     Failed = "Failed"
 
+
 @unique
 class KubernetesJobState(Enum):
     """Simple strings describing the K8s job state.
@@ -79,7 +85,7 @@ class KubernetesJobState(Enum):
     from details relating to the *pod*, as the latter is more
     information-rich. A "Job" may show up as active for both a pending
     and a running pod, for example.
-    
+
     Drawn from the docs for pod lifecycle:
     https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/
 
@@ -103,6 +109,7 @@ class KubernetesJobState(Enum):
     Deleted:
         The job once existed, but does no longer.
     """
+
     Requested = "Requested"
     Pending = "Pending"
     Running = "Running"
@@ -119,6 +126,7 @@ class KubernetesJobState(Enum):
             KubernetesJobState.Restarting,
         }
 
+
 @dataclass
 class PodSummary:
     pod_name: str
@@ -134,6 +142,7 @@ class PodSummary:
             f"with pod condition '{self.condition_message}' "
             f"and container condition: '{self.container_condition_message}'."
         )
+
 
 @dataclass
 class KubernetesExternalJob(ExternalJob):
@@ -210,7 +219,7 @@ class KubernetesExternalJob(ExternalJob):
         status = self.get_status()
         logger.info("Job %s status: %s", self.external_job_id, status)
         return KubernetesJobState[status.state_name].is_active()
-    
+
     def get_status(self) -> JobStatus:
         """Get a simple status describing the state of the job.
 
@@ -273,7 +282,7 @@ class KubernetesExternalJob(ExternalJob):
         elif self.pending_or_running_pod_count == 0:
             return JobStatus(
                 state_name=KubernetesJobState.Failed.value,
-                description="No pods were considered succeeded, but none are running"
+                description="No pods were considered succeeded, but none are running",
             )
         elif self.pending_or_running_pod_count == 1:
             logger.error("TODO (more detail): %s", self)
@@ -284,9 +293,7 @@ class KubernetesExternalJob(ExternalJob):
         else:
             # multiple pods can sometimes simultaneously be active
             # if pod restart timing works out strangely.
-            pod_summaries = [
-                pod.string_summary() for pod in self.current_pods
-            ]
+            pod_summaries = [pod.string_summary() for pod in self.current_pods]
             return JobStatus(
                 state_name=KubernetesJobState.Restarting,
                 description=(
@@ -583,6 +590,7 @@ def cancel_job(job: KubernetesExternalJob) -> KubernetesExternalJob:
         raise ValueError(
             f"Expected a {KubernetesExternalJob.__name__}, got a {type(job).__name__}"
         )
+    job = refresh_job(job)
     if not job.still_exists:
         logger.info(
             "No need to cancel Kubernetes job %s, as it no longer exists",
