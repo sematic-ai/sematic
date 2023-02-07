@@ -62,7 +62,10 @@ def _dict_to_json_encodable(
     key_type, element_type = type_.__args__
 
     # Sorting keys for determinism
-    sorted_keys = sorted(value.keys())
+    # not using the values of the keys directly because the '<' operation is not
+    # guaranteed to be implemented for all types, but the hash is guaranteed to be
+    # implemented, since the keys must be hashable in order to be used as keys
+    sorted_keys = sorted(value.keys(), key=hash)
 
     return {
         "items": [
@@ -103,7 +106,10 @@ def _dict_to_json_encodable_summary(value: Dict, type_: Type) -> List[Tuple[Any,
     key_type, element_type = type_.__args__
 
     # Sorting keys for determinism
-    sorted_keys = sorted(value.keys())
+    # not using the values of the keys directly because the '<' operation is not
+    # guaranteed to be implemented for all types, but the hash is guaranteed to be
+    # implemented, since the keys must be hashable in order to be used as keys
+    sorted_keys = sorted(value.keys(), key=hash)
 
     return [
         (
