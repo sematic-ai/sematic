@@ -97,12 +97,21 @@ def _sematic_py_wheel_impl(ctx):
     requires = list(ctx.attr.requires)
     deps_files = []
 
-    inputs = depset(
-        transitive = [dep[DefaultInfo].data_runfiles.files for dep in ctx.attr.deps] +
-                     [dep[DefaultInfo].default_runfiles.files for dep in ctx.attr.deps],
+    # We handle "ee" and "non-ee" deps distinctly, because we don't want "ee"
+    # dependencies to add requirements to the base wheel. Extra third-party
+    # deps for ee are all handled via "extra_requires"
+    non_ee_deps = [dep for dep in ctx.attr.deps if "sematic/ee" not in dep.label.package]
+    non_ee_inputs = depset(
+        transitive = [dep[DefaultInfo].data_runfiles.files for dep in non_ee_deps] +
+                     [dep[DefaultInfo].default_runfiles.files for dep in non_ee_deps],
+    )
+    ee_deps = [dep for dep in ctx.attr.deps if "sematic/ee" in dep.label.package]
+    ee_inputs = depset(
+        transitive = [dep[DefaultInfo].data_runfiles.files for dep in ee_deps] +
+                     [dep[DefaultInfo].default_runfiles.files for dep in ee_deps],
     )
 
-    for input_file in inputs.to_list():
+    for input_file in non_ee_inputs.to_list():
         file_path = _path_inside_wheel(input_file)
         depedency_name = _extract_dependency_name(file_path)
 
@@ -116,6 +125,10 @@ def _sematic_py_wheel_impl(ctx):
             if not already_in:
                 requires.append(depedency_name)
 
+        if file_path.startswith("sematic"):
+            deps_files.append(input_file)
+
+    for input_file in ee_inputs.to_list():
         if file_path.startswith("sematic"):
             deps_files.append(input_file)
 

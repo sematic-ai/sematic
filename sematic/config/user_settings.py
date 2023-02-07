@@ -3,7 +3,11 @@ import functools
 from typing import Dict, Tuple, Type, cast
 
 # Sematic
-from sematic.abstract_plugin import AbstractPlugin, AbstractPluginSettingsVar
+from sematic.abstract_plugin import (
+    SEMATIC_PLUGIN_AUTHOR,
+    AbstractPlugin,
+    AbstractPluginSettingsVar,
+)
 from sematic.config.settings import (
     MissingSettingsError,
     as_bool,
@@ -32,7 +36,7 @@ class UserSettingsVar(AbstractPluginSettingsVar):
 class UserSettings(AbstractPlugin):
     @staticmethod
     def get_author() -> str:
-        return "github.com/sematic-ai"
+        return SEMATIC_PLUGIN_AUTHOR
 
     @staticmethod
     def get_version() -> Tuple[int, int, int]:

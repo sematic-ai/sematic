@@ -1,4 +1,22 @@
-load("//sematic:wheel_version.bzl", "wheel_version_string")
+load("//sematic:wheel_constants.bzl",
+    "wheel_version_string",
+    "wheel_author",
+    "wheel_author_email",
+    "wheel_classifiers",
+    "wheel_description_file",
+    "wheel_entry_points",
+    "wheel_homepage",
+    "wheel_platform",
+    "wheel_python_requires",
+    "wheel_python_tag",
+    "wheel_requires",
+    "wheel_deps",
+)
+load(
+    "//sematic/ee:extras.bzl",
+    "EXTRA_REQUIRES",
+    "EXTRA_SEMATIC_DEPS",
+)
 
 sematic_py_lib(
     name = "init",
@@ -11,6 +29,7 @@ sematic_py_lib(
         "//sematic:future_context",
         "//sematic/future_operators:init",
         "//sematic/plugins/external_resource:timed_message",
+        "//sematic/plugins/kuberay_wrapper:standard",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:local_resolver",
         "//sematic/resolvers:resource_requirements",
@@ -199,37 +218,20 @@ sematic_py_lib(
 
 sematic_py_wheel(
     name = "wheel",
-    author = "Sematic AI, Inc.",
-    author_email = "emmanuel@sematic.ai",
-    classifiers = [
-        "License :: OSI Approved :: MIT License",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Science/Research",
-        "Programming Language :: Python :: 3 :: Only",
-        "Topic :: Scientific/Engineering :: Artificial Intelligence",
-        "Topic :: Scientific/Engineering :: Visualization",
-        "Typing :: Typed",
-    ],
-    description_file = "//:README.rst",
+    author = wheel_author,
+    author_email = wheel_author_email,
+    classifiers = wheel_classifiers,
+    description_file = wheel_description_file,
     distribution = "sematic",
-    entry_points = {"console_scripts": ["sematic = sematic.cli.main:cli"]},
-    homepage = "https://sematic.dev",
+    entry_points = wheel_entry_points,
+    homepage = wheel_homepage,
     license = "Apache License 2.0",
-    platform = "any",
-    python_requires = ">=3.8,<3.10",
-    python_tag = "py3",
-    requires = [
-        # Specifying this by hand because sematic_py_wheel doesn't know
-        # how to fix versions
-        "eventlet==0.30.2",
-        "SQLAlchemy<2.0.0",
-    ],
+    platform = wheel_platform,
+    python_requires = wheel_python_requires,
+    python_tag = wheel_python_tag,
+    requires = wheel_requires,
     version = wheel_version_string,
+    extra_requires = EXTRA_REQUIRES,
     visibility = ["//visibility:public"],
-    deps = [
-        "//sematic:client",
-        "//sematic:init",
-        "//sematic/testing:init",
-        "//sematic/cli:main_lib",
-    ],
+    deps = wheel_deps + EXTRA_SEMATIC_DEPS,
 )

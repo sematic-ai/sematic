@@ -29,8 +29,11 @@ def redirect_to_file(file_path: str):
         The file path to put stdout and stderr into
     """
     with open(file_path, "wb") as to_file:
-        with redirect_to_file_descriptor(to_file.fileno()):
-            yield
+        with redirect_to_file_descriptor(to_file.fileno()) as (
+            original_stdout,
+            original_stderr,
+        ):
+            yield (original_stdout, original_stderr)
 
 
 @contextmanager
@@ -70,7 +73,9 @@ def redirect_to_file_descriptor(file_descriptor: int):
             os.dup2(file_descriptor, stderr_fd)
             os.set_inheritable(file_descriptor, True)
             try:
-                yield  # allow code to be run with the redirected stdout
+                yield _fileno(stdout_copied), _fileno(  # type: ignore
+                    stderr_copied  # type: ignore
+                )  # allow code to be run with the redirected stdout
             finally:
                 # restore stdout & stderr to previous values
                 # NOTE: dup2 makes stdout_fd inheritable unconditionally
