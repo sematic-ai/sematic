@@ -1,4 +1,4 @@
-import { BatchPrediction, Logout, ManageSearch, PlayCircle, Timeline } from "@mui/icons-material";
+import { Logout, PlayCircle, Timeline } from "@mui/icons-material";
 import {
   Box,
   Typography,

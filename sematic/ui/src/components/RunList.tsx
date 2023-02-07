@@ -10,8 +10,12 @@ import TablePagination from "@mui/material/TablePagination";
 import TableFooter from "@mui/material/TableFooter";
 import { Filter, RunListPayload } from "../Payloads";
 import Loading from "./Loading";
-import { Run } from "../Models";
 import { useFetchRunsFn } from "../hooks/pipelineHooks";
+import useLatest from "react-use/lib/useLatest";
+import usePreviousDistinct from "react-use/lib/usePreviousDistinct";
+import { styled } from "@mui/system";
+import { spacing } from "../utils";
+import toolbarClasses from "@mui/material/Toolbar/toolbarClasses";
 
 const defaultPageSize = 10;
 
@@ -24,12 +28,23 @@ type RunListProps = {
   pageSize?: number;
   size?: "small" | "medium" | undefined;
   emptyAlert?: string;
-  onRunsLoaded?: (runs: Run[]) => void;
   triggerRefresh?: (refreshCallback: () => void) => void;
 };
 
+const StyledFooter = styled('div')`
+  & .${toolbarClasses.root} {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    background-color: ${({theme}) => theme.palette.background.paper};
+    box-sizing: border-box;
+    margin-right: ${spacing(5)};
+    width: 100%;
+  }
+`;
+
 export function RunList(props: RunListProps) {
-  let { triggerRefresh, filters, groupBy, onRunsLoaded, search } = props;
+  let { triggerRefresh, filters, groupBy, search } = props;
   const [pages, setPages] = useState<Array<RunListPayload>>([]);
   const [currentPage, setPage] = useState(0);
 
@@ -59,9 +74,12 @@ export function RunList(props: RunListProps) {
     return queryParams;
   }, [pageSize, groupBy, search]);
 
-  const {isLoaded, error, load} = useFetchRunsFn(filters, queryParams);
+  const { isLoaded, error, load } = useFetchRunsFn(filters, queryParams);
+
+  const loadCurrent = useLatest(load);
 
   useEffect(() => {
+    // logic for turning to the next page which has not been seen
     if (currentPage <= pages.length - 1) {
       return;
     }
@@ -74,12 +92,27 @@ export function RunList(props: RunListProps) {
         params = { cursor };
       }
 
-      const payload = await load(params);
+      const payload = await loadCurrent.current(params);
 
       setPages(pages.concat(payload));
-      onRunsLoaded?.(payload.content);
     })().catch(console.error);
-  }, [currentPage, pages, load, onRunsLoaded, search]);
+  }, [currentPage, pages, loadCurrent]);
+
+  const prevSearch = usePreviousDistinct(search);
+
+  useEffect(() => {
+    // logic for updating search terms
+    if (search === prevSearch) {
+      return;
+    }
+
+    (async () => {
+      const payload = await loadCurrent.current();
+
+      setPages([payload]);
+      setPage(0);
+    })().catch(console.error);
+  }, [search, prevSearch, loadCurrent]);
 
   let tableBody;
   let currentPayload = pages[currentPage];
@@ -131,13 +164,15 @@ export function RunList(props: RunListProps) {
           {tableBody}
           <TableFooter>
             <TableRow>
-              <TablePagination
-                count={totalCount}
-                page={page}
-                onPageChange={(event, page) => setPage(page)}
-                rowsPerPage={pageSize}
-                rowsPerPageOptions={[pageSize]}
-              />
+              <StyledFooter>
+                <TablePagination
+                  count={totalCount}
+                  page={page}
+                  onPageChange={(event, page) => setPage(page)}
+                  rowsPerPage={pageSize}
+                  rowsPerPageOptions={[pageSize]}
+                />
+              </StyledFooter>
             </TableRow>
           </TableFooter>
         </Table>

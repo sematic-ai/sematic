@@ -5,14 +5,16 @@ import Link from "@mui/material/Link";
 import { Run } from "../Models";
 import { RunList } from "../components/RunList";
 import RunStateChip from "../components/RunStateChip";
-import React, { ChangeEvent, FormEvent, FormEventHandler, useCallback, useState } from "react";
+import React, { ChangeEvent, FormEvent, useCallback, useState } from "react";
 import Tags from "../components/Tags";
 import CalculatorPath from "../components/CalculatorPath";
 import Id from "../components/Id";
 import TimeAgo from "../components/TimeAgo";
-import { Box, Button, Container, TextField } from "@mui/material";
+import { Box, Button, Container, TextField, textFieldClasses, buttonClasses } from "@mui/material";
 import { RunTime } from "../components/RunTime";
 import { SearchOutlined } from "@mui/icons-material";
+import { styled } from "@mui/system";
+import { spacing } from "../utils";
 
 type RunRowProps = {
   run: Run;
@@ -26,16 +28,9 @@ export function RunRow(props: RunRowProps) {
   let run = props.run;
 
   let calculatorPath: React.ReactElement | undefined = undefined;
-  let createdAt: React.ReactElement | undefined;
 
   if (props.variant !== "skinny") {
-    calculatorPath = <Box><CalculatorPath calculatorPath={run.calculator_path}/></Box>;
-
-    createdAt = (
-      <Typography fontSize="small" color="GrayText">
-        {new Date(run.created_at).toLocaleString()}
-      </Typography>
-    );
+    calculatorPath = <Box><CalculatorPath calculatorPath={run.calculator_path} /></Box>;
   }
 
   return (
@@ -49,13 +44,13 @@ export function RunRow(props: RunRowProps) {
         <Id id={run.id} trimTo={8} />
       </TableCell>
       <TableCell onClick={props.onClick}>
-      <Typography variant="h6">
-        {props.noRunLink && run.name}
-        {!props.noRunLink && (
-          <Link href={"/runs/" + run.id} underline="hover">
-            {run.name}
-          </Link>
-        )}
+        <Typography variant="h6">
+          {props.noRunLink && run.name}
+          {!props.noRunLink && (
+            <Link href={`/pipelines/${run.calculator_path}/${run.id}`} underline="hover">
+              {run.name}
+            </Link>
+          )}
         </Typography>
         {calculatorPath}
       </TableCell>
@@ -66,11 +61,68 @@ export function RunRow(props: RunRowProps) {
         <TimeAgo date={run.created_at} /><RunTime run={run} prefix="in" />
       </TableCell>
       <TableCell onClick={props.onClick}>
-        <RunStateChip run={run} variant="full"/>
+        <RunStateChip run={run} variant="full" />
       </TableCell>
     </TableRow>
   );
 }
+
+const StyledContainer = styled('div')`
+  height: 100%;
+  transform: translate(0);
+  width: fit-content;
+  margin: auto;
+`;
+
+const StyledScroller = styled(Container)`
+  padding-top: ${spacing(10)};
+  height: 100%;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+
+  @media (min-width: 1280px) {
+    min-width: 800px;
+  }
+
+  & .${buttonClasses.root} {
+    height: 100%;
+  }
+
+  & .${textFieldClasses.root} {
+    width: 100%;
+  }
+
+  & .search-bar {
+    padding-top: ${spacing(10)};
+    padding-bottom: ${spacing(10)};
+    display: flex;
+    flex-direction: row;
+
+    & > :first-child {
+      padding-right: ${spacing(10)};
+      flex-grow: 1
+    }
+  }
+
+  & form {
+    position: sticky;
+    top: -${spacing(15)};
+    background-color: ${({theme}) => theme.palette.background.paper};
+    z-index: 200;
+  }
+
+  & table {
+    position: sticky;
+    bottom: 0;
+    background-color: ${({theme}) => theme.palette.background.paper};
+  }
+
+  & > :last-child {
+    margin-bottom: ${spacing(15)};
+  }
+`;
+
 
 export function RunIndex() {
 
@@ -83,40 +135,39 @@ export function RunIndex() {
 
   const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log(searchString);
     setSubmitedSearchString(searchString);
   }, [searchString]);
 
-  return (
-    <Container sx={{ pt: 10, height: "100vh", overflowY: "scroll", display: "grid", gridTemplateRows: "auto 1fr" }}>
-
-      <Box sx={{gridRow: 1}}>
-
-      <Typography variant="h4" component="h2">
-        Runs
-      </Typography>
-      <form onSubmit={onSubmit}>
-      <Box sx={{py: 10, display: "grid", gridTemplateColumns: "1fr auto"}}>
-        <Box sx={{gridColumn: 1, pr: 10}}>
-        <TextField 
-        id="outlined-basic"
-        label="Search"
-        variant="outlined"
-        sx={{width: "100%"}}
-        onChange={onChange}
-        />
+  return (<StyledContainer>
+      <StyledScroller>
+          <Typography variant="h4" component="h2">
+            Runs
+          </Typography>
+          <form onSubmit={onSubmit}>
+            <Box className={'search-bar'}>
+              <Box sx={{ gridColumn: 1 }}>
+                <TextField
+                  id="outlined-basic"
+                  label="Search"
+                  variant="outlined"
+                  onChange={onChange}
+                />
+              </Box>
+              <Box sx={{ gridColumn: 2 }}>
+                <Button variant="contained" size="large" startIcon={<SearchOutlined />} 
+                type="submit">
+                  SEARCH
+                </Button>
+              </Box>
+            </Box>
+          </form>
+        <Box>
+          <RunList columns={["ID", "Name", "Tags", "Time", "Status"]} 
+            search={submitedSearchString}>
+            {(run: Run) => <RunRow run={run} key={run.id} onClick={() => null} />}
+          </RunList>
         </Box>
-        <Box sx={{gridColumn: 2}}>
-          <Button variant="contained" size="large" startIcon={<SearchOutlined/>} sx={{height: "100%"}} type="submit">SEARCH</Button>
-        </Box>
-      </Box>
-      </form>
-        </Box>
-        <Box sx={{gridRow: 2}}>
-      <RunList columns={["ID", "Name", "Tags", "Time", "Status"]} search={submitedSearchString}>
-        {(run: Run) => <RunRow run={run} key={run.id} onClick={() => null}/>}
-      </RunList>
-        </Box>
-    </Container>
+      </StyledScroller>
+    </StyledContainer>
   );
 }

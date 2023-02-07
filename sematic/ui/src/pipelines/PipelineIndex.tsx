@@ -91,7 +91,7 @@ function PipelineIndex() {
     <Box sx={{ display: "grid", gridTemplateColumns: "1fr 300px" }}>
       <Box sx={{ gridColumn: 1 }}>
         <Container sx={{ pt: 15 }}>
-          <Box sx={{ mx: 5 }}>
+          <Box sx={{ mx: 5, transform: 'translate(0)', pb: 15}}>
             <Box sx={{ mb: 10 }}>
               <Typography variant="h2" component="h2">
                 Your pipelines
