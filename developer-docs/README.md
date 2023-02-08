@@ -102,6 +102,11 @@ Do this for all supported versions of Python. You can check your virtual env
 Python version using `sematic version` (as well as the Server and Client
 version).
 
+At this point, you should also deploy the Docker image to a cloud Dev environment
+using the [internal Helm charts](/helm/sematic-server), and execute at least one
+pipeline in detached cloud mode. You will likely also want to smoke test new
+features that were included in the release.
+
 If everything works fine, we are ready to push the release.
 
 ```bash
@@ -123,11 +128,6 @@ Next, build and push the server image. Use the dockerfile at
 ```bash
 $ TAG=v$(python3 sematic/versions.py) make release-server
 ```
-
-At this point, you should also deploy the Docker image to a cloud Dev environment
-using the [internal Helm charts](/helm/sematic-server), and execute at least one
-pipeline in detached cloud mode. You will likely also want to smoke test new
-features that were included in the release.
 
 Next you can generate the Helm package and publish it to the Helm repository.
 Clone the repo with `git clone git@github.com:sematic-ai/helm-charts.git`, and
