@@ -128,7 +128,6 @@ def get_active_settings() -> ProfileSettings:
 
         _apply_scopes_overrides(profile_settings.scopes)
         _ensure_mandatory_plugins(profile_settings.settings)
-        _ensure_scoped_plugins(profile_settings.settings, profile_settings.scopes)
 
         for plugin_path, plugin_settings in profile_settings.settings.items():
             plugin_settings_vars = _get_plugin_settings_vars(plugin_path)
@@ -360,7 +359,7 @@ def _load_settings(file_path: str) -> Settings:
             profile_settings.scopes, PluginScope
         )
 
-        # We are mutating the dictionary as we iterate so we iterate on keys.
+        # We are mutating the dictionary as we iterate, so we iterate on keys.
         for plugin_path in list(profile_settings.settings):
             try:
                 plugin = import_plugin(plugin_path)
@@ -476,16 +475,6 @@ def _ensure_mandatory_plugins(plugin_settings: PluginsSettings) -> None:
     for plugin_path in _MANDATORY_SYSTEM_PLUGIN_PATHS:
         if plugin_path not in plugin_settings:
             plugin_settings[plugin_path] = {}
-
-
-def _ensure_scoped_plugins(plugin_settings, scopes):
-    """
-    Adds any plugins that are in a scope to the parameter, if not present.
-    """
-    for scope_plugins in scopes.values():
-        for plugin_path in scope_plugins:
-            if plugin_path not in plugin_settings:
-                plugin_settings[plugin_path] = {}
 
 
 def dump_settings(settings: ProfileSettings) -> str:
