@@ -19,6 +19,11 @@ def up():
 
     schema_version = user_loaded_yaml.get("version", 0)
 
+    if schema_version == THIS_MIGRATION_SCHEMA_VERSION:
+        # the current settings file is already at the correct version,
+        # just that this migration hadn't been marked as performed yet
+        return
+
     if schema_version != THIS_MIGRATION_SCHEMA_VERSION - 1:
         raise RuntimeError(
             f"Cannot upgrade settings file from version {schema_version} "
