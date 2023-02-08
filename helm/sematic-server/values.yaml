@@ -111,7 +111,7 @@ service:
 
 ingress:
   create: false
-  dashboard_url: https://my.sematic # REPLACE ME
+  sematic_dashboard_url: https://my.sematic # REPLACE ME
   class_name: ""
   annotations: {}
     # kubernetes.io/ingress.class: nginx
