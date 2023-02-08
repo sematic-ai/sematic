@@ -5,6 +5,17 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.24.0](https://pypi.org/project/sematic/0.24.0/)
+    * [feature] Introduction of RayCluster[^1]
+    * [feature] "Tee" cloud function logs so they appear in Sematic dashboard and the pod logs
+    * [improvement] Visualize better which run was the true "root failure" when a resolution fails
+    * [improvement] Improve an error message when using untyped dicts in type annotations
+    * [improvement] Various improvements to Sematic internal test infrastructure
+    * [bugfix] Remove a possible server crash for local servers running on Macs
+    * [bugfix] Eliminate a bug that could leave runs hanging if multiple cancellation events were sent
+    * [bugfix] Fix a bug that removed a useful default for image tag in the Helm chart
+    * [bugfix] Rename an incorrectly named helm-chart value for Slack integration
+    * [bugfix] Gracefully terminate runs when a resolver pod restarts mid-resolution
 * [0.23.0](https://pypi.org/project/sematic/0.23.0/)
     * [feature] Ability to deploy socket.io micro-service separately.
     * [feature] Expose external resources in the dashboard.
@@ -225,3 +236,6 @@ with nothing else on the line.
     * [example] New liver cirrhosis prediction model (SKLearn, XGBoost)
 * [0.0.2.alpha.1654828599](https://pypi.org/project/sematic/0.0.2a1654828599/)
     * Initial release
+
+[^1]: This feature is for Sematic's "Enterprise Edition" only. Please reach out if
+you are interested in using Sematic EE.
