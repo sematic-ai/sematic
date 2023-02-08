@@ -140,6 +140,7 @@ def _run_py_migration(migration_file: str, version: str, direction: MigrationDir
             _update_version(conn, version, direction)
 
     except Exception as e:
+        logging.exception("Error during Python migration; reverting")
         down() if direction == MigrationDirection.UP else up()
         raise e
 
