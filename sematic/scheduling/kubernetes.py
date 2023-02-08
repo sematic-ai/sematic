@@ -128,17 +128,18 @@ class KubernetesJobState(Enum):
 @dataclass
 class PodSummary:
     pod_name: str
-    pod_restart_count: Optional[int] = None
-    phase_message: Optional[str] = None
+    container_restart_count: Optional[int] = None
+    phase: Optional[str] = None
     condition_message: Optional[str] = None
     container_condition_message: Optional[str] = None
-    start_time_epoch_seconds: Optional[int] = None
+    start_time_epoch_seconds: Optional[float] = None
+    detected_infra_failure: bool = False
 
     def string_summary(self) -> str:
         return (
-            f"{self.pod_name} in phase '{self.phase_message}' "
-            f"with pod condition '{self.condition_message}' "
-            f"and container condition: '{self.container_condition_message}'."
+            f"{self.pod_name}[in phase '{self.phase}']"
+            f"[{self.condition_message}]"
+            f"[{self.container_condition_message}]"
         )
 
 
@@ -237,6 +238,8 @@ class KubernetesExternalJob(ExternalJob):
         # evictions (which don't stop the job completely, but do stop the pod),
         # a pod can briefly show up as failed even when another one is
         # going to be scheduled in its place.
+
+        # TODO: message around k8s pod restarts
         if not self.has_started:
             description = "The job has been requested, but no pods are created yet."
             if self.try_number != 0:
@@ -344,18 +347,18 @@ def _is_none_or_empty(list_: Optional[List]) -> bool:
     return list_ is None or len(list_) == 0
 
 
-def _v1_pod_precedence_key(pod: V1Pod) -> int:
+def _v1_pod_precedence_key(pod_summary: PodSummary) -> int:
     """
     To be used as a sorting key when determining the precedence of `V1Pod`s.
 
     Uses the phase of the pod because the start_time might be None in some phases.
     """
-    if pod.status is None:
+    if pod_summary.phase is None:
         return -1
 
     return (
-        POD_PHASE_PRECEDENCE.index(pod.status.phase)
-        if pod.status.phase in POD_PHASE_PRECEDENCE
+        POD_PHASE_PRECEDENCE.index(pod_summary.phase)
+        if pod_summary.phase in POD_PHASE_PRECEDENCE
         else -1
     )
 
@@ -462,24 +465,27 @@ def _get_most_recent_job_condition(
     return job.most_recent_condition
 
 
-def _get_most_recent_pod_details(
+def _get_pods_for_job(
     job: KubernetesExternalJob,
-) -> Tuple[Optional[str], Optional[str], Optional[str], bool]:
-    """
-    Fetches the details of the latest pod associated with the specified job.
+) -> Tuple[Optional[List[V1Pod]], bool]:
+    """Get the pod(s) associated with the given job
 
-    Returns a tuple containing:
-    - the pod phase
-    - a human-readable message describing the pod status
-    - a human-readable message describing the container status
-    - and whether ot not the above should be interpreted as an external failure
+    Parameters
+    ----------
+    job:
+        The job to get pods for
+
+    Returns
+    -------
+    A tuple where the first element is the list of pods, if the list can
+    be determined. If the list of pods can't be determined due to error,
+    the first element will be None.
+
+    The second element of the tuple is a boolean indicating if there was
+    an infra failure during pod retrieval (True if there was an error).
     """
-    logger.error("TODO: refactor to return list of pod summaries")
-    most_recent_pod_phase_message = None
-    most_recent_pod_condition_message = None
-    most_recent_container_condition_message = None
+    k8s_pods = None
     has_infra_failure = False
-
     try:
         k8s_pods = kubernetes.client.CoreV1Api().list_namespaced_pod(
             namespace=job.namespace,
@@ -488,55 +494,8 @@ def _get_most_recent_pod_details(
         logger.debug("K8 pods for job %s:\n%s", job.external_job_id, k8s_pods)
 
         if _is_none_or_empty(k8s_pods.items):
-            return None, None, None, True
-
-        # we can only have multiple pods in case of eviction (famous last words),
-        # so the one in the earliest phase lifecycle should be the newest one
-        most_recent_pod = min(k8s_pods.items, key=_v1_pod_precedence_key)
-
-        # if this is None, then we can't extract any information
-        if most_recent_pod.status is None:
-            return None, None, None, True
-
-        most_recent_pod_phase_message = f"Pod phase is '{most_recent_pod.status.phase}'"
-
-        # try to build a message based on the latest pod condition
-        if _is_none_or_empty(most_recent_pod.status.conditions):
-            most_recent_pod_condition_message = "Pod condition is unknown!"
-            has_infra_failure = True
-        else:
-            most_recent_condition = min(
-                most_recent_pod.status.conditions,  # type: ignore
-                key=_v1_pod_condition_precedence_key,
-            )
-            condition_modifier = (
-                "" if most_recent_condition.status == "True" else "NOT "
-            )
-            most_recent_pod_condition_message = _make_final_message(
-                f"Pod condition is {condition_modifier}'{most_recent_condition.type}'",
-                most_recent_condition.reason,
-                most_recent_condition.message,
-            )
-
-            if most_recent_condition.type in POD_FAILURE_PHASES:
-                has_infra_failure = True
-
-        # try to build a message based on the latest container status
-        if _is_none_or_empty(most_recent_pod.status.container_statuses):
-            most_recent_container_condition_message = "There is no container!"
-            has_infra_failure = most_recent_pod.status.phase != "Pending"
-        else:
-            # there can be only one
-            most_recent_container_status = most_recent_pod.status.container_statuses[
-                0
-            ]  # type: ignore
-            most_recent_container_condition_message = _make_final_message(
-                *_get_standardized_container_state(most_recent_container_status)
-            )
-
-            if _has_container_failure(most_recent_container_status):
-                has_infra_failure = most_recent_pod.status.phase != "Pending"
-
+            return [], has_infra_failure
+        return list(k8s_pods.items), has_infra_failure
     except OpenApiException as e:
         has_infra_failure = True
         logger.warning(
@@ -544,22 +503,85 @@ def _get_most_recent_pod_details(
             job.external_job_id,
             exc_info=e,
         )
+        return None, has_infra_failure
 
+
+def _get_pod_summary(pod: V1Pod) -> PodSummary:
+    try:
+        detected_infra_failure = False
+        if pod.status is None:
+            logger.warning("Pod %s has no status", pod.metadata.name)  # type: ignore
+            return PodSummary(
+                pod_name=pod.metadata.name,  # type: ignore
+                detected_infra_failure=detected_infra_failure,
+            )
+
+        if _is_none_or_empty(pod.status.conditions):
+            most_recent_condition_message = "Most recent pod condition is unknown"
+        else:
+            most_recent_condition = min(
+                pod.status.conditions,  # type: ignore
+                key=_v1_pod_condition_precedence_key,
+            )
+            condition_modifier = (
+                "" if most_recent_condition.status == "True" else "NOT "
+            )
+            most_recent_condition_message = _make_final_message(
+                f"Pod condition is {condition_modifier}'{most_recent_condition.type}'",
+                most_recent_condition.reason,
+                most_recent_condition.message,
+            )
+
+            if most_recent_condition.type in POD_FAILURE_PHASES:
+                detected_infra_failure = True
+
+        container_restarts = None
+        # try to build a message based on the latest container status
+        if _is_none_or_empty(pod.status.container_statuses):
+            most_recent_container_condition_message = "There is no container!"
+            detected_infra_failure = pod.status.phase != "Pending"
+        else:
+            # there can be only one
+            most_recent_container_status = pod.status.container_statuses[
+                0
+            ]  # type: ignore
+            most_recent_container_condition_message = _make_final_message(
+                *_get_standardized_container_state(most_recent_container_status)
+            )
+
+            if _has_container_failure(most_recent_container_status):
+                detected_infra_failure = pod.status.phase != "Pending"
+
+            container_restarts = getattr(
+                most_recent_container_status, "restart_count", None
+            )
+
+        return PodSummary(
+            pod_name=pod.metadata.name,  # type: ignore
+            container_restart_count=container_restarts,
+            phase=pod.status.phase,
+            condition_message=most_recent_condition_message,
+            container_condition_message=most_recent_container_condition_message,
+            start_time_epoch_seconds=(
+                pod.status.start_time.timestamp()
+                if pod.status.start_time is not None
+                else None
+            ),
+            detected_infra_failure=detected_infra_failure,
+        )
     except Exception as e:
-        has_infra_failure = True
         logger.error(
-            "Got exception while extracting information from pods for job %s",
-            job.external_job_id,
+            "Got exception while extracting information from pods",
             exc_info=e,
         )
-
-    finally:
-        # even if we raised, some of these fields might have been filled in
-        return (
-            most_recent_pod_phase_message,
-            most_recent_pod_condition_message,
-            most_recent_container_condition_message,
-            has_infra_failure,
+        pod_name = "Unknown"
+        try:
+            pod_name = pod.metadata.name  # type: ignore
+        except Exception as e2:
+            logger.error("Pod name could not be determined", exc_info=e2)
+        return PodSummary(
+            pod_name=pod_name,
+            detected_infra_failure=True,
         )
 
 
@@ -678,12 +700,27 @@ def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
     )
 
     job.most_recent_condition = _get_most_recent_job_condition(job, k8s_job)
-    (
-        job.most_recent_pod_phase_message,
-        job.most_recent_pod_condition_message,
-        job.most_recent_container_condition_message,
-        job.has_infra_failure,
-    ) = _get_most_recent_pod_details(job)
+    pods, had_infra_failure = _get_pods_for_job(job)
+    job.has_infra_failure = had_infra_failure
+
+    if pods is None:
+        job.current_pods = []
+    else:
+        pod_summaries = [_get_pod_summary(pod) for pod in pods]
+        job.current_pods = pod_summaries
+        most_recent_pod_summary: PodSummary = min(
+            pod_summaries, key=_v1_pod_precedence_key
+        )
+        job.most_recent_pod_phase_message = (
+            f"Pod phase is {most_recent_pod_summary.phase}"
+        )
+        job.most_recent_pod_condition_message = (
+            most_recent_pod_summary.condition_message
+        )
+        job.most_recent_container_condition_message = (
+            most_recent_pod_summary.container_condition_message
+        )
+        job.has_infra_failure = most_recent_pod_summary.detected_infra_failure
 
     logger.debug("Job %s refreshed: %s", job.external_job_id, job)
     return job

@@ -71,7 +71,7 @@ deployment:
 
 image:
   repository: sematic/sematic-server
-  tag: vX.XX.X # REPLACE ME
+  #tag: vX.XX.X # REPLACE ME
   pull_policy: IfNotPresent
   #pull_secrets: []
 
