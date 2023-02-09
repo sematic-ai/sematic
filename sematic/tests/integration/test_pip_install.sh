@@ -16,11 +16,12 @@ pwd
 
 source ./$VENV_NAME/bin/activate
 
-make wheel
 WHEEL_PATH=$(ls bazel-bin/sematic/sematic-*.whl)
 
 if test -f "$WHEEL_PATH"; then
-    echo "Error: Wheel not found"
+    echo "Wheel found at $WHEEL_PATH"
+else
+    echo "Wheel not present at $WHEEL_PATH"
     exit 1
 fi
 
