@@ -7,13 +7,13 @@ in various circumstances.
 
 Sematic has 3 versioned entities, depending on your usage:
 
-- *pip package*: If you are using Sematic only locally, this is
+- **pip package**: If you are using Sematic only locally, this is
 the only versioned entity you need. This determines the code
 that will be used for your code to interact with the server,
 including how Sematic resolvers interact with the server.
-- *Server*: If you are using Sematic in the cloud, you need this
+- **Server**: If you are using Sematic in the cloud, you need this
 and the pip package.
-- *bazel integration*: If you are using `bazel` with Sematic, you
+- **bazel integration**: If you are using `bazel` with Sematic, you
 need this versioned entity as well.
 
 When you are upgrading Sematic, you generally want to upgrade all of
@@ -139,9 +139,9 @@ parameter to
 
 ## FOSS to "Enterprise Edition"[^1]
 
-(0) Reach out to Sematic to obtain a license for "Sematic EE."
-(1) In your helm deployment, change `image.repository` to `sematic/sematic-server-ee`.
-(2) In your `pip` installation (client installation), change from depending on `sematic`
+0. Reach out to Sematic to obtain a license for "Sematic EE."
+1. In your helm deployment, change `image.repository` to `sematic/sematic-server-ee`.
+2. In your `pip` installation (client installation), change from depending on `sematic`
 to `sematic[<extra>]`, where `<extra>` is the appropriate variant of Sematic containing
 the EE features you are interested in. See [integrations](#integrations) below for
 specific extras. Note that `sematic[all]` will equip clients with ALL Enterprise Edition
@@ -205,3 +205,34 @@ ray:
 
 [^1]: This feature of Sematic is only available with the "Enterprise Edition."
 Before using, please reach out to Sematic to obtain a license for "Sematic EE."
+
+### Slack
+
+##### Setting up a Slack webhook and obtaining a token
+
+- Log into Slack web and go to the page where the App creation flow starts:
+https://api.slack.com/apps?new_app=1
+- Choose “From scratch”
+- Type in an App name and select the workspace they want to add the App to, and click “Create App”
+
+##### Configuring values.yaml
+
+- set `ingress.sematic_dashboard_url` if it has not already been set. This
+controls the way the Slack integration will generate links to Sematic in the
+messages it posts.
+- configure all the values called `slack.*`, as described in Sematic's
+[Helm documentation](https://github.com/sematic-ai/helm-charts/blob/gh-pages/README.md).
+
+As an example:
+
+```yaml
+ingress:
+    # ...
+    sematic_dashboard_url: https://my.sematic.com
+
+# ...
+
+slack:
+  enabled: true
+  slack_webhook_token: XXX/YYY/ZZZ
+```
