@@ -17,6 +17,7 @@ data:
   STORAGE: "sematic.plugins.storage.s3_storage.S3Storage"
 {{ end }}
 {{ if .Values.slack.enabled }}
+  PUBLISH: "sematic.plugins.publishing.slack.SlackPublisher"
   SLACK_WEBHOOK_TOKEN: {{ .Values.slack.slack_webhook_token | quote }}
 {{ end }}
   KUBERNETES_NAMESPACE: {{ .Release.Namespace }}
