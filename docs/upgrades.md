@@ -5,17 +5,19 @@ in various circumstances.
 
 ## General guidance
 
-Sematic has 3 components, depending on your usage:
+Sematic has 3 versioned entities, depending on your usage:
 
 - *pip package*: If you are using Sematic only locally, this is
-the only component you need.
+the only versioned entity you need. This determines the code
+that will be used for your code to interact with the server,
+including how Sematic resolvers interact with the server.
 - *Server*: If you are using Sematic in the cloud, you need this
 and the pip package.
-- *bazel integration*: If you are running Sematic with `bazel`, you
-need this component as well.
+- *bazel integration*: If you are using `bazel` with Sematic, you
+need this versioned entity as well.
 
 When you are upgrading Sematic, you generally want to upgrade all of
-the components you are using at the same time. It is impossible to
+the versions you are using at the same time. It is impossible to
 upgrade all of them literally atomically, so we reccommend upgrading in
 the order:
 
@@ -77,15 +79,20 @@ helm upgrade sematic-server -f /path/to.values.yaml
 
 ## Upgrading the server past supported client versions
 
-You will always want to upgrade the server before upgrading the clients. If the
-server is being upgraded to a version that still supports the version being
+For purposes of this discussion, "client" generally refers to
+the code installed with your pip package, which applies to how your
+source code interacts with the Server API via our SDK, including
+how remote resolution jobs interact with that Server API.
+
+You will always want to upgrade the server before upgrading the pip package.
+If the server is being upgraded to a version that still supports the version being
 used by your clients, you can often upgrade the server without any downtime for
 users. This is one benefit of keeping up-to-date with regular upgrades! If you
 want to know what client versions a given server supports, you can look at
 the [release notes](https://github.com/sematic-ai/sematic/releases).
 
 Often, you will need to upgrade the server beyond support for the clients
-currently in use. When this happens, a recommended upgrade workflow is:
+currently in use. When this happens, an example upgrade workflow would be:
 
 1. Draft a PR in your repo that upgrades the clients
 2. Notify users that there will be an upcoming maintenance window for upgrades
@@ -99,11 +106,15 @@ currently in use. When this happens, a recommended upgrade workflow is:
 
 ## From vX1.X2.X3 to vY1.Y2.Y3
 
+{% hint style="info" %}
 This section contains instructions for migrating from one
 version of Sematic to another. It does not cover every version
-delta, but only (a) from one version to a subsequent one (b)
-upgrades where there are non-trivial details to pay attention to
+delta, but only:
+
+(a) from one version to a subsequent one
+(b) upgrades where there are non-trivial details to pay attention to
 when performing the upgrade.
+{% endhint %}
 
 ### v0.23.X to v0.24.Y
 
