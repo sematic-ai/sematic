@@ -1,5 +1,9 @@
 # Ray[^1]
 
+{% hint style="warning" %}
+This feature is in "Beta."
+{% endhint %}
+
 ## What is Ray?
 
 [Ray](https://www.ray.io/) is a framework for scaling python
