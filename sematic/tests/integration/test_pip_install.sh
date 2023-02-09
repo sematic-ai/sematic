@@ -16,6 +16,7 @@ pwd
 
 source ./$VENV_NAME/bin/activate
 
+make wheel
 WHEEL_PATH=$(ls bazel-bin/sematic/sematic-*.whl)
 
 if test -f "$WHEEL_PATH"; then
