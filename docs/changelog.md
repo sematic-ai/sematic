@@ -5,6 +5,9 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.24.1](https://pypi.org/project/sematic/0.24.1/)
+    * [improvement] Show more detailed errors on failures of DB migrations
+    * [bugfix] Reduce wheel size
 * [0.24.0](https://pypi.org/project/sematic/0.24.0/)
     * [feature] Introduction of RayCluster[^1]
     * [feature] "Tee" cloud function logs so they appear in Sematic dashboard and the pod logs
