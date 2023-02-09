@@ -40,6 +40,7 @@
 * Apache Spark
 * Ray
 -->
+* [Ray](ray.md)
 * [Snowflake](snowflake.md)
 * [Grafana](grafana.md)
 <!---
