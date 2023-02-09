@@ -129,6 +129,7 @@ def _sematic_py_wheel_impl(ctx):
             deps_files.append(input_file)
 
     for input_file in ee_inputs.to_list():
+        file_path = _path_inside_wheel(input_file)
         if file_path.startswith("sematic"):
             deps_files.append(input_file)
 
