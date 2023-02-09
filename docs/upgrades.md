@@ -11,7 +11,7 @@ Sematic has 3 components, depending on your usage:
 the only component you need.
 - *Server*: If you are using Sematic in the cloud, you need this
 and the pip package.
-- *bazel integration*: If you are using `bazel` with Sematic, you
+- *bazel integration*: If you are running Sematic with `bazel`, you
 need this component as well.
 
 When you are upgrading Sematic, you generally want to upgrade all of
