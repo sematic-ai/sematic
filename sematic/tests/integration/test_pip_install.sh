@@ -36,13 +36,7 @@ else
 fi
 
 pip install bazel-bin/sematic/sematic-*.whl
-
-if $? ; then
-    echo "Pip install succeeded"
-else
-    echo "Pip install failed"
-    exit 1
-fi
+python3 -c "import sematic; print(sematic.__version__)" || exit 1
 
 deactivate
 
