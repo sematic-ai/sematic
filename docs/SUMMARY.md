@@ -59,6 +59,7 @@
     * [Code of Conduct](code-of-conduct.md)
     * [Example pipelines](contribute-example.md)
 * [Changelog](changelog.md)
+* [Upgrade Guides](upgrades.md)
 <!---
 * Company handbook
 -->
