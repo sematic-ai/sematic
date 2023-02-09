@@ -340,12 +340,11 @@ def test_list_runs_search_fields(
         make_run(name="photon"),
         make_run(calculator_path="neutralino.to.dark.matter"),
         make_run(description="the neutralino is a hypothetical particle"),
-        make_run(source_code="def neutrino():\npass"),
     )
 
     for run_ in runs:
         save_run(run_)
-    run1, run2, run3, run4, run5, run6 = runs
+    run1, run2, run3, run4, run5 = runs
 
     response = test_client.get("/api/v1/runs?search=neutr")
 
@@ -354,14 +353,13 @@ def test_list_runs_search_fields(
     payload = response.json
     payload = typing.cast(typing.Dict[str, typing.Any], payload)
 
-    assert len(payload["content"]) == 5
+    assert len(payload["content"]) == 4
     ids = [result["id"] for result in payload["content"]]
     assert run1.id in ids
     assert run2.id in ids
     assert run3.id not in ids
     assert run4.id in ids
     assert run5.id in ids
-    assert run6.id in ids
 
 
 def test_list_runs_search_tags(

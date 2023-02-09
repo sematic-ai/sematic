@@ -138,8 +138,9 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
         if sql_predicates is not None:
             query = query.filter(sql_predicates)
 
-        search_predicates = _generateSearchPredicate()
-        if search_predicates is not None:
+        search_string = flask.request.args.get("search")
+        if search_string is not None:
+            search_predicates = _generate_search_predicate(search_string)
             query = query.filter(search_predicates)
 
         if decoded_cursor is not None:
@@ -196,19 +197,16 @@ def _make_cursor(key: str) -> str:
     return base64.urlsafe_b64encode(bytes(key, "utf-8")).decode("utf-8")
 
 
-def _generateSearchPredicate() -> Optional[BooleanClauseList]:
-    search_string, search_predicates = flask.request.args.get("search"), None
-    if search_string is not None:
-        search_predicates = sqlalchemy.or_(
-            Run.name.ilike(f"%{search_string}%"),
-            Run.calculator_path.ilike(f"%{search_string}%"),
-            Run.description.ilike(f"%{search_string}%"),
-            Run.source_code.ilike(f"%{search_string}%"),
-            Run.id.ilike(f"%{search_string}%"),
-            Run.tags.ilike(f"%{search_string}%"),
-        )
-
-    return search_predicates
+def _generate_search_predicate(
+    search_string: str,
+) -> BooleanClauseList:
+    return sqlalchemy.or_(
+        Run.name.ilike(f"%{search_string}%"),
+        Run.calculator_path.ilike(f"%{search_string}%"),
+        Run.description.ilike(f"%{search_string}%"),
+        Run.id.ilike(f"%{search_string}%"),
+        Run.tags.ilike(f"%{search_string}%"),
+    )
 
 
 @sematic_api.route("/api/v1/runs/<run_id>", methods=["GET"])
