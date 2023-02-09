@@ -67,30 +67,25 @@ export function RunRow(props: RunRowProps) {
   );
 }
 
-const StyledContainer = styled('div')`
-  height: 100%;
-  transform: translate(0);
-  width: fit-content;
-  margin: auto;
-`;
-
 const StyledScroller = styled(Container)`
   padding-top: ${spacing(10)};
   height: 100%;
-  overflow-y: scroll;
+  overflow-y: hidden;
   display: flex;
   flex-direction: column;
 
   @media (min-width: 1280px) {
-    min-width: 800px;
+    min-width: 1020px;
   }
 
-  & .${buttonClasses.root} {
-    height: 100%;
+  & > * {
+    flex-shrink: 1;
   }
 
-  & .${textFieldClasses.root} {
-    width: 100%;
+  & > *.RunListBox {
+    flex-grow: 1;
+    flex-shrink: unset;
+    height: 0;
   }
 
   & .search-bar {
@@ -103,26 +98,24 @@ const StyledScroller = styled(Container)`
       padding-right: ${spacing(10)};
       flex-grow: 1
     }
-  }
 
-  & form {
-    position: sticky;
-    top: -${spacing(15)};
-    background-color: ${({theme}) => theme.palette.background.paper};
-    z-index: 200;
-  }
-
-  & table {
-    position: sticky;
-    bottom: 0;
-    background-color: ${({theme}) => theme.palette.background.paper};
-  }
-
-  & > :last-child {
-    margin-bottom: ${spacing(15)};
+    & .${buttonClasses.root} {
+      height: 100%;
+    }
+  
+    & .${textFieldClasses.root} {
+      width: 100%;
+    }
   }
 `;
 
+const TableColumns = [
+  {name: "ID", width: "7.5%"},
+  {name: "Name", width: "47.5%"},
+  {name: "Tags", width: "21%"},
+  {name: "Time", width: "12%"},
+  {name: "Status", width: "12%"}
+]
 
 export function RunIndex() {
 
@@ -138,8 +131,7 @@ export function RunIndex() {
     setSubmitedSearchString(searchString);
   }, [searchString]);
 
-  return (<StyledContainer>
-      <StyledScroller>
+  return (<StyledScroller>
           <Typography variant="h4" component="h2">
             Runs
           </Typography>
@@ -161,13 +153,12 @@ export function RunIndex() {
               </Box>
             </Box>
           </form>
-        <Box>
-          <RunList columns={["ID", "Name", "Tags", "Time", "Status"]} 
+        <Box className="RunListBox">
+          <RunList columns={TableColumns} 
             search={submitedSearchString}>
             {(run: Run) => <RunRow run={run} key={run.id} onClick={() => null} />}
           </RunList>
         </Box>
       </StyledScroller>
-    </StyledContainer>
   );
 }

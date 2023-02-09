@@ -23,6 +23,12 @@ const RecentStatusesWithStyles = styled('span')`
   display: flex;
 `;
 
+const TableColumns = [
+  {name: "Name", width: "65%"},
+  {name: "Last run", width: "20%"},
+  {name: "Status", width: "15%"}
+]
+
 function RecentStatuses(props: { calculatorPath: string }) {
   const { calculatorPath } = props;
 
@@ -98,7 +104,7 @@ function PipelineIndex() {
               </Typography>
             </Box>
             <RunList
-              columns={["Name", "Last run", "Status"]}
+              columns={TableColumns}
               groupBy="calculator_path"
               filters={{ AND: [{ parent_id: { eq: null } }] }}
               emptyAlert="No pipelines."

@@ -14,13 +14,17 @@ import { useFetchRunsFn } from "../hooks/pipelineHooks";
 import useLatest from "react-use/lib/useLatest";
 import usePreviousDistinct from "react-use/lib/usePreviousDistinct";
 import { styled } from "@mui/system";
-import { spacing } from "../utils";
-import toolbarClasses from "@mui/material/Toolbar/toolbarClasses";
+import { useSynchornizedTables } from "../hooks/domHooks";
 
 const defaultPageSize = 10;
 
+interface RunListColumn {
+  name: string;
+  width: string;
+}
+
 type RunListProps = {
-  columns: Array<string>;
+  columns: Array<RunListColumn>;
   children: Function;
   groupBy?: string;
   search?: string;
@@ -31,16 +35,19 @@ type RunListProps = {
   triggerRefresh?: (refreshCallback: () => void) => void;
 };
 
-const StyledFooter = styled('div')`
-  & .${toolbarClasses.root} {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    background-color: ${({theme}) => theme.palette.background.paper};
-    box-sizing: border-box;
-    margin-right: ${spacing(5)};
-    width: 100%;
+const StyledTableContainer = styled(TableContainer)`
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  & table {
+    flex-shrink: 1;
   }
+`;
+
+const TBodyScroller = styled('div')`
+  flex-grow: 1;
+  overflow-y: auto;
 `;
 
 export function RunList(props: RunListProps) {
@@ -116,6 +123,8 @@ export function RunList(props: RunListProps) {
 
   let tableBody;
   let currentPayload = pages[currentPage];
+  
+  const {sourceTableRef, targetTableRef} = useSynchornizedTables()
 
   if (error || !isLoaded) {
     tableBody = (
@@ -151,32 +160,34 @@ export function RunList(props: RunListProps) {
   }
 
   return (
-    <>
-      <TableContainer>
-        <Table size={props.size} data-cy={"RunList"}>
-          <TableHead>
-            <TableRow>
-              {props.columns.map((column) => (
-                <TableCell key={column}>{column}</TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
+    <StyledTableContainer data-cy={"RunList"}>
+      <Table ref={sourceTableRef} size={props.size} >
+        <TableHead>
+          <TableRow>
+            {props.columns.map(({name, width}) => (
+              <TableCell key={name} style={{width}}>{name}</TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+      </Table>
+      <TBodyScroller>
+        <Table ref={targetTableRef}>
           {tableBody}
-          <TableFooter>
-            <TableRow>
-              <StyledFooter>
-                <TablePagination
-                  count={totalCount}
-                  page={page}
-                  onPageChange={(event, page) => setPage(page)}
-                  rowsPerPage={pageSize}
-                  rowsPerPageOptions={[pageSize]}
-                />
-              </StyledFooter>
-            </TableRow>
-          </TableFooter>
         </Table>
-      </TableContainer>
-    </>
+      </TBodyScroller>
+      <Table>
+        <TableFooter>
+          <TableRow>
+            <TablePagination
+              count={totalCount}
+              page={page}
+              onPageChange={(event, page) => setPage(page)}
+              rowsPerPage={pageSize}
+              rowsPerPageOptions={[pageSize]}
+            />
+          </TableRow>
+        </TableFooter>
+      </Table>
+    </StyledTableContainer>
   );
 }
