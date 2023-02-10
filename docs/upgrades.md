@@ -137,7 +137,7 @@ for the chart you install.
 parameter to
 [`ingress.sematic_dashboard_url`](https://github.com/sematic-ai/sematic/pull/547)
 
-## FOSS to "Enterprise Edition"[^1]
+## FOSS to "Enterprise Edition"
 
 0. Reach out to Sematic to obtain a license for "Sematic EE."
 1. In your helm deployment, change `image.repository` to `sematic/sematic-server-ee`.
