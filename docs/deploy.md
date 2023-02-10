@@ -294,8 +294,9 @@ aws ecr get-login-password --region <region> | docker login --username AWS --pas
 
 You will likely need to issue this command every day.
 
-## Upgrading your deployments
+## Upgrading and enhancing your deployments
 
 Eventually, you will want to access the latest features Sematic has
-to offer! When you're ready to do this, check out our
-[upgrades guide](./upgrades.md) for help.
+to offer! You might also want to get set up with some of the
+advanced integrations we provide. When you're ready to do this,
+check out our [upgrades guide](./upgrades.md) for help.
