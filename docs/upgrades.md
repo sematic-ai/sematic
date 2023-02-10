@@ -152,7 +152,4 @@ features.
 Some integrations require changes to how pip packages and Helm deployments
 are installed and configured:
 
-- [Ray[^1]](./ray.md)
-
-[^1]: This feature of Sematic is only available with the "Enterprise Edition."
-Before using, please reach out to Sematic to obtain a license for "Sematic EE."
+- [Ray](./ray.md)
