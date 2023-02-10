@@ -1,4 +1,4 @@
-import { BatchPrediction, Logout } from "@mui/icons-material";
+import { Logout, PlayCircle, Timeline } from "@mui/icons-material";
 import {
   Box,
   Typography,
@@ -47,8 +47,18 @@ export default function SideBar() {
             sx={{ color: "rgba(255, 255, 255, 0.5)" }}
             underline="none"
           >
-            <BatchPrediction fontSize="large" />
+            <Timeline fontSize="large" />
             <Typography fontSize={10}>Pipelines</Typography>
+          </Link>
+        </Box>
+        <Box mt={5}>
+          <Link
+            href="/runs"
+            sx={{ color: "rgba(255, 255, 255, 0.5)" }}
+            underline="none"
+          >
+            <PlayCircle fontSize="large" />
+            <Typography fontSize={10}>Runs</Typography>
           </Link>
         </Box>
       </Stack>

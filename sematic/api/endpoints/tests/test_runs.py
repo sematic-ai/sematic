@@ -310,6 +310,85 @@ def test_list_runs_cursor_400(
     assert payload == dict(error="invalid value for 'cursor'")
 
 
+def test_list_runs_search_id(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    runs = make_run(), make_run(), make_run()
+
+    for run_ in runs:
+        save_run(run_)
+
+    run1 = runs[0]
+
+    response = test_client.get(f"/api/v1/runs?search={run1.id}")
+
+    assert response.status_code == 200
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == 1
+    assert payload["content"][0]["id"] == run1.id
+
+
+def test_list_runs_search_fields(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    runs = (
+        make_run(name="neutrino"),
+        make_run(name="neutralino"),
+        make_run(name="photon"),
+        make_run(calculator_path="neutralino.to.dark.matter"),
+        make_run(description="the neutralino is a hypothetical particle"),
+    )
+
+    for run_ in runs:
+        save_run(run_)
+    run1, run2, run3, run4, run5 = runs
+
+    response = test_client.get("/api/v1/runs?search=neutr")
+
+    assert response.status_code == 200
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == 4
+    ids = [result["id"] for result in payload["content"]]
+    assert run1.id in ids
+    assert run2.id in ids
+    assert run3.id not in ids
+    assert run4.id in ids
+    assert run5.id in ids
+
+
+def test_list_runs_search_tags(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    runs = (
+        make_run(tags=["Donald", "Fauntleroy"]),
+        make_run(tags=["Pineapple", "apple", "pie"]),
+        make_run(tags=["MacDonald"]),
+    )
+
+    for run_ in runs:
+        save_run(run_)
+    run1, run2, run3 = runs
+
+    response = test_client.get("/api/v1/runs?search=donald")
+
+    assert response.status_code == 200
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == 2
+    ids = [result["id"] for result in payload["content"]]
+    assert run1.id in ids
+    assert run2.id not in ids
+    assert run3.id in ids
+
+
 def test_get_run_endpoint(
     mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
