@@ -7,13 +7,13 @@ in various circumstances.
 
 Sematic has 3 versioned entities, depending on your usage:
 
-- *pip package*: If you are using Sematic only locally, this is
+- **pip package**: If you are using Sematic only locally, this is
 the only versioned entity you need. This determines the code
 that will be used for your code to interact with the server,
 including how Sematic resolvers interact with the server.
-- *Server*: If you are using Sematic in the cloud, you need this
+- **Server**: If you are using Sematic in the cloud, you need this
 and the pip package.
-- *bazel integration*: If you are using `bazel` with Sematic, you
+- **bazel integration**: If you are using `bazel` with Sematic, you
 need this versioned entity as well.
 
 When you are upgrading Sematic, you generally want to upgrade all of
@@ -137,11 +137,11 @@ for the chart you install.
 parameter to
 [`ingress.sematic_dashboard_url`](https://github.com/sematic-ai/sematic/pull/547)
 
-## FOSS to "Enterprise Edition"[^1]
+## FOSS to "Enterprise Edition"
 
-(0) Reach out to Sematic to obtain a license for "Sematic EE."
-(1) In your helm deployment, change `image.repository` to `sematic/sematic-server-ee`.
-(2) In your `pip` installation (client installation), change from depending on `sematic`
+0. Reach out to Sematic to obtain a license for "Sematic EE."
+1. In your helm deployment, change `image.repository` to `sematic/sematic-server-ee`.
+2. In your `pip` installation (client installation), change from depending on `sematic`
 to `sematic[<extra>]`, where `<extra>` is the appropriate variant of Sematic containing
 the EE features you are interested in. See [integrations](#integrations) below for
 specific extras. Note that `sematic[all]` will equip clients with ALL Enterprise Edition
@@ -149,59 +149,7 @@ features.
 
 ## Integrations
 
-### Ray[^1]
+Some integrations require changes to how pip packages and Helm deployments
+are installed and configured:
 
-Before using this feature, make sure you are set up with a Sematic EE
-license. Once that's taken care of, you will need to make the following
-changes:
-
-#### Pip package
-
-Instead of depending on `sematic`, you will need to depend on `sematic[ray]`
-or `sematic[all]`.
-
-#### Helm chart
-
-Ensure that you are using an [EE server](#foss-to-enterprise-edition1).
-Then you will need to install Kuberay into your Kubernetes environment.
-
-##### Installing Kuberay
-
-This can be done via helm, with instructions
-[here](https://ray-project.github.io/kuberay/deploy/helm/). Please install the latest
-stable version, and not the nightly one! You probably want to use a
-`singleNamespaceInstall`  (see
-[here](https://github.com/ray-project/kuberay/blob/2600854c61673f2b7da9fe2b54c8220468c1a013/helm-chart/kuberay-operator/values.yaml#L62)) and install it in the same namespace as Sematic. You will probably want to apply
-a configuration for a simple ray cluster (such as
-[this](https://github.com/ray-project/kuberay/blob/master/ray-operator/config/samples/ray-cluster.complete.yaml))
-to verify the deployment. You can delete that cluster once you have verified that the
-appropriate pods are created and are marked as ready.
-
-##### Configuring values.yaml
-
-You will want to set `rbac.manage_ray` to `true` to ensure that the
-Sematic server has permissions to manage Ray clusters. Then configure
-all the values called `ray.*`, as described in Sematic's
-[Helm documentation](https://github.com/sematic-ai/helm-charts/blob/gh-pages/README.md).
-
-As an example, your completed `ray.*` configs might look something like the following.
-However, do note that different configurations and deployments of Kubernetes will
-require/support different node selectors, tolerations, etc..
-
-```yaml
-ray:
-  enabled: true
-  supports_gpus: true
-  gpu_node_selector: {"node.kubernetes.io/instance-type": "g4dn.xlarge"}
-  non_gpu_node_selector: {}
-  gpu_tolerations:
-    - key: "nvidia.com/gpu"
-      value: "true"
-      operator: Equal
-      effect: NoSchedule
-  non_gpu_tolerations: []
-  gpu_resource_request_key: null
-```
-
-[^1]: This feature of Sematic is only available with the "Enterprise Edition."
-Before using, please reach out to Sematic to obtain a license for "Sematic EE."
+- [Ray](./ray.md)
