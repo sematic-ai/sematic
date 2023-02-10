@@ -15,7 +15,12 @@ from torchvision.transforms import Compose, Normalize, ToTensor
 
 # Sematic
 import sematic
-from sematic import KubernetesResourceRequirements, ResourceRequirements
+from sematic import (
+    KubernetesResourceRequirements,
+    KubernetesToleration,
+    KubernetesTolerationEffect,
+    ResourceRequirements,
+)
 from sematic.examples.mnist.pytorch.train_eval import Net, test, train
 
 
@@ -52,10 +57,19 @@ class PipelineConfig:
     use_cuda: bool = False
 
 
+# The node selector and toleration(s) you need to use to access
+# GPUs will vary depending on your Kubernetes setup.
 GPU_RESOURCE_REQS = ResourceRequirements(
     kubernetes=KubernetesResourceRequirements(
         node_selector={"node.kubernetes.io/instance-type": "g4dn.xlarge"},
         requests={"cpu": "2", "memory": "4Gi"},
+        tolerations=[
+            KubernetesToleration(
+                key="nvidia.com/gpu",
+                value="true",
+                effect=KubernetesTolerationEffect.NoSchedule,
+            )
+        ],
     )
 )
 
