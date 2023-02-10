@@ -4,6 +4,11 @@
 This feature is in "Beta."
 {% endhint %}
 
+{% hint style="info" %}
+This feature is only available in Sematic
+Enterprise Edition.
+{% endhint %}
+
 ## What is Ray?
 
 [Ray](https://www.ray.io/) is a framework for scaling python
