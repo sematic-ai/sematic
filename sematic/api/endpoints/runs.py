@@ -46,6 +46,7 @@ from sematic.scheduling.external_job import ExternalJob
 from sematic.scheduling.job_scheduler import schedule_run, update_run_status
 from sematic.scheduling.kubernetes import cancel_job
 from sematic.utils.retry import retry
+from sqlalchemy.sql.elements import BooleanClauseList
 
 logger = logging.getLogger(__name__)
 
@@ -137,6 +138,11 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
         if sql_predicates is not None:
             query = query.filter(sql_predicates)
 
+        search_string = flask.request.args.get("search")
+        if search_string is not None:
+            search_predicates = _generate_search_predicate(search_string)
+            query = query.filter(search_predicates)
+
         if decoded_cursor is not None:
             query = query.filter(
                 sqlalchemy.text(
@@ -189,6 +195,18 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
 
 def _make_cursor(key: str) -> str:
     return base64.urlsafe_b64encode(bytes(key, "utf-8")).decode("utf-8")
+
+
+def _generate_search_predicate(
+    search_string: str,
+) -> BooleanClauseList:
+    return sqlalchemy.or_(
+        Run.name.ilike(f"%{search_string}%"),
+        Run.calculator_path.ilike(f"%{search_string}%"),
+        Run.description.ilike(f"%{search_string}%"),
+        Run.id.ilike(f"%{search_string}%"),
+        Run.tags.ilike(f"%{search_string}%"),
+    )
 
 
 @sematic_api.route("/api/v1/runs/<run_id>", methods=["GET"])
@@ -340,7 +358,6 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
 
     result_list = []
     for run_id, (future_state, jobs) in db_status_dict.items():
-
         new_future_state_value = future_state.value
         run = _get_run_if_modified(run_id, future_state, jobs)
         if run is not None:
