@@ -12,6 +12,15 @@ sematic_example(
     ],
 )
 
+pip_deps = [
+    "torch",
+    "torchvision",
+    "torchmetrics",
+    "plotly",
+    "pandas",
+    "scikit-learn",
+]
+
 py_library(
     name = "mnist_train_lib",
     srcs = glob([
@@ -20,13 +29,21 @@ py_library(
     ]),
     deps = [
         "//sematic:init",
-        requirement("torch"),
-        requirement("torchvision"),
-        requirement("torchmetrics"),
-        requirement("plotly"),
-        requirement("pandas"),
-        requirement("scikit-learn"),
+    ] + [
+        requirement(pip_dep) for pip_dep in pip_deps
     ],
+)
+
+sematic_py_lib(
+    name = "mnist_train_sematic_lib",
+    srcs = glob([
+        "*.py",
+        "**/*.py",
+    ]),
+    deps = [
+        "//sematic:init",
+    ],
+    pip_deps = pip_deps,
 )
 
 sematic_pipeline(
