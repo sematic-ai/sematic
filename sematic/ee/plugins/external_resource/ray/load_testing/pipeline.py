@@ -11,6 +11,7 @@ from typing import Dict, List, Optional, Tuple
 import ray
 import torch
 import torch.nn as nn
+from ray.exceptions import GetTimeoutError
 from torch.optim import Adadelta
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
@@ -125,8 +126,10 @@ def wait_for_results(refs, inputs, max_wait_seconds):
                 try:
                     result = ray.get(ref, timeout=0)
                     results_by_ref[ref.hex()] = result
+                except GetTimeoutError:
+                    pass  # doesn't matter
                 except Exception:
-                    pass
+                    logger.exception("Error getting task result")
         time.sleep(10)
         n_ready = len(results_by_ref)
         n_not_ready = n_total - n_ready
@@ -136,35 +139,41 @@ def wait_for_results(refs, inputs, max_wait_seconds):
     return [
         (inputs_by_ref[ref.hex()], results_by_ref[ref.hex()])
         for ref in refs
-        if ref in results_by_ref
+        if ref.hex() in results_by_ref
     ]
 
 
 @func(inline=False)
 def load_test_mnist() -> MnistResults:
-    n_rates = 10
+    n_rates = 20
     n_epochs = 1
     learning_rates = [i / n_rates for i in range(0, n_rates)]
-    n_workers = 2
-    max_wait_seconds = 10 * 60
+    n_workers = 3
+    max_wait_seconds = 30 * 60
     with RayCluster(
         config=SimpleRayCluster(
             n_nodes=n_workers,
-            node_config=RayNodeConfig(cpu=4, memory_gb=8, gpu_count=1),
+            node_config=RayNodeConfig(cpu=3, memory_gb=13, gpu_count=1),
         )
     ):
         refs = [train_model.remote(rate, n_epochs) for rate in learning_rates]
         results = wait_for_results(refs, learning_rates, max_wait_seconds)
-    results = [(k, 0.1) for k, _ in results]
+    results = [(k, loss) for k, loss in results]
     return MnistResults(learning_rate_to_loss=results)
 
 
-@ray.remote(num_cpus=1, num_gpus=1, memory=int(1.5 * 2**30))
+@ray.remote(num_cpus=2, num_gpus=1, memory=int(8 * 2**30))
 def train_model(
     learning_rate: float,
     n_epochs: int,
 ) -> nn.Module:
     """Train the model"""
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    n_iterations = 0
+    intentional_memory_bomb = "x"
+    logger.info("Working on Mnist for %s", learning_rate)
+
     device = torch.device("cuda")
     path = "/tmp/pytorch-mnist"
     model = Net().to(device)
@@ -177,19 +186,14 @@ def train_model(
     mnist_dataset = MNIST(root=path, train=True, download=True, transform=transform)
     train_loader = DataLoader(mnist_dataset, batch_size=batch_size)
 
+    loss = None
     for epoch in range(1, n_epochs + 1):
         train(
-            model,
-            device,
-            train_loader,
-            optimizer,
-            epoch,
-            log_interval,
-            dry_run=False
+            model, device, train_loader, optimizer, epoch, log_interval, dry_run=False
         )
-        scheduler.step()
+        loss = scheduler.step()
 
-    return model
+    return loss
 
 
 @func(inline=True)

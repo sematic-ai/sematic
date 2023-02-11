@@ -7,7 +7,7 @@
 EXTRAS = {
     "ray": dict(
         sematic_module="//sematic/ee:ray",
-        requires=["ray>=2.1.0"]
+        requires=["ray[default]>=2.1.0"]
     ),
 }
 

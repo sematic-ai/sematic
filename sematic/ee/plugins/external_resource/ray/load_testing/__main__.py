@@ -34,10 +34,16 @@ SILENT_HELP = (
     "Whether to run the resolution using the SilentResolver. Defaults to False. "
     "Only one of --silent or --cloud are allowed."
 )
-COLLATZ_N_WORKERS_HELP = ""
-COLLATZ_N_TASKS_HELP = ""
-COLLATZ_WAIT_MINUTES_HELP = ""
-COLLATZ_MEMORY_GROWTH_FACTOR_HELP = ""
+COLLATZ_N_WORKERS_HELP = "Number of workers when doing the Collatz load test"
+COLLATZ_N_TASKS_HELP = "Number of tasks to perform operations on for Collatz load test"
+COLLATZ_WAIT_MINUTES_HELP = (
+    "Number of minutes to wait before stopping the Collatz load test"
+)
+COLLATZ_MEMORY_GROWTH_FACTOR_HELP = (
+    "For each Collatz task, how rapidly should memory usage grow per iteration in the "
+    "task? A factor of 1.25 grows at about a rate of an extra 25% per iteration, and is "
+    "enough to OOM for tasks around 100. 1.0 should be safe to not OOM."
+)
 
 
 def _parse_args() -> argparse.Namespace:
