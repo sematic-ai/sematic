@@ -153,6 +153,11 @@ function RunActionMenu(props: {
         },
       });
     }, [run.id, run.root_id, setSnackMessage, user?.api_key]);
+
+    const onCopyShareClick = useCallback(() => {
+      navigator.clipboard.writeText(window.location.href);
+      setSnackMessage({ message: "Run link copied" });
+    }, [setSnackMessage]);
   
     const rerunEnabled = useMemo(
       () =>
@@ -167,18 +172,14 @@ function RunActionMenu(props: {
           title="Rerun pipeline from this run"
           onClick={onRerunClick}
           enabled={rerunEnabled}
-          beta
         >
           <Typography>All upstream runs will use cached outputs.</Typography>
           <Typography>Only available for cloud resolution.</Typography>
         </ActionMenuItem>
-  
-        {/* 
-        TODO: Implement nested run deep linking
-        <ActionMenuItem title="Copy share link">
+
+        <ActionMenuItem title="Copy share link" onClick={onCopyShareClick}>
             <Typography>Copy link to this exact run.</Typography>
-    </ActionMenuItem>
-    */}
+        </ActionMenuItem>
       </ActionMenu>
     );
   }

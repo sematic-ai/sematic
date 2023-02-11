@@ -78,7 +78,7 @@ function PipelineActionMenu(props: {
 
   const onCopyShareClick = useCallback(() => {
     navigator.clipboard.writeText(window.location.href);
-    setSnackMessage({ message: "Pipeline link copied" });
+    setSnackMessage({ message: "Resolution link copied" });
   }, [setSnackMessage]);
 
   const cancelEnabled = useMemo(
@@ -101,7 +101,6 @@ function PipelineActionMenu(props: {
           title="Rerun"
           enabled={rerunEnable}
           onClick={() => onRerunClick(rootRun.id)}
-          beta
         >
           <Typography>Rerun pipeline from scratch.</Typography>
           <Typography>Only available for remote resolutions.</Typography>
