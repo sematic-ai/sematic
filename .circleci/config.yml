@@ -45,10 +45,10 @@ commands:
           command: mypy --version && mypy sematic
       - run:
           name: Black
-          command: black sematic
+          command: black sematic --diff --check
       - run:
           name: ISort
-          command: isort sematic
+          command: isort sematic --diff --check
       - run:
           name: ESlint
           working_directory: ./sematic/ui
