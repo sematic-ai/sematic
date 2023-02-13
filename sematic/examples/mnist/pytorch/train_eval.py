@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from plotly.graph_objs import Figure, Heatmap
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix  # type: ignore
 from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 from torchmetrics import PrecisionRecallCurve  # type: ignore
@@ -48,7 +48,7 @@ def train(
     epoch: int,
     log_interval: int,
     dry_run: bool,
-):
+) -> float:
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
@@ -69,6 +69,7 @@ def train(
             )
             if dry_run:
                 break
+    return loss.item()
 
 
 def _confusion_matrix(targets: List[int], preds: List[int]):

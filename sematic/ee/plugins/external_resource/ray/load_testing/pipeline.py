@@ -8,10 +8,10 @@ from dataclasses import asdict, dataclass
 from typing import Dict, List, Optional, Tuple
 
 # Third-party
-import ray
+import ray  # type: ignore
 import torch
 import torch.nn as nn
-from ray.exceptions import GetTimeoutError
+from ray.exceptions import GetTimeoutError  # type: ignore
 from torch.optim import Adadelta
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class CollatzResults:
     n_ready: int
     n_not_ready: int
@@ -35,12 +35,15 @@ class CollatzResults:
     results: Dict[int, int]
 
 
-@dataclass
+@dataclass(frozen=True)
 class MnistResults:
+    n_ready: int
+    n_not_ready: int
+    fraction_ready: float
     learning_rate_to_loss: List[Tuple[float, float]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class CollatzConfig:
     n_workers: int
     n_tasks: int
@@ -48,7 +51,15 @@ class CollatzConfig:
     memory_growth_factor: float
 
 
-@dataclass
+@dataclass(frozen=True)
+class MnistConfig:
+    n_rates: int
+    n_epochs: int
+    n_workers: int
+    wait_minutes: int
+
+
+@dataclass(frozen=True)
 class LoadResults:
     collatz_results: CollatzResults
     mnist_results: MnistResults
@@ -104,7 +115,7 @@ def collatz_ray_task(n: int, memory_growth_factor: float):
                 n_mbs,
             )
         if n % 2 == 0:
-            n = n / 2
+            n = n // 2
         else:
             n = 3 * n + 1
     logger.info("Collatz length of %s: %s", original_n, n_iterations)
@@ -120,7 +131,8 @@ def wait_for_results(refs, inputs, max_wait_seconds):
     n_not_ready = len(refs)
     results_by_ref = {}
     inputs_by_ref = {ref.hex(): input_val for ref, input_val in zip(refs, inputs)}
-    while n_not_ready != 0 and time.time() - start_time < max_wait_seconds:
+    remaining_seconds = max_wait_seconds - (time.time() - start_time)
+    while n_not_ready != 0 and remaining_seconds > 0:
         for ref in refs:
             if ref.hex() not in results_by_ref:
                 try:
@@ -133,8 +145,13 @@ def wait_for_results(refs, inputs, max_wait_seconds):
         time.sleep(10)
         n_ready = len(results_by_ref)
         n_not_ready = n_total - n_ready
+        remaining_seconds = max_wait_seconds - (time.time() - start_time)
         logger.info(
-            "Progress: %s ready, %s not ready out of %s", n_ready, n_not_ready, n_total
+            "Progress: %s ready, %s not ready out of %s. %s minutes left",
+            n_ready,
+            n_not_ready,
+            n_total,
+            remaining_seconds / 60.0,
         )
     return [
         (inputs_by_ref[ref.hex()], results_by_ref[ref.hex()])
@@ -144,12 +161,11 @@ def wait_for_results(refs, inputs, max_wait_seconds):
 
 
 @func(inline=False)
-def load_test_mnist() -> MnistResults:
-    n_rates = 20
-    n_epochs = 1
-    learning_rates = [i / n_rates for i in range(0, n_rates)]
-    n_workers = 3
-    max_wait_seconds = 30 * 60
+def load_test_mnist(
+    n_rates: int, n_epochs: int, n_workers: int, wait_minutes: int
+) -> MnistResults:
+    learning_rates = [i / (n_rates + 1) for i in range(1, n_rates + 1)]
+    max_wait_seconds = wait_minutes * 60
     with RayCluster(
         config=SimpleRayCluster(
             n_nodes=n_workers,
@@ -158,8 +174,12 @@ def load_test_mnist() -> MnistResults:
     ):
         refs = [train_model.remote(rate, n_epochs) for rate in learning_rates]
         results = wait_for_results(refs, learning_rates, max_wait_seconds)
-    results = [(k, loss) for k, loss in results]
-    return MnistResults(learning_rate_to_loss=results)
+    return MnistResults(
+        n_ready=len(results),
+        n_not_ready=n_rates - len(results),
+        fraction_ready=len(results) / n_rates,
+        learning_rate_to_loss=results,
+    )
 
 
 @ray.remote(num_cpus=2, num_gpus=1, memory=int(8 * 2**30))
@@ -170,8 +190,6 @@ def train_model(
     """Train the model"""
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
-    n_iterations = 0
-    intentional_memory_bomb = "x"
     logger.info("Working on Mnist for %s", learning_rate)
 
     device = torch.device("cuda")
@@ -188,11 +206,16 @@ def train_model(
 
     loss = None
     for epoch in range(1, n_epochs + 1):
-        train(
+        loss = train(
             model, device, train_loader, optimizer, epoch, log_interval, dry_run=False
         )
-        loss = scheduler.step()
+        scheduler.step()
 
+    logger.info(
+        "Done with MNIST for learning rate: %s. Final loss: %s",
+        learning_rate,
+        loss,
+    )
     return loss
 
 
@@ -209,6 +232,7 @@ def make_results(
 @func(inline=True)
 def load_test_ray(
     collatz_config: Optional[CollatzConfig] = None,
+    mnist_config: Optional[MnistConfig] = None,
 ) -> LoadResults:
     """
     The root function of the testing pipeline.
@@ -220,6 +244,9 @@ def load_test_ray(
     collatz_config:
         How to perform Collatz load testing (a variety of fairly fast tasks
         with a broad range of lengths and memory requirements).
+    mnist_config:
+        How to perform MNIST load testing (repeated parallel GPU training
+        of MNIST model using different learning rates).
     """
     collatz_results = CollatzResults(
         n_ready=0,
@@ -232,8 +259,12 @@ def load_test_ray(
         collatz_results = collatz_with_ray(**asdict(collatz_config))
 
     mnist_results = MnistResults(
+        n_ready=0,
+        n_not_ready=0,
+        fraction_ready=0.0,
         learning_rate_to_loss=[],
     )
-    mnist_results = load_test_mnist()
+    if mnist_config is not None:
+        mnist_results = load_test_mnist(**asdict(mnist_config))
 
     return make_results(collatz_results, mnist_results)
