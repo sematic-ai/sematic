@@ -295,7 +295,7 @@ class LocalResolver(SilentResolver):
     def _resolution_did_cancel(self) -> None:
         super()._resolution_did_cancel()
         api_client.cancel_resolution(self._root_future.id)
-        self._sio_client.disconnect()
+        self._clean_up_resolution(save_graph=True)
 
     def _get_tagged_image(self, tag: str) -> Optional[str]:
         return None
