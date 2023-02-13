@@ -15,6 +15,7 @@ from urllib.parse import urlencode, urlsplit, urlunsplit
 import flask
 import sqlalchemy
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql.elements import BooleanClauseList
 
 # Sematic
 from sematic.abstract_future import FutureState
@@ -46,7 +47,6 @@ from sematic.scheduling.external_job import ExternalJob
 from sematic.scheduling.job_scheduler import schedule_run, update_run_status
 from sematic.scheduling.kubernetes import cancel_job
 from sematic.utils.retry import retry
-from sqlalchemy.sql.elements import BooleanClauseList
 
 logger = logging.getLogger(__name__)
 
