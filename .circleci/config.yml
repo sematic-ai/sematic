@@ -38,11 +38,17 @@ commands:
     description: Do linting and other static analysis
     steps:
       - run:
-          name: Linting
+          name: Flake8
           command: python3 -m flake8 --max-line-length=90
       - run:
           name: MyPy
           command: mypy --version && mypy sematic
+      - run:
+          name: Black
+          command: black sematic --diff --check
+      - run:
+          name: ISort
+          command: isort sematic --diff --check
       - run:
           name: ESlint
           working_directory: ./sematic/ui
