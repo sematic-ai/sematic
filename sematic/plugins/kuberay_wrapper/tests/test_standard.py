@@ -114,6 +114,8 @@ _EXPECTED_HEAD_ONLY_MANIFEST = {
                         }
                     ],
                     "tolerations": [],
+                    "serviceAccount": "default",
+                    "serviceAccountName": "default",
                     "nodeSelector": {},
                     "volumes": [{"name": "ray-logs", "emptyDir": {}}],
                 },
@@ -161,6 +163,8 @@ _EXPECTED_SINGLE_WORKER_GROUP = {
                 }
             ],
             "tolerations": [],
+            "serviceAccount": "default",
+            "serviceAccountName": "default",
             "nodeSelector": {},
             "volumes": [{"name": "ray-logs", "emptyDir": {}}],
         }
@@ -397,3 +401,36 @@ def test_worker_node_gpus():
     assert manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"]["containers"][0][
         "resources"
     ]["requests"] == {"cpu": "1000m", "nvidia.com/gpu": 2, "memory": "2048M"}
+
+
+def test_custom_service_account():
+    custom_sa = "foosa"
+    with environment_variables(
+        {
+            "SEMATIC_WORKER_KUBERNETES_SA": custom_sa,
+        }
+    ):
+        manifest = StandardKuberayWrapper.create_cluster_manifest(  # type: ignore
+            image_uri=_TEST_IMAGE_URI,
+            cluster_name=_TEST_CLUSTER_NAME,
+            cluster_config=_MULTIPLE_WORKER_GROUP_CONFIG,
+            kuberay_version=_TEST_KUBERAY_VERSION,
+        )
+    assert (
+        manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"]["serviceAccount"]
+        == custom_sa
+    )
+    assert (
+        manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"][
+            "serviceAccountName"
+        ]
+        == custom_sa
+    )
+    assert (
+        manifest["spec"]["headGroupSpec"]["template"]["spec"]["serviceAccount"]
+        == custom_sa
+    )
+    assert (
+        manifest["spec"]["headGroupSpec"]["template"]["spec"]["serviceAccountName"]
+        == custom_sa
+    )
