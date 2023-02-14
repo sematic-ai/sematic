@@ -26,8 +26,9 @@ fix:
 	black sematic
 
 refresh-dependencies:
-	bazel run //requirements:requirements38.update
-	bazel run //requirements:requirements39.update
+	bazel run //requirements:requirements3_8.update
+	bazel run //requirements:requirements3_9.update
+	bazel run //requirements:requirements3_10.update
 
 .PHONY: ui
 ui:
