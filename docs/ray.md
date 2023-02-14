@@ -90,6 +90,8 @@ SilentResolver, this will be ignored and a local cluster will be started instead
 - **forward_logs** (*bool*): Whether or not to have logs from Ray workers returned
 back to the stdout of the Sematic func this resource is used in. Sets `log_to_driver`
 in [`ray.init`](https://docs.ray.io/en/latest/ray-core/package-ref.html?highlight=init#ray.init)
+- **activation_timeout_seconds** (*float*): The number of seconds the cluster has
+to initialize itself before a timeout error occurs.
 
 #### RayClusterConfig
 
