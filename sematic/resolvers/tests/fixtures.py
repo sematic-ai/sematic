@@ -18,8 +18,10 @@ class FakeExternalResource(AbstractExternalResource):
     raise_on_activate: bool = False
     raise_on_deactivate: bool = False
     raise_on_update: bool = False
-    activation_timeout_seconds: float = 100
-    deactivation_timeout_seconds: float = 100
+    slow_activate: bool = False
+    slow_deactivate: bool = False
+    activation_timeout_seconds: float = 10
+    deactivation_timeout_seconds: float = 10
 
     @classmethod
     def reset_history(cls) -> None:
@@ -106,6 +108,8 @@ class FakeExternalResource(AbstractExternalResource):
         if self.raise_on_update:
             raise ValueError("Intentional fail")
         if self.status.state == ResourceState.ACTIVATING:
+            if self.slow_activate:
+                return self
             return replace(
                 self,
                 status=replace(
@@ -115,6 +119,8 @@ class FakeExternalResource(AbstractExternalResource):
                 ),
             )
         elif self.status.state == ResourceState.DEACTIVATING:
+            if self.slow_deactivate:
+                return self
             return replace(
                 self,
                 status=replace(

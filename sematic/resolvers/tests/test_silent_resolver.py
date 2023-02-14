@@ -1,3 +1,6 @@
+# Standard Library
+import time
+
 # Third-party
 import pytest
 
@@ -209,7 +212,11 @@ def test_activation_failures_for_resource():
                 private=PrivateContext(resolver_class_path=SilentResolver.classpath()),
             )
         ):
-            with FakeExternalResource(raise_on_update=True):
+            with FakeExternalResource(
+                raise_on_update=True,
+                activation_timeout_seconds=0.1,
+                deactivation_timeout_seconds=0.1,
+            ):
                 raise AssertionError("Should not reach here")
     resources = SilentResolver._resource_manager.resources_by_root_id(root_id)
     assert len(resources) == 1
@@ -218,6 +225,52 @@ def test_activation_failures_for_resource():
     # not deactivated because the resolver failed to get an update
     # about the status while trying to deactivate
     assert stored.status.state == ResourceState.DEACTIVATING
+
+
+def test_activation_timeout_for_resource():
+    FakeExternalResource.reset_history()
+    run_id = "abc1233"
+    root_id = "xyz789111"
+    with pytest.raises(ExternalResourceError, match=r"Timed out activating.*"):
+        with set_context(
+            SematicContext(
+                run_id=run_id,
+                root_id=root_id,
+                private=PrivateContext(resolver_class_path=SilentResolver.classpath()),
+            )
+        ):
+            started_activate = time.time()
+            with FakeExternalResource(
+                slow_activate=True, activation_timeout_seconds=0.0
+            ):
+                raise AssertionError("Should not reach here")
+    exited_with_block = time.time()
+    resources = SilentResolver._resource_manager.resources_by_root_id(root_id)
+    assert len(resources) == 1
+    assert exited_with_block - started_activate < 5
+
+
+def test_deactivation_timeout_for_resource():
+    FakeExternalResource.reset_history()
+    run_id = "abc123334"
+    root_id = "xyz789112"
+    with pytest.raises(ExternalResourceError, match=r"Timed out deactivating.*"):
+        with set_context(
+            SematicContext(
+                run_id=run_id,
+                root_id=root_id,
+                private=PrivateContext(resolver_class_path=SilentResolver.classpath()),
+            )
+        ):
+            started_activate = time.time()
+            with FakeExternalResource(
+                slow_deactivate=True, deactivation_timeout_seconds=0.0
+            ):
+                raise AssertionError("Should not reach here")
+    exited_with_block = time.time()
+    resources = SilentResolver._resource_manager.resources_by_root_id(root_id)
+    assert len(resources) == 1
+    assert exited_with_block - started_activate < 5
 
 
 def test_deactivation_failures_for_resource():
