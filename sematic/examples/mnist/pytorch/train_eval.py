@@ -137,6 +137,6 @@ def test(model: nn.Module, device: torch.device, test_loader: DataLoader):
         accuracy=correct / len(test_loader.dataset),  # type: ignore
         pr_curve=fig,
         confusion_matrix=_confusion_matrix(
-            torch.cat(targets).cpu(), torch.cat(preds).cpu()
+            torch.cat(targets).cpu(), torch.cat(preds).cpu()  # type: ignore
         ),
     )

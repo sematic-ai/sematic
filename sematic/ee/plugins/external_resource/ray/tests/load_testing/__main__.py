@@ -5,14 +5,14 @@ Entry point for the testing pipeline.
 import argparse
 import logging
 import os
-from typing import Optional
+from typing import Optional, Tuple
 
 # Third-party
 import debugpy  # type: ignore
 
 # Sematic
 from sematic import CloudResolver, LocalResolver, Resolver, SilentResolver
-from sematic.ee.plugins.external_resource.ray.load_testing.pipeline import (
+from sematic.ee.plugins.external_resource.ray.tests.load_testing.pipeline import (
     CollatzConfig,
     MnistConfig,
     load_test_ray,
@@ -21,7 +21,9 @@ from sematic.ee.plugins.external_resource.ray.load_testing.pipeline import (
 logger = logging.getLogger(__name__)
 
 BAZEL_COMMAND = (
-    "bazel run //sematic/ee/plugins/external_resource/ray/load_testing:__main__ --"
+    "bazel run "
+    "//sematic/ee/plugins/external_resource/ray/tests/load_testing:__main__ "
+    "--"
 )
 DESCRIPTION = (
     "This pipeline is used to perform load testing on the Ray integration. "
@@ -62,7 +64,9 @@ MNIST_WAIT_MINUTES_HELP = (
 )
 
 
-def _parse_args() -> argparse.Namespace:
+def _parse_args() -> Tuple[
+    argparse.Namespace, Optional[CollatzConfig], Optional[MnistConfig]
+]:
     """Parses the command line arguments."""
     parser = argparse.ArgumentParser(prog=BAZEL_COMMAND, description=DESCRIPTION)
 
@@ -139,7 +143,28 @@ def _parse_args() -> argparse.Namespace:
 
     args = parser.parse_args()
 
-    return args
+    if args.silent and args.cloud:
+        raise ValueError("Cannot pass --silent and --cloud")
+
+    collatz_config_args = {
+        arg_key.replace("collatz_", ""): arg_val
+        for arg_key, arg_val in vars(args).items()
+        if arg_key.startswith("collatz_")
+    }
+    collatz_config: Optional[CollatzConfig] = CollatzConfig(**collatz_config_args)
+    if collatz_config.n_workers == 0:  # type: ignore
+        collatz_config = None
+
+    mnist_config_args = {
+        arg_key.replace("mnist_", ""): arg_val
+        for arg_key, arg_val in vars(args).items()
+        if arg_key.startswith("mnist_")
+    }
+    mnist_config: Optional[MnistConfig] = MnistConfig(**mnist_config_args)
+    if mnist_config.n_workers == 0:  # type: ignore
+        mnist_config = None
+
+    return args, collatz_config, mnist_config
 
 
 def _get_resolver(args: argparse.Namespace) -> Resolver:
@@ -166,30 +191,14 @@ def main() -> None:
     if os.environ.get("DEBUGPY", None) is not None:
         _wait_for_debugger()
 
-    args = _parse_args()
+    args, collatz_config, mnist_config = _parse_args()
     logger.info("Command line arguments: %s", args)
     tags = ["load-testing", "ray"]
 
-    collatz_config_args = {
-        arg_key.replace("collatz_", ""): arg_val
-        for arg_key, arg_val in vars(args).items()
-        if arg_key.startswith("collatz_")
-    }
-    collatz_config: Optional[CollatzConfig] = CollatzConfig(**collatz_config_args)
-    if collatz_config.n_workers == 0:  # type: ignore
-        collatz_config = None
-    else:
+    if collatz_config is not None:
         tags.append("collatz-tested")
 
-    mnist_config_args = {
-        arg_key.replace("mnist_", ""): arg_val
-        for arg_key, arg_val in vars(args).items()
-        if arg_key.startswith("mnist_")
-    }
-    mnist_config: Optional[MnistConfig] = MnistConfig(**mnist_config_args)
-    if mnist_config.n_workers == 0:  # type: ignore
-        mnist_config = None
-    else:
+    if mnist_config is not None:
         tags.append("mnist-tested")
 
     resolver = _get_resolver(args)

@@ -1,5 +1,5 @@
 """
-Flexible-structure pipeline meant to be used in testing.
+Flexible-structure pipeline meant to be used in load testing.
 """
 # Standard Library
 import logging
@@ -10,7 +10,6 @@ from typing import Dict, List, Optional, Tuple
 # Third-party
 import ray  # type: ignore
 import torch
-import torch.nn as nn
 from ray.exceptions import GetTimeoutError  # type: ignore
 from torch.optim import Adadelta
 from torch.optim.lr_scheduler import StepLR
@@ -70,7 +69,9 @@ def collatz_with_ray(
     n_workers: int, n_tasks: int, wait_minutes: int, memory_growth_factor: float
 ) -> CollatzResults:
     """
-    Adds two numbers, using a Ray cluster.
+    Specifies the Collatz sequence length for all numbers up to the specified parameter.
+
+    Uses a Ray cluster to accomplish this.
     """
     max_wait_seconds = wait_minutes * 60
     logger.info("Determining max Collatz length for numbers less than %s", n_tasks)
@@ -186,7 +187,7 @@ def load_test_mnist(
 def train_model(
     learning_rate: float,
     n_epochs: int,
-) -> nn.Module:
+) -> Optional[float]:
     """Train the model"""
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
