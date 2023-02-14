@@ -42,8 +42,8 @@
 * [Ray](ray.md)
 * [Snowflake](snowflake.md)
 * [Grafana](grafana.md)
+* [Slack](slack.md)
 <!---
-* Slack
 * PyTorch
 * Pandas
 * Plotly
