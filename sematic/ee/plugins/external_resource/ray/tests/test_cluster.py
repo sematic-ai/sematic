@@ -56,6 +56,16 @@ def add(a: int, b: int) -> int:
     return result
 
 
+def test_timeout():
+    cluster = RayCluster(
+        config=SimpleRayCluster(
+            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=1)
+        ),
+        activation_timeout_seconds=42,
+    )
+    assert cluster.get_activation_timeout_seconds() == 42
+
+
 def test_local_cluster():
     result = add(1, 2).resolve(tracking=False)
     assert result == 3
