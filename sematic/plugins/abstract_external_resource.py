@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 _PLUGIN_VERSION = (0, 1, 0)
+_DEFAULT_ACTIVATION_TIMEOUT_SECONDS = 10 * 60
+_DEFAULT_DEACTIVATION_TIMEOUT_SECONDS = 5 * 60
 
 
 @unique
@@ -210,6 +212,14 @@ class AbstractExternalResource(AbstractPlugin):
             raise ValueError(f"ExternalResource had an invalid uuid: '{self.id}'")
         if not isinstance(self.status, ResourceStatus):
             raise ValueError(f"ExternalResource had invalid status: '{self.status}'")
+
+    def get_activation_timeout_seconds(self) -> float:
+        """Get the number of seconds the resource is allowed to take to activate"""
+        return _DEFAULT_ACTIVATION_TIMEOUT_SECONDS
+
+    def get_deactivation_timeout_seconds(self) -> float:
+        """Get the number of seconds the resource is allowed to take to deactivate"""
+        return _DEFAULT_DEACTIVATION_TIMEOUT_SECONDS
 
     @staticmethod
     def get_author() -> str:

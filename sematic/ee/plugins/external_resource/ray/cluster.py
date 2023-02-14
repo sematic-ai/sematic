@@ -74,12 +74,15 @@ class RayCluster(AbstractExternalResource):
         stdout of the Sematic func this resource is used in. Sets
         `log_to_driver` in `ray.init`:
         https://docs.ray.io/en/latest/ray-core/package-ref.html?highlight=init#ray.init
+    activation_timeout_seconds:
+        The number of seconds the cluster can take to initialize before a timeout error.
     """
 
     # Since the parent class has defaults, all params here must technically
     # have defaults. Here we raise an error if no value is provided though.
     config: RayClusterConfig = field(default_factory=_no_default_cluster)
     forward_logs: bool = True
+    activation_timeout_seconds: float = 15 * 60
 
     # The name of the remote cluster, if a remote cluster has been requested
     _cluster_name: Optional[str] = None
@@ -369,6 +372,10 @@ class RayCluster(AbstractExternalResource):
                     f"{cluster._min_required_workers()}."
                 ),
             )
+
+    def get_activation_timeout_seconds(self) -> float:
+        """Get the number of seconds the resource is allowed to take to activate"""
+        return self.activation_timeout_seconds
 
     def _update_n_pods(self) -> "RayCluster":
         if self.status.managed_by == ManagedBy.RESOLVER:

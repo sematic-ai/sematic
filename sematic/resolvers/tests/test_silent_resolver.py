@@ -57,26 +57,6 @@ def custom_resource_func() -> int:
     return value
 
 
-@pytest.fixture
-def short_timeouts():
-    original_values = (
-        SilentResolver._RESOURCE_ACTIVATION_TIMEOUT_SECONDS,
-        SilentResolver._RESOURCE_DEACTIVATION_TIMEOUT_SECONDS,
-        SilentResolver._RESOURCE_UPDATE_INTERVAL_SECONDS,
-    )
-    SilentResolver._RESOURCE_ACTIVATION_TIMEOUT_SECONDS = 0.1
-    SilentResolver._RESOURCE_DEACTIVATION_TIMEOUT_SECONDS = 0.1
-    SilentResolver._RESOURCE_UPDATE_INTERVAL_SECONDS = 0.001
-    try:
-        yield
-    finally:
-        (
-            SilentResolver._RESOURCE_ACTIVATION_TIMEOUT_SECONDS,
-            SilentResolver._RESOURCE_DEACTIVATION_TIMEOUT_SECONDS,
-            SilentResolver._RESOURCE_UPDATE_INTERVAL_SECONDS,
-        ) = original_values
-
-
 def test_silent_resolver():
     assert SilentResolver().resolve(pipeline(3, 5)) == 24
 
@@ -198,7 +178,7 @@ def test_activate_resource_for_run():
     assert SilentResolver._resource_manager.resources_by_root_id(root_id) == [stored]
 
 
-def test_activation_failures_for_resource(short_timeouts):
+def test_activation_failures_for_resource():
     FakeExternalResource.reset_history()
     run_id = "abc1232"
     root_id = "xyz7892"
@@ -210,7 +190,9 @@ def test_activation_failures_for_resource(short_timeouts):
                 private=PrivateContext(resolver_class_path=SilentResolver.classpath()),
             )
         ):
-            with FakeExternalResource(raise_on_activate=True):
+            with FakeExternalResource(
+                raise_on_activate=True, activation_timeout_seconds=0.1
+            ):
                 pass
     resources = SilentResolver._resource_manager.resources_by_root_id(root_id)
     assert len(resources) == 1
@@ -238,7 +220,7 @@ def test_activation_failures_for_resource(short_timeouts):
     assert stored.status.state == ResourceState.DEACTIVATING
 
 
-def test_deactivation_failures_for_resource(short_timeouts):
+def test_deactivation_failures_for_resource():
     FakeExternalResource.reset_history()
     run_id = "abc1234"
     root_id = "xyz7894"
@@ -253,7 +235,9 @@ def test_deactivation_failures_for_resource(short_timeouts):
                 private=PrivateContext(resolver_class_path=SilentResolver.classpath()),
             )
         ):
-            with FakeExternalResource(raise_on_deactivate=True):
+            with FakeExternalResource(
+                raise_on_deactivate=True, deactivation_timeout_seconds=0.1
+            ):
                 reached_inside_with_block = True
     assert reached_inside_with_block
     resources = SilentResolver._resource_manager.resources_by_root_id(root_id)
