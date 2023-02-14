@@ -421,7 +421,9 @@ def test_custom_service_account():
         == custom_sa
     )
     assert (
-        manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"]["serviceAccountName"]
+        manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"][
+            "serviceAccountName"
+        ]
         == custom_sa
     )
     assert (
