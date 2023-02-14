@@ -32,7 +32,7 @@ CLI](cli.md) to set these settings:
 $ # this is the token from the Slack App Webhook URL
 $ sematic settings set -p sematic.plugins.publishing.slack.SlackPublisher \
 >     SLACK_WEBHOOK_TOKEN XXX/YYY/ZZZ
-$  # this is an externally-accessible URL to your Dashboard,
+$  # this is an externally-accessible URL for your Dashboard,
 $  # used to construct the notification message
 $ sematic server-settings set SEMATIC_DASHBOARD_URL https://my.sematic
 ```
@@ -41,8 +41,8 @@ $ sematic server-settings set SEMATIC_DASHBOARD_URL https://my.sematic
 
 To configure your [cloud Sematic
 deployment](deploy.md#deployment-option-2-sematic-with-cloud-execution) to send
-notifications to Slack, you need to add these settings in your `values.yaml`
-file:
+notifications to Slack, you need to add these settings to the `values.yaml`
+file you use in your Helm deployment:
 
 ```yaml
 slack:
@@ -52,7 +52,7 @@ slack:
   slack_webhook_token: XXX/YYY/ZZZ
 
 ingress:
-  # this is an externally-accessible URL to your Dashboard,
+  # this is an externally-accessible URL for your Dashboard,
   # used to construct the notification message
   sematic_dashboard_url: https://my.sematic
 ```
