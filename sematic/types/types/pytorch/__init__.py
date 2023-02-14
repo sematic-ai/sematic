@@ -8,7 +8,7 @@ try:
     import torch  # noqa: F401
 except ImportError:
     pass
-except Exception:
+except Exception as e:
     # Why include errors besides ImportError?
     # Because torch can raise weird things under certain circumstances on
     # import when Cuda is missing:
@@ -19,7 +19,7 @@ except Exception:
     #     File "/lib/python3.9/ctypes/__init__.py", line 374, in __init__
     #         self._handle = _dlopen(self._name, mode)
     # OSError: libcublas.so.11: cannot open shared object file: No such file or directory
-    logger.exception("Error importing torch")
+    logger.exception("Error importing torch: %s", e)
 else:
     # Sematic
     import sematic.types.types.pytorch.dataloader  # noqa: F401
