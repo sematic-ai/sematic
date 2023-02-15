@@ -105,12 +105,11 @@ version).
 At this point, you should also deploy the Docker image to a cloud Dev environment
 using the [internal Helm charts](/helm/sematic-server), and execute at least one
 pipeline in detached cloud mode. To build the image, use the same process
-you do when usually deploying dev code to a dev env. If you don't have a
-process for this, you can just copy the wheel to the docker dir,
-build and push an image to a container registry, and follow the public
-deploy procedure. You will want to use values.yaml overrides specific to
-your environment (present in Sematic's secret manager). You will likely also
-want to smoke test new features that were included in the release.
+you do when usually deploying dev code to a dev env. You can use
+[`serve-dev`](https://github.com/sematic-ai/infrastructure/tree/main/bin)
+to build and deploy the image while on the release branch to deploy the
+release candidate. You will likely also want to smoke test new features
+that were included in the release.
 
 If everything works fine, we are ready to push the release.
 
