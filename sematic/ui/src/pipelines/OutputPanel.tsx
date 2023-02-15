@@ -1,7 +1,7 @@
 import { Alert } from "@mui/material";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { getPipelineUrlPattern, usePipelinePanelsContext } from "../hooks/pipelineHooks";
+import { getRunUrlPattern, usePipelinePanelsContext } from "../hooks/pipelineHooks";
 import { Artifact } from "../Models";
 import { ArtifactList } from "./Artifacts";
 
@@ -14,9 +14,9 @@ export default function OutputPanel(props: {
 
     const logsLinkPath = useMemo(
         () => {
-            const { calculator_path, id} = selectedRun!;
+            const { id } = selectedRun!;
             return {
-                pathname: getPipelineUrlPattern(calculator_path, id),
+                pathname: getRunUrlPattern(id),
                 hash: 'tab=logs'
             }
         }, [selectedRun]);

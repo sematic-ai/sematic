@@ -15,6 +15,7 @@ import { RunTime } from "../components/RunTime";
 import { SearchOutlined } from "@mui/icons-material";
 import { styled } from "@mui/system";
 import { spacing } from "../utils";
+import { getRunUrlPattern } from "../hooks/pipelineHooks";
 
 type RunRowProps = {
   run: Run;
@@ -47,7 +48,7 @@ export function RunRow(props: RunRowProps) {
         <Typography variant="h6">
           {props.noRunLink && run.name}
           {!props.noRunLink && (
-            <Link href={`/pipelines/${run.calculator_path}/${run.id}`} underline="hover">
+            <Link href={getRunUrlPattern(run.id)} underline="hover">
               {run.name}
             </Link>
           )}

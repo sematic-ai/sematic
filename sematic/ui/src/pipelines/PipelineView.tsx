@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import Loading from "../components/Loading";
-import { useFetchRuns, usePipelineNavigation } from "../hooks/pipelineHooks";
+import { useFetchRuns, useRunNavigation } from "../hooks/pipelineHooks";
 import { Alert } from "@mui/material";
 
 /**
@@ -28,7 +28,7 @@ export default function PipelineView() {
 
     const {isLoaded, error, runs: latestRuns} = useFetchRuns(runFilters, otherQueryParams);
 
-    const navigate = usePipelineNavigation(pipelinePath!);
+    const navigate = useRunNavigation();
 
     useEffect(() => {
         if (!isLoaded || !!error) {
