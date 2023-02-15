@@ -86,6 +86,10 @@ class CloudResolver(LocalResolver):
     # Time between external resource updates *during activation and deactivation*
     _RESOURCE_UPDATE_INTERVAL_SECONDS = 10
 
+    # Time that external resources have to activate before
+    # hitting a timeout.
+    _RESOURCE_ACTIVATION_TIMEOUT_SECONDS = 30 * 60  # 30 min
+
     def __init__(
         self,
         detach: bool = True,
