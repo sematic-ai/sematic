@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 # the sdk. Should be bumped any time a release is made. Should be set
 # to whatever is the version after the most recent one in changelog.md,
 # as well as the version for the sematic wheel in wheel_constants.bzl
-CURRENT_VERSION = (0, 24, 1)
+CURRENT_VERSION = (0, 25, 0)
 
 # Represents the smallest client version that works with the server
 # at the CURRENT_VERSION. Should be updated any time a breaking change
