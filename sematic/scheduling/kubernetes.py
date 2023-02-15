@@ -585,7 +585,7 @@ def _schedule_kubernetes_job(
     # of where they are writing the logging file bytes to.
     # See: https://github.com/sematic-ai/sematic/issues/579
     s3_bucket = environment_vars.get(S3StorageSettingsVar.AWS_S3_BUCKET.value, None)
-    if s3_bucket is not None:
+    if s3_bucket is None:
         s3_bucket = get_plugin_setting(
             S3Storage, S3StorageSettingsVar.AWS_S3_BUCKET, None
         )
