@@ -112,11 +112,11 @@ export function useFetchResolution(resolutionId: string): [
     return [value, loading, error];
 }
 
-export function getPipelineUrlPattern(pipelinePath: string, requestedRootId: string) {
-    return `/pipelines/${pipelinePath}/${requestedRootId}`;
+export function getRunUrlPattern(requestedRootId: string) {
+    return `/runs/${requestedRootId}`;
 }
 
-export function usePipelineNavigation(pipelinePath: string) {
+export function useRunNavigation() {
     const navigate = useNavigate();
     const { rootId } = useParams();
     const { hash } = useLocation();
@@ -138,10 +138,10 @@ export function usePipelineNavigation(pipelinePath: string) {
         }
 
         navigate({
-            pathname: getPipelineUrlPattern(pipelinePath, requestedRootId),
+            pathname: getRunUrlPattern(requestedRootId),
             hash: newHashValue
         }, {
             replace
         });
-    }, [pipelinePath, rootId, hash, navigate]);
+    }, [rootId, hash, navigate]);
 }

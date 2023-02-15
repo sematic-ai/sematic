@@ -1,5 +1,5 @@
-import { useParams, Link } from "react-router-dom";
-import { getPipelineUrlPattern } from "../hooks/pipelineHooks";
+import { Link } from "react-router-dom";
+import { getRunUrlPattern } from "../hooks/pipelineHooks";
 import { CopyButton } from "./CopyButton";
 
 export default function RunId(props: {
@@ -9,11 +9,9 @@ export default function RunId(props: {
   }) {
     const { runId, trim = true, copy = true } = props;
   
-    const { pipelinePath } = useParams();
-  
     return (
       <>
-        <Link to={getPipelineUrlPattern(pipelinePath!, runId)} style={
+        <Link to={getRunUrlPattern(runId)} style={
           {fontSize: '12px'}
         }>
             <code>{trim ? runId.substring(0, 6) : runId}</code>

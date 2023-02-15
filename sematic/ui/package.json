@@ -37,7 +37,7 @@
     "react-markdown": "^8.0.3",
     "react-medium-image-zoom": "^4.4.3",
     "react-plotly.js": "^2.5.1",
-    "react-router-dom": "^6.3.0",
+    "react-router-dom": "^6.8.1",
     "react-scripts": "5.0.1",
     "react-syntax-highlighter": "^15.5.0",
     "react-time-ago": "^7.1.9",
