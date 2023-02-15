@@ -27,7 +27,7 @@ flask
 flask-cors
 cloudpickle
 flask-socketio
-eventlet==0.30.2  # Because of https://stackoverflow.com/questions/67409452/gunicorn-importerror-cannot-import-name-already-handled-from-eventlet-wsgi
+gevent
 requests
 responses==0.20.0  # 0.21.0 breaks mypy checks https://github.com/getsentry/responses/issues/556
 werkzeug

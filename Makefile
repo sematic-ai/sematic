@@ -25,6 +25,7 @@ fix:
 	isort sematic
 	black sematic
 
+# this is not supported on Mac
 refresh-dependencies:
 	bazel run //requirements:requirements3_8.update
 	bazel run //requirements:requirements3_9.update

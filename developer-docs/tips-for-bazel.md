@@ -10,7 +10,7 @@ bazel test //sematic/...
 ```
 
 This will run a specific test (in this case the API client test), on the default python version.
-The target path is the file path to to the python package where the test lives (`sematic.tests`
+The target path is the file path to the python package where the test lives (`sematic.tests`
 in the example below), followed by a colon and the name of the python module for the test
 (`test_api_client` in this example).
 ```

@@ -1,10 +1,8 @@
 # Standard Library
 import argparse
 import os
-import sys
 
 # Third-party
-import eventlet
 from flask import jsonify, send_file
 from flask_socketio import Namespace, SocketIO  # type: ignore
 
@@ -28,13 +26,6 @@ from sematic.config.settings import import_plugins
 
 # Some plugins may register endpoints
 import_plugins()
-
-# Monkey-patching ssl
-# See https://eventlet.net/doc/patching.html
-# google.oauth2.id_token.verify_oauth2_token makes outgoing
-# SSL queries
-eventlet.import_patched("ssl")
-sys.modules["ssl"] = eventlet.green.ssl
 
 
 @sematic_api.route("/data/<file>")
@@ -86,7 +77,7 @@ def run_wsgi(daemon: bool):
     options = {
         "bind": f"{get_config().server_address}:{get_config().port}",
         "workers": get_config().wsgi_workers_count,
-        "worker_class": "eventlet",
+        "worker_class": "gevent",
         "daemon": daemon,
         "pidfile": get_config().server_pid_file_path,
         "logconfig_dict": make_log_config(),
