@@ -26,13 +26,9 @@ from sematic.db.models.run import Run
 from sematic.future import Future
 from sematic.future_context import PrivateContext, SematicContext, set_context
 from sematic.log_reader import log_prefix
-from sematic.resolvers.cloud_resolver import (
-    CloudResolver,
-    make_nested_future_storage_key,
-)
+from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.resolvers.log_streamer import ingested_logs, log_ingestion_enabled
 from sematic.scheduling.external_job import JobType
-from sematic.storage import S3Storage
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.versions import CURRENT_VERSION_STR
 
@@ -107,11 +103,10 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
     Persist run output, whether it is a nested future or a concrete output.
     """
     artifacts = []
-    storage = S3Storage()
 
     if isinstance(output, Future):
         pickled_nested_future = cloudpickle.dumps(output)
-        storage.set(make_nested_future_storage_key(output.id), pickled_nested_future)
+        api_client.store_future_bytes(output.id, pickled_nested_future)
         run.nested_future_id = output.id
         run.future_state = FutureState.RAN
         run.ended_at = datetime.datetime.utcnow()
