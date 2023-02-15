@@ -12,6 +12,7 @@ with nothing else on the line.
     * [improvement] Make allocation timeouts for Ray clusters configurable
     * [improvement] Small changes to layout of pipeline display page
     * [improvement] Have Ray workers use same Kubernetes SA as Sematic workers
+    * [improvement] Minor user docs improvements
     * [bugfix] Fix a bug that was preventing configuration of Slack via helm
     * [bugfix] Remove error occurring when a local settings file configures server-only settings
     * [bugfix] Be more resilient against non-standard failures during `torch` imports
