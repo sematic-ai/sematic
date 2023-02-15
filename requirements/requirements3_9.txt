@@ -1126,7 +1126,9 @@ nvidia-cuda-nvrtc-cu11==11.7.99 \
 nvidia-cuda-runtime-cu11==11.7.99 \
     --hash=sha256:bc77fa59a7679310df9d5c70ab13c4e34c64ae2124dd1efd7e5474b71be125c7 \
     --hash=sha256:cc768314ae58d2641f07eac350f40f99dcb35719c4faff4bc458a7cd2b119e31
-    # via torch
+    # via
+    #   -r requirements/requirements.in
+    #   torch
 nvidia-cudnn-cu11==8.5.0.96 \
     --hash=sha256:402f40adfc6f418f9dae9ab402e773cfed9beae52333f6d86ae3107a1b9527e7 \
     --hash=sha256:71f8111eb830879ff2836db3cccf03bbd735df9b0d17cd93761732ac50a8a108
