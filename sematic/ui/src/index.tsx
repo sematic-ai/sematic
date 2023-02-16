@@ -4,9 +4,9 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./index.css";
-import { Route, BrowserRouter, Routes, useNavigate } from "react-router-dom";
+import { Route, useNavigate, RouterProvider, createRoutesFromElements, createBrowserRouter, redirect } from "react-router-dom";
 import PipelineIndex from "./pipelines/PipelineIndex";
-import PipelineRunView from "./pipelines/PipelineRunView";
+import RunView from "./pipelines/PipelineRunView";
 import Shell from "./components/Shell";
 import Loading from "./components/Loading";
 import Home from "./Home";
@@ -27,6 +27,7 @@ import logo from "./Fox.png";
 import { fetchJSON } from "./utils";
 import { SnackBarProvider } from "./components/SnackBarProvider";
 import PipelineView from "./pipelines/PipelineView";
+import { RunIndex } from "./runs/RunIndex";
 
 export const UserContext = React.createContext<{
   user: User | null;
@@ -110,18 +111,7 @@ function App() {
     <UserContext.Provider value={userContextValue}>
       <EnvContext.Provider value={envContextValue}>
         <SnackBarProvider>
-          <Routes>
-            <Route path="/" element={<Shell />}>
-              <Route path="" element={<Home />} />
-              <Route path="pipelines" element={<PipelineIndex />} />
-              <Route
-                path="pipelines/:pipelinePath/:rootId" element={<PipelineRunView />}
-              />
-              <Route
-                path="pipelines/:pipelinePath" element={<PipelineView />}
-              />
-            </Route>
-          </Routes>
+          <Shell />
         </SnackBarProvider>
       </EnvContext.Provider>
     </UserContext.Provider>
@@ -171,11 +161,29 @@ function App() {
   );
 }
 
+function Router() {
+  const router = createBrowserRouter(createRoutesFromElements(
+    <Route path="/" element={<App />}>
+      <Route index element={<Home />} />
+      <Route path="pipelines" element={<PipelineIndex />} />
+      <Route path="runs" element={<RunIndex />} />
+      <Route
+        path="pipelines/:pipelinePath/:rootId" 
+          loader={({params}) => redirect(`/runs/${params.rootId}`)}
+      />
+      <Route
+        path="pipelines/:pipelinePath" element={<PipelineView />}
+      />
+      <Route
+        path="runs/:rootId" element={<RunView />}
+      />
+    </Route>
+  ));
+
+  return <RouterProvider router={router} />;
+}
+
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
-root.render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>
-);
+root.render(<Router />);

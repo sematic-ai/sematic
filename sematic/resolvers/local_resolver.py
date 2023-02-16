@@ -45,12 +45,12 @@ class LocalResolver(SilentResolver):
     ----------
     cache_namespace: CacheNamespace
         A string or a `Callable` which takes a root `Future` and returns a string, which
-        will be used as the cache key namespace in which the executed funcs's outputs will
+        will be used as the cache key namespace in which the executed funcs' outputs will
         be cached, as long as they also have the `cache` flag activated. Defaults to
         `None`.
 
         The `Callable` option takes as input the `Resolution` root `Future`. All the other
-        required variables must be enclosed in the `Callables`'s context. The `Callable`
+        required variables must be enclosed in the `Callables`' context. The `Callable`
         must have a small memory footprint and must return immediately!
     rerun_from: Optional[str]
         When `None`, the pipeline is resolved from scratch, as normally. When not `None`,
@@ -295,7 +295,7 @@ class LocalResolver(SilentResolver):
     def _resolution_did_cancel(self) -> None:
         super()._resolution_did_cancel()
         api_client.cancel_resolution(self._root_future.id)
-        self._sio_client.disconnect()
+        self._clean_up_resolution(save_graph=True)
 
     def _get_tagged_image(self, tag: str) -> Optional[str]:
         return None

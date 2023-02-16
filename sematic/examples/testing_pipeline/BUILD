@@ -16,9 +16,12 @@ sematic_pipeline(
     dev = True,
     registry = "558717131297.dkr.ecr.us-west-2.amazonaws.com",
     repository = "sematic-dev",
-    deps = [
-        ":testing_pipeline_lib",
+    image_layers = [
+        # Include these in their own layers, since they don't change often.
         requirement("debugpy"),
         requirement("ray"),
+    ],
+    deps = [
+        ":testing_pipeline_lib",
     ],
 )

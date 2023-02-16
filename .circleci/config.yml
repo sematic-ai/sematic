@@ -27,17 +27,28 @@ commands:
           # For example sqlalchemy requires greenlet only on certain platforms
           name: Freeze requirements
           command: pip-compile --allow-unsafe ~/project/requirements/requirements.in > ~/project/requirements/requirements.txt
+  
+  install-npm-dependencies:
+    description: Install NPM dependencies in the UI folder
+    steps:
+      - node/install-packages:
+          app-dir: ./sematic/ui
+
   do-static-analysis:
     description: Do linting and other static analysis
     steps:
       - run:
-          name: Linting
+          name: Flake8
           command: python3 -m flake8 --max-line-length=90
       - run:
           name: MyPy
           command: mypy --version && mypy sematic
-      - node/install-packages:
-          app-dir: ./sematic/ui
+      - run:
+          name: Black
+          command: black sematic --diff --check
+      - run:
+          name: ISort
+          command: isort sematic --diff --check
       - run:
           name: ESlint
           working_directory: ./sematic/ui
@@ -63,7 +74,6 @@ commands:
     description: Send a notification to Slack about job completion
     steps:
       - slack/notify:
-          channel: C03CPMXA1QU
           event: always
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -74,10 +84,12 @@ jobs:
     steps:
       - checkout
       - install-ci-pip-deps
+      - install-npm-dependencies
       - persist_to_workspace:
           root: /home/circleci
           paths:
             - .pyenv
+            - .cache/Cypress
             - project
 
   lint:
@@ -103,12 +115,38 @@ jobs:
       - attach_workspace:
           at: /home/circleci
       - installation-tests
+      - persist_to_workspace:
+          root: /home/circleci/
+          paths:
+            - project/CIVENV
+    environment:
+      CI_VENV_NAME: CIVENV
+    
   
   integration-test:
     docker:
       - image: sematicai/sematic-ci:latest
     steps:
-      - run: echo "no op for now"
+      - attach_workspace:
+          at: /home/circleci
+      - run: 
+          name: Create a run
+          command: source ./CIVENV/bin/activate && sematic start && sematic run examples/add
+      - run:
+          name: Run Cypress test
+          working_directory: ./sematic/ui
+          command: npm run cypress:run
+      - run:
+          name: Stop Sematic
+          working_directory: ~/project
+          command: source ./CIVENV/bin/activate && sematic stop
+      - store_artifacts:
+          path: ~/project/sematic/ui/tests/cypress_video
+      - store_artifacts:
+          path: ~/project/sematic/ui/tests/cypress_screenshots
+      - store_test_results:
+          path: ~/project/sematic/ui/tests/cypress_results
+    resource_class: medium+
       
   finalize:
     docker:

@@ -10,25 +10,48 @@ import TablePagination from "@mui/material/TablePagination";
 import TableFooter from "@mui/material/TableFooter";
 import { Filter, RunListPayload } from "../Payloads";
 import Loading from "./Loading";
-import { Run } from "../Models";
 import { useFetchRunsFn } from "../hooks/pipelineHooks";
+import useLatest from "react-use/lib/useLatest";
+import usePreviousDistinct from "react-use/lib/usePreviousDistinct";
+import { styled } from "@mui/system";
+import { useSynchornizedTables } from "../hooks/domHooks";
 
 const defaultPageSize = 10;
 
+interface RunListColumn {
+  name: string;
+  width: string;
+}
+
 type RunListProps = {
-  columns: Array<string>;
+  columns: Array<RunListColumn>;
   children: Function;
   groupBy?: string;
+  search?: string;
   filters?: Filter;
   pageSize?: number;
   size?: "small" | "medium" | undefined;
   emptyAlert?: string;
-  onRunsLoaded?: (runs: Run[]) => void;
   triggerRefresh?: (refreshCallback: () => void) => void;
 };
 
+const StyledTableContainer = styled(TableContainer)`
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  & table {
+    flex-shrink: 1;
+  }
+`;
+
+const TBodyScroller = styled('div')`
+  flex-grow: 1;
+  overflow-y: auto;
+`;
+
 export function RunList(props: RunListProps) {
-  let { triggerRefresh, filters, groupBy, onRunsLoaded } = props;
+  let { triggerRefresh, filters, groupBy, search } = props;
   const [pages, setPages] = useState<Array<RunListPayload>>([]);
   const [currentPage, setPage] = useState(0);
 
@@ -52,12 +75,18 @@ export function RunList(props: RunListProps) {
     if (!!groupBy) {
       queryParams['group_by'] = groupBy;
     }
+    if (!!search && search.length > 0) {
+      queryParams['search'] = search;
+    }
     return queryParams;
-  }, [pageSize, groupBy]);
+  }, [pageSize, groupBy, search]);
 
-  const {isLoaded, error, load} = useFetchRunsFn(filters, queryParams);
+  const { isLoaded, error, load } = useFetchRunsFn(filters, queryParams);
+
+  const loadCurrent = useLatest(load);
 
   useEffect(() => {
+    // logic for turning to the next page which has not been seen
     if (currentPage <= pages.length - 1) {
       return;
     }
@@ -70,15 +99,32 @@ export function RunList(props: RunListProps) {
         params = { cursor };
       }
 
-      const payload = await load(params);
+      const payload = await loadCurrent.current(params);
 
       setPages(pages.concat(payload));
-      onRunsLoaded?.(payload.content);
     })().catch(console.error);
-  }, [currentPage, pages, load, onRunsLoaded]);
+  }, [currentPage, pages, loadCurrent]);
+
+  const prevSearch = usePreviousDistinct(search);
+
+  useEffect(() => {
+    // logic for updating search terms
+    if (search === prevSearch) {
+      return;
+    }
+
+    (async () => {
+      const payload = await loadCurrent.current();
+
+      setPages([payload]);
+      setPage(0);
+    })().catch(console.error);
+  }, [search, prevSearch, loadCurrent]);
 
   let tableBody;
   let currentPayload = pages[currentPage];
+  
+  const {sourceTableRef, targetTableRef} = useSynchornizedTables()
 
   if (error || !isLoaded) {
     tableBody = (
@@ -114,30 +160,34 @@ export function RunList(props: RunListProps) {
   }
 
   return (
-    <>
-      <TableContainer>
-        <Table size={props.size} data-cy={"RunList"}>
-          <TableHead>
-            <TableRow>
-              {props.columns.map((column) => (
-                <TableCell key={column}>{column}</TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
+    <StyledTableContainer data-cy={"RunList"}>
+      <Table ref={sourceTableRef} size={props.size} >
+        <TableHead>
+          <TableRow>
+            {props.columns.map(({name, width}) => (
+              <TableCell key={name} style={{width}}>{name}</TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+      </Table>
+      <TBodyScroller>
+        <Table ref={targetTableRef}>
           {tableBody}
-          <TableFooter>
-            <TableRow>
-              <TablePagination
-                count={totalCount}
-                page={page}
-                onPageChange={(event, page) => setPage(page)}
-                rowsPerPage={pageSize}
-                rowsPerPageOptions={[pageSize]}
-              />
-            </TableRow>
-          </TableFooter>
         </Table>
-      </TableContainer>
-    </>
+      </TBodyScroller>
+      <Table>
+        <TableFooter>
+          <TableRow>
+            <TablePagination
+              count={totalCount}
+              page={page}
+              onPageChange={(event, page) => setPage(page)}
+              rowsPerPage={pageSize}
+              rowsPerPageOptions={[pageSize]}
+            />
+          </TableRow>
+        </TableFooter>
+      </Table>
+    </StyledTableContainer>
   );
 }

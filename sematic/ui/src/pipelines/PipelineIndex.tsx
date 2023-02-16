@@ -8,7 +8,7 @@ import Tags from "../components/Tags";
 import { Run } from "../Models";
 import Link from "@mui/material/Link";
 import RunStateChip, { RunStateChipUndefinedStyle } from "../components/RunStateChip";
-import { Alert, AlertTitle, Container } from "@mui/material";
+import { Alert, AlertTitle, Container, containerClasses } from "@mui/material";
 import { InfoOutlined } from "@mui/icons-material";
 import { RunTime } from "../components/RunTime";
 import { pipelineSocket } from "../utils";
@@ -22,6 +22,32 @@ const RecentStatusesWithStyles = styled('span')`
   flex-direction: row;
   display: flex;
 `;
+
+const StyledRootBox = styled(Box, {
+  shouldForwardProp: () => true,
+})`
+  height: 100%;
+
+  & .main-content {
+    overflow-y: hidden;
+
+    & .${containerClasses.root} {
+      height: 100%;
+
+      & > * {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+    }
+  }
+`;
+
+const TableColumns = [
+  {name: "Name", width: "65%"},
+  {name: "Last run", width: "20%"},
+  {name: "Status", width: "15%"}
+]
 
 function RecentStatuses(props: { calculatorPath: string }) {
   const { calculatorPath } = props;
@@ -88,8 +114,8 @@ function PipelineIndex() {
   }, []);
 
   return (
-    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 300px" }}>
-      <Box sx={{ gridColumn: 1 }}>
+    <StyledRootBox sx={{ display: "grid", gridTemplateColumns: "1fr 300px" }}>
+      <Box sx={{ gridColumn: 1 }} className={"main-content"}>
         <Container sx={{ pt: 15 }}>
           <Box sx={{ mx: 5 }}>
             <Box sx={{ mb: 10 }}>
@@ -98,7 +124,7 @@ function PipelineIndex() {
               </Typography>
             </Box>
             <RunList
-              columns={["Name", "Last run", "Status"]}
+              columns={TableColumns}
               groupBy="calculator_path"
               filters={{ AND: [{ parent_id: { eq: null } }] }}
               emptyAlert="No pipelines."
@@ -118,7 +144,7 @@ function PipelineIndex() {
           </p>
         </Alert>
       </Box>
-    </Box>
+    </StyledRootBox>
   );
 }
 

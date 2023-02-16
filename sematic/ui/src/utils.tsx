@@ -98,3 +98,5 @@ export function atomWithHashCustomSerialization(
 export const graphSocket = io("/graph");
 
 export const pipelineSocket = io("/pipeline");
+
+export const spacing = (val: number) => ({theme}: any) => theme.spacing(val);

@@ -22,8 +22,10 @@ from urllib3.exceptions import ConnectionError
 # Sematic
 from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR, ON_WORKER_ENV_VAR
 from sematic.config.server_settings import ServerSettingsVar, get_server_setting
+from sematic.config.settings import get_plugin_setting
 from sematic.config.user_settings import UserSettingsVar
 from sematic.container_images import CONTAINER_IMAGE_ENV_VAR
+from sematic.plugins.storage.s3_storage import S3Storage, S3StorageSettingsVar
 from sematic.resolvers.resource_requirements import (
     KUBERNETES_SECRET_NAME,
     KubernetesResourceRequirements,
@@ -750,6 +752,21 @@ def _schedule_kubernetes_job(
         environment_vars[
             ServerSettingsVar.SEMATIC_WORKER_SOCKET_IO_ADDRESS.value
         ] = socketio_address_override
+
+    # TODO: Remove this once logging is properly using storage settings.
+    # As of this authorship, worker/driver jobs are not getting settings
+    # around storage transferred to them, but try to use S3 storage
+    # to write logs. The proper fix is to integrate logging into the
+    # full storage plugin system so the workers/drivers can be agnostic
+    # of where they are writing the logging file bytes to.
+    # See: https://github.com/sematic-ai/sematic/issues/579
+    s3_bucket = environment_vars.get(S3StorageSettingsVar.AWS_S3_BUCKET.value, None)
+    if s3_bucket is None:
+        s3_bucket = get_plugin_setting(
+            S3Storage, S3StorageSettingsVar.AWS_S3_BUCKET, None
+        )
+        if s3_bucket is not None:
+            environment_vars[S3StorageSettingsVar.AWS_S3_BUCKET.value] = s3_bucket
 
     args = args if args is not None else []
     node_selector = {}

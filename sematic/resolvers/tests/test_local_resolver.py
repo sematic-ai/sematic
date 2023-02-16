@@ -1,6 +1,6 @@
 # Standard Library
 from collections import defaultdict
-from typing import List
+from typing import Any, List, Tuple, Type
 
 # Third-party
 import pytest
@@ -15,14 +15,21 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
 )
 from sematic.calculator import func
+from sematic.db.db import DB
+from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
+from sematic.db.models.run import Run
 from sematic.db.queries import get_resolution, get_root_graph, get_run
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.resolvers.local_resolver import LocalResolver
 from sematic.retry_settings import RetrySettings
-from sematic.tests.fixtures import valid_client_version  # noqa: F401
+from sematic.tests.fixtures import (  # noqa: F401
+    DIVERSE_VALUES_WITH_TYPES,
+    test_storage,
+    valid_client_version,
+)
 from sematic.utils.exceptions import ExceptionMetadata, ResolutionError
 
 
@@ -543,6 +550,7 @@ def test_rerun_from_here(
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811
+    test_storage,  # noqa: F811
 ):
     future = pipeline(1, 2)
 
@@ -641,9 +649,185 @@ def test_cancel_non_terminal_futures(
     assert middle_func_states == [
         FutureState.SCHEDULED,
         FutureState.CANCELED,
-        # see comment in callback assetions above about why this is here
+        # see comment in callback assertions above about why this is here
         FutureState.RESOLVED,
     ]
     assert last_func_states == [
         FutureState.CANCELED,
     ]
+
+
+def _get_runs_and_artifacts(db: DB) -> List[Tuple[Run, Artifact]]:
+    with db.get_session() as session:
+        return (
+            session.query(Run, Artifact)
+            .join(Edge, Edge.source_run_id == Run.id)
+            .filter(Edge.artifact_id == Artifact.id)
+            .order_by(Run.created_at)
+            .all()
+        )
+
+
+@pytest.mark.parametrize("value_and_type", DIVERSE_VALUES_WITH_TYPES)
+def test_cached_output_happy(
+    value_and_type: Tuple[Any, Type],
+    mock_socketio,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+):
+    value, T = value_and_type
+
+    @func(cache=True)
+    def cache_func(param: T) -> T:  # type: ignore
+        return param
+
+    # original run:
+    resolver = LocalResolver(cache_namespace="test_namespace")
+    original_future = cache_func(param=value)
+    output = original_future.resolve(resolver)
+
+    assert output == value
+
+    # second run, which should be cached:
+    # resolvers are single-use, so we instantiate a new one
+    resolver = LocalResolver(cache_namespace="test_namespace")
+    cache_future = cache_func(param=value)
+    output = cache_future.resolve(resolver)
+
+    assert output == value
+
+    # get the saved runs and artifacts from the test db
+    db_values = _get_runs_and_artifacts(test_db)
+
+    assert len(db_values) == 2
+    original_run, original_artifact = db_values[0]
+    cache_run, cache_artifact = db_values[1]
+
+    assert original_run.cache_key == cache_run.cache_key
+    assert original_run.id == original_future.id
+    assert cache_run.id == cache_future.id
+    assert original_artifact == cache_artifact
+
+
+def test_cached_output_different_namespaces(
+    mock_socketio,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+):
+    @func(cache=True)
+    def cache_func(param: int) -> int:  # type: ignore
+        return param
+
+    # original run:
+    resolver = LocalResolver(cache_namespace="test_namespace1")
+    future1 = cache_func(param=42)
+    output1 = future1.resolve(resolver)
+
+    assert output1 == 42
+
+    # second run, which should be cached:
+    # resolvers are single-use, so we instantiate a new one
+    resolver = LocalResolver(cache_namespace="test_namespace2")
+    future2 = cache_func(param=42)
+    output2 = future2.resolve(resolver)
+
+    assert output2 == 42
+
+    # get the saved runs and artifacts from the test db
+    db_values = _get_runs_and_artifacts(test_db)
+
+    assert len(db_values) == 2
+    run1, artifact1 = db_values[0]
+    run2, artifact2 = db_values[1]
+
+    assert run1.cache_key != run2.cache_key
+    assert run1.id == future1.id
+    assert run2.id == future2.id
+    # we currently address artifacts by content
+    # if this ever changes, this must be updated to `!=`,
+    # and this added: with pytest.raises(ValueError): artifact1.assert_matches(artifact2)
+    assert artifact1 == artifact2
+
+
+def test_cached_output_different_funcs(
+    mock_socketio,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+):
+    @func(cache=True)
+    def cache_func1(param: int) -> int:  # type: ignore
+        return param
+
+    @func(cache=True)
+    def cache_func2(param: int) -> int:  # type: ignore
+        return param
+
+    # original run:
+    resolver = LocalResolver(cache_namespace="test_namespace")
+    future1 = cache_func1(param=42)
+    output1 = future1.resolve(resolver)
+
+    assert output1 == 42
+
+    # second run, which should be cached:
+    # resolvers are single-use, so we instantiate a new one
+    resolver = LocalResolver(cache_namespace="test_namespace")
+    future2 = cache_func2(param=42)
+    output2 = future2.resolve(resolver)
+
+    assert output2 == 42
+
+    # get the saved runs and artifacts from the test db
+    db_values = _get_runs_and_artifacts(test_db)
+
+    assert len(db_values) == 2
+    run1, artifact1 = db_values[0]
+    run2, artifact2 = db_values[1]
+
+    assert run1.cache_key != run2.cache_key
+    assert run1.id == future1.id
+    assert run2.id == future2.id
+    # we currently address artifacts by content
+    # if this ever changes, this must be updated to `!=`,
+    # and this added: with pytest.raises(ValueError): artifact1.assert_matches(artifact2)
+    assert artifact1 == artifact2
+
+
+def test_cached_output_different_inputs(
+    mock_socketio,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+):
+    @func(cache=True)
+    def cache_func(param: int) -> int:  # type: ignore
+        return param
+
+    # original run:
+    resolver = LocalResolver(cache_namespace="test_namespace")
+    future1 = cache_func(param=42)
+    output1 = future1.resolve(resolver)
+
+    assert output1 == 42
+
+    # second run, which should be cached:
+    # resolvers are single-use, so we instantiate a new one
+    resolver = LocalResolver(cache_namespace="test_namespace")
+    future2 = cache_func(param=43)
+    output2 = future2.resolve(resolver)
+
+    assert output2 == 43
+
+    # get the saved runs and artifacts from the test db
+    db_values = _get_runs_and_artifacts(test_db)
+
+    assert len(db_values) == 2
+    run1, artifact1 = db_values[0]
+    run2, artifact2 = db_values[1]
+
+    assert run1.cache_key != run2.cache_key
+    assert run1.id == future1.id
+    assert run2.id == future2.id
+    assert artifact1 != artifact2
+
+    with pytest.raises(ValueError):
+        artifact1.assert_matches(artifact2)

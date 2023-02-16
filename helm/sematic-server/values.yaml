@@ -71,7 +71,7 @@ deployment:
 
 image:
   repository: sematic/sematic-server
-  #tag: vX.XX.X # REPLACE ME
+  #tag: vX.XX.X # If not specified, will use the Chart App version
   pull_policy: IfNotPresent
   #pull_secrets: []
 
@@ -111,7 +111,7 @@ service:
 
 ingress:
   create: false
-  dashboard_url: https://my.sematic # REPLACE ME
+  sematic_dashboard_url: https://my.sematic # REPLACE ME
   class_name: ""
   annotations: {}
     # kubernetes.io/ingress.class: nginx

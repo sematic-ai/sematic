@@ -16,6 +16,7 @@
 * [The Dashboard](sematic-ui.md)
 * [Future algebra](future-algebra.md)
 * [Artifacts](artifacts.md)
+* [Advanced features](advanced-features.md)
 * [Glossary](glossary.md)
 
 ## Cloud execution
@@ -37,12 +38,12 @@
 
 <!---
 * Apache Spark
-* Ray
 -->
+* [Ray](ray.md)
 * [Snowflake](snowflake.md)
 * [Grafana](grafana.md)
+* [Slack](slack.md)
 <!---
-* Slack
 * PyTorch
 * Pandas
 * Plotly
@@ -58,6 +59,7 @@
     * [Code of Conduct](code-of-conduct.md)
     * [Example pipelines](contribute-example.md)
 * [Changelog](changelog.md)
+* [Upgrade Guides](upgrades.md)
 <!---
 * Company handbook
 -->

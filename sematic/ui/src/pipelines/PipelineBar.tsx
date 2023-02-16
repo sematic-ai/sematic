@@ -21,7 +21,7 @@ import RunStateChip from "../components/RunStateChip";
 import TimeAgo from "../components/TimeAgo";
 import { ActionMenu, ActionMenuItem } from "../components/ActionMenu";
 import { SnackBarContext } from "../components/SnackBarProvider";
-import { useFetchRuns, usePipelineNavigation, usePipelineRunContext } from "../hooks/pipelineHooks";
+import { useFetchRuns, useRunNavigation, usePipelineRunContext } from "../hooks/pipelineHooks";
 import { ExtractContextType } from "../components/utils/typings";
 import PipelineRunViewContext from "./PipelineRunViewContext";
 
@@ -78,7 +78,7 @@ function PipelineActionMenu(props: {
 
   const onCopyShareClick = useCallback(() => {
     navigator.clipboard.writeText(window.location.href);
-    setSnackMessage({ message: "Pipeline link copied" });
+    setSnackMessage({ message: "Resolution link copied" });
   }, [setSnackMessage]);
 
   const cancelEnabled = useMemo(
@@ -101,7 +101,6 @@ function PipelineActionMenu(props: {
           title="Rerun"
           enabled={rerunEnable}
           onClick={() => onRerunClick(rootRun.id)}
-          beta
         >
           <Typography>Rerun pipeline from scratch.</Typography>
           <Typography>Only available for remote resolutions.</Typography>
@@ -129,10 +128,12 @@ function PipelineActionMenu(props: {
 export default function PipelineBar() {
   const { setSnackMessage } = useContext(SnackBarContext);
 
-  const { rootRun, resolution, pipelinePath } 
+  const { rootRun, resolution } 
   = usePipelineRunContext() as ExtractContextType<typeof PipelineRunViewContext> & {
     rootRun: Run, resolution: Resolution
   };;
+
+  const pipelinePath = rootRun.calculator_path;
 
   const theme = useTheme();
 
@@ -149,7 +150,7 @@ export default function PipelineBar() {
 
   const {isLoaded, error, runs: latestRuns, reloadRuns } = useFetchRuns(runFilters, otherQueryParams);
 
-  const navigate = usePipelineNavigation(pipelinePath!);
+  const navigate = useRunNavigation();
 
   const changeRootId = useCallback((runId: string) => {
     navigate(runId);

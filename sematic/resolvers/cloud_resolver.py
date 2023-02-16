@@ -54,12 +54,12 @@ class CloudResolver(LocalResolver):
         will return when the entire pipeline has completed.
     cache_namespace: CacheNamespace
         A string or a `Callable` which takes a root `Future` and returns a string, which
-        will be used as the cache key namespace in which the executed funcs's outputs will
+        will be used as the cache key namespace in which the executed funcs' outputs will
         be cached, as long as they also have the `cache` flag activated. Defaults to
         `None`.
 
         The `Callable` option takes as input the `Resolution` root `Future`. All the other
-        required variables must be enclosed in the `Callables`'s context. The `Callable`
+        required variables must be enclosed in the `Callables`' context. The `Callable`
         must have a small memory footprint and must return immediately!
     max_parallelism: Optional[int]
         The maximum number of non-inlined runs that this resolver will allow to be in the
@@ -85,6 +85,10 @@ class CloudResolver(LocalResolver):
 
     # Time between external resource updates *during activation and deactivation*
     _RESOURCE_UPDATE_INTERVAL_SECONDS = 10
+
+    # Time that external resources have to activate before
+    # hitting a timeout.
+    _RESOURCE_ACTIVATION_TIMEOUT_SECONDS = 30 * 60  # 30 min
 
     def __init__(
         self,

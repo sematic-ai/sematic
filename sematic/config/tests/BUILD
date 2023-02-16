@@ -33,9 +33,8 @@ pytest_test(
         ":fixtures",
         "//sematic:abstract_plugin",
         "//sematic/config:settings",
+        "//sematic/plugins/storage:local_storage",
         "//sematic/tests:fixtures",
-        "//sematic/plugins/external_resource:timed_message",
-        "//sematic/plugins/kuberay_wrapper:standard",
     ],
 )
 

@@ -68,4 +68,4 @@ mpld3
 
 # External Resource Plugins
 ## Ray
-ray>=2.2.0
+ray[default]>=2.2.0

@@ -9,6 +9,7 @@ from requests.exceptions import ConnectionError
 
 # Sematic
 from sematic.abstract_future import FutureState
+from sematic.api.endpoints.auth import API_KEY_HEADER
 from sematic.config.config import get_config
 from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import UserSettings, UserSettingsVar, get_user_setting
@@ -91,17 +92,16 @@ def _get_artifact(artifact_id: str) -> Artifact:
 
 @retry(tries=3, delay=10, jitter=1)
 def store_artifact_bytes(artifact_id: str, bytes_: bytes) -> None:
-    response = _get(f"/artifacts/{artifact_id}/location")
+    response = _get(f"/storage/artifacts/{artifact_id}/location")
 
-    location: str = response["location"]
+    url: str = response["url"]
+    headers: Dict[str, str] = response["request_headers"]
 
-    put = requests.put if location.startswith("https://") else _put
-
-    put(location, data=bytes_)
+    requests.put(url, data=bytes_, headers=headers)
 
 
 def _get_artifact_bytes(artifact_id: str) -> bytes:
-    return _get(f"/artifacts/{artifact_id}/data", decode_json=False)
+    return _get(f"/storage/artifacts/{artifact_id}/data", decode_json=False)
 
 
 def get_run(run_id: str) -> Run:
@@ -561,7 +561,8 @@ def request(
     headers = kwargs.get("headers", {})
     headers["Content-Type"] = "application/json"
     if attempt_auth:
-        headers["X-API-KEY"] = _get_api_key(user)
+        headers[API_KEY_HEADER] = _get_api_key(user)
+
     kwargs["headers"] = headers
 
     try:
@@ -578,7 +579,7 @@ def request(
 
     if (
         response.status_code == requests.codes.unauthorized
-        and headers["X-API-KEY"] is None
+        and headers[API_KEY_HEADER] is None
     ):
         raise MissingSettingsError(UserSettings, UserSettingsVar.SEMATIC_API_KEY)
 

@@ -5,25 +5,24 @@ import Loading from "../components/Loading";
 import PipelineBar from "./PipelineBar";
 import PipelinePanels from "./PipelinePanels";
 import { ExtractContextType } from "../components/utils/typings";
-import { selectedRunHashAtom, useFetchResolution, useFetchRun, usePipelineNavigation } from "../hooks/pipelineHooks";
+import { selectedRunHashAtom, useFetchResolution, useFetchRun, useRunNavigation } from "../hooks/pipelineHooks";
 import PipelineRunViewContext from './PipelineRunViewContext'
 import { Run } from "../Models";
 import { useAtom } from "jotai";
 
-interface PipelineRunViewPresentationProps {
-  pipelinePath: string
+interface RunViewPresentationProps {
   rootRun: Run
 }
-export function PipelineRunViewPresentation({
-  pipelinePath, rootRun
-}: PipelineRunViewPresentationProps ) {
+export function RunViewPresentation({
+  rootRun
+}: RunViewPresentationProps ) {
   const { id: rootId } = rootRun;
 
   const [resolution, isLoading, error] = useFetchResolution(rootId!);
 
   const context = useMemo<ExtractContextType<typeof PipelineRunViewContext>>(() => ({
-    rootRun, resolution, isLoading, pipelinePath: pipelinePath!
-  }), [rootRun, resolution, isLoading, pipelinePath]);
+    rootRun, resolution, isLoading,
+  }), [rootRun, resolution, isLoading]);
 
   if (error || isLoading) {
     return <Loading error={error} isLoaded={!isLoading} />
@@ -46,16 +45,14 @@ export function PipelineRunViewPresentation({
   );
 }
 
-export function PipelineRunViewRouter() {
-  const { pipelinePath, rootId } = useParams();
+export function RunViewRouter() {
+  const { rootId } = useParams();
 
-  for (const [key, value] of Object.entries({pipelinePath, rootId})) {
-    if (!value) {
+    if (!rootId) {
       throw new Error(
-        `\`${key}\` is expected from the URL. This component might be used with wrong route.`);
+        `\`rootId\` is expected from the URL. This component might be used with wrong route.`);
     }
-  }
-  const navigate = usePipelineNavigation(pipelinePath!);
+  const navigate = useRunNavigation();
   const [run, isLoading, error] = useFetchRun(rootId!);
   const [, setSelectedRunId] = useAtom(selectedRunHashAtom);
 
@@ -68,7 +65,7 @@ export function PipelineRunViewRouter() {
       const nestedRunId = rootId!;
       navigate(run.root_id, true, {'run': nestedRunId});
     }
-  }, [run, rootId, pipelinePath, navigate, setSelectedRunId]);
+  }, [run, rootId, navigate, setSelectedRunId]);
 
   if (error || isLoading) {
     return <Loading error={error} isLoaded={!isLoading} />
@@ -81,12 +78,11 @@ export function PipelineRunViewRouter() {
   }
 
   // Otherwise, load `PipelineRunViewPresentation` to actually render root run.
-  return <PipelineRunViewPresentation pipelinePath={pipelinePath!} rootRun={run!} />
+  return <RunViewPresentation rootRun={run!} />
 }
 
-export default function PipelineRunViewWraper() {
-  const { pipelinePath, rootId } = useParams();
-  const key = `${pipelinePath}--${rootId}`;
-  return <PipelineRunViewRouter key={key}/>
+export default function RunViewWraper() {
+  const { rootId } = useParams();
+  return <RunViewRouter key={rootId}/>
 }
 

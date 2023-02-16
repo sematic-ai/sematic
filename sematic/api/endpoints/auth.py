@@ -130,6 +130,9 @@ def google_login() -> flask.Response:
     return flask.jsonify(payload)
 
 
+API_KEY_HEADER = "X-API-KEY"
+
+
 def authenticate(endpoint_fn: Callable) -> Callable:
     """
     Decorator for endpoints who need authentication.
@@ -143,7 +146,7 @@ def authenticate(endpoint_fn: Callable) -> Callable:
         if not authenticate:
             return endpoint_fn(None, *args, **kwargs)
 
-        request_api_key = flask.request.headers.get("X-API-KEY")
+        request_api_key = flask.request.headers.get(API_KEY_HEADER)
         if request_api_key is None:
             return jsonify_error("Missing API key", HTTPStatus.UNAUTHORIZED)
 

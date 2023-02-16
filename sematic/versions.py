@@ -7,14 +7,14 @@ logger = logging.getLogger(__name__)
 # Represents the version of the client, server, and all other parts of
 # the sdk. Should be bumped any time a release is made. Should be set
 # to whatever is the version after the most recent one in changelog.md,
-# as well as the version for the sematic wheel in wheel_version.bzl
-CURRENT_VERSION = (0, 23, 0)
+# as well as the version for the sematic wheel in wheel_constants.bzl
+CURRENT_VERSION = (0, 25, 0)
 
 # Represents the smallest client version that works with the server
 # at the CURRENT_VERSION. Should be updated any time a breaking change
 # is made to the web API. If there is a breaking change, there should
 # be a TODO below
-MIN_CLIENT_SERVER_SUPPORTS = (0, 21, 1)
+MIN_CLIENT_SERVER_SUPPORTS = (0, 22, 1)
 
 # Version of the settings file schema
 SETTINGS_SCHEMA_VERSION = 1

@@ -5,6 +5,32 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.25.0](https://pypi.org/project/sematic/0.25.0/)
+    * [feature] New dashboard page showing a searchable list of runs
+    * [feature] Enable links to runs using only the run id (pipeline path not required)
+    * [improvement] Expose image layer caching configuration for bazel-built pipelines
+    * [improvement] Make allocation timeouts for Ray clusters configurable
+    * [improvement] Small changes to layout of pipeline display page
+    * [improvement] Have Ray workers use same Kubernetes SA as Sematic workers
+    * [improvement] Minor user docs improvements
+    * [bugfix] Fix a bug that was preventing configuration of Slack via helm
+    * [bugfix] Remove error occurring when a local settings file configures server-only settings
+    * [bugfix] Be more resilient against non-standard failures during `torch` imports
+    * [bugfix] More robust cleanup of Ray clusters on pipeline cancellation
+* [0.24.1](https://pypi.org/project/sematic/0.24.1/)
+    * [improvement] Show more detailed errors on failures of DB migrations
+    * [bugfix] Reduce wheel size
+* [0.24.0](https://pypi.org/project/sematic/0.24.0/)
+    * [feature] Introduction of RayCluster[^1]
+    * [feature] "Tee" cloud function logs so they appear in Sematic dashboard and the pod logs
+    * [improvement] Visualize better which run was the true "root failure" when a resolution fails
+    * [improvement] Improve an error message when using untyped dicts in type annotations
+    * [improvement] Various improvements to Sematic internal test infrastructure
+    * [bugfix] Remove a possible server crash for local servers running on Macs
+    * [bugfix] Eliminate a bug that could leave runs hanging if multiple cancellation events were sent
+    * [bugfix] Fix a bug that removed a useful default for image tag in the Helm chart
+    * [bugfix] Rename an incorrectly named helm-chart value for Slack integration
+    * [bugfix] Gracefully terminate runs when a resolver pod restarts mid-resolution
 * [0.23.0](https://pypi.org/project/sematic/0.23.0/)
     * [feature] Ability to deploy socket.io micro-service separately.
     * [feature] Expose external resources in the dashboard.
@@ -225,3 +251,6 @@ with nothing else on the line.
     * [example] New liver cirrhosis prediction model (SKLearn, XGBoost)
 * [0.0.2.alpha.1654828599](https://pypi.org/project/sematic/0.0.2a1654828599/)
     * Initial release
+
+[^1]: This feature is for Sematic's "Enterprise Edition" only. Please reach out if
+you are interested in using Sematic EE.

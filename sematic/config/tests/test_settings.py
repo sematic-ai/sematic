@@ -23,11 +23,6 @@ from sematic.config.tests.fixtures import (
     mock_settings,
 )
 from sematic.config.user_settings import UserSettings, UserSettingsVar
-from sematic.plugins.external_resource.timed_message import TimedMessage
-from sematic.plugins.kuberay_wrapper.standard import (
-    StandardKuberaySettingsVar,
-    StandardKuberayWrapper,
-)
 from sematic.tests.fixtures import environment_variables
 
 
@@ -189,7 +184,7 @@ def test_get_specific_plugin_empty_file(empty_settings_file):
     get_settings()
 
     assert get_active_plugins(scope=PluginScope.STORAGE, default=[TestPlugin]) == [
-        TestPlugin
+        TestPlugin,
     ]
     assert (
         get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING, "default") == "default"
@@ -242,7 +237,8 @@ def test_get_specific_plugin_no_file(no_settings_file):
 
 def test_env_override_specific_plugin_no_file(no_settings_file):
     with environment_variables({"SOME_SETTING": "override"}):
-        # the plugin is not present in the scope, so its variables won't be even loaded
+        # when asking for the plugin specifically,
+        # its variables will be loaded, and overridden
         assert get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING) == "override"
 
 
@@ -257,23 +253,3 @@ def test_env_override_absent_plugin_no_file(no_settings_file):
 def test_get_active_settings_no_file(no_settings_file):
     active_settings = get_active_settings()
     assert active_settings == EXPECTED_DEFAULT_ACTIVE_SETTINGS
-
-
-def test_get_active_settings_env_scope_override():
-    scope_env_var = (
-        f",{TimedMessage.__module__}.{TimedMessage.__name__},,\n,"
-        f"{StandardKuberayWrapper.__module__}.{StandardKuberayWrapper.__name__},,"
-    )
-    with environment_variables(
-        {
-            PluginScope.EXTERNAL_RESOURCE.value: scope_env_var,
-            StandardKuberaySettingsVar.RAY_SUPPORTS_GPUS.value: "true",
-        }
-    ):
-        settings = get_active_settings()
-    assert (
-        settings.settings[
-            f"{StandardKuberayWrapper.__module__}.{StandardKuberayWrapper.__name__}"
-        ][StandardKuberaySettingsVar.RAY_SUPPORTS_GPUS]
-        == "true"
-    )

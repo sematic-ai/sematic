@@ -5,6 +5,7 @@ from typing import Any, Dict, Type
 
 # Sematic
 from sematic.abstract_plugin import AbstractPluginSettingsVar
+from sematic.config.server_settings import ServerSettingsVar, get_server_setting
 from sematic.config.settings import get_plugin_setting
 from sematic.plugins.abstract_kuberay_wrapper import (
     AbstractKuberayWrapper,
@@ -13,6 +14,7 @@ from sematic.plugins.abstract_kuberay_wrapper import (
     RayNodeConfig,
     ScalingGroup,
 )
+from sematic.scheduling.kubernetes import DEFAULT_WORKER_SERVICE_ACCOUNT
 from sematic.utils.exceptions import UnsupportedUsageError, UnsupportedVersionError
 
 
@@ -98,6 +100,8 @@ _WORKER_GROUP_TEMPLATE: Dict[str, Any] = {
                 }
             ],
             "tolerations": _NeedsOverride,
+            "serviceAccount": _NeedsOverride,
+            "serviceAccountName": _NeedsOverride,
             "nodeSelector": _NeedsOverride,
             "volumes": [{"name": "ray-logs", "emptyDir": {}}],
         }
@@ -143,6 +147,8 @@ _MANIFEST_TEMPLATE: Dict[str, Any] = {
                         }
                     ],
                     "tolerations": _NeedsOverride,
+                    "serviceAccount": _NeedsOverride,
+                    "serviceAccountName": _NeedsOverride,
                     "nodeSelector": _NeedsOverride,
                     "volumes": [{"name": "ray-logs", "emptyDir": {}}],
                 },
@@ -218,6 +224,10 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         group_manifest["template"]["spec"]["tolerations"] = cls._get_tolerations(
             worker_group.worker_nodes
         )
+        group_manifest["template"]["spec"]["serviceAccount"] = _get_service_account()
+        group_manifest["template"]["spec"][
+            "serviceAccountName"
+        ] = _get_service_account()
 
         return group_manifest
 
@@ -281,6 +291,12 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         head_group_template["template"]["spec"]["tolerations"] = cls._get_tolerations(
             node_config
         )
+        head_group_template["template"]["spec"][
+            "serviceAccount"
+        ] = _get_service_account()
+        head_group_template["template"]["spec"][
+            "serviceAccountName"
+        ] = _get_service_account()
 
         return head_group_template
 
@@ -349,3 +365,9 @@ def _get_setting(setting, default):
     if value is None:
         value = default
     return value
+
+
+def _get_service_account() -> str:
+    return get_server_setting(
+        ServerSettingsVar.SEMATIC_WORKER_KUBERNETES_SA, DEFAULT_WORKER_SERVICE_ACCOUNT
+    )

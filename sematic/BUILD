@@ -64,6 +64,7 @@ sematic_py_lib(
     deps = [
         "//sematic:abstract_future",
         "//sematic:versions",
+        "//sematic/api/endpoints:auth",
         "//sematic/config:config",
         "//sematic/config:settings",
         "//sematic/config:user_settings",
