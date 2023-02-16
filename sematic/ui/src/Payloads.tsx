@@ -66,10 +66,7 @@ export type GoogleLoginPayload = {
 
 export type AuthenticatePayload = {
   authenticate: boolean;
-  providers: {
-    GOOGLE_OAUTH_CLIENT_ID?: string;
-    GITHUB_OAUTH_CLIENT_ID?: string;
-  };
+  providers: { [key: string]: { [key: string]: string } };
 };
 
 export type EnvPayload = {

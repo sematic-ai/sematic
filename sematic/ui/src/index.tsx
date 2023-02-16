@@ -141,9 +141,9 @@ function App() {
       {!error &&
       authenticate &&
       authenticate.authenticate === true &&
-      authenticate.providers.GOOGLE_OAUTH_CLIENT_ID !== undefined ? (
+      authenticate.providers["google"] !== undefined ? (
         <GoogleOAuthProvider
-          clientId={authenticate.providers.GOOGLE_OAUTH_CLIENT_ID}
+          clientId={authenticate.providers["google"]["GOOGLE_OAUTH_CLIENT_ID"]}
         >
           <GoogleLogin
             text="signin_with"
