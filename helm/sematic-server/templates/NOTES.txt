@@ -1,5 +1,4 @@
-Sematic dashboard url: 
-{{- if .Values.ingress.create -}}
+Sematic dashboard url: {{ if .Values.ingress.create -}}
 {{- range $host := .Values.ingress.hosts -}}
   {{- range .paths -}}
   http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
