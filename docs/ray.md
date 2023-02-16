@@ -194,4 +194,5 @@ ray:
 ```
 
 [^1]: This feature of Sematic is only available with the "Enterprise Edition."
-Before using, please reach out to Sematic to obtain a license for "Sematic EE."
+Before using, please reach out to Sematic via support@sematic.dev to obtain a
+license for "Sematic EE."
