@@ -216,7 +216,7 @@ export default function Home() {
           </Grid>
           <Typography paragraph sx={{ mt: 10 }}>
             Or email us at{" "}
-            <Link href="mailto:support@sematic.ai">support@sematic.ai</Link>.
+            <Link href="mailto:support@sematic.dev">support@sematic.dev</Link>.
           </Typography>
         </Grid>
       </Grid>
