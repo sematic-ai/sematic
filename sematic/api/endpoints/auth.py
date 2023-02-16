@@ -5,22 +5,15 @@ from typing import Callable
 
 # Third-party
 import flask
-from google.auth.exceptions import GoogleAuthError
-from google.auth.transport import requests
-from google.oauth2 import id_token
 from sqlalchemy.orm.exc import NoResultFound
 
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.request_parameters import jsonify_error
-from sematic.config.server_settings import (
-    ServerSettingsVar,
-    get_bool_server_setting,
-    get_server_setting,
-)
-from sematic.config.settings import MissingSettingsError
-from sematic.db.models.factories import make_user
-from sematic.db.queries import get_user, get_user_by_api_key, save_user
+from sematic.config.server_settings import ServerSettingsVar, get_bool_server_setting
+from sematic.db.queries import get_user_by_api_key
+from sematic.plugins.abstract_auth import get_auth_plugins
+from sematic.plugins.auth.google_auth import GoogleAuth
 
 
 @sematic_api.route("/authenticate", methods=["GET"])
@@ -37,97 +30,18 @@ def authenticate_endpoint() -> flask.Response:
     )
 
     if authenticate:
-        for var in (
-            ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID,
-            # TODO: Github needs more work, npm package is broken
-            # ServerSettingsVar.GITHUB_OAUTH_CLIENT_ID,
-        ):
-            try:
-                providers[var.value] = get_server_setting(var)
-            except MissingSettingsError:
-                continue
+        selected_auth_plugins = get_auth_plugins([GoogleAuth])
+
+        for auth_plugin in selected_auth_plugins:
+            details = auth_plugin.get_public_auth_details()
+            details["endpoint"] = auth_plugin.get_login_endpoint()
+
+            providers[auth_plugin.get_slug()] = details
 
         if len(providers) == 0:
             return jsonify_error("No login providers", HTTPStatus.BAD_REQUEST)
 
     return flask.jsonify({"authenticate": authenticate, "providers": providers})
-
-
-@sematic_api.route("/login/google", methods=["POST"])
-def google_login() -> flask.Response:
-    """
-    Google login.
-
-    Schema returned by verify_oauth2_token:
-    {'iss': 'https://accounts.google.com',
-    'nbf': int,
-    'aud': '....apps.googleusercontent.com',
-    'sub': '...',
-    'hd': 'example.com',
-    'email': 'ringo@example.com',
-    'email_verified': True,
-    'azp': '....apps.googleusercontent.com',
-    'name': 'Ringo Starr',
-    'picture': 'https://...',
-    'given_name': 'Ringo',
-    'family_name': 'Starr',
-    'iat': ...,
-    'exp': ...,
-    'jti': '...'}
-    """
-    if not flask.request or not flask.request.json or "token" not in flask.request.json:
-        return jsonify_error("Please provide a login token", HTTPStatus.BAD_REQUEST)
-
-    token = flask.request.json["token"]
-
-    try:
-        google_oauth_client_id = get_server_setting(
-            ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID
-        )
-    except MissingSettingsError:
-        return jsonify_error("Missing oauth client ID", HTTPStatus.BAD_REQUEST)
-
-    try:
-        idinfo = id_token.verify_oauth2_token(
-            token,
-            requests.Request(),
-            google_oauth_client_id,
-        )
-
-        authorized_email_domain = get_server_setting(
-            ServerSettingsVar.SEMATIC_AUTHORIZED_EMAIL_DOMAIN, None
-        )
-
-        if authorized_email_domain is not None:
-            if idinfo.get("hd") not in authorized_email_domain.split(","):
-                raise ValueError("Incorrect email domain")
-
-    except (ValueError, GoogleAuthError):
-        return jsonify_error("Invalid user", HTTPStatus.UNAUTHORIZED)
-
-    try:
-        user = get_user(idinfo["email"])
-
-        # In case these have changed
-        user.first_name = idinfo["given_name"]
-        user.last_name = idinfo["family_name"]
-        user.avatar_url = idinfo["picture"]
-    except NoResultFound:
-        user = make_user(
-            email=idinfo["email"],
-            first_name=idinfo["given_name"],
-            last_name=idinfo["family_name"],
-            avatar_url=idinfo["picture"],
-        )
-
-    user = save_user(user)
-
-    payload = {"user": user.to_json_encodable()}
-    # API keys are redacted by default.
-    # In this case we do need to pass it to the front-end.
-    payload["user"]["api_key"] = user.api_key
-
-    return flask.jsonify(payload)
 
 
 API_KEY_HEADER = "X-API-KEY"

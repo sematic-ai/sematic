@@ -160,17 +160,15 @@ sematic_py_lib(
     srcs = ["auth.py"],
     pip_deps = [
         "flask",
-        "google-auth",
-        "requests",
         "sqlalchemy",
     ],
     deps = [
         ":request_parameters",
         "//sematic/api:app",
         "//sematic/config:server_settings",
-        "//sematic/config:settings",
         "//sematic/db:queries",
-        "//sematic/db/models:factories",
+        "//sematic/plugins:abstract_auth",
+        "//sematic/plugins/auth:google_auth",
     ],
 )
 
