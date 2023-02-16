@@ -252,5 +252,5 @@ with nothing else on the line.
 * [0.0.2.alpha.1654828599](https://pypi.org/project/sematic/0.0.2a1654828599/)
     * Initial release
 
-[^1]: This feature is for Sematic's "Enterprise Edition" only. Please reach out if
-you are interested in using Sematic EE.
+[^1]: This feature is for Sematic's "Enterprise Edition" only. Please reach out
+to support@sematic.dev if you are interested in using Sematic EE.
