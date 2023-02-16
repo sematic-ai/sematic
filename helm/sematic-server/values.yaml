@@ -16,6 +16,7 @@ secret:
 
 database:
   url: postgres://postgresql:5432/postgres # REPLACE ME
+  auto_migrate: true
 
 deployment:
   socket_io:

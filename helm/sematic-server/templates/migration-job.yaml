@@ -1,7 +1,8 @@
+{{- if .Values.database.auto_migrate }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{ .Release.Name }}"
+  name: "migration-{{ .Release.Name }}"
   labels:
     app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
     app.kubernetes.io/instance: {{ .Release.Name | quote }}
@@ -28,3 +29,4 @@ spec:
       - name: pre-install-migration
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         command: ["sematic", "migrate"]
+{{- end }}
