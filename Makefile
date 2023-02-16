@@ -15,15 +15,17 @@ install-dev-deps:
 	pip3 install -r requirements/ci-requirements.txt
 
 pre-commit:
-	flake8
-	mypy sematic
-	black sematic --check
-	isort sematic --diff
+	python3 -m flake8
+	python3 -m mypy sematic
+	python3 -m black sematic --check
+	python3 -m isort sematic --diff
 	pushd sematic/ui && npm run lint && popd
 
 fix:
 	isort sematic
 	black sematic
+
+
 
 # this is not supported on Mac because some of the dependencies that need to be pulled
 # do not have a release version for Mac
@@ -56,7 +58,7 @@ wheel : sematic/ui/build
 		grep -v "<a" | \
 		grep -v "/a>" | \
 		grep -v "/img>" > README.nohtml
-	m2r --overwrite README.nohtml
+	python3 -m m2r --overwrite README.nohtml
 	rm README.nohtml
 	bazel build //sematic:wheel
 
