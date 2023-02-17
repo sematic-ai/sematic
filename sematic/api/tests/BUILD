@@ -7,13 +7,16 @@ sematic_py_lib(
         "responses",
     ],
     visibility = ["//visibility:public"],
+    # buildifier: leave-alone
     deps = [
+        "//sematic:abstract_plugin",
         "//sematic/api:server_lib",
+        "//sematic/config:config",
         "//sematic/config:server_settings",
         "//sematic/config:settings",
         "//sematic/config:user_settings",
         "//sematic/db/tests:fixtures",
-        "//sematic/scheduling:kubernetes",
+        "//sematic/plugins/storage:memory_storage",
     ],
 )
 

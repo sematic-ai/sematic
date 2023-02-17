@@ -11,17 +11,22 @@ import flask.testing
 import pytest
 
 # Sematic
+import sematic.api_client as api_client
 from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     make_auth_test,
     mock_auth,
+    mock_plugin_settings,
     mock_requests,
     mock_socketio,
     test_client,
 )
 from sematic.calculator import func
+from sematic.config.server_settings import ServerSettings, ServerSettingsVar
+from sematic.config.user_settings import UserSettings, UserSettingsVar
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
+from sematic.db.models.user import User
 from sematic.db.queries import (
     get_run,
     save_resolution,
@@ -33,6 +38,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     persisted_external_resource,
     persisted_resolution,
     persisted_run,
+    persisted_user,
     pg_mock,
     run,
     test_db,
@@ -722,3 +728,17 @@ def test_get_run_external_resources(
 
     assert len(payload) == 1
     assert payload[0]["id"] == persisted_external_resource.id
+
+
+def test_set_run_user(persisted_user: User, run: Run, mock_requests):  # noqa: F811
+    with mock_plugin_settings(
+        ServerSettings, {ServerSettingsVar.SEMATIC_AUTHENTICATE: "1"}
+    ):
+        with mock_plugin_settings(
+            UserSettings, {UserSettingsVar.SEMATIC_API_KEY: persisted_user.api_key}
+        ):
+            api_client.save_graph(run.id, [run], [], [])
+
+    saved_run = api_client.get_run(run.id)
+
+    assert saved_run.user_id == persisted_user.email

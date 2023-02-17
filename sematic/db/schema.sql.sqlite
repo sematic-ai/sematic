@@ -24,6 +24,7 @@ CREATE TABLE runs (
     external_exception_metadata_json JSONB,
     original_run_id character(32),
     cache_key TEXT,
+    user_id TEXT,
 
     PRIMARY KEY (id)
 );
