@@ -24,7 +24,7 @@ CREATE TABLE runs (
     external_exception_metadata_json JSONB,
     original_run_id character(32),
     cache_key TEXT,
-    user_id TEXT,
+    user_id character(32),
 
     PRIMARY KEY (id)
 );
@@ -68,6 +68,7 @@ CREATE TABLE notes (
     FOREIGN KEY(root_id) REFERENCES runs (id)
 );
 CREATE TABLE users (
+    id character(32) NOT NULL,
     email TEXT NOT NULL,
     first_name TEXT,
     last_name TEXT,
@@ -76,7 +77,7 @@ CREATE TABLE users (
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL,
 
-    PRIMARY KEY (email)
+    PRIMARY KEY (id)
 );
 CREATE TABLE resolutions (
     root_id TEXT NOT NULL,

@@ -1,6 +1,6 @@
 -- migrate:up
 
-ALTER TABLE runs ADD COLUMN user_id TEXT REFERENCES users(email);
+ALTER TABLE runs ADD COLUMN user_id character(32) REFERENCES users(email);
 
 -- migrate:down
 
