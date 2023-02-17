@@ -1,12 +1,11 @@
+# Standard Library
+import logging
+
 # Sematic
 from sematic.config.config import switch_env
 from sematic.db.migrate import migrate_up
 
-# Configure logging so that the migration container shows output
-import logging
-
 logging.basicConfig(level=logging.INFO)
-
 switch_env("local")
 migrate_up()
 
