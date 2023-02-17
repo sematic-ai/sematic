@@ -1,5 +1,6 @@
 # Standard Library
 import datetime
+import uuid
 from typing import Optional
 
 # Third-party
@@ -17,7 +18,8 @@ class User(Base, JSONEncodableMixin):
 
     __tablename__ = "users"
 
-    email: str = Column(types.String(), primary_key=True)
+    id: str = Column(types.String(), primary_key=True, default=lambda: uuid.uuid4().hex)
+    email: str = Column(types.String(), nullable=False)
     first_name: Optional[str] = Column(types.String(), nullable=True)
     last_name: Optional[str] = Column(types.String(), nullable=True)
     avatar_url: Optional[str] = Column(types.String(), nullable=True)

@@ -436,7 +436,7 @@ def save_graph_endpoint(user: Optional[User]):
         logger.info("Graph update, run %s is in state %s", run.id, run.future_state)
 
         if user is not None:
-            run.user_id = user.email
+            run.user_id = user.id
 
         if FutureState[run.future_state].is_terminal():
             logger.info("Ensuring jobs for %s are stopped %s", run.id, run.future_state)
