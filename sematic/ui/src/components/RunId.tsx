@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
 import { getRunUrlPattern } from "../hooks/pipelineHooks";
 import { CopyButton } from "./CopyButton";
+import MuiRouterLink from "./MuiRouterLink";
 
 export default function RunId(props: {
     runId: string;
@@ -11,11 +11,10 @@ export default function RunId(props: {
   
     return (
       <>
-        <Link to={getRunUrlPattern(runId)} style={
-          {fontSize: '12px'}
-        }>
+        <MuiRouterLink to={getRunUrlPattern(runId)} underline="hover" 
+          style={{fontSize: '12px', color: 'revert'}}>
             <code>{trim ? runId.substring(0, 6) : runId}</code>
-        </Link>
+        </MuiRouterLink>
         {copy && <CopyButton text={runId} message="Copied run ID" />}
       </>
     );
