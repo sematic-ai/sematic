@@ -58,6 +58,9 @@ export function RunRow(props: RunRowProps) {
       <TableCell>
         <Tags tags={run.tags || []} />
       </TableCell>
+      <TableCell>
+        Emmanuel T.
+      </TableCell>
       <TableCell onClick={props.onClick}>
         <TimeAgo date={run.created_at} /><RunTime run={run} prefix="in" />
       </TableCell>
@@ -112,8 +115,9 @@ const StyledScroller = styled(Container)`
 
 const TableColumns = [
   {name: "ID", width: "7.5%"},
-  {name: "Name", width: "47.5%"},
+  {name: "Name", width: "37.5%"},
   {name: "Tags", width: "21%"},
+  {name: "User", width: "10%"},
   {name: "Time", width: "12%"},
   {name: "Status", width: "12%"}
 ]
