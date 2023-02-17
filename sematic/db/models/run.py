@@ -139,6 +139,7 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
         types.JSON(), nullable=True, info={JSON_KEY: True}
     )
     cache_key: Optional[str] = Column(types.String(), nullable=True)
+    user_id: Optional[str] = Column(types.String(), nullable=True)
 
     @validates("future_state")
     def validate_future_state(self, _, value) -> str:

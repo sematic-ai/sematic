@@ -431,17 +431,24 @@ def save_graph_endpoint(user: Optional[User]):
     graph = flask.request.json["graph"]
 
     runs = [Run.from_json_encodable(run) for run in graph["runs"]]
+
     for run in runs:
         logger.info("Graph update, run %s is in state %s", run.id, run.future_state)
+
+        if user is not None:
+            run.user_id = user.email
+
         if FutureState[run.future_state].is_terminal():
             logger.info("Ensuring jobs for %s are stopped %s", run.id, run.future_state)
             jobs = []
             for external_job in run.external_jobs:
                 jobs.append(cancel_job(external_job))
             run.external_jobs = jobs
+
     artifacts = [
         Artifact.from_json_encodable(artifact) for artifact in graph["artifacts"]
     ]
+
     edges = [Edge.from_json_encodable(edge) for edge in graph["edges"]]
 
     # try:
