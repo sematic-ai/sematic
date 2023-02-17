@@ -5,7 +5,7 @@ import Link from "@mui/material/Link/Link"
 import Button from "@mui/material/Button/Button"
 import Dialog from "@mui/material/Dialog/Dialog"
 import DialogActions from "@mui/material/DialogActions/DialogActions"
-import { alertClasses, DialogContent, DialogContentText, DialogTitle, FormGroup, FormControlLabel, Checkbox } from "@mui/material";
+import { DialogContent, DialogContentText, DialogTitle, FormGroup, FormControlLabel, Checkbox } from "@mui/material";
 import React, { useState, useMemo, useCallback } from "react";
 import { spacing } from "../utils";
 import { applyPostHogOptOutSetting, optOutStorageKey } from "../postHogManager"
@@ -17,17 +17,12 @@ const PageFooterContainer = styled('div', {
   bottom: 0;
   right: 0;
   width: fit-content;
-
-  & .${alertClasses.root}:hover {
-    text-decoration: underline;
-    cursor: pointer;
-  }
 `;
 
 const StyledNoticeText = styled('div')`
   padding: ${spacing(2)};
   cursor: pointer;
-  color: ${({theme}) => theme.palette.grey[100]}
+  color: ${({theme}) => theme.palette.grey[400]}
 `;
 
 const optOutSetting = atomWithStorage<boolean | null>(optOutStorageKey, null);

@@ -21,6 +21,7 @@ import {
   AuthenticatePayload,
   EnvPayload,
   GoogleLoginPayload,
+  VersionPayload,
 } from "./Payloads";
 import { User } from "./Models";
 import { Alert, Paper } from "@mui/material";
@@ -189,11 +190,13 @@ function Router() {
   const currentUrl = new URL(window.location.toString());
   const currentHostName = await sha1(currentUrl.hostname);
 
+  const versionResponse: VersionPayload = await (await fetch("/api/v1/meta/versions")).json();
+  const serverVersion = versionResponse.server.join('.');
+
   posthog.init( 
     'phc_nJlFf7MpsrzF5pPaSEQi5GKyTSDjHRcqqL808VLRNXc', { 
       api_host: 'https://app.posthog.com',
       autocapture: false,
-      debug: true,
       disable_session_recording: true,
       capture_pageview: false,
       capture_pageleave: false,
@@ -220,6 +223,12 @@ function Router() {
         if ('$host' in properties) {
           properties['$host'] = currentUrl.host;
         }
+
+        Object.assign(properties, {
+          SERVER_VERSION: serverVersion,
+          GIT_HASH: process.env.REACT_APP_GIT_HASH,
+          NODE_ENV: process.env.NODE_ENV,
+        })
 
         return properties;
       }
