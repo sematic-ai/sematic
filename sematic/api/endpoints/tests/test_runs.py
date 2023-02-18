@@ -744,4 +744,5 @@ def test_set_run_user(
 
     saved_run = api_client.get_run(run.id)
 
+    assert saved_run.user_id is not None
     assert saved_run.user_id == persisted_user.id
