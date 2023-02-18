@@ -121,6 +121,7 @@ jobs:
             - project/CIVENV
     environment:
       CI_VENV_NAME: CIVENV
+      REACT_APP_IS_CIRCLE_CI: 1
     
   
   integration-test:

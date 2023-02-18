@@ -228,6 +228,7 @@ function Router() {
           SERVER_VERSION: serverVersion,
           GIT_HASH: process.env.REACT_APP_GIT_HASH,
           NODE_ENV: process.env.NODE_ENV,
+          CIRCLECI: process.env.REACT_APP_IS_CIRCLE_CI !== undefined
         })
 
         return properties;
