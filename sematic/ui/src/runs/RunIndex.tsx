@@ -95,7 +95,7 @@ const StyledScroller = styled(Container)`
     display: flex;
     flex-direction: row;
 
-    & > :first-child {
+    & > *:first-of-type {
       padding-right: ${spacing(10)};
       flex-grow: 1
     }
