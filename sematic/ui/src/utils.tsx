@@ -100,3 +100,13 @@ export const graphSocket = io("/graph");
 export const pipelineSocket = io("/pipeline");
 
 export const spacing = (val: number) => ({theme}: any) => theme.spacing(val);
+
+export async function sha1(text: string) {
+  const utf8 = new TextEncoder().encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-1', utf8);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray
+    .map((bytes) => bytes.toString(16).padStart(2, '0'))
+    .join('');
+  return hashHex;
+}

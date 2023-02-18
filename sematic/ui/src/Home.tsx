@@ -19,6 +19,7 @@ import { SiDiscord, SiReadthedocs, SiGithub } from "react-icons/si";
 import { UserContext } from ".";
 import MuiRouterLink from "./components/MuiRouterLink";
 import RunStateChip from "./components/RunStateChip";
+import TrackingNotice from "./components/TrackingNotice";
 import { useFetchRuns } from "./hooks/pipelineHooks";
 
 function ShellCommand(props: { command: string }) {
@@ -83,11 +84,12 @@ export default function Home() {
     </Typography>;
   }, [isLoaded, runs]);
 
+  const theme = useTheme();
+
   const h1 = user ? "Hi " + user.first_name : "Welcome to Sematic";
 
   return (
-    <Container sx={{ pt: 10, height: "100vh", overflowY: "scroll" }}>
-      {/*sx={{ pt: 20, mx: 5, height: "100vh", overflowY: "scroll" }}>*/}
+    <Container sx={{ pt: 10, height: "100vh" }}>
       <Typography variant="h1">{h1}</Typography>
       <Box sx={{ mt: 15, mb: 10, minHeight: "1px" }}>
         {!!error && <Alert severity="error">
@@ -220,6 +222,7 @@ export default function Home() {
           </Typography>
         </Grid>
       </Grid>
+      <TrackingNotice sx={{pr: `${theme.spacing(4)}!important`}}/>
     </Container>
   );
 }
