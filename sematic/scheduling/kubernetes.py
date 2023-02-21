@@ -133,6 +133,7 @@ class PodSummary:
     container_restart_count: Optional[int] = None
     phase: Optional[str] = None
     condition_message: Optional[str] = None
+    unschedulable_message: Optional[str] = None
     container_condition_message: Optional[str] = None
     start_time_epoch_seconds: Optional[float] = None
     detected_infra_failure: bool = False
@@ -221,6 +222,25 @@ class KubernetesExternalJob(ExternalJob):
         logger.info("Job %s status: %s", self.external_job_id, status)
         return KubernetesJobState[status.state_name].is_active()
 
+    def latest_pod_summary(self) -> Optional[PodSummary]:
+        if len(self.current_pods) == 0:
+            return None
+
+        def order_key(summary):
+            """Order pods first by phase, then start time.
+
+            It's important to not just rely on start time because pending
+            pods don't have one.
+            """
+            phase_key = -1
+            if summary.phase is not None:
+                phase_key = POD_PHASE_PRECEDENCE.index(summary.phase)
+            start_time_key = summary.start_time_epoch_seconds or 0
+            return (phase_key, start_time_key)
+
+        latest = max(self.current_pods, key=order_key)
+        return latest
+
     def get_status(self) -> JobStatus:
         """Get a simple status describing the state of the job.
 
@@ -241,7 +261,7 @@ class KubernetesExternalJob(ExternalJob):
         # a pod can briefly show up as failed even when another one is
         # going to be scheduled in its place.
 
-        # TODO: message around k8s pod restarts
+        latest_summary = self.latest_pod_summary()
         if not self.has_started:
             description = "The job has been requested, but no pods are created yet."
             if self.try_number != 0:
@@ -257,19 +277,13 @@ class KubernetesExternalJob(ExternalJob):
                 state_name=KubernetesJobState.Deleted.value,
                 description="The job no longer exists",
             )
-        elif self.most_recent_condition is None:
-            logger.error("TODO: state: %s", self)
-            return JobStatus(
-                state_name=KubernetesJobState.Running.value,
-                description="TODO",
-            )
         elif self.most_recent_condition == KubernetesJobCondition.Complete.value:
             return JobStatus(
                 state_name=KubernetesJobState.Succeeded.value,
                 description="The job has completed successfully",
             )
         elif self.most_recent_condition == KubernetesJobCondition.Failed.value:
-            logger.error("TODO (more detail): state: %s", self)
+            logger.error("TODO (more detail 7): state: %s", self)
             return JobStatus(
                 state_name=KubernetesJobState.Failed.value,
                 description="The job has failed",
@@ -283,27 +297,77 @@ class KubernetesExternalJob(ExternalJob):
                 ),
             )
         elif self.pending_or_running_pod_count == 0:
+            # I suppose this could happen if we catch the job in the brief
+            # interval between when the job object is created and a pod
+            # is requested for it. Should be *incredibly* rare though
+            logger.warning("Unusual job state detected: %s", self)
+            return JobStatus(
+                state_name=KubernetesJobState.Pending.value,
+                description=(
+                    "No pods were considered succeeded, but none are pending/running."
+                ),
+            )
+        elif latest_summary is None:
+            # *hopefully* should be impossible to reach here; it means the
+            # job object says it has a pod, but Sematic was unable to identify
+            # such a pod.
+            logger.warning("Unusual job state detected: %s", self)
             return JobStatus(
                 state_name=KubernetesJobState.Failed.value,
-                description="No pods were considered succeeded, but none are running",
-            )
-        elif self.pending_or_running_pod_count == 1:
-            logger.error("TODO (more detail): %s", self)
-            return JobStatus(
-                state_name=KubernetesJobState.Running.value,
-                description="Pod is running",
+                description=(
+                    f"Job reports running pod count as "
+                    f"{self.pending_or_running_pod_count}, but no "
+                    f"pods could be identified."
+                ),
             )
         else:
+            return self.get_active_status_from_pods(
+                latest_summary=latest_summary,
+                current_pods=self.current_pods,
+                most_recent_condition=self.most_recent_condition,
+            )
+
+    @classmethod
+    def get_active_status_from_pods(
+        cls,
+        latest_summary: PodSummary,
+        current_pods: List[PodSummary],
+        most_recent_condition: Optional[str],
+    ) -> JobStatus:
+        state_name = KubernetesJobState.Running.value
+        description = f"Job is running with pod {latest_summary.pod_name}."
+        if len(current_pods) > 1:
             # multiple pods can sometimes simultaneously be active
             # if pod restart timing works out strangely.
-            pod_summaries = [pod.string_summary() for pod in self.current_pods]
+            pod_summaries = [pod.string_summary() for pod in current_pods]
             return JobStatus(
                 state_name=KubernetesJobState.Restarting.value,
                 description=(
-                    f"There are currently {self.pending_or_running_pod_count} "
+                    f"There are currently {len(current_pods)} "
                     f"pending/runnings pods: {' | '.join(pod_summaries)}"
                 ),
             )
+
+        logger.info("TODO Latest summary: %s", latest_summary)
+        if latest_summary.phase is not None and latest_summary.phase in dir(
+            KubernetesJobState
+        ):
+            state_name = latest_summary.phase
+            logger.info("TODO Changing state name to: %s", state_name)
+            if latest_summary.phase == KubernetesJobState.Pending.value:
+                logger.info("TODO Is pending: %s", state_name)
+                if latest_summary.unschedulable_message is not None:
+                    logger.info("TODO Is unschedulable: %s", state_name)
+                    description = latest_summary.unschedulable_message
+                else:
+                    description += f" {latest_summary.container_condition_message}."
+
+        if most_recent_condition is not None:
+            description += f" Pod condition is: {most_recent_condition}."
+        return JobStatus(
+            state_name=state_name,
+            description=description,
+        )
 
     def get_exception_metadata(self) -> Optional[ExceptionMetadata]:
         """
@@ -508,7 +572,26 @@ def _get_pods_for_job(
         return None, has_infra_failure
 
 
+def _get_unschedulable_reason(pod_conditions) -> Optional[str]:
+    logger.info("TODO Called _get_unschedulable_reason with %s", pod_conditions)
+    message = None
+    for condition in pod_conditions:
+        logger.info("TODO Condition...: %s", condition)
+        if condition.type != "PodScheduled" or condition.status == "True":
+            continue
+
+        message = (
+            f"Pod is not scheduled. Reason: {condition.reason}: {condition.message}. "
+            f"Depending on your Kubernetes cluster's configuration and current usage, "
+            f"this may or may not resolve itself on its own. Please consult your "
+            f"cluster operator."
+        )
+    logger.info("TODO Unschedulable message: %s", message)
+    return message
+
+
 def _get_pod_summary(pod: V1Pod) -> PodSummary:
+    logger.info("TODO summarizing pod...")
     try:
         detected_infra_failure = False
         if pod.status is None:
@@ -518,9 +601,16 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
                 detected_infra_failure=detected_infra_failure,
             )
 
+        unschedulable_reason = None
         if _is_none_or_empty(pod.status.conditions):
+            logger.info("TODO No conditions")
             most_recent_condition_message = "Most recent pod condition is unknown"
         else:
+            logger.info("TODO Has conditions")
+            logger.info(
+                "TODO Calling _get_unschedulable_reason with %s", pod.status.conditions
+            )
+            unschedulable_reason = _get_unschedulable_reason(pod.status.conditions)
             most_recent_condition = min(
                 pod.status.conditions,  # type: ignore
                 key=_v1_pod_condition_precedence_key,
@@ -570,6 +660,7 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
                 else None
             ),
             detected_infra_failure=detected_infra_failure,
+            unschedulable_message=unschedulable_reason,
         )
     except Exception as e:
         logger.error(
