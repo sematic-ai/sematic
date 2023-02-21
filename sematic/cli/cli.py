@@ -10,7 +10,7 @@ from sematic.db.migrate import migrate_up
 
 
 @click.group("sematic")
-@click.option('-v', '--verbose', count=True)
+@click.option("-v", "--verbose", count=True)
 def cli(verbose: int):
     """
     Welcome to Sematic
