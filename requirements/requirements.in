@@ -42,6 +42,7 @@ click
 torch==1.13.1
 torchvision==0.14.1
 torchmetrics
+#nvidia-cuda-runtime-cu11==11.7.99  # need to pin otherwise resolves to an unfindable version...
 plotly
 pandas
 pandas-stubs
@@ -68,4 +69,4 @@ mpld3
 # External Resource Plugins
 ## Ray
 ray[default]>=2.2.0
-
+Cython==0.29.33  # need to include https://github.com/cython/cython/commit/b37607f46b165e81f7af2b4eec2ae7f76f7717df
