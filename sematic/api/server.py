@@ -77,7 +77,7 @@ def run_wsgi(daemon: bool):
     options = {
         "bind": f"{get_config().server_address}:{get_config().port}",
         "workers": get_config().wsgi_workers_count,
-        "worker_class": "gevent",
+        "worker_class": "geventwebsocket.gunicorn.workers.GeventWebSocketWorker",
         "daemon": daemon,
         "pidfile": get_config().server_pid_file_path,
         "logconfig_dict": make_log_config(),

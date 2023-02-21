@@ -18,6 +18,7 @@ sematic_py_lib(
         "flask",
         "flask-socketio",
         "gevent",
+        "gevent-websocket",
     ],
     # buildifier: leave-alone
     deps = [
