@@ -1,14 +1,3 @@
-# Standard Library
-import logging
-
-# Sematic
-from sematic.config.config import switch_env
-from sematic.db.migrate import migrate_up
-
-logging.basicConfig(level=logging.INFO)
-switch_env("local")
-migrate_up()
-
 # Sematic
 import sematic.cli.cancel  # noqa: F401, E402
 import sematic.cli.logs  # noqa: F401, E402
