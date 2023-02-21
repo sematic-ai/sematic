@@ -6,6 +6,18 @@ with nothing else on the line.
 -->
 * HEAD
     * [improvement] Added support for Python 3.10
+* [0.25.0](https://pypi.org/project/sematic/0.25.0/)
+    * [feature] New dashboard page showing a searchable list of runs
+    * [feature] Enable links to runs using only the run id (pipeline path not required)
+    * [improvement] Expose image layer caching configuration for bazel-built pipelines
+    * [improvement] Make allocation timeouts for Ray clusters configurable
+    * [improvement] Small changes to layout of pipeline display page
+    * [improvement] Have Ray workers use same Kubernetes SA as Sematic workers
+    * [improvement] Minor user docs improvements
+    * [bugfix] Fix a bug that was preventing configuration of Slack via helm
+    * [bugfix] Remove error occurring when a local settings file configures server-only settings
+    * [bugfix] Be more resilient against non-standard failures during `torch` imports
+    * [bugfix] More robust cleanup of Ray clusters on pipeline cancellation
 * [0.24.1](https://pypi.org/project/sematic/0.24.1/)
     * [improvement] Show more detailed errors on failures of DB migrations
     * [bugfix] Reduce wheel size
