@@ -42,7 +42,6 @@ click
 torch==1.13.1
 torchvision==0.14.1
 torchmetrics
-nvidia-cuda-runtime-cu11==11.7.99
 plotly
 pandas
 pandas-stubs

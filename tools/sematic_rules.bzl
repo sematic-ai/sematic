@@ -148,14 +148,14 @@ def sematic_py_lib(name, srcs, deps, pip_deps = None, visibility = None, data = 
             data = data + runfiles,
         )
 
+        print("{0}_ipython".format(target_name))
         py_binary(
             name = "{0}_ipython".format(target_name),
             main = "//tools/jupyter:ipython.py",
             srcs = ["//tools/jupyter:ipython.py"],
             deps = [
                 ":{0}".format(target_name),
-                requirement("ipython"),
-            ] + versioned_pip_deps(pip_deps, py_version),
+            ] + versioned_pip_deps(pip_deps + ["ipython"], py_version),
             env = pyenv,
             tags = ["manual"],
             data = data + runfiles,
