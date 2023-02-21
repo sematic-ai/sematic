@@ -148,7 +148,6 @@ def sematic_py_lib(name, srcs, deps, pip_deps = None, visibility = None, data = 
             data = data + runfiles,
         )
 
-        print("{0}_ipython".format(target_name))
         py_binary(
             name = "{0}_ipython".format(target_name),
             main = "//tools/jupyter:ipython.py",
