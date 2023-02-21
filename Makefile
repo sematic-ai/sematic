@@ -1,3 +1,6 @@
+UNAME_S := $(shell uname -s)
+YELLOW := \033[1;33m
+NO_COLOR := \033[1;0m
 
 migrate_up_rds:
 	cd sematic; DATABASE_URL=${DATABASE_URL} dbmate -s db/schema.sql.pg up 
@@ -29,19 +32,18 @@ fix:
 
 # this is not supported on Mac because some of the dependencies that need to be pulled
 # do not have a release version for Mac
-refresh-dependencies-osx:
-	[[ "$(uname -a)" != *"Linux"* ]] || ( echo "Not on Mac" && exit 1 )
-	bazel run //requirements:requirements3_8_osx.update
-	bazel run //requirements:requirements3_9_osx.update
-	bazel run //requirements:requirements3_10_osx.update
-	echo "Please be sure to update requirements on Linux as well"
-
-refresh-dependencies-linux:
-	[[ "$(uname -a)" == *"Linux"* ]] || ( echo "Not on Linux" && exit 1 )
+refresh-dependencies:
+ifeq ($(UNAME_S),Linux)
 	bazel run //requirements:requirements3_8_linux.update
 	bazel run //requirements:requirements3_9_linux.update
 	bazel run //requirements:requirements3_10_linux.update
-	echo "Please be sure to update requirements on Mac as well"
+	echo "${YELLOW}❗ Please be sure to update requirements on Linux as well ❗${NO_COLOR}"
+else
+	bazel run //requirements:requirements3_8_osx.update
+	bazel run //requirements:requirements3_9_osx.update
+	bazel run //requirements:requirements3_10_osx.update
+	echo "${YELLOW}❗ Please be sure to update requirements on OSX as well ❗${NO_COLOR}"
+endif
 
 .PHONY: ui
 ui:
