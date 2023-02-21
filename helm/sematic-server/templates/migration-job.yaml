@@ -28,5 +28,5 @@ spec:
       containers:
       - name: pre-install-migration
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-        command: ["sematic", "migrate"]
+        command: ["sematic", "--verbose", "migrate"]
 {{- end }}
