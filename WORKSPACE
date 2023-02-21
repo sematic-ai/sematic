@@ -108,26 +108,26 @@ load("@rules_python//python:pip.bzl", "pip_parse")
 # ...but the python ecosystem in bazel is so hacked
 # together in general that I'm not sure there's another way to get
 # platform-dependent requirements.
-ON_OSX = "apple" in interpreter3_8
-_reqs_suffix = "_osx" if ON_OSX else ""
+_ON_OSX = "apple" in interpreter3_8
+_REQS_SUFFIX = "_osx" if _ON_OSX else "_linux"
 
 
 pip_parse(
     name = "pip_dependencies3_8",
     python_interpreter_target = interpreter3_8,
-    requirements_lock = "//requirements:requirements3_8{}.txt".format(_reqs_suffix),
+    requirements_lock = "//requirements:requirements3_8{}.txt".format(_REQS_SUFFIX),
 )
 
 pip_parse(
     name = "pip_dependencies3_9",
     python_interpreter_target = interpreter3_9,
-    requirements_lock = "//requirements:requirements3_9{}.txt".format(_reqs_suffix),
+    requirements_lock = "//requirements:requirements3_9{}.txt".format(_REQS_SUFFIX),
 )
 
 pip_parse(
     name = "pip_dependencies3_10",
     python_interpreter_target = interpreter3_10,
-    requirements_lock = "//requirements:requirements3_10{}.txt".format(_reqs_suffix),
+    requirements_lock = "//requirements:requirements3_10{}.txt".format(_REQS_SUFFIX),
 )
 
 load("@pip_dependencies3_8//:requirements.bzl", install_deps3_8="install_deps")

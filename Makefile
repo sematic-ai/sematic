@@ -29,10 +29,19 @@ fix:
 
 # this is not supported on Mac because some of the dependencies that need to be pulled
 # do not have a release version for Mac
-refresh-dependencies:
-	bazel run //requirements:requirements3_8.update
-	bazel run //requirements:requirements3_9.update
-	bazel run //requirements:requirements3_10.update
+refresh-dependencies-osx:
+	[[ "$(uname -a)" != *"Linux"* ]] || ( echo "Not on Mac" && exit 1 )
+	bazel run //requirements:requirements3_8_osx.update
+	bazel run //requirements:requirements3_9_osx.update
+	bazel run //requirements:requirements3_10_osx.update
+	echo "Please be sure to update requirements on Linux as well"
+
+refresh-dependencies-linux:
+	[[ "$(uname -a)" == *"Linux"* ]] || ( echo "Not on Linux" && exit 1 )
+	bazel run //requirements:requirements3_8_linux.update
+	bazel run //requirements:requirements3_9_linux.update
+	bazel run //requirements:requirements3_10_linux.update
+	echo "Please be sure to update requirements on Mac as well"
 
 .PHONY: ui
 ui:
