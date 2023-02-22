@@ -235,7 +235,7 @@ def migrate_up():
                 f"{e}\n"
                 f"Last successful migration is: {last_successful}"
             )
-            return
+            raise e
 
         last_successful = migration_file
 
