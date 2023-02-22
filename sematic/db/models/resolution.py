@@ -199,6 +199,7 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     container_image_uri: Optional[str] = Column(types.String(), nullable=True)
     client_version: Optional[str] = Column(types.String(), nullable=True)
     cache_namespace: Optional[str] = Column(types.String(), nullable=True)
+    user_id: Optional[str] = Column(types.String(), nullable=True)
 
     @validates("status")
     def validate_status(self, key, value) -> str:

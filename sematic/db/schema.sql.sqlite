@@ -90,6 +90,7 @@ CREATE TABLE resolutions (
     container_image_uris JSONB,
     client_version TEXT,
     cache_namespace TEXT,
+    user_id character(32),
 
     PRIMARY KEY (root_id),
     FOREIGN KEY (root_id) REFERENCES runs(id)

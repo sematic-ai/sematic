@@ -85,6 +85,9 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
     resolution_json_encodable = flask.request.json["resolution"]
     resolution = Resolution.from_json_encodable(resolution_json_encodable)
 
+    if user is not None:
+        resolution.user_id = user.id
+
     if not resolution.root_id == resolution_id:
         message = (
             f"Id of resolution in the payload ({resolution.root_id}) does not match "
@@ -197,9 +200,16 @@ def rerun_resolution_endpoint(
     original_root_run = original_runs[0]
 
     root_run, edges = clone_root_run(original_root_run, original_edges)
+
+    if user is not None:
+        root_run.user_id = user.id
+
     save_graph(runs=[root_run], edges=edges, artifacts=[])
 
     resolution = clone_resolution(original_resolution, root_id=root_run.id)
+
+    if user is not None:
+        resolution.user_id = user.id
 
     resolution = schedule_resolution(resolution, rerun_from=rerun_from)
 

@@ -9,10 +9,10 @@ from sematic.db.db import db
 
 
 def up():
-    with db().get_session().begin() as conn:
+    with db().get_engine().begin() as conn:
         users = conn.execute(
             "SELECT "
-            "email, first_name, last_name, avatar_url, api_key, created_at, updated_at"
+            "email, first_name, last_name, avatar_url, api_key, created_at, updated_at "
             "FROM users;"
         )
 
