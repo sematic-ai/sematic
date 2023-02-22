@@ -14,15 +14,6 @@ CREATE TABLE users_tmp (
 );
 
 
--- INSERT INTO users_tmp (
---    id, email, first_name, last_name, avatar_url, api_key, created_at, updated_at
--- ) SELECT 
---    lower(hex(randomblob(16))), email, first_name, last_name, avatar_url,
---    api_key, created_at, updated_at
--- FROM users;
-
-
-
 -- migrate:down
 
 DROP TABLE users_tmp;
