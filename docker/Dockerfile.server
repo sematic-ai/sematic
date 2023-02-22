@@ -13,6 +13,5 @@ RUN python3 -m pip install --upgrade pip
 # When debugging use the wheel directly
 COPY sematic-*.whl .
 RUN pip install $(ls ./sematic-*.whl)["${EXTRA}"]
-
 EXPOSE 80
 CMD python3 -m sematic.db.migrate up --verbose --env cloud && python3 -m sematic.api.server --env cloud

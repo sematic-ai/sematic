@@ -58,12 +58,13 @@ def ping():
     return jsonify({"status": "ok"})
 
 
-socketio = SocketIO(sematic_api, cors_allowed_origins="*")
-# This is necessary because starting version 5.7.0 python-socketio does not
-# accept connections to undeclared namespaces
-socketio.on_namespace(Namespace("/pipeline"))
-socketio.on_namespace(Namespace("/graph"))
-
+def init_socketio():
+    socketio = SocketIO(sematic_api, cors_allowed_origins="*")
+    # This is necessary because starting version 5.7.0 python-socketio does not
+    # accept connections to undeclared namespaces
+    socketio.on_namespace(Namespace("/pipeline"))
+    socketio.on_namespace(Namespace("/graph"))
+    return socketio
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser("Sematic API server")
@@ -74,10 +75,28 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def run_wsgi(daemon: bool):
+    if get_config().wsgi_workers_count == 1:
+        socketio = init_socketio()
+        socketio.run(
+            sematic_api,
+            port=get_config().port,
+            host=get_config().server_address,
+            debug=False,
+        )
+        return
+
+    # TODO: https://github.com/sematic-ai/sematic/issues/595
+    # We should be able to use this worker class to actually leverage
+    # websockets for socket.io, but right now that gives us
+    # a recusrion error when deployed.
+    #worker_class = "geventwebsocket.gunicorn.workers.GeventWebSocketWorker"
+    #worker_class = "gevent"
+
+    worker_class = "sync"
     options = {
         "bind": f"{get_config().server_address}:{get_config().port}",
         "workers": get_config().wsgi_workers_count,
-        "worker_class": "geventwebsocket.gunicorn.workers.GeventWebSocketWorker",
+        "worker_class": worker_class,
         "daemon": daemon,
         "pidfile": get_config().server_pid_file_path,
         "logconfig_dict": make_log_config(),
@@ -137,6 +156,7 @@ if __name__ == "__main__":
     switch_env(args.env)
 
     if args.debug:
+        socketio = init_socketio()
         socketio.run(
             sematic_api,
             port=get_config().port,
