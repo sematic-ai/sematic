@@ -19,7 +19,7 @@ class User(Base, JSONEncodableMixin):
     __tablename__ = "users"
 
     id: str = Column(types.String(), primary_key=True, default=lambda: uuid.uuid4().hex)
-    email: str = Column(types.String(), nullable=False)
+    email: str = Column(types.String(), nullable=False, info={REDACTED_KEY: True})
     first_name: Optional[str] = Column(types.String(), nullable=True)
     last_name: Optional[str] = Column(types.String(), nullable=True)
     avatar_url: Optional[str] = Column(types.String(), nullable=True)

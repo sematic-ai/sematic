@@ -23,6 +23,16 @@ export type ExceptionMetadata = {
   module: string;
 };
 
+export type User = {
+  id: string;
+  email: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+  // only returned if user is self
+  api_key: string | null;
+};
+
 export type Run = {
   id: string;
   original_run_id: string | null;
@@ -35,6 +45,8 @@ export type Run = {
   external_exception_metadata_json: ExceptionMetadata | null;
   tags: Array<string>;
   parent_id: string | null;
+  user_id: string | null;
+  user: User | null;
   root_id: string;
   created_at: Date;
   updated_at: Date;
@@ -72,15 +84,6 @@ export type Note = {
   root_id: string;
   created_at: Date;
   updated_at: Date;
-};
-
-export type User = {
-  email: string;
-  first_name: string | null;
-  last_name: string | null;
-  avatar_url: string | null;
-  // only returned if user is self
-  api_key: string | null;
 };
 
 export type ExternalResourceState = 

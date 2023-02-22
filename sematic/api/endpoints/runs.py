@@ -38,6 +38,8 @@ from sematic.db.queries import (
     get_run,
     get_run_graph,
     get_run_status_details,
+    get_user,
+    get_users,
     save_graph,
     save_run,
     save_run_external_resource_links,
@@ -181,6 +183,14 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
 
     content = [run.to_json_encodable() for run in runs]
 
+    user_ids = {run.user_id for run in runs if run.user_id is not None}
+    users_by_id = {
+        user.id: user.to_json_encodable() for user in get_users(list(user_ids))
+    }
+
+    for run in content:
+        run["user"] = users_by_id.get(run["user_id"])
+
     payload = dict(
         current_page_url=current_page_url,
         next_page_url=next_page_url,
@@ -219,9 +229,16 @@ def get_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
             "No runs with id {}".format(repr(run_id)), HTTPStatus.NOT_FOUND
         )
 
-    payload = dict(
-        content=run.to_json_encodable(),
-    )
+    user = None
+
+    if run.user_id is not None:
+        user = get_user(run.user_id).to_json_encodable()
+
+    run_payload = run.to_json_encodable()
+
+    run_payload["user"] = user
+
+    payload = dict(content=run_payload)
 
     return flask.jsonify(payload)
 

@@ -61,6 +61,29 @@ def get_artifact(artifact_id: str) -> Artifact:
         return session.query(Artifact).filter(Artifact.id == artifact_id).one()
 
 
+def get_users(user_ids: List[str]) -> List[User]:
+    """
+    Get users from the database.
+
+    Parameters
+    ----------
+    user_ids: List[str]
+        List of IDs to retrieve.
+
+    Returns
+    -------
+    List[User]
+        List of users
+    """
+    with db().get_session() as session:
+        return session.query(User).filter(User.id.in_(user_ids)).all()
+
+
+def get_user(id: str) -> User:
+    with db().get_session() as session:
+        return session.query(User).filter(User.id == id).one()
+
+
 def get_run(run_id: str) -> Run:
     """
     Get a run from the database.
