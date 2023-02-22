@@ -27,6 +27,9 @@ spec:
       restartPolicy: Never
       containers:
       - name: pre-install-migration
+        envFrom:
+        - secretRef:
+            name: {{ .Release.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-        command: ["sematic", "--verbose", "migrate"]
+        command: ["python3", "-m", "sematic.db.migrate", "up", "--verbose", "--env", "cloud"]
 {{- end }}
