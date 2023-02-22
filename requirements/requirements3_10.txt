@@ -574,6 +574,12 @@ gevent==22.10.2 \
     --hash=sha256:f23d0997149a816a2a9045af29c66f67f405a221745b34cefeac5769ed451db8 \
     --hash=sha256:f3329bedbba4d3146ae58c667e0f9ac1e6f1e1e6340c7593976cdc60aa7d1a47 \
     --hash=sha256:f7ed2346eb9dc4344f9cb0d7963ce5b74fe16fdd031a2809bb6c2b6eba7ebcd5
+    # via
+    #   -r requirements/requirements.in
+    #   gevent-websocket
+gevent-websocket==0.10.1 \
+    --hash=sha256:17b67d91282f8f4c973eba0551183fc84f56f1c90c8f6b6b30256f31f66f5242 \
+    --hash=sha256:7eaef32968290c9121f7c35b973e2cc302ffb076d018c9068d2f5ca8b2d85fb0
     # via -r requirements/requirements.in
 git-python==1.0.3 \
     --hash=sha256:8820ce93786cd11a76d44c7153708588e8056213e4c512406ea3732871aa9ad6 \

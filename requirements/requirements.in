@@ -28,6 +28,7 @@ flask-cors
 cloudpickle
 flask-socketio
 gevent
+gevent-websocket
 requests
 responses==0.20.0  # 0.21.0 breaks mypy checks https://github.com/getsentry/responses/issues/556
 werkzeug
