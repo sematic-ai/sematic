@@ -741,4 +741,4 @@ def test_set_run_user(persisted_user: User, run: Run, mock_requests):  # noqa: F
 
     saved_run = api_client.get_run(run.id)
 
-    assert saved_run.user_id == persisted_user.email
+    assert saved_run.user_id == persisted_user.id
