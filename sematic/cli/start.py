@@ -9,7 +9,7 @@ import webbrowser
 import click
 
 # Sematic
-from sematic.api.server import run_wsgi
+from sematic.api.server import run_socketio
 from sematic.cli.cli import cli
 from sematic.cli.process_utils import server_is_running
 from sematic.config.config import get_config
@@ -32,4 +32,4 @@ def start():
 
         os._exit(0)
 
-    run_wsgi(False)
+    run_socketio(False)

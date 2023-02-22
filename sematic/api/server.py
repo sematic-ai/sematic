@@ -5,6 +5,7 @@ import os
 # Third-party
 from flask import jsonify, send_file
 from flask_socketio import Namespace, SocketIO  # type: ignore
+from gunicorn.util import daemonize  # type: ignore
 
 # Sematic
 # Endpoint modules need to be imported for endpoints
@@ -66,6 +67,19 @@ def init_socketio():
     socketio.on_namespace(Namespace("/graph"))
     return socketio
 
+
+def run_socketio(debug=False):
+    socketio = init_socketio()
+    with open(get_config().server_pid_file_path, "w+") as fp:
+        fp.write(str(os.getpid()))
+    socketio.run(
+        sematic_api,
+        port=get_config().port,
+        host=get_config().server_address,
+        debug=debug,
+    )
+
+
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser("Sematic API server")
     parser.add_argument("--env", required=False, default="local", type=str)
@@ -75,28 +89,11 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def run_wsgi(daemon: bool):
-    if get_config().wsgi_workers_count == 1:
-        socketio = init_socketio()
-        socketio.run(
-            sematic_api,
-            port=get_config().port,
-            host=get_config().server_address,
-            debug=False,
-        )
-        return
-
-    # TODO: https://github.com/sematic-ai/sematic/issues/595
-    # We should be able to use this worker class to actually leverage
-    # websockets for socket.io, but right now that gives us
-    # a recusrion error when deployed.
-    #worker_class = "geventwebsocket.gunicorn.workers.GeventWebSocketWorker"
-    #worker_class = "gevent"
-
-    worker_class = "sync"
+    init_socketio()
     options = {
         "bind": f"{get_config().server_address}:{get_config().port}",
         "workers": get_config().wsgi_workers_count,
-        "worker_class": worker_class,
+        "worker_class": "geventwebsocket.gunicorn.workers.GeventWebSocketWorker",
         "daemon": daemon,
         "pidfile": get_config().server_pid_file_path,
         "logconfig_dict": make_log_config(),
@@ -156,13 +153,7 @@ if __name__ == "__main__":
     switch_env(args.env)
 
     if args.debug:
-        socketio = init_socketio()
-        socketio.run(
-            sematic_api,
-            port=get_config().port,
-            host=get_config().server_address,
-            debug=args.debug,
-        )
+        run_socketio(args.daemon, args.debug)
 
     else:
         run_wsgi(args.daemon)
