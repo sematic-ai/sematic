@@ -103,31 +103,22 @@ load("@python3_9//:defs.bzl", interpreter3_9="interpreter")
 load("@python3_10//:defs.bzl", interpreter3_10="interpreter")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
-# Accessing our platform from within a WORKSPACE is a sin against
-# the bazel gods (which is why it is done in this roundabout way)
-# ...but the python ecosystem in bazel is so hacked
-# together in general that I'm not sure there's another way to get
-# platform-dependent requirements.
-_ON_OSX = "apple" in interpreter3_8
-_REQS_SUFFIX = "_osx" if _ON_OSX else "_linux"
-
-
 pip_parse(
     name = "pip_dependencies3_8",
     python_interpreter_target = interpreter3_8,
-    requirements_lock = "//requirements:requirements3_8{}.txt".format(_REQS_SUFFIX),
+    requirements_lock = "//requirements:requirements3_8.txt",
 )
 
 pip_parse(
     name = "pip_dependencies3_9",
     python_interpreter_target = interpreter3_9,
-    requirements_lock = "//requirements:requirements3_9{}.txt".format(_REQS_SUFFIX),
+    requirements_lock = "//requirements:requirements3_9.txt",
 )
 
 pip_parse(
     name = "pip_dependencies3_10",
     python_interpreter_target = interpreter3_10,
-    requirements_lock = "//requirements:requirements3_10{}.txt".format(_REQS_SUFFIX),
+    requirements_lock = "//requirements:requirements3_10.txt",
 )
 
 load("@pip_dependencies3_8//:requirements.bzl", install_deps3_8="install_deps")

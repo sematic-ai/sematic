@@ -1,5 +1,5 @@
 UNAME_S := $(shell uname -s)
-YELLOW := \033[1;33m
+RED := \033[0;31m
 NO_COLOR := \033[1;0m
 
 migrate_up_rds:
@@ -37,12 +37,9 @@ ifeq ($(UNAME_S),Linux)
 	bazel run //requirements:requirements3_8_linux.update
 	bazel run //requirements:requirements3_9_linux.update
 	bazel run //requirements:requirements3_10_linux.update
-	echo "${YELLOW}❗ Please be sure to update requirements on Linux as well ❗${NO_COLOR}"
 else
-	bazel run //requirements:requirements3_8_osx.update
-	bazel run //requirements:requirements3_9_osx.update
-	bazel run //requirements:requirements3_10_osx.update
-	echo "${YELLOW}❗ Please be sure to update requirements on OSX as well ❗${NO_COLOR}"
+	echo "${RED}Refreshing dependencies should only be done from Linux${NO_COLOR}"
+	exit 1
 endif
 
 .PHONY: ui
