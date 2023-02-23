@@ -1,6 +1,10 @@
 # Standard Library
 import argparse
+import logging
 import os
+import signal
+import sys
+from logging.config import dictConfig
 
 # Third-party
 from flask import jsonify, send_file
@@ -73,6 +77,21 @@ socketio = init_socketio()
 def run_socketio(debug=False):
     with open(get_config().server_pid_file_path, "w+") as fp:
         fp.write(str(os.getpid()))
+
+    dictConfig(make_log_config())
+
+    logger = logging.getLogger()
+
+    def handler(signum, frame):
+        logger.warning("Received signal: %s. Quitting", signum)
+        sys.exit(signum)
+
+    signal.signal(signal.SIGCHLD, handler)
+    signal.signal(signal.SIGTERM, handler)
+    signal.signal(signal.SIGINT, handler)
+    signal.signal(signal.SIGABRT, handler)
+    signal.signal(signal.SIGSEGV, handler)
+
     socketio.run(
         sematic_api,
         port=get_config().port,
