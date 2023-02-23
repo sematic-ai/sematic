@@ -5,7 +5,6 @@ import os
 # Third-party
 from flask import jsonify, send_file
 from flask_socketio import Namespace, SocketIO  # type: ignore
-from gunicorn.util import daemonize  # type: ignore
 
 # Sematic
 # Endpoint modules need to be imported for endpoints
@@ -84,7 +83,6 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser("Sematic API server")
     parser.add_argument("--env", required=False, default="local", type=str)
     parser.add_argument("--debug", required=False, default=False, action="store_true")
-    parser.add_argument("--daemon", required=False, default=False, action="store_true")
     return parser.parse_args()
 
 
@@ -153,7 +151,7 @@ if __name__ == "__main__":
     switch_env(args.env)
 
     if args.debug:
-        run_socketio(args.daemon, args.debug)
+        run_socketio(args.debug)
 
     else:
-        run_wsgi(args.daemon)
+        run_wsgi(False)
