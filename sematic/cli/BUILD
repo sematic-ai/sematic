@@ -14,7 +14,6 @@ sematic_py_lib(
         ":settings",
         ":version",
         "//sematic/config:config",
-        "//sematic/db:migrate_lib",
         # Examples
         "//sematic/examples/template:template_lib",
         # These do not add dependencies on 3rd party packages
@@ -30,7 +29,9 @@ sematic_py_lib(
     pip_deps = [
         "click",
     ],
-    deps = [],
+    deps = [
+        "//sematic/db:migrate_lib",
+    ],
 )
 
 sematic_py_lib(

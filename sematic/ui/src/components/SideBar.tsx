@@ -2,7 +2,6 @@ import { Logout, PlayCircle, Timeline } from "@mui/icons-material";
 import {
   Box,
   Typography,
-  Link,
   Stack,
   ButtonBase,
   Menu,
@@ -17,6 +16,7 @@ import { useContext, useState } from "react";
 import { SiDiscord, SiReadthedocs } from "react-icons/si";
 import { UserContext } from "..";
 import logo from "../Fox.png";
+import MuiRouterLink from "./MuiRouterLink";
 import UserAvatar from "./UserAvatar";
 
 export default function SideBar() {
@@ -36,30 +36,30 @@ export default function SideBar() {
     >
       <Stack sx={{ gridRow: 1, spacing: 2, paddingTop: 3 }}>
         <Box sx={{ color: "#ffffff", paddingBottom: 4 }}>
-          <Link href="/" underline="none">
+          <MuiRouterLink href="/" underline="none">
             <img src={logo} width="30px" alt="Sematic fox" />
             {/*<Typography fontSize={32}>🦊</Typography>*/}
-          </Link>
+          </MuiRouterLink>
         </Box>
         <Box mt={5}>
-          <Link
+          <MuiRouterLink
             href="/pipelines"
             sx={{ color: "rgba(255, 255, 255, 0.5)" }}
             underline="none"
           >
             <Timeline fontSize="large" />
             <Typography fontSize={10}>Pipelines</Typography>
-          </Link>
+          </MuiRouterLink>
         </Box>
         <Box mt={5}>
-          <Link
+          <MuiRouterLink
             href="/runs"
             sx={{ color: "rgba(255, 255, 255, 0.5)" }}
             underline="none"
           >
             <PlayCircle fontSize="large" />
             <Typography fontSize={10}>Runs</Typography>
-          </Link>
+          </MuiRouterLink>
         </Box>
       </Stack>
       <Stack
@@ -72,7 +72,7 @@ export default function SideBar() {
       >
         <Stack spacing={4} sx={{ paddingBottom: 4 }}>
           <Box>
-            <Link
+            <MuiRouterLink
               href="https://docs.sematic.dev"
               sx={{ color: "rgba(255, 255, 255, 0.5)" }}
               underline="none"
@@ -80,17 +80,17 @@ export default function SideBar() {
             >
               <SiReadthedocs />
               <Typography fontSize={10}>Docs</Typography>
-            </Link>
+            </MuiRouterLink>
           </Box>
           <Box>
-            <Link
+            <MuiRouterLink
               href="https://discord.gg/4KZJ6kYVax"
               sx={{ color: "rgba(255, 255, 255, 0.5)" }}
               underline="none"
             >
               <SiDiscord />
               <Typography fontSize={10}>Discord</Typography>
-            </Link>
+            </MuiRouterLink>
           </Box>
         </Stack>
         <UserMenu />

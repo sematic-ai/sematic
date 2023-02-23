@@ -25,6 +25,35 @@ def test_invalid_migration(_):
         _run_sql_migration("abc", "abc", MigrationDirection.UP)
 
 
+VALID_SQL = """
+-- migrate:up
+
+-- this commented-out query will hopefully be ignored
+-- SELECT 0;
+SELECT 1;
+-- this; comment; one; as; well;
+
+-- migrate:down
+
+-- only a commented-out query
+-- SELECT 2;
+
+"""
+
+
+@patch("sematic.db.migrate._get_migration_sql", return_value=VALID_SQL)
+@patch("sqlalchemy.engine.base.Connection.execute")
+def test_statement_parsing(mock_execute, _, test_db_empty):  # noqa: F811
+
+    _run_sql_migration("abc", "abc", MigrationDirection.UP)
+    # one call for the statement, one to mark the migration as done
+    assert mock_execute.call_count == 2
+
+    _run_sql_migration("abc", "abc", MigrationDirection.DOWN)
+    # another call to mark the migration as done
+    assert mock_execute.call_count == 3
+
+
 INVALID_SQL = """
 -- migrate:up
 

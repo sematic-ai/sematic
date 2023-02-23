@@ -6,7 +6,6 @@ import {
   Container,
   Divider,
   Grid,
-  Link,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -18,7 +17,9 @@ import {
 } from "react";
 import { SiDiscord, SiReadthedocs, SiGithub } from "react-icons/si";
 import { UserContext } from ".";
+import MuiRouterLink from "./components/MuiRouterLink";
 import RunStateChip from "./components/RunStateChip";
+import TrackingNotice from "./components/TrackingNotice";
 import { useFetchRuns } from "./hooks/pipelineHooks";
 
 function ShellCommand(props: { command: string }) {
@@ -79,15 +80,16 @@ export default function Home() {
       sx={{ display: "flex", alignItems: "center" }}
     >
       Your latest run:&nbsp; <RunStateChip run={run} />
-      <Link href={"/pipelines/" + run.calculator_path}>{run.name}</Link>
+      <MuiRouterLink href={"/pipelines/" + run.calculator_path}>{run.name}</MuiRouterLink>
     </Typography>;
   }, [isLoaded, runs]);
+
+  const theme = useTheme();
 
   const h1 = user ? "Hi " + user.first_name : "Welcome to Sematic";
 
   return (
-    <Container sx={{ pt: 10, height: "100vh", overflowY: "scroll" }}>
-      {/*sx={{ pt: 20, mx: 5, height: "100vh", overflowY: "scroll" }}>*/}
+    <Container sx={{ pt: 10, height: "100vh" }}>
       <Typography variant="h1">{h1}</Typography>
       <Box sx={{ mt: 15, mb: 10, minHeight: "1px" }}>
         {!!error && <Alert severity="error">
@@ -176,24 +178,24 @@ export default function Home() {
             spacing={20}
           >
             <Grid item sx={{ textAlign: "center" }}>
-              <Link
+              <MuiRouterLink
                 href="https://discord.gg/PFCpatvy"
                 underline="none"
                 target="_blank"
               >
                 <SiDiscord fontSize={42} color="#7289da" />
                 <Typography>Discord</Typography>
-              </Link>
+              </MuiRouterLink>
             </Grid>
             <Grid item sx={{ textAlign: "center" }}>
-              <Link
+              <MuiRouterLink
                 href="https://github.com/sematic-ai/sematic"
                 underline="none"
                 target="_blank"
               >
                 <SiGithub fontSize={42} color="#000000" />
                 <Typography>GitHub</Typography>
-              </Link>
+              </MuiRouterLink>
             </Grid>
           </Grid>
           <Typography paragraph sx={{ mt: 10 }}>
@@ -204,22 +206,23 @@ export default function Home() {
             sx={{ justifyContent: "center", alignItems: "flex-start", pt: 3 }}
           >
             <Grid item sx={{ textAlign: "center" }}>
-              <Link
+              <MuiRouterLink
                 href="https://docs.sematic.dev"
                 underline="none"
                 target="_blank"
               >
                 <SiReadthedocs fontSize={38} color="#000000" />
                 <Typography>Sematic Documentation</Typography>
-              </Link>
+              </MuiRouterLink>
             </Grid>
           </Grid>
           <Typography paragraph sx={{ mt: 10 }}>
             Or email us at{" "}
-            <Link href="mailto:support@sematic.ai">support@sematic.ai</Link>.
+            <MuiRouterLink href="mailto:support@sematic.dev">support@sematic.dev</MuiRouterLink>.
           </Typography>
         </Grid>
       </Grid>
+      <TrackingNotice sx={{pr: `${theme.spacing(4)}!important`}}/>
     </Container>
   );
 }

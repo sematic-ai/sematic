@@ -13,6 +13,7 @@ import functools
 import importlib
 import logging
 import os
+import re
 import subprocess
 from typing import List, Optional
 from urllib.parse import urlparse
@@ -111,8 +112,12 @@ def _run_sql_migration(
         )
 
     up_sql, down_sql = sql.split(_DOWN_MARKER)
-    up_sql = up_sql.split(_UP_MARKER)[1].strip()
-    down_sql = down_sql.strip()
+    # remove comments, in order to ensure commented-out statements are not considered
+    # otherwise, splitting by ";" will result in commented-out statements being executed,
+    # which will result in an error on Postgres
+    up_sql = up_sql.split(_UP_MARKER)[1]
+    up_sql = re.sub("-- .*\n?", "", up_sql).strip()
+    down_sql = re.sub("-- .*\n?", "", down_sql).strip()
 
     statements = (up_sql if direction == MigrationDirection.UP else down_sql).split(";")
 
@@ -230,7 +235,7 @@ def migrate_up():
                 f"{e}\n"
                 f"Last successful migration is: {last_successful}"
             )
-            return
+            raise e
 
         last_successful = migration_file
 

@@ -3,7 +3,6 @@ import {
   Box,
   FormControl,
   InputLabel,
-  Link,
   MenuItem,
   Select,
   SelectChangeEvent,
@@ -24,6 +23,7 @@ import { SnackBarContext } from "../components/SnackBarProvider";
 import { useFetchRuns, useRunNavigation, usePipelineRunContext } from "../hooks/pipelineHooks";
 import { ExtractContextType } from "../components/utils/typings";
 import PipelineRunViewContext from "./PipelineRunViewContext";
+import MuiRouterLink from "../components/MuiRouterLink";
 
 function PipelineActionMenu(props: {
   onCancel: () => void;
@@ -211,9 +211,9 @@ export default function PipelineBar() {
             borderColor: theme.palette.grey[200],
           }}
         >
-          <Link href="/pipelines">
+          <MuiRouterLink href="/pipelines">
             <ChevronLeft fontSize="large" />
-          </Link>
+          </MuiRouterLink>
         </Box>
         <Box sx={{ gridColumn: 2, pl: 7 }}>
           <Typography variant="h4">{rootRun.name}</Typography>

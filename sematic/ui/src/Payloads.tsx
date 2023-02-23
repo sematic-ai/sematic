@@ -76,6 +76,13 @@ export type EnvPayload = {
   env: { [k: string]: string };
 };
 
+export type SemanticVersion = [number, number, number];
+
+export interface VersionPayload {
+  min_client_supported: SemanticVersion;
+  server: SemanticVersion;
+} 
+
 type Operator = "eq";
 
 type FilterCondition = {
