@@ -5,4 +5,4 @@ from sqlalchemy.orm import declarative_mixin
 
 @declarative_mixin
 class HasUserMixin:
-    user_id: str = Column(types.String(), nullable=False)
+    user_id: str = Column(types.String(), nullable=True)
