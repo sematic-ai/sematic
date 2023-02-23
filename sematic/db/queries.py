@@ -76,7 +76,7 @@ def get_users(user_ids: List[str]) -> List[User]:
         List of users
     """
     with db().get_session() as session:
-        return session.query(User).filter(User.id.in_(user_ids)).all()
+        return session.query(User).filter(User.id.in_(list(set(user_ids)))).all()
 
 
 def get_run(run_id: str) -> Run:
