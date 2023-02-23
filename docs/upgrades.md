@@ -116,6 +116,16 @@ delta, but only:
 when performing the upgrade.
 {% endhint %}
 
+### v0.25.X to v0.26.Y
+
+#### Dependency changes
+
+As a part of adding python 3.10 support, Sematic has changed
+from depending on `eventlet` to depending on `gevent`. If you
+use requirements locking systems like [Poetry](https://python-poetry.org/)
+or [pip-tools/pip-compile](https://pypi.org/project/pip-tools/)
+you will need to regenerate your dependency lockfiles.
+
 ### v0.23.X to v0.24.Y
 
 #### Server/Helm upgrade notes
