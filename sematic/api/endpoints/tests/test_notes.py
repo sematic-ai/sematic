@@ -40,7 +40,6 @@ def test_create_note(
     mock_auth, test_client: flask.testing.FlaskClient, persisted_run: Run  # noqa: F811
 ):
     note_payload = {
-        "user_id": uuid.uuid4().hex,
         "note": "And now for something completely different",
         "run_id": persisted_run.id,
         "root_id": persisted_run.id,
