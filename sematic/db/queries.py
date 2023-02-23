@@ -79,11 +79,6 @@ def get_users(user_ids: List[str]) -> List[User]:
         return session.query(User).filter(User.id.in_(user_ids)).all()
 
 
-def get_user(id: str) -> User:
-    with db().get_session() as session:
-        return session.query(User).filter(User.id == id).one()
-
-
 def get_run(run_id: str) -> Run:
     """
     Get a run from the database.
