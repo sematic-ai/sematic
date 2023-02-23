@@ -759,16 +759,16 @@ def test_set_run_user(
         payload = typing.cast(typing.Dict[str, typing.Any], payload)
 
         assert payload["content"]["user"]["id"] == persisted_user.id
-        assert payload["content"]["user"]["email"] == "REDACTED"
-        assert payload["content"]["user"]["api_key"] == "REDACTED"
+        assert "email" not in payload["content"]["user"]
+        assert "api_key" not in payload["content"]["user"]
 
         response = test_client.get(
-            f"/api/v1/runs",
+            "/api/v1/runs",
             headers={"X-API-KEY": persisted_user.api_key},
         )
         payload = response.json
         payload = typing.cast(typing.Dict[str, typing.Any], payload)
 
         assert payload["content"][0]["user"]["id"] == persisted_user.id
-        assert payload["content"][0]["user"]["email"] == "REDACTED"
-        assert payload["content"][0]["user"]["api_key"] == "REDACTED"
+        assert "email" not in payload["content"][0]["user"]
+        assert "api_key" not in payload["content"][0]["user"]

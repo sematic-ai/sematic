@@ -20,6 +20,7 @@ class JSONEncodableMixin:
         return {
             column.key: _to_json_encodable(getattr(self, column.key), column)
             for column in self.__table__.columns
+            if not column.info.get(REDACTED_KEY, False)
         }
 
     @classmethod
