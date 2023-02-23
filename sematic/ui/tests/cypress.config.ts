@@ -9,13 +9,26 @@ export default defineConfig({
       // implement node event listeners here
     },
   },
+
   fileServerFolder: ".",
   fixturesFolder: "fixtures",
   screenshotsFolder: "cypress_screenshots",
   videosFolder: "cypress_video",
-  reporter: 'junit',
+  reporter: "junit",
+
   reporterOptions: {
-    "mochaFile": "cypress_results/tests-[hash].xml",
-    "toConsole": true
-  }
+    mochaFile: "cypress_results/tests-[hash].xml",
+    toConsole: true,
+  },
+
+  component: {
+    supportFile: "support/component.ts",
+    indexHtmlFile: 'support/component-index.html',
+    specPattern: "../src/**/*.cy.{ts,tsx}",
+
+    devServer: {
+      framework: "create-react-app",
+      bundler: "webpack",
+    },
+  },
 });
