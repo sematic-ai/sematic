@@ -14,8 +14,9 @@ from sqlalchemy.orm import validates
 from sematic.abstract_calculator import AbstractCalculator
 from sematic.abstract_future import FutureState
 from sematic.db.models.base import Base
-from sematic.db.models.has_external_jobs_mixin import HasExternalJobsMixin
-from sematic.db.models.json_encodable_mixin import (
+from sematic.db.models.mixins.has_external_jobs_mixin import HasExternalJobsMixin
+from sematic.db.models.mixins.has_user_mixin import HasUserMixin
+from sematic.db.models.mixins.json_encodable_mixin import (
     ENUM_KEY,
     JSON_KEY,
     JSONEncodableMixin,
@@ -29,7 +30,7 @@ from sematic.types.serialization import (
 from sematic.utils.exceptions import ExceptionMetadata
 
 
-class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
+class Run(HasUserMixin, Base, JSONEncodableMixin, HasExternalJobsMixin):
     """
     SQLAlchemy model for runs.
 
@@ -141,7 +142,6 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
         types.JSON(), nullable=True, info={JSON_KEY: True}
     )
     cache_key: Optional[str] = Column(types.String(), nullable=True)
-    user_id: Optional[str] = Column(types.String(), nullable=True)
 
     @validates("future_state")
     def validate_future_state(self, _, value) -> str:

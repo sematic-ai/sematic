@@ -8,7 +8,7 @@ from sqlalchemy import Column, ForeignKey, types
 
 # Sematic
 from sematic.db.models.base import Base
-from sematic.db.models.json_encodable_mixin import JSONEncodableMixin
+from sematic.db.models.mixins.json_encodable_mixin import JSONEncodableMixin
 
 
 class Edge(Base, JSONEncodableMixin):
