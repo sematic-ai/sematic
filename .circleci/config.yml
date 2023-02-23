@@ -163,11 +163,11 @@ jobs:
           at: /home/circleci
       - run: 
           name: Create a run
-          command: source ./CIVENV/bin/activate && sematic start && sematic run examples/add && curl 127.0.0.1:5001 && echo "Done"
+          command: source ./CIVENV/bin/activate && sematic start && sematic run examples/add
       - run:
           name: Run Cypress Integration test
           working_directory: ./sematic/ui
-          command: curl 127.0.0.1:5001 && echo "server is there" && npm run cypress:e2e
+          command: npm run cypress:e2e
       - run:
           name: Stop Sematic
           working_directory: ~/project

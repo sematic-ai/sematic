@@ -85,7 +85,7 @@ def register_signal_handlers():
                 "Received SIGHUP. Ignoring. Please send SIGTERM to stop the process"
             )
             return
-        
+
         # This is helpful so we know in the logs which signal caused
         # the process to stop.
         logger.warning("Received signal: %s. Quitting", signum)
