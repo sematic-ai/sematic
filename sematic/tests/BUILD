@@ -54,6 +54,16 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_3_10_calculator",
+    srcs = ["test_3_10_calculator.py"],
+    pip_deps = [],
+    py_versions = [PY3.PY3_10],
+    deps = [
+        "//sematic:calculator",
+    ],
+)
+
+pytest_test(
     name = "test_api_client",
     srcs = ["test_api_client.py"],
     # buildifier: leave-alone

@@ -17,7 +17,6 @@ from typing import (
     TypeVar,
     Union,
     get_args,
-    get_origin,
 )
 
 # Sematic
@@ -29,7 +28,7 @@ from sematic.resolvers.type_utils import make_list_type
 from sematic.retry_settings import RetrySettings
 from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.registry import validate_type_annotation
-from sematic.types.type import is_type
+from sematic.types.type import get_origin, is_type
 from sematic.utils.algorithms import breadth_first_search
 
 _EXTRA_FUTURE_DOCS_LINK = (

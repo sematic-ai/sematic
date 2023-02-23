@@ -51,6 +51,7 @@ sematic_py_lib(
     srcs = ["registry.py"],
     deps = [
         ":generic_type",
+        ":type",
     ],
 )
 
