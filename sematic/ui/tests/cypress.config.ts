@@ -1,4 +1,5 @@
 import { defineConfig } from "cypress";
+import { initPlugin } from "@frsource/cypress-plugin-visual-regression-diff/plugins";
 
 export default defineConfig({
   e2e: {
@@ -7,6 +8,7 @@ export default defineConfig({
     specPattern: "e2e/**/*.cy.{js,jsx,ts,tsx}",
     setupNodeEvents(on, config) {
       // implement node event listeners here
+      initPlugin(on, config);
     },
   },
 
@@ -29,6 +31,11 @@ export default defineConfig({
     devServer: {
       framework: "create-react-app",
       bundler: "webpack",
+    },
+
+    setupNodeEvents(on, config) {
+      // implement node event listeners here
+      initPlugin(on, config);
     },
   },
 });
