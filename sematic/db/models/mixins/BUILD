@@ -24,4 +24,5 @@ sematic_py_lib(
     pip_deps = [
         "sqlalchemy",
     ],
+    deps = [],
 )
