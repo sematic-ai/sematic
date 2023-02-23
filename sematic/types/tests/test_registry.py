@@ -65,7 +65,7 @@ def test_validate_type_annotation():
         TypeError, match=r"'Any' is not a Sematic-supported.*'object' instead."
     ):
         validate_type_annotation(Any)
-    with pytest.raises(TypeError, match=r"typing.Union must be parametrized.*"):
+    with pytest.raises(TypeError, match=r"Union must be parametrized.*"):
         validate_type_annotation(Union)
 
 

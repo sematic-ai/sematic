@@ -364,10 +364,9 @@ def is_parameterized_generic(
 
     if is_unparameterized_generic:
         if raise_for_unparameterized:
+            name = type_.__name__ if hasattr(type_, "__name__") else str(type_)
             raise TypeError(
-                f"{type_.__name__} must be parametrized "
-                f"({type_.__name__}[...] "
-                f"instead of {type_.__name__})."
+                f"{name} must be parametrized " f"({name}[...] " f"instead of {name})."
             )
         else:
             return False
