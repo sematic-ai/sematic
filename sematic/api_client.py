@@ -217,7 +217,7 @@ def get_graph(
 
 def save_resolution(resolution: Resolution):
     payload = {
-        "resolution": resolution.to_json_encodable(),
+        "resolution": resolution.to_json_encodable(redact=False),
     }
     _put(f"/resolutions/{resolution.root_id}", payload)
 

@@ -53,7 +53,10 @@ def list_notes_endpoint(user: Optional[User]) -> flask.Response:
 
     payload = dict(
         content=[note.to_json_encodable() for note in notes],
-        authors=[user.to_json_encodable() for user in authors],
+        # Remove email after notes get migrated to use user.id
+        authors=[
+            dict(email=user.email, **user.to_json_encodable()) for user in authors
+        ],
     )
 
     return flask.jsonify(payload)

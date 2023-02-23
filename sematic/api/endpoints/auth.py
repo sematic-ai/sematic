@@ -122,10 +122,9 @@ def google_login() -> flask.Response:
 
     user = save_user(user)
 
-    payload = {"user": user.to_json_encodable()}
     # API keys are redacted by default.
     # In this case we do need to pass it to the front-end.
-    payload["user"]["api_key"] = user.api_key
+    payload = {"user": user.to_json_encodable(redact=False)}
 
     return flask.jsonify(payload)
 

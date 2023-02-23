@@ -16,11 +16,11 @@ class JSONEncodableMixin:
     Defines JSON-encodable behavior.
     """
 
-    def to_json_encodable(self):
+    def to_json_encodable(self, redact: bool = True):
         return {
             column.key: _to_json_encodable(getattr(self, column.key), column)
             for column in self.__table__.columns
-            if not column.info.get(REDACTED_KEY, False)
+            if (not column.info.get(REDACTED_KEY, False) or not redact)
         }
 
     @classmethod
@@ -28,13 +28,14 @@ class JSONEncodableMixin:
         field_dict = {
             column.key: cls.field_from_json_encodable(column.key, json_encodable)
             for column in inspect(cls).attrs
+            if column.key in json_encodable
         }
         return cls(**field_dict)
 
     @classmethod
     def field_from_json_encodable(cls, field_name, json_encodable):
         return _from_json_encodable(
-            json_encodable.get(field_name), getattr(cls, field_name)
+            json_encodable[field_name], getattr(cls, field_name)
         )
 
 
@@ -42,14 +43,9 @@ JSON_KEY = "json"
 ENUM_KEY = "enum"
 REDACTED_KEY = "redacted"
 
-REDACTED = "REDACTED"
-
 
 def _to_json_encodable(value, column):
     info = column.info
-
-    if info.get(REDACTED_KEY, False):
-        return REDACTED
 
     if isinstance(value, datetime.datetime):
         # SQLite does not store timezone

@@ -20,7 +20,6 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 )
 from sematic.config.server_settings import ServerSettingsVar
 from sematic.config.settings import as_bool
-from sematic.db.models.json_encodable_mixin import REDACTED
 from sematic.db.models.user import User
 from sematic.db.queries import get_user
 from sematic.db.tests.fixtures import persisted_user, test_db  # noqa: F401
@@ -85,7 +84,7 @@ def test_login_new_user(idinfo, test_client: flask.testing.FlaskClient):  # noqa
         assert user.last_name == "Starr"
         assert user.email == "ringo@example.com"
         assert user.avatar_url == "https://picture"
-        assert user.api_key != REDACTED
+        assert len(user.api_key) > 0
 
 
 def test_login_existing_user(

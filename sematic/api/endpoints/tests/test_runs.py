@@ -98,7 +98,9 @@ def test_list_runs(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: 
     assert len(payload["next_page_url"]) > 0
     assert len(payload["next_cursor"]) > 0
     assert payload["after_cursor_count"] == len(created_runs)
-    assert payload["content"] == [run_.to_json_encodable() for run_ in created_runs[:3]]
+    assert payload["content"] == [
+        dict(user=None, **run_.to_json_encodable()) for run_ in created_runs[:3]
+    ]
 
     next_page_url = payload["next_page_url"]
     next_page_url = next_page_url.split("localhost")[1]
@@ -110,7 +112,9 @@ def test_list_runs(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: 
     assert payload["next_page_url"] is None
     assert payload["next_cursor"] is None
     assert payload["after_cursor_count"] == 2
-    assert payload["content"] == [run_.to_json_encodable() for run_ in created_runs[3:]]
+    assert payload["content"] == [
+        dict(user=None, **run_.to_json_encodable()) for run_ in created_runs[3:]
+    ]
 
 
 def test_list_runs_group_by(

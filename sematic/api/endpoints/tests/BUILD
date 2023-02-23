@@ -90,7 +90,6 @@ pytest_test(
         "//sematic/config:server_settings",
         "//sematic/config:settings",
         "//sematic/db:queries",
-        "//sematic/db/models:json_encodable_mixin",
         "//sematic/db/models:user",
     ],
 )
