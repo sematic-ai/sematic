@@ -1,3 +1,4 @@
+"""Augment or modify the returned json for ORM models for returns from API calls"""
 # Standard Library
 import logging
 from typing import Any, Dict, List
@@ -58,7 +59,7 @@ def _set_user_payloads(items: List[Dict[str, Any]]):
     try:
         user_ids = [item["user_id"] for item in items]
     except KeyError as e:
-        logger.error("Items are not payloads of owned models.")
+        logger.error("Items are not payloads that have associated users.")
         raise e
 
     users_by_id = {
