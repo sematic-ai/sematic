@@ -59,7 +59,8 @@
     "lint:ui-tests": "eslint --ext .ts ./tests",
     "lint": "npm run lint:app && npm run lint:ui-tests",
     "cypress:open": "cypress open --project tests",
-    "cypress:run": "cypress run --headless --project tests"
+    "cypress:e2e": "cypress run --headless --e2e --project tests",
+    "cypress:component": "cypress run --headless --component --project tests"
   },
   "eslintConfig": {
     "extends": [

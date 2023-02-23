@@ -134,9 +134,9 @@ jobs:
           name: Create a run
           command: source ./CIVENV/bin/activate && sematic start && sematic run examples/add
       - run:
-          name: Run Cypress test
+          name: Run Cypress Integration test
           working_directory: ./sematic/ui
-          command: npm run cypress:run
+          command: npm run cypress:e2e
       - run:
           name: Stop Sematic
           working_directory: ~/project
@@ -147,7 +147,23 @@ jobs:
           path: ~/project/sematic/ui/tests/cypress_screenshots
       - store_test_results:
           path: ~/project/sematic/ui/tests/cypress_results
-    resource_class: medium+
+  
+  fe-unit-tests:
+    docker:
+      - image: sematicai/sematic-ci:latest
+    steps:
+      - attach_workspace:
+          at: /home/circleci
+      - run:
+          name: Run Cypress Component test
+          working_directory: ./sematic/ui
+          command: npm run cypress:component
+      - store_artifacts:
+          path: ~/project/sematic/ui/tests/cypress_video
+      - store_artifacts:
+          path: ~/project/sematic/ui/tests/cypress_screenshots
+      - store_test_results:
+          path: ~/project/sematic/ui/tests/cypress_results
       
   finalize:
     docker:
@@ -175,8 +191,12 @@ workflows:
       - integration-test:
           requires:
             - installation
+      - fe-unit-tests:
+          requires:
+            - init
       - finalize:
           requires:
             - lint
             - unit-tests
             - integration-test
+            - fe-unit-tests
