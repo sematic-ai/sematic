@@ -490,14 +490,6 @@ def _get_root_graph(root_run_id: str) -> Tuple[Set[Run], Set[Edge], Set[Artifact
     return set(runs), set(edges), set(artifacts)
 
 
-def get_user(email: str) -> User:
-    """
-    Get a user from the DB.
-    """
-    with db().get_session() as session:
-        return session.query(User).filter(User.email == email).one()
-
-
 def get_user_by_api_key(api_key: str) -> User:
     """
     Get a user by API key
