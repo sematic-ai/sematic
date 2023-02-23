@@ -3,9 +3,10 @@ import useAsyncRetry from "react-use/lib/useAsyncRetry";
 import GraphContext from "../pipelines/graph/graphContext";
 import { Graph, RunTreeNode } from "../interfaces/graph";
 import { RunGraphPayload } from "../Payloads";
-import { graphSocket, useLogger } from "../utils";
+import { useLogger } from "../utils";
 import { useHttpClient } from "./httpHooks";
 import usePrevious from "react-use/lib/usePrevious";
+import { graphSocket } from "../sockets";
 
 export function useGraph(runRootId: string): [
     Graph | undefined,

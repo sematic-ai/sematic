@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import io from "socket.io-client";
 import { atomWithHash } from 'jotai-location'
 import { useLocation } from "react-router-dom";
 
@@ -83,7 +82,6 @@ export function useLogger() {
   }
 } 
 
-
 export function atomWithHashCustomSerialization(
   name: string, initialValue: string, 
   options: Parameters<typeof atomWithHash>[2] = {}) {
@@ -94,10 +92,6 @@ export function atomWithHashCustomSerialization(
 
   return atomWithHash<string>(name, initialValue, options as any); 
 }
-
-export const graphSocket = io("/graph");
-
-export const pipelineSocket = io("/pipeline");
 
 export const spacing = (val: number) => ({theme}: any) => theme.spacing(val);
 
