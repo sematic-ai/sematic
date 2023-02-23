@@ -74,24 +74,36 @@ def init_socketio():
 socketio = init_socketio()
 
 
-def run_socketio(debug=False):
-    with open(get_config().server_pid_file_path, "w+") as fp:
-        fp.write(str(os.getpid()))
-
-    dictConfig(make_log_config())
-
-    logger = logging.getLogger()
-
+def register_signal_handlers():
     def handler(signum, frame):
+        logger = logging.getLogger()
+        if signum == signal.SIGHUP:
+            # Circle CI sends this between steps; and some environments may
+            # send it for closed terminals. We don't want either to stop
+            # the server.
+            logger.warning(
+                "Received SIGHUP. Ignoring. Please send SIGTERM to stop the process"
+            )
+            return
+        
+        # This is helpful so we know in the logs which signal caused
+        # the process to stop.
         logger.warning("Received signal: %s. Quitting", signum)
         sys.exit(signum)
 
-    signal.signal(signal.SIGCHLD, handler)
     signal.signal(signal.SIGTERM, handler)
     signal.signal(signal.SIGINT, handler)
     signal.signal(signal.SIGABRT, handler)
     signal.signal(signal.SIGSEGV, handler)
     signal.signal(signal.SIGHUP, handler)
+
+
+def run_socketio(debug=False):
+    with open(get_config().server_pid_file_path, "w+") as fp:
+        fp.write(str(os.getpid()))
+
+    dictConfig(make_log_config())
+    register_signal_handlers()
 
     socketio.run(
         sematic_api,
@@ -119,6 +131,7 @@ def run_wsgi(daemon: bool):
         "certfile": os.environ.get("CERTIFICATE"),
         "keyfile": os.environ.get("PRIVATE_KEY"),
     }
+    register_signal_handlers()
     SematicWSGI(sematic_api, options).run()
 
 
