@@ -28,8 +28,9 @@ from sqlalchemy.orm import validates
 # Sematic
 from sematic.db.models.base import Base
 from sematic.db.models.git_info import GitInfo
-from sematic.db.models.has_external_jobs_mixin import HasExternalJobsMixin
-from sematic.db.models.json_encodable_mixin import (
+from sematic.db.models.mixins.has_external_jobs_mixin import HasExternalJobsMixin
+from sematic.db.models.mixins.has_user_mixin import HasUserMixin
+from sematic.db.models.mixins.json_encodable_mixin import (
     ENUM_KEY,
     JSON_KEY,
     REDACTED_KEY,
@@ -143,7 +144,7 @@ class ResolutionKind(Enum):
     KUBERNETES = "KUBERNETES"  # for detached mode
 
 
-class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
+class Resolution(HasUserMixin, Base, JSONEncodableMixin, HasExternalJobsMixin):
     """Represents a session of a resolver.
 
     Attributes
@@ -206,7 +207,6 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     container_image_uri: Optional[str] = Column(types.String(), nullable=True)
     client_version: Optional[str] = Column(types.String(), nullable=True)
     cache_namespace: Optional[str] = Column(types.String(), nullable=True)
-    user_id: Optional[str] = Column(types.String(), nullable=True)
 
     @validates("status")
     def validate_status(self, key, value) -> str:

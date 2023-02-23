@@ -1,67 +1,65 @@
 """Augment or modify the returned json for ORM models for returns from API calls."""
 # Standard Library
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Protocol, Sequence
 
 # Sematic
-from sematic.db.models.resolution import Resolution
-from sematic.db.models.run import Run
-from sematic.db.queries import get_users
+from sematic.db.queries import get_user, get_users
 
 logger = logging.getLogger(__name__)
 
 
-def get_runs_payload(runs: List[Run]) -> List[Dict[str, Any]]:
-    """
-    Build the standard payload for a list of runs.
-    """
-    runs_payload = [run.to_json_encodable() for run in runs]
+class _JSONEncodableWithUser(Protocol):
+    @property
+    def user_id(self) -> str:
+        ...
 
-    _set_user_payloads(runs_payload)
-
-    return runs_payload
+    def to_json_encodable(self) -> Dict[str, Any]:
+        ...
 
 
-def get_run_payload(run: Run) -> Dict[str, Any]:
-    """
-    Build the standard payload for a single run.
-    """
-    run_payload = run.to_json_encodable()
+def _get_payload_with_user(item: _JSONEncodableWithUser) -> Dict[str, Any]:
+    item_payload = item.to_json_encodable()
 
-    _set_user_payloads([run_payload])
+    user_payload = None
+    if item.user_id is not None:
+        user = get_user(item.user_id)
+        user_payload = user.to_json_encodable()
 
-    return run_payload
+    item_payload["user"] = user_payload
 
-
-def get_resolution_payload(resolution: Resolution) -> Dict[str, Any]:
-    """
-    Build the standard payload for a single resolution.
-    """
-    resolution_payload = resolution.to_json_encodable()
-    # Setting this manual redaction for backward compatibility
-    # ToDo: remove after a few releases
-    resolution_payload["settings_env_vars"] = {}
-
-    _set_user_payloads([resolution_payload])
-
-    return resolution_payload
+    return item_payload
 
 
-def _set_user_payloads(items: List[Dict[str, Any]]):
-    """
-    Sets item user payload.
-    """
-    try:
-        user_ids = [item["user_id"] for item in items]
-    except KeyError:
-        raise ValueError(
-            "'user_id' field was missing from one or more of the provided payloads"
-        )
+def _get_collection_payload_with_user(
+    items: Sequence[_JSONEncodableWithUser],
+) -> List[Dict[str, Any]]:
+    items_payload = []
 
-    users_by_id = {
-        user.id: user.to_json_encodable(redact=True)
-        for user in get_users(list(user_ids))
-    }
+    user_ids = [item.user_id for item in items if item.user_id is not None]
+
+    users_by_id = {}
+    if len(user_ids) > 0:
+        users_by_id = {
+            user.id: user.to_json_encodable() for user in get_users(user_ids)
+        }
 
     for item in items:
-        item["user"] = users_by_id.get(item["user_id"])
+        item_payload = item.to_json_encodable()
+        item_payload["user"] = None
+
+        if item.user_id is not None:
+            item_payload["user"] = users_by_id[item.user_id]
+
+        items_payload.append(item_payload)
+
+    return items_payload
+
+
+get_run_payload = _get_payload_with_user
+get_runs_payload = _get_collection_payload_with_user
+
+get_resolution_payload = _get_payload_with_user
+
+get_note_payload = _get_payload_with_user
+get_notes_payload = _get_collection_payload_with_user
