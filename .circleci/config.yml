@@ -68,14 +68,14 @@ commands:
           command: |
               bazel build @pip_dependencies3_10_nvidia_cudnn_cu11//:pkg
       - run:
-          name: Prepare build (2)
+          name: Prepare build (try 2)
           command: |
-              bazel build @pip_dependencies3_10_nvidia_cudnn_cu11//:pkg
+              bazel clean --expunge && bazel build @pip_dependencies3_10_nvidia_cudnn_cu11//:pkg
           when: on_fail
       - run:
-          name: Prepare build (3)
+          name: Prepare build (try 3)
           command: |
-              bazel build @pip_dependencies3_10_nvidia_cudnn_cu11//:pkg
+              bazel clean --expunge && bazel build @pip_dependencies3_10_nvidia_cudnn_cu11//:pkg
           when: on_fail
       - run:
           name: Run Non-coverage Tests
