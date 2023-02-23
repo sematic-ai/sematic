@@ -67,8 +67,10 @@ def init_socketio():
     return socketio
 
 
+socketio = init_socketio()
+
+
 def run_socketio(debug=False):
-    socketio = init_socketio()
     with open(get_config().server_pid_file_path, "w+") as fp:
         fp.write(str(os.getpid()))
     socketio.run(
@@ -87,7 +89,6 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def run_wsgi(daemon: bool):
-    init_socketio()
     options = {
         "bind": f"{get_config().server_address}:{get_config().port}",
         "workers": get_config().wsgi_workers_count,
