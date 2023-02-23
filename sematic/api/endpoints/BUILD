@@ -147,6 +147,7 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         ":auth",
+        ":payloads",
         ":request_parameters",
         "//sematic/api:app",
         "//sematic/db:db",
