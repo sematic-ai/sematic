@@ -1,6 +1,5 @@
 # Standard Library
 import json
-import uuid
 
 # Third-party
 import flask.testing
