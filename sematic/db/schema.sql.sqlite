@@ -55,7 +55,7 @@ CREATE TABLE edges (
 );
 CREATE TABLE notes (
     id character(32) NOT NULL,
-    author_id TEXT NOT NULL,
+    user_id character(32),
     note TEXT NOT NULL,
     run_id character(32) NOT NULL,
     root_id character(32) NOT NULL,
@@ -65,7 +65,8 @@ CREATE TABLE notes (
     PRIMARY KEY(id),
 
     FOREIGN KEY(run_id) REFERENCES runs (id),
-    FOREIGN KEY(root_id) REFERENCES runs (id)
+    FOREIGN KEY(root_id) REFERENCES runs (id),
+    FOREIGN KEY(user_id) REFERENCES users (id)
 );
 CREATE TABLE users (
     id character(32) NOT NULL,
