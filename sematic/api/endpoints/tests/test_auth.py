@@ -77,7 +77,7 @@ def test_login_new_user(idinfo, test_client: flask.testing.FlaskClient):  # noqa
                 response.json["user"]  # type: ignore
             )
 
-    saved_user = get_user("ringo@example.com")
+    saved_user = get_user(response.json["user"]["id"])  # type: ignore
 
     for user in (returned_user, saved_user):
         assert user.first_name == "Ringo"
@@ -107,9 +107,10 @@ def test_login_existing_user(
                 response.json["user"]  # type: ignore
             )
 
-    updated_user = get_user("george@example.com")
+    updated_user = get_user(response.json["user"]["id"])  # type: ignore
 
     for user in (returned_user, updated_user):
+        assert user.id == persisted_user.id
         assert user.first_name == "George"
         assert user.last_name == "Harrison"
         assert user.email == "george@example.com"

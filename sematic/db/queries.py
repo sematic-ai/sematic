@@ -97,6 +97,24 @@ def get_user(user_id: str) -> User:
         return session.query(User).filter(User.id == user_id).one()
 
 
+def get_user_by_email(email: str) -> User:
+    """
+    Get a user from the database by email.
+
+    Parameters
+    ----------
+    email : str
+        email of user to retrieve.
+
+    Returns
+    -------
+    User
+        Fetched user
+    """
+    with db().get_session() as session:
+        return session.query(User).filter(User.email == email).one()
+
+
 def get_run(run_id: str) -> Run:
     """
     Get a run from the database.
