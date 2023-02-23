@@ -19,7 +19,7 @@ class JSONEncodableMixin:
     def to_json_encodable(self, redact: bool = True):
         return {
             column.key: _to_json_encodable(getattr(self, column.key), column)
-            for column in self.__table__.columns
+            for column in self.__table__.columns  # type: ignore
             if (not column.info.get(REDACTED_KEY, False) or not redact)
         }
 

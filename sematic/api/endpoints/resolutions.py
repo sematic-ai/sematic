@@ -21,10 +21,7 @@ from sematic.api.endpoints.events import (
     broadcast_pipeline_update,
     broadcast_resolution_cancel,
 )
-from sematic.api.endpoints.payloads import (
-    get_resolution_payload,
-    get_resolutions_payload,
-)
+from sematic.api.endpoints.payloads import get_resolution_payload
 from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.db.models.factories import clone_resolution, clone_root_run
 from sematic.db.models.resolution import InvalidResolution, Resolution, ResolutionStatus

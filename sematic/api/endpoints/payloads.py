@@ -44,23 +44,13 @@ def get_resolution_payload(resolution: Resolution) -> Dict[str, Any]:
     return resolution_payload
 
 
-def get_resolutions_payload(resolutions: List[Run]) -> List[Dict[str, Any]]:
-    """
-    Build the standard payload for a list of resolutions.
-    """
-    resolutions_payload = [resolution.to_json_encodable() for resolution in resolutions]
-
-    _set_user_payloads(resolutions_payload)
-
-    return resolutions_payload
-
-
 def _set_user_payloads(items: List[Dict[str, Any]]):
     try:
         user_ids = [item["user_id"] for item in items]
-    except KeyError as e:
-        logger.error("Items are not payloads that have associated users.")
-        raise e
+    except KeyError:
+        raise ValueError(
+            "'user_id' field was missing from one or more of the provided payloads"
+        )
 
     users_by_id = {
         user.id: user.to_json_encodable() for user in get_users(list(user_ids))

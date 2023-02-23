@@ -23,9 +23,7 @@ class User(Base, JSONEncodableMixin):
     first_name: Optional[str] = Column(types.String(), nullable=True)
     last_name: Optional[str] = Column(types.String(), nullable=True)
     avatar_url: Optional[str] = Column(types.String(), nullable=True)
-    api_key: Optional[str] = Column(
-        types.String(), nullable=False, info={REDACTED_KEY: True}
-    )
+    api_key: str = Column(types.String(), nullable=False, info={REDACTED_KEY: True})
 
     created_at: datetime.datetime = Column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow
