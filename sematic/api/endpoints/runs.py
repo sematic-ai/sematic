@@ -22,6 +22,7 @@ from sematic.abstract_future import FutureState
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.events import broadcast_graph_update
+from sematic.api.endpoints.payloads import get_run_payload, get_runs_payload
 from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
@@ -38,8 +39,6 @@ from sematic.db.queries import (
     get_run,
     get_run_graph,
     get_run_status_details,
-    get_user,
-    get_users,
     save_graph,
     save_run,
     save_run_external_resource_links,
@@ -181,23 +180,13 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
             (scheme, netloc, path, urlencode(next_url_params), fragment)
         )
 
-    content = [run.to_json_encodable() for run in runs]
-
-    user_ids = {run.user_id for run in runs if run.user_id is not None}
-    users_by_id = {
-        user.id: user.to_json_encodable() for user in get_users(list(user_ids))
-    }
-
-    for run in content:
-        run["user"] = users_by_id.get(run["user_id"])
-
     payload = dict(
         current_page_url=current_page_url,
         next_page_url=next_page_url,
         limit=limit,
         next_cursor=next_cursor,
         after_cursor_count=after_cursor_count,
-        content=content,
+        content=get_runs_payload(runs),
     )
 
     return flask.jsonify(payload)
@@ -229,16 +218,7 @@ def get_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
             "No runs with id {}".format(repr(run_id)), HTTPStatus.NOT_FOUND
         )
 
-    user = None
-
-    if run.user_id is not None:
-        user = get_user(run.user_id).to_json_encodable()
-
-    run_payload = run.to_json_encodable()
-
-    run_payload["user"] = user
-
-    payload = dict(content=run_payload)
+    payload = dict(content=get_run_payload(run))
 
     return flask.jsonify(payload)
 
@@ -264,7 +244,7 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     broadcast_graph_update(root_id=run.root_id, user=user)
 
     payload = dict(
-        content=run.to_json_encodable(),
+        content=get_run_payload(run),
     )
     return flask.jsonify(payload)
 
@@ -428,7 +408,7 @@ def get_run_graph_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     runs, artifacts, edges = get_graph_fn(run_id)
     payload = dict(
         run_id=run_id,
-        runs=[run.to_json_encodable() for run in runs],
+        runs=get_runs_payload(runs),
         edges=[edge.to_json_encodable() for edge in edges],
         artifacts=[artifact.to_json_encodable() for artifact in artifacts],
     )
@@ -468,10 +448,7 @@ def save_graph_endpoint(user: Optional[User]):
 
     edges = [Edge.from_json_encodable(edge) for edge in graph["edges"]]
 
-    # try:
     save_graph(runs, artifacts, edges)
-    # except Exception as e:
-    #    return jsonify_error(str(e), HTTPStatus.INTERNAL_SERVER_ERROR)
 
     return flask.jsonify({})
 

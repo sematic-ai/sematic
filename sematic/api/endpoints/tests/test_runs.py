@@ -732,8 +732,12 @@ def test_get_run_external_resources(
 
 
 def test_set_run_user(
-    persisted_user: User, run: Run, mock_requests, empty_settings_file  # noqa: F811
-):  # noqa: F811
+    persisted_user: User,  # noqa: F811
+    run: Run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_requests,  # noqa: F811
+    empty_settings_file,  # noqa: F811
+):
     with mock_plugin_settings(
         ServerSettings, {ServerSettingsVar.SEMATIC_AUTHENTICATE: "1"}
     ):
@@ -742,7 +746,29 @@ def test_set_run_user(
         ):
             api_client.save_graph(run.id, [run], [], [])
 
-    saved_run = api_client.get_run(run.id)
+            saved_run = api_client.get_run(run.id)
 
-    assert saved_run.user_id is not None
-    assert saved_run.user_id == persisted_user.id
+            assert saved_run.user_id is not None
+            assert saved_run.user_id == persisted_user.id
+
+        response = test_client.get(
+            f"/api/v1/runs/{saved_run.id}",
+            headers={"X-API-KEY": persisted_user.api_key},
+        )
+        payload = response.json
+        payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+        assert payload["content"]["user"]["id"] == persisted_user.id
+        assert payload["content"]["user"]["email"] == "REDACTED"
+        assert payload["content"]["user"]["api_key"] == "REDACTED"
+
+        response = test_client.get(
+            f"/api/v1/runs",
+            headers={"X-API-KEY": persisted_user.api_key},
+        )
+        payload = response.json
+        payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+        assert payload["content"][0]["user"]["id"] == persisted_user.id
+        assert payload["content"][0]["user"]["email"] == "REDACTED"
+        assert payload["content"][0]["user"]["api_key"] == "REDACTED"

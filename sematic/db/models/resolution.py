@@ -32,6 +32,7 @@ from sematic.db.models.has_external_jobs_mixin import HasExternalJobsMixin
 from sematic.db.models.json_encodable_mixin import (
     ENUM_KEY,
     JSON_KEY,
+    REDACTED_KEY,
     JSONEncodableMixin,
 )
 
@@ -191,8 +192,12 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     git_info_json: Optional[str] = Column(  # type: ignore
         types.JSON(), nullable=True, info={JSON_KEY: True}
     )
+    # REDACTED_KEY: Scrub the environment variables before returning from the
+    # API. They can contain sensitive info like API keys. On write,
+    # we consider this field to be immutable, so we will just re-use
+    # whatever was already in the DB for it
     settings_env_vars: Dict[str, str] = Column(
-        types.JSON, nullable=False, default=lambda: {}
+        types.JSON, nullable=False, default=lambda: {}, info={REDACTED_KEY: True}
     )
     external_jobs_json: Optional[List[Dict[str, Any]]] = Column(
         types.JSON(), nullable=True
