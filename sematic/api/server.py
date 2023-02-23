@@ -91,6 +91,7 @@ def run_socketio(debug=False):
     signal.signal(signal.SIGINT, handler)
     signal.signal(signal.SIGABRT, handler)
     signal.signal(signal.SIGSEGV, handler)
+    signal.signal(signal.SIGHUP, handler)
 
     socketio.run(
         sematic_api,
