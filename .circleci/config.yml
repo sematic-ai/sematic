@@ -126,18 +126,18 @@ jobs:
     steps:
       - attach_workspace:
           at: /home/circleci
-      # Uncomment to profile memory & CPU usage.
-      #- run:
-      #  name: Profile CPU and memory (background)
-      #  command: |
-      #    while true; do
-      #      sleep 5  # set polling interval
-      #      printf "\n\n$(date)\n"
-      #      top -b -c -n 1
-      #      echo "======"
-      #    done
-      #  background: true
-      #- non-coverage-tests
+      # Uncomment to profile CPU/Memory
+      # - run:
+      #    name: Profile CPU and memory (background)
+      #    command: |
+      #      while true; do
+      #        sleep 2
+      #        printf "\n\n$(date)\n"
+      #        top -b -c -n 1
+      #        echo "======"
+      #      done
+      #    background: true
+      - non-coverage-tests
 
   installation:
     docker:
