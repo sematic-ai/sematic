@@ -13,6 +13,7 @@ from sematic.config.config import get_config
 from sematic.config.user_settings import UserSettingsVar, get_user_setting
 from sematic.utils.memoized_property import memoized_property
 from sematic.utils.retry import retry
+from sematic.config.settings import MissingSettingsError
 
 
 class Storage(abc.ABC):
@@ -91,8 +92,15 @@ class S3Storage(Storage):
         return get_user_setting(UserSettingsVar.AWS_S3_BUCKET)
 
     @memoized_property
+    def _endpoint_url(self) -> str:
+        try:
+            return get_user_setting(UserSettingsVar.AWS_S3_ENDPOINT_URL)
+        except MissingSettingsError:
+            return None
+
+    @memoized_property
     def _s3_client(self):
-        return boto3.client("s3")
+        return boto3.client("s3", endpoint_url=self._endpoint_url)
 
     def set(self, key: str, value: bytes):
         """Store value in S3"""

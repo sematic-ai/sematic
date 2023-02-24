@@ -94,6 +94,8 @@ This is the full list of supported user settings:
   pipelines that use Snowflake
 - `AWS_S3_BUCKET`: the S3 bucket to use for persisting artifacts; required only
   for cloud pipeline submissions
+- `AWS_S3_ENDPOINT_URL`: the S3 endpoint url; required only if you are using 
+  an object storage service that is not AWS S3 but compatible with the S3 protocol
 
 ### Server settings
 

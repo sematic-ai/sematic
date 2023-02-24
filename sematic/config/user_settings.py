@@ -31,6 +31,7 @@ class UserSettingsVar(AbstractPluginSettingsVar):
 
     # AWS
     AWS_S3_BUCKET = "AWS_S3_BUCKET"
+    AWS_S3_ENDPOINT_URL = "AWS_S3_ENDPOINT_URL"
 
 
 class UserSettings(AbstractPlugin):
