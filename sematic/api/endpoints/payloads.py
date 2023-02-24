@@ -1,4 +1,4 @@
-"""Augment or modify the returned json for ORM models for returns from API calls"""
+"""Augment or modify the returned json for ORM models for returns from API calls."""
 # Standard Library
 import logging
 from typing import Any, Dict, List
