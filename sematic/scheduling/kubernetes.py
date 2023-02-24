@@ -129,13 +129,49 @@ class KubernetesJobState(Enum):
 
 @dataclass
 class PodSummary:
+    """Summary of an individual pod associated with a job."""
+
+    # Unique name of the pod assigned by K8s
     pod_name: str
+
+    # number of times the container within the pod has
+    # been restarted. Is NOT the number of pods that
+    # has been associated with the associated job.
     container_restart_count: Optional[int] = None
+
+    # Current phase in the lifecycle of the pod.
     phase: Optional[str] = None
+
+    # Human readable message associated with the most recent
+    # "relevant" condition of the job. Relevancy is based on
+    # condition kind and True/False value.
     condition_message: Optional[str] = None
+
+    # Human readable reason why the pod is unschedulable
+    # (assuming the pod is currently unschedulable). Note that
+    # just because a pod is *currently* unschedulable doesn't mean
+    # that autoscaling or workload drops won't make it schedulable at
+    # some point.
     unschedulable_message: Optional[str] = None
+
+    # Human readable message about the state of the container
+    # associated with the pod.
     container_condition_message: Optional[str] = None
+
+    # Exit code of the container, assuming the container has exited and
+    # the exit code can be identified.
+    container_exit_code: Optional[int] = None
+
+    # Epoch time that Kubernetes started the pod.
     start_time_epoch_seconds: Optional[float] = None
+
+    # Name of the node the pod is running on, if it
+    # has been scheduled to a node.
+    node_name: Optional[str] = None
+
+    # Indicator of whether the pod has shown some abnormality
+    # that shows that Sematic should move the current run to
+    # a terminal state (or retry it).
     detected_infra_failure: bool = False
 
     def string_summary(self) -> str:
@@ -148,6 +184,13 @@ class PodSummary:
 
 @dataclass
 class KubernetesExternalJob(ExternalJob):
+    """Summary of a Kubernetes Job object.
+
+    There is a 1:1 mapping between a TRY of a Sematic run and a job.
+    A job may have one or more pods associated with it throughout
+    its lifetime. The common case is one pod, but pod failures, evictions,
+    etc. may lead to multiple pods per job.
+    """
 
     # See
     # github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1JobStatus.md
@@ -160,16 +203,60 @@ class KubernetesExternalJob(ExternalJob):
 
     # pending_or_running_pod_count is the "active" property.
     pending_or_running_pod_count: int
+
+    # count of jobs that have finished successfully
     succeeded_pod_count: int
+
+    # has the Kubernetes job object been observed on Kubernetes?
     has_started: bool
+
+    # True so long as BOTH are true:
+    # - the job is detectable in K8s
+    # - has_started is True
     still_exists: bool
+
+    # epoch seconds that the job was created by Sematic at
     start_time: Optional[float]
+
+    # Most recent "relevant" condition of the most recent pod
+    # for the run. Relevancy filters are based on certain job
+    # condition types and True/False values. Can be None if no
+    # pod or relevant condition exist.
     most_recent_condition: Optional[str]
+
+    # Human readable message about the phase of the most
+    # recent pod. Can be None if no pod can be found.
     most_recent_pod_phase_message: Optional[str]
+
+    # Human readable message summarizing most_recent_condition
     most_recent_pod_condition_message: Optional[str]
+
+    # Human readable message summarizing the most recent condition
+    # of the container within the most recent pod. Can be None
+    # if no pod/container exist.
     most_recent_container_condition_message: Optional[str]
+
+    # Set to True if some abonormality is detected that indicates the
+    # Sematic run should be forced to a terminal state or retried.
     has_infra_failure: Optional[bool]
+
+    # List of summaries of pods currently associated with a job. 99%
+    # of the time should contain only one pod. But there might be
+    # transient moments where one pod is being terminated and another one
+    # started simultaneously.
     current_pods: List[PodSummary] = field(default_factory=list)
+
+    # represents the name the pod had before the latest refresh happened.
+    # None means the prior refresh had no pod name (which is true to
+    # begin with). It may match latest_pod_name if the pod name hasn't
+    # changed between refreshes.
+    previous_pod_name: Optional[str] = None
+
+    # represents the name the node the pod had before the latest refresh happened.
+    # None means the prior refresh had no node (which is true to
+    # begin with). It may match latest_node_name if the pod's node hasn't
+    # changed between refreshes.
+    previous_node_name: Optional[str] = None
 
     @classmethod
     def new(
@@ -241,6 +328,18 @@ class KubernetesExternalJob(ExternalJob):
         latest = max(self.current_pods, key=order_key)
         return latest
 
+    def latest_pod_name(self) -> Optional[str]:
+        summary = self.latest_pod_summary()
+        if summary is None:
+            return None
+        return summary.pod_name
+
+    def latest_node_name(self) -> Optional[str]:
+        summary = self.latest_pod_summary()
+        if summary is None:
+            return None
+        return summary.node_name
+
     def get_status(self) -> JobStatus:
         """Get a simple status describing the state of the job.
 
@@ -282,11 +381,11 @@ class KubernetesExternalJob(ExternalJob):
                 state_name=KubernetesJobState.Succeeded.value,
                 description="The job has completed successfully",
             )
-        elif self.most_recent_condition == KubernetesJobCondition.Failed.value:
-            logger.error("TODO (more detail 7): state: %s", self)
-            return JobStatus(
-                state_name=KubernetesJobState.Failed.value,
-                description="The job has failed",
+        elif self.most_recent_condition == KubernetesJobCondition.Failed.value or (
+            latest_summary is not None and latest_summary.detected_infra_failure
+        ):
+            return self._get_job_failed_status(
+                latest_summary=latest_summary,
             )
         elif self.succeeded_pod_count != 0:
             return JobStatus(
@@ -325,6 +424,8 @@ class KubernetesExternalJob(ExternalJob):
                 latest_summary=latest_summary,
                 current_pods=self.current_pods,
                 most_recent_condition=self.most_recent_condition,
+                previous_pod_name=self.previous_pod_name,
+                previous_node_name=self.previous_node_name,
             )
 
     @classmethod
@@ -333,9 +434,36 @@ class KubernetesExternalJob(ExternalJob):
         latest_summary: PodSummary,
         current_pods: List[PodSummary],
         most_recent_condition: Optional[str],
+        previous_pod_name: Optional[str],
+        previous_node_name: Optional[str],
     ) -> JobStatus:
         state_name = KubernetesJobState.Running.value
-        description = f"Job is running with pod {latest_summary.pod_name}."
+        if latest_summary.node_name is None:
+            description = f"Job is running with pod {latest_summary.pod_name}."
+        else:
+            description = (
+                f"Job is running with pod {latest_summary.pod_name} on "
+                f"node {latest_summary.node_name}."
+            )
+
+        if (
+            previous_node_name is not None
+            and previous_node_name != latest_summary.node_name
+        ):
+            description += (
+                " The pod was restarted by Kubernetes without Sematic's "
+                "intervention, and was assigned to a new Kubernetes node. "
+                "This can have many causes."
+            )
+        elif (
+            previous_pod_name is not None
+            and previous_pod_name != latest_summary.pod_name
+        ):
+            description += (
+                " The pod was restarted by Kubernetes without Sematic's "
+                "intervention, but was not assigned to a new Kubernetes node."
+                " This can have many causes."
+            )
         if len(current_pods) > 1:
             # multiple pods can sometimes simultaneously be active
             # if pod restart timing works out strangely.
@@ -348,22 +476,54 @@ class KubernetesExternalJob(ExternalJob):
                 ),
             )
 
-        logger.info("TODO Latest summary: %s", latest_summary)
         if latest_summary.phase is not None and latest_summary.phase in dir(
             KubernetesJobState
         ):
             state_name = latest_summary.phase
-            logger.info("TODO Changing state name to: %s", state_name)
             if latest_summary.phase == KubernetesJobState.Pending.value:
-                logger.info("TODO Is pending: %s", state_name)
                 if latest_summary.unschedulable_message is not None:
-                    logger.info("TODO Is unschedulable: %s", state_name)
                     description = latest_summary.unschedulable_message
                 else:
                     description += f" {latest_summary.container_condition_message}."
 
         if most_recent_condition is not None:
             description += f" Pod condition is: {most_recent_condition}."
+        return JobStatus(
+            state_name=state_name,
+            description=description,
+        )
+
+    @classmethod
+    def _get_job_failed_status(
+        cls,
+        latest_summary: Optional[PodSummary],
+    ):
+        state_name = KubernetesJobState.Failed.value
+        description = "Job failed. "
+        pod_name = latest_summary.pod_name if latest_summary is not None else "UNKNOWN"
+
+        is_premature_0_exit = (
+            latest_summary is not None
+            and latest_summary.container_exit_code == 0
+            and latest_summary.detected_infra_failure
+        )
+        if is_premature_0_exit:
+            description += (
+                "The container exited with a 0 exit code, "
+                "but Sematic did not record the terminal state from the worker. "
+                "Did the code inside the Sematic func contain a forced premature exit "
+                "(ex: sys.exit(0), os._exit(0))?"
+            )
+        elif (
+            latest_summary is not None
+            and latest_summary.container_condition_message is not None
+        ):
+            description += latest_summary.container_condition_message + "."
+
+        # Warning instead of error because it's normal for user jobs to fail
+        # even when Sematic/the server is healthy.
+        logger.warning("Worker pod %s failed: %s", pod_name, description)
+
         return JobStatus(
             state_name=state_name,
             description=description,
@@ -489,10 +649,20 @@ def _get_standardized_container_state(
         return "Container is running", None, None
 
     if state.terminated is not None:
+        exit_code = _get_container_exit_code_from_status(container_status)
+        message = state.terminated.message
+
+        if exit_code is not None:
+            # exit code is very useful info, but is not included in
+            # the reason/message. Let's add it.
+            if message is None:
+                message = f"Exit code is {exit_code}"
+            else:
+                message += f". Exit code is {exit_code}"
         return (
             "Container is terminated",
             state.terminated.reason,
-            state.terminated.message,
+            message,
         )
 
     return "Container state is unreadable!", None, None
@@ -573,10 +743,8 @@ def _get_pods_for_job(
 
 
 def _get_unschedulable_reason(pod_conditions) -> Optional[str]:
-    logger.info("TODO Called _get_unschedulable_reason with %s", pod_conditions)
     message = None
     for condition in pod_conditions:
-        logger.info("TODO Condition...: %s", condition)
         if condition.type != "PodScheduled" or condition.status == "True":
             continue
 
@@ -586,30 +754,25 @@ def _get_unschedulable_reason(pod_conditions) -> Optional[str]:
             f"this may or may not resolve itself on its own. Please consult your "
             f"cluster operator."
         )
-    logger.info("TODO Unschedulable message: %s", message)
     return message
 
 
 def _get_pod_summary(pod: V1Pod) -> PodSummary:
-    logger.info("TODO summarizing pod...")
     try:
+        node_name = pod.spec.node_name if pod.spec is not None else None
         detected_infra_failure = False
         if pod.status is None:
             logger.warning("Pod %s has no status", pod.metadata.name)  # type: ignore
             return PodSummary(
                 pod_name=pod.metadata.name,  # type: ignore
                 detected_infra_failure=detected_infra_failure,
+                node_name=node_name,
             )
 
         unschedulable_reason = None
         if _is_none_or_empty(pod.status.conditions):
-            logger.info("TODO No conditions")
             most_recent_condition_message = "Most recent pod condition is unknown"
         else:
-            logger.info("TODO Has conditions")
-            logger.info(
-                "TODO Calling _get_unschedulable_reason with %s", pod.status.conditions
-            )
             unschedulable_reason = _get_unschedulable_reason(pod.status.conditions)
             most_recent_condition = min(
                 pod.status.conditions,  # type: ignore
@@ -637,6 +800,11 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
             most_recent_container_status = pod.status.container_statuses[
                 0
             ]  # type: ignore
+
+            container_exit_code = _get_container_exit_code_from_status(
+                most_recent_container_status
+            )
+
             most_recent_container_condition_message = _make_final_message(
                 *_get_standardized_container_state(most_recent_container_status)
             )
@@ -654,6 +822,7 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
             phase=pod.status.phase,
             condition_message=most_recent_condition_message,
             container_condition_message=most_recent_container_condition_message,
+            container_exit_code=container_exit_code,
             start_time_epoch_seconds=(
                 pod.status.start_time.timestamp()
                 if pod.status.start_time is not None
@@ -661,6 +830,7 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
             ),
             detected_infra_failure=detected_infra_failure,
             unschedulable_message=unschedulable_reason,
+            node_name=node_name,
         )
     except Exception as e:
         logger.error(
@@ -676,6 +846,26 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
             pod_name=pod_name,
             detected_infra_failure=True,
         )
+
+
+def _get_container_exit_code_from_status(
+    container_status: Optional[V1ContainerStatus],
+) -> Optional[int]:
+    logger.info("TODO: container status: %s", container_status)
+    if container_status is None:
+        logger.info("TODO: Status is None")
+        return None
+    state = getattr(container_status, "state", None)
+    if state is None:
+        logger.info("TODO: state is None")
+        return None
+    terminated = getattr(state, "terminated", None)
+    if terminated is None:
+        logger.info("TODO: terminated is None")
+        return None
+    exit_code = getattr(terminated, "exit_code", None)
+    logger.info("TODO: exit code is %s", exit_code)
+    return exit_code
 
 
 def load_kube_config():
@@ -732,10 +922,14 @@ def cancel_job(job: KubernetesExternalJob) -> KubernetesExternalJob:
 def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
     """Reach out to K8s for updates on the status of the job."""
     load_kube_config()
+
     if not isinstance(job, KubernetesExternalJob):
         raise ValueError(
             f"Expected a {KubernetesExternalJob.__name__}, got a {type(job).__name__}"
         )
+
+    job.previous_pod_name = job.latest_pod_name()
+    job.previous_node_name = job.latest_node_name()
 
     try:
         k8s_job = kubernetes.client.BatchV1Api().read_namespaced_job_status(
