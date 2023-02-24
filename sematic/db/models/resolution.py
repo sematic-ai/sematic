@@ -171,6 +171,8 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     cache_namespace:
         The cache key namespace in which the executed funcs's outputs will
         be cached, as long as they also have the `cache` flag activated.
+    user_id:
+        User who submitted this resolution.
     """
 
     __tablename__ = "resolutions"

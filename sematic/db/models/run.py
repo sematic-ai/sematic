@@ -91,6 +91,8 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
         The compute resources requested for the execution.
     cache_key : Optional[str]
         If present, the key under which the run's output artifact will be cached.
+    user_id: Optional[str]
+        Users who submitted this run.
     """
 
     __tablename__ = "runs"

@@ -41,4 +41,11 @@ def up():
 
 
 def down():
-    pass
+    with db().get_engine().begin() as conn:
+        conn.execute(
+            "INSERT INTO users "
+            "(email, first_name, last_name, avatar_url, api_key, created_at, updated_at) "
+            "SELECT "
+            "email, first_name, last_name, avatar_url, api_key, created_at, updated_at "
+            "FROM users_tmp;"
+        )
