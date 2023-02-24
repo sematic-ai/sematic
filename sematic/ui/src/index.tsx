@@ -14,7 +14,6 @@ import React, { useCallback, useMemo } from "react";
 import {
   VersionPayload,
 } from "./Payloads";
-import { User } from "./Models";
 import { sha1 } from "./utils";
 import { SnackBarProvider } from "./components/SnackBarProvider";
 import PipelineView from "./pipelines/PipelineView";
@@ -22,32 +21,24 @@ import { RunIndex } from "./runs/RunIndex";
 import { setupPostHogOptout } from "./postHogManager";
 import GoogleLoginPage from "./loginGoogle";
 import { ExtractContextType } from "./components/utils/typings";
-import AppContext from "./appContext";
+import AppContext, { UserContext } from "./appContext";
 import { useAuthentication, userAtom } from "./hooks/appHooks";
 import Loading from "./components/Loading";
 import { useAtom } from "jotai";
 import { RESET } from "jotai/utils";
 import EnvironmentProvider from "./components/EnvironmentProvider";
 
-export const UserContext = React.createContext<{
-  user: User | null;
-  signOut: (() => void) | null;
-}>({ user: null, signOut: null });
-
 export const EnvContext = React.createContext<Map<string, string>>(new Map());
 
 function App() {
   const [user, setUser] = useAtom(userAtom);
 
-  const {value: authentication, error, loading } = useAuthentication();
-
-  const isAuthenticationEnabled = useMemo(
-    () => authentication?.authenticate || false, [authentication]);
+  const {isAuthenticationEnabled, authProviderDetails, error, loading } = useAuthentication();
 
   const appContextValue: ExtractContextType<typeof AppContext> = useMemo(() => ({
-    authenticatedEnabled: isAuthenticationEnabled,
-    googleAuthClientId: authentication?.providers.GOOGLE_OAUTH_CLIENT_ID
-  }), [isAuthenticationEnabled, authentication]);
+    authenticationEnabled: isAuthenticationEnabled,
+    authProviderDetails
+  }), [isAuthenticationEnabled, authProviderDetails]);
 
   const navigate = useNavigate();
 

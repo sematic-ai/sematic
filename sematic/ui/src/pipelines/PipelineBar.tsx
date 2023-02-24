@@ -10,7 +10,6 @@ import {
   useTheme,
 } from "@mui/material";
 import { useCallback, useContext, useEffect, useMemo } from "react";
-import { UserContext } from "..";
 import { Resolution, Run } from "../Models";
 import { fetchJSON } from "../utils";
 import CalculatorPath from "../components/CalculatorPath";
@@ -25,6 +24,7 @@ import { ExtractContextType } from "../components/utils/typings";
 import PipelineRunViewContext from "./PipelineRunViewContext";
 import MuiRouterLink from "../components/MuiRouterLink";
 import { pipelineSocket } from "../sockets";
+import { UserContext } from "../appContext";
 
 function PipelineActionMenu(props: {
   onCancel: () => void;

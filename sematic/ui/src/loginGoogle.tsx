@@ -12,7 +12,7 @@ import { GoogleLoginPayload } from "./Payloads";
 
 export default function GoogleLoginPage() {
   const [error, setError] = useState<Error | undefined>(undefined);
-  const { googleAuthClientId } = useAppContext()
+  const { authProviderDetails } = useAppContext()
 
   const [, setUser] = useAtom(userAtom);
 
@@ -61,7 +61,7 @@ export default function GoogleLoginPage() {
 
     {!error &&
       <GoogleOAuthProvider
-        clientId={googleAuthClientId!}
+        clientId={authProviderDetails.google!.GOOGLE_OAUTH_CLIENT_ID}
       >
         <GoogleLogin
           text="signin_with"

@@ -2,13 +2,13 @@ import Box from "@mui/material/Box";
 import { ThemeProvider } from "@mui/material/styles";
 import { useContext } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { UserContext } from "../index";
+import { UserContext } from "../appContext";
 import { useAppContext } from "../hooks/appHooks";
 import createTheme from "../themes/mira";
 import SideBar from "./SideBar";
 
 export default function Shell() {
-  const { authenticatedEnabled } = useAppContext()
+  const { authenticationEnabled: authenticatedEnabled } = useAppContext()
   const { user } = useContext(UserContext);
 
   if (authenticatedEnabled && !user) {

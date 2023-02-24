@@ -2,6 +2,7 @@ import { atomWithStorage } from "jotai/utils";
 import { useContext, useMemo } from "react";
 import useAsync from "react-use/lib/useAsync";
 import AppContext from "../appContext";
+import { ExtractContextType } from "../components/utils/typings";
 import { User } from "../Models";
 import { AuthenticatePayload, EnvPayload } from "../Payloads";
 import { useHttpClient } from "./httpHooks";
@@ -21,12 +22,46 @@ export function useAppContext() {
 export function useAuthentication() {
     const {fetch} = useHttpClient();
 
-    return useAsync(async () => {
+    const {value, loading, error} = useAsync(async () => {
         const response: AuthenticatePayload = await fetch({
             url: `/authenticate`
         });
         return response;
     }, []);
+
+    const isAuthenticationEnabled = useMemo(
+        () => value?.authenticate || false, [value]);
+    
+    const authProviderDetails = useMemo(() => {
+        const authProviderDetails
+            : ExtractContextType<typeof AppContext>['authProviderDetails']  = {
+
+        };
+        if (!value) {
+            return authProviderDetails;
+        }
+
+        if (value?.providers.GOOGLE_OAUTH_CLIENT_ID) {
+            authProviderDetails['google'] = {
+                GOOGLE_OAUTH_CLIENT_ID: value.providers.GOOGLE_OAUTH_CLIENT_ID
+            }
+        }
+
+        if (value?.providers.GITHUB_OAUTH_CLIENT_ID) {
+            authProviderDetails['github'] = {
+                GITHUB_OAUTH_CLIENT_ID: value.providers.GITHUB_OAUTH_CLIENT_ID
+            }
+        }
+
+        return authProviderDetails;
+
+    }, [value]);
+
+    return {
+        isAuthenticationEnabled,
+        authProviderDetails,
+        loading, error
+    };
 }
 
 export function useEnv(user: User | null) {
