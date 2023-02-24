@@ -38,6 +38,9 @@ def get_resolution_payload(resolution: Resolution) -> Dict[str, Any]:
     Build the standard payload for a single resolution.
     """
     resolution_payload = resolution.to_json_encodable()
+    # Setting this manual redaction for backward compatibility
+    # ToDo: remove after a few releases
+    resolution_payload["settings_env_vars"] = {}
 
     _set_user_payloads([resolution_payload])
 
@@ -45,6 +48,9 @@ def get_resolution_payload(resolution: Resolution) -> Dict[str, Any]:
 
 
 def _set_user_payloads(items: List[Dict[str, Any]]):
+    """
+    Sets item user payload.
+    """
     try:
         user_ids = [item["user_id"] for item in items]
     except KeyError:
@@ -53,7 +59,8 @@ def _set_user_payloads(items: List[Dict[str, Any]]):
         )
 
     users_by_id = {
-        user.id: user.to_json_encodable() for user in get_users(list(user_ids))
+        user.id: user.to_json_encodable(redact=True)
+        for user in get_users(list(user_ids))
     }
 
     for item in items:

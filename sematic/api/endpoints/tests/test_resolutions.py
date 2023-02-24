@@ -117,7 +117,7 @@ def test_get_resolution_endpoint(
     assert payload["content"]["root_id"] == persisted_resolution.root_id
 
     # Should have been scrubbed
-    assert "settings_env_vars" not in payload["content"]
+    assert payload["content"]["settings_env_vars"] == {}
 
 
 def test_put_resolution_endpoint(
@@ -136,7 +136,7 @@ def test_put_resolution_endpoint(
     response = test_client.get("/api/v1/resolutions/{}".format(resolution.root_id))
     encodable = response.json["content"]  # type: ignore
 
-    assert "settings_env_vars" not in encodable
+    assert encodable["settings_env_vars"] == {}
 
     read = get_resolution(resolution.root_id)
     assert read.settings_env_vars == resolution.settings_env_vars
