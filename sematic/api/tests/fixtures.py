@@ -35,6 +35,20 @@ from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.plugins.storage.memory_storage import MemoryStorage
 
 
+@pytest.fixture
+def mock_storage():
+    current_storage_scope = get_active_settings().scopes.get(PluginScope.STORAGE)
+    get_active_settings().scopes[PluginScope.STORAGE] = [f"{MemoryStorage.get_path()}"]
+
+    try:
+        yield MemoryStorage
+    finally:
+        if current_storage_scope is None:
+            del get_active_settings().scopes[PluginScope.STORAGE]
+        else:
+            get_active_settings().scopes[PluginScope.STORAGE] = current_storage_scope
+
+
 @pytest.fixture(scope="function")
 def test_client(test_db):  # noqa: F811
     sematic_api.config["DATABASE"] = test_db

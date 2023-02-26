@@ -13,7 +13,8 @@ from sematic.abstract_future import FutureState
 from sematic.db import queries as db_queries
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
-from sematic.plugins.storage.s3_storage import S3Storage
+from sematic.plugins.abstract_storage import get_storage_plugins
+from sematic.plugins.storage.local_storage import LocalStorage
 from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
     START_INLINE_RUN_INDICATOR,
@@ -276,7 +277,9 @@ def _get_latest_log_file(prefix, cursor_file) -> Optional[str]:
     # recall that for v1 logs, each log file contains ALL the logs from
     # the beginning of the run until the time that file was uploaded. So
     # the latest log file contains all the logs we have for the run.
-    log_files = S3Storage().get_child_paths(prefix)
+    storage = get_storage_plugins([LocalStorage])[0]
+
+    log_files = storage().get_child_paths(prefix)
     if len(log_files) < 1:
         return None
 
@@ -377,7 +380,10 @@ def _load_non_inline_logs_v1(
             log_info_message="No log files found",
         )
 
-    text_stream = S3Storage().get_line_stream(latest_log_file)
+    storage = get_storage_plugins([LocalStorage])[0]
+
+    text_stream = storage().get_line_stream(latest_log_file)
+
     line_stream = (
         LogLine(source_file=latest_log_file, source_file_index=i, line=ln)
         for i, ln in zip(itertools.count(), text_stream)
@@ -480,7 +486,11 @@ def line_stream_from_log_directory(
     directory: str, cursor_file: Optional[str], cursor_line_index: Optional[int]
 ) -> Iterable[LogLine]:
     """Stream lines from multiple files in a storage dir, starting from cursor."""
-    log_files = S3Storage().get_child_paths(directory)
+    storage_class = get_storage_plugins([LocalStorage])[0]
+
+    storage = storage_class()
+
+    log_files = storage.get_child_paths(directory)
 
     log_files = sorted(
         log_files,
@@ -495,7 +505,7 @@ def line_stream_from_log_directory(
             found_cursor_file = True
         if not found_cursor_file:
             continue
-        text_stream: Iterable[str] = S3Storage().get_line_stream(log_file)
+        text_stream: Iterable[str] = storage.get_line_stream(log_file)
         for i_line, line in enumerate(text_stream):
             if (
                 (not found_cursor_line)
@@ -541,7 +551,8 @@ def _load_inline_logs_v1(
             log_info_message="Resolver logs are missing",
         )
 
-    text_stream: Iterable[str] = S3Storage().get_line_stream(latest_log_file)
+    storage = get_storage_plugins([LocalStorage])[0]
+    text_stream: Iterable[str] = storage().get_line_stream(latest_log_file)
     unfiltered_line_stream = (
         LogLine(source_file=latest_log_file, source_file_index=i, line=text)
         for i, text in zip(itertools.count(), text_stream)
