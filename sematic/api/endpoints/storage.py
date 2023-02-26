@@ -1,19 +1,18 @@
 # Standard Library
 import logging
+import urllib.parse
 from http import HTTPStatus
-from typing import Optional, Type, cast
+from typing import Optional
 
 # Third-party
 import flask
 
 # Sematic
-from sematic.abstract_plugin import PluginScope
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
-from sematic.config.settings import get_active_plugins
 from sematic.db.models.user import User
-from sematic.plugins.abstract_storage import AbstractStorage
+from sematic.plugins.abstract_storage import get_storage_plugins
 from sematic.plugins.storage.local_storage import LocalStorage
 
 logger = logging.getLogger(__name__)
@@ -38,8 +37,11 @@ def get_storage_location(
     request_headers: Dict[str, str]
         Headers to set on the PUT request.
     """
+    namespace = urllib.parse.unquote(namespace)
+    key = urllib.parse.unquote(key)
+
     try:
-        storage_plugin = get_storage_plugin()
+        storage_plugin = get_storage_plugins([LocalStorage])[0]
     except Exception as e:
         logger.error(e)
 
@@ -72,7 +74,7 @@ def get_storage_data_endpoint(user: Optional[User], namespace: str, key: str):
 
 def get_stored_data_redirect(user: Optional[User], namespace: str, key: str):
     try:
-        storage_plugin = get_storage_plugin()
+        storage_plugin = get_storage_plugins([LocalStorage])[0]
     except Exception as e:
         logger.error(e)
 
@@ -88,9 +90,3 @@ def get_stored_data_redirect(user: Optional[User], namespace: str, key: str):
         response.headers.set(key, value)
 
     return response
-
-
-def get_storage_plugin() -> Type[AbstractStorage]:
-    storage_plugin = get_active_plugins(PluginScope.STORAGE, default=[LocalStorage])[0]
-
-    return cast(Type[AbstractStorage], storage_plugin)

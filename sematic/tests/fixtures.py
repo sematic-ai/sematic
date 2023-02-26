@@ -14,26 +14,9 @@ import sematic.config.settings as sematic_settings
 from sematic.plugins.storage.memory_storage import MemoryStorage
 
 
-class MockStorage(MemoryStorage):
-    def set_from_file(self, key, file_path):
-        with open(file_path, "rb") as fp:
-            self._store[key] = b"".join(fp)
-
-    def get_line_stream(self, key):
-        as_bytes = self.get(key)
-        as_str = str(as_bytes, encoding="utf8")
-        for line in as_str.split("\n"):
-            yield line
-
-    def get_child_paths(self, key_prefix):
-        if not key_prefix.endswith("/"):
-            key_prefix = f"{key_prefix}/"
-        return [key for key in self._store.keys() if key.startswith(key_prefix)]
-
-
 @pytest.fixture(scope="function")
 def test_storage():
-    yield MockStorage
+    yield MemoryStorage
 
 
 @pytest.fixture
