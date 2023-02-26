@@ -34,11 +34,11 @@ def mock_load_log_lines():
         yield mock_loader
 
 
-MOCK_LINES = [f"Hello {i}" for i in range(10)]
+MOCK_LINES = [f"Hello {i}" for i in range(1000)]
 
 
 def fill_log_dir(mock_storage, text_lines, prefix):  # noqa: F811
-    break_at_line = 5
+    break_at_line = 52
     lines_part_1 = text_lines[:break_at_line]
     lines_part_2 = text_lines[break_at_line:]
 
