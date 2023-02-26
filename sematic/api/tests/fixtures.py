@@ -37,6 +37,12 @@ from sematic.plugins.storage.memory_storage import MemoryStorage
 
 @pytest.fixture
 def mock_storage():
+    with _mock_storage() as storage:
+        yield storage
+
+
+@contextlib.contextmanager
+def _mock_storage():
     current_storage_scope = get_active_settings().scopes.get(PluginScope.STORAGE)
     get_active_settings().scopes[PluginScope.STORAGE] = [f"{MemoryStorage.get_path()}"]
 
@@ -54,17 +60,9 @@ def test_client(test_db):  # noqa: F811
     sematic_api.config["DATABASE"] = test_db
     sematic_api.config["TESTING"] = True
 
-    current_storage_scope = get_active_settings().scopes.get(PluginScope.STORAGE)
-    get_active_settings().scopes[PluginScope.STORAGE] = [f"{MemoryStorage.get_path()}"]
-
-    try:
+    with _mock_storage():
         with sematic_api.test_client() as client:
             yield client
-    finally:
-        if current_storage_scope is None:
-            del get_active_settings().scopes[PluginScope.STORAGE]
-        else:
-            get_active_settings().scopes[PluginScope.STORAGE] = current_storage_scope
 
 
 # Credit to https://github.com/adamtheturtle/requests-mock-flask
