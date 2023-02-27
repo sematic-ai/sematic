@@ -262,5 +262,5 @@ with nothing else on the line.
 
 [^1]: This feature is for Sematic's "Enterprise Edition" only. Please reach out
 to support@sematic.dev if you are interested in using Sematic EE.
-[^2]: This release adds opt-in anonymized user analytics tracking to the Sematic
+[^2]: This release adds opt-out anonymized user analytics tracking to the Sematic
 code.  You can opt-out of this tracking on the Sematic Dashboard home page.
