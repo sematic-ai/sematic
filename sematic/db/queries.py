@@ -139,6 +139,11 @@ def save_run(run: Run) -> Run:
         existing_run_future_state = (
             session.query(Run.future_state).filter(Run.id == run.id).one_or_none()
         )
+        existing_run_future_state = (
+            existing_run_future_state[0]
+            if existing_run_future_state is not None
+            else None
+        )
         new_state = run.future_state
         if isinstance(new_state, str):
             new_state = FutureState[new_state]
