@@ -739,6 +739,7 @@ def _get_pods_for_job(
             job.external_job_id,
             exc_info=e,
         )
+        logger.info("TODO Error looking for pods, has infra failure")
         return None, has_infra_failure
 
 
@@ -788,6 +789,9 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
             )
 
             if most_recent_condition.type in POD_FAILURE_PHASES:
+                logger.info(
+                    "TODO: infra fail, Pod phase is %s", most_recent_condition.type
+                )
                 detected_infra_failure = True
 
         container_restarts = None
@@ -795,6 +799,10 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
         if _is_none_or_empty(pod.status.container_statuses):
             most_recent_container_condition_message = "There is no container!"
             detected_infra_failure = pod.status.phase != "Pending"
+            logger.info(
+                "TODO: infra fail, No container status, but phase is %s",
+                pod.status.phase,
+            )
         else:
             # there can be only one
             most_recent_container_status = pod.status.container_statuses[
@@ -811,6 +819,10 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
 
             if _has_container_failure(most_recent_container_status):
                 detected_infra_failure = pod.status.phase != "Pending"
+                logger.info(
+                    "TODO: infra fail, Has container failure, and pod phase is %s",
+                    pod.status.phase,
+                )
 
             container_restarts = getattr(
                 most_recent_container_status, "restart_count", None
@@ -944,6 +956,7 @@ def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
                 return job  # still hasn't started
             else:
                 job.still_exists = False
+                logger.info("TODO: job not found, has infra failure")
                 job.has_infra_failure = True
                 return job
         raise e
