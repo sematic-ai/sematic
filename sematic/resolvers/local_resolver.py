@@ -55,9 +55,9 @@ class LocalResolver(SilentResolver):
     rerun_from: Optional[str]
         When `None`, the pipeline is resolved from scratch, as normally. When not `None`,
         must be the id of a `Run` from a previous resolution. Instead of running from
-        scratch, parts of that previous resolution is cloned up until and including the
-        specified `Run`, and only nested and downstream `Future`s are executed. This is
-        meant to be used for retries or for hotfixes, without needing to re-run the
+        scratch, parts of that previous resolution is cloned up until the specified `Run`,
+        and only the specified `Run`, nested and downstream `Future`s are executed. This
+        is meant to be used for retries or for hotfixes, without needing to re-run the
         entire pipeline again.
     """
 
