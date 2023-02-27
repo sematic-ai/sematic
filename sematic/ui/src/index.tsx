@@ -215,7 +215,7 @@ function Router() {
 
         // Use obfuscated host name
         currentUrl.hostname = currentHostName;
-        currentUrl.pathname = '[removed]';
+        currentUrl.pathname = '[redacted]';
 
         if ('$current_url' in properties) {
           properties['$current_url'] = currentUrl.toString();
