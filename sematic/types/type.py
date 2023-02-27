@@ -13,6 +13,12 @@ else:
     # parameterized a Union, we just use an example. Why use two types
     # instead of just Union[int]? Because that is disallowed--all Union
     # parameterizations must have at least two types.
+    # Different types from the typing module have different behaviors
+    # when getting origin--behaviors which differ with python version.
+    # Rather than hard-coding what the origin type is when you have
+    # parameterized a Union, we just use an example. Why use two types
+    # instead of just Union[int]? Because that is disallowed--all Union
+    # parameterizations must have at least two types.
     UnionType = typing.get_origin(typing.Union[int, float])
 
 
