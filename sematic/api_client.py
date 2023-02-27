@@ -117,8 +117,8 @@ def store_file_content(file_path: str, namespace: str, key: str) -> None:
 
 @retry(tries=3, delay=10, jitter=1)
 def _store_bytes(namespace: str, key: str, bytes_: bytes) -> None:
-    namespace = urllib.parse.quote(namespace, safe="/")
-    key = urllib.parse.quote(key, safe="/")
+    namespace = urllib.parse.quote(namespace, safe="")
+    key = urllib.parse.quote(key, safe="")
 
     response = _get(f"/storage/{namespace}/{key}/location")
 
