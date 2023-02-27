@@ -24,6 +24,7 @@ from sematic.db.models.user import User
 from sematic.plugins.abstract_external_resource import ResourceState
 from sematic.scheduling.external_job import ExternalJob
 from sematic.types.serialization import value_from_json_encodable
+from sematic.utils.exceptions import IllegalStateTransitionError
 
 logger = logging.getLogger(__name__)
 
@@ -135,6 +136,22 @@ def save_run(run: Run) -> Run:
     """
     _assert_external_jobs_not_removed([run])
     with db().get_session() as session:
+        existing_run_future_state = (
+            session.query(Run.future_state).filter(Run.id == run.id).one_or_none()
+        )
+        new_state = run.future_state
+        if isinstance(new_state, str):
+            new_state = FutureState[new_state]
+        if (
+            existing_run_future_state != new_state
+            and not FutureState.is_allowed_transition(
+                existing_run_future_state, run.future_state
+            )
+        ):
+            raise IllegalStateTransitionError(
+                f"Cannot transition run from '{existing_run_future_state}' to "
+                f"'{run.future_state}'"
+            )
         session.add(run)
         session.commit()
         session.refresh(run)
