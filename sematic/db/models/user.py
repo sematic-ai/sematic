@@ -1,5 +1,6 @@
 # Standard Library
 import datetime
+import uuid
 from typing import Optional
 
 # Third-party
@@ -7,7 +8,10 @@ from sqlalchemy import Column, types
 
 # Sematic
 from sematic.db.models.base import Base
-from sematic.db.models.json_encodable_mixin import REDACTED_KEY, JSONEncodableMixin
+from sematic.db.models.mixins.json_encodable_mixin import (
+    REDACTED_KEY,
+    JSONEncodableMixin,
+)
 
 
 class User(Base, JSONEncodableMixin):
@@ -17,7 +21,8 @@ class User(Base, JSONEncodableMixin):
 
     __tablename__ = "users"
 
-    email: str = Column(types.String(), primary_key=True)
+    id: str = Column(types.String(), primary_key=True, default=lambda: uuid.uuid4().hex)
+    email: str = Column(types.String(), nullable=False, info={REDACTED_KEY: True})
     first_name: Optional[str] = Column(types.String(), nullable=True)
     last_name: Optional[str] = Column(types.String(), nullable=True)
     avatar_url: Optional[str] = Column(types.String(), nullable=True)

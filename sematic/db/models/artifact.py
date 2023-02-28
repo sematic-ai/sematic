@@ -6,7 +6,7 @@ from sqlalchemy import Column, types
 
 # Sematic
 from sematic.db.models.base import Base
-from sematic.db.models.json_encodable_mixin import JSON_KEY, JSONEncodableMixin
+from sematic.db.models.mixins.json_encodable_mixin import JSON_KEY, JSONEncodableMixin
 
 
 class Artifact(Base, JSONEncodableMixin):
