@@ -1,6 +1,5 @@
 # Standard Library
 import logging
-import urllib.parse
 from http import HTTPStatus
 from typing import Optional
 
@@ -22,7 +21,7 @@ logger = logging.getLogger(__name__)
 # storage plugins (e.g. /api/v1/storage/<namespace>/<key>/memory by memory_storage)
 
 
-@sematic_api.route("/api/v1/storage/<namespace>/<key>/location", methods=["GET"])
+@sematic_api.route("/api/v1/storage/<path:namespace>/<key>/location", methods=["GET"])
 @authenticate
 def get_storage_location(
     user: Optional[User], namespace: str, key: str
@@ -37,9 +36,6 @@ def get_storage_location(
     request_headers: Dict[str, str]
         Headers to set on the PUT request.
     """
-    namespace = urllib.parse.unquote(namespace)
-    key = urllib.parse.unquote(key)
-
     try:
         storage_plugin = get_storage_plugins([LocalStorage])[0]
     except Exception as e:
