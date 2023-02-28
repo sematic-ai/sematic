@@ -1,9 +1,11 @@
 # Standard Library
 import abc
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Type
+from typing import Dict, Iterable, List, Optional, Type, cast
 
 # Sematic
+from sematic.abstract_plugin import AbstractPlugin, PluginScope
+from sematic.config.settings import get_active_plugins
 from sematic.db.models.user import User
 
 
@@ -44,7 +46,46 @@ class AbstractStorage(abc.ABC):
         """
         pass
 
+    @abc.abstractmethod
+    def get_child_paths(self, key_prefix: str) -> List[str]:
+        """Get all descendants of the 'directory' specified by the prefix
+        Parameters
+        ----------
+        key_prefix:
+            The prefix to a key that would be used with 'get' or 'set'. The keys are
+            treated as being like directories, with '/' in a key specifying an
+            organizational unit for the objects.
+        Returns
+        -------
+        A list of all keys that start with the prefix. You can think of this as getting
+        the absolute file paths for all contents of a directory (including 'files' in
+        'subdirectories').
+        """
+        pass
+
+    @abc.abstractmethod
+    def get_line_stream(self, key: str, encoding: str = "utf8") -> Iterable[str]:
+        """
+        Get value in stream of text lines.
+        """
+        pass
+
 
 class NoSuchStorageKeyError(KeyError):
     def __init__(self, storage: Type[AbstractStorage], key: str):
         super().__init__(f"No such storage key for {storage.__name__}: {key}")
+
+
+def get_storage_plugins(
+    default: List[Type[AbstractPlugin]],
+) -> List[Type[AbstractStorage]]:
+    """
+    Return all configured "STORAGE" scope plugins.
+    """
+    storage_plugins = get_active_plugins(PluginScope.STORAGE, default=default)
+
+    storage_classes = [
+        cast(Type[AbstractStorage], plugin) for plugin in storage_plugins
+    ]
+
+    return storage_classes

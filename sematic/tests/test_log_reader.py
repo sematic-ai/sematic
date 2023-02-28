@@ -1,12 +1,12 @@
 # Standard Library
 from typing import Iterable, List
-from unittest import mock
 
 # Third-party
 import pytest
 
 # Sematic
 from sematic.abstract_future import FutureState
+from sematic.api.tests.fixtures import mock_storage  # noqa: F401
 from sematic.db.models.resolution import ResolutionStatus
 from sematic.db.queries import save_resolution, save_run
 from sematic.db.tests.fixtures import make_resolution, make_run, test_db  # noqa: F401
@@ -27,18 +27,10 @@ from sematic.resolvers.cloud_resolver import (
     START_INLINE_RUN_INDICATOR,
 )
 from sematic.scheduling.external_job import ExternalJob, JobType
-from sematic.tests.fixtures import MockStorage  # noqa: F401
 
 _streamed_lines: List[str] = []
 _DUMMY_LOGS_FILE = "logs.log"
 _DUMMY_RUN_ID = "abc123"
-
-
-@pytest.fixture
-def mock_storage():
-    storage = MockStorage()
-    with mock.patch("sematic.log_reader.S3Storage", return_value=storage):
-        yield storage
 
 
 # Using this should help ensure we're actually properly streaming.
@@ -210,7 +202,7 @@ def test_get_log_lines_from_line_stream_filter():
     )
 
 
-def prepare_logs_v1(run_id, text_lines, mock_storage, job_type):
+def prepare_logs_v1(run_id, text_lines, mock_storage, job_type):  # noqa: F811
     log_file_contents = bytes("\n".join(text_lines), encoding="utf8")
     prefix = v1_log_prefix(run_id, job_type)
     key = f"{prefix}12345.log"
@@ -221,7 +213,7 @@ def prepare_logs_v1(run_id, text_lines, mock_storage, job_type):
 def prepare_logs_v2(
     run_id,
     text_lines,
-    mock_storage,
+    mock_storage,  # noqa: F811
     job_type,
     break_at_line=52,
     emulate_pending_more_lines=False,
@@ -252,7 +244,7 @@ def prepare_logs_v2(
     ),
 )
 def test_load_non_inline_logs(
-    test_db, mock_storage: MockStorage, log_preparation_function  # noqa: F811
+    test_db, mock_storage, log_preparation_function  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
@@ -334,9 +326,7 @@ def test_load_non_inline_logs(
     )
 
 
-def test_line_stream_from_log_directory(
-    mock_storage: MockStorage, test_db  # noqa: F811
-):
+def test_line_stream_from_log_directory(mock_storage, test_db):  # noqa: F811
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
     n_lines = 500
@@ -374,7 +364,7 @@ def test_line_stream_from_log_directory(
     ),
 )
 def test_load_inline_logs(
-    mock_storage: MockStorage, test_db, log_preparation_function  # noqa: F811
+    mock_storage, test_db, log_preparation_function  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
@@ -480,9 +470,7 @@ def test_load_inline_logs(
         prepare_logs_v2,
     ),
 )
-def test_load_log_lines(
-    mock_storage: MockStorage, test_db, log_preparation_function  # noqa: F811
-):
+def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noqa: F811
     run = make_run(future_state=FutureState.CREATED)
     save_run(run)
     resolution = make_resolution(status=ResolutionStatus.SCHEDULED)
@@ -595,7 +583,7 @@ def test_load_log_lines(
     ),
 )
 def test_load_cloned_run_log_lines(
-    mock_storage: MockStorage, test_db, log_preparation_function  # noqa: F811
+    mock_storage, test_db, log_preparation_function  # noqa: F811
 ):
     run = make_run(future_state=FutureState.CREATED)
     save_run(run)
@@ -710,9 +698,7 @@ def test_load_cloned_run_log_lines(
     assert result.lines == ["Line 42"]
 
 
-def test_continue_from_end_with_no_new_logs(
-    test_db, mock_storage: MockStorage  # noqa: F811
-):
+def test_continue_from_end_with_no_new_logs(test_db, mock_storage):  # noqa: F811
     run = make_run(future_state=FutureState.SCHEDULED)
     save_run(run)
 

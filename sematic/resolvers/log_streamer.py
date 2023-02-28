@@ -11,9 +11,8 @@ from curses import ascii
 from typing import Callable, Optional
 
 # Sematic
+import sematic.api_client as api_client
 from sematic.config.user_settings import UserSettingsVar, get_user_setting
-from sematic.plugins.storage.s3_storage import S3Storage
-from sematic.utils.retry import retry
 from sematic.utils.stdout import redirect_to_file_descriptor
 
 """
@@ -186,7 +185,6 @@ def _stream_logs_to_remote_from_file_descriptor(
             os._exit(0)
 
 
-@retry(tries=3, delay=5)
 def _do_upload(file_path: str, remote_prefix: str):
     """Upload a local file to remote storage
 
@@ -201,12 +199,16 @@ def _do_upload(file_path: str, remote_prefix: str):
     file_has_contents = (
         os.path.exists(file_path) and os.stat(file_path)[stat.ST_SIZE] > 0
     )
+
     if not file_has_contents:
         return
+
     if remote_prefix.endswith("/"):
         remote_prefix = remote_prefix[:-1]
-    remote = f"{remote_prefix}/{int(time.time() * 1000)}.log"
-    S3Storage().set_from_file(remote, file_path)
+
+    api_client.store_file_content(
+        file_path, remote_prefix, f"{int(time.time() * 1000)}.log"
+    )
 
 
 def _start_log_streamer_out_of_process(
