@@ -1,19 +1,17 @@
 # Standard Library
 import logging
 from http import HTTPStatus
-from typing import Optional, Type, cast
+from typing import Optional
 
 # Third-party
 import flask
 
 # Sematic
-from sematic.abstract_plugin import PluginScope
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
-from sematic.config.settings import get_active_plugins
 from sematic.db.models.user import User
-from sematic.plugins.abstract_storage import AbstractStorage
+from sematic.plugins.abstract_storage import get_storage_plugins
 from sematic.plugins.storage.local_storage import LocalStorage
 
 logger = logging.getLogger(__name__)
@@ -23,7 +21,7 @@ logger = logging.getLogger(__name__)
 # storage plugins (e.g. /api/v1/storage/<namespace>/<key>/memory by memory_storage)
 
 
-@sematic_api.route("/api/v1/storage/<namespace>/<key>/location", methods=["GET"])
+@sematic_api.route("/api/v1/storage/<path:namespace>/<key>/location", methods=["GET"])
 @authenticate
 def get_storage_location(
     user: Optional[User], namespace: str, key: str
@@ -39,7 +37,7 @@ def get_storage_location(
         Headers to set on the PUT request.
     """
     try:
-        storage_plugin = get_storage_plugin()
+        storage_plugin = get_storage_plugins([LocalStorage])[0]
     except Exception as e:
         logger.error(e)
 
@@ -72,7 +70,7 @@ def get_storage_data_endpoint(user: Optional[User], namespace: str, key: str):
 
 def get_stored_data_redirect(user: Optional[User], namespace: str, key: str):
     try:
-        storage_plugin = get_storage_plugin()
+        storage_plugin = get_storage_plugins([LocalStorage])[0]
     except Exception as e:
         logger.error(e)
 
@@ -88,9 +86,3 @@ def get_stored_data_redirect(user: Optional[User], namespace: str, key: str):
         response.headers.set(key, value)
 
     return response
-
-
-def get_storage_plugin() -> Type[AbstractStorage]:
-    storage_plugin = get_active_plugins(PluginScope.STORAGE, default=[LocalStorage])[0]
-
-    return cast(Type[AbstractStorage], storage_plugin)

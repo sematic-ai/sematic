@@ -99,6 +99,7 @@ pytest_test(
         "//sematic:abstract_future",
         "//sematic:log_reader",
         "//sematic:storage",
+        "//sematic/api/tests:fixtures",
         "//sematic/db:queries",
         "//sematic/db/tests:fixtures",
         "//sematic/resolvers:cloud_resolver",

@@ -14,11 +14,13 @@ from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
 )
-from sematic.api.endpoints.storage import get_storage_plugin, get_stored_data_redirect
+from sematic.api.endpoints.storage import get_stored_data_redirect
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.user import User
 from sematic.db.queries import get_artifact
+from sematic.plugins.abstract_storage import get_storage_plugins
+from sematic.plugins.storage.local_storage import LocalStorage
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +80,7 @@ def get_artifact_endpoint(user: Optional[User], artifact_id: str) -> flask.Respo
 @authenticate
 def get_artifact_location_endpoint(user: Optional[User], artifact_id: str):
     try:
-        storage_plugin = get_storage_plugin()
+        storage_plugin = get_storage_plugins([LocalStorage])[0]
     except Exception as e:
         logger.exception("Unable to load the storage plugin: %s", str(e))
 
