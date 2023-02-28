@@ -4,6 +4,7 @@ import logging
 from typing import Any, Dict, List, Protocol, Sequence
 
 # Sematic
+from sematic.db.models.resolution import Resolution
 from sematic.db.queries import get_user, get_users
 
 logger = logging.getLogger(__name__)
@@ -59,7 +60,14 @@ def _get_collection_payload_with_user(
 get_run_payload = _get_payload_with_user
 get_runs_payload = _get_collection_payload_with_user
 
-get_resolution_payload = _get_payload_with_user
+
+def get_resolution_payload(resolution: Resolution) -> Dict[str, Any]:
+    payload = _get_payload_with_user(resolution)
+    # Temporary to ensure backward compatibility for a few releases
+    # https://github.com/sematic-ai/sematic/issues/612
+    payload["settings_env_vars"] = {}
+    return payload
+
 
 get_note_payload = _get_payload_with_user
 get_notes_payload = _get_collection_payload_with_user
