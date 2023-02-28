@@ -1,6 +1,6 @@
 # Standard Library
 from http import HTTPStatus
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 # Third-party
 import flask
@@ -65,6 +65,15 @@ class MemoryStorage(AbstractStorage, AbstractPlugin):
             url=f"{get_config().api_url}/storage/{namespace}/{key}/memory",
             request_headers=_make_headers(user),
         )
+
+    def get_child_paths(self, key_prefix: str) -> List[str]:
+        return [key for key in self._store if key.startswith(key_prefix)]
+
+    def get_line_stream(self, key: str, encoding: str = "utf8") -> Iterable[str]:
+        content = str(self.get(key), encoding=encoding)
+
+        for line in content.split("\n"):
+            yield line
 
 
 def _make_headers(user: Optional[User]) -> Dict[str, str]:
