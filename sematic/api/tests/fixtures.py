@@ -51,7 +51,10 @@ def test_client(test_db):  # noqa: F811
         with sematic_api.test_client() as client:
             yield client
     finally:
-        if current_storage_scope is None:
+        if (
+            current_storage_scope is None
+            and PluginScope.STORAGE in get_active_settings().scopes
+        ):
             del get_active_settings().scopes[PluginScope.STORAGE]
         else:
             get_active_settings().scopes[PluginScope.STORAGE] = current_storage_scope
@@ -113,12 +116,13 @@ def mock_plugin_settings(
         current_plugin_settings[key] = value
 
     original_settings_copy.profiles[_DEFAULT_PROFILE].settings[
-        UserSettings.get_path()
+        plugin.get_path()
     ] = current_plugin_settings
 
     settings_module._SETTINGS = original_settings_copy
 
     try:
+        print(settings_module._SETTINGS)
         yield settings
     finally:
         settings_module._SETTINGS = original_settings

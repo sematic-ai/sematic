@@ -143,6 +143,7 @@ def authenticate(endpoint_fn: Callable) -> Callable:
         authenticate = get_bool_server_setting(
             ServerSettingsVar.SEMATIC_AUTHENTICATE, False
         )
+
         if not authenticate:
             return endpoint_fn(None, *args, **kwargs)
 

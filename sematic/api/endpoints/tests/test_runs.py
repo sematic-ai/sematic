@@ -23,6 +23,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 )
 from sematic.calculator import func
 from sematic.config.server_settings import ServerSettings, ServerSettingsVar
+from sematic.config.tests.fixtures import empty_settings_file  # noqa: F401
 from sematic.config.user_settings import UserSettings, UserSettingsVar
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
@@ -730,7 +731,9 @@ def test_get_run_external_resources(
     assert payload[0]["id"] == persisted_external_resource.id
 
 
-def test_set_run_user(persisted_user: User, run: Run, mock_requests):  # noqa: F811
+def test_set_run_user(
+    persisted_user: User, run: Run, mock_requests, empty_settings_file  # noqa: F811
+):  # noqa: F811
     with mock_plugin_settings(
         ServerSettings, {ServerSettingsVar.SEMATIC_AUTHENTICATE: "1"}
     ):

@@ -43,6 +43,7 @@ sematic_py_lib(
     srcs = ["fixtures.py"],
     pip_deps = [
         "pyyaml",
+        "pytest",
     ],
     deps = [
         "//sematic/config:server_settings",

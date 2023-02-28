@@ -48,6 +48,7 @@ pytest_test(
         "//sematic/api/tests:fixtures",
         "//sematic/config:server_settings",
         "//sematic/config:user_settings",
+        "//sematic/config/tests:fixtures",
         "//sematic/db:queries",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
