@@ -44,7 +44,7 @@ export default function RunTree(props: {
       }}
     >
       {runTreeNodes.map(({run, children}) => (
-        <Fragment key={run!.id}>
+        <Fragment key={`${run!.id}---${run!.future_state}`}>
           <ListItemButton
             onClick={() => onSelectRun(run!.id)}
             key={run!.id}
