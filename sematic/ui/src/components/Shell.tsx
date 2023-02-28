@@ -1,10 +1,20 @@
 import Box from "@mui/material/Box";
 import { ThemeProvider } from "@mui/material/styles";
-import { Outlet } from "react-router-dom";
+import { useContext } from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import { UserContext } from "../appContext";
+import { useAppContext } from "../hooks/appHooks";
 import createTheme from "../themes/mira";
 import SideBar from "./SideBar";
 
 export default function Shell() {
+  const { authenticationEnabled } = useAppContext()
+  const { user } = useContext(UserContext);
+
+  if (authenticationEnabled && !user) {
+      return <Navigate to="/login" />;
+  }
+
   return (
     <ThemeProvider theme={createTheme("LIGHT")}>
       <Box
