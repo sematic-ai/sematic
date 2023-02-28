@@ -3,7 +3,6 @@ import {
   Box,
   FormControl,
   InputLabel,
-  Link,
   MenuItem,
   Select,
   SelectChangeEvent,
@@ -13,7 +12,7 @@ import {
 import { useCallback, useContext, useEffect, useMemo } from "react";
 import { UserContext } from "..";
 import { Resolution, Run } from "../Models";
-import { fetchJSON, pipelineSocket } from "../utils";
+import { fetchJSON } from "../utils";
 import CalculatorPath from "../components/CalculatorPath";
 import GitInfoBox from "../components/GitInfo";
 import Loading from "../components/Loading";
@@ -24,6 +23,8 @@ import { SnackBarContext } from "../components/SnackBarProvider";
 import { useFetchRuns, useRunNavigation, usePipelineRunContext } from "../hooks/pipelineHooks";
 import { ExtractContextType } from "../components/utils/typings";
 import PipelineRunViewContext from "./PipelineRunViewContext";
+import MuiRouterLink from "../components/MuiRouterLink";
+import { pipelineSocket } from "../sockets";
 
 function PipelineActionMenu(props: {
   onCancel: () => void;
@@ -211,9 +212,9 @@ export default function PipelineBar() {
             borderColor: theme.palette.grey[200],
           }}
         >
-          <Link href="/pipelines">
+          <MuiRouterLink href="/pipelines">
             <ChevronLeft fontSize="large" />
-          </Link>
+          </MuiRouterLink>
         </Box>
         <Box sx={{ gridColumn: 2, pl: 7 }}>
           <Typography variant="h4">{rootRun.name}</Typography>

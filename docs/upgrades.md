@@ -116,6 +116,16 @@ delta, but only:
 when performing the upgrade.
 {% endhint %}
 
+### v0.25.X to v0.26.Y
+
+#### Dependency changes
+
+As a part of adding python 3.10 support, Sematic has changed
+from depending on `eventlet` to depending on `gevent`. If you
+use requirements locking systems like [Poetry](https://python-poetry.org/)
+or [pip-tools/pip-compile](https://pypi.org/project/pip-tools/)
+you will need to regenerate your dependency lockfiles.
+
 ### v0.23.X to v0.24.Y
 
 #### Server/Helm upgrade notes
@@ -139,7 +149,7 @@ parameter to
 
 ## FOSS to "Enterprise Edition"
 
-0. Reach out to Sematic to obtain a license for "Sematic EE."
+0. Reach out to Sematic via support@sematic.dev to obtain a license for "Sematic EE."
 1. In your helm deployment, change `image.repository` to `sematic/sematic-server-ee`.
 2. In your `pip` installation (client installation), change from depending on `sematic`
 to `sematic[<extra>]`, where `<extra>` is the appropriate variant of Sematic containing

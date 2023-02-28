@@ -5,6 +5,15 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+    * [improvement] Added support for Python 3.10
+* [0.26.0](https://pypi.org/project/sematic/0.26.0/)
+    * [feature] Added optional anonymized user analytics to track Sematic usage[^2]
+    * [improvement] Atomic database migrations with Helm hooks
+    * [improvement] Move future pickle storage to new server-generated locations
+    * [improvement] Refactor in-app links to use react router
+    * [improvement] Minor UI test improvements with Cypress
+    * [improvement] Minor documentation fixes for rerun-from-here
+    * [bugfix] Fix noop SQL migrations
 * [0.25.0](https://pypi.org/project/sematic/0.25.0/)
     * [feature] New dashboard page showing a searchable list of runs
     * [feature] Enable links to runs using only the run id (pipeline path not required)
@@ -252,5 +261,7 @@ with nothing else on the line.
 * [0.0.2.alpha.1654828599](https://pypi.org/project/sematic/0.0.2a1654828599/)
     * Initial release
 
-[^1]: This feature is for Sematic's "Enterprise Edition" only. Please reach out if
-you are interested in using Sematic EE.
+[^1]: This feature is for Sematic's "Enterprise Edition" only. Please reach out
+to support@sematic.dev if you are interested in using Sematic EE.
+[^2]: This release adds opt-out anonymized user analytics tracking to the Sematic
+code.  You can opt-out of this tracking on the Sematic Dashboard home page.

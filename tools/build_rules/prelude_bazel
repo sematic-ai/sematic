@@ -4,8 +4,9 @@ This file gets loaded before every BUILD file
 
 # @unused
 # <add python version>: This will need to be updated when a python version is added
-load("@pip_dependencies38//:requirements.bzl", requirement38="requirement")
-load("@pip_dependencies39//:requirements.bzl", requirement39="requirement")
+load("@pip_dependencies3_8//:requirements.bzl", requirement3_8="requirement")
+load("@pip_dependencies3_9//:requirements.bzl", requirement3_9="requirement")
+load("@pip_dependencies3_10//:requirements.bzl", requirement3_10="requirement")
 
 # @unused
 load(

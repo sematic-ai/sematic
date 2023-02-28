@@ -27,6 +27,7 @@
     "jotai-location": "^0.3.2",
     "mpld3": "^0.5.8",
     "plotly.js-cartesian-dist": "^2.12.1",
+    "posthog-js": "^1.45.1",
     "react": "^18.1.0",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.1.0",
@@ -49,16 +50,17 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "REACT_APP_HOST=127.0.0.1 react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "REACT_APP_HOST=127.0.0.1 REACT_APP_GIT_HASH=$(git rev-parse --short HEAD) react-scripts start",
+    "build": "REACT_APP_GIT_HASH=$(git rev-parse --short HEAD) react-scripts build",
+    "test": "REACT_APP_GIT_HASH=$(git rev-parse --short HEAD) react-scripts test",
     "eject": "react-scripts eject",
     "analyze": "source-map-explorer 'build/static/js/*.js'",
     "lint:app": "eslint --config node_modules/eslint-config-react-app/index.js --ext .ts,.tsx --max-warnings=0 ./src",
     "lint:ui-tests": "eslint --ext .ts ./tests",
     "lint": "npm run lint:app && npm run lint:ui-tests",
     "cypress:open": "cypress open --project tests",
-    "cypress:run": "cypress run --headless --project tests"
+    "cypress:e2e": "cypress run --headless --e2e --project tests",
+    "cypress:component": "cypress run --headless --component --project tests"
   },
   "eslintConfig": {
     "extends": [
@@ -79,6 +81,7 @@
     ]
   },
   "devDependencies": {
+    "@frsource/cypress-plugin-visual-regression-diff": "^3.2.8",
     "@types/d3": "^7.4.0",
     "@types/dagre": "^0.7.47",
     "@types/mocha": "^10.0.1",

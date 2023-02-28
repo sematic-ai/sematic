@@ -90,9 +90,33 @@ def _get_artifact(artifact_id: str) -> Artifact:
     return Artifact.from_json_encodable(response["content"])
 
 
-@retry(tries=3, delay=10, jitter=1)
 def store_artifact_bytes(artifact_id: str, bytes_: bytes) -> None:
-    response = _get(f"/storage/artifacts/{artifact_id}/location")
+    """
+    Store an artifact's serialized payload.
+    """
+    _store_bytes("artifacts", artifact_id, bytes_)
+
+
+def store_future_bytes(future_id: str, bytes_: bytes) -> None:
+    """
+    Store a serialzied future.
+    """
+    _store_bytes("futures", future_id, bytes_)
+
+
+def store_file_content(file_path: str, namespace: str, key: str) -> None:
+    """
+    Store content of local file.
+    """
+    with open(file_path, "rb") as f:
+        bytes_ = f.read()
+
+    _store_bytes(namespace, key, bytes_)
+
+
+@retry(tries=3, delay=10, jitter=1)
+def _store_bytes(namespace: str, key: str, bytes_: bytes) -> None:
+    response = _get(f"/storage/{namespace}/{key}/location")
 
     url: str = response["url"]
     headers: Dict[str, str] = response["request_headers"]
@@ -101,7 +125,16 @@ def store_artifact_bytes(artifact_id: str, bytes_: bytes) -> None:
 
 
 def _get_artifact_bytes(artifact_id: str) -> bytes:
-    return _get(f"/storage/artifacts/{artifact_id}/data", decode_json=False)
+    return _get_stored_bytes("artifacts", artifact_id)
+
+
+def get_future_bytes(future_id: str) -> bytes:
+    return _get_stored_bytes("futures", future_id)
+
+
+@retry(tries=3, delay=10, jitter=1)
+def _get_stored_bytes(namespace: str, key: str) -> bytes:
+    return _get(f"/storage/{namespace}/{key}/data", decode_json=False)
 
 
 def get_run(run_id: str) -> Run:

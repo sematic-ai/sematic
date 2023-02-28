@@ -9,10 +9,19 @@ ARG EXTRA
 
 RUN python3 -m pip install --upgrade pip
 
-# RUN pip install sematic
-# When debugging use the wheel directly
+# Install from a local wheel
 COPY sematic-*.whl .
 RUN pip install $(ls ./sematic-*.whl)["${EXTRA}"]
+
+# gevent fails when deployed to k8s unless you execute
+# some monkey patching. See this: https://github.com/gevent/gevent/issues/1235
+# Here we use a usercustomize [^1] module to
+# ensure the monkey patch is applied before any other imports
+# occur.
+# [^1]: https://docs.python.org/3/library/site.html
+RUN mkdir /pycustomizations && \
+    echo "import gevent.monkey; gevent.monkey.patch_all(); print('Gevent monkey patch applied...')" > /pycustomizations/usercustomize.py
+ENV PYTHONPATH="$PYTHONPATH:/pycustomizations"
 
 EXPOSE 80
 CMD python3 -m sematic.db.migrate up --verbose --env cloud && python3 -m sematic.api.server --env cloud

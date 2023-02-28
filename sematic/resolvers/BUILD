@@ -41,8 +41,8 @@ sematic_py_lib(
     deps = [
         "//sematic:abstract_calculator",
         "//sematic:abstract_future",
-        "//sematic/plugins:abstract_external_resource",
         "//sematic:resolver",
+        "//sematic/plugins:abstract_external_resource",
         "//sematic/resolvers:abstract_resource_manager",
         "//sematic/utils:exceptions",
     ],
@@ -72,7 +72,6 @@ sematic_py_lib(
         "//sematic:abstract_future",
         "//sematic:api_client",
         "//sematic:container_images",
-        "//sematic:storage",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:resolution",
@@ -96,10 +95,9 @@ sematic_py_lib(
     srcs = ["log_streamer.py"],
     # buildifier: leave-alone
     deps = [
+        "//sematic:api_client",
         "//sematic/config:config",
         "//sematic/config:user_settings",
-        "//sematic/plugins/storage:s3_storage",
-        "//sematic/utils:retry",
         "//sematic/utils:stdout",
     ],
 )
@@ -121,17 +119,17 @@ sematic_py_lib(
         "//sematic:abstract_future",
         "//sematic:api_client",
         "//sematic:calculator",
-        "//sematic/config:user_settings",
         "//sematic:future",
         "//sematic:future_context",
         "//sematic:log_reader",
+        "//sematic:versions",
+        "//sematic/config:user_settings",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/scheduling:external_job",
         "//sematic/utils:exceptions",
-        "//sematic:versions",
     ],
 )
 

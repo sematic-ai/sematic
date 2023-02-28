@@ -17,7 +17,8 @@ sematic_py_lib(
     pip_deps = [
         "flask",
         "flask-socketio",
-        "eventlet",
+        "gevent",
+        "gevent-websocket",
     ],
     # buildifier: leave-alone
     deps = [

@@ -10,7 +10,7 @@ bazel test //sematic/...
 ```
 
 This will run a specific test (in this case the API client test), on the default python version.
-The target path is the file path to to the python package where the test lives (`sematic.tests`
+The target path is the file path to the python package where the test lives (`sematic.tests`
 in the example below), followed by a colon and the name of the python module for the test
 (`test_api_client` in this example).
 ```
@@ -18,9 +18,9 @@ bazel run //sematic/tests:test_api_client
 ```
 
 This will run a specific test (in this case the API client test), on the python version indicated
-by the `_py3X` (python 3.9 in the example below).
+by the `_py3_X` (python 3.9 in the example below).
 ```
-bazel run //sematic/tests:test_api_client_py39
+bazel run //sematic/tests:test_api_client_py3_9
 ```
 
 If you are using VSCode, you can use the VSCode debugger with bazel while testing. First, you
@@ -50,16 +50,17 @@ stepping, variables and watch views, stack navigation, etc..
 
 
 ## IPython
-You can open an iPython shell that contains the dependencies for any `sematic_py_lib`:
+You can open an iPython shell that contains the dependencies for any `sematic_py_lib`.
+This is only supported for Linux platforms:
 ```
 $ bazel run //sematic:api_client_ipython  # build //sematic:api_client and open a shell
 In [1]: from sematic import api_client as api
 ```
 
-You can also do this for specific versions of python by adding a `_py3X_` between the
+You can also do this for specific versions of python by adding a `_py3_X_` between the
 name of the lib target and the `ipython`:
 ```
-$ bazel run //sematic:api_client_py39_ipython  # build target and open a py3.9 shell
+$ bazel run //sematic:api_client_py3_9_ipython  # build target and open a py3.9 shell
 In [1]: from sematic import api_client as api
 ```
 
@@ -70,14 +71,14 @@ You can run Sematic examples by running one of the targets created with the
 $ bazel run //sematic/examples/liver_cirrhosis:liver_cirrhosis
 ```
 
-You can do this using a specific interpreter as well with a `_py3X` suffix:
+You can do this using a specific interpreter as well with a `_py3_X` suffix:
 ```
-$ bazel run //sematic/examples/liver_cirrhosis:liver_cirrhosis_py39
+$ bazel run //sematic/examples/liver_cirrhosis:liver_cirrhosis_py3_9
 ```
 
 You can also open an ipython interpreter into the environment for the example:
 ```
-$ bazel run //sematic/examples/liver_cirrhosis:liver_cirrhosis_py39_ipython
+$ bazel run //sematic/examples/liver_cirrhosis:liver_cirrhosis_py3_9_ipython
 In [1]: from sematic.examples.liver_cirrhosis import *
 ```
 
@@ -91,7 +92,7 @@ $ bazel run //sematic/cli:main -- --help
 
 You can also do *this* with specific python interpreters:
 ```
-$ bazel run //sematic/cli:main_py39 -- --help
+$ bazel run //sematic/cli:main_py3_9 -- --help
 ```
 
 ## Miscellaneous

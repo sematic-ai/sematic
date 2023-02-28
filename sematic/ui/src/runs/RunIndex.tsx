@@ -1,7 +1,6 @@
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Typography from "@mui/material/Typography";
-import Link from "@mui/material/Link";
 import { Run } from "../Models";
 import { RunList } from "../components/RunList";
 import RunStateChip from "../components/RunStateChip";
@@ -16,6 +15,7 @@ import { SearchOutlined } from "@mui/icons-material";
 import { styled } from "@mui/system";
 import { spacing } from "../utils";
 import { getRunUrlPattern } from "../hooks/pipelineHooks";
+import MuiRouterLink from "../components/MuiRouterLink";
 
 type RunRowProps = {
   run: Run;
@@ -48,9 +48,9 @@ export function RunRow(props: RunRowProps) {
         <Typography variant="h6">
           {props.noRunLink && run.name}
           {!props.noRunLink && (
-            <Link href={getRunUrlPattern(run.id)} underline="hover">
+            <MuiRouterLink href={getRunUrlPattern(run.id)} underline="hover">
               {run.name}
-            </Link>
+            </MuiRouterLink>
           )}
         </Typography>
         {calculatorPath}
@@ -95,7 +95,7 @@ const StyledScroller = styled(Container)`
     display: flex;
     flex-direction: row;
 
-    & > :first-child {
+    & > *:first-of-type {
       padding-right: ${spacing(10)};
       flex-grow: 1
     }

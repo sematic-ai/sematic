@@ -4,8 +4,8 @@ load("@aspect_bazel_lib//lib:expand_make_vars.bzl", "expand_template")
 
 # <default py version change>: If the default version of python changes for Sematic, this
 # will need updating
-load("@pip_dependencies38//:requirements.bzl", entry_point38="entry_point")
-load("@python3_8//:defs.bzl", interpreter38="interpreter")
+load("@pip_dependencies3_8//:requirements.bzl", entry_point3_8="entry_point")
+load("@python3_8//:defs.bzl", interpreter3_8="interpreter")
 
 
 exports_files(["README.rst"])
@@ -16,7 +16,7 @@ stamp_build_setting(name = "stamp")
 
 alias(
     name = "python_coverage_tools",
-    actual = entry_point38("coverage"),  # <default py version change>
+    actual = entry_point3_8("coverage"),  # <default py version change>
     visibility = ["//visibility:public"],
 )
 
@@ -29,7 +29,7 @@ expand_template(
     data = [
         # Reference to the binary used to run the stub.py script that
         # launches the "real" interpreter
-        interpreter38,  # <default py version change>
+        interpreter3_8,  # <default py version change>
     ],
     is_executable = True,
     substitutions = {
@@ -37,7 +37,7 @@ expand_template(
         # Can't be hardcoded in stub.py because we want it to point at
         # the hermetic default interpreter, and the hermetic default
         # interpreter's path is determined by bazel.
-        "%DEFAULT_PYTHON_INTERPRETER_PATH%": "$(execpath {})".format(interpreter38),
+        "%DEFAULT_PYTHON_INTERPRETER_PATH%": "$(execpath {})".format(interpreter3_8),
     },
     template = "//:stub.py.tpl",
     visibility = ["//visibility:public"],
@@ -60,7 +60,7 @@ py_runtime(
     files = [
         # Need the default python interpreter here as
         # a fallback version for external py_binary targets that don't set the 'WHICH_PYTHON' env var.
-        interpreter38,  # <default py version change>
+        interpreter3_8,  # <default py version change>
         # Need the runfiles helper for when looking up the files needed for other Python versions defined
         "@bazel_tools//tools/python/runfiles",
     ],

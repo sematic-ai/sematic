@@ -87,7 +87,10 @@ def safe_cast(
         if unsuccessful or `None`.
     """
     # 1. First we check if there is a custom casting function
-    _safe_cast_func = get_safe_cast_func(type_)
+    try:
+        _safe_cast_func = get_safe_cast_func(type_)
+    except TypeError as e:
+        return None, f"Type '{type_.__name__}' is not a valid Sematic type: {e}"
 
     # 1b. If this is a dataclass we fetch the datacalss casting logic
     if _safe_cast_func is None and dataclasses.is_dataclass(type_):

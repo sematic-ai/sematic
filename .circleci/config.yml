@@ -58,6 +58,26 @@ commands:
     description: Do tests without tracking code coverage
     steps:
       - run:
+          # This can fail sporadically, which is why we do it before the
+          # rest of the tests. We can retry just this part if it fails
+          # rather than having to retry all the tests.
+          # Why do retry in this way? Believe it or not it's the
+          # CircleCI recommended way:
+          # https://support.circleci.com/hc/en-us/articles/360043188514-How-to-Retry-a-Failed-Step-with-when-Attribute-
+          name: Prepare build
+          command: |
+              bazel build @pip_dependencies3_10_nvidia_cudnn_cu11//:pkg
+      - run:
+          name: Prepare build (try 2)
+          command: |
+              bazel clean --expunge && bazel build @pip_dependencies3_10_nvidia_cudnn_cu11//:pkg
+          when: on_fail
+      - run:
+          name: Prepare build (try 3)
+          command: |
+              bazel clean --expunge && bazel build @pip_dependencies3_10_nvidia_cudnn_cu11//:pkg
+          when: on_fail
+      - run:
           name: Run Non-coverage Tests
           # This assumes pytest is installed via the install-package step above
           command: PYTHONUNBUFFERED=1 bazel test //sematic/... --test_output=all
@@ -106,6 +126,17 @@ jobs:
     steps:
       - attach_workspace:
           at: /home/circleci
+      # Uncomment to profile CPU/Memory
+      # - run:
+      #    name: Profile CPU and memory (background)
+      #    command: |
+      #      while true; do
+      #        sleep 2
+      #        printf "\n\n$(date)\n"
+      #        top -b -c -n 1
+      #        echo "======"
+      #      done
+      #    background: true
       - non-coverage-tests
 
   installation:
@@ -121,6 +152,7 @@ jobs:
             - project/CIVENV
     environment:
       CI_VENV_NAME: CIVENV
+      REACT_APP_IS_CIRCLE_CI: 1
     
   
   integration-test:
@@ -133,9 +165,9 @@ jobs:
           name: Create a run
           command: source ./CIVENV/bin/activate && sematic start && sematic run examples/add
       - run:
-          name: Run Cypress test
+          name: Run Cypress Integration test
           working_directory: ./sematic/ui
-          command: npm run cypress:run
+          command: npm run cypress:e2e
       - run:
           name: Stop Sematic
           working_directory: ~/project
@@ -146,7 +178,23 @@ jobs:
           path: ~/project/sematic/ui/tests/cypress_screenshots
       - store_test_results:
           path: ~/project/sematic/ui/tests/cypress_results
-    resource_class: medium+
+  
+  fe-unit-tests:
+    docker:
+      - image: sematicai/sematic-ci:latest
+    steps:
+      - attach_workspace:
+          at: /home/circleci
+      - run:
+          name: Run Cypress Component test
+          working_directory: ./sematic/ui
+          command: npm run cypress:component
+      - store_artifacts:
+          path: ~/project/sematic/ui/tests/cypress_video
+      - store_artifacts:
+          path: ~/project/sematic/ui/tests/cypress_screenshots
+      - store_test_results:
+          path: ~/project/sematic/ui/tests/cypress_results
       
   finalize:
     docker:
@@ -174,8 +222,12 @@ workflows:
       - integration-test:
           requires:
             - installation
+      - fe-unit-tests:
+          requires:
+            - init
       - finalize:
           requires:
             - lint
             - unit-tests
             - integration-test
+            - fe-unit-tests

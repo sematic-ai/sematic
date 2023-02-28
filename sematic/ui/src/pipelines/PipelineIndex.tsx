@@ -6,17 +6,17 @@ import { useCallback, useMemo } from "react";
 import { RunList } from "../components/RunList";
 import Tags from "../components/Tags";
 import { Run } from "../Models";
-import Link from "@mui/material/Link";
 import RunStateChip, { RunStateChipUndefinedStyle } from "../components/RunStateChip";
 import { Alert, AlertTitle, Container, containerClasses } from "@mui/material";
 import { InfoOutlined } from "@mui/icons-material";
 import { RunTime } from "../components/RunTime";
-import { pipelineSocket } from "../utils";
 import CalculatorPath from "../components/CalculatorPath";
 import TimeAgo from "../components/TimeAgo";
 import { useFetchRuns } from "../hooks/pipelineHooks";
 import Loading from "../components/Loading";
 import { styled } from "@mui/system";
+import MuiRouterLink from "../components/MuiRouterLink";
+import { pipelineSocket } from "../sockets";
 
 const RecentStatusesWithStyles = styled('span')`
   flex-direction: row;
@@ -86,9 +86,9 @@ function PipelineRow(props: { run: Run }) {
       <TableRow key={id}>
         <TableCell key="name" data-cy={"pipeline-row"}>
           <Box sx={{ mb: 3 }}>
-            <Link href={"/pipelines/" + calculator_path} underline="hover">
+            <MuiRouterLink href={"/pipelines/" + calculator_path} underline="hover">
               <Typography variant="h6">{name}</Typography>
-            </Link>
+            </MuiRouterLink>
             <CalculatorPath calculatorPath={calculator_path} />
           </Box>
           <Tags tags={tags || []} />

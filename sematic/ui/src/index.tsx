@@ -1,4 +1,5 @@
 import ReactDOM from "react-dom/client";
+import posthog, { Properties } from 'posthog-js';
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
@@ -20,14 +21,16 @@ import {
   AuthenticatePayload,
   EnvPayload,
   GoogleLoginPayload,
+  VersionPayload,
 } from "./Payloads";
 import { User } from "./Models";
 import { Alert, Paper } from "@mui/material";
 import logo from "./Fox.png";
-import { fetchJSON } from "./utils";
+import { fetchJSON, sha1 } from "./utils";
 import { SnackBarProvider } from "./components/SnackBarProvider";
 import PipelineView from "./pipelines/PipelineView";
 import { RunIndex } from "./runs/RunIndex";
+import { setupPostHogOptout } from "./postHogManager";
 
 export const UserContext = React.createContext<{
   user: User | null;
@@ -182,6 +185,59 @@ function Router() {
 
   return <RouterProvider router={router} />;
 }
+
+(async () => {
+  const currentUrl = new URL(window.location.toString());
+  const currentHostName = await sha1(currentUrl.hostname);
+
+  const versionResponse: VersionPayload = await (await fetch("/api/v1/meta/versions")).json();
+  const serverVersion = versionResponse.server.join('.');
+
+  posthog.init( 
+    'phc_nJlFf7MpsrzF5pPaSEQi5GKyTSDjHRcqqL808VLRNXc', { 
+      api_host: 'https://app.posthog.com',
+      autocapture: false,
+      disable_session_recording: true,
+      capture_pageview: false,
+      capture_pageleave: false,
+      persistence: "localStorage",
+      property_blacklist: [
+        '$referrer', '$referring_domain', '$initial_current_url', '$initial_referrer',
+        '$initial_referring_domain', '$pathname', '$initial_pathname'
+      ],
+      loaded: () => {
+        setupPostHogOptout();
+        posthog.capture('$pageview');
+      },
+
+      sanitize_properties: (properties: Properties, event_name: string) => {
+        const currentUrl = new URL(window.location.toString());
+
+        // Use obfuscated host name
+        currentUrl.hostname = currentHostName;
+        currentUrl.pathname = '[redacted]';
+
+        if ('$current_url' in properties) {
+          properties['$current_url'] = currentUrl.toString();
+        }
+
+        if ('$host' in properties) {
+          properties['$host'] = currentUrl.host;
+        }
+
+        Object.assign(properties, {
+          SERVER_VERSION: serverVersion,
+          GIT_HASH: process.env.REACT_APP_GIT_HASH,
+          NODE_ENV: process.env.NODE_ENV,
+          CIRCLECI: process.env.REACT_APP_IS_CIRCLE_CI !== undefined
+        })
+
+        return properties;
+      }
+    }
+);
+
+})();
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
