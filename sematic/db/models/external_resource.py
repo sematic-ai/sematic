@@ -8,7 +8,7 @@ from sqlalchemy.orm import validates
 
 # Sematic
 from sematic.db.models.base import Base
-from sematic.db.models.json_encodable_mixin import JSONEncodableMixin
+from sematic.db.models.mixins.json_encodable_mixin import JSONEncodableMixin
 from sematic.plugins.abstract_external_resource import (
     AbstractExternalResource,
     ManagedBy,

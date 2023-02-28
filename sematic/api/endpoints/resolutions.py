@@ -21,6 +21,7 @@ from sematic.api.endpoints.events import (
     broadcast_pipeline_update,
     broadcast_resolution_cancel,
 )
+from sematic.api.endpoints.payloads import get_resolution_payload
 from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.db.models.factories import clone_resolution, clone_root_run
 from sematic.db.models.resolution import InvalidResolution, Resolution, ResolutionStatus
@@ -53,16 +54,8 @@ def get_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
             HTTPStatus.NOT_FOUND,
         )
 
-    resolution_json = resolution.to_json_encodable()
-
-    # Scrub the environment variables before returning from the
-    # API. They can contain sensitive info like API keys. On write,
-    # we consider this field to be immutable, so we will just re-use
-    # whatever was already in the DB for it
-    resolution_json[Resolution.settings_env_vars.key] = {}
-
     payload = dict(
-        content=resolution_json,
+        content=get_resolution_payload(resolution),
     )
 
     return flask.jsonify(payload)
@@ -84,6 +77,9 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
 
     resolution_json_encodable = flask.request.json["resolution"]
     resolution = Resolution.from_json_encodable(resolution_json_encodable)
+
+    if user is not None:
+        resolution.user_id = user.id
 
     if not resolution.root_id == resolution_id:
         message = (
@@ -166,7 +162,7 @@ def schedule_resolution_endpoint(
     save_resolution(resolution)
 
     payload = dict(
-        content=resolution.to_json_encodable(),
+        content=get_resolution_payload(resolution),
     )
 
     return flask.jsonify(payload)
@@ -197,16 +193,23 @@ def rerun_resolution_endpoint(
     original_root_run = original_runs[0]
 
     root_run, edges = clone_root_run(original_root_run, original_edges)
+
+    if user is not None:
+        root_run.user_id = user.id
+
     save_graph(runs=[root_run], edges=edges, artifacts=[])
 
     resolution = clone_resolution(original_resolution, root_id=root_run.id)
+
+    if user is not None:
+        resolution.user_id = user.id
 
     resolution = schedule_resolution(resolution, rerun_from=rerun_from)
 
     save_resolution(resolution)
 
     payload = dict(
-        content=resolution.to_json_encodable(),
+        content=get_resolution_payload(resolution),
     )
 
     broadcast_pipeline_update(calculator_path=root_run.calculator_path, user=user)
@@ -255,7 +258,7 @@ def cancel_resolution_endpoint(
         root_id=resolution.root_id, calculator_path=root_run.calculator_path, user=user
     )
 
-    return flask.jsonify(dict(content=resolution.to_json_encodable()))
+    return flask.jsonify(dict(content=get_resolution_payload(resolution)))
 
 
 @sematic_api.route(

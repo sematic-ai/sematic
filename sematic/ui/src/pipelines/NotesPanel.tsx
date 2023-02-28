@@ -37,6 +37,7 @@ export default function NotesPanel() {
   );
 
   const anonymousUser: User = useMemo(() => ({
+    id: "",
     email: "anonymous@acme.com",
     first_name: "Anonymous",
     last_name: null,

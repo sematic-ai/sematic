@@ -6,7 +6,7 @@ sematic_py_lib(
     ],
     deps = [
         ":base",
-        ":json_encodable_mixin",
+        "//sematic/db/models/mixins:json_encodable_mixin",
     ],
 )
 
@@ -44,7 +44,7 @@ sematic_py_lib(
     ],
     deps = [
         ":base",
-        ":json_encodable_mixin",
+        "//sematic/db/models/mixins:json_encodable_mixin",
     ],
 )
 
@@ -56,7 +56,7 @@ sematic_py_lib(
     ],
     deps = [
         ":base",
-        ":json_encodable_mixin",
+        "//sematic/db/models/mixins:json_encodable_mixin",
         "//sematic/plugins:abstract_external_resource",
         "//sematic/types:serialization",
     ],
@@ -72,26 +72,6 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "has_external_jobs_mixin",
-    srcs = ["has_external_jobs_mixin.py"],
-    deps = [
-        "//sematic/scheduling:external_job",
-        "//sematic/types:serialization",
-        "//sematic/types/types:dataclass",
-    ],
-)
-
-sematic_py_lib(
-    name = "json_encodable_mixin",
-    srcs = ["json_encodable_mixin.py"],
-    pip_deps = [
-        "python-dateutil",
-        "sqlalchemy",
-    ],
-    deps = [],
-)
-
-sematic_py_lib(
     name = "run",
     srcs = ["run.py"],
     pip_deps = [
@@ -99,10 +79,11 @@ sematic_py_lib(
     ],
     deps = [
         ":base",
-        ":has_external_jobs_mixin",
-        ":json_encodable_mixin",
         "//sematic:abstract_calculator",
         "//sematic:abstract_future",
+        "//sematic/db/models/mixins:has_external_jobs_mixin",
+        "//sematic/db/models/mixins:has_user_mixin",
+        "//sematic/db/models/mixins:json_encodable_mixin",
         "//sematic/scheduling:external_job",
         "//sematic/types:serialization",
         "//sematic/utils:exceptions",
@@ -117,7 +98,7 @@ sematic_py_lib(
     ],
     deps = [
         ":base",
-        ":json_encodable_mixin",
+        "//sematic/db/models/mixins:json_encodable_mixin",
     ],
 )
 
@@ -130,8 +111,9 @@ sematic_py_lib(
     deps = [
         ":base",
         ":git_info",
-        ":has_external_jobs_mixin",
-        ":json_encodable_mixin",
+        "//sematic/db/models/mixins:has_external_jobs_mixin",
+        "//sematic/db/models/mixins:has_user_mixin",
+        "//sematic/db/models/mixins:json_encodable_mixin",
     ],
 )
 
@@ -143,7 +125,8 @@ sematic_py_lib(
     ],
     deps = [
         ":base",
-        ":json_encodable_mixin",
+        "//sematic/db/models/mixins:has_user_mixin",
+        "//sematic/db/models/mixins:json_encodable_mixin",
     ],
 )
 
@@ -155,6 +138,6 @@ sematic_py_lib(
     ],
     deps = [
         ":base",
-        ":json_encodable_mixin",
+        "//sematic/db/models/mixins:json_encodable_mixin",
     ],
 )
