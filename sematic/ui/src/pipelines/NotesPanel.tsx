@@ -8,7 +8,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { UserContext } from "..";
 import { usePipelinePanelsContext, usePipelineRunContext } from "../hooks/pipelineHooks";
 import { Note, Run, User } from "../Models";
 import { NoteCreatePayload, NoteListPayload } from "../Payloads";
@@ -17,6 +16,7 @@ import { fetchJSON } from "../utils";
 import { NoteView } from "../components/Notes";
 import { ExtractContextType } from "../components/utils/typings";
 import PipelinePanelsContext from "./PipelinePanelsContext";
+import { UserContext } from "../appContext";
 
 export default function NotesPanel() {
   const theme = useTheme();
