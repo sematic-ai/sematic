@@ -20,7 +20,7 @@ from sematic.config.server_settings import (
 )
 from sematic.config.settings import MissingSettingsError
 from sematic.db.models.factories import make_user
-from sematic.db.queries import get_user, get_user_by_api_key, save_user
+from sematic.db.queries import get_user_by_api_key, get_user_by_email, save_user
 
 
 @sematic_api.route("/authenticate", methods=["GET"])
@@ -106,7 +106,7 @@ def google_login() -> flask.Response:
         return jsonify_error("Invalid user", HTTPStatus.UNAUTHORIZED)
 
     try:
-        user = get_user(idinfo["email"])
+        user = get_user_by_email(idinfo["email"])
 
         # In case these have changed
         user.first_name = idinfo["given_name"]
@@ -122,10 +122,9 @@ def google_login() -> flask.Response:
 
     user = save_user(user)
 
-    payload = {"user": user.to_json_encodable()}
     # API keys are redacted by default.
     # In this case we do need to pass it to the front-end.
-    payload["user"]["api_key"] = user.api_key
+    payload = {"user": user.to_json_encodable(redact=False)}
 
     return flask.jsonify(payload)
 

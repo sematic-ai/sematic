@@ -28,10 +28,12 @@ from sqlalchemy.orm import validates
 # Sematic
 from sematic.db.models.base import Base
 from sematic.db.models.git_info import GitInfo
-from sematic.db.models.has_external_jobs_mixin import HasExternalJobsMixin
-from sematic.db.models.json_encodable_mixin import (
+from sematic.db.models.mixins.has_external_jobs_mixin import HasExternalJobsMixin
+from sematic.db.models.mixins.has_user_mixin import HasUserMixin
+from sematic.db.models.mixins.json_encodable_mixin import (
     ENUM_KEY,
     JSON_KEY,
+    REDACTED_KEY,
     JSONEncodableMixin,
 )
 
@@ -142,7 +144,7 @@ class ResolutionKind(Enum):
     KUBERNETES = "KUBERNETES"  # for detached mode
 
 
-class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
+class Resolution(HasUserMixin, Base, JSONEncodableMixin, HasExternalJobsMixin):
     """Represents a session of a resolver.
 
     Attributes
@@ -171,6 +173,8 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     cache_namespace:
         The cache key namespace in which the executed funcs's outputs will
         be cached, as long as they also have the `cache` flag activated.
+    user_id:
+        User who submitted this resolution.
     """
 
     __tablename__ = "resolutions"
@@ -189,8 +193,12 @@ class Resolution(Base, JSONEncodableMixin, HasExternalJobsMixin):
     git_info_json: Optional[str] = Column(  # type: ignore
         types.JSON(), nullable=True, info={JSON_KEY: True}
     )
+    # REDACTED_KEY: Scrub the environment variables before returning from the
+    # API. They can contain sensitive info like API keys. On write,
+    # we consider this field to be immutable, so we will just re-use
+    # whatever was already in the DB for it
     settings_env_vars: Dict[str, str] = Column(
-        types.JSON, nullable=False, default=lambda: {}
+        types.JSON, nullable=False, default=lambda: {}, info={REDACTED_KEY: True}
     )
     external_jobs_json: Optional[List[Dict[str, Any]]] = Column(
         types.JSON(), nullable=True
