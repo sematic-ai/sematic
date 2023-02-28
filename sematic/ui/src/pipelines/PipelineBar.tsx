@@ -12,7 +12,7 @@ import {
 import { useCallback, useContext, useEffect, useMemo } from "react";
 import { UserContext } from "..";
 import { Resolution, Run } from "../Models";
-import { fetchJSON, pipelineSocket } from "../utils";
+import { fetchJSON } from "../utils";
 import CalculatorPath from "../components/CalculatorPath";
 import GitInfoBox from "../components/GitInfo";
 import Loading from "../components/Loading";
@@ -24,6 +24,7 @@ import { useFetchRuns, useRunNavigation, usePipelineRunContext } from "../hooks/
 import { ExtractContextType } from "../components/utils/typings";
 import PipelineRunViewContext from "./PipelineRunViewContext";
 import MuiRouterLink from "../components/MuiRouterLink";
+import { pipelineSocket } from "../sockets";
 
 function PipelineActionMenu(props: {
   onCancel: () => void;

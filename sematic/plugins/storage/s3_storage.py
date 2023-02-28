@@ -81,15 +81,8 @@ class S3Storage(AbstractStorage, AbstractPlugin):
             url=self._make_presigned_url(S3ClientMethod.GET, f"{namespace}/{key}")
         )
 
-    def set_from_file(self, key: str, value_file_path: str):
-        """Store value in S3 using the contents of a file
-        see TODO in 'set'
-        """
-        with open(value_file_path, "rb") as file_obj:
-            self._s3_client.upload_fileobj(file_obj, self._bucket, key)
-
     @retry(tries=3, delay=5)
-    def get_line_stream(self, key: str, encoding="utf8") -> Iterable[str]:
+    def get_line_stream(self, key: str, encoding: str = "utf8") -> Iterable[str]:
         """Get value from S3 into a stream of text lines.
         See TODO in `set`.
         """

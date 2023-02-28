@@ -40,7 +40,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
 from sematic.log_reader import LogLineResult
 from sematic.scheduling.external_job import JobType
 from sematic.scheduling.kubernetes import KubernetesExternalJob
-from sematic.tests.fixtures import MockStorage, valid_client_version  # noqa: F401
+from sematic.tests.fixtures import valid_client_version  # noqa: F401
 from sematic.utils.exceptions import ExceptionMetadata, InfrastructureError
 
 test_list_runs_auth = make_auth_test("/api/v1/runs")

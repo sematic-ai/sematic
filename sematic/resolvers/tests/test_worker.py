@@ -36,7 +36,6 @@ from sematic.future_context import PrivateContext, SematicContext
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.resolvers.worker import _emulate_interpreter, main, wrap_main_with_logging
 from sematic.tests.fixtures import (  # noqa: F401
-    MockStorage,
     environment_variables,
     test_storage,
     valid_client_version,

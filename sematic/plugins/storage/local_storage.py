@@ -2,7 +2,7 @@
 import logging
 import os
 from http import HTTPStatus
-from typing import Dict, Optional
+from typing import Dict, Iterable, List, Optional
 
 # Third-party
 import flask
@@ -52,6 +52,18 @@ class LocalStorage(AbstractStorage, AbstractPlugin):
             url=f"{get_config().api_url}/storage/{namespace}/{key}/local",
             request_headers=_make_headers(user),
         )
+
+    def get_child_paths(self, key_prefix: str) -> List[str]:
+        return [
+            os.path.join(dp, f)
+            for dp, _, fn in os.walk(os.path.join(_get_data_dir(), key_prefix))
+            for f in fn
+        ]
+
+    def get_line_stream(self, key: str, encoding: str = "utf8") -> Iterable[str]:
+        with open(os.path.join(_get_data_dir(), key), "rb") as f:
+            for line in f:
+                yield str(line, encoding=encoding)
 
 
 def _make_headers(user: Optional[User]) -> Dict[str, str]:

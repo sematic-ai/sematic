@@ -86,14 +86,15 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         ":auth",
-        ":storage",
         ":request_parameters",
+        ":storage",
         "//sematic/api:app",
         "//sematic/db:db",
         "//sematic/db:queries",
         "//sematic/db/models:artifact",
         "//sematic/db/models:user",
-        "//sematic/plugins:abstract_publisher",
+        "//sematic/plugins:abstract_storage",
+        "//sematic/plugins/storage:local_storage",
     ],
 )
 
@@ -183,9 +184,7 @@ sematic_py_lib(
     deps = [
         ":auth",
         ":request_parameters",
-        "//sematic:abstract_plugin",
         "//sematic/api:app",
-        "//sematic/config:settings",
         "//sematic/db/models:user",
         "//sematic/plugins:abstract_storage",
         "//sematic/plugins/storage:local_storage",

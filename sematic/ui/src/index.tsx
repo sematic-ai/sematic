@@ -203,7 +203,7 @@ function Router() {
       persistence: "localStorage",
       property_blacklist: [
         '$referrer', '$referring_domain', '$initial_current_url', '$initial_referrer',
-        '$initial_referring_domain'
+        '$initial_referring_domain', '$pathname', '$initial_pathname'
       ],
       loaded: () => {
         setupPostHogOptout();
@@ -215,6 +215,7 @@ function Router() {
 
         // Use obfuscated host name
         currentUrl.hostname = currentHostName;
+        currentUrl.pathname = '[redacted]';
 
         if ('$current_url' in properties) {
           properties['$current_url'] = currentUrl.toString();

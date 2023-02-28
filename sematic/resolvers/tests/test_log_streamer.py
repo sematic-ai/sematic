@@ -64,18 +64,18 @@ def test_ingested_logs():
     assert all_upload_contents == everything
 
 
-@patch("sematic.resolvers.log_streamer.S3Storage")
-def test_no_empty_uploads(mock_s3_storage):
+@patch("sematic.resolvers.log_streamer.api_client.store_file_content")
+def test_no_empty_uploads(mock_store_file_content):
     with tempfile.NamedTemporaryFile(delete=False) as log_file:
         log_file.flush()
         _do_upload(log_file.name, "foo_bar")
-    mock_s3_storage.return_value.set_from_file.assert_not_called()
+    mock_store_file_content.assert_not_called()
 
     with tempfile.NamedTemporaryFile(delete=False) as log_file:
         log_file.write(b"hi!")
         log_file.flush()
         _do_upload(log_file.name, "foo_bar")
-    mock_s3_storage.return_value.set_from_file.assert_called_once()
+    mock_store_file_content.assert_called_once()
 
 
 @retry(AssertionError, tries=3)  # this test is somewhat dependent on relative timings.

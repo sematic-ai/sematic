@@ -1,4 +1,5 @@
 # Standard Library
+import tempfile
 from unittest import mock
 
 # Third-party
@@ -7,21 +8,13 @@ from click.testing import CliRunner
 
 # Sematic
 from sematic.abstract_future import FutureState
+from sematic.api.tests.fixtures import mock_storage  # noqa: F401
 from sematic.cli.logs import dump_log_storage, logs
 from sematic.db.models.resolution import ResolutionStatus
 from sematic.db.queries import save_resolution, save_run
 from sematic.db.tests.fixtures import make_resolution, make_run, test_db  # noqa: F401
 from sematic.log_reader import LogLineResult, log_prefix
 from sematic.scheduling.external_job import ExternalJob, JobType
-from sematic.tests.fixtures import MockStorage  # noqa: F401
-
-
-@pytest.fixture
-def mock_storage():
-    storage = MockStorage()
-    storage._store.clear()
-    with mock.patch("sematic.log_reader.S3Storage", return_value=storage):
-        yield storage
 
 
 @pytest.fixture
@@ -44,7 +37,7 @@ def mock_load_log_lines():
 MOCK_LINES = [f"Hello {i}" for i in range(1000)]
 
 
-def fill_log_dir(mock_storage, text_lines, prefix):
+def fill_log_dir(mock_storage, text_lines, prefix):  # noqa: F811
     break_at_line = 52
     lines_part_1 = text_lines[:break_at_line]
     lines_part_2 = text_lines[break_at_line:]
@@ -156,20 +149,20 @@ def test_empty_logs(test_db, mock_storage, mock_api_client):  # noqa: F811
     assert list(result.output.split("\n"))[:-1] == ["No log files found"]
 
 
-def test_dump_log_dir(mock_storage):
-    random_dir = "blah/foo/"
-    fill_log_dir(mock_storage, MOCK_LINES, random_dir)
-    runner = CliRunner()
-    result = runner.invoke(dump_log_storage, [random_dir])
-    assert result.exit_code == 0
-    assert list(result.output.split("\n"))[:-1] == MOCK_LINES
+def test_dump_log_dir(mock_storage):  # noqa: F811
+    with tempfile.TemporaryDirectory() as temp_dir:
+        fill_log_dir(mock_storage, MOCK_LINES, f"{temp_dir}/")
+        runner = CliRunner()
+        result = runner.invoke(dump_log_storage, [temp_dir])
+        assert result.exit_code == 0
+        assert list(result.output.split("\n"))[:-1] == MOCK_LINES
 
 
-def test_dump_empty_log_dir(mock_storage):
-    random_dir = "blah/foo/"
-    runner = CliRunner()
-    result = runner.invoke(dump_log_storage, [random_dir])
-    assert result.exit_code == 1
-    assert list(result.output.split("\n"))[:-1] == [
-        "No logs found in storage at 'blah/foo/'"
-    ]
+def test_dump_empty_log_dir(mock_storage):  # noqa: F811
+    with tempfile.TemporaryDirectory() as temp_dir:
+        runner = CliRunner()
+        result = runner.invoke(dump_log_storage, [temp_dir])
+        assert result.exit_code == 1
+        assert list(result.output.split("\n"))[:-1] == [
+            f"No logs found in storage at '{temp_dir}/'"
+        ]
