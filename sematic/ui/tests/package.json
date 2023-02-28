@@ -1,4 +1,8 @@
 {
   "name": "ui-test",
-  "version": "0.0.1"
+  "version": "0.1.0",
+  "description": "UI test library",
+  "devDependencies": {},
+  "author": "",
+  "license": "ISC"
 }
