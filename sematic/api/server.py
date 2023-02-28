@@ -1,10 +1,12 @@
 # Standard Library
 import argparse
+import logging
 import os
+import signal
 import sys
+from logging.config import dictConfig
 
 # Third-party
-import eventlet
 from flask import jsonify, send_file
 from flask_socketio import Namespace, SocketIO  # type: ignore
 
@@ -28,13 +30,6 @@ from sematic.config.settings import import_plugins
 
 # Some plugins may register endpoints
 import_plugins()
-
-# Monkey-patching ssl
-# See https://eventlet.net/doc/patching.html
-# google.oauth2.id_token.verify_oauth2_token makes outgoing
-# SSL queries
-eventlet.import_patched("ssl")
-sys.modules["ssl"] = eventlet.green.ssl
 
 
 @sematic_api.route("/data/<file>")
@@ -67,18 +62,61 @@ def ping():
     return jsonify({"status": "ok"})
 
 
-socketio = SocketIO(sematic_api, cors_allowed_origins="*")
-# This is necessary because starting version 5.7.0 python-socketio does not
-# accept connections to undeclared namespaces
-socketio.on_namespace(Namespace("/pipeline"))
-socketio.on_namespace(Namespace("/graph"))
+def init_socketio():
+    socketio = SocketIO(sematic_api, cors_allowed_origins="*")
+    # This is necessary because starting version 5.7.0 python-socketio does not
+    # accept connections to undeclared namespaces
+    socketio.on_namespace(Namespace("/pipeline"))
+    socketio.on_namespace(Namespace("/graph"))
+    return socketio
+
+
+socketio = init_socketio()
+
+
+def register_signal_handlers():
+    def handler(signum, frame):
+        logger = logging.getLogger()
+        if signum == signal.SIGHUP:
+            # Circle CI sends this between steps; and some environments may
+            # send it for closed terminals. We don't want either to stop
+            # the server.
+            logger.warning(
+                "Received SIGHUP. Ignoring. Please send SIGTERM to stop the process"
+            )
+            return
+
+        # This is helpful so we know in the logs which signal caused
+        # the process to stop.
+        logger.warning("Received signal: %s. Quitting", signum)
+        sys.exit(signum)
+
+    signal.signal(signal.SIGTERM, handler)
+    signal.signal(signal.SIGINT, handler)
+    signal.signal(signal.SIGABRT, handler)
+    signal.signal(signal.SIGSEGV, handler)
+    signal.signal(signal.SIGHUP, handler)
+
+
+def run_socketio(debug=False):
+    with open(get_config().server_pid_file_path, "w+") as fp:
+        fp.write(str(os.getpid()))
+
+    dictConfig(make_log_config())
+    register_signal_handlers()
+
+    socketio.run(
+        sematic_api,
+        port=get_config().port,
+        host=get_config().server_address,
+        debug=debug,
+    )
 
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser("Sematic API server")
     parser.add_argument("--env", required=False, default="local", type=str)
     parser.add_argument("--debug", required=False, default=False, action="store_true")
-    parser.add_argument("--daemon", required=False, default=False, action="store_true")
     return parser.parse_args()
 
 
@@ -86,13 +124,14 @@ def run_wsgi(daemon: bool):
     options = {
         "bind": f"{get_config().server_address}:{get_config().port}",
         "workers": get_config().wsgi_workers_count,
-        "worker_class": "eventlet",
+        "worker_class": "geventwebsocket.gunicorn.workers.GeventWebSocketWorker",
         "daemon": daemon,
         "pidfile": get_config().server_pid_file_path,
         "logconfig_dict": make_log_config(),
         "certfile": os.environ.get("CERTIFICATE"),
         "keyfile": os.environ.get("PRIVATE_KEY"),
     }
+    register_signal_handlers()
     SematicWSGI(sematic_api, options).run()
 
 
@@ -146,12 +185,7 @@ if __name__ == "__main__":
     switch_env(args.env)
 
     if args.debug:
-        socketio.run(
-            sematic_api,
-            port=get_config().port,
-            host=get_config().server_address,
-            debug=args.debug,
-        )
+        run_socketio(args.debug)
 
     else:
-        run_wsgi(args.daemon)
+        run_wsgi(False)

@@ -31,6 +31,11 @@
    :alt: Python 3.9
 
 
+.. image:: https://img.shields.io/badge/Python-3.10-blue?style=for-the-badge&logo=none
+   :target: https://python.org
+   :alt: Python 3.10
+
+
 .. image:: https://img.shields.io/discord/983789877927747714?label=DISCORD&style=for-the-badge
    :target: https://img.shields.io/discord/983789877927747714?label=DISCORD&style=for-the-badge
    :alt: Discord

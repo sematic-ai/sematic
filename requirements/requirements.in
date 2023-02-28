@@ -27,7 +27,8 @@ flask
 flask-cors
 cloudpickle
 flask-socketio
-eventlet==0.30.2  # Because of https://stackoverflow.com/questions/67409452/gunicorn-importerror-cannot-import-name-already-handled-from-eventlet-wsgi
+gevent
+gevent-websocket
 requests
 responses==0.20.0  # 0.21.0 breaks mypy checks https://github.com/getsentry/responses/issues/556
 werkzeug
@@ -39,9 +40,8 @@ google-auth
 click
 
 # Examples
-torch
-torchvision==0.13.1  # Because 0.14.0 fails with
-# AssertionError: In torchvision-0.14.0-cp39-cp39-manylinux1_x86_64.whl, torchvision-0.14.0.dist-info/RECORD is not mentioned in RECORD
+torch==1.13.1
+torchvision==0.14.1
 torchmetrics
 plotly
 pandas
@@ -69,3 +69,4 @@ mpld3
 # External Resource Plugins
 ## Ray
 ray[default]>=2.2.0
+Cython==0.29.33  # need to include https://github.com/cython/cython/commit/b37607f46b165e81f7af2b4eec2ae7f76f7717df
