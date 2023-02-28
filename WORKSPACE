@@ -76,6 +76,13 @@ python_register_toolchains(
     register_toolchains = False,
 )
 
+python_register_toolchains(
+    name = "python3_10",
+    python_version = "3.10",
+    # See above comment about why this is False.
+    register_toolchains = False,
+)
+
 # Used to register a default toolchain in /WORKSPACE.bazel,
 # this is ultimately what makes it so bazel sees our stub
 # interpreter as the thing to use for python things.
@@ -91,29 +98,38 @@ register_toolchains(
 # See https://qiita.com/ShotaMiyazaki94/items/d868855b379d797d605f
 
 # <add python version>: This section will need to be updated when a python version is added
-load("@python3_8//:defs.bzl", interpreter38="interpreter")
-load("@python3_9//:defs.bzl", interpreter39="interpreter")
+load("@python3_8//:defs.bzl", interpreter3_8="interpreter")
+load("@python3_9//:defs.bzl", interpreter3_9="interpreter")
+load("@python3_10//:defs.bzl", interpreter3_10="interpreter")
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
-    name = "pip_dependencies38",
-    python_interpreter_target = interpreter38,
-    requirements_lock = "//requirements:requirements38.txt",
+    name = "pip_dependencies3_8",
+    python_interpreter_target = interpreter3_8,
+    requirements_lock = "//requirements:requirements3_8.txt",
 )
 
 pip_parse(
-    name = "pip_dependencies39",
-    python_interpreter_target = interpreter39,
-    requirements_lock = "//requirements:requirements39.txt",
+    name = "pip_dependencies3_9",
+    python_interpreter_target = interpreter3_9,
+    requirements_lock = "//requirements:requirements3_9.txt",
 )
 
-load("@pip_dependencies38//:requirements.bzl", install_deps38="install_deps")
-load("@pip_dependencies39//:requirements.bzl", install_deps39="install_deps")
+pip_parse(
+    name = "pip_dependencies3_10",
+    python_interpreter_target = interpreter3_10,
+    requirements_lock = "//requirements:requirements3_10.txt",
+)
+
+load("@pip_dependencies3_8//:requirements.bzl", install_deps3_8="install_deps")
+load("@pip_dependencies3_9//:requirements.bzl", install_deps3_9="install_deps")
+load("@pip_dependencies3_10//:requirements.bzl", install_deps3_10="install_deps")
 
 # Actually does the 3rd party dep installs for each of our
 # hermetic interpreters to use.
-install_deps38()
-install_deps39()
+install_deps3_8()
+install_deps3_9()
+install_deps3_10()
 
 # Used to enable multiple interpreters for tests
 # approach from https://blog.aspect.dev/many-python-versions-one-bazel-build

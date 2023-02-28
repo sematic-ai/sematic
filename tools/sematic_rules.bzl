@@ -10,22 +10,29 @@ load(
 )
 
 # <add python version>: This will need to be updated when a python version is added
-load("@pip_dependencies38//:requirements.bzl", requirement38 = "requirement")
-load("@pip_dependencies39//:requirements.bzl", requirement39 = "requirement")
-load("@python3_8//:defs.bzl", interpreter38 = "interpreter")
-load("@python3_9//:defs.bzl", interpreter39 = "interpreter")
+load("@pip_dependencies3_8//:requirements.bzl", requirement3_8 = "requirement")
+load("@pip_dependencies3_9//:requirements.bzl", requirement3_9 = "requirement")
+load("@pip_dependencies3_10//:requirements.bzl", requirement3_10 = "requirement")
+load("@python3_8//:defs.bzl", interpreter3_8 = "interpreter")
+load("@python3_9//:defs.bzl", interpreter3_9 = "interpreter")
+load("@python3_10//:defs.bzl", interpreter3_10 = "interpreter")
 
 # <add python version>: This section will need to be updated when a python version is added
 _PYTHON_VERSION_INFO = dict(
-    PY38 = struct(
+    PY3_8 = struct(
         workspace_name = "python3_8",
-        interpreter = interpreter38,
-        pip_requirement = requirement38,
+        interpreter = interpreter3_8,
+        pip_requirement = requirement3_8,
     ),
-    PY39 = struct(
+    PY3_9 = struct(
         workspace_name = "python3_9",
-        interpreter = interpreter39,
-        pip_requirement = requirement39,
+        interpreter = interpreter3_9,
+        pip_requirement = requirement3_9,
+    ),
+    PY3_10 = struct(
+        workspace_name = "python3_10",
+        interpreter = interpreter3_10,
+        pip_requirement = requirement3_10,
     ),
 )
 PYTHON_VERSION_INFO = struct(**_PYTHON_VERSION_INFO)
@@ -38,10 +45,10 @@ PY3 = struct(**{
 
 # <default py version change>: This line will need to be updated if we change the default
 # python version for sematic.
-DEFAULT_PY_VERSION = PY3.PY38
+DEFAULT_PY_VERSION = PY3.PY3_8
 requirement = _PYTHON_VERSION_INFO[DEFAULT_PY_VERSION].pip_requirement
 
-ALL_PY3_VERSIONS = sorted([key for key in _PYTHON_VERSION_INFO.keys()])
+ALL_PY3_VERSIONS = sorted([key for key in _PYTHON_VERSION_INFO.keys()], key=lambda k: int(k.replace("PY3_", "")))
 PY3_DEFAULT_TEST_VERSIONS = ALL_PY3_VERSIONS
 
 def env_and_runfiles_for_python(version):
@@ -80,7 +87,7 @@ def pytest_test(
 
     if len(py_versions) < 1:
         fail("There must be at least one python version to test")
-    py_versions = sorted(py_versions)
+    py_versions = sorted(py_versions, key=lambda k: int(k.replace("PY3_", "")))
     for i, py3_version in enumerate(py_versions):
         (pyenv, runfiles) = env_and_runfiles_for_python(py3_version)
         final_deps = full_versioned_deps(
@@ -90,11 +97,10 @@ def pytest_test(
         )
 
         # Use the lowest python version provided for the default target,
-        # all other python versions should have a suffix like _py39
-        name = name if i == 0 else "{}_{}".format(name, py3_version.lower())
-
+        # all other python versions should have a suffix like _py3_8
+        new_name = name if i == 0 else "{}_{}".format(name, py3_version.lower())
         py_test(
-            name = name,
+            name = new_name,
             srcs = ["//tools:pytest_runner"] + srcs,
             main = "tools/pytest_runner.py",
             env = dict(env, **pyenv),
@@ -148,8 +154,7 @@ def sematic_py_lib(name, srcs, deps, pip_deps = None, visibility = None, data = 
             srcs = ["//tools/jupyter:ipython.py"],
             deps = [
                 ":{0}".format(target_name),
-                requirement("ipython"),
-            ] + versioned_pip_deps(pip_deps, py_version),
+            ] + versioned_pip_deps(pip_deps + ["ipython"], py_version),
             env = pyenv,
             tags = ["manual"],
             data = data + runfiles,

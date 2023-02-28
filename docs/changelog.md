@@ -5,6 +5,7 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+    * [improvement] Added support for Python 3.10
 * [0.26.0](https://pypi.org/project/sematic/0.26.0/)
     * [feature] Added optional anonymized user analytics to track Sematic usage[^2]
     * [improvement] Atomic database migrations with Helm hooks

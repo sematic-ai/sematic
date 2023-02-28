@@ -18,13 +18,13 @@ wheel_description_file = "//:README.rst"
 wheel_entry_points = {"console_scripts": ["sematic = sematic.cli.main:cli"]}
 wheel_homepage = "https://sematic.dev"
 wheel_platform = "any"
-wheel_python_requires = ">=3.8,<3.10"
+wheel_python_requires = ">=3.8,<3.11"
 wheel_python_tag = "py3"
 wheel_requires = [
     # Specifying this by hand because sematic_py_wheel doesn't know
     # how to fix versions
-    "eventlet==0.30.2",
     "SQLAlchemy<2.0.0",
+    "Cython==0.29.33",
 ]
 wheel_deps = [
     "//sematic:client",
