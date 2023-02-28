@@ -9,6 +9,7 @@
 ![PyPI - License](https://img.shields.io/pypi/l/sematic?style=for-the-badge)
 [![Python 3.8](https://img.shields.io/badge/Python-3.8-blue?style=for-the-badge&logo=none)](https://python.org)
 [![Python 3.9](https://img.shields.io/badge/Python-3.9-blue?style=for-the-badge&logo=none)](https://python.org)
+[![Python 3.10](https://img.shields.io/badge/Python-3.10-blue?style=for-the-badge&logo=none)](https://python.org)
 ![Discord](https://img.shields.io/discord/983789877927747714?label=DISCORD&style=for-the-badge)
 [![Made By Sematic](https://img.shields.io/badge/Made_by-Sematic_🦊-E19632?style=for-the-badge&logo=none)](https://sematic.dev)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/sematic?style=for-the-badge)

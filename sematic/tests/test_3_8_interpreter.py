@@ -6,5 +6,5 @@ import sys
 import requests  # noqa: F401
 
 
-def test_py38():
+def test_py3_8():
     assert sys.version_info[0:2] == (3, 8)
