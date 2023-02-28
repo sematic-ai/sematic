@@ -92,5 +92,8 @@
     "@types/uuid": "^8.3.4",
     "cypress": "^12.5.0",
     "eslint-plugin-cypress": "^2.12.1"
-  }
+  },
+  "workspaces": [
+    "tests"
+  ]
 }
