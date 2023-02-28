@@ -436,24 +436,32 @@ def save_graph_endpoint(user: Optional[User]):
 
     graph = flask.request.json["graph"]
 
-    runs = [Run.from_json_encodable(run) for run in graph["runs"]]
-    for run in runs:
-        logger.info("Graph update, run %s is in state %s", run.id, run.future_state)
-        if FutureState[run.future_state].is_terminal():
-            logger.info("Ensuring jobs for %s are stopped %s", run.id, run.future_state)
-            jobs = []
-            for external_job in run.external_jobs:
-                jobs.append(cancel_job(external_job))
-            run.external_jobs = jobs
     artifacts = [
         Artifact.from_json_encodable(artifact) for artifact in graph["artifacts"]
     ]
     edges = [Edge.from_json_encodable(edge) for edge in graph["edges"]]
 
-    # try:
+    runs = [Run.from_json_encodable(run) for run in graph["runs"]]
+
+    # save graph BEFORE ensuring jobs are stopped. This way
+    # code that is checking on job status will be ok if it
+    # sees the jobs as gone while we are going through and
+    # deleting them.
     save_graph(runs, artifacts, edges)
-    # except Exception as e:
-    #    return jsonify_error(str(e), HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    updated_jobs = False
+    for run in runs:
+        logger.info("Graph update, run %s is in state %s", run.id, run.future_state)
+        if FutureState[run.future_state].is_terminal():
+            updated_jobs = True
+            logger.info("Ensuring jobs for %s are stopped %s", run.id, run.future_state)
+            jobs = []
+            for external_job in run.external_jobs:
+                jobs.append(cancel_job(external_job))
+            run.external_jobs = jobs
+
+    if updated_jobs:
+        save_graph(runs, [], [])
 
     return flask.jsonify({})
 

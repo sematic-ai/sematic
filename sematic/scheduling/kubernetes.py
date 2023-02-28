@@ -739,7 +739,6 @@ def _get_pods_for_job(
             job.external_job_id,
             exc_info=e,
         )
-        logger.info("TODO Error looking for pods, has infra failure")
         return None, has_infra_failure
 
 
@@ -762,6 +761,7 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
     try:
         node_name = pod.spec.node_name if pod.spec is not None else None
         detected_infra_failure = False
+        container_exit_code = None
         if pod.status is None:
             logger.warning("Pod %s has no status", pod.metadata.name)  # type: ignore
             return PodSummary(
@@ -789,9 +789,6 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
             )
 
             if most_recent_condition.type in POD_FAILURE_PHASES:
-                logger.info(
-                    "TODO: infra fail, Pod phase is %s", most_recent_condition.type
-                )
                 detected_infra_failure = True
 
         container_restarts = None
@@ -799,10 +796,6 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
         if _is_none_or_empty(pod.status.container_statuses):
             most_recent_container_condition_message = "There is no container!"
             detected_infra_failure = pod.status.phase != "Pending"
-            logger.info(
-                "TODO: infra fail, No container status, but phase is %s",
-                pod.status.phase,
-            )
         else:
             # there can be only one
             most_recent_container_status = pod.status.container_statuses[
@@ -819,10 +812,6 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
 
             if _has_container_failure(most_recent_container_status):
                 detected_infra_failure = pod.status.phase != "Pending"
-                logger.info(
-                    "TODO: infra fail, Has container failure, and pod phase is %s",
-                    pod.status.phase,
-                )
 
             container_restarts = getattr(
                 most_recent_container_status, "restart_count", None
@@ -845,15 +834,16 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
             node_name=node_name,
         )
     except Exception as e:
-        logger.error(
-            "Got exception while extracting information from pods",
-            exc_info=e,
-        )
         pod_name = "Unknown"
         try:
             pod_name = pod.metadata.name  # type: ignore
         except Exception as e2:
             logger.error("Pod name could not be determined", exc_info=e2)
+        logger.error(
+            "Got exception while extracting information from pods: %s",
+            pod_name,
+            exc_info=e,
+        )
         return PodSummary(
             pod_name=pod_name,
             detected_infra_failure=True,
@@ -863,20 +853,15 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
 def _get_container_exit_code_from_status(
     container_status: Optional[V1ContainerStatus],
 ) -> Optional[int]:
-    logger.info("TODO: container status: %s", container_status)
     if container_status is None:
-        logger.info("TODO: Status is None")
         return None
     state = getattr(container_status, "state", None)
     if state is None:
-        logger.info("TODO: state is None")
         return None
     terminated = getattr(state, "terminated", None)
     if terminated is None:
-        logger.info("TODO: terminated is None")
         return None
     exit_code = getattr(terminated, "exit_code", None)
-    logger.info("TODO: exit code is %s", exit_code)
     return exit_code
 
 
@@ -940,6 +925,9 @@ def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
             f"Expected a {KubernetesExternalJob.__name__}, got a {type(job).__name__}"
         )
 
+    if not job.still_exists:
+        return job
+
     job.previous_pod_name = job.latest_pod_name()
     job.previous_node_name = job.latest_node_name()
 
@@ -956,7 +944,6 @@ def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
                 return job  # still hasn't started
             else:
                 job.still_exists = False
-                logger.info("TODO: job not found, has infra failure")
                 job.has_infra_failure = True
                 return job
         raise e

@@ -145,8 +145,11 @@ def save_run(run: Run) -> Run:
             else None
         )
         new_state = run.future_state
-        if isinstance(new_state, str):
-            new_state = FutureState[new_state]
+        if isinstance(new_state, FutureState):
+            # despite run.future_state being typed as FutureState, it
+            # is sometimes a string.
+            new_state = new_state.name  # type: ignore
+
         if (
             existing_run_future_state != new_state
             and not FutureState.is_allowed_transition(
