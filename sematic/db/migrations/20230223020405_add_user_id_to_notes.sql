@@ -24,7 +24,7 @@ SELECT
     notes.id, users.id, notes.note, notes.run_id, notes.root_id, notes.created_at, notes.updated_at
 FROM notes
 JOIN users ON users.email = notes.author_id
-WHERE notes.author_id != "anonymous@acme.com";
+WHERE notes.author_id != 'anonymous@acme.com';
 
 INSERT INTO
     notes_tmp
@@ -32,7 +32,7 @@ INSERT INTO
 SELECT 
     notes.id, NULL, notes.note, notes.run_id, notes.root_id, notes.created_at, notes.updated_at
 FROM notes
-WHERE notes.author_id = "anonymous@acme.com";
+WHERE notes.author_id = 'anonymous@acme.com';
 
 ALTER TABLE notes RENAME TO notes_backup;
 
@@ -70,7 +70,7 @@ INSERT INTO
     notes_tmp
     (id, author_id, note, run_id, root_id, created_at, updated_at)
 SELECT 
-    notes.id, "anonymous@acme.com", notes.note, notes.run_id, notes.root_id, notes.created_at, notes.updated_at
+    notes.id, 'anonymous@acme.com', notes.note, notes.run_id, notes.root_id, notes.created_at, notes.updated_at
 FROM notes
 WHERE notes.user_id IS NULL;
 
