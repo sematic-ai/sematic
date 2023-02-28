@@ -8,10 +8,10 @@ import createTheme from "../themes/mira";
 import SideBar from "./SideBar";
 
 export default function Shell() {
-  const { authenticationEnabled: authenticatedEnabled } = useAppContext()
+  const { authenticationEnabled } = useAppContext()
   const { user } = useContext(UserContext);
 
-  if (authenticatedEnabled && !user) {
+  if (authenticationEnabled && !user) {
       return <Navigate to="/login" />;
   }
 

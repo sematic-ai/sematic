@@ -19,7 +19,7 @@ import { SnackBarProvider } from "./components/SnackBarProvider";
 import PipelineView from "./pipelines/PipelineView";
 import { RunIndex } from "./runs/RunIndex";
 import { setupPostHogOptout } from "./postHogManager";
-import GoogleLoginPage from "./loginGoogle";
+import LoginPage from "./login";
 import { ExtractContextType } from "./components/utils/typings";
 import AppContext, { UserContext } from "./appContext";
 import { useAuthentication, userAtom } from "./hooks/appHooks";
@@ -73,7 +73,7 @@ function App() {
 const router = createBrowserRouter(
   createRoutesFromElements(
   <Route path="/" element={<App />}>
-    <Route path="/login" element={<GoogleLoginPage />} />
+    <Route path="/login" element={<LoginPage />} />
     <Route element={<Shell />}>
       <Route index element={<Home />} />
       <Route path="pipelines" element={<PipelineIndex />} />

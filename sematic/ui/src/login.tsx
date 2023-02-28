@@ -4,17 +4,24 @@ import { CredentialResponse, GoogleLogin, GoogleOAuthProvider } from "@react-oau
 import { useAtom } from "jotai";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ExtractContextType } from "./components/utils/typings";
 import logo from "./Fox.png";
 import { useAppContext, userAtom } from "./hooks/appHooks";
 import { useHttpClient } from "./hooks/httpHooks";
 import { GoogleLoginPayload } from "./Payloads";
+import AppContext from "./appContext";
+import { User } from "./Models";
 
+interface GoogleLoginComponentProps {
+  setUser: (user: User) => void;
+  setError: (error: Error | undefined) => void;
+  authProviderDetail: Exclude<ExtractContextType<typeof AppContext>[
+    "authProviderDetails"]["google"], undefined>,
+}
 
-export default function GoogleLoginPage() {
-  const [error, setError] = useState<Error | undefined>(undefined);
-  const { authProviderDetails } = useAppContext()
-
-  const [, setUser] = useAtom(userAtom);
+function GoogleLoginComponent({
+  setUser, setError, authProviderDetail
+}: GoogleLoginComponentProps) {
 
   const navigate = useNavigate();
 
@@ -38,6 +45,26 @@ export default function GoogleLoginPage() {
       }
     }, [setError, setUser, navigate, fetch]);
 
+  return <GoogleOAuthProvider
+    clientId={authProviderDetail.GOOGLE_OAUTH_CLIENT_ID}
+  >
+    <GoogleLogin
+      text="signin_with"
+      logo_alignment="center"
+      onSuccess={onGoogleLoginSuccess}
+      onError={() => {
+        setError(Error("Unauthorized user"));
+      }}
+    />
+  </GoogleOAuthProvider>
+}
+
+
+export default function LoginPage() {
+  const [error, setError] = useState<Error | undefined>(undefined);
+  const { authProviderDetails } = useAppContext()
+  const [, setUser] = useAtom(userAtom);
+
   return <Paper
     sx={{
       width: 200,
@@ -59,19 +86,14 @@ export default function GoogleLoginPage() {
 
     {error ? <Alert severity="error">{error.message}</Alert> : <></>}
 
-    {!error &&
-      <GoogleOAuthProvider
-        clientId={authProviderDetails.google!.GOOGLE_OAUTH_CLIENT_ID}
-      >
-        <GoogleLogin
-          text="signin_with"
-          logo_alignment="center"
-          onSuccess={onGoogleLoginSuccess}
-          onError={() => {
-            setError(Error("Unauthorized user"));
-          }}
-        />
-      </GoogleOAuthProvider>
+    {!error && authProviderDetails.google &&
+        <GoogleLoginComponent setUser={setUser}
+          authProviderDetail={authProviderDetails.google!} setError={setError} />
+    }
+    {!error && authProviderDetails.github &&
+        <>{
+          // TODO: Add github login
+        }</>
     }
   </Paper>;
 }
