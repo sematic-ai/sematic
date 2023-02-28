@@ -104,6 +104,16 @@ def store_future_bytes(future_id: str, bytes_: bytes) -> None:
     _store_bytes("futures", future_id, bytes_)
 
 
+def store_file_content(file_path: str, namespace: str, key: str) -> None:
+    """
+    Store content of local file.
+    """
+    with open(file_path, "rb") as f:
+        bytes_ = f.read()
+
+    _store_bytes(namespace, key, bytes_)
+
+
 @retry(tries=3, delay=10, jitter=1)
 def _store_bytes(namespace: str, key: str, bytes_: bytes) -> None:
     response = _get(f"/storage/{namespace}/{key}/location")

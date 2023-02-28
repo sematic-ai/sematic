@@ -4,6 +4,7 @@ pytest_test(
     pip_deps = [
         "click",
     ],
+    # buildifier: leave-alone
     deps = [
         "//sematic/cli:main_lib",
         "//sematic/cli:process_utils",
@@ -44,10 +45,10 @@ pytest_test(
         "click",
     ],
     deps = [
+        "//sematic/api/tests:fixtures",
         "//sematic/cli:logs",
         "//sematic/db:queries",
         "//sematic/db/tests:fixtures",
-        "//sematic/tests:fixtures",
     ],
 )
 

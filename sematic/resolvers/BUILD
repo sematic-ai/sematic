@@ -95,10 +95,9 @@ sematic_py_lib(
     srcs = ["log_streamer.py"],
     # buildifier: leave-alone
     deps = [
+        "//sematic:api_client",
         "//sematic/config:config",
         "//sematic/config:user_settings",
-        "//sematic/plugins/storage:s3_storage",
-        "//sematic/utils:retry",
         "//sematic/utils:stdout",
     ],
 )

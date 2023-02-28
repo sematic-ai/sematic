@@ -10,13 +10,13 @@ import RunStateChip, { RunStateChipUndefinedStyle } from "../components/RunState
 import { Alert, AlertTitle, Container, containerClasses } from "@mui/material";
 import { InfoOutlined } from "@mui/icons-material";
 import { RunTime } from "../components/RunTime";
-import { pipelineSocket } from "../utils";
 import CalculatorPath from "../components/CalculatorPath";
 import TimeAgo from "../components/TimeAgo";
 import { useFetchRuns } from "../hooks/pipelineHooks";
 import Loading from "../components/Loading";
 import { styled } from "@mui/system";
 import MuiRouterLink from "../components/MuiRouterLink";
+import { pipelineSocket } from "../sockets";
 
 const RecentStatusesWithStyles = styled('span')`
   flex-direction: row;
