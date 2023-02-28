@@ -3,20 +3,11 @@ import abc
 import inspect
 import typing
 from enum import Enum
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union,
-    get_origin,
-)
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
 
 # Sematic
 from sematic.types.generic_type import GenericType
+from sematic.types.type import get_origin
 
 _SUPPORTED_TYPES_DOCS = (
     "https://docs.sematic.dev/type-support/type-support#what-types-are-supported"
@@ -279,7 +270,7 @@ def get_origin_type(type_: TypeAnnotation) -> TypeAnnotation:
     if is_parameterized_generic(registry_type) or is_sematic_parametrized_generic_type(
         registry_type
     ):
-        registry_type = registry_type.__origin__
+        registry_type = get_origin(registry_type)
     return registry_type
 
 
@@ -299,8 +290,15 @@ def validate_type_annotation(*types: TypeAnnotation) -> None:
             raise TypeError(
                 "'Any' is not a Sematic-supported type. Use 'object' instead."
             )
-
-        if _is_type(type_) or _is_abc(type_) or is_enum(type_):
+        is_non_generic = (
+            (
+                _is_type(type_)
+                and type_ not in SUPPORTED_GENERIC_TYPING_ANNOTATIONS.values()
+            )
+            or _is_abc(type_)
+            or is_enum(type_)
+        )
+        if is_non_generic:
             return
         if not is_parameterized_generic(type_, raise_for_unparameterized=True):
             raise TypeError(
@@ -360,10 +358,15 @@ def is_parameterized_generic(
     is_from_typing = (
         hasattr(type_, "__module__") and getattr(type_, "__module__") == "typing"
     )
-    if is_from_typing and type_ in SUPPORTED_GENERIC_TYPING_ANNOTATIONS.keys():
+    is_unparameterized_generic = (
+        is_from_typing and type_ in SUPPORTED_GENERIC_TYPING_ANNOTATIONS.keys()
+    ) or type_ in SUPPORTED_GENERIC_TYPING_ANNOTATIONS.values()
+
+    if is_unparameterized_generic:
         if raise_for_unparameterized:
+            name = type_.__name__ if hasattr(type_, "__name__") else str(type_)
             raise TypeError(
-                f"{type_} must be parametrized ({type_}[...] " f"instead of {type_})"
+                f"{name} must be parametrized " f"({name}[...] " f"instead of {name})."
             )
         else:
             return False
