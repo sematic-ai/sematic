@@ -122,7 +122,6 @@ def mock_plugin_settings(
     settings_module._SETTINGS = original_settings_copy
 
     try:
-        print(settings_module._SETTINGS)
         yield settings
     finally:
         settings_module._SETTINGS = original_settings
