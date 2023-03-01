@@ -5,7 +5,7 @@ import TableBody from "@mui/material/TableBody";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, ReactNode } from "react";
 import TablePagination from "@mui/material/TablePagination";
 import TableFooter from "@mui/material/TableFooter";
 import { Filter, RunListPayload } from "../Payloads";
@@ -14,18 +14,18 @@ import { useFetchRunsFn } from "../hooks/pipelineHooks";
 import useLatest from "react-use/lib/useLatest";
 import usePreviousDistinct from "react-use/lib/usePreviousDistinct";
 import { styled } from "@mui/system";
-import { useSynchornizedTables } from "../hooks/domHooks";
+import { Run } from "src/Models";
 
 const defaultPageSize = 10;
 
-interface RunListColumn {
+export interface RunListColumn {
   name: string;
   width: string;
+  render: (run: Run) => ReactNode;
 }
 
 type RunListProps = {
   columns: Array<RunListColumn>;
-  children: Function;
   groupBy?: string;
   search?: string;
   filters?: Filter;
@@ -34,6 +34,8 @@ type RunListProps = {
   emptyAlert?: string;
   triggerRefresh?: (refreshCallback: () => void) => void;
 };
+
+
 
 const StyledTableContainer = styled(TableContainer)`
   display: flex;
@@ -45,13 +47,25 @@ const StyledTableContainer = styled(TableContainer)`
   }
 `;
 
-const TBodyScroller = styled('div')`
+const TableScroller = styled('div')`
   flex-grow: 1;
   overflow-y: auto;
 `;
 
+function TBodyRow(props: {
+  run: Run;
+  columns: Array<RunListColumn>;
+}) {
+  const { run, columns } = props;
+  return <TableRow>
+    {columns.map((column, i) => <TableCell key={i} style={{width: column.width}}>
+      {column.render(run)}
+    </TableCell>)}
+ </TableRow>;
+}
+
 export function RunList(props: RunListProps) {
-  let { triggerRefresh, filters, groupBy, search } = props;
+  let { triggerRefresh, filters, groupBy, search, columns } = props;
   const [pages, setPages] = useState<Array<RunListPayload>>([]);
   const [currentPage, setPage] = useState(0);
 
@@ -124,13 +138,11 @@ export function RunList(props: RunListProps) {
   let tableBody;
   let currentPayload = pages[currentPage];
   
-  const {sourceTableRef, targetTableRef} = useSynchornizedTables()
-
   if (error || !isLoaded) {
     tableBody = (
       <TableBody>
         <TableRow>
-          <TableCell colSpan={props.columns.length} align="center">
+          <TableCell colSpan={columns.length} align="center">
             <Loading error={error} isLoaded={isLoaded} />
           </TableCell>
         </TableRow>
@@ -140,10 +152,11 @@ export function RunList(props: RunListProps) {
     tableBody = (
       <TableBody>
         {currentPayload.content.length > 0 &&
-          currentPayload.content.map((run) => props.children(run))}
+          currentPayload.content.map(
+            (run) => <TBodyRow run={run} columns={columns} key={run.id} />)}
         {currentPayload.content.length === 0 && (
           <TableRow>
-            <TableCell colSpan={props.columns.length}>
+            <TableCell colSpan={columns.length}>
               <Alert severity="info">{props.emptyAlert || "No runs."}</Alert>
             </TableCell>
           </TableRow>
@@ -161,20 +174,20 @@ export function RunList(props: RunListProps) {
 
   return (
     <StyledTableContainer data-cy={"RunList"}>
-      <Table ref={sourceTableRef} size={props.size} >
+      <Table size={props.size} >
         <TableHead>
           <TableRow>
-            {props.columns.map(({name, width}) => (
+            {columns.map(({name, width}) => (
               <TableCell key={name} style={{width}}>{name}</TableCell>
             ))}
           </TableRow>
         </TableHead>
       </Table>
-      <TBodyScroller>
-        <Table ref={targetTableRef}>
+      <TableScroller>
+        <Table>
           {tableBody}
         </Table>
-      </TBodyScroller>
+      </TableScroller>
       <Table>
         <TableFooter>
           <TableRow>
