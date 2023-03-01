@@ -47,7 +47,7 @@ const StyledTableContainer = styled(TableContainer)`
   }
 `;
 
-const TableScroller = styled('div')`
+const TBodyScroller = styled('div')`
   flex-grow: 1;
   overflow-y: auto;
 `;
@@ -57,7 +57,7 @@ function TBodyRow(props: {
   columns: Array<RunListColumn>;
 }) {
   const { run, columns } = props;
-  return <TableRow>
+  return <TableRow data-cy={"runlist-row"}>
     {columns.map((column, i) => <TableCell key={i} style={{width: column.width}}>
       {column.render(run)}
     </TableCell>)}
@@ -183,11 +183,11 @@ export function RunList(props: RunListProps) {
           </TableRow>
         </TableHead>
       </Table>
-      <TableScroller>
+      <TBodyScroller>
         <Table>
           {tableBody}
         </Table>
-      </TableScroller>
+      </TBodyScroller>
       <Table>
         <TableFooter>
           <TableRow>
