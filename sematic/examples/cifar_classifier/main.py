@@ -38,8 +38,8 @@ REMOTE_TRAINING_CONFIG = TrainingConfig(
     ),
     checkpoint_dir="s3://sematic-dev/ray-demo",
     loop_config=TrainLoopConfig(
-        batch_size=2,
-        n_epochs=2,
+        batch_size=4,
+        n_epochs=5,
     ),
 )
 
@@ -75,7 +75,7 @@ def main():
         train_config = REMOTE_TRAINING_CONFIG
         eval_config = REMOTE_EVAL_CONFIG
     else:
-        resolver = sematic.SilentResolver()
+        resolver = sematic.LocalResolver()
         train_config = LOCAL_TRAINING_CONFIG
         eval_config = LOCAL_EVAL_CONFIG
 

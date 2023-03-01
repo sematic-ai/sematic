@@ -2,7 +2,7 @@
 # https://docs.ray.io/en/latest/ray-air/examples/torch_image_example.html
 # Standard Library
 from dataclasses import asdict, dataclass
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 # Third-party
 import numpy as np
@@ -14,6 +14,7 @@ import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 from PIL.Image import Image
+from plotly.graph_objs import Figure, Heatmap
 from ray import train
 from ray.air import RunConfig, session
 from ray.air.config import ScalingConfig
@@ -59,7 +60,10 @@ class Net(nn.Module):
 
 @dataclass
 class EvaluationResults:
-    accuracy: float = 0.0
+    accuracy: float
+    n_correct: int
+    n_samples: int
+    confusion_matrix_plot: Figure
 
 
 @dataclass
@@ -82,12 +86,13 @@ class EvaluationConfig:
     n_workers: int
 
 
-def load_dataset(is_train: bool) -> ray.data.Dataset:
+def load_dataset(is_train: bool) -> Tuple[ray.data.Dataset, List[str]]:
     dataset = torchvision.datasets.CIFAR10("data", download=True, train=is_train)
+    classes = dataset.classes
     dataset: ray.data.Dataset = ray.data.from_torch(dataset)
     dataset = dataset.map_batches(convert_batch_to_numpy).fully_executed()
 
-    return dataset
+    return dataset, classes
 
 
 def train_classifier(config: TrainingConfig) -> TorchCheckpoint:
@@ -98,7 +103,7 @@ def train_classifier(config: TrainingConfig) -> TorchCheckpoint:
         else:
             raise RuntimeError("GPUs could not be used by torch on Ray Cluster")
 
-    train_dataset = load_dataset(is_train=True)
+    train_dataset, _ = load_dataset(is_train=True)
     transform = transforms.Compose(
         [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
     )
@@ -132,7 +137,7 @@ def validate_gpus():
 def evaluate_classifier(
     checkpoint: TorchCheckpoint, config: EvaluationConfig
 ) -> EvaluationResults:
-    test_dataset = load_dataset(is_train=False)
+    test_dataset, classes_list = load_dataset(is_train=False)
     batch_predictor = BatchPredictor.from_checkpoint(
         checkpoint=checkpoint,
         predictor_cls=TorchPredictor,
@@ -150,15 +155,63 @@ def evaluate_classifier(
 
     predictions = outputs.map_batches(convert_logits_to_classes)
     scores = predictions.map_batches(calculate_prediction_scores)
-    accuracy = scores.sum(on="correct") / scores.count()
+    confusion_matrix_data_frame = to_confusion_matrix_data_frame(
+        predictions.map_batches(add_confusion_key)
+        .groupby("confusion_key")
+        .count()
+        .to_pandas()
+    )
+    n_correct = scores.sum(on="correct")
+    n_samples = scores.count()
+    accuracy = n_correct / n_samples
+    plot = create_confusion_matrix_plot(confusion_matrix_data_frame, classes_list)
 
-    return EvaluationResults(accuracy=accuracy)
+    return EvaluationResults(
+        accuracy=accuracy,
+        n_correct=n_correct,
+        n_samples=n_samples,
+        confusion_matrix_plot=plot,
+    )
+
+
+def create_confusion_matrix_plot(confusion_matrix_data_frame, classes_list):
+    data = Heatmap(
+        z=confusion_matrix_data_frame.T,
+        text=confusion_matrix_data_frame.T,
+        texttemplate="%{text}",
+        x=confusion_matrix_data_frame.index.map(lambda i: classes_list[i]),
+        y=confusion_matrix_data_frame.columns.map(lambda i: classes_list[i]),
+    )
+    layout = {
+        "title": "Confusion Matrix",
+        "xaxis": {"title": "Predicted class"},
+        "yaxis": {"title": "Labeled class"},
+    }
+    return Figure(data=data, layout=layout)
 
 
 def convert_batch_to_numpy(batch: Tuple[Image, int]) -> Dict[str, np.ndarray]:
     images = np.stack([np.array(image) for image, _ in batch])
     labels = np.array([label for _, label in batch])
     return {"image": images, "label": labels}
+
+
+def add_confusion_key(df):
+    df["confusion_key"] = [
+        f"{pred} : {label}" for pred, label in zip(df["prediction"], df["label"])
+    ]
+    return df
+
+
+def to_confusion_matrix_data_frame(df):
+    df["prediction"] = df["confusion_key"].map(
+        lambda key: int(key.split(":")[0].strip())
+    )
+    df["label"] = df["confusion_key"].map(lambda key: int(key.split(":")[1].strip()))
+    df = df.reset_index()
+    del df["confusion_key"]
+    df = df.rename(columns={"count()": "count"})
+    return df.pivot(index="prediction", columns="label", values="count").fillna(0)
 
 
 def calculate_prediction_scores(df):
@@ -179,12 +232,13 @@ def train_loop_per_worker(config):
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
     train_dataset_shard = session.get_dataset_shard("train")
-
-    for epoch in range(config["n_epochs"]):
+    n_epochs = config["n_epochs"]
+    for epoch in range(n_epochs):
         running_loss = 0.0
         train_dataset_batches = train_dataset_shard.iter_torch_batches(
             batch_size=config["batch_size"], device=train.torch.get_device()
         )
+        print(f"Training epoch {epoch + 1} of {n_epochs}")
         for i, batch in enumerate(train_dataset_batches):
             # get the inputs and labels
             inputs, labels = batch["image"], batch["label"]
