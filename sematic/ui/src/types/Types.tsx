@@ -795,21 +795,25 @@ function S3BucketValueView(props: ValueViewProps) {
   return <S3Button region={values.region} bucket={values.name} />
 }
 
-function S3Button(props: {region: string, bucket: string, location?: string}) {
+function S3Button(props: {region?: string, bucket: string, location?: string}) {
   const { region, bucket, location } = props;
 
   let s3URI = "s3://" + bucket;
-  let href = "https://s3.console.aws.amazon.com/s3/object/" + bucket + "?region=" + region;
+  let href = new URL("https://s3.console.aws.amazon.com/s3/object/" + bucket);
+  
+  if (region !== null && region !== undefined) {
+    href.searchParams.append("region", region);
+  }
 
   if (location !== undefined) {
     s3URI = s3URI + "/" + location;
-    href = href + "&prefix=" + location;
+    href.searchParams.append("prefix", location);
   }
 
   return <>
   <Tooltip title="View in AWS console">
     <Button
-      href={href}
+      href={href.href}
       variant="outlined"
       target="blank"
       endIcon={<OpenInNew />}
