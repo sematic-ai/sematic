@@ -27,6 +27,8 @@ sematic_py_lib(
         "//sematic/types/types/matplotlib:init",
         # Does not actually create a dependency on snowflake
         "//sematic/types/types/snowflake:init",
+        # Does not actually create a dependency on AWS libs
+        "//sematic/types/types/aws:init",
     ],
 )
 
@@ -64,11 +66,11 @@ sematic_py_lib(
 sematic_py_lib(
     name = "serialization",
     srcs = ["serialization.py"],
+    pip_deps = [
+        "cloudpickle",
+    ],
     deps = [
         ":generic_type",
         ":registry",
-    ],
-    pip_deps = [
-        "cloudpickle",
     ],
 )
