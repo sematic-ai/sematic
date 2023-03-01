@@ -81,11 +81,10 @@ function UserColumn({run}: {run: Run}) {
   if (!run.user) {
     return null;
   }
-  const {first_name, last_name} = run.user;
   return <>
     <StyledContainer>
       <UserAvatar user={run.user} sx={{ width: 18, height: 18 }} />
-      <div>{first_name} {(last_name || "").substring(0, 1)}.</div>
+      <div>abbreviatedUserName(run.user)</div>
     </StyledContainer>
   </>;
 }
