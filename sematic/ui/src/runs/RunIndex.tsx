@@ -14,6 +14,7 @@ import { styled } from "@mui/system";
 import { spacing } from "../utils";
 import { getRunUrlPattern } from "../hooks/pipelineHooks";
 import MuiRouterLink from "../components/MuiRouterLink";
+import UserAvatar from "src/components/UserAvatar";
 
 const StyledScroller = styled(Container)`
   padding-top: ${spacing(10)};
@@ -57,6 +58,13 @@ const StyledScroller = styled(Container)`
   }
 `;
 
+const StyledContainer = styled(Container)`
+  display: flex;
+  align-items: center;
+  column-gap: 12px;
+  padding-left: 0;
+`
+
 function RowNameColumn({run}: {run: Run}) {
   let calculatorPath: React.ReactElement = <Box><CalculatorPath calculatorPath={run.calculator_path} /></Box>;
   return <>
@@ -69,14 +77,28 @@ function RowNameColumn({run}: {run: Run}) {
   </>;
 }
 
+function UserColumn({run}: {run: Run}) {
+  if (!run.user) {
+    return null;
+  }
+  const {first_name, last_name} = run.user;
+  return <>
+    <StyledContainer>
+      <UserAvatar user={run.user} sx={{ width: 18, height: 18 }} />
+      <div>{first_name} {(last_name || "").substring(0, 1)}.</div>
+    </StyledContainer>
+  </>;
+}
+
 const TableColumns: Array<RunListColumn> = [
   {name: "ID", width: "7.5%", render: (run: Run) => <Id id={run.id} trimTo={8} />},
-  {name: "Name", width: "47.5%", render: (run: Run) => <RowNameColumn run={run} />},
+  {name: "Name", width: "37.5%", render: (run: Run) => <RowNameColumn run={run} />},
   {name: "Tags", width: "21%", render: (run: Run) => <Tags tags={run.tags || []} />},
-  {name: "Time", width: "12%", 
+  {name: "User", width: "14%", render: (run: Run) => <UserColumn run={run} />},
+  {name: "Time", width: "10%", 
     render: (run: Run) => <><TimeAgo date={run.created_at} />
     <RunTime run={run} prefix="in" /></>},
-  {name: "Status", width: "12%", 
+  {name: "Status", width: "10%", 
   render: (run: Run) => <RunStateChip run={run} variant="full" />}
 ]
 

@@ -9,7 +9,7 @@ describe("Sematic application", () => {
     table.should("exist");
 
     table.within(() => {
-      cy.getBySel("pipeline-row").its("length").should("be.gte", 1);
+      cy.getBySel("runlist-row").its("length").should("be.gte", 1);
     });
   })
 })

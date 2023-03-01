@@ -86,7 +86,7 @@ function PipelineNameColumn(props: { run: Run }) {
   let { calculator_path, name, tags } = run;
 
   return (  
-    <div key="name" data-cy={"pipeline-row"}>
+    <>
       <Box sx={{ mb: 3 }}>  
         <MuiRouterLink href={"/pipelines/" + calculator_path} underline="hover">
           <Typography variant="h6">{name}</Typography>
@@ -94,7 +94,7 @@ function PipelineNameColumn(props: { run: Run }) {
         <CalculatorPath calculatorPath={calculator_path} />
       </Box>
       <Tags tags={tags || []} />
-    </div>  
+    </>  
   );
 }
 
