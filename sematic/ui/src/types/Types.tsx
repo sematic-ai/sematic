@@ -806,7 +806,6 @@ function S3Button(props: {region: string, bucket: string, location?: string}) {
     href = href + "&prefix=" + location;
   }
 
-  // https://s3.console.aws.amazon.com/s3/object/sematic-dev?region=us-west-2&prefix=artifacts/0024ed6e505a302dbe10b848cb007db47968b743
   return <>
   <Tooltip title="View in AWS console">
     <Button
@@ -815,7 +814,7 @@ function S3Button(props: {region: string, bucket: string, location?: string}) {
       target="blank"
       endIcon={<OpenInNew />}
     >
-      <img src={S3Icon} width="20px" style={{paddingRight: "5px"}}/>
+      <img src={S3Icon} width="20px" style={{paddingRight: "5px"}} alt="S3 icon"/>
       {s3URI}
     </Button>
     </Tooltip>
@@ -879,6 +878,10 @@ const TypeComponents: Map<string, ComponentPair> = new Map([
 
 function getComponentPair(typeRepr: TypeRepr) {
   let typeKey = typeRepr[1];
+
+  // This makes it so we don't have to create a shadow dataclass
+  // to have a custom viz for a particular dataclass. We can just
+  // register the React component with the full import path of the dataclass.
   if ("import_path" in typeRepr[2]) {
     typeKey = typeRepr[2]["import_path"] + "." + typeKey;
   }
