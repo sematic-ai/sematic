@@ -114,6 +114,9 @@ sematic_py_lib(
 sematic_py_lib(
     name = "image",
     srcs = ["image.py"],
+    pip_deps = [
+        "python-magic",
+    ],
     deps = [
         "//sematic/types:registry",
     ],

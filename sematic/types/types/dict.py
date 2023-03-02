@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, Type, get
 # Sematic
 from sematic.types.casting import safe_cast
 from sematic.types.registry import (
+    SummaryOutput,
     register_from_json_encodable,
     register_safe_cast,
     register_to_json_encodable,
@@ -97,7 +98,7 @@ def _dict_from_json_encodable(
 
 
 @register_to_json_encodable_summary(dict)
-def _dict_to_json_encodable_summary(value: Dict, type_: Type) -> List[Tuple[Any, Any]]:
+def _dict_to_json_encodable_summary(value: Dict, type_: Type) -> SummaryOutput:
     """
     UI summary for dict
 
@@ -111,10 +112,15 @@ def _dict_to_json_encodable_summary(value: Dict, type_: Type) -> List[Tuple[Any,
     # implemented, since the keys must be hashable in order to be used as keys
     sorted_keys = sorted(value.keys(), key=hash)
 
-    return [
-        (
-            get_json_encodable_summary(key, key_type),
-            get_json_encodable_summary(value[key], element_type),
+    summary, blobs = [], {}
+
+    for key in sorted_keys:
+        key_summary = get_json_encodable_summary(key, key_type)[0]
+        value_summary, value_blobs = get_json_encodable_summary(
+            value[key], element_type
         )
-        for key in sorted_keys
-    ]
+
+        summary.append((key_summary, value_summary))
+        blobs.update(value_blobs)
+
+    return summary, blobs
