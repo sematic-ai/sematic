@@ -4,7 +4,7 @@ import logging
 
 # Sematic
 from sematic import CloudResolver, LocalResolver
-from sematic.examples.add.pipeline import pipeline
+from sematic.examples.add.pipeline import image, pipeline
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Sematic add example")
@@ -26,6 +26,8 @@ if __name__ == "__main__":
         else LocalResolver(rerun_from=args.rerun_from)
     )
 
-    result = future.resolve(resolver)
+    # result = future.resolve(resolver)
+
+    result = image().resolve()
 
     logging.info(result)

@@ -94,14 +94,14 @@ def store_artifact_bytes(artifact_id: str, bytes_: bytes) -> None:
     """
     Store an artifact's serialized payload.
     """
-    _store_bytes("artifacts", artifact_id, bytes_)
+    store_bytes("artifacts", artifact_id, bytes_)
 
 
 def store_future_bytes(future_id: str, bytes_: bytes) -> None:
     """
     Store a serialzied future.
     """
-    _store_bytes("futures", future_id, bytes_)
+    store_bytes("futures", future_id, bytes_)
 
 
 def store_file_content(file_path: str, namespace: str, key: str) -> None:
@@ -111,11 +111,11 @@ def store_file_content(file_path: str, namespace: str, key: str) -> None:
     with open(file_path, "rb") as f:
         bytes_ = f.read()
 
-    _store_bytes(namespace, key, bytes_)
+    store_bytes(namespace, key, bytes_)
 
 
 @retry(tries=3, delay=10, jitter=1)
-def _store_bytes(namespace: str, key: str, bytes_: bytes) -> None:
+def store_bytes(namespace: str, key: str, bytes_: bytes) -> None:
     response = _get(f"/storage/{namespace}/{key}/location")
 
     url: str = response["url"]
