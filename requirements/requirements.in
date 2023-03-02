@@ -40,8 +40,9 @@ google-auth
 click
 
 # Examples
-torch==1.13.1
-torchvision==0.14.1
+# torch at 1.13.0 or later gives trouble with cuda dependencies
+torch<1.13.0
+torchvision==0.13.1
 torchmetrics
 plotly
 pandas
