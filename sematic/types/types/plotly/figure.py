@@ -7,6 +7,7 @@ from plotly.graph_objs import Figure
 
 # Sematic
 from sematic.types.registry import (
+    SummaryOutput,
     register_to_json_encodable,
     register_to_json_encodable_summary,
 )
@@ -18,5 +19,5 @@ def _plotly_figure_serialization(value: Figure, _) -> Any:
 
 
 @register_to_json_encodable_summary(Figure)
-def _plotly_figure_summary(value: Figure, _) -> Any:
-    return dict(figure=json.loads(value.to_json()))
+def _plotly_figure_summary(value: Figure, _) -> SummaryOutput:
+    return dict(figure=json.loads(value.to_json())), {}

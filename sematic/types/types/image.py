@@ -1,11 +1,12 @@
 # Standard Library
-import base64
 import uuid
 from dataclasses import dataclass
-from typing import Any, Dict, Tuple
+
+# Third-party
+import magic
 
 # Sematic
-from sematic.types.registry import register_to_json_encodable_summary
+from sematic.types.registry import SummaryOutput, register_to_json_encodable_summary
 
 
 @dataclass
@@ -19,7 +20,10 @@ class Image:
 
 
 @register_to_json_encodable_summary(Image)
-def _image_to_summary(value: Image, _) -> Tuple[Any, Dict[str, bytes]]:
-    encoded_string = base64.b64encode(value.bytes)
+def _image_to_summary(value: Image, _) -> SummaryOutput:
     blob_id = uuid.uuid4().hex
-    return {"bytes": {"blob": blob_id}}, {blob_id: encoded_string}
+    mime_type = magic.from_buffer(value.bytes, mime=True)
+
+    summary = {"mime_type": mime_type, "bytes": {"blob": blob_id}}
+
+    return summary, {blob_id: value.bytes}

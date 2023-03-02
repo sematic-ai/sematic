@@ -7,6 +7,7 @@ import typing
 
 # Sematic
 from sematic.types.registry import (
+    SummaryOutput,
     register_can_cast,
     register_safe_cast,
     register_to_json_encodable_summary,
@@ -41,5 +42,5 @@ def can_cast_to_str(type_: type, _) -> typing.Tuple[bool, typing.Optional[str]]:
 
 
 @register_to_json_encodable_summary(str, typing.Text)
-def _str_summary(value: str, _) -> str:
-    return value_to_json_encodable(value, str)
+def _str_summary(value: str, _) -> SummaryOutput:
+    return value_to_json_encodable(value, str), {}
