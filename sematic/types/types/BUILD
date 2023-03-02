@@ -110,3 +110,11 @@ sematic_py_lib(
     srcs = ["datetime.py"],
     deps = [],
 )
+
+sematic_py_lib(
+    name = "image",
+    srcs = ["image.py"],
+    deps = [
+        "//sematic/types:registry",
+    ],
+)

@@ -17,6 +17,7 @@ sematic_py_lib(
         "//sematic/types/types:dict",
         "//sematic/types/types:str",
         "//sematic/types/types:datetime",
+        "//sematic/types/types:image",
         # Does not actually create a dependency on torch
         "//sematic/types/types/pytorch:init",
         # Does not actually create a dependency on plotly

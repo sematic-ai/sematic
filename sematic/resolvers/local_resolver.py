@@ -656,8 +656,11 @@ class LocalResolver(SilentResolver):
 
             return artifact
 
-        artifact, payload = make_artifact(value, type_)
-        api_client.store_artifact_bytes(artifact.id, payload)
+        artifact, uploads_candidates = make_artifact(value, type_)
+        for upload in uploads_candidates:
+            api_client.store_bytes(
+                namespace=upload.namespace.value, key=upload.key, bytes_=upload.payload
+            )
 
         logger.debug(
             "Created %s with id %s for run %s",

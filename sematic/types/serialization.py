@@ -97,7 +97,9 @@ def binary_from_string(string: str) -> bytes:
 
 
 # JSON SUMMARIES
-def get_json_encodable_summary(value: typing.Any, type_: typing.Any) -> typing.Any:
+def get_json_encodable_summary(
+    value: typing.Any, type_: typing.Any
+) -> typing.Tuple[typing.Any, typing.Dict[str, bytes]]:
     to_json_encodable_summary_func = get_to_json_encodable_summary_func(type_)
 
     if to_json_encodable_summary_func is None and dataclasses.is_dataclass(type_):
@@ -111,7 +113,7 @@ def get_json_encodable_summary(value: typing.Any, type_: typing.Any) -> typing.A
     if to_json_encodable_summary_func is not None:
         return to_json_encodable_summary_func(value, type_)
 
-    return {"repr": repr(value)}
+    return {"repr": repr(value)}, {}
 
 
 # TYPE SERIALIZATION
