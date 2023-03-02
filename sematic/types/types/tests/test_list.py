@@ -39,19 +39,21 @@ def test_safe_cast(type_, value, expected_cast_value, expected_error):
 
 
 def test_summaries():
-    summary = get_json_encodable_summary([1, 2, 3, 4, 5, 6, 7], List[int])
+    summary, blobs = get_json_encodable_summary([1, 2, 3, 4, 5, 6, 7], List[int])
     assert summary == {
         "summary": [1, 2, 3, 4, 5, 6, 7],
         "length": 7,
     }
+    assert blobs == {}
 
     long_value = 2**21 * "h"
     long_list = [long_value for _ in range(5)]
-    summary = get_json_encodable_summary(long_list, List[str])
+    summary, blobs = get_json_encodable_summary(long_list, List[str])
     assert summary == {
         "summary": [long_value],
         "length": 5,
     }
+    assert blobs == {}
 
 
 @pytest.mark.parametrize(

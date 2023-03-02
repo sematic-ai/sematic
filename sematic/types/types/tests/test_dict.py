@@ -41,9 +41,10 @@ def test_dict(value, type_, expected_value, expected_error):
 
 
 def test_dict_summary():
-    summary = get_json_encodable_summary(dict(a=123), Dict[str, int])
+    summary, blobs = get_json_encodable_summary(dict(a=123), Dict[str, int])
 
     assert summary == [("a", 123)]
+    assert blobs == {}
 
 
 @pytest.mark.parametrize("type_", (Dict[str, int],))
