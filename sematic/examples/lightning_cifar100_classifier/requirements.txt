@@ -1,0 +1,6 @@
+torch
+torchvision
+torchmetrics
+plotly
+pandas
+scikit-learn
