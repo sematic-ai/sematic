@@ -1,8 +1,6 @@
-import TableRow from "@mui/material/TableRow";
-import TableCell from "@mui/material/TableCell";
 import Typography from "@mui/material/Typography";
 import { Run } from "../Models";
-import { RunList } from "../components/RunList";
+import { RunList, RunListColumn } from "../components/RunList";
 import RunStateChip from "../components/RunStateChip";
 import React, { ChangeEvent, FormEvent, useCallback, useState } from "react";
 import Tags from "../components/Tags";
@@ -16,57 +14,7 @@ import { styled } from "@mui/system";
 import { spacing } from "../utils";
 import { getRunUrlPattern } from "../hooks/pipelineHooks";
 import MuiRouterLink from "../components/MuiRouterLink";
-
-type RunRowProps = {
-  run: Run;
-  variant?: string;
-  onClick?: React.MouseEventHandler;
-  selected?: boolean;
-  noRunLink?: boolean;
-};
-
-export function RunRow(props: RunRowProps) {
-  let run = props.run;
-
-  let calculatorPath: React.ReactElement | undefined = undefined;
-
-  if (props.variant !== "skinny") {
-    calculatorPath = <Box><CalculatorPath calculatorPath={run.calculator_path} /></Box>;
-  }
-
-  return (
-    <TableRow
-      key={run.id}
-      hover={props.onClick !== undefined}
-      sx={{ cursor: props.onClick ? "pointer" : undefined }}
-      selected={props.selected}
-    >
-      <TableCell onClick={props.onClick} width={1}>
-        <Id id={run.id} trimTo={8} />
-      </TableCell>
-      <TableCell onClick={props.onClick}>
-        <Typography variant="h6">
-          {props.noRunLink && run.name}
-          {!props.noRunLink && (
-            <MuiRouterLink href={getRunUrlPattern(run.id)} underline="hover">
-              {run.name}
-            </MuiRouterLink>
-          )}
-        </Typography>
-        {calculatorPath}
-      </TableCell>
-      <TableCell>
-        <Tags tags={run.tags || []} />
-      </TableCell>
-      <TableCell onClick={props.onClick}>
-        <TimeAgo date={run.created_at} /><RunTime run={run} prefix="in" />
-      </TableCell>
-      <TableCell onClick={props.onClick}>
-        <RunStateChip run={run} variant="full" />
-      </TableCell>
-    </TableRow>
-  );
-}
+import UserAvatar from "src/components/UserAvatar";
 
 const StyledScroller = styled(Container)`
   padding-top: ${spacing(10)};
@@ -110,12 +58,46 @@ const StyledScroller = styled(Container)`
   }
 `;
 
-const TableColumns = [
-  {name: "ID", width: "7.5%"},
-  {name: "Name", width: "47.5%"},
-  {name: "Tags", width: "21%"},
-  {name: "Time", width: "12%"},
-  {name: "Status", width: "12%"}
+const StyledContainer = styled(Container)`
+  display: flex;
+  align-items: center;
+  column-gap: 12px;
+  padding-left: 0;
+`
+
+function RowNameColumn({run}: {run: Run}) {
+  let calculatorPath: React.ReactElement = <Box><CalculatorPath calculatorPath={run.calculator_path} /></Box>;
+  return <>
+    <Typography variant="h6">
+      <MuiRouterLink href={getRunUrlPattern(run.id)} underline="hover">
+          {run.name}
+      </MuiRouterLink>
+    </Typography>
+      {calculatorPath}
+  </>;
+}
+
+function UserColumn({run}: {run: Run}) {
+  if (!run.user) {
+    return null;
+  }
+  const {first_name, last_name} = run.user;
+  return <StyledContainer>
+      <UserAvatar user={run.user} sx={{ width: 18, height: 18 }} />
+      <div>{first_name} {(last_name || "").substring(0, 1)}.</div>
+    </StyledContainer>;
+}
+
+const TableColumns: Array<RunListColumn> = [
+  {name: "ID", width: "7.5%", render: (run: Run) => <Id id={run.id} trimTo={8} />},
+  {name: "Name", width: "37.5%", render: (run: Run) => <RowNameColumn run={run} />},
+  {name: "Tags", width: "21%", render: (run: Run) => <Tags tags={run.tags || []} />},
+  {name: "User", width: "14%", render: (run: Run) => <UserColumn run={run} />},
+  {name: "Time", width: "10%", 
+    render: (run: Run) => <><TimeAgo date={run.created_at} />
+    <RunTime run={run} prefix="in" /></>},
+  {name: "Status", width: "10%", 
+  render: (run: Run) => <RunStateChip run={run} variant="full" />}
 ]
 
 export function RunIndex() {
@@ -155,10 +137,7 @@ export function RunIndex() {
             </Box>
           </form>
         <Box className="RunListBox">
-          <RunList columns={TableColumns} 
-            search={submitedSearchString}>
-            {(run: Run) => <RunRow run={run} key={run.id} onClick={() => null} />}
-          </RunList>
+          <RunList columns={TableColumns} search={submitedSearchString} />
         </Box>
       </StyledScroller>
   );
