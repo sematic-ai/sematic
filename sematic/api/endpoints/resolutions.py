@@ -135,8 +135,13 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
         return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
 
     if ResolutionStatus[resolution.status].is_terminal():
-        if previous_status is not None and previous_status.is_terminal():
-
+        # we want to log a message when the resolution is moved
+        # from a non-terminal state to a terminal state.
+        is_termination_update = (
+            previous_status is not None
+            and not ResolutionStatus[previous_status].is_terminal()  # type: ignore
+        )
+        if is_termination_update:
             # Note: This message can be used to extract information about pipeline
             # status for usage in dashboards. Some users may be leveraging it for
             # such purposes, so think carefully before changing/removing it.
