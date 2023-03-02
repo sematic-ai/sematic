@@ -56,6 +56,9 @@ class S3Location:
             bucket=S3Bucket(name=split_uri.netloc, region=region), location=location
         )
 
+    def to_uri(self) -> str:
+        return f"s3://{self.bucket.name}/{self.location}"
+
     @property
     def parent_directory(self) -> "S3Location":
         """

@@ -95,3 +95,10 @@ def test_div(current_location, sibling_location):
 
     assert sibling.bucket == location.bucket
     assert sibling.location == sibling_location
+
+
+def test_to_uri():
+    assert (
+        S3Location(bucket=S3Bucket(name="foo"), location="bar/bat").to_uri()
+        == "s3://foo/bar/bat"
+    )
