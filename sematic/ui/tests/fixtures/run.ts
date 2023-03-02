@@ -1,4 +1,4 @@
-export default {
+const run = {
     "cache_key": null,
     "calculator_path": "sematic.examples.add.pipeline.pipeline",
     "container_image_uri": null,
@@ -29,3 +29,5 @@ export default {
     "user": null as any,
     "user_id": "uid" as string | null
 }
+
+export default run;

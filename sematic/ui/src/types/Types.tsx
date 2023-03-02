@@ -31,6 +31,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useMatplotLib } from "../hooks/useMatplotLib";
 import useMeasure from "react-use/lib/useMeasure";
 import Zoom from "react-medium-image-zoom";
+import S3Icon from "../s3.png";
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -778,6 +779,52 @@ function EnumValueView(props: ValueViewProps) {
   return <Chip label={valueSummary} variant="outlined" />;
 }
 
+function S3LocationValueView(props: ValueViewProps) {
+  const { valueSummary } = props;
+  const { values } = valueSummary;
+
+  const bucketSummary = values.bucket.values;
+
+  return <S3Button region={bucketSummary.region} bucket={bucketSummary.name} location={values.location} />;
+}
+
+function S3BucketValueView(props: ValueViewProps) {
+  const { valueSummary } = props;
+  const { values } = valueSummary;
+
+  return <S3Button region={values.region} bucket={values.name} />
+}
+
+function S3Button(props: {region?: string, bucket: string, location?: string}) {
+  const { region, bucket, location } = props;
+
+  let s3URI = "s3://" + bucket;
+  let href = new URL("https://s3.console.aws.amazon.com/s3/object/" + bucket);
+  
+  if (region !== null && region !== undefined) {
+    href.searchParams.append("region", region);
+  }
+
+  if (location !== undefined) {
+    s3URI = s3URI + "/" + location;
+    href.searchParams.append("prefix", location);
+  }
+
+  return <>
+  <Tooltip title="View in AWS console">
+    <Button
+      href={href.href}
+      variant="outlined"
+      target="blank"
+      endIcon={<OpenInNew />}
+    >
+      <img src={S3Icon} width="20px" style={{paddingRight: "5px"}} alt="S3 icon"/>
+      {s3URI}
+    </Button>
+    </Tooltip>
+  </>;
+}
+
 type ComponentPair = {
   type: (props: TypeViewProps) => JSX.Element;
   value: (props: ValueViewProps) => JSX.Element;
@@ -817,11 +864,29 @@ const TypeComponents: Map<string, ComponentPair> = new Map([
       value: DataFrameValueView,
     },
   ],
+  [
+    "sematic.types.types.aws.s3.S3Location",
+    {
+      type: TypeView,
+      value: S3LocationValueView,
+    }
+  ],
+  [
+    "sematic.types.types.aws.s3.S3Bucket",
+    {
+      type: TypeView,
+      value: S3BucketValueView,
+    }
+  ]
 ]);
 
 function getComponentPair(typeRepr: TypeRepr) {
   let typeKey = typeRepr[1];
-  if (typeRepr[0] === "class") {
+
+  // This makes it so we don't have to create a shadow dataclass
+  // to have a custom viz for a particular dataclass. We can just
+  // register the React component with the full import path of the dataclass.
+  if ("import_path" in typeRepr[2]) {
     typeKey = typeRepr[2]["import_path"] + "." + typeKey;
   }
 
