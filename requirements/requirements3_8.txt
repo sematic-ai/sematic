@@ -1676,6 +1676,10 @@ python-engineio==4.3.4 \
     --hash=sha256:7454314a529bba20e745928601ffeaf101c1b5aca9a6c4e48ad397803d10ea0c \
     --hash=sha256:d8d8b072799c36cadcdcc2b40d2a560ce09797ab3d2d596b2ad519a5e4df19ae
     # via python-socketio
+python-magic==0.4.27 \
+    --hash=sha256:c1ba14b08e4a5f5c31a302b7721239695b2f0f058d125bd5ce1ee36b9d9d3c3b \
+    --hash=sha256:c212960ad306f700aa0d01e5d7a325d20548ff97eb9920dcd29513174f0294d3
+    # via -r requirements/requirements.in
 python-socketio==5.7.2 \
     --hash=sha256:92395062d9db3c13d30e7cdedaa0e1330bba78505645db695415f9a3c628d097 \
     --hash=sha256:d9a9f047e6fdd306c852fbac36516f4b495c2096f8ad9ceb8803b8e5ff5622e3
