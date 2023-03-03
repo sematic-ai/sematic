@@ -16,7 +16,7 @@ from sematic.config.user_settings import UserSettings, UserSettingsVar, get_user
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
-from sematic.db.models.factories import UploadCandidate, deserialize_artifact_value
+from sematic.db.models.factories import UploadPayload, deserialize_artifact_value
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -114,12 +114,12 @@ def store_file_content(file_path: str, namespace: str, key: str) -> None:
     _store_bytes(namespace, key, bytes_)
 
 
-def store_candidates(candidates: Iterable[UploadCandidate]) -> None:
+def store_payloads(payloads: Iterable[UploadPayload]) -> None:
     """
-    Upload candidates.
+    Upload payloads.
     """
-    for candidate in candidates:
-        _store_bytes(candidate.namespace.value, candidate.key, candidate.payload)
+    for payload in payloads:
+        _store_bytes(payload.namespace.value, payload.key, payload.payload)
 
 
 @retry(tries=3, delay=10, jitter=1)

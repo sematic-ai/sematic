@@ -158,15 +158,13 @@ class StorageNamespace(enum.Enum):
 
 
 @dataclass
-class UploadCandidate:
+class UploadPayload:
     namespace: StorageNamespace
     key: str
     payload: bytes
 
 
-def make_artifact(
-    value: Any, type_: Any
-) -> Tuple[Artifact, Tuple[UploadCandidate, ...]]:
+def make_artifact(value: Any, type_: Any) -> Tuple[Artifact, Tuple[UploadPayload, ...]]:
     """
     Create an Artifact model instance from a value and type.
     """
@@ -191,17 +189,17 @@ def make_artifact(
 
     payload = json.dumps(value_serialization, sort_keys=True).encode("utf-8")
 
-    upload_candidates = [
-        UploadCandidate(
+    upload_payloads = [
+        UploadPayload(
             namespace=StorageNamespace.artifacts, key=artifact_id, payload=payload
         )
     ]
     for key, blob in blobs.items():
-        upload_candidates.append(
-            UploadCandidate(namespace=StorageNamespace.blobs, key=key, payload=blob)
+        upload_payloads.append(
+            UploadPayload(namespace=StorageNamespace.blobs, key=key, payload=blob)
         )
 
-    return artifact, tuple(upload_candidates)
+    return artifact, tuple(upload_payloads)
 
 
 def deserialize_artifact_value(artifact: Artifact, payload: bytes) -> Any:
