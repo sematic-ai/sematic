@@ -11,6 +11,10 @@ from sematic.types.registry import SummaryOutput, register_to_json_encodable_sum
 
 @dataclass
 class Image:
+    """
+    A simple type to display images in the UI.
+    """
+
     bytes: bytes
 
     @classmethod
