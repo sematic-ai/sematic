@@ -217,13 +217,16 @@ def persisted_artifact(test_db, test_storage):  # noqa: F811
     """
     Persisted artifact fixture.
     """
-    artifact, bytes_ = make_artifact(42, int)
+    artifact, upload_candidates = make_artifact(42, int)
 
     with db.db().get_session() as session:
         artifact = _save_artifact(artifact=artifact, session=session)
         session.commit()
         session.refresh(artifact)
 
-    test_storage.set(f"artifacts/{artifact.id}", bytes_)
+    for candidate in upload_candidates:
+        test_storage.set(
+            f"{candidate.namespace.value}/{candidate.key}", candidate.payload
+        )
 
     return artifact

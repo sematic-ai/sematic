@@ -75,7 +75,7 @@ def test_make_artifact():
 
     value_serialization = value_to_json_encodable(42, int)
     type_serialization = type_to_json_encodable(int)
-    json_summary = get_json_encodable_summary(42, int)
+    json_summary, blobs = get_json_encodable_summary(42, int)
 
     payload = {
         "value": value_serialization,
@@ -85,6 +85,7 @@ def test_make_artifact():
 
     sha1 = hashlib.sha1(json.dumps(payload, sort_keys=True).encode("utf-8"))
 
+    assert blobs == {}
     assert artifact.id == sha1.hexdigest()
     assert artifact.json_summary == json.dumps(json_summary, sort_keys=True)
     assert artifact.type_serialization == json.dumps(type_serialization, sort_keys=True)
@@ -95,7 +96,7 @@ def test_make_artifact_with_optional_type_hint():
 
     value_serialization = value_to_json_encodable([42], List[int])
     type_serialization = type_to_json_encodable(List[int])
-    json_summary = get_json_encodable_summary([42], List[int])
+    json_summary, blobs = get_json_encodable_summary([42], List[int])
 
     payload = {
         "value": value_serialization,
@@ -105,6 +106,7 @@ def test_make_artifact_with_optional_type_hint():
 
     sha1 = hashlib.sha1(json.dumps(payload, sort_keys=True).encode("utf-8"))
 
+    assert blobs == {}
     assert artifact.id == sha1.hexdigest()
     assert artifact.json_summary == json.dumps(json_summary, sort_keys=True)
     assert artifact.type_serialization == json.dumps(type_serialization, sort_keys=True)
@@ -115,7 +117,7 @@ def test_make_artifact_with_nested_union_type_hint():
 
     value_serialization = value_to_json_encodable([42], List[int])
     type_serialization = type_to_json_encodable(List[int])
-    json_summary = get_json_encodable_summary([42], List[int])
+    json_summary, blobs = get_json_encodable_summary([42], List[int])
 
     payload = {
         "value": value_serialization,
@@ -125,6 +127,7 @@ def test_make_artifact_with_nested_union_type_hint():
 
     sha1 = hashlib.sha1(json.dumps(payload, sort_keys=True).encode("utf-8"))
 
+    assert blobs == {}
     assert artifact.id == sha1.hexdigest()
     assert artifact.json_summary == json.dumps(json_summary, sort_keys=True)
     assert artifact.type_serialization == json.dumps(type_serialization, sort_keys=True)
