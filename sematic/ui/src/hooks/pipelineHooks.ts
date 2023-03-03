@@ -1,5 +1,6 @@
+import { RESET } from "jotai/utils";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import useAsync from "react-use/lib/useAsync";
 import useAsyncFn from "react-use/lib/useAsyncFn";
 import { Resolution, Run } from "../Models";
@@ -13,6 +14,7 @@ export type QueryParams = {[key: string]: string};
 
 export const selectedRunHashAtom = atomWithHashCustomSerialization('run', '')
 export const selectedTabHashAtom = atomWithHashCustomSerialization('tab', '')
+export const selectedPanelHashAtom = atomWithHashCustomSerialization('panel', '')
 
 export function usePipelineRunContext() {
     const contextValue = useContext(PipelineRunViewContext);
@@ -118,23 +120,15 @@ export function getRunUrlPattern(requestedRootId: string) {
 
 export function useRunNavigation() {
     const navigate = useNavigate();
-    const { rootId } = useParams();
     const { hash } = useLocation();
 
     return useCallback((requestedRootId: string, replace: boolean = false,
-        hashOverrideValues: Record<string, string> | undefined = undefined) => {
-        if ( rootId === requestedRootId ) {
-            return
-        }
+        hashOverrideValues: Record<string, string | Symbol> | undefined = undefined) => {
 
-        let newHashValue = hash;
+        let newHashValue = hash.replace(/^#/, '');
 
         if (hashOverrideValues) {
-            const searchParams = new URLSearchParams(hash);
-            for (const key of Object.keys(hashOverrideValues)) {
-                searchParams.set(key, hashOverrideValues[key]);
-            }
-            newHashValue = searchParams.toString();
+            newHashValue = updateHash(hash, hashOverrideValues);
         }
 
         navigate({
@@ -143,5 +137,38 @@ export function useRunNavigation() {
         }, {
             replace
         });
-    }, [rootId, hash, navigate]);
+    }, [hash, navigate]);
+}
+
+export function useHashUpdater() {
+    const { hash } = useLocation();
+    const navigate = useNavigate();
+
+    return useCallback((
+        hashOverrideValues: Record<string, string | Symbol>, replace: boolean = false) => {
+        let newHashValue = hash.replace(/^#/, '');
+
+        newHashValue = updateHash(newHashValue, hashOverrideValues);
+
+        navigate({
+            hash: newHashValue
+        }, {
+            replace
+        });
+    }, [hash, navigate]);
+}
+
+function updateHash(currentHash: string, hashOverrideValues: Record<string, string | Symbol>) {
+    let newHashValue = currentHash.replace(/^#/, '');
+
+    const searchParams = new URLSearchParams(newHashValue);
+    for (const key of Object.keys(hashOverrideValues)) {
+        const value = hashOverrideValues[key]; 
+        if (value === RESET) {
+            searchParams.delete(key);
+        } else {
+            searchParams.set(key, value as string);
+        }
+    }
+    return searchParams.toString();
 }
