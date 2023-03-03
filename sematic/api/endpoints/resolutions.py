@@ -77,6 +77,11 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
 
     resolution_json_encodable = flask.request.json["resolution"]
     resolution = Resolution.from_json_encodable(resolution_json_encodable)
+    logger.info(
+        "Attempting to update resolution %s. Status: %s",
+        resolution.root_id,
+        resolution.status,
+    )
 
     if user is not None:
         resolution.user_id = user.id
@@ -114,8 +119,10 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
     except NoResultFound:
         existing_resolution = None
 
+    previous_status = None
     try:
         if existing_resolution is not None:
+            previous_status = existing_resolution.status
             # This field is scrubbed on read, but should be immutable.
             # ignore whatever the caller sent back this time.
             resolution.settings_env_vars = existing_resolution.settings_env_vars
@@ -128,6 +135,26 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
         return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
 
     if ResolutionStatus[resolution.status].is_terminal():
+        # we want to log a message when the resolution is moved
+        # from a non-terminal state to a terminal state.
+        is_termination_update = (
+            previous_status is not None
+            and not ResolutionStatus[previous_status].is_terminal()  # type: ignore
+        )
+        if is_termination_update:
+            # Note: This message can be used to extract information about pipeline
+            # status for usage in dashboards. Some users may be leveraging it for
+            # such purposes, so think carefully before changing/removing it.
+            was_remote = len(resolution.external_jobs)
+            logger.info(
+                "%s resolution %s for pipeline %s terminated with "
+                "root run in state %s. The root run had tags: %s",
+                "Remote" if was_remote else "Local",
+                resolution.root_id,
+                root_run.calculator_path,
+                root_run.future_state,
+                root_run.tags,
+            )
         try:
             _cancel_non_terminal_runs(resolution.root_id)
         except Exception as e:
