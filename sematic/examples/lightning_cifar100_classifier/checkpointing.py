@@ -1,39 +1,41 @@
+# Standard Library
+import io
 import logging
 from dataclasses import dataclass
-import os
-import io
-import tempfile
+
+# Third-party
 import boto3
-import botocore.exceptions
-from sematic.utils.retry import retry
 import cloudpickle
 from pytorch_lightning.plugins.io.checkpoint_plugin import CheckpointIO
 
+# Sematic
+from sematic.types.types.aws.s3 import S3Location
+from sematic.utils.retry import retry
+
 logger = logging.getLogger(__name__)
 
+
 class SematicCheckpointIO(CheckpointIO):
-    def __init__(self, *args, bucket=None, prefix=None, **kwargs) -> None:
-        if bucket is None:
-            raise ValueError("Missing required argument bucket")
-        if prefix is None:
-            raise ValueError("Missing required argument prefix")
-        self._bucket = bucket
-        self._prefix = prefix if not prefix.endswith("/") else prefix[-1]
+    def __init__(self, *args, s3_location=None, **kwargs) -> None:
+        if s3_location is None:
+            raise ValueError("Missing required argument 's3_location'")
+        self._s3_location = s3_location
         super().__init__(*args, **kwargs)
 
     def save_checkpoint(self, checkpoint, path, storage_options=None):
         as_bytes = cloudpickle.dumps(checkpoint)
         s3_client = boto3.client("s3")
-        key = f"{self._prefix}/{path}"
+        key = (self._s3_location / path).location
         with io.BytesIO(as_bytes) as file_obj:
-            s3_client.upload_fileobj(file_obj, self._bucket, key)
+            s3_client.upload_fileobj(file_obj, self._s3_location.bucket.name, key)
 
     @retry(tries=3, delay=5)
     def load_checkpoint(self, path, storage_options=None):
         file_obj = io.BytesIO()
         s3_client = boto3.client("s3")
-        key = f"{self._prefix}/{path}"
-        s3_client.download_fileobj(self._bucket, key, file_obj)        
+        key = (self._s3_location / path).location
+        logger.info("Loading checkpoint from %s", (self._s3_location / path).to_uri())
+        s3_client.download_fileobj(self._s3_location.bucket.name, key, file_obj)
         return cloudpickle.loads(file_obj.getvalue())
 
     def remove_checkpoint(self, path):
@@ -41,16 +43,19 @@ class SematicCheckpointIO(CheckpointIO):
             f"Cannot remove checkpoints once "
             f"they have been written. Ignoring removal of: {path}"
         )
-    
+
     def from_path(self, path):
         return Checkpoint(
-            path=path,
-            prefix=self._prefix,
-            bucket=self._bucket,
+            location=self._s3_location / path,
+            prefix=self._s3_location,
         )
 
 
 @dataclass
 class Checkpoint:
-    path: str
-    source_run_id: str
+    location: S3Location
+    prefix: S3Location
+
+    @property
+    def path(self):
+        return self.location.location.replace(f"{self.prefix.location}/", "")

@@ -1,21 +1,26 @@
 # Standard Library
+import logging
 from dataclasses import dataclass
 
+# Third-party
 import ray
 
 # Sematic
 import sematic
 from sematic import context
 from sematic.ee.ray import RayCluster, SimpleRayCluster
+from sematic.examples.lightning_cifar100_classifier.checkpointing import (
+    Checkpoint,
+    SematicCheckpointIO,
+)
 from sematic.examples.lightning_cifar100_classifier.train_eval import (
+    DataConfig,
     EvaluationConfig,
     EvaluationResults,
     TrainingConfig,
     evaluate_classifier,
     train_classifier,
-    DataConfig,
 )
-from sematic.examples.lightning_cifar100_classifier.checkpointing import SematicCheckpointIO, Checkpoint
 
 
 @dataclass
@@ -29,14 +34,29 @@ def train(config: TrainingConfig, data_config: DataConfig) -> Checkpoint:
     cluster_config = SimpleRayCluster(
         n_nodes=config.n_workers, node_config=config.worker
     )
-    checkpointer = SematicCheckpointIO(run_id=context().run_id)
 
+    # You can also use the built-in pytorch lightning checkpointing
+    # with s3 if you are willing to install some extra dependencies
+    checkpointer = SematicCheckpointIO(
+        s3_location=config.checkpoint_location / context().run_id
+    )
+
+    # we want the driver for the training to run on the
+    # small ray cluster we're creating.
     @ray.remote(num_cpus=config.worker.cpu, num_gpus=config.worker.gpu_count)
     def call_train_classifier_from_ray():
-        strategy_compute_kwargs = dict(num_workers=config.n_workers - 1, num_cpus_per_worker=config.worker.cpu, use_gpu=config.worker.gpu_count > 0)
-        return train_classifier(config, data_config, strategy_compute_kwargs, checkpointer)
+        logging.basicConfig(level=logging.INFO)
+        strategy_compute_kwargs = dict(
+            # -1 because 1 worker is being used to drive the training.
+            num_workers=config.n_workers - 1,
+            num_cpus_per_worker=config.worker.cpu,
+            use_gpu=config.worker.gpu_count > 0,
+        )
+        return train_classifier(
+            config, data_config, strategy_compute_kwargs, checkpointer
+        )
 
-    with RayCluster(config=cluster_config):        
+    with RayCluster(config=cluster_config):
         return ray.get(call_train_classifier_from_ray.remote())
 
 
@@ -47,13 +67,20 @@ def evaluate(
     cluster_config = SimpleRayCluster(
         n_nodes=config.n_workers, node_config=config.worker
     )
-    checkpointer = SematicCheckpointIO(run_id=checkpoint.source_run_id)
+    checkpointer = SematicCheckpointIO(s3_location=checkpoint.prefix)
 
     @ray.remote(num_gpus=config.worker.gpu_count)
     def call_evaluate_classifier_from_ray():
-        strategy_compute_kwargs = dict(num_workers=config.n_workers - 1, num_cpus_per_worker=config.worker.cpu, use_gpu=config.worker.gpu_count > 0)
-        return evaluate_classifier(checkpoint, config, data_config, strategy_compute_kwargs, checkpointer)
-    
+        logging.basicConfig(level=logging.INFO)
+        strategy_compute_kwargs = dict(
+            num_workers=config.n_workers - 1,
+            num_cpus_per_worker=config.worker.cpu,
+            use_gpu=config.worker.gpu_count > 0,
+        )
+        return evaluate_classifier(
+            checkpoint, config, data_config, strategy_compute_kwargs, checkpointer
+        )
+
     with RayCluster(config=cluster_config):
         return ray.get(call_evaluate_classifier_from_ray.remote())
 

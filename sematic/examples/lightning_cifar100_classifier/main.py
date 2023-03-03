@@ -8,14 +8,17 @@ import sematic
 from sematic.ee.ray import RayNodeConfig
 from sematic.examples.lightning_cifar100_classifier.pipeline import pipeline
 from sematic.examples.lightning_cifar100_classifier.train_eval import (
+    DataConfig,
     EvaluationConfig,
     TrainingConfig,
     TrainLoopConfig,
-    DataConfig,
 )
+from sematic.types.types.aws.s3 import S3Location
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+CHECKPOINT_LOCATION = S3Location.from_uri("s3://sematic-dev/lightning-cifar")
 
 LOCAL_DATA_CONFIG = DataConfig(
     batch_size=2,
@@ -26,7 +29,7 @@ LOCAL_DATA_CONFIG = DataConfig(
 REMOTE_DATA_CONFIG = replace(LOCAL_DATA_CONFIG, batch_size=256)
 
 LOCAL_TRAINING_CONFIG = TrainingConfig(
-    n_workers=1,
+    n_workers=2,
     worker=RayNodeConfig(
         cpu=2,
         memory_gb=8,
@@ -36,6 +39,7 @@ LOCAL_TRAINING_CONFIG = TrainingConfig(
         n_epochs=1,
         max_steps=250,
     ),
+    checkpoint_location=CHECKPOINT_LOCATION,
 )
 
 REMOTE_TRAINING_CONFIG = TrainingConfig(
@@ -46,13 +50,14 @@ REMOTE_TRAINING_CONFIG = TrainingConfig(
         gpu_count=1,
     ),
     loop_config=TrainLoopConfig(
-        n_epochs=5,
+        n_epochs=30,
         max_steps=-1,
     ),
+    checkpoint_location=CHECKPOINT_LOCATION,
 )
 
 LOCAL_EVAL_CONFIG = EvaluationConfig(
-    n_workers=1,
+    n_workers=2,
     worker=RayNodeConfig(
         cpu=2,
         memory_gb=8,
@@ -61,7 +66,7 @@ LOCAL_EVAL_CONFIG = EvaluationConfig(
 )
 
 REMOTE_EVAL_CONFIG = EvaluationConfig(
-    n_workers=1,
+    n_workers=2,
     worker=RayNodeConfig(
         cpu=3,
         memory_gb=10,
@@ -89,9 +94,12 @@ def main():
         eval_config = LOCAL_EVAL_CONFIG
         data_config = LOCAL_DATA_CONFIG
 
-    future = pipeline(train_config, data_config, eval_config).set(name="CIFAR Classifier Example")
+    future = pipeline(train_config, data_config, eval_config).set(
+        name="Distributed Training Resnet Example"
+    )
 
     print(future.resolve(resolver))
+
 
 if __name__ == "__main__":
     main()

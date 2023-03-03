@@ -2,6 +2,7 @@ load("//bazel:pipeline.bzl", "sematic_pipeline")
 
 
 pip_deps = [
+    "boto3",
     "pandas",
     "pillow",
     "plotly",

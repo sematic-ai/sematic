@@ -1,6 +1,10 @@
-torch
-torchvision
-torchmetrics
-plotly
+boto3
 pandas
-scikit-learn
+pillow
+plotly
+pytorch-lightning
+ray
+ray-lightning
+torch
+torchmetrics
+torchvision
