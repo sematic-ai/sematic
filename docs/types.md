@@ -27,7 +27,10 @@ list, tuple, or dictionary as well.
 
 ## Pandas dataframes
 
-See [Pandas integration](./pandas.md).
+Using a pandas data frame as an input/output from a Sematic func will result in
+a summary of that data frame being displayed.
+
+![Data Frame view in the UI](./images/DataFrame.png)
 
 ## Snowflake tables
 
