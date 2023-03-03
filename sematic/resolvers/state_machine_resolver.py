@@ -4,6 +4,7 @@ Abstract base class for a state machine-based resolution.
 # Standard Library
 import abc
 import logging
+import os
 import signal
 import time
 import typing
@@ -24,6 +25,7 @@ from sematic.utils.exceptions import (
     ResolutionError,
     format_exception_for_run,
 )
+from sematic.utils.signals import FrameType, HandlerType, call_signal_handler
 
 logger = logging.getLogger(__name__)
 
@@ -134,8 +136,21 @@ class StateMachineResolver(Resolver, abc.ABC):
         self._enqueue_future(future)
 
     def _register_signal_handlers(self):
+        resolver_pid = os.getpid()
+        original_handlers: typing.Dict[int, HandlerType] = dict()
+
+        def _handle_sig_cancel(signum: int, frame: FrameType) -> None:
+            if resolver_pid == os.getpid():
+                logger.warning("Received signal %s; canceling resolution...", signum)
+                self._resolution_did_cancel()
+
+            # this branch is possible when using LocalResolver,
+            # or if inlined funcs spawn processes when using CloudResolver
+            else:
+                call_signal_handler(original_handlers[signum], signum, frame)
+
         for signum in {signal.SIGINT, signal.SIGTERM}:
-            signal.signal(signum, self._handle_sig_cancel)
+            original_handlers[signum] = signal.signal(signum, _handle_sig_cancel)
 
     def _enqueue_future(self, future: AbstractFuture) -> None:
         if future in self._futures:
@@ -163,10 +178,6 @@ class StateMachineResolver(Resolver, abc.ABC):
     @abc.abstractmethod
     def _wait_for_scheduled_runs(self) -> None:
         pass
-
-    def _handle_sig_cancel(self, signum, frame):
-        logger.warning("Received SIGINT, canceling resolution...")
-        self._resolution_did_cancel()
 
     def _cancel_non_terminal_futures(self):
         for future in self._futures:

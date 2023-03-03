@@ -5,6 +5,7 @@ Flexible-structure pipeline meant to be used in testing.
 import logging
 import os
 import random
+import sys
 import time
 from typing import List, Optional, Tuple
 
@@ -63,11 +64,7 @@ def add_inline(a: float, b: float) -> float:
     """
     Adds two numbers inline.
     """
-    logger.info(
-        "Executing: add_inline(a=%s, b=%s)",
-        a,
-        b,
-    )
+    logger.info("Executing: add_inline(a=%s, b=%s)", a, b)
     time.sleep(5)
     return a + b
 
@@ -77,15 +74,16 @@ def add_inline_using_resource(a: float, b: float) -> float:
     """
     Adds two numbers and logs info about a custom resource.
     """
+    logger.info("Executing: add_inline_using_resource(a=%s, b=%s)", a, b)
+
     with TimedMessage(
         message="some message", allocation_seconds=2, deallocation_seconds=2
     ) as timed_message:
+
         logger.info(
-            "Executing: add(a=%s, b=%s, timed_message='%s')",
-            a,
-            b,
-            timed_message.read_message(),
+            "Adding inline with timed_message='%s'", timed_message.read_message()
         )
+        time.sleep(5)
         return a + b
 
 
@@ -94,15 +92,13 @@ def add_using_resource(a: float, b: float) -> float:
     """
     Adds two numbers and logs info about a custom resource.
     """
+    logger.info("Executing: add_using_resource(a=%s, b=%s)", a, b)
+
     with TimedMessage(
         message="Some message", allocation_seconds=2, deallocation_seconds=2
     ) as timed_message:
-        logger.info(
-            "Executing: add(a=%s, b=%s, timed_message='%s')",
-            a,
-            b,
-            timed_message.read_message(),
-        )
+
+        logger.info("Adding with timed_message='%s'", timed_message.read_message())
         time.sleep(5)
         return a + b
 
@@ -226,19 +222,6 @@ def do_spam_logs(val: float, log_lines: int) -> float:
 
 
 @sematic.func(inline=False)
-def do_exit(val: float, exit_code: int) -> float:
-    """
-    Exits execution using the specified exit code.
-
-    The other parameter is ignored.
-    """
-    logger.info("Executing: do_exit(val=%s, exit_code=%s)", val, exit_code)
-    time.sleep(5)
-    os._exit(exit_code)
-    return val
-
-
-@sematic.func(inline=False)
 def do_oom(val: float) -> float:
     """
     Causes an Out of Memory error.
@@ -288,6 +271,63 @@ def do_virtual_funcs(a: float, b: float, c: float) -> float:
     return add_all([d, e, f])
 
 
+@sematic.func(inline=False)
+def fork_subprocess(val: float, action: str, code: int) -> float:
+    """
+    Forks a subprocess, and then performs the specified action, using the specified value:
+     - on 'return', the subprocess returns the specified value
+     - on 'exit', the subprocess exits with the specified code
+     - on 'signal', the parent process sends the specified signal to the subprocess
+    """
+    logger.info(
+        "Executing: fork_subprocess(val=%s, action=%s, code=%s)", val, action, code
+    )
+    time.sleep(5)
+
+    subprocess_pid = os.fork()
+
+    if subprocess_pid == 0:
+        # in this branch we are in the subprocess
+        my_pid = os.getpid()
+        logger.info("Subprocess %s has started", my_pid)
+
+        if action == "return":
+            logger.info("Subprocess %s is returning: %s", my_pid, code)
+            return code
+
+        if action == "exit":
+            logger.info("Subprocess %s is exiting: %s", my_pid, code)
+            sys.exit(code)
+
+        logger.info("Subprocess %s is sleeping...", my_pid)
+        time.sleep(100000)
+
+    # from here on we are in the parent
+    time.sleep(5)
+
+    if action == "signal":
+        logger.info("Sending signal %s to subprocess %s...", code, subprocess_pid)
+        os.kill(subprocess_pid, code)
+
+    os.waitpid(subprocess_pid, 0)
+    logger.info("Parent is done waiting on the subprocess")
+
+    return val
+
+
+@sematic.func(inline=False)
+def do_exit(val: float, exit_code: int) -> float:
+    """
+    Exits execution using the specified exit code.
+
+    The other parameter is ignored.
+    """
+    logger.info("Executing: do_exit(val=%s, exit_code=%s)", val, exit_code)
+    time.sleep(5)
+    os._exit(exit_code)
+    return val
+
+
 @sematic.func(inline=True)
 def testing_pipeline(
     inline: bool = False,
@@ -303,6 +343,7 @@ def testing_pipeline(
     resource_requirements: Optional[ResourceRequirements] = None,
     cache: bool = False,
     virtual_funcs: bool = False,
+    fork_actions: Optional[List[Tuple[str, int]]] = None,
     exit_code: Optional[int] = None,
 ) -> float:
     """
@@ -347,6 +388,12 @@ def testing_pipeline(
     virtual_funcs: bool
         Whether to include the `_make_list`, `_make_tuple`, and `_getitem` virtual
         functions. Defaults to False.
+    fork_actions: Optional[List[Tuple[str, int]]]
+        For each entry, includes a function that forks a subprocess, and then performs the
+        specified action, using the specified value:
+         - on 'return', the subprocess returns the specified value
+         - on 'exit', the subprocess exits with the specified code
+         - on 'signal', the parent process sends the specified signal to the subprocess
     exit_code: Optional[int]
         If not None, includes a function which will exit with the specified code.
         Defaults to None.
@@ -404,6 +451,11 @@ def testing_pipeline(
 
     if ray_resource:
         futures.append(add_with_ray(initial_future, 1.0))
+
+    if fork_actions is not None:
+        for action, value in fork_actions:
+            future = fork_subprocess(initial_future, action, value)
+            futures.append(future.set(name=f"fork_subprocess[{action}={value}]"))
 
     if exit_code is not None:
         futures.append(do_exit(initial_future, exit_code))
