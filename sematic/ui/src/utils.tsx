@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { atomWithHash } from 'jotai-location'
 import { useLocation } from "react-router-dom";
+import { User } from "./Models";
 
 interface IFetchJSON {
   url: string;
@@ -103,4 +104,14 @@ export async function sha1(text: string) {
     .map((bytes) => bytes.toString(16).padStart(2, '0'))
     .join('');
   return hashHex;
+}
+
+
+export function abbreviatedUserName(user: User | null): string {
+  if (!user) {
+    return "";
+  }
+  const {first_name, last_name} = user;
+
+  return `${first_name} ${(last_name || "").substring(0, 1)}.`
 }
