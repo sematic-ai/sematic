@@ -25,7 +25,7 @@ def test_value_and_type_digest():
 
     type_serialization = type_to_json_encodable(type_)
     value_serialization = value_to_json_encodable(value, type_)
-    json_summary = get_json_encodable_summary(value, type_)
+    json_summary, _ = get_json_encodable_summary(value, type_)
 
     actual = get_value_and_type_sha1_digest(
         value_serialization, type_serialization, json_summary

@@ -1,6 +1,3 @@
-# Standard Library
-from typing import Any
-
 # Third-party
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
