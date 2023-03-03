@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { AliasTypeRepr, BaseTypeRepr, CommonValueViewProps, ValueView, ValueViewProps } from "./common";
 import EnumValueView from "./enum";
 import DatetimeValueView from "./datatime";
@@ -19,6 +20,45 @@ import { S3BucketValueView, S3LocationValueView } from "./aws";
 import { ImageValueView } from "src/types/image";
 import { TypeComponents, SpecificTypeSerialization } from "./common";
 
+=======
+import React, { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import Plotly from "plotly.js-cartesian-dist";
+import "react-medium-image-zoom/dist/styles.css";
+import DataEditor, {
+  Item,
+  GridCell,
+  GridColumn,
+  GridCellKind,
+} from "@glideapps/glide-data-grid";
+
+import createPlotlyComponent from "react-plotly.js/factory";
+import {
+  Stack,
+  Typography,
+  Tooltip,
+  Box,
+  Alert,
+  Table,
+  TableCell,
+  TableRow,
+  TableBody,
+  Chip,
+  List,
+  ListItem,
+  TableHead,
+  Button,
+  Skeleton,
+} from "@mui/material";
+import { OpenInNew } from "@mui/icons-material";
+import { format, isValid, parseISO } from "date-fns";
+import { v4 as uuidv4 } from "uuid";
+import { useMatplotLib } from "../hooks/useMatplotLib";
+import useMeasure from "react-use/lib/useMeasure";
+import Zoom from "react-medium-image-zoom";
+import S3Icon from "../s3.png";
+import { UserContext } from "src/appContext";
+import { base64ArrayBuffer } from "src/base64ArrayBuffer";
+>>>>>>> 7ab9e0b (Fetching with auth)
 
 // TypeRepr types
 export type AnyTypeRepr =
@@ -808,13 +848,37 @@ function S3Button(props: {region?: string, bucket: string, location?: string}) {
 
 function ImageValueView(props: ValueViewProps) {
   const { valueSummary } = props;
-  const { bytes } = valueSummary;
+  const { bytes, mime_type } = valueSummary;
 
-  return <img
-    src={`/api/v1/storage/blobs/${bytes.blob}/data`}
-    alt="Artifact rendering"
-    style={{maxWidth: "600px"}}
-  />
+  const { user } = useContext(UserContext);
+
+  const [ imageBase64, setImageBase64 ] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const headers: HeadersInit = new Headers();
+    if (user?.api_key) {
+      headers.set("X-API-KEY", user.api_key);
+    }
+    fetch(`/api/v1/storage/blobs/${bytes.blob}/data`, {headers: headers})
+    .then((response) => {
+      if (!response.ok) {
+        throw Error(response.statusText);
+      }
+        return response.arrayBuffer();
+    }).then((arrayBuffer) => {
+      setImageBase64(base64ArrayBuffer(arrayBuffer));
+    });
+  }, []);
+
+  if (imageBase64 !== undefined) {
+    return <img
+      src={`data:${mime_type};base64,${imageBase64}`}
+      alt="Artifact rendering"
+      style={{maxWidth: "600px"}}
+    />
+  } else {
+    return <Skeleton variant="rectangular" width={210} height={60} />
+  }
 }
 
 type ComponentPair = {
