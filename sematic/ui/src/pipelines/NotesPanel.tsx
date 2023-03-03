@@ -111,7 +111,7 @@ export default function NotesPanel() {
         borderColor: theme.palette.grey[200],
         display: "grid",
         gridTemplateRows: "1fr auto",
-        overflowY: "scroll",
+        overflowY: "auto",
       }}
     >
       <Box
@@ -121,7 +121,7 @@ export default function NotesPanel() {
           gridTemplateRows: "1fr auto",
           borderBottom: 1,
           borderColor: theme.palette.grey[200],
-          overflowY: "scroll",
+          overflowY: "auto",
         }}
         id="notesList"
       >
