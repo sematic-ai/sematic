@@ -3,7 +3,7 @@ import uuid
 from dataclasses import dataclass
 
 # Third-party
-import magic
+import magic  # type: ignore
 
 # Sematic
 from sematic.types.registry import SummaryOutput, register_to_json_encodable_summary
