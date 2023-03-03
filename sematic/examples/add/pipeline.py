@@ -1,11 +1,8 @@
 # Standard Library
 import time
-from dataclasses import dataclass
-from typing import List
 
 # Sematic
 import sematic
-from sematic.types.types.image import Image
 
 
 @sematic.func
@@ -43,15 +40,3 @@ def pipeline(a: float, b: float, c: float) -> float:
     sum2 = add(b, c)
     sum3 = add(a, c)
     return add3(sum1, sum2, sum3)
-
-
-@dataclass
-class Output:
-    image1: Image
-    image2: Image
-
-
-@sematic.func
-def image() -> List[Image]:
-    image = Image.from_file("/Users/emmanuelturlay/Documents/Logos/Fox.png")
-    return [image, image]
