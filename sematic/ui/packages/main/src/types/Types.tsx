@@ -868,7 +868,7 @@ function ImageValueView(props: ValueViewProps) {
     }).then((arrayBuffer) => {
       setImageBase64(base64ArrayBuffer(arrayBuffer));
     });
-  }, []);
+  }, [bytes.blob, user?.api_key]);
 
   if (imageBase64 !== undefined) {
     return <img
