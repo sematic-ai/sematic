@@ -1,4 +1,4 @@
-import { TypeSerialization } from "./types/Types";
+import { AnyTypeSerialization } from "./types/Types";
 
 export type TypeGitInfo = {
   remote: string;
@@ -59,7 +59,7 @@ export type Run = {
 export type Artifact = {
   id: string;
   json_summary: any;
-  type_serialization: TypeSerialization;
+  type_serialization: AnyTypeSerialization;
   created_at: Date;
   updated_at: Date;
 };
@@ -99,7 +99,7 @@ export type ExternalResource = {
   managed_by: string,
   status_message: string,
   last_updated_epoch_seconds: Date,
-  type_serialization: TypeSerialization,
+  type_serialization: AnyTypeSerialization,
   value_serialization: any,
   history_serializations: any,
   created_at: Date
@@ -107,7 +107,7 @@ export type ExternalResource = {
 };
 
 export type ExternalResourceHistorySerialization = {
-  root_type: TypeSerialization,
+  root_type: AnyTypeSerialization,
   types: unknown,
   values: {
     allocation_seconds: number,
@@ -118,7 +118,7 @@ export type ExternalResourceHistorySerialization = {
     max_active_seconds: number,
     message: string,
     status: {
-      root_type: TypeSerialization,
+      root_type: AnyTypeSerialization,
       values: {
         last_update_epoch_time: number,
         managed_by: string,
