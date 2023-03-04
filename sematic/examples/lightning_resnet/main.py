@@ -6,8 +6,8 @@ from dataclasses import replace
 # Sematic
 import sematic
 from sematic.ee.ray import RayNodeConfig
-from sematic.examples.lightning_cifar100_classifier.pipeline import pipeline
-from sematic.examples.lightning_cifar100_classifier.train_eval import (
+from sematic.examples.lightning_resnet.pipeline import pipeline
+from sematic.examples.lightning_resnet.train_eval import (
     DataConfig,
     EvaluationConfig,
     TrainingConfig,
@@ -18,7 +18,7 @@ from sematic.types.types.aws.s3 import S3Location
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-CHECKPOINT_LOCATION = S3Location.from_uri("s3://sematic-dev/lightning-cifar")
+CHECKPOINT_LOCATION = S3Location.from_uri("s3://sematic-dev/lightning-resnet")
 
 LOCAL_DATA_CONFIG = DataConfig(
     batch_size=2,
@@ -50,7 +50,7 @@ REMOTE_TRAINING_CONFIG = TrainingConfig(
         gpu_count=1,
     ),
     loop_config=TrainLoopConfig(
-        n_epochs=30,
+        n_epochs=80,
         max_steps=-1,
     ),
     checkpoint_location=CHECKPOINT_LOCATION,

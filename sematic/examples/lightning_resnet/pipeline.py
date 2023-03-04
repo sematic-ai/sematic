@@ -1,19 +1,21 @@
 # Standard Library
 import logging
 from dataclasses import dataclass
+from typing import List, Tuple
 
 # Third-party
 import ray
+from plotly.graph_objs import Figure
 
 # Sematic
 import sematic
 from sematic import context
 from sematic.ee.ray import RayCluster, SimpleRayCluster
-from sematic.examples.lightning_cifar100_classifier.checkpointing import (
+from sematic.examples.lightning_resnet.checkpointing import (
     Checkpoint,
     SematicCheckpointIO,
 )
-from sematic.examples.lightning_cifar100_classifier.train_eval import (
+from sematic.examples.lightning_resnet.train_eval import (
     DataConfig,
     EvaluationConfig,
     EvaluationResults,
@@ -87,7 +89,8 @@ def evaluate(
 
 @sematic.func(inline=True)
 def bundle_results(
-    final_checkpoint: Checkpoint, evaluation_results: EvaluationResults
+    final_checkpoint: Checkpoint,
+    evaluation_results: EvaluationResults,
 ) -> PipelineResults:
     return PipelineResults(
         final_checkpoint=final_checkpoint,
