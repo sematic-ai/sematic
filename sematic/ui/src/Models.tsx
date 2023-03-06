@@ -33,7 +33,12 @@ export type User = {
   api_key: string | null;
 };
 
-export type Run = {
+export interface HasUserMixin {
+  user_id: string | null;
+  user: User | null;
+}
+
+export interface Run extends HasUserMixin {
   id: string;
   original_run_id: string | null;
   future_state: string;
@@ -45,8 +50,6 @@ export type Run = {
   external_exception_metadata_json: ExceptionMetadata | null;
   tags: Array<string>;
   parent_id: string | null;
-  user_id: string | null;
-  user: User | null;
   root_id: string;
   created_at: Date;
   updated_at: Date;
@@ -76,9 +79,8 @@ export type Edge = {
   updated_at: Date;
 };
 
-export type Note = {
+export interface Note extends HasUserMixin {
   id: string;
-  author_id: string;
   note: string;
   run_id: string;
   root_id: string;
