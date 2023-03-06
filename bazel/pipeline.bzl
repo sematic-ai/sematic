@@ -91,7 +91,10 @@ def sematic_pipeline(
         srcs = ["@rules_sematic//:worker.py"]
         script_data = ["@rules_sematic//:ray", "@rules_sematic//:bazel_python"]
         py3_image_deps = deps
-
+    
+    # If a dependency is already in the image via layers,
+    # we don't want to duplicate the dependency via the other
+    # deps.
     py3_image_deps = [dep for dep in deps if dep not in image_layers]
 
     push_rule_names = {}
