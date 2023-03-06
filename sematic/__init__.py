@@ -36,6 +36,7 @@ import sematic.types  # noqa: F401,E402
 from sematic.calculator import func  # noqa: F401,E402
 from sematic.container_images import has_container_image  # noqa: F401,E402
 from sematic.future_context import SematicContext, context  # noqa: F401,E402
+from sematic.metrics import post_pipeline_metric, post_run_metric  # noqa: F401, E402
 from sematic.plugins.external_resource.timed_message import (  # noqa: F401,E402
     TimedMessage,
 )

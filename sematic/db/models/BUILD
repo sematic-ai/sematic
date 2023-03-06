@@ -141,3 +141,13 @@ sematic_py_lib(
         "//sematic/db/models/mixins:json_encodable_mixin",
     ],
 )
+
+sematic_py_lib(
+    name = "metric",
+    srcs = ["metric.py"],
+    pip_deps = ["sqlalchemy"],
+    deps = [
+        ":base",
+        "//sematic/db/models/mixins:json_encodable_mixin",
+    ],
+)

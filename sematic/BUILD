@@ -28,6 +28,7 @@ sematic_py_lib(
         ":resolver",
         ":retry_settings",
         "//sematic:future_context",
+        "//sematic:metrics",
         "//sematic/future_operators:init",
         "//sematic/plugins/external_resource:timed_message",
         "//sematic/plugins/kuberay_wrapper:standard",
@@ -73,6 +74,7 @@ sematic_py_lib(
         "//sematic/db/models:edge",
         "//sematic/db/models:external_resource",
         "//sematic/db/models:factories",
+        "//sematic/db/models:metric",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
@@ -216,6 +218,16 @@ sematic_py_lib(
         "//sematic/resolvers:type_utils",
         "//sematic/utils:algorithms",
         "//sematic/utils:memoized_property",
+    ],
+)
+
+sematic_py_lib(
+    name = "metrics",
+    srcs = ["metrics.py"],
+    deps = [
+        ":api_client",
+        ":future_context",
+        "//sematic/db/models:metric",
     ],
 )
 

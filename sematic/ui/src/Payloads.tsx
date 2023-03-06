@@ -95,3 +95,10 @@ export type Filter = FilterCondition | {
   OR : Array<FilterCondition>
 }
 
+export type CompactMetrics = {
+  [name: string]: {[rootId: string]: [number, Date, string | null][]}
+}
+
+export type CompactMetricsPayload = {
+  content: CompactMetrics
+}

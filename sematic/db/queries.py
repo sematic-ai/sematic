@@ -16,6 +16,7 @@ from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
+from sematic.db.models.metric import Metric, MetricScope
 from sematic.db.models.note import Note
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
@@ -219,6 +220,49 @@ def save_run(run: Run) -> Run:
         session.refresh(run)
 
     return run
+
+
+def save_metric(metric: Metric) -> Metric:
+    with db().get_session() as session:
+        session.add(metric)
+        session.commit()
+        session.refresh(metric)
+
+    return metric
+
+
+def get_pipeline_metrics(root_import_path: str, limit: int = 20) -> List[Metric]:
+    with db().get_session() as session:
+        metrics = (
+            session.query(Metric)
+            .join(Run, Metric.root_id == Run.id)
+            .filter(
+                Run.calculator_path == root_import_path,
+                Metric.scope == MetricScope.PIPELINE.value,
+            )
+            .order_by(Metric.created_at)
+            .limit(limit)
+            .all()
+        )
+
+        return metrics
+
+
+def get_run_metrics(run_id: str) -> List[Metric]:
+    with db().get_session() as session:
+        metrics = (
+            session.query(Metric)
+            .filter(Metric.run_id == run_id, Metric.scope == MetricScope.RUN.value)
+            .order_by(Metric.created_at)
+            .all()
+        )
+
+        return metrics
+
+
+def clear_run_metrics(run_id: str) -> None:
+    with db().get_session() as session:
+        session.query(Metric).filter(Metric.run_id == run_id).delete()
 
 
 def save_external_resource_record(record: ExternalResource):

@@ -29,6 +29,7 @@ sematic_py_lib(
         "//sematic/api/endpoints:events",
         "//sematic/api/endpoints:external_resources",
         "//sematic/api/endpoints:meta",
+        "//sematic/api/endpoints:metrics",
         "//sematic/api/endpoints:notes",
         "//sematic/api/endpoints:resolutions",
         "//sematic/api/endpoints:runs",

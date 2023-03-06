@@ -14,6 +14,7 @@ import LogPanel from "./LogPanel";
 import SourceCode from "../components/SourceCode";
 import OutputPanel from "./OutputPanel";
 import ExternalResourcePanel from "./external_resource/ExternalResource";
+import RunMetricsPanel from "./RunMetricsPanel";
 
 const StickyHeader = styled(Box)`
   position: sticky;
@@ -52,6 +53,7 @@ export default function RunTabs(props: {
           <TabList onChange={handleChange} aria-label="Selected run tabs">
             <Tab label="Input" value="input" />
             <Tab label="Output" value="output" />
+            <Tab label="Metrics" value="metrics" />
             <Tab label="Source" value="source" />
             <Tab label="Logs" value="logs" />
             {grafanaTab}
@@ -63,6 +65,9 @@ export default function RunTabs(props: {
         </TabPanel>
         <TabPanel value="output" sx={{ pt: 5 }}>
           <OutputPanel outputArtifacts={artifacts.output} />
+        </TabPanel>
+        <TabPanel value="metrics">
+          <RunMetricsPanel />
         </TabPanel>
         <TabPanel hidden={selectedRunTab !== "logs"} value="logs">
           <LogPanel />

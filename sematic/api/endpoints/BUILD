@@ -198,8 +198,24 @@ sematic_py_lib(
     name = "payloads",
     srcs = ["payloads.py"],
     deps = [
+        "//sematic:metrics",
         "//sematic/db:queries",
+        "//sematic/db/models:metric",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+    ],
+)
+
+sematic_py_lib(
+    name = "metrics",
+    srcs = ["metrics.py"],
+    deps = [
+        ":auth",
+        ":events",
+        ":request_parameters",
+        "//sematic/api:app",
+        "//sematic/db:queries",
+        "//sematic/db/models:metric",
+        "//sematic/db/models:user",
     ],
 )

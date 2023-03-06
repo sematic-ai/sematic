@@ -20,6 +20,8 @@ from sematic import (
     KubernetesToleration,
     KubernetesTolerationEffect,
     ResourceRequirements,
+    post_pipeline_metric,
+    post_run_metric,
 )
 from sematic.examples.mnist.pytorch.train_eval import Net, test, train
 
@@ -84,8 +86,9 @@ def train_model(
     model = Net().to(device)
     optimizer = Adadelta(model.parameters(), lr=config.learning_rate)
     scheduler = StepLR(optimizer, step_size=1, gamma=config.gamma)
+    loss = 0
     for epoch in range(1, config.epochs + 1):
-        train(
+        loss = train(
             model,
             device,
             train_loader,
@@ -94,7 +97,10 @@ def train_model(
             config.log_interval,
             config.dry_run,
         )
+        post_run_metric("Loss", loss, label=f"Epoch {epoch}")
         scheduler.step()
+
+    post_pipeline_metric("Final loss", loss)
 
     return model
 
@@ -117,6 +123,10 @@ def evaluate_model(
     """
     model = model.to(device)
     results = test(model, device, test_loader)
+
+    post_pipeline_metric("Accuracy", results["accuracy"])
+    post_pipeline_metric("Average loss", results["average_loss"])
+
     return EvaluationResults(
         test_set_size=len(test_loader.dataset),  # type: ignore
         average_loss=results["average_loss"],

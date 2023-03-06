@@ -47,6 +47,24 @@ def broadcast_graph_update(
     return _call_broadcast_endpoint(url=url, json_payload=json_payload, user=user)
 
 
+def broadcast_run_metrics_update(
+    run_id: str,
+    user: Optional[User] = None,
+) -> Optional[requests.Response]:
+    url = "/events/metrics/update"
+    json_payload = dict(run_id=run_id)
+    return _call_broadcast_endpoint(url, json_payload, user)
+
+
+def broadcast_pipeline_metrics_update(
+    calculator_path: str,
+    user: Optional[User] = None,
+) -> Optional[requests.Response]:
+    url = "/events/metrics/update"
+    json_payload = dict(calculator_path=calculator_path)
+    return _call_broadcast_endpoint(url, json_payload, user)
+
+
 def broadcast_resolution_cancel(
     root_id: str, calculator_path: str, user: Optional[User] = None
 ) -> Optional[requests.Response]:

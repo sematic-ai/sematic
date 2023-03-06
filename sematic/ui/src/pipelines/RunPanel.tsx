@@ -7,6 +7,7 @@ import RunPanelContext from "./RunDetailsContext";
 import { useMemo, useRef, useState } from "react";
 import { ExtractContextType } from "../components/utils/typings";
 import Loading from "../components/Loading";
+import PipelineMetricsPanel from "./PipelineMetricsPanel";
 
 const FloatingFooter = styled('div')`
   width: 100%;
@@ -76,7 +77,10 @@ export default function RunPanel() {
             </>
           )}
           {selectedPanelItem === "run" && (
-              <RunDetailsPanel />
+            <RunDetailsPanel />
+          )}
+          {selectedPanelItem === "metrics" && (
+            <PipelineMetricsPanel/>
           )}
         </RunPanelContext.Provider>
 

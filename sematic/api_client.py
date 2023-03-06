@@ -17,6 +17,7 @@ from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.factories import deserialize_artifact_value
+from sematic.db.models.metric import Metric
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -135,6 +136,10 @@ def get_future_bytes(future_id: str) -> bytes:
 @retry(tries=3, delay=10, jitter=1)
 def _get_stored_bytes(namespace: str, key: str) -> bytes:
     return _get(f"/storage/{namespace}/{key}/data", decode_json=False)
+
+
+def save_metric(metric: Metric) -> None:
+    _post("/metrics", json_payload={"metric": metric.to_json_encodable()})
 
 
 def get_run(run_id: str) -> Run:
