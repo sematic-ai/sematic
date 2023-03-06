@@ -28,17 +28,9 @@ from sematic import context
 from sematic.ee.ray import RayNodeConfig
 
 
-def patched_set_state(self, state):
-    if state.get("_data_dict", None) is not None:
-        state = state.copy()
-        state["_data_dict"] = self._decode_data_dict(state["_data_dict"])
-    super(TorchCheckpoint, self).__setstate__(state)
-
-
-TorchCheckpoint.__setstate__ = patched_set_state
-
-
 class Net(nn.Module):
+    """A basic model to illustrate an image recognition task"""
+
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 6, 5)
@@ -70,6 +62,8 @@ class EvaluationResults:
 class TrainLoopConfig:
     batch_size: int
     n_epochs: int
+    lr: float = 0.001
+    momentum: float = 0.9
 
 
 @dataclass
@@ -87,6 +81,7 @@ class EvaluationConfig:
 
 
 def load_dataset(is_train: bool) -> Tuple[ray.data.Dataset, List[str]]:
+    """Load (and fully materialize) the CIFAR10 dataset for training/evaluation"""
     dataset = torchvision.datasets.CIFAR10("data", download=True, train=is_train)
     classes = dataset.classes
     dataset: ray.data.Dataset = ray.data.from_torch(dataset)
@@ -96,6 +91,7 @@ def load_dataset(is_train: bool) -> Tuple[ray.data.Dataset, List[str]]:
 
 
 def train_classifier(config: TrainingConfig) -> TorchCheckpoint:
+    """Perform distributed training of the classifier model"""
     use_gpu = config.worker.gpu_count > 0
     if use_gpu:
         if ray.get(validate_gpus.remote()):
@@ -104,10 +100,16 @@ def train_classifier(config: TrainingConfig) -> TorchCheckpoint:
             raise RuntimeError("GPUs could not be used by torch on Ray Cluster")
 
     train_dataset, _ = load_dataset(is_train=True)
+
+    # Normalize the input image tensors. Preprocessing will take place on
+    # ray workers.
     transform = transforms.Compose(
         [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
     )
     preprocessor = TorchVisionPreprocessor(columns=["image"], transform=transform)
+
+    # initialize and execute the model trainer. Training will take
+    # place distributedly on ray workers.
     trainer = TorchTrainer(
         train_loop_per_worker=train_loop_per_worker,
         train_loop_config=asdict(config.loop_config),
@@ -121,15 +123,18 @@ def train_classifier(config: TrainingConfig) -> TorchCheckpoint:
         preprocessor=preprocessor,
     )
     result = trainer.fit()
+
     latest_checkpoint = result.checkpoint
     if latest_checkpoint is None:
         raise ValueError("No checkpoint produced from model")
 
-    return latest_checkpoint
+    # the to_dict/from_dict keeps full checkpoint as Sematic artifact
+    return TorchCheckpoint.from_dict(latest_checkpoint.to_dict())
 
 
 @ray.remote(num_gpus=1)
 def validate_gpus():
+    """Helps confirm that GPUs can be used, and fail-fast if not."""
     cuda_available = torch.cuda.is_available()
     return cuda_available
 
@@ -137,6 +142,7 @@ def validate_gpus():
 def evaluate_classifier(
     checkpoint: TorchCheckpoint, config: EvaluationConfig
 ) -> EvaluationResults:
+    """Perform evaluation on a model represented by the given checkpoint"""
     test_dataset, classes_list = load_dataset(is_train=False)
     batch_predictor = BatchPredictor.from_checkpoint(
         checkpoint=checkpoint,
@@ -175,6 +181,23 @@ def evaluate_classifier(
 
 
 def create_confusion_matrix_plot(confusion_matrix_data_frame, classes_list):
+    """Plot a confusion matrix as a Plotly image
+
+    Parameters
+    ----------
+    confusion_matrix_data_frame:
+        Data frame structured as a pivot table where the row index is predicted
+        class, the column index is labeled class, and the values are the number
+        of occurrences of that prediction/label pair.
+    classes_list:
+        A list of the human-readable classes the prediction is being run for,
+        ordered such that element 0 is the name for the class that a prediction
+        of 0 corresponds to, element 1 is the name for class 1, etc..
+
+    Returns
+    -------
+    A plotly image of a confusion matrix.
+    """
     data = Heatmap(
         z=confusion_matrix_data_frame.T,
         text=confusion_matrix_data_frame.T,
@@ -190,13 +213,30 @@ def create_confusion_matrix_plot(confusion_matrix_data_frame, classes_list):
     return Figure(data=data, layout=layout)
 
 
-def convert_batch_to_numpy(batch: Tuple[Image, int]) -> Dict[str, np.ndarray]:
+def convert_batch_to_numpy(batch: List[Tuple[Image, int]]) -> Dict[str, np.ndarray]:
+    """Convert a batch PIL images and their labels to Ray's numpy batch format.
+
+    Parameters
+    ----------
+    batch:
+        A batch of tuples where each tuple holds a PIL Image and its labeled class
+
+    Returns
+    -------
+    A dict where the keys are "image" and "label". The value for "image" is an array
+    of images with each image as a 3d numpy array (x/y/channel). The value for
+    "labels" is an array of predicted classes for each of the images.
+    """
     images = np.stack([np.array(image) for image, _ in batch])
     labels = np.array([label for _, label in batch])
     return {"image": images, "label": labels}
 
 
 def add_confusion_key(df):
+    """Add a column "confusion_key" to a dataframe with prediction & label keys.
+
+    The confusion_key column will hold strings of the form "<prediction> : <label>"
+    """
     df["confusion_key"] = [
         f"{pred} : {label}" for pred, label in zip(df["prediction"], df["label"])
     ]
@@ -204,6 +244,17 @@ def add_confusion_key(df):
 
 
 def to_confusion_matrix_data_frame(df):
+    """Given a data frame with column "confusion_key" to a pivot table confusion matrix.
+
+    The confusion_key column should be structured as strings of the form
+    "<prediction> : <label>"
+
+    Returns
+    -------
+    A data frame structured as a pivot table where rows are indexed by the predicted
+    class, columns are indexed by the labeled class, and the values are the number
+    of times the given prediction/label pair occurred.
+    """
     df["prediction"] = df["confusion_key"].map(
         lambda key: int(key.split(":")[0].strip())
     )
@@ -215,21 +266,32 @@ def to_confusion_matrix_data_frame(df):
 
 
 def calculate_prediction_scores(df):
+    """Add a "correct" column to a data frame indicating if the prediction was correct.
+
+    Input data frame should have "prediction" and "label" columns.
+    """
     df["correct"] = df["prediction"] == df["label"]
     return df
 
 
 def convert_logits_to_classes(df):
+    """Convert the "prediction" column of the data frame from logits to classes."""
     best_class = df["predictions"].map(lambda x: x.argmax())
     df["prediction"] = best_class
     return df[["prediction", "label"]]
 
 
 def train_loop_per_worker(config):
+    """This is the training loop that each train worker will iterate over.
+
+    A checkpoint will be registered by the train workers each epoch
+    """
     model = train.torch.prepare_model(Net())
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+    optimizer = optim.SGD(
+        model.parameters(), lr=config["lr"], momentum=config["momentum"]
+    )
 
     train_dataset_shard = session.get_dataset_shard("train")
     n_epochs = config["n_epochs"]
