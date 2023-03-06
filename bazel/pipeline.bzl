@@ -52,6 +52,10 @@ def sematic_pipeline(
 
         image_layers: (optional) pass through arg to the `layers`
             parameter of `py3_image`: https://github.com/bazelbuild/rules_docker#py3_image
+            Does NOT automatically get passed through to the python
+            binary target. So if you are including direct dependencies
+            of the binary here, you will need to *also* pass them in
+            to "deps".
 
         env: (optional) mapping of environment variables to set in the container
 
@@ -134,16 +138,12 @@ def sematic_pipeline(
             format = "Docker",
             tags = ["manual"],
         )
-
-    # image_layers also contains dependencies, they're just ones that
-    # should be added separately when creating the image.
-    binary_deps = deps + image_layers
     
     py_binary(
         name = "{}_binary".format(name),
         srcs = ["{}.py".format(name)],
         main = "{}.py".format(name),
-        deps = binary_deps,
+        deps = deps,
         tags = ["manual"],
     )
 
@@ -152,7 +152,7 @@ def sematic_pipeline(
         main = "{}.py".format(name),
         srcs = ["{}.py".format(name)],
         tags = ["manual"],
-        deps = binary_deps,
+        deps = deps,
     )
 
     sematic_push_and_run(
