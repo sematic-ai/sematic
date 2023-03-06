@@ -72,10 +72,7 @@ const meta: Array<[string, ComponentRenderDetails]> = [
       value: DataFrameValueView,
     },
   ],
-  // (Keep this memo): when a new type is added, see if you need to add a
-  // type presentation type at line `export type AnyTypeRepr =`
 ];
-
 
 
 meta.forEach(([key, value]) => {

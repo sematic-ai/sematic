@@ -23,7 +23,7 @@ export interface CommonValueViewProps {
   valueSummary: any;
 }
 
-export type AliasValueViewProps = ValueViewProps<AliasTypeRepr>
+export type AliasValueViewProps = ValueViewProps<AliasTypeRepr>;
 
 type TypeCategory = "builtin" | "typing" | "dataclass" | "generic" | "class";
 
