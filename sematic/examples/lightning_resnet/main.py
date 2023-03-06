@@ -28,6 +28,14 @@ LOCAL_DATA_CONFIG = DataConfig(
 
 REMOTE_DATA_CONFIG = replace(LOCAL_DATA_CONFIG, batch_size=256)
 
+LOCAL_LOOP_CONFIG = TrainLoopConfig(
+    n_epochs=1,
+    max_steps=250,
+    learning_rate=0.5,
+    momentum=0.9,
+    weight_decay=5e-4,
+)
+
 LOCAL_TRAINING_CONFIG = TrainingConfig(
     n_workers=2,
     worker=RayNodeConfig(
@@ -35,10 +43,7 @@ LOCAL_TRAINING_CONFIG = TrainingConfig(
         memory_gb=8,
         gpu_count=0,
     ),
-    loop_config=TrainLoopConfig(
-        n_epochs=1,
-        max_steps=250,
-    ),
+    loop_config=LOCAL_LOOP_CONFIG,
     checkpoint_location=CHECKPOINT_LOCATION,
 )
 
@@ -49,7 +54,8 @@ REMOTE_TRAINING_CONFIG = TrainingConfig(
         memory_gb=10,
         gpu_count=1,
     ),
-    loop_config=TrainLoopConfig(
+    loop_config=replace(
+        LOCAL_LOOP_CONFIG,
         n_epochs=10,
         max_steps=-1,
     ),

@@ -11,3 +11,7 @@ Sematic EE.
 The modeling code in `train_eval` is based on an example from
 [the pytorch lightning documentation](https://pytorch-lightning.readthedocs.io/en/stable/notebooks/lightning_examples/cifar10-baseline.html)
 It is available under the license [CC BY-SA](https://creativecommons.org/licenses/by-sa/2.0/)
+
+This pipeline also illustrates how you can test the end-to-end connections between
+steps in your pipeline to reduce the chance that your pipeline will fail
+mid-execution from a programming error. See [`test_pipeline.py`](./tests/test_pipeline.py).

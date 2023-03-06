@@ -16,6 +16,14 @@ logger = logging.getLogger(__name__)
 
 
 class SematicCheckpointIO(CheckpointIO):
+    """Example checkpointer for usage with PyTorch Lightning & S3 storage.
+
+    You can use the built-in PyTorch Lightning checkpointer with S3 (AWS),
+    GCS (Google Cloud), or ADL (Azure) provided that you add extra dependencies.
+    See Lightning Documentation:
+    https://pytorch-lightning.readthedocs.io/en/stable/common/checkpointing_advanced.html
+    """
+
     def __init__(self, *args, s3_location=None, **kwargs) -> None:
         if s3_location is None:
             raise ValueError("Missing required argument 's3_location'")
@@ -53,6 +61,14 @@ class SematicCheckpointIO(CheckpointIO):
 
 @dataclass
 class Checkpoint:
+    """Sematic representation of the Checkpoint.
+
+    Attributes
+    ----------
+    location: The full location of the checkpoint
+    prefix: The prefix the checkpointer was using when the checkpoint was created
+    """
+
     location: S3Location
     prefix: S3Location
 

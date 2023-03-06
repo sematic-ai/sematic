@@ -6,6 +6,12 @@ from torch.utils.data import DataLoader, random_split
 
 
 class CifarDataModule(pl.LightningDataModule):
+    """PyTorch Lightning DataModule for loading train/eval/test data
+
+    See:
+    https://pytorch-lightning.readthedocs.io/en/stable/data/datamodule.html#why-do-i-need-a-datamodule
+    """
+
     def __init__(
         self,
         batch_size,

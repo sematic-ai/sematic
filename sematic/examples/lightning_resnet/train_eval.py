@@ -40,7 +40,9 @@ class LitResnet(LightningModule):
     https://pytorch.org/vision/stable/models/resnet.html?highlight=resnet
     """
 
-    def __init__(self, batch_size, num_classes, num_samples_per_epoch, lr=0.05):
+    def __init__(
+        self, batch_size, num_classes, num_samples_per_epoch, lr, momentum, weight_decay
+    ):
         super().__init__()
         self.batch_size = batch_size
         self.num_samples_per_epoch = num_samples_per_epoch
@@ -150,8 +152,8 @@ class LitResnet(LightningModule):
         optimizer = torch.optim.SGD(
             self.parameters(),
             lr=self.hparams.lr,
-            momentum=0.9,
-            weight_decay=5e-4,
+            momentum=self.hparams.momentum,
+            weight_decay=self.hparams.weight_decay,
         )
         steps_per_epoch = self.num_samples_per_epoch // self.batch_size
         scheduler_dict = {
@@ -178,6 +180,9 @@ class EvaluationResults:
 class TrainLoopConfig:
     n_epochs: int
     max_steps: int
+    learning_rate: float
+    momentum: float
+    weight_decay: float
 
 
 @dataclass
@@ -230,7 +235,9 @@ def train_classifier(
     model = LitResnet(
         data_config.batch_size,
         num_classes=len(cifar_dm.classes),
-        lr=0.05,
+        lr=config.loop_config.learning_rate,
+        momentum=config.loop_config.momentum,
+        weight_decay=config.loop_config.weight_decay,
         num_samples_per_epoch=cifar_dm.n_train,
     )
 
