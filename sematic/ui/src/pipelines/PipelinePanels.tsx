@@ -86,17 +86,17 @@ export default function PipelinePanels() {
     }
   }, [selectedRunIdHash, graph, rootRun, updateHash]);
 
-  const prevSelectedPanelItemHash = usePrevious(selectedPanelItemHash);
+  const prevSelectedPanelItem = usePrevious(selectedPanelItem);
   // Clear the `tab`, `run` hash when we move away from the run panel.
   useEffect(()=> {
     // Only clear the hash when the selected panel item has just changed.
-    if (selectedPanelItemHash === prevSelectedPanelItemHash) {
+    if (selectedPanelItem === prevSelectedPanelItem) {
       return;
     }
-    if (selectedPanelItemHash !== 'run') {
+    if (selectedPanelItem !== 'run') {
         updateHash({'tab': RESET, 'run': RESET}, true);
     }
-  }, [selectedPanelItemHash, prevSelectedPanelItemHash, updateHash])
+  }, [prevSelectedPanelItem, selectedPanelItem, updateHash])
 
 
   if (error || (!graph && isGraphLoading)) {
