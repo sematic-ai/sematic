@@ -97,11 +97,13 @@ def sematic_pipeline(
             name = with_tools_layer,
             files = script_data,
             directory = "/sematic/bin/",
+            tags = ["manual"],
         )
         container_image(
             name = with_tools_image,
             base = base_image,
             layers = [with_tools_layer],
+            tags = ["manual"],
         )
         env = env or {}
 
@@ -157,7 +159,8 @@ def sematic_pipeline(
 
     sematic_push_and_run(
         name = name,
-        push_rule_names = push_rule_names
+        push_rule_names = push_rule_names,
+        tags = ["manual"],
     )
 
 def base_images():
