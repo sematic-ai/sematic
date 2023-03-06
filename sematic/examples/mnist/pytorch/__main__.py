@@ -12,7 +12,7 @@ from sematic.examples.mnist.pytorch.pipeline import (
 
 PIPELINE_CONFIG = PipelineConfig(
     dataloader_config=DataLoaderConfig(),
-    train_config=TrainConfig(epochs=50),
+    train_config=TrainConfig(epochs=1),
 )
 
 

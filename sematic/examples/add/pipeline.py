@@ -36,12 +36,7 @@ def pipeline(a: float, b: float, c: float) -> float:
 
     `pretty_cool`.
     """
-    # sum1 = add(a, b)
-    # sum2 = add(b, c)
-    # sum3 = add(a, c)
-    # return add3(sum1, sum2, sum3)
-    for i in range(35):
-        sematic.post_run_metric("i", i)
-        time.sleep(3)
-
-    return 42
+    sum1 = add(a, b)
+    sum2 = add(b, c)
+    sum3 = add(a, c)
+    return add3(sum1, sum2, sum3)
