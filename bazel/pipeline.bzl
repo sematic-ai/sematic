@@ -92,6 +92,8 @@ def sematic_pipeline(
         script_data = ["@rules_sematic//:ray", "@rules_sematic//:bazel_python"]
         py3_image_deps = deps
 
+    py3_image_deps = [dep for dep in deps if dep not in image_layers]
+
     push_rule_names = {}
 
     for tag, base_image in bases.items():
