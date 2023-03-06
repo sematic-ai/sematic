@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
-import { UserContext } from "../index";
+import { UserContext } from "../appContext";
 import { useLogger } from "../utils";
 
 interface HttpClient {

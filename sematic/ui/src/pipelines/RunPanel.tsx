@@ -39,7 +39,6 @@ export default function RunPanel() {
   const scrollerId = 'run-panel-scrolling-area';
   const scrollContainerRef = useRef<HTMLElement>();
 
-
   const [footerRenderProp, setFooterRenderPropState] = useState<(() => JSX.Element) | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -64,7 +63,7 @@ export default function RunPanel() {
           <Loading isLoaded={false} />
         </LoadingOverlay>}
       <Box id={scrollerId} ref={scrollContainerRef}
-      sx={{ overflowY: "scroll", position: 'relative', height: '100%' }}>
+      sx={{ overflowY: "auto", position: 'relative', height: '100%' }}>
         <RunPanelContext.Provider value={runDetailsContextValue}>
 
           {selectedPanelItem === "graph" && (

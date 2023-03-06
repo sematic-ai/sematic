@@ -1,4 +1,4 @@
-export default {
+const run = {
     "cache_key": null,
     "calculator_path": "sematic.examples.add.pipeline.pipeline",
     "container_image_uri": null,
@@ -14,7 +14,7 @@ export default {
     "name": "Basic add example pipeline",
     "nested_future_id": "dc9203e31c764656a424a2c274ba40c0",
     "original_run_id": null,
-    "parent_id": null,
+    "parent_id": null as string | null,
     "resolved_at": new Date("2023-02-03T16:52:13.146034+00:00"),
     "resource_requirements_json": null,
     "root_id": "e5a0aca06816414fa6fd2ffa0649ea6d",
@@ -25,5 +25,9 @@ export default {
         "basic",
         "final"
     ],
-    "updated_at": new Date("2023-02-03T16:51:47.578636+00:00")
+    "updated_at": new Date("2023-02-03T16:51:47.578636+00:00"),
+    "user": null as any,
+    "user_id": "uid" as string | null
 }
+
+export default run;

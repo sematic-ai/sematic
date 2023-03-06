@@ -14,7 +14,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { useContext, useState } from "react";
 import { SiDiscord, SiReadthedocs } from "react-icons/si";
-import { UserContext } from "..";
+import { UserContext } from "../appContext";
 import logo from "../Fox.png";
 import MuiRouterLink from "./MuiRouterLink";
 import UserAvatar from "./UserAvatar";

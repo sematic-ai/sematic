@@ -128,13 +128,15 @@ def test_put_resolution_endpoint(
     resolution = make_resolution(root_id=persisted_run.id)  # noqa: F811
     response = test_client.put(
         "/api/v1/resolutions/{}".format(resolution.root_id),
-        json={"resolution": resolution.to_json_encodable()},
+        json={"resolution": resolution.to_json_encodable(redact=False)},
     )
 
     assert response.status_code == HTTPStatus.OK
 
     response = test_client.get("/api/v1/resolutions/{}".format(resolution.root_id))
     encodable = response.json["content"]  # type: ignore
+
+    assert encodable["settings_env_vars"] == {}
 
     read = get_resolution(resolution.root_id)
     assert read.settings_env_vars == resolution.settings_env_vars

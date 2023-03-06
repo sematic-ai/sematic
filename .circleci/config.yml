@@ -58,26 +58,6 @@ commands:
     description: Do tests without tracking code coverage
     steps:
       - run:
-          # This can fail sporadically, which is why we do it before the
-          # rest of the tests. We can retry just this part if it fails
-          # rather than having to retry all the tests.
-          # Why do retry in this way? Believe it or not it's the
-          # CircleCI recommended way:
-          # https://support.circleci.com/hc/en-us/articles/360043188514-How-to-Retry-a-Failed-Step-with-when-Attribute-
-          name: Prepare build
-          command: |
-              bazel build @pip_dependencies3_10_nvidia_cudnn_cu11//:pkg
-      - run:
-          name: Prepare build (try 2)
-          command: |
-              bazel clean --expunge && bazel build @pip_dependencies3_10_nvidia_cudnn_cu11//:pkg
-          when: on_fail
-      - run:
-          name: Prepare build (try 3)
-          command: |
-              bazel clean --expunge && bazel build @pip_dependencies3_10_nvidia_cudnn_cu11//:pkg
-          when: on_fail
-      - run:
           name: Run Non-coverage Tests
           # This assumes pytest is installed via the install-package step above
           command: PYTHONUNBUFFERED=1 bazel test //sematic/... --test_output=all

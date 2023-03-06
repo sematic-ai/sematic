@@ -8,7 +8,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { UserContext } from "..";
 import { usePipelinePanelsContext, usePipelineRunContext } from "../hooks/pipelineHooks";
 import { Note, Run, User } from "../Models";
 import { NoteCreatePayload, NoteListPayload } from "../Payloads";
@@ -17,6 +16,7 @@ import { fetchJSON } from "../utils";
 import { NoteView } from "../components/Notes";
 import { ExtractContextType } from "../components/utils/typings";
 import PipelinePanelsContext from "./PipelinePanelsContext";
+import { UserContext } from "../appContext";
 
 export default function NotesPanel() {
   const theme = useTheme();
@@ -37,6 +37,7 @@ export default function NotesPanel() {
   );
 
   const anonymousUser: User = useMemo(() => ({
+    id: "",
     email: "anonymous@acme.com",
     first_name: "Anonymous",
     last_name: null,
@@ -110,7 +111,7 @@ export default function NotesPanel() {
         borderColor: theme.palette.grey[200],
         display: "grid",
         gridTemplateRows: "1fr auto",
-        overflowY: "scroll",
+        overflowY: "auto",
       }}
     >
       <Box
@@ -120,7 +121,7 @@ export default function NotesPanel() {
           gridTemplateRows: "1fr auto",
           borderBottom: 1,
           borderColor: theme.palette.grey[200],
-          overflowY: "scroll",
+          overflowY: "auto",
         }}
         id="notesList"
       >

@@ -18,9 +18,11 @@ from sematic.config.settings import (
     get_plugin_settings,
     get_settings,
 )
-from sematic.config.tests.fixtures import (
+from sematic.config.tests.fixtures import (  # noqa: F401
     EXPECTED_DEFAULT_ACTIVE_SETTINGS,
+    empty_settings_file,
     mock_settings,
+    no_settings_file,
 )
 from sematic.config.user_settings import UserSettings, UserSettingsVar
 from sematic.tests.fixtures import environment_variables
@@ -165,13 +167,7 @@ def test_get_active_settings_server_missing(plugin_settings):
         }
 
 
-@pytest.fixture
-def empty_settings_file():
-    with mock_settings({}):
-        yield
-
-
-def test_get_empty_file(empty_settings_file):
+def test_get_empty_file(empty_settings_file):  # noqa: F811
     settings = get_settings()
     assert settings.version == 1
 
@@ -180,7 +176,7 @@ def test_get_empty_file(empty_settings_file):
     assert settings_profile.settings == {}
 
 
-def test_get_specific_plugin_empty_file(empty_settings_file):
+def test_get_specific_plugin_empty_file(empty_settings_file):  # noqa: F811
     get_settings()
 
     assert get_active_plugins(scope=PluginScope.STORAGE, default=[TestPlugin]) == [
@@ -191,12 +187,12 @@ def test_get_specific_plugin_empty_file(empty_settings_file):
     )
 
 
-def test_env_override_specific_plugin_empty_file(empty_settings_file):
+def test_env_override_specific_plugin_empty_file(empty_settings_file):  # noqa: F811
     with environment_variables({"SOME_SETTING": "override"}):
         assert get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING) == "override"
 
 
-def test_env_override_absent_plugin_empty_file(empty_settings_file):
+def test_env_override_absent_plugin_empty_file(empty_settings_file):  # noqa: F811
     with environment_variables({"SOME_SETTING": "override"}):
         active_settings = get_active_settings()
 
@@ -204,18 +200,12 @@ def test_env_override_absent_plugin_empty_file(empty_settings_file):
         assert active_settings == EXPECTED_DEFAULT_ACTIVE_SETTINGS
 
 
-def test_get_active_settings_empty_file(empty_settings_file):
+def test_get_active_settings_empty_file(empty_settings_file):  # noqa: F811
     active_settings = get_active_settings()
     assert active_settings == EXPECTED_DEFAULT_ACTIVE_SETTINGS
 
 
-@pytest.fixture
-def no_settings_file():
-    with mock_settings(None):
-        yield
-
-
-def test_get_no_file(no_settings_file):
+def test_get_no_file(no_settings_file):  # noqa: F811
     settings = get_settings()
     assert settings.version == 1
 
@@ -224,7 +214,7 @@ def test_get_no_file(no_settings_file):
     assert settings_profile.settings == {}
 
 
-def test_get_specific_plugin_no_file(no_settings_file):
+def test_get_specific_plugin_no_file(no_settings_file):  # noqa: F811
     get_settings()
 
     assert get_active_plugins(scope=PluginScope.STORAGE, default=[TestPlugin]) == [
@@ -235,14 +225,14 @@ def test_get_specific_plugin_no_file(no_settings_file):
     )
 
 
-def test_env_override_specific_plugin_no_file(no_settings_file):
+def test_env_override_specific_plugin_no_file(no_settings_file):  # noqa: F811
     with environment_variables({"SOME_SETTING": "override"}):
         # when asking for the plugin specifically,
         # its variables will be loaded, and overridden
         assert get_plugin_setting(TestPlugin, SettingsVar.SOME_SETTING) == "override"
 
 
-def test_env_override_absent_plugin_no_file(no_settings_file):
+def test_env_override_absent_plugin_no_file(no_settings_file):  # noqa: F811
     with environment_variables({"SOME_SETTING": "override"}):
         active_settings = get_active_settings()
 
@@ -250,6 +240,6 @@ def test_env_override_absent_plugin_no_file(no_settings_file):
         assert active_settings == EXPECTED_DEFAULT_ACTIVE_SETTINGS
 
 
-def test_get_active_settings_no_file(no_settings_file):
+def test_get_active_settings_no_file(no_settings_file):  # noqa: F811
     active_settings = get_active_settings()
     assert active_settings == EXPECTED_DEFAULT_ACTIVE_SETTINGS

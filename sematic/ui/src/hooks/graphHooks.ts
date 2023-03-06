@@ -87,6 +87,33 @@ export function useGraph(runRootId: string): [
     return [graph, loading, error];
 }
 
+/**
+ * Sort the run tree by start time.
+ * @param rootTreeNode 
+ */
+function sortRunTree(rootTreeNode: RunTreeNode) {
+    const queue = [rootTreeNode];
+    while (queue.length > 0) {
+        const treeNode = queue.shift()!;
+        treeNode.children.sort((a, b) => {
+            const aRun = a.run!;
+            const bRun = b.run!;
+
+            const aCreatedTime = new Date(aRun.created_at);
+            const bCreatedTime = new Date(bRun.created_at);
+
+            if (aCreatedTime < bCreatedTime) {
+                return 1;
+            } else if (aCreatedTime > bCreatedTime) {
+                return -1;
+            } else {
+                return 0;
+            }
+        });
+        queue.push(...treeNode.children);
+    }
+}
+
 export function useRunsTree(graph: Graph | undefined) {
     return useMemo(() => {
         if (!graph) {
@@ -110,6 +137,7 @@ export function useRunsTree(graph: Graph | undefined) {
             const treeNode = runTreeNodeMappinng.get(id);
             parentNode!.children.push(treeNode!);
         });
+        sortRunTree(rootTreeNode);
         return rootTreeNode;
     }, [graph]);
 }

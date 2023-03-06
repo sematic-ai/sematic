@@ -14,8 +14,9 @@ from sqlalchemy.orm import validates
 from sematic.abstract_calculator import AbstractCalculator
 from sematic.abstract_future import FutureState
 from sematic.db.models.base import Base
-from sematic.db.models.has_external_jobs_mixin import HasExternalJobsMixin
-from sematic.db.models.json_encodable_mixin import (
+from sematic.db.models.mixins.has_external_jobs_mixin import HasExternalJobsMixin
+from sematic.db.models.mixins.has_user_mixin import HasUserMixin
+from sematic.db.models.mixins.json_encodable_mixin import (
     ENUM_KEY,
     JSON_KEY,
     JSONEncodableMixin,
@@ -29,7 +30,7 @@ from sematic.types.serialization import (
 from sematic.utils.exceptions import ExceptionMetadata
 
 
-class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
+class Run(HasUserMixin, Base, JSONEncodableMixin, HasExternalJobsMixin):
     """
     SQLAlchemy model for runs.
 
@@ -91,6 +92,8 @@ class Run(Base, JSONEncodableMixin, HasExternalJobsMixin):
         The compute resources requested for the execution.
     cache_key : Optional[str]
         If present, the key under which the run's output artifact will be cached.
+    user_id: Optional[str]
+        Users who submitted this run.
     """
 
     __tablename__ = "runs"

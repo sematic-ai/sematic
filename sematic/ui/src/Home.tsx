@@ -16,7 +16,7 @@ import {
   useState,
 } from "react";
 import { SiDiscord, SiReadthedocs, SiGithub } from "react-icons/si";
-import { UserContext } from ".";
+import { UserContext } from "./appContext";
 import MuiRouterLink from "./components/MuiRouterLink";
 import RunStateChip from "./components/RunStateChip";
 import TrackingNotice from "./components/TrackingNotice";

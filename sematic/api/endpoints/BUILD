@@ -8,6 +8,7 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         ":auth",
+        ":payloads",
         ":request_parameters",
         "//sematic:log_reader",
         "//sematic/api:app",
@@ -69,6 +70,7 @@ sematic_py_lib(
     deps = [
         ":auth",
         ":events",
+        ":payloads",
         ":request_parameters",
         "//sematic/api:app",
         "//sematic/db:queries",
@@ -146,6 +148,7 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         ":auth",
+        ":payloads",
         ":request_parameters",
         "//sematic/api:app",
         "//sematic/db:db",
@@ -188,5 +191,15 @@ sematic_py_lib(
         "//sematic/db/models:user",
         "//sematic/plugins:abstract_storage",
         "//sematic/plugins/storage:local_storage",
+    ],
+)
+
+sematic_py_lib(
+    name = "payloads",
+    srcs = ["payloads.py"],
+    deps = [
+        "//sematic/db:queries",
+        "//sematic/db/models:resolution",
+        "//sematic/db/models:run",
     ],
 )

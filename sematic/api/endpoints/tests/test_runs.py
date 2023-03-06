@@ -11,17 +11,23 @@ import flask.testing
 import pytest
 
 # Sematic
+import sematic.api_client as api_client
 from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     make_auth_test,
     mock_auth,
+    mock_plugin_settings,
     mock_requests,
     mock_socketio,
     test_client,
 )
 from sematic.calculator import func
+from sematic.config.server_settings import ServerSettings, ServerSettingsVar
+from sematic.config.tests.fixtures import empty_settings_file  # noqa: F401
+from sematic.config.user_settings import UserSettings, UserSettingsVar
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
+from sematic.db.models.user import User
 from sematic.db.queries import (
     get_run,
     save_resolution,
@@ -33,6 +39,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     persisted_external_resource,
     persisted_resolution,
     persisted_run,
+    persisted_user,
     pg_mock,
     run,
     test_db,
@@ -91,7 +98,9 @@ def test_list_runs(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: 
     assert len(payload["next_page_url"]) > 0
     assert len(payload["next_cursor"]) > 0
     assert payload["after_cursor_count"] == len(created_runs)
-    assert payload["content"] == [run_.to_json_encodable() for run_ in created_runs[:3]]
+    assert payload["content"] == [
+        dict(user=None, **run_.to_json_encodable()) for run_ in created_runs[:3]
+    ]
 
     next_page_url = payload["next_page_url"]
     next_page_url = next_page_url.split("localhost")[1]
@@ -103,7 +112,9 @@ def test_list_runs(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: 
     assert payload["next_page_url"] is None
     assert payload["next_cursor"] is None
     assert payload["after_cursor_count"] == 2
-    assert payload["content"] == [run_.to_json_encodable() for run_ in created_runs[3:]]
+    assert payload["content"] == [
+        dict(user=None, **run_.to_json_encodable()) for run_ in created_runs[3:]
+    ]
 
 
 def test_list_runs_group_by(
@@ -722,3 +733,46 @@ def test_get_run_external_resources(
 
     assert len(payload) == 1
     assert payload[0]["id"] == persisted_external_resource.id
+
+
+def test_set_run_user(
+    persisted_user: User,  # noqa: F811
+    run: Run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_requests,  # noqa: F811
+    empty_settings_file,  # noqa: F811
+):
+    with mock_plugin_settings(
+        ServerSettings, {ServerSettingsVar.SEMATIC_AUTHENTICATE: "1"}
+    ):
+        with mock_plugin_settings(
+            UserSettings, {UserSettingsVar.SEMATIC_API_KEY: persisted_user.api_key}
+        ):
+            api_client.save_graph(run.id, [run], [], [])
+
+            saved_run = api_client.get_run(run.id)
+
+            assert saved_run.user_id is not None
+            assert saved_run.user_id == persisted_user.id
+
+        response = test_client.get(
+            f"/api/v1/runs/{saved_run.id}",
+            headers={"X-API-KEY": persisted_user.api_key},
+        )
+        payload = response.json
+        payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+        assert payload["content"]["user"]["id"] == persisted_user.id
+        assert "email" not in payload["content"]["user"]
+        assert "api_key" not in payload["content"]["user"]
+
+        response = test_client.get(
+            "/api/v1/runs",
+            headers={"X-API-KEY": persisted_user.api_key},
+        )
+        payload = response.json
+        payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+        assert payload["content"][0]["user"]["id"] == persisted_user.id
+        assert "email" not in payload["content"][0]["user"]
+        assert "api_key" not in payload["content"][0]["user"]

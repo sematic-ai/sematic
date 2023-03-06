@@ -3,7 +3,7 @@ import contextlib
 import re
 from copy import copy
 from http import HTTPStatus
-from typing import Dict, cast
+from typing import Dict, Type, cast
 from unittest import mock
 
 # Third-party
@@ -17,7 +17,11 @@ import werkzeug
 
 # Sematic
 import sematic.config.settings as settings_module
-from sematic.abstract_plugin import PluginScope
+from sematic.abstract_plugin import (
+    AbstractPlugin,
+    AbstractPluginSettingsVar,
+    PluginScope,
+)
 
 # Importing from server instead of app to make sure
 # all endpoints are loaded
@@ -49,7 +53,10 @@ def _mock_storage():
     try:
         yield MemoryStorage
     finally:
-        if current_storage_scope is None:
+        if (
+            current_storage_scope is None
+            and PluginScope.STORAGE in get_active_settings().scopes
+        ):
             del get_active_settings().scopes[PluginScope.STORAGE]
         else:
             get_active_settings().scopes[PluginScope.STORAGE] = current_storage_scope
@@ -103,24 +110,26 @@ def mock_requests(test_client):
 
 
 @contextlib.contextmanager
-def mock_user_settings(settings: Dict[UserSettingsVar, str]):
+def mock_plugin_settings(
+    plugin: Type[AbstractPlugin], settings: Dict[AbstractPluginSettingsVar, str]
+):
     original_settings = settings_module._SETTINGS
 
     original_settings_copy = copy(original_settings)
     if original_settings_copy is None:
         original_settings_copy = Settings()
 
-    plugin_settings = cast(PluginSettings, settings)
-    user_settings = original_settings_copy.profiles[_DEFAULT_PROFILE].settings.get(
-        UserSettings.get_path(), {}
-    )
+    new_plugin_settings = cast(PluginSettings, settings)
+    current_plugin_settings = original_settings_copy.profiles[
+        _DEFAULT_PROFILE
+    ].settings.get(plugin.get_path(), {})
 
-    for key, value in plugin_settings.items():
-        user_settings[key] = value
+    for key, value in new_plugin_settings.items():
+        current_plugin_settings[key] = value
 
     original_settings_copy.profiles[_DEFAULT_PROFILE].settings[
-        UserSettings.get_path()
-    ] = plugin_settings
+        plugin.get_path()
+    ] = current_plugin_settings
 
     settings_module._SETTINGS = original_settings_copy
 
@@ -131,31 +140,17 @@ def mock_user_settings(settings: Dict[UserSettingsVar, str]):
 
 
 @contextlib.contextmanager
-def mock_server_settings(settings: Dict[ServerSettingsVar, str]):
-    original_settings = settings_module._SETTINGS
-
-    original_settings_copy = copy(original_settings)
-    if original_settings_copy is None:
-        original_settings_copy = Settings()
-
-    plugin_settings = cast(PluginSettings, settings)
-    user_settings = original_settings_copy.profiles[_DEFAULT_PROFILE].settings.get(
-        ServerSettings.get_path(), {}
-    )
-
-    for key, value in plugin_settings.items():
-        user_settings[key] = value
-
-    original_settings_copy.profiles[_DEFAULT_PROFILE].settings[
-        ServerSettings.get_path()
-    ] = plugin_settings
-
-    settings_module._SETTINGS = original_settings_copy
-
-    try:
+def mock_user_settings(settings: Dict[UserSettingsVar, str]):
+    cast_settings = cast(Dict[AbstractPluginSettingsVar, str], settings)
+    with mock_plugin_settings(UserSettings, cast_settings) as settings:
         yield settings
-    finally:
-        settings_module._SETTINGS = original_settings
+
+
+@contextlib.contextmanager
+def mock_server_settings(settings: Dict[ServerSettingsVar, str]):
+    cast_settings = cast(Dict[AbstractPluginSettingsVar, str], settings)
+    with mock_plugin_settings(ServerSettings, cast_settings) as settings:
+        yield settings
 
 
 def make_auth_test(endpoint: str, method: str = "GET"):

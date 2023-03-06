@@ -24,6 +24,7 @@ CREATE TABLE runs (
     external_exception_metadata_json JSONB,
     original_run_id character(32),
     cache_key TEXT,
+    user_id character(32),
 
     PRIMARY KEY (id)
 );
@@ -54,7 +55,7 @@ CREATE TABLE edges (
 );
 CREATE TABLE notes (
     id character(32) NOT NULL,
-    author_id TEXT NOT NULL,
+    user_id character(32),
     note TEXT NOT NULL,
     run_id character(32) NOT NULL,
     root_id character(32) NOT NULL,
@@ -64,9 +65,11 @@ CREATE TABLE notes (
     PRIMARY KEY(id),
 
     FOREIGN KEY(run_id) REFERENCES runs (id),
-    FOREIGN KEY(root_id) REFERENCES runs (id)
+    FOREIGN KEY(root_id) REFERENCES runs (id),
+    FOREIGN KEY(user_id) REFERENCES users (id)
 );
 CREATE TABLE users (
+    id character(32) NOT NULL,
     email TEXT NOT NULL,
     first_name TEXT,
     last_name TEXT,
@@ -75,7 +78,7 @@ CREATE TABLE users (
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL,
 
-    PRIMARY KEY (email)
+    PRIMARY KEY (id)
 );
 CREATE TABLE resolutions (
     root_id TEXT NOT NULL,
@@ -88,6 +91,7 @@ CREATE TABLE resolutions (
     container_image_uris JSONB,
     client_version TEXT,
     cache_namespace TEXT,
+    user_id character(32),
 
     PRIMARY KEY (root_id),
     FOREIGN KEY (root_id) REFERENCES runs(id)
@@ -146,4 +150,8 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20221214142609'),
   ('20221215212459'),
   ('20230105163857'),
-  ('20230105170402');
+  ('20230105170402'),
+  ('20230217235835'),
+  ('20230221004028'),
+  ('20230221004041'),
+  ('20230222013045');

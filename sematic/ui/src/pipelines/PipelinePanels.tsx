@@ -1,11 +1,12 @@
 import { Box } from "@mui/material";
 import { useAtom } from "jotai";
-import { RESET } from 'jotai/utils';
+import { RESET } from "jotai/utils";
 import { useEffect, useMemo, useState } from "react";
+import usePrevious from "react-use/lib/usePrevious";
 import Loading from "../components/Loading";
 import { ExtractContextType } from "../components/utils/typings";
 import { useGraph } from "../hooks/graphHooks";
-import { selectedRunHashAtom, selectedTabHashAtom, usePipelineRunContext } from "../hooks/pipelineHooks";
+import { selectedPanelHashAtom, selectedRunHashAtom, selectedTabHashAtom, useHashUpdater, usePipelineRunContext } from "../hooks/pipelineHooks";
 import { Run } from "../Models";
 import GraphContext from "./graph/graphContext";
 import MenuPanel from "./MenuPanel";
@@ -21,8 +22,8 @@ export default function PipelinePanels() {
       rootRun: Run
     };
     
-  const [selectedRunId, setSelectedRunId] = useAtom(selectedRunHashAtom);
-  const [selectedPanelItem, setSelectedPanelItem] = useState("run");
+  const [selectedRunIdHash, setSelectedRunId] = useAtom(selectedRunHashAtom);
+  const [selectedPanelItemHash, setSelectedPanelItem] = useAtom(selectedPanelHashAtom);
 
   const [graph, isGraphLoading, error] = useGraph(rootRun.id);
   const graphContext = useMemo<ExtractContextType<typeof GraphContext>>(() => ({
@@ -31,7 +32,7 @@ export default function PipelinePanels() {
   }), [graph, isGraphLoading]);
 
   const selectedRun = useMemo(() => {
-    let runId = selectedRunId;
+    let runId = selectedRunIdHash;
     if (!runId) {
       runId = rootRun.id;
     }
@@ -39,7 +40,7 @@ export default function PipelinePanels() {
       return undefined;
     }
     return graph.runsById.get(runId) || rootRun;
-  }, [selectedRunId, graph, rootRun]);
+  }, [selectedRunIdHash, graph, rootRun]);
 
   const [selectedTabHash, setSelectedRunTab] = useAtom(selectedTabHashAtom);
 
@@ -55,6 +56,13 @@ export default function PipelinePanels() {
     return run?.future_state === "FAILED" ? "logs" : "output";
   }, [selectedTabHash, selectedRun, rootRun]);
 
+  const selectedPanelItem = useMemo(() => {
+    if (!selectedPanelItemHash) {
+      return 'run';
+    }
+    return selectedPanelItemHash;
+  }, [selectedPanelItemHash]);
+
   const [selectedArtifactName, setSelectedArtifactName] = useState("");
 
   const pipelinePanelsContext = useMemo<ExtractContextType<typeof PipelinePanelsContext>>(() => ({
@@ -62,15 +70,34 @@ export default function PipelinePanels() {
     selectedRun, setSelectedRunId,
     selectedRunTab, setSelectedRunTab,
     selectedArtifactName, setSelectedArtifactName
-  }), [selectedPanelItem, selectedRun, setSelectedRunId, selectedRunTab, selectedArtifactName, setSelectedRunTab]);
+  }), [selectedPanelItem, setSelectedPanelItem, selectedRun, setSelectedRunId, selectedRunTab, selectedArtifactName, setSelectedRunTab]);
+  
+  const updateHash = useHashUpdater();
 
+  // Clear the `run` hash when the selected run is not available in the graph or
+  // the selected run is the root run.
   useEffect(()=> {
-    if (selectedRunId === rootRun.id || 
-      (!!graph && !graph.runsById.get(selectedRunId))) {
-      setSelectedRunId(RESET);
+    if (selectedRunIdHash === rootRun.id || 
+      (!!graph && !graph.runsById.get(selectedRunIdHash))) {
+      if (!!selectedRunIdHash) {
+        updateHash({'run': RESET}, true);
+      }
       return;
     }
-  }, [selectedRunId, graph, rootRun, setSelectedRunId])
+  }, [selectedRunIdHash, graph, rootRun, updateHash]);
+
+  const prevSelectedPanelItem = usePrevious(selectedPanelItem);
+  // Clear the `tab`, `run` hash when we move away from the run panel.
+  useEffect(()=> {
+    // Only clear the hash when the selected panel item has just changed.
+    if (selectedPanelItem === prevSelectedPanelItem) {
+      return;
+    }
+    if (selectedPanelItem !== 'run') {
+        updateHash({'tab': RESET, 'run': RESET}, true);
+    }
+  }, [prevSelectedPanelItem, selectedPanelItem, updateHash])
+
 
   if (error || (!graph && isGraphLoading)) {
     return (

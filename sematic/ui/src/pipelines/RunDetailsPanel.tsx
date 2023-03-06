@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import { styled } from "@mui/system";
 import { useCallback, useContext, useMemo } from "react";
-import { UserContext } from "..";
+import { UserContext } from "../appContext";
 import { ActionMenu, ActionMenuItem } from "../components/ActionMenu";
 import CalculatorPath from "../components/CalculatorPath";
 import { CopyButton } from "../components/CopyButton";
