@@ -1,36 +1,8 @@
-# Standard Library
-from collections import Counter
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Dict, List, Tuple, Union
-
 # Third-party
-import pandas as pd
-import plotly.express as px
 import pytorch_lightning as pl
-import ray
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torchmetrics
 import torchvision
 import torchvision.transforms as transforms
-from plotly.graph_objs import Figure, Heatmap, Scatter
-from pytorch_lightning import LightningModule, Trainer, seed_everything
-from pytorch_lightning.callbacks import Callback, LearningRateMonitor
-from pytorch_lightning.callbacks.progress import TQDMProgressBar
-from pytorch_lightning.loggers import CSVLogger
-from ray_lightning import RayStrategy
-from torch.optim.lr_scheduler import OneCycleLR
 from torch.utils.data import DataLoader, random_split
-
-# Sematic
-from sematic.ee.ray import RayNodeConfig
-from sematic.examples.lightning_resnet.checkpointing import (
-    Checkpoint,
-    SematicCheckpointIO,
-)
-from sematic.types.types.aws.s3 import S3Location
 
 
 class CifarDataModule(pl.LightningDataModule):

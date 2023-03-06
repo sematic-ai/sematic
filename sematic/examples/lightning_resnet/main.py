@@ -50,7 +50,7 @@ REMOTE_TRAINING_CONFIG = TrainingConfig(
         gpu_count=1,
     ),
     loop_config=TrainLoopConfig(
-        n_epochs=80,
+        n_epochs=10,
         max_steps=-1,
     ),
     checkpoint_location=CHECKPOINT_LOCATION,

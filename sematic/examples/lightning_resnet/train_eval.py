@@ -6,28 +6,23 @@
 # Standard Library
 from collections import Counter
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Dict, Union
 
 # Third-party
 import pandas as pd
-import plotly.express as px
-import pytorch_lightning as pl
 import ray
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchmetrics
 import torchvision
-import torchvision.transforms as transforms
-from plotly.graph_objs import Figure, Heatmap, Scatter
+from plotly.graph_objs import Figure, Heatmap
 from pytorch_lightning import LightningModule, Trainer, seed_everything
-from pytorch_lightning.callbacks import Callback, LearningRateMonitor
+from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.callbacks.progress import TQDMProgressBar
 from pytorch_lightning.loggers import CSVLogger
 from ray_lightning import RayStrategy
 from torch.optim.lr_scheduler import OneCycleLR
-from torch.utils.data import DataLoader, random_split
 
 # Sematic
 from sematic.ee.ray import RayNodeConfig
@@ -40,6 +35,11 @@ from sematic.types.types.aws.s3 import S3Location
 
 
 class LitResnet(LightningModule):
+    """Simple wrapper around Torchvision ResNet
+
+    https://pytorch.org/vision/stable/models/resnet.html?highlight=resnet
+    """
+
     def __init__(self, batch_size, num_classes, num_samples_per_epoch, lr=0.05):
         super().__init__()
         self.batch_size = batch_size
@@ -145,22 +145,6 @@ class LitResnet(LightningModule):
 
     def test_step(self, batch, batch_idx):
         self.evaluate(batch, "test")
-
-    def plot_confusion(self, stage, metrics, classes_list):
-        confusion_matrix_data_frame = self._read_confusion_metrics(stage, metrics)
-        data = Heatmap(
-            z=confusion_matrix_data_frame.T,
-            text=confusion_matrix_data_frame.T,
-            texttemplate="%{text}",
-            x=confusion_matrix_data_frame.index.map(lambda i: classes_list[i]),
-            y=confusion_matrix_data_frame.columns.map(lambda i: classes_list[i]),
-        )
-        layout = {
-            "title": "Confusion Matrix",
-            "xaxis": {"title": "Predicted class"},
-            "yaxis": {"title": "Labeled class"},
-        }
-        return Figure(data=data, layout=layout)
 
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(
@@ -318,7 +302,9 @@ def evaluate_classifier(
         num_samples_per_epoch=-1,
     )
     metrics = trainer.test(model=model, ckpt_path=checkpoint.path, datamodule=cifar_dm)
-    confusion_plot = model.plot_confusion("test", metrics, cifar_dm.classes)
+
+    confusion_matrix_data_frame = model._read_confusion_metrics("test", metrics)
+    confusion_plot = plot_confusion(confusion_matrix_data_frame, cifar_dm.classes)
     return EvaluationResults(
         accuracy=metrics[-1]["test_accuracy"],
         n_correct=int(metrics[-1]["test_n_samples"] * metrics[-1]["test_accuracy"]),
@@ -327,7 +313,7 @@ def evaluate_classifier(
     )
 
 
-def create_confusion_matrix_plot(confusion_matrix_data_frame, classes_list):
+def plot_confusion(confusion_matrix_data_frame, classes_list):
     data = Heatmap(
         z=confusion_matrix_data_frame.T,
         text=confusion_matrix_data_frame.T,

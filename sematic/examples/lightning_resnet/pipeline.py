@@ -1,11 +1,9 @@
 # Standard Library
 import logging
 from dataclasses import dataclass
-from typing import List, Tuple
 
 # Third-party
 import ray
-from plotly.graph_objs import Figure
 
 # Sematic
 import sematic
@@ -27,12 +25,29 @@ from sematic.examples.lightning_resnet.train_eval import (
 
 @dataclass
 class PipelineResults:
+    """Data structure for holding results from training and evaluation"""
+
     final_checkpoint: Checkpoint
     evaluation_results: EvaluationResults
 
 
 @sematic.func(inline=False)
 def train(config: TrainingConfig, data_config: DataConfig) -> Checkpoint:
+    """# Perform distributed training of a ResNet model.
+
+    The model will be based on the
+    [ResNet](https://pytorch.org/vision/stable/models/resnet.html?highlight=resnet)
+    variant in Torchvision.
+
+    It will be trainined using distributed training via [Ray](https://ray.io)
+
+    ## Inputs
+    - **config**: Configuration with compute and model parameters for training
+    - **data_config**: Configuration for training data and data loading
+
+    ## Output
+    The best checkpoint produced during training
+    """
     cluster_config = SimpleRayCluster(
         n_nodes=config.n_workers, node_config=config.worker
     )
@@ -66,11 +81,23 @@ def train(config: TrainingConfig, data_config: DataConfig) -> Checkpoint:
 def evaluate(
     checkpoint: Checkpoint, config: EvaluationConfig, data_config: DataConfig
 ) -> EvaluationResults:
+    """# Evaluate a model checkpoint for a ResNet model.
+
+    ## Inputs
+    - **checkpoint**: A checkpoint for a trained model
+    - **config**: Configuration for compute for evaluation
+    - **data_config**: Configuration for the data to be used during evaluation
+
+    ## Output
+    Summary of some statistics resulting from the evaluation.
+    """
     cluster_config = SimpleRayCluster(
         n_nodes=config.n_workers, node_config=config.worker
     )
     checkpointer = SematicCheckpointIO(s3_location=checkpoint.prefix)
 
+    # we want the driver for the eval to run on the
+    # small ray cluster we're creating.
     @ray.remote(num_gpus=config.worker.gpu_count)
     def call_evaluate_classifier_from_ray():
         logging.basicConfig(level=logging.INFO)
@@ -92,6 +119,12 @@ def bundle_results(
     final_checkpoint: Checkpoint,
     evaluation_results: EvaluationResults,
 ) -> PipelineResults:
+    """# Combine the results into a single data structure.
+
+    This is necessary due to the fact that the results from training
+    and evaluation are
+    ["futures"](https://docs.sematic.dev/diving-deeper/future-algebra).
+    """
     return PipelineResults(
         final_checkpoint=final_checkpoint,
         evaluation_results=evaluation_results,
@@ -102,6 +135,28 @@ def bundle_results(
 def pipeline(
     train_config: TrainingConfig, data_config: DataConfig, eval_config: EvaluationConfig
 ) -> PipelineResults:
+    """# Do distributed training & evaluation on a ResNet model
+
+    The dataset the training will be performed on is
+    [CIFAR10](https://www.cs.toronto.edu/~kriz/cifar.html)
+
+    Distributed training will be performed using Sematic's
+    [Ray integration](https://docs.sematic.dev/integrations/ray).
+
+    Evaluation will also be distributed, though it will use its own
+    (smaller) Ray cluster.
+
+    ## Inputs
+    - **train_config**: configuration for how training will be performed
+    = **data_config**: configuration of the data & data loading that will be used
+      for training and eval
+    - **eval_config**: configuration for how the evaluation will be performed
+
+    ## Output
+    A summary of training performance, a link to the best checkpoint produced
+    during training, and metrics about the evaluation of the model from that
+    checkpoint.
+    """
     model_checkpoint = train(train_config, data_config)
     evaluation_results = evaluate(model_checkpoint, eval_config, data_config)
     return bundle_results(model_checkpoint, evaluation_results)
