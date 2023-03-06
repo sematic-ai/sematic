@@ -148,7 +148,7 @@ def pipeline(
 
     ## Inputs
     - **train_config**: configuration for how training will be performed
-    = **data_config**: configuration of the data & data loading that will be used
+    - **data_config**: configuration of the data & data loading that will be used
       for training and eval
     - **eval_config**: configuration for how the evaluation will be performed
 
