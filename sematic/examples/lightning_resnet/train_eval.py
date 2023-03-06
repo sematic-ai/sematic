@@ -41,7 +41,13 @@ class LitResnet(LightningModule):
     """
 
     def __init__(
-        self, batch_size, num_classes, num_samples_per_epoch, lr, momentum, weight_decay
+        self,
+        batch_size,
+        num_classes,
+        num_samples_per_epoch,
+        lr=0,
+        momentum=0,
+        weight_decay=0,
     ):
         super().__init__()
         self.batch_size = batch_size
