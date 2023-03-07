@@ -1,4 +1,15 @@
 sematic_py_lib(
+    name = "checkpoint",
+    srcs = ["checkpoint.py"],
+    deps = [
+        "//sematic/types:registry",
+    ],
+    pip_deps=[
+        "ray",
+    ],
+)
+
+sematic_py_lib(
     name = "cluster",
     srcs = ["cluster.py"],
     deps = [
