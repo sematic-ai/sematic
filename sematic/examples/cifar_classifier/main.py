@@ -11,6 +11,7 @@ from sematic.examples.cifar_classifier.train_eval import (
     TrainingConfig,
     TrainLoopConfig,
 )
+from sematic.types.types.aws.s3 import S3Location
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ LOCAL_TRAINING_CONFIG = TrainingConfig(
         memory_gb=8,
         gpu_count=0,
     ),
-    checkpoint_dir="s3://sematic-dev/ray-demo",
+    checkpoint_dir=S3Location.from_uri("s3://sematic-dev/ray-demo"),
     loop_config=TrainLoopConfig(
         batch_size=2,
         n_epochs=1,
@@ -36,7 +37,7 @@ REMOTE_TRAINING_CONFIG = TrainingConfig(
         memory_gb=10,
         gpu_count=1,
     ),
-    checkpoint_dir="s3://sematic-dev/ray-demo",
+    checkpoint_dir=S3Location.from_uri("s3://sematic-dev/ray-demo"),
     loop_config=TrainLoopConfig(
         batch_size=4,
         n_epochs=5,

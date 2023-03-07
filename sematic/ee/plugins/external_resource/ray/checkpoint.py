@@ -26,7 +26,7 @@ def summarize_ray_torch_checkpoint(value, _):
             parameter_summaries.append(f"{prefix}: {summarize_value(value)}")
 
     summary = "\n".join(parameter_summaries)
-    return f"TorchCheckpoint:\n{summary}"
+    return {"repr": f"TorchCheckpoint:\n{summary}"}
 
 
 def summarize_value(value):

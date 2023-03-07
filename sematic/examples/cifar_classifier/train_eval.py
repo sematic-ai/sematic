@@ -26,6 +26,7 @@ from ray.tune import SyncConfig
 # Sematic
 from sematic import context
 from sematic.ee.ray import RayNodeConfig
+from sematic.types.types.aws.s3 import S3Location
 
 
 class Net(nn.Module):
@@ -70,7 +71,7 @@ class TrainLoopConfig:
 class TrainingConfig:
     worker: RayNodeConfig
     n_workers: int
-    checkpoint_dir: str
+    checkpoint_dir: S3Location
     loop_config: TrainLoopConfig
 
 
@@ -117,7 +118,7 @@ def train_classifier(config: TrainingConfig) -> TorchCheckpoint:
         scaling_config=ScalingConfig(num_workers=config.n_workers, use_gpu=use_gpu),
         run_config=RunConfig(
             sync_config=SyncConfig(
-                upload_dir=f"{config.checkpoint_dir}/{context().run_id}",
+                upload_dir=f"{config.checkpoint_dir.to_uri()}/{context().run_id}",
             ),
         ),
         preprocessor=preprocessor,

@@ -48,5 +48,5 @@ SUMMARY_CASES = [
 def test_summarize_ray_torch_checkpoint(checkpoint_dict, expected_summary):
     mock_checkpoint = MagicMock(name="mock_checkpoint")
     mock_checkpoint.to_dict.return_value = checkpoint_dict
-    summary = summarize_ray_torch_checkpoint(mock_checkpoint, None)
+    summary = summarize_ray_torch_checkpoint(mock_checkpoint, None)["repr"]
     assert expected_summary == summary

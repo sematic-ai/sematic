@@ -12,7 +12,7 @@ try:
         ScalingGroup,
         SimpleRayCluster,
     )
-    from sematic.plugins.external_resource.ray import (  # type: ignore  # noqa: F401,E402
+    from sematic.ee.plugins.external_resource.ray import (  # type: ignore  # noqa: F401,E402,E501
         checkpoint,
     )
 except ImportError:
