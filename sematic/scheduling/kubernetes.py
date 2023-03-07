@@ -32,7 +32,7 @@ from sematic.resolvers.resource_requirements import (
     KubernetesSecretMount,
     ResourceRequirements,
 )
-from sematic.scheduling.external_job import KUBERNETES_JOB_KIND, ExternalJob, JobType
+from sematic.scheduling.external_job import KUBERNETES_JOB_KIND, ExternalJob, JobType, JobStatus
 from sematic.utils.exceptions import ExceptionMetadata, KubernetesError
 from sematic.utils.retry import retry
 
@@ -191,6 +191,25 @@ class KubernetesExternalJob(ExternalJob):
             name=KubernetesError.__name__,
             module=KubernetesError.__module__,
             ancestors=ExceptionMetadata.ancestors_from_exception(KubernetesError),
+        )
+
+    def get_status(self) -> JobStatus:
+        """Get a simple status describing the state of the job.
+
+        Note that the returned status should be based on the in-memory
+        fields of the ExternalJob, and should not reach out to the external
+        job source.
+
+        Returns
+        -------
+        A job status.
+        """
+        raise JobStatus(
+            # Both the state name and description are just placeholders
+            # here, they will be populated with meaningful data in a
+            # separate PR.
+            state_name="ACTIVE" if self.is_active() else "INACTIVE",
+            description=f"Job has {'not ' if self.has_started else ''}started",
         )
 
 
