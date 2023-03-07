@@ -6,6 +6,10 @@ with nothing else on the line.
 -->
 * HEAD
     * [improvement] Added support for Python 3.10
+    * [improvement] BREAKING CHANGE: `image_layers` field in `sematic_pipeline` bazel macro
+      now ONLY gets passed to image layering, and not also to the Sematic binary target.
+      if you are using `image_layers` to express dependencies of a pipeline, you will now
+      need to duplicate them in the `deps` field.
 * [0.26.0](https://pypi.org/project/sematic/0.26.0/)
     * [feature] Added optional anonymized user analytics to track Sematic usage[^2]
     * [improvement] Atomic database migrations with Helm hooks

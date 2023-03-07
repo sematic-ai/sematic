@@ -126,6 +126,13 @@ use requirements locking systems like [Poetry](https://python-poetry.org/)
 or [pip-tools/pip-compile](https://pypi.org/project/pip-tools/)
 you will need to regenerate your dependency lockfiles.
 
+#### Bazel API changes
+
+The `image_layers` field in `sematic_pipeline` bazel macro
+now ONLY gets passed to image layering, and not also to the Sematic binary target.
+if you are using `image_layers` to express dependencies of a pipeline, you will now
+need to duplicate them in the `deps` field.
+
 ### v0.23.X to v0.24.Y
 
 #### Server/Helm upgrade notes
