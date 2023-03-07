@@ -27,6 +27,7 @@ from sematic.resolvers.cloud_resolver import (
     START_INLINE_RUN_INDICATOR,
 )
 from sematic.scheduling.external_job import ExternalJob, JobType
+from sematic.tests.fixtures import allow_any_run_state_transition  # noqa: F401
 
 _streamed_lines: List[str] = []
 _DUMMY_LOGS_FILE = "logs.log"
@@ -244,7 +245,10 @@ def prepare_logs_v2(
     ),
 )
 def test_load_non_inline_logs(
-    test_db, mock_storage, log_preparation_function  # noqa: F811
+    test_db,  # noqa: F811
+    mock_storage,  # noqa: F811
+    log_preparation_function,
+    allow_any_run_state_transition,  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
@@ -326,7 +330,9 @@ def test_load_non_inline_logs(
     )
 
 
-def test_line_stream_from_log_directory(mock_storage, test_db):  # noqa: F811
+def test_line_stream_from_log_directory(
+    mock_storage, test_db, allow_any_run_state_transition  # noqa: F811
+):
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
     n_lines = 500
@@ -364,7 +370,10 @@ def test_line_stream_from_log_directory(mock_storage, test_db):  # noqa: F811
     ),
 )
 def test_load_inline_logs(
-    mock_storage, test_db, log_preparation_function  # noqa: F811
+    mock_storage,  # noqa: F811
+    test_db,  # noqa: F811
+    log_preparation_function,
+    allow_any_run_state_transition,  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
@@ -698,7 +707,9 @@ def test_load_cloned_run_log_lines(
     assert result.lines == ["Line 42"]
 
 
-def test_continue_from_end_with_no_new_logs(test_db, mock_storage):  # noqa: F811
+def test_continue_from_end_with_no_new_logs(
+    test_db, mock_storage, allow_any_run_state_transition  # noqa: F811
+):
     run = make_run(future_state=FutureState.SCHEDULED)
     save_run(run)
 
