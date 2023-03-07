@@ -21,7 +21,9 @@ def sematic_pipeline(
         data = None,
         base = "@sematic-worker-base//image",
         bases = None,
+        tags = None,
         image_layers = None,
+        image_tags = None,
         env = None,
         dev = False):
     """
@@ -50,6 +52,8 @@ def sematic_pipeline(
 
         bases: (optional)
 
+        tags: (optional) add these tags to ALL generated targets. Defaults to ["manual"]
+
         image_layers: (optional) pass through arg to the `layers`
             parameter of `py3_image`: https://github.com/bazelbuild/rules_docker#py3_image
 
@@ -64,6 +68,8 @@ def sematic_pipeline(
         data = []
     if image_layers == None:
         image_layers = []
+    if tags == None:
+        tags = ["manual"]
 
     if "default" not in bases:
         if base != None:
@@ -97,11 +103,13 @@ def sematic_pipeline(
             name = with_tools_layer,
             files = script_data,
             directory = "/sematic/bin/",
+            tags = tags,
         )
         container_image(
             name = with_tools_image,
             base = base_image,
             layers = [with_tools_layer],
+            tags = tags,
         )
         env = env or {}
 
@@ -119,7 +127,7 @@ def sematic_pipeline(
             visibility = ["//visibility:public"],
             base = with_tools_image,
             env = env,
-            tags = ["manual"],
+            tags = tags,
         )
 
         push_rule_name = "{}_{}_push".format(name, tag)
@@ -132,7 +140,7 @@ def sematic_pipeline(
             repository = repository,
             tag = "{}_{}".format(name, tag),
             format = "Docker",
-            tags = ["manual"],
+            tags = tags,
         )
 
     # image_layers also contains dependencies, they're just ones that
@@ -144,20 +152,21 @@ def sematic_pipeline(
         srcs = ["{}.py".format(name)],
         main = "{}.py".format(name),
         deps = binary_deps,
-        tags = ["manual"],
+        tags = tags,
     )
 
     py_binary(
         name = "{}_local".format(name),
         main = "{}.py".format(name),
         srcs = ["{}.py".format(name)],
-        tags = ["manual"],
+        tags = tags,
         deps = binary_deps,
     )
 
     sematic_push_and_run(
         name = name,
-        push_rule_names = push_rule_names
+        push_rule_names = push_rule_names,
+        tags = tags,
     )
 
 def base_images():
