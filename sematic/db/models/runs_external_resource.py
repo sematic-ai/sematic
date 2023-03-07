@@ -3,7 +3,7 @@ from sqlalchemy import Column, ForeignKey, types
 
 # Sematic
 from sematic.db.models.base import Base
-from sematic.db.models.json_encodable_mixin import JSONEncodableMixin
+from sematic.db.models.mixins.json_encodable_mixin import JSONEncodableMixin
 
 
 # Q: Why not make resource_id a field on run?

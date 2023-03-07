@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 from unittest.mock import patch
 
 # Third-party
+import pytest
 import yaml
 
 # Sematic
@@ -47,6 +48,18 @@ def mock_settings(settings_dict: Optional[Dict[str, Any]]):
             yield settings_file_path
 
             _clear_cache()
+
+
+@pytest.fixture
+def no_settings_file():
+    with mock_settings(None):
+        yield
+
+
+@pytest.fixture
+def empty_settings_file():
+    with mock_settings({}):
+        yield
 
 
 def _clear_cache():

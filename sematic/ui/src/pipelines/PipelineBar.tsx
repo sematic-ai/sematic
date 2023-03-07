@@ -10,9 +10,8 @@ import {
   useTheme,
 } from "@mui/material";
 import { useCallback, useContext, useEffect, useMemo } from "react";
-import { UserContext } from "..";
 import { Resolution, Run } from "../Models";
-import { fetchJSON } from "../utils";
+import { abbreviatedUserName, fetchJSON } from "../utils";
 import CalculatorPath from "../components/CalculatorPath";
 import GitInfoBox from "../components/GitInfo";
 import Loading from "../components/Loading";
@@ -25,6 +24,7 @@ import { ExtractContextType } from "../components/utils/typings";
 import PipelineRunViewContext from "./PipelineRunViewContext";
 import MuiRouterLink from "../components/MuiRouterLink";
 import { pipelineSocket } from "../sockets";
+import { UserContext } from "../appContext";
 
 function PipelineActionMenu(props: {
   onCancel: () => void;
@@ -269,6 +269,9 @@ export default function PipelineBar() {
                       <Typography sx={{ fontSize: "small", color: "GrayText" }}>
                         <code>{id.substring(0, 6)}</code>
                       </Typography>
+                    </Box>
+                    <Box sx={{ml: 3}}>
+                      {abbreviatedUserName(run.user)}
                     </Box>
                     <Box ml={3}>
                       <TimeAgo date={created_at} />

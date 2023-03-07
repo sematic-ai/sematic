@@ -62,6 +62,60 @@ def get_artifact(artifact_id: str) -> Artifact:
         return session.query(Artifact).filter(Artifact.id == artifact_id).one()
 
 
+def get_users(user_ids: List[str]) -> List[User]:
+    """
+    Get users from the database.
+
+    Parameters
+    ----------
+    user_ids: List[str]
+        List of IDs to retrieve.
+
+    Returns
+    -------
+    List[User]
+        List of users
+    """
+    with db().get_session() as session:
+        return session.query(User).filter(User.id.in_(list(set(user_ids)))).all()
+
+
+def get_user(user_id: str) -> User:
+    """
+    Get a user from the database.
+
+    Parameters
+    ----------
+    user_id : str
+        ID of user to retrieve.
+
+    Returns
+    -------
+    User
+        Fetched user
+    """
+    with db().get_session() as session:
+        return session.query(User).filter(User.id == user_id).one()
+
+
+def get_user_by_email(email: str) -> User:
+    """
+    Get a user from the database by email.
+
+    Parameters
+    ----------
+    email : str
+        email of user to retrieve.
+
+    Returns
+    -------
+    User
+        Fetched user
+    """
+    with db().get_session() as session:
+        return session.query(User).filter(User.email == email).one()
+
+
 def get_run(run_id: str) -> Run:
     """
     Get a run from the database.
@@ -477,14 +531,6 @@ def _get_root_graph(root_run_id: str) -> Tuple[Set[Run], Set[Edge], Set[Artifact
         artifacts.append(result[2])
 
     return set(runs), set(edges), set(artifacts)
-
-
-def get_user(email: str) -> User:
-    """
-    Get a user from the DB.
-    """
-    with db().get_session() as session:
-        return session.query(User).filter(User.email == email).one()
 
 
 def get_user_by_api_key(api_key: str) -> User:

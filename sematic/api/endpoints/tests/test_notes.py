@@ -39,7 +39,6 @@ def test_create_note(
     mock_auth, test_client: flask.testing.FlaskClient, persisted_run: Run  # noqa: F811
 ):
     note_payload = {
-        "author_id": "test@test.test",
         "note": "And now for something completely different",
         "run_id": persisted_run.id,
         "root_id": persisted_run.id,
@@ -62,7 +61,7 @@ def test_create_note(
 @pytest.fixture
 def note(persisted_run: Run, persisted_user: User) -> Note:  # noqa: F811
     return Note(
-        author_id=persisted_user.email,
+        user_id=persisted_user.id,
         note="And now for something completely different",
         run_id=persisted_run.id,
         root_id=persisted_run.id,
@@ -88,7 +87,7 @@ def test_list_notes(
     assert response.json["content"][0]["id"] == persisted_note.id
 
     assert len(response.json["authors"]) == 1
-    assert response.json["authors"][0]["email"] == persisted_note.author_id
+    assert response.json["authors"][0]["id"] == persisted_note.user_id
 
 
 def test_delete_note(

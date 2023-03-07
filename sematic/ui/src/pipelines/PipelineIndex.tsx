@@ -1,9 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import TableCell from "@mui/material/TableCell";
-import TableRow from "@mui/material/TableRow";
 import { useCallback, useMemo } from "react";
-import { RunList } from "../components/RunList";
+import { RunList, RunListColumn } from "../components/RunList";
 import Tags from "../components/Tags";
 import { Run } from "../Models";
 import RunStateChip, { RunStateChipUndefinedStyle } from "../components/RunStateChip";
@@ -43,10 +41,16 @@ const StyledRootBox = styled(Box, {
   }
 `;
 
-const TableColumns = [
-  {name: "Name", width: "65%"},
-  {name: "Last run", width: "20%"},
-  {name: "Status", width: "15%"}
+const TableColumns: Array<RunListColumn> = [
+  {name: "Name", width: "65%", render:(run: Run) => <PipelineNameColumn run={run} />},
+  {name: "Last run", width: "20%", render:
+    (run: Run) => <>
+      <TimeAgo date={run.created_at} />
+      <RunTime run={run} prefix="in" />
+    </>},
+  {name: "Status", width: "15%", render:
+    ({calculator_path}: Run) => <RecentStatuses calculatorPath={calculator_path} />
+}
 ]
 
 function RecentStatuses(props: { calculatorPath: string }) {
@@ -77,31 +81,20 @@ function RecentStatuses(props: { calculatorPath: string }) {
     </RecentStatusesWithStyles>;
 }
 
-function PipelineRow(props: { run: Run }) {
-  let { run }  = props;
-  let { id, name, tags, calculator_path, created_at} = run;
+function PipelineNameColumn(props: { run: Run }) {
+  let { run } = props;
+  let { calculator_path, name, tags } = run;
 
-  return (
+  return (  
     <>
-      <TableRow key={id}>
-        <TableCell key="name" data-cy={"pipeline-row"}>
-          <Box sx={{ mb: 3 }}>
-            <MuiRouterLink href={"/pipelines/" + calculator_path} underline="hover">
-              <Typography variant="h6">{name}</Typography>
-            </MuiRouterLink>
-            <CalculatorPath calculatorPath={calculator_path} />
-          </Box>
-          <Tags tags={tags || []} />
-        </TableCell>
-        <TableCell key="last-run">
-          <TimeAgo date={created_at} />
-          <RunTime run={run} prefix="in" />
-        </TableCell>
-        <TableCell key="status" width={120}>
-          <RecentStatuses calculatorPath={calculator_path} />
-        </TableCell>
-      </TableRow>
-    </>
+      <Box sx={{ mb: 3 }}>  
+        <MuiRouterLink href={"/pipelines/" + calculator_path} underline="hover">
+          <Typography variant="h6">{name}</Typography>
+        </MuiRouterLink>
+        <CalculatorPath calculatorPath={calculator_path} />
+      </Box>
+      <Tags tags={tags || []} />
+    </>  
   );
 }
 
@@ -129,9 +122,7 @@ function PipelineIndex() {
               filters={{ AND: [{ parent_id: { eq: null } }] }}
               emptyAlert="No pipelines."
               triggerRefresh={triggerRefresh}
-            >
-              {(run: Run) => <PipelineRow run={run} key={run.id} />}
-            </RunList>
+            />
           </Box>
         </Container>
       </Box>

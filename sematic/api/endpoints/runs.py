@@ -22,6 +22,7 @@ from sematic.abstract_future import FutureState
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.events import broadcast_graph_update
+from sematic.api.endpoints.payloads import get_run_payload, get_runs_payload
 from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
@@ -180,15 +181,13 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
             (scheme, netloc, path, urlencode(next_url_params), fragment)
         )
 
-    content = [run.to_json_encodable() for run in runs]
-
     payload = dict(
         current_page_url=current_page_url,
         next_page_url=next_page_url,
         limit=limit,
         next_cursor=next_cursor,
         after_cursor_count=after_cursor_count,
-        content=content,
+        content=get_runs_payload(runs),
     )
 
     return flask.jsonify(payload)
@@ -220,9 +219,7 @@ def get_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
             "No runs with id {}".format(repr(run_id)), HTTPStatus.NOT_FOUND
         )
 
-    payload = dict(
-        content=run.to_json_encodable(),
-    )
+    payload = dict(content=get_run_payload(run))
 
     return flask.jsonify(payload)
 
@@ -248,7 +245,7 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     broadcast_graph_update(root_id=run.root_id, user=user)
 
     payload = dict(
-        content=run.to_json_encodable(),
+        content=get_run_payload(run),
     )
     return flask.jsonify(payload)
 
@@ -417,7 +414,7 @@ def get_run_graph_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     runs, artifacts, edges = get_graph_fn(run_id)
     payload = dict(
         run_id=run_id,
-        runs=[run.to_json_encodable() for run in runs],
+        runs=get_runs_payload(runs),
         edges=[edge.to_json_encodable() for edge in edges],
         artifacts=[artifact.to_json_encodable() for artifact in artifacts],
     )
@@ -439,9 +436,15 @@ def save_graph_endpoint(user: Optional[User]):
     artifacts = [
         Artifact.from_json_encodable(artifact) for artifact in graph["artifacts"]
     ]
+
     edges = [Edge.from_json_encodable(edge) for edge in graph["edges"]]
 
     runs = [Run.from_json_encodable(run) for run in graph["runs"]]
+
+    for run in runs:
+        logger.info("Graph update, run %s is in state %s", run.id, run.future_state)
+        if user is not None:
+            run.user_id = user.id
 
     # save graph BEFORE ensuring jobs are stopped. This way
     # code that is checking on job status will be ok if it
@@ -451,7 +454,6 @@ def save_graph_endpoint(user: Optional[User]):
 
     updated_jobs = False
     for run in runs:
-        logger.info("Graph update, run %s is in state %s", run.id, run.future_state)
         if FutureState[run.future_state].is_terminal():
             updated_jobs = True
             logger.info("Ensuring jobs for %s are stopped %s", run.id, run.future_state)

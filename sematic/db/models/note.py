@@ -7,15 +7,15 @@ from sqlalchemy import Column, types
 
 # Sematic
 from sematic.db.models.base import Base
-from sematic.db.models.json_encodable_mixin import JSONEncodableMixin
+from sematic.db.models.mixins.has_user_mixin import HasUserMixin
+from sematic.db.models.mixins.json_encodable_mixin import JSONEncodableMixin
 
 
-class Note(Base, JSONEncodableMixin):
+class Note(HasUserMixin, Base, JSONEncodableMixin):
 
     __tablename__ = "notes"
 
     id: str = Column(types.String(), primary_key=True, default=lambda: uuid.uuid4().hex)
-    author_id: str = Column(types.String(), nullable=False)
     note: str = Column(types.String(), nullable=False)
     run_id: str = Column(types.String(), nullable=False)
     root_id: str = Column(types.String(), nullable=False)

@@ -1,5 +1,5 @@
 import RunStateChip from "../RunStateChip";
-import run from "../../../tests/fixtures/run.js";
+import run from "ui-test/fixtures/run";
 
 describe('RunStateChip component', () => {
     it("should render", () => {
