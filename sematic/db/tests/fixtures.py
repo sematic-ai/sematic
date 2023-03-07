@@ -27,7 +27,10 @@ from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
 )
-from sematic.tests.fixtures import test_storage  # noqa: F401
+from sematic.tests.fixtures import (  # noqa: F401
+    allow_any_run_state_transition,
+    test_storage,
+)
 
 
 def handler(postgresql):
@@ -173,7 +176,7 @@ def run() -> Run:
 
 
 @pytest.fixture
-def persisted_run(run, test_db) -> Run:
+def persisted_run(run, test_db, allow_any_run_state_transition) -> Run:  # noqa: F811
     return save_run(run)
 
 

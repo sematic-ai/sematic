@@ -11,6 +11,7 @@ import pytest
 # Sematic
 import sematic.api_client as api_client
 import sematic.config.settings as sematic_settings
+from sematic.abstract_future import FutureState
 from sematic.plugins.storage.memory_storage import MemoryStorage
 
 
@@ -29,6 +30,16 @@ def valid_client_version():
         yield
     finally:
         api_client._validated_client_version = current_validated_client_version
+
+
+@pytest.fixture
+def allow_any_run_state_transition():
+    original = FutureState.is_allowed_transition
+    try:
+        FutureState.is_allowed_transition = lambda *args, **kwargs: True
+        yield
+    finally:
+        FutureState.is_allowed_transition = original
 
 
 @contextlib.contextmanager

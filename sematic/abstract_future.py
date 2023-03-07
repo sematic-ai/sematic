@@ -115,7 +115,7 @@ _ALLOWED_TRANSITIONS = {
     FutureState.RESOLVED: frozenset(),
 }
 
-# TODO: retries should
+
 _TERMINAL_STATES = frozenset(
     {
         FutureState.NESTED_FAILED,
