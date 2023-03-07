@@ -23,7 +23,10 @@ from sematic.db.tests.fixtures import persisted_resolution  # noqa: F401
 from sematic.db.tests.fixtures import persisted_run  # noqa: F401
 from sematic.db.tests.fixtures import pg_mock  # noqa: F401
 from sematic.db.tests.fixtures import run  # noqa: F401
-from sematic.db.tests.fixtures import test_db  # noqa: F401
+from sematic.db.tests.fixtures import (  # noqa: F401
+    allow_any_run_state_transition,
+    test_db,
+)
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.tests.fixtures import (  # noqa: F401
     environment_variables,

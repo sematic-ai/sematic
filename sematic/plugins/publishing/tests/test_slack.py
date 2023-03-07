@@ -12,6 +12,7 @@ from sematic.config.tests.fixtures import mock_settings
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.tests.fixtures import (  # noqa: F401
+    allow_any_run_state_transition,
     make_resolution,
     persisted_resolution,
     persisted_run,

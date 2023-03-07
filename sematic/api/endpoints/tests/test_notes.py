@@ -17,6 +17,7 @@ from sematic.db.models.run import Run
 from sematic.db.models.user import User  # noqa: F401
 from sematic.db.queries import get_note, save_note  # noqa: F401
 from sematic.db.tests.fixtures import (  # noqa: F401
+    allow_any_run_state_transition,
     persisted_run,
     persisted_user,
     run,

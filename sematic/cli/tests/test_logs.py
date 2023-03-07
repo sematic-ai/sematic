@@ -12,10 +12,14 @@ from sematic.api.tests.fixtures import mock_storage  # noqa: F401
 from sematic.cli.logs import dump_log_storage, logs
 from sematic.db.models.resolution import ResolutionStatus
 from sematic.db.queries import save_resolution, save_run
-from sematic.db.tests.fixtures import make_resolution, make_run, test_db  # noqa: F401
+from sematic.db.tests.fixtures import (  # noqa: F401
+    allow_any_run_state_transition,
+    make_resolution,
+    make_run,
+    test_db,
+)
 from sematic.log_reader import LogLineResult, log_prefix
 from sematic.scheduling.external_job import ExternalJob, JobType
-from sematic.tests.fixtures import allow_any_run_state_transition  # noqa: F401
 
 
 @pytest.fixture

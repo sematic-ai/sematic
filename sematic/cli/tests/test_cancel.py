@@ -7,7 +7,12 @@ from click.testing import CliRunner
 # Sematic
 from sematic.cli.cancel import cancel
 from sematic.db.models.run import Run
-from sematic.db.tests.fixtures import persisted_run, run, test_db  # noqa: F401
+from sematic.db.tests.fixtures import (  # noqa: F401
+    allow_any_run_state_transition,
+    persisted_run,
+    run,
+    test_db,
+)
 
 
 @mock.patch("sematic.cli.cancel.api_client.get_run")

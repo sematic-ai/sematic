@@ -27,10 +27,7 @@ from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
 )
-from sematic.tests.fixtures import (  # noqa: F401
-    allow_any_run_state_transition,
-    test_storage,
-)
+from sematic.tests.fixtures import test_storage  # noqa: F401
 
 
 def handler(postgresql):
@@ -173,6 +170,16 @@ def persisted_external_resource(test_db) -> AbstractExternalResource:
 @pytest.fixture
 def run() -> Run:
     return make_run()
+
+
+@pytest.fixture
+def allow_any_run_state_transition():
+    original = FutureState.is_allowed_transition
+    try:
+        FutureState.is_allowed_transition = lambda *args, **kwargs: True
+        yield
+    finally:
+        FutureState.is_allowed_transition = original
 
 
 @pytest.fixture

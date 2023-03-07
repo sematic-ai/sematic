@@ -39,6 +39,7 @@ pytest_test(
     # buildifier: leave-alone
     deps = [
         ":fixtures",
+        "//sematic:abstract_future",
         "//sematic:calculator",
         "//sematic/api/tests:fixtures",
         "//sematic/db:db",
