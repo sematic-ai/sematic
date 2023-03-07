@@ -37,7 +37,7 @@ def sematic_pipeline(
     Args:
         name: name of the target
 
-        deps: list of dependencies
+        deps: list of dependencies. Will be present both locally and in the cloud.
 
         registry: URI of the container registry to use to register
             the container image
