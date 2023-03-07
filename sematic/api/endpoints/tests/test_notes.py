@@ -32,7 +32,7 @@ def test_list_notes_empty(
 ):
     response = test_client.get("/api/v1/notes")
 
-    assert response.json == dict(content=[], authors=[])
+    assert response.json == dict(content=[])
 
 
 def test_create_note(
@@ -85,9 +85,6 @@ def test_list_notes(
     assert response.json is not None
     assert len(response.json["content"]) == 1
     assert response.json["content"][0]["id"] == persisted_note.id
-
-    assert len(response.json["authors"]) == 1
-    assert response.json["authors"][0]["id"] == persisted_note.user_id
 
 
 def test_delete_note(

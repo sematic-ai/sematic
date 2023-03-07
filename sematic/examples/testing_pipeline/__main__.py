@@ -63,8 +63,12 @@ INLINE_HELP = (
 )
 NESTED_HELP = "Whether to include nested functions in the pipeline. Defaults to False."
 SLEEP_HELP = (
-    "Includes a function which sleeps for the specified number of seconds, logging a "
-    "message every second. Defaults to 0."
+    "If greater than zero, includes a function which sleeps for the specified number of "
+    "seconds, logging a message every second. Defaults to 0."
+)
+SPAM_LOGS_HELP = (
+    "If greater than zero, includes a function which produces the specified number of "
+    "log lines at INFO level. Defaults to 0."
 )
 FAN_OUT_HELP = (
     "How many dynamically-generated functions to add in parallel. Defaults to 0."
@@ -97,7 +101,6 @@ EXPAND_SHARED_MEMORY_HELP = (
     "KubernetesResourceRequirements configuration containing all the relevant specified "
     "CLI parameters. Defaults to False."
 )
-RAY_HELP = "Includes a function that is executed on an external Ray cluster. "
 CACHE_HELP = (
     "The cache namespace to use for funcs whose outputs will be cached. "
     "Defaults to None, which deactivates caching."
@@ -139,7 +142,11 @@ def _parse_args() -> argparse.Namespace:
         default=False,
         help=CLOUD_HELP,
         **_required_by(
-            "--detach", "--expand-shared-memory", "--max-parallelism", "--oom"
+            "--detach",
+            "--expand-shared-memory",
+            "--max-parallelism",
+            "--oom",
+            "--ray-resource",
         ),
     )
     parser.add_argument(
@@ -177,6 +184,9 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--sleep", type=int, default=0, dest="sleep_time", help=SLEEP_HELP
+    )
+    parser.add_argument(
+        "--spam-logs", type=int, default=0, dest="spam_logs", help=SPAM_LOGS_HELP
     )
     parser.add_argument("--fan-out", type=int, default=0, help=FAN_OUT_HELP)
     parser.add_argument(
