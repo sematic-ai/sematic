@@ -130,7 +130,7 @@ class Job(Base, JSONEncodableMixin):
             id=job.external_job_id,
             source_run_id=run_id,
             state_name=status.state_name,
-            is_active=job.is_active(),
+            is_active=int(job.is_active()),
             status_message=status.description,
             job_type=job.job_type,
             last_updated_epoch_seconds=status.last_update_epoch_time,
