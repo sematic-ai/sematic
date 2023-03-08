@@ -13,7 +13,7 @@ else:
     # parameterized a Union, we just use an example. Why use two types
     # instead of just Union[int]? Because that is disallowed--all Union
     # parameterizations must have at least two types.
-    UnionType = typing.get_origin(typing.Union[int, float])
+    UnionType = typing.get_origin(typing.Union[int, float])  # type: ignore
 
 
 class TypeMeta(abc.ABCMeta):

@@ -33,6 +33,7 @@ from sematic.db.queries import (
     save_run_external_resource_links,
 )
 from sematic.db.tests.fixtures import (  # noqa: F401
+    allow_any_run_state_transition,
     make_resolution,
     persisted_external_resource,
     persisted_resolution,

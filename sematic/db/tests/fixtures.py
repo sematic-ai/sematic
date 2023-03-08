@@ -173,7 +173,17 @@ def run() -> Run:
 
 
 @pytest.fixture
-def persisted_run(run, test_db) -> Run:
+def allow_any_run_state_transition():
+    original = FutureState.is_allowed_transition
+    try:
+        FutureState.is_allowed_transition = lambda *args, **kwargs: True
+        yield
+    finally:
+        FutureState.is_allowed_transition = original
+
+
+@pytest.fixture
+def persisted_run(run, test_db, allow_any_run_state_transition) -> Run:  # noqa: F811
     return save_run(run)
 
 

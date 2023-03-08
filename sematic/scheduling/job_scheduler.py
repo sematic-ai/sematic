@@ -96,8 +96,23 @@ def update_run_status(
     The second is the updated external jobs tuple.
     """
     external_jobs = tuple(external_jobs)
+    active_jobs_remain = any(job.is_active() for job in external_jobs)
     if future_state.is_terminal():
-        return future_state, external_jobs
+        if active_jobs_remain:
+            logger.warning(
+                "There are still active external jobs for run in "
+                "state %s (will refresh jobs): %s",
+                future_state,
+                external_jobs,
+            )
+            refreshed_jobs = _refresh_external_jobs(external_jobs)
+            logger.warning(
+                "After refresh, jobs are: " "%s",
+                refreshed_jobs,
+            )
+            return future_state, refreshed_jobs
+        else:
+            return future_state, external_jobs
 
     if future_state.value == FutureState.RAN.value:
         # If the job already RAN, the only reason it's not
