@@ -1,8 +1,9 @@
 # Standard Library
 import logging
 import pathlib
+import time
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, unique
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -101,6 +102,14 @@ class KubernetesExternalJob(ExternalJob):
     most_recent_container_condition_message: Optional[str]
     has_infra_failure: Optional[bool]
 
+    # default value: need one so we're backwards compatible
+    # with old serializations missing this field
+    # why not time.time()?: that would imply the updates are
+    # recent, when due to the fact that this is only missing for
+    # old runs is a bad assumption. Better to treat them as
+    # indefinitely old
+    epoch_time_last_updated: float = field(default=0.0, compare=False, hash=False)
+
     @classmethod
     def new(
         cls, try_number: int, run_id: str, namespace: str, job_type: JobType
@@ -120,6 +129,7 @@ class KubernetesExternalJob(ExternalJob):
             most_recent_pod_condition_message=None,
             most_recent_container_condition_message=None,
             has_infra_failure=False,
+            epoch_time_last_updated=time.time(),
         )
 
     @property
@@ -219,6 +229,7 @@ class KubernetesExternalJob(ExternalJob):
             description=active_status_message
             if self.is_active()
             else inactive_status_message,
+            last_update_epoch_time=self.epoch_time_last_updated,
         )
 
 
@@ -575,6 +586,7 @@ def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
         job.most_recent_container_condition_message,
         job.has_infra_failure,
     ) = _get_most_recent_pod_details(job)
+    job.epoch_time_last_updated = time.time()
 
     logger.debug("Job %s refreshed: %s", job.external_job_id, job)
     return job

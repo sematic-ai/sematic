@@ -91,7 +91,7 @@ class Job(Base, JSONEncodableMixin):
         types.Enum(JobType),
         nullable=False,
     )
-    last_updated_epoch_seconds: int = Column(types.BIGINT(), nullable=False)
+    last_updated_epoch_seconds: float = Column(types.Float(), nullable=False)
     value_serialization: Dict[str, Any] = Column(types.JSON(), nullable=False)
     status_history_serializations: Tuple[Dict[str, Any], ...] = Column(  # type: ignore
         types.JSON(), nullable=False
@@ -166,13 +166,22 @@ class Job(Base, JSONEncodableMixin):
         serialization = value_to_json_encodable(job, type(job))
         most_recent_status = None
         current_status = job.get_status()
+        status_serialization = value_to_json_encodable(current_status, JobStatus)
         if len(self.status_history_serializations) > 0:
             most_recent_status = value_from_json_encodable(
                 self.status_history_serializations[0], JobStatus
             )
+            if (
+                most_recent_status.last_update_epoch_time
+                > current_status.last_update_epoch_time
+            ):
+                raise IllegalStateTransitionError(
+                    "Cannot append status to history, a more recent "
+                    "update is already available."
+                )
         if current_status != most_recent_status:
             history = list(self.status_history_serializations)
-            history.insert(0, serialization)
+            history.insert(0, status_serialization)
             self.status_history_serializations = tuple(history)
 
         self.state_name = current_status.state_name

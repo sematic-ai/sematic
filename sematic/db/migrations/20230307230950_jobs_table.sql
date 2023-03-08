@@ -3,7 +3,7 @@
 CREATE TABLE jobs (
     id TEXT NOT NULL,
     source_run_id character(32) NOT NULL,
-    last_updated_epoch_seconds bigint NOT NULL,
+    last_updated_epoch_seconds double precision NOT NULL,
     state_name TEXT NOT NULL,
     is_active int8 NOT NULL, -- int8 because sqlite doesn't have boolean
     job_type TEXT NOT NULL,

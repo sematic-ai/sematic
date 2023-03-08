@@ -34,8 +34,8 @@ class JobStatus:
 
     state_name: str
     description: str
-    last_update_epoch_time: int = field(
-        default_factory=lambda: int(time.time()), compare=False
+    last_update_epoch_time: float = field(
+        default_factory=lambda: float(time.time()), compare=False
     )
 
 
