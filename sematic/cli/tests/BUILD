@@ -49,6 +49,7 @@ pytest_test(
         "//sematic/cli:logs",
         "//sematic/db:queries",
         "//sematic/db/tests:fixtures",
+        "//sematic/tests:fixtures",
     ],
 )
 
