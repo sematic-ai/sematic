@@ -9,7 +9,9 @@ export default function ImageValueView(props: CommonValueViewProps) {
   const { bytes, mime_type } = valueSummary;
   const { user } = useContext(UserContext);
 
+
   const [ imageBase64, setImageBase64 ] = useState<string | undefined>(undefined);
+  
 
   useEffect(() => {
     const headers: HeadersInit = new Headers();
@@ -23,7 +25,8 @@ export default function ImageValueView(props: CommonValueViewProps) {
       }
         return response.arrayBuffer();
     }).then((arrayBuffer) => {
-      setImageBase64(base64ArrayBuffer(arrayBuffer));
+      let base64Image = base64ArrayBuffer(arrayBuffer);
+      setImageBase64(base64Image);
     });
   }, [bytes.blob, user?.api_key]);
 
