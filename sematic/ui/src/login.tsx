@@ -30,13 +30,13 @@ function GoogleLoginComponent({
   const onGoogleLoginSuccess = useCallback(
     async (credentialResponse: CredentialResponse) => {
       try {
-        const payload: GoogleLoginPayload = await fetch({
+        const payload: GoogleLoginPayload = await (await fetch({
           url: "/login/google",
           method: "POST",
           body: {
             token: credentialResponse.credential,
           },
-        });
+        })).json();
         setError(undefined);
         setUser(payload.user);
         navigate(-1);

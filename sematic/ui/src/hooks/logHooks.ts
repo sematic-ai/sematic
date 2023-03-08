@@ -43,7 +43,7 @@ export function useLogStream(source: string, filterString: string) {
             const qString = (new URLSearchParams(queryParams)).toString();
             const url = `/api/v1/runs/${source}/logs?${qString}`;
 
-            const payload: LogLineRequestResponse = await fetch({ url });
+            const payload: LogLineRequestResponse = await (await fetch({ url })).json();
 
             const { content: { lines, continuation_cursor, log_info_message } } = payload;
 

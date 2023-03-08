@@ -59,8 +59,9 @@ export function useFetchRunsFn(runFilters: Filter | undefined = undefined,
         const response = await fetch({
             url: `/api/v1/runs?${qString}`
         });
+        const payload: RunListPayload = await response.json();
         setIsLoaded(true);
-        return response as RunListPayload;
+        return payload;
     }, [queryParams, fetch]);
 
     const {loading: isLoading, error, value: runs} = state;
@@ -90,10 +91,10 @@ export function useFetchRun(runID: string): [
     const {fetch} = useHttpClient();
 
     const {value, loading, error} = useAsync(async () => {
-        const response: RunViewPayload = await fetch({
+        const response = await fetch({
             url: `/api/v1/runs/${runID}`
         });
-        return response.content
+        return (await response.json() as RunViewPayload).content
     }, [runID]);
     
     return [value, loading, error];
@@ -105,10 +106,10 @@ export function useFetchResolution(resolutionId: string): [
     const {fetch} = useHttpClient();
 
     const {value, loading, error} = useAsync(async () => {
-        const response: ResolutionPayload = await fetch({
+        const response  = await fetch({
             url: `/api/v1/resolutions/${resolutionId}`
         });
-        return response.content;
+        return ((await response.json()) as ResolutionPayload).content;
     }, [resolutionId]);
     
     return [value, loading, error];

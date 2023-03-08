@@ -17,9 +17,11 @@ export function useGraph(runRootId: string): [
     const { devLogger } = useLogger();
 
     const {value: graphPayload, loading, error, retry} = useAsyncRetry(async () => {
-        return await fetch({
+        const response = await fetch({
             url: `/api/v1/runs/${runRootId}/graph?root=1`,
-        }) as RunGraphPayload;
+        });
+
+        return (await response.json()) as RunGraphPayload;
     }, [runRootId]);
 
     const graph = useMemo<Graph | undefined >(() => {

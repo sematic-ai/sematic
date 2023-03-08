@@ -3,7 +3,7 @@ import { UserContext } from "../appContext";
 import { useLogger } from "../utils";
 
 interface HttpClient {
-    fetch: (params: { url: string, method?: string, body?: any }) => Promise<any>;
+    fetch: (params: { url: string, method?: string, body?: any }) => Promise<Response>;
     cancel: () => void
 }
 
@@ -29,7 +29,7 @@ export function useHttpClient(): HttpClient {
         url,
         method,
         body
-    }: { url: string, method?: string, body?: any }) => {
+    }: { url: string, method?: string, body?: any }): Promise<Response>  => {
         method = method || "GET";
 
         const reqBody: BodyInit | null = body ? JSON.stringify(body) : null;
@@ -49,7 +49,7 @@ export function useHttpClient(): HttpClient {
                 throw Error(response.statusText);
             }
 
-            return response.json();
+            return response;
         } catch (e: any) {
             if (e instanceof DOMException && e.name === 'AbortError') {
                 devLogger("fetch() was voluntarily cancelled.")

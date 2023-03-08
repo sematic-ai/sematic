@@ -15,11 +15,13 @@ export function useExternalResource(run: Run) {
             url: `/api/v1/runs/${run.id}/external_resources`
         });
 
-        if (!response['content']) {
+        const payload = await response.json();
+
+        if (!payload['content']) {
             throw Error('external_resources response is not in the correct format.')
         }
 
-        return response['content'] as Array<ExternalResource>
+        return payload['content'] as Array<ExternalResource>
     }, [fetch, run.id]);
 
     const timerHandler = useRef<number>();
