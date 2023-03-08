@@ -91,3 +91,13 @@ class ExternalJob:
         A job status.
         """
         raise NotImplementedError("Subclasses of ExternalJob should define get_status")
+
+    @property
+    def job_type(self) -> JobType:
+        """Get a JobType for the current job
+
+        Returns
+        -------
+        A JobType.
+        """
+        raise NotImplementedError("Subclasses of ExternalJob should define job_type")

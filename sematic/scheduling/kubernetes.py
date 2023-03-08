@@ -216,7 +216,9 @@ class KubernetesExternalJob(ExternalJob):
             # here, they will be populated with meaningful data in a
             # separate PR.
             state_name="ACTIVE" if self.is_active() else "INACTIVE",
-            description=active_status_message if self.is_active() else inactive_status_message,
+            description=active_status_message
+            if self.is_active()
+            else inactive_status_message,
         )
 
 

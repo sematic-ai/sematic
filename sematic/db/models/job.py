@@ -1,14 +1,15 @@
 # Standard Library
 import datetime
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Union
 
 # Third-party
 from sqlalchemy import Column, types
+from sqlalchemy.orm import validates
 
 # Sematic
 from sematic.db.models.base import Base
 from sematic.db.models.mixins.json_encodable_mixin import JSONEncodableMixin
-from sematic.scheduling.external_job import ExternalJob, JobStatus
+from sematic.scheduling.external_job import ExternalJob, JobStatus, JobType
 from sematic.types.serialization import (
     value_from_json_encodable,
     value_to_json_encodable,
@@ -28,6 +29,8 @@ class Job(Base, JSONEncodableMixin):
         The name of the state this job is in
     status_message:
         A human-readable status message about the job's most recent state.
+    job_type:
+        The job type (ex: worker/driver) of this job.
     value_serialization:
         The Sematic serialization of the full external job. This may be more
         "volatile" over time relative to overall status information. Thus its
@@ -55,10 +58,11 @@ class Job(Base, JSONEncodableMixin):
     """
 
     # Q: Why duplicate data that's already in the json of
-    # status_history_serializations as columns?
+    # status_history_serializations and value_serialization as columns?
     # A: For two reasons:
-    #    1. It gives us freedom to refactor the dataclass for JobStatus later to
-    #    move fields around, while allowing the database columns to stay stable.
+    #    1. It gives us freedom to refactor the dataclass for
+    #    JobStatus/ExternalJob/KubernetesExternalJob later to move fields around,
+    #    while allowing the database columns to stay stable.
     #    2. It allows for more efficient queries on the explicit columns rather than
     #    requiring json traversal.
 
@@ -74,6 +78,10 @@ class Job(Base, JSONEncodableMixin):
         nullable=False,
     )
     status_message: str = Column(types.String(), nullable=False)
+    job_type: JobType = Column(  # type: ignore
+        types.Enum(JobType),
+        nullable=False,
+    )
     last_updated_epoch_seconds: int = Column(types.BIGINT(), nullable=False)
     value_serialization: Dict[str, Any] = Column(types.JSON(), nullable=False)
     status_history_serializations: Tuple[Dict[str, Any], ...] = Column(  # type: ignore
@@ -88,6 +96,14 @@ class Job(Base, JSONEncodableMixin):
         default=datetime.datetime.utcnow,
         onupdate=datetime.datetime.utcnow,
     )
+
+    @validates("job_type")
+    def validate_job_type(self, key: Any, job_type: Union[str, JobType]) -> JobType:
+        if isinstance(job_type, str):
+            return JobType[job_type]
+        elif isinstance(job_type, JobType):
+            return job_type
+        raise ValueError(f"Cannot make a JobType from {job_type}")
 
     @classmethod
     def from_job(cls, job: ExternalJob, run_id: str) -> "Job":
@@ -106,6 +122,7 @@ class Job(Base, JSONEncodableMixin):
             source_run_id=run_id,
             state_name=status.state_name,
             status_message=status.description,
+            job_type=job.job_type,
             last_updated_epoch_seconds=status.last_update_epoch_time,
             value_serialization=value_serialization,
             status_history_serializations=(status_serialization,),
@@ -119,7 +136,15 @@ class Job(Base, JSONEncodableMixin):
             raise ValueError(f"job must be a subclass of ExternalJob. Was: {type(job)}")
 
         if job.external_job_id != self.id:
-            raise ValueError("Job can only be updated by another job with the same id")
+            raise ValueError(
+                f"Job can only be updated by another job with the same id. "
+                f"Original id: {self.id}, new id: {job.external_job_id}"
+            )
+
+        if job.job_type != self.job_type:
+            raise ValueError(
+                f"Job cannot change job type from {self.job_type} to {job.job_type}"
+            )
 
         serialization = value_to_json_encodable(job, type(job))
         most_recent_status = None
