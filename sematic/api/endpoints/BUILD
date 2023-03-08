@@ -16,6 +16,7 @@ sematic_py_lib(
         "//sematic/db:queries",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
+        "//sematic/db/models:job",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
         "//sematic/scheduling:job_scheduler",

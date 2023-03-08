@@ -8,7 +8,7 @@ import datetime
 import logging
 from dataclasses import asdict
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import urlencode, urlsplit, urlunsplit
 
 # Third-party
@@ -30,6 +30,7 @@ from sematic.api.endpoints.request_parameters import (
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
+from sematic.db.models.job import Job
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
@@ -40,6 +41,7 @@ from sematic.db.queries import (
     get_run_graph,
     get_run_status_details,
     save_graph,
+    save_job,
     save_run,
     save_run_external_resource_links,
 )
@@ -242,6 +244,7 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     save_run(run)
 
     broadcast_graph_update(root_id=run.root_id, user=user)
+    save_job(Job.from_job(run.external_jobs[-1], run_id=run.id))
 
     payload = dict(
         content=get_run_payload(run),
@@ -277,11 +280,11 @@ def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     return flask.jsonify(payload)
 
 
-def _get_run_if_modified(
+def _get_run_and_jobs_if_modified(
     run_id: str, future_state: FutureState, jobs: List[ExternalJob]
-) -> Optional[Run]:
-    """Returns the updated run, if it has changed based on external job status, or None
-    if it hasn't.
+) -> Tuple[Optional[Run], Optional[Tuple[ExternalJob, ...]]]:
+    """Returns the updated run & its jobs, if they changed job status, or None
+    if they haven't
     """
     new_future_state, new_external_jobs = update_run_status(future_state, jobs)
     run = None
@@ -331,7 +334,10 @@ def _get_run_if_modified(
             msg,
         )
 
-    return run
+    if new_external_jobs == jobs:
+        new_external_jobs = None  # type: ignore
+
+    return (run, new_external_jobs)
 
 
 @sematic_api.route("/api/v1/runs/future_states", methods=["POST"])
@@ -356,11 +362,15 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
     result_list = []
     for run_id, (future_state, jobs) in db_status_dict.items():
         new_future_state_value = future_state.value
-        run = _get_run_if_modified(run_id, future_state, jobs)
+        run, new_jobs = _get_run_and_jobs_if_modified(run_id, future_state, jobs)
         if run is not None:
             new_future_state_value = run.future_state
             save_run(run)
             broadcast_graph_update(run.root_id, user=user)
+
+        if new_jobs is not None:
+            for job in new_jobs:
+                save_job(Job.from_job(job, run_id=run_id))
 
         result_list.append(
             dict(
@@ -439,7 +449,9 @@ def save_graph_endpoint(user: Optional[User]):
             logger.info("Ensuring jobs for %s are stopped %s", run.id, run.future_state)
             jobs = []
             for external_job in run.external_jobs:
-                jobs.append(cancel_job(external_job))
+                canceled_job = cancel_job(external_job)
+                save_job(Job.from_job(canceled_job, run_id=run.id))
+                jobs.append(canceled_job)
             run.external_jobs = jobs
 
     artifacts = [

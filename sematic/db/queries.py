@@ -16,6 +16,7 @@ from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
+from sematic.db.models.job import Job
 from sematic.db.models.note import Note
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
@@ -194,6 +195,30 @@ def save_run(run: Run) -> Run:
         session.refresh(run)
 
     return run
+
+
+def save_job(job: Job) -> Job:
+    existing_job = get_job(job.id)
+    if existing_job is None:
+        # this ensures that all the fields are consistent
+        job = Job.from_job(job.job, run_id=job.source_run_id)
+    else:
+        # this ensures that the update properly updates history
+        # and keeps data consistent
+        existing_job.set_job(job.job)
+        job = existing_job
+
+    with db().get_session() as session:
+        session.merge(job)
+        session.commit()
+
+        return job
+
+
+def get_job(job_id: str) -> Optional[Job]:
+    """Get a job from the DB, or None if it doesn't exist"""
+    with db().get_session() as session:
+        return session.query(Job).filter(Job.id == job_id).one_or_none()
 
 
 def save_external_resource_record(record: ExternalResource):
