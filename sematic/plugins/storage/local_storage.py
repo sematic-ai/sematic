@@ -102,7 +102,9 @@ def download_endpoint(user: Optional[User], namespace: str, key: str) -> flask.R
             status=HTTPStatus.NOT_FOUND,
         )
 
-    return flask.Response(content)
+    response = flask.Response(content)
+
+    return response
 
 
 # For easier mocking

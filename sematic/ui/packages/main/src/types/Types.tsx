@@ -18,7 +18,7 @@ import StrValueView from "./str";
 import { S3BucketValueView, S3LocationValueView } from "./aws";
 import ImageValueView from "src/types/image";
 import { TypeComponents, SpecificTypeSerialization } from "./common";
-
+export {renderSummary} from "./common";
 
 // TypeRepr types
 export type AnyTypeRepr =

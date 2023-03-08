@@ -92,7 +92,11 @@ export function renderSummary<TypeRepr extends AnyTypeRepr>(
 
 function getComponentRenderDetails(typeRepr: AnyTypeRepr) {
   let typeKey = typeRepr[1];
-  if (typeRepr[0] === "class") {
+  
+  // This makes it so we don't have to create a shadow dataclass
+  // to have a custom viz for a particular dataclass. We can just
+  // register the React component with the full import path of the dataclass.
+  if ("import_path" in typeRepr[2]) {
     typeKey = typeRepr[2]["import_path"] + "." + typeKey;
   }
 
