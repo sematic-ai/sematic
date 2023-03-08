@@ -103,6 +103,7 @@ def download_endpoint(user: Optional[User], namespace: str, key: str) -> flask.R
         )
 
     response = flask.Response(content)
+    response.headers.set("Cache-Control", "max-age=31536000, immutable, private")
 
     return response
 
