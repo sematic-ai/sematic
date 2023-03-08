@@ -1,4 +1,4 @@
-import { Alert, Skeleton } from "@mui/material";
+import { Skeleton, Typography } from "@mui/material";
 import { useMemo } from "react";
 import { CommonValueViewProps } from "src/types/common";
 import { base64ArrayBuffer } from "src/base64ArrayBuffer";
@@ -11,23 +11,25 @@ export default function ImageValueView(props: CommonValueViewProps) {
   const [arrayBuffer, loading, error] = useFetchBlob(bytes.blob);
 
   const imageBase64 = useMemo<string | undefined>(() => {
-    if (!(arrayBuffer instanceof ArrayBuffer)) return undefined;
+    if (arrayBuffer === undefined) return undefined;
     return base64ArrayBuffer(arrayBuffer);
   }, [arrayBuffer]);
 
-  if (error instanceof Error || arrayBuffer instanceof Error) {
-    return <Alert severity="error">Unable to load image.</Alert>
+  if (error) {
+    return <Typography>Unable to load image: {error.message}.</Typography>
   }
 
-  if (loading === true) {
+  if (loading) {
     return <Skeleton variant="rectangular" width={210} height={60} />
   }
 
-  if (arrayBuffer instanceof ArrayBuffer) {
+  if (arrayBuffer) {
     return <img
       src={`data:${mime_type};base64,${imageBase64}`}
       alt="Artifact rendering"
       style={{maxWidth: "600px"}}
     />
   }
+
+  return <></>;
 }
