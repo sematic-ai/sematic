@@ -115,12 +115,14 @@ def _dict_to_json_encodable_summary(value: Dict, type_: Type) -> SummaryOutput:
     summary, blobs = [], {}
 
     for key in sorted_keys:
-        key_summary, _ = get_json_encodable_summary(key, key_type)
+        key_summary, key_blobs = get_json_encodable_summary(key, key_type)
+
         value_summary, value_blobs = get_json_encodable_summary(
             value[key], element_type
         )
 
         summary.append((key_summary, value_summary))
         blobs.update(value_blobs)
+        blobs.update(key_blobs)
 
     return summary, blobs

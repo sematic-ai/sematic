@@ -1,5 +1,5 @@
 # Standard Library
-import uuid
+import hashlib
 from dataclasses import dataclass
 
 # Third-party
@@ -12,7 +12,7 @@ from sematic.types.registry import SummaryOutput, register_to_json_encodable_sum
 @dataclass
 class Image:
     """
-    A simple type to display images in the UI.
+    A simple type to display images in the dashboard.
     """
 
     bytes: bytes
@@ -25,7 +25,8 @@ class Image:
 
 @register_to_json_encodable_summary(Image)
 def _image_to_summary(value: Image, _) -> SummaryOutput:
-    blob_id = uuid.uuid4().hex
+    blob_id = hashlib.sha1(value.bytes).hexdigest()
+
     mime_type = magic.from_buffer(value.bytes, mime=True)
 
     summary = {"mime_type": mime_type, "bytes": {"blob": blob_id}}

@@ -33,6 +33,7 @@ pytest_test(
         "//sematic/types:casting",
         "//sematic/types:init",
         "//sematic/types:serialization",
+        "//sematic/types/types:image",
     ],
 )
 
@@ -72,6 +73,7 @@ pytest_test(
         "//sematic/types:casting",
         "//sematic/types:init",
         "//sematic/types:serialization",
+        "//sematic/types/types:image",
     ],
 )
 

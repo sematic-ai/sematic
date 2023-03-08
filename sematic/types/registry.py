@@ -207,8 +207,6 @@ def get_from_json_encodable_func(
 
 SummaryOutput = Tuple[Any, Dict[str, bytes]]
 
-ToJSONEncodableSummaryCallable = Callable[[Any, Any], SummaryOutput]
-
 _JSON_ENCODABLE_SUMMARY_REGISTRY: Dict[RegistryKey, ToJSONEncodableCallable] = {}
 
 
