@@ -1,19 +1,6 @@
 load("//bazel:pipeline.bzl", "sematic_pipeline")
 
 
-pip_deps = [
-    "boto3",
-    "pandas",
-    "pillow",
-    "plotly",
-    "pytorch-lightning",
-    "ray",
-    "ray-lightning",
-    "torch",
-    "torchmetrics",
-    "torchvision",
-]
-
 sematic_py_lib(
     name = "lib",
     srcs = glob([
@@ -24,7 +11,18 @@ sematic_py_lib(
         "//sematic:init",
         "//sematic/ee:ray",
     ],
-    pip_deps = pip_deps,
+    pip_deps = [
+        "boto3",
+        "pandas",
+        "pillow",
+        "plotly",
+        "pytorch-lightning",
+        "ray",
+        "ray-lightning",
+        "torch",
+        "torchmetrics",
+        "torchvision",
+    ],
 )
 
 sematic_pipeline(

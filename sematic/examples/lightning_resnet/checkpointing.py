@@ -2,6 +2,7 @@
 import io
 import logging
 from dataclasses import dataclass
+from typing import Any, Dict, Optional
 
 # Third-party
 import boto3
@@ -24,13 +25,18 @@ class SematicCheckpointIO(CheckpointIO):
     https://pytorch-lightning.readthedocs.io/en/stable/common/checkpointing_advanced.html
     """
 
-    def __init__(self, *args, s3_location=None, **kwargs) -> None:
+    def __init__(self, *args, s3_location: S3Location = None, **kwargs) -> None:
         if s3_location is None:
             raise ValueError("Missing required argument 's3_location'")
         self._s3_location = s3_location
         super().__init__(*args, **kwargs)
 
-    def save_checkpoint(self, checkpoint, path, storage_options=None):
+    def save_checkpoint(
+        self,
+        checkpoint: Any,
+        path: str,
+        storage_options: Optional[Dict[str, Any]] = None,
+    ):
         as_bytes = cloudpickle.dumps(checkpoint)
         s3_client = boto3.client("s3")
         key = (self._s3_location / path).location
@@ -38,7 +44,9 @@ class SematicCheckpointIO(CheckpointIO):
             s3_client.upload_fileobj(file_obj, self._s3_location.bucket.name, key)
 
     @retry(tries=3, delay=5)
-    def load_checkpoint(self, path, storage_options=None):
+    def load_checkpoint(
+        self, path: str, storage_options: Optional[Dict[str, Any]] = None
+    ) -> Any:
         file_obj = io.BytesIO()
         s3_client = boto3.client("s3")
         key = (self._s3_location / path).location
@@ -46,13 +54,14 @@ class SematicCheckpointIO(CheckpointIO):
         s3_client.download_fileobj(self._s3_location.bucket.name, key, file_obj)
         return cloudpickle.loads(file_obj.getvalue())
 
-    def remove_checkpoint(self, path):
+    def remove_checkpoint(self, path: str) -> None:
         logger.warning(
-            f"Cannot remove checkpoints once "
-            f"they have been written. Ignoring removal of: {path}"
+            "Cannot remove checkpoints once "
+            "they have been written. Ignoring removal of: %s",
+            path,
         )
 
-    def from_path(self, path):
+    def from_path(self, path: str) -> "Checkpoint":
         return Checkpoint(
             location=self._s3_location / path,
             prefix=self._s3_location,
@@ -73,5 +82,5 @@ class Checkpoint:
     prefix: S3Location
 
     @property
-    def path(self):
+    def path(self) -> str:
         return self.location.location.replace(f"{self.prefix.location}/", "")

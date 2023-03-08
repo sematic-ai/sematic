@@ -18,7 +18,7 @@ from sematic.types.types.aws.s3 import S3Location
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-CHECKPOINT_LOCATION = S3Location.from_uri("s3://sematic-dev/lightning-resnet")
+DEFAULT_CHECKPOINT_LOCATION = S3Location.from_uri("s3://sematic-dev/lightning-resnet")
 
 LOCAL_DATA_CONFIG = DataConfig(
     batch_size=2,
@@ -44,7 +44,7 @@ LOCAL_TRAINING_CONFIG = TrainingConfig(
         gpu_count=0,
     ),
     loop_config=LOCAL_LOOP_CONFIG,
-    checkpoint_location=CHECKPOINT_LOCATION,
+    checkpoint_location=DEFAULT_CHECKPOINT_LOCATION,
 )
 
 REMOTE_TRAINING_CONFIG = TrainingConfig(
@@ -59,7 +59,7 @@ REMOTE_TRAINING_CONFIG = TrainingConfig(
         n_epochs=10,
         max_steps=-1,
     ),
-    checkpoint_location=CHECKPOINT_LOCATION,
+    checkpoint_location=DEFAULT_CHECKPOINT_LOCATION,
 )
 
 LOCAL_EVAL_CONFIG = EvaluationConfig(
@@ -83,7 +83,18 @@ REMOTE_EVAL_CONFIG = EvaluationConfig(
 
 def main():
     parser = argparse.ArgumentParser("Lightning CIFAR Classifier Example")
-    parser.add_argument("--cloud", default=False, action="store_true")
+    parser.add_argument(
+        "--cloud",
+        default=False,
+        action="store_true",
+        help="Whether to use the CloudResolver (uses LocalResolver otherwise)",
+    )
+    parser.add_argument(
+        "--checkpoint-dir",
+        default=DEFAULT_CHECKPOINT_LOCATION,
+        type=str,
+        help="S3 URI for where to store checkpoints.",
+    )
 
     args = parser.parse_args()
 
@@ -99,6 +110,8 @@ def main():
         train_config = LOCAL_TRAINING_CONFIG
         eval_config = LOCAL_EVAL_CONFIG
         data_config = LOCAL_DATA_CONFIG
+
+    train_config = replace(train_config, checkpoint_location=args.checkpoint_dir)
 
     future = pipeline(train_config, data_config, eval_config).set(
         name="Distributed Training Resnet Example"

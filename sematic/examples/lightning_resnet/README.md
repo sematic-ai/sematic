@@ -15,3 +15,17 @@ It is available under the license [CC BY-SA](https://creativecommons.org/license
 This pipeline also illustrates how you can test the end-to-end connections between
 steps in your pipeline to reduce the chance that your pipeline will fail
 mid-execution from a programming error. See [`test_pipeline.py`](./tests/test_pipeline.py).
+
+## Screenshots
+
+![Inputs](./lightningInputs.png)
+*Displays hyperparameters, compute configurations, docstrings, and any*
+*inputs you can imagine, right in the dashboard*
+
+![Ray](./lightningRay.png)
+*Get live information about execution including logs and the state*
+*of any computing resources your job uses*
+
+![Results](./lightningResults.png)
+*Display statistics, plotly figures, and more to summarize*
+*the results of your execution*

@@ -6,7 +6,7 @@
 # Standard Library
 from collections import Counter
 from dataclasses import dataclass
-from typing import Dict, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Third-party
 import pandas as pd
@@ -35,19 +35,19 @@ from sematic.types.types.aws.s3 import S3Location
 
 
 class LitResnet(LightningModule):
-    """Simple wrapper around Torchvision ResNet
+    """Simple wrapper around Torchvision ResNet.
 
     https://pytorch.org/vision/stable/models/resnet.html?highlight=resnet
     """
 
     def __init__(
         self,
-        batch_size,
-        num_classes,
-        num_samples_per_epoch,
-        lr=0,
-        momentum=0,
-        weight_decay=0,
+        batch_size: int,
+        num_classes: int,
+        num_samples_per_epoch: int,
+        lr: float = 0,
+        momentum: float = 0,
+        weight_decay: float = 0,
     ):
         super().__init__()
         self.batch_size = batch_size
@@ -59,18 +59,18 @@ class LitResnet(LightningModule):
         )
         self.num_classes = num_classes
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         out = self.model(x)
         return F.log_softmax(out, dim=1)
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch: torch.Tensor, batch_idx: int) -> torch.Tensor:
         x, y = batch
         logits = self(x)
         loss = F.nll_loss(logits, y)
         self.log("train_loss", loss)
         return loss
 
-    def evaluate(self, batch, stage=None):
+    def evaluate(self, batch: torch.Tensor, stage: Optional[str] = None):
         x, y = batch
         logits = self(x)
         loss = F.nll_loss(logits, y)
@@ -97,7 +97,9 @@ class LitResnet(LightningModule):
             ):
                 self.log(key, val, reduce_fx="sum", sync_dist=True)
 
-    def _create_confusion_metrics(self, stage, count_by_confusion_key):
+    def _create_confusion_metrics(
+        self, stage: str, count_by_confusion_key: Dict[str, int]
+    ) -> List[Tuple[str, float]]:
         metric_key_value_pairs = []
         for (pred, label), count in count_by_confusion_key.items():
             metric_key_value_pairs.append(
@@ -105,7 +107,9 @@ class LitResnet(LightningModule):
             )
         return metric_key_value_pairs
 
-    def _read_confusion_metrics(self, stage, metrics):
+    def _read_confusion_metrics(
+        self, stage: str, metrics: List[Dict[str, float]]
+    ) -> pd.DataFrame:
         confusion_dicts = [
             {
                 "prediction": int(k.split("_")[1]),
@@ -148,13 +152,13 @@ class LitResnet(LightningModule):
             .fillna(0)
         )
 
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch: torch.Tensor, batch_idx: int) -> None:
         self.evaluate(batch, "val")
 
-    def test_step(self, batch, batch_idx):
+    def test_step(self, batch: torch.Tensor, batch_idx: int) -> None:
         self.evaluate(batch, "test")
 
-    def configure_optimizers(self):
+    def configure_optimizers(self) -> Dict[str, Any]:
         optimizer = torch.optim.SGD(
             self.parameters(),
             lr=self.hparams.lr,
@@ -269,12 +273,12 @@ def train_classifier(
 
 
 @ray.remote(num_gpus=1)
-def validate_gpus():
+def validate_gpus() -> bool:
     cuda_available = torch.cuda.is_available()
     return cuda_available
 
 
-def create_model(num_classes):
+def create_model(num_classes: int) -> torch.nn.Module:
     model = torchvision.models.resnet18(weights=None, num_classes=num_classes)
     model.conv1 = nn.Conv2d(
         3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False
@@ -326,7 +330,9 @@ def evaluate_classifier(
     )
 
 
-def plot_confusion(confusion_matrix_data_frame, classes_list):
+def plot_confusion(
+    confusion_matrix_data_frame: pd.DataFrame, classes_list: List[str]
+) -> Figure:
     data = Heatmap(
         z=confusion_matrix_data_frame.T,
         text=confusion_matrix_data_frame.T,
