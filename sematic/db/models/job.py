@@ -176,6 +176,7 @@ class Job(Base, JSONEncodableMixin):
         self.state_name = current_status.state_name
         self.status_message = current_status.description
         self.last_updated_epoch_seconds = current_status.last_update_epoch_time
+        self.is_active = job.is_active()
 
         self.value_serialization = serialization
 

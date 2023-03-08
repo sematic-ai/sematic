@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS "notes" (
 CREATE TABLE jobs (
     id TEXT NOT NULL,
     source_run_id character(32) NOT NULL,
-    last_updated_epoch_seconds int64 NOT NULL,
+    last_updated_epoch_seconds bigint NOT NULL,
     state_name TEXT NOT NULL,
     is_active int8 NOT NULL,     job_type TEXT NOT NULL,
     status_message TEXT NOT NULL,
