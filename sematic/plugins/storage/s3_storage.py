@@ -65,7 +65,11 @@ class S3Storage(AbstractStorage, AbstractPlugin):
     def _make_presigned_url(self, client_method: S3ClientMethod, key: str) -> str:
         presigned_url = self._s3_client.generate_presigned_url(
             ClientMethod=client_method.value,
-            Params={"Bucket": self._bucket, "Key": key},
+            Params={
+                "Bucket": self._bucket,
+                "Key": key,
+                "ResponseCacheControl": "max-age=31536000, immutable, private",
+            },
             ExpiresIn=self.PRESIGNED_URL_EXPIRATION,
         )
 
