@@ -1,7 +1,11 @@
 import { useHttpClient } from "src/hooks/httpHooks";
 import useAsync from "react-use/lib/useAsync";
 
-export default function useFetchBlob(blobId: string) {
+export default function useFetchBlob(blobId: string): [
+  ArrayBuffer | undefined,
+  boolean,
+  Error | undefined
+] {
   const {fetch} = useHttpClient();
 
   const {value, loading, error} = useAsync(async () => {
