@@ -68,6 +68,7 @@ class S3Storage(AbstractStorage, AbstractPlugin):
             Params={
                 "Bucket": self._bucket,
                 "Key": key,
+                "ResponseCacheControl": "max-age=31536000, immutable, private",
             },
             ExpiresIn=self.PRESIGNED_URL_EXPIRATION,
         )
