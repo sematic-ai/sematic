@@ -1,6 +1,7 @@
 # Standard Library
 import argparse
 import logging
+from dataclasses import replace
 
 # Sematic
 import sematic
@@ -65,7 +66,18 @@ REMOTE_EVAL_CONFIG = EvaluationConfig(
 
 def main():
     parser = argparse.ArgumentParser("CIFAR Classifier Example")
-    parser.add_argument("--cloud", default=False, action="store_true")
+    parser.add_argument(
+        "--cloud",
+        default=False,
+        action="store_true",
+        help="Whether to use CloudResolver (otherwise LocalResolver is used)",
+    )
+    parser.add_argument(
+        "--checkpoint-dir",
+        default="s3://sematic-dev/ray-demo",
+        type=str,
+        help="S3 URI to store checkpoints at.",
+    )
 
     args = parser.parse_args()
 
@@ -79,6 +91,8 @@ def main():
         resolver = sematic.LocalResolver()
         train_config = LOCAL_TRAINING_CONFIG
         eval_config = LOCAL_EVAL_CONFIG
+
+    train_config = replace(train_config, checkpoint_dir=args.checkpoint_dir)
 
     future = pipeline(train_config, eval_config).set(name="CIFAR Classifier Example")
 

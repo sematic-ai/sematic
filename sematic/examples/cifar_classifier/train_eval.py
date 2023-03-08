@@ -2,10 +2,11 @@
 # https://docs.ray.io/en/latest/ray-air/examples/torch_image_example.html
 # Standard Library
 from dataclasses import asdict, dataclass
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 # Third-party
 import numpy as np
+import pandas as pd
 import ray
 import torch
 import torch.nn as nn
@@ -30,7 +31,7 @@ from sematic.types.types.aws.s3 import S3Location
 
 
 class Net(nn.Module):
-    """A basic model to illustrate an image recognition task"""
+    """A basic model to illustrate an image recognition task."""
 
     def __init__(self):
         super().__init__()
@@ -134,7 +135,7 @@ def train_classifier(config: TrainingConfig) -> TorchCheckpoint:
 
 
 @ray.remote(num_gpus=1)
-def validate_gpus():
+def validate_gpus() -> bool:
     """Helps confirm that GPUs can be used, and fail-fast if not."""
     cuda_available = torch.cuda.is_available()
     return cuda_available
@@ -181,7 +182,9 @@ def evaluate_classifier(
     )
 
 
-def create_confusion_matrix_plot(confusion_matrix_data_frame, classes_list):
+def create_confusion_matrix_plot(
+    confusion_matrix_data_frame: pd.DataFrame, classes_list: str
+) -> Figure:
     """Plot a confusion matrix as a Plotly image
 
     Parameters
@@ -233,7 +236,7 @@ def convert_batch_to_numpy(batch: List[Tuple[Image, int]]) -> Dict[str, np.ndarr
     return {"image": images, "label": labels}
 
 
-def add_confusion_key(df):
+def add_confusion_key(df: pd.DataFrame) -> pd.DataFrame:
     """Add a column "confusion_key" to a dataframe with prediction & label keys.
 
     The confusion_key column will hold strings of the form "<prediction> : <label>"
@@ -244,7 +247,7 @@ def add_confusion_key(df):
     return df
 
 
-def to_confusion_matrix_data_frame(df):
+def to_confusion_matrix_data_frame(df: pd.DataFrame) -> pd.DataFrame:
     """Given a data frame with column "confusion_key" to a pivot table confusion matrix.
 
     The confusion_key column should be structured as strings of the form
@@ -266,7 +269,7 @@ def to_confusion_matrix_data_frame(df):
     return df.pivot(index="prediction", columns="label", values="count").fillna(0)
 
 
-def calculate_prediction_scores(df):
+def calculate_prediction_scores(df: pd.DataFrame) -> pd.DataFrame:
     """Add a "correct" column to a data frame indicating if the prediction was correct.
 
     Input data frame should have "prediction" and "label" columns.
@@ -275,14 +278,14 @@ def calculate_prediction_scores(df):
     return df
 
 
-def convert_logits_to_classes(df):
+def convert_logits_to_classes(df: pd.DataFrame) -> pd.DataFrame:
     """Convert the "prediction" column of the data frame from logits to classes."""
     best_class = df["predictions"].map(lambda x: x.argmax())
     df["prediction"] = best_class
     return df[["prediction", "label"]]
 
 
-def train_loop_per_worker(config):
+def train_loop_per_worker(config: Dict[str, Any]) -> None:
     """This is the training loop that each train worker will iterate over.
 
     A checkpoint will be registered by the train workers each epoch

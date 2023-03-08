@@ -1,3 +1,6 @@
+# Standard Library
+from typing import Any, Dict, List, Literal
+
 # Sematic
 from sematic.types.registry import register_to_json_encodable_summary
 
@@ -15,9 +18,13 @@ except Exception:
     TorchCheckpoint = None
 
 
-def summarize_ray_torch_checkpoint(value, _):
+def summarize_ray_torch_checkpoint(
+    value: TorchCheckpoint, _
+) -> Dict[Literal["repr"], str]:
+    # why the "or" instead of get("model", {})? Because if the dict is
+    # {"model": None} we would rather replace the None with {}.
     parameters = list((value.to_dict().get("model") or {}).items())
-    parameter_summaries = []
+    parameter_summaries: List[str] = []
     if len(parameters) > 0:
         max_key_length = max(len(k) for k, _ in parameters)
         parameter_summaries = []
@@ -29,7 +36,7 @@ def summarize_ray_torch_checkpoint(value, _):
     return {"repr": f"TorchCheckpoint:\n{summary}"}
 
 
-def summarize_value(value):
+def summarize_value(value: Any) -> str:
     if torch.is_tensor(value):
         dtype = str(value.dtype).replace("torch.", "")
         dimensions = "x".join([str(dim) for dim in value.size()])
@@ -39,6 +46,6 @@ def summarize_value(value):
 
 
 if TorchCheckpoint is not None:
-    summarize_ray_torch_checkpoint = register_to_json_encodable_summary(
+    summarize_ray_torch_checkpoint = register_to_json_encodable_summary(  # type: ignore
         TorchCheckpoint
     )(summarize_ray_torch_checkpoint)
