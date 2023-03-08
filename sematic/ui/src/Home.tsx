@@ -60,8 +60,12 @@ export default function Home() {
   const { user } = useContext(UserContext);
 
   const runFilters = useMemo(() => ({
-    parent_id: { eq: null },
-  }), []);
+    AND: [{
+      parent_id: { eq: null },
+    }, {
+      user_id: { eq: user?.id || null },
+    }
+  ]}), [user?.id]);
 
   const otherQueryParams = useMemo(() => ({
       limit: '1'
