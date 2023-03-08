@@ -63,7 +63,7 @@ export default function Home() {
     AND: [{
       parent_id: { eq: null },
     }, {
-      user_id: { eq: user?.id },
+      user_id: { eq: user?.id || null },
     }
   ]}), [user?.id]);
 
