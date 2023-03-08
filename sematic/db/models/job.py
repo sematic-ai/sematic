@@ -83,7 +83,9 @@ class Job(Base, JSONEncodableMixin):
     # free-form and subject to change. The latter should be a stable way
     # to determine whether the job is in a terminal state or not, and
     # whether it is expected to change.
-    is_active: int = Column(types.Integer, nullable=False)
+    is_active: int = Column(
+        types.Integer, nullable=False  # sqlite doesn't support bool
+    )
     status_message: str = Column(types.String(), nullable=False)
     job_type: JobType = Column(  # type: ignore
         types.Enum(JobType),
