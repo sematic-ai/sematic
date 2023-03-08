@@ -83,7 +83,7 @@ class Job(Base, JSONEncodableMixin):
     # free-form and subject to change. The latter should be a stable way
     # to determine whether the job is in a terminal state or not, and
     # whether it is expected to change.
-    is_active: bool = Column(types.Boolean, nullable=False)
+    is_active: int = Column(types.Integer, nullable=False)
     status_message: str = Column(types.String(), nullable=False)
     job_type: JobType = Column(  # type: ignore
         types.Enum(JobType),
@@ -176,7 +176,7 @@ class Job(Base, JSONEncodableMixin):
         self.state_name = current_status.state_name
         self.status_message = current_status.description
         self.last_updated_epoch_seconds = current_status.last_update_epoch_time
-        self.is_active = job.is_active()
+        self.is_active = int(job.is_active())
 
         self.value_serialization = serialization
 
