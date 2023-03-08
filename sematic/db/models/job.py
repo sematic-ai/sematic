@@ -14,6 +14,7 @@ from sematic.types.serialization import (
     value_from_json_encodable,
     value_to_json_encodable,
 )
+from sematic.utils.exceptions import IllegalStateTransitionError
 
 
 class Job(Base, JSONEncodableMixin):
@@ -77,6 +78,12 @@ class Job(Base, JSONEncodableMixin):
         types.String(),
         nullable=False,
     )
+
+    # Why do we need both state_name and is_active? The former is fairly
+    # free-form and subject to change. The latter should be a stable way
+    # to determine whether the job is in a terminal state or not, and
+    # whether it is expected to change.
+    is_active: bool = Column(types.Boolean, nullable=False)
     status_message: str = Column(types.String(), nullable=False)
     job_type: JobType = Column(  # type: ignore
         types.Enum(JobType),
@@ -121,6 +128,7 @@ class Job(Base, JSONEncodableMixin):
             id=job.external_job_id,
             source_run_id=run_id,
             state_name=status.state_name,
+            is_active=job.is_active(),
             status_message=status.description,
             job_type=job.job_type,
             last_updated_epoch_seconds=status.last_update_epoch_time,
@@ -144,6 +152,13 @@ class Job(Base, JSONEncodableMixin):
         if job.job_type != self.job_type:
             raise ValueError(
                 f"Job cannot change job type from {self.job_type} to {job.job_type}"
+            )
+
+        if job.is_active() and not self.is_active:
+            raise IllegalStateTransitionError(
+                f"Job was inactive, can't be made active again. "
+                f"Former state: {self.state_name}, new state: "
+                f"{job.get_status().state_name}"
             )
 
         serialization = value_to_json_encodable(job, type(job))
