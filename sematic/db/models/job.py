@@ -1,0 +1,163 @@
+# Standard Library
+import datetime
+from typing import Any, Dict, Tuple
+
+# Third-party
+from sqlalchemy import Column, types
+
+# Sematic
+from sematic.db.models.base import Base
+from sematic.db.models.mixins.json_encodable_mixin import JSONEncodableMixin
+from sematic.scheduling.external_job import ExternalJob, JobStatus
+from sematic.types.serialization import (
+    value_from_json_encodable,
+    value_to_json_encodable,
+)
+
+
+class Job(Base, JSONEncodableMixin):
+    """A DB record for an ExternalJob (dataclass) and its history.
+
+    Attributes
+    ----------
+    id:
+        The unique id of the external resource
+    source_run_id:
+        The id of the run this job is associated with
+    state_name:
+        The name of the state this job is in
+    status_message:
+        A human-readable status message about the job's most recent state.
+    value_serialization:
+        The Sematic serialization of the full external job. This may be more
+        "volatile" over time relative to overall status information. Thus its
+        contents are not extracted into individual fields.
+    status_history_serializations:
+        The Sematic serialization of the job's JobStatus objects over time. Any
+        time the JobStatus object changes in such a way as to make the instances
+        compare as not equal, a new entry will be added to this list.
+        Element 0 is the most recent, element N the oldest.
+    last_updated_epoch_seconds:
+        The time that the job was last updated against the k8s job
+        it represnets, expressed as epoch seconds. Ex: the last time k8s was
+        queried for whether the job was alive. This differs from updated_at
+        in that it relates to the updates against the external resources, while
+        updated_at relates to updates of the DB record. It is in epoch seconds
+        rather than as a datetime object because it will primarily be used in
+        arithmetic operations with time (ex: comparing which value is more recent,
+        amount of elapsed time since last update) rather than for human-readability
+        of absolute time.
+    created_at:
+        The time this record was created in the DB.
+    updated_at:
+        The time this record was last updated in the DB. See documentation in
+        last_updated_epoch_seconds for how this relates to that field.
+    """
+
+    # Q: Why duplicate data that's already in the json of
+    # status_history_serializations as columns?
+    # A: For two reasons:
+    #    1. It gives us freedom to refactor the dataclass for JobStatus later to
+    #    move fields around, while allowing the database columns to stay stable.
+    #    2. It allows for more efficient queries on the explicit columns rather than
+    #    requiring json traversal.
+
+    __tablename__ = "jobs"
+
+    id: str = Column(types.String(), primary_key=True)
+    source_run_id: str = Column(  # type: ignore
+        types.String(),
+        nullable=False,
+    )
+    state_name: str = Column(  # type: ignore
+        types.String(),
+        nullable=False,
+    )
+    status_message: str = Column(types.String(), nullable=False)
+    last_updated_epoch_seconds: int = Column(types.BIGINT(), nullable=False)
+    value_serialization: Dict[str, Any] = Column(types.JSON(), nullable=False)
+    status_history_serializations: Tuple[Dict[str, Any], ...] = Column(  # type: ignore
+        types.JSON(), nullable=False
+    )
+    created_at: datetime.datetime = Column(
+        types.DateTime(), nullable=False, default=datetime.datetime.utcnow
+    )
+    updated_at: datetime.datetime = Column(
+        types.DateTime(),
+        nullable=False,
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
+    )
+
+    @classmethod
+    def from_job(cls, job: ExternalJob, run_id: str) -> "Job":
+        if not isinstance(job, ExternalJob):
+            raise ValueError(
+                f"resource must be an instance of a subclass of "
+                f"ExternalJob. Was: {job} of type "
+                f"'{type(job)}'"
+            )
+        value_serialization = value_to_json_encodable(job, type(job))
+        status = job.get_status()
+        status_serialization = value_to_json_encodable(status, type(status))
+
+        return Job(
+            id=job.external_job_id,
+            source_run_id=run_id,
+            state_name=status.state_name,
+            status_message=status.description,
+            last_updated_epoch_seconds=status.last_update_epoch_time,
+            value_serialization=value_serialization,
+            status_history_serializations=(status_serialization,),
+        )
+
+    def get_job(self) -> ExternalJob:
+        return value_from_json_encodable(self.value_serialization, ExternalJob)
+
+    def set_job(self, job: ExternalJob) -> None:
+        if not isinstance(job, ExternalJob):
+            raise ValueError(f"job must be a subclass of ExternalJob. Was: {type(job)}")
+
+        if job.external_job_id != self.id:
+            raise ValueError("Job can only be updated by another job with the same id")
+
+        serialization = value_to_json_encodable(job, type(job))
+        most_recent_status = None
+        current_status = job.get_status()
+        if len(self.status_history_serializations) > 0:
+            most_recent_status = value_from_json_encodable(
+                self.status_history_serializations[0], JobStatus
+            )
+        if current_status != most_recent_status:
+            history = list(self.status_history_serializations)
+            history.insert(0, serialization)
+            self.status_history_serializations = tuple(history)
+
+        self.state_name = current_status.state_name
+        self.status_message = current_status.description
+        self.last_updated_epoch_seconds = current_status.last_update_epoch_time
+
+        self.value_serialization = serialization
+
+    job = property(get_job, set_job)
+
+    @property
+    def status_history(self) -> Tuple[JobStatus, ...]:
+        return tuple(
+            value_from_json_encodable(status, JobStatus)
+            for status in self.status_history_serializations
+        )
+
+    def __repr__(self) -> str:
+        key_value_strings = [
+            f"{field}={getattr(self, field)}"
+            for field in (
+                "id",
+                "state_name",
+                "source_run_id",
+                "status_message",
+            )
+        ]
+
+        fields = ", ".join(key_value_strings)
+        return f"Job({fields}, ...)"

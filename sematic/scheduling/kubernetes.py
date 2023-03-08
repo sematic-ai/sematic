@@ -32,7 +32,12 @@ from sematic.resolvers.resource_requirements import (
     KubernetesSecretMount,
     ResourceRequirements,
 )
-from sematic.scheduling.external_job import KUBERNETES_JOB_KIND, ExternalJob, JobType, JobStatus
+from sematic.scheduling.external_job import (
+    KUBERNETES_JOB_KIND,
+    ExternalJob,
+    JobStatus,
+    JobType,
+)
 from sematic.utils.exceptions import ExceptionMetadata, KubernetesError
 from sematic.utils.retry import retry
 
@@ -204,7 +209,7 @@ class KubernetesExternalJob(ExternalJob):
         -------
         A job status.
         """
-        raise JobStatus(
+        return JobStatus(
             # Both the state name and description are just placeholders
             # here, they will be populated with meaningful data in a
             # separate PR.
