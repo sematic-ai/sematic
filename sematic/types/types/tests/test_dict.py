@@ -57,8 +57,8 @@ def test_dict_summary_blobs():
     summary, blobs = get_json_encodable_summary(dict_, Dict[str, Image])
 
     assert summary == [
-        ("foo", {"mime_type": "text/plain", "bytes": {"blob": blob_id}}),
         ("bar", {"mime_type": "text/plain", "bytes": {"blob": blob_id}}),
+        ("foo", {"mime_type": "text/plain", "bytes": {"blob": blob_id}}),
     ]
     assert blobs == {blob_id: bytes_}
 
