@@ -96,6 +96,7 @@ sematic_py_lib(
     deps = [
         "//sematic/types:casting",
         "//sematic/types:registry",
+        "//sematic/utils:hashing",
     ],
 )
 
