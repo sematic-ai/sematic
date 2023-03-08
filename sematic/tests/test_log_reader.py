@@ -9,7 +9,12 @@ from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import mock_storage  # noqa: F401
 from sematic.db.models.resolution import ResolutionStatus
 from sematic.db.queries import save_resolution, save_run
-from sematic.db.tests.fixtures import make_resolution, make_run, test_db  # noqa: F401
+from sematic.db.tests.fixtures import (  # noqa: F401
+    allow_any_run_state_transition,
+    make_resolution,
+    make_run,
+    test_db,
+)
 from sematic.log_reader import (
     Cursor,
     LogLine,
@@ -244,7 +249,10 @@ def prepare_logs_v2(
     ),
 )
 def test_load_non_inline_logs(
-    test_db, mock_storage, log_preparation_function  # noqa: F811
+    test_db,  # noqa: F811
+    mock_storage,  # noqa: F811
+    log_preparation_function,
+    allow_any_run_state_transition,  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
@@ -326,7 +334,9 @@ def test_load_non_inline_logs(
     )
 
 
-def test_line_stream_from_log_directory(mock_storage, test_db):  # noqa: F811
+def test_line_stream_from_log_directory(
+    mock_storage, test_db, allow_any_run_state_transition  # noqa: F811
+):
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
     n_lines = 500
@@ -364,7 +374,10 @@ def test_line_stream_from_log_directory(mock_storage, test_db):  # noqa: F811
     ),
 )
 def test_load_inline_logs(
-    mock_storage, test_db, log_preparation_function  # noqa: F811
+    mock_storage,  # noqa: F811
+    test_db,  # noqa: F811
+    log_preparation_function,
+    allow_any_run_state_transition,  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
@@ -698,7 +711,9 @@ def test_load_cloned_run_log_lines(
     assert result.lines == ["Line 42"]
 
 
-def test_continue_from_end_with_no_new_logs(test_db, mock_storage):  # noqa: F811
+def test_continue_from_end_with_no_new_logs(
+    test_db, mock_storage, allow_any_run_state_transition  # noqa: F811
+):
     run = make_run(future_state=FutureState.SCHEDULED)
     save_run(run)
 
