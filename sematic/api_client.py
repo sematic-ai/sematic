@@ -16,7 +16,11 @@ from sematic.config.user_settings import UserSettings, UserSettingsVar, get_user
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
-from sematic.db.models.factories import UploadPayload, deserialize_artifact_value
+from sematic.db.models.factories import (
+    StorageNamespace,
+    UploadPayload,
+    deserialize_artifact_value,
+)
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -94,14 +98,14 @@ def store_artifact_bytes(artifact_id: str, bytes_: bytes) -> None:
     """
     Store an artifact's serialized payload.
     """
-    _store_bytes("artifacts", artifact_id, bytes_)
+    _store_bytes(StorageNamespace.artifacts.value, artifact_id, bytes_)
 
 
 def store_future_bytes(future_id: str, bytes_: bytes) -> None:
     """
     Store a serialzied future.
     """
-    _store_bytes("futures", future_id, bytes_)
+    _store_bytes(StorageNamespace.futures.value, future_id, bytes_)
 
 
 def store_file_content(file_path: str, namespace: str, key: str) -> None:

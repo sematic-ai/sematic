@@ -150,9 +150,7 @@ def _dataclass_to_json_encodable_summary(value: Any, type_: Any) -> SummaryOutpu
     return _serialize_dataclass(get_json_encodable_summary, value, type_)
 
 
-def _serialize_dataclass(
-    serializer: Callable, value: Any, _
-) -> Tuple[Any, Dict[str, bytes]]:
+def _serialize_dataclass(serializer: Callable, value: Any, _) -> SummaryOutput:
     # We use type(value) instead of the passed type because we want to
     # conserve any subclasses
     type_ = type(value)

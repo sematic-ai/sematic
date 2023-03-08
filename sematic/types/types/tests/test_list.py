@@ -1,4 +1,5 @@
 # Standard Library
+import hashlib
 from typing import Dict, List, Optional, Tuple, Union
 
 # Third-party
@@ -12,6 +13,7 @@ from sematic.types.serialization import (
     type_to_json_encodable,
     value_to_json_encodable,
 )
+from sematic.types.types.image import Image
 
 
 @pytest.mark.parametrize(
@@ -54,6 +56,21 @@ def test_summaries():
         "length": 5,
     }
     assert blobs == {}
+
+
+def test_blob_summary():
+    bytes_ = b"foobar"
+    blob_id = hashlib.sha1(bytes_).hexdigest()
+    image = Image(bytes=bytes_)
+    list_ = [image] * 5
+    summary, blobs = get_json_encodable_summary(list_, List[Image])
+
+    assert summary == {
+        "summary": [{"mime_type": "text/plain", "bytes": {"blob": blob_id}}] * 5,
+        "length": 5,
+    }
+
+    assert blobs == {blob_id: bytes_}
 
 
 @pytest.mark.parametrize(
