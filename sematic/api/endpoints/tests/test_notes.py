@@ -17,6 +17,7 @@ from sematic.db.models.run import Run
 from sematic.db.models.user import User  # noqa: F401
 from sematic.db.queries import get_note, save_note  # noqa: F401
 from sematic.db.tests.fixtures import (  # noqa: F401
+    allow_any_run_state_transition,
     persisted_run,
     persisted_user,
     run,
@@ -32,7 +33,7 @@ def test_list_notes_empty(
 ):
     response = test_client.get("/api/v1/notes")
 
-    assert response.json == dict(content=[], authors=[])
+    assert response.json == dict(content=[])
 
 
 def test_create_note(
@@ -85,9 +86,6 @@ def test_list_notes(
     assert response.json is not None
     assert len(response.json["content"]) == 1
     assert response.json["content"][0]["id"] == persisted_note.id
-
-    assert len(response.json["authors"]) == 1
-    assert response.json["authors"][0]["id"] == persisted_note.user_id
 
 
 def test_delete_note(

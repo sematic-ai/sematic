@@ -19,7 +19,7 @@ from sematic.db.db import db
 from sematic.db.models.note import Note
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
-from sematic.db.queries import delete_note, get_note, get_users, save_note
+from sematic.db.queries import delete_note, get_note, save_note
 
 
 @sematic_api.route("/api/v1/notes", methods=["GET"])
@@ -42,20 +42,10 @@ def list_notes_endpoint(user: Optional[User]) -> flask.Response:
 
         query = query.order_by(order(Note.created_at))
 
-        # query = query.limit(limit)
-
         notes: List[Note] = query.all()
-
-        user_ids = [note.user_id for note in notes if note.user_id is not None]
-
-        authors = get_users(user_ids)
 
     payload = dict(
         content=get_notes_payload(notes),
-        # Remove after front-end notes get migrated to use note.user
-        authors=[
-            dict(email=user.email, **user.to_json_encodable()) for user in authors
-        ],
     )
 
     return flask.jsonify(payload)

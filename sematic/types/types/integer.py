@@ -7,7 +7,11 @@ import numbers
 import typing
 
 # Sematic
-from sematic.types.registry import register_can_cast, register_to_json_encodable_summary
+from sematic.types.registry import (
+    SummaryOutput,
+    register_can_cast,
+    register_to_json_encodable_summary,
+)
 from sematic.types.serialization import value_to_json_encodable
 
 
@@ -25,5 +29,5 @@ def can_cast_type(type_: type, _) -> typing.Tuple[bool, typing.Optional[str]]:
 
 
 @register_to_json_encodable_summary(int)
-def _int_summary(value: int, _) -> int:
-    return value_to_json_encodable(value, int)
+def _int_summary(value: int, _) -> SummaryOutput:
+    return value_to_json_encodable(value, int), {}

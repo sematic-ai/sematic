@@ -22,7 +22,8 @@ def test_dataframe_summary():
         index_col=["ID"],
     )
 
-    summary = get_json_encodable_summary(df, pandas.DataFrame)
+    summary, blobs = get_json_encodable_summary(df, pandas.DataFrame)
+    assert blobs == {}
     assert summary["shape"] == df.shape
     assert len(summary["dataframe"]) == 19
     assert len(list(summary["dataframe"].values())[0]) == 5

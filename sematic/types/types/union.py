@@ -4,6 +4,7 @@ from typing import Any, Optional, Tuple, Union, get_args
 # Sematic
 from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.registry import (
+    SummaryOutput,
     get_origin_type,
     register_can_cast,
     register_from_json_encodable,
@@ -78,7 +79,7 @@ def _union_from_json_encodable(json_encodable: Any, type_: Any) -> Any:
 
 
 @register_to_json_encodable_summary(Union)
-def _union_to_summary(value: Any, type_: Any) -> Any:
+def _union_to_summary(value: Any, type_: Any) -> SummaryOutput:
     return get_json_encodable_summary(value, get_value_type(value, type_))
 
 

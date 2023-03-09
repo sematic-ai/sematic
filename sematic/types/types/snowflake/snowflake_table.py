@@ -2,7 +2,7 @@
 import os
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any, Generator, Type
+from typing import Generator, Type
 
 try:
     # Third-party
@@ -29,7 +29,7 @@ except ImportError as e:
 
 # Sematic
 from sematic.config.user_settings import UserSettingsVar, get_user_setting
-from sematic.types.registry import register_to_json_encodable_summary
+from sematic.types.registry import SummaryOutput, register_to_json_encodable_summary
 from sematic.types.types.dataclass import _dataclass_to_json_encodable_summary
 
 
@@ -73,7 +73,9 @@ class SnowflakeTable:
 
 
 @register_to_json_encodable_summary(SnowflakeTable)
-def _snowflake_table_summary(value: SnowflakeTable, type_: Type[SnowflakeTable]) -> Any:
+def _snowflake_table_summary(
+    value: SnowflakeTable, type_: Type[SnowflakeTable]
+) -> SummaryOutput:
     value._preview = value.to_df(limit=5)
 
     return _dataclass_to_json_encodable_summary(value, type_)

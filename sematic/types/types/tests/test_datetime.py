@@ -14,8 +14,9 @@ from sematic.types.serialization import (
 
 def test_dict_summary():
     date = datetime.now()
-    summary = get_json_encodable_summary(date, datetime)
+    summary, blobs = get_json_encodable_summary(date, datetime)
 
+    assert blobs == {}
     assert summary == date.isoformat()
 
 

@@ -43,8 +43,11 @@ else
 endif
 
 .PHONY: ui
-ui:
+ui: sematic/ui/node_modules/.build_timestamp
 	cd sematic/ui; npm run build
+
+sematic/ui/node_modules/.build_timestamp: sematic/ui/package.json
+	cd sematic/ui; npm install; touch -r ./package.json ./node_modules/.build_timestamp
 
 worker-image:
 	cd docker; docker build -t sematicai/sematic-worker-base:latest -f Dockerfile.worker .
