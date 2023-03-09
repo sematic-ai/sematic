@@ -1,4 +1,5 @@
 # Standard Library
+import hashlib
 from dataclasses import dataclass
 
 # Third-party
@@ -7,11 +8,13 @@ import pytest
 # Sematic
 from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.serialization import (
+    get_json_encodable_summary,
     type_from_json_encodable,
     type_to_json_encodable,
     value_from_json_encodable,
     value_to_json_encodable,
 )
+from sematic.types.types.image import Image
 
 
 @dataclass
@@ -262,3 +265,27 @@ def test_backwards_compatibility():
     encodable["root_type"] = type_to_json_encodable(NewVersionOfDataclass)
     decoded = value_from_json_encodable(encodable, NewVersionOfDataclass)
     assert decoded == NewVersionOfDataclass(field1=1, field2=42)
+
+
+@dataclass
+class ClassWithImage:
+    foo: Image
+    bar: Image
+
+
+def test_summary_with_blobs():
+    bytes_ = b"foobar"
+    image = Image(bytes=bytes_)
+
+    blob_id = hashlib.sha1(bytes_).hexdigest()
+
+    dc = ClassWithImage(foo=image, bar=image)
+
+    summary, blobs = get_json_encodable_summary(dc, ClassWithImage)
+
+    assert summary["values"] == {
+        "foo": {"mime_type": "text/plain", "bytes": {"blob": blob_id}},
+        "bar": {"mime_type": "text/plain", "bytes": {"blob": blob_id}},
+    }
+
+    assert blobs == {blob_id: bytes_}

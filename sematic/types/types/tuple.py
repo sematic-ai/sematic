@@ -4,6 +4,7 @@ from typing import Any, Iterable, List, Optional, Tuple, Type
 # Sematic
 from sematic.types.casting import safe_cast
 from sematic.types.registry import (
+    SummaryOutput,
     register_from_json_encodable,
     register_safe_cast,
     register_to_json_encodable,
@@ -73,11 +74,17 @@ def _tuple_from_json_encodable(value: Tuple, type_: Type) -> Tuple[Any, ...]:
 
 
 @register_to_json_encodable_summary(tuple)
-def _tuple_to_json_encodable_summary(value: Tuple, type_: Type) -> List:
+def _tuple_to_json_encodable_summary(value: Tuple, type_: Type) -> SummaryOutput:
     """
     Generate summary for the UI.
     """
-    return [
-        get_json_encodable_summary(element, element_type)
-        for element, element_type in zip(value, type_.__args__)
-    ]
+    summary, blobs = [], {}
+
+    for element, element_type in zip(value, type_.__args__):
+        element_summary, element_blobs = get_json_encodable_summary(
+            element, element_type
+        )
+        summary.append(element)
+        blobs.update(element_blobs)
+
+    return summary, blobs

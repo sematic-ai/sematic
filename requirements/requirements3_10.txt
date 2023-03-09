@@ -4,6 +4,10 @@
 #
 #    bazel run //requirements:requirements3_10.update
 #
+absl-py==1.4.0 \
+    --hash=sha256:0d3fe606adfa4f7db64792dd4c7aee4ee0c38ab75dfd353b7a83ed3e957fcb47 \
+    --hash=sha256:d2c244d01048ba476e7c080bd2c6df5e141d211de80223460d5b3b8a2a58433d
+    # via tensorboard
 aiohttp==3.8.4 \
     --hash=sha256:03543dcf98a6619254b409be2d22b51f21ec66272be4ebda7b04e6412e4b2e14 \
     --hash=sha256:03baa76b730e4e15a45f81dfe29a8d910314143414e528737f8589ec60cf7391 \
@@ -94,6 +98,7 @@ aiohttp==3.8.4 \
     --hash=sha256:fe7ba4a51f33ab275515f66b0a236bcde4fb5561498fe8f898d4e549b2e4509f
     # via
     #   aiohttp-cors
+    #   fsspec
     #   ray
 aiohttp-cors==0.7.0 \
     --hash=sha256:0451ba59fdf6909d0e2cd21e4c0a43752bc0703d33fc78ae94d9d9321710193e \
@@ -140,13 +145,13 @@ blessed==1.20.0 \
     --hash=sha256:0c542922586a265e699188e52d5f5ac5ec0dd517e5a1041d90d2bbf23f906058 \
     --hash=sha256:2cdd67f8746e048f00df47a2880f4d6acbcdb399031b604e34ba8f71d5787680
     # via gpustat
-boto3==1.26.70 \
-    --hash=sha256:123cf34f3cc58772b4f806dfbb1ae9ffae47459de5088e971be9d3cd2b198975 \
-    --hash=sha256:5324c2a9dbc271d2b25eb79f7469b422de411665f9ab1c0b410e8ac820859b1a
+boto3==1.26.82 \
+    --hash=sha256:f50c048b4f3223dd57afb6eee1189ef9a472bf0ed9b26ff9db65ec13275c4414 \
+    --hash=sha256:f618f2e8a4b9d5cb9f05d3a5628ca2afa4bcd3e8b4b8413d11dea0f4c4480b3c
     # via -r requirements/requirements.in
-botocore==1.29.70 \
-    --hash=sha256:7d9abef42846c1c2f31dacaa559f8450f6fbda74c2c9e3dc6630e06e882ad026 \
-    --hash=sha256:caaa144f49ef0d01b5e8812c9afa729def2c3358d9c4d9204789be2b56c5e849
+botocore==1.29.82 \
+    --hash=sha256:913ca09a184cf4428f05838afc631c4fb93f3b173871b69d66230fd14656a3a1 \
+    --hash=sha256:b31e86f9b51eced5506a0f6038370fe8c1355000379610def1bb9e91cae9e77e
     # via
     #   boto3
     #   s3transfer
@@ -521,6 +526,10 @@ frozenlist==1.3.3 \
     #   aiohttp
     #   aiosignal
     #   ray
+fsspec[http]==2023.1.0 \
+    --hash=sha256:b833e2e541e9e8cde0ab549414187871243177feb3d344f9d27b25a93f5d8139 \
+    --hash=sha256:fbae7f20ff801eb5f7d0bedf81f25c787c0dfac5e982d98fa3884a9cde2b5411
+    # via pytorch-lightning
 gevent==22.10.2 \
     --hash=sha256:018f93de7d5318d2fb440f846839a4464738468c3476d5c9cf7da45bb71c18bd \
     --hash=sha256:0d581f22a5be6281b11ad6309b38b18f0638cf896931223cbaa5adb904826ef6 \
@@ -603,7 +612,13 @@ google-auth==2.16.0 \
     # via
     #   -r requirements/requirements.in
     #   google-api-core
+    #   google-auth-oauthlib
     #   kubernetes
+    #   tensorboard
+google-auth-oauthlib==0.4.6 \
+    --hash=sha256:3f2a6e802eebbb6fb736a370fbf3b055edcb6b52878bf2f26330b5e041316c73 \
+    --hash=sha256:a90a072f6993f2c327067bf65270046384cda5a8ecb20b94ea9a687f1f233a7a
+    # via tensorboard
 googleapis-common-protos==1.58.0 \
     --hash=sha256:c727251ec025947d545184ba17e3578840fc3a24a0516a020479edab660457df \
     --hash=sha256:ca3befcd4580dab6ad49356b46bf165bb68ff4b32389f028f1abd7c10ab9519a
@@ -721,7 +736,9 @@ grpcio==1.51.1 \
     --hash=sha256:f1fec3abaf274cdb85bf3878167cfde5ad4a4d97c68421afda95174de85ba813 \
     --hash=sha256:f96ace1540223f26fbe7c4ebbf8a98e3929a6aa0290c8033d12526847b291c0f \
     --hash=sha256:fbdbe9a849854fe484c00823f45b7baab159bdd4a46075302281998cb8719df5
-    # via ray
+    # via
+    #   ray
+    #   tensorboard
 gunicorn==20.1.0 \
     --hash=sha256:9dcc4547dbb1cb284accfb15ab5667a0e5d1881cc443e0677b4882a4067a807e \
     --hash=sha256:e0a968b5ba15f8a328fdfd7ab1fcb5af4470c28aaf7e55df02a99bc13138e6e8
@@ -736,7 +753,9 @@ idna==3.4 \
 importlib-metadata==6.0.0 \
     --hash=sha256:7efb448ec9a5e313a57655d35aa54cd3e01b7e1fbcf72dce1bf06119420f5bad \
     --hash=sha256:e354bedeb60efa6affdcc8ae121b73544a7aa74156d047311948f6d711cd378d
-    # via flask
+    # via
+    #   flask
+    #   markdown
 importlib-resources==5.10.2 \
     --hash=sha256:7d543798b0beca10b6a01ac7cafda9f822c54db9e8376a6bf57e0cbd74d486b6 \
     --hash=sha256:e4a96c8cc0339647ff9a5e0550d9f276fc5a01ffa276012b58ec108cfd7b8484
@@ -853,6 +872,10 @@ kubernetes==25.3.0 \
     --hash=sha256:213befbb4e5aed95f94950c7eed0c2322fc5a2f8f40932e58d28fdd42d90836c \
     --hash=sha256:eb42333dad0bb5caf4e66460c6a4a1a36f0f057a040f35018f6c05a699baed86
     # via -r requirements/requirements.in
+markdown==3.4.1 \
+    --hash=sha256:08fb8465cffd03d10b9dd34a5c3fea908e20391a2a90b88d66362cb05beed186 \
+    --hash=sha256:3b809086bb6efad416156e00a0da66fe47618a5d6918dd688f53f40c8e4cfeff
+    # via tensorboard
 markupsafe==2.1.2 \
     --hash=sha256:0576fe974b40a400449768941d5d0858cc624e3249dfd1e0c33674e5c7ca7aed \
     --hash=sha256:085fd3201e7b12809f9e6e9bc1e5c96a368c8523fad5afb02afe3c051ae4afcc \
@@ -1129,11 +1152,13 @@ numpy==1.24.2 \
     #   pandas
     #   patsy
     #   pyarrow
+    #   pytorch-lightning
     #   ray
     #   scikit-learn
     #   scipy
     #   seaborn
     #   statsmodels
+    #   tensorboard
     #   torchmetrics
     #   torchvision
     #   xgboost
@@ -1163,6 +1188,7 @@ packaging==23.0 \
     # via
     #   matplotlib
     #   pytest
+    #   pytorch-lightning
     #   statsmodels
     #   torchmetrics
 pandas==1.5.3 \
@@ -1326,24 +1352,37 @@ prompt-toolkit==3.0.36 \
     --hash=sha256:3e163f254bef5a03b146397d7c1963bd3e2812f0964bb9a24e6ec761fd28db63 \
     --hash=sha256:aa64ad242a462c5ff0363a7b9cfe696c20d55d9fc60c11fd8e632d064804d305
     # via ipython
-protobuf==4.21.12 \
-    --hash=sha256:1f22ac0ca65bb70a876060d96d914dae09ac98d114294f77584b0d2644fa9c30 \
-    --hash=sha256:237216c3326d46808a9f7c26fd1bd4b20015fb6867dc5d263a493ef9a539293b \
-    --hash=sha256:27f4d15021da6d2b706ddc3860fac0a5ddaba34ab679dc182b60a8bb4e1121cc \
-    --hash=sha256:299ea899484ee6f44604deb71f424234f654606b983cb496ea2a53e3c63ab791 \
-    --hash=sha256:3d164928ff0727d97022957c2b849250ca0e64777ee31efd7d6de2e07c494717 \
-    --hash=sha256:6ab80df09e3208f742c98443b6166bcb70d65f52cfeb67357d52032ea1ae9bec \
-    --hash=sha256:78a28c9fa223998472886c77042e9b9afb6fe4242bd2a2a5aced88e3f4422aa7 \
-    --hash=sha256:7cd532c4566d0e6feafecc1059d04c7915aec8e182d1cf7adee8b24ef1e2e6ab \
-    --hash=sha256:89f9149e4a0169cddfc44c74f230d7743002e3aa0b9472d8c28f0388102fc4c2 \
-    --hash=sha256:a53fd3f03e578553623272dc46ac2f189de23862e68565e83dde203d41b76fc5 \
-    --hash=sha256:b135410244ebe777db80298297a97fbb4c862c881b4403b71bac9d4107d61fd1 \
-    --hash=sha256:b98d0148f84e3a3c569e19f52103ca1feacdac0d2df8d6533cf983d1fda28462 \
-    --hash=sha256:d1736130bce8cf131ac7957fa26880ca19227d4ad68b4888b3be0dea1f95df97 \
-    --hash=sha256:f45460f9ee70a0ec1b6694c6e4e348ad2019275680bd68a1d9314b8c7e01e574
+protobuf==3.19.6 \
+    --hash=sha256:010be24d5a44be7b0613750ab40bc8b8cedc796db468eae6c779b395f50d1fa1 \
+    --hash=sha256:0469bc66160180165e4e29de7f445e57a34ab68f49357392c5b2f54c656ab25e \
+    --hash=sha256:0c0714b025ec057b5a7600cb66ce7c693815f897cfda6d6efb58201c472e3437 \
+    --hash=sha256:11478547958c2dfea921920617eb457bc26867b0d1aa065ab05f35080c5d9eb6 \
+    --hash=sha256:14082457dc02be946f60b15aad35e9f5c69e738f80ebbc0900a19bc83734a5a4 \
+    --hash=sha256:2b2d2913bcda0e0ec9a784d194bc490f5dc3d9d71d322d070b11a0ade32ff6ba \
+    --hash=sha256:30a15015d86b9c3b8d6bf78d5b8c7749f2512c29f168ca259c9d7727604d0e39 \
+    --hash=sha256:30f5370d50295b246eaa0296533403961f7e64b03ea12265d6dfce3a391d8992 \
+    --hash=sha256:347b393d4dd06fb93a77620781e11c058b3b0a5289262f094379ada2920a3730 \
+    --hash=sha256:4bc98de3cdccfb5cd769620d5785b92c662b6bfad03a202b83799b6ed3fa1fa7 \
+    --hash=sha256:5057c64052a1f1dd7d4450e9aac25af6bf36cfbfb3a1cd89d16393a036c49157 \
+    --hash=sha256:559670e006e3173308c9254d63facb2c03865818f22204037ab76f7a0ff70b5f \
+    --hash=sha256:5a0d7539a1b1fb7e76bf5faa0b44b30f812758e989e59c40f77a7dab320e79b9 \
+    --hash=sha256:5f5540d57a43042389e87661c6eaa50f47c19c6176e8cf1c4f287aeefeccb5c4 \
+    --hash=sha256:7a552af4dc34793803f4e735aabe97ffc45962dfd3a237bdde242bff5a3de684 \
+    --hash=sha256:84a04134866861b11556a82dd91ea6daf1f4925746b992f277b84013a7cc1229 \
+    --hash=sha256:878b4cd080a21ddda6ac6d1e163403ec6eea2e206cf225982ae04567d39be7b0 \
+    --hash=sha256:90b0d02163c4e67279ddb6dc25e063db0130fc299aefabb5d481053509fae5c8 \
+    --hash=sha256:91d5f1e139ff92c37e0ff07f391101df77e55ebb97f46bbc1535298d72019462 \
+    --hash=sha256:a8ce5ae0de28b51dff886fb922012dad885e66176663950cb2344c0439ecb473 \
+    --hash=sha256:aa3b82ca1f24ab5326dcf4ea00fcbda703e986b22f3d27541654f749564d778b \
+    --hash=sha256:bb6776bd18f01ffe9920e78e03a8676530a5d6c5911934c6a1ac6eb78973ecb6 \
+    --hash=sha256:bbf5cea5048272e1c60d235c7bd12ce1b14b8a16e76917f371c718bd3005f045 \
+    --hash=sha256:c0ccd3f940fe7f3b35a261b1dd1b4fc850c8fde9f74207015431f174be5976b3 \
+    --hash=sha256:d0b635cefebd7a8a0f92020562dead912f81f401af7e71f16bf9506ff3bdbb38
     # via
     #   google-api-core
+    #   pytorch-lightning
     #   ray
+    #   tensorboard
 psutil==5.9.4 \
     --hash=sha256:149555f59a69b33f056ba1c4eb22bb7bf24332ce631c44a319cec09f876aaeff \
     --hash=sha256:16653106f3b59386ffe10e0bad3bb6299e169d5327d3f187614b1cb8f24cf2e1 \
@@ -1568,6 +1607,10 @@ pydantic==1.10.4 \
     --hash=sha256:fdf88ab63c3ee282c76d652fc86518aacb737ff35796023fae56a65ced1a5978 \
     --hash=sha256:fdf8d759ef326962b4678d89e275ffc55b7ce59d917d9f72233762061fd04a2d
     # via ray
+pydeprecate==0.3.2 \
+    --hash=sha256:d481116cc5d7f6c473e7c4be820efdd9b90a16b594b350276e9e66a6cb5bdd29 \
+    --hash=sha256:ed86b68ed837e6465245904a3de2f59bf9eef78ac7a2502ee280533d04802457
+    # via pytorch-lightning
 pygments==2.14.0 \
     --hash=sha256:b3ed06a9e8ac9a9aae5a6f5dbe78a8a58655d17b43b93c078f094ddc476ae297 \
     --hash=sha256:fa7bd7bd2771287c0de303af8bfdfc731f51bd2c6a47ab69d117138893b82717
@@ -1633,12 +1676,22 @@ python-engineio==4.3.4 \
     --hash=sha256:7454314a529bba20e745928601ffeaf101c1b5aca9a6c4e48ad397803d10ea0c \
     --hash=sha256:d8d8b072799c36cadcdcc2b40d2a560ce09797ab3d2d596b2ad519a5e4df19ae
     # via python-socketio
+python-magic==0.4.27 \
+    --hash=sha256:c1ba14b08e4a5f5c31a302b7721239695b2f0f058d125bd5ce1ee36b9d9d3c3b \
+    --hash=sha256:c212960ad306f700aa0d01e5d7a325d20548ff97eb9920dcd29513174f0294d3
+    # via -r requirements/requirements.in
 python-socketio==5.7.2 \
     --hash=sha256:92395062d9db3c13d30e7cdedaa0e1330bba78505645db695415f9a3c628d097 \
     --hash=sha256:d9a9f047e6fdd306c852fbac36516f4b495c2096f8ad9ceb8803b8e5ff5622e3
     # via
     #   -r requirements/requirements.in
     #   flask-socketio
+pytorch-lightning==1.6.5 \
+    --hash=sha256:00c9205d26aa354defdd4dd592b2dded33916d6e0c180ccffbb06cf34dc67ccf \
+    --hash=sha256:8d521f2619b9db2ada5bbaf9713330d01460e75a11e4bc0bc2ca25fd37c47c57
+    # via
+    #   -r requirements/requirements.in
+    #   ray-lightning
 pytz==2022.7.1 \
     --hash=sha256:01a0681c4b9684a28304615eba55d1ab31ae00bf68ec157ec3708a8182dbbcd0 \
     --hash=sha256:78f4f37d8198e0627c5f1143240bb0206b8691d8d7ac6d78fee88b78733f8c4a
@@ -1689,6 +1742,7 @@ pyyaml==6.0 \
     # via
     #   -r requirements/requirements.in
     #   kubernetes
+    #   pytorch-lightning
     #   ray
 ray[default]==2.2.0 \
     --hash=sha256:018dbdadd1fe7773327f7d9ea34d6831ddaf89d637d71e72f4e05d81aea5063c \
@@ -1713,23 +1767,32 @@ ray[default]==2.2.0 \
     --hash=sha256:f46ff124c566aa55db99b395a28d3972ae15c6f2f0bfefee90f0f390defce788 \
     --hash=sha256:f722648fb5f799c158f52b4517ea9f2c343bc344ee1bd570279faa636e3cd88b \
     --hash=sha256:fea824f38444a58aa32ced5361f860416b1b555a900f7cbe34b672ff1356528b
+    # via
+    #   -r requirements/requirements.in
+    #   ray-lightning
+ray-lightning==0.3.0 \
+    --hash=sha256:46b6768395b85337d64ab0c265b09e7a52ec696c9e46ee401c109bd7d986ae48
     # via -r requirements/requirements.in
 requests==2.28.2 \
     --hash=sha256:64299f4909223da747622c030b781c0d7811e359c37124b4bd368fb8c6518baa \
     --hash=sha256:98b1b2782e3c6c4904938b84c0eb932721069dfdb9134313beff7c83c2df24bf
     # via
     #   -r requirements/requirements.in
+    #   fsspec
     #   google-api-core
     #   kubernetes
     #   ray
     #   requests-oauthlib
     #   responses
     #   snowflake-connector-python
+    #   tensorboard
     #   torchvision
 requests-oauthlib==1.3.1 \
     --hash=sha256:2577c501a2fb8d05a304c09d090d6e47c306fef15809d102b327cf8364bddab5 \
     --hash=sha256:75beac4a47881eeb94d5ea5d6ad31ef88856affe2332b9aafb52c6452ccf0d7a
-    # via kubernetes
+    # via
+    #   google-auth-oauthlib
+    #   kubernetes
 responses==0.20.0 \
     --hash=sha256:18831bc2d72443b67664d98038374a6fa1f27eaaff4dd9a7d7613723416fea3c \
     --hash=sha256:644905bc4fb8a18fa37e3882b2ac05e610fe8c2f967d327eed669e314d94a541
@@ -1919,6 +1982,17 @@ tenacity==8.2.1 \
     --hash=sha256:c7bb4b86425b977726a7b49971542d4f67baf72096597d283f3ffd01f33b92df \
     --hash=sha256:dd1b769ca7002fda992322939feca5bee4fa11f39146b0af14e0b8d9f27ea854
     # via plotly
+tensorboard==2.12.0 \
+    --hash=sha256:3cbdc32448d7a28dc1bf0b1754760c08b8e0e2e37c451027ebd5ff4896613012
+    # via pytorch-lightning
+tensorboard-data-server==0.7.0 \
+    --hash=sha256:64aa1be7c23e80b1a42c13b686eb0875bb70f5e755f4d2b8de5c1d880cf2267f \
+    --hash=sha256:753d4214799b31da7b6d93837959abebbc6afa86e69eacf1e9a317a48daa31eb \
+    --hash=sha256:eb7fa518737944dbf4f0cf83c2e40a7ac346bf91be2e6a0215de98be74e85454
+    # via tensorboard
+tensorboard-plugin-wit==1.8.1 \
+    --hash=sha256:ff26bdd583d155aa951ee3b152b3d0cffae8005dc697f72b44a8e8c2a77a8cbe
+    # via tensorboard
 testing-common-database==2.0.3 \
     --hash=sha256:965d80b2985315325dc358c3061b174a712f4d4d5bf6a80b58b11f9a1dd86d73 \
     --hash=sha256:e3ed492bf480a87f271f74c53b262caf5d85c8bc09989a8f534fa2283ec52492
@@ -1958,12 +2032,15 @@ torch==1.12.1 \
     --hash=sha256:f3b52a634e62821e747e872084ab32fbcb01b7fa7dbb7471b6218279f02a178a
     # via
     #   -r requirements/requirements.in
+    #   pytorch-lightning
     #   torchmetrics
     #   torchvision
 torchmetrics==0.11.1 \
     --hash=sha256:9987d7c21b081cceef246a72be1ce25bf29c842764f59dda54f59e3b4cd1970b \
     --hash=sha256:de2e9feb3316f798ab08b318302ff04e764f47e691f0847f780044279fa176ca
-    # via -r requirements/requirements.in
+    # via
+    #   -r requirements/requirements.in
+    #   pytorch-lightning
 torchvision==0.13.1 \
     --hash=sha256:0298bae3b09ac361866088434008d82b99d6458fe8888c8df90720ef4b347d44 \
     --hash=sha256:08f592ea61836ebeceb5c97f4d7a813b9d7dc651bbf7ce4401563ccfae6a21fc \
@@ -1985,6 +2062,10 @@ torchvision==0.13.1 \
     --hash=sha256:ef5fe3ec1848123cd0ec74c07658192b3147dcd38e507308c790d5943e87b88c \
     --hash=sha256:f230a1a40ed70d51e463ce43df243ec520902f8725de2502e485efc5eea9d864
     # via -r requirements/requirements.in
+tqdm==4.64.1 \
+    --hash=sha256:5f4f682a004951c1b450bc753c710e9280c5746ce6ffedee253ddbcbf54cf1e4 \
+    --hash=sha256:6fee160d6ffcd1b1c68c65f14c829c22832bc401726335ce92c52d395944a6a1
+    # via pytorch-lightning
 traitlets==5.9.0 \
     --hash=sha256:9e6ec080259b9a5940c797d58b613b5e31441c2257b87c2e795c5228ae80d2d8 \
     --hash=sha256:f6cde21a9c68cf756af02035f72d5a723bf607e862e7be33ece505abf4a3bad9
@@ -2000,6 +2081,7 @@ typing-extensions==4.4.0 \
     --hash=sha256:16fa4864408f655d35ec496218b85f79b3437c829e93320c7c9215ccfd92489e
     # via
     #   pydantic
+    #   pytorch-lightning
     #   snowflake-connector-python
     #   torch
     #   torchmetrics
@@ -2035,6 +2117,11 @@ werkzeug==2.2.3 \
     # via
     #   -r requirements/requirements.in
     #   flask
+    #   tensorboard
+wheel==0.38.4 \
+    --hash=sha256:965f5259b566725405b05e7cf774052044b1ed30119b5d586b2703aafe8719ac \
+    --hash=sha256:b60533f3f5d530e971d6737ca6d58681ee434818fab630c83a734bb10c083ce8
+    # via tensorboard
 xgboost==1.7.3 \
     --hash=sha256:457fa32b39b8bfa8a94eea6b932cb4d945c7a41fcd26e69a1f1dd843179eaccc \
     --hash=sha256:4a8985b2a874bd65b31869c325bb80051a2c28cedc16805928e2dcfb55fa25ce \
@@ -2179,5 +2266,6 @@ setuptools==58.1.0 \
     #   ipython
     #   kubernetes
     #   snowflake-connector-python
+    #   tensorboard
     #   zope-event
     #   zope-interface

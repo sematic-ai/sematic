@@ -5,6 +5,7 @@ import typing
 # Sematic
 from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.registry import (
+    SummaryOutput,
     register_can_cast,
     register_from_json_encodable,
     register_safe_cast,
@@ -102,14 +103,14 @@ def list_from_json_encodable(value: list, type_: typing.Any) -> list:
 
 
 @register_to_json_encodable_summary(list)
-def list_to_json_encodable_summary(
-    value: list, type_: typing.Any
-) -> typing.Dict[str, typing.Any]:
+def list_to_json_encodable_summary(value: list, type_: typing.Any) -> SummaryOutput:
     element_type = type_.__args__[0]
 
-    complete_summary = [
-        get_json_encodable_summary(item, element_type) for item in value
-    ]
+    complete_summary, blobs = [], []
+    for item in value:
+        item_summary, item_blobs = get_json_encodable_summary(item, element_type)
+        complete_summary.append(item_summary)
+        blobs.append(item_blobs)
 
     max_item = 0
     if len(complete_summary) > 0:
@@ -126,7 +127,11 @@ def list_to_json_encodable_summary(
             max_elements, 1
         )  # ensure there's always at least 1 element for non-empty lists
 
+    blobs_dict = {}
+    for item_blobs in blobs[:max_item]:
+        blobs_dict.update(item_blobs)
+
     return {
         "length": len(value),
         "summary": complete_summary[:max_item],
-    }
+    }, blobs_dict
