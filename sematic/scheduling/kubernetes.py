@@ -219,7 +219,9 @@ class KubernetesExternalJob(ExternalJob):
         -------
         A job status.
         """
-        active_status_message = f"Job has {'not ' if self.has_started else ''}started"
+        active_status_message = (
+            f"Job has {'not ' if not self.has_started else ''}started"
+        )
         inactive_status_message = "Job has terminated"
         return JobStatus(
             # Both the state name and description are just placeholders
