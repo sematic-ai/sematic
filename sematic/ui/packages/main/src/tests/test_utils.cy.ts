@@ -1,5 +1,5 @@
 import { abbreviatedUserName, sha1 } from "../utils";
-import user from "ui-test/fixtures/user";
+import user from "@sematic/ui-test/fixtures/user";
 
 describe('sha1', () => {
     it("should calculate sha1 value from string", async () => {
