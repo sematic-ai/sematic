@@ -61,6 +61,7 @@ xgboost
 snowflake-connector-python>=2.8.0
 pyOpenSSL
 pyarrow
+python-magic
 
 # Cloud execution
 kubernetes

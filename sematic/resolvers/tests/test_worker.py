@@ -117,10 +117,10 @@ def test_main_func(
     valid_client_version,  # noqa: F811
 ):
     future = add(1, 1)
-    artifact_1, bytes_ = make_artifact(1, int)
-    api_client.store_artifact_bytes(artifact_1.id, bytes_)
-    artifact_2, _ = make_artifact(1, int)
-    api_client.store_artifact_bytes(artifact_2.id, bytes_)
+    artifact_1, payload_1 = make_artifact(1, int)
+    artifact_2, payload_2 = make_artifact(1, int)
+
+    api_client.store_payloads(payload_1 + payload_2)
 
     edge_1 = Edge(
         id=uuid.uuid4().hex,

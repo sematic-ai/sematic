@@ -5,7 +5,7 @@ import LinkValueView from "./link";
 import DataFrameValueView from "./dataframetable";
 import MatplotlibFigureValueView from "./matplot";
 import PlotlyFigureValueView from "./plotly";
-import TorchDataLoaderValueView from "./torchDataLoader";
+import TorchDataLoaderValueView from "src/types/torchDataLoader";
 import BoolValueView from "./boolean";
 import DictValueView from "./dict";
 import DataclassValueView, { DataclassTypeRepr } from "./dataclass";
@@ -15,9 +15,10 @@ import NoneValueView from "./none";
 import IntValueView from "./int";
 import FloatValueView from "./float";
 import StrValueView from "./str";
+import { S3BucketValueView, S3LocationValueView } from "./aws";
+import ImageValueView from "src/types/image";
 import { TypeComponents, SpecificTypeSerialization } from "./common";
 export {renderSummary} from "./common";
-
 
 // TypeRepr types
 export type AnyTypeRepr =
@@ -72,6 +73,24 @@ const meta: Array<[string, ComponentRenderDetails]> = [
       value: DataFrameValueView,
     },
   ],
+  [
+    "sematic.types.types.aws.s3.S3Bucket",
+    {
+      value: S3BucketValueView,
+    }
+  ],
+  [
+    "sematic.types.types.aws.s3.S3Location",
+    {
+      value: S3LocationValueView,
+    }
+  ],
+  [
+    "sematic.types.types.image.Image",
+    {
+      value: ImageValueView,
+    }
+  ]
 ];
 
 

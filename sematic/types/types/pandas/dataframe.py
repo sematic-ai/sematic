@@ -6,13 +6,13 @@ from typing import Any, Dict, List
 import pandas
 
 # Sematic
-from sematic.types.registry import register_to_json_encodable_summary
+from sematic.types.registry import SummaryOutput, register_to_json_encodable_summary
 
 _PAYLOAD_CUTOFF = 3000
 
 
 @register_to_json_encodable_summary(pandas.DataFrame)
-def _dataframe_json_encodable_summary(value: pandas.DataFrame, _) -> Any:
+def _dataframe_json_encodable_summary(value: pandas.DataFrame, _) -> SummaryOutput:
     truncated = False
     payload: Any = value.to_dict()
     index = list(value.index)
@@ -33,12 +33,15 @@ def _dataframe_json_encodable_summary(value: pandas.DataFrame, _) -> Any:
     except ValueError:
         pass
 
-    return dict(
-        dataframe=payload,
-        index=index,
-        dtypes=dtypes,
-        truncated=truncated,
-        shape=value.shape,
-        describe=describe,
-        isna=value.isna().sum().to_dict(),
+    return (
+        dict(
+            dataframe=payload,
+            index=index,
+            dtypes=dtypes,
+            truncated=truncated,
+            shape=value.shape,
+            describe=describe,
+            isna=value.isna().sum().to_dict(),
+        ),
+        {},
     )

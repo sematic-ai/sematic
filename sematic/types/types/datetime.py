@@ -8,6 +8,7 @@ from datetime import datetime
 
 # Sematic
 from sematic.types.registry import (
+    SummaryOutput,
     register_from_json_encodable,
     register_to_json_encodable,
     register_to_json_encodable_summary,
@@ -15,8 +16,8 @@ from sematic.types.registry import (
 
 
 @register_to_json_encodable_summary(datetime)
-def _datetime_summary(value: datetime, _) -> str:
-    return value.isoformat()
+def _datetime_summary(value: datetime, _) -> SummaryOutput:
+    return value.isoformat(), {}
 
 
 @register_to_json_encodable(datetime)
