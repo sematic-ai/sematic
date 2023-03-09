@@ -23,10 +23,10 @@ export function useAuthentication() {
     const {fetch} = useHttpClient();
 
     const {value, loading, error} = useAsync(async () => {
-        const response: AuthenticatePayload = await fetch({
+        const response = await fetch({
             url: `/authenticate`
         });
-        return response;
+        return (await response.json()) as AuthenticatePayload;
     }, []);
 
     const isAuthenticationEnabled = useMemo(
@@ -71,10 +71,10 @@ export function useEnv(user: User | null) {
         if (!user) {
             return null;
         }
-        const response: EnvPayload = await fetch({
+        const response = await fetch({
             url: `/api/v1/meta/env`
         });
-        return response;
+        return (await response.json()) as EnvPayload;
     }, [user]);
 
     const envVars = useMemo(() => {

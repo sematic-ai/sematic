@@ -5,6 +5,7 @@ from dataclasses import dataclass, replace
 import pytest
 
 # Sematic
+from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_auth,
     mock_requests,
@@ -34,6 +35,7 @@ from sematic.db.queries import (
     save_run_external_resource_links,
 )
 from sematic.db.tests.fixtures import (  # noqa: F401
+    allow_any_run_state_transition,
     make_run,
     persisted_artifact,
     persisted_resolution,
@@ -347,3 +349,12 @@ def test_get_external_resources_by_run_id(test_db):  # noqa: F811
     assert all(isinstance(record, ExternalResource) for record in resources)
     resource_ids = {resource.id for resource in resources}
     assert resource_ids == {resource_1.id, resource_2.id}
+
+
+def test_fail_invalid_run_state_transition(test_db):  # noqa: F811
+    run = make_run(future_state=FutureState.CREATED)  # noqa: F811
+    save_run(run)
+
+    run.future_state = FutureState.RESOLVED
+    with pytest.raises(IllegalStateTransitionError):
+        save_run(run)

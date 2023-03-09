@@ -50,6 +50,7 @@ from sematic.log_reader import load_log_lines
 from sematic.scheduling.external_job import ExternalJob
 from sematic.scheduling.job_scheduler import schedule_run, update_run_status
 from sematic.scheduling.kubernetes import cancel_job
+from sematic.utils.exceptions import IllegalStateTransitionError
 from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
@@ -367,7 +368,12 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
         run, new_jobs = _get_run_and_jobs_if_modified(run_id, future_state, jobs)
         if run is not None:
             new_future_state_value = run.future_state
-            save_run(run)
+            try:
+                save_run(run)
+            except IllegalStateTransitionError as e:
+                raise _DetectedRunRaceCondition(
+                    "Run appears to have been modified since being queried: %s", e
+                )
             broadcast_graph_update(run.root_id, user=user)
 
         if new_jobs is not None:
@@ -440,15 +446,29 @@ def save_graph_endpoint(user: Optional[User]):
 
     graph = flask.request.json["graph"]
 
+    artifacts = [
+        Artifact.from_json_encodable(artifact) for artifact in graph["artifacts"]
+    ]
+
+    edges = [Edge.from_json_encodable(edge) for edge in graph["edges"]]
+
     runs = [Run.from_json_encodable(run) for run in graph["runs"]]
 
     for run in runs:
         logger.info("Graph update, run %s is in state %s", run.id, run.future_state)
-
         if user is not None:
             run.user_id = user.id
 
+    # save graph BEFORE ensuring jobs are stopped. This way
+    # code that is checking on job status will be ok if it
+    # sees the jobs as gone while we are going through and
+    # deleting them.
+    save_graph(runs, artifacts, edges)
+
+    updated_jobs = False
+    for run in runs:
         if FutureState[run.future_state].is_terminal():
+            updated_jobs = True
             logger.info("Ensuring jobs for %s are stopped %s", run.id, run.future_state)
             jobs = []
             for external_job in run.external_jobs:
@@ -458,13 +478,8 @@ def save_graph_endpoint(user: Optional[User]):
             broadcast_job_update(source_run_id=run.id, user=user)
             run.external_jobs = jobs
 
-    artifacts = [
-        Artifact.from_json_encodable(artifact) for artifact in graph["artifacts"]
-    ]
-
-    edges = [Edge.from_json_encodable(edge) for edge in graph["edges"]]
-
-    save_graph(runs, artifacts, edges)
+    if updated_jobs:
+        save_graph(runs, [], [])
 
     return flask.jsonify({})
 
