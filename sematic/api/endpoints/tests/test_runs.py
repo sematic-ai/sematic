@@ -16,6 +16,7 @@ from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     make_auth_test,
     mock_auth,
+    mock_broadcasts,
     mock_plugin_settings,
     mock_requests,
     mock_socketio,
@@ -475,7 +476,10 @@ def test_schedule_run(
 
 
 def test_update_future_states(
-    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_broadcasts: mock.MagicMock,  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
         persisted_run.future_state = FutureState.CREATED
@@ -520,6 +524,11 @@ def test_update_future_states(
         assert payload == {
             "content": [{"future_state": "SCHEDULED", "run_id": persisted_run.id}]
         }
+        mock_broadcasts.assert_called_with(
+            url="/events/job/update",
+            json_payload=dict(source_run_id=persisted_run.id),
+            user=None,
+        )
 
 
 def test_update_run_disappeared(
@@ -692,6 +701,7 @@ def pipeline(a: float, b: float) -> float:
 )
 def test_get_run_graph_endpoint(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     root: int,
     run_count: int,

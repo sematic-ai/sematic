@@ -8,6 +8,7 @@ import pytest
 from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_auth,
+    mock_broadcasts,
     mock_requests,
     mock_socketio,
     test_client,
@@ -16,6 +17,7 @@ from sematic.calculator import func
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.factories import make_artifact
+from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import (
@@ -23,13 +25,16 @@ from sematic.db.queries import (
     get_artifact,
     get_external_resource_record,
     get_external_resources_by_run_id,
+    get_job,
     get_resolution,
     get_resources_by_root_id,
     get_root_graph,
     get_run,
     get_run_graph,
+    jobs_by_run_id,
     save_external_resource_record,
     save_graph,
+    save_job,
     save_resolution,
     save_run,
     save_run_external_resource_links,
@@ -49,6 +54,8 @@ from sematic.plugins.abstract_external_resource import (
     ManagedBy,
     ResourceState,
 )
+from sematic.scheduling.external_job import JobType
+from sematic.scheduling.kubernetes import KubernetesExternalJob
 from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 from sematic.utils.exceptions import IllegalStateTransitionError
 
@@ -198,6 +205,7 @@ def pipeline(a: float, b: float) -> float:
 def test_get_run_graph(
     mock_auth,  # noqa: F811
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     fn,
     run_count: int,
     artifact_count: int,
@@ -358,3 +366,51 @@ def test_fail_invalid_run_state_transition(test_db):  # noqa: F811
     run.future_state = FutureState.RESOLVED
     with pytest.raises(IllegalStateTransitionError):
         save_run(run)
+
+
+def test_save_read_jobs(test_db):  # noqa: F811
+    root_run = make_run()
+    child_run = make_run(root_id=root_run.id)
+    for r in [root_run, child_run]:
+        save_run(r)
+
+    namespace = "fakens"
+    run_job = KubernetesExternalJob.new(
+        try_number=0,
+        run_id=root_run.id,
+        namespace=namespace,
+        job_type=JobType.worker,
+    )
+    child_run.external_jobs = [run_job]
+    save_job(Job.from_job(run_job, run_id=child_run.id))
+
+    run_job.has_started = True
+    run_job.epoch_time_last_updated = run_job.epoch_time_last_updated + 0.1
+    save_job(Job.from_job(run_job, run_id=child_run.id))
+    status_history = get_job(run_job.external_job_id).status_history
+    assert len(status_history) == 2
+
+    assert jobs_by_run_id(root_run.id) == []
+    assert len(jobs_by_run_id(child_run.id)) == 1
+
+    retry_job = KubernetesExternalJob.new(
+        try_number=1,
+        run_id=root_run.id,
+        namespace=namespace,
+        job_type=JobType.worker,
+    )
+    child_run.external_jobs = [run_job, retry_job]
+    save_run(child_run)
+
+    save_job(Job.from_job(retry_job, run_id=child_run.id))
+    assert len(jobs_by_run_id(child_run.id)) == 2
+
+    retry_job.epoch_time_last_updated = retry_job.epoch_time_last_updated - 1
+    with pytest.raises(
+        IllegalStateTransitionError,
+        match=(
+            r"Cannot append status to history, a more "
+            r"recent update is already available."
+        ),
+    ):
+        save_job(Job.from_job(retry_job, run_id=child_run.id))

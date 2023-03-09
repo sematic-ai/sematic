@@ -169,6 +169,14 @@ def mock_socketio():
 
 
 @pytest.fixture
+def mock_broadcasts():
+    with mock.patch(
+        "sematic.api.endpoints.events._call_broadcast_endpoint"
+    ) as mock_call_broadcast:
+        yield mock_call_broadcast
+
+
+@pytest.fixture
 def mock_auth():
     with mock_server_settings({ServerSettingsVar.SEMATIC_AUTHENTICATE: "false"}):
         yield
