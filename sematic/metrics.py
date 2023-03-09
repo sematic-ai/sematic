@@ -66,3 +66,40 @@ def _post_metric(
     )
 
     api_client.save_metric(metric)
+
+
+"""
+Org metrics
+===========
+
+Resolutions per user
+--------------------
+post_pipeline_metric("sematic.resolution.user", user.id, point_type=HISTOGRAM, label=user.name)
+
+Pipeline metrics
+================
+
+Pipeline status histogram
+-------------------------
+Display single pie chart
+
+post_pipeline_metric("sematic.resolution.status", status, point_type=HISTOGRAM)
+
+Pipeline success rate over time
+-------------------------------
+
+post_pipeline_metric("sematic.resolution.success", 1 if status == COMPLETED else 0, point_type=GAUGE)
+
+Pipeline duration
+-----------------
+Display time series
+Only include completed resolutions
+post_pipeline_metric("sematic.resolution.duration", duration, point_type=GAUGE)
+
+Resolution and run count
+------------------------
+Bar chart time series
+
+post_pipeline_metric("sematic.resolution.count", {"resolution": 1, "runs": run_count}, point_type=SUM)
+
+"""
