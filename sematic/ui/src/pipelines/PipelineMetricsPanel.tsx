@@ -1,11 +1,8 @@
-import { Box, Typography } from "@mui/material";
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { UserContext } from "src/appContext";
+import { Alert, AlertTitle, Box, Typography } from "@mui/material";
+import { useMemo } from "react";
 import Loading from "src/components/Loading";
 import { ExtractContextType } from "src/components/utils/typings";
 import { Run } from "src/Models";
-import { CompactMetrics, CompactMetricsPayload } from "src/Payloads";
-import { fetchJSON } from "src/utils";
 import { usePipelineRunContext } from "../hooks/pipelineHooks";
 import PipelineRunViewContext from "./PipelineRunViewContext";
 import {
@@ -20,7 +17,7 @@ import {
   ChartData
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { metricsSocket } from "src/sockets";
+import useMetrics from "src/hooks/metricsHooks";
 
 ChartJS.register(
   CategoryScale,
@@ -46,31 +43,11 @@ export default function PipelineMetricsPanel() {
     rootRun: Run
   };
 
-  const { user } = useContext(UserContext);
-  const [metrics, setMetrics] = useState<CompactMetrics | undefined>(undefined);
+  const [ payload, loading, error ] = useMetrics({calculatorPath: rootRun.calculator_path});
 
-  const refreshMetrics = useCallback(() => {
-    if (rootRun === undefined) return;
-    fetchJSON({
-      url: `/api/v1/metrics?calculator_path=${rootRun.calculator_path}&format=compact`,
-      apiKey: user?.api_key,
-      callback: (payload: CompactMetricsPayload) => {
-        setMetrics(payload.content);
-      }
-    });
-  }, [rootRun, setMetrics, user?.api_key]);
-
-  useEffect(refreshMetrics, []);
-
-
-  useEffect(() => {
-    metricsSocket.removeAllListeners("new");
-    metricsSocket.on("new", (args: {calculator_path: string | undefined}) => {
-      if (args.calculator_path === rootRun?.calculator_path) {
-        refreshMetrics();
-      }
-    });
-  });
+  const metrics = useMemo(() => {
+    return payload?.content;
+  }, [payload]);
 
   const graphDataByName = useMemo(() => {
     if (metrics === undefined) {
@@ -117,28 +94,38 @@ export default function PipelineMetricsPanel() {
     return dataByName;
   }, [metrics]);  
 
+  if (error !== undefined) {
+    return <Alert severity="error">
+      <AlertTitle>There was an error loading metrics.</AlertTitle>
+      Please report the following error to the Sematic team: {error.message}
+    </Alert>
+  }
+
+  // we do not use `loading` because it will become true again every refresh,
+  // leading to a full refresh of the graph, instead of just adding the new data points.
   if (graphDataByName === undefined) {
     return <Loading isLoaded={false}/>;
+  } else {
+    return <Box sx={{p: 5}}>
+      <Typography variant="h3" sx={{mb: 5}}>Pipeline Metrics</Typography>
+      {
+        graphDataByName.size === 0 && (
+          <Typography>
+            No metrics registered for this pipeline.
+            Use <code>sematic.post_pipeline_metric</code> in the body of a Sematic function.
+          </Typography>
+        )
+      }
+      {
+        graphDataByName.size > 0 && (
+          <>{Array.from(graphDataByName).map(([name, graphData], idx) => (
+            <Box key={idx} sx={{mt: 10, width: "45%", minWidth: 500, float: "left", px: 3}}>
+              <Typography variant="h6">{name}</Typography>
+              <Line data={graphData} />
+            </Box>
+          ))}</>
+        )
+      }
+    </Box>;
   }
-  return <Box sx={{p: 5}}>
-    <Typography variant="h3" sx={{mb: 5}}>Pipeline Metrics</Typography>
-    {
-      graphDataByName.size === 0 && (
-        <Typography>
-          No metrics registered for this pipeline.
-          Use <code>sematic.post_pipeline_metric</code> in the body of a Sematic function.
-        </Typography>
-      )
-    }
-    {
-      graphDataByName.size > 0 && (
-        <>{Array.from(graphDataByName).map(([name, graphData], idx) => (
-          <Box key={idx} sx={{mt: 10, width: "45%", minWidth: 500, float: "left", px: 3}}>
-            <Typography variant="h6">{name}</Typography>
-            <Line data={graphData} />
-          </Box>
-        ))}</>
-      )
-    }
-  </Box>;
 }

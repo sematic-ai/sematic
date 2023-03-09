@@ -13,7 +13,7 @@ import {
 import { useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
 import Loading from 'src/components/Loading';
-import useFetchRunMetrics from 'src/hooks/metricsHooks';
+import useMetrics from 'src/hooks/metricsHooks';
 import { usePipelinePanelsContext } from 'src/hooks/pipelineHooks';
 
 ChartJS.register(
@@ -39,7 +39,7 @@ const COLORS = [
 export default function RunMetricsPanel() {
   const { selectedRun } = usePipelinePanelsContext();
 
-  const [ payload, loading, error ] = useFetchRunMetrics(selectedRun!.id);
+  const [ payload, loading, error ] = useMetrics({runId: selectedRun!.id});
 
   const metrics = useMemo(() => {
     return payload?.content;
@@ -94,7 +94,7 @@ export default function RunMetricsPanel() {
 
   // we do not use `loading` because it will become true again every refresh,
   // leading to a full refresh of the graph, instead of just adding the new data points.
-  if (graphDataByName == undefined) {
+  if (graphDataByName === undefined) {
     return <Loading isLoaded={false}/>;
   } else {
     if (graphDataByName.size === 0) {
@@ -111,5 +111,4 @@ export default function RunMetricsPanel() {
       ))}</>
     }
   }
-  return <>abc</>;
 }
