@@ -272,7 +272,13 @@ def cancel_resolution_endpoint(
 
     jobs = []
     for external_job in resolution.external_jobs:
-        jobs.append(cancel_job(external_job))
+        after_cancellation = cancel_job(external_job)
+        logger.info(
+            "After cancellation, job for resolution %s has status: %s",
+            resolution.root_id,
+            after_cancellation.get_status(),
+        )
+        jobs.append(after_cancellation)
     resolution.external_jobs = jobs  # type: ignore
 
     resolution.status = ResolutionStatus.CANCELED
@@ -330,7 +336,13 @@ def _cancel_non_terminal_runs(root_id):
     for run in unfinished_runs:
         jobs = []
         for external_job in run.external_jobs:
-            jobs.append(cancel_job(external_job))
+            after_cancellation = cancel_job(external_job)
+            jobs.append(after_cancellation)
+            logger.info(
+                "Canceled job %s. Now has status: %s",
+                after_cancellation,
+                after_cancellation.get_status(),
+            )
         run.external_jobs = jobs
 
         run.future_state = FutureState.CANCELED
