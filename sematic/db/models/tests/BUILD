@@ -16,6 +16,18 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_job",
+    srcs = ["test_job.py"],
+    deps = [
+        "//sematic/db/models:job",
+        "//sematic/scheduling:external_job",
+        "//sematic/scheduling:kubernetes",
+        "//sematic/utils:exceptions",
+    ],
+)
+
+
+pytest_test(
     name = "test_resolution",
     srcs = ["test_resolution.py"],
     deps = [
