@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="Mocha Tests" time="0.727" tests="1" failures="0">
-  <testsuite name="Root Suite" timestamp="2023-02-09T17:34:55" tests="0" file="e2e/main.cy.ts" time="0.000" failures="0">
-  </testsuite>
-  <testsuite name="Sematic application" timestamp="2023-02-09T17:34:55" tests="1" time="0.719" failures="0">
-    <testcase name="Sematic application renders the pipeline index page" time="0.699" classname="renders the pipeline index page">
-    </testcase>
-  </testsuite>
-</testsuites>

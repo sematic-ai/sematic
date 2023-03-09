@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="Mocha Tests" time="0.054" tests="1" failures="0">
-  <testsuite name="Root Suite" timestamp="2023-02-28T04:40:56" tests="0" file="../src/tests/test_utils.cy.ts" time="0.000" failures="0">
-  </testsuite>
-  <testsuite name="sha1" timestamp="2023-02-28T04:40:56" tests="1" time="0.029" failures="0">
-    <testcase name="sha1 should calculate sha1 value from string" time="0.032" classname="should calculate sha1 value from string">
-    </testcase>
-  </testsuite>
-</testsuites>

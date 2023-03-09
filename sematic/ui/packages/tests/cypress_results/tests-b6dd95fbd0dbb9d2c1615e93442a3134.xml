@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="Mocha Tests" time="0.061" tests="1" failures="0">
-  <testsuite name="Root Suite" timestamp="2023-02-23T00:02:21" tests="0" file="../src/components/tests/test_RunStateChip.cy.tsx" time="0.000" failures="0">
-  </testsuite>
-  <testsuite name="RunStateChip component" timestamp="2023-02-23T00:02:21" tests="1" time="0.044" failures="0">
-    <testcase name="RunStateChip component should render" time="0.024" classname="should render">
-    </testcase>
-  </testsuite>
-</testsuites>

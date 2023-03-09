@@ -55,9 +55,7 @@
     "test": "REACT_APP_GIT_HASH=$(git rev-parse --short HEAD) react-scripts test",
     "eject": "react-scripts eject",
     "analyze": "source-map-explorer 'build/static/js/*.js'",
-    "lint:app": "eslint --config node_modules/eslint-config-react-app/index.js --ext .ts,.tsx --max-warnings=0 ./src",
-    "lint:ui-tests": "eslint --ext .ts ./tests",
-    "lint": "npm run lint:app && npm run lint:ui-tests"
+    "lint": "eslint --ext .ts,.tsx --max-warnings=0 ./src"
   },
   "eslintConfig": {
     "extends": [

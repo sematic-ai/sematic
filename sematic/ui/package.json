@@ -7,7 +7,7 @@
     "start": "npm run start --workspace @sematic/main",
     "build": "npm run build --workspace @sematic/main",
     "test": "npm run test --workspace @sematic/main",
-    "lint": "npm run lint --workspace @sematic/main",
+    "lint": "npm run lint --workspaces --if-present",
     "cypress:open": "cypress open --project packages/tests",
     "cypress:e2e": "cypress run --headless --e2e --project packages/tests",
     "cypress:component": "cypress run --headless --component --project packages/tests"
