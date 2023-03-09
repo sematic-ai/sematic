@@ -21,7 +21,7 @@ from sqlalchemy.sql.elements import BooleanClauseList
 from sematic.abstract_future import FutureState
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
-from sematic.api.endpoints.events import broadcast_graph_update
+from sematic.api.endpoints.events import broadcast_graph_update, broadcast_job_update
 from sematic.api.endpoints.payloads import get_run_payload, get_runs_payload
 from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
@@ -246,6 +246,7 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 
     broadcast_graph_update(root_id=run.root_id, user=user)
     save_job(Job.from_job(run.external_jobs[-1], run_id=run.id))
+    broadcast_job_update(source_run_id=run.id, user=user)
 
     payload = dict(
         content=get_run_payload(run),
@@ -372,6 +373,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
         if new_jobs is not None:
             for job in new_jobs:
                 save_job(Job.from_job(job, run_id=run_id))
+            broadcast_job_update(source_run_id=run_id, user=user)
 
         result_list.append(
             dict(
@@ -453,6 +455,7 @@ def save_graph_endpoint(user: Optional[User]):
                 canceled_job = cancel_job(external_job)
                 save_job(Job.from_job(canceled_job, run_id=run.id))
                 jobs.append(canceled_job)
+            broadcast_job_update(source_run_id=run.id, user=user)
             run.external_jobs = jobs
 
     artifacts = [
@@ -488,8 +491,10 @@ def get_run_job_status_history(user: Optional[User], run_id):
     job_status_histories = [
         dict(
             job_id=job.id,
-            job_kind=job.job_type,
-            status_history=list(job.status_history_serializations),
+            job_kind=job.job_type.value,
+            status_history=[
+                status["values"] for status in job.status_history_serializations
+            ],
         )
         for job in jobs
     ]

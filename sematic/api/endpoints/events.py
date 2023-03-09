@@ -66,6 +66,16 @@ def broadcast_pipeline_update(
     return _call_broadcast_endpoint(url=url, json_payload=json_payload, user=user)
 
 
+def broadcast_job_update(
+    source_run_id: str,
+    user: Optional[User] = None,
+) -> Optional[requests.Response]:
+
+    url = "/events/job/update"
+    json_payload = dict(source_run_id=source_run_id)
+    return _call_broadcast_endpoint(url=url, json_payload=json_payload, user=user)
+
+
 def _call_broadcast_endpoint(
     url: str, json_payload: Dict[str, Any], user: Optional[User] = None
 ) -> Optional[requests.Response]:
