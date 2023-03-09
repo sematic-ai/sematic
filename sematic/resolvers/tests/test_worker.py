@@ -15,6 +15,7 @@ from sematic import api_client
 from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_auth,
+    mock_broadcasts,
     mock_requests,
     mock_socketio,
     test_client,
@@ -65,6 +66,7 @@ def test_main(
     mock_set_context: mock.MagicMock,
     mock_get_image: mock.MagicMock,
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
@@ -111,6 +113,7 @@ def test_main_func(
     mock_set_context: mock.MagicMock,
     mock_get_image: mock.MagicMock,
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
@@ -198,6 +201,7 @@ def test_fail(
     mock_schedule_job: mock.MagicMock,
     mock_get_image: mock.MagicMock,
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811

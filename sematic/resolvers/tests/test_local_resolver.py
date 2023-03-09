@@ -10,6 +10,7 @@ from sematic.abstract_calculator import CalculatorError
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_auth,
+    mock_broadcasts,
     mock_requests,
     mock_socketio,
     test_client,
@@ -52,6 +53,7 @@ def pipeline(a: float, b: float) -> float:
 
 def test_single_function(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
@@ -107,6 +109,7 @@ def add_add_add(a: float, b: float) -> float:
 
 def test_add_add(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
@@ -127,6 +130,7 @@ def test_add_add(
 
 def test_pipeline(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
@@ -164,6 +168,7 @@ def test_pipeline(
 
 def test_failure(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
@@ -206,6 +211,7 @@ def test_failure(
 
 def test_resolver_error(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
@@ -395,6 +401,7 @@ class CallbackTrackingResolver(LocalResolver):
 
 def test_db_state_machine(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
@@ -405,6 +412,7 @@ def test_db_state_machine(
 
 def test_list_conversion(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
@@ -419,6 +427,7 @@ def test_list_conversion(
 
 def test_exceptions(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811
@@ -487,6 +496,7 @@ def try_three_times():
 
 def test_retry(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
@@ -546,6 +556,7 @@ class RerunTestResolver(LocalResolver):
 
 def test_rerun_from_here(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
@@ -578,6 +589,7 @@ def test_rerun_from_here(
 
 def test_cancel_non_terminal_futures(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
@@ -672,6 +684,7 @@ def _get_runs_and_artifacts(db: DB) -> List[Tuple[Run, Artifact]]:
 def test_cached_output_happy(
     value_and_type: Tuple[Any, Type],
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
@@ -711,6 +724,7 @@ def test_cached_output_happy(
 
 def test_cached_output_different_namespaces(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
@@ -751,6 +765,7 @@ def test_cached_output_different_namespaces(
 
 def test_cached_output_different_funcs(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
@@ -795,6 +810,7 @@ def test_cached_output_different_funcs(
 
 def test_cached_output_different_inputs(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
 ):

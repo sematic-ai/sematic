@@ -10,6 +10,7 @@ import sematic.api_client as api_client
 from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_auth,
+    mock_broadcasts,
     mock_requests,
     mock_socketio,
     test_client,
@@ -57,6 +58,7 @@ def test_simulate_cloud_exec(
     mock_get_images: mock.MagicMock,
     mock_update_run_future_states: mock.MagicMock,
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     mock_requests,  # noqa: F811
     test_db,  # noqa: F811
@@ -234,6 +236,7 @@ def test_make_resolution(
 
 def test_resolver_restart(
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811

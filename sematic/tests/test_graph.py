@@ -6,6 +6,7 @@ import sematic.api_client as api_client
 from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_auth,
+    mock_broadcasts,
     mock_requests,
     mock_socketio,
     test_client,
@@ -35,6 +36,7 @@ def pipeline(a: float, b: float, c: float) -> float:
 def test_clone_futures(
     mock_auth,  # noqa: F811
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
@@ -112,6 +114,7 @@ def test_clone_futures(
 def test_clone_futures_reset(
     mock_auth,  # noqa: F811
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
@@ -200,6 +203,7 @@ def add4(a: float, b: float, c: float, d: float) -> float:
 def test_reset_failed(
     mock_auth,  # noqa: F811
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
@@ -234,6 +238,7 @@ def order_test() -> float:
 def test_run_execution_ordering(
     mock_auth,  # noqa: F811
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
@@ -268,6 +273,7 @@ def test_run_execution_ordering(
 def test_run_reverse_ordering(
     mock_auth,  # noqa: F811
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
@@ -309,6 +315,7 @@ def pipeline_fail(a: int) -> int:
 def test_nested_fail(
     mock_auth,  # noqa: F811
     mock_socketio,  # noqa: F811
+    mock_broadcasts,  # noqa: F811
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
