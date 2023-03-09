@@ -376,7 +376,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
                 )
             broadcast_graph_update(run.root_id, user=user)
 
-        if new_jobs is not None:
+        if new_jobs is not None and len(new_jobs) > 0:
             for job in new_jobs:
                 save_job(Job.from_job(job, run_id=run_id))
             broadcast_job_update(source_run_id=run_id, user=user)
@@ -475,7 +475,8 @@ def save_graph_endpoint(user: Optional[User]):
                 canceled_job = cancel_job(external_job)
                 save_job(Job.from_job(canceled_job, run_id=run.id))
                 jobs.append(canceled_job)
-            broadcast_job_update(source_run_id=run.id, user=user)
+            if len(jobs) > 0:
+                broadcast_job_update(source_run_id=run.id, user=user)
             run.external_jobs = jobs
 
     if updated_jobs:
