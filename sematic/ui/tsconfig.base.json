@@ -23,9 +23,5 @@
     "types": [
       "cypress",
     ],
-  },
-  "include": [
-    "src",
-    "tests/global.d.ts"
-  ]
+  }
 }

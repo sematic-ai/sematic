@@ -26,7 +26,7 @@ export default defineConfig({
   component: {
     supportFile: "support/component.ts",
     indexHtmlFile: 'support/component-index.html',
-    specPattern: "../src/**/*.cy.{ts,tsx}",
+    specPattern: ["../../packages/main/src/**/*.cy.{ts,tsx}"],
 
     devServer: {
       framework: "create-react-app",
