@@ -60,11 +60,12 @@ export default function PipelineMetricsPanel() {
     });
   }, [rootRun, setMetrics, user?.api_key]);
 
-  useEffect(refreshMetrics);
+  useEffect(refreshMetrics, []);
+
 
   useEffect(() => {
-    metricsSocket.removeAllListeners("update");
-    metricsSocket.on("update", (args: {calculator_path: string | undefined}) => {
+    metricsSocket.removeAllListeners("new");
+    metricsSocket.on("new", (args: {calculator_path: string | undefined}) => {
       if (args.calculator_path === rootRun?.calculator_path) {
         refreshMetrics();
       }

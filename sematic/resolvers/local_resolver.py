@@ -248,6 +248,7 @@ class LocalResolver(SilentResolver):
     def _clean_up_resolution(self, save_graph: bool) -> None:
         self._cancel_non_terminal_futures()
         self._deactivate_all_resources()
+        logger.debug("Disconnection SockerIO client")
         self._sio_client.disconnect()
         if save_graph:
             self._save_graph()

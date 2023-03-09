@@ -8,18 +8,13 @@ import flask
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
-from sematic.api.endpoints.events import (
-    broadcast_pipeline_metrics_update,
-    broadcast_run_metrics_update,
-)
 from sematic.api.endpoints.payloads import get_compact_metrics_payload
 from sematic.api.endpoints.request_parameters import jsonify_error
-from sematic.db.models.metric import Metric, MetricScope
+from sematic.db.models.metric import Metric
 from sematic.db.models.user import User
 from sematic.db.queries import (
     clear_run_metrics,
     get_pipeline_metrics,
-    get_run,
     get_run_metrics,
     save_metric,
 )
@@ -37,13 +32,6 @@ def post_metric(user: Optional[User]) -> flask.Response:
     metric = Metric.from_json_encodable(payload["metric"])
 
     metric = save_metric(metric)
-
-    if metric.scope is MetricScope.PIPELINE:
-        root_run = get_run(metric.root_id)
-        broadcast_pipeline_metrics_update(root_run.calculator_path, user)
-
-    if metric.scope is MetricScope.RUN:
-        broadcast_run_metrics_update(metric.run_id, user)
 
     return flask.jsonify({})
 

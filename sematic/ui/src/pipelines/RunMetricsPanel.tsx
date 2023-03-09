@@ -14,6 +14,7 @@ import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import { UserContext } from 'src/appContext';
 import Loading from 'src/components/Loading';
+import useFetchRunMetrics from 'src/hooks/metricsHooks';
 import { usePipelinePanelsContext } from 'src/hooks/pipelineHooks';
 import { CompactMetrics, CompactMetricsPayload } from 'src/Payloads';
 import { metricsSocket } from 'src/sockets';
@@ -42,30 +43,40 @@ const COLORS = [
 export default function RunMetricsPanel() {
   const { selectedRun } = usePipelinePanelsContext();
 
-  const { user } = useContext(UserContext);
-  const [metrics, setMetrics] = useState<CompactMetrics | undefined>(undefined);
+  //const { user } = useContext(UserContext);
+  //const [metrics, setMetrics] = useState<CompactMetrics | undefined>(undefined);
 
-  const refreshMetrics = useCallback(() => {
+  const [payload, loading, error] = useFetchRunMetrics(selectedRun!.id);
+  console.log(payload)
+  const metrics = useMemo(() => {
+    console.log("setting metrics", payload);
+    return payload?.content;
+  }, [payload]);
+
+  /*const refreshMetrics = useCallback(() => {
     if (selectedRun === undefined) return;
-    fetchJSON({
+    /*fetchJSON({
       url: `/api/v1/metrics?run_id=${selectedRun.id}&format=compact`,
       apiKey: user?.api_key,
       callback: (payload: CompactMetricsPayload) => {
         setMetrics(payload.content);
       }
-    });    
+    });
+    const [payload, loading, error] = useFetchRunMetrics(selectedRun!.id);
+    payloadToMetrics(payload);
   }, [selectedRun, setMetrics, user?.api_key]);
+  */
+  // useEffect(refreshMetrics, []);
 
-  useEffect(refreshMetrics);
-
-  useEffect(() => {
-    metricsSocket.removeAllListeners("update");
-    metricsSocket.on("update", (args: {run_id: string | undefined}) => {
+  /*useEffect(() => {
+    metricsSocket.removeAllListeners("new");
+    metricsSocket.on("new", (args: {run_id: string | undefined}) => {
       if (args.run_id === selectedRun?.id) {
-        refreshMetrics();
+        const [payload, loading, error] = useFetchRunMetrics(selectedRun!.id);
+        payloadToMetrics(payload);
       }
     });
-  });
+  });*/
 
   const graphDataByName = useMemo(() => {
     if (metrics === undefined) {
@@ -107,20 +118,25 @@ export default function RunMetricsPanel() {
     return dataByName;
   }, [metrics]);
 
-  if (graphDataByName === undefined) {
+  if (loading) {
     return <Loading isLoaded={false}/>;
   }
-  if (graphDataByName.size === 0) {
-    return <Typography>
-      No metrics registered for this run.
-      Use <code>sematic.post_run_metric</code> in the body of a Sematic function.
-      </Typography>;
+  if (graphDataByName !== undefined) {
+    if (graphDataByName.size === 0) {
+      return <Typography>
+        No metrics registered for this run.
+        Use <code>sematic.post_run_metric</code> in the body of a Sematic function.
+        </Typography>;
+    } else {
+      return <>{Array.from(graphDataByName).map(([name, graphData], idx) => (
+        <Box key={idx} sx={{mt: 5, width: "50%", minWidth: 500}}>
+          <Typography variant="h6">{name}</Typography>
+          <Line data={graphData} />
+        </Box>
+      ))}</>
+    }
   } else {
-    return <>{Array.from(graphDataByName).map(([name, graphData], idx) => (
-      <Box key={idx} sx={{mt: 5, width: "50%", minWidth: 500}}>
-        <Typography variant="h6">{name}</Typography>
-        <Line data={graphData} />
-      </Box>
-    ))}</>
+    console.log(graphDataByName);
   }
+  return <>abc</>;
 }

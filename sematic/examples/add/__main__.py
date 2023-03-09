@@ -4,7 +4,7 @@ import logging
 
 # Sematic
 from sematic import CloudResolver, LocalResolver
-from sematic.examples.add.pipeline import pipeline
+from sematic.examples.add.pipeline import metrics, pipeline
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Sematic add example")
@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
 
     future = pipeline(1, 2, 3).set(
         name="Basic add example pipeline", tags=["example", "basic", "final"]
@@ -25,6 +25,8 @@ if __name__ == "__main__":
         if args.cloud
         else LocalResolver(rerun_from=args.rerun_from)
     )
+
+    future = metrics()
 
     result = future.resolve(resolver)
 

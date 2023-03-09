@@ -17,7 +17,7 @@ from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.factories import deserialize_artifact_value
-from sematic.db.models.metric import Metric
+from sematic.db.models.metric import Metric, MetricScope
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -140,6 +140,15 @@ def _get_stored_bytes(namespace: str, key: str) -> bytes:
 
 def save_metric(metric: Metric) -> None:
     _post("/metrics", json_payload={"metric": metric.to_json_encodable()})
+
+    if metric.scope == MetricScope.PIPELINE.value:
+        root_run = get_run(metric.root_id)
+        json_payload = dict(calculator_path=root_run.calculator_path)
+
+    if metric.scope == MetricScope.RUN.value:
+        json_payload = dict(run_id=metric.run_id)
+
+    _notify_event("metrics", "new", json_payload)
 
 
 def get_run(run_id: str) -> Run:
