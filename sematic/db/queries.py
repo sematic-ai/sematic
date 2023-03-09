@@ -221,6 +221,12 @@ def get_job(job_id: str) -> Optional[Job]:
         return session.query(Job).filter(Job.id == job_id).one_or_none()
 
 
+def jobs_by_run_id(source_run_id: str) -> List[Job]:
+    """Get jobs from the DB by source run id"""
+    with db().get_session() as session:
+        return list(session.query(Job).filter(Job.source_run_id == source_run_id).all())
+
+
 def save_external_resource_record(record: ExternalResource):
     """Save an ExternalResource to the DB"""
     existing_record = get_external_resource_record(record.id)

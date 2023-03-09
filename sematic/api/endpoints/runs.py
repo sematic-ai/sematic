@@ -40,6 +40,7 @@ from sematic.db.queries import (
     get_run,
     get_run_graph,
     get_run_status_details,
+    jobs_by_run_id,
     save_graph,
     save_job,
     save_run,
@@ -476,6 +477,25 @@ def get_run_external_resources(user: Optional[User], run_id):
                 external_resource.to_json_encodable()
                 for external_resource in external_resources
             ],
+        )
+    )
+
+
+@sematic_api.route("/api/v1/runs/<run_id>/job_status_history", methods=["GET"])
+@authenticate
+def get_run_job_status_history(user: Optional[User], run_id):
+    jobs = jobs_by_run_id(run_id)
+    job_status_histories = [
+        dict(
+            job_id=job.id,
+            job_kind=job.job_type,
+            status_history=list(job.status_history_serializations),
+        )
+        for job in jobs
+    ]
+    return flask.jsonify(
+        dict(
+            content=job_status_histories,
         )
     )
 
