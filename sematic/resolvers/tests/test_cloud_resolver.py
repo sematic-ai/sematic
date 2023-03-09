@@ -98,12 +98,12 @@ def test_simulate_cloud_exec(
             run.future_state = FutureState.RESOLVED
             updates[run.id] = FutureState.RESOLVED
             edge = driver_resolver._get_output_edges(run.id)[0]
-            artifact, bytes_ = make_artifact(3, int)
+            artifact, payloads = make_artifact(3, int)
             edge.artifact_id = artifact.id
             api_client.save_graph(
                 run.id, runs=[run], artifacts=[artifact], edges=[edge]
             )
-            api_client.store_artifact_bytes(artifact.id, bytes_)
+            api_client.store_payloads(payloads)
             driver_resolver._refresh_graph(run.id)
         return updates
 

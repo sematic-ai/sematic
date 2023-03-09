@@ -1,7 +1,7 @@
 import { Artifact } from "../Models";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
-import { renderSummary } from "../types/Types";
+import { renderSummary } from "src/types/Types";
 import {
   Box,
   Table,

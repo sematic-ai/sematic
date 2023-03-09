@@ -1,13 +1,13 @@
 # Standard Library
 import copy
 import dataclasses
-from typing import Any, Dict, Literal, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Literal, Optional, Tuple, Union
 
 # Sematic
 from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.registry import (
     DataclassKey,
-    ToJSONEncodableCallable,
+    SummaryOutput,
     is_parameterized_generic,
     register_can_cast,
     register_from_json_encodable,
@@ -109,7 +109,9 @@ def _can_cast_to_dataclass(from_type: Any, to_type: Any) -> Tuple[bool, Optional
 def _dataclass_to_json_encodable(value: Any, type_: Any) -> Any:
     if value is None:
         raise ValueError(f"Expected {type_}, got None")
-    return _serialize_dataclass(value_to_json_encodable, value, type_)
+    return _serialize_dataclass(
+        lambda v, t: (value_to_json_encodable(v, t), {}), value, type_
+    )[0]
 
 
 @register_from_json_encodable(DataclassKey)
@@ -144,11 +146,11 @@ def _dataclass_from_json_encodable(value: Any, type_: Any) -> Any:
 
 
 @register_to_json_encodable_summary(DataclassKey)
-def _dataclass_to_json_encodable_summary(value: Any, type_: Any) -> Any:
+def _dataclass_to_json_encodable_summary(value: Any, type_: Any) -> SummaryOutput:
     return _serialize_dataclass(get_json_encodable_summary, value, type_)
 
 
-def _serialize_dataclass(serializer: ToJSONEncodableCallable, value: Any, _) -> Any:
+def _serialize_dataclass(serializer: Callable, value: Any, _) -> SummaryOutput:
     # We use type(value) instead of the passed type because we want to
     # conserve any subclasses
     type_ = type(value)
@@ -159,6 +161,8 @@ def _serialize_dataclass(serializer: ToJSONEncodableCallable, value: Any, _) -> 
     ] = {"values": {}, "types": {}, "root_type": type_to_json_encodable(type_)}
 
     fields: Dict[str, dataclasses.Field] = type_.__dataclass_fields__
+
+    blobs: Dict[str, bytes] = {}
 
     for name, field in fields.items():
         field_value = getattr(value, name)
@@ -177,6 +181,9 @@ def _serialize_dataclass(serializer: ToJSONEncodableCallable, value: Any, _) -> 
             output["types"][name] = type_to_json_encodable(value_type)
             value_serialization_type = value_type
 
-        output["values"][name] = serializer(field_value, value_serialization_type)
+        output["values"][name], blobs_ = serializer(
+            field_value, value_serialization_type
+        )
+        blobs.update(blobs_)
 
-    return output
+    return output, blobs
