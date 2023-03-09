@@ -4,6 +4,7 @@ pytest_test(
     deps = [
         "//sematic/types:casting",
         "//sematic/types:init",
+        "//sematic/types/types:image",
     ],
 )
 
