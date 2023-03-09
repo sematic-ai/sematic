@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="0.133" tests="2" failures="0">
+  <testsuite name="Root Suite" timestamp="2023-02-28T04:34:55" tests="0" file="../src/hooks/tests/test_appHooks.cy.tsx" time="0.000" failures="0">
+  </testsuite>
+  <testsuite name="useAutentication hook" timestamp="2023-02-28T04:34:55" tests="2" time="0.117" failures="0">
+    <testcase name="useAutentication hook produces app context value if auth is not enabled" time="0.081" classname="produces app context value if auth is not enabled">
+    </testcase>
+    <testcase name="useAutentication hook produces app context value if auth is enabled" time="0.041" classname="produces app context value if auth is enabled">
+    </testcase>
+  </testsuite>
+</testsuites>

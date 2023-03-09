@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="5.000" tests="1" failures="1">
+  <testsuite name="Root Suite" timestamp="2023-03-01T18:08:25" tests="0" file="e2e/main.cy.ts" time="0.000" failures="0">
+  </testsuite>
+  <testsuite name="Sematic application" timestamp="2023-03-01T18:08:25" tests="1" time="4.981" failures="1">
+    <testcase name="Sematic application renders the pipeline index page" time="0.000" classname="renders the pipeline index page">
+      <failure message="Timed out retrying after 4000ms: Expected to find element: `[data-cy=runlist-row]`, but never found it." type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 4000ms: Expected to find element: `[data-cy=runlist-row]`, but never found it.
+    at Context.eval (webpack:///./support/commands.ts:30:17)]]></failure>
+    </testcase>
+  </testsuite>
+</testsuites>

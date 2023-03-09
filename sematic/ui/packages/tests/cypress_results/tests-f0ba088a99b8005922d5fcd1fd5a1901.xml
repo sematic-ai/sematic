@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="0.220" tests="1" failures="1">
+  <testsuite name="Root Suite" timestamp="2023-02-28T04:23:20" tests="1" file="../src/components/tests/test_RunStateChip.cy.tsx" time="0.210" failures="1">
+    <testcase name="An uncaught error was detected outside of a test" time="0.000" classname="An uncaught error was detected outside of a test">
+      <failure message="The following error originated from your test code, not from Cypress.
+
+  &gt; Cannot find module &apos;tests/fixtures/run&apos;
+
+When Cypress detects uncaught errors originating from your test code it will automatically fail the current test.
+
+Cypress could not associate this error to any specific test.
+
+We dynamically generated a new test to display this failure." type="Error"><![CDATA[Error: The following error originated from your test code, not from Cypress.
+
+  > Cannot find module 'tests/fixtures/run'
+
+When Cypress detects uncaught errors originating from your test code it will automatically fail the current test.
+
+Cypress could not associate this error to any specific test.
+
+We dynamically generated a new test to display this failure.
+    at webpackMissingModule (http://localhost:8080/__cypress/src/spec-1.js:191:50)
+    at ../src/components/tests/test_RunStateChip.cy.tsx (http://localhost:8080/__cypress/src/spec-1.js:191:143)
+    at Function.__webpack_require__ (http://localhost:8080/__cypress/src/main.js:7422:42)]]></failure>
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="4.340" tests="1" failures="1">
+  <testsuite name="Root Suite" timestamp="2023-02-22T19:48:40" tests="0" file="../src/hooks/tests/helperHook.cy.tsx" time="0.000" failures="0">
+  </testsuite>
+  <testsuite name="useQueuedAsyncRetry hook" timestamp="2023-02-22T19:48:40" tests="1" time="4.332" failures="1">
+    <testcase name="useQueuedAsyncRetry hook should queue retry request while previous loading hasn&apos;t finished" time="0.000" classname="should queue retry request while previous loading hasn&apos;t finished">
+      <failure message="Timed out retrying after 4000ms: expected &apos;&lt;div&gt;&apos; to have text &apos;false&apos;, but the text was &apos;true&apos;" type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 4000ms: expected '<div>' to have text 'false', but the text was 'true'
+    at Context.<anonymous> (/Users/anch/develop/sematic/sematic/ui/src/hooks/tests/helperHook.cy.tsx:45:33)
+    at getRet (http://localhost:8081/__cypress/runner/cypress_runner.js:135685:20)
+    at tryCatcher (http://localhost:8081/__cypress/runner/cypress_runner.js:8914:23)
+    at Promise.attempt.Promise.try (http://localhost:8081/__cypress/runner/cypress_runner.js:6188:29)
+    at Context.thenFn (http://localhost:8081/__cypress/runner/cypress_runner.js:135696:63)
+    at Context.then (http://localhost:8081/__cypress/runner/cypress_runner.js:135945:21)
+    at wrapped (http://localhost:8081/__cypress/runner/cypress_runner.js:151126:19)
+    at <unknown> (http://localhost:8081/__cypress/runner/cypress_runner.js:149985:15)
+
+      + expected - actual
+
+      -'true'
+      +'false'
+      ]]></failure>
+    </testcase>
+  </testsuite>
+</testsuites>

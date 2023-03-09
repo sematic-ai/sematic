@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="0.125" tests="1" failures="0">
+  <testsuite name="Root Suite" timestamp="2023-02-28T01:35:38" tests="0" file="../src/hooks/tests/test_helperHook.cy.tsx" time="0.000" failures="0">
+  </testsuite>
+  <testsuite name="useQueuedAsyncRetry hook" timestamp="2023-02-28T01:35:38" tests="1" time="0.102" failures="0">
+    <testcase name="useQueuedAsyncRetry hook should queue retry request while previous loading hasn&apos;t finished" time="0.103" classname="should queue retry request while previous loading hasn&apos;t finished">
+    </testcase>
+  </testsuite>
+</testsuites>

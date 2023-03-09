@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="0.054" tests="1" failures="0">
+  <testsuite name="Root Suite" timestamp="2023-02-28T04:31:29" tests="0" file="../src/hooks/tests/test_graphHooks.cy.tsx" time="0.000" failures="0">
+  </testsuite>
+  <testsuite name="useRunsTree hook" timestamp="2023-02-28T04:31:29" tests="1" time="0.045" failures="0">
+    <testcase name="useRunsTree hook create a run tree from graph data" time="0.042" classname="create a run tree from graph data">
+    </testcase>
+  </testsuite>
+</testsuites>
