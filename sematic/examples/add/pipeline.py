@@ -40,11 +40,3 @@ def pipeline(a: float, b: float, c: float) -> float:
     sum2 = add(b, c)
     sum3 = add(a, c)
     return add3(sum1, sum2, sum3)
-
-
-@sematic.func
-def metrics():
-    for i in range(10):
-        sematic.post_run_metric("i", i)
-        time.sleep(1)
-    sematic.post_pipeline_metric("total", 10)

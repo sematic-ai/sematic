@@ -15,7 +15,6 @@ export default function useFetchRunMetrics(runId: string): [
     const response  = await fetch({
         url: `/api/v1/metrics?run_id=${runId}&format=compact`
     });
-    console.log(await response.json());
     return ((await response.json()) as CompactMetricsPayload);
   }, [runId]);
 
@@ -44,6 +43,6 @@ export default function useFetchRunMetrics(runId: string): [
     metricsSocket.removeAllListeners();
     metricsSocket.on("new", onNewMetrics);
     }, [onNewMetrics]);
-  console.log(value);
-  return [value, loading, error];
+
+    return [value, loading, error];
 }

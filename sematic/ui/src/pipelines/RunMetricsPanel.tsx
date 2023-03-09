@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Alert, AlertTitle, Box, Typography } from '@mui/material';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,15 +10,11 @@ import {
   Legend,
   ChartData
 } from 'chart.js';
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
-import { UserContext } from 'src/appContext';
 import Loading from 'src/components/Loading';
 import useFetchRunMetrics from 'src/hooks/metricsHooks';
 import { usePipelinePanelsContext } from 'src/hooks/pipelineHooks';
-import { CompactMetrics, CompactMetricsPayload } from 'src/Payloads';
-import { metricsSocket } from 'src/sockets';
-import { fetchJSON } from 'src/utils';
 
 ChartJS.register(
   CategoryScale,
@@ -43,40 +39,11 @@ const COLORS = [
 export default function RunMetricsPanel() {
   const { selectedRun } = usePipelinePanelsContext();
 
-  //const { user } = useContext(UserContext);
-  //const [metrics, setMetrics] = useState<CompactMetrics | undefined>(undefined);
+  const [ payload, loading, error ] = useFetchRunMetrics(selectedRun!.id);
 
-  const [payload, loading, error] = useFetchRunMetrics(selectedRun!.id);
-  console.log(payload)
   const metrics = useMemo(() => {
-    console.log("setting metrics", payload);
     return payload?.content;
   }, [payload]);
-
-  /*const refreshMetrics = useCallback(() => {
-    if (selectedRun === undefined) return;
-    /*fetchJSON({
-      url: `/api/v1/metrics?run_id=${selectedRun.id}&format=compact`,
-      apiKey: user?.api_key,
-      callback: (payload: CompactMetricsPayload) => {
-        setMetrics(payload.content);
-      }
-    });
-    const [payload, loading, error] = useFetchRunMetrics(selectedRun!.id);
-    payloadToMetrics(payload);
-  }, [selectedRun, setMetrics, user?.api_key]);
-  */
-  // useEffect(refreshMetrics, []);
-
-  /*useEffect(() => {
-    metricsSocket.removeAllListeners("new");
-    metricsSocket.on("new", (args: {run_id: string | undefined}) => {
-      if (args.run_id === selectedRun?.id) {
-        const [payload, loading, error] = useFetchRunMetrics(selectedRun!.id);
-        payloadToMetrics(payload);
-      }
-    });
-  });*/
 
   const graphDataByName = useMemo(() => {
     if (metrics === undefined) {
@@ -118,10 +85,18 @@ export default function RunMetricsPanel() {
     return dataByName;
   }, [metrics]);
 
-  if (loading) {
-    return <Loading isLoaded={false}/>;
+  if (error !== undefined) {
+    return <Alert severity="error">
+      <AlertTitle>There was an error loading metrics.</AlertTitle>
+      Please report the following error to the Sematic team: {error.message}
+    </Alert>
   }
-  if (graphDataByName !== undefined) {
+
+  // we do not use `loading` because it will become true again every refresh,
+  // leading to a full refresh of the graph, instead of just adding the new data points.
+  if (graphDataByName == undefined) {
+    return <Loading isLoaded={false}/>;
+  } else {
     if (graphDataByName.size === 0) {
       return <Typography>
         No metrics registered for this run.
@@ -135,8 +110,6 @@ export default function RunMetricsPanel() {
         </Box>
       ))}</>
     }
-  } else {
-    console.log(graphDataByName);
   }
   return <>abc</>;
 }

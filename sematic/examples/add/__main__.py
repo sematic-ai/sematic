@@ -4,7 +4,7 @@ import logging
 
 # Sematic
 from sematic import CloudResolver, LocalResolver
-from sematic.examples.add.pipeline import metrics, pipeline
+from sematic.examples.add.pipeline import pipeline
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Sematic add example")
@@ -25,8 +25,6 @@ if __name__ == "__main__":
         if args.cloud
         else LocalResolver(rerun_from=args.rerun_from)
     )
-
-    future = metrics()
 
     result = future.resolve(resolver)
 
