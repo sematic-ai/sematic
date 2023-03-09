@@ -1,5 +1,5 @@
 import RunStateChip from "../RunStateChip";
-import run from "ui-test/fixtures/run";
+import run from "@sematic/ui-test/fixtures/run";
 
 describe('RunStateChip component', () => {
     it("should render", () => {
