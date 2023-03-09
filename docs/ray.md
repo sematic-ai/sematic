@@ -78,6 +78,39 @@ used by the Ray workers, so even native dependencies (ex: cuda) are available.
 - Execute your training code on the Ray cluster.
 - Tear down the cluster when training terminates (successfully or with a failure).
 
+### Architecture
+
+![Ray/Sematic architecture diagram](./images/rayDiagram.png)
+
+When you use `with RayCluster(...):` inside a Sematic func, your Sematic func
+asks the Sematic server to allocate a Ray cluster. The Sematic server generates
+a manifest describing that cluster, which it then posts for
+[KubeRay](https://github.com/ray-project/kuberay) to use. KubeRay initializes
+a Kubernetes service for the new cluster, as well as pods for the Ray head node
+and Ray workers.
+
+Once the Ray cluster has been initialized, the Sematic func that requested the
+cluster enters the body of the `with RayCluster(...):` code block and can make
+requests to the new Ray cluster. The Sematic func that does this usually doesn't
+need many compute resources, as the "heavy lifting" of computing is usually being
+taken care of by the Ray head and worker nodes. The Sematic func requests work
+to be done on the Ray cluster. This work ultimately takes the form of Ray
+[tasks/actors](https://docs.ray.io/en/latest/ray-core/key-concepts.html), though
+the author of the Sematic func may be using a higher-level library to generate
+these (such as
+[Ray Lightning](https://docs.ray.io/en/latest/ray-more-libs/using-ray-with-pytorch-lightning.html#using-ray-with-pytorch-lightning)
+for distributed pytorch training).
+
+Multiple tasks/actors may coexist on any given Ray worker/head node, depending
+on the resources that head/worker have available and the resources requested
+by each task/actor.
+
+Once the Sematic func is done using the Ray cluster, and completes the
+`with RayCluster(...)` context, it makes a request to the Sematic server
+to tear down the Ray cluster. The server then relays this request to
+KubeRay, which deallocates any resources that it had allocated for the
+cluster.
+
 ### Detailed API
 
 #### RayCluster
