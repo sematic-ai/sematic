@@ -1,9 +1,9 @@
 import { Alert } from "@mui/material";
+import { Artifact } from "@sematic/common/src/Models";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { getRunUrlPattern, usePipelinePanelsContext } from "../hooks/pipelineHooks";
-import { Artifact } from "../Models";
-import { ArtifactList } from "./Artifacts";
+import { getRunUrlPattern, usePipelinePanelsContext } from "src/hooks/pipelineHooks";
+import { ArtifactList } from "src/pipelines/Artifacts";
 
 export default function OutputPanel(props: {
     outputArtifacts: Map<string, Artifact | undefined>

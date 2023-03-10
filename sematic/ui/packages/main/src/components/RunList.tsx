@@ -8,12 +8,12 @@ import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import { styled } from "@mui/system";
+import { Run } from "@sematic/common/src/Models";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import useLatest from "react-use/lib/useLatest";
 import usePreviousDistinct from "react-use/lib/usePreviousDistinct";
 import Loading from "src/components/Loading";
 import { useFetchRunsFn } from "src/hooks/pipelineHooks";
-import { Run } from "src/Models";
 import { Filter, RunListPayload } from "src/Payloads";
 
 const defaultPageSize = 10;
