@@ -90,6 +90,7 @@ class TrainingConfig:
 class EvaluationConfig:
     worker: RayNodeConfig
     n_workers: int
+    n_sample_misclassifications: int
 
 
 def load_dataset(is_train: bool) -> Tuple[ray.data.Dataset, List[str]]:
@@ -185,7 +186,9 @@ def evaluate_classifier(
     accuracy = n_correct / n_samples
     plot = create_confusion_matrix_plot(confusion_matrix_data_frame, classes_list)
 
-    missclassified_images_df = misclassified.limit(10).to_pandas()
+    missclassified_images_df = misclassified.limit(
+        config.n_sample_misclassifications
+    ).to_pandas()
     sample_misclassifications = get_sample_misclassifications_from_df(
         missclassified_images_df, classes_list
     )

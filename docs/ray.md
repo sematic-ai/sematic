@@ -123,7 +123,8 @@ structure of train/eval loops, logging of metrics, and more. Here's
 using it to do distributed training on a ResNet model.
 
 2. Using Ray's ["AI Runtime"](https://docs.ray.io/en/latest/ray-air/getting-started.html)
-(aka "Ray AIR") to distributed train a simple image classifier.
+(aka "Ray AIR") to distributed train a simple image classifier. Here's
+[our example](https://github.com/sematic-ai/sematic/blob/main/sematic/examples/cifar_classifier/README.md)
 
 
 ### Detailed API

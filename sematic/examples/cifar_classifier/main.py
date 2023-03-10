@@ -54,6 +54,7 @@ LOCAL_EVAL_CONFIG = EvaluationConfig(
         memory_gb=8,
         gpu_count=0,
     ),
+    n_sample_misclassifications=10,
 )
 
 REMOTE_EVAL_CONFIG = EvaluationConfig(
@@ -63,6 +64,7 @@ REMOTE_EVAL_CONFIG = EvaluationConfig(
         memory_gb=10,
         gpu_count=1,
     ),
+    n_sample_misclassifications=10,
 )
 
 
