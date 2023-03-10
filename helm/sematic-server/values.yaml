@@ -6,6 +6,7 @@ auth:
 aws:
   enabled: true
   storage_bucket: my-s3-bucket # REPLACE ME
+  bucket_region: my-s3-region # REPLACE ME
 
 slack:
   enabled: true

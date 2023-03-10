@@ -116,6 +116,20 @@ delta, but only:
 when performing the upgrade.
 {% endhint %}
 
+### v0.26.X to v0.27.Y
+
+#### Helm chart changes
+
+A new `bucket_region` value needs to be set in the deployment Helm chart:
+
+```yaml
+aws:
+  enabled: true
+  storage_bucket: my-s3-bucket # REPLACE ME
+  bucket_region: my-s3-region # REPLACE ME
+
+```
+
 ### v0.25.X to v0.26.Y
 
 #### Dependency changes
