@@ -98,7 +98,7 @@ def main():
 
     future = pipeline(train_config, eval_config).set(name="CIFAR Classifier Example")
 
-    print(future.resolve(resolver))
+    future.resolve(resolver)
 
 
 if __name__ == "__main__":

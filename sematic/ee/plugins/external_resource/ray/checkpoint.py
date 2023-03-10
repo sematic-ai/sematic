@@ -1,5 +1,5 @@
 # Standard Library
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List, Literal, Tuple
 
 # Sematic
 from sematic.types.registry import register_to_json_encodable_summary
@@ -20,7 +20,7 @@ except Exception:
 
 def summarize_ray_torch_checkpoint(
     value: TorchCheckpoint, _
-) -> Dict[Literal["repr"], str]:
+) -> Tuple[Dict[Literal["repr"], str], Dict[str, Any]]:
     # why the "or" instead of get("model", {})? Because if the dict is
     # {"model": None} we would rather replace the None with {}.
     parameters = list((value.to_dict().get("model") or {}).items())

@@ -2,6 +2,7 @@
 # https://docs.ray.io/en/latest/ray-air/examples/torch_image_example.html
 # Standard Library
 from dataclasses import asdict, dataclass
+from io import BytesIO
 from typing import Any, Dict, List, Tuple
 
 # Third-party
@@ -14,7 +15,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
-from PIL.Image import Image
+from PIL import Image
 from plotly.graph_objs import Figure, Heatmap
 from ray import train
 from ray.air import RunConfig, session
@@ -28,6 +29,7 @@ from ray.tune import SyncConfig
 from sematic import context
 from sematic.ee.ray import RayNodeConfig
 from sematic.types.types.aws.s3 import S3Location
+from sematic.types.types.image import Image as SematicImage
 
 
 class Net(nn.Module):
@@ -53,11 +55,19 @@ class Net(nn.Module):
 
 
 @dataclass
+class ClassifiedImage:
+    image: SematicImage
+    predicted_class: str
+    labeled_class: str
+
+
+@dataclass
 class EvaluationResults:
     accuracy: float
     n_correct: int
     n_samples: int
     confusion_matrix_plot: Figure
+    sample_misclassifications: List[ClassifiedImage]
 
 
 @dataclass
@@ -156,13 +166,14 @@ def evaluate_classifier(
         data=test_dataset,
         dtype=torch.float,
         feature_columns=["image"],
-        keep_columns=["label"],
+        keep_columns=["label", "original_image", "image"],
         # We will use GPU if available.
         num_gpus_per_worker=config.worker.gpu_count,
     )
 
     predictions = outputs.map_batches(convert_logits_to_classes)
     scores = predictions.map_batches(calculate_prediction_scores)
+    misclassified = predictions.filter(filter_to_misclassified)
     confusion_matrix_data_frame = to_confusion_matrix_data_frame(
         predictions.map_batches(add_confusion_key)
         .groupby("confusion_key")
@@ -174,16 +185,45 @@ def evaluate_classifier(
     accuracy = n_correct / n_samples
     plot = create_confusion_matrix_plot(confusion_matrix_data_frame, classes_list)
 
+    missclassified_images_df = misclassified.limit(10).to_pandas()
+    sample_misclassifications = get_sample_misclassifications_from_df(
+        missclassified_images_df, classes_list
+    )
+
     return EvaluationResults(
         accuracy=accuracy,
         n_correct=n_correct,
         n_samples=n_samples,
         confusion_matrix_plot=plot,
+        sample_misclassifications=sample_misclassifications,
     )
 
 
+def filter_to_misclassified(prediction_row):
+    return prediction_row["prediction"] != prediction_row["label"]
+
+
+def get_sample_misclassifications_from_df(
+    missclassified_images_df: pd.DataFrame, classes_list: List[str]
+) -> List[ClassifiedImage]:
+    def _array_to_jpg(original_image_array):
+        image = Image.fromarray(original_image_array.to_numpy())
+        byte_buffer = BytesIO()
+        image.save(byte_buffer, format="jpeg")
+        return SematicImage(bytes=byte_buffer.getvalue())
+
+    return [
+        ClassifiedImage(
+            image=_array_to_jpg(row["original_image"]),
+            predicted_class=classes_list[row["prediction"]],
+            labeled_class=classes_list[row["label"]],
+        )
+        for _, row in missclassified_images_df.iterrows()
+    ]
+
+
 def create_confusion_matrix_plot(
-    confusion_matrix_data_frame: pd.DataFrame, classes_list: str
+    confusion_matrix_data_frame: pd.DataFrame, classes_list: List[str]
 ) -> Figure:
     """Plot a confusion matrix as a Plotly image
 
@@ -217,7 +257,9 @@ def create_confusion_matrix_plot(
     return Figure(data=data, layout=layout)
 
 
-def convert_batch_to_numpy(batch: List[Tuple[Image, int]]) -> Dict[str, np.ndarray]:
+def convert_batch_to_numpy(
+    batch: List[Tuple[Image.Image, int]]
+) -> Dict[str, np.ndarray]:
     """Convert a batch PIL images and their labels to Ray's numpy batch format.
 
     Parameters
@@ -227,13 +269,22 @@ def convert_batch_to_numpy(batch: List[Tuple[Image, int]]) -> Dict[str, np.ndarr
 
     Returns
     -------
-    A dict where the keys are "image" and "label". The value for "image" is an array
-    of images with each image as a 3d numpy array (x/y/channel). The value for
-    "labels" is an array of predicted classes for each of the images.
+    A dict where the keys are "image", "label", and "original_image". The value
+    for "image" is an array of images with each image as a 3d numpy array
+    (x/y/channel). The value for "labels" is an array of predicted classes
+    for each of the images. The value of "original_image" is the PIL.Image.Image
+    representation of the image.
     """
+
+    def _pil_to_jpg_bytes(pil_image):
+        byte_buffer = BytesIO()
+        pil_image.save(byte_buffer, format="jpeg")
+        return np.array(pil_image)
+
     images = np.stack([np.array(image) for image, _ in batch])
     labels = np.array([label for _, label in batch])
-    return {"image": images, "label": labels}
+    original_images = np.stack([np.array(image) for image, _ in batch])
+    return {"image": images, "label": labels, "original_image": original_images}
 
 
 def add_confusion_key(df: pd.DataFrame) -> pd.DataFrame:
@@ -275,6 +326,8 @@ def calculate_prediction_scores(df: pd.DataFrame) -> pd.DataFrame:
     Input data frame should have "prediction" and "label" columns.
     """
     df["correct"] = df["prediction"] == df["label"]
+    del df["original_image"]
+    del df["image"]
     return df
 
 
@@ -282,7 +335,7 @@ def convert_logits_to_classes(df: pd.DataFrame) -> pd.DataFrame:
     """Convert the "prediction" column of the data frame from logits to classes."""
     best_class = df["predictions"].map(lambda x: x.argmax())
     df["prediction"] = best_class
-    return df[["prediction", "label"]]
+    return df[["prediction", "label", "original_image", "image"]]
 
 
 def train_loop_per_worker(config: Dict[str, Any]) -> None:
