@@ -1,34 +1,25 @@
-import { AliasTypeRepr, BaseTypeRepr, CommonValueViewProps, ValueView, ValueViewProps } from "./common";
-import EnumValueView from "./enum";
-import DatetimeValueView from "./datatime";
-import LinkValueView from "./link";
-import DataFrameValueView from "./dataframetable";
-import MatplotlibFigureValueView from "./matplot";
-import PlotlyFigureValueView from "./plotly";
-import TorchDataLoaderValueView from "src/types/torchDataLoader";
-import BoolValueView from "./boolean";
-import DictValueView from "./dict";
-import DataclassValueView, { DataclassTypeRepr } from "./dataclass";
-import TupleValueView from "./tuple";
-import ListValueView  from "./list";
-import NoneValueView from "./none";
-import IntValueView from "./int";
-import FloatValueView from "./float";
-import StrValueView from "./str";
-import { S3BucketValueView, S3LocationValueView } from "./aws";
+import { AnyTypeRepr } from "@sematic/common/src/types";
+import BoolValueView from "src/types/boolean";
+import { CommonValueViewProps, TypeComponents, ValueView, ValueViewProps } from "src/types/common";
+import DataclassValueView from "src/types/dataclass";
+import DataFrameValueView from "src/types/dataframetable";
+import DatetimeValueView from "src/types/datatime";
+import DictValueView from "src/types/dict";
+import EnumValueView from "src/types/enum";
+import FloatValueView from "src/types/float";
 import ImageValueView from "src/types/image";
-import { TypeComponents, SpecificTypeSerialization } from "./common";
-export {renderSummary} from "./common";
+import IntValueView from "src/types/int";
+import LinkValueView from "src/types/link";
+import ListValueView from "src/types/list";
+import MatplotlibFigureValueView from "src/types/matplot";
+import NoneValueView from "src/types/none";
+import PlotlyFigureValueView from "src/types/plotly";
+import StrValueView from "src/types/str";
+import TorchDataLoaderValueView from "src/types/torchDataLoader";
+import TupleValueView from "src/types/tuple";
+import { S3BucketValueView, S3LocationValueView } from "src/types/aws";
+export { renderSummary } from "src/types/common";
 
-// TypeRepr types
-export type AnyTypeRepr =
-  BaseTypeRepr
-  | AliasTypeRepr
-  | DataclassTypeRepr
-
-// TypeSerialization types
-type GenerateTypeSerializationType<U> = U extends AnyTypeRepr ? SpecificTypeSerialization<U> : never; 
-export type AnyTypeSerialization = GenerateTypeSerializationType<AnyTypeRepr>;
 
 // ValueComponent props
 type GenerateValueViewProps<U> = U extends AnyTypeRepr ? ValueViewProps<U> : never;

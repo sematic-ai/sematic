@@ -1,13 +1,13 @@
 import Timeline from '@mui/lab/Timeline';
-import Alert from "@mui/material/Alert";
-import { useMemo } from "react";
-import { useExternalResource } from "../../hooks/externalResourceHooks";
-import { usePipelinePanelsContext } from "../../hooks/pipelineHooks";
-import { styled } from '@mui/system';
-import ExternalResourceState from './ExternalResourceState';
 import timelineItemClasses from '@mui/lab/TimelineItem/timelineItemClasses';
-import { ExternalResourceHistorySerialization } from '../../Models';
-import { useRunPanelLoadingIndicator } from '../../hooks/runDetailsHooks';
+import Alert from "@mui/material/Alert";
+import { styled } from '@mui/system';
+import { ExternalResourceHistorySerialization } from '@sematic/common/src/Models';
+import { useMemo } from "react";
+import { useExternalResource } from "src/hooks/externalResourceHooks";
+import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
+import { useRunPanelLoadingIndicator } from 'src/hooks/runDetailsHooks';
+import ExternalResourceState from 'src/pipelines/external_resource/ExternalResourceState';
 
 const ThinTimetime = styled(Timeline)`
     margin: 0;

@@ -1,5 +1,6 @@
 import { MemoryRouter } from "react-router-dom";
-import {useAuthentication} from "../appHooks"
+import { useAuthentication } from "@sematic/main/src/hooks/appHooks"
+
 
 describe('useAutentication hook', () => {
     it("produces app context value if auth is not enabled", () => {

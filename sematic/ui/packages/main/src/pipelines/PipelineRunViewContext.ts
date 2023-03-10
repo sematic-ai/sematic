@@ -1,5 +1,5 @@
+import { Resolution, Run } from "@sematic/common/src/Models";
 import React from "react";
-import { Resolution, Run } from "../Models";
 
 export const PipelineRunViewContext = React.createContext<{
     rootRun: Run | undefined;

@@ -1,5 +1,5 @@
+import { Run } from "@sematic/common/src/Models";
 import React from "react";
-import { Run } from "../Models";
 
 export const PipelinePanelsContext = React.createContext<{
     selectedPanelItem: string;

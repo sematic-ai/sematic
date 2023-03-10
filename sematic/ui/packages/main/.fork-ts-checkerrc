@@ -1,0 +1,5 @@
+{
+    "typescript": {
+        "build": true
+    }
+}

@@ -3,13 +3,13 @@ import TimelineContent from "@mui/lab/TimelineContent/TimelineContent";
 import TimelineDot from "@mui/lab/TimelineDot/TimelineDot";
 import TimelineItem from "@mui/lab/TimelineItem/TimelineItem";
 import TimelineSeparator from "@mui/lab/TimelineSeparator/TimelineSeparator";
-import { TERMINATE_STATE } from "../../hooks/externalResourceHooks";
-import { format } from 'date-fns'
-import { useMemo } from "react";
-import Typography from "@mui/material/Typography/Typography";
-import { ExternalResourceHistorySerialization, ExternalResourceState as ExternalResourceStateType } from "../../Models";
-import { styled } from "@mui/system";
 import Chip from "@mui/material/Chip/Chip";
+import Typography from "@mui/material/Typography/Typography";
+import { styled } from "@mui/system";
+import { ExternalResourceHistorySerialization, ExternalResourceState as ExternalResourceStateType } from "@sematic/common/src/Models";
+import { format } from 'date-fns';
+import { useMemo } from "react";
+import { TERMINATE_STATE } from "src/hooks/externalResourceHooks";
 
 const HighLightenedText = styled(Typography)`
     font-weight: bold;

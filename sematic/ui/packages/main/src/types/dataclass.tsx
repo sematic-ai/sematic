@@ -1,13 +1,8 @@
 import { Alert, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import { AnyTypeSerialization, renderSummary, TypeParamRepr, ValueViewProps } from "./common";
-
-export type DataclassTypeRepr = [
-  "dataclass",
-  string,
-  { import_path: string; fields: { [name: string]: TypeParamRepr } }
-];
+import { AnyTypeSerialization, DataclassTypeRepr } from "@sematic/common/src/types";
+import { renderSummary, ValueViewProps } from "./common";
 
 export type DataclassValueViewProps = ValueViewProps<DataclassTypeRepr>;
 

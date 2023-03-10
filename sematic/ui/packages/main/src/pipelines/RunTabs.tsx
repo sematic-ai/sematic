@@ -4,16 +4,16 @@ import TabPanel from "@mui/lab/TabPanel";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import { styled } from '@mui/system';
+import { Artifact } from "@sematic/common/src/Models";
 import { useContext } from "react";
-import { EnvContext } from "..";
-import GrafanaPanel from "../addons/grafana/GrafanaPanel";
-import { usePipelinePanelsContext} from "../hooks/pipelineHooks";
-import { Artifact } from "../Models";
-import { ArtifactList } from "./Artifacts";
-import LogPanel from "./LogPanel";
-import SourceCode from "../components/SourceCode";
-import OutputPanel from "./OutputPanel";
-import ExternalResourcePanel from "./external_resource/ExternalResource";
+import { EnvContext } from "src";
+import GrafanaPanel from "src/addons/grafana/GrafanaPanel";
+import SourceCode from "src/components/SourceCode";
+import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
+import { ArtifactList } from "src/pipelines/Artifacts";
+import ExternalResourcePanel from "src/pipelines/external_resource/ExternalResource";
+import LogPanel from "src/pipelines/LogPanel";
+import OutputPanel from "src/pipelines/OutputPanel";
 
 const StickyHeader = styled(Box)`
   position: sticky;

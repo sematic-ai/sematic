@@ -1,8 +1,8 @@
 import { Box, Typography, useTheme } from "@mui/material";
-import { Note, User } from "../Models";
-import RunId from "./RunId";
-import TimeAgo from "./TimeAgo";
-import UserAvatar from "./UserAvatar";
+import { Note, User } from "@sematic/common/src/Models";
+import RunId from "src/components/RunId";
+import TimeAgo from "src/components/TimeAgo";
+import UserAvatar from "src/components/UserAvatar";
 
 export function NoteView(props: {
   note: Note;
