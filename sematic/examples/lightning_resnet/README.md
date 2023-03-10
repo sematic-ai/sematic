@@ -1,8 +1,10 @@
+# PyTorch Lightning Distributed ResNet
+
 An example of using
 [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/index.html)
 to do distributed training of a model classifying images in the
 [CIFAR100 dataset](https://www.cs.toronto.edu/~kriz/cifar.html)
-using Resnet.
+using ResNet.
 
 This example can only be run on Kubernetes clusters set up with sufficiently powerful
 GPU nodes enabled. It makes use of Sematic's Ray integration, which is available in
@@ -18,14 +20,14 @@ mid-execution from a programming error. See [`test_pipeline.py`](./tests/test_pi
 
 ## Screenshots
 
-![Inputs](./lightningInputs.png)
+![Inputs](./lightningInputs.jpg)
 *Displays hyperparameters, compute configurations, docstrings, and any*
 *inputs you can imagine, right in the dashboard*
 
-![Ray](./lightningRay.png)
+![Ray](./lightningRay.jpg)
 *Get live information about execution including logs and the state*
 *of any computing resources your job uses*
 
-![Results](./lightningResults.png)
+![Results](./lightningResults.jpg)
 *Display statistics, plotly figures, and more to summarize*
 *the results of your execution*

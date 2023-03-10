@@ -66,7 +66,7 @@ def evaluate(
 def bundle_results(
     final_checkpoint: TorchCheckpoint, evaluation_results: EvaluationResults
 ) -> PipelineResults:
-    """# Combine the results into a single data structure.
+    """# Combine the results into a single data structure
 
     This is necessary due to the fact that the results from training
     and evaluation are

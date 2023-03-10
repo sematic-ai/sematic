@@ -17,6 +17,8 @@ from sematic.types.types.aws.s3 import S3Location
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+DEFAULT_CHECKPOINT_DIR = S3Location.from_uri("s3://sematic-dev/ray-demo")
+
 LOCAL_TRAINING_CONFIG = TrainingConfig(
     n_workers=1,
     worker=RayNodeConfig(
@@ -24,7 +26,7 @@ LOCAL_TRAINING_CONFIG = TrainingConfig(
         memory_gb=8,
         gpu_count=0,
     ),
-    checkpoint_dir=S3Location.from_uri("s3://sematic-dev/ray-demo"),
+    checkpoint_dir=DEFAULT_CHECKPOINT_DIR,
     loop_config=TrainLoopConfig(
         batch_size=2,
         n_epochs=1,
@@ -38,7 +40,7 @@ REMOTE_TRAINING_CONFIG = TrainingConfig(
         memory_gb=10,
         gpu_count=1,
     ),
-    checkpoint_dir=S3Location.from_uri("s3://sematic-dev/ray-demo"),
+    checkpoint_dir=DEFAULT_CHECKPOINT_DIR,
     loop_config=TrainLoopConfig(
         batch_size=4,
         n_epochs=5,
@@ -74,8 +76,8 @@ def main():
     )
     parser.add_argument(
         "--checkpoint-dir",
-        default="s3://sematic-dev/ray-demo",
-        type=str,
+        default=DEFAULT_CHECKPOINT_DIR,
+        type=S3Location.from_uri,
         help="S3 URI to store checkpoints at.",
     )
 
