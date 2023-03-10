@@ -1,5 +1,5 @@
 import { Typography } from "@mui/material";
-import { Run } from "../Models";
+import { Run } from "@sematic/common/src/Models";
 
 export function RunTime(props: { run: Run; prefix?: string }) {
   const { run, prefix = "" } = props;

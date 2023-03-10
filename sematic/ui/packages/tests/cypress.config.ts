@@ -1,5 +1,9 @@
 import { defineConfig } from "cypress";
 import { initPlugin } from "@frsource/cypress-plugin-visual-regression-diff/plugins";
+import {createReactAppHandler} from "@cypress/webpack-dev-server/dist/helpers/createReactAppHandler";
+import { devServer }  from "@cypress/webpack-dev-server";
+
+const TsconfigPathsWebpackPlugin = require('tsconfig-paths-webpack-plugin');
 
 export default defineConfig({
   e2e: {
@@ -26,16 +30,27 @@ export default defineConfig({
   component: {
     supportFile: "support/component.ts",
     indexHtmlFile: 'support/component-index.html',
-    specPattern: ["../../packages/main/src/**/*.cy.{ts,tsx}"],
+    specPattern: ["../main/src/**/*.cy.{ts,tsx}"],
 
-    devServer: {
-      framework: "create-react-app",
-      bundler: "webpack",
+    devServer: (cypressConfig) => {
+      const handler = createReactAppHandler(cypressConfig);
+      const webpackConfig = handler.frameworkConfig;
+
+      (webpackConfig.resolve!.plugins!).push(new TsconfigPathsWebpackPlugin({}));
+
+      return devServer({
+        ...cypressConfig,
+        webpackConfig: {
+        ...webpackConfig,
+        },
+      })
     },
 
     setupNodeEvents(on, config) {
       // implement node event listeners here
       initPlugin(on, config);
+
+      return config      
     },
   },
 });

@@ -3,17 +3,17 @@ import { useAtom } from "jotai";
 import { RESET } from "jotai/utils";
 import { useEffect, useMemo, useState } from "react";
 import usePrevious from "react-use/lib/usePrevious";
-import Loading from "../components/Loading";
-import { ExtractContextType } from "../components/utils/typings";
-import { useGraph } from "../hooks/graphHooks";
-import { selectedPanelHashAtom, selectedRunHashAtom, selectedTabHashAtom, useHashUpdater, usePipelineRunContext } from "../hooks/pipelineHooks";
-import { Run } from "../Models";
-import GraphContext from "./graph/graphContext";
-import MenuPanel from "./MenuPanel";
-import NotesPanel from "./NotesPanel";
-import PipelinePanelsContext from "./PipelinePanelsContext";
-import PipelineRunViewContext from "./PipelineRunViewContext";
-import RunPanel from "./RunPanel";
+import Loading from "src/components/Loading";
+import { ExtractContextType } from "src/components/utils/typings";
+import { useGraph } from "src/hooks/graphHooks";
+import { selectedPanelHashAtom, selectedRunHashAtom, selectedTabHashAtom, useHashUpdater, usePipelineRunContext } from "src/hooks/pipelineHooks";
+import { Run } from "@sematic/common/src/Models";
+import GraphContext from "src/pipelines/graph/graphContext";
+import MenuPanel from "src/pipelines/MenuPanel";
+import NotesPanel from "src/pipelines/NotesPanel";
+import PipelinePanelsContext from "src/pipelines/PipelinePanelsContext";
+import PipelineRunViewContext from "src/pipelines/PipelineRunViewContext";
+import RunPanel from "src/pipelines/RunPanel";
 
 export default function PipelinePanels() {
   const { rootRun }

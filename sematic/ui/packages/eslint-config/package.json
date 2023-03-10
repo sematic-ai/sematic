@@ -1,0 +1,10 @@
+{
+  "name": "@sematic/eslint-config",
+  "version": "0.2.0",
+  "description": "common components",
+  "devDependencies": {
+  },
+  "author": "",
+  "license": "ISC",
+  "main": "index.js"
+}

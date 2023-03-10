@@ -1,25 +1,19 @@
-import { Run, Edge } from "../../Models";
-import ReactFlow, {
-  Node,
-  Edge as RFEdge,
-  ReactFlowInstance,
-  useNodesState,
-  useEdgesState,
-  ReactFlowProvider,
-  Background,
-  BackgroundVariant,
-} from "react-flow-renderer";
 import { Box } from "@mui/material";
+import { Edge, Run } from "@sematic/common/src/Models";
 import { useCallback, useEffect, useMemo } from "react";
-import buildDagLayout from "../../components/utils/buildDagLayout";
-import RunNode from "./RunNode";
-import ArtifactNode from "./ArtifactNode";
-import { usePipelinePanelsContext } from "../../hooks/pipelineHooks";
-import { useGraphContext } from "../../hooks/graphHooks";
-import { ExtractContextType } from "../../components/utils/typings";
-import PipelinePanelsContext from "../PipelinePanelsContext";
-import HiddenRunNode from "./HiddenRunNode";
-import { HIDDEN_RUN_NAME_LIST } from "../../constants";
+import ReactFlow, {
+  Background,
+  BackgroundVariant, Edge as RFEdge, Node, ReactFlowInstance, ReactFlowProvider, useEdgesState, useNodesState
+} from "react-flow-renderer";
+import buildDagLayout from "src/components/utils/buildDagLayout";
+import { ExtractContextType } from "src/components/utils/typings";
+import { HIDDEN_RUN_NAME_LIST } from "src/constants";
+import { useGraphContext } from "src/hooks/graphHooks";
+import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
+import ArtifactNode from "src/pipelines/graph/ArtifactNode";
+import HiddenRunNode from "src/pipelines/graph/HiddenRunNode";
+import RunNode from "src/pipelines/graph/RunNode";
+import PipelinePanelsContext from "src/pipelines/PipelinePanelsContext";
 
 var util = require("dagre/lib/util");
 var graphlib = require("graphlib");
