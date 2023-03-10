@@ -1,12 +1,12 @@
+import SettingsIcon from '@mui/icons-material/Settings';
 import {
   lighten,
   Paper,
-  useTheme,
+  useTheme
 } from "@mui/material";
-import SettingsIcon from '@mui/icons-material/Settings';
+import { Run } from "@sematic/common/src/Models";
 import { Handle, NodeProps, Position } from "react-flow-renderer";
-import { Run } from "../../Models";
-import { getColor } from "../../components/utils/graphUtils";
+import { getColor } from "src/components/utils/graphUtils";
 
 export default function HiddenRunNode(props: NodeProps) {
   const run: Run = props.data.run;

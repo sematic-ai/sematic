@@ -4,11 +4,11 @@ import {
   lighten,
   PaletteColor,
   Theme,
-  useTheme,
+  useTheme
 } from "@mui/material";
+import { Run } from "@sematic/common/src/Models";
 import { Handle, NodeProps, Position } from "react-flow-renderer";
-import { Run } from "../../Models";
-import RunStateChip from "../../components/RunStateChip";
+import RunStateChip from "src/components/RunStateChip";
 
 function getColor(futureState: string, theme: Theme): PaletteColor {
   if (futureState === "RESOLVED") {

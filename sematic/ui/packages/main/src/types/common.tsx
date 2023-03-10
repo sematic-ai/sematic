@@ -1,17 +1,9 @@
 
+import { AnyTypeRepr, TypeRegistry, SpecificTypeSerialization } from "@sematic/common/src/types";
 import React from 'react';
-import type { ComponentRenderDetails, AnyTypeRepr } from './Types';
-export type { AnyTypeRepr, AnyTypeSerialization } from './Types';
+import type { ComponentRenderDetails } from './Types';
 
 // Defs (compile time)
-
-export type TypeRegistry = Map<string, Array<AnyTypeRepr>>;
-
-export type SpecificTypeSerialization<TRepr> = {
-  type: TRepr;
-  registry: TypeRegistry;
-};
-
 export interface ValueViewProps<TRepr> {
   typeRepr: TRepr;
   typeSerialization: SpecificTypeSerialization<TRepr>;

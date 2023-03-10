@@ -3,16 +3,16 @@ import {
   List,
   ListItemButton,
   ListItemIcon,
-  ListItemText,
+  ListItemText
 } from "@mui/material";
+import { Run } from "@sematic/common/src/Models";
 import { Fragment, useCallback } from "react";
-import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
-import { RunTreeNode } from "../interfaces/graph";
-import { Run } from "../Models";
-import RunStateChip from "../components/RunStateChip";
-import { ExtractContextType } from "../components/utils/typings";
-import PipelinePanelsContext from "./PipelinePanelsContext";
-import { HIDDEN_RUN_NAME_LIST } from "../constants";
+import RunStateChip from "src/components/RunStateChip";
+import { ExtractContextType } from "src/components/utils/typings";
+import { HIDDEN_RUN_NAME_LIST } from "src/constants";
+import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
+import { RunTreeNode } from "src/interfaces/graph";
+import PipelinePanelsContext from "src/pipelines/PipelinePanelsContext";
 
 export default function RunTree(props: {
   runTreeNodes: Array<RunTreeNode>;

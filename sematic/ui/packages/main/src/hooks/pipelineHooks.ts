@@ -1,14 +1,14 @@
+import { Resolution, Run } from "@sematic/common/src/Models";
 import { RESET } from "jotai/utils";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAsync from "react-use/lib/useAsync";
 import useAsyncFn from "react-use/lib/useAsyncFn";
-import { Resolution, Run } from "../Models";
-import { Filter, ResolutionPayload, RunListPayload, RunViewPayload } from "../Payloads";
-import PipelinePanelsContext from "../pipelines/PipelinePanelsContext";
-import PipelineRunViewContext from "../pipelines/PipelineRunViewContext";
-import { useHttpClient } from "./httpHooks";
-import { atomWithHashCustomSerialization } from "../utils";
+import { useHttpClient } from "src/hooks/httpHooks";
+import { Filter, ResolutionPayload, RunListPayload, RunViewPayload } from "src/Payloads";
+import PipelinePanelsContext from "src/pipelines/PipelinePanelsContext";
+import PipelineRunViewContext from "src/pipelines/PipelineRunViewContext";
+import { atomWithHashCustomSerialization } from "src/utils";
 
 export type QueryParams = {[key: string]: string};
 

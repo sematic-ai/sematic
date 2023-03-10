@@ -1,5 +1,5 @@
 import React from "react";
-import { User } from "./Models";
+import { User } from "@sematic/common/src/Models";
 
 export const AppContext = React.createContext<{
   authenticationEnabled: boolean;

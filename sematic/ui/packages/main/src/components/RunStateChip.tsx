@@ -1,6 +1,6 @@
 import { Box, Tooltip, Typography, useTheme } from "@mui/material";
+import { Run } from "@sematic/common/src/Models";
 import React from "react";
-import { Run } from "../Models";
 
 const Pin = React.forwardRef<HTMLDivElement, { color: any; hollow?: boolean }>(
   (props, ref) => {

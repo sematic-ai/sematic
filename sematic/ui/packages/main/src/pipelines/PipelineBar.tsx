@@ -7,24 +7,24 @@ import {
   Select,
   SelectChangeEvent,
   Typography,
-  useTheme,
+  useTheme
 } from "@mui/material";
+import { Resolution, Run } from "@sematic/common/src/Models";
 import { useCallback, useContext, useEffect, useMemo } from "react";
-import { Resolution, Run } from "../Models";
-import { abbreviatedUserName, fetchJSON } from "../utils";
-import CalculatorPath from "../components/CalculatorPath";
-import GitInfoBox from "../components/GitInfo";
-import Loading from "../components/Loading";
-import RunStateChip from "../components/RunStateChip";
-import TimeAgo from "../components/TimeAgo";
-import { ActionMenu, ActionMenuItem } from "../components/ActionMenu";
-import { SnackBarContext } from "../components/SnackBarProvider";
-import { useFetchRuns, useRunNavigation, usePipelineRunContext } from "../hooks/pipelineHooks";
-import { ExtractContextType } from "../components/utils/typings";
-import PipelineRunViewContext from "./PipelineRunViewContext";
-import MuiRouterLink from "../components/MuiRouterLink";
-import { pipelineSocket } from "../sockets";
-import { UserContext } from "../appContext";
+import { UserContext } from "src/appContext";
+import { ActionMenu, ActionMenuItem } from "src/components/ActionMenu";
+import CalculatorPath from "src/components/CalculatorPath";
+import GitInfoBox from "src/components/GitInfo";
+import Loading from "src/components/Loading";
+import MuiRouterLink from "src/components/MuiRouterLink";
+import RunStateChip from "src/components/RunStateChip";
+import { SnackBarContext } from "src/components/SnackBarProvider";
+import TimeAgo from "src/components/TimeAgo";
+import { ExtractContextType } from "src/components/utils/typings";
+import { useFetchRuns, usePipelineRunContext, useRunNavigation } from "src/hooks/pipelineHooks";
+import PipelineRunViewContext from "src/pipelines/PipelineRunViewContext";
+import { pipelineSocket } from "src/sockets";
+import { abbreviatedUserName, fetchJSON } from "src/utils";
 
 function PipelineActionMenu(props: {
   onCancel: () => void;

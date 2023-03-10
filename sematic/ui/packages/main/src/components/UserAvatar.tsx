@@ -1,5 +1,5 @@
 import { Avatar, AvatarProps } from "@mui/material";
-import { User } from "../Models";
+import { User } from "@sematic/common/src/Models";
 
 function userInitials(user: User) {
   let initials = "";
