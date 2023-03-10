@@ -381,22 +381,26 @@ class KubernetesExternalJob(ExternalJob):
             return JobStatus(
                 state_name=KubernetesJobState.Requested.value,
                 description=description,
+                last_update_epoch_time=self.epoch_time_last_updated,
             )
         elif not self.still_exists:
             return JobStatus(
                 state_name=KubernetesJobState.Deleted.value,
                 description="The job no longer exists",
+                last_update_epoch_time=self.epoch_time_last_updated,
             )
         elif self.most_recent_condition == KubernetesJobCondition.Complete.value:
             return JobStatus(
                 state_name=KubernetesJobState.Succeeded.value,
                 description="The job has completed successfully",
+                last_update_epoch_time=self.epoch_time_last_updated,
             )
         elif self.most_recent_condition == KubernetesJobCondition.Failed.value or (
             latest_summary is not None and latest_summary.detected_infra_failure
         ):
             return self._get_job_failed_status(
                 latest_summary=latest_summary,
+                epoch_time_last_updated=self.epoch_time_last_updated,
             )
         elif self.succeeded_pod_count != 0:
             return JobStatus(
@@ -405,6 +409,7 @@ class KubernetesExternalJob(ExternalJob):
                     "The job has completed successfully, "
                     "but the final status on the pod was not set"
                 ),
+                last_update_epoch_time=self.epoch_time_last_updated,
             )
         elif self.pending_or_running_pod_count == 0:
             # I suppose this could happen if we catch the job in the brief
@@ -416,6 +421,7 @@ class KubernetesExternalJob(ExternalJob):
                 description=(
                     "No pods were considered succeeded, but none are pending/running."
                 ),
+                last_update_epoch_time=self.epoch_time_last_updated,
             )
         elif latest_summary is None:
             # *hopefully* should be impossible to reach here; it means the
@@ -429,6 +435,7 @@ class KubernetesExternalJob(ExternalJob):
                     f"{self.pending_or_running_pod_count}, but no "
                     f"pods could be identified."
                 ),
+                last_update_epoch_time=self.epoch_time_last_updated,
             )
         else:
             return self.get_active_status_from_pods(
@@ -437,6 +444,7 @@ class KubernetesExternalJob(ExternalJob):
                 most_recent_condition=self.most_recent_condition,
                 previous_pod_name=self.previous_pod_name,
                 previous_node_name=self.previous_node_name,
+                last_update_epoch_time=self.epoch_time_last_updated,
             )
 
     @classmethod
@@ -447,6 +455,7 @@ class KubernetesExternalJob(ExternalJob):
         most_recent_condition: Optional[str],
         previous_pod_name: Optional[str],
         previous_node_name: Optional[str],
+        last_update_epoch_time: float,
     ) -> JobStatus:
         state_name = KubernetesJobState.Running.value
         if latest_summary.node_name is None:
@@ -485,6 +494,7 @@ class KubernetesExternalJob(ExternalJob):
                     f"There are currently {len(current_pods)} "
                     f"pending/runnings pods: {' | '.join(pod_summaries)}"
                 ),
+                last_update_epoch_time=last_update_epoch_time,
             )
 
         if latest_summary.phase is not None and latest_summary.phase in dir(
@@ -502,12 +512,14 @@ class KubernetesExternalJob(ExternalJob):
         return JobStatus(
             state_name=state_name,
             description=description,
+            last_update_epoch_time=last_update_epoch_time,
         )
 
     @classmethod
     def _get_job_failed_status(
         cls,
         latest_summary: Optional[PodSummary],
+        epoch_time_last_updated: float,
     ):
         state_name = KubernetesJobState.Failed.value
         description = "Job failed. "
@@ -538,6 +550,7 @@ class KubernetesExternalJob(ExternalJob):
         return JobStatus(
             state_name=state_name,
             description=description,
+            last_update_epoch_time=epoch_time_last_updated,
         )
 
     def get_exception_metadata(self) -> Optional[ExceptionMetadata]:
@@ -567,32 +580,6 @@ class KubernetesExternalJob(ExternalJob):
             name=KubernetesError.__name__,
             module=KubernetesError.__module__,
             ancestors=ExceptionMetadata.ancestors_from_exception(KubernetesError),
-        )
-
-    def get_status(self) -> JobStatus:
-        """Get a simple status describing the state of the job.
-
-        Note that the returned status should be based on the in-memory
-        fields of the ExternalJob, and should not reach out to the external
-        job source.
-
-        Returns
-        -------
-        A job status.
-        """
-        active_status_message = (
-            f"Job has {'not ' if not self.has_started else ''}started"
-        )
-        inactive_status_message = "Job has terminated"
-        return JobStatus(
-            # Both the state name and description are just placeholders
-            # here, they will be populated with meaningful data in a
-            # separate PR.
-            state_name="ACTIVE" if self.is_active() else "INACTIVE",
-            description=active_status_message
-            if self.is_active()
-            else inactive_status_message,
-            last_update_epoch_time=self.epoch_time_last_updated,
         )
 
 

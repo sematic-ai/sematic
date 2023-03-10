@@ -454,6 +454,11 @@ def save_graph_endpoint(user: Optional[User]):
 
     runs = [Run.from_json_encodable(run) for run in graph["runs"]]
 
+    for run in runs:
+        logger.info("Graph update, run %s is in state %s", run.id, run.future_state)
+        if user is not None:
+            run.user_id = user.id
+
     # save graph BEFORE ensuring jobs are stopped. This way
     # code that is checking on job status will be ok if it
     # sees the jobs as gone while we are going through and
@@ -462,7 +467,6 @@ def save_graph_endpoint(user: Optional[User]):
 
     updated_jobs = False
     for run in runs:
-        logger.info("Graph update, run %s is in state %s", run.id, run.future_state)
         if FutureState[run.future_state].is_terminal():
             updated_jobs = True
             logger.info("Ensuring jobs for %s are stopped %s", run.id, run.future_state)
