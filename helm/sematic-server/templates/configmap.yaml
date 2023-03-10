@@ -14,6 +14,7 @@ data:
 {{ end }}
 {{ if .Values.aws.enabled }}
   AWS_S3_BUCKET: {{ .Values.aws.storage_bucket | quote }}
+  AWS_S3_REGION: {{ .Values.aws.bucket_region | quote }}
   STORAGE: "sematic.plugins.storage.s3_storage.S3Storage"
 {{ end }}
 {{ if .Values.slack.enabled }}
