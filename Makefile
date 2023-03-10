@@ -1,3 +1,5 @@
+SHELL=/bin/bash
+
 UNAME_S := $(shell uname -s)
 RED := \033[0;31m
 NO_COLOR := \033[1;0m
