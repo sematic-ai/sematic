@@ -65,6 +65,56 @@ class FutureState(enum.Enum):
     def terminal_state_strings(cls) -> FrozenSet[str]:
         return _TERMINAL_STATE_STRINGS
 
+    @classmethod
+    def is_allowed_transition(
+        cls,
+        from_status: Optional[Union["FutureState", str]],
+        to_status: Union["FutureState", str],
+    ) -> bool:
+        if isinstance(from_status, str):
+            from_status = FutureState[from_status]
+        if isinstance(to_status, str):
+            to_status = FutureState[to_status]
+        return to_status in _ALLOWED_TRANSITIONS[from_status]
+
+
+_ALLOWED_TRANSITIONS = {
+    None: frozenset({FutureState.CREATED}),
+    FutureState.CREATED: frozenset(
+        {
+            FutureState.SCHEDULED,
+            # Not all that uncommon: if run is downstream from something that
+            # is canceled/failed, it goes from CREATED -> CANCELLED
+            FutureState.CANCELED,
+        }
+    ),
+    FutureState.SCHEDULED: frozenset(
+        {
+            FutureState.RAN,
+            FutureState.RETRYING,
+            FutureState.CANCELED,
+            FutureState.RESOLVED,
+            # TODO: remove (See https://github.com/sematic-ai/sematic/issues/609)
+            FutureState.FAILED,
+        }
+    ),
+    FutureState.RAN: frozenset(
+        {FutureState.NESTED_FAILED, FutureState.RESOLVED, FutureState.CANCELED}
+    ),
+    FutureState.RETRYING: frozenset(
+        {FutureState.FAILED, FutureState.SCHEDULED, FutureState.CANCELED}
+    ),
+    FutureState.FAILED: frozenset(
+        {
+            # TODO: remove (See https://github.com/sematic-ai/sematic/issues/609)
+            FutureState.RETRYING
+        }
+    ),
+    FutureState.NESTED_FAILED: frozenset(),
+    FutureState.CANCELED: frozenset(),
+    FutureState.RESOLVED: frozenset(),
+}
+
 
 _TERMINAL_STATES = frozenset(
     {

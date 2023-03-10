@@ -4,6 +4,7 @@ from enum import Enum
 
 # Sematic
 from sematic.types.registry import (
+    SummaryOutput,
     register_can_cast,
     register_from_json_encodable,
     register_to_json_encodable,
@@ -30,8 +31,8 @@ def can_cast_type(
 
 
 @register_to_json_encodable_summary(Enum)
-def _enum_summary(value: Enum, _) -> str:
-    return _enum_to_encodable(value, _)
+def _enum_summary(value: Enum, _) -> SummaryOutput:
+    return _enum_to_encodable(value, _), {}
 
 
 @register_to_json_encodable(Enum)

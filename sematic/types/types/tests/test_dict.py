@@ -1,4 +1,5 @@
 # Standard Library
+import hashlib
 from typing import Dict, Union
 
 # Third-party
@@ -13,6 +14,7 @@ from sematic.types.serialization import (
     value_from_json_encodable,
     value_to_json_encodable,
 )
+from sematic.types.types.image import Image
 
 
 class StringSubclass(str):
@@ -41,9 +43,24 @@ def test_dict(value, type_, expected_value, expected_error):
 
 
 def test_dict_summary():
-    summary = get_json_encodable_summary(dict(a=123), Dict[str, int])
+    summary, blobs = get_json_encodable_summary(dict(a=123), Dict[str, int])
 
     assert summary == [("a", 123)]
+    assert blobs == {}
+
+
+def test_dict_summary_blobs():
+    bytes_ = b"bar"
+    blob_id = hashlib.sha1(bytes_).hexdigest()
+    image = Image(bytes=bytes_)
+    dict_ = dict(foo=image, bar=image)
+    summary, blobs = get_json_encodable_summary(dict_, Dict[str, Image])
+
+    assert summary == [
+        ("bar", {"mime_type": "text/plain", "bytes": {"blob": blob_id}}),
+        ("foo", {"mime_type": "text/plain", "bytes": {"blob": blob_id}}),
+    ]
+    assert blobs == {blob_id: bytes_}
 
 
 @pytest.mark.parametrize("type_", (Dict[str, int],))

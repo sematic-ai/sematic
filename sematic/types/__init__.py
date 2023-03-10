@@ -10,6 +10,7 @@ import sematic.types.types.dataclass  # noqa: F401
 import sematic.types.types.dict  # noqa: F401
 import sematic.types.types.enum  # noqa: F401
 import sematic.types.types.float  # noqa: F401
+import sematic.types.types.image  # noqa: F401
 import sematic.types.types.integer  # noqa: F401
 import sematic.types.types.list  # noqa: F401
 import sematic.types.types.none  # noqa: F401

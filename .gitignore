@@ -166,7 +166,3 @@ node_modules
 
 # Python wheels
 *.whl
-
-# Cypress related
-sematic/ui/tests/cypress_video
-sematic/ui/tests/cypress_results

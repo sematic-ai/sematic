@@ -19,6 +19,7 @@ import cloudpickle  # type: ignore
 from sematic.types.generic_type import GenericType
 from sematic.types.registry import (
     DataclassKey,
+    SummaryOutput,
     get_from_json_encodable_func,
     get_origin_type,
     get_to_json_encodable_func,
@@ -97,7 +98,13 @@ def binary_from_string(string: str) -> bytes:
 
 
 # JSON SUMMARIES
-def get_json_encodable_summary(value: typing.Any, type_: typing.Any) -> typing.Any:
+def get_json_encodable_summary(value: typing.Any, type_: typing.Any) -> SummaryOutput:
+    """
+    Returns a tuple containing two elements:
+    - A JSON encodable summary of the value for the front-end to render.
+    - A dictionary of blobIds to bytes payload to upload. The blobIds must be referenced
+    in the JSON summary.
+    """
     to_json_encodable_summary_func = get_to_json_encodable_summary_func(type_)
 
     if to_json_encodable_summary_func is None and dataclasses.is_dataclass(type_):
@@ -111,7 +118,7 @@ def get_json_encodable_summary(value: typing.Any, type_: typing.Any) -> typing.A
     if to_json_encodable_summary_func is not None:
         return to_json_encodable_summary_func(value, type_)
 
-    return {"repr": repr(value)}
+    return {"repr": repr(value)}, {}
 
 
 # TYPE SERIALIZATION

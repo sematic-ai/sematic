@@ -96,6 +96,7 @@ sematic_py_lib(
     deps = [
         "//sematic/types:casting",
         "//sematic/types:registry",
+        "//sematic/utils:hashing",
     ],
 )
 
@@ -109,4 +110,15 @@ sematic_py_lib(
     name = "datetime",
     srcs = ["datetime.py"],
     deps = [],
+)
+
+sematic_py_lib(
+    name = "image",
+    srcs = ["image.py"],
+    pip_deps = [
+        "python-magic",
+    ],
+    deps = [
+        "//sematic/types:registry",
+    ],
 )

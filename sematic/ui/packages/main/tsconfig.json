@@ -1,0 +1,10 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "baseUrl": "./",
+    },
+    "include": [
+        "src",
+        "../tests/global.d.ts"
+    ]
+}

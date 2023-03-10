@@ -3,8 +3,10 @@ Functions to generate models.
 """
 # Standard Library
 import datetime
+import enum
 import json
 import secrets
+from dataclasses import dataclass
 from typing import Any, List, Optional, Tuple
 
 # Sematic
@@ -149,20 +151,36 @@ def make_func_path(future: AbstractFuture) -> str:
     return f"{future.calculator.__module__}.{future.calculator.__name__}"
 
 
-def make_artifact(value: Any, type_: Any) -> Tuple[Artifact, bytes]:
+class StorageNamespace(enum.Enum):
+    artifacts = "artifacts"
+    futures = "futures"
+    blobs = "blobs"
+
+
+@dataclass
+class UploadPayload:
+    namespace: StorageNamespace
+    key: str
+    payload: bytes
+
+
+def make_artifact(value: Any, type_: Any) -> Tuple[Artifact, Tuple[UploadPayload, ...]]:
     """
     Create an Artifact model instance from a value and type.
     """
     if is_union(type_):
         type_ = get_value_type(value, type_)
+
     type_serialization = type_to_json_encodable(type_)
     value_serialization = value_to_json_encodable(value, type_)
-    json_summary = get_json_encodable_summary(value, type_)
+    json_summary, blobs = get_json_encodable_summary(value, type_)
+
+    artifact_id = get_value_and_type_sha1_digest(
+        value_serialization, type_serialization, json_summary
+    )
 
     artifact = Artifact(
-        id=get_value_and_type_sha1_digest(
-            value_serialization, type_serialization, json_summary
-        ),
+        id=artifact_id,
         json_summary=fix_nan_inf(json.dumps(json_summary, sort_keys=True, default=str)),
         type_serialization=json.dumps(type_serialization, sort_keys=True),
         created_at=datetime.datetime.utcnow(),
@@ -171,7 +189,17 @@ def make_artifact(value: Any, type_: Any) -> Tuple[Artifact, bytes]:
 
     payload = json.dumps(value_serialization, sort_keys=True).encode("utf-8")
 
-    return artifact, payload
+    upload_payloads = [
+        UploadPayload(
+            namespace=StorageNamespace.artifacts, key=artifact_id, payload=payload
+        )
+    ]
+    for key, blob in blobs.items():
+        upload_payloads.append(
+            UploadPayload(namespace=StorageNamespace.blobs, key=key, payload=blob)
+        )
+
+    return artifact, tuple(upload_payloads)
 
 
 def deserialize_artifact_value(artifact: Artifact, payload: bytes) -> Any:

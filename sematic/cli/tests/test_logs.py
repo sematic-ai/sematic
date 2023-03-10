@@ -12,7 +12,12 @@ from sematic.api.tests.fixtures import mock_storage  # noqa: F401
 from sematic.cli.logs import dump_log_storage, logs
 from sematic.db.models.resolution import ResolutionStatus
 from sematic.db.queries import save_resolution, save_run
-from sematic.db.tests.fixtures import make_resolution, make_run, test_db  # noqa: F401
+from sematic.db.tests.fixtures import (  # noqa: F401
+    allow_any_run_state_transition,
+    make_resolution,
+    make_run,
+    test_db,
+)
 from sematic.log_reader import LogLineResult, log_prefix
 from sematic.scheduling.external_job import ExternalJob, JobType
 
@@ -52,7 +57,9 @@ def fill_log_dir(mock_storage, text_lines, prefix):  # noqa: F811
     return prefix
 
 
-def test_logs(test_db, mock_storage, mock_api_client):  # noqa: F811
+def test_logs(
+    test_db, mock_storage, mock_api_client, allow_any_run_state_transition  # noqa: F811
+):
     run = make_run(future_state=FutureState.RESOLVED)
     run.external_jobs = [ExternalJob(JobType.driver, 0, external_job_id="abc")]
     resolution = make_resolution(root_id=run.id, status=ResolutionStatus.COMPLETE)
@@ -69,7 +76,11 @@ def test_logs(test_db, mock_storage, mock_api_client):  # noqa: F811
 
 
 def test_follow_logs(
-    test_db, mock_storage, mock_api_client, mock_load_log_lines  # noqa: F811
+    test_db,  # noqa: F811
+    mock_storage,  # noqa: F811
+    mock_api_client,
+    mock_load_log_lines,
+    allow_any_run_state_transition,  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
     run.external_jobs = [ExternalJob(JobType.driver, 0, external_job_id="abc")]
@@ -134,7 +145,9 @@ def test_follow_logs(
     assert list(result.output.split("\n"))[:-1] == early_lines + late_lines
 
 
-def test_empty_logs(test_db, mock_storage, mock_api_client):  # noqa: F811
+def test_empty_logs(
+    test_db, mock_storage, mock_api_client, allow_any_run_state_transition  # noqa: F811
+):
     run = make_run(future_state=FutureState.RESOLVED)
     run.external_jobs = [ExternalJob(JobType.driver, 0, external_job_id="abc")]
     resolution = make_resolution(root_id=run.id, status=ResolutionStatus.COMPLETE)

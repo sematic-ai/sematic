@@ -4,6 +4,7 @@ pytest_test(
     deps = [
         "//sematic/types:casting",
         "//sematic/types:init",
+        "//sematic/types/types:image",
     ],
 )
 
@@ -33,6 +34,7 @@ pytest_test(
         "//sematic/types:casting",
         "//sematic/types:init",
         "//sematic/types:serialization",
+        "//sematic/types/types:image",
     ],
 )
 
@@ -60,8 +62,8 @@ pytest_test(
     name = "test_enum",
     srcs = ["test_enum.py"],
     deps = [
-        "//sematic/types/types:enum",
         "//sematic/types:serialization",
+        "//sematic/types/types:enum",
     ],
 )
 
@@ -72,6 +74,7 @@ pytest_test(
         "//sematic/types:casting",
         "//sematic/types:init",
         "//sematic/types:serialization",
+        "//sematic/types/types:image",
     ],
 )
 
@@ -87,9 +90,9 @@ pytest_test(
     name = "test_datetime",
     srcs = ["test_datetime.py"],
     deps = [
-        "//sematic/types/types:datetime",
         "//sematic/types:init",
         "//sematic/types:serialization",
+        "//sematic/types/types:datetime",
     ],
 )
 
@@ -100,5 +103,14 @@ pytest_test(
         "//sematic/types:casting",
         "//sematic/types:init",
         "//sematic/types:serialization",
+    ],
+)
+
+pytest_test(
+    name = "test_image",
+    srcs = ["test_image.py"],
+    deps = [
+        "//sematic/types:serialization",
+        "//sematic/types/types:image",
     ],
 )

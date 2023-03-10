@@ -1,0 +1,10 @@
+boto3
+pandas
+pillow
+plotly
+pytorch-lightning
+ray
+ray-lightning
+torch
+torchmetrics
+torchvision

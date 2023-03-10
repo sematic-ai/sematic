@@ -43,9 +43,10 @@ def test_tuple(value, type_, expected_value, expected_error):
 
 
 def test_summary():
-    summary = get_json_encodable_summary(("foo", 42), Tuple[str, float])
+    summary, blobs = get_json_encodable_summary(("foo", 42), Tuple[str, float])
 
     assert summary == ["foo", 42]
+    assert blobs == {}
 
 
 def test_type_from_json_encodable():

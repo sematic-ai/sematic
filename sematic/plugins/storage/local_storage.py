@@ -102,7 +102,10 @@ def download_endpoint(user: Optional[User], namespace: str, key: str) -> flask.R
             status=HTTPStatus.NOT_FOUND,
         )
 
-    return flask.Response(content)
+    response = flask.Response(content)
+    response.headers.set("Cache-Control", "max-age=31536000, immutable, private")
+
+    return response
 
 
 # For easier mocking

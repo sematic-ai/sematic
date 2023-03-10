@@ -1,0 +1,26 @@
+{
+  "name": "@sematic/ui-test",
+  "version": "0.2.0",
+  "description": "UI test library",
+  "scripts": {
+    "lint": "eslint --ext .ts ."
+  },
+  "devDependencies": {
+    "cypress": "^12.5.0",
+    "eslint-plugin-cypress": "^2.12.1"
+  },
+  "author": "",
+  "license": "ISC",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

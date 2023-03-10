@@ -21,7 +21,7 @@ from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR
 from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.factories import make_artifact
+from sematic.db.models.factories import UploadPayload, make_artifact
 from sematic.db.models.run import Run
 from sematic.future import Future
 from sematic.future_context import PrivateContext, SematicContext, set_context
@@ -103,6 +103,7 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
     Persist run output, whether it is a nested future or a concrete output.
     """
     artifacts = []
+    upload_payloads: List[UploadPayload] = []
 
     if isinstance(output, Future):
         pickled_nested_future = cloudpickle.dumps(output)
@@ -112,10 +113,9 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
         run.ended_at = datetime.datetime.utcnow()
 
     else:
-        artifact, payload = make_artifact(output, type_)
+        artifact, payloads = make_artifact(output, type_)
         artifacts.append(artifact)
-
-        api_client.store_artifact_bytes(artifact.id, payload)
+        upload_payloads += payloads
 
         # Set output artifact on output edges
         for edge in edges:
@@ -125,6 +125,7 @@ def _set_run_output(run: Run, output: Any, type_: Any, edges: List[Edge]):
         run.future_state = FutureState.RESOLVED
         run.resolved_at = datetime.datetime.utcnow()
 
+    api_client.store_payloads(upload_payloads)
     api_client.save_graph(run.root_id, [run], artifacts, edges)
 
 

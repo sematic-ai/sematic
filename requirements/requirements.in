@@ -43,6 +43,8 @@ click
 # torch at 1.13.0 or later gives trouble with cuda dependencies
 torch<1.13.0
 torchvision==0.13.1
+pytorch-lightning
+ray-lightning
 torchmetrics
 plotly
 pandas
@@ -59,6 +61,7 @@ xgboost
 snowflake-connector-python>=2.8.0
 pyOpenSSL
 pyarrow
+python-magic
 
 # Cloud execution
 kubernetes

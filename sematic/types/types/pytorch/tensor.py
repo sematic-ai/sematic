@@ -5,11 +5,13 @@ from typing import Any
 import torch
 
 # Sematic
-from sematic.types.registry import register_to_json_encodable_summary
+from sematic.types.registry import SummaryOutput, register_to_json_encodable_summary
 
 
 @register_to_json_encodable_summary(torch.Tensor)
-def _torch_tensor_to_json_encodable_summary(value: torch.Tensor, type_: Any) -> Any:
+def _torch_tensor_to_json_encodable_summary(
+    value: torch.Tensor, type_: Any
+) -> SummaryOutput:
     unique_values = value.unique()
     if len(unique_values) < 300:
         unique_values = [i.item() for i in unique_values]
@@ -26,4 +28,4 @@ def _torch_tensor_to_json_encodable_summary(value: torch.Tensor, type_: Any) -> 
         "unique_values": unique_values,
         "has_nan": True in value.isnan(),
         "has_inf": True in value.isinf(),
-    }
+    }, {}

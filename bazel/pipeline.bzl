@@ -21,7 +21,9 @@ def sematic_pipeline(
         data = None,
         base = "@sematic-worker-base//image",
         bases = None,
+        tags = None,
         image_layers = None,
+        image_tags = None,
         env = None,
         dev = False):
     """
@@ -37,7 +39,7 @@ def sematic_pipeline(
     Args:
         name: name of the target
 
-        deps: list of dependencies
+        deps: list of dependencies. Will be present both locally and in the cloud.
 
         registry: URI of the container registry to use to register
             the container image
@@ -50,8 +52,14 @@ def sematic_pipeline(
 
         bases: (optional)
 
+        tags: (optional) add these tags to ALL generated targets. Defaults to ["manual"]
+
         image_layers: (optional) pass through arg to the `layers`
             parameter of `py3_image`: https://github.com/bazelbuild/rules_docker#py3_image
+            Does NOT automatically get passed through to the python
+            binary target. So if you are including direct dependencies
+            of the binary here, you will need to *also* pass them in
+            to "deps".
 
         env: (optional) mapping of environment variables to set in the container
 
@@ -64,6 +72,8 @@ def sematic_pipeline(
         data = []
     if image_layers == None:
         image_layers = []
+    if tags == None:
+        tags = ["manual"]
 
     if "default" not in bases:
         if base != None:
@@ -87,6 +97,11 @@ def sematic_pipeline(
         srcs = ["@rules_sematic//:worker.py"]
         script_data = ["@rules_sematic//:ray", "@rules_sematic//:bazel_python"]
         py3_image_deps = deps
+    
+    # If a dependency is already in the image via layers,
+    # we don't want to duplicate the dependency via the other
+    # deps.
+    py3_image_deps = [dep for dep in deps if dep not in image_layers]
 
     push_rule_names = {}
 
@@ -97,11 +112,13 @@ def sematic_pipeline(
             name = with_tools_layer,
             files = script_data,
             directory = "/sematic/bin/",
+            tags = tags,
         )
         container_image(
             name = with_tools_image,
             base = base_image,
             layers = [with_tools_layer],
+            tags = tags,
         )
         env = env or {}
 
@@ -119,7 +136,7 @@ def sematic_pipeline(
             visibility = ["//visibility:public"],
             base = with_tools_image,
             env = env,
-            tags = ["manual"],
+            tags = tags,
         )
 
         push_rule_name = "{}_{}_push".format(name, tag)
@@ -132,32 +149,29 @@ def sematic_pipeline(
             repository = repository,
             tag = "{}_{}".format(name, tag),
             format = "Docker",
-            tags = ["manual"],
+            tags = tags,
         )
-
-    # image_layers also contains dependencies, they're just ones that
-    # should be added separately when creating the image.
-    binary_deps = deps + image_layers
     
     py_binary(
         name = "{}_binary".format(name),
         srcs = ["{}.py".format(name)],
         main = "{}.py".format(name),
-        deps = binary_deps,
-        tags = ["manual"],
+        deps = deps,
+        tags = tags,
     )
 
     py_binary(
         name = "{}_local".format(name),
         main = "{}.py".format(name),
         srcs = ["{}.py".format(name)],
-        tags = ["manual"],
-        deps = binary_deps,
+        tags = tags,
+        deps = deps,
     )
 
     sematic_push_and_run(
         name = name,
-        push_rule_names = push_rule_names
+        push_rule_names = push_rule_names,
+        tags = tags,
     )
 
 def base_images():

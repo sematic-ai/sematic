@@ -4,6 +4,7 @@ sematic_py_lib(
     name = "fixtures",
     srcs = ["fixtures.py"],
     deps = [
+        "//sematic:abstract_future",
         "//sematic:api_client",
         "//sematic/plugins/storage:memory_storage",
     ],

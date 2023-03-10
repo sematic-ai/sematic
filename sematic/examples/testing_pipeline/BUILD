@@ -22,6 +22,8 @@ sematic_pipeline(
         requirement("ray"),
     ],
     deps = [
+        requirement("debugpy"),
+        requirement("ray"),
         ":testing_pipeline_lib",
     ],
 )
