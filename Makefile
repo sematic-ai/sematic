@@ -1,7 +1,8 @@
+SHELL=/bin/bash
+
 UNAME_S := $(shell uname -s)
 RED := \033[0;31m
 NO_COLOR := \033[1;0m
-SHELL=/bin/bash
 
 migrate_up_rds:
 	cd sematic; DATABASE_URL=${DATABASE_URL} dbmate -s db/schema.sql.pg up 
