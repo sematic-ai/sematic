@@ -5,6 +5,7 @@ from typing import Dict, Iterable, List, Type
 
 # Third-party
 import boto3
+import botocore.config
 import botocore.exceptions
 
 # Sematic
@@ -31,6 +32,7 @@ class S3ClientMethod(enum.Enum):
 
 class S3StorageSettingsVar(AbstractPluginSettingsVar):
     AWS_S3_BUCKET = "AWS_S3_BUCKET"
+    AWS_S3_REGION = "AWS_S3_REGION"
 
 
 class S3Storage(AbstractStorage, AbstractPlugin):
@@ -59,16 +61,27 @@ class S3Storage(AbstractStorage, AbstractPlugin):
         return get_plugin_setting(self.__class__, S3StorageSettingsVar.AWS_S3_BUCKET)
 
     @memoized_property
+    def _region(self) -> str:
+        return get_plugin_setting(self.__class__, S3StorageSettingsVar.AWS_S3_REGION)
+
+    @memoized_property
     def _s3_client(self):
-        return boto3.client("s3")
+        return boto3.client(
+            "s3",
+            config=botocore.config.Config(
+                region_name=self._region, signature_version="s3v4"
+            ),
+        )
 
     def _make_presigned_url(self, client_method: S3ClientMethod, key: str) -> str:
+        logger.info("Generating S3 presigned url for %s", key)
         presigned_url = self._s3_client.generate_presigned_url(
             ClientMethod=client_method.value,
             Params={
                 "Bucket": self._bucket,
                 "Key": key,
-                "ResponseCacheControl": "max-age=31536000, immutable, private",
+                # TODO: Recover caching https://github.com/sematic-ai/sematic/issues/653
+                # "ResponseCacheControl": "max-age=31536000, immutable, private",
             },
             ExpiresIn=self.PRESIGNED_URL_EXPIRATION,
         )
