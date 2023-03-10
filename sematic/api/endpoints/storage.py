@@ -85,7 +85,7 @@ def get_stored_data_redirect(user: Optional[User], namespace: str, key: str):
     for key, value in destination.request_headers.items():
         response.headers.set(key, value)
 
-    # Disabling caching for now
+    # TODO: Recover caching https://github.com/sematic-ai/sematic/issues/653
     # response.headers.set("Cache-Control", "max-age=31536000, immutable, private")
 
     return response
