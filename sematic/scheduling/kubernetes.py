@@ -375,7 +375,7 @@ class KubernetesExternalJob(ExternalJob):
             description = "The job has been requested, but no pods are created yet."
             if self.try_number != 0:
                 description += (
-                    f"Sematic has retried the job, this is try "
+                    f" Sematic has retried the job, this is try "
                     f"number {self.try_number + 1}"
                 )
             return JobStatus(
