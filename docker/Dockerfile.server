@@ -9,6 +9,14 @@ ARG EXTRA
 
 RUN python3 -m pip install --upgrade pip
 
+# Pre-install some requirements so that installing from the
+# wheel takes less time. This improves caching behavior
+# during development iterations, but should not be used
+# for production builds, as it will install extra dependencies
+# that aren't actually needed for the server to run.
+# <uncomment for pre-install-cache> COPY ./requirements*.txt /requirements/
+# <uncomment for pre-install-cache> RUN pip install -r /requirements/requirements-dev-cache.txt
+
 # Install from a local wheel
 COPY sematic-*.whl .
 RUN pip install $(ls ./sematic-*.whl)["${EXTRA}"]
