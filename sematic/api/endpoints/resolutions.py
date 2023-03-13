@@ -161,7 +161,7 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
                 root_run.calculator_path,
                 root_run.future_state,
                 duration_seconds,
-                resolution.git_info.dirty,
+                getattr(resolution.git_info, "dirty", "UNKNOWN"),
                 root_run.tags,
             )
         try:
