@@ -25,6 +25,11 @@ The images will be persisted in Sematic's artifact store and displayed in the Ou
 
 ![Image type visualization](./images/ImageType.png)
 
+An `Image` object can be returned by itself, or as part of greater output type,
+as shown in the example above (e.g. dataclass, dictionary, tuple, list, etc.).
+
+All image types that are supported by browsers are supported.
+
 ## The `Link` type
 
 If you need to output a URL in one of your Sematic functions and you would like
