@@ -18,6 +18,7 @@ import sematic.types.types.str  # noqa: F401
 import sematic.types.types.tuple  # noqa: F401
 import sematic.types.types.union  # noqa: F401
 from sematic.types.types.datetime import datetime  # noqa: F401
+from sematic.types.types.image import Image  # noqa: F401
 from sematic.types.types.link import Link  # noqa: F401
 
 # isort: off
