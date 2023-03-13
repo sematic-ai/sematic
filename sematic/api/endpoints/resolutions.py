@@ -4,9 +4,9 @@ Module keeping all /api/v*/runs/* API endpoints.
 
 # Standard Library
 import logging
+from datetime import datetime
 from http import HTTPStatus
 from typing import Optional
-from datetime import datetime
 
 # Third-party
 import flask
@@ -149,7 +149,9 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
             was_remote = len(resolution.external_jobs)
             duration_seconds = None
             if root_run.started_at is not None:
-                duration_seconds = (datetime.utcnow() - root_run.started_at).total_seconds()
+                duration_seconds = (
+                    datetime.utcnow() - root_run.started_at
+                ).total_seconds()
             logger.info(
                 "%s resolution %s for pipeline %s terminated with "
                 "root run in state %s. The duration was %s seconds. Git dirty: %s ."
