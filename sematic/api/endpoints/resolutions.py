@@ -154,7 +154,8 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
                 ).total_seconds()
             logger.info(
                 "%s resolution %s for pipeline %s terminated with "
-                "root run in state %s. The duration was %s seconds. Git dirty: %s ."
+                "root run in state %s. The duration was %s seconds. "
+                "Git dirty: %s . Git branch: '%s'"
                 "The root run had tags: %s",
                 "Remote" if was_remote else "Local",
                 resolution.root_id,
@@ -162,6 +163,7 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
                 root_run.future_state,
                 duration_seconds,
                 getattr(resolution.git_info, "dirty", "UNKNOWN"),
+                getattr(resolution.git_info, "branch", "UNKNOWN"),
                 root_run.tags,
             )
         try:
