@@ -6,7 +6,7 @@ dashboard.
 
 ## The `Image` type
 
-I you need to output an image in your Sematic function, you can use the `Image` type.
+If you need to output an image in your Sematic function, you can use the `Image` type.
 
 ```python
 from sematic.types import Image
@@ -23,7 +23,7 @@ def my_function() -> Dict[str, Image]:
 
 The images will be persisted in Sematic's artifact store and displayed in the Output tab of the function's run.
 
-![Image type visualization](./images/ImageType.png)
+![Image type visualization](./images/ImageType.jpg)
 
 An `Image` object can be returned by itself, or as part of greater output type,
 as shown in the example above (e.g. dataclass, dictionary, tuple, list, etc.).
