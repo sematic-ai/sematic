@@ -1,0 +1,24 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "target": "es5",
+        "lib": [
+            "es5",
+            "dom"
+        ],
+        "types": [
+            "cypress",
+            "node"
+        ],
+        "baseUrl": "./",
+        "paths": {
+            "*": ["*", "../main/*", "../common/*"]
+        }
+    },
+    "include": [
+        "**/*.ts"
+    ],
+    "references": [
+        { "path": "../common" },
+    ]
+}

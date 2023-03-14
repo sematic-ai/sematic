@@ -4,7 +4,7 @@ import { useContext } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { UserContext } from "../appContext";
 import { useAppContext } from "../hooks/appHooks";
-import createTheme from "../themes/mira";
+import createTheme from "@sematic/common/src/theme/mira";
 import SideBar from "./SideBar";
 
 export default function Shell() {
