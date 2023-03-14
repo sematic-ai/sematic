@@ -15,7 +15,7 @@ from sematic.types.serialization import (
     value_from_json_encodable,
     value_to_json_encodable,
 )
-from sematic.types.types.dataclass import from_dict
+from sematic.types.types.dataclass import fromdict
 from sematic.types.types.image import Image
 
 
@@ -72,6 +72,15 @@ class SimplySerializableModified:
     dict_field: Dict[int, A]
     non_initing: int = field(init=False, default=42)
     new_field: int = 43
+
+
+class NormalClass:
+    pass
+
+
+@dataclass
+class ListOfNormalClassField:
+    field: List[NormalClass]
 
 
 @pytest.mark.parametrize(
@@ -312,7 +321,7 @@ def test_summary_with_blobs():
     assert blobs == {blob_id: bytes_}
 
 
-def test_from_dict():
+def test_fromdict():
     simply_serializable_in = SimplySerializable(
         primitive=1,
         other_dataclass=D(a=2, d=3.5),
@@ -329,13 +338,23 @@ def test_from_dict():
         "non_initing": 42,
     }
 
-    simply_serializable_out = from_dict(SimplySerializable, serialized)
+    simply_serializable_out = fromdict(SimplySerializable, serialized)
     assert simply_serializable_in == simply_serializable_out
+
+
+def test_fromdict_backwards_compatibility():
+    simply_serializable_in = SimplySerializable(
+        primitive=1,
+        other_dataclass=D(a=2, d=3.5),
+        list_field=[A(4), A(5)],
+        dict_field={6: A(6), 7: A(7)},
+    )
+    serialized = asdict(simply_serializable_in)
 
     # emulate us adding a new field and removing an existing one,
     # then trying to deserialize something that was serailized
     # with the original class:
-    modified_out = from_dict(SimplySerializableModified, serialized)
+    modified_out = fromdict(SimplySerializableModified, serialized)
 
     expected_modified = SimplySerializableModified(
         primitive=1,
@@ -345,3 +364,13 @@ def test_from_dict():
     )
 
     assert modified_out == expected_modified
+
+
+def test_fromdict_bad_type():
+    with pytest.raises(TypeError):
+        fromdict(NormalClass, {})
+
+
+def test_fromdict_bad_dict():
+    with pytest.raises(TypeError):
+        fromdict(SimplySerializable, dict(random="field"))

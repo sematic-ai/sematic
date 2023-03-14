@@ -204,7 +204,7 @@ def _serialize_dataclass(serializer: Callable, value: Any, _) -> SummaryOutput:
 T = TypeVar("T")
 
 
-def from_dict(dataclass_type: Type[T], as_dict: Dict[str, Any]) -> T:
+def fromdict(dataclass_type: Type[T], as_dict: Dict[str, Any]) -> T:
     """Invert dataclasses.asdict for simple dataclass structures.
 
     This will only work assuming the following conditions are met:
@@ -251,20 +251,20 @@ def from_dict(dataclass_type: Type[T], as_dict: Dict[str, Any]) -> T:
             continue
         dict_value = as_dict[name]
         if dataclasses.is_dataclass(field.type):
-            kwargs[name] = from_dict(field.type, dict_value)
+            kwargs[name] = fromdict(field.type, dict_value)
             continue
         if get_origin(field.type) == list:
             element_type = get_args(field.type)[0]
             if dataclasses.is_dataclass(element_type):
                 kwargs[name] = [
-                    from_dict(element_type, element) for element in dict_value
+                    fromdict(element_type, element) for element in dict_value
                 ]
                 continue
         if get_origin(field.type) == dict:
             value_type = get_args(field.type)[1]
             if dataclasses.is_dataclass(value_type):
                 kwargs[name] = {
-                    key: from_dict(value_type, value)
+                    key: fromdict(value_type, value)
                     for key, value in dict_value.items()
                 }
                 continue
