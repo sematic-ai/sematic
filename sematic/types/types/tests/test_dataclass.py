@@ -1,6 +1,7 @@
 # Standard Library
 import hashlib
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, field
+from typing import Dict, List
 
 # Third-party
 import pytest
@@ -14,6 +15,7 @@ from sematic.types.serialization import (
     value_from_json_encodable,
     value_to_json_encodable,
 )
+from sematic.types.types.dataclass import from_dict
 from sematic.types.types.image import Image
 
 
@@ -51,6 +53,25 @@ class MyFrozenDataclass:
 @dataclass
 class BadDictField:
     bad_dict_field: dict
+
+
+@dataclass(frozen=True)
+class SimplySerializable:
+    primitive: int
+    other_dataclass: D
+    list_field: List[A]
+    dict_field: Dict[int, A]
+    non_initing: int = field(init=False, default=42)
+
+
+@dataclass(frozen=True)
+class SimplySerializableModified:
+    # we add new_field and remove other_dataclass
+    primitive: int
+    list_field: List[A]
+    dict_field: Dict[int, A]
+    non_initing: int = field(init=False, default=42)
+    new_field: int = 43
 
 
 @pytest.mark.parametrize(
@@ -289,3 +310,29 @@ def test_summary_with_blobs():
     }
 
     assert blobs == {blob_id: bytes_}
+
+
+def test_from_dict():
+    simply_serializable_in = SimplySerializable(
+        primitive=1,
+        other_dataclass=D(a=2, d=3.5),
+        list_field=[A(4), A(5)],
+        dict_field={6: A(6), 7: A(7)},
+    )
+    serialized = asdict(simply_serializable_in)
+    simply_serializable_out = from_dict(SimplySerializable, serialized)
+    assert simply_serializable_in == simply_serializable_out
+
+    # emulate us adding a new field and removing an existing one,
+    # then trying to deserialize something that was serailized
+    # with the original class:
+    modified_out = from_dict(SimplySerializableModified, serialized)
+
+    expected_modified = SimplySerializableModified(
+        primitive=1,
+        list_field=[A(4), A(5)],
+        dict_field={6: A(6), 7: A(7)},
+        new_field=43,
+    )
+
+    assert modified_out == expected_modified
