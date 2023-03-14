@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 _MAX_DELAY_BETWEEN_STATUS_UPDATES_SECONDS = 60  # 60s => 1 min
-_DELAY_BETWEEN_STATUS_UPDATES_BACKOFF = 1.5
+_DELAY_BETWEEN_STATUS_UPDATES_BACKOFF = 1.25
 
 # It is important not to change these! They are used for identifying the start/end of
 # inline run logs. If you change it, inline logs written with prior versions of Sematic
