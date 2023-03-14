@@ -251,20 +251,32 @@ def fromdict(dataclass_type: Type[T], as_dict: Dict[str, Any]) -> T:
             continue
         dict_value = as_dict[name]
         if dataclasses.is_dataclass(field.type):
+<<<<<<< HEAD
             kwargs[name] = fromdict(field.type, dict_value)
+=======
+            kwargs[name] = from_dict(field.type, dict_value)
+>>>>>>> 00e2ca4d (Add more compact ser/des for simple dataclasses)
             continue
         if get_origin(field.type) == list:
             element_type = get_args(field.type)[0]
             if dataclasses.is_dataclass(element_type):
                 kwargs[name] = [
+<<<<<<< HEAD
                     fromdict(element_type, element) for element in dict_value
+=======
+                    from_dict(element_type, element) for element in dict_value
+>>>>>>> 00e2ca4d (Add more compact ser/des for simple dataclasses)
                 ]
                 continue
         if get_origin(field.type) == dict:
             value_type = get_args(field.type)[1]
             if dataclasses.is_dataclass(value_type):
                 kwargs[name] = {
+<<<<<<< HEAD
                     key: fromdict(value_type, value)
+=======
+                    key: from_dict(value_type, value)
+>>>>>>> 00e2ca4d (Add more compact ser/des for simple dataclasses)
                     for key, value in dict_value.items()
                 }
                 continue
