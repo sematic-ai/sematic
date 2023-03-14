@@ -117,7 +117,6 @@ pytest_test(
     deps = [
         "//sematic:abstract_future",
         "//sematic:log_reader",
-        "//sematic:storage",
         "//sematic/api/tests:fixtures",
         "//sematic/db:queries",
         "//sematic/db/tests:fixtures",

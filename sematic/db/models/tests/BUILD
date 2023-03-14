@@ -13,7 +13,6 @@ pytest_test(
     deps = [
         "//sematic:abstract_future",
         "//sematic:calculator",
-        "//sematic:storage",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
         "//sematic/db/models:resolution",
