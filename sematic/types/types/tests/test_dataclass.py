@@ -320,6 +320,15 @@ def test_from_dict():
         dict_field={6: A(6), 7: A(7)},
     )
     serialized = asdict(simply_serializable_in)
+
+    assert serialized == {
+        "primitive": 1,
+        "other_dataclass": {"a": 2, "d": 3.5},
+        "list_field": [{"a": 4}, {"a": 5}],
+        "dict_field": {6: {"a": 6}, 7: {"a": 7}},
+        "non_initing": 42,
+    }
+
     simply_serializable_out = from_dict(SimplySerializable, serialized)
     assert simply_serializable_in == simply_serializable_out
 
