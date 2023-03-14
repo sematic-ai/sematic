@@ -72,6 +72,21 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "job",
+    srcs = ["job.py"],
+    pip_deps = [
+        "sqlalchemy",
+    ],
+    deps = [
+        ":base",
+        "//sematic/db/models/mixins:json_encodable_mixin",
+        "//sematic/scheduling:job_details",
+        "//sematic/types/types:dataclass",
+        "//sematic/utils:exceptions",
+    ],
+)
+
+sematic_py_lib(
     name = "run",
     srcs = ["run.py"],
     pip_deps = [

@@ -1,4 +1,13 @@
 pytest_test(
+    name = "test_job",
+    srcs = ["test_job.py"],
+    deps = [
+        "//sematic/db/models:job",
+        "//sematic/scheduling:job_details",
+    ],
+)
+
+pytest_test(
     name = "test_factories",
     srcs = ["test_factories.py"],
     deps = [
