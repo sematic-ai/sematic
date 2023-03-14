@@ -182,22 +182,6 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "storage",
-    srcs = ["storage.py"],
-    pip_deps = [
-        "boto3",
-    ],
-    # buildifier: leave-alone
-    deps = [
-        "//sematic/config:config",
-        "//sematic/config:server_settings",
-        "//sematic/config:user_settings",
-        "//sematic/utils:memoized_property",
-        "//sematic/utils:retry",
-    ],
-)
-
-sematic_py_lib(
     name = "versions",
     srcs = ["versions.py"],
     deps = [],
