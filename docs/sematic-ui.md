@@ -69,7 +69,7 @@ Function's run. You can click on them to open the corresponding run in the
 central [Run Panel](#run-panel) in order to inspect its details.
 
 You can zoom in and out on the graph diagram by using the trackpad, or with
-`CMD+scroll`.
+`CMD+scroll` or `Ctrl+scroll`, depending on your system.
 
 ### Run Panel
 
