@@ -223,7 +223,7 @@ def save_run(run: Run) -> Run:
 
 
 def get_job(job_name: str, job_namespace: str) -> Optional[Job]:
-    """Get a job by name and namespace (or None if it doesn't exist)"""
+    """Get a job by name and namespace (or None if it doesn't exist)."""
     with db().get_session() as session:
         return (
             session.query(Job)
