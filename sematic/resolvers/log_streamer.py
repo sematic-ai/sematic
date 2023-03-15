@@ -13,6 +13,7 @@ from typing import Callable, Optional
 # Sematic
 import sematic.api_client as api_client
 from sematic.config.user_settings import UserSettingsVar, get_user_setting
+from sematic.utils.signals import call_signal_handler
 from sematic.utils.stdout import redirect_to_file_descriptor
 
 """
@@ -164,7 +165,7 @@ def _stream_logs_to_remote_from_file_descriptor(
         The amount of time between the end of one upload and the start of the next
     remote_prefix:
         The prefix for the remote storage location where the log files will be kept.
-        The actual file name will be unique for each upload, increasing monoatonically
+        The actual file name will be unique for each upload, increasing monotonically
         with time
     uploader:
         A callable to perform the upload. It will be given the path to upload from and
@@ -266,7 +267,7 @@ def ingested_logs(
     upload_interval_seconds=DEFAULT_LOG_UPLOAD_INTERVAL_SECONDS,
     uploader: Optional[Callable[[str, str], None]] = None,
 ):
-    """Code within context will have stdout/stderr (including subprocess) ingested
+    """Code within context will have stdout/stderr (including subprocess) ingested.
 
     The ingestion will use file_path as an on-disk cache to capture the logs to, and
     logs will be uploaded to remote storage with a storage path prefix given by
@@ -285,32 +286,31 @@ def ingested_logs(
     """
     uploader = uploader if uploader is not None else _do_upload
     original_signal_handler = None
+    worker_pid = os.getpid()
     streamer_pid = None
     read_file_descriptor = None
     write_file_descriptor = None
 
-    def clean_up_streamer(signal_num=None, frame=None):
-        logger.info("Cleaning up log ingestor")
-        print(_TERMINATION_CHAR)  # tell the reader that the stream is done
+    def _streamer_signal_handler(signum, frame) -> None:
+        my_pid = os.getpid()
+        logger.info("Process %s received signal: %s", my_pid, signum)
 
-        # ensure there's a final log upload, and that it contains ALL the
-        # contents of stdout and stderr before we redirect them back to their
-        # originals.
-        sys.stderr.flush()
-        sys.stdout.flush()
+        # this can happen if the user code spawns child processes, then sends them signals
+        if my_pid != worker_pid:
+            call_signal_handler(original_signal_handler, signum, frame)
+            # in case the original signal handler didn't kill us, we shouldn't clean up
+            # the log ingestor because we're not the main worker process; we just continue
+            return
 
-        if streamer_pid is not None:
-            # forwarding the signal should trigger a final upload.
-            # use a timeout so the parent process can still exit if
-            # the child hangs for some reason (ex: during remote service call)
-            _wait_or_kill(streamer_pid, timeout_seconds=20)
+        # from here on we are in the Sematic worker process
+        try:
+            _clean_up_streamer(streamer_pid)
+        finally:
+            # call the original handler even if our streamer logic raised exceptions
+            call_signal_handler(original_signal_handler, signum, frame)
 
-        if original_signal_handler is not None and hasattr(
-            original_signal_handler, "__call__"
-        ):
-            original_signal_handler(signal_num, frame)
+    original_signal_handler = signal.signal(signal.SIGTERM, _streamer_signal_handler)
 
-    original_signal_handler = signal.signal(signal.SIGTERM, clean_up_streamer)
     try:
         read_file_descriptor, write_file_descriptor = os.pipe()
         os.set_blocking(read_file_descriptor, False)
@@ -337,17 +337,20 @@ def ingested_logs(
             )
             try:
                 yield
-            except Exception:
+
+            except BaseException as e:
                 # make sure error is logged while logs are directed
                 # for ingestion so the error gets ingested. Re-raise
                 # so caller can handle/not as needed.
+                print(f"Process {os.getpid()} raised exception: {str(e)}")
                 traceback.print_exc()
                 raise
+
             finally:
                 signal.signal(signal.SIGTERM, original_signal_handler)
                 original_signal_handler = None
+                _clean_up_streamer(streamer_pid)
 
-                clean_up_streamer()
     finally:
         # outermost try/finally is so we can tail logs to non-redirected stdout
         # even if the code raised an error
@@ -368,8 +371,26 @@ def ingested_logs(
             os.close(write_file_descriptor)
 
 
-def _wait_or_kill(pid: int, timeout_seconds: int):
-    """Wait on the given pid. If not exited by timeout, send SIGKILL.
+def _clean_up_streamer(streamer_pid: Optional[int]) -> None:
+    logger.info("Cleaning up log ingestor")
+    print(_TERMINATION_CHAR)  # tell the reader that the stream is done
+
+    # ensure there's a final log upload, and that it contains ALL the
+    # contents of stdout and stderr before we redirect them back to their originals
+    sys.stderr.flush()
+    sys.stdout.flush()
+
+    if streamer_pid is not None:
+        # forwarding the signal should trigger a final upload.
+        # use a timeout so the parent process can still exit if
+        # the child hangs for some reason (ex: during remote service call)
+        _wait_or_kill_streamer(streamer_pid, timeout_seconds=20)
+
+
+def _wait_or_kill_streamer(pid: int, timeout_seconds: int) -> None:
+    """Wait on the given streamer process pid. If not exited by timeout, send SIGKILL.
+
+    Logs streamer process-specific log messages.
 
     Parameters
     ----------
@@ -389,16 +410,23 @@ def _wait_or_kill(pid: int, timeout_seconds: int):
                     f"Log streamer exited with error code: {wait_result[1]}"
                 )
             time.sleep(0.1)
+
+        logger.debug("Killing subprocess %s...", pid)
         os.kill(pid, signal.SIGKILL)
         pid, status_code = os.waitpid(pid, 0)
+
         if status_code != 0:
             raise RuntimeError(f"Log streamer exited with error code: {status_code}")
+
+        logger.debug("Killed subprocess %s", pid)
+
     except (ProcessLookupError, ChildProcessError):
-        return  # process already gone
+        logger.debug("Subprocess %s has already completed", pid)
 
 
-def _tail_log_file(file_path, print_func=None):
+def _tail_log_file(file_path: str, print_func: Optional[Callable] = None) -> None:
     """Print the last lines of the last 1 or 2 log file deltas."""
+
     print_func = print_func if print_func is not None else print
     print_func(
         "Showing the tail of the logs for reference. For complete "
