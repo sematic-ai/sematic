@@ -68,7 +68,7 @@ class Job(Base, JSONEncodableMixin):
     kind: JobKindString = Column(types.String(), nullable=False)
     message: str = Column(types.String(), nullable=False)
     detail_serialization: Dict[str, Any] = Column(  # type: ignore
-        types.String(), nullable=False
+        types.JSON(), nullable=False
     )
     status_history_serialization: List[Dict[str, Union[str, float]]] = Column(
         types.JSON(), nullable=False
@@ -126,6 +126,16 @@ class Job(Base, JSONEncodableMixin):
     # don't expose setter; we want this to be read-only for clients. update_status
     # should be used to update status_history.
     status_history = property(get_status_history)
+
+    def get_latest_status(self) -> JobStatus:
+        """Get the most recent job status."""
+        return JobStatus(
+            state=self.state,
+            message=self.message,
+            last_updated_epoch_seconds=self.last_updated_epoch_seconds,
+        )
+
+    latest_status = property(get_latest_status)
 
     def __repr__(self) -> str:
         key_value_strings = [

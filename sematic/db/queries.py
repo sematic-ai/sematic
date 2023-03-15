@@ -16,6 +16,7 @@ from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
+from sematic.db.models.job import Job
 from sematic.db.models.note import Note
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
@@ -219,6 +220,39 @@ def save_run(run: Run) -> Run:
         session.refresh(run)
 
     return run
+
+
+def get_job(job_name: str, job_namespace: str) -> Optional[Job]:
+    """Get a job by name and namespace (or None if it doesn't exist)"""
+    with db().get_session() as session:
+        return (
+            session.query(Job)
+            .filter(Job.name == job_name)
+            .filter(Job.namespace == job_namespace)
+            .one_or_none()
+        )
+
+
+def save_job(job: Job) -> Job:
+    """Save a job to the db, updating an existing one if present."""
+    existing_job = get_job(job_name=job.name, job_namespace=job.namespace)
+    if existing_job is not None:
+        # do this to ensure that we are updating the history based on what's
+        # actually already in the DB.
+        existing_job.details = job.details
+        existing_job.update_status(job.latest_status)
+        job = existing_job
+    with db().get_session() as session:
+        session.merge(job)
+        session.commit()
+
+        return job
+
+
+def get_jobs_by_run_id(run_id: str) -> List[Job]:
+    """Get jobs from the DB by source run id"""
+    with db().get_session() as session:
+        return list(session.query(Job).filter(Job.run_id == run_id).all())
 
 
 def save_external_resource_record(record: ExternalResource):

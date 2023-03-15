@@ -51,6 +51,7 @@ pytest_test(
         "//sematic/db/models:run",
         "//sematic/plugins:abstract_external_resource",
         "//sematic/resolvers/tests:fixtures",
+        "//sematic/scheduling:job_details",
         "//sematic/tests:fixtures",
         "//sematic/types:init",
         "//sematic/utils:exceptions",

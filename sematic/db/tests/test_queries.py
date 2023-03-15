@@ -1,4 +1,5 @@
 # Standard Library
+import time
 from dataclasses import dataclass, replace
 
 # Third-party
@@ -15,7 +16,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.calculator import func
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.external_resource import ExternalResource
-from sematic.db.models.factories import make_artifact
+from sematic.db.models.factories import make_artifact, make_job
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import (
@@ -23,6 +24,8 @@ from sematic.db.queries import (
     get_artifact,
     get_external_resource_record,
     get_external_resources_by_run_id,
+    get_job,
+    get_jobs_by_run_id,
     get_resolution,
     get_resources_by_root_id,
     get_root_graph,
@@ -30,6 +33,7 @@ from sematic.db.queries import (
     get_run_graph,
     save_external_resource_record,
     save_graph,
+    save_job,
     save_resolution,
     save_run,
     save_run_external_resource_links,
@@ -48,6 +52,12 @@ from sematic.plugins.abstract_external_resource import (
     AbstractExternalResource,
     ManagedBy,
     ResourceState,
+)
+from sematic.scheduling.job_details import (
+    JobDetails,
+    JobKind,
+    JobStatus,
+    KubernetesJobState,
 )
 from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 from sematic.utils.exceptions import IllegalStateTransitionError
@@ -358,3 +368,82 @@ def test_fail_invalid_run_state_transition(test_db):  # noqa: F811
     run.future_state = FutureState.RESOLVED
     with pytest.raises(IllegalStateTransitionError):
         save_run(run)
+
+
+def test_save_read_jobs(test_db):  # noqa: F811
+    root_run = make_run()
+    child_run = make_run(root_id=root_run.id)
+    for r in [root_run, child_run]:
+        save_run(r)
+
+    status = JobStatus(
+        state=KubernetesJobState.Requested,
+        message="Just created",
+        last_updated_epoch_seconds=time.time(),
+    )
+    details = JobDetails(try_number=0)
+    job = make_job(
+        name="foo",
+        namespace="bar",
+        run_id=child_run.id,
+        status=status,
+        details=details,
+        kind=JobKind.run,
+    )
+    save_job(job)
+
+    details.has_started = True
+    status = replace(
+        status,
+        state=KubernetesJobState.Running,
+        last_updated_epoch_seconds=status.last_updated_epoch_seconds + 0.1,
+    )
+    job.update_status(status)
+    save_job(job)
+    status_history = get_job(job.name, job.namespace).status_history
+    assert len(status_history) == 2
+
+    assert get_jobs_by_run_id(root_run.id) == []
+    assert len(get_jobs_by_run_id(child_run.id)) == 1
+
+    status = JobStatus(
+        state=KubernetesJobState.Requested,
+        message="Just created",
+        last_updated_epoch_seconds=time.time(),
+    )
+
+    retry_details = replace(
+        details,
+        try_number=1,
+    )
+    retry_job = make_job(
+        name="foo-1",
+        namespace="bar",
+        run_id=child_run.id,
+        status=status,
+        details=retry_details,
+        kind=JobKind.run,
+    )
+
+    save_job(retry_job)
+    assert len(get_jobs_by_run_id(child_run.id)) == 2
+
+    retry_job_from_scratch = make_job(
+        name="foo-1",
+        namespace="bar",
+        run_id=child_run.id,
+        status=replace(
+            status,
+            last_updated_epoch_seconds=(
+                retry_job.latest_status.last_updated_epoch_seconds - 0.1
+            ),
+        ),
+        details=retry_details,
+        kind=JobKind.run,
+    )
+
+    with pytest.raises(
+        IllegalStateTransitionError,
+        match=(r"Tried to update status from .* to .*, " r"but the latter was older"),
+    ):
+        save_job(retry_job_from_scratch)
