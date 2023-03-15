@@ -68,7 +68,7 @@ class Job(Base, JSONEncodableMixin):
     kind: JobKindString = Column(types.String(), nullable=False)
     message: str = Column(types.String(), nullable=False)
     detail_serialization: Dict[str, Any] = Column(  # type: ignore
-        types.String(), nullable=False
+        types.JSON(), nullable=False
     )
     status_history_serialization: List[Dict[str, Union[str, float]]] = Column(
         types.JSON(), nullable=False
