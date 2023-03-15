@@ -250,7 +250,7 @@ def save_job(job: Job) -> Job:
 
 
 def get_jobs_by_run_id(run_id: str) -> List[Job]:
-    """Get jobs from the DB by source run id"""
+    """Get jobs from the DB by source run id."""
     with db().get_session() as session:
         return list(session.query(Job).filter(Job.run_id == run_id).all())
 
