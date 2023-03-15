@@ -105,7 +105,7 @@ class RayCluster(AbstractExternalResource):
             raise UnsupportedUsageError(
                 f"RayCluster cannot be used unless there is a "
                 f"{AbstractKuberayWrapper.__name__} "
-                f"plugin active. Check your settings.yaml file."
+                f"plugin active. Please check your 'settings.yaml' file."
             )
         return plugins[0]
 
@@ -124,10 +124,9 @@ class RayCluster(AbstractExternalResource):
             logger.error("Could not connect to Ray...")
             try:
                 ray.shutdown()
-            except Exception as e:
+            except Exception:
                 logger.exception(
-                    "Error disconnecting from Ray while handling connection error: %s",
-                    e,
+                    "Error disconnecting from Ray while handling connection error:"
                 )
             raise
 
@@ -155,9 +154,9 @@ class RayCluster(AbstractExternalResource):
             # note that this shuts down the cluster for a local cluster,
             # or simply disconnects from it for a remote one.
             ray.shutdown()
-        except Exception as e:
+        except Exception:
             logger.exception(
-                "While exiting Ray context, could not disconnect from ray: %s", e
+                "While exiting Ray context, could not disconnect from Ray:"
             )
         super().__exit__(exc_type, exc_value, exc_traceback)
 
@@ -175,7 +174,7 @@ class RayCluster(AbstractExternalResource):
         except Exception as e:
             message = (
                 f"Namespace for Kubernetes not configured when "
-                f"creating RayCluster. {e}"
+                f"creating RayCluster: {e}."
             )
             logger.exception(message)
             return self._with_status(
@@ -199,7 +198,7 @@ class RayCluster(AbstractExternalResource):
             # should be exactly one run when we activate the cluster
             run = get_run(run_ids[0])
         except Exception as e:
-            message = f"Unable to get run before creating Ray cluster: {e}"
+            message = f"Unable to get run before creating Ray cluster: {e}."
             logger.exception(message)
             return self._with_status(
                 ResourceState.DEACTIVATING,
@@ -218,7 +217,7 @@ class RayCluster(AbstractExternalResource):
             )
             head_uri = self._kuberay_wrapper().head_uri(manifest)
         except Exception as e:
-            message = f"Unable to create Kubernetes manifest for RayCluster: {e}"
+            message = f"Unable to create Kubernetes manifest for RayCluster: {e}."
             logger.exception(message)
             return self._with_status(
                 ResourceState.DEACTIVATING,
@@ -234,12 +233,12 @@ class RayCluster(AbstractExternalResource):
                 return replace(
                     self._with_status(
                         ResourceState.DEACTIVATING,
-                        f"Cluster not created with expected name {cluster_name}",
+                        f"Cluster not created with expected name '{cluster_name}'.",
                     ),
                     _cluster_name=cluster_name,
                 )
         except Exception as e:
-            message = f"Unable to request RayCluster with name {cluster_name}: {e}"
+            message = f"Unable to request RayCluster with name '{cluster_name}': {e}."
             logger.exception(message)
             return self._continue_deactivation(message)
 
@@ -331,7 +330,7 @@ class RayCluster(AbstractExternalResource):
                 return None, message
             return None, str(e)
         except Exception as e:
-            logger.exception("Error getting Kuberay version: %s", e)
+            logger.exception("Error getting Kuberay version:")
             return None, str(e)
 
         return (
@@ -360,7 +359,8 @@ class RayCluster(AbstractExternalResource):
             is_active, _ = cluster._validate_ray()
             if is_active:
                 return cluster._with_status(
-                    ResourceState.ACTIVE, "Ready to use remote Ray cluster."
+                    ResourceState.ACTIVE,
+                    f"Ready to use remote Ray cluster with name '{self._cluster_name}'.",
                 )
 
             # must be still activating
@@ -368,13 +368,13 @@ class RayCluster(AbstractExternalResource):
                 ResourceState.ACTIVATING,
                 (
                     f"Ray cluster has {cluster._n_pods} ready workers "
-                    f"(counting the head) out of minimum "
+                    f"(counting the head) out of a minimum of "
                     f"{cluster._min_required_workers()}."
                 ),
             )
 
     def get_activation_timeout_seconds(self) -> float:
-        """Get the number of seconds the resource is allowed to take to activate"""
+        """Get the number of seconds the resource is allowed to take to activate."""
         return self.activation_timeout_seconds
 
     def _update_n_pods(self) -> "RayCluster":
@@ -435,22 +435,22 @@ class RayCluster(AbstractExternalResource):
                 if self.status.state == ResourceState.DEACTIVATING
                 else ResourceState.DEACTIVATING
             )
-            return self._with_status(state, f"Deactivating cluster because: {reason}")
+            return self._with_status(state, f"Deactivating cluster because '{reason}'.")
 
         try:
             namespace = get_server_setting(ServerSettingsVar.KUBERNETES_NAMESPACE)
             self._cluster_api().delete(self._cluster_name, namespace=namespace)
             return self._with_status(
                 ResourceState.DEACTIVATING,
-                f"Requested deletion of RayCluster with name {self._cluster_name} "
-                f"because: {reason}",
+                f"Requested deletion of RayCluster with name '{self._cluster_name}' "
+                f"because '{reason}'.",
             )
         except ApiException as e:
             if e.status == 404:
                 return self._with_status(
                     ResourceState.DEACTIVATED,
                     f"Ray cluster with name '{self._cluster_name}' "
-                    f"deleted because: {reason}",
+                    f"deleted because '{reason}'.",
                 )
             message = (
                 f"While attempting to deactivate Ray cluster because '{reason}', "
@@ -464,7 +464,7 @@ class RayCluster(AbstractExternalResource):
         except Exception as e:
             message = (
                 f"While attempting to deactivate Ray cluster because '{reason}', "
-                f"had error: '{e}'."
+                f"had error: {e}."
             )
             logger.exception(message)
             return self._with_status(
@@ -473,7 +473,9 @@ class RayCluster(AbstractExternalResource):
             )
 
     def _do_deactivate(self) -> "RayCluster":
-        return self._continue_deactivation("Deactivation requested via Sematic API")
+        return self._continue_deactivation(
+            "Deactivation requested via the Sematic API."
+        )
 
     def _validate_ray(self) -> Tuple[bool, Optional[str]]:
         """Confirm that the Ray cluster is up and appears healthy.
