@@ -140,7 +140,7 @@ def test_continue_deactivation():
         assert cluster.status.state == ResourceState.DEACTIVATING
         assert cluster.status.message == (
             f"Requested deletion of RayCluster with name "
-            f"{cluster_name} because: {reason}"
+            f"'{cluster_name}' because '{reason}'."
         )
         cluster._cluster_api().delete.assert_called_with(
             cluster_name, namespace=namespace
@@ -150,7 +150,7 @@ def test_continue_deactivation():
         cluster = cluster._continue_deactivation(reason)
         assert cluster.status.state == ResourceState.DEACTIVATED
         assert cluster.status.message == (
-            f"Ray cluster with name '{cluster_name}' deleted because: {reason}"
+            f"Ray cluster with name '{cluster_name}' deleted because '{reason}'."
         )
 
 
@@ -190,8 +190,8 @@ def test_request_cluster(mock_get_run_ids, mock_get_run):
     cluster = cluster._request_cluster(kuberay_version, namespace)
     assert cluster.status.state == ResourceState.DEACTIVATING
     assert (
-        f"Deactivating cluster because: Unable to request "
-        f"RayCluster with name {cluster_name}: (500)"
+        f"Deactivating cluster because 'Unable to request "
+        f"RayCluster with name '{cluster_name}': (500)"
     ) in cluster.status.message
 
 
@@ -216,7 +216,7 @@ def test_update_from_activating():
         cluster = cluster._update_from_activating()
 
     assert cluster.status.message == (
-        "Ray cluster has 0 ready workers (counting the head) out of minimum 3."
+        "Ray cluster has 0 ready workers (counting the head) out of a minimum of 3."
     )
     assert cluster.status.state == ResourceState.ACTIVATING
 
@@ -251,7 +251,7 @@ def test_update_from_activating():
         cluster = cluster._update_from_activating()
 
     assert cluster.status.message == (
-        "Ray cluster has 2 ready workers (counting the head) out of minimum 3."
+        "Ray cluster has 2 ready workers (counting the head) out of a minimum of 3."
     )
     assert cluster.status.state == ResourceState.ACTIVATING
 
@@ -261,7 +261,7 @@ def test_update_from_activating():
         cluster = cluster._update_from_activating()
 
     assert cluster.status.message == (
-        "Ray cluster has 2 ready workers (counting the head) out of minimum 3."
+        "Ray cluster has 2 ready workers (counting the head) out of a minimum of 3."
     )
     assert cluster.status.state == ResourceState.ACTIVATING
 
@@ -272,5 +272,7 @@ def test_update_from_activating():
     with environment_variables(dict(KUBERNETES_NAMESPACE=namespace)):
         cluster = cluster._update_from_activating()
 
-    assert cluster.status.message == ("Ready to use remote Ray cluster.")
+    assert cluster.status.message == (
+        "Ready to use remote Ray cluster with name 'cluster-name'."
+    )
     assert cluster.status.state == ResourceState.ACTIVE
