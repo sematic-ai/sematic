@@ -23,7 +23,7 @@ pre-commit:
 	python3 -m flake8
 	python3 -m mypy sematic
 	python3 -m black sematic --check
-	python3 -m isort sematic --diff
+	python3 -m isort sematic --diff --check
 	pushd sematic/ui && npm run lint && popd
 
 fix:
