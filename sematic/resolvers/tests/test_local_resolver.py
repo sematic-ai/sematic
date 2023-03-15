@@ -1,4 +1,6 @@
 # Standard Library
+import os
+import time
 from collections import defaultdict
 from typing import Any, List, Tuple, Type
 
@@ -15,6 +17,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
 )
 from sematic.calculator import func
+from sematic.config.tests.fixtures import no_settings_file  # noqa: F401
 from sematic.db.db import DB
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
@@ -831,3 +834,79 @@ def test_cached_output_different_inputs(
 
     with pytest.raises(ValueError):
         artifact1.assert_matches(artifact2)
+
+
+def test_subprocess_signal_handling(
+    no_settings_file,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+):
+    @func
+    def fork_func(param: int) -> int:  # type: ignore
+        subprocess_pid = os.fork()
+
+        if subprocess_pid == 0:
+            time.sleep(1)
+            # sys.exit(1) would mess up pytest
+            os._exit(1)
+
+        os.kill(subprocess_pid, 15)
+        os.waitpid(subprocess_pid, 0)
+        return param
+
+    future = fork_func(param=42)
+    result = future.resolve(LocalResolver())
+
+    # assert killing the subprocess did not cancel the resolution
+    assert result == 42
+
+
+def test_subprocess_no_cleanup(
+    no_settings_file,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+):
+    @func
+    def fork_func(param: int) -> int:  # type: ignore
+        subprocess_pid = os.fork()
+
+        if subprocess_pid == 0:
+            return param
+
+        os.waitpid(subprocess_pid, 0)
+        time.sleep(1)
+        return param
+
+    future = fork_func(param=42)
+    result = future.resolve(LocalResolver())
+
+    # assert the subprocess did not execute worker code,
+    # messing up the actual worker's workflow
+    assert result == 42
+
+
+def test_subprocess_error(
+    no_settings_file,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+):
+    @func
+    def fork_func(param: int) -> int:  # type: ignore
+        subprocess_pid = os.fork()
+
+        if subprocess_pid == 0:
+            # sys.exit(1) would mess up pytest
+            os._exit(1)
+
+        os.waitpid(subprocess_pid, 0)
+        time.sleep(1)
+        return param
+
+    future = fork_func(param=42)
+    result = future.resolve(LocalResolver())
+
+    # assert the subprocess' death did not cancel the resolution
+    assert result == 42
