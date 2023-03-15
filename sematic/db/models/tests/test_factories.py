@@ -15,6 +15,7 @@ from sematic.db.models.factories import (
     clone_resolution,
     clone_root_run,
     make_artifact,
+    make_job,
     make_run_from_future,
 )
 from sematic.db.models.job import Job
@@ -220,7 +221,7 @@ def test_new():
     details = JobDetails(
         try_number=0,
     )
-    job = Job.new(
+    job = make_job(
         name=name,
         namespace=namespace,
         run_id=run_id,
