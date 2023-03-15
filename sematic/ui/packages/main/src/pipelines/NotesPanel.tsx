@@ -1,4 +1,5 @@
 import { Box, Stack, TextField, useTheme } from "@mui/material";
+import { Note, Run, User } from "@sematic/common/src/Models";
 import {
   KeyboardEvent,
   useCallback,
@@ -6,17 +7,16 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
+  useState
 } from "react";
-import { usePipelinePanelsContext, usePipelineRunContext } from "../hooks/pipelineHooks";
-import { Note, Run, User } from "../Models";
-import { NoteCreatePayload, NoteListPayload } from "../Payloads";
-import PipelineRunViewContext from "./PipelineRunViewContext";
-import { fetchJSON } from "../utils";
-import { NoteView } from "../components/Notes";
-import { ExtractContextType } from "../components/utils/typings";
-import PipelinePanelsContext from "./PipelinePanelsContext";
-import { UserContext } from "../appContext";
+import { UserContext } from "src/appContext";
+import { NoteView } from "src/components/Notes";
+import { ExtractContextType } from "src/components/utils/typings";
+import { usePipelinePanelsContext, usePipelineRunContext } from "src/hooks/pipelineHooks";
+import { NoteCreatePayload, NoteListPayload } from "src/Payloads";
+import PipelineRunViewContext from "src/pipelines/PipelineRunViewContext";
+import { fetchJSON } from "src/utils";
+import PipelinePanelsContext from "src/pipelines/PipelinePanelsContext";
 
 export default function NotesPanel() {
   const theme = useTheme();

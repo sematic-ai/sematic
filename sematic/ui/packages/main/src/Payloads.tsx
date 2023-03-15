@@ -1,4 +1,4 @@
-import { Artifact, Edge, Note, Resolution, Run, User } from "./Models";
+import { Artifact, Edge, Note, Resolution, Run, User } from "@sematic/common/src/Models";
 
 export type RunListPayload = {
   current_page_url: string;

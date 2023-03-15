@@ -9,6 +9,19 @@ ARG EXTRA
 
 RUN python3 -m pip install --upgrade pip
 
+# Pre-install some requirements so that installing from the
+# wheel takes less time. This improves caching behavior
+# during development iterations, but should not be used
+# for production builds, as it will install extra dependencies
+# that aren't actually needed for the server to run.
+# The most convenient way to leverage this is by using a script
+# that automatically uncomments these lines and builds using the resulting
+# Dockerfile, but you can manually uncomment them.
+# Just make sure to have a requirements-dev-cache.txt file
+# in the docker dir before uncommenting.
+# <uncomment for pre-install-cache> COPY ./requirements*.txt /requirements/
+# <uncomment for pre-install-cache> RUN pip install -r /requirements/requirements-dev-cache.txt
+
 # Install from a local wheel
 COPY sematic-*.whl .
 RUN pip install $(ls ./sematic-*.whl)["${EXTRA}"]

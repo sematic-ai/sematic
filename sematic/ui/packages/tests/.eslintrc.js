@@ -1,5 +1,5 @@
 module.exports = {
-    "extends": ["react-app", "react-app/jest"],
+    "extends": ["@sematic/eslint-config"],
     "plugins": [
         "cypress"
     ]

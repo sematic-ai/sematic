@@ -1,3 +1,5 @@
+import { User } from "@sematic/common/src/Models";
+
 const run = {
     "cache_key": null,
     "calculator_path": "sematic.examples.add.pipeline.pipeline",
@@ -26,7 +28,7 @@ const run = {
         "final"
     ],
     "updated_at": new Date("2023-02-03T16:51:47.578636+00:00"),
-    "user": null as any,
+    "user": null as User | null,
     "user_id": "uid" as string | null
 }
 

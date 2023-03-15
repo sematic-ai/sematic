@@ -1,4 +1,4 @@
-import { abbreviatedUserName, sha1 } from "../utils";
+import { abbreviatedUserName, sha1 } from "@sematic/main/src/utils";
 import user from "@sematic/ui-test/fixtures/user";
 
 describe('sha1', () => {

@@ -1,3 +1,5 @@
+///<reference path="../vendor/types/plotly.js-cartesian-dist.d.ts" />
+
 import { CommonValueViewProps } from "./common";
 import createPlotlyComponent from "react-plotly.js/factory";
 import Plotly from "plotly.js-cartesian-dist";

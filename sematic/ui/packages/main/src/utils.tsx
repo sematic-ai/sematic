@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { atomWithHash } from 'jotai-location'
 import { useLocation } from "react-router-dom";
-import { User } from "./Models";
+import { User } from "@sematic/common/src/Models";
 
 interface IFetchJSON {
   url: string;

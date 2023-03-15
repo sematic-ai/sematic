@@ -1,20 +1,20 @@
+import { InfoOutlined } from "@mui/icons-material";
+import { Alert, AlertTitle, Container, containerClasses } from "@mui/material";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { useCallback, useMemo } from "react";
-import { RunList, RunListColumn } from "../components/RunList";
-import Tags from "../components/Tags";
-import { Run } from "../Models";
-import RunStateChip, { RunStateChipUndefinedStyle } from "../components/RunStateChip";
-import { Alert, AlertTitle, Container, containerClasses } from "@mui/material";
-import { InfoOutlined } from "@mui/icons-material";
-import { RunTime } from "../components/RunTime";
-import CalculatorPath from "../components/CalculatorPath";
-import TimeAgo from "../components/TimeAgo";
-import { useFetchRuns } from "../hooks/pipelineHooks";
-import Loading from "../components/Loading";
 import { styled } from "@mui/system";
-import MuiRouterLink from "../components/MuiRouterLink";
-import { pipelineSocket } from "../sockets";
+import { Run } from "@sematic/common/src/Models";
+import { useCallback, useMemo } from "react";
+import CalculatorPath from "src/components/CalculatorPath";
+import Loading from "src/components/Loading";
+import MuiRouterLink from "src/components/MuiRouterLink";
+import { RunList, RunListColumn } from "src/components/RunList";
+import RunStateChip, { RunStateChipUndefinedStyle } from "src/components/RunStateChip";
+import { RunTime } from "src/components/RunTime";
+import Tags from "src/components/Tags";
+import TimeAgo from "src/components/TimeAgo";
+import { useFetchRuns } from "src/hooks/pipelineHooks";
+import { pipelineSocket } from "src/sockets";
 
 const RecentStatusesWithStyles = styled('span')`
   flex-direction: row;

@@ -45,6 +45,7 @@ sematic_py_lib(
         "//sematic/plugins:abstract_external_resource",
         "//sematic/resolvers:abstract_resource_manager",
         "//sematic/utils:exceptions",
+        "//sematic/utils:signals",
     ],
 )
 
@@ -98,6 +99,7 @@ sematic_py_lib(
         "//sematic:api_client",
         "//sematic/config:config",
         "//sematic/config:user_settings",
+        "//sematic/utils:signals",
         "//sematic/utils:stdout",
     ],
 )

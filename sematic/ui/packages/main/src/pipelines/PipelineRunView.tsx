@@ -1,14 +1,14 @@
 import Box from "@mui/material/Box";
+import { Run } from "@sematic/common/src/Models";
+import { useAtom } from "jotai";
 import { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import Loading from "../components/Loading";
-import PipelineBar from "./PipelineBar";
-import PipelinePanels from "./PipelinePanels";
-import { ExtractContextType } from "../components/utils/typings";
-import { selectedRunHashAtom, useFetchResolution, useFetchRun, useRunNavigation } from "../hooks/pipelineHooks";
-import PipelineRunViewContext from './PipelineRunViewContext'
-import { Run } from "../Models";
-import { useAtom } from "jotai";
+import Loading from "src/components/Loading";
+import { ExtractContextType } from "src/components/utils/typings";
+import { selectedRunHashAtom, useFetchResolution, useFetchRun, useRunNavigation } from "src/hooks/pipelineHooks";
+import PipelineBar from "src/pipelines/PipelineBar";
+import PipelinePanels from "src/pipelines/PipelinePanels";
+import PipelineRunViewContext from 'src/pipelines/PipelineRunViewContext';
 
 interface RunViewPresentationProps {
   rootRun: Run

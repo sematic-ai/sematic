@@ -84,6 +84,7 @@
     "@types/react-copy-to-clipboard": "^5.0.2",
     "@types/react-plotly.js": "^2.5.0",
     "@types/react-syntax-highlighter": "^15.5.1",
-    "@types/uuid": "^8.3.4"
+    "@types/uuid": "^8.3.4",
+    "@sematic/common": "*"
   }
 }

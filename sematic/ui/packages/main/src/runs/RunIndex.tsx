@@ -2,6 +2,7 @@ import { SearchOutlined } from "@mui/icons-material";
 import { Box, Button, buttonClasses, Container, TextField, textFieldClasses } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/system";
+import { Run } from "@sematic/common/src/Models";
 import React, { ChangeEvent, FormEvent, useCallback, useState } from "react";
 import CalculatorPath from "src/components/CalculatorPath";
 import Id from "src/components/Id";
@@ -13,7 +14,6 @@ import Tags from "src/components/Tags";
 import TimeAgo from "src/components/TimeAgo";
 import UserAvatar from "src/components/UserAvatar";
 import { getRunUrlPattern } from "src/hooks/pipelineHooks";
-import { Run } from "src/Models";
 import { spacing } from "src/utils";
 
 const StyledScroller = styled(Container)`

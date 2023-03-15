@@ -4,6 +4,7 @@ Module keeping all /api/v*/runs/* API endpoints.
 
 # Standard Library
 import logging
+from datetime import datetime
 from http import HTTPStatus
 from typing import Optional
 
@@ -146,13 +147,23 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
             # status for usage in dashboards. Some users may be leveraging it for
             # such purposes, so think carefully before changing/removing it.
             was_remote = len(resolution.external_jobs)
+            duration_seconds = None
+            if root_run.started_at is not None:
+                duration_seconds = (
+                    datetime.utcnow() - root_run.started_at
+                ).total_seconds()
             logger.info(
                 "%s resolution %s for pipeline %s terminated with "
-                "root run in state %s. The root run had tags: %s",
+                "root run in state %s. The duration was %s seconds. "
+                "Git dirty: %s . Git branch: '%s'"
+                "The root run had tags: %s",
                 "Remote" if was_remote else "Local",
                 resolution.root_id,
                 root_run.calculator_path,
                 root_run.future_state,
+                duration_seconds,
+                getattr(resolution.git_info, "dirty", "UNKNOWN"),
+                getattr(resolution.git_info, "branch", "UNKNOWN"),
                 root_run.tags,
             )
         try:

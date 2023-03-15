@@ -1,4 +1,4 @@
-import { Artifact, Edge, Run } from "../Models";
+import { Artifact, Edge, Run } from "@sematic/common/src/Models";
 export interface Graph {
     runs: Array<Run>;
     runsById: Map<string, Run>;
