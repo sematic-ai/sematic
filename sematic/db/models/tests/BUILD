@@ -2,8 +2,9 @@ pytest_test(
     name = "test_job",
     srcs = ["test_job.py"],
     deps = [
-        "//sematic/db/models:job",
+        "//sematic/db/models:factories",
         "//sematic/scheduling:job_details",
+        "//sematic/utils:exceptions",
     ],
 )
 
@@ -15,10 +16,12 @@ pytest_test(
         "//sematic:calculator",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
+        "//sematic/db/models:job",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
         "//sematic/db/tests:fixtures",
         "//sematic/resolvers:resource_requirements",
+        "//sematic/scheduling:job_details",
         "//sematic/types:serialization",
     ],
 )

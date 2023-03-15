@@ -1,6 +1,7 @@
 # Standard Library
 import hashlib
 import json
+import time
 from typing import List, Optional, Union
 
 # Third-party
@@ -16,12 +17,19 @@ from sematic.db.models.factories import (
     make_artifact,
     make_run_from_future,
 )
+from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.tests.fixtures import resolution, run  # noqa: F401
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
+)
+from sematic.scheduling.job_details import (
+    JobDetails,
+    JobKind,
+    JobStatus,
+    KubernetesJobState,
 )
 from sematic.types.serialization import (
     get_json_encodable_summary,
@@ -197,3 +205,37 @@ def test_clone_resolution(resolution: Resolution):  # noqa: F811
     assert cloned_resolution.settings_env_vars == resolution.settings_env_vars
     assert cloned_resolution.container_image_uri == resolution.container_image_uri
     assert cloned_resolution.container_image_uris == resolution.container_image_uris
+
+
+def test_new():
+    name = "foo"
+    namespace = "bar"
+    run_id = "abc123"
+    job_kind = JobKind.run
+    status = JobStatus(
+        state=KubernetesJobState.Requested,
+        message="Just created",
+        last_updated_epoch_seconds=time.time(),
+    )
+    details = JobDetails(
+        try_number=0,
+    )
+    job = Job.new(
+        name=name,
+        namespace=namespace,
+        run_id=run_id,
+        status=status,
+        details=details,
+        kind=job_kind,
+    )
+    assert isinstance(job, Job)
+
+    assert job.name == name
+    assert job.namespace == namespace
+    assert job.run_id == run_id
+    assert job.last_updated_epoch_seconds == status.last_updated_epoch_seconds
+    assert job.state == status.state
+    assert job.kind == job_kind
+    assert job.message == status.message
+    assert job.details == details
+    assert job.status_history == (status,)

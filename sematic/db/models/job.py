@@ -50,7 +50,7 @@ class Job(Base, JSONEncodableMixin):
         the most recent status to aid in queries.
     detail_serialization:
         A json-encoded serialization of detailed state information for the job
-    status_history_serializations:
+    status_history_serialization:
         A list of json-encoded serializations of job statuses
     created_at:
         The time the DB record for the job was created
@@ -70,7 +70,7 @@ class Job(Base, JSONEncodableMixin):
     detail_serialization: Dict[str, Any] = Column(  # type: ignore
         types.String(), nullable=False
     )
-    status_history_serializations: List[Dict[str, Union[str, float]]] = Column(
+    status_history_serialization: List[Dict[str, Union[str, float]]] = Column(
         types.JSON(), nullable=False
     )
     created_at: datetime.datetime = Column(
@@ -82,28 +82,6 @@ class Job(Base, JSONEncodableMixin):
         default=datetime.datetime.utcnow,
         onupdate=datetime.datetime.utcnow,
     )
-
-    @classmethod
-    def new(
-        cls,
-        name: str,
-        namespace: str,
-        run_id: str,
-        status: JobStatus,
-        details: JobDetails,
-        kind: JobKindString,
-    ):
-        return Job(
-            name=name,
-            namespace=namespace,
-            run_id=run_id,
-            last_updated_epoch_seconds=status.last_updated_epoch_seconds,
-            state=status.state,
-            kind=kind,
-            message=status.message,
-            detail_serialization=asdict(details),
-            status_history_serializations=[asdict(status)],
-        )
 
     def get_details(self) -> JobDetails:
         return fromdict(JobDetails, self.detail_serialization)
@@ -137,11 +115,11 @@ class Job(Base, JSONEncodableMixin):
 
     def get_status_history(self) -> Tuple[JobStatus, ...]:
         return tuple(
-            fromdict(JobStatus, status) for status in self.status_history_serializations
+            fromdict(JobStatus, status) for status in self.status_history_serialization
         )
 
     def _set_status_history(self, status_history: Sequence[JobStatus]):
-        self.status_history_serializations = [
+        self.status_history_serialization = [
             asdict(status) for status in status_history
         ]
 

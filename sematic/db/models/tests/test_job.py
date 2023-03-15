@@ -6,47 +6,14 @@ from dataclasses import replace
 import pytest
 
 # Sematic
-from sematic.db.models.job import IllegalStateTransitionError, Job
+from sematic.db.models.factories import make_job
 from sematic.scheduling.job_details import (
     JobDetails,
     JobKind,
     JobStatus,
     KubernetesJobState,
 )
-
-
-def test_new():
-    name = "foo"
-    namespace = "bar"
-    run_id = "abc123"
-    job_kind = JobKind.run
-    status = JobStatus(
-        state=KubernetesJobState.Requested,
-        message="Just created",
-        last_updated_epoch_seconds=time.time(),
-    )
-    details = JobDetails(
-        try_number=0,
-    )
-    job = Job.new(
-        name=name,
-        namespace=namespace,
-        run_id=run_id,
-        status=status,
-        details=details,
-        kind=job_kind,
-    )
-    assert isinstance(job, Job)
-
-    assert job.name == name
-    assert job.namespace == namespace
-    assert job.run_id == run_id
-    assert job.last_updated_epoch_seconds == status.last_updated_epoch_seconds
-    assert job.state == status.state
-    assert job.kind == job_kind
-    assert job.message == status.message
-    assert job.details == details
-    assert job.status_history == (status,)
+from sematic.utils.exceptions import IllegalStateTransitionError
 
 
 def test_update_status():
@@ -55,7 +22,7 @@ def test_update_status():
         message="Just created",
         last_updated_epoch_seconds=time.time(),
     )
-    job = Job.new(
+    job = make_job(
         name="foo",
         namespace="bar",
         run_id="abc123",
@@ -97,7 +64,7 @@ def test_update_with_out_of_order_status():
         message="Just created",
         last_updated_epoch_seconds=time.time(),
     )
-    job = Job.new(
+    job = make_job(
         name="foo",
         namespace="bar",
         run_id="abc123",
@@ -119,7 +86,7 @@ def test_update_reanimate_dead_job():
         message="Just created",
         last_updated_epoch_seconds=time.time(),
     )
-    job = Job.new(
+    job = make_job(
         name="foo",
         namespace="bar",
         run_id="abc123",

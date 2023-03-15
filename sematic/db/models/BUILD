@@ -25,10 +25,12 @@ sematic_py_lib(
     deps = [
         ":artifact",
         ":edge",
+        ":job",
         ":resolution",
         ":run",
         ":user",
         "//sematic:abstract_future",
+        "//sematic/scheduling:job_details",
         "//sematic/types:serialization",
         "//sematic/types/types:union",
         "//sematic/utils:hashing",

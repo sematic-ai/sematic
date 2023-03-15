@@ -9,7 +9,7 @@ CREATE TABLE jobs (
     kind TEXT NOT NULL,
     message TEXT NOT NULL,
     detail_serialization JSONB NOT NULL,
-    status_history_serializations JSONB NOT NULL,
+    status_history_serialization JSONB NOT NULL,
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
 

@@ -154,7 +154,8 @@ class PodSummary:
 
 @dataclass(frozen=True)
 class JobStatus:
-    """A simple status object describing the state of the job
+    """A simple status object describing the state of the job.
+
     Attributes
     ----------
     state:
