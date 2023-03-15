@@ -6,9 +6,8 @@ from dataclasses import replace
 # Sematic
 import sematic
 from sematic.ee.ray import RayNodeConfig
-from sematic.examples.lightning_resnet.pipeline import pipeline
-from sematic.examples.lightning_resnet.train_eval import (
-    DataConfig,
+from sematic.examples.cifar_classifier.pipeline import pipeline
+from sematic.examples.cifar_classifier.train_eval import (
     EvaluationConfig,
     TrainingConfig,
     TrainLoopConfig,
@@ -18,35 +17,20 @@ from sematic.types.types.aws.s3 import S3Location
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DEFAULT_CHECKPOINT_LOCATION = S3Location.from_uri(
-    "s3://sematic-examples/lightning-resnet-example"
-)
-
-LOCAL_DATA_CONFIG = DataConfig(
-    batch_size=2,
-    train_fraction=0.9,
-    n_workers=4,
-)
-
-REMOTE_DATA_CONFIG = replace(LOCAL_DATA_CONFIG, batch_size=256)
-
-LOCAL_LOOP_CONFIG = TrainLoopConfig(
-    n_epochs=1,
-    max_steps=250,
-    learning_rate=0.5,
-    momentum=0.9,
-    weight_decay=5e-4,
-)
+DEFAULT_CHECKPOINT_DIR = S3Location.from_uri("s3://sematic-examples/ray-cifar-example")
 
 LOCAL_TRAINING_CONFIG = TrainingConfig(
-    n_workers=2,
+    n_workers=1,
     worker=RayNodeConfig(
         cpu=2,
         memory_gb=8,
         gpu_count=0,
     ),
-    loop_config=LOCAL_LOOP_CONFIG,
-    checkpoint_location=DEFAULT_CHECKPOINT_LOCATION,
+    checkpoint_dir=DEFAULT_CHECKPOINT_DIR,
+    loop_config=TrainLoopConfig(
+        batch_size=2,
+        n_epochs=1,
+    ),
 )
 
 REMOTE_TRAINING_CONFIG = TrainingConfig(
@@ -56,46 +40,47 @@ REMOTE_TRAINING_CONFIG = TrainingConfig(
         memory_gb=10,
         gpu_count=1,
     ),
-    loop_config=replace(
-        LOCAL_LOOP_CONFIG,
-        n_epochs=10,
-        max_steps=-1,
+    checkpoint_dir=DEFAULT_CHECKPOINT_DIR,
+    loop_config=TrainLoopConfig(
+        batch_size=4,
+        n_epochs=5,
     ),
-    checkpoint_location=DEFAULT_CHECKPOINT_LOCATION,
 )
 
 LOCAL_EVAL_CONFIG = EvaluationConfig(
-    n_workers=2,
+    n_workers=1,
     worker=RayNodeConfig(
         cpu=2,
         memory_gb=8,
         gpu_count=0,
     ),
+    n_sample_misclassifications=10,
 )
 
 REMOTE_EVAL_CONFIG = EvaluationConfig(
-    n_workers=2,
+    n_workers=1,
     worker=RayNodeConfig(
         cpu=3,
         memory_gb=10,
         gpu_count=1,
     ),
+    n_sample_misclassifications=10,
 )
 
 
 def main():
-    parser = argparse.ArgumentParser("Lightning CIFAR Classifier Example")
+    parser = argparse.ArgumentParser("CIFAR Classifier Example")
     parser.add_argument(
         "--cloud",
         default=False,
         action="store_true",
-        help="Whether to use the CloudResolver (uses LocalResolver otherwise)",
+        help="Whether to use CloudResolver (otherwise LocalResolver is used)",
     )
     parser.add_argument(
         "--checkpoint-dir",
-        default=DEFAULT_CHECKPOINT_LOCATION,
-        type=str,
-        help="S3 URI for where to store checkpoints.",
+        default=DEFAULT_CHECKPOINT_DIR,
+        type=S3Location.from_uri,
+        help="S3 URI to store checkpoints at.",
     )
 
     args = parser.parse_args()
@@ -106,20 +91,16 @@ def main():
         resolver = sematic.CloudResolver()
         train_config = REMOTE_TRAINING_CONFIG
         eval_config = REMOTE_EVAL_CONFIG
-        data_config = REMOTE_DATA_CONFIG
     else:
         resolver = sematic.LocalResolver()
         train_config = LOCAL_TRAINING_CONFIG
         eval_config = LOCAL_EVAL_CONFIG
-        data_config = LOCAL_DATA_CONFIG
 
-    train_config = replace(train_config, checkpoint_location=args.checkpoint_dir)
+    train_config = replace(train_config, checkpoint_dir=args.checkpoint_dir)
 
-    future = pipeline(train_config, data_config, eval_config).set(
-        name="Distributed Training Resnet Example"
-    )
+    future = pipeline(train_config, eval_config).set(name="CIFAR Classifier Example")
 
-    print(future.resolve(resolver))
+    future.resolve(resolver)
 
 
 if __name__ == "__main__":
