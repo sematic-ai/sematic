@@ -17,7 +17,7 @@ from sematic.types.types.aws.s3 import S3Location
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DEFAULT_CHECKPOINT_DIR = S3Location.from_uri("s3://sematic-dev/ray-demo")
+DEFAULT_CHECKPOINT_DIR = S3Location.from_uri("s3://sematic-examples/ray-cifar-example")
 
 LOCAL_TRAINING_CONFIG = TrainingConfig(
     n_workers=1,
