@@ -25,17 +25,20 @@ from sematic.calculator import func
 from sematic.config.server_settings import ServerSettings, ServerSettingsVar
 from sematic.config.tests.fixtures import empty_settings_file  # noqa: F401
 from sematic.config.user_settings import UserSettings, UserSettingsVar
+from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
     get_run,
+    save_job,
     save_resolution,
     save_run,
     save_run_external_resource_links,
 )
 from sematic.db.tests.fixtures import (  # noqa: F401
     allow_any_run_state_transition,
+    make_job,
     make_run,
     persisted_external_resource,
     persisted_resolution,
@@ -777,3 +780,23 @@ def test_set_run_user(
         assert payload["content"][0]["user"]["id"] == persisted_user.id
         assert "email" not in payload["content"][0]["user"]
         assert "api_key" not in payload["content"][0]["user"]
+
+
+def test_get_jobs(
+    mock_socketio,  # noqa: F811
+    persisted_user: User,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    mock_requests,  # noqa: F811
+    empty_settings_file,  # noqa: F811
+):
+    job_1 = make_job(run_id=persisted_run.id, name="job_1")
+    job_2 = make_job(run_id=persisted_run.id, name="job_2")
+    save_job(job_1)
+    save_job(job_2)
+
+    response = test_client.get(f"/api/v1/runs/{persisted_run.id}/jobs")
+    serialized_jobs = response.json["content"]  # type: ignore
+    jobs = [Job.from_json_encodable(job) for job in serialized_jobs]
+
+    assert jobs == [job_1, job_2]

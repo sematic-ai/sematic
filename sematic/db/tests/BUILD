@@ -16,9 +16,11 @@ sematic_py_lib(
         "//sematic/db:queries",
         "//sematic/db/models:external_resource",
         "//sematic/db/models:factories",
+        "//sematic/db/models:job",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
         "//sematic/plugins:abstract_external_resource",
+        "//sematic/scheduling:job_details",
         "//sematic/tests:fixtures",
     ],
 )

@@ -16,7 +16,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.calculator import func
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.external_resource import ExternalResource
-from sematic.db.models.factories import make_artifact, make_job
+from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import (
@@ -40,6 +40,7 @@ from sematic.db.queries import (
 )
 from sematic.db.tests.fixtures import (  # noqa: F401
     allow_any_run_state_transition,
+    make_job,
     make_run,
     persisted_artifact,
     persisted_resolution,
@@ -53,12 +54,7 @@ from sematic.plugins.abstract_external_resource import (
     ManagedBy,
     ResourceState,
 )
-from sematic.scheduling.job_details import (
-    JobDetails,
-    JobKind,
-    JobStatus,
-    KubernetesJobState,
-)
+from sematic.scheduling.job_details import JobDetails, JobStatus, KubernetesJobState
 from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 from sematic.utils.exceptions import IllegalStateTransitionError
 
@@ -382,14 +378,7 @@ def test_save_read_jobs(test_db):  # noqa: F811
         last_updated_epoch_seconds=time.time(),
     )
     details = JobDetails(try_number=0)
-    job = make_job(
-        name="foo",
-        namespace="bar",
-        run_id=child_run.id,
-        status=status,
-        details=details,
-        kind=JobKind.run,
-    )
+    job = make_job(details=details, status=status, run_id=child_run.id)
     save_job(job)
 
     details.has_started = True
@@ -418,11 +407,9 @@ def test_save_read_jobs(test_db):  # noqa: F811
     )
     retry_job = make_job(
         name="foo-1",
-        namespace="bar",
         run_id=child_run.id,
         status=status,
         details=retry_details,
-        kind=JobKind.run,
     )
 
     save_job(retry_job)
@@ -430,7 +417,6 @@ def test_save_read_jobs(test_db):  # noqa: F811
 
     retry_job_from_scratch = make_job(
         name="foo-1",
-        namespace="bar",
         run_id=child_run.id,
         status=replace(
             status,
@@ -439,7 +425,6 @@ def test_save_read_jobs(test_db):  # noqa: F811
             ),
         ),
         details=retry_details,
-        kind=JobKind.run,
     )
 
     with pytest.raises(

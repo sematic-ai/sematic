@@ -1,4 +1,5 @@
 # Standard Library
+import time
 import uuid
 from typing import Any
 
@@ -11,8 +12,11 @@ import testing.postgresql  # type: ignore
 import sematic.db.db as db
 from sematic.abstract_future import FutureState
 from sematic.db.models.external_resource import ExternalResource
-from sematic.db.models.factories import make_artifact, make_user
+from sematic.db.models.factories import make_artifact
+from sematic.db.models.factories import make_job as factory_make_job
+from sematic.db.models.factories import make_user
 from sematic.db.models.git_info import GitInfo
+from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import (
@@ -26,6 +30,12 @@ from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
+)
+from sematic.scheduling.job_details import (
+    JobDetails,
+    JobKind,
+    JobStatus,
+    KubernetesJobState,
 )
 from sematic.tests.fixtures import test_storage  # noqa: F401
 
@@ -107,6 +117,23 @@ def test_db():
         yield temp_db
     finally:
         db._db_instance = original_db
+
+
+def make_job(**kwargs) -> Job:
+    final_kwargs = dict(
+        name="foo",
+        namespace="bar",
+        run_id="abc123",
+        status=JobStatus(
+            state=KubernetesJobState.Requested,  # type: ignore
+            message="Just created",
+            last_updated_epoch_seconds=time.time(),
+        ),
+        details=JobDetails(try_number=0),
+        kind=JobKind.run,
+    )
+    final_kwargs.update(kwargs)
+    return factory_make_job(**final_kwargs)  # type: ignore
 
 
 def make_run(**kwargs) -> Run:
