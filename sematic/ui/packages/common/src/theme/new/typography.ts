@@ -1,21 +1,5 @@
 import { TypographyOptions } from "@mui/material/styles/createTypography";
 
-declare module '@mui/material/styles' {
-  interface TypographyVariants {
-      small: React.CSSProperties;
-      big: React.CSSProperties;
-      bold: React.CSSProperties;
-      bigBold: React.CSSProperties;
-  }
-
-  // allow configuration using `createTheme`
-  interface TypographyVariantsOptions {
-      small?: React.CSSProperties;
-      big?: React.CSSProperties;
-      bold?: React.CSSProperties;
-      bigBold?: React.CSSProperties;
-  }
-}
 const fontWeightLight = 300;
 const fontWeightRegular = 400;
 const fontWeightMedium = 500;

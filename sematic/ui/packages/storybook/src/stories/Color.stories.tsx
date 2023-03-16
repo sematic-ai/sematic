@@ -22,7 +22,7 @@ const ColorBlock = (props: ColorBlockProps) => {
   const { paletteColorName } = props;
 
   const theme = useTheme();
-  const colorObject = theme.palette[paletteColorName];
+  const colorObject = (theme.palette as any)[paletteColorName];
 
   return <StyledBlock style={{
     background: colorObject.main,
@@ -64,7 +64,7 @@ export const AllColors = () => {
   return <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
     {Array.from(cases).map((c, index) => (
       <Grid item xs={2} sm={4} md={4} key={index}>
-        <ColorBlock {...c.args} />
+        <ColorBlock {...(c.args as any)} />
       </Grid>
     ))}
   </Grid>;
