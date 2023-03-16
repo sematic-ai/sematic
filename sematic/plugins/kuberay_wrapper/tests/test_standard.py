@@ -108,8 +108,8 @@ _EXPECTED_HEAD_ONLY_MANIFEST = {
                                 {"mountPath": "/tmp/ray", "name": "ray-logs"}
                             ],
                             "resources": {
-                                "limits": {"cpu": "2000m", "memory": "4096M"},
-                                "requests": {"cpu": "2000m", "memory": "4096M"},
+                                "limits": {"cpu": "2000m", "memory": "4096Mi"},
+                                "requests": {"cpu": "2000m", "memory": "4096Mi"},
                             },
                         }
                     ],
@@ -142,8 +142,8 @@ _EXPECTED_SINGLE_WORKER_GROUP = {
                     },
                     "volumeMounts": [{"mountPath": "/tmp/ray", "name": "ray-logs"}],
                     "resources": {
-                        "limits": {"cpu": "4000m", "memory": "2048M"},
-                        "requests": {"cpu": "4000m", "memory": "2048M"},
+                        "limits": {"cpu": "4000m", "memory": "2048Mi"},
+                        "requests": {"cpu": "4000m", "memory": "2048Mi"},
                     },
                 }
             ],
@@ -334,7 +334,7 @@ def test_head_node_gpus():
     )
     assert manifest["spec"]["headGroupSpec"]["template"]["spec"]["containers"][0][
         "resources"
-    ]["requests"] == {"cpu": "2000m", "memory": "4096M"}
+    ]["requests"] == {"cpu": "2000m", "memory": "4096Mi"}
     assert (
         manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"]["nodeSelector"]
         == non_gpu_node_selector
@@ -400,7 +400,7 @@ def test_worker_node_gpus():
     )
     assert manifest["spec"]["workerGroupSpecs"][0]["template"]["spec"]["containers"][0][
         "resources"
-    ]["requests"] == {"cpu": "1000m", "nvidia.com/gpu": 2, "memory": "2048M"}
+    ]["requests"] == {"cpu": "1000m", "nvidia.com/gpu": 2, "memory": "2048Mi"}
 
 
 def test_custom_service_account():

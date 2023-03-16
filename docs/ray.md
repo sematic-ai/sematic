@@ -171,8 +171,10 @@ for each node in the cluster
 The compute characteristics of a single Ray head/worker.
 
 - **cpu** (*float*): Number of CPUs for each node (supports fractional CPUs).
-- **memory_gb** (*float*): Gigabytes of memory for each node
-(supports fractional values).
+- **memory_gb** (*float*): Gibibytes of memory for each node
+(supports fractional values). Note: One
+[gibibyte](https://simple.wikipedia.org/wiki/Gibibyte) is
+`2**30` bytes.
 - **gpu_count** (*int*): The number of GPUs to attach. Not all deployments
 support GPUs, or more than one GPU per node.
 
