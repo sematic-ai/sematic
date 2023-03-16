@@ -533,12 +533,12 @@ class LocalResolver(SilentResolver):
             reason = "Marked as failed because the rest of the graph failed to resolve."
             resolution_status = ResolutionStatus.FAILED
 
-        self._move_runs_to_terminal_state(reason)
+        self._move_runs_to_terminal_state(reason, fail_root_run=True)
         self._update_resolution_status(resolution_status)
         self._sio_client.disconnect()
         self._notify_pipeline_update()
 
-    def _move_runs_to_terminal_state(self, reason):
+    def _move_runs_to_terminal_state(self, reason, fail_root_run: bool):
         for run_id in self._runs.keys():
             run = self._get_run(run_id)  # may have terminated remotely, re-get from api
             state = FutureState.as_object(run.future_state)
@@ -546,7 +546,14 @@ class LocalResolver(SilentResolver):
             if state.is_terminal():
                 continue
 
-            run.future_state = FutureState.CANCELED
+            if run.parent_id is None and fail_root_run:
+                # If the resolution failed due to an error in the resolver
+                # itself, it may not yet have a terminal status. We want to
+                # make sure the root run gets marked as FAILED instead of
+                # CANCELLED in such cases.
+                run.future_state = FutureState.FAILED
+            else:
+                run.future_state = FutureState.CANCELED
 
             if run.exception_metadata is None:
                 run.exception_metadata = ExceptionMetadata(
