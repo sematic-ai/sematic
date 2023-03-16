@@ -30,7 +30,7 @@ function ArtifactError(props: { error: Error }) {
 function ArtifactView(props: { artifact: Artifact }) {
   let { artifact } = props;
   return (
-    <ErrorBoundary FallbackComponent={ArtifactError}>
+    <ErrorBoundary resetKeys={[artifact.id]} FallbackComponent={ArtifactError}>
       <Box>
         <Box sx={{ float: "right" }}>
           <ArtifactID artifactId={artifact.id} />
