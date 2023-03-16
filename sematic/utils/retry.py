@@ -41,7 +41,7 @@ def __retry_internal(
     delay: float = 0,
     max_delay: Optional[float] = None,
     backoff: float = 1,
-    jitter: float = 0,
+    jitter: Union[float, Tuple[float, float]] = 0,
     logger: Optional[logging.Logger] = logging_logger,
 ):
     """Executes a function and retries it if it failed.
@@ -72,16 +72,22 @@ def __retry_internal(
     the result of the f function.
     """
     _tries, _delay = tries, delay
-    while _tries:
+    while _tries != 0:
         try:
             return f()
         except exceptions as e:
-            _tries -= 1
-            if not _tries:
+            _tries = max(-1, _tries - 1)
+            if _tries == 0:
                 raise
 
             if logger is not None:
-                logger.warning("%s, retrying in %s seconds...", e, _delay)
+                logger.warning(e)
+                logger.warning(
+                    "Retrying %s in %s seconds with %s tries left...",
+                    f.__name__,
+                    _delay,
+                    _tries,
+                )
 
             time.sleep(_delay)
             _delay *= backoff
@@ -134,8 +140,10 @@ def retry(
     def retry_decorator(f, *fargs, **fkwargs):
         args = fargs if fargs else list()
         kwargs = fkwargs if fkwargs else dict()
+        partialed = partial(f, *args, **kwargs)
+        partialed.__name__ = f.__name__
         return __retry_internal(
-            partial(f, *args, **kwargs),
+            partialed,
             exceptions,
             tries,
             delay,

@@ -254,7 +254,7 @@ def get_resolution(root_id: str) -> Resolution:
 
 
 def cancel_resolution(resolution_id: str) -> Resolution:
-    response = _put(f"/resolutions/{resolution_id}/cancel", {})
+    response = _put_no_retries(f"/resolutions/{resolution_id}/cancel", {})
 
     return Resolution.from_json_encodable(response["content"])
 
@@ -496,6 +496,14 @@ def _put(
     json_payload: Optional[Dict[str, Any]] = None,
     data: Optional[bytes] = None,
 ) -> Any:
+    return _put_no_retries(endpoint=endpoint, json_payload=json_payload, data=data)
+
+
+def _put_no_retries(
+    endpoint: str,
+    json_payload: Optional[Dict[str, Any]] = None,
+    data: Optional[bytes] = None,
+) -> Any:
     response = request(requests.put, endpoint, dict(json=json_payload, data=data))
 
     if len(response.content) == 0:
@@ -603,7 +611,7 @@ def request(
     valid json.
     """
     if validate_version_compatibility:
-        _validate_server_compatibility()
+        _validate_server_compatibility(tries=1)
     kwargs = kwargs or {}
 
     headers = kwargs.get("headers", {})
