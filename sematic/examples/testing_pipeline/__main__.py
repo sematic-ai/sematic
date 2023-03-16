@@ -64,6 +64,7 @@ INLINE_HELP = (
     "Whether to include an inline function in the pipeline. Defaults to False."
 )
 NESTED_HELP = "Whether to include nested functions in the pipeline. Defaults to False."
+NO_INPUT_HELP = "Whether to include a function that takes no input. Defaults to False."
 SLEEP_HELP = (
     "If greater than zero, includes a function which sleeps for the specified number of "
     "seconds, logging a message every second. Defaults to 0."
@@ -106,6 +107,10 @@ EXPAND_SHARED_MEMORY_HELP = (
 CACHE_HELP = (
     "The cache namespace to use for funcs whose outputs will be cached. "
     "Defaults to None, which deactivates caching."
+)
+IMAGES_HELP = (
+    "Whether to include nested functions which will include the `Image` type in their "
+    "I/O signatures. Defaults to False."
 )
 VIRTUAL_FUNCS_HELP = (
     "Whether to explicitly include the `_make_list`, `_make_tuple`, and `_getitem` "
@@ -222,6 +227,9 @@ def _parse_args() -> argparse.Namespace:
         "--nested", action="store_true", default=False, help=NESTED_HELP
     )
     parser.add_argument(
+        "--no-input", action="store_true", default=False, help=NO_INPUT_HELP
+    )
+    parser.add_argument(
         "--sleep", type=int, default=0, dest="sleep_time", help=SLEEP_HELP
     )
     parser.add_argument(
@@ -269,6 +277,9 @@ def _parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help=CACHE_HELP,
+    )
+    parser.add_argument(
+        "--images", action="store_true", default=False, help=IMAGES_HELP
     )
     parser.add_argument(
         "--virtual-funcs",

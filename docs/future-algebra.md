@@ -181,7 +181,7 @@ argument are **always** [concrete](./glossary.md#concrete-inputs).
 
 ### Containers of futures
 
-Passing and returning lists of future is supported as [mentioned
+Passing and returning lists of futures is supported as [mentioned
 above](#passing-and-returning-lists-of-futures). However, other containers
 (tuple, dictionaries, dataclasses) are currently not supported.
 

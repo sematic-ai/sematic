@@ -14,6 +14,12 @@ if needed.
 
 ### Bazel
 
+{% hint style="info" %}
+Although Bazel does not officially support RPM Linux distributions such as
+RedHat, CentOS, and Fedora, they endorse an
+[unofficial solution](https://bazel.build/install/redhat).
+{% endhint %}
+
 If you're using [**Bazel**](https://bazel.build), having Sematic create a cloud
 image containing your code is quite straightforward: we have a bazel macro that
 will allow you to create targets for building and pushing your image at the
