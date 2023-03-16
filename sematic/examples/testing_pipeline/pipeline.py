@@ -516,7 +516,8 @@ def testing_pipeline(
     if fork_actions is not None:
         for action, value in fork_actions:
             future = fork_subprocess(initial_future, action, value)
-            futures.append(future.set(name=f"fork_subprocess[{action}={value}]"))
+            future.set(name=f"fork_subprocess[{action}={value}]")
+            futures.append(future)
 
     if exit_code is not None:
         futures.append(do_exit(initial_future, exit_code))
