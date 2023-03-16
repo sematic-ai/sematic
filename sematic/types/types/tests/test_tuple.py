@@ -1,4 +1,5 @@
 # Standard Library
+import hashlib
 from typing import Optional, Tuple
 
 # Third-party
@@ -13,6 +14,7 @@ from sematic.types.serialization import (
     value_from_json_encodable,
     value_to_json_encodable,
 )
+from sematic.types.types.image import Image
 
 
 @pytest.mark.parametrize(
@@ -67,3 +69,14 @@ def test_serdes(value, type_):
     serialized = value_to_json_encodable(value, type_)
     deserialized = value_from_json_encodable(serialized, type_)
     assert value == deserialized
+
+
+def test_summary_blobs():
+    bytes_ = b"foo"
+    image = Image(bytes=bytes_)
+    blob_id = hashlib.sha1(bytes_).hexdigest()
+
+    summary, blobs = get_json_encodable_summary((image, image), Tuple[Image, Image])
+
+    assert summary == [{"mime_type": "text/plain", "bytes": {"blob": blob_id}}] * 2
+    assert blobs == {blob_id: bytes_}
