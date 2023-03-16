@@ -5,11 +5,58 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
-    * [improvement] Added support for Python 3.10
+* [0.27.0](https://pypi.org/project/sematic/0.27.0/)
+    * [feature] Added new S3Location and S3Bucket types that render S3 links in the Dashboard, and
+      documented them
+    * [feature] Added a new Image type that render images in the Dashboard, and documented it
+    * [example] Added TorchLightning + Resnet + Ray example
+    * [example] Added Ray AIR example
+    * [example] Added various enhancements to the example Testing Pipeline
     * [improvement] BREAKING CHANGE: `image_layers` field in `sematic_pipeline` bazel macro
       now ONLY gets passed to image layering, and not also to the Sematic binary target.
       if you are using `image_layers` to express dependencies of a pipeline, you will now
       need to duplicate them in the `deps` field.
+    * [improvement] Added support for Python 3.10
+    * [improvement] Added support for Python 3.10-style type hints
+    * [improvement] The Dashboard login flow will now redirect to the requested page instead of to
+      the homepage
+    * [improvement] Displaying the user who started a Run in the Dashboard Run list page and in the
+      Run history drop-down
+    * [improvement] Various documentation updates and fixes
+    * [improvement] Various log message improvements and enhancements
+    * [improvement] Sped up Docker image generation through various improvements
+    * [improvement] Automatically update npm dependencies when building the wheel
+    * [improvement] Added deep-linking selected panel stickiness in the Dashboard
+    * [improvement] Filtered only pipelines launched by the current user in the Dashboard homepage
+      last run widget
+    * [improvement] Documented Ray integration architecture
+    * [improvement] Improved wheel building portability by defaulting to bash
+    * [improvement] Improved reaction time of the CloudResolver after a very long-running cloud Run
+      has ended
+    * [improvement] Improved handling of incorrect cleanup of or errors in subprocess spawned by
+      user code
+    * [improvement] Various internal refactorings, cleanups, and build improvements
+    * [improvement] Switched from MB and GB to GiB and MiB in the Ray configurations, for
+      consistency and standardization reasons
+    * [improvement] Added checks and documentation for the new libmagic dependency
+    * [improvement] Resolution failures caused by Resolver errors now get marked as failed instead
+      of canceled
+    * [bugfix] Pinned MNIST example pipeline dependencies after a new dependency release broke the
+      execution
+    * [bugfix] Fixed a bug that prevented the browser back/forward buttons from working correctly
+      in the Dashboard
+    * [bugfix] Fixed a bug that sometimes prevented the Dashboard Run tree panel from updating
+    * [bugfix] Fixed sorting of the Runs in the Dashboard Run tree panel by creation time
+    * [bugfix] Fixed a race condition where Kubernetes job updates would be incorrectly handled,
+      and added safeguards for incorrect Run state transitions
+    * [bugfix] Fixed a bug where killing a subprocess spawned by user code would prematurely
+      terminate the Run, or leave the Resolver in an inconsistent state
+    * [bugfix] Fixed a race condition that would prevent a fresh deployment on Kubernetes due to
+      missing resources
+    * [bugfix] Fixed a bug in the Dashboard that prevented the log panel error messages from
+      refreshing when seeking to a different Run
+    * [bugfix] Fixed a bug where failure to notify the Dashboard or Resolver with Run updates via
+      socketio messages would cause the Resolution to fail
 * [0.26.0](https://pypi.org/project/sematic/0.26.0/)
     * [feature] Added optional anonymized user analytics to track Sematic usage[^2]
     * [improvement] Atomic database migrations with Helm hooks
