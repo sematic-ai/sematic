@@ -172,7 +172,8 @@ parameter to
 
 ## FOSS to "Enterprise Edition"
 
-0. Reach out to Sematic via `support@sematic.dev` to obtain a license for "Sematic EE".
+0. Reach out to Sematic via [support@sematic.dev](mailto:support@sematic.dev) to obtain
+an Enterprise License.
 1. In your helm deployment, change `image.repository` to `sematic/sematic-server-ee`.
 2. In your `pip` installation (client installation), change from depending on `sematic`
 to `sematic[<extra>]`, where `<extra>` is the appropriate variant of Sematic containing

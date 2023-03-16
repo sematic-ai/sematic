@@ -20,7 +20,6 @@ with nothing else on the line.
     * [improvement] Added support for Python 3.10-style type hints
     * [improvement] The Dashboard login flow will now redirect to the requested page instead of to
       the homepage
-    * [improvement] Sorted the Runs in the Dashboard Run tree panel by creation time
     * [improvement] Displaying the user who started a Run in the Dashboard Run list page and in the
       Run history drop-down
     * [improvement] Various documentation updates and fixes
@@ -47,6 +46,7 @@ with nothing else on the line.
     * [bugfix] Fixed a bug that prevented the browser back/forward buttons from working correctly
       in the Dashboard
     * [bugfix] Fixed a bug that sometimes prevented the Dashboard Run tree panel from updating
+    * [bugfix] Fixed sorting of the Runs in the Dashboard Run tree panel by creation time
     * [bugfix] Fixed a race condition where Kubernetes job updates would be incorrectly handled,
       and added safeguards for incorrect Run state transitions
     * [bugfix] Fixed a bug where killing a subprocess spawned by user code would prematurely
