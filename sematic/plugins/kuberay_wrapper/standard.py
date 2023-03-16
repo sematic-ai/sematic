@@ -349,7 +349,7 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         memory_mb = int(1024 * node_config.memory_gb)
         requests = {
             "cpu": f"{milli_cpu}m",
-            "memory": f"{memory_mb}M",
+            "memory": f"{memory_mb}Mi",
         }
         requests.update(gpu_requests)
         return requests
