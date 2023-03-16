@@ -84,7 +84,7 @@ def _tuple_to_json_encodable_summary(value: Tuple, type_: Type) -> SummaryOutput
         element_summary, element_blobs = get_json_encodable_summary(
             element, element_type
         )
-        summary.append(element)
+        summary.append(element_summary)
         blobs.update(element_blobs)
 
     return summary, blobs
