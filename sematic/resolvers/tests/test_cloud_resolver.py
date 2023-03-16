@@ -288,4 +288,6 @@ def test_resolver_restart(
     assert read_run_state_by_id[child_run1.id] == FutureState.CANCELED.value
     assert read_run_state_by_id[child_run2.id] == FutureState.RESOLVED.value
     assert read_run_state_by_id[child_run3.id] == FutureState.CANCELED.value
-    assert read_run_state_by_id[root_run.id] == FutureState.CANCELED.value
+
+    # We want the root run to show up as Failed in this circumstance.
+    assert read_run_state_by_id[root_run.id] == FutureState.FAILED.value
