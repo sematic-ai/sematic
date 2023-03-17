@@ -1,6 +1,7 @@
 # Deploy Sematic
 
-When you install Sematic the first time, everything runs locally. The web app
+When you install Sematic the first time, according to the instructions from the
+[Get started](get-started.md#installation) section, everything runs locally. The web app
 and your pipelines run locally.
 
 Here is how to deploy Sematic to take full advantage of your cloud resources.
@@ -127,8 +128,12 @@ deployment is complete.
 
 ##### Database
 
-In the `values.yaml` file above, the setting `database.url` can be set to the
-fully-qualified URL of your Postgres instance.  It should look similar to the following:
+You should create a separate database and an owner user, in order to ensure the service can perform
+required database schema migrations.
+
+In the `values.yaml` file above, the setting `database.url` can be set to the fully-qualified URL
+of your Postgres database, using the credentials of the owner user.  It should look similar to the
+following:
 
 ```
 postgresql://<username>:<password>@<hostname>:<port>/<database>
