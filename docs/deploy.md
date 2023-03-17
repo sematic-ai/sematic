@@ -131,9 +131,9 @@ deployment is complete.
 You should create a separate database and an owner user, in order to ensure the service can perform
 required database schema migrations.
 
-In the `values.yaml` file above, the setting `database.url` can be set to the
-fully-qualified URL of your Postgres database, using the credentials of the owner user.  It should
-look similar to the following:
+In the `values.yaml` file above, the setting `database.url` can be set to the fully-qualified URL
+of your Postgres database, using the credentials of the owner user.  It should look similar to the
+following:
 
 ```
 postgresql://<username>:<password>@<hostname>:<port>/<database>
