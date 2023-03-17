@@ -50,9 +50,9 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "REACT_APP_HOST=127.0.0.1 REACT_APP_GIT_HASH=$(git rev-parse --short HEAD) react-scripts start",
-    "build": "REACT_APP_GIT_HASH=$(git rev-parse --short HEAD) BUILD_PATH=../../build react-scripts build",
-    "test": "REACT_APP_GIT_HASH=$(git rev-parse --short HEAD) react-scripts test",
+    "start": "REACT_APP_HOST=127.0.0.1 REACT_APP_GIT_HASH=$(git rev-parse --short HEAD) react-app-rewired start",
+    "build": "REACT_APP_GIT_HASH=$(git rev-parse --short HEAD) BUILD_PATH=../../build react-app-rewired build",
+    "test": "REACT_APP_GIT_HASH=$(git rev-parse --short HEAD) react-app-rewired test",
     "eject": "react-scripts eject",
     "analyze": "source-map-explorer 'build/static/js/*.js'",
     "lint": "eslint --ext .ts,.tsx --max-warnings=0 ./src"
@@ -77,6 +77,7 @@
   },
   "devDependencies": {
     "@frsource/cypress-plugin-visual-regression-diff": "^3.2.8",
+    "@sematic/common": "*",
     "@types/d3": "^7.4.0",
     "@types/dagre": "^0.7.47",
     "@types/mocha": "^10.0.1",
@@ -85,6 +86,6 @@
     "@types/react-plotly.js": "^2.5.0",
     "@types/react-syntax-highlighter": "^15.5.1",
     "@types/uuid": "^8.3.4",
-    "@sematic/common": "*"
+    "react-app-rewired": "^2.2.1"
   }
 }

@@ -68,3 +68,10 @@ $ bazel run //sematic/api:server
 $ cd sematic/ui
 $ npm start
 ```
+
+## Starting Storybook to browse UI components
+
+```shell
+$ cd sematic/ui
+$ npm run storybook
+```
