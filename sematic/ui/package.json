@@ -10,7 +10,8 @@
     "lint": "npm run lint --workspaces --if-present",
     "cypress:open": "cypress open --project packages/tests",
     "cypress:e2e": "cypress run --headless --e2e --project packages/tests",
-    "cypress:component": "cypress run --headless --component --project packages/tests"
+    "cypress:component": "cypress run --headless --component --project packages/tests",
+    "storybook": "npm run storybook --workspace @sematic/storybook"
   },
   "devDependencies": {},
   "workspaces": [
