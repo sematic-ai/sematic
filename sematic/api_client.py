@@ -618,6 +618,7 @@ def request(
     valid json.
     """
     if validate_version_compatibility:
+        # only 1 try, as the entire call is retired itself
         _validate_server_compatibility(tries=1)
     kwargs = kwargs or {}
 
