@@ -3,7 +3,7 @@ import datetime
 import json
 import typing
 import uuid
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from unittest import mock
 
 # Third-party
@@ -68,6 +68,14 @@ test_get_run_external_resource_auth = make_auth_test(
 def mock_load_log_lines():
     with mock.patch("sematic.api.endpoints.runs.load_log_lines") as mock_load:
         yield mock_load
+
+
+@pytest.fixture
+def mock_broadcast_graph_update():
+    with mock.patch(
+        "sematic.api.endpoints.runs.broadcast_graph_update"
+    ) as mock_broadcast:
+        yield mock_broadcast
 
 
 def test_list_runs_empty(
@@ -475,7 +483,10 @@ def test_schedule_run(
 
 
 def test_update_future_states(
-    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_broadcast_graph_update: mock.MagicMock,  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
         persisted_run.future_state = FutureState.CREATED
@@ -519,6 +530,19 @@ def test_update_future_states(
         payload = response.json
         assert payload == {
             "content": [{"future_state": "SCHEDULED", "run_id": persisted_run.id}]
+        }
+
+        # Pretend the job disappeared
+        mock_k8s.refresh_job.side_effect = lambda job: replace(job, still_exists=False)
+        mock_broadcast_graph_update.assert_not_called()
+        response = test_client.post(
+            "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
+        )
+        assert response.status_code == 200
+        mock_broadcast_graph_update.assert_called_once()
+        payload = response.json
+        assert payload == {
+            "content": [{"future_state": "FAILED", "run_id": persisted_run.id}]
         }
 
 
