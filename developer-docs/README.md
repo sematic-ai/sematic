@@ -64,102 +64,162 @@ SEMATIC_API_ADDRESS: https://<my_prod1_host:port>
 SEMATIC_API_KEY: <my_prod1_api_key>
 ```
 
+## Building the Wheel
+
+If you want to build the wheel from sources, do:
+
+```bash
+$ make ui
+$ make wheel
+```
+
 ## Releasing
 
 **Note:** Actually pushing the released wheel can only be done if you have
 access to the PyPi repo, which is limited to employees of Sematic.
 
-We cut releases from the `main` branch, following these steps:
+We cut releases from the `main` branch, following the steps below. They must be
+performed in order, without skipping any. If any errors occur, you must fix
+them and then go back and redo all the steps that have been affected by the
+changes.
 
-- Bump the version in `wheel_constants.bzl`, `sematic/versions.py`,
-  and `helm/sematic-server/Chart.yaml`
-- Increment the minor version of the `version` field in
+1. Bump the version in:
+   - `wheel_constants.bzl` - `wheel_version_string`
+   - `helm/sematic-server/Chart.yaml` - `appVersion`
+   - `sematic/versions.py` - `CURRENT_VERSION`; bump
+     `MIN_CLIENT_SERVER_SUPPORTS` if there are any TODOs mentioning this should
+     be done
+   - `./README.md` - PyPI badge
+
+1. Increment the minor version of the `version` field in
   `helm/sematic-server/Chart.yaml`. Note that this will be DIFFERENT
   from the Sematic version you changed in prior steps (chart version
-  will be 1.X.Y, Sematic version is 0.M.N).
-- Update `changelog.md` with the new version number and any missing change
+  will be `1.X.Y`, Sematic version is `0.M.N`).
+
+1. Update `changelog.md` with the new version number and any missing change
   entries
-- Make the bump commit
-- Build the UI:
-```bash
-$ make ui
-```
-- Build the wheel:
-```bash
-$ make wheel
-```
-- copy wheel from `bazel-bin/sematic/sematic-....whl` into a scratch directory,
-and use a virtual env to test:
 
-```bash
-$ pip3 install <wheel path>
-$ sematic stop
-$ sematic start
-$ sematic run examples/mnist/pytorch
-```
+1. Make the release PR, containing the previous changes. After implementing
+  comments and getting approval on the release PR, merge it and pull from the
+  updated `main`. It is mandatory to include this version of main in the
+  subsequent steps. If validation issues are discovered, they must be fixed
+  in patch PRs, and the process restarted from this step.
 
-Do this for all supported versions of Python. You can check your virtual env
-Python version using `sematic version` (as well as the Server and Client
-version).
+1. Build the UI:
+  ```bash
+  $ make ui
+  ```
 
-At this point, you should also deploy the Docker image to a cloud Dev environment
-using the [internal Helm charts](/helm/sematic-server), and execute at least one
-pipeline in detached cloud mode. To build the image, use the same process
-you do when usually deploying dev code to a dev env. You can use
-[`serve-dev`](https://github.com/sematic-ai/infrastructure/tree/main/bin)
-to build and deploy the image while on the release branch to deploy the
-release candidate. You will likely also want to smoke test new features
-that were included in the release.
+1. Build the wheel:
+  ```bash
+  $ make wheel
+  ```
 
-If everything works fine, we are ready to push the release.
+1. Copy wheel from `bazel-bin/sematic/sematic-....whl` into a scratch
+  directory, and use a virtual env to test:
 
-```bash
-$ make test-release
-$ make release
-```
+  ```bash
+  $ pip3 install <wheel path>
+  $ sematic stop
+  $ sematic start
+  $ sematic run examples/mnist/pytorch
+  $ sematic stop
+  ```
 
-Once you have pushed it to PyPi, add the git tag.
+  Do this for all supported versions of Python. You can check your virtual env
+  Python version using `sematic version` (as well as the Server and Client
+  version).
 
-```bash
-$ export RELEASE_VERSION=v$(python3 ./sematic/versions.py)
-$ git tag $RELEASE_VERSION
-$ git push origin $RELEASE_VERSION
-```
+1. At this point, you should also deploy the Docker image to a cloud Dev environment
+  using the [internal Helm charts](/helm/sematic-server), and execute at least one
+  pipeline in detached cloud mode. To build the image, use the same process
+  you do when usually deploying dev code to a dev env. You can use
+  [`serve-dev`](https://github.com/sematic-ai/infrastructure/tree/main/bin)
+  to build and deploy the image while on the release branch to deploy the
+  release candidate. You will likely also want to smoke test new features
+  that were included in the release.
 
-Next, build and push the server image. Use the dockerfile at
-`docker/Dockerfile.server`.
+1. Run the Testing Pipeline with "the works" on this deployment, and check that
+  it completes successfully, while perusing its outputs and logs to check they
+  render correctly:
+  ```bash
+  $ bazel run sematic/examples/testing_pipeline:__main__ -- \
+        --cloud \
+        --detach \
+        --max-parallelism 10 \
+        --inline \
+        --nested \
+        --no-input \
+        --sleep 10 \
+        --spam-logs 1000 \
+        --fan-out 10 \
+        --raise-retry 0.7 \
+        --external-resource \
+        --expand-shared-memory \
+        --cache-namespace test \
+        --images \
+        --virtual-funcs \
+        --fork-subprocess return 0 \
+        --fork-subprocess exit 0 \
+        --fork-subprocess exit 1 \
+        --fork-subprocess signal 2 \
+        --fork-subprocess signal 15
+  ```
 
-```bash
-$ TAG=v$(python3 sematic/versions.py) make release-server
-```
+1. Test publishing the wheel. Check if the generated webpage is rendered
+  correctly.
+  ```bash
+  $ make test-release
+  ```
 
-Next you can generate the Helm package and publish it to the Helm repository.
-Clone the repo with `git clone git@github.com:sematic-ai/helm-charts.git`, and
-check out the `gh-pages` branch in it.  The commands below assume the
-`helm-charts` repo has been cloned
-into the `~/code/helm-charts` directory, but they should be run from the root
-of the `github.com/sematic-ai/sematic` repo directory.
+1. Publish the wheel. Check if the generated webpage is rendered
+  correctly.
+  ```bash
+  $ make release
+  ```
 
-```bash
-HELM_REPO=~/code/helm-charts
-helm package helm/sematic-server
-helm repo index . --url https://sematic-ai.github.io/helm-charts/sematic-server \
-         --merge $HELM_REPO/index.yaml
-mv index.yaml $HELM_REPO/index.yaml
-mv *.tgz $HELM_REPO/sematic-server/
-```
+1. Add the git tag.
+  ```bash
+  $ export RELEASE_VERSION=v$(python3 ./sematic/versions.py)
+  $ git tag $RELEASE_VERSION
+  $ git push origin $RELEASE_VERSION
+  ```
 
-You should now have a new `sematic-server/sematic-server-X.X.X.tgz` in the
-`helm-charts` repo, and a modified `index.yaml`.  Commit and push both of
-these to a new branch, and create a PR for the change based on `gh-pages`
-necessary.
+1. Build and push the Server Docker image. Use the Dockerfile at
+  `docker/Dockerfile.server`.
+  ```bash
+  $ TAG=v$(python3 sematic/versions.py) make release-server
+  ```
 
-Finally, draft the release on GitHub:
-- Add a "What's Changed" section.
-- Add a warning that the client version will need to be upgraded, if this applies.
-- Add a "New Contributors" section, if this applies.
-- Add a "Full Changelog" link.
-- Attach the wheel in the "Assets" section.
+1. Next you can generate the Helm package and publish it to the Helm repository.
+  Clone the repo with `git clone git@github.com:sematic-ai/helm-charts.git`, and
+  check out the `gh-pages` branch in it.  The commands below assume the
+  `helm-charts` repo has been cloned into the `~/code/helm-charts` directory,
+  but they should be run from the root of the `github.com/sematic-ai/sematic`
+  repo directory.
+  ```bash
+  $ export HELM_REPO=~/code/helm-charts
+  $ helm package helm/sematic-server
+  $ helm repo index . --url https://sematic-ai.github.io/helm-charts/sematic-server \
+           --merge $HELM_REPO/index.yaml
+  $ mv index.yaml $HELM_REPO/index.yaml
+  $ mv *.tgz $HELM_REPO/sematic-server/
+  ```
+
+  You should now have a new `sematic-server/sematic-server-X.X.X.tgz` in the
+  `helm-charts` repo, and a modified `index.yaml`.  Commit and push both of
+  these to a new branch, and create a PR for the change based on `gh-pages`
+  necessary.
+
+1. Finally, draft the release on GitHub:
+   - Pick the "previous tag" from the dropdown.
+   - Add a "What's Changed" section.
+   - If `MIN_CLIENT_SERVER_SUPPORTS` was bumped and/or if `docs/upgrades.md`
+     contains an entry for upgrading to the released version, add an
+     "Upgrade Instructions" section and list and link all these steps
+   - Add a "New Contributors" section, if this applies.
+   - Add a "Full Changelog" link.
+   - Attach the wheel in the "Assets" section.
 
 ### Special Releases
 
