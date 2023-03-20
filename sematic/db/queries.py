@@ -235,14 +235,23 @@ def get_job(job_name: str, job_namespace: str) -> Optional[Job]:
 
 def save_job(job: Job) -> Job:
     """Save a job to the db, updating an existing one if present."""
-    existing_job = get_job(job_name=job.name, job_namespace=job.namespace)
-    if existing_job is not None:
-        # do this to ensure that we are updating the history based on what's
-        # actually already in the DB.
-        existing_job.details = job.details
-        existing_job.update_status(job.latest_status)
-        job = existing_job
     with db().get_session() as session:
+        # do this instead of get_job so we can keep it in one
+        # session to avoid race conditions.
+        existing_job = (
+            session.query(Job)
+            .filter(Job.name == job.name)
+            .filter(Job.namespace == job.namespace)
+            .one_or_none()
+        )
+
+        if existing_job is not None:
+            # do this to ensure that we are updating the history based on what's
+            # actually already in the DB.
+            existing_job.details = job.details
+            existing_job.update_status(job.latest_status)
+            job = existing_job
+
         session.merge(job)
         session.commit()
 
