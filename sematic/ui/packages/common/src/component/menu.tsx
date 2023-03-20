@@ -1,13 +1,20 @@
-import Grid from "@mui/material/Grid";
-import Button from "@mui/material/Button";
+import styled from "@emotion/styled";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Grid from "@mui/material/Grid";
 import useTheme from "@mui/material/styles/useTheme";
 import Fox from "src/static/fox";
+import palette from "src/theme/new/palette";
+import { SimplePaletteColorOptions } from "@mui/material/styles";
+
+const StyledGridContainer = styled(Grid)`
+    border-bottom: 1px solid ${() => (palette.p3border as SimplePaletteColorOptions).main};
+`;
 
 const HeaderMenu = () => {
     const theme = useTheme();
 
-    return <Grid container spacing={0}>
+    return <StyledGridContainer container spacing={0}>
         <Box style={{flexGrow: 1, display: 'flex'}} >
             <Button variant="logo" style={{marginRight: theme.spacing(6)}}>
                 <Fox style={{width: '16px'}}/>
@@ -23,7 +30,7 @@ const HeaderMenu = () => {
             <Button variant="menu">Support</Button>
             <Button variant="menu">Developer E</Button>
         </Box>
-    </Grid>;
+    </StyledGridContainer>;
 };
 
 export default HeaderMenu;

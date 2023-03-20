@@ -1,11 +1,11 @@
 import React from 'react';
 import { Meta, StoryObj } from '@storybook/react';
-import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
 import { Route, RouterProvider, createRoutesFromElements, createBrowserRouter } from "react-router-dom";
 import Shell from "@sematic/common/src/layout/Shell";
 
 const Home = () => {
-  return <Grid container spacing={2}>Empty</Grid>
+  return <Box>Empty</Box>
 }
 
 const router = createBrowserRouter(

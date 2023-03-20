@@ -21,7 +21,8 @@ const components: Components = {
                         width: 100,
                         padding: 0,
                         height: 50,
-                        overflow: 'ellipsis'
+                        overflow: 'ellipsis',
+                        textTransform: 'none'
                     }
                 },
             }
