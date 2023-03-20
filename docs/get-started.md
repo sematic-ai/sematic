@@ -2,29 +2,43 @@
 
 ## Supported Platforms
 
-Sematic currently supports Linux and Mac. If you're using Windows, you can
+Sematic currently supports Linux and MacOS. If you're using Windows, you can
 run Sematic in
 [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/about).
 
-Python versions 3.8, 3.9, and 3.10 are supported.
+Python versions `3.8`, `3.9`, and `3.10` are supported.
 
 ## Installation
 
-Install Sematic in your local Python enviroment with:
+Install Sematic in your local Python environment with:
 
 ```shell
 $ pip install sematic
 ```
 
-## Starting the web dashboard
+The above command will also install all required Python dependencies.
 
-Before running pipelines, you need to start the metadata server and web dashboard with:
+### System Dependencies
+
+Sematic does require an additional system library installed, `libmagic` / `filemagic`,
+which is required by [`python-magic`](https://pypi.org/project/python-magic/), in order
+to render [`Image`](types.md#the-image-type) type artifacts. If you want to use `Image`s,
+you can install the library with:
+
+- MacOs: `brew install libmagic`, or `port install file`
+- Debian: `sudo apt-get install libmagic1`
+- RPM: `sudo yum install file-devel`
+- Windows unofficial support: `pip install python-magic-bin`
+
+## Starting the Web Dashboard
+
+Before running pipelines, you need to start the metadata server and Web Dashboard with:
 
 ```shell
 $ sematic start
 ```
 
-This will launch the dashboard in your browser.
+This will launch the Dashboard in your browser.
 
 {% hint style="info" %}
 This runs the Sematic app on your local machine. To
@@ -67,8 +81,8 @@ of the box. If they are missing on your machine, Sematic will let you know how
 to install them.
 {% endhint %}
 
-You can follow execution of the pipeline in the [web dashboard](sematic-ui.md), visualize inputs, outputs,
-markdown docstrings, etc.
+You can follow execution of the pipeline in the [Web Dashboard](sematic-ui.md),
+visualize inputs, outputs, markdown docstrings, etc.
 
 If you want to contribute examples to the Sematic code base, see our
 [Contributor Guide](contributor-guide.md).

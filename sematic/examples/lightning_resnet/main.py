@@ -18,7 +18,9 @@ from sematic.types.types.aws.s3 import S3Location
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DEFAULT_CHECKPOINT_LOCATION = S3Location.from_uri("s3://sematic-dev/lightning-resnet")
+DEFAULT_CHECKPOINT_LOCATION = S3Location.from_uri(
+    "s3://sematic-examples/lightning-resnet-example"
+)
 
 LOCAL_DATA_CONFIG = DataConfig(
     batch_size=2,

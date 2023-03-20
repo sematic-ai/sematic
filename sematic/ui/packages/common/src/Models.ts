@@ -1,4 +1,4 @@
-import type { AnyTypeSerialization } from "types";
+import type { AnyTypeSerialization } from "src/types";
 
 export type TypeGitInfo = {
   remote: string;

@@ -13,6 +13,31 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "git",
+    srcs = ["git.py"],
+    pip_deps = [
+        "git-python",
+    ],
+    deps = [
+        "//sematic/db/models:git_info",
+    ],
+)
+
+sematic_py_lib(
+    name = "hashing",
+    srcs = ["hashing.py"],
+    deps = [
+        ":json",
+    ],
+)
+
+sematic_py_lib(
+    name = "json",
+    srcs = ["json.py"],
+    deps = [],
+)
+
+sematic_py_lib(
     name = "memoized_property",
     srcs = ["memoized_property.py"],
     deps = [],
@@ -25,32 +50,13 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "signals",
+    srcs = ["signals.py"],
+    deps = [],
+)
+
+sematic_py_lib(
     name = "stdout",
     srcs = ["stdout.py"],
     deps = [],
-)
-
-sematic_py_lib(
-    name = "git",
-    srcs = ["git.py"],
-    pip_deps = [
-        "git-python",
-    ],
-    deps = [
-        "//sematic/db/models:git_info",
-    ],
-)
-
-sematic_py_lib(
-    name = "json",
-    srcs = ["json.py"],
-    deps = [],
-)
-
-sematic_py_lib(
-    name = "hashing",
-    srcs = ["hashing.py"],
-    deps = [
-        ":json",
-    ],
 )

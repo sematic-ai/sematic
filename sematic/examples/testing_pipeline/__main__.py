@@ -23,6 +23,7 @@ from sematic.resolvers.state_machine_resolver import StateMachineResolver
 logger = logging.getLogger(__name__)
 
 BAZEL_COMMAND = "bazel run //sematic/examples/testing_pipeline:__main__ --"
+
 DESCRIPTION = (
     "This is the Sematic Testing Pipeline. "
     "It is used to test the behavior of the Server and of the Resolver. "
@@ -33,6 +34,7 @@ DESCRIPTION = (
     "At the end of the pipeline execution, the individual future outputs are collected "
     "in a future list and reduced."
 )
+
 LOG_LEVEL_HELP = "The log level for the pipeline and Resolver. Defaults to INFO."
 CLOUD_HELP = (
     "Whether to run the resolution in the cloud, or locally. Defaults to False. "
@@ -62,6 +64,7 @@ INLINE_HELP = (
     "Whether to include an inline function in the pipeline. Defaults to False."
 )
 NESTED_HELP = "Whether to include nested functions in the pipeline. Defaults to False."
+NO_INPUT_HELP = "Whether to include a function that takes no input. Defaults to False."
 SLEEP_HELP = (
     "If greater than zero, includes a function which sleeps for the specified number of "
     "seconds, logging a message every second. Defaults to 0."
@@ -105,11 +108,22 @@ CACHE_HELP = (
     "The cache namespace to use for funcs whose outputs will be cached. "
     "Defaults to None, which deactivates caching."
 )
+IMAGES_HELP = (
+    "Whether to include nested functions which will include the `Image` type in their "
+    "I/O signatures. Defaults to False."
+)
 VIRTUAL_FUNCS_HELP = (
     "Whether to explicitly include the `_make_list`, `_make_tuple`, and `_getitem` "
     "virtual functions. Defaults to False. Note: If this pipeline is invoked with any "
     "parameters, `_make_list` is automatically included at the end of the execution "
     "anyway, in order to collect all intermediate results."
+)
+FORK_SUBPROCESS_HELP = (
+    "Includes a function that forks a subprocess, and then performs the specified "
+    "action, using the specified value:\n"
+    " - on 'return', the subprocess returns the specified value\n"
+    " - on 'exit', the subprocess exits with the specified code\n"
+    " - on 'signal', the parent process sends the specified signal to the subprocess"
 )
 EXIT_HELP = (
     "Includes a function which will exit with the specified code. "
@@ -125,6 +139,32 @@ class StoreCacheNamespace(argparse.Action):
         setattr(namespace, "cache", True)
 
 
+class AppendForkAction(argparse._AppendAction):
+    """Custom action to append the fork subprocess action to perform."""
+
+    valid_actions = {"return", "exit", "signal"}
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if (
+            values is None
+            or len(values) != 2
+            or values[0] not in AppendForkAction.valid_actions
+            or not values[1].isdigit()
+            or (values[0] == "exit" and int(values[1]) < 0)
+            or (values[0] == "signal" and int(values[1]) < 1)
+        ):
+            raise ValueError(
+                f"Invalid action or value for parameter '--fork-subprocess': {values}"
+            )
+
+        normalized_values = values[0], int(values[1])
+
+        items = getattr(namespace, self.dest) or []
+        items = items[:]
+        items.append(normalized_values)
+        setattr(namespace, self.dest, items)
+
+
 def _required_by(*args: str) -> Dict[str, bool]:
     """Syntactic sugar to specify argparse dependencies between arguments."""
     return {"required": any([arg in sys.argv for arg in args])}
@@ -132,7 +172,11 @@ def _required_by(*args: str) -> Dict[str, bool]:
 
 def _parse_args() -> argparse.Namespace:
     """Parses the command line arguments."""
-    parser = argparse.ArgumentParser(prog=BAZEL_COMMAND, description=DESCRIPTION)
+    parser = argparse.ArgumentParser(
+        prog=BAZEL_COMMAND,
+        description=DESCRIPTION,
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
 
     # Resolver args:
     parser.add_argument("--log-level", type=str, default="INFO", help=LOG_LEVEL_HELP)
@@ -181,6 +225,9 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--nested", action="store_true", default=False, help=NESTED_HELP
+    )
+    parser.add_argument(
+        "--no-input", action="store_true", default=False, help=NO_INPUT_HELP
     )
     parser.add_argument(
         "--sleep", type=int, default=0, dest="sleep_time", help=SLEEP_HELP
@@ -232,10 +279,21 @@ def _parse_args() -> argparse.Namespace:
         help=CACHE_HELP,
     )
     parser.add_argument(
+        "--images", action="store_true", default=False, help=IMAGES_HELP
+    )
+    parser.add_argument(
         "--virtual-funcs",
         action="store_true",
         default=False,
         help=VIRTUAL_FUNCS_HELP,
+    )
+    parser.add_argument(
+        "--fork-subprocess",
+        dest="fork_actions",
+        action=AppendForkAction,
+        metavar=("action", "code"),
+        nargs="*",
+        help=FORK_SUBPROCESS_HELP,
     )
     parser.add_argument(
         "--exit",
@@ -248,6 +306,8 @@ def _parse_args() -> argparse.Namespace:
     )
 
     args = parser.parse_args()
+    if args.log_level is not None:
+        args.log_level = args.log_level.upper()
 
     # args values validations:
     logging._checkLevel(args.log_level)

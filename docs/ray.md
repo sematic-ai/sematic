@@ -111,6 +111,22 @@ to tear down the Ray cluster. The server then relays this request to
 KubeRay, which deallocates any resources that it had allocated for the
 cluster.
 
+### Examples
+
+To demonstrate the power of Sematic + Ray, we have created two examples of using
+them to do distributed training from within a Sematic pipeline:
+
+1. Using ["PyTorch Lightning"](https://pytorch-lightning.readthedocs.io/en/stable/index.html),
+an opinionated wrapper around raw [PyTorch](https://pytorch.org/) that helps standardize the
+structure of train/eval loops, logging of metrics, and more. Here's
+[our example](https://github.com/sematic-ai/sematic/blob/main/sematic/examples/lightning_resnet/README.md)
+using it to do distributed training on a ResNet model.
+
+2. Using Ray's ["AI Runtime"](https://docs.ray.io/en/latest/ray-air/getting-started.html)
+(aka "Ray AIR") to distributed train a simple image classifier. Here's
+[our example](https://github.com/sematic-ai/sematic/blob/main/sematic/examples/cifar_classifier/README.md)
+
+
 ### Detailed API
 
 #### RayCluster
@@ -155,8 +171,10 @@ for each node in the cluster
 The compute characteristics of a single Ray head/worker.
 
 - **cpu** (*float*): Number of CPUs for each node (supports fractional CPUs).
-- **memory_gb** (*float*): Gigabytes of memory for each node
-(supports fractional values).
+- **memory_gb** (*float*): Gibibytes of memory for each node
+(supports fractional values). Note: One
+[gibibyte](https://simple.wikipedia.org/wiki/Gibibyte) is
+`2**30` bytes.
 - **gpu_count** (*int*): The number of GPUs to attach. Not all deployments
 support GPUs, or more than one GPU per node.
 

@@ -1,0 +1,7 @@
+numpy
+torch
+torchvision
+torchmetrics
+pillow
+plotly
+ray[air]
