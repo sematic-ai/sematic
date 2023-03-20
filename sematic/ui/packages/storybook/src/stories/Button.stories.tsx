@@ -1,13 +1,20 @@
-import React from 'react';
-import { Meta, StoryObj } from '@storybook/react';
 import Button from "@mui/material/Button";
+import { ThemeProvider } from "@mui/material/styles";
 import Fox from '@sematic/common/src/static/fox';
+import createTheme from '@sematic/common/src/theme/new';
+import { Meta, StoryObj } from '@storybook/react';
 
 // More on default export: https://storybook.js.org/docs/react/writing-stories/introduction#default-export
 export default {
   title: 'Sematic/Button',
   component: Button,
-
+  decorators: [
+    (Story) => (
+      <ThemeProvider theme={createTheme()}>
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
 } as Meta<typeof Button>;
 
 
