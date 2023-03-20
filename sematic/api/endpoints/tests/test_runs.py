@@ -25,7 +25,6 @@ from sematic.calculator import func
 from sematic.config.server_settings import ServerSettings, ServerSettingsVar
 from sematic.config.tests.fixtures import empty_settings_file  # noqa: F401
 from sematic.config.user_settings import UserSettings, UserSettingsVar
-from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -797,6 +796,36 @@ def test_get_jobs(
 
     response = test_client.get(f"/api/v1/runs/{persisted_run.id}/jobs")
     serialized_jobs = response.json["content"]  # type: ignore
-    jobs = [Job.from_json_encodable(job) for job in serialized_jobs]
 
-    assert jobs == [job_1, job_2]
+    for serialized_job in serialized_jobs:
+        # don't care about these during comparison
+        serialized_job["created_at"] = None
+        serialized_job["updated_at"] = None
+
+    assert serialized_jobs == [job_1.to_json_encodable(), job_2.to_json_encodable()]
+
+
+def test_get_jobs_none_present(
+    mock_socketio,  # noqa: F811
+    persisted_user: User,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    mock_requests,  # noqa: F811
+    empty_settings_file,  # noqa: F811
+):
+    response = test_client.get(f"/api/v1/runs/{persisted_run.id}/jobs")
+    serialized_jobs = response.json["content"]  # type: ignore
+    assert serialized_jobs == []
+
+
+def test_get_jobs_bad_run_id(
+    mock_socketio,  # noqa: F811
+    persisted_user: User,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_requests,  # noqa: F811
+    empty_settings_file,  # noqa: F811
+):
+    fake_run_id = 32 * "a"
+    response = test_client.get(f"/api/v1/runs/{fake_run_id}/jobs")
+    serialized_jobs = response.json["content"]  # type: ignore
+    assert serialized_jobs == []
