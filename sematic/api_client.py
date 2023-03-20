@@ -434,7 +434,10 @@ def _notify_event(namespace: str, event: str, payload: Any = None):
         event,
         payload,
     )
-    _post("/events/{}/{}".format(namespace, event), payload)
+    try:
+        _post("/events/{}/{}".format(namespace, event), payload)
+    except Exception:
+        logger.exception("Error notifying %s/%s", namespace, event)
 
 
 @retry(

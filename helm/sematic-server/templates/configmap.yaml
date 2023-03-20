@@ -4,6 +4,10 @@ metadata:
   name: {{ .Release.Name }}
   labels:
     {{- include "sematic-server.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation
 data:
 {{ if .Values.auth.enabled }}
   GOOGLE_OAUTH_CLIENT_ID: {{ .Values.auth.google_oauth_client_id | quote }}

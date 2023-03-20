@@ -18,7 +18,7 @@ need this versioned entity as well.
 
 When you are upgrading Sematic, you generally want to upgrade all of
 the versions you are using at the same time. It is impossible to
-upgrade all of them literally atomically, so we reccommend upgrading in
+upgrade all of them literally atomically, so we recommend upgrading in
 the order:
 
 - Server
@@ -130,8 +130,6 @@ aws:
 
 ```
 
-### v0.25.X to v0.26.Y
-
 #### Dependency changes
 
 As a part of adding python 3.10 support, Sematic has changed
@@ -139,6 +137,10 @@ from depending on `eventlet` to depending on `gevent`. If you
 use requirements locking systems like [Poetry](https://python-poetry.org/)
 or [pip-tools/pip-compile](https://pypi.org/project/pip-tools/)
 you will need to regenerate your dependency lockfiles.
+
+The new [`Image`](types.md#the-image-type) type now requires the `libmagic` system
+library. If you want to use `Image`, please install that dependency by following
+[these instructions](get-started.md#system-dependencies).
 
 #### Bazel API changes
 
@@ -170,7 +172,8 @@ parameter to
 
 ## FOSS to "Enterprise Edition"
 
-0. Reach out to Sematic via support@sematic.dev to obtain a license for "Sematic EE."
+0. Reach out to Sematic via [support@sematic.dev](mailto:support@sematic.dev) to obtain
+an Enterprise License.
 1. In your helm deployment, change `image.repository` to `sematic/sematic-server-ee`.
 2. In your `pip` installation (client installation), change from depending on `sematic`
 to `sematic[<extra>]`, where `<extra>` is the appropriate variant of Sematic containing

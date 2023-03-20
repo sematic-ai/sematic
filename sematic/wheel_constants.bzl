@@ -2,7 +2,7 @@
 # changelog.md.
 # This is the version that will be attached to the
 # wheel that bazel builds for sematic.
-wheel_version_string = "0.26.0"
+wheel_version_string = "0.27.0"
 
 wheel_author = "Sematic AI, Inc."
 wheel_author_email = "emmanuel@sematic.ai"

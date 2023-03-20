@@ -15,6 +15,7 @@ from sematic.api.tests.fixtures import test_client  # noqa: F401
 from sematic.api_client import (
     IncompatibleClientError,
     ServerError,
+    _notify_event,
     _validate_server_compatibility,
     get_artifact_value_by_id,
 )
@@ -153,3 +154,13 @@ def test_get_artifact_value_by_id(
 
     assert isinstance(value, int)
     assert value == 42
+
+
+@mock.patch("sematic.api_client.requests")
+def test_notify_resilient(mock_requests):
+    mock_requests.post.side_effect = RuntimeError("Intentional fail!")
+
+    # Shouldn't raise
+    _notify_event("foo", "bar", {})
+
+    mock_requests.post.assert_called()

@@ -141,6 +141,8 @@ def main(
     `resolve` set to `True` will execute the driver logic.
     `resolve` set to `False` will execute the worker logic.
     """
+    worker_pid = os.getpid()
+
     if not resolve and rerun_from is not None:
         raise ValueError("Can only have non-None rerun_from in resolve mode")
 
@@ -176,6 +178,7 @@ def main(
 
         else:
             logger.info("Executing %s", func.__name__)
+
             with set_context(
                 SematicContext(
                     run_id=run.id,
@@ -186,15 +189,52 @@ def main(
                 )
             ):
                 output = func.calculate(**kwargs)
+
+            logger.info("Finished executing %s", func.__name__)
+            my_pid = os.getpid()
+
+            if my_pid != worker_pid:
+                raise RuntimeError(
+                    f"Subprocess {my_pid} spawned by func '{func.__name__}' did not "
+                    f"clean up correctly and is attempting to execute Sematic worker "
+                    f"code! Force terminating! Please always finish executing "
+                    f"subprocesses with `sys.exit(<code>)`, with `os._exit(<code>)`, "
+                    f"or by sending them a termination signal!"
+                )
+
             _set_run_output(run, output, func.output_type, edges)
 
-    except Exception as e:
-        logger.error("Run failed:")
-        logger.error("%s: %s", e.__class__.__name__, e)
+    except SystemExit as e:
+        if e.code == 0:
+            return
+        my_pid = os.getpid()
+
+        if my_pid == worker_pid:
+            # there is a race condition where during the execution of _set_run_output
+            # above, the server knows the run completed, and it kills the Kubernetes job;
+            # Kubernetes then sends signals to the worker to kill it, and this might catch
+            # the worker still executing code, without having completed cleanly
+            # the worker will only ever receive signals from Kubernetes, and they are
+            # righteous, so we just cleanly complete execution here, without bothering the
+            # user with stack traces on a successful execution
+            return
+
+        logger.info("Subprocess %s is exiting with code: %s", my_pid, e.code)
+        raise
+
+    except BaseException as e:
+        my_pid = os.getpid()
+        if my_pid != worker_pid:
+            # here we are in a subprocess spawned by user code
+            # we log our error and let the parent process decide on an appropriate cleanup
+            logger.error("User code subprocess %s raised an error", my_pid)
+            raise
+
+        # from here on we are in the Sematic worker process
+        logger.exception("Run failed: %s: %s", e.__class__.__name__, str(e))
 
         if resolve:
-            # refresh the run from the DB in case it was updated from
-            # its worker job
+            # refresh the run from the DB in case it was updated from its worker job
             root_run = api_client.get_run(run_id)
             if not FutureState[root_run.future_state].is_terminal():  # type: ignore
                 # Only fail here if the root run hasn't already been
@@ -208,7 +248,7 @@ def main(
         if resolve:
             api_client.notify_pipeline_update(run.calculator_path)
 
-        raise e
+        raise
 
 
 def _create_log_file_path(file_name: str) -> str:
