@@ -7,6 +7,12 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "job_details",
+    srcs = ["job_details.py"],
+    deps = [],
+)
+
+sematic_py_lib(
     name = "job_scheduler",
     srcs = ["job_scheduler.py"],
     deps = [
