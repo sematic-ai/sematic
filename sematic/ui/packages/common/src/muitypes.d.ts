@@ -4,6 +4,7 @@ declare module '@mui/material/styles' {
         big: React.CSSProperties;
         bold: React.CSSProperties;
         bigBold: React.CSSProperties;
+        code: React.CSSProperties;
     }
 
     // allow configuration using `createTheme`
@@ -12,10 +13,11 @@ declare module '@mui/material/styles' {
         big?: React.CSSProperties;
         bold?: React.CSSProperties;
         bigBold?: React.CSSProperties;
+        code?: React.CSSProperties;
     }
     interface Palette {
         black: PaletteColor;
-        lightGray: PaletteColor;
+        lightGrey: PaletteColor;
         p3border: PaletteColor;
     }
 }
@@ -35,6 +37,7 @@ declare module '@mui/material/Typography' {
         bold: true;
         logo: true;
         menu: true;
+        code: true;
     }
 }
 

@@ -6,7 +6,7 @@ const pallette: Record<string, PaletteColorOptions> = {
         main: blue[500]
     },
     lightGrey: {
-        main: '#f5f5f5'
+        main: '#BDB7B4'
     },
     black: {
         main: '#2D2C2E',

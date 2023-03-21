@@ -5,10 +5,10 @@ import components from "src/theme/new/componnets";
 import palette from "src/theme/new/palette";
 import typography from "src/theme/new/typography";
 
-const createTheme = () => {
+export const createTheme = () => {
     return createMuiTheme(
         {
-            spacing: 4,
+            spacing: 5,
             breakpoints,
             palette,
             typography,
@@ -17,4 +17,6 @@ const createTheme = () => {
     );
 }
 
-export default createTheme;
+export const theme = createTheme();
+
+export default theme;
