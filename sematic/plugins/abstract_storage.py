@@ -11,8 +11,13 @@ from sematic.db.models.user import User
 
 @dataclass
 class StorageDestination:
-    url: str
+    url: Optional[str] = None
+    path: Optional[str] = None
     request_headers: Dict[str, str] = field(default_factory=dict)
+
+    def __post_init__(self):
+        if self.url is None and self.path is None:
+            raise ValueError("Either path or url must be specified.")
 
 
 class AbstractStorage(abc.ABC):
