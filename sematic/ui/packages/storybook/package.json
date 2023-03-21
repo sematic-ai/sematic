@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "storybook": "storybook dev -p 6006 -s public",
-    "build-storybook": "storybook build -s public"
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "author": "",
   "license": "ISC",
@@ -21,7 +21,6 @@
     "@storybook/addon-essentials": "^7.0.0-rc.3",
     "@storybook/addon-interactions": "^7.0.0-rc.3",
     "@storybook/addon-links": "^7.0.0-rc.3",
-    "@storybook/addon-mdx-gfm": "^7.0.0-rc.3",
     "@storybook/cli": "^7.0.0-rc.3",
     "@storybook/node-logger": "^7.0.0-rc.3",
     "@storybook/preset-create-react-app": "^7.0.0-rc.3",
