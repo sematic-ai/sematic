@@ -10,6 +10,7 @@ import flask
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
+from sematic.config.config import get_config
 from sematic.db.models.user import User
 from sematic.plugins.abstract_storage import StorageDestination, get_storage_plugins
 from sematic.plugins.storage.local_storage import LocalStorage
@@ -101,6 +102,8 @@ def _get_storage_destination_url(
         return destination.url
 
     if destination.path is not None:
-        return f"{flask.request.host_url}{destination.path}"
+        host = request.args.get("origin", get_config().server_url)
+
+        return f"{host}{destination.path}"
 
     raise RuntimeError("Missing path or url")

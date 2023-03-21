@@ -10,7 +10,7 @@ export default function useFetchBlob(blobId: string): [
 
   const {value, loading, error} = useAsync(async () => {
     const response  = await fetch({
-        url: `/api/v1/storage/blobs/${blobId}/data`
+        url: `/api/v1/storage/blobs/${blobId}/data?origin=${window.location.origin}`
     });
     return ((await response.arrayBuffer()) as ArrayBuffer);
   }, [blobId]);
