@@ -30,14 +30,17 @@ from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
     get_graph,
+    get_jobs_by_run_id,
     get_resolution,
     get_resources_by_root_id,
     get_run,
     get_run_graph,
     save_graph,
+    save_job,
     save_resolution,
 )
 from sematic.plugins.abstract_publisher import get_publishing_plugins
+from sematic.scheduling.job_details import JobKind
 from sematic.scheduling.job_scheduler import schedule_resolution
 from sematic.scheduling.kubernetes import cancel_job
 
@@ -193,11 +196,22 @@ def schedule_resolution_endpoint(
         if "rerun_from" in flask.request.json:
             rerun_from = flask.request.json["rerun_from"]
 
-    resolution = schedule_resolution(
-        resolution=resolution, max_parallelism=max_parallelism, rerun_from=rerun_from
+    jobs = get_jobs_by_run_id(resolution_id, kind=JobKind.resolver)
+    resolution, post_schedule_jobs = schedule_resolution(
+        resolution=resolution,
+        max_parallelism=max_parallelism,
+        rerun_from=rerun_from,
+        existing_jobs=jobs,
+    )
+    logger.info(
+        "Scheduled resolution with job %s/%s",
+        post_schedule_jobs[-1].namespace,
+        post_schedule_jobs[-1].name,
     )
 
     save_resolution(resolution)
+    for job in post_schedule_jobs:
+        save_job(job)
 
     payload = dict(
         content=get_resolution_payload(resolution),
@@ -242,9 +256,25 @@ def rerun_resolution_endpoint(
     if user is not None:
         resolution.user_id = user.id
 
-    resolution = schedule_resolution(resolution, rerun_from=rerun_from)
+    resolution, post_schedule_jobs = schedule_resolution(
+        resolution, rerun_from=rerun_from, existing_jobs=[]
+    )
 
     save_resolution(resolution)
+    if len(post_schedule_jobs) == 0:
+        logger.error("After schedule, resolution had no jobs")
+        return jsonify_error(
+            "Cloned resolution could not be scheduled.",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+        )
+    elif len(post_schedule_jobs) > 1:
+        logger.error("After schedule, resolution had jobs: %s", post_schedule_jobs)
+        return jsonify_error(
+            "Cloned resolution had multiple jobs.",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+        )
+
+    save_job(post_schedule_jobs[0])
 
     payload = dict(
         content=get_resolution_payload(resolution),

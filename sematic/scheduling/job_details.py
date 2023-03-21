@@ -3,7 +3,17 @@ import time
 from dataclasses import dataclass, field
 from typing import List, Literal, Optional
 
+# Sematic
+from sematic.utils.exceptions import ExceptionMetadata, KubernetesError
+
 # TODO: remove ExternalJob and KubernetesExternalJob once they are replaced by this & Job
+
+# ordered from highest to lowest precedence
+# to be interpreted as: pods with phases earlier in the list are newer
+# interpreted from the list from this resource:
+# https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-conditions
+# no official documentation exists regarding "Unknown"'s state transitions
+POD_PHASE_PRECEDENCE = ["Unknown", "Pending", "Running", "Succeeded", "Failed"]
 
 
 # This is not an Enum because dataclasses.asdict doesn't produce
@@ -52,13 +62,13 @@ class KubernetesJobState:
             "This is meant to emulate an Enum and not to be instantiated directly"
         )
 
-    Requested = "Requested"
-    Pending = "Pending"
-    Running = "Running"
-    Restarting = "Restarting"
-    Succeeded = "Succeeded"
-    Failed = "Failed"
-    Deleted = "Deleted"
+    Requested: "KubernetesJobStateString" = "Requested"
+    Pending: "KubernetesJobStateString" = "Pending"
+    Running: "KubernetesJobStateString" = "Running"
+    Restarting: "KubernetesJobStateString" = "Restarting"
+    Succeeded: "KubernetesJobStateString" = "Succeeded"
+    Failed: "KubernetesJobStateString" = "Failed"
+    Deleted: "KubernetesJobStateString" = "Deleted"
 
     @classmethod
     def is_active(cls, state) -> bool:
@@ -87,8 +97,8 @@ class JobKind:
     def __init__(self) -> None:
         raise RuntimeError("This is meant to emulate an enum, not be instantiated.")
 
-    resolver = "resolver"
-    run = "run"
+    resolver: "JobKindString" = "resolver"
+    run: "JobKindString" = "run"
 
 
 JobKindString = Literal[
@@ -142,14 +152,21 @@ class PodSummary:
     # Indicator of whether the pod has shown some abnormality
     # that shows that Sematic should move the current run to
     # a terminal state (or retry it).
-    detected_infra_failure: bool = False
+    has_infra_failure: bool = False
 
-    def string_summary(self) -> str:
-        return (
-            f"{self.pod_name}[in phase '{self.phase}']"
-            f"[{self.condition_message}]"
-            f"[{self.container_condition_message}]"
-        )
+    def string_summary(self, use_newlines=False) -> str:
+        if use_newlines:
+            return (
+                f"{self.pod_name} is in phase '{self.phase}'\n"
+                f"{self.condition_message}\n"
+                f"{self.container_condition_message}"
+            )
+        else:
+            return (
+                f"{self.pod_name}[in phase '{self.phase}']"
+                f"[{self.condition_message}]"
+                f"[{self.container_condition_message}]"
+            )
 
 
 @dataclass(frozen=True)
@@ -233,3 +250,57 @@ class JobDetails:
     # changed between refreshes. Used to detect when K8s replaces the
     # job's pod.
     previous_pod_name: Optional[str] = None
+
+    # represents the node the pod was assigned to before the latest
+    # refresh happened. None means the prior refresh had no node name
+    # (which is true until the pod is scheduled). It may match
+    # latest_pod_name if the pod name hasn't changed between refreshes.
+    # Used to detect when K8s replaces the job's pod.
+    previous_node_name: Optional[str] = None
+
+    def latest_pod_summary(self) -> Optional[PodSummary]:
+        if len(self.current_pods) == 0:
+            return None
+
+        def order_key(summary):
+            """Order pods first by phase, then start time.
+            It's important to not just rely on start time because pending
+            pods don't have one.
+            """
+            phase_key = -1
+            if summary.phase is not None:
+                phase_key = POD_PHASE_PRECEDENCE.index(summary.phase)
+            start_time_key = summary.start_time_epoch_seconds or 0
+            return (phase_key, start_time_key)
+
+        latest = max(self.current_pods, key=order_key)
+        return latest
+
+    def latest_pod_name(self) -> Optional[str]:
+        summary = self.latest_pod_summary()
+        if summary is None:
+            return None
+        return summary.pod_name
+
+    def latest_node_name(self) -> Optional[str]:
+        summary = self.latest_pod_summary()
+        if summary is None:
+            return None
+        return summary.node_name
+
+    def get_exception_metadata(self) -> Optional[ExceptionMetadata]:
+        if not self.has_infra_failure:
+            return None
+
+        latest_pod_summary = self.latest_pod_summary()
+        if latest_pod_summary is None:
+            message = "No pods could be found."
+        else:
+            message = latest_pod_summary.string_summary(use_newlines=True)
+
+        return ExceptionMetadata(
+            repr=message,
+            name=KubernetesError.__name__,
+            module=KubernetesError.__module__,
+            ancestors=ExceptionMetadata.ancestors_from_exception(KubernetesError),
+        )

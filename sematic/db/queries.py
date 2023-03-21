@@ -24,6 +24,7 @@ from sematic.db.models.runs_external_resource import RunExternalResource
 from sematic.db.models.user import User
 from sematic.plugins.abstract_external_resource import ResourceState
 from sematic.scheduling.external_job import ExternalJob
+from sematic.scheduling.job_details import JobKind, JobKindString
 from sematic.types.serialization import value_from_json_encodable
 from sematic.utils.exceptions import IllegalStateTransitionError
 
@@ -137,7 +138,7 @@ def get_run(run_id: str) -> Run:
 
 def get_run_status_details(
     run_ids: List[str],
-) -> Dict[str, Tuple[FutureState, List[ExternalJob]]]:
+) -> Dict[str, Tuple[FutureState, List[Job]]]:
     """
     Get information about runs' statuses from the DB.
 
@@ -158,20 +159,23 @@ def get_run_status_details(
     """
     with db().get_session() as session:
         query_results = (
-            session.query(Run.id, Run.future_state, Run.external_jobs_json)
-            .filter(Run.id.in_(run_ids))
+            session.query(Run.id, Run.future_state).filter(Run.id.in_(run_ids)).all()
+        )
+        jobs = list(
+            session.query(Job)
+            .filter(Job.run_id.in_(run_ids))
+            .filter(Job.kind == JobKind.run)
             .all()
         )
+        jobs_by_run_id: Dict[str, List[Job]] = {job.run_id: [] for job in jobs}
+        for job in jobs:
+            jobs_by_run_id[job.run_id].append(job)
         result_dict = {}
-        for run_id, state_string, jobs_encodable in query_results:
-            if jobs_encodable is None:
-                jobs = []
-            else:
-                jobs = [
-                    value_from_json_encodable(job, ExternalJob)
-                    for job in jobs_encodable
-                ]
-            result_dict[run_id] = (FutureState[state_string], jobs)
+        for run_id, state_string in query_results:
+            result_dict[run_id] = (
+                FutureState[state_string],
+                jobs_by_run_id.get(run_id, []),
+            )
     return result_dict
 
 
@@ -258,10 +262,15 @@ def save_job(job: Job) -> Job:
         return job
 
 
-def get_jobs_by_run_id(run_id: str) -> List[Job]:
+def get_jobs_by_run_id(run_id: str, kind: JobKindString = JobKind.run) -> List[Job]:
     """Get jobs from the DB by source run id."""
     with db().get_session() as session:
-        return list(session.query(Job).filter(Job.run_id == run_id).all())
+        return list(
+            session.query(Job)
+            .filter(Job.run_id == run_id)
+            .filter(Job.kind == kind)
+            .all()
+        )
 
 
 def save_external_resource_record(record: ExternalResource):

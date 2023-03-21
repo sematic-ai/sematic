@@ -30,6 +30,7 @@ from sematic.api.endpoints.request_parameters import (
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
+from sematic.db.models.job import Job
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
@@ -41,11 +42,11 @@ from sematic.db.queries import (
     get_run_graph,
     get_run_status_details,
     save_graph,
+    save_job,
     save_run,
     save_run_external_resource_links,
 )
 from sematic.log_reader import load_log_lines
-from sematic.scheduling.external_job import ExternalJob
 from sematic.scheduling.job_scheduler import schedule_run, update_run_status
 from sematic.scheduling.kubernetes import cancel_job
 from sematic.utils.exceptions import IllegalStateTransitionError
@@ -235,13 +236,17 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
         return jsonify_error(
             "No runs with id {}".format(repr(run_id)), HTTPStatus.NOT_FOUND
         )
+    jobs = get_jobs_by_run_id(run_id)
 
     resolution = get_resolution(run.root_id)
-    run = schedule_run(run, resolution)
-    logger.info("Scheduled run with external job: %s", run.external_jobs[-1])
+    run, jobs_post_schedule = schedule_run(run, resolution, jobs)
+    logger.info("Scheduled run with job: %s", jobs_post_schedule[-1])
     run.started_at = datetime.datetime.utcnow()
 
     save_run(run)
+
+    for job in jobs_post_schedule:
+        save_job(job)
 
     broadcast_graph_update(root_id=run.root_id, user=user)
 
@@ -280,24 +285,23 @@ def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 
 
 def _get_run_if_modified(
-    run_id: str, future_state: FutureState, jobs: List[ExternalJob]
+    run_id: str, future_state: FutureState, jobs: List[Job]
 ) -> Optional[Run]:
-    """Returns the updated run, if it has changed based on external job status, or None
+    """Returns the updated run, if it has changed based on job status, or None
     if it hasn't.
     """
-    new_future_state, new_external_jobs = update_run_status(future_state, jobs)
+    new_future_state, new_jobs = update_run_status(future_state, jobs)
     run = None
 
     # we standardize to tuples, but sometimes we get lists
-    if tuple(new_external_jobs) != tuple(jobs):
+    if tuple(new_jobs) != tuple(jobs):
         run = get_run(run_id)
-        run.external_jobs = new_external_jobs
-        run.external_exception_metadata = new_external_jobs[-1].get_exception_metadata()
-        logger.info("Updating run's external jobs: %s", new_external_jobs)
+        run.external_exception_metadata = new_jobs[-1].details.get_exception_metadata()
+        logger.info("Updating run's jobs: %s", new_jobs)
 
     if new_future_state != future_state:
         # why have get_run both here and in the block above about
-        # external jobs? Why not just get the run outside both blocks?
+        # jobs? Why not just get the run outside both blocks?
         # because this endpoint gets called A LOT, and we want to
         # avoid loading the run from the DB unless we detect that something
         # has changed, and we need to load it to modify. The common case will
@@ -347,6 +351,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
             "Call did not contain json with a 'run_ids' key", HTTPStatus.BAD_REQUEST
         )
     run_ids = input_payload["run_ids"]
+    logger.info("Updating state for runs %s", run_ids)
 
     db_status_dict = get_run_status_details(run_ids)
     missing_run_ids = set(run_ids).difference(db_status_dict.keys())
