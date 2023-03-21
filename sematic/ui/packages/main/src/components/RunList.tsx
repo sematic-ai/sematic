@@ -174,7 +174,7 @@ export function RunList(props: RunListProps) {
 
   return (
     <StyledTableContainer data-cy={"RunList"}>
-      <Table size={props.size} >
+      <Table size={props.size} style={{ 'tableLayout': 'fixed' }}>
         <TableHead>
           <TableRow>
             {columns.map(({name, width}) => (
@@ -184,7 +184,7 @@ export function RunList(props: RunListProps) {
         </TableHead>
       </Table>
       <TBodyScroller>
-        <Table>
+        <Table style={{ 'tableLayout': 'fixed' }}>
           {tableBody}
         </Table>
       </TBodyScroller>
