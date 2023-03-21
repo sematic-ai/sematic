@@ -24,12 +24,12 @@ def test_upload_download(
             "sematic.plugins.storage.local_storage._get_data_dir", return_value=tempdir
         ):
             destination = local_storage.get_write_destination("artifacts", "123", None)
-            response = test_client.put(destination.url, data=value)
+            response = test_client.put(destination.path, data=value)
 
             assert response.status_code == 200
 
             destination = local_storage.get_read_destination("artifacts", "123", None)
 
-            response = test_client.get(destination.url)
+            response = test_client.get(destination.path)
 
             assert response.data == value
