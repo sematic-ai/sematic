@@ -1,26 +1,10 @@
 import { TypographyOptions } from "@mui/material/styles/createTypography";
 
-declare module '@mui/material/styles' {
-  interface TypographyVariants {
-      small: React.CSSProperties;
-      big: React.CSSProperties;
-      bold: React.CSSProperties;
-      bigBold: React.CSSProperties;
-  }
-
-  // allow configuration using `createTheme`
-  interface TypographyVariantsOptions {
-      small?: React.CSSProperties;
-      big?: React.CSSProperties;
-      bold?: React.CSSProperties;
-      bigBold?: React.CSSProperties;
-  }
-}
-const fontWeightLight = 300;
-const fontWeightRegular = 400;
-const fontWeightMedium = 500;
-const fontWeightBold = 600;
-const fontFamily = [
+export const fontWeightLight = 300;
+export const fontWeightRegular = 400;
+export const fontWeightMedium = 500;
+export const fontWeightBold = 600;
+export const fontFamily = [
   "Inter",
   "-apple-system",
   "BlinkMacSystemFont",

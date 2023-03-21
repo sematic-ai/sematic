@@ -16,7 +16,8 @@
         }
     },
     "include": [
-        "**/*.ts"
+        "**/*.tsx",
+        "../common/src/muitypes.d.ts",
     ],
     "references": [
         { "path": "../common" },
