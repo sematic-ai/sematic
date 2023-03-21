@@ -13,12 +13,26 @@ export default {
       </ThemeProvider>
     ),
   ],
-} as Meta<typeof Menu>;
+} as Meta<StoryProps>;
+
+interface StoryProps {
+  selectedItem: string;
+}
 
 
-export const Header: StoryObj<typeof Menu> = {
-  render: () => {
-    return <Menu />
+export const Header: StoryObj<StoryProps> = {
+  render: (props) => {
+    const { selectedItem } = props;
+
+    return <Menu selectedKey={selectedItem}/>
+  },
+  argTypes: {
+    selectedItem: {
+      control: 'select', 
+      options: [
+        undefined, 'runs', 'pipelines', 'metrics'
+      ]
+    }
   }
 };
 

@@ -15,9 +15,8 @@ declare module '@mui/material/styles' {
     }
     interface Palette {
         black: PaletteColor;
+        lightGray: PaletteColor;
         p3border: PaletteColor;
-        lightGrey: PaletteColor;
-        blue: PaletteColor;
     }
 }
 
@@ -34,6 +33,8 @@ declare module '@mui/material/Typography' {
         big: true;
         bigBold: true;
         bold: true;
+        logo: true;
+        menu: true;
     }
 }
 

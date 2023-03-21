@@ -6,7 +6,7 @@ import HeaderMenu from "src/component/menu";
 
 const Shell = () => {
   return <ThemeProvider theme={createTheme()}>
-    <Grid container spacing={0} direction={'column'} style={{height: "100%", width: "100%"}}>
+    <Grid container spacing={0} direction={'column'} style={{height: "100vh", width: "100%"}}>
       <Grid style={{flexShrink: 1}}>
         <HeaderMenu />
       </Grid>

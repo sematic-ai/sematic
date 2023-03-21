@@ -1,4 +1,4 @@
-import Button from "@mui/material/Button";
+import Link from "@mui/material/Link";
 import { ThemeProvider } from "@mui/material/styles";
 import Fox from '@sematic/common/src/static/fox';
 import createTheme from '@sematic/common/src/theme/new';
@@ -6,8 +6,8 @@ import { Meta, StoryObj } from '@storybook/react';
 
 // More on default export: https://storybook.js.org/docs/react/writing-stories/introduction#default-export
 export default {
-  title: 'Sematic/Button',
-  component: Button,
+  title: 'Sematic/Link',
+  component: Link,
   decorators: [
     (Story) => (
       <ThemeProvider theme={createTheme()}>
@@ -15,22 +15,30 @@ export default {
       </ThemeProvider>
     ),
   ],
-} as Meta<typeof Button>;
+} as Meta<typeof Link>;
 
 
-export const LogoButton: StoryObj<typeof Button> = {
+export const LogoLink: StoryObj<typeof Link> = {
   render: () => {
-    return <Button variant="logo" >
+    return <Link variant="logo" >
           <Fox style={{}}/>
-      </Button>  
+      </Link>  
   }
 };
 
-export const MenuButton: StoryObj<typeof Button> = {
+export const MenuLink: StoryObj<typeof Link> = {
   render: () => {
-    return <Button variant="menu" >
+    return <Link variant="subtitle1" type="menu" >
           Menu Item
-      </Button>  
+      </Link>  
+  }
+};
+
+export const SelectedMenuLink: StoryObj<typeof Link> = {
+  render: () => {
+    return <Link variant="subtitle1" type="menu" className={"selected"} >
+          Menu Item
+      </Link>  
   }
 };
 
