@@ -14,13 +14,10 @@ from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
 )
-from sematic.api.endpoints.storage import get_stored_data_redirect
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.user import User
 from sematic.db.queries import get_artifact
-from sematic.plugins.abstract_storage import get_storage_plugins
-from sematic.plugins.storage.local_storage import LocalStorage
 
 logger = logging.getLogger(__name__)
 
