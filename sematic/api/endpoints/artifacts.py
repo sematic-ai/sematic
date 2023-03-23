@@ -14,13 +14,10 @@ from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
     jsonify_error,
 )
-from sematic.api.endpoints.storage import get_stored_data_redirect
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.user import User
 from sematic.db.queries import get_artifact
-from sematic.plugins.abstract_storage import get_storage_plugins
-from sematic.plugins.storage.local_storage import LocalStorage
 
 logger = logging.getLogger(__name__)
 
@@ -73,36 +70,3 @@ def get_artifact_endpoint(user: Optional[User], artifact_id: str) -> flask.Respo
     payload = dict(content=artifact.to_json_encodable())
 
     return flask.jsonify(payload)
-
-
-# Kept for backward compatibility with 0.23.0
-@sematic_api.route("/api/v1/artifacts/<artifact_id>/location", methods=["GET"])
-@authenticate
-def get_artifact_location_endpoint(user: Optional[User], artifact_id: str):
-    try:
-        storage_plugin = get_storage_plugins([LocalStorage])[0]
-    except Exception as e:
-        logger.exception("Unable to load the storage plugin: %s", str(e))
-
-        return jsonify_error(
-            "Incorrect storage plugin scope", HTTPStatus.INTERNAL_SERVER_ERROR
-        )
-
-    destination = storage_plugin().get_write_destination("artifacts", artifact_id, user)
-
-    location = destination.url
-
-    # If this is a Sematic URL, older clients expect the relative path and will add
-    # auth headers on their own
-    url_parts = location.split("/api/v1")
-    if len(url_parts) > 1:
-        location = url_parts[1]
-
-    return flask.jsonify(dict(location=location))
-
-
-# Kept for backward compatibility with 0.23.0
-@sematic_api.route("/api/v1/artifacts/<artifact_id>/data", methods=["GET"])
-@authenticate
-def get_artifact_data_endpoint(user: Optional[User], artifact_id: str):
-    return get_stored_data_redirect(user, "artifacts", artifact_id)
