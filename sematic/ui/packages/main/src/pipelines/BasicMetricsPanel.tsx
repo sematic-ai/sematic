@@ -12,7 +12,6 @@ import {
   TableRow,
   Tooltip,
   Typography,
-  useTheme,
 } from "@mui/material";
 import { useMemo } from "react";
 import { durationSecondsToString } from "src/utils";
@@ -51,7 +50,6 @@ const MetricLabel = styled(Box)`
 
 function TopMetric(props: { value: string; label: string; help?: string }) {
   const { value, label, help } = props;
-  const theme = useTheme();
 
   return (
     <MetricBox>
