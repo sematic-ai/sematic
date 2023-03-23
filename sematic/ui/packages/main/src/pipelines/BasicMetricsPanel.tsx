@@ -54,7 +54,7 @@ export default function BasicMetricsPanel() {
 
   const sortedAvgRuntimeChildren = useMemo(() => Object.entries(payload?.content.avg_runtime_children || {}).sort(
     (a, b) => a[1] > b[1] ? -1 : 1)
-  , [payload, rootRun]);
+  , [payload]);
 
   return <Box sx={{p: 5}}>
     {loading === true && <Loading isLoaded={false}/>}
