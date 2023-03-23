@@ -184,19 +184,27 @@ class BasicPipelineMetrics:
 
 
 def get_basic_pipeline_metrics(calculator_path: str):
-    with db().get_engine().begin() as conn:
+    with db().get_session() as session:
         count_by_state = list(
-            conn.execute(
-                sqlalchemy.text(RUN_COUNT_BY_STATE),
-                dict(calculator_path=calculator_path),
-            )
+            session.query(Run.future_state, sqlalchemy.func.count())
+            .filter(Run.calculator_path == calculator_path)
+            .group_by(Run.future_state)
         )
 
+        RootRun = sqlalchemy.orm.aliased(Run)
         avg_runtime_children = list(
-            conn.execute(
-                sqlalchemy.text(AVG_RUNTIME_CHILDREN),
-                dict(calculator_path=calculator_path),
+            session.query(
+                Run.calculator_path,
+                sqlalchemy.func.avg(
+                    sqlalchemy.func.extract("epoch", Run.resolved_at)
+                    - sqlalchemy.func.extract("epoch", Run.started_at)
+                ),
             )
+            .join(RootRun, Run.root_id == RootRun.id)
+            .filter(
+                RootRun.calculator_path == calculator_path, Run.resolved_at is not None
+            )
+            .group_by(Run.calculator_path)
         )
 
     total_count = sum([count for _, count in count_by_state])
