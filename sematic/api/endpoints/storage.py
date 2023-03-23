@@ -2,6 +2,7 @@
 import logging
 from http import HTTPStatus
 from typing import Optional
+from urllib.parse import urlparse
 
 # Third-party
 import flask
@@ -98,12 +99,10 @@ def get_stored_data_redirect(user: Optional[User], namespace: str, key: str):
 def _get_storage_destination_url(
     destination: StorageDestination, request: flask.Request
 ) -> str:
-    if destination.url is not None:
-        return destination.url
+    parsed_url = urlparse(destination.uri)
 
-    if destination.path is not None:
+    if parsed_url.scheme == "sematic":
         host = request.args.get("origin", get_config().server_url)
+        return f"{host}{parsed_url.path}"
 
-        return f"{host}{destination.path}"
-
-    raise RuntimeError("Missing path or url")
+    return destination.uri

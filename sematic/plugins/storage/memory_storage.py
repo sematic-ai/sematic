@@ -10,7 +10,6 @@ from sematic.abstract_plugin import SEMATIC_PLUGIN_AUTHOR, AbstractPlugin, Plugi
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import API_KEY_HEADER, authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
-from sematic.config.config import get_config
 from sematic.db.models.user import User
 from sematic.plugins.abstract_storage import (
     AbstractStorage,
@@ -54,7 +53,7 @@ class MemoryStorage(AbstractStorage, AbstractPlugin):
         self, namespace: str, key: str, user: Optional[User]
     ) -> StorageDestination:
         return StorageDestination(
-            url=f"{get_config().api_url}/storage/{namespace}/{key}/memory",
+            uri=f"sematic:///api/v1/storage/{namespace}/{key}/memory",
             request_headers=_make_headers(user),
         )
 
@@ -62,7 +61,7 @@ class MemoryStorage(AbstractStorage, AbstractPlugin):
         self, namespace: str, key: str, user: Optional[User]
     ) -> StorageDestination:
         return StorageDestination(
-            url=f"{get_config().api_url}/storage/{namespace}/{key}/memory",
+            uri=f"sematic:///api/v1/storage/{namespace}/{key}/memory",
             request_headers=_make_headers(user),
         )
 
