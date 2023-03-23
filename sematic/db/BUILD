@@ -53,13 +53,14 @@ sematic_py_lib(
         "click",
         "sqlalchemy",
     ],
+    # buildifier: leave-alone
     deps = [
         # DO NOT add any other dependencies
         # or it may break the sequence of migrations
         # Migrations are written at a specific point in time, whereas the
         # codebase evolves.
         ":db",
-        "//sematic/config",
+        "//sematic/config:config",
     ],
 )
 
