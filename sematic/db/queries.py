@@ -3,6 +3,7 @@ Module holding common DB queries.
 """
 # Standard Library
 import logging
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Set, Tuple
 
 # Third-party
@@ -13,6 +14,7 @@ from sqlalchemy.sql.elements import ColumnElement
 # Sematic
 from sematic.abstract_future import FutureState
 from sematic.db.db import db
+from sematic.db.metrics_queries import AVG_RUNTIME_CHILDREN, RUN_COUNT_BY_STATE
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
@@ -172,6 +174,38 @@ def get_run_status_details(
                 ]
             result_dict[run_id] = (FutureState[state_string], jobs)
     return result_dict
+
+
+@dataclass
+class PipelineMetrics:
+    count_by_state: Dict[str, int]
+    avg_runtime_children: Dict[str, float]
+    total_count: int
+
+
+def get_pipeline_metrics(calculator_path: str):
+    with db().get_engine().begin() as conn:
+        count_by_state = list(
+            conn.execute(
+                sqlalchemy.text(RUN_COUNT_BY_STATE),
+                dict(calculator_path=calculator_path),
+            )
+        )
+
+        avg_runtime_children = list(
+            conn.execute(
+                sqlalchemy.text(AVG_RUNTIME_CHILDREN),
+                dict(calculator_path=calculator_path),
+            )
+        )
+
+    total_count = sum([count for _, count in count_by_state])
+
+    return PipelineMetrics(
+        total_count=total_count,
+        count_by_state={state: count for state, count in count_by_state},
+        avg_runtime_children={path: runtime for path, runtime in avg_runtime_children},
+    )
 
 
 def save_run(run: Run) -> Run:

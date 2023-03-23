@@ -34,6 +34,7 @@ from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
     get_external_resources_by_run_id,
+    get_pipeline_metrics,
     get_resolution,
     get_root_graph,
     get_run,
@@ -498,3 +499,11 @@ def link_resource_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     external_resource_ids = flask.request.json["external_resource_ids"]
     save_run_external_resource_links(resource_ids=external_resource_ids, run_id=run_id)
     return flask.jsonify({})
+
+
+@sematic_api.route("/api/v1/runs/<run_id>/metrics", methods=["GET"])
+@authenticate
+def run_metrics_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+    run = get_run(run_id)
+    pipeline_metrics = get_pipeline_metrics(run.calculator_path)
+    return flask.jsonify(dict(content=asdict(pipeline_metrics)))

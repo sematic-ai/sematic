@@ -24,6 +24,12 @@ export default function MenuPanel() {
 
   let panelList = [
     {
+      label: "metrics",
+      title: "Pipeline metrics",
+      icon: <Timeline />,
+      onClick: () => setSelectedPanelItem("metrics"),
+    },
+    {
       label: "graph",
       title: "Execution graph",
       icon: <BubbleChart />,
@@ -33,20 +39,9 @@ export default function MenuPanel() {
       label: "run",
       title: "Nested runs",
       icon: <FormatListBulleted />,
-      onClick: () => {
-        setSelectedPanelItem("run");
-      },
+      onClick: () => setSelectedPanelItem("run"),
     },
   ];
-
-  if (process.env.NODE_ENV === "development") {
-    panelList.splice(1, 0, {
-      label: "topline",
-      title: "Topline metrics",
-      icon: <Timeline />,
-      onClick: () => {},
-    });
-  }
 
   return (
     <Box
