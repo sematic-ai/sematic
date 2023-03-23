@@ -177,13 +177,13 @@ def get_run_status_details(
 
 
 @dataclass
-class PipelineMetrics:
+class BasicPipelineMetrics:
     count_by_state: Dict[str, int]
     avg_runtime_children: Dict[str, float]
     total_count: int
 
 
-def get_pipeline_metrics(calculator_path: str):
+def get_basic_pipeline_metrics(calculator_path: str):
     with db().get_engine().begin() as conn:
         count_by_state = list(
             conn.execute(
@@ -201,7 +201,7 @@ def get_pipeline_metrics(calculator_path: str):
 
     total_count = sum([count for _, count in count_by_state])
 
-    return PipelineMetrics(
+    return BasicPipelineMetrics(
         total_count=total_count,
         count_by_state={state: count for state, count in count_by_state},
         avg_runtime_children={path: runtime for path, runtime in avg_runtime_children},

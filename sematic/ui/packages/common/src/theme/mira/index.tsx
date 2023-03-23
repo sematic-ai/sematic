@@ -34,3 +34,5 @@ const createTheme = (name: string) => {
 };
 
 export default createTheme;
+
+export const theme = createTheme("LIGHT");
