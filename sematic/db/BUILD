@@ -19,7 +19,6 @@ sematic_py_lib(
     ],
     deps = [
         ":db",
-        ":metrics_queries",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:external_resource",
@@ -68,10 +67,4 @@ py_binary(
     name = "migrate",
     srcs = ["migrate.py"],
     deps = [":migrate_lib"],
-)
-
-sematic_py_lib(
-    name = "metrics_queries",
-    srcs = ["metrics_queries.py"],
-    deps = [],
 )

@@ -14,7 +14,6 @@ from sqlalchemy.sql.elements import ColumnElement
 # Sematic
 from sematic.abstract_future import FutureState
 from sematic.db.db import db
-from sematic.db.metrics_queries import AVG_RUNTIME_CHILDREN, RUN_COUNT_BY_STATE
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
