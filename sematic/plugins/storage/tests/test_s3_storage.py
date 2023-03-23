@@ -22,8 +22,8 @@ def test_upload_download(
     ):
         destination = s3_storage.get_write_destination("artifacts", "123", None)
 
-        assert destination.url == "https://presigned-url"
+        assert destination.uri == "https://presigned-url"
 
         destination = s3_storage.get_read_destination("artifacts", "123", None)
 
-        assert destination.url == "https://presigned-url"
+        assert destination.uri == "https://presigned-url"
