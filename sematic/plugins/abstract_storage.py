@@ -11,7 +11,7 @@ from sematic.db.models.user import User
 
 @dataclass
 class StorageDestination:
-    url: str
+    uri: str
     request_headers: Dict[str, str] = field(default_factory=dict)
 
 
