@@ -115,3 +115,21 @@ export function abbreviatedUserName(user: User | null): string {
 
   return `${first_name} ${(last_name || "").substring(0, 1)}.`
 }
+
+
+export function durationSecondsToString(durationS: number) : string {
+  const displayH: number = Math.floor(durationS / 3600);
+  const displayM: number = Math.floor((durationS % 3600) / 60);
+  const displayS: number = Math.round(durationS % 60);
+
+  const final = [
+    displayH > 0 ? displayH.toString() + "h" : "",
+    displayM > 0 ? displayM.toString() + "m " : "",
+    displayS > 0 ? displayS.toString() + "s" : "",
+    displayS === 0 ? "<1s" : "",
+  ]
+    .join(" ")
+    .trim();
+
+  return final;
+}

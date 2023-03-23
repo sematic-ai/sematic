@@ -5,6 +5,7 @@ sematic_py_lib(
         "sqlalchemy",
         "psycopg2-binary",
     ],
+    # buildifier: leave-alone
     deps = [
         "//sematic/config:config",
     ],
@@ -18,6 +19,7 @@ sematic_py_lib(
     ],
     deps = [
         ":db",
+        ":metrics_queries",
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:external_resource",
@@ -57,7 +59,7 @@ sematic_py_lib(
         # Migrations are written at a specific point in time, whereas the
         # codebase evolves.
         ":db",
-        "//sematic/config:config",
+        "//sematic/config",
     ],
 )
 
@@ -65,4 +67,10 @@ py_binary(
     name = "migrate",
     srcs = ["migrate.py"],
     deps = [":migrate_lib"],
+)
+
+sematic_py_lib(
+    name = "metrics_queries",
+    srcs = ["metrics_queries.py"],
+    deps = [],
 )

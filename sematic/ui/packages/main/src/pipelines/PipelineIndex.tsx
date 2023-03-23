@@ -1,5 +1,5 @@
 import { InfoOutlined } from "@mui/icons-material";
-import { Alert, AlertTitle, Container, containerClasses } from "@mui/material";
+import { Alert, AlertTitle, Container, containerClasses, Skeleton } from "@mui/material";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/system";
@@ -13,8 +13,10 @@ import RunStateChip, { RunStateChipUndefinedStyle } from "src/components/RunStat
 import { RunTime } from "src/components/RunTime";
 import Tags from "src/components/Tags";
 import TimeAgo from "src/components/TimeAgo";
+import useBasicMetrics from "src/hooks/metricsHooks";
 import { useFetchRuns } from "src/hooks/pipelineHooks";
 import { pipelineSocket } from "src/sockets";
+import { runAvgRunTime, runSuccessRate } from "src/pipelines/BasicMetricsPanel";
 
 const RecentStatusesWithStyles = styled('span')`
   flex-direction: row;
@@ -41,14 +43,48 @@ const StyledRootBox = styled(Box, {
   }
 `;
 
+function PipelineMetric(props: {value: string, label: string}) {
+  const {value, label} = props;
+  return <Box sx={{textAlign: "center"}}>
+    <Typography sx={{fontSize: 18}}>{value}</Typography>
+    <Typography fontSize="small" color="Gray
+    ">{label}</Typography>
+  </Box>
+
+}
+
+
+function PipelineMetrics(props: {run: Run}) {
+  const { run } = props;
+  const [ payload, loading, error ] = useBasicMetrics({runId: run.id});
+
+  const successRate = useMemo(() => payload ? runSuccessRate(payload, run) : "0%",
+  [payload])
+
+  const avgRuntime = useMemo(() => payload ? runAvgRunTime(payload, run) : "0s"
+  , [payload, run])
+
+  return <>
+  { loading === true && <Skeleton />}
+  { loading !== true && error === undefined && payload && 
+    <Box sx={{display: "flex", flexDirection: "row", columnGap: 5}}>
+      <PipelineMetric value={payload.content.total_count.toString()} label="runs" />
+      <PipelineMetric value={successRate} label="success" />
+      <PipelineMetric value={avgRuntime} label="avg. time" />
+    </Box>}
+  </>;
+}
+
+
 const TableColumns: Array<RunListColumn> = [
-  {name: "Name", width: "65%", render:(run: Run) => <PipelineNameColumn run={run} />},
+  {name: "Name", width: "45%", render:(run: Run) => <PipelineNameColumn run={run} />},
   {name: "Last run", width: "20%", render:
-    (run: Run) => <>
+  (run: Run) => <>
       <TimeAgo date={run.created_at} />
       <RunTime run={run} prefix="in" />
     </>},
-  {name: "Status", width: "15%", render:
+  {name: "Metrics", width: "20%", render: (run: Run) => <PipelineMetrics run={run} />},
+  {name: "Last 5 runs", width: "15%", render:
     ({calculator_path}: Run) => <RecentStatuses calculatorPath={calculator_path} />
 }
 ]
