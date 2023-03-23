@@ -5,7 +5,6 @@ SELECT
 FROM runs
 WHERE
     calculator_path = :calculator_path
-    --AND tags LIKE '%%'
 GROUP BY future_state;
 """
 
@@ -20,7 +19,6 @@ INNER JOIN
     ON root_runs.id == runs.root_id
 WHERE
     root_runs.calculator_path = :calculator_path
-    --AND root_runs.tags LIKE '%%'
     AND runs.resolved_at IS NOT NULL
 GROUP BY runs.calculator_path;
 """
