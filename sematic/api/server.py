@@ -68,6 +68,7 @@ def init_socketio():
     # accept connections to undeclared namespaces
     socketio.on_namespace(Namespace("/pipeline"))
     socketio.on_namespace(Namespace("/graph"))
+    socketio.on_namespace(Namespace("/job"))
     return socketio
 
 

@@ -51,7 +51,8 @@ class Job(Base, JSONEncodableMixin):
     detail_serialization:
         A json-encoded serialization of detailed state information for the job
     status_history_serialization:
-        A list of json-encoded serializations of job statuses
+        A list of json-encoded serializations of job statuses. Statuses are in
+        reverse-chronological order (most recent first).
     created_at:
         The time the DB record for the job was created
     updated_at:
@@ -92,10 +93,6 @@ class Job(Base, JSONEncodableMixin):
     details = property(get_details, set_details)
 
     def update_status(self, status: JobStatus):
-        self.last_updated_epoch_seconds = status.last_updated_epoch_seconds
-        self.state = status.state
-        self.message = status.message
-
         history = self.status_history
         prior_status = history[0]
         if prior_status.last_updated_epoch_seconds > status.last_updated_epoch_seconds:
@@ -108,6 +105,11 @@ class Job(Base, JSONEncodableMixin):
                 f"Tried to update status from {prior_status.state} to {status.state}, "
                 f"but the former is a terminal status"
             )
+
+        self.last_updated_epoch_seconds = status.last_updated_epoch_seconds
+        self.state = status.state
+        self.message = status.message
+
         if prior_status != status:
             updated_history = list(history)
             updated_history.insert(0, status)
@@ -126,6 +128,16 @@ class Job(Base, JSONEncodableMixin):
     # don't expose setter; we want this to be read-only for clients. update_status
     # should be used to update status_history.
     status_history = property(get_status_history)
+
+    def get_latest_status(self) -> JobStatus:
+        """Get the most recent job status."""
+        return JobStatus(
+            state=self.state,
+            message=self.message,
+            last_updated_epoch_seconds=self.last_updated_epoch_seconds,
+        )
+
+    latest_status = property(get_latest_status)
 
     def __repr__(self) -> str:
         key_value_strings = [
