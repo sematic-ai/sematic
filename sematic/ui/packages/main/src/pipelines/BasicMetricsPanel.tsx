@@ -5,6 +5,7 @@ import Loading from "src/components/Loading";
 import {
   Alert,
   Box,
+  ButtonBase,
   Grid,
   Table,
   TableBody,
@@ -48,8 +49,8 @@ const MetricLabel = styled(Box)`
   }
 `;
 
-function TopMetric(props: { value: string; label: string; help?: string }) {
-  const { value, label, help } = props;
+function TopMetric(props: { value: string; label: string; docs?: string }) {
+  const { value, label, docs } = props;
 
   return (
     <MetricBox>
@@ -58,10 +59,13 @@ function TopMetric(props: { value: string; label: string; help?: string }) {
       </MetricValue>
       <MetricLabel>
         <Typography>{label}</Typography>
-        {help !== undefined && (
-          <Tooltip title={help}>
+        {docs !== undefined && (
+          <ButtonBase
+            href={`https://docs.sematic.dev/diving-deeper/metrics#${docs}`}
+            target="_blank"
+          >
             <HelpIcon fontSize="small" />
-          </Tooltip>
+          </ButtonBase>
         )}
       </MetricLabel>
     </MetricBox>
@@ -70,9 +74,22 @@ function TopMetric(props: { value: string; label: string; help?: string }) {
 
 export function runSuccessRate(payload: BasicMetricsPayload, run: Run): string {
   const totalCount = payload.content.total_count;
+
+  const numeratorStates = ["RESOLVED"];
+  const denominatorStates = ["RESOLVED", "FAILED", "NESTED_FAILED"];
+
+  const countForStates = (states: string[]) =>
+    states.reduce(
+      (sum: number, state: string) =>
+        (sum += payload.content.count_by_state[state] || 0),
+      0
+    );
+
   const percentRate =
-    ((payload.content.count_by_state["RESOLVED"] || 0) / (totalCount || 1)) *
+    (countForStates(numeratorStates) /
+      (countForStates(denominatorStates) || 1)) *
     100;
+
   return `${Math.floor(percentRate)}%`;
 }
 
@@ -121,21 +138,21 @@ export default function BasicMetricsPanel() {
               <TopMetric
                 value={`${totalCount}`}
                 label="runs"
-                help={`${totalCount} runs of ${rootRun.calculator_path}`}
+                docs="run-count"
               />
             </Grid>
             <Grid item xs={4}>
               <TopMetric
                 value={successRate}
                 label="success rate"
-                help={`Success rate of ${rootRun.calculator_path}`}
+                docs="success-rate"
               />
             </Grid>
             <Grid item xs={4}>
               <TopMetric
                 value={avgRuntime}
                 label="avg. run time"
-                help="Only successfull runs are included."
+                docs="average-run-time"
               />
             </Grid>
           </Grid>
