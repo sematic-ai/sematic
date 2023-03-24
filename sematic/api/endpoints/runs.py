@@ -8,7 +8,7 @@ import datetime
 import logging
 from dataclasses import asdict
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import urlencode, urlsplit, urlunsplit
 
 # Third-party
@@ -284,20 +284,37 @@ def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     return flask.jsonify(payload)
 
 
-def _get_run_if_modified(
+def _get_run_and_jobs_if_modified(
     run_id: str, future_state: FutureState, jobs: List[Job]
-) -> Optional[Run]:
-    """Returns the updated run, if it has changed based on job status, or None
-    if it hasn't.
+) -> Tuple[Optional[Run], List[Job]]:
+    """Returns updated run and jobs.
+
+    Parameters
+    ----------
+    run_id:
+        The id of the run to get updates for.
+    future_state:
+        The state of the run before checking against the jobs.
+    jobs:
+        The jobs to update.
+
+    Returns
+    -------
+    A tuple where the first element is the updated run, if the run has been modified.
+    If the run has not been modified, the first element will be None. The second element
+    is a list of the jobs after update.
     """
-    new_future_state, new_jobs = update_run_status(future_state, jobs)
+    new_future_state, updated_jobs = update_run_status(future_state, jobs)
     run = None
 
     # we standardize to tuples, but sometimes we get lists
-    if tuple(new_jobs) != tuple(jobs):
+    if tuple(updated_jobs) != tuple(jobs):
         run = get_run(run_id)
-        run.external_exception_metadata = new_jobs[-1].details.get_exception_metadata()
-        logger.info("Updating run's jobs: %s", new_jobs)
+        if new_future_state not in (FutureState.CANCELED, FutureState.RESOLVED):
+            run.external_exception_metadata = updated_jobs[
+                -1
+            ].details.get_exception_metadata()
+        logger.info("Updating run's jobs: %s", updated_jobs)
 
     if new_future_state != future_state:
         # why have get_run both here and in the block above about
@@ -337,7 +354,7 @@ def _get_run_if_modified(
             msg,
         )
 
-    return run
+    return run, updated_jobs
 
 
 @sematic_api.route("/api/v1/runs/future_states", methods=["POST"])
@@ -363,7 +380,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
     result_list = []
     for run_id, (future_state, jobs) in db_status_dict.items():
         new_future_state_value = future_state.value
-        run = _get_run_if_modified(run_id, future_state, jobs)
+        run, updated_jobs = _get_run_and_jobs_if_modified(run_id, future_state, jobs)
         if run is not None:
             new_future_state_value = run.future_state
             try:
@@ -373,6 +390,10 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
                     "Run appears to have been modified since being queried: %s", e
                 )
             broadcast_graph_update(run.root_id, user=user)
+
+        for original_job, updated_job in zip(jobs, updated_jobs or []):
+            if original_job.latest_status != updated_job.latest_status:
+                save_job(updated_job)
 
         result_list.append(
             dict(
@@ -458,18 +479,12 @@ def save_graph_endpoint(user: Optional[User]):
     # deleting them.
     save_graph(runs, artifacts, edges)
 
-    updated_jobs = False
     for run in runs:
         if FutureState[run.future_state].is_terminal():
-            updated_jobs = True
             logger.info("Ensuring jobs for %s are stopped %s", run.id, run.future_state)
-            jobs = []
-            for external_job in run.external_jobs:
-                jobs.append(cancel_job(external_job))
-            run.external_jobs = jobs
-
-    if updated_jobs:
-        save_graph(runs, [], [])
+            for job in get_jobs_by_run_id(run.id):
+                canceled_job = cancel_job(job)
+                save_job(canceled_job)
 
     return flask.jsonify({})
 

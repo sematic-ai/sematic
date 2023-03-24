@@ -3,7 +3,6 @@ import logging
 import pathlib
 import time
 from dataclasses import replace
-from enum import Enum, unique
 from typing import Any, Dict, List, Optional, Tuple
 
 # Third-party
@@ -70,12 +69,6 @@ RESOLUTION_RESOURCE_REQUIREMENTS = ResourceRequirements(
 )
 
 DEFAULT_WORKER_SERVICE_ACCOUNT = "default"
-
-
-@unique
-class KubernetesJobCondition(Enum):
-    Complete = "Complete"
-    Failed = "Failed"
 
 
 def _is_none_or_empty(list_: Optional[List]) -> bool:
@@ -238,16 +231,8 @@ def refresh_job(job: Job) -> Job:
                 return job  # still hasn't started
             else:
                 details.still_exists = False
-                details.has_infra_failure = True
                 job.details = details
-                # TODO: something more robust
-                job.update_status(
-                    JobStatus(
-                        state=KubernetesJobState.Deleted,
-                        message="Kubernetes is no longer tracking this job.",
-                        last_updated_epoch_seconds=time.time(),
-                    )
-                )
+                job.update_status(details.get_status(time.time()))
                 return job
         raise e
 
@@ -294,7 +279,6 @@ def refresh_job(job: Job) -> Job:
                 job.name,
                 ts,
             )
-        details = job.details
         details.has_started = True
         details.start_time = ts
 
@@ -317,25 +301,7 @@ def refresh_job(job: Job) -> Job:
 
     job.details = details
 
-    # TODO: something more robust
-    state, message = None, None
-    if details.succeeded_pod_count > 0:
-        state = KubernetesJobState.Succeeded
-        message = "Job has succeeded"
-    elif details.has_infra_failure:
-        state = KubernetesJobState.Failed
-        message = "Job has failed"
-    else:
-        state = KubernetesJobState.Running
-        message = "Job is running"
-    job.update_status(
-        # TODO: replace ALL JobStatus calls in this module with detail derived variants
-        JobStatus(
-            state=state,
-            message=message,
-            last_updated_epoch_seconds=time.time(),
-        )
-    )
+    job.update_status(details.get_status(time.time()))
 
     logger.debug("Job %s/%s refreshed: %s", job.namespace, job.name, job)
     return job
@@ -355,8 +321,10 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
             )
 
         unschedulable_reason = None
+        most_recent_condition = None
         if _is_none_or_empty(pod.status.conditions):
             most_recent_condition_message = "Most recent pod condition is unknown"
+            most_recent_condition_name = "Unknown"
         else:
             unschedulable_reason = _get_unschedulable_reason(pod.status.conditions)
             most_recent_condition = min(
@@ -370,6 +338,11 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
                 f"Pod condition is {condition_modifier}'{most_recent_condition.type}'",
                 most_recent_condition.reason,
                 most_recent_condition.message,
+            )
+            most_recent_condition_name = (
+                f"{condition_modifier}{most_recent_condition.type}".replace(
+                    "NOT ", "Not"
+                )
             )
 
             if most_recent_condition.type in POD_FAILURE_PHASES:
@@ -406,6 +379,7 @@ def _get_pod_summary(pod: V1Pod) -> PodSummary:
             container_restart_count=container_restarts,
             phase=pod.status.phase,
             condition_message=most_recent_condition_message,
+            condition=most_recent_condition_name,
             container_condition_message=most_recent_container_condition_message,
             container_exit_code=container_exit_code,
             start_time_epoch_seconds=(
