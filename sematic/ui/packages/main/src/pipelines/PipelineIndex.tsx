@@ -57,10 +57,10 @@ function PipelineMetrics(props: {run: Run}) {
   const { run } = props;
   const [ payload, loading, error ] = useBasicMetrics({runId: run.id});
 
-  const successRate = useMemo(() => payload ? runSuccessRate(payload, run) : "0%",
+  const successRate = useMemo(() => payload ? runSuccessRate(payload.content.count_by_state, run) : "0%",
   [payload, run])
 
-  const avgRuntime = useMemo(() => payload ? runAvgRunTime(payload, run) : "0s"
+  const avgRuntime = useMemo(() => payload ? runAvgRunTime(payload.content.avg_runtime_children, run) : "0s"
   , [payload, run])
 
   return <>
