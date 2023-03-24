@@ -11,14 +11,12 @@ import {
   TableBody,
   TableCell,
   TableRow,
-  Tooltip,
   Typography,
 } from "@mui/material";
 import { useMemo } from "react";
 import { durationSecondsToString } from "src/utils";
 import CalculatorPath from "src/components/CalculatorPath";
 import HelpIcon from "@mui/icons-material/Help";
-import { BasicMetricsPayload } from "src/Payloads";
 import styled from "@emotion/styled";
 import { theme } from "@sematic/common/src/theme/mira/index";
 
@@ -72,16 +70,14 @@ function TopMetric(props: { value: string; label: string; docs?: string }) {
   );
 }
 
-export function runSuccessRate(payload: BasicMetricsPayload, run: Run): string {
-  const totalCount = payload.content.total_count;
-
+export function runSuccessRate(countByState: {[k: string]: number}, run: Run): string {
   const numeratorStates = ["RESOLVED"];
   const denominatorStates = ["RESOLVED", "FAILED", "NESTED_FAILED"];
 
   const countForStates = (states: string[]) =>
     states.reduce(
       (sum: number, state: string) =>
-        (sum += payload.content.count_by_state[state] || 0),
+        (sum += countByState[state] || 0),
       0
     );
 
@@ -93,9 +89,9 @@ export function runSuccessRate(payload: BasicMetricsPayload, run: Run): string {
   return `${Math.floor(percentRate)}%`;
 }
 
-export function runAvgRunTime(payload: BasicMetricsPayload, run: Run): string {
+export function runAvgRunTime(avgRuntimeChildren: {[k: string]: number}, run: Run): string {
   return durationSecondsToString(
-    payload.content.avg_runtime_children[run.calculator_path] || 0
+    avgRuntimeChildren[run.calculator_path] || 0
   );
 }
 
@@ -107,12 +103,12 @@ export default function BasicMetricsPanel() {
   const totalCount = useMemo(() => payload?.content.total_count, [payload]);
 
   const successRate = useMemo(
-    () => (payload ? runSuccessRate(payload, rootRun) : "0%"),
+    () => (payload ? runSuccessRate(payload.content.count_by_state, rootRun) : "0%"),
     [payload, rootRun]
   );
 
   const avgRuntime = useMemo(
-    () => (payload ? runAvgRunTime(payload, rootRun) : "0s"),
+    () => (payload ? runAvgRunTime(payload.content.avg_runtime_children, rootRun) : "0s"),
     [payload, rootRun]
   );
 
