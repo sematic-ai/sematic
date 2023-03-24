@@ -501,6 +501,9 @@ def link_resource_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     return flask.jsonify({})
 
 
+# No "write" endpoint is needed; the server will be writing to the job
+# table in response to queries that ask the server to update run state
+# (rather than a client posting a job to the server).
 @sematic_api.route("/api/v1/runs/<run_id>/jobs", methods=["GET"])
 @authenticate
 def get_run_jobs(user: Optional[User], run_id: str) -> flask.Response:
