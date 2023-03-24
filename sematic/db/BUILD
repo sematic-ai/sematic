@@ -21,6 +21,7 @@ sematic_py_lib(
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:external_resource",
+        "//sematic/db/models:job",
         "//sematic/db/models:note",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
