@@ -25,5 +25,5 @@ export default {
 type Story = StoryObj<typeof Router>;
 
 export const Page: Story = {
-  render: () => <Router />,
+  render: () => <div style={{margin: "-1em"}}><Router /></div>,
 };

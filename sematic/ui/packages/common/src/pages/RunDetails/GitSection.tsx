@@ -2,21 +2,20 @@ import styled from '@emotion/styled';
 
 import theme from 'src/theme/new';
 import GitInfoBox from 'src/component/GitInfo';
+import Section from 'src/component/Section';
+import Headline from 'src/component/Headline';
 
-const Headline = styled.h2`
-    margin-bottom: ${theme.spacing(3)};
-`;
-const Section = styled.section`
+const StyledSection = styled(Section)`
     display: flex;
     flex-direction: column;
     margin-bottom: ${theme.spacing(4)};
 }
 `
 const GitSection = () => {
-    return <Section>
-        <Headline>GIT</Headline>
+    return <StyledSection>
+        <Headline>Git</Headline>
         <GitInfoBox />
-    </Section>;
+    </StyledSection>;
 }
 
 export default GitSection;

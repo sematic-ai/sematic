@@ -2,7 +2,7 @@ import PostAddIcon from "@mui/icons-material/PostAdd";
 import { Box, Link, Tooltip, Typography, useTheme } from "@mui/material";
 import { Resolution } from "@sematic/common/src/Models";
 import { RiGitBranchLine, RiGitCommitLine } from "react-icons/ri";
-import { CopyButton } from "src/components/CopyButton";
+import CopyButton from "@sematic/common/src/component/CopyButton";
 
 /**
  * Turns the following remote formats:

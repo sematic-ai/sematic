@@ -8,7 +8,7 @@ const StyledBox = styled(Box)`
     display: flex;
     align-items: center;
 
-    & .${chipClasses.root}:not(:first-child) {
+    & .${chipClasses.root}:not(*:first-of-type) {
         margin-left: ${theme.spacing(1)};
     }
 

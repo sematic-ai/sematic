@@ -18,6 +18,7 @@ declare module '@mui/material/styles' {
     interface Palette {
         black: PaletteColor;
         lightGrey: PaletteColor;
+        mediumGrey: PaletteColor;
         p3border: PaletteColor;
     }
 }

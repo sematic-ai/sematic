@@ -6,6 +6,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { SuccessStateChip } from 'src/component/RunStateChips';
 import theme from 'src/theme/new';
+import { Fragment } from 'react';
 
 const StyledList = styled(List)`
     padding: 0;
@@ -15,7 +16,6 @@ const StyledList = styled(List)`
         height: 25px;
 
         &.selected {
-            margin-right: -25px;
             border-right: 2px solid ${theme.palette.primary.main};
         }
     }
@@ -33,9 +33,9 @@ const RunTree = (props: {
     const { runTreeNodes } = props;
 
     return <StyledList>
-        {runTreeNodes.map(({ value, children, selected }) => (
-            <>
-                <ListItemButton key={(value as any).toString()} className={selected ? 'selected': ''}>
+        {runTreeNodes.map(({ value, children, selected }, index) => (
+            <Fragment key={index} >
+                <ListItemButton className={selected ? 'selected': ''}>
                     <ListItemIcon sx={{ minWidth: "20px" }}>
                         <SuccessStateChip size={"small"} />
                     </ListItemIcon>
@@ -48,7 +48,7 @@ const RunTree = (props: {
                         </Box>
                     )
                 }
-            </>
+            </Fragment>
         ))}
 
     </StyledList>

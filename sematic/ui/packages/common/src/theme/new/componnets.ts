@@ -11,6 +11,8 @@ const components: Components = {
                 color: theme.palette.lightGrey.main,
                 fontSize: theme.typography.small.fontSize,
                 lineHeight: 1,
+                textTransform: 'uppercase',
+                marginTop: 0,
             }
         })) as any
     },
@@ -96,7 +98,17 @@ const components: Components = {
             root: {
                 marginBottom: 0,
             }
-        }
+        },
+        variants: [
+            {
+                props: { variant: 'code' },
+                style: ({ theme }) => {
+                    return {
+                        color: theme.palette.mediumGrey.main,
+                    }
+                }
+            }
+        ]
     },
     MuiFormControl: {        
         variants: [
@@ -166,7 +178,15 @@ const components: Components = {
                 },
             })) as any
         }
+    },
+    MuiTooltip: {
+        styleOverrides: {
+            tooltipPlacementBottom: (({theme}: {theme: Theme}) => ({
+                'marginTop': `${theme.spacing(1.5)}!important`,
+            })) as any
+        }
     }
+    
 }
 
 export default components;

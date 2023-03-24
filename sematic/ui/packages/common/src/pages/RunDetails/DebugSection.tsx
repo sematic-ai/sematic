@@ -1,28 +1,25 @@
 import styled from '@emotion/styled';
 import Link from '@mui/material/Link';
-
 import theme from 'src/theme/new';
+import Headline from 'src/component/Headline';
+import Section from 'src/component/Section';
 
-const Section = styled.section`
+const StyledSection = styled(Section)`
     display: flex;
     flex-direction: column;
 }
 `
-const Headline = styled.h2`
-    margin-bottom: ${theme.spacing(3)};
-`;
-
 const StyledLink = styled(Link)`
-    margin-top: ${theme.spacing(3)};
-    margin-bottom: ${theme.spacing(3)};
+    margin-top: ${theme.spacing(2)};
+    margin-bottom: ${theme.spacing(2)};
 `;
 
 const DebugSection = () => {
-    return <Section>
-        <Headline>DEBUG</Headline>
+    return <StyledSection>
+        <Headline>Debug</Headline>
         <StyledLink >Resolution logs</StyledLink>
         <StyledLink >Build information</StyledLink>
-    </Section>;
+    </StyledSection>;
 }
 
 export default DebugSection;

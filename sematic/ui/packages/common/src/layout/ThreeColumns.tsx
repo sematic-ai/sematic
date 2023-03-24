@@ -4,12 +4,18 @@ import theme from 'src/theme/new';
 
 const Left = styled.div`
     min-width: 300px;
-    width: 19.841%;
+    width: 300px;
     height: 100%;
     border-right: 1px solid ${theme.palette.p3border.main};
-    padding: 12px 25px;
+    padding: 0 25px;
     box-sizing: border-box;
-    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+
+    & > section {
+        flex-grow: 1;
+    }
 `;
 
 const Center = styled.div`
