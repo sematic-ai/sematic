@@ -2,6 +2,7 @@
 import logging
 from http import HTTPStatus
 from typing import Optional
+from urllib.parse import urlparse
 
 # Third-party
 import flask
@@ -10,8 +11,9 @@ import flask
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
+from sematic.config.config import get_config
 from sematic.db.models.user import User
-from sematic.plugins.abstract_storage import get_storage_plugins
+from sematic.plugins.abstract_storage import StorageDestination, get_storage_plugins
 from sematic.plugins.storage.local_storage import LocalStorage
 
 logger = logging.getLogger(__name__)
@@ -47,9 +49,11 @@ def get_storage_location(
 
     destination = storage_plugin().get_write_destination(namespace, key, user)
 
+    url = _get_storage_destination_url(destination, flask.request)
+
     return flask.jsonify(
         dict(
-            url=destination.url,
+            url=url,
             request_headers=destination.request_headers,
         )
     )
@@ -80,7 +84,8 @@ def get_stored_data_redirect(user: Optional[User], namespace: str, key: str):
 
     destination = storage_plugin().get_read_destination(namespace, key, user)
 
-    response = flask.redirect(destination.url, code=HTTPStatus.FOUND)
+    url = _get_storage_destination_url(destination, flask.request)
+    response = flask.redirect(url, code=HTTPStatus.FOUND)
 
     for key, value in destination.request_headers.items():
         response.headers.set(key, value)
@@ -89,3 +94,15 @@ def get_stored_data_redirect(user: Optional[User], namespace: str, key: str):
     # response.headers.set("Cache-Control", "max-age=31536000, immutable, private")
 
     return response
+
+
+def _get_storage_destination_url(
+    destination: StorageDestination, request: flask.Request
+) -> str:
+    parsed_url = urlparse(destination.uri)
+
+    if parsed_url.scheme == "sematic":
+        host = request.args.get("origin", get_config().server_url)
+        return f"{host}{parsed_url.path}"
+
+    return destination.uri

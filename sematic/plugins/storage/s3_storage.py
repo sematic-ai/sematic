@@ -90,12 +90,12 @@ class S3Storage(AbstractStorage, AbstractPlugin):
 
     def get_write_destination(self, namespace: str, key: str, _) -> StorageDestination:
         return StorageDestination(
-            url=self._make_presigned_url(S3ClientMethod.PUT, f"{namespace}/{key}")
+            uri=self._make_presigned_url(S3ClientMethod.PUT, f"{namespace}/{key}")
         )
 
     def get_read_destination(self, namespace: str, key: str, _) -> StorageDestination:
         return StorageDestination(
-            url=self._make_presigned_url(S3ClientMethod.GET, f"{namespace}/{key}")
+            uri=self._make_presigned_url(S3ClientMethod.GET, f"{namespace}/{key}")
         )
 
     @retry(tries=3, delay=5)

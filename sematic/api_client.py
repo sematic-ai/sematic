@@ -128,7 +128,9 @@ def store_payloads(payloads: Iterable[UploadPayload]) -> None:
 
 @retry(tries=3, delay=10, jitter=1)
 def _store_bytes(namespace: str, key: str, bytes_: bytes) -> None:
-    response = _get(f"/storage/{namespace}/{key}/location")
+    origin = get_config().server_url
+
+    response = _get(f"/storage/{namespace}/{key}/location?origin={origin}")
 
     url: str = response["url"]
     headers: Dict[str, str] = response["request_headers"]
@@ -146,7 +148,12 @@ def get_future_bytes(future_id: str) -> bytes:
 
 @retry(tries=3, delay=10, jitter=1)
 def _get_stored_bytes(namespace: str, key: str) -> bytes:
-    return _get(f"/storage/{namespace}/{key}/data", decode_json=False)
+    origin = get_config().server_url
+
+    return _get(
+        f"/storage/{namespace}/{key}/data?origin={origin}",
+        decode_json=False,
+    )
 
 
 def get_run(run_id: str) -> Run:
