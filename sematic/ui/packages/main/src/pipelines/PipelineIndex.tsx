@@ -6,7 +6,6 @@ import { styled } from "@mui/system";
 import { Run } from "@sematic/common/src/Models";
 import { useCallback, useMemo } from "react";
 import CalculatorPath from "src/components/CalculatorPath";
-import Loading from "src/components/Loading";
 import MuiRouterLink from "src/components/MuiRouterLink";
 import { RunList, RunListColumn } from "src/components/RunList";
 import RunStateChip, { RunStateChipUndefinedStyle } from "src/components/RunStateChip";
@@ -110,7 +109,7 @@ function RecentStatuses(props: { calculatorPath: string }) {
     }
   }
   if (isLoading) {
-    return <Loading isLoaded={false} /> 
+    return <Skeleton />
   }
   return <RecentStatusesWithStyles>
     {[...Array(5)].map((e, i) => statusChip(i))}
