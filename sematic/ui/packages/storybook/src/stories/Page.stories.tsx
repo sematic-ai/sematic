@@ -1,17 +1,12 @@
-import React from 'react';
 import { Meta, StoryObj } from '@storybook/react';
-import Box from "@mui/material/Box";
 import { Route, RouterProvider, createRoutesFromElements, createBrowserRouter } from "react-router-dom";
 import Shell from "@sematic/common/src/layout/Shell";
-
-const Home = () => {
-  return <Box>Empty</Box>
-}
+import RunDetails from "@sematic/common/src/pages/RunDetails";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
   <Route path="/" element={<Shell />}>
-      <Route path="*" element={<Home />} />
+      <Route path="*" element={<RunDetails />} />
   </Route>
 ));
 
@@ -30,5 +25,5 @@ export default {
 type Story = StoryObj<typeof Router>;
 
 export const Page: Story = {
-  render: () => <Router />,
+  render: () => <div style={{margin: "-1em"}}><Router /></div>,
 };

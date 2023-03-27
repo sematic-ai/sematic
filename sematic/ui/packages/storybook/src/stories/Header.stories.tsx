@@ -1,6 +1,6 @@
 import { ThemeProvider } from "@mui/material/styles";
 import Menu from '@sematic/common/src/component/menu';
-import createTheme from '@sematic/common/src/theme/new';
+import theme from '@sematic/common/src/theme/new';
 import { Meta, StoryObj } from '@storybook/react';
 
 export default {
@@ -8,7 +8,7 @@ export default {
   component: Menu,
   decorators: [
     (Story) => (
-      <ThemeProvider theme={createTheme()}>
+      <ThemeProvider theme={theme}>
         <Story />
       </ThemeProvider>
     ),

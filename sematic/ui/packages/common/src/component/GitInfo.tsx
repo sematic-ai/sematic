@@ -1,0 +1,48 @@
+import Box from "@mui/material/Box";
+import Link from "@mui/material/Link";
+import Typography, { typographyClasses } from "@mui/material/Typography";
+import { RiGitBranchLine, RiGitCommitLine } from "react-icons/ri";
+import styled from "@emotion/styled";
+import theme from "src/theme/new";
+import CopyButton from "src/component/CopyButton";
+import { Code } from "@mui/icons-material";
+import Tooltip from "@mui/material/Tooltip";
+
+const StyledBox = styled(Box)`
+    display: flex;
+    align-items: center;
+
+    & svg {
+        font-size: ${theme.typography.body1.fontSize}px;
+        fill: ${theme.palette.lightGrey.main};
+    }
+
+    & .${typographyClasses.root} {
+        color: ${theme.palette.mediumGrey.main};
+
+        margin-left: ${theme.spacing(1)};
+    }
+`;
+
+const GitInfoBox = () => {
+    return <>
+        <StyledBox>
+            <RiGitBranchLine />
+            <Link>acme/feature-branch</Link>
+            <CopyButton text={"acme/feature-branch"} />
+        </StyledBox>
+        <StyledBox>
+            <RiGitCommitLine />
+            <Link>pf49df3</Link>
+            <CopyButton text={"pf49df3"} />
+        </StyledBox>
+        <StyledBox>
+            <Code />
+            <Tooltip title={"This run used code with uncommitted changed on top of the above commit."} arrow={true} >
+                <Typography>Uncommited changes</Typography>
+            </Tooltip>            
+        </StyledBox>
+    </>
+};
+
+export default GitInfoBox;
