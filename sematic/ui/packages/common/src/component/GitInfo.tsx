@@ -24,7 +24,13 @@ const StyledBox = styled(Box)`
     }
 `;
 
-const GitInfoBox = () => {
+interface GitInfoBoxProps {
+    hasUncommittedChanges?: boolean;
+}
+
+const GitInfoBox = (prop: GitInfoBoxProps) => {
+    const { hasUncommittedChanges = false } = prop;
+
     return <>
         <StyledBox>
             <RiGitBranchLine />
@@ -36,12 +42,12 @@ const GitInfoBox = () => {
             <Link>pf49df3</Link>
             <CopyButton text={"pf49df3"} />
         </StyledBox>
-        <StyledBox>
+        {!!hasUncommittedChanges && <StyledBox>
             <Code />
             <Tooltip title={"This run used code with uncommitted changed on top of the above commit."} arrow={true} >
                 <Typography>Uncommited changes</Typography>
             </Tooltip>            
-        </StyledBox>
+        </StyledBox>}
     </>
 };
 

@@ -7,9 +7,10 @@ import theme from 'src/theme/new';
 const StyledBox = styled(Box)`
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
 
-    & .${chipClasses.root}:not(*:first-of-type) {
-        margin-left: ${theme.spacing(1)};
+    & .${chipClasses.root}:not(*:last-of-type) {
+        margin-right: ${theme.spacing(1)};
     }
 
     & .${buttonClasses.root} {
@@ -21,13 +22,15 @@ const StyledBox = styled(Box)`
 
 interface TagsListProps {
     tags: string[];
+    onClick?: (tag: string) => void;
+    onAddTag?: () => void;
 }
 
 const TagsList = (props: TagsListProps) => {
-    const { tags = [] } = props;
+    const { tags = [], onClick, onAddTag } = props;
     return <StyledBox>
-        {tags.map(tag => <Chip key={tag} label={tag} />)}
-        <Button variant={"text"}>add tags</Button>
+        {tags.map(tag => <Chip key={tag} label={tag} onClick={() => onClick?.(tag)} />)}
+        <Button variant={"text"} onClick={onAddTag}>add tags</Button>
     </StyledBox>;
 }
 

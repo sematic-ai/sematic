@@ -14,7 +14,7 @@ const StyledSection = styled(Section)`
 const GitSection = () => {
     return <StyledSection>
         <Headline>Git</Headline>
-        <GitInfoBox />
+        <GitInfoBox hasUncommittedChanges={true}/>
     </StyledSection>;
 }
 
