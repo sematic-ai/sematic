@@ -522,4 +522,3 @@ def get_run_jobs(user: Optional[User], run_id: str) -> flask.Response:
             content=jobs,
         )
     )
-
