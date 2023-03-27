@@ -1,10 +1,20 @@
 """
 Sematic Public API
 """
+# Third-party
+import gevent.monkey  # type: ignore
+
+# This enables us to use websockets and standard HTTP requests in the same server locally,
+# which is what we want. If you try to use Gunicorn to do this, gevent will complain about
+# not monkey patching early enough, unless you have the gevent monkey patch applied VERY
+# early (like user/sitecustomize).
+# Monkey patching: https://github.com/gevent/gevent/issues/1235
+gevent.monkey.patch_all()
+
 # Standard Library
-import os
-import platform
-import sys
+import os  # noqa: E402
+import platform  # noqa: E402
+import sys  # noqa: E402
 
 # `urllib` invokes the underlying OS framework to get configured system proxies.
 # On MacOS, this call causes the OS to immediately kill the `gunicorn` WSGI worker because
