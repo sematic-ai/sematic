@@ -1,7 +1,7 @@
 import Link from "@mui/material/Link";
 import { ThemeProvider } from "@mui/material/styles";
 import Fox from '@sematic/common/src/static/fox';
-import createTheme from '@sematic/common/src/theme/new';
+import theme from '@sematic/common/src/theme/new';
 import { Meta, StoryObj } from '@storybook/react';
 
 // More on default export: https://storybook.js.org/docs/react/writing-stories/introduction#default-export
@@ -10,7 +10,7 @@ export default {
   component: Link,
   decorators: [
     (Story) => (
-      <ThemeProvider theme={createTheme()}>
+      <ThemeProvider theme={theme}>
         <Story />
       </ThemeProvider>
     ),

@@ -1,4 +1,4 @@
-import { blue, common } from "@mui/material/colors";
+import { blue, common, grey } from "@mui/material/colors";
 import { PaletteColorOptions } from "@mui/material/styles";
 
 const pallette: Record<string, PaletteColorOptions> = {
@@ -6,7 +6,10 @@ const pallette: Record<string, PaletteColorOptions> = {
         main: blue[500]
     },
     lightGrey: {
-        main: '#f5f5f5'
+        main: '#BDB7B4'
+    },
+    mediumGrey: {
+        main: grey[600]
     },
     black: {
         main: '#2D2C2E',
