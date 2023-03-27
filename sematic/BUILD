@@ -39,6 +39,9 @@ sematic_py_lib(
         "//sematic/types:init",
         "//sematic/utils:exceptions",
     ],
+    pip_deps = [
+        "gevent",
+    ],
 )
 
 sematic_py_lib(
