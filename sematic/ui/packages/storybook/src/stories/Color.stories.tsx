@@ -1,6 +1,6 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta, StoryObj } from '@storybook/react';
-import createTheme from "@sematic/common/src/theme/new";
+import { ComponentStory, ComponentMeta } from '@storybook/react';
+import theme from "@sematic/common/src/theme/new";
 import { ThemeProvider, useTheme,  } from "@mui/material/styles";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
@@ -51,7 +51,7 @@ export default {
 
   decorators: [
     (Story) => (
-      <ThemeProvider theme={createTheme()}>
+      <ThemeProvider theme={theme}>
         <Story />
       </ThemeProvider>
     ),

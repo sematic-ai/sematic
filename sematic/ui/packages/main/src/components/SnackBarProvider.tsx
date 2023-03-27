@@ -1,10 +1,7 @@
 import { Button, IconButton, Snackbar } from "@mui/material";
-import { createContext, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
-
-export const SnackBarContext = createContext<{
-  setSnackMessage?: any;
-}>({});
+import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
 
 export type SnackMessage = {
   message: string;
