@@ -50,6 +50,7 @@ pytest_test(
         "//sematic/config:user_settings",
         "//sematic/config/tests:fixtures",
         "//sematic/db:queries",
+        "//sematic/db/models:job",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
