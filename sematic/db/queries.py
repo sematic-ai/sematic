@@ -3,6 +3,7 @@ Module holding common DB queries.
 """
 # Standard Library
 import logging
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Set, Tuple
 
 # Third-party
@@ -173,6 +174,46 @@ def get_run_status_details(
                 ]
             result_dict[run_id] = (FutureState[state_string], jobs)
     return result_dict
+
+
+@dataclass
+class BasicPipelineMetrics:
+    count_by_state: Dict[str, int]
+    avg_runtime_children: Dict[str, float]
+    total_count: int
+
+
+def get_basic_pipeline_metrics(calculator_path: str):
+    with db().get_session() as session:
+        count_by_state = list(
+            session.query(Run.future_state, sqlalchemy.func.count())
+            .filter(Run.calculator_path == calculator_path)
+            .group_by(Run.future_state)
+        )
+
+        RootRun = sqlalchemy.orm.aliased(Run)
+        avg_runtime_children = list(
+            session.query(
+                Run.calculator_path,
+                sqlalchemy.func.avg(
+                    sqlalchemy.func.extract("epoch", Run.resolved_at)
+                    - sqlalchemy.func.extract("epoch", Run.started_at)
+                ),
+            )
+            .join(RootRun, Run.root_id == RootRun.id)
+            .filter(
+                RootRun.calculator_path == calculator_path, Run.resolved_at is not None
+            )
+            .group_by(Run.calculator_path)
+        )
+
+    total_count = sum([count for _, count in count_by_state])
+
+    return BasicPipelineMetrics(
+        total_count=total_count,
+        count_by_state={state: count for state, count in count_by_state},
+        avg_runtime_children={path: runtime for path, runtime in avg_runtime_children},
+    )
 
 
 def save_run(run: Run) -> Run:

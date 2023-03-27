@@ -114,6 +114,7 @@ CREATE TABLE jobs (
 
     FOREIGN KEY(run_id) REFERENCES runs (id)
 );
+CREATE INDEX runs_calculator_path ON runs (calculator_path);
 -- schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
   ('20220424062956'),
