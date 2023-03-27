@@ -89,14 +89,11 @@ sematic_py_lib(
     deps = [
         ":auth",
         ":request_parameters",
-        ":storage",
         "//sematic/api:app",
         "//sematic/db:db",
         "//sematic/db:queries",
         "//sematic/db/models:artifact",
         "//sematic/db/models:user",
-        "//sematic/plugins:abstract_storage",
-        "//sematic/plugins/storage:local_storage",
     ],
 )
 
