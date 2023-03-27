@@ -1,12 +1,13 @@
 import { Box, styled } from "@mui/material";
-import { FlowWithProvider } from "./graph/ReactFlowDag";
-import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
-import { useGraphContext } from "../hooks/graphHooks";
-import { RunDetailsPanel } from "./RunDetailsPanel";
-import RunPanelContext from "./RunDetailsContext";
+import { FlowWithProvider } from "src/pipelines/graph/ReactFlowDag";
+import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
+import { useGraphContext } from "src/hooks/graphHooks";
+import { RunDetailsPanel } from "src/pipelines/RunDetailsPanel";
+import BasicMetricsPanel from "src/pipelines/BasicMetricsPanel";
+import RunPanelContext from "src/pipelines//RunDetailsContext";
 import { useMemo, useRef, useState } from "react";
-import { ExtractContextType } from "../components/utils/typings";
-import Loading from "../components/Loading";
+import { ExtractContextType } from "src/components/utils/typings";
+import Loading from "src/components/Loading";
 
 const FloatingFooter = styled('div')`
   width: 100%;
@@ -65,7 +66,9 @@ export default function RunPanel() {
       <Box id={scrollerId} ref={scrollContainerRef}
       sx={{ overflowY: "auto", position: 'relative', height: '100%' }}>
         <RunPanelContext.Provider value={runDetailsContextValue}>
-
+          {
+            selectedPanelItem === "metrics" && <BasicMetricsPanel />
+          }
           {selectedPanelItem === "graph" && (
             <>
               <FlowWithProvider
