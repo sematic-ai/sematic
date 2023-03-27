@@ -30,7 +30,10 @@ export default defineConfig({
   component: {
     supportFile: "support/component.ts",
     indexHtmlFile: 'support/component-index.html',
-    specPattern: ["../main/src/**/*.cy.{ts,tsx}"],
+    specPattern: [
+      "../main/src/**/*.cy.{ts,tsx}",
+      "../common/src/**/*.cy.{ts,tsx}"
+    ],
 
     devServer: (cypressConfig) => {
       const handler = createReactAppHandler(cypressConfig);
