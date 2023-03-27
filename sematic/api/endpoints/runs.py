@@ -35,6 +35,7 @@ from sematic.db.models.user import User
 from sematic.db.queries import (
     get_basic_pipeline_metrics,
     get_external_resources_by_run_id,
+    get_jobs_by_run_id,
     get_resolution,
     get_root_graph,
     get_run,
@@ -507,3 +508,18 @@ def run_metrics_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     run = get_run(run_id)
     pipeline_metrics = get_basic_pipeline_metrics(run.calculator_path)
     return flask.jsonify(dict(content=asdict(pipeline_metrics)))
+
+
+# No "write" endpoint is needed; the server will be writing to the job
+# table in response to queries that ask the server to update run state
+# (rather than a client posting a job to the server).
+@sematic_api.route("/api/v1/runs/<run_id>/jobs", methods=["GET"])
+@authenticate
+def get_run_jobs(user: Optional[User], run_id: str) -> flask.Response:
+    jobs = [job.to_json_encodable() for job in get_jobs_by_run_id(run_id=run_id)]
+    return flask.jsonify(
+        dict(
+            content=jobs,
+        )
+    )
+

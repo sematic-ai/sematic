@@ -30,12 +30,14 @@ from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
     get_run,
+    save_job,
     save_resolution,
     save_run,
     save_run_external_resource_links,
 )
 from sematic.db.tests.fixtures import (  # noqa: F401
     allow_any_run_state_transition,
+    make_job,
     make_run,
     persisted_external_resource,
     persisted_resolution,
@@ -777,3 +779,53 @@ def test_set_run_user(
         assert payload["content"][0]["user"]["id"] == persisted_user.id
         assert "email" not in payload["content"][0]["user"]
         assert "api_key" not in payload["content"][0]["user"]
+
+
+def test_get_jobs(
+    mock_socketio,  # noqa: F811
+    persisted_user: User,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    mock_requests,  # noqa: F811
+    empty_settings_file,  # noqa: F811
+):
+    job_1 = make_job(run_id=persisted_run.id, name="job_1")
+    job_2 = make_job(run_id=persisted_run.id, name="job_2")
+    save_job(job_1)
+    save_job(job_2)
+
+    response = test_client.get(f"/api/v1/runs/{persisted_run.id}/jobs")
+    serialized_jobs = response.json["content"]  # type: ignore
+
+    for serialized_job in serialized_jobs:
+        # don't care about these during comparison
+        serialized_job["created_at"] = None
+        serialized_job["updated_at"] = None
+
+    assert serialized_jobs == [job_1.to_json_encodable(), job_2.to_json_encodable()]
+
+
+def test_get_jobs_none_present(
+    mock_socketio,  # noqa: F811
+    persisted_user: User,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    mock_requests,  # noqa: F811
+    empty_settings_file,  # noqa: F811
+):
+    response = test_client.get(f"/api/v1/runs/{persisted_run.id}/jobs")
+    serialized_jobs = response.json["content"]  # type: ignore
+    assert serialized_jobs == []
+
+
+def test_get_jobs_bad_run_id(
+    mock_socketio,  # noqa: F811
+    persisted_user: User,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_requests,  # noqa: F811
+    empty_settings_file,  # noqa: F811
+):
+    fake_run_id = 32 * "a"
+    response = test_client.get(f"/api/v1/runs/{fake_run_id}/jobs")
+    serialized_jobs = response.json["content"]  # type: ignore
+    assert serialized_jobs == []
