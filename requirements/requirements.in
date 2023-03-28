@@ -67,9 +67,6 @@ python-magic
 kubernetes
 boto3
 
-# Matplotlib
-mpld3
-
 # External Resource Plugins
 ## Ray
 # Note: just because we depend on ray[air] here does NOT

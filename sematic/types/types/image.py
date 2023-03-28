@@ -63,7 +63,7 @@ class Image:
 
 
 @register_to_json_encodable_summary(Image)
-def _image_to_summary(value: Image, _) -> SummaryOutput:
+def image_to_summary(value: Image, _) -> SummaryOutput:
 
     if magic_import_error is not None:
         _log_magic_import_error(magic_import_error, fatal=True)
