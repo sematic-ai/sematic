@@ -1,7 +1,10 @@
 const path = require("path");
+const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 
 module.exports = function override(config, env) {
-    //do stuff with the webpack config...
+
+    // resolve TS aliases
+    config.resolve.plugins.push(new TsconfigPathsPlugin());
 
     // Tsx parsing
     config.module.rules.push({

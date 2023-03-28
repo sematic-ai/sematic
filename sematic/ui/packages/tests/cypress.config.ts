@@ -6,6 +6,10 @@ import { devServer }  from "@cypress/webpack-dev-server";
 const TsconfigPathsWebpackPlugin = require('tsconfig-paths-webpack-plugin');
 
 export default defineConfig({
+  env: {
+    pluginVisualRegressionImagesPath: 'cypress_screenshots/upper_level/{spec_path}',
+    pluginVisualRegressionForceDeviceScaleFactor: true,
+  },
   e2e: {
     baseUrl: "http://127.0.0.1:5001",
     supportFile: "support/e2e.ts",
@@ -30,7 +34,10 @@ export default defineConfig({
   component: {
     supportFile: "support/component.ts",
     indexHtmlFile: 'support/component-index.html',
-    specPattern: ["../main/src/**/*.cy.{ts,tsx}"],
+    specPattern: [
+      "../main/src/**/*.cy.{ts,tsx}",
+      "../common/src/**/*.cy.{ts,tsx}"
+    ],
 
     devServer: (cypressConfig) => {
       const handler = createReactAppHandler(cypressConfig);
