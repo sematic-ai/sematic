@@ -11,7 +11,7 @@ from urllib.parse import urljoin
 from sematic.config.config_dir import get_config_dir
 from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import UserSettingsVar, get_user_setting
-from sematic.versions import version_as_string
+from sematic.versions import string_version_to_tuple, version_as_string
 
 logger = logging.getLogger(__name__)
 
@@ -20,11 +20,8 @@ MIN_SQLITE_VERSION = (3, 35, 0)
 
 
 def _check_sqlite_version():
-    version_tuple = sqlite3.sqlite_version.split(".")
-
-    # get major/minor as ints. Patch can sometimes have non-digit chars
-    major, minor = int(version_tuple[0]), int(version_tuple[1])
-    if (major, minor) < MIN_SQLITE_VERSION:
+    version_tuple = string_version_to_tuple(sqlite3.sqlite_version)
+    if version_tuple < MIN_SQLITE_VERSION:
         # TODO #302: implement sustainable way to upgrade sqlite3 DBs
         logger.warning(
             "Sematic will soon require the sqlite3 version to be at least %s, but your "
