@@ -107,7 +107,7 @@ Prerequisites:
 Add the Sematic Helm repository to your cluster:
 
 ```shell
-$ helm repo add sematic-ai https://sematic-ai.github.io/helm-charts
+$ helm repo add sematic https://sematic-ai.github.io/helm-charts
 ```
 
 Configure the contents of `helm/sematic/values.yaml` (see the sections below).
