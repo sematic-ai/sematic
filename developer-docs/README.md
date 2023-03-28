@@ -75,8 +75,9 @@ $ make wheel
 
 ## Releasing
 
-**Note:** Actually pushing the released wheel can only be done if you have
-access to the PyPI repo, which is limited to employees of Sematic.
+**Note:** Actually pushing the artifacts and accessing some of the repositories listed in
+this section can only be done if you have access to the PyPI repo, which is limited to
+employees of Sematic.
 
 We cut releases from the `main` branch, following the steps below. They must be
 performed in order, without skipping any. If any errors occur, you must fix
@@ -144,9 +145,9 @@ changes.
     1. Smoke test new features that were included or significantly updated in the
     release.
 
-    1. Run the Testing Pipeline with "the works" on this deployment, and check that
-      it completes successfully, while perusing its outputs and logs to check they
-      render correctly.
+    1. Run the Testing Pipeline with the test cases listed below on this deployment, and
+      check that it completes successfully, while perusing its outputs and logs to check
+      that they render correctly.
         ```bash
         $ # STAGE:
         $ bazel run sematic/examples/testing_pipeline:__main__ -- \
@@ -202,7 +203,7 @@ changes.
 
 1. Add the git tag.
     ```bash
-    $ export RELEASE_VERSION=v$(python3 ./sematic/versions.py)
+    $ export RELEASE_VERSION=v$(python3.9 ./sematic/versions.py)
     $ git tag $RELEASE_VERSION
     $ git push origin $RELEASE_VERSION
     ```
@@ -210,7 +211,7 @@ changes.
 1. Build and push the Server Docker image. Use the Dockerfile at
   `docker/Dockerfile.server`.
     ```bash
-    $ TAG=v$(python3 ./sematic/versions.py) make release-server
+    $ TAG=v$(python3.9 ./sematic/versions.py) make release-server
     ```
 
 2. Next you can generate the Helm package and publish it to the Helm repository.
