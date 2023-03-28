@@ -1,5 +1,6 @@
 # Standard Library
 import logging
+import re
 import typing
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,16 @@ def string_version_to_tuple(version_string: str) -> typing.Tuple[int, int, int]:
         raise ValueError(
             f"Version strings should have at least three digits. Got: {version_string}"
         )
-    return tuple(int(v) for v in string_components[:3])  # type: ignore
+    return (
+        int(string_components[0]),
+        int(string_components[1]),
+        _consume_number(string_components[2]),
+    )
+
+
+def _consume_number(s: str) -> int:
+    match = re.search(r"\d+", s)
+    return 0 if match is None else int(match.group())
 
 
 CURRENT_VERSION_STR = version_as_string(CURRENT_VERSION)
