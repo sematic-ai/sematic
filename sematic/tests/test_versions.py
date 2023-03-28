@@ -71,3 +71,9 @@ def test_string_version_to_tuple():
     as_tuple = (1, 2, 3)
     assert version_as_string(as_tuple) == as_string
     assert string_version_to_tuple(as_string) == as_tuple
+
+
+def test_exotic_string_version_to_tuple():
+    as_string = "1.2.3+arch"
+    as_tuple = (1, 2, 3)
+    assert string_version_to_tuple(as_string) == as_tuple
