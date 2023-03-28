@@ -42,8 +42,8 @@ export function useLogStream(source: string, filterString: string) {
     const [{ loading: isLoading, error }, getNext] = useAsyncFn(
         async (reason: DiagnosticReasons): Promise<GetNextResult> => {
             FetchOccurenceCounters.current[reason] += 1;
-            const occuranceID = FetchOccurenceCounters.current[reason];
-            const DEBUG_TAG = `${reason}_${occuranceID}`;
+            const occurenceID = FetchOccurenceCounters.current[reason];
+            const DEBUG_TAG = `${reason}_${occurenceID}`;
             devLogger(`logHooks.ts [${DEBUG_TAG}] getNext() started. hasMore ${hasMore} `
                 + `cursor: ${cursor && atob(cursor)} filter_string: ${filterString}`);
             let queryParams: any = {
@@ -136,6 +136,8 @@ export function useAccumulateLogsUntilEnd(hasMore: boolean,
             }
             setIsLoading(false);
             
+            // The server shouldn't return NaN, but just in case and be defensive,
+            // we don't want to add NaN to the accumulatedLines.
             if (!isNaN(pulledLines)) {
                 accumulatedLines += pulledLines;
                 setAccumulatedLines(accumulatedLines);
