@@ -133,3 +133,28 @@ export function durationSecondsToString(durationS: number) : string {
 
   return final;
 }
+
+
+export function AsyncInvocationQueue() {
+  const queue: any[] = [];
+
+  const acquire = async () => {
+    let resolve: any;
+    const waitingPromise = new Promise((_resolve) => {
+      resolve = _resolve;
+    });
+    queue.push(waitingPromise);
+
+    // Wait until the second to last item in the queue is resolved
+    // (because the last item is the one we just added)
+    while (queue.length !== 1) {
+      await queue.shift();
+      // sleep
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    
+    // The resolve function can be used to release to the next item in the queue
+    return resolve;
+  }
+  return acquire;
+}
