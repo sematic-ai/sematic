@@ -70,6 +70,8 @@ function MatplotlibFigureValueFigure(props: MatplotlibFigureValueFigureProps) {
   );
 }
 
+// This component can be entirely removed and replaced with ImageValueView
+// a couple of releases after 0.28.0
 export default function MatplotlibFigureValueView(props: CommonValueViewProps) {
   let { valueSummary } = props;
 
