@@ -29,6 +29,7 @@ from sematic.resolvers.resource_managers.server_manager import ServerResourceMan
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
 from sematic.utils.git import get_git_info
+from sematic.utils.retry import retry_call
 from sematic.versions import CURRENT_VERSION_STR
 
 logger = logging.getLogger(__name__)
@@ -220,8 +221,30 @@ class LocalResolver(SilentResolver):
 
         return run
 
+    def _connect_to_sio_server(self):
+        try:
+            retry_call(
+                f=self._sio_client.connect,
+                fargs=[get_config().socket_io_url],
+                fkwargs=dict(namespaces=["/pipeline"]),
+                tries=4,
+            )
+        except BaseException as e:
+            # provide the user with useful information, and then continue failing
+            logger.error("Could not connect to the socket.io server: %s", e)
+            raise
+
+    def _disconnect_from_sio_server(self):
+        try:
+            retry_call(f=self._sio_client.disconnect(), tries=4)
+        except BaseException as e:
+            # we are shutting down already, so just warn and continue
+            logger.warning(
+                "Could not cleanly disconnect from the socket.io server: %s", e
+            )
+
     def _resolution_will_start(self) -> None:
-        self._sio_client.connect(get_config().socket_io_url, namespaces=["/pipeline"])
+        self._connect_to_sio_server()
 
         @self._sio_client.on("cancel", namespace="/pipeline")
         def _cancel(data):
@@ -248,7 +271,7 @@ class LocalResolver(SilentResolver):
     def _clean_up_resolution(self, save_graph: bool) -> None:
         self._cancel_non_terminal_futures()
         self._deactivate_all_resources()
-        self._sio_client.disconnect()
+        self._disconnect_from_sio_server()
         if save_graph:
             self._save_graph()
 
@@ -519,7 +542,7 @@ class LocalResolver(SilentResolver):
         super()._resolution_did_succeed()
         self._update_resolution_status(ResolutionStatus.COMPLETE)
         self._notify_pipeline_update()
-        self._sio_client.disconnect()
+        self._disconnect_from_sio_server()
 
     def _resolution_did_fail(self, error: Exception) -> None:
         super()._resolution_did_fail(error)
@@ -535,7 +558,7 @@ class LocalResolver(SilentResolver):
 
         self._move_runs_to_terminal_state(reason, fail_root_run=True)
         self._update_resolution_status(resolution_status)
-        self._sio_client.disconnect()
+        self._disconnect_from_sio_server()
         self._notify_pipeline_update()
 
     def _move_runs_to_terminal_state(self, reason, fail_root_run: bool):

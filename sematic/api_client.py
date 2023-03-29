@@ -8,7 +8,6 @@ import requests
 from requests.exceptions import ConnectionError
 
 # Sematic
-import sematic
 from sematic.abstract_future import FutureState
 from sematic.api.endpoints.auth import API_KEY_HEADER
 from sematic.config.config import get_config
@@ -26,14 +25,22 @@ from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
-from sematic.utils.retry import retry
+from sematic.utils.retry import retry, retry_call
 from sematic.versions import CURRENT_VERSION, version_as_string
 
 logger = logging.getLogger(__name__)
 
+# set 6 retries for resolver -> server API calls in other to weather network disruptions
+API_CALLS_TRIES = 7
+# 2^7 exponential backoff = 63 seconds
+API_CALLS_BACKOFF = 2
+
 # The client should always verify that it is compatible with the server
 # it is talking to before using the API, but we don't want to do that every
 # time. This caches whether we have validated it or not.
+# TODO: encapsulate this flag and the API call functions in a stateful client class that
+#  can also keep track of a flag that suppresses cleanup stack traces on unsuccessful
+#  resolution terminations
 _validated_client_version = False
 
 
@@ -254,15 +261,16 @@ def save_resolution(resolution: Resolution):
 
 def get_resolution(root_id: str) -> Resolution:
     """
-    Get resolution
+    Get resolution.
     """
     response = _get(f"/resolutions/{root_id}")
-
     return Resolution.from_json_encodable(response["content"])
 
 
 def cancel_resolution(resolution_id: str) -> Resolution:
     """Ask the server to cancel a resolution."""
+    # not retrying because resolver-initiated cancelations usually happen because of
+    # server connection issues, and because they need to be responsive anyway
     response = _put(
         f"/resolutions/{resolution_id}/cancel", json_payload={}, retry=False
     )
@@ -553,9 +561,7 @@ def _put(
     return response.json()
 
 
-def _validate_server_compatibility(
-    tries: int = 5, seconds_between_tries: int = 10, use_cached: bool = True
-):
+def _validate_server_compatibility(use_cached: bool = True) -> None:
     """Check that the client is compatible with the server.
 
     Raises an error if the server and client are incompatible, or if this can't be
@@ -565,20 +571,6 @@ def _validate_server_compatibility(
     if _validated_client_version and use_cached:
         return
 
-    retriable_errors = (
-        ConnectionError,
-        ServerError,
-    )
-    retry(
-        exceptions=retriable_errors,
-        tries=tries,
-        delay=seconds_between_tries,
-    )(_validate_server_compatibility_no_catch)()
-
-    _validated_client_version = True
-
-
-def _validate_server_compatibility_no_catch() -> None:
     base_url = get_config().api_url.replace("/api/v1", "")
     unexpected_server_response_error = IncompatibleClientError(
         "The Sematic server did not provide information about its version "
@@ -633,6 +625,8 @@ def _validate_server_compatibility_no_catch() -> None:
         version_as_string(server_version),
     )
 
+    _validated_client_version = True
+
 
 def request(
     method: Callable[[Any], requests.Response],
@@ -653,10 +647,9 @@ def request(
     valid json.
     """
     if validate_version_compatibility:
-        # only 1 try, as the entire call is retired itself
-        _validate_server_compatibility(tries=1)
-    kwargs = kwargs or {}
+        _validate_server_compatibility()
 
+    kwargs = kwargs if kwargs is not None else dict()
     headers = kwargs.get("headers", {})
     headers["Content-Type"] = "application/json"
     if attempt_auth:
@@ -664,19 +657,17 @@ def request(
 
     kwargs["headers"] = headers
 
-    @sematic.utils.retry.retry(
-        exceptions=ConnectionError,
-        tries=4 if retry else 1,
-        delay=1,
-        backoff=2,
-        jitter=0.1,
-    )
-    def _method_with_retries() -> requests.Response:
-        return method(_url(endpoint), **kwargs)
-
     try:
-        _method_with_retries.__name__ = method.__name__
-        response = _method_with_retries()
+        response = retry_call(
+            f=method,
+            fargs=[_url(endpoint)],
+            fkwargs=kwargs,
+            exceptions=Exception,
+            tries=API_CALLS_TRIES if retry else 1,
+            delay=1,
+            backoff=API_CALLS_BACKOFF,
+            jitter=0.1,
+        )
     except ConnectionError:
         raise APIConnectionError(
             (
