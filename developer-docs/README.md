@@ -251,7 +251,7 @@ changes.
   deploy the release.
     ```bash
     $ # STAGE:
-    $ helm upgrade sematic-server sematic/sematic-server -n stage -f /path/to/stage_values.yml
+    $ helm upgrade sematic-server sematic-ai/sematic-server -n stage -f /path/to/stage_values.yml
     $ helm list -n stage  # check that the expected APP VERSION was deployed
     ```
 

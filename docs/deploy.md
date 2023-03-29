@@ -107,14 +107,14 @@ Prerequisites:
 Add the Sematic Helm repository to your cluster:
 
 ```shell
-$ helm repo add sematic https://sematic-ai.github.io/helm-charts
+$ helm repo add sematic-ai https://sematic-ai.github.io/helm-charts
 ```
 
 Configure the contents of `helm/sematic/values.yaml` (see the sections below).
 Once you have set all the values, deploy the Sematic Helm chart to your cluster:
 
 ```
-$ helm install sematic-server sematic/sematic-server \
+$ helm install sematic-server sematic-ai/sematic-server \
         -n <NAMESPACE FOR DEPLOYING> \
         -f <PATH TO YOUR CONFIGURED VALUES YAML FILE>
 ```
