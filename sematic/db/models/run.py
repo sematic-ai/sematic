@@ -4,7 +4,7 @@ import importlib
 import json
 import re
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 # Third-party
 from sqlalchemy import Column, types
@@ -14,7 +14,6 @@ from sqlalchemy.orm import validates
 from sematic.abstract_calculator import AbstractCalculator
 from sematic.abstract_future import FutureState
 from sematic.db.models.base import Base
-from sematic.db.models.mixins.has_external_jobs_mixin import HasExternalJobsMixin
 from sematic.db.models.mixins.has_user_mixin import HasUserMixin
 from sematic.db.models.mixins.json_encodable_mixin import (
     ENUM_KEY,
@@ -22,7 +21,6 @@ from sematic.db.models.mixins.json_encodable_mixin import (
     JSONEncodableMixin,
 )
 from sematic.resolvers.resource_requirements import ResourceRequirements
-from sematic.scheduling.external_job import ExternalJob
 from sematic.types.serialization import (
     value_from_json_encodable,
     value_to_json_encodable,
@@ -30,7 +28,7 @@ from sematic.types.serialization import (
 from sematic.utils.exceptions import ExceptionMetadata
 
 
-class Run(HasUserMixin, Base, JSONEncodableMixin, HasExternalJobsMixin):
+class Run(HasUserMixin, Base, JSONEncodableMixin):
     """
     SQLAlchemy model for runs.
 
@@ -193,19 +191,6 @@ class Run(HasUserMixin, Base, JSONEncodableMixin, HasExternalJobsMixin):
         self.external_exception_metadata_json = Run._exception_metadata_to_dict(
             exception_metadata
         )
-
-    @property
-    def external_jobs(self) -> Tuple[ExternalJob, ...]:
-        """Representations of the external compute jobs used for the run."""
-        encodables = self.external_jobs_json
-        encodables = encodables if encodables is not None else []
-        return tuple(value_from_json_encodable(job, ExternalJob) for job in encodables)
-
-    @external_jobs.setter
-    def external_jobs(self, jobs: Sequence[ExternalJob]) -> None:
-        self.external_jobs_json = [
-            value_to_json_encodable(job, ExternalJob) for job in jobs
-        ]
 
     @property
     def resource_requirements(self) -> Optional[ResourceRequirements]:

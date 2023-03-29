@@ -1,10 +1,3 @@
-sematic_py_lib(
-    name = "external_job",
-    srcs = ["external_job.py"],
-    deps = [
-        "//sematic/utils:exceptions",
-    ],
-)
 
 sematic_py_lib(
     name = "job_details",
@@ -23,7 +16,6 @@ sematic_py_lib(
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
         "//sematic/scheduling:kubernetes",
-        "//sematic/scheduling:external_job",
     ],
 )
 

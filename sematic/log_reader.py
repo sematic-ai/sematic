@@ -11,6 +11,7 @@ from typing import Iterable, List, Optional
 from sematic import api_client
 from sematic.abstract_future import FutureState
 from sematic.db import queries as db_queries
+from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.plugins.abstract_storage import get_storage_plugins
@@ -56,6 +57,9 @@ class ObjectSource(Enum):
 
     def get_run(self, run_id: str) -> Run:
         return self.value[0].get_run(run_id)
+
+    def get_jobs_by_run_id(self, run_id: str) -> List[Job]:
+        return self.value[0].get_jobs_by_run_id(run_id)
 
 
 def log_prefix(run_id: str, job_kind: JobKindString):
@@ -246,10 +250,10 @@ def load_log_lines(
             log_info_message="The run has not yet started executing.",
         )
 
-    # looking for external jobs to determine inline is only valid
+    # looking for jobs to determine inline is only valid
     # since we know the run has at least reached SCHEDULED due to it
     # not being CREATED.
-    is_inline = len(run.external_jobs) == 0
+    is_inline = len(object_source.get_jobs_by_run_id(run.id)) == 0
     if is_inline:
         return _load_inline_logs(
             run_id=run_id,
@@ -282,6 +286,7 @@ def _get_latest_log_file(prefix, cursor_file) -> Optional[str]:
     storage = get_storage_plugins([LocalStorage])[0]
 
     log_files = storage().get_child_paths(prefix)
+    logger.info("Log files: %s", log_files)  # TODO: remove
     if len(log_files) < 1:
         return None
 
@@ -297,6 +302,7 @@ def _get_latest_log_file(prefix, cursor_file) -> Optional[str]:
             path_key.replace(prefix, "").replace(".log", "".replace("/", ""))
         ),
     )
+    logger.info("Latest log file: %s", latest_log_file)  # TODO: remove
     return latest_log_file
 
 
@@ -311,6 +317,7 @@ def _load_non_inline_logs(
     default_log_info_message: Optional[str] = None,
 ) -> LogLineResult:
     """Load the lines for runs that are NOT inline."""
+    logger.info("Loading non-inline logs for %s", run_id)  # TODO: remove
 
     # See if there are logs in V1 format--if so, use them
     v1_prefix = v1_log_prefix(run_id, JobKind.run)
@@ -330,6 +337,7 @@ def _load_non_inline_logs(
     # If logs aren't in V1 format, try v2
     prefix = log_prefix(run_id, JobKind.run)
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
+    logger.info("Latest file: %s", latest_log_file)  # TODO: remove
     if latest_log_file is None:
         return LogLineResult(
             more_before=False,
@@ -657,6 +665,7 @@ def get_log_lines_from_line_stream(
     while keep_going:
         try:
             line = next(ln for ln in buffer_iterator)
+            logger.info("Handling line: %s", line)  # TODO: remove
             source_file = line.source_file
             source_file_line_index = line.source_file_index
 
@@ -675,6 +684,7 @@ def get_log_lines_from_line_stream(
             if not passes_filter(line):
                 continue
 
+            logger.info("Appending line: %s", line.line)  # TODO: remove
             lines.append(line.line)
 
             if len(lines) >= max_lines:

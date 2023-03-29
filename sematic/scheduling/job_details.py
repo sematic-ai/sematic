@@ -10,9 +10,6 @@ from sematic.utils.exceptions import ExceptionMetadata, KubernetesError
 
 logger = logging.getLogger(__name__)
 
-
-# TODO: remove ExternalJob and KubernetesExternalJob once they are replaced by this & Job
-
 # ordered from highest to lowest precedence
 # to be interpreted as: pods with phases earlier in the list are newer
 # interpreted from the list from this resource:

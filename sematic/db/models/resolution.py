@@ -28,7 +28,6 @@ from sqlalchemy.orm import validates
 # Sematic
 from sematic.db.models.base import Base
 from sematic.db.models.git_info import GitInfo
-from sematic.db.models.mixins.has_external_jobs_mixin import HasExternalJobsMixin
 from sematic.db.models.mixins.has_user_mixin import HasUserMixin
 from sematic.db.models.mixins.json_encodable_mixin import (
     ENUM_KEY,
@@ -144,7 +143,7 @@ class ResolutionKind(Enum):
     KUBERNETES = "KUBERNETES"  # for detached mode
 
 
-class Resolution(HasUserMixin, Base, JSONEncodableMixin, HasExternalJobsMixin):
+class Resolution(HasUserMixin, Base, JSONEncodableMixin):
     """Represents a session of a resolver.
 
     Attributes

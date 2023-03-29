@@ -24,9 +24,7 @@ from sematic.db.models.run import Run
 from sematic.db.models.runs_external_resource import RunExternalResource
 from sematic.db.models.user import User
 from sematic.plugins.abstract_external_resource import ResourceState
-from sematic.scheduling.external_job import ExternalJob
 from sematic.scheduling.job_details import JobKind, JobKindString
-from sematic.types.serialization import value_from_json_encodable
 from sematic.utils.exceptions import IllegalStateTransitionError
 
 logger = logging.getLogger(__name__)
@@ -234,7 +232,6 @@ def save_run(run: Run) -> Run:
     Run
         saved run
     """
-    _assert_external_jobs_not_removed([run])
     with db().get_session() as session:
         existing_run_future_state = (
             session.query(Run.future_state).filter(Run.id == run.id).one_or_none()
@@ -443,7 +440,6 @@ def save_graph(runs: List[Run], artifacts: List[Artifact], edges: List[Edge]):
     """
     Update a graph.
     """
-    _assert_external_jobs_not_removed(runs)
     with db().get_session() as session:
         for run in runs:
             session.merge(run)
@@ -472,35 +468,6 @@ def _save_artifact(artifact: Artifact, session: sqlalchemy.orm.Session) -> Artif
         return previous_artifact
 
     return session.merge(artifact)
-
-
-def _assert_external_jobs_not_removed(runs):
-    run_ids = [run.id for run in runs]
-    runs_by_id = {run.id: run for run in runs}
-    with db().get_session() as session:
-        existing_run_jobs_all_runs = (
-            session.query(Run.id, Run.external_jobs_json)
-            .filter(Run.id.in_(run_ids))
-            .all()
-        )
-
-        # it's ok if there isn't an existing run for one of the passed-in runs.
-        # the passed-in runs may be new.
-        for existing_run_id, existing_run_jobs_json in existing_run_jobs_all_runs:
-            if existing_run_jobs_json is None:
-                existing_run_jobs = []
-            else:
-                existing_run_jobs = [
-                    value_from_json_encodable(job, ExternalJob)
-                    for job in existing_run_jobs_json
-                ]
-            run = runs_by_id[existing_run_id]
-            if len(run.external_jobs) < len(existing_run_jobs):
-                raise ValueError(
-                    f"Cannot remove existing external jobs from {run.id}. "
-                    f"Existing run had: {existing_run_jobs}. New "
-                    f"run had: {run.external_jobs}"
-                )
 
 
 Graph = Tuple[List[Run], List[Artifact], List[Edge]]

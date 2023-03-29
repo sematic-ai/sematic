@@ -149,7 +149,9 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
             # Note: This message can be used to extract information about pipeline
             # status for usage in dashboards. Some users may be leveraging it for
             # such purposes, so think carefully before changing/removing it.
-            was_remote = len(resolution.external_jobs)
+            was_remote = (
+                len(get_jobs_by_run_id(resolution.id, kind=JobKind.resolver)) > 0
+            )
             duration_seconds = None
             if root_run.started_at is not None:
                 duration_seconds = (
@@ -311,10 +313,11 @@ def cancel_resolution_endpoint(
 
     root_run = get_run(resolution.root_id)
 
-    jobs = []
-    for external_job in resolution.external_jobs:
-        jobs.append(cancel_job(external_job))
-    resolution.external_jobs = jobs  # type: ignore
+    jobs = get_jobs_by_run_id(resolution.root_id, kind=JobKind.resolver)
+    for job in jobs:
+        logger.info("Cancelling %s/%s", job.namespace, job.name)
+        post_cancel_job = cancel_job(job)
+        save_job(post_cancel_job)
 
     resolution.status = ResolutionStatus.CANCELED
     save_resolution(resolution)
@@ -369,11 +372,10 @@ def _cancel_non_terminal_runs(root_id):
     )
 
     for run in unfinished_runs:
-        jobs = []
-        for external_job in run.external_jobs:
-            jobs.append(cancel_job(external_job))
-        run.external_jobs = jobs
-
         run.future_state = FutureState.CANCELED
-
     save_graph(unfinished_runs, [], [])
+
+    for run in unfinished_runs:
+        for job in get_jobs_by_run_id(run.id):
+            logger.info("Cancelling %s/%s", job.namespace, job.name)
+            save_job(cancel_job(job))
