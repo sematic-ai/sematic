@@ -95,3 +95,10 @@ export type Filter = FilterCondition | {
   OR : Array<FilterCondition>
 }
 
+export type BasicMetricsPayload = {
+  content: {
+    avg_runtime_children: {[k: string]: number},
+    count_by_state: {[k: string]: number},
+    total_count: number
+  }
+}

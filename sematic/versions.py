@@ -1,5 +1,6 @@
 # Standard Library
 import logging
+import re
 import typing
 
 logger = logging.getLogger(__name__)
@@ -9,6 +10,11 @@ logger = logging.getLogger(__name__)
 # to whatever is the version after the most recent one in changelog.md,
 # as well as the version for the sematic wheel in wheel_constants.bzl
 CURRENT_VERSION = (0, 27, 0)
+
+# TO DEPRECATE
+# 0.30.0
+# - https://github.com/sematic-ai/sematic/issues/700
+
 
 # Represents the smallest client version that works with the server
 # at the CURRENT_VERSION. Should be updated any time a breaking change
@@ -52,7 +58,16 @@ def string_version_to_tuple(version_string: str) -> typing.Tuple[int, int, int]:
         raise ValueError(
             f"Version strings should have at least three digits. Got: {version_string}"
         )
-    return tuple(int(v) for v in string_components[:3])  # type: ignore
+    return (
+        int(string_components[0]),
+        int(string_components[1]),
+        _consume_number(string_components[2]),
+    )
+
+
+def _consume_number(s: str) -> int:
+    match = re.search(r"\d+", s)
+    return 0 if match is None else int(match.group())
 
 
 CURRENT_VERSION_STR = version_as_string(CURRENT_VERSION)

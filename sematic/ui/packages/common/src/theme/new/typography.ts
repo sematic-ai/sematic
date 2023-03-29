@@ -18,6 +18,11 @@ export const fontFamily = [
   '"Segoe UI Symbol"',
 ].join(",")
 
+export const fontFamilyCode = [
+  "monospace",
+  fontFamily
+].join(",")
+
 const typography: TypographyOptions = {
   fontFamily,
   fontSize: 14,
@@ -79,6 +84,10 @@ const typography: TypographyOptions = {
     fontSize: 16,
     fontWeight: fontWeightBold,
   },
+  code: {
+    fontSize: 14,
+    fontFamily: fontFamilyCode,
+  }
 };
 
 export default typography;

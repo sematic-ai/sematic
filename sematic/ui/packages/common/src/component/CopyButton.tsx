@@ -1,7 +1,7 @@
 import { ContentCopy } from "@mui/icons-material";
 import { ButtonBase, Tooltip } from "@mui/material";
 import { useCallback, useContext } from "react";
-import { SnackBarContext } from "./SnackBarProvider";
+import SnackBarContext from "src/context/SnackBarContext";
 
 export function CopyButton(props: {
   text: string;
@@ -26,3 +26,5 @@ export function CopyButton(props: {
     </Tooltip>
   );
 }
+
+export default CopyButton;

@@ -16,6 +16,7 @@
 * [The Dashboard](sematic-ui.md)
 * [Future algebra](future-algebra.md)
 * [Artifacts](artifacts.md)
+* [Metrics](metrics.md)
 * [Testing](testing.md)
 * [Advanced features](advanced-features.md)
 * [Glossary](glossary.md)

@@ -18,7 +18,7 @@ import GitInfoBox from "src/components/GitInfo";
 import Loading from "src/components/Loading";
 import MuiRouterLink from "src/components/MuiRouterLink";
 import RunStateChip from "src/components/RunStateChip";
-import { SnackBarContext } from "src/components/SnackBarProvider";
+import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
 import TimeAgo from "src/components/TimeAgo";
 import { ExtractContextType } from "src/components/utils/typings";
 import { useFetchRuns, usePipelineRunContext, useRunNavigation } from "src/hooks/pipelineHooks";

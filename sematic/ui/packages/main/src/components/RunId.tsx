@@ -1,5 +1,5 @@
 import { getRunUrlPattern } from "../hooks/pipelineHooks";
-import { CopyButton } from "./CopyButton";
+import CopyButton from "@sematic/common/src/component/CopyButton";
 import MuiRouterLink from "./MuiRouterLink";
 
 export default function RunId(props: {
