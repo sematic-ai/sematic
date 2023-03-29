@@ -142,6 +142,7 @@ def retry(
         kwargs = fkwargs if fkwargs else dict()
         partialed = partial(f, *args, **kwargs)
         partialed.__name__ = f.__name__
+
         return __retry_internal(
             partialed,
             exceptions,
@@ -201,8 +202,11 @@ def retry_call(
     """
     args = fargs if fargs else list()
     kwargs = fkwargs if fkwargs else dict()
+    partialed = partial(f, *args, **kwargs)
+    partialed.__name__ = f.__name__
+
     return __retry_internal(
-        partial(f, *args, **kwargs),
+        partialed,
         exceptions,
         tries,
         delay,
