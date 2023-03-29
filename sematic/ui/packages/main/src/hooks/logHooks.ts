@@ -3,7 +3,7 @@ import useAsyncFn from "react-use/lib/useAsyncFn";
 import useList from "react-use/lib/useList";
 import useLatest from "react-use/lib/useLatest";
 import { LogLineRequestResponse } from "../Payloads";
-import { useLogger } from "../utils";
+import { AsyncInvocationQueue, useLogger } from "src/utils";
 import { useHttpClient } from "./httpHooks";
 
 const MAX_LINES = 2000;
@@ -11,6 +11,13 @@ const POLLING_INTERVAL = 5000;
 export interface GetNextResult {
     pulledLines: number
 }
+
+export enum DiagnosticReasons {
+    BOOTSTRAP = "BOOTSTRAP",
+    SCROLL = "SCROLL",
+    PULLDOWN = "PULLDOWN",
+    ACCUMULATE = "ACCUMULATE"
+} 
 
 export function useLogStream(source: string, filterString: string) {
     const [lines, {push: pushLines}] = useList<string>([]);
@@ -25,11 +32,22 @@ export function useLogStream(source: string, filterString: string) {
     const { fetch } = useHttpClient();
     const { devLogger } = useLogger();
 
+    const FetchOccurenceCounters = useRef({
+        [DiagnosticReasons.BOOTSTRAP]: 0,
+        [DiagnosticReasons.SCROLL]: 0,
+        [DiagnosticReasons.PULLDOWN]: 0,
+        [DiagnosticReasons.ACCUMULATE]: 0    
+    });
+
     const [{ loading: isLoading, error }, getNext] = useAsyncFn(
-        async (): Promise<GetNextResult> => {
-            devLogger(`logHooks.ts getNext() started hasMore ${hasMore} `
-                + `cursor: ${cursor?.slice(0, 15) || null} filter_string: ${filterString}`);
+        async (reason: DiagnosticReasons): Promise<GetNextResult> => {
+            FetchOccurenceCounters.current[reason] += 1;
+            const occurenceID = FetchOccurenceCounters.current[reason];
+            const DEBUG_TAG = `${reason}_${occurenceID}`;
+            devLogger(`logHooks.ts [${DEBUG_TAG}] getNext() started. hasMore ${hasMore} `
+                + `cursor: ${cursor && atob(cursor)} filter_string: ${filterString}`);
             let queryParams: any = {
+                'DEBUG': DEBUG_TAG,
                 max_lines: '' + MAX_LINES
             };
 
@@ -47,9 +65,9 @@ export function useLogStream(source: string, filterString: string) {
 
             const { content: { lines, continuation_cursor, log_info_message } } = payload;
 
-            devLogger(`logHooks.ts getNext() ${url} completed. `
-                + `# of lines: ${(lines && lines.length) || NaN} `
-                + `continuation_cursor: ${continuation_cursor?.slice(0, 15)} `
+            devLogger(`logHooks.ts [${DEBUG_TAG}] getNext() ${url} completed. `
+                + `# of lines: ${(!!lines ? lines.length : NaN)} `
+                + `continuation_cursor: ${continuation_cursor && atob(continuation_cursor)} `
                 + `log_info_message: ${log_info_message || 'N/A'} `);
 
             pushLines(...lines);
@@ -61,10 +79,24 @@ export function useLogStream(source: string, filterString: string) {
             }
         }, [source, setHasPulledData, hasMore, filterString, cursor, MAX_LINES, devLogger]);
 
-    return { lines, isLoading, error, hasMore, logInfoMessage, getNext, hasPulledData };
+    const acquire = useRef(AsyncInvocationQueue());
+
+    const getNextLatest = useLatest(getNext);
+
+    // This is a function to call getNext by queuing the request.
+    // This is to avoid multiple getNext() calls being made at the same time.
+    const getNextWithQueue = useCallback(async (reason: DiagnosticReasons) => {
+        const release = await acquire.current();
+        const result = await getNextLatest.current(reason);
+        release();
+        return result;
+    },[acquire, getNextLatest]);
+
+    return { lines, isLoading, error, hasMore, logInfoMessage, getNext: getNextWithQueue, hasPulledData };
 }
 
-export function useAccumulateLogsUntilEnd(hasMore: boolean, getNext: () => Promise<GetNextResult>) {
+export function useAccumulateLogsUntilEnd(hasMore: boolean, 
+    getNext: (reason: DiagnosticReasons) => Promise<GetNextResult>) {
     // useLatest() ensures that the multi-stage async function always see the 
     // latest state of those variables, instead of the state attached to the 
     // function closure at the beginning.
@@ -97,15 +129,19 @@ export function useAccumulateLogsUntilEnd(hasMore: boolean, getNext: () => Promi
             }
 
             setIsLoading(true);
-            const {pulledLines} = await latestGetNext.current();
+            const {pulledLines} = await latestGetNext.current(DiagnosticReasons.ACCUMULATE);
 
             if (abortController.signal.aborted) {
                 break;
             }
             setIsLoading(false);
             
-            accumulatedLines += pulledLines;
-            setAccumulatedLines(accumulatedLines);
+            // The server shouldn't return NaN, but just in case and be defensive,
+            // we don't want to add NaN to the accumulatedLines.
+            if (!isNaN(pulledLines)) {
+                accumulatedLines += pulledLines;
+                setAccumulatedLines(accumulatedLines);
+            }
 
             // Yield to rendering cycles
             await new Promise(
