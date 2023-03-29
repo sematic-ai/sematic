@@ -1,4 +1,4 @@
-import { abbreviatedUserName, sha1 } from "@sematic/main/src/utils";
+import { abbreviatedUserName, sha1, AsyncInvocationQueue } from "@sematic/main/src/utils";
 import user from "@sematic/ui-test/fixtures/user";
 
 describe('sha1', () => {
@@ -14,5 +14,53 @@ describe('abbreviatedUserName()', () => {
     });
     it("should return empty string when the parameter is not provided", () => {
         expect(abbreviatedUserName(null)).to.equal("");
+    });
+});
+
+describe('AsyncInvocationQueue', () => {
+    it("should sequentialize function invocation using a queue", () => {
+        let asyncFunction: any;
+        let acquire: any;
+        cy.clock();
+        cy.wait(0).then(async () => {
+            acquire = AsyncInvocationQueue();
+            asyncFunction = cy.spy(async () => {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            });
+        });
+        cy.wait(0).then(async () => {
+            setTimeout(async () => {
+                const release = await acquire();
+                await asyncFunction();
+                release();
+            }, 0);
+    
+            setTimeout(async () => {
+                const release = await acquire();
+                await asyncFunction();
+                release();
+            }, 20);
+        });
+
+        cy.tick(0); // trigger the first call
+        cy.wait(0);
+        cy.tick(20); // trigger the second call
+        cy.wait(0);
+        cy.tick(30).then(() => {
+            // test that at 50th millisecond, the function is executed only once
+            // because the second call is queued
+            expect(asyncFunction).to.have.callCount(1);
+        });
+        cy.wait(0);
+
+        cy.tick(50); // this resolves the 1st call
+        cy.wait(0);
+        cy.tick(50); // this resolves the sleep in AsyncInvocationQueue
+        cy.wait(0);
+        cy.wait(0).then(() => {
+            // test that at 150th millisecond, the function is executed twice
+            expect(asyncFunction).to.have.callCount(2);
+        });
+        
     });
 });
