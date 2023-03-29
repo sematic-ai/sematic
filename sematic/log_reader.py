@@ -19,7 +19,7 @@ from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
     START_INLINE_RUN_INDICATOR,
 )
-from sematic.scheduling.external_job import JobType
+from sematic.scheduling.job_details import JobKind, JobKindString
 
 # Why the "V1"/"V2"? Because we changed the structure of the logs. Originally,
 # each file on s3 held the entirety of the logs. Now each file contains a
@@ -58,15 +58,17 @@ class ObjectSource(Enum):
         return self.value[0].get_run(run_id)
 
 
-def log_prefix(run_id: str, job_type: JobType):
+def log_prefix(run_id: str, job_kind: JobKindString):
+    log_kind = "worker" if job_kind == JobKind.run else "driver"
     return LOG_PATH_FORMAT.format(
-        prefix=V2_LOG_PREFIX, run_id=run_id, log_kind=job_type.value
+        prefix=V2_LOG_PREFIX, run_id=run_id, log_kind=log_kind
     )
 
 
-def v1_log_prefix(run_id: str, job_type: JobType):
+def v1_log_prefix(run_id: str, job_kind: JobKindString):
+    log_kind = "worker" if job_kind == JobKind.run else "driver"
     return LOG_PATH_FORMAT.format(
-        prefix=V1_LOG_PREFIX, run_id=run_id, log_kind=job_type.value
+        prefix=V1_LOG_PREFIX, run_id=run_id, log_kind=log_kind
     )
 
 
@@ -311,7 +313,7 @@ def _load_non_inline_logs(
     """Load the lines for runs that are NOT inline."""
 
     # See if there are logs in V1 format--if so, use them
-    v1_prefix = v1_log_prefix(run_id, JobType.worker)
+    v1_prefix = v1_log_prefix(run_id, JobKind.run)
     latest_v1_log_file = _get_latest_log_file(v1_prefix, cursor_file)
     if latest_v1_log_file is not None:
         return _load_non_inline_logs_v1(
@@ -326,7 +328,7 @@ def _load_non_inline_logs(
         )
 
     # If logs aren't in V1 format, try v2
-    prefix = log_prefix(run_id, JobType.worker)
+    prefix = log_prefix(run_id, JobKind.run)
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
     if latest_log_file is None:
         return LogLineResult(
@@ -366,7 +368,7 @@ def _load_non_inline_logs_v1(
     default_log_info_message: Optional[str] = None,
 ) -> LogLineResult:
     """Load the lines for runs that are NOT inline"""
-    prefix = v1_log_prefix(run_id, JobType.worker)
+    prefix = v1_log_prefix(run_id, JobKind.run)
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
 
     if latest_log_file is None:
@@ -429,7 +431,7 @@ def _load_inline_logs(
         )
 
     # See if there are logs in V1 format--if so, use them
-    v1_prefix = v1_log_prefix(resolution.root_id, JobType.driver)
+    v1_prefix = v1_log_prefix(resolution.root_id, JobKind.resolver)
     v1_latest_log_file = _get_latest_log_file(v1_prefix, cursor_file)
     if v1_latest_log_file is not None:
         return _load_inline_logs_v1(
@@ -445,7 +447,7 @@ def _load_inline_logs(
         )
 
     # If logs are not in V1 format, try V2
-    prefix = log_prefix(resolution.root_id, JobType.driver)
+    prefix = log_prefix(resolution.root_id, JobKind.resolver)
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
     if latest_log_file is None:
         return LogLineResult(
@@ -458,7 +460,7 @@ def _load_inline_logs(
             log_info_message="Resolver logs are missing",
         )
 
-    prefix = log_prefix(resolution.root_id, JobType.driver)
+    prefix = log_prefix(resolution.root_id, JobKind.resolver)
     line_stream = line_stream_from_log_directory(
         prefix, cursor_file=cursor_file, cursor_line_index=cursor_line_index
     )
@@ -537,7 +539,7 @@ def _load_inline_logs_v1(
     default_log_info_message: Optional[str] = None,
 ) -> LogLineResult:
     """Load the lines for runs that are inline."""
-    prefix = v1_log_prefix(resolution.root_id, JobType.driver)
+    prefix = v1_log_prefix(resolution.root_id, JobKind.resolver)
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
 
     if latest_log_file is None:

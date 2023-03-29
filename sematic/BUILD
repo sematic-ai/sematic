@@ -108,7 +108,7 @@ sematic_py_lib(
         "//sematic/plugins:abstract_storage",
         "//sematic/plugins/storage:local_storage",
         "//sematic/resolvers:cloud_resolver",
-        "//sematic/scheduling:external_job",
+        "//sematic/scheduling:job_details",
     ],
 )
 

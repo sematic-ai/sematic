@@ -355,7 +355,7 @@ def _get_run_and_jobs_if_modified(
             msg,
         )
 
-    return run, updated_jobs
+    return run, list(updated_jobs)
 
 
 @sematic_api.route("/api/v1/runs/future_states", methods=["POST"])

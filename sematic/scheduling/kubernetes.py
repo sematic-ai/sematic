@@ -2,6 +2,7 @@
 import logging
 import pathlib
 import time
+import uuid
 from dataclasses import replace
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -71,6 +72,13 @@ RESOLUTION_RESOURCE_REQUIREMENTS = ResourceRequirements(
 DEFAULT_WORKER_SERVICE_ACCOUNT = "default"
 
 
+def _unique_job_id_suffix() -> str:
+    """
+    Jobs need to have unique names in case of retries.
+    """
+    return uuid.uuid4().hex[:6]
+
+
 def _is_none_or_empty(list_: Optional[List]) -> bool:
     """
     Returns True if a list is None or empty, False otherwise.
@@ -138,10 +146,20 @@ def _get_standardized_container_state(
         return "Container is running", None, None
 
     if state.terminated is not None:
+        exit_code = _get_container_exit_code_from_status(container_status)
+        message = state.terminated.message
+
+        if exit_code is not None:
+            # exit code is very useful info, but is not included in
+            # the reason/message. Let's add it.
+            if message is None:
+                message = f"Exit code is {exit_code}"
+            else:
+                message += f". Exit code is {exit_code}"
         return (
             "Container is terminated",
             state.terminated.reason,
-            state.terminated.message,
+            message,
         )
 
     return "Container state is unreadable!", None, None
@@ -720,7 +738,7 @@ def schedule_run_job(
 
     job = make_job(
         namespace=namespace,
-        name=f"sematic-{JobKind.run}-{run_id}",
+        name=f"sematic-{JobKind.run}-{run_id}-{_unique_job_id_suffix()}",
         run_id=run_id,
         status=JobStatus(
             state=KubernetesJobState.Requested,

@@ -304,6 +304,15 @@ class JobDetails:
         return summary.node_name
 
     def get_exception_metadata(self) -> Optional[ExceptionMetadata]:
+        status = self.get_status(last_updated_epoch_seconds=time.time())
+        if status.state == KubernetesJobState.Failed:
+            return ExceptionMetadata(
+                repr=status.message,
+                name=KubernetesError.__name__,
+                module=KubernetesError.__module__,
+                ancestors=ExceptionMetadata.ancestors_from_exception(KubernetesError),
+            )
+
         if not self.has_infra_failure:
             return None
 
@@ -381,12 +390,24 @@ class JobDetails:
                 last_updated_epoch_seconds=last_updated_epoch_seconds,
             )
         elif self.succeeded_pod_count != 0:
+            pod_name = (
+                latest_summary.pod_name if latest_summary is not None else "UNKNOWN"
+            )
+            node_name = (
+                latest_summary.node_name if latest_summary is not None else "UNKNOWN"
+            )
+            message = (
+                f"A pod has exited, but a final status for "
+                f"the job was not assigned. This can happen in a "
+                f"variety of circumstances, including failure of the "
+                f"node the pod was running on, explicit pod deletion "
+                f"(ex: with kubectl), or others. Please examine your "
+                f"Kubernetes events for the pod {pod_name} "
+                f"and the node {node_name}."
+            )
             return JobStatus(
-                state=KubernetesJobState.Succeeded,
-                message=(
-                    "The job has completed successfully, "
-                    "but the final status on the pod was not set"
-                ),
+                state=KubernetesJobState.Failed,
+                message=message,
                 last_updated_epoch_seconds=last_updated_epoch_seconds,
             )
         elif self.pending_or_running_pod_count == 0:

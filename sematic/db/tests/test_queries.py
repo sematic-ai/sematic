@@ -41,7 +41,6 @@ from sematic.db.queries import (
 from sematic.db.tests.fixtures import make_job  # noqa: F811
 from sematic.db.tests.fixtures import (  # noqa: F401
     allow_any_run_state_transition,
-    make_job,
     make_run,
     persisted_artifact,
     persisted_resolution,
