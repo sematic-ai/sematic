@@ -145,9 +145,11 @@ export function AsyncInvocationQueue() {
     });
     queue.push(waitingPromise);
 
-    // Wait until the second to last item in the queue is resolved
-    // (because the last item is the one we just added)
-    while (queue.length !== 1) {
+    // Wait until the all the promises before this one have been resolved
+    while (queue.length !== 0) {
+      if (queue[0] === waitingPromise) { 
+        break;
+      }
       await queue.shift();
       // sleep
       await new Promise((resolve) => setTimeout(resolve, 50));
