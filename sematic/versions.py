@@ -11,6 +11,11 @@ logger = logging.getLogger(__name__)
 # as well as the version for the sematic wheel in wheel_constants.bzl
 CURRENT_VERSION = (0, 27, 0)
 
+# TO DEPRECATE
+# 0.30.0
+# - https://github.com/sematic-ai/sematic/issues/700
+
+
 # Represents the smallest client version that works with the server
 # at the CURRENT_VERSION. Should be updated any time a breaking change
 # is made to the web API. If there is a breaking change, there should
