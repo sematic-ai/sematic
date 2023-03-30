@@ -10,7 +10,7 @@ import logging
 import random
 import time
 from functools import partial, wraps
-from typing import Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
 logging_logger = logging.getLogger(__name__)
 
@@ -35,13 +35,13 @@ def decorator(caller):
 
 
 def __retry_internal(
-    f,
+    f: Callable[[], Any],
     exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]] = Exception,
     tries: int = -1,
     delay: float = 0,
     max_delay: Optional[float] = None,
     backoff: float = 1,
-    jitter: float = 0,
+    jitter: Union[float, Tuple[float, float]] = 0,
     logger: Optional[logging.Logger] = logging_logger,
 ):
     """Executes a function and retries it if it failed.
@@ -72,16 +72,22 @@ def __retry_internal(
     the result of the f function.
     """
     _tries, _delay = tries, delay
-    while _tries:
+    while _tries != 0:
         try:
             return f()
         except exceptions as e:
-            _tries -= 1
-            if not _tries:
+            _tries = max(-1, _tries - 1)
+            if _tries == 0:
                 raise
 
             if logger is not None:
-                logger.warning("%s, retrying in %s seconds...", e, _delay)
+                logger.warning(e)
+                logger.warning(
+                    "Retrying %s in %s seconds with %s tries left...",
+                    f.__name__,
+                    _delay,
+                    _tries,
+                )
 
             time.sleep(_delay)
             _delay *= backoff
@@ -132,33 +138,35 @@ def retry(
 
     @decorator
     def retry_decorator(f, *fargs, **fkwargs):
-        args = fargs if fargs else list()
-        kwargs = fkwargs if fkwargs else dict()
+        args = fargs if fargs is not None else list()
+        kwargs = fkwargs if fkwargs is not None else dict()
+        partialed = _named_partial(f, *args, **kwargs)
+
         return __retry_internal(
-            partial(f, *args, **kwargs),
-            exceptions,
-            tries,
-            delay,
-            max_delay,
-            backoff,
-            jitter,
-            logger,
+            f=partialed,
+            exceptions=exceptions,
+            tries=tries,
+            delay=delay,
+            max_delay=max_delay,
+            backoff=backoff,
+            jitter=jitter,
+            logger=logger,
         )
 
     return retry_decorator
 
 
 def retry_call(
-    f,
-    fargs=None,
-    fkwargs=None,
-    exceptions=Exception,
-    tries=-1,
-    delay=0,
-    max_delay=None,
-    backoff=1,
-    jitter=0,
-    logger=logging_logger,
+    f: Callable[..., Any],
+    fargs: Optional[List[Any]] = None,
+    fkwargs: Optional[Dict[str, Any]] = None,
+    exceptions: Union[Type[Exception], Tuple[Type[Exception], ...]] = Exception,
+    tries: int = -1,
+    delay: float = 0,
+    max_delay: Optional[float] = None,
+    backoff: float = 1,
+    jitter: float = 0,
+    logger: Optional[logging.Logger] = logging_logger,
 ):
     """Calls a function and re-executes it if it failed.
 
@@ -191,15 +199,23 @@ def retry_call(
     --------
     the result of the f function.
     """
-    args = fargs if fargs else list()
-    kwargs = fkwargs if fkwargs else dict()
+    args = fargs if fargs is not None else list()
+    kwargs = fkwargs if fkwargs is not None else dict()
+    partialed = _named_partial(f, *args, **kwargs)
+
     return __retry_internal(
-        partial(f, *args, **kwargs),
-        exceptions,
-        tries,
-        delay,
-        max_delay,
-        backoff,
-        jitter,
-        logger,
+        f=partialed,
+        exceptions=exceptions,
+        tries=tries,
+        delay=delay,
+        max_delay=max_delay,
+        backoff=backoff,
+        jitter=jitter,
+        logger=logger,
     )
+
+
+def _named_partial(f: Callable[..., Any], *args, **kwargs) -> Callable[..., Any]:
+    partialed = partial(f, *args, **kwargs)
+    setattr(partialed, "__name__", getattr(f, "__name__", str(f)))
+    return partialed
