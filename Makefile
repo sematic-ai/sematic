@@ -20,6 +20,7 @@ install-dev-deps:
 	pip3 install -r requirements/ci-requirements.txt
 
 pre-commit:
+	bazel run //sematic/db:migrate -- dump --schema-file ${PWD}/sematic/db/schema.sql.sqlite
 	python3 -m flake8
 	python3 -m mypy sematic
 	python3 -m black sematic --check
