@@ -9,6 +9,7 @@ from kubernetes.client.exceptions import ApiException
 # Sematic
 from sematic.api.tests.fixtures import mock_server_settings
 from sematic.config.server_settings import ServerSettingsVar
+from sematic.db.tests.fixtures import make_job
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     KubernetesSecretMount,
@@ -17,10 +18,13 @@ from sematic.resolvers.resource_requirements import (
     KubernetesTolerationOperator,
     ResourceRequirements,
 )
-from sematic.scheduling.kubernetes import (
-    JobType,
-    KubernetesExternalJob,
+from sematic.scheduling.job_details import (
+    JobDetails,
+    JobKind,
     KubernetesJobCondition,
+    PodSummary,
+)
+from sematic.scheduling.kubernetes import (
     _schedule_kubernetes_job,
     cancel_job,
     refresh_job,
@@ -32,16 +36,15 @@ from sematic.tests.fixtures import environment_variables  # noqa: F401
 @mock.patch("sematic.scheduling.kubernetes.load_kube_config")
 @mock.patch("sematic.scheduling.kubernetes.kubernetes.client.BatchV1Api")
 def test_cancel_job(k8s_batch_client: mock.MagicMock, mock_kube_config):
-    external_job = KubernetesExternalJob.new(
-        job_type=JobType.driver,
-        try_number=0,
+    job = make_job(
         run_id="abc",
+        name="some-name",
         namespace="some-namespace",
     )
-    cancel_job(external_job)
+    cancel_job(job)
     k8s_batch_client.return_value.delete_namespaced_job.assert_called_once_with(
-        namespace="some-namespace",
-        name=external_job.kubernetes_job_name,
+        namespace=job.namespace,
+        name=job.name,
         grace_period_seconds=0,
         propagation_policy="Background",
     )
@@ -156,174 +159,230 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     assert tolerations[1].toleration_seconds is None
 
 
+"""
+class PodSummary:
+    pod_name: str
+    container_restart_count: Optional[int] = None
+    phase: Optional[str] = None
+    condition_message: Optional[str] = None
+    condition: Optional[str] = None
+    unschedulable_message: Optional[str] = None
+    container_condition_message: Optional[str] = None
+    container_exit_code: Optional[int] = None
+    start_time_epoch_seconds: Optional[float] = None
+    node_name: Optional[str] = None
+    has_infra_failure: bool = False
+"""
+
+"""
+    try_number: int
+    pending_or_running_pod_count: int = 0
+    succeeded_pod_count: int = 0
+    has_started: bool = False
+    still_exists: bool = True
+    start_time: float = field(default_factory=time.time)
+    has_infra_failure: bool = False
+    current_pods: List[PodSummary] = field(default_factory=list)
+    previous_pod_name: Optional[str] = None
+    previous_node_name: Optional[str] = None
+"""
 IS_ACTIVE_CASES = [
     (
-        KubernetesExternalJob(
-            kind="k8s",
+        JobDetails(
             try_number=0,
-            external_job_id=KubernetesExternalJob.make_external_job_id(
-                "a", "b", JobType.worker
-            ),
             pending_or_running_pod_count=0,
             succeeded_pod_count=0,
             has_started=False,
             still_exists=True,
             start_time=None,
-            most_recent_condition=None,
-            most_recent_pod_phase_message=None,
-            most_recent_pod_condition_message=None,
-            most_recent_container_condition_message=None,
             has_infra_failure=False,
+            current_pods=[
+                PodSummary(
+                    pod_name="foo",
+                    container_restart_count=0,
+                    phase="Running",
+                    condition_message=None,
+                    condition=None,
+                    unschedulable_message=None,
+                    container_condition_message=None,
+                    container_exit_code=None,
+                    start_time_epoch_seconds=None,
+                    node_name=None,
+                    has_infra_failure=False,
+                ),
+            ],
         ),
         True,  # job hasn't started yet
     ),
     (
-        KubernetesExternalJob(
-            kind="k8s",
+        JobDetails(
             try_number=0,
-            external_job_id=KubernetesExternalJob.make_external_job_id(
-                "a", "b", JobType.worker
-            ),
             pending_or_running_pod_count=1,
             succeeded_pod_count=0,
             has_started=True,
             still_exists=True,
             start_time=datetime.now().timestamp(),
-            most_recent_condition=None,
-            most_recent_pod_phase_message="Pod phase is 'Pending'",
-            most_recent_pod_condition_message="Pod condition is 'Initialized'",
-            most_recent_container_condition_message=(
-                "Container is waiting: ContainerCreating"
-            ),
             has_infra_failure=False,
+            current_pods=[
+                PodSummary(
+                    pod_name="foo",
+                    container_restart_count=0,
+                    phase="Pending",
+                    condition_message="Pod condition is 'Initialized'",
+                    condition=None,
+                    unschedulable_message=None,
+                    container_condition_message="Container is waiting: ContainerCreating",
+                    container_exit_code=None,
+                    start_time_epoch_seconds=None,
+                    node_name="foo-node",
+                    has_infra_failure=False,
+                ),
+            ],
         ),
         True,  # job has started and has pending pods
     ),
     (
-        KubernetesExternalJob(
-            kind="k8s",
+        JobDetails(
             try_number=0,
-            external_job_id=KubernetesExternalJob.make_external_job_id(
-                "a", "b", JobType.worker
-            ),
             pending_or_running_pod_count=1,
             succeeded_pod_count=0,
             has_started=True,
             still_exists=True,
             start_time=datetime.now().timestamp(),
-            most_recent_condition=None,
-            most_recent_pod_phase_message="Pod phase is 'Pending'",
-            most_recent_pod_condition_message=(
-                "Pod condition is NOT 'PodScheduled': Unschedulable; "
-                "0/2 nodes are available: "
-                "1 Insufficient cpu, "
-                "1 Insufficient memory, "
-                "1 node(s) didn't match Pod's node affinity/selector."
-            ),
-            most_recent_container_condition_message=None,
             has_infra_failure=False,
+            current_pods=[
+                PodSummary(
+                    pod_name="foo",
+                    container_restart_count=0,
+                    phase="Pending",
+                    condition_message=(
+                        "Pod condition is NOT 'PodScheduled': Unschedulable; "
+                        "0/2 nodes are available: "
+                        "1 Insufficient cpu, "
+                        "1 Insufficient memory, "
+                        "1 node(s) didn't match Pod's node affinity/selector."
+                    ),
+                    condition=None,
+                    unschedulable_message=(
+                        "0/2 nodes are available: "
+                        "1 Insufficient cpu, "
+                        "1 Insufficient memory, "
+                        "1 node(s) didn't match Pod's node affinity/selector."
+                    ),
+                    container_condition_message=None,
+                    container_exit_code=None,
+                    start_time_epoch_seconds=None,
+                    node_name="foo-node",
+                    has_infra_failure=False,
+                ),
+            ],
         ),
         True,  # job has started and has unschedulable pods
     ),
     (
-        KubernetesExternalJob(
-            kind="k8s",
+        JobDetails(
             try_number=0,
-            external_job_id=KubernetesExternalJob.make_external_job_id(
-                "a", "b", JobType.worker
-            ),
             pending_or_running_pod_count=1,
             succeeded_pod_count=0,
             has_started=True,
             still_exists=True,
             start_time=datetime.now().timestamp(),
-            most_recent_condition=None,
-            most_recent_pod_phase_message="Pod phase is 'Running'",
-            most_recent_pod_condition_message="Pod condition is 'Ready'",
-            most_recent_container_condition_message="Container is running",
             has_infra_failure=False,
+            current_pods=[
+                PodSummary(
+                    pod_name="foo",
+                    container_restart_count=0,
+                    phase="Running",
+                    condition_message=("Pod condition is 'Ready'"),
+                    condition="Ready",
+                    unschedulable_message=None,
+                    container_condition_message="Container is running",
+                    container_exit_code=None,
+                    start_time_epoch_seconds=None,
+                    node_name="foo-node",
+                    has_infra_failure=False,
+                ),
+            ],
         ),
         True,  # job has started and has active pods
     ),
     (
-        KubernetesExternalJob(
-            kind="k8s",
+        JobDetails(
             try_number=0,
-            external_job_id=KubernetesExternalJob.make_external_job_id(
-                "a", "b", JobType.worker
-            ),
             pending_or_running_pod_count=0,
             succeeded_pod_count=1,
             has_started=True,
             still_exists=True,
             start_time=datetime.now().timestamp(),
-            most_recent_condition=KubernetesJobCondition.Complete.value,
-            # k8 reports the pods from our completed jobs ar running for a while
-            # probably a race condition
-            most_recent_pod_phase_message="Pod phase is 'Running'",
-            most_recent_pod_condition_message="Pod condition is 'Ready'",
-            most_recent_container_condition_message="...",
             has_infra_failure=False,
+            current_pods=[
+                PodSummary(
+                    pod_name="foo",
+                    container_restart_count=0,
+                    phase="Succeeded",
+                    condition_message=("Pod condition is 'Ready'"),
+                    condition="Ready",
+                    unschedulable_message=None,
+                    container_condition_message="Container is running",
+                    container_exit_code=0,
+                    start_time_epoch_seconds=None,
+                    node_name="foo-node",
+                    has_infra_failure=False,
+                ),
+            ],
         ),
         False,  # job has completed successfully
     ),
     (
-        KubernetesExternalJob(
-            kind="k8s",
+        JobDetails(
             try_number=0,
-            external_job_id=KubernetesExternalJob.make_external_job_id(
-                "a", "b", JobType.worker
-            ),
             pending_or_running_pod_count=0,
             succeeded_pod_count=0,
             has_started=True,
             still_exists=True,
             start_time=datetime.now().timestamp(),
-            most_recent_condition=KubernetesJobCondition.Failed.value,
-            most_recent_pod_phase_message="Pod phase is 'Failed'",
-            most_recent_pod_condition_message="Pod condition is 'Initialized'",
-            most_recent_container_condition_message="Container is terminated: OOMKilled",
-            has_infra_failure=True,
+            has_infra_failure=False,
+            current_pods=[
+                PodSummary(
+                    pod_name="foo",
+                    container_restart_count=0,
+                    phase="Failed",
+                    condition_message=("Pod condition is 'Initialized'"),
+                    condition="Failed",
+                    unschedulable_message=None,
+                    container_condition_message="Container is terminated: OOMKilled",
+                    container_exit_code=0,
+                    start_time_epoch_seconds=None,
+                    node_name="foo-node",
+                    has_infra_failure=True,
+                ),
+            ],
         ),
         False,  # job has failed
     ),
     (
-        KubernetesExternalJob(
-            kind="k8s",
+        JobDetails(
             try_number=0,
-            external_job_id=KubernetesExternalJob.make_external_job_id(
-                "a", "b", JobType.worker
-            ),
             pending_or_running_pod_count=0,
             succeeded_pod_count=1,
             has_started=True,
             still_exists=False,
-            start_time=1.01,
-            most_recent_condition=KubernetesJobCondition.Complete.value,
-            most_recent_pod_phase_message="Pod phase is 'Succeeded'",
-            most_recent_pod_condition_message="...",
-            most_recent_container_condition_message="...",
+            start_time=datetime.now().timestamp(),
             has_infra_failure=False,
+            current_pods=[],
         ),
         False,  # job completed long ago and no longer exists
     ),
     (
-        KubernetesExternalJob(
-            kind="k8s",
+        JobDetails(
             try_number=0,
-            external_job_id=KubernetesExternalJob.make_external_job_id(
-                "a", "b", JobType.worker
-            ),
-            pending_or_running_pod_count=0,
+            pending_or_running_pod_count=1,
             succeeded_pod_count=0,
             has_started=True,
             still_exists=False,
-            start_time=1.01,
-            most_recent_condition=None,
-            most_recent_pod_phase_message=None,
-            most_recent_pod_condition_message=None,
-            most_recent_container_condition_message=None,
+            start_time=datetime.now().timestamp(),
             has_infra_failure=False,
+            current_pods=[],
         ),
         False,  # job was not updated between start and complete disappearance
     ),
@@ -331,11 +390,11 @@ IS_ACTIVE_CASES = [
 
 
 @pytest.mark.parametrize(
-    "job, expected",
+    "job_details, expected",
     IS_ACTIVE_CASES,
 )
-def test_job_is_active(job, expected):
-    assert job.is_active() == expected
+def test_job_is_active(job_details, expected):
+    assert job_details.get_status(0).is_active() == expected
 
 
 @mock.patch("sematic.scheduling.kubernetes.load_kube_config")
@@ -478,7 +537,7 @@ def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job):
         )
 
     mock_schedule_k8s_job.assert_called_with(
-        name=f"sematic-worker-{run_id}-foo",
+        name=f"sematic-run-{run_id}-foo",
         image=image,
         environment_vars=settings,
         namespace=namespace,
