@@ -210,9 +210,8 @@ def schedule_resolution_endpoint(
         rerun_from=rerun_from,
     )
     logger.info(
-        "Scheduled resolution with job %s/%s",
-        post_schedule_job.namespace,
-        post_schedule_job.name,
+        "Scheduled resolution with job %s",
+        post_schedule_job.identifier(),
     )
 
     save_resolution(resolution)
@@ -305,7 +304,7 @@ def cancel_resolution_endpoint(
 
     jobs = get_jobs_by_run_id(resolution.root_id, kind=JobKind.resolver)
     for job in jobs:
-        logger.info("Canceling %s/%s", job.namespace, job.name)
+        logger.info("Canceling %s", job.identifier())
         post_cancel_job = cancel_job(job)
         save_job(post_cancel_job)
 
@@ -367,5 +366,5 @@ def _cancel_non_terminal_runs(root_id):
 
     for run in unfinished_runs:
         for job in get_jobs_by_run_id(run.id):
-            logger.info("Canceling %s/%s", job.namespace, job.name)
+            logger.info("Canceling %s", job.identifier())
             save_job(cancel_job(job))

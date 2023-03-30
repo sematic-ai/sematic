@@ -63,6 +63,12 @@ class ObjectSource(Enum):
 
 
 def log_prefix(run_id: str, job_kind: JobKindString):
+    # TODO: move log writing to use "run"/"resolver" instead
+    # of "worker"/"driver". Wait to do it until we can add in
+    # some backwards compatibility so we can still read logs
+    # written by clients that haven't yet upgraded. Probably
+    # wait until after deprecating V1, so we don't have to support
+    # *3* formats in this module at one time.
     log_kind = "worker" if job_kind == JobKind.run else "driver"
     return LOG_PATH_FORMAT.format(
         prefix=V2_LOG_PREFIX, run_id=run_id, log_kind=log_kind

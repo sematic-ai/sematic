@@ -191,9 +191,8 @@ def cancel_job(job: Job) -> Job:
     details = job.details
     if not details.still_exists:
         logger.info(
-            "No need to cancel Kubernetes job %s/%s, as it no longer exists",
-            job.namespace,
-            job.name,
+            "No need to cancel Kubernetes job %s, as it no longer exists",
+            job.identifier(),
         )
         return job
 
@@ -230,15 +229,11 @@ def refresh_job(job: Job) -> Job:
         k8s_job = kubernetes.client.BatchV1Api().read_namespaced_job_status(
             name=job.name, namespace=job.namespace
         )
-        logger.debug(
-            "K8 job status for job %s/%s:\n%s", job.namespace, job.name, k8s_job
-        )
+        logger.debug("K8 job status for job %s:\n%s", job.identifier(), k8s_job)
 
     except ApiException as e:
         if e.status == 404:
-            logger.warning(
-                "Got 404 while looking for job %s/%s", job.namespace, job.name
-            )
+            logger.warning("Got 404 while looking for job %s", job.identifier())
             if not job.details.has_started:
                 job.update_status(
                     replace(
@@ -260,9 +255,7 @@ def refresh_job(job: Job) -> Job:
         details.current_pods = [_get_pod_summary(pod) for pod in pods]
         details.has_infra_failure |= has_infra_failure
     except Exception:
-        logger.exception(
-            "Exception getting pods for job %s/%s", job.namespace, job.name
-        )
+        logger.exception("Exception getting pods for job %s", job.identifier())
         details.current_pods = []
 
     latest_pod_summary = details.latest_pod_summary()
@@ -286,15 +279,13 @@ def refresh_job(job: Job) -> Job:
         )
         if ts is None:
             logger.warning(
-                "Setting has_started=True for job %s/%s with no start time!",
-                job.namespace,
-                job.name,
+                "Setting has_started=True for job %s with no start time!",
+                job.identifier(),
             )
         else:
             logger.info(
-                "Setting has_started=True for job %s/%s at timestamp %s",
-                job.namespace,
-                job.name,
+                "Setting has_started=True for job %s at timestamp %s",
+                job.identifier(),
                 ts,
             )
         details.has_started = True
@@ -321,7 +312,7 @@ def refresh_job(job: Job) -> Job:
 
     job.update_status(details.get_status(time.time()))
 
-    logger.debug("Job %s/%s refreshed: %s", job.namespace, job.name, job)
+    logger.debug("Job %s refreshed: %s", job.identifier(), job)
     return job
 
 
@@ -451,7 +442,7 @@ def _get_pods_for_job(
             namespace=job.namespace,
             label_selector=f"job-name={job.name}",
         )
-        logger.debug("K8 pods for job %s/%s:\n%s", job.namespace, job.name, k8s_pods)
+        logger.debug("K8 pods for job %s:\n%s", job.identifier(), k8s_pods)
 
         if _is_none_or_empty(k8s_pods.items):
             return [], has_infra_failure
@@ -459,9 +450,8 @@ def _get_pods_for_job(
     except OpenApiException as e:
         has_infra_failure = True
         logger.warning(
-            "Got exception while looking for pods for job %s/%s",
-            job.namespace,
-            job.name,
+            "Got exception while looking for pods for job %s",
+            job.identifier(),
             exc_info=e,
         )
         return None, has_infra_failure
@@ -476,8 +466,8 @@ def _get_unschedulable_reason(pod_conditions) -> Optional[str]:
         message = (
             f"Pod is not scheduled. Reason: {condition.reason}: {condition.message}. "
             f"Depending on your Kubernetes cluster's configuration and current usage, "
-            f"this may or may not resolve itself on its own. Please consult your "
-            f"cluster operator."
+            f"this may or may not resolve itself on its own via autoscaling or resource "
+            f"reclamation. Please consult your cluster operator."
         )
     return message
 
@@ -692,7 +682,7 @@ def schedule_resolution_job(
         kind=JobKind.resolver,
     )
 
-    logger.info("Scheduling job %s/%s", job.namespace, job.name)
+    logger.info("Scheduling job %s", job.identifier())
 
     args = ["--run_id", resolution_id, "--resolve"]
 
@@ -750,7 +740,7 @@ def schedule_run_job(
         details=JobDetails(try_number=try_number),
         kind=JobKind.run,
     )
-    logger.info("Scheduling job %s/%s with image %s", job.namespace, job.name, image)
+    logger.info("Scheduling job %s with image %s", job.identifier(), image)
     args = ["--run_id", run_id]
 
     _schedule_kubernetes_job(

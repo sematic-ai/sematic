@@ -231,7 +231,7 @@ def _refresh_jobs(jobs: Iterable[Job]) -> Sequence[Job]:
 
 
 def _refresh_job(job: Job) -> Job:
-    """Reach out to external compute to update the state of the job"""
+    """Reach out to external compute to update the state of the job."""
     # modify a new copy, not existing one
     job = Job.from_json_encodable(job.to_json_encodable(redact=False))
 
