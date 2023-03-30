@@ -150,7 +150,7 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
             # status for usage in dashboards. Some users may be leveraging it for
             # such purposes, so think carefully before changing/removing it.
             was_remote = (
-                len(get_jobs_by_run_id(resolution.id, kind=JobKind.resolver)) > 0
+                len(get_jobs_by_run_id(resolution.root_id, kind=JobKind.resolver)) > 0
             )
             duration_seconds = None
             if root_run.started_at is not None:
@@ -199,21 +199,24 @@ def schedule_resolution_endpoint(
             rerun_from = flask.request.json["rerun_from"]
 
     jobs = get_jobs_by_run_id(resolution_id, kind=JobKind.resolver)
-    resolution, post_schedule_jobs = schedule_resolution(
+    if len(jobs) != 0:
+        return jsonify_error(
+            f"Resolution {resolution_id} was already scheduled",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    resolution, post_schedule_job = schedule_resolution(
         resolution=resolution,
         max_parallelism=max_parallelism,
         rerun_from=rerun_from,
-        existing_jobs=jobs,
     )
     logger.info(
         "Scheduled resolution with job %s/%s",
-        post_schedule_jobs[-1].namespace,
-        post_schedule_jobs[-1].name,
+        post_schedule_job.namespace,
+        post_schedule_job.name,
     )
 
     save_resolution(resolution)
-    for job in post_schedule_jobs:
-        save_job(job)
+    save_job(post_schedule_job)
 
     payload = dict(
         content=get_resolution_payload(resolution),
@@ -258,25 +261,12 @@ def rerun_resolution_endpoint(
     if user is not None:
         resolution.user_id = user.id
 
-    resolution, post_schedule_jobs = schedule_resolution(
-        resolution, rerun_from=rerun_from, existing_jobs=[]
+    resolution, post_schedule_job = schedule_resolution(
+        resolution, rerun_from=rerun_from
     )
 
     save_resolution(resolution)
-    if len(post_schedule_jobs) == 0:
-        logger.error("After schedule, resolution had no jobs")
-        return jsonify_error(
-            "Cloned resolution could not be scheduled.",
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-        )
-    elif len(post_schedule_jobs) > 1:
-        logger.error("After schedule, resolution had jobs: %s", post_schedule_jobs)
-        return jsonify_error(
-            "Cloned resolution had multiple jobs.",
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-        )
-
-    save_job(post_schedule_jobs[0])
+    save_job(post_schedule_job)
 
     payload = dict(
         content=get_resolution_payload(resolution),
@@ -315,7 +305,7 @@ def cancel_resolution_endpoint(
 
     jobs = get_jobs_by_run_id(resolution.root_id, kind=JobKind.resolver)
     for job in jobs:
-        logger.info("Cancelling %s/%s", job.namespace, job.name)
+        logger.info("Canceling %s/%s", job.namespace, job.name)
         post_cancel_job = cancel_job(job)
         save_job(post_cancel_job)
 
@@ -377,5 +367,5 @@ def _cancel_non_terminal_runs(root_id):
 
     for run in unfinished_runs:
         for job in get_jobs_by_run_id(run.id):
-            logger.info("Cancelling %s/%s", job.namespace, job.name)
+            logger.info("Canceling %s/%s", job.namespace, job.name)
             save_job(cancel_job(job))

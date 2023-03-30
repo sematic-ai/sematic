@@ -240,13 +240,13 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     jobs = get_jobs_by_run_id(run_id)
 
     resolution = get_resolution(run.root_id)
-    run, jobs_post_schedule = schedule_run(run, resolution, jobs)
-    logger.info("Scheduled run with job: %s", jobs_post_schedule[-1])
+    run, post_schedule_jobs = schedule_run(run, resolution, jobs)
+    logger.info("Scheduled run with job: %s", post_schedule_jobs[-1])
     run.started_at = datetime.datetime.utcnow()
 
     save_run(run)
 
-    for job in jobs_post_schedule:
+    for job in post_schedule_jobs:
         save_job(job)
 
     broadcast_graph_update(root_id=run.root_id, user=user)
@@ -311,7 +311,16 @@ def _get_run_and_jobs_if_modified(
     # we standardize to tuples, but sometimes we get lists
     if tuple(updated_jobs) != tuple(jobs):
         run = get_run(run_id)
-        if new_future_state not in (FutureState.CANCELED, FutureState.RESOLVED):
+
+        # We want exception metadata if it is present while the run is still
+        # active, or if it has ended in a failure state. If the run has ended
+        # in a non-failure state, we don't care about exception metadata from
+        # the job, because it may just be something non-standard in job cleanup
+        # that doesn't actually impact the outcome of the run.
+        if (
+            new_future_state not in FutureState.terminal_states()
+            or new_future_state in FutureState.failure_terminal_states()
+        ):
             run.external_exception_metadata = updated_jobs[
                 -1
             ].details.get_exception_metadata()
@@ -369,7 +378,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
             "Call did not contain json with a 'run_ids' key", HTTPStatus.BAD_REQUEST
         )
     run_ids = input_payload["run_ids"]
-    logger.info("Updating state for runs %s", run_ids)
+    logger.info("Updating state for runs: %s", run_ids)
 
     db_status_dict = get_run_status_details(run_ids)
     missing_run_ids = set(run_ids).difference(db_status_dict.keys())

@@ -19,7 +19,7 @@ import dataclasses
 import json
 import logging
 from enum import Enum, unique
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, Optional, Union
 
 # Third-party
 from sqlalchemy import Column, types
@@ -198,9 +198,6 @@ class Resolution(HasUserMixin, Base, JSONEncodableMixin):
     # whatever was already in the DB for it
     settings_env_vars: Dict[str, str] = Column(
         types.JSON, nullable=False, default=lambda: {}, info={REDACTED_KEY: True}
-    )
-    external_jobs_json: Optional[List[Dict[str, Any]]] = Column(
-        types.JSON(), nullable=True
     )
     container_image_uris: Optional[Dict[str, str]] = Column(types.JSON(), nullable=True)
     container_image_uri: Optional[str] = Column(types.String(), nullable=True)

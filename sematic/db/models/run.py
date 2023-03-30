@@ -4,7 +4,7 @@ import importlib
 import json
 import re
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 # Third-party
 from sqlalchemy import Column, types
@@ -67,11 +67,6 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
         The metadata for the exception from the calculator's execution, if any.
     external_exception_metadata : Optional[ExceptionMetadata]
         The metadata for the exception from the external compute infrastructure, if any.
-    external_jobs_json : Optional[List[Dict[str, Any]]]
-        A list of external compute jobs associated with the execution of this run.
-        There may be multiple due to run retries. The field is a json string, but
-        the dataclass version of the jobs can be accessed with the `external_jobs`
-        property.
     created_at : datetime
         Time of creating of the run record in the DB.
     updated_at : datetime
@@ -117,9 +112,6 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
     external_exception_metadata_json: Optional[
         Dict[str, Union[str, List[str]]]
     ] = Column(types.JSON(), nullable=True)
-    external_jobs_json: Optional[List[Dict[str, Any]]] = Column(
-        types.JSON(), nullable=True
-    )
     container_image_uri: Optional[str] = Column(types.String(), nullable=True)
 
     # Lifecycle timestamps

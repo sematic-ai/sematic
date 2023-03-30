@@ -52,18 +52,15 @@ def schedule_run(
 
 def schedule_resolution(
     resolution: Resolution,
-    existing_jobs: Sequence[Job],
     max_parallelism: Optional[int] = None,
     rerun_from: Optional[str] = None,
-) -> Tuple[Resolution, Sequence[Job]]:
+) -> Tuple[Resolution, Job]:
     """Start a resolution for the run on external compute.
 
     Parameters
     ----------
     resolution: Resolution
         The resolution associated with the run.
-    existing_jobs:
-        Any existing jobs associated with the resolution.
     max_parallelism:
         The maximum number of non-inlined runs that the resolver will allow to be in the
         SCHEDULED state at any one time.
@@ -73,19 +70,17 @@ def schedule_resolution(
     Returns
     -------
     A tuple where the first element is the resolution with its status updated and
-    the second is the new list of jobs associated with the resolution.
+    the second is the job associated with the resolution.
     """
-    existing_jobs = _refresh_jobs(existing_jobs)
-    _assert_resolution_is_scheduleable(resolution, existing_jobs)
-    jobs = list(existing_jobs) + [
-        _schedule_resolution_job(
-            resolution=resolution,
-            max_parallelism=max_parallelism,
-            rerun_from=rerun_from,
-        )
-    ]
+    _assert_resolution_is_scheduleable(resolution)
+    job = _schedule_resolution_job(
+        resolution=resolution,
+        max_parallelism=max_parallelism,
+        rerun_from=rerun_from,
+    )
+
     resolution.status = ResolutionStatus.SCHEDULED
-    return (resolution, jobs)
+    return (resolution, job)
 
 
 def update_run_status(
@@ -165,9 +160,7 @@ def update_run_status(
     )
 
 
-def _assert_resolution_is_scheduleable(
-    resolution: Resolution, existing_jobs: Sequence[Job]
-):
+def _assert_resolution_is_scheduleable(resolution: Resolution):
     """raise StateNotSchedulable if the state is not such that it can be scheduled"""
     if resolution.status != ResolutionStatus.CREATED.value:
         raise StateNotSchedulable(
@@ -175,12 +168,6 @@ def _assert_resolution_is_scheduleable(
             f"and could not be scheduled. Resolution can only be scheduled if they "
             f"are in the {ResolutionStatus.CREATED} state."
         )
-    for job in existing_jobs:
-        if job.latest_status.is_active():
-            raise StateNotSchedulable(
-                f"The resolution {resolution.root_id} already had an active "
-                f"job {job.namespace}/{job.name} and thus could not be scheduled."
-            )
     if resolution.container_image_uri is None:
         raise StateNotSchedulable(
             f"The resolution {resolution.root_id} had no docker image URI"

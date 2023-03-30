@@ -3,6 +3,7 @@ Module holding common DB queries.
 """
 # Standard Library
 import logging
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -157,25 +158,22 @@ def get_run_status_details(
     jobs for the run (if any exist)
     """
     with db().get_session() as session:
-        query_results = (
-            session.query(Run.id, Run.future_state).filter(Run.id.in_(run_ids)).all()
-        )
-        jobs = list(
-            session.query(Job)
-            .filter(Job.run_id.in_(run_ids))
+        query_results = list(
+            session.query(Run.id, Run.future_state, Job)
+            .filter(Run.id.in_(run_ids))
             .filter(Job.kind == JobKind.run)
+            .filter(Job.run_id == Run.id)
             .all()
         )
-        jobs_by_run_id: Dict[str, List[Job]] = {job.run_id: [] for job in jobs}
-        for job in jobs:
-            jobs_by_run_id[job.run_id].append(job)
-        result_dict = {}
-        for run_id, state_string in query_results:
-            result_dict[run_id] = (
-                FutureState[state_string],
-                jobs_by_run_id.get(run_id, []),
-            )
-    return result_dict
+        run_ids_to_jobs_list = defaultdict(list)
+        for run_id, _, job in query_results:
+            run_ids_to_jobs_list[run_id].append(job)
+
+        future_state_and_jobs_by_run_id: Dict[str, Tuple[FutureState, List[Job]]] = {
+            run_id: (FutureState[future_state], run_ids_to_jobs_list[run_id])
+            for run_id, future_state, _ in query_results  # type: ignore
+        }
+    return future_state_and_jobs_by_run_id
 
 
 @dataclass
