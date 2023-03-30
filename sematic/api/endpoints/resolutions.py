@@ -345,5 +345,6 @@ def _cancel_non_terminal_runs(root_id):
         run.external_jobs = jobs
 
         run.future_state = FutureState.CANCELED
+        run.failed_at = datetime.utcnow()
 
     save_graph(unfinished_runs, [], [])
