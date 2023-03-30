@@ -25,14 +25,22 @@ from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
-from sematic.utils.retry import retry
+from sematic.utils.retry import retry, retry_call
 from sematic.versions import CURRENT_VERSION, version_as_string
 
 logger = logging.getLogger(__name__)
 
+# set 6 retries for resolver -> server API calls in other to weather network disruptions
+API_CALLS_TRIES = 7
+# 2^7 exponential backoff = 63 seconds
+API_CALLS_BACKOFF = 2
+
 # The client should always verify that it is compatible with the server
 # it is talking to before using the API, but we don't want to do that every
 # time. This caches whether we have validated it or not.
+# TODO: encapsulate this flag and the API call functions in a stateful client class that
+#  can also keep track of a flag that suppresses cleanup stack traces on unsuccessful
+#  resolution terminations
 _validated_client_version = False
 
 
@@ -253,16 +261,19 @@ def save_resolution(resolution: Resolution):
 
 def get_resolution(root_id: str) -> Resolution:
     """
-    Get resolution
+    Get resolution.
     """
     response = _get(f"/resolutions/{root_id}")
-
     return Resolution.from_json_encodable(response["content"])
 
 
 def cancel_resolution(resolution_id: str) -> Resolution:
-    response = _put(f"/resolutions/{resolution_id}/cancel", {})
-
+    """Ask the server to cancel a resolution."""
+    # not retrying because resolver-initiated cancelations usually happen because of
+    # server connection issues, and because they need to be responsive anyway
+    response = _put(
+        f"/resolutions/{resolution_id}/cancel", json_payload={}, retry=False
+    )
     return Resolution.from_json_encodable(response["content"])
 
 
@@ -447,27 +458,27 @@ def _notify_event(namespace: str, event: str, payload: Any = None):
         logger.exception("Error notifying %s/%s", namespace, event)
 
 
-@retry(
-    exceptions=(ServerError, APIConnectionError),
-    tries=4,
-    delay=1,
-    backoff=2,
-    jitter=0.1,
-)
-def _get(endpoint: str, decode_json: bool = True) -> Any:
+def _get(endpoint: str, decode_json: bool = True, retry: bool = True) -> Any:
     """
-    Get a payload from the API server.
+    GETs a payload from the API server.
 
     Parameters
     ----------
     endpoint: str
-        Endpoint to query. `/api/v1` will be prepended and authentication
-        headers will be added.
+        Endpoint to GET from. `/api/v1` will be prepended and authentication headers will
+        be added.
     decode_json: bool
-        Defaults to `True`. Whether the returned payload should be JSON-decoded.
+        Whether the returned payload should be JSON-decoded. Defaults to `True`.
+    retry: bool
+        Whether to use retires in case the connection fails. Defaults to `True`.
+
+    Returns
+    -------
+    Any:
+        The contents obtained form the server, in either raw or JSON-decoded format.
     """
-    response = request(requests.get, endpoint)
-    logger.debug("Got response with raw content: %s", response.content)
+    response = request(method=requests.get, endpoint=endpoint, retry=retry)
+    logger.debug("[_get] Got response with raw content: %s", response.content)
 
     if decode_json:
         return response.json()
@@ -475,15 +486,34 @@ def _get(endpoint: str, decode_json: bool = True) -> Any:
     return response.content
 
 
-@retry(
-    exceptions=APIConnectionError,
-    tries=4,
-    delay=1,
-    backoff=2,
-    jitter=0.1,
-)
-def _post(endpoint, json_payload) -> Any:
-    response = request(requests.post, endpoint, dict(json=json_payload))
+def _post(
+    endpoint: str, json_payload: Optional[Dict[str, Any]] = None, retry: bool = True
+) -> Any:
+    """
+    POSTs a payload to the API server.
+
+    Parameters
+    ----------
+    endpoint: str
+        Endpoint to POST to. `/api/v1` will be prepended and authentication headers will
+        be added.
+    json_payload: Optional[Dict[str, Any]]
+        The contents to POST to the specified endpoint. Defaults to `None`.
+    retry: bool
+        Whether to use retires in case the connection fails. Defaults to `True`.
+
+    Returns
+    -------
+    Any:
+        The response returned form the server, if it exists.
+    """
+    response = request(
+        method=requests.post,
+        endpoint=endpoint,
+        kwargs=dict(json=json_payload),
+        retry=retry,
+    )
+    logger.debug("[_post] Got response with raw content: %s", response.content)
 
     if len(response.content) == 0:
         return None
@@ -491,19 +521,39 @@ def _post(endpoint, json_payload) -> Any:
     return response.json()
 
 
-@retry(
-    exceptions=APIConnectionError,
-    tries=4,
-    delay=1,
-    backoff=2,
-    jitter=0.1,
-)
 def _put(
     endpoint: str,
     json_payload: Optional[Dict[str, Any]] = None,
     data: Optional[bytes] = None,
+    retry: bool = True,
 ) -> Any:
-    response = request(requests.put, endpoint, dict(json=json_payload, data=data))
+    """
+    PUTs a payload in the API server.
+
+    Parameters
+    ----------
+    endpoint: str
+        Endpoint to PUT to. `/api/v1` will be prepended and authentication headers will be
+        added.
+    json_payload: Dict[str, Any]
+        An optional JSON payload to PUT to the specified endpoint. Defaults to `None`.
+    data: Optional[bytes]
+        Optional key-value pairs to PUT to the specified endpoint. Defaults to `None`.
+    retry: bool
+        Whether to use retires in case the connection fails. Defaults to `True`.
+
+    Returns
+    -------
+    Any:
+        The response returned form the server, if it exists.
+    """
+    response = request(
+        method=requests.put,
+        endpoint=endpoint,
+        kwargs=dict(json=json_payload, data=data),
+        retry=retry,
+    )
+    logger.debug("[_put] Got response with raw content: %s", response.content)
 
     if len(response.content) == 0:
         return None
@@ -511,9 +561,7 @@ def _put(
     return response.json()
 
 
-def _validate_server_compatibility(
-    tries: int = 5, seconds_between_tries: int = 10, use_cached: bool = True
-):
+def _validate_server_compatibility(use_cached: bool = True) -> None:
     """Check that the client is compatible with the server.
 
     Raises an error if the server and client are incompatible, or if this can't be
@@ -523,20 +571,6 @@ def _validate_server_compatibility(
     if _validated_client_version and use_cached:
         return
 
-    retriable_errors = (
-        ConnectionError,
-        ServerError,
-    )
-    retry(
-        exceptions=retriable_errors,
-        tries=tries,
-        delay=seconds_between_tries,
-    )(_validate_server_compatibility_no_catch)()
-
-    _validated_client_version = True
-
-
-def _validate_server_compatibility_no_catch() -> None:
     base_url = get_config().api_url.replace("/api/v1", "")
     unexpected_server_response_error = IncompatibleClientError(
         "The Sematic server did not provide information about its version "
@@ -591,6 +625,8 @@ def _validate_server_compatibility_no_catch() -> None:
         version_as_string(server_version),
     )
 
+    _validated_client_version = True
+
 
 def request(
     method: Callable[[Any], requests.Response],
@@ -600,7 +636,8 @@ def request(
     validate_version_compatibility: bool = True,
     validate_json: bool = False,
     user: Optional[User] = None,
-):
+    retry: bool = True,
+) -> requests.Response:
     """Internal function for wrapping requests.<get/put/etc.>.
 
     validate_version_compatibility indicates whether we should check that the
@@ -611,8 +648,8 @@ def request(
     """
     if validate_version_compatibility:
         _validate_server_compatibility()
-    kwargs = kwargs or {}
 
+    kwargs = kwargs if kwargs is not None else dict()
     headers = kwargs.get("headers", {})
     headers["Content-Type"] = "application/json"
     if attempt_auth:
@@ -621,7 +658,16 @@ def request(
     kwargs["headers"] = headers
 
     try:
-        response = method(_url(endpoint), **kwargs)
+        response = retry_call(
+            f=method,
+            fargs=[_url(endpoint)],
+            fkwargs=kwargs,
+            exceptions=Exception,
+            tries=API_CALLS_TRIES if retry else 1,
+            delay=1,
+            backoff=API_CALLS_BACKOFF,
+            jitter=0.1,
+        )
     except ConnectionError:
         raise APIConnectionError(
             (
@@ -638,10 +684,7 @@ def request(
     ):
         raise MissingSettingsError(UserSettings, UserSettingsVar.SEMATIC_API_KEY)
 
-    _raise_for_response(
-        response,
-        validate_json,
-    )
+    _raise_for_response(response, validate_json)
 
     return response
 
