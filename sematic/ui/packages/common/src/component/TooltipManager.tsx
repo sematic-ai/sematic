@@ -12,7 +12,7 @@ interface TooltipManagerProps {
  * This component is used to manage the tooltip of a component. 
  * It will render the component twice, once for the presentation and once for the measurement.
  * The measurement component will be hidden and will not take up space,
- * and will be used to measure the width of the presentation component. 
+ * and will be used to measure the width of the presentation component if fully expanded. 
  * The presentation component will be used to render the actual component.
  * If the width of the presentation component is less than the measurement component, then the tooltip will be shown. 
  * 
@@ -43,7 +43,7 @@ const TooltipManager = (props: TooltipManagerProps) => {
         return element;
     }, [onRender, refMeasure]);
 
-    const shouldShowTooltip = widthPresentation <= widthMeasure;
+    const shouldShowTooltip = widthPresentation < widthMeasure;
 
     return <>
         {measurement}

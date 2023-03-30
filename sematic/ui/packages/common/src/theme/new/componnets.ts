@@ -1,5 +1,5 @@
 import { Components, Theme } from '@mui/material/styles';
-import { fontWeightBold } from 'src/theme/new/typography';
+import { fontFamilyCode, fontWeightBold } from 'src/theme/new/typography';
 import { KeyboardArrowDown } from "@mui/icons-material";
 import { selectClasses } from '@mui/material/Select'
 import { inputBaseClasses } from '@mui/material/InputBase'
@@ -77,15 +77,30 @@ const components: Components = {
                             content: '""',
                             height: 2,
                             position: 'absolute',
-                            bottom: 0
+                            bottom: 0,
+                            display: 'none',
                         },
                         '&.selected': {
                             position: 'relative'
                         },
                         '&.selected::after': {
+                            display: 'block',
                             backgroundColor: theme.palette.primary.main
                         }
                     }
+                },
+            },
+            {
+                props: { variant: 'small' },
+                style: ({ theme }) => ({
+                    color: theme.palette.lightGrey.main,
+                    fontSize: theme.typography.small.fontSize,
+                }),
+            },
+            {
+                props: { type: 'code' },
+                style: {
+                    fontFamily: fontFamilyCode,
                 },
             }
         ]
@@ -129,6 +144,13 @@ const components: Components = {
             }
         ]
     },
+    MuiTextField: {
+        defaultProps: {
+            InputProps: {
+                disableUnderline: true
+            }
+        }
+    },
     MuiSelect: {
         defaultProps: {
             IconComponent: KeyboardArrowDown
@@ -156,10 +178,11 @@ const components: Components = {
     MuiButton: {
         variants: [
             {
-                props: { variant: 'text' },
+                props: { variant: 'small-text' },
                 style: ({ theme }) => {
                     return {
                         color: theme.palette.lightGrey.main,
+                        fontSize: theme.typography.small.fontSize,
                         '&:hover': {
                             color: theme.palette.primary.main,
                             background: 'transparent',

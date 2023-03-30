@@ -27,6 +27,7 @@ declare module '@mui/material/Button' {
     interface ButtonPropsVariantOverrides {
         logo: true;
         menu: true;
+        'small-text': true;
     }
 }
 
