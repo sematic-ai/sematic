@@ -40,7 +40,7 @@ const GitInfoBox = (prop: GitInfoBoxProps) => {
         <StyledBox>
             <RiGitCommitLine />
             <Link>pf49df3</Link>
-            <CopyButton text={"pf49df3"} />
+            <CopyButton text={"pf49df36ae2e09b5f5780b38140f83cfe9f866b5"} />
         </StyledBox>
         {!!hasUncommittedChanges && <StyledBox>
             <Code />

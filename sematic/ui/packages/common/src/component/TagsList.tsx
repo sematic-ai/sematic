@@ -18,6 +18,13 @@ const StyledBox = styled(Box)`
         padding: ${theme.spacing(1)};
         height: 25px;
     }
+
+    & > .${chipClasses.root}, & > .${buttonClasses.root}{
+        margin-bottom: ${theme.spacing(1)};
+    }
+
+    // This is to offset the margin-bottom set to the last row of elements
+    margin-bottom: -${theme.spacing(1)}; 
 `;
 
 interface TagsListProps {
