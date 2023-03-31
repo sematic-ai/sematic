@@ -293,7 +293,7 @@ cases, instead of performing the release from the `main` branch, we:
 
 ## Updating the CircleCi Image
 
-The image used for most of our CircleCI steps is built using `docker/Dockerfile.ci`.
+The image used for most of our CircleCi steps is built using `docker/Dockerfile.ci`.
 After updating it, open a PR with the change, push the image to Dockerhub using the PR
 number as a tag (in order to be able to maintain a history, and revert, if necessary),
 and update the `SEMATIC_CI_IMAGE` env var in the CircleCi project settings.
