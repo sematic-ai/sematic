@@ -193,7 +193,7 @@ IS_ACTIVE_CASES = [
             succeeded_pod_count=0,
             has_started=False,
             still_exists=True,
-            start_time=None,
+            start_time=0.0,
             has_infra_failure=False,
             current_pods=[
                 PodSummary(
