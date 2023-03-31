@@ -55,7 +55,7 @@ pytest_test(
         "//sematic/db/models:run",
         "//sematic/db/models:user",
         "//sematic/db/tests:fixtures",
-        "//sematic/scheduling:external_job",
+        "//sematic/scheduling:job_details",
         "//sematic/scheduling:kubernetes",
         "//sematic/tests:fixtures",
         "//sematic/utils:exceptions",

@@ -160,13 +160,15 @@ def get_run_status_details(
     with db().get_session() as session:
         query_results = list(
             session.query(Run.id, Run.future_state, Job)
+            .outerjoin(Job, Job.run_id == Run.id, full=True)
             .filter(Run.id.in_(run_ids))
-            .filter(Job.kind == JobKind.run)
-            .filter(Job.run_id == Run.id)
+            .filter(sqlalchemy.or_(Job.kind == JobKind.run, Job.kind.is_(None)))
             .all()
         )
         run_ids_to_jobs_list = defaultdict(list)
         for run_id, _, job in query_results:
+            if job is None:
+                continue
             run_ids_to_jobs_list[run_id].append(job)
 
         future_state_and_jobs_by_run_id: Dict[str, Tuple[FutureState, List[Job]]] = {
