@@ -20,7 +20,6 @@ from sematic.resolvers.resource_requirements import (
 )
 from sematic.scheduling.job_details import (
     JobDetails,
-    JobKind,
     KubernetesJobCondition,
     PodSummary,
 )
@@ -402,24 +401,11 @@ def test_job_is_active(job_details, expected):
 def test_refresh_job(mock_batch_api, mock_load_kube_config):
     mock_k8s_job = mock.MagicMock()
     mock_batch_api.return_value.read_namespaced_job_status.return_value = mock_k8s_job
-    run_id = "the-run-id"
+    name = "the-name"
     namespace = "the-namespace"
-    job = KubernetesExternalJob(
-        kind="k8s",
-        try_number=0,
-        external_job_id=KubernetesExternalJob.make_external_job_id(
-            run_id, namespace, JobType.worker
-        ),
-        pending_or_running_pod_count=0,
-        succeeded_pod_count=1,
-        has_started=True,
-        still_exists=True,
-        start_time=1.01,
-        most_recent_condition=None,
-        most_recent_pod_phase_message=None,
-        most_recent_pod_condition_message=None,
-        most_recent_container_condition_message=None,
-        has_infra_failure=False,
+    job = make_job(
+        name=name,
+        namespace=namespace,
     )
     mock_k8s_job.status.active = 1
 
@@ -447,42 +433,35 @@ def test_refresh_job(mock_batch_api, mock_load_kube_config):
     ]
     job = refresh_job(job)
 
-    assert job.has_started
-    assert job.pending_or_running_pod_count == 1
-    assert job.most_recent_condition == KubernetesJobCondition.Complete.value
-    assert job.still_exists
+    assert job.details.has_started
+    assert job.details.pending_or_running_pod_count == 1
+    assert job.details.still_exists
 
     mock_batch_api.return_value.read_namespaced_job_status.side_effect = ApiException()
     mock_batch_api.return_value.read_namespaced_job_status.side_effect.status = 404
     job = refresh_job(job)
-    assert not job.still_exists
+    assert not job.details.still_exists
 
 
+# kubernetes.client.CoreV1Api().list_namespaced_pod
 @mock.patch("sematic.scheduling.kubernetes.load_kube_config")
+@mock.patch("sematic.scheduling.kubernetes.kubernetes.client.CoreV1Api")
 @mock.patch("sematic.scheduling.kubernetes.kubernetes.client.BatchV1Api")
-def test_refresh_job_single_condition(mock_batch_api, mock_load_kube_config):
-    mock_k8s_job = mock.MagicMock()
+def test_refresh_job_single_condition(
+    mock_batch_api, mock_core_api, mock_load_kube_config
+):
+    mock_k8s_job = mock.MagicMock(name="mock-k8s-job")
     mock_batch_api.return_value.read_namespaced_job_status.return_value = mock_k8s_job
-    run_id = "the-run-id"
+
+    mock_pod = mock.MagicMock(name="mock-pod")
+    mock_list_pod_response = mock.MagicMock(name="mock-list-response")
+    mock_list_pod_response.items = [mock_pod]
+    mock_core_api.return_value.list_namespaced_pod.return_value = mock_list_pod_response
+
     namespace = "the-namespace"
-    job = KubernetesExternalJob(
-        kind="k8s",
-        try_number=0,
-        external_job_id=KubernetesExternalJob.make_external_job_id(
-            run_id, namespace, JobType.worker
-        ),
-        pending_or_running_pod_count=0,
-        succeeded_pod_count=1,
-        has_started=True,
-        still_exists=True,
-        start_time=1.01,
-        most_recent_condition=None,
-        most_recent_pod_phase_message=None,
-        most_recent_pod_condition_message=None,
-        most_recent_container_condition_message=None,
-        has_infra_failure=False,
-    )
-    mock_k8s_job.status.active = 0
+    name = "the-name"
+    job = make_job(name=name, namespace=namespace)
+    mock_k8s_job.status.active = 1
     mock_k8s_job.status.succeeded = 0
 
     fail_condition = mock.MagicMock()
@@ -492,17 +471,20 @@ def test_refresh_job_single_condition(mock_batch_api, mock_load_kube_config):
     mock_k8s_job.status.conditions = [
         fail_condition,
     ]
+    mock_pod.status.conditions = [fail_condition]
+    mock_pod.status.phase = "Running"
+
     job = refresh_job(job)
 
-    assert job.has_started
-    assert job.pending_or_running_pod_count == 0
-    assert job.most_recent_condition == KubernetesJobCondition.Failed.value
-    assert job.still_exists
+    assert job.details.has_started
+    assert job.details.pending_or_running_pod_count == 1
+    assert job.details.current_pods[0].condition == KubernetesJobCondition.Failed.value
+    assert job.details.still_exists
 
     mock_batch_api.return_value.read_namespaced_job_status.side_effect = ApiException()
     mock_batch_api.return_value.read_namespaced_job_status.side_effect.status = 404
     job = refresh_job(job)
-    assert not job.still_exists
+    assert not job.details.still_exists
 
 
 @mock.patch("sematic.scheduling.kubernetes._schedule_kubernetes_job")
