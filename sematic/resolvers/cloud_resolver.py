@@ -261,6 +261,7 @@ class CloudResolver(LocalResolver):
         else:
             try:
                 run = api_client.schedule_run(future.id)
+                logger.info("Scheduled run: %s", run)
             except Exception:
                 logger.error(
                     "Error scheduling run %s. Futures: %s. "
