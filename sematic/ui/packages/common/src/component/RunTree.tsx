@@ -27,15 +27,19 @@ interface ChildrenList<T> {
     children: Array<ChildrenList<T>>;
 }
 
-const RunTree = (props: {
+interface RunTreeProps {
     runTreeNodes: Array<ChildrenList<string>>;
-}) => {
-    const { runTreeNodes } = props;
+    onSelect?: (value: string) => void;
+}
+
+const RunTree = (props: RunTreeProps) => {
+    const { runTreeNodes, onSelect } = props;
 
     return <StyledList>
         {runTreeNodes.map(({ value, children, selected }, index) => (
-            <Fragment key={index} >
-                <ListItemButton className={selected ? 'selected': ''}>
+            <Fragment key={`${index}---${value}`} >
+                <ListItemButton className={selected ? 'selected' : ''}
+                    onClick={() => onSelect?.(value)}>
                     <ListItemIcon sx={{ minWidth: "20px" }}>
                         <SuccessStateChip size={"small"} />
                     </ListItemIcon>
@@ -44,7 +48,7 @@ const RunTree = (props: {
                 {
                     children.length > 0 && (
                         <Box marginLeft={1.8}>
-                            <RunTree runTreeNodes={children} />
+                            <RunTree runTreeNodes={children} onSelect={onSelect} />
                         </Box>
                     )
                 }
