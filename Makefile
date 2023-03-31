@@ -20,7 +20,6 @@ install-dev-deps:
 	pip3 install -r requirements/ci-requirements.txt
 
 pre-commit:
-	bazel run //sematic/db:migrate -- dump --schema-file ${PWD}/sematic/db/schema.sql.sqlite
 	python3 -m flake8
 	python3 -m mypy sematic
 	python3 -m black sematic --check
@@ -31,7 +30,9 @@ fix:
 	isort sematic
 	black sematic
 
-
+.PHONY: update-schema
+update-schema:
+	bazel run //sematic/db:migrate -- dump --schema-file ${PWD}/sematic/db/schema.sql.sqlite
 
 # this is not supported on Mac because some of the dependencies that need to be pulled
 # do not have a release version for Mac
