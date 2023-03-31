@@ -504,6 +504,7 @@ class LocalResolver(SilentResolver):
 
         run = self._get_run(failed_future.id)
         run.future_state = failed_future.state
+        run.failed_at = datetime.datetime.utcnow()
 
         # We do not propagate exceptions to parent runs
         logger.info(
@@ -529,7 +530,6 @@ class LocalResolver(SilentResolver):
                     f"{failed_future.state} when it should have been already processed"
                 )
 
-        run.failed_at = datetime.datetime.utcnow()
         self._add_run(run)
         self._save_graph()
 
@@ -578,6 +578,8 @@ class LocalResolver(SilentResolver):
             else:
                 run.future_state = FutureState.CANCELED
 
+            run.failed_at = datetime.datetime.utcnow()
+
             if run.exception_metadata is None:
                 run.exception_metadata = ExceptionMetadata(
                     repr=reason,
@@ -587,6 +589,7 @@ class LocalResolver(SilentResolver):
                 )
 
             self._add_run(run)
+
         self._save_graph()
 
     def _update_resolution_status(self, status: ResolutionStatus):
