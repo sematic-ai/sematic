@@ -28,7 +28,6 @@ pytest_test(
         "//sematic/db/models:run",
         "//sematic/db/tests:fixtures",
         "//sematic/plugins:abstract_publisher",
-        "//sematic/scheduling:external_job",
         "//sematic/scheduling:kubernetes",
         "//sematic/tests:fixtures",
     ],
