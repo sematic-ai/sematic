@@ -1,12 +1,14 @@
-import { Check } from "@mui/icons-material";
-import React, { useMemo } from "react";
-
+import BoltIcon from '@mui/icons-material/Bolt';
+import Check from "@mui/icons-material/Check";
+import ClearIcon from '@mui/icons-material/Clear';
+import StopIcon from '@mui/icons-material/Stop';
+import { useMemo } from "react";
 interface StateChipBaseProps {
-    size: "small" | "medium" | "large";
+    size?: "small" | "medium" | "large";
 }
 
 const useStylesHook = (props: StateChipBaseProps) => {
-    const { size } = props;
+    const { size = "small" } = props;
 
     const styles = useMemo(() => {
         const sizeMap = {
@@ -20,12 +22,34 @@ const useStylesHook = (props: StateChipBaseProps) => {
             height: sizeValue,
         };
     }, [size]);
-    
+
     return styles;
 };
 
 
 export const SuccessStateChip = (props: StateChipBaseProps) => {
-    const styles = useStylesHook({ size: "small" });
+    const { size } = props;
+    const styles = useStylesHook({ size });
     return <Check color={"success"} style={styles} />;
 }
+
+export const FailedStateChip = (props: StateChipBaseProps) => {
+    const { size } = props;
+    const styles = useStylesHook({ size });
+    return <ClearIcon color={"error"} style={styles} />;
+}
+
+export const RunningStateChip = (props: StateChipBaseProps) => {
+    const { size } = props;
+    const styles = useStylesHook({ size });
+    return <BoltIcon color={"primary"} style={styles} />;
+}
+
+export const CanceledStateChip = (props: StateChipBaseProps) => {
+    const { size } = props;
+    const styles = useStylesHook({ size });
+    return <StopIcon color={"error"} style={styles} />;
+}
+
+
+
