@@ -245,16 +245,17 @@ class CloudResolver(LocalResolver):
         return run.id
 
     def _schedule_future(self, future: AbstractFuture) -> None:
-        run = api_client.get_run(future.id)
+        pre_query_run_summary = str(self._runs)
+        run = self._get_run(future.id)
         if run.future_state == FutureState.SCHEDULED.value:
             # It's unclear how we wind up in this situation, but it shouldn't be fatal.
             # Log some info to help diagnose, and move on.
             logger.warning(
                 "Tried to double schedule %s. Futures: %s. "
-                "Runs: %s. Buffer runs: %s. Retrieved run: %s",
+                "Runs (before query): %s. Buffer runs: %s. Retrieved run: %s",
                 run.id,
                 self._futures,
-                self._runs,
+                pre_query_run_summary,
                 self._buffer_runs,
                 run,
             )
@@ -273,7 +274,7 @@ class CloudResolver(LocalResolver):
                     run,
                 )
                 raise
-        self._runs[run.id] = run
+        self._add_run(run)
         self._set_future_state(future, FutureState[run.future_state])  # type: ignore
 
     def _wait_for_scheduled_runs(self) -> None:
