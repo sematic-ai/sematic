@@ -153,5 +153,5 @@ class Job(Base, JSONEncodableMixin):
         return f"Job({fields}, ...)"
 
     def identifier(self) -> str:
-        """Get a single string uniquely identifying the job"""
+        """Get a single string uniquely identifying the job."""
         return f"{self.namespace}/{self.name}"
