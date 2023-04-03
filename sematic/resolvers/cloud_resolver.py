@@ -246,7 +246,42 @@ class CloudResolver(LocalResolver):
         return run.id
 
     def _schedule_future(self, future: AbstractFuture) -> None:
-        run = api_client.schedule_run(future.id)
+        pre_query_run_summary = str(self._runs)
+        run = self._get_run(future.id)
+        if run.future_state not in (
+            FutureState.CREATED.value,
+            FutureState.RETRYING.value,
+        ):
+            # It's unclear how we wind up in this situation, but it shouldn't be fatal.
+            # Log some info to help diagnose, and move on.
+            logger.warning(
+                "Tried to double schedule %s. Futures: %s. "
+                "Runs (before query): %s. Buffer runs: %s. Retrieved run: %s",
+                run.id,
+                self._futures,
+                pre_query_run_summary,
+                self._buffer_runs,
+                run,
+            )
+        else:
+            try:
+                run = api_client.schedule_run(future.id)
+                logger.info("Scheduled run: %s", run)
+            except Exception:
+                logger.error(
+                    "Error scheduling run %s. Futures: %s. "
+                    "Runs: %s. Buffer runs: %s. Retrieved run: %s",
+                    run.id,
+                    self._futures,
+                    self._runs,
+                    self._buffer_runs,
+                    run,
+                )
+                raise
+
+        # Why not self._add_run()? Because the relevant change is already
+        # in the DB. And adding it to save again might make it so we overwrite
+        # changes to the run made by the run job itself as it executes.
         self._runs[run.id] = run
         self._set_future_state(future, FutureState[run.future_state])  # type: ignore
 
