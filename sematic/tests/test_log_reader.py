@@ -26,7 +26,6 @@ from sematic.log_reader import (
     line_stream_from_log_directory,
     load_log_lines,
     log_prefix,
-    v1_log_prefix,
 )
 from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
@@ -208,14 +207,6 @@ def test_get_log_lines_from_line_stream_filter():
     )
 
 
-def prepare_logs_v1(run_id, text_lines, mock_storage, job_type):  # noqa: F811
-    log_file_contents = bytes("\n".join(text_lines), encoding="utf8")
-    prefix = v1_log_prefix(run_id, job_type)
-    key = f"{prefix}12345.log"
-    mock_storage.set(key, log_file_contents)
-    return prefix
-
-
 def prepare_logs_v2(
     run_id,
     text_lines,
@@ -244,10 +235,7 @@ def prepare_logs_v2(
 
 @pytest.mark.parametrize(
     "log_preparation_function",
-    (
-        prepare_logs_v1,
-        prepare_logs_v2,
-    ),
+    (prepare_logs_v2,),
 )
 def test_load_non_inline_logs(
     test_db,  # noqa: F811
@@ -369,10 +357,7 @@ def test_line_stream_from_log_directory(
 
 @pytest.mark.parametrize(
     "log_preparation_function",
-    (
-        prepare_logs_v1,
-        prepare_logs_v2,
-    ),
+    (prepare_logs_v2,),
 )
 def test_load_inline_logs(
     mock_storage,  # noqa: F811
@@ -479,10 +464,7 @@ def test_load_inline_logs(
 
 @pytest.mark.parametrize(
     "log_preparation_function",
-    (
-        prepare_logs_v1,
-        prepare_logs_v2,
-    ),
+    (prepare_logs_v2,),
 )
 def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noqa: F811
     run = make_run(future_state=FutureState.CREATED)
@@ -589,10 +571,7 @@ def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noq
 
 @pytest.mark.parametrize(
     "log_preparation_function",
-    (
-        prepare_logs_v1,
-        prepare_logs_v2,
-    ),
+    (prepare_logs_v2,),
 )
 def test_load_cloned_run_log_lines(
     mock_storage, test_db, log_preparation_function  # noqa: F811

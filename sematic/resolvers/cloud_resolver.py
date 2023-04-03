@@ -1,4 +1,5 @@
 # Standard Library
+import datetime
 import logging
 import time
 from typing import Any, Dict, List, Optional
@@ -296,9 +297,13 @@ class CloudResolver(LocalResolver):
             and run.exception_metadata is None
         ):
             run.exception_metadata = format_exception_for_run()
+
         run.future_state = failed_future.state
+        run.failed_at = datetime.datetime.utcnow()
+
         self._add_run(run)
         self._save_graph()
+
         if failed_future.state == FutureState.NESTED_FAILED:
             super()._future_did_fail(failed_future)
 
