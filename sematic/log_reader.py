@@ -11,7 +11,6 @@ from typing import Iterable, List, Optional
 from sematic import api_client
 from sematic.abstract_future import FutureState
 from sematic.db import queries as db_queries
-from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.plugins.abstract_storage import get_storage_plugins
@@ -58,8 +57,11 @@ class ObjectSource(Enum):
     def get_run(self, run_id: str) -> Run:
         return self.value[0].get_run(run_id)
 
-    def get_jobs_by_run_id(self, run_id: str) -> List[Job]:
-        return self.value[0].get_jobs_by_run_id(run_id)
+    def count_jobs_by_run_id(self, run_id: str) -> int:
+        if self is ObjectSource.DB:
+            return self.value[0].count_jobs_by_run_id(run_id)
+        else:
+            return len(self.value[0].get_jobs_by_run_id(run_id))
 
 
 def log_prefix(run_id: str, job_kind: JobKindString):
@@ -259,7 +261,7 @@ def load_log_lines(
     # looking for jobs to determine inline is only valid
     # since we know the run has at least reached SCHEDULED due to it
     # not being CREATED.
-    is_inline = len(object_source.get_jobs_by_run_id(run.id)) == 0
+    is_inline = object_source.count_jobs_by_run_id(run.id) == 0
     if is_inline:
         return _load_inline_logs(
             run_id=run_id,

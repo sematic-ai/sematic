@@ -26,6 +26,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import (
+    count_jobs_by_run_id,
     get_graph,
     get_jobs_by_run_id,
     get_resolution,
@@ -210,7 +211,7 @@ def test_schedule_resolution_endpoint(
     payload = typing.cast(typing.Dict[str, typing.Any], payload)
 
     assert payload["content"]["root_id"] == persisted_resolution.root_id
-    assert len(get_jobs_by_run_id(persisted_resolution.root_id, "resolver")) == 1
+    assert count_jobs_by_run_id(persisted_resolution.root_id, "resolver") == 1
     mock_schedule_resolution.assert_called_once()
     scheduled_resolution = mock_schedule_resolution.call_args.kwargs["resolution"]
     assert isinstance(scheduled_resolution, Resolution)

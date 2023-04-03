@@ -20,6 +20,7 @@ from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import (
+    count_jobs_by_run_id,
     count_runs,
     get_artifact,
     get_external_resource_record,
@@ -393,7 +394,7 @@ def test_save_read_jobs(test_db):  # noqa: F811
     assert len(status_history) == 2
 
     assert get_jobs_by_run_id(root_run.id) == []
-    assert len(get_jobs_by_run_id(child_run.id)) == 1
+    assert count_jobs_by_run_id(child_run.id) == 1
 
     status = JobStatus(
         state=KubernetesJobState.Requested,
@@ -413,7 +414,7 @@ def test_save_read_jobs(test_db):  # noqa: F811
     )
 
     save_job(retry_job)
-    assert len(get_jobs_by_run_id(child_run.id)) == 2
+    assert count_jobs_by_run_id(child_run.id) == 2
 
     retry_job_from_scratch = make_job(
         name="foo-1",

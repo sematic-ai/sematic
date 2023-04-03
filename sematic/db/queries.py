@@ -311,6 +311,17 @@ def get_jobs_by_run_id(run_id: str, kind: JobKindString = JobKind.run) -> List[J
         )
 
 
+def count_jobs_by_run_id(run_id: str, kind: JobKindString = JobKind.run) -> int:
+    """Count jobs from the DB by source run id."""
+    with db().get_session() as session:
+        return (
+            session.query(Job)
+            .filter(Job.run_id == run_id)
+            .filter(Job.kind == kind)
+            .count()
+        )
+
+
 def save_external_resource_record(record: ExternalResource):
     """Save an ExternalResource to the DB"""
     existing_record = get_external_resource_record(record.id)

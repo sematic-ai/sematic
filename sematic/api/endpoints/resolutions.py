@@ -29,6 +29,7 @@ from sematic.db.models.resolution import InvalidResolution, Resolution, Resoluti
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
+    count_jobs_by_run_id,
     get_graph,
     get_jobs_by_run_id,
     get_resolution,
@@ -150,7 +151,7 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
             # status for usage in dashboards. Some users may be leveraging it for
             # such purposes, so think carefully before changing/removing it.
             was_remote = (
-                len(get_jobs_by_run_id(resolution.root_id, kind=JobKind.resolver)) > 0
+                count_jobs_by_run_id(resolution.root_id, kind=JobKind.resolver) > 0
             )
             duration_seconds = None
             if root_run.started_at is not None:

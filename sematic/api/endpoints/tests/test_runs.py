@@ -30,7 +30,7 @@ from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
-    get_jobs_by_run_id,
+    count_jobs_by_run_id,
     get_run,
     save_job,
     save_resolution,
@@ -460,7 +460,7 @@ def test_schedule_run(
             "resource_requirements"
         ] == persisted_run.resource_requirements
         run = get_run(persisted_run.id)
-        assert len(get_jobs_by_run_id(run.id)) == 1
+        assert count_jobs_by_run_id(run.id) == 1
 
 
 def test_update_future_states(
