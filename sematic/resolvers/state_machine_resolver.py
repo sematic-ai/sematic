@@ -110,10 +110,14 @@ class StateMachineResolver(Resolver, abc.ABC):
         try:
             yield
         except Exception as e:
+            logger.info(
+                "Resolution %s has failed; starting cleanup; look for details below",
+                self._root_future.id,
+            )
             try:
                 self._resolution_did_fail(error=e)
-            except Exception as ee:
-                logger.error("Unable to fail resolution: %s", ee)
+            except Exception:
+                logger.exception("Unable to fail resolution:")
 
             if isinstance(e, CalculatorError) and hasattr(e, "__cause__"):
                 # this will simplify the stack trace so the user sees less

@@ -172,6 +172,7 @@ def make_resolution(**kwargs) -> Resolution:
         container_image_uris={"default": "some.uri"},
         container_image_uri="some.uri",
         settings_env_vars={"MY_SETTING": "MY_VALUE"},
+        user_id="some_user",
     )
 
     # Set this outside the constructor because the constructor expects

@@ -236,7 +236,7 @@ class LocalResolver(SilentResolver):
 
     def _disconnect_from_sio_server(self):
         try:
-            retry_call(f=self._sio_client.disconnect(), tries=4)
+            retry_call(f=self._sio_client.disconnect, tries=4)
         except BaseException as e:
             # we are shutting down already, so just warn and continue
             logger.warning(
@@ -339,6 +339,8 @@ class LocalResolver(SilentResolver):
             settings_env_vars=get_active_user_settings_strings(),
             client_version=CURRENT_VERSION_STR,
             cache_namespace=self._cache_namespace_str,
+            # the user_id is overwritten on the API call based on the user's API key
+            user_id=None,
         )
 
         return resolution
