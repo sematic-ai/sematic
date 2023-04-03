@@ -14,7 +14,6 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.api.tests.fixtures import test_client  # noqa: F401
 from sematic.api_client import (
     IncompatibleClientError,
-    ServerError,
     _notify_event,
     _validate_server_compatibility,
     get_artifact_value_by_id,
@@ -69,21 +68,11 @@ def test_validate_server_compatibility(mock_requests):
             min_client_supported=MIN_CLIENT_SERVER_SUPPORTS,
         ),
     )
-    _validate_server_compatibility(seconds_between_tries=0, use_cached=False)
+    _validate_server_compatibility(use_cached=False)
     mock_requests.get.assert_called_with(
         f"{get_config().api_url}/meta/versions",
         headers={"Content-Type": "application/json"},
     )
-
-
-@mock.patch("sematic.api_client.requests")
-def test_validate_server_compatibility_retry(mock_requests):
-    mock_requests.get.return_value = MockResponse(status_code=500, json_contents={})
-    with pytest.raises(ServerError):
-        _validate_server_compatibility(
-            tries=5, seconds_between_tries=0, use_cached=False
-        )
-    assert len(mock_requests.get.call_args_list) == 5
 
 
 @mock.patch("sematic.api_client.requests")
@@ -95,9 +84,7 @@ def test_validate_server_compatibility_bad_json(mock_requests):
 
     mock_requests.get.return_value.json = bad_json
     with pytest.raises(IncompatibleClientError):
-        _validate_server_compatibility(
-            tries=5, seconds_between_tries=0, use_cached=False
-        )
+        _validate_server_compatibility(use_cached=False)
 
 
 @mock.patch("sematic.api_client.requests")
@@ -110,9 +97,7 @@ def test_validate_server_compatibility_old_server(mock_requests):
         ),
     )
     with pytest.raises(IncompatibleClientError):
-        _validate_server_compatibility(
-            tries=5, seconds_between_tries=0, use_cached=False
-        )
+        _validate_server_compatibility(use_cached=False)
 
 
 @mock.patch("sematic.api_client.requests")
@@ -127,9 +112,7 @@ def test_validate_server_compatibility_old_client(mock_requests):
         ),
     )
     with pytest.raises(IncompatibleClientError):
-        _validate_server_compatibility(
-            tries=5, seconds_between_tries=0, use_cached=False
-        )
+        _validate_server_compatibility(use_cached=False)
 
 
 @mock.patch("sematic.api_client.requests")
@@ -141,8 +124,8 @@ def test_validate_server_compatibility_new_server_still_supports(mock_requests):
             min_client_supported=MIN_CLIENT_SERVER_SUPPORTS,
         ),
     )
-    _validate_server_compatibility(tries=5, seconds_between_tries=0, use_cached=False)
-    _validate_server_compatibility(tries=5, seconds_between_tries=0, use_cached=True)
+    _validate_server_compatibility(use_cached=False)
+    _validate_server_compatibility(use_cached=True)
 
     mock_requests.get.assert_called_once()
 
