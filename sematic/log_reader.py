@@ -57,11 +57,27 @@ class ObjectSource(Enum):
     def get_run(self, run_id: str) -> Run:
         return self.value[0].get_run(run_id)
 
-    def count_jobs_by_run_id(self, run_id: str) -> int:
+    def run_is_inline(self, run_id: str) -> bool:
+        # looking for jobs to determine inline is only valid
+        # since we know the run has at least reached SCHEDULED due to it
+        # not being CREATED.
+        run_is_inline = True
         if self is ObjectSource.DB:
-            return self.value[0].count_jobs_by_run_id(run_id)
+            has_new_jobs = db_queries.count_jobs_by_run_id(run_id) > 0
+            if has_new_jobs:
+                run_is_inline = False
+            else:
+                # TODO: remove this
+                # https://github.com/sematic-ai/sematic/issues/710
+                run_is_inline = not db_queries.run_has_legacy_jobs(run_id)
         else:
-            return len(self.value[0].get_jobs_by_run_id(run_id))
+            # we don't look for legacy jobs here, so using the CLI
+            # to read logs won't work for old runs. Seems a fair
+            # trade off to avoid exposing run_has_legacy_jobs as an
+            # API endpoint.
+            run_is_inline = len(self.value[0].get_jobs_by_run_id(run_id)) == 0
+        print("Run {} is inline: {}".format(run_id, run_is_inline))
+        return run_is_inline
 
 
 def log_prefix(run_id: str, job_kind: JobKindString):
@@ -258,10 +274,7 @@ def load_log_lines(
             log_info_message="The run has not yet started executing.",
         )
 
-    # looking for jobs to determine inline is only valid
-    # since we know the run has at least reached SCHEDULED due to it
-    # not being CREATED.
-    is_inline = object_source.count_jobs_by_run_id(run.id) == 0
+    is_inline = object_source.run_is_inline(run.id)
     if is_inline:
         return _load_inline_logs(
             run_id=run_id,
