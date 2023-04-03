@@ -41,7 +41,7 @@ class LocalStorage(AbstractStorage, AbstractPlugin):
     ) -> StorageDestination:
 
         return StorageDestination(
-            url=f"{get_config().api_url}/storage/{namespace}/{key}/local",
+            uri=f"sematic:///api/v1/storage/{namespace}/{key}/local",
             request_headers=_make_headers(user),
         )
 
@@ -49,7 +49,7 @@ class LocalStorage(AbstractStorage, AbstractPlugin):
         self, namespace: str, key: str, user: Optional[User]
     ) -> StorageDestination:
         return StorageDestination(
-            url=f"{get_config().api_url}/storage/{namespace}/{key}/local",
+            uri=f"sematic:///api/v1/storage/{namespace}/{key}/local",
             request_headers=_make_headers(user),
         )
 

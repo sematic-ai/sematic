@@ -11,7 +11,7 @@ import AlertTitle from "@mui/material/AlertTitle";
 import { Artifact } from "@sematic/common/src/Models";
 import { useEffect, useMemo, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { CopyButton } from "src/components/CopyButton";
+import CopyButton from "@sematic/common/src/component/CopyButton";
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
 import { renderSummary } from "src/types/Types";
 

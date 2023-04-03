@@ -2,14 +2,14 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import Typography from "@mui/material/Typography";
 import { ThemeProvider } from "@mui/material/styles";
-import createTheme from "@sematic/common/src/theme/new";
+import theme from "@sematic/common/src/theme/new";
 
 export default {
   title: 'Sematic/Typography',
   component: Typography,
   decorators: [
     (Story) => (
-      <ThemeProvider theme={createTheme()}>
+      <ThemeProvider theme={theme}>
         <Story />
       </ThemeProvider>
     ),

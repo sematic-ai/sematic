@@ -2,11 +2,11 @@ import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
 import { Alert, Box, Button, LinearProgress, useTheme } from "@mui/material";
 import { styled } from "@mui/system";
 import { ExceptionMetadata } from "@sematic/common/src/Models";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import usePrevious from "react-use/lib/usePrevious";
 import { Exception, ExternalException } from "src/components/Exception";
-import { useAccumulateLogsUntilEnd, useLogStream } from "src/hooks/logHooks";
+import { DiagnosticReasons, useAccumulateLogsUntilEnd, useLogStream } from "src/hooks/logHooks";
 import { useRunPanelContext, useRunPanelLoadingIndicator } from "src/hooks/runDetailsHooks";
 import { usePulldownTrigger, useScrollTracker } from "src/hooks/scrollingHooks";
 
@@ -28,7 +28,7 @@ export default function ScrollingLogView(props: {
 
   // Single pull logic
   const { lines, isLoading, error: logLoadError, hasMore, 
-    logInfoMessage, getNext, hasPulledData } = useLogStream(logSource, filterString);
+    logInfoMessage, getNext } = useLogStream(logSource, filterString);
 
   // Accumulator (logs draining) logic
   const { accumulateLogsUntilEnd, isLoading: isAccumulatorLoading,
@@ -41,7 +41,7 @@ export default function ScrollingLogView(props: {
     if (isAccumulating || isLoading || !hasMore) {
       return;
     }
-    await getNext();
+    await getNext(DiagnosticReasons.PULLDOWN);
   }, [isAccumulating, isLoading, getNext, hasMore]);
 
   const {pullDownProgress, pullDownTriggerEnabled} 
@@ -53,7 +53,7 @@ export default function ScrollingLogView(props: {
     if (isAccumulating) {
       return;
     }
-    getNext();
+    getNext(DiagnosticReasons.SCROLL);
   }, [getNext, isAccumulating]);
 
   const { hasReachedBottom, scrollToBottom } = useScrollTracker(scrollContainerRef);
@@ -142,16 +142,21 @@ export default function ScrollingLogView(props: {
     }
   }, [prevIsAccumulating, isAccumulatorLoading, scrollToBottom]);
 
+  const hasDoneBootstrapPull = useRef(false);
   useEffect(() => {
     const hasContainerScrolled = scrollContainerRef.current!.scrollTop > 0;
     // If <InfiniteScroll /> has not scrolled, the initial pull will not be triggered
     // this drives an initial data pull.
     // If <InfiniteScroll /> has scrolled, the initial pull will be triggered by the 
     // component itself.
-    if (!hasPulledData && !hasContainerScrolled) { 
-      getNext();
+    if (hasDoneBootstrapPull.current) {
+      return;
     }
-  }, [getNext, hasPulledData, scrollContainerRef]);
+    if (!hasContainerScrolled) { 
+      hasDoneBootstrapPull.current = true;
+      getNext(DiagnosticReasons.BOOTSTRAP);
+    }
+  }, [getNext, hasDoneBootstrapPull, scrollContainerRef]);
 
   useRunPanelLoadingIndicator(isLoading);
 

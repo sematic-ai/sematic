@@ -132,6 +132,7 @@ pytest_test(
     data = [
         "//:docs/changelog.md",
         "//:helm/sematic-server/Chart.yaml",
+        "//:README.md",
     ],
     env = {"BAZEL_WHEEL_VERSION": wheel_version_string},
     pip_deps = [

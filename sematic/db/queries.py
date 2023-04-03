@@ -3,6 +3,7 @@ Module holding common DB queries.
 """
 # Standard Library
 import logging
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Set, Tuple
 
 # Third-party
@@ -16,6 +17,7 @@ from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
+from sematic.db.models.job import Job
 from sematic.db.models.note import Note
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
@@ -174,6 +176,46 @@ def get_run_status_details(
     return result_dict
 
 
+@dataclass
+class BasicPipelineMetrics:
+    count_by_state: Dict[str, int]
+    avg_runtime_children: Dict[str, float]
+    total_count: int
+
+
+def get_basic_pipeline_metrics(calculator_path: str):
+    with db().get_session() as session:
+        count_by_state = list(
+            session.query(Run.future_state, sqlalchemy.func.count())
+            .filter(Run.calculator_path == calculator_path)
+            .group_by(Run.future_state)
+        )
+
+        RootRun = sqlalchemy.orm.aliased(Run)
+        avg_runtime_children = list(
+            session.query(
+                Run.calculator_path,
+                sqlalchemy.func.avg(
+                    sqlalchemy.func.extract("epoch", Run.resolved_at)
+                    - sqlalchemy.func.extract("epoch", Run.started_at)
+                ),
+            )
+            .join(RootRun, Run.root_id == RootRun.id)
+            .filter(
+                RootRun.calculator_path == calculator_path, Run.resolved_at is not None
+            )
+            .group_by(Run.calculator_path)
+        )
+
+    total_count = sum([count for _, count in count_by_state])
+
+    return BasicPipelineMetrics(
+        total_count=total_count,
+        count_by_state={state: count for state, count in count_by_state},
+        avg_runtime_children={path: runtime for path, runtime in avg_runtime_children},
+    )
+
+
 def save_run(run: Run) -> Run:
     """
     Save run to the database.
@@ -219,6 +261,48 @@ def save_run(run: Run) -> Run:
         session.refresh(run)
 
     return run
+
+
+def get_job(job_name: str, job_namespace: str) -> Optional[Job]:
+    """Get a job by name and namespace (or None if it doesn't exist)."""
+    with db().get_session() as session:
+        return (
+            session.query(Job)
+            .filter(Job.name == job_name)
+            .filter(Job.namespace == job_namespace)
+            .one_or_none()
+        )
+
+
+def save_job(job: Job) -> Job:
+    """Save a job to the db, updating an existing one if present."""
+    with db().get_session() as session:
+        # do this instead of get_job so we can keep it in one
+        # session to avoid race conditions.
+        existing_job = (
+            session.query(Job)
+            .filter(Job.name == job.name)
+            .filter(Job.namespace == job.namespace)
+            .one_or_none()
+        )
+
+        if existing_job is not None:
+            # do this to ensure that we are updating the history based on what's
+            # actually already in the DB.
+            existing_job.details = job.details
+            existing_job.update_status(job.latest_status)
+            job = existing_job
+
+        session.merge(job)
+        session.commit()
+
+        return job
+
+
+def get_jobs_by_run_id(run_id: str) -> List[Job]:
+    """Get jobs from the DB by source run id."""
+    with db().get_session() as session:
+        return list(session.query(Job).filter(Job.run_id == run_id).all())
 
 
 def save_external_resource_record(record: ExternalResource):

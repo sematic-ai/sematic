@@ -115,3 +115,48 @@ export function abbreviatedUserName(user: User | null): string {
 
   return `${first_name} ${(last_name || "").substring(0, 1)}.`
 }
+
+
+export function durationSecondsToString(durationS: number) : string {
+  const displayH: number = Math.floor(durationS / 3600);
+  const displayM: number = Math.floor((durationS % 3600) / 60);
+  const displayS: number = Math.round(durationS % 60);
+
+  const final = [
+    displayH > 0 ? displayH.toString() + "h" : "",
+    displayM > 0 ? displayM.toString() + "m " : "",
+    displayS > 0 ? displayS.toString() + "s" : "",
+    displayS === 0 ? "<1s" : "",
+  ]
+    .join(" ")
+    .trim();
+
+  return final;
+}
+
+
+export function AsyncInvocationQueue() {
+  const queue: any[] = [];
+
+  const acquire = async () => {
+    let resolve: any;
+    const waitingPromise = new Promise((_resolve) => {
+      resolve = _resolve;
+    });
+    queue.push(waitingPromise);
+
+    // Wait until the all the promises before this one have been resolved
+    while (queue.length !== 0) {
+      if (queue[0] === waitingPromise) { 
+        break;
+      }
+      await queue.shift();
+      // sleep
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    
+    // The resolve function can be used to release to the next item in the queue
+    return resolve;
+  }
+  return acquire;
+}
