@@ -162,19 +162,24 @@ def get_run_status_details(
             session.query(Run.id, Run.future_state, Job)
             .outerjoin(Job, Job.run_id == Run.id, full=True)
             .filter(Run.id.in_(run_ids))
+            # Job kind can be None when there are no jobs for the run yet.
+            # We still want to return the future state in that case. No actual
+            # row in the Job table will have a null kind/null run id.
+            # It appears that way here merely due to the outer join.
             .filter(sqlalchemy.or_(Job.kind == JobKind.run, Job.kind.is_(None)))
             .all()
         )
+
         run_ids_to_jobs_list = defaultdict(list)
         for run_id, _, job in query_results:
             if job is None:
                 continue
             run_ids_to_jobs_list[run_id].append(job)
 
-        future_state_and_jobs_by_run_id: Dict[str, Tuple[FutureState, List[Job]]] = {
-            run_id: (FutureState[future_state], run_ids_to_jobs_list[run_id])
-            for run_id, future_state, _ in query_results  # type: ignore
-        }
+    future_state_and_jobs_by_run_id: Dict[str, Tuple[FutureState, List[Job]]] = {
+        run_id: (FutureState[future_state], run_ids_to_jobs_list[run_id])
+        for run_id, future_state, _ in query_results  # type: ignore
+    }
     return future_state_and_jobs_by_run_id
 
 
@@ -301,7 +306,21 @@ def save_job(job: Job) -> Job:
 
 
 def get_jobs_by_run_id(run_id: str, kind: JobKindString = JobKind.run) -> List[Job]:
-    """Get jobs from the DB by source run id."""
+    """Get jobs from the DB by source run id.
+
+    Parameters
+    ----------
+    run_id:
+        The id of the run to get jobs for
+    kind:
+        The kind of jobs to get. Can be either "run" to get
+        jobs for the run itself, or "resolution" to get jobs
+        for the resolution associated with the run.
+
+    Returns
+    -------
+    The job(s) associated with the run.
+    """
     with db().get_session() as session:
         return list(
             session.query(Job)
@@ -312,7 +331,21 @@ def get_jobs_by_run_id(run_id: str, kind: JobKindString = JobKind.run) -> List[J
 
 
 def count_jobs_by_run_id(run_id: str, kind: JobKindString = JobKind.run) -> int:
-    """Count jobs from the DB by source run id."""
+    """Count jobs from the DB by source run id.
+
+    Parameters
+    ----------
+    run_id:
+        The id of the run to get jobs for
+    kind:
+        The kind of jobs to get. Can be either "run" to get
+        jobs for the run itself, or "resolution" to get jobs
+        for the resolution associated with the run.
+
+    Returns
+    -------
+    The number of jobs associated with the run.
+    """
     with db().get_session() as session:
         return (
             session.query(Job)

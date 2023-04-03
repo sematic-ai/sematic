@@ -158,33 +158,6 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     assert tolerations[1].toleration_seconds is None
 
 
-"""
-class PodSummary:
-    pod_name: str
-    container_restart_count: Optional[int] = None
-    phase: Optional[str] = None
-    condition_message: Optional[str] = None
-    condition: Optional[str] = None
-    unschedulable_message: Optional[str] = None
-    container_condition_message: Optional[str] = None
-    container_exit_code: Optional[int] = None
-    start_time_epoch_seconds: Optional[float] = None
-    node_name: Optional[str] = None
-    has_infra_failure: bool = False
-"""
-
-"""
-    try_number: int
-    pending_or_running_pod_count: int = 0
-    succeeded_pod_count: int = 0
-    has_started: bool = False
-    still_exists: bool = True
-    start_time: float = field(default_factory=time.time)
-    has_infra_failure: bool = False
-    current_pods: List[PodSummary] = field(default_factory=list)
-    previous_pod_name: Optional[str] = None
-    previous_node_name: Optional[str] = None
-"""
 IS_ACTIVE_CASES = [
     (
         JobDetails(

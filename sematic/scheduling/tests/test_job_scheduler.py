@@ -77,6 +77,9 @@ def test_schedule_run(mock_k8s, run: Run, resolution: Resolution):
     assert len(jobs) == 1
     job = jobs[0]
     assert isinstance(job, Job)
+    assert job.details.get_status(time.time()).state == "Requested"
+    assert job.latest_status.state == "Requested"
+
     mock_k8s.schedule_run_job.assert_called_once()
     mock_k8s.schedule_run_job.assert_called_with(
         run_id=run.id,
