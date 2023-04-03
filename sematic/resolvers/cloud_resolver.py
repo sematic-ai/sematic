@@ -247,7 +247,10 @@ class CloudResolver(LocalResolver):
     def _schedule_future(self, future: AbstractFuture) -> None:
         pre_query_run_summary = str(self._runs)
         run = self._get_run(future.id)
-        if run.future_state == FutureState.SCHEDULED.value:
+        if run.future_state not in (
+            FutureState.CREATED.value,
+            FutureState.RETRYING.value,
+        ):
             # It's unclear how we wind up in this situation, but it shouldn't be fatal.
             # Log some info to help diagnose, and move on.
             logger.warning(
@@ -274,7 +277,11 @@ class CloudResolver(LocalResolver):
                     run,
                 )
                 raise
-        self._add_run(run)
+
+        # Why not self._add_run()? Because the relevant change is already
+        # in the DB. And adding it to save again might make it so we overwrite
+        # changes to the run made by the run job itself as it executes.
+        self._runs[run.id] = run
         self._set_future_state(future, FutureState[run.future_state])  # type: ignore
 
     def _wait_for_scheduled_runs(self) -> None:
