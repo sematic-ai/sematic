@@ -32,13 +32,13 @@ const Examples: Record<string, React.ComponentProps<typeof NoteComponent>> = {
     runId: '8e321af4318f42cc9062451d0dd4b974',
   },
   "Long Content": {
-    name: 'Donatello',
+    name: 'Raphael',
     content: 'The statement implies that the upcoming conversation is anticipated to be lengthy and will involve a significant amount of text. The speaker expresses uncertainty about the topic and whether or not it will be worthwhile to engage in this discussion. \n\nFurthermore, the speaker mentions that the metrics related to this conversation seem inaccurate or not aligned with their expectations. Additionally, they note that the process of preparing for this conversation has been arduous, requiring a considerable amount of time to prepare and train for it.',
     createdAt: '2018-01-12T12:51:51.141Z',
     runId: '8e321af4318f42cc9062451d0dd4b974',
   },
   "Long Content & Name": {
-    name: 'Raphael',
+    name: 'Donato di Niccolò di Betto Bardi',
     content: 'The statement implies that the upcoming conversation is anticipated to be lengthy and will involve a significant amount of text. The speaker expresses uncertainty about the topic and whether or not it will be worthwhile to engage in this discussion. \n\nFurthermore, the speaker mentions that the metrics related to this conversation seem inaccurate or not aligned with their expectations. Additionally, they note that the process of preparing for this conversation has been arduous, requiring a considerable amount of time to prepare and train for it.',
     createdAt: '2018-01-12T12:51:51.141Z',
     runId: '8e321af4318f42cc9062451d0dd4b974',

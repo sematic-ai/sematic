@@ -178,15 +178,24 @@ const components: Components = {
     MuiButton: {
         variants: [
             {
-                props: { variant: 'small-text' },
+                props: { variant: 'text' },
                 style: ({ theme }) => {
                     return {
                         color: theme.palette.lightGrey.main,
-                        fontSize: theme.typography.small.fontSize,
                         '&:hover': {
                             color: theme.palette.primary.main,
                             background: 'transparent',
                         }
+                    }
+                }
+                
+
+            },
+            {
+                props: { size: 'small' },
+                style: ({ theme }) => {
+                    return {
+                        fontSize: theme.typography.small.fontSize,
                     }
                 }
             }

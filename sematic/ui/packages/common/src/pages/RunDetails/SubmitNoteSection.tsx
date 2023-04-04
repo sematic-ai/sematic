@@ -4,7 +4,7 @@ import TextField from '@mui/material/TextField';
 import HeadlineBase from 'src/component/Headline';
 import Section from 'src/component/Section';
 import theme from 'src/theme/new';
-import { useCallback, useState, useRef } from 'react';
+import { useCallback, useState } from 'react';
 
 const Headline = styled(HeadlineBase)`
     margin-bottom: ${theme.spacing(2)};
@@ -39,15 +39,13 @@ interface SubmitNoteSectionProps {
 const SubmitNoteSection = (props: SubmitNoteSectionProps) => {
     const { onSubmit = console.log, clearTextOnSubmit = true } = props;
     const [composedNote, setComposedNote] = useState<string>('');
-    const elementRef = useRef<HTMLDivElement>(null);
 
     const onSubmitCallback = useCallback(() => {
         onSubmit(composedNote);
         if (clearTextOnSubmit) {
             setComposedNote('');
         }
-        setTimeout(() => elementRef.current!.style.height = '19px', 0);
-    }, [onSubmit, setComposedNote, composedNote, elementRef, clearTextOnSubmit]);
+    }, [onSubmit, setComposedNote, composedNote, clearTextOnSubmit]);
 
     const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -63,9 +61,8 @@ const SubmitNoteSection = (props: SubmitNoteSectionProps) => {
 
     return <StyledSection>
         <Headline>Notes</Headline>
-        <TextField inputRef={elementRef} id="outlined-basic" variant="standard" fullWidth multiline maxRows={12}
-            onKeyDown={onKeyDown} placeholder="Write pipeline note..."
-            onChange={onChange} value={composedNote} />
+        <TextField variant="standard" fullWidth multiline minRows={3} maxRows={12}
+            onKeyDown={onKeyDown} placeholder="Write pipeline note..." onChange={onChange} value={composedNote}  />
     </StyledSection>;
 }
 
