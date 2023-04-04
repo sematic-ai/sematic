@@ -30,7 +30,9 @@ fix:
 	isort sematic
 	black sematic
 
-
+.PHONY: update-schema
+update-schema:
+	bazel run //sematic/db:migrate -- dump --schema-file ${PWD}/sematic/db/schema.sql.sqlite
 
 # this is not supported on Mac because some of the dependencies that need to be pulled
 # do not have a release version for Mac

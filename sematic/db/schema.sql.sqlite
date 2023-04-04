@@ -10,13 +10,12 @@ CREATE TABLE runs (
     ended_at timestamp,
     resolved_at timestamp,
     failed_at timestamp,
-    parent_id character(32), description TEXT, tags TEXT, source_code TEXT, root_id character(32), nested_future_id character(32), external_jobs_json JSONB, resource_requirements_json JSONB, exception_metadata_json JSONB, container_image_uri TEXT, external_exception_metadata_json JSONB, original_run_id character(32), cache_key TEXT, user_id character(32) REFERENCES users(id),
+    parent_id character(32), description TEXT, tags TEXT, source_code TEXT, root_id character(32), nested_future_id character(32), exception TEXT, external_jobs_json JSONB, resource_requirements_json JSONB, exception_metadata_json JSONB, container_image_uri TEXT, external_exception_metadata_json JSONB, original_run_id character(32), cache_key TEXT, user_id character(32) REFERENCES users(id),
 
     PRIMARY KEY (id)
 );
 CREATE TABLE artifacts (
-    -- sha1 hex digest are 40 characters
-    id character(40) NOT NULL,
+        id character(40) NOT NULL,
     json_summary JSONB NOT NULL,
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL, type_serialization JSONB,
@@ -143,7 +142,6 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20221025201847'),
   ('20221027233641'),
   ('20221202221000'),
-  ('20221208183307'),
   ('20221212110018'),
   ('20221214142609'),
   ('20221215212459'),
@@ -155,5 +153,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20230221004041'),
   ('20230222013045'),
   ('20230223020405'),
-  ('20230307230950'),
-  ('20230314141123');
+  ('20230314141123'),
+  ('20230324182512');
