@@ -1,4 +1,4 @@
-FROM cimg/python:3.9.10
+FROM cimg/python:3.10.10
 
 RUN sudo apt install curl gnupg
 RUN curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg
@@ -9,3 +9,4 @@ RUN sudo apt install -y bazel default-jre default-jdk xvfb libgtk-3-0 libgtk-3-0
 ENV JAVA_HOME=/usr/lib/jvm/default-java
 RUN curl -fsSL https://deb.nodesource.com/setup_19.x | sudo -E bash - &&\
     sudo apt-get install -y nodejs
+RUN sudo apt install sqlite3
