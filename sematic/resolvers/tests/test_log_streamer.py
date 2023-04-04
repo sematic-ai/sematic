@@ -9,6 +9,7 @@ from unittest.mock import patch
 # Sematic
 from sematic.resolvers.log_streamer import (
     _TERMINATION_CHAR,
+    MAX_LINES_PER_LOG_FILE,
     _do_upload,
     _start_log_streamer_out_of_process,
     _tail_log_file,
@@ -62,6 +63,39 @@ def test_ingested_logs():
     # everything uploaded should contain all log lines, with
     # no duplicated lines.
     assert all_upload_contents == everything
+
+
+@retry(AssertionError, tries=3)  # this test is somewhat dependent on relative timings.
+def test_ingested_logs_line_limit():
+    with tempfile.NamedTemporaryFile(delete=False) as log_file:
+        remote_prefix = "foo/bar"
+        upload_interval = 1000
+        n_lines = int(2.5 * MAX_LINES_PER_LOG_FILE)
+        with ingested_logs(
+            log_file.name,
+            upload_interval_seconds=upload_interval,
+            remote_prefix=remote_prefix,
+            uploader=mock_uploader,
+        ):
+            for i in range(n_lines):
+                print(f"Line {i}")
+
+    upload_number = 0
+    uploads = []
+    while pathlib.Path(_upload_path(log_file.name, upload_number)).exists():
+        with open(_upload_path(log_file.name, upload_number), "r") as upload:
+            uploads.append(list(upload))
+        upload_number += 1
+
+    assert len(uploads) > 2  # should have generated at least two log files worth.
+
+    assert uploads[0][1:] == [f"Line {i}\n" for i in range(MAX_LINES_PER_LOG_FILE)]
+    assert uploads[1][1:] == [
+        f"Line {i}\n" for i in range(MAX_LINES_PER_LOG_FILE, 2 * MAX_LINES_PER_LOG_FILE)
+    ]
+    assert uploads[2][1:] == [
+        f"Line {i}\n" for i in range(2 * MAX_LINES_PER_LOG_FILE, n_lines)
+    ]
 
 
 @patch("sematic.resolvers.log_streamer.api_client.store_file_content")
