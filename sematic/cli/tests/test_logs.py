@@ -64,6 +64,7 @@ def test_logs(
     job = make_job(run_id=run.id)
     save_job(job)
     mock_api_client.get_jobs_by_run_id.return_value = [job]
+    mock_api_client.run_is_inline.return_value = False
 
     resolution = make_resolution(root_id=run.id, status=ResolutionStatus.COMPLETE)
     save_run(run)
@@ -157,6 +158,7 @@ def test_empty_logs(
     job = make_job(run_id=run.id)
     save_job(job)
     mock_api_client.get_jobs_by_run_id.return_value = [job]
+    mock_api_client.run_is_inline.return_value = False
 
     resolution = make_resolution(root_id=run.id, status=ResolutionStatus.COMPLETE)
     save_run(run)

@@ -357,6 +357,8 @@ def count_jobs_by_run_id(run_id: str, kind: JobKindString = JobKind.run) -> int:
 
 # TODO: Remove this function
 # https://github.com/sematic-ai/sematic/issues/710
+# Will also need to be removed if this issue is fixed:
+# https://github.com/sematic-ai/sematic/issues/302
 def run_has_legacy_jobs(run_id: str) -> bool:
     with db().get_session() as session:
         statement = sqlalchemy.text(

@@ -11,5 +11,6 @@ CREATE INDEX jobs_run_id ON jobs (run_id);
 -- migrate:down
 
 DROP INDEX jobs_run_id;
-ALTER TABLE resolutions ADD COLUMN external_jobs_json JSONB;
-ALTER TABLE runs ADD COLUMN external_jobs_json JSONB;
+-- TODO #302: implement sustainable way to upgrade sqlite3 DBs
+--ALTER TABLE resolutions ADD COLUMN external_jobs_json JSONB;
+--ALTER TABLE runs ADD COLUMN external_jobs_json JSONB;
