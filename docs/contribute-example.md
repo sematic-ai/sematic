@@ -123,9 +123,10 @@ Requests](https://github.com/sematic-ai/sematic/compare) to create one.
 
 To increase your chances of being merged fast:
 
-* Add a comprehensive description to your pipeline
-* Ensure your code is properly formatted and type checked
-  * Make sure you have the dev tools installed by running `pip3 install -r requirements/ci-requirements.txt` (you only ever need to do this once)
-  * Use `make pre-commit` to run the linter and code formatter
-* Make sure the Circle CI build passes for your branch (linked in the checks section at the bottom of the GitHub PR page)
-* Add a specific committer as a reviewer, such as `neutralino1`
+* Add a comprehensive description to your PR.
+* Ensure your code is properly formatted and type checked.
+  * Make sure you have the dev tools installed by running `make install-dev-deps` (you only ever need to do this once).
+  * Use `make pre-commit` to run the linter and code formatter.
+  * Use `make update-schema` to make sure any DB changes you made are accounted for.
+* Make sure the CircleCI build passes for your branch (linked in the checks section at the bottom of the GitHub PR page).
+* Add `sematic-ai/staff` as a reviewer, but also try to assign a specific reviewer, such as `neutralino1`.
