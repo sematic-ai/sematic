@@ -2,9 +2,10 @@
 import base64
 import json
 import logging
+import sys
 from dataclasses import asdict, dataclass
 from enum import Enum, unique
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, TypeVar
 
 # Sematic
 from sematic import api_client
@@ -60,26 +61,41 @@ class LogLineResult:
 
     Attributes
     ----------
-    more_before:
-        Are there more lines before the first line returned?
-    more_after:
+    can_continue_backward:
+        Are there more lines before the first line returned? Will be True if the
+        answer is known to be yes, False if the answer is known to be no. If the
+        answer is not known (ex: going in reverse and don't know if earlier lines
+        pass the filter), True will be returned. "Before" refers to log lines
+        produced at an earlier point in time, regardless of traversal direction. So
+        more_before==True indicates that traversal can continue in the reverse
+        direction.
+    can_continue_forward:
         Are there more lines after the last line returned? Will be True
         if the answer is known to be yes, False if the answer is known to
         be no. If the answer is not known (i.e. run may still be in
-        progress), True will be returned.
+        progress, or we may not know if future lines pass the filter),
+        True will be returned. "After" refers to log lines produced
+        at a later point in time, regardless of traversal direction. So
+        more_after==True indicates that traversal can continue
+        in the forward direction.
     lines:
         The actual log lines
     continuation_cursor:
         A string that can be used to continue traversing these logs from where you left
         off. If more_after is False, this will be set to None.
+    reverse_cursor:
+        A string that can be used to continue traversing these logs from where you left
+        off, but in the backwards direction. If more_before is False, this will be set
+        to None.
     log_info_message:
         A human-readable extra info message.
     """
 
-    more_before: bool
-    more_after: bool
+    can_continue_backward: bool
+    can_continue_forward: bool
     lines: List[str]
     continuation_cursor: Optional[str]
+    reverse_cursor: Optional[str] = None
     log_info_message: Optional[str] = None
 
 
@@ -94,8 +110,9 @@ class Cursor:
         logs have been found yet, will be None
     source_file_line_index:
         The line number BEFORE filters are applied within the log file being read.
-        It will be the first line that HASN'T yet been read. If no logs have been found,
-        will be -1.
+        It will be the first line that HASN'T yet been read. If no logs have been found
+        and `reverse` is False, will be -1. If no logs have been found and `reverse` is
+        True, will be `sys.maxsize`.
     filter_strings:
         The filter strings that were used for this log traversal.
     run_id:
@@ -103,6 +120,8 @@ class Cursor:
     traversal_had_lines:
         Will be True if this cursor corresponds to a result that has lines, or
         if it continues from a chain of cursors that had found some lines
+    reverse:
+        Will be True if the lines are being traversed in the reverse direction.
     """
 
     source_log_key: Optional[str]
@@ -110,6 +129,7 @@ class Cursor:
     filter_strings: List[str]
     run_id: str
     traversal_had_lines: bool = False
+    reverse: bool = False
 
     def to_token(self) -> str:
         return str(
@@ -124,13 +144,14 @@ class Cursor:
         return Cursor(**kwargs)
 
     @classmethod
-    def nothing_found(cls, filter_strings: List[str], run_id: str):
+    def nothing_found(cls, filter_strings: List[str], run_id: str, reverse: bool):
         return Cursor(
             source_log_key=None,
-            source_file_line_index=-1,
+            source_file_line_index=sys.maxsize if reverse else -1,
             filter_strings=filter_strings,
             run_id=run_id,
             traversal_had_lines=False,
+            reverse=reverse,
         )
 
 
@@ -141,12 +162,27 @@ class LogLine:
     line: str
 
 
+def _assert_valid_cursor(cursor: Cursor, run_id: str, filter_strings: Iterable[str]):
+    if cursor.run_id != run_id:
+        raise ValueError(
+            f"Tried to continue a log search of {run_id} using a "
+            f"continuation cursor from {cursor.run_id}"
+        )
+    if set(cursor.filter_strings) != set(filter_strings):
+        raise ValueError(
+            f"Tried to continue a log search of {run_id} using a "
+            f"different set of filters than were used in the cursor."
+        )
+
+
 def load_log_lines(
     run_id: str,
-    continuation_cursor: Optional[str],
+    continuation_cursor_token: Optional[str],
+    reverse_cursor_token: Optional[str],
     max_lines: int,
     filter_strings: Optional[List[str]] = None,
     object_source: ObjectSource = ObjectSource.DB,
+    reverse: bool = False,
 ) -> LogLineResult:
     """Load a portion of the logs for a particular run.
 
@@ -154,9 +190,14 @@ def load_log_lines(
     ----------
     run_id:
         The id of the run to get logs for
-    continuation_cursor:
+    continuation_cursor_token:
         A cursor indicating where to continue reading logs from. Should be
-        None if the logs are being read from the beginning.
+        None if the logs are being read from the beginning or `reverse` is
+        True.
+    reverse_cursor_token:
+        A cursor indicating where to continue reading logs from in the backward
+        direction. Should be None if the logs are being read from the end or
+        `reverse` is False.
     max_lines:
         The highest number of log lines that should be returned at once
     filter_strings:
@@ -164,17 +205,21 @@ def load_log_lines(
         be included in the result
     object_source:
         How to get runs/resolutions
+    reverse:
+        Whether to traverse logs from the end backwards
 
     Returns
     -------
     A subset of the logs for the given run
     """
     logger.info(
-        "Starting log line loading for: %s, %s, %s, %s",
+        "Starting log line loading for: %s, %s, %s, %s, %s, reverse=%s",
         run_id,
-        continuation_cursor,
+        continuation_cursor_token,
+        reverse_cursor_token,
         max_lines,
         filter_strings,
+        reverse,
     )
     default_log_info_message = None
     run = object_source.get_run(run_id)
@@ -190,43 +235,56 @@ def load_log_lines(
     resolution = object_source.get_resolution(run.root_id)
     filter_strings = filter_strings if filter_strings is not None else []
     cursor = (
-        Cursor.from_token(continuation_cursor)
-        if continuation_cursor is not None
-        else Cursor.nothing_found(filter_strings, run_id)
+        Cursor.from_token(continuation_cursor_token)
+        if continuation_cursor_token is not None
+        else Cursor.nothing_found(filter_strings, run_id, reverse=False)
+    )
+    reverse_cursor: Cursor = (
+        Cursor.from_token(reverse_cursor_token)
+        if reverse_cursor_token is not None
+        else Cursor.nothing_found(filter_strings, run_id, reverse=True)
     )
 
-    if cursor.run_id != run_id:
-        raise ValueError(
-            f"Tried to continue a log search of {run_id} using a "
-            f"continuation cursor from {cursor.run_id}"
-        )
-    if set(cursor.filter_strings) != set(filter_strings):
-        raise ValueError(
-            f"Tried to continue a log search of {run_id} using a "
-            f"different set of filters than were used in the cursor."
-        )
+    _assert_valid_cursor(cursor, run_id, filter_strings)
+    _assert_valid_cursor(reverse_cursor, run_id, filter_strings)
 
     if ResolutionStatus[resolution.status] in (  # type: ignore
         ResolutionStatus.CREATED,
         ResolutionStatus.SCHEDULED,
     ):
         return LogLineResult(
-            more_before=False,
-            more_after=True,
+            can_continue_backward=False,
+            can_continue_forward=True,
             lines=[],
             continuation_cursor=cursor.to_token(),
+            reverse_cursor=None,
             log_info_message="Resolution has not started yet.",
         )
 
     filter_strings = filter_strings if filter_strings is not None else []
     if FutureState[run.future_state] == FutureState.CREATED:  # type: ignore
         return LogLineResult(
-            more_before=False,
-            more_after=True,
+            can_continue_backward=False,
+            can_continue_forward=True,
             lines=[],
             continuation_cursor=cursor.to_token(),
+            reverse_cursor=None,
             log_info_message="The run has not yet started executing.",
         )
+
+    cursor_kwargs = (
+        dict(
+            cursor_file=reverse_cursor.source_log_key,
+            cursor_line_index=reverse_cursor.source_file_line_index,
+            traversal_had_lines=reverse_cursor.traversal_had_lines,
+        )
+        if reverse
+        else dict(
+            cursor_file=cursor.source_log_key,
+            cursor_line_index=cursor.source_file_line_index,
+            traversal_had_lines=cursor.traversal_had_lines,
+        )
+    )
 
     # looking for external jobs to determine inline is only valid
     # since we know the run has at least reached SCHEDULED due to it
@@ -237,23 +295,21 @@ def load_log_lines(
             run_id=run_id,
             resolution=resolution,
             still_running=still_running,
-            cursor_file=cursor.source_log_key,
-            cursor_line_index=cursor.source_file_line_index,
-            cursor_had_more_before=cursor.traversal_had_lines,
             max_lines=max_lines,
             filter_strings=filter_strings,
             default_log_info_message=default_log_info_message,
+            reverse=reverse,
+            **cursor_kwargs,  # type: ignore
         )
 
     return _load_non_inline_logs(
         run_id=run_id,
         still_running=still_running,
-        cursor_file=cursor.source_log_key,
-        cursor_line_index=cursor.source_file_line_index,
-        cursor_had_more_before=cursor.traversal_had_lines,
         max_lines=max_lines,
         filter_strings=filter_strings,
         default_log_info_message=default_log_info_message,
+        reverse=reverse,
+        **cursor_kwargs,  # type: ignore
     )
 
 
@@ -283,9 +339,10 @@ def _load_non_inline_logs(
     still_running: bool,
     cursor_file: Optional[str],
     cursor_line_index: int,
-    cursor_had_more_before: bool,
+    traversal_had_lines: bool,
     max_lines: int,
     filter_strings: List[str],
+    reverse: bool,
     default_log_info_message: Optional[str] = None,
 ) -> LogLineResult:
     """Load the lines for runs that are NOT inline."""
@@ -293,28 +350,33 @@ def _load_non_inline_logs(
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
     if latest_log_file is None:
         return LogLineResult(
-            more_before=False,
-            more_after=still_running,
+            can_continue_backward=False,
+            can_continue_forward=still_running,
             lines=[],
-            continuation_cursor=Cursor.nothing_found(filter_strings, run_id).to_token()
+            continuation_cursor=Cursor.nothing_found(
+                filter_strings, run_id, reverse=False
+            ).to_token()
             if still_running
             else None,
+            reverse_cursor=None,
             log_info_message="No log files found",
         )
     line_stream = line_stream_from_log_directory(
-        prefix, cursor_file=cursor_file, cursor_line_index=cursor_line_index
+        prefix,
+        cursor_file=cursor_file,
+        cursor_line_index=cursor_line_index,
+        reverse=reverse,
     )
 
     return get_log_lines_from_line_stream(
         line_stream=line_stream,
         still_running=still_running,
-        cursor_source_file=cursor_file,
-        cursor_line_index=cursor_line_index,
-        cursor_had_more_before=cursor_had_more_before,
+        traversal_had_lines=traversal_had_lines,
         max_lines=max_lines,
         filter_strings=filter_strings,
         run_id=run_id,
         default_log_info_message=default_log_info_message,
+        reverse=reverse,
     )
 
 
@@ -324,19 +386,21 @@ def _load_inline_logs(
     still_running: bool,
     cursor_file: Optional[str],
     cursor_line_index: int,
-    cursor_had_more_before: bool,
+    traversal_had_lines: bool,
     max_lines: int,
     filter_strings: List[str],
     default_log_info_message: Optional[str] = None,
+    reverse: bool = False,
 ) -> LogLineResult:
     """Load the lines for runs that are inline."""
 
     if ResolutionKind[resolution.kind] == ResolutionKind.LOCAL:  # type: ignore
         return LogLineResult(
-            more_before=False,
-            more_after=False,
+            can_continue_backward=False,
+            can_continue_forward=False,
             lines=[],
             continuation_cursor=None,
+            reverse_cursor=None,
             log_info_message=(
                 "UI logs are only available for runs that "
                 "(a) are executed using the CloudResolver and "
@@ -348,41 +412,50 @@ def _load_inline_logs(
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
     if latest_log_file is None:
         return LogLineResult(
-            more_before=False,
-            more_after=still_running,
-            continuation_cursor=Cursor.nothing_found(filter_strings, run_id).to_token()
+            can_continue_backward=False,
+            can_continue_forward=still_running,
+            continuation_cursor=Cursor.nothing_found(
+                filter_strings, run_id, reverse=False
+            ).to_token()
             if still_running
             else None,
+            reverse_cursor=None,
             lines=[],
             log_info_message="Resolver logs are missing",
         )
 
     prefix = log_prefix(resolution.root_id, JobType.driver)
     line_stream = line_stream_from_log_directory(
-        prefix, cursor_file=cursor_file, cursor_line_index=cursor_line_index
+        prefix,
+        cursor_file=cursor_file,
+        cursor_line_index=cursor_line_index,
+        reverse=reverse,
     )
     line_stream = _filter_for_inline(
         line_stream=line_stream,
         run_id=run_id,
         # we already found the indicator for the inline run start with the current cursor
-        skip_start=cursor_had_more_before,
+        skip_start=traversal_had_lines,
+        reverse=reverse,
     )
 
     return get_log_lines_from_line_stream(
         line_stream=line_stream,
         still_running=still_running,
-        cursor_source_file=cursor_file,
-        cursor_line_index=cursor_line_index,
-        cursor_had_more_before=cursor_had_more_before,
+        traversal_had_lines=traversal_had_lines,
         max_lines=max_lines,
         filter_strings=filter_strings,
         run_id=run_id,
         default_log_info_message=default_log_info_message,
+        reverse=reverse,
     )
 
 
 def line_stream_from_log_directory(
-    directory: str, cursor_file: Optional[str], cursor_line_index: Optional[int]
+    directory: str,
+    cursor_file: Optional[str],
+    cursor_line_index: Optional[int],
+    reverse: bool,
 ) -> Iterable[LogLine]:
     """Stream lines from multiple files in a storage dir, starting from cursor."""
     storage_class = get_storage_plugins([LocalStorage])[0]
@@ -396,40 +469,69 @@ def line_stream_from_log_directory(
         key=lambda path_key: int(
             path_key.replace(directory, "").replace(".log", "".replace("/", ""))
         ),
+        reverse=reverse,
     )
-    found_cursor_file = cursor_file is None
-    found_cursor_line = cursor_line_index is None
-    for log_file in log_files:
-        if log_file == cursor_file:
-            found_cursor_file = True
-        if not found_cursor_file:
-            continue
+    index_of_log_file = 0
+    if cursor_file is not None:
+        if cursor_file not in log_files:
+            raise ValueError(f"Cursor referenced invalid log file {cursor_file}.")
+        index_of_log_file = log_files.index(cursor_file)
+
+    cursor_file = log_files[index_of_log_file]
+    log_files_to_traverse = log_files[index_of_log_file:]
+    for log_file in log_files_to_traverse:
+        start_line_index = sys.maxsize if reverse else 0
+        if log_file == cursor_file and cursor_line_index is not None:
+            start_line_index = cursor_line_index
+
         text_stream: Iterable[str] = storage.get_line_stream(log_file)
-        for i_line, line in enumerate(text_stream):
-            if (
-                (not found_cursor_line)
-                and cursor_line_index is not None
-                and i_line < cursor_line_index
-            ):
+        yield from _stream_from_text_stream_from_index(
+            log_file, start_line_index, reverse, text_stream
+        )
+
+
+def _stream_from_text_stream_from_index(
+    log_file: str, start_line_index: int, reverse: bool, text_stream: Iterable[str]
+) -> Iterable[LogLine]:
+    """Starting at the given index within the file, stream logs in desired direction.
+
+    When going forward, the line pointed to by the index will be included. When going in
+    the reverse direction, the line pointed to by the index will be omitted.
+    """
+    # For purposes of this function, "preceding" refers to indices
+    # lower than the start index, regardless of traversal direction.
+    lines_preceding_cursor: List[LogLine] = []
+    for i_line, line in enumerate(text_stream):
+        as_log_line = LogLine(
+            source_file=log_file,
+            source_file_index=i_line,
+            line=line,
+        )
+        if i_line < start_line_index:
+            if reverse:
+                lines_preceding_cursor.append(as_log_line)
+            else:
                 continue
-            found_cursor_line = True
-            yield LogLine(
-                source_file=log_file,
-                source_file_index=i_line,
-                line=line,
-            )
-        if cursor_file is not None and log_file >= cursor_file:
-            # we automatically know we hit the cursor line if we are at the end
-            # of the cursor file or in a file that comes after it.
-            found_cursor_line = True
+        elif reverse:
+            # once we hit the cursor, we have everything we
+            # need to go backwards
+            break
+        else:
+            yield as_log_line
+    if reverse:
+        yield from reversed(lines_preceding_cursor)
 
 
 def _filter_for_inline(
-    line_stream: Iterable[LogLine], run_id: str, skip_start: bool
+    line_stream: Iterable[LogLine], run_id: str, skip_start: bool, reverse: bool
 ) -> Iterable[LogLine]:
     """Stream resolver logs to make a new stream with only lines for a particular run."""
-    expected_start = START_INLINE_RUN_INDICATOR.format(run_id)
-    expected_end = END_INLINE_RUN_INDICATOR.format(run_id)
+    if reverse:
+        expected_start = END_INLINE_RUN_INDICATOR.format(run_id)
+        expected_end = START_INLINE_RUN_INDICATOR.format(run_id)
+    else:
+        expected_start = START_INLINE_RUN_INDICATOR.format(run_id)
+        expected_end = END_INLINE_RUN_INDICATOR.format(run_id)
     buffer_iterator = iter(line_stream)
     found_start = skip_start
     while True:
@@ -453,13 +555,12 @@ def _filter_for_inline(
 def get_log_lines_from_line_stream(
     line_stream: Iterable[LogLine],
     still_running: bool,
-    cursor_source_file: Optional[str],
-    cursor_line_index: int,
-    cursor_had_more_before: bool,
+    traversal_had_lines: bool,
     max_lines: int,
     filter_strings: List[str],
     run_id: str,
     default_log_info_message: Optional[str] = None,
+    reverse: bool = False,
 ) -> LogLineResult:
     """Given a stream of log lines, produce an object containing the desired subset
 
@@ -469,14 +570,8 @@ def get_log_lines_from_line_stream(
         An iterable stream of log lines
     still_running:
         A boolean indicating whether the run these logs are for is still running or not
-    cursor_source_file:
-        The source file to continue from. No lines should be returned until this file is
-        reached.
-    cursor_line_index:
-        The source file to continue from. No lines should be returned until this source
-        file index is reached.
-    cursor_had_more_before:
-        Whether the cursor had matching lines before it
+    traversal_had_lines:
+        Has the traversal this cursor is continuing contained any lines?
     max_lines:
         The maximum number of lines that should be returned
     filter_strings:
@@ -487,6 +582,8 @@ def get_log_lines_from_line_stream(
     default_log_info_message:
         A default extra log info message to provide the user, unless a specific one needs
         to be provided.
+    reverse:
+        Whether the log lines are being traversed in reverse order.
 
     Returns
     -------
@@ -494,68 +591,99 @@ def get_log_lines_from_line_stream(
     """
     buffer_iterator = iter(line_stream)
     keep_going = True
-    lines = []
-    has_more = True
-    more_before = cursor_had_more_before
-    source_file = None
-    source_file_line_index = -1
-    found_cursor = False
+    lines: List[str] = []
 
     def passes_filter(line: LogLine) -> bool:
         return all(substring in line.line for substring in filter_strings)
 
+    current_direction_cursor_log_file = None
+    current_direction_cursor_log_index = None
+    other_direction_cursor_log_file = None
+    other_direction_cursor_log_index = None
+    has_more_in_current_direction = False
     while keep_going:
         try:
+            # For reverse direction, these lines are being iterated in
+            # reverse chronological order.
             line = next(ln for ln in buffer_iterator)
-            source_file = line.source_file
-            source_file_line_index = line.source_file_index
-
-            if not found_cursor:
-                if (
-                    cursor_source_file is None
-                    or source_file > cursor_source_file
-                    or source_file == cursor_source_file
-                    and source_file_line_index >= cursor_line_index
-                ):
-                    found_cursor = True
-                else:
-                    more_before = more_before or passes_filter(line)
-                    continue
-
             if not passes_filter(line):
                 continue
 
-            lines.append(line.line)
+            if other_direction_cursor_log_index is None:
+                other_direction_cursor_log_file = line.source_file
+                other_direction_cursor_log_index = line.source_file_index
 
-            if len(lines) >= max_lines:
-                has_more = True
+            if len(lines) < max_lines:
+                lines.append(line.line)
+                current_direction_cursor_log_file = line.source_file
+                current_direction_cursor_log_index = line.source_file_index
+            elif len(lines) >= max_lines:
                 keep_going = False
+                has_more_in_current_direction = True
+
+                # Cursor is *beyond* the returned lines in its
+                # current direction at this point.
+                if not reverse:
+                    current_direction_cursor_log_file = line.source_file
+                    current_direction_cursor_log_index = line.source_file_index
+
         except StopIteration:
             keep_going = False
 
-            # hit the end of the logs produced so far. If the run is done,
-            # there are no more logs. Otherwise, more might show up!
-            has_more = still_running
+    if still_running and not reverse:
+        # more lines might still be produced later
+        has_more_in_current_direction = True
 
-    if not has_more:
-        cursor_token = None
-    elif found_cursor:
-        cursor_token = Cursor(
-            source_log_key=source_file,
-            # +1: next time we want to start AFTER where we last read
-            source_file_line_index=source_file_line_index + 1,
-            filter_strings=filter_strings,
-            run_id=run_id,
-            traversal_had_lines=more_before or len(lines) > 0,
-        ).to_token()
+    # recall: in the forward direction, when starting from a cursor, the
+    # line pointed to by the cursor is *included*. In the reverse direction,
+    # the line pointed to by the cursor is *omitted*.
+    if not reverse:
+        # Forward cursor should be determined by the first line
+        # NOT included in returned lines. Reverse one should be
+        # determined by the first line that IS included in returned
+        # lines (since that will be omitted on reverse traversal).
+        if has_more_in_current_direction:
+            forward_cursor_file = current_direction_cursor_log_file
+            forward_cursor_index = current_direction_cursor_log_index
+        else:
+            forward_cursor_file = None
+            forward_cursor_index = None
+        reverse_cursor_file = other_direction_cursor_log_file
+        reverse_cursor_index = other_direction_cursor_log_index
     else:
-        # didn't find anything new, just use the existing cursor values
-        cursor_token = Cursor(
-            source_log_key=cursor_source_file,
-            source_file_line_index=cursor_line_index,
+        # Forward cursor should be AFTER the latest (chronologically)
+        # line included in the returned lines. Reverse cursor should
+        # point AT the earliest (chronoligically) line included.
+        forward_cursor_file = other_direction_cursor_log_file
+        if other_direction_cursor_log_index is not None:
+            forward_cursor_index = other_direction_cursor_log_index + 1
+
+        if has_more_in_current_direction:
+            reverse_cursor_file = current_direction_cursor_log_file
+            reverse_cursor_index = current_direction_cursor_log_index
+        else:
+            reverse_cursor_file = None
+            reverse_cursor_index = None
+
+    forward_cursor_token = None
+    reverse_cursor_token = None
+    if forward_cursor_file is not None:
+        forward_cursor_token = Cursor(
+            source_log_key=forward_cursor_file,
+            source_file_line_index=forward_cursor_index,  # type: ignore
             filter_strings=filter_strings,
             run_id=run_id,
-            traversal_had_lines=cursor_had_more_before,
+            traversal_had_lines=traversal_had_lines or len(lines) > 0,
+            reverse=False,
+        ).to_token()
+    if reverse_cursor_file is not None:
+        reverse_cursor_token = Cursor(
+            source_log_key=reverse_cursor_file,
+            source_file_line_index=reverse_cursor_index,  # type: ignore
+            filter_strings=filter_strings,
+            run_id=run_id,
+            traversal_had_lines=traversal_had_lines or len(lines) > 0,
+            reverse=True,
         ).to_token()
 
     log_info_message = (
@@ -563,9 +691,27 @@ def get_log_lines_from_line_stream(
     )
 
     return LogLineResult(
-        more_before=more_before,
-        more_after=has_more,
-        lines=lines,
-        continuation_cursor=cursor_token,
+        can_continue_backward=reverse_cursor_file is not None,
+        can_continue_forward=forward_cursor_file is not None or still_running,
+        lines=list(reversed(lines)) if reverse else lines,
+        continuation_cursor=forward_cursor_token,
+        reverse_cursor=reverse_cursor_token,
         log_info_message=log_info_message,
     )
+
+
+T = TypeVar("T")
+
+
+def reversed(iterable: Iterable[T]) -> Iterable[T]:
+    """Return an iterator over the elements in the reverse order.
+
+    Differs from built-in `reversed` in that it works with generators,
+    and materializes the whole iterator in memory before reversing.
+    It is thus unsuitable for large/infitnite iterables.
+    """
+    as_list = []
+    for item in iterable:
+        as_list.append(item)
+    as_list.reverse()
+    yield from as_list

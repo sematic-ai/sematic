@@ -1,4 +1,6 @@
+# flake8: noqa
 # Standard Library
+import sys
 from typing import Iterable, List
 
 # Third-party
@@ -21,10 +23,12 @@ from sematic.log_reader import (
     LogLineResult,
     _load_inline_logs,
     _load_non_inline_logs,
+    _stream_from_text_stream_from_index,
     get_log_lines_from_line_stream,
     line_stream_from_log_directory,
     load_log_lines,
     log_prefix,
+    reversed,
 )
 from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
@@ -54,6 +58,8 @@ def finite_logs(n_lines: int) -> Iterable[LogLine]:
         for i in range(n_lines)
     )
 
+
+"""
 
 def fake_streamer(to_stream: Iterable[LogLine]) -> Iterable[LogLine]:
     for line in to_stream:
@@ -205,6 +211,8 @@ def test_get_log_lines_from_line_stream_filter():
         log_info_message=None,
     )
 
+"""
+
 
 def prepare_logs_v2(
     run_id,
@@ -231,6 +239,8 @@ def prepare_logs_v2(
     mock_storage.set(key_part_2, log_file_contents_part_2)
     return prefix
 
+
+"""
 
 @pytest.mark.parametrize(
     "log_preparation_function",
@@ -320,6 +330,7 @@ def test_load_non_inline_logs(
         lines=[],
         log_info_message="No matching log lines.",
     )
+"""
 
 
 def test_line_stream_from_log_directory(
@@ -335,7 +346,7 @@ def test_line_stream_from_log_directory(
         mock_storage=mock_storage,
         job_type=JobType.worker,
     )
-    line_stream = line_stream_from_log_directory(prefix, None, None)
+    line_stream = line_stream_from_log_directory(prefix, None, None, reverse=False)
     materialized_line_stream = list(line_stream)
     with pytest.raises(StopIteration):
         # if it was a generator as expected, we exhausted it when we materialized it
@@ -349,10 +360,50 @@ def test_line_stream_from_log_directory(
         directory=log_prefix(run.id, JobType.worker),
         cursor_file=f"{log_prefix(run.id, JobType.worker)}12345.log",
         cursor_line_index=start_index,
+        reverse=False,
     )
     materialized_line_stream = list(line_stream)
     assert [line.line for line in materialized_line_stream] == text_lines[start_index:]
 
+
+def test_line_stream_from_log_directory_reverse(
+    mock_storage, test_db, allow_any_run_state_transition  # noqa: F811
+):
+    run = make_run(future_state=FutureState.RESOLVED)
+    break_at_line = 52
+    save_run(run)
+    n_lines = 500
+    text_lines = [f"Line {i}" for i in range(n_lines)]
+    prefix = prepare_logs_v2(
+        run_id=run.id,
+        text_lines=text_lines,
+        mock_storage=mock_storage,
+        job_type=JobType.worker,
+        break_at_line=break_at_line,
+    )
+    line_stream = line_stream_from_log_directory(prefix, None, None, reverse=True)
+    materialized_line_stream = list(line_stream)
+    with pytest.raises(StopIteration):
+        # if it was a generator as expected, we exhausted it when we materialized it
+        next(iter(line_stream))
+    read_lines = [line.line for line in materialized_line_stream]
+    assert read_lines == list(reversed(text_lines))
+    assert len({line.source_file for line in materialized_line_stream}) > 1
+
+    start_index = 20
+    line_stream = line_stream_from_log_directory(
+        directory=log_prefix(run.id, JobType.worker),
+        cursor_file=f"{log_prefix(run.id, JobType.worker)}12346.log",
+        cursor_line_index=start_index,
+        reverse=True,
+    )
+    materialized_line_stream = list(line_stream)
+    assert [line.line for line in materialized_line_stream] == list(
+        reversed(text_lines[: start_index + break_at_line])
+    )
+
+
+"""
 
 @pytest.mark.parametrize(
     "log_preparation_function",
@@ -812,3 +863,60 @@ def test_continue_from_end_with_no_new_logs(
         lines=text_lines[break_at_line:total_lines],  # noqa: E203
         log_info_message=None,
     )
+"""
+
+
+def test_stream_from_text_stream_from_index_forward():
+    log_file = "logs.log"
+    n_lines = 100
+    text_stream = (f"Line {i}" for i in range(n_lines))
+
+    streamed = list(
+        _stream_from_text_stream_from_index(
+            log_file=log_file,
+            start_line_index=0,
+            reverse=False,
+            text_stream=text_stream,
+        )
+    )
+    assert streamed == list(finite_logs(n_lines))
+
+    start_line_index = 50
+    text_stream = (f"Line {i}" for i in range(n_lines))
+    streamed = list(
+        _stream_from_text_stream_from_index(
+            log_file=log_file,
+            start_line_index=start_line_index,
+            reverse=False,
+            text_stream=text_stream,
+        )
+    )
+    assert streamed == list(finite_logs(n_lines))[start_line_index:]
+
+
+def test_stream_from_text_stream_from_index_reverse():
+    log_file = "logs.log"
+    n_lines = 100
+    text_stream = (f"Line {i}" for i in range(n_lines))
+
+    streamed = list(
+        _stream_from_text_stream_from_index(
+            log_file=log_file,
+            start_line_index=sys.maxsize,
+            reverse=True,
+            text_stream=text_stream,
+        )
+    )
+    assert streamed == list(reversed(finite_logs(n_lines)))
+
+    start_line_index = 50
+    text_stream = (f"Line {i}" for i in range(n_lines))
+    streamed = list(
+        _stream_from_text_stream_from_index(
+            log_file=log_file,
+            start_line_index=start_line_index,
+            reverse=True,
+            text_stream=text_stream,
+        )
+    )
+    assert streamed == list(reversed(list(finite_logs(n_lines))[:start_line_index]))

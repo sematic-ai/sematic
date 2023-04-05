@@ -40,8 +40,8 @@ export type RunGraphPayload = {
 };
 
 export type LogLineResult = {
-  more_before: boolean;
-  more_after: boolean;
+  can_continue_backward: boolean;
+  can_continue_forward: boolean;
   lines: string[];
   continuation_cursor: string | null;
   log_info_message: string | null;
