@@ -48,6 +48,7 @@ A: The pipe mechanisms for the "multiprocess" module assumes that the parent pro
 
 
 DEFAULT_LOG_UPLOAD_INTERVAL_SECONDS = 10
+MAX_LINES_PER_LOG_FILE = 1000
 _LAST_NON_EMPTY_DELTA_TEMPLATE = "{}.previous"
 _TERMINATION_CHAR = chr(ascii.EOT)  # EOT => End Of Transmission
 
@@ -73,6 +74,7 @@ def _flush_to_file(
     uploader,
     remote_prefix,
     timeout_seconds=None,
+    max_lines=MAX_LINES_PER_LOG_FILE,
 ):
     """Read from the read_handle dump to file_path and then remote.
 
@@ -101,6 +103,10 @@ def _flush_to_file(
         when the upload occurs. If set to "None", the read_handle will be read until the
         "end of transmission" character is present, at which point the flush will
         immediately conclude.
+    max_lines:
+        The max number of lines that will be included in a given upload. If this number
+        of lines is reached before the timeout has occurred or a termination character
+        observed, the file will still be uploaded immediately.
     """
     if os.path.exists(file_path):
         if os.stat(file_path)[stat.ST_SIZE] > 0:
@@ -111,6 +117,7 @@ def _flush_to_file(
 
     started_reading = time.time()
     received_stream_termination = False
+    n_lines_written = 0
 
     # Use w+ mode; should overwrite whatever was in the prior delta file
     with open(file_path, "w+") as fp:
@@ -134,7 +141,10 @@ def _flush_to_file(
             tee_write_handle.write(line)
             tee_write_handle.flush()
             fp.flush()
+            n_lines_written += 1
             if received_stream_termination:
+                break
+            if n_lines_written >= max_lines:
                 break
 
     uploader(file_path, remote_prefix)

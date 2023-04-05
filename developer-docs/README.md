@@ -19,6 +19,18 @@ Guideline for testing changes that might impact resolution:
 - test remotely in non-detached mode
 - test remotely in detached mode
 
+## PR Prerequisites
+
+In order to ensure the PR review goes swiftly, please:
+
+- Add a comprehensive description to your PR
+- Ensure your code is properly formatted and type checked
+  - Make sure you have the dev tools installed by running `make install-dev-deps` (you only ever need to do this once)
+  - Use `make pre-commit` to run the linter and code formatter
+  - Use `make update-schema` to make sure any DB changes you made are accounted for
+- Make sure the CircleCI build passes for your branch (linked in the checks section at the bottom of the GitHub PR page)
+- Add `sematic-ai/staff` as a reviewer, but also try to assign a specific reviewer, such as `neutralino1`
+
 ## Switching profiles
 
 The [user settings](../docs/cli.md#user-settings) are saved to the
@@ -278,3 +290,10 @@ cases, instead of performing the release from the `main` branch, we:
 - follow all the other steps from the [Releasing](#releasing) section
 - switch to the `main` branch, make a commit that contains the previous version
   increases and reconciles the changelog, and merge a PR with this commit
+
+## Updating the CircleCi Image
+
+The image used for most of our CircleCi steps is built using `docker/Dockerfile.ci`.
+After updating it, open a PR with the change, push the image to Dockerhub using the PR
+number as a tag (in order to be able to maintain a history, and revert, if necessary),
+and update the `SEMATIC_CI_IMAGE` env var in the CircleCi project settings.
