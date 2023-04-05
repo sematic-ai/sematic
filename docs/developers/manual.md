@@ -69,6 +69,15 @@ $ cd sematic/ui
 $ npm start
 ```
 
+## Diagnose UI Dashboard issues
+
+The local development server launched by [Create-React-Apps](https://create-react-app.dev/) is set up by default to provide extensive logging, which is helpful for investigating issues with the front-end. However, this logging is disabled by default for production builds.
+
+If you need to enable excessive logging in a production build, you can add "debug=true" as a query parameter to any dashboard page (being careful not to add it after URL hashes). Once you've set this parameter, it will be remembered even if you don't explicitly include it in the URL. This means that the debug state will be maintained even after page refreshes.
+
+To turn off excessive logging, you can append debug=false to the URL again, or you can clear it from localStorage using browser developer tools. 
+
+
 ## Starting Storybook to browse UI components
 
 ```shell
