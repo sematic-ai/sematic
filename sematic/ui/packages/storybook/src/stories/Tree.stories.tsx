@@ -4,6 +4,7 @@ import RunTreeComponent from '@sematic/common/src/component/RunTree';
 import theme from '@sematic/common/src/theme/new';
 import { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
+import { useState } from '@sematic/common/src/reactHooks';
 
 export default {
   title: 'Sematic/Tree',
@@ -36,56 +37,47 @@ const commonArgTypes = {
   onChange: { action: 'value changed' }
 };
 
-class RunTreeStory extends React.Component<StoryProps, {
-  selectedValue: string | undefined
-}> {
-  constructor(props: StoryProps) {
-    super(props);
-    this.state = {
-      selectedValue: undefined
-    };
-  }
 
-  render() {
-    const { width, onChange } = this.props;
+const RunTreeStory: React.FC<StoryProps> = (props) => {
+  const [selectedValue, setSelectedValue] = useState<string>();
 
-    const widthValue = width ? sizeOptions[width] : 200;
+  const { width, onChange } = props;
 
-    const valueExpander = (value: string) => ({
-      value,
-      selected: this.state.selectedValue === value
-    })
+  const widthValue = width ? sizeOptions[width] : 200;
 
-    const ExampleTreeData = [
-      {
-        ...valueExpander('MNIST PyTorch Example'), children: [
-          { ...valueExpander('Load train dataset'), children: [] as any },
-          { ...valueExpander('Load test dataset'), children: [] as any },
-          { ...valueExpander('get_dataloader'), children: [] as any },
-          { ...valueExpander('get_dataloader_ctd'), children: [] as any },
-          {
-            ...valueExpander('train_eval'), children: [
-              { ...valueExpander('train_model'), children: [] as any },
-              { ...valueExpander('evaluate_model'), children: [] as any }
-            ] as any
-          },
-        ] as any
-      }
-    ]
+  const valueExpander = (value: string) => ({
+    value,
+    selected: selectedValue === value
+  })
 
-    return <div style={{ maxWidth: widthValue }}>
-      <RunTreeComponent runTreeNodes={ExampleTreeData} onSelect={(value) => {
-        onChange(value);
-        this.setState({ selectedValue: value });
-      }} />
-    </div>;
-  }
+  const ExampleTreeData = [
+    {
+      ...valueExpander('MNIST PyTorch Example'), children: [
+        { ...valueExpander('Load train dataset'), children: [] as any },
+        { ...valueExpander('Load test dataset'), children: [] as any },
+        { ...valueExpander('get_dataloader'), children: [] as any },
+        { ...valueExpander('get_dataloader_ctd'), children: [] as any },
+        {
+          ...valueExpander('train_eval'), children: [
+            { ...valueExpander('train_model'), children: [] as any },
+            { ...valueExpander('evaluate_model'), children: [] as any }
+          ] as any
+        },
+      ] as any
+    }
+  ]
 
+  return <div style={{ maxWidth: widthValue }}>
+    <RunTreeComponent runTreeNodes={ExampleTreeData} onSelect={(value) => {
+      onChange(value);
+      setSelectedValue(value);
+    }} />
+  </div>;
 }
 
 export const RunTree: StoryObj<StoryProps> = {
   render: (props) => {
     return <RunTreeStory {...props} />
-  }
+  },
+  argTypes: commonArgTypes
 };
-RunTree.argTypes = commonArgTypes;
