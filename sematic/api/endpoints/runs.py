@@ -21,7 +21,7 @@ from sqlalchemy.sql.elements import BooleanClauseList
 from sematic.abstract_future import FutureState
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
-from sematic.api.endpoints.events import broadcast_graph_update
+from sematic.api.endpoints.events import broadcast_graph_update, broadcast_job_update
 from sematic.api.endpoints.payloads import get_run_payload, get_runs_payload
 from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
@@ -248,6 +248,7 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 
     for job in post_schedule_jobs:
         save_job(job)
+    broadcast_job_update(run_id, user)
 
     broadcast_graph_update(root_id=run.root_id, user=user)
 
@@ -404,6 +405,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
         for original_job, updated_job in zip(jobs, updated_jobs or []):
             if original_job.latest_status != updated_job.latest_status:
                 save_job(updated_job)
+                broadcast_job_update(run_id=run_id, user=user)
 
         result_list.append(
             dict(
@@ -495,6 +497,7 @@ def save_graph_endpoint(user: Optional[User]):
             for job in get_jobs_by_run_id(run.id):
                 canceled_job = cancel_job(job)
                 save_job(canceled_job)
+            broadcast_job_update(run_id=run.id, user=user)
 
     return flask.jsonify({})
 

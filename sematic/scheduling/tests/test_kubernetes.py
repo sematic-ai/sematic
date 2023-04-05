@@ -492,7 +492,7 @@ def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job):
         )
 
     mock_schedule_k8s_job.assert_called_with(
-        name=f"sematic-run-{run_id}-foo",
+        name=f"sematic-worker-{run_id}-foo",
         image=image,
         environment_vars=settings,
         namespace=namespace,
