@@ -1,7 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { atomWithHash } from 'jotai-location'
 import { useLocation } from "react-router-dom";
 import { User } from "@sematic/common/src/Models";
+import { atomWithStorage } from "jotai/utils";
+import { useAtom } from "jotai";
 
 interface IFetchJSON {
   url: string;
@@ -59,11 +61,50 @@ export function fetchJSON({
     );
 }
 
-export function useLogger() {
-  const { search } = useLocation();
+export const debugFlagAtom = atomWithStorage<boolean | null>('debug', null);
 
-  const isLoggingExplicitlyTurnedOn = useMemo(
-    () => (new URLSearchParams(search)).has('debug'), [search]);
+
+export function useDebugState() {
+  const { search } = useLocation();
+  const [debugFlagLocalStorage, setDebugFlagLocalStorage] = useAtom(debugFlagAtom);
+
+
+  const debugFlagUrlValue = useMemo(
+    () => {
+      const strValue = (new URLSearchParams(search)).get('debug')?.toLocaleLowerCase();
+      if (strValue === 'true' || strValue === '1') {
+        return true;
+      };
+      if (strValue === 'false' || strValue === '0') {
+        return false;
+      };
+      return null;
+    }, [search]);
+  
+  // if debugFlagUrlValue is set, then set it in localStorage, so that it is memorized across page refreshes
+  useEffect(() => {
+    if (debugFlagUrlValue === null) {
+      return;
+    }
+    if (debugFlagLocalStorage !== debugFlagUrlValue) {
+      setDebugFlagLocalStorage(debugFlagUrlValue);
+    }
+  }, [debugFlagUrlValue, debugFlagLocalStorage, setDebugFlagLocalStorage]);
+
+  return useMemo(() => {
+    if (debugFlagUrlValue !== null) {
+      return debugFlagUrlValue;
+    }
+
+    if (debugFlagLocalStorage !== null) {
+      return debugFlagLocalStorage;
+    }
+    return false; // default turning debug flag off
+  }, [debugFlagUrlValue, debugFlagLocalStorage]);
+}
+
+export function useLogger() {
+  const isLoggingExplicitlyTurnedOn = useDebugState();
 
   const devLogger = useMemo(
     () => {
