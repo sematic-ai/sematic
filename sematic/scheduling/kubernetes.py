@@ -668,7 +668,7 @@ def schedule_resolution_job(
 
     job = make_job(
         namespace=namespace,
-        name=f"sematic-{JobKind.resolver}-{resolution_id}",
+        name=f"sematic-driver-{resolution_id}",
         run_id=resolution_id,
         status=JobStatus(
             state=KubernetesJobState.Requested,
@@ -728,7 +728,7 @@ def schedule_run_job(
 
     job = make_job(
         namespace=namespace,
-        name=f"sematic-{JobKind.run}-{run_id}-{_unique_job_id_suffix()}",
+        name=f"sematic-worker-{run_id}-{_unique_job_id_suffix()}",
         run_id=run_id,
         status=JobStatus(
             state=KubernetesJobState.Requested,

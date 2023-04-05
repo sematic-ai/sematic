@@ -118,13 +118,9 @@ when performing the upgrade.
 
 ### v0.27.0 to v0.28.0
 
-- **Important!**: Any in-progress runs will fail when the server is upgraded.
-  Please perform this upgrade at a time when there are no runs or where failures
-  are acceptable.
-- Any instrumentation (ex: Grafana dashboards) that was relying on the names of
-  Kubernetes jobs/pods produced by Sematic having the structure `sematic-worker-...`
-  or `sematic-driver-...` will need to replace those with `sematic-run-...` and
-  `sematic-resolver-...` (respectively).
+**Important!**: Any in-progress runs will fail when the server is upgraded.
+Please perform this upgrade at a time when there are no runs or where failures
+are acceptable.
 
 ### v0.26.X to v0.27.Y
 
