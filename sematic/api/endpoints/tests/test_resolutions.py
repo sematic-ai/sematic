@@ -1,6 +1,7 @@
 # Standard Library
 import time
 import typing
+from copy import copy
 from dataclasses import replace
 from http import HTTPStatus
 from unittest import mock
@@ -24,6 +25,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
     with_auth,
 )
+from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -123,7 +125,7 @@ def test_get_resolution_endpoint(
     assert payload["content"]["settings_env_vars"] == {}
 
 
-def test_put_resolution_endpoint(
+def test_put_resolution_endpoint_no_auth(
     mock_auth,  # noqa: F811
     persisted_run,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
@@ -137,6 +139,9 @@ def test_put_resolution_endpoint(
     assert response.status_code == HTTPStatus.OK
 
     response = test_client.get("/api/v1/resolutions/{}".format(resolution.root_id))
+
+    assert response.status_code == HTTPStatus.OK
+
     encodable = response.json["content"]  # type: ignore
 
     assert encodable["settings_env_vars"] == {}
@@ -144,6 +149,7 @@ def test_put_resolution_endpoint(
     read = get_resolution(resolution.root_id)
     assert read.settings_env_vars == resolution.settings_env_vars
     assert read.status == ResolutionStatus.SCHEDULED.value
+    assert read.user_id is None
 
     encodable["status"] = ResolutionStatus.COMPLETE.value
     response = test_client.put(
@@ -155,6 +161,7 @@ def test_put_resolution_endpoint(
     assert response.status_code == HTTPStatus.BAD_REQUEST
     read = get_resolution(resolution.root_id)
     assert read.status == ResolutionStatus.SCHEDULED.value
+    assert read.user_id is None
 
     encodable["status"] = ResolutionStatus.RUNNING.value
     response = test_client.put(
@@ -166,6 +173,86 @@ def test_put_resolution_endpoint(
     assert response.status_code == HTTPStatus.OK
     read = get_resolution(resolution.root_id)
     assert read.status == ResolutionStatus.RUNNING.value
+    assert read.user_id is None
+
+
+def test_put_resolution_endpoint_auth(
+    with_auth,  # noqa: F811
+    persisted_run_w_user,  # noqa: F811
+    persisted_user,  # noqa: F811
+    other_persisted_user,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+):
+    resolution = make_resolution(root_id=persisted_run_w_user.id)  # noqa: F811
+    expected_env_vars = _get_expected_env_vars(resolution, persisted_user)
+
+    # check the resolution creation succeeds:
+    response = test_client.put(
+        "/api/v1/resolutions/{}".format(resolution.root_id),
+        json={"resolution": resolution.to_json_encodable(redact=False)},
+        headers=({"X-API-KEY": persisted_user.api_key}),
+    )
+
+    assert response.status_code == HTTPStatus.OK
+
+    response = test_client.get(
+        "/api/v1/resolutions/{}".format(resolution.root_id),
+        headers=({"X-API-KEY": persisted_user.api_key}),
+    )
+
+    assert response.status_code == HTTPStatus.OK
+
+    encodable = response.json["content"]  # type: ignore
+
+    assert encodable["settings_env_vars"] == {}
+
+    read = get_resolution(resolution.root_id)
+
+    assert read.settings_env_vars == expected_env_vars
+    assert read.status == ResolutionStatus.SCHEDULED.value
+    assert read.user_id == persisted_user.id
+
+    # check an incorrect transition fails:
+    encodable["status"] = ResolutionStatus.COMPLETE.value
+    response = test_client.put(
+        "/api/v1/resolutions/{}".format(resolution.root_id),
+        json={"resolution": encodable},
+        headers=({"X-API-KEY": persisted_user.api_key}),
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    read = get_resolution(resolution.root_id)
+    assert read.settings_env_vars == expected_env_vars
+    assert read.status == ResolutionStatus.SCHEDULED.value
+    assert read.user_id == persisted_user.id
+
+    # check a correct transition succeeds:
+    encodable["status"] = ResolutionStatus.RUNNING.value
+    response = test_client.put(
+        "/api/v1/resolutions/{}".format(resolution.root_id),
+        json={"resolution": encodable},
+        headers=({"X-API-KEY": persisted_user.api_key}),
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    read = get_resolution(resolution.root_id)
+    assert read.settings_env_vars == expected_env_vars
+    assert read.status == ResolutionStatus.RUNNING.value
+    assert read.user_id == persisted_user.id
+
+    # check updating an immutable field fails:
+    encodable["status"] = ResolutionStatus.COMPLETE.value
+    response = test_client.put(
+        "/api/v1/resolutions/{}".format(resolution.root_id),
+        json={"resolution": encodable},
+        headers=({"X-API-KEY": other_persisted_user.api_key}),
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    read = get_resolution(resolution.root_id)
+    assert read.settings_env_vars == expected_env_vars
+    assert read.status == ResolutionStatus.RUNNING.value
+    assert read.user_id == persisted_user.id
 
 
 def test_resolution_event_publishing(
@@ -463,3 +550,12 @@ def test_list_external_resource_ids(
         for resource in response.json["external_resources"]  # type: ignore
     ]
     assert result_ids == [persisted_external_resource.id]
+
+
+def _get_expected_env_vars(
+    resolution: Resolution, user: User  # noqa: F811
+) -> typing.Dict[str, str]:
+
+    expected_env_vars = copy(resolution.settings_env_vars)
+    expected_env_vars[str(UserSettingsVar.SEMATIC_API_KEY.value)] = user.api_key
+    return expected_env_vars

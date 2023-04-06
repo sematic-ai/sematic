@@ -60,9 +60,7 @@ def get_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
             HTTPStatus.NOT_FOUND,
         )
 
-    payload = dict(
-        content=get_resolution_payload(resolution),
-    )
+    payload = dict(content=get_resolution_payload(resolution))
 
     return flask.jsonify(payload)
 
@@ -84,8 +82,11 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
     resolution_json_encodable = flask.request.json["resolution"]
     resolution = Resolution.from_json_encodable(resolution_json_encodable)
 
-    if user is not None:
-        resolution.user_id = user.id
+    resolution, updated = _update_resolution_user(resolution=resolution, user=user)
+    if updated:
+        logger.debug(
+            "Updated Resolution %s User to %s", resolution.root_id, resolution.user_id
+        )
 
     logger.info(
         "Attempting to update resolution %s; status: %s; user: %s",
@@ -224,9 +225,7 @@ def schedule_resolution_endpoint(
     save_resolution(resolution)
     save_job(post_schedule_job)
 
-    payload = dict(
-        content=get_resolution_payload(resolution),
-    )
+    payload = dict(content=get_resolution_payload(resolution))
 
     return flask.jsonify(payload)
 
@@ -278,9 +277,7 @@ def rerun_resolution_endpoint(
     save_resolution(resolution)
     save_job(post_schedule_job)
 
-    payload = dict(
-        content=get_resolution_payload(resolution),
-    )
+    payload = dict(content=get_resolution_payload(resolution))
 
     broadcast_pipeline_update(calculator_path=root_run.calculator_path, user=user)
 
@@ -329,7 +326,9 @@ def cancel_resolution_endpoint(
         root_id=resolution.root_id, calculator_path=root_run.calculator_path, user=user
     )
 
-    return flask.jsonify(dict(content=get_resolution_payload(resolution)))
+    payload = dict(content=get_resolution_payload(resolution))
+
+    return flask.jsonify(payload)
 
 
 @sematic_api.route(
@@ -381,6 +380,7 @@ def _cancel_non_terminal_runs(root_id):
         for job in get_jobs_by_run_id(run.id):
             logger.info("Canceling %s", job.identifier())
             save_job(cancel_job(job))
+
 
 def _update_resolution_user(
     resolution: Resolution, user: Optional[User]
