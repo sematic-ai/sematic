@@ -11,15 +11,15 @@ from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import mock_storage  # noqa: F401
 from sematic.cli.logs import dump_log_storage, logs
 from sematic.db.models.resolution import ResolutionStatus
-from sematic.db.queries import save_resolution, save_run
+from sematic.db.queries import save_job, save_resolution, save_run
 from sematic.db.tests.fixtures import (  # noqa: F401
     allow_any_run_state_transition,
+    make_job,
     make_resolution,
     make_run,
     test_db,
 )
 from sematic.log_reader import LogLineResult, log_prefix
-from sematic.scheduling.external_job import ExternalJob, JobType
 
 
 @pytest.fixture
@@ -61,12 +61,16 @@ def test_logs(
     test_db, mock_storage, mock_api_client, allow_any_run_state_transition  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
-    run.external_jobs = [ExternalJob(JobType.driver, 0, external_job_id="abc")]
+    job = make_job(run_id=run.id)
+    save_job(job)
+    mock_api_client.get_jobs_by_run_id.return_value = [job]
+    mock_api_client.run_is_inline.return_value = False
+
     resolution = make_resolution(root_id=run.id, status=ResolutionStatus.COMPLETE)
     save_run(run)
     save_resolution(resolution)
     runner = CliRunner()
-    fill_log_dir(mock_storage, MOCK_LINES, log_prefix(run.id, JobType.worker))
+    fill_log_dir(mock_storage, MOCK_LINES, log_prefix(run.id, "run"))
     mock_api_client.get_run = lambda x: run
     mock_api_client.get_resolution = lambda x: resolution
 
@@ -83,7 +87,9 @@ def test_follow_logs(
     allow_any_run_state_transition,  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
-    run.external_jobs = [ExternalJob(JobType.driver, 0, external_job_id="abc")]
+    job = make_job(run_id=run.id)
+    save_job(job)
+
     resolution = make_resolution(root_id=run.id, status=ResolutionStatus.COMPLETE)
     save_run(run)
     save_resolution(resolution)
@@ -149,7 +155,11 @@ def test_empty_logs(
     test_db, mock_storage, mock_api_client, allow_any_run_state_transition  # noqa: F811
 ):
     run = make_run(future_state=FutureState.RESOLVED)
-    run.external_jobs = [ExternalJob(JobType.driver, 0, external_job_id="abc")]
+    job = make_job(run_id=run.id)
+    save_job(job)
+    mock_api_client.get_jobs_by_run_id.return_value = [job]
+    mock_api_client.run_is_inline.return_value = False
+
     resolution = make_resolution(root_id=run.id, status=ResolutionStatus.COMPLETE)
     save_run(run)
     save_resolution(resolution)

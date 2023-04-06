@@ -21,6 +21,7 @@ from sematic.db.models.factories import (
     UploadPayload,
     deserialize_artifact_value,
 )
+from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -265,6 +266,12 @@ def get_resolution(root_id: str) -> Resolution:
     """
     response = _get(f"/resolutions/{root_id}")
     return Resolution.from_json_encodable(response["content"])
+
+
+def get_jobs_by_run_id(run_id: str) -> List[Job]:
+    """Get jobs from the DB by source run id."""
+    response = _get(f"/api/v1/runs/{run_id}/jobs")
+    return [Job.from_json_encodable(job) for job in response["content"]]
 
 
 def cancel_resolution(resolution_id: str) -> Resolution:

@@ -1,4 +1,5 @@
 # Standard Library
+import time
 import typing
 from dataclasses import replace
 from http import HTTPStatus
@@ -25,15 +26,18 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import (
+    count_jobs_by_run_id,
     get_graph,
+    get_jobs_by_run_id,
     get_resolution,
     get_run,
+    save_job,
     save_resolution,
-    save_run,
     save_run_external_resource_links,
 )
 from sematic.db.tests.fixtures import (  # noqa: F401
     allow_any_run_state_transition,
+    make_job,
     make_resolution,
     persisted_external_resource,
     persisted_resolution,
@@ -44,8 +48,6 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     test_db,
 )
 from sematic.plugins.abstract_publisher import AbstractPublisher
-from sematic.scheduling.external_job import JobType
-from sematic.scheduling.kubernetes import KubernetesExternalJob
 from sematic.tests.fixtures import environment_variables
 
 test_get_resolution_auth = make_auth_test("/api/v1/resolutions/123")
@@ -83,15 +85,9 @@ class MockPublisher(AbstractPublisher, AbstractPlugin):
 
 def mock_schedule(resolution, max_parallelism=None, rerun_from=None):  # noqa: F811
     resolution.status = ResolutionStatus.SCHEDULED
-    resolution.external_jobs = (
-        KubernetesExternalJob.new(
-            try_number=0,
-            run_id="a",
-            namespace="foo",
-            job_type=JobType.driver,
-        ),
-    )
-    return resolution
+    job = make_job(run_id=resolution.root_id, kind="resolver")
+    save_job(job)
+    return resolution, job
 
 
 @pytest.fixture
@@ -215,7 +211,7 @@ def test_schedule_resolution_endpoint(
     payload = typing.cast(typing.Dict[str, typing.Any], payload)
 
     assert payload["content"]["root_id"] == persisted_resolution.root_id
-    assert len(payload["content"]["external_jobs_json"]) == 1
+    assert count_jobs_by_run_id(persisted_resolution.root_id, "resolver") == 1
     mock_schedule_resolution.assert_called_once()
     scheduled_resolution = mock_schedule_resolution.call_args.kwargs["resolution"]
     assert isinstance(scheduled_resolution, Resolution)
@@ -239,18 +235,16 @@ def test_cancel_resolution(
     mock_auth,  # noqa: F811
 ):
     def fake_cancel(job):
-        return replace(job, still_exists=False, has_started=True)
+        details = job.details
+        details = replace(details, still_exists=False, has_started=True)
+        job.details = details
+        job.update_status(details.get_status(time.time()))
+        return job
 
     mock_cancel_job.side_effect = fake_cancel
 
-    persisted_resolution.external_jobs = (
-        KubernetesExternalJob.new(
-            try_number=0,
-            run_id="a",
-            namespace="foo",
-            job_type=JobType.driver,
-        ),
-    )
+    job = make_job(run_id=persisted_resolution.root_id, kind="resolver")
+    save_job(job)
     save_resolution(persisted_resolution)
 
     runs, _, __ = get_graph(
@@ -258,15 +252,9 @@ def test_cancel_resolution(
         include_artifacts=False,
         include_edges=False,
     )
-    runs[0].external_jobs = (
-        KubernetesExternalJob.new(
-            try_number=0,
-            run_id="a",
-            namespace="foo",
-            job_type=JobType.worker,
-        ),
-    )
-    save_run(runs[0])
+
+    run_job = make_job(run_id=runs[0].id, kind="run", name="run-job")
+    save_job(run_job)
 
     response = test_client.put(
         f"/api/v1/resolutions/{persisted_resolution.root_id}/cancel"
@@ -277,8 +265,8 @@ def test_cancel_resolution(
     mock_broadcast_cancel.assert_called()
 
     canceled_resolution = get_resolution(persisted_resolution.root_id)
-    for job in canceled_resolution.external_jobs:
-        assert not job.is_active()
+    for job in get_jobs_by_run_id(canceled_resolution.root_id, "resolver"):
+        assert not job.latest_status.is_active()
 
     assert canceled_resolution.status == ResolutionStatus.CANCELED.value
 

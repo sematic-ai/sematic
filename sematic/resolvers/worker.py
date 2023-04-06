@@ -28,7 +28,7 @@ from sematic.future_context import PrivateContext, SematicContext, set_context
 from sematic.log_reader import log_prefix
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.resolvers.log_streamer import ingested_logs, log_ingestion_enabled
-from sematic.scheduling.external_job import JobType
+from sematic.scheduling.job_details import JobKind
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.versions import CURRENT_VERSION_STR
 
@@ -289,7 +289,7 @@ def wrap_main_with_logging():
         os._exit(exit_code)
     print("Starting Sematic Worker")
     args = parse_args()
-    prefix = log_prefix(args.run_id, JobType.driver if args.resolve else JobType.worker)
+    prefix = log_prefix(args.run_id, JobKind.resolver if args.resolve else JobKind.run)
     path = _create_log_file_path("worker.log")
 
     if not log_ingestion_enabled():
