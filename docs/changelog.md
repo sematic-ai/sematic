@@ -5,7 +5,11 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
-    * Support setting and memorizing debug flag for the dashboard. 
+    * [feature] Added support for setting and memorizing a dev debug flag for the Dashboard
+    * [improvement] Several minor logging improvements and fixes
+    * [bugfix] Ensured different users can rerun a pipeline
+    * [bugfix] Ensured pipeline reruns use the submitting user's credentials
+    * [bugfix] Fixed a bug where the Resolver Socket.io client would not be cleanly closed
 * [0.27.0](https://pypi.org/project/sematic/0.27.0/)
     * [feature] Added new S3Location and S3Bucket types that render S3 links in the Dashboard, and
       documented them

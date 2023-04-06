@@ -289,7 +289,7 @@ def test_get_resolution_404(
     assert payload == dict(error="No resolutions with id 'unknownid'")
 
 
-def test_schedule_resolution_endpoint(
+def test_schedule_resolution_endpoint_no_auth(
     mock_auth,  # noqa: F811
     persisted_resolution: Resolution,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
@@ -300,12 +300,49 @@ def test_schedule_resolution_endpoint(
         json={"max_parallelism": 3, "rerun_from": "rerun_from_run_id"},
     )
 
-    payload = response.json
-    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+    assert response.status_code == HTTPStatus.OK
+
+    payload = typing.cast(typing.Dict[str, typing.Any], response.json)
 
     assert payload["content"]["root_id"] == persisted_resolution.root_id
     assert count_jobs_by_run_id(persisted_resolution.root_id, "resolver") == 1
+    assert payload["content"]["user_id"] is None
+    assert payload["content"]["settings_env_vars"] == {}
     mock_schedule_resolution.assert_called_once()
+
+    scheduled_resolution = mock_schedule_resolution.call_args.kwargs["resolution"]
+    assert isinstance(scheduled_resolution, Resolution)
+    assert scheduled_resolution.root_id == persisted_resolution.root_id
+    assert mock_schedule_resolution.call_args.kwargs["max_parallelism"] == 3
+    assert (
+        mock_schedule_resolution.call_args.kwargs["rerun_from"] == "rerun_from_run_id"
+    )
+
+
+def test_schedule_resolution_endpoint_auth(
+    with_auth,  # noqa: F811
+    persisted_resolution: Resolution,  # noqa: F811
+    persisted_user,  # noqa: F811
+    other_persisted_user,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_schedule_resolution: mock.MagicMock,
+):
+    response = test_client.post(
+        "/api/v1/resolutions/{}/schedule".format(persisted_resolution.root_id),
+        json={"max_parallelism": 3, "rerun_from": "rerun_from_run_id"},
+        headers=({"X-API-KEY": persisted_user.api_key}),
+    )
+
+    assert response.status_code == HTTPStatus.OK
+
+    payload = typing.cast(typing.Dict[str, typing.Any], response.json)
+
+    assert payload["content"]["root_id"] == persisted_resolution.root_id
+    assert count_jobs_by_run_id(persisted_resolution.root_id, "resolver") == 1
+    assert payload["content"]["user_id"] == persisted_user.id
+    assert payload["content"]["settings_env_vars"] == {}
+    mock_schedule_resolution.assert_called_once()
+
     scheduled_resolution = mock_schedule_resolution.call_args.kwargs["resolution"]
     assert isinstance(scheduled_resolution, Resolution)
     assert scheduled_resolution.root_id == persisted_resolution.root_id

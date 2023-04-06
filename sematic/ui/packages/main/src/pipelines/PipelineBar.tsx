@@ -164,7 +164,7 @@ export default function PipelineBar() {
         const runs = await reloadRuns();
         if (runs[0].id !== latestRuns[0].id) {
           setSnackMessage({
-            message: "New run available!!!",
+            message: "New run available.",
             actionName: "view",
             autoHide: false,
             closable: true,
