@@ -14,6 +14,7 @@ CURRENT_VERSION = (0, 27, 0)
 # TO DEPRECATE
 # 0.30.0
 # - https://github.com/sematic-ai/sematic/issues/700
+# - https://github.com/sematic-ai/sematic/issues/710
 
 
 # Represents the smallest client version that works with the server
