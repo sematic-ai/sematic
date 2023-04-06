@@ -617,10 +617,11 @@ def test_get_run_logs(
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     mock_result = LogLineResult(
-        more_before=False,
-        more_after=True,
+        can_continue_backward=True,
+        can_continue_forward=True,
         lines=["Line 1", "Line 2"],
         continuation_cursor="abc",
+        reverse_cursor="xyz",
         log_info_message=None,
     )
     mock_load_log_lines.return_value = mock_result
@@ -631,18 +632,22 @@ def test_get_run_logs(
 
     assert payload["content"] == asdict(mock_result)
     kwargs = dict(
-        continuation_cursor="continue...",
+        continuation_cursor_token="continue...",
+        reverse_cursor_token="continue backwards...",
         max_lines=10,
         filter_string="a",
+        reverse=False,
     )
 
     query_string = "&".join(f"{k}={v}" for k, v in kwargs.items())
     test_client.get(f"/api/v1/runs/{persisted_run.id}/logs?{query_string}")
 
     modified_kwargs = dict(
-        continuation_cursor="continue...",
+        continuation_cursor_token="continue...",
+        reverse_cursor_token="continue backwards...",
         max_lines=10,
         filter_strings=["a"],
+        reverse=False,
     )
     mock_load_log_lines.assert_called_with(
         run_id=persisted_run.id,

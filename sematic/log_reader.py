@@ -682,6 +682,12 @@ def get_log_lines_from_line_stream(
     )
     reverse_cursor_file = earliest_included_line_file
     reverse_cursor_index = earliest_included_line_index
+    if reverse_cursor_file is None and len(lines) == 0 and not reverse:
+        # Empty forward traversal. Might still be able to continue
+        # backwards from where the forward cursor was originally
+        # pointing even if we found nothing in forward direction.
+        reverse_cursor_file = original_cursor_file
+        reverse_cursor_index = original_cursor_line_index
 
     if still_running and forward_cursor_file is None and not reverse:
         # No new lines have been found, but run is still running. So
@@ -692,31 +698,33 @@ def get_log_lines_from_line_stream(
     forward_cursor_token = None
     reverse_cursor_token = None
     if forward_cursor_file is not None:
-        forward_cursor_token = Cursor(
-            source_log_key=forward_cursor_file,
-            source_file_line_index=forward_cursor_index,  # type: ignore
-            filter_strings=filter_strings,
-            run_id=run_id,
-            traversal_had_lines=traversal_had_lines or len(lines) > 0,
-            reverse=False,
-        ).to_token()
+        if reverse or (len(lines) == max_lines or still_running):
+            forward_cursor_token = Cursor(
+                source_log_key=forward_cursor_file,
+                source_file_line_index=forward_cursor_index,  # type: ignore
+                filter_strings=filter_strings,
+                run_id=run_id,
+                traversal_had_lines=traversal_had_lines or len(lines) > 0,
+                reverse=False,
+            ).to_token()
     if reverse_cursor_file is not None:
-        reverse_cursor_token = Cursor(
-            source_log_key=reverse_cursor_file,
-            source_file_line_index=reverse_cursor_index,  # type: ignore
-            filter_strings=filter_strings,
-            run_id=run_id,
-            traversal_had_lines=traversal_had_lines or len(lines) > 0,
-            reverse=True,
-        ).to_token()
+        if not reverse or len(lines) == max_lines:
+            reverse_cursor_token = Cursor(
+                source_log_key=reverse_cursor_file,
+                source_file_line_index=reverse_cursor_index,  # type: ignore
+                filter_strings=filter_strings,
+                run_id=run_id,
+                traversal_had_lines=traversal_had_lines or len(lines) > 0,
+                reverse=True,
+            ).to_token()
 
     log_info_message = (
         default_log_info_message if len(lines) > 0 else "No matching log lines."
     )
 
     return LogLineResult(
-        can_continue_backward=reverse_cursor_file is not None,
-        can_continue_forward=forward_cursor_file is not None,
+        can_continue_backward=reverse_cursor_token is not None,
+        can_continue_forward=forward_cursor_token is not None,
         lines=list(reversed(lines)) if reverse else lines,
         continuation_cursor=forward_cursor_token,
         reverse_cursor=reverse_cursor_token,
