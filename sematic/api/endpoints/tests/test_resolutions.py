@@ -22,9 +22,11 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     mock_auth,
     mock_requests,
     test_client,
+    with_auth,
 )
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
+from sematic.db.models.user import User
 from sematic.db.queries import (
     count_jobs_by_run_id,
     get_graph,
@@ -39,9 +41,13 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     allow_any_run_state_transition,
     make_job,
     make_resolution,
+    other_persisted_user,
     persisted_external_resource,
     persisted_resolution,
+    persisted_resolution_w_user,
     persisted_run,
+    persisted_run_w_user,
+    persisted_user,
     pg_mock,
     resolution,
     run,
@@ -295,7 +301,7 @@ def test_cancel_resolution(
 
 
 @mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
-def test_rerun_resolution_endpoint(
+def test_rerun_resolution_endpoint_no_auth(
     mock_broadcast_update: mock.MagicMock,
     persisted_resolution: Resolution,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
@@ -317,11 +323,13 @@ def test_rerun_resolution_endpoint(
     cloned_resolution = get_resolution(payload["content"]["root_id"])
 
     assert cloned_resolution.status == ResolutionStatus.SCHEDULED.value
+    assert cloned_resolution.user_id is None
 
     run = get_run(cloned_resolution.root_id)  # noqa: F811
 
     assert run.parent_id is None
     assert run.future_state == FutureState.CREATED.value
+    assert run.user_id is None
 
     mock_schedule_resolution.assert_called_once()
     assert (
@@ -330,12 +338,111 @@ def test_rerun_resolution_endpoint(
     )
 
 
+@mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
+def test_rerun_resolution_endpoint_auth_same_user(
+    mock_broadcast_update: mock.MagicMock,
+    persisted_resolution_w_user: Resolution,  # noqa: F811
+    persisted_user: User,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    test_db,  # noqa: F811
+    with_auth,  # noqa: F811
+    mock_schedule_resolution: mock.MagicMock,
+):
+    response = test_client.post(
+        f"/api/v1/resolutions/{persisted_resolution_w_user.root_id}/rerun",
+        json={"rerun_from": persisted_resolution_w_user.root_id},
+        headers=({"X-API-KEY": persisted_user.api_key}),
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    mock_broadcast_update.assert_called()
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    cloned_resolution = get_resolution(payload["content"]["root_id"])
+
+    assert cloned_resolution.status == ResolutionStatus.SCHEDULED.value
+    assert cloned_resolution.user_id == persisted_user.id
+
+    run = get_run(cloned_resolution.root_id)  # noqa: F811
+
+    assert run.parent_id is None
+    assert run.future_state == FutureState.CREATED.value
+    assert run.user_id == persisted_user.id
+
+    mock_schedule_resolution.assert_called_once()
+    assert (
+        mock_schedule_resolution.call_args.kwargs["rerun_from"]
+        == persisted_resolution_w_user.root_id
+    )
+
+
+@mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
+def test_rerun_resolution_endpoint_auth_different_user(
+    mock_broadcast_update: mock.MagicMock,
+    persisted_resolution_w_user: Resolution,  # noqa: F811
+    persisted_user: User,  # noqa: F811
+    other_persisted_user: User,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    test_db,  # noqa: F811
+    with_auth,  # noqa: F811
+    mock_schedule_resolution: mock.MagicMock,
+):
+    response = test_client.post(
+        f"/api/v1/resolutions/{persisted_resolution_w_user.root_id}/rerun",
+        json={"rerun_from": persisted_resolution_w_user.root_id},
+        headers=({"X-API-KEY": other_persisted_user.api_key}),
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    mock_broadcast_update.assert_called()
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    cloned_resolution = get_resolution(payload["content"]["root_id"])
+
+    assert cloned_resolution.status == ResolutionStatus.SCHEDULED.value
+    assert cloned_resolution.user_id == other_persisted_user.id
+
+    run = get_run(cloned_resolution.root_id)  # noqa: F811
+
+    assert run.parent_id is None
+    assert run.future_state == FutureState.CREATED.value
+    assert run.user_id == other_persisted_user.id
+
+    mock_schedule_resolution.assert_called_once()
+    assert (
+        mock_schedule_resolution.call_args.kwargs["rerun_from"]
+        == persisted_resolution_w_user.root_id
+    )
+
+
+@mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
+def test_rerun_resolution_endpoint_auth_no_user_fails(
+    mock_broadcast_update: mock.MagicMock,
+    persisted_resolution_w_user: Resolution,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    test_db,  # noqa: F811
+    with_auth,  # noqa: F811
+    mock_schedule_resolution: mock.MagicMock,
+):
+    response = test_client.post(
+        f"/api/v1/resolutions/{persisted_resolution_w_user.root_id}/rerun",
+        json={"rerun_from": persisted_resolution_w_user.root_id},
+    )
+
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+    mock_broadcast_update.assert_not_called()
+
+
 def test_list_external_resources_empty(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     response = test_client.get("/api/v1/resolutions/abc123/external_resources")
-    assert response.status_code == HTTPStatus.OK
 
+    assert response.status_code == HTTPStatus.OK
     assert response.json == dict(external_resources=[])
 
 

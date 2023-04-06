@@ -26,6 +26,7 @@ pytest_test(
         "//sematic/db:queries",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+        "//sematic/db/models:user",
         "//sematic/db/tests:fixtures",
         "//sematic/plugins:abstract_publisher",
         "//sematic/scheduling:kubernetes",

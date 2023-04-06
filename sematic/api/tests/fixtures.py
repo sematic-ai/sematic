@@ -175,3 +175,9 @@ def mock_socketio():
 def mock_auth():
     with mock_server_settings({ServerSettingsVar.SEMATIC_AUTHENTICATE: "false"}):
         yield
+
+
+@pytest.fixture
+def with_auth():
+    with mock_server_settings({ServerSettingsVar.SEMATIC_AUTHENTICATE: "true"}):
+        yield
