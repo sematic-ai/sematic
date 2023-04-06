@@ -8,9 +8,10 @@ import pytest
 from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import mock_storage  # noqa: F401
 from sematic.db.models.resolution import ResolutionStatus
-from sematic.db.queries import save_resolution, save_run
+from sematic.db.queries import save_job, save_resolution, save_run
 from sematic.db.tests.fixtures import (  # noqa: F401
     allow_any_run_state_transition,
+    make_job,
     make_resolution,
     make_run,
     test_db,
@@ -30,7 +31,7 @@ from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
     START_INLINE_RUN_INDICATOR,
 )
-from sematic.scheduling.external_job import ExternalJob, JobType
+from sematic.scheduling.job_details import JobKind
 
 _streamed_lines: List[str] = []
 _DUMMY_LOGS_FILE = "logs.log"
@@ -261,7 +262,7 @@ def test_load_non_inline_logs(
     assert result.lines == []
     assert result.continuation_cursor is None
     assert result.log_info_message == "No log files found"
-    log_preparation_function(run.id, text_lines, mock_storage, JobType.worker)
+    log_preparation_function(run.id, text_lines, mock_storage, JobKind.run)
 
     result = _load_non_inline_logs(
         run_id=run.id,
@@ -333,7 +334,7 @@ def test_line_stream_from_log_directory(
         run_id=run.id,
         text_lines=text_lines,
         mock_storage=mock_storage,
-        job_type=JobType.worker,
+        job_type=JobKind.run,
     )
     line_stream = line_stream_from_log_directory(prefix, None, None)
     materialized_line_stream = list(line_stream)
@@ -346,8 +347,8 @@ def test_line_stream_from_log_directory(
 
     start_index = 50
     line_stream = line_stream_from_log_directory(
-        directory=log_prefix(run.id, JobType.worker),
-        cursor_file=f"{log_prefix(run.id, JobType.worker)}12345.log",
+        directory=log_prefix(run.id, JobKind.run),
+        cursor_file=f"{log_prefix(run.id, JobKind.run)}12345.log",
         cursor_line_index=start_index,
     )
     materialized_line_stream = list(line_stream)
@@ -395,7 +396,7 @@ def test_load_inline_logs(
     assert result.continuation_cursor is None
     assert result.log_info_message == "Resolver logs are missing"
 
-    log_preparation_function(run.id, text_lines, mock_storage, JobType.driver)
+    log_preparation_function(run.id, text_lines, mock_storage, JobKind.resolver)
 
     result = _load_inline_logs(
         run_id=run.id,
@@ -505,12 +506,10 @@ def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noq
     )
 
     run.future_state = FutureState.SCHEDULED
-    run.external_jobs = (
-        ExternalJob(kind="fake", try_number=0, external_job_id="fake"),
-    )
+    save_job(make_job(run_id=run.id))
     save_run(run)
     text_lines = [line.line for line in finite_logs(100)]
-    log_preparation_function(run.id, text_lines, mock_storage, JobType.worker)
+    log_preparation_function(run.id, text_lines, mock_storage, JobKind.run)
 
     result = load_log_lines(
         run_id=run.id,
@@ -622,12 +621,10 @@ def test_load_cloned_run_log_lines(
     )
 
     run.future_state = FutureState.SCHEDULED
-    run.external_jobs = (
-        ExternalJob(kind="fake", try_number=0, external_job_id="fake"),
-    )
+    save_job(make_job(run_id=run.id))
     save_run(run)
     text_lines = [line.line for line in finite_logs(100)]
-    log_preparation_function(run.id, text_lines, mock_storage, JobType.worker)
+    log_preparation_function(run.id, text_lines, mock_storage, JobKind.run)
 
     result = load_log_lines(
         run_id=cloned_run.id,
@@ -714,7 +711,7 @@ def test_continue_from_end_with_no_new_logs(
         run.id,
         text_lines,
         mock_storage,
-        JobType.worker,
+        JobKind.run,
         break_at_line=break_at_line,
         emulate_pending_more_lines=True,
     )
@@ -788,7 +785,7 @@ def test_continue_from_end_with_no_new_logs(
         run.id,
         text_lines,
         mock_storage,
-        JobType.worker,
+        JobKind.run,
         break_at_line=break_at_line,
         emulate_pending_more_lines=False,
     )

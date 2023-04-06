@@ -1,9 +1,10 @@
 # Standard Library
 import datetime
 import json
+import time
 import typing
 import uuid
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from unittest import mock
 
 # Third-party
@@ -29,6 +30,7 @@ from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
+    count_jobs_by_run_id,
     get_run,
     save_job,
     save_resolution,
@@ -48,8 +50,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     test_db,
 )
 from sematic.log_reader import LogLineResult
-from sematic.scheduling.external_job import JobType
-from sematic.scheduling.kubernetes import KubernetesExternalJob
+from sematic.scheduling.job_details import PodSummary
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
 from sematic.utils.exceptions import ExceptionMetadata, InfrastructureError
 
@@ -433,22 +434,8 @@ def test_schedule_run(
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
         mock_k8s.refresh_job.side_effect = lambda job: job
-        mock_k8s.schedule_run_job.side_effect = lambda *_, **__: KubernetesExternalJob(
-            kind="k8s",
-            try_number=0,
-            external_job_id=KubernetesExternalJob.make_external_job_id(
-                persisted_run.id, namespace="foo", job_type=JobType.worker
-            ),
-            pending_or_running_pod_count=1,
-            succeeded_pod_count=0,
-            has_started=False,
-            still_exists=True,
-            start_time=None,
-            most_recent_condition=None,
-            most_recent_pod_phase_message=None,
-            most_recent_pod_condition_message=None,
-            most_recent_container_condition_message=None,
-            has_infra_failure=False,
+        mock_k8s.schedule_run_job.side_effect = lambda *_, **__: make_job(
+            name="job1", run_id=persisted_run.id
         )
         persisted_resolution.status = ResolutionStatus.RUNNING
         save_resolution(persisted_resolution)
@@ -473,7 +460,7 @@ def test_schedule_run(
             "resource_requirements"
         ] == persisted_run.resource_requirements
         run = get_run(persisted_run.id)
-        assert len(run.external_jobs) == 1
+        assert count_jobs_by_run_id(run.id) == 1
 
 
 def test_update_future_states(
@@ -491,32 +478,17 @@ def test_update_future_states(
         assert payload == {
             "content": [{"future_state": "CREATED", "run_id": persisted_run.id}]
         }
-        job = KubernetesExternalJob(
-            kind="k8s",
-            try_number=0,
-            external_job_id=KubernetesExternalJob.make_external_job_id(
-                persisted_run.id, namespace="foo", job_type=JobType.worker
-            ),
-            pending_or_running_pod_count=1,
-            succeeded_pod_count=0,
-            has_started=True,
-            still_exists=True,
-            start_time=1.01,
-            most_recent_condition=None,
-            most_recent_pod_phase_message=None,
-            most_recent_pod_condition_message=None,
-            most_recent_container_condition_message=None,
-            has_infra_failure=False,
-        )
+        job = make_job(name="job1", run_id=persisted_run.id)
+        save_job(job)
 
-        persisted_run.external_jobs = (job,)
         persisted_run.future_state = FutureState.SCHEDULED
         save_run(persisted_run)
 
         mock_k8s.refresh_job.side_effect = lambda job: job
-        response = test_client.post(
-            "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
-        )
+        with mock.patch("sematic.api.endpoints.runs.broadcast_graph_update"):
+            response = test_client.post(
+                "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
+            )
         assert response.status_code == 200
         payload = response.json
         assert payload == {
@@ -525,37 +497,28 @@ def test_update_future_states(
 
 
 def test_update_run_disappeared(
-    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
 
-        job = KubernetesExternalJob(
-            kind="k8s",
-            try_number=0,
-            external_job_id=KubernetesExternalJob.make_external_job_id(
-                persisted_run.id, namespace="foo", job_type=JobType.worker
-            ),
-            pending_or_running_pod_count=1,
-            succeeded_pod_count=0,
-            has_started=True,
-            still_exists=True,
-            start_time=1.01,
-            most_recent_condition=None,
-            most_recent_pod_phase_message=None,
-            most_recent_pod_condition_message=None,
-            most_recent_container_condition_message=None,
-            has_infra_failure=False,
-        )
+        job = make_job(name="job1", run_id=persisted_run.id)
+        save_job(job)
 
-        persisted_run.external_jobs = (job,)
         persisted_run.future_state = FutureState.SCHEDULED
         save_run(persisted_run)
 
         # simulate the job disappearing while the run is still SCHEDULED
         # this happens for example when the job is canceled
-        job.still_exists = False
-        assert not job.is_active()
-        job.has_infra_failure = True
+        details = job.details
+        details.has_started = True
+        details.still_exists = False
+        job.details = details
+        job.update_status(details.get_status(time.time()))
+        assert not job.latest_status.is_active()
+        details.has_infra_failure = True
+        job.details = details
         mock_k8s.refresh_job.side_effect = lambda j: job
 
         with mock.patch(
@@ -573,7 +536,7 @@ def test_update_run_disappeared(
         }
         loaded = get_run(persisted_run.id)
         assert loaded.external_exception_metadata == ExceptionMetadata(
-            repr="The Kubernetes job state is unknown",
+            repr="No pods could be found.",
             name="KubernetesError",
             module="sematic.utils.exceptions",
             ancestors=[
@@ -584,43 +547,51 @@ def test_update_run_disappeared(
 
 
 def test_update_run_k8_pod_error(
-    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    test_db,  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
 
-        job = KubernetesExternalJob(
-            kind="k8s",
-            try_number=0,
-            external_job_id=KubernetesExternalJob.make_external_job_id(
-                persisted_run.id, namespace="foo", job_type=JobType.worker
+        job = make_job(name="job1", run_id=persisted_run.id)
+        details = job.details
+        details.current_pods = [
+            PodSummary(
+                pod_name="foo",
+                phase="Running",
+                has_infra_failure=False,
             ),
-            pending_or_running_pod_count=1,
-            succeeded_pod_count=0,
-            has_started=True,
-            still_exists=True,
-            start_time=1.01,
-            most_recent_condition=None,
-            most_recent_pod_phase_message=None,
-            most_recent_pod_condition_message=None,
-            most_recent_container_condition_message=None,
-            has_infra_failure=False,
-        )
+        ]
+        job.details = details
+        save_job(job)
 
-        persisted_run.external_jobs = (job,)
         persisted_run.future_state = FutureState.SCHEDULED
         save_run(persisted_run)
 
-        job.still_exists = False
-        assert not job.is_active()
-        job.has_infra_failure = True
-        job.most_recent_pod_phase_message = "Failed"
-        job.most_recent_pod_condition_message = "test pod condition"
-        job.most_recent_container_condition_message = "test container condition"
+        details = job.details
+        details.has_started = True
+        details.current_pods = [
+            replace(
+                details.current_pods[0],
+                has_infra_failure=True,
+                phase="Failed",
+                container_exit_code=42,
+                container_condition_message="Pod exited with status code 42",
+            ),
+        ]
+        job.details = details
+        job.update_status(details.get_status(time.time()))
+        assert not job.latest_status.is_active()
+        details.has_infra_failure = True
+        job.details = details
+        job.update_status(details.get_status(time.time()))
         mock_k8s.refresh_job.side_effect = lambda j: job
 
-        response = test_client.post(
-            "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
-        )
+        with mock.patch("sematic.api.endpoints.runs.broadcast_graph_update"):
+            response = test_client.post(
+                "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
+            )
         assert response.status_code == 200
         payload = response.json
         assert payload == {
@@ -628,7 +599,7 @@ def test_update_run_k8_pod_error(
         }
         loaded = get_run(persisted_run.id)
         assert loaded.external_exception_metadata == ExceptionMetadata(
-            repr="Failed\ntest pod condition\ntest container condition",
+            repr="Job failed. Pod exited with status code 42.",
             name="KubernetesError",
             module="sematic.utils.exceptions",
             ancestors=[

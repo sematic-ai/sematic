@@ -29,15 +29,19 @@ from sematic.db.models.resolution import InvalidResolution, Resolution, Resoluti
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
+    count_jobs_by_run_id,
     get_graph,
+    get_jobs_by_run_id,
     get_resolution,
     get_resources_by_root_id,
     get_run,
     get_run_graph,
     save_graph,
+    save_job,
     save_resolution,
 )
 from sematic.plugins.abstract_publisher import get_publishing_plugins
+from sematic.scheduling.job_details import JobKind
 from sematic.scheduling.job_scheduler import schedule_resolution
 from sematic.scheduling.kubernetes import cancel_job
 
@@ -146,7 +150,9 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
             # Note: This message can be used to extract information about pipeline
             # status for usage in dashboards. Some users may be leveraging it for
             # such purposes, so think carefully before changing/removing it.
-            was_remote = len(resolution.external_jobs)
+            was_remote = (
+                count_jobs_by_run_id(resolution.root_id, kind=JobKind.resolver) > 0
+            )
             duration_seconds = None
             if root_run.started_at is not None:
                 duration_seconds = (
@@ -193,11 +199,24 @@ def schedule_resolution_endpoint(
         if "rerun_from" in flask.request.json:
             rerun_from = flask.request.json["rerun_from"]
 
-    resolution = schedule_resolution(
-        resolution=resolution, max_parallelism=max_parallelism, rerun_from=rerun_from
+    jobs = get_jobs_by_run_id(resolution_id, kind=JobKind.resolver)
+    if len(jobs) != 0:
+        return jsonify_error(
+            f"Resolution {resolution_id} was already scheduled",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    resolution, post_schedule_job = schedule_resolution(
+        resolution=resolution,
+        max_parallelism=max_parallelism,
+        rerun_from=rerun_from,
+    )
+    logger.info(
+        "Scheduled resolution with job %s",
+        post_schedule_job.identifier(),
     )
 
     save_resolution(resolution)
+    save_job(post_schedule_job)
 
     payload = dict(
         content=get_resolution_payload(resolution),
@@ -242,9 +261,12 @@ def rerun_resolution_endpoint(
     if user is not None:
         resolution.user_id = user.id
 
-    resolution = schedule_resolution(resolution, rerun_from=rerun_from)
+    resolution, post_schedule_job = schedule_resolution(
+        resolution, rerun_from=rerun_from
+    )
 
     save_resolution(resolution)
+    save_job(post_schedule_job)
 
     payload = dict(
         content=get_resolution_payload(resolution),
@@ -281,10 +303,11 @@ def cancel_resolution_endpoint(
 
     root_run = get_run(resolution.root_id)
 
-    jobs = []
-    for external_job in resolution.external_jobs:
-        jobs.append(cancel_job(external_job))
-    resolution.external_jobs = jobs  # type: ignore
+    jobs = get_jobs_by_run_id(resolution.root_id, kind=JobKind.resolver)
+    for job in jobs:
+        logger.info("Canceling %s", job.identifier())
+        post_cancel_job = cancel_job(job)
+        save_job(post_cancel_job)
 
     resolution.status = ResolutionStatus.CANCELED
     save_resolution(resolution)
@@ -339,12 +362,12 @@ def _cancel_non_terminal_runs(root_id):
     )
 
     for run in unfinished_runs:
-        jobs = []
-        for external_job in run.external_jobs:
-            jobs.append(cancel_job(external_job))
-        run.external_jobs = jobs
-
         run.future_state = FutureState.CANCELED
         run.failed_at = datetime.utcnow()
 
     save_graph(unfinished_runs, [], [])
+
+    for run in unfinished_runs:
+        for job in get_jobs_by_run_id(run.id):
+            logger.info("Canceling %s", job.identifier())
+            save_job(cancel_job(job))
