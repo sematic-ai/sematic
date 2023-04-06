@@ -130,7 +130,7 @@ sematic_py_lib(
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
         "//sematic/resolvers:cloud_resolver",
-        "//sematic/scheduling:external_job",
+        "//sematic/scheduling:job_details",
         "//sematic/utils:exceptions",
     ],
 )

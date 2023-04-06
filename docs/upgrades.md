@@ -116,6 +116,12 @@ delta, but only:
 when performing the upgrade.
 {% endhint %}
 
+### v0.27.0 to v0.28.0
+
+**Important!**: Any in-progress runs will fail when the server is upgraded.
+Please perform this upgrade at a time when there are no runs or where failures
+are acceptable.
+
 ### v0.26.X to v0.27.Y
 
 #### Helm chart changes

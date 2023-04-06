@@ -6,6 +6,8 @@ pytest_test(
         "//sematic:versions",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+        "//sematic/db/models:job",
+        "//sematic/db/tests:fixtures",
         "//sematic/resolvers:resource_requirements",
         "//sematic/scheduling:job_scheduler",
         "//sematic/scheduling:kubernetes",
@@ -21,6 +23,7 @@ pytest_test(
     deps = [
         "//sematic/api/tests:fixtures",
         "//sematic/config:server_settings",
+        "//sematic/db/tests:fixtures",
         "//sematic/resolvers:resource_requirements",
         "//sematic/scheduling:kubernetes",
         "//sematic/tests:fixtures",
