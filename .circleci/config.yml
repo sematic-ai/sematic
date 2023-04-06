@@ -54,6 +54,13 @@ commands:
           working_directory: ./sematic/ui
           command: npm run lint
 
+  validate-schemas:
+    description: Validates all dev resource schemas are up-to-date and consistent
+    steps:
+      - run:
+          name: Check DB Schema
+          command: make migrate_up_sqlite && make update-schema && git diff --exit-code
+
   non-coverage-tests:
     description: Do tests without tracking code coverage
     steps:
@@ -61,6 +68,7 @@ commands:
           name: Run Non-coverage Tests
           # This assumes pytest is installed via the install-package step above
           command: PYTHONUNBUFFERED=1 bazel test //sematic/... --test_output=all
+
   installation-tests:
     description: Do a test of installing sematic via wheel
     steps:
@@ -70,17 +78,19 @@ commands:
       - run:
           name: Test pip install
           command: bazel run //sematic/tests/integration:test_pip_install
+
   notify-completion:
     description: Send a notification to Slack about job completion
     steps:
       - slack/notify:
           event: always
+
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
   init:
     docker:
-      - image: sematicai/sematic-ci:latest
+      - image: $SEMATIC_CI_IMAGE
     steps:
       - checkout
       - install-ci-pip-deps
@@ -94,15 +104,23 @@ jobs:
 
   lint:
     docker:
-      - image: sematicai/sematic-ci:latest
+      - image: $SEMATIC_CI_IMAGE
     steps:
       - attach_workspace:
           at: /home/circleci
       - do-static-analysis
+
+  schemas:
+    docker:
+      - image: $SEMATIC_CI_IMAGE
+    steps:
+      - attach_workspace:
+          at: /home/circleci
+      - validate-schemas
       
   unit-tests:
     docker:
-      - image: sematicai/sematic-ci:latest
+      - image: $SEMATIC_CI_IMAGE
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -121,7 +139,7 @@ jobs:
 
   installation:
     docker:
-      - image: sematicai/sematic-ci:latest
+      - image: $SEMATIC_CI_IMAGE
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -137,7 +155,7 @@ jobs:
   
   integration-test:
     docker:
-      - image: sematicai/sematic-ci:latest
+      - image: $SEMATIC_CI_IMAGE
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -161,7 +179,7 @@ jobs:
   
   fe-unit-tests:
     docker:
-      - image: sematicai/sematic-ci:latest
+      - image: $SEMATIC_CI_IMAGE
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -193,6 +211,9 @@ workflows:
       - lint:
           requires:
             - init
+      - schemas:
+          requires:
+            - init
       - unit-tests:
           requires:
             - init
@@ -208,6 +229,8 @@ workflows:
       - finalize:
           requires:
             - lint
+            - schemas
             - unit-tests
             - integration-test
             - fe-unit-tests
+
