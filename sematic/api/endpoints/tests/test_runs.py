@@ -442,10 +442,13 @@ def test_schedule_run(
 
         with mock.patch(
             "sematic.api.endpoints.runs.broadcast_graph_update"
-        ) as mock_broadcast_graph_update:
+        ) as mock_broadcast_graph_update, mock.patch(
+            "sematic.api.endpoints.runs.broadcast_job_update"
+        ) as mock_broadcast_job_update:
             response = test_client.post(f"/api/v1/runs/{persisted_run.id}/schedule")
 
             mock_broadcast_graph_update.assert_called_once()
+            mock_broadcast_job_update.assert_called_once()
 
         assert response.status_code == 200
 
@@ -485,7 +488,9 @@ def test_update_future_states(
         save_run(persisted_run)
 
         mock_k8s.refresh_job.side_effect = lambda job: job
-        with mock.patch("sematic.api.endpoints.runs.broadcast_graph_update"):
+        with mock.patch(
+            "sematic.api.endpoints.runs.broadcast_graph_update"
+        ), mock.patch("sematic.api.endpoints.runs.broadcast_job_update"):
             response = test_client.post(
                 "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
             )
@@ -523,11 +528,14 @@ def test_update_run_disappeared(
 
         with mock.patch(
             "sematic.api.endpoints.runs.broadcast_graph_update"
-        ) as mock_broadcast_graph_update:
+        ) as mock_broadcast_graph_update, mock.patch(
+            "sematic.api.endpoints.runs.broadcast_job_update"
+        ) as mock_broadcast_job_update:
             response = test_client.post(
                 "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
             )
             mock_broadcast_graph_update.assert_called_once()
+            mock_broadcast_job_update.assert_called_once()
 
         assert response.status_code == 200
         payload = response.json
@@ -588,7 +596,9 @@ def test_update_run_k8_pod_error(
         job.update_status(details.get_status(time.time()))
         mock_k8s.refresh_job.side_effect = lambda j: job
 
-        with mock.patch("sematic.api.endpoints.runs.broadcast_graph_update"):
+        with mock.patch(
+            "sematic.api.endpoints.runs.broadcast_graph_update"
+        ), mock.patch("sematic.api.endpoints.runs.broadcast_job_update"):
             response = test_client.post(
                 "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
             )
