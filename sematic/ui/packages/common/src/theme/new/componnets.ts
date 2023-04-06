@@ -26,6 +26,7 @@ const components: Components = {
                 marginBottom: 0,
                 color: theme.palette.black.main,
                 fontSize: theme.typography.fontSize,
+                fontStyle: 'italic',
 
                 '&:hover': {
                     color: theme.palette.primary.main,
@@ -54,6 +55,7 @@ const components: Components = {
                         color: theme.palette.black.main,
                         width: 'fit-content',
                         fontSize: 14,
+                        fontStyle: 'normal',
                         marginLeft: 20,
                         marginRight: 20,
                         fontWeight: fontWeightBold,
@@ -181,6 +183,7 @@ const components: Components = {
                 props: { variant: 'text' },
                 style: ({ theme }) => {
                     return {
+                        fontStyle: 'italic',
                         color: theme.palette.lightGrey.main,
                         '&:hover': {
                             color: theme.palette.primary.main,
