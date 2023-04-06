@@ -97,7 +97,7 @@ will need to deploy it on Kubernetes.
 
 Prerequisites:
 
-- A Kubernetes cluster running Kubernetes >=1.21
+- A Kubernetes cluster running Kubernetes >=1.23
 - A Postgres database
 - [Helm](https://helm.sh/docs/intro/install/#helm) &
   [kubectl](https://kubernetes.io/docs/tasks/tools/) installed and
