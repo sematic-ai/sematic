@@ -1,9 +1,9 @@
 # Standard Library
 import logging
 import pathlib
+import time
 import uuid
-from dataclasses import dataclass
-from enum import Enum, unique
+from dataclasses import replace
 from typing import Any, Dict, List, Optional, Tuple
 
 # Third-party
@@ -11,7 +11,6 @@ import kubernetes
 from kubernetes.client.exceptions import ApiException, OpenApiException
 from kubernetes.client.models import (
     V1ContainerStatus,
-    V1Job,
     V1Pod,
     V1PodCondition,
     V1Volume,
@@ -25,6 +24,8 @@ from sematic.config.server_settings import ServerSettingsVar, get_server_setting
 from sematic.config.settings import get_plugin_setting
 from sematic.config.user_settings import UserSettingsVar
 from sematic.container_images import CONTAINER_IMAGE_ENV_VAR
+from sematic.db.models.factories import make_job
+from sematic.db.models.job import Job
 from sematic.plugins.storage.s3_storage import S3Storage, S3StorageSettingsVar
 from sematic.resolvers.resource_requirements import (
     KUBERNETES_SECRET_NAME,
@@ -32,8 +33,13 @@ from sematic.resolvers.resource_requirements import (
     KubernetesSecretMount,
     ResourceRequirements,
 )
-from sematic.scheduling.external_job import KUBERNETES_JOB_KIND, ExternalJob, JobType
-from sematic.utils.exceptions import ExceptionMetadata, KubernetesError
+from sematic.scheduling.job_details import (
+    JobDetails,
+    JobKind,
+    JobStatus,
+    KubernetesJobState,
+    PodSummary,
+)
 from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
@@ -66,134 +72,6 @@ RESOLUTION_RESOURCE_REQUIREMENTS = ResourceRequirements(
 DEFAULT_WORKER_SERVICE_ACCOUNT = "default"
 
 
-@unique
-class KubernetesJobCondition(Enum):
-    Complete = "Complete"
-    Failed = "Failed"
-
-
-@dataclass
-class KubernetesExternalJob(ExternalJob):
-
-    # See
-    # github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1JobStatus.md
-    # and: https://kubernetes.io/docs/concepts/workloads/controllers/job/
-    # Explanation of k8s status conditions:
-    # https://maelvls.dev/kubernetes-conditions/
-
-    # TODO #271: deduplicate and rename these properties for ergonomics
-    # this would require a python migration of the db
-
-    # pending_or_running_pod_count is the "active" property.
-    pending_or_running_pod_count: int
-    succeeded_pod_count: int
-    has_started: bool
-    still_exists: bool
-    start_time: Optional[float]
-    most_recent_condition: Optional[str]
-    most_recent_pod_phase_message: Optional[str]
-    most_recent_pod_condition_message: Optional[str]
-    most_recent_container_condition_message: Optional[str]
-    has_infra_failure: Optional[bool]
-
-    @classmethod
-    def new(
-        cls, try_number: int, run_id: str, namespace: str, job_type: JobType
-    ) -> "KubernetesExternalJob":
-        """Get a job with an appropriate configuration for having just started."""
-        return KubernetesExternalJob(
-            kind=KUBERNETES_JOB_KIND,
-            try_number=try_number,
-            external_job_id=cls.make_external_job_id(run_id, namespace, job_type),
-            pending_or_running_pod_count=1,
-            succeeded_pod_count=0,
-            has_started=False,
-            still_exists=True,
-            start_time=None,
-            most_recent_condition=None,
-            most_recent_pod_phase_message=None,
-            most_recent_pod_condition_message=None,
-            most_recent_container_condition_message=None,
-            has_infra_failure=False,
-        )
-
-    @property
-    def run_id(self) -> str:
-        return self.kubernetes_job_name.split("-")[-2]
-
-    @property
-    def namespace(self) -> str:
-        return self.external_job_id.split("/")[0]
-
-    @property
-    def job_type(self) -> JobType:
-        return JobType[self.kubernetes_job_name.split("-")[1]]
-
-    @property
-    def kubernetes_job_name(self) -> str:
-        return self.external_job_id.split("/")[-1]
-
-    @classmethod
-    def make_external_job_id(
-        self, run_id: str, namespace: str, job_type: JobType
-    ) -> str:
-        job_name = "-".join(
-            ("sematic", job_type.value, run_id, _unique_job_id_suffix())
-        )
-        return f"{namespace}/{job_name}"
-
-    def is_active(self) -> bool:
-        # According to the docs:
-        # github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1JobStatus.md
-        # a job's "active" field holds the number of pending or running pods.
-        # This should be a more reliable measure of whether the job is still
-        # active than the number of succeeded or failed pods, as during pod
-        # evictions (which don't stop the job completely, but do stop the pod),
-        # a pod can briefly show up as failed even when another one is
-        # going to be scheduled in its place.
-        if not self.has_started:
-            return True
-        if not self.still_exists:
-            return False
-        if self.most_recent_condition is None:
-            return True
-        if self.most_recent_condition in (
-            KubernetesJobCondition.Complete.value,
-            KubernetesJobCondition.Failed.value,
-        ):
-            return False
-        return self.succeeded_pod_count == 0 and self.pending_or_running_pod_count > 0
-
-    def get_exception_metadata(self) -> Optional[ExceptionMetadata]:
-        """
-        Returns an `ExceptionMetadata` object in case the job has experienced a
-        failure.
-
-        The message is based on pod and container statuses.
-        """
-        if not self.has_infra_failure:
-            return None
-
-        message = "\n".join(
-            [
-                message
-                for message in (
-                    self.most_recent_pod_phase_message,
-                    self.most_recent_pod_condition_message,
-                    self.most_recent_container_condition_message,
-                )
-                if message is not None
-            ]
-        )
-
-        return ExceptionMetadata(
-            repr=message or "The Kubernetes job state is unknown",
-            name=KubernetesError.__name__,
-            module=KubernetesError.__module__,
-            ancestors=ExceptionMetadata.ancestors_from_exception(KubernetesError),
-        )
-
-
 def _unique_job_id_suffix() -> str:
     """
     Jobs need to have unique names in case of retries.
@@ -206,22 +84,6 @@ def _is_none_or_empty(list_: Optional[List]) -> bool:
     Returns True if a list is None or empty, False otherwise.
     """
     return list_ is None or len(list_) == 0
-
-
-def _v1_pod_precedence_key(pod: V1Pod) -> int:
-    """
-    To be used as a sorting key when determining the precedence of `V1Pod`s.
-
-    Uses the phase of the pod because the start_time might be None in some phases.
-    """
-    if pod.status is None:
-        return -1
-
-    return (
-        POD_PHASE_PRECEDENCE.index(pod.status.phase)
-        if pod.status.phase in POD_PHASE_PRECEDENCE
-        else -1
-    )
 
 
 def _v1_pod_condition_precedence_key(condition: V1PodCondition) -> Any:
@@ -284,147 +146,23 @@ def _get_standardized_container_state(
         return "Container is running", None, None
 
     if state.terminated is not None:
+        exit_code = _get_container_exit_code_from_status(container_status)
+        message = state.terminated.message
+
+        if exit_code is not None:
+            # exit code is very useful info, but is not included in
+            # the reason/message. Let's add it.
+            if message is None:
+                message = f"Exit code is {exit_code}"
+            else:
+                message += f". Exit code is {exit_code}"
         return (
             "Container is terminated",
             state.terminated.reason,
-            state.terminated.message,
+            message,
         )
 
     return "Container state is unreadable!", None, None
-
-
-def _get_most_recent_job_condition(
-    job: KubernetesExternalJob, k8s_job: V1Job
-) -> Optional[str]:
-    """
-    Returns a human-readable message describing the latest condition for the specified
-    job based on the information in the specified `V1Job` payload, falling back to the
-    existing latest job condition if there is no new information.
-    """
-    if (
-        k8s_job.status.conditions is None  # type: ignore
-        or len(k8s_job.status.conditions) == 0  # type: ignore
-    ):
-        return job.most_recent_condition
-
-    conditions = sorted(
-        k8s_job.status.conditions,  # type: ignore
-        key=lambda c: c.last_transition_time,
-        reverse=True,
-    )
-
-    for condition in conditions:
-        if condition.status != "True":
-            # we're only interested in True conditions
-            continue
-        if condition.type in (
-            KubernetesJobCondition.Complete.value,
-            KubernetesJobCondition.Failed.value,
-        ):
-            return condition.type
-
-    return job.most_recent_condition
-
-
-def _get_most_recent_pod_details(
-    job: KubernetesExternalJob,
-) -> Tuple[Optional[str], Optional[str], Optional[str], bool]:
-    """
-    Fetches the details of the latest pod associated with the specified job.
-
-    Returns a tuple containing:
-    - the pod phase
-    - a human-readable message describing the pod status
-    - a human-readable message describing the container status
-    - and whether ot not the above should be interpreted as an external failure
-    """
-
-    most_recent_pod_phase_message = None
-    most_recent_pod_condition_message = None
-    most_recent_container_condition_message = None
-    has_infra_failure = False
-
-    try:
-        k8s_pods = kubernetes.client.CoreV1Api().list_namespaced_pod(
-            namespace=job.namespace,
-            label_selector=f"job-name={job.kubernetes_job_name}",
-        )
-        logger.debug("K8 pods for job %s:\n%s", job.external_job_id, k8s_pods)
-
-        if _is_none_or_empty(k8s_pods.items):
-            return None, None, None, True
-
-        # we can only have multiple pods in case of eviction (famous last words),
-        # so the one in the earliest phase lifecycle should be the newest one
-        most_recent_pod = min(k8s_pods.items, key=_v1_pod_precedence_key)
-
-        # if this is None, then we can't extract any information
-        if most_recent_pod.status is None:
-            return None, None, None, True
-
-        most_recent_pod_phase_message = f"Pod phase is '{most_recent_pod.status.phase}'"
-
-        # try to build a message based on the latest pod condition
-        if _is_none_or_empty(most_recent_pod.status.conditions):
-            most_recent_pod_condition_message = "Pod condition is unknown!"
-            has_infra_failure = True
-        else:
-            most_recent_condition = min(
-                most_recent_pod.status.conditions,  # type: ignore
-                key=_v1_pod_condition_precedence_key,
-            )
-            condition_modifier = (
-                "" if most_recent_condition.status == "True" else "NOT "
-            )
-            most_recent_pod_condition_message = _make_final_message(
-                f"Pod condition is {condition_modifier}'{most_recent_condition.type}'",
-                most_recent_condition.reason,
-                most_recent_condition.message,
-            )
-
-            if most_recent_condition.type in POD_FAILURE_PHASES:
-                has_infra_failure = True
-
-        # try to build a message based on the latest container status
-        if _is_none_or_empty(most_recent_pod.status.container_statuses):
-            most_recent_container_condition_message = "There is no container!"
-            has_infra_failure = most_recent_pod.status.phase != "Pending"
-        else:
-            # there can be only one
-            most_recent_container_status = most_recent_pod.status.container_statuses[
-                0
-            ]  # type: ignore
-            most_recent_container_condition_message = _make_final_message(
-                *_get_standardized_container_state(most_recent_container_status)
-            )
-
-            if _has_container_failure(most_recent_container_status):
-                has_infra_failure = most_recent_pod.status.phase != "Pending"
-
-    except OpenApiException as e:
-        has_infra_failure = True
-        logger.warning(
-            "Got exception while looking for pods for job %s",
-            job.external_job_id,
-            exc_info=e,
-        )
-
-    except Exception as e:
-        has_infra_failure = True
-        logger.error(
-            "Got exception while extracting information from pods for job %s",
-            job.external_job_id,
-            exc_info=e,
-        )
-
-    finally:
-        # even if we raised, some of these fields might have been filled in
-        return (
-            most_recent_pod_phase_message,
-            most_recent_pod_condition_message,
-            most_recent_container_condition_message,
-            has_infra_failure,
-        )
 
 
 def load_kube_config():
@@ -443,26 +181,25 @@ def load_kube_config():
 
 
 @retry(exceptions=(ApiException, ConnectionError), tries=3, delay=5, jitter=2)
-def cancel_job(job: KubernetesExternalJob) -> KubernetesExternalJob:
+def cancel_job(job: Job) -> Job:
     """
     Cancel a remote k8s job.
     """
     load_kube_config()
-    if not isinstance(job, KubernetesExternalJob):
-        raise ValueError(
-            f"Expected a {KubernetesExternalJob.__name__}, got a {type(job).__name__}"
-        )
-    if not job.still_exists:
+    if not isinstance(job, Job):
+        raise ValueError(f"Expected a {Job.__name__}, got a {type(job).__name__}")
+    details = job.details
+    if not details.still_exists:
         logger.info(
             "No need to cancel Kubernetes job %s, as it no longer exists",
-            job.external_job_id,
+            job.identifier(),
         )
         return job
 
     try:
         kubernetes.client.BatchV1Api().delete_namespaced_job(
             namespace=job.namespace,
-            name=job.kubernetes_job_name,
+            name=job.name,
             grace_period_seconds=0,
             propagation_policy="Background",
         )
@@ -471,44 +208,69 @@ def cancel_job(job: KubernetesExternalJob) -> KubernetesExternalJob:
         if e.status == 404:
             pass
 
-    job.still_exists = False
+    details.still_exists = False
+    job.details = details
 
     return job
 
 
 @retry(exceptions=(ApiException, ConnectionError), tries=3, delay=5, jitter=2)
-def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
+def refresh_job(job: Job) -> Job:
     """Reach out to K8s for updates on the status of the job."""
     load_kube_config()
-    if not isinstance(job, KubernetesExternalJob):
-        raise ValueError(
-            f"Expected a {KubernetesExternalJob.__name__}, got a {type(job).__name__}"
-        )
+    details = job.details
+    details.previous_pod_name = details.latest_pod_name()
+    details.previous_node_name = details.latest_node_name()
+
+    if not isinstance(job, Job):
+        raise ValueError(f"Expected a {Job.__name__}, got a {type(job).__name__}")
 
     try:
         k8s_job = kubernetes.client.BatchV1Api().read_namespaced_job_status(
-            name=job.kubernetes_job_name, namespace=job.namespace
+            name=job.name, namespace=job.namespace
         )
-        logger.debug("K8 job status for job %s:\n%s", job.external_job_id, k8s_job)
+        logger.debug("K8 job status for job %s:\n%s", job.identifier(), k8s_job)
 
     except ApiException as e:
         if e.status == 404:
-            logger.warning("Got 404 while looking for job %s", job.external_job_id)
-            if not job.has_started:
+            logger.warning("Got 404 while looking for job %s", job.identifier())
+            if not job.details.has_started:
+                job.update_status(
+                    replace(
+                        job.latest_status,
+                        last_updated_epoch_seconds=time.time(),
+                    )
+                )
                 return job  # still hasn't started
             else:
-                job.still_exists = False
-                job.has_infra_failure = True
+                details.still_exists = False
+                job.details = details
+                job.update_status(details.get_status(time.time()))
                 return job
         raise e
+
+    try:
+        pods, has_infra_failure = _get_pods_for_job(job)
+        pods = pods or []
+        details.current_pods = [_get_pod_summary(pod) for pod in pods]
+        details.has_infra_failure |= has_infra_failure
+    except Exception:
+        logger.exception("Exception getting pods for job %s", job.identifier())
+        details.current_pods = []
+
+    latest_pod_summary = details.latest_pod_summary()
+    if latest_pod_summary is None:
+        details.has_infra_failure = True
+    else:
+        details.has_infra_failure |= latest_pod_summary.has_infra_failure
 
     if k8s_job.status is None:
         raise ValueError(
             "Received malformed k8 job payload with no status "
-            f"for job {job.external_job_id}"
+            f"for job {job.namespace}/{job.name}"
         )
 
-    if not job.has_started:
+    if not job.details.has_started:
         # this should never be None once the job has started
         ts = (
             k8s_job.status.start_time.timestamp()
@@ -518,38 +280,211 @@ def refresh_job(job: ExternalJob) -> KubernetesExternalJob:
         if ts is None:
             logger.warning(
                 "Setting has_started=True for job %s with no start time!",
-                job.external_job_id,
+                job.identifier(),
             )
         else:
             logger.info(
                 "Setting has_started=True for job %s at timestamp %s",
-                job.external_job_id,
+                job.identifier(),
                 ts,
             )
-        job.has_started = True
-        job.start_time = ts
+        details.has_started = True
+        details.start_time = ts
 
-    # trust the status.active field over the state of pods,
-    # as explained in KubernetesExternalJob.is_active()
-    job.pending_or_running_pod_count = (
+    # Trust the status.active field over the state of pods. According to the docs:
+    # github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1JobStatus.md
+    # a job's "active" field holds the number of pending or running pods.
+    # This should be a more reliable measure of whether the job is still
+    # active than the number of succeeded or failed pods, as during pod
+    # evictions (which don't stop the job completely, but do stop the pod),
+    # a pod can briefly show up as failed even when another one is
+    # going to be scheduled in its place.
+    details.pending_or_running_pod_count = (
         k8s_job.status.active if k8s_job.status.active is not None else 0  # type: ignore
     )
-    job.succeeded_pod_count = (
+    details.succeeded_pod_count = (
         k8s_job.status.succeeded  # type: ignore
         if k8s_job.status.succeeded is not None  # type: ignore
         else 0
     )
 
-    job.most_recent_condition = _get_most_recent_job_condition(job, k8s_job)
-    (
-        job.most_recent_pod_phase_message,
-        job.most_recent_pod_condition_message,
-        job.most_recent_container_condition_message,
-        job.has_infra_failure,
-    ) = _get_most_recent_pod_details(job)
+    job.details = details
 
-    logger.debug("Job %s refreshed: %s", job.external_job_id, job)
+    job.update_status(details.get_status(time.time()))
+
+    logger.debug("Job %s refreshed: %s", job.identifier(), job)
     return job
+
+
+def _get_pod_summary(pod: V1Pod) -> PodSummary:
+    try:
+        node_name = pod.spec.node_name if pod.spec is not None else None
+        has_infra_failure = False
+        container_exit_code = None
+        if pod.status is None:
+            logger.warning("Pod %s has no status", pod.metadata.name)  # type: ignore
+            return PodSummary(
+                pod_name=pod.metadata.name,  # type: ignore
+                has_infra_failure=has_infra_failure,
+                node_name=node_name,
+            )
+
+        unschedulable_reason = None
+        most_recent_condition = None
+        if _is_none_or_empty(pod.status.conditions):
+            most_recent_condition_message = "Most recent pod condition is unknown"
+            most_recent_condition_name = "Unknown"
+        else:
+            unschedulable_reason = _get_unschedulable_reason(pod.status.conditions)
+            most_recent_condition = min(
+                pod.status.conditions,  # type: ignore
+                key=_v1_pod_condition_precedence_key,
+            )
+            condition_modifier = (
+                "" if most_recent_condition.status == "True" else "NOT "
+            )
+            most_recent_condition_message = _make_final_message(
+                f"Pod condition is {condition_modifier}'{most_recent_condition.type}'",
+                most_recent_condition.reason,
+                most_recent_condition.message,
+            )
+            most_recent_condition_name = (
+                f"{condition_modifier}{most_recent_condition.type}".replace(
+                    "NOT ", "Not"
+                )
+            )
+
+            if most_recent_condition.type in POD_FAILURE_PHASES:
+                has_infra_failure = True
+
+        container_restarts = None
+        # try to build a message based on the latest container status
+        if _is_none_or_empty(pod.status.container_statuses):
+            most_recent_container_condition_message = "There is no container!"
+            has_infra_failure = pod.status.phase != "Pending"
+        else:
+            # there can be only one
+            most_recent_container_status = pod.status.container_statuses[
+                0
+            ]  # type: ignore
+
+            container_exit_code = _get_container_exit_code_from_status(
+                most_recent_container_status
+            )
+
+            most_recent_container_condition_message = _make_final_message(
+                *_get_standardized_container_state(most_recent_container_status)
+            )
+
+            if _has_container_failure(most_recent_container_status):
+                has_infra_failure = pod.status.phase != "Pending"
+
+            container_restarts = getattr(
+                most_recent_container_status, "restart_count", None
+            )
+
+        return PodSummary(
+            pod_name=pod.metadata.name,  # type: ignore
+            container_restart_count=container_restarts,
+            phase=pod.status.phase,
+            condition_message=most_recent_condition_message,
+            condition=most_recent_condition_name,
+            container_condition_message=most_recent_container_condition_message,
+            container_exit_code=container_exit_code,
+            start_time_epoch_seconds=(
+                pod.status.start_time.timestamp()
+                if pod.status.start_time is not None
+                else None
+            ),
+            has_infra_failure=has_infra_failure,
+            unschedulable_message=unschedulable_reason,
+            node_name=node_name,
+        )
+    except Exception as e:
+        pod_name = "Unknown"
+        try:
+            pod_name = pod.metadata.name  # type: ignore
+        except Exception as e2:
+            logger.error("Pod name could not be determined", exc_info=e2)
+        logger.error(
+            "Got exception while extracting information from pods: %s",
+            pod_name,
+            exc_info=e,
+        )
+        return PodSummary(
+            pod_name=pod_name,
+            has_infra_failure=True,
+        )
+
+
+def _get_pods_for_job(
+    job: Job,
+) -> Tuple[Optional[List[V1Pod]], bool]:
+    """Get the pod(s) associated with the given job
+
+    Parameters
+    ----------
+    job:
+        The job to get pods for
+
+    Returns
+    -------
+    A tuple where the first element is the list of pods, if the list can
+    be determined. If the list of pods can't be determined due to error,
+    the first element will be None.
+    The second element of the tuple is a boolean indicating if there was
+    an infra failure during pod retrieval (True if there was an error).
+    """
+    k8s_pods = None
+    has_infra_failure = False
+    try:
+        k8s_pods = kubernetes.client.CoreV1Api().list_namespaced_pod(
+            namespace=job.namespace,
+            label_selector=f"job-name={job.name}",
+        )
+        logger.debug("K8 pods for job %s:\n%s", job.identifier(), k8s_pods)
+
+        if _is_none_or_empty(k8s_pods.items):
+            return [], has_infra_failure
+        return list(k8s_pods.items), has_infra_failure
+    except OpenApiException as e:
+        has_infra_failure = True
+        logger.warning(
+            "Got exception while looking for pods for job %s",
+            job.identifier(),
+            exc_info=e,
+        )
+        return None, has_infra_failure
+
+
+def _get_unschedulable_reason(pod_conditions) -> Optional[str]:
+    message = None
+    for condition in pod_conditions:
+        if condition.type != "PodScheduled" or condition.status == "True":
+            continue
+
+        message = (
+            f"Pod is not scheduled. Reason: {condition.reason}: {condition.message}. "
+            f"Depending on your Kubernetes cluster's configuration and current usage, "
+            f"this may or may not resolve itself on its own via autoscaling or resource "
+            f"reclamation. Please consult your cluster operator."
+        )
+    return message
+
+
+def _get_container_exit_code_from_status(
+    container_status: Optional[V1ContainerStatus],
+) -> Optional[int]:
+    if container_status is None:
+        return None
+    state = getattr(container_status, "state", None)
+    if state is None:
+        return None
+    terminated = getattr(state, "terminated", None)
+    if terminated is None:
+        return None
+    exit_code = getattr(terminated, "exit_code", None)
+    return exit_code
 
 
 def _schedule_kubernetes_job(
@@ -718,7 +653,7 @@ def schedule_resolution_job(
     user_settings: Dict[str, str],
     max_parallelism: Optional[int] = None,
     rerun_from: Optional[str] = None,
-) -> ExternalJob:
+) -> Job:
 
     namespace = get_server_setting(ServerSettingsVar.KUBERNETES_NAMESPACE)
     service_account = get_server_setting(
@@ -731,14 +666,23 @@ def schedule_resolution_job(
         ServerSettingsVar.SEMATIC_WORKER_SOCKET_IO_ADDRESS, None
     )
 
-    external_job = KubernetesExternalJob.new(
-        try_number=0,
-        run_id=resolution_id,
+    job = make_job(
         namespace=namespace,
-        job_type=JobType.driver,
+        name=f"sematic-driver-{resolution_id}",
+        run_id=resolution_id,
+        status=JobStatus(
+            state=KubernetesJobState.Requested,
+            message=(
+                "Resolution has been requested by Sematic but "
+                "not yet acknowledged by Kubernetes"
+            ),
+            last_updated_epoch_seconds=time.time(),
+        ),
+        details=JobDetails(try_number=0),
+        kind=JobKind.resolver,
     )
 
-    logger.info("Scheduling job %s", external_job.kubernetes_job_name)
+    logger.info("Scheduling job %s", job.identifier())
 
     args = ["--run_id", resolution_id, "--resolve"]
 
@@ -749,7 +693,7 @@ def schedule_resolution_job(
         args += ["--rerun-from", rerun_from]
 
     _schedule_kubernetes_job(
-        name=external_job.kubernetes_job_name,
+        name=job.name,
         image=image,
         environment_vars=user_settings,
         namespace=namespace,
@@ -759,7 +703,7 @@ def schedule_resolution_job(
         resource_requirements=RESOLUTION_RESOURCE_REQUIREMENTS,
         args=args,
     )
-    return external_job
+    return job
 
 
 def schedule_run_job(
@@ -768,7 +712,7 @@ def schedule_run_job(
     user_settings: Dict[str, str],
     resource_requirements: Optional[ResourceRequirements] = None,
     try_number: int = 0,
-) -> ExternalJob:
+) -> Job:
     """Schedule a job on k8s for a calculator execution."""
     # "User" in this case is the server.
     namespace = get_server_setting(ServerSettingsVar.KUBERNETES_NAMESPACE)
@@ -782,16 +726,25 @@ def schedule_run_job(
         ServerSettingsVar.SEMATIC_WORKER_SOCKET_IO_ADDRESS, None
     )
 
-    external_job = KubernetesExternalJob.new(
-        try_number, run_id, namespace, JobType.worker
+    job = make_job(
+        namespace=namespace,
+        name=f"sematic-worker-{run_id}-{_unique_job_id_suffix()}",
+        run_id=run_id,
+        status=JobStatus(
+            state=KubernetesJobState.Requested,
+            message=(
+                "Run has been requested by Sematic but not yet acknowledged by Kubernetes"
+            ),
+            last_updated_epoch_seconds=time.time(),
+        ),
+        details=JobDetails(try_number=try_number),
+        kind=JobKind.run,
     )
-    logger.info(
-        "Scheduling job %s with image %s", external_job.kubernetes_job_name, image
-    )
+    logger.info("Scheduling job %s with image %s", job.identifier(), image)
     args = ["--run_id", run_id]
 
     _schedule_kubernetes_job(
-        name=external_job.kubernetes_job_name,
+        name=job.name,
         image=image,
         environment_vars=user_settings,
         namespace=namespace,
@@ -801,7 +754,7 @@ def schedule_run_job(
         resource_requirements=resource_requirements,
         args=args,
     )
-    return external_job
+    return job
 
 
 def _volume_secrets(
