@@ -376,6 +376,8 @@ def _load_non_inline_logs(
         filter_strings=filter_strings,
         run_id=run_id,
         default_log_info_message=default_log_info_message,
+        cursor_file=cursor_file,
+        cursor_line_index=cursor_line_index,
         reverse=reverse,
     )
 
@@ -446,6 +448,8 @@ def _load_inline_logs(
         max_lines=max_lines,
         filter_strings=filter_strings,
         run_id=run_id,
+        cursor_file=cursor_file,
+        cursor_line_index=cursor_line_index,
         default_log_info_message=default_log_info_message,
         reverse=reverse,
     )
@@ -559,6 +563,8 @@ def get_log_lines_from_line_stream(
     max_lines: int,
     filter_strings: List[str],
     run_id: str,
+    cursor_file: Optional[str] = None,
+    cursor_line_index: Optional[int] = None,
     default_log_info_message: Optional[str] = None,
     reverse: bool = False,
 ) -> LogLineResult:
@@ -579,6 +585,11 @@ def get_log_lines_from_line_stream(
         filters will be returned.
     run_id:
         The id of the run the traversal is for.
+    cursor_file:
+        The file of the cursor in the current direction, if continuing from a cursor.
+    cursor_line_index:
+        The line index of the cursor in the current direction, if continuing from a
+        cursor.
     default_log_info_message:
         A default extra log info message to provide the user, unless a specific one needs
         to be provided.
@@ -589,6 +600,8 @@ def get_log_lines_from_line_stream(
     -------
     A subset of the logs for the given run
     """
+    original_cursor_file = cursor_file
+    original_cursor_line_index = cursor_line_index
     buffer_iterator = iter(line_stream)
     keep_going = True
     lines: List[str] = []
@@ -596,11 +609,12 @@ def get_log_lines_from_line_stream(
     def passes_filter(line: LogLine) -> bool:
         return all(substring in line.line for substring in filter_strings)
 
-    current_direction_cursor_log_file = None
-    current_direction_cursor_log_index = None
-    other_direction_cursor_log_file = None
-    other_direction_cursor_log_index = None
-    has_more_in_current_direction = False
+    # "earliest" and "latest" here refer to chronological
+    # line order, not iteration order.
+    earliest_included_line_file = None
+    earliest_included_line_index = None
+    latest_included_line_file = None
+    latest_included_line_index = None
     while keep_going:
         try:
             # For reverse direction, these lines are being iterated in
@@ -609,61 +623,45 @@ def get_log_lines_from_line_stream(
             if not passes_filter(line):
                 continue
 
-            if other_direction_cursor_log_index is None:
-                other_direction_cursor_log_file = line.source_file
-                other_direction_cursor_log_index = line.source_file_index
+            if reverse:
+                if latest_included_line_index is None:
+                    latest_included_line_file = line.source_file
+                    latest_included_line_index = line.source_file_index
+                earliest_included_line_file = line.source_file
+                earliest_included_line_index = line.source_file_index
+            else:
+                if earliest_included_line_index is None:
+                    earliest_included_line_file = line.source_file
+                    earliest_included_line_index = line.source_file_index
+                latest_included_line_file = line.source_file
+                latest_included_line_index = line.source_file_index
 
-            if len(lines) < max_lines:
-                lines.append(line.line)
-                current_direction_cursor_log_file = line.source_file
-                current_direction_cursor_log_index = line.source_file_index
-            elif len(lines) >= max_lines:
+            lines.append(line.line)
+            if len(lines) >= max_lines:
                 keep_going = False
-                has_more_in_current_direction = True
-
-                # Cursor is *beyond* the returned lines in its
-                # current direction at this point.
-                if not reverse:
-                    current_direction_cursor_log_file = line.source_file
-                    current_direction_cursor_log_index = line.source_file_index
-
         except StopIteration:
             keep_going = False
-
-    if still_running and not reverse:
-        # more lines might still be produced later
-        has_more_in_current_direction = True
 
     # recall: in the forward direction, when starting from a cursor, the
     # line pointed to by the cursor is *included*. In the reverse direction,
     # the line pointed to by the cursor is *omitted*.
-    if not reverse:
-        # Forward cursor should be determined by the first line
-        # NOT included in returned lines. Reverse one should be
-        # determined by the first line that IS included in returned
-        # lines (since that will be omitted on reverse traversal).
-        if has_more_in_current_direction:
-            forward_cursor_file = current_direction_cursor_log_file
-            forward_cursor_index = current_direction_cursor_log_index
-        else:
-            forward_cursor_file = None
-            forward_cursor_index = None
-        reverse_cursor_file = other_direction_cursor_log_file
-        reverse_cursor_index = other_direction_cursor_log_index
-    else:
-        # Forward cursor should be AFTER the latest (chronologically)
-        # line included in the returned lines. Reverse cursor should
-        # point AT the earliest (chronoligically) line included.
-        forward_cursor_file = other_direction_cursor_log_file
-        if other_direction_cursor_log_index is not None:
-            forward_cursor_index = other_direction_cursor_log_index + 1
 
-        if has_more_in_current_direction:
-            reverse_cursor_file = current_direction_cursor_log_file
-            reverse_cursor_index = current_direction_cursor_log_index
-        else:
-            reverse_cursor_file = None
-            reverse_cursor_index = None
+    # Forward cursor should be AFTER the latest included line.
+    # Reverse one should be AT the earliest included line.
+    forward_cursor_file = latest_included_line_file
+    forward_cursor_index: Optional[int] = (
+        latest_included_line_index + 1
+        if latest_included_line_index is not None
+        else None
+    )
+    reverse_cursor_file = earliest_included_line_file
+    reverse_cursor_index = earliest_included_line_index
+
+    if still_running and forward_cursor_file is None and not reverse:
+        # No new lines have been found, but run is still running. So
+        # we might get more if we try the same cursor again after waiting.
+        forward_cursor_file = original_cursor_file
+        forward_cursor_index = original_cursor_line_index
 
     forward_cursor_token = None
     reverse_cursor_token = None
@@ -692,7 +690,7 @@ def get_log_lines_from_line_stream(
 
     return LogLineResult(
         can_continue_backward=reverse_cursor_file is not None,
-        can_continue_forward=forward_cursor_file is not None or still_running,
+        can_continue_forward=forward_cursor_file is not None,
         lines=list(reversed(lines)) if reverse else lines,
         continuation_cursor=forward_cursor_token,
         reverse_cursor=reverse_cursor_token,
