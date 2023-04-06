@@ -97,7 +97,7 @@ will need to deploy it on Kubernetes.
 
 Prerequisites:
 
-- A Kubernetes cluster running Kubernetes >=1.21
+- A Kubernetes cluster running Kubernetes >=1.23.  1.24 recommended as officially supported.
 - A Postgres database
 - [Helm](https://helm.sh/docs/intro/install/#helm) &
   [kubectl](https://kubernetes.io/docs/tasks/tools/) installed and
@@ -181,12 +181,7 @@ authentication behavior for your deployed app.
 - `auth.authorized_email_domain` denies access to users whose email is not of
   said domain.
 
-##### SSL
-
-If you wish to put your Kubernetes Sematic deployment behind SSL, the recommended way to do
-this is to set up an [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/)
-that points to the service (named `sematic-server`) deployed by the Helm chart,
-and set up your ingress to use SSL.
+##### Ingress
 
 The Helm chart can create an ingress for you by setting `ingress.create` to `true`, and by
 specifying the ingress domain information like so in the `ingress.hosts` setting:
@@ -198,6 +193,13 @@ specifying the ingress domain information like so in the `ingress.hosts` setting
         - path: /
           pathType: ImplementationSpecific
 ```
+
+##### SSL
+
+If you wish to put your Kubernetes Sematic deployment behind SSL, the recommended way to do
+this is to set up an [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/)
+that points to the service (named `sematic-server`) deployed by the Helm chart,
+and set up your ingress to use SSL.
 
 ##### Additional configuration options
 
