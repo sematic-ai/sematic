@@ -292,22 +292,10 @@ def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
         for k, default_v in default_kwargs.items()
     }
 
-    # cheating!
-    # kwargs["reverse"] = True
-    # kwargs["reverse_cursor_token"] = kwargs["continuation_cursor_token"]
-    # kwargs["continuation_cursor_token"] = None
-    # logger.info("Cheat kwargs: %s", kwargs)
-    #######
-
     result = load_log_lines(
         run_id=run_id,
         **kwargs,  # type: ignore
     )
-
-    # cheating!
-    # result.continuation_cursor = result.reverse_cursor
-    # result.lines = list(reversed(result.lines))
-    #######
 
     payload = dict(content=asdict(result))
     return flask.jsonify(payload)

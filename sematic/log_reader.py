@@ -222,11 +222,11 @@ def load_log_lines(
     continuation_cursor_token:
         A cursor indicating where to continue reading logs from. Should be
         None if the logs are being read from the beginning or `reverse` is
-        True.
+        True. Ignored if `reverse` is True.
     reverse_cursor_token:
         A cursor indicating where to continue reading logs from in the backward
         direction. Should be None if the logs are being read from the end or
-        `reverse` is False.
+        `reverse` is False. Ignored if `reverse` is False.
     max_lines:
         The highest number of log lines that should be returned at once
     filter_strings:
