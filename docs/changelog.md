@@ -5,6 +5,7 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+    * Support setting and memorizing debug flag for the dashboard. 
 * [0.27.0](https://pypi.org/project/sematic/0.27.0/)
     * [feature] Added new S3Location and S3Bucket types that render S3 links in the Dashboard, and
       documented them
