@@ -122,6 +122,10 @@ when performing the upgrade.
 Please perform this upgrade at a time when there are no runs or where failures
 are acceptable.
 
+As of this release, the minumum supported Kubernetes version has been changed to >1.23.
+Non supported versions *may* continue to work, but are not validated. Please upgrade
+your Kubernetes if you are on an older version.
+
 ### v0.26.X to v0.27.Y
 
 #### Helm chart changes
