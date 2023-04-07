@@ -28,6 +28,8 @@ export function RunTime(props: { run: Run; prefix?: string }) {
   let endTimeString = run.failed_at || run.resolved_at;
   if (endTimeString) {
     endedAt = new Date(endTimeString);
+  } else if (["CREATED", "SCHEDULED", "RAN", "RETRYING"].includes(run.future_state) ){
+    endedAt = new Date();
   } else {
     return <UnkownRunTime />;
   }
