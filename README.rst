@@ -6,8 +6,8 @@
 
 
 
-.. image:: https://img.shields.io/pypi/v/sematic?style=for-the-badge
-   :target: https://img.shields.io/pypi/v/sematic?style=for-the-badge
+.. image:: https://img.shields.io/pypi/v/sematic/0.28.0?style=for-the-badge
+   :target: https://img.shields.io/pypi/v/sematic/0.28.0?style=for-the-badge
    :alt: PyPI
 
 
