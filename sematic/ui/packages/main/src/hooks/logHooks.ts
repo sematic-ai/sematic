@@ -108,7 +108,7 @@ export function useLogStream(source: string, filterString: string) {
 
         if (abortController.signal.aborted) {
             // The rendering thread is going away. No need to continue.
-            devLogger(`[AsyncQ_${ID}][${reason}] canceled.`);
+            devLogger(`[AsyncQ_${ID}][${reason}] Canceled.`);
 
             return {
                 canceled: true,
@@ -182,6 +182,8 @@ export function useAccumulateLogsUntilEnd(hasMore: boolean,
                 if (!isNaN(pulledLines!)) {
                     accumulatedLines += pulledLines!;
                     setAccumulatedLines(accumulatedLines);
+                } else {
+                    devLogger('Encounter NaN for pulledLines, skip updating component state.')
                 }
             }
             
@@ -191,7 +193,7 @@ export function useAccumulateLogsUntilEnd(hasMore: boolean,
             );
         }
         setIsAccumulating(false);
-    }, [latestHasMore, latestGetNext]);
+    }, [latestHasMore, devLogger, latestGetNext]);
 
     useEffect(() => {
         // always cancel ongoing accumulation if the component will unmount
