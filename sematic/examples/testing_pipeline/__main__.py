@@ -204,7 +204,6 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         default=False,
         help=DETACH_HELP,
-        **_required_by("--rerun-from"),
     )
     parser.add_argument(
         "--rerun-from",

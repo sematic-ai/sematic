@@ -52,6 +52,8 @@ def make_run_from_future(future: AbstractFuture) -> Run:
         created_at=datetime.datetime.utcnow(),
         updated_at=datetime.datetime.utcnow(),
         cache_key=None,
+        # the user_id is overwritten on the API call based on the user's API key
+        user_id=None,
     )
 
     # Set this outside the constructor because the constructor expects
@@ -93,6 +95,8 @@ def clone_root_run(run: Run, edges: List[Edge]) -> Tuple[Run, List[Edge]]:
         source_code=run.source_code,
         container_image_uri=run.container_image_uri,
         cache_key=run.cache_key,
+        # the user_id is overwritten on the API call based on the user's API key
+        user_id=None,
     )
 
     # Set this outside the constructor because the constructor expects
@@ -139,6 +143,8 @@ def clone_resolution(resolution: Resolution, root_id: str) -> Resolution:
         container_image_uris=resolution.container_image_uris,
         client_version=resolution.client_version,
         cache_namespace=resolution.cache_namespace,
+        # the user_id is overwritten on the API call based on the user's API key
+        user_id=None,
     )
 
     # Set this outside the constructor because the constructor expects
