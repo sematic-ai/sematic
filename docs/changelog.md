@@ -5,6 +5,7 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.28.0](https://pypi.org/project/sematic/0.27.0/)
     * [feature] Added support for setting and memorizing a dev debug flag for the Dashboard
     * [improvement] Several minor logging improvements and fixes
     * [bugfix] Ensured different users can rerun a pipeline
