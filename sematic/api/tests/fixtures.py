@@ -165,10 +165,19 @@ def make_auth_test(endpoint: str, method: str = "GET"):
 @pytest.fixture
 def mock_socketio():
     with mock.patch("socketio.Client.connect"):
-        yield
+
+        # This mocks calls that would be made to the socket io server.
+        with mock.patch("sematic.api.endpoints.events._call_broadcast_endpoint"):
+            yield
 
 
 @pytest.fixture
 def mock_auth():
     with mock_server_settings({ServerSettingsVar.SEMATIC_AUTHENTICATE: "false"}):
+        yield
+
+
+@pytest.fixture
+def with_auth():
+    with mock_server_settings({ServerSettingsVar.SEMATIC_AUTHENTICATE: "true"}):
         yield
