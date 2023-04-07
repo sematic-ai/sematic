@@ -501,6 +501,9 @@ def line_stream_from_log_directory(
         ),
         reverse=reverse,
     )
+    if len(log_files) == 0:
+        yield from []
+        return
     index_of_log_file = 0
     if cursor_file is not None:
         if cursor_file not in log_files:
