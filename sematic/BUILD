@@ -22,6 +22,9 @@ load(
 sematic_py_lib(
     name = "init",
     srcs = ["__init__.py"],
+    pip_deps = [
+        "gevent",
+    ],
     deps = [
         ":calculator",
         ":container_images",
@@ -38,9 +41,6 @@ sematic_py_lib(
         "//sematic/types:casting",
         "//sematic/types:init",
         "//sematic/utils:exceptions",
-    ],
-    pip_deps = [
-        "gevent",
     ],
 )
 
@@ -203,6 +203,20 @@ sematic_py_lib(
         "//sematic/resolvers:type_utils",
         "//sematic/utils:algorithms",
         "//sematic/utils:memoized_property",
+    ],
+)
+
+sematic_py_lib(
+    name = "abstract_metric",
+    srcs = ["abstract_metric.py"],
+    pip_deps = ["sqlalchemy"],
+    # buildifier: leave-alone
+    deps = [
+        "//sematic/db:db",
+        "//sematic/db/models:run",
+        "//sematic/metrics:types",
+        "//sematic/plugins:abstract_metrics_storage",
+        "//sematic/plugins/metrics_storage/pg:pg_metrics_storage",
     ],
 )
 

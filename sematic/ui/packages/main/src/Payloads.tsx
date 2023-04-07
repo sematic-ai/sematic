@@ -1,4 +1,11 @@
-import { Artifact, Edge, Note, Resolution, Run, User } from "@sematic/common/src/Models";
+import {
+  Artifact,
+  Edge,
+  Note,
+  Resolution,
+  Run,
+  User,
+} from "@sematic/common/src/Models";
 
 export type RunListPayload = {
   current_page_url: string;
@@ -81,24 +88,36 @@ export type SemanticVersion = [number, number, number];
 export interface VersionPayload {
   min_client_supported: SemanticVersion;
   server: SemanticVersion;
-} 
+}
 
 type Operator = "eq";
 
 type FilterCondition = {
-    [key: string]: {[eq in Operator]? : string | null} | undefined
-}
+  [key: string]: { [eq in Operator]?: string | null } | undefined;
+};
 
-export type Filter = FilterCondition | {
-    AND : Array<FilterCondition>
-} | {
-  OR : Array<FilterCondition>
-}
+export type Filter =
+  | FilterCondition
+  | {
+      AND: Array<FilterCondition>;
+    }
+  | {
+      OR: Array<FilterCondition>;
+    };
 
 export type BasicMetricsPayload = {
   content: {
-    avg_runtime_children: {[k: string]: number},
-    count_by_state: {[k: string]: number},
-    total_count: number
-  }
-}
+    avg_runtime_children: { [k: string]: number };
+    count_by_state: { [k: string]: number };
+    total_count: number;
+  };
+};
+
+export type AggregatedMetricsPayload = {
+  content: {
+    metric_name: string;
+    group_by_labels: string[];
+    metric_type: string;
+    series: [number, any[]][];
+  };
+};

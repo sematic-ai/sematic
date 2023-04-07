@@ -46,6 +46,7 @@ from sematic.db.queries import (
     save_run_external_resource_links,
 )
 from sematic.log_reader import load_log_lines
+from sematic.metrics.metrics import MetricEvent, save_event_metrics
 from sematic.scheduling.external_job import ExternalJob
 from sematic.scheduling.job_scheduler import schedule_run, update_run_status
 from sematic.scheduling.kubernetes import cancel_job
@@ -357,6 +358,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
         )
 
     result_list = []
+    state_changed_runs = []
     for run_id, (future_state, jobs) in db_status_dict.items():
         new_future_state_value = future_state.value
         run = _get_run_if_modified(run_id, future_state, jobs)
@@ -368,6 +370,9 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
                 raise _DetectedRunRaceCondition(
                     "Run appears to have been modified since being queried: %s", e
                 )
+
+            state_changed_runs.append(run)
+
             broadcast_graph_update(run.root_id, user=user)
 
         result_list.append(
@@ -376,6 +381,8 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
                 future_state=new_future_state_value,
             )
         )
+
+    save_event_metrics(MetricEvent.run_future_state_changed, state_changed_runs)
 
     payload = dict(
         content=result_list,

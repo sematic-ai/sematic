@@ -7,8 +7,8 @@ from dataclasses import asdict
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 # Third-party
-from sqlalchemy import Column, types
-from sqlalchemy.orm import validates
+from sqlalchemy import Column, ForeignKey, types
+from sqlalchemy.orm import backref, relationship, validates
 
 # Sematic
 from sematic.abstract_calculator import AbstractCalculator
@@ -106,7 +106,7 @@ class Run(HasUserMixin, Base, JSONEncodableMixin, HasExternalJobsMixin):
     name: str = Column(types.String(), nullable=True)
     calculator_path: str = Column(types.String(), nullable=False)
     parent_id: Optional[str] = Column(types.String(), nullable=True)
-    root_id: str = Column(types.String(), nullable=False)
+    root_id: str = Column(types.String(), ForeignKey("runs.id"), nullable=False)
     description: Optional[str] = Column(types.String(), nullable=True)
     tags: List[str] = Column(  # type: ignore
         types.String(), nullable=False, default="[]", info={JSON_KEY: True}
@@ -143,6 +143,12 @@ class Run(HasUserMixin, Base, JSONEncodableMixin, HasExternalJobsMixin):
     )
     cache_key: Optional[str] = Column(types.String(), nullable=True)
 
+    # Relationships
+    descendant_runs: List["Run"] = relationship(
+        "Run", backref=backref("root_run", remote_side=[id])
+    )
+    root_run: "Run"
+
     @validates("future_state")
     def validate_future_state(self, _, value) -> str:
         """
@@ -169,6 +175,9 @@ class Run(HasUserMixin, Base, JSONEncodableMixin, HasExternalJobsMixin):
             value = re.sub(r"\n( {4}|\t)", "\n", value.strip())
 
         return value
+
+    def is_root(self) -> bool:
+        return self.id == self.root_id
 
     @property
     def exception_metadata(self) -> Optional[ExceptionMetadata]:

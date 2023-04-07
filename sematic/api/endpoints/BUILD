@@ -18,6 +18,7 @@ sematic_py_lib(
         "//sematic/db/models:edge",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
+        "//sematic/metrics:metrics_lib",
         "//sematic/scheduling:job_scheduler",
         "//sematic/scheduling:kubernetes",
     ],
@@ -76,6 +77,7 @@ sematic_py_lib(
         "//sematic/db:queries",
         "//sematic/db/models:resolution",
         "//sematic/db/models:user",
+        "//sematic/metrics:metrics_lib",
     ],
 )
 
@@ -198,5 +200,21 @@ sematic_py_lib(
         "//sematic/db:queries",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+    ],
+)
+
+sematic_py_lib(
+    name = "metrics",
+    srcs = ["metrics.py"],
+    pip_deps = [
+        "flask",
+    ],
+    deps = [
+        ":auth",
+        ":request_parameters",
+        "//sematic/api:app",
+        "//sematic/db/models:user",
+        "//sematic/plugins:abstract_metrics_storage",
+        "//sematic/plugins/metrics_storage/pg:pg_metrics_storage",
     ],
 )

@@ -37,6 +37,7 @@ from sematic.db.queries import (
     save_graph,
     save_resolution,
 )
+from sematic.metrics.metrics import MetricEvent, save_event_metrics
 from sematic.plugins.abstract_publisher import get_publishing_plugins
 from sematic.scheduling.job_scheduler import schedule_resolution
 from sematic.scheduling.kubernetes import cancel_job
@@ -172,6 +173,10 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
             logger.exception("Error when trying to cancel runs in resolution: %s", e)
 
     save_resolution(resolution)
+
+    if existing_resolution is None:
+        save_event_metrics(MetricEvent.run_created, [root_run])
+
     _publish_resolution_event(resolution)
 
     return flask.jsonify({})

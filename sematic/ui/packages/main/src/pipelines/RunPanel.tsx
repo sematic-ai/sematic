@@ -3,20 +3,20 @@ import { FlowWithProvider } from "src/pipelines/graph/ReactFlowDag";
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
 import { useGraphContext } from "src/hooks/graphHooks";
 import { RunDetailsPanel } from "src/pipelines/RunDetailsPanel";
-import BasicMetricsPanel from "src/pipelines/BasicMetricsPanel";
+import PipelineMetricsPanel from "src/pipelines/PipelineMetricsPanel";
 import RunPanelContext from "src/pipelines//RunDetailsContext";
 import { useMemo, useRef, useState } from "react";
 import { ExtractContextType } from "src/components/utils/typings";
 import Loading from "src/components/Loading";
 
-const FloatingFooter = styled('div')`
+const FloatingFooter = styled("div")`
   width: 100%;
   position: sticky;
   bottom: 0;
   height: 0;
 `;
 
-const FloatingFooterAnchor = styled('div')`
+const FloatingFooterAnchor = styled("div")`
   width: 100%;
   position: absolute;
   bottom: 0;
@@ -31,44 +31,59 @@ const LoadingOverlay = styled(Box)`
   display: flex;
   align-items: center;
   justify-content: center;
-`
+`;
 
 export default function RunPanel() {
   const { graph } = useGraphContext();
   const { selectedPanelItem } = usePipelinePanelsContext();
 
-  const scrollerId = 'run-panel-scrolling-area';
+  const scrollerId = "run-panel-scrolling-area";
   const scrollContainerRef = useRef<HTMLElement>();
 
-  const [footerRenderProp, setFooterRenderPropState] = useState<(() => JSX.Element) | null>(null);
+  const [footerRenderProp, setFooterRenderPropState] = useState<
+    (() => JSX.Element) | null
+  >(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const runDetailsContextValue = useMemo<
-        ExtractContextType<typeof RunPanelContext>
-    >(() => ({
+    ExtractContextType<typeof RunPanelContext>
+  >(
+    () => ({
       setFooterRenderProp: (renderProp) => {
         setFooterRenderPropState(() => renderProp);
       },
       scrollerId,
       scrollContainerRef,
-      setIsLoading
-    }), [setFooterRenderPropState]);
+      setIsLoading,
+    }),
+    [setFooterRenderPropState]
+  );
 
   if (!graph) {
     return <></>;
   }
   return (
-    <Box sx={{ gridColumn: 2, gridRow: 2, height: '100%', overflow: 'hidden', 
-    position: 'relative'}}>
-        {isLoading && <LoadingOverlay>
+    <Box
+      sx={{
+        gridColumn: 2,
+        gridRow: 2,
+        height: "100%",
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
+      {isLoading && (
+        <LoadingOverlay>
           <Loading isLoaded={false} />
-        </LoadingOverlay>}
-      <Box id={scrollerId} ref={scrollContainerRef}
-      sx={{ overflowY: "auto", position: 'relative', height: '100%' }}>
+        </LoadingOverlay>
+      )}
+      <Box
+        id={scrollerId}
+        ref={scrollContainerRef}
+        sx={{ overflowY: "auto", position: "relative", height: "100%" }}
+      >
         <RunPanelContext.Provider value={runDetailsContextValue}>
-          {
-            selectedPanelItem === "metrics" && <BasicMetricsPanel />
-          }
+          {selectedPanelItem === "metrics" && <PipelineMetricsPanel />}
           {selectedPanelItem === "graph" && (
             <>
               <FlowWithProvider
@@ -78,14 +93,12 @@ export default function RunPanel() {
               />
             </>
           )}
-          {selectedPanelItem === "run" && (
-              <RunDetailsPanel />
-          )}
+          {selectedPanelItem === "run" && <RunDetailsPanel />}
         </RunPanelContext.Provider>
 
-        <FloatingFooter >
+        <FloatingFooter>
           <FloatingFooterAnchor>
-          {!!footerRenderProp && footerRenderProp()}
+            {!!footerRenderProp && footerRenderProp()}
           </FloatingFooterAnchor>
         </FloatingFooter>
       </Box>
