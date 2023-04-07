@@ -98,10 +98,8 @@ sematic_py_lib(
         ":base",
         "//sematic:abstract_calculator",
         "//sematic:abstract_future",
-        "//sematic/db/models/mixins:has_external_jobs_mixin",
         "//sematic/db/models/mixins:has_user_mixin",
         "//sematic/db/models/mixins:json_encodable_mixin",
-        "//sematic/scheduling:external_job",
         "//sematic/types:serialization",
         "//sematic/utils:exceptions",
     ],
@@ -128,7 +126,6 @@ sematic_py_lib(
     deps = [
         ":base",
         ":git_info",
-        "//sematic/db/models/mixins:has_external_jobs_mixin",
         "//sematic/db/models/mixins:has_user_mixin",
         "//sematic/db/models/mixins:json_encodable_mixin",
     ],

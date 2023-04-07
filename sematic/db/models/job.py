@@ -151,3 +151,7 @@ class Job(Base, JSONEncodableMixin):
 
         fields = ", ".join(key_value_strings)
         return f"Job({fields}, ...)"
+
+    def identifier(self) -> str:
+        """Get a single string uniquely identifying the job."""
+        return f"{self.namespace}/{self.name}"

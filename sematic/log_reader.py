@@ -18,7 +18,7 @@ from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
     START_INLINE_RUN_INDICATOR,
 )
-from sematic.scheduling.external_job import JobType
+from sematic.scheduling.job_details import JobKind, JobKindString
 
 V2_LOG_PREFIX = "logs/v2"
 LOG_PATH_FORMAT = "{prefix}/run_id/{run_id}/{log_kind}/"
@@ -47,10 +47,39 @@ class ObjectSource(Enum):
     def get_run(self, run_id: str) -> Run:
         return self.value[0].get_run(run_id)
 
+    def run_is_inline(self, run_id: str) -> bool:
+        """Determine if a scheduled run is inline.
 
-def log_prefix(run_id: str, job_type: JobType):
+        Looking for jobs to determine inline is only valid
+        since we know the run has at least reached SCHEDULED due to it
+        not being CREATED.
+        """
+        if self is ObjectSource.DB:
+            has_non_legacy_jobs = self.value[0].count_jobs_by_run_id(run_id) > 0
+            if has_non_legacy_jobs:
+                return False
+            else:
+                # TODO: remove this
+                # https://github.com/sematic-ai/sematic/issues/710
+                return not db_queries.run_has_legacy_jobs(run_id)
+        else:
+            # we don't look for legacy jobs here, so using the CLI
+            # to read logs won't work for old runs. Seems a fair
+            # trade off to avoid exposing run_has_legacy_jobs as an
+            # API endpoint.
+            return len(self.value[0].get_jobs_by_run_id(run_id)) == 0
+
+
+def log_prefix(run_id: str, job_kind: JobKindString):
+    # TODO: move log writing to use "run"/"resolver" instead
+    # of "worker"/"driver". Wait to do it until we can add in
+    # some backwards compatibility so we can still read logs
+    # written by clients that haven't yet upgraded. Probably
+    # wait until after deprecating V1, so we don't have to support
+    # *3* formats in this module at one time.
+    log_kind = "worker" if job_kind == JobKind.run else "driver"
     return LOG_PATH_FORMAT.format(
-        prefix=V2_LOG_PREFIX, run_id=run_id, log_kind=job_type.value
+        prefix=V2_LOG_PREFIX, run_id=run_id, log_kind=log_kind
     )
 
 
@@ -228,10 +257,7 @@ def load_log_lines(
             log_info_message="The run has not yet started executing.",
         )
 
-    # looking for external jobs to determine inline is only valid
-    # since we know the run has at least reached SCHEDULED due to it
-    # not being CREATED.
-    is_inline = len(run.external_jobs) == 0
+    is_inline = object_source.run_is_inline(run.id)
     if is_inline:
         return _load_inline_logs(
             run_id=run_id,
@@ -289,7 +315,7 @@ def _load_non_inline_logs(
     default_log_info_message: Optional[str] = None,
 ) -> LogLineResult:
     """Load the lines for runs that are NOT inline."""
-    prefix = log_prefix(run_id, JobType.worker)
+    prefix = log_prefix(run_id, JobKind.run)
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
     if latest_log_file is None:
         return LogLineResult(
@@ -344,7 +370,7 @@ def _load_inline_logs(
             ),
         )
 
-    prefix = log_prefix(resolution.root_id, JobType.driver)
+    prefix = log_prefix(resolution.root_id, JobKind.resolver)
     latest_log_file = _get_latest_log_file(prefix, cursor_file)
     if latest_log_file is None:
         return LogLineResult(
@@ -357,7 +383,7 @@ def _load_inline_logs(
             log_info_message="Resolver logs are missing",
         )
 
-    prefix = log_prefix(resolution.root_id, JobType.driver)
+    prefix = log_prefix(resolution.root_id, JobKind.resolver)
     line_stream = line_stream_from_log_directory(
         prefix, cursor_file=cursor_file, cursor_line_index=cursor_line_index
     )

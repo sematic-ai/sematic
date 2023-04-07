@@ -121,7 +121,7 @@ pytest_test(
         "//sematic/db:queries",
         "//sematic/db/tests:fixtures",
         "//sematic/resolvers:cloud_resolver",
-        "//sematic/scheduling:external_job",
+        "//sematic/scheduling:job_details",
         "//sematic/tests:fixtures",
     ],
 )

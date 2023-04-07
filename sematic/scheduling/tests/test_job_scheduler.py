@@ -1,4 +1,5 @@
 # Standard Library
+import time
 from unittest import mock
 
 # Third-party
@@ -7,35 +8,30 @@ import pytest
 # Sematic
 from sematic.abstract_future import FutureState
 from sematic.db.models.git_info import GitInfo
+from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
+from sematic.db.tests.fixtures import make_job
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
 )
-from sematic.scheduling.external_job import JobType
+from sematic.scheduling.job_details import JobStatus, KubernetesJobState
 from sematic.scheduling.job_scheduler import (
     StateNotSchedulable,
-    _refresh_external_jobs,
+    _refresh_jobs,
     schedule_resolution,
     schedule_run,
 )
-from sematic.scheduling.kubernetes import KubernetesExternalJob
 from sematic.versions import CURRENT_VERSION_STR
 
 
 @pytest.fixture
 def mock_k8s():
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
-        mock_k8s.schedule_run_job.side_effect = (
-            lambda *_, **__: KubernetesExternalJob.new(
-                try_number=0, run_id="aaa", namespace="foo", job_type=JobType.worker
-            )
-        )
-        mock_k8s.schedule_resolution_job.side_effect = (
-            lambda *_, **__: KubernetesExternalJob.new(
-                try_number=0, run_id="aaa", namespace="foo", job_type=JobType.driver
-            )
+        mock_k8s.schedule_run_job.side_effect = lambda *_, **__: make_job(name="job1")
+        mock_k8s.schedule_resolution_job.side_effect = lambda *_, **__: make_job(
+            name="job2"
         )
         mock_k8s.refresh_job.side_effect = lambda job: job
         yield mock_k8s
@@ -77,10 +73,13 @@ def resolution(run):
 def test_schedule_run(mock_k8s, run: Run, resolution: Resolution):
     resolution.status = ResolutionStatus.RUNNING
     run.container_image_uri = resolution.container_image_uri
-    scheduled = schedule_run(run, resolution)
-    assert len(scheduled.external_jobs) == 1
-    external_job = scheduled.external_jobs[0]
-    assert isinstance(external_job, KubernetesExternalJob)
+    _, jobs = schedule_run(run, resolution, [])
+    assert len(jobs) == 1
+    job = jobs[0]
+    assert isinstance(job, Job)
+    assert job.details.get_status(time.time()).state == "Requested"
+    assert job.latest_status.state == "Requested"
+
     mock_k8s.schedule_run_job.assert_called_once()
     mock_k8s.schedule_run_job.assert_called_with(
         run_id=run.id,
@@ -92,10 +91,8 @@ def test_schedule_run(mock_k8s, run: Run, resolution: Resolution):
 
 
 def test_schedule_resolution(mock_k8s, resolution: Resolution):
-    scheduled = schedule_resolution(resolution, max_parallelism=3, rerun_from="foobar")
-    assert len(scheduled.external_jobs) == 1
-    external_job = scheduled.external_jobs[0]
-    assert isinstance(external_job, KubernetesExternalJob)
+    _, job = schedule_resolution(resolution, max_parallelism=3, rerun_from="foobar")
+    assert isinstance(job, Job)
     mock_k8s.schedule_resolution_job.assert_called_once()
     mock_k8s.schedule_resolution_job.assert_called_with(
         resolution_id=resolution.root_id,
@@ -113,26 +110,28 @@ def test_schedule_resolution_bad_version(mock_k8s, resolution: Resolution):
     mock_k8s.schedule_resolution_job.assert_not_called()
 
 
-def test_refresh_external_jobs(mock_k8s):
-    job1 = KubernetesExternalJob.new(
-        try_number=0, run_id="aaa", namespace="foo", job_type=JobType.worker
-    )
-    job2 = KubernetesExternalJob.new(
-        try_number=0, run_id="bbb", namespace="foo", job_type=JobType.worker
-    )
-    refreshed = _refresh_external_jobs([job1, job2])
-    assert [job.external_job_id for job in refreshed] == [
-        job1.external_job_id,
-        job2.external_job_id,
+def test_refresh_jobs(mock_k8s):
+    job1 = make_job(name="job1")
+    job2 = make_job(name="job2")
+    refreshed = _refresh_jobs([job1, job2])
+    assert [job.identifier() for job in refreshed] == [
+        job1.identifier(),
+        job2.identifier(),
     ]
     assert mock_k8s.refresh_job.call_count == 2
 
     mock_k8s.refresh_job.reset_mock()
 
-    job2.is_active = lambda: False
-    refreshed = _refresh_external_jobs([job1, job2])
-    assert [job.external_job_id for job in refreshed] == [
-        job1.external_job_id,
-        job2.external_job_id,
+    job2.update_status(
+        JobStatus(
+            state=KubernetesJobState.Failed,
+            message="failed",
+            last_updated_epoch_seconds=time.time(),
+        )
+    )
+    refreshed = _refresh_jobs([job1, job2])
+    assert [job.identifier() for job in refreshed] == [
+        job1.identifier(),
+        job2.identifier(),
     ]
     assert mock_k8s.refresh_job.call_count == 1
