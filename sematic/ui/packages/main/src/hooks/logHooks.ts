@@ -5,11 +5,13 @@ import useLatest from "react-use/lib/useLatest";
 import { LogLineRequestResponse } from "../Payloads";
 import { AsyncInvocationQueue, useLogger } from "src/utils";
 import { useHttpClient } from "./httpHooks";
+import { useRefFn } from "@sematic/common/src/utils/hooks";
 
 const MAX_LINES = 2000;
 const POLLING_INTERVAL = 5000;
 export interface GetNextResult {
-    pulledLines: number
+    pulledLines?: number;
+    canceled?: boolean;
 }
 
 export enum DiagnosticReasons {
@@ -79,18 +81,56 @@ export function useLogStream(source: string, filterString: string) {
             }
         }, [source, setHasPulledData, hasMore, filterString, cursor, MAX_LINES, devLogger]);
 
-    const acquire = useRef(AsyncInvocationQueue());
+    const asyncInvocationManager = useRefFn(() => new AsyncInvocationQueue());
+
+    const abortController = useRefFn(() => new AbortController());
 
     const getNextLatest = useLatest(getNext);
+    const hasMoreLatest = useLatest(hasMore);
 
     // This is a function to call getNext by queuing the request.
     // This is to avoid multiple getNext() calls being made at the same time.
     const getNextWithQueue = useCallback(async (reason: DiagnosticReasons) => {
-        const release = await acquire.current();
-        const result = await getNextLatest.current(reason);
+        const ID = asyncInvocationManager.InstanceID;
+        devLogger(`[AsyncQ_${ID}][${reason}] Entering asyncQueue, attempting to acquire lock`);
+
+        const release = await asyncInvocationManager.acquire();
+        devLogger(`[AsyncQ_${ID}][${reason}] acquired.`);
+
+        if (hasMoreLatest.current === false) {
+            // There is no more data to fetch. No need to continue.
+            devLogger(`[AsyncQ_${ID}][${reason}] Since 'hasMore' is false, getNext queue will not continue.`);
+
+            return {
+                canceled: true,
+            };
+        }
+
+        if (abortController.signal.aborted) {
+            // The rendering thread is going away. No need to continue.
+            devLogger(`[AsyncQ_${ID}][${reason}] Canceled.`);
+
+            return {
+                canceled: true,
+            };
+        }
+        const result = await (new Promise<GetNextResult>((resolve) => {
+            setTimeout(async () => {
+                resolve(await getNextLatest.current(reason));
+            }, 0);
+        }));
         release();
+        devLogger(`[AsyncQ_${ID}][${reason}] released.`);
         return result;
-    },[acquire, getNextLatest]);
+    },[asyncInvocationManager, getNextLatest, hasMoreLatest, abortController, devLogger]);
+
+    useEffect(() => {
+        return () => {
+            if (!abortController.signal.aborted) {
+                abortController.abort();
+            }
+        };
+    },[abortController])
 
     return { lines, isLoading, error, hasMore, logInfoMessage, getNext: getNextWithQueue, hasPulledData };
 }
@@ -129,27 +169,31 @@ export function useAccumulateLogsUntilEnd(hasMore: boolean,
             }
 
             setIsLoading(true);
-            const {pulledLines} = await latestGetNext.current(DiagnosticReasons.ACCUMULATE);
+            const { pulledLines, canceled } = await latestGetNext.current(DiagnosticReasons.ACCUMULATE);
 
             if (abortController.signal.aborted) {
                 break;
             }
             setIsLoading(false);
-            
-            // The server shouldn't return NaN, but just in case and be defensive,
-            // we don't want to add NaN to the accumulatedLines.
-            if (!isNaN(pulledLines)) {
-                accumulatedLines += pulledLines;
-                setAccumulatedLines(accumulatedLines);
-            }
 
+            if (canceled !== true) {
+                // The server shouldn't return NaN, but just in case and be defensive,
+                // we don't want to add NaN to the accumulatedLines.
+                if (!isNaN(pulledLines!)) {
+                    accumulatedLines += pulledLines!;
+                    setAccumulatedLines(accumulatedLines);
+                } else {
+                    devLogger('Encounter NaN for pulledLines, skip updating component state.')
+                }
+            }
+            
             // Yield to rendering cycles
             await new Promise(
                 resolve => setTimeout(resolve, POLLING_INTERVAL)
             );
         }
         setIsAccumulating(false);
-    }, [latestHasMore, latestGetNext]);
+    }, [latestHasMore, devLogger, latestGetNext]);
 
     useEffect(() => {
         // always cancel ongoing accumulation if the component will unmount

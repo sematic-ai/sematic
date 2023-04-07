@@ -20,23 +20,23 @@ describe('abbreviatedUserName()', () => {
 describe('AsyncInvocationQueue', () => {
     it("should sequentialize function invocation using a queue", () => {
         let asyncFunction: any;
-        let acquire: any;
+        let asyncController: AsyncInvocationQueue;
         cy.clock();
         cy.wait(0).then(async () => {
-            acquire = AsyncInvocationQueue();
+            asyncController = new AsyncInvocationQueue();
             asyncFunction = cy.spy(async () => {
                 await new Promise(resolve => setTimeout(resolve, 100));
             });
         });
         cy.wait(0).then(async () => {
             setTimeout(async () => {
-                const release = await acquire();
+                const release = await asyncController.acquire();
                 await asyncFunction();
                 release();
             }, 0);
     
             setTimeout(async () => {
-                const release = await acquire();
+                const release = await asyncController.acquire();
                 await asyncFunction();
                 release();
             }, 20);
@@ -50,6 +50,7 @@ describe('AsyncInvocationQueue', () => {
             // test that at 50th millisecond, the function is executed only once
             // because the second call is queued
             expect(asyncFunction).to.have.callCount(1);
+            expect(asyncController.IsBusy).to.equal(true);
         });
         cy.wait(0);
 
