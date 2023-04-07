@@ -28,12 +28,7 @@ from sematic.abstract_plugin import (
 from sematic.api.server import sematic_api
 from sematic.config.config import switch_env
 from sematic.config.server_settings import ServerSettings, ServerSettingsVar
-from sematic.config.settings import (
-    _DEFAULT_PROFILE,
-    PluginSettings,
-    Settings,
-    get_active_settings,
-)
+from sematic.config.settings import _DEFAULT_PROFILE, Settings, get_active_settings
 from sematic.config.user_settings import UserSettings, UserSettingsVar
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.plugins.storage.memory_storage import MemoryStorage
@@ -113,30 +108,31 @@ def mock_requests(test_client):
 def mock_plugin_settings(
     plugin: Type[AbstractPlugin], settings: Dict[AbstractPluginSettingsVar, str]
 ):
+    # save copies of original global caches
     original_settings = settings_module._SETTINGS
+    original_active_settings = settings_module._ACTIVE_SETTINGS
 
-    original_settings_copy = copy(original_settings)
-    if original_settings_copy is None:
-        original_settings_copy = Settings()
+    # create new settings copy, which will be updated with the caller-specified settings
+    new_settings = copy(original_settings) or Settings()
 
-    new_plugin_settings = cast(PluginSettings, settings)
-    current_plugin_settings = original_settings_copy.profiles[
-        _DEFAULT_PROFILE
-    ].settings.get(plugin.get_path(), {})
+    # clear global caches
+    # _ACTIVE_SETTINGS will be rehydrated on the first settings get call, so don't bother
+    # to update its values
+    settings_module._SETTINGS = new_settings
+    settings_module._ACTIVE_SETTINGS = None
 
-    for key, value in new_plugin_settings.items():
-        current_plugin_settings[key] = value
-
-    original_settings_copy.profiles[_DEFAULT_PROFILE].settings[
-        plugin.get_path()
-    ] = current_plugin_settings
-
-    settings_module._SETTINGS = original_settings_copy
+    # update the profile settings with the caller-specified settings
+    new_profile_settings = new_settings.profiles[_DEFAULT_PROFILE].settings
+    new_plugin_settings = new_profile_settings.get(plugin.get_path(), {})
+    new_plugin_settings.update(settings)  # type: ignore
+    new_profile_settings[plugin.get_path()] = new_plugin_settings
 
     try:
         yield settings
     finally:
+        # reinstate original copies of global caches
         settings_module._SETTINGS = original_settings
+        settings_module._ACTIVE_SETTINGS = original_active_settings
 
 
 @contextlib.contextmanager
