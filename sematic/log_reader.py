@@ -703,6 +703,12 @@ def get_log_lines_from_line_stream(
         # pointing even if we found nothing in forward direction.
         reverse_cursor_file = original_cursor_file
         reverse_cursor_index = original_cursor_line_index
+    if forward_cursor_file is None and len(lines) == 0 and reverse:
+        # Empty reverse traversal. Might still be able to continue
+        # forwards from where the reverse cursor was originally
+        # pointing even if we found nothing in reverse direction.
+        forward_cursor_file = original_cursor_file
+        forward_cursor_index = original_cursor_line_index
 
     if still_running and forward_cursor_file is None and not reverse:
         # No new lines have been found, but run is still running. So

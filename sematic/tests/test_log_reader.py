@@ -678,6 +678,141 @@ def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noq
     "log_preparation_function",
     (prepare_logs_v2,),
 )
+def test_load_log_lines_reverse(
+    mock_storage, test_db, log_preparation_function  # noqa: F811
+):  # noqa: F811
+    run = make_run(future_state=FutureState.CREATED)
+    save_run(run)
+    resolution = make_resolution(status=ResolutionStatus.SCHEDULED)
+    resolution.root_id = run.root_id
+    save_resolution(resolution)
+    max_lines = 50
+
+    result = load_log_lines(
+        run_id=run.id,
+        forward_cursor_token=None,
+        reverse_cursor_token=None,
+        max_lines=max_lines,
+        reverse=True,
+    )
+    result.forward_cursor_token = None
+    result.reverse_cursor_token = None
+    assert result == LogLineResult(
+        can_continue_forward=True,
+        can_continue_backward=False,
+        forward_cursor_token=None,
+        reverse_cursor_token=None,
+        lines=[],
+        log_info_message="Resolution has not started yet.",
+    )
+
+    resolution.status = ResolutionStatus.RUNNING
+    save_resolution(resolution)
+
+    result = load_log_lines(
+        run_id=run.id,
+        forward_cursor_token=None,
+        reverse_cursor_token=None,
+        max_lines=max_lines,
+        reverse=True,
+    )
+    assert result.forward_cursor_token is not None
+    result.forward_cursor_token = None
+    assert result == LogLineResult(
+        can_continue_forward=True,
+        can_continue_backward=False,
+        forward_cursor_token=None,
+        reverse_cursor_token=None,
+        lines=[],
+        log_info_message="The run has not yet started executing.",
+    )
+
+    run.future_state = FutureState.SCHEDULED
+    save_job(make_job(run_id=run.id))
+    save_run(run)
+    text_lines = [line.line for line in finite_logs(100)]
+    log_preparation_function(run.id, text_lines, mock_storage, JobKind.run)
+
+    result = load_log_lines(
+        run_id=run.id,
+        forward_cursor_token=None,
+        reverse_cursor_token=None,
+        max_lines=max_lines,
+        reverse=True,
+    )
+    token = result.reverse_cursor_token
+    result.forward_cursor_token = None
+    result.reverse_cursor_token = None
+    assert result == LogLineResult(
+        forward_cursor_token=None,
+        reverse_cursor_token=None,
+        can_continue_backward=True,
+        can_continue_forward=True,
+        lines=text_lines[-1 * max_lines :],  # noqa: E203
+        log_info_message=None,
+    )
+
+    result = load_log_lines(
+        run_id=run.id,
+        forward_cursor_token=None,
+        reverse_cursor_token=token,
+        max_lines=max_lines,
+        reverse=True,
+    )
+    token = result.reverse_cursor_token
+    result.forward_cursor_token = None
+    result.reverse_cursor_token = None
+    assert result == LogLineResult(
+        can_continue_forward=True,
+        can_continue_backward=True,
+        forward_cursor_token=None,
+        reverse_cursor_token=None,
+        lines=text_lines[-2 * max_lines : -1 * max_lines],  # noqa: E203
+        log_info_message=None,
+    )
+
+    result = load_log_lines(
+        run_id=run.id,
+        forward_cursor_token=None,
+        reverse_cursor_token=token,
+        max_lines=max_lines,
+        reverse=True,
+    )
+    result.forward_cursor_token = None
+    result.reverse_cursor_token = None
+    assert result == LogLineResult(
+        can_continue_forward=True,
+        can_continue_backward=False,
+        forward_cursor_token=None,
+        reverse_cursor_token=None,
+        lines=[],
+        log_info_message="No matching log lines.",
+    )
+    result = load_log_lines(
+        run_id=run.id,
+        forward_cursor_token=None,
+        reverse_cursor_token=None,
+        max_lines=1,
+        filter_strings=["2", "4"],
+        reverse=True,
+    )
+    assert result.lines == ["Line 42"]
+
+    result = load_log_lines(
+        run_id=run.id,
+        forward_cursor_token=None,
+        reverse_cursor_token=result.reverse_cursor_token,
+        max_lines=1,
+        filter_strings=["2", "4"],
+        reverse=True,
+    )
+    assert result.lines == ["Line 24"]
+
+
+@pytest.mark.parametrize(
+    "log_preparation_function",
+    (prepare_logs_v2,),
+)
 def test_load_cloned_run_log_lines(
     mock_storage, test_db, log_preparation_function  # noqa: F811
 ):
