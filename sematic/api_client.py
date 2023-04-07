@@ -736,6 +736,7 @@ def _raise_for_response(
         method,
         url,
         response.text,
+        exc_info=exception,
     )
     raise exception
 

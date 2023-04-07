@@ -35,6 +35,7 @@ UPDATE_CASES = [
             container_image_uri="my.docker.registry.io/image/tag",
             container_image_uris={"default": "my.docker.registry.io/image/tag"},
             git_info=GitInfo(remote="r", branch="b", commit="c", dirty=False),
+            user_id="some_user",
         ),
         None,
     ),
@@ -46,6 +47,7 @@ UPDATE_CASES = [
             container_image_uri="my.docker.registry.io/image/tag",
             container_image_uris={"default": "my.docker.registry.io/image/tag"},
             git_info=GitInfo(remote="r", branch="b", commit="c", dirty=False),
+            user_id="some_user",
         ),
         None,
     ),
@@ -57,6 +59,7 @@ UPDATE_CASES = [
             container_image_uri="my.docker.registry.io/image/tag",
             container_image_uris={"default": "my.docker.registry.io/image/tag"},
             git_info=GitInfo(remote="r", branch="b", commit="c", dirty=False),
+            user_id="some_user",
         ),
         r"Cannot update root_id of resolution abc123 after it has been created.*zzz.*",
     ),
@@ -68,6 +71,7 @@ UPDATE_CASES = [
             container_image_uri="my.docker.registry.io/image/tag",
             container_image_uris={"default": "my.docker.registry.io/image/tag"},
             git_info=GitInfo(remote="r", branch="b", commit="c", dirty=False),
+            user_id="some_user",
         ),
         r"Resolution abc123 cannot be moved from the SCHEDULED state to the "
         r"COMPLETE state.",
@@ -80,6 +84,7 @@ UPDATE_CASES = [
             container_image_uri="my.docker.registry.io/image/tag",
             container_image_uris={"default": "my.docker.registry.io/image/tag"},
             git_info=GitInfo(remote="r", branch="b", commit="c", dirty=False),
+            user_id="some_user",
         ),
         r"Cannot update kind of resolution abc123 after it has been created.*LOCAL.*",
     ),
@@ -91,6 +96,7 @@ UPDATE_CASES = [
             container_image_uri="my.docker.registry.io/changed/tag",
             container_image_uris={"my.docker.registry.io/changed/tag"},
             git_info=GitInfo(remote="r", branch="b", commit="c", dirty=False),
+            user_id="some_user",
         ),
         r"Cannot update container_image_uris of resolution abc123 .*changed/tag.*",
     ),
@@ -102,8 +108,22 @@ UPDATE_CASES = [
             container_image_uri="my.docker.registry.io/image/tag",
             container_image_uris={"default": "my.docker.registry.io/image/tag"},
             git_info=GitInfo(remote="r", branch="b", commit="c", dirty=True),
+            user_id="some_user",
         ),
         r"Cannot update git_info_json of resolution abc123 .*\"dirty\": false.*",
+    ),
+    (
+        make_resolution(
+            root_id="abc123",
+            status=ResolutionStatus.SCHEDULED,
+            kind=ResolutionKind.KUBERNETES,
+            container_image_uri="my.docker.registry.io/image/tag",
+            container_image_uris={"default": "my.docker.registry.io/image/tag"},
+            git_info=GitInfo(remote="r", branch="b", commit="c", dirty=False),
+            user_id="another_user",
+        ),
+        r"Cannot update user_id of resolution abc123 after it has been created"
+        r".*another_user.*",
     ),
 ]
 
@@ -117,6 +137,7 @@ def test_updates(update, expected_error):
         container_image_uri="my.docker.registry.io/image/tag",
         container_image_uris={"default": "my.docker.registry.io/image/tag"},
         git_info=GitInfo(remote="r", branch="b", commit="c", dirty=False),
+        user_id="some_user",
     )
     try:
         original.update_with(update)
