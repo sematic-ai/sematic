@@ -175,23 +175,33 @@ export function durationSecondsToString(durationS: number) : string {
   return final;
 }
 
+let ID = 0;
 
-export function AsyncInvocationQueue() {
-  const queue: any[] = [];
+export interface ReleaseHandle {
+  (): void;
+}
+export class AsyncInvocationQueue {
+  private queue: any[] = [];
+  private instanceID: number;
 
-  const acquire = async () => {
+  constructor() {
+    this.queue = [];
+    this.instanceID = ID++;
+  }
+
+  async acquire(): Promise<ReleaseHandle> {
     let resolve: any;
     const waitingPromise = new Promise((_resolve) => {
       resolve = _resolve;
     });
-    queue.push(waitingPromise);
+    this.queue.push(waitingPromise);
 
-    // Wait until the all the promises before this one have been resolved
-    while (queue.length !== 0) {
-      if (queue[0] === waitingPromise) { 
+    // Wait until all the promises before this one have been resolved
+    while (this.queue.length !== 0) {
+      if (this.queue[0] === waitingPromise) { 
         break;
       }
-      await queue.shift();
+      await this.queue.shift();
       // sleep
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
@@ -199,5 +209,12 @@ export function AsyncInvocationQueue() {
     // The resolve function can be used to release to the next item in the queue
     return resolve;
   }
-  return acquire;
+
+  get InstanceID() {
+    return this.instanceID;
+  }
+
+  get IsBusy() {
+    return this.queue.length > 0;
+  }
 }
