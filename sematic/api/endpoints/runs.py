@@ -267,22 +267,15 @@ def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     if "filter_string" in kwarg_overrides:
         filter_string: str = kwarg_overrides["filter_string"]  # type: ignore
         kwarg_overrides["filter_strings"] = [filter_string]
-    if "continuation_cursor" in kwarg_overrides:
-        # For backwards compatibility; parameter used to be called
-        # continuation_cursor.
-        kwarg_overrides["continuation_cursor_token"] = kwarg_overrides[
-            "continuation_cursor"
-        ]
-        del kwarg_overrides["continuation_cursor"]
     default_kwargs = dict(
-        continuation_cursor_token=None,
+        forward_cursor_token=None,
         reverse_cursor_token=None,
         max_lines=100,
         filter_strings=None,
         reverse=False,
     )
     kwarg_converters = dict(
-        continuation_cursor_token=lambda v: v if v is None else str(v),
+        forward_cursor_token=lambda v: v if v is None else str(v),
         reverse_cursor_token=lambda v: v if v is None else str(v),
         max_lines=int,
         filter_strings=lambda v: [] if v is None else list(v),

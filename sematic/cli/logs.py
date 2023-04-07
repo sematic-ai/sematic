@@ -50,7 +50,7 @@ def logs(run_id: str, follow: bool):
     while has_more:
         loaded = load_log_lines(
             run_id,
-            continuation_cursor_token=cursor,
+            forward_cursor_token=cursor,
             reverse_cursor_token=None,
             max_lines=DEFAULT_LOG_LOAD_MAX_SIZE,
             filter_strings=None,
@@ -70,7 +70,7 @@ def logs(run_id: str, follow: bool):
             time.sleep(1)
             continue
 
-        cursor = loaded.continuation_cursor
+        cursor = loaded.forward_cursor_token
 
         for line in loaded.lines:
             had_any = True

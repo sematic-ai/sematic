@@ -101,27 +101,27 @@ def test_follow_logs(
 
     live_log_returns = [
         LogLineResult(
-            can_continue_backward=True,
             can_continue_forward=True,
+            can_continue_backward=True,
             lines=early_lines,
-            continuation_cursor="abc",
-            reverse_cursor="zyx",
+            forward_cursor_token="abc",
+            reverse_cursor_token="zyx",
             log_info_message=None,
         ),
         LogLineResult(
-            can_continue_backward=True,
             can_continue_forward=True,
+            can_continue_backward=True,
             lines=[],  # simulate situation where more WILL be produced but isn't yet
-            continuation_cursor="abc",
-            reverse_cursor="zyx",
+            forward_cursor_token="abc",
+            reverse_cursor_token="zyx",
             log_info_message=None,
         ),
         LogLineResult(
-            can_continue_backward=True,
             can_continue_forward=False,
+            can_continue_backward=True,
             lines=late_lines,
-            continuation_cursor=None,
-            reverse_cursor="zyx",
+            forward_cursor_token=None,
+            reverse_cursor_token="zyx",
             log_info_message=None,
         ),
     ]
