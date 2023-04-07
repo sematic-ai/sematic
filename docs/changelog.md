@@ -5,11 +5,23 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.28.0](https://pypi.org/project/sematic/0.28.0/)
+    * [feature] Display metrics for pipelines (success rate, run count, runtime)
     * [feature] Added support for setting and memorizing a dev debug flag for the Dashboard
+    * [deprecation] Deprecate Kubernetes 1.22 support
+    * [improvement] Backend improvements to syncing with Kubernetes job states
     * [improvement] Several minor logging improvements and fixes
+    * [bugfix] Enable local server to run with python 3.10
     * [bugfix] Ensured different users can rerun a pipeline
     * [bugfix] Ensured pipeline reruns use the submitting user's credentials
+    * [bugfix] Ensure canceled/terminated runs have proper runtime display
+    * [bugfix] Properly display duration for cloned runs
+    * [bugfix] Fix matplotlib figure serialization, use Sematic Image type for support
+    * [bugfix] Make storage object URL redirects consistent
+    * [bugfix] Remove possible infinite reconnect loop when canceling local runs
     * [bugfix] Fixed a bug where the Resolver Socket.io client would not be cleanly closed
+    * [bugfix] Fix corner case in the comparison of sqlite versions
+    * [bugfix] Wrap long pipeline import paths in pipeline/run display
 * [0.27.0](https://pypi.org/project/sematic/0.27.0/)
     * [feature] Added new S3Location and S3Bucket types that render S3 links in the Dashboard, and
       documented them
