@@ -5,7 +5,7 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
-* [0.28.0](https://pypi.org/project/sematic/0.27.0/)
+* [0.28.0](https://pypi.org/project/sematic/0.28.0/)
     * [feature] Display metrics for pipelines (success rate, run count, runtime)
     * [feature] Added support for setting and memorizing a dev debug flag for the Dashboard
     * [deprecation] Deprecate Kubernetes 1.22 support
