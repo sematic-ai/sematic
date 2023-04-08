@@ -42,17 +42,8 @@ export function ScalarMetric(props: {
   variant?: "small" | "large";
   live?: boolean;
 }) {
-  const {
-    metricsFilter,
-    label,
-    docs,
-    formatValue,
-    variant = "small",
-    live = false,
-  } = props;
+  const { metricsFilter, label, docs, formatValue, variant = "small" } = props;
   const [payload, loading, error] = useAggregatedMetrics(metricsFilter);
-
-  const theme = useTheme();
 
   const value = useMemo(() => {
     if (payload === undefined) return undefined;

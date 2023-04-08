@@ -3,7 +3,7 @@ import datetime
 import json
 import time
 from http import HTTPStatus
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 # Third-party
 import flask
@@ -13,6 +13,7 @@ from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.db.models.user import User
+from sematic.metrics.types_ import MetricPoint
 from sematic.plugins.abstract_metrics_storage import (
     GroupBy,
     MetricsFilter,
@@ -64,3 +65,22 @@ def get_metric_endpoint(user: Optional[User], metric_name: str) -> flask.Respons
         return jsonify_error(str(e), HTTPStatus.NOT_FOUND)
 
     return flask.jsonify(content=series)
+
+
+@sematic_api.route("/api/v1/metrics", methods=["POST"])
+@authenticate
+def log_metric_endpoint(user: Optional[User]) -> flask.Response:
+    plugin_class = get_metrics_storage_plugins(default=[PGMetricsStorage])[0]
+
+    plugin = plugin_class()
+
+    payload: Dict[str, Any] = flask.request.json  # type: ignore
+
+    metric_points = [
+        MetricPoint.from_json_encodable(metric_point)
+        for metric_point in payload.get("metric_points", [])
+    ]
+
+    plugin.store_metrics(metric_points)
+
+    return flask.jsonify({})
