@@ -31,4 +31,5 @@ wheel_deps = [
     "//sematic:init",
     "//sematic/testing:init",
     "//sematic/cli:main_lib",
+    "//sematic/metrics:cli_lib",
 ]

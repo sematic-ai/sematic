@@ -7,9 +7,9 @@ from sqlalchemy.orm import Query, Session, joinedload
 
 # Sematic
 from sematic.abstract_future import FutureState
-from sematic.abstract_metric import AbstractMetric
+from sematic.abstract_metric import AbstractMetric, DataIntegrityError
 from sematic.db.models.run import Run
-from sematic.metrics.types_ import MetricScope, MetricType
+from sematic.metrics.types_ import MetricType
 
 
 class FuncEffectiveRuntime(AbstractMetric):
@@ -29,10 +29,14 @@ class FuncEffectiveRuntime(AbstractMetric):
             return None
 
         if run.resolved_at is None:
-            raise ValueError()
+            raise DataIntegrityError(
+                f"Run {run.id} has future_state {run.future_state} but resolved_at=None"
+            )
 
         if run.started_at is None:
-            raise ValueError()
+            raise DataIntegrityError(
+                f"Run {run.id} has future_state {run.future_state} but started_at=None"
+            )
 
         runtime_seconds = (run.resolved_at - run.started_at).total_seconds()
 

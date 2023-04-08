@@ -38,6 +38,17 @@ class FuncSuccessRate(AbstractMetric):
         value = 1 if state is FutureState.RESOLVED else 0
         measured_at: datetime = run.resolved_at or run.failed_at  # type: ignore
 
+        if measured_at is None:
+            self.get_logger().warning(
+                "DataIntegrityWarning: Run %s has future_state %s but resolved_at=%s, "
+                "failed_at=%s. Using started_at instead.",
+                run.id,
+                run.future_state,
+                run.resolved_at,
+                run.failed_at,
+            )
+            measured_at = run.started_at
+
         return measured_at, value
 
     def get_backfill_query(self, session: Session) -> Query:

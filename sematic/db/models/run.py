@@ -255,7 +255,10 @@ class Run(HasUserMixin, Base, JSONEncodableMixin, HasExternalJobsMixin):
                 f"Run(id={self.id}",
                 f"calculator_path={self.calculator_path}",
                 f"future_state={self.future_state}",
-                f"parent_id={self.parent_id})",
+                f"parent_id={self.parent_id}",
+                f"created_at={self.created_at}",
+                f"resolved_at={self.resolved_at}",
+                f"failed_at={self.failed_at})",
             )
         )
 

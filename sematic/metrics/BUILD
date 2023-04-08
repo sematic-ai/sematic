@@ -44,7 +44,6 @@ sematic_py_lib(
         ":func_success_rate",
         "//sematic:abstract_metric",
         "//sematic/config:config",
-        "//sematic/metrics:types",
     ],
 )
 

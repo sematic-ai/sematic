@@ -12,7 +12,6 @@ from sematic.config.config import switch_env
 from sematic.metrics.func_effective_runtime import FuncEffectiveRuntime
 from sematic.metrics.func_run_count import FuncRunCount
 from sematic.metrics.func_success_rate import FuncSuccessRate
-from sematic.metrics.types_ import MetricType
 from sematic.plugins.abstract_metrics_storage import GroupBy, MetricsLabels
 
 _METRICS: Set[Type[AbstractMetric]] = {
@@ -81,8 +80,11 @@ def _get_metric(metric_name: str) -> AbstractMetric:
 
 
 def backfill_metric(metric_name: str):
-    metric = _get_metric(metric_name)
-    metric.backfill()
+    metric_names = _METRICS_BY_NAME.keys() if metric_name == "all" else [metric_name]
+
+    for metric_name_ in metric_names:
+        metric = _get_metric(metric_name_)
+        metric.backfill()
 
 
 @main.command("list", short_help="List metric points")

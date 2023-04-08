@@ -20,6 +20,10 @@ from sematic.plugins.abstract_metrics_storage import (
 from sematic.plugins.metrics_storage.pg.pg_metrics_storage import PGMetricsStorage
 
 
+class DataIntegrityError(Exception):
+    pass
+
+
 class AbstractMetric(abc.ABC):
 
     NAME_PREFIX = "sematic"
@@ -115,10 +119,18 @@ class AbstractMetric(abc.ABC):
 
             metric_points: List[MetricPoint] = []
 
+            integrity_error_count = 0
+
             for i in range(pages):
                 records = query.limit(PAGE_SIZE).offset(i * PAGE_SIZE).all()
                 for record in records:
-                    metric_point = self.make_metric_point(record)
+                    try:
+                        metric_point = self.make_metric_point(record)
+                    except DataIntegrityError as e:
+                        logger.error(str(e))
+                        integrity_error_count += 1
+                        continue
+
                     if metric_point is None:
                         continue
 
@@ -129,6 +141,13 @@ class AbstractMetric(abc.ABC):
         for plugin in self.plugins:
             logger.info("Using plugin %s", plugin.__class__.__name__)
             plugin.store_metrics(metric_points)
+
+        if integrity_error_count > 0:
+            logger.warning(
+                "Found %s fatal data integrity errors in %s runs.",
+                integrity_error_count,
+                count,
+            )
 
     def clear(self, scope_id: Optional[str] = None):
         logger = self.get_logger()

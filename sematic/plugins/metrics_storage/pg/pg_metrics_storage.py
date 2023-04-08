@@ -126,7 +126,10 @@ class PGMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
         extra_field_names = []
 
-        group_by_clauses = []
+        group_by_clauses = [
+            MetricLabel.metric_name,
+            MetricLabel.metric_type,
+        ]
 
         for gb in group_by:
             extra_field_names.append(gb.value)
