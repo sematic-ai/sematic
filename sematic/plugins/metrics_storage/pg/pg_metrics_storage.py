@@ -1,9 +1,8 @@
 # Standard Library
 import logging
-from typing import Dict, Iterable, List, Set, Type, Union
+from typing import Any, Dict, Iterable, List, Set, Type
 
 # Third-party
-import sqlalchemy
 from sqlalchemy import func
 from sqlalchemy.exc import NoResultFound
 
@@ -92,9 +91,16 @@ class PGMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
             session.add_all(metric_values)
             session.commit()
 
-    def get_metrics(self, filters: MetricsFilter) -> Iterable[MetricPoint]:
-        metrics = _get_metrics(filters)
-        return map(_make_metric_point, metrics)
+    def get_metrics(self, labels: MetricsLabels) -> Iterable[str]:
+        with db().get_session() as session:
+            metric_names = (
+                session.query(MetricLabel.metric_name)
+                .distinct(MetricLabel.metric_name)
+                .filter(*_make_predicates_from_labels(labels))
+                .all()
+            )
+
+        return [row[0] for row in metric_names]
 
     def get_aggregated_metrics(
         self, filter: MetricsFilter, group_by: List[GroupBy]
@@ -137,7 +143,7 @@ class PGMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
             if gb is GroupBy.date:
                 field_ = func.date(MetricValue.metric_time)
             elif gb is GroupBy.timestamp:
-                field_ = MetricValue.metric_time
+                field_ = func.extract("epoch", MetricValue.metric_time)
             else:
                 field_ = MetricLabel.metric_labels[gb.value].astext
 

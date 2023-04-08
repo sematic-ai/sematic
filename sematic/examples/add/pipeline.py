@@ -3,6 +3,7 @@ import time
 
 # Sematic
 import sematic
+from sematic.ee.metrics import log_metric
 
 
 @sematic.func
@@ -10,7 +11,11 @@ def add(a: float, b: float) -> float:
     """
     Adds two numbers.
     """
+    log_metric("add_test", 0)
+    log_metric("add_test_2", 0)
     time.sleep(5)
+    log_metric("add_test", 1)
+    log_metric("add_test_2", 1)
     return a + b
 
 

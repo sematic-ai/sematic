@@ -76,11 +76,34 @@ def log_metric_endpoint(user: Optional[User]) -> flask.Response:
 
     payload: Dict[str, Any] = flask.request.json  # type: ignore
 
-    metric_points = [
-        MetricPoint.from_json_encodable(metric_point)
-        for metric_point in payload.get("metric_points", [])
-    ]
+    metric_points = []
+
+    for metric_point_ in payload.get("metric_points", []):
+        metric_point = MetricPoint.from_json_encodable(metric_point_)
+        if user is not None:
+            metric_point.labels["user_id"] = user.id
+
+        metric_points.append(metric_point)
 
     plugin.store_metrics(metric_points)
 
     return flask.jsonify({})
+
+
+@sematic_api.route("/api/v1/metrics", methods=["GET"])
+@authenticate
+def list_metrics_endpoint(user: Optional[User]) -> flask.Response:
+    try:
+        labels: Dict = json.loads(flask.request.args.get("labels", "{}"))
+    except Exception as e:
+        return jsonify_error(
+            f"Unable to deserialize labels: {e}", HTTPStatus.BAD_REQUEST
+        )
+
+    plugin_class = get_metrics_storage_plugins(default=[PGMetricsStorage])[0]
+
+    plugin = plugin_class()
+
+    metric_names = plugin.get_metrics(labels)
+
+    return flask.jsonify(dict(content=metric_names))

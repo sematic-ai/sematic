@@ -2,7 +2,7 @@
 import abc
 import logging
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Third-party
 import sqlalchemy.orm
@@ -10,6 +10,7 @@ import sqlalchemy.orm
 # Sematic
 from sematic.db.db import db
 from sematic.db.models.run import Run
+from sematic.db.queries import get_calculator_path
 from sematic.metrics.types_ import MetricPoint, MetricType
 from sematic.plugins.abstract_metrics_storage import (
     AbstractMetricsStorage,
@@ -83,24 +84,11 @@ class AbstractMetric(abc.ABC):
                 "run_id": run.id,
                 "calculator_path": run.calculator_path,
                 "root_id": run.root_id,
-                "root_calculator_path": run.root_run.calculator_path,
+                "root_calculator_path": _get_root_calculator_path(run),
             },
         )
 
         return metric_point
-
-    def get_metrics(self, scope_id: str) -> Dict[str, Iterable[MetricPoint]]:
-        filters = MetricsFilter(
-            name=self.get_full_name(),
-            scope=self.get_scope(),
-            scope_id=scope_id,
-            from_time=datetime.fromtimestamp(0),
-            to_time=datetime.utcnow(),
-        )
-
-        return {
-            plugin.get_path(): plugin.get_metrics(filters) for plugin in self.plugins
-        }
 
     def backfill(self):
         logger = self.get_logger()
@@ -191,3 +179,10 @@ class AbstractMetric(abc.ABC):
             ]
 
         return self._plugins
+
+
+def _get_root_calculator_path(run: Run) -> str:
+    try:
+        return run.root_run.calculator_path
+    except sqlalchemy.orm.exc.DetachedInstanceError:
+        return get_calculator_path(run.root_id)

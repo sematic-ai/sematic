@@ -144,10 +144,7 @@ class Run(HasUserMixin, Base, JSONEncodableMixin, HasExternalJobsMixin):
     cache_key: Optional[str] = Column(types.String(), nullable=True)
 
     # Relationships
-    descendant_runs: List["Run"] = relationship(
-        "Run", backref=backref("root_run", remote_side=[id])
-    )
-    root_run: "Run"
+    root_run: "Run" = relationship("Run", lazy="select")
 
     @validates("future_state")
     def validate_future_state(self, _, value) -> str:

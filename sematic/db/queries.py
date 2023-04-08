@@ -176,6 +176,13 @@ def get_run_status_details(
     return result_dict
 
 
+def get_calculator_path(run_id: str) -> str:
+    with db().get_session() as session:
+        rows = session.query(Run.calculator_path).filter(Run.id == run_id).one()
+
+    return rows[0][0]
+
+
 @dataclass
 class BasicPipelineMetrics:
     count_by_state: Dict[str, int]

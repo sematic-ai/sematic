@@ -39,3 +39,19 @@ export function useAggregatedMetrics(
 
   return [value, loading, error];
 }
+
+export function useListMetrics(labels: {
+  [k: string]: any;
+}): [{ content: string[] } | undefined, boolean, Error | undefined] {
+  const { fetch } = useHttpClient();
+
+  const { value, loading, error } = useAsync(async () => {
+    const labelsJSON = JSON.stringify(labels);
+    const response = await fetch({
+      url: `/api/v1/metrics?labels=${labelsJSON}`,
+    });
+    return (await response.json()) as { content: string[] };
+  }, [labels]);
+
+  return [value, loading, error];
+}

@@ -79,6 +79,7 @@ sematic_py_lib(
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
+        "//sematic/metrics:types",
         "//sematic/plugins:abstract_external_resource",
         "//sematic/utils:retry",
     ],
@@ -214,6 +215,7 @@ sematic_py_lib(
     deps = [
         "//sematic/db:db",
         "//sematic/db/models:run",
+        "//sematic/db:queries",
         "//sematic/metrics:types",
         "//sematic/plugins:abstract_metrics_storage",
         "//sematic/plugins/metrics_storage/pg:pg_metrics_storage",

@@ -10,13 +10,34 @@ import {
   TableCell,
   TableRow,
   Typography,
-  useTheme,
 } from "@mui/material";
 import { ReactElement, useCallback, useMemo } from "react";
 import { durationSecondsToString } from "src/utils";
 import HelpIcon from "@mui/icons-material/Help";
 import styled from "@emotion/styled";
 import { theme } from "@sematic/common/src/theme/mira/index";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  ChartData,
+} from "chart.js";
+import { Line } from "react-chartjs-2";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const MetricBox = styled(Box)`
   text-align: center;
@@ -104,6 +125,46 @@ export function ScalarMetric(props: {
         )}
       </MetricLabel>
     </MetricBox>
+  );
+}
+
+export function TimeseriesMetric(props: {
+  metricsFilter: MetricsFilter;
+  color: string;
+}) {
+  const { metricsFilter, color } = props;
+  const [payload, loading, error] = useAggregatedMetrics(metricsFilter);
+
+  const chartData = useMemo(() => {
+    const cData: ChartData<"line", number[], string> = {
+      labels: [],
+      datasets: [
+        {
+          label: metricsFilter.metricName,
+          data: [],
+          backgroundColor: color,
+          borderColor: color,
+        },
+      ],
+    };
+    if (payload === undefined) return cData;
+
+    payload.content.series.forEach((item) => {
+      cData.labels?.push(item[1][0]);
+      cData.datasets[0].data.push(item[0]);
+    });
+
+    return cData;
+  }, [payload]);
+
+  return (
+    <>
+      {loading && <Skeleton />}
+      {error && (
+        <Alert severity="error">Unable to load metric: {error.message}</Alert>
+      )}
+      {payload !== undefined && <Line data={chartData} />}
+    </>
   );
 }
 

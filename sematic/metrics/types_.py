@@ -28,9 +28,11 @@ class MetricPoint:
     def to_json_encodable(self) -> Dict[str, Any]:
         output = asdict(self)
         output["metric_type"] = self.metric_type.value
+        output["metric_time"] = self.metric_time.timestamp()
         return output
 
     @classmethod
     def from_json_encodable(cls, payload: Dict[str, Any]) -> "MetricPoint":
         payload["metric_type"] = MetricType(payload["metric_type"])
+        payload["metric_time"] = datetime.fromtimestamp(payload["metric_time"])
         return cls(**payload)

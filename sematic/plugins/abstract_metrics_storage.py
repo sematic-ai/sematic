@@ -50,7 +50,7 @@ class AbstractMetricsStorage(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_metrics(self, filter: MetricsFilter) -> Iterable[MetricPoint]:
+    def get_metrics(self, labels: MetricsLabels) -> Iterable[str]:
         # Returns a list of unaggregated data points
         pass
 

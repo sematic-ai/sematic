@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { atomWithHash } from 'jotai-location'
+import { atomWithHash } from "jotai-location";
 import { useLocation } from "react-router-dom";
 import { User } from "@sematic/common/src/Models";
 
@@ -63,61 +63,65 @@ export function useLogger() {
   const { search } = useLocation();
 
   const isLoggingExplicitlyTurnedOn = useMemo(
-    () => (new URLSearchParams(search)).has('debug'), [search]);
+    () => new URLSearchParams(search).has("debug"),
+    [search]
+  );
 
-  const devLogger = useMemo(
-    () => {
-      if (process.env.NODE_ENV === "development" || isLoggingExplicitlyTurnedOn) {
-        return (...args: any[]) => {
-          console.log(
-            `${(new Date()).toString().replace(/\sGMT.+$/, '')}  DEV DEBUG: `,
-            ...args
-          );
-        }
-      }
-      return () => { };
-    }, [isLoggingExplicitlyTurnedOn]);
+  const devLogger = useMemo(() => {
+    if (process.env.NODE_ENV === "development" || isLoggingExplicitlyTurnedOn) {
+      return (...args: any[]) => {
+        console.log(
+          `${new Date().toString().replace(/\sGMT.+$/, "")}  DEV DEBUG: `,
+          ...args
+        );
+      };
+    }
+    return () => {};
+  }, [isLoggingExplicitlyTurnedOn]);
 
   return {
-    devLogger
-  }
-} 
-
-export function atomWithHashCustomSerialization(
-  name: string, initialValue: string, 
-  options: Parameters<typeof atomWithHash>[2] = {}) {
-  let overridenOptions = options || {};
-  // Use custom serialization function to avoid generating `"`(%22) in the hash
-  overridenOptions.serialize = (value: unknown) => (value as any).toString() ;
-  overridenOptions.deserialize = (value: unknown) => value as string ;
-
-  return atomWithHash<string>(name, initialValue, options as any); 
+    devLogger,
+  };
 }
 
-export const spacing = (val: number) => ({theme}: any) => theme.spacing(val);
+export function atomWithHashCustomSerialization(
+  name: string,
+  initialValue: string,
+  options: Parameters<typeof atomWithHash>[2] = {}
+) {
+  let overridenOptions = options || {};
+  // Use custom serialization function to avoid generating `"`(%22) in the hash
+  overridenOptions.serialize = (value: unknown) => (value as any).toString();
+  overridenOptions.deserialize = (value: unknown) => value as string;
+
+  return atomWithHash<string>(name, initialValue, options as any);
+}
+
+export const spacing =
+  (val: number) =>
+  ({ theme }: any) =>
+    theme.spacing(val);
 
 export async function sha1(text: string) {
   const utf8 = new TextEncoder().encode(text);
-  const hashBuffer = await crypto.subtle.digest('SHA-1', utf8);
+  const hashBuffer = await crypto.subtle.digest("SHA-1", utf8);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hashHex = hashArray
-    .map((bytes) => bytes.toString(16).padStart(2, '0'))
-    .join('');
+    .map((bytes) => bytes.toString(16).padStart(2, "0"))
+    .join("");
   return hashHex;
 }
-
 
 export function abbreviatedUserName(user: User | null): string {
   if (!user) {
     return "";
   }
-  const {first_name, last_name} = user;
+  const { first_name, last_name } = user;
 
-  return `${first_name} ${(last_name || "").substring(0, 1)}.`
+  return `${first_name} ${(last_name || "").substring(0, 1)}.`;
 }
 
-
-export function durationSecondsToString(durationS: number) : string {
+export function durationSecondsToString(durationS: number): string {
   const displayH: number = Math.floor(durationS / 3600);
   const displayM: number = Math.floor((durationS % 3600) / 60);
   const displayS: number = Math.round(durationS % 60);
@@ -134,7 +138,6 @@ export function durationSecondsToString(durationS: number) : string {
   return final;
 }
 
-
 export function AsyncInvocationQueue() {
   const queue: any[] = [];
 
@@ -147,16 +150,29 @@ export function AsyncInvocationQueue() {
 
     // Wait until the all the promises before this one have been resolved
     while (queue.length !== 0) {
-      if (queue[0] === waitingPromise) { 
+      if (queue[0] === waitingPromise) {
         break;
       }
       await queue.shift();
       // sleep
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
-    
+
     // The resolve function can be used to release to the next item in the queue
     return resolve;
-  }
+  };
   return acquire;
+}
+
+const CHART_COLORS = [
+  "rgb(255, 99, 132)",
+  "rgb(54, 162, 235)",
+  "rgb(255, 206, 86)",
+  "rgb(75, 192, 192)",
+  "rgb(153, 102, 255)",
+  "rgb(255, 159, 64)",
+];
+
+export function getChartColor(index: number): string {
+  return CHART_COLORS[index % CHART_COLORS.length];
 }
