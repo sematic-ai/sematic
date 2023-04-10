@@ -24,10 +24,9 @@ module.exports = {
       configFile: path.resolve(__dirname, "../tsconfig.json"),
       extensions: config.resolve.extensions
     })];
-
     const filteredPlugins = config.plugins.filter(p => p.constructor.name !== 'ForkTsCheckerWebpackPlugin');
     config.plugins = filteredPlugins;
-    
+
     // Fix wrong project root
     const babelLoaderRule = config.module.rules.find(
     // https://github.com/storybookjs/storybook/blob/next/lib/builder-webpack4/src/preview/babel-loader-preview.ts

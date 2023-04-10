@@ -1,5 +1,5 @@
 import { Components, Theme } from '@mui/material/styles';
-import { fontWeightBold } from 'src/theme/new/typography';
+import { fontFamilyCode, fontWeightBold } from 'src/theme/new/typography';
 import { KeyboardArrowDown } from "@mui/icons-material";
 import { selectClasses } from '@mui/material/Select'
 import { inputBaseClasses } from '@mui/material/InputBase'
@@ -26,6 +26,7 @@ const components: Components = {
                 marginBottom: 0,
                 color: theme.palette.black.main,
                 fontSize: theme.typography.fontSize,
+                fontStyle: 'italic',
 
                 '&:hover': {
                     color: theme.palette.primary.main,
@@ -54,6 +55,7 @@ const components: Components = {
                         color: theme.palette.black.main,
                         width: 'fit-content',
                         fontSize: 14,
+                        fontStyle: 'normal',
                         marginLeft: 20,
                         marginRight: 20,
                         fontWeight: fontWeightBold,
@@ -77,15 +79,30 @@ const components: Components = {
                             content: '""',
                             height: 2,
                             position: 'absolute',
-                            bottom: 0
+                            bottom: 0,
+                            display: 'none',
                         },
                         '&.selected': {
                             position: 'relative'
                         },
                         '&.selected::after': {
+                            display: 'block',
                             backgroundColor: theme.palette.primary.main
                         }
                     }
+                },
+            },
+            {
+                props: { variant: 'small' },
+                style: ({ theme }) => ({
+                    color: theme.palette.lightGrey.main,
+                    fontSize: theme.typography.small.fontSize,
+                }),
+            },
+            {
+                props: { type: 'code' },
+                style: {
+                    fontFamily: fontFamilyCode,
                 },
             }
         ]
@@ -129,6 +146,13 @@ const components: Components = {
             }
         ]
     },
+    MuiTextField: {
+        defaultProps: {
+            InputProps: {
+                disableUnderline: true
+            }
+        }
+    },
     MuiSelect: {
         defaultProps: {
             IconComponent: KeyboardArrowDown
@@ -159,11 +183,22 @@ const components: Components = {
                 props: { variant: 'text' },
                 style: ({ theme }) => {
                     return {
+                        fontStyle: 'italic',
                         color: theme.palette.lightGrey.main,
                         '&:hover': {
                             color: theme.palette.primary.main,
                             background: 'transparent',
                         }
+                    }
+                }
+                
+
+            },
+            {
+                props: { size: 'small' },
+                style: ({ theme }) => {
+                    return {
+                        fontSize: theme.typography.small.fontSize,
                     }
                 }
             }
