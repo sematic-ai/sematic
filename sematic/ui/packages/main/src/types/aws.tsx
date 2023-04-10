@@ -23,7 +23,9 @@ function S3Button(props: {region?: string, bucket: string, location?: string}) {
   const { region, bucket, location } = props;
 
   let s3URI = "s3://" + bucket;
-  let href = new URL("https://s3.console.aws.amazon.com/s3/object/" + bucket);
+  // in case the location points to an object and not to an intermediate
+  // "directory", AWS will redirect to the object URL
+  let href = new URL("https://s3.console.aws.amazon.com/s3/buckets/" + bucket);
   
   if (region !== null && region !== undefined) {
     href.searchParams.append("region", region);

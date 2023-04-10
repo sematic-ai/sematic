@@ -18,6 +18,11 @@ class S3Bucket:
 class S3Location:
     """
     Basic type to describe an S3 location.
+
+    S3 only emulates a file system through key-value pairs and does not have an actual
+    hierarchical directory structure. As a convention, locations that end in a "/" are
+    rendered as "directories", and those that do not are interpreted as fully-qualified
+    file paths.
     """
 
     bucket: S3Bucket
@@ -27,7 +32,7 @@ class S3Location:
     def from_uri(cls, uri: str, region: Optional[str] = None) -> "S3Location":
         """
         Construct an S3Location object from an S3 URI of the form
-        s3://bucket-name/path/to/location
+        `s3://bucket-name/path/to/location`.
 
         Parameters
         ----------
@@ -74,8 +79,9 @@ class S3Location:
         """
         location = self.location[:-1] if self.location[-1] == "/" else self.location
         location_parts = location.split("/")
+        parent_location = f"{'/'.join(location_parts[:-1])}/"
 
-        return S3Location(bucket=self.bucket, location="/".join(location_parts[:-1]))
+        return S3Location(bucket=self.bucket, location=parent_location)
 
     def sibling_location(self, location: str) -> "S3Location":
         """
@@ -87,7 +93,7 @@ class S3Location:
         """
         return S3Location(
             bucket=self.bucket,
-            location="/".join([self.parent_directory.location, location]),
+            location=f"{self.parent_directory.location}{location}",
         )
 
     def child_location(self, location: str) -> "S3Location":
