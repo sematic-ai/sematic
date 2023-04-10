@@ -1,4 +1,5 @@
 # Standard Library
+import inspect
 import numbers
 import typing
 
@@ -18,7 +19,7 @@ def can_cast_type(type_: type, _) -> typing.Tuple[bool, typing.Optional[str]]:
 
     Only subclasses of `numbers.Real` can cast to `float`.
     """
-    if issubclass(type_, numbers.Real):
+    if inspect.isclass(type_) and issubclass(type_, numbers.Real):
         return True, None
 
     return False, "Cannot cast {} to float".format(type_)
