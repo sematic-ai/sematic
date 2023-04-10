@@ -34,18 +34,18 @@ const GitInfoBox = (prop: GitInfoBoxProps) => {
     return <>
         <StyledBox>
             <RiGitBranchLine />
-            <Link>acme/feature-branch</Link>
+            <Link variant={"small"}>acme/feature-branch</Link>
             <CopyButton text={"acme/feature-branch"} />
         </StyledBox>
         <StyledBox>
             <RiGitCommitLine />
-            <Link>pf49df3</Link>
+            <Link variant={"small"} type={"code"}>pf49df3</Link>
             <CopyButton text={"pf49df36ae2e09b5f5780b38140f83cfe9f866b5"} />
         </StyledBox>
         {!!hasUncommittedChanges && <StyledBox>
             <Code />
             <Tooltip title={"This run used code with uncommitted changed on top of the above commit."} arrow={true} >
-                <Typography>Uncommited changes</Typography>
+                <Typography variant="small">Uncommited changes</Typography>
             </Tooltip>            
         </StyledBox>}
     </>
