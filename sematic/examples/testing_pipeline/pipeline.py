@@ -18,7 +18,7 @@ from sematic.calculator import _make_tuple
 from sematic.ee.ray import RayCluster, RayNodeConfig, SimpleRayCluster
 from sematic.plugins.external_resource.timed_message import TimedMessage
 from sematic.resolvers.resource_requirements import ResourceRequirements
-from sematic.types import Image
+from sematic.types import Image, S3Location
 from sematic.types.serialization import get_json_encodable_summary
 
 logging.basicConfig(level=logging.INFO)
@@ -299,13 +299,37 @@ def explode_image(
 
 
 @sematic.func(inline=False)
-def images_io(val: float) -> float:
+def do_image_io(val: float) -> float:
     """
     Internally uses functions that pass around `Image` objects in their I/O signatures.
     """
-    logger.info("Executing: images_io(val=%s)", val)
+    logger.info("Executing: do_image_io(val=%s)", val)
     image_tuple = explode_image(val, load_image())
-    return add(val, image_tuple[0])
+    return add(1, image_tuple[0])
+
+
+@sematic.func(inline=False)
+def compose_s3_locations(
+    val: float, s3_uris: List[str]
+) -> Tuple[float, List[S3Location]]:
+    """
+    Composes `S3Location` dataclasses for the specified URIs.
+    """
+    logger.info("Executing: compose_s3_locations(val=%s, s3_uris=%s)", val, s3_uris)
+    time.sleep(5)
+    s3_locations = list(map(S3Location.from_uri, s3_uris))
+    return val, s3_locations
+
+
+@sematic.func(inline=False)
+def do_s3_locations(val: float, s3_uris: List[str]) -> float:
+    """
+    Internally uses a function that composes `S3Location` dataclasses for the specified
+    URIs.
+    """
+    logger.info("Executing: do_s3_locations(val=%s, s3_uris=%s)", val, s3_uris)
+    location_tuple = compose_s3_locations(val, s3_uris)
+    return add(1, location_tuple[0])
 
 
 @sematic.func(inline=False)
@@ -392,6 +416,7 @@ def testing_pipeline(
     resource_requirements: Optional[ResourceRequirements] = None,
     cache: bool = False,
     images: bool = False,
+    s3_uris: Optional[List[str]] = None,
     virtual_funcs: bool = False,
     fork_actions: Optional[List[Tuple[str, int]]] = None,
     exit_code: Optional[int] = None,
@@ -440,6 +465,9 @@ def testing_pipeline(
     images: bool
         Whether to include nested functions which will include the `Image` type in their
         I/O signatures. Defaults to False.
+    s3_uris: Optional[List[str]]
+        If non-empty, includes a function that composes `S3Location` dataclasses for the
+        specified URIs. Defaults to None.
     virtual_funcs: bool
         Whether to include the `_make_list`, `_make_tuple`, and `_getitem` virtual
         functions. Defaults to False.
@@ -505,7 +533,10 @@ def testing_pipeline(
         futures.append(add4_nested_cached(initial_future, 1, 2, 3))
 
     if images:
-        futures.append(images_io(initial_future))
+        futures.append(do_image_io(initial_future))
+
+    if s3_uris is not None and len(s3_uris) > 0:
+        futures.append(do_s3_locations(initial_future, s3_uris))
 
     if virtual_funcs:
         futures.append(do_virtual_funcs(initial_future, 2, 3))
