@@ -44,6 +44,7 @@ export type LogLineResult = {
   can_continue_forward: boolean;
   lines: string[];
   forward_cursor_token: string | null;
+  reverse_cursor_token: string | null;
   log_info_message: string | null;
 };
 
