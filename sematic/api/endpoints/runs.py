@@ -267,11 +267,19 @@ def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     if "filter_string" in kwarg_overrides:
         filter_string: str = kwarg_overrides["filter_string"]  # type: ignore
         kwarg_overrides["filter_strings"] = [filter_string]
-    default_kwargs = dict(continuation_cursor=None, max_lines=100, filter_strings=None)
+    default_kwargs = dict(
+        forward_cursor_token=None,
+        reverse_cursor_token=None,
+        max_lines=100,
+        filter_strings=None,
+        reverse=False,
+    )
     kwarg_converters = dict(
-        continuation_cursor=lambda v: v if v is None else str(v),
+        forward_cursor_token=lambda v: v if v is None else str(v),
+        reverse_cursor_token=lambda v: v if v is None else str(v),
         max_lines=int,
         filter_strings=lambda v: [] if v is None else list(v),
+        reverse=lambda v: v if isinstance(v, bool) else v.lower() == "true",
     )
     kwargs = {
         k: kwarg_converters[k](kwarg_overrides.get(k, default_v))  # type: ignore
@@ -282,6 +290,7 @@ def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
         run_id=run_id,
         **kwargs,  # type: ignore
     )
+
     payload = dict(content=asdict(result))
     return flask.jsonify(payload)
 
