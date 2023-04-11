@@ -112,6 +112,10 @@ IMAGES_HELP = (
     "Whether to include nested functions which will include the `Image` type in their "
     "I/O signatures. Defaults to False."
 )
+S3_URIS_HELP = (
+    "If any values are supplied, includes a function that composes `S3Location` "
+    "dataclasses for the specified URIs. Defaults to None."
+)
 VIRTUAL_FUNCS_HELP = (
     "Whether to explicitly include the `_make_list`, `_make_tuple`, and `_getitem` "
     "virtual functions. Defaults to False. Note: If this pipeline is invoked with any "
@@ -279,6 +283,9 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--images", action="store_true", default=False, help=IMAGES_HELP
+    )
+    parser.add_argument(
+        "--s3-uris", type=str, default=None, nargs="+", help=S3_URIS_HELP
     )
     parser.add_argument(
         "--virtual-funcs",

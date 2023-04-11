@@ -37,7 +37,7 @@ const TagsList = (props: TagsListProps) => {
     const { tags = [], onClick, onAddTag } = props;
     return <StyledBox>
         {tags.map(tag => <Chip key={tag} label={tag} onClick={() => onClick?.(tag)} />)}
-        <Button variant={"text"} onClick={onAddTag}>add tags</Button>
+        <Button variant={"text"} size={"small"} onClick={onAddTag}>add tags</Button>
     </StyledBox>;
 }
 
