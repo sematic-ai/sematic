@@ -42,6 +42,9 @@ sematic_py_lib(
     pip_deps = [
         "gevent",
     ],
+    data = [
+        "//:sematic.pth",
+    ]
 )
 
 sematic_py_lib(
