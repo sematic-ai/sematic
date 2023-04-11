@@ -50,12 +50,13 @@ def logs(run_id: str, follow: bool):
     while has_more:
         loaded = load_log_lines(
             run_id,
-            continuation_cursor=cursor,
+            forward_cursor_token=cursor,
+            reverse_cursor_token=None,
             max_lines=DEFAULT_LOG_LOAD_MAX_SIZE,
             filter_strings=None,
             object_source=ObjectSource.API,
         )
-        has_more = loaded.more_after
+        has_more = loaded.can_continue_forward
 
         if len(loaded.lines) == 0:
 
@@ -69,7 +70,7 @@ def logs(run_id: str, follow: bool):
             time.sleep(1)
             continue
 
-        cursor = loaded.continuation_cursor
+        cursor = loaded.forward_cursor_token
 
         for line in loaded.lines:
             had_any = True
@@ -98,7 +99,10 @@ def dump_log_storage(storage_key: str):
     logging.basicConfig(level=logging.ERROR)
     storage_key = storage_key if storage_key.endswith("/") else f"{storage_key}/"
     line_stream = line_stream_from_log_directory(
-        storage_key, cursor_file=None, cursor_line_index=None
+        storage_key,
+        cursor_file=None,
+        cursor_line_index=None,
+        reverse=False,
     )
     found_lines = False
 
