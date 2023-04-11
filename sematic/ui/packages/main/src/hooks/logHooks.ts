@@ -54,7 +54,7 @@ export function useLogStream(source: string, filterString: string) {
             };
 
             if (!!cursor) {
-                queryParams['continuation_cursor'] = cursor;
+                queryParams['forward_cursor_token'] = cursor;
             }
             if (!!filterString) {
                 queryParams['filter_string'] = filterString;
@@ -65,15 +65,15 @@ export function useLogStream(source: string, filterString: string) {
 
             const payload: LogLineRequestResponse = await (await fetch({ url })).json();
 
-            const { content: { lines, continuation_cursor, log_info_message } } = payload;
+            const { content: { lines, forward_cursor_token, log_info_message } } = payload;
 
             devLogger(`logHooks.ts [${DEBUG_TAG}] getNext() ${url} completed. `
                 + `# of lines: ${(!!lines ? lines.length : NaN)} `
-                + `continuation_cursor: ${continuation_cursor && atob(continuation_cursor)} `
+                + `forward_cursor_token: ${forward_cursor_token && atob(forward_cursor_token)} `
                 + `log_info_message: ${log_info_message || 'N/A'} `);
 
             pushLines(...lines);
-            setCursor(continuation_cursor);
+            setCursor(forward_cursor_token);
             setlogInfoMessage(log_info_message);
             setHasPulledData(true);
             return {
