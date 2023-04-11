@@ -365,6 +365,10 @@ def test_line_stream_from_log_directory(
 ):
     run = make_run(future_state=FutureState.RESOLVED)
     save_run(run)
+    line_stream = line_stream_from_log_directory("empty", None, None, reverse=False)
+    materialized_line_stream = list(line_stream)
+    assert materialized_line_stream == []
+
     n_lines = 500
     text_lines = [f"Line {i}" for i in range(n_lines)]
     prefix = prepare_logs_v2(
@@ -695,8 +699,8 @@ def test_load_log_lines_reverse(
         max_lines=max_lines,
         reverse=True,
     )
+    assert result.forward_cursor_token is not None
     result.forward_cursor_token = None
-    result.reverse_cursor_token = None
     assert result == LogLineResult(
         can_continue_forward=True,
         can_continue_backward=False,
