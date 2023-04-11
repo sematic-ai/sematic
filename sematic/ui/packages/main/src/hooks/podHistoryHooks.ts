@@ -20,7 +20,7 @@ export function useRunJobHistory(runId: string) {
         const payload: RunJobPayload = await response.json();
 
         if (!payload['content']) {
-            throw Error('external_resources response is not in the correct format.')
+            throw Error('jobs response is not in the correct format.')
         }
 
         return payload['content'] as Array<Job>
@@ -68,5 +68,3 @@ export function useRunJobHistory(runId: string) {
 
     return {value, loading, error};
 }
-
-

@@ -57,7 +57,7 @@ export default function RunTabs(props: {
             <Tab label="Logs" value="logs" />
             {grafanaTab}
             <Tab label="Resources" value="ext_res" />
-            <Tab label="Pods states" value="pod_lifecycle" />
+            <Tab label="Pods" value="pod_lifecycle" />
           </TabList>
         </StickyHeader>
         <TabPanel value="input">

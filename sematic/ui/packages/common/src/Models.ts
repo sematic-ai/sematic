@@ -133,15 +133,15 @@ export type ExternalResourceHistorySerialization = {
 
 type PodHistoryStatusSerialization = {
   last_updated_epoch_seconds: number;
-  message: string
-  state: string
+  message: string;
+  state: string;
 };
 
 export type Job = {
   created_at: Date,
-  detail_serialization: any;
+  detail_serialization: object;
   kind: string;
-  last_updated_epoch_secondsL: number;
+  last_updated_epoch_seconds: number;
   message: string;
   name: string;
   namespace: string;

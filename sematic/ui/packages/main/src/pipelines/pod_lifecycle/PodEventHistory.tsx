@@ -3,8 +3,9 @@ import timelineItemClasses from '@mui/lab/TimelineItem/timelineItemClasses';
 import { styled } from '@mui/system';
 import PodLifecycleEvent from 'src/pipelines/pod_lifecycle/PodLifecycleEvent';
 import { Job } from '@sematic/common/lib/src/Models';
+import { useMemo } from 'react';
 
-const ThinTimetime = styled(Timeline)`
+const ThinTimeline = styled(Timeline)`
     margin: 0;
     flex: 0;
     & .${timelineItemClasses.root}:before {
@@ -20,11 +21,14 @@ interface PodEventHistoryProps {
 export default function PodEventHistory(props: PodEventHistoryProps) {
   const { historyRecords } = props;
 
-  return <ThinTimetime>
-      {historyRecords.map(
+  const reversedHistoryRecords = useMemo(
+    () => historyRecords.slice().reverse(), [historyRecords]);
+
+  return <ThinTimeline>
+      {reversedHistoryRecords.map(
         (state, index) =>
           <PodLifecycleEvent key={index} podStatus={state}
-            isLast={historyRecords.length - 1 === index} isFirst={index === 0} />
+            isLast={historyRecords.length - 1 === index} />
       )}
-    </ThinTimetime>
+    </ThinTimeline>
 }
