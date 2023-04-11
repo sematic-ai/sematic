@@ -1,6 +1,8 @@
 import { useHttpClient } from "src/hooks/httpHooks";
 import useAsync from "react-use/lib/useAsync";
 import { AggregatedMetricsPayload, BasicMetricsPayload } from "src/Payloads";
+import { MetricPoint } from "@sematic/common/lib/src/Models";
+import { useCallback } from "react";
 
 export default function useBasicMetrics({
   runId,
@@ -24,18 +26,43 @@ export type MetricsFilter = {
 };
 
 export function useAggregatedMetrics(
-  metricsFilter: MetricsFilter
+  metricsFilter: MetricsFilter,
+  broadcastEvent?: MetricPoint[]
 ): [AggregatedMetricsPayload | undefined, boolean, Error | undefined] {
   const { fetch } = useHttpClient();
 
+  const eventMatchesFilter = useCallback(
+    () =>
+      broadcastEvent &&
+      !!broadcastEvent.find(
+        (metricPoint) =>
+          metricPoint.name === metricsFilter.metricName &&
+          [
+            "run_id",
+            "calculator_path",
+            "root_id",
+            "root_calculator_path",
+          ].every(
+            (key) =>
+              // Filter does not filter on key
+              metricsFilter.labels[key] === undefined ||
+              // or it does and the value matches
+              metricsFilter.labels[key] === metricPoint.labels[key]
+          )
+      ),
+    [metricsFilter, broadcastEvent]
+  );
+
   const { value, loading, error } = useAsync(async () => {
+    console.log("useAsync", broadcastEvent);
+    if (broadcastEvent && !eventMatchesFilter()) return;
     const labelsJSON = JSON.stringify(metricsFilter.labels);
     const groupBysStr = metricsFilter.groupBys.join(",");
     const response = await fetch({
       url: `/api/v1/metrics/${metricsFilter.metricName}?labels=${labelsJSON}&group_by=${groupBysStr}`,
     });
     return (await response.json()) as AggregatedMetricsPayload;
-  }, []);
+  }, [broadcastEvent]);
 
   return [value, loading, error];
 }

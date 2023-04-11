@@ -28,6 +28,7 @@ import {
   ChartData,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import { MetricPoint } from "@sematic/common/lib/src/Models";
 
 ChartJS.register(
   CategoryScale,
@@ -131,9 +132,13 @@ export function ScalarMetric(props: {
 export function TimeseriesMetric(props: {
   metricsFilter: MetricsFilter;
   color: string;
+  broadcastEvent?: MetricPoint[];
 }) {
-  const { metricsFilter, color } = props;
-  const [payload, loading, error] = useAggregatedMetrics(metricsFilter);
+  const { metricsFilter, color, broadcastEvent } = props;
+  const [payload, loading, error] = useAggregatedMetrics(
+    metricsFilter,
+    broadcastEvent
+  );
 
   const chartData = useMemo(() => {
     const cData: ChartData<"line", number[], string> = {

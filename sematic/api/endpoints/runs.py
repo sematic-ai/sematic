@@ -382,7 +382,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
             )
         )
 
-    save_event_metrics(MetricEvent.run_future_state_changed, state_changed_runs)
+    save_event_metrics(MetricEvent.run_future_state_changed, state_changed_runs, user)
 
     payload = dict(
         content=result_list,

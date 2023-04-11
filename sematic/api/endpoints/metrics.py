@@ -11,6 +11,7 @@ import flask
 # Sematic
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
+from sematic.api.endpoints.events import broadcast_metrics_update
 from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.db.models.user import User
 from sematic.metrics.types_ import MetricPoint
@@ -86,6 +87,8 @@ def log_metric_endpoint(user: Optional[User]) -> flask.Response:
         metric_points.append(metric_point)
 
     plugin.store_metrics(metric_points)
+
+    # broadcast_metrics_update(metric_points, user)
 
     return flask.jsonify({})
 

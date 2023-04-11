@@ -435,6 +435,7 @@ def save_metric_points(metric_points: List[MetricPoint]) -> None:
     )
 
     _post("/metrics", json_payload=payload)
+    _notify_event("metrics", "update", payload)
 
 
 def notify_pipeline_update(calculator_path: str):

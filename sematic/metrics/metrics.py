@@ -1,11 +1,12 @@
 # Standard Library
 import enum
 import logging
-from typing import Dict, List, Type
+from typing import Dict, List, Optional, Type
 
 # Sematic
 from sematic.abstract_metric import AbstractMetric
 from sematic.db.models.run import Run
+from sematic.db.models.user import User
 from sematic.metrics.func_effective_runtime import FuncEffectiveRuntime
 from sematic.metrics.func_run_count import FuncRunCount
 from sematic.metrics.func_success_rate import FuncSuccessRate
@@ -32,7 +33,9 @@ _METRICS: Dict[MetricEvent, List[Type[AbstractMetric]]] = {
 }
 
 
-def save_event_metrics(event: MetricEvent, runs: List[Run]):
+def save_event_metrics(
+    event: MetricEvent, runs: List[Run], user: Optional[User] = None
+):
     if len(runs) == 0:
         return
 
@@ -42,8 +45,8 @@ def save_event_metrics(event: MetricEvent, runs: List[Run]):
         metric_points: List[MetricPoint] = []
 
         for metric_class in _METRICS[event]:
+            metric = metric_class()
             for run in runs:
-                metric = metric_class()
                 metric_point = metric.make_metric_point(run)
 
                 if metric_point is None:

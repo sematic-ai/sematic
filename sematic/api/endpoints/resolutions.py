@@ -175,7 +175,7 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
     save_resolution(resolution)
 
     if existing_resolution is None:
-        save_event_metrics(MetricEvent.run_created, [root_run])
+        save_event_metrics(MetricEvent.run_created, [root_run], user)
 
     _publish_resolution_event(resolution)
 

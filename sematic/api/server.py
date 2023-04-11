@@ -70,6 +70,7 @@ def init_socketio():
     socketio.on_namespace(Namespace("/pipeline"))
     socketio.on_namespace(Namespace("/graph"))
     socketio.on_namespace(Namespace("/job"))
+    socketio.on_namespace(Namespace("/metrics"))
     return socketio
 
 

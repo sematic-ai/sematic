@@ -11,11 +11,11 @@ def add(a: float, b: float) -> float:
     """
     Adds two numbers.
     """
-    log_metric("add_test", 0)
-    log_metric("add_test_2", 0)
-    time.sleep(5)
-    log_metric("add_test", 1)
-    log_metric("add_test_2", 1)
+    for i in range(10):
+        log_metric("add_test", i)
+        time.sleep(1)
+
+    # time.sleep(5)
     return a + b
 
 
