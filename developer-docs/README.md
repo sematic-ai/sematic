@@ -262,6 +262,9 @@ changes.
   consistent and expected state, and to test the actual commands users will be using to
   deploy the release.
     ```bash
+    $ # Run this step if it has never been done before
+    $ helm repo add sematic-ai https://sematic-ai.github.io/helm-charts
+
     $ # STAGE:
     $ helm upgrade sematic-server sematic-ai/sematic-server -n stage -f /path/to/stage_values.yml
     $ helm list -n stage  # check that the expected APP VERSION was deployed
