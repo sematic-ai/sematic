@@ -29,6 +29,7 @@ from sematic.log_reader import (
     load_log_lines,
     log_prefix,
     reversed,
+    to_line_id,
 )
 from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
@@ -251,7 +252,7 @@ def prepare_logs_v2(
 
     log_file_contents_part_1 = bytes("\n".join(lines_part_1), encoding="utf8")
     prefix = log_prefix(run_id, job_kind)
-    key_part_1 = f"{prefix}12345.log"
+    key_part_1 = f"{prefix}1600000000000.log"
     mock_storage.set(key_part_1, log_file_contents_part_1)
 
     if emulate_pending_more_lines:
@@ -259,9 +260,13 @@ def prepare_logs_v2(
         return prefix
     log_file_contents_part_2 = bytes("\n".join(lines_part_2), encoding="utf8")
     prefix = log_prefix(run_id, job_kind)
-    key_part_2 = f"{prefix}12346.log"
+    key_part_2 = f"{prefix}1610000000000.log"
     mock_storage.set(key_part_2, log_file_contents_part_2)
-    return prefix
+
+    line_ids_part_1 = [to_line_id(key_part_1, i) for i in range(len(lines_part_1))]
+    line_ids_part_2 = [to_line_id(key_part_2, i) for i in range(len(lines_part_2))]
+    line_ids = line_ids_part_1 + line_ids_part_2
+    return prefix, line_ids
 
 
 @pytest.mark.parametrize(
@@ -382,7 +387,7 @@ def test_line_stream_from_log_directory(
 
     n_lines = 500
     text_lines = [f"Line {i}" for i in range(n_lines)]
-    prefix = prepare_logs_v2(
+    prefix, _ = prepare_logs_v2(
         run_id=run.id,
         text_lines=text_lines,
         mock_storage=mock_storage,
@@ -400,7 +405,7 @@ def test_line_stream_from_log_directory(
     start_index = 50
     line_stream = line_stream_from_log_directory(
         directory=log_prefix(run.id, JobKind.run),
-        cursor_file=f"{log_prefix(run.id, JobKind.run)}12345.log",
+        cursor_file=f"{log_prefix(run.id, JobKind.run)}1600000000000.log",
         cursor_line_index=start_index,
         reverse=False,
     )
@@ -416,7 +421,7 @@ def test_line_stream_from_log_directory_reverse(
     save_run(run)
     n_lines = 500
     text_lines = [f"Line {i}" for i in range(n_lines)]
-    prefix = prepare_logs_v2(
+    prefix, _ = prepare_logs_v2(
         run_id=run.id,
         text_lines=text_lines,
         mock_storage=mock_storage,
@@ -435,7 +440,7 @@ def test_line_stream_from_log_directory_reverse(
     start_index = 20
     line_stream = line_stream_from_log_directory(
         directory=log_prefix(run.id, JobKind.run),
-        cursor_file=f"{log_prefix(run.id, JobKind.run)}12346.log",
+        cursor_file=f"{log_prefix(run.id, JobKind.run)}1610000000000.log",
         cursor_line_index=start_index,
         reverse=True,
     )
@@ -623,7 +628,9 @@ def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noq
     save_job(make_job(run_id=run.id))
     save_run(run)
     text_lines = [line.line for line in finite_logs(100)]
-    log_preparation_function(run.id, text_lines, mock_storage, JobKind.run)
+    _, line_ids = log_preparation_function(
+        run.id, text_lines, mock_storage, JobKind.run
+    )
 
     result = load_log_lines(
         run_id=run.id,
@@ -639,10 +646,11 @@ def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noq
             can_continue_backward=True,
             can_continue_forward=True,
             lines=text_lines[:max_lines],
-            line_ids=None,
+            line_ids=line_ids[:max_lines],
             log_info_message=None,
         ),
         result,
+        compare_line_ids=True,
     )
 
     result = load_log_lines(
@@ -767,7 +775,9 @@ def test_load_log_lines_reverse(
     save_job(make_job(run_id=run.id))
     save_run(run)
     text_lines = [line.line for line in finite_logs(100)]
-    log_preparation_function(run.id, text_lines, mock_storage, JobKind.run)
+    _, line_ids = log_preparation_function(
+        run.id, text_lines, mock_storage, JobKind.run
+    )
 
     result = load_log_lines(
         run_id=run.id,
@@ -784,10 +794,11 @@ def test_load_log_lines_reverse(
             can_continue_backward=True,
             can_continue_forward=True,
             lines=text_lines[-1 * max_lines :],  # noqa: E203
-            line_ids=None,
+            line_ids=line_ids[-1 * max_lines :],  # noqa: E203
             log_info_message=None,
         ),
         result,
+        compare_line_ids=True,
     )
 
     result = load_log_lines(
@@ -1203,6 +1214,38 @@ def test_stream_from_text_stream_from_index_reverse():
         )
     )
     assert streamed == list(reversed(list(finite_logs(n_lines))[:start_line_index]))
+
+
+# Note: this serves both as a source of individual test cases
+# for test_to_line_id, and a list of test cases for
+# test_to_line_id_obeys_order
+LINE_ID_TESTS = [
+    ("foo/1234bar/baz1610000000000.log", 42, 1100000000000042),
+    ("foo/1234bar/baz1610000000000.log", 43, 1100000000000043),
+    ("foo/1234bar/baz1610000000333.log", 999, 1100000003330999),
+    ("foo/1234bar/baz2510000000333.log", 999, 10100000003330999),
+]
+
+
+@pytest.mark.parametrize("log_file, log_index, expected_id", LINE_ID_TESTS)
+def test_to_line_id(log_file, log_index, expected_id):
+    actual = to_line_id(log_file, log_index)
+    assert expected_id == actual
+
+
+def test_to_line_id_obeys_order():
+    """Tests that lines which were generated later have higher ids.
+
+    Even if the actual logic mapping log files/indices to ids changes, this
+    test should still pass unchanged.
+    """
+
+    # Lexical ordering should ensure these are sorted first by log
+    # file, then by line index.
+    ordered_lines = sorted(LINE_ID_TESTS)
+
+    line_ids = [to_line_id(log_file, index) for log_file, index, _ in ordered_lines]
+    assert sorted(line_ids) == line_ids
 
 
 def compare_log_line_result(
