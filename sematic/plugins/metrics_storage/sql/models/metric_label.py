@@ -4,8 +4,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 # Sematic
 from sematic.db.models.base import Base
-from sematic.metrics.metric_point import MetricType
-from sematic.plugins.abstract_metrics_storage import MetricsLabels
+from sematic.metrics.metric_point import MetricsLabels, MetricType
 from sematic.utils.db import IntEnum
 
 
@@ -34,6 +33,3 @@ class MetricLabel(Base):
     metric_name: str = Column(types.String(), nullable=False)
     metric_labels: MetricsLabels = Column(JSONB(), nullable=False)
     metric_type: MetricType = Column(IntEnum(MetricType), nullable=False)
-
-    def __hash__(self) -> int:
-        return hash(self.metric_id)

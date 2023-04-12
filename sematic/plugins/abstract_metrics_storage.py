@@ -6,14 +6,12 @@ import abc
 import enum
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Sequence, Tuple, Type, Union, cast
+from typing import List, Optional, Sequence, Tuple, Type, cast
 
 # Sematic
 from sematic.abstract_plugin import AbstractPlugin, PluginScope
 from sematic.config.settings import get_active_plugins
-from sematic.metrics.metric_point import MetricPoint
-
-MetricsLabels = Dict[str, Union[int, float, str, bool, None]]
+from sematic.metrics.metric_point import MetricPoint, MetricsLabels
 
 
 @dataclass

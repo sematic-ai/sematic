@@ -1,6 +1,6 @@
 # Standard Library
 import logging
-from typing import List, Sequence, Set, Tuple, Type
+from typing import Dict, List, Sequence, Set, Tuple, Type
 
 # Third-party
 from sqlalchemy import func
@@ -14,13 +14,12 @@ from sematic.abstract_plugin import (
     PluginVersion,
 )
 from sematic.db.db import db
-from sematic.metrics.metric_point import MetricPoint, MetricType
+from sematic.metrics.metric_point import MetricPoint, MetricsLabels, MetricType
 from sematic.plugins.abstract_metrics_storage import (
     AbstractMetricsStorage,
     GroupBy,
     MetricSeries,
     MetricsFilter,
-    MetricsLabels,
     NoMetricError,
 )
 from sematic.plugins.metrics_storage.sql.models.metric_label import MetricLabel
@@ -42,6 +41,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
     Metrics storage plug-in to store metrics values in a SQL database (SQLite
     3.38.0+ and PostgreSQL).
     """
+
     @staticmethod
     def get_author() -> str:
         return SEMATIC_PLUGIN_AUTHOR
@@ -57,14 +57,12 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
     def store_metrics(self, metric_points: Sequence[MetricPoint]) -> None:
         logger.info("Storing %s metric points", len(metric_points))
 
-        metric_ids: Set[str] = set()
         metric_values: List[MetricValue] = []
-        metric_labels: Set[MetricLabel] = set()
+        metric_labels: Dict[str, MetricLabel] = dict()
 
         for metric_point in metric_points:
             metric_label = _make_metric_label(metric_point)
-            metric_ids.add(metric_label.metric_id)
-            metric_labels.add(metric_label)
+            metric_labels[metric_label.metric_id] = metric_label
 
             metric_value = MetricValue(
                 metric_id=metric_label.metric_id,
@@ -76,7 +74,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
         with db().get_session() as session:
             existing_metric_ids = (
                 session.query(MetricLabel.metric_id)
-                .filter(MetricLabel.metric_id.in_(metric_ids))
+                .filter(MetricLabel.metric_id.in_(metric_labels.keys()))
                 .all()
             )
 
@@ -84,7 +82,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
         new_metric_labels = [
             metric_label
-            for metric_label in metric_labels
+            for metric_label in metric_labels.values()
             if metric_label.metric_id not in existing_metric_ids
         ]
 

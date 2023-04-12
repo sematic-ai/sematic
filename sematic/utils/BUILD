@@ -60,3 +60,12 @@ sematic_py_lib(
     srcs = ["stdout.py"],
     deps = [],
 )
+
+sematic_py_lib(
+    name = "db",
+    srcs = ["db.py"],
+    pip_deps = [
+        "sqlalchemy",
+    ],
+    deps = [],
+)
