@@ -5,6 +5,13 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.28.1](https://pypi.org/project/sematic/0.28.1/)
+    * [improvement] Allow selecting S3 paths in UI
+    * [improvement] Backend logging improvements
+    * [bugfix] Ensure gevent import doesn't monkeypatch standard lib late when importing Sematic
+    * [bugfix] Resolve issue with S3 links in the UI for S3 "directories"
+    * [bugfix] Eliminate one situation that could lead to duplicated logs in the UI
+    * [bugfix] Fix a casting issue with floats
 * [0.28.0](https://pypi.org/project/sematic/0.28.0/)
     * [feature] Display metrics for pipelines (success rate, run count, runtime)
     * [feature] Added support for setting and memorizing a dev debug flag for the Dashboard
