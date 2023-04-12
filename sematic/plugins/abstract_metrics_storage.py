@@ -6,7 +6,7 @@ import abc
 import enum
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, Iterable, List, Optional, Tuple, Type, Union, cast
+from typing import Dict, List, Optional, Sequence, Tuple, Type, Union, cast
 
 # Sematic
 from sematic.abstract_plugin import AbstractPlugin, PluginScope
@@ -112,7 +112,7 @@ class AbstractMetricsStorage(abc.ABC):
     """
 
     @abc.abstractmethod
-    def store_metrics(self, metric_points: Iterable[MetricPoint]) -> None:
+    def store_metrics(self, metric_points: Sequence[MetricPoint]) -> None:
         """
         Persists a list of metric points.
 
@@ -124,7 +124,7 @@ class AbstractMetricsStorage(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_metrics(self, labels: MetricsLabels) -> Iterable[str]:
+    def get_metrics(self, labels: MetricsLabels) -> Tuple[str, ...]:
         """
         Gets the list of unique metric names for the given set of labels.
 
@@ -137,7 +137,7 @@ class AbstractMetricsStorage(abc.ABC):
 
     @abc.abstractmethod
     def get_aggregated_metrics(
-        self, filter: MetricsFilter, group_by: Iterable[GroupBy]
+        self, filter: MetricsFilter, group_by: Sequence[GroupBy]
     ) -> MetricSeries:
         """
         Returns a metric aggregation according to the provided filter and group

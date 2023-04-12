@@ -16,7 +16,8 @@ from sematic.versions import string_version_to_tuple, version_as_string
 logger = logging.getLogger(__name__)
 
 # Support for dropping columns added in 3.35.0
-MIN_SQLITE_VERSION = (3, 35, 0)
+# Support for JSON querying added in 3.38.0
+MIN_SQLITE_VERSION = (3, 38, 0)
 
 
 def _check_sqlite_version():
