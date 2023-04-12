@@ -19,6 +19,7 @@ from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
     START_INLINE_RUN_INDICATOR,
 )
+from sematic.resolvers.log_streamer import MAX_LINES_PER_LOG_FILE
 from sematic.scheduling.job_details import JobKind, JobKindString
 
 V2_LOG_PREFIX = "logs/v2"
@@ -810,11 +811,10 @@ def to_line_id(log_file: str, line_index: int) -> int:
     # was.
     prefix = timestamp - 1500000000000
 
-    # We know the suffic will be less than 1000 because
-    # that's the max size for any given log file. However, that limit was
-    # fairly recent so we can use an extra 0 to be safe. For logs older
-    # than the "max 1000" rule, timestamps would be 10 seconds apart
-    # and the timestamps are in milliseconds, which gives us more headroom
-    # to avoid duplication.
+    # We know the suffix will be less than MAX_LINES_PER_LOG_FILE. However,
+    # that limit was fairly recent so we can use an extra 0 to be safe.
+    # For logs older than the MAX_LINES_PER_LOG_FILE rule, timestamps
+    # would be 10 seconds apart and the timestamps are in milliseconds,
+    # which gives us more headroom to avoid duplication.
     suffix = line_index
-    return 10000 * prefix + suffix
+    return 10 * MAX_LINES_PER_LOG_FILE * prefix + suffix
