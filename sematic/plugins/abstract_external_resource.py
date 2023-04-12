@@ -4,7 +4,7 @@ import time
 import uuid
 from dataclasses import dataclass, field, fields, replace
 from enum import Enum, unique
-from typing import TypeVar, final
+from typing import FrozenSet, TypeVar, final
 
 # Sematic
 from sematic.abstract_future import AbstractFuture
@@ -69,6 +69,10 @@ class ResourceState(Enum):
         """True if there are no states that can follow this one, False otherwise."""
         return len(_ALLOWED_TRANSITIONS[self]) == 0
 
+    @classmethod
+    def non_terminal_states(cls) -> FrozenSet["ResourceState"]:
+        return _NON_TERMINAL_STATES
+
 
 _ALLOWED_TRANSITIONS = {
     None: {ResourceState.CREATED},
@@ -100,6 +104,11 @@ _ALLOWED_TRANSITIONS = {
     },
     ResourceState.DEACTIVATED: {},
 }
+
+
+_NON_TERMINAL_STATES = frozenset(
+    {state for state in ResourceState if not state.is_terminal()}
+)
 
 
 @unique

@@ -1,7 +1,8 @@
 # Standard Library
 import logging
+from dataclasses import asdict, dataclass
 from http import HTTPStatus
-from typing import Optional
+from typing import List, Optional
 
 # Third-party
 import flask
@@ -14,9 +15,14 @@ from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.user import User
 from sematic.db.queries import (
     get_external_resource_record,
+    get_orphaned_resource_records,
     save_external_resource_record,
 )
-from sematic.plugins.abstract_external_resource import ManagedBy
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
+    ManagedBy,
+    ResourceState,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -151,3 +157,68 @@ def save_resource_endpoint(user: Optional[User]) -> flask.Response:
     payload = dict(external_resource=record.to_json_encodable())
 
     return flask.jsonify(payload)
+
+
+@sematic_api.route("/api/v1/external_resources/all/clean_orphaned", methods=["PUT"])
+@authenticate
+def clean_orphaned_resources_endpoint(user: Optional[User]) -> flask.Response:
+    resources = get_orphaned_resource_records()
+    state_changes = evolve_resources_deactivation(resources)
+    return flask.jsonify({"state_changes": asdict(state_changes)})
+
+
+@dataclass
+class StateChanges:
+    reached_deactivation: List[str]
+    began_deactivation: List[str]
+    unmodified: List[str]
+    update_error: List[str]
+
+
+def evolve_resources_deactivation(resources: List[ExternalResource]) -> StateChanges:
+    state_changes = StateChanges(
+        reached_deactivation=[],
+        began_deactivation=[],
+        unmodified=[],
+        update_error=[],
+    )
+    for resource in resources:
+        try:
+            evolve_resource_deactivation(resource, state_changes)
+        except Exception:
+            logger.exception("Error evolving deactivation for '%s'", resource.id)
+            state_changes.update_error.append(resource.id)
+    return state_changes
+
+
+def evolve_resource_deactivation(
+    resource: ExternalResource, state_changes: StateChanges
+):
+    if resource.managed_by != ManagedBy.SERVER:
+        state_changes.unmodified.append(resource.id)
+        logger.info("Skipping clean of %s, not managed by server", resource.id)
+        return
+
+    abstract_resource: AbstractExternalResource = resource.resource
+    if abstract_resource.status.state.is_terminal():
+        logger.info(
+            "Skipping clean of %s, in terminal state %s",
+            resource.id,
+            abstract_resource.status.state,
+        )
+        state_changes.unmodified.append(resource.id)
+        return
+    if abstract_resource.status.state == ResourceState.DEACTIVATING:
+        abstract_resource = abstract_resource.update()
+        if abstract_resource.status.state == ResourceState.DEACTIVATING:
+            logger.info("Resource %s is still deactivating.", resource.id)
+            state_changes.unmodified.append(resource.id)
+            return
+        else:
+            resource.resource = abstract_resource
+            save_external_resource_record(resource)
+            state_changes.reached_deactivation.append(resource.id)
+            return
+    abstract_resource = abstract_resource.deactivate()
+    state_changes.began_deactivation.append(resource.id)
+    return

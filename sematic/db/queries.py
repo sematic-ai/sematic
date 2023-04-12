@@ -20,7 +20,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.job import Job
 from sematic.db.models.note import Note
-from sematic.db.models.resolution import Resolution
+from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.runs_external_resource import RunExternalResource
 from sematic.db.models.user import User
@@ -402,6 +402,44 @@ def get_external_resource_record(resource_id: str) -> Optional[ExternalResource]
             .filter(ExternalResource.id == resource_id)
             .one_or_none()
         )
+
+
+def get_orphaned_resource_records() -> List[ExternalResource]:
+    """Get ExternalResources orphaned resources from the db.
+
+    Orphaned resources are ones that are not in a terminal state, but
+    whose resolutions ARE in a terminal state.
+    """
+    with db().get_session() as session:
+        results = (
+            session.query(
+                ExternalResource,
+                Resolution.root_id,
+                RunExternalResource,
+                Run.id,
+                Run.root_id,
+            )
+            .filter(ExternalResource.id == RunExternalResource.resource_id)
+            .filter(Run.id == RunExternalResource.run_id)
+            .filter(Run.root_id == Resolution.root_id)
+            .filter(Resolution.status.in_(ResolutionStatus.terminal_states()))
+            .filter(
+                ExternalResource.resource_state.in_(ResourceState.non_terminal_states())
+            )
+            .all()
+        )
+
+        # use a set: a resource might show up twice if it is used in more than one run.
+        resources: Set[ExternalResource] = set()
+        for resource, resolution_id, _, run_id, __ in results:
+            logger.info(
+                "Found orphaned resource '%s' from resolution '%s' and run '%s'",
+                resource,
+                resolution_id,
+                run_id,
+            )
+            resources.add(resource)
+    return list(resources)
 
 
 def save_run_external_resource_links(resource_ids: List[str], run_id: str):
