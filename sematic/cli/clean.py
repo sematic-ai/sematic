@@ -60,7 +60,7 @@ def clean(orphaned_jobs: bool, orphaned_resources: bool):
         cleaned_messages.append(f"Cleaned {n_cleaned} orphaned resources")
 
     if len(cleaned_messages) == 0:
-        echo("❌ Nothing to clean.")
+        echo("✅ Nothing to clean.")
     else:
         for message in cleaned_messages:
             echo(f"🧹 {message}")
