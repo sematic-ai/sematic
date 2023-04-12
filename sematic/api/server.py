@@ -39,6 +39,7 @@ from sematic.api.app import sematic_api
 from sematic.api.wsgi import SematicWSGI
 from sematic.config.config import get_config, switch_env  # noqa: F401
 from sematic.config.settings import import_plugins
+from sematic.logging import make_log_config
 
 # Some plugins may register endpoints
 import_plugins()
@@ -115,7 +116,7 @@ def run_socketio(debug=False):
     with open(get_config().server_pid_file_path, "w+") as fp:
         fp.write(str(os.getpid()))
 
-    dictConfig(make_log_config())
+    dictConfig(make_log_config(log_to_disk=True))
     register_signal_handlers()
 
     socketio.run(
@@ -140,57 +141,12 @@ def run_wsgi(daemon: bool):
         "worker_class": "geventwebsocket.gunicorn.workers.GeventWebSocketWorker",
         "daemon": daemon,
         "pidfile": get_config().server_pid_file_path,
-        "logconfig_dict": make_log_config(),
+        "logconfig_dict": make_log_config(log_to_disk=True),
         "certfile": os.environ.get("CERTIFICATE"),
         "keyfile": os.environ.get("PRIVATE_KEY"),
     }
     register_signal_handlers()
     SematicWSGI(sematic_api, options).run()
-
-
-def make_log_config():
-    stdout_handler_list = ["stdout"] if get_config().server_log_to_stdout else []
-    full_handler_list = ["default", "error"] + stdout_handler_list
-    root_logger_config = {"level": "INFO", "handlers": full_handler_list}
-    log_rotation_settings = {
-        "formatter": "standard",
-        "class": "logging.handlers.RotatingFileHandler",
-        "maxBytes": 500 * 2**20,  # 500 MB
-        "backupCount": 20,
-    }
-    config = {
-        "version": 1,
-        "root": root_logger_config,
-        "disable_existing_loggers": True,
-        "formatters": {
-            "standard": {
-                "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-            },
-        },
-        "handlers": {
-            "default": dict(
-                level="INFO",
-                filename=os.path.join(get_config().config_dir, "access.log"),
-                **log_rotation_settings,
-            ),
-            "error": dict(
-                level="ERROR",
-                filename=os.path.join(get_config().config_dir, "error.log"),
-                **log_rotation_settings,
-            ),
-            "stdout": {
-                "formatter": "standard",
-                "class": "logging.StreamHandler",
-                "stream": "ext://sys.stdout",
-            },
-        },
-        "loggers": {
-            "sematic": root_logger_config,
-            "gunicorn.error": {"level": "ERROR", "handlers": full_handler_list},
-            "gunicorn.access": {"level": "INFO", "handlers": full_handler_list},
-        },
-    }
-    return config
 
 
 if __name__ == "__main__":
