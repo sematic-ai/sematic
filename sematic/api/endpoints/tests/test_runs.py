@@ -630,6 +630,7 @@ def test_get_run_logs(
         can_continue_forward=True,
         can_continue_backward=True,
         lines=["Line 1", "Line 2"],
+        line_ids=[123, 124],
         forward_cursor_token="abc",
         reverse_cursor_token="xyz",
         log_info_message=None,

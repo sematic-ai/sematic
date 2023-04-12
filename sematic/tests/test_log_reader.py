@@ -29,6 +29,7 @@ from sematic.log_reader import (
     load_log_lines,
     log_prefix,
     reversed,
+    to_line_id,
 )
 from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
@@ -37,7 +38,7 @@ from sematic.resolvers.cloud_resolver import (
 from sematic.scheduling.job_details import JobKind
 
 _streamed_lines: List[str] = []
-_DUMMY_LOGS_FILE = "logs.log"
+_DUMMY_LOGS_FILE = "logs123.log"
 _DUMMY_RUN_ID = "abc123"
 
 
@@ -89,16 +90,17 @@ def test_get_log_lines_from_line_stream_does_streaming():
         run_id=_DUMMY_RUN_ID,
     )
     cursor = Cursor.from_token(result.forward_cursor_token)
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=[f"Line {i}" for i in range(max_lines)],
-        log_info_message=None,
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=[f"Line {i}" for i in range(max_lines)],
+            line_ids=None,
+            log_info_message=None,
+        ),
+        result,
     )
     assert _streamed_lines == result.lines
 
@@ -115,16 +117,17 @@ def test_get_log_lines_from_line_stream_does_streaming():
         filter_strings=[],
         run_id=_DUMMY_RUN_ID,
     )
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-
-    assert result == LogLineResult(
-        can_continue_backward=True,
-        can_continue_forward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=[f"Line {i}" for i in range(max_lines, 2 * max_lines)],
-        log_info_message=None,
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_backward=True,
+            can_continue_forward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=[f"Line {i}" for i in range(max_lines, 2 * max_lines)],
+            line_ids=None,
+            log_info_message=None,
+        ),
+        result,
     )
 
 
@@ -173,27 +176,29 @@ def test_get_log_lines_from_line_stream_filter():
         filter_strings=["2"],
     )
     cursor = Cursor.from_token(result.forward_cursor_token)
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
 
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=[
-            "Line 2",
-            "Line 12",
-            "Line 20",
-            "Line 21",
-            "Line 22",
-            "Line 23",
-            "Line 24",
-            "Line 25",
-            "Line 26",
-            "Line 27",
-        ],
-        log_info_message=None,
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=[
+                "Line 2",
+                "Line 12",
+                "Line 20",
+                "Line 21",
+                "Line 22",
+                "Line 23",
+                "Line 24",
+                "Line 25",
+                "Line 26",
+                "Line 27",
+            ],
+            line_ids=None,
+            log_info_message=None,
+        ),
+        result,
     )
 
     result = get_log_lines_from_line_stream(
@@ -209,26 +214,28 @@ def test_get_log_lines_from_line_stream_filter():
         filter_strings=["2"],
     )
 
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=[
-            "Line 28",
-            "Line 29",
-            "Line 32",
-            "Line 42",
-            "Line 52",
-            "Line 62",
-            "Line 72",
-            "Line 82",
-            "Line 92",
-            "Line 102",
-        ],
-        log_info_message=None,
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=[
+                "Line 28",
+                "Line 29",
+                "Line 32",
+                "Line 42",
+                "Line 52",
+                "Line 62",
+                "Line 72",
+                "Line 82",
+                "Line 92",
+                "Line 102",
+            ],
+            line_ids=None,
+            log_info_message=None,
+        ),
+        result,
     )
 
 
@@ -245,7 +252,7 @@ def prepare_logs_v2(
 
     log_file_contents_part_1 = bytes("\n".join(lines_part_1), encoding="utf8")
     prefix = log_prefix(run_id, job_kind)
-    key_part_1 = f"{prefix}12345.log"
+    key_part_1 = f"{prefix}1600000000000.log"
     mock_storage.set(key_part_1, log_file_contents_part_1)
 
     if emulate_pending_more_lines:
@@ -253,9 +260,13 @@ def prepare_logs_v2(
         return prefix
     log_file_contents_part_2 = bytes("\n".join(lines_part_2), encoding="utf8")
     prefix = log_prefix(run_id, job_kind)
-    key_part_2 = f"{prefix}12346.log"
+    key_part_2 = f"{prefix}1610000000000.log"
     mock_storage.set(key_part_2, log_file_contents_part_2)
-    return prefix
+
+    line_ids_part_1 = [to_line_id(key_part_1, i) for i in range(len(lines_part_1))]
+    line_ids_part_2 = [to_line_id(key_part_2, i) for i in range(len(lines_part_2))]
+    line_ids = line_ids_part_1 + line_ids_part_2
+    return prefix, line_ids
 
 
 @pytest.mark.parametrize(
@@ -305,15 +316,17 @@ def test_load_non_inline_logs(
     assert result.forward_cursor_token is not None
     cursor = Cursor.from_token(result.forward_cursor_token)
     assert cursor.traversal_had_lines
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=text_lines[:max_lines],
-        log_info_message=None,
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=text_lines[:max_lines],
+            line_ids=None,
+            log_info_message=None,
+        ),
+        result,
     )
 
     result = _load_non_inline_logs(
@@ -328,15 +341,17 @@ def test_load_non_inline_logs(
     )
     assert result.forward_cursor_token is not None
     cursor = Cursor.from_token(result.forward_cursor_token)
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        can_continue_backward=True,
-        can_continue_forward=True,
-        lines=text_lines[max_lines : 2 * max_lines],  # noqa: E203
-        log_info_message=None,
+    compare_log_line_result(
+        LogLineResult(
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            can_continue_backward=True,
+            can_continue_forward=True,
+            lines=text_lines[max_lines : 2 * max_lines],  # noqa: E203
+            line_ids=None,
+            log_info_message=None,
+        ),
+        result,
     )
 
     result = _load_non_inline_logs(
@@ -356,6 +371,7 @@ def test_load_non_inline_logs(
         forward_cursor_token=None,
         reverse_cursor_token=None,
         lines=[],
+        line_ids=[],
         log_info_message="No matching log lines.",
     )
 
@@ -371,7 +387,7 @@ def test_line_stream_from_log_directory(
 
     n_lines = 500
     text_lines = [f"Line {i}" for i in range(n_lines)]
-    prefix = prepare_logs_v2(
+    prefix, _ = prepare_logs_v2(
         run_id=run.id,
         text_lines=text_lines,
         mock_storage=mock_storage,
@@ -389,7 +405,7 @@ def test_line_stream_from_log_directory(
     start_index = 50
     line_stream = line_stream_from_log_directory(
         directory=log_prefix(run.id, JobKind.run),
-        cursor_file=f"{log_prefix(run.id, JobKind.run)}12345.log",
+        cursor_file=f"{log_prefix(run.id, JobKind.run)}1600000000000.log",
         cursor_line_index=start_index,
         reverse=False,
     )
@@ -405,7 +421,7 @@ def test_line_stream_from_log_directory_reverse(
     save_run(run)
     n_lines = 500
     text_lines = [f"Line {i}" for i in range(n_lines)]
-    prefix = prepare_logs_v2(
+    prefix, _ = prepare_logs_v2(
         run_id=run.id,
         text_lines=text_lines,
         mock_storage=mock_storage,
@@ -424,7 +440,7 @@ def test_line_stream_from_log_directory_reverse(
     start_index = 20
     line_stream = line_stream_from_log_directory(
         directory=log_prefix(run.id, JobKind.run),
-        cursor_file=f"{log_prefix(run.id, JobKind.run)}12346.log",
+        cursor_file=f"{log_prefix(run.id, JobKind.run)}1610000000000.log",
         cursor_line_index=start_index,
         reverse=True,
     )
@@ -491,13 +507,17 @@ def test_load_inline_logs(
     cursor = Cursor.from_token(result.forward_cursor_token)
     result.forward_cursor_token = None
     result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=run_text_lines[:max_lines],
-        log_info_message=None,
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=run_text_lines[:max_lines],
+            line_ids=None,
+            log_info_message=None,
+        ),
+        result,
     )
 
     result = _load_inline_logs(
@@ -516,12 +536,16 @@ def test_load_inline_logs(
     result.forward_cursor_token = None
     result.reverse_cursor_token = None
 
-    assert result == LogLineResult(
-        forward_cursor_token=None,
-        can_continue_backward=True,
-        can_continue_forward=True,
-        lines=run_text_lines[max_lines:],
-        log_info_message=None,
+    compare_log_line_result(
+        LogLineResult(
+            forward_cursor_token=None,
+            can_continue_backward=True,
+            can_continue_forward=True,
+            lines=run_text_lines[max_lines:],
+            line_ids=None,
+            log_info_message=None,
+        ),
+        result,
     )
 
     result = _load_inline_logs(
@@ -534,15 +558,17 @@ def test_load_inline_logs(
         max_lines=max_lines,
         filter_strings=[],
     )
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        can_continue_forward=False,
-        can_continue_backward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=[],
-        log_info_message="No matching log lines.",
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=False,
+            can_continue_backward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=[],
+            line_ids=None,
+            log_info_message="No matching log lines.",
+        ),
+        result,
     )
 
 
@@ -573,6 +599,7 @@ def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noq
         forward_cursor_token=None,
         reverse_cursor_token=None,
         lines=[],
+        line_ids=[],
         log_info_message="Resolution has not started yet.",
     )
 
@@ -593,6 +620,7 @@ def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noq
         forward_cursor_token=None,
         reverse_cursor_token=None,
         lines=[],
+        line_ids=[],
         log_info_message="The run has not yet started executing.",
     )
 
@@ -600,7 +628,9 @@ def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noq
     save_job(make_job(run_id=run.id))
     save_run(run)
     text_lines = [line.line for line in finite_logs(100)]
-    log_preparation_function(run.id, text_lines, mock_storage, JobKind.run)
+    _, line_ids = log_preparation_function(
+        run.id, text_lines, mock_storage, JobKind.run
+    )
 
     result = load_log_lines(
         run_id=run.id,
@@ -609,15 +639,18 @@ def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noq
         max_lines=max_lines,
     )
     token = result.forward_cursor_token
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        can_continue_backward=True,
-        can_continue_forward=True,
-        lines=text_lines[:max_lines],
-        log_info_message=None,
+    compare_log_line_result(
+        LogLineResult(
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            can_continue_backward=True,
+            can_continue_forward=True,
+            lines=text_lines[:max_lines],
+            line_ids=line_ids[:max_lines],
+            log_info_message=None,
+        ),
+        result,
+        compare_line_ids=True,
     )
 
     result = load_log_lines(
@@ -628,15 +661,17 @@ def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noq
         reverse=False,
     )
     token = result.forward_cursor_token
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=text_lines[max_lines : 2 * max_lines],  # noqa: E203
-        log_info_message=None,
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=text_lines[max_lines : 2 * max_lines],  # noqa: E203
+            line_ids=None,
+            log_info_message=None,
+        ),
+        result,
     )
 
     result = load_log_lines(
@@ -646,15 +681,18 @@ def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noq
         max_lines=max_lines,
         reverse=False,
     )
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=[],
-        log_info_message="No matching log lines.",
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=[],
+            line_ids=[],
+            log_info_message="No matching log lines.",
+        ),
+        result,
+        compare_line_ids=True,
     )
 
     result = load_log_lines(
@@ -707,6 +745,7 @@ def test_load_log_lines_reverse(
         forward_cursor_token=None,
         reverse_cursor_token=None,
         lines=[],
+        line_ids=[],
         log_info_message="Resolution has not started yet.",
     )
 
@@ -728,6 +767,7 @@ def test_load_log_lines_reverse(
         forward_cursor_token=None,
         reverse_cursor_token=None,
         lines=[],
+        line_ids=[],
         log_info_message="The run has not yet started executing.",
     )
 
@@ -735,7 +775,9 @@ def test_load_log_lines_reverse(
     save_job(make_job(run_id=run.id))
     save_run(run)
     text_lines = [line.line for line in finite_logs(100)]
-    log_preparation_function(run.id, text_lines, mock_storage, JobKind.run)
+    _, line_ids = log_preparation_function(
+        run.id, text_lines, mock_storage, JobKind.run
+    )
 
     result = load_log_lines(
         run_id=run.id,
@@ -745,15 +787,18 @@ def test_load_log_lines_reverse(
         reverse=True,
     )
     token = result.reverse_cursor_token
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        can_continue_backward=True,
-        can_continue_forward=True,
-        lines=text_lines[-1 * max_lines :],  # noqa: E203
-        log_info_message=None,
+    compare_log_line_result(
+        LogLineResult(
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            can_continue_backward=True,
+            can_continue_forward=True,
+            lines=text_lines[-1 * max_lines :],  # noqa: E203
+            line_ids=line_ids[-1 * max_lines :],  # noqa: E203
+            log_info_message=None,
+        ),
+        result,
+        compare_line_ids=True,
     )
 
     result = load_log_lines(
@@ -764,15 +809,17 @@ def test_load_log_lines_reverse(
         reverse=True,
     )
     token = result.reverse_cursor_token
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=text_lines[-2 * max_lines : -1 * max_lines],  # noqa: E203
-        log_info_message=None,
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=text_lines[-2 * max_lines : -1 * max_lines],  # noqa: E203
+            line_ids=None,
+            log_info_message=None,
+        ),
+        result,
     )
 
     result = load_log_lines(
@@ -782,15 +829,17 @@ def test_load_log_lines_reverse(
         max_lines=max_lines,
         reverse=True,
     )
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=False,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=[],
-        log_info_message="No matching log lines.",
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=False,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=[],
+            line_ids=None,
+            log_info_message="No matching log lines.",
+        ),
+        result,
     )
     result = load_log_lines(
         run_id=run.id,
@@ -848,6 +897,7 @@ def test_load_cloned_run_log_lines(
         can_continue_backward=False,
         can_continue_forward=True,
         lines=[],
+        line_ids=[],
         log_info_message="Resolution has not started yet.",
     )
 
@@ -861,15 +911,17 @@ def test_load_cloned_run_log_lines(
         max_lines=max_lines,
         reverse=False,
     )
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=False,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=[],
-        log_info_message="The run has not yet started executing.",
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=False,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=[],
+            line_ids=[],
+            log_info_message="The run has not yet started executing.",
+        ),
+        result,
     )
 
     run.future_state = FutureState.SCHEDULED
@@ -886,15 +938,17 @@ def test_load_cloned_run_log_lines(
         reverse=False,
     )
     token = result.forward_cursor_token
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=text_lines[:max_lines],
-        log_info_message=f"Run logs sourced from original run {run.id}.",
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=text_lines[:max_lines],
+            line_ids=None,
+            log_info_message=f"Run logs sourced from original run {run.id}.",
+        ),
+        result,
     )
 
     result = load_log_lines(
@@ -905,15 +959,17 @@ def test_load_cloned_run_log_lines(
         reverse=False,
     )
     token = result.forward_cursor_token
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=text_lines[max_lines : 2 * max_lines],  # noqa: E203
-        log_info_message=f"Run logs sourced from original run {run.id}.",
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=text_lines[max_lines : 2 * max_lines],  # noqa: E203
+            line_ids=None,
+            log_info_message=f"Run logs sourced from original run {run.id}.",
+        ),
+        result,
     )
 
     result = load_log_lines(
@@ -931,6 +987,7 @@ def test_load_cloned_run_log_lines(
         can_continue_backward=True,
         can_continue_forward=True,
         lines=[],
+        line_ids=[],
         log_info_message="No matching log lines.",
     )
 
@@ -999,15 +1056,17 @@ def test_continue_from_end_with_no_new_logs(
     assert result.reverse_cursor_token is not None
     cursor = Cursor.from_token(result.forward_cursor_token)
     assert cursor.traversal_had_lines
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=text_lines[:max_lines],
-        log_info_message=None,
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=text_lines[:max_lines],
+            line_ids=None,
+            log_info_message=None,
+        ),
+        result,
     )
 
     # 50 more lines requested, only 2 more available
@@ -1024,15 +1083,17 @@ def test_continue_from_end_with_no_new_logs(
     assert result.forward_cursor_token is not None
     assert result.reverse_cursor_token is not None
     cursor = Cursor.from_token(result.forward_cursor_token)
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=text_lines[max_lines:break_at_line],  # noqa: E203
-        log_info_message=None,
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=text_lines[max_lines:break_at_line],  # noqa: E203
+            line_ids=None,
+            log_info_message=None,
+        ),
+        result,
     )
 
     # 50 more lines requested, no more available
@@ -1049,15 +1110,17 @@ def test_continue_from_end_with_no_new_logs(
     assert result.forward_cursor_token is not None
     assert result.reverse_cursor_token is not None
     cursor = Cursor.from_token(result.forward_cursor_token)
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=[],  # noqa: E203
-        log_info_message="No matching log lines.",
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=[],  # noqa: E203
+            line_ids=[],
+            log_info_message="No matching log lines.",
+        ),
+        result,
     )
 
     # upload more logs
@@ -1083,20 +1146,22 @@ def test_continue_from_end_with_no_new_logs(
     )
     assert result.forward_cursor_token is not None
     assert result.reverse_cursor_token is not None
-    result.forward_cursor_token = None
-    result.reverse_cursor_token = None
-    assert result == LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=True,
-        forward_cursor_token=None,
-        reverse_cursor_token=None,
-        lines=text_lines[break_at_line:total_lines],  # noqa: E203
-        log_info_message=None,
+    compare_log_line_result(
+        LogLineResult(
+            can_continue_forward=True,
+            can_continue_backward=True,
+            forward_cursor_token=None,
+            reverse_cursor_token=None,
+            lines=text_lines[break_at_line:total_lines],  # noqa: E203
+            line_ids=None,
+            log_info_message=None,
+        ),
+        result,
     )
 
 
 def test_stream_from_text_stream_from_index_forward():
-    log_file = "logs.log"
+    log_file = "logs123.log"
     n_lines = 100
     text_stream = (f"Line {i}" for i in range(n_lines))
 
@@ -1124,7 +1189,7 @@ def test_stream_from_text_stream_from_index_forward():
 
 
 def test_stream_from_text_stream_from_index_reverse():
-    log_file = "logs.log"
+    log_file = "logs123.log"
     n_lines = 100
     text_stream = (f"Line {i}" for i in range(n_lines))
 
@@ -1149,3 +1214,56 @@ def test_stream_from_text_stream_from_index_reverse():
         )
     )
     assert streamed == list(reversed(list(finite_logs(n_lines))[:start_line_index]))
+
+
+# Note: this serves both as a source of individual test cases
+# for test_to_line_id, and a list of test cases for
+# test_to_line_id_obeys_order
+LINE_ID_TESTS = [
+    ("foo/1234bar/baz1610000000000.log", 42, 1100000000000042),
+    ("foo/1234bar/baz1610000000000.log", 43, 1100000000000043),
+    ("foo/1234bar/baz1610000000333.log", 999, 1100000003330999),
+    ("foo/1234bar/baz2510000000333.log", 999, 10100000003330999),
+]
+
+
+@pytest.mark.parametrize("log_file, log_index, expected_id", LINE_ID_TESTS)
+def test_to_line_id(log_file, log_index, expected_id):
+    actual = to_line_id(log_file, log_index)
+    assert expected_id == actual
+
+
+def test_to_line_id_obeys_order():
+    """Tests that lines which were generated later have higher ids.
+
+    Even if the actual logic mapping log files/indices to ids changes, this
+    test should still pass unchanged.
+    """
+
+    # Lexical ordering should ensure these are sorted first by log
+    # file, then by line index.
+    ordered_lines = sorted(LINE_ID_TESTS)
+
+    line_ids = [to_line_id(log_file, index) for log_file, index, _ in ordered_lines]
+    assert sorted(line_ids) == line_ids
+
+
+def compare_log_line_result(
+    expected: LogLineResult,
+    actual: LogLineResult,
+    compare_cursors: bool = False,
+    compare_line_ids: bool = False,
+):
+    if not compare_cursors:
+        expected.forward_cursor_token = None
+        expected.reverse_cursor_token = None
+        actual.forward_cursor_token = None
+        actual.reverse_cursor_token = None
+    assert len(actual.line_ids) == len(actual.lines)
+    assert sorted(actual.line_ids) == actual.line_ids
+
+    if not compare_line_ids:
+        expected.line_ids = None  # type: ignore
+        actual.line_ids = None  # type: ignore
+
+    assert expected == actual
