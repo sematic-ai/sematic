@@ -88,7 +88,6 @@ ray:
 
 rbac:
   create: true
-  
   # Should the server be allowed to manage Ray clusters?
   # Should be 'true' if using Sematic's Ray or Spark
   # integrations.
@@ -114,6 +113,7 @@ service:
 ingress:
   create: false
   sematic_dashboard_url: https://my.sematic # REPLACE ME
+  force_ssl: true
   class_name: ""
   annotations: {}
     # kubernetes.io/ingress.class: nginx
