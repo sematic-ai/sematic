@@ -1,6 +1,8 @@
 # Standard Library
 import time
-from dataclasses import replace
+from collections import defaultdict
+from dataclasses import dataclass, replace
+from unittest.mock import patch
 
 # Third-party
 import flask.testing
@@ -33,6 +35,14 @@ test_get_external_resource_auth = make_auth_test(
 test_set_external_resource_auth = make_auth_test(
     "/api/v1/external_resources", method="POST"
 )
+
+
+@dataclass(frozen=True)
+class FailingTimedMessage(TimedMessage):
+    def _do_update(self):
+        if self.status.state == ResourceState.DEACTIVATING:
+            raise ValueError("Intentional Fail")
+        return super()._do_update()
 
 
 def test_save_read(
@@ -144,3 +154,65 @@ def test_activate_deactivate(
         deactivated_response.json["external_resource"]  # type: ignore
     )
     assert deactivated.resource_state == ResourceState.DEACTIVATED
+
+
+def test_deactivate_orphaned(mock_auth, test_client):  # noqa: F811
+    module = "sematic.api.endpoints.external_resources"
+
+    message_kwargs = dict(
+        allocation_seconds=0.0,
+        deallocation_seconds=0.0,
+        max_active_seconds=30.0,
+    )
+    with patch(f"{module}.get_orphaned_resource_records") as mock_get_orphans, patch(
+        f"{module}.save_external_resource_record"
+    ) as mock_save:
+        resource1 = TimedMessage(**message_kwargs)
+        record1 = ExternalResource.from_resource(resource1)
+
+        resource2 = TimedMessage(**message_kwargs)
+        resource2 = resource2.activate(is_local=False).update()
+        record2 = ExternalResource.from_resource(resource2)
+
+        resource3 = TimedMessage(**message_kwargs)
+        resource3 = resource3.activate(is_local=False).update().deactivate().update()
+        record3 = ExternalResource.from_resource(resource3)
+
+        resource4 = FailingTimedMessage(**message_kwargs)
+        resource4 = resource4.activate(is_local=False).update().deactivate()
+        record4 = ExternalResource.from_resource(resource4)
+
+        mock_get_orphans.return_value = [
+            record1,
+            record2,
+            record3,
+            record4,
+        ]
+        result = test_client.post("/api/v1/external_resources/all/clean_orphaned")
+        saves_by_resource_id = defaultdict(list)
+        for call in mock_save.call_args_list:
+            saves_by_resource_id[call[0][0].id].append(call[0][0])
+
+        assert saves_by_resource_id[record1.id][-1].resource_state.is_terminal()
+        assert saves_by_resource_id[record2.id][-1].resource_state.is_terminal()
+        assert len(saves_by_resource_id[record3.id]) == 0
+        assert len(saves_by_resource_id[record4.id]) == 0
+
+        assert result.json == {
+            "state_changes": {
+                "deactivated": [resource1.id, resource2.id],
+                "forced_terminal": [],
+                "unmodified": [resource3.id],
+                "update_error": [resource4.id],
+            }
+        }
+
+        mock_save.reset_mock()
+        result = test_client.post(
+            "/api/v1/external_resources/all/clean_orphaned?force=true"
+        )
+        assert result.json["state_changes"]["forced_terminal"] == [resource4.id]
+        saves_by_resource_id = defaultdict(list)
+        for call in mock_save.call_args_list:
+            saves_by_resource_id[call[0][0].id].append(call[0][0])
+        assert saves_by_resource_id[record4.id][-1].resource_state.is_terminal()

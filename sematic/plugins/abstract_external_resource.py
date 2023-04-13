@@ -165,12 +165,17 @@ class ResourceStatus:
 
     def __post_init__(self):
         if (
-            self.state not in {ResourceState.CREATED, ResourceState.DEACTIVATED}
+            self.state
+            not in {
+                ResourceState.CREATED,
+                ResourceState.DEACTIVATED,
+                ResourceState.FORCE_KILLED,
+            }
             and self.managed_by == ManagedBy.UNKNOWN
         ):
             raise IllegalStateTransitionError(
-                "Only resources in the CREATED and DEACTIVATED states "
-                "can have managed_by==UNKNOWN"
+                "Only resources in the CREATED, DEACTIVATED and FORCE_KILLED "
+                "states can have managed_by==UNKNOWN"
             )
 
 

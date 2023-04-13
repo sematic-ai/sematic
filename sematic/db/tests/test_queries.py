@@ -27,6 +27,7 @@ from sematic.db.queries import (
     get_external_resources_by_run_id,
     get_job,
     get_jobs_by_run_id,
+    get_orphaned_resource_records,
     get_resolution,
     get_resources_by_root_id,
     get_root_graph,
@@ -42,6 +43,7 @@ from sematic.db.queries import (
 from sematic.db.tests.fixtures import make_job  # noqa: F811
 from sematic.db.tests.fixtures import (  # noqa: F401
     allow_any_run_state_transition,
+    make_resolution,
     make_run,
     persisted_artifact,
     persisted_resolution,
@@ -330,6 +332,41 @@ def test_run_resource_links(test_db):  # noqa: F811
     assert all(isinstance(record, ExternalResource) for record in resources)
     resource_ids = {resource.id for resource in resources}
     assert resource_ids == {resource_1.id, resource_2.id, resource_3.id}
+
+
+def test_get_orphaned_resource_records(test_db):  # noqa: F811
+    root_run = make_run()
+    resolution = make_resolution(root_id=root_run.id, status=ResolutionStatus.CANCELED)
+    save_resolution(resolution)
+
+    child_run_1 = make_run(root_id=root_run.id)
+    child_run_2 = make_run(root_id=root_run.id)
+    child_run_3 = make_run(root_id=root_run.id)
+
+    other_root_run = make_run()
+    other_resolution = make_resolution(root_id=other_root_run.id)
+    save_resolution(other_resolution)
+    for r in [root_run, child_run_1, child_run_2, child_run_3, other_root_run]:
+        save_run(r)
+
+    resource_1 = SomeResource(some_field=1)
+    resource_2 = SomeResource(some_field=2)
+    resource_3 = SomeResource(some_field=3)
+    resource_4 = SomeResource(some_field=4)
+
+    for resource in [resource_1, resource_2, resource_3, resource_4]:
+        save_external_resource_record(ExternalResource.from_resource(resource))
+
+    save_run_external_resource_links([resource_1.id], child_run_1.id)
+    save_run_external_resource_links([resource_2.id], child_run_2.id)
+
+    # multiple resources linked with one run
+    save_run_external_resource_links([resource_3.id], child_run_2.id)
+
+    save_run_external_resource_links([resource_4.id], other_root_run.id)
+
+    orphan_ids = [resource.id for resource in get_orphaned_resource_records()]
+    assert set(orphan_ids) == {resource_1.id, resource_2.id, resource_3.id}
 
 
 def test_get_external_resources_by_run_id(test_db):  # noqa: F811

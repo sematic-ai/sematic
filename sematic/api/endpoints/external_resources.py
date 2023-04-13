@@ -180,6 +180,21 @@ class StateChanges:
 def deactivate_resources(
     resources: List[ExternalResource], force: bool
 ) -> StateChanges:
+    """Deactivate the resources if possible.
+
+    Parameters
+    ----------
+    resources:
+        The resources to deactivate.
+    force:
+        Whether or not to force resources into a terminal state
+        irrespective of whether their deactivation was confirmed.
+
+    Returns
+    -------
+    A StateChanges object describing the resources that were/were not
+    changed.
+    """
     state_changes = StateChanges(
         deactivated=[],
         unmodified=[],
@@ -224,7 +239,10 @@ def deactivate_resource(
     -------
     True if the resource ended in a terminal state, False otherwise.
     """
-    if resource.managed_by != ManagedBy.SERVER:
+    if (
+        resource.resource_state != ResourceState.CREATED
+        and resource.managed_by != ManagedBy.SERVER
+    ):
         state_changes.unmodified.append(resource.id)
         logger.info("Skipping clean of %s, not managed by server", resource.id)
         return resource.resource_state.is_terminal()
