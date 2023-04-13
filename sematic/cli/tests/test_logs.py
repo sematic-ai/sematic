@@ -104,6 +104,7 @@ def test_follow_logs(
             can_continue_forward=True,
             can_continue_backward=True,
             lines=early_lines,
+            line_ids=[i for i in range(len(early_lines))],
             forward_cursor_token="abc",
             reverse_cursor_token="zyx",
             log_info_message=None,
@@ -112,6 +113,7 @@ def test_follow_logs(
             can_continue_forward=True,
             can_continue_backward=True,
             lines=[],  # simulate situation where more WILL be produced but isn't yet
+            line_ids=[],
             forward_cursor_token="abc",
             reverse_cursor_token="zyx",
             log_info_message=None,
@@ -120,6 +122,7 @@ def test_follow_logs(
             can_continue_forward=False,
             can_continue_backward=True,
             lines=late_lines,
+            line_ids=[i + 10000 for i in range(len(late_lines))],
             forward_cursor_token=None,
             reverse_cursor_token="zyx",
             log_info_message=None,

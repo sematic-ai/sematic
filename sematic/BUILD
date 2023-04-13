@@ -112,6 +112,7 @@ sematic_py_lib(
         "//sematic/plugins:abstract_storage",
         "//sematic/plugins/storage:local_storage",
         "//sematic/resolvers:cloud_resolver",
+        "//sematic/resolvers:log_streamer",
         "//sematic/scheduling:job_details",
     ],
 )

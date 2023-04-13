@@ -19,6 +19,7 @@ from sematic.resolvers.cloud_resolver import (
     END_INLINE_RUN_INDICATOR,
     START_INLINE_RUN_INDICATOR,
 )
+from sematic.resolvers.log_streamer import MAX_LINES_PER_LOG_FILE
 from sematic.scheduling.job_details import JobKind, JobKindString
 
 V2_LOG_PREFIX = "logs/v2"
@@ -111,7 +112,10 @@ class LogLineResult:
         can_continue_backward==True indicates that traversal can continue in the reverse
         direction.
     lines:
-        The actual log lines
+        The actual log lines.
+    line_ids:
+        Unique ids for each included log line. The log line at index `i` of the `lines`
+        field will have its id at index `i` of line_ids.
     forward_cursor_token:
         A string that can be used to continue traversing these logs from where you left
         off. If can_continue_forward is False, this will be set to None.
@@ -126,6 +130,7 @@ class LogLineResult:
     can_continue_forward: bool
     can_continue_backward: bool
     lines: List[str]
+    line_ids: List[int]
     forward_cursor_token: Optional[str]
     reverse_cursor_token: Optional[str] = None
     log_info_message: Optional[str] = None
@@ -291,6 +296,7 @@ def load_log_lines(
             can_continue_forward=True,
             can_continue_backward=False,
             lines=[],
+            line_ids=[],
             forward_cursor_token=forward_cursor.to_token(),
             reverse_cursor_token=None,
             log_info_message="Resolution has not started yet.",
@@ -302,6 +308,7 @@ def load_log_lines(
             can_continue_forward=True,
             can_continue_backward=False,
             lines=[],
+            line_ids=[],
             forward_cursor_token=forward_cursor.to_token(),
             reverse_cursor_token=None,
             log_info_message="The run has not yet started executing.",
@@ -385,6 +392,7 @@ def _load_non_inline_logs(
             can_continue_forward=still_running,
             can_continue_backward=False,
             lines=[],
+            line_ids=[],
             forward_cursor_token=Cursor.nothing_found(
                 filter_strings, run_id, reverse=False
             ).to_token()
@@ -433,6 +441,7 @@ def _load_inline_logs(
             can_continue_forward=False,
             can_continue_backward=False,
             lines=[],
+            line_ids=[],
             forward_cursor_token=None,
             reverse_cursor_token=None,
             log_info_message=(
@@ -455,6 +464,7 @@ def _load_inline_logs(
             else None,
             reverse_cursor_token=None,
             lines=[],
+            line_ids=[],
             log_info_message="Resolver logs are missing",
         )
 
@@ -646,6 +656,7 @@ def get_log_lines_from_line_stream(
     buffer_iterator = iter(line_stream)
     keep_going = True
     lines: List[str] = []
+    line_ids: List[int] = []
 
     def passes_filter(line: LogLine) -> bool:
         return all(substring in line.line for substring in filter_strings)
@@ -678,6 +689,7 @@ def get_log_lines_from_line_stream(
                 latest_included_line_index = line.source_file_index
 
             lines.append(line.line)
+            line_ids.append(to_line_id(line.source_file, line.source_file_index))
             if len(lines) >= max_lines:
                 keep_going = False
         except StopIteration:
@@ -747,6 +759,7 @@ def get_log_lines_from_line_stream(
         can_continue_forward=forward_cursor_token is not None,
         can_continue_backward=reverse_cursor_token is not None,
         lines=list(reversed(lines)) if reverse else lines,
+        line_ids=list(reversed(line_ids)) if reverse else line_ids,
         forward_cursor_token=forward_cursor_token,
         reverse_cursor_token=reverse_cursor_token,
         log_info_message=log_info_message,
@@ -768,3 +781,40 @@ def reversed(iterable: Iterable[T]) -> Iterable[T]:
         as_list.append(item)
     as_list.reverse()
     yield from as_list
+
+
+def to_line_id(log_file: str, line_index: int) -> int:
+    """Get a unique id for each log line.
+
+    Line ids are only guaranteed unique within a given run or resolver
+    execution. However, within such a context, the line ids are in
+    chronological order. Some line ids may appear to be sequential with
+    no gap, but it is not guaranteed that there will be no gaps between ids.
+
+    It should only be used for actual lines, and not abstract positions (such as
+    cursors).
+
+    Callers should not depend on any details about how this id is constructed.
+
+    Parameters
+    ----------
+    log_file:
+        The name of the log file where the line occurs.
+    line_index:
+        The index of the line within the log file.
+    """
+    timestamp = int("".join(char for char in log_file.split("/")[-1] if char.isdigit()))
+
+    # obfuscate the fact that there's a timestamp here; we don't want the
+    # front-end to actually use it as such. It only represents the time
+    # the whole *log file* was ingested, and not when any individual line
+    # was.
+    prefix = timestamp - 1500000000000
+
+    # We know the suffix will be less than MAX_LINES_PER_LOG_FILE. However,
+    # that limit was fairly recent so we can use an extra 0 to be safe.
+    # For logs older than the MAX_LINES_PER_LOG_FILE rule, timestamps
+    # would be 10 seconds apart and the timestamps are in milliseconds,
+    # which gives us more headroom to avoid duplication.
+    suffix = line_index
+    return 10 * MAX_LINES_PER_LOG_FILE * prefix + suffix
