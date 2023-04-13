@@ -23,7 +23,6 @@ def sematic_pipeline(
         bases = None,
         tags = None,
         image_layers = None,
-        image_tags = None,
         env = None,
         insecure_repository = None,
         dev = False):
