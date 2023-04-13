@@ -197,6 +197,17 @@ class ExternalResource(Base, JSONEncodableMixin):
     resource = property(get_resource, set_resource)
 
     def force_to_terminal_state(self, reason: str):
+        """Force this record to be in a terminal state.
+
+        This method is safe against errors loading the resource
+        class. It will update the resource history properly.
+
+        Parameters
+        ----------
+        reason:
+            A human-readable explanation for why the resource is being
+            forced into a terminal state.
+        """
         # We may not be able to deserialize the resource,
         # so we'll work directly with the serializations.
         new_value = deepcopy(self.value_serialization)
