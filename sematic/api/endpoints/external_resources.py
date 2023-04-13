@@ -1,5 +1,6 @@
 # Standard Library
 import logging
+import time
 from dataclasses import asdict, dataclass
 from http import HTTPStatus
 from typing import List, Optional
@@ -164,25 +165,23 @@ def save_resource_endpoint(user: Optional[User]) -> flask.Response:
 def clean_orphaned_resources_endpoint(user: Optional[User]) -> flask.Response:
     resources = get_orphaned_resource_records()
     force = flask.request.args.get("force", "false").lower() == "true"
-    state_changes = evolve_resources_deactivation(resources, force)
+    state_changes = deactivate_resources(resources, force)
     return flask.jsonify({"state_changes": asdict(state_changes)})
 
 
 @dataclass
 class StateChanges:
-    reached_deactivation: List[str]
-    began_deactivation: List[str]
+    deactivated: List[str]
     unmodified: List[str]
     update_error: List[str]
     forced_terminal: List[str]
 
 
-def evolve_resources_deactivation(
+def deactivate_resources(
     resources: List[ExternalResource], force: bool
 ) -> StateChanges:
     state_changes = StateChanges(
-        reached_deactivation=[],
-        began_deactivation=[],
+        deactivated=[],
         unmodified=[],
         update_error=[],
         forced_terminal=[],
@@ -190,7 +189,7 @@ def evolve_resources_deactivation(
     for resource in resources:
         ended_terminal = False
         try:
-            ended_terminal = evolve_resource_deactivation(resource, state_changes)
+            ended_terminal = deactivate_resource(resource, state_changes)
         except Exception:
             logger.exception("Error evolving deactivation for '%s'", resource.id)
             state_changes.update_error.append(resource.id)
@@ -208,10 +207,10 @@ def evolve_resources_deactivation(
     return state_changes
 
 
-def evolve_resource_deactivation(
+def deactivate_resource(
     resource: ExternalResource, state_changes: StateChanges
 ) -> bool:
-    """Move the resource closer to total deactivation and update state_changes.
+    """Deactivate the resource if possible, and update state_changes.
 
     Parameters
     ----------
@@ -239,17 +238,29 @@ def evolve_resource_deactivation(
         )
         state_changes.unmodified.append(resource.id)
         return resource.resource_state.is_terminal()
-    if abstract_resource.status.state == ResourceState.DEACTIVATING:
-        abstract_resource = abstract_resource.update()
-        if abstract_resource.status.state == ResourceState.DEACTIVATING:
-            logger.info("Resource %s is still deactivating.", resource.id)
-            state_changes.unmodified.append(resource.id)
-            return False
-        else:
-            resource.resource = abstract_resource
-            save_external_resource_record(resource)
-            state_changes.reached_deactivation.append(resource.id)
-            return abstract_resource.status.state.is_terminal()
-    abstract_resource = abstract_resource.deactivate()
-    state_changes.began_deactivation.append(resource.id)
+    if abstract_resource.status.state != ResourceState.DEACTIVATING:
+        abstract_resource = abstract_resource.deactivate()
+        resource.resource = abstract_resource
+        save_external_resource_record(resource)
+
+    abstract_resource = wait_for_deactivation(
+        abstract_resource, abstract_resource.get_deactivation_timeout_seconds()
+    )
+    resource.resource = abstract_resource
+    save_external_resource_record(resource)
+    if abstract_resource.status.state.is_terminal():
+        state_changes.deactivated.append(abstract_resource.id)
+    else:
+        state_changes.update_error.append(abstract_resource.id)
     return abstract_resource.status.state.is_terminal()
+
+
+def wait_for_deactivation(
+    resource: AbstractExternalResource, timeout_seconds: float
+) -> AbstractExternalResource:
+    start = time.time()
+    while time.time() - start < timeout_seconds:
+        resource = resource.update()
+        if resource.status.state.is_terminal():
+            break
+    return resource
