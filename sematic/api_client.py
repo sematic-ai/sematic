@@ -421,6 +421,24 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
     ]
 
 
+def clean_orphaned_resources(force: bool) -> Dict[str, List[str]]:
+    """Clean up resources associated with resolutions that are no longer alive.
+
+    Parameters
+    ----------
+    force:
+        If true, resources will be moved to a terminal state in the DB regardless of
+        whether a successful cleaning could be confirmed.
+
+    Returns
+    -------
+    A dictionary whose keys are different state changes and whose values are
+    the ids of resources that went through those state changes.
+    """
+    response = _post(f"/external_resources/all/clean_orphaned?force={force}")
+    return response["state_changes"]
+
+
 @retry(tries=3, delay=10, jitter=1)
 def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
     """Ask the server to update the status of given run ids if needed and return them.

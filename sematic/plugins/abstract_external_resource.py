@@ -40,9 +40,12 @@ class ResourceState(Enum):
         The resource is allocated and ready for use.
     DEACTIVATING:
         The resource is being deactivated, and likely is no longer usable.
-    DEACTIVATED:
-        The resource has been deactivated and may not even exist anymore.
-        It is not usable.
+    FORCE_KILLED:
+        The resource has been forced to a terminal state. Any resources
+        associated with it outside Sematic may or may not still be around.
+        The resource is not usable from within Sematic. Should only be used
+        by Sematic as a framework, and never by implementations of
+        AbstractExternalResource.
     """
 
     CREATED = "CREATED"
@@ -50,6 +53,7 @@ class ResourceState(Enum):
     ACTIVE = "ACTIVE"
     DEACTIVATING = "DEACTIVATING"
     DEACTIVATED = "DEACTIVATED"
+    FORCE_KILLED = "FORCE_KILLED"
 
     def is_allowed_transition(self, other_state: "ResourceState") -> bool:
         """True if going from the current state to the other is allowed, otherwise False.
@@ -85,24 +89,29 @@ _ALLOWED_TRANSITIONS = {
         # was performed, there is no need to do anything for deactivation
         # so we can skip DEACTIVATING.
         ResourceState.DEACTIVATED,
+        ResourceState.FORCE_KILLED,
     },
     ResourceState.ACTIVATING: {
         # Activating -> Active: normal progression for successful activation
         ResourceState.ACTIVE,
         # Activating -> Deactivating: activation failed, immediate deactivation
         ResourceState.DEACTIVATING,
+        ResourceState.FORCE_KILLED,
     },
     ResourceState.ACTIVE: {
         # Active -> Deactivating:
         #   - possibly normal termination, due to no longer being needed.
         #   - possibly an error with the resource. Status message should have more info.
         ResourceState.DEACTIVATING,
+        ResourceState.FORCE_KILLED,
     },
     ResourceState.DEACTIVATING: {
         # Deactivating -> Deactivated: normal progression for deactivation
         ResourceState.DEACTIVATED,
+        ResourceState.FORCE_KILLED,
     },
     ResourceState.DEACTIVATED: {},
+    ResourceState.FORCE_KILLED: {},
 }
 
 

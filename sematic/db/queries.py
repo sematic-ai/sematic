@@ -24,7 +24,7 @@ from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.runs_external_resource import RunExternalResource
 from sematic.db.models.user import User
-from sematic.plugins.abstract_external_resource import ResourceState
+from sematic.plugins.abstract_external_resource import ManagedBy, ResourceState
 from sematic.scheduling.job_details import JobKind, JobKindString
 from sematic.utils.exceptions import IllegalStateTransitionError
 
@@ -370,6 +370,15 @@ def run_has_legacy_jobs(run_id: str) -> bool:
 
 def save_external_resource_record(record: ExternalResource):
     """Save an ExternalResource to the DB"""
+    if record.resource_state == ResourceState.FORCE_KILLED:
+        # There may be problems deserializing the resource.
+        # Just save without attempting any complex modifications.
+        with db().get_session() as session:
+            session.merge(record)
+            session.commit()
+
+        return record
+
     existing_record = get_external_resource_record(record.id)
 
     if existing_record is None:
@@ -408,7 +417,8 @@ def get_orphaned_resource_records() -> List[ExternalResource]:
     """Get ExternalResources orphaned resources from the db.
 
     Orphaned resources are ones that are not in a terminal state, but
-    whose resolutions ARE in a terminal state.
+    whose resolutions ARE in a terminal state. This query will only return
+    results where the resource is managed by the server or "unknown".
     """
     with db().get_session() as session:
         results = (
@@ -422,15 +432,25 @@ def get_orphaned_resource_records() -> List[ExternalResource]:
             .filter(ExternalResource.id == RunExternalResource.resource_id)
             .filter(Run.id == RunExternalResource.run_id)
             .filter(Run.root_id == Resolution.root_id)
-            .filter(Resolution.status.in_(ResolutionStatus.terminal_states()))
             .filter(
-                ExternalResource.resource_state.in_(ResourceState.non_terminal_states())
+                ExternalResource.managed_by.in_([ManagedBy.SERVER, ManagedBy.UNKNOWN])
+            )
+            .filter(
+                Resolution.status.in_(
+                    [status.value for status in ResolutionStatus.terminal_states()]
+                )
+            )
+            .filter(
+                ExternalResource.resource_state.in_(
+                    [state for state in ResourceState.non_terminal_states()]
+                )
             )
             .all()
         )
 
-        # use a set: a resource might show up twice if it is used in more than one run.
-        resources: Set[ExternalResource] = set()
+        # use a dict based on id: a resource might show up twice if it is used
+        # in more than one run.
+        resources: Dict[str, ExternalResource] = {}
         for resource, resolution_id, _, run_id, __ in results:
             logger.info(
                 "Found orphaned resource '%s' from resolution '%s' and run '%s'",
@@ -438,8 +458,8 @@ def get_orphaned_resource_records() -> List[ExternalResource]:
                 resolution_id,
                 run_id,
             )
-            resources.add(resource)
-    return list(resources)
+            resources[resource.id] = resource
+    return list(resources.values())
 
 
 def save_run_external_resource_links(resource_ids: List[str], run_id: str):

@@ -159,11 +159,12 @@ def save_resource_endpoint(user: Optional[User]) -> flask.Response:
     return flask.jsonify(payload)
 
 
-@sematic_api.route("/api/v1/external_resources/all/clean_orphaned", methods=["PUT"])
+@sematic_api.route("/api/v1/external_resources/all/clean_orphaned", methods=["POST"])
 @authenticate
 def clean_orphaned_resources_endpoint(user: Optional[User]) -> flask.Response:
     resources = get_orphaned_resource_records()
-    state_changes = evolve_resources_deactivation(resources)
+    force = flask.request.args.get("force", "false").lower() == "true"
+    state_changes = evolve_resources_deactivation(resources, force)
     return flask.jsonify({"state_changes": asdict(state_changes)})
 
 
@@ -173,31 +174,61 @@ class StateChanges:
     began_deactivation: List[str]
     unmodified: List[str]
     update_error: List[str]
+    forced_terminal: List[str]
 
 
-def evolve_resources_deactivation(resources: List[ExternalResource]) -> StateChanges:
+def evolve_resources_deactivation(
+    resources: List[ExternalResource], force: bool
+) -> StateChanges:
     state_changes = StateChanges(
         reached_deactivation=[],
         began_deactivation=[],
         unmodified=[],
         update_error=[],
+        forced_terminal=[],
     )
     for resource in resources:
+        ended_terminal = False
         try:
-            evolve_resource_deactivation(resource, state_changes)
+            ended_terminal = evolve_resource_deactivation(resource, state_changes)
         except Exception:
             logger.exception("Error evolving deactivation for '%s'", resource.id)
             state_changes.update_error.append(resource.id)
+        if force and not ended_terminal:
+            logger.warning("Forcing resource %s into terminal state.", resource.id)
+            try:
+                resource.force_to_terminal_state("Resources were being cleaned.")
+                save_external_resource_record(resource)
+                state_changes.forced_terminal.append(resource.id)
+            except Exception:
+                logger.exception(
+                    "Error forcing resource %s into terminal state.", resource.id
+                )
+    logger.info("Done cleaning resources: %s", state_changes)
     return state_changes
 
 
 def evolve_resource_deactivation(
     resource: ExternalResource, state_changes: StateChanges
-):
+) -> bool:
+    """Move the resource closer to total deactivation and update state_changes.
+
+    Parameters
+    ----------
+    resource:
+        The resource to deactivate.
+    state_changes:
+        A dict of state changes to update depending on how the resource's state is
+        evolved.
+
+    Returns
+    -------
+    True if the resource ended in a terminal state, False otherwise.
+    """
     if resource.managed_by != ManagedBy.SERVER:
         state_changes.unmodified.append(resource.id)
         logger.info("Skipping clean of %s, not managed by server", resource.id)
-        return
+        return resource.resource_state.is_terminal()
 
     abstract_resource: AbstractExternalResource = resource.resource
     if abstract_resource.status.state.is_terminal():
@@ -207,18 +238,18 @@ def evolve_resource_deactivation(
             abstract_resource.status.state,
         )
         state_changes.unmodified.append(resource.id)
-        return
+        return resource.resource_state.is_terminal()
     if abstract_resource.status.state == ResourceState.DEACTIVATING:
         abstract_resource = abstract_resource.update()
         if abstract_resource.status.state == ResourceState.DEACTIVATING:
             logger.info("Resource %s is still deactivating.", resource.id)
             state_changes.unmodified.append(resource.id)
-            return
+            return False
         else:
             resource.resource = abstract_resource
             save_external_resource_record(resource)
             state_changes.reached_deactivation.append(resource.id)
-            return
+            return abstract_resource.status.state.is_terminal()
     abstract_resource = abstract_resource.deactivate()
     state_changes.began_deactivation.append(resource.id)
-    return
+    return abstract_resource.status.state.is_terminal()
