@@ -102,7 +102,7 @@ sematic_py_lib(
     srcs = ["logging.py"],
     pip_deps = [],
     deps = [
-        "//sematic/config:config",
+        "//sematic/config",
     ],
 )
 
