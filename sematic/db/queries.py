@@ -20,7 +20,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.job import Job
 from sematic.db.models.note import Note
-from sematic.db.models.resolution import Resolution
+from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.runs_external_resource import RunExternalResource
 from sematic.db.models.user import User
@@ -326,6 +326,32 @@ def get_orphaned_run_jobs() -> List[Job]:
                 job.identifier(),
                 run_id,
                 future_state,
+            )
+            jobs.append(job)
+    return jobs
+
+
+def get_orphaned_resolver_jobs() -> List[Job]:
+    with db().get_session() as session:
+        query_results = list(
+            session.query(Job, Resolution.root_id, Resolution.status)
+            .filter(Job.run_id == Resolution.root_id)
+            .filter(Job.kind == JobKind.resolver)
+            .filter(
+                Resolution.status.in_(
+                    [status.value for status in ResolutionStatus.terminal_states()]
+                )
+            )
+            .filter(Job.state.not_in(KubernetesJobState.terminal_states()))
+            .all()
+        )
+        jobs = []
+        for job, root_id, status in query_results:
+            logger.info(
+                "Job %s for resolution %s in state %s is orphaned",
+                job.identifier(),
+                root_id,
+                status,
             )
             jobs.append(job)
     return jobs

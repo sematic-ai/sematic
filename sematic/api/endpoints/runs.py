@@ -37,6 +37,7 @@ from sematic.db.queries import (
     get_basic_pipeline_metrics,
     get_external_resources_by_run_id,
     get_jobs_by_run_id,
+    get_orphaned_run_jobs,
     get_resolution,
     get_root_graph,
     get_run,
@@ -48,7 +49,7 @@ from sematic.db.queries import (
     save_run_external_resource_links,
 )
 from sematic.log_reader import load_log_lines
-from sematic.scheduling.job_scheduler import schedule_run, update_run_status
+from sematic.scheduling.job_scheduler import clean_jobs, schedule_run, update_run_status
 from sematic.scheduling.kubernetes import cancel_job
 from sematic.utils.exceptions import IllegalStateTransitionError
 from sematic.utils.retry import retry
@@ -565,7 +566,16 @@ def get_run_jobs(user: Optional[User], run_id: str) -> flask.Response:
     )
 
 
-@sematic_api.route("/api/v1/runs/all/jobs/clean_orphaned", methods=["POST"])
+@sematic_api.route("/api/v1/runs/orphaned_jobs", methods=["DELETE"])
 @authenticate
 def clean_orphaned_jobs_endpoint(user: Optional[User]) -> flask.Response:
-    pass
+    force = flask.request.args.get("force", "false").lower() == "true"
+    jobs = get_orphaned_run_jobs()
+    state_changes = clean_jobs(jobs, force)
+    for run_id in state_changes.impacted_runs:
+        broadcast_job_update(run_id, user)
+    return flask.jsonify(
+        dict(
+            content=asdict(state_changes),
+        )
+    )
