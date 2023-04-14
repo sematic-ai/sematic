@@ -20,7 +20,7 @@ class MetricType(enum.IntEnum):
 MetricsLabels = Dict[str, Union[int, float, str, bool, None]]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MetricPoint:
     """
     A data structure to represent a single metric value.
