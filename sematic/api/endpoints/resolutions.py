@@ -411,7 +411,9 @@ def _update_resolution_user(
 
 @sematic_api.route("/api/v1/resolutions/with_orphaned_jobs", methods=["GET"])
 @authenticate
-def get_orphaned_job_identifiers_endpoint(user: Optional[User]) -> flask.Response:
+def get_orphaned_resolution_job_identifiers_endpoint(
+    user: Optional[User],
+) -> flask.Response:
     run_ids = get_resolutions_with_orphaned_jobs()
 
     return flask.jsonify(
@@ -423,7 +425,17 @@ def get_orphaned_job_identifiers_endpoint(user: Optional[User]) -> flask.Respons
 
 @sematic_api.route("/api/v1/resolutions/<root_id>/clean_jobs", methods=["POST"])
 @authenticate
-def clean_orphaned_jobs_endpoint(user: Optional[User], root_id: str) -> flask.Response:
+def clean_orphaned_resolution_jobs_endpoint(
+    user: Optional[User], root_id: str
+) -> flask.Response:
+    resolution = get_resolution(root_id)
+    if not ResolutionStatus[resolution.status].is_terminal():  # type: ignore
+        message = (
+            f"Can't clean jobs of resolution {root_id} "
+            f"in non-terminal state {resolution.status}."
+        )
+        logger.error(message)
+        return jsonify_error(message, HTTPStatus.BAD_REQUEST)
     force = flask.request.args.get("force", "false").lower() == "true"
     jobs = get_jobs_by_run_id(root_id, kind=JobKind.resolver)
     state_changes = clean_jobs(jobs, force)

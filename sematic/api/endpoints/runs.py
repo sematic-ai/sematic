@@ -581,6 +581,13 @@ def get_orphaned_job_identifiers_endpoint(user: Optional[User]) -> flask.Respons
 @sematic_api.route("/api/v1/runs/<run_id>/clean_jobs", methods=["POST"])
 @authenticate
 def clean_orphaned_jobs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+    run = get_run(run_id)
+    if not FutureState[run.future_state].is_terminal():  # type: ignore
+        message = (
+            f"Can't clean jobs of run {run_id} "
+            f"in non-terminal state {run.future_state}."
+        )
+        return jsonify_error(message, HTTPStatus.BAD_REQUEST)
     force = flask.request.args.get("force", "false").lower() == "true"
     jobs = get_jobs_by_run_id(run_id)
     state_changes = clean_jobs(jobs, force)
