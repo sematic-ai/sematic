@@ -131,6 +131,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
             func.sum(MetricValue.value),
             func.count(MetricValue.value),
         ]
+    n_basic_fields = len(select_fields)
 
         extra_field_names = []
 
@@ -165,13 +166,13 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
         )
 
         for record in records:
-            _, metric_type, metric_sum, metric_count = record[:4]
+            _, metric_type, metric_sum, metric_count = record[:n_basic_fields]
             output.metric_type = MetricType(metric_type).name
             metric_value: float = metric_sum
             if metric_type == MetricType.GAUGE.value:
                 metric_value = float(metric_sum) / (metric_count or 1)
 
-            output.series.append((metric_value, tuple(record[4:])))
+            output.series.append((metric_value, tuple(record[n_basic_fields:])))
 
         return output
 
