@@ -424,7 +424,7 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
 def get_orphaned_resource_ids() -> List[str]:
     """Get the ids of resources whose resolutions are no longer active."""
     response = _get("/external_resources/orphaned")
-    return response["contents"]
+    return response["content"]
 
 
 def clean_resource(resource_id: str, force: bool) -> str:
@@ -445,7 +445,7 @@ def clean_resource(resource_id: str, force: bool) -> str:
     conditional behavior.
     """
     response = _post(f"/external_resources/{resource_id}/clean?force={force}")
-    return response["contents"]
+    return response["content"]
 
 
 @retry(tries=3, delay=10, jitter=1)

@@ -164,7 +164,7 @@ def save_resource_endpoint(user: Optional[User]) -> flask.Response:
 @authenticate
 def get_orphaned_resources_endpoint(user: Optional[User]) -> flask.Response:
     resources = get_orphaned_resource_records()
-    return flask.jsonify({"contents": [resource.id for resource in resources]})
+    return flask.jsonify({"content": [resource.id for resource in resources]})
 
 
 @sematic_api.route("/api/v1/external_resources/<resource_id>/clean", methods=["POST"])
