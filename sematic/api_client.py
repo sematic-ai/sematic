@@ -421,6 +421,33 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
     ]
 
 
+def get_orphaned_resource_ids() -> List[str]:
+    """Get the ids of resources whose resolutions are no longer active."""
+    response = _get("/external_resources/orphaned")
+    return response["content"]
+
+
+def clean_resource(resource_id: str, force: bool) -> str:
+    """Clean up infrastructure objects and metadata for a resource.
+
+    Parameters
+    ----------
+    resource_id:
+        The id of the resource to clean.
+    force:
+        If true, resource will be moved to a terminal state in the DB regardless of
+        whether a successful cleaning could be confirmed.
+
+    Returns
+    -------
+    A string describing what change was made to the object. Should be used
+    for display purposes only; the output should not be relied upon for
+    conditional behavior.
+    """
+    response = _post(f"/external_resources/{resource_id}/clean?force={force}")
+    return response["content"]
+
+
 @retry(tries=3, delay=10, jitter=1)
 def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
     """Ask the server to update the status of given run ids if needed and return them.

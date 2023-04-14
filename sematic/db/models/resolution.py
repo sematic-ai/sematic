@@ -19,7 +19,7 @@ import dataclasses
 import json
 import logging
 from enum import Enum, unique
-from typing import Dict, Optional, Union
+from typing import Dict, FrozenSet, Optional, Union
 
 # Third-party
 from sqlalchemy import Column, types
@@ -100,6 +100,10 @@ class ResolutionStatus(Enum):
     def is_terminal(self) -> bool:
         return len(_ALLOWED_TRANSITIONS[self]) == 0
 
+    @classmethod
+    def terminal_states(cls) -> FrozenSet:
+        return _TERMINAL_STATES
+
 
 _ALLOWED_TRANSITIONS = {
     # Local resolver can jump straight to RUNNING
@@ -129,6 +133,11 @@ _ALLOWED_TRANSITIONS = {
     ResolutionStatus.FAILED: {},
     ResolutionStatus.CANCELED: {},
 }
+
+
+_TERMINAL_STATES = frozenset(
+    {state for state in ResolutionStatus if state.is_terminal()}
+)
 
 
 class InvalidResolution(Exception):

@@ -4,7 +4,7 @@ import time
 import uuid
 from dataclasses import dataclass, field, fields, replace
 from enum import Enum, unique
-from typing import TypeVar, final
+from typing import FrozenSet, TypeVar, final
 
 # Sematic
 from sematic.abstract_future import AbstractFuture
@@ -43,6 +43,12 @@ class ResourceState(Enum):
     DEACTIVATED:
         The resource has been deactivated and may not even exist anymore.
         It is not usable.
+    FORCE_KILLED:
+        The resource has been forced to a terminal state. Any resources
+        associated with it outside Sematic may or may not still be around.
+        The resource is not usable from within Sematic. Should only be used
+        by Sematic as a framework, and never by implementations of
+        AbstractExternalResource.
     """
 
     CREATED = "CREATED"
@@ -50,6 +56,7 @@ class ResourceState(Enum):
     ACTIVE = "ACTIVE"
     DEACTIVATING = "DEACTIVATING"
     DEACTIVATED = "DEACTIVATED"
+    FORCE_KILLED = "FORCE_KILLED"
 
     def is_allowed_transition(self, other_state: "ResourceState") -> bool:
         """True if going from the current state to the other is allowed, otherwise False.
@@ -69,6 +76,10 @@ class ResourceState(Enum):
         """True if there are no states that can follow this one, False otherwise."""
         return len(_ALLOWED_TRANSITIONS[self]) == 0
 
+    @classmethod
+    def non_terminal_states(cls) -> FrozenSet["ResourceState"]:
+        return _NON_TERMINAL_STATES
+
 
 _ALLOWED_TRANSITIONS = {
     None: {ResourceState.CREATED},
@@ -81,25 +92,35 @@ _ALLOWED_TRANSITIONS = {
         # was performed, there is no need to do anything for deactivation
         # so we can skip DEACTIVATING.
         ResourceState.DEACTIVATED,
+        ResourceState.FORCE_KILLED,
     },
     ResourceState.ACTIVATING: {
         # Activating -> Active: normal progression for successful activation
         ResourceState.ACTIVE,
         # Activating -> Deactivating: activation failed, immediate deactivation
         ResourceState.DEACTIVATING,
+        ResourceState.FORCE_KILLED,
     },
     ResourceState.ACTIVE: {
         # Active -> Deactivating:
         #   - possibly normal termination, due to no longer being needed.
         #   - possibly an error with the resource. Status message should have more info.
         ResourceState.DEACTIVATING,
+        ResourceState.FORCE_KILLED,
     },
     ResourceState.DEACTIVATING: {
         # Deactivating -> Deactivated: normal progression for deactivation
         ResourceState.DEACTIVATED,
+        ResourceState.FORCE_KILLED,
     },
     ResourceState.DEACTIVATED: {},
+    ResourceState.FORCE_KILLED: {},
 }
+
+
+_NON_TERMINAL_STATES = frozenset(
+    {state for state in ResourceState if not state.is_terminal()}
+)
 
 
 @unique
@@ -147,12 +168,17 @@ class ResourceStatus:
 
     def __post_init__(self):
         if (
-            self.state not in {ResourceState.CREATED, ResourceState.DEACTIVATED}
+            self.state
+            not in {
+                ResourceState.CREATED,
+                ResourceState.DEACTIVATED,
+                ResourceState.FORCE_KILLED,
+            }
             and self.managed_by == ManagedBy.UNKNOWN
         ):
             raise IllegalStateTransitionError(
-                "Only resources in the CREATED and DEACTIVATED states "
-                "can have managed_by==UNKNOWN"
+                "Only resources in the CREATED, DEACTIVATED and FORCE_KILLED "
+                "states can have managed_by==UNKNOWN"
             )
 
 
