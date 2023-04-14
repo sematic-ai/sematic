@@ -1,9 +1,9 @@
 # Standard Library
 import logging
 import time
-from dataclasses import asdict, dataclass, field
+from enum import Enum, unique
 from http import HTTPStatus
-from typing import List, Optional
+from typing import Optional
 
 # Third-party
 import flask
@@ -160,87 +160,62 @@ def save_resource_endpoint(user: Optional[User]) -> flask.Response:
     return flask.jsonify(payload)
 
 
-@sematic_api.route("/api/v1/external_resources/orphaned", methods=["DELETE"])
+@sematic_api.route("/api/v1/external_resources/orphaned", methods=["GET"])
 @authenticate
-def clean_orphaned_resources_endpoint(user: Optional[User]) -> flask.Response:
+def get_orphaned_resources_endpoint(user: Optional[User]) -> flask.Response:
     resources = get_orphaned_resource_records()
+    return flask.jsonify({"contents": [resource.id for resource in resources]})
+
+
+@sematic_api.route("/api/v1/external_resources/<resource_id>/clean", methods=["POST"])
+@authenticate
+def clean_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Response:
+    resource = get_external_resource_record(resource_id)
+    if resource is None:
+        return jsonify_error(f"No such resource: {resource_id}", HTTPStatus.NOT_FOUND)
     force = flask.request.args.get("force", "false").lower() == "true"
-    state_changes = deactivate_resources(resources, force)
-    return flask.jsonify({"state_changes": asdict(state_changes)})
+
+    try:
+        clean_result = deactivate_resource(resource, force)
+    except Exception:
+        logger.exception("Error cleaning resource %s", resource_id)
+        clean_result = CleanResult.UPDATE_ERROR
+        if force:
+            clean_result = CleanResult.FORCED_TERMINAL
+            resource.force_to_terminal_state("Cleaning resource.")
+            save_external_resource_record(resource)
+    return flask.jsonify({"content": clean_result.value})
 
 
-@dataclass
-class StateChanges:
-    deactivated: List[str] = field(default_factory=list)
-    unmodified: List[str] = field(default_factory=list)
-    update_error: List[str] = field(default_factory=list)
-    forced_terminal: List[str] = field(default_factory=list)
+@unique
+class CleanResult(Enum):
+    DEACTIVATED = "DEACTIVATED"
+    UNMODIFIED = "UNMODIFIED"
+    UPDATE_ERROR = "UPDATE_ERROR"
+    FORCED_TERMINAL = "FORCED_TERMINAL"
 
 
-def deactivate_resources(
-    resources: List[ExternalResource], force: bool
-) -> StateChanges:
-    """Deactivate the resources if possible.
-
-    Parameters
-    ----------
-    resources:
-        The resources to deactivate.
-    force:
-        Whether or not to force resources into a terminal state
-        irrespective of whether their deactivation was confirmed.
-
-    Returns
-    -------
-    A StateChanges object describing the resources that were/were not
-    changed.
-    """
-    state_changes = StateChanges()
-    for resource in resources:
-        ended_terminal = False
-        try:
-            ended_terminal = deactivate_resource(resource, state_changes)
-        except Exception:
-            logger.exception("Error evolving deactivation for '%s'", resource.id)
-            state_changes.update_error.append(resource.id)
-        if force and not ended_terminal:
-            logger.warning("Forcing resource %s into terminal state.", resource.id)
-            try:
-                resource.force_to_terminal_state("Resources were being cleaned.")
-                save_external_resource_record(resource)
-                state_changes.forced_terminal.append(resource.id)
-            except Exception:
-                logger.exception(
-                    "Error forcing resource %s into terminal state.", resource.id
-                )
-    logger.info("Done cleaning resources: %s", state_changes)
-    return state_changes
-
-
-def deactivate_resource(
-    resource: ExternalResource, state_changes: StateChanges
-) -> bool:
-    """Deactivate the resource if possible, and update state_changes.
+def deactivate_resource(resource: ExternalResource, force: bool) -> CleanResult:
+    """Deactivate the resource if possible.
 
     Parameters
     ----------
     resource:
         The resource to deactivate.
-    state_changes:
-        A dict of state changes to update depending on how the resource's state is
-        evolved.
+    force:
+        If true, will force the resource's metadata to a terminal state
+        regardless of whether the deactivation could be verified.
 
     Returns
     -------
-    True if the resource ended in a terminal state, False otherwise.
+    CleanResult indicating the result of the attempt to clean the resource.
     """
     if (
         resource.resource_state != ResourceState.CREATED
         and resource.managed_by != ManagedBy.SERVER
     ):
-        state_changes.unmodified.append(resource.id)
         logger.info("Skipping clean of %s, not managed by server", resource.id)
-        return resource.resource_state.is_terminal()
+        return CleanResult.UNMODIFIED
 
     abstract_resource: AbstractExternalResource = resource.resource
     if abstract_resource.status.state.is_terminal():
@@ -249,8 +224,7 @@ def deactivate_resource(
             resource.id,
             abstract_resource.status.state,
         )
-        state_changes.unmodified.append(resource.id)
-        return resource.resource_state.is_terminal()
+        return CleanResult.UNMODIFIED
     if abstract_resource.status.state != ResourceState.DEACTIVATING:
         abstract_resource = abstract_resource.deactivate()
         resource.resource = abstract_resource
@@ -262,10 +236,9 @@ def deactivate_resource(
     resource.resource = abstract_resource
     save_external_resource_record(resource)
     if abstract_resource.status.state.is_terminal():
-        state_changes.deactivated.append(abstract_resource.id)
+        return CleanResult.DEACTIVATED
     else:
-        state_changes.update_error.append(abstract_resource.id)
-    return abstract_resource.status.state.is_terminal()
+        return CleanResult.UPDATE_ERROR
 
 
 def wait_for_deactivation(

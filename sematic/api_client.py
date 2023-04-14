@@ -421,22 +421,31 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
     ]
 
 
-def clean_orphaned_resources(force: bool) -> Dict[str, List[str]]:
-    """Clean up resources associated with resolutions that are no longer alive.
+def get_orphaned_resource_ids() -> List[str]:
+    """Get the ids of resources whose resolutions are no longer active."""
+    response = _get("/external_resources/orphaned")
+    return response["content"]
+
+
+def clean_resource(resource_id: str, force: bool) -> str:
+    """Clean up infrastructure objects and metadata for a resource.
 
     Parameters
     ----------
+    resource_id:
+        The id of the resource to clean.
     force:
-        If true, resources will be moved to a terminal state in the DB regardless of
+        If true, resource will be moved to a terminal state in the DB regardless of
         whether a successful cleaning could be confirmed.
 
     Returns
     -------
-    A dictionary whose keys are different state changes and whose values are
-    the ids of resources that went through those state changes.
+    A string describing what change was made to the object. Should be used
+    for display purposes only; the output should not be relied upon for
+    conditional behavior.
     """
-    response = _delete(f"/external_resources/orphaned?force={force}")
-    return response["state_changes"]
+    response = _post(f"/external_resources/{resource_id}/clean?force={force}")
+    return response["content"]
 
 
 @retry(tries=3, delay=10, jitter=1)
@@ -579,37 +588,6 @@ def _put(
         retry=retry,
     )
     logger.debug("[_put] Got response with raw content: %s", response.content)
-
-    if len(response.content) == 0:
-        return None
-
-    return response.json()
-
-
-def _delete(endpoint: str, retry: bool = True) -> Any:
-    """
-    POSTs a payload to the API server.
-
-    Parameters
-    ----------
-    endpoint: str
-        Endpoint to POST to. `/api/v1` will be prepended and authentication headers will
-        be added.
-    retry: bool
-        Whether to use retires in case the connection fails. Defaults to `True`.
-
-    Returns
-    -------
-    Any:
-        The response returned form the server, if it exists.
-    """
-    response = request(
-        method=requests.delete,
-        endpoint=endpoint,
-        kwargs=dict(),
-        retry=retry,
-    )
-    logger.debug("[_delete] Got response with raw content: %s", response.content)
 
     if len(response.content) == 0:
         return None

@@ -1,6 +1,5 @@
 # Standard Library
 import time
-from collections import defaultdict
 from dataclasses import dataclass, replace
 from unittest.mock import patch
 
@@ -156,7 +155,7 @@ def test_activate_deactivate(
     assert deactivated.resource_state == ResourceState.DEACTIVATED
 
 
-def test_deactivate_orphaned(mock_auth, test_client):  # noqa: F811
+def test_clean(mock_auth, test_client):  # noqa: F811
     module = "sematic.api.endpoints.external_resources"
 
     message_kwargs = dict(
@@ -164,7 +163,7 @@ def test_deactivate_orphaned(mock_auth, test_client):  # noqa: F811
         deallocation_seconds=0.0,
         max_active_seconds=30.0,
     )
-    with patch(f"{module}.get_orphaned_resource_records") as mock_get_orphans, patch(
+    with patch(f"{module}.get_external_resource_record") as mock_get_resource, patch(
         f"{module}.save_external_resource_record"
     ) as mock_save:
         resource1 = TimedMessage(**message_kwargs)
@@ -182,35 +181,34 @@ def test_deactivate_orphaned(mock_auth, test_client):  # noqa: F811
         resource4 = resource4.activate(is_local=False).update().deactivate()
         record4 = ExternalResource.from_resource(resource4)
 
-        mock_get_orphans.return_value = [
-            record1,
-            record2,
-            record3,
-            record4,
-        ]
-        result = test_client.delete("/api/v1/external_resources/orphaned")
-        saves_by_resource_id = defaultdict(list)
-        for call in mock_save.call_args_list:
-            saves_by_resource_id[call[0][0].id].append(call[0][0])
+        mock_get_resource.side_effect = lambda id: {
+            record1.id: record1,
+            record2.id: record2,
+            record3.id: record3,
+            record4.id: record4,
+        }[id]
 
-        assert saves_by_resource_id[record1.id][-1].resource_state.is_terminal()
-        assert saves_by_resource_id[record2.id][-1].resource_state.is_terminal()
-        assert len(saves_by_resource_id[record3.id]) == 0
-        assert len(saves_by_resource_id[record4.id]) == 0
+        result1 = test_client.post(f"/api/v1/external_resources/{record1.id}/clean")
+        assert mock_save.call_args_list[-1][0][0].id == record1.id
+        assert mock_save.call_args_list[-1][0][0].resource_state.is_terminal()
+        assert result1.json["content"] == "DEACTIVATED"
 
-        assert result.json == {
-            "state_changes": {
-                "deactivated": [resource1.id, resource2.id],
-                "forced_terminal": [],
-                "unmodified": [resource3.id],
-                "update_error": [resource4.id],
-            }
-        }
+        result2 = test_client.post(f"/api/v1/external_resources/{record2.id}/clean")
+        assert mock_save.call_args_list[-1][0][0].id == record2.id
+        assert mock_save.call_args_list[-1][0][0].resource_state.is_terminal()
+        assert result2.json["content"] == "DEACTIVATED"
 
-        mock_save.reset_mock()
-        result = test_client.delete("/api/v1/external_resources/orphaned?force=true")
-        assert result.json["state_changes"]["forced_terminal"] == [resource4.id]
-        saves_by_resource_id = defaultdict(list)
-        for call in mock_save.call_args_list:
-            saves_by_resource_id[call[0][0].id].append(call[0][0])
-        assert saves_by_resource_id[record4.id][-1].resource_state.is_terminal()
+        result3 = test_client.post(f"/api/v1/external_resources/{record3.id}/clean")
+        assert mock_save.call_args_list[-1][0][0].id != record3.id
+        assert result3.json["content"] == "UNMODIFIED"
+
+        result4 = test_client.post(f"/api/v1/external_resources/{record4.id}/clean")
+        assert mock_save.call_args_list[-1][0][0].id != record4.id
+        assert result4.json["content"] == "UPDATE_ERROR"
+
+        result4 = test_client.post(
+            f"/api/v1/external_resources/{record4.id}/clean?force=true"
+        )
+        assert mock_save.call_args_list[-1][0][0].id == record4.id
+        assert mock_save.call_args_list[-1][0][0].resource_state.is_terminal()
+        assert result4.json["content"] == "FORCED_TERMINAL"
