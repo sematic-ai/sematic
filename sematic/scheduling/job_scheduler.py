@@ -10,6 +10,7 @@ from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import save_job
 from sematic.scheduling import kubernetes as k8s
+from sematic.scheduling.job_details import KubernetesJobState
 from sematic.versions import MIN_CLIENT_SERVER_SUPPORTS, string_version_to_tuple
 
 logger = logging.getLogger(__name__)
@@ -281,6 +282,7 @@ def _schedule_resolution_job(
 @unique
 class JobCleaningStateChange(Enum):
     DELETED = "DELETED"
+    UNMODIFIED = "UNMODIFIED"
     DELETION_ERROR = "DELETION_ERROR"
     FORCE_DELETED = "FORCE_DELETED"
 
@@ -288,6 +290,9 @@ class JobCleaningStateChange(Enum):
 def clean_jobs(jobs: List[Job], force: bool) -> List[JobCleaningStateChange]:
     changes = []
     for job in jobs:
+        if job.state in KubernetesJobState.terminal_states():
+            changes.append(JobCleaningStateChange.UNMODIFIED)
+            continue
         try:
             logger.info("Cleaning job %s", job.identifier())
             canceled_job = k8s.cancel_job(job)

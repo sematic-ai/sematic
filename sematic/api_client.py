@@ -421,6 +421,18 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
     ]
 
 
+@retry(tries=3, delay=5, jitter=1)
+def get_runs_with_orphaned_jobs() -> List[str]:
+    response = _get("/api/v1/runs/with_orphaned_jobs")
+    return response["content"]
+
+
+@retry(tries=3, delay=5, jitter=1)
+def clean_orphaned_jobs_for_run(run_id: str, force: bool) -> List[str]:
+    response = _post(f"/api/v1/runs/{run_id}/clean_jobs?force={force}")
+    return response["content"]
+
+
 @retry(tries=3, delay=10, jitter=1)
 def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
     """Ask the server to update the status of given run ids if needed and return them.
