@@ -1,5 +1,7 @@
 # Standard Library
 import logging
+import time
+from enum import Enum, unique
 from http import HTTPStatus
 from typing import Optional
 
@@ -14,9 +16,14 @@ from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.user import User
 from sematic.db.queries import (
     get_external_resource_record,
+    get_orphaned_resource_records,
     save_external_resource_record,
 )
-from sematic.plugins.abstract_external_resource import ManagedBy
+from sematic.plugins.abstract_external_resource import (
+    AbstractExternalResource,
+    ManagedBy,
+    ResourceState,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -151,3 +158,95 @@ def save_resource_endpoint(user: Optional[User]) -> flask.Response:
     payload = dict(external_resource=record.to_json_encodable())
 
     return flask.jsonify(payload)
+
+
+@sematic_api.route("/api/v1/external_resources/orphaned", methods=["GET"])
+@authenticate
+def get_orphaned_resources_endpoint(user: Optional[User]) -> flask.Response:
+    resources = get_orphaned_resource_records()
+    return flask.jsonify({"content": [resource.id for resource in resources]})
+
+
+@sematic_api.route("/api/v1/external_resources/<resource_id>/clean", methods=["POST"])
+@authenticate
+def clean_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Response:
+    resource = get_external_resource_record(resource_id)
+    if resource is None:
+        return jsonify_error(f"No such resource: {resource_id}", HTTPStatus.NOT_FOUND)
+    force = flask.request.args.get("force", "false").lower() == "true"
+
+    try:
+        clean_result = deactivate_resource(resource, force)
+    except Exception:
+        logger.exception("Error cleaning resource %s", resource_id)
+        clean_result = CleanResult.UPDATE_ERROR
+        if force:
+            clean_result = CleanResult.FORCED_TERMINAL
+            resource.force_to_terminal_state("Cleaning resource.")
+            save_external_resource_record(resource)
+    return flask.jsonify({"content": clean_result.value})
+
+
+@unique
+class CleanResult(Enum):
+    DEACTIVATED = "DEACTIVATED"
+    UNMODIFIED = "UNMODIFIED"
+    UPDATE_ERROR = "UPDATE_ERROR"
+    FORCED_TERMINAL = "FORCED_TERMINAL"
+
+
+def deactivate_resource(resource: ExternalResource, force: bool) -> CleanResult:
+    """Deactivate the resource if possible.
+
+    Parameters
+    ----------
+    resource:
+        The resource to deactivate.
+    force:
+        If true, will force the resource's metadata to a terminal state
+        regardless of whether the deactivation could be verified.
+
+    Returns
+    -------
+    CleanResult indicating the result of the attempt to clean the resource.
+    """
+    if (
+        resource.resource_state != ResourceState.CREATED
+        and resource.managed_by != ManagedBy.SERVER
+    ):
+        logger.info("Skipping clean of %s, not managed by server", resource.id)
+        return CleanResult.UNMODIFIED
+
+    abstract_resource: AbstractExternalResource = resource.resource
+    if abstract_resource.status.state.is_terminal():
+        logger.info(
+            "Skipping clean of %s, in terminal state %s",
+            resource.id,
+            abstract_resource.status.state,
+        )
+        return CleanResult.UNMODIFIED
+    if abstract_resource.status.state != ResourceState.DEACTIVATING:
+        abstract_resource = abstract_resource.deactivate()
+        resource.resource = abstract_resource
+        save_external_resource_record(resource)
+
+    abstract_resource = wait_for_deactivation(
+        abstract_resource, abstract_resource.get_deactivation_timeout_seconds()
+    )
+    resource.resource = abstract_resource
+    save_external_resource_record(resource)
+    if abstract_resource.status.state.is_terminal():
+        return CleanResult.DEACTIVATED
+    else:
+        return CleanResult.UPDATE_ERROR
+
+
+def wait_for_deactivation(
+    resource: AbstractExternalResource, timeout_seconds: float
+) -> AbstractExternalResource:
+    start = time.time()
+    while time.time() - start < timeout_seconds:
+        resource = resource.update()
+        if resource.status.state.is_terminal():
+            break
+    return resource
