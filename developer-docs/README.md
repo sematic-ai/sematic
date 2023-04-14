@@ -110,12 +110,6 @@ changes.
 
 1. Update `changelog.md` with the new version number and any missing change entries.
 
-1. Make the release PR, containing the previous changes. After implementing
-  comments and getting approval on the release PR, merge it and pull from the
-  updated `main`. **It is mandatory to include this version of main in the
-  subsequent steps. If validation issues are discovered, they must be fixed
-  in patch PRs, and the process restarted from this step.**
-
 1. Build the UI:
     ```bash
     $ make ui
@@ -207,6 +201,12 @@ changes.
     ```bash
     $ make test-release
     ```
+
+1. Make the release PR, containing all version changes and required fixes for issues
+  discovered during validation. Even the previous step compiled documentation changes
+  that must be included. After implementing comments and getting approval on the release
+  PR, merge it and pull from the updated `main` branch. **It is mandatory to include this
+  updated version of `main` in the subsequent steps.**
 
 1. Publish the wheel. Check if the generated webpage on `pypi.org` is rendered correctly.
     ```bash
