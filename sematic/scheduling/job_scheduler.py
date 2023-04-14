@@ -1,6 +1,6 @@
 # Standard Library
 import logging
-from dataclasses import dataclass, field
+from enum import Enum, unique
 from typing import Iterable, List, Optional, Sequence, Tuple
 
 # Sematic
@@ -278,31 +278,23 @@ def _schedule_resolution_job(
     )
 
 
-@dataclass
-class JobCleaningStateChanges:
-    deleted: List[str] = field(default_factory=list)
-    deletion_error: List[str] = field(default_factory=list)
-    force_deleted: List[str] = field(default_factory=list)
-    impacted_runs: List[str] = field(default_factory=list)
+@unique
+class JobCleaningStateChange(Enum):
+    DELETED = "DELETED"
+    DELETION_ERROR = "DELETION_ERROR"
+    FORCE_DELETED = "FORCE_DELETED"
 
 
-def clean_jobs(jobs: List[Job], force: bool) -> JobCleaningStateChanges:
-    state_changes = JobCleaningStateChanges()
-
-    # track in a dict to avoid duplication for jobs that are part of the
-    # same run (ex: retries). Why not a set? We want to preserve order
-    # for determinism. Will convert to a list at the end.
-    impacted_runs = {}
+def clean_jobs(jobs: List[Job], force: bool) -> List[JobCleaningStateChange]:
+    changes = []
     for job in jobs:
-        impacted_runs[job.run_id] = True
         try:
-            logger.info("Cleaning orphaned job %s", job.identifier())
+            logger.info("Cleaning job %s", job.identifier())
             canceled_job = k8s.cancel_job(job)
             save_job(canceled_job)
-            state_changes.deleted.append(job.identifier())
+            changes.append(JobCleaningStateChange.DELETED)
         except Exception:
-            logger.exception("Error cleaning orphaned job %s", job.identifier())
-            state_changes.deletion_error.append(job.identifier())
+            logger.exception("Error cleaning job %s", job.identifier())
             if force:
                 try:
                     logger.info("Force cleaning job %s", job.identifier())
@@ -310,9 +302,11 @@ def clean_jobs(jobs: List[Job], force: bool) -> JobCleaningStateChanges:
                     details = details.force_clean()
                     job.details = details
                     save_job(job)
-                    state_changes.force_deleted.append(job.identifier())
+                    changes.append(JobCleaningStateChange.FORCE_DELETED)
                 except Exception:
                     logger.exception("Could not force-delete job %s", job.identifier())
+                    changes.append(JobCleaningStateChange.DELETION_ERROR)
+            else:
+                changes.append(JobCleaningStateChange.DELETION_ERROR)
 
-    state_changes.impacted_runs = list(impacted_runs.keys())
-    return state_changes
+    return changes

@@ -305,10 +305,10 @@ def save_job(job: Job) -> Job:
         return job
 
 
-def get_orphaned_run_jobs() -> List[Job]:
+def get_runs_with_orphaned_jobs() -> List[str]:
     with db().get_session() as session:
         query_results = list(
-            session.query(Job, Run.id, Run.future_state)
+            session.query(Job.run_id, Job.kind, Job.state, Run.id, Run.future_state)
             .filter(Job.run_id == Run.id)
             .filter(Job.kind == JobKind.run)
             .filter(
@@ -319,22 +319,24 @@ def get_orphaned_run_jobs() -> List[Job]:
             .filter(Job.state.not_in(KubernetesJobState.terminal_states()))
             .all()
         )
-        jobs = []
-        for job, run_id, future_state in query_results:
+        run_ids = set()
+        for _, __, job_state, run_id, future_state in query_results:
             logger.info(
-                "Job %s for run %s in state %s is orphaned",
-                job.identifier(),
+                "Run %s in state %s has orphaned job in state %s",
                 run_id,
                 future_state,
+                job_state,
             )
-            jobs.append(job)
-    return jobs
+            run_ids.add(run_id)
+    return list(run_ids)
 
 
-def get_orphaned_resolver_jobs() -> List[Job]:
+def get_resolutions_with_orphaned_jobs() -> List[str]:
     with db().get_session() as session:
         query_results = list(
-            session.query(Job, Resolution.root_id, Resolution.status)
+            session.query(
+                Job.run_id, Job.kind, Job.state, Resolution.root_id, Resolution.status
+            )
             .filter(Job.run_id == Resolution.root_id)
             .filter(Job.kind == JobKind.resolver)
             .filter(
@@ -345,16 +347,16 @@ def get_orphaned_resolver_jobs() -> List[Job]:
             .filter(Job.state.not_in(KubernetesJobState.terminal_states()))
             .all()
         )
-        jobs = []
-        for job, root_id, status in query_results:
+        resolution_ids = []
+        for _, __, job_state, root_id, status in query_results:
             logger.info(
-                "Job %s for resolution %s in state %s is orphaned",
-                job.identifier(),
+                "Resolution %s in state %s has orphaned job in state %s",
                 root_id,
                 status,
+                job_state,
             )
-            jobs.append(job)
-    return jobs
+            resolution_ids.append(root_id)
+    return resolution_ids
 
 
 def get_jobs_by_run_id(run_id: str, kind: JobKindString = JobKind.run) -> List[Job]:

@@ -37,12 +37,12 @@ from sematic.db.queries import (
     get_basic_pipeline_metrics,
     get_external_resources_by_run_id,
     get_jobs_by_run_id,
-    get_orphaned_run_jobs,
     get_resolution,
     get_root_graph,
     get_run,
     get_run_graph,
     get_run_status_details,
+    get_runs_with_orphaned_jobs,
     save_graph,
     save_job,
     save_run,
@@ -566,16 +566,27 @@ def get_run_jobs(user: Optional[User], run_id: str) -> flask.Response:
     )
 
 
-@sematic_api.route("/api/v1/runs/orphaned_jobs", methods=["DELETE"])
+@sematic_api.route("/api/v1/runs/with_orphaned_jobs", methods=["GET"])
 @authenticate
-def clean_orphaned_jobs_endpoint(user: Optional[User]) -> flask.Response:
-    force = flask.request.args.get("force", "false").lower() == "true"
-    jobs = get_orphaned_run_jobs()
-    state_changes = clean_jobs(jobs, force)
-    for run_id in state_changes.impacted_runs:
-        broadcast_job_update(run_id, user)
+def get_orphaned_job_identifiers_endpoint(user: Optional[User]) -> flask.Response:
+    run_ids = get_runs_with_orphaned_jobs()
+
     return flask.jsonify(
         dict(
-            content=asdict(state_changes),
+            content=run_ids,
+        )
+    )
+
+
+@sematic_api.route("/api/v1/runs/<run_id>/clean_jobs", methods=["POST"])
+@authenticate
+def clean_orphaned_jobs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+    force = flask.request.args.get("force", "false").lower() == "true"
+    jobs = get_jobs_by_run_id(run_id)
+    state_changes = clean_jobs(jobs, force)
+    broadcast_job_update(run_id, user)
+    return flask.jsonify(
+        dict(
+            content=[change.value for change in state_changes],
         )
     )
