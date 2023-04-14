@@ -188,7 +188,7 @@ def test_deactivate_orphaned(mock_auth, test_client):  # noqa: F811
             record3,
             record4,
         ]
-        result = test_client.post("/api/v1/external_resources/all/clean_orphaned")
+        result = test_client.delete("/api/v1/external_resources/orphaned")
         saves_by_resource_id = defaultdict(list)
         for call in mock_save.call_args_list:
             saves_by_resource_id[call[0][0].id].append(call[0][0])
@@ -208,9 +208,7 @@ def test_deactivate_orphaned(mock_auth, test_client):  # noqa: F811
         }
 
         mock_save.reset_mock()
-        result = test_client.post(
-            "/api/v1/external_resources/all/clean_orphaned?force=true"
-        )
+        result = test_client.delete("/api/v1/external_resources/orphaned?force=true")
         assert result.json["state_changes"]["forced_terminal"] == [resource4.id]
         saves_by_resource_id = defaultdict(list)
         for call in mock_save.call_args_list:

@@ -40,6 +40,9 @@ class ResourceState(Enum):
         The resource is allocated and ready for use.
     DEACTIVATING:
         The resource is being deactivated, and likely is no longer usable.
+    DEACTIVATED:
+        The resource has been deactivated and may not even exist anymore.
+        It is not usable.
     FORCE_KILLED:
         The resource has been forced to a terminal state. Any resources
         associated with it outside Sematic may or may not still be around.

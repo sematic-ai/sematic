@@ -435,7 +435,7 @@ def clean_orphaned_resources(force: bool) -> Dict[str, List[str]]:
     A dictionary whose keys are different state changes and whose values are
     the ids of resources that went through those state changes.
     """
-    response = _post(f"/external_resources/all/clean_orphaned?force={force}")
+    response = _delete(f"/external_resources/orphaned?force={force}")
     return response["state_changes"]
 
 
@@ -579,6 +579,37 @@ def _put(
         retry=retry,
     )
     logger.debug("[_put] Got response with raw content: %s", response.content)
+
+    if len(response.content) == 0:
+        return None
+
+    return response.json()
+
+
+def _delete(endpoint: str, retry: bool = True) -> Any:
+    """
+    POSTs a payload to the API server.
+
+    Parameters
+    ----------
+    endpoint: str
+        Endpoint to POST to. `/api/v1` will be prepended and authentication headers will
+        be added.
+    retry: bool
+        Whether to use retires in case the connection fails. Defaults to `True`.
+
+    Returns
+    -------
+    Any:
+        The response returned form the server, if it exists.
+    """
+    response = request(
+        method=requests.delete,
+        endpoint=endpoint,
+        kwargs=dict(),
+        retry=retry,
+    )
+    logger.debug("[_delete] Got response with raw content: %s", response.content)
 
     if len(response.content) == 0:
         return None

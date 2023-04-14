@@ -1,7 +1,7 @@
 # Standard Library
 import logging
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from http import HTTPStatus
 from typing import List, Optional
 
@@ -160,7 +160,7 @@ def save_resource_endpoint(user: Optional[User]) -> flask.Response:
     return flask.jsonify(payload)
 
 
-@sematic_api.route("/api/v1/external_resources/all/clean_orphaned", methods=["POST"])
+@sematic_api.route("/api/v1/external_resources/orphaned", methods=["DELETE"])
 @authenticate
 def clean_orphaned_resources_endpoint(user: Optional[User]) -> flask.Response:
     resources = get_orphaned_resource_records()
@@ -171,10 +171,10 @@ def clean_orphaned_resources_endpoint(user: Optional[User]) -> flask.Response:
 
 @dataclass
 class StateChanges:
-    deactivated: List[str]
-    unmodified: List[str]
-    update_error: List[str]
-    forced_terminal: List[str]
+    deactivated: List[str] = field(default_factory=list)
+    unmodified: List[str] = field(default_factory=list)
+    update_error: List[str] = field(default_factory=list)
+    forced_terminal: List[str] = field(default_factory=list)
 
 
 def deactivate_resources(
@@ -195,12 +195,7 @@ def deactivate_resources(
     A StateChanges object describing the resources that were/were not
     changed.
     """
-    state_changes = StateChanges(
-        deactivated=[],
-        unmodified=[],
-        update_error=[],
-        forced_terminal=[],
-    )
+    state_changes = StateChanges()
     for resource in resources:
         ended_terminal = False
         try:
