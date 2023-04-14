@@ -34,6 +34,7 @@ from sematic.db.queries import (
     get_graph,
     get_jobs_by_run_id,
     get_resolution,
+    get_resolutions_with_orphaned_jobs,
     get_resources_by_root_id,
     get_run,
     get_run_graph,
@@ -43,7 +44,7 @@ from sematic.db.queries import (
 )
 from sematic.plugins.abstract_publisher import get_publishing_plugins
 from sematic.scheduling.job_details import JobKind
-from sematic.scheduling.job_scheduler import schedule_resolution
+from sematic.scheduling.job_scheduler import clean_jobs, schedule_resolution
 from sematic.scheduling.kubernetes import cancel_job
 
 logger = logging.getLogger(__name__)
@@ -406,3 +407,28 @@ def _update_resolution_user(
     resolution.settings_env_vars[var_key] = user.api_key
 
     return resolution, True
+
+
+@sematic_api.route("/api/v1/resolutions/with_orphaned_jobs", methods=["GET"])
+@authenticate
+def get_orphaned_job_identifiers_endpoint(user: Optional[User]) -> flask.Response:
+    run_ids = get_resolutions_with_orphaned_jobs()
+
+    return flask.jsonify(
+        dict(
+            content=run_ids,
+        )
+    )
+
+
+@sematic_api.route("/api/v1/resolutions/<root_id>/clean_jobs", methods=["POST"])
+@authenticate
+def clean_orphaned_jobs_endpoint(user: Optional[User], root_id: str) -> flask.Response:
+    force = flask.request.args.get("force", "false").lower() == "true"
+    jobs = get_jobs_by_run_id(root_id, kind=JobKind.resolver)
+    state_changes = clean_jobs(jobs, force)
+    return flask.jsonify(
+        dict(
+            content=[change.value for change in state_changes],
+        )
+    )
