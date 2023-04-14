@@ -423,13 +423,13 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
 
 @retry(tries=3, delay=5, jitter=1)
 def get_runs_with_orphaned_jobs() -> List[str]:
-    response = _get("/api/v1/runs/with_orphaned_jobs")
+    response = _get("/runs/with_orphaned_jobs")
     return response["content"]
 
 
 @retry(tries=3, delay=5, jitter=1)
 def clean_orphaned_jobs_for_run(run_id: str, force: bool) -> List[str]:
-    response = _post(f"/api/v1/runs/{run_id}/clean_jobs?force={force}")
+    response = _post(f"/runs/{run_id}/clean_jobs?force={force}")
     return response["content"]
 
 
