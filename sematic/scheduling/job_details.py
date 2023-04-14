@@ -3,7 +3,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum, unique
-from typing import List, Literal, Optional
+from typing import FrozenSet, List, Literal, Optional
 
 # Sematic
 from sematic.utils.exceptions import ExceptionMetadata, KubernetesError
@@ -81,6 +81,10 @@ class KubernetesJobState:
     @classmethod
     def is_active(cls, state) -> bool:
         return state in _ACTIVE_STATES
+
+    @classmethod
+    def terminal_states(cls) -> FrozenSet["KubernetesJobStateString"]:
+        return frozenset({cls.Deleted})
 
 
 _ACTIVE_STATES = {

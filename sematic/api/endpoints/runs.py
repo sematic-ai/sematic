@@ -563,3 +563,9 @@ def get_run_jobs(user: Optional[User], run_id: str) -> flask.Response:
             content=jobs,
         )
     )
+
+
+@sematic_api.route("/api/v1/runs/all/jobs/clean_orphaned", methods=["POST"])
+@authenticate
+def clean_orphaned_jobs_endpoint(user: Optional[User]) -> flask.Response:
+    pass
