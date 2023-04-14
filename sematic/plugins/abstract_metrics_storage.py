@@ -190,7 +190,7 @@ class AbstractMetricsStorage(abc.ABC):
         pass
 
 
-def get_metrics_plugins(
+def get_metrics_storage_plugins(
     scope: PluginScope,
     default: List[Type[AbstractPlugin]],
 ) -> List[Type[AbstractMetricsStorage]]:
