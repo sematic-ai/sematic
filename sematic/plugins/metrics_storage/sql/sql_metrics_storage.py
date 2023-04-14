@@ -136,6 +136,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
             func.sum(MetricValue.value),
             func.count(MetricValue.value),
         ]
+    n_basic_fields = len(select_fields)
 
         n_basic_fields = len(select_fields)
 
