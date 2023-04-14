@@ -1,5 +1,6 @@
 # Standard Library
 import datetime
+from copy import deepcopy
 from typing import Any, Dict, Tuple, Type, Union
 
 # Third-party
@@ -13,6 +14,7 @@ from sematic.plugins.abstract_external_resource import (
     AbstractExternalResource,
     ManagedBy,
     ResourceState,
+    ResourceStatus,
 )
 from sematic.types.serialization import (
     type_from_json_encodable,
@@ -193,6 +195,41 @@ class ExternalResource(Base, JSONEncodableMixin):
         self.value_serialization = serialization
 
     resource = property(get_resource, set_resource)
+
+    def force_to_terminal_state(self, reason: str):
+        """Force this record to be in a terminal state.
+
+        This method is safe against errors loading the resource
+        class. It will update the resource history properly.
+
+        Parameters
+        ----------
+        reason:
+            A human-readable explanation for why the resource is being
+            forced into a terminal state.
+        """
+        # We may not be able to deserialize the resource,
+        # so we'll work directly with the serializations.
+        new_value = deepcopy(self.value_serialization)
+        state = ResourceState.FORCE_KILLED
+        message = f"Forced to terminal state: {reason}"
+        status = ResourceStatus(
+            state=state,
+            message=message,
+            managed_by=self.managed_by,
+        )
+        status_serialization = value_to_json_encodable(
+            status,
+            ResourceStatus,
+        )
+        new_value["values"]["status"] = status_serialization
+        self.value_serialization = new_value
+        self.resource_state = state
+        self.status_message = message
+        self.last_updated_epoch_seconds = status.last_update_epoch_time
+        history = list(self.history_serializations)
+        history.insert(0, new_value)
+        self.history_serializations = tuple(history)
 
     @property
     def history(self) -> Tuple[AbstractExternalResource, ...]:
