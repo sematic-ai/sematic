@@ -134,7 +134,7 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
     cache_key: Optional[str] = Column(types.String(), nullable=True)
 
     # Relationships
-    root_run: "Run" = relationship("Run", lazy="select")
+    root_run: "Run" = relationship("Run", remote_side=[id], lazy="select")
 
     @validates("future_state")
     def validate_future_state(self, _, value) -> str:
@@ -227,6 +227,7 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
                 f"calculator_path={self.calculator_path}",
                 f"future_state={self.future_state}",
                 f"parent_id={self.parent_id}",
+                f"root_id={self.root_id}",
                 f"created_at={self.created_at}",
                 f"resolved_at={self.resolved_at}",
                 f"failed_at={self.failed_at})",

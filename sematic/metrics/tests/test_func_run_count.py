@@ -24,7 +24,12 @@ def test_meta():
 @pytest.fixture
 def twelve_runs(test_db: DB) -> List[Run]:
     runs = [
-        Run(id=str(i), calculator_path=str(i), future_state=FutureState.CREATED)
+        Run(
+            id=str(i),
+            calculator_path=str(i // 6),
+            future_state=FutureState.CREATED,
+            root_id="0",
+        )
         for i in range(12)
     ]
     with test_db.get_session() as session:
@@ -61,13 +66,15 @@ def test_backfill(twelve_runs: List[Run], test_db: DB):
 def test_aggregation(twelve_runs: List[Run]):
     FuncRunCount().backfill()
 
-    aggregation = FuncRunCount.aggregate(group_by=[GroupBy.calculator_path])
+    aggregation = FuncRunCount().aggregate(
+        labels={"calculator_path": "0"}, group_by=[GroupBy.calculator_path]
+    )
 
     assert aggregation == {
         SQLMetricsStorage.get_path(): MetricSeries(
             metric_name="sematic.run_count",
             metric_type=MetricType.COUNT.name,
             group_by_labels=["calculator_path"],
-            series=[(1, (run.calculator_path)) for run in twelve_runs],
+            series=[(6, ("0",))],
         )
     }
