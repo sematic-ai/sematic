@@ -1,4 +1,5 @@
 # Standard Library
+import datetime
 import time
 import uuid
 from typing import Any
@@ -151,6 +152,8 @@ def make_run(**kwargs) -> Run:
         source_code="def foo(): pass",
         cache_key=None,
         user_id=None,
+        created_at=datetime.datetime.utcnow(),
+        updated_at=datetime.datetime.utcnow(),
     )
     run.resource_requirements = ResourceRequirements(
         kubernetes=KubernetesResourceRequirements(

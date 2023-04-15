@@ -229,6 +229,7 @@ sematic_py_lib(
         ":abstract_plugin",
         "//sematic/db:db",
         "//sematic/db/models:run",
+        "//sematic/db/models:user",
         "//sematic/db:queries",
         "//sematic/metrics:metric_point",
         "//sematic/plugins:abstract_metrics_storage",

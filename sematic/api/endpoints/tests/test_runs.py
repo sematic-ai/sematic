@@ -50,6 +50,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     test_db,
 )
 from sematic.log_reader import LogLineResult
+from sematic.metrics.func_run_count import FuncRunCount
 from sematic.scheduling.job_details import PodSummary
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
 from sematic.utils.exceptions import ExceptionMetadata, InfrastructureError
@@ -541,7 +542,6 @@ def test_update_run_disappeared(
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
-
         job = make_job(name="job1", run_id=persisted_run.id)
         save_job(job)
 
@@ -595,7 +595,6 @@ def test_update_run_k8_pod_error(
     test_db,  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
-
         job = make_job(name="job1", run_id=persisted_run.id)
         details = job.details
         details.current_pods = [
@@ -850,3 +849,43 @@ def test_get_jobs_bad_run_id(
     response = test_client.get(f"/api/v1/runs/{fake_run_id}/jobs")
     serialized_jobs = response.json["content"]  # type: ignore
     assert serialized_jobs == []
+
+
+def test_save_graph(
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_requests,  # noqa: F811
+):
+    # Standard Library
+    import logging
+
+    logging.basicConfig()
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+    run1 = make_run()
+
+    test_client.put(
+        "/api/v1/graph",
+        json={
+            "graph": {"runs": [run1.to_json_encodable()], "edges": [], "artifacts": []}
+        },
+    )
+
+    assert list(FuncRunCount().aggregate(labels={}, group_by=[]).values())[
+        0
+    ].series == [(1, ())]
+
+    run2 = make_run()
+
+    test_client.put(
+        "/api/v1/graph",
+        json={
+            "graph": {
+                "runs": [run1.to_json_encodable(), run2.to_json_encodable()],
+                "edges": [],
+                "artifacts": [],
+            }
+        },
+    )
+
+    assert list(FuncRunCount().aggregate(labels={}, group_by=[]).values())[
+        0
+    ].series == [(2, ())]
