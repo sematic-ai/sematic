@@ -1,7 +1,6 @@
 # Standard Library
 from datetime import datetime
 from typing import List, Optional, Tuple
-from unittest import mock
 
 # Third-party
 import pytest
@@ -111,8 +110,7 @@ def test_make_metric_point(runs: List[Run]):
     )
 
 
-@mock.patch("sematic.abstract_metric._get_root_calculator_path", return_value="foo")
-def test_backfill(_, runs: List[Run], test_db: DB):
+def test_backfill(runs: List[Run], test_db: DB):
     with test_db.get_session() as session:
         assert session.query(MetricValue).count() == 0
 
@@ -128,8 +126,7 @@ def test_backfill(_, runs: List[Run], test_db: DB):
     assert len(data_integrity_errors) == 1
 
 
-@mock.patch("sematic.abstract_metric._get_root_calculator_path", return_value="foo")
-def test_clear(_, runs: List[Run], test_db: DB):
+def test_clear(runs: List[Run], test_db: DB):
     metric = ConcreteMetric()
 
     metric.backfill()
@@ -143,8 +140,7 @@ def test_clear(_, runs: List[Run], test_db: DB):
         assert session.query(MetricValue).count() == 0
 
 
-@mock.patch("sematic.abstract_metric._get_root_calculator_path", return_value="foo")
-def test_aggregate(_, runs: List[Run], test_db: DB):
+def test_aggregate(runs: List[Run], test_db: DB):
     metric = ConcreteMetric()
 
     metric.backfill()

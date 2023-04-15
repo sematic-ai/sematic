@@ -11,6 +11,7 @@ import sqlalchemy.orm
 from sematic.abstract_plugin import PluginScope
 from sematic.db.db import db
 from sematic.db.models.run import Run
+from sematic.db.models.user import User
 from sematic.db.queries import get_calculator_path
 from sematic.metrics.metric_point import MetricPoint, MetricType
 from sematic.plugins.abstract_metrics_storage import (
@@ -80,7 +81,9 @@ class AbstractMetric(abc.ABC):
     def get_full_name(cls) -> str:
         return ".".join([cls.NAME_PREFIX, cls._get_name()])
 
-    def make_metric_point(self, run: Run) -> Optional[MetricPoint]:
+    def make_metric_point(
+        self, run: Run, user: Optional[User] = None
+    ) -> Optional[MetricPoint]:
         measured_value = self._get_value(run)
 
         if measured_value is None:
@@ -93,11 +96,14 @@ class AbstractMetric(abc.ABC):
             value=value,
             metric_time=metric_time,
             metric_type=self._get_metric_type(),
+            # Commented-out labels greatly increase the cardinality of the
+            # metric which increases its storage footprint.
             labels={
                 # "run_id": run.id,
                 "calculator_path": run.calculator_path,
                 # "root_id": run.root_id,
                 "root_calculator_path": _get_root_calculator_path(run),
+                "user_id": None if user is None else user.id,
             },
         )
 
@@ -111,7 +117,7 @@ class AbstractMetric(abc.ABC):
             query = self._get_backfill_query(session)
 
             count = query.count()
-            print(count)
+
             PAGE_SIZE = 100
 
             pages = count // PAGE_SIZE + 1
@@ -124,7 +130,7 @@ class AbstractMetric(abc.ABC):
 
             for i in range(pages):
                 records = query.limit(PAGE_SIZE).offset(i * PAGE_SIZE).all()
-                print(len(records))
+
                 for record in records:
                     try:
                         metric_point = self.make_metric_point(record)
@@ -142,7 +148,6 @@ class AbstractMetric(abc.ABC):
 
         for plugin in self.plugins:
             logger.info("Using plugin %s", plugin.__class__.__name__)
-            print(plugin.get_path(), metric_points)
             plugin.store_metrics(metric_points)
 
         if len(integrity_errors) > 0:
@@ -202,5 +207,5 @@ def _get_root_calculator_path(run: Run) -> str:
     # Sometimes root_run is already loaded by the query, sometimes not.
     try:
         return run.root_run.calculator_path
-    except sqlalchemy.orm.exc.DetachedInstanceError:
+    except (sqlalchemy.orm.exc.DetachedInstanceError, AttributeError):
         return get_calculator_path(run.root_id)
