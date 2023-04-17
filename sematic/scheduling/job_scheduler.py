@@ -292,6 +292,7 @@ def clean_jobs(jobs: List[Job], force: bool) -> List[JobCleaningStateChange]:
     for job in jobs:
         if job.state in KubernetesJobState.terminal_states():
             changes.append(JobCleaningStateChange.UNMODIFIED)
+            logger.info("Leaving job %s unmodified", job.identifier())
             continue
         try:
             logger.info("Cleaning job %s", job.identifier())
