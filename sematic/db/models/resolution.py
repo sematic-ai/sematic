@@ -139,11 +139,6 @@ _TERMINAL_STATES = frozenset(
 )
 
 
-_TERMINAL_STATES = frozenset(
-    {state for state in ResolutionStatus if state.is_terminal()}
-)
-
-
 class InvalidResolution(Exception):
     pass
 

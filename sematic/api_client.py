@@ -435,17 +435,18 @@ def clean_jobs_for_run(run_id: str, force: bool) -> List[str]:
     return response["content"]
 
 
-@retry(tries=3, delay=5, jitter=1)
 def get_resolutions_with_orphaned_jobs() -> List[str]:
     """Get ids of resolutions that have terminated which still have non-terminal jobs."""
     response = _get("/resolutions/with_orphaned_jobs")
     return response["content"]
 
 
-@retry(tries=3, delay=5, jitter=1)
 def clean_orphaned_jobs_for_resolution(root_run_id: str, force: bool) -> List[str]:
     """Clean up the jobs for the resolution with the given id."""
-    response = _post(f"/resolutions/{root_run_id}/clean_jobs?force={force}")
+    response = _post(f"/resolutions/{root_run_id}/clean_jobs?force={force}", retry=True)
+    return response["content"]
+
+
 def get_orphaned_resource_ids() -> List[str]:
     """Get the ids of resources whose resolutions are no longer active."""
     response = _get("/external_resources/orphaned")

@@ -308,7 +308,13 @@ def save_job(job: Job) -> Job:
 def get_runs_with_orphaned_jobs() -> List[str]:
     with db().get_session() as session:
         query_results = list(
-            session.query(Job.run_id, Job.kind, Job.state, Run.id, Run.future_state)
+            session.query(
+                Job.run_id,
+                sqlalchemy.func.max(Job.kind),
+                sqlalchemy.func.max(Job.state),
+                sqlalchemy.func.max(Run.id),
+                sqlalchemy.func.max(Run.future_state),
+            )
             .filter(Job.run_id == Run.id)
             .filter(Job.kind == JobKind.run)
             .filter(
@@ -317,9 +323,10 @@ def get_runs_with_orphaned_jobs() -> List[str]:
                 )
             )
             .filter(Job.state.not_in(KubernetesJobState.terminal_states()))
+            .group_by(Job.run_id)
             .all()
         )
-        run_ids = set()
+        run_ids = []
         for _, __, job_state, run_id, future_state in query_results:
             logger.info(
                 "Run %s in state %s has orphaned job in state %s",
@@ -327,7 +334,7 @@ def get_runs_with_orphaned_jobs() -> List[str]:
                 future_state,
                 job_state,
             )
-            run_ids.add(run_id)
+            run_ids.append(run_id)
     return list(run_ids)
 
 

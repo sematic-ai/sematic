@@ -414,11 +414,11 @@ def _update_resolution_user(
 def get_orphaned_resolution_job_identifiers_endpoint(
     user: Optional[User],
 ) -> flask.Response:
-    run_ids = get_resolutions_with_orphaned_jobs()
+    resolution_ids = get_resolutions_with_orphaned_jobs()
 
     return flask.jsonify(
         dict(
-            content=run_ids,
+            content=resolution_ids,
         )
     )
 
