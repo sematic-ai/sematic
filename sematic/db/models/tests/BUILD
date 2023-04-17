@@ -8,6 +8,18 @@ pytest_test(
     ],
 )
 
+
+pytest_test(
+    name = "test_external_resource",
+    srcs = ["test_external_resource.py"],
+    deps = [
+        "//sematic/db/models:external_resource",
+        "//sematic/plugins/external_resource:timed_message",
+        "//sematic/types/types:dataclass"
+    ],
+)
+
+
 pytest_test(
     name = "test_factories",
     srcs = ["test_factories.py"],

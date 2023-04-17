@@ -446,6 +446,30 @@ def get_resolutions_with_orphaned_jobs() -> List[str]:
 def clean_orphaned_jobs_for_resolution(root_run_id: str, force: bool) -> List[str]:
     """Clean up the jobs for the resolution with the given id."""
     response = _post(f"/resolutions/{root_run_id}/clean_jobs?force={force}")
+def get_orphaned_resource_ids() -> List[str]:
+    """Get the ids of resources whose resolutions are no longer active."""
+    response = _get("/external_resources/orphaned")
+    return response["content"]
+
+
+def clean_resource(resource_id: str, force: bool) -> str:
+    """Clean up infrastructure objects and metadata for a resource.
+
+    Parameters
+    ----------
+    resource_id:
+        The id of the resource to clean.
+    force:
+        If true, resource will be moved to a terminal state in the DB regardless of
+        whether a successful cleaning could be confirmed.
+
+    Returns
+    -------
+    A string describing what change was made to the object. Should be used
+    for display purposes only; the output should not be relied upon for
+    conditional behavior.
+    """
+    response = _post(f"/external_resources/{resource_id}/clean?force={force}")
     return response["content"]
 
 
