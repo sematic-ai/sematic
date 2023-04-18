@@ -146,32 +146,31 @@ class AbstractMetricsStorage(abc.ABC):
             Criteria to filter metrics values.
         group_by: Iterable[GroupBy]
             List of dimensions to aggregate metrics over.
-
+        rollup: Union[int, Literal["auto"], None]
+            How to aggregate metrics over time. `None` means no aggregation,
+            returns a single scalar per combination of `group_by` dimensions.
+            `"auto"` means the optimal aggregation interval will be found to
+            have a maximum of 300 series points. Passing an int sets the
+            interval size in seconds. If this interval is capped to yield no
+            more than 300 buckets.
         Examples
         --------
-        All time run count
-        ```
-        MetricsStorage().get_aggregated_metrics(
+        All time run count ``` MetricsStorage().get_aggregated_metrics(
             filter=MetricsFilter(
                 name="sematic.func_run_count",
-                from_time=datetime.fromtimestamp(0),
-                to_time=datetime.utcnow(),
+                from_time=datetime.fromtimestamp(0), to_time=datetime.utcnow(),
                 labels={}
-            ),
-            group_by=[],
+            ), group_by=[], rollup=None,
         )
         ```
 
         Success rate for Function `path.to.foo` by date over the last 30 days
-        ```
-        MetricsStorage().get_aggregated_metrics(
+        ``` MetricsStorage().get_aggregated_metrics(
             filter=MetricsFilter(
-                name="sematic.func_run_count",
-                from_time=(datetime.utcnow() - datetime.timedelta(days=30)),
-                to_time=datetime.utcnow(),
+                name="sematic.func_run_count", from_time=(datetime.utcnow() -
+                datetime.timedelta(days=30)), to_time=datetime.utcnow(),
                 labels={"calculator_path": "path.to.foo"}
-            ),
-            group_by=[GrouBy.date],
+            ), group_by=[], rollup=24 * 3600,
         )
         ```
         """

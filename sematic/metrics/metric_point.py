@@ -7,7 +7,7 @@ from typing import Any, Dict, Union
 
 class MetricType(enum.IntEnum):
     """
-    A metric's type dictate how it gets aggregate.
+    A metric's type dictates how it gets aggregated.
     See https://opentelemetry.io/docs/reference/specification/metrics/data-model/#timeseries-model  # noqa: E501
     """
 

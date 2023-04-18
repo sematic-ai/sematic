@@ -217,7 +217,7 @@ def test_get_aggregated_metrics_rollup(
         filter=MetricsFilter(
             name="foo",
             from_time=datetime.datetime.fromtimestamp(0),
-            to_time=datetime.datetime.fromtimestamp(1000),
+            to_time=datetime.datetime.fromtimestamp(1001),
             labels={},
         ),
         group_by=[],
