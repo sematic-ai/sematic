@@ -6,7 +6,7 @@ import abc
 import enum
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional, Sequence, Tuple, Type, cast
+from typing import List, Literal, Optional, Sequence, Tuple, Type, Union, cast
 
 # Sematic
 from sematic.abstract_plugin import AbstractPlugin, PluginScope
@@ -44,8 +44,8 @@ class MetricSeries:
         The metric series. A list of tuples. Every element in the list
         correspond to a series value. The tuple contains two elements: the
         value, and a tuple of label values. The order of label values
-        corresponds to the order of label names in group_by_labels.
-    group_by_labels: List[str]
+        corresponds to the order of label names in columns.
+    columns: List[str]
         The list of label names the metric was aggregated over.
 
     Examples
@@ -56,7 +56,7 @@ class MetricSeries:
         metric_name="sematic.func_run_count",
         metric_type="COUNT",
         series=[(483.0, ())],
-        group_by_labels=[]
+        columns=[]
     )
     ```
 
@@ -71,28 +71,24 @@ class MetricSeries:
             (0.45, ("path.to.bar", "2023-04-12")),
             ...
         ],
-        group_by_labels=["calculator_path", "date"],
+        columns=["calculator_path", "date"],
     )
     ```
     """
 
     metric_name: str
     metric_type: Optional[str] = None
-    series: List[Tuple[float, Tuple[str, ...]]] = field(default_factory=list)
-    group_by_labels: List[str] = field(default_factory=list)
+    series: List[Tuple[float, Tuple[Union[str, int], ...]]] = field(
+        default_factory=list
+    )
+    columns: List[str] = field(default_factory=list)
 
 
 class GroupBy(enum.Enum):
     """
     Options to aggregate metrics over.
-
-    `GroupBy.timestamp` will aggregate over the value's timestamp, which is
-    likely unique. Therefore, this aggregation option will return every single
-    value/
     """
 
-    timestamp = "timestamp"
-    date = "date"
     run_id = "run_id"
     calculator_path = "calculator_path"
     root_id = "root_id"
@@ -135,7 +131,10 @@ class AbstractMetricsStorage(abc.ABC):
 
     @abc.abstractmethod
     def get_aggregated_metrics(
-        self, filter: MetricsFilter, group_by: Sequence[GroupBy]
+        self,
+        filter: MetricsFilter,
+        group_by: Sequence[GroupBy],
+        rollup: Union[int, Literal["auto"], None],
     ) -> MetricSeries:
         """
         Returns a metric aggregation according to the provided filter and group

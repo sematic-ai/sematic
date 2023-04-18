@@ -1,6 +1,8 @@
 # Standard Library
 import logging
-from typing import Dict, List, Sequence, Tuple, Type
+import math
+from datetime import datetime
+from typing import Dict, List, Literal, Optional, Sequence, Tuple, Type, Union
 
 # Third-party
 from sqlalchemy import func
@@ -34,6 +36,9 @@ _PLUGIN_VERSION = (0, 1, 0)
 
 class SQLMetricsStorageSettingsVar(AbstractPluginSettingsVar):
     pass
+
+
+_MAX_SERIES_POINTS = 300
 
 
 class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
@@ -105,7 +110,10 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
         return tuple(row[0] for row in metric_names)
 
     def get_aggregated_metrics(
-        self, filter: MetricsFilter, group_by: Sequence[GroupBy]
+        self,
+        filter: MetricsFilter,
+        group_by: Sequence[GroupBy],
+        rollup: Union[int, Literal["auto"], None],
     ) -> MetricSeries:
         # Early check as later queries fail when there are no rows.
         try:
@@ -141,15 +149,24 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
             MetricLabel.metric_type,
         ]
 
+        time_range = filter.to_time - filter.from_time
+        # Ceil to make sure we always have fewer than _MAX_SERIES_POINTS
+        interval_seconds = math.ceil(time_range.total_seconds() / _MAX_SERIES_POINTS)
+
+        if isinstance(rollup, int):
+            interval_seconds = max(interval_seconds, rollup)
+            field_ = (
+                func.extract("epoch", MetricValue.metric_time)
+                / interval_seconds
+                * interval_seconds
+            )
+            select_fields.append(field_)
+            group_by_clauses.append(field_)
+            extra_field_names.append("timestamp")
+
         for gb in group_by:
             extra_field_names.append(gb.value)
-
-            if gb is GroupBy.date:
-                field_ = func.date(MetricValue.metric_time)
-            elif gb is GroupBy.timestamp:
-                field_ = func.extract("epoch", MetricValue.metric_time)
-            else:
-                field_ = MetricLabel.metric_labels[gb.value].astext
+            field_ = MetricLabel.metric_labels[gb.value].astext
 
             select_fields.append(field_)
             group_by_clauses.append(field_)
@@ -160,11 +177,19 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
             if len(group_by_clauses) > 0:
                 query = query.group_by(*group_by_clauses)
 
+            if rollup == "auto":
+                field_ = func.extract("epoch", MetricValue.metric_time)
+                record_count = query.add_columns(field_).group_by(field_).count()
+
+                if record_count > _MAX_SERIES_POINTS:
+                    field_ = field_ / interval_seconds * interval_seconds
+
+                query = query.add_columns(field_).group_by(field_)
+                extra_field_names.append("timestamp")
+
             records = query.all()
 
-        output = MetricSeries(
-            metric_name=filter.name, group_by_labels=extra_field_names
-        )
+        output = MetricSeries(metric_name=filter.name, columns=extra_field_names)
 
         for record in records:
             _, metric_type, metric_sum, metric_count = record[:n_basic_fields]
