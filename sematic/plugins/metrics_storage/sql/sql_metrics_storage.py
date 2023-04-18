@@ -1,8 +1,7 @@
 # Standard Library
 import logging
 import math
-from datetime import datetime
-from typing import Dict, List, Literal, Optional, Sequence, Tuple, Type, Union
+from typing import Dict, List, Literal, Sequence, Tuple, Type, Union
 
 # Third-party
 from sqlalchemy import func
@@ -83,7 +82,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
                 .all()
             )
 
-        existing_metric_ids = [row[0] for row in existing_metric_ids]
+        existing_metric_ids = {row[0] for row in existing_metric_ids}  # type: ignore
 
         new_metric_labels = [
             metric_label
@@ -93,7 +92,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
         with db().get_session() as session:
             session.add_all(new_metric_labels)
-            session.commit()
+            # session.commit()
 
             session.add_all(metric_values)
             session.commit()
@@ -127,8 +126,8 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
         predicates = [
             MetricLabel.metric_id == MetricValue.metric_id,
             MetricLabel.metric_name == filter.name,
-            MetricValue.metric_time > filter.from_time,
-            MetricValue.metric_time <= filter.to_time,
+            MetricValue.metric_time >= filter.from_time,
+            MetricValue.metric_time < filter.to_time,
         ]
 
         predicates += _make_predicates_from_labels(filter.labels)
@@ -206,17 +205,17 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
         labels_predicates = _make_predicates_from_labels(filter.labels)
 
         with db().get_session() as session:
-            metric_ids = (
+            metric_ids: Sequence[str] = (
                 session.query(MetricLabel.metric_id)
                 .filter(MetricLabel.metric_name == filter.name, *labels_predicates)
                 .all()
             )
-            metric_ids = [row[0] for row in metric_ids]
+            metric_ids = {row[0] for row in metric_ids}  # type: ignore
 
             session.query(MetricValue).filter(
                 MetricValue.metric_id.in_(metric_ids),  # type: ignore
-                MetricValue.metric_time > filter.from_time,
-                MetricValue.metric_time <= filter.to_time,
+                MetricValue.metric_time >= filter.from_time,
+                MetricValue.metric_time < filter.to_time,
             ).delete()
             session.commit()
 
