@@ -36,7 +36,7 @@ function PodLifecycleWithRunId(prop: { runId: string }) {
     <Typography fontSize="small" color="GrayText" style={{marginBottom: '1em'}}>
       The information in this tab is provided for debugging purposes.
       The information it displays is periodically polled from Kubernetes,
-      and not all intermediate states may be represented in the timelines.
+      and some intermediate states may not be represented in the timelines.
     </Typography>
     {value!.map(
       (job, index) =>
