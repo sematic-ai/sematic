@@ -1,6 +1,6 @@
 # Standard Library
 import datetime
-from typing import List
+from typing import List, Literal, Union
 
 # Third-party
 import pytest
@@ -69,7 +69,7 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
 
 
 @pytest.mark.parametrize(
-    "metrics_filter, group_by, expected_series",
+    "metrics_filter, group_by, rollup, expected_series",
     (
         (
             MetricsFilter(
@@ -79,26 +79,28 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
                 labels={},
             ),
             [],
+            None,
             MetricSeries(
                 metric_name="foo",
                 metric_type=MetricType.GAUGE.name,
                 series=[(0.5, ())],
-                group_by_labels=[],
+                columns=[],
             ),
         ),
         (
             MetricsFilter(
                 name="foo",
-                from_time=datetime.datetime.fromtimestamp(0),
-                to_time=datetime.datetime.utcnow(),
+                from_time=datetime.datetime(2023, 4, 10),
+                to_time=datetime.datetime(2023, 4, 13),
                 labels={},
             ),
-            [GroupBy.date],
+            [],
+            24 * 3600,
             MetricSeries(
                 metric_name="foo",
                 metric_type=MetricType.GAUGE.name,
-                series=[(0, ("2023-04-11",)), (1, ("2023-04-12",))],
-                group_by_labels=["date"],
+                series=[(0, (1681171200,)), (1, (1681257600,))],
+                columns=["timestamp"],
             ),
         ),
         (
@@ -109,11 +111,12 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
                 labels={"calculator_path": "foo"},
             ),
             [GroupBy.calculator_path],
+            None,
             MetricSeries(
                 metric_name="foo",
                 metric_type=MetricType.GAUGE.name,
                 series=[(1, ("foo",))],
-                group_by_labels=["calculator_path"],
+                columns=["calculator_path"],
             ),
         ),
         (
@@ -124,11 +127,28 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
                 labels={},
             ),
             [],
+            None,
             MetricSeries(
                 metric_name="bar",
                 metric_type=MetricType.COUNT.name,
                 series=[(2, ())],
-                group_by_labels=[],
+                columns=[],
+            ),
+        ),
+        (
+            MetricsFilter(
+                name="bar",
+                from_time=datetime.datetime(2023, 4, 10),
+                to_time=datetime.datetime(2023, 4, 13),
+                labels={},
+            ),
+            [GroupBy.calculator_path],
+            24 * 3600,
+            MetricSeries(
+                metric_name="bar",
+                metric_type=MetricType.COUNT.name,
+                series=[(1, (1681171200, "foo")), (1, (1681257600, "foo"))],
+                columns=["timestamp", "calculator_path"],
             ),
         ),
         (
@@ -138,12 +158,13 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
                 to_time=datetime.datetime.utcnow(),
                 labels={},
             ),
-            [GroupBy.date, GroupBy.calculator_path],
+            [],
+            "auto",
             MetricSeries(
                 metric_name="bar",
                 metric_type=MetricType.COUNT.name,
-                series=[(1, ("2023-04-11", "foo")), (1, ("2023-04-12", "foo"))],
-                group_by_labels=["date", "calculator_path"],
+                series=[(1, (1681171200,)), (1, (1681257600,))],
+                columns=["timestamp"],
             ),
         ),
     ),
@@ -151,6 +172,7 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
 def test_get_aggregated_metrics(
     metrics_filter: MetricsFilter,
     group_by: List[GroupBy],
+    rollup: Union[int, Literal["auto"], None],
     expected_series: MetricSeries,
     test_db: DB,  # noqa: F811
     metric_points: List[MetricPoint],
@@ -161,9 +183,49 @@ def test_get_aggregated_metrics(
     metric_series = metrics_storage_plugin.get_aggregated_metrics(
         filter=metrics_filter,
         group_by=group_by,
+        rollup=rollup,
     )
 
     assert metric_series == expected_series
+
+
+@pytest.mark.parametrize(
+    "rollup, expected_series_length, expected_series_first_value",
+    (("auto", 251, 3.0), (100, 11, 99.0), (20, 51, 19.0), (None, 1, 1000)),
+)
+def test_get_aggregated_metrics_rollup(
+    rollup,
+    expected_series_length,
+    expected_series_first_value,
+    test_db: DB,  # noqa: F811
+):
+    metric_points = [
+        MetricPoint(
+            name="foo",
+            metric_type=MetricType.COUNT,
+            value=1,
+            labels={},
+            metric_time=datetime.datetime.fromtimestamp(i + 1),
+        )
+        for i in range(1000)
+    ]
+
+    metrics_storage_plugin = SQLMetricsStorage()
+    metrics_storage_plugin.store_metrics(metric_points)
+
+    metric_series = metrics_storage_plugin.get_aggregated_metrics(
+        filter=MetricsFilter(
+            name="foo",
+            from_time=datetime.datetime.fromtimestamp(0),
+            to_time=datetime.datetime.fromtimestamp(1000),
+            labels={},
+        ),
+        group_by=[],
+        rollup=rollup,
+    )
+
+    assert len(metric_series.series) == expected_series_length
+    assert metric_series.series[0][0] == expected_series_first_value
 
 
 def test_clear_metrics(
