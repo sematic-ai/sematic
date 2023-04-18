@@ -421,17 +421,15 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
     ]
 
 
-@retry(tries=3, delay=5, jitter=1)
 def get_runs_with_orphaned_jobs() -> List[str]:
     """Get ids of runs that have terminated, which still have non-terminal jobs."""
     response = _get("/runs/with_orphaned_jobs")
     return response["content"]
 
 
-@retry(tries=3, delay=5, jitter=1)
 def clean_jobs_for_run(run_id: str, force: bool) -> List[str]:
     """Clean up the jobs for the run with the given id."""
-    response = _post(f"/runs/{run_id}/clean_jobs?force={force}")
+    response = _post(f"/runs/{run_id}/clean_jobs?force={force}", retry=True)
     return response["content"]
 
 
