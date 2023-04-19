@@ -22,7 +22,7 @@ class MetricValue(Base):
         Foreign key to metric_label.metric_id.
     value: float
         The value to store.
-    metric_time: daatetime
+    metric_time: datetime
         The time at which the value was recorded.
     """
 
