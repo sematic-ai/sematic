@@ -9,9 +9,9 @@ from sqlalchemy.orm import Query, Session, joinedload
 # Sematic
 from sematic.abstract_future import FutureState
 from sematic.abstract_metric import AbstractMetric, DataIntegrityError
-from sematic.db.db import DB, db
+from sematic.db.db import DB, db  # noqa: F401
 from sematic.db.models.run import Run
-from sematic.db.tests.fixtures import test_db
+from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.metrics.metric_point import MetricPoint, MetricType
 from sematic.plugins.abstract_metrics_storage import GroupBy, MetricSeries
 from sematic.plugins.metrics_storage.sql.models.metric_value import MetricValue
@@ -49,7 +49,7 @@ def test_get_full_name():
 
 
 @pytest.fixture
-def runs(test_db: DB):
+def runs(test_db: DB):  # noqa: F811
     runs = [
         Run(
             id="a",
@@ -86,7 +86,7 @@ def runs(test_db: DB):
     return runs
 
 
-def test_get_backfill_query(runs: List[Run], test_db: DB):
+def test_get_backfill_query(runs: List[Run], test_db: DB):  # noqa: F811
     with test_db.get_session() as session:
         query = ConcreteMetric()._get_backfill_query(session)
 
@@ -105,12 +105,16 @@ def test_make_metric_point(runs: List[Run]):
         name="sematic.concrete_metric",
         value=1,
         metric_type=MetricType.COUNT,
-        labels={"calculator_path": "count_me", "root_calculator_path": "count_me"},
+        labels={
+            "calculator_path": "count_me",
+            "root_calculator_path": "count_me",
+            "user_id": None,
+        },
         metric_time=runs[0].started_at,  # type: ignore
     )
 
 
-def test_backfill(runs: List[Run], test_db: DB):
+def test_backfill(runs: List[Run], test_db: DB):  # noqa: F811
     with test_db.get_session() as session:
         assert session.query(MetricValue).count() == 0
 
@@ -126,7 +130,7 @@ def test_backfill(runs: List[Run], test_db: DB):
     assert len(data_integrity_errors) == 1
 
 
-def test_clear(runs: List[Run], test_db: DB):
+def test_clear(runs: List[Run], test_db: DB):  # noqa: F811
     metric = ConcreteMetric()
 
     metric.backfill()
@@ -140,26 +144,33 @@ def test_clear(runs: List[Run], test_db: DB):
         assert session.query(MetricValue).count() == 0
 
 
-def test_aggregate(runs: List[Run], test_db: DB):
+def test_aggregate(runs: List[Run], test_db: DB):  # noqa: F811
     metric = ConcreteMetric()
 
     metric.backfill()
 
+    DAY_SECONDS = 24 * 3600
+
     aggregation = metric.aggregate(
         labels={"calculator_path": "count_me"},
-        group_by=[GroupBy.date, GroupBy.calculator_path],
+        group_by=[GroupBy.calculator_path],
+        rollup=DAY_SECONDS,
+    )
+
+    timestamp = (
+        int(runs[0].started_at.timestamp()) // DAY_SECONDS * DAY_SECONDS  # type: ignore
     )
 
     assert aggregation == {
         SQLMetricsStorage.get_path(): MetricSeries(
             metric_name="sematic.concrete_metric",
             metric_type=MetricType.COUNT.name,
-            group_by_labels=["date", "calculator_path"],
+            columns=["timestamp", "calculator_path"],
             series=[
                 (
                     1,
                     (
-                        str(runs[0].started_at.date()),  # type: ignore
+                        timestamp,
                         runs[0].calculator_path,
                     ),
                 )
