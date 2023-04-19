@@ -761,7 +761,7 @@ def _raise_for_response(
         could_load_json = True
         error_message = response_json.get("error", None)
         if error_message is not None:
-            error_message = f"The server provided the error message: {error_message}. "
+            error_message = f"The server provided the error message: {error_message}."
     except Exception:
         pass
 
@@ -772,7 +772,7 @@ def _raise_for_response(
         exception = BadRequestError(
             f"The {method} request to {url} was invalid, "
             f"response was {response.status_code}. "
-            f"{error_message}"
+            f"{error_message} "
             f"Please check the Sematic server logs for more information."
         )
 
