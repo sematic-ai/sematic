@@ -22,6 +22,7 @@ const Left = styled.div`
 const Center = styled.div`
     height: 100%;
     flex-grow: 1;
+    padding: 0 25px;
 `;
 
 const Right = styled.div`
@@ -43,20 +44,21 @@ const Container = styled.div`
 
 export interface ThreeColumnsProps {
     onRenderLeft: () => React.ReactNode;
-    onRenderCenter?: () => React.ReactNode;
+    onRenderCenter: () => React.ReactNode;
     onRenderRight: () => React.ReactNode;
 }
 
 const ThreeColumns = (props: ThreeColumnsProps) => {
-    const { onRenderLeft, onRenderRight } = props;
+    const { onRenderLeft, onRenderCenter, onRenderRight } = props;
 
     const leftPane = useMemo(() => onRenderLeft(), [onRenderLeft]);
+    const centerPane = useMemo(() => onRenderCenter(), [onRenderCenter]);
     const rightPane = useMemo(() => onRenderRight(), [onRenderRight]);
 
     return (
         <Container>
             <Left>{leftPane}</Left>
-            <Center />
+            <Center>{centerPane}</Center>
             <Right >{rightPane}</Right>
         </Container>
     );
