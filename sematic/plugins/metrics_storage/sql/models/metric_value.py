@@ -3,6 +3,7 @@ import datetime
 
 # Third-party
 from sqlalchemy import Column, ForeignKey, types
+from sqlalchemy.orm import validates
 
 # Sematic
 from sematic.db.models.base import Base
@@ -41,3 +42,12 @@ class MetricValue(Base):
     created_at: datetime.datetime = Column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow
     )
+
+    @validates("metric_time")
+    def _validate_metric_time(
+        self, _, metric_time: datetime.datetime
+    ) -> datetime.datetime:
+        if metric_time is None:
+            raise ValueError()
+
+        return metric_time
