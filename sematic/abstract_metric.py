@@ -1,7 +1,7 @@
 # Standard Library
 import abc
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple, Union
 
 # Third-party
@@ -19,6 +19,7 @@ from sematic.plugins.abstract_metrics_storage import (
     GroupBy,
     MetricSeries,
     MetricsFilter,
+    RollUp,
     get_metrics_storage_plugins,
 )
 from sematic.plugins.metrics_storage.sql.sql_metrics_storage import SQLMetricsStorage
@@ -177,16 +178,19 @@ class AbstractMetric(abc.ABC):
         self,
         labels: Dict[str, Union[int, float, str, bool, None]],
         group_by: List[GroupBy],
+        rollup: RollUp = None,
     ) -> Dict[str, MetricSeries]:
         filters = MetricsFilter(
             name=self.get_full_name(),
-            from_time=datetime.fromtimestamp(0),
+            from_time=datetime.utcnow() - timedelta(days=30),
             to_time=datetime.utcnow(),
             labels=labels,
         )
 
         return {
-            plugin.get_path(): plugin.get_aggregated_metrics(filters, group_by)
+            plugin.get_path(): plugin.get_aggregated_metrics(  # type: ignore
+                filters, group_by, rollup
+            )
             for plugin in self.plugins
         }
 
