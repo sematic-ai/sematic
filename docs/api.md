@@ -37,9 +37,15 @@ in the Sematic UI.
     resources the function requires. Defaults to `None`.
 
 - `retry`: Optional[RetrySettings]
-    
+
     Specifies in case of which Exceptions the function's execution should
     be retried, and how many times. Defaults to `None`.
+
+- `timeout_minutes`: Optional[float]
+
+    Specifies the maximum amount of time that this function can take to
+    execute. Cannot be set for any function that returns a value from
+    another Sematic function.
 
 #### Returns
 
