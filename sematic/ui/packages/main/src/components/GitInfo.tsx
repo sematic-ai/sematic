@@ -68,7 +68,11 @@ function GitInfoBox(props: { resolution: Resolution | undefined }) {
   const { resolution } = props;
   const theme = useTheme();
 
-  if (!resolution || !resolution.git_info_json) {
+  if (
+    !resolution
+    || !resolution.git_info_json
+    || !resolution.git_info_json.commit
+  ) {
     return (
       <Typography
         color="GrayText"
