@@ -190,6 +190,8 @@ def cancel_job(job: Job) -> Job:
         raise ValueError(f"Expected a {Job.__name__}, got a {type(job).__name__}")
     details = job.details
     if not details.still_exists:
+        details.canceled = True
+        job.update_status(details.get_status(time.time()))
         logger.info(
             "No need to cancel Kubernetes job %s, as it no longer exists",
             job.identifier(),
@@ -209,6 +211,7 @@ def cancel_job(job: Job) -> Job:
             pass
 
     details.still_exists = False
+    details.canceled = True
     job.details = details
 
     return job
