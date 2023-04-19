@@ -34,4 +34,4 @@ def test_clean(
     mock_clean_orphaned_resources.reset_mock()
     runner.invoke(clean, ["--orphaned-resources"])
     mock_clean_orphaned_resources.assert_called()
-    mock_clean_orphaned_jobs.assert_called()
+    mock_clean_orphaned_jobs.assert_not_called()
