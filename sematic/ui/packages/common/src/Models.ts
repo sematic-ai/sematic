@@ -88,12 +88,12 @@ export interface Note extends HasUserMixin {
   updated_at: Date;
 };
 
-export type ExternalResourceState = 
-"CREATED" |
-"ACTIVATING" |
-"ACTIVE" |
-"DEACTIVATING" |
-"DEACTIVATED";
+export type ExternalResourceState =
+  "CREATED" |
+  "ACTIVATING" |
+  "ACTIVE" |
+  "DEACTIVATING" |
+  "DEACTIVATED";
 
 export type ExternalResource = {
   id: string,
@@ -131,4 +131,23 @@ export type ExternalResourceHistorySerialization = {
   }
 };
 
+type PodHistoryStatusSerialization = {
+  last_updated_epoch_seconds: number;
+  message: string;
+  state: string;
+};
+
+export type Job = {
+  created_at: Date,
+  detail_serialization: object;
+  kind: string;
+  last_updated_epoch_seconds: number;
+  message: string;
+  name: string;
+  namespace: string;
+  run_id: string;
+  state: string;
+  status_history_serialization: Array<PodHistoryStatusSerialization>;
+  updated_at: Date;
+}
 

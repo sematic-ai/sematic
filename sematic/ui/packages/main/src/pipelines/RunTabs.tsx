@@ -12,6 +12,7 @@ import SourceCode from "src/components/SourceCode";
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
 import { ArtifactList } from "src/pipelines/Artifacts";
 import ExternalResourcePanel from "src/pipelines/external_resource/ExternalResource";
+import PodLifecycle from "src/pipelines/pod_lifecycle/PodLifecycle";
 import LogPanel from "src/pipelines/LogPanel";
 import OutputPanel from "src/pipelines/OutputPanel";
 
@@ -56,6 +57,7 @@ export default function RunTabs(props: {
             <Tab label="Logs" value="logs" />
             {grafanaTab}
             <Tab label="Resources" value="ext_res" />
+            <Tab label="Pods" value="pod_lifecycle" />
           </TabList>
         </StickyHeader>
         <TabPanel value="input">
@@ -75,6 +77,9 @@ export default function RunTabs(props: {
         </TabPanel>
         <TabPanel hidden={selectedRunTab !== "ext_res"} value="ext_res">
             <ExternalResourcePanel />
+        </TabPanel>
+        <TabPanel hidden={selectedRunTab !== "pod_lifecycle"} value="pod_lifecycle">
+            <PodLifecycle />
         </TabPanel>
       </TabContext>
     </>
