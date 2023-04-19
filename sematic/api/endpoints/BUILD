@@ -206,8 +206,8 @@ sematic_py_lib(
     name = "metrics",
     srcs = ["metrics.py"],
     deps = [
-        "//sematic:abstract_metric",
         "//sematic:abstract_plugin",
+        "//sematic:abstract_system_metric",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
         "//sematic/metrics:metric_point",

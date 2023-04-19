@@ -498,7 +498,8 @@ def save_graph_endpoint(user: Optional[User]):
             run.user_id = user.id
 
     run_ids = [run.id for run in runs]
-    new_runs = [run for run in runs if run.id not in get_existing_run_ids(run_ids)]
+    existing_run_ids = get_existing_run_ids(run_ids)
+    new_runs = [run for run in runs if run.id not in existing_run_ids]
 
     # save graph BEFORE ensuring jobs are stopped. This way
     # code that is checking on job status will be ok if it

@@ -855,12 +855,8 @@ def test_save_graph(
     test_client: flask.testing.FlaskClient,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
-    # Standard Library
-    import logging
-
-    logging.basicConfig()
-    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
-    run1 = make_run()
+    now = datetime.datetime.utcnow()
+    run1 = make_run(created_at=now)
 
     test_client.put(
         "/api/v1/graph",
@@ -873,7 +869,7 @@ def test_save_graph(
         0
     ].series == [(1, ())]
 
-    run2 = make_run()
+    run2 = make_run(created_at=now)
 
     test_client.put(
         "/api/v1/graph",
