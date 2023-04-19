@@ -95,6 +95,9 @@ class GroupBy(enum.Enum):
     root_calculator_path = "root_calculator_path"
 
 
+RollUp = Union[int, Literal["auto"], None]
+
+
 class NoMetricError(Exception):
     def __init__(self, metric_name: str, plugin_name: str):
         super().__init__(f"No metric named {metric_name} was found in {plugin_name}")
@@ -134,7 +137,7 @@ class AbstractMetricsStorage(abc.ABC):
         self,
         filter: MetricsFilter,
         group_by: Sequence[GroupBy],
-        rollup: Union[int, Literal["auto"], None],
+        rollup: RollUp,
     ) -> MetricSeries:
         """
         Returns a metric aggregation according to the provided filter and group
@@ -146,7 +149,7 @@ class AbstractMetricsStorage(abc.ABC):
             Criteria to filter metrics values.
         group_by: Iterable[GroupBy]
             List of dimensions to aggregate metrics over.
-        rollup: Union[int, Literal["auto"], None]
+        rollup: RollUp
             How to aggregate metrics over time. `None` means no aggregation,
             returns a single scalar per combination of `group_by` dimensions.
             `"auto"` means the optimal aggregation interval will be found to

@@ -1,7 +1,7 @@
 # Standard Library
 import logging
 import math
-from typing import Dict, List, Literal, Sequence, Tuple, Type, Union
+from typing import Dict, List, Sequence, Tuple, Type
 
 # Third-party
 from sqlalchemy import func
@@ -22,6 +22,7 @@ from sematic.plugins.abstract_metrics_storage import (
     MetricSeries,
     MetricsFilter,
     NoMetricError,
+    RollUp,
 )
 from sematic.plugins.metrics_storage.sql.models.metric_label import MetricLabel
 from sematic.plugins.metrics_storage.sql.models.metric_value import MetricValue
@@ -110,7 +111,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
         self,
         filter: MetricsFilter,
         group_by: Sequence[GroupBy],
-        rollup: Union[int, Literal["auto"], None],
+        rollup: RollUp,
     ) -> MetricSeries:
         # Early check as later queries fail when there are no rows.
         try:

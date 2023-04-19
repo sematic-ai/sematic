@@ -8,7 +8,7 @@ import pytest
 from sematic.abstract_future import FutureState
 from sematic.db.db import DB
 from sematic.db.models.run import Run
-from sematic.db.tests.fixtures import test_db
+from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.metrics.func_run_count import FuncRunCount
 from sematic.metrics.metric_point import MetricType
 from sematic.plugins.abstract_metrics_storage import GroupBy, MetricSeries
@@ -22,7 +22,7 @@ def test_meta():
 
 
 @pytest.fixture
-def twelve_runs(test_db: DB) -> List[Run]:
+def twelve_runs(test_db: DB) -> List[Run]:  # noqa: F811
     runs = [
         Run(
             id=str(i),
@@ -45,14 +45,14 @@ def test_get_value(twelve_runs: List[Run]):
     assert FuncRunCount()._get_value(twelve_runs[0]) == (twelve_runs[0].created_at, 1)
 
 
-def test_get_backfill_query(twelve_runs: List[Run], test_db: DB):
+def test_get_backfill_query(twelve_runs: List[Run], test_db: DB):  # noqa: F811
     with test_db.get_session() as session:
         query = FuncRunCount()._get_backfill_query(session)
 
         assert query.count() == 12
 
 
-def test_backfill(twelve_runs: List[Run], test_db: DB):
+def test_backfill(twelve_runs: List[Run], test_db: DB):  # noqa: F811
     FuncRunCount().backfill()
 
     with test_db.get_session() as session:
@@ -67,14 +67,14 @@ def test_aggregation(twelve_runs: List[Run]):
     FuncRunCount().backfill()
 
     aggregation = FuncRunCount().aggregate(
-        labels={"calculator_path": "0"}, group_by=[GroupBy.calculator_path]
+        labels={"calculator_path": "0"}, group_by=[GroupBy.calculator_path], rollup=None
     )
 
     assert aggregation == {
         SQLMetricsStorage.get_path(): MetricSeries(
             metric_name="sematic.run_count",
             metric_type=MetricType.COUNT.name,
-            group_by_labels=["calculator_path"],
+            columns=["calculator_path"],
             series=[(6, ("0",))],
         )
     }
