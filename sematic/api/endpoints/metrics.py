@@ -4,12 +4,12 @@ import logging
 from typing import Dict, List, Optional, Type
 
 # Sematic
-from sematic.abstract_metric import AbstractMetric
 from sematic.abstract_plugin import PluginScope
+from sematic.abstract_system_metric import AbstractSystemMetric
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
-from sematic.metrics.func_run_count import FuncRunCount
 from sematic.metrics.metric_point import MetricPoint
+from sematic.metrics.run_count_metric import RunCountMetric
 from sematic.plugins.abstract_metrics_storage import get_metrics_storage_plugins
 from sematic.plugins.metrics_storage.sql.sql_metrics_storage import SQLMetricsStorage
 
@@ -20,9 +20,9 @@ class MetricEvent(enum.IntEnum):
     run_created = 1
 
 
-_METRICS: Dict[MetricEvent, List[Type[AbstractMetric]]] = {
+_METRICS: Dict[MetricEvent, List[Type[AbstractSystemMetric]]] = {
     MetricEvent.run_created: [
-        FuncRunCount,
+        RunCountMetric,
     ],
 }
 
@@ -53,7 +53,7 @@ def save_event_metrics(
             metric_points.append(metric_point)
 
     for plugin_class in get_metrics_storage_plugins(
-        PluginScope.METRICS_WRITE, default=[SQLMetricsStorage]
+        PluginScope.METRICS_STORAGE, default=[SQLMetricsStorage]
     ):
         logging.info("Saving metrics to %s", plugin_class.get_path())  # type: ignore
         plugin_class().store_metrics(metric_points)

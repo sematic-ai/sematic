@@ -168,16 +168,17 @@ pytest_test(
 )
 
 pytest_test(
-    name = "test_abstract_metric",
-    srcs = ["test_abstract_metric.py"],
+    name = "test_abstract_system_metric",
+    srcs = ["test_abstract_system_metric.py"],
     pip_deps = ["sqlalchemy"],
     # buildifier: leave-alone
     deps = [
         "//sematic:abstract_future",
-        "//sematic:abstract_metric",
+        "//sematic:abstract_system_metric",
         "//sematic/db:db",
         "//sematic/db/models:run",
         "//sematic/db/tests:fixtures",
         "//sematic/metrics:metric_point",
+        "//sematic/utils:exceptions",
     ],
 )

@@ -5,11 +5,11 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "func_run_count",
-    srcs = ["func_run_count.py"],
+    name = "run_count_metric",
+    srcs = ["run_count_metric.py"],
     deps = [
         ":metric_point",
-        "//sematic:abstract_metric",
+        "//sematic:abstract_system_metric",
         "//sematic/db/models:run",
     ],
 )

@@ -221,8 +221,8 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "abstract_metric",
-    srcs = ["abstract_metric.py"],
+    name = "abstract_system_metric",
+    srcs = ["abstract_system_metric.py"],
     pip_deps = ["sqlalchemy"],
     # buildifier: leave-alone
     deps = [
@@ -234,6 +234,7 @@ sematic_py_lib(
         "//sematic/metrics:metric_point",
         "//sematic/plugins:abstract_metrics_storage",
         "//sematic/plugins/metrics_storage/sql:sql_metrics_storage",
+        "//sematic/utils:exceptions",
     ],
 )
 

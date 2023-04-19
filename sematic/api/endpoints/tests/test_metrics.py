@@ -7,8 +7,8 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
-from sematic.metrics.func_run_count import FuncRunCount
 from sematic.metrics.metric_point import MetricType
+from sematic.metrics.run_count_metric import RunCountMetric
 from sematic.plugins.abstract_metrics_storage import MetricSeries
 from sematic.plugins.metrics_storage.sql.sql_metrics_storage import SQLMetricsStorage
 
@@ -16,7 +16,7 @@ from sematic.plugins.metrics_storage.sql.sql_metrics_storage import SQLMetricsSt
 def test_run_created(persisted_run: Run):  # noqa: F811
     save_event_metrics(MetricEvent.run_created, [persisted_run])
 
-    aggregation = FuncRunCount().aggregate(labels={}, group_by=[], rollup=None)
+    aggregation = RunCountMetric().aggregate(labels={}, group_by=[], rollup=None)
 
     assert aggregation == {
         SQLMetricsStorage.get_path(): MetricSeries(
