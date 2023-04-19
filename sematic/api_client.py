@@ -733,7 +733,7 @@ def _raise_for_response(
     error_message = None
     could_load_json = False
     try:
-        response_json  = response.json()
+        response_json = response.json()
         could_load_json = True
         error_message = response_json.get("error", None)
         if error_message is not None:
@@ -754,7 +754,8 @@ def _raise_for_response(
 
     elif response.status_code >= 500:
         exception = ServerError(
-            f"The Sematic server could not handle the " f"{method} request to {url}. "
+            f"The Sematic server could not handle the "
+            f"{method} request to {url}. "
             f"{error_message}"
             f"Please check the Sematic server logs for more information."
         )

@@ -178,13 +178,13 @@ class RayCluster(AbstractExternalResource):
             )
             logger.exception(message)
             return self._with_status(
-                ResourceState.DEACTIVATING,
+                ResourceState.DEACTIVATED,
                 message,
             )
         kuberay_version, error = self._get_kuberay_version(namespace)
         if error is not None:
             return self._with_status(
-                ResourceState.DEACTIVATING,
+                ResourceState.DEACTIVATED,
                 error,
             )
         assert kuberay_version is not None
@@ -201,7 +201,7 @@ class RayCluster(AbstractExternalResource):
             message = f"Unable to get run before creating Ray cluster: {e}."
             logger.exception(message)
             return self._with_status(
-                ResourceState.DEACTIVATING,
+                ResourceState.DEACTIVATED,
                 message,
             )
 
@@ -220,7 +220,7 @@ class RayCluster(AbstractExternalResource):
             message = f"Unable to create Kubernetes manifest for RayCluster: {e}."
             logger.exception(message)
             return self._with_status(
-                ResourceState.DEACTIVATING,
+                ResourceState.DEACTIVATED,
                 message,
             )
 
@@ -232,7 +232,7 @@ class RayCluster(AbstractExternalResource):
             if response.metadata.name != cluster_name:
                 return replace(
                     self._with_status(
-                        ResourceState.DEACTIVATING,
+                        ResourceState.DEACTIVATED,
                         f"Cluster not created with expected name '{cluster_name}'.",
                     ),
                     _cluster_name=cluster_name,
