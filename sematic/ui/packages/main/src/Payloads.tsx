@@ -1,4 +1,4 @@
-import { Artifact, Edge, Note, Resolution, Run, User } from "@sematic/common/src/Models";
+import { Artifact, Edge, Job, Note, Resolution, Run, User } from "@sematic/common/src/Models";
 
 export type RunListPayload = {
   current_page_url: string;
@@ -103,4 +103,8 @@ export type BasicMetricsPayload = {
     count_by_state: {[k: string]: number},
     total_count: number
   }
+}
+
+export type RunJobPayload = {
+  content: Array<Job>
 }

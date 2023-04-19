@@ -466,6 +466,40 @@ def test_schedule_run(
         assert count_jobs_by_run_id(run.id) == 1
 
 
+def test_clean_jobs(
+    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
+        persisted_run.future_state = FutureState.CREATED
+        save_run(persisted_run)
+        job = make_job(name="job1", run_id=persisted_run.id)
+        save_job(job)
+
+        def mock_cancel_job(job):
+            details = job.details
+            details.canceled = True
+            job.details = details
+            job.update_status(details.get_status(job.last_updated_epoch_seconds + 1))
+            return job
+
+        mock_k8s.cancel_job = mock_cancel_job
+
+        response = test_client.post(f"/api/v1/runs/{persisted_run.id}/clean_jobs")
+
+        # run not terminal yet
+        assert response.status_code == 400
+
+        persisted_run.future_state = FutureState.SCHEDULED
+        save_run(persisted_run)
+        persisted_run.future_state = FutureState.RESOLVED
+        save_run(persisted_run)
+
+        response = test_client.post(f"/api/v1/runs/{persisted_run.id}/clean_jobs")
+        assert response.status_code == 200
+        payload = response.json
+        assert payload == {"content": ["DELETED"]}
+
+
 def test_update_future_states(
     mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
