@@ -149,6 +149,7 @@ class AbstractMetric(abc.ABC):
 
         for plugin in self.plugins:
             logger.info("Using plugin %s", plugin.__class__.__name__)
+            print(len(metric_points))
             plugin.store_metrics(metric_points)
 
         if len(integrity_errors) > 0:
