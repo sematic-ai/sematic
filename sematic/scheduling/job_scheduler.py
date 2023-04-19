@@ -1,5 +1,6 @@
 # Standard Library
 import logging
+from enum import Enum, unique
 from typing import Iterable, List, Optional, Sequence, Tuple
 
 # Sematic
@@ -7,7 +8,9 @@ from sematic.abstract_future import FutureState
 from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
+from sematic.db.queries import save_job
 from sematic.scheduling import kubernetes as k8s
+from sematic.scheduling.job_details import KubernetesJobState
 from sematic.versions import MIN_CLIENT_SERVER_SUPPORTS, string_version_to_tuple
 
 logger = logging.getLogger(__name__)
@@ -274,3 +277,42 @@ def _schedule_resolution_job(
         max_parallelism=max_parallelism,
         rerun_from=rerun_from,
     )
+
+
+@unique
+class JobCleaningStateChange(Enum):
+    DELETED = "DELETED"
+    UNMODIFIED = "UNMODIFIED"
+    DELETION_ERROR = "DELETION_ERROR"
+    FORCE_DELETED = "FORCE_DELETED"
+
+
+def clean_jobs(jobs: List[Job], force: bool) -> List[JobCleaningStateChange]:
+    changes = []
+    for job in jobs:
+        if job.state in KubernetesJobState.terminal_states():
+            changes.append(JobCleaningStateChange.UNMODIFIED)
+            logger.info("Leaving job %s unmodified", job.identifier())
+            continue
+        try:
+            logger.info("Cleaning job %s", job.identifier())
+            canceled_job = k8s.cancel_job(job)
+            save_job(canceled_job)
+            changes.append(JobCleaningStateChange.DELETED)
+        except Exception:
+            logger.exception("Error cleaning job %s", job.identifier())
+            if force:
+                try:
+                    logger.info("Force cleaning job %s", job.identifier())
+                    details = job.details
+                    details = details.force_clean()
+                    job.details = details
+                    save_job(job)
+                    changes.append(JobCleaningStateChange.FORCE_DELETED)
+                except Exception:
+                    logger.exception("Could not force-delete job %s", job.identifier())
+                    changes.append(JobCleaningStateChange.DELETION_ERROR)
+            else:
+                changes.append(JobCleaningStateChange.DELETION_ERROR)
+
+    return changes

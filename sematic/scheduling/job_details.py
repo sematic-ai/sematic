@@ -3,7 +3,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum, unique
-from typing import List, Literal, Optional
+from typing import FrozenSet, List, Literal, Optional
 
 # Sematic
 from sematic.utils.exceptions import ExceptionMetadata, KubernetesError
@@ -81,6 +81,10 @@ class KubernetesJobState:
     @classmethod
     def is_active(cls, state) -> bool:
         return state in _ACTIVE_STATES
+
+    @classmethod
+    def terminal_states(cls) -> FrozenSet["KubernetesJobStateString"]:
+        return frozenset({cls.Deleted})
 
 
 _ACTIVE_STATES = {
@@ -270,6 +274,9 @@ class JobDetails:
     # Used to detect when K8s replaces the job's pod.
     previous_node_name: Optional[str] = None
 
+    # Indicates whether the job has been canceled by Sematic.
+    canceled: bool = False
+
     def latest_pod_summary(self) -> Optional[PodSummary]:
         if len(self.current_pods) == 0:
             return None
@@ -355,7 +362,7 @@ class JobDetails:
         most_recent_condition = (
             latest_summary.condition if latest_summary is not None else None
         )
-        if not self.has_started:
+        if not (self.has_started or self.canceled):
             description = "The job has been requested, but no pods are created yet."
             if self.try_number != 0:
                 description += (
@@ -367,7 +374,7 @@ class JobDetails:
                 message=description,
                 last_updated_epoch_seconds=last_updated_epoch_seconds,
             )
-        elif not self.still_exists:
+        elif self.canceled or not self.still_exists:
             return JobStatus(
                 state=KubernetesJobState.Deleted,
                 message="The job no longer exists",

@@ -134,7 +134,6 @@ _ALLOWED_TRANSITIONS = {
     ResolutionStatus.CANCELED: {},
 }
 
-
 _TERMINAL_STATES = frozenset(
     {state for state in ResolutionStatus if state.is_terminal()}
 )
