@@ -45,7 +45,7 @@ class PluginScope(enum.Enum):
     PUBLISH = "PUBLISH"
 
     # Metrics storage
-    METRICS_WRITE = "METRICS_WRITE"
+    METRICS_STORAGE = "METRICS_STORAGE"
 
 
 class AbstractPluginSettingsVar(enum.Enum):
