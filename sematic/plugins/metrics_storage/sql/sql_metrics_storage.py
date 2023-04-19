@@ -92,8 +92,6 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
         with db().get_session() as session:
             session.add_all(new_metric_labels)
-            # session.commit()
-
             session.add_all(metric_values)
             session.commit()
 
