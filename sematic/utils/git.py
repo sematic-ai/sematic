@@ -71,12 +71,18 @@ def get_git_info(object_: Any) -> Optional[GitInfo]:
         logger.debug(f"Found bare git repo in '{repo.git_dir}'")
         return None
 
-    return GitInfo(
-        remote=_get_remote(repo),
-        branch=_get_branch(repo),
-        commit=_get_commit(repo),
-        dirty=repo.is_dirty(),
-    )
+    remote = _get_remote(repo)
+    if remote is None:
+        return None
+
+    commit = _get_commit(repo)
+    if commit is None:
+        return None
+
+    branch = _get_branch(repo)
+    dirty = repo.is_dirty()
+
+    return GitInfo(remote=remote, branch=branch, commit=commit, dirty=dirty)
 
 
 def _get_repo(git: Any, source: Any) -> Optional["Repo"]:  # type: ignore # noqa: F821
@@ -113,7 +119,7 @@ def _get_commit(repo: "Repo") -> Optional[str]:  # type: ignore # noqa: F821
         return None
 
 
-def _get_branch(repo: "Repo") -> Optional[str]:  # type: ignore # noqa: F821
+def _get_branch(repo: "Repo") -> str:  # type: ignore # noqa: F821
     try:
         return repo.active_branch.name
     except Exception:
