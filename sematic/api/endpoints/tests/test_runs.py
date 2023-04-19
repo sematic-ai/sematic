@@ -50,7 +50,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     test_db,
 )
 from sematic.log_reader import LogLineResult
-from sematic.metrics.func_run_count import FuncRunCount
+from sematic.metrics.run_count_metric import RunCountMetric
 from sematic.scheduling.job_details import PodSummary
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
 from sematic.utils.exceptions import ExceptionMetadata, InfrastructureError
@@ -869,7 +869,7 @@ def test_save_graph(
         },
     )
 
-    assert list(FuncRunCount().aggregate(labels={}, group_by=[]).values())[
+    assert list(RunCountMetric().aggregate(labels={}, group_by=[]).values())[
         0
     ].series == [(1, ())]
 
@@ -886,6 +886,6 @@ def test_save_graph(
         },
     )
 
-    assert list(FuncRunCount().aggregate(labels={}, group_by=[]).values())[
+    assert list(RunCountMetric().aggregate(labels={}, group_by=[]).values())[
         0
     ].series == [(2, ())]

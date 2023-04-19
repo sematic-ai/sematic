@@ -228,3 +228,11 @@ class UnsupportedVersionError(UnsupportedUsageError):
     """Code is being asked to interface with a component with a non-supported version."""
 
     pass
+
+
+class DataIntegrityError(Exception):
+    """
+    A data integrity error.
+    """
+
+    pass
