@@ -9,7 +9,7 @@ import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
 import { useRunPanelLoadingIndicator } from 'src/hooks/runDetailsHooks';
 import ExternalResourceState from 'src/pipelines/external_resource/ExternalResourceState';
 
-const ThinTimetime = styled(Timeline)`
+const ThinTimeline = styled(Timeline)`
     margin: 0;
     flex: 0;
     & .${timelineItemClasses.root}:before {
@@ -63,12 +63,12 @@ export default function ExternalResourcePanel() {
 
     return <>
         {extraResourcesInfoSection}
-        <ThinTimetime key={selectedRun?.id}>
+        <ThinTimeline key={selectedRun?.id}>
             {historyRecords?.map(
                 (state, index) => 
                 <ExternalResourceState 
                     historyRecord={state} key={index} isLast={historyRecords.length - 1 === index}/>
             )}
-        </ThinTimetime>
+        </ThinTimeline>
     </>
 }

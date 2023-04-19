@@ -56,6 +56,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     test_db,
 )
 from sematic.plugins.abstract_publisher import AbstractPublisher
+from sematic.scheduling.job_details import JobKind
 from sematic.tests.fixtures import environment_variables
 
 test_get_resolution_auth = make_auth_test("/api/v1/resolutions/123")
@@ -105,6 +106,15 @@ def mock_schedule_resolution():
         side_effect=mock_schedule,
     ) as mock_schedule_resolution_:
         yield mock_schedule_resolution_
+
+
+@pytest.fixture
+def mock_schedule_kubernetes():
+    with mock.patch(
+        "sematic.scheduling.job_scheduler.k8s",
+        side_effect=mock_schedule,
+    ) as mock_scheduler_k8s:
+        yield mock_scheduler_k8s
 
 
 def test_get_resolution_endpoint(
@@ -317,6 +327,41 @@ def test_schedule_resolution_endpoint_no_auth(
     assert (
         mock_schedule_resolution.call_args.kwargs["rerun_from"] == "rerun_from_run_id"
     )
+
+
+def test_clean_resolution_jobs(
+    mock_auth,  # noqa: F811
+    persisted_resolution: Resolution,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_schedule_kubernetes: mock.MagicMock,
+):
+    def mock_cancel_job(job):
+        details = job.details
+        details.canceled = True
+        job.details = details
+        job.update_status(details.get_status(job.last_updated_epoch_seconds + 1))
+        return job
+
+    mock_schedule_kubernetes.cancel_job = mock_cancel_job
+
+    job = make_job(run_id=persisted_resolution.root_id, kind=JobKind.resolver)
+    save_job(job)
+    response = test_client.post(
+        f"/api/v1/resolutions/{persisted_resolution.root_id}/clean_jobs",
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+    persisted_resolution.status = ResolutionStatus.FAILED
+    save_resolution(persisted_resolution)
+    response = test_client.post(
+        f"/api/v1/resolutions/{persisted_resolution.root_id}/clean_jobs",
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    payload = typing.cast(typing.Dict[str, typing.Any], response.json)
+
+    assert payload["content"] == ["DELETED"]
 
 
 def test_schedule_resolution_endpoint_auth(
