@@ -73,7 +73,7 @@ def test_activate():
                 self,
                 is_local=is_local,
                 status=ResourceStatus(
-                    state=ResourceState.DEACTIVATING,
+                    state=ResourceState.CREATED,
                     message="updating",
                     managed_by=ManagedBy.RESOLVER if is_local else ManagedBy.SERVER,
                 ),
