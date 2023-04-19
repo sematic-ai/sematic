@@ -30,6 +30,9 @@ _METRICS: Dict[MetricEvent, List[Type[AbstractSystemMetric]]] = {
 def save_event_metrics(
     event: MetricEvent, runs: List[Run], user: Optional[User] = None
 ):
+    """
+    Compute and store System Metrics associated with a particular metric event.
+    """
     if len(runs) == 0:
         return
 
@@ -52,6 +55,10 @@ def save_event_metrics(
 
             metric_points.append(metric_point)
 
+    _store_metrics(metric_points)
+
+
+def _store_metrics(metric_points: List[MetricPoint]):
     for plugin_class in get_metrics_storage_plugins(
         PluginScope.METRICS_STORAGE, default=[SQLMetricsStorage]
     ):
