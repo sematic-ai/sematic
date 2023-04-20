@@ -22,7 +22,6 @@ from sematic.config.settings import MissingSettingsError
 from sematic.db.models.factories import make_user
 from sematic.db.queries import get_user_by_api_key, get_user_by_email, save_user
 
-
 # Email address for pseudo-user for the cron job that periodically
 # makes requests to the API to clean up dangling resources.
 CLEANER_EMAIL_ADDRESS = "cleaner@serviceaccount"
