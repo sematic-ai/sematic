@@ -140,8 +140,6 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
         n_basic_fields = len(select_fields)
 
-        n_basic_fields = len(select_fields)
-
         extra_field_names = []
 
         group_by_clauses = [

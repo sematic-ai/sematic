@@ -25,6 +25,10 @@ from sematic.plugins.abstract_metrics_storage import (
 from sematic.plugins.metrics_storage.sql.sql_metrics_storage import SQLMetricsStorage
 from sematic.utils.exceptions import DataIntegrityError
 
+MeasuredValue = Tuple[datetime, float]
+
+_BACKFILL_PAGE_SIZE = 100
+
 
 class AbstractSystemMetric(abc.ABC):
     """
@@ -50,7 +54,7 @@ class AbstractSystemMetric(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _get_value(self, run: Run) -> Optional[Tuple[datetime, float]]:
+    def _get_value(self, run: Run) -> Optional[MeasuredValue]:
         """
         The metric's value for the given run.
 
@@ -116,9 +120,7 @@ class AbstractSystemMetric(abc.ABC):
 
             count = query.count()
 
-            PAGE_SIZE = 100
-
-            pages = count // PAGE_SIZE + 1
+            pages = count // _BACKFILL_PAGE_SIZE + 1
 
             logger.info("Querying %s records in %s pages", count, pages)
 
@@ -127,7 +129,11 @@ class AbstractSystemMetric(abc.ABC):
             integrity_errors: List[DataIntegrityError] = []
 
             for i in range(pages):
-                records = query.limit(PAGE_SIZE).offset(i * PAGE_SIZE).all()
+                records = (
+                    query.limit(_BACKFILL_PAGE_SIZE)
+                    .offset(i * _BACKFILL_PAGE_SIZE)
+                    .all()
+                )
 
                 for record in records:
                     try:
