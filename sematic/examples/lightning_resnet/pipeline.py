@@ -31,7 +31,7 @@ class PipelineResults:
     evaluation_results: EvaluationResults
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def train(config: TrainingConfig, data_config: DataConfig) -> Checkpoint:
     """# Perform distributed training of a ResNet model.
 
@@ -77,7 +77,7 @@ def train(config: TrainingConfig, data_config: DataConfig) -> Checkpoint:
         return ray.get(call_train_classifier_from_ray.remote())
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def evaluate(
     checkpoint: Checkpoint, config: EvaluationConfig, data_config: DataConfig
 ) -> EvaluationResults:
@@ -114,7 +114,7 @@ def evaluate(
         return ray.get(call_evaluate_classifier_from_ray.remote())
 
 
-@sematic.func(inline=True)
+@sematic.func
 def bundle_results(
     final_checkpoint: Checkpoint,
     evaluation_results: EvaluationResults,
@@ -131,7 +131,7 @@ def bundle_results(
     )
 
 
-@sematic.func(inline=True)
+@sematic.func
 def pipeline(
     train_config: TrainingConfig, data_config: DataConfig, eval_config: EvaluationConfig
 ) -> PipelineResults:

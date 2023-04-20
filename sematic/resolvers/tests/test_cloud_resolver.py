@@ -34,7 +34,7 @@ from sematic.tests.fixtures import (  # noqa: F401
 )
 
 
-@func(base_image_tag="cuda", inline=False)
+@func(base_image_tag="cuda", standalone=True)
 def add(a: float, b: float) -> float:
     return a + b
 
@@ -178,7 +178,7 @@ def test_max_parallelism_validation(max_parallelism, expected_validates):
     ),
 )
 def test_make_run(_, base_image_tag, expected_image):
-    @func(inline=False, base_image_tag=base_image_tag)
+    @func(standalone=True, base_image_tag=base_image_tag)
     def foo():
         pass
 
