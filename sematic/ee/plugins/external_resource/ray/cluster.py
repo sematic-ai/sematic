@@ -344,7 +344,7 @@ class RayCluster(AbstractExternalResource):
         elif self.status.state == ResourceState.ACTIVE:
             return self._update_from_active()
         elif self.status.state == ResourceState.DEACTIVATING:
-            return self._continue_deactivation("finalizing deactivation")
+            return self._continue_deactivation(self.status.message)
 
         return self
 

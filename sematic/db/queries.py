@@ -20,12 +20,12 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.job import Job
 from sematic.db.models.note import Note
-from sematic.db.models.resolution import Resolution
+from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.runs_external_resource import RunExternalResource
 from sematic.db.models.user import User
-from sematic.plugins.abstract_external_resource import ResourceState
-from sematic.scheduling.job_details import JobKind, JobKindString
+from sematic.plugins.abstract_external_resource import ManagedBy, ResourceState
+from sematic.scheduling.job_details import JobKind, JobKindString, KubernetesJobState
 from sematic.utils.exceptions import IllegalStateTransitionError
 
 logger = logging.getLogger(__name__)
@@ -305,6 +305,67 @@ def save_job(job: Job) -> Job:
         return job
 
 
+def get_runs_with_orphaned_jobs() -> List[str]:
+    with db().get_session() as session:
+        query_results = list(
+            session.query(
+                Job.run_id,
+                sqlalchemy.func.max(Job.kind),
+                sqlalchemy.func.max(Job.state),
+                sqlalchemy.func.max(Run.id),
+                sqlalchemy.func.max(Run.future_state),
+            )
+            .filter(Job.run_id == Run.id)
+            .filter(Job.kind == JobKind.run)
+            .filter(
+                Run.future_state.in_(
+                    [state.value for state in FutureState.terminal_states()]
+                )
+            )
+            .filter(Job.state.not_in(KubernetesJobState.terminal_states()))
+            .group_by(Job.run_id)
+            .all()
+        )
+        run_ids = []
+        for _, __, job_state, run_id, future_state in query_results:
+            logger.info(
+                "Run %s in state %s has orphaned job in state %s",
+                run_id,
+                future_state,
+                job_state,
+            )
+            run_ids.append(run_id)
+    return list(run_ids)
+
+
+def get_resolutions_with_orphaned_jobs() -> List[str]:
+    with db().get_session() as session:
+        query_results = list(
+            session.query(
+                Job.run_id, Job.kind, Job.state, Resolution.root_id, Resolution.status
+            )
+            .filter(Job.run_id == Resolution.root_id)
+            .filter(Job.kind == JobKind.resolver)
+            .filter(
+                Resolution.status.in_(
+                    [status.value for status in ResolutionStatus.terminal_states()]
+                )
+            )
+            .filter(Job.state.not_in(KubernetesJobState.terminal_states()))
+            .all()
+        )
+        resolution_ids = []
+        for _, __, job_state, root_id, status in query_results:
+            logger.info(
+                "Resolution %s in state %s has orphaned job in state %s",
+                root_id,
+                status,
+                job_state,
+            )
+            resolution_ids.append(root_id)
+    return resolution_ids
+
+
 def get_jobs_by_run_id(run_id: str, kind: JobKindString = JobKind.run) -> List[Job]:
     """Get jobs from the DB by source run id.
 
@@ -370,6 +431,15 @@ def run_has_legacy_jobs(run_id: str) -> bool:
 
 def save_external_resource_record(record: ExternalResource):
     """Save an ExternalResource to the DB"""
+    if record.resource_state == ResourceState.FORCE_KILLED:
+        # There may be problems deserializing the resource.
+        # Just save without attempting any complex modifications.
+        with db().get_session() as session:
+            session.merge(record)
+            session.commit()
+
+        return record
+
     existing_record = get_external_resource_record(record.id)
 
     if existing_record is None:
@@ -402,6 +472,55 @@ def get_external_resource_record(resource_id: str) -> Optional[ExternalResource]
             .filter(ExternalResource.id == resource_id)
             .one_or_none()
         )
+
+
+def get_orphaned_resource_records() -> List[ExternalResource]:
+    """Get ExternalResources orphaned resources from the db.
+
+    Orphaned resources are ones that are not in a terminal state, but
+    whose resolutions ARE in a terminal state. This query will only return
+    results where the resource is managed by the server or "unknown".
+    """
+    with db().get_session() as session:
+        results = (
+            session.query(
+                ExternalResource,
+                Resolution.root_id,
+                RunExternalResource,
+                Run.id,
+                Run.root_id,
+            )
+            .filter(ExternalResource.id == RunExternalResource.resource_id)
+            .filter(Run.id == RunExternalResource.run_id)
+            .filter(Run.root_id == Resolution.root_id)
+            .filter(
+                ExternalResource.managed_by.in_([ManagedBy.SERVER, ManagedBy.UNKNOWN])
+            )
+            .filter(
+                Resolution.status.in_(
+                    [status.value for status in ResolutionStatus.terminal_states()]
+                )
+            )
+            .filter(
+                ExternalResource.resource_state.in_(
+                    [state for state in ResourceState.non_terminal_states()]
+                )
+            )
+            .all()
+        )
+
+        # use a dict based on id: a resource might show up twice if it is used
+        # in more than one run.
+        resources: Dict[str, ExternalResource] = {}
+        for resource, resolution_id, _, run_id, __ in results:
+            logger.info(
+                "Found orphaned resource '%s' from resolution '%s' and run '%s'",
+                resource,
+                resolution_id,
+                run_id,
+            )
+            resources[resource.id] = resource
+    return list(resources.values())
 
 
 def save_run_external_resource_links(resource_ids: List[str], run_id: str):

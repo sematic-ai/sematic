@@ -421,6 +421,57 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
     ]
 
 
+def get_runs_with_orphaned_jobs() -> List[str]:
+    """Get ids of runs that have terminated, which still have non-terminal jobs."""
+    response = _get("/runs/with_orphaned_jobs")
+    return response["content"]
+
+
+def clean_jobs_for_run(run_id: str, force: bool) -> List[str]:
+    """Clean up the jobs for the run with the given id."""
+    response = _post(f"/runs/{run_id}/clean_jobs?force={force}", retry=True)
+    return response["content"]
+
+
+def get_resolutions_with_orphaned_jobs() -> List[str]:
+    """Get ids of resolutions that have terminated which still have non-terminal jobs."""
+    response = _get("/resolutions/with_orphaned_jobs")
+    return response["content"]
+
+
+def clean_orphaned_jobs_for_resolution(root_run_id: str, force: bool) -> List[str]:
+    """Clean up the jobs for the resolution with the given id."""
+    response = _post(f"/resolutions/{root_run_id}/clean_jobs?force={force}", retry=True)
+    return response["content"]
+
+
+def get_orphaned_resource_ids() -> List[str]:
+    """Get the ids of resources whose resolutions are no longer active."""
+    response = _get("/external_resources/orphaned")
+    return response["content"]
+
+
+def clean_resource(resource_id: str, force: bool) -> str:
+    """Clean up infrastructure objects and metadata for a resource.
+
+    Parameters
+    ----------
+    resource_id:
+        The id of the resource to clean.
+    force:
+        If true, resource will be moved to a terminal state in the DB regardless of
+        whether a successful cleaning could be confirmed.
+
+    Returns
+    -------
+    A string describing what change was made to the object. Should be used
+    for display purposes only; the output should not be relied upon for
+    conditional behavior.
+    """
+    response = _post(f"/external_resources/{resource_id}/clean?force={force}")
+    return response["content"]
+
+
 @retry(tries=3, delay=10, jitter=1)
 def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
     """Ask the server to update the status of given run ids if needed and return them.
@@ -703,29 +754,42 @@ def _raise_for_response(
     exception: Optional[Exception] = None
     url, method = response.url, response.request.method
 
+    error_message = None
+    could_load_json = False
+    try:
+        response_json = response.json()
+        could_load_json = True
+        error_message = response_json.get("error", None)
+        if error_message is not None:
+            error_message = f"The server provided the error message: {error_message}."
+    except Exception:
+        pass
+
     if response.status_code == 404:
         exception = ResourceNotFoundError(f"Resource {url} was not found")
 
     elif 400 <= response.status_code < 500:
         exception = BadRequestError(
             f"The {method} request to {url} was invalid, "
-            f"response was {response.status_code}"
+            f"response was {response.status_code}. "
+            f"{error_message} "
+            f"Please check the Sematic server logs for more information."
         )
 
     elif response.status_code >= 500:
         exception = ServerError(
-            f"The Sematic server could not handle the " f"{method} request to {url}",
+            f"The Sematic server could not handle the "
+            f"{method} request to {url}. "
+            f"{error_message}"
+            f"Please check the Sematic server logs for more information."
         )
 
-    if exception is None and validate_json:
-        try:
-            response.json()
-        except Exception:
-            exception = InvalidResponseError(
-                f"The Sematic server was expected to return json for "
-                f"{method} request to {url}, but the "
-                f"response was not json."
-            )
+    if exception is None and validate_json and not could_load_json:
+        exception = InvalidResponseError(
+            f"The Sematic server was expected to return json for "
+            f"{method} request to {url}, but the "
+            f"response was not json."
+        )
 
     if exception is None:
         return

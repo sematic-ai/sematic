@@ -1,9 +1,8 @@
-import { useEffect, useMemo } from "react";
-import { atomWithHash } from 'jotai-location'
-import { useLocation } from "react-router-dom";
 import { User } from "@sematic/common/src/Models";
-import { atomWithStorage } from "jotai/utils";
-import { useAtom } from "jotai";
+import { atomWithHash } from 'jotai-location';
+import memoize from 'lodash/memoize';
+import noop from 'lodash/noop';
+import { useMemo } from "react";
 
 interface IFetchJSON {
   url: string;
@@ -61,63 +60,54 @@ export function fetchJSON({
     );
 }
 
-export const debugFlagAtom = atomWithStorage<boolean | null>('debug', null);
+export const getDebugState = memoize(function getDebugState() {
+  const search = window.location.search;
 
+  let debugFlagUrlValue: boolean | null;
+  const strValue = (new URLSearchParams(search)).get('debug')?.toLocaleLowerCase();
+  if (strValue === 'true' || strValue === '1') {
+    debugFlagUrlValue = true;
+  } else if (strValue === 'false' || strValue === '0') {
+    debugFlagUrlValue = false;
+  } else {
+    debugFlagUrlValue = null;
+  };
 
-export function useDebugState() {
-  const { search } = useLocation();
-  const [debugFlagLocalStorage, setDebugFlagLocalStorage] = useAtom(debugFlagAtom);
+  const debugFlagLocalStorage = window.localStorage.getItem('debug');
 
-
-  const debugFlagUrlValue = useMemo(
-    () => {
-      const strValue = (new URLSearchParams(search)).get('debug')?.toLocaleLowerCase();
-      if (strValue === 'true' || strValue === '1') {
-        return true;
-      };
-      if (strValue === 'false' || strValue === '0') {
-        return false;
-      };
-      return null;
-    }, [search]);
-  
   // if debugFlagUrlValue is set, then set it in localStorage, so that it is memorized across page refreshes
-  useEffect(() => {
-    if (debugFlagUrlValue === null) {
-      return;
-    }
-    if (debugFlagLocalStorage !== debugFlagUrlValue) {
-      setDebugFlagLocalStorage(debugFlagUrlValue);
-    }
-  }, [debugFlagUrlValue, debugFlagLocalStorage, setDebugFlagLocalStorage]);
+  if (debugFlagUrlValue !== null && debugFlagLocalStorage !== debugFlagUrlValue.toString()) {
+    window.localStorage.setItem('debug', debugFlagUrlValue.toString());
+  }
 
-  return useMemo(() => {
-    if (debugFlagUrlValue !== null) {
-      return debugFlagUrlValue;
-    }
+  if (debugFlagUrlValue !== null) {
+    return debugFlagUrlValue;
+  }
 
-    if (debugFlagLocalStorage !== null) {
-      return debugFlagLocalStorage;
+  if (debugFlagLocalStorage !== null) {
+    return debugFlagLocalStorage === 'true';
+  }
+  return false; // default turning debug flag off
+});
+
+
+const getDevlogger = memoize(function getDevlogger () {
+  const isLoggingExplicitlyTurnedOn = getDebugState();
+
+  if (process.env.NODE_ENV === "development" || isLoggingExplicitlyTurnedOn) {
+    return (...args: any[]) => {
+      console.log(
+        `${(new Date()).toString().replace(/\sGMT.+$/, '')}  DEV DEBUG: `,
+        ...args
+      );
     }
-    return false; // default turning debug flag off
-  }, [debugFlagUrlValue, debugFlagLocalStorage]);
-}
+  }
+  return noop;
+});
+
 
 export function useLogger() {
-  const isLoggingExplicitlyTurnedOn = useDebugState();
-
-  const devLogger = useMemo(
-    () => {
-      if (process.env.NODE_ENV === "development" || isLoggingExplicitlyTurnedOn) {
-        return (...args: any[]) => {
-          console.log(
-            `${(new Date()).toString().replace(/\sGMT.+$/, '')}  DEV DEBUG: `,
-            ...args
-          );
-        }
-      }
-      return () => { };
-    }, [isLoggingExplicitlyTurnedOn]);
+  const devLogger = useMemo(() => getDevlogger(), []);
 
   return {
     devLogger

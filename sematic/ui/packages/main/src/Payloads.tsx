@@ -1,4 +1,4 @@
-import { Artifact, Edge, Note, Resolution, Run, User } from "@sematic/common/src/Models";
+import { Artifact, Edge, Job, Note, Resolution, Run, User } from "@sematic/common/src/Models";
 
 export type RunListPayload = {
   current_page_url: string;
@@ -43,6 +43,7 @@ export type LogLineResult = {
   can_continue_backward: boolean;
   can_continue_forward: boolean;
   lines: string[];
+  line_ids: number[];
   forward_cursor_token: string | null;
   reverse_cursor_token: string | null;
   log_info_message: string | null;
@@ -102,4 +103,8 @@ export type BasicMetricsPayload = {
     count_by_state: {[k: string]: number},
     total_count: number
   }
+}
+
+export type RunJobPayload = {
+  content: Array<Job>
 }
