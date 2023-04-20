@@ -64,7 +64,7 @@ class LoadResults:
     mnist_results: MnistResults
 
 
-@func(inline=False)
+@func(standalone=True)
 def collatz_with_ray(
     n_workers: int, n_tasks: int, wait_minutes: int, memory_growth_factor: float
 ) -> CollatzResults:
@@ -161,7 +161,7 @@ def wait_for_results(refs, inputs, max_wait_seconds):
     ]
 
 
-@func(inline=False)
+@func(standalone=True)
 def load_test_mnist(
     n_rates: int, n_epochs: int, n_workers: int, wait_minutes: int
 ) -> MnistResults:
@@ -220,7 +220,7 @@ def train_model(
     return loss
 
 
-@func(inline=True)
+@func(standalone=False)
 def make_results(
     collatz_results: CollatzResults, mnist_results: MnistResults
 ) -> LoadResults:
@@ -230,7 +230,7 @@ def make_results(
     )
 
 
-@func(inline=True)
+@func(standalone=False)
 def load_test_ray(
     collatz_config: Optional[CollatzConfig] = None,
     mnist_config: Optional[MnistConfig] = None,

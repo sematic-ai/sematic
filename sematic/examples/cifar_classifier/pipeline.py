@@ -22,7 +22,7 @@ class PipelineResults:
     evaluation_results: EvaluationResults
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def train(config: TrainingConfig) -> TorchCheckpoint:
     """# Train an image classifier on the CIFAR10 dataset
 
@@ -40,7 +40,7 @@ def train(config: TrainingConfig) -> TorchCheckpoint:
         return train_classifier(config)
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def evaluate(
     checkpoint: TorchCheckpoint, config: EvaluationConfig
 ) -> EvaluationResults:
@@ -62,7 +62,7 @@ def evaluate(
         return evaluate_classifier(checkpoint, config)
 
 
-@sematic.func(inline=True)
+@sematic.func
 def bundle_results(
     final_checkpoint: TorchCheckpoint, evaluation_results: EvaluationResults
 ) -> PipelineResults:
@@ -78,7 +78,7 @@ def bundle_results(
     )
 
 
-@sematic.func(inline=True)
+@sematic.func
 def pipeline(
     train_config: TrainingConfig, eval_config: EvaluationConfig
 ) -> PipelineResults:

@@ -146,7 +146,7 @@ class FutureProperties:
     Ideally over time we move all future properties to this dataclass.
     """
 
-    inline: bool
+    standalone: bool
     name: str
     tags: List[str]
     cache: bool = False
@@ -159,25 +159,25 @@ class AbstractFuture(abc.ABC):
     """
     Abstract base class to support `Future`.
 
-    This is necessary for two reasons:
-    - Resolve dependency loops (notably Future depends on LocalResolver)
-    - Enabling MyPy compliance in functions that take futures as inputs
+    This is necessary for two reasons: - Resolve dependency loops (notably
+    Future depends on LocalResolver) - Enabling MyPy compliance in functions
+    that take futures as inputs
 
-    What should go into `AbstractFuture` vs. `Future`?
-    In general, as much as possible should go into `AbstractFuture` without:
-    - introducing dependency cycles
-    - actual logic (e.g. resolve)
+    What should go into `AbstractFuture` vs. `Future`? In general, as much as
+    possible should go into `AbstractFuture` without: - introducing dependency
+    cycles - actual logic (e.g. resolve)
 
     Parameters
     ----------
     calculator: AbstractCalculator
         The calculator this is a future of.
     kwargs: Dict[str, Any]
-        The input arguments to the calculator. Can be concrete values or other futures.
-    inline: bool
-        When using the `CloudResolver`, whether the instrumented function should be
-        executed inside the same process and worker that is executing the `Resolver`
-        itself.
+        The input arguments to the calculator. Can be concrete values or other
+        futures.
+    standalone: bool
+        When using the `CloudResolver`, whether the instrumented function should
+        be executed as a standalone Kubernetes job or inside the same process
+        and worker that is executing the `Resolver` itself.
     original_future_id: Optional[str]
         The id of the original future this future was cloned from, if any.
     cache: bool
@@ -186,18 +186,18 @@ class AbstractFuture(abc.ABC):
 
         Do not activate this on a non-deterministic function!
     resource_requirements: Optional[ResourceRequirements]
-        When using the `CloudResolver`, specifies what special execution resources the
-        function requires. Defaults to `None`.
+        When using the `CloudResolver`, specifies what special execution
+        resources the function requires. Defaults to `None`.
     retry_settings: Optional[RetrySettings]
-        Specifies in case of which Exceptions the function's execution should be retried,
-        and how many times. Defaults to `None`.
+        Specifies in case of which Exceptions the function's execution should be
+        retried, and how many times. Defaults to `None`.
     """
 
     def __init__(
         self,
         calculator: AbstractCalculator,
         kwargs: Dict[str, Any],
-        inline: bool,
+        standalone: bool,
         original_future_id: Optional[str] = None,
         cache: bool = False,
         resource_requirements: Optional[ResourceRequirements] = None,
@@ -219,7 +219,7 @@ class AbstractFuture(abc.ABC):
         self.nested_future: Optional["AbstractFuture"] = None
 
         self._props = FutureProperties(
-            inline=inline,
+            standalone=standalone,
             cache=cache,
             resource_requirements=resource_requirements,
             retry_settings=retry_settings,
