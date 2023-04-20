@@ -758,7 +758,9 @@ def test_get_run_external_resources(
     assert payload[0]["id"] == persisted_external_resource.id
 
 
+@mock.patch("sematic.api.endpoints.runs.save_event_metrics")
 def test_set_run_user(
+    mock_save_event_metrics,
     persisted_user: User,  # noqa: F811
     run: Run,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
@@ -856,7 +858,7 @@ def test_save_graph(
     mock_requests,  # noqa: F811
 ):
     now = datetime.datetime.utcnow()
-    run1 = make_run(created_at=now)
+    run1 = make_run(created_at=now, updated_at=now)
 
     test_client.put(
         "/api/v1/graph",
@@ -869,7 +871,7 @@ def test_save_graph(
         0
     ].series == [(1, ())]
 
-    run2 = make_run(created_at=now)
+    run2 = make_run(created_at=now, updated_at=now)
 
     test_client.put(
         "/api/v1/graph",
