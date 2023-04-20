@@ -86,11 +86,13 @@ _ALLOWED_TRANSITIONS = {
     ResourceState.CREATED: {
         # Created -> Activating: normal progression for activation
         ResourceState.ACTIVATING,
+        # Created -> Deactivating:
+        # Some partial activation may have occured, but there was an error
+        # that led to an about & deactivation
+        ResourceState.DEACTIVATING,
         # Created -> Deactivated: after creating the resource,
         # but before starting to activate it, it was decided
-        # to not activate the resource after all. Since no activation
-        # was performed, there is no need to do anything for deactivation
-        # so we can skip DEACTIVATING.
+        # to not activate the resource after all.
         ResourceState.DEACTIVATED,
         ResourceState.FORCE_KILLED,
     },

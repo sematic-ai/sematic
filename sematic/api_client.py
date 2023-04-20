@@ -754,29 +754,42 @@ def _raise_for_response(
     exception: Optional[Exception] = None
     url, method = response.url, response.request.method
 
+    error_message = None
+    could_load_json = False
+    try:
+        response_json = response.json()
+        could_load_json = True
+        error_message = response_json.get("error", None)
+        if error_message is not None:
+            error_message = f"The server provided the error message: {error_message}."
+    except Exception:
+        pass
+
     if response.status_code == 404:
         exception = ResourceNotFoundError(f"Resource {url} was not found")
 
     elif 400 <= response.status_code < 500:
         exception = BadRequestError(
             f"The {method} request to {url} was invalid, "
-            f"response was {response.status_code}"
+            f"response was {response.status_code}. "
+            f"{error_message} "
+            f"Please check the Sematic server logs for more information."
         )
 
     elif response.status_code >= 500:
         exception = ServerError(
-            f"The Sematic server could not handle the " f"{method} request to {url}",
+            f"The Sematic server could not handle the "
+            f"{method} request to {url}. "
+            f"{error_message}"
+            f"Please check the Sematic server logs for more information."
         )
 
-    if exception is None and validate_json:
-        try:
-            response.json()
-        except Exception:
-            exception = InvalidResponseError(
-                f"The Sematic server was expected to return json for "
-                f"{method} request to {url}, but the "
-                f"response was not json."
-            )
+    if exception is None and validate_json and not could_load_json:
+        exception = InvalidResponseError(
+            f"The Sematic server was expected to return json for "
+            f"{method} request to {url}, but the "
+            f"response was not json."
+        )
 
     if exception is None:
         return

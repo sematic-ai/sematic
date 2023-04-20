@@ -13,6 +13,7 @@ if __name__ == "__main__":
 
 # Sematic
 import sematic.cli.cancel  # noqa: F401, E402
+import sematic.cli.clean  # noqa: F401, E402
 import sematic.cli.logs  # noqa: F401, E402
 import sematic.cli.migrate  # noqa: F401, E402
 import sematic.cli.new  # noqa: F401, E402

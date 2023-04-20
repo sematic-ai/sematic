@@ -22,6 +22,10 @@ from sematic.config.settings import MissingSettingsError
 from sematic.db.models.factories import make_user
 from sematic.db.queries import get_user_by_api_key, get_user_by_email, save_user
 
+# Email address for pseudo-user for the cron job that periodically
+# makes requests to the API to clean up dangling resources.
+CLEANER_EMAIL_ADDRESS = "cleaner@serviceaccount"
+
 
 @sematic_api.route("/authenticate", methods=["GET"])
 def authenticate_endpoint() -> flask.Response:
@@ -127,6 +131,30 @@ def google_login() -> flask.Response:
     payload = {"user": user.to_json_encodable(redact=False)}
 
     return flask.jsonify(payload)
+
+
+def get_cleaner_api_key() -> str:
+    """Get an API key for the cleaner, or make one if it doesn't exist.
+
+    This should NEVER be exposed via an endpoint. Running it requires
+    DB access, which ensures that it can only be done by sufficiently
+    privileged code.
+
+    Returns
+    -------
+    An API key that can be used to authenticate as the user for the cleaner.
+    """
+    try:
+        user = get_user_by_email(CLEANER_EMAIL_ADDRESS)
+    except NoResultFound:
+        user = make_user(
+            email=CLEANER_EMAIL_ADDRESS,
+            first_name=None,
+            last_name=None,
+            avatar_url=None,
+        )
+        save_user(user)
+    return user.api_key
 
 
 API_KEY_HEADER = "X-API-KEY"
