@@ -107,8 +107,8 @@ def test_make_metric_point(runs: List[Run]):
         value=1,
         metric_type=MetricType.COUNT,
         labels={
-            "calculator_path": "count_me",
-            "root_calculator_path": "count_me",
+            "function_path": "count_me",
+            "root_function_path": "count_me",
             "user_id": None,
         },
         metric_time=runs[0].started_at,  # type: ignore
