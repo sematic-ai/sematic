@@ -3,7 +3,6 @@ import datetime
 
 # Third-party
 from sqlalchemy import Column, ForeignKey, types
-from sqlalchemy.orm import validates
 
 # Sematic
 from sematic.db.models.base import Base
