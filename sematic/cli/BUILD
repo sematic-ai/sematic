@@ -4,6 +4,7 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         ":cancel",
+        ":clean",
         ":cli",
         ":logs",
         ":start",
@@ -45,6 +46,23 @@ sematic_py_lib(
         "//sematic:api_client",
     ],
 )
+
+sematic_py_lib(
+    name = "clean",
+    srcs = ["clean.py"],
+    pip_deps = [
+        "click",
+    ],
+    deps = [
+        ":cli",
+        "//sematic:api_client",
+        "//sematic:logging",
+        "//sematic/api/endpoints:auth",
+        "//sematic/config:user_settings",
+        "//sematic/config:config",
+    ],
+)
+
 
 sematic_py_lib(
     name = "logs",

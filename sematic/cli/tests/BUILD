@@ -39,6 +39,17 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_clean",
+    srcs = ["test_clean.py"],
+    pip_deps = [
+        "click",
+    ],
+    deps = [
+        "//sematic/cli:clean",
+    ],
+)
+
+pytest_test(
     name = "test_logs",
     srcs = ["test_logs.py"],
     pip_deps = [
