@@ -42,7 +42,7 @@ class MetricSeries:
         serializability.
     series: List[Tuple[float, Tuple[str, ...]]]
         The metric series. A list of tuples. Every element in the list
-        correspond to a series value. The tuple contains two elements: the
+        corresponds to a series value. The tuple contains two elements: the
         value, and a tuple of label values. The order of label values
         corresponds to the order of label names in columns.
     columns: List[str]
@@ -50,17 +50,17 @@ class MetricSeries:
 
     Examples
     --------
-    Run count with no aggregations.
+    Run count with no aggregations:
     ```
     MetricSeries(
         metric_name="sematic.func_run_count",
         metric_type="COUNT",
         series=[(483.0, ())],
-        columns=[]
+        columns=[],
     )
     ```
 
-    Success rate by calculator path by day
+    Success rate by calculator path by day:
     ```
     MetricSeries(
         metric_name="sematic.func_success_rate",
@@ -153,9 +153,12 @@ class AbstractMetricsStorage(abc.ABC):
             have a maximum of 300 series points. Passing an int sets the
             interval size in seconds. If this interval is capped to yield no
             more than 300 buckets.
+
         Examples
         --------
-        All time run count ``` MetricsStorage().get_aggregated_metrics(
+        All time run count:
+        ```
+        MetricsStorage().get_aggregated_metrics(
             filter=MetricsFilter(
                 name="sematic.func_run_count",
                 from_time=datetime.fromtimestamp(0), to_time=datetime.utcnow(),
@@ -164,8 +167,9 @@ class AbstractMetricsStorage(abc.ABC):
         )
         ```
 
-        Success rate for Function `path.to.foo` by date over the last 30 days
-        ``` MetricsStorage().get_aggregated_metrics(
+        Success rate for Function `path.to.foo` by date over the last 30 days:
+        ```
+        MetricsStorage().get_aggregated_metrics(
             filter=MetricsFilter(
                 name="sematic.func_run_count", from_time=(datetime.utcnow() -
                 datetime.timedelta(days=30)), to_time=datetime.utcnow(),
