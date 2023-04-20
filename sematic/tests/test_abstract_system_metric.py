@@ -153,8 +153,8 @@ def test_aggregate(runs: List[Run], test_db: DB):  # noqa: F811
     DAY_SECONDS = 24 * 3600
 
     aggregation = metric.aggregate(
-        labels={"calculator_path": "count_me"},
-        group_by=[GroupBy.calculator_path],
+        labels={"function_path": "count_me"},
+        group_by=[GroupBy.function_path],
         rollup=DAY_SECONDS,
     )
 
@@ -166,7 +166,7 @@ def test_aggregate(runs: List[Run], test_db: DB):  # noqa: F811
         SQLMetricsStorage.get_path(): MetricSeries(
             metric_name="sematic.concrete_metric",
             metric_type=MetricType.COUNT.name,
-            columns=["timestamp", "calculator_path"],
+            columns=["timestamp", "function_path"],
             series=[
                 (
                     1,

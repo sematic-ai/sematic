@@ -98,9 +98,9 @@ class AbstractSystemMetric(abc.ABC):
             # metric which increases its storage footprint.
             labels={
                 # "run_id": run.id,
-                "calculator_path": run.calculator_path,
+                "function_path": run.calculator_path,
                 # "root_id": run.root_id,
-                "root_calculator_path": _get_root_calculator_path(run),
+                "root_function_path": _get_root_calculator_path(run),
                 "user_id": None if user is None else user.id,
             },
         )

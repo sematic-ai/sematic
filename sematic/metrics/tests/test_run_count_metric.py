@@ -69,7 +69,7 @@ def test_aggregation(twelve_runs: List[Run]):
     RunCountMetric().backfill()
 
     aggregation = RunCountMetric().aggregate(
-        labels={"calculator_path": "0"}, group_by=[GroupBy.calculator_path], rollup=None
+        labels={"calculator_path": "0"}, group_by=[GroupBy.function_path], rollup=None
     )
 
     assert aggregation == {
