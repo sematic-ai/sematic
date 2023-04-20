@@ -69,14 +69,14 @@ def test_aggregation(twelve_runs: List[Run]):
     RunCountMetric().backfill()
 
     aggregation = RunCountMetric().aggregate(
-        labels={"calculator_path": "0"}, group_by=[GroupBy.function_path], rollup=None
+        labels={"function_path": "0"}, group_by=[GroupBy.function_path], rollup=None
     )
 
     assert aggregation == {
         SQLMetricsStorage.get_path(): MetricSeries(
             metric_name="sematic.run_count",
             metric_type=MetricType.COUNT.name,
-            columns=["calculator_path"],
+            columns=["function_path"],
             series=[(6, ("0",))],
         )
     }
