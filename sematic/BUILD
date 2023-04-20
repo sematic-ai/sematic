@@ -98,6 +98,15 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "logging",
+    srcs = ["logging.py"],
+    pip_deps = [],
+    deps = [
+        "//sematic/config:config",
+    ],
+)
+
+sematic_py_lib(
     name = "log_reader",
     srcs = ["log_reader.py"],
     pip_deps = [
