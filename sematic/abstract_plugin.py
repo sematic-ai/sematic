@@ -44,6 +44,9 @@ class PluginScope(enum.Enum):
     # Event external publishing plug-in scope
     PUBLISH = "PUBLISH"
 
+    # Metrics storage
+    METRICS_STORAGE = "METRICS_STORAGE"
+
 
 class AbstractPluginSettingsVar(enum.Enum):
     """

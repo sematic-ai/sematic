@@ -31,3 +31,13 @@ sematic_py_lib(
     srcs = ["abstract_publisher.py"],
     deps = [],
 )
+
+sematic_py_lib(
+    name = "abstract_metrics_storage",
+    srcs = ["abstract_metrics_storage.py"],
+    deps = [
+        "//sematic:abstract_plugin",
+        "//sematic/config:settings",
+        "//sematic/metrics:metric_point",
+    ],
+)
