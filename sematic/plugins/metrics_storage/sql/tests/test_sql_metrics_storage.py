@@ -27,28 +27,28 @@ def metric_points():
             value=1,
             metric_type=MetricType.GAUGE,
             metric_time=datetime.datetime(2023, 4, 12),
-            labels=dict(calculator_path="foo"),
+            labels=dict(function_path="foo"),
         ),
         MetricPoint(
             name="foo",
             value=0,
             metric_type=MetricType.GAUGE,
             metric_time=datetime.datetime(2023, 4, 11),
-            labels=dict(calculator_path="bar"),
+            labels=dict(function_path="bar"),
         ),
         MetricPoint(
             name="bar",
             value=1,
             metric_type=MetricType.COUNT,
             metric_time=datetime.datetime(2023, 4, 12),
-            labels=dict(calculator_path="foo"),
+            labels=dict(function_path="foo"),
         ),
         MetricPoint(
             name="bar",
             value=1,
             metric_type=MetricType.COUNT,
             metric_time=datetime.datetime(2023, 4, 11),
-            labels=dict(calculator_path="foo"),
+            labels=dict(function_path="foo"),
         ),
     ]
 
@@ -108,7 +108,7 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
                 name="foo",
                 from_time=datetime.datetime.fromtimestamp(0),
                 to_time=datetime.datetime.utcnow(),
-                labels={"calculator_path": "foo"},
+                labels={"function_path": "foo"},
             ),
             [GroupBy.function_path],
             None,
@@ -116,7 +116,7 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
                 metric_name="foo",
                 metric_type=MetricType.GAUGE.name,
                 series=[(1, ("foo",))],
-                columns=["calculator_path"],
+                columns=["function_path"],
             ),
         ),
         (
@@ -148,7 +148,7 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
                 metric_name="bar",
                 metric_type=MetricType.COUNT.name,
                 series=[(1, (1681171200, "foo")), (1, (1681257600, "foo"))],
-                columns=["timestamp", "calculator_path"],
+                columns=["timestamp", "function_path"],
             ),
         ),
         (
@@ -240,7 +240,7 @@ def test_clear_metrics(
             name="foo",
             from_time=datetime.datetime.fromtimestamp(0),
             to_time=datetime.datetime.utcnow(),
-            labels={"calculator_path": "foo"},
+            labels={"function_path": "foo"},
         )
     )
 
