@@ -90,9 +90,9 @@ class GroupBy(enum.Enum):
     """
 
     run_id = "run_id"
-    calculator_path = "calculator_path"
+    function_path = "function_path"
     root_id = "root_id"
-    root_calculator_path = "root_calculator_path"
+    root_function_path = "root_function_path"
 
 
 RollUp = Union[int, Literal["auto"], None]

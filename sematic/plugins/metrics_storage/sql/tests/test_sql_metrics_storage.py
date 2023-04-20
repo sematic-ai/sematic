@@ -110,7 +110,7 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
                 to_time=datetime.datetime.utcnow(),
                 labels={"calculator_path": "foo"},
             ),
-            [GroupBy.calculator_path],
+            [GroupBy.function_path],
             None,
             MetricSeries(
                 metric_name="foo",
@@ -142,7 +142,7 @@ def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: 
                 to_time=datetime.datetime(2023, 4, 13),
                 labels={},
             ),
-            [GroupBy.calculator_path],
+            [GroupBy.function_path],
             24 * 3600,
             MetricSeries(
                 metric_name="bar",
