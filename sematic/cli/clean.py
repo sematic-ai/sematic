@@ -2,7 +2,6 @@
 import logging
 import os
 from collections import Counter
-from logging.config import dictConfig
 from typing import List
 
 # Third-party
@@ -14,7 +13,6 @@ from sematic.api.endpoints.auth import get_cleaner_api_key
 from sematic.cli.cli import cli
 from sematic.config.config import switch_env
 from sematic.config.user_settings import UserSettingsVar
-from sematic.logging import make_log_config
 
 logger = logging.getLogger(__name__)
 
@@ -49,9 +47,7 @@ def clean(orphaned_jobs: bool, orphaned_resources: bool, force: bool):
     Clean up objects that are no longer needed.
     """
     running_as_cron_job = os.environ.get("RUNNING_AS_CRON_JOB", None) is not None
-    switch_env("user")
     if running_as_cron_job:
-        dictConfig(make_log_config(log_to_disk=False))
         echo = logger.info  # type: ignore
         api_key = get_cleaner_api_key()
         os.environ[UserSettingsVar.SEMATIC_API_KEY.value] = api_key
@@ -59,6 +55,7 @@ def clean(orphaned_jobs: bool, orphaned_resources: bool, force: bool):
     else:
         echo = click.echo  # type: ignore
         echo("Starting cleaner")
+    switch_env("user")
 
     cleaned_messages = []
     if orphaned_jobs:
