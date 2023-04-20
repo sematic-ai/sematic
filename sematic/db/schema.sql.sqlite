@@ -114,10 +114,7 @@ CREATE TABLE jobs (
     FOREIGN KEY(run_id) REFERENCES runs (id)
 );
 CREATE INDEX runs_calculator_path ON runs (calculator_path);
-<<<<<<< HEAD
 CREATE INDEX jobs_run_id ON jobs (run_id);
-=======
->>>>>>> 25edb08 (Cleanup schema file)
 CREATE TABLE metric_labels (
     metric_id TEXT NOT NULL PRIMARY KEY,
     metric_name TEXT NOT NULL,
@@ -133,10 +130,6 @@ CREATE TABLE metric_values (
 );
 CREATE INDEX metric_values_id_time_idx ON metric_values(metric_id, metric_time DESC);
 CREATE INDEX metric_values_time_idx ON metric_values(metric_time DESC);
-<<<<<<< HEAD
-=======
-CREATE INDEX jobs_run_id ON jobs (run_id);
->>>>>>> 25edb08 (Cleanup schema file)
 -- schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
   ('20220424062956'),
