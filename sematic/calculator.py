@@ -56,7 +56,7 @@ class Calculator(AbstractCalculator):
         resource_requirements: Optional[ResourceRequirements] = None,
         retry_settings: Optional[RetrySettings] = None,
         base_image_tag: Optional[str] = None,
-        timeout_minutes: Optional[float] = None
+        timeout_minutes: Optional[int] = None,
     ) -> None:
         self._validate_func(func)
         self._func = func
@@ -171,6 +171,7 @@ class Calculator(AbstractCalculator):
             # future (retry_count is mutable and increases with retries)
             retry_settings=copy(self._retry_settings),
             base_image_tag=self._base_image_tag,
+            timeout_minutes=self._timeout_minutes,
         )
         try:
             ctx = context()
@@ -288,7 +289,7 @@ def func(
     resource_requirements: Optional[ResourceRequirements] = None,
     retry: Optional[RetrySettings] = None,
     base_image_tag: Optional[str] = None,
-    timeout_minutes: Optional[float] = None
+    timeout_minutes: Optional[int] = None,
 ) -> Union[Calculator, Callable]:
     """
     The Sematic Function decorator.
@@ -320,10 +321,9 @@ def func(
     retry: Optional[RetrySettings]
         Specifies in case of which Exceptions the function's execution should
         be retried, and how many times. Defaults to `None`.
-    timeout_minutes: Optional[float]
-        Specifies the maximum amount of time that this function can take to
-        execute. Cannot be set for any function that returns a value from
-        another Sematic function.
+    timeout_minutes: Optional[int]
+        Specifies the maximum amount of time that this function can take before
+        the final result is known. Must be an integer >=1.
 
     Returns
     -------

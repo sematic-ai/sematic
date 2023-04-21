@@ -153,6 +153,20 @@ class FutureProperties:
     resource_requirements: Optional[ResourceRequirements] = None
     retry_settings: Optional[RetrySettings] = None
     base_image_tag: Optional[str] = None
+    timeout_minutes: Optional[int] = None
+
+    def __post_init__(self):
+        if self.timeout_minutes is None:
+            return
+        if int(self.timeout_minutes) != self.timeout_minutes:
+            raise ValueError(
+                f"Timeouts must be an integer number "
+                f"of minutes, got: {self.timeout_minutes}"
+            )
+        if self.timeout_minutes < 1:
+            raise ValueError(
+                f"Timeouts must be >=1 minutes, got: {self.timeout_minutes}"
+            )
 
 
 class AbstractFuture(abc.ABC):
@@ -203,6 +217,7 @@ class AbstractFuture(abc.ABC):
         resource_requirements: Optional[ResourceRequirements] = None,
         retry_settings: Optional[RetrySettings] = None,
         base_image_tag: Optional[str] = None,
+        timeout_minutes: Optional[int] = None,
     ):
         self.id: str = make_future_id()
         self.original_future_id = original_future_id
@@ -226,6 +241,7 @@ class AbstractFuture(abc.ABC):
             name=calculator.__name__,
             tags=[],
             base_image_tag=base_image_tag,
+            timeout_minutes=timeout_minutes,
         )
 
     @property
