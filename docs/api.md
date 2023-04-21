@@ -14,14 +14,14 @@ in the Sematic UI.
     
     The `Callable` to instrument; usually the decorated function.
 
-- `inline`: bool
+- `standalone`: bool
     
-    When using the `CloudResolver`, whether the instrumented function
-    should be executed inside the same process and worker that is executing
-    the `Resolver` itself.
+    When using the `CloudResolver`, whether the instrumented function should be
+    executed inside its own container job (`True`) or in the same process and
+    worker that is executing the `Resolver` itself (`False`).
 
-    Defaults to `True`, as most pipeline functions are expected to be
-    lightweight. Explicitly set this to `False` in order to distribute its
+    Defaults to `False`, as most pipeline functions are expected to be
+    lightweight. Set this to `True` in order to distribute its
     execution to a worker and parallelize its execution.
 
 - `cache`: bool
@@ -117,9 +117,10 @@ Resolves a pipeline on a Kubernetes cluster.
 
 - `max_parallelism`: Optional[int]
 
-    The maximum number of non-inlined runs that this resolver will allow to be in the
-    `SCHEDULED` state at any one time. Must be a positive integer, or `None` for
-    unlimited runs. Defaults to `None`.
+    The maximum number of [Standalone
+    Runs](./glossary.md#standalone-inline-function) that this resolver will
+    allow to be in the `SCHEDULED` state at any one time. Must be a positive
+    integer, or `None` for unlimited runs. Defaults to `None`.
 
     This is intended as a simple mechanism to limit the amount of computing resources
     consumed by one pipeline execution for pipelines with a high degree of

@@ -171,7 +171,7 @@ class CloudResolver(LocalResolver):
         if self._container_image_uris is None:
             return None
 
-        if future.props.standalone:
+        if not future.props.standalone:
             return self._get_resolution_container_image()
 
         base_image_tag = future.props.base_image_tag or DEFAULT_BASE_IMAGE_TAG
@@ -224,7 +224,7 @@ class CloudResolver(LocalResolver):
         # For the cloud resolver, the server will update the relevant
         # run fields when it gets scheduled by the server.
         # Inline futures still need the updates.
-        if not future.props.standalone:
+        if future.props.standalone:
             return
 
         super()._update_run_and_future_pre_scheduling(run, future)
@@ -365,14 +365,14 @@ class CloudResolver(LocalResolver):
         return [
             future.id
             for future in self._futures
-            if future.props.standalone and future.state == FutureState.SCHEDULED
+            if not future.props.standalone and future.state == FutureState.SCHEDULED
         ]
 
     def _wait_for_any_remote_jobs(self) -> List[str]:
         scheduled_futures_by_id: Dict[str, AbstractFuture] = {
             future.id: future
             for future in self._futures
-            if not future.props.standalone and future.state == FutureState.SCHEDULED
+            if future.props.standalone and future.state == FutureState.SCHEDULED
         }
 
         if not scheduled_futures_by_id:
@@ -424,7 +424,7 @@ class CloudResolver(LocalResolver):
         Inline futures can always be scheduled. External futures can only be scheduled
         if the maximum parallelism degree has not been exceeded.
         """
-        if future.props.standalone:
+        if not future.props.standalone:
             return True
 
         if not self._max_parallelism:
