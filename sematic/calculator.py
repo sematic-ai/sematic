@@ -327,7 +327,7 @@ def func(
     """
     if inline is not None:
         warn(INLINE_DEPRECATION_MESSAGE, DeprecationWarning)
-        standalone = inline
+        standalone = not inline
 
     if not standalone and resource_requirements is not None:
         raise ValueError(
