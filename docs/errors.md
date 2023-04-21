@@ -1,6 +1,6 @@
 ## Inline Functions cannot have resource requirements
 
-[Inline Function](./glossary.md#standalone-inline-function) run within the same
+[Inline Function](./glossary.md#standalone-inline-function)s run within the same
 process and container as the `CloudResolver` orchestrating the pipeline.
 Therefore, they cannot have custom resource requirements.
 
