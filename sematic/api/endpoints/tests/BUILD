@@ -55,6 +55,7 @@ pytest_test(
         "//sematic/db/models:run",
         "//sematic/db/models:user",
         "//sematic/db/tests:fixtures",
+        "//sematic/metrics:run_count_metric",
         "//sematic/scheduling:job_details",
         "//sematic/scheduling:kubernetes",
         "//sematic/tests:fixtures",
@@ -134,5 +135,19 @@ pytest_test(
     deps = [
         "//sematic/api/tests:fixtures",
         "//sematic/db/tests:fixtures",
+    ],
+)
+
+pytest_test(
+    name = "test_metrics",
+    srcs = ["test_metrics.py"],
+    deps = [
+        "//sematic/api/endpoints:metrics",
+        "//sematic/db/models:run",
+        "//sematic/db/tests:fixtures",
+        "//sematic/metrics:metric_point",
+        "//sematic/metrics:run_count_metric",
+        "//sematic/plugins:abstract_metrics_storage",
+        "//sematic/plugins/metrics_storage/sql:sql_metrics_storage",
     ],
 )
