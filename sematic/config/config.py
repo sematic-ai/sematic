@@ -19,18 +19,19 @@ logger = logging.getLogger(__name__)
 # Support for JSON querying added in 3.38.0
 MIN_SQLITE_VERSION = (3, 38, 0)
 
+SQLITE_WARNING_MESSAGE = (
+    f"Sematic will soon require the sqlite3 version to be at least "
+    f"{version_as_string(MIN_SQLITE_VERSION)}, but your "
+    f"Python is using {sqlite3.sqlite_version}. Please upgrade. "
+    f"You may find this useful: https://stackoverflow.com/a/55729735/2540669"
+)
+
 
 def _check_sqlite_version():
     version_tuple = string_version_to_tuple(sqlite3.sqlite_version)
     if version_tuple < MIN_SQLITE_VERSION:
         # TODO #302: implement sustainable way to upgrade sqlite3 DBs
-        logger.warning(
-            "Sematic will soon require the sqlite3 version to be at least %s, but your "
-            "Python is using %s. Please upgrade. You may find this useful: "
-            "https://stackoverflow.com/a/55729735/2540669",
-            version_as_string(MIN_SQLITE_VERSION),
-            sqlite3.sqlite_version,
-        )
+        logger.warning(SQLITE_WARNING_MESSAGE)
 
 
 def _get_migrations_dir() -> str:

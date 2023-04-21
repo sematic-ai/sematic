@@ -8,6 +8,7 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         ":auth",
+        ":metrics",
         ":payloads",
         ":request_parameters",
         "//sematic:log_reader",
@@ -198,5 +199,20 @@ sematic_py_lib(
         "//sematic/db:queries",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+    ],
+)
+
+sematic_py_lib(
+    name = "metrics",
+    srcs = ["metrics.py"],
+    deps = [
+        "//sematic:abstract_plugin",
+        "//sematic:abstract_system_metric",
+        "//sematic/db/models:run",
+        "//sematic/db/models:user",
+        "//sematic/metrics:metric_point",
+        "//sematic/metrics:run_count_metric",
+        "//sematic/plugins:abstract_metrics_storage",
+        "//sematic/plugins/metrics_storage/sql:sql_metrics_storage",
     ],
 )
