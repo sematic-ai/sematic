@@ -1,7 +1,7 @@
 # Standard Library
 import logging
 from http import HTTPStatus
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 # Third-party
 import flask
@@ -13,6 +13,7 @@ from sematic import api_client
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.db.models.user import User
+from sematic.metrics.metric_point import MetricPoint
 
 logger = logging.getLogger(__name__)
 
@@ -41,16 +42,26 @@ def broadcast_graph_update(
     root_id: str,
     user: Optional[User] = None,
 ) -> Optional[requests.Response]:
-
     url = "/events/graph/update"
     json_payload = dict(run_id=root_id)
+    return _call_broadcast_endpoint(url=url, json_payload=json_payload, user=user)
+
+
+def broadcast_metrics_update(
+    metric_points: List[MetricPoint],
+    user: Optional[User] = None,
+) -> Optional[requests.Response]:
+    url = "/events/metrics/update"
+    json_payload = {
+        metric_point.name: metric_point.to_json_encodable()
+        for metric_point in metric_points
+    }
     return _call_broadcast_endpoint(url=url, json_payload=json_payload, user=user)
 
 
 def broadcast_resolution_cancel(
     root_id: str, calculator_path: str, user: Optional[User] = None
 ) -> Optional[requests.Response]:
-
     url = "/events/pipeline/cancel"
     json_payload = dict(resolution_id=root_id, calculator_path=calculator_path)
     return _call_broadcast_endpoint(url=url, json_payload=json_payload, user=user)
@@ -60,7 +71,6 @@ def broadcast_pipeline_update(
     calculator_path: str,
     user: Optional[User] = None,
 ) -> Optional[requests.Response]:
-
     url = "/events/pipeline/update"
     json_payload = dict(calculator_path=calculator_path)
     return _call_broadcast_endpoint(url=url, json_payload=json_payload, user=user)
@@ -70,7 +80,6 @@ def broadcast_job_update(
     run_id: str,
     user: Optional[User] = None,
 ) -> Optional[requests.Response]:
-
     url = "/events/job/update"
     json_payload = dict(run_id=run_id)
     return _call_broadcast_endpoint(url=url, json_payload=json_payload, user=user)

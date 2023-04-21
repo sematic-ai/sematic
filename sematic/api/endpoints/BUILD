@@ -205,9 +205,12 @@ sematic_py_lib(
 sematic_py_lib(
     name = "metrics",
     srcs = ["metrics.py"],
+    pip_deps = ["sqlalchemy"],
     deps = [
-        "//sematic:abstract_plugin",
         "//sematic:abstract_system_metric",
+        "//sematic/api:app",
+        "//sematic/api/endpoints:auth",
+        "//sematic/api/endpoints:request_parameters",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
         "//sematic/metrics:metric_point",
