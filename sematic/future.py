@@ -1,5 +1,5 @@
 # Standard Library
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Optional
 from warnings import warn  # noqa: F401
 
 # Sematic

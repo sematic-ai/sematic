@@ -329,10 +329,11 @@ def func(
         warn(INLINE_DEPRECATION_MESSAGE, DeprecationWarning)
         standalone = inline
 
-    if standalone and resource_requirements is not None:
+    if not standalone and resource_requirements is not None:
         raise ValueError(
-            "Inline functions cannot have resource requirements "
-            "Try using @sematic.func(standalone=True, ...)"
+            "Inline Functions cannot have resource requirements "
+            "Try using @sematic.func(standalone=True, ...). "
+            "See https://docs.sematic.dev/public-api-reference/errors#inline-functions-cannot-have-resource-requirements"  # noqa: E501
         )
 
     def _wrapper(func_):
