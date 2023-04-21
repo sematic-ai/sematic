@@ -147,7 +147,7 @@ See [Sematic Functions](./functions.md).
 
 ## Standalone, Inline Function
 
-When executed with `CloudResolver`, by default, all Sematic Function run
+When executed with `CloudResolver`, by default, all Sematic Functions run
 "inline". That means they execute in the same Kubernetes container as the
 `CloudResolver` which orchestrates the pipeline.
 

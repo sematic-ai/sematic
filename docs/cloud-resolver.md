@@ -50,7 +50,7 @@ Sematic will run two types of pods for each pipeline:
   Functions](./glossary.md#standalone-inline-function) run. This pod has the
   word "driver" in its name.
 * **Worker pods** – this is where [Standalone Functions](./glossary.md#standalone-inline-function)
-  (`@sematic.func(standalone=True`). These pods have the work "worker" in their
+  (`@sematic.func(standalone=True`). These pods have the word "worker" in their
   name.
 
 By default, the execution of the graph and all [Sematic
@@ -171,14 +171,14 @@ execute `add`. `add` returns an actual `float` which is the sum of `a`, `b`, and
 it does so. Since `divide` is inline, the driver doesn't need to start a new
 container for it, and instead it executes `divide` in its own process.
 
-#### When to use Standalone?
+#### When to use Standalone or Inline?
 
 - Any [Sematic Function](./glossary.md#sematic-function) doing something
 "trivial" that executes in a few seconds or less and requires negligible CPU or
 memory should be inline.
 - Any [Sematic Functions](./glossary.md#sematic-function) which primarily calls
 other Sematic functions and doesn't do any work "of its own" aside from these
-calls should be inline
+calls should be inline.
 - Any other [Sematic Functions](./glossary.md#sematic-function) should be
 standalone. In practice this usually means "leaf node" Sematic functions that
 don't call other Sematic functions and which do some "real work."

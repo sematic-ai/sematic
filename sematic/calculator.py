@@ -362,7 +362,7 @@ def func(
             )
 
         if standalone and base_image_tag is not None:
-            # Not raising an exception because users may be setting `standalone`
+            # Not raising an exception because users may be setting `standalone=False`
             # dynamically from CLI args. It would be annoying to have to also
             # change `base_image_tag` dynamically.
             logging.warning(
