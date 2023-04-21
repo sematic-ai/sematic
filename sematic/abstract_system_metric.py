@@ -64,7 +64,7 @@ class AbstractSystemMetric(abc.ABC):
 
         Returns
         -------
-        Optional[Tuple[datetime, float]]
+        Optional[MeasuredValue]
             If no metric value should be recorded for run, return None.
             Otherwise, return a tuple of metric time and value.
         """
