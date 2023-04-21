@@ -20,10 +20,10 @@ logger = logging.getLogger(__name__)
 MIN_SQLITE_VERSION = (3, 38, 0)
 
 SQLITE_WARNING_MESSAGE = (
-    "Sematic will soon require the sqlite3 version to be at least "
+    f"Sematic will soon require the sqlite3 version to be at least "
     f"{version_as_string(MIN_SQLITE_VERSION)}, but your "
     f"Python is using {sqlite3.sqlite_version}. Please upgrade. "
-    "You may find this useful: https://stackoverflow.com/a/55729735/2540669"
+    f"You may find this useful: https://stackoverflow.com/a/55729735/2540669"
 )
 
 
