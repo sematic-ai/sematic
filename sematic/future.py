@@ -13,7 +13,7 @@ _MUTABLE_FIELDS = {"name", "standalone", "cache", "resource_requirements", "tags
 
 INLINE_DEPRECATION_MESSAGE = (
     "The inline argument to the @sematic.func decorator will be deprecated on "
-    "<date>. Please use standalone=True for standalone=True."
+    "June 1st, 2023. Please replace inline=False with standalone=True."
 )
 
 

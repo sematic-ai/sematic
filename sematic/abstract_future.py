@@ -164,8 +164,9 @@ class AbstractFuture(abc.ABC):
     that take futures as inputs
 
     What should go into `AbstractFuture` vs. `Future`? In general, as much as
-    possible should go into `AbstractFuture` without: - introducing dependency
-    cycles - actual logic (e.g. resolve)
+    possible should go into `AbstractFuture` without:
+    - introducing dependency cycles
+    - actual logic (e.g. resolve)
 
     Parameters
     ----------

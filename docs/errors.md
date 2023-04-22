@@ -1,5 +1,11 @@
 ## Inline Functions cannot have resource requirements
 
+```
+ValueError: Inline Functions cannot have resource requirements.
+Try using @sematic.func(standalone=True, ...).
+See https://go.sematic.dev/t3mynx.
+```
+
 [Inline Function](./glossary.md#standalone-inline-function)s run within the same
 process and container as the `CloudResolver` orchestrating the pipeline.
 Therefore, they cannot have custom resource requirements.

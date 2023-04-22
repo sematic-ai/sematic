@@ -333,7 +333,7 @@ def func(
         raise ValueError(
             "Inline Functions cannot have resource requirements "
             "Try using @sematic.func(standalone=True, ...). "
-            "See https://docs.sematic.dev/public-api-reference/errors#inline-functions-cannot-have-resource-requirements"  # noqa: E501
+            "See https://go.sematic.dev/t3mynx"  # noqa: E501
         )
 
     def _wrapper(func_):
@@ -361,7 +361,7 @@ def func(
                 ).format(_repr_str_iterable(missing_annotations))
             )
 
-        if standalone and base_image_tag is not None:
+        if not standalone and base_image_tag is not None:
             # Not raising an exception because users may be setting `standalone=False`
             # dynamically from CLI args. It would be annoying to have to also
             # change `base_image_tag` dynamically.
