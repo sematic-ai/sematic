@@ -65,8 +65,8 @@ class ScalingGroup:
     max_workers: int = 1
 
     def __post_init__(self):
-        if self.min_workers < 0:
-            raise ValueError("min_workers must be >= 0")
+        if self.min_workers <= 0:
+            raise ValueError("min_workers must be >= 1")
         if self.min_workers > self.max_workers:
             raise ValueError("max_workers must be >= min_workers")
 
@@ -107,10 +107,7 @@ class RayClusterConfig:
 
 
 def SimpleRayCluster(
-    n_nodes: int,
-    node_config: RayNodeConfig,
-    max_nodes: Optional[int],
-    ray_version: Optional[str] = None,
+    n_nodes: int, node_config: RayNodeConfig, ray_version: Optional[str] = None
 ) -> RayClusterConfig:
     """Configuration for a RayCluster with a fixed number of identical compute nodes
 
@@ -120,8 +117,6 @@ def SimpleRayCluster(
         The number of nodes in the cluster, including the head node
     node_config:
         The configuration for each node in the cluster
-    max_nodes:
-        The maximum number of nodes in the cluster, including the head node
     ray_version:
         The version of Ray used by the cluster. Will be populated automatically
         if Ray is installed. Otherwise it must be explicitly configured.
@@ -130,19 +125,14 @@ def SimpleRayCluster(
         ray_version = _get_ray_version()
     if n_nodes < 1:
         raise ValueError("There must be at least one node in the Ray Cluster")
-    if max_nodes is None:
-        max_nodes = n_nodes
-    if max_nodes < n_nodes:
-        raise ValueError(f"max_nodes ({max_nodes}) is less than n_nodes ({n_nodes}).")
     n_workers = n_nodes - 1
-    max_workers = max_nodes - 1
     scaling_groups = []
-    if max_workers > 0:
+    if n_workers > 0:
         scaling_groups.append(
             ScalingGroup(
                 worker_nodes=node_config,
                 min_workers=n_workers,
-                max_workers=max_workers,
+                max_workers=n_workers,
             )
         )
     return RayClusterConfig(
