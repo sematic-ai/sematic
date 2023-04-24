@@ -95,7 +95,7 @@ NESTED_TIMEOUT_HELP = (
     "sleep function whose duration is determined by the first argument and whose "
     "timeout limit is determined by the second argument. Units for both are in minutes. "
     "Contrary to --timeout, this sets the timeout on an outer function and waits in an "
-    "inner function."
+    "inner function. Defaults to `None`."
 )
 OOM_HELP = (
     "Whether to include a function that causes an Out of Memory error. "
