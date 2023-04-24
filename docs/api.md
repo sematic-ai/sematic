@@ -43,7 +43,7 @@ in the Sematic UI.
 
 - `timeout_minutes`: Optional[int]
 
-    Specifies the maximum amount of time that this function can take
+    Specifies the maximum amount of time that this Function can take
     before the final result is known. Must be an integer >=1.
 
 #### Returns
