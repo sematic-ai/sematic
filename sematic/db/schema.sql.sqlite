@@ -115,6 +115,21 @@ CREATE TABLE jobs (
 );
 CREATE INDEX runs_calculator_path ON runs (calculator_path);
 CREATE INDEX jobs_run_id ON jobs (run_id);
+CREATE TABLE metric_labels (
+    metric_id TEXT NOT NULL PRIMARY KEY,
+    metric_name TEXT NOT NULL,
+    metric_labels JSONB NOT NULL DEFAULT '{}',
+    metric_type SMALLINT NOT NULL
+);
+CREATE UNIQUE INDEX metric_labels_name_labels_idx ON metric_labels(metric_name, metric_labels);
+CREATE TABLE metric_values (
+    metric_id TEXT NOT NULL,
+    value FLOAT NOT NULL,
+    metric_time TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL
+);
+CREATE INDEX metric_values_id_time_idx ON metric_values(metric_id, metric_time DESC);
+CREATE INDEX metric_values_time_idx ON metric_values(metric_time DESC);
 -- schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
   ('20220424062956'),
@@ -156,4 +171,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20230223020405'),
   ('20230314141123'),
   ('20230324182512'),
-  ('20230403153220');
+  ('20230403153220'),
+  ('20230419080554');

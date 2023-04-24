@@ -13,8 +13,12 @@ from sematic.plugins.abstract_external_resource import ResourceState
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.resolvers.tests.fixtures import FakeExternalResource
 from sematic.retry_settings import RetrySettings
-from sematic.utils.exceptions import ExternalResourceError, ResolutionError, TimeoutError
 from sematic.tests.utils import RUN_SLOW_TESTS
+from sematic.utils.exceptions import (
+    ExternalResourceError,
+    ResolutionError,
+    TimeoutError,
+)
 
 
 @func
@@ -68,7 +72,7 @@ def do_sleep(seconds: float) -> float:
 
 
 @func
-def nested_sleep(seconds: float, ignored: float=0.0) -> float:
+def nested_sleep(seconds: float, ignored: float = 0.0) -> float:
     return do_sleep(seconds)
 
 
@@ -318,9 +322,14 @@ def test_deactivation_failures_for_resource():
     assert stored.status.state == ResourceState.ACTIVE
 
 
-@pytest.mark.skipif(not RUN_SLOW_TESTS, reason="This test takes a long time to execute, and is disabled by default")
+@pytest.mark.skipif(
+    not RUN_SLOW_TESTS,
+    reason="This test takes a long time to execute, and is disabled by default",
+)
 def test_timeout():
-    result = timeout_pipeline(long_child=False, long_grandchild=False).resolve(SilentResolver())
+    result = timeout_pipeline(long_child=False, long_grandchild=False).resolve(
+        SilentResolver()
+    )
     assert result == 42.0
 
     future = timeout_pipeline(long_child=True, long_grandchild=False)

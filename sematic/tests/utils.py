@@ -2,8 +2,8 @@
 Module containing testing utility code.
 """
 # Standard Library
-from typing import Any
 import os
+from typing import Any
 
 
 def assert_logs_captured(caplog: Any, *messages: str) -> None:

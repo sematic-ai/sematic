@@ -68,3 +68,12 @@ sematic_py_lib(
         "//sematic/utils:exceptions",
     ],
 )
+
+sematic_py_lib(
+    name = "db",
+    srcs = ["db.py"],
+    pip_deps = [
+        "sqlalchemy",
+    ],
+    deps = [],
+)

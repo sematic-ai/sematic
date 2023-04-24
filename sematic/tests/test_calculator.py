@@ -109,11 +109,11 @@ def test_not_a_function():
 
 def test_inline_and_resource_reqs():
     with pytest.raises(
-        ValueError, match="Inline functions cannot have resource requirements"
+        ValueError, match="Only Standalone Functions can have resource requirements"
     ):
 
         @func(
-            inline=True,
+            standalone=False,
             resource_requirements=ResourceRequirements(
                 KubernetesResourceRequirements()
             ),
@@ -262,7 +262,7 @@ def test_convert_lists():
     result = _convert_lists([1, foo(), [2, bar()], 3, [4, [5, foo()]]])
 
     assert isinstance(result, Future)
-    assert result.props.inline is True
+    assert result.props.standalone is False
     assert len(result.kwargs) == 5
     assert (
         result.calculator.output_type
@@ -279,14 +279,16 @@ def test_convert_lists():
     assert isinstance(result.kwargs["v4"].kwargs["v1"].kwargs["v1"], Future)
 
     @func
-    def pipeline() -> List[
-        Union[
-            int,
-            str,
-            List[Union[int, str]],
-            List[Union[int, List[Union[int, str]]]],
+    def pipeline() -> (
+        List[
+            Union[
+                int,
+                str,
+                List[Union[int, str]],
+                List[Union[int, List[Union[int, str]]]],
+            ]
         ]
-    ]:
+    ):
         return [1, foo(), [2, bar()], 3, [4, [5, foo()]]]  # type: ignore
 
     assert pipeline().resolve(tracking=False) == [
@@ -303,7 +305,7 @@ def test_convert_tuples():
     expected_type = Tuple[int, List[int], Tuple[str, str], str]
     result = _convert_tuples(value, expected_type)
     assert isinstance(result, Future)
-    assert result.props.inline is True
+    assert result.props.standalone is False
 
     @func
     def pipeline() -> expected_type:
@@ -312,22 +314,22 @@ def test_convert_tuples():
     assert pipeline().resolve(tracking=False) == (42, [1, 42, 3], ("foo", "bar"), "foo")
 
 
-def test_inline_default():
+def test_standalone_default():
     @func
     def f():
         pass
 
-    assert f._inline is True
-    assert f().props.inline is True
+    assert f._standalone is False
+    assert f().props.standalone is False
 
 
-def test_inline():
-    @func(inline=False)
+def test_standalone():
+    @func(standalone=True)
     def f():
         pass
 
-    assert f._inline is False
-    assert f().props.inline is False
+    assert f._standalone is True
+    assert f().props.standalone is True
 
 
 def test_resource_requirements():
@@ -335,7 +337,7 @@ def test_resource_requirements():
         kubernetes=KubernetesResourceRequirements(node_selector={"a": "b"}, requests={})
     )
 
-    @func(resource_requirements=resource_requirements, inline=False)
+    @func(resource_requirements=resource_requirements, standalone=True)
     def f():
         pass
 

@@ -3,12 +3,13 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
+import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CopyButton from '@sematic/common/lib/src/component/CopyButton';
-import { useCallback } from 'react';
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
 import { useRunJobHistory } from 'src/hooks/podHistoryHooks';
 import { useRunPanelLoadingIndicator } from 'src/hooks/runDetailsHooks';
+import { useTextSelection } from 'src/hooks/textSelectionHooks';
 import PodEventHistory from 'src/pipelines/pod_lifecycle/PodEventHistory';
 
 const StyledCode = styled.code`
@@ -25,15 +26,13 @@ function PodLifecycleWithRunId(prop: { runId: string }) {
 
   useRunPanelLoadingIndicator(loading);
 
-  const preventPropagation = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
+  const elementRef = useTextSelection<HTMLDivElement>();
 
   if (!value) return null;
   if (value?.length === 0) return <Typography variant="body2">No pod history found.</Typography>;
 
   return <>
-    <Typography fontSize="small" color="GrayText" style={{marginBottom: '1em'}}>
+    <Typography fontSize="small" color="GrayText" style={{ marginBottom: '1em' }}>
       The information in this tab is provided for debugging purposes.
       The information it displays is periodically polled from Kubernetes,
       and some intermediate states may not be represented in the timelines.
@@ -42,13 +41,15 @@ function PodLifecycleWithRunId(prop: { runId: string }) {
       (job, index) =>
         <Accordion key={index} defaultExpanded={index === value.length - 1}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />} >
-            <Typography fontSize="small" color="GrayText" component="span">
-              {`Job ID: `}
-              <StyledCode>{job.name}</StyledCode>
-              <span onClick={preventPropagation}>
-                <CopyButton text={job.name} message="Copied Job ID" color={"grey"} />
-              </span>
-            </Typography>
+            <Box ref={elementRef} style={{ width: `100%` }}>
+              <Typography fontSize="small" color="GrayText" component="span">
+                {`Job ID: `}
+                <StyledCode>{job.name}</StyledCode>
+                <span>
+                  <CopyButton text={job.name} message="Copied Job ID" color={"grey"} />
+                </span>
+              </Typography>
+            </Box>
           </AccordionSummary>
           <AccordionDetails>
             <PodEventHistory historyRecords={job.status_history_serialization} key={index} />

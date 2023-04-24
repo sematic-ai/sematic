@@ -56,7 +56,7 @@ RERUN_FROM_HELP = (
     "to None."
 )
 MAX_PARALLELISM_HELP = (
-    "The maximum number of non-inlined runs that will be allowed to be in the "
+    "The maximum number of Standalone Function Runs that will be allowed to be in the "
     "`SCHEDULED` state at any one time. Must be a positive integer, or None for "
     "unlimited runs. Defaults to None."
 )
