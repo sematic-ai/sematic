@@ -325,7 +325,7 @@ def func(
         retried, and how many times. Defaults to `None`.
     timeout_minutes: Optional[int]
         Specifies the maximum amount of time that this function can take before
-        the final result is known. Must be an integer >=1.
+        the final result is known. Must be an integer >=1. Defaults to `None`.
 
     Returns
     -------
