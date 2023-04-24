@@ -15,7 +15,8 @@ const Left = styled.div`
     flex-direction: column;
 
     & > section {
-        flex-grow: 1;
+        flex-grow: 0;
+        flex-shrink: 0;
     }
 `;
 

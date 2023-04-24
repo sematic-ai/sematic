@@ -1,7 +1,6 @@
 import styled from '@emotion/styled';
 import Box from '@mui/material/Box';
 import { DateTimeLong, Duration } from 'src/component/DateTime';
-import Docstring from 'src/component/Docstring';
 import Headline from 'src/component/Headline';
 import ImportPath from 'src/component/ImportPath';
 import MoreVertButton from 'src/component/MoreVertButton';
@@ -41,7 +40,8 @@ const BoxContainer = styled(Box)`
     flex-direction: row;
     height: 35px;
     align-items: center;
-    margin-bottom: ${theme.spacing(3)};
+    padding-top: ${theme.spacing(1)};
+    margin-bottom: ${theme.spacing(4)};
 
     & .Info {
         margin-left: ${theme.spacing(2)};
@@ -61,7 +61,7 @@ const RunStateContainer = styled(Box)`
 `
 
 const ImportPathContainer = styled(Box)`
-    margin-bottom: ${theme.spacing(3)};
+    margin-bottom: ${theme.spacing(4)};
 `
 
 const StyledRunReferenceLink = styled(RunReferenceLink)`
@@ -92,7 +92,6 @@ const FunctionSection = () => {
         </ImportPathContainer>
         <StyledVertButton />
         <TagsList tags={['example', 'torch', 'mnist']} />
-        <Docstring docstring={"# Function header line \n                 Some of the function description goes here."} />
     </StyledSection>;
 }
 

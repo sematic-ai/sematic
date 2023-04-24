@@ -9,6 +9,7 @@ import { SimplePaletteColorOptions } from "@mui/material/styles";
 
 const StyledGridContainer = styled(Grid)`
     border-bottom: 1px solid ${() => (palette.p3border as SimplePaletteColorOptions).main};
+    flex-wrap: nowrap;
 `;
 
 interface HeaderMenuProps {
