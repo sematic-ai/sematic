@@ -2,23 +2,33 @@
 import logging
 import os
 from http import HTTPStatus
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Type
 
 # Third-party
 import flask
 
 # Sematic
-from sematic.abstract_plugin import SEMATIC_PLUGIN_AUTHOR, AbstractPlugin, PluginVersion
+from sematic.abstract_plugin import (
+    SEMATIC_PLUGIN_AUTHOR,
+    AbstractPlugin,
+    AbstractPluginSettingsVar,
+    PluginVersion,
+)
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import API_KEY_HEADER, authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.config.config import get_config
+from sematic.config.settings import get_plugin_setting
 from sematic.db.models.user import User
 from sematic.plugins.abstract_storage import AbstractStorage, StorageDestination
 
 logger = logging.getLogger(__name__)
 
 _PLUGIN_VERSION = (0, 1, 0)
+
+
+class LocalStorageSettingsVar(AbstractPluginSettingsVar):
+    LOCAL_STORAGE_PATH = "LOCAL_STORAGE_PATH"
 
 
 class LocalStorage(AbstractStorage, AbstractPlugin):
@@ -36,10 +46,13 @@ class LocalStorage(AbstractStorage, AbstractPlugin):
     def get_version() -> PluginVersion:
         return _PLUGIN_VERSION
 
+    @classmethod
+    def get_settings_vars(cls) -> Type[AbstractPluginSettingsVar]:
+        return LocalStorageSettingsVar
+
     def get_write_destination(
         self, namespace: str, key: str, user: Optional[User]
     ) -> StorageDestination:
-
         return StorageDestination(
             uri=f"sematic:///api/v1/storage/{namespace}/{key}/local",
             request_headers=_make_headers(user),
@@ -110,4 +123,6 @@ def download_endpoint(user: Optional[User], namespace: str, key: str) -> flask.R
 
 # For easier mocking
 def _get_data_dir() -> str:
-    return get_config().data_dir
+    return get_plugin_setting(
+        LocalStorage, LocalStorageSettingsVar.LOCAL_STORAGE_PATH, get_config().data_dir
+    )
