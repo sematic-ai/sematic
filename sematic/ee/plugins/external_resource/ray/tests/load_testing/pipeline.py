@@ -77,11 +77,13 @@ def collatz_with_ray(
     logger.info("Determining max Collatz length for numbers less than %s", n_tasks)
     with RayCluster(
         config=SimpleRayCluster(
-            n_nodes=n_workers, node_config=RayNodeConfig(cpu=1, memory_gb=2)
+            n_nodes=n_workers,
+            node_config=RayNodeConfig(cpu=1, memory_gb=2.25),
+            max_nodes=n_workers + 2,
         )
     ):
         refs = [
-            collatz_ray_task.remote(n, memory_growth_factor) for n in range(0, n_tasks)
+            collatz_ray_task.remote(7, memory_growth_factor) for n in range(0, n_tasks)
         ]
         results = wait_for_results(refs, range(0, n_tasks), max_wait_seconds)
     return CollatzResults(
