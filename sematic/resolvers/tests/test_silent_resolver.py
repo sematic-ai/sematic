@@ -13,7 +13,8 @@ from sematic.plugins.abstract_external_resource import ResourceState
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.resolvers.tests.fixtures import FakeExternalResource
 from sematic.retry_settings import RetrySettings
-from sematic.utils.exceptions import ExternalResourceError, ResolutionError
+from sematic.utils.exceptions import ExternalResourceError, ResolutionError, TimeoutError
+from sematic.tests.utils import RUN_SLOW_TESTS
 
 
 @func
@@ -58,6 +59,23 @@ def custom_resource_func() -> int:
     with FakeExternalResource(some_field=101) as r2:
         value = value + r2.use_resource()
     return value
+
+
+@func
+def do_sleep(seconds: float) -> float:
+    time.sleep(seconds)
+    return 42
+
+
+@func
+def nested_sleep(seconds: float, ignored: float=0.0) -> float:
+    return do_sleep(seconds)
+
+
+@func
+def timeout_pipeline(long_child: bool, long_grandchild: bool) -> int:
+    partial = do_sleep(120.0 if long_child else 0).set(timeout_minutes=1)
+    return nested_sleep(120.0 if long_grandchild else 0, partial).set(timeout_minutes=1)
 
 
 def test_silent_resolver():
@@ -298,3 +316,25 @@ def test_deactivation_failures_for_resource():
     stored = resources[0]
 
     assert stored.status.state == ResourceState.ACTIVE
+
+
+@pytest.mark.skipif(not RUN_SLOW_TESTS, reason="This test takes a long time to execute, and is disabled by default")
+def test_timeout():
+    result = timeout_pipeline(long_child=False, long_grandchild=False).resolve(SilentResolver())
+    assert result == 42.0
+
+    future = timeout_pipeline(long_child=True, long_grandchild=False)
+    error_text = None
+    try:
+        future.resolve(SilentResolver())
+    except Exception as e:
+        error_text = str(e)
+    assert TimeoutError.__name__ in error_text
+
+    future = timeout_pipeline(long_child=False, long_grandchild=True)
+    error_text = None
+    try:
+        future.resolve(SilentResolver())
+    except Exception as e:
+        error_text = str(e)
+    assert TimeoutError.__name__ in error_text

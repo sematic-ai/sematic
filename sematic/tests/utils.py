@@ -3,6 +3,7 @@ Module containing testing utility code.
 """
 # Standard Library
 from typing import Any
+import os
 
 
 def assert_logs_captured(caplog: Any, *messages: str) -> None:
@@ -44,3 +45,6 @@ def assert_logs_captured(caplog: Any, *messages: str) -> None:
             raise AssertionError(
                 f"Message {message} not found in captured log lines: {log_lines}"
             )
+
+
+RUN_SLOW_TESTS = "RUN_SLOW_TESTS" in os.environ
