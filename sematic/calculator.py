@@ -331,7 +331,7 @@ def func(
 
     if not standalone and resource_requirements is not None:
         raise ValueError(
-            "Inline Functions cannot have resource requirements "
+            "Only Standalone Functions can have resource requirements "
             "Try using @sematic.func(standalone=True, ...). "
             "See https://go.sematic.dev/t3mynx"  # noqa: E501
         )
