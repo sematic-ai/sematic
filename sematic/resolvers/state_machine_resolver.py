@@ -330,12 +330,12 @@ class StateMachineResolver(Resolver, abc.ABC):
 
         self._future_will_schedule(future)
 
-        if future.props.inline:
-            logger.info("Running inline %s %s", future.id, future.calculator)
-            self._run_inline(future)
-        else:
+        if future.props.standalone:
             logger.info("Scheduling %s %s", future.id, future.calculator)
             self._schedule_future(future)
+        else:
+            logger.info("Running inline %s %s", future.id, future.calculator)
+            self._run_inline(future)
 
     @typing.final
     def _resolve_nested_future(self, future: AbstractFuture) -> None:

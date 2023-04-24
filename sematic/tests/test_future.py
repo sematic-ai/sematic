@@ -33,15 +33,15 @@ def test_set_validate_name():
         future.set(name=123)
 
 
-def test_set_validate_inline():
+def test_set_validate_standalone():
     future = foo()
 
-    assert future.props.inline is True
-    future.set(inline=False)
-    assert future.props.inline is False
+    assert future.props.standalone is False
+    future.set(standalone=True)
+    assert future.props.standalone is True
 
-    with pytest.raises(ValueError, match="Invalid `inline`"):
-        future.set(inline=123)
+    with pytest.raises(ValueError, match="Invalid `standalone`"):
+        future.set(standalone=123)
 
 
 def test_set_validate_cache():

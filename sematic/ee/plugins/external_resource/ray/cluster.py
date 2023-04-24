@@ -50,7 +50,7 @@ class RayCluster(AbstractExternalResource):
     is intended to be used via Sematic's "with" api:
 
     ```python
-    @sematic.func(inline=False)
+    @sematic.func(standalone=True)
     def use_ray() -> int:
         with RayCluster(config=CLUSTER_CONFIG):
             return ray.get(some_ray_task.remote())[0]
