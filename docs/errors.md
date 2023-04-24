@@ -1,3 +1,5 @@
+# Errors
+
 ## Only Standalone Functions can have resource requirements
 
 ```
