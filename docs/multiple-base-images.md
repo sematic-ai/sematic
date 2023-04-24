@@ -25,9 +25,10 @@ them:
   execute. Sematic aims to make this loop as tight as possible, and having to build multiple
   images every time (or remember which ones you need to rebuild when) would significantly
   damage this workflow.
-- If you have a step which is really lightweight, there's a better option than having
-  a small new container: _no_ new container. This is a great case for inline functions.
-  See the [CloudResolver docs](cloud-resolver.md#when-to-use-inline) for more.
+- If you have a step which is really lightweight, there's a better option than
+  having a small new container: _no_ new container. This is a great case for
+  [Inline Functions](./glossary.md#standalone-inline-function). See the
+  [CloudResolver docs](cloud-resolver.md#when-to-use-inline) for more.
 
 ### Multiple images if you must
 

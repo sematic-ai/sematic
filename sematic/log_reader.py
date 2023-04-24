@@ -447,7 +447,7 @@ def _load_inline_logs(
             log_info_message=(
                 "UI logs are only available for runs that "
                 "(a) are executed using the CloudResolver and "
-                "(b) are using the resolver in non-detached mode OR have inline=False."
+                "(b) are using the resolver in non-detached mode OR have standalone=True."
             ),
         )
 

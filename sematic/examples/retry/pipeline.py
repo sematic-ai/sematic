@@ -14,9 +14,7 @@ class SomeException(Exception):
     pass
 
 
-@sematic.func(
-    inline=True, retry=sematic.RetrySettings(exceptions=(SomeException,), retries=5)
-)
+@sematic.func(retry=sematic.RetrySettings(exceptions=(SomeException,), retries=5))
 def raise_exception() -> float:
     """
     A toy function to illustrate the retry mechanism
