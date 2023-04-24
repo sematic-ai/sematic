@@ -11,7 +11,8 @@ from sematic.resolvers.silent_resolver import SilentResolver
 
 _MUTABLE_FIELDS = {
     "name",
-    "standalone" "cache",
+    "standalone",
+    "cache",
     "resource_requirements",
     "tags",
     "timeout_minutes",
