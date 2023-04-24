@@ -109,7 +109,7 @@ def test_not_a_function():
 
 def test_inline_and_resource_reqs():
     with pytest.raises(
-        ValueError, match="Inline Functions cannot have resource requirements"
+        ValueError, match="Only Standalone Functions can have resource requirements"
     ):
 
         @func(
