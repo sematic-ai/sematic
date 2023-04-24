@@ -15,7 +15,7 @@ _MUTABLE_FIELDS = {
     "cache",
     "resource_requirements",
     "tags",
-    "timeout_minutes",
+    "timeout_mins",
 }
 
 INLINE_DEPRECATION_MESSAGE = (

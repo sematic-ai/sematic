@@ -6,7 +6,7 @@ import argparse
 import logging
 import os
 import sys
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional
 
 # Third-party
 import debugpy
@@ -186,13 +186,6 @@ def _required_by(*args: str) -> Dict[str, bool]:
     return {"required": any([arg in sys.argv for arg in args])}
 
 
-def _integer_pair(as_str: str) -> Tuple[int, int]:
-    pair = tuple(int(i) for i in as_str.split(","))
-    if len(pair) != 2:
-        raise ValueError(f"Expected 2 integers, got: {as_str}")
-    return pair
-
-
 def _parse_args() -> argparse.Namespace:
     """Parses the command line arguments."""
     parser = argparse.ArgumentParser(
@@ -276,14 +269,16 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--timeout",
-        type=_integer_pair,
+        nargs=2,
+        type=int,
         default=None,
         dest="timeout_settings",
         help=TIMEOUT_HELP,
     )
     parser.add_argument(
         "--nested-timeout",
-        type=_integer_pair,
+        nargs=2,
+        type=int,
         default=None,
         dest="nested_timeout_settings",
         help=NESTED_TIMEOUT_HELP,

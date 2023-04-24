@@ -78,8 +78,8 @@ def nested_sleep(seconds: float, ignored: float = 0.0) -> float:
 
 @func
 def timeout_pipeline(long_child: bool, long_grandchild: bool) -> int:
-    partial = do_sleep(120.0 if long_child else 0).set(timeout_minutes=1)
-    return nested_sleep(120.0 if long_grandchild else 0, partial).set(timeout_minutes=1)
+    partial = do_sleep(120.0 if long_child else 0).set(timeout_mins=1)
+    return nested_sleep(120.0 if long_grandchild else 0, partial).set(timeout_mins=1)
 
 
 def test_silent_resolver():
@@ -341,6 +341,14 @@ def test_timeout():
     assert TimeoutError.__name__ in error_text
 
     future = timeout_pipeline(long_child=False, long_grandchild=True)
+    error_text = None
+    try:
+        future.resolve(SilentResolver())
+    except Exception as e:
+        error_text = str(e)
+    assert TimeoutError.__name__ in error_text
+
+    future = do_sleep(120).set(timeout_mins=1)
     error_text = None
     try:
         future.resolve(SilentResolver())

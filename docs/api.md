@@ -41,10 +41,12 @@ in the Sematic UI.
     Specifies in case of which Exceptions the function's execution should
     be retried, and how many times. Defaults to `None`.
 
-- `timeout_minutes`: Optional[int]
+- `timeout_mins`: Optional[int]
 
     Specifies the maximum amount of time that this function can take
-    before the final result is known. Must be an integer >=1.
+    before the final result is known. Must be an integer >=1. Note that
+    this time includes any time it takes to schedule the Function to
+    execute and begin executing the code.
 
 #### Returns
 

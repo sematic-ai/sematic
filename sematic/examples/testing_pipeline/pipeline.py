@@ -543,14 +543,14 @@ def testing_pipeline(
     if timeout_settings and timeout_settings[0] > 0:
         futures.append(
             do_sleep(initial_future, timeout_settings[0] * 60).set(
-                name="timeout", timeout_minutes=timeout_settings[1]
+                name="timeout", timeout_mins=timeout_settings[1]
             )
         )
 
     if nested_timeout_settings and nested_timeout_settings[0] > 0:
         futures.append(
             do_nested_sleep(initial_future, nested_timeout_settings[0] * 60).set(
-                name="nested_timeout", timeout_minutes=nested_timeout_settings[1]
+                name="nested_timeout", timeout_mins=nested_timeout_settings[1]
             )
         )
 

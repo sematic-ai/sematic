@@ -45,3 +45,7 @@ def test_bad_arg_timeout():
     with pytest.raises(ValueError):
         with timeout(0):
             do_lengthy(0.2)
+
+    with pytest.raises(ValueError):
+        with timeout(-1):
+            do_lengthy(0.2)
