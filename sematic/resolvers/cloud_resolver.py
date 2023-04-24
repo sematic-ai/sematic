@@ -46,41 +46,43 @@ class CloudResolver(LocalResolver):
     detach: bool
         Defaults to `True`.
 
-        When `True`, the driver job will run on the remote cluster. This is the so
-        called `fire-and-forget` mode. The shell prompt will return as soon as
-        the driver job as been submitted.
+        When `True`, the driver job will run on the remote cluster. This is the
+        so called `fire-and-forget` mode. The shell prompt will return as soon
+        as the driver job as been submitted.
 
         When `False`, the driver job runs on the local machine. The shell prompt
         will return when the entire pipeline has completed.
     cache_namespace: CacheNamespace
-        A string or a `Callable` which takes a root `Future` and returns a string, which
-        will be used as the cache key namespace in which the executed funcs' outputs will
-        be cached, as long as they also have the `cache` flag activated. Defaults to
-        `None`.
+        A string or a `Callable` which takes a root `Future` and returns a
+        string, which will be used as the cache key namespace in which the
+        executed funcs' outputs will be cached, as long as they also have the
+        `cache` flag activated. Defaults to `None`.
 
-        The `Callable` option takes as input the `Resolution` root `Future`. All the other
-        required variables must be enclosed in the `Callables`' context. The `Callable`
-        must have a small memory footprint and must return immediately!
+        The `Callable` option takes as input the `Resolution` root `Future`. All
+        the other required variables must be enclosed in the `Callables`'
+        context. The `Callable` must have a small memory footprint and must
+        return immediately!
     max_parallelism: Optional[int]
-        The maximum number of non-inlined runs that this resolver will allow to be in the
-        `SCHEDULED` state at any one time. Must be a positive integer, or `None` for
-        unlimited runs. Defaults to `None`.
-        This is intended as a simple mechanism to limit the amount of computing resources
-        consumed by one pipeline execution for pipelines with a high degree of
-        parallelism. Note that if other resolvers are active, runs from them will not be
-        considered in this parallelism limit. Note also that runs that are in the RAN
-        state do not contribute to the limit, since they do not consume computing
-        resources.
+        The maximum number of Standalone Function Runs that this resolver will
+        allow to be in the `SCHEDULED` state at any one time. Must be a positive
+        integer, or `None` for unlimited runs. Defaults to `None`. This is
+        intended as a simple mechanism to limit the amount of computing
+        resources consumed by one pipeline execution for pipelines with a high
+        degree of parallelism. Note that if other resolvers are active, runs
+        from them will not be considered in this parallelism limit. Note also
+        that runs that are in the RAN state do not contribute to the limit,
+        since they do not consume computing resources.
     rerun_from: Optional[str]
-        When `None`, the pipeline is resolved from scratch, as normally. When not `None`,
-        must be the id of a `Run` from a previous resolution. Instead of running from
-        scratch, parts of that previous resolution is cloned up until the specified `Run`,
-        and only the specified `Run`, nested and downstream `Future`s are executed. This
-        is meant to be used for retries or for hotfixes, without needing to re-run the
-        entire pipeline again.
+        When `None`, the pipeline is resolved from scratch, as normally. When
+        not `None`, must be the id of a `Run` from a previous resolution.
+        Instead of running from scratch, parts of that previous resolution is
+        cloned up until the specified `Run`, and only the specified `Run`,
+        nested and downstream `Future`s are executed. This is meant to be used
+        for retries or for hotfixes, without needing to re-run the entire
+        pipeline again.
     _is_running_remotely: bool
-        For Sematic internal usage. End users should always leave this at the default
-        value of `False`.
+        For Sematic internal usage. End users should always leave this at the
+        default value of `False`.
     """
 
     # Time between external resource updates *during activation and deactivation*
@@ -169,7 +171,7 @@ class CloudResolver(LocalResolver):
         if self._container_image_uris is None:
             return None
 
-        if future.props.inline:
+        if not future.props.standalone:
             return self._get_resolution_container_image()
 
         base_image_tag = future.props.base_image_tag or DEFAULT_BASE_IMAGE_TAG
@@ -222,7 +224,7 @@ class CloudResolver(LocalResolver):
         # For the cloud resolver, the server will update the relevant
         # run fields when it gets scheduled by the server.
         # Inline futures still need the updates.
-        if not future.props.inline:
+        if future.props.standalone:
             return
 
         super()._update_run_and_future_pre_scheduling(run, future)
@@ -363,14 +365,14 @@ class CloudResolver(LocalResolver):
         return [
             future.id
             for future in self._futures
-            if future.props.inline and future.state == FutureState.SCHEDULED
+            if not future.props.standalone and future.state == FutureState.SCHEDULED
         ]
 
     def _wait_for_any_remote_jobs(self) -> List[str]:
         scheduled_futures_by_id: Dict[str, AbstractFuture] = {
             future.id: future
             for future in self._futures
-            if not future.props.inline and future.state == FutureState.SCHEDULED
+            if future.props.standalone and future.state == FutureState.SCHEDULED
         }
 
         if not scheduled_futures_by_id:
@@ -422,7 +424,7 @@ class CloudResolver(LocalResolver):
         Inline futures can always be scheduled. External futures can only be scheduled
         if the maximum parallelism degree has not been exceeded.
         """
-        if future.props.inline:
+        if not future.props.standalone:
             return True
 
         if not self._max_parallelism:

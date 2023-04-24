@@ -145,7 +145,26 @@ Three runs will be persisted:
 
 See [Sematic Functions](./functions.md).
 
-## Upstream, downstream function
+## Standalone, Inline Function
+
+When executed with `CloudResolver`, by default, all Sematic Functions run
+"inline". That means they execute in the same Kubernetes container as the
+`CloudResolver` which orchestrates the pipeline.
+
+Standalone Functions run in their own Kubernetes container, job, and pod. They
+can therefore request custom resource requirements:
+
+```python
+@sematic.func(standalone=True, resource_requirements=GPU_RESOURCE_REQS)
+def foo():
+    ...
+```
+
+See [Customize resource
+requirements](./cloud-resolver.md#customize-resource-requirements) for more
+info.
+
+## Upstream, downstream Function
 
 In the following example:
 

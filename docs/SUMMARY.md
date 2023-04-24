@@ -30,6 +30,7 @@
 ## Public API reference
 
 * [API reference](api.md)
+* [Errors](errors.md)
 
 ## Type support
 
