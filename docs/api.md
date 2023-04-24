@@ -46,7 +46,7 @@ in the Sematic UI.
     Specifies the maximum amount of time that this function can take
     before the final result is known. Must be an integer >=1. Note that
     this time includes any time it takes to schedule the Function to
-    execute and begin executing the code.
+    execute and begin executing the code. Defaults to `None`.
 
 #### Returns
 

@@ -88,14 +88,14 @@ RAISE_RETRY_HELP = (
 TIMEOUT_HELP = (
     "Two integers separated by a comma. If both ints are greater than 0, includes a "
     "sleep function whose duration is determined by the first argument and whose "
-    "timeout limit is determined by the second argument. Units for both are in minutes."
+    "timeout limit is determined by the second argument. Units for both are in minutes. Defaults to `None`."
 )
 NESTED_TIMEOUT_HELP = (
     "Two integers separated by a comma. If both ints are greater than 0, includes a "
     "sleep function whose duration is determined by the first argument and whose "
     "timeout limit is determined by the second argument. Units for both are in minutes. "
     "Contrary to --timeout, this sets the timeout on an outer function and waits in an "
-    "inner function."
+    "inner function. Defaults to `None`."
 )
 OOM_HELP = (
     "Whether to include a function that causes an Out of Memory error. "
