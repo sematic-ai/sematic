@@ -121,6 +121,14 @@ _MANIFEST_TEMPLATE: Dict[str, Any] = {
         # required when autoscaling is active and we don't want to add
         # it unless it's needed.
         "enableInTreeAutoscaling": False,
+        "autoscalerOptions": {
+            "env": [
+                {
+                    "name": "RAY_LOG_TO_STDERR",
+                    "value": "1",
+                },
+            ],
+        },
         "headGroupSpec": {
             "serviceType": "ClusterIP",
             "rayStartParams": {"dashboard-host": "0.0.0.0", "block": "true"},
@@ -148,6 +156,12 @@ _MANIFEST_TEMPLATE: Dict[str, Any] = {
                                 "limits": _NeedsOverride,
                                 "requests": _NeedsOverride,
                             },
+                            "env": [
+                                {
+                                    "name": "RAY_LOG_TO_STDERR",
+                                    "value": "1",
+                                },
+                            ],
                         }
                     ],
                     "tolerations": _NeedsOverride,
@@ -194,7 +208,9 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         manifest = deepcopy(cls._manifest_template)
         manifest["metadata"]["name"] = cluster_name
         manifest["spec"]["rayVersion"] = cluster_config.ray_version
-        manifest["spec"]["enableInTreeAutoscaling"] = _requires_autoscale(cluster_config)
+        manifest["spec"]["enableInTreeAutoscaling"] = _requires_autoscale(
+            cluster_config
+        )
 
         head_group_spec = cls._make_head_group_spec(
             image_uri, cluster_config.head_node, manifest["spec"]["headGroupSpec"]
@@ -377,5 +393,8 @@ def _get_service_account() -> str:
         ServerSettingsVar.SEMATIC_WORKER_KUBERNETES_SA, DEFAULT_WORKER_SERVICE_ACCOUNT
     )
 
+
 def _requires_autoscale(cluster_config: RayClusterConfig) -> bool:
-    return any(group.max_workers > group.min_workers for group in cluster_config.scaling_groups)
+    return any(
+        group.max_workers > group.min_workers for group in cluster_config.scaling_groups
+    )

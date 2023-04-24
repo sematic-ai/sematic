@@ -85,6 +85,7 @@ _EXPECTED_HEAD_ONLY_MANIFEST = {
     "spec": {
         "rayVersion": _TEST_RAY_VERSION,
         "enableInTreeAutoscaling": False,
+        "autoscalerOptions": {"env": [{"name": "RAY_LOG_TO_STDERR", "value": "1"}]},
         "headGroupSpec": {
             "serviceType": "ClusterIP",
             "rayStartParams": {"dashboard-host": "0.0.0.0", "block": "true"},
@@ -112,6 +113,7 @@ _EXPECTED_HEAD_ONLY_MANIFEST = {
                                 "limits": {"cpu": "2000m", "memory": "4096Mi"},
                                 "requests": {"cpu": "2000m", "memory": "4096Mi"},
                             },
+                            "env": [{"name": "RAY_LOG_TO_STDERR", "value": "1"}],
                         }
                     ],
                     "tolerations": [],
