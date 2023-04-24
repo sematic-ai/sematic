@@ -7,9 +7,19 @@ from urllib.parse import urlparse
 import flask.testing
 
 # Sematic
-from sematic.api.tests.fixtures import mock_auth, test_client  # noqa: F401
+from sematic.api.tests.fixtures import (  # noqa: F401
+    mock_auth,
+    mock_plugin_settings,
+    test_client,
+)
+from sematic.config.config import get_config
+from sematic.config.tests.fixtures import empty_settings_file  # noqa: F401
 from sematic.db.tests.fixtures import test_db  # noqa: F401
-from sematic.plugins.storage.local_storage import LocalStorage
+from sematic.plugins.storage.local_storage import (
+    LocalStorage,
+    LocalStorageSettingsVar,
+    _get_data_dir,
+)
 
 
 def test_upload_download(
@@ -41,3 +51,14 @@ def test_upload_download(
             response = test_client.get(parsed_url.path)
 
             assert response.data == value
+
+
+def test_settings():
+    with mock_plugin_settings(
+        LocalStorage, {LocalStorageSettingsVar.LOCAL_STORAGE_PATH: "/foo/bar"}
+    ):
+        assert _get_data_dir() == "/foo/bar"
+
+
+def test_default_settings(empty_settings_file):  # noqa: F811
+    assert _get_data_dir() == get_config().data_dir

@@ -13,8 +13,11 @@ pytest_test(
     name = "test_local_storage",
     srcs = ["test_local_storage.py"],
     pip_deps = ["flask"],
+    # buildifier: leave-alone
     deps = [
         "//sematic/api/tests:fixtures",
+        "//sematic/config:config",
+        "//sematic/config/tests:fixtures",
         "//sematic/db/tests:fixtures",
         "//sematic/plugins/storage:local_storage",
     ],
