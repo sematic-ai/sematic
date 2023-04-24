@@ -84,6 +84,7 @@ _EXPECTED_HEAD_ONLY_MANIFEST = {
     },
     "spec": {
         "rayVersion": _TEST_RAY_VERSION,
+        "enableInTreeAutoscaling": False,
         "headGroupSpec": {
             "serviceType": "ClusterIP",
             "rayStartParams": {"dashboard-host": "0.0.0.0", "block": "true"},

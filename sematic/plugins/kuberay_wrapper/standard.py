@@ -117,6 +117,10 @@ _MANIFEST_TEMPLATE: Dict[str, Any] = {
     },
     "spec": {
         "rayVersion": _NeedsOverride,
+        # leave autoscaling off unless required, as there is a sidecar
+        # required when autoscaling is active and we don't want to add
+        # it unless it's needed.
+        "enableInTreeAutoscaling": False,
         "headGroupSpec": {
             "serviceType": "ClusterIP",
             "rayStartParams": {"dashboard-host": "0.0.0.0", "block": "true"},
@@ -190,6 +194,7 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         manifest = deepcopy(cls._manifest_template)
         manifest["metadata"]["name"] = cluster_name
         manifest["spec"]["rayVersion"] = cluster_config.ray_version
+        manifest["spec"]["enableInTreeAutoscaling"] = _requires_autoscale(cluster_config)
 
         head_group_spec = cls._make_head_group_spec(
             image_uri, cluster_config.head_node, manifest["spec"]["headGroupSpec"]
@@ -371,3 +376,6 @@ def _get_service_account() -> str:
     return get_server_setting(
         ServerSettingsVar.SEMATIC_WORKER_KUBERNETES_SA, DEFAULT_WORKER_SERVICE_ACCOUNT
     )
+
+def _requires_autoscale(cluster_config: RayClusterConfig) -> bool:
+    return any(group.max_workers > group.min_workers for group in cluster_config.scaling_groups)
