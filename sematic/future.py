@@ -8,7 +8,14 @@ from sematic.resolvers.local_resolver import LocalResolver
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.resolvers.silent_resolver import SilentResolver
 
-_MUTABLE_FIELDS = {"name", "inline", "cache", "resource_requirements", "tags"}
+_MUTABLE_FIELDS = {
+    "name",
+    "inline",
+    "cache",
+    "resource_requirements",
+    "tags",
+    "timeout_minutes",
+}
 
 
 class Future(AbstractFuture):

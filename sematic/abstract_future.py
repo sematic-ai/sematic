@@ -5,6 +5,7 @@ between `Future` and `Resolver`.
 # Standard Library
 import abc
 import enum
+import time
 import uuid
 from dataclasses import dataclass
 from typing import Any, Dict, FrozenSet, List, Optional, Tuple, Union
@@ -149,11 +150,13 @@ class FutureProperties:
     inline: bool
     name: str
     tags: List[str]
+    state: FutureState
     cache: bool = False
     resource_requirements: Optional[ResourceRequirements] = None
     retry_settings: Optional[RetrySettings] = None
     base_image_tag: Optional[str] = None
     timeout_minutes: Optional[int] = None
+    scheduled_epoch_time: Optional[float] = None
 
     def __post_init__(self):
         if self.timeout_minutes is None:
@@ -167,6 +170,24 @@ class FutureProperties:
             raise ValueError(
                 f"Timeouts must be >=1 minutes, got: {self.timeout_minutes}"
             )
+
+    @property
+    def remaining_timeout_seconds(self) -> Optional[float]:
+        """Number of seconds until timeout, or None if undefined
+
+        Seconds until timeout is defined as the difference between
+        the total allowed time and the time the future has spent
+        in the SCHEDULED or RAN states so far. Can be negative if
+        timeout is expired.
+        """
+        if self.scheduled_epoch_time is None:
+            return None
+        if self.timeout_minutes is None:
+            return None
+        if self.state.is_terminal():
+            return None
+        time_so_far = time.time() - self.scheduled_epoch_time
+        return self.timeout_minutes * 60 - time_so_far
 
 
 class AbstractFuture(abc.ABC):
@@ -205,6 +226,9 @@ class AbstractFuture(abc.ABC):
     retry_settings: Optional[RetrySettings]
         Specifies in case of which Exceptions the function's execution should be retried,
         and how many times. Defaults to `None`.
+    timeout_minutes:
+        Specified how many minutes are allowed to be spent between the future entering the
+        SCHEDULED state and entering some terminal state.
     """
 
     def __init__(
@@ -229,13 +253,13 @@ class AbstractFuture(abc.ABC):
         # It will be set only once all input values are resolved
         self.resolved_kwargs: Dict[str, Any] = {}
         self.value: Any = None
-        self.state: FutureState = FutureState.CREATED
         self.parent_future: Optional["AbstractFuture"] = None
         self.nested_future: Optional["AbstractFuture"] = None
 
         self._props = FutureProperties(
             inline=inline,
             cache=cache,
+            state=FutureState.CREATED,
             resource_requirements=resource_requirements,
             retry_settings=retry_settings,
             name=calculator.__name__,
@@ -253,6 +277,19 @@ class AbstractFuture(abc.ABC):
         TODO: Migrate all future properties to FutureProperties
         """
         return self._props
+
+    @property
+    def state(self) -> FutureState:
+        return self._props.state
+
+    @state.setter
+    def state(self, state: FutureState) -> None:
+        self._props.state = state
+        if state is FutureState.SCHEDULED and self.props.scheduled_epoch_time is None:
+            self._props.scheduled_epoch_time = time.time()
+        if state.is_terminal() or state is FutureState.RETRYING:
+            # ensures that timeout resets for retries.
+            self._props.scheduled_epoch_time = None
 
     def __repr__(self):
         parent_id = self.parent_future.id if self.parent_future is not None else None
@@ -272,3 +309,36 @@ class AbstractFuture(abc.ABC):
 
 def make_future_id() -> str:
     return uuid.uuid4().hex
+
+
+def get_minimum_call_chain_timeout_seconds(
+    future: AbstractFuture,
+) -> Tuple[Optional[float], Optional[AbstractFuture]]:
+    """Given a future, determine the most restrictive timeout up its call chain.
+
+    Parameters
+    ----------
+    future:
+        The future to start traversal at.
+
+    Returns
+    -------
+    If no futures up the call chain for this future have active timeouts,
+    returns (None, None). Otherwise returns a tuple where the first element
+    is the time until the most restrictive timeout expires and
+    the second element is the future that had specified that timeout.
+    """
+    call_chain = [future]
+    while call_chain[-1].parent_future is not None:
+        call_chain.append(call_chain[-1].parent_future)
+
+    remaining_time_future_pairs = [
+        (future.props.remaining_timeout_seconds, future)
+        for future in call_chain
+        if future.props.remaining_timeout_seconds is not None
+    ]
+
+    if len(remaining_time_future_pairs) == 0:
+        return None, None
+
+    return min(remaining_time_future_pairs)

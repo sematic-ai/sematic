@@ -6,7 +6,7 @@ import argparse
 import logging
 import os
 import sys
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 # Third-party
 import debugpy
@@ -84,6 +84,18 @@ RAISE_RETRY_HELP = (
     "Includes a function which raises a ValueError with the given probability, "
     "with a total of 10 retries. If specified without a value, defaults to 0.5, "
     "meaning a cumulative probability of complete failure of 0.5 ** 11 = 0.00048828125."
+)
+TIMEOUT_HELP = (
+    "Two integers separated by a comma. If both ints are greater than 0, includes a "
+    "sleep function whose duration is determined by the first argument and whose "
+    "timeout limit is determined by the second argument. Units for both are in minutes."
+)
+NESTED_TIMEOUT_HELP = (
+    "Two integers separated by a comma. If both ints are greater than 0, includes a "
+    "sleep function whose duration is determined by the first argument and whose "
+    "timeout limit is determined by the second argument. Units for both are in minutes. "
+    "Contrary to --timeout, this sets the timeout on an outer function and waits in an "
+    "inner function."
 )
 OOM_HELP = (
     "Whether to include a function that causes an Out of Memory error. "
@@ -174,6 +186,13 @@ def _required_by(*args: str) -> Dict[str, bool]:
     return {"required": any([arg in sys.argv for arg in args])}
 
 
+def _integer_pair(as_str: str) -> Tuple[int, int]:
+    pair = tuple(int(i) for i in as_str.split(","))
+    if len(pair) != 2:
+        raise ValueError(f"Expected 2 integers, got: {as_str}")
+    return pair
+
+
 def _parse_args() -> argparse.Namespace:
     """Parses the command line arguments."""
     parser = argparse.ArgumentParser(
@@ -254,6 +273,20 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         dest="raise_retry_probability",
         help=RAISE_RETRY_HELP,
+    )
+    parser.add_argument(
+        "--timeout",
+        type=_integer_pair,
+        default=None,
+        dest="timeout_settings",
+        help=TIMEOUT_HELP,
+    )
+    parser.add_argument(
+        "--nested-timeout",
+        type=_integer_pair,
+        default=None,
+        dest="nested_timeout_settings",
+        help=NESTED_TIMEOUT_HELP,
     )
     parser.add_argument("--oom", action="store_true", default=False, help=OOM_HELP)
     parser.add_argument(
