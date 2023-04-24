@@ -245,7 +245,7 @@ class StateMachineResolver(Resolver, abc.ABC):
             (int(future.props.remaining_timeout_seconds), future)  # type: ignore
             for future in self._futures
             if not future.state.is_terminal()
-            and future.props.timeout_minutes is not None
+            and future.props.remaining_timeout_seconds is not None
         ]
         if len(remaining_timeout_future_pairs) == 0:
             return None, None
