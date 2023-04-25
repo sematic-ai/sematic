@@ -40,6 +40,11 @@ class RayNodeConfig:
             raise ValueError("memory_gb field must be a float or int")
         if not isinstance(self.gpu_count, int):
             raise ValueError("gpu_count field must be an int")
+        if self.memory_gb < 2.0:
+            raise ValueError(
+                f"Ray workers/head must have at least "
+                f"2GB of memory. Got : {self.memory_gb}"
+            )
 
 
 @dataclass(frozen=True)
@@ -87,6 +92,36 @@ def _get_ray_version() -> str:
 
 
 @dataclass(frozen=True)
+class AutoscalerConfig:
+    """Configuration for the autoscaler.
+
+    Note that the autoscaler will execute in the same pod with the head node,
+    if the autoscaler is enabled.
+
+    Attributes
+    ----------
+    cpu:
+        Number of CPUs for each node (supports fractional CPUs).
+    memory_gb:
+        Gigabytes of memory for each node (supports fractional values).
+    """
+
+    cpu: float
+    memory_gb: float
+
+    def __post_init__(self):
+        if not isinstance(self.cpu, (int, float)):
+            raise ValueError("cpu field must be a float or int")
+        if not isinstance(self.memory_gb, (int, float)):
+            raise ValueError("memory_gb field must be a float or int")
+        if self.memory_gb < 1.0:
+            raise ValueError(
+                f"The autoscaler requires at least 1GB of "
+                f"memory. Got: {self.memory_gb} GB"
+            )
+
+
+@dataclass(frozen=True)
 class RayClusterConfig:
     """Description of a Ray Cluster
 
@@ -106,13 +141,30 @@ class RayClusterConfig:
     head_node: RayNodeConfig
     scaling_groups: List[ScalingGroup] = field(default_factory=list)
     ray_version: str = field(default_factory=_get_ray_version)
+    autoscaler_config: Optional[AutoscalerConfig] = None
+
+    def __post_init__(self) -> None:
+        if self.requires_autoscale() and self.autoscaler_config is None:
+            raise ValueError(
+                "Your RayClusterConfig would require autoscaling, but no "
+                "AutoScalerConfig is provided. Note that the autoscaler "
+                "will execute in the same Kubernetes pod as the Ray head, "
+                "so you must have a Kubernetes node available which can "
+                "accomodate the resources for the head PLUS the autoscaler."
+            )
+
+    def requires_autoscale(self) -> bool:
+        return any(
+            group.max_workers > group.min_workers for group in self.scaling_groups
+        )
 
 
 def SimpleRayCluster(
     n_nodes: int,
     node_config: RayNodeConfig,
-    max_nodes: Optional[int],
+    max_nodes: Optional[int] = None,
     ray_version: Optional[str] = None,
+    autoscaler_config: Optional[AutoscalerConfig] = None,
 ) -> RayClusterConfig:
     """Configuration for a RayCluster with a fixed number of identical compute nodes
 
@@ -127,6 +179,8 @@ def SimpleRayCluster(
     ray_version:
         The version of Ray used by the cluster. Will be populated automatically
         if Ray is installed. Otherwise it must be explicitly configured.
+    autoscaler_config:
+        A configuration for the autoscaler, if the cluster would require autoscaling.
     """
     if ray_version is None:
         ray_version = _get_ray_version()
@@ -151,6 +205,7 @@ def SimpleRayCluster(
         head_node=node_config,
         scaling_groups=scaling_groups,
         ray_version=ray_version,
+        autoscaler_config=autoscaler_config,
     )
 
 
