@@ -22,3 +22,16 @@ pytest_test(
         "//sematic/plugins:abstract_metrics_storage",
     ],
 )
+
+sematic_py_lib(
+    name = "fixtures",
+    srcs = ["fixtures.py"],
+    pip_deps = ["pytest"],
+    # buildifier: leave-alone
+    deps = [
+        "//sematic/db:db",
+        "//sematic/db/tests:fixtures",
+        "//sematic/metrics:metric_point",
+        "//sematic/plugins/metrics_storage/sql:sql_metrics_storage",
+    ],
+)

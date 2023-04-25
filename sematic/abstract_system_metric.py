@@ -204,7 +204,7 @@ class AbstractSystemMetric(abc.ABC):
             self._plugins: List[AbstractMetricsStorage] = [
                 plugin_class()
                 for plugin_class in get_metrics_storage_plugins(
-                    PluginScope.METRICS_STORAGE, default=[SQLMetricsStorage]
+                    default=[SQLMetricsStorage]
                 )
             ]
 
