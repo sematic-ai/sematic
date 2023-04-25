@@ -28,6 +28,7 @@ const StyledText = styled('span')`
 
 const EnclosingBoxContainer = styled(Box)`
   box-sizing: border-box;
+  min-height: 100%;
 `
 
 const HeaderBox = styled(Box)`
