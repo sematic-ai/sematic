@@ -125,3 +125,39 @@ def test_get_metrics_endpoint(
     payload = response.json
 
     assert payload["content"] == expected_series  # type: ignore
+
+
+@pytest.mark.parametrize(
+    "url, expected_list",
+    (
+        ("", ["bar", "foo"]),
+        (f"?labels={json.dumps(dict(root_function_path='bat'))}", ["foo"]),
+    ),
+)
+def test_list_metrics_endpoint(
+    url: str,
+    expected_list: List[str],
+    persisted_metric_points: List[MetricPoint],  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+):
+    response = test_client.get(f"/api/v1/metrics{url}")
+
+    assert response.json["content"] == expected_list  # type: ignore
+
+
+def test_log_metric_endpoint(
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    metric_points: List[MetricPoint],  # noqa: F811
+):
+    test_client.post(
+        "/api/v1/metrics",
+        json=dict(
+            metric_points=[
+                metric_point.to_json_encodable() for metric_point in metric_points
+            ]
+        ),
+    )
+
+    response = test_client.get("/api/v1/metrics")
+
+    assert response.json["content"] == ["bar", "foo"]  # type: ignore

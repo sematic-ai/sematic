@@ -5,7 +5,7 @@ import json
 import logging
 import time
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Type, cast
+from typing import Any, Dict, List, Literal, Optional, Type, cast
 
 # Third-party
 import flask
@@ -43,7 +43,7 @@ def _get_rollup(args: Dict[str, str]) -> RollUp:
         return int(rollup_arg)
 
     if rollup_arg == "auto":
-        return rollup_arg
+        return cast(Literal["auto"], rollup_arg)
 
     raise ValueError("Incorrect value for rollup")
 

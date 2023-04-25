@@ -20,7 +20,7 @@ def metric_points():
             value=1,
             metric_type=MetricType.GAUGE,
             metric_time=datetime.datetime(2023, 4, 12),
-            labels=dict(function_path="foo"),
+            labels=dict(function_path="foo", root_function_path="bat"),
         ),
         MetricPoint(
             name="foo",
