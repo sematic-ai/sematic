@@ -103,7 +103,7 @@ sematic_py_lib(
     pip_deps = [],
     # buildifier: leave-alone
     deps = [
-        "//sematic/config",
+        "//sematic/config:config",
     ],
 )
 
