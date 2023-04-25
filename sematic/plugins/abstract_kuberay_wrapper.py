@@ -43,7 +43,7 @@ class RayNodeConfig:
         if self.memory_gb < 2.0:
             raise ValueError(
                 f"Ray workers/head must have at least "
-                f"2GB of memory. Got : {self.memory_gb}"
+                f"2GiB of memory. Got : {self.memory_gb} GiB"
             )
 
 
@@ -116,8 +116,8 @@ class AutoscalerConfig:
             raise ValueError("memory_gb field must be a float or int")
         if self.memory_gb < 1.0:
             raise ValueError(
-                f"The autoscaler requires at least 1GB of "
-                f"memory. Got: {self.memory_gb} GB"
+                f"The autoscaler requires at least 1GiB of "
+                f"memory. Got: {self.memory_gb} GiB"
             )
 
 
