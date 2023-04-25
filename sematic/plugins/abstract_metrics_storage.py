@@ -98,9 +98,6 @@ class GroupBy(enum.Enum):
 RollUp = Union[int, Literal["auto"], None]
 
 
-RollUp = Union[int, Literal["auto"], None]
-
-
 class NoMetricError(Exception):
     def __init__(self, metric_name: str, plugin_name: str):
         super().__init__(f"No metric named {metric_name} was found in {plugin_name}")
