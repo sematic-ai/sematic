@@ -101,8 +101,9 @@ sematic_py_lib(
     name = "logging",
     srcs = ["logging.py"],
     pip_deps = [],
+    # buildifier: leave-alone
     deps = [
-        "//sematic/config",
+        "//sematic/config:config",
     ],
 )
 

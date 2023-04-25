@@ -5,7 +5,7 @@ import json
 import logging
 import time
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, cast
 
 # Third-party
 import flask
@@ -25,11 +25,27 @@ from sematic.plugins.abstract_metrics_storage import (
     GroupBy,
     MetricsFilter,
     NoMetricError,
+    RollUp,
     get_metrics_storage_plugins,
 )
 from sematic.plugins.metrics_storage.sql.sql_metrics_storage import SQLMetricsStorage
 
 logger = logging.getLogger(__name__)
+
+
+def _get_rollup(args: Dict[str, str]) -> RollUp:
+    rollup_arg = flask.request.args.get("rollup")
+
+    if rollup_arg is None:
+        return rollup_arg
+
+    if rollup_arg.isdigit():
+        return int(rollup_arg)
+
+    if rollup_arg == "auto":
+        return rollup_arg
+
+    raise ValueError("Incorrect value for rollup")
 
 
 @sematic_api.route("/api/v1/metrics/<metric_name>", methods=["GET"])
@@ -47,7 +63,13 @@ def get_metric_endpoint(user: Optional[User], metric_name: str) -> flask.Respons
             f"Unable to deserialize labels: {e}", HTTPStatus.BAD_REQUEST
         )
 
-    rollup = json.loads(flask.request.args.get("labels", "null"))
+    try:
+        rollup = _get_rollup(flask.request.args)
+    except ValueError:
+        return jsonify_error(
+            "Incorrect value for rollup. Expected an integer or auto.",
+            HTTPStatus.BAD_REQUEST,
+        )
 
     filter = MetricsFilter(
         name=metric_name,
