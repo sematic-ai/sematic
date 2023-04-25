@@ -10,6 +10,7 @@ from sematic.plugins.abstract_kuberay_wrapper import (
     RayClusterConfig,
     RayNodeConfig,
     ScalingGroup,
+    AutoscalerConfig,
 )
 from sematic.plugins.kuberay_wrapper.standard import (
     StandardKuberaySettingsVar,
@@ -46,6 +47,10 @@ _SINGLE_WORKER_GROUP_CONFIG = RayClusterConfig(
             max_workers=8,
         )
     ],
+    autoscaler_config=AutoscalerConfig(
+        cpu=1.5,
+        memory_gb=1.5,
+    ),
     ray_version=_TEST_RAY_VERSION,
 )
 
@@ -85,7 +90,21 @@ _EXPECTED_HEAD_ONLY_MANIFEST = {
     "spec": {
         "rayVersion": _TEST_RAY_VERSION,
         "enableInTreeAutoscaling": False,
-        "autoscalerOptions": {"env": [{"name": "RAY_LOG_TO_STDERR", "value": "1"}]},
+        "autoscalerOptions": {
+            "env": [
+                {"name": "RAY_LOG_TO_STDERR", "value": "1"}
+            ],
+            "resources": {
+                "requests": {
+                    "cpu": "500m",
+                    "memory": "1024Mi",
+                },
+                "limits": {
+                    "cpu": "500m",
+                    "memory": "1024Mi",
+                },
+            },
+        },
         "headGroupSpec": {
             "serviceType": "ClusterIP",
             "rayStartParams": {"dashboard-host": "0.0.0.0", "block": "true"},
