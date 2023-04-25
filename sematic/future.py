@@ -9,7 +9,14 @@ from sematic.resolvers.local_resolver import LocalResolver
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.resolvers.silent_resolver import SilentResolver
 
-_MUTABLE_FIELDS = {"name", "standalone", "cache", "resource_requirements", "tags"}
+_MUTABLE_FIELDS = {
+    "name",
+    "standalone",
+    "cache",
+    "resource_requirements",
+    "tags",
+    "timeout_mins",
+}
 
 INLINE_DEPRECATION_MESSAGE = (
     "The inline argument to the @sematic.func decorator will be deprecated on "
