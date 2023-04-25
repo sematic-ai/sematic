@@ -7,6 +7,17 @@ import Section from 'src/component/Section';
 const StyledSection = styled(Section)`
     display: flex;
     flex-direction: column;
+    position: relative;
+
+    &:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        height: 1px;
+        width: calc(100% + ${theme.spacing(10)});
+        margin-left: -${theme.spacing(5)};
+        background: ${theme.palette.p3border.main};
+    }
 }
 `
 const StyledLink = styled(Link)`

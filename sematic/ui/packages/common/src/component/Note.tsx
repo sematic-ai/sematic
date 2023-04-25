@@ -25,9 +25,11 @@ type ExtendedStyleProps = {
 
 const footerHeight = 20;
 
-const Container = styled(Section) <ExtendedStyleProps>`
-    min-height: calc(100px - ${theme.spacing(2.4)});
-    height: ${props => props.isExpanded ? 'max-content' : `calc(100px - ${theme.spacing(2.4)})`};
+const Container = styled(Section, {
+    shouldForwardProp: (prop) => !["isExpanded", "contentHeight"].includes(prop as any),
+}) <ExtendedStyleProps>`
+    min-height: 100px;
+    height: ${props => props.isExpanded ? 'max-content' : '100px'};
     padding-bottom: calc(${footerHeight}px);
     box-sizing: border-box;
     position: relative;
@@ -60,7 +62,9 @@ const Body = styled(Box)`
     font-size: ${theme.typography.small.fontSize}px;
 `;
 
-const Footer = styled(Box) <ExtendedStyleProps>`
+const Footer = styled(Box,  {
+    shouldForwardProp: (prop) => !["isExpanded", "contentHeight"].includes(prop as any),
+}) <ExtendedStyleProps>`
     height: ${footerHeight}px;
     box-sizing: content-box;
     display: flex;

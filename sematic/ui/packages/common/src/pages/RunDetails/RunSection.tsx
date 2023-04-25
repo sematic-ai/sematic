@@ -18,10 +18,11 @@ const StyledVertButton = styled(MoreVertButton)`
 `;
 
 const BoxContainer = styled(Box)`
-    display: flex;
-    & .${typographyClasses.root} {
-        margin-right: ${theme.spacing(2)};
-    }
+    display: flex;    
+`
+
+const StyledTypography = styled(Typography)`
+    margin-right: ${theme.spacing(2)};
 `
 
 const RunSection = () => {
@@ -34,7 +35,7 @@ const RunSection = () => {
                 <StyledVertButton />
             </BoxContainer>
             <BoxContainer style={{marginBottom: theme.spacing(2)}}>
-                <Typography variant='small'>Developer E.</Typography>
+                <StyledTypography variant='small'>Developer E.</StyledTypography>
                 <Typography variant='small'>CloudResolver</Typography>
             </BoxContainer>
             <BoxContainer>
