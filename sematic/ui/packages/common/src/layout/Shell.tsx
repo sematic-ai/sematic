@@ -11,7 +11,7 @@ const Shell = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Grid container spacing={0} direction={'column'} style={{ height: "100vh", width: "100%" }}>
-        <Grid style={{ flexShrink: 1 }}>
+        <Grid style={{ flexShrink: 0, flexGrow: 0 }}>
           <HeaderMenu />
         </Grid>
         <Grid style={{ flexGrow: 1, height: 0 }}>
