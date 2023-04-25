@@ -164,7 +164,7 @@ def test_get_aggregated_metrics_rollup(
     expected_series_first_value,
     test_db: DB,  # noqa: F811
 ):
-    metric_points = [
+    metric_points = [  # noqa: F811
         MetricPoint(
             name="foo",
             metric_type=MetricType.COUNT,
@@ -195,7 +195,7 @@ def test_get_aggregated_metrics_rollup(
 
 def test_clear_metrics(
     test_db: DB,  # noqa: F811
-    metric_points: List[MetricPoint],
+    metric_points: List[MetricPoint],  # noqa: F811
 ):
     metrics_storage_plugin = SQLMetricsStorage()
     metrics_storage_plugin.store_metrics(metric_points)
