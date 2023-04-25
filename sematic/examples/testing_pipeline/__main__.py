@@ -85,6 +85,19 @@ RAISE_RETRY_HELP = (
     "with a total of 10 retries. If specified without a value, defaults to 0.5, "
     "meaning a cumulative probability of complete failure of 0.5 ** 11 = 0.00048828125."
 )
+TIMEOUT_HELP = (
+    "Two integers. If both ints are greater than 0, includes a "
+    "sleep function whose duration is determined by the first argument and whose "
+    "timeout limit is determined by the second argument. Units for both are in minutes. "
+    "Defaults to `None`."
+)
+NESTED_TIMEOUT_HELP = (
+    "Two integers. If both ints are greater than 0, includes a "
+    "sleep function whose duration is determined by the first argument and whose "
+    "timeout limit is determined by the second argument. Units for both are in minutes. "
+    "Contrary to --timeout, this sets the timeout on an outer function and waits in an "
+    "inner function. Defaults to `None`."
+)
 OOM_HELP = (
     "Whether to include a function that causes an Out of Memory error. "
     "Defaults to False."
@@ -254,6 +267,22 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         dest="raise_retry_probability",
         help=RAISE_RETRY_HELP,
+    )
+    parser.add_argument(
+        "--timeout",
+        nargs=2,
+        type=int,
+        default=None,
+        dest="timeout_settings",
+        help=TIMEOUT_HELP,
+    )
+    parser.add_argument(
+        "--nested-timeout",
+        nargs=2,
+        type=int,
+        default=None,
+        dest="nested_timeout_settings",
+        help=NESTED_TIMEOUT_HELP,
     )
     parser.add_argument("--oom", action="store_true", default=False, help=OOM_HELP)
     parser.add_argument(

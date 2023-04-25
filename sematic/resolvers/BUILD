@@ -46,6 +46,7 @@ sematic_py_lib(
         "//sematic/resolvers:abstract_resource_manager",
         "//sematic/utils:exceptions",
         "//sematic/utils:signals",
+        "//sematic/utils:timeout",
     ],
 )
 

@@ -62,6 +62,14 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "timeout",
+    srcs = ["timeout.py"],
+    deps = [
+        "//sematic/utils:exceptions",
+    ],
+)
+
+sematic_py_lib(
     name = "db",
     srcs = ["db.py"],
     pip_deps = [
