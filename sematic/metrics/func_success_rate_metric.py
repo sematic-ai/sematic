@@ -15,6 +15,18 @@ FINAL_STATES = {FutureState.RESOLVED, FutureState.FAILED, FutureState.NESTED_FAI
 
 
 class FuncSuccessRateMetric(AbstractSystemMetric):
+    """
+    System Metric to measure Sematic Function's success rate.
+
+    Success rate is defined as:
+
+    Number of qualifying RESOLVED runs
+    ------------------------------------------------------------
+    Number of qualifying (RESOLVED + FAILED + NESTED_FAILED) runs
+
+    where qualifying runs are all non-cached, non-cloned runs.
+    """
+
     @classmethod
     def _get_name(cls) -> str:
         return "func_success_rate"
