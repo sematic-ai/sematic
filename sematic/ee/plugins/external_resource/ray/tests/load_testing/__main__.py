@@ -48,8 +48,8 @@ COLLATZ_WAIT_MINUTES_HELP = (
 )
 COLLATZ_MEMORY_GROWTH_FACTOR_HELP = (
     "For each Collatz task, how rapidly should memory usage grow per iteration in the "
-    "task? A factor of 1.25 grows at about a rate of an extra 25% per iteration, and is "
-    "enough to OOM for tasks around 100. 1.0 should be safe to not OOM."
+    "task? A factor of 1.25 grows at about a rate of an extra 25 percent per iteration, "
+    "and is enough to OOM for tasks around 100. 1.0 should be safe to not OOM."
 )
 MNIST_N_RATES_HELP = (
     "Number of different learning rates (independent training jobs) to try."

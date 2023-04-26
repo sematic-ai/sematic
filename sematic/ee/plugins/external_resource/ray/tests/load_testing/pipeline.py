@@ -172,8 +172,9 @@ def load_test_mnist(
     with RayCluster(
         config=SimpleRayCluster(
             n_nodes=n_workers,
-            node_config=RayNodeConfig(cpu=3, memory_gb=13, gpu_count=1),
-        )
+            node_config=RayNodeConfig(cpu=3, memory_gb=12, gpu_count=1),
+            max_nodes=n_workers,
+        ),
     ):
         refs = [train_model.remote(rate, n_epochs) for rate in learning_rates]
         results = wait_for_results(refs, learning_rates, max_wait_seconds)
@@ -194,7 +195,6 @@ def train_model(
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
     logger.info("Working on Mnist for %s", learning_rate)
-
     device = torch.device("cuda")
     path = "/tmp/pytorch-mnist"
     model = Net().to(device)
