@@ -118,7 +118,7 @@ data:
       },
       "id": 3,
       "options": {
-        "content": "# Viewing Run\n\n# [$run_id](https://pilot.verdant.sematic.cloud/runs/$run_id)",
+        "content": "# Viewing Run\n\n# [$run_id]({{ .Values.sematic_server_dashboard_url }}/runs/$run_id)",
         "mode": "markdown"
       },
       "pluginVersion": "9.1.7",

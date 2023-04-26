@@ -92,7 +92,7 @@ data:
       "targets": [
         {
           "editorMode": "code",
-          "expr": "{app=\"sematic-server\", namespace=\"pilot\"} != `socket` != `kube-probe` | json line=\"log\" | line_format `{{.line}}`",
+          "expr": "{app=\"sematic-server\", namespace=\"{{ .Values.sematic_server_namespace }}\"} != `socket` != `kube-probe` | json line=\"log\" | line_format `{{.line}}`",
           "key": "Q-df73f6a9-a449-42ee-bf11-a09d0f7590c4-0",
           "queryType": "range",
           "refId": "A",
@@ -115,8 +115,8 @@ data:
       {
         "current": {
           "selected": true,
-          "text": "pilot",
-          "value": "pilot"
+          "text": "{{ .Values.sematic_server_namespace }}",
+          "value": "{{ .Values.sematic_server_namespace }}"
         },
         "description": "The Kubernetes namespace to view information about",
         "hide": 0,
@@ -126,12 +126,12 @@ data:
         "options": [
           {
             "selected": true,
-            "text": "pilot",
-            "value": "pilot"
+            "text": "{{ .Values.sematic_server_namespace }}",
+            "value": "{{ .Values.sematic_server_namespace }}"
           }
         ],
-        "query": "pilot",
-        "queryValue": "pilot",
+        "query": "{{ .Values.sematic_server_namespace }}",
+        "queryValue": "{{ .Values.sematic_server_namespace }}",
         "skipUrlSync": false,
         "type": "custom"
       },
