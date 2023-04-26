@@ -26,7 +26,6 @@
     "jotai": "^1.12.1",
     "jotai-location": "^0.3.2",
     "lodash": "^4.17.21",
-    "mpld3": "^0.5.8",
     "plotly.js-cartesian-dist": "^2.12.1",
     "posthog-js": "^1.45.1",
     "react": "^18.1.0",
