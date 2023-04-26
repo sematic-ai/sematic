@@ -8,6 +8,10 @@ aws:
   storage_bucket: my-s3-bucket # REPLACE ME
   bucket_region: my-s3-region # REPLACE ME
 
+local_storage:
+  enabled: false
+  local_storage_path: /path/to/storage # REPLACE ME. Optional, defaults to ~/.sematic/data
+
 slack:
   enabled: true
   slack_webhook_token: XXX/YYY/ZZZ # REPLACE ME
