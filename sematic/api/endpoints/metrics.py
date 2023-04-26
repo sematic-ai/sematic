@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 def _get_rollup(args: Dict[str, str]) -> RollUp:
-    rollup_arg = flask.request.args.get("rollup")
+    rollup_arg = args.get("rollup")
 
     if rollup_arg is None:
         return rollup_arg
@@ -45,7 +45,7 @@ def _get_rollup(args: Dict[str, str]) -> RollUp:
     if rollup_arg == "auto":
         return cast(Literal["auto"], rollup_arg)
 
-    raise ValueError("Incorrect value for rollup")
+    raise ValueError("Incorrect value for rollup. Expected an integer or 'auto'.")
 
 
 @sematic_api.route("/api/v1/metrics/<metric_name>", methods=["GET"])
@@ -65,11 +65,8 @@ def get_metric_endpoint(user: Optional[User], metric_name: str) -> flask.Respons
 
     try:
         rollup = _get_rollup(flask.request.args)
-    except ValueError:
-        return jsonify_error(
-            "Incorrect value for rollup. Expected an integer or auto.",
-            HTTPStatus.BAD_REQUEST,
-        )
+    except ValueError as e:
+        return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
 
     filter = MetricsFilter(
         name=metric_name,
@@ -87,7 +84,7 @@ def get_metric_endpoint(user: Optional[User], metric_name: str) -> flask.Respons
     except ValueError:
         options = ", ".join([gb.name for gb in GroupBy])
         return jsonify_error(
-            f"Unrecognized group_by. Options are {options}", HTTPStatus.BAD_REQUEST
+            f"Unrecognized group_by. Options are: {options}", HTTPStatus.BAD_REQUEST
         )
 
     try:
