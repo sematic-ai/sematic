@@ -19,7 +19,7 @@ from torchvision.transforms import Compose, Normalize, ToTensor
 
 # Sematic
 from sematic.calculator import func
-from sematic.ee.ray import RayCluster, RayNodeConfig, SimpleRayCluster
+from sematic.ee.ray import AutoscalerConfig, RayCluster, RayNodeConfig, SimpleRayCluster
 from sematic.examples.mnist.pytorch.train_eval import Net, train
 
 logging.basicConfig(level=logging.INFO)
@@ -48,6 +48,7 @@ class CollatzConfig:
     n_tasks: int
     wait_minutes: int
     memory_growth_factor: float
+    max_n_workers: Optional[int] = None
 
 
 @dataclass(frozen=True)
@@ -56,6 +57,7 @@ class MnistConfig:
     n_epochs: int
     n_workers: int
     wait_minutes: int
+    max_n_workers: Optional[int] = None
 
 
 @dataclass(frozen=True)
@@ -66,7 +68,11 @@ class LoadResults:
 
 @func(standalone=True)
 def collatz_with_ray(
-    n_workers: int, n_tasks: int, wait_minutes: int, memory_growth_factor: float
+    n_workers: int,
+    n_tasks: int,
+    wait_minutes: int,
+    memory_growth_factor: float,
+    max_n_workers: Optional[int] = None,
 ) -> CollatzResults:
     """
     Specifies the Collatz sequence length for all numbers up to the specified parameter.
@@ -79,7 +85,11 @@ def collatz_with_ray(
         config=SimpleRayCluster(
             n_nodes=n_workers,
             node_config=RayNodeConfig(cpu=1, memory_gb=2.25),
-            max_nodes=n_workers + 2,
+            max_nodes=max_n_workers,
+            autoscaler_config=AutoscalerConfig(
+                cpu=0.5,
+                memory_gb=1.0,
+            ),
         )
     ):
         refs = [
@@ -165,7 +175,11 @@ def wait_for_results(refs, inputs, max_wait_seconds):
 
 @func(standalone=True)
 def load_test_mnist(
-    n_rates: int, n_epochs: int, n_workers: int, wait_minutes: int
+    n_rates: int,
+    n_epochs: int,
+    n_workers: int,
+    wait_minutes: int,
+    max_n_workers: Optional[int] = None,
 ) -> MnistResults:
     learning_rates = [i / (n_rates + 1) for i in range(1, n_rates + 1)]
     max_wait_seconds = wait_minutes * 60
@@ -173,7 +187,11 @@ def load_test_mnist(
         config=SimpleRayCluster(
             n_nodes=n_workers,
             node_config=RayNodeConfig(cpu=3, memory_gb=12, gpu_count=1),
-            max_nodes=n_workers,
+            max_nodes=max_n_workers,
+            autoscaler_config=AutoscalerConfig(
+                cpu=0.5,
+                memory_gb=1.0,
+            ),
         ),
     ):
         refs = [train_model.remote(rate, n_epochs) for rate in learning_rates]
