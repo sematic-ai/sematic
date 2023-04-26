@@ -41,7 +41,6 @@ def broadcast_graph_update(
     root_id: str,
     user: Optional[User] = None,
 ) -> Optional[requests.Response]:
-
     url = "/events/graph/update"
     json_payload = dict(run_id=root_id)
     return _call_broadcast_endpoint(url=url, json_payload=json_payload, user=user)
@@ -50,7 +49,6 @@ def broadcast_graph_update(
 def broadcast_resolution_cancel(
     root_id: str, calculator_path: str, user: Optional[User] = None
 ) -> Optional[requests.Response]:
-
     url = "/events/pipeline/cancel"
     json_payload = dict(resolution_id=root_id, calculator_path=calculator_path)
     return _call_broadcast_endpoint(url=url, json_payload=json_payload, user=user)
@@ -60,7 +58,6 @@ def broadcast_pipeline_update(
     calculator_path: str,
     user: Optional[User] = None,
 ) -> Optional[requests.Response]:
-
     url = "/events/pipeline/update"
     json_payload = dict(calculator_path=calculator_path)
     return _call_broadcast_endpoint(url=url, json_payload=json_payload, user=user)
@@ -70,7 +67,6 @@ def broadcast_job_update(
     run_id: str,
     user: Optional[User] = None,
 ) -> Optional[requests.Response]:
-
     url = "/events/job/update"
     json_payload = dict(run_id=run_id)
     return _call_broadcast_endpoint(url=url, json_payload=json_payload, user=user)

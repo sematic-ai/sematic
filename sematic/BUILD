@@ -101,6 +101,7 @@ sematic_py_lib(
     name = "logging",
     srcs = ["logging.py"],
     pip_deps = [],
+    # buildifier: leave-alone
     deps = [
         "//sematic/config:config",
     ],
@@ -226,7 +227,6 @@ sematic_py_lib(
     pip_deps = ["sqlalchemy"],
     # buildifier: leave-alone
     deps = [
-        ":abstract_plugin",
         "//sematic/db:db",
         "//sematic/db/models:run",
         "//sematic/db/models:user",

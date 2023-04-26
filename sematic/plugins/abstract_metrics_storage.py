@@ -194,13 +194,12 @@ class AbstractMetricsStorage(abc.ABC):
 
 
 def get_metrics_storage_plugins(
-    scope: PluginScope,
     default: List[Type[AbstractPlugin]],
 ) -> List[Type[AbstractMetricsStorage]]:
     """
     Return all configured metrics plug-ins for scope.
     """
-    storage_plugins = get_active_plugins(scope, default=default)
+    storage_plugins = get_active_plugins(PluginScope.METRICS_STORAGE, default=default)
 
     storage_classes = [
         cast(Type[AbstractMetricsStorage], plugin) for plugin in storage_plugins
