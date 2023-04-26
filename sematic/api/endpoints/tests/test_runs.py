@@ -501,6 +501,7 @@ def test_clean_jobs(
         assert payload == {"content": ["DELETED"]}
 
 
+@mock.patch("sematic.api.endpoints.runs.save_event_metrics")
 def test_update_future_states(
     mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
@@ -536,6 +537,7 @@ def test_update_future_states(
         }
 
 
+@mock.patch("sematic.api.endpoints.runs.save_event_metrics")
 def test_update_run_disappeared(
     mock_auth,  # noqa: F811
     persisted_run: Run,  # noqa: F811
@@ -588,6 +590,7 @@ def test_update_run_disappeared(
         )
 
 
+@mock.patch("sematic.api.endpoints.runs.save_event_metrics")
 def test_update_run_k8_pod_error(
     mock_auth,  # noqa: F811
     persisted_run: Run,  # noqa: F811
