@@ -24,7 +24,7 @@ data:
 {{ if .Values.local_storage.enabled }}
   STORAGE: "sematic.plugins.storage.local_storage.LocalStorage"
   {{ if .Values.local_storage.local_storage_path }}
-    LOCAL_STORAGE_PATH: {{ .Values.local_storage_path | quote }}
+    LOCAL_STORAGE_PATH: {{ .Values.local_storage.local_storage_path | quote }}
   {{ end }}
 {{ end }}
 {{ if .Values.slack.enabled }}
