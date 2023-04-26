@@ -253,10 +253,24 @@ changes.
         $ mv *.tgz $HELM_REPO/sematic-server/
         ```
 
+    1. (OPTIONAL) Only do this step if you know that the Sematic Grafana dashboards
+    have been updated and need to be released.  Generate the updated Helm package
+    from the Sematic repo.
+        ```bash
+        $ export HELM_REPO=~/code/helm-charts
+        $ helm package helm/sematic-grafana-dashboards
+        $ helm repo index . \
+                --url https://sematic-ai.github.io/helm-charts/sematic-grafana-dashboards \
+                --merge $HELM_REPO/index.yaml
+        $ mv index.yaml $HELM_REPO/index.yaml
+        $ mv *.tgz $HELM_REPO/sematic-grafana-dashboards/
+        ```
     1. You should now have a new `sematic-server/sematic-server-X.X.X.tgz` file in the
-    `helm-charts` repo, and a modified `index.yaml` file. Commit and push both of these
-    to a new release branch, and create a PR for the change based on `gh-pages`. Wait for
-    approval, and merge it.
+    `helm-charts` repo, and a modified `index.yaml` file. If you optionally created a package
+    for the Grafana dashboards, you should also have a
+    `sematic-grafana-dashboards/sematic-grafana-dashboards-X.X.X.tgz` file in the `helm-charts`
+    repo.  Commit and push all of these to a new release branch, and create a PR for the change
+    based on `gh-pages`. Wait for approval, and merge it.
 
 1. Deploy this new official release to the `stage` environment, in order to leave it in a
   consistent and expected state, and to test the actual commands users will be using to
