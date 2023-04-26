@@ -8,7 +8,6 @@ from typing import Dict, List, Optional, Tuple, Union
 import sqlalchemy.orm
 
 # Sematic
-from sematic.abstract_plugin import PluginScope
 from sematic.db.db import db
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -204,7 +203,7 @@ class AbstractSystemMetric(abc.ABC):
             self._plugins: List[AbstractMetricsStorage] = [
                 plugin_class()
                 for plugin_class in get_metrics_storage_plugins(
-                    PluginScope.METRICS_STORAGE, default=[SQLMetricsStorage]
+                    default=[SQLMetricsStorage]
                 )
             ]
 

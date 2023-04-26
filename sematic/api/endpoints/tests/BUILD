@@ -143,10 +143,12 @@ pytest_test(
     srcs = ["test_metrics.py"],
     deps = [
         "//sematic/api/endpoints:metrics",
+        "//sematic/api/tests:fixtures",
         "//sematic/db/models:run",
         "//sematic/db/tests:fixtures",
         "//sematic/metrics:metric_point",
         "//sematic/metrics:run_count_metric",
+        "//sematic/metrics/tests:fixtures",
         "//sematic/plugins:abstract_metrics_storage",
         "//sematic/plugins/metrics_storage/sql:sql_metrics_storage",
     ],
