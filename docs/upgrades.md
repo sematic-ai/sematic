@@ -116,6 +116,11 @@ delta, but only:
 when performing the upgrade.
 {% endhint %}
 
+### v0.28.X to v0.29.0
+
+Direct support for Matplotlib figures was dropped in favor of the [`Image`
+type](./types.md#the-image-type).
+
 ### v0.27.0 to v0.28.0
 
 **Important!**: Any in-progress runs will fail when the server is upgraded.
