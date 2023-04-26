@@ -19,6 +19,7 @@ from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
+from sematic.metrics.func_success_rate_metric import FuncSuccessRateMetric
 from sematic.metrics.metric_point import MetricPoint
 from sematic.metrics.run_count_metric import RunCountMetric
 from sematic.plugins.abstract_metrics_storage import (
@@ -139,11 +140,15 @@ def list_metrics_endpoint(user: Optional[User]) -> flask.Response:
 
 class MetricEvent(enum.IntEnum):
     run_created = 1
+    run_state_changed = 0
 
 
 _METRICS: Dict[MetricEvent, List[Type[AbstractSystemMetric]]] = {
     MetricEvent.run_created: [
         RunCountMetric,
+    ],
+    MetricEvent.run_state_changed: [
+        FuncSuccessRateMetric,
     ],
 }
 

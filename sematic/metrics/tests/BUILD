@@ -23,6 +23,23 @@ pytest_test(
     ],
 )
 
+pytest_test(
+    name = "test_func_success_rate_metric",
+    srcs = ["test_func_success_rate_metric.py"],
+    # buildifier: leave-alone
+    deps = [
+        "//sematic:abstract_future",
+        "//sematic/db:db",
+        "//sematic/db/models:run",
+        "//sematic/db/tests:fixtures",
+        "//sematic/metrics:func_success_rate_metric",
+        "//sematic/metrics:metric_point",
+        "//sematic/plugins:abstract_metrics_storage",
+        "//sematic/plugins/metrics_storage/sql:sql_metrics_storage",
+        "//sematic/plugins/metrics_storage/sql/models:metric_value",
+    ],
+)
+
 sematic_py_lib(
     name = "fixtures",
     srcs = ["fixtures.py"],
