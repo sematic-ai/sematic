@@ -295,6 +295,25 @@ def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     )
 
     payload = dict(content=asdict(result))
+
+    # when none cursors is set, it means we are doing the initial pull
+    # and we can determine if we can continue in either direction
+    # this overrides the value from the `result`.
+    if (
+        kwargs["reverse_cursor_token"] is None
+        and kwargs["forward_cursor_token"] is None
+    ):
+        if kwargs["reverse"]:
+            run = get_run(run_id)
+
+            payload["content"]["can_continue_forward"] = run.future_state not in [
+                FutureState.RESOLVED.value,
+                FutureState.FAILED.value,
+                FutureState.NESTED_FAILED.value,
+            ]
+        else:
+            payload["content"]["can_continue_backward"] = False
+
     return flask.jsonify(payload)
 
 
