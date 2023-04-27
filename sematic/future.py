@@ -1,5 +1,6 @@
 # Standard Library
-from typing import Any, Callable, List, Optional, Union  # noqa: F401
+from typing import Any, Optional
+from warnings import warn  # noqa: F401
 
 # Sematic
 from sematic.abstract_future import AbstractFuture, FutureState
@@ -8,7 +9,19 @@ from sematic.resolvers.local_resolver import LocalResolver
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.resolvers.silent_resolver import SilentResolver
 
-_MUTABLE_FIELDS = {"name", "inline", "cache", "resource_requirements", "tags"}
+_MUTABLE_FIELDS = {
+    "name",
+    "standalone",
+    "cache",
+    "resource_requirements",
+    "tags",
+    "timeout_mins",
+}
+
+INLINE_DEPRECATION_MESSAGE = (
+    "The inline argument to the @sematic.func decorator will be deprecated on "
+    "June 1st, 2023. Please replace inline=False with standalone=True."
+)
 
 
 class Future(AbstractFuture):
@@ -53,14 +66,14 @@ class Future(AbstractFuture):
         ----------
         name: str
             The future's name. This will be used to name the run in the UI.
-        inline: bool
+        standalone: bool
             When using the `CloudResolver`, whether the instrumented function
-            should be executed inside the same process and worker that is executing
-            the `Resolver` itself.
+            should be executed in a standalone container or inside the same
+            process and worker that is executing the `Resolver` itself.
 
-            Defaults to `True`, as most pipeline functions are expected to be
-            lightweight. Explicitly set this to `False` in order to distribute its
-            execution to a worker and parallelize its execution.
+            Defaults to `False`, as most pipeline functions are expected to be
+            lightweight. Set to `True` in order to distribute
+            its execution to a worker and parallelize its execution.
         cache: bool
             Whether to cache the function's output value under the
             `cache_namespace` configured in the `Resolver`. Defaults to `False`.
@@ -89,9 +102,15 @@ class Future(AbstractFuture):
                 )
 
         if "inline" in kwargs:
+            warn(INLINE_DEPRECATION_MESSAGE, DeprecationWarning)
             value = kwargs["inline"]
+            del kwargs["inline"]
+            kwargs["standalone"] = value
+
+        if "standalone" in kwargs:
+            value = kwargs["standalone"]
             if not (isinstance(value, bool)):
-                raise ValueError(f"Invalid `inline`, must be a bool: {repr(value)}")
+                raise ValueError(f"Invalid `standalone`, must be a bool: {repr(value)}")
 
         if "cache" in kwargs:
             value = kwargs["cache"]

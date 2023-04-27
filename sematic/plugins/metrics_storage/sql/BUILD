@@ -5,6 +5,7 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         "//sematic:abstract_plugin",
+        "//sematic/config:config",
         "//sematic/db:db",
         "//sematic/metrics:metric_point",
         "//sematic/plugins:abstract_metrics_storage",

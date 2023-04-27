@@ -1,11 +1,11 @@
 # Standard Library
 import logging
 import math
-from typing import Dict, List, Literal, Sequence, Tuple, Type, Union
+from typing import Dict, List, Sequence, Tuple, Type
 
 # Third-party
+import sqlalchemy.exc
 from sqlalchemy import func
-from sqlalchemy.exc import NoResultFound
 
 # Sematic
 from sematic.abstract_plugin import (
@@ -14,6 +14,7 @@ from sematic.abstract_plugin import (
     AbstractPluginSettingsVar,
     PluginVersion,
 )
+from sematic.config.config import SQLITE_WARNING_MESSAGE
 from sematic.db.db import db
 from sematic.metrics.metric_point import MetricPoint, MetricsLabels, MetricType
 from sematic.plugins.abstract_metrics_storage import (
@@ -22,6 +23,7 @@ from sematic.plugins.abstract_metrics_storage import (
     MetricSeries,
     MetricsFilter,
     NoMetricError,
+    RollUp,
 )
 from sematic.plugins.metrics_storage.sql.models.metric_label import MetricLabel
 from sematic.plugins.metrics_storage.sql.models.metric_value import MetricValue
@@ -110,7 +112,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
         self,
         filter: MetricsFilter,
         group_by: Sequence[GroupBy],
-        rollup: Union[int, Literal["auto"], None],
+        rollup: RollUp,
     ) -> MetricSeries:
         # Early check as later queries fail when there are no rows.
         try:
@@ -118,7 +120,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
                 session.query(MetricLabel.metric_id).filter(
                     MetricLabel.metric_name == filter.name
                 ).limit(1).one()
-        except NoResultFound:
+        except sqlalchemy.exc.NoResultFound:
             raise NoMetricError(filter.name, self.get_path())
 
         predicates = [
@@ -168,23 +170,31 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
             select_fields.append(field_)
             group_by_clauses.append(field_)
 
-        with db().get_session() as session:
-            query = session.query(*select_fields).filter(*predicates)
+        try:
+            with db().get_session() as session:
+                query = session.query(*select_fields).filter(*predicates)
 
-            if len(group_by_clauses) > 0:
-                query = query.group_by(*group_by_clauses)
+                if len(group_by_clauses) > 0:
+                    query = query.group_by(*group_by_clauses)
 
-            if rollup == "auto":
-                field_ = func.extract("epoch", MetricValue.metric_time)
-                record_count = query.add_columns(field_).group_by(field_).count()
+                if rollup == "auto":
+                    field_ = func.extract("epoch", MetricValue.metric_time)
+                    record_count = query.add_columns(field_).group_by(field_).count()
 
-                if record_count > _MAX_SERIES_POINTS:
-                    field_ = field_ / interval_seconds * interval_seconds
+                    if record_count > _MAX_SERIES_POINTS:
+                        field_ = field_ / interval_seconds * interval_seconds
 
-                query = query.add_columns(field_).group_by(field_)
-                extra_field_names.append("timestamp")
+                    query = query.add_columns(field_).group_by(field_)
+                    extra_field_names.append("timestamp")
 
-            records = query.all()
+                records = query.all()
+        except sqlalchemy.exc.OperationalError as e:
+            # User has old SQLite version that does not support querying JSONB fields.
+            if str(e).startswith('(sqlite3.OperationalError) near ">>"'):
+                logger.error(SQLITE_WARNING_MESSAGE)
+                records = []
+            else:
+                raise e
 
         output = MetricSeries(metric_name=filter.name, columns=extra_field_names)
 

@@ -24,7 +24,7 @@ from sematic import (
 from sematic.examples.mnist.pytorch.train_eval import Net, test, train
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def load_mnist_dataset(train: bool, path: str = "/tmp/pytorch-mnist") -> MNIST:
     transform = Compose([ToTensor(), Normalize((0.1307,), (0.3081,))])
     return MNIST(root=path, train=train, download=True, transform=transform)
@@ -35,7 +35,7 @@ class DataLoaderConfig:
     batch_size: Optional[int] = 1000
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def get_dataloader(dataset: Dataset, config: DataLoaderConfig) -> DataLoader:
     return DataLoader(dataset, batch_size=config.batch_size)
 
@@ -74,7 +74,7 @@ GPU_RESOURCE_REQS = ResourceRequirements(
 )
 
 
-@sematic.func(inline=False, resource_requirements=GPU_RESOURCE_REQS)
+@sematic.func(standalone=True, resource_requirements=GPU_RESOURCE_REQS)
 def train_model(
     config: TrainConfig,
     train_loader: DataLoader,
@@ -108,7 +108,7 @@ class EvaluationResults:
     confusion_matrix: plotly.graph_objs.Figure
 
 
-@sematic.func(inline=False, resource_requirements=GPU_RESOURCE_REQS)
+@sematic.func(standalone=True, resource_requirements=GPU_RESOURCE_REQS)
 def evaluate_model(
     model: nn.Module, test_loader: DataLoader, device: torch.device
 ) -> EvaluationResults:
@@ -126,7 +126,7 @@ def evaluate_model(
     )
 
 
-@sematic.func(inline=True)
+@sematic.func
 def train_eval(
     train_dataloader: DataLoader, test_dataloader: DataLoader, train_config: TrainConfig
 ) -> EvaluationResults:
@@ -146,7 +146,7 @@ def train_eval(
     return evaluation_results
 
 
-@sematic.func(inline=True)
+@sematic.func
 def pipeline(config: PipelineConfig) -> EvaluationResults:
     """
     # MNIST example in PyTorch
@@ -177,7 +177,7 @@ def pipeline(config: PipelineConfig) -> EvaluationResults:
     return evaluation_results
 
 
-@sematic.func(inline=True)
+@sematic.func
 def find_best_accuracy_index(evaluation_results: List[EvaluationResults]) -> int:
     """
     Find the best accuracy out of a list of evaluation results.
@@ -192,12 +192,12 @@ def find_best_accuracy_index(evaluation_results: List[EvaluationResults]) -> int
     return best_index
 
 
-@sematic.func(inline=True)
+@sematic.func
 def get_best_learning_rate(configs: List[TrainConfig], best_index: int) -> float:
     return configs[best_index].learning_rate
 
 
-@sematic.func(inline=True)
+@sematic.func
 def scan_learning_rate(
     dataloader_config: DataLoaderConfig, train_configs: List[TrainConfig]
 ) -> float:

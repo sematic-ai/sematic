@@ -5,7 +5,7 @@ Module holding common DB queries.
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 # Third-party
 import sqlalchemy
@@ -136,6 +136,26 @@ def get_run(run_id: str) -> Run:
         return session.query(Run).filter(Run.id == run_id).one()
 
 
+def get_existing_run_ids(run_ids: Iterable[str]) -> Set[str]:
+    """
+    From a list of run IDs, return a set of the ones that exist in the DB.
+
+    Parameters
+    ----------
+    run_ids: Iterable[str]
+        List of run IDs to check for existence.
+
+    Returns
+    -------
+    Set[str]
+        The set of existing run IDs.
+    """
+    with db().get_session() as session:
+        existing_run_ids = session.query(Run.id).filter(Run.id.in_(run_ids)).all()
+
+    return set([row[0] for row in existing_run_ids])
+
+
 def get_run_status_details(
     run_ids: List[str],
 ) -> Dict[str, Tuple[FutureState, List[Job]]]:
@@ -181,6 +201,13 @@ def get_run_status_details(
         for run_id, future_state, _ in query_results  # type: ignore
     }
     return future_state_and_jobs_by_run_id
+
+
+def get_calculator_path(run_id: str) -> str:
+    with db().get_session() as session:
+        row = session.query(Run.calculator_path).filter(Run.id == run_id).one()
+
+    return row[0]
 
 
 @dataclass

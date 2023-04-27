@@ -7,8 +7,8 @@ from dataclasses import asdict
 from typing import Dict, List, Optional, Union
 
 # Third-party
-from sqlalchemy import Column, types
-from sqlalchemy.orm import validates
+from sqlalchemy import Column, ForeignKey, types
+from sqlalchemy.orm import relationship, validates
 
 # Sematic
 from sematic.abstract_calculator import AbstractCalculator
@@ -99,7 +99,7 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
     name: str = Column(types.String(), nullable=True)
     calculator_path: str = Column(types.String(), nullable=False)
     parent_id: Optional[str] = Column(types.String(), nullable=True)
-    root_id: str = Column(types.String(), nullable=False)
+    root_id: str = Column(types.String(), ForeignKey("runs.id"), nullable=False)
     description: Optional[str] = Column(types.String(), nullable=True)
     tags: List[str] = Column(  # type: ignore
         types.String(), nullable=False, default="[]", info={JSON_KEY: True}
@@ -132,6 +132,9 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
         types.JSON(), nullable=True, info={JSON_KEY: True}
     )
     cache_key: Optional[str] = Column(types.String(), nullable=True)
+
+    # Relationships
+    root_run: "Run" = relationship("Run", remote_side=[id], lazy="select")
 
     @validates("future_state")
     def validate_future_state(self, _, value) -> str:
@@ -223,7 +226,11 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
                 f"Run(id={self.id}",
                 f"calculator_path={self.calculator_path}",
                 f"future_state={self.future_state}",
-                f"parent_id={self.parent_id})",
+                f"parent_id={self.parent_id}",
+                f"root_id={self.root_id}",
+                f"created_at={self.created_at}",
+                f"resolved_at={self.resolved_at}",
+                f"failed_at={self.failed_at})",
             )
         )
 

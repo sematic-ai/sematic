@@ -22,6 +22,7 @@ from sematic.abstract_future import FutureState
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.events import broadcast_graph_update, broadcast_job_update
+from sematic.api.endpoints.metrics import MetricEvent, save_event_metrics
 from sematic.api.endpoints.payloads import get_run_payload, get_runs_payload
 from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
@@ -35,6 +36,7 @@ from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
     get_basic_pipeline_metrics,
+    get_existing_run_ids,
     get_external_resources_by_run_id,
     get_jobs_by_run_id,
     get_resolution,
@@ -495,11 +497,18 @@ def save_graph_endpoint(user: Optional[User]):
         if user is not None:
             run.user_id = user.id
 
+    run_ids = [run.id for run in runs]
+    existing_run_ids = get_existing_run_ids(run_ids)
+    new_runs = [run for run in runs if run.id not in existing_run_ids]
+
     # save graph BEFORE ensuring jobs are stopped. This way
     # code that is checking on job status will be ok if it
     # sees the jobs as gone while we are going through and
     # deleting them.
     save_graph(runs, artifacts, edges)
+
+    if len(new_runs) > 0:
+        save_event_metrics(MetricEvent.run_created, new_runs, user)
 
     for run in runs:
         if FutureState[run.future_state].is_terminal():

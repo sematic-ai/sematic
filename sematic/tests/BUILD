@@ -130,9 +130,9 @@ pytest_test(
     name = "test_versions",
     srcs = ["test_versions.py"],
     data = [
+        "//:README.md",
         "//:docs/changelog.md",
         "//:helm/sematic-server/Chart.yaml",
-        "//:README.md",
     ],
     env = {"BAZEL_WHEEL_VERSION": wheel_version_string},
     pip_deps = [
@@ -164,5 +164,21 @@ pytest_test(
         "//sematic/db/models:factories",
         "//sematic/db/tests:fixtures",
         "//sematic/resolvers:local_resolver",
+    ],
+)
+
+pytest_test(
+    name = "test_abstract_system_metric",
+    srcs = ["test_abstract_system_metric.py"],
+    pip_deps = ["sqlalchemy"],
+    # buildifier: leave-alone
+    deps = [
+        "//sematic:abstract_future",
+        "//sematic:abstract_system_metric",
+        "//sematic/db:db",
+        "//sematic/db/models:run",
+        "//sematic/db/tests:fixtures",
+        "//sematic/metrics:metric_point",
+        "//sematic/utils:exceptions",
     ],
 )

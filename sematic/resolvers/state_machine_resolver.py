@@ -4,6 +4,7 @@ Abstract base class for a state machine-based resolution.
 # Standard Library
 import abc
 import logging
+import math
 import os
 import signal
 import time
@@ -12,7 +13,7 @@ from contextlib import contextmanager
 
 # Sematic
 from sematic.abstract_calculator import CalculatorError
-from sematic.abstract_future import AbstractFuture, FutureState
+from sematic.abstract_future import AbstractFuture, FutureState, TimeoutFuturePair
 from sematic.plugins.abstract_external_resource import (
     AbstractExternalResource,
     ResourceState,
@@ -23,9 +24,11 @@ from sematic.utils.exceptions import (
     ExceptionMetadata,
     ExternalResourceError,
     ResolutionError,
+    TimeoutError,
     format_exception_for_run,
 )
 from sematic.utils.signals import FrameType, HandlerType, call_signal_handler
+from sematic.utils.timeout import timeout
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +99,7 @@ class StateMachineResolver(Resolver, abc.ABC):
                         " when it should have been already processed"
                     )
 
-            self._wait_for_scheduled_runs()
+            self._wait_for_scheduled_runs_with_timeout()
 
         if self._root_future.state == FutureState.RESOLVED:
             self._resolution_did_succeed()
@@ -182,6 +185,71 @@ class StateMachineResolver(Resolver, abc.ABC):
     @abc.abstractmethod
     def _wait_for_scheduled_runs(self) -> None:
         pass
+
+    def _fail_future_with_timeout(
+        self,
+        executing_future: AbstractFuture,
+        timeout_restricting_future: typing.Optional[AbstractFuture] = None,
+    ):
+        if timeout_restricting_future is None:
+            timeout_restricting_future = executing_future
+
+        if timeout_restricting_future.id == executing_future.id:
+            message = (
+                f"The Sematic function {executing_future.calculator.__name__} did not "
+                f"complete in time to satisfy its "
+                f"{executing_future.props.timeout_mins} minute timeout."
+            )
+        else:
+            message = (
+                f"The Sematic function {executing_future.calculator.__name__} did not "
+                f"complete in time to satisfy the "
+                f"{timeout_restricting_future.props.timeout_mins} minute timeout "
+                f"specified by its ancestor "
+                f"{timeout_restricting_future.calculator.__name__}."
+            )
+        self._handle_future_failure(
+            executing_future,
+            format_exception_for_run(TimeoutError(message)),
+        )
+
+    def _wait_for_scheduled_runs_with_timeout(self) -> None:
+        seconds_until_next_timeout, future = self._get_seconds_to_next_timeout()
+        if seconds_until_next_timeout is not None and future is not None:
+            if seconds_until_next_timeout <= 0 and not future.state.is_terminal():
+                # a future had already expired before we even started waiting.
+                self._fail_future_with_timeout(future)
+                return
+            logger.info(
+                "Next timeout is in %s seconds, for %s",
+                seconds_until_next_timeout,
+                future.id,
+            )
+
+        try:
+            with timeout(seconds_until_next_timeout):
+                self._wait_for_scheduled_runs()
+        except TimeoutError:
+            if future is not None and not future.state.is_terminal():
+                self._fail_future_with_timeout(future)
+            elif future is not None:
+                logger.warning(
+                    "Received TimeoutError, but %s is already in terminal state %s",
+                    future.id,
+                    future.state,
+                )
+
+    def _get_seconds_to_next_timeout(
+        self,
+    ) -> TimeoutFuturePair:
+        remaining_timeout_future_pairs = [
+            (math.ceil(future.props.remaining_timeout_seconds), future)  # type: ignore
+            for future in self._futures
+            if future.props.remaining_timeout_seconds is not None
+        ]
+        if len(remaining_timeout_future_pairs) == 0:
+            return None, None
+        return min(remaining_timeout_future_pairs)
 
     def _cancel_non_terminal_futures(self):
         for future in self._futures:
@@ -330,12 +398,12 @@ class StateMachineResolver(Resolver, abc.ABC):
 
         self._future_will_schedule(future)
 
-        if future.props.inline:
-            logger.info("Running inline %s %s", future.id, future.calculator)
-            self._run_inline(future)
-        else:
+        if future.props.standalone:
             logger.info("Scheduling %s %s", future.id, future.calculator)
             self._schedule_future(future)
+        else:
+            logger.info("Running inline %s %s", future.id, future.calculator)
+            self._run_inline(future)
 
     @typing.final
     def _resolve_nested_future(self, future: AbstractFuture) -> None:
