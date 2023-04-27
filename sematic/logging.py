@@ -1,14 +1,14 @@
 # Standard Library
+import logging
 import os
 
 # Sematic
 from sematic.config.config import get_config
 
 
-def make_log_config(log_to_disk: bool = False):
-    stdout_handler_list = ["stdout"] if get_config().server_log_to_stdout else []
-    full_handler_list = ["default", "error"] + stdout_handler_list
-    root_logger_config = {"level": "INFO", "handlers": full_handler_list}
+def make_log_config(log_to_disk: bool = False, level: int = logging.INFO):
+    log_to_stdout = get_config().server_log_to_stdout or not log_to_disk
+    stdout_handler_list = ["stdout"] if log_to_stdout else []
     log_rotation_settings = {
         "formatter": "standard",
         "class": "logging.handlers.RotatingFileHandler",
@@ -24,10 +24,11 @@ def make_log_config(log_to_disk: bool = False):
         },
     }
     if log_to_disk:
+        full_handler_list = ["default", "error"] + stdout_handler_list
         handlers.update(
             {
                 "default": dict(
-                    level="INFO",
+                    level=level,  # type: ignore
                     filename=os.path.join(get_config().config_dir, "access.log"),
                     **log_rotation_settings,  # type: ignore
                 ),
@@ -38,6 +39,11 @@ def make_log_config(log_to_disk: bool = False):
                 ),
             }
         )
+    else:
+        full_handler_list = stdout_handler_list
+
+    root_logger_config = {"level": level, "handlers": full_handler_list}
+
     config = {
         "version": 1,
         "root": root_logger_config,
@@ -50,8 +56,8 @@ def make_log_config(log_to_disk: bool = False):
         "handlers": handlers,
         "loggers": {
             "sematic": root_logger_config,
-            "gunicorn.error": {"level": "ERROR", "handlers": full_handler_list},
-            "gunicorn.access": {"level": "INFO", "handlers": full_handler_list},
+            "gunicorn.error": {"level": logging.ERROR, "handlers": full_handler_list},
+            "gunicorn.access": {"level": level, "handlers": full_handler_list},
         },
     }
     return config
