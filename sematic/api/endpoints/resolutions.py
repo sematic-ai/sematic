@@ -214,7 +214,9 @@ def schedule_resolution_endpoint(
         resolution, updated = _update_resolution_user(resolution=resolution, user=user)
         if updated:
             logger.debug(
-                "Updated Resolution %s User to %s", resolution.root_id, resolution.user_id
+                "Updated Resolution %s User to %s",
+                resolution.root_id,
+                resolution.user_id,
             )
             save_resolution(resolution)
 
