@@ -52,3 +52,21 @@ sematic_py_lib(
         "//sematic/plugins/metrics_storage/sql:sql_metrics_storage",
     ],
 )
+
+pytest_test(
+    name = "test_func_effective_runtime_metric",
+    srcs = ["test_func_effective_runtime_metric.py"],
+    # buildifier: leave-alone
+    deps = [
+        "//sematic:abstract_future",
+        "//sematic/db:db",
+        "//sematic/db/models:run",
+        "//sematic/db/tests:fixtures",
+        "//sematic/metrics:func_effective_runtime_metric",
+        "//sematic/metric:metric_point",
+        "//sematic/plugins:abstract_metrics_storage",
+        "//sematic/plugins/metrics_storage/sql/models:metric_value",
+        "//sematic/plugins/metrics_storage/sql:sql_metrics_storage",
+        "//sematic/utils:exceptions",
+    ],
+)
