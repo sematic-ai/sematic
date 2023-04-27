@@ -401,6 +401,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
         )
 
     result_list = []
+    state_changed_runs = []
     for run_id, (future_state, jobs) in db_status_dict.items():
         new_future_state_value = future_state.value
         run, updated_jobs = _get_run_and_jobs_if_modified(run_id, future_state, jobs)
@@ -412,6 +413,7 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
                 raise _DetectedRunRaceCondition(
                     "Run appears to have been modified since being queried: %s", e
                 )
+            state_changed_runs.append(run)
             broadcast_graph_update(run.root_id, user=user)
 
         for original_job, updated_job in zip(jobs, updated_jobs or []):
@@ -425,6 +427,8 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
                 future_state=new_future_state_value,
             )
         )
+
+    save_event_metrics(MetricEvent.run_state_changed, state_changed_runs, user)
 
     payload = dict(
         content=result_list,
