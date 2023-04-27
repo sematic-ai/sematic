@@ -157,6 +157,12 @@ class NotInSematicFuncError(RuntimeError):
     pass
 
 
+class TimeoutError(RuntimeError):
+    """A timeout has expired."""
+
+    pass
+
+
 class ResolutionError(Exception):
     """The pipeline resolution has failed.
 

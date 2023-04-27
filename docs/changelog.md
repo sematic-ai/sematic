@@ -5,6 +5,7 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+    * [deprecation] Remove direct support for matplotlib figures, use `Image` instead
 * [0.28.1](https://pypi.org/project/sematic/0.28.1/)
     * [improvement] Allow selecting S3 paths in UI
     * [improvement] Backend logging improvements

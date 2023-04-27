@@ -13,6 +13,9 @@ const components: Components = {
                 lineHeight: 1,
                 textTransform: 'uppercase',
                 marginTop: 0,
+            },
+            pre: {
+                whiteSpace: 'pre-wrap'
             }
         })) as any
     },
@@ -21,8 +24,8 @@ const components: Components = {
             underline: 'none'
         },
         styleOverrides: {
-            root: (({theme}: {theme: Theme}) => ({
-                cursor: 'pointer', 
+            root: (({ theme }: { theme: Theme }) => ({
+                cursor: 'pointer',
                 marginBottom: 0,
                 color: theme.palette.black.main,
                 fontSize: theme.typography.fontSize,
@@ -127,7 +130,7 @@ const components: Components = {
             }
         ]
     },
-    MuiFormControl: {        
+    MuiFormControl: {
         variants: [
             {
                 props: { size: 'small' },
@@ -160,7 +163,7 @@ const components: Components = {
     },
     MuiOutlinedInput: {
         styleOverrides: {
-            notchedOutline: (({theme}: {theme: Theme}) => ({
+            notchedOutline: (({ theme }: { theme: Theme }) => ({
                 border: `1px solid ${theme.palette.p3border.main}`,
             })) as any
         }
@@ -171,7 +174,7 @@ const components: Components = {
                 height: 25,
                 borderRadius: 0,
             },
-            label: (({theme}: {theme: Theme}) => ({
+            label: (({ theme }: { theme: Theme }) => ({
                 fontSize: theme.typography.small.fontSize,
                 padding: 5
             })) as any
@@ -191,7 +194,7 @@ const components: Components = {
                         }
                     }
                 }
-                
+
 
             },
             {
@@ -206,7 +209,7 @@ const components: Components = {
     },
     MuiListItemButton: {
         styleOverrides: {
-            root: (({theme}: {theme: Theme}) => ({
+            root: (({ theme }: { theme: Theme }) => ({
                 '&:hover': {
                     color: theme.palette.primary.main,
                     background: 'transparent',
@@ -216,12 +219,21 @@ const components: Components = {
     },
     MuiTooltip: {
         styleOverrides: {
-            tooltipPlacementBottom: (({theme}: {theme: Theme}) => ({
+            tooltipPlacementBottom: (({ theme }: { theme: Theme }) => ({
                 'marginTop': `${theme.spacing(1.5)}!important`,
             })) as any
         }
+    },
+    MuiTab: {
+        styleOverrides: {
+            "root": (({ theme }: { theme: Theme }) => ({
+                "&.Mui-selected": {
+                    'color': `${theme.palette.black.main}`
+                }
+            })) as any
+        }
     }
-    
+
 }
 
 export default components;

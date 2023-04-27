@@ -1,0 +1,171 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    grafana_dashboard: "1"
+  name: sematic-server-dashboard
+data:
+  sematic_server_dashboard_configmap.json: |-
+    {
+      "__inputs": [
+        {
+          "name": "DS_LOKI",
+          "label": "Loki",
+          "description": "",
+          "type": "datasource",
+          "pluginId": "loki",
+          "pluginName": "Loki"
+        }
+      ],
+      "__elements": {},
+      "__requires": [
+        {
+          "type": "grafana",
+          "id": "grafana",
+          "name": "Grafana",
+          "version": "9.1.7"
+        },
+        {
+          "type": "panel",
+          "id": "logs",
+          "name": "Logs",
+          "version": ""
+        },
+        {
+          "type": "datasource",
+          "id": "loki",
+          "name": "Loki",
+          "version": "1.0.0"
+        }
+      ],
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "gridPos": {
+            "h": 19,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 16,
+          "options": {
+            "dedupStrategy": "none",
+            "enableLogDetails": true,
+            "prettifyLogMessage": false,
+            "showCommonLabels": false,
+            "showLabels": false,
+            "showTime": false,
+            "sortOrder": "Descending",
+            "wrapLogMessage": false
+          },
+          "targets": [
+            {
+              "editorMode": "code",
+              "expr": "{app=\"sematic-server\", namespace=\"{{ .Values.sematic_server_namespace }}\"} != `socket` != `kube-probe` | json line=\"log\" | line_format `{{.line}}`",
+              "key": "Q-df73f6a9-a449-42ee-bf11-a09d0f7590c4-0",
+              "queryType": "range",
+              "refId": "A",
+              "datasource": {
+                "type": "loki",
+                "uid": "${DS_LOKI}"
+              }
+            }
+          ],
+          "title": "Server Logs",
+          "type": "logs"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 37,
+      "style": "dark",
+      "tags": [],
+      "templating": {
+        "list": [
+          {
+            "current": {
+              "selected": true,
+              "text": "{{ .Values.sematic_server_namespace }}",
+              "value": "{{ .Values.sematic_server_namespace }}"
+            },
+            "description": "The Kubernetes namespace to view information about",
+            "hide": 0,
+            "includeAll": false,
+            "multi": false,
+            "name": "namespace",
+            "options": [
+              {
+                "selected": true,
+                "text": "{{ .Values.sematic_server_namespace }}",
+                "value": "{{ .Values.sematic_server_namespace }}"
+              }
+            ],
+            "query": "{{ .Values.sematic_server_namespace }}",
+            "queryValue": "{{ .Values.sematic_server_namespace }}",
+            "skipUrlSync": false,
+            "type": "custom"
+          },
+          {
+            "current": {
+              "selected": false,
+              "text": "",
+              "value": ""
+            },
+            "description": "Raw text string to filter server log lines",
+            "hide": 0,
+            "label": "Log Filter",
+            "name": "logfilter",
+            "options": [
+              {
+                "selected": true,
+                "text": "",
+                "value": ""
+              }
+            ],
+            "query": "",
+            "skipUrlSync": false,
+            "type": "textbox"
+          }
+        ]
+      },
+      "time": {
+        "from": "now-3h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Sematic Server",
+      "uid": "33h1gao4k",
+      "version": 6,
+      "weekStart": ""
+    }

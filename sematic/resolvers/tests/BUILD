@@ -50,6 +50,7 @@ pytest_test(
         "//sematic/resolvers:silent_resolver",
         "//sematic/resolvers/tests:fixtures",
         "//sematic/utils:exceptions",
+        "//sematic/tests:utils",
     ],
 )
 

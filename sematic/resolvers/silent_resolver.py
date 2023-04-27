@@ -2,13 +2,22 @@
 import logging
 
 # Sematic
-from sematic.abstract_future import AbstractFuture, FutureState
+from sematic.abstract_future import (
+    AbstractFuture,
+    FutureState,
+    get_minimum_call_chain_timeout_seconds,
+)
 from sematic.future_context import PrivateContext, SematicContext, set_context
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 from sematic.resolvers.resource_managers.memory_manager import MemoryResourceManager
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
-from sematic.utils.exceptions import ResolutionError, format_exception_for_run
+from sematic.utils.exceptions import (
+    ResolutionError,
+    TimeoutError,
+    format_exception_for_run,
+)
+from sematic.utils.timeout import timeout
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +32,17 @@ class SilentResolver(StateMachineResolver):
 
     def _run_inline(self, future: AbstractFuture) -> None:
         self._set_future_state(future, FutureState.SCHEDULED)
+        (
+            timeout_seconds,
+            timeout_restricting_future,
+        ) = get_minimum_call_chain_timeout_seconds(future)
+        timeout_seconds = None if timeout_seconds is None else int(timeout_seconds)
+        if (
+            timeout_seconds is not None
+            and timeout_seconds < 0
+            and timeout_restricting_future is not None
+        ):
+            self._fail_future_with_timeout(timeout_restricting_future)
         try:
             self._start_inline_execution(future.id)
             with set_context(
@@ -34,7 +54,11 @@ class SilentResolver(StateMachineResolver):
                     ),
                 )
             ):
-                value = future.calculator.calculate(**future.resolved_kwargs)
+                try:
+                    with timeout(timeout_seconds):
+                        value = future.calculator.calculate(**future.resolved_kwargs)
+                except TimeoutError:
+                    self._fail_future_with_timeout(future, timeout_restricting_future)
             self._update_future_with_value(future, value)
         except ResolutionError:
             # only we raise ResolutionError when determining a failure is unrecoverable

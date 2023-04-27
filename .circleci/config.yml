@@ -67,7 +67,7 @@ commands:
       - run:
           name: Run Non-coverage Tests
           # This assumes pytest is installed via the install-package step above
-          command: PYTHONUNBUFFERED=1 bazel test //sematic/... --test_output=all
+          command: PYTHONUNBUFFERED=1 bazel test --action_env=RUN_SLOW_TESTS=1 //sematic/... --test_output=all
 
   installation-tests:
     description: Do a test of installing sematic via wheel

@@ -21,6 +21,12 @@ data:
   AWS_S3_REGION: {{ .Values.aws.bucket_region | quote }}
   STORAGE: "sematic.plugins.storage.s3_storage.S3Storage"
 {{ end }}
+{{ if .Values.local_storage.enabled }}
+  STORAGE: "sematic.plugins.storage.local_storage.LocalStorage"
+{{ if .Values.local_storage.local_storage_path }}
+  LOCAL_STORAGE_PATH: {{ .Values.local_storage.local_storage_path | quote }}
+{{ end }}
+{{ end }}
 {{ if .Values.slack.enabled }}
   PUBLISH: "sematic.plugins.publishing.slack.SlackPublisher"
   SLACK_WEBHOOK_TOKEN: {{ .Values.slack.slack_webhook_token | quote }}

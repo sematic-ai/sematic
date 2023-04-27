@@ -231,6 +231,19 @@ def do_spam_logs(val: float, log_lines: int) -> float:
     return val
 
 
+@sematic.func
+def do_nested_sleep(val: float, duration_minutes: int) -> float:
+    """
+    Call sleep as a nested function.
+    """
+    logger.info(
+        "Executing: do_nested_sleep(val=%s, duration_minutes=%s)",
+        val,
+        duration_minutes,
+    )
+    return do_sleep(val, duration_minutes)
+
+
 @sematic.func(standalone=True)
 def do_oom(val: float) -> float:
     """
@@ -408,6 +421,8 @@ def testing_pipeline(
     spam_logs: int = 0,
     should_raise: bool = False,
     raise_retry_probability: Optional[float] = None,
+    timeout_settings: Optional[Tuple[int, int]] = None,
+    nested_timeout_settings: Optional[Tuple[int, int]] = None,
     oom: bool = False,
     external_resource: bool = False,
     ray_resource: bool = False,
@@ -446,6 +461,16 @@ def testing_pipeline(
     raise_retry_probability: Optional[float]
         If not None, includes a function which raises a ValueError with the given
         probability, with a total of 10 retries. Defaults to None.
+    timeout_settings: Optional[Tuple[int, int]]
+        If not None, perform a sleep with a duration given by the first int as the number
+        of minutes on a Sematic function set with a timeout given by the second int as
+        a number of minutes. If None, do not test timeouts. Defaults to None.
+    nested_timeout_settings: Optional[Tuple[int, int]]
+        If not None, perform a sleep with a duration given by the first int as the number
+        of minutes on a Sematic function set with a timeout given by the second int as
+        a number of minutes. If None, do not test timeouts. Defaults to None. This setting
+        will set the timeout on an outer function, and do the waiting in a nested function
+        call.
     oom: bool
         Whether to include a function that causes an Out of Memory error.
         Defaults to False.
@@ -514,6 +539,20 @@ def testing_pipeline(
 
     if raise_retry_probability:
         futures.append(do_retry(initial_future))
+
+    if timeout_settings and timeout_settings[0] > 0:
+        futures.append(
+            do_sleep(initial_future, timeout_settings[0] * 60).set(
+                name="timeout", timeout_mins=timeout_settings[1]
+            )
+        )
+
+    if nested_timeout_settings and nested_timeout_settings[0] > 0:
+        futures.append(
+            do_nested_sleep(initial_future, nested_timeout_settings[0] * 60).set(
+                name="nested_timeout", timeout_mins=nested_timeout_settings[1]
+            )
+        )
 
     if oom:
         futures.append(do_oom(initial_future))

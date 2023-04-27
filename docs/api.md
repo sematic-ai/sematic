@@ -37,9 +37,16 @@ in the Sematic UI.
     resources the function requires. Defaults to `None`.
 
 - `retry`: Optional[RetrySettings]
-    
+
     Specifies in case of which Exceptions the function's execution should
     be retried, and how many times. Defaults to `None`.
+
+- `timeout_mins`: Optional[int]
+
+    Specifies the maximum amount of time that this function can take
+    before the final result is known. Must be an integer >=1. Note that
+    this time includes any time it takes to schedule the Function to
+    execute and begin executing the code. Defaults to `None`.
 
 #### Returns
 

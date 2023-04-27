@@ -57,6 +57,7 @@ class Calculator(AbstractCalculator):
         resource_requirements: Optional[ResourceRequirements] = None,
         retry_settings: Optional[RetrySettings] = None,
         base_image_tag: Optional[str] = None,
+        timeout_mins: Optional[int] = None,
     ) -> None:
         self._validate_func(func)
         self._func = func
@@ -69,6 +70,7 @@ class Calculator(AbstractCalculator):
         self._resource_requirements = resource_requirements
         self._retry_settings = retry_settings
         self._base_image_tag = base_image_tag
+        self._timeout_mins = timeout_mins
 
         self.__doc__ = func.__doc__
         self.__module__ = func.__module__
@@ -170,6 +172,7 @@ class Calculator(AbstractCalculator):
             # future (retry_count is mutable and increases with retries)
             retry_settings=copy(self._retry_settings),
             base_image_tag=self._base_image_tag,
+            timeout_mins=self._timeout_mins,
         )
         try:
             ctx = context()
@@ -288,6 +291,7 @@ def func(
     resource_requirements: Optional[ResourceRequirements] = None,
     retry: Optional[RetrySettings] = None,
     base_image_tag: Optional[str] = None,
+    timeout_mins: Optional[int] = None,
 ) -> Union[Calculator, Callable]:
     """
     The Sematic Function decorator.
@@ -319,6 +323,9 @@ def func(
     retry: Optional[RetrySettings]
         Specifies in case of which Exceptions the function's execution should be
         retried, and how many times. Defaults to `None`.
+    timeout_mins: Optional[int]
+        Specifies the maximum amount of time that this function can take before
+        the final result is known. Must be an integer >=1. Defaults to `None`.
 
     Returns
     -------
@@ -384,6 +391,7 @@ def func(
             resource_requirements=resource_requirements,
             retry_settings=retry,
             base_image_tag=base_image_tag,
+            timeout_mins=timeout_mins,
         )
 
     if func is None:
