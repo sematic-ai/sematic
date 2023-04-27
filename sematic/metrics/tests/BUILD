@@ -63,7 +63,7 @@ pytest_test(
         "//sematic/db/models:run",
         "//sematic/db/tests:fixtures",
         "//sematic/metrics:func_effective_runtime_metric",
-        "//sematic/metric:metric_point",
+        "//sematic/metrics:metric_point",
         "//sematic/plugins:abstract_metrics_storage",
         "//sematic/plugins/metrics_storage/sql/models:metric_value",
         "//sematic/plugins/metrics_storage/sql:sql_metrics_storage",
