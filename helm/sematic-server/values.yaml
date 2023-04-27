@@ -20,6 +20,7 @@ secret:
   create: true
 
 cleaner:
+  enabled: true
   crontab: "0-55/5 * * * *"
   ttlSecondsAfterFinished: 300
 

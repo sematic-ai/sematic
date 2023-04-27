@@ -1,9 +1,11 @@
+{{- if .Values.cleaner.enabled }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ .Release.Name }}-cleaner
   labels:
-    app.kubernetes.io/component: cleaner
+    {{- include "sematic-server.labels" . | nindent 4 }}
+    sematic.ai/component: cleaner
 spec:
   schedule: {{ .Values.cleaner.crontab }}
   concurrencyPolicy: Forbid
@@ -24,7 +26,7 @@ spec:
             env:
             - name: SEMATIC_API_ADDRESS
               value: "http://{{ .Release.Name }}"
-            - name: RUNNING_AS_CRON_JOB
+            - name: RUNNING_AS_CLEANER_CRON_JOB
               value: "true"
             envFrom:
             - configMapRef:
@@ -38,3 +40,4 @@ spec:
             - --orphaned-jobs
             - --orphaned-resources
           restartPolicy: Never
+{{- end }}

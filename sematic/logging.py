@@ -56,7 +56,7 @@ def make_log_config(log_to_disk: bool = False, level: int = logging.INFO):
         "handlers": handlers,
         "loggers": {
             "sematic": root_logger_config,
-            "gunicorn.error": {"level": "ERROR", "handlers": full_handler_list},
+            "gunicorn.error": {"level": logging.ERROR, "handlers": full_handler_list},
             "gunicorn.access": {"level": level, "handlers": full_handler_list},
         },
     }

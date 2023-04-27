@@ -46,7 +46,10 @@ def clean(orphaned_jobs: bool, orphaned_resources: bool, force: bool):
     """
     Clean up objects that are no longer needed.
     """
-    running_as_cron_job = os.environ.get("RUNNING_AS_CRON_JOB", None) is not None
+    switch_env("user")
+    running_as_cron_job = (
+        os.environ.get("RUNNING_AS_CLEANER_CRON_JOB", None) is not None
+    )
     if running_as_cron_job:
         echo = logger.info  # type: ignore
         api_key = get_cleaner_api_key()
@@ -55,7 +58,6 @@ def clean(orphaned_jobs: bool, orphaned_resources: bool, force: bool):
     else:
         echo = click.echo  # type: ignore
         echo("Starting cleaner")
-    switch_env("user")
 
     cleaned_messages = []
     if orphaned_jobs:
