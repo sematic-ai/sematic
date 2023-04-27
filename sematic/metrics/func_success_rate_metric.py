@@ -11,7 +11,7 @@ from sematic.abstract_system_metric import AbstractSystemMetric
 from sematic.db.models.run import Run
 from sematic.metrics.metric_point import MetricType
 
-FINAL_STATES = {FutureState.RESOLVED, FutureState.FAILED, FutureState.NESTED_FAILED}
+INCLUDED_STATES = {FutureState.RESOLVED, FutureState.FAILED, FutureState.NESTED_FAILED}
 
 
 class FuncSuccessRateMetric(AbstractSystemMetric):
@@ -37,17 +37,14 @@ class FuncSuccessRateMetric(AbstractSystemMetric):
     def _get_value(self, run: Run) -> Optional[Tuple[datetime, float]]:
         state = FutureState(run.future_state)
 
-        if not state.is_terminal():
+        # Canceled runs result either from user action, or from the failure
+        # of an upstream run. They should not be counted.
+        if state not in INCLUDED_STATES:
             return None
 
         # Cached and cloned runs should not contribute to the success rate
         # Otherwise they would artificially inflate success counts
         if run.original_run_id is not None:
-            return None
-
-        # Canceled runs result either from user action, or from the failure
-        # of an upstream run. They should not be counted.
-        if state is FutureState.CANCELED:
             return None
 
         value = 1 if state is FutureState.RESOLVED else 0
@@ -70,7 +67,7 @@ class FuncSuccessRateMetric(AbstractSystemMetric):
         return (
             session.query(Run)
             .filter(
-                Run.future_state.in_([state.value for state in FINAL_STATES]),
+                Run.future_state.in_([state.value for state in INCLUDED_STATES]),
                 Run.original_run_id.is_(None),
             )
             .options(joinedload(Run.root_run))
