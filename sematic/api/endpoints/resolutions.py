@@ -24,6 +24,7 @@ from sematic.api.endpoints.events import (
 )
 from sematic.api.endpoints.payloads import get_resolution_payload
 from sematic.api.endpoints.request_parameters import jsonify_error
+from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.factories import clone_resolution, clone_root_run
 from sematic.db.models.resolution import InvalidResolution, Resolution, ResolutionStatus
@@ -209,22 +210,31 @@ def schedule_resolution_endpoint(
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    resolution, updated = _update_resolution_user(resolution=resolution, user=user)
-    if updated:
-        logger.debug(
-            "Updated Resolution %s User to %s", resolution.root_id, resolution.user_id
+    try:
+        resolution, updated = _update_resolution_user(resolution=resolution, user=user)
+        if updated:
+            logger.debug(
+                "Updated Resolution %s User to %s",
+                resolution.root_id,
+                resolution.user_id,
+            )
+            save_resolution(resolution)
+
+        resolution, post_schedule_job = schedule_resolution(
+            resolution=resolution,
+            max_parallelism=max_parallelism,
+            rerun_from=rerun_from,
         )
+
+        logger.info("Scheduled resolution with job %s", post_schedule_job.identifier())
         save_resolution(resolution)
+        save_job(post_schedule_job)
 
-    resolution, post_schedule_job = schedule_resolution(
-        resolution=resolution,
-        max_parallelism=max_parallelism,
-        rerun_from=rerun_from,
-    )
+    except MissingSettingsError as e:
+        return jsonify_error(str(e), status=HTTPStatus.BAD_REQUEST)
 
-    logger.info("Scheduled resolution with job %s", post_schedule_job.identifier())
-    save_resolution(resolution)
-    save_job(post_schedule_job)
+    except Exception as e:
+        return jsonify_error(str(e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     payload = dict(content=get_resolution_payload(resolution))
 

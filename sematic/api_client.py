@@ -754,14 +754,19 @@ def _raise_for_response(
     exception: Optional[Exception] = None
     url, method = response.url, response.request.method
 
-    error_message = None
+    details = "Please check the Sematic Server logs for more information."
     could_load_json = False
     try:
         response_json = response.json()
         could_load_json = True
+
         error_message = response_json.get("error", None)
         if error_message is not None:
-            error_message = f"The server provided the error message: {error_message}."
+            details = (
+                f"The Server provided the following error message:"
+                f"\n{error_message}\n{details}"
+            )
+
     except Exception:
         pass
 
@@ -771,17 +776,13 @@ def _raise_for_response(
     elif 400 <= response.status_code < 500:
         exception = BadRequestError(
             f"The {method} request to {url} was invalid, "
-            f"response was {response.status_code}. "
-            f"{error_message} "
-            f"Please check the Sematic server logs for more information."
+            f"response was {response.status_code}. {details}"
         )
 
     elif response.status_code >= 500:
         exception = ServerError(
             f"The Sematic server could not handle the "
-            f"{method} request to {url}. "
-            f"{error_message}"
-            f"Please check the Sematic server logs for more information."
+            f"{method} request to {url}. {details}"
         )
 
     if exception is None and validate_json and not could_load_json:
