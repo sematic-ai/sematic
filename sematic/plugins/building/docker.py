@@ -231,10 +231,10 @@ class DockerBuilder(AbstractBuilder):
         executions.
         """
         build_config = _get_build_config(script_path=target)
-        logger.error("Loaded build configuration: %s", build_config)
+        logger.info("Loaded build configuration: %s", build_config)
 
         base_image_uri = _get_image_uri(build_config=build_config, target=target)
-        logger.error("Using container base image URI: %s", repr(base_image_uri))
+        logger.info("Using container base image URI: %s", repr(base_image_uri))
 
         # TODO: configure the docker service connection string in the build file
         docker_client = docker.from_env()  # type: ignore
@@ -247,7 +247,7 @@ class DockerBuilder(AbstractBuilder):
                 f"expected: {base_image_uri.digest} got: {image.id}"
             )
 
-        logger.error("Found base image: '%s'", base_image_uri)
+        logger.info("Found base image: '%s'", base_image_uri)
 
         build_image_uri = _push_image(
             image=image,
@@ -256,7 +256,7 @@ class DockerBuilder(AbstractBuilder):
             docker_client=docker_client,
         )
 
-        logger.error("Finished building image: '%s'", repr(build_image_uri))
+        logger.info("Finished building image: '%s'", repr(build_image_uri))
 
         return build_image_uri
 
@@ -269,11 +269,11 @@ class DockerBuilder(AbstractBuilder):
         #  promote the `environment_variables` testing fixture to a utility
         os.environ[CONTAINER_IMAGE_ENV_VAR] = repr(image_uri)
 
-        logger.error("Launching target: '%s'", target)
+        logger.info("Launching target: '%s'", target)
 
         runpy.run_path(path_name=target, run_name="__main__")
 
-        logger.error("Finished launching target: '%s'", target)
+        logger.info("Finished launching target: '%s'", target)
 
 
 def _get_build_config(script_path: str) -> BuildConfig:
@@ -287,7 +287,7 @@ def _get_build_config(script_path: str) -> BuildConfig:
         There was an error when loading or validating the specified build configuration.
     """
     build_config_files = _find_build_config_files(script_path=script_path)
-    logger.error(
+    logger.info(
         "Script '%s' has these corresponding build files: %s",
         script_path,
         build_config_files,
@@ -343,7 +343,7 @@ def _get_image_uri(build_config: BuildConfig, target: str) -> ImageURI:
             script_dir = None  # type: ignore
         script_file = f"./{script_file}"
 
-        logger.error(
+        logger.info(
             f"Executing: executable={script_file} cwd={script_dir} args={target}"
         )
 
@@ -405,7 +405,7 @@ def _push_image(
         There was an error when executing the `docker` commands.
     """
     if push_config is None:
-        logger.error("Image pushing not configured; skipping")
+        logger.info("Image pushing not configured; skipping")
         return image_uri
 
     repository = push_config.get_repository_str()
@@ -419,7 +419,7 @@ def _push_image(
             f"with tag '{tag}' failed; no other information available."
         )
 
-    logger.error(
+    logger.info(
         "Tagged image '%s' in repository '%s' with tag '%s'",
         image_uri,
         repository,
@@ -447,7 +447,7 @@ def _push_image(
             raise BuildError(f"Unable to push image: {status_update['error']}")
 
         update_str = " ".join(sorted([f"{k}={v}" for k, v in status_update.items()]))
-        logger.error("Image push update: %s", update_str)
+        logger.info("Image push update: %s", update_str)
 
     return _reload_image_uri(image=image)
 
