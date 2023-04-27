@@ -4,7 +4,6 @@ import json
 import time
 import typing
 import uuid
-from copy import deepcopy
 from dataclasses import asdict, replace
 from unittest import mock
 
@@ -675,11 +674,7 @@ def test_get_run_logs(
     payload = response.json
     payload = typing.cast(typing.Dict[str, typing.Any], payload)
 
-    # can_continue_backward will be overriden to False if a cursor is not provided
-    expected_result = asdict(mock_result)
-    expected_result["can_continue_backward"] = False
-
-    assert payload["content"] == expected_result
+    assert payload["content"] == asdict(mock_result)
     kwargs = dict(
         forward_cursor_token="continue...",
         reverse_cursor_token="continue backwards...",
@@ -702,44 +697,6 @@ def test_get_run_logs(
         run_id=persisted_run.id,
         **modified_kwargs,
     )
-
-
-def test_get_run_logs_can_continue_override(
-    mock_auth,  # noqa: F811
-    mock_load_log_lines,
-    persisted_resolution: Resolution,  # noqa: F811
-    persisted_run: Run,  # noqa: F811
-    test_client: flask.testing.FlaskClient,  # noqa: F811
-):
-    mock_result = LogLineResult(
-        can_continue_forward=True,
-        can_continue_backward=True,
-        lines=["Line 1", "Line 2"],
-        line_ids=[123, 124],
-        forward_cursor_token="abc",
-        reverse_cursor_token="xyz",
-        log_info_message=None,
-    )
-    mock_load_log_lines.return_value = mock_result
-    response = test_client.get(f"/api/v1/runs/{persisted_run.id}/logs")
-
-    assert response.status_code == 200
-    assert response.json["content"]["can_continue_backward"] is False  # type: ignore
-
-    new_run = deepcopy(persisted_run)
-    new_run.future_state = FutureState.RESOLVED
-    save_run(new_run)
-
-    response = test_client.get(f"/api/v1/runs/{new_run.id}/logs?reverse=true")
-    assert response.json["content"]["can_continue_forward"] is False  # type: ignore
-
-    new_run.future_state = FutureState.RAN
-    save_run(new_run)
-
-    response = test_client.get(f"/api/v1/runs/{new_run.id}/logs?reverse=true")
-    assert response.json["content"]["can_continue_forward"] is True  # type: ignore
-
-    save_run(persisted_run)
 
 
 @func
