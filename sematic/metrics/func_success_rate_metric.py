@@ -20,9 +20,8 @@ class FuncSuccessRateMetric(AbstractSystemMetric):
 
     Success rate is defined as:
 
-    Number of qualifying RESOLVED runs
-    ------------------------------------------------------------
-    Number of qualifying (RESOLVED + FAILED + NESTED_FAILED) runs
+    Numerator: Number of qualifying RESOLVED runs
+    Denominator: Number of qualifying (RESOLVED + FAILED + NESTED_FAILED) runs
 
     where qualifying runs are all non-cached, non-cloned runs.
     """

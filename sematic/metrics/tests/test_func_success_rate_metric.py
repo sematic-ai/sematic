@@ -107,6 +107,9 @@ def test_backfill_query(twelve_runs: List[Run], test_db: DB):  # noqa: F811
     with test_db.get_session() as session:
         query = FuncSuccessRateMetric()._get_backfill_query(session)
 
+        # 1 in 4 is CREATED (non terminal state)
+        # 1 in 3 is cached
+        # (3/4) * (2/3) * 12 = 6
         assert query.count() == 6
 
 
