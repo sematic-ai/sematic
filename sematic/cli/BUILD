@@ -32,6 +32,7 @@ sematic_py_lib(
     ],
     deps = [
         "//sematic/db:migrate_lib",
+        "//sematic:logging",
     ],
 )
 

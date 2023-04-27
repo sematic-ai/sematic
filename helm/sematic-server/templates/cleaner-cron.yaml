@@ -1,0 +1,43 @@
+{{- if .Values.cleaner.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-cleaner
+  labels:
+    {{- include "sematic-server.labels" . | nindent 4 }}
+    sematic.ai/component: cleaner
+spec:
+  schedule: {{ .Values.cleaner.crontab }}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: {{ .Values.cleaner.ttlSecondsAfterFinished }}
+      template:
+        spec:
+          {{- with .Values.image.pull_secrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          serviceAccountName: {{ .Values.service_account.name | default .Release.Name }}
+          containers:
+          - name: cleaner
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+            imagePullPolicy: {{ .Values.image.pull_policy }}
+            env:
+            - name: SEMATIC_API_ADDRESS
+              value: "http://{{ .Release.Name }}"
+            - name: RUNNING_AS_CLEANER_CRON_JOB
+              value: "true"
+            envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}
+            - secretRef:
+                name: {{ .Release.Name }}
+            command:
+            - sematic
+            - --verbose
+            - clean
+            - --orphaned-jobs
+            - --orphaned-resources
+          restartPolicy: Never
+{{- end }}
