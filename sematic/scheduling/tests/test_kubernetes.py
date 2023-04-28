@@ -11,8 +11,10 @@ from sematic.api.tests.fixtures import mock_server_settings
 from sematic.config.server_settings import ServerSettingsVar
 from sematic.db.tests.fixtures import make_job
 from sematic.resolvers.resource_requirements import (
+    KubernetesCapabilities,
     KubernetesResourceRequirements,
     KubernetesSecretMount,
+    KubernetesSecurityContext,
     KubernetesToleration,
     KubernetesTolerationEffect,
     KubernetesTolerationOperator,
@@ -88,10 +90,17 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
                 KubernetesToleration(),
             ],
             mount_expanded_shared_memory=True,
+            security_context=KubernetesSecurityContext(
+                privileged=True,
+                allow_privilege_escalation=True,
+                capabilities=KubernetesCapabilities(add=["SYS_ADMIN"]),
+            ),
         )
     )
 
-    with environment_variables({"SEMATIC_CONTAINER_IMAGE": image_uri}):
+    with environment_variables(
+        {"SEMATIC_CONTAINER_IMAGE": image_uri, "ALLOW_CUSTOM_SECURITY_CONTEXTS": "true"}
+    ):
         _schedule_kubernetes_job(
             name=name,
             image=image_uri,
@@ -156,6 +165,93 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     assert tolerations[1].effect is None
     assert tolerations[1].operator == "Equal"
     assert tolerations[1].toleration_seconds is None
+
+    security_context = container.security_context
+    assert security_context.privileged
+    assert security_context.allow_privilege_escalation
+    assert security_context.capabilities.add == ["SYS_ADMIN"]
+
+
+@mock.patch("sematic.scheduling.kubernetes.load_kube_config")
+@mock.patch("sematic.scheduling.kubernetes.kubernetes.client.BatchV1Api")
+def test_schedule_security_context_feature_flag(k8s_batch_client, mock_kube_config):
+    name = "the-name"
+    requests = {"cpu": "42"}
+    node_selector = {"foo": "bar"}
+    environment_secrets = {"api_key_1": "MY_API_KEY"}
+    file_secrets = {"api_key_2": "the_file.txt"}
+    secret_root = "/the-secrets"
+    image_uri = "the-image"
+    namespace = "the-namespace"
+    custom_service_account = "custom-sa"
+    args = ["a", "b", "c"]
+    configured_env_vars = {
+        "SOME_ENV_VAR": "some-env-var-value",
+        "SEMATIC_API_ADDRESS": "http://theurl.com",
+    }
+    api_url_override = "http://urloverride.com"
+
+    resource_requirements = ResourceRequirements(
+        kubernetes=KubernetesResourceRequirements(
+            requests=requests,
+            node_selector=node_selector,
+            secret_mounts=KubernetesSecretMount(
+                environment_secrets=environment_secrets,
+                file_secrets=file_secrets,
+                file_secret_root_path=secret_root,
+            ),
+            tolerations=[
+                KubernetesToleration(
+                    key="foo",
+                    operator=KubernetesTolerationOperator.Equal,
+                    effect=KubernetesTolerationEffect.NoExecute,
+                    value="bar",
+                    toleration_seconds=42,
+                ),
+                KubernetesToleration(),
+            ],
+            mount_expanded_shared_memory=True,
+            security_context=KubernetesSecurityContext(
+                privileged=True,
+                allow_privilege_escalation=True,
+                capabilities=KubernetesCapabilities(add=["SYS_ADMIN"]),
+            ),
+        )
+    )
+
+    with environment_variables(
+        {
+            "SEMATIC_CONTAINER_IMAGE": image_uri,
+            "ALLOW_CUSTOM_SECURITY_CONTEXTS": "false",
+        }
+    ):
+        with pytest.raises(ValueError):
+            _schedule_kubernetes_job(
+                name=name,
+                image=image_uri,
+                environment_vars=configured_env_vars,
+                namespace=namespace,
+                service_account=custom_service_account,
+                resource_requirements=resource_requirements,
+                api_address_override=api_url_override,
+                args=args,
+            )
+
+    with environment_variables(
+        {"SEMATIC_CONTAINER_IMAGE": image_uri, "ALLOW_CUSTOM_SECURITY_CONTEXTS": "true"}
+    ):
+        _schedule_kubernetes_job(
+            name=name,
+            image=image_uri,
+            environment_vars=configured_env_vars,
+            namespace=namespace,
+            service_account=custom_service_account,
+            resource_requirements=resource_requirements,
+            api_address_override=api_url_override,
+            args=args,
+        )
+
+    k8s_batch_client.return_value.create_namespaced_job.assert_called_once()
 
 
 IS_ACTIVE_CASES = [

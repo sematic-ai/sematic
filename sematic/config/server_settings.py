@@ -43,6 +43,11 @@ class ServerSettingsVar(AbstractPluginSettingsVar):
     # uses for jobs.
     SEMATIC_WORKER_KUBERNETES_SA = "SEMATIC_WORKER_KUBERNETES_SA"
 
+    # Controls whether users who are defining pipelines can
+    # customize the Kubernetes security context in which their
+    # job runs.
+    ALLOW_CUSTOM_SECURITY_CONTEXTS = "ALLOW_CUSTOM_SECURITY_CONTEXTS"
+
     # GRAFANA
     GRAFANA_PANEL_URL = "GRAFANA_PANEL_URL"
 
