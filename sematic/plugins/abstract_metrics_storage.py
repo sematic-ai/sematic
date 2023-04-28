@@ -60,7 +60,7 @@ class MetricSeries:
     )
     ```
 
-    Success rate by calculator path by day:
+    Success rate by function path by day:
     ```
     MetricSeries(
         metric_name="sematic.func_success_rate",
@@ -71,7 +71,7 @@ class MetricSeries:
             (0.45, ("path.to.bar", "2023-04-12")),
             ...
         ],
-        columns=["calculator_path", "date"],
+        columns=["function_path", "date"],
     )
     ```
     """
@@ -176,7 +176,7 @@ class AbstractMetricsStorage(abc.ABC):
             filter=MetricsFilter(
                 name="sematic.func_run_count", from_time=(datetime.utcnow() -
                 datetime.timedelta(days=30)), to_time=datetime.utcnow(),
-                labels={"calculator_path": "path.to.foo"}
+                labels={"function_path": "path.to.foo"}
             ), group_by=[], rollup=24 * 3600,
         )
         ```

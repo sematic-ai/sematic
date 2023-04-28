@@ -286,7 +286,7 @@ def cancel_resolution(resolution_id: str) -> Resolution:
 
 
 def schedule_run(run_id: str) -> Run:
-    """Ask the server to execute the calculator for the run."""
+    """Ask the server to execute the function for the run."""
     response = _post(f"/runs/{run_id}/schedule", json_payload={})
     return Run.from_json_encodable(response["content"])
 
@@ -536,8 +536,8 @@ def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
     return result_dict
 
 
-def notify_pipeline_update(calculator_path: str):
-    _notify_event("pipeline", "update", {"calculator_path": calculator_path})
+def notify_pipeline_update(function_path: str):
+    _notify_event("pipeline", "update", {"function_path": function_path})
 
 
 def notify_graph_update(run_id: str):

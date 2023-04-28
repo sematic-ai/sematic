@@ -43,7 +43,7 @@ pytest_test(
     deps = [
         "//sematic:abstract_future",
         "//sematic:api_client",
-        "//sematic:calculator",
+        "//sematic:function",
         "//sematic:log_reader",
         "//sematic/api/tests:fixtures",
         "//sematic/config:server_settings",

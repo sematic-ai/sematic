@@ -14,7 +14,6 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     mock_socketio,
     test_client,
 )
-from sematic.calculator import func
 from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.queries import get_root_graph, get_run, save_resolution, save_run
@@ -27,6 +26,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     allow_any_run_state_transition,
     test_db,
 )
+from sematic.function import func
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.tests.fixtures import (  # noqa: F401
     environment_variables,
@@ -81,7 +81,7 @@ def test_simulate_cloud_exec(
         if run_id == future.id:
             raise RuntimeError("Root future should not need scheduling--it's inline!")
         run = api_client.get_run(run_id)  # noqa: F811
-        if "add" in run.calculator_path:
+        if "add" in run.function_path:
             add_run_ids.append(run_id)
         run.future_state = FutureState.SCHEDULED
         api_client.save_graph(run.id, runs=[run], artifacts=[], edges=[])

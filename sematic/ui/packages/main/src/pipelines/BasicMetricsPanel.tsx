@@ -70,14 +70,16 @@ function TopMetric(props: { value: string; label: string; docs?: string }) {
   );
 }
 
-export function runSuccessRate(countByState: {[k: string]: number}, run: Run): string {
+export function runSuccessRate(
+  countByState: { [k: string]: number },
+  run: Run
+): string {
   const numeratorStates = ["RESOLVED"];
   const denominatorStates = ["RESOLVED", "FAILED", "NESTED_FAILED"];
 
   const countForStates = (states: string[]) =>
     states.reduce(
-      (sum: number, state: string) =>
-        (sum += countByState[state] || 0),
+      (sum: number, state: string) => (sum += countByState[state] || 0),
       0
     );
 
@@ -89,10 +91,11 @@ export function runSuccessRate(countByState: {[k: string]: number}, run: Run): s
   return `${Math.floor(percentRate)}%`;
 }
 
-export function runAvgRunTime(avgRuntimeChildren: {[k: string]: number}, run: Run): string {
-  return durationSecondsToString(
-    avgRuntimeChildren[run.calculator_path] || 0
-  );
+export function runAvgRunTime(
+  avgRuntimeChildren: { [k: string]: number },
+  run: Run
+): string {
+  return durationSecondsToString(avgRuntimeChildren[run.function_path] || 0);
 }
 
 export default function BasicMetricsPanel() {
@@ -103,12 +106,16 @@ export default function BasicMetricsPanel() {
   const totalCount = useMemo(() => payload?.content.total_count, [payload]);
 
   const successRate = useMemo(
-    () => (payload ? runSuccessRate(payload.content.count_by_state, rootRun) : "0%"),
+    () =>
+      payload ? runSuccessRate(payload.content.count_by_state, rootRun) : "0%",
     [payload, rootRun]
   );
 
   const avgRuntime = useMemo(
-    () => (payload ? runAvgRunTime(payload.content.avg_runtime_children, rootRun) : "0s"),
+    () =>
+      payload
+        ? runAvgRunTime(payload.content.avg_runtime_children, rootRun)
+        : "0s",
     [payload, rootRun]
   );
 
@@ -157,10 +164,10 @@ export default function BasicMetricsPanel() {
             <Table>
               <TableBody>
                 {sortedAvgRuntimeChildren.map(
-                  ([calculatorPath, runtimeS], idx) => (
+                  ([functionPath, runtimeS], idx) => (
                     <TableRow key={idx}>
                       <TableCell>
-                        <CalculatorPath calculatorPath={calculatorPath} />
+                        <CalculatorPath functionPath={functionPath} />
                       </TableCell>
                       <TableCell>{durationSecondsToString(runtimeS)}</TableCell>
                     </TableRow>

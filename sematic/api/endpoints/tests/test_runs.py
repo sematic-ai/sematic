@@ -23,7 +23,6 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     mock_socketio,
     test_client,
 )
-from sematic.calculator import func
 from sematic.config.server_settings import ServerSettings, ServerSettingsVar
 from sematic.config.tests.fixtures import empty_settings_file  # noqa: F401
 from sematic.config.user_settings import UserSettings, UserSettingsVar
@@ -51,6 +50,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
+from sematic.function import func
 from sematic.log_reader import LogLineResult
 from sematic.metrics.run_count_metric import RunCountMetric
 from sematic.scheduling.job_details import PodSummary
@@ -185,8 +185,8 @@ def test_list_runs_filters(
 def test_list_runs_filters_empty(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
-    run1 = make_run(name="abc", calculator_path="abc")
-    run2 = make_run(name="def", calculator_path="def")
+    run1 = make_run(name="abc", function_path="abc")
+    run2 = make_run(name="def", function_path="def")
 
     for run_ in [run1, run2]:
         save_run(run_)
@@ -204,14 +204,14 @@ def test_list_runs_filters_empty(
 def test_list_runs_and_filters(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
-    run1 = make_run(name="abc", calculator_path="abc")
-    run2 = make_run(name="def", calculator_path="abc")
-    run3 = make_run(name="abc", calculator_path="def")
+    run1 = make_run(name="abc", function_path="abc")
+    run2 = make_run(name="def", function_path="abc")
+    run3 = make_run(name="abc", function_path="def")
 
     for run_ in [run1, run2, run3]:
         save_run(run_)
 
-    filters = {"AND": [{"name": {"eq": "abc"}}, {"calculator_path": {"eq": "abc"}}]}
+    filters = {"AND": [{"name": {"eq": "abc"}}, {"function_path": {"eq": "abc"}}]}
 
     results = test_client.get(f"/api/v1/runs?filters={json.dumps(filters)}")
 
@@ -225,14 +225,14 @@ def test_list_runs_and_filters(
 def test_list_runs_or_filters(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
-    run1 = make_run(name="abc", calculator_path="abc")
-    run2 = make_run(name="def", calculator_path="abc")
-    run3 = make_run(name="def", calculator_path="def")
+    run1 = make_run(name="abc", function_path="abc")
+    run2 = make_run(name="def", function_path="abc")
+    run3 = make_run(name="def", function_path="def")
 
     for run_ in [run1, run2, run3]:
         save_run(run_)
 
-    filters = {"OR": [{"name": {"eq": "abc"}}, {"calculator_path": {"eq": "def"}}]}
+    filters = {"OR": [{"name": {"eq": "abc"}}, {"function_path": {"eq": "def"}}]}
 
     results = test_client.get(f"/api/v1/runs?filters={json.dumps(filters)}")
 
@@ -375,7 +375,7 @@ def test_list_runs_search_fields(
         make_run(name="neutrino"),
         make_run(name="neutralino"),
         make_run(name="photon"),
-        make_run(calculator_path="neutralino.to.dark.matter"),
+        make_run(function_path="neutralino.to.dark.matter"),
         make_run(description="the neutralino is a hypothetical particle"),
     )
 

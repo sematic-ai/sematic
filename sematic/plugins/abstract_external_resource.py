@@ -223,7 +223,7 @@ class AbstractExternalResource(AbstractPlugin):
         for field_ in fields(self):
             field_value = getattr(self, field_.name)
             if isinstance(field_value, AbstractFuture):
-                func_name = {field_value.calculator.__name__}
+                func_name = {field_value.function.__name__}
                 type_name = type(self).__name__
                 raise IllegalUseOfFutureError(
                     f"Tried to instantiate {type_name} with a future for the "

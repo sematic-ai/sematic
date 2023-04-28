@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, FrozenSet, List, Optional, Tuple, Union
 
 # Sematic
-from sematic.abstract_calculator import AbstractCalculator
+from sematic.abstract_function import AbstractFunction
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.retry_settings import RetrySettings
 
@@ -204,10 +204,10 @@ class AbstractFuture(abc.ABC):
 
     Parameters
     ----------
-    calculator: AbstractCalculator
-        The calculator this is a future of.
+    function: AbstractFunction
+        The function this is a future of.
     kwargs: Dict[str, Any]
-        The input arguments to the calculator. Can be concrete values or other
+        The input arguments to the function. Can be concrete values or other
         futures.
     standalone: bool
         When using the `CloudResolver`, whether the instrumented function should
@@ -233,7 +233,7 @@ class AbstractFuture(abc.ABC):
 
     def __init__(
         self,
-        calculator: AbstractCalculator,
+        function: AbstractFunction,
         kwargs: Dict[str, Any],
         standalone: bool,
         original_future_id: Optional[str] = None,
@@ -245,7 +245,7 @@ class AbstractFuture(abc.ABC):
     ):
         self.id: str = make_future_id()
         self.original_future_id = original_future_id
-        self.calculator = calculator
+        self.function = function
         self.kwargs = kwargs
         # We don't want to replace futures in kwargs, because it holds
         # the source of truth for the future graph. Instead, we have concrete
@@ -262,7 +262,7 @@ class AbstractFuture(abc.ABC):
             state=FutureState.CREATED,
             resource_requirements=resource_requirements,
             retry_settings=retry_settings,
-            name=calculator.__name__,
+            name=function.__name__,
             tags=[],
             base_image_tag=base_image_tag,
             timeout_mins=timeout_mins,
@@ -295,7 +295,7 @@ class AbstractFuture(abc.ABC):
         parent_id = self.parent_future.id if self.parent_future is not None else None
         nested_id = self.nested_future.id if self.nested_future is not None else None
         return (
-            f"Future(id={self.id}, func={self.calculator}, "
+            f"Future(id={self.id}, func={self.function}, "
             f"state={self.state.value}, parent_id={parent_id}, "
             f"nested_id={nested_id}, value={self.value})"
         )

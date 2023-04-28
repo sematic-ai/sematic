@@ -39,16 +39,16 @@ def make_run_from_future(future: AbstractFuture) -> Run:
         original_run_id=future.original_future_id,
         future_state=future.state,
         name=future.props.name,
-        calculator_path=make_func_path(future),
+        function_path=make_func_path(future),
         parent_id=(
             future.parent_future.id if future.parent_future is not None else None
         ),
         nested_future_id=(
             future.nested_future.id if future.nested_future is not None else None
         ),
-        description=future.calculator.__doc__,
+        description=future.function.__doc__,
         tags=future.props.tags,
-        source_code=future.calculator.get_source(),
+        source_code=future.function.get_source(),
         created_at=datetime.datetime.utcnow(),
         updated_at=datetime.datetime.utcnow(),
         cache_key=None,
@@ -88,7 +88,7 @@ def clone_root_run(run: Run, edges: List[Edge]) -> Tuple[Run, List[Edge]]:
         root_id=run_id,
         future_state=FutureState.CREATED,
         name=run.name,
-        calculator_path=run.calculator_path,
+        function_path=run.function_path,
         parent_id=None,
         description=run.description,
         tags=run.tags,
@@ -194,7 +194,7 @@ def make_job(
 
 
 def make_func_path(future: AbstractFuture) -> str:
-    return f"{future.calculator.__module__}.{future.calculator.__name__}"
+    return f"{future.function.__module__}.{future.function.__name__}"
 
 
 class StorageNamespace(enum.Enum):

@@ -14,8 +14,8 @@ import ray
 
 # Sematic
 import sematic
-from sematic.calculator import _make_tuple
 from sematic.ee.ray import RayCluster, RayNodeConfig, SimpleRayCluster
+from sematic.function import _make_tuple
 from sematic.plugins.external_resource.timed_message import TimedMessage
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.types import Image, S3Location

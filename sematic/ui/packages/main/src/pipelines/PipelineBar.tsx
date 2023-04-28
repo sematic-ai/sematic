@@ -7,7 +7,7 @@ import {
   Select,
   SelectChangeEvent,
   Typography,
-  useTheme
+  useTheme,
 } from "@mui/material";
 import { Resolution, Run } from "@sematic/common/src/Models";
 import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
@@ -21,25 +21,30 @@ import MuiRouterLink from "src/components/MuiRouterLink";
 import RunStateChip from "src/components/RunStateChip";
 import TimeAgo from "src/components/TimeAgo";
 import { ExtractContextType } from "src/components/utils/typings";
-import { useFetchRuns, usePipelineRunContext, useRunNavigation } from "src/hooks/pipelineHooks";
+import {
+  useFetchRuns,
+  usePipelineRunContext,
+  useRunNavigation,
+} from "src/hooks/pipelineHooks";
 import PipelineRunViewContext from "src/pipelines/PipelineRunViewContext";
 import { pipelineSocket } from "src/sockets";
 import { abbreviatedUserName, fetchJSON } from "src/utils";
 
-function PipelineActionMenu(props: {
-  onCancel: () => void;
-}) {
+function PipelineActionMenu(props: { onCancel: () => void }) {
   const { onCancel } = props;
   const { user } = useContext(UserContext);
   const theme = useTheme();
   const { setSnackMessage } = useContext(SnackBarContext);
 
-  const { rootRun, resolution } = usePipelineRunContext() as {rootRun: Run, resolution: Resolution};
+  const { rootRun, resolution } = usePipelineRunContext() as {
+    rootRun: Run;
+    resolution: Resolution;
+  };
 
   useEffect(() => {
     pipelineSocket.removeAllListeners("cancel");
-    pipelineSocket.on("cancel", (args: { calculator_path: string }) => {
-      if (args.calculator_path === rootRun.calculator_path) {
+    pipelineSocket.on("cancel", (args: { function_path: string }) => {
+      if (args.function_path === rootRun.function_path) {
         setSnackMessage({ message: "Pipeline run was canceled." });
         onCancel();
       }
@@ -55,7 +60,8 @@ function PipelineActionMenu(props: {
       apiKey: user?.api_key,
       callback: (payload) => {},
       setError: (error) => {
-        if (error) setSnackMessage({ message: "Failed to cancel pipeline run." });
+        if (error)
+          setSnackMessage({ message: "Failed to cancel pipeline run." });
       },
     });
   }, [rootRun.id, setSnackMessage, user?.api_key]);
@@ -129,38 +135,54 @@ function PipelineActionMenu(props: {
 export default function PipelineBar() {
   const { setSnackMessage } = useContext(SnackBarContext);
 
-  const { rootRun, resolution } 
-  = usePipelineRunContext() as ExtractContextType<typeof PipelineRunViewContext> & {
-    rootRun: Run, resolution: Resolution
-  };;
+  const { rootRun, resolution } = usePipelineRunContext() as ExtractContextType<
+    typeof PipelineRunViewContext
+  > & {
+    rootRun: Run;
+    resolution: Resolution;
+  };
 
-  const pipelinePath = rootRun.calculator_path;
+  const pipelinePath = rootRun.function_path;
 
   const theme = useTheme();
 
-  const runFilters = useMemo(() => ({
-    AND: [
-      { parent_id: { eq: null } },
-      { calculator_path: { eq: pipelinePath } },
-    ],
-  }), [pipelinePath]);
+  const runFilters = useMemo(
+    () => ({
+      AND: [
+        { parent_id: { eq: null } },
+        { function_path: { eq: pipelinePath } },
+      ],
+    }),
+    [pipelinePath]
+  );
 
-  const otherQueryParams = useMemo(() => ({
-      limit: '10'
-  }), []);
+  const otherQueryParams = useMemo(
+    () => ({
+      limit: "10",
+    }),
+    []
+  );
 
-  const {isLoaded, error, runs: latestRuns, reloadRuns } = useFetchRuns(runFilters, otherQueryParams);
+  const {
+    isLoaded,
+    error,
+    runs: latestRuns,
+    reloadRuns,
+  } = useFetchRuns(runFilters, otherQueryParams);
 
   const navigate = useRunNavigation();
 
-  const changeRootId = useCallback((runId: string) => {
-    navigate(runId);
-  }, [navigate]);
+  const changeRootId = useCallback(
+    (runId: string) => {
+      navigate(runId);
+    },
+    [navigate]
+  );
 
   useEffect(() => {
     pipelineSocket.removeAllListeners("update");
-    pipelineSocket.on("update", async (args: { calculator_path: string }) => {
-      if (args.calculator_path === pipelinePath) {
+    pipelineSocket.on("update", async (args: { function_path: string }) => {
+      if (args.function_path === pipelinePath) {
         const runs = await reloadRuns();
         if (runs[0].id !== latestRuns[0].id) {
           setSnackMessage({
@@ -218,12 +240,10 @@ export default function PipelineBar() {
         </Box>
         <Box sx={{ gridColumn: 2, pl: 7 }}>
           <Typography variant="h4">{rootRun.name}</Typography>
-          <CalculatorPath calculatorPath={rootRun.calculator_path} />
+          <CalculatorPath functionPath={rootRun.function_path} />
         </Box>
         <Box sx={{ gridColumn: 3, pt: 2, px: 7 }}>
-          {resolution && (
-            <PipelineActionMenu onCancel={onCancel} />
-          )}
+          {resolution && <PipelineActionMenu onCancel={onCancel} />}
         </Box>
         <Box
           sx={{
@@ -258,26 +278,28 @@ export default function PipelineBar() {
               onChange={onSelect}
             >
               {latestRuns.map((run) => {
-                const {id, created_at} = run;
-                return <MenuItem value={id} key={id}>
-                  <Typography
-                    component="span"
-                    sx={{ display: "flex", alignItems: "center" }}
-                  >
-                    <RunStateChip run={run} />
-                    <Box>
-                      <Typography sx={{ fontSize: "small", color: "GrayText" }}>
-                        <code>{id.substring(0, 6)}</code>
-                      </Typography>
-                    </Box>
-                    <Box sx={{ml: 3}}>
-                      {abbreviatedUserName(run.user)}
-                    </Box>
-                    <Box ml={3}>
-                      <TimeAgo date={created_at} />
-                    </Box>
-                  </Typography>
-                </MenuItem>
+                const { id, created_at } = run;
+                return (
+                  <MenuItem value={id} key={id}>
+                    <Typography
+                      component="span"
+                      sx={{ display: "flex", alignItems: "center" }}
+                    >
+                      <RunStateChip run={run} />
+                      <Box>
+                        <Typography
+                          sx={{ fontSize: "small", color: "GrayText" }}
+                        >
+                          <code>{id.substring(0, 6)}</code>
+                        </Typography>
+                      </Box>
+                      <Box sx={{ ml: 3 }}>{abbreviatedUserName(run.user)}</Box>
+                      <Box ml={3}>
+                        <TimeAgo date={created_at} />
+                      </Box>
+                    </Typography>
+                  </MenuItem>
+                );
               })}
             </Select>
           </FormControl>

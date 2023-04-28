@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Type, Union
 
 # Sematic
-from sematic.abstract_calculator import CalculatorError
+from sematic.abstract_function import FunctionError
 
 
 @dataclass
@@ -102,9 +102,9 @@ def format_exception_for_run(
             # not by an exception on the traceback
             return None
 
-    if isinstance(exception, CalculatorError) and exception.__cause__ is not None:
+    if isinstance(exception, FunctionError) and exception.__cause__ is not None:
         # Don't display to the user the parts of the stack from Sematic
-        # resolver if the root cause was a failure in Calculator code.
+        # resolver if the root cause was a failure in Function code.
         tb_exception = traceback.TracebackException.from_exception(exception.__cause__)
         repr_ = "\n".join(tb_exception.format())
         exception = exception.__cause__

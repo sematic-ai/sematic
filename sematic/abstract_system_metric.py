@@ -11,7 +11,7 @@ import sqlalchemy.orm
 from sematic.db.db import db
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
-from sematic.db.queries import get_calculator_path
+from sematic.db.queries import get_function_path
 from sematic.metrics.metric_point import MetricPoint, MetricType
 from sematic.plugins.abstract_metrics_storage import (
     AbstractMetricsStorage,
@@ -101,9 +101,9 @@ class AbstractSystemMetric(abc.ABC):
             # metric which increases its storage footprint.
             labels={
                 # "run_id": run.id,
-                "function_path": run.calculator_path,
+                "function_path": run.function_path,
                 # "root_id": run.root_id,
-                "root_function_path": _get_root_calculator_path(run),
+                "root_function_path": _get_root_function_path(run),
                 "user_id": None if user is None else user.id,
             },
         )
@@ -209,9 +209,9 @@ class AbstractSystemMetric(abc.ABC):
         return self._plugins
 
 
-def _get_root_calculator_path(run: Run) -> str:
+def _get_root_function_path(run: Run) -> str:
     # Sometimes root_run is already loaded by the query, sometimes not.
     try:
-        return run.root_run.calculator_path
+        return run.root_run.function_path
     except (sqlalchemy.orm.exc.DetachedInstanceError, AttributeError):
-        return get_calculator_path(run.root_id)
+        return get_function_path(run.root_id)

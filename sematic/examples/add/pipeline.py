@@ -29,7 +29,7 @@ def pipeline(a: float, b: float, c: float) -> float:
 
     A trivial pipeline to showcase basic future encapsulation.
 
-    This pipeline simply adds a bunch of numbers. It shows how calculators can
+    This pipeline simply adds a bunch of numbers. It shows how functions can
     be arbitrarily nested.
 
     ### It supports markdown

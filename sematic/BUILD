@@ -29,8 +29,8 @@ sematic_py_lib(
         "gevent",
     ],
     deps = [
-        ":calculator",
         ":container_images",
+        ":function",
         ":resolver",
         ":retry_settings",
         "//sematic:future_context",
@@ -136,8 +136,8 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "abstract_calculator",
-    srcs = ["abstract_calculator.py"],
+    name = "abstract_function",
+    srcs = ["abstract_function.py"],
     deps = [],
 )
 
@@ -145,17 +145,17 @@ sematic_py_lib(
     name = "abstract_future",
     srcs = ["abstract_future.py"],
     deps = [
-        ":abstract_calculator",
+        ":abstract_function",
         ":retry_settings",
         "//sematic/resolvers:resource_requirements",
     ],
 )
 
 sematic_py_lib(
-    name = "calculator",
-    srcs = ["calculator.py"],
+    name = "function",
+    srcs = ["function.py"],
     deps = [
-        ":abstract_calculator",
+        ":abstract_function",
         ":future",
         ":retry_settings",
         "//sematic:future_context",
@@ -174,7 +174,7 @@ sematic_py_lib(
     name = "future",
     srcs = ["future.py"],
     deps = [
-        ":abstract_calculator",
+        ":abstract_function",
         ":abstract_future",
         "//sematic:resolver",
         "//sematic/resolvers:local_resolver",

@@ -19,7 +19,6 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     mock_socketio,
     test_client,
 )
-from sematic.calculator import func
 from sematic.config.tests.fixtures import mock_settings
 from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.edge import Edge
@@ -32,6 +31,7 @@ from sematic.db.queries import (
     save_resolution,
 )
 from sematic.db.tests.fixtures import test_db  # noqa: F401
+from sematic.function import func
 from sematic.future_context import PrivateContext, SematicContext
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.resolvers.worker import _emulate_interpreter, main, wrap_main_with_logging

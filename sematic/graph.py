@@ -468,11 +468,11 @@ class Graph:
 
         # _make_list and _make_tuple need special treatment as they are not
         # decorated functions, but factories that dynamically generate futures.
-        if run.calculator_path == "sematic.calculator._make_list":
+        if run.function_path == "sematic.function._make_list":
             # Dict values insertion order guaranteed as of Python 3.7
             input_list = list(kwargs.values())
             future = func(make_list_type(input_list), input_list)  # type: ignore
-        elif run.calculator_path == "sematic.calculator._make_tuple":
+        elif run.function_path == "sematic.function._make_tuple":
             # Dict values insertion order guaranteed as of Python 3.7
             input_tuple = tuple(kwargs.values())
             future = func(make_tuple_type(input_tuple), input_tuple)  # type: ignore

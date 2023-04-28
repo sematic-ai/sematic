@@ -29,7 +29,7 @@ class ConcreteMetric(AbstractSystemMetric):
         return MetricType.COUNT
 
     def _get_value(self, run: Run) -> Optional[Tuple[datetime, float]]:
-        if run.calculator_path == "do_not_count_me":
+        if run.function_path == "do_not_count_me":
             return None
 
         if run.started_at is None:
@@ -41,7 +41,7 @@ class ConcreteMetric(AbstractSystemMetric):
         return (
             session.query(Run)
             .options(joinedload(Run.root_run))
-            .filter(Run.calculator_path != "do_not_query")
+            .filter(Run.function_path != "do_not_query")
         )
 
 
@@ -54,26 +54,26 @@ def runs(test_db: DB):  # noqa: F811
     runs = [
         Run(
             id="a",
-            calculator_path="count_me",
+            function_path="count_me",
             started_at=datetime.utcnow(),
             future_state=FutureState.CREATED,
             root_id="b",
         ),
         Run(
             id="b",
-            calculator_path="count_me",
+            function_path="count_me",
             started_at=None,
             future_state=FutureState.CREATED,
         ),
         Run(
             id="c",
-            calculator_path="do_not_count_me",
+            function_path="do_not_count_me",
             started_at=datetime.utcnow(),
             future_state=FutureState.CREATED,
         ),
         Run(
             id="d",
-            calculator_path="do_not_query",
+            function_path="do_not_query",
             started_at=datetime.utcnow(),
             future_state=FutureState.CREATED,
         ),
@@ -172,7 +172,7 @@ def test_aggregate(runs: List[Run], test_db: DB):  # noqa: F811
                     1,
                     (
                         timestamp,
-                        runs[0].calculator_path,
+                        runs[0].function_path,
                     ),
                 )
             ],
