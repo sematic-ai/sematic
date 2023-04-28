@@ -5,8 +5,8 @@ from typing import List
 import pytest
 
 # Sematic
-from sematic.abstract_calculator import CalculatorError
-from sematic.calculator import func
+from sematic.abstract_function import FunctionError
+from sematic.function import func
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.testing.mock_funcs import mock_sematic_funcs
 from sematic.utils.exceptions import ResolutionError
@@ -36,7 +36,7 @@ def test_mock_sematic_funcs():
     with pytest.raises(ResolutionError, match=r"Oh no.*") as exc_info:
         pipeline().resolve(SilentResolver())
 
-    assert isinstance(exc_info.value.__context__, CalculatorError)
+    assert isinstance(exc_info.value.__context__, FunctionError)
     assert isinstance(exc_info.value.__context__.__context__, ValueError)
 
     with mock_sematic_funcs([remote_only_func]) as mock_funcs:
@@ -62,11 +62,10 @@ def test_mock_sematic_funcs_still_type_checks():
         ResolutionError,
         match=r"for 'sematic.testing.tests.test_mock_funcs.remote_only_func'.*",
     ) as exc_info:
-
         with mock_sematic_funcs([remote_only_func]) as mock_funcs:
             mock_funcs[remote_only_func].mock.return_value = "this is the wrong type!"
             pipeline().resolve(SilentResolver())
 
     # the exception occurs when casting the function's output value inside the resolver
-    # it is not a CalculatorError per se
+    # it is not a FunctionError per se
     assert isinstance(exc_info.value.__context__, TypeError)

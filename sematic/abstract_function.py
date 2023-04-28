@@ -1,27 +1,27 @@
 """
-Module defining AbstractCalculator.
+Module defining AbstractFunction.
 
 This is needed to avoid circular dependencies between
-modules for Calculator and Future.
+modules for Function and Future.
 """
 # Standard Library
 import abc
 import typing
 
 
-class CalculatorError(Exception):
+class FunctionError(Exception):
     """Error when the exception originated inside user code"""
 
     pass
 
 
-class AbstractCalculator(abc.ABC):
+class AbstractFunction(abc.ABC):
     def __init__(self) -> None:
         # Simply typing attributes
         self.__name__: str
 
     @abc.abstractmethod
-    def calculate(self, **kwargs) -> typing.Any:
+    def execute(self, **kwargs) -> typing.Any:
         pass
 
     @abc.abstractmethod

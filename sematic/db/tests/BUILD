@@ -42,7 +42,7 @@ pytest_test(
     deps = [
         ":fixtures",
         "//sematic:abstract_future",
-        "//sematic:calculator",
+        "//sematic:function",
         "//sematic/api/tests:fixtures",
         "//sematic/db:db",
         "//sematic/db:queries",

@@ -6,7 +6,7 @@ from typing import Callable, Dict, Iterator, List
 from unittest import mock
 
 # Sematic
-from sematic.calculator import Calculator
+from sematic.function import Function
 
 
 @dataclass
@@ -32,8 +32,8 @@ class SematicFuncMock:
 
 @contextmanager
 def mock_sematic_funcs(
-    funcs: List[Calculator],
-) -> Iterator[Dict[Calculator, SematicFuncMock]]:
+    funcs: List[Function],
+) -> Iterator[Dict[Function, SematicFuncMock]]:
     """Mock Sematic funcs so they still return futures and check input/output types.
 
     To be used as a context manager:
@@ -80,7 +80,7 @@ def mock_sematic_funcs(
         yield func_mocks
     finally:
         for func in funcs:
-            if not isinstance(func, Calculator):
+            if not isinstance(func, Function):
                 raise ValueError(
                     f"mock_sematic_funcs(funcs=[...]) must be given a list of "
                     f"functions decorated with @sematic.func, but one of the "

@@ -9,7 +9,6 @@ import pytest
 
 # Sematic
 from sematic.abstract_future import FutureState
-from sematic.calculator import func
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import (
     clone_resolution,
@@ -22,6 +21,7 @@ from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.tests.fixtures import resolution, run  # noqa: F401
+from sematic.function import func
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
@@ -61,7 +61,7 @@ def test_make_run_from_future():
 
     assert run.id == future.id
     assert run.future_state == FutureState.CREATED.value
-    assert run.calculator_path == "sematic.db.models.tests.test_factories.f"
+    assert run.function_path == "sematic.db.models.tests.test_factories.f"
     assert run.name == "f"
     assert run.parent_id == parent_future.id
     assert run.description == "An informative docstring."
@@ -169,7 +169,7 @@ def test_clone_root_run(run: Run):  # noqa: F811
     assert cloned_run.root_id == cloned_run.id
     assert cloned_run.future_state is FutureState.CREATED.value
     assert cloned_run.name == run.name
-    assert cloned_run.calculator_path == run.calculator_path
+    assert cloned_run.function_path == run.function_path
     assert cloned_run.parent_id is None
     assert cloned_run.description is not None
     assert cloned_run.description == run.description

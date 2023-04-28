@@ -33,8 +33,8 @@ if _CURRENT_PYTHON_VERSION < MIN_PYTHON_VERSION:
 # Sematic
 import sematic.future_operators  # noqa: F401,E402
 import sematic.types  # noqa: F401,E402
-from sematic.calculator import func  # noqa: F401,E402
 from sematic.container_images import has_container_image  # noqa: F401,E402
+from sematic.function import func  # noqa: F401,E402
 from sematic.future_context import SematicContext, context  # noqa: F401,E402
 from sematic.plugins.external_resource.timed_message import (  # noqa: F401,E402
     TimedMessage,

@@ -3,7 +3,7 @@ from typing import List
 
 # Sematic
 import sematic.future_operators.getitem  # # noqa: F401
-from sematic.calculator import func
+from sematic.function import func
 from sematic.future import Future
 
 
@@ -18,12 +18,11 @@ def pipeline() -> str:
 
 
 def test_getitem():
-
     a = foo()[0]
 
     assert isinstance(a, Future)
     assert a.kwargs["key"] == 0
-    assert a.calculator.output_type is str
+    assert a.function.output_type is str
 
 
 def test_resolution():
