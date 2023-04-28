@@ -28,7 +28,7 @@ ValueError: Your RayClusterConfig would require autoscaling, but no
 AutoScalerConfig is provided. For more see: https://go.sematic.dev/KMzMCm
 ```
 
-Your RayClusterConfig would require autoscaling, but no AutoScalerConfig is
+Your `RayClusterConfig` would require autoscaling, but no [`AutoScalerConfig`](https://docs.sematic.dev/integrations/ray#autoscalerconfig) is
 provided. This means one of your scaling groups has a min number of
 workers which differ from its max number of workers. See Sematic's
 [Ray docs](https://docs.sematic.dev/integrations/ray#autoscalerconfig)
