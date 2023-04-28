@@ -150,7 +150,6 @@ class AbstractSystemMetric(abc.ABC):
         self.clear()
 
         for plugin in self.plugins:
-            print(len(metric_points))
             logger.info("Using plugin %s", plugin.__class__.__name__)
             plugin.store_metrics(metric_points)
 

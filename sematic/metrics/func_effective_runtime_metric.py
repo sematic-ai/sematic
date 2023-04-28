@@ -15,7 +15,7 @@ from sematic.utils.exceptions import DataIntegrityError
 
 class FuncEffectiveRuntimeMetric(AbstractSystemMetric):
     """
-    A system metric capture Sematic Functions' effective runtimes.
+    A system metric that measures Sematic Functions' effective runtimes.
 
     'Effective' because it includes the runtime of all descendant Functions.
     That time starts when `run.started_at` is set (run gets scheduled), and ends
