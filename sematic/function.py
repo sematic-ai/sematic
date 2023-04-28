@@ -21,7 +21,7 @@ from typing import (
 from warnings import warn
 
 # Sematic
-from sematic.abstract_funtion import AbstractFunction, FunctionError
+from sematic.abstract_function import AbstractFunction, FunctionError
 from sematic.future import INLINE_DEPRECATION_MESSAGE, Future
 from sematic.future_context import NotInSematicFuncError, context
 from sematic.resolvers.resource_requirements import ResourceRequirements
@@ -184,7 +184,7 @@ class Function(AbstractFunction):
     def __signature__(self) -> inspect.Signature:
         return inspect.signature(self._func)
 
-    def calculate(self, **kwargs) -> Any:
+    def execute(self, **kwargs) -> Any:
         try:
             output = self.func(**kwargs)
         except Exception as e:

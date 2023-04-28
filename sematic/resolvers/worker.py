@@ -188,7 +188,7 @@ def main(
                     ),
                 )
             ):
-                output = func.calculate(**kwargs)
+                output = func.execute(**kwargs)
 
             logger.info("Finished executing %s", func.__name__)
             my_pid = os.getpid()

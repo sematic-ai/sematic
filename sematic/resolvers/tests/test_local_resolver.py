@@ -8,7 +8,7 @@ from typing import Any, List, Tuple, Type
 import pytest
 
 # Sematic
-from sematic.abstract_funtion import FunctionError
+from sematic.abstract_function import FunctionError
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_auth,

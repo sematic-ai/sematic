@@ -235,7 +235,7 @@ def test_make_tuple():
     assert isinstance(future, Future)
     assert future.function.output_type is Tuple[str, int]
     assert len(future.function.input_types) == 2
-    assert future.function.calculate(v0="a", v1=42) == ("a", 42)
+    assert future.function.execute(v0="a", v1=42) == ("a", 42)
 
 
 @func
@@ -370,7 +370,7 @@ def test_calculate_error():
         # calling calculate should surface the FunctionError,
         # with root cause as __context__
         # see https://peps.python.org/pep-0409/#language-details
-        f.calculate()
+        f.execute()
 
     assert isinstance(exc_info.value.__context__, ValueError)
     assert "Intentional error" in str(exc_info.value.__context__)
