@@ -40,6 +40,11 @@ class RayNodeConfig:
             raise ValueError("memory_gb field must be a float or int")
         if not isinstance(self.gpu_count, int):
             raise ValueError("gpu_count field must be an int")
+        if self.memory_gb < 2.0:
+            raise ValueError(
+                f"Ray workers/head must have at least "
+                f"2GiB of memory. Got : {self.memory_gb} GiB"
+            )
 
 
 @dataclass(frozen=True)
@@ -65,8 +70,10 @@ class ScalingGroup:
     max_workers: int = 1
 
     def __post_init__(self):
-        if self.min_workers <= 0:
-            raise ValueError("min_workers must be >= 1")
+        if self.min_workers < 0:
+            raise ValueError("min_workers must be >= 0")
+        if self.max_workers <= 0:
+            raise ValueError("max_workers must be > 0")
         if self.min_workers > self.max_workers:
             raise ValueError("max_workers must be >= min_workers")
 
@@ -82,6 +89,36 @@ def _get_ray_version() -> str:
         raise ValueError(
             "If ray is not installed, a value must be provided for ray_version"
         )
+
+
+@dataclass(frozen=True)
+class AutoscalerConfig:
+    """Configuration for the autoscaler.
+
+    Note that the autoscaler will execute in the same pod with the head node,
+    if the autoscaler is enabled.
+
+    Attributes
+    ----------
+    cpu:
+        Number of CPUs for each node (supports fractional CPUs).
+    memory_gb:
+        Gigabytes of memory for each node (supports fractional values).
+    """
+
+    cpu: float
+    memory_gb: float
+
+    def __post_init__(self):
+        if not isinstance(self.cpu, (int, float)):
+            raise ValueError("cpu field must be a float or int")
+        if not isinstance(self.memory_gb, (int, float)):
+            raise ValueError("memory_gb field must be a float or int")
+        if self.memory_gb < 1.0:
+            raise ValueError(
+                f"The autoscaler requires at least 1GiB of "
+                f"memory. Got: {self.memory_gb} GiB"
+            )
 
 
 @dataclass(frozen=True)
@@ -104,10 +141,28 @@ class RayClusterConfig:
     head_node: RayNodeConfig
     scaling_groups: List[ScalingGroup] = field(default_factory=list)
     ray_version: str = field(default_factory=_get_ray_version)
+    autoscaler_config: Optional[AutoscalerConfig] = None
+
+    def __post_init__(self) -> None:
+        if self.requires_autoscale() and self.autoscaler_config is None:
+            raise ValueError(
+                "Your RayClusterConfig would require autoscaling, but no "
+                "AutoScalerConfig is provided. For more, see "
+                "https://go.sematic.dev/KMzMCm "
+            )
+
+    def requires_autoscale(self) -> bool:
+        return any(
+            group.max_workers > group.min_workers for group in self.scaling_groups
+        )
 
 
 def SimpleRayCluster(
-    n_nodes: int, node_config: RayNodeConfig, ray_version: Optional[str] = None
+    n_nodes: int,
+    node_config: RayNodeConfig,
+    max_nodes: Optional[int] = None,
+    ray_version: Optional[str] = None,
+    autoscaler_config: Optional[AutoscalerConfig] = None,
 ) -> RayClusterConfig:
     """Configuration for a RayCluster with a fixed number of identical compute nodes
 
@@ -117,28 +172,38 @@ def SimpleRayCluster(
         The number of nodes in the cluster, including the head node
     node_config:
         The configuration for each node in the cluster
+    max_nodes:
+        The maximum number of nodes in the cluster, including the head node
     ray_version:
         The version of Ray used by the cluster. Will be populated automatically
         if Ray is installed. Otherwise it must be explicitly configured.
+    autoscaler_config:
+        A configuration for the autoscaler, if the cluster would require autoscaling.
     """
     if ray_version is None:
         ray_version = _get_ray_version()
     if n_nodes < 1:
         raise ValueError("There must be at least one node in the Ray Cluster")
+    if max_nodes is None:
+        max_nodes = n_nodes
+    if max_nodes < n_nodes:
+        raise ValueError(f"max_nodes ({max_nodes}) is less than n_nodes ({n_nodes}).")
     n_workers = n_nodes - 1
+    max_workers = max_nodes - 1
     scaling_groups = []
-    if n_workers > 0:
+    if max_workers > 0:
         scaling_groups.append(
             ScalingGroup(
                 worker_nodes=node_config,
                 min_workers=n_workers,
-                max_workers=n_workers,
+                max_workers=max_workers,
             )
         )
     return RayClusterConfig(
         head_node=node_config,
         scaling_groups=scaling_groups,
         ray_version=ray_version,
+        autoscaler_config=autoscaler_config,
     )
 
 

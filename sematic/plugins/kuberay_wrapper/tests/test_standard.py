@@ -7,6 +7,7 @@ import pytest
 
 # Sematic
 from sematic.plugins.abstract_kuberay_wrapper import (
+    AutoscalerConfig,
     RayClusterConfig,
     RayNodeConfig,
     ScalingGroup,
@@ -46,6 +47,10 @@ _SINGLE_WORKER_GROUP_CONFIG = RayClusterConfig(
             max_workers=8,
         )
     ],
+    autoscaler_config=AutoscalerConfig(
+        cpu=1.5,
+        memory_gb=1.5,
+    ),
     ray_version=_TEST_RAY_VERSION,
 )
 
@@ -84,6 +89,20 @@ _EXPECTED_HEAD_ONLY_MANIFEST = {
     },
     "spec": {
         "rayVersion": _TEST_RAY_VERSION,
+        "enableInTreeAutoscaling": False,
+        "autoscalerOptions": {
+            "env": [{"name": "RAY_LOG_TO_STDERR", "value": "1"}],
+            "resources": {
+                "requests": {
+                    "cpu": "500m",
+                    "memory": "1024Mi",
+                },
+                "limits": {
+                    "cpu": "500m",
+                    "memory": "1024Mi",
+                },
+            },
+        },
         "headGroupSpec": {
             "serviceType": "ClusterIP",
             "rayStartParams": {"dashboard-host": "0.0.0.0", "block": "true"},
@@ -111,6 +130,7 @@ _EXPECTED_HEAD_ONLY_MANIFEST = {
                                 "limits": {"cpu": "2000m", "memory": "4096Mi"},
                                 "requests": {"cpu": "2000m", "memory": "4096Mi"},
                             },
+                            "env": [{"name": "RAY_LOG_TO_STDERR", "value": "1"}],
                         }
                     ],
                     "tolerations": [],
@@ -434,3 +454,38 @@ def test_custom_service_account():
         manifest["spec"]["headGroupSpec"]["template"]["spec"]["serviceAccountName"]
         == custom_sa
     )
+
+
+def test_autoscaling_configuration():
+    autoscaling_config = _SINGLE_WORKER_GROUP_CONFIG
+    static_config = _MULTIPLE_WORKER_GROUP_CONFIG
+    assert autoscaling_config.requires_autoscale()
+    assert not static_config.requires_autoscale()
+
+    shared_kwargs = dict(
+        image_uri=_TEST_IMAGE_URI,
+        cluster_name=_TEST_CLUSTER_NAME,
+        kuberay_version=_TEST_KUBERAY_VERSION,
+    )
+
+    autoscaling_manifest = StandardKuberayWrapper.create_cluster_manifest(  # type: ignore
+        cluster_config=autoscaling_config,
+        **shared_kwargs,
+    )
+    static_manifest = StandardKuberayWrapper.create_cluster_manifest(  # type: ignore
+        cluster_config=static_config,
+        **shared_kwargs,
+    )
+    assert autoscaling_manifest["spec"]["enableInTreeAutoscaling"]
+    assert not static_manifest["spec"]["enableInTreeAutoscaling"]
+
+    assert autoscaling_config.autoscaler_config is not None
+    assert autoscaling_config.autoscaler_config.cpu == 1.5
+    assert autoscaling_config.autoscaler_config.memory_gb == 1.5
+
+    rendered_resources = autoscaling_manifest["spec"]["autoscalerOptions"]["resources"]
+    assert rendered_resources["requests"] == rendered_resources["limits"]
+    assert rendered_resources["requests"] == {
+        "cpu": "1500m",
+        "memory": "1536Mi",
+    }
