@@ -5,7 +5,31 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
-    * Support setting and memorizing debug flag for the dashboard. 
+    * [deprecation] Remove direct support for matplotlib figures, use `Image` instead
+* [0.28.1](https://pypi.org/project/sematic/0.28.1/)
+    * [improvement] Allow selecting S3 paths in UI
+    * [improvement] Backend logging improvements
+    * [bugfix] Ensure gevent import doesn't monkeypatch standard lib late when importing Sematic
+    * [bugfix] Resolve issue with S3 links in the UI for S3 "directories"
+    * [bugfix] Eliminate one situation that could lead to duplicated logs in the UI
+    * [bugfix] Fix a casting issue with floats
+* [0.28.0](https://pypi.org/project/sematic/0.28.0/)
+    * [feature] Display metrics for pipelines (success rate, run count, runtime)
+    * [feature] Added support for setting and memorizing a dev debug flag for the Dashboard
+    * [deprecation] Deprecate Kubernetes 1.22 support
+    * [improvement] Backend improvements to syncing with Kubernetes job states
+    * [improvement] Several minor logging improvements and fixes
+    * [bugfix] Enable local server to run with python 3.10
+    * [bugfix] Ensured different users can rerun a pipeline
+    * [bugfix] Ensured pipeline reruns use the submitting user's credentials
+    * [bugfix] Ensure canceled/terminated runs have proper runtime display
+    * [bugfix] Properly display duration for cloned runs
+    * [bugfix] Fix matplotlib figure serialization, use Sematic Image type for support
+    * [bugfix] Make storage object URL redirects consistent
+    * [bugfix] Remove possible infinite reconnect loop when canceling local runs
+    * [bugfix] Fixed a bug where the Resolver Socket.io client would not be cleanly closed
+    * [bugfix] Fix corner case in the comparison of sqlite versions
+    * [bugfix] Wrap long pipeline import paths in pipeline/run display
 * [0.27.0](https://pypi.org/project/sematic/0.27.0/)
     * [feature] Added new S3Location and S3Bucket types that render S3 links in the Dashboard, and
       documented them

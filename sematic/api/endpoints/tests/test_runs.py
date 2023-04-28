@@ -50,6 +50,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     test_db,
 )
 from sematic.log_reader import LogLineResult
+from sematic.metrics.run_count_metric import RunCountMetric
 from sematic.scheduling.job_details import PodSummary
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
 from sematic.utils.exceptions import ExceptionMetadata, InfrastructureError
@@ -474,6 +475,41 @@ def test_schedule_run(
         assert count_jobs_by_run_id(run.id) == 1
 
 
+def test_clean_jobs(
+    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
+        persisted_run.future_state = FutureState.CREATED
+        save_run(persisted_run)
+        job = make_job(name="job1", run_id=persisted_run.id)
+        save_job(job)
+
+        def mock_cancel_job(job):
+            details = job.details
+            details.canceled = True
+            job.details = details
+            job.update_status(details.get_status(job.last_updated_epoch_seconds + 1))
+            return job
+
+        mock_k8s.cancel_job = mock_cancel_job
+
+        response = test_client.post(f"/api/v1/runs/{persisted_run.id}/clean_jobs")
+
+        # run not terminal yet
+        assert response.status_code == 400
+
+        persisted_run.future_state = FutureState.SCHEDULED
+        save_run(persisted_run)
+        persisted_run.future_state = FutureState.RESOLVED
+        save_run(persisted_run)
+
+        response = test_client.post(f"/api/v1/runs/{persisted_run.id}/clean_jobs")
+        assert response.status_code == 200
+        payload = response.json
+        assert payload == {"content": ["DELETED"]}
+
+
+@mock.patch("sematic.api.endpoints.runs.save_event_metrics")
 def test_update_future_states(
     mock_auth,  # noqa: F811
     persisted_run: Run,  # noqa: F811
@@ -525,13 +561,13 @@ def test_update_future_states(
         }
 
 
+@mock.patch("sematic.api.endpoints.runs.save_event_metrics")
 def test_update_run_disappeared(
     mock_auth,  # noqa: F811
     persisted_run: Run,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
-
         job = make_job(name="job1", run_id=persisted_run.id)
         save_job(job)
 
@@ -578,6 +614,7 @@ def test_update_run_disappeared(
         )
 
 
+@mock.patch("sematic.api.endpoints.runs.save_event_metrics")
 def test_update_run_k8_pod_error(
     mock_auth,  # noqa: F811
     persisted_run: Run,  # noqa: F811
@@ -585,7 +622,6 @@ def test_update_run_k8_pod_error(
     test_db,  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
-
         job = make_job(name="job1", run_id=persisted_run.id)
         details = job.details
         details.current_pods = [
@@ -651,10 +687,12 @@ def test_get_run_logs(
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     mock_result = LogLineResult(
-        more_before=False,
-        more_after=True,
+        can_continue_forward=True,
+        can_continue_backward=True,
         lines=["Line 1", "Line 2"],
-        continuation_cursor="abc",
+        line_ids=[123, 124],
+        forward_cursor_token="abc",
+        reverse_cursor_token="xyz",
         log_info_message=None,
     )
     mock_load_log_lines.return_value = mock_result
@@ -665,18 +703,22 @@ def test_get_run_logs(
 
     assert payload["content"] == asdict(mock_result)
     kwargs = dict(
-        continuation_cursor="continue...",
+        forward_cursor_token="continue...",
+        reverse_cursor_token="continue backwards...",
         max_lines=10,
         filter_string="a",
+        reverse=False,
     )
 
     query_string = "&".join(f"{k}={v}" for k, v in kwargs.items())
     test_client.get(f"/api/v1/runs/{persisted_run.id}/logs?{query_string}")
 
     modified_kwargs = dict(
-        continuation_cursor="continue...",
+        forward_cursor_token="continue...",
+        reverse_cursor_token="continue backwards...",
         max_lines=10,
         filter_strings=["a"],
+        reverse=False,
     )
     mock_load_log_lines.assert_called_with(
         run_id=persisted_run.id,
@@ -743,7 +785,9 @@ def test_get_run_external_resources(
     assert payload[0]["id"] == persisted_external_resource.id
 
 
+@mock.patch("sematic.api.endpoints.runs.save_event_metrics")
 def test_set_run_user(
+    mock_save_event_metrics,
     persisted_user: User,  # noqa: F811
     run: Run,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
@@ -834,3 +878,39 @@ def test_get_jobs_bad_run_id(
     response = test_client.get(f"/api/v1/runs/{fake_run_id}/jobs")
     serialized_jobs = response.json["content"]  # type: ignore
     assert serialized_jobs == []
+
+
+def test_save_graph(
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_requests,  # noqa: F811
+):
+    now = datetime.datetime.utcnow()
+    run1 = make_run(created_at=now, updated_at=now)
+
+    test_client.put(
+        "/api/v1/graph",
+        json={
+            "graph": {"runs": [run1.to_json_encodable()], "edges": [], "artifacts": []}
+        },
+    )
+
+    assert list(RunCountMetric().aggregate(labels={}, group_by=[]).values())[
+        0
+    ].series == [(1, ())]
+
+    run2 = make_run(created_at=now, updated_at=now)
+
+    test_client.put(
+        "/api/v1/graph",
+        json={
+            "graph": {
+                "runs": [run1.to_json_encodable(), run2.to_json_encodable()],
+                "edges": [],
+                "artifacts": [],
+            }
+        },
+    )
+
+    assert list(RunCountMetric().aggregate(labels={}, group_by=[]).values())[
+        0
+    ].series == [(2, ())]

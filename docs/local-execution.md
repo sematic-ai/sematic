@@ -43,6 +43,18 @@ was configured. By default, when running locally after having launched the
 server with `$ sematic start`, artifacts will be persisted on your local
 machine, in the `~/.sematic/data` directory.
 
+To customize this location, set the `LOCAL_STORAGE_PATH` setting to the path of your choice:
+
+```shell
+$ sematic settings set -p sematic.plugins.storage.local_storage.LocalStorage LOCAL_STORAGE_PATH /path/to/location
+```
+
+or at runtime:
+
+```shell
+$ LOCAL_STORAGE_PATH=/path/to/location sematic start
+```
+
 A different storage backend can be selected by selecting a different storage
 plug-in when starting the server (whether a local or deployed server). For
 example, to select the S3 storage plug-in:

@@ -18,14 +18,14 @@ from sematic.calculator import _make_tuple
 from sematic.ee.ray import RayCluster, RayNodeConfig, SimpleRayCluster
 from sematic.plugins.external_resource.timed_message import TimedMessage
 from sematic.resolvers.resource_requirements import ResourceRequirements
-from sematic.types import Image
+from sematic.types import Image, S3Location
 from sematic.types.serialization import get_json_encodable_summary
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def add(a: float, b: float) -> float:
     """
     Adds two numbers.
@@ -35,7 +35,7 @@ def add(a: float, b: float) -> float:
     return a + b
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def add_with_ray(a: float, b: float) -> float:
     """
     Adds two numbers, using a Ray cluster.
@@ -61,7 +61,7 @@ def add_ray_task(x, y):
     return x + y
 
 
-@sematic.func(inline=True)
+@sematic.func
 def add_inline(a: float, b: float) -> float:
     """
     Adds two numbers inline.
@@ -71,7 +71,7 @@ def add_inline(a: float, b: float) -> float:
     return a + b
 
 
-@sematic.func(inline=True)
+@sematic.func
 def add_inline_using_resource(a: float, b: float) -> float:
     """
     Adds two numbers and logs info about a custom resource.
@@ -81,7 +81,6 @@ def add_inline_using_resource(a: float, b: float) -> float:
     with TimedMessage(
         message="some message", allocation_seconds=2, deallocation_seconds=2
     ) as timed_message:
-
         logger.info(
             "Adding inline with timed_message='%s'", timed_message.read_message()
         )
@@ -89,7 +88,7 @@ def add_inline_using_resource(a: float, b: float) -> float:
         return a + b
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def add_using_resource(a: float, b: float) -> float:
     """
     Adds two numbers and logs info about a custom resource.
@@ -99,13 +98,12 @@ def add_using_resource(a: float, b: float) -> float:
     with TimedMessage(
         message="Some message", allocation_seconds=2, deallocation_seconds=2
     ) as timed_message:
-
         logger.info("Adding with timed_message='%s'", timed_message.read_message())
         time.sleep(5)
         return a + b
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def add_with_resource_requirements(a: float, b: float) -> float:
     """
     Adds two numbers with ResourceRequirements.
@@ -119,7 +117,7 @@ def add_with_resource_requirements(a: float, b: float) -> float:
     return a + b
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def add2_nested(a: float, b: float) -> float:
     """
     Adds two numbers using a nested structure.
@@ -128,7 +126,7 @@ def add2_nested(a: float, b: float) -> float:
     return add(a, b)
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def add4_nested(a: float, b: float, c: float, d: float) -> float:
     """
     Adds four numbers using a nested structure.
@@ -137,7 +135,7 @@ def add4_nested(a: float, b: float, c: float, d: float) -> float:
     return add2_nested(add2_nested(a, b), add2_nested(c, d))
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def do_no_input() -> float:
     """
     Returns a number without taking any inputs.
@@ -147,7 +145,7 @@ def do_no_input() -> float:
     return 7
 
 
-@sematic.func(inline=True, cache=True)
+@sematic.func(standalone=False, cache=True)
 def add_inline_cached(a: float, b: float) -> float:
     """
     Adds two numbers inline, attempting to source the value from the cache.
@@ -157,7 +155,7 @@ def add_inline_cached(a: float, b: float) -> float:
     return a + b
 
 
-@sematic.func(inline=False, cache=True)
+@sematic.func(standalone=True, cache=True)
 def add2_nested_cached(a: float, b: float) -> float:
     """
     Adds two numbers using a nested structure, attempting to source the value from the
@@ -167,7 +165,7 @@ def add2_nested_cached(a: float, b: float) -> float:
     return add_inline_cached(a, b)
 
 
-@sematic.func(inline=False, cache=True)
+@sematic.func(standalone=True, cache=True)
 def add4_nested_cached(a: float, b: float, c: float, d: float) -> float:
     """
     Adds four numbers using a nested structure, attempting to source the value from the
@@ -177,7 +175,7 @@ def add4_nested_cached(a: float, b: float, c: float, d: float) -> float:
     return add2_nested_cached(add2_nested_cached(a, b), add2_nested_cached(c, d))
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def add_all(values: List[float]) -> float:
     """
     Adds all the numbers in the list.
@@ -189,7 +187,7 @@ def add_all(values: List[float]) -> float:
     return sum
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def add_fan_out(val: float, fan_out: int) -> float:
     """
     Adds the specified number of dynamically-generated functions in parallel.
@@ -201,7 +199,7 @@ def add_fan_out(val: float, fan_out: int) -> float:
     return add_all(futures)
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def do_sleep(val: float, sleep_time: int) -> float:
     """
     Sleeps for the specified number of seconds, in 1-second stretches, logging an INFO
@@ -220,7 +218,7 @@ def do_sleep(val: float, sleep_time: int) -> float:
     return val
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def do_spam_logs(val: float, log_lines: int) -> float:
     """
     Logs the indicated number of INFO messages.
@@ -233,7 +231,20 @@ def do_spam_logs(val: float, log_lines: int) -> float:
     return val
 
 
-@sematic.func(inline=False)
+@sematic.func
+def do_nested_sleep(val: float, duration_minutes: int) -> float:
+    """
+    Call sleep as a nested function.
+    """
+    logger.info(
+        "Executing: do_nested_sleep(val=%s, duration_minutes=%s)",
+        val,
+        duration_minutes,
+    )
+    return do_sleep(val, duration_minutes)
+
+
+@sematic.func(standalone=True)
 def do_oom(val: float) -> float:
     """
     Causes an Out of Memory error.
@@ -246,7 +257,7 @@ def do_oom(val: float) -> float:
     return val
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def do_raise(val: float) -> float:
     """
     Raises a ValueError, without retries.
@@ -257,7 +268,7 @@ def do_raise(val: float) -> float:
 
 
 @sematic.func(
-    inline=False, retry=sematic.RetrySettings(exceptions=(ValueError,), retries=10)
+    standalone=True, retry=sematic.RetrySettings(exceptions=(ValueError,), retries=10)
 )
 def do_retry(val: float, failure_probability: float = 0.5) -> float:
     """
@@ -272,7 +283,7 @@ def do_retry(val: float, failure_probability: float = 0.5) -> float:
     return val
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def load_image() -> Image:
     """
     Loads and returns an `Image`.
@@ -282,7 +293,7 @@ def load_image() -> Image:
     return Image.from_file("sematic/examples/testing_pipeline/resources/sammy.png")
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def explode_image(
     val: float, image: Image
 ) -> Tuple[float, Image, List[Image], Dict[str, Image]]:
@@ -298,17 +309,41 @@ def explode_image(
     return val, image, [image, image], {"the_image": image}
 
 
-@sematic.func(inline=False)
-def images_io(val: float) -> float:
+@sematic.func(standalone=True)
+def do_image_io(val: float) -> float:
     """
     Internally uses functions that pass around `Image` objects in their I/O signatures.
     """
-    logger.info("Executing: images_io(val=%s)", val)
+    logger.info("Executing: do_image_io(val=%s)", val)
     image_tuple = explode_image(val, load_image())
-    return add(val, image_tuple[0])
+    return add(1, image_tuple[0])
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
+def compose_s3_locations(
+    val: float, s3_uris: List[str]
+) -> Tuple[float, List[S3Location]]:
+    """
+    Composes `S3Location` dataclasses for the specified URIs.
+    """
+    logger.info("Executing: compose_s3_locations(val=%s, s3_uris=%s)", val, s3_uris)
+    time.sleep(5)
+    s3_locations = list(map(S3Location.from_uri, s3_uris))
+    return val, s3_locations
+
+
+@sematic.func(standalone=True)
+def do_s3_locations(val: float, s3_uris: List[str]) -> float:
+    """
+    Internally uses a function that composes `S3Location` dataclasses for the specified
+    URIs.
+    """
+    logger.info("Executing: do_s3_locations(val=%s, s3_uris=%s)", val, s3_uris)
+    location_tuple = compose_s3_locations(val, s3_uris)
+    return add(1, location_tuple[0])
+
+
+@sematic.func(standalone=True)
 def do_virtual_funcs(a: float, b: float, c: float) -> float:
     """
     Adds three numbers while explicitly including _make_tuple, _make_list, and _getitem.
@@ -319,7 +354,7 @@ def do_virtual_funcs(a: float, b: float, c: float) -> float:
     return add_all([d, e, f])
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def fork_subprocess(val: float, action: str, code: int) -> float:
     """
     Forks a subprocess, and then performs the specified action, using the specified value:
@@ -363,7 +398,7 @@ def fork_subprocess(val: float, action: str, code: int) -> float:
     return val
 
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def do_exit(val: float, exit_code: int) -> float:
     """
     Exits execution using the specified exit code.
@@ -376,7 +411,7 @@ def do_exit(val: float, exit_code: int) -> float:
     return val
 
 
-@sematic.func(inline=True)
+@sematic.func
 def testing_pipeline(
     inline: bool = False,
     nested: bool = False,
@@ -386,12 +421,15 @@ def testing_pipeline(
     spam_logs: int = 0,
     should_raise: bool = False,
     raise_retry_probability: Optional[float] = None,
+    timeout_settings: Optional[Tuple[int, int]] = None,
+    nested_timeout_settings: Optional[Tuple[int, int]] = None,
     oom: bool = False,
     external_resource: bool = False,
     ray_resource: bool = False,
     resource_requirements: Optional[ResourceRequirements] = None,
     cache: bool = False,
     images: bool = False,
+    s3_uris: Optional[List[str]] = None,
     virtual_funcs: bool = False,
     fork_actions: Optional[List[Tuple[str, int]]] = None,
     exit_code: Optional[int] = None,
@@ -404,7 +442,7 @@ def testing_pipeline(
     Parameters
     ----------
     inline: bool
-        Whether to include inline functions in the pipeline. Defaults to False.
+        Whether to include Inline Functions in the pipeline. Defaults to False.
     nested: bool
         Whether to include nested functions in the pipeline. Defaults to False.
     no_input: bool
@@ -423,6 +461,16 @@ def testing_pipeline(
     raise_retry_probability: Optional[float]
         If not None, includes a function which raises a ValueError with the given
         probability, with a total of 10 retries. Defaults to None.
+    timeout_settings: Optional[Tuple[int, int]]
+        If not None, perform a sleep with a duration given by the first int as the number
+        of minutes on a Sematic function set with a timeout given by the second int as
+        a number of minutes. If None, do not test timeouts. Defaults to None.
+    nested_timeout_settings: Optional[Tuple[int, int]]
+        If not None, perform a sleep with a duration given by the first int as the number
+        of minutes on a Sematic function set with a timeout given by the second int as
+        a number of minutes. If None, do not test timeouts. Defaults to None. This setting
+        will set the timeout on an outer function, and do the waiting in a nested function
+        call.
     oom: bool
         Whether to include a function that causes an Out of Memory error.
         Defaults to False.
@@ -440,6 +488,9 @@ def testing_pipeline(
     images: bool
         Whether to include nested functions which will include the `Image` type in their
         I/O signatures. Defaults to False.
+    s3_uris: Optional[List[str]]
+        If non-empty, includes a function that composes `S3Location` dataclasses for the
+        specified URIs. Defaults to None.
     virtual_funcs: bool
         Whether to include the `_make_list`, `_make_tuple`, and `_getitem` virtual
         functions. Defaults to False.
@@ -489,6 +540,20 @@ def testing_pipeline(
     if raise_retry_probability:
         futures.append(do_retry(initial_future))
 
+    if timeout_settings and timeout_settings[0] > 0:
+        futures.append(
+            do_sleep(initial_future, timeout_settings[0] * 60).set(
+                name="timeout", timeout_mins=timeout_settings[1]
+            )
+        )
+
+    if nested_timeout_settings and nested_timeout_settings[0] > 0:
+        futures.append(
+            do_nested_sleep(initial_future, nested_timeout_settings[0] * 60).set(
+                name="nested_timeout", timeout_mins=nested_timeout_settings[1]
+            )
+        )
+
     if oom:
         futures.append(do_oom(initial_future))
 
@@ -505,7 +570,10 @@ def testing_pipeline(
         futures.append(add4_nested_cached(initial_future, 1, 2, 3))
 
     if images:
-        futures.append(images_io(initial_future))
+        futures.append(do_image_io(initial_future))
+
+    if s3_uris is not None and len(s3_uris) > 0:
+        futures.append(do_s3_locations(initial_future, s3_uris))
 
     if virtual_funcs:
         futures.append(do_virtual_funcs(initial_future, 2, 3))

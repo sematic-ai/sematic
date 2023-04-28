@@ -1,14 +1,14 @@
-import { Meta, StoryObj } from '@storybook/react';
-import { Route, RouterProvider, createRoutesFromElements, createBrowserRouter } from "react-router-dom";
 import Shell from "@sematic/common/src/layout/Shell";
 import RunDetails from "@sematic/common/src/pages/RunDetails";
+import { Meta, StoryObj } from '@storybook/react';
+import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from "react-router-dom";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-  <Route path="/" element={<Shell />}>
+    <Route path="/" element={<Shell />}>
       <Route path="*" element={<RunDetails />} />
-  </Route>
-));
+    </Route>
+  ));
 
 function Router() {
   return <RouterProvider router={router} />;
@@ -25,5 +25,9 @@ export default {
 type Story = StoryObj<typeof Router>;
 
 export const Page: Story = {
-  render: () => <div style={{margin: "-1em"}}><Router /></div>,
+  render: () => <Router />,
+
+  parameters : {
+    layout: 'fullscreen' 
+  }
 };

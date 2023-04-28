@@ -1,5 +1,5 @@
 import { Components, Theme } from '@mui/material/styles';
-import { fontWeightBold } from 'src/theme/new/typography';
+import { fontFamilyCode, fontWeightBold } from 'src/theme/new/typography';
 import { KeyboardArrowDown } from "@mui/icons-material";
 import { selectClasses } from '@mui/material/Select'
 import { inputBaseClasses } from '@mui/material/InputBase'
@@ -13,6 +13,9 @@ const components: Components = {
                 lineHeight: 1,
                 textTransform: 'uppercase',
                 marginTop: 0,
+            },
+            pre: {
+                whiteSpace: 'pre-wrap'
             }
         })) as any
     },
@@ -21,11 +24,12 @@ const components: Components = {
             underline: 'none'
         },
         styleOverrides: {
-            root: (({theme}: {theme: Theme}) => ({
-                cursor: 'pointer', 
+            root: (({ theme }: { theme: Theme }) => ({
+                cursor: 'pointer',
                 marginBottom: 0,
                 color: theme.palette.black.main,
                 fontSize: theme.typography.fontSize,
+                fontStyle: 'italic',
 
                 '&:hover': {
                     color: theme.palette.primary.main,
@@ -54,6 +58,7 @@ const components: Components = {
                         color: theme.palette.black.main,
                         width: 'fit-content',
                         fontSize: 14,
+                        fontStyle: 'normal',
                         marginLeft: 20,
                         marginRight: 20,
                         fontWeight: fontWeightBold,
@@ -77,15 +82,30 @@ const components: Components = {
                             content: '""',
                             height: 2,
                             position: 'absolute',
-                            bottom: 0
+                            bottom: 0,
+                            display: 'none',
                         },
                         '&.selected': {
                             position: 'relative'
                         },
                         '&.selected::after': {
+                            display: 'block',
                             backgroundColor: theme.palette.primary.main
                         }
                     }
+                },
+            },
+            {
+                props: { variant: 'small' },
+                style: ({ theme }) => ({
+                    color: theme.palette.lightGrey.main,
+                    fontSize: theme.typography.small.fontSize,
+                }),
+            },
+            {
+                props: { type: 'code' },
+                style: {
+                    fontFamily: fontFamilyCode,
                 },
             }
         ]
@@ -110,7 +130,7 @@ const components: Components = {
             }
         ]
     },
-    MuiFormControl: {        
+    MuiFormControl: {
         variants: [
             {
                 props: { size: 'small' },
@@ -129,6 +149,13 @@ const components: Components = {
             }
         ]
     },
+    MuiTextField: {
+        defaultProps: {
+            InputProps: {
+                disableUnderline: true
+            }
+        }
+    },
     MuiSelect: {
         defaultProps: {
             IconComponent: KeyboardArrowDown
@@ -136,7 +163,7 @@ const components: Components = {
     },
     MuiOutlinedInput: {
         styleOverrides: {
-            notchedOutline: (({theme}: {theme: Theme}) => ({
+            notchedOutline: (({ theme }: { theme: Theme }) => ({
                 border: `1px solid ${theme.palette.p3border.main}`,
             })) as any
         }
@@ -147,7 +174,7 @@ const components: Components = {
                 height: 25,
                 borderRadius: 0,
             },
-            label: (({theme}: {theme: Theme}) => ({
+            label: (({ theme }: { theme: Theme }) => ({
                 fontSize: theme.typography.small.fontSize,
                 padding: 5
             })) as any
@@ -159,6 +186,7 @@ const components: Components = {
                 props: { variant: 'text' },
                 style: ({ theme }) => {
                     return {
+                        fontStyle: 'italic',
                         color: theme.palette.lightGrey.main,
                         '&:hover': {
                             color: theme.palette.primary.main,
@@ -166,12 +194,22 @@ const components: Components = {
                         }
                     }
                 }
+
+
+            },
+            {
+                props: { size: 'small' },
+                style: ({ theme }) => {
+                    return {
+                        fontSize: theme.typography.small.fontSize,
+                    }
+                }
             }
         ]
     },
     MuiListItemButton: {
         styleOverrides: {
-            root: (({theme}: {theme: Theme}) => ({
+            root: (({ theme }: { theme: Theme }) => ({
                 '&:hover': {
                     color: theme.palette.primary.main,
                     background: 'transparent',
@@ -181,12 +219,21 @@ const components: Components = {
     },
     MuiTooltip: {
         styleOverrides: {
-            tooltipPlacementBottom: (({theme}: {theme: Theme}) => ({
+            tooltipPlacementBottom: (({ theme }: { theme: Theme }) => ({
                 'marginTop': `${theme.spacing(1.5)}!important`,
             })) as any
         }
+    },
+    MuiTab: {
+        styleOverrides: {
+            "root": (({ theme }: { theme: Theme }) => ({
+                "&.Mui-selected": {
+                    'color': `${theme.palette.black.main}`
+                }
+            })) as any
+        }
     }
-    
+
 }
 
 export default components;

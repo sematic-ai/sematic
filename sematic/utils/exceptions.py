@@ -157,6 +157,12 @@ class NotInSematicFuncError(RuntimeError):
     pass
 
 
+class TimeoutError(RuntimeError):
+    """A timeout has expired."""
+
+    pass
+
+
 class ResolutionError(Exception):
     """The pipeline resolution has failed.
 
@@ -226,5 +232,13 @@ class UnsupportedUsageError(Exception):
 
 class UnsupportedVersionError(UnsupportedUsageError):
     """Code is being asked to interface with a component with a non-supported version."""
+
+    pass
+
+
+class DataIntegrityError(Exception):
+    """
+    A data integrity error.
+    """
 
     pass

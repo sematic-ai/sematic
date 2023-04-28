@@ -22,6 +22,12 @@ load(
 sematic_py_lib(
     name = "init",
     srcs = ["__init__.py"],
+    data = [
+        "//:sematic.pth",
+    ],
+    pip_deps = [
+        "gevent",
+    ],
     deps = [
         ":calculator",
         ":container_images",
@@ -38,9 +44,6 @@ sematic_py_lib(
         "//sematic/types:casting",
         "//sematic/types:init",
         "//sematic/utils:exceptions",
-    ],
-    pip_deps = [
-        "gevent",
     ],
 )
 
@@ -95,6 +98,16 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "logging",
+    srcs = ["logging.py"],
+    pip_deps = [],
+    # buildifier: leave-alone
+    deps = [
+        "//sematic/config:config",
+    ],
+)
+
+sematic_py_lib(
     name = "log_reader",
     srcs = ["log_reader.py"],
     pip_deps = [
@@ -109,6 +122,7 @@ sematic_py_lib(
         "//sematic/plugins:abstract_storage",
         "//sematic/plugins/storage:local_storage",
         "//sematic/resolvers:cloud_resolver",
+        "//sematic/resolvers:log_streamer",
         "//sematic/scheduling:job_details",
     ],
 )
@@ -204,6 +218,23 @@ sematic_py_lib(
         "//sematic/resolvers:type_utils",
         "//sematic/utils:algorithms",
         "//sematic/utils:memoized_property",
+    ],
+)
+
+sematic_py_lib(
+    name = "abstract_system_metric",
+    srcs = ["abstract_system_metric.py"],
+    pip_deps = ["sqlalchemy"],
+    # buildifier: leave-alone
+    deps = [
+        "//sematic/db:db",
+        "//sematic/db/models:run",
+        "//sematic/db/models:user",
+        "//sematic/db:queries",
+        "//sematic/metrics:metric_point",
+        "//sematic/plugins:abstract_metrics_storage",
+        "//sematic/plugins/metrics_storage/sql:sql_metrics_storage",
+        "//sematic/utils:exceptions",
     ],
 )
 

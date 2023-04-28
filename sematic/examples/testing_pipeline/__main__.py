@@ -56,7 +56,7 @@ RERUN_FROM_HELP = (
     "to None."
 )
 MAX_PARALLELISM_HELP = (
-    "The maximum number of non-inlined runs that will be allowed to be in the "
+    "The maximum number of Standalone Function Runs that will be allowed to be in the "
     "`SCHEDULED` state at any one time. Must be a positive integer, or None for "
     "unlimited runs. Defaults to None."
 )
@@ -85,6 +85,19 @@ RAISE_RETRY_HELP = (
     "with a total of 10 retries. If specified without a value, defaults to 0.5, "
     "meaning a cumulative probability of complete failure of 0.5 ** 11 = 0.00048828125."
 )
+TIMEOUT_HELP = (
+    "Two integers. If both ints are greater than 0, includes a "
+    "sleep function whose duration is determined by the first argument and whose "
+    "timeout limit is determined by the second argument. Units for both are in minutes. "
+    "Defaults to `None`."
+)
+NESTED_TIMEOUT_HELP = (
+    "Two integers. If both ints are greater than 0, includes a "
+    "sleep function whose duration is determined by the first argument and whose "
+    "timeout limit is determined by the second argument. Units for both are in minutes. "
+    "Contrary to --timeout, this sets the timeout on an outer function and waits in an "
+    "inner function. Defaults to `None`."
+)
 OOM_HELP = (
     "Whether to include a function that causes an Out of Memory error. "
     "Defaults to False."
@@ -111,6 +124,10 @@ CACHE_HELP = (
 IMAGES_HELP = (
     "Whether to include nested functions which will include the `Image` type in their "
     "I/O signatures. Defaults to False."
+)
+S3_URIS_HELP = (
+    "If any values are supplied, includes a function that composes `S3Location` "
+    "dataclasses for the specified URIs. Defaults to None."
 )
 VIRTUAL_FUNCS_HELP = (
     "Whether to explicitly include the `_make_list`, `_make_tuple`, and `_getitem` "
@@ -204,7 +221,6 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         default=False,
         help=DETACH_HELP,
-        **_required_by("--rerun-from"),
     )
     parser.add_argument(
         "--rerun-from",
@@ -252,6 +268,22 @@ def _parse_args() -> argparse.Namespace:
         dest="raise_retry_probability",
         help=RAISE_RETRY_HELP,
     )
+    parser.add_argument(
+        "--timeout",
+        nargs=2,
+        type=int,
+        default=None,
+        dest="timeout_settings",
+        help=TIMEOUT_HELP,
+    )
+    parser.add_argument(
+        "--nested-timeout",
+        nargs=2,
+        type=int,
+        default=None,
+        dest="nested_timeout_settings",
+        help=NESTED_TIMEOUT_HELP,
+    )
     parser.add_argument("--oom", action="store_true", default=False, help=OOM_HELP)
     parser.add_argument(
         "--external-resource",
@@ -280,6 +312,9 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--images", action="store_true", default=False, help=IMAGES_HELP
+    )
+    parser.add_argument(
+        "--s3-uris", type=str, default=None, nargs="+", help=S3_URIS_HELP
     )
     parser.add_argument(
         "--virtual-funcs",

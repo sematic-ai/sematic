@@ -20,6 +20,7 @@ const ScrollableStyledSection = styled(StyledSection)`
     margin-left: -25px;
     margin-right: -25px;
     scrollbar-gutter: stable;
+    flex-shrink: 1!important;
 
     &::-webkit-scrollbar {
       display: block;

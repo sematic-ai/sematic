@@ -15,6 +15,8 @@ sematic_py_lib(
         "//sematic/db/models:job",
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
+        "//sematic/db:queries",
+        "//sematic/scheduling:job_details",
         "//sematic/scheduling:kubernetes",
     ],
 )

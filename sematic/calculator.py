@@ -18,10 +18,11 @@ from typing import (
     Union,
     get_args,
 )
+from warnings import warn
 
 # Sematic
 from sematic.abstract_calculator import AbstractCalculator, CalculatorError
-from sematic.future import Future
+from sematic.future import INLINE_DEPRECATION_MESSAGE, Future
 from sematic.future_context import NotInSematicFuncError, context
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.resolvers.type_utils import make_list_type
@@ -51,11 +52,12 @@ class Calculator(AbstractCalculator):
         func: types.FunctionType,
         input_types: Dict[str, type],
         output_type: type,
-        inline: bool = True,
+        standalone: bool = False,
         cache: bool = False,
         resource_requirements: Optional[ResourceRequirements] = None,
         retry_settings: Optional[RetrySettings] = None,
         base_image_tag: Optional[str] = None,
+        timeout_mins: Optional[int] = None,
     ) -> None:
         self._validate_func(func)
         self._func = func
@@ -63,11 +65,12 @@ class Calculator(AbstractCalculator):
         self._input_types = input_types
         self._output_type = output_type
 
-        self._inline = inline
+        self._standalone = standalone
         self._cache = cache
         self._resource_requirements = resource_requirements
         self._retry_settings = retry_settings
         self._base_image_tag = base_image_tag
+        self._timeout_mins = timeout_mins
 
         self.__doc__ = func.__doc__
         self.__module__ = func.__module__
@@ -162,13 +165,14 @@ class Calculator(AbstractCalculator):
         future = Future(
             self,
             cast_arguments,
-            inline=self._inline,
+            standalone=self._standalone,
             cache=self._cache,
             resource_requirements=self._resource_requirements,
             # copying because it will hold state for the particular
             # future (retry_count is mutable and increases with retries)
             retry_settings=copy(self._retry_settings),
             base_image_tag=self._base_image_tag,
+            timeout_mins=self._timeout_mins,
         )
         try:
             ctx = context()
@@ -281,56 +285,65 @@ def _repr_str_iterable(str_iterable: Iterable[str]) -> str:
 
 def func(
     func: Optional[Callable] = None,
-    inline: bool = True,
+    inline: Optional[bool] = None,
+    standalone: bool = False,
     cache: bool = False,
     resource_requirements: Optional[ResourceRequirements] = None,
     retry: Optional[RetrySettings] = None,
     base_image_tag: Optional[str] = None,
+    timeout_mins: Optional[int] = None,
 ) -> Union[Calculator, Callable]:
     """
     The Sematic Function decorator.
 
     This identifies the function as a unit of work that Sematic knows about for
-    tracking and scheduling. The function's execution details will be exposed
-    in the Sematic UI.
+    tracking and scheduling. The function's execution details will be exposed in
+    the Sematic UI.
 
     Parameters
     ----------
     func: Optional[Callable]
         The `Callable` to instrument; usually the decorated function.
-    inline: bool
-        When using the `CloudResolver`, whether the instrumented function
-        should be executed inside the same process and worker that is executing
-        the `Resolver` itself.
+    standalone: bool
+        When using the `CloudResolver`, whether the instrumented function should
+        be executed in a standalone Kubernetes Job or inside the same process
+        and worker that is executing the `Resolver` itself.
 
-        Defaults to `True`, as most pipeline functions are expected to be
-        lightweight. Explicitly set this to `False` in order to distribute its
+        Defaults to `False`, as most pipeline functions are expected to be
+        lightweight. Set this to `True` in order to distribute its
         execution to a worker and parallelize its execution.
     cache: bool
-        Whether to cache the function's output value under the
-        `cache_namespace` configured in the `Resolver`. Defaults to `False`.
+        Whether to cache the function's output value under the `cache_namespace`
+        configured in the `Resolver`. Defaults to `False`.
 
         Do not activate this on a non-deterministic function!
     resource_requirements: Optional[ResourceRequirements]
         When using the `CloudResolver`, specifies what special execution
         resources the function requires. Defaults to `None`.
     retry: Optional[RetrySettings]
-        Specifies in case of which Exceptions the function's execution should
-        be retried, and how many times. Defaults to `None`.
+        Specifies in case of which Exceptions the function's execution should be
+        retried, and how many times. Defaults to `None`.
+    timeout_mins: Optional[int]
+        Specifies the maximum amount of time that this function can take before
+        the final result is known. Must be an integer >=1. Defaults to `None`.
 
     Returns
     -------
     Union[Calculator, Callable]
         An internal instrumentation wrapper over the decorated function.
     """
-    if inline and resource_requirements is not None:
+    if inline is not None:
+        warn(INLINE_DEPRECATION_MESSAGE, DeprecationWarning)
+        standalone = not inline
+
+    if not standalone and resource_requirements is not None:
         raise ValueError(
-            "Inline functions cannot have resource requirements "
-            "Try using @sematic.func(inline=False, ...)"
+            "Only Standalone Functions can have resource requirements "
+            "Try using @sematic.func(standalone=True, ...). "
+            "See https://go.sematic.dev/t3mynx"  # noqa: E501
         )
 
     def _wrapper(func_):
-
         annotations = func_.__annotations__
 
         output_type: type = type(None)
@@ -355,12 +368,12 @@ def func(
                 ).format(_repr_str_iterable(missing_annotations))
             )
 
-        if inline and base_image_tag is not None:
-            # Not raising an exception because users may be setting `inline` dynamically
-            # from CLI args. It would be annoying to have to also change `base_image_tag`
-            # dynamically.
+        if not standalone and base_image_tag is not None:
+            # Not raising an exception because users may be setting `standalone=False`
+            # dynamically from CLI args. It would be annoying to have to also
+            # change `base_image_tag` dynamically.
             logging.warning(
-                "base_image_tag %s for %s will be ignored because inline is True",
+                "base_image_tag %s for %s will be ignored because `standalone` is False",
                 base_image_tag,
                 func_.__name__,
             )
@@ -373,11 +386,12 @@ def func(
             func_,
             input_types=input_types,
             output_type=output_type,
-            inline=inline,
+            standalone=standalone,
             cache=cache,
             resource_requirements=resource_requirements,
             retry_settings=retry,
             base_image_tag=base_image_tag,
+            timeout_mins=timeout_mins,
         )
 
     if func is None:
@@ -512,7 +526,7 @@ def _make_list({inputs}):
     _make_list = scope["_make_list"]
 
     return Calculator(
-        _make_list, input_types=input_types, output_type=type_, inline=True
+        _make_list, input_types=input_types, output_type=type_, standalone=False
     )(**inputs)
 
 
@@ -577,7 +591,7 @@ def _make_tuple({inputs}):
     _make_tuple = scope["_make_tuple"]
 
     return Calculator(
-        _make_tuple, input_types=input_types, output_type=type_, inline=True
+        _make_tuple, input_types=input_types, output_type=type_, standalone=False
     )(**inputs)
 
 

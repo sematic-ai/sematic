@@ -31,6 +31,15 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_timeout",
+    srcs = ["test_timeout.py"],
+    deps = [
+        "//sematic/utils:exceptions",
+        "//sematic/utils:timeout",
+    ],
+)
+
+pytest_test(
     name = "test_hashing",
     srcs = ["test_hashing.py"],
     deps = [

@@ -45,25 +45,28 @@ can be overridden by environment variables.
 
 Sematic will run two types of pods for each pipeline:
 
-* **Driver pod** – this is where the graph of your pipeline gets processed,
-  and where the `Resolver` and `inline=True` pipeline steps run. This pod
-  has the word "driver" in its name.
-* **Worker pods** – this is where individual pipeline steps will be run if they
-  are marked as `inline=False`. These pods have the work "worker" in their name.
+* **Driver pod** – this is where the graph of your pipeline gets processed, and
+  where the `Resolver` and [Inline
+  Functions](./glossary.md#standalone-inline-function) run. This pod has the
+  word "driver" in its name.
+* **Worker pods** – this is where [Standalone Functions](./glossary.md#standalone-inline-function)
+  (`@sematic.func(standalone=True`). These pods have the word "worker" in their
+  name.
 
-By default, the resolution of the graph and all pipeline steps will run in a
-single pod, the resolver pod. This is fine for minor pipeline steps that take up
-little time and resources. Some pipeline steps may require specific resources
-(e.g. GPUs) and need to run in their own isolated containers. This can be
-achieved as follows:
+By default, the execution of the graph and all [Sematic
+Functions](./glossary.md#sematic-function) will run in a single pod, the
+resolver pod. This is fine for minor pipeline steps that take up little time and
+resources. Some Functions may require specific resources (e.g. GPUs) and
+need to run in their own standalone containers. This can be achieved as follows:
 
 ```python
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def train_model(...):
     ...
 ```
 
-`inline=False` functions will be executed asynchronously as separate Kubernetes pods.
+[Standalone Functions](./glossary.md#standalone-inline-function) will be
+executed asynchronously as separate Kubernetes pods.
 
 ### Customize resource requirements
 
@@ -95,7 +98,7 @@ GPU_RESOURCE_REQS = ResourceRequirements(
     )
 )
 
-@sematic.func(resource_requirements=GPU_RESOURCE_REQS)
+@sematic.func(standalone=True, resource_requirements=GPU_RESOURCE_REQS)
 def train_model(...):
     ...
 ```
@@ -103,42 +106,37 @@ def train_model(...):
 If there is a corresponding node available in your Kubernetes cluster, this
 function will be executed on that node.
 
-Note that `inline=False` is necessary for these resource requirements to be
+Note that `standalone=True` is necessary for these resource requirements to be
 honored, otherwise, they will be ignored.
 
-### Understanding "Inline"
+### Understanding Inline and Standalone Functions
 
-Before understanding inline functions, it is first helpful to refresh yourself
-on the description of the "driver" job above. Note that this job is distinct
-from the container where the root run executes - it's best to think of the
-driver as an "extra" container for the overall pipeline.
-
-Given this understanding of the driver job, the behavior of inline executions
-can be summarized as follows. Every Sematic func executes in one of two places:
+Every Sematic func executes in one of two places:
 
 (1) The driver container
 (2) Its own, dedicated container
 
-The *only* determining factor in which of these two is used for a given function
-is whether or not it has `inline=True`. For functions where `inline=True`, they
-will execute in the driver container. This is best used for very lightweight
-functions that execute quickly and don't make any calls to external services. For
-functions where `inline=False`, they execute in their own containers.
+The *only* determining factor in which of these two is used for a given Function
+is whether or not it has `standalone=True`. For functions where
+`standalone=False` (the default), they will execute in the driver container.
+This is best used for very lightweight functions that execute quickly and don't
+make any calls to external services. For functions where `standalone=True`, they
+execute in their own containers.
 
-A common source of confusion with inline functions is to think there's a
+A common source of confusion with Inline Functions is to think there's a
 relationship between nested functions and inline. Consider the following code:
 
 ```python
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def calculate_average(a: float, b: float, c: float) -> float:
   total = add(a, b, c)
   average = divide(total, 3)
 
-@sematic.func(inline=False)
+@sematic.func(standalone=True)
 def add(a: float, b: float, c: float) -> float:
   return a + b + c
 
-@sematic.func(inline=True)
+@sematic.func(standalone=False)
 def divide(a: float, b: int) -> float:
   return a / b
 ```
@@ -147,15 +145,15 @@ Let's assume `calculate_average` and `add` are actually doing something
 "heavy" that requires a dedicated container, rather than just performing
 simple arithmetic operations.
 
-People sometimes assume that since `divide`
-is nested inside `calculate_average`, and `divide` is inline, `divide`
-must execute in the same container as `calculate_average`. This is NOT
-correct. This misunderstanding stems from a misunderstanding of how Sematic
-works with Futures. Recall that Sematic functions return futures when you
-call them (see [Future Algebra](future-algebra.md)). That means that `total` in `calculate_average`
-*actually holds a Future instead of a `float`*. So when `divide(total, 3)`
-is called above, the content of `total` is not even known. Therefore, how
-could it be executed?
+People sometimes assume that since `divide` is nested inside
+`calculate_average`, and `divide` is inline, `divide` must execute in the same
+container as `calculate_average`. This is NOT correct. This misunderstanding
+stems from a misunderstanding of how Sematic works with Futures. Recall that
+[Sematic Functions](./glossary.md#sematic-function) return futures when you call
+them (see [Future Algebra](future-algebra.md)). That means that `total` in
+`calculate_average` *actually holds a Future instead of a `float`*. So when
+`divide(total, 3)` is called above, the content of `total` is not even known.
+Therefore, how could it be executed?
 
 Instead, what happens is this:
 
@@ -166,27 +164,24 @@ also returns immediately without doing any work.
 4. The driver job analyzes the `Future` coming from `calculate_average` and
 sees that to get the value for it, it must first execute `add` and then
 execute `divide`.
-5. Since `add` is non-inline, the driver starts a container within which to
+5. Since `add` is standalone, the driver starts a container within which to
 execute `add`. `add` returns an actual `float` which is the sum of `a`, `b`, and
 `c`.
 6. The driver sees that it now has everything required to execute `divide`, so
 it does so. Since `divide` is inline, the driver doesn't need to start a new
 container for it, and instead it executes `divide` in its own process.
 
-#### When to use inline?
+#### When to use Standalone or Inline?
 
-After walking through the above example, you may be wondering if there's a simple
-way to know when something should be marked as inline vs not. Even if you don't
-follow the above trace of the execution, you can still use `inline` correctly if
-you follow this guidance:
-
-- Any Sematic function doing something "trivial" that executes in a few seconds or
-less and requires negligible CPU or memory should be inline.
-- Any Sematic function which primarily calls other Sematic functions and doesn't
-do any work "of its own" aside from these calls should be inline
-- Any other Sematic functions should NOT be inline. In practice this usually means
-"leaf node" Sematic functions that don't call other Sematic functions and which
-do some "real work."
+- Any [Sematic Function](./glossary.md#sematic-function) doing something
+"trivial" that executes in a few seconds or less and requires negligible CPU or
+memory should be inline.
+- Any [Sematic Functions](./glossary.md#sematic-function) which primarily calls
+other Sematic functions and doesn't do any work "of its own" aside from these
+calls should be inline.
+- Any other [Sematic Functions](./glossary.md#sematic-function) should be
+standalone. In practice this usually means "leaf node" Sematic functions that
+don't call other Sematic functions and which do some "real work."
 
 Most Sematic functions tend to meet the first two criteria, so functions are inline
 by default.
