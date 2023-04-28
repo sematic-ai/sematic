@@ -1,6 +1,7 @@
 pytest_test(
     name = "test_local_resolver",
     srcs = ["test_local_resolver.py"],
+    # buildifier: leave-alone
     deps = [
         ":fixtures",
         "//sematic:abstract_function",
@@ -9,7 +10,7 @@ pytest_test(
         "//sematic:retry_settings",
         "//sematic/api/tests:fixtures",
         "//sematic/config/tests:fixtures",
-        "//sematic/db",
+        "//sematic/db:db",
         "//sematic/db/models:edge",
         "//sematic/db/models:resolution",
         "//sematic/db/tests:fixtures",
