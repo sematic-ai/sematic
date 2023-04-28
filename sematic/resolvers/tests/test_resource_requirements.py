@@ -3,8 +3,10 @@ import pytest
 
 # Sematic
 from sematic.resolvers.resource_requirements import (
+    KubernetesCapabilities,
     KubernetesResourceRequirements,
     KubernetesSecretMount,
+    KubernetesSecurityContext,
     KubernetesToleration,
     KubernetesTolerationEffect,
     KubernetesTolerationOperator,
@@ -36,6 +38,11 @@ def test_is_serializable():
                 )
             ],
             mount_expanded_shared_memory=True,
+            security_context=KubernetesSecurityContext(
+                privileged=True,
+                allow_privilege_escalation=True,
+                capabilities=KubernetesCapabilities(add=["SYS_ADMIN"]),
+            ),
         )
     )
     encoded = value_to_json_encodable(requirements, ResourceRequirements)

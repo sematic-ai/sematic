@@ -195,6 +195,55 @@ class KubernetesToleration:
 
 
 @dataclass
+class KubernetesCapabilities:
+    """Capabilities associated with a Kubernetes Security Context.
+
+    For more docs, see:
+    https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#capabilities-v1-core
+
+    Attributes
+    ----------
+    add:
+        Added capabilities
+    drop:
+        Dropped capabilities
+    """
+
+    add: List[str] = field(default_factory=list)
+    drop: List[str] = field(default_factory=list)
+
+
+@dataclass
+class KubernetesSecurityContext:
+    """A security context the Sematic job should run with.
+
+    Docs sourced from:
+    https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#securitycontext-v1-core
+
+    Attributes
+    ----------
+    allow_privilege_escalation:
+        AllowPrivilegeEscalation controls whether a process can gain more privileges
+        than its parent process. This bool directly controls if the no_new_privs
+        flag will be set on the container process. AllowPrivilegeEscalation is true
+        always when the container is: 1) run as Privileged 2) has CAP_SYS_ADMIN Note
+        that this field cannot be set when spec.os.name is windows.
+    privileged:
+        Run container in privileged mode. Processes in privileged containers are
+        essentially equivalent to root on the host. Defaults to false. Note that
+        this field cannot be set when spec.os.name is windows.
+    capabilities:
+        The capabilities to add/drop when running containers. Defaults to the default
+        set of capabilities granted by the container runtime. Note that this field
+        cannot be set when spec.os.name is windows.
+    """
+
+    allow_privilege_escalation: bool
+    privileged: bool
+    capabilities: KubernetesCapabilities
+
+
+@dataclass
 class KubernetesResourceRequirements:
     """Information on the Kubernetes resources required.
 
@@ -224,6 +273,10 @@ class KubernetesResourceRequirements:
         memory-backed tmpfs that expands up to half of the available memory file is used
         instead. Defaults to False. If that file is expanded to more than that limit
         (through external action), then the pod will be terminated.
+    security_context: Optional[KubernetesSecurityContext]
+        The Kubernetes security context the job will run with. Note that this
+        field will only be respected if ALLOW_CUSTOM_SECURITY_CONTEXTS has been
+        enabled by your Sematic administrator.
     """
 
     node_selector: Dict[str, str] = field(default_factory=dict)
@@ -231,6 +284,7 @@ class KubernetesResourceRequirements:
     secret_mounts: KubernetesSecretMount = field(default_factory=KubernetesSecretMount)
     tolerations: List[KubernetesToleration] = field(default_factory=list)
     mount_expanded_shared_memory: bool = field(default=False)
+    security_context: Optional[KubernetesSecurityContext] = None
 
 
 @dataclass

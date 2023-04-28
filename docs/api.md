@@ -198,6 +198,12 @@ Information on the Kubernetes resources required.
     instead. Defaults to False. If that file is expanded to more than that limit
     (through external action), then the pod will be terminated.
 
+- `security_context`: KubernetesSecurityContext
+
+    Custom security context for your container to run in. Can ONLY be set
+    if your Sematic administrator has enabled the
+    `ALLOW_CUSTOM_SECURITY_CONTEXTS` server setting.
+
 ### `KubernetesSecretMount`
 
 Information about how to expose Kubernetes secrets when running a Sematic func.
@@ -331,6 +337,52 @@ https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
     the toleration is considered to apply. In addition to this condition,
     the "effect" must be equal for the toleration and the taint for the toleration
     to be considered to apply.
+
+### `KubernetesSecurityContext`
+
+A custom security context for your Sematic job to run in. The
+following docs are sourced from the
+[Kubernetes docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#securitycontext-v1-core).
+For more up-to-date documentation, please refer to those docs.
+
+#### Parameters
+
+- `allow_privilege_escalation`: bool
+
+    AllowPrivilegeEscalation controls whether a process can gain more privileges
+    than its parent process. This bool directly controls if the no_new_privs
+    flag will be set on the container process. AllowPrivilegeEscalation is true
+    always when the container is: 1) run as Privileged 2) has CAP_SYS_ADMIN Note
+    that this field cannot be set when spec.os.name is windows.
+
+- `privileged`: bool
+
+    Run container in privileged mode. Processes in privileged containers are
+    essentially equivalent to root on the host. Defaults to false. Note that
+    this field cannot be set when spec.os.name is windows.
+
+- `capabilities`: KubernetesCapabilities
+
+    The capabilities to add/drop when running containers. Defaults to the default
+    set of capabilities granted by the container runtime. Note that this field
+    cannot be set when spec.os.name is windows.
+
+### `KubernetesCapabilities`
+
+Capabilities for a custom security context. The
+following docs are sourced from the
+[Kubernetes docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#capabilities-v1-core).
+For more up-to-date documentation, please refer to those docs.
+
+#### Parameters
+
+- `add`: List[str]
+
+    Capabilities to add (e.g. `["SYS_ADMIN"]`).
+
+- `drop`: List[str]
+
+    The capabilities to drop.
 
 ## Fault tolerance
 

@@ -1,5 +1,6 @@
 # Standard Library
 import logging
+from logging.config import dictConfig
 
 # Third-party
 import click
@@ -7,6 +8,7 @@ import click
 # Sematic
 from sematic.config.config import switch_env
 from sematic.db.migrate import migrate_up
+from sematic.logging import make_log_config
 
 
 @click.group("sematic")
@@ -22,9 +24,10 @@ def cli(verbose: int):
         $ sematic run examples/mnist/pytorch
     """
     if verbose == 1:
-        logging.basicConfig(level=logging.INFO)
+        dictConfig(make_log_config(log_to_disk=False, level=logging.INFO))
     elif verbose > 1:
-        logging.basicConfig(level=logging.DEBUG)
+        dictConfig(make_log_config(log_to_disk=False, level=logging.DEBUG))
+        pass
 
     switch_env("local")
     migrate_up()
