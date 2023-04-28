@@ -1,6 +1,6 @@
 sematic_py_lib(
-    name = "docker",
-    srcs = ["docker.py"],
+    name = "docker_builder",
+    srcs = ["docker_builder.py"],
     pip_deps = [
         "docker",
         "pyyaml",
