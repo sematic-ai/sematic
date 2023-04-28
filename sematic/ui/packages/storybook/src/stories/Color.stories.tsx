@@ -62,7 +62,7 @@ export default {
 const Template: ComponentStory<typeof ColorBlock> = (args) => <ColorBlock {...args} />;
 
 export const AllColors = () => {
-  const cases = [Primary, PrimaryLight, Error, Warning, Success, LightGray, Black, p3border];
+  const cases = [Primary, PrimaryLight, Error, Warning, Success, LightGray, Black, p3border, white];
 
   return <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
     {Array.from(cases).map((c, index) => (
@@ -119,3 +119,9 @@ export const p3border = Template.bind({});
 p3border.args = {
   paletteColorName: 'p3border'
 };
+
+export const white = Template.bind({});
+white.args = {
+  paletteColorName: 'white'
+};
+

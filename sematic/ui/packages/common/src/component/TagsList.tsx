@@ -36,7 +36,7 @@ interface TagsListProps {
 const TagsList = (props: TagsListProps) => {
     const { tags = [], onClick, onAddTag } = props;
     return <StyledBox>
-        {tags.map(tag => <Chip key={tag} label={tag} onClick={() => onClick?.(tag)} />)}
+        {tags.map(tag => <Chip key={tag} label={tag} variant={"tag"} onClick={() => onClick?.(tag)} />)}
         <Button variant={"text"} size={"small"} onClick={onAddTag}>add tags</Button>
     </StyledBox>;
 }
