@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# TODO: move to a build system-agnostic location
 # This file allows for emulating the Ray CLI inside a Sematic Docker image.
 # It can use either a regular python environment within the image or the
 # python environment managed by bazel (if the latter is available). If Ray
