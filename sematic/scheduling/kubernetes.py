@@ -20,7 +20,11 @@ from urllib3.exceptions import ConnectionError
 
 # Sematic
 from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR, ON_WORKER_ENV_VAR
-from sematic.config.server_settings import ServerSettingsVar, get_server_setting
+from sematic.config.server_settings import (
+    ServerSettingsVar,
+    get_bool_server_setting,
+    get_server_setting,
+)
 from sematic.config.settings import get_plugin_setting
 from sematic.config.user_settings import UserSettingsVar
 from sematic.container_images import CONTAINER_IMAGE_ENV_VAR
@@ -537,6 +541,7 @@ def _schedule_kubernetes_job(
     volume_mounts = []
     secret_env_vars = []
     tolerations = []
+    security_context = None
 
     if resource_requirements is not None:
         node_selector = resource_requirements.kubernetes.node_selector
@@ -552,6 +557,25 @@ def _schedule_kubernetes_job(
             volume, mount = _shared_memory()
             volumes.append(volume)
             volume_mounts.append(mount)
+
+        if resource_requirements.kubernetes.security_context is not None:
+            allow_customization = get_bool_server_setting(
+                ServerSettingsVar.ALLOW_CUSTOM_SECURITY_CONTEXTS, False
+            )
+            if not allow_customization:
+                raise ValueError(
+                    "User tried to customize the security context for their "
+                    "Sematic function, but ALLOW_CUSTOM_SECURITY_CONTEXTS is "
+                    "not enabled."
+                )
+            sc = resource_requirements.kubernetes.security_context
+            security_context = kubernetes.client.V1SecurityContext(
+                allow_privilege_escalation=sc.allow_privilege_escalation,
+                privileged=sc.privileged,
+                capabilities=kubernetes.client.V1Capabilities(
+                    add=sc.capabilities.add, drop=sc.capabilities.drop
+                ),
+            )
 
         secret_env_vars.extend(
             _environment_secrets(resource_requirements.kubernetes.secret_mounts)
@@ -569,6 +593,7 @@ def _schedule_kubernetes_job(
         logger.debug("kubernetes volume mounts: %s", volume_mounts)
         logger.debug("kubernetes environment secrets: %s", secret_env_vars)
         logger.debug("kubernetes tolerations: %s", tolerations)
+        logger.debug("kubernetes security context: %s", security_context)
 
     pod_name_env_var = kubernetes.client.V1EnvVar(  # type: ignore
         name=KUBERNETES_POD_NAME_ENV_VAR,
@@ -626,6 +651,7 @@ def _schedule_kubernetes_job(
                             ]
                             + secret_env_vars,
                             volume_mounts=volume_mounts,
+                            security_context=security_context,
                             resources=(
                                 kubernetes.client.V1ResourceRequirements(  # type: ignore
                                     limits=resource_requests,
