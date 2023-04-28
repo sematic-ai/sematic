@@ -25,8 +25,12 @@ logger = logging.getLogger(__name__)
 @sematic_api.route("/api/v1/artifacts", methods=["GET"])
 @authenticate
 def list_artifacts_endpoint(user: Optional[User] = None) -> flask.Response:
-    limit, order, _, _, sql_predicates = get_request_parameters(
-        args=flask.request.args, model=Artifact
+
+    parameters = get_request_parameters(args=flask.request.args, model=Artifact)
+    limit, order, sql_predicates = (
+        parameters.limit,
+        parameters.order,
+        parameters.filters,
     )
 
     with db().get_session() as session:

@@ -25,9 +25,10 @@ from sematic.db.queries import delete_note, get_note, save_note
 @sematic_api.route("/api/v1/notes", methods=["GET"])
 @authenticate
 def list_notes_endpoint(user: Optional[User]) -> flask.Response:
-    limit, order, _, _, sql_predicates = get_request_parameters(
+    parameters = get_request_parameters(
         args=flask.request.args, model=Note, default_order="asc"
     )
+    order, sql_predicates = parameters.order, parameters.filters
 
     with db().get_session() as session:
         query = session.query(Note)

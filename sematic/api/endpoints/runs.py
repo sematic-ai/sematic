@@ -5,6 +5,7 @@ Module keeping all /api/v*/runs/* API endpoints.
 # Standard Library
 import base64
 import datetime
+import json
 import logging
 from dataclasses import asdict
 from http import HTTPStatus
@@ -26,6 +27,8 @@ from sematic.api.endpoints.metrics import MetricEvent, save_event_metrics
 from sematic.api.endpoints.payloads import get_run_payload, get_runs_payload
 from sematic.api.endpoints.request_parameters import (
     get_request_parameters,
+    list_garbage_ids,
+    get_garbage_filters,
     jsonify_error,
 )
 from sematic.db.db import db
@@ -62,6 +65,10 @@ logger = logging.getLogger(__name__)
 class _DetectedRunRaceCondition(Exception):
     pass
 
+
+_GARBAGE_QUERIES = {
+    "orphaned_jobs": get_runs_with_orphaned_jobs,
+}
 
 @sematic_api.route("/api/v1/runs", methods=["GET"])
 @authenticate
@@ -100,15 +107,41 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
     after_cursor_count : int
         Number of items remain after the current cursor, i.e. including the current page.
     content: List[Run]
-        A list of run JSON payloads. The size of the list is `limit` or less if
-        current page is last page.
+        A list of run JSON payloads, if the 'include' request parameter was not set.
+        If the 'include' parameter was set to ['id'], returns a list of run ids. The
+        size of the list is `limit` or less if current page is last page.
     """
+    request_args = dict(flask.request.args)
+    contained_extra_filters = garbage_filters = get_garbage_filters(request_args, list(_GARBAGE_QUERIES.keys()))
+    if len(garbage_filters) != 0:
+        if contained_extra_filters or len(garbage_filters) > 1:
+            return jsonify_error(
+                f"Filter {garbage_filters[0]} must be used alone",
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        return list_garbage_ids(garbage_filters[0], flask.request.url, _GARBAGE_QUERIES, Run, urlencode(request_args))
+    return _standard_list_runs(request_args)
+
+
+def _standard_list_runs(args: Dict[str, str]) -> flask.Response:
     try:
-        limit, order, cursor, group_by_column, sql_predicates = get_request_parameters(
-            args=flask.request.args, model=Run
-        )
+        parameters = get_request_parameters(args=args, model=Run)
     except ValueError as e:
         return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
+
+    if parameters.include_fields != None:
+        return jsonify_error(
+            "'include' is not supported in combination with the given filters.",
+            HTTPStatus.BAD_REQUEST,
+        )
+
+    limit, order, cursor, group_by_column, sql_predicates = (
+        parameters.limit,
+        parameters.order,
+        parameters.cursor,
+        parameters.group_by,
+        parameters.filters,
+    )
 
     decoded_cursor: Optional[str] = None
     if cursor is not None:
