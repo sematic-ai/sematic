@@ -7,6 +7,7 @@ try:
         RayCluster,
     )
     from sematic.plugins.abstract_kuberay_wrapper import (  # noqa: F401,E402
+        AutoscalerConfig,
         RayClusterConfig,
         RayNodeConfig,
         ScalingGroup,

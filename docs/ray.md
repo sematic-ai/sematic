@@ -155,6 +155,11 @@ for the head node.
 - **scaling_groups** (*[`List[ScalingGroup]`](#scalinggroup)*): A list of
 scaling groups. Each scaling group may have different properties for the
 nodes in the group.
+- **autoscaler_config** (*[`Optional[AutoscalerConfig]`](#autoscalerconfig)*): The
+configuration for the autoscaler. Required if there is at least one scaling
+group which has `max_workers` greater than `min_workers`. The autoscaler is
+not enabled if all scaling groups have `max_workers == min_workers`, even if
+this configuration is specified. Defaults to `None`.
 
 #### SimpleRayCluster
 
@@ -165,6 +170,13 @@ clusters with a fixed number of uniform workers.
 head node
 - **node_config** (*[`RayNodeConfig`](#raynodeconfig)*): The configuration
 for each node in the cluster
+- **max_nodes** (Optional[int]): The maximum number of nodes in the cluster
+(including the head node). Defaults to be equal to `n_nodes`. Must be greater
+than or equal to `n_nodes`.
+- **autoscaler_config** (*[`Optional[AutoScalerConfig]`](#autoscalerconfig)*): The
+configuration for the autoscaler. Required if `max_nodes` is greater than
+`n_nodes`. The autoscaler is not enabled if `max_nodes == n_nodes`, even if
+this configuration is specified. Defaults to `None`.
 
 #### RayNodeConfig
 
@@ -189,6 +201,19 @@ group can scale to. Must be non-negative.
 - **max_workers** (*int*): The maximum number of workers the scaling
 group can scale to. Must be equal to or greater than min_workers.
 For a fixed-size scaling group, set this equal to min_workers.
+
+#### AutoscalerConfig
+
+The configuration for the autoscaler. The autoscaler will run in the same
+Kubernetes pod as the Ray head. Thus your Kubernetes cluster must have
+a single node available which can supply BOTH the resource requirements
+of the Ray head AND of the autoscaler.
+
+- **cpu** (*float*): Number of CPUs for each node (supports fractional CPUs).
+- **memory_gb** (*float*): Gibibytes of memory for each node
+(supports fractional values). Note: One
+[gibibyte](https://simple.wikipedia.org/wiki/Gibibyte) is
+`2**30` bytes.
 
 ## Installation and configuration
 
