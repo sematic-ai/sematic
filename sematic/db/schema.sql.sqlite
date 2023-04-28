@@ -113,7 +113,7 @@ CREATE TABLE jobs (
 
     FOREIGN KEY(run_id) REFERENCES runs (id)
 );
-CREATE INDEX runs_calculator_path ON runs (calculator_path);
+CREATE INDEX runs_calculator_path ON runs (function_path);
 CREATE INDEX jobs_run_id ON jobs (run_id);
 CREATE TABLE metric_labels (
     metric_id TEXT NOT NULL PRIMARY KEY,
