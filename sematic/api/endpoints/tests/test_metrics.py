@@ -18,6 +18,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
+from sematic.metrics.func_effective_runtime_metric import FuncEffectiveRuntimeMetric
 from sematic.metrics.func_success_rate_metric import FuncSuccessRateMetric
 from sematic.metrics.metric_point import MetricPoint, MetricType
 from sematic.metrics.run_count_metric import RunCountMetric
@@ -46,7 +47,8 @@ def test_run_created(persisted_run: Run):  # noqa: F811
 
 def test_run_state_changed(persisted_run: Run):  # noqa: F811
     persisted_run.future_state = FutureState.RESOLVED.value  # type: ignore
-    persisted_run.resolved_at = datetime.utcnow()
+    persisted_run.started_at = datetime(2023, 4, 27)
+    persisted_run.resolved_at = datetime(2023, 4, 27, 0, 0, 10)
 
     save_event_metrics(MetricEvent.run_state_changed, [persisted_run])
 
@@ -58,6 +60,19 @@ def test_run_state_changed(persisted_run: Run):  # noqa: F811
             metric_type=MetricType.GAUGE.name,
             columns=[],
             series=[(1, ())],
+        )
+    }
+
+    aggregation = FuncEffectiveRuntimeMetric().aggregate(
+        labels={}, group_by=[], rollup=None
+    )
+
+    assert aggregation == {
+        SQLMetricsStorage.get_path(): MetricSeries(
+            metric_name="sematic.func_effective_runtime",
+            metric_type=MetricType.GAUGE.name,
+            columns=[],
+            series=[(10, ())],
         )
     }
 
