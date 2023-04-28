@@ -3,7 +3,7 @@ CREATE TABLE runs (
     id character(32) NOT NULL,
     future_state TEXT NOT NULL,
     name TEXT,
-    calculator_path TEXT,
+    function_path TEXT,
     created_at timestamp WITH time zone NOT NULL,
     updated_at timestamp WITH time zone NOT NULL,
     started_at timestamp,
