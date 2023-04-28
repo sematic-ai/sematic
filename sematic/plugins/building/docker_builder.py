@@ -105,7 +105,7 @@ class ImagePushConfig:
 
     registry: str
     repository: str
-    tag_suffix: Optional[str]
+    tag_suffix: Optional[str] = None
 
     def __post_init__(self):
         """
@@ -207,7 +207,30 @@ class BuildConfig:
 
 
 class DockerBuilder(AbstractBuilder):
-    """ """
+    """
+    Docker-based Build System plugin implementation.
+
+    Packages the target pipeline code and required dependencies in a Docker image,
+    according to a proprietary build configuration specified via a configuration file of
+    the form:
+
+    ```
+    version: <version>
+    base_uri: <base image URI>
+    image_script: <custom image URI script>
+    build:
+        requirements: <requirements file>
+        data: <list of data file globs>
+        src: <list of source file globs>
+    push:
+        registry: <image push registry>
+        repository: <image push repository>
+        tag_suffix: <optional image push tag suffix>
+    ```
+
+    It then launches the target pipeline by submitting its execution to Sematic Server,
+    using the build image to execute `@func`s in the cloud.
+    """
 
     @staticmethod
     def get_author() -> str:
@@ -233,7 +256,7 @@ class DockerBuilder(AbstractBuilder):
         build_config = _get_build_config(script_path=target)
         logger.info("Loaded build configuration: %s", build_config)
 
-        base_image_uri = _get_image_uri(build_config=build_config, target=target)
+        base_image_uri = _build_image(build_config=build_config, target=target)
         logger.info("Using container base image URI: %s", repr(base_image_uri))
 
         # TODO: configure the docker service connection string in the build file
@@ -308,17 +331,18 @@ def _find_build_config_files(script_path: str) -> List[str]:
     Searches for build configuration files that correspond to the specified script file,
     and returns a list containing their paths.
     """
-    # TODO: also load `build.yaml` files on the file hierarchy between the cwd and the
-    #  script directory
+    # TODO: also load `sematic_build.yaml` files on the file hierarchy between the cwd and
+    #  the script directory
     root = os.path.splitext(script_path)[0]
     file_candidate = f"{root}.yaml"
 
     return [file_candidate] if os.path.isfile(file_candidate) else []
 
 
-def _get_image_uri(build_config: BuildConfig, target: str) -> ImageURI:
+def _build_image(build_config: BuildConfig, target: str) -> ImageURI:
     """
-    Returns the container image URI to use, according to the build configuration.
+    Builds the container image to use, according to the build configuration, and returns
+    an `ImageURI` that identifies it.
 
     Raises
     ------

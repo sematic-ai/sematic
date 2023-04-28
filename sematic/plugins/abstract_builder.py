@@ -29,7 +29,7 @@ class BuildConfigurationError(BuildError):
 
 class AbstractBuilder(AbstractPlugin):
     """
-    Abstract base class to represent a container image builder.
+    Abstract base class to represent a container image builder and launcher.
     """
 
     @abc.abstractmethod
