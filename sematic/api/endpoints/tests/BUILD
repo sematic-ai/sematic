@@ -147,6 +147,7 @@ pytest_test(
         "//sematic/api/tests:fixtures",
         "//sematic/db/models:run",
         "//sematic/db/tests:fixtures",
+        "//sematic/metrics:func_effective_runtime_metric",
         "//sematic/metrics:func_success_rate_metric",
         "//sematic/metrics:metric_point",
         "//sematic/metrics:run_count_metric",

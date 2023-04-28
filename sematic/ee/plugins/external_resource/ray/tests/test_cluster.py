@@ -49,7 +49,7 @@ def add_with_ray(a, b):
 def add(a: int, b: int) -> int:
     with RayCluster(
         config=SimpleRayCluster(
-            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=1)
+            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2)
         )
     ):
         result = ray.get([add_with_ray.remote(a, b)], timeout=30)[0]
@@ -59,7 +59,7 @@ def add(a: int, b: int) -> int:
 def test_timeout():
     cluster = RayCluster(
         config=SimpleRayCluster(
-            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=1)
+            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2)
         ),
         activation_timeout_seconds=42,
     )
@@ -79,7 +79,7 @@ def test_get_kuberay_version():
     fake_namespace = "fake_namespace"
     cluster = RayClusterClientsMocked(
         config=SimpleRayCluster(
-            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=1)
+            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2)
         )
     )
     mock_api = cluster._apps_api()
@@ -126,7 +126,7 @@ def test_continue_deactivation():
     with environment_variables(dict(KUBERNETES_NAMESPACE=namespace)):
         cluster = RayClusterClientsMocked(
             config=SimpleRayCluster(
-                n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=1)
+                n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2)
             ),
             status=ResourceStatus(
                 state=ResourceState.ACTIVE,
@@ -166,7 +166,7 @@ def test_request_cluster(mock_get_run_ids, mock_get_run):
 
     original_cluster = RayClusterClientsMocked(
         config=SimpleRayCluster(
-            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=1)
+            n_nodes=1, node_config=RayNodeConfig(cpu=1, memory_gb=2)
         ),
         status=ResourceStatus(
             state=ResourceState.CREATED,
@@ -201,7 +201,7 @@ def test_update_from_activating():
     cluster_name = "cluster-name"
     cluster = RayClusterClientsMocked(
         config=SimpleRayCluster(
-            n_nodes=3, node_config=RayNodeConfig(cpu=1, memory_gb=1)
+            n_nodes=3, node_config=RayNodeConfig(cpu=1, memory_gb=2)
         ),
         status=ResourceStatus(
             state=ResourceState.ACTIVATING,
