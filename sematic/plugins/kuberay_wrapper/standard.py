@@ -1,7 +1,7 @@
 # Standard Library
 import json
 from copy import deepcopy
-from typing import Any, Dict, Type
+from typing import Any, Dict, Type, Union
 
 # Sematic
 from sematic.abstract_plugin import AbstractPluginSettingsVar
@@ -9,6 +9,7 @@ from sematic.config.server_settings import ServerSettingsVar, get_server_setting
 from sematic.config.settings import get_plugin_setting
 from sematic.plugins.abstract_kuberay_wrapper import (
     AbstractKuberayWrapper,
+    AutoscalerConfig,
     RayClusterConfig,
     RayClusterManifest,
     RayNodeConfig,
@@ -117,6 +118,28 @@ _MANIFEST_TEMPLATE: Dict[str, Any] = {
     },
     "spec": {
         "rayVersion": _NeedsOverride,
+        # leave autoscaling off unless required, as there is a sidecar
+        # required when autoscaling is active and we don't want to add
+        # it unless it's needed.
+        "enableInTreeAutoscaling": False,
+        "autoscalerOptions": {
+            "env": [
+                {
+                    "name": "RAY_LOG_TO_STDERR",
+                    "value": "1",
+                },
+            ],
+            "resources": {
+                "limits": {
+                    "cpu": _NeedsOverride,
+                    "memory": _NeedsOverride,
+                },
+                "requests": {
+                    "cpu": _NeedsOverride,
+                    "memory": _NeedsOverride,
+                },
+            },
+        },
         "headGroupSpec": {
             "serviceType": "ClusterIP",
             "rayStartParams": {"dashboard-host": "0.0.0.0", "block": "true"},
@@ -144,6 +167,12 @@ _MANIFEST_TEMPLATE: Dict[str, Any] = {
                                 "limits": _NeedsOverride,
                                 "requests": _NeedsOverride,
                             },
+                            "env": [
+                                {
+                                    "name": "RAY_LOG_TO_STDERR",
+                                    "value": "1",
+                                },
+                            ],
                         }
                     ],
                     "tolerations": _NeedsOverride,
@@ -190,6 +219,21 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         manifest = deepcopy(cls._manifest_template)
         manifest["metadata"]["name"] = cluster_name
         manifest["spec"]["rayVersion"] = cluster_config.ray_version
+        manifest["spec"][
+            "enableInTreeAutoscaling"
+        ] = cluster_config.requires_autoscale()
+
+        autoscaler_config = AutoscalerConfig(
+            cpu=0.5,
+            memory_gb=1,
+        )
+        if cluster_config.autoscaler_config is not None:
+            autoscaler_config = cluster_config.autoscaler_config
+
+        manifest["spec"]["autoscalerOptions"]["resources"] = {
+            "requests": cls._requests_for_node(autoscaler_config),
+            "limits": cls._requests_for_node(autoscaler_config),
+        }
 
         head_group_spec = cls._make_head_group_spec(
             image_uri, cluster_config.head_node, manifest["spec"]["headGroupSpec"]
@@ -330,20 +374,23 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         return cls._requests_for_node(node_config)
 
     @classmethod
-    def _requests_for_node(cls, node_config: RayNodeConfig) -> Dict[str, str]:
+    def _requests_for_node(
+        cls, node_config: Union[RayNodeConfig, AutoscalerConfig]
+    ) -> Dict[str, str]:
         gpu_requests = {}
-        if node_config.gpu_count > 0:
+        gpu_count = getattr(node_config, "gpu_count", 0)
+        if gpu_count > 0:
             gpu_request_key = _get_setting(
                 StandardKuberaySettingsVar.RAY_GPU_RESOURCE_REQUEST_KEY, None
             )
             if gpu_request_key is None:
-                if node_config.gpu_count > 1:
+                if gpu_count > 1:
                     raise UnsupportedUsageError(
                         "You are requesting more than one GPU per node, but the server "
                         "is not configured to support more than one GPU per node."
                     )
             else:
-                gpu_requests[gpu_request_key] = node_config.gpu_count
+                gpu_requests[gpu_request_key] = gpu_count
 
         milli_cpu = int(1000 * node_config.cpu)
         memory_mb = int(1024 * node_config.memory_gb)
