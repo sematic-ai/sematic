@@ -147,10 +147,8 @@ class RayClusterConfig:
         if self.requires_autoscale() and self.autoscaler_config is None:
             raise ValueError(
                 "Your RayClusterConfig would require autoscaling, but no "
-                "AutoScalerConfig is provided. Note that the autoscaler "
-                "will execute in the same Kubernetes pod as the Ray head, "
-                "so you must have a Kubernetes node available which can "
-                "accomodate the resources for the head PLUS the autoscaler."
+                "AutoScalerConfig is provided. For more, see "
+                "https://go.sematic.dev/KMzMCm "
             )
 
     def requires_autoscale(self) -> bool:
