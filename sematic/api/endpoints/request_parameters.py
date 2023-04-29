@@ -62,6 +62,9 @@ def get_garbage_filters(
         filters: Dict = json.loads(filters_json)
     except Exception as e:
         raise ValueError(f"Malformed filters: {filters_json}, error: {e}")
+    
+    if len(filters) == 0:
+        return False, []
 
     operand = list(filters.keys())[0]
     contained_extra_filters = False
@@ -90,7 +93,7 @@ def get_garbage_filters(
             return True, []
         if filter_[filter_name] != {"eq": True}:
             raise ValueError(
-                f"The filter '{filter_name}' must use the predicate {'eq: true'}"
+                "The filter '{}' must use the predicate {}".format(filter_name, "{'eq': True}")
             )
         return False, [filter_name]
 

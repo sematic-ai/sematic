@@ -112,7 +112,7 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
         size of the list is `limit` or less if current page is last page.
     """
     request_args = dict(flask.request.args)
-    contained_extra_filters = garbage_filters = get_garbage_filters(
+    contained_extra_filters, garbage_filters = get_garbage_filters(
         request_args, list(_GARBAGE_QUERIES.keys())
     )
     if len(garbage_filters) != 0:
