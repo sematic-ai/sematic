@@ -3,8 +3,19 @@ import json
 import logging
 from dataclasses import dataclass
 from http import HTTPStatus
-from typing import Any, Callable, Dict, List, Literal, Tuple, Type, Optional, Union, cast
-from urllib.parse import urlencode, urlsplit, urlunsplit
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
+from urllib.parse import urlsplit, urlunsplit
 
 # Third-party
 import flask
@@ -40,16 +51,18 @@ class SearchRequestParameters:
     cursor: Optional[str]
     group_by: Optional[sqlalchemy.Column]
     filters: Optional[BooleanClauseList]
-    include_fields: Optional[List[str]]
+    fields: Optional[List[str]]
 
 
-def get_garbage_filters(request_args: Dict[str, str], supported_filters: List[str]) -> Tuple[bool, List[str]]:
+def get_garbage_filters(
+    request_args: Dict[str, str], supported_filters: List[str]
+) -> Tuple[bool, List[str]]:
     filters_json: str = request_args.get("filters", "{}")
     try:
         filters: Dict = json.loads(filters_json)
     except Exception as e:
         raise ValueError(f"Malformed filters: {filters_json}, error: {e}")
-    
+
     operand = list(filters.keys())[0]
     contained_extra_filters = False
 
@@ -63,43 +76,67 @@ def get_garbage_filters(request_args: Dict[str, str], supported_filters: List[st
                 contained_extra_filters = True
                 continue
             if filter_[filter_name] != {"eq": True}:
-                raise ValueError(f"The filter '{filter_name}' must use the predicate {'eq: true'}")
+                raise ValueError(
+                    f"The filter '{filter_name}' must use the predicate {'eq: true'}"
+                )
             garbage_filters.append(filter_name)
-        
+
         return contained_extra_filters, garbage_filters
-        
+
     else:
         filter_ = cast(ColumnPredicate, filters)
         filter_name = list(filter_.keys())[0]
         if filter_name not in supported_filters:
             return True, []
         if filter_[filter_name] != {"eq": True}:
-            raise ValueError(f"The filter '{filter_name}' must use the predicate {'eq: true'}")
+            raise ValueError(
+                f"The filter '{filter_name}' must use the predicate {'eq: true'}"
+            )
         return False, [filter_name]
 
 
-def list_garbage_ids(garbage_filter: str, request_url: str, queries: Dict[str, Callable[[], List[str]]], model: Type[Any], encoded_request_args: str) -> flask.Response:
+def list_garbage_ids(
+    garbage_filter: str,
+    request_url: str,
+    queries: Dict[str, Callable[[], List[str]]],
+    model: Type[Any],
+    encoded_request_args: str,
+    id_field: Optional[str] = None,
+) -> flask.Response:
     request_args = dict(flask.request.args)
     if "limit" in request_args:
-        return jsonify_error(f"Cannot use limit with filter {garbage_filter}", status=HTTPStatus.BAD_REQUEST)
+        return jsonify_error(
+            f"Cannot use limit with filter {garbage_filter}",
+            status=HTTPStatus.BAD_REQUEST,
+        )
     del request_args["filters"]
     try:
         parameters = get_request_parameters(args=request_args, model=model)
     except ValueError as e:
         return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
     if parameters.cursor is not None:
-        return jsonify_error(f"Cannot use pagination with filter {garbage_filter}", status=HTTPStatus.BAD_REQUEST)
+        return jsonify_error(
+            f"Cannot use pagination with filter {garbage_filter}",
+            status=HTTPStatus.BAD_REQUEST,
+        )
     if parameters.group_by is not None:
-        return jsonify_error(f"Cannot use group by with filter {garbage_filter}", status=HTTPStatus.BAD_REQUEST)
-    if parameters.include_fields != ["id"]:
-        return jsonify_error(f"Filter {garbage_filter} must have include=['id'] set.", status=HTTPStatus.BAD_REQUEST)
-    
+        return jsonify_error(
+            f"Cannot use group by with filter {garbage_filter}",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    if parameters.fields != ["id"]:
+        return jsonify_error(
+            f"Filter {garbage_filter} must have include=['id'] set.",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
     scheme, netloc, path, _, fragment = urlsplit(request_url)
     current_page_url = urlunsplit(
-        (scheme, netloc, path, urlencode(encoded_request_args), fragment)
+        (scheme, netloc, path, encoded_request_args, fragment)
     )
 
     ids = queries[garbage_filter]()
+    id_field = "id" if id_field is None else id_field
 
     payload = dict(
         current_page_url=current_page_url,
@@ -107,7 +144,7 @@ def list_garbage_ids(garbage_filter: str, request_url: str, queries: Dict[str, C
         limit=len(ids),
         next_cursor=None,
         after_cursor_count=0,
-        content=ids,
+        content=[{id_field: id_ for id_ in ids}],
     )
     return flask.jsonify(payload)
 
@@ -176,7 +213,7 @@ def get_request_parameters(
             f"{list(ORDER_BY_DIRECTIONS.keys())}; got: '{args.get('order')}'"
         )
 
-    include_fields_json: str = args.get("include", "null")
+    include_fields_json: str = args.get("fields", "null")
     try:
         include_fields: Optional[List[str]] = json.loads(include_fields_json)
     except Exception as e:
