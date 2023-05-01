@@ -517,3 +517,35 @@ def clean_orphaned_resolution_jobs_endpoint(
             content=[change.value for change in state_changes],
         )
     )
+
+
+@sematic_api.route("/api/v1/resolutions/<root_id>/clean", methods=["POST"])
+@authenticate
+def clean_stale_resolution_endpoint(
+    user: Optional[User], root_id: str
+) -> flask.Response:
+    resolution = get_resolution(root_id)
+    root_run = get_run(root_id)
+
+    if not FutureState[root_run.future_state].is_terminal():  # type: ignore
+        return jsonify_error(
+            f"Couldn't clean resolution {root_id} because its root run "
+            f"is in state {root_run.future_state}",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    state_change = "UNMODIFIED"
+    if not resolution.status.is_terminal():
+        logger.warning(
+            "Marking resolution %s as failed because it wasn't properly terminated.",
+            root_id,
+        )
+        resolution.status = ResolutionStatus.FAILED
+        state_change = "FAILED"
+        save_resolution(resolution)
+
+    return flask.jsonify(
+        dict(
+            content=state_change,
+        )
+    )

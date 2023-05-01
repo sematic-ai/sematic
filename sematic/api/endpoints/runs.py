@@ -56,7 +56,7 @@ from sematic.db.queries import (
 from sematic.log_reader import load_log_lines
 from sematic.scheduling.job_scheduler import clean_jobs, schedule_run, update_run_status
 from sematic.scheduling.kubernetes import cancel_job
-from sematic.utils.exceptions import IllegalStateTransitionError
+from sematic.utils.exceptions import ExceptionMetadata, IllegalStateTransitionError
 from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
@@ -633,6 +633,41 @@ def get_run_jobs(user: Optional[User], run_id: str) -> flask.Response:
     return flask.jsonify(
         dict(
             content=jobs,
+        )
+    )
+
+
+@sematic_api.route("/api/v1/runs/<run_id>/clean", methods=["POST"])
+@authenticate
+def clean_orphaned_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+    run = get_run(run_id)
+    resolution = get_resolution(run.root_id)
+    if not resolution.status.is_terminal():
+        return jsonify_error(
+            f"The resolution for run {run_id} has not terminated "
+            f"(has status: {resolution.status.value}).",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    state_change = "UNMODIFIED"
+
+    if not FutureState[run.future_state].is_terminal():  # type: ignore
+        run.future_state = FutureState.FAILED
+        if run.exception_metadata is None:
+            run.exception_metadata = ExceptionMetadata.from_exception(
+                RuntimeError(
+                    "Run was still alive despite the resolution being terminated."
+                ),
+            )
+        logger.warning(
+            "Marking run %s as failed because it was not terminated with its resolution.",
+            run.id,
+        )
+        save_run(run)
+        state_change = "FAILED"
+
+    return flask.jsonify(
+        dict(
+            content=state_change,
         )
     )
 
