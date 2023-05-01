@@ -18,13 +18,11 @@ def test_clean(
     mock_clean_orphaned_runs: mock.MagicMock,
     mock_clean_stale_resolutions: mock.MagicMock,
 ):
-    
     def reset():
         mock_clean_orphaned_jobs.reset_mock()
         mock_clean_orphaned_resources.reset_mock()
         mock_clean_orphaned_runs.reset_mock()
         mock_clean_stale_resolutions.reset_mock()
-
 
     runner = CliRunner()
 

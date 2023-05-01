@@ -646,7 +646,7 @@ def clean_orphaned_run_endpoint(user: Optional[User], run_id: str) -> flask.Resp
     if not ResolutionStatus[resolution.status].is_terminal():  # type: ignore
         return jsonify_error(
             f"The resolution for run {run_id} has not terminated "
-            f"(has status: {resolution.status.value}).",
+            f"(has status: {resolution.status}).",
             status=HTTPStatus.BAD_REQUEST,
         )
     state_change = "UNMODIFIED"
