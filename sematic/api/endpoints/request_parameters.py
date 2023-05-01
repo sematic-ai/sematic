@@ -128,6 +128,43 @@ def list_garbage_ids(
     encoded_request_args: str,
     id_field: Optional[str] = None,
 ) -> flask.Response:
+    """Return a flask response for a search on ids of garbage data.
+
+    Parameters
+    ----------
+    garbage_filter:
+        A string representing which garbage collection filter is being used.
+    request_url:
+        The URL used to perform the search request.
+    queries:
+        A mapping from garbage collection filter name to a callable to perform
+        the query.
+    model:
+        The ORM model for the object being searched over.
+    encoded_request_args:
+        URL-encoded query parameters for the current search request.
+    id_field:
+        The name of the field representing the id of the object being searched over.
+        When `None`, "id" will be used as the name of the id field. Defaults to None.
+
+    Returns
+    -------
+    A flask response containing the search results. The fields of the response object
+    are:
+    current_page_url
+        URL of the current page.
+    next_page_url
+        Always `None` (present for compatibility with other search APIs).
+    limit
+        The number of results returned.
+    next_cursor
+        Always `None` (present for compatibility with other search APIs).
+    after_cursor_count
+        Always 0 (present for compatibility with other search APIs).
+    content:
+        A list of id JSON payloads. Each element in the returned list is a dict
+        whose key is the string specified by `id_field` and whose value is an id.
+    """
     request_args = dict(flask.request.args)
     if "limit" in request_args:
         return jsonify_error(

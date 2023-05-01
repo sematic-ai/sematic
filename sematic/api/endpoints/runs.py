@@ -112,7 +112,7 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
         Cursor to obtain next page. Already included in `next_page_url`.
     after_cursor_count : int
         Number of items remain after the current cursor, i.e. including the current page.
-    content: List[Run]
+    content : List[Run]
         A list of run JSON payloads, if the 'fields' request parameter was not set.
         If the 'fields' parameter was set to ['id'], returns a list of run ids. The
         size of the list is `limit` or less if current page is last page.

@@ -460,11 +460,10 @@ def list_resolutions_endpoint(user: Optional[User]) -> flask.Response:
         Cursor to obtain next page. Already included in `next_page_url`.
     after_cursor_count : int
         Number of items remain after the current cursor, i.e. including the current page.
-    content: List[Run]
+    content : List[Dict[str, str]]
         A list of resolution JSON payloads, if the 'fields' request parameter was not set.
         If the 'fields' parameter was set to ['root_id'], returns a list of resolution
         ids. The size of the list is `limit` or less if current page is last page.
-        Defaults to None.
     """
     request_args = dict(flask.request.args)
     contained_extra_filters, garbage_filters = get_gc_filters(
