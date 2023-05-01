@@ -1,4 +1,3 @@
-import OrderSection from 'src/pages/RunSearch/filters/OrderSection';
 import OtherFiltersSection from 'src/pages/RunSearch/filters/OtherFilterSection';
 import OwnersFilterSection from 'src/pages/RunSearch/filters/OwnersFilterSection';
 import SearchTextSection from 'src/pages/RunSearch/filters/SearchTextSection';
@@ -20,7 +19,7 @@ const SearchFilters = () => {
         <StatusFilterSection />
         <OwnersFilterSection />
         <OtherFiltersSection />
-        <OrderSection />
+        {/* <OrderSection /> disabled for now */}
         <StyledButton variant="contained" disableElevation>Filter runs</StyledButton>
         <StyledButton variant="contained" disableElevation color={"white"}>Clear filters</StyledButton>
     </>;

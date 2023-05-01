@@ -5,7 +5,7 @@ import { CanceledStateChip, FailedStateChip, RunningStateChip, SuccessStateChip 
 import CollapseableFilterSection from 'src/pages/RunSearch/filters/CollapseableFilterSection';
 import theme from "src/theme/new";
 import memoize from 'lodash/memoize';
-import { ResettableHanlde } from 'src/pages/RunSearch/filters/common';
+import { ResettableHandle } from 'src/pages/RunSearch/filters/common';
 
 const StyledChip = styled(Chip)`
     padding-left: ${theme.spacing(1)};
@@ -56,7 +56,7 @@ const toogleFilterGenerator = memoize((
         onFiltersChanged?.(Array.from(newFilters));
     }, []));
 
-const StatusFilterSection = forwardRef<ResettableHanlde, StatusFilterSectionProps>((props, ref) => {
+const StatusFilterSection = forwardRef<ResettableHandle, StatusFilterSectionProps>((props, ref) => {
     const { onFiltersChanged } = props;
     const [filters, setFilters] = useState<Set<string>>(() => new Set());
 

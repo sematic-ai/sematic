@@ -6,7 +6,7 @@ import OwnersFilterSection from '@sematic/common/src/pages/RunSearch/filters/Own
 import { useRef } from '@sematic/common/src/reactHooks';
 import theme from '@sematic/common/src/theme/new';
 import { Meta, StoryObj } from '@storybook/react';
-import { ResettableHanlde } from 'src/pages/RunSearch/filters/common';
+import { ResettableHandle } from 'src/pages/RunSearch/filters/common';
 
 export default {
   title: 'Sematic/RunFilters',
@@ -29,7 +29,7 @@ const commonArgTypes = {
 };
 
 function StatusFilterStory(props: StoryProps) {
-  const ref = useRef<ResettableHanlde>(null);
+  const ref = useRef<ResettableHandle>(null);
   const { onFilterChange } = props;
 
   return <div style={{ width: '300px' }}>
@@ -46,7 +46,7 @@ export const StatusFilter: StoryObj<StoryProps> = {
 };
 
 function OwnerFilterStory(props: StoryProps) {
-  const ref = useRef<ResettableHanlde>(null);
+  const ref = useRef<ResettableHandle>(null);
   const { onFilterChange } = props;
 
   return <div style={{ width: '300px' }}>

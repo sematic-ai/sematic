@@ -24,6 +24,7 @@ const Center = styled.div`
     height: 100%;
     flex-grow: 1;
     padding: 0 25px;
+    border-right: 1px solid ${theme.palette.p3border.main};
 `;
 
 export const Right = styled.div`
@@ -34,7 +35,6 @@ export const Right = styled.div`
     height: 100%;
     padding: 0 ${theme.spacing(2.4)};
     box-sizing: border-box;
-    border-left: 1px solid ${theme.palette.p3border.main};
 `;
 
 export const Container = styled.div`

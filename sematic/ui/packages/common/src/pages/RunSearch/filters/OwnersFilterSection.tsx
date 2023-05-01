@@ -4,9 +4,9 @@ import { collapseClasses } from '@mui/material/Collapse';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormGroup from '@mui/material/FormGroup';
 import { paperClasses } from '@mui/material/Paper';
-import { forwardRef, useCallback, useState, useImperativeHandle } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import CollapseableFilterSection from 'src/pages/RunSearch/filters/CollapseableFilterSection';
-import { ResettableHanlde } from 'src/pages/RunSearch/filters/common';
+import { ResettableHandle } from 'src/pages/RunSearch/filters/common';
 import theme from "src/theme/new";
 
 
@@ -48,7 +48,7 @@ interface OwnersFilterSectionProps {
     onFiltersChanged?: (filters: string[]) => void;
 }
 
-const OwnersFilterSection = forwardRef<ResettableHanlde, OwnersFilterSectionProps>((props, ref) => {
+const OwnersFilterSection = forwardRef<ResettableHandle, OwnersFilterSectionProps>((props, ref) => {
     const { onFiltersChanged } = props;
     const [filters, setFilters] = useState<Set<string>>(() => new Set());
 
@@ -60,25 +60,7 @@ const OwnersFilterSection = forwardRef<ResettableHanlde, OwnersFilterSectionProp
             } else {
                 filters.delete(filter);
             }
-            filters.delete('current_user_id');
             newFilters = new Set(filters);
-            onFiltersChanged?.(Array.from(newFilters));
-            return newFilters;
-        });
-
-    }, [onFiltersChanged, setFilters]);
-
-    /***
-     * This clears all other filters but the current user filter
-     */
-    const toogleJustMeFilter = useCallback((checked: boolean) => {
-        let newFilters: any;
-        setFilters(() => {
-            if (checked) {
-                newFilters = new Set(['current_user_id']);
-            } else {
-                newFilters = new Set();
-            }
             onFiltersChanged?.(Array.from(newFilters));
             return newFilters;
         });
@@ -96,11 +78,11 @@ const OwnersFilterSection = forwardRef<ResettableHanlde, OwnersFilterSectionProp
             <FormGroup>
                 <StyledFormControlLabel control={<Checkbox
                     checked={filters.has('current_user_id')}
-                    onChange={(e, checked) => toogleJustMeFilter(checked)} />} label="My runs only"
+                    onChange={(e, checked) => toogleFilter("current_user_id", checked)} />} label="Your runs"
                 />
                 {['Alice', 'Bob', 'Clark', 'David', 'Edison', 'Frank'].map(
-                    (owner) =>
-                        <StyledFormControlLabel control={<Checkbox
+                    (owner, index) =>
+                        <StyledFormControlLabel key={index} control={<Checkbox
                             onChange={(e, checked) => toogleFilter(owner, checked)} />} label={owner}
                             checked={filters.has(owner)} />
                 )}
