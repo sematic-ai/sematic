@@ -1,3 +1,3 @@
-export interface ResettableHanlde {
+export interface ResetTableHandle {
     reset: () => void;
 }
