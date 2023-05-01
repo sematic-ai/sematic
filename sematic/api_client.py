@@ -441,7 +441,16 @@ def clean_jobs_for_run(run_id: str, force: bool) -> List[str]:
 
 def get_resolutions_with_orphaned_jobs() -> List[str]:
     """Get ids of resolutions that have terminated which still have non-terminal jobs."""
-    filters = {"orphaned_jobs": {"eq": True}}
+    return _search_for_gc_resolutions("orphaned_jobs")
+
+
+def get_resolutions_with_stale_statuses() -> List[str]:
+    """Get ids of resolutions that have terminated which still have non-terminal jobs."""
+    return _search_for_gc_resolutions("stale")
+
+
+def _search_for_gc_resolutions(filter_name: str) -> List[str]:
+    filters = {filter_name: {"eq": True}}
     query_params = {
         "filters": json.dumps(filters),
         "fields": json.dumps(["root_id"]),

@@ -41,6 +41,7 @@ from sematic.db.queries import (
     get_existing_run_ids,
     get_external_resources_by_run_id,
     get_jobs_by_run_id,
+    get_orphaned_runs,
     get_resolution,
     get_root_graph,
     get_run,
@@ -67,6 +68,7 @@ class _DetectedRunRaceCondition(Exception):
 
 _GARBAGE_COLLECTION_QUERIES = {
     "orphaned_jobs": get_runs_with_orphaned_jobs,
+    "orphaned": get_orphaned_runs,
 }
 
 

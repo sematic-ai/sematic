@@ -44,6 +44,7 @@ from sematic.db.queries import (
     get_resources_by_root_id,
     get_run,
     get_run_graph,
+    get_stale_resolutions,
     save_graph,
     save_job,
     save_resolution,
@@ -57,6 +58,7 @@ logger = logging.getLogger(__name__)
 
 _GARBAGE_COLLECTION_QUERIES = {
     "orphaned_jobs": get_resolutions_with_orphaned_jobs,
+    "stale": get_stale_resolutions,
 }
 
 
