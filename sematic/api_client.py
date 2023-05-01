@@ -424,7 +424,16 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
 
 def get_runs_with_orphaned_jobs() -> List[str]:
     """Get ids of runs that have terminated, which still have non-terminal jobs."""
-    filters = {"orphaned_jobs": {"eq": True}}
+    return _search_for_gc_runs("orphaned_jobs")
+
+
+def get_orphaned_runs() -> List[str]:
+    """Get ids of runs that have not terminated, which have a terminal resolution."""
+    return _search_for_gc_runs("orphaned")
+
+
+def _search_for_gc_runs(filter_name: str) -> List[str]:
+    filters = {filter_name: {"eq": True}}
     query_params = {
         "filters": json.dumps(filters),
         "fields": json.dumps(["id"]),
