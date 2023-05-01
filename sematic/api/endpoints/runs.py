@@ -25,7 +25,7 @@ from sematic.api.endpoints.events import broadcast_graph_update, broadcast_job_u
 from sematic.api.endpoints.metrics import MetricEvent, save_event_metrics
 from sematic.api.endpoints.payloads import get_run_payload, get_runs_payload
 from sematic.api.endpoints.request_parameters import (
-    get_garbage_filters,
+    get_gc_filters,
     get_request_parameters,
     jsonify_error,
     list_garbage_ids,
@@ -65,7 +65,7 @@ class _DetectedRunRaceCondition(Exception):
     pass
 
 
-_GARBAGE_QUERIES = {
+_GARBAGE_COLLECTION_QUERIES = {
     "orphaned_jobs": get_runs_with_orphaned_jobs,
 }
 
@@ -112,8 +112,8 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
         size of the list is `limit` or less if current page is last page.
     """
     request_args = dict(flask.request.args)
-    contained_extra_filters, garbage_filters = get_garbage_filters(
-        request_args, list(_GARBAGE_QUERIES.keys())
+    contained_extra_filters, garbage_filters = get_gc_filters(
+        request_args, list(_GARBAGE_COLLECTION_QUERIES.keys())
     )
     if len(garbage_filters) != 0:
         if contained_extra_filters or len(garbage_filters) > 1:
@@ -124,7 +124,7 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
         return list_garbage_ids(
             garbage_filters[0],
             flask.request.url,
-            _GARBAGE_QUERIES,
+            _GARBAGE_COLLECTION_QUERIES,
             Run,
             urlencode(request_args),
         )

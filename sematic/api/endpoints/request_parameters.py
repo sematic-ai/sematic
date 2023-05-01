@@ -54,15 +54,35 @@ class SearchRequestParameters:
     fields: Optional[List[str]]
 
 
-def get_garbage_filters(
+def get_gc_filters(
     request_args: Dict[str, str], supported_filters: List[str]
 ) -> Tuple[bool, List[str]]:
+    """Get filters for garbage collection (gc).
+
+    Garbage collection filters are either present or not, so
+    when returned they are returned as a list of the names of
+    filters that were present.
+
+    Parameters
+    ----------
+    request_args:
+        The flask request args the filters were specified in.
+    supported_filters:
+        The supported garbage collection filters, as a list of
+        the names of said filters.
+
+    Returns
+    -------
+    A tuple where the first element is a bool indicating if there were
+    extra filters besides the garbage collection ones, and the second
+    element is a list of garbage collection filters that were identified.
+    """
     filters_json: str = request_args.get("filters", "{}")
     try:
         filters: Dict = json.loads(filters_json)
     except Exception as e:
         raise ValueError(f"Malformed filters: {filters_json}, error: {e}")
-    
+
     if len(filters) == 0:
         return False, []
 
@@ -93,7 +113,9 @@ def get_garbage_filters(
             return True, []
         if filter_[filter_name] != {"eq": True}:
             raise ValueError(
-                "The filter '{}' must use the predicate {}".format(filter_name, "{'eq': True}")
+                "The filter '{}' must use the predicate {}".format(
+                    filter_name, "{'eq': True}"
+                )
             )
         return False, [filter_name]
 
