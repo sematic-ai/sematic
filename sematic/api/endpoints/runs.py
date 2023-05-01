@@ -34,6 +34,7 @@ from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.job import Job
+from sematic.db.models.resolution import ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
@@ -642,7 +643,7 @@ def get_run_jobs(user: Optional[User], run_id: str) -> flask.Response:
 def clean_orphaned_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     run = get_run(run_id)
     resolution = get_resolution(run.root_id)
-    if not resolution.status.is_terminal():
+    if not ResolutionStatus[resolution.status].is_terminal():  # type: ignore
         return jsonify_error(
             f"The resolution for run {run_id} has not terminated "
             f"(has status: {resolution.status.value}).",
@@ -651,11 +652,16 @@ def clean_orphaned_run_endpoint(user: Optional[User], run_id: str) -> flask.Resp
     state_change = "UNMODIFIED"
 
     if not FutureState[run.future_state].is_terminal():  # type: ignore
-        run.future_state = FutureState.FAILED
+        if FutureState.is_allowed_transition(run.future_state, FutureState.FAILED):
+            run.future_state = FutureState.FAILED
+        else:
+            run.future_state = FutureState.NESTED_FAILED
+        run.failed_at = datetime.datetime.utcnow()
         if run.exception_metadata is None:
             run.exception_metadata = ExceptionMetadata.from_exception(
                 RuntimeError(
-                    "Run was still alive despite the resolution being terminated."
+                    "Run was still alive despite the resolution being terminated. "
+                    "Run was forced to fail."
                 ),
             )
         logger.warning(

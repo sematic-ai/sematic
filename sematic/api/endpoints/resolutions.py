@@ -535,7 +535,7 @@ def clean_stale_resolution_endpoint(
         )
 
     state_change = "UNMODIFIED"
-    if not resolution.status.is_terminal():
+    if not ResolutionStatus[resolution.status].is_terminal():  # type: ignore
         logger.warning(
             "Marking resolution %s as failed because it wasn't properly terminated.",
             root_id,
