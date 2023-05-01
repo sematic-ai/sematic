@@ -166,6 +166,7 @@ def list_garbage_ids(
         whose key is the string specified by `id_field` and whose value is an id.
     """
     request_args = dict(flask.request.args)
+    id_field = id_field or "id"
     if "limit" in request_args:
         return jsonify_error(
             f"Cannot use limit with filter {garbage_filter}",
@@ -198,7 +199,6 @@ def list_garbage_ids(
     )
 
     ids = queries[garbage_filter]()
-    id_field = "id" if id_field is None else id_field
 
     payload = dict(
         current_page_url=current_page_url,
