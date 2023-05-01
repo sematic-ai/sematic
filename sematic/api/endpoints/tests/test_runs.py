@@ -425,8 +425,8 @@ def test_list_runs_search_orphaned_jobs(
     runs = (
         make_run(name="Fox"),
         make_run(name="Falco"),
-        make_run(tags="Slippy"),
-        make_run(tags="Peppy"),
+        make_run(name="Slippy"),
+        make_run(name="Peppy"),
     )
     mock_get_runs_with_orphaned_jobs.return_value = [r.id for r in runs]
 

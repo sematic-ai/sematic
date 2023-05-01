@@ -149,9 +149,9 @@ def list_garbage_ids(
             f"Cannot use group by with filter {garbage_filter}",
             status=HTTPStatus.BAD_REQUEST,
         )
-    if parameters.fields != ["id"]:
+    if parameters.fields != [id_field]:
         return jsonify_error(
-            f"Filter {garbage_filter} must have include=['id'] set.",
+            f"Filter {garbage_filter} must have include=['{id_field}'] set.",
             status=HTTPStatus.BAD_REQUEST,
         )
 
