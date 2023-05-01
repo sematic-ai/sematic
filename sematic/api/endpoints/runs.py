@@ -116,6 +116,9 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
         request_args, list(_GARBAGE_COLLECTION_QUERIES.keys())
     )
     if len(garbage_filters) != 0:
+        logger.info(
+            "Searching for runs to garbage collect with filters: %s", garbage_filters
+        )
         if contained_extra_filters or len(garbage_filters) > 1:
             return jsonify_error(
                 f"Filter {garbage_filters[0]} must be used alone",
@@ -616,18 +619,6 @@ def get_run_jobs(user: Optional[User], run_id: str) -> flask.Response:
     return flask.jsonify(
         dict(
             content=jobs,
-        )
-    )
-
-
-@sematic_api.route("/api/v1/runs/with_orphaned_jobs", methods=["GET"])
-@authenticate
-def get_orphaned_job_identifiers_endpoint(user: Optional[User]) -> flask.Response:
-    run_ids = get_runs_with_orphaned_jobs()
-
-    return flask.jsonify(
-        dict(
-            content=run_ids,
         )
     )
 

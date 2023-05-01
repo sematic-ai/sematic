@@ -2,6 +2,7 @@
 import json
 import logging
 from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, cast
+from urllib.parse import urlencode
 
 # Third-party
 import requests
@@ -423,8 +424,13 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
 
 def get_runs_with_orphaned_jobs() -> List[str]:
     """Get ids of runs that have terminated, which still have non-terminal jobs."""
-    response = _get("/runs/with_orphaned_jobs")
-    return response["content"]
+    filters = {"orphaned_jobs": {"eq": True}}
+    query_params = {
+        "filters": json.dumps(filters),
+        "fields": json.dumps(["id"]),
+    }
+    response = _get("/runs?{}".format(urlencode(query_params)))
+    return [run["id"] for run in response["content"]]
 
 
 def clean_jobs_for_run(run_id: str, force: bool) -> List[str]:

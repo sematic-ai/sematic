@@ -169,7 +169,7 @@ def list_garbage_ids(
         limit=len(ids),
         next_cursor=None,
         after_cursor_count=0,
-        content=[{id_field: id_ for id_ in ids}],
+        content=[{id_field: id_} for id_ in ids],
     )
     return flask.jsonify(payload)
 
