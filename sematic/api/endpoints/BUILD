@@ -74,6 +74,7 @@ sematic_py_lib(
         ":payloads",
         ":request_parameters",
         "//sematic/api:app",
+        "//sematic/api/endpoints:request_parameters",
         "//sematic/db:queries",
         "//sematic/db/models:resolution",
         "//sematic/db/models:user",

@@ -91,7 +91,13 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
         Value to group runs by. If not None, the endpoint will return
         a single run by unique value of the field passed in `group_by`.
     filters : Optional[str]
-        Filters of the form `{"column_name": {"operator": "value"}}`. Defaults to None.
+        Filters of the form `{"column_name": {"operator": "value"}}`. A pseudo-column
+        name of "orphaned_jobs" and type bool is supported. Defaults to None.
+    fields: Optional[List[str]]
+        The fields of the run object to include in the result. If not set, all fields
+        will be returned. Currently the only supported subset of fields is ["id"]. The
+        ["id"] subset must be used when the "orphaned_jobs" filter is used. Defaults to
+        None.
 
     Response
     --------
@@ -107,8 +113,8 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
     after_cursor_count : int
         Number of items remain after the current cursor, i.e. including the current page.
     content: List[Run]
-        A list of run JSON payloads, if the 'include' request parameter was not set.
-        If the 'include' parameter was set to ['id'], returns a list of run ids. The
+        A list of run JSON payloads, if the 'fields' request parameter was not set.
+        If the 'fields' parameter was set to ['id'], returns a list of run ids. The
         size of the list is `limit` or less if current page is last page.
     """
     request_args = dict(flask.request.args)
@@ -140,9 +146,9 @@ def _standard_list_runs(args: Dict[str, str]) -> flask.Response:
     except ValueError as e:
         return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
 
-    if parameters.fields is not None:
+    if parameters.fields is not None and parameters.fields != ["id"]:
         return jsonify_error(
-            "'fields' is not supported in combination with the given filters.",
+            "'fields' must be either `None` or `['id']`",
             HTTPStatus.BAD_REQUEST,
         )
 
@@ -230,6 +236,12 @@ def _standard_list_runs(args: Dict[str, str]) -> flask.Response:
         next_page_url = urlunsplit(
             (scheme, netloc, path, urlencode(next_url_params), fragment)
         )
+
+    content = get_runs_payload(runs)
+    if parameters.fields == ["id"]:
+        # TODO: it would be better to push this field subsetting
+        # down to the DB query level, but for now we'll do it here.
+        content = [{"id": run["id"] for run in content}]
 
     payload = dict(
         current_page_url=current_page_url,
