@@ -444,10 +444,10 @@ def get_resolutions_with_orphaned_jobs() -> List[str]:
     filters = {"orphaned_jobs": {"eq": True}}
     query_params = {
         "filters": json.dumps(filters),
-        "fields": json.dumps(["id"]),
+        "fields": json.dumps(["root_id"]),
     }
     response = _get("/resolutions?{}".format(urlencode(query_params)))
-    return [resolution["id"] for resolution in response["content"]]
+    return [resolution["root_id"] for resolution in response["content"]]
 
 
 def clean_orphaned_jobs_for_resolution(root_run_id: str, force: bool) -> List[str]:
