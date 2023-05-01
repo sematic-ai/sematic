@@ -3,7 +3,7 @@ import base64
 import json
 import logging
 import sys
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from enum import Enum, unique
 from typing import Iterable, List, Optional, TypeVar
 
@@ -329,8 +329,9 @@ def load_log_lines(
     )
 
     is_inline = object_source.run_is_inline(run.id)
+    log_line_result: LogLineResult
     if is_inline:
-        return _load_inline_logs(
+        log_line_result = _load_inline_logs(
             run_id=run_id,
             resolution=resolution,
             still_running=still_running,
@@ -340,16 +341,33 @@ def load_log_lines(
             reverse=reverse,
             **cursor_kwargs,  # type: ignore
         )
+    else:
+        log_line_result = _load_non_inline_logs(
+            run_id=run_id,
+            still_running=still_running,
+            max_lines=max_lines,
+            filter_strings=filter_strings,
+            default_log_info_message=default_log_info_message,
+            reverse=reverse,
+            **cursor_kwargs,  # type: ignore
+        )
 
-    return _load_non_inline_logs(
-        run_id=run_id,
-        still_running=still_running,
-        max_lines=max_lines,
-        filter_strings=filter_strings,
-        default_log_info_message=default_log_info_message,
-        reverse=reverse,
-        **cursor_kwargs,  # type: ignore
-    )
+    # when no cursor is set, it means that we are doing the initial pull
+    # and we can determine if we can continue in either direction
+    # this overrides the value from the `log_line_result`.
+    if reverse_cursor_token is None and forward_cursor_token is None:
+        if reverse is True:
+            # can_continue_forward will be False
+            # if the run has reached to a terminal state
+            log_line_result = replace(
+                log_line_result,
+                can_continue_forward=run.future_state
+                not in FutureState.terminal_state_strings(),
+            )
+        else:
+            log_line_result = replace(log_line_result, can_continue_backward=False)
+
+    return log_line_result
 
 
 def _get_latest_log_file(prefix, cursor_file) -> Optional[str]:
