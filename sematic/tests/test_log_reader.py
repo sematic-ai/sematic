@@ -643,7 +643,7 @@ def test_load_log_lines(mock_storage, test_db, log_preparation_function):  # noq
         LogLineResult(
             forward_cursor_token=None,
             reverse_cursor_token=None,
-            can_continue_backward=True,
+            can_continue_backward=False,
             can_continue_forward=True,
             lines=text_lines[:max_lines],
             line_ids=line_ids[:max_lines],
@@ -861,6 +861,19 @@ def test_load_log_lines_reverse(
     )
     assert result.lines == ["Line 24"]
 
+    run.future_state = FutureState.RESOLVED
+    save_run(run)
+
+    result = load_log_lines(
+        run_id=run.id,
+        forward_cursor_token=None,
+        reverse_cursor_token=None,
+        max_lines=max_lines,
+        reverse=True,
+    )
+
+    assert result.can_continue_forward is False
+
 
 @pytest.mark.parametrize(
     "log_preparation_function",
@@ -941,7 +954,7 @@ def test_load_cloned_run_log_lines(
     compare_log_line_result(
         LogLineResult(
             can_continue_forward=True,
-            can_continue_backward=True,
+            can_continue_backward=False,
             forward_cursor_token=None,
             reverse_cursor_token=None,
             lines=text_lines[:max_lines],
