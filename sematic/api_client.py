@@ -448,6 +448,18 @@ def clean_jobs_for_run(run_id: str, force: bool) -> List[str]:
     return response["content"]
 
 
+def clean_orphaned_run(run_id: str) -> str:
+    """Clean up a run whose resolution has terminated."""
+    response = _post(f"/runs/{run_id}/clean", retry=True)
+    return response["content"]
+
+
+def clean_stale_resolution(run_id: str) -> str:
+    """Clean up a resolution whose run has terminated."""
+    response = _post(f"/resolutions/{run_id}/clean", retry=True)
+    return response["content"]
+
+
 def get_resolutions_with_orphaned_jobs() -> List[str]:
     """Get ids of resolutions that have terminated which still have non-terminal jobs."""
     return _search_for_gc_resolutions("orphaned_jobs")
