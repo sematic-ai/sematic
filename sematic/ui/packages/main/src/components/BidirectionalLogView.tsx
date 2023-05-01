@@ -81,9 +81,23 @@ const BidirectionalLogView = (props: BidirectionalLogViewProps) => {
     }, [getNext]);
 
     const onGetPrev = useCallback(async () => {
+        const prevScrollHeight = scrollContainerRef.current?.scrollHeight;
+
         setLastPressedButton(Buttons.LoadPrevious);
         await getPrev();
-    }, [getPrev]);
+
+        // Yield to rendering so that the scroll container has a chance to update
+        setTimeout(() => {
+            // Check how much the scroll height has changed
+            const diff = scrollContainerRef.current!.scrollHeight - prevScrollHeight!;
+
+            // Restore to the previously visited last log line
+            scrollContainerRef.current?.scrollTo(
+                0,
+                scrollContainerRef.current?.scrollTop + diff
+            );
+        }, 0);
+    }, [getPrev, scrollContainerRef]);
 
     const renderNextButton = useCallback(() => {
         if (!canContinueForward) {

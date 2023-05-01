@@ -61,8 +61,6 @@ export function useLogStream(source: string, filterString: string) {
     const lineIds = useRefFn<Set<number>>(() => new Set());
     const forwardCursorToken = useRef<string | null>();
     const reverseCursorToken = useRef<string | null>();
-
-
     const prependLines = useCallback((newLines: Array<string>, newLineIds: Array<number>) => {
         const linesToAdded = pruneLines(lineIds, newLines, newLineIds);
         setLines((lines) => linesToAdded.concat(lines));
