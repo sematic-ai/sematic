@@ -1,8 +1,8 @@
+import { ExternalResource, ExternalResourceState, Run } from "@sematic/common/src/Models";
+import { useHttpClient } from "@sematic/common/src/hooks/httpHooks";
 import { useEffect, useRef } from "react";
 import useAsyncRetry from "react-use/lib/useAsyncRetry";
 import usePreviousDistinct from "react-use/lib/usePreviousDistinct";
-import { ExternalResource, ExternalResourceState, Run } from "@sematic/common/src/Models";
-import { useHttpClient } from "src/hooks/httpHooks";
 
 export const TERMINATE_STATE: ExternalResourceState = 'DEACTIVATED';
 const POLL_EXTERNAL_RESOURCE_INTERVAL = 1000;
