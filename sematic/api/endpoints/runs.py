@@ -25,8 +25,10 @@ from sematic.api.endpoints.events import broadcast_graph_update, broadcast_job_u
 from sematic.api.endpoints.metrics import MetricEvent, save_event_metrics
 from sematic.api.endpoints.payloads import get_run_payload, get_runs_payload
 from sematic.api.endpoints.request_parameters import (
+    get_gc_filters,
     get_request_parameters,
     jsonify_error,
+    list_garbage_ids,
 )
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
@@ -43,8 +45,8 @@ from sematic.db.queries import (
     get_root_graph,
     get_run,
     get_run_graph,
+    get_run_ids_with_orphaned_jobs,
     get_run_status_details,
-    get_runs_with_orphaned_jobs,
     save_graph,
     save_job,
     save_run,
@@ -61,6 +63,11 @@ logger = logging.getLogger(__name__)
 
 class _DetectedRunRaceCondition(Exception):
     pass
+
+
+_GARBAGE_COLLECTION_QUERIES = {
+    "orphaned_jobs": get_run_ids_with_orphaned_jobs,
+}
 
 
 @sematic_api.route("/api/v1/runs", methods=["GET"])
@@ -84,7 +91,13 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
         Value to group runs by. If not None, the endpoint will return
         a single run by unique value of the field passed in `group_by`.
     filters : Optional[str]
-        Filters of the form `{"column_name": {"operator": "value"}}`. Defaults to None.
+        Filters of the form `{"column_name": {"operator": "value"}}`. A pseudo-column
+        name of "orphaned_jobs" and type bool is supported. Defaults to None.
+    fields: Optional[List[str]]
+        The fields of the run object to include in the result. If not set, all fields
+        will be returned. Currently the only supported subset of fields is ["id"]. The
+        ["id"] subset must be used when the "orphaned_jobs" filter is used. Defaults to
+        None.
 
     Response
     --------
@@ -93,22 +106,61 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
     next_page_url : Optional[str]
         URL of the next page, if any, `null` otherwise
     limit : int
-        Current page size. The actual number of items returned may be inferior
+        Current page size. The actual number of items returned may be smaller
         if current page is last page.
     next_cursor : Optional[str]
         Cursor to obtain next page. Already included in `next_page_url`.
     after_cursor_count : int
         Number of items remain after the current cursor, i.e. including the current page.
-    content: List[Run]
-        A list of run JSON payloads. The size of the list is `limit` or less if
-        current page is last page.
+    content : List[Run]
+        A list of run JSON payloads, if the 'fields' request parameter was not set.
+        If the 'fields' parameter was set to ['id'], returns a list of run ids. The
+        size of the list is `limit` or less if current page is last page.
     """
-    try:
-        limit, order, cursor, group_by_column, sql_predicates = get_request_parameters(
-            args=flask.request.args, model=Run
+    request_args = dict(flask.request.args)
+    contained_extra_filters, garbage_filters = get_gc_filters(
+        request_args, list(_GARBAGE_COLLECTION_QUERIES.keys())
+    )
+    logger.info(
+        "Searching for runs to garbage collect with filters: %s", garbage_filters
+    )
+    if len(garbage_filters) == 0:
+        return _standard_list_runs(request_args)
+
+    if contained_extra_filters or len(garbage_filters) > 1:
+        return jsonify_error(
+            f"Filter {garbage_filters[0]} must be used alone",
+            status=HTTPStatus.BAD_REQUEST,
         )
+
+    return list_garbage_ids(
+        garbage_filters[0],
+        flask.request.url,
+        _GARBAGE_COLLECTION_QUERIES,
+        Run,
+        urlencode(request_args),
+    )
+
+
+def _standard_list_runs(args: Dict[str, str]) -> flask.Response:
+    try:
+        parameters = get_request_parameters(args=args, model=Run)
     except ValueError as e:
         return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
+
+    if parameters.fields is not None and parameters.fields != ["id"]:
+        return jsonify_error(
+            "'fields' must be either `None` or `['id']`",
+            HTTPStatus.BAD_REQUEST,
+        )
+
+    limit, order, cursor, group_by_column, sql_predicates = (
+        parameters.limit,
+        parameters.order,
+        parameters.cursor,
+        parameters.group_by,
+        parameters.filters,
+    )
 
     decoded_cursor: Optional[str] = None
     if cursor is not None:
@@ -186,6 +238,12 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
         next_page_url = urlunsplit(
             (scheme, netloc, path, urlencode(next_url_params), fragment)
         )
+
+    content = get_runs_payload(runs)
+    if parameters.fields == ["id"]:
+        # TODO: it would be better to push this field subsetting
+        # down to the DB query level, but for now we'll do it here.
+        content = [{"id": run["id"] for run in content}]
 
     payload = dict(
         current_page_url=current_page_url,
@@ -575,18 +633,6 @@ def get_run_jobs(user: Optional[User], run_id: str) -> flask.Response:
     return flask.jsonify(
         dict(
             content=jobs,
-        )
-    )
-
-
-@sematic_api.route("/api/v1/runs/with_orphaned_jobs", methods=["GET"])
-@authenticate
-def get_orphaned_job_identifiers_endpoint(user: Optional[User]) -> flask.Response:
-    run_ids = get_runs_with_orphaned_jobs()
-
-    return flask.jsonify(
-        dict(
-            content=run_ids,
         )
     )
 

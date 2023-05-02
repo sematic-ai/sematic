@@ -1,8 +1,21 @@
 # Standard Library
 import json
 import logging
+from dataclasses import dataclass
 from http import HTTPStatus
-from typing import Callable, Dict, List, Literal, Optional, Tuple, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
+from urllib.parse import urlsplit, urlunsplit
 
 # Third-party
 import flask
@@ -31,17 +44,180 @@ Filters = Union[
 ]
 
 
+@dataclass
+class SearchRequestParameters:
+    limit: int
+    order: Callable[[Any], Any]
+    cursor: Optional[str]
+    group_by: Optional[sqlalchemy.Column]
+    filters: Optional[BooleanClauseList]
+    fields: Optional[List[str]]
+
+
+def get_gc_filters(
+    request_args: Dict[str, str], supported_filters: List[str]
+) -> Tuple[bool, List[str]]:
+    """Get filters for garbage collection (gc).
+
+    Garbage collection filters are either present or not, so
+    when returned they are returned as a list of the names of
+    filters that were present.
+
+    Parameters
+    ----------
+    request_args:
+        The flask request args the filters were specified in.
+    supported_filters:
+        The supported garbage collection filters, as a list of
+        the names of said filters.
+
+    Returns
+    -------
+    A tuple where the first element is a bool indicating if there were
+    extra filters besides the garbage collection ones, and the second
+    element is a list of garbage collection filters that were identified.
+    """
+    filters_json: str = request_args.get("filters", "{}")
+    try:
+        filters: Dict = json.loads(filters_json)
+    except Exception as e:
+        raise ValueError(f"Malformed filters: {filters_json}, error: {e}")
+
+    if len(filters) == 0:
+        return False, []
+
+    operand = list(filters.keys())[0]
+    contained_extra_filters = False
+
+    if operand in {"AND", "OR"}:
+        filters = cast(BooleanPredicate, filters)
+        operand = cast(Literal["AND", "OR"], operand)
+        garbage_filters = []
+        for filter_ in filters[operand]:
+            filter_name = list(filter_.keys())[0]
+            if filter_name not in supported_filters:
+                contained_extra_filters = True
+                continue
+            if filter_[filter_name] != {"eq": True}:
+                raise ValueError(
+                    "The filter '{}' must use the predicate {}".format(
+                        filter_name, {"eq: true"}
+                    )
+                )
+            garbage_filters.append(filter_name)
+
+        return contained_extra_filters, garbage_filters
+
+    else:
+        filter_ = cast(ColumnPredicate, filters)
+        filter_name = list(filter_.keys())[0]
+        if filter_name not in supported_filters:
+            return True, []
+        if filter_[filter_name] != {"eq": True}:
+            raise ValueError(
+                "The filter '{}' must use the predicate {}".format(
+                    filter_name, "{'eq': True}"
+                )
+            )
+        return False, [filter_name]
+
+
+def list_garbage_ids(
+    garbage_filter: str,
+    request_url: str,
+    queries: Dict[str, Callable[[], List[str]]],
+    model: Type[Any],
+    encoded_request_args: str,
+    id_field: Optional[str] = None,
+) -> flask.Response:
+    """Return a flask response for a search on ids of garbage data.
+
+    Parameters
+    ----------
+    garbage_filter:
+        A string representing which garbage collection filter is being used.
+    request_url:
+        The URL used to perform the search request.
+    queries:
+        A mapping from garbage collection filter name to a callable to perform
+        the query.
+    model:
+        The ORM model for the object being searched over.
+    encoded_request_args:
+        URL-encoded query parameters for the current search request.
+    id_field:
+        The name of the field representing the id of the object being searched over.
+        When `None`, "id" will be used as the name of the id field. Defaults to None.
+
+    Returns
+    -------
+    A flask response containing the search results. The fields of the response object
+    are:
+    current_page_url
+        URL of the current page.
+    next_page_url
+        Always `None` (present for compatibility with other search APIs).
+    limit
+        The number of results returned.
+    next_cursor
+        Always `None` (present for compatibility with other search APIs).
+    after_cursor_count
+        Always 0 (present for compatibility with other search APIs).
+    content:
+        A list of id JSON payloads. Each element in the returned list is a dict
+        whose key is the string specified by `id_field` and whose value is an id.
+    """
+    request_args = dict(flask.request.args)
+    id_field = id_field or "id"
+    if "limit" in request_args:
+        return jsonify_error(
+            f"Cannot use limit with filter {garbage_filter}",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    del request_args["filters"]
+    try:
+        parameters = get_request_parameters(args=request_args, model=model)
+    except ValueError as e:
+        return jsonify_error(str(e), HTTPStatus.BAD_REQUEST)
+    if parameters.cursor is not None:
+        return jsonify_error(
+            f"Cannot use pagination with filter {garbage_filter}",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    if parameters.group_by is not None:
+        return jsonify_error(
+            f"Cannot use group by with filter {garbage_filter}",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    if parameters.fields != [id_field]:
+        return jsonify_error(
+            f"Filter {garbage_filter} must have \"fields=['{id_field}']\" set.",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    scheme, netloc, path, _, fragment = urlsplit(request_url)
+    current_page_url = urlunsplit(
+        (scheme, netloc, path, encoded_request_args, fragment)
+    )
+
+    ids = queries[garbage_filter]()
+
+    payload = dict(
+        current_page_url=current_page_url,
+        next_page_url=None,
+        limit=len(ids),
+        next_cursor=None,
+        after_cursor_count=0,
+        content=[{id_field: id_} for id_ in ids],
+    )
+    return flask.jsonify(payload)
+
+
 def get_request_parameters(
     args: Dict[str, str],
     model: type,
     default_order: Literal["asc", "desc"] = "desc",
-) -> Tuple[
-    int,
-    Callable,
-    Optional[str],
-    Optional[sqlalchemy.Column],
-    Optional[BooleanClauseList],
-]:
+) -> SearchRequestParameters:
     """
     Extract, validate, and format query parameters.
 
@@ -57,13 +233,7 @@ def get_request_parameters(
 
     Returns
     -------
-    Tuple[
-        int,
-        Callable,
-        Optional[str],
-        Optional[sqlalchemy.Column],
-        List[ColumnElement]
-    ] : limit, order, cursor, group_by, filters
+    SearchRequestParameters
     """
     logger.debug("Raw request parameters: %s; model: %s", args, model)
 
@@ -107,7 +277,15 @@ def get_request_parameters(
             f"{list(ORDER_BY_DIRECTIONS.keys())}; got: '{args.get('order')}'"
         )
 
-    return limit, order, cursor, group_by_column, sql_predicates
+    include_fields_json: str = args.get("fields", "null")
+    try:
+        include_fields: Optional[List[str]] = json.loads(include_fields_json)
+    except Exception as e:
+        raise ValueError(f"Malformed include fields: {include_fields}") from e
+
+    return SearchRequestParameters(
+        limit, order, cursor, group_by_column, sql_predicates, include_fields
+    )
 
 
 def jsonify_error(error: str, status: HTTPStatus):

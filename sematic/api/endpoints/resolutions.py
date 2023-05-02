@@ -7,6 +7,7 @@ import logging
 from datetime import datetime
 from http import HTTPStatus
 from typing import Optional, Tuple, Union
+from urllib.parse import urlencode
 
 # Third-party
 import flask
@@ -23,7 +24,11 @@ from sematic.api.endpoints.events import (
     broadcast_resolution_cancel,
 )
 from sematic.api.endpoints.payloads import get_resolution_payload
-from sematic.api.endpoints.request_parameters import jsonify_error
+from sematic.api.endpoints.request_parameters import (
+    get_gc_filters,
+    jsonify_error,
+    list_garbage_ids,
+)
 from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.factories import clone_resolution, clone_root_run
@@ -35,7 +40,7 @@ from sematic.db.queries import (
     get_graph,
     get_jobs_by_run_id,
     get_resolution,
-    get_resolutions_with_orphaned_jobs,
+    get_resolution_ids_with_orphaned_jobs,
     get_resources_by_root_id,
     get_run,
     get_run_graph,
@@ -49,6 +54,10 @@ from sematic.scheduling.job_scheduler import clean_jobs, schedule_resolution
 from sematic.scheduling.kubernetes import cancel_job
 
 logger = logging.getLogger(__name__)
+
+_GARBAGE_COLLECTION_QUERIES = {
+    "orphaned_jobs": get_resolution_ids_with_orphaned_jobs,
+}
 
 
 @sematic_api.route("/api/v1/resolutions/<resolution_id>", methods=["GET"])
@@ -419,17 +428,71 @@ def _update_resolution_user(
     return resolution, True
 
 
-@sematic_api.route("/api/v1/resolutions/with_orphaned_jobs", methods=["GET"])
+@sematic_api.route("/api/v1/resolutions", methods=["GET"])
 @authenticate
-def get_orphaned_resolution_job_identifiers_endpoint(
-    user: Optional[User],
-) -> flask.Response:
-    resolution_ids = get_resolutions_with_orphaned_jobs()
+def list_resolutions_endpoint(user: Optional[User]) -> flask.Response:
+    """
+    GET /api/v1/resolutions endpoint.
 
-    return flask.jsonify(
-        dict(
-            content=resolution_ids,
+    The API endpoint to list and filter resolutions. Returns a JSON payload.
+
+    Parameters
+    ----------
+    filters : Optional[str]
+        Filters of the form `{"column_name": {"operator": "value"}}`. Currenrly only
+        a pseudo-column with the name of "orphaned_jobs" and type bool is supported.
+        Defaults to None.
+    fields: Optional[List[str]]
+        The fields of the run object to include in the result. If not set, all fields
+        will be returned. Currently the only supported subset of fields is ["root_id"].
+        The ["root_id"] subset must be used when the "orphaned_jobs" filter is used.
+
+    Response
+    --------
+    current_page_url : str
+        URL of the current page
+    next_page_url : Optional[str]
+        URL of the next page, if any, `null` otherwise
+    limit : int
+        Current page size. The actual number of items returned may be smaller
+        if current page is last page.
+    next_cursor : Optional[str]
+        Cursor to obtain next page. Already included in `next_page_url`.
+    after_cursor_count : int
+        Number of items remain after the current cursor, i.e. including the current page.
+    content : List[Dict[str, str]]
+        A list of resolution JSON payloads, if the 'fields' request parameter was not set.
+        If the 'fields' parameter was set to ['root_id'], returns a list of resolution
+        ids. The size of the list is `limit` or less if current page is last page.
+    """
+    request_args = dict(flask.request.args)
+    contained_extra_filters, garbage_filters = get_gc_filters(
+        request_args, list(_GARBAGE_COLLECTION_QUERIES.keys())
+    )
+    logger.info(
+        "Searching for resolutions to garbage collect with filters: %s",
+        garbage_filters,
+    )
+    if len(garbage_filters) == 0:
+        return jsonify_error(
+            "Currently the only supported resolution search is with the filter "
+            "'orphaned_jobs'.",
+            status=HTTPStatus.BAD_REQUEST,
         )
+
+    if contained_extra_filters or len(garbage_filters) > 1:
+        return jsonify_error(
+            f"Filter {garbage_filters[0]} must be used alone",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    return list_garbage_ids(
+        garbage_filters[0],
+        flask.request.url,
+        _GARBAGE_COLLECTION_QUERIES,
+        Resolution,
+        urlencode(request_args),
+        id_field="root_id",
     )
 
 
