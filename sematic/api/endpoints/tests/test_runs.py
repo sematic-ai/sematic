@@ -557,7 +557,7 @@ def test_clean_orphaned_runs(
     response = test_client.post(f"/api/v1/runs/{persisted_run.id}/clean")
 
     # resolution not terminal yet
-    assert response.status_code == 400
+    assert response.status_code == 409
 
     resolution.status = ResolutionStatus.CANCELED
     save_resolution(resolution)

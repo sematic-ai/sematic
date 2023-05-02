@@ -354,7 +354,7 @@ def test_clean_resolution(
     )
 
     # Can't be cleaned while root run is still alive.
-    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.status_code == HTTPStatus.CONFLICT
 
     run = get_run(persisted_resolution.root_id)  # noqa: F811
     run.future_state = FutureState.CANCELED
