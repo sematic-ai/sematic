@@ -1,10 +1,12 @@
 # Standard Library
+import json
 import time
 import typing
 from copy import copy
 from dataclasses import replace
 from http import HTTPStatus
 from unittest import mock
+from urllib.parse import urlencode
 
 # Third-party
 import flask.testing
@@ -73,6 +75,17 @@ test_rerun_resolution_auth = make_auth_test(
 test_list_external_resource_auth = make_auth_test(
     "/api/v1/resolutions/123/external_resources", method="GET"
 )
+
+
+@pytest.fixture
+def mock_get_resolution_ids_with_orphaned_jobs():
+    with mock.patch(
+        "sematic.api.endpoints.resolutions._GARBAGE_COLLECTION_QUERIES"
+    ) as mock_query_dict:
+        mock_query = mock.MagicMock()
+        mock_query_dict.keys = lambda: ["orphaned_jobs"]
+        mock_query_dict.__getitem__ = lambda _, __: mock_query
+        yield mock_query
 
 
 class MockPublisher(AbstractPublisher, AbstractPlugin):
@@ -362,6 +375,38 @@ def test_clean_resolution_jobs(
     payload = typing.cast(typing.Dict[str, typing.Any], response.json)
 
     assert payload["content"] == ["DELETED"]
+
+
+def test_list_resolutions_search_orphaned_jobs(
+    mock_auth,  # noqa: F811
+    mock_get_resolution_ids_with_orphaned_jobs,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+):
+    resolutions = (
+        make_resolution(root_id="1"),
+        make_resolution(root_id="2"),
+        make_resolution(root_id="3"),
+        make_resolution(root_id="4"),
+    )
+    mock_get_resolution_ids_with_orphaned_jobs.return_value = [
+        r.root_id for r in resolutions
+    ]
+
+    filters = {"orphaned_jobs": {"eq": True}}
+    query_params = {
+        "filters": json.dumps(filters),
+        "fields": json.dumps(["root_id"]),
+    }
+    response = test_client.get("/api/v1/resolutions?{}".format(urlencode(query_params)))
+
+    assert response.status_code == 200
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == len(resolutions)
+    ids = [result["root_id"] for result in payload["content"]]
+    assert set(ids) == {r.root_id for r in resolutions}
 
 
 def test_schedule_resolution_endpoint_auth(

@@ -13,8 +13,11 @@ from sematic.db.models.edge import Edge
 
 @sematic_api.route("/api/v1/edges", methods=["GET"])
 def list_edges_endpoint() -> flask.Response:
-    limit, order, _, _, sql_predicates = get_request_parameters(
-        args=flask.request.args, model=Edge
+    parameters = get_request_parameters(args=flask.request.args, model=Edge)
+    limit, order, sql_predicates = (
+        parameters.limit,
+        parameters.order,
+        parameters.filters,
     )
 
     with db().get_session() as session:
