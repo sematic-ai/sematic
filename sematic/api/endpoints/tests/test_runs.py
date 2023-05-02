@@ -76,7 +76,7 @@ def mock_load_log_lines():
 
 
 @pytest.fixture
-def mock_get_runs_with_orphaned_jobs():
+def mock_get_run_ids_with_orphaned_jobs():
     with mock.patch(
         "sematic.api.endpoints.runs._GARBAGE_COLLECTION_QUERIES"
     ) as mock_query_dict:
@@ -419,7 +419,7 @@ def test_list_runs_search_tags(
 
 def test_list_runs_search_orphaned_jobs(
     mock_auth,  # noqa: F811
-    mock_get_runs_with_orphaned_jobs,  # noqa: F811
+    mock_get_run_ids_with_orphaned_jobs,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     runs = (
@@ -428,7 +428,7 @@ def test_list_runs_search_orphaned_jobs(
         make_run(name="Slippy"),
         make_run(name="Peppy"),
     )
-    mock_get_runs_with_orphaned_jobs.return_value = [r.id for r in runs]
+    mock_get_run_ids_with_orphaned_jobs.return_value = [r.id for r in runs]
 
     filters = {"orphaned_jobs": {"eq": True}}
     query_params = {

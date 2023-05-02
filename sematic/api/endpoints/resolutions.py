@@ -40,7 +40,7 @@ from sematic.db.queries import (
     get_graph,
     get_jobs_by_run_id,
     get_resolution,
-    get_resolutions_with_orphaned_jobs,
+    get_resolution_ids_with_orphaned_jobs,
     get_resources_by_root_id,
     get_run,
     get_run_graph,
@@ -56,7 +56,7 @@ from sematic.scheduling.kubernetes import cancel_job
 logger = logging.getLogger(__name__)
 
 _GARBAGE_COLLECTION_QUERIES = {
-    "orphaned_jobs": get_resolutions_with_orphaned_jobs,
+    "orphaned_jobs": get_resolution_ids_with_orphaned_jobs,
 }
 
 
@@ -454,7 +454,7 @@ def list_resolutions_endpoint(user: Optional[User]) -> flask.Response:
     next_page_url : Optional[str]
         URL of the next page, if any, `null` otherwise
     limit : int
-        Current page size. The actual number of items returned may be inferior
+        Current page size. The actual number of items returned may be smaller
         if current page is last page.
     next_cursor : Optional[str]
         Cursor to obtain next page. Already included in `next_page_url`.
@@ -469,28 +469,30 @@ def list_resolutions_endpoint(user: Optional[User]) -> flask.Response:
     contained_extra_filters, garbage_filters = get_gc_filters(
         request_args, list(_GARBAGE_COLLECTION_QUERIES.keys())
     )
-    if len(garbage_filters) != 0:
-        logger.info(
-            "Searching for resolutions to garbage collect with filters: %s",
-            garbage_filters,
+    logger.info(
+        "Searching for resolutions to garbage collect with filters: %s",
+        garbage_filters,
+    )
+    if len(garbage_filters) == 0:
+        return jsonify_error(
+            "Currently the only supported resolution search is with the filter "
+            "'orphaned_jobs'.",
+            status=HTTPStatus.BAD_REQUEST,
         )
-        if contained_extra_filters or len(garbage_filters) > 1:
-            return jsonify_error(
-                f"Filter {garbage_filters[0]} must be used alone",
-                status=HTTPStatus.BAD_REQUEST,
-            )
-        return list_garbage_ids(
-            garbage_filters[0],
-            flask.request.url,
-            _GARBAGE_COLLECTION_QUERIES,
-            Resolution,
-            urlencode(request_args),
-            id_field="root_id",
+
+    if contained_extra_filters or len(garbage_filters) > 1:
+        return jsonify_error(
+            f"Filter {garbage_filters[0]} must be used alone",
+            status=HTTPStatus.BAD_REQUEST,
         )
-    return jsonify_error(
-        "Currently the only supported resolution search is with the filter "
-        "'orphaned_jobs'.",
-        status=HTTPStatus.BAD_REQUEST,
+
+    return list_garbage_ids(
+        garbage_filters[0],
+        flask.request.url,
+        _GARBAGE_COLLECTION_QUERIES,
+        Resolution,
+        urlencode(request_args),
+        id_field="root_id",
     )
 
 

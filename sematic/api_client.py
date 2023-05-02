@@ -422,7 +422,7 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
     ]
 
 
-def get_runs_with_orphaned_jobs() -> List[str]:
+def get_run_ids_with_orphaned_jobs() -> List[str]:
     """Get ids of runs that have terminated, which still have non-terminal jobs."""
     filters = {"orphaned_jobs": {"eq": True}}
     query_params = {
@@ -439,7 +439,7 @@ def clean_jobs_for_run(run_id: str, force: bool) -> List[str]:
     return response["content"]
 
 
-def get_resolutions_with_orphaned_jobs() -> List[str]:
+def get_resolution_ids_with_orphaned_jobs() -> List[str]:
     """Get ids of resolutions that have terminated which still have non-terminal jobs."""
     filters = {"orphaned_jobs": {"eq": True}}
     query_params = {

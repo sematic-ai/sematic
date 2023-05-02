@@ -45,8 +45,8 @@ from sematic.db.queries import (
     get_root_graph,
     get_run,
     get_run_graph,
+    get_run_ids_with_orphaned_jobs,
     get_run_status_details,
-    get_runs_with_orphaned_jobs,
     save_graph,
     save_job,
     save_run,
@@ -66,7 +66,7 @@ class _DetectedRunRaceCondition(Exception):
 
 
 _GARBAGE_COLLECTION_QUERIES = {
-    "orphaned_jobs": get_runs_with_orphaned_jobs,
+    "orphaned_jobs": get_run_ids_with_orphaned_jobs,
 }
 
 
@@ -106,7 +106,7 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
     next_page_url : Optional[str]
         URL of the next page, if any, `null` otherwise
     limit : int
-        Current page size. The actual number of items returned may be inferior
+        Current page size. The actual number of items returned may be smaller
         if current page is last page.
     next_cursor : Optional[str]
         Cursor to obtain next page. Already included in `next_page_url`.
@@ -121,23 +121,25 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
     contained_extra_filters, garbage_filters = get_gc_filters(
         request_args, list(_GARBAGE_COLLECTION_QUERIES.keys())
     )
-    if len(garbage_filters) != 0:
-        logger.info(
-            "Searching for runs to garbage collect with filters: %s", garbage_filters
+    logger.info(
+        "Searching for runs to garbage collect with filters: %s", garbage_filters
+    )
+    if len(garbage_filters) == 0:
+        return _standard_list_runs(request_args)
+
+    if contained_extra_filters or len(garbage_filters) > 1:
+        return jsonify_error(
+            f"Filter {garbage_filters[0]} must be used alone",
+            status=HTTPStatus.BAD_REQUEST,
         )
-        if contained_extra_filters or len(garbage_filters) > 1:
-            return jsonify_error(
-                f"Filter {garbage_filters[0]} must be used alone",
-                status=HTTPStatus.BAD_REQUEST,
-            )
-        return list_garbage_ids(
-            garbage_filters[0],
-            flask.request.url,
-            _GARBAGE_COLLECTION_QUERIES,
-            Run,
-            urlencode(request_args),
-        )
-    return _standard_list_runs(request_args)
+
+    return list_garbage_ids(
+        garbage_filters[0],
+        flask.request.url,
+        _GARBAGE_COLLECTION_QUERIES,
+        Run,
+        urlencode(request_args),
+    )
 
 
 def _standard_list_runs(args: Dict[str, str]) -> flask.Response:
