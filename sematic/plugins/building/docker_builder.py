@@ -2,15 +2,17 @@
 The native Docker Builder plugin implementation.
 """
 # Standard Library
+import glob
 import logging
 import os
 import re
 import runpy
 import subprocess
 import sys
+import tempfile
 import time
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 # isort: off
 # there is a collision between the docker-py library and the sematic/docker directory
@@ -18,6 +20,7 @@ from typing import List, Optional
 # Third-party
 import docker
 import yaml
+from docker.models.images import Image  # type: ignore
 
 # isort: on
 
@@ -38,6 +41,24 @@ BUILD_SCHEMA_VERSION = 0
 
 # TODO: bump to 0.1.0 when the build system is exposed to users
 _PLUGIN_VERSION = (0, 0, 1)
+
+_DOCKERFILE_BASE_TEMPLATE = """
+FROM {base_uri}
+WORKDIR /
+
+RUN which pip3 || apt update -y && apt install -y python3-pip
+RUN python3 -c "import distutils" || apt update -y && apt install --reinstall -y python3.9-distutils
+
+ENV PATH="/sematic/bin/:${{PATH}}"
+RUN echo '#!/bin/sh' > launch.sh && echo '/usr/bin/python3 -m sematic.resolvers.worker "$@"' >> launch.sh
+RUN chmod +x /launch.sh
+ENTRYPOINT ["/launch.sh"]
+"""  # noqa: E501
+
+_DOCKERFILE_REQUIREMENTS_TEMPLATE = """
+COPY {requirements_file} requirements.txt
+RUN pip3 install --no-cache -r requirements.txt
+"""
 
 
 @dataclass
@@ -73,6 +94,23 @@ class ImageURI:
             repository=match.group(1), tag=match.group(2), digest=match.group(3)
         )
 
+    @classmethod
+    def from_image(cls, image: Image) -> "ImageURI":
+        """
+        Returns an `ImageURI` that identifies the specified image.
+
+        Raises
+        ------
+        ValueError:
+            The specified image does not have a defined repository/tag, which is required
+            for generating a URI in the `<repository>:<tag>@<digest>` format.
+        """
+        if len(image.attrs.get("RepoTags", [])) == 0:
+            raise ValueError(f"Container image '{image.id}' does not have a defined tag!")
+
+        repository, tag = image.attrs["RepoTags"][0].split(":")
+        return ImageURI(repository=repository, tag=tag, digest=image.id)
+
     def __str__(self):
         """
         Returns a short `<repository>:<tag>` version of this image URI.
@@ -92,6 +130,7 @@ class SourceBuildConfig:
     A packaged build source file configuration.
     """
 
+    platform: Optional[str] = None
     requirements: Optional[str] = None
     data: Optional[str] = None
     src: Optional[str] = None
@@ -139,6 +178,7 @@ class BuildConfig:
     """
 
     version: int
+    project: str
     image_script: Optional[str] = None
     base_uri: Optional[ImageURI] = None
     build: Optional[SourceBuildConfig] = None
@@ -159,6 +199,9 @@ class BuildConfig:
                 f"Unsupported build schema version! Expected: {BUILD_SCHEMA_VERSION}; "
                 f"got: {self.version}!"
             )
+
+        if not self.project:
+            raise BuildConfigurationError("`project` must be non-empty!")
 
         if (
             self.image_script is None
@@ -240,63 +283,73 @@ class DockerBuilder(AbstractBuilder):
     def get_version() -> PluginVersion:
         return _PLUGIN_VERSION
 
-    def build_and_launch(self, target: str):
+    def build_and_launch(self, target: str) -> None:
         """
         Builds a container image and launches the specified target launch script, based on
         proprietary build configuration files.
+
+        Parameters
+        ----------
+        target: str
+            The path to the pipeline target to launch; the built image must support this
+            target's execution.
+
+        Raises
+        ------
+        BuildError:
+            There was an error when executing the specified build script.
+        BuildConfigurationError:
+            There was an error when validating the specified build configuration.
         """
-        image_uri = self._build(target=target)
-        self._launch(target=target, image_uri=image_uri)
+        image_uri = _build(target=target)
+        _launch(target=target, image_uri=image_uri)
 
-    def _build(self, target: str) -> ImageURI:
-        """
-        Builds the container image, returning the image URI that can be used to launch
-        executions.
-        """
-        build_config = _get_build_config(script_path=target)
-        logger.info("Loaded build configuration: %s", build_config)
 
-        base_image_uri = _build_image(build_config=build_config, target=target)
-        logger.info("Using container base image URI: %s", repr(base_image_uri))
+def _build(target: str) -> ImageURI:
+    """
+    Builds the container image, returning the image URI that can be used to launch
+    executions.
+    """
+    build_config = _get_build_config(script_path=target)
+    logger.info("Loaded build configuration: %s", build_config)
 
-        # TODO: configure the docker service connection string in the build file
-        docker_client = docker.from_env()  # type: ignore
+    # TODO: configure the docker service connection string in the build file
+    docker_client = docker.from_env()  # type: ignore
+    logger.info(
+        "Instantiated docker client for server: %s", docker_client.api.base_url
+    )
 
-        # TODO: pull if it is not available locally
-        image = docker_client.images.get(str(base_image_uri))
-        if image.id != base_image_uri.digest:
-            raise BuildError(
-                f"Digest mismatch for image '{base_image_uri}'; "
-                f"expected: {base_image_uri.digest} got: {image.id}"
-            )
+    image, image_uri = _build_image(
+        target=target, build_config=build_config, docker_client=docker_client
+    )
+    logger.info("Built image: %s", repr(image_uri))
 
-        logger.info("Found base image: '%s'", base_image_uri)
+    build_image_uri = _push_image(
+        image=image,
+        image_uri=image_uri,
+        push_config=build_config.push,
+        docker_client=docker_client,
+    )
 
-        build_image_uri = _push_image(
-            image=image,
-            image_uri=base_image_uri,
-            push_config=build_config.push,
-            docker_client=docker_client,
-        )
+    logger.info("Using image: '%s'", repr(build_image_uri))
 
-        logger.info("Finished building image: '%s'", repr(build_image_uri))
+    return build_image_uri
 
-        return build_image_uri
 
-    def _launch(self, target: str, image_uri: ImageURI) -> None:
-        """
-        Launches the specified user code target, using the specified image.
-        """
-        sys.path.append(os.getcwd())
-        # TODO: revert this overwrite after finishing execution
-        #  promote the `environment_variables` testing fixture to a utility
-        os.environ[CONTAINER_IMAGE_ENV_VAR] = repr(image_uri)
+def _launch(target: str, image_uri: ImageURI) -> None:
+    """
+    Launches the specified user code target, using the specified image.
+    """
+    sys.path.append(os.getcwd())
+    # TODO: revert this overwrite after finishing execution
+    #  promote the `environment_variables` testing fixture to a utility
+    os.environ[CONTAINER_IMAGE_ENV_VAR] = repr(image_uri)
 
-        logger.info("Launching target: '%s'", target)
+    logger.info("Launching target: '%s'", target)
 
-        runpy.run_path(path_name=target, run_name="__main__")
+    runpy.run_path(path_name=target, run_name="__main__")
 
-        logger.info("Finished launching target: '%s'", target)
+    logger.info("Finished launching target: '%s'", target)
 
 
 def _get_build_config(script_path: str) -> BuildConfig:
@@ -339,30 +392,167 @@ def _find_build_config_files(script_path: str) -> List[str]:
     return [file_candidate] if os.path.isfile(file_candidate) else []
 
 
-def _build_image(build_config: BuildConfig, target: str) -> ImageURI:
+def _build_image(
+    target: str,
+    build_config: BuildConfig,
+    docker_client: docker.DockerClient,  # type: ignore
+) -> Tuple[Image, ImageURI]:
     """
     Builds the container image to use, according to the build configuration, and returns
     an `ImageURI` that identifies it.
 
+    Parameters
+    ----------
+    target: str
+        The path to the pipeline target to launch; the built image must support this
+        target's execution.
+    build_config: BuildConfig
+        The configuration that controls the image build.
+    docker_client: docker.DockerClient
+        The client to use for executing the operations.
+
+    Returns
+    -------
+    Tuple[Image, ImageURI]:
+        The build container image and a URI that identifies the image.
+
     Raises
     ------
     BuildError:
-        There was an error when executing the specified build script.
+        There was an error when building the image.
     BuildConfigurationError:
         There was an error when validating the specified build configuration.
+    SystemExit:
+        A subprocess exited with an unexpected code.
     """
     if build_config.base_uri is not None:
-        # TODO: honor configurations in build_config.build
-        return build_config.base_uri
-
-    if build_config.image_script is None:
-        # appease mypy
-        raise BuildConfigurationError(
-            "Exactly one of `image_script` and `base_uri` must be specified!"
+        return _build_image_from_base(
+            target=target, build_config=build_config, docker_client=docker_client
         )
 
+    if build_config.image_script is not None:
+        return _execute_build_script(
+            target=target,
+            image_script=build_config.image_script,
+            docker_client=docker_client,
+        )
+
+    # should be unreachable code, here for a sanity check
+    raise BuildConfigurationError(
+        "Exactly one of `image_script` and `base_uri` must be specified!"
+    )
+
+
+def _build_image_from_base(
+    target: str,
+    build_config: BuildConfig,
+    docker_client: docker.DockerClient,  # type: ignore
+) -> Tuple[Image, ImageURI]:
+    """
+    Builds the container image to use by adding layers to an existing base image.
+    """
+    image_name = f"{build_config.project}:{build_config.push.get_tag()}"
+    logger.error("Building container image %s", image_name)
+
+    dockerfile_contents = _generate_dockerfile_contents(
+        target=target, build_config=build_config
+    )
+    logger.error("Using Dockerfile:\n%s", dockerfile_contents)
+
+    # we have to create a tmp dockerfile and pass it instead of using the `fileobj` option
+    # of the docker_client, because it does not work with contexts, so operations like
+    # COPY do not work, as there exists no working dir context to copy them from
+    # API: https://docker-py.readthedocs.io/en/stable/api.html#module-docker.api.build
+    # Reported unresolved issue: https://github.com/docker/docker-py/issues/2105
+    with tempfile.NamedTemporaryFile(mode="wt", delete=True) as dockerfile:
+        dockerfile.write(dockerfile_contents)
+        dockerfile.flush()
+
+        optional_kwargs = dict()
+        if build_config.build.platform is not None:
+            optional_kwargs["platform"] = build_config.build.platform
+
+        status_updates = docker_client.api.build(
+            dockerfile=dockerfile.name,
+            # use the project root as the context
+            path=os.getcwd(),
+            tag=image_name,
+            pull=True,
+            decode=True,
+            **optional_kwargs
+        )
+
+    if status_updates is None:
+        logger.warning("Built image '%s' without any response", build_config.base_uri)
+        image = docker_client.images.get(image_name)
+        return image, ImageURI.from_image(image)
+
+    for status_update in status_updates:
+        if "error" in status_update:
+            logger.error(
+                "Image push error details: '%s'", str(status_update.get("errorDetail"))
+            )
+            raise BuildError(f"Unable to build image: {status_update['error']}")
+
+        update_str = " ".join(sorted([f"{k}={v}" for k, v in status_update.items()]))
+        logger.error("Image build update: %s", update_str.strip())
+
+    image = docker_client.images.get(image_name)
+    return image, ImageURI.from_image(image)
+
+
+def _generate_dockerfile_contents(target: str, build_config: BuildConfig) -> str:
+    """
+    Generates the Dockerfile contents based on the config, using templates.
+    """
+    dockerfile_contents = _DOCKERFILE_BASE_TEMPLATE.format(base_uri=build_config.base_uri)
+
+    if build_config.build.requirements is not None:
+        logger.error("Adding requirements file")
+        requirements_contents = _DOCKERFILE_REQUIREMENTS_TEMPLATE.format(
+            requirements_file=build_config.build.requirements
+        )
+        dockerfile_contents = f"{dockerfile_contents}{requirements_contents}"
+
+    if build_config.build.data is not None:
+        logger.error("Adding data files")
+        for data_glob in build_config.build.data:
+            data_files = glob.glob(data_glob)
+            if len(data_files) > 0:
+                for data_file in data_files:
+                    dockerfile_contents = (
+                        f"{dockerfile_contents}\nCOPY {data_file} {data_file}"
+                    )
+
+    if build_config.build.src is not None:
+        logger.error("Adding source files")
+        for src_glob in build_config.build.src:
+            src_files = glob.glob(src_glob)
+            if len(src_files) > 0:
+                for scr_file in src_files:
+                    dockerfile_contents = (
+                        f"{dockerfile_contents}\nCOPY {scr_file} {scr_file}"
+                    )
+
+    elif build_config.base_uri is not None:
+        logger.error("Adding target source file")
+        dockerfile_contents = (
+            f"{dockerfile_contents}\nCOPY {target} {target}"
+        )
+
+    return dockerfile_contents
+
+
+def _execute_build_script(
+    target: str,
+    image_script: str,
+    docker_client: docker.DockerClient,  # type: ignore
+) -> Tuple[Image, ImageURI]:
+    """
+    Builds the container image to use by executing the specified script.
+    """
     try:
-        script_dir, script_file = os.path.split(build_config.image_script)
+        script_dir, script_file = os.path.split(image_script)
         if script_dir == "":
             script_dir = None  # type: ignore
         script_file = f"./{script_file}"
@@ -381,23 +571,23 @@ def _build_image(build_config: BuildConfig, target: str) -> ImageURI:
             text=True,
         ) as subproc:
 
-            image_uri, _ = subproc.communicate()
+            raw_uri, _ = subproc.communicate()
 
             if subproc.returncode != 0:
                 raise SystemExit(subproc.returncode)
 
-            image_uri = image_uri.strip()
+            image_uri = ImageURI.from_uri(uri=raw_uri.strip())
+            image = docker_client.images.get(str(image_uri))
+            return image, image_uri
 
     except BaseException as e:
         raise BuildError(
-            f"Unable to source container image URI from '{build_config.image_script}'!"
+            f"Unable to source container image URI from '{image_script}'!"
         ) from e
-
-    return ImageURI.from_uri(uri=image_uri)
 
 
 def _push_image(
-    image: docker.models.images.Image,  # type: ignore
+    image: Image,  # type: ignore
     image_uri: ImageURI,
     push_config: Optional[ImagePushConfig],
     docker_client: docker.DockerClient,  # type: ignore
@@ -409,7 +599,7 @@ def _push_image(
 
     Parameters
     ----------
-    image: docker.models.images.Image
+    image: Image
         The image to push
     image_uri: ImageURI
         The initial URI of the image to push
@@ -450,11 +640,11 @@ def _push_image(
         tag,
     )
 
-    response = docker_client.images.push(
+    status_updates = docker_client.images.push(
         repository=repository, tag=tag, stream=True, decode=True
     )
 
-    if response is None:
+    if status_updates is None:
         logger.warning(
             "Pushed image '%s' to repository '%s' with tag '%s', without any response",
             image_uri,
@@ -463,7 +653,7 @@ def _push_image(
         )
         return _reload_image_uri(image=image)
 
-    for status_update in response:
+    for status_update in status_updates:
         if "error" in status_update:
             logger.error(
                 "Image push error details: '%s'", str(status_update.get("errorDetail"))
@@ -471,12 +661,12 @@ def _push_image(
             raise BuildError(f"Unable to push image: {status_update['error']}")
 
         update_str = " ".join(sorted([f"{k}={v}" for k, v in status_update.items()]))
-        logger.info("Image push update: %s", update_str)
+        logger.info("Image push update: %s", update_str.strip())
 
     return _reload_image_uri(image=image)
 
 
-def _reload_image_uri(image: docker.models.images.Image) -> ImageURI:  # type: ignore
+def _reload_image_uri(image: Image) -> ImageURI:  # type: ignore
     """
     Reloads an image's tags and digest after it has been pushed to a repository, returning
     an `ImageURI` that locates it in that repository.
@@ -488,6 +678,8 @@ def _reload_image_uri(image: docker.models.images.Image) -> ImageURI:  # type: i
         image.reload()
 
     # couldn't find any better way of doing this
+    # we know "RepoTags" and "RepoDigests" exist because we just pushed the image,
+    # filling in those attrs
     digest = image.attrs["RepoDigests"][0].split("@")[1]
     # "RepoDigests" does not contain the fully qualified repo and tag;
     # we must use "RepoTags"
