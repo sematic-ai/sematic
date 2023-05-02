@@ -111,7 +111,7 @@ def clean(
 
 def clean_orphaned_runs() -> List[str]:
     return clean_ids(
-        ids=api_client.get_orphaned_runs(),
+        ids=api_client.get_orphaned_run_ids(),
         object_name="run",
         clean_query=api_client.clean_orphaned_run,
     )

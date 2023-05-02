@@ -44,7 +44,7 @@ from sematic.db.queries import (
     get_resources_by_root_id,
     get_run,
     get_run_graph,
-    get_stale_resolutions,
+    get_stale_resolution_ids,
     save_graph,
     save_job,
     save_resolution,
@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
 
 _GARBAGE_COLLECTION_QUERIES = {
     "orphaned_jobs": get_resolution_ids_with_orphaned_jobs,
-    "stale": get_stale_resolutions,
+    "stale": get_stale_resolution_ids,
 }
 
 
@@ -533,7 +533,7 @@ def clean_stale_resolution_endpoint(
         return jsonify_error(
             f"Couldn't clean resolution {root_id} because its root run "
             f"is in state {root_run.future_state}",
-            status=HTTPStatus.BAD_REQUEST,
+            status=HTTPStatus.CONFLICT,
         )
 
     state_change = "UNMODIFIED"
@@ -543,7 +543,7 @@ def clean_stale_resolution_endpoint(
             root_id,
         )
         resolution.status = ResolutionStatus.FAILED
-        state_change = "FAILED"
+        state_change = ResolutionStatus.FAILED.value
         save_resolution(resolution)
 
     return flask.jsonify(

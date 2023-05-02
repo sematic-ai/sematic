@@ -427,7 +427,7 @@ def get_run_ids_with_orphaned_jobs() -> List[str]:
     return _search_for_gc_runs("orphaned_jobs")
 
 
-def get_orphaned_runs() -> List[str]:
+def get_orphaned_run_ids() -> List[str]:
     """Get ids of runs that have not terminated, which have a terminal resolution."""
     return _search_for_gc_runs("orphaned")
 

@@ -42,7 +42,7 @@ from sematic.db.queries import (
     get_existing_run_ids,
     get_external_resources_by_run_id,
     get_jobs_by_run_id,
-    get_orphaned_runs,
+    get_orphaned_run_ids,
     get_resolution,
     get_root_graph,
     get_run,
@@ -69,7 +69,7 @@ class _DetectedRunRaceCondition(Exception):
 
 _GARBAGE_COLLECTION_QUERIES = {
     "orphaned_jobs": get_run_ids_with_orphaned_jobs,
-    "orphaned": get_orphaned_runs,
+    "orphaned": get_orphaned_run_ids,
 }
 
 
@@ -649,7 +649,7 @@ def clean_orphaned_run_endpoint(user: Optional[User], run_id: str) -> flask.Resp
         return jsonify_error(
             f"The resolution for run {run_id} has not terminated "
             f"(has status: {resolution.status}).",
-            status=HTTPStatus.BAD_REQUEST,
+            status=HTTPStatus.CONFLICT,
         )
     state_change = "UNMODIFIED"
 
@@ -671,7 +671,7 @@ def clean_orphaned_run_endpoint(user: Optional[User], run_id: str) -> flask.Resp
             run.id,
         )
         save_run(run)
-        state_change = "FAILED"
+        state_change = FutureState.FAILED.value
 
     return flask.jsonify(
         dict(

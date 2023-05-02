@@ -393,7 +393,7 @@ def get_resolution_ids_with_orphaned_jobs() -> List[str]:
     return resolution_ids
 
 
-def get_orphaned_runs() -> List[str]:
+def get_orphaned_run_ids() -> List[str]:
     """Get runs whose status is non-terminal, but whose resolutions are terminated.
 
     Returns
@@ -431,7 +431,7 @@ def get_orphaned_runs() -> List[str]:
     return run_ids
 
 
-def get_stale_resolutions() -> List[str]:
+def get_stale_resolution_ids() -> List[str]:
     """Get ids of resolutions that is non-terminal, but whose root runs are.
 
     Returns

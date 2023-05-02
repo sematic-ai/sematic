@@ -28,7 +28,7 @@ from sematic.db.queries import (
     get_job,
     get_jobs_by_run_id,
     get_orphaned_resource_records,
-    get_orphaned_runs,
+    get_orphaned_run_ids,
     get_resolution,
     get_resolution_ids_with_orphaned_jobs,
     get_resources_by_root_id,
@@ -36,7 +36,7 @@ from sematic.db.queries import (
     get_run,
     get_run_graph,
     get_run_ids_with_orphaned_jobs,
-    get_stale_resolutions,
+    get_stale_resolution_ids,
     save_external_resource_record,
     save_graph,
     save_job,
@@ -343,7 +343,9 @@ def test_run_resource_links(test_db):  # noqa: F811
     assert resource_ids == {resource_1.id, resource_2.id, resource_3.id}
 
 
-def test_get_stale_resolutions(test_db, allow_any_run_state_transition):  # noqa: F811
+def test_get_stale_resolution_ids(
+    test_db, allow_any_run_state_transition  # noqa: F811
+):
     # Stale because run is dead and resolution isn't
     root_run_1 = make_run(future_state=FutureState.CANCELED)
     resolution_1 = make_resolution(
@@ -368,11 +370,11 @@ def test_get_stale_resolutions(test_db, allow_any_run_state_transition):  # noqa
     for resolution in [resolution_1, resolution_2, resolution_3]:
         save_resolution(resolution)
 
-    stale_resolution_ids = get_stale_resolutions()
+    stale_resolution_ids = get_stale_resolution_ids()
     assert stale_resolution_ids == [resolution_1.root_id]
 
 
-def test_get_orphaned_runs(test_db, allow_any_run_state_transition):  # noqa: F811
+def test_get_orphaned_run_ids(test_db, allow_any_run_state_transition):  # noqa: F811
     # Runs are orphaned because resolution is terminal but runs aren't
     root_run_1 = make_run(future_state=FutureState.RAN)
     child_run_1 = make_run(root_id=root_run_1.id, future_state=FutureState.SCHEDULED)
@@ -408,7 +410,7 @@ def test_get_orphaned_runs(test_db, allow_any_run_state_transition):  # noqa: F8
     for resolution in [resolution_1, resolution_2, resolution_3]:
         save_resolution(resolution)
 
-    orphaned_run_ids = get_orphaned_runs()
+    orphaned_run_ids = get_orphaned_run_ids()
     assert set(orphaned_run_ids) == {root_run_1.id, child_run_1.id, child_run_3.id}
 
 
