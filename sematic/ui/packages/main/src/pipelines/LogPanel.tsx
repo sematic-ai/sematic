@@ -1,11 +1,11 @@
 import { Box, TextField } from "@mui/material";
 import { useCallback, useState } from "react";
 import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
-import ScrollingLogView from "./ScrollingLogView";
+import BidirectionalLogView from "src/components/BidirectionalLogView";
 
 export default function LogPanel() {
   const { selectedRun } = usePipelinePanelsContext();
-  const { id, external_exception_metadata_json, exception_metadata_json} = selectedRun!;
+  const { id } = selectedRun!;
   const [filterString, setFilterString] = useState<string>("");
 
   const onFilterStringChange = useCallback(
@@ -25,10 +25,8 @@ export default function LogPanel() {
           onChange={onFilterStringChange}
           style={{ flexShrink: 1 }}
         />
-        <ScrollingLogView key={`${id}---${filterString}`} logSource={id}
-          filterString={filterString}
-          exception_metadata_json={exception_metadata_json} 
-          external_exception_metadata_json={external_exception_metadata_json} />
+        <BidirectionalLogView key={`${id}---${filterString}`} logSource={id}
+          filterString={filterString} />
       </Box>
     </Box>
   );
