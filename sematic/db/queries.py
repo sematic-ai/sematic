@@ -393,6 +393,82 @@ def get_resolution_ids_with_orphaned_jobs() -> List[str]:
     return resolution_ids
 
 
+def get_orphaned_run_ids() -> List[str]:
+    """Get runs whose status is non-terminal, but whose resolutions are terminated.
+
+    Returns
+    -------
+    A list of ids.
+    """
+    with db().get_session() as session:
+        query_results = list(
+            session.query(
+                Run.id,
+                Run.root_id,
+                Run.future_state,
+                Resolution.status,
+                Resolution.root_id,
+            )
+            .filter(Run.root_id == Resolution.root_id)
+            .filter(
+                Resolution.status.in_(
+                    [status.value for status in ResolutionStatus.terminal_states()]
+                )
+            )
+            .filter(Run.future_state.not_in(FutureState.terminal_state_strings()))
+            .all()
+        )
+        run_ids = []
+        for run_id, root_id, run_state, resolution_status, _ in query_results:
+            logger.info(
+                "Resolution %s in state %s has orphaned run %s in state %s",
+                root_id,
+                resolution_status,
+                run_id,
+                run_state,
+            )
+            run_ids.append(run_id)
+    return run_ids
+
+
+def get_stale_resolution_ids() -> List[str]:
+    """Get ids of resolutions that is non-terminal, but whose root runs are.
+
+    Returns
+    -------
+    A list of ids.
+    """
+    with db().get_session() as session:
+        query_results = list(
+            session.query(
+                Run.id,
+                Run.root_id,
+                Run.future_state,
+                Resolution.status,
+                Resolution.root_id,
+            )
+            .filter(Run.id == Resolution.root_id)
+            .filter(
+                Resolution.status.not_in(
+                    [status.value for status in ResolutionStatus.terminal_states()]
+                )
+            )
+            .filter(Run.future_state.in_(FutureState.terminal_state_strings()))
+            .all()
+        )
+        resolution_ids = []
+        for run_id, root_id, run_state, resolution_status, _ in query_results:
+            logger.info(
+                "Resolution %s in state %s has root run %s in state %s",
+                root_id,
+                resolution_status,
+                run_id,
+                run_state,
+            )
+            resolution_ids.append(root_id)
+    return resolution_ids
+
+
 def get_jobs_by_run_id(run_id: str, kind: JobKindString = JobKind.run) -> List[Job]:
     """Get jobs from the DB by source run id.
 

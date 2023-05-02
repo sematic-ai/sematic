@@ -37,6 +37,8 @@ spec:
             - sematic
             - --verbose
             - clean
+            - --orphaned-runs
+            - --stale-resolutions
             - --orphaned-jobs
             - --orphaned-resources
           restartPolicy: Never
