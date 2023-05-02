@@ -28,6 +28,7 @@ from sematic.db.queries import (
     get_job,
     get_jobs_by_run_id,
     get_orphaned_resource_records,
+    get_orphaned_run_ids,
     get_resolution,
     get_resolution_ids_with_orphaned_jobs,
     get_resources_by_root_id,
@@ -35,6 +36,7 @@ from sematic.db.queries import (
     get_run,
     get_run_graph,
     get_run_ids_with_orphaned_jobs,
+    get_stale_resolution_ids,
     save_external_resource_record,
     save_graph,
     save_job,
@@ -339,6 +341,77 @@ def test_run_resource_links(test_db):  # noqa: F811
     assert all(isinstance(record, ExternalResource) for record in resources)
     resource_ids = {resource.id for resource in resources}
     assert resource_ids == {resource_1.id, resource_2.id, resource_3.id}
+
+
+def test_get_stale_resolution_ids(
+    test_db, allow_any_run_state_transition  # noqa: F811
+):
+    # Stale because run is dead and resolution isn't
+    root_run_1 = make_run(future_state=FutureState.CANCELED)
+    resolution_1 = make_resolution(
+        root_id=root_run_1.id, status=ResolutionStatus.RUNNING
+    )
+
+    # not stale because resolution and run are alive
+    root_run_2 = make_run(future_state=FutureState.SCHEDULED)
+    resolution_2 = make_resolution(
+        root_id=root_run_2.id, status=ResolutionStatus.RUNNING
+    )
+
+    # not stale because neither resolution nor run are alive
+    root_run_3 = make_run(future_state=FutureState.CANCELED)
+    resolution_3 = make_resolution(
+        root_id=root_run_3.id, status=ResolutionStatus.CANCELED
+    )
+
+    for run in [root_run_1, root_run_2, root_run_3]:  # noqa: F402
+        save_run(run)
+
+    for resolution in [resolution_1, resolution_2, resolution_3]:
+        save_resolution(resolution)
+
+    stale_resolution_ids = get_stale_resolution_ids()
+    assert stale_resolution_ids == [resolution_1.root_id]
+
+
+def test_get_orphaned_run_ids(test_db, allow_any_run_state_transition):  # noqa: F811
+    # Runs are orphaned because resolution is terminal but runs aren't
+    root_run_1 = make_run(future_state=FutureState.RAN)
+    child_run_1 = make_run(root_id=root_run_1.id, future_state=FutureState.SCHEDULED)
+    resolution_1 = make_resolution(
+        root_id=root_run_1.id, status=ResolutionStatus.CANCELED
+    )
+
+    # Not orphaned because everything is still alive
+    root_run_2 = make_run(future_state=FutureState.SCHEDULED)
+    child_run_2 = make_run(root_id=root_run_2.id, future_state=FutureState.RAN)
+    resolution_2 = make_resolution(
+        root_id=root_run_2.id, status=ResolutionStatus.RUNNING
+    )
+
+    # Root run is terminal and therefore not orphaned. Child run is alive but resolution
+    # is not--therefore child is orphaned.
+    root_run_3 = make_run(future_state=FutureState.CANCELED)
+    child_run_3 = make_run(root_id=root_run_3.id, future_state=FutureState.RAN)
+    resolution_3 = make_resolution(
+        root_id=root_run_3.id, status=ResolutionStatus.CANCELED
+    )
+
+    for run in [  # noqa: F402
+        root_run_1,
+        child_run_1,
+        root_run_2,
+        child_run_2,
+        root_run_3,
+        child_run_3,
+    ]:
+        save_run(run)
+
+    for resolution in [resolution_1, resolution_2, resolution_3]:
+        save_resolution(resolution)
+
+    orphaned_run_ids = get_orphaned_run_ids()
+    assert set(orphaned_run_ids) == {root_run_1.id, child_run_1.id, child_run_3.id}
 
 
 def test_get_orphaned_resource_records(test_db):  # noqa: F811

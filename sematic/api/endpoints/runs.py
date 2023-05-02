@@ -34,6 +34,7 @@ from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.job import Job
+from sematic.db.models.resolution import ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
@@ -41,6 +42,7 @@ from sematic.db.queries import (
     get_existing_run_ids,
     get_external_resources_by_run_id,
     get_jobs_by_run_id,
+    get_orphaned_run_ids,
     get_resolution,
     get_root_graph,
     get_run,
@@ -55,7 +57,7 @@ from sematic.db.queries import (
 from sematic.log_reader import load_log_lines
 from sematic.scheduling.job_scheduler import clean_jobs, schedule_run, update_run_status
 from sematic.scheduling.kubernetes import cancel_job
-from sematic.utils.exceptions import IllegalStateTransitionError
+from sematic.utils.exceptions import ExceptionMetadata, IllegalStateTransitionError
 from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
@@ -67,6 +69,7 @@ class _DetectedRunRaceCondition(Exception):
 
 _GARBAGE_COLLECTION_QUERIES = {
     "orphaned_jobs": get_run_ids_with_orphaned_jobs,
+    "orphaned": get_orphaned_run_ids,
 }
 
 
@@ -633,6 +636,46 @@ def get_run_jobs(user: Optional[User], run_id: str) -> flask.Response:
     return flask.jsonify(
         dict(
             content=jobs,
+        )
+    )
+
+
+@sematic_api.route("/api/v1/runs/<run_id>/clean", methods=["POST"])
+@authenticate
+def clean_orphaned_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+    run = get_run(run_id)
+    resolution = get_resolution(run.root_id)
+    if not ResolutionStatus[resolution.status].is_terminal():  # type: ignore
+        return jsonify_error(
+            f"The resolution for run {run_id} has not terminated "
+            f"(has status: {resolution.status}).",
+            status=HTTPStatus.CONFLICT,
+        )
+    state_change = "UNMODIFIED"
+
+    if not FutureState[run.future_state].is_terminal():  # type: ignore
+        if FutureState.is_allowed_transition(run.future_state, FutureState.FAILED):
+            run.future_state = FutureState.FAILED
+        else:
+            run.future_state = FutureState.NESTED_FAILED
+        run.failed_at = datetime.datetime.utcnow()
+        if run.exception_metadata is None:
+            run.exception_metadata = ExceptionMetadata.from_exception(
+                RuntimeError(
+                    "Run was still alive despite the resolution being terminated. "
+                    "Run was forced to fail."
+                ),
+            )
+        logger.warning(
+            "Marking run %s as failed because it was not terminated with its resolution.",
+            run.id,
+        )
+        save_run(run)
+        state_change = FutureState.FAILED.value
+
+    return flask.jsonify(
+        dict(
+            content=state_change,
         )
     )
 

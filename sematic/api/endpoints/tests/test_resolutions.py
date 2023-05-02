@@ -39,6 +39,7 @@ from sematic.db.queries import (
     get_run,
     save_job,
     save_resolution,
+    save_run,
     save_run_external_resource_links,
 )
 from sematic.db.tests.fixtures import (  # noqa: F401
@@ -340,6 +341,33 @@ def test_schedule_resolution_endpoint_no_auth(
     assert (
         mock_schedule_resolution.call_args.kwargs["rerun_from"] == "rerun_from_run_id"
     )
+
+
+def test_clean_resolution(
+    mock_auth,  # noqa: F811
+    persisted_resolution: Resolution,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_schedule_kubernetes: mock.MagicMock,
+):
+    response = test_client.post(
+        f"/api/v1/resolutions/{persisted_resolution.root_id}/clean",
+    )
+
+    # Can't be cleaned while root run is still alive.
+    assert response.status_code == HTTPStatus.CONFLICT
+
+    run = get_run(persisted_resolution.root_id)  # noqa: F811
+    run.future_state = FutureState.CANCELED
+    save_run(run)
+
+    response = test_client.post(
+        f"/api/v1/resolutions/{persisted_resolution.root_id}/clean",
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    payload = typing.cast(typing.Dict[str, typing.Any], response.json)
+
+    assert payload["content"] == "FAILED"
 
 
 def test_clean_resolution_jobs(
