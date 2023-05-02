@@ -44,7 +44,7 @@ $ python3 -m piptools compile requirements/requirements.in > requirements/requir
 ## Build the sematic wheel
 
 ```shell
-$ bazel build //sematic:sematic_wheel
+$ bazel build //sematic:wheel
 ```
 
 ## Generate documentation
