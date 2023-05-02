@@ -332,7 +332,7 @@ def save_job(job: Job) -> Job:
         return job
 
 
-def get_runs_with_orphaned_jobs() -> List[str]:
+def get_run_ids_with_orphaned_jobs() -> List[str]:
     with db().get_session() as session:
         query_results = list(
             session.query(
@@ -365,7 +365,7 @@ def get_runs_with_orphaned_jobs() -> List[str]:
     return list(run_ids)
 
 
-def get_resolutions_with_orphaned_jobs() -> List[str]:
+def get_resolution_ids_with_orphaned_jobs() -> List[str]:
     with db().get_session() as session:
         query_results = list(
             session.query(

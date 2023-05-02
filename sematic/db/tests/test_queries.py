@@ -29,12 +29,12 @@ from sematic.db.queries import (
     get_jobs_by_run_id,
     get_orphaned_resource_records,
     get_resolution,
-    get_resolutions_with_orphaned_jobs,
+    get_resolution_ids_with_orphaned_jobs,
     get_resources_by_root_id,
     get_root_graph,
     get_run,
     get_run_graph,
-    get_runs_with_orphaned_jobs,
+    get_run_ids_with_orphaned_jobs,
     save_external_resource_record,
     save_graph,
     save_job,
@@ -479,7 +479,7 @@ def test_save_read_jobs(test_db):  # noqa: F811
         save_job(retry_job_from_scratch)
 
 
-def test_get_runs_with_orphaned_jobs(test_db):  # noqa: F811
+def test_get_run_ids_with_orphaned_jobs(test_db):  # noqa: F811
     root_run = make_run()
     child_run_1 = make_run(root_id=root_run.id)
     child_run_2 = make_run(root_id=root_run.id)
@@ -509,11 +509,11 @@ def test_get_runs_with_orphaned_jobs(test_db):  # noqa: F811
     child_run_2.future_state = FutureState.RESOLVED
     save_run(child_run_2)
 
-    run_ids = get_runs_with_orphaned_jobs()
+    run_ids = get_run_ids_with_orphaned_jobs()
     assert run_ids == [child_run_2.id]
 
 
-def test_get_resolutions_with_orphaned_jobs(test_db):  # noqa: F811
+def test_get_resolution_ids_with_orphaned_jobs(test_db):  # noqa: F811
     root_run_1 = make_run()
     root_run_2 = make_run()
     save_run(root_run_1)
@@ -552,5 +552,5 @@ def test_get_resolutions_with_orphaned_jobs(test_db):  # noqa: F811
     )
     save_job(job_2)
 
-    resolution_ids = get_resolutions_with_orphaned_jobs()
+    resolution_ids = get_resolution_ids_with_orphaned_jobs()
     assert resolution_ids == [resolution_2.root_id]

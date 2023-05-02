@@ -6,6 +6,7 @@ import typing
 import uuid
 from dataclasses import asdict, replace
 from unittest import mock
+from urllib.parse import urlencode
 
 # Third-party
 import flask.testing
@@ -72,6 +73,17 @@ test_get_run_external_resource_auth = make_auth_test(
 def mock_load_log_lines():
     with mock.patch("sematic.api.endpoints.runs.load_log_lines") as mock_load:
         yield mock_load
+
+
+@pytest.fixture
+def mock_get_run_ids_with_orphaned_jobs():
+    with mock.patch(
+        "sematic.api.endpoints.runs._GARBAGE_COLLECTION_QUERIES"
+    ) as mock_query_dict:
+        mock_query = mock.MagicMock()
+        mock_query_dict.keys = lambda: ["orphaned_jobs"]
+        mock_query_dict.__getitem__ = lambda _, __: mock_query
+        yield mock_query
 
 
 def test_list_runs_empty(
@@ -403,6 +415,36 @@ def test_list_runs_search_tags(
     assert run1.id in ids
     assert run2.id not in ids
     assert run3.id in ids
+
+
+def test_list_runs_search_orphaned_jobs(
+    mock_auth,  # noqa: F811
+    mock_get_run_ids_with_orphaned_jobs,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+):
+    runs = (
+        make_run(name="Fox"),
+        make_run(name="Falco"),
+        make_run(name="Slippy"),
+        make_run(name="Peppy"),
+    )
+    mock_get_run_ids_with_orphaned_jobs.return_value = [r.id for r in runs]
+
+    filters = {"orphaned_jobs": {"eq": True}}
+    query_params = {
+        "filters": json.dumps(filters),
+        "fields": json.dumps(["id"]),
+    }
+    response = test_client.get("/api/v1/runs?{}".format(urlencode(query_params)))
+
+    assert response.status_code == 200
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == len(runs)
+    ids = [result["id"] for result in payload["content"]]
+    assert set(ids) == {r.id for r in runs}
 
 
 def test_get_run_endpoint(
