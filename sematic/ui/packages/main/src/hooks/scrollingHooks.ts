@@ -1,5 +1,5 @@
+import { useLogger } from "@sematic/common/src/utils/logging";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useLogger } from "../utils";
 import { useSetTimeout } from "./setTimeoutHooks";
 
 const SCROLL_EVENTS = ['mousewheel', 'DOMMouseScroll', 'wheel', 'MozMousePixelScroll'];

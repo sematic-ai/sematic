@@ -10,15 +10,15 @@ import {
   useTheme
 } from "@mui/material";
 import { Resolution, Run } from "@sematic/common/src/Models";
+import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
+import UserContext from "@sematic/common/src/context/UserContext";
 import { useCallback, useContext, useEffect, useMemo } from "react";
-import { UserContext } from "src/appContext";
 import { ActionMenu, ActionMenuItem } from "src/components/ActionMenu";
 import CalculatorPath from "src/components/CalculatorPath";
 import GitInfoBox from "src/components/GitInfo";
 import Loading from "src/components/Loading";
 import MuiRouterLink from "src/components/MuiRouterLink";
 import RunStateChip from "src/components/RunStateChip";
-import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
 import TimeAgo from "src/components/TimeAgo";
 import { ExtractContextType } from "src/components/utils/typings";
 import { useFetchRuns, usePipelineRunContext, useRunNavigation } from "src/hooks/pipelineHooks";

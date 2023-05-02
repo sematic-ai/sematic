@@ -1,11 +1,11 @@
 import { User } from "@sematic/common/src/Models";
+import { useHttpClient } from "@sematic/common/src/hooks/httpHooks";
 import { atomWithStorage } from "jotai/utils";
 import { useContext, useMemo } from "react";
 import useAsync from "react-use/lib/useAsync";
+import { AuthenticatePayload, EnvPayload } from "src/Payloads";
 import AppContext from "src/appContext";
 import { ExtractContextType } from "src/components/utils/typings";
-import { useHttpClient } from "src/hooks/httpHooks";
-import { AuthenticatePayload, EnvPayload } from "src/Payloads";
 
 export const userAtom = atomWithStorage<User | null>('user', null);
 
