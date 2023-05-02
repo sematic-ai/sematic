@@ -1,6 +1,6 @@
+import UserContext from "src/context/UserContext";
+import { useLogger } from "src/utils/logging";
 import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
-import { UserContext } from "../appContext";
-import { useLogger } from "../utils";
 
 interface HttpClient {
     fetch: (params: { url: string, method?: string, body?: any }) => Promise<Response>;

@@ -1,4 +1,4 @@
-import { useHttpClient } from "src/hooks/httpHooks";
+import { useHttpClient } from "@sematic/common/src/hooks/httpHooks";
 import useAsync from "react-use/lib/useAsync";
 
 export default function useFetchBlob(blobId: string): [
