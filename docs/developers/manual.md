@@ -17,7 +17,7 @@ $ make install-dev-deps
 
 ## Add a third-party pip dependency
 
-Add your dependency to `requirements/requirements.in`, and if possible, set a fixed version.
+Add your dependency to `requirements/requirements.in`. Avoid pinning a fixed version unless necessary.
 
 Then run (only supported on Linux):
 ```shell
