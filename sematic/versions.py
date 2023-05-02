@@ -15,6 +15,8 @@ CURRENT_VERSION = (0, 29, 0)
 # 0.30.0
 # - https://github.com/sematic-ai/sematic/issues/700
 # - https://github.com/sematic-ai/sematic/issues/710
+# 0.31.0
+# - https://github.com/sematic-ai/sematic/issues/785
 
 
 # Represents the smallest client version that works with the server

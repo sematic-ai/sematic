@@ -57,7 +57,16 @@ def _get_collection_payload_with_user(
     return items_payload
 
 
-get_run_payload = _get_payload_with_user
+# TODO: revert this change in 0.31.0
+# get_run_payload = _get_payload_with_user
+def get_run_payload(run: Run) -> Dict[str, Any]:
+    payload = _get_payload_with_user(run)
+
+    payload["calculator_path"] = payload["function_path"]
+
+    return payload
+
+
 get_runs_payload = _get_collection_payload_with_user
 
 
