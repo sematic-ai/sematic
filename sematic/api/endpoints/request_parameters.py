@@ -100,7 +100,9 @@ def get_gc_filters(
                 continue
             if filter_[filter_name] != {"eq": True}:
                 raise ValueError(
-                    f"The filter '{filter_name}' must use the predicate {'eq: true'}"
+                    "The filter '{}' must use the predicate {}".format(
+                        filter_name, {"eq: true"}
+                    )
                 )
             garbage_filters.append(filter_name)
 
@@ -189,7 +191,7 @@ def list_garbage_ids(
         )
     if parameters.fields != [id_field]:
         return jsonify_error(
-            f"Filter {garbage_filter} must have include=['{id_field}'] set.",
+            f"Filter {garbage_filter} must have \"fields=['{id_field}']\" set.",
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -279,7 +281,7 @@ def get_request_parameters(
     try:
         include_fields: Optional[List[str]] = json.loads(include_fields_json)
     except Exception as e:
-        raise ValueError(f"Malformed include fields: {include_fields}, error: {e}")
+        raise ValueError(f"Malformed include fields: {include_fields}") from e
 
     return SearchRequestParameters(
         limit, order, cursor, group_by_column, sql_predicates, include_fields

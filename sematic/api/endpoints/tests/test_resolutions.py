@@ -79,7 +79,7 @@ test_list_external_resource_auth = make_auth_test(
 
 
 @pytest.fixture
-def mock_get_resolutions_with_orphaned_jobs():
+def mock_get_resolution_ids_with_orphaned_jobs():
     with mock.patch(
         "sematic.api.endpoints.resolutions._GARBAGE_COLLECTION_QUERIES"
     ) as mock_query_dict:
@@ -407,7 +407,7 @@ def test_clean_resolution_jobs(
 
 def test_list_resolutions_search_orphaned_jobs(
     mock_auth,  # noqa: F811
-    mock_get_resolutions_with_orphaned_jobs,  # noqa: F811
+    mock_get_resolution_ids_with_orphaned_jobs,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
 ):
     resolutions = (
@@ -416,7 +416,7 @@ def test_list_resolutions_search_orphaned_jobs(
         make_resolution(root_id="3"),
         make_resolution(root_id="4"),
     )
-    mock_get_resolutions_with_orphaned_jobs.return_value = [
+    mock_get_resolution_ids_with_orphaned_jobs.return_value = [
         r.root_id for r in resolutions
     ]
 

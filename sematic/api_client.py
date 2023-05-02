@@ -422,7 +422,7 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
     ]
 
 
-def get_runs_with_orphaned_jobs() -> List[str]:
+def get_run_ids_with_orphaned_jobs() -> List[str]:
     """Get ids of runs that have terminated, which still have non-terminal jobs."""
     return _search_for_gc_runs("orphaned_jobs")
 
@@ -460,7 +460,7 @@ def clean_stale_resolution(run_id: str) -> str:
     return response["content"]
 
 
-def get_resolutions_with_orphaned_jobs() -> List[str]:
+def get_resolution_ids_with_orphaned_jobs() -> List[str]:
     """Get ids of resolutions that have terminated which still have non-terminal jobs."""
     return _search_for_gc_resolutions("orphaned_jobs")
 

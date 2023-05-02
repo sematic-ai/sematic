@@ -141,7 +141,7 @@ def clean_ids(
 
 
 def clean_orphaned_jobs(force: bool) -> List[str]:
-    resolution_ids: List[str] = api_client.get_resolutions_with_orphaned_jobs()
+    resolution_ids: List[str] = api_client.get_resolution_ids_with_orphaned_jobs()
     resolution_updates_by_kind: Counter = Counter()
     for root_id in resolution_ids:
         try:
@@ -153,7 +153,7 @@ def clean_orphaned_jobs(force: bool) -> List[str]:
         except Exception:
             logger.exception("Error cleaning jobs for resolution %s", root_id)
 
-    run_ids = api_client.get_runs_with_orphaned_jobs()
+    run_ids = api_client.get_run_ids_with_orphaned_jobs()
     run_updates_by_kind: Counter = Counter()
     for run_id in run_ids:
         try:
