@@ -3,6 +3,7 @@ import { fontFamilyCode, fontWeightBold } from 'src/theme/new/typography';
 import { KeyboardArrowDown } from "@mui/icons-material";
 import { selectClasses } from '@mui/material/Select'
 import { inputBaseClasses } from '@mui/material/InputBase'
+import { chipClasses } from '@mui/material/Chip'
 
 const components: Components = {
     MuiCssBaseline: {
@@ -169,16 +170,20 @@ const components: Components = {
         }
     },
     MuiChip: {
-        styleOverrides: {
-            root: {
-                height: 25,
-                borderRadius: 0,
-            },
-            label: (({ theme }: { theme: Theme }) => ({
-                fontSize: theme.typography.small.fontSize,
-                padding: 5
-            })) as any
-        }
+        variants: [
+            {
+                props: { variant: 'tag' },
+                style: ({ theme }) => ({
+                    height: 25,
+                    borderRadius: 0,
+
+                    [`& .${chipClasses.label}`]: {
+                        fontSize: theme.typography.small.fontSize,
+                        padding: 5
+                    }
+                })
+            }
+        ]
     },
     MuiButton: {
         variants: [
@@ -194,8 +199,12 @@ const components: Components = {
                         }
                     }
                 }
-
-
+            },
+            {
+                props: { variant: 'contained' },
+                style: {
+                    borderRadius: 0,
+                }
             },
             {
                 props: { size: 'small' },
@@ -230,6 +239,44 @@ const components: Components = {
                 "&.Mui-selected": {
                     'color': `${theme.palette.black.main}`
                 }
+            })) as any
+        }
+    },
+    MuiAccordion: {
+        styleOverrides: {
+            root: {
+                'boxShadow': 'none',
+            }
+        }
+    },
+    MuiAccordionSummary: {
+        styleOverrides: {
+            root: {
+                'padding': '0',
+                'minHeight': '50px',
+                '&.Mui-expanded': {
+                    'minHeight': '50px'
+                }
+            },
+            content: (({ theme }: { theme: Theme }) => ({
+                '&.Mui-expanded': {
+                    'marginTop': theme.spacing(2.4),
+                    'marginBottom': theme.spacing(2.4)
+                }
+            })) as any,
+            expandIconWrapper: (({ theme }: { theme: Theme }) => ({
+                'color': theme.palette.black.main,
+
+                '&.Mui-expanded': {
+                    'color': theme.palette.primary.main,
+                }
+            })) as any
+        }
+    },
+    MuiAccordionDetails: {
+        styleOverrides: {
+            root: (({ theme }: { theme: Theme }) => ({
+                'padding': `${theme.spacing(2.4)} 0`,
             })) as any
         }
     }

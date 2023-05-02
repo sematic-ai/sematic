@@ -1,31 +1,50 @@
 import Shell from "@sematic/common/src/layout/Shell";
-import RunDetails from "@sematic/common/src/pages/RunDetails";
+import RunDetailsComponent from "@sematic/common/src/pages/RunDetails";
+import RunSearchComponent from "@sematic/common/src/pages/RunSearch";
 import { Meta, StoryObj } from '@storybook/react';
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from "react-router-dom";
 
-const router = createBrowserRouter(
+const runDetailsRouter = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Shell />}>
-      <Route path="*" element={<RunDetails />} />
+      <Route path="*" element={<RunDetailsComponent />} />
     </Route>
   ));
 
-function Router() {
-  return <RouterProvider router={router} />;
+function RunDetailsRouter() {
+  return <RouterProvider router={runDetailsRouter} />;
 }
 
 
 // More on default export: https://storybook.js.org/docs/react/writing-stories/introduction#default-export
 export default {
   title: 'Sematic/Page',
-  component: Router,
+  component: RunDetailsRouter,
 
-} as Meta<typeof Router>;
+} as Meta<typeof RunDetailsRouter>;
 
-type Story = StoryObj<typeof Router>;
+export const RunDetails: StoryObj<typeof RunDetailsRouter> = {
+  render: () => <RunDetailsRouter />,
 
-export const Page: Story = {
-  render: () => <Router />,
+  parameters : {
+    layout: 'fullscreen' 
+  }
+};
+
+const runSearchRouter = createBrowserRouter(
+  createRoutesFromElements(
+    <Route path="/" element={<Shell />}>
+      <Route path="*" element={<RunSearchComponent />} />
+    </Route>
+  ));
+
+function RunSearchRouter() {
+  return <RouterProvider router={runSearchRouter} />;
+}
+
+
+export const RunSearch: StoryObj<typeof RunSearchRouter> = {
+  render: () => <RunSearchRouter />,
 
   parameters : {
     layout: 'fullscreen' 

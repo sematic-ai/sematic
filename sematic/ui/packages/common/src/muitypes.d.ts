@@ -20,6 +20,7 @@ declare module '@mui/material/styles' {
         lightGrey: PaletteColor;
         mediumGrey: PaletteColor;
         p3border: PaletteColor;
+        white: PaletteColor;
     }
 }
 
@@ -27,6 +28,9 @@ declare module '@mui/material/Button' {
     interface ButtonPropsVariantOverrides {
         logo: true;
         menu: true;
+    }
+    interface ButtonPropsColorOverrides {
+        white: true;
     }
 }
 
@@ -39,6 +43,12 @@ declare module '@mui/material/Typography' {
         logo: true;
         menu: true;
         code: true;
+    }
+}
+
+declare module '@mui/material/Chip' {
+    interface ChipPropsVariantOverrides {
+        tag: true;
     }
 }
 
