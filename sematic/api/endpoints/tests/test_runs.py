@@ -548,7 +548,12 @@ def test_update_future_states(
         }
 
         # Pretend the job disappeared
-        mock_k8s.refresh_job.side_effect = lambda job: replace(job, still_exists=False)
+        def refresh_job(job):
+            job.details = replace(job.details, still_exists=False, has_started=True)
+            job.update_status(job.details.get_status(time.time()))
+            return job
+
+        mock_k8s.refresh_job.side_effect = refresh_job
         mock_broadcast_graph_update.assert_not_called()
         response = test_client.post(
             "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}

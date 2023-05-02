@@ -416,7 +416,6 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
                     "Run appears to have been modified since being queried: %s", e
                 )
             state_changed_runs.append(run)
-            broadcast_graph_update(run.root_id, user=user)
 
         for original_job, updated_job in zip(jobs, updated_jobs or []):
             if original_job.latest_status != updated_job.latest_status:
