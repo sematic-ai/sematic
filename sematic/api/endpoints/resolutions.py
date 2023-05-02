@@ -44,6 +44,7 @@ from sematic.db.queries import (
     get_resources_by_root_id,
     get_run,
     get_run_graph,
+    get_stale_resolution_ids,
     save_graph,
     save_job,
     save_resolution,
@@ -57,6 +58,7 @@ logger = logging.getLogger(__name__)
 
 _GARBAGE_COLLECTION_QUERIES = {
     "orphaned_jobs": get_resolution_ids_with_orphaned_jobs,
+    "stale": get_stale_resolution_ids,
 }
 
 
@@ -515,5 +517,37 @@ def clean_orphaned_resolution_jobs_endpoint(
     return flask.jsonify(
         dict(
             content=[change.value for change in state_changes],
+        )
+    )
+
+
+@sematic_api.route("/api/v1/resolutions/<root_id>/clean", methods=["POST"])
+@authenticate
+def clean_stale_resolution_endpoint(
+    user: Optional[User], root_id: str
+) -> flask.Response:
+    resolution = get_resolution(root_id)
+    root_run = get_run(root_id)
+
+    if not FutureState[root_run.future_state].is_terminal():  # type: ignore
+        return jsonify_error(
+            f"Couldn't clean resolution {root_id} because its root run "
+            f"is in state {root_run.future_state}",
+            status=HTTPStatus.CONFLICT,
+        )
+
+    state_change = "UNMODIFIED"
+    if not ResolutionStatus[resolution.status].is_terminal():  # type: ignore
+        logger.warning(
+            "Marking resolution %s as failed because it wasn't properly terminated.",
+            root_id,
+        )
+        resolution.status = ResolutionStatus.FAILED
+        state_change = ResolutionStatus.FAILED.value
+        save_resolution(resolution)
+
+    return flask.jsonify(
+        dict(
+            content=state_change,
         )
     )

@@ -41,6 +41,7 @@ from sematic.db.queries import (
 from sematic.db.tests.fixtures import (  # noqa: F401
     allow_any_run_state_transition,
     make_job,
+    make_resolution,
     make_run,
     persisted_external_resource,
     persisted_resolution,
@@ -541,6 +542,34 @@ def test_clean_jobs(
         assert response.status_code == 200
         payload = response.json
         assert payload == {"content": ["DELETED"]}
+
+
+def test_clean_orphaned_runs(
+    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    persisted_run.future_state = FutureState.SCHEDULED
+    save_run(persisted_run)
+    resolution = make_resolution(
+        root_id=persisted_run.id, status=ResolutionStatus.RUNNING
+    )
+    save_resolution(resolution)
+
+    response = test_client.post(f"/api/v1/runs/{persisted_run.id}/clean")
+
+    # resolution not terminal yet
+    assert response.status_code == 409
+
+    resolution.status = ResolutionStatus.CANCELED
+    save_resolution(resolution)
+
+    response = test_client.post(f"/api/v1/runs/{persisted_run.id}/clean")
+    assert response.status_code == 200
+
+    payload = response.json
+    assert payload == {"content": "FAILED"}
+    assert (
+        get_run(persisted_run.id).future_state in FutureState.terminal_state_strings()
+    )
 
 
 @mock.patch("sematic.api.endpoints.runs.save_event_metrics")
