@@ -1,5 +1,4 @@
 import React from "react";
-import { User } from "@sematic/common/src/Models";
 
 export const AppContext = React.createContext<{
   authenticationEnabled: boolean;
@@ -12,11 +11,6 @@ export const AppContext = React.createContext<{
     }
   };
 } | null>(null);
-
-export const UserContext = React.createContext<{
-  user: User | null;
-  signOut: (() => void) | null;
-}>({ user: null, signOut: null });
 
 export default AppContext;
   

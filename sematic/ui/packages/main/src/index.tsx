@@ -1,32 +1,33 @@
-import ReactDOM from "react-dom/client";
-import posthog, { Properties } from 'posthog-js';
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
-import "./index.css";
-import { Route, useNavigate, RouterProvider, createRoutesFromElements, createBrowserRouter, redirect, Outlet } from "react-router-dom";
-import PipelineIndex from "./pipelines/PipelineIndex";
-import RunView from "./pipelines/PipelineRunView";
-import Shell from "./components/Shell";
-import Home from "./Home";
+import UserContext from "@sematic/common/src/context/UserContext";
+import { useAtom } from "jotai";
+import { RESET } from "jotai/utils";
+import posthog, { Properties } from 'posthog-js';
 import React, { useCallback, useMemo } from "react";
+import ReactDOM from "react-dom/client";
+import { Outlet, Route, RouterProvider, createBrowserRouter, createRoutesFromElements, redirect, useNavigate } from "react-router-dom";
+import Home from "./Home";
 import {
   VersionPayload,
 } from "./Payloads";
-import { sha1 } from "./utils";
-import { SnackBarProvider } from "./components/SnackBarProvider";
-import PipelineView from "./pipelines/PipelineView";
-import { RunIndex } from "./runs/RunIndex";
-import { setupPostHogOptout } from "./postHogManager";
-import LoginPage from "./login";
-import { ExtractContextType } from "./components/utils/typings";
-import AppContext, { UserContext } from "./appContext";
-import { useAuthentication, userAtom } from "./hooks/appHooks";
-import Loading from "./components/Loading";
-import { useAtom } from "jotai";
-import { RESET } from "jotai/utils";
+import AppContext from "./appContext";
 import EnvironmentProvider from "./components/EnvironmentProvider";
+import Loading from "./components/Loading";
+import Shell from "./components/Shell";
+import { SnackBarProvider } from "./components/SnackBarProvider";
+import { ExtractContextType } from "./components/utils/typings";
+import { useAuthentication, userAtom } from "./hooks/appHooks";
+import "./index.css";
+import LoginPage from "./login";
+import PipelineIndex from "./pipelines/PipelineIndex";
+import RunView from "./pipelines/PipelineRunView";
+import PipelineView from "./pipelines/PipelineView";
+import { setupPostHogOptout } from "./postHogManager";
+import { RunIndex } from "./runs/RunIndex";
+import { sha1 } from "./utils";
 
 export const EnvContext = React.createContext<Map<string, string>>(new Map());
 
