@@ -462,11 +462,13 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
         )
 
     result_list = []
+    modified_root_runs = set()
     state_changed_runs = []
     for run_id, (future_state, jobs) in db_status_dict.items():
         new_future_state_value = future_state.value
         run, updated_jobs = _get_run_and_jobs_if_modified(run_id, future_state, jobs)
         if run is not None:
+            modified_root_runs.add(run.root_id)
             new_future_state_value = run.future_state
             try:
                 save_run(run)
@@ -475,7 +477,6 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
                     "Run appears to have been modified since being queried: %s", e
                 )
             state_changed_runs.append(run)
-            broadcast_graph_update(run.root_id, user=user)
 
         for original_job, updated_job in zip(jobs, updated_jobs or []):
             if original_job.latest_status != updated_job.latest_status:
@@ -488,6 +489,17 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
                 future_state=new_future_state_value,
             )
         )
+
+    for root_id in modified_root_runs:
+        # modified_root_runs will contain only
+        # 0 or 1 root id, unless the caller asked
+        # for updates about runs in multiple
+        # resolutions at once.
+
+        # Done outside the for loop over db_status_dict.items()
+        # to minimize broadcasts for high fan-out pipelines where
+        # many runs from one root pipeline may happen at once.
+        broadcast_graph_update(root_id, user=user)
 
     save_event_metrics(MetricEvent.run_state_changed, state_changed_runs, user)
 
