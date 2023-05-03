@@ -180,7 +180,6 @@ class BuildConfig:
     """
 
     version: int
-    project: str
     image_script: Optional[str] = None
     base_uri: Optional[ImageURI] = None
     build: Optional[SourceBuildConfig] = None
@@ -201,9 +200,6 @@ class BuildConfig:
                 f"Unsupported build schema version! Expected: {BUILD_SCHEMA_VERSION}; "
                 f"got: {self.version}!"
             )
-
-        if not self.project:
-            raise BuildConfigurationError("`project` must be non-empty!")
 
         if (
             self.image_script is None
