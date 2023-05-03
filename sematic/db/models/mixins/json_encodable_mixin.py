@@ -35,9 +35,21 @@ class JSONEncodableMixin:
 
     @classmethod
     def field_from_json_encodable(cls, column: Column, json_encodable):
-        field_name = column.info.get(ALIAS_KEY, column.key)
-
-        return _from_json_encodable(json_encodable[field_name], column)
+        field_name = column.key
+        field_alias = column.info.get(
+            ALIAS_KEY,
+            column.key,
+        )
+        if (
+            field_name not in json_encodable and
+            field_alias in json_encodable
+        ):
+            field_name = field_alias
+           
+        return _from_json_encodable(
+            json_encodable[field_name],
+            column,
+        )
 
 
 JSON_KEY = "json"
