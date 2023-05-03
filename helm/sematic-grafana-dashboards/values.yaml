@@ -1,2 +1,11 @@
-sematic_server_namespace: default
 sematic_server_dashboard_url: https://my.sematic
+datasources:
+  loki:
+    type: "loki"
+    uid: "XXXXAAAABBBBCCCCC"
+  prometheus:
+    type: "prometheus"
+    uid: "prometheus"
+  grafana:
+    type: "grafana"
+    uid: "-- Grafana --"
