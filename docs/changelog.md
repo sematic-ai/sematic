@@ -5,7 +5,16 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.29.0]
+    * [feature] Garbage collection CRON job
+    * [feature] Enable customization of local storage path
+    * [feature] Add Sematic Grafana dashboard as helm package
+    * [feature] Add support for function timeout
+    * [improvement] Enable backward logs scrolling
+    * [improvement] Rename `inline=False` to `standalone=True`
     * [deprecation] Remove direct support for matplotlib figures, use `Image` instead
+    * [bugfix] Constraint plotly version for MNIST example
+    * [bugfix] Fix Kuberay autoscale
 * [0.28.1](https://pypi.org/project/sematic/0.28.1/)
     * [improvement] Allow selecting S3 paths in UI
     * [improvement] Backend logging improvements
