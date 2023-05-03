@@ -6,6 +6,7 @@ import typing
 import uuid
 from dataclasses import asdict, replace
 from unittest import mock
+from urllib.parse import urlencode
 
 # Third-party
 import flask.testing
@@ -40,6 +41,7 @@ from sematic.db.queries import (
 from sematic.db.tests.fixtures import (  # noqa: F401
     allow_any_run_state_transition,
     make_job,
+    make_resolution,
     make_run,
     persisted_external_resource,
     persisted_resolution,
@@ -80,6 +82,17 @@ def mock_broadcast_graph_update():
         "sematic.api.endpoints.runs.broadcast_graph_update"
     ) as mock_broadcast:
         yield mock_broadcast
+
+
+@pytest.fixture
+def mock_get_run_ids_with_orphaned_jobs():
+    with mock.patch(
+        "sematic.api.endpoints.runs._GARBAGE_COLLECTION_QUERIES"
+    ) as mock_query_dict:
+        mock_query = mock.MagicMock()
+        mock_query_dict.keys = lambda: ["orphaned_jobs"]
+        mock_query_dict.__getitem__ = lambda _, __: mock_query
+        yield mock_query
 
 
 def test_list_runs_empty(
@@ -413,6 +426,36 @@ def test_list_runs_search_tags(
     assert run3.id in ids
 
 
+def test_list_runs_search_orphaned_jobs(
+    mock_auth,  # noqa: F811
+    mock_get_run_ids_with_orphaned_jobs,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+):
+    runs = (
+        make_run(name="Fox"),
+        make_run(name="Falco"),
+        make_run(name="Slippy"),
+        make_run(name="Peppy"),
+    )
+    mock_get_run_ids_with_orphaned_jobs.return_value = [r.id for r in runs]
+
+    filters = {"orphaned_jobs": {"eq": True}}
+    query_params = {
+        "filters": json.dumps(filters),
+        "fields": json.dumps(["id"]),
+    }
+    response = test_client.get("/api/v1/runs?{}".format(urlencode(query_params)))
+
+    assert response.status_code == 200
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == len(runs)
+    ids = [result["id"] for result in payload["content"]]
+    assert set(ids) == {r.id for r in runs}
+
+
 def test_get_run_endpoint(
     mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
@@ -507,6 +550,34 @@ def test_clean_jobs(
         assert response.status_code == 200
         payload = response.json
         assert payload == {"content": ["DELETED"]}
+
+
+def test_clean_orphaned_runs(
+    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    persisted_run.future_state = FutureState.SCHEDULED
+    save_run(persisted_run)
+    resolution = make_resolution(
+        root_id=persisted_run.id, status=ResolutionStatus.RUNNING
+    )
+    save_resolution(resolution)
+
+    response = test_client.post(f"/api/v1/runs/{persisted_run.id}/clean")
+
+    # resolution not terminal yet
+    assert response.status_code == 409
+
+    resolution.status = ResolutionStatus.CANCELED
+    save_resolution(resolution)
+
+    response = test_client.post(f"/api/v1/runs/{persisted_run.id}/clean")
+    assert response.status_code == 200
+
+    payload = response.json
+    assert payload == {"content": "FAILED"}
+    assert (
+        get_run(persisted_run.id).future_state in FutureState.terminal_state_strings()
+    )
 
 
 @mock.patch("sematic.api.endpoints.runs.save_event_metrics")

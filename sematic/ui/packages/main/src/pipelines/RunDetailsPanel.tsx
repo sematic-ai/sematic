@@ -1,16 +1,16 @@
 import { Box, Typography } from "@mui/material";
 import { styled } from "@mui/system";
 import { Artifact, Edge, Resolution, Run } from "@sematic/common/src/Models";
+import CopyButton from "@sematic/common/src/component/CopyButton";
+import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
+import UserContext from "@sematic/common/src/context/UserContext";
 import { useCallback, useContext, useMemo } from "react";
-import { UserContext } from "src/appContext";
 import { ActionMenu, ActionMenuItem } from "src/components/ActionMenu";
 import CalculatorPath from "src/components/CalculatorPath";
-import CopyButton from "@sematic/common/src/component/CopyButton";
 import Docstring from "src/components/Docstring";
 import RunId from "src/components/RunId";
 import RunStateChip from "src/components/RunStateChip";
 import { RunTime } from "src/components/RunTime";
-import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
 import Tags from "src/components/Tags";
 import { ExtractContextType } from "src/components/utils/typings";
 import { useGraphContext } from "src/hooks/graphHooks";
@@ -28,6 +28,7 @@ const StyledText = styled('span')`
 
 const EnclosingBoxContainer = styled(Box)`
   box-sizing: border-box;
+  min-height: 100%;
 `
 
 const HeaderBox = styled(Box)`

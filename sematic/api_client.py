@@ -2,6 +2,7 @@
 import json
 import logging
 from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, cast
+from urllib.parse import urlencode
 
 # Third-party
 import requests
@@ -421,10 +422,24 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
     ]
 
 
-def get_runs_with_orphaned_jobs() -> List[str]:
+def get_run_ids_with_orphaned_jobs() -> List[str]:
     """Get ids of runs that have terminated, which still have non-terminal jobs."""
-    response = _get("/runs/with_orphaned_jobs")
-    return response["content"]
+    return _search_for_gc_runs("orphaned_jobs")
+
+
+def get_orphaned_run_ids() -> List[str]:
+    """Get ids of runs that have not terminated, which have a terminal resolution."""
+    return _search_for_gc_runs("orphaned")
+
+
+def _search_for_gc_runs(filter_name: str) -> List[str]:
+    filters = {filter_name: {"eq": True}}
+    query_params = {
+        "filters": json.dumps(filters),
+        "fields": json.dumps(["id"]),
+    }
+    response = _get("/runs?{}".format(urlencode(query_params)))
+    return [run["id"] for run in response["content"]]
 
 
 def clean_jobs_for_run(run_id: str, force: bool) -> List[str]:
@@ -433,10 +448,36 @@ def clean_jobs_for_run(run_id: str, force: bool) -> List[str]:
     return response["content"]
 
 
-def get_resolutions_with_orphaned_jobs() -> List[str]:
-    """Get ids of resolutions that have terminated which still have non-terminal jobs."""
-    response = _get("/resolutions/with_orphaned_jobs")
+def clean_orphaned_run(run_id: str) -> str:
+    """Clean up a run whose resolution has terminated."""
+    response = _post(f"/runs/{run_id}/clean", retry=True)
     return response["content"]
+
+
+def clean_stale_resolution(run_id: str) -> str:
+    """Clean up a resolution whose run has terminated."""
+    response = _post(f"/resolutions/{run_id}/clean", retry=True)
+    return response["content"]
+
+
+def get_resolution_ids_with_orphaned_jobs() -> List[str]:
+    """Get ids of resolutions that have terminated which still have non-terminal jobs."""
+    return _search_for_gc_resolutions("orphaned_jobs")
+
+
+def get_resolutions_with_stale_statuses() -> List[str]:
+    """Get ids of resolutions that have terminated which still have non-terminal jobs."""
+    return _search_for_gc_resolutions("stale")
+
+
+def _search_for_gc_resolutions(filter_name: str) -> List[str]:
+    filters = {filter_name: {"eq": True}}
+    query_params = {
+        "filters": json.dumps(filters),
+        "fields": json.dumps(["root_id"]),
+    }
+    response = _get("/resolutions?{}".format(urlencode(query_params)))
+    return [resolution["root_id"] for resolution in response["content"]]
 
 
 def clean_orphaned_jobs_for_resolution(root_run_id: str, force: bool) -> List[str]:
