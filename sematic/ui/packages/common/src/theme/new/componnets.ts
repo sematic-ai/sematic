@@ -183,7 +183,12 @@ const components: Components = {
                     }
                 })
             }
-        ]
+        ],
+        styleOverrides: {
+            deleteIcon: {
+                marginLeft: 0
+            }
+        }
     },
     MuiButton: {
         variants: [
