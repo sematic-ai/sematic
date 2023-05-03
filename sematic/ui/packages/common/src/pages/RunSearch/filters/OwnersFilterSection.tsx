@@ -3,9 +3,8 @@ import Checkbox from '@mui/material/Checkbox';
 import { collapseClasses } from '@mui/material/Collapse';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormGroup from '@mui/material/FormGroup';
-import { paperClasses } from '@mui/material/Paper';
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
-import CollapseableFilterSection from 'src/pages/RunSearch/filters/CollapseableFilterSection';
+import { ScrollableCollapseableFilterSection } from 'src/pages/RunSearch/filters/CollapseableFilterSection';
 import { ResettableHandle } from 'src/pages/RunSearch/filters/common';
 import theme from "src/theme/new";
 
@@ -20,23 +19,6 @@ const Container = styled.div`
     margin-bottom: 2px;
 
     overflow-y: auto;
-`;
-
-const StyledCollapseableFilterSection = styled(CollapseableFilterSection)`
-    flex-grow: 0;
-    flex-shrink: 1!important;
-    
-    & .${paperClasses.root} {
-        display: flex;
-        flex-direction: column;
-    }
-
-    & .${collapseClasses.root} {
-        flex-grow: 0;
-        flex-shrink: 1;
-        overflow-y: auto;
-        margin: 0 -${theme.spacing(5)};
-    }
 `;
 
 const StyledFormControlLabel = styled(FormControlLabel)`
@@ -73,7 +55,7 @@ const OwnersFilterSection = forwardRef<ResettableHandle, OwnersFilterSectionProp
         }
     }));
 
-    return <StyledCollapseableFilterSection title={"Owner"} >
+    return <ScrollableCollapseableFilterSection title={"Owner"} >
         <Container>
             <FormGroup>
                 <StyledFormControlLabel control={<Checkbox
@@ -88,7 +70,7 @@ const OwnersFilterSection = forwardRef<ResettableHandle, OwnersFilterSectionProp
                 )}
             </FormGroup>
         </Container>
-    </StyledCollapseableFilterSection>;
+    </ScrollableCollapseableFilterSection>;
 })
 
 export default OwnersFilterSection;
