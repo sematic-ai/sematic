@@ -84,7 +84,7 @@ data:
                 "uid": "{{ .Values.datasources.loki.uid }}"
               },
               "editorMode": "code",
-              "expr": "{job=~\".*sematic-worker-$run_id.*\", namespace=\"$namespace\"} |= `` |= `$log_filter`",
+              "expr": "{job=~\".*$run_id.*\", app != \"sematic-server\", namespace=\"$namespace\"} |= `` |= `$log_filter`",
               "key": "Q-6892653b-f7f6-47e4-b0e2-c2fa672f4049-0",
               "queryType": "range",
               "refId": "A"
@@ -179,7 +179,7 @@ data:
                 "uid": "{{ .Values.datasources.prometheus.uid }}"
               },
               "editorMode": "builder",
-              "expr": "avg(container_memory_working_set_bytes{pod=~\".*sematic-worker-$run_id.*\", namespace=\"$namespace\"}) by (container_name, pod) / avg(cluster:namespace:pod_memory:active:kube_pod_container_resource_limits{pod=~\".*$run_id.*\", namespace=\"$namespace\", resource=\"memory\"}) by (container_name, pod)",
+              "expr": "avg(container_memory_working_set_bytes{pod=~\".*sematic-driver.*$run_id.*|.*sematic-worker.*$run_id.*\", namespace=\"$namespace\"}) by (container_name, pod) / avg(cluster:namespace:pod_memory:active:kube_pod_container_resource_limits{pod=~\".*sematic-driver.*$run_id.*|.*sematic-worker.*$run_id.*\", namespace=\"$namespace\", resource=\"memory\"}) by (container_name, pod)",
               "instant": true,
               "interval": "",
               "key": "Q-1d737459-4c0f-453b-8c26-201c3a996e5b-0",
@@ -189,6 +189,365 @@ data:
           ],
           "title": "Memory usage fraction (namespace: $namespace)",
           "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "{{ .Values.datasources.prometheus.type }}",
+            "uid": "{{ .Values.datasources.prometheus.uid }}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 24,
+            "x": 0,
+            "y": 23
+          },
+          "id": 1,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "{{ .Values.datasources.prometheus.type }}",
+                "uid": "{{ .Values.datasources.prometheus.uid }}"
+              },
+              "editorMode": "builder",
+              "expr": "sum by(pod) (rate(container_cpu_usage_seconds_total{pod=~\".*sematic-driver.*$run_id.*|.*sematic-worker.*$run_id.*\", container!=\"\", namespace=\"$namespace\"}[5m]))",
+              "key": "Q-24256308-758f-4d45-8012-d2bf78549d51-0",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "{{ .Values.datasources.prometheus.type }}",
+                "uid": "{{ .Values.datasources.prometheus.uid }}"
+              },
+              "key": "Q-9ed78180-0977-4e47-ba8f-1e275f7320b6-1",
+              "refId": "B"
+            }
+          ],
+          "title": "CPU usage (namespace: $namespace)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "{{ .Values.datasources.prometheus.type }}",
+            "uid": "{{ .Values.datasources.prometheus.uid }}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 34
+          },
+          "id": 6,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.1.7",
+          "targets": [
+            {
+              "datasource": {
+                "type": "{{ .Values.datasources.prometheus.type }}",
+                "uid": "{{ .Values.datasources.prometheus.uid }}"
+              },
+              "editorMode": "builder",
+              "expr": "count by(namespace) (kube_pod_info{pod=~\".*sematic-driver.*$run_id.*|.*sematic-worker.*$run_id.*\", namespace=\"$namespace\"})",
+              "interval": "",
+              "key": "Q-693b671a-5bcd-4843-bf39-d5aa26a57f99-0",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "{{ .Values.datasources.prometheus.type }}",
+                "uid": "{{ .Values.datasources.prometheus.uid }}"
+              },
+              "expr": "",
+              "interval": "",
+              "key": "Q-51e21a48-23cc-4c27-b4b0-64e3d64e35e5-1",
+              "refId": "B"
+            }
+          ],
+          "title": "Pod count (namespace: $namespace)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "{{ .Values.datasources.prometheus.type }}",
+            "uid": "{{ .Values.datasources.prometheus.uid }}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 34
+          },
+          "id": 11,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "last"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.1.7",
+          "targets": [
+            {
+              "datasource": {
+                "type": "{{ .Values.datasources.prometheus.type }}",
+                "uid": "{{ .Values.datasources.prometheus.uid }}"
+              },
+              "editorMode": "builder",
+              "expr": "count(kube_pod_tolerations{pod=~\".*sematic-driver.*$run_id.*|.*sematic-worker.*$run_id.*\", key=\"nvidia.com/gpu\", namespace=\"$namespace\"})",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "GPU pod count (namespace: $namespace)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "{{ .Values.datasources.prometheus.type }}",
+            "uid": "{{ .Values.datasources.prometheus.uid }}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "displayMode": "auto",
+                "inspect": false
+              },
+              "mappings": [],
+              "min": 1,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "pod"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 701
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 24,
+            "x": 0,
+            "y": 43
+          },
+          "id": 15,
+          "interval": "30s",
+          "options": {
+            "footer": {
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "frameIndex": 1,
+            "showHeader": true,
+            "sortBy": []
+          },
+          "pluginVersion": "9.1.7",
+          "targets": [
+            {
+              "datasource": {
+                "type": "{{ .Values.datasources.prometheus.type }}",
+                "uid": "{{ .Values.datasources.prometheus.uid }}"
+              },
+              "editorMode": "builder",
+              "exemplar": false,
+              "expr": "kube_pod_status_phase{pod=~\".*sematic-driver.*$run_id.*|.*sematic-worker.*$run_id.*\", namespace=\"$namespace\"} > 0",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "{{ "{{pod}}" }}",
+              "range": false,
+              "refId": "A"
+            }
+          ],
+          "title": "Currently running pods (namespace: $namespace)",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "Value": true,
+                  "__name__": true,
+                  "container": true,
+                  "endpoint": true,
+                  "instance": true,
+                  "job": true,
+                  "namespace": true,
+                  "service": true,
+                  "uid": true
+                },
+                "indexByName": {
+                  "Time": 2,
+                  "Value": 11,
+                  "__name__": 3,
+                  "container": 4,
+                  "endpoint": 5,
+                  "instance": 6,
+                  "job": 7,
+                  "namespace": 8,
+                  "phase": 1,
+                  "pod": 0,
+                  "service": 9,
+                  "uid": 10
+                },
+                "renameByName": {}
+              }
+            }
+          ],
+          "type": "table"
         }
       ],
       "refresh": "30s",
