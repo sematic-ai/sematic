@@ -666,11 +666,19 @@ def clean_orphaned_run_endpoint(user: Optional[User], run_id: str) -> flask.Resp
     state_change = "UNMODIFIED"
 
     if not FutureState[run.future_state].is_terminal():  # type: ignore
-        if FutureState.is_allowed_transition(run.future_state, FutureState.FAILED):
+
+        state_change = FutureState.FAILED.value
+
+        if run.future_state == FutureState.CREATED.value:
+            run.future_state = FutureState.CANCELED
+            run.ended_at = datetime.datetime.utcnow()
+            state_change = FutureState.CANCELED.value
+        elif FutureState.is_allowed_transition(run.future_state, FutureState.FAILED):
             run.future_state = FutureState.FAILED
+            run.failed_at = datetime.datetime.utcnow()
         else:
             run.future_state = FutureState.NESTED_FAILED
-        run.failed_at = datetime.datetime.utcnow()
+            run.failed_at = datetime.datetime.utcnow()
         if run.exception_metadata is None:
             run.exception_metadata = ExceptionMetadata.from_exception(
                 RuntimeError(
@@ -683,7 +691,6 @@ def clean_orphaned_run_endpoint(user: Optional[User], run_id: str) -> flask.Resp
             run.id,
         )
         save_run(run)
-        state_change = FutureState.FAILED.value
 
     return flask.jsonify(
         dict(

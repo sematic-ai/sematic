@@ -556,10 +556,14 @@ def test_clean_orphaned_runs(
     mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     persisted_run.future_state = FutureState.SCHEDULED
-    save_run(persisted_run)
+    child_run_1 = make_run(future_state=FutureState.CREATED, root_id=persisted_run.id)
+    child_run_2 = make_run(future_state=FutureState.RAN, root_id=persisted_run.id)
     resolution = make_resolution(
         root_id=persisted_run.id, status=ResolutionStatus.RUNNING
     )
+    runs = [persisted_run, child_run_1, child_run_2]
+    for run in runs:  # noqa: F402
+        save_run(run)
     save_resolution(resolution)
 
     response = test_client.post(f"/api/v1/runs/{persisted_run.id}/clean")
@@ -570,14 +574,16 @@ def test_clean_orphaned_runs(
     resolution.status = ResolutionStatus.CANCELED
     save_resolution(resolution)
 
-    response = test_client.post(f"/api/v1/runs/{persisted_run.id}/clean")
-    assert response.status_code == 200
+    for run in runs:
+        response = test_client.post(f"/api/v1/runs/{run.id}/clean")
+        assert response.status_code == 200
 
-    payload = response.json
-    assert payload == {"content": "FAILED"}
-    assert (
-        get_run(persisted_run.id).future_state in FutureState.terminal_state_strings()
-    )
+        payload = response.json
+        if run.future_state == FutureState.CREATED.value:
+            assert payload == {"content": "CANCELED"}
+        else:
+            assert payload == {"content": "FAILED"}
+        assert get_run(run.id).future_state in FutureState.terminal_state_strings()
 
 
 @mock.patch("sematic.api.endpoints.runs.save_event_metrics")
