@@ -124,11 +124,12 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
     contained_extra_filters, garbage_filters = get_gc_filters(
         request_args, list(_GARBAGE_COLLECTION_QUERIES.keys())
     )
+    if len(garbage_filters) == 0:
+        return _standard_list_runs(request_args)
+
     logger.info(
         "Searching for runs to garbage collect with filters: %s", garbage_filters
     )
-    if len(garbage_filters) == 0:
-        return _standard_list_runs(request_args)
 
     if contained_extra_filters or len(garbage_filters) > 1:
         return jsonify_error(
@@ -666,7 +667,6 @@ def clean_orphaned_run_endpoint(user: Optional[User], run_id: str) -> flask.Resp
     state_change = "UNMODIFIED"
 
     if not FutureState[run.future_state].is_terminal():  # type: ignore
-
         state_change = FutureState.FAILED.value
 
         if run.future_state == FutureState.CREATED.value:
