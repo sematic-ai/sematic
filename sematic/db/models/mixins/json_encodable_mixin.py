@@ -30,6 +30,7 @@ class JSONEncodableMixin:
             column.key: cls.field_from_json_encodable(column, json_encodable)
             for column in inspect(cls).attrs
             if column.key in json_encodable
+            or column.info.get(ALIAS_KEY) in json_encodable
         }
         return cls(**field_dict)
 
@@ -40,15 +41,13 @@ class JSONEncodableMixin:
             ALIAS_KEY,
             column.key,
         )
-        if (
-            field_name not in json_encodable and
-            field_alias in json_encodable
-        ):
-            field_name = field_alias
-           
+        payload_key = field_name
+        if field_name not in json_encodable and field_alias in json_encodable:
+            payload_key = field_alias
+
         return _from_json_encodable(
-            json_encodable[field_name],
-            column,
+            json_encodable[payload_key],
+            getattr(cls, field_name),  # type: ignore
         )
 
 
