@@ -106,7 +106,9 @@ class ImageURI:
             for generating a URI in the `<repository>:<tag>@<digest>` format.
         """
         if len(image.attrs.get("RepoTags", [])) == 0:
-            raise ValueError(f"Container image '{image.id}' does not have a defined tag!")
+            raise ValueError(
+                f"Container image '{image.id}' does not have a defined tag!"
+            )
 
         repository, tag = image.attrs["RepoTags"][0].split(":")
         return ImageURI(repository=repository, tag=tag, digest=image.id)
@@ -315,9 +317,7 @@ def _build(target: str) -> ImageURI:
 
     # TODO: configure the docker service connection string in the build file
     docker_client = docker.from_env()  # type: ignore
-    logger.info(
-        "Instantiated docker client for server: %s", docker_client.api.base_url
-    )
+    logger.info("Instantiated docker client for server: %s", docker_client.api.base_url)
 
     image, image_uri = _build_image(
         target=target, build_config=build_config, docker_client=docker_client
@@ -425,39 +425,41 @@ def _build_image(
     SystemExit:
         A subprocess exited with an unexpected code.
     """
-    if build_config.base_uri is not None:
-        return _build_image_from_base(
-            target=target, build_config=build_config, docker_client=docker_client
-        )
+    effective_base_uri = build_config.base_uri
 
     if build_config.image_script is not None:
-        return _execute_build_script(
-            target=target,
-            image_script=build_config.image_script,
-            docker_client=docker_client,
+        effective_base_uri = _execute_build_script(
+            target=target, image_script=build_config.image_script
         )
 
-    # should be unreachable code, here for a sanity check
-    raise BuildConfigurationError(
-        "Exactly one of `image_script` and `base_uri` must be specified!"
+    # appease mypy
+    assert effective_base_uri is not None
+
+    return _build_image_from_base(
+        target=target,
+        effective_base_uri=effective_base_uri,
+        build_config=build_config,
+        docker_client=docker_client,
     )
 
 
 def _build_image_from_base(
     target: str,
+    effective_base_uri: ImageURI,
     build_config: BuildConfig,
     docker_client: docker.DockerClient,  # type: ignore
 ) -> Tuple[Image, ImageURI]:
     """
     Builds the container image to use by adding layers to an existing base image.
     """
-    image_name = f"{build_config.project}:{build_config.push.get_tag()}"
-    logger.error("Building container image %s", image_name)
+    logger.info("Building image starting from base: %s", effective_base_uri)
 
     dockerfile_contents = _generate_dockerfile_contents(
-        target=target, build_config=build_config
+        base_uri=effective_base_uri,
+        source_build_config=build_config.build,
+        target=target if build_config.base_uri is not None else None,
     )
-    logger.error("Using Dockerfile:\n%s", dockerfile_contents)
+    logger.info("Using Dockerfile:\n%s", dockerfile_contents)
 
     # we have to create a tmp dockerfile and pass it instead of using the `fileobj` option
     # of the docker_client, because it does not work with contexts, so operations like
@@ -469,54 +471,61 @@ def _build_image_from_base(
         dockerfile.flush()
 
         optional_kwargs = dict()
-        if build_config.build.platform is not None:
+        if build_config.build is not None and build_config.build.platform is not None:
             optional_kwargs["platform"] = build_config.build.platform
 
         status_updates = docker_client.api.build(
             dockerfile=dockerfile.name,
             # use the project root as the context
+            # TODO: switch from project-relative paths to build file-relative paths
             path=os.getcwd(),
-            tag=image_name,
-            pull=True,
+            tag=str(effective_base_uri),
             decode=True,
-            **optional_kwargs
+            **optional_kwargs,
         )
 
     if status_updates is None:
-        logger.warning("Built image '%s' without any response", build_config.base_uri)
-        image = docker_client.images.get(image_name)
+        logger.warning("Built image '%s' without any response", effective_base_uri)
+        image = docker_client.images.get(str(effective_base_uri))
         return image, ImageURI.from_image(image)
 
     for status_update in status_updates:
         if "error" in status_update:
             logger.error(
-                "Image push error details: '%s'", str(status_update.get("errorDetail"))
+                "Image build error details: '%s'", str(status_update.get("errorDetail"))
             )
             raise BuildError(f"Unable to build image: {status_update['error']}")
 
         update_str = " ".join(sorted([f"{k}={v}" for k, v in status_update.items()]))
-        logger.error("Image build update: %s", update_str.strip())
+        logger.info("Image build update: %s", update_str.strip())
 
-    image = docker_client.images.get(image_name)
+    image = docker_client.images.get(str(effective_base_uri))
     return image, ImageURI.from_image(image)
 
 
-def _generate_dockerfile_contents(target: str, build_config: BuildConfig) -> str:
+def _generate_dockerfile_contents(
+    base_uri: ImageURI,
+    source_build_config: Optional[SourceBuildConfig],
+    target: Optional[str],
+) -> str:
     """
     Generates the Dockerfile contents based on the config, using templates.
-    """
-    dockerfile_contents = _DOCKERFILE_BASE_TEMPLATE.format(base_uri=build_config.base_uri)
 
-    if build_config.build.requirements is not None:
-        logger.error("Adding requirements file")
+    If the `target` parameter is specified, then the Dockerfile will be generated to copy
+    it even if no other source files are specified.
+    """
+    dockerfile_contents = _DOCKERFILE_BASE_TEMPLATE.format(base_uri=base_uri)
+
+    if source_build_config is not None and source_build_config.requirements is not None:
+        logger.info("Adding requirements file: %s", source_build_config.requirements)
         requirements_contents = _DOCKERFILE_REQUIREMENTS_TEMPLATE.format(
-            requirements_file=build_config.build.requirements
+            requirements_file=source_build_config.requirements
         )
         dockerfile_contents = f"{dockerfile_contents}{requirements_contents}"
 
-    if build_config.build.data is not None:
-        logger.error("Adding data files")
-        for data_glob in build_config.build.data:
+    if source_build_config is not None and source_build_config.data is not None:
+        logger.info("Adding data files: %s", source_build_config.data)
+        for data_glob in source_build_config.data:
             data_files = glob.glob(data_glob)
             if len(data_files) > 0:
                 for data_file in data_files:
@@ -524,9 +533,9 @@ def _generate_dockerfile_contents(target: str, build_config: BuildConfig) -> str
                         f"{dockerfile_contents}\nCOPY {data_file} {data_file}"
                     )
 
-    if build_config.build.src is not None:
-        logger.error("Adding source files")
-        for src_glob in build_config.build.src:
+    if source_build_config is not None and source_build_config.src is not None:
+        logger.info("Adding source files: %s", source_build_config.src)
+        for src_glob in source_build_config.src:
             src_files = glob.glob(src_glob)
             if len(src_files) > 0:
                 for scr_file in src_files:
@@ -534,20 +543,14 @@ def _generate_dockerfile_contents(target: str, build_config: BuildConfig) -> str
                         f"{dockerfile_contents}\nCOPY {scr_file} {scr_file}"
                     )
 
-    elif build_config.base_uri is not None:
-        logger.error("Adding target source file")
-        dockerfile_contents = (
-            f"{dockerfile_contents}\nCOPY {target} {target}"
-        )
+    elif target is not None:
+        logger.info("Adding target source file: %s", target)
+        dockerfile_contents = f"{dockerfile_contents}\nCOPY {target} {target}"
 
     return dockerfile_contents
 
 
-def _execute_build_script(
-    target: str,
-    image_script: str,
-    docker_client: docker.DockerClient,  # type: ignore
-) -> Tuple[Image, ImageURI]:
+def _execute_build_script(target: str, image_script: str) -> ImageURI:
     """
     Builds the container image to use by executing the specified script.
     """
@@ -576,9 +579,7 @@ def _execute_build_script(
             if subproc.returncode != 0:
                 raise SystemExit(subproc.returncode)
 
-            image_uri = ImageURI.from_uri(uri=raw_uri.strip())
-            image = docker_client.images.get(str(image_uri))
-            return image, image_uri
+            return ImageURI.from_uri(uri=raw_uri.strip())
 
     except BaseException as e:
         raise BuildError(
