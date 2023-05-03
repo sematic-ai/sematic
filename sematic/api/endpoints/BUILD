@@ -128,7 +128,10 @@ sematic_py_lib(
 sematic_py_lib(
     name = "meta",
     srcs = ["meta.py"],
-    pip_deps = ["flask"],
+    pip_deps = [
+        "flask",
+        "sqlalchemy",
+    ],
     deps = [
         "//sematic:versions",
         "//sematic/api:app",

@@ -1,5 +1,6 @@
 # Standard Library
 from typing import Any, Dict, cast
+from unittest import mock
 
 # Third-party
 import flask.testing
@@ -38,3 +39,15 @@ def test_versions(test_client: flask.testing.FlaskClient):  # noqa: F811
 
     assert tuple(payload["server"]) == CURRENT_VERSION
     assert tuple(payload["min_client_supported"]) == MIN_CLIENT_SERVER_SUPPORTS
+
+
+def test_health(
+    test_client: flask.testing.FlaskClient, test_db: mock.MagicMock  # noqa: F811
+):
+    response = test_client.get("/api/v1/meta/health")
+    payload = response.json
+    payload = cast(Dict[str, Any], payload)
+    assert payload == {
+        "api": {"healthy": True, "message": "API is healthy"},
+        "db": {"healthy": True, "message": "Basic database access verified"},
+    }
