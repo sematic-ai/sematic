@@ -5,6 +5,7 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+    * [deprecation] `Calculator` renamed to `Function`
 * [0.29.0](https://pypi.org/project/sematic/0.29.0/)
     * [feature] Garbage collection CRON job
     * [feature] Enable customization of local storage path

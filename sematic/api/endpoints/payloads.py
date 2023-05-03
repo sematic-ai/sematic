@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Protocol, Sequence
 
 # Sematic
 from sematic.db.models.resolution import Resolution
+from sematic.db.models.run import Run
 from sematic.db.queries import get_user, get_users_by_id
 
 logger = logging.getLogger(__name__)
