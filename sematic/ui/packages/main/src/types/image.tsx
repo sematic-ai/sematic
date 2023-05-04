@@ -3,7 +3,6 @@ import { useMemo } from "react";
 import { CommonValueViewProps } from "src/types/common";
 import { base64ArrayBuffer } from "src/base64ArrayBuffer";
 import useFetchBlob from "src/hooks/blobHooks";
-import Zoom from "react-medium-image-zoom";
 
 export default function ImageValueView(props: CommonValueViewProps) {
   const { valueSummary } = props;
@@ -26,13 +25,11 @@ export default function ImageValueView(props: CommonValueViewProps) {
 
   if (arrayBuffer) {
     return (
-      <Zoom>
-        <img
-          src={`data:${mime_type};base64,${imageBase64}`}
-          alt="Artifact rendering"
-          style={{ maxWidth: "900px" }}
-        />
-      </Zoom>
+      <img
+        src={`data:${mime_type};base64,${imageBase64}`}
+        alt="Artifact rendering"
+        style={{ maxWidth: "900px" }}
+      />
     );
   }
 
