@@ -580,3 +580,45 @@ class Graph:
         cloned_graph.sort_by(run_ids_by_reverse_execution_order)
 
         return cloned_graph
+
+    def first_incomplete_run(self) -> Optional[RunID]:
+        """Find the first run that would require executing it for a result.
+
+        Runs which are "Resolved" have a known output value, and runs which are
+        "Ran" no longer need to be executed since their children will determine
+        their output value.
+
+        The runs are traversed in execution order to identify the first one
+        that would require execution. Note that if there are runs that might
+        execute in parallel where multiple options could in principle execute
+        simultaneously but >1 of them are missing a result, the output of this
+        function has multiple possible output values. However, rerunning
+        starting from any of these values should have the same effect--all the
+        siblings that would need to be executed simultaneously will be.
+
+        Returns
+        -------
+        The first run id which would require an execution to determine its
+        output value. If the entire graph has already resolved, `None` will
+        be returned.
+        """
+        run_ids_by_execution_order = self._sorted_run_ids_by_layer(
+            run_sorter=self._execution_order
+        )
+        if len(run_ids_by_execution_order) == 0:
+            raise ValueError("This function cannot be called on an empty graph.")
+
+        doesnt_require_rerun_states = {
+            FutureState.RESOLVED.value,
+            FutureState.RAN.value,
+        }
+        runs_by_id = self._runs_by_id
+        root_run = runs_by_id[run_ids_by_execution_order[0]]
+        if root_run.future_state == FutureState.RESOLVED:
+            return None
+        requires_rerun = next(
+            run_id
+            for run_id in run_ids_by_execution_order
+            if runs_by_id[run_id].future_state not in doesnt_require_rerun_states
+        )
+        return requires_rerun
