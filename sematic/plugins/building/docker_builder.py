@@ -499,7 +499,7 @@ def _build_image_from_base(
         return image, ImageURI.from_image(image)
 
     for status_update in status_updates:
-        if "error" in status_update:
+        if "error" in status_update.keys():
             logger.error(
                 "Image build error details: '%s'", str(status_update.get("errorDetail"))
             )
@@ -664,7 +664,7 @@ def _push_image(
         return _reload_image_uri(image=image)
 
     for status_update in status_updates:
-        if "error" in status_update:
+        if "error" in status_update.keys():
             logger.error(
                 "Image push error details: '%s'", str(status_update.get("errorDetail"))
             )
