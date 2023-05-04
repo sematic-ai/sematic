@@ -9,6 +9,7 @@ import pytest
 from sematic.db.db import DB
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.metrics.metric_point import MetricPoint, MetricType
+from sematic.metrics.tests.fixtures import metric_points  # noqa: F401
 from sematic.plugins.abstract_metrics_storage import (
     GroupBy,
     MetricSeries,
@@ -17,42 +18,6 @@ from sematic.plugins.abstract_metrics_storage import (
 from sematic.plugins.metrics_storage.sql.models.metric_label import MetricLabel
 from sematic.plugins.metrics_storage.sql.models.metric_value import MetricValue
 from sematic.plugins.metrics_storage.sql.sql_metrics_storage import SQLMetricsStorage
-
-
-@pytest.fixture
-def metric_points():
-    metric_points = [
-        MetricPoint(
-            name="foo",
-            value=1,
-            metric_type=MetricType.GAUGE,
-            metric_time=datetime.datetime(2023, 4, 12),
-            labels=dict(function_path="foo"),
-        ),
-        MetricPoint(
-            name="foo",
-            value=0,
-            metric_type=MetricType.GAUGE,
-            metric_time=datetime.datetime(2023, 4, 11),
-            labels=dict(function_path="bar"),
-        ),
-        MetricPoint(
-            name="bar",
-            value=1,
-            metric_type=MetricType.COUNT,
-            metric_time=datetime.datetime(2023, 4, 12),
-            labels=dict(function_path="foo"),
-        ),
-        MetricPoint(
-            name="bar",
-            value=1,
-            metric_type=MetricType.COUNT,
-            metric_time=datetime.datetime(2023, 4, 11),
-            labels=dict(function_path="foo"),
-        ),
-    ]
-
-    return metric_points
 
 
 def test_store_metrics(test_db: DB, metric_points: List[MetricPoint]):  # noqa: F811
@@ -175,7 +140,7 @@ def test_get_aggregated_metrics(
     rollup: Union[int, Literal["auto"], None],
     expected_series: MetricSeries,
     test_db: DB,  # noqa: F811
-    metric_points: List[MetricPoint],
+    metric_points: List[MetricPoint],  # noqa: F811
 ):
     metrics_storage_plugin = SQLMetricsStorage()
     metrics_storage_plugin.store_metrics(metric_points)
@@ -199,7 +164,7 @@ def test_get_aggregated_metrics_rollup(
     expected_series_first_value,
     test_db: DB,  # noqa: F811
 ):
-    metric_points = [
+    metric_points = [  # noqa: F811
         MetricPoint(
             name="foo",
             metric_type=MetricType.COUNT,
@@ -230,7 +195,7 @@ def test_get_aggregated_metrics_rollup(
 
 def test_clear_metrics(
     test_db: DB,  # noqa: F811
-    metric_points: List[MetricPoint],
+    metric_points: List[MetricPoint],  # noqa: F811
 ):
     metrics_storage_plugin = SQLMetricsStorage()
     metrics_storage_plugin.store_metrics(metric_points)

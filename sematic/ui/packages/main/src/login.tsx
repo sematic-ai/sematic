@@ -2,15 +2,15 @@ import Alert from "@mui/material/Alert/Alert";
 import Paper from "@mui/material/Paper/Paper";
 import { CredentialResponse, GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import { User } from "@sematic/common/src/Models";
+import { useHttpClient } from "@sematic/common/src/hooks/httpHooks";
 import { useAtom } from "jotai";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import logo from "src/Fox.png";
+import { GoogleLoginPayload } from "src/Payloads";
 import AppContext from "src/appContext";
 import { ExtractContextType } from "src/components/utils/typings";
-import logo from "src/Fox.png";
 import { useAppContext, userAtom } from "src/hooks/appHooks";
-import { useHttpClient } from "src/hooks/httpHooks";
-import { GoogleLoginPayload } from "src/Payloads";
 
 interface GoogleLoginComponentProps {
   setUser: (user: User) => void;

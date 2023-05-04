@@ -21,12 +21,19 @@ data:
   AWS_S3_REGION: {{ .Values.aws.bucket_region | quote }}
   STORAGE: "sematic.plugins.storage.s3_storage.S3Storage"
 {{ end }}
+{{ if .Values.local_storage.enabled }}
+  STORAGE: "sematic.plugins.storage.local_storage.LocalStorage"
+{{ if .Values.local_storage.local_storage_path }}
+  LOCAL_STORAGE_PATH: {{ .Values.local_storage.local_storage_path | quote }}
+{{ end }}
+{{ end }}
 {{ if .Values.slack.enabled }}
   PUBLISH: "sematic.plugins.publishing.slack.SlackPublisher"
   SLACK_WEBHOOK_TOKEN: {{ .Values.slack.slack_webhook_token | quote }}
 {{ end }}
   KUBERNETES_NAMESPACE: {{ .Release.Namespace }}
   SEMATIC_WORKER_KUBERNETES_SA: {{ .Values.worker.service_account.name | quote }}
+  ALLOW_CUSTOM_SECURITY_CONTEXTS: {{ .Values.worker.can_customize_security_context | quote }}
   SEMATIC_WORKER_API_ADDRESS: "http://{{ .Release.Name }}"
 {{ if .Values.deployment.socket_io.dedicated }}
   SEMATIC_WORKER_SOCKET_IO_ADDRESS: {{ printf "http://%s-socketio" .Release.Name }}

@@ -6,6 +6,7 @@ import typing
 import uuid
 from dataclasses import asdict, replace
 from unittest import mock
+from urllib.parse import urlencode
 
 # Third-party
 import flask.testing
@@ -40,6 +41,7 @@ from sematic.db.queries import (
 from sematic.db.tests.fixtures import (  # noqa: F401
     allow_any_run_state_transition,
     make_job,
+    make_resolution,
     make_run,
     persisted_external_resource,
     persisted_resolution,
@@ -72,6 +74,25 @@ test_get_run_external_resource_auth = make_auth_test(
 def mock_load_log_lines():
     with mock.patch("sematic.api.endpoints.runs.load_log_lines") as mock_load:
         yield mock_load
+
+
+@pytest.fixture
+def mock_broadcast_graph_update():
+    with mock.patch(
+        "sematic.api.endpoints.runs.broadcast_graph_update"
+    ) as mock_broadcast:
+        yield mock_broadcast
+
+
+@pytest.fixture
+def mock_get_run_ids_with_orphaned_jobs():
+    with mock.patch(
+        "sematic.api.endpoints.runs._GARBAGE_COLLECTION_QUERIES"
+    ) as mock_query_dict:
+        mock_query = mock.MagicMock()
+        mock_query_dict.keys = lambda: ["orphaned_jobs"]
+        mock_query_dict.__getitem__ = lambda _, __: mock_query
+        yield mock_query
 
 
 def test_list_runs_empty(
@@ -405,6 +426,36 @@ def test_list_runs_search_tags(
     assert run3.id in ids
 
 
+def test_list_runs_search_orphaned_jobs(
+    mock_auth,  # noqa: F811
+    mock_get_run_ids_with_orphaned_jobs,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+):
+    runs = (
+        make_run(name="Fox"),
+        make_run(name="Falco"),
+        make_run(name="Slippy"),
+        make_run(name="Peppy"),
+    )
+    mock_get_run_ids_with_orphaned_jobs.return_value = [r.id for r in runs]
+
+    filters = {"orphaned_jobs": {"eq": True}}
+    query_params = {
+        "filters": json.dumps(filters),
+        "fields": json.dumps(["id"]),
+    }
+    response = test_client.get("/api/v1/runs?{}".format(urlencode(query_params)))
+
+    assert response.status_code == 200
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == len(runs)
+    ids = [result["id"] for result in payload["content"]]
+    assert set(ids) == {r.id for r in runs}
+
+
 def test_get_run_endpoint(
     mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
@@ -501,8 +552,46 @@ def test_clean_jobs(
         assert payload == {"content": ["DELETED"]}
 
 
-def test_update_future_states(
+def test_clean_orphaned_runs(
     mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    persisted_run.future_state = FutureState.SCHEDULED
+    child_run_1 = make_run(future_state=FutureState.CREATED, root_id=persisted_run.id)
+    child_run_2 = make_run(future_state=FutureState.RAN, root_id=persisted_run.id)
+    resolution = make_resolution(
+        root_id=persisted_run.id, status=ResolutionStatus.RUNNING
+    )
+    runs = [persisted_run, child_run_1, child_run_2]
+    for run in runs:  # noqa: F402
+        save_run(run)
+    save_resolution(resolution)
+
+    response = test_client.post(f"/api/v1/runs/{persisted_run.id}/clean")
+
+    # resolution not terminal yet
+    assert response.status_code == 409
+
+    resolution.status = ResolutionStatus.CANCELED
+    save_resolution(resolution)
+
+    for run in runs:
+        response = test_client.post(f"/api/v1/runs/{run.id}/clean")
+        assert response.status_code == 200
+
+        payload = response.json
+        if run.future_state == FutureState.CREATED.value:
+            assert payload == {"content": "CANCELED"}
+        else:
+            assert payload == {"content": "FAILED"}
+        assert get_run(run.id).future_state in FutureState.terminal_state_strings()
+
+
+@mock.patch("sematic.api.endpoints.runs.save_event_metrics")
+def test_update_future_states(
+    mock_auth,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_broadcast_graph_update: mock.MagicMock,  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
         persisted_run.future_state = FutureState.CREATED
@@ -535,7 +624,26 @@ def test_update_future_states(
             "content": [{"future_state": "SCHEDULED", "run_id": persisted_run.id}]
         }
 
+        # Pretend the job disappeared
+        def refresh_job(job):
+            job.details = replace(job.details, still_exists=False, has_started=True)
+            job.update_status(job.details.get_status(time.time()))
+            return job
 
+        mock_k8s.refresh_job.side_effect = refresh_job
+        mock_broadcast_graph_update.assert_not_called()
+        response = test_client.post(
+            "/api/v1/runs/future_states", json={"run_ids": [persisted_run.id]}
+        )
+        assert response.status_code == 200
+        mock_broadcast_graph_update.assert_called_once()
+        payload = response.json
+        assert payload == {
+            "content": [{"future_state": "FAILED", "run_id": persisted_run.id}]
+        }
+
+
+@mock.patch("sematic.api.endpoints.runs.save_event_metrics")
 def test_update_run_disappeared(
     mock_auth,  # noqa: F811
     persisted_run: Run,  # noqa: F811
@@ -588,6 +696,7 @@ def test_update_run_disappeared(
         )
 
 
+@mock.patch("sematic.api.endpoints.runs.save_event_metrics")
 def test_update_run_k8_pod_error(
     mock_auth,  # noqa: F811
     persisted_run: Run,  # noqa: F811

@@ -42,14 +42,17 @@ SILENT_HELP = (
     "Only one of --silent or --cloud are allowed."
 )
 COLLATZ_N_WORKERS_HELP = "Number of workers when doing the Collatz load test"
+COLLATZ_MAX_N_WORKERS_HELP = (
+    "Maximum number of workers when doing the Collatz load test"
+)
 COLLATZ_N_TASKS_HELP = "Number of tasks to perform operations on for Collatz load test"
 COLLATZ_WAIT_MINUTES_HELP = (
     "Number of minutes to wait before stopping the Collatz load test"
 )
 COLLATZ_MEMORY_GROWTH_FACTOR_HELP = (
     "For each Collatz task, how rapidly should memory usage grow per iteration in the "
-    "task? A factor of 1.25 grows at about a rate of an extra 25% per iteration, and is "
-    "enough to OOM for tasks around 100. 1.0 should be safe to not OOM."
+    "task? A factor of 1.25 grows at about a rate of an extra 25 percent per iteration, "
+    "and is enough to OOM for tasks around 100. 1.0 should be safe to not OOM."
 )
 MNIST_N_RATES_HELP = (
     "Number of different learning rates (independent training jobs) to try."
@@ -57,6 +60,10 @@ MNIST_N_RATES_HELP = (
 MNIST_N_EPOCHS_HELP = "Number of training epochs for each training job to try."
 MNIST_N_WORKERS_HELP = (
     "Number of Ray workers (including head) to use in the cluster. Set to 0 "
+    "(default) to disable MNIST load testing."
+)
+MNIST_MAX_N_WORKERS_HELP = (
+    "Max number of Ray workers (including head) to use in the cluster. Set to 0 "
     "(default) to disable MNIST load testing."
 )
 MNIST_WAIT_MINUTES_HELP = (
@@ -89,6 +96,13 @@ def _parse_args() -> Tuple[
         default=0,
         dest="collatz_n_workers",
         help=COLLATZ_N_WORKERS_HELP,
+    )
+    parser.add_argument(
+        "--collatz.max_n_workers",
+        type=int,
+        default=0,
+        dest="collatz_max_n_workers",
+        help=COLLATZ_MAX_N_WORKERS_HELP,
     )
     parser.add_argument(
         "--collatz.n_tasks",
@@ -132,6 +146,13 @@ def _parse_args() -> Tuple[
         default=0,
         dest="mnist_n_workers",
         help=MNIST_N_WORKERS_HELP,
+    )
+    parser.add_argument(
+        "--mnist.max_n_workers",
+        type=int,
+        default=0,
+        dest="mnist_max_n_workers",
+        help=MNIST_MAX_N_WORKERS_HELP,
     )
     parser.add_argument(
         "--mnist.wait_minutes",

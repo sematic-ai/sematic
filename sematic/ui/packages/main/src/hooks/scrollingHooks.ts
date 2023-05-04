@@ -1,5 +1,5 @@
+import { useLogger } from "@sematic/common/src/utils/logging";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useLogger } from "../utils";
 import { useSetTimeout } from "./setTimeoutHooks";
 
 const SCROLL_EVENTS = ['mousewheel', 'DOMMouseScroll', 'wheel', 'MozMousePixelScroll'];
@@ -170,6 +170,12 @@ export function useScrollTracker(
         checkHasScrolledToBottom();
     }, [refElement, checkHasScrolledToBottom]);
 
+    const scrollToTop = useCallback(() => {
+        const scroller = refElement.current;
+        scroller?.scrollTo(0, 0);
+        checkHasScrolledToBottom();
+    }, [refElement, checkHasScrolledToBottom]);
+
     useEffect(() => {
         const attachedDomElement = refElement.current;
 
@@ -186,6 +192,7 @@ export function useScrollTracker(
 
     return {
         hasReachedBottom,
-        scrollToBottom
+        scrollToBottom,
+        scrollToTop
     }
 }
