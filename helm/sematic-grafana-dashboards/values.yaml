@@ -1,4 +1,12 @@
+# Values provided in this file are only defaults, and in most cases will need
+# to be overridden by providing your own Helm `values.yaml` or command-line
+# arguments.  Not all of the values in this file need to be overridden,
+# but they are presented here as examples.
+#
+# See https://sematic-ai.github.io/helm-charts/ for more information.
+
 sematic_server_dashboard_url: https://my.sematic
+
 datasources:
   loki:
     type: "loki"
