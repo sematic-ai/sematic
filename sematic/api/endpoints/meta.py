@@ -110,4 +110,6 @@ def get_server_health() -> flask.Response:
     status = HTTPStatus.OK if db_healthy else HTTPStatus.SERVICE_UNAVAILABLE
     logger.info("Health: %s", payload)
 
-    return flask.jsonify(payload)
+    response = flask.jsonify(payload)
+    response.status_code = status
+    return response
