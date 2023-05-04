@@ -12,7 +12,7 @@ import sys
 import tempfile
 import time
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 # isort: off
 # there is a collision between the docker-py library and the sematic/docker directory
@@ -47,12 +47,12 @@ FROM {base_uri}
 WORKDIR /
 
 RUN which pip3 || apt update -y && apt install -y python3-pip
-RUN python3 -c "import distutils" || apt update -y && apt install --reinstall -y python3.9-distutils
+RUN python3 -c "import distutils" || apt update -y && apt install --reinstall -y python$(python3 -c "import sys; print(f'{{sys.version_info.major}}.{{sys.version_info.minor}}')")-distutils
 
 ENV PATH="/sematic/bin/:${{PATH}}"
-RUN echo '#!/bin/sh' > launch.sh && echo '/usr/bin/python3 -m sematic.resolvers.worker "$@"' >> launch.sh
-RUN chmod +x /launch.sh
-ENTRYPOINT ["/launch.sh"]
+RUN echo '#!/bin/sh' > entrypoint.sh && echo '/usr/bin/python3 -m sematic.resolvers.worker "$@"' >> entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 """  # noqa: E501
 
 _DOCKERFILE_REQUIREMENTS_TEMPLATE = """
@@ -180,6 +180,7 @@ class BuildConfig:
     """
 
     version: int
+    project: str
     image_script: Optional[str] = None
     base_uri: Optional[ImageURI] = None
     build: Optional[SourceBuildConfig] = None
@@ -198,8 +199,11 @@ class BuildConfig:
             # TODO: implement migration mechanism
             raise BuildConfigurationError(
                 f"Unsupported build schema version! Expected: {BUILD_SCHEMA_VERSION}; "
-                f"got: {self.version}!"
+                f"got: {self.version}"
             )
+
+        if self.project is None or len(self.project) == 0:
+            raise BuildConfigurationError("`project` must be specified and non-empty!")
 
         if (
             self.image_script is None
@@ -318,7 +322,7 @@ def _build(target: str) -> ImageURI:
     image, image_uri = _build_image(
         target=target, build_config=build_config, docker_client=docker_client
     )
-    logger.info("Built image: %s", repr(image_uri))
+    logger.info("Built local image: %s", repr(image_uri))
 
     build_image_uri = _push_image(
         image=image,
@@ -327,7 +331,7 @@ def _build(target: str) -> ImageURI:
         docker_client=docker_client,
     )
 
-    logger.info("Using image: '%s'", repr(build_image_uri))
+    logger.info("Using image: %s", repr(build_image_uri))
 
     return build_image_uri
 
@@ -448,18 +452,27 @@ def _build_image_from_base(
     """
     Builds the container image to use by adding layers to an existing base image.
     """
-    logger.info("Building image starting from base: %s", effective_base_uri)
+    if build_config.push is None:
+        built_image_name = f"{build_config.project}:default"
+    else:
+        built_image_name = f"{build_config.project}:{build_config.push.get_tag()}"
+
+    logger.info(
+        "Building image '%s' starting from base: %s",
+        built_image_name,
+        effective_base_uri,
+    )
 
     dockerfile_contents = _generate_dockerfile_contents(
         base_uri=effective_base_uri,
         source_build_config=build_config.build,
         target=target if build_config.base_uri is not None else None,
     )
-    logger.info("Using Dockerfile:\n%s", dockerfile_contents)
+    logger.debug("Using Dockerfile:\n%s", dockerfile_contents)
 
     # we have to create a tmp dockerfile and pass it instead of using the `fileobj` option
     # of the docker_client, because it does not work with contexts, so operations like
-    # COPY do not work, as there exists no working dir context to copy them from
+    # COPY do not work, as there exists no working dir context to copy the targets from
     # API: https://docker-py.readthedocs.io/en/stable/api.html#module-docker.api.build
     # Reported unresolved issue: https://github.com/docker/docker-py/issues/2105
     with tempfile.NamedTemporaryFile(mode="wt", delete=True) as dockerfile:
@@ -475,13 +488,13 @@ def _build_image_from_base(
             # use the project root as the context
             # TODO: switch from project-relative paths to build file-relative paths
             path=os.getcwd(),
-            tag=str(effective_base_uri),
+            tag=built_image_name,
             decode=True,
             **optional_kwargs,
         )
 
     if status_updates is None:
-        logger.warning("Built image '%s' without any response", effective_base_uri)
+        logger.warning("Built image '%s' without any response", built_image_name)
         image = docker_client.images.get(str(effective_base_uri))
         return image, ImageURI.from_image(image)
 
@@ -490,12 +503,15 @@ def _build_image_from_base(
             logger.error(
                 "Image build error details: '%s'", str(status_update.get("errorDetail"))
             )
-            raise BuildError(f"Unable to build image: {status_update['error']}")
+            raise BuildError(
+                f"Unable to build image '{built_image_name}': {status_update['error']}"
+            )
 
-        update_str = " ".join(sorted([f"{k}={v}" for k, v in status_update.items()]))
-        logger.info("Image build update: %s", update_str.strip())
+        update_str = _docker_status_update_to_str(status_update)
+        if update_str is not None:
+            logger.info("Image build update: %s", update_str)
 
-    image = docker_client.images.get(str(effective_base_uri))
+    image = docker_client.images.get(built_image_name)
     return image, ImageURI.from_image(image)
 
 
@@ -513,14 +529,14 @@ def _generate_dockerfile_contents(
     dockerfile_contents = _DOCKERFILE_BASE_TEMPLATE.format(base_uri=base_uri)
 
     if source_build_config is not None and source_build_config.requirements is not None:
-        logger.info("Adding requirements file: %s", source_build_config.requirements)
+        logger.debug("Adding requirements file: %s", source_build_config.requirements)
         requirements_contents = _DOCKERFILE_REQUIREMENTS_TEMPLATE.format(
             requirements_file=source_build_config.requirements
         )
         dockerfile_contents = f"{dockerfile_contents}{requirements_contents}"
 
     if source_build_config is not None and source_build_config.data is not None:
-        logger.info("Adding data files: %s", source_build_config.data)
+        logger.debug("Adding data files: %s", source_build_config.data)
         for data_glob in source_build_config.data:
             data_files = glob.glob(data_glob)
             if len(data_files) > 0:
@@ -530,7 +546,7 @@ def _generate_dockerfile_contents(
                     )
 
     if source_build_config is not None and source_build_config.src is not None:
-        logger.info("Adding source files: %s", source_build_config.src)
+        logger.debug("Adding source files: %s", source_build_config.src)
         for src_glob in source_build_config.src:
             src_files = glob.glob(src_glob)
             if len(src_files) > 0:
@@ -540,7 +556,7 @@ def _generate_dockerfile_contents(
                     )
 
     elif target is not None:
-        logger.info("Adding target source file: %s", target)
+        logger.debug("Adding target source file: %s", target)
         dockerfile_contents = f"{dockerfile_contents}\nCOPY {target} {target}"
 
     return dockerfile_contents
@@ -631,10 +647,7 @@ def _push_image(
         )
 
     logger.info(
-        "Tagged image '%s' in repository '%s' with tag '%s'",
-        image_uri,
-        repository,
-        tag,
+        "Tagged image '%s' in repository '%s' with tag '%s'", image_uri, repository, tag
     )
 
     status_updates = docker_client.images.push(
@@ -657,8 +670,9 @@ def _push_image(
             )
             raise BuildError(f"Unable to push image: {status_update['error']}")
 
-        update_str = " ".join(sorted([f"{k}={v}" for k, v in status_update.items()]))
-        logger.info("Image push update: %s", update_str.strip())
+        update_str = _docker_status_update_to_str(status_update)
+        if update_str is not None:
+            logger.info("Image push update: %s", update_str)
 
     return _reload_image_uri(image=image)
 
@@ -683,3 +697,23 @@ def _reload_image_uri(image: Image) -> ImageURI:  # type: ignore
     repository, tag = image.attrs["RepoTags"][0].split(":")
 
     return ImageURI(repository=repository, tag=tag, digest=digest)
+
+
+def _docker_status_update_to_str(status_update: Dict[str, Any]) -> Optional[str]:
+    """
+    Returns a textual representation of the status update dict received from the Docker
+    server, or None if it was devoid of useful information.
+    """
+    length = len(status_update)
+
+    if length == 0:
+        return None
+
+    if length == 1:
+        k, v = next(iter(status_update.items()))
+        if v is None or len(str(v).strip()) == 0:
+            # only one key with an empty value
+            return None
+        return f"{k}={str(v).strip()}"
+
+    return " ".join(sorted([f"{k}={str(v).strip()}" for k, v in status_update.items()]))
