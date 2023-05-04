@@ -551,7 +551,7 @@ class LocalResolver(SilentResolver):
         if isinstance(error, CalculatorError):
             reason = "Marked as failed because another run in the graph failed."
             resolution_status = ResolutionStatus.COMPLETE
-        elif isinstance(error, _ResolverRestartError):
+        elif isinstance(error, ResolverRestartError):
             reason = "Marked as failed because the resolver restarted mid-execution."
             resolution_status = ResolutionStatus.FAILED
         else:
@@ -601,7 +601,7 @@ class LocalResolver(SilentResolver):
             status == ResolutionStatus.RUNNING
             and current_status != ResolutionStatus.SCHEDULED
         ):
-            raise _ResolverRestartError(
+            raise ResolverRestartError(
                 "It appears that the resolver has restarted mid-execution. "
                 "The cluster may be under pressure."
             )
@@ -860,5 +860,5 @@ def make_edge_key(edge: Edge) -> str:
     )
 
 
-class _ResolverRestartError(RuntimeError):
+class ResolverRestartError(RuntimeError):
     pass

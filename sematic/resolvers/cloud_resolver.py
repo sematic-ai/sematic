@@ -20,7 +20,11 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
-from sematic.resolvers.local_resolver import LocalResolver, make_edge_key
+from sematic.resolvers.local_resolver import (
+    LocalResolver,
+    ResolverRestartError,
+    make_edge_key,
+)
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.utils.memoized_property import memoized_property
 
@@ -323,6 +327,19 @@ class CloudResolver(LocalResolver):
             value = api_client.get_artifact_value(output_artifact)
 
         self._update_future_with_value(future, value)
+
+    def _resolution_did_fail(self, error: Exception) -> None:
+        if isinstance(error, ResolverRestartError):
+            new_resolver = self.__class__(
+                cache_namespace=self._cache_namespace_str,
+                rerun_from=None,
+                detach=True,
+                max_parallelism=self._max_parallelism,
+                _base_image_tag=self._base_image_tag,
+            )
+            new_root_future = self._root_future.calculator(**self._root_future.kwargs)
+            new_resolver.resolve(new_root_future)
+        super()._resolution_did_fail(error)
 
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
         # Unlike LocalResolver._future_did_fail, we only care about
