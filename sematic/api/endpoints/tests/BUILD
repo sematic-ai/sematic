@@ -102,12 +102,15 @@ pytest_test(
     srcs = ["test_meta.py"],
     pip_deps = [
         "flask",
+        "sqlalchemy",
     ],
     deps = [
         "//sematic:versions",
         "//sematic/api:app",
         "//sematic/api/endpoints:meta",
         "//sematic/api/tests:fixtures",
+        "//sematic/db:db",
+        "//sematic/db/tests:fixtures",
         "//sematic/config:server_settings",
     ],
 )
