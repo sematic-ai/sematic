@@ -5,7 +5,10 @@
 #
 # See https://sematic-ai.github.io/helm-charts/ for more information.
 
-sematic_server_dashboard_url: https://my.sematic
+sematic_server_dashboard:
+  url: my.sematic
+  ssl: true
+  subdomain_namespace: false
 
 datasources:
   loki:

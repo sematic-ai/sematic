@@ -49,7 +49,18 @@ data:
           },
           "id": 3,
           "options": {
-            "content": "# Run ID\n\n# [$run_id]({{ .Values.sematic_server_dashboard_url }}/runs/$run_id)",
+            {{- if .Values.sematic_server_dashboard.ssl }}
+            {{- $proto := 'https://'
+            {{- else }}
+            {{- $proto := 'http://'
+            {{- end }}
+
+            {{- if .Values.sematic_server_dashboard.subdomain_namespace }}
+            {{- $base_url := printf "%s/$namespace.%s/runs/$run_id" $proto .Values.sematic_server_dashboard.url }}
+            {{- else }}
+            {{- $base_url := printf "%s/%s/runs/$run_id" $proto .Values.sematic_server_dashboard.url }}
+            {{- end }}
+            "content": "# Run ID\n\n# [$run_id]({{ $base_url }})",
             "mode": "markdown"
           },
           "pluginVersion": "9.1.7",
