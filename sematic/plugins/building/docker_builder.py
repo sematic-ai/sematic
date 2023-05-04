@@ -180,7 +180,6 @@ class BuildConfig:
     """
 
     version: int
-    project: str
     image_script: Optional[str] = None
     base_uri: Optional[ImageURI] = None
     build: Optional[SourceBuildConfig] = None
@@ -201,9 +200,6 @@ class BuildConfig:
                 f"Unsupported build schema version! Expected: {BUILD_SCHEMA_VERSION}; "
                 f"got: {self.version}"
             )
-
-        if self.project is None or len(self.project) == 0:
-            raise BuildConfigurationError("`project` must be specified and non-empty!")
 
         if (
             self.image_script is None
@@ -452,11 +448,7 @@ def _build_image_from_base(
     """
     Builds the container image to use by adding layers to an existing base image.
     """
-    if build_config.push is None:
-        built_image_name = f"{build_config.project}:default"
-    else:
-        built_image_name = f"{build_config.project}:{build_config.push.get_tag()}"
-
+    built_image_name = _get_local_image_name(target=target, build_config=build_config)
     logger.info(
         "Building image '%s' starting from base: %s",
         built_image_name,
@@ -717,3 +709,19 @@ def _docker_status_update_to_str(status_update: Dict[str, Any]) -> Optional[str]
         return f"{k}={str(v).strip()}"
 
     return " ".join(sorted([f"{k}={str(v).strip()}" for k, v in status_update.items()]))
+
+
+def _get_local_image_name(target: str, build_config: BuildConfig) -> str:
+    """
+    Returns a local name to give to an image build for the specified target script,
+    according to the specified build configuration.
+    """
+    # TODO: switch from project-relative paths to build file-relative paths
+    dir_name = os.path.basename(os.path.dirname(os.path.abspath(target)))
+    if dir_name == "/":
+        dir_name = "default"
+
+    if build_config.push is None:
+        return f"{dir_name}:default"
+
+    return f"{dir_name}:{build_config.push.get_tag()}"
