@@ -84,7 +84,7 @@ data:
                 "uid": "{{ .Values.datasources.loki.uid }}"
               },
               "editorMode": "code",
-              "expr": "{job=~\".*$run_id.*\", app != \"sematic-server\", namespace=\"$namespace\"} |= `` |= `$log_filter`",
+              "expr": "{job=~\".*$sematic-worker-run_id.*|.*$sematic-driver-run_id.*\", app != \"sematic-server\", namespace=\"$namespace\"} |= `` |= `$log_filter`",
               "key": "Q-6892653b-f7f6-47e4-b0e2-c2fa672f4049-0",
               "queryType": "range",
               "refId": "A"
