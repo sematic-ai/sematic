@@ -51,12 +51,12 @@ data:
           "options": {
             {{- $proto := "https://" }}
             {{- if not .Values.sematic_server_dashboard.ssl }}
-            {{- $proto := "http://" }}
+            {{- $proto = "http://" }}
             {{- end }}
 
-            {{- $base_url := printf "%s/%s/runs/$run_id" $proto .Values.sematic_server_dashboard.url }}
+            {{- $base_url := printf "%s%s/runs/$run_id" $proto .Values.sematic_server_dashboard.url }}
             {{- if .Values.sematic_server_dashboard.subdomain_namespace }}
-            {{- $base_url := printf "%s/$namespace.%s/runs/$run_id" $proto .Values.sematic_server_dashboard.url }}
+            {{- $base_url = printf "%s%s.%s/runs/$run_id" $proto "$namespace" .Values.sematic_server_dashboard.url }}
             {{- end }}
             "content": "# Run ID\n\n# [$run_id]({{ $base_url }})",
             "mode": "markdown"
