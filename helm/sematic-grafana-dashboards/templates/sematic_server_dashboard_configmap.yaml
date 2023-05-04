@@ -719,8 +719,8 @@ data:
           {
             "current": {
               "selected": false,
-              "text": "default",
-              "value": "default"
+              "text": "{{ .Values.namespaces.default }}",
+              "value": "{{ .Values.namespaces.default }}"
             },
             "description": "",
             "hide": 0,
@@ -728,13 +728,16 @@ data:
             "multi": false,
             "name": "namespace",
             "options": [
+              {{- $last := sub (len .Values.namespaces.available) 1 }}
+              {{- range $index, $namespace := .Values.namespaces.available }}
               {
                 "selected": false,
-                "text": "default",
-                "value": "default"
-              }
+                "text": {{ quote $namespace }},
+                "value": {{ quote $namespace }}
+              }{{ if ne $index $last }},{{ end }}
+              {{- end }}
             ],
-            "query": "default",
+            "query": "",
             "queryValue": "",
             "skipUrlSync": false,
             "type": "custom"

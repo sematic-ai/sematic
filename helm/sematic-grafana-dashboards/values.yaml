@@ -9,3 +9,9 @@ datasources:
   grafana:
     type: "grafana"
     uid: "-- Grafana --"
+
+namespaces:
+  default: foo
+  available:
+    - bar
+    - baz
