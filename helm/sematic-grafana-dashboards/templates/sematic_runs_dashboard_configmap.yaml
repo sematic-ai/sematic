@@ -49,16 +49,14 @@ data:
           },
           "id": 3,
           "options": {
-            {{- if .Values.sematic_server_dashboard.ssl }}
-            {{- $proto := 'https://'
-            {{- else }}
-            {{- $proto := 'http://'
+            {{- $proto := "https://" }}
+            {{- if not .Values.sematic_server_dashboard.ssl }}
+            {{- $proto := "http://" }}
             {{- end }}
 
+            {{- $base_url := printf "%s/%s/runs/$run_id" $proto .Values.sematic_server_dashboard.url }}
             {{- if .Values.sematic_server_dashboard.subdomain_namespace }}
             {{- $base_url := printf "%s/$namespace.%s/runs/$run_id" $proto .Values.sematic_server_dashboard.url }}
-            {{- else }}
-            {{- $base_url := printf "%s/%s/runs/$run_id" $proto .Values.sematic_server_dashboard.url }}
             {{- end }}
             "content": "# Run ID\n\n# [$run_id]({{ $base_url }})",
             "mode": "markdown"
@@ -95,7 +93,7 @@ data:
                 "uid": "{{ .Values.datasources.loki.uid }}"
               },
               "editorMode": "code",
-              "expr": "{job=~\".*$sematic-worker-run_id.*|.*$sematic-driver-run_id.*\", app != \"sematic-server\", namespace=\"$namespace\"} |= `` |= `$log_filter`",
+              "expr": "{job=~\".*sematic-worker-$run_id.*|.*sematic-driver-$run_id.*\", app != \"sematic-server\", namespace=\"$namespace\"} |= `` |= `$log_filter`",
               "key": "Q-6892653b-f7f6-47e4-b0e2-c2fa672f4049-0",
               "queryType": "range",
               "refId": "A"
