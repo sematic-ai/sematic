@@ -124,11 +124,12 @@ def list_runs_endpoint(user: Optional[User]) -> flask.Response:
     contained_extra_filters, garbage_filters = get_gc_filters(
         request_args, list(_GARBAGE_COLLECTION_QUERIES.keys())
     )
+    if len(garbage_filters) == 0:
+        return _standard_list_runs(request_args)
+
     logger.info(
         "Searching for runs to garbage collect with filters: %s", garbage_filters
     )
-    if len(garbage_filters) == 0:
-        return _standard_list_runs(request_args)
 
     if contained_extra_filters or len(garbage_filters) > 1:
         return jsonify_error(
@@ -462,11 +463,13 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
         )
 
     result_list = []
+    modified_root_runs = set()
     state_changed_runs = []
     for run_id, (future_state, jobs) in db_status_dict.items():
         new_future_state_value = future_state.value
         run, updated_jobs = _get_run_and_jobs_if_modified(run_id, future_state, jobs)
         if run is not None:
+            modified_root_runs.add(run.root_id)
             new_future_state_value = run.future_state
             try:
                 save_run(run)
@@ -475,7 +478,6 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
                     "Run appears to have been modified since being queried: %s", e
                 )
             state_changed_runs.append(run)
-            broadcast_graph_update(run.root_id, user=user)
 
         for original_job, updated_job in zip(jobs, updated_jobs or []):
             if original_job.latest_status != updated_job.latest_status:
@@ -488,6 +490,17 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
                 future_state=new_future_state_value,
             )
         )
+
+    for root_id in modified_root_runs:
+        # modified_root_runs will contain only
+        # 0 or 1 root id, unless the caller asked
+        # for updates about runs in multiple
+        # resolutions at once.
+
+        # Done outside the for loop over db_status_dict.items()
+        # to minimize broadcasts for high fan-out pipelines where
+        # many runs from one root pipeline may happen at once.
+        broadcast_graph_update(root_id, user=user)
 
     save_event_metrics(MetricEvent.run_state_changed, state_changed_runs, user)
 
@@ -654,11 +667,18 @@ def clean_orphaned_run_endpoint(user: Optional[User], run_id: str) -> flask.Resp
     state_change = "UNMODIFIED"
 
     if not FutureState[run.future_state].is_terminal():  # type: ignore
-        if FutureState.is_allowed_transition(run.future_state, FutureState.FAILED):
+        state_change = FutureState.FAILED.value
+
+        if run.future_state == FutureState.CREATED.value:
+            run.future_state = FutureState.CANCELED
+            run.ended_at = datetime.datetime.utcnow()
+            state_change = FutureState.CANCELED.value
+        elif FutureState.is_allowed_transition(run.future_state, FutureState.FAILED):
             run.future_state = FutureState.FAILED
+            run.failed_at = datetime.datetime.utcnow()
         else:
             run.future_state = FutureState.NESTED_FAILED
-        run.failed_at = datetime.datetime.utcnow()
+            run.failed_at = datetime.datetime.utcnow()
         if run.exception_metadata is None:
             run.exception_metadata = ExceptionMetadata.from_exception(
                 RuntimeError(
@@ -671,7 +691,6 @@ def clean_orphaned_run_endpoint(user: Optional[User], run_id: str) -> flask.Resp
             run.id,
         )
         save_run(run)
-        state_change = FutureState.FAILED.value
 
     return flask.jsonify(
         dict(

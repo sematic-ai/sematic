@@ -10,6 +10,8 @@ import theme from 'src/theme/new';
 const StyledButton = styled(Button)`
     margin: 0 -${theme.spacing(5)};
     height: 50px;
+    flex-shrink: 0;
+    flex-grow: 0;
 `;
 
 const SearchFilters = () => {
