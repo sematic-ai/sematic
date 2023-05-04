@@ -1,6 +1,7 @@
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from "@mui/material/styles";
 import TagsListComponent from '@sematic/common/src/component/TagsList';
+import TagsInputComponent from '@sematic/common/src/component/TagsInput';
 import theme from '@sematic/common/src/theme/new';
 import { Meta, StoryObj } from '@storybook/react';
 
@@ -17,15 +18,9 @@ export default {
 } as Meta<StoryProps>;
 
 interface StoryProps {
-  width: keyof typeof sizeOptions;
+  width: number;
   onTagClick: (value: string) => void;
   onAddTag: () => void;
-}
-
-const sizeOptions = {
-  "100px (small)": 100,
-  "200px (medium)": 200,
-  "400px (large)": 400
 }
 
 const commonArgTypes = {
@@ -47,10 +42,21 @@ export const TagsList: StoryObj<StoryProps> = {
   render: (props) => {
     const { width, onTagClick, onAddTag } = props;
 
-    return <div style={{ maxWidth: width }}>
+    return <div style={{ maxWidth: width || 200 }}>
       <TagsListComponent tags={['example', 'torch', 'mnist']}
         onClick={onTagClick} onAddTag={onAddTag} />
     </div>;
-  }
+  },
+  argTypes: commonArgTypes
 };
-TagsList.argTypes = commonArgTypes;
+
+export const TagsInput: StoryObj<StoryProps> = {
+  render: (props) => {
+    const { width } = props;
+
+    return <div style={{ maxWidth: width || 200 }}>
+      <TagsInputComponent />
+    </div>;
+  },
+  argTypes: commonArgTypes
+};

@@ -9,7 +9,8 @@ import { ResettableHandle } from 'src/pages/RunSearch/filters/common';
 
 const StyledChip = styled(Chip)`
     padding-left: ${theme.spacing(1)};
-    border: 1px solid transparent;
+    border-width: 1px;
+    border-style: solid;
 
     & .${chipClasses.label} {
         padding-left: ${theme.spacing(2)};
