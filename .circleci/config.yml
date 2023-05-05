@@ -1,6 +1,7 @@
 # Use the latest 2.1 version of CircleCI pipeline process engine.
 # See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
+# CI Config D
 
 # Orbs are reusable packages of CircleCI configuration that you may share across projects, enabling you to create encapsulated, parameterized commands, jobs, and executors that can be used across multiple projects.
 # See: https://circleci.com/docs/2.0/orb-intro/
@@ -63,6 +64,7 @@ commands:
 
   non-coverage-tests:
     description: Do tests without tracking code coverage
+    resource_class: xlarge
     steps:
       - run:
           name: Run Non-coverage Tests
