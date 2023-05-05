@@ -74,7 +74,11 @@ pytest_test(
         "//sematic/config:config",
         "//sematic/api/tests:fixtures",
         "//sematic/db/tests:fixtures",
+        "//sematic/db:db",
         "//sematic/tests:fixtures",
+        "//sematic/metrics:metric_point",
+        "//sematic/metrics/tests:fixtures",
+        "//sematic/plugins/metrics_storage/sql/models:metric_value",
     ],
 )
 
