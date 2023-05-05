@@ -36,6 +36,12 @@ class AbstractBuilder(AbstractPlugin):
     def build_and_launch(self, target: str) -> None:
         """
         Builds a container image and launches the specified target launch script.
+
+        Parameters
+        ----------
+        target: str
+            The path to the pipeline target to launch; the built image must support this
+            target's execution.
         """
 
         pass
