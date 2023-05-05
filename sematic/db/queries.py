@@ -64,7 +64,12 @@ def get_artifact(artifact_id: str) -> Artifact:
         return session.query(Artifact).filter(Artifact.id == artifact_id).one()
 
 
-def get_users(user_ids: List[str]) -> List[User]:
+def get_users() -> List[User]:
+    with db().get_session() as session:
+        return session.query(User).order_by(User.first_name).all()
+
+
+def get_users_by_id(user_ids: List[str]) -> List[User]:
     """
     Get users from the database.
 

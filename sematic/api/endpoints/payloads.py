@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Protocol, Sequence
 
 # Sematic
 from sematic.db.models.resolution import Resolution
-from sematic.db.queries import get_user, get_users
+from sematic.db.queries import get_user, get_users_by_id
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ def _get_collection_payload_with_user(
     users_by_id = {}
     if len(user_ids) > 0:
         users_by_id = {
-            user.id: user.to_json_encodable() for user in get_users(user_ids)
+            user.id: user.to_json_encodable() for user in get_users_by_id(user_ids)
         }
 
     for item in items:
