@@ -5,9 +5,9 @@ import time
 import pytest
 
 # Sematic
-from sematic.abstract_calculator import CalculatorError
+from sematic.abstract_function import FunctionError
 from sematic.abstract_future import FutureState
-from sematic.calculator import func
+from sematic.function import func
 from sematic.future_context import PrivateContext, SematicContext, context, set_context
 from sematic.plugins.abstract_external_resource import ResourceState
 from sematic.resolvers.silent_resolver import SilentResolver
@@ -124,7 +124,7 @@ def test_retry():
     with pytest.raises(ResolutionError) as exc_info:
         SilentResolver().resolve(future)
 
-    assert isinstance(exc_info.value.__context__, CalculatorError)
+    assert isinstance(exc_info.value.__context__, FunctionError)
     assert isinstance(exc_info.value.__context__.__context__, SomeException)
     assert future.props.retry_settings.retry_count == 3
     assert future.state == FutureState.FAILED

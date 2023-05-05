@@ -208,9 +208,9 @@ def get_run_status_details(
     return future_state_and_jobs_by_run_id
 
 
-def get_calculator_path(run_id: str) -> str:
+def get_function_path(run_id: str) -> str:
     with db().get_session() as session:
-        row = session.query(Run.calculator_path).filter(Run.id == run_id).one()
+        row = session.query(Run.function_path).filter(Run.id == run_id).one()
 
     return row[0]
 
@@ -222,28 +222,26 @@ class BasicPipelineMetrics:
     total_count: int
 
 
-def get_basic_pipeline_metrics(calculator_path: str):
+def get_basic_pipeline_metrics(function_path: str):
     with db().get_session() as session:
         count_by_state = list(
             session.query(Run.future_state, sqlalchemy.func.count())
-            .filter(Run.calculator_path == calculator_path)
+            .filter(Run.function_path == function_path)
             .group_by(Run.future_state)
         )
 
         RootRun = sqlalchemy.orm.aliased(Run)
         avg_runtime_children = list(
             session.query(
-                Run.calculator_path,
+                Run.function_path,
                 sqlalchemy.func.avg(
                     sqlalchemy.func.extract("epoch", Run.resolved_at)
                     - sqlalchemy.func.extract("epoch", Run.started_at)
                 ),
             )
             .join(RootRun, Run.root_id == RootRun.id)
-            .filter(
-                RootRun.calculator_path == calculator_path, Run.resolved_at is not None
-            )
-            .group_by(Run.calculator_path)
+            .filter(RootRun.function_path == function_path, Run.resolved_at is not None)
+            .group_by(Run.function_path)
         )
 
     total_count = sum([count for _, count in count_by_state])

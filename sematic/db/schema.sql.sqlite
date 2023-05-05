@@ -3,7 +3,7 @@ CREATE TABLE runs (
     id character(32) NOT NULL,
     future_state TEXT NOT NULL,
     name TEXT,
-    calculator_path TEXT,
+    function_path TEXT,
     created_at timestamp WITH time zone NOT NULL,
     updated_at timestamp WITH time zone NOT NULL,
     started_at timestamp,
@@ -113,7 +113,7 @@ CREATE TABLE jobs (
 
     FOREIGN KEY(run_id) REFERENCES runs (id)
 );
-CREATE INDEX runs_calculator_path ON runs (calculator_path);
+CREATE INDEX runs_calculator_path ON runs (function_path);
 CREATE INDEX jobs_run_id ON jobs (run_id);
 CREATE TABLE metric_labels (
     metric_id TEXT NOT NULL PRIMARY KEY,
@@ -172,4 +172,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20230314141123'),
   ('20230324182512'),
   ('20230403153220'),
-  ('20230419080554');
+  ('20230419080554'),
+  ('20230428225443');

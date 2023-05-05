@@ -1,6 +1,6 @@
 """
 Defining these operators in seperate modules in order to avoid circular
-dependencies between Future and Calculator
+dependencies between Future and Function
 """
 # Standard Library
 # standard library
@@ -21,7 +21,7 @@ def __iter__(self: Future):
     Only supporting tuples for now.
     """
     is_tuple_future = False
-    future_type = self.calculator.output_type
+    future_type = self.function.output_type
 
     is_tuple_future = get_origin(future_type) is tuple
 

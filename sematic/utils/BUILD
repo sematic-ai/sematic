@@ -8,7 +8,7 @@ sematic_py_lib(
     name = "exceptions",
     srcs = ["exceptions.py"],
     deps = [
-        "//sematic:abstract_calculator",
+        "//sematic:abstract_function",
     ],
 )
 

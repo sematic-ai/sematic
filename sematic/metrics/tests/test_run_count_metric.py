@@ -27,7 +27,7 @@ def twelve_runs(test_db: DB) -> List[Run]:  # noqa: F811
     runs = [
         Run(
             id=str(i),
-            calculator_path=str(i // 6),
+            function_path=str(i // 6),
             future_state=FutureState.CREATED,
             root_id="0",
             created_at=datetime.datetime.utcnow() - datetime.timedelta(minutes=i),

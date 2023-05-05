@@ -21,7 +21,7 @@ from typing import (
 from warnings import warn
 
 # Sematic
-from sematic.abstract_calculator import AbstractCalculator, CalculatorError
+from sematic.abstract_function import AbstractFunction, FunctionError
 from sematic.future import INLINE_DEPRECATION_MESSAGE, Future
 from sematic.future_context import NotInSematicFuncError, context
 from sematic.resolvers.resource_requirements import ResourceRequirements
@@ -39,12 +39,12 @@ _EXTRA_FUTURE_DOCS_LINK = (
 logger = logging.getLogger(__name__)
 
 
-class Calculator(AbstractCalculator):
+class Function(AbstractFunction):
     """
-    A Calculator is Sematic's base unit of computation in a graph.
+    A Function is Sematic's base unit of computation in a graph.
 
-    Functions decorated with the `@calculator` decorator become
-    instances of `Calculator`.
+    Functions decorated with the `@func` decorator become
+    instances of `Function`.
     """
 
     def __init__(
@@ -140,7 +140,7 @@ class Calculator(AbstractCalculator):
         return self._input_types
 
     # Returns typing.Any instead of Future to ensure
-    # calculator algebra is valid from a mypy perspective
+    # function algebra is valid from a mypy perspective
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         signature = self.__signature__()
         argument_binding = signature.bind(*args, **kwargs)
@@ -184,11 +184,11 @@ class Calculator(AbstractCalculator):
     def __signature__(self) -> inspect.Signature:
         return inspect.signature(self._func)
 
-    def calculate(self, **kwargs) -> Any:
+    def execute(self, **kwargs) -> Any:
         try:
             output = self.func(**kwargs)
         except Exception as e:
-            raise CalculatorError(f"Error from running {self.func.__name__}") from e
+            raise FunctionError(f"Error from running {self.func.__name__}") from e
 
         # Support for lists of futures
         if isinstance(output, list):
@@ -208,7 +208,7 @@ class Calculator(AbstractCalculator):
     def cast_inputs(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """
         Attempts to cast passed inputs to actual input values based on the
-        calculator's input type signature.
+        function's input type signature.
 
         Parameters
         ----------
@@ -233,13 +233,13 @@ class Calculator(AbstractCalculator):
 
     def cast_output(self, value: Any) -> Any:
         """
-        Attempts to cast the value returned by the calculator logic to an actual
-        output value based on the calculator's output type signature.
+        Attempts to cast the value returned by the function logic to an actual
+        output value based on the function's output type signature.
 
         Parameters
         ----------
         value: typing.Any
-            The output value of the calculator logic
+            The output value of the function logic
 
         Returns
         -------
@@ -258,11 +258,11 @@ class Calculator(AbstractCalculator):
         Attempts to cast a value to the passed type.
         """
         if isinstance(value, Future):
-            can_cast, error = can_cast_type(value.calculator.output_type, type_)
+            can_cast, error = can_cast_type(value.function.output_type, type_)
             if not can_cast:
                 raise TypeError(
                     "{} Cannot cast {} to {}: {}".format(
-                        error_prefix, value.calculator.output_type, type_, error
+                        error_prefix, value.function.output_type, type_, error
                     )
                 )
             return value
@@ -292,7 +292,7 @@ def func(
     retry: Optional[RetrySettings] = None,
     base_image_tag: Optional[str] = None,
     timeout_mins: Optional[int] = None,
-) -> Union[Calculator, Callable]:
+) -> Union[Function, Callable]:
     """
     The Sematic Function decorator.
 
@@ -329,7 +329,7 @@ def func(
 
     Returns
     -------
-    Union[Calculator, Callable]
+    Union[Function, Callable]
         An internal instrumentation wrapper over the decorated function.
     """
     if inline is not None:
@@ -363,7 +363,7 @@ def func(
         if len(missing_annotations) > 0:
             raise ValueError(
                 (
-                    "Missing calculator type annotations."
+                    "Missing function type annotations."
                     " The following arguments are not annotated: {}"
                 ).format(_repr_str_iterable(missing_annotations))
             )
@@ -382,7 +382,7 @@ def func(
         all_type_annotations["<output>"] = output_type
         _validate_type_annotations(all_type_annotations)
 
-        return Calculator(
+        return Function(
             func_,
             input_types=input_types,
             output_type=output_type,
@@ -504,7 +504,7 @@ def _make_list(type_: Type[OutputType], list_with_futures: Sequence[Any]) -> Out
 
     for i, item in enumerate(list_with_futures):
         if isinstance(item, Future):
-            can_cast, error = can_cast_type(item.calculator.output_type, element_type)
+            can_cast, error = can_cast_type(item.function.output_type, element_type)
             if not can_cast:
                 raise TypeError("Invalid value: {}".format(error))
         else:
@@ -525,7 +525,7 @@ def _make_list({inputs}):
     exec(source_code, scope)
     _make_list = scope["_make_list"]
 
-    return Calculator(
+    return Function(
         _make_list, input_types=input_types, output_type=type_, standalone=False
     )(**inputs)
 
@@ -569,7 +569,7 @@ def _make_tuple(
     for i, item in enumerate(tuple_with_futures):
         element_type = get_args(type_)[i]
         if isinstance(item, Future):
-            can_cast, error = can_cast_type(item.calculator.output_type, element_type)
+            can_cast, error = can_cast_type(item.function.output_type, element_type)
             if not can_cast:
                 raise TypeError("Invalid value: {}".format(error))
         else:
@@ -590,7 +590,7 @@ def _make_tuple({inputs}):
     exec(source_code, scope)
     _make_tuple = scope["_make_tuple"]
 
-    return Calculator(
+    return Function(
         _make_tuple, input_types=input_types, output_type=type_, standalone=False
     )(**inputs)
 
@@ -610,7 +610,7 @@ def _convert_tuples(value_, expected_type):
 
 
 def _check_for_unused_futures(
-    calculator_name: str, output: Future, created_futures: List[Future]
+    function_name: str, output: Future, created_futures: List[Future]
 ):
     futures_by_id = {f.id: f for f in created_futures}
 
@@ -623,7 +623,7 @@ def _check_for_unused_futures(
     sample_extra = None
     for possible_extra_id in possible_extra_ids:
         possible_extra_future = futures_by_id[possible_extra_id]
-        if possible_extra_future.calculator.__module__ == Future.__getitem__.__module__:
+        if possible_extra_future.function.__module__ == Future.__getitem__.__module__:
             # It is ok for a "getitem" future to be unused, there are legitimate
             # reasons to have this pattern: tuple unpacking from a future return is
             # one example (_, foo = my_func()). The whole purpose of the unused
@@ -639,15 +639,15 @@ def _check_for_unused_futures(
         return
 
     message = (
-        f"The output of '{calculator_name}' does not depend on the output of "
-        f" '{sample_extra.calculator.__name__}', thus "
-        f"'{sample_extra.calculator.__name__}' "
+        f"The output of '{function_name}' does not depend on the output of "
+        f" '{sample_extra.function.__name__}', thus "
+        f"'{sample_extra.function.__name__}' "
         f"will not be executed. See {_EXTRA_FUTURE_DOCS_LINK} for details on "
         f"what you can do in this situation."
     )
 
     # since this is from user code
-    raise CalculatorError(message) from RuntimeError(message)
+    raise FunctionError(message) from RuntimeError(message)
 
 
 def _get_dependency_ids(future: Future) -> List[str]:

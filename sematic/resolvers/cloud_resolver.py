@@ -236,7 +236,7 @@ class CloudResolver(LocalResolver):
         self._create_resolution(future)
         run.root_id = future.id
 
-        api_client.notify_pipeline_update(run.calculator_path)
+        api_client.notify_pipeline_update(run.function_path)
 
         # SUBMIT RESOLUTION JOB
         api_client.schedule_resolution(

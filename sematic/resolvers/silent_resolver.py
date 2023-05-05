@@ -56,7 +56,7 @@ class SilentResolver(StateMachineResolver):
             ):
                 try:
                     with timeout(timeout_seconds):
-                        value = future.calculator.calculate(**future.resolved_kwargs)
+                        value = future.function.execute(**future.resolved_kwargs)
                 except TimeoutError:
                     self._fail_future_with_timeout(future, timeout_restricting_future)
             self._update_future_with_value(future, value)
