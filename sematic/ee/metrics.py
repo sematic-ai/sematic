@@ -35,7 +35,7 @@ def log_metric(
         MetricScope.RUN. When MetricScope.RUN, the plot for this metric will be
         displayed in the Metrics tab of the current run. When
         MetricScope.PIPELINE, the plot for this metric will be displayed in the
-        Pipeline Metricds panel.
+        Pipeline Metrics panel.
     metric_type: MetricType
         One of MetricType.GAUGE, MetricType.COUNT. Defaults to MetricType.GAUGE.
         When MetricType.COUNT, values are aggregated by sum. When
