@@ -18,6 +18,9 @@ pyyaml
 # Git integration
 git-python
 
+# Build system
+docker
+
 # Client
 websocket-client
 python-socketio
