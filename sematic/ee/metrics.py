@@ -1,6 +1,6 @@
 # Standard Library
-import datetime
 import enum
+from datetime import datetime
 from typing import Dict
 
 # Sematic
@@ -51,14 +51,14 @@ def log_metric(
     metric_point = MetricPoint(
         name=name,
         value=value,
-        metric_time=datetime.datetime.utcnow(),
+        metric_time=datetime.utcnow(),
         metric_type=metric_type,
         labels={
             "__scope__": scope.value,
             "run_id": run_id,
-            "calculator_path": _get_function_path(run_id),
+            "function_path": _get_function_path(run_id),
             "root_id": root_id,
-            "root_calculator_path": _get_function_path(root_id),
+            "root_function_path": _get_function_path(root_id),
         },
     )
 
