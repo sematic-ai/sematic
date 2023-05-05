@@ -538,6 +538,14 @@ def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
 
 
 def save_metric_points(metric_points: List[MetricPoint]) -> None:
+    """
+    Saves metric points.
+
+    Parameters
+    ----------
+    metric_points: List[MetricPoint]
+        THe list of metric points to persist.
+    """
     payload = dict(
         metric_points=[
             metric_point.to_json_encodable() for metric_point in metric_points
