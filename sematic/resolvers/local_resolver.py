@@ -10,7 +10,7 @@ import socketio  # type: ignore
 
 # Sematic
 import sematic.api_client as api_client
-from sematic.abstract_calculator import CalculatorError
+from sematic.abstract_function import FunctionError
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.caching import (
     CacheNamespace,
@@ -335,7 +335,7 @@ class LocalResolver(SilentResolver):
             root_id=root_future.id,
             status=ResolutionStatus.SCHEDULED,
             kind=ResolutionKind.LOCAL,
-            git_info=get_git_info(root_future.calculator.func),  # type: ignore
+            git_info=get_git_info(root_future.function.func),  # type: ignore
             settings_env_vars=get_active_user_settings_strings(),
             client_version=CURRENT_VERSION_STR,
             cache_namespace=self._cache_namespace_str,
@@ -408,7 +408,7 @@ class LocalResolver(SilentResolver):
                 "Falling back to execution for %s %s",
                 run.cache_key,
                 future.id,
-                future.calculator,
+                future.function,
                 exc_info=1,  # type: ignore
             )
 
@@ -424,7 +424,7 @@ class LocalResolver(SilentResolver):
         logger.info(
             "Future %s %s will be resolved from a cached value",
             future.id,
-            future.calculator,
+            future.function,
         )
 
         # we remember the original artifact in order to reuse it, and not create
@@ -451,7 +451,6 @@ class LocalResolver(SilentResolver):
     def _get_output_artifact(
         self, run_id: str, artifacts: List[Artifact], edges: List[Edge]
     ) -> Artifact:
-
         for edge in edges:
             if edge.source_run_id == run_id:
                 for artifact in artifacts:
@@ -537,7 +536,7 @@ class LocalResolver(SilentResolver):
 
     def _notify_pipeline_update(self):
         api_client.notify_pipeline_update(
-            self._runs[self._root_future.id].calculator_path
+            self._runs[self._root_future.id].function_path
         )
 
     def _resolution_did_succeed(self) -> None:
@@ -548,7 +547,7 @@ class LocalResolver(SilentResolver):
 
     def _resolution_did_fail(self, error: Exception) -> None:
         super()._resolution_did_fail(error)
-        if isinstance(error, CalculatorError):
+        if isinstance(error, FunctionError):
             reason = "Marked as failed because another run in the graph failed."
             resolution_status = ResolutionStatus.COMPLETE
         elif isinstance(error, _ResolverRestartError):
@@ -633,7 +632,7 @@ class LocalResolver(SilentResolver):
         run = make_run_from_future(future=future)
         run.root_id = self._root_future.id
 
-        logger.debug("Created run %s for %s", run.id, future.calculator)
+        logger.debug("Created run %s for %s", run.id, future.function)
         return run
 
     def _get_cache_key(self, future: AbstractFuture) -> Optional[str]:
@@ -647,7 +646,7 @@ class LocalResolver(SilentResolver):
             logger.debug(
                 "Future %s %s is not configured to use the cache",
                 future.id,
-                future.calculator,
+                future.function,
             )
             return None
 
@@ -659,7 +658,7 @@ class LocalResolver(SilentResolver):
             logger.warning(
                 "Unable to compute the cache key for %s %s",
                 future.id,
-                future.calculator,
+                future.function,
                 exc_info=1,  # type: ignore
             )
             return None
@@ -667,7 +666,7 @@ class LocalResolver(SilentResolver):
         logger.debug(
             "Future %s %s will use the cache key: %s",
             future.id,
-            future.calculator,
+            future.function,
             cache_key,
         )
 
@@ -676,7 +675,6 @@ class LocalResolver(SilentResolver):
     def _make_artifact(
         self, run_id: str, value: Any, type_: Any, name: Optional[str]
     ) -> Artifact:
-
         # _artifacts_by_run_id is a defaultdict;
         # this lookup will create the entry if missing
         artifact = self._artifacts_by_run_id[run_id].get(name)
@@ -724,7 +722,7 @@ class LocalResolver(SilentResolver):
                 artifact = self._make_artifact(
                     run_id=future.id,
                     value=maybe_resolved_value,
-                    type_=future.calculator.input_types[name],
+                    type_=future.function.input_types[name],
                     name=name,
                 )
 
@@ -772,7 +770,7 @@ class LocalResolver(SilentResolver):
             output_artifact = self._make_artifact(
                 run_id=future.id,
                 value=future.value,
-                type_=future.calculator.output_type,
+                type_=future.function.output_type,
                 name=None,
             )
             artifact_id = output_artifact.id

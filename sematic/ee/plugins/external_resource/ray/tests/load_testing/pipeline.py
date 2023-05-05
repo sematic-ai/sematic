@@ -18,9 +18,9 @@ from torchvision.datasets import MNIST
 from torchvision.transforms import Compose, Normalize, ToTensor
 
 # Sematic
-from sematic.calculator import func
 from sematic.ee.ray import AutoscalerConfig, RayCluster, RayNodeConfig, SimpleRayCluster
 from sematic.examples.mnist.pytorch.train_eval import Net, train
+from sematic.function import func
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

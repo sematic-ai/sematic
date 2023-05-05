@@ -5,16 +5,16 @@ from typing import Any, List, Tuple, Union
 import pytest
 
 # Sematic
-from sematic.abstract_calculator import CalculatorError
-from sematic.calculator import (
-    Calculator,
+from sematic.abstract_function import FunctionError
+from sematic.db.tests.fixtures import test_db  # noqa: F401
+from sematic.function import (
+    Function,
     _convert_lists,
     _convert_tuples,
     _make_list,
     _make_tuple,
     func,
 )
-from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.future import Future
 from sematic.resolvers.resource_requirements import (  # noqa: F401
     KubernetesResourceRequirements,
@@ -28,7 +28,7 @@ def test_decorator_no_params():
     def f():
         pass
 
-    assert isinstance(f, Calculator)
+    assert isinstance(f, Function)
 
 
 def test_decorator_with_params():
@@ -36,13 +36,13 @@ def test_decorator_with_params():
     def f():
         pass
 
-    assert isinstance(f, Calculator)
+    assert isinstance(f, Function)
 
 
 def test_any():
     expected = (
         r"Invalid type annotation for argument 'x' "
-        r"of sematic.tests.test_calculator.f1: 'Any' is "
+        r"of sematic.tests.test_function.f1: 'Any' is "
         r"not a Sematic-supported type. Use 'object' instead."
     )
     with pytest.raises(TypeError, match=expected):
@@ -77,7 +77,7 @@ def test_not_a_function():
     with pytest.raises(
         TypeError, match=r".*can only be used with functions. But 'abc' is a 'str'."
     ):
-        Calculator("abc", {}, None)
+        Function("abc", {}, None)
 
     with pytest.raises(
         TypeError, match=r".*can only be used with functions, not methods.*"
@@ -164,7 +164,7 @@ def test_missing_types():
     with pytest.raises(
         ValueError,
         match=(
-            "Missing calculator type annotations."
+            "Missing function type annotations."
             " The following arguments are not annotated: 'a', 'b'"
         ),
     ):
@@ -191,7 +191,7 @@ def test_call_pass_cast():
     ff = f(1.23)
 
     assert isinstance(ff, Future)
-    assert ff.calculator is f
+    assert ff.function is f
     assert set(ff.kwargs) == {"a"}
     assert isinstance(ff.kwargs["a"], float)
     assert ff.kwargs["a"] == 1.23
@@ -225,17 +225,17 @@ def test_make_list():
     future = _make_list(List[str], [foo(), bar()])
 
     assert isinstance(future, Future)
-    assert future.calculator.output_type is List[str]
-    assert len(future.calculator.input_types) == 2
+    assert future.function.output_type is List[str]
+    assert len(future.function.input_types) == 2
 
 
 def test_make_tuple():
     future = _make_tuple(Tuple[str, int], (bar(), baz()))
 
     assert isinstance(future, Future)
-    assert future.calculator.output_type is Tuple[str, int]
-    assert len(future.calculator.input_types) == 2
-    assert future.calculator.calculate(v0="a", v1=42) == ("a", 42)
+    assert future.function.output_type is Tuple[str, int]
+    assert len(future.function.input_types) == 2
+    assert future.function.execute(v0="a", v1=42) == ("a", 42)
 
 
 @func
@@ -265,7 +265,7 @@ def test_convert_lists():
     assert result.props.standalone is False
     assert len(result.kwargs) == 5
     assert (
-        result.calculator.output_type
+        result.function.output_type
         is List[
             Union[
                 int, str, List[Union[int, str]], List[Union[int, List[Union[int, str]]]]
@@ -356,7 +356,7 @@ def test_resolve_error():
         # see https://peps.python.org/pep-0409/#language-details
         f().resolve(tracking=False)
 
-    assert isinstance(exc_info.value.__context__, CalculatorError)
+    assert isinstance(exc_info.value.__context__, FunctionError)
     assert isinstance(exc_info.value.__context__.__context__, ValueError)
     assert "Intentional error" in str(exc_info.value.__context__.__context__)
 
@@ -366,11 +366,11 @@ def test_calculate_error():
     def f():
         raise ValueError("Intentional error")
 
-    with pytest.raises(CalculatorError) as exc_info:
-        # calling calculate should surface the CalculatorError,
+    with pytest.raises(FunctionError) as exc_info:
+        # calling calculate should surface the FunctionError,
         # with root cause as __context__
         # see https://peps.python.org/pep-0409/#language-details
-        f.calculate()
+        f.execute()
 
     assert isinstance(exc_info.value.__context__, ValueError)
     assert "Intentional error" in str(exc_info.value.__context__)

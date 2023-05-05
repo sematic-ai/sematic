@@ -24,7 +24,7 @@ def make_list_type(list_: List[Any]) -> Type[List]:
 
     for item in list_:
         item_type = (
-            item.calculator.output_type
+            item.function.output_type
             if isinstance(item, AbstractFuture)
             else type(item)
         )
@@ -41,7 +41,7 @@ def make_tuple_type(tuple_: Tuple) -> GenericAlias:
     Attempts to make a Tuple generic type representing the provided tuple.
     """
     element_types = [
-        item.calculator.output_type if isinstance(item, AbstractFuture) else type(item)
+        item.function.output_type if isinstance(item, AbstractFuture) else type(item)
         for item in tuple_
     ]
 

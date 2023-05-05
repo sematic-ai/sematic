@@ -180,7 +180,7 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
                 "The root run had tags: %s .",
                 "Remote" if was_remote else "Local",
                 resolution.root_id,
-                root_run.calculator_path,
+                root_run.function_path,
                 root_run.future_state,
                 duration_seconds,
                 getattr(resolution.git_info, "dirty", "UNKNOWN"),
@@ -301,7 +301,7 @@ def rerun_resolution_endpoint(
 
     payload = dict(content=get_resolution_payload(resolution))
 
-    broadcast_pipeline_update(calculator_path=root_run.calculator_path, user=user)
+    broadcast_pipeline_update(function_path=root_run.function_path, user=user)
 
     return flask.jsonify(payload)
 
@@ -345,7 +345,7 @@ def cancel_resolution_endpoint(
 
     broadcast_graph_update(root_id=resolution.root_id, user=user)
     broadcast_resolution_cancel(
-        root_id=resolution.root_id, calculator_path=root_run.calculator_path, user=user
+        root_id=resolution.root_id, function_path=root_run.function_path, user=user
     )
 
     payload = dict(content=get_resolution_payload(resolution))

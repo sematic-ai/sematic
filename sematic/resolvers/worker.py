@@ -16,13 +16,13 @@ import cloudpickle
 # Sematic
 import sematic.api_client as api_client
 from sematic.abstract_future import FutureState
-from sematic.calculator import Calculator
 from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR
 from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import UploadPayload, make_artifact
 from sematic.db.models.run import Run
+from sematic.function import Function
 from sematic.future import Future
 from sematic.future_context import PrivateContext, SematicContext, set_context
 from sematic.log_reader import log_prefix
@@ -154,7 +154,7 @@ def main(
     run = runs[0]
 
     try:
-        func: Calculator = run.get_func()  # type: ignore
+        func: Function = run.get_func()  # type: ignore
         kwargs = _get_input_kwargs(run.id, artifacts, edges)
 
         if resolve:
@@ -188,7 +188,7 @@ def main(
                     ),
                 )
             ):
-                output = func.calculate(**kwargs)
+                output = func.execute(**kwargs)
 
             logger.info("Finished executing %s", func.__name__)
             my_pid = os.getpid()
@@ -246,7 +246,7 @@ def main(
             _fail_run(run, e)
 
         if resolve:
-            api_client.notify_pipeline_update(run.calculator_path)
+            api_client.notify_pipeline_update(run.function_path)
 
         raise
 

@@ -102,7 +102,7 @@ def test_custom_resolve_namespace(
     my_future: AbstractFuture, my_other_future: AbstractFuture
 ):
     def my_custom_namespace(future: AbstractFuture) -> str:
-        fqpn = future.calculator.get_func_fqpn()  # type: ignore # noqa: ignore
+        fqpn = future.function.get_func_fqpn()  # type: ignore # noqa: ignore
 
         if fqpn == "sematic.caching.tests.test_caching.my_pipeline":
             return "my_namespace"
