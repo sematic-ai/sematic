@@ -12,7 +12,7 @@ import typing
 from contextlib import contextmanager
 
 # Sematic
-from sematic.abstract_calculator import CalculatorError
+from sematic.abstract_function import FunctionError
 from sematic.abstract_future import AbstractFuture, FutureState, TimeoutFuturePair
 from sematic.plugins.abstract_external_resource import (
     AbstractExternalResource,
@@ -122,7 +122,7 @@ class StateMachineResolver(Resolver, abc.ABC):
             except Exception:
                 logger.exception("Unable to fail resolution:")
 
-            if isinstance(e, CalculatorError) and hasattr(e, "__cause__"):
+            if isinstance(e, FunctionError) and hasattr(e, "__cause__"):
                 # this will simplify the stack trace so the user sees less
                 # from Sematic's stack and more from the error from their code.
                 raise e.__cause__  # type: ignore
@@ -196,17 +196,17 @@ class StateMachineResolver(Resolver, abc.ABC):
 
         if timeout_restricting_future.id == executing_future.id:
             message = (
-                f"The Sematic function {executing_future.calculator.__name__} did not "
+                f"The Sematic function {executing_future.function.__name__} did not "
                 f"complete in time to satisfy its "
                 f"{executing_future.props.timeout_mins} minute timeout."
             )
         else:
             message = (
-                f"The Sematic function {executing_future.calculator.__name__} did not "
+                f"The Sematic function {executing_future.function.__name__} did not "
                 f"complete in time to satisfy the "
                 f"{timeout_restricting_future.props.timeout_mins} minute timeout "
                 f"specified by its ancestor "
-                f"{timeout_restricting_future.calculator.__name__}."
+                f"{timeout_restricting_future.function.__name__}."
             )
         self._handle_future_failure(
             executing_future,
@@ -308,7 +308,7 @@ class StateMachineResolver(Resolver, abc.ABC):
         ----------
         error:
             The error that led to the resolution's failure. If the error occurred
-            within a calculator, will be an instance of CalculatorError
+            within a function, will be an instance of FunctionError
         """
         pass
 
@@ -393,16 +393,16 @@ class StateMachineResolver(Resolver, abc.ABC):
         Attempts to execute the given Future.
         """
         if not self._can_schedule_future(future):
-            logger.info("Currently not scheduling %s", future.calculator)
+            logger.info("Currently not scheduling %s", future.function)
             return
 
         self._future_will_schedule(future)
 
         if future.props.standalone:
-            logger.info("Scheduling %s %s", future.id, future.calculator)
+            logger.info("Scheduling %s %s", future.id, future.function)
             self._schedule_future(future)
         else:
-            logger.info("Running inline %s %s", future.id, future.calculator)
+            logger.info("Running inline %s %s", future.id, future.function)
             self._run_inline(future)
 
     @typing.final
@@ -472,7 +472,7 @@ class StateMachineResolver(Resolver, abc.ABC):
         self, future: AbstractFuture, value: typing.Any
     ) -> None:
         try:
-            value = future.calculator.cast_output(value)
+            value = future.function.cast_output(value)
         except TypeError as e:
             logger.error("Unable to process future value", exc_info=e)
             self._handle_future_failure(future, format_exception_for_run(e))

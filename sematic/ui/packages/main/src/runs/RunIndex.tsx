@@ -1,5 +1,12 @@
 import { SearchOutlined } from "@mui/icons-material";
-import { Box, Button, buttonClasses, Container, TextField, textFieldClasses } from "@mui/material";
+import {
+  Box,
+  Button,
+  buttonClasses,
+  Container,
+  TextField,
+  textFieldClasses,
+} from "@mui/material";
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/system";
 import { Run } from "@sematic/common/src/Models";
@@ -45,13 +52,13 @@ const StyledScroller = styled(Container)`
 
     & > *:first-of-type {
       padding-right: ${spacing(10)};
-      flex-grow: 1
+      flex-grow: 1;
     }
 
     & .${buttonClasses.root} {
       height: 100%;
     }
-  
+
     & .${textFieldClasses.root} {
       width: 100%;
     }
@@ -63,82 +70,129 @@ const StyledContainer = styled(Container)`
   align-items: center;
   column-gap: 12px;
   padding-left: 0;
-`
+`;
 
-function RowNameColumn({run}: {run: Run}) {
-  let calculatorPath: React.ReactElement = <Box><CalculatorPath calculatorPath={run.calculator_path} /></Box>;
-  return <>
-    <Typography variant="h6">
-      <MuiRouterLink href={getRunUrlPattern(run.id)} underline="hover">
+function RowNameColumn({ run }: { run: Run }) {
+  let functionPath: React.ReactElement = (
+    <Box>
+      <CalculatorPath functionPath={run.function_path} />
+    </Box>
+  );
+  return (
+    <>
+      <Typography variant="h6">
+        <MuiRouterLink href={getRunUrlPattern(run.id)} underline="hover">
           {run.name}
-      </MuiRouterLink>
-    </Typography>
-      {calculatorPath}
-  </>;
+        </MuiRouterLink>
+      </Typography>
+      {functionPath}
+    </>
+  );
 }
 
-function UserColumn({run}: {run: Run}) {
+function UserColumn({ run }: { run: Run }) {
   if (!run.user) {
     return null;
   }
-  const {first_name, last_name} = run.user;
-  return <StyledContainer>
+  const { first_name, last_name } = run.user;
+  return (
+    <StyledContainer>
       <UserAvatar user={run.user} sx={{ width: 18, height: 18 }} />
-      <div>{first_name} {(last_name || "").substring(0, 1)}.</div>
-    </StyledContainer>;
+      <div>
+        {first_name} {(last_name || "").substring(0, 1)}.
+      </div>
+    </StyledContainer>
+  );
 }
 
 const TableColumns: Array<RunListColumn> = [
-  {name: "ID", width: "7.5%", render: (run: Run) => <Id id={run.id} trimTo={8} />},
-  {name: "Name", width: "37.5%", render: (run: Run) => <RowNameColumn run={run} />},
-  {name: "Tags", width: "21%", render: (run: Run) => <Tags tags={run.tags || []} />},
-  {name: "User", width: "14%", render: (run: Run) => <UserColumn run={run} />},
-  {name: "Time", width: "10%", 
-    render: (run: Run) => <><TimeAgo date={run.created_at} />
-    <RunTime run={run} prefix="in" /></>},
-  {name: "Status", width: "10%", 
-  render: (run: Run) => <RunStateChip run={run} variant="full" />}
-]
+  {
+    name: "ID",
+    width: "7.5%",
+    render: (run: Run) => <Id id={run.id} trimTo={8} />,
+  },
+  {
+    name: "Name",
+    width: "37.5%",
+    render: (run: Run) => <RowNameColumn run={run} />,
+  },
+  {
+    name: "Tags",
+    width: "21%",
+    render: (run: Run) => <Tags tags={run.tags || []} />,
+  },
+  {
+    name: "User",
+    width: "14%",
+    render: (run: Run) => <UserColumn run={run} />,
+  },
+  {
+    name: "Time",
+    width: "10%",
+    render: (run: Run) => (
+      <>
+        <TimeAgo date={run.created_at} />
+        <RunTime run={run} prefix="in" />
+      </>
+    ),
+  },
+  {
+    name: "Status",
+    width: "10%",
+    render: (run: Run) => <RunStateChip run={run} variant="full" />,
+  },
+];
 
 export function RunIndex() {
-
-  const [searchString, setSearchString] = useState<string | undefined>(undefined);
-  const [submitedSearchString, setSubmitedSearchString] = useState<string | undefined>(undefined);
+  const [searchString, setSearchString] = useState<string | undefined>(
+    undefined
+  );
+  const [submitedSearchString, setSubmitedSearchString] = useState<
+    string | undefined
+  >(undefined);
 
   const onChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     setSearchString(event.target.value);
   }, []);
 
-  const onSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setSubmitedSearchString(searchString);
-  }, [searchString]);
+  const onSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      setSubmitedSearchString(searchString);
+    },
+    [searchString]
+  );
 
-  return (<StyledScroller>
-          <Typography variant="h4" component="h2">
-            Runs
-          </Typography>
-          <form onSubmit={onSubmit}>
-            <Box className={'search-bar'}>
-              <Box sx={{ gridColumn: 1 }}>
-                <TextField
-                  id="outlined-basic"
-                  label="Search"
-                  variant="outlined"
-                  onChange={onChange}
-                />
-              </Box>
-              <Box sx={{ gridColumn: 2 }}>
-                <Button variant="contained" size="large" startIcon={<SearchOutlined />} 
-                type="submit">
-                  SEARCH
-                </Button>
-              </Box>
-            </Box>
-          </form>
-        <Box className="RunListBox">
-          <RunList columns={TableColumns} search={submitedSearchString} />
+  return (
+    <StyledScroller>
+      <Typography variant="h4" component="h2">
+        Runs
+      </Typography>
+      <form onSubmit={onSubmit}>
+        <Box className={"search-bar"}>
+          <Box sx={{ gridColumn: 1 }}>
+            <TextField
+              id="outlined-basic"
+              label="Search"
+              variant="outlined"
+              onChange={onChange}
+            />
+          </Box>
+          <Box sx={{ gridColumn: 2 }}>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<SearchOutlined />}
+              type="submit"
+            >
+              SEARCH
+            </Button>
+          </Box>
         </Box>
-      </StyledScroller>
+      </form>
+      <Box className="RunListBox">
+        <RunList columns={TableColumns} search={submitedSearchString} />
+      </Box>
+    </StyledScroller>
   );
 }

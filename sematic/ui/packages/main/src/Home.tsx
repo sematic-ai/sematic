@@ -9,12 +9,7 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import {
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useContext, useMemo, useState } from "react";
 import { SiDiscord, SiReadthedocs, SiGithub } from "react-icons/si";
 import UserContext from "@sematic/common/src/context/UserContext";
 import MuiRouterLink from "./components/MuiRouterLink";
@@ -59,33 +54,46 @@ function ShellCommand(props: { command: string }) {
 export default function Home() {
   const { user } = useContext(UserContext);
 
-  const runFilters = useMemo(() => ({
-    AND: [{
-      parent_id: { eq: null },
-    }, {
-      user_id: { eq: user?.id || null },
-    }
-  ]}), [user?.id]);
+  const runFilters = useMemo(
+    () => ({
+      AND: [
+        {
+          parent_id: { eq: null },
+        },
+        {
+          user_id: { eq: user?.id || null },
+        },
+      ],
+    }),
+    [user?.id]
+  );
 
-  const otherQueryParams = useMemo(() => ({
-      limit: '1'
-  }), [])
+  const otherQueryParams = useMemo(
+    () => ({
+      limit: "1",
+    }),
+    []
+  );
 
-  const {isLoaded, error, runs} = useFetchRuns(runFilters, otherQueryParams);
+  const { isLoaded, error, runs } = useFetchRuns(runFilters, otherQueryParams);
 
   const prompt = useMemo(() => {
     if (!isLoaded || runs.length === 0) {
       return null;
     }
     const run = runs[0];
-    return <Typography
-      fontSize="medium"
-      component="span"
-      sx={{ display: "flex", alignItems: "center" }}
-    >
-      Your latest run:&nbsp; <RunStateChip run={run} />
-      <MuiRouterLink href={"/pipelines/" + run.calculator_path}>{run.name}</MuiRouterLink>
-    </Typography>;
+    return (
+      <Typography
+        fontSize="medium"
+        component="span"
+        sx={{ display: "flex", alignItems: "center" }}
+      >
+        Your latest run:&nbsp; <RunStateChip run={run} />
+        <MuiRouterLink href={"/pipelines/" + run.function_path}>
+          {run.name}
+        </MuiRouterLink>
+      </Typography>
+    );
   }, [isLoaded, runs]);
 
   const theme = useTheme();
@@ -96,8 +104,11 @@ export default function Home() {
     <Container sx={{ pt: 10, height: "100vh" }}>
       <Typography variant="h1">{h1}</Typography>
       <Box sx={{ mt: 15, mb: 10, minHeight: "1px" }}>
-        {!!error && <Alert severity="error">
-          Encountered an error loading the latest runs: {error.message}</Alert>}
+        {!!error && (
+          <Alert severity="error">
+            Encountered an error loading the latest runs: {error.message}
+          </Alert>
+        )}
         {prompt ? (
           prompt
         ) : user && isLoaded ? (
@@ -222,11 +233,14 @@ export default function Home() {
           </Grid>
           <Typography paragraph sx={{ mt: 10 }}>
             Or email us at{" "}
-            <MuiRouterLink href="mailto:support@sematic.dev">support@sematic.dev</MuiRouterLink>.
+            <MuiRouterLink href="mailto:support@sematic.dev">
+              support@sematic.dev
+            </MuiRouterLink>
+            .
           </Typography>
         </Grid>
       </Grid>
-      <TrackingNotice sx={{pr: `${theme.spacing(4)}!important`}}/>
+      <TrackingNotice sx={{ pr: `${theme.spacing(4)}!important` }} />
     </Container>
   );
 }

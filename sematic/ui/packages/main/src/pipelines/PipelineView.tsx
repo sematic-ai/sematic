@@ -5,44 +5,55 @@ import { useFetchRuns, useRunNavigation } from "../hooks/pipelineHooks";
 import { Alert } from "@mui/material";
 
 /**
- * This page doesn't do detailed rendering, its main focus is to 
+ * This page doesn't do detailed rendering, its main focus is to
  * load the latest runs, pick the first run, then redirect to that
  * run's detail view.
- * 
+ *
  * @returns JSX.element
  */
 export default function PipelineView() {
-    const params = useParams();
-    const { pipelinePath } = params;
+  const params = useParams();
+  const { pipelinePath } = params;
 
-    const runFilters = useMemo(() => ({
-        "AND": [
-          { parent_id: { eq: null } },
-          { calculator_path: { eq: pipelinePath! } },
-        ]
-      }), [pipelinePath]);
+  const runFilters = useMemo(
+    () => ({
+      AND: [
+        { parent_id: { eq: null } },
+        { function_path: { eq: pipelinePath! } },
+      ],
+    }),
+    [pipelinePath]
+  );
 
-    const otherQueryParams = useMemo(() => ({
-        limit: '10'
-    }), []);
+  const otherQueryParams = useMemo(
+    () => ({
+      limit: "10",
+    }),
+    []
+  );
 
-    const {isLoaded, error, runs: latestRuns} = useFetchRuns(runFilters, otherQueryParams);
+  const {
+    isLoaded,
+    error,
+    runs: latestRuns,
+  } = useFetchRuns(runFilters, otherQueryParams);
 
-    const navigate = useRunNavigation();
+  const navigate = useRunNavigation();
 
-    useEffect(() => {
-        if (!isLoaded || !!error) {
-            return;
-        }
+  useEffect(() => {
+    if (!isLoaded || !!error) {
+      return;
+    }
 
-        if (latestRuns.length > 0) {
-            navigate(latestRuns[0].root_id, true);
-        }
+    if (latestRuns.length > 0) {
+      navigate(latestRuns[0].root_id, true);
+    }
+  }, [isLoaded, error, latestRuns, navigate]);
 
-    }, [isLoaded, error, latestRuns, navigate])
-
-    return <>
-        { !isLoaded && <Loading isLoaded={false} /> }
-        { !!error && <Alert severity="error">{error.message}</Alert> }
-    </>;
+  return (
+    <>
+      {!isLoaded && <Loading isLoaded={false} />}
+      {!!error && <Alert severity="error">{error.message}</Alert>}
+    </>
+  );
 }

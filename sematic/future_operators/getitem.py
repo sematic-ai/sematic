@@ -1,12 +1,12 @@
 """
 Defining these operators in seperate modules in order to avoid circular
-dependencies between Future and Calculator
+dependencies between Future and Function
 """
 # Standard Library
 from typing import Any, get_args, get_origin
 
 # Sematic
-from sematic.calculator import func
+from sematic.function import func
 from sematic.future import Future
 from sematic.types.casting import can_cast_type, safe_cast
 
@@ -18,7 +18,7 @@ def __getitem__(self: Future, key: Any):
     When users try to access an item on a future returning a list, tuple, dict,
     a new Sematic Function needs to be created on the fly to access the item.
     """
-    future_type = self.calculator.output_type
+    future_type = self.function.output_type
 
     origin_type = get_origin(future_type)
     if origin_type is None:
@@ -37,7 +37,7 @@ def __getitem__(self: Future, key: Any):
         key_type, value_type = element_types
 
         if isinstance(key, Future):
-            _, error = can_cast_type(key.calculator.output_type, key_type)
+            _, error = can_cast_type(key.function.output_type, key_type)
         else:
             _, error = safe_cast(key, key_type)
 

@@ -90,12 +90,12 @@ class SlackPublisher(AbstractPublisher, AbstractPlugin):
         #  redirect to the full url path
         resolution_url = _RESOLUTION_URL_TEMPLATE.format(
             external_url=external_url,
-            pipeline_import_path=root_run.calculator_path,
+            pipeline_import_path=root_run.function_path,
             resolution_id=resolution.root_id,
         )
 
         message = _MESSAGE_TEMPLATE.format(
-            resolution_name=root_run.name or root_run.calculator_path,
+            resolution_name=root_run.name or root_run.function_path,
             resolution_url=resolution_url,
             short_resolution_id=resolution.root_id[0:6],
         )

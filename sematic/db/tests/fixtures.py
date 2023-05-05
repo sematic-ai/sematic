@@ -143,7 +143,7 @@ def make_run(**kwargs) -> Run:
         original_run_id=None,
         future_state=FutureState.CREATED,
         name="test_run",
-        calculator_path="path.to.test_run",
+        function_path="path.to.test_run",
         root_id=id,
         container_image_uri="foobar",
         description="Foo Bar",

@@ -8,7 +8,7 @@ from typing import Any, List, Tuple, Type
 import pytest
 
 # Sematic
-from sematic.abstract_calculator import CalculatorError
+from sematic.abstract_function import FunctionError
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_auth,
@@ -16,7 +16,6 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     mock_socketio,
     test_client,
 )
-from sematic.calculator import func
 from sematic.config.tests.fixtures import no_settings_file  # noqa: F401
 from sematic.db.db import DB
 from sematic.db.models.artifact import Artifact
@@ -26,6 +25,7 @@ from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import get_resolution, get_root_graph, get_run
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
+from sematic.function import func
 from sematic.resolvers.local_resolver import LocalResolver
 from sematic.retry_settings import RetrySettings
 from sematic.tests.fixtures import (  # noqa: F401
@@ -193,7 +193,7 @@ def test_failure(
     with pytest.raises(ResolutionError, match="some message") as exc_info:
         future.resolve(resolver)
 
-    assert isinstance(exc_info.value.__context__, CalculatorError)
+    assert isinstance(exc_info.value.__context__, FunctionError)
     assert isinstance(exc_info.value.__context__.__context__, CustomException)
 
     assert get_resolution(future.id).status == ResolutionStatus.FAILED.value
@@ -204,7 +204,7 @@ def test_failure(
     )
 
     for future in resolver._futures:
-        assert future.state == expected_states[future.calculator.__name__]
+        assert future.state == expected_states[future.function.__name__]
 
 
 def test_resolver_error(
@@ -235,7 +235,7 @@ def test_resolver_error(
         future.resolve(resolver)
 
     # this test doesn't really go through the entire Resolver logic due to
-    # the custom setting of _future_did_resolve above, so no CalculatorError here
+    # the custom setting of _future_did_resolve above, so no FunctionError here
     # TODO: replace with testing logic that goes through the entire tested code logic
     assert isinstance(exc_info.value.__context__, ValueError)
 
@@ -260,9 +260,9 @@ class DBStateMachineTestResolver(LocalResolver):
 
         assert run.id == future.id
         assert run.future_state == FutureState.SCHEDULED.value
-        assert run.name == future.calculator.__name__
-        assert run.calculator_path == "{}.{}".format(
-            future.calculator.__module__, future.calculator.__name__
+        assert run.name == future.function.__name__
+        assert run.function_path == "{}.{}".format(
+            future.function.__module__, future.function.__name__
         )
         assert run.parent_id == (
             future.parent_future.id if not future.is_root_future() else None
@@ -441,7 +441,7 @@ def test_exceptions(
     with pytest.raises(ResolutionError, match="FAIL!") as exc_info:
         future.resolve(resolver)
 
-    assert isinstance(exc_info.value.__context__, CalculatorError)
+    assert isinstance(exc_info.value.__context__, FunctionError)
     assert isinstance(exc_info.value.__context__.__context__, Exception)
 
     runs, _, _ = get_root_graph(future.id)
@@ -501,7 +501,7 @@ def test_retry(
     with pytest.raises(ResolutionError) as exc_info:
         future.resolve(resolver)
 
-    assert isinstance(exc_info.value.__context__, CalculatorError)
+    assert isinstance(exc_info.value.__context__, FunctionError)
     assert isinstance(exc_info.value.__context__.__context__, SomeException)
 
     assert future.props.retry_settings.retry_count == 3
@@ -544,7 +544,7 @@ class RerunTestResolver(LocalResolver):
 
     def _future_will_schedule(self, future):
         super()._future_will_schedule(future)
-        self.scheduled_run_counts[future.calculator.__name__] += 1
+        self.scheduled_run_counts[future.function.__name__] += 1
 
 
 def test_rerun_from_here(

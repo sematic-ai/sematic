@@ -11,7 +11,7 @@ from sqlalchemy import Column, ForeignKey, types
 from sqlalchemy.orm import relationship, validates
 
 # Sematic
-from sematic.abstract_calculator import AbstractCalculator
+from sematic.abstract_function import AbstractFunction
 from sematic.abstract_future import FutureState
 from sematic.db.models.base import Base
 from sematic.db.models.mixins.has_user_mixin import HasUserMixin
@@ -32,7 +32,7 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
     """
     SQLAlchemy model for runs.
 
-    Runs represent the execution of a :class:`sematic.Calculator`. They are
+    Runs represent the execution of a :class:`sematic.Function`. They are
     created upon scheduling of a :class:`sematic.Future`.
 
     Attributes
@@ -45,13 +45,13 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
         The state of the corresponding :class:`sematic.Future`. See
         :class:`sematic.abstract_future.FutureState` for possible values.
     name : str
-        The name of the run. Defaults to the name of the :class:`sematic.Calculator`.
-    calculator_path : str
-        The full import path of the :class:`sematic.Calculator`.
+        The name of the run. Defaults to the name of the :class:`sematic.Function`.
+    function_path : str
+        The full import path of the :class:`sematic.Function`.
     parent_id : Optional[str]
         The id of the parent run. A parent run is the run corresponding to
-        the :class:`sematic.Calculator` encapsulating the current
-        :class:`sematic.Calculator`.
+        the :class:`sematic.Function` encapsulating the current
+        :class:`sematic.Function`.
     root_id : str
         ID of the root run of the current graph. The root run corresponds to the
         entry point of the graph, i.e. the one corresponding to the future on which
@@ -59,12 +59,12 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
     description : Optional[str]
         The run's description. Defaults to the function's docstring.
     source_code : str
-        The calculator's source code.
+        The function's source code.
     nested_future_id : Optional[str]
         If the run resulted in returning a new future, this contains the id of that
         future.
     exception_metadata : Optional[ExceptionMetadata]
-        The metadata for the exception from the calculator's execution, if any.
+        The metadata for the exception from the function's execution, if any.
     external_exception_metadata : Optional[ExceptionMetadata]
         The metadata for the exception from the external compute infrastructure, if any.
     created_at : datetime
@@ -77,7 +77,7 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
         Time at which the run has finished running.
     resolved_at : Optional[datetime]
         Time at which the run has a concrete resolved value.
-        This is different from `ended_at` if the :class:`sematic.Calculator`
+        This is different from `ended_at` if the :class:`sematic.Function`
         returns a :class:`sematic.Future`.
     failed_at : Optional[datetime]
         Time at which the run has failed.
@@ -97,7 +97,9 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
         types.String(), nullable=False, info={ENUM_KEY: FutureState}
     )
     name: str = Column(types.String(), nullable=True)
-    calculator_path: str = Column(types.String(), nullable=False)
+    function_path: str = Column(
+        types.String(), nullable=False, info={"alias": "calculator_path"}
+    )
     parent_id: Optional[str] = Column(types.String(), nullable=True)
     root_id: str = Column(types.String(), ForeignKey("runs.id"), nullable=False)
     description: Optional[str] = Column(types.String(), nullable=True)
@@ -204,11 +206,11 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
             value_to_json_encodable(value, ResourceRequirements)
         )
 
-    def get_func(self) -> AbstractCalculator:
-        split_calculator_path = self.calculator_path.split(".")
+    def get_func(self) -> AbstractFunction:
+        split_function_path = self.function_path.split(".")
         import_path, func_name = (
-            ".".join(split_calculator_path[:-1]),
-            split_calculator_path[-1],
+            ".".join(split_function_path[:-1]),
+            split_function_path[-1],
         )
         try:
             func = getattr(importlib.import_module(import_path), func_name)
@@ -224,7 +226,7 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
         return ", ".join(
             (
                 f"Run(id={self.id}",
-                f"calculator_path={self.calculator_path}",
+                f"function_path={self.function_path}",
                 f"future_state={self.future_state}",
                 f"parent_id={self.parent_id}",
                 f"root_id={self.root_id}",

@@ -16,7 +16,7 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         ":silent_resolver",
-        "//sematic:abstract_calculator",
+        "//sematic:abstract_function",
         "//sematic:abstract_future",
         "//sematic:api_client",
         "//sematic:graph",
@@ -39,7 +39,7 @@ sematic_py_lib(
     name = "state_machine_resolver",
     srcs = ["state_machine_resolver.py"],
     deps = [
-        "//sematic:abstract_calculator",
+        "//sematic:abstract_function",
         "//sematic:abstract_future",
         "//sematic:resolver",
         "//sematic/plugins:abstract_external_resource",
@@ -121,7 +121,7 @@ sematic_py_lib(
         ":log_streamer",
         "//sematic:abstract_future",
         "//sematic:api_client",
-        "//sematic:calculator",
+        "//sematic:function",
         "//sematic:future",
         "//sematic:future_context",
         "//sematic:log_reader",

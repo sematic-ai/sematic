@@ -47,19 +47,19 @@ def broadcast_graph_update(
 
 
 def broadcast_resolution_cancel(
-    root_id: str, calculator_path: str, user: Optional[User] = None
+    root_id: str, function_path: str, user: Optional[User] = None
 ) -> Optional[requests.Response]:
     url = "/events/pipeline/cancel"
-    json_payload = dict(resolution_id=root_id, calculator_path=calculator_path)
+    json_payload = dict(resolution_id=root_id, function_path=function_path)
     return _call_broadcast_endpoint(url=url, json_payload=json_payload, user=user)
 
 
 def broadcast_pipeline_update(
-    calculator_path: str,
+    function_path: str,
     user: Optional[User] = None,
 ) -> Optional[requests.Response]:
     url = "/events/pipeline/update"
-    json_payload = dict(calculator_path=calculator_path)
+    json_payload = dict(function_path=function_path)
     return _call_broadcast_endpoint(url=url, json_payload=json_payload, user=user)
 
 
