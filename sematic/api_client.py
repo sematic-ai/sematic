@@ -26,6 +26,7 @@ from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
+from sematic.metrics.metric_point import MetricPoint
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.utils.retry import retry, retry_call
 from sematic.versions import CURRENT_VERSION, version_as_string
@@ -534,6 +535,25 @@ def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
     for run_result in response["content"]:
         result_dict[run_result["run_id"]] = FutureState[run_result["future_state"]]
     return result_dict
+
+
+def save_metric_points(metric_points: List[MetricPoint]) -> None:
+    """
+    Saves metric points.
+
+    Parameters
+    ----------
+    metric_points: List[MetricPoint]
+        THe list of metric points to persist.
+    """
+    payload = dict(
+        metric_points=[
+            metric_point.to_json_encodable() for metric_point in metric_points
+        ]
+    )
+
+    _post("/metrics", json_payload=payload)
+    _notify_event("metrics", "update", payload)
 
 
 def notify_pipeline_update(function_path: str):
