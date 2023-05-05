@@ -33,6 +33,7 @@ sematic_py_lib(
         "//sematic/api/endpoints:resolutions",
         "//sematic/api/endpoints:runs",
         "//sematic/api/endpoints:storage",
+        "//sematic/api/endpoints:users",
         "//sematic/config:config",
         "//sematic/config:server_settings",
         "//sematic:logging",
@@ -45,12 +46,12 @@ sematic_py_lib(
 py_binary(
     name = "server",
     srcs = ["server.py"],
+    data = [
+        "//:sematic.pth",
+    ],
     main = "server.py",
     deps = [
         ":server_lib",
-    ],
-    data = [
-        "//:sematic.pth",
     ],
 )
 
