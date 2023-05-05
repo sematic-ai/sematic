@@ -47,6 +47,9 @@ class PluginScope(enum.Enum):
     # Metrics storage
     METRICS_STORAGE = "METRICS_STORAGE"
 
+    # Source code container image building plugin
+    BUILD = "BUILD"
+
 
 class AbstractPluginSettingsVar(enum.Enum):
     """
