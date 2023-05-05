@@ -15,9 +15,16 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
 )
 from sematic.calculator import func
+from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
-from sematic.db.queries import get_root_graph, get_run, save_resolution, save_run
+from sematic.db.queries import (
+    get_root_graph,
+    get_run,
+    save_graph,
+    save_resolution,
+    save_run,
+)
 from sematic.db.tests.fixtures import make_run  # noqa: F401
 from sematic.db.tests.fixtures import persisted_resolution  # noqa: F401
 from sematic.db.tests.fixtures import persisted_run  # noqa: F401
@@ -43,6 +50,25 @@ def add(a: float, b: float) -> float:
 @func
 def pipeline() -> float:
     return add(1, 2)
+
+
+class InstrumentedCloudResolver(CloudResolver):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _INSTRUMENTED_INSTANCES.append(self)
+        self._init_args = (args, kwargs)
+        self._resolve_called_with = None
+        self._detach_resolution_called_with = None
+
+    def resolve(self, future):
+        self._resolve_called_with = future
+        super().resolve(future)
+
+    def _detach_resolution(self, future):
+        self._detach_resolution_called_with = future
+
+
+_INSTRUMENTED_INSTANCES: List[InstrumentedCloudResolver] = []
 
 
 @mock.patch("sematic.api_client.update_run_future_states")
@@ -259,30 +285,62 @@ def test_resolver_restart(
     root_run = get_run(persisted_resolution.root_id)
     root_run.future_state = FutureState.RAN
     child_run1 = make_run(
+        id="a" * 32,
         future_state=FutureState.RAN,
         parent_id=persisted_resolution.root_id,
         root_id=persisted_resolution.root_id,
     )
     child_run2 = make_run(
+        id="b" * 32,
         future_state=FutureState.RESOLVED,
         parent_id=persisted_resolution.root_id,
         root_id=persisted_resolution.root_id,
     )
     child_run3 = make_run(
+        id="c" * 32,
         future_state=FutureState.CREATED,
         parent_id=persisted_resolution.root_id,
         root_id=persisted_resolution.root_id,
     )
-    for run in [root_run, child_run1, child_run2, child_run3]:  # noqa: F402
-        save_run(run)
+    child_run4 = make_run(
+        id="d" * 32,
+        future_state=FutureState.CREATED,
+        parent_id=persisted_resolution.root_id,
+        root_id=persisted_resolution.root_id,
+    )
+    runs = [root_run, child_run1, child_run2, child_run3, child_run4]
+
+    edge1 = Edge(
+        destination_run_id=child_run4.id,
+        source_run_id=child_run1.id,
+        destination_name="i0",
+        artifact_id=None,
+    )
+    edge2 = Edge(
+        destination_run_id=child_run4.id,
+        source_run_id=child_run2.id,
+        destination_name="i1",
+        artifact_id=None,
+    )
+    edge3 = Edge(
+        destination_run_id=child_run4.id,
+        source_run_id=child_run3.id,
+        destination_name="i2",
+        artifact_id=None,
+    )
+    edges = [edge1, edge2, edge3]
+    save_graph(runs=runs, artifacts=[], edges=edges)
 
     # Now that we have a partially executed resolution, see
     # what would happen if the resolver restarted.
     future = foo()
     future.id = root_run.id
+    future.state = FutureState[root_run.future_state]
     with environment_variables({"SEMATIC_CONTAINER_IMAGE": "foo:bar"}):
         with pytest.raises(Exception):
-            CloudResolver(_is_running_remotely=True, detach=False).resolve(future)
+            InstrumentedCloudResolver(_is_running_remotely=True, detach=False).resolve(
+                future
+            )
     runs, _, __ = get_root_graph(root_run.id)
     read_run_state_by_id = {run.id: run.future_state for run in runs}
     assert read_run_state_by_id[child_run1.id] == FutureState.CANCELED.value
@@ -291,3 +349,13 @@ def test_resolver_restart(
 
     # We want the root run to show up as Failed in this circumstance.
     assert read_run_state_by_id[root_run.id] == FutureState.FAILED.value
+
+    new_resolver = _INSTRUMENTED_INSTANCES[-1]
+    assert new_resolver._resolve_called_with.calculator is future.calculator
+    assert new_resolver._resolve_called_with.kwargs == future.kwargs
+    assert new_resolver._resolve_called_with.id != future.id
+    assert (
+        new_resolver._detach_resolution_called_with.id
+        == new_resolver._resolve_called_with.id
+    )
+    assert new_resolver._init_args[1]["rerun_from"] == child_run3.id
