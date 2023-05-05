@@ -156,3 +156,15 @@ pytest_test(
         "//sematic/plugins/metrics_storage/sql:sql_metrics_storage",
     ],
 )
+
+pytest_test(
+    name = "test_users",
+    srcs = ["test_users.py"],
+    # buildifier: leave-alone
+    deps = [
+        "//sematic/db:db",
+        "//sematic/db/models:user",
+        "//sematic/api/tests:fixtures",
+        "//sematic/db/tests:fixtures",
+    ],
+)
