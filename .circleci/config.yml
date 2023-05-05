@@ -64,7 +64,6 @@ commands:
 
   non-coverage-tests:
     description: Do tests without tracking code coverage
-    resource_class: xlarge
     steps:
       - run:
           name: Run Non-coverage Tests
@@ -121,6 +120,7 @@ jobs:
       - validate-schemas
       
   unit-tests:
+    resource_class: xlarge
     docker:
       - image: $SEMATIC_CI_IMAGE
     steps:
