@@ -82,6 +82,7 @@ sematic_py_lib(
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
+        "//sematic/metrics:metric_point",
         "//sematic/plugins:abstract_external_resource",
         "//sematic/scheduling:job_details",
         "//sematic/utils:retry",
