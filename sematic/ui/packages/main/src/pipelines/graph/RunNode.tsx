@@ -1,11 +1,12 @@
+import styled from "@emotion/styled";
 import {
-  Alert,
   AlertTitle,
   lighten,
   PaletteColor,
   Theme,
   useTheme
 } from "@mui/material";
+import Alert, { alertClasses } from "@mui/material/Alert";
 import { Run } from "@sematic/common/src/Models";
 import { Handle, NodeProps, Position } from "react-flow-renderer";
 import RunStateChip from "src/components/RunStateChip";
@@ -31,6 +32,12 @@ function getColor(futureState: string, theme: Theme): PaletteColor {
   };
 }
 
+const StyledAlert = styled(Alert)`
+  & .${alertClasses.message} {
+    overflow-y: hidden;
+  }
+`;
+
 export default function RunNode(props: NodeProps) {
   const run: Run = props.data.run;
   const theme = useTheme();
@@ -51,7 +58,7 @@ export default function RunNode(props: NodeProps) {
           }}
         />
       ))}
-      <Alert
+      <StyledAlert
         //severity="success"
         variant="outlined"
         icon={false}
@@ -65,6 +72,7 @@ export default function RunNode(props: NodeProps) {
           borderColor: lighten(color.light, 0.5),
           backgroundColor: lighten(color.light, props.selected ? 0.7 : 0.9),
           color: color.dark,
+          overflowY: 'hidden'
           //"&:hover": {
           //  backgroundColor: lighten(color.light, props.selected ? 0.7 : 0.87),
           //},
@@ -75,7 +83,7 @@ export default function RunNode(props: NodeProps) {
           <RunStateChip run={run} />
           {run.name}
         </AlertTitle>
-      </Alert>
+      </StyledAlert>
       <Handle
         id={run.id}
         isConnectable={false}
