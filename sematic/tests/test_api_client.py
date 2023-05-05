@@ -167,7 +167,14 @@ def test_save_metrics_points(
 
     payload = dict(
         metric_points=[
-            metric_point.to_json_encodable() for metric_point in metric_points
+            {
+                "name": metric_point.name,
+                "value": metric_point.value,
+                "metric_type": metric_point.metric_type.value,
+                "metric_time": metric_point.metric_time.timestamp(),
+                "labels": metric_point.labels,
+            }
+            for metric_point in metric_points
         ]
     )
 
