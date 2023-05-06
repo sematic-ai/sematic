@@ -45,5 +45,7 @@ sematic_py_lib(
 sematic_py_lib(
     name = "abstract_builder",
     srcs = ["abstract_builder.py"],
-    deps = [],
+    deps = [
+        "//sematic/config:settings",
+    ],
 )
