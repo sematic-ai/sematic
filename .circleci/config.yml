@@ -61,13 +61,27 @@ commands:
           name: Check DB Schema
           command: make migrate_up_sqlite && make update-schema && git diff --exit-code
 
-  non-coverage-tests:
+  non-coverage-tests-3-8:
     description: Do tests without tracking code coverage
     steps:
       - run:
-          name: Run Non-coverage Tests
+          name: Run Non-coverage Tests 3.8
           # This assumes pytest is installed via the install-package step above
-          command: PYTHONUNBUFFERED=1 bazel test --action_env=RUN_SLOW_TESTS=1 //sematic/... --test_output=all
+          command: PYTHONUNBUFFERED=1 bazel test --test_tag_filters=py3_8 --action_env=RUN_SLOW_TESTS=1 //sematic/... --test_output=all
+  non-coverage-tests-3-9:
+    description: Do tests without tracking code coverage
+    steps:
+      - run:
+          name: Run Non-coverage Tests 3.9
+          # This assumes pytest is installed via the install-package step above
+          command: PYTHONUNBUFFERED=1 bazel test --test_tag_filters=py3_9 --action_env=RUN_SLOW_TESTS=1 //sematic/... --test_output=all
+  non-coverage-tests-3-10:
+    description: Do tests without tracking code coverage
+    steps:
+      - run:
+          name: Run Non-coverage Tests 3.10
+          # This assumes pytest is installed via the install-package step above
+          command: PYTHONUNBUFFERED=1 bazel test --test_tag_filters=py3_10 --action_env=RUN_SLOW_TESTS=1 //sematic/... --test_output=all
 
   installation-tests:
     description: Do a test of installing sematic via wheel
@@ -118,24 +132,27 @@ jobs:
           at: /home/circleci
       - validate-schemas
       
-  unit-tests:
+  unit-tests-3-8:
     docker:
       - image: $SEMATIC_CI_IMAGE
     steps:
       - attach_workspace:
           at: /home/circleci
-      # Uncomment to profile CPU/Memory
-      # - run:
-      #    name: Profile CPU and memory (background)
-      #    command: |
-      #      while true; do
-      #        sleep 2
-      #        printf "\n\n$(date)\n"
-      #        top -b -c -n 1
-      #        echo "======"
-      #      done
-      #    background: true
-      - non-coverage-tests
+      - non-coverage-tests-3-8
+  unit-tests-3-9:
+    docker:
+      - image: $SEMATIC_CI_IMAGE
+    steps:
+      - attach_workspace:
+          at: /home/circleci
+      - non-coverage-tests-3-9
+  unit-tests-3-10:
+    docker:
+      - image: $SEMATIC_CI_IMAGE
+    steps:
+      - attach_workspace:
+          at: /home/circleci
+      - non-coverage-tests-3-10
 
   installation:
     docker:
@@ -214,7 +231,13 @@ workflows:
       - schemas:
           requires:
             - init
-      - unit-tests:
+      - unit-tests-3-8:
+          requires:
+            - init
+      - unit-tests-3-9:
+          requires:
+            - init
+      - unit-tests-3-10:
           requires:
             - init
       - installation:
@@ -230,7 +253,9 @@ workflows:
           requires:
             - lint
             - schemas
-            - unit-tests
+            - unit-tests-3-8
+            - unit-tests-3-9
+            - unit-tests-3-10
             - integration-test
             - fe-unit-tests
 
