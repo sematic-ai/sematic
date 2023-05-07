@@ -2,6 +2,7 @@ import BoltIcon from '@mui/icons-material/Bolt';
 import Check from "@mui/icons-material/Check";
 import ClearIcon from '@mui/icons-material/Clear';
 import StopIcon from '@mui/icons-material/Stop';
+import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import { useMemo } from "react";
 interface StateChipBaseProps {
     size?: "small" | "medium" | "large";
@@ -51,5 +52,8 @@ export const CanceledStateChip = (props: StateChipBaseProps) => {
     return <StopIcon color={"error"} style={styles} />;
 }
 
-
-
+export const SubmittedStateChip = (props: StateChipBaseProps) => {
+    const { size } = props;
+    const styles = useStylesHook({ size });
+    return <ArrowUpward color={"lightGrey"} style={styles} />;
+}

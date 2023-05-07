@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import Button, { buttonClasses } from '@mui/material/Button';
 import styled from '@emotion/styled';
 import theme from 'src/theme/new';
+import { useMemo } from 'react';
 
 const StyledBox = styled(Box)`
     display: flex;
@@ -29,15 +30,28 @@ const StyledBox = styled(Box)`
 
 interface TagsListProps {
     tags: string[];
+    fold?: number;
     onClick?: (tag: string) => void;
     onAddTag?: () => void;
 }
 
 const TagsList = (props: TagsListProps) => {
-    const { tags = [], onClick, onAddTag } = props;
+    const { tags = [], fold, onClick, onAddTag } = props;
+    const tagsToShow = useMemo(() => fold ? tags.slice(0, fold) : tags, [tags, fold]);
+    const plusMore = useMemo(() => {
+        if (!fold) {
+            return null;
+        }
+        if (tags.length <= fold) {
+            return null;
+        }
+        return <Chip label={`+${tags.length - fold}`} variant={"tag"} />
+    }, [tags, fold]);
+
     return <StyledBox>
-        {tags.map(tag => <Chip key={tag} label={tag} variant={"tag"} onClick={() => onClick?.(tag)} />)}
-        <Button variant={"text"} size={"small"} onClick={onAddTag}>add tags</Button>
+        {tagsToShow.map(tag => <Chip key={tag} label={tag} variant={"tag"} onClick={() => onClick?.(tag)} />)}
+        {plusMore}
+        {fold === undefined && <Button variant={"text"} size={"small"} onClick={onAddTag}>add tags</Button>}
     </StyledBox>;
 }
 

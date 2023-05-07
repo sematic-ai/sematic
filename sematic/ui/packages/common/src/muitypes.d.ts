@@ -52,4 +52,10 @@ declare module '@mui/material/Chip' {
     }
 }
 
+declare module '@mui/material/SvgIcon' {
+    interface SvgIconPropsColorOverrides {
+        lightGrey: true;
+    }
+}
+
 export const notAModule = 1;

@@ -284,8 +284,15 @@ const components: Components = {
                 'padding': `${theme.spacing(2.4)} 0`,
             })) as any
         }
+    },
+    MuiTableHead: {
+        styleOverrides: {
+            root: (({ theme }: { theme: Theme }) => ({
+                'fontSize': `${theme.typography.fontSize}px`,
+                'textAlign': 'left',
+            })) as any
+        }
     }
-
 }
 
 export default components;

@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import TwoColumns from "src/layout/TwoColumns";
+import RunList from 'src/pages/RunSearch/RunList';
 import SearchFilters from 'src/pages/RunSearch/SearchFilters';
 
 const RunSearch = () => {
@@ -9,7 +10,7 @@ const RunSearch = () => {
     }, []);
 
     const onRenderRight = useCallback(() => {
-        return <></>;
+        return <RunList />;
     }, []);
 
     return <TwoColumns onRenderLeft={onRenderLeft} onRenderRight={onRenderRight} />;

@@ -23,6 +23,12 @@ export const DateTimeLong = (datetime: Date | string) => {
     return format(date, "M/d/yyyy 'at' h:mmaaa")
 }
 
+export const DateTimeLongConcise = (datetime: Date | string) => {
+    let date = datetime instanceof Date ? datetime : parseJSON(datetime);
+
+    return format(date, "M/d/yyyy h:mmaaa")
+}
+
 export const Duration = (start: Date | string, end: Date | string) => {
     let startTime = start instanceof Date ? start : parseJSON(start);
 
@@ -31,9 +37,15 @@ export const Duration = (start: Date | string, end: Date | string) => {
     const duration = intervalToDuration({
         start: startTime,
         end: endTime
-    })
+    });
 
-    return formatDuration(duration, { format: ["minutes", "seconds"]});
+    const formatString = formatDuration(duration, { format: ["minutes", "seconds"], zero: true});
+
+    return formatString.replace(/\s0\sseconds$/g, "");
+}
+
+export function DurationShort(start: Date | string, end: Date | string) {
+    return Duration(start, end).replace(/minutes/g, "m").replace(/seconds/g, "s");
 }
 
 
