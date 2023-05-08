@@ -1,2 +1,0 @@
-version: 0
-image_script: "sematic/plugins/building/tests/resources/good_image_script.sh"

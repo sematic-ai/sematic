@@ -9,7 +9,4 @@ RUN echo '#!/bin/sh' > entrypoint.sh && echo '/usr/bin/python3 -m sematic.resolv
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
-COPY requirements.txt requirements.txt
-RUN pip3 install --no-cache -r requirements.txt
-
-COPY sematic/plugins/building/tests/resources/good_launch_script.py sematic/plugins/building/tests/resources/good_launch_script.py
+COPY sematic/plugins/building/tests/fixtures/bad_launch_script.py sematic/plugins/building/tests/fixtures/bad_launch_script.py

@@ -1,5 +1,6 @@
 # Standard Library
 import logging
+import os
 import sys
 import tempfile
 from typing import Any, Optional
@@ -15,11 +16,11 @@ from sematic.tests.utils import assert_logs_captured
 
 # this is the relative path inside the bazel sandbox where the data files will be copied
 # they are repo-relative instead of build file-relative
-_RESOURCE_PATH = "sematic/plugins/building/tests/resources/"
-_LAUNCH_SCRIPT = _RESOURCE_PATH + "good_launch_script.py"
+_RESOURCE_PATH = os.path.join("sematic", "plugins", "building", "tests", "fixtures")
+_LAUNCH_SCRIPT = os.path.join(_RESOURCE_PATH, "good_launch_script.py")
 _IMAGE_SHA = "sha256:bea3926876a3024c33fe08e0a6b2c0377a7eb600d7b3061a3f3f39d711152e3c"
 _BASE_IMAGE_URI = f"sematicai/sematic-worker-base:latest@{_IMAGE_SHA}"
-_LOCAL_IMAGE_NAME = "resources:default_my_tag_suffix"
+_LOCAL_IMAGE_NAME = "fixtures:default_my_tag_suffix"
 _LOCAL_IMAGE_URI = f"{_LOCAL_IMAGE_NAME}@{_IMAGE_SHA}"
 _REMOTE_IMAGE_NAME = "my_registry.com/my_repository:default_my_tag_suffix"
 _REMOTE_IMAGE_URI = f"{_REMOTE_IMAGE_NAME}@{_IMAGE_SHA}"
@@ -98,7 +99,7 @@ def test_build_image_script_happy(
     mock_image: mock.Mock,
 ):
     # determine loading the image_script build config
-    target = _RESOURCE_PATH + "good_minimal.py"
+    target = os.path.join(_RESOURCE_PATH, "good_minimal.py")
     expected_local_uri = docker_builder.ImageURI.from_uri(_LOCAL_IMAGE_URI)
     mock_from_env.return_value = mock_docker_client
     mock_push_image.return_value = docker_builder.ImageURI.from_uri(_REMOTE_IMAGE_URI)
@@ -176,7 +177,7 @@ def test_build_image_build_script(
     mock_docker_client: mock.Mock,
     mock_image: mock.Mock,
 ):
-    image_script = _RESOURCE_PATH + "good_image_script.sh"
+    image_script = os.path.join(_RESOURCE_PATH, "good_image_script.sh")
     base_uri = docker_builder.ImageURI.from_uri(_BASE_IMAGE_URI)
     local_uri = docker_builder.ImageURI.from_uri(_LOCAL_IMAGE_URI)
 
@@ -223,7 +224,7 @@ def test_launch_happy():
 
 
 def test_launch_error():
-    target = _RESOURCE_PATH + "bad_launch_script.py"
+    target = os.path.join(_RESOURCE_PATH, "bad_launch_script.py")
     image_uri = docker_builder.ImageURI.from_uri(_BASE_IMAGE_URI)
 
     # we go through the same motions as for the happy path, because we are honourable
@@ -259,11 +260,13 @@ def test_get_build_config_full_base_uri_happy():
 
 
 def test_get_build_config_minimal_image_script_happy():
-    actual_config = docker_builder._get_build_config(_RESOURCE_PATH + "good_minimal.py")
+    target = os.path.join(_RESOURCE_PATH, "good_minimal.py")
+    expected_image_script = os.path.join(_RESOURCE_PATH, "good_image_script.sh")
+    actual_config = docker_builder._get_build_config(target)
 
     assert actual_config is not None
     assert actual_config.version == docker_builder.BUILD_SCHEMA_VERSION
-    assert actual_config.image_script == _RESOURCE_PATH + "good_image_script.sh"
+    assert actual_config.image_script == expected_image_script
     assert actual_config.base_uri is None
     assert actual_config.build is None
     assert actual_config.push is None
@@ -284,20 +287,25 @@ def test_get_build_config_minimal_image_script_happy():
     ],
 )
 def test_get_build_config_errors(config_file: str, match: str):
+    config_file = os.path.join(_RESOURCE_PATH, config_file)
     with pytest.raises(docker_builder.BuildConfigurationError, match=match):
-        docker_builder._get_build_config(_RESOURCE_PATH + config_file)
+        docker_builder._get_build_config(config_file)
 
 
 @pytest.mark.parametrize(
     "source_build_config,target,expected_dockerfile",
     [
         (None, None, "docker/Dockerfile.basic"),
-        (None, _RESOURCE_PATH + "good_launch_script.py", "docker/Dockerfile.target"),
+        (
+            None,
+            os.path.join(_RESOURCE_PATH, "good_launch_script.py"),
+            "docker/Dockerfile.target",
+        ),
         (
             docker_builder.SourceBuildConfig(
                 platform=None, requirements="requirements.txt", data=None, src=None
             ),
-            _RESOURCE_PATH + "good_launch_script.py",
+            os.path.join(_RESOURCE_PATH, "good_launch_script.py"),
             "docker/Dockerfile.requirements",
         ),
         (
@@ -305,10 +313,10 @@ def test_get_build_config_errors(config_file: str, match: str):
                 platform=None,
                 requirements=None,
                 # check globbing
-                data=[_RESOURCE_PATH + "/**/Dockerfile.*"],
+                data=[os.path.join(_RESOURCE_PATH, "**/Dockerfile.*")],
                 src=None,
             ),
-            _RESOURCE_PATH + "good_launch_script.py",
+            os.path.join(_RESOURCE_PATH, "good_launch_script.py"),
             "docker/Dockerfile.data",
         ),
         (
@@ -317,22 +325,25 @@ def test_get_build_config_errors(config_file: str, match: str):
                 requirements=None,
                 data=None,
                 # intentionally leave out the target to check it is not added
-                src=[_RESOURCE_PATH + "bad_launch_script.py"],
+                src=[os.path.join(_RESOURCE_PATH, "bad_launch_script.py")],
             ),
-            _RESOURCE_PATH + "good_launch_script.py",
+            os.path.join(_RESOURCE_PATH, "good_launch_script.py"),
             "docker/Dockerfile.src",
         ),
         (
             docker_builder.SourceBuildConfig(
                 platform=None,
                 requirements="requirements.txt",
-                data=[_RESOURCE_PATH + "docker", _RESOURCE_PATH + "*.sh"],
+                data=[
+                    os.path.join(_RESOURCE_PATH, "docker"),
+                    os.path.join(_RESOURCE_PATH, "*.sh"),
+                ],
                 # check the target is not duplicated
                 # this actually results in an unexpected __init__.py file being included
                 # bazel is perhaps responsible for creating it
-                src=[_RESOURCE_PATH + "*.py"],
+                src=[os.path.join(_RESOURCE_PATH, "*.py")],
             ),
-            _RESOURCE_PATH + "good_launch_script.py",
+            os.path.join(_RESOURCE_PATH, "good_launch_script.py"),
             "docker/Dockerfile.full",
         ),
     ],
@@ -343,8 +354,9 @@ def test_generate_dockerfile_contents(
     expected_dockerfile: str,
 ):
     base_uri = docker_builder.ImageURI.from_uri(_BASE_IMAGE_URI)
+    dockerfile_full_path = os.path.join(_RESOURCE_PATH, expected_dockerfile)
 
-    with open(_RESOURCE_PATH + expected_dockerfile, "rt") as f:
+    with open(dockerfile_full_path, "rt") as f:
         expected_contents = f.read().strip()
 
     actual_contents = docker_builder._generate_dockerfile_contents(
@@ -363,7 +375,7 @@ def test_generate_dockerfile_contents(
 
 def test_execute_build_script_happy(caplog: Any):
     target = "/dummy.py"
-    image_script = _RESOURCE_PATH + "good_image_script.sh"
+    image_script = os.path.join(_RESOURCE_PATH, "good_image_script.sh")
     expected_image_uri = docker_builder.ImageURI.from_uri(uri=_BASE_IMAGE_URI)
 
     actual_image_uri = docker_builder._execute_build_script(
@@ -375,7 +387,7 @@ def test_execute_build_script_happy(caplog: Any):
 
 def test_execute_build_script_error():
     target = "/dummy.py"
-    image_script = _RESOURCE_PATH + "bad_image_script.sh"
+    image_script = os.path.join(_RESOURCE_PATH, "bad_image_script.sh")
 
     with pytest.raises(
         docker_builder.BuildError, match="Unable to source container image URI from.*42"
@@ -503,11 +515,11 @@ def test_get_local_image_name():
         target=_LAUNCH_SCRIPT, build_config=mock_build_config
     )
 
-    assert actual_name == "resources:default"
+    assert actual_name == "fixtures:default"
 
     mock_build_config.push = _PUSH_CONFIG
     actual_name = docker_builder._get_local_image_name(
         target=_LAUNCH_SCRIPT, build_config=mock_build_config
     )
 
-    assert actual_name == "resources:default_my_tag_suffix"
+    assert actual_name == _LOCAL_IMAGE_NAME
