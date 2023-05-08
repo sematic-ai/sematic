@@ -49,6 +49,7 @@ def _get_collection_payload_with_user(
     for item in items:
         item_payload = item.to_json_encodable()
         item_payload["user"] = None
+        item_payload["calculator_path"] = item_payload["function_path"]
 
         if item.user_id is not None:
             item_payload["user"] = users_by_id[item.user_id]
