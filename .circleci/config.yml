@@ -27,7 +27,7 @@ commands:
           # For example sqlalchemy requires greenlet only on certain platforms
           name: Freeze requirements
           command: pip-compile --allow-unsafe ~/project/requirements/requirements.in > ~/project/requirements/requirements.txt
-  
+
   install-npm-dependencies:
     description: Install NPM dependencies in the UI folder
     steps:
@@ -117,7 +117,7 @@ jobs:
       - attach_workspace:
           at: /home/circleci
       - validate-schemas
-      
+
   unit-tests:
     docker:
       - image: $SEMATIC_CI_IMAGE
@@ -151,15 +151,15 @@ jobs:
     environment:
       CI_VENV_NAME: CIVENV
       REACT_APP_IS_CIRCLE_CI: 1
-    
-  
+
+
   integration-test:
     docker:
       - image: $SEMATIC_CI_IMAGE
     steps:
       - attach_workspace:
           at: /home/circleci
-      - run: 
+      - run:
           name: Create a run
           command: source ./CIVENV/bin/activate && sematic start && sematic run examples/add
       - run:
@@ -176,7 +176,7 @@ jobs:
           path: ~/project/sematic/ui/tests/cypress_screenshots
       - store_test_results:
           path: ~/project/sematic/ui/tests/cypress_results
-  
+
   fe-unit-tests:
     docker:
       - image: $SEMATIC_CI_IMAGE
@@ -193,7 +193,7 @@ jobs:
           path: ~/project/sematic/ui/tests/cypress_screenshots
       - store_test_results:
           path: ~/project/sematic/ui/tests/cypress_results
-      
+
   finalize:
     docker:
       - image: cimg/base:2023.01
