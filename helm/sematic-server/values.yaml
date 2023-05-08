@@ -32,24 +32,24 @@ deployment:
   socket_io:
     dedicated: false
   worker_count: 1 # if you want to increase this, enable socket_io.dedicated above
-  replica_count: 1
+  replica_count: 2
   affinity: {}
   annotations: {}
   tolerations: {}
   node_selector: {}
   resources:
     limits:
-      cpu: 500m
-      memory: 4000Mi
+      cpu: 250m
+      memory: 2000Mi
     requests:
-      cpu: 500m
-      memory: 4000Mi
+      cpu: 250m
+      memory: 2000Mi
   autoscaling:
     enabled: false
-    min_replicas: 1
-    max_replicas: 1
+    min_replicas: 2
+    max_replicas: 5
     target_cpu_utilization_pct: 80
-    # target_memory_utilization_pct: 80
+    target_memory_utilization_pct: 80
   security_context: {}
     # fs_group: 2000
   container_security_context: {}
