@@ -296,7 +296,10 @@ def test_get_build_config_errors(config_file: str, match: str):
         docker_builder._get_build_config(config_file)
 
 
-def test_make_docker_client_no_config():
+@mock.patch("docker.api.client.APIClient._retrieve_server_version")
+def test_make_docker_client_no_config(mock_retrieve_server_version: mock.MagicMock):
+    mock_retrieve_server_version.return_value = "1.30"
+
     docker_client = docker_builder._make_docker_client(docker_config=None)
 
     # the rest of the values depend on the specific version of the docker library,
@@ -306,7 +309,10 @@ def test_make_docker_client_no_config():
     assert docker_client.api.credstore_env is None
 
 
-def test_make_docker_client_config():
+@mock.patch("docker.api.client.APIClient._retrieve_server_version")
+def test_make_docker_client_config(mock_retrieve_server_version: mock.MagicMock):
+    mock_retrieve_server_version.return_value = "1.30"
+
     expected_base_url = "unix://var/run/docker.sock"
     expected_credstore_env = {"DOCKER_TLS_VERIFY": "/home/trudy/legit.cer"}
     docker_config = docker_builder.DockerClientConfig(
