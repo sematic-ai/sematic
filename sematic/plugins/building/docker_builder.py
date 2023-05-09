@@ -15,11 +15,13 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 # isort: off
-# there is a collision between the docker-py library and the sematic/docker directory
 
 # Third-party
 import docker
 import yaml
+
+# there is a collision between the docker-py library and the sematic/docker directory,
+# so we need to add `# type: ignore` everywhere a component of the docker module is used
 from docker.models.images import Image  # type: ignore
 
 # isort: on
@@ -134,8 +136,8 @@ class SourceBuildConfig:
 
     platform: Optional[str] = None
     requirements: Optional[str] = None
-    data: Optional[str] = None
-    src: Optional[str] = None
+    data: Optional[List[str]] = None
+    src: Optional[List[str]] = None
 
 
 @dataclass
@@ -243,7 +245,7 @@ class BuildConfig:
 
         except Exception as e:
             raise BuildConfigurationError(
-                f"Unable to load build configuration from '{build_file_path}'!"
+                f"Unable to load build configuration from '{build_file_path}': {e}"
             ) from e
 
 
@@ -532,26 +534,29 @@ def _generate_dockerfile_contents(
         for data_glob in source_build_config.data:
             data_files = glob.glob(data_glob)
             if len(data_files) > 0:
-                for data_file in data_files:
+                # sorting for determinism
+                for data_file in sorted(data_files):
                     dockerfile_contents = (
                         f"{dockerfile_contents}\nCOPY {data_file} {data_file}"
                     )
+        # provide an empty line between data and src, for readability
+        dockerfile_contents = f"{dockerfile_contents}\n"
 
     if source_build_config is not None and source_build_config.src is not None:
         logger.debug("Adding source files: %s", source_build_config.src)
         for src_glob in source_build_config.src:
             src_files = glob.glob(src_glob)
             if len(src_files) > 0:
-                for scr_file in src_files:
+                # sorting for determinism
+                for src_file in sorted(src_files):
                     dockerfile_contents = (
-                        f"{dockerfile_contents}\nCOPY {scr_file} {scr_file}"
+                        f"{dockerfile_contents}\nCOPY {src_file} {src_file}"
                     )
-
     elif target is not None:
         logger.debug("Adding target source file: %s", target)
         dockerfile_contents = f"{dockerfile_contents}\nCOPY {target} {target}"
 
-    return dockerfile_contents
+    return dockerfile_contents.strip()
 
 
 def _execute_build_script(target: str, image_script: str) -> ImageURI:
@@ -587,7 +592,7 @@ def _execute_build_script(target: str, image_script: str) -> ImageURI:
 
     except BaseException as e:
         raise BuildError(
-            f"Unable to source container image URI from '{image_script}'!"
+            f"Unable to source container image URI from '{image_script}': {e}"
         ) from e
 
 

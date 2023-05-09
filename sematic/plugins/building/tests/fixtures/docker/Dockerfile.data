@@ -1,0 +1,19 @@
+FROM sematicai/sematic-worker-base:latest
+WORKDIR /
+
+RUN which pip3 || apt update -y && apt install -y python3-pip
+RUN python3 -c "import distutils" || apt update -y && apt install --reinstall -y python$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")-distutils
+
+ENV PATH="/sematic/bin/:${PATH}"
+RUN echo '#!/bin/sh' > entrypoint.sh && echo '/usr/bin/python3 -m sematic.resolvers.worker "$@"' >> entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+
+COPY sematic/plugins/building/tests/fixtures/docker/Dockerfile.basic sematic/plugins/building/tests/fixtures/docker/Dockerfile.basic
+COPY sematic/plugins/building/tests/fixtures/docker/Dockerfile.data sematic/plugins/building/tests/fixtures/docker/Dockerfile.data
+COPY sematic/plugins/building/tests/fixtures/docker/Dockerfile.full sematic/plugins/building/tests/fixtures/docker/Dockerfile.full
+COPY sematic/plugins/building/tests/fixtures/docker/Dockerfile.requirements sematic/plugins/building/tests/fixtures/docker/Dockerfile.requirements
+COPY sematic/plugins/building/tests/fixtures/docker/Dockerfile.src sematic/plugins/building/tests/fixtures/docker/Dockerfile.src
+COPY sematic/plugins/building/tests/fixtures/docker/Dockerfile.target sematic/plugins/building/tests/fixtures/docker/Dockerfile.target
+
+COPY sematic/plugins/building/tests/fixtures/good_launch_script.py sematic/plugins/building/tests/fixtures/good_launch_script.py
