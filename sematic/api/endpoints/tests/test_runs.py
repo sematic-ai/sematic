@@ -125,7 +125,8 @@ def test_list_runs(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: 
     assert len(payload["next_cursor"]) > 0
     assert payload["after_cursor_count"] == len(created_runs)
     assert payload["content"] == [
-        dict(user=None, **run_.to_json_encodable()) for run_ in created_runs[:3]
+        dict(user=None, calculator_path=run_.function_path, **run_.to_json_encodable())
+        for run_ in created_runs[:3]
     ]
 
     next_page_url = payload["next_page_url"]
@@ -139,7 +140,8 @@ def test_list_runs(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: 
     assert payload["next_cursor"] is None
     assert payload["after_cursor_count"] == 2
     assert payload["content"] == [
-        dict(user=None, **run_.to_json_encodable()) for run_ in created_runs[3:]
+        dict(user=None, calculator_path=run_.function_path, **run_.to_json_encodable())
+        for run_ in created_runs[3:]
     ]
 
 
@@ -509,11 +511,12 @@ def test_schedule_run(
         assert run.future_state == FutureState.SCHEDULED.value
         mock_k8s.schedule_run_job.assert_called_once()
         schedule_job_call_args = mock_k8s.schedule_run_job.call_args[1]
-        schedule_job_call_args["run_id"] == persisted_run.id
-        schedule_job_call_args["image"] == persisted_run.container_image_uri
-        schedule_job_call_args[
-            "resource_requirements"
-        ] == persisted_run.resource_requirements
+        assert schedule_job_call_args["run_id"] == persisted_run.id
+        assert schedule_job_call_args["image"] == persisted_run.container_image_uri
+        assert (
+            schedule_job_call_args["resource_requirements"]
+            == persisted_run.resource_requirements
+        )
         run = get_run(persisted_run.id)
         assert count_jobs_by_run_id(run.id) == 1
 
