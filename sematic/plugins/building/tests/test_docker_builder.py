@@ -68,15 +68,15 @@ def mock_docker_client(mock_image: mock.Mock) -> mock.Mock:
 
 
 @mock.patch("sematic.plugins.building.docker_builder._push_image")
-@mock.patch("sematic.plugins.building.docker_builder._get_docker_client")
+@mock.patch("sematic.plugins.building.docker_builder._make_docker_client")
 def test_build_base_uri_happy(
-    mock_get_docker_client: mock.MagicMock,
+    mock_make_docker_client: mock.MagicMock,
     mock_push_image: mock.MagicMock,
     mock_docker_client: mock.Mock,
     mock_image: mock.Mock,
 ):
     expected_local_uri = docker_builder.ImageURI.from_uri(_LOCAL_IMAGE_URI)
-    mock_get_docker_client.return_value = mock_docker_client
+    mock_make_docker_client.return_value = mock_docker_client
     mock_push_image.return_value = docker_builder.ImageURI.from_uri(_REMOTE_IMAGE_URI)
 
     actual_image_uri = docker_builder._build(target=_LAUNCH_SCRIPT)
@@ -91,9 +91,9 @@ def test_build_base_uri_happy(
 
 
 @mock.patch("sematic.plugins.building.docker_builder._push_image")
-@mock.patch("sematic.plugins.building.docker_builder._get_docker_client")
+@mock.patch("sematic.plugins.building.docker_builder._make_docker_client")
 def test_build_image_script_happy(
-    mock_get_docker_client: mock.MagicMock,
+    mock_make_docker_client: mock.MagicMock,
     mock_push_image: mock.MagicMock,
     mock_docker_client: mock.Mock,
     mock_image: mock.Mock,
@@ -101,7 +101,7 @@ def test_build_image_script_happy(
     # determine loading the image_script build config
     target = os.path.join(_RESOURCE_PATH, "good_minimal.py")
     expected_local_uri = docker_builder.ImageURI.from_uri(_LOCAL_IMAGE_URI)
-    mock_get_docker_client.return_value = mock_docker_client
+    mock_make_docker_client.return_value = mock_docker_client
     mock_push_image.return_value = docker_builder.ImageURI.from_uri(_REMOTE_IMAGE_URI)
 
     actual_image_uri = docker_builder._build(target=target)
@@ -115,14 +115,14 @@ def test_build_image_script_happy(
     )
 
 
-@mock.patch("sematic.plugins.building.docker_builder._get_docker_client")
+@mock.patch("sematic.plugins.building.docker_builder._make_docker_client")
 def test_build_error(
-    mock_get_docker_client: mock.MagicMock,
+    mock_make_docker_client: mock.MagicMock,
     mock_docker_client: mock.Mock,
     mock_image: mock.Mock,
     caplog: Any,
 ):
-    mock_get_docker_client.return_value = mock_docker_client
+    mock_make_docker_client.return_value = mock_docker_client
     mock_docker_client.api.build.return_value = [
         {"stream": "Step 1/14 : FROM sematicai/sematic-worker-base:latest"},
         {"stream": ""},
@@ -296,8 +296,8 @@ def test_get_build_config_errors(config_file: str, match: str):
         docker_builder._get_build_config(config_file)
 
 
-def test_get_docker_client_no_config():
-    docker_client = docker_builder._get_docker_client(docker_config=None)
+def test_make_docker_client_no_config():
+    docker_client = docker_builder._make_docker_client(docker_config=None)
 
     # the rest of the values depend on the specific version of the docker library,
     # or are pushed down to implementation-specific components,
@@ -306,14 +306,14 @@ def test_get_docker_client_no_config():
     assert docker_client.api.credstore_env is None
 
 
-def test_get_docker_client_config():
+def test_make_docker_client_config():
     expected_base_url = "unix://var/run/docker.sock"
     expected_credstore_env = {"DOCKER_TLS_VERIFY": "/home/trudy/legit.cer"}
     docker_config = docker_builder.DockerClientConfig(
         base_url=expected_base_url, credstore_env=expected_credstore_env
     )
 
-    docker_client = docker_builder._get_docker_client(docker_config=docker_config)
+    docker_client = docker_builder._make_docker_client(docker_config=docker_config)
 
     # the rest of the values depend on the specific version of the docker library,
     # or are pushed down to implementation-specific components,

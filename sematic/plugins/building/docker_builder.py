@@ -2,6 +2,7 @@
 The native Docker Builder plugin implementation.
 """
 # Standard Library
+import distutils.util
 import glob
 import json
 import logging
@@ -202,12 +203,12 @@ class DockerClientConfig:
             self.timeout = int(self.timeout)
         if self.tls is not None and isinstance(self.tls, str):
             # TODO: extract settings.as_bool to utilities, and use that instead
-            self.tls = self.tls == "True"
+            self.tls = bool(distutils.util.strtobool(self.tls))
         if self.credstore_env is not None and isinstance(self.credstore_env, str):
             self.credstore_env = json.loads(self.credstore_env)
         if self.use_ssh_client is not None and isinstance(self.use_ssh_client, str):
             # TODO: extract settings.as_bool to utilities, and use that instead
-            self.use_ssh_client = self.use_ssh_client == "True"
+            self.use_ssh_client = bool(distutils.util.strtobool(self.use_ssh_client))
         if self.max_pool_size is not None and isinstance(self.max_pool_size, str):
             self.max_pool_size = int(self.max_pool_size)
 
@@ -401,7 +402,7 @@ def _build(target: str) -> ImageURI:
     build_config = _get_build_config(script_path=target)
     logger.info("Loaded build configuration: %s", build_config)
 
-    docker_client = _get_docker_client(build_config.docker)
+    docker_client = _make_docker_client(build_config.docker)
     logger.info("Instantiated docker client for server: %s", docker_client.api.base_url)
 
     image, image_uri = _build_image(
@@ -477,7 +478,7 @@ def _find_build_config_files(script_path: str) -> List[str]:
     return [file_candidate] if os.path.isfile(file_candidate) else []
 
 
-def _get_docker_client(
+def _make_docker_client(
     docker_config: Optional[DockerClientConfig],
 ) -> docker.DockerClient:  # type: ignore
     """
