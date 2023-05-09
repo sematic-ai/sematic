@@ -68,15 +68,15 @@ def mock_docker_client(mock_image: mock.Mock) -> mock.Mock:
 
 
 @mock.patch("sematic.plugins.building.docker_builder._push_image")
-@mock.patch("docker.from_env")
+@mock.patch("sematic.plugins.building.docker_builder._make_docker_client")
 def test_build_base_uri_happy(
-    mock_from_env: mock.MagicMock,
+    mock_make_docker_client: mock.MagicMock,
     mock_push_image: mock.MagicMock,
     mock_docker_client: mock.Mock,
     mock_image: mock.Mock,
 ):
     expected_local_uri = docker_builder.ImageURI.from_uri(_LOCAL_IMAGE_URI)
-    mock_from_env.return_value = mock_docker_client
+    mock_make_docker_client.return_value = mock_docker_client
     mock_push_image.return_value = docker_builder.ImageURI.from_uri(_REMOTE_IMAGE_URI)
 
     actual_image_uri = docker_builder._build(target=_LAUNCH_SCRIPT)
@@ -91,9 +91,9 @@ def test_build_base_uri_happy(
 
 
 @mock.patch("sematic.plugins.building.docker_builder._push_image")
-@mock.patch("docker.from_env")
+@mock.patch("sematic.plugins.building.docker_builder._make_docker_client")
 def test_build_image_script_happy(
-    mock_from_env: mock.MagicMock,
+    mock_make_docker_client: mock.MagicMock,
     mock_push_image: mock.MagicMock,
     mock_docker_client: mock.Mock,
     mock_image: mock.Mock,
@@ -101,7 +101,7 @@ def test_build_image_script_happy(
     # determine loading the image_script build config
     target = os.path.join(_RESOURCE_PATH, "good_minimal.py")
     expected_local_uri = docker_builder.ImageURI.from_uri(_LOCAL_IMAGE_URI)
-    mock_from_env.return_value = mock_docker_client
+    mock_make_docker_client.return_value = mock_docker_client
     mock_push_image.return_value = docker_builder.ImageURI.from_uri(_REMOTE_IMAGE_URI)
 
     actual_image_uri = docker_builder._build(target=target)
@@ -115,14 +115,14 @@ def test_build_image_script_happy(
     )
 
 
-@mock.patch("docker.from_env")
+@mock.patch("sematic.plugins.building.docker_builder._make_docker_client")
 def test_build_error(
-    mock_from_env: mock.MagicMock,
+    mock_make_docker_client: mock.MagicMock,
     mock_docker_client: mock.Mock,
     mock_image: mock.Mock,
     caplog: Any,
 ):
-    mock_from_env.return_value = mock_docker_client
+    mock_make_docker_client.return_value = mock_docker_client
     mock_docker_client.api.build.return_value = [
         {"stream": "Step 1/14 : FROM sematicai/sematic-worker-base:latest"},
         {"stream": ""},
@@ -257,6 +257,10 @@ def test_get_build_config_full_base_uri_happy():
     assert actual_config.push.registry == "my_registry.com"
     assert actual_config.push.repository == "my_repository"
     assert actual_config.push.tag_suffix == "my_tag_suffix"
+    assert actual_config.docker.base_url == "unix://var/run/docker.sock"
+    assert actual_config.docker.credstore_env == {
+        "DOCKER_TLS_VERIFY": "/home/trudy/legit.cer"
+    }
 
 
 def test_get_build_config_minimal_image_script_happy():
@@ -290,6 +294,55 @@ def test_get_build_config_errors(config_file: str, match: str):
     config_file = os.path.join(_RESOURCE_PATH, config_file)
     with pytest.raises(docker_builder.BuildConfigurationError, match=match):
         docker_builder._get_build_config(config_file)
+
+
+@mock.patch("docker.api.client.APIClient._retrieve_server_version")
+def test_make_docker_client_no_config(mock_retrieve_server_version: mock.MagicMock):
+    mock_retrieve_server_version.return_value = "1.30"
+
+    docker_client = docker_builder._make_docker_client(docker_config=None)
+
+    # the rest of the values depend on the specific version of the docker library,
+    # or are pushed down to implementation-specific components,
+    # so it doesn't make sense to assert on them
+    assert docker_client.api.base_url == "http+docker://localhost"
+    assert docker_client.api.credstore_env is None
+
+
+@mock.patch("docker.api.client.APIClient._retrieve_server_version")
+def test_make_docker_client_config(mock_retrieve_server_version: mock.MagicMock):
+    mock_retrieve_server_version.return_value = "1.30"
+
+    expected_base_url = "unix://var/run/docker.sock"
+    expected_credstore_env = {"DOCKER_TLS_VERIFY": "/home/trudy/legit.cer"}
+    docker_config = docker_builder.DockerClientConfig(
+        base_url=expected_base_url, credstore_env=expected_credstore_env
+    )
+
+    docker_client = docker_builder._make_docker_client(docker_config=docker_config)
+
+    # the rest of the values depend on the specific version of the docker library,
+    # or are pushed down to implementation-specific components,
+    # so it doesn't make sense to assert on them
+    assert docker_client.api.base_url == "http+docker://localhost"
+    assert docker_client.api.credstore_env == expected_credstore_env
+
+
+@mock.patch("docker.api.client.APIClient._retrieve_server_version")
+def test_make_docker_client_error(mock_retrieve_server_version: mock.MagicMock):
+    test_error = docker.errors.DockerException("test")  # type: ignore
+    mock_retrieve_server_version.side_effect = test_error
+
+    expected_base_url = "unix://var/run/docker.sock"
+    expected_credstore_env = {"DOCKER_TLS_VERIFY": "/home/trudy/legit.cer"}
+    docker_config = docker_builder.DockerClientConfig(
+        base_url=expected_base_url, credstore_env=expected_credstore_env
+    )
+
+    with pytest.raises(
+        docker_builder.BuildError, match="Unable to instantiate Docker client: test"
+    ):
+        docker_builder._make_docker_client(docker_config=docker_config)
 
 
 @pytest.mark.parametrize(
