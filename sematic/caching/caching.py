@@ -103,8 +103,8 @@ def get_future_cache_key(cache_namespace: str, future: AbstractFuture) -> str:
     if len(future.kwargs) != len(future.resolved_kwargs):
         raise ValueError("Not all input arguments are resolved!")
 
-    func_fqpn = future.calculator.get_func_fqpn()  # type: ignore
-    output_type_repr = repr(future.calculator.output_type)
+    func_fqpn = future.function.get_func_fqpn()  # type: ignore
+    output_type_repr = repr(future.function.output_type)
     input_args_hash = _get_input_args_hash(future)
 
     hash_base = f"{func_fqpn}|{output_type_repr}|{input_args_hash}"
@@ -145,8 +145,7 @@ def _get_input_args_hash(future: AbstractFuture) -> str:
     # TODO #403: do these things in a sustainable and efficient way
     input_arg_hashes = {}
     for name, value in future.resolved_kwargs.items():
-
-        type_ = future.calculator.input_types[name]
+        type_ = future.function.input_types[name]
         type_serialization = type_to_json_encodable(type_)
         value_serialization = value_to_json_encodable(value, type_)
         json_summary, _ = get_json_encodable_summary(value, type_)

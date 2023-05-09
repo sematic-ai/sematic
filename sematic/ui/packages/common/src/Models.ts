@@ -43,7 +43,7 @@ export interface Run extends HasUserMixin {
   original_run_id: string | null;
   future_state: string;
   name: string;
-  calculator_path: string;
+  function_path: string;
   description: string | null;
   source_code: string;
   exception_metadata_json: ExceptionMetadata | null;
@@ -57,7 +57,7 @@ export interface Run extends HasUserMixin {
   ended_at: Date | null;
   resolved_at: Date | null;
   failed_at: Date | null;
-};
+}
 
 export type Artifact = {
   id: string;
@@ -86,49 +86,49 @@ export interface Note extends HasUserMixin {
   root_id: string;
   created_at: Date;
   updated_at: Date;
-};
+}
 
 export type ExternalResourceState =
-  "CREATED" |
-  "ACTIVATING" |
-  "ACTIVE" |
-  "DEACTIVATING" |
-  "DEACTIVATED";
+  | "CREATED"
+  | "ACTIVATING"
+  | "ACTIVE"
+  | "DEACTIVATING"
+  | "DEACTIVATED";
 
 export type ExternalResource = {
-  id: string,
-  resource_state: ExternalResourceState,
-  managed_by: string,
-  status_message: string,
-  last_updated_epoch_seconds: Date,
-  type_serialization: AnyTypeSerialization,
-  value_serialization: any,
-  history_serializations: any,
-  created_at: Date
-  updated_at: Date
+  id: string;
+  resource_state: ExternalResourceState;
+  managed_by: string;
+  status_message: string;
+  last_updated_epoch_seconds: Date;
+  type_serialization: AnyTypeSerialization;
+  value_serialization: any;
+  history_serializations: any;
+  created_at: Date;
+  updated_at: Date;
 };
 
 export type ExternalResourceHistorySerialization = {
-  root_type: AnyTypeSerialization,
-  types: unknown,
+  root_type: AnyTypeSerialization;
+  types: unknown;
   values: {
-    allocation_seconds: number,
-    deallocation_seconds: number,
-    epoch_time_activation_began: any,
-    epoch_time_deactivation_began: any,
-    id: string,
-    max_active_seconds: number,
-    message: string,
+    allocation_seconds: number;
+    deallocation_seconds: number;
+    epoch_time_activation_began: any;
+    epoch_time_deactivation_began: any;
+    id: string;
+    max_active_seconds: number;
+    message: string;
     status: {
-      root_type: AnyTypeSerialization,
+      root_type: AnyTypeSerialization;
       values: {
-        last_update_epoch_time: number,
-        managed_by: string,
-        message: string,
-        state: ExternalResourceState
-      }
-    }
-  }
+        last_update_epoch_time: number;
+        managed_by: string;
+        message: string;
+        state: ExternalResourceState;
+      };
+    };
+  };
 };
 
 type PodHistoryStatusSerialization = {
@@ -138,7 +138,7 @@ type PodHistoryStatusSerialization = {
 };
 
 export type Job = {
-  created_at: Date,
+  created_at: Date;
   detail_serialization: object;
   kind: string;
   last_updated_epoch_seconds: number;
@@ -149,5 +149,4 @@ export type Job = {
   state: string;
   status_history_serialization: Array<PodHistoryStatusSerialization>;
   updated_at: Date;
-}
-
+};

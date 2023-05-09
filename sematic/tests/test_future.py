@@ -2,7 +2,7 @@
 import pytest
 
 # Sematic
-from sematic.calculator import func
+from sematic.function import func
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,

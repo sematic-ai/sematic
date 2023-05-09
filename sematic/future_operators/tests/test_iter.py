@@ -3,7 +3,7 @@ from typing import Tuple
 
 # Sematic
 import sematic.future_operators.iter  # # noqa: F401
-from sematic.calculator import func
+from sematic.function import func
 from sematic.future import Future
 
 
@@ -24,11 +24,11 @@ def test_iter():
 
     assert isinstance(a, Future)
     assert a.kwargs["key"] == 0
-    assert a.calculator.output_type is int
+    assert a.function.output_type is int
 
     assert isinstance(b, Future)
     assert b.kwargs["key"] == 1
-    assert b.calculator.output_type is str
+    assert b.function.output_type is str
 
 
 def test_resolution():

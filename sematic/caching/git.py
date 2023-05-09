@@ -33,10 +33,10 @@ def get_git_sha_caching_namespace(future: AbstractFuture) -> str:
     ValueError
         If the git information could not be found.
     """
-    git_info = get_git_info(future.calculator.func)  # type: ignore
+    git_info = get_git_info(future.function.func)  # type: ignore
 
     if git_info is None:
-        func_fqpn = future.calculator.get_func_fqpn()  # type: ignore
+        func_fqpn = future.function.get_func_fqpn()  # type: ignore
         raise ValueError(f"Could not get git information for {func_fqpn}")
 
     return f"{git_info.commit}+{git_info.dirty}"

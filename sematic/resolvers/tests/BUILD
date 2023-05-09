@@ -1,11 +1,12 @@
 pytest_test(
     name = "test_local_resolver",
     srcs = ["test_local_resolver.py"],
+    # buildifier: leave-alone
     deps = [
         ":fixtures",
-        "//sematic:abstract_calculator",
+        "//sematic:abstract_function",
         "//sematic:abstract_future",
-        "//sematic:calculator",
+        "//sematic:function",
         "//sematic:retry_settings",
         "//sematic/api/tests:fixtures",
         "//sematic/config/tests:fixtures",
@@ -42,15 +43,15 @@ pytest_test(
     name = "test_silent_resolver",
     srcs = ["test_silent_resolver.py"],
     deps = [
-        "//sematic:abstract_calculator",
-        "//sematic:calculator",
+        "//sematic:abstract_function",
+        "//sematic:function",
         "//sematic:future_context",
         "//sematic:retry_settings",
         "//sematic/plugins:abstract_external_resource",
         "//sematic/resolvers:silent_resolver",
         "//sematic/resolvers/tests:fixtures",
-        "//sematic/utils:exceptions",
         "//sematic/tests:utils",
+        "//sematic/utils:exceptions",
     ],
 )
 
@@ -67,7 +68,7 @@ pytest_test(
     srcs = ["test_cloud_resolver.py"],
     deps = [
         "//sematic:api_client",
-        "//sematic:calculator",
+        "//sematic:function",
         "//sematic/api/tests:fixtures",
         "//sematic/db/models:factories",
         "//sematic/db/models:resolution",
@@ -84,11 +85,11 @@ pytest_test(
     deps = [
         "//sematic:abstract_future",
         "//sematic:api_client",
-        "//sematic:calculator",
-        "//sematic/config/tests:fixtures",
-        "//sematic/config:user_settings",
+        "//sematic:function",
         "//sematic:future_context",
         "//sematic/api/tests:fixtures",
+        "//sematic/config:user_settings",
+        "//sematic/config/tests:fixtures",
         "//sematic/db:queries",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",

@@ -18,11 +18,11 @@ sematic_py_lib(
 )
 
 pytest_test(
-    name = "test_calculator",
-    srcs = ["test_calculator.py"],
+    name = "test_function",
+    srcs = ["test_function.py"],
     deps = [
-        "//sematic:abstract_calculator",
-        "//sematic:calculator",
+        "//sematic:abstract_function",
+        "//sematic:function",
         "//sematic:future",
         "//sematic/db/tests:fixtures",
         "//sematic/utils:exceptions",
@@ -55,12 +55,12 @@ pytest_test(
 )
 
 pytest_test(
-    name = "test_3_10_calculator",
-    srcs = ["test_3_10_calculator.py"],
+    name = "test_3_10_function",
+    srcs = ["test_3_10_function.py"],
     pip_deps = [],
     py_versions = [PY3.PY3_10],
     deps = [
-        "//sematic:calculator",
+        "//sematic:function",
     ],
 )
 
@@ -74,7 +74,11 @@ pytest_test(
         "//sematic/config:config",
         "//sematic/api/tests:fixtures",
         "//sematic/db/tests:fixtures",
+        "//sematic/db:db",
         "//sematic/tests:fixtures",
+        "//sematic/metrics:metric_point",
+        "//sematic/metrics/tests:fixtures",
+        "//sematic/plugins/metrics_storage/sql/models:metric_value",
     ],
 )
 
@@ -90,7 +94,7 @@ pytest_test(
     name = "test_future",
     srcs = ["test_future.py"],
     deps = [
-        "//sematic:calculator",
+        "//sematic:function",
         "//sematic/resolvers:resource_requirements",
     ],
 )
@@ -158,7 +162,7 @@ pytest_test(
     deps = [
         "//sematic:abstract_future",
         "//sematic:api_client",
-        "//sematic:calculator",
+        "//sematic:function",
         "//sematic:graph",
         "//sematic/api/tests:fixtures",
         "//sematic/db/models:factories",

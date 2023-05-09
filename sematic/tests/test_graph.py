@@ -10,8 +10,8 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     mock_socketio,
     test_client,
 )
-from sematic.calculator import func
 from sematic.db.tests.fixtures import test_db  # noqa: F401
+from sematic.function import func
 from sematic.graph import Graph
 from sematic.resolvers.local_resolver import LocalResolver
 
@@ -57,7 +57,7 @@ def test_clone_futures(
     root_future = cloned_graph.futures_by_original_id[future.id]
 
     assert root_future.state == FutureState.RESOLVED
-    assert root_future.calculator._func is pipeline._func
+    assert root_future.function._func is pipeline._func
     assert root_future.is_root_future()
     # the entire pipeline resolution was cloned,
     # so the root run was never actually executed
@@ -130,7 +130,7 @@ def test_clone_futures_reset(
     root_future = cloned_graph.futures_by_original_id[future.id]
 
     assert root_future.state == FutureState.RAN
-    assert root_future.calculator._func is pipeline._func
+    assert root_future.function._func is pipeline._func
     assert root_future.is_root_future()
     assert root_future.original_future_id is None
 
@@ -177,7 +177,7 @@ def test_clone_futures_reset(
     top_level_add_futures_ids = {
         id
         for id, future_ in cloned_graph.futures_by_original_id.items()
-        if future_.calculator._func is add._func
+        if future_.function._func is add._func
     }
     top_level_add_futures_original_ids = {
         future_.original_future_id for future_ in top_level_add_futures

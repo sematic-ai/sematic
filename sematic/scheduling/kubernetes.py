@@ -683,7 +683,6 @@ def schedule_resolution_job(
     max_parallelism: Optional[int] = None,
     rerun_from: Optional[str] = None,
 ) -> Job:
-
     namespace = get_server_setting(ServerSettingsVar.KUBERNETES_NAMESPACE)
     service_account = get_server_setting(
         ServerSettingsVar.SEMATIC_WORKER_KUBERNETES_SA, DEFAULT_WORKER_SERVICE_ACCOUNT
@@ -742,7 +741,7 @@ def schedule_run_job(
     resource_requirements: Optional[ResourceRequirements] = None,
     try_number: int = 0,
 ) -> Job:
-    """Schedule a job on k8s for a calculator execution."""
+    """Schedule a job on k8s for a function execution."""
     # "User" in this case is the server.
     namespace = get_server_setting(ServerSettingsVar.KUBERNETES_NAMESPACE)
     service_account = get_server_setting(

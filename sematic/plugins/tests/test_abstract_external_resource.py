@@ -5,7 +5,7 @@ from dataclasses import dataclass, replace
 import pytest
 
 # Sematic
-from sematic.calculator import func
+from sematic.function import func
 from sematic.plugins.abstract_external_resource import (
     AbstractExternalResource,
     IllegalStateTransitionError,

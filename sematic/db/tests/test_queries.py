@@ -13,7 +13,6 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     mock_socketio,
     test_client,
 )
-from sematic.calculator import func
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.factories import make_artifact
@@ -56,6 +55,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     run,
     test_db,
 )
+from sematic.function import func
 from sematic.plugins.abstract_external_resource import (
     AbstractExternalResource,
     ManagedBy,
@@ -223,7 +223,6 @@ def test_get_run_graph(
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
-
     future = pipeline(1, 2)
     future.resolve()
 

@@ -1,7 +1,7 @@
 # Standard Library
 import json
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from unittest import mock
 
 # Third-party
@@ -17,12 +17,19 @@ from sematic.api_client import (
     _notify_event,
     _validate_server_compatibility,
     get_artifact_value_by_id,
+    save_metric_points,
 )
 from sematic.config.config import get_config
+from sematic.db.db import DB
 from sematic.db.tests.fixtures import (  # noqa: F401
     persisted_artifact,
     test_db,
     test_storage,
+)
+from sematic.metrics.metric_point import MetricPoint
+from sematic.metrics.tests.fixtures import metric_points  # noqa: F401
+from sematic.plugins.metrics_storage.sql.models.metric_value import (  # noqa: F401
+    MetricValue,
 )
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
@@ -147,3 +154,31 @@ def test_notify_resilient(mock_requests):
     _notify_event("foo", "bar", {})
 
     mock_requests.post.assert_called()
+
+
+@mock.patch("sematic.api_client._notify_event")
+def test_save_metrics_points(
+    mock_notify_event: mock.MagicMock,
+    metric_points: List[MetricPoint],  # noqa: F811
+    test_db: DB,  # noqa: F811
+    mock_requests_fixture,  # noqa: F811
+):
+    save_metric_points(metric_points)
+
+    payload = dict(
+        metric_points=[
+            {
+                "name": metric_point.name,
+                "value": metric_point.value,
+                "metric_type": metric_point.metric_type.value,
+                "metric_time": metric_point.metric_time.timestamp(),
+                "labels": metric_point.labels,
+            }
+            for metric_point in metric_points
+        ]
+    )
+
+    mock_notify_event.assert_called_once_with("metrics", "update", payload)
+
+    with test_db.get_session() as session:
+        assert session.query(MetricValue).count() == len(metric_points)
