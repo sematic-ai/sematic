@@ -1,0 +1,11 @@
+version: 0
+base_uri: "sematicai/sematic-worker-base:latest@sha256:bea3926876a3024c33fe08e0a6b2c0377a7eb600d7b3061a3f3f39d711152e3c"
+build:
+  platform: "linux/amd64"
+  requirements: "requirements.txt"
+  data: ["**.txt"]
+  src: ["**.py"]
+push:
+  registry: null
+  repository: "my_repository"
+  tag_suffix: "my_tag_suffix"
