@@ -97,6 +97,11 @@ jobs:
     docker:
       - image: << pipeline.parameters.sematic-ci-image >>
     steps:
+      - run: echo "build --remote_cache=https://storage.googleapis.com/sematic-bazel-cache" > ~/.bazelrc
+      - run: echo "build --google_credentials=/home/circleci/.gcloud/circleci-bazel.json" >> ~/.bazelrc
+      - run: echo "build --remote_instance_name=circleci" >> ~/.bazelrc
+      - run: mkdir -p /home/circleci/.gcloud
+      - run: echo $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS > /home/circleci/.gcloud/circleci-bazel.json
       - checkout
       - install-ci-pip-deps
       - install-npm-dependencies
