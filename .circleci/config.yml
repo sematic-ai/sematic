@@ -2,6 +2,11 @@
 # See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
+parameters:
+  sematic-ci-image:
+    type: string
+    default: "sematicai/sematic-ci:704"
+
 # Orbs are reusable packages of CircleCI configuration that you may share across projects, enabling you to create encapsulated, parameterized commands, jobs, and executors that can be used across multiple projects.
 # See: https://circleci.com/docs/2.0/orb-intro/
 orbs:
@@ -90,7 +95,7 @@ commands:
 jobs:
   init:
     docker:
-      - image: $SEMATIC_CI_IMAGE
+      - image: << pipeline.parameters.sematic-ci-image >>
     steps:
       - checkout
       - install-ci-pip-deps
@@ -104,7 +109,7 @@ jobs:
 
   lint:
     docker:
-      - image: $SEMATIC_CI_IMAGE
+      - image: << pipeline.parameters.sematic-ci-image >>
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -112,7 +117,7 @@ jobs:
 
   schemas:
     docker:
-      - image: $SEMATIC_CI_IMAGE
+      - image: << pipeline.parameters.sematic-ci-image >>
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -120,7 +125,7 @@ jobs:
 
   unit-tests:
     docker:
-      - image: $SEMATIC_CI_IMAGE
+      - image: << pipeline.parameters.sematic-ci-image >>
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -139,7 +144,7 @@ jobs:
 
   installation:
     docker:
-      - image: $SEMATIC_CI_IMAGE
+      - image: << pipeline.parameters.sematic-ci-image >>
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -152,10 +157,9 @@ jobs:
       CI_VENV_NAME: CIVENV
       REACT_APP_IS_CIRCLE_CI: 1
 
-
   integration-test:
     docker:
-      - image: $SEMATIC_CI_IMAGE
+      - image: << pipeline.parameters.sematic-ci-image >>
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -179,7 +183,7 @@ jobs:
 
   fe-unit-tests:
     docker:
-      - image: $SEMATIC_CI_IMAGE
+      - image: << pipeline.parameters.sematic-ci-image >>
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -199,8 +203,6 @@ jobs:
       - image: cimg/base:2023.01
     steps:
       - notify-completion
-
-
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
@@ -233,4 +235,3 @@ workflows:
             - unit-tests
             - integration-test
             - fe-unit-tests
-
