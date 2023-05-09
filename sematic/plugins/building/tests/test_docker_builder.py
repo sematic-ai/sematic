@@ -328,6 +328,23 @@ def test_make_docker_client_config(mock_retrieve_server_version: mock.MagicMock)
     assert docker_client.api.credstore_env == expected_credstore_env
 
 
+@mock.patch("docker.api.client.APIClient._retrieve_server_version")
+def test_make_docker_client_error(mock_retrieve_server_version: mock.MagicMock):
+    test_error = docker.errors.DockerException("test")  # type: ignore
+    mock_retrieve_server_version.side_effect = test_error
+
+    expected_base_url = "unix://var/run/docker.sock"
+    expected_credstore_env = {"DOCKER_TLS_VERIFY": "/home/trudy/legit.cer"}
+    docker_config = docker_builder.DockerClientConfig(
+        base_url=expected_base_url, credstore_env=expected_credstore_env
+    )
+
+    with pytest.raises(
+        docker_builder.BuildError, match="Unable to instantiate Docker client: test"
+    ):
+        docker_builder._make_docker_client(docker_config=docker_config)
+
+
 @pytest.mark.parametrize(
     "source_build_config,target,expected_dockerfile",
     [

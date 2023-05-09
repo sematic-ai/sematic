@@ -389,6 +389,8 @@ class DockerBuilder(AbstractBuilder):
             There was an error when executing the specified build script.
         BuildConfigurationError:
             There was an error when validating the specified build configuration.
+        SystemExit:
+            A subprocess exited with an unexpected code.
         """
         image_uri = _build(target=target)
         _launch(target=target, image_uri=image_uri)
@@ -486,11 +488,15 @@ def _make_docker_client(
 
     If no configuration is passed, uses the system Docker Client configuration.
     """
-    if docker_config is None:
-        return docker.from_env()  # type: ignore
+    try:
+        if docker_config is None:
+            return docker.from_env()  # type: ignore
 
-    kwargs = {k: v for k, v in asdict(docker_config).items() if v is not None}
-    return docker.DockerClient(**kwargs)  # type: ignore
+        kwargs = {k: v for k, v in asdict(docker_config).items() if v is not None}
+        return docker.DockerClient(**kwargs)  # type: ignore
+
+    except docker.errors.DockerException as e:  # type: ignore
+        raise BuildError(f"Unable to instantiate Docker client: {e}") from e
 
 
 def _build_image(
