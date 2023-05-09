@@ -14,6 +14,9 @@ const TableScroller = styled.div`
     overflow-x: hidden;
     flex-grow: 1;
     flex-shrink: 1;
+    position: relative;
+    margin-left: -${theme.spacing(5)};
+    padding-left: ${theme.spacing(5)};
 `;
 
 const StyledHeader = styled(TableHead, {

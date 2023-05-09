@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
-import { Container, Left, Right as RightBase } from 'src/layout/ThreeColumns';
-import styled from '@emotion/styled';
-import theme from 'src/theme/new';
+import styled from "@emotion/styled";
+import { useMemo } from "react";
+import { Container, Left, Right as RightBase } from "src/layout/ThreeColumns";
+import theme from "src/theme/new";
 
 const Right = styled(RightBase)`
     width: auto;

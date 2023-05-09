@@ -1,15 +1,16 @@
-import styled from '@emotion/styled';
+import styled from "@emotion/styled";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
-import Typography from '@mui/material/Typography';
-import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { DateTimeLongConcise } from 'src/component/DateTime';
-import ImportPath from 'src/component/ImportPath';
-import PipelineTitle from 'src/component/PipelineTitle';
-import RunReferenceLink from 'src/component/RunReferenceLink';
-import TableComponent from 'src/component/Table';
-import TagsList from 'src/component/TagsList';
-import RunStatusColumn from 'src/pages/RunSearch/RunStatusColumn';
-import theme from 'src/theme/new';
+import Typography from "@mui/material/Typography";
+import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { parseJSON } from "date-fns";
+import { DateTimeLongConcise } from "src/component/DateTime";
+import ImportPath from "src/component/ImportPath";
+import PipelineTitle from "src/component/PipelineTitle";
+import RunReferenceLink from "src/component/RunReferenceLink";
+import TableComponent from "src/component/Table";
+import TagsList from "src/component/TagsList";
+import RunStatusColumn from "src/pages/RunSearch/RunStatusColumn";
+import theme from "src/theme/new";
 
 const Container = styled.div`
     display: flex;
@@ -88,7 +89,7 @@ const columns = [
             }
         },
         header: 'Submitted at',
-        cell: info => DateTimeLongConcise(info.getValue()),
+        cell: info => DateTimeLongConcise(parseJSON(info.getValue())),
     }),
     columnHelper.accessor(data => [data.name, data.importPath], {
         meta: {
@@ -151,7 +152,7 @@ const columns = [
         },
         header: '',
         id: 'goto',
-        cell: _ => <ChevronRight />,
+        cell: _ => <ChevronRight style={{cursor: 'pointer'}}/>,
     }),
 ]
 
