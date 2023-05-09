@@ -5,8 +5,9 @@
   "scripts": {
     "lint": "eslint --ext .ts ."
   },
-  "devDependencies": {
-  },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@tanstack/react-table": "^8.9.1"
+  }
 }

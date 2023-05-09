@@ -1,15 +1,16 @@
 import Link from "@mui/material/Link";
-
+import { TypographyProps } from '@mui/material/Typography';
 
 interface RunReferenceLinkProps {
     runId: string;
     className?: string;
+    variant?: TypographyProps['variant'];
 }
 
 const RunReferenceLink = (props: RunReferenceLinkProps) => {
-    const { runId, className } = props;
+    const { runId, className, variant="small" } = props;
 
-    return <Link href={`/runs/${runId}`} variant={"small"} type={"code"} className={className}>
+    return <Link href={`/runs/${runId}`} variant={variant} type={"code"} className={className}>
             {runId.substring(0, 7)}
         </Link>
 }
