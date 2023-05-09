@@ -2,7 +2,8 @@ import { ThemeProvider } from "@mui/material/styles";
 import { SuccessStateChip as SuccessStateChipComponent, 
   FailedStateChip as FailedStateChipComponent,
   RunningStateChip as RunningStateChipComponent,
-  CanceledStateChip as CanceledStateChipComponent
+  CanceledStateChip as CanceledStateChipComponent,
+  SubmittedStateChip as SubmittedStateChipComponent
  } from '@sematic/common/src/component/RunStateChips';
 import theme from '@sematic/common/src/theme/new';
 import { Meta, StoryFn } from '@storybook/react';
@@ -14,7 +15,8 @@ const typeOptions = {
   "Success": SuccessStateChipComponent,
   "Failed": FailedStateChipComponent,
   "Running": RunningStateChipComponent,
-  "Canceled": CanceledStateChipComponent
+  "Canceled": CanceledStateChipComponent,
+  "Submitted": SubmittedStateChipComponent
 }
 
 export default {
@@ -66,4 +68,9 @@ RunningStateChip.args = {
 export const CanceledStateChip = Template.bind({});
 CanceledStateChip.args = {
   type: "Canceled",
+}
+
+export const SubmittedStateChip = Template.bind({});
+SubmittedStateChip.args = {
+  type: "Submitted",
 }

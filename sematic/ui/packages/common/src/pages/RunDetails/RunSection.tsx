@@ -1,7 +1,8 @@
 import styled from "@emotion/styled";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
-import Typography, { typographyClasses } from "@mui/material/Typography";
 import Headline from "src/component/Headline";
 import MoreVertButton from "src/component/MoreVertButton";
 import RunsDropdown from "src/component/RunsDropdown";
@@ -19,6 +20,7 @@ const StyledVertButton = styled(MoreVertButton)`
 
 const BoxContainer = styled(Box)`
   display: flex;
+  align-items: center;
 `;
 
 const StyledTypography = styled(Typography)`
@@ -40,7 +42,8 @@ const RunSection = () => {
         <Typography variant="small">CloudResolver</Typography>
       </BoxContainer>
       <BoxContainer>
-        <TagsList tags={["example", "torch", "mnist"]} />
+        <div><TagsList tags={["example", "torch", "mnist"]} /></div>
+        <Button variant={"text"} size={"small"}>add tags</Button>
       </BoxContainer>
     </StyledSection>
   );
