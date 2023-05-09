@@ -365,11 +365,6 @@ def test_generate_dockerfile_contents(
         target=target,
     )
 
-    # Standard Library
-    import logging
-
-    logging.error(actual_contents)
-
     assert actual_contents == expected_contents
 
 

@@ -20,7 +20,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import docker
 import yaml
 
-# there is a collision between the docker-py library and the sematic/docker directory
+# there is a collision between the docker-py library and the sematic/docker directory,
+# so we need to add `# type: ignore` everywhere a component of the docker module is used
 from docker.models.images import Image  # type: ignore
 
 # isort: on
@@ -533,6 +534,7 @@ def _generate_dockerfile_contents(
         for data_glob in source_build_config.data:
             data_files = glob.glob(data_glob)
             if len(data_files) > 0:
+                # sorting for determinism
                 for data_file in sorted(data_files):
                     dockerfile_contents = (
                         f"{dockerfile_contents}\nCOPY {data_file} {data_file}"
@@ -545,6 +547,7 @@ def _generate_dockerfile_contents(
         for src_glob in source_build_config.src:
             src_files = glob.glob(src_glob)
             if len(src_files) > 0:
+                # sorting for determinism
                 for src_file in sorted(src_files):
                     dockerfile_contents = (
                         f"{dockerfile_contents}\nCOPY {src_file} {src_file}"
