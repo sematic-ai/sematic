@@ -9,3 +9,7 @@ push:
   registry: "my_registry.com"
   repository: "my_repository"
   tag_suffix: "my_tag_suffix"
+docker:
+  base_url: "unix://var/run/docker.sock"
+  credstore_env:
+    DOCKER_TLS_VERIFY: "/home/trudy/legit.cer"
