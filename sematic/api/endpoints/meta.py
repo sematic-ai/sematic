@@ -1,7 +1,6 @@
 """Metadata about the server itself."""
 
 # Standard Library
-from http import HTTPStatus
 from logging import getLogger
 from typing import Optional
 
@@ -73,7 +72,6 @@ def get_server_health() -> flask.Response:
         "healthy": <bool>,
         "message": <str message about status>,
     }
-    If any of the "healthy" fields is `false`, will return a 503 status code.
     """
     # healthy by nature of the fact that this API is working.
     api_status = dict(
@@ -107,8 +105,5 @@ def get_server_health() -> flask.Response:
         db=db_status,
     )
 
-    status = HTTPStatus.OK if db_healthy else HTTPStatus.SERVICE_UNAVAILABLE
-
     response = flask.jsonify(payload)
-    response.status_code = status
     return response

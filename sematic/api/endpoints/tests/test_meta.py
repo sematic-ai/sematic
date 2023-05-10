@@ -61,7 +61,7 @@ def test_health(
 
     response = test_client.get("/api/v1/meta/health")
     payload = response.json
-    assert response.status_code == 503
+    assert response.status_code == 200
     payload = cast(Dict[str, Any], payload)
     assert payload["api"] == {"healthy": True, "message": "API is healthy"}
     assert not payload["db"]["healthy"]

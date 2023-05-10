@@ -5,7 +5,7 @@ import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
 import CloseIcon from "@mui/icons-material/Close";
 
 export enum MessageKind {
-  Informative,
+  Info,
   Error,
 }
 
@@ -49,9 +49,9 @@ export function SnackBarProvider(props: { children: any }) {
     () =>
       snackMessage
         ? snackMessage.kind === undefined
-          ? MessageKind.Informative
+          ? MessageKind.Info
           : snackMessage.kind
-        : MessageKind.Informative,
+        : MessageKind.Info,
     [snackMessage]
   );
 
@@ -86,12 +86,9 @@ export function SnackBarProvider(props: { children: any }) {
 
   const content = useMemo( 
     () => {
-      if(kind === MessageKind.Informative) {
-        return undefined;
-      }
-      
+      const severity = kind === MessageKind.Info ? "info" : "error"
       const asAlert = (
-        <Alert severity="error">{snackMessage?.message}</Alert>
+        <Alert severity={severity}>{snackMessage?.message}</Alert>
       );
       return asAlert;
     }, [snackMessage, kind]
@@ -103,7 +100,6 @@ export function SnackBarProvider(props: { children: any }) {
       <Snackbar
         open={snackMessage !== undefined}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        message={snackMessage?.message}
         sx={{ marginTop: "50px" }}
         autoHideDuration={autoHide ? 5000 : undefined}
         onClose={() => {
