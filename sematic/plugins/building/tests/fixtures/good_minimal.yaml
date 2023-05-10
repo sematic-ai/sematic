@@ -1,0 +1,2 @@
+version: 0
+image_script: "sematic/plugins/building/tests/fixtures/good_image_script.sh"

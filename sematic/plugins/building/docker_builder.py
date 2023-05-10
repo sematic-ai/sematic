@@ -2,7 +2,9 @@
 The native Docker Builder plugin implementation.
 """
 # Standard Library
+import distutils.util
 import glob
+import json
 import logging
 import os
 import re
@@ -11,15 +13,17 @@ import subprocess
 import sys
 import tempfile
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 # isort: off
-# there is a collision between the docker-py library and the sematic/docker directory
 
 # Third-party
 import docker
 import yaml
+
+# there is a collision between the docker-py library and the sematic/docker directory,
+# so we need to add `# type: ignore` everywhere a component of the docker module is used
 from docker.models.images import Image  # type: ignore
 
 # isort: on
@@ -134,8 +138,8 @@ class SourceBuildConfig:
 
     platform: Optional[str] = None
     requirements: Optional[str] = None
-    data: Optional[str] = None
-    src: Optional[str] = None
+    data: Optional[List[str]] = None
+    src: Optional[List[str]] = None
 
 
 @dataclass
@@ -174,9 +178,92 @@ class ImagePushConfig:
 
 
 @dataclass
+class DockerClientConfig:
+    """
+    The Docker Client connection details to use to connect to the Docker Server.
+
+    See https://docker-py.readthedocs.io/en/stable/client.html#client-reference for more
+    details.
+    """
+
+    base_url: str = "unix://var/run/docker.sock"
+    version: str = "auto"
+    timeout: Optional[int] = None
+    tls: bool = False
+    user_agent: Optional[str] = None
+    credstore_env: Optional[Dict[str, str]] = None
+    use_ssh_client: bool = False
+    max_pool_size: Optional[int] = None
+
+    def __post_init__(self):
+        """
+        Validates the contents of this object.
+        """
+        if self.timeout is not None and isinstance(self.timeout, str):
+            self.timeout = int(self.timeout)
+        if self.tls is not None and isinstance(self.tls, str):
+            # TODO: extract settings.as_bool to utilities, and use that instead
+            self.tls = bool(distutils.util.strtobool(self.tls))
+        if self.credstore_env is not None and isinstance(self.credstore_env, str):
+            self.credstore_env = json.loads(self.credstore_env)
+        if self.use_ssh_client is not None and isinstance(self.use_ssh_client, str):
+            # TODO: extract settings.as_bool to utilities, and use that instead
+            self.use_ssh_client = bool(distutils.util.strtobool(self.use_ssh_client))
+        if self.max_pool_size is not None and isinstance(self.max_pool_size, str):
+            self.max_pool_size = int(self.max_pool_size)
+
+
+@dataclass
 class BuildConfig:
     """
-    A packaged build configuration.
+    A packaged build configuration object that describes how to construct a container
+    image that is meant to execute a Runner and Standalone Functions for a specific
+    Pipeline.
+
+    Attributes
+    ----------
+    version: int
+        The version of the configuration semantics to which this object adheres.
+    image_script: Optional[str]
+        An optional path to a script which must write only a container image URI in the
+        `<repository>:<tag>@<digest>` format to standard output. This image will be used
+        as the base from which the Runner and Standalone Function image will be created.
+        Exactly one of `image_script` and `base_uri` must be specified. Defaults to
+        `None`.
+
+        This script is meant to be a hook that the user can leverage to build a base
+        image. It is the user's responsibility to ensure the resulting base image is
+        usable by Sematic in order to construct a Standalone container image:
+        - Must contain a `python3` executable in the env `PATH`.
+        - Must contain all the source code, data files, and installed Python requirements,
+        unless otherwise handled in the `build` field of this configuration.
+        - Does not need to specify a workdir, Any specified workdir will be overwritten.
+        - Does not need to specify an entry point. Any specified entry point will be
+        overwritten.
+
+        The script may write anything to standard error. The script may be written in any
+        language supported by the system, as long as it has the executable bit set, and
+        the system can determine how to execute it (i.e. specifies a shebang, or is an ELF
+        executable).
+    base_uri: Optional[ImageURI]
+        An optional container image URI in the `<repository>:<tag>@<digest>` format. This
+        image will be used as the base from which the Runner and Standalone Function image
+        will be created. Exactly one of `image_script` and `base_uri` must be specified.
+        Defaults to `None`.
+    build: Optional[SourceBuildConfig]
+        An object that configures how to package source code, data files, and Python
+        requirements inside the container image. Defaults to `None`, meaning nothing with
+        be copied to the image, except for the target launch script when using the
+        `base_uri` option. When using the `image_script` option, it is the user's
+        responsibility to ensure the launch script is present.
+    push: Optional[ImagePushConfig]
+        An object that configures how to push the resulting container image to registry
+        that is accessible from the Sematic Server that will execute the Pipeline.
+        Defaults to `None`, meaning that the resulting image will not be pushed to a
+        remote registry, and will only be kept on the Docker server user to construct it.
+    docker: Optional[DockerClientConfig]
+        The Docker Client connection configuration to use to connect to the Docker Server.
+        Defaults to `None`, meaning the system Client configuration will be used.
     """
 
     version: int
@@ -184,6 +271,7 @@ class BuildConfig:
     base_uri: Optional[ImageURI] = None
     build: Optional[SourceBuildConfig] = None
     push: Optional[ImagePushConfig] = None
+    docker: Optional[DockerClientConfig] = None
 
     def __post_init__(self):
         """
@@ -220,6 +308,9 @@ class BuildConfig:
         if self.push is not None and isinstance(self.push, dict):
             self.push = ImagePushConfig(**self.push)
 
+        if self.docker is not None and isinstance(self.docker, dict):
+            self.docker = DockerClientConfig(**self.docker)
+
         # TODO: switch from project-relative paths to build file-relative paths,
         #  and mangle these path fields
         # TODO: validate absolute paths are not used
@@ -243,7 +334,7 @@ class BuildConfig:
 
         except Exception as e:
             raise BuildConfigurationError(
-                f"Unable to load build configuration from '{build_file_path}'!"
+                f"Unable to load build configuration from '{build_file_path}': {e}"
             ) from e
 
 
@@ -251,7 +342,7 @@ class DockerBuilder(AbstractBuilder):
     """
     Docker-based Build System plugin implementation.
 
-    Packages the target pipeline code and required dependencies in a Docker image,
+    Packages the target Pipeline code and required dependencies in a Docker image,
     according to a proprietary build configuration specified via a configuration file of
     the form:
 
@@ -269,7 +360,7 @@ class DockerBuilder(AbstractBuilder):
         tag_suffix: <optional image push tag suffix>
     ```
 
-    It then launches the target pipeline by submitting its execution to Sematic Server,
+    It then launches the target Pipeline by submitting its execution to Sematic Server,
     using the build image to execute `@func`s in the cloud.
     """
 
@@ -289,7 +380,7 @@ class DockerBuilder(AbstractBuilder):
         Parameters
         ----------
         target: str
-            The path to the pipeline target to launch; the built image must support this
+            The path to the Pipeline target to launch; the built image must support this
             target's execution.
 
         Raises
@@ -298,6 +389,8 @@ class DockerBuilder(AbstractBuilder):
             There was an error when executing the specified build script.
         BuildConfigurationError:
             There was an error when validating the specified build configuration.
+        SystemExit:
+            A subprocess exited with an unexpected code.
         """
         image_uri = _build(target=target)
         _launch(target=target, image_uri=image_uri)
@@ -311,8 +404,7 @@ def _build(target: str) -> ImageURI:
     build_config = _get_build_config(script_path=target)
     logger.info("Loaded build configuration: %s", build_config)
 
-    # TODO: configure the docker service connection string in the build file
-    docker_client = docker.from_env()  # type: ignore
+    docker_client = _make_docker_client(build_config.docker)
     logger.info("Instantiated docker client for server: %s", docker_client.api.base_url)
 
     image, image_uri = _build_image(
@@ -388,6 +480,25 @@ def _find_build_config_files(script_path: str) -> List[str]:
     return [file_candidate] if os.path.isfile(file_candidate) else []
 
 
+def _make_docker_client(
+    docker_config: Optional[DockerClientConfig],
+) -> docker.DockerClient:  # type: ignore
+    """
+    Instantiates a `DockerClient` based on the specified configuration.
+
+    If no configuration is passed, uses the system Docker Client configuration.
+    """
+    try:
+        if docker_config is None:
+            return docker.from_env()  # type: ignore
+
+        kwargs = {k: v for k, v in asdict(docker_config).items() if v is not None}
+        return docker.DockerClient(**kwargs)  # type: ignore
+
+    except docker.errors.DockerException as e:  # type: ignore
+        raise BuildError(f"Unable to instantiate Docker client: {e}") from e
+
+
 def _build_image(
     target: str,
     build_config: BuildConfig,
@@ -400,7 +511,7 @@ def _build_image(
     Parameters
     ----------
     target: str
-        The path to the pipeline target to launch; the built image must support this
+        The path to the Pipeline target to launch; the built image must support this
         target's execution.
     build_config: BuildConfig
         The configuration that controls the image build.
@@ -532,26 +643,29 @@ def _generate_dockerfile_contents(
         for data_glob in source_build_config.data:
             data_files = glob.glob(data_glob)
             if len(data_files) > 0:
-                for data_file in data_files:
+                # sorting for determinism
+                for data_file in sorted(data_files):
                     dockerfile_contents = (
                         f"{dockerfile_contents}\nCOPY {data_file} {data_file}"
                     )
+        # provide an empty line between data and src, for readability
+        dockerfile_contents = f"{dockerfile_contents}\n"
 
     if source_build_config is not None and source_build_config.src is not None:
         logger.debug("Adding source files: %s", source_build_config.src)
         for src_glob in source_build_config.src:
             src_files = glob.glob(src_glob)
             if len(src_files) > 0:
-                for scr_file in src_files:
+                # sorting for determinism
+                for src_file in sorted(src_files):
                     dockerfile_contents = (
-                        f"{dockerfile_contents}\nCOPY {scr_file} {scr_file}"
+                        f"{dockerfile_contents}\nCOPY {src_file} {src_file}"
                     )
-
     elif target is not None:
         logger.debug("Adding target source file: %s", target)
         dockerfile_contents = f"{dockerfile_contents}\nCOPY {target} {target}"
 
-    return dockerfile_contents
+    return dockerfile_contents.strip()
 
 
 def _execute_build_script(target: str, image_script: str) -> ImageURI:
@@ -587,7 +701,7 @@ def _execute_build_script(target: str, image_script: str) -> ImageURI:
 
     except BaseException as e:
         raise BuildError(
-            f"Unable to source container image URI from '{image_script}'!"
+            f"Unable to source container image URI from '{image_script}': {e}"
         ) from e
 
 

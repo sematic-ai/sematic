@@ -1,5 +1,7 @@
 import styled from '@emotion/styled';
 import Box from '@mui/material/Box';
+import Button from "@mui/material/Button";
+import parseJSON from 'date-fns/parseJSON';
 import { DateTimeLong, Duration } from 'src/component/DateTime';
 import Headline from 'src/component/Headline';
 import ImportPath from 'src/component/ImportPath';
@@ -64,6 +66,12 @@ const ImportPathContainer = styled(Box)`
     margin-bottom: ${theme.spacing(4)};
 `
 
+const TagsContainer = styled(Box)`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+`;
+
 const StyledRunReferenceLink = styled(RunReferenceLink)`
     font-size: ${theme.typography.fontSize}px ;
 `;
@@ -83,7 +91,9 @@ const FunctionSection = () => {
                 </FunctionName>
                 <div>
                     <StyledRunReferenceLink runId={"qwc2ldf"} />
-                    {`Completed in ${Duration("2012-04-23T18:14:23.511Z", "2012-04-23T18:25:43.511Z")} on ${DateTimeLong(new Date())}`}
+                    {`Completed in ${Duration(
+                        parseJSON("2012-04-23T18:14:23.511Z"), parseJSON("2012-04-23T18:25:43.511Z")
+                        )} on ${DateTimeLong(new Date())}`}
                 </div>
             </div>
         </BoxContainer>
@@ -91,7 +101,11 @@ const FunctionSection = () => {
             <ImportPath>examples.mnist.train_eval.evaluate_model</ImportPath>
         </ImportPathContainer>
         <StyledVertButton />
-        <TagsList tags={['example', 'torch', 'mnist']} />
+        <TagsContainer>
+            <div><TagsList tags={['example', 'torch', 'mnist']} /></div>
+            <Button variant={"text"} size={"small"}>add tags</Button>
+        </TagsContainer>
+        
     </StyledSection>;
 }
 

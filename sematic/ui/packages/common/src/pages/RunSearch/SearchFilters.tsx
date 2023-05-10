@@ -12,6 +12,7 @@ const StyledButton = styled(Button)`
     height: 50px;
     flex-shrink: 0;
     flex-grow: 0;
+    border-radius: 2px;
 `;
 
 const SearchFilters = () => {

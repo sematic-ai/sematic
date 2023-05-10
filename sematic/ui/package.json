@@ -2,7 +2,6 @@
   "name": "ui",
   "version": "0.2.0",
   "private": true,
-  "dependencies": {},
   "scripts": {
     "start": "npm run start --workspace @sematic/main",
     "build": "npm run build --workspace @sematic/main",
@@ -13,7 +12,6 @@
     "cypress:component": "cypress run --headless --component --project packages/tests",
     "storybook": "npm run storybook --workspace @sematic/storybook"
   },
-  "devDependencies": {},
   "workspaces": [
     "packages/*"
   ]
