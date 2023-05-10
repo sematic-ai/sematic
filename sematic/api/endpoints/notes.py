@@ -36,9 +36,9 @@ def list_notes_endpoint(user: Optional[User]) -> flask.Response:
         if sql_predicates is not None:
             query = query.filter(sql_predicates)
 
-        if "calculator_path" in flask.request.args:
+        if "function_path" in flask.request.args:
             query = query.join(Run, Run.id == Note.root_id).filter(
-                Run.calculator_path == flask.request.args["calculator_path"]
+                Run.function_path == flask.request.args["function_path"]
             )
 
         query = query.order_by(order(Note.created_at))

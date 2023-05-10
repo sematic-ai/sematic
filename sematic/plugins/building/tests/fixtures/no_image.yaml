@@ -1,0 +1,10 @@
+version: 0
+build:
+  platform: "linux/amd64"
+  requirements: "requirements.txt"
+  data: ["**.txt"]
+  src: ["**.py"]
+push:
+  registry: "my_registry"
+  repository: "my_repository"
+  tag_suffix: "my_tag_suffix"

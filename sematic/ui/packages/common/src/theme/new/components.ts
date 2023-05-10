@@ -30,7 +30,6 @@ const components: Components = {
                 marginBottom: 0,
                 color: theme.palette.black.main,
                 fontSize: theme.typography.fontSize,
-                fontStyle: 'italic',
 
                 '&:hover': {
                     color: theme.palette.primary.main,
@@ -196,7 +195,6 @@ const components: Components = {
                 props: { variant: 'text' },
                 style: ({ theme }) => {
                     return {
-                        fontStyle: 'italic',
                         color: theme.palette.lightGrey.main,
                         '&:hover': {
                             color: theme.palette.primary.main,
@@ -284,8 +282,15 @@ const components: Components = {
                 'padding': `${theme.spacing(2.4)} 0`,
             })) as any
         }
+    },
+    MuiTableHead: {
+        styleOverrides: {
+            root: (({ theme }: { theme: Theme }) => ({
+                'fontSize': `${theme.typography.fontSize}px`,
+                'textAlign': 'left',
+            })) as any
+        }
     }
-
 }
 
 export default components;

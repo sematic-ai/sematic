@@ -3,10 +3,11 @@ import dataclasses
 import datetime
 import enum
 import json
+from typing import Any
 
 # Third-party
 import dateutil.parser
-from sqlalchemy import inspect, types
+from sqlalchemy import Column, inspect, types
 
 
 class JSONEncodableMixin:
@@ -26,25 +27,37 @@ class JSONEncodableMixin:
     @classmethod
     def from_json_encodable(cls, json_encodable):
         field_dict = {
-            column.key: cls.field_from_json_encodable(column.key, json_encodable)
+            column.key: cls.field_from_json_encodable(column, json_encodable)
             for column in inspect(cls).attrs
             if column.key in json_encodable
+            or column.info.get(ALIAS_KEY) in json_encodable
         }
         return cls(**field_dict)
 
     @classmethod
-    def field_from_json_encodable(cls, field_name, json_encodable):
+    def field_from_json_encodable(cls, column: Column, json_encodable):
+        field_name = column.key
+        field_alias = column.info.get(
+            ALIAS_KEY,
+            column.key,
+        )
+        payload_key = field_name
+        if field_name not in json_encodable and field_alias in json_encodable:
+            payload_key = field_alias
+
         return _from_json_encodable(
-            json_encodable[field_name], getattr(cls, field_name)
+            json_encodable[payload_key],
+            getattr(cls, field_name),  # type: ignore
         )
 
 
 JSON_KEY = "json"
 ENUM_KEY = "enum"
 REDACTED_KEY = "redacted"
+ALIAS_KEY = "alias"
 
 
-def _to_json_encodable(value, column):
+def _to_json_encodable(value: Any, column: Column) -> Any:
     info = column.info
 
     if isinstance(value, datetime.datetime):
@@ -73,12 +86,12 @@ def _to_json_encodable(value, column):
     return value
 
 
-def _from_json_encodable(json_encodable, column):
+def _from_json_encodable(json_encodable: Any, column: Column) -> Any:
     if json_encodable is None:
         return None
 
     if isinstance(column.type, types.Enum):
-        return getattr(column.type.enum_class, json_encodable)
+        return getattr(column.type.enum_class, json_encodable)  # type: ignore
 
     if column.info.get(ENUM_KEY, False):
         return getattr(column.info[ENUM_KEY], json_encodable)

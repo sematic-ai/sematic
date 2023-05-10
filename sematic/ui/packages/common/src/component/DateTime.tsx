@@ -17,23 +17,27 @@ const DateTime = (props: DateTimeProps) => {
     </Typography>
 }
 
-export const DateTimeLong = (datetime: Date | string) => {
-    let date = datetime instanceof Date ? datetime : parseJSON(datetime);
-
-    return format(date, "M/d/yyyy 'at' h:mmaaa")
+export const DateTimeLong = (datetime: Date) => {
+    return format(datetime, "M/d/yyyy 'at' h:mmaaa")
 }
 
-export const Duration = (start: Date | string, end: Date | string) => {
-    let startTime = start instanceof Date ? start : parseJSON(start);
+export const DateTimeLongConcise = (datetime: Date) => {
+    return format(datetime, "M/d/yyyy h:mmaaa")
+}
 
-    let endTime = end instanceof Date ? end : parseJSON(end);
-
+export const Duration = (start: Date, end: Date) => {
     const duration = intervalToDuration({
-        start: startTime,
-        end: endTime
-    })
+        start,
+        end
+    });
 
-    return formatDuration(duration, { format: ["minutes", "seconds"]});
+    const formatString = formatDuration(duration, { format: ["minutes", "seconds"], zero: true});
+
+    return formatString.replace(/\s0\sseconds$/g, "");
+}
+
+export function DurationShort(start: Date, end: Date) {
+    return Duration(start, end).replace(/minutes/g, "m").replace(/seconds/g, "s");
 }
 
 

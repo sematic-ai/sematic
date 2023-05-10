@@ -42,7 +42,7 @@ def run():
     run_id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     run = Run(
         id=run_id,
-        calculator_path="foo.bar",
+        function_path="foo.bar",
         root_id=run_id,
         future_state=FutureState.CREATED,
     )

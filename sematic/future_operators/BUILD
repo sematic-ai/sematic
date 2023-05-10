@@ -4,17 +4,17 @@ sematic_py_lib(
     deps = [
         ":getitem",
         ":iter",
-    ]
+    ],
 )
 
 sematic_py_lib(
     name = "getitem",
     srcs = ["getitem.py"],
     deps = [
+        "//sematic:function",
         "//sematic:future",
         "//sematic/types:casting",
-        "//sematic:calculator",
-    ]
+    ],
 )
 
 sematic_py_lib(
@@ -22,6 +22,6 @@ sematic_py_lib(
     srcs = ["iter.py"],
     deps = [
         "//sematic:future",
-        "//sematic/future_operators:getitem"
-    ]
+        "//sematic/future_operators:getitem",
+    ],
 )

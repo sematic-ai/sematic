@@ -17,8 +17,8 @@ pytest_test(
         "ray",
     ],
     deps = [
+        "//sematic:function",
         "//sematic/ee/plugins/external_resource/ray:cluster",
-        "//sematic:calculator",
         "//sematic/plugins:abstract_external_resource",
         "//sematic/tests:fixtures",
     ],

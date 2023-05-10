@@ -41,3 +41,11 @@ sematic_py_lib(
         "//sematic/metrics:metric_point",
     ],
 )
+
+sematic_py_lib(
+    name = "abstract_builder",
+    srcs = ["abstract_builder.py"],
+    deps = [
+        "//sematic/config:settings",
+    ],
+)

@@ -12,7 +12,7 @@ function SourceCode() {
   let run = selectedRun!;
 
   return (
-    <Box key={run.calculator_path} sx={{ marginTop: 2 }}>
+    <Box key={run.function_path} sx={{ marginTop: 2 }}>
       <SyntaxHighlighter
         language="python"
         style={docco}

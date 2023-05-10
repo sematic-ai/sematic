@@ -5,7 +5,8 @@ from typing import Any, Dict, List, Protocol, Sequence
 
 # Sematic
 from sematic.db.models.resolution import Resolution
-from sematic.db.queries import get_user, get_users
+from sematic.db.models.run import Run
+from sematic.db.queries import get_user, get_users_by_id
 
 logger = logging.getLogger(__name__)
 
@@ -42,12 +43,19 @@ def _get_collection_payload_with_user(
     users_by_id = {}
     if len(user_ids) > 0:
         users_by_id = {
-            user.id: user.to_json_encodable() for user in get_users(user_ids)
+            user.id: user.to_json_encodable() for user in get_users_by_id(user_ids)
         }
 
     for item in items:
         item_payload = item.to_json_encodable()
         item_payload["user"] = None
+
+        # this code is also used for the `notes` endpoint, which does not specify a run,
+        # so the function_path path could be not set
+        # but the `runs` endpoints needs calculator_path to be set for
+        # backwards-compatibility
+        if item_payload.get("function_path") is not None:
+            item_payload["calculator_path"] = item_payload["function_path"]
 
         if item.user_id is not None:
             item_payload["user"] = users_by_id[item.user_id]
@@ -57,7 +65,16 @@ def _get_collection_payload_with_user(
     return items_payload
 
 
-get_run_payload = _get_payload_with_user
+# TODO: revert this change in 0.31.0
+# get_run_payload = _get_payload_with_user
+def get_run_payload(run: Run) -> Dict[str, Any]:
+    payload = _get_payload_with_user(run)
+
+    payload["calculator_path"] = payload["function_path"]
+
+    return payload
+
+
 get_runs_payload = _get_collection_payload_with_user
 
 

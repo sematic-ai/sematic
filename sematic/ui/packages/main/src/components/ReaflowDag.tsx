@@ -29,10 +29,10 @@ function ReaflowDag(props: ReaflowDagProps) {
   let edge_data: EdgeData[] = [];
 
   node_data = runs.map((run) => {
-    var calculator_module = run.calculator_path.split(".");
+    var function_module = run.function_path.split(".");
     return {
       id: run.id,
-      text: calculator_module[calculator_module.length - 1],
+      text: function_module[function_module.length - 1],
       parent: run.parent_id === null ? undefined : run.parent_id,
       data: { run: run },
     };

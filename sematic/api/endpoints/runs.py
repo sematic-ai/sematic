@@ -270,7 +270,7 @@ def _generate_search_predicate(
 ) -> BooleanClauseList:
     return sqlalchemy.or_(
         Run.name.ilike(f"%{search_string}%"),
-        Run.calculator_path.ilike(f"%{search_string}%"),
+        Run.function_path.ilike(f"%{search_string}%"),
         Run.description.ilike(f"%{search_string}%"),
         Run.id.ilike(f"%{search_string}%"),
         Run.tags.ilike(f"%{search_string}%"),
@@ -635,7 +635,7 @@ def link_resource_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 @authenticate
 def run_metrics_endpoint(user: Optional[User], run_id: str) -> flask.Response:
     run = get_run(run_id)
-    pipeline_metrics = get_basic_pipeline_metrics(run.calculator_path)
+    pipeline_metrics = get_basic_pipeline_metrics(run.function_path)
     return flask.jsonify(dict(content=asdict(pipeline_metrics)))
 
 

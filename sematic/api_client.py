@@ -26,6 +26,7 @@ from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
+from sematic.metrics.metric_point import MetricPoint
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.utils.retry import retry, retry_call
 from sematic.versions import CURRENT_VERSION, version_as_string
@@ -286,7 +287,7 @@ def cancel_resolution(resolution_id: str) -> Resolution:
 
 
 def schedule_run(run_id: str) -> Run:
-    """Ask the server to execute the calculator for the run."""
+    """Ask the server to execute the function for the run."""
     response = _post(f"/runs/{run_id}/schedule", json_payload={})
     return Run.from_json_encodable(response["content"])
 
@@ -536,8 +537,27 @@ def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
     return result_dict
 
 
-def notify_pipeline_update(calculator_path: str):
-    _notify_event("pipeline", "update", {"calculator_path": calculator_path})
+def save_metric_points(metric_points: List[MetricPoint]) -> None:
+    """
+    Saves metric points.
+
+    Parameters
+    ----------
+    metric_points: List[MetricPoint]
+        THe list of metric points to persist.
+    """
+    payload = dict(
+        metric_points=[
+            metric_point.to_json_encodable() for metric_point in metric_points
+        ]
+    )
+
+    _post("/metrics", json_payload=payload)
+    _notify_event("metrics", "update", payload)
+
+
+def notify_pipeline_update(function_path: str):
+    _notify_event("pipeline", "update", {"function_path": function_path})
 
 
 def notify_graph_update(run_id: str):

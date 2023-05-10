@@ -43,7 +43,7 @@ pytest_test(
     deps = [
         "//sematic:abstract_future",
         "//sematic:api_client",
-        "//sematic:calculator",
+        "//sematic:function",
         "//sematic:log_reader",
         "//sematic/api/tests:fixtures",
         "//sematic/config:server_settings",
@@ -154,5 +154,17 @@ pytest_test(
         "//sematic/metrics/tests:fixtures",
         "//sematic/plugins:abstract_metrics_storage",
         "//sematic/plugins/metrics_storage/sql:sql_metrics_storage",
+    ],
+)
+
+pytest_test(
+    name = "test_users",
+    srcs = ["test_users.py"],
+    # buildifier: leave-alone
+    deps = [
+        "//sematic/db:db",
+        "//sematic/db/models:user",
+        "//sematic/api/tests:fixtures",
+        "//sematic/db/tests:fixtures",
     ],
 )
