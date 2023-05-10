@@ -12,12 +12,12 @@ export type RunListPayload = {
 type Operator = "eq";
 
 type FilterCondition = {
-    [key: string]: {[eq in Operator]? : string | null} | undefined
+    [key: string]: { [eq in Operator]?: string | null } | undefined
 }
 
 export type Filter = FilterCondition | {
-    AND : Array<FilterCondition>
+    AND: Array<FilterCondition>
 } | {
-  OR : Array<FilterCondition>
+    OR: Array<FilterCondition>
 }
 

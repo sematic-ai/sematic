@@ -9,8 +9,8 @@ import { DateTimeLongConcise } from "src/component/DateTime";
 import ImportPath from "src/component/ImportPath";
 import NameTag from "src/component/NameTag";
 import PipelineTitle from "src/component/PipelineTitle";
-import RunReferenceLink from "src/component/RunReferenceLink";
-import TableComponent from "src/component/Table";
+import { RunReference } from "src/component/RunReference";
+import TableComponent, { TableComponentProps } from "src/component/Table";
 import { getRunUrlPattern, useRunsPagination } from "src/hooks/runHooks";
 import RunStatusColumn from "src/pages/RunSearch/RunStatusColumn";
 import TagsColumn from "src/pages/RunSearch/TagsColumn";
@@ -58,9 +58,13 @@ const NameSection = styled.div`
     position: relative;
 `;
 
-const StyledRunReferenceLink = styled(RunReferenceLink)`
+const StyledRunReferenceLink = styled(RunReference)`
     color: ${theme.palette.mediumGrey.main};
 `;
+
+const StyledTableComponent = styled(TableComponent)<TableComponentProps<Run>>`
+    min-width: 850px;
+` as typeof TableComponent;
 
 const columnHelper = createColumnHelper<Run>()
 
@@ -72,23 +76,23 @@ const columns = [
             }
         },
         header: 'ID',
-        cell: info => <StyledRunReferenceLink variant={'inherit'} runId={info.getValue()} />,
+        cell: info => <StyledRunReferenceLink runId={info.getValue()} />,
     }),
     columnHelper.accessor('created_at', {
         meta: {
             columnStyles: {
                 width: "12.3396%",
-                minWidth: "140px"
+                minWidth: "150px"
             }
         },
         header: 'Submitted at',
         cell: info => DateTimeLongConcise(parseJSON(info.getValue())),
     }),
-    columnHelper.accessor(data => [data.name, data.function_path], {
+    columnHelper.accessor(run => [run.name, run.function_path], {
         meta: {
             columnStyles: {
                 width: "1px",
-                maxWidth: "calc(100vw - 1050px)"
+                maxWidth: "calc(100vw - 1060px)"
             }
         },
         header: 'Name',
@@ -163,7 +167,7 @@ const RunList = (props: RunListProps) => {
         <Stats>
             <Typography variant={'bold'}>{`${totalRuns || '?'} ${totalRuns === 1 ? 'Run' : 'Runs'}`}</Typography>
         </Stats>
-        <TableComponent table={tableInstance} getRowLink={getRowLink} />
+        <StyledTableComponent table={tableInstance} getRowLink={getRowLink} />
         <Pagination>
             <IconButton aria-label="previous" disabled={page === 0} onClick={previousPage}>
                 <ChevronLeft />

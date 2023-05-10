@@ -65,7 +65,7 @@ const TableDataRow = styled(TableRow)`
 
     & td {
         padding-left: 0;
-        padding-right: ${theme.spacing(2.5)};
+        padding-right: ${theme.spacing(5)};
         padding-top: 0;
         padding-bottom: 0;
         border-bottom: none;
@@ -80,19 +80,20 @@ const TableDataRow = styled(TableRow)`
     }
 `;
 
-interface TableComponentProps<T> {
+export interface TableComponentProps<T> {
     table: Table<T>;
     stickyHeader?: boolean;
     getRowLink?: (row: Row<T>) => string;
+    className?: string;
 }
 
 const TableComponent = <T,>(props: TableComponentProps<T>) => {
-    const { table, stickyHeader = true, getRowLink } = props;
+    const { table, stickyHeader = true, getRowLink, className } = props;
     const { getLeafHeaders } = table;
 
     const navigate = useNavigate();
 
-    return <TableScroller>
+    return <TableScroller className={className}>
         <TableMui>
             <StyledHeader stickyHeader={stickyHeader}>
                 <TableRow>

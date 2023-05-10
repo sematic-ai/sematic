@@ -8,7 +8,7 @@ import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import { styled } from "@mui/system";
-import { Filter, RunListPayload } from "@sematic/common/src/ApiContract";
+import { Filter, RunListPayload } from "@sematic/common/src/ApiContracts";
 import { Run } from "@sematic/common/src/Models";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import useLatest from "react-use/lib/useLatest";

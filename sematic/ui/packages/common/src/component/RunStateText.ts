@@ -7,7 +7,7 @@ export function getRunStateText(futureState: string,
     }) {
     const { createdAt, resolvedAt, failedAt, endedAt } = timestamps;
 
-    if (futureState === 'RESOLVED') {
+    if (["RESOLVED", "SUCCEEDED"].includes(futureState)) {
         return `Completed in ${DurationShort(parseJSON(resolvedAt!), parseJSON(createdAt))}`;
     }
     if (["FAILED", "NESTED_FAILED"].includes(futureState)) {
@@ -16,13 +16,13 @@ export function getRunStateText(futureState: string,
     if (["SCHEDULED", "RAN"].includes(futureState)) {
         return `Running for ${DurationShort(new Date(), parseJSON(createdAt))}`;
     }
-    if (futureState === 'CANCELLED') {
+    if (futureState === "CANCELED") {
         return `Canceled after ${DurationShort(parseJSON(endedAt || failedAt!), parseJSON(createdAt))}`;
     }
-    if (futureState === 'CREATED') {
-        return 'Submitted';
+    if (futureState === "CREATED") {
+        return `Submitted ${DurationShort(new Date(), parseJSON(createdAt))} ago`;
     }
-    if (futureState === 'RETRYING') {
+    if (futureState === "RETRYING") {
         return `Retrying for ${DurationShort(new Date(), parseJSON(createdAt))}`;
     }
     return null;

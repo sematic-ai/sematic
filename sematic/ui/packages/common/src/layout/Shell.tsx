@@ -7,6 +7,13 @@ import { Outlet, useMatches } from "react-router-dom";
 import HeaderMenu from "src/component/menu";
 import SnackBarProvider from "src/context/SnackBarProvider";
 import theme from "src/theme/new/index";
+import styled from "@emotion/styled";
+
+const StyledGrid = styled(Grid)`
+  height: 100vh;
+  width: 100%;
+  overflow: overlay;
+`;
 
 export const HeaderSelectionKey = 'activatedHeaderKey';
 
@@ -23,14 +30,14 @@ const Shell = () => {
   return <SnackBarProvider>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Grid container spacing={0} direction={'column'} style={{ height: "100vh", width: "100%" }}>
+      <StyledGrid container spacing={0} direction={'column'} >
         <Grid style={{ flexShrink: 0, flexGrow: 0 }}>
           <HeaderMenu selectedKey={selectionKey} />
         </Grid>
         <Grid style={{ flexGrow: 1, height: 0 }}>
           <Outlet />
         </Grid>
-      </Grid>
+      </StyledGrid>
     </ThemeProvider>
   </SnackBarProvider>;
 }
