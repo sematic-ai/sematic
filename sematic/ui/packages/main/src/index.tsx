@@ -16,6 +16,7 @@ import {
 } from "./Payloads";
 import AppContext from "./appContext";
 import EnvironmentProvider from "./components/EnvironmentProvider";
+import Health from "./components/Health";
 import Loading from "./components/Loading";
 import Shell from "./components/Shell";
 import { SnackBarProvider } from "./components/SnackBarProvider";
@@ -69,6 +70,7 @@ function App() {
       <EnvironmentProvider>
         <SnackBarProvider>
           <Helper />
+          <Health />
           <Outlet />
         </SnackBarProvider>
       </EnvironmentProvider>
