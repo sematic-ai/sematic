@@ -1,0 +1,16 @@
+{{- if gt (int .Values.deployment.replica_count) 1 }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: sematic-server-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "sematic-server.labels" . | nindent 6 }}
+      {{- if .Values.deployment.socket_io.dedicated }}
+      app.kubernetes.io/component: api
+      {{- else }}
+      app.kubernetes.io/component: all
+      {{- end }}
+{{- end }}
