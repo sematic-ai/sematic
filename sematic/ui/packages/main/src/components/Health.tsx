@@ -50,7 +50,7 @@ function useFetchHealth(): string | null {
       message = value.db.message;
     }
   } else if(!!error){
-    message = "Unable to verify even basic Sematic API access.";
+    message = "Unable to connect to the Sematic API.";
   }
   return message;
 }
