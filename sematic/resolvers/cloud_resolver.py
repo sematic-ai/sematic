@@ -338,11 +338,10 @@ class CloudResolver(LocalResolver):
     ) -> None:
         if not isinstance(error, ResolverRestartError):
             super()._resolution_did_fail(error)
-            logger.error("Really early return!")
             return
 
         try:
-            new_root_future = self._root_future.calculator(
+            new_root_future = self._root_future.function(
                 **self._root_future.kwargs
             ).set(name=self._root_future.props.name, tags=self._root_future.props.tags)
             runs, artifacts, edges = api_client.get_graph(
@@ -358,7 +357,6 @@ class CloudResolver(LocalResolver):
                 # Means the whole graph is resolved. Shouldn't be possible
                 # to reach this state as far as I know, but if we did, we should
                 # fail as normal.
-                logger.error("Early return!")
                 super()._resolution_did_fail(error)
                 return
             new_resolver = self.__class__(

@@ -14,17 +14,10 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     mock_socketio,
     test_client,
 )
-from sematic.calculator import func
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
-from sematic.db.queries import (
-    get_root_graph,
-    get_run,
-    save_graph,
-    save_resolution,
-    save_run,
-)
+from sematic.db.queries import get_root_graph, get_run, save_graph, save_resolution
 from sematic.db.tests.fixtures import make_run  # noqa: F401
 from sematic.db.tests.fixtures import persisted_resolution  # noqa: F401
 from sematic.db.tests.fixtures import persisted_run  # noqa: F401
@@ -343,7 +336,7 @@ def test_resolver_restart(
                 future
             )
     runs, _, __ = get_root_graph(root_run.id)
-    read_run_state_by_id = {run.id: run.future_state for run in runs}
+    read_run_state_by_id = {run.id: run.future_state for run in runs}  # noqa: F811
     assert read_run_state_by_id[child_run1.id] == FutureState.CANCELED.value
     assert read_run_state_by_id[child_run2.id] == FutureState.RESOLVED.value
     assert read_run_state_by_id[child_run3.id] == FutureState.CANCELED.value

@@ -553,20 +553,22 @@ class LocalResolver(SilentResolver):
         self, error: Exception, reason: Optional[str] = None
     ) -> None:
         super()._resolution_did_fail(error)
+
         if isinstance(error, FunctionError):
-            reason = "Marked as failed because another run in the graph failed."
+            reason = reason or (
+                "Marked as failed because another run in the graph failed."
+            )
             resolution_status = ResolutionStatus.COMPLETE
         elif isinstance(error, ResolverRestartError):
-            message = "Marked as failed because the resolver restarted mid-execution."
+            reason = reason or (
+                "Marked as failed because the resolver restarted mid-execution."
+            )
             resolution_status = ResolutionStatus.FAILED
         else:
-            message = (
+            reason = reason or (
                 "Marked as failed because the rest of the graph failed to resolve."
             )
             resolution_status = ResolutionStatus.FAILED
-
-        if reason is None:
-            reason = message
 
         self._move_runs_to_terminal_state(reason, fail_root_run=True)
         self._update_resolution_status(resolution_status)

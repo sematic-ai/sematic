@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Iterable, List, Optional
 from typing import OrderedDict as OrderedDictType
 from typing import Tuple
+from enum import Enum, unique
 
 # Sematic
 import sematic.api_client as api_client
@@ -21,6 +22,19 @@ RunsByID = Dict[RunID, Run]
 RunsByParentID = Dict[Optional[RunID], List[Run]]
 EdgesByRunID = Dict[RunID, List[Edge]]
 EdgesByID = Dict[str, Edge]
+
+
+class RerunMode:
+    """How to choose which parts of the graph need to be rerun.
+
+    Attributes
+    ----------
+    FROM_INCOMPLETE:
+        Execute any runs that require an execution to determine the final
+        result of the graph.
+    """
+    # FROM_FAILED="FROM_FAILED"  # TODO
+    FROM_INCOMPLETE="FROM_INCOMPLETE"
 
 
 @dataclass
