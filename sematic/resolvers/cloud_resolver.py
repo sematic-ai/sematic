@@ -17,8 +17,10 @@ from sematic.container_images import (
 )
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
+from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
+from sematic.graph import Graph
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.local_resolver import (
     LocalResolver,
@@ -127,6 +129,9 @@ class CloudResolver(LocalResolver):
         # When multiple base images are specified through the build info (Bazel target)
         # this is the tag we use to find the resolution image
         self._base_image_tag = _base_image_tag or DEFAULT_BASE_IMAGE_TAG
+
+        # cached git info if it is known from a source other than local git execution
+        self._git_info: Optional[GitInfo] = None
 
     def resolve(self, future: AbstractFuture) -> Any:
         if not self._detach:
@@ -328,18 +333,56 @@ class CloudResolver(LocalResolver):
 
         self._update_future_with_value(future, value)
 
-    def _resolution_did_fail(self, error: Exception) -> None:
-        if isinstance(error, ResolverRestartError):
+    def _resolution_did_fail(
+        self, error: Exception, reason: Optional[str] = None
+    ) -> None:
+        if not isinstance(error, ResolverRestartError):
+            super()._resolution_did_fail(error)
+            logger.error("Really early return!")
+            return
+
+        try:
+            new_root_future = self._root_future.calculator(
+                **self._root_future.kwargs
+            ).set(name=self._root_future.props.name, tags=self._root_future.props.tags)
+            runs, artifacts, edges = api_client.get_graph(
+                self._root_future.id, root=True
+            )
+            graph = Graph(
+                runs=runs,
+                artifacts=artifacts,
+                edges=edges,
+            )
+            rerun_from = graph.first_incomplete_run()
+            if rerun_from is None:
+                # Means the whole graph is resolved. Shouldn't be possible
+                # to reach this state as far as I know, but if we did, we should
+                # fail as normal.
+                logger.error("Early return!")
+                super()._resolution_did_fail(error)
+                return
             new_resolver = self.__class__(
                 cache_namespace=self._cache_namespace_str,
-                rerun_from=None,
+                rerun_from=rerun_from,
                 detach=True,
                 max_parallelism=self._max_parallelism,
                 _base_image_tag=self._base_image_tag,
             )
-            new_root_future = self._root_future.calculator(**self._root_future.kwargs)
+            new_resolver._git_info = api_client.get_resolution(
+                self._root_future.id
+            ).git_info
             new_resolver.resolve(new_root_future)
-        super()._resolution_did_fail(error)
+            reason = (
+                f"Resolution restarted mid-execution. A new one has been started "
+                f"with the id {new_root_future.id}"
+            )
+        finally:
+            super()._resolution_did_fail(error, reason)
+
+    def _get_git_info(self, object: Any) -> Optional[GitInfo]:
+        if self._git_info is not None:
+            return self._git_info
+        return super()._get_git_info(object)
 
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
         # Unlike LocalResolver._future_did_fail, we only care about

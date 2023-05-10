@@ -22,6 +22,7 @@ from sematic.config.user_settings import get_active_user_settings_strings
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact, make_run_from_future
+from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.graph import Graph
@@ -345,6 +346,9 @@ class LocalResolver(SilentResolver):
 
         return resolution
 
+    def _get_git_info(self, object: Any) -> Optional[GitInfo]:
+        return get_git_info(object)
+
     def _future_will_schedule(self, future: AbstractFuture) -> None:
         super()._future_will_schedule(future)
 
@@ -545,17 +549,24 @@ class LocalResolver(SilentResolver):
         self._notify_pipeline_update()
         self._disconnect_from_sio_server()
 
-    def _resolution_did_fail(self, error: Exception) -> None:
+    def _resolution_did_fail(
+        self, error: Exception, reason: Optional[str] = None
+    ) -> None:
         super()._resolution_did_fail(error)
         if isinstance(error, FunctionError):
             reason = "Marked as failed because another run in the graph failed."
             resolution_status = ResolutionStatus.COMPLETE
         elif isinstance(error, ResolverRestartError):
-            reason = "Marked as failed because the resolver restarted mid-execution."
+            message = "Marked as failed because the resolver restarted mid-execution."
             resolution_status = ResolutionStatus.FAILED
         else:
-            reason = "Marked as failed because the rest of the graph failed to resolve."
+            message = (
+                "Marked as failed because the rest of the graph failed to resolve."
+            )
             resolution_status = ResolutionStatus.FAILED
+
+        if reason is None:
+            reason = message
 
         self._move_runs_to_terminal_state(reason, fail_root_run=True)
         self._update_resolution_status(resolution_status)
