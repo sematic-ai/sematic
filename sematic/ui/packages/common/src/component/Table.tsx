@@ -4,7 +4,8 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import { Table, flexRender } from "@tanstack/react-table";
+import { Table, flexRender, Row } from "@tanstack/react-table";
+import { useNavigate } from "react-router-dom";
 import theme from "src/theme/new";
 
 const TableScroller = styled.div`
@@ -16,7 +17,6 @@ const TableScroller = styled.div`
     flex-shrink: 1;
     position: relative;
     margin-left: -${theme.spacing(5)};
-    padding-left: ${theme.spacing(5)};
 `;
 
 const StyledHeader = styled(TableHead, {
@@ -47,10 +47,21 @@ const StyledHeader = styled(TableHead, {
         margin-left: -${theme.spacing(5)};
         background: ${theme.palette.p3border.main};
     }
+
+    & th:first-of-type {
+        padding-left: ${theme.spacing(5)};
+    }
 `;
 
 const TableDataRow = styled(TableRow)`
     height: 50px;
+    cursor: pointer;
+
+    &:hover {
+        td {
+            background: ${theme.palette.p3border.main};
+        }
+    }
 
     & td {
         padding-left: 0;
@@ -62,17 +73,24 @@ const TableDataRow = styled(TableRow)`
         &:last-of-type {
             padding-right: 0
         };
+
+        &:first-of-type {
+            padding-left: ${theme.spacing(5)};
+        }
     }
 `;
 
 interface TableComponentProps<T> {
     table: Table<T>;
     stickyHeader?: boolean;
+    getRowLink?: (row: Row<T>) => string;
 }
 
 const TableComponent = <T,>(props: TableComponentProps<T>) => {
-    const { table, stickyHeader = true } = props;
+    const { table, stickyHeader = true, getRowLink } = props;
     const { getLeafHeaders } = table;
+
+    const navigate = useNavigate();
 
     return <TableScroller>
         <TableMui>
@@ -89,7 +107,7 @@ const TableComponent = <T,>(props: TableComponentProps<T>) => {
             </StyledHeader>
             <TableBody>
                 {table.getRowModel().rows.map(row => (
-                    <TableDataRow key={row.id}>
+                    <TableDataRow key={row.id} onClick={() => !!getRowLink && navigate(getRowLink(row))}>
                         {row.getVisibleCells().map(cell => (
                             <TableCell key={cell.id} style={(cell.column.columnDef.meta as any).columnStyles}>
                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}

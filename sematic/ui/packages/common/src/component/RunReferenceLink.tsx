@@ -1,5 +1,7 @@
 import Link from "@mui/material/Link";
 import { TypographyProps } from '@mui/material/Typography';
+import { Link as RouterLink } from "react-router-dom";
+import { getRunUrlPattern } from "src/hooks/runHooks";
 
 interface RunReferenceLinkProps {
     runId: string;
@@ -8,11 +10,12 @@ interface RunReferenceLinkProps {
 }
 
 const RunReferenceLink = (props: RunReferenceLinkProps) => {
-    const { runId, className, variant="small" } = props;
+    const { runId, className, variant = "small" } = props;
 
-    return <Link href={`/runs/${runId}`} variant={variant} type={"code"} className={className}>
-            {runId.substring(0, 7)}
-        </Link>
+    return <Link to={getRunUrlPattern(runId)} variant={variant} type={"code"} className={className}
+        component={RouterLink}>
+        {runId.substring(0, 7)}
+    </Link>
 }
 
 export default RunReferenceLink;

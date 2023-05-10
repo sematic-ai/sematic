@@ -1,4 +1,4 @@
-import { getRunUrlPattern } from "../hooks/pipelineHooks";
+import { getRunUrlPattern } from "@sematic/common/src/hooks/runHooks";
 import CopyButton from "@sematic/common/src/component/CopyButton";
 import MuiRouterLink from "./MuiRouterLink";
 

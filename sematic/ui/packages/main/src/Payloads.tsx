@@ -1,14 +1,5 @@
 import { Artifact, Edge, Job, Note, Resolution, Run, User } from "@sematic/common/src/Models";
 
-export type RunListPayload = {
-  current_page_url: string;
-  next_page_url?: string;
-  limit: number;
-  next_cursor?: string;
-  after_cursor_count: number;
-  content: Run[];
-};
-
 export type RunViewPayload = {
   content: Run;
 };
@@ -84,18 +75,6 @@ export interface VersionPayload {
   min_client_supported: SemanticVersion;
   server: SemanticVersion;
 } 
-
-type Operator = "eq";
-
-type FilterCondition = {
-    [key: string]: {[eq in Operator]? : string | null} | undefined
-}
-
-export type Filter = FilterCondition | {
-    AND : Array<FilterCondition>
-} | {
-  OR : Array<FilterCondition>
-}
 
 export type BasicMetricsPayload = {
   content: {

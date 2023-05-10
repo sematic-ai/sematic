@@ -20,7 +20,7 @@ import { RunTime } from "src/components/RunTime";
 import Tags from "src/components/Tags";
 import TimeAgo from "src/components/TimeAgo";
 import UserAvatar from "src/components/UserAvatar";
-import { getRunUrlPattern } from "src/hooks/pipelineHooks";
+import { getRunUrlPattern } from "@sematic/common/src/hooks/runHooks";
 import { spacing } from "src/utils";
 
 const StyledScroller = styled(Container)`

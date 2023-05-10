@@ -1,13 +1,30 @@
 import styled from "@emotion/styled";
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Container, Left, Right as RightBase } from "src/layout/ThreeColumns";
 import theme from "src/theme/new";
+import Box from "@mui/material/Box";
+import Loading from "src/component/Loading";
+import LayoutServiceContext from "src/context/LayoutServiceContext";
 
 const Right = styled(RightBase)`
     width: auto;
     flex-grow: 1;
     padding: 0 ${theme.spacing(5)};
+    position: relative;
 `
+
+const LoadingOverlay = styled(Box)`
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  top: 0;
+  right: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`
+
 
 export interface TwoColumnsProps {
     onRenderLeft: () => React.ReactNode;
@@ -17,14 +34,27 @@ export interface TwoColumnsProps {
 const TwoColumns = (props: TwoColumnsProps) => {
     const { onRenderLeft, onRenderRight } = props;
 
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
     const leftPane = useMemo(() => onRenderLeft(), [onRenderLeft]);
     const rightPane = useMemo(() => onRenderRight(), [onRenderRight]);
+
+    const layoutServiceValue = useMemo(() => ({
+        setIsLoading
+    }), [setIsLoading]);
 
     return (
         <Container>
             <Left>{leftPane}</Left>
-            <Right >{rightPane}</Right>
-        </Container>
+            <Right >
+                <LayoutServiceContext.Provider value={layoutServiceValue}>
+                    {isLoading && <LoadingOverlay>
+                        <Loading />
+                    </LoadingOverlay>}
+                    {rightPane}
+                </LayoutServiceContext.Provider>
+            </Right>
+        </Container >
     );
 };
 

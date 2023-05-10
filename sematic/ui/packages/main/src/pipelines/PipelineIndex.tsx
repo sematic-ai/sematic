@@ -9,6 +9,7 @@ import {
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/system";
+import { useFetchRuns } from "@sematic/common/src/hooks/runHooks";
 import { Run } from "@sematic/common/src/Models";
 import { useCallback, useMemo } from "react";
 import CalculatorPath from "src/components/CalculatorPath";
@@ -21,9 +22,8 @@ import { RunTime } from "src/components/RunTime";
 import Tags from "src/components/Tags";
 import TimeAgo from "src/components/TimeAgo";
 import useBasicMetrics from "src/hooks/metricsHooks";
-import { useFetchRuns } from "src/hooks/pipelineHooks";
-import { pipelineSocket } from "src/sockets";
 import { runAvgRunTime, runSuccessRate } from "src/pipelines/BasicMetricsPanel";
+import { pipelineSocket } from "src/sockets";
 
 const RecentStatusesWithStyles = styled("span")`
   flex-direction: row;

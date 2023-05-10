@@ -3,7 +3,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import UserContext from "@sematic/common/src/context/UserContext";
-import NewShell from '@sematic/common/src/layout/Shell';
+import NewShell, { HeaderSelectionKey } from '@sematic/common/src/layout/Shell';
 import { useAtom } from "jotai";
 import { RESET } from "jotai/utils";
 import posthog, { Properties } from 'posthog-js';
@@ -31,6 +31,7 @@ import { setupPostHogOptout } from "./postHogManager";
 import { RunIndex } from "./runs/RunIndex";
 import { sha1 } from "./utils";
 import NewRunDetails from "@sematic/common/src/pages/RunDetails";
+import NewRunSearch from "@sematic/common/src/pages/RunSearch";
 import { getFeatureFlagValue } from "@sematic/common/src/utils/FeatureFlagManager";
 import Helper from "src/components/tests/tеst_normal";
 
@@ -81,6 +82,9 @@ function App() {
 const isNewUIEnabled = getFeatureFlagValue('newui');
 
 const NewRoutesOverrides = isNewUIEnabled ? (<>
+  <Route path="runs" element={<NewShell />} >
+    <Route index element={<NewRunSearch />} handle={{[HeaderSelectionKey]: 'runs'}} />
+  </Route>
   <Route path="runs/:rootId" element={<NewShell />} >
     <Route index element={<NewRunDetails />} />
   </Route>

@@ -31,14 +31,13 @@ export const Duration = (start: Date, end: Date) => {
         end
     });
 
-    const formatString = formatDuration(duration, { format: ["minutes", "seconds"], zero: true});
+    const formatString = formatDuration(duration, { format: ["minutes", "seconds"], zero: false});
 
     return formatString.replace(/\s0\sseconds$/g, "");
 }
 
 export function DurationShort(start: Date, end: Date) {
-    return Duration(start, end).replace(/minutes/g, "m").replace(/seconds/g, "s");
+    return Duration(start, end).replace(/\sminutes?/g, "m").replace(/\sseconds?/g, "s");
 }
-
 
 export default DateTime;
