@@ -45,15 +45,7 @@ export function SnackBarProvider(props: { children: any }) {
     [snackMessage]
   );
 
-  const kind = useMemo(
-    () =>
-      snackMessage
-        ? snackMessage.kind === undefined
-          ? MessageKind.Info
-          : snackMessage.kind
-        : MessageKind.Info,
-    [snackMessage]
-  );
+  const kind = useMemo(() => (!!snackMessage && snackMessage.kind) || MessageKind.Info, [snackMessage]);
 
   const snackBarAction = useMemo(
     () => (
@@ -86,12 +78,21 @@ export function SnackBarProvider(props: { children: any }) {
 
   const content = useMemo( 
     () => {
-      const severity = kind === MessageKind.Info ? "info" : "error"
-      const asAlert = (
-        <Alert severity={severity}>{snackMessage?.message}</Alert>
+      const severity = kind === MessageKind.Info ? "info" : "error";
+      return (
+        <Alert
+          severity={severity}
+          onClick={() => {
+            if(closable) {
+              setSnackMessage(undefined);
+            }
+          }}
+        >
+          {snackMessage?.message}
+          {snackBarAction}
+        </Alert>
       );
-      return asAlert;
-    }, [snackMessage, kind]
+    }, [snackMessage, kind, snackBarAction]
   );
 
   return (
@@ -105,7 +106,6 @@ export function SnackBarProvider(props: { children: any }) {
         onClose={() => {
           setSnackMessage(undefined);
         }}
-        action={snackMessage?.actionName ? snackBarAction : <></>}
       >
         {content}
       </Snackbar>
