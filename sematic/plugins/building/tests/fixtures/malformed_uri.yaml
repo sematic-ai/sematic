@@ -1,4 +1,4 @@
-version: 0
+version: 1
 base_uri: "sematicai/sematic-worker-base:latest"
 build:
   platform: "linux/amd64"

@@ -40,11 +40,9 @@ from sematic.plugins.abstract_builder import (
 logger = logging.getLogger(__name__)
 
 # Version of the build file schema
-# TODO: bump to 1 when the build system is exposed to users
-BUILD_SCHEMA_VERSION = 0
+BUILD_SCHEMA_VERSION = 1
 
-# TODO: bump to 0.1.0 when the build system is exposed to users
-_PLUGIN_VERSION = (0, 0, 1)
+_PLUGIN_VERSION = (0, 1, 0)
 
 _DOCKERFILE_BASE_TEMPLATE = """
 FROM {base_uri}
