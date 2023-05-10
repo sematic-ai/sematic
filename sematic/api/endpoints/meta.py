@@ -73,7 +73,7 @@ def get_server_health() -> flask.Response:
         "healthy": <bool>,
         "message": <str message about status>,
     }
-    If any of the "healthy" fields is `False`, will return a 503 status code.
+    If any of the "healthy" fields is `false`, will return a 503 status code.
     """
     # healthy by nature of the fact that this API is working.
     api_status = dict(
@@ -108,7 +108,6 @@ def get_server_health() -> flask.Response:
     )
 
     status = HTTPStatus.OK if db_healthy else HTTPStatus.SERVICE_UNAVAILABLE
-    logger.info("Health: %s", payload)
 
     response = flask.jsonify(payload)
     response.status_code = status

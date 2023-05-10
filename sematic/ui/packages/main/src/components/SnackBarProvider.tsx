@@ -1,7 +1,13 @@
 import { Button, IconButton, Snackbar } from "@mui/material";
+import { Alert } from "@mui/material";
 import { useMemo, useState } from "react";
-import CloseIcon from "@mui/icons-material/Close";
 import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
+import CloseIcon from "@mui/icons-material/Close";
+
+export enum MessageKind {
+  Informative,
+  Error,
+}
 
 export type SnackMessage = {
   message: string;
@@ -9,6 +15,7 @@ export type SnackMessage = {
   onClick?: () => void;
   closable?: boolean;
   autoHide?: boolean;
+  kind?: MessageKind;
 };
 
 export function SnackBarProvider(props: { children: any }) {
@@ -35,6 +42,16 @@ export function SnackBarProvider(props: { children: any }) {
           ? true
           : snackMessage.autoHide
         : undefined,
+    [snackMessage]
+  );
+
+  const kind = useMemo(
+    () =>
+      snackMessage
+        ? snackMessage.kind === undefined
+          ? MessageKind.Informative
+          : snackMessage.kind
+        : MessageKind.Informative,
     [snackMessage]
   );
 
@@ -67,6 +84,19 @@ export function SnackBarProvider(props: { children: any }) {
     [snackMessage, closable]
   );
 
+  const content = useMemo( 
+    () => {
+      if(kind === MessageKind.Informative) {
+        return undefined;
+      }
+      
+      const asAlert = (
+        <Alert severity="error">{snackMessage?.message}</Alert>
+      );
+      return asAlert;
+    }, [snackMessage, kind]
+  );
+
   return (
     <SnackBarContext.Provider value={{ setSnackMessage }}>
       {children}
@@ -80,7 +110,9 @@ export function SnackBarProvider(props: { children: any }) {
           setSnackMessage(undefined);
         }}
         action={snackMessage?.actionName ? snackBarAction : <></>}
-      />
+      >
+        {content}
+      </Snackbar>
     </SnackBarContext.Provider>
   );
 }
