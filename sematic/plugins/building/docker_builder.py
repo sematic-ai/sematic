@@ -14,7 +14,7 @@ import sys
 import tempfile
 import time
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Generator, List, Optional, TextIO, Tuple
 
 # isort: off
 
@@ -63,6 +63,8 @@ _DOCKERFILE_REQUIREMENTS_TEMPLATE = """
 COPY {requirements_file} requirements.txt
 RUN pip3 install --no-cache -r requirements.txt
 """
+
+_ROLLING_PRINT_WINDOW = 10
 
 
 @dataclass
@@ -601,18 +603,14 @@ def _build_image_from_base(
         image = docker_client.images.get(str(effective_base_uri))
         return image, ImageURI.from_image(image)
 
-    for status_update in status_updates:
-        if "error" in status_update.keys():
-            logger.error(
-                "Image build error details: '%s'", str(status_update.get("errorDetail"))
-            )
-            raise BuildError(
-                f"Unable to build image '{built_image_name}': {status_update['error']}"
-            )
-
-        update_str = _docker_status_update_to_str(status_update)
-        if update_str is not None:
-            logger.info("Image build update: %s", update_str)
+    error_update = _rolling_print_status_updates(status_updates)
+    if error_update is not None:
+        logger.error(
+            "Image build error details: '%s'", str(error_update.get("errorDetail"))
+        )
+        raise BuildError(
+            f"Unable to build image '{built_image_name}': {error_update['error']}"
+        )
 
     image = docker_client.images.get(built_image_name)
     return image, ImageURI.from_image(image)
@@ -769,16 +767,12 @@ def _push_image(
         )
         return _reload_image_uri(image=image)
 
-    for status_update in status_updates:
-        if "error" in status_update.keys():
-            logger.error(
-                "Image push error details: '%s'", str(status_update.get("errorDetail"))
-            )
-            raise BuildError(f"Unable to push image: {status_update['error']}")
-
-        update_str = _docker_status_update_to_str(status_update)
-        if update_str is not None:
-            logger.info("Image push update: %s", update_str)
+    error_update = _rolling_print_status_updates(status_updates)
+    if error_update is not None:
+        logger.error(
+            "Image push error details: '%s'", str(error_update.get("errorDetail"))
+        )
+        raise BuildError(f"Unable to push image: {error_update['error']}")
 
     return _reload_image_uri(image=image)
 
@@ -803,6 +797,35 @@ def _reload_image_uri(image: Image) -> ImageURI:  # type: ignore
     repository, tag = image.attrs["RepoTags"][0].split(":")
 
     return ImageURI(repository=repository, tag=tag, digest=digest)
+
+
+def _rolling_print_status_updates(
+    status_updates: Generator[Dict[str, Any], None, None],
+    output_handle: TextIO = sys.stderr,
+) -> Optional[Dict[str, Any]]:
+    """
+    Prints a rolling window of Docker server status message updates.
+    """
+    message_window = []
+
+    for status_update in status_updates:
+        if "error" in status_update.keys():
+            return status_update
+
+        update_str = _docker_status_update_to_str(status_update)
+        if update_str is None:
+            continue
+
+        message_window.append(update_str)
+        if len(message_window) <= _ROLLING_PRINT_WINDOW:
+            print(update_str, file=output_handle)
+        else:
+            message_window = message_window[1:]
+            print(f"\033[{_ROLLING_PRINT_WINDOW + 1}F\033[K[...]", file=output_handle)
+            for message in message_window:
+                print(f"\033[K{message}", file=output_handle)
+
+    return None
 
 
 def _docker_status_update_to_str(status_update: Dict[str, Any]) -> Optional[str]:

@@ -15,7 +15,9 @@ _LOG_FILE_ROTATION_SETTINGS = {
 
 
 def make_log_config(log_to_disk: bool = False, level: Union[int, str] = logging.INFO):
-    level = logging._checkLevel(str(level).upper())  # type: ignore
+    if isinstance(level, str):
+        level = level.upper()
+    level = logging._checkLevel(level)  # type: ignore
 
     handlers = {
         "stdout": {
