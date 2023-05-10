@@ -24,8 +24,6 @@ export default function Health() {
   useEffect(() => {
     if(!!message) {
       setSnackMessage({ message: message, autoHide: false, kind: MessageKind.Error});
-    } else {
-      setSnackMessage({ message: "Foo bar", autoHide: false, kind: MessageKind.Info});
     }
   }, [message, setSnackMessage]);
 

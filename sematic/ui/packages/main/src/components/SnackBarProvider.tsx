@@ -92,7 +92,7 @@ export function SnackBarProvider(props: { children: any }) {
           {snackBarAction}
         </Alert>
       );
-    }, [snackMessage, kind, snackBarAction]
+    }, [snackMessage, kind, snackBarAction, closable]
   );
 
   return (
