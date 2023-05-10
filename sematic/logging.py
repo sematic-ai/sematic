@@ -1,6 +1,7 @@
 # Standard Library
 import logging
 import os
+from typing import Union
 
 # Sematic
 from sematic.config.config import get_config
@@ -13,7 +14,9 @@ _LOG_FILE_ROTATION_SETTINGS = {
 }
 
 
-def make_log_config(log_to_disk: bool = False, level: int = logging.INFO):
+def make_log_config(log_to_disk: bool = False, level: Union[int, str] = logging.INFO):
+    level = logging._checkLevel(str(level).upper())  # type: ignore
+
     handlers = {
         "stdout": {
             "formatter": "standard",
