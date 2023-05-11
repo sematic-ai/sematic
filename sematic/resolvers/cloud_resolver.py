@@ -23,6 +23,7 @@ from sematic.db.models.run import Run
 from sematic.graph import Graph
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.local_resolver import (
+    RerunMode,
     LocalResolver,
     ResolverRestartError,
     make_edge_key,
@@ -352,16 +353,10 @@ class CloudResolver(LocalResolver):
                 artifacts=artifacts,
                 edges=edges,
             )
-            rerun_from = graph.first_incomplete_run()
-            if rerun_from is None:
-                # Means the whole graph is resolved. Shouldn't be possible
-                # to reach this state as far as I know, but if we did, we should
-                # fail as normal.
-                super()._resolution_did_fail(error)
-                return
             new_resolver = self.__class__(
                 cache_namespace=self._cache_namespace_str,
-                rerun_from=rerun_from,
+                rerun_from=self._root_future.id,
+                rerun_mode=RerunMode.CONTINUE,
                 detach=True,
                 max_parallelism=self._max_parallelism,
                 _base_image_tag=self._base_image_tag,

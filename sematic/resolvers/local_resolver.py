@@ -36,6 +36,24 @@ from sematic.versions import CURRENT_VERSION_STR
 logger = logging.getLogger(__name__)
 
 
+@unique
+class RerunMode(Enum):
+    """How to choose which parts of the graph need to be rerun.
+
+    Attributes
+    ----------
+    SPECIFIC_RUN:
+        Invalidate a specific run and all its descendants. Then execute
+        whatever runs are required to determine the final result of the
+        graph.
+    CONTINUE:
+        Execute only runs that are required to determine the final
+        result of the graph.
+    """
+    SPECIFIC_RUN = "SPECIFIC_RUN"
+    CONTINUE = "CONTINUE"
+
+
 class LocalResolver(SilentResolver):
     """
     A `Resolver` that resolves a pipeline locally.
@@ -56,11 +74,21 @@ class LocalResolver(SilentResolver):
         must have a small memory footprint and must return immediately!
     rerun_from: Optional[str]
         When `None`, the pipeline is resolved from scratch, as normally. When not `None`,
-        must be the id of a `Run` from a previous resolution. Instead of running from
-        scratch, parts of that previous resolution is cloned up until the specified `Run`,
-        and only the specified `Run`, nested and downstream `Future`s are executed. This
-        is meant to be used for retries or for hotfixes, without needing to re-run the
-        entire pipeline again.
+        must be the id of a `Run` from a previous resolution the nature of the rerun
+        when an id is specified will depend on the `rerun_mode` parameter.
+    rerun_mode: RerunMode
+        This option is only used when `rerun_from` has been given a run id.
+        If set to
+        `RerunMode.SPECIFIC_RUN` (the default):
+            Instead of running from scratch, parts of that previous
+            resolution will be cloned up until the specified `Run`, and only the
+            specified `Run`, nested and downstream `Future`s will be executed.
+            This is meant to be used for retries or for hotfixes, without needing to
+            re-run the entire pipeline again.
+        `RerunMode.CONTINUE`:
+            In this case, the run id passed to rerun_from must be the root id of a
+            resolution. The new resolution will use any available results from the
+            old one and only execute what is necessary to determine the final result.
     """
 
     _resource_manager: Optional[ServerResourceManager] = None  # type: ignore
@@ -69,6 +97,7 @@ class LocalResolver(SilentResolver):
         self,
         cache_namespace: Optional[CacheNamespace] = None,
         rerun_from: Optional[str] = None,
+        rerun_mode: RerunMode = RerunMode.SPECIFIC_RUN,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -92,6 +121,7 @@ class LocalResolver(SilentResolver):
         self._sio_client = socketio.Client()
 
         self._rerun_from_run_id = rerun_from
+        self._rerun_mode = rerun_mode
 
         # this parameter needs to be resolved after the root future is enqueued
         # and before the resolution is created
@@ -102,9 +132,9 @@ class LocalResolver(SilentResolver):
         if self._rerun_from_run_id is None:
             super()._seed_graph(future)
         else:
-            self._seed_from_clone(future, self._rerun_from_run_id)
+            self._seed_from_clone(future, self._rerun_from_run_id, self._rerun_mode)
 
-    def _seed_from_clone(self, future: AbstractFuture, from_run_id: str):
+    def _seed_from_clone(self, future: AbstractFuture, from_run_id: str, rerun_mode: RerunMode):
         """
         Instead of simply queuing the root future, this method seeds the future graph
         from a clone of another execution of same pipeline.
@@ -115,6 +145,9 @@ class LocalResolver(SilentResolver):
             raise ValueError(
                 f"Cannot restart from {from_run_id}: run cannot be found."
             ) from e
+
+        if rerun_mode is RerunMode.CONTINUE and run.id != run.root_id:
+            raise ValueError("Cannot use RerunMode.CONTINUE with a non-root run.")
 
         runs, artifacts, edges = api_client.get_graph(run.root_id, root=True)
 
@@ -131,9 +164,13 @@ class LocalResolver(SilentResolver):
 
         logger.info(f"Attempting to rerun from {from_run_id}")
 
-        cloned_graph = graph.clone_futures(
-            reset_from=from_run_id,
-        )
+        if rerun_mode is RerunMode.SPECIFIC_RUN:
+            cloned_graph = graph.clone_futures(
+                reset_from=from_run_id,
+            )
+        else:
+            cloned_graph = graph.clone_futures()
+            
 
         # Making sure we honor id of future passed from the outside
         cloned_graph.set_root_future_id(future.id)
