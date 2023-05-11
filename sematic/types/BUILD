@@ -16,6 +16,7 @@ sematic_py_lib(
         "//sematic/types/types:tuple",
         "//sematic/types/types:dict",
         "//sematic/types/types:str",
+        "//sematic/types/types:set",
         "//sematic/types/types:datetime",
         "//sematic/types/types:image",
         # Does not actually create a dependency on torch
