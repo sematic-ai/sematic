@@ -402,15 +402,17 @@ def _build(target: str) -> ImageURI:
     executions.
     """
     build_config = _get_build_config(script_path=target)
-    logger.info("Loaded build configuration: %s", build_config)
+    logger.debug("Loaded build configuration: %s", build_config)
 
     docker_client = _make_docker_client(build_config.docker)
-    logger.info("Instantiated docker client for server: %s", docker_client.api.base_url)
+    logger.debug(
+        "Instantiated docker client for server: %s", docker_client.api.base_url
+    )
 
     image, image_uri = _build_image(
         target=target, build_config=build_config, docker_client=docker_client
     )
-    logger.info("Built local image: %s", repr(image_uri))
+    logger.debug("Built local image: %s", repr(image_uri))
 
     build_image_uri = _push_image(
         image=image,
@@ -419,7 +421,7 @@ def _build(target: str) -> ImageURI:
         docker_client=docker_client,
     )
 
-    logger.info("Using image: %s", repr(build_image_uri))
+    logger.debug("Using image: %s", repr(build_image_uri))
 
     return build_image_uri
 
@@ -437,7 +439,7 @@ def _launch(target: str, image_uri: ImageURI) -> None:
 
     runpy.run_path(path_name=target, run_name="__main__")
 
-    logger.info("Finished launching target: '%s'", target)
+    logger.debug("Finished launching target: '%s'", target)
 
 
 def _get_build_config(script_path: str) -> BuildConfig:
@@ -451,7 +453,7 @@ def _get_build_config(script_path: str) -> BuildConfig:
         There was an error when loading or validating the specified build configuration.
     """
     build_config_files = _find_build_config_files(script_path=script_path)
-    logger.info(
+    logger.debug(
         "Script '%s' has these corresponding build files: %s",
         script_path,
         build_config_files,
@@ -674,8 +676,8 @@ def _execute_build_script(target: str, image_script: str) -> ImageURI:
             script_dir = None  # type: ignore
         script_file = f"./{script_file}"
 
-        logger.info(
-            f"Executing: executable={script_file} cwd={script_dir} args={target}"
+        logger.debug(
+            f"Executing: executable={script_file} args={target} cwd={script_dir}"
         )
 
         # the subprocess' stderr will be inherited from the current process,
