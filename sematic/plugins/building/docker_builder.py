@@ -14,7 +14,7 @@ import sys
 import tempfile
 import time
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Generator, List, Optional, TextIO, Tuple
 
 # isort: off
 
@@ -40,11 +40,9 @@ from sematic.plugins.abstract_builder import (
 logger = logging.getLogger(__name__)
 
 # Version of the build file schema
-# TODO: bump to 1 when the build system is exposed to users
-BUILD_SCHEMA_VERSION = 0
+BUILD_SCHEMA_VERSION = 1
 
-# TODO: bump to 0.1.0 when the build system is exposed to users
-_PLUGIN_VERSION = (0, 0, 1)
+_PLUGIN_VERSION = (0, 1, 0)
 
 _DOCKERFILE_BASE_TEMPLATE = """
 FROM {base_uri}
@@ -63,6 +61,8 @@ _DOCKERFILE_REQUIREMENTS_TEMPLATE = """
 COPY {requirements_file} requirements.txt
 RUN pip3 install --no-cache -r requirements.txt
 """
+
+_ROLLING_PRINT_WINDOW = 10
 
 
 @dataclass
@@ -402,15 +402,17 @@ def _build(target: str) -> ImageURI:
     executions.
     """
     build_config = _get_build_config(script_path=target)
-    logger.info("Loaded build configuration: %s", build_config)
+    logger.debug("Loaded build configuration: %s", build_config)
 
     docker_client = _make_docker_client(build_config.docker)
-    logger.info("Instantiated docker client for server: %s", docker_client.api.base_url)
+    logger.debug(
+        "Instantiated docker client for server: %s", docker_client.api.base_url
+    )
 
     image, image_uri = _build_image(
         target=target, build_config=build_config, docker_client=docker_client
     )
-    logger.info("Built local image: %s", repr(image_uri))
+    logger.debug("Built local image: %s", repr(image_uri))
 
     build_image_uri = _push_image(
         image=image,
@@ -419,7 +421,7 @@ def _build(target: str) -> ImageURI:
         docker_client=docker_client,
     )
 
-    logger.info("Using image: %s", repr(build_image_uri))
+    logger.debug("Using image: %s", repr(build_image_uri))
 
     return build_image_uri
 
@@ -437,7 +439,7 @@ def _launch(target: str, image_uri: ImageURI) -> None:
 
     runpy.run_path(path_name=target, run_name="__main__")
 
-    logger.info("Finished launching target: '%s'", target)
+    logger.debug("Finished launching target: '%s'", target)
 
 
 def _get_build_config(script_path: str) -> BuildConfig:
@@ -451,7 +453,7 @@ def _get_build_config(script_path: str) -> BuildConfig:
         There was an error when loading or validating the specified build configuration.
     """
     build_config_files = _find_build_config_files(script_path=script_path)
-    logger.info(
+    logger.debug(
         "Script '%s' has these corresponding build files: %s",
         script_path,
         build_config_files,
@@ -601,18 +603,14 @@ def _build_image_from_base(
         image = docker_client.images.get(str(effective_base_uri))
         return image, ImageURI.from_image(image)
 
-    for status_update in status_updates:
-        if "error" in status_update.keys():
-            logger.error(
-                "Image build error details: '%s'", str(status_update.get("errorDetail"))
-            )
-            raise BuildError(
-                f"Unable to build image '{built_image_name}': {status_update['error']}"
-            )
-
-        update_str = _docker_status_update_to_str(status_update)
-        if update_str is not None:
-            logger.info("Image build update: %s", update_str)
+    error_update = _rolling_print_status_updates(status_updates)
+    if error_update is not None:
+        logger.error(
+            "Image build error details: '%s'", str(error_update.get("errorDetail"))
+        )
+        raise BuildError(
+            f"Unable to build image '{built_image_name}': {error_update['error']}"
+        )
 
     image = docker_client.images.get(built_image_name)
     return image, ImageURI.from_image(image)
@@ -678,8 +676,8 @@ def _execute_build_script(target: str, image_script: str) -> ImageURI:
             script_dir = None  # type: ignore
         script_file = f"./{script_file}"
 
-        logger.info(
-            f"Executing: executable={script_file} cwd={script_dir} args={target}"
+        logger.debug(
+            f"Executing: executable={script_file} args={target} cwd={script_dir}"
         )
 
         # the subprocess' stderr will be inherited from the current process,
@@ -769,16 +767,12 @@ def _push_image(
         )
         return _reload_image_uri(image=image)
 
-    for status_update in status_updates:
-        if "error" in status_update.keys():
-            logger.error(
-                "Image push error details: '%s'", str(status_update.get("errorDetail"))
-            )
-            raise BuildError(f"Unable to push image: {status_update['error']}")
-
-        update_str = _docker_status_update_to_str(status_update)
-        if update_str is not None:
-            logger.info("Image push update: %s", update_str)
+    error_update = _rolling_print_status_updates(status_updates)
+    if error_update is not None:
+        logger.error(
+            "Image push error details: '%s'", str(error_update.get("errorDetail"))
+        )
+        raise BuildError(f"Unable to push image: {error_update['error']}")
 
     return _reload_image_uri(image=image)
 
@@ -803,6 +797,35 @@ def _reload_image_uri(image: Image) -> ImageURI:  # type: ignore
     repository, tag = image.attrs["RepoTags"][0].split(":")
 
     return ImageURI(repository=repository, tag=tag, digest=digest)
+
+
+def _rolling_print_status_updates(
+    status_updates: Generator[Dict[str, Any], None, None],
+    output_handle: TextIO = sys.stderr,
+) -> Optional[Dict[str, Any]]:
+    """
+    Prints a rolling window of Docker server status message updates.
+    """
+    message_window = []
+
+    for status_update in status_updates:
+        if "error" in status_update.keys():
+            return status_update
+
+        update_str = _docker_status_update_to_str(status_update)
+        if update_str is None:
+            continue
+
+        message_window.append(update_str)
+        if len(message_window) <= _ROLLING_PRINT_WINDOW:
+            print(update_str, file=output_handle)
+        else:
+            message_window = message_window[1:]
+            print(f"\033[{_ROLLING_PRINT_WINDOW + 1}F\033[K[...]", file=output_handle)
+            for message in message_window:
+                print(f"\033[K{message}", file=output_handle)
+
+    return None
 
 
 def _docker_status_update_to_str(status_update: Dict[str, Any]) -> Optional[str]:
