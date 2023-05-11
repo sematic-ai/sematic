@@ -15,9 +15,9 @@ from sematic.api.tests.fixtures import test_client  # noqa: F401
 from sematic.api_client import (
     IncompatibleClientError,
     _notify_event,
-    _validate_server_compatibility,
     get_artifact_value_by_id,
     save_metric_points,
+    validate_server_compatibility,
 )
 from sematic.config.config import get_config
 from sematic.db.db import DB
@@ -75,7 +75,7 @@ def test_validate_server_compatibility(mock_requests):
             min_client_supported=MIN_CLIENT_SERVER_SUPPORTS,
         ),
     )
-    _validate_server_compatibility(use_cached=False)
+    validate_server_compatibility(use_cached=False)
     mock_requests.get.assert_called_with(
         f"{get_config().api_url}/meta/versions",
         headers={"Content-Type": "application/json"},
@@ -91,7 +91,7 @@ def test_validate_server_compatibility_bad_json(mock_requests):
 
     mock_requests.get.return_value.json = bad_json
     with pytest.raises(IncompatibleClientError):
-        _validate_server_compatibility(use_cached=False)
+        validate_server_compatibility(use_cached=False)
 
 
 @mock.patch("sematic.api_client.requests")
@@ -104,7 +104,7 @@ def test_validate_server_compatibility_old_server(mock_requests):
         ),
     )
     with pytest.raises(IncompatibleClientError):
-        _validate_server_compatibility(use_cached=False)
+        validate_server_compatibility(use_cached=False)
 
 
 @mock.patch("sematic.api_client.requests")
@@ -119,7 +119,7 @@ def test_validate_server_compatibility_old_client(mock_requests):
         ),
     )
     with pytest.raises(IncompatibleClientError):
-        _validate_server_compatibility(use_cached=False)
+        validate_server_compatibility(use_cached=False)
 
 
 @mock.patch("sematic.api_client.requests")
@@ -131,8 +131,8 @@ def test_validate_server_compatibility_new_server_still_supports(mock_requests):
             min_client_supported=MIN_CLIENT_SERVER_SUPPORTS,
         ),
     )
-    _validate_server_compatibility(use_cached=False)
-    _validate_server_compatibility(use_cached=True)
+    validate_server_compatibility(use_cached=False)
+    validate_server_compatibility(use_cached=True)
 
     mock_requests.get.assert_called_once()
 

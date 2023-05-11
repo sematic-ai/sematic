@@ -680,7 +680,7 @@ def _put(
     return response.json()
 
 
-def _validate_server_compatibility(use_cached: bool = True) -> None:
+def validate_server_compatibility(use_cached: bool = True) -> None:
     """Check that the client is compatible with the server.
 
     Raises an error if the server and client are incompatible, or if this can't be
@@ -766,7 +766,7 @@ def request(
     valid json.
     """
     if validate_version_compatibility:
-        _validate_server_compatibility()
+        validate_server_compatibility()
 
     kwargs = kwargs if kwargs is not None else dict()
     headers = kwargs.get("headers", {})
