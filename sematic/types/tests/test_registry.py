@@ -2,7 +2,7 @@
 from abc import ABC, ABCMeta, abstractmethod
 from dataclasses import dataclass
 from enum import Enum, unique
-from typing import Any, List, Literal, Optional, Union
+from typing import Any, List, Literal, Optional, Set, Union
 
 # Third-party
 import pytest
@@ -55,6 +55,8 @@ def test_validate_type_annotation():
     validate_type_annotation(Optional[int])
     validate_type_annotation(List[int])
     validate_type_annotation(List[int], int)
+    validate_type_annotation(Set[int])
+    validate_type_annotation(Set[int], int)
     with pytest.raises(TypeError, match=r"Expected a Sematic-supported type here"):
         validate_type_annotation(42)
     with pytest.raises(TypeError, match=r"Expected a Sematic-supported type here"):
@@ -86,6 +88,7 @@ def test_is_parameterized_generic():
     assert is_parameterized_generic(Union[int, float])
     assert is_parameterized_generic(Optional[int])
     assert is_parameterized_generic(List[int])
+    assert is_parameterized_generic(Set[int])
     assert not is_parameterized_generic(Literal[42])
     assert not is_parameterized_generic(Any)
     assert not is_parameterized_generic(Union)
@@ -101,6 +104,7 @@ def test_validate_registry_keys():
     _validate_registry_keys(Color)
     _validate_registry_keys(Union)
     _validate_registry_keys(List)
+    _validate_registry_keys(Set)
     with pytest.raises(
         TypeError, match=r"Cannot register type typing.Union\[int, float\]"
     ):
