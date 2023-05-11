@@ -14,6 +14,7 @@ import sematic.types.types.image  # noqa: F401
 import sematic.types.types.integer  # noqa: F401
 import sematic.types.types.list  # noqa: F401
 import sematic.types.types.none  # noqa: F401
+import sematic.types.types.set  # noqa: F401
 import sematic.types.types.str  # noqa: F401
 import sematic.types.types.tuple  # noqa: F401
 import sematic.types.types.union  # noqa: F401

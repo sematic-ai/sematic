@@ -120,10 +120,14 @@ def test_can_cast_type_registered():
 def test_is_parameterized_generic():
     assert is_parameterized_generic(int) is False
     assert is_parameterized_generic(typing.List[int]) is True
+    assert is_parameterized_generic(typing.Set[int]) is True
     assert is_parameterized_generic(typing.Optional[int]) is True
 
     with pytest.raises(TypeError, match="must be parametrized"):
         is_parameterized_generic(typing.List, raise_for_unparameterized=True)
+
+    with pytest.raises(TypeError, match="must be parametrized"):
+        is_parameterized_generic(typing.Set, raise_for_unparameterized=True)
 
     with pytest.raises(TypeError, match="must be parametrized"):
         is_parameterized_generic(typing.Optional, raise_for_unparameterized=True)

@@ -101,6 +101,16 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "set",
+    srcs = ["set.py"],
+    deps = [
+        "//sematic/types:casting",
+        "//sematic/types:registry",
+        "//sematic/types:serialization",
+    ],
+)
+
+sematic_py_lib(
     name = "link",
     srcs = ["link.py"],
     deps = [],
