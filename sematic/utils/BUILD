@@ -5,6 +5,21 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "db",
+    srcs = ["db.py"],
+    pip_deps = [
+        "sqlalchemy",
+    ],
+    deps = [],
+)
+
+sematic_py_lib(
+    name = "env",
+    srcs = ["env.py"],
+    deps = [],
+)
+
+sematic_py_lib(
     name = "exceptions",
     srcs = ["exceptions.py"],
     deps = [
@@ -70,10 +85,7 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "db",
-    srcs = ["db.py"],
-    pip_deps = [
-        "sqlalchemy",
-    ],
+    name = "types",
+    srcs = ["types.py"],
     deps = [],
 )

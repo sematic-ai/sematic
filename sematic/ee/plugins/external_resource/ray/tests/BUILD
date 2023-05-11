@@ -20,6 +20,6 @@ pytest_test(
         "//sematic:function",
         "//sematic/ee/plugins/external_resource/ray:cluster",
         "//sematic/plugins:abstract_external_resource",
-        "//sematic/tests:fixtures",
+        "//sematic/utils:env",
     ],
 )
