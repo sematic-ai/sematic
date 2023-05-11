@@ -117,7 +117,10 @@ sematic_py_lib(
     deps = [
         ":cli",
         ":process_utils",
+        "//sematic:api_client",
         "//sematic/config:config",
+        "//sematic/plugins:abstract_builder",
+        "//sematic/plugins/building:docker_builder",
     ],
 )
 
