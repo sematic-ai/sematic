@@ -2,6 +2,7 @@
 import json
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any, Callable, Dict, Iterable, List, Optional
 from typing import OrderedDict as OrderedDictType
 from typing import Tuple
@@ -21,6 +22,25 @@ RunsByID = Dict[RunID, Run]
 RunsByParentID = Dict[Optional[RunID], List[Run]]
 EdgesByRunID = Dict[RunID, List[Edge]]
 EdgesByID = Dict[str, Edge]
+
+
+@unique
+class RerunMode(Enum):
+    """How to choose which parts of the graph need to be rerun.
+
+    Attributes
+    ----------
+    SPECIFIC_RUN:
+        Invalidate a specific run and all its descendants. Then execute
+        whatever runs are required to determine the final result of the
+        graph.
+    CONTINUE:
+        Execute only runs that are required to determine the final
+        result of the graph.
+    """
+
+    SPECIFIC_RUN = "SPECIFIC_RUN"
+    CONTINUE = "CONTINUE"
 
 
 @dataclass

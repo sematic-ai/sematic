@@ -214,6 +214,9 @@ def schedule_resolution_endpoint(
         if "rerun_from" in flask.request.json:
             rerun_from = flask.request.json["rerun_from"]
 
+        if "rerun_mode" in flask.request.json:
+            rerun_mode = flask.request.json["rerun_mode"]
+
     jobs = get_jobs_by_run_id(resolution_id, kind=JobKind.resolver)
     if len(jobs) != 0:
         return jsonify_error(
@@ -235,6 +238,7 @@ def schedule_resolution_endpoint(
             resolution=resolution,
             max_parallelism=max_parallelism,
             rerun_from=rerun_from,
+            rerun_mode=rerun_mode,
         )
 
         logger.info("Scheduled resolution with job %s", post_schedule_job.identifier())

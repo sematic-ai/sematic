@@ -30,6 +30,7 @@ from sematic.config.user_settings import UserSettingsVar
 from sematic.container_images import CONTAINER_IMAGE_ENV_VAR
 from sematic.db.models.factories import make_job
 from sematic.db.models.job import Job
+from sematic.graph import RerunMode
 from sematic.plugins.storage.s3_storage import S3Storage, S3StorageSettingsVar
 from sematic.resolvers.resource_requirements import (
     KUBERNETES_SECRET_NAME,
@@ -682,6 +683,7 @@ def schedule_resolution_job(
     user_settings: Dict[str, str],
     max_parallelism: Optional[int] = None,
     rerun_from: Optional[str] = None,
+    rerun_mode: Optional[RerunMode] = None,
 ) -> Job:
     namespace = get_server_setting(ServerSettingsVar.KUBERNETES_NAMESPACE)
     service_account = get_server_setting(
@@ -719,6 +721,9 @@ def schedule_resolution_job(
 
     if rerun_from is not None:
         args += ["--rerun-from", rerun_from]
+
+    if rerun_mode is not None:
+        args += ["--rerun-mode", rerun_mode.value]
 
     _schedule_kubernetes_job(
         name=job.name,

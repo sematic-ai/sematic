@@ -4,7 +4,6 @@ import logging
 import uuid
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple, Union
-from enum import unique, Enum
 
 # Third-party
 import socketio  # type: ignore
@@ -26,7 +25,7 @@ from sematic.db.models.factories import make_artifact, make_run_from_future
 from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
-from sematic.graph import Graph
+from sematic.graph import Graph, RerunMode
 from sematic.resolvers.resource_managers.server_manager import ServerResourceManager
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
@@ -35,24 +34,6 @@ from sematic.utils.retry import retry_call
 from sematic.versions import CURRENT_VERSION_STR
 
 logger = logging.getLogger(__name__)
-
-
-@unique
-class RerunMode(Enum):
-    """How to choose which parts of the graph need to be rerun.
-
-    Attributes
-    ----------
-    SPECIFIC_RUN:
-        Invalidate a specific run and all its descendants. Then execute
-        whatever runs are required to determine the final result of the
-        graph.
-    CONTINUE:
-        Execute only runs that are required to determine the final
-        result of the graph.
-    """
-    SPECIFIC_RUN = "SPECIFIC_RUN"
-    CONTINUE = "CONTINUE"
 
 
 class LocalResolver(SilentResolver):
@@ -135,7 +116,9 @@ class LocalResolver(SilentResolver):
         else:
             self._seed_from_clone(future, self._rerun_from_run_id, self._rerun_mode)
 
-    def _seed_from_clone(self, future: AbstractFuture, from_run_id: str, rerun_mode: RerunMode):
+    def _seed_from_clone(
+        self, future: AbstractFuture, from_run_id: str, rerun_mode: RerunMode
+    ):
         """
         Instead of simply queuing the root future, this method seeds the future graph
         from a clone of another execution of same pipeline.
@@ -171,7 +154,6 @@ class LocalResolver(SilentResolver):
             )
         else:
             cloned_graph = graph.clone_futures()
-            
 
         # Making sure we honor id of future passed from the outside
         cloned_graph.set_root_future_id(future.id)

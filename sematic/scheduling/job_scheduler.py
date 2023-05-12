@@ -57,6 +57,7 @@ def schedule_resolution(
     resolution: Resolution,
     max_parallelism: Optional[int] = None,
     rerun_from: Optional[str] = None,
+    rerun_mode: Optional[RerunMode] = None,
 ) -> Tuple[Resolution, Job]:
     """Start a resolution for the run on external compute.
 
@@ -69,6 +70,8 @@ def schedule_resolution(
         SCHEDULED state at any one time.
     rerun_from: Optional[str]
         Start resolution from a particular point.
+    rerun_mode: Optional[RerunMode]
+        Instructions on how to proceed when given an id to rerun from.
 
     Returns
     -------
@@ -80,6 +83,7 @@ def schedule_resolution(
         resolution=resolution,
         max_parallelism=max_parallelism,
         rerun_from=rerun_from,
+        rerun_mode=rerun_mode,
     )
 
     resolution.status = ResolutionStatus.SCHEDULED
@@ -266,6 +270,7 @@ def _schedule_resolution_job(
     resolution: Resolution,
     max_parallelism: Optional[int] = None,
     rerun_from: Optional[str] = None,
+    rerun_mode: Optional[RerunMode] = None,
 ) -> Job:
     """Reach out to external compute to start the execution of the resolution"""
     # should be impossible to fail this assert, but it makes mypy happy
@@ -276,6 +281,7 @@ def _schedule_resolution_job(
         user_settings=resolution.settings_env_vars,
         max_parallelism=max_parallelism,
         rerun_from=rerun_from,
+        rerun_mode=rerun_mode,
     )
 
 

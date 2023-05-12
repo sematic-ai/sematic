@@ -20,10 +20,9 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
-from sematic.graph import Graph
+from sematic.graph import RerunMode
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.resolvers.local_resolver import (
-    RerunMode,
     LocalResolver,
     ResolverRestartError,
     make_edge_key,
@@ -345,14 +344,6 @@ class CloudResolver(LocalResolver):
             new_root_future = self._root_future.function(
                 **self._root_future.kwargs
             ).set(name=self._root_future.props.name, tags=self._root_future.props.tags)
-            runs, artifacts, edges = api_client.get_graph(
-                self._root_future.id, root=True
-            )
-            graph = Graph(
-                runs=runs,
-                artifacts=artifacts,
-                edges=edges,
-            )
             new_resolver = self.__class__(
                 cache_namespace=self._cache_namespace_str,
                 rerun_from=self._root_future.id,
@@ -369,6 +360,7 @@ class CloudResolver(LocalResolver):
                 f"Resolution restarted mid-execution. A new one has been started "
                 f"with the id {new_root_future.id}"
             )
+            logger.error(reason)
         finally:
             super()._resolution_did_fail(error, reason)
 
