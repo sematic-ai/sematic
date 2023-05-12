@@ -356,7 +356,7 @@ class LocalResolver(SilentResolver):
             root_id=root_future.id,
             status=ResolutionStatus.SCHEDULED,
             kind=ResolutionKind.LOCAL,
-            git_info=get_git_info(root_future.function.func),  # type: ignore
+            git_info=self._get_git_info(root_future.function.func),  # type: ignore
             settings_env_vars=get_active_user_settings_strings(),
             client_version=CURRENT_VERSION_STR,
             cache_namespace=self._cache_namespace_str,
