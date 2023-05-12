@@ -2,7 +2,6 @@
 The native Docker Builder plugin implementation.
 """
 # Standard Library
-import distutils.util
 import glob
 import json
 import logging
@@ -36,6 +35,8 @@ from sematic.plugins.abstract_builder import (
     BuildConfigurationError,
     BuildError,
 )
+from sematic.utils.env import environment_variables
+from sematic.utils.types import as_bool
 
 logger = logging.getLogger(__name__)
 
@@ -201,14 +202,14 @@ class DockerClientConfig:
         """
         if self.timeout is not None and isinstance(self.timeout, str):
             self.timeout = int(self.timeout)
-        if self.tls is not None and isinstance(self.tls, str):
-            # TODO: extract settings.as_bool to utilities, and use that instead
-            self.tls = bool(distutils.util.strtobool(self.tls))
+
+        self.tls = as_bool(self.tls)
+
         if self.credstore_env is not None and isinstance(self.credstore_env, str):
             self.credstore_env = json.loads(self.credstore_env)
-        if self.use_ssh_client is not None and isinstance(self.use_ssh_client, str):
-            # TODO: extract settings.as_bool to utilities, and use that instead
-            self.use_ssh_client = bool(distutils.util.strtobool(self.use_ssh_client))
+
+        self.use_ssh_client = as_bool(self.use_ssh_client)
+
         if self.max_pool_size is not None and isinstance(self.max_pool_size, str):
             self.max_pool_size = int(self.max_pool_size)
 
@@ -430,14 +431,12 @@ def _launch(target: str, image_uri: ImageURI) -> None:
     """
     Launches the specified user code target, using the specified image.
     """
+    # TODO: switch from project-relative paths to build file-relative paths
     sys.path.append(os.getcwd())
-    # TODO: revert this overwrite after finishing execution
-    #  promote the `environment_variables` testing fixture to a utility
-    os.environ[CONTAINER_IMAGE_ENV_VAR] = repr(image_uri)
-
     logger.info("Launching target: '%s'", target)
 
-    runpy.run_path(path_name=target, run_name="__main__")
+    with environment_variables({CONTAINER_IMAGE_ENV_VAR: repr(image_uri)}):
+        runpy.run_path(path_name=target, run_name="__main__")
 
     logger.debug("Finished launching target: '%s'", target)
 

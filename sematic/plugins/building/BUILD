@@ -9,5 +9,7 @@ sematic_py_lib(
         "//sematic:abstract_plugin",
         "//sematic:container_images",
         "//sematic/plugins:abstract_builder",
+        "//sematic/utils:env",
+        "//sematic/utils:types",
     ],
 )

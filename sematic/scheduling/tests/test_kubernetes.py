@@ -31,7 +31,7 @@ from sematic.scheduling.kubernetes import (
     refresh_job,
     schedule_run_job,
 )
-from sematic.tests.fixtures import environment_variables  # noqa: F401
+from sematic.utils.env import environment_variables  # noqa: F401
 
 
 @mock.patch("sematic.scheduling.kubernetes.load_kube_config")

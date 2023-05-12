@@ -76,6 +76,7 @@ pytest_test(
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:resource_requirements",
         "//sematic/tests:fixtures",
+        "//sematic/utils:env",
     ],
 )
 
@@ -98,6 +99,7 @@ pytest_test(
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:worker",
         "//sematic/tests:fixtures",
+        "//sematic/utils:env",
         "//sematic/utils:stdout",
     ],
 )
