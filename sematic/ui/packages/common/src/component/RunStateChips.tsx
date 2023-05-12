@@ -58,21 +58,24 @@ export const SubmittedStateChip = (props: StateChipBaseProps) => {
     return <ArrowUpward color={"lightGrey"} style={styles} />;
 }
 
-export function getRunStateChipByState(futureState: string, size: StateChipBaseProps['size'] ="large") {
-    if (futureState === 'SUCCESS') {
+export function getRunStateChipByState(futureState: string, size: StateChipBaseProps['size'] = "large") {
+    if (["RESOLVED", "SUCCEEDED"].includes(futureState)) {
         return <SuccessStateChip size={size} />;
     }
-    if (futureState === 'FAILED') {
+    if (["FAILED", "NESTED_FAILED"].includes(futureState)) {
         return <FailedStateChip size={size} />;
     }
-    if (futureState === 'RUNNING') {
+    if (["SCHEDULED", "RAN"].includes(futureState)) {
         return <RunningStateChip size={size} />;
     }
-    if (futureState === 'CANCELLED') {
+    if (futureState === "CANCELED") {
         return <CanceledStateChip size={size} />;
     }
-    if (futureState === 'SCHEDULED') {
+    if (futureState === "CREATED") {
         return <SubmittedStateChip size={size} />;
+    }
+    if (futureState === "RETRYING") {
+        return <RunningStateChip size={size} />;
     }
 
     return null;

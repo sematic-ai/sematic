@@ -1,9 +1,12 @@
+import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from "@mui/material/styles";
 import NoteComponent from '@sematic/common/src/component/Note';
+import SubmitNoteSection from '@sematic/common/src/pages/RunDetails/SubmitNoteSection';
 import theme from '@sematic/common/src/theme/new';
 import { Meta, StoryFn, StoryObj } from '@storybook/react';
-import CssBaseline from '@mui/material/CssBaseline';
-import SubmitNoteSection from '@sematic/common/src/pages/RunDetails/SubmitNoteSection';
+import { ReactElement } from 'react';
+import { Route, createBrowserRouter, createRoutesFromElements, RouterProvider } from "react-router-dom";
+import { useMemo } from '@sematic/common/src/reactHooks';
 
 export default {
   title: 'Sematic/Notes',
@@ -23,6 +26,11 @@ interface StoryProps extends React.ComponentProps<typeof NoteComponent> {
   width?: keyof (typeof sizeOptions);
   onSubmit?: (content: string) => void;
 }
+
+const dummyRouter = (node: ReactElement) => createBrowserRouter(
+  createRoutesFromElements(
+    <Route path="*" index element={node} />
+  ));
 
 const Examples: Record<string, React.ComponentProps<typeof NoteComponent>> = {
   "Clean": {
@@ -54,7 +62,14 @@ const Examples: Record<string, React.ComponentProps<typeof NoteComponent>> = {
 const Template: StoryFn<StoryProps> = (props: StoryProps) => {
   const { example = "Clean" } = props;
   const mockData = Examples[example] || Examples["clean"];
-  return <div style={{ width: '300px' }}><NoteComponent {...mockData} /></div>;
+
+  const router = useMemo(() => {
+    return dummyRouter(
+      <div style={{ width: '300px' }}><NoteComponent {...mockData} /></div>
+    );
+  }, [mockData]);
+
+  return <RouterProvider router={router} />;
 };
 
 const commonArgTypes = {
@@ -81,19 +96,19 @@ const sizeOptions = {
 
 export const NoteSubmission: StoryObj<StoryProps> = {
   render: (props) => {
-    const { width, onSubmit} = props;
+    const { width, onSubmit } = props;
 
     const keys = Object.keys(sizeOptions) as (keyof typeof sizeOptions)[];
 
     const widthValue = sizeOptions[width || keys[1]];
 
-    return <div style={{width: widthValue}}>
+    return <div style={{ width: widthValue }}>
       <SubmitNoteSection onSubmit={onSubmit!} />
     </div>
   },
   argTypes: {
     width: {
-      control: 'select', options: Object.keys(sizeOptions)      
+      control: 'select', options: Object.keys(sizeOptions)
     },
     onSubmit: { action: 'value changed' }
   }

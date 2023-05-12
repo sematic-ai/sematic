@@ -2,7 +2,7 @@ import Timeline from '@mui/lab/Timeline';
 import timelineItemClasses from '@mui/lab/TimelineItem/timelineItemClasses';
 import { styled } from '@mui/system';
 import PodLifecycleEvent from 'src/pipelines/pod_lifecycle/PodLifecycleEvent';
-import { Job } from '@sematic/common/lib/src/Models';
+import { Job } from '@sematic/common/src/Models';
 import { useMemo } from 'react';
 
 const ThinTimeline = styled(Timeline)`
