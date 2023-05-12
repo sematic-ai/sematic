@@ -309,7 +309,7 @@ def schedule_resolution(
         payload["rerun_from"] = rerun_from
 
     if rerun_mode is not None:
-        payload["rerun_mode"] = rerun_mode
+        payload["rerun_mode"] = rerun_mode.value
 
     response = _post(f"/resolutions/{resolution_id}/schedule", json_payload=payload)
     return Resolution.from_json_encodable(response["content"])
