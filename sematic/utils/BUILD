@@ -16,7 +16,9 @@ sematic_py_lib(
 sematic_py_lib(
     name = "env",
     srcs = ["env.py"],
-    deps = [],
+    deps = [
+        "//sematic/config:settings",
+    ],
 )
 
 sematic_py_lib(

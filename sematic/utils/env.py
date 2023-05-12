@@ -36,6 +36,7 @@ def environment_variables(to_set: Dict[str, Optional[str]]):
                 os.environ[key] = value
 
     update_environ_with(to_set)
+
     try:
         yield
     finally:
