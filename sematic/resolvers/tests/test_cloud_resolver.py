@@ -28,10 +28,8 @@ from sematic.db.tests.fixtures import (  # noqa: F401
 )
 from sematic.function import func
 from sematic.resolvers.cloud_resolver import CloudResolver
-from sematic.tests.fixtures import (  # noqa: F401
-    environment_variables,
-    valid_client_version,
-)
+from sematic.tests.fixtures import valid_client_version  # noqa: F401
+from sematic.utils.env import environment_variables
 
 
 @func(base_image_tag="cuda", standalone=True)

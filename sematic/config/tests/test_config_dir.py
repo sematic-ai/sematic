@@ -6,7 +6,7 @@ import pytest
 
 # Sematic
 from sematic.config.config_dir import _CONFIG_DIR_OVERRIDE_ENV_VAR, get_config_dir
-from sematic.tests.fixtures import environment_variables
+from sematic.utils.env import environment_variables
 
 
 def test_get_config_dir_default():

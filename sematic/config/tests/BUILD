@@ -3,7 +3,7 @@ pytest_test(
     srcs = ["test_config_dir.py"],
     deps = [
         "//sematic/config:config_dir",
-        "//sematic/tests:fixtures",
+        "//sematic/utils:env",
     ],
 )
 
@@ -34,7 +34,7 @@ pytest_test(
         "//sematic:abstract_plugin",
         "//sematic/config:settings",
         "//sematic/plugins/storage:local_storage",
-        "//sematic/tests:fixtures",
+        "//sematic/utils:env",
     ],
 )
 
