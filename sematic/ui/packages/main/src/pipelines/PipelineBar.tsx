@@ -12,6 +12,7 @@ import {
 import { Resolution, Run } from "@sematic/common/src/Models";
 import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
 import UserContext from "@sematic/common/src/context/UserContext";
+import { useFetchRuns } from "@sematic/common/src/hooks/runHooks";
 import { useCallback, useContext, useEffect, useMemo } from "react";
 import { ActionMenu, ActionMenuItem } from "src/components/ActionMenu";
 import CalculatorPath from "src/components/CalculatorPath";
@@ -22,7 +23,6 @@ import RunStateChip from "src/components/RunStateChip";
 import TimeAgo from "src/components/TimeAgo";
 import { ExtractContextType } from "src/components/utils/typings";
 import {
-  useFetchRuns,
   usePipelineRunContext,
   useRunNavigation,
 } from "src/hooks/pipelineHooks";

@@ -19,18 +19,18 @@ interface RunStatusColumnProps {
     createdAt: string;
     failedAt?: string;
     resolvedAt?: string;
-    canceledAt?: string;
+    endedAt?: string;
 }
 
 const RunStatusColumn = (props: RunStatusColumnProps) => {
-    const { futureState, createdAt, failedAt, resolvedAt, canceledAt } = props;
+    const { futureState, createdAt, failedAt, resolvedAt, endedAt } = props;
 
     const runStateChip = useMemo(() => getRunStateChipByState(futureState), [futureState]);
 
     const runStateText = useMemo(() => getRunStateText(
         futureState,
-        {createdAt, failedAt, resolvedAt, canceledAt}
-    ), [futureState, createdAt, failedAt, resolvedAt, canceledAt]);
+        {createdAt, failedAt, resolvedAt, endedAt}
+    ), [futureState, createdAt, failedAt, resolvedAt, endedAt]);
 
     return <StyledContainer>{runStateChip} {runStateText}</StyledContainer>;
 }
