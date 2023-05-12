@@ -28,6 +28,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     test_db,
 )
 from sematic.function import func
+from sematic.graph import RerunMode
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.tests.fixtures import (  # noqa: F401
     environment_variables,
@@ -130,7 +131,10 @@ def test_simulate_cloud_exec(
     mock_update_run_future_states.side_effect = fake_update_run_future_states
 
     mock_schedule_resolution.assert_called_once_with(
-        resolution_id=future.id, max_parallelism=None, rerun_from=None
+        resolution_id=future.id,
+        max_parallelism=None,
+        rerun_from=None,
+        rerun_mode=RerunMode.SPECIFIC_RUN,
     )
     assert api_client.get_resolution(future.id).status == ResolutionStatus.CREATED.value
 
@@ -345,11 +349,12 @@ def test_resolver_restart(
     assert read_run_state_by_id[root_run.id] == FutureState.FAILED.value
 
     new_resolver = _INSTRUMENTED_INSTANCES[-1]
-    assert new_resolver._resolve_called_with.calculator is future.calculator
+    assert new_resolver._resolve_called_with.function is future.function
     assert new_resolver._resolve_called_with.kwargs == future.kwargs
     assert new_resolver._resolve_called_with.id != future.id
     assert (
         new_resolver._detach_resolution_called_with.id
         == new_resolver._resolve_called_with.id
     )
-    assert new_resolver._init_args[1]["rerun_from"] == child_run3.id
+    assert new_resolver._init_args[1]["rerun_from"] == root_run.id
+    assert new_resolver._init_args[1]["rerun_mode"] == RerunMode.CONTINUE

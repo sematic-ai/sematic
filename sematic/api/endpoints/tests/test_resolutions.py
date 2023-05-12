@@ -106,7 +106,12 @@ class MockPublisher(AbstractPublisher, AbstractPlugin):
         MockPublisher.call_counter += 1
 
 
-def mock_schedule(resolution, max_parallelism=None, rerun_from=None):  # noqa: F811
+def mock_schedule(
+    resolution,  # noqa: F811
+    max_parallelism=None,
+    rerun_from=None,
+    rerun_mode=None,
+):
     resolution.status = ResolutionStatus.SCHEDULED
     job = make_job(run_id=resolution.root_id, kind="resolver")
     save_job(job)

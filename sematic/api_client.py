@@ -1,6 +1,7 @@
 # Standard Library
 import json
 import logging
+from enum import Enum
 from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, cast
 from urllib.parse import urlencode
 
@@ -26,7 +27,6 @@ from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
-from sematic.graph import RerunMode
 from sematic.metrics.metric_point import MetricPoint
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.utils.retry import retry, retry_call
@@ -297,7 +297,9 @@ def schedule_resolution(
     resolution_id: str,
     max_parallelism: Optional[int] = None,
     rerun_from: Optional[str] = None,
-    rerun_mode: Optional[RerunMode] = None,
+    # We use "Enum" instead of "RerunMode" because the latter
+    # would create a dependency cycle.
+    rerun_mode: Optional[Enum] = None,
 ) -> Resolution:
     """Ask the server to start a detached resolution execution."""
     payload: Dict[str, Any] = {}
