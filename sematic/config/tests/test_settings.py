@@ -25,7 +25,7 @@ from sematic.config.tests.fixtures import (  # noqa: F401
     no_settings_file,
 )
 from sematic.config.user_settings import UserSettings, UserSettingsVar
-from sematic.tests.fixtures import environment_variables
+from sematic.utils.env import environment_variables
 
 
 class SettingsVar(AbstractPluginSettingsVar):

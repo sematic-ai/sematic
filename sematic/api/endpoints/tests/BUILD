@@ -30,7 +30,7 @@ pytest_test(
         "//sematic/db/tests:fixtures",
         "//sematic/plugins:abstract_publisher",
         "//sematic/scheduling:kubernetes",
-        "//sematic/tests:fixtures",
+        "//sematic/utils:env",
     ],
 )
 
@@ -94,6 +94,7 @@ pytest_test(
         "//sematic/db:queries",
         "//sematic/db/models:user",
         "//sematic/db/models/mixins:json_encodable_mixin",
+        "//sematic/utils:types",
     ],
 )
 

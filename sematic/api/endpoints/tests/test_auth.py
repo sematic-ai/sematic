@@ -19,10 +19,10 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     test_client,
 )
 from sematic.config.server_settings import ServerSettingsVar
-from sematic.config.settings import as_bool
 from sematic.db.models.user import User
 from sematic.db.queries import get_user
 from sematic.db.tests.fixtures import persisted_user, test_db  # noqa: F401
+from sematic.utils.types import as_bool
 
 
 @pytest.mark.parametrize(

@@ -10,12 +10,12 @@ from sematic.abstract_plugin import (
 )
 from sematic.config.settings import (
     MissingSettingsError,
-    as_bool,
     delete_plugin_setting,
     get_plugin_setting,
     get_plugin_settings,
     set_plugin_setting,
 )
+from sematic.utils.types import as_bool
 
 
 class ServerSettingsVar(AbstractPluginSettingsVar):
