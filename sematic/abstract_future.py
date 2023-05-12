@@ -385,6 +385,7 @@ def get_next_timeout(futures: List[AbstractFuture]) -> TimeoutFuturePair:
 
 
 def clone(future: AbstractFuture) -> AbstractFuture:
+    ""Clone the given future, including all properties.""""
     new_future = future.__class__(
         function=future.function,
         kwargs=dict(future.kwargs),
