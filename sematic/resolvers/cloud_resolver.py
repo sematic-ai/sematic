@@ -252,6 +252,7 @@ class CloudResolver(LocalResolver):
             resolution_id=future.id,
             max_parallelism=self._max_parallelism,
             rerun_from=self._rerun_from_run_id,
+            rerun_mode=self._rerun_mode,
         )
 
         return run.id
