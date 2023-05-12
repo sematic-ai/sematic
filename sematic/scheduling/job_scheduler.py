@@ -9,6 +9,7 @@ from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import save_job
+from sematic.graph import RerunMode
 from sematic.scheduling import kubernetes as k8s
 from sematic.scheduling.job_details import KubernetesJobState
 from sematic.versions import MIN_CLIENT_SERVER_SUPPORTS, string_version_to_tuple
