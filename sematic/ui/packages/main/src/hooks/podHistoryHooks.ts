@@ -1,4 +1,4 @@
-import { useRefFn } from "@sematic/common/lib/src/utils/hooks";
+import { useRefFn } from "@sematic/common/src/utils/hooks";
 import { Job } from "@sematic/common/src/Models";
 import { useHttpClient } from "@sematic/common/src/hooks/httpHooks";
 import { useCallback, useEffect } from "react";

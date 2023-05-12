@@ -9,13 +9,13 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { useCallback, useContext, useMemo, useState } from "react";
-import { SiDiscord, SiReadthedocs, SiGithub } from "react-icons/si";
 import UserContext from "@sematic/common/src/context/UserContext";
+import { useFetchRuns } from "@sematic/common/src/hooks/runHooks";
+import { useCallback, useContext, useMemo, useState } from "react";
+import { SiDiscord, SiGithub, SiReadthedocs } from "react-icons/si";
 import MuiRouterLink from "./components/MuiRouterLink";
 import RunStateChip from "./components/RunStateChip";
 import TrackingNotice from "./components/TrackingNotice";
-import { useFetchRuns } from "./hooks/pipelineHooks";
 
 function ShellCommand(props: { command: string }) {
   const { command } = props;
