@@ -49,6 +49,7 @@ from sematic.db.queries import (
     save_job,
     save_resolution,
 )
+from sematic.graph import RerunMode
 from sematic.plugins.abstract_publisher import get_publishing_plugins
 from sematic.scheduling.job_details import JobKind
 from sematic.scheduling.job_scheduler import clean_jobs, schedule_resolution
@@ -215,7 +216,7 @@ def schedule_resolution_endpoint(
             rerun_from = flask.request.json["rerun_from"]
 
         if "rerun_mode" in flask.request.json:
-            rerun_mode = flask.request.json["rerun_mode"]
+            rerun_mode = RerunMode[flask.request.json["rerun_mode"]]
 
     jobs = get_jobs_by_run_id(resolution_id, kind=JobKind.resolver)
     if len(jobs) != 0:
