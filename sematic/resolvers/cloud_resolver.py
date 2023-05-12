@@ -9,7 +9,7 @@ import cloudpickle
 
 # Sematic
 import sematic.api_client as api_client
-from sematic.abstract_future import AbstractFuture, FutureState
+from sematic.abstract_future import AbstractFuture, FutureState, clone
 from sematic.container_images import (
     DEFAULT_BASE_IMAGE_TAG,
     MissingContainerImage,
@@ -342,9 +342,7 @@ class CloudResolver(LocalResolver):
             return
 
         try:
-            new_root_future = self._root_future.function(
-                **self._root_future.kwargs
-            ).set(name=self._root_future.props.name, tags=self._root_future.props.tags)
+            new_root_future = clone(self._root_future)
             new_resolver = self.__class__(
                 cache_namespace=self._cache_namespace_str,
                 rerun_from=self._root_future.id,
