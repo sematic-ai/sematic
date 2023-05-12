@@ -2,7 +2,7 @@
 import json
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, unique
 from typing import Any, Callable, Dict, Iterable, List, Optional
 from typing import OrderedDict as OrderedDictType
 from typing import Tuple
