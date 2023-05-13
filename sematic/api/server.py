@@ -17,9 +17,10 @@ import os
 import signal
 import sys
 from logging.config import dictConfig
+from typing import Optional
 
 # Third-party
-from flask import jsonify, send_file
+from flask import jsonify, request, send_file
 from flask_socketio import Namespace, SocketIO  # type: ignore
 
 # Sematic
@@ -44,6 +45,22 @@ from sematic.logging import make_log_config
 
 # Some plugins may register endpoints
 import_plugins()
+
+
+_logger: Optional[logging.Logger] = None
+
+
+def logger() -> logging.Logger:
+    """Lazy-init and return a logger object"""
+    # lazy-init is necessary because the logger must be instantiated
+    # after the logging config is handled, and that can happen in an
+    # app run thread if we are using a WSGI server. In that case we don't
+    # have an easy "hook" to init the logger after the WSGI app has
+    # done its log config initialization.
+    global _logger
+    if _logger is None:
+        _logger = logging.getLogger(__name__)
+    return _logger
 
 
 @sematic_api.route("/data/<file>")
@@ -74,6 +91,39 @@ def ping():
     Basic health ping. Does not include DB liveness check.
     """
     return jsonify({"status": "ok"})
+
+
+@sematic_api.before_request
+def log_request_start():
+    query_string = (
+        f"?{str(request.query_string, encoding='utf8')}"
+        if len(request.query_string) > 0
+        else ""
+    )
+    logger().info(
+        "Request start: %s %s %s%s",
+        request.remote_addr,
+        request.method,
+        request.path,
+        query_string,
+    )
+
+
+@sematic_api.after_request
+def log_request_end(response):
+    query_string = (
+        f"?{str(request.query_string, encoding='utf8')}"
+        if len(request.query_string) > 0
+        else ""
+    )
+    logger().info(
+        "Request end: %s %s %s%s",
+        request.remote_addr,
+        request.method,
+        request.path,
+        query_string,
+    )
+    return response
 
 
 def init_socketio():
