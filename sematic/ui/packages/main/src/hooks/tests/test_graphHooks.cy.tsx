@@ -2,7 +2,7 @@ import { Graph, RunTreeNode } from "../../interfaces/graph";
 import { useRunsTree } from "../graphHooks";
 import { createRun } from "@sematic/ui-test/support/utils"
 
-describe('useRunsTree hook', () => {
+describe("useRunsTree hook", () => {
     it("create a run tree from graph data", () => {
         const graph: Graph = {
             runs: [

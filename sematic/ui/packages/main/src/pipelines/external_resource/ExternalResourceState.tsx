@@ -7,7 +7,7 @@ import Chip from "@mui/material/Chip/Chip";
 import Typography from "@mui/material/Typography/Typography";
 import { styled } from "@mui/system";
 import { ExternalResourceHistorySerialization, ExternalResourceState as ExternalResourceStateType } from "@sematic/common/src/Models";
-import { format } from 'date-fns';
+import { format } from "date-fns";
 import { useMemo } from "react";
 import { TERMINATE_STATE } from "src/hooks/externalResourceHooks";
 
@@ -25,9 +25,9 @@ function StyledChip(props: React.ComponentProps<typeof Chip>) {
 };
 
 function StyledChipWithColor(props:
-    React.ComponentProps<typeof StyledChip> & {
-        resourceState: ExternalResourceStateType
-    }) {
+React.ComponentProps<typeof StyledChip> & {
+    resourceState: ExternalResourceStateType
+}) {
     const {resourceState, ...restProps } = props;
 
     const color = useMemo(() => getColorByState(resourceState), [resourceState]);
@@ -42,10 +42,10 @@ interface ExternalResourceStateProps {
 
 function getColorByState(resourceState: ExternalResourceStateType) {
     if (["ACTIVATING", "DEACTIVATING"].includes(resourceState)) {
-        return 'primary';
+        return "primary";
     }
-    if ('ACTIVE' === resourceState) {
-        return 'success';
+    if ("ACTIVE" === resourceState) {
+        return "success";
     }
     if (["CREATED", "DEACTIVATED"].includes(resourceState)) {
         return undefined;
@@ -54,7 +54,7 @@ function getColorByState(resourceState: ExternalResourceStateType) {
 }
 
 function TimelineDotWithColor({ resourceState }: { resourceState: ExternalResourceStateType }) {
-    const color = useMemo(() => getColorByState(resourceState) || 'grey', [resourceState]);
+    const color = useMemo(() => getColorByState(resourceState) || "grey", [resourceState]);
     return <TimelineDot color={color} />;
 };
 
@@ -63,7 +63,7 @@ export default function ExternalResourceState({ historyRecord, isLast }: Externa
     const timeString = useMemo(
         () => format(
             new Date(last_update_epoch_time * 1000),
-            'LLL\xa0d,\xa0yyyy\xa0h:mm:ss\xa0a'), [last_update_epoch_time]);
+            "LLL\xa0d,\xa0yyyy\xa0h:mm:ss\xa0a"), [last_update_epoch_time]);
 
     const resourceName = root_type.type[1];
 

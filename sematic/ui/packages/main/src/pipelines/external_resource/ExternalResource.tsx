@@ -1,13 +1,13 @@
-import Timeline from '@mui/lab/Timeline';
-import timelineItemClasses from '@mui/lab/TimelineItem/timelineItemClasses';
+import Timeline from "@mui/lab/Timeline";
+import timelineItemClasses from "@mui/lab/TimelineItem/timelineItemClasses";
 import Alert from "@mui/material/Alert";
-import { styled } from '@mui/system';
-import { ExternalResourceHistorySerialization } from '@sematic/common/src/Models';
+import { styled } from "@mui/system";
+import { ExternalResourceHistorySerialization } from "@sematic/common/src/Models";
 import { useMemo } from "react";
 import { useExternalResource } from "src/hooks/externalResourceHooks";
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
-import { useRunPanelLoadingIndicator } from 'src/hooks/runDetailsHooks';
-import ExternalResourceState from 'src/pipelines/external_resource/ExternalResourceState';
+import { useRunPanelLoadingIndicator } from "src/hooks/runDetailsHooks";
+import ExternalResourceState from "src/pipelines/external_resource/ExternalResourceState";
 
 const ThinTimeline = styled(Timeline)`
     margin: 0;
@@ -66,8 +66,8 @@ export default function ExternalResourcePanel() {
         <ThinTimeline key={selectedRun?.id}>
             {historyRecords?.map(
                 (state, index) => 
-                <ExternalResourceState 
-                    historyRecord={state} key={index} isLast={historyRecords.length - 1 === index}/>
+                    <ExternalResourceState 
+                        historyRecord={state} key={index} isLast={historyRecords.length - 1 === index}/>
             )}
         </ThinTimeline>
     </>

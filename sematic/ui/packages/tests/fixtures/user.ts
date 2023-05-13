@@ -7,6 +7,6 @@ const user = {
     "updated_at": "2023-02-28T21:32:02.499142+00:00",
     "email": "",
     "api_key": null
-  }
+}
 
 export default user;

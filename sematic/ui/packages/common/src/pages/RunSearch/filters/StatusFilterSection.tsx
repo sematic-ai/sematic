@@ -1,11 +1,11 @@
-import styled from '@emotion/styled';
+import styled from "@emotion/styled";
 import Chip, { chipClasses } from "@mui/material/Chip";
 import { useCallback, useImperativeHandle, forwardRef, useState } from "react";
 import { CanceledStateChip, FailedStateChip, RunningStateChip, SuccessStateChip } from "src/component/RunStateChips";
-import CollapseableFilterSection from 'src/pages/RunSearch/filters/CollapseableFilterSection';
+import CollapseableFilterSection from "src/pages/RunSearch/filters/CollapseableFilterSection";
 import theme from "src/theme/new";
-import memoize from 'lodash/memoize';
-import { ResettableHandle } from 'src/pages/RunSearch/filters/common';
+import memoize from "lodash/memoize";
+import { ResettableHandle } from "src/pages/RunSearch/filters/common";
 
 const StyledChip = styled(Chip)`
     padding-left: ${theme.spacing(1)};
@@ -39,7 +39,7 @@ interface StatusFilterSectionProps {
 const toogleFilterGenerator = memoize((
     filter: string,
     setFilters: React.Dispatch<React.SetStateAction<Set<string>>>,
-    onFiltersChanged: StatusFilterSectionProps['onFiltersChanged']
+    onFiltersChanged: StatusFilterSectionProps["onFiltersChanged"]
 ) =>
     () => useCallback(() => {
         let newFilters: any;

@@ -24,7 +24,7 @@ export enum DiagnosticReasons {
  */
 function pruneLines(currentlineIds: Set<number>, newLines: string[], newLineIds: number[]) {
     if (newLines.length !== newLineIds.length) {
-        throw new Error('Received lines and lineIds are not of the same length.');
+        throw new Error("Received lines and lineIds are not of the same length.");
     }
 
     const linesToAdded: string[] = [];
@@ -80,13 +80,13 @@ export function useLogStream(source: string, filterString: string) {
             devLogger(`logHooks.ts [${DEBUG_TAG}] kickoff() started. filter_string: ${filterString}`);
 
             let queryParams: any = {
-                'DEBUG': DEBUG_TAG,
-                max_lines: '' + MAX_LINES,
+                "DEBUG": DEBUG_TAG,
+                max_lines: "" + MAX_LINES,
                 ..._queryParams
             };
 
             if (!!filterString) {
-                queryParams['filter_string'] = filterString;
+                queryParams["filter_string"] = filterString;
             }
 
             const qString = (new URLSearchParams(queryParams)).toString();
@@ -117,7 +117,7 @@ export function useLogStream(source: string, filterString: string) {
         };
 
         if (!!reverse) {
-            queryParams['reverse'] = 'true';
+            queryParams["reverse"] = "true";
         }
 
         const result = await fetchCommon(reason, queryParams);
@@ -166,7 +166,7 @@ export function useLogStream(source: string, filterString: string) {
     const getPrev = useCallback(async () => {
         let queryParams: any = {
             reverse_cursor_token: reverseCursorToken.current,
-            reverse: 'true'
+            reverse: "true"
         };
         const result = await fetchCommon(DiagnosticReasons.PREV, queryParams);
         if (result instanceof Error) {

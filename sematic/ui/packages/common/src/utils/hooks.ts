@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef } from "react";
 
 export function useRefFn<T>(initializer: () => T): T {
     const instanceRef = useRef<T | null>(null)

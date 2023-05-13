@@ -1,1 +1,1 @@
-declare module 'plotly.js-cartesian-dist';
+declare module "plotly.js-cartesian-dist";

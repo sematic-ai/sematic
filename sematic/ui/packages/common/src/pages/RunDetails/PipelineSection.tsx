@@ -43,32 +43,32 @@ const StyledPipelineTitle = styled(PipelineTitle)`
 `;
 
 const PipelineSection = () => {
-  return (
-    <>
-      <TopSection>
-        <Headline>Pipeline</Headline>
-        <StyledPipelineTitle>MNIST PyTorch Example</StyledPipelineTitle>
-        <ImportPath>
+    return (
+        <>
+            <TopSection>
+                <Headline>Pipeline</Headline>
+                <StyledPipelineTitle>MNIST PyTorch Example</StyledPipelineTitle>
+                <ImportPath>
           sematic.examples.mnist.pipeline.with.very.long.path
-        </ImportPath>
-        <StyledVertButton />
-      </TopSection>
-      <BottomSection>
-        <Box>
-          <Typograph variant="bigBold">257</Typograph>
-          <Typograph variant="body1">runs</Typograph>
-        </Box>
-        <Box>
-          <Typograph variant="bigBold">74 min.</Typograph>
-          <Typograph variant="body1">avg. runtime</Typograph>
-        </Box>
-        <Box>
-          <Typograph variant="bigBold">62%</Typograph>
-          <Typograph variant="body1">success</Typograph>
-        </Box>
-      </BottomSection>
-    </>
-  );
+                </ImportPath>
+                <StyledVertButton />
+            </TopSection>
+            <BottomSection>
+                <Box>
+                    <Typograph variant="bigBold">257</Typograph>
+                    <Typograph variant="body1">runs</Typograph>
+                </Box>
+                <Box>
+                    <Typograph variant="bigBold">74 min.</Typograph>
+                    <Typograph variant="body1">avg. runtime</Typograph>
+                </Box>
+                <Box>
+                    <Typograph variant="bigBold">62%</Typograph>
+                    <Typograph variant="body1">success</Typograph>
+                </Box>
+            </BottomSection>
+        </>
+    );
 };
 
 export default PipelineSection;

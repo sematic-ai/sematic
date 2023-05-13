@@ -13,87 +13,87 @@ import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { useAppContext, userAtom } from "src/hooks/appHooks";
 
 interface GoogleLoginComponentProps {
-  setUser: (user: User) => void;
-  setError: (error: Error | undefined) => void;
-  authProviderDetail: Exclude<ExtractContextType<typeof AppContext>[
-    "authProviderDetails"]["google"], undefined>,
+    setUser: (user: User) => void;
+    setError: (error: Error | undefined) => void;
+    authProviderDetail: Exclude<ExtractContextType<typeof AppContext>[
+        "authProviderDetails"]["google"], undefined>,
 }
 
 function GoogleLoginComponent({
-  setUser, setError, authProviderDetail
+    setUser, setError, authProviderDetail
 }: GoogleLoginComponentProps) {
 
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
-  const { fetch } = useHttpClient();
+    const { fetch } = useHttpClient();
 
-  const onGoogleLoginSuccess = useCallback(
-    async (credentialResponse: CredentialResponse) => {
-      try {
-        const payload: GoogleLoginPayload = await (await fetch({
-          url: "/login/google",
-          method: "POST",
-          body: {
-            token: credentialResponse.credential,
-          },
-        })).json();
-        setError(undefined);
-        setUser(payload.user);
-        navigate(-1);
-      } catch (error) {
-        setError(error as Error);
-      }
-    }, [setError, setUser, navigate, fetch]);
+    const onGoogleLoginSuccess = useCallback(
+        async (credentialResponse: CredentialResponse) => {
+            try {
+                const payload: GoogleLoginPayload = await (await fetch({
+                    url: "/login/google",
+                    method: "POST",
+                    body: {
+                        token: credentialResponse.credential,
+                    },
+                })).json();
+                setError(undefined);
+                setUser(payload.user);
+                navigate(-1);
+            } catch (error) {
+                setError(error as Error);
+            }
+        }, [setError, setUser, navigate, fetch]);
 
-  return <GoogleOAuthProvider
-    clientId={authProviderDetail.GOOGLE_OAUTH_CLIENT_ID}
-  >
-    <GoogleLogin
-      text="signin_with"
-      logo_alignment="center"
-      onSuccess={onGoogleLoginSuccess}
-      onError={() => {
-        setError(Error("Unauthorized user"));
-      }}
-    />
-  </GoogleOAuthProvider>
+    return <GoogleOAuthProvider
+        clientId={authProviderDetail.GOOGLE_OAUTH_CLIENT_ID}
+    >
+        <GoogleLogin
+            text="signin_with"
+            logo_alignment="center"
+            onSuccess={onGoogleLoginSuccess}
+            onError={() => {
+                setError(Error("Unauthorized user"));
+            }}
+        />
+    </GoogleOAuthProvider>
 }
 
 
 export default function LoginPage() {
-  const [error, setError] = useState<Error | undefined>(undefined);
-  const { authProviderDetails } = useAppContext()
-  const [, setUser] = useAtom(userAtom);
+    const [error, setError] = useState<Error | undefined>(undefined);
+    const { authProviderDetails } = useAppContext()
+    const [, setUser] = useAtom(userAtom);
 
-  return <Paper
-    sx={{
-      width: 200,
-      p: 5,
-      textAlign: "center",
-      top: "50%",
-      left: "50%",
-      position: "absolute",
-      transform: "translateY(-50%) translateX(-50%)",
-    }}
-    variant="outlined"
-  >
-    <img
-      src={logo}
-      width="50px"
-      alt="Sematic logo"
-      style={{ marginBottom: "30px" }}
-    />
+    return <Paper
+        sx={{
+            width: 200,
+            p: 5,
+            textAlign: "center",
+            top: "50%",
+            left: "50%",
+            position: "absolute",
+            transform: "translateY(-50%) translateX(-50%)",
+        }}
+        variant="outlined"
+    >
+        <img
+            src={logo}
+            width="50px"
+            alt="Sematic logo"
+            style={{ marginBottom: "30px" }}
+        />
 
-    {error ? <Alert severity="error">{error.message}</Alert> : <></>}
+        {error ? <Alert severity="error">{error.message}</Alert> : <></>}
 
-    {!error && authProviderDetails.google &&
+        {!error && authProviderDetails.google &&
         <GoogleLoginComponent setUser={setUser}
-          authProviderDetail={authProviderDetails.google!} setError={setError} />
-    }
-    {!error && authProviderDetails.github &&
+            authProviderDetail={authProviderDetails.google!} setError={setError} />
+        }
+        {!error && authProviderDetails.github &&
         <>{
-          // TODO: Add github login
+            // TODO: Add github login
         }</>
-    }
-  </Paper>;
+        }
+    </Paper>;
 }

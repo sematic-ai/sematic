@@ -1,5 +1,5 @@
 import Link from "@mui/material/Link";
-import Typography, { TypographyProps } from '@mui/material/Typography';
+import Typography, { TypographyProps } from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
 import { getRunUrlPattern } from "src/hooks/runHooks";
 
@@ -7,7 +7,7 @@ import { getRunUrlPattern } from "src/hooks/runHooks";
 interface RunReferenceLinkProps {
     runId: string;
     className?: string;
-    variant?: TypographyProps['variant'];
+    variant?: TypographyProps["variant"];
 }
 
 export const RunReferenceLink = (props: RunReferenceLinkProps) => {

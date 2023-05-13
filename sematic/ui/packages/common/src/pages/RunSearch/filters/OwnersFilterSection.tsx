@@ -1,11 +1,10 @@
-import styled from '@emotion/styled';
-import Checkbox from '@mui/material/Checkbox';
-import { collapseClasses } from '@mui/material/Collapse';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormGroup from '@mui/material/FormGroup';
+import styled from "@emotion/styled";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormGroup from "@mui/material/FormGroup";
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
-import { ScrollableCollapseableFilterSection } from 'src/pages/RunSearch/filters/CollapseableFilterSection';
-import { ResettableHandle } from 'src/pages/RunSearch/filters/common';
+import { ScrollableCollapseableFilterSection } from "src/pages/RunSearch/filters/CollapseableFilterSection";
+import { ResettableHandle } from "src/pages/RunSearch/filters/common";
 import theme from "src/theme/new";
 
 
@@ -59,14 +58,14 @@ const OwnersFilterSection = forwardRef<ResettableHandle, OwnersFilterSectionProp
         <Container>
             <FormGroup>
                 <StyledFormControlLabel control={<Checkbox
-                    checked={filters.has('current_user_id')}
+                    checked={filters.has("current_user_id")}
                     onChange={(e, checked) => toogleFilter("current_user_id", checked)} />} label="Your runs"
                 />
-                {['Alice', 'Bob', 'Clark', 'David', 'Edison', 'Frank'].map(
+                {["Alice", "Bob", "Clark", "David", "Edison", "Frank"].map(
                     (owner, index) =>
                         <StyledFormControlLabel key={index} control={<Checkbox
                             onChange={(e, checked) => toogleFilter(owner, checked)} />} label={owner}
-                            checked={filters.has(owner)} />
+                        checked={filters.has(owner)} />
                 )}
             </FormGroup>
         </Container>

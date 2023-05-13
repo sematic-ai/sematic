@@ -28,25 +28,25 @@ const StyledTypography = styled(Typography)`
 `;
 
 const RunSection = () => {
-  const theme = useTheme();
+    const theme = useTheme();
 
-  return (
-    <StyledSection>
-      <Headline>Pipeline Run</Headline>
-      <BoxContainer style={{ marginBottom: theme.spacing(3) }}>
-        <RunsDropdown />
-        <StyledVertButton />
-      </BoxContainer>
-      <BoxContainer style={{ marginBottom: theme.spacing(2) }}>
-        <StyledTypography variant="small">Developer E.</StyledTypography>
-        <Typography variant="small">CloudResolver</Typography>
-      </BoxContainer>
-      <BoxContainer>
-        <div><TagsList tags={["example", "torch", "mnist"]} /></div>
-        <Button variant={"text"} size={"small"}>add tags</Button>
-      </BoxContainer>
-    </StyledSection>
-  );
+    return (
+        <StyledSection>
+            <Headline>Pipeline Run</Headline>
+            <BoxContainer style={{ marginBottom: theme.spacing(3) }}>
+                <RunsDropdown />
+                <StyledVertButton />
+            </BoxContainer>
+            <BoxContainer style={{ marginBottom: theme.spacing(2) }}>
+                <StyledTypography variant="small">Developer E.</StyledTypography>
+                <Typography variant="small">CloudResolver</Typography>
+            </BoxContainer>
+            <BoxContainer>
+                <div><TagsList tags={["example", "torch", "mnist"]} /></div>
+                <Button variant={"text"} size={"small"}>add tags</Button>
+            </BoxContainer>
+        </StyledSection>
+    );
 };
 
 export default RunSection;

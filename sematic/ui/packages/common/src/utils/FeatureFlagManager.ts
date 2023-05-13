@@ -1,9 +1,9 @@
-import memoize from 'lodash/memoize';
+import memoize from "lodash/memoize";
 
 function convertBooleanLikeValue(value: any) {
-    if (value === 'true' || value === '1') {
+    if (value === "true" || value === "1") {
         return true;
-    } else if (value === 'false' || value === '0') {
+    } else if (value === "false" || value === "0") {
         return false;
     } else {
         return value;

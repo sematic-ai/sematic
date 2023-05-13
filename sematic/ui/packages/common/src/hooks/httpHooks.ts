@@ -52,7 +52,7 @@ export function useHttpClient(): HttpClient {
 
             return response;
         } catch (e: any) {
-            if (e instanceof DOMException && e.name === 'AbortError') {
+            if (e instanceof DOMException && e.name === "AbortError") {
                 devLogger("fetch() was voluntarily cancelled.")
             }
             throw e;

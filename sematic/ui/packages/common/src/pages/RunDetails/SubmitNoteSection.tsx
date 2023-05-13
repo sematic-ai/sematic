@@ -1,10 +1,10 @@
-import styled from '@emotion/styled';
+import styled from "@emotion/styled";
 
-import TextField from '@mui/material/TextField';
-import HeadlineBase from 'src/component/Headline';
-import Section from 'src/component/Section';
-import theme from 'src/theme/new';
-import { useCallback, useState } from 'react';
+import TextField from "@mui/material/TextField";
+import HeadlineBase from "src/component/Headline";
+import Section from "src/component/Section";
+import theme from "src/theme/new";
+import { useCallback, useState } from "react";
 
 const Headline = styled(HeadlineBase)`
     margin-bottom: ${theme.spacing(2)};
@@ -38,17 +38,17 @@ interface SubmitNoteSectionProps {
 
 const SubmitNoteSection = (props: SubmitNoteSectionProps) => {
     const { onSubmit = console.log, clearTextOnSubmit = true } = props;
-    const [composedNote, setComposedNote] = useState<string>('');
+    const [composedNote, setComposedNote] = useState<string>("");
 
     const onSubmitCallback = useCallback(() => {
         onSubmit(composedNote);
         if (clearTextOnSubmit) {
-            setComposedNote('');
+            setComposedNote("");
         }
     }, [onSubmit, setComposedNote, composedNote, clearTextOnSubmit]);
 
     const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             onSubmitCallback();
         }

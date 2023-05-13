@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "description": "common components",
   "scripts": {
-    "lint": "eslint --ext .ts ."
+    "lint": "eslint --ext .ts,.tsx,.js --max-warnings=0 ./src"
   },
   "author": "",
   "license": "ISC",
