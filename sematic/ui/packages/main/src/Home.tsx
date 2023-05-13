@@ -13,7 +13,7 @@ import UserContext from "@sematic/common/src/context/UserContext";
 import { useFetchRuns } from "@sematic/common/src/hooks/runHooks";
 import { useCallback, useContext, useMemo, useState } from "react";
 import { SiDiscord, SiGithub, SiReadthedocs } from "react-icons/si";
-import MuiRouterLink from "./components/MuiRouterLink";
+import MuiRouterLink from "@sematic/common/src/component/MuiRouterLink";
 import RunStateChip from "./components/RunStateChip";
 import TrackingNotice from "./components/TrackingNotice";
 

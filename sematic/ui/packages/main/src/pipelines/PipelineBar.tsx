@@ -10,6 +10,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { Resolution, Run } from "@sematic/common/src/Models";
+import MuiRouterLink from "@sematic/common/src/component/MuiRouterLink";
 import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
 import UserContext from "@sematic/common/src/context/UserContext";
 import { useFetchRuns } from "@sematic/common/src/hooks/runHooks";
@@ -18,10 +19,9 @@ import { ActionMenu, ActionMenuItem } from "src/components/ActionMenu";
 import CalculatorPath from "src/components/CalculatorPath";
 import GitInfoBox from "src/components/GitInfo";
 import Loading from "src/components/Loading";
-import MuiRouterLink from "src/components/MuiRouterLink";
 import RunStateChip from "src/components/RunStateChip";
 import TimeAgo from "src/components/TimeAgo";
-import { ExtractContextType } from "src/components/utils/typings";
+import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import {
   usePipelineRunContext,
   useRunNavigation,
@@ -58,7 +58,7 @@ function PipelineActionMenu(props: { onCancel: () => void }) {
       url: "/api/v1/resolutions/" + rootRun.id + "/cancel",
       method: "PUT",
       apiKey: user?.api_key,
-      callback: (payload) => {},
+      callback: (payload) => { },
       setError: (error) => {
         if (error)
           setSnackMessage({ message: "Failed to cancel pipeline run." });
@@ -73,7 +73,7 @@ function PipelineActionMenu(props: { onCancel: () => void }) {
         method: "POST",
         body: { rerun_from: rerunFrom },
         apiKey: user?.api_key,
-        callback: (payload) => {},
+        callback: (payload) => { },
         setError: (error) => {
           if (!error) return;
           setSnackMessage({ message: "Failed to trigger rerun." });

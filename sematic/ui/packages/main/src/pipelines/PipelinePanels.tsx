@@ -4,7 +4,7 @@ import { RESET } from "jotai/utils";
 import { useEffect, useMemo, useState } from "react";
 import usePrevious from "react-use/lib/usePrevious";
 import Loading from "src/components/Loading";
-import { ExtractContextType } from "src/components/utils/typings";
+import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { useGraph } from "src/hooks/graphHooks";
 import { selectedPanelHashAtom, selectedRunHashAtom, selectedTabHashAtom, useHashUpdater, usePipelineRunContext } from "src/hooks/pipelineHooks";
 import { Run } from "@sematic/common/src/Models";
