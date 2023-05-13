@@ -9,11 +9,11 @@ import {
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/system";
+import MuiRouterLink from "@sematic/common/src/component/MuiRouterLink";
 import { useFetchRuns } from "@sematic/common/src/hooks/runHooks";
 import { Run } from "@sematic/common/src/Models";
 import { useCallback, useMemo } from "react";
 import CalculatorPath from "src/components/CalculatorPath";
-import MuiRouterLink from "src/components/MuiRouterLink";
 import { RunList, RunListColumn } from "src/components/RunList";
 import RunStateChip, {
   RunStateChipUndefinedStyle,

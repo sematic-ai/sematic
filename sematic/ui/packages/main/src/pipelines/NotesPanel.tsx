@@ -12,7 +12,7 @@ import {
 } from "react";
 import { NoteCreatePayload, NoteListPayload } from "src/Payloads";
 import { NoteView } from "src/components/Notes";
-import { ExtractContextType } from "src/components/utils/typings";
+import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import {
   usePipelinePanelsContext,
   usePipelineRunContext,
