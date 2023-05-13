@@ -101,7 +101,8 @@ def log_request_start():
         else ""
     )
     logger().info(
-        "Request start: %s %s %s%s",
+        "Request start: %s %s %s %s%s",
+        request.user_agent,
         request.remote_addr,
         request.method,
         request.path,
@@ -117,7 +118,8 @@ def log_request_end(response):
         else ""
     )
     logger().info(
-        "Request end: %s %s %s%s",
+        "Request end: %s %s %s %s%s",
+        request.user_agent,
         request.remote_addr,
         request.method,
         request.path,
