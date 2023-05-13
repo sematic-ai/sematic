@@ -6,7 +6,7 @@ import ReactFlow, {
   BackgroundVariant, Edge as RFEdge, Node, ReactFlowInstance, ReactFlowProvider, useEdgesState, useNodesState
 } from "react-flow-renderer";
 import buildDagLayout from "src/components/utils/buildDagLayout";
-import { ExtractContextType } from "src/components/utils/typings";
+import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { HIDDEN_RUN_NAME_LIST } from "src/constants";
 import { useGraphContext } from "src/hooks/graphHooks";
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";

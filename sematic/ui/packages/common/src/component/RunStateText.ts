@@ -17,7 +17,11 @@ export function getRunStateText(futureState: string,
         return `Running for ${DurationShort(new Date(), parseJSON(createdAt))}`;
     }
     if (futureState === "CANCELED") {
-        return `Canceled after ${DurationShort(parseJSON(endedAt || failedAt!), parseJSON(createdAt))}`;
+        const finishAt = endedAt || failedAt!;
+        if (!finishAt) {
+            return 'Unknonw duration';
+        }
+        return `Canceled after ${DurationShort(parseJSON(finishAt), parseJSON(createdAt))}`;
     }
     if (futureState === "CREATED") {
         return `Submitted ${DurationShort(new Date(), parseJSON(createdAt))} ago`;

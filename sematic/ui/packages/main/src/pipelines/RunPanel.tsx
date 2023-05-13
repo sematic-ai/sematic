@@ -6,7 +6,7 @@ import { RunDetailsPanel } from "src/pipelines/RunDetailsPanel";
 import BasicMetricsPanel from "src/pipelines/BasicMetricsPanel";
 import RunPanelContext from "src/pipelines//RunDetailsContext";
 import { useMemo, useRef, useState } from "react";
-import { ExtractContextType } from "src/components/utils/typings";
+import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import Loading from "src/components/Loading";
 
 const FloatingFooter = styled('div')`
