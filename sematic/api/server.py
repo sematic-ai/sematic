@@ -93,37 +93,32 @@ def ping():
     return jsonify({"status": "ok"})
 
 
-@sematic_api.before_request
-def log_request_start():
+def _request_string() -> str:
     query_string = (
         f"?{str(request.query_string, encoding='utf8')}"
         if len(request.query_string) > 0
         else ""
     )
+    request_string = (
+        f"{request.remote_addr} {request.user_agent} "
+        f"{request.method} {request.path}{query_string}"
+    )
+    return request_string
+
+
+@sematic_api.before_request
+def log_request_start():
     logger().info(
-        "Request start: %s %s %s %s%s",
-        request.user_agent,
-        request.remote_addr,
-        request.method,
-        request.path,
-        query_string,
+        "Request start: %s",
+        _request_string(),
     )
 
 
 @sematic_api.after_request
 def log_request_end(response):
-    query_string = (
-        f"?{str(request.query_string, encoding='utf8')}"
-        if len(request.query_string) > 0
-        else ""
-    )
     logger().info(
-        "Request end: %s %s %s %s%s",
-        request.user_agent,
-        request.remote_addr,
-        request.method,
-        request.path,
-        query_string,
+        "Request end: %s",
+        _request_string(),
     )
     return response
 
