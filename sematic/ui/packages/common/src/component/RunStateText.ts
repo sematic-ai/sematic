@@ -2,23 +2,32 @@ import { parseJSON } from 'date-fns';
 import { DurationShort } from 'src/component/DateTime';
 
 export function getRunStateText(futureState: string,
-    timestamps: { createdAt: string, resolvedAt?: string, failedAt?: string, canceledAt?: string }) {
-    const { createdAt, resolvedAt, failedAt, canceledAt } = timestamps;
+    timestamps: {
+        createdAt: string, resolvedAt?: string, failedAt?: string, endedAt?: string
+    }) {
+    const { createdAt, resolvedAt, failedAt, endedAt } = timestamps;
 
-    if (futureState === 'SUCCESS') {
+    if (["RESOLVED", "SUCCEEDED"].includes(futureState)) {
         return `Completed in ${DurationShort(parseJSON(resolvedAt!), parseJSON(createdAt))}`;
     }
-    if (futureState === 'FAILED') {
+    if (["FAILED", "NESTED_FAILED"].includes(futureState)) {
         return `Failed after ${DurationShort(parseJSON(failedAt!), parseJSON(createdAt))}`;
     }
-    if (futureState === 'RUNNING') {
+    if (["SCHEDULED", "RAN"].includes(futureState)) {
         return `Running for ${DurationShort(new Date(), parseJSON(createdAt))}`;
     }
-    if (futureState === 'CANCELLED') {
-        return `Canceled after ${DurationShort(parseJSON(canceledAt!), parseJSON(createdAt))}`;
+    if (futureState === "CANCELED") {
+        const finishAt = endedAt || failedAt!;
+        if (!finishAt) {
+            return 'Unknonw duration';
+        }
+        return `Canceled after ${DurationShort(parseJSON(finishAt), parseJSON(createdAt))}`;
     }
-    if (futureState === 'SCHEDULED') {
-        return 'Submitted';
+    if (futureState === "CREATED") {
+        return `Submitted ${DurationShort(new Date(), parseJSON(createdAt))} ago`;
+    }
+    if (futureState === "RETRYING") {
+        return `Retrying for ${DurationShort(new Date(), parseJSON(createdAt))}`;
     }
     return null;
 }

@@ -42,7 +42,6 @@ const StyledBox = styled(Box)`
 
 interface TagsListProps {
     tags: string[];
-    fold?: number;
     onClick?: (tag: string) => void;
 }
 

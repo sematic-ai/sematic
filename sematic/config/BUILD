@@ -31,6 +31,7 @@ sematic_py_lib(
     deps = [
         ":settings",
         "//sematic:abstract_plugin",
+        "//sematic/utils:types",
     ],
 )
 
@@ -39,6 +40,7 @@ sematic_py_lib(
     srcs = ["user_settings.py"],
     deps = [
         ":settings",
+        "//sematic/utils:types",
     ],
 )
 

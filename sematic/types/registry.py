@@ -3,7 +3,7 @@ import abc
 import inspect
 import typing
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, TypeVar, Union
 
 # Sematic
 from sematic.types.generic_type import GenericType
@@ -24,6 +24,7 @@ SUPPORTED_GENERIC_TYPING_ANNOTATIONS = {
     Dict: get_origin(Dict[int, int]),
     Union: get_origin(Union[int, str]),
     Optional: get_origin(Optional[int]),
+    Set: get_origin(Set[int]),
 }
 
 # This is aliased to "Any" just because it can include pseudo-types in the form

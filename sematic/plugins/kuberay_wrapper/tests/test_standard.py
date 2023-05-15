@@ -16,7 +16,7 @@ from sematic.plugins.kuberay_wrapper.standard import (
     StandardKuberaySettingsVar,
     StandardKuberayWrapper,
 )
-from sematic.tests.fixtures import environment_variables
+from sematic.utils.env import environment_variables
 from sematic.utils.exceptions import UnsupportedUsageError, UnsupportedVersionError
 
 _TEST_IMAGE_URI = "test_image_uri"

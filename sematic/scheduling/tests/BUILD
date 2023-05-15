@@ -26,6 +26,6 @@ pytest_test(
         "//sematic/db/tests:fixtures",
         "//sematic/resolvers:resource_requirements",
         "//sematic/scheduling:kubernetes",
-        "//sematic/tests:fixtures",
+        "//sematic/utils:env",
     ],
 )

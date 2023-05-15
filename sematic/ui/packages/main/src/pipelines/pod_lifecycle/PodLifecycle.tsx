@@ -5,7 +5,7 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import CopyButton from '@sematic/common/lib/src/component/CopyButton';
+import CopyButton from '@sematic/common/src/component/CopyButton';
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
 import { useRunJobHistory } from 'src/hooks/podHistoryHooks';
 import { useRunPanelLoadingIndicator } from 'src/hooks/runDetailsHooks';

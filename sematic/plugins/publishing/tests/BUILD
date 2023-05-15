@@ -9,7 +9,7 @@ pytest_test(
         "//sematic/db/models:run",
         "//sematic/db/tests:fixtures",
         "//sematic/plugins/publishing:slack",
-        "//sematic/tests:fixtures",
         "//sematic/tests:utils",
+        "//sematic/utils:env",
     ],
 )

@@ -7,7 +7,7 @@ import Headline from 'src/component/Headline';
 import ImportPath from 'src/component/ImportPath';
 import MoreVertButton from 'src/component/MoreVertButton';
 import PipelineTitle from 'src/component/PipelineTitle';
-import RunReferenceLink from "src/component/RunReferenceLink";
+import { RunReferenceLink } from "src/component/RunReference";
 import { SuccessStateChip } from 'src/component/RunStateChips';
 import Section from 'src/component/Section';
 import TagsList from 'src/component/TagsList';

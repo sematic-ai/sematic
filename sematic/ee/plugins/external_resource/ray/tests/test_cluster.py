@@ -14,7 +14,7 @@ from sematic.plugins.abstract_external_resource import (
     ResourceStatus,
 )
 from sematic.plugins.abstract_kuberay_wrapper import RayNodeConfig, SimpleRayCluster
-from sematic.tests.fixtures import environment_variables
+from sematic.utils.env import environment_variables
 
 
 class RayClusterClientsMocked(RayCluster):

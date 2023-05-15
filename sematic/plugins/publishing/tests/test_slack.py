@@ -20,8 +20,8 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     test_db,
 )
 from sematic.plugins.publishing.slack import SlackPublisher, SlackPublisherSettingsVar
-from sematic.tests.fixtures import environment_variables
 from sematic.tests.utils import assert_logs_captured
+from sematic.utils.env import environment_variables
 
 _TEST_ENV_VARS = {
     ServerSettingsVar.SEMATIC_DASHBOARD_URL.value: "https://my.sematic",

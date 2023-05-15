@@ -1,22 +1,22 @@
 import { Logout, PlayCircle, Timeline } from "@mui/icons-material";
 import {
   Box,
-  Typography,
-  Stack,
   ButtonBase,
-  Menu,
-  MenuItem,
-  ListItemIcon,
+  Divider,
   IconButton,
   ListItem,
-  Divider,
+  ListItemIcon,
+  Menu,
+  MenuItem,
+  Stack,
+  Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import MuiRouterLink from "@sematic/common/src/component/MuiRouterLink";
+import UserContext from "@sematic/common/src/context/UserContext";
 import { useContext, useState } from "react";
 import { SiDiscord, SiReadthedocs } from "react-icons/si";
-import UserContext from "@sematic/common/src/context/UserContext";
 import logo from "../Fox.png";
-import MuiRouterLink from "./MuiRouterLink";
 import UserAvatar from "./UserAvatar";
 
 export default function SideBar() {
