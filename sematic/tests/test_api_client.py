@@ -1,6 +1,7 @@
 # Standard Library
 import json
-from dataclasses import dataclass
+from collections import defaultdict
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 from unittest import mock
 
@@ -38,6 +39,9 @@ from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 @dataclass
 class MockRequest:
     method: str = "GET"
+    headers: Dict[str, str] = field(
+        default_factory=lambda: defaultdict(default_factory=str)  # type: ignore
+    )
 
 
 @dataclass
@@ -76,10 +80,12 @@ def test_validate_server_compatibility(mock_requests):
         ),
     )
     validate_server_compatibility(use_cached=False)
-    mock_requests.get.assert_called_with(
-        f"{get_config().api_url}/meta/versions",
-        headers={"Content-Type": "application/json"},
+    mock_requests.get.assert_called_once()
+    assert mock_requests.get.call_args[0][0] == f"{get_config().api_url}/meta/versions"
+    assert (
+        mock_requests.get.call_args[1]["headers"]["Content-Type"] == "application/json"
     )
+    assert mock_requests.get.call_args[1]["headers"]["X-REQUEST-ID"] is not None
 
 
 @mock.patch("sematic.api_client.requests")

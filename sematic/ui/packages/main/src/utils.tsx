@@ -29,6 +29,7 @@ export function fetchJSON({
   if (apiKey) {
     headers.set("X-API-KEY", apiKey);
   }
+  headers.set("X-REQUEST-ID", Math.floor(Math.random() * Math.pow(16, 9)).toString(16))
 
   method = method || "GET";
 
