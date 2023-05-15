@@ -40,7 +40,7 @@ from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 class MockRequest:
     method: str = "GET"
     headers: Dict[str, str] = field(
-        default_factory=lambda: defaultdict(default_factory=str)
+        default_factory=lambda: defaultdict(default_factory=str)  # type: ignore
     )
 
 
