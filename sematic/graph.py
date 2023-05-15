@@ -421,7 +421,7 @@ class Graph:
 
         for ancestor_run_id in [reset_from] + ancestor_run_ids:
             downstream_run_ids = self._get_run_downstream_ids(ancestor_run_id)
-            reset_run_ids += downstream_run_idsun_ids
+            reset_run_ids += downstream_run_ids
 
             for downstream_run_id in downstream_run_ids:
                 downstream_descendant_ids = self._get_run_descendant_ids(

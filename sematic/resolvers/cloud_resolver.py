@@ -17,7 +17,6 @@ from sematic.container_images import (
 )
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
-from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.graph import RerunMode
