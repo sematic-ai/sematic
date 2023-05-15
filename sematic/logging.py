@@ -3,6 +3,9 @@ import logging
 import os
 from typing import Union
 
+# Third-party
+import flask
+
 # Sematic
 from sematic.config.config import get_config
 
@@ -12,6 +15,18 @@ _LOG_FILE_ROTATION_SETTINGS = {
     "maxBytes": 500 * 2**20,  # 500 MB
     "backupCount": 20,
 }
+
+
+REQUEST_ID_HEADER = "X-REQUEST-ID"
+
+
+class FlaskRequestContextFilter(logging.Filter):
+    def filter(self, record):
+        try:
+            record.request_id = flask.request.headers.get(REQUEST_ID_HEADER, "")
+        except Exception:
+            record.request_id = ""
+        return True
 
 
 def make_log_config(log_to_disk: bool = False, level: Union[int, str] = logging.INFO):
@@ -24,6 +39,7 @@ def make_log_config(log_to_disk: bool = False, level: Union[int, str] = logging.
             "formatter": "standard",
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stdout",
+            "filters": ["request_context"],
         },
     }
 
@@ -32,11 +48,13 @@ def make_log_config(log_to_disk: bool = False, level: Union[int, str] = logging.
             {
                 "default": dict(
                     level=level,  # type: ignore
+                    filters=["request_context"],
                     filename=os.path.join(get_config().config_dir, "access.log"),
                     **_LOG_FILE_ROTATION_SETTINGS,  # type: ignore
                 ),
                 "error": dict(
                     level="ERROR",
+                    filters=["request_context"],
                     filename=os.path.join(get_config().config_dir, "error.log"),
                     **_LOG_FILE_ROTATION_SETTINGS,  # type: ignore
                 ),
@@ -52,7 +70,15 @@ def make_log_config(log_to_disk: bool = False, level: Union[int, str] = logging.
         "disable_existing_loggers": True,
         "formatters": {
             "standard": {
-                "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+                "format": (
+                    "%(asctime)s %(request_id)s "
+                    "[%(levelname)s] %(name)s: %(message)s"
+                ),
+            },
+        },
+        "filters": {
+            "request_context": {
+                "()": f"{__name__}.{FlaskRequestContextFilter.__name__}",
             },
         },
         "handlers": handlers,
