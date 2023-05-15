@@ -20,7 +20,7 @@ import Health from "./components/Health";
 import Loading from "./components/Loading";
 import Shell from "./components/Shell";
 import { SnackBarProvider } from "./components/SnackBarProvider";
-import { ExtractContextType } from "./components/utils/typings";
+import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { useAuthentication, userAtom } from "./hooks/appHooks";
 import "./index.css";
 import LoginPage from "./login";

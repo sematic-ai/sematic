@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import logo from "src/Fox.png";
 import { GoogleLoginPayload } from "src/Payloads";
 import AppContext from "src/appContext";
-import { ExtractContextType } from "src/components/utils/typings";
+import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { useAppContext, userAtom } from "src/hooks/appHooks";
 
 interface GoogleLoginComponentProps {

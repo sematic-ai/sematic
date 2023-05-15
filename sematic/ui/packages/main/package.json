@@ -2,7 +2,6 @@
   "name": "@sematic/main",
   "version": "0.2.0",
   "private": true,
-  "proxy": "http://127.0.0.1:5001/",
   "dependencies": {
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",

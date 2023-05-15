@@ -5,6 +5,7 @@ import theme from "src/theme/new";
 import Box from "@mui/material/Box";
 import Loading from "src/component/Loading";
 import LayoutServiceContext from "src/context/LayoutServiceContext";
+import { ExtractContextType } from "src/utils/typings";
 
 const Right = styled(RightBase)`
     width: auto;
@@ -39,7 +40,7 @@ const TwoColumns = (props: TwoColumnsProps) => {
     const leftPane = useMemo(() => onRenderLeft(), [onRenderLeft]);
     const rightPane = useMemo(() => onRenderRight(), [onRenderRight]);
 
-    const layoutServiceValue = useMemo(() => ({
+    const layoutServiceValue: ExtractContextType<typeof LayoutServiceContext> = useMemo(() => ({
         setIsLoading
     }), [setIsLoading]);
 
