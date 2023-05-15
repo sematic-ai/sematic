@@ -32,6 +32,7 @@ sematic_py_lib(
         "//sematic/config:settings",
         "//sematic/db/models:factories",
         "//sematic/db/models:job",
+        "//sematic:graph",
         "//sematic/plugins/storage:s3_storage",
         "//sematic/resolvers:resource_requirements",
         "//sematic/scheduling:job_details",

@@ -22,9 +22,10 @@ from sematic.config.user_settings import get_active_user_settings_strings
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact, make_run_from_future
+from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
-from sematic.graph import Graph
+from sematic.graph import Graph, RerunMode
 from sematic.resolvers.resource_managers.server_manager import ServerResourceManager
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
@@ -55,11 +56,21 @@ class LocalResolver(SilentResolver):
         must have a small memory footprint and must return immediately!
     rerun_from: Optional[str]
         When `None`, the pipeline is resolved from scratch, as normally. When not `None`,
-        must be the id of a `Run` from a previous resolution. Instead of running from
-        scratch, parts of that previous resolution is cloned up until the specified `Run`,
-        and only the specified `Run`, nested and downstream `Future`s are executed. This
-        is meant to be used for retries or for hotfixes, without needing to re-run the
-        entire pipeline again.
+        must be the id of a `Run` from a previous resolution the nature of the rerun
+        when an id is specified will depend on the `rerun_mode` parameter.
+    rerun_mode: RerunMode
+        This option is only used when `rerun_from` has been given a run id.
+        If set to
+        `RerunMode.SPECIFIC_RUN` (the default):
+            Instead of running from scratch, parts of that previous
+            resolution will be cloned up until the specified `Run`, and only the
+            specified `Run`, nested and downstream `Future`s will be executed.
+            This is meant to be used for retries or for hotfixes, without needing to
+            re-run the entire pipeline again.
+        `RerunMode.CONTINUE`:
+            In this case, the run id passed to rerun_from must be the root id of a
+            resolution. The new resolution will use any available results from the
+            old one and only execute what is necessary to determine the final result.
     """
 
     _resource_manager: Optional[ServerResourceManager] = None  # type: ignore
@@ -68,6 +79,7 @@ class LocalResolver(SilentResolver):
         self,
         cache_namespace: Optional[CacheNamespace] = None,
         rerun_from: Optional[str] = None,
+        rerun_mode: RerunMode = RerunMode.SPECIFIC_RUN,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -91,19 +103,25 @@ class LocalResolver(SilentResolver):
         self._sio_client = socketio.Client()
 
         self._rerun_from_run_id = rerun_from
+        self._rerun_mode = rerun_mode
 
         # this parameter needs to be resolved after the root future is enqueued
         # and before the resolution is created
         self._cache_namespace_str: Optional[str] = None
         self._raw_cache_namespace = cache_namespace
 
+        # cached git info if it is known from a source other than local git execution
+        self._git_info: Optional[GitInfo] = None
+
     def _seed_graph(self, future: AbstractFuture):
         if self._rerun_from_run_id is None:
             super()._seed_graph(future)
         else:
-            self._seed_from_clone(future, self._rerun_from_run_id)
+            self._seed_from_clone(future, self._rerun_from_run_id, self._rerun_mode)
 
-    def _seed_from_clone(self, future: AbstractFuture, from_run_id: str):
+    def _seed_from_clone(
+        self, future: AbstractFuture, from_run_id: str, rerun_mode: RerunMode
+    ):
         """
         Instead of simply queuing the root future, this method seeds the future graph
         from a clone of another execution of same pipeline.
@@ -114,6 +132,9 @@ class LocalResolver(SilentResolver):
             raise ValueError(
                 f"Cannot restart from {from_run_id}: run cannot be found."
             ) from e
+
+        if rerun_mode is RerunMode.CONTINUE and run.id != run.root_id:
+            raise ValueError("Cannot use RerunMode.CONTINUE with a non-root run.")
 
         runs, artifacts, edges = api_client.get_graph(run.root_id, root=True)
 
@@ -130,9 +151,12 @@ class LocalResolver(SilentResolver):
 
         logger.info(f"Attempting to rerun from {from_run_id}")
 
-        cloned_graph = graph.clone_futures(
-            reset_from=from_run_id,
-        )
+        if rerun_mode is RerunMode.SPECIFIC_RUN:
+            cloned_graph = graph.clone_futures(
+                reset_from=from_run_id,
+            )
+        else:
+            cloned_graph = graph.clone_futures()
 
         # Making sure we honor id of future passed from the outside
         cloned_graph.set_root_future_id(future.id)
@@ -335,7 +359,7 @@ class LocalResolver(SilentResolver):
             root_id=root_future.id,
             status=ResolutionStatus.SCHEDULED,
             kind=ResolutionKind.LOCAL,
-            git_info=get_git_info(root_future.function.func),  # type: ignore
+            git_info=self._get_git_info(root_future.function.func),  # type: ignore
             settings_env_vars=get_active_user_settings_strings(),
             client_version=CURRENT_VERSION_STR,
             cache_namespace=self._cache_namespace_str,
@@ -344,6 +368,11 @@ class LocalResolver(SilentResolver):
         )
 
         return resolution
+
+    def _get_git_info(self, object: Any) -> Optional[GitInfo]:
+        if self._git_info is not None:
+            return self._git_info
+        return get_git_info(object)
 
     def _future_will_schedule(self, future: AbstractFuture) -> None:
         super()._future_will_schedule(future)
@@ -545,16 +574,25 @@ class LocalResolver(SilentResolver):
         self._notify_pipeline_update()
         self._disconnect_from_sio_server()
 
-    def _resolution_did_fail(self, error: Exception) -> None:
+    def _resolution_did_fail(
+        self, error: Exception, reason: Optional[str] = None
+    ) -> None:
         super()._resolution_did_fail(error)
+
         if isinstance(error, FunctionError):
-            reason = "Marked as failed because another run in the graph failed."
+            reason = reason or (
+                "Marked as failed because another run in the graph failed."
+            )
             resolution_status = ResolutionStatus.COMPLETE
-        elif isinstance(error, _ResolverRestartError):
-            reason = "Marked as failed because the resolver restarted mid-execution."
+        elif isinstance(error, ResolverRestartError):
+            reason = reason or (
+                "Marked as failed because the resolver restarted mid-execution."
+            )
             resolution_status = ResolutionStatus.FAILED
         else:
-            reason = "Marked as failed because the rest of the graph failed to resolve."
+            reason = reason or (
+                "Marked as failed because the rest of the graph failed to resolve."
+            )
             resolution_status = ResolutionStatus.FAILED
 
         self._move_runs_to_terminal_state(reason, fail_root_run=True)
@@ -600,7 +638,7 @@ class LocalResolver(SilentResolver):
             status == ResolutionStatus.RUNNING
             and current_status != ResolutionStatus.SCHEDULED
         ):
-            raise _ResolverRestartError(
+            raise ResolverRestartError(
                 "It appears that the resolver has restarted mid-execution. "
                 "The cluster may be under pressure."
             )
@@ -858,5 +896,5 @@ def make_edge_key(edge: Edge) -> str:
     )
 
 
-class _ResolverRestartError(RuntimeError):
+class ResolverRestartError(RuntimeError):
     pass
