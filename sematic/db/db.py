@@ -20,7 +20,19 @@ class DB:
     """
 
     def __init__(self, url: str):
-        self._engine = sqlalchemy.create_engine(url)
+        self._engine = sqlalchemy.create_engine(
+            url,
+            # Recycle connections after 1 hour (3600s). This
+            # helps prevent us from holding onto connections
+            # when a DB server is trying to swap connections
+            # gradually to a new instance.
+            pool_recycle=3600,
+            # Before getting a connection from the connection pool,
+            # ping the DB to ensure that it's still a valid connection.
+            # This prevents us from trying to use stale/bad connections
+            # for real requests.
+            pool_pre_ping=True,
+        )
         self._Session = sqlalchemy.orm.sessionmaker(bind=self._engine)
 
     def get_engine(self) -> sqlalchemy.engine.Engine:
