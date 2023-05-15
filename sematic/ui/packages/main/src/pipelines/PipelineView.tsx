@@ -1,7 +1,8 @@
 import { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import Loading from "../components/Loading";
-import { useFetchRuns, useRunNavigation } from "../hooks/pipelineHooks";
+import { useRunNavigation } from "../hooks/pipelineHooks";
+import { useFetchRuns } from "@sematic/common/src/hooks/runHooks";
 import { Alert } from "@mui/material";
 
 /**

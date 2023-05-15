@@ -4,7 +4,7 @@ import { useAtom } from "jotai";
 import { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import Loading from "src/components/Loading";
-import { ExtractContextType } from "src/components/utils/typings";
+import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { selectedRunHashAtom, useFetchResolution, useFetchRun, useRunNavigation } from "src/hooks/pipelineHooks";
 import PipelineBar from "src/pipelines/PipelineBar";
 import PipelinePanels from "src/pipelines/PipelinePanels";

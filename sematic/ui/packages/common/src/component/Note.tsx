@@ -7,7 +7,7 @@ import { useCallback, useMemo, useState } from "react";
 import useMeasure from "react-use/lib/useMeasure";
 import DateTime from "src/component/DateTime";
 import NameTag from "src/component/NameTag";
-import RunReferenceLink from "src/component/RunReferenceLink";
+import { RunReferenceLink } from "src/component/RunReference";
 import Section from "src/component/Section";
 import theme from "src/theme/new";
 

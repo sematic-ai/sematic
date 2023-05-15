@@ -60,7 +60,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
 )
 from sematic.plugins.abstract_publisher import AbstractPublisher
 from sematic.scheduling.job_details import JobKind
-from sematic.tests.fixtures import environment_variables
+from sematic.utils.env import environment_variables
 
 test_get_resolution_auth = make_auth_test("/api/v1/resolutions/123")
 test_put_resolution_auth = make_auth_test("/api/v1/resolutions/123", method="PUT")

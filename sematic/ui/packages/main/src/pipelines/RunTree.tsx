@@ -8,7 +8,7 @@ import {
 import { Run } from "@sematic/common/src/Models";
 import { Fragment, useCallback } from "react";
 import RunStateChip from "src/components/RunStateChip";
-import { ExtractContextType } from "src/components/utils/typings";
+import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { HIDDEN_RUN_NAME_LIST } from "src/constants";
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
 import { RunTreeNode } from "src/interfaces/graph";

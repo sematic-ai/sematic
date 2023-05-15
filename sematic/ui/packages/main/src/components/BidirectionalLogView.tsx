@@ -6,7 +6,7 @@ import { useTheme } from "@mui/material/styles";
 import Alert from "@mui/material/Alert";
 import { useRunPanelContext, useRunPanelLoadingIndicator } from "src/hooks/runDetailsHooks";
 import { Button } from "@mui/material";
-import { theme } from "@sematic/common/lib/src/theme/mira";
+import { theme } from "@sematic/common/src/theme/mira";
 import { useScrollTracker } from "src/hooks/scrollingHooks";
 
 const Container = styled(Box)`

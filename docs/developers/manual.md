@@ -37,6 +37,10 @@ $ cd sematic/ui
 $ npm start
 ```
 
+The UI Dashboard is capable of hooking up with an alternative backend other than the local one. To do so, 
+setting `SEMATIC_PROXY_OVERRIDE` environment variable to the URL of a backend deployment. All backend requests
+issued from the dashboard are going to proxy to that address.
+
 ## Diagnose UI Dashboard issues
 
 The local development server launched by [Create-React-Apps](https://create-react-app.dev/) is set up by default to provide extensive logging, which is helpful for investigating issues with the front-end. However, this logging is disabled by default for production builds.

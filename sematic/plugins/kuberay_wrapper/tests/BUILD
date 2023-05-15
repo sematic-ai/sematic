@@ -4,7 +4,7 @@ pytest_test(
     deps = [
         "//sematic/plugins:abstract_kuberay_wrapper",
         "//sematic/plugins/kuberay_wrapper:standard",
+        "//sematic/utils:env",
         "//sematic/utils:exceptions",
-        "//sematic/tests:fixtures",
     ],
 )

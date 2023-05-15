@@ -1,14 +1,14 @@
 import { Resolution, Run } from "@sematic/common/src/Models";
 import { useHttpClient } from "@sematic/common/src/hooks/httpHooks";
 import { RESET } from "jotai/utils";
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAsync from "react-use/lib/useAsync";
-import useAsyncFn from "react-use/lib/useAsyncFn";
-import { Filter, ResolutionPayload, RunListPayload, RunViewPayload } from "src/Payloads";
+import { ResolutionPayload, RunViewPayload } from "src/Payloads";
 import PipelinePanelsContext from "src/pipelines/PipelinePanelsContext";
 import PipelineRunViewContext from "src/pipelines/PipelineRunViewContext";
 import { atomWithHashCustomSerialization } from "src/utils";
+import { getRunUrlPattern } from "@sematic/common/src/hooks/runHooks";
 
 export type QueryParams = {[key: string]: string};
 
@@ -34,55 +34,6 @@ export function usePipelinePanelsContext() {
     }
 
     return contextValue;
-}
-
-export function useFetchRunsFn(runFilters: Filter | undefined = undefined,
-    otherQueryParams: QueryParams = {}) {
-    const [isLoaded, setIsLoaded] = useState(false);
-
-    const queryParams = useMemo(() => {
-        let params = {...otherQueryParams};
-        if (!!runFilters) {
-            params.filters = JSON.stringify(runFilters)
-        }
-        return params;
-    }, [otherQueryParams, runFilters]);
-
-    const {fetch} = useHttpClient();
-
-    const [state, load] = useAsyncFn(async (overrideQueryParams: QueryParams = {}) => {
-        const finalQueryParams = {
-            ...queryParams,
-            ...overrideQueryParams
-        }
-        const qString = (new URLSearchParams(finalQueryParams)).toString();
-        const response = await fetch({
-            url: `/api/v1/runs?${qString}`
-        });
-        const payload: RunListPayload = await response.json();
-        setIsLoaded(true);
-        return payload;
-    }, [queryParams, fetch]);
-
-    const {loading: isLoading, error, value: runs} = state;
-
-    return {isLoaded, isLoading, error, runs: runs as RunListPayload, load};
-}
-
-export function useFetchRuns(runFilters: Filter | undefined = undefined,
-    otherQueryParams: {[key: string]: string} = {}) {
-    const {isLoaded, isLoading, error, runs, load} = useFetchRunsFn(runFilters, otherQueryParams);
-
-    const reloadRuns = useCallback(async () => {
-        const payload = await load();
-        return payload.content;
-    }, [load]);
-
-    useEffect(() => {
-        load();
-    }, [load])
-
-    return {isLoaded, isLoading, error, runs: runs?.content, reloadRuns};
 }
 
 export function useFetchRun(runID: string): [
@@ -113,10 +64,6 @@ export function useFetchResolution(resolutionId: string): [
     }, [resolutionId]);
     
     return [value, loading, error];
-}
-
-export function getRunUrlPattern(requestedRootId: string) {
-    return `/runs/${requestedRootId}`;
 }
 
 export function useRunNavigation() {

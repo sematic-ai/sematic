@@ -1,7 +1,13 @@
 import { Button, IconButton, Snackbar } from "@mui/material";
+import { Alert } from "@mui/material";
 import { useMemo, useState } from "react";
-import CloseIcon from "@mui/icons-material/Close";
 import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
+import CloseIcon from "@mui/icons-material/Close";
+
+export enum MessageKind {
+  Info,
+  Error,
+}
 
 export type SnackMessage = {
   message: string;
@@ -9,6 +15,7 @@ export type SnackMessage = {
   onClick?: () => void;
   closable?: boolean;
   autoHide?: boolean;
+  kind?: MessageKind;
 };
 
 export function SnackBarProvider(props: { children: any }) {
@@ -37,6 +44,8 @@ export function SnackBarProvider(props: { children: any }) {
         : undefined,
     [snackMessage]
   );
+
+  const kind = useMemo(() => (!!snackMessage && snackMessage.kind) || MessageKind.Info, [snackMessage]);
 
   const snackBarAction = useMemo(
     () => (
@@ -67,20 +76,39 @@ export function SnackBarProvider(props: { children: any }) {
     [snackMessage, closable]
   );
 
+  const content = useMemo( 
+    () => {
+      const severity = kind === MessageKind.Info ? "info" : "error";
+      return (
+        <Alert
+          severity={severity}
+          onClick={() => {
+            if(closable) {
+              setSnackMessage(undefined);
+            }
+          }}
+        >
+          {snackMessage?.message}
+          {snackBarAction}
+        </Alert>
+      );
+    }, [snackMessage, kind, snackBarAction, closable]
+  );
+
   return (
     <SnackBarContext.Provider value={{ setSnackMessage }}>
       {children}
       <Snackbar
         open={snackMessage !== undefined}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        message={snackMessage?.message}
         sx={{ marginTop: "50px" }}
         autoHideDuration={autoHide ? 5000 : undefined}
         onClose={() => {
           setSnackMessage(undefined);
         }}
-        action={snackMessage?.actionName ? snackBarAction : <></>}
-      />
+      >
+        {content}
+      </Snackbar>
     </SnackBarContext.Provider>
   );
 }

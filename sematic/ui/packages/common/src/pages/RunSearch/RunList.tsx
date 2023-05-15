@@ -1,16 +1,22 @@
 import styled from "@emotion/styled";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { createColumnHelper, getCoreRowModel, useReactTable, Row } from "@tanstack/react-table";
 import { parseJSON } from "date-fns";
+import { Run } from "src/Models";
 import { DateTimeLongConcise } from "src/component/DateTime";
 import ImportPath from "src/component/ImportPath";
+import NameTag from "src/component/NameTag";
 import PipelineTitle from "src/component/PipelineTitle";
-import RunReferenceLink from "src/component/RunReferenceLink";
-import TableComponent from "src/component/Table";
-import TagsList from "src/component/TagsList";
+import { RunReference } from "src/component/RunReference";
+import TableComponent, { TableComponentProps } from "src/component/Table";
+import { getRunUrlPattern, useRunsPagination } from "src/hooks/runHooks";
 import RunStatusColumn from "src/pages/RunSearch/RunStatusColumn";
+import TagsColumn from "src/pages/RunSearch/TagsColumn";
 import theme from "src/theme/new";
+import LayoutServiceContext from "src/context/LayoutServiceContext";
+import { useContext, useEffect, useCallback } from "react";
 
 const Container = styled.div`
     display: flex;
@@ -52,50 +58,41 @@ const NameSection = styled.div`
     position: relative;
 `;
 
-const StyledRunReferenceLink = styled(RunReferenceLink)`
+const StyledRunReferenceLink = styled(RunReference)`
     color: ${theme.palette.mediumGrey.main};
 `;
 
-const RunData = {
-    ID: '3es92wd',
-    created: '2021-10-01T12:00:00Z',
-    name: 'MNIST PyTorch Example',
-    importPath: 'examples.mnist.pipeline',
-    tags: ['example', 'pytorch', 'mnist', 'demo'],
-    owner: 'Demo User',
-    status: 'RUNNING',
-    failedAt: undefined as undefined | string,
-    resolvedAt: undefined as undefined | string,
-    canceledAt: undefined as undefined | string,
-}
+const StyledTableComponent = styled(TableComponent)<TableComponentProps<Run>>`
+    min-width: 850px;
+` as typeof TableComponent;
 
-const columnHelper = createColumnHelper<typeof RunData>()
+const columnHelper = createColumnHelper<Run>()
 
 const columns = [
-    columnHelper.accessor('ID', {
+    columnHelper.accessor('id', {
         meta: {
             columnStyles: {
                 width: "5.923%",
             }
         },
         header: 'ID',
-        cell: info => <StyledRunReferenceLink variant={'inherit'} runId={info.getValue()} />,
+        cell: info => <StyledRunReferenceLink runId={info.getValue()} />,
     }),
-    columnHelper.accessor('created', {
+    columnHelper.accessor('created_at', {
         meta: {
             columnStyles: {
                 width: "12.3396%",
-                minWidth: "140px"
+                minWidth: "150px"
             }
         },
         header: 'Submitted at',
         cell: info => DateTimeLongConcise(parseJSON(info.getValue())),
     }),
-    columnHelper.accessor(data => [data.name, data.importPath], {
+    columnHelper.accessor(run => [run.name, run.function_path], {
         meta: {
             columnStyles: {
                 width: "1px",
-                maxWidth: "calc(100vw - 1090px)"
+                maxWidth: "calc(100vw - 1060px)"
             }
         },
         header: 'Name',
@@ -115,9 +112,9 @@ const columns = [
             }
         },
         header: 'Tags',
-        cell: info => <TagsList tags={info.getValue()} fold={2} />,
+        cell: info => <TagsColumn tags={info.getValue()} />,
     }),
-    columnHelper.accessor('owner', {
+    columnHelper.accessor(data => `${data.user?.first_name} ${data.user?.last_name}`, {
         meta: {
             columnStyles: {
                 width: "8.39092%",
@@ -125,14 +122,13 @@ const columns = [
             }
         },
         header: 'Owner',
-        cell: info => info.getValue(),
+        cell: info => <NameTag>{info.getValue()}</NameTag>,
     }),
     columnHelper.accessor(data => ({
-        futureState: data.status,
-        createdAt: data.created,
-        failedAt: data.failedAt,
-        canceledAt: data.canceledAt,
-        resolvedAt: data.resolvedAt
+        futureState: data.future_state,
+        createdAt: data.created_at,
+        failedAt: data.failed_at,
+        resolvedAt: data.resolved_at
     }), {
         meta: {
             columnStyles: {
@@ -141,55 +137,45 @@ const columns = [
             }
         },
         header: 'Status',
-        cell: info => <RunStatusColumn {...info.getValue()} />,
-    }),
-    columnHelper.display({
-        meta: {
-            columnStyles: {
-                width: "2.46792%",
-                minWidth: "40px"
-            }
-        },
-        header: '',
-        id: 'goto',
-        cell: _ => <ChevronRight style={{cursor: 'pointer'}}/>,
-    }),
+        cell: info => <RunStatusColumn {...info.getValue() as any} />,
+    })
 ]
 
-const data: Array<typeof RunData> = [
-    RunData,
-    RunData,
-    { ...RunData, resolvedAt: '2021-10-01T12:10:00Z', status: 'SUCCESS' },
-    { ...RunData, failedAt: '2021-10-01T12:10:00Z', status: 'FAILED' },
-    { ...RunData, canceledAt: '2021-10-01T12:10:00Z', status: 'CANCELLED' },
-    { ...RunData, status: 'SCHEDULED' },
-    RunData,
-    RunData,
-    RunData,
-    RunData,
-    { ...RunData, canceledAt: '2021-10-01T12:10:00Z', status: 'CANCELLED' },
-    { ...RunData, status: 'SCHEDULED' },
-    RunData,
-    RunData,
-    { ...RunData, canceledAt: '2021-10-01T12:10:00Z', status: 'CANCELLED' },
-]
+interface RunListProps {
+}
 
-const RunList = () => {
+const RunList = (props: RunListProps) => {
+    const { runs, page, isLoading, totalPages, totalRuns, nextPage, previousPage } = useRunsPagination();
+
+    const { setIsLoading } = useContext(LayoutServiceContext);
+
     const tableInstance = useReactTable({
-        data,
+        data: runs,
         columns,
         getCoreRowModel: getCoreRowModel()
     });
 
+    const getRowLink = useCallback((row: Row<Run>): string => {
+        return getRunUrlPattern(row.original.id);
+    }, [])
+
+    useEffect(() => {
+        setIsLoading(isLoading)
+    }, [setIsLoading, isLoading]);
+
     return <Container>
         <Stats>
-            <Typography variant={'bold'}>142 Runs</Typography>
+            <Typography variant={'bold'}>{`${totalRuns || '?'} ${totalRuns === 1 ? 'Run' : 'Runs'}`}</Typography>
         </Stats>
-        <TableComponent table={tableInstance} />
+        <StyledTableComponent table={tableInstance} getRowLink={getRowLink} />
         <Pagination>
-            <ChevronLeft /> 
-                {'1 / 4'} 
-            <ChevronRight />
+            <IconButton aria-label="previous" disabled={page === 0} onClick={previousPage}>
+                <ChevronLeft />
+            </IconButton>
+            {`${page + 1} / ${totalPages}`}
+            <IconButton aria-label="next" disabled={page + 1 === totalPages} onClick={nextPage}>
+                <ChevronRight />
+            </IconButton>
         </Pagination>
     </Container>
 }
