@@ -20,7 +20,8 @@ from logging.config import dictConfig
 from typing import Optional
 
 # Third-party
-from flask import jsonify, request, send_file
+import flask
+from flask import jsonify, send_file
 from flask_socketio import Namespace, SocketIO  # type: ignore
 
 # Sematic
@@ -93,7 +94,7 @@ def ping():
     return jsonify({"status": "ok"})
 
 
-def _request_string() -> str:
+def _request_string(request) -> str:
     query_string = (
         f"?{str(request.query_string, encoding='utf8')}"
         if len(request.query_string) > 0
@@ -110,7 +111,7 @@ def _request_string() -> str:
 def log_request_start():
     logger().info(
         "Request start: %s",
-        _request_string(),
+        _request_string(flask.request),
     )
 
 
@@ -118,7 +119,7 @@ def log_request_start():
 def log_request_end(response):
     logger().info(
         "Request end: %s",
-        _request_string(),
+        _request_string(flask.request),
     )
     return response
 

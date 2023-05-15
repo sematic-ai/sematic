@@ -837,7 +837,7 @@ def _raise_for_response(
         pass
 
     request_id = response.request.headers.get(REQUEST_ID_HEADER)
-    details += f" You may search the server logs for request id '{request_id}'"
+    details = f"{details} You may search the server logs for request id '{request_id}'"
 
     if response.status_code == 404:
         exception = ResourceNotFoundError(f"Resource {url} was not found")
