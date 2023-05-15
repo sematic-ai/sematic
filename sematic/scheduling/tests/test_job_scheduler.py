@@ -100,6 +100,7 @@ def test_schedule_resolution(mock_k8s, resolution: Resolution):
         user_settings=resolution.settings_env_vars,
         max_parallelism=3,
         rerun_from="foobar",
+        rerun_mode=None,
     )
 
 

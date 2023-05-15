@@ -1,12 +1,12 @@
 # Standard Library
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum, unique
 from typing import Dict, List, Optional, Union
 
 KUBERNETES_SECRET_NAME = "sematic-func-secrets"
 
 
-@dataclass
+@dataclass(frozen=True)
 class KubernetesSecretMount:
     """Information about how to expose Kubernetes secrets when running a Sematic func.
 
@@ -108,7 +108,7 @@ class KubernetesTolerationEffect(Enum):
     All = "All"
 
 
-@dataclass
+@dataclass(frozen=True)
 class KubernetesToleration:
     """Toleration for a node taint, enabling the pod for the function to run on the node
 
@@ -194,7 +194,7 @@ class KubernetesToleration:
             )
 
 
-@dataclass
+@dataclass(frozen=True)
 class KubernetesCapabilities:
     """Capabilities associated with a Kubernetes Security Context.
 
@@ -213,7 +213,7 @@ class KubernetesCapabilities:
     drop: List[str] = field(default_factory=list)
 
 
-@dataclass
+@dataclass(frozen=True)
 class KubernetesSecurityContext:
     """A security context the Sematic job should run with.
 
@@ -243,7 +243,7 @@ class KubernetesSecurityContext:
     capabilities: KubernetesCapabilities
 
 
-@dataclass
+@dataclass(frozen=True)
 class KubernetesResourceRequirements:
     """Information on the Kubernetes resources required.
 
@@ -286,9 +286,26 @@ class KubernetesResourceRequirements:
     mount_expanded_shared_memory: bool = field(default=False)
     security_context: Optional[KubernetesSecurityContext] = None
 
+    def clone(self) -> "KubernetesResourceRequirements":
+        """Deep copy these requirements."""
+        # only need to replace things that are mutable.
+        return replace(
+            self,
+            node_selector=dict(self.node_selector),
+            requests=dict(self.requests),
+            tolerations=[t for t in self.tolerations],
+        )
+
 
 @dataclass
 class ResourceRequirements:
     kubernetes: KubernetesResourceRequirements = field(
         default_factory=KubernetesResourceRequirements
     )
+
+    def clone(self) -> "ResourceRequirements":
+        """Deep copy these resource requirements."""
+        return replace(
+            self,
+            kubernetes=self.kubernetes.clone(),
+        )

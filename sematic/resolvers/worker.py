@@ -25,6 +25,7 @@ from sematic.db.models.run import Run
 from sematic.function import Function
 from sematic.future import Future
 from sematic.future_context import PrivateContext, SematicContext, set_context
+from sematic.graph import RerunMode
 from sematic.log_reader import log_prefix
 from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.resolvers.log_streamer import ingested_logs, log_ingestion_enabled
@@ -49,6 +50,7 @@ def parse_args():
     )
     parser.add_argument("--max-parallelism", type=int, default=None, required=False)
     parser.add_argument("--rerun-from", type=str, default=None, required=False)
+    parser.add_argument("--rerun-mode", type=str, default=None, required=False)
 
     args = parser.parse_args()
 
@@ -134,6 +136,7 @@ def main(
     resolve: bool,
     max_parallelism: Optional[int] = None,
     rerun_from: Optional[str] = None,
+    rerun_mode: Optional[RerunMode] = RerunMode.SPECIFIC_RUN,
 ):
     """
     Main job logic.
@@ -170,6 +173,7 @@ def main(
                 detach=False,
                 max_parallelism=max_parallelism,
                 rerun_from=rerun_from,
+                rerun_mode=rerun_mode,
                 _is_running_remotely=True,
             )
             resolver.set_graph(runs=runs, artifacts=artifacts, edges=edges)
@@ -319,6 +323,7 @@ def wrap_main_with_logging():
             resolve=args.resolve,
             max_parallelism=args.max_parallelism,
             rerun_from=args.rerun_from,
+            rerun_mode=args.rerun_mode,
         )
 
 
