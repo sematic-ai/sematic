@@ -9,7 +9,7 @@ import cloudpickle
 
 # Sematic
 import sematic.api_client as api_client
-from sematic.abstract_future import AbstractFuture, FutureState, clone
+from sematic.abstract_future import AbstractFuture, FutureState, clone_future
 from sematic.container_images import (
     DEFAULT_BASE_IMAGE_TAG,
     MissingContainerImage,
@@ -129,9 +129,6 @@ class CloudResolver(LocalResolver):
         # When multiple base images are specified through the build info (Bazel target)
         # this is the tag we use to find the resolution image
         self._base_image_tag = _base_image_tag or DEFAULT_BASE_IMAGE_TAG
-
-        # cached git info if it is known from a source other than local git execution
-        self._git_info: Optional[GitInfo] = None
 
     def resolve(self, future: AbstractFuture) -> Any:
         if not self._detach:
@@ -342,7 +339,7 @@ class CloudResolver(LocalResolver):
             return
 
         try:
-            new_root_future = clone(self._root_future)
+            new_root_future = clone_future(self._root_future)
             new_resolver = self.__class__(
                 cache_namespace=self._cache_namespace_str,
                 rerun_from=self._root_future.id,
@@ -362,11 +359,6 @@ class CloudResolver(LocalResolver):
             logger.error(reason)
         finally:
             super()._resolution_did_fail(error, reason)
-
-    def _get_git_info(self, object: Any) -> Optional[GitInfo]:
-        if self._git_info is not None:
-            return self._git_info
-        return super()._get_git_info(object)
 
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
         # Unlike LocalResolver._future_did_fail, we only care about

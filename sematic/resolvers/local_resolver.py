@@ -110,6 +110,9 @@ class LocalResolver(SilentResolver):
         self._cache_namespace_str: Optional[str] = None
         self._raw_cache_namespace = cache_namespace
 
+        # cached git info if it is known from a source other than local git execution
+        self._git_info: Optional[GitInfo] = None
+
     def _seed_graph(self, future: AbstractFuture):
         if self._rerun_from_run_id is None:
             super()._seed_graph(future)
@@ -367,6 +370,8 @@ class LocalResolver(SilentResolver):
         return resolution
 
     def _get_git_info(self, object: Any) -> Optional[GitInfo]:
+        if self._git_info is not None:
+            return self._git_info
         return get_git_info(object)
 
     def _future_will_schedule(self, future: AbstractFuture) -> None:

@@ -287,7 +287,7 @@ class KubernetesResourceRequirements:
     security_context: Optional[KubernetesSecurityContext] = None
 
     def clone(self) -> "KubernetesResourceRequirements":
-        """Deep copy these requirements"""
+        """Deep copy these requirements."""
         # only need to replace things that are mutable.
         return replace(
             self,

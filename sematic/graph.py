@@ -357,14 +357,18 @@ class Graph:
         return list(set(downstream_ids))
 
     def _get_skip_reset_run_ids(
-        self, reset_from: RunID
+        self, reset_from: Optional[RunID]
     ) -> Tuple[List[RunID], List[RunID]]:
         """
         Figures out what run IDs to skip or reset based on rerun_from.
 
-        We skip descendants of reset point and descendants of downstreams of
-        reset point and ancestors. The skipped futures will be naturally
-        re-created by the new graph resolution.
+        If reset_from is a run id, we skip descendants of reset point
+        and descendants of downstreams of reset point and ancestors.
+        The skipped futures will be naturally re-created by the new
+        graph resolution.
+
+        If reset_from is None, we skip nothing and reset anything that
+        was not in one of RAN, RESOLVED, or NESTED_FAILED.
 
         reset = forcing future state to CREATED or RAN. Considering reset_from
         and ancestors runs, we reset the run and all downstream.
@@ -381,16 +385,43 @@ class Graph:
             cloning the graph. The second element is the list of run IDs whose
             cloned future's state to reset to CREATED.
         """
-        skip_run_ids: List[RunID] = self._get_run_descendant_ids(reset_from)
+        skip_run_ids: List[RunID] = []
+        reset_run_ids = []
 
-        reset_run_ids: List[RunID] = [reset_from]
+        if reset_from is None:
+            run_ids_by_execution_order = self._sorted_run_ids_by_layer(
+                run_sorter=self._execution_order
+            )
+            if len(run_ids_by_execution_order) == 0:
+                return [], []
+
+            doesnt_require_rerun_states = {
+                FutureState.RESOLVED.value,
+                FutureState.RAN.value,
+                # If the run is "nested" failed, then the run itself
+                # executed fine, it just has a child/descendant that needs
+                # to be re-executed.
+                FutureState.NESTED_FAILED.value,
+            }
+            runs_by_id = self._runs_by_id
+            reset_run_ids = [
+                run_id
+                for run_id in run_ids_by_execution_order
+                if runs_by_id[run_id].future_state not in doesnt_require_rerun_states
+            ]
+
+            return skip_run_ids, reset_run_ids
+
+        skip_run_ids = self._get_run_descendant_ids(reset_from)
+
+        reset_run_ids = [reset_from]
 
         ancestor_run_ids = self._get_run_ancestor_ids(reset_from)
         reset_run_ids += ancestor_run_ids
 
         for ancestor_run_id in [reset_from] + ancestor_run_ids:
             downstream_run_ids = self._get_run_downstream_ids(ancestor_run_id)
-            reset_run_ids += downstream_run_ids
+            reset_run_ids += downstream_run_idsun_ids
 
             for downstream_run_id in downstream_run_ids:
                 downstream_descendant_ids = self._get_run_descendant_ids(
@@ -566,10 +597,7 @@ class Graph:
         """
         cloned_graph = ClonedFutureGraph()
 
-        if reset_from is None:
-            skip_run_ids, reset_run_ids = self._get_skip_reset_run_ids_continue()
-        else:
-            skip_run_ids, reset_run_ids = self._get_skip_reset_run_ids(reset_from)
+        skip_run_ids, reset_run_ids = self._get_skip_reset_run_ids(reset_from)
 
         # run order guarantees parents and upstream come first
         # This is necessary because we want upstream cloned futures
@@ -602,47 +630,3 @@ class Graph:
         cloned_graph.sort_by(run_ids_by_reverse_execution_order)
 
         return cloned_graph
-
-    def _get_skip_reset_run_ids_continue(self) -> Tuple[List[RunID], List[RunID]]:
-        """Get the ids of the runs to skip/reset when continuing the graph.
-
-        Runs which are "Resolved" have a known output value, and runs which are
-        "Ran" no longer need to be executed since their children will determine
-        their output value. Runs which are "nested failed" successfully returned
-        a future, but will have one or more descendants that need execution.
-
-        Returns
-        -------
-        A tuple whose first element is the list of run IDs to skip when
-        cloning the graph. Skipping runs is generally only necessary when there
-        is a run which produced a future, but which we have been asked to re-execute
-        anyway. Since when using a "continue" rerun mode there are no such runs,
-        the list of skip run ids will always be empty. The second element is the
-        list of run IDs whose
-        cloned future's state to reset to CREATED.
-        """
-        skip_run_ids: List[RunID] = []
-        reset_run_ids = []
-
-        run_ids_by_execution_order = self._sorted_run_ids_by_layer(
-            run_sorter=self._execution_order
-        )
-        if len(run_ids_by_execution_order) == 0:
-            return [], []
-
-        doesnt_require_rerun_states = {
-            FutureState.RESOLVED.value,
-            FutureState.RAN.value,
-            # If the run is "nested" failed, then the run itself
-            # executed fine, it just has a child/descendant that needs
-            # to be re-executed.
-            FutureState.NESTED_FAILED.value,
-        }
-        runs_by_id = self._runs_by_id
-        reset_run_ids = [
-            run_id
-            for run_id in run_ids_by_execution_order
-            if runs_by_id[run_id].future_state not in doesnt_require_rerun_states
-        ]
-
-        return skip_run_ids, reset_run_ids
