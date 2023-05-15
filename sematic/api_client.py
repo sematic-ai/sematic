@@ -1,6 +1,7 @@
 # Standard Library
 import json
 import logging
+from enum import Enum
 from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, cast
 from urllib.parse import urlencode
 
@@ -296,6 +297,9 @@ def schedule_resolution(
     resolution_id: str,
     max_parallelism: Optional[int] = None,
     rerun_from: Optional[str] = None,
+    # We use "Enum" instead of "RerunMode" because the latter
+    # would create a dependency cycle.
+    rerun_mode: Optional[Enum] = None,
 ) -> Resolution:
     """Ask the server to start a detached resolution execution."""
     payload: Dict[str, Any] = {}
@@ -305,6 +309,9 @@ def schedule_resolution(
 
     if rerun_from is not None:
         payload["rerun_from"] = rerun_from
+
+    if rerun_mode is not None:
+        payload["rerun_mode"] = rerun_mode.value
 
     response = _post(f"/resolutions/{resolution_id}/schedule", json_payload=payload)
     return Resolution.from_json_encodable(response["content"])

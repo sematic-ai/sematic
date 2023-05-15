@@ -8,7 +8,7 @@ import enum
 import math
 import time
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Dict, FrozenSet, List, Optional, Tuple, Union
 
 # Sematic
@@ -382,3 +382,26 @@ def get_next_timeout(futures: List[AbstractFuture]) -> TimeoutFuturePair:
         return None, None
 
     return min(remaining_time_future_pairs)
+
+
+def clone_future(future: AbstractFuture) -> AbstractFuture:
+    """Clone the given future, including all properties."""
+    new_future = future.__class__(
+        function=future.function,
+        kwargs=dict(future.kwargs),
+        standalone=future.props.standalone,
+        cache=future.props.cache,
+        resource_requirements=None
+        if future.props.resource_requirements is None
+        else future.props.resource_requirements.clone(),
+        retry_settings=None
+        if future.props.retry_settings is None
+        else replace(future.props.retry_settings),
+        base_image_tag=future.props.base_image_tag,
+        timeout_mins=future.props.timeout_mins,
+    )
+    new_future.props.tags = (
+        None if future.props.tags is None else [t for t in future.props.tags]
+    )
+    new_future.props.name = future.props.name
+    return new_future

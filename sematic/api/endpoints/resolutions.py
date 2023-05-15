@@ -49,6 +49,7 @@ from sematic.db.queries import (
     save_job,
     save_resolution,
 )
+from sematic.graph import RerunMode
 from sematic.plugins.abstract_publisher import get_publishing_plugins
 from sematic.scheduling.job_details import JobKind
 from sematic.scheduling.job_scheduler import clean_jobs, schedule_resolution
@@ -205,7 +206,7 @@ def schedule_resolution_endpoint(
 ) -> flask.Response:
     resolution = get_resolution(resolution_id)
 
-    max_parallelism, rerun_from = None, None
+    max_parallelism, rerun_from, rerun_mode = None, None, None
 
     if flask.request.json:
         if "max_parallelism" in flask.request.json:
@@ -213,6 +214,9 @@ def schedule_resolution_endpoint(
 
         if "rerun_from" in flask.request.json:
             rerun_from = flask.request.json["rerun_from"]
+
+        if "rerun_mode" in flask.request.json:
+            rerun_mode = RerunMode[flask.request.json["rerun_mode"]]
 
     jobs = get_jobs_by_run_id(resolution_id, kind=JobKind.resolver)
     if len(jobs) != 0:
@@ -235,6 +239,7 @@ def schedule_resolution_endpoint(
             resolution=resolution,
             max_parallelism=max_parallelism,
             rerun_from=rerun_from,
+            rerun_mode=rerun_mode,
         )
 
         logger.info("Scheduled resolution with job %s", post_schedule_job.identifier())
