@@ -4,8 +4,8 @@ import noop from "lodash/noop";
 const LayoutServiceContext = createContext<{
     setIsLoading: (isLoading: boolean) => void;
 }>({
-    setIsLoading: noop
-});
+            setIsLoading: noop
+        });
 
 export default LayoutServiceContext;
   

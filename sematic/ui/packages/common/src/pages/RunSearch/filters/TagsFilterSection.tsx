@@ -1,7 +1,7 @@
-import styled from '@emotion/styled';
-import { useState } from 'react';
+import styled from "@emotion/styled";
+import { useState } from "react";
 import TagsInput from "src/component/TagsInput";
-import { ScrollableCollapseableFilterSection } from 'src/pages/RunSearch/filters/CollapseableFilterSection';
+import { ScrollableCollapseableFilterSection } from "src/pages/RunSearch/filters/CollapseableFilterSection";
 import theme from "src/theme/new";
 
 const Container = styled.div`

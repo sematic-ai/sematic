@@ -12,15 +12,15 @@ import { getRunUrlPattern } from "@sematic/common/src/hooks/runHooks";
 
 export type QueryParams = {[key: string]: string};
 
-export const selectedRunHashAtom = atomWithHashCustomSerialization('run', '')
-export const selectedTabHashAtom = atomWithHashCustomSerialization('tab', '')
-export const selectedPanelHashAtom = atomWithHashCustomSerialization('panel', '')
+export const selectedRunHashAtom = atomWithHashCustomSerialization("run", "")
+export const selectedTabHashAtom = atomWithHashCustomSerialization("tab", "")
+export const selectedPanelHashAtom = atomWithHashCustomSerialization("panel", "")
 
 export function usePipelineRunContext() {
     const contextValue = useContext(PipelineRunViewContext);
 
     if (!contextValue) {
-        throw new Error('usePipelineRunContext() should be called under a provider.')
+        throw new Error("usePipelineRunContext() should be called under a provider.")
     }
 
     return contextValue;
@@ -30,7 +30,7 @@ export function usePipelinePanelsContext() {
     const contextValue = useContext(PipelinePanelsContext);
 
     if (!contextValue) {
-        throw new Error('usePipelinePanelsContext() should be called under a provider.')
+        throw new Error("usePipelinePanelsContext() should be called under a provider.")
     }
 
     return contextValue;
@@ -73,7 +73,7 @@ export function useRunNavigation() {
     return useCallback((requestedRootId: string, replace: boolean = false,
         hashOverrideValues: Record<string, string | Symbol> | undefined = undefined) => {
 
-        let newHashValue = hash.replace(/^#/, '');
+        let newHashValue = hash.replace(/^#/, "");
 
         if (hashOverrideValues) {
             newHashValue = updateHash(hash, hashOverrideValues);
@@ -94,7 +94,7 @@ export function useHashUpdater() {
 
     return useCallback((
         hashOverrideValues: Record<string, string | Symbol>, replace: boolean = false) => {
-        let newHashValue = hash.replace(/^#/, '');
+        let newHashValue = hash.replace(/^#/, "");
 
         newHashValue = updateHash(newHashValue, hashOverrideValues);
 
@@ -107,7 +107,7 @@ export function useHashUpdater() {
 }
 
 function updateHash(currentHash: string, hashOverrideValues: Record<string, string | Symbol>) {
-    let newHashValue = currentHash.replace(/^#/, '');
+    let newHashValue = currentHash.replace(/^#/, "");
 
     const searchParams = new URLSearchParams(newHashValue);
     for (const key of Object.keys(hashOverrideValues)) {

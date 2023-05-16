@@ -1,8 +1,8 @@
-import styled from '@emotion/styled';
-import { useMemo } from 'react';
-import { getRunStateChipByState } from 'src/component/RunStateChips';
-import getRunStateText from 'src/component/RunStateText';
-import theme from 'src/theme/new';
+import styled from "@emotion/styled";
+import { useMemo } from "react";
+import { getRunStateChipByState } from "src/component/RunStateChips";
+import getRunStateText from "src/component/RunStateText";
+import theme from "src/theme/new";
 
 const StyledContainer = styled.div`
     display: flex;

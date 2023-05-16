@@ -7,22 +7,22 @@ import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
 SyntaxHighlighter.registerLanguage("python", python);
 
 function SourceCode() {
-  const { selectedRun } = usePipelinePanelsContext();
+    const { selectedRun } = usePipelinePanelsContext();
 
-  let run = selectedRun!;
+    let run = selectedRun!;
 
-  return (
-    <Box key={run.function_path} sx={{ marginTop: 2 }}>
-      <SyntaxHighlighter
-        language="python"
-        style={docco}
-        showLineNumbers
-        customStyle={{ fontSize: 12 }}
-      >
-        {run.source_code}
-      </SyntaxHighlighter>
-    </Box>
-  );
+    return (
+        <Box key={run.function_path} sx={{ marginTop: 2 }}>
+            <SyntaxHighlighter
+                language="python"
+                style={docco}
+                showLineNumbers
+                customStyle={{ fontSize: 12 }}
+            >
+                {run.source_code}
+            </SyntaxHighlighter>
+        </Box>
+    );
 }
 
 export default SourceCode;

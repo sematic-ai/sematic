@@ -3,15 +3,15 @@ import { usePipelineRunContext } from "src/hooks/pipelineHooks";
 import useBasicMetrics from "src/hooks/metricsHooks";
 import Loading from "src/components/Loading";
 import {
-  Alert,
-  Box,
-  ButtonBase,
-  Grid,
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-  Typography,
+    Alert,
+    Box,
+    ButtonBase,
+    Grid,
+    Table,
+    TableBody,
+    TableCell,
+    TableRow,
+    Typography,
 } from "@mui/material";
 import { useMemo } from "react";
 import { durationSecondsToString } from "src/utils";
@@ -48,136 +48,136 @@ const MetricLabel = styled(Box)`
 `;
 
 function TopMetric(props: { value: string; label: string; docs?: string }) {
-  const { value, label, docs } = props;
+    const { value, label, docs } = props;
 
-  return (
-    <MetricBox>
-      <MetricValue sx={{ fontSize: 70, fontWeight: 500, lineHeight: 1 }}>
-        {value}
-      </MetricValue>
-      <MetricLabel>
-        <Typography>{label}</Typography>
-        {docs !== undefined && (
-          <ButtonBase
-            href={`https://docs.sematic.dev/diving-deeper/metrics#${docs}`}
-            target="_blank"
-          >
-            <HelpIcon fontSize="small" />
-          </ButtonBase>
-        )}
-      </MetricLabel>
-    </MetricBox>
-  );
+    return (
+        <MetricBox>
+            <MetricValue sx={{ fontSize: 70, fontWeight: 500, lineHeight: 1 }}>
+                {value}
+            </MetricValue>
+            <MetricLabel>
+                <Typography>{label}</Typography>
+                {docs !== undefined && (
+                    <ButtonBase
+                        href={`https://docs.sematic.dev/diving-deeper/metrics#${docs}`}
+                        target="_blank"
+                    >
+                        <HelpIcon fontSize="small" />
+                    </ButtonBase>
+                )}
+            </MetricLabel>
+        </MetricBox>
+    );
 }
 
 export function runSuccessRate(
-  countByState: { [k: string]: number },
-  run: Run
+    countByState: { [k: string]: number },
+    run: Run
 ): string {
-  const numeratorStates = ["RESOLVED"];
-  const denominatorStates = ["RESOLVED", "FAILED", "NESTED_FAILED"];
+    const numeratorStates = ["RESOLVED"];
+    const denominatorStates = ["RESOLVED", "FAILED", "NESTED_FAILED"];
 
-  const countForStates = (states: string[]) =>
-    states.reduce(
-      (sum: number, state: string) => (sum += countByState[state] || 0),
-      0
-    );
+    const countForStates = (states: string[]) =>
+        states.reduce(
+            (sum: number, state: string) => (sum += countByState[state] || 0),
+            0
+        );
 
-  const percentRate =
+    const percentRate =
     (countForStates(numeratorStates) /
       (countForStates(denominatorStates) || 1)) *
     100;
 
-  return `${Math.floor(percentRate)}%`;
+    return `${Math.floor(percentRate)}%`;
 }
 
 export function runAvgRunTime(
-  avgRuntimeChildren: { [k: string]: number },
-  run: Run
+    avgRuntimeChildren: { [k: string]: number },
+    run: Run
 ): string {
-  return durationSecondsToString(avgRuntimeChildren[run.function_path] || 0);
+    return durationSecondsToString(avgRuntimeChildren[run.function_path] || 0);
 }
 
 export default function BasicMetricsPanel() {
-  const { rootRun } = usePipelineRunContext() as { rootRun: Run };
+    const { rootRun } = usePipelineRunContext() as { rootRun: Run };
 
-  const [payload, loading, error] = useBasicMetrics({ runId: rootRun!.id });
+    const [payload, loading, error] = useBasicMetrics({ runId: rootRun!.id });
 
-  const totalCount = useMemo(() => payload?.content.total_count, [payload]);
+    const totalCount = useMemo(() => payload?.content.total_count, [payload]);
 
-  const successRate = useMemo(
-    () =>
-      payload ? runSuccessRate(payload.content.count_by_state, rootRun) : "0%",
-    [payload, rootRun]
-  );
+    const successRate = useMemo(
+        () =>
+            payload ? runSuccessRate(payload.content.count_by_state, rootRun) : "0%",
+        [payload, rootRun]
+    );
 
-  const avgRuntime = useMemo(
-    () =>
-      payload
-        ? runAvgRunTime(payload.content.avg_runtime_children, rootRun)
-        : "0s",
-    [payload, rootRun]
-  );
+    const avgRuntime = useMemo(
+        () =>
+            payload
+                ? runAvgRunTime(payload.content.avg_runtime_children, rootRun)
+                : "0s",
+        [payload, rootRun]
+    );
 
-  const sortedAvgRuntimeChildren = useMemo(
-    () =>
-      Object.entries(payload?.content.avg_runtime_children || {}).sort((a, b) =>
-        a[1] > b[1] ? -1 : 1
-      ),
-    [payload]
-  );
+    const sortedAvgRuntimeChildren = useMemo(
+        () =>
+            Object.entries(payload?.content.avg_runtime_children || {}).sort((a, b) =>
+                a[1] > b[1] ? -1 : 1
+            ),
+        [payload]
+    );
 
-  return (
-    <Box sx={{ p: 5 }}>
-      {loading === true && <Loading isLoaded={false} />}
-      {!loading && error !== undefined && (
-        <Alert severity="error">Unable to load metrics: {error.message}</Alert>
-      )}
-      {!loading && !error && payload !== undefined && (
-        <>
-          <Typography variant="h1">Pipeline Metrics</Typography>
-          <Grid container sx={{ my: 10 }}>
-            <Grid item xs={4}>
-              <TopMetric
-                value={`${totalCount}`}
-                label="runs"
-                docs="run-count"
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <TopMetric
-                value={successRate}
-                label="success rate"
-                docs="success-rate"
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <TopMetric
-                value={avgRuntime}
-                label="avg. run time"
-                docs="average-run-time"
-              />
-            </Grid>
-          </Grid>
-          <Typography variant="h3">Average run time by function</Typography>
-          <Box sx={{ my: 10 }}>
-            <Table>
-              <TableBody>
-                {sortedAvgRuntimeChildren.map(
-                  ([functionPath, runtimeS], idx) => (
-                    <TableRow key={idx}>
-                      <TableCell>
-                        <CalculatorPath functionPath={functionPath} />
-                      </TableCell>
-                      <TableCell>{durationSecondsToString(runtimeS)}</TableCell>
-                    </TableRow>
-                  )
-                )}
-              </TableBody>
-            </Table>
-          </Box>
-        </>
-      )}
-    </Box>
-  );
+    return (
+        <Box sx={{ p: 5 }}>
+            {loading === true && <Loading isLoaded={false} />}
+            {!loading && error !== undefined && (
+                <Alert severity="error">Unable to load metrics: {error.message}</Alert>
+            )}
+            {!loading && !error && payload !== undefined && (
+                <>
+                    <Typography variant="h1">Pipeline Metrics</Typography>
+                    <Grid container sx={{ my: 10 }}>
+                        <Grid item xs={4}>
+                            <TopMetric
+                                value={`${totalCount}`}
+                                label="runs"
+                                docs="run-count"
+                            />
+                        </Grid>
+                        <Grid item xs={4}>
+                            <TopMetric
+                                value={successRate}
+                                label="success rate"
+                                docs="success-rate"
+                            />
+                        </Grid>
+                        <Grid item xs={4}>
+                            <TopMetric
+                                value={avgRuntime}
+                                label="avg. run time"
+                                docs="average-run-time"
+                            />
+                        </Grid>
+                    </Grid>
+                    <Typography variant="h3">Average run time by function</Typography>
+                    <Box sx={{ my: 10 }}>
+                        <Table>
+                            <TableBody>
+                                {sortedAvgRuntimeChildren.map(
+                                    ([functionPath, runtimeS], idx) => (
+                                        <TableRow key={idx}>
+                                            <TableCell>
+                                                <CalculatorPath functionPath={functionPath} />
+                                            </TableCell>
+                                            <TableCell>{durationSecondsToString(runtimeS)}</TableCell>
+                                        </TableRow>
+                                    )
+                                )}
+                            </TableBody>
+                        </Table>
+                    </Box>
+                </>
+            )}
+        </Box>
+    );
 }

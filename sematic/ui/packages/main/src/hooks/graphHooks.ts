@@ -48,8 +48,8 @@ export function useGraph(runRootId: string): [
     useEffect(() => {
         if (prevLoading&& !loading && retryPending.current) {
             retryPending.current = false;
-            devLogger('Loading state has switched from true to false,' 
-                + ' and reloading was requested. reloading now...');
+            devLogger("Loading state has switched from true to false," 
+                + " and reloading was requested. reloading now...");
             retry();
         }
     }, [loading, prevLoading, retry, devLogger]);
@@ -58,11 +58,11 @@ export function useGraph(runRootId: string): [
         devLogger("Handler triggered with:", args);
         if (args.run_id === runRootId) {
             if (loading) {
-                devLogger('Reloading is requested but an ongoing loading process is present.' +
-                ' Mark the state for retrying later.');
+                devLogger("Reloading is requested but an ongoing loading process is present." +
+                " Mark the state for retrying later.");
                 retryPending.current = true;
             } else {
-                devLogger('There was no ongoing loading process. Directly reload.')
+                devLogger("There was no ongoing loading process. Directly reload.")
                 retry();
             }
         }
@@ -84,7 +84,7 @@ export function useGraph(runRootId: string): [
     useEffect(() => {
         graphSocket.removeAllListeners();
         graphSocket.on("update", onGraphUpdate);
-      }, [onGraphUpdate]);
+    }, [onGraphUpdate]);
 
     return [graph, loading, error];
 }
@@ -148,7 +148,7 @@ export function useGraphContext() {
     const contextValue = useContext(GraphContext);
 
     if (!contextValue) {
-        throw new Error('useGraphContext() should be called under a provider.')
+        throw new Error("useGraphContext() should be called under a provider.")
     }
 
     return contextValue

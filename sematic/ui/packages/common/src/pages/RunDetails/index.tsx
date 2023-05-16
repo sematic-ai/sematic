@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback } from "react";
 import ThreeColumns from "src/layout/ThreeColumns";
-import CenterPane from 'src/pages/RunDetails/CenterPane';
-import MetaDataPane from 'src/pages/RunDetails/MetaDataPane';
-import NotesPane from 'src/pages/RunDetails/NotesPane';
+import CenterPane from "src/pages/RunDetails/CenterPane";
+import MetaDataPane from "src/pages/RunDetails/MetaDataPane";
+import NotesPane from "src/pages/RunDetails/NotesPane";
 
 const RunDetails = () => {
 

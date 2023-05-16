@@ -1,9 +1,9 @@
-import styled from '@emotion/styled';
+import styled from "@emotion/styled";
 
-import theme from 'src/theme/new';
-import GitInfoBox from 'src/component/GitInfo';
-import Section from 'src/component/Section';
-import Headline from 'src/component/Headline';
+import theme from "src/theme/new";
+import GitInfoBox from "src/component/GitInfo";
+import Section from "src/component/Section";
+import Headline from "src/component/Headline";
 
 const StyledSection = styled(Section)`
     display: flex;
