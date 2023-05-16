@@ -106,7 +106,9 @@ sematic_py_lib(
         "sqlalchemy",
         "flask",
     ],
-    deps = [],
+    deps = [
+        "//sematic/db/models/mixins:json_encodable_mixin",
+    ],
 )
 
 sematic_py_lib(
