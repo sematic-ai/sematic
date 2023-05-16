@@ -37,7 +37,7 @@ export default function RunMetricsPanel() {
       if (currentRunMetricPoints.length > 0)
         setLatestBroadcastEvent(currentRunMetricPoints);
     });
-  }, [run.id]);
+  }, [run]);
 
   const labels = useMemo(() => {
     return { run_id: run.id, __scope__: METRIC_SCOPES.run };

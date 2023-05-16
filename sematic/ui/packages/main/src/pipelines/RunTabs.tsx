@@ -15,6 +15,7 @@ import ExternalResourcePanel from "src/pipelines/external_resource/ExternalResou
 import PodLifecycle from "src/pipelines/pod_lifecycle/PodLifecycle";
 import LogPanel from "src/pipelines/LogPanel";
 import OutputPanel from "src/pipelines/OutputPanel";
+import RunMetricsPanel from "src/pipelines/RunMetricsPanel";
 
 const StickyHeader = styled(Box)`
     position: sticky;
