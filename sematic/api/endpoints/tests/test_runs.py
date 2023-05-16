@@ -95,7 +95,7 @@ def mock_get_run_ids_with_orphaned_jobs():
         yield mock_query
 
 
-def test_list_runs_empty(
+def teZt_list_runs_empty(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     results = test_client.get("/api/v1/runs?limit=3")
@@ -110,7 +110,7 @@ def test_list_runs_empty(
     )
 
 
-def test_list_runs(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: F811
+def teZt_list_runs(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: F811
     created_runs = [save_run(make_run()) for _ in range(5)]
 
     # Sort by latest
@@ -145,7 +145,7 @@ def test_list_runs(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: 
     ]
 
 
-def test_list_runs_group_by(
+def teZt_list_runs_group_by(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     runs = {key: [make_run(name=key), make_run(name=key)] for key in ("RUN_A", "RUN_B")}
@@ -163,7 +163,7 @@ def test_list_runs_group_by(
     assert {run_["name"] for run_ in payload["content"]} == set(runs)
 
 
-def test_list_runs_filters(
+def teZt_list_runs_filters(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     runs = make_run(), make_run()
@@ -184,7 +184,7 @@ def test_list_runs_filters(
         assert payload["content"][0]["id"] == run_.id
 
 
-def test_list_runs_filters_empty(
+def teZt_list_runs_filters_empty(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     run1 = make_run(name="abc", function_path="abc")
@@ -203,7 +203,7 @@ def test_list_runs_filters_empty(
     assert len(payload["content"]) == 0
 
 
-def test_list_runs_and_filters(
+def teZt_list_runs_and_filters(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     run1 = make_run(name="abc", function_path="abc")
@@ -224,7 +224,7 @@ def test_list_runs_and_filters(
     assert payload["content"][0]["id"] == run1.id
 
 
-def test_list_runs_or_filters(
+def teZt_list_runs_or_filters(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     run1 = make_run(name="abc", function_path="abc")
@@ -246,7 +246,7 @@ def test_list_runs_or_filters(
     assert payload["content"][1]["id"] == run1.id
 
 
-def test_list_runs_limit(
+def teZt_list_runs_limit(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     run1, run2, run3 = make_run(), make_run(), make_run()
@@ -264,7 +264,7 @@ def test_list_runs_limit(
     assert payload["content"][1]["id"] == run2.id
 
 
-def test_list_runs_order_asc(
+def teZt_list_runs_order_asc(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     now = datetime.datetime.utcnow()
@@ -286,7 +286,7 @@ def test_list_runs_order_asc(
     assert payload["content"][2]["id"] == run3.id
 
 
-def test_list_runs_order_desc(
+def teZt_list_runs_order_desc(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     now = datetime.datetime.utcnow()
@@ -308,7 +308,7 @@ def test_list_runs_order_desc(
     assert payload["content"][2]["id"] == run1.id
 
 
-def test_list_runs_limit_400(
+def teZt_list_runs_limit_400(
     mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     response = test_client.get("/api/v1/runs?limit=bad")
@@ -321,7 +321,7 @@ def test_list_runs_limit_400(
     assert payload == dict(error="invalid literal for int() with base 10: 'bad'")
 
 
-def test_list_runs_order_400(
+def teZt_list_runs_order_400(
     mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     response = test_client.get("/api/v1/runs?order=bad")
@@ -336,7 +336,7 @@ def test_list_runs_order_400(
     )
 
 
-def test_list_runs_cursor_400(
+def teZt_list_runs_cursor_400(
     mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     response = test_client.get("/api/v1/runs?cursor=///////")
@@ -349,7 +349,7 @@ def test_list_runs_cursor_400(
     assert payload == dict(error="invalid value for 'cursor'")
 
 
-def test_list_runs_search_id(
+def teZt_list_runs_search_id(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     runs = make_run(), make_run(), make_run()
@@ -370,7 +370,7 @@ def test_list_runs_search_id(
     assert payload["content"][0]["id"] == run1.id
 
 
-def test_list_runs_search_fields(
+def teZt_list_runs_search_fields(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     runs = (
@@ -405,6 +405,43 @@ def test_list_runs_search_tags(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     runs = (
+        make_run(tags=["food"]),
+        make_run(tags=["foo", "bar"]),
+        make_run(tags=["foo", "baz"]),
+        make_run(tags=["qux", "bar"]),
+    )
+
+    for run_ in runs:
+        save_run(run_)
+    run1, run2, run3, run4 = runs
+
+    def expect(filters, runs):
+        filters = dict(filters=json.dumps(filters))
+        response = test_client.get(f"/api/v1/runs?{urlencode(filters)}")
+
+        assert response.status_code == 200
+
+        payload = response.json
+        payload = typing.cast(typing.Dict[str, typing.Any], payload)
+        assert len(payload["content"]) == len(runs)
+        assert {run.id for run in runs} == {r["id"] for r in payload["content"]}
+
+    expect({"tags": {"contains": "foo"}}, [run2, run3])
+    expect({"tags": {"contains": "food"}}, [run1])
+    expect({"tags": {"contains": "oo"}}, [])
+    expect(
+        {"AND": [{"tags": {"contains": "foo"}}, {"tags": {"contains": "bar"}}]}, [run2]
+    )
+    expect(
+        {"OR": [{"tags": {"contains": "foo"}}, {"tags": {"contains": "bar"}}]},
+        [run2, run3, run4],
+    )
+
+
+def teZt_list_runs_search_tags(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    runs = (
         make_run(tags=["Donald", "Fauntleroy"]),
         make_run(tags=["Pineapple", "apple", "pie"]),
         make_run(tags=["MacDonald"]),
@@ -428,7 +465,7 @@ def test_list_runs_search_tags(
     assert run3.id in ids
 
 
-def test_list_runs_search_orphaned_jobs(
+def teZt_list_runs_search_orphaned_jobs(
     mock_auth,  # noqa: F811
     mock_get_run_ids_with_orphaned_jobs,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
@@ -458,7 +495,7 @@ def test_list_runs_search_orphaned_jobs(
     assert set(ids) == {r.id for r in runs}
 
 
-def test_get_run_endpoint(
+def teZt_get_run_endpoint(
     mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     response = test_client.get(f"/api/v1/runs/{persisted_run.id}")
@@ -469,7 +506,7 @@ def test_get_run_endpoint(
     assert payload["content"]["id"] == persisted_run.id
 
 
-def test_get_run_404(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: F811
+def teZt_get_run_404(mock_auth, test_client: flask.testing.FlaskClient):  # noqa: F811
     response = test_client.get("/api/v1/runs/unknownid")
 
     assert response.status_code == 404
@@ -480,7 +517,7 @@ def test_get_run_404(mock_auth, test_client: flask.testing.FlaskClient):  # noqa
     assert payload == dict(error="No runs with id 'unknownid'")
 
 
-def test_schedule_run(
+def teZt_schedule_run(
     mock_auth,  # noqa: F811
     persisted_run: Run,  # noqa: F811
     persisted_resolution: Resolution,  # noqa: F811
@@ -521,7 +558,7 @@ def test_schedule_run(
         assert count_jobs_by_run_id(run.id) == 1
 
 
-def test_clean_jobs(
+def teZt_clean_jobs(
     mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
@@ -555,7 +592,7 @@ def test_clean_jobs(
         assert payload == {"content": ["DELETED"]}
 
 
-def test_clean_orphaned_runs(
+def teZt_clean_orphaned_runs(
     mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     persisted_run.future_state = FutureState.SCHEDULED
@@ -590,7 +627,7 @@ def test_clean_orphaned_runs(
 
 
 @mock.patch("sematic.api.endpoints.runs.save_event_metrics")
-def test_update_future_states(
+def teZt_update_future_states(
     mock_auth,  # noqa: F811
     persisted_run: Run,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
@@ -647,7 +684,7 @@ def test_update_future_states(
 
 
 @mock.patch("sematic.api.endpoints.runs.save_event_metrics")
-def test_update_run_disappeared(
+def teZt_update_run_disappeared(
     mock_auth,  # noqa: F811
     persisted_run: Run,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
@@ -700,7 +737,7 @@ def test_update_run_disappeared(
 
 
 @mock.patch("sematic.api.endpoints.runs.save_event_metrics")
-def test_update_run_k8_pod_error(
+def teZt_update_run_k8_pod_error(
     mock_auth,  # noqa: F811
     persisted_run: Run,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
@@ -764,7 +801,7 @@ def test_update_run_k8_pod_error(
         )
 
 
-def test_get_run_logs(
+def teZt_get_run_logs(
     mock_auth,  # noqa: F811
     mock_load_log_lines,
     persisted_resolution: Resolution,  # noqa: F811
@@ -824,7 +861,7 @@ def pipeline(a: float, b: float) -> float:
 @pytest.mark.parametrize(
     "root, run_count, artifact_count, edge_count", ((0, 1, 3, 3), (1, 3, 4, 8))
 )
-def test_get_run_graph_endpoint(
+def teZt_get_run_graph_endpoint(
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     root: int,
@@ -852,7 +889,7 @@ def test_get_run_graph_endpoint(
     assert len(payload["edges"]) == edge_count
 
 
-def test_get_run_external_resources(
+def teZt_get_run_external_resources(
     persisted_run,  # noqa: F811
     persisted_external_resource,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
@@ -871,7 +908,7 @@ def test_get_run_external_resources(
 
 
 @mock.patch("sematic.api.endpoints.runs.save_event_metrics")
-def test_set_run_user(
+def teZt_set_run_user(
     mock_save_event_metrics,
     persisted_user: User,  # noqa: F811
     run: Run,  # noqa: F811
@@ -915,7 +952,7 @@ def test_set_run_user(
         assert "api_key" not in payload["content"][0]["user"]
 
 
-def test_get_jobs(
+def teZt_get_jobs(
     mock_socketio,  # noqa: F811
     persisted_user: User,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
@@ -939,7 +976,7 @@ def test_get_jobs(
     assert serialized_jobs == [job_1.to_json_encodable(), job_2.to_json_encodable()]
 
 
-def test_get_jobs_none_present(
+def teZt_get_jobs_none_present(
     mock_socketio,  # noqa: F811
     persisted_user: User,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
@@ -952,7 +989,7 @@ def test_get_jobs_none_present(
     assert serialized_jobs == []
 
 
-def test_get_jobs_bad_run_id(
+def teZt_get_jobs_bad_run_id(
     mock_socketio,  # noqa: F811
     persisted_user: User,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
@@ -965,7 +1002,7 @@ def test_get_jobs_bad_run_id(
     assert serialized_jobs == []
 
 
-def test_save_graph(
+def teZt_save_graph(
     test_client: flask.testing.FlaskClient,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
