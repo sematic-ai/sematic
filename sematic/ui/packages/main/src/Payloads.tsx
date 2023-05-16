@@ -1,89 +1,89 @@
 import { Artifact, Edge, Job, Note, Resolution, Run, User } from "@sematic/common/src/Models";
 
 export type RunViewPayload = {
-  content: Run;
+    content: Run;
 };
 
 export type ResolutionPayload = {
-  content: Resolution;
+    content: Resolution;
 };
 
 export type ArtifactMap = {
-  input: Map<string, Artifact>;
-  output: Map<string, Artifact>;
+    input: Map<string, Artifact>;
+    output: Map<string, Artifact>;
 };
 
 export type RunArtifactMap = Map<string, ArtifactMap>;
 
 export type ArtifactListPayload = {
-  content: Artifact[];
+    content: Artifact[];
 };
 
 export type EdgeListPayload = {
-  content: Edge[];
+    content: Edge[];
 };
 
 export type RunGraphPayload = {
-  root_id: string;
-  runs: Run[];
-  edges: Edge[];
-  artifacts: Artifact[];
+    root_id: string;
+    runs: Run[];
+    edges: Edge[];
+    artifacts: Artifact[];
 };
 
 export type LogLineResult = {
-  can_continue_backward: boolean;
-  can_continue_forward: boolean;
-  lines: string[];
-  line_ids: number[];
-  forward_cursor_token: string | null;
-  reverse_cursor_token: string | null;
-  log_info_message: string | null;
+    can_continue_backward: boolean;
+    can_continue_forward: boolean;
+    lines: string[];
+    line_ids: number[];
+    forward_cursor_token: string | null;
+    reverse_cursor_token: string | null;
+    log_info_message: string | null;
 };
 
 export type LogLineRequestResponse = {
-  content: LogLineResult;
+    content: LogLineResult;
 };
 
 export type NoteListPayload = {
-  content: Note[];
-  authors: User[];
+    content: Note[];
+    authors: User[];
 };
 
 export type NoteCreatePayload = {
-  content: Note;
+    content: Note;
 };
 
 export type GoogleLoginPayload = {
-  user: User;
+    user: User;
 };
 
 export type AuthenticatePayload = {
-  authenticate: boolean;
-  providers: {
-    GOOGLE_OAUTH_CLIENT_ID?: string;
-    GITHUB_OAUTH_CLIENT_ID?: string;
-  };
+    authenticate: boolean;
+    providers: {
+        GOOGLE_OAUTH_CLIENT_ID?: string;
+        GITHUB_OAUTH_CLIENT_ID?: string;
+    };
 };
 
 export type EnvPayload = {
-  env: { [k: string]: string };
+    env: { [k: string]: string };
 };
 
 export type SemanticVersion = [number, number, number];
 
 export interface VersionPayload {
-  min_client_supported: SemanticVersion;
-  server: SemanticVersion;
+    min_client_supported: SemanticVersion;
+    server: SemanticVersion;
 } 
 
 export type BasicMetricsPayload = {
-  content: {
-    avg_runtime_children: {[k: string]: number},
-    count_by_state: {[k: string]: number},
-    total_count: number
-  }
+    content: {
+        avg_runtime_children: {[k: string]: number},
+        count_by_state: {[k: string]: number},
+        total_count: number
+    }
 }
 
 export type RunJobPayload = {
-  content: Array<Job>
+    content: Array<Job>
 }

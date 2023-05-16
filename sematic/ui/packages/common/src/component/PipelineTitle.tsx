@@ -1,16 +1,16 @@
-import Typograph from '@mui/material/Typography';
-import { useCallback } from 'react';
-import TooltipManager from 'src/component/TooltipManager';
+import Typograph from "@mui/material/Typography";
+import { useCallback } from "react";
+import TooltipManager from "src/component/TooltipManager";
 
 interface PipelineTitleProps {
     className?: string;
     style?: React.CSSProperties;
     children: React.ReactNode;
-    variant?: React.ComponentProps<typeof Typograph>['variant'];
+    variant?: React.ComponentProps<typeof Typograph>["variant"];
 }
 
 const PipelineTitle = (props: PipelineTitleProps) => {
-    const { className, style, variant = 'bold', children } = props;
+    const { className, style, variant = "bold", children } = props;
 
     const onRender = useCallback((ref: any) => (
         <Typograph ref={ref} variant={variant} className={className} style={style || {}}>

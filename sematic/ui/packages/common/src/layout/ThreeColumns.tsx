@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import styled from '@emotion/styled';
-import theme from 'src/theme/new';
+import { useMemo } from "react";
+import styled from "@emotion/styled";
+import theme from "src/theme/new";
 
 export const Left = styled.div`
     min-width: 300px;

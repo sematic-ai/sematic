@@ -69,23 +69,23 @@ const StyledTableComponent = styled(TableComponent)<TableComponentProps<Run>>`
 const columnHelper = createColumnHelper<Run>()
 
 const columns = [
-    columnHelper.accessor('id', {
+    columnHelper.accessor("id", {
         meta: {
             columnStyles: {
                 width: "5.923%",
             }
         },
-        header: 'ID',
+        header: "ID",
         cell: info => <StyledRunReferenceLink runId={info.getValue()} />,
     }),
-    columnHelper.accessor('created_at', {
+    columnHelper.accessor("created_at", {
         meta: {
             columnStyles: {
                 width: "12.3396%",
                 minWidth: "150px"
             }
         },
-        header: 'Submitted at',
+        header: "Submitted at",
         cell: info => DateTimeLongConcise(parseJSON(info.getValue())),
     }),
     columnHelper.accessor(run => [run.name, run.function_path], {
@@ -95,7 +95,7 @@ const columns = [
                 maxWidth: "calc(100vw - 1060px)"
             }
         },
-        header: 'Name',
+        header: "Name",
         cell: info => {
             const [name, importPath] = info.getValue();
             return <NameSection>
@@ -104,14 +104,14 @@ const columns = [
             </NameSection>
         },
     }),
-    columnHelper.accessor('tags', {
+    columnHelper.accessor("tags", {
         meta: {
             columnStyles: {
                 width: "14.5114%",
                 minWidth: "160px"
             }
         },
-        header: 'Tags',
+        header: "Tags",
         cell: info => <TagsColumn tags={info.getValue()} />,
     }),
     columnHelper.accessor(data => `${data.user?.first_name} ${data.user?.last_name}`, {
@@ -121,7 +121,7 @@ const columns = [
                 minWidth: "100px"
             }
         },
-        header: 'Owner',
+        header: "Owner",
         cell: info => <NameTag>{info.getValue()}</NameTag>,
     }),
     columnHelper.accessor(data => ({
@@ -136,7 +136,7 @@ const columns = [
                 minWidth: "200px"
             }
         },
-        header: 'Status',
+        header: "Status",
         cell: info => <RunStatusColumn {...info.getValue() as any} />,
     })
 ]
@@ -165,7 +165,7 @@ const RunList = (props: RunListProps) => {
 
     return <Container>
         <Stats>
-            <Typography variant={'bold'}>{`${totalRuns || '?'} ${totalRuns === 1 ? 'Run' : 'Runs'}`}</Typography>
+            <Typography variant={"bold"}>{`${totalRuns || "?"} ${totalRuns === 1 ? "Run" : "Runs"}`}</Typography>
         </Stats>
         <StyledTableComponent table={tableInstance} getRowLink={getRowLink} />
         <Pagination>

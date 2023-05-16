@@ -1,4 +1,4 @@
-declare module '@mui/material/styles' {
+declare module "@mui/material/styles" {
     interface TypographyVariants {
         small: React.CSSProperties;
         big: React.CSSProperties;
@@ -24,7 +24,7 @@ declare module '@mui/material/styles' {
     }
 }
 
-declare module '@mui/material/Button' {
+declare module "@mui/material/Button" {
     interface ButtonPropsVariantOverrides {
         logo: true;
         menu: true;
@@ -34,7 +34,7 @@ declare module '@mui/material/Button' {
     }
 }
 
-declare module '@mui/material/Typography' {
+declare module "@mui/material/Typography" {
     interface TypographyPropsVariantOverrides {
         small: true;
         big: true;
@@ -46,13 +46,13 @@ declare module '@mui/material/Typography' {
     }
 }
 
-declare module '@mui/material/Chip' {
+declare module "@mui/material/Chip" {
     interface ChipPropsVariantOverrides {
         tag: true;
     }
 }
 
-declare module '@mui/material/SvgIcon' {
+declare module "@mui/material/SvgIcon" {
     interface SvgIconPropsColorOverrides {
         lightGrey: true;
     }

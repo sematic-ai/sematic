@@ -1,12 +1,12 @@
-import styled from '@emotion/styled';
+import styled from "@emotion/styled";
 import { KeyboardArrowDown } from "@mui/icons-material";
-import Accordion from '@mui/material/Accordion';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import { collapseClasses } from '@mui/material/Collapse';
-import { paperClasses } from '@mui/material/Paper';
-import { SectionWithBorder } from 'src/component/Section';
-import theme from 'src/theme/new';
+import Accordion from "@mui/material/Accordion";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import { collapseClasses } from "@mui/material/Collapse";
+import { paperClasses } from "@mui/material/Paper";
+import { SectionWithBorder } from "src/component/Section";
+import theme from "src/theme/new";
 
 const BoldHeader = styled.div`
     font-weight: ${theme.typography.fontWeightBold};

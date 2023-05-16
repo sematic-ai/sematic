@@ -2,18 +2,18 @@ import { useHttpClient } from "@sematic/common/src/hooks/httpHooks";
 import useAsync from "react-use/lib/useAsync";
 
 export default function useFetchBlob(blobId: string): [
-  ArrayBuffer | undefined,
-  boolean,
-  Error | undefined
+    ArrayBuffer | undefined,
+    boolean,
+    Error | undefined
 ] {
-  const {fetch} = useHttpClient();
+    const {fetch} = useHttpClient();
 
-  const {value, loading, error} = useAsync(async () => {
-    const response  = await fetch({
-        url: `/api/v1/storage/blobs/${blobId}/data?origin=${window.location.origin}`
-    });
-    return ((await response.arrayBuffer()) as ArrayBuffer);
-  }, [blobId]);
+    const {value, loading, error} = useAsync(async () => {
+        const response  = await fetch({
+            url: `/api/v1/storage/blobs/${blobId}/data?origin=${window.location.origin}`
+        });
+        return ((await response.arrayBuffer()) as ArrayBuffer);
+    }, [blobId]);
 
-  return [value, loading, error];
+    return [value, loading, error];
 }

@@ -1,10 +1,10 @@
-import styled from '@emotion/styled';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import theme from 'src/theme/new';
-import RunTree from 'src/component/RunTree';
-import Section from 'src/component/Section';
-import Headline from 'src/component/Headline';
+import styled from "@emotion/styled";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import theme from "src/theme/new";
+import RunTree from "src/component/RunTree";
+import Section from "src/component/Section";
+import Headline from "src/component/Headline";
 
 const StyledSection = styled(Section)`
     display: flex;
@@ -64,15 +64,15 @@ const RunTreeContainer = styled(Box)`
 const RunTreeSection = () => {
     const nodes = [
         {
-            value: 'MNIST PyTorch Example', children: [
-                { value: 'Load train dataset', children: [] as any },
-                { value: 'Load test dataset', children: [] as any },
-                { value: 'get_dataloader', children: [] as any },
-                { value: 'get_dataloader', children: [] as any },
+            value: "MNIST PyTorch Example", children: [
+                { value: "Load train dataset", children: [] as any },
+                { value: "Load test dataset", children: [] as any },
+                { value: "get_dataloader", children: [] as any },
+                { value: "get_dataloader", children: [] as any },
                 {
-                    value: 'train_eval', children: [
-                        { value: 'train_model', children: [] as any },
-                        { value: 'evaluate_model', selected: true, children: [] as any }
+                    value: "train_eval", children: [
+                        { value: "train_model", children: [] as any },
+                        { value: "evaluate_model", selected: true, children: [] as any }
                     ] as any
                 },
             ] as any
