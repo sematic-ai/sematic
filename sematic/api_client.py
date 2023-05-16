@@ -774,6 +774,10 @@ def request(
     validate_json indicates whether the response is expected to contain
     valid json.
     """
+
+    if validate_version_compatibility:
+        validate_server_compatibility()
+
     if retry:
         return retry_call(
             f=request,
@@ -783,7 +787,7 @@ def request(
                 endpoint=endpoint,
                 kwargs=kwargs,
                 attempt_auth=attempt_auth,
-                validate_version_compatibility=validate_version_compatibility,
+                validate_version_compatibility=False,
                 validate_json=validate_json,
                 user=user,
                 retry=False,
@@ -794,9 +798,6 @@ def request(
             backoff=API_CALLS_BACKOFF,
             jitter=0.1,
         )
-
-    if validate_version_compatibility:
-        validate_server_compatibility()
 
     kwargs = kwargs if kwargs is not None else dict()
     headers = kwargs.get("headers", {})
