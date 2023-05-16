@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
 import { useMemo } from "react";
+import ErrorBoundary from "src/component/ErrorBoundary";
 import { getRunStateChipByState } from "src/component/RunStateChips";
 import getRunStateText from "src/component/RunStateText";
 import theme from "src/theme/new";
@@ -35,4 +36,10 @@ const RunStatusColumn = (props: RunStatusColumnProps) => {
     return <StyledContainer>{runStateChip} {runStateText}</StyledContainer>;
 }
 
-export default RunStatusColumn;
+const RunStatusColumnWithErrorBoundary = (props: RunStatusColumnProps) => {
+    return <ErrorBoundary fallback={"Invalid state"}>
+        <RunStatusColumn {...props} />
+    </ErrorBoundary>
+}
+
+export default RunStatusColumnWithErrorBoundary;

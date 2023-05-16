@@ -2,22 +2,21 @@ import styled from "@emotion/styled";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import { createColumnHelper, getCoreRowModel, useReactTable, Row } from "@tanstack/react-table";
+import { Row, createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { parseJSON } from "date-fns";
+import { useCallback, useContext, useEffect, useMemo } from "react";
 import { Run } from "src/Models";
 import { DateTimeLongConcise } from "src/component/DateTime";
-import ImportPath from "src/component/ImportPath";
 import NameTag from "src/component/NameTag";
-import PipelineTitle from "src/component/PipelineTitle";
 import { RunReference } from "src/component/RunReference";
 import TableComponent, { TableComponentProps } from "src/component/Table";
+import LayoutServiceContext from "src/context/LayoutServiceContext";
 import { getRunUrlPattern, useRunsPagination } from "src/hooks/runHooks";
+import NameColumn from "src/pages/RunSearch/NameColumn";
 import RunStatusColumn from "src/pages/RunSearch/RunStatusColumn";
 import TagsColumn from "src/pages/RunSearch/TagsColumn";
+import { AllFilters, FilterType, StatusFilters, convertMiscellaneousFilterToRunFilters, convertOwnersFilterToRunFilters, convertStatusFilterToRunFilters } from "src/pages/RunSearch/filters/common";
 import theme from "src/theme/new";
-import LayoutServiceContext from "src/context/LayoutServiceContext";
-import { useContext, useEffect, useCallback, useMemo } from "react";
-import { AllFilters, convertMiscellaneousFilterToRunFilters, convertOwnersFilterToRunFilters, convertStatusFilterToRunFilters, FilterType, StatusFilters } from "src/pages/RunSearch/filters/common";
 
 const Container = styled.div`
     display: flex;
@@ -48,15 +47,6 @@ const Pagination = styled.div`
     svg {
         cursor: pointer;
     }
-`;
-
-const NameSection = styled.div`
-    display: flex;
-    flex-direction: row;
-    column-gap: ${theme.spacing(2)};
-    overflow-x: hidden;
-    min-width: 100px;
-    position: relative;
 `;
 
 const StyledRunReferenceLink = styled(RunReference)`
@@ -99,10 +89,7 @@ const columns = [
         header: "Name",
         cell: info => {
             const [name, importPath] = info.getValue();
-            return <NameSection>
-                <PipelineTitle>{name}</PipelineTitle>
-                <ImportPath>{importPath}</ImportPath>
-            </NameSection>
+            return <NameColumn name={name} importPath={importPath} />
         },
     }),
     columnHelper.accessor("tags", {
