@@ -207,6 +207,33 @@ def test_failure(
         assert future.state == expected_states[future.function.__name__]
 
 
+def test_pre_resolution_creation_failure(
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
+):
+    class CustomException(Exception):
+        pass
+
+    def do_fail(*args, **kwargs):
+        raise CustomException("Custom exception")
+
+    @func
+    def pipeline() -> None:
+        return None
+
+    resolver = LocalResolver()
+    resolver._make_resolution = do_fail
+    future = pipeline()
+
+    with pytest.raises(CustomException):
+        # this confirms the exception isn't swallowed by another when trying
+        # to fail the resolution.
+        future.resolve(resolver)
+
+
 def test_resolver_error(
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
