@@ -811,7 +811,16 @@ def request(
     kwargs["headers"] = headers
 
     try:
-        response = method(_url(endpoint), **kwargs)
+        response = retry_call(
+            f=method,
+            fargs=[_url(endpoint)],
+            fkwargs=kwargs,
+            exceptions=Exception,
+            tries=1,
+            delay=1,
+            backoff=API_CALLS_BACKOFF,
+            jitter=0.1,
+        )
     except ConnectionError:
         raise APIConnectionError(
             (
