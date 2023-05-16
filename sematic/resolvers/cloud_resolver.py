@@ -113,6 +113,8 @@ class CloudResolver(LocalResolver):
         #           machine
         self._detach = detach
 
+        self._resolution_was_created = _is_running_remotely
+
         # _is_running_remotely:
         #   True: we are running in a remote driver job
         #   False: default we are running on a local user machine
