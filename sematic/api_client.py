@@ -774,6 +774,35 @@ def request(
     validate_json indicates whether the response is expected to contain
     valid json.
     """
+    if retry:
+        # f=_raise_for_response,
+        # fargs=(response, validate_json),
+        # fkwargs={},
+        # exceptions=ServerError,  # don't want to retry caller errors
+        # tries=API_CALLS_TRIES if retry else 1,
+        # delay=1,
+        # backoff=API_CALLS_BACKOFF,
+        # jitter=0.1,
+        return retry_call(
+            f=request,
+            fargs=(),
+            fkwargs=dict(
+                method=method,
+                endpoint=endpoint,
+                kwargs=kwargs,
+                attempt_auth=attempt_auth,
+                validate_version_compatibility=validate_version_compatibility,
+                validate_json=validate_json,
+                user=user,
+                retry=False,
+            ),
+            exceptions=Exception,
+            tries=API_CALLS_TRIES,
+            delay=1,
+            backoff=API_CALLS_BACKOFF,
+            jitter=0.1,
+        )
+
     if validate_version_compatibility:
         validate_server_compatibility()
 
@@ -789,16 +818,7 @@ def request(
     kwargs["headers"] = headers
 
     try:
-        response = retry_call(
-            f=method,
-            fargs=[_url(endpoint)],
-            fkwargs=kwargs,
-            exceptions=Exception,
-            tries=API_CALLS_TRIES if retry else 1,
-            delay=1,
-            backoff=API_CALLS_BACKOFF,
-            jitter=0.1,
-        )
+        response = method(_url(endpoint), **kwargs)
     except ConnectionError:
         raise APIConnectionError(
             (
