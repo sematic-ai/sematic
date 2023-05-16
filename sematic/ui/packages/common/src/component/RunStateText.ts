@@ -8,26 +8,32 @@ export function getRunStateText(futureState: string,
     const { createdAt, resolvedAt, failedAt, endedAt } = timestamps;
 
     if (["RESOLVED", "SUCCEEDED"].includes(futureState)) {
-        return `Completed in ${DurationShort(parseJSON(resolvedAt!), parseJSON(createdAt))}`;
+        if (!resolvedAt) {
+            return "Completed in unknown duration";
+        }
+        return `Completed in ${DurationShort(parseJSON(resolvedAt!), parseJSON(createdAt)) || "< 1s"}`;
     }
     if (["FAILED", "NESTED_FAILED"].includes(futureState)) {
-        return `Failed after ${DurationShort(parseJSON(failedAt!), parseJSON(createdAt))}`;
+        if (!failedAt) {
+            return "Failed after unknown duration";
+        }
+        return `Failed after ${DurationShort(parseJSON(failedAt!), parseJSON(createdAt)) || "< 1s"}`;
     }
     if (["SCHEDULED", "RAN"].includes(futureState)) {
-        return `Running for ${DurationShort(new Date(), parseJSON(createdAt))}`;
+        return `Running for ${DurationShort(new Date(), parseJSON(createdAt)) || "< 1s"}`;
     }
     if (futureState === "CANCELED") {
         const finishAt = endedAt || failedAt!;
         if (!finishAt) {
-            return "Unknonw duration";
+            return "Canceled after unknown duration";
         }
-        return `Canceled after ${DurationShort(parseJSON(finishAt), parseJSON(createdAt))}`;
+        return `Canceled after ${DurationShort(parseJSON(finishAt), parseJSON(createdAt)) || "< 1s"}`;
     }
     if (futureState === "CREATED") {
-        return `Submitted ${DurationShort(new Date(), parseJSON(createdAt))} ago`;
+        return `Submitted ${DurationShort(new Date(), parseJSON(createdAt)) || "< 1s"} ago`;
     }
     if (futureState === "RETRYING") {
-        return `Retrying for ${DurationShort(new Date(), parseJSON(createdAt))}`;
+        return `Retrying for ${DurationShort(new Date(), parseJSON(createdAt)) || "< 1s"}`;
     }
     return null;
 }

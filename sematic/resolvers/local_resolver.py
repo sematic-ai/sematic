@@ -88,6 +88,8 @@ class LocalResolver(SilentResolver):
         self._runs: Dict[str, Run] = {}
         self._artifacts: Dict[str, Artifact] = {}
 
+        self._resolution_was_created = False
+
         # A cache of already created artifacts to avoid making them over again.
         # The key is run ID, the value is a dictionary where the key is input
         # name, or None for output and the value is the artifact.
@@ -351,6 +353,7 @@ class LocalResolver(SilentResolver):
         """Make a Resolution instance and persist it."""
         resolution = self._make_resolution(root_future)
         api_client.save_resolution(resolution)
+        self._resolution_was_created = True
         self._notify_pipeline_update()
 
     def _make_resolution(self, root_future: AbstractFuture) -> Resolution:
@@ -596,7 +599,13 @@ class LocalResolver(SilentResolver):
             resolution_status = ResolutionStatus.FAILED
 
         self._move_runs_to_terminal_state(reason, fail_root_run=True)
-        self._update_resolution_status(resolution_status)
+        if self._resolution_was_created:
+            self._update_resolution_status(resolution_status)
+        else:
+            logger.warning(
+                "Can't update resolution status while handling resolution failure, "
+                "because resolution was never created."
+            )
         self._disconnect_from_sio_server()
         self._notify_pipeline_update()
 
