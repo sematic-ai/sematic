@@ -401,7 +401,7 @@ def test_list_runs_search_fields(
     assert run5.id in ids
 
 
-def test_list_runs_search_tags(
+def test_list_runs_search_tag_filters(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
     runs = (
@@ -424,7 +424,9 @@ def test_list_runs_search_tags(
         payload = response.json
         payload = typing.cast(typing.Dict[str, typing.Any], payload)
         assert len(payload["content"]) == len(runs)
-        assert {run.id for run in runs} == {r["id"] for r in payload["content"]}
+        assert {run.id for run in runs} == {  # noqa: F811
+            r["id"] for r in payload["content"]
+        }
 
     expect({"tags": {"contains": "foo"}}, [run2, run3])
     expect({"tags": {"contains": "food"}}, [run1])
