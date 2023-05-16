@@ -2,10 +2,13 @@ import styled from "@emotion/styled";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormGroup from "@mui/material/FormGroup";
-import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useState, useMemo, useContext } from "react";
 import { ScrollableCollapseableFilterSection } from "src/pages/RunSearch/filters/CollapseableFilterSection";
-import { ResettableHandle } from "src/pages/RunSearch/filters/common";
+import { ResettableHandle } from "src/component/common";
 import theme from "src/theme/new";
+import { useUsersList } from "src/hooks/userHooks";
+import UserContext from "src/context/UserContext";
+import NameTag from "src/component/NameTag";
 
 
 const Container = styled.div`
@@ -33,6 +36,17 @@ const OwnersFilterSection = forwardRef<ResettableHandle, OwnersFilterSectionProp
     const { onFiltersChanged } = props;
     const [filters, setFilters] = useState<Set<string>>(() => new Set());
 
+    const { users } = useUsersList();
+    const { user: currentUser } = useContext(UserContext);
+
+    const otherUsers = useMemo(() => {
+        if (!users || users.length === 0) {
+            return undefined;
+        }
+        return users!.filter((user) => user.id !== currentUser?.id);
+
+    }, [currentUser, users]);
+
     const toogleFilter = useCallback((filter: string, checked: boolean) => {
         let newFilters: any;
         setFilters((filters) => {
@@ -58,14 +72,15 @@ const OwnersFilterSection = forwardRef<ResettableHandle, OwnersFilterSectionProp
         <Container>
             <FormGroup>
                 <StyledFormControlLabel control={<Checkbox
-                    checked={filters.has("current_user_id")}
-                    onChange={(e, checked) => toogleFilter("current_user_id", checked)} />} label="Your runs"
+                    checked={filters.has(currentUser!.id)}
+                    onChange={(event) => toogleFilter(currentUser!.id, event.target.checked)} />} label="Your runs"
                 />
-                {["Alice", "Bob", "Clark", "David", "Edison", "Frank"].map(
-                    (owner, index) =>
+                {!!otherUsers && otherUsers.map(
+                    (user, index) =>
                         <StyledFormControlLabel key={index} control={<Checkbox
-                            onChange={(e, checked) => toogleFilter(owner, checked)} />} label={owner}
-                        checked={filters.has(owner)} />
+                            onChange={(event) => toogleFilter(user.id, event.target.checked)} />}
+                        label={<NameTag>{`${user.first_name} ${user.last_name}`}</NameTag>}
+                        checked={filters.has(user.id)} />
                 )}
             </FormGroup>
         </Container>
