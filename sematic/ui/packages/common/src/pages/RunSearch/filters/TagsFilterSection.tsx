@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
-import { useState } from "react";
+import { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import TagsInput from "src/component/TagsInput";
+import { ResettableHandle } from "src/component/common";
 import { ScrollableCollapseableFilterSection } from "src/pages/RunSearch/filters/CollapseableFilterSection";
 import theme from "src/theme/new";
 
@@ -23,16 +24,27 @@ const StyledScrollableSection = styled(ScrollableCollapseableFilterSection) <{
     transition: min-height 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
 `;
 
+interface TagsFilterSectionProps {
+    onFiltersChanged?: (filters: string[]) => void;
+}
 
-const TagsFilterSection = () => {
+const TagsFilterSection = forwardRef<ResettableHandle, TagsFilterSectionProps>((props, ref) => {
     const [expanded, setExpanded] = useState(false);
+
+    const tagInputRef = useRef<ResettableHandle>(null);
+
+    useImperativeHandle(ref, () => ({
+        reset: () => {
+            tagInputRef.current?.reset();
+        }
+    }));
 
     return <StyledScrollableSection title={"Tags"} expanded={expanded}
         onChange={(_, expanded) => setExpanded(expanded)}>
         <Container>
-            <TagsInput />
+            <TagsInput ref={tagInputRef} />
         </Container>
     </StyledScrollableSection>;
-}
+});
 
 export default TagsFilterSection;
