@@ -775,17 +775,9 @@ def request(
     valid json.
     """
     if retry:
-        # f=_raise_for_response,
-        # fargs=(response, validate_json),
-        # fkwargs={},
-        # exceptions=ServerError,  # don't want to retry caller errors
-        # tries=API_CALLS_TRIES if retry else 1,
-        # delay=1,
-        # backoff=API_CALLS_BACKOFF,
-        # jitter=0.1,
         return retry_call(
             f=request,
-            fargs=(),
+            fargs=[],
             fkwargs=dict(
                 method=method,
                 endpoint=endpoint,
