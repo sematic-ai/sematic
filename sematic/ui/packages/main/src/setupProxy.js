@@ -7,4 +7,5 @@ module.exports = function (app) {
     });
     app.use("/api", proxy);
     app.use("/authenticate", proxy);
+    app.use("/login", proxy);
 };
