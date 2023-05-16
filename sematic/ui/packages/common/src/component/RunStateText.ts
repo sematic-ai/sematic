@@ -1,5 +1,5 @@
-import { parseJSON } from 'date-fns';
-import { DurationShort } from 'src/component/DateTime';
+import { parseJSON } from "date-fns";
+import { DurationShort } from "src/component/DateTime";
 
 export function getRunStateText(futureState: string,
     timestamps: {
@@ -19,7 +19,7 @@ export function getRunStateText(futureState: string,
     if (futureState === "CANCELED") {
         const finishAt = endedAt || failedAt!;
         if (!finishAt) {
-            return 'Unknonw duration';
+            return "Unknonw duration";
         }
         return `Canceled after ${DurationShort(parseJSON(finishAt), parseJSON(createdAt))}`;
     }

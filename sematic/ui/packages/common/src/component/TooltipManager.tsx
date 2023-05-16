@@ -1,6 +1,6 @@
-import Tooltip from '@mui/material/Tooltip';
-import React from 'react';
-import { useMemo } from 'react';
+import Tooltip from "@mui/material/Tooltip";
+import React from "react";
+import { useMemo } from "react";
 import useMeasure, { UseMeasureRef } from "react-use/lib/useMeasure";
 
 interface TooltipManagerProps {
@@ -27,9 +27,9 @@ const TooltipManager = (props: TooltipManagerProps) => {
     const presentation = useMemo(() => {
         const element = onRender(refPresentation);
         // The real presentatin will use ellipsis if applicable.
-        element.props.style.textOverflow = 'ellipsis';
-        element.props.style.overflow = 'hidden';
-        element.props.style.whiteSpace = 'nowrap';
+        element.props.style.textOverflow = "ellipsis";
+        element.props.style.overflow = "hidden";
+        element.props.style.whiteSpace = "nowrap";
         return element;
     }, [onRender, refPresentation]);
 
@@ -37,9 +37,9 @@ const TooltipManager = (props: TooltipManagerProps) => {
 
     const measurement = useMemo(() => {
         const element = onRender(refMeasure);
-        element.props.style.position = 'absolute'; // set this so it does not take up space
-        element.props.style.visibility = 'hidden';
-        element.props.style.width = 'max-content';
+        element.props.style.position = "absolute"; // set this so it does not take up space
+        element.props.style.visibility = "hidden";
+        element.props.style.width = "max-content";
         return element;
     }, [onRender, refMeasure]);
 

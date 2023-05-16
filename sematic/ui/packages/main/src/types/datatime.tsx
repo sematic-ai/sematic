@@ -8,7 +8,7 @@ export default function DatetimeValueView(props: CommonValueViewProps) {
     const date = parseISO(valueSummary);
   
     if (!valueSummary || !isValid(date)) {
-      return <Alert severity="error">Incorrect date value.</Alert>;
+        return <Alert severity="error">Incorrect date value.</Alert>;
     }
     return <Typography>{format(date, "LLLL d, yyyy h:mm:ss a xxx")}</Typography>;
-  }
+}

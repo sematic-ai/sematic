@@ -7,10 +7,10 @@ import Chip from "@mui/material/Chip/Chip";
 import Typography from "@mui/material/Typography/Typography";
 import styled from "@emotion/styled";
 import { Job } from "@sematic/common/src/Models";
-import { format } from 'date-fns';
+import { format } from "date-fns";
 import { useMemo } from "react";
 
-const TERMINATE_STATE = 'Deleted';
+const TERMINATE_STATE = "Deleted";
 const SpacedText = styled(Typography)`
     margin: 4px 0;
 `;
@@ -20,7 +20,7 @@ function StyledChip(props: React.ComponentProps<typeof Chip>) {
 };
 
 function StyledChipWithColor(props:
-    React.ComponentProps<typeof StyledChip> & { resourceState: string }) {
+React.ComponentProps<typeof StyledChip> & { resourceState: string }) {
     const { resourceState, ...restProps } = props;
 
     const color = useMemo(() => getColorByState(resourceState), [resourceState]);
@@ -29,19 +29,19 @@ function StyledChipWithColor(props:
 }
 
 interface PodLifecycleEventProps {
-    podStatus: Job['status_history_serialization'][number];
+    podStatus: Job["status_history_serialization"][number];
     isLast: boolean;
 }
 
 function getColorByState(podEvent: string) {
     if (["Running", "Pending"].includes(podEvent)) {
-        return 'primary';
+        return "primary";
     }
     return undefined;
 }
 
 function TimelineDotWithColor({ resourceState }: { resourceState: string }) {
-    const color = useMemo(() => getColorByState(resourceState) || 'grey', [resourceState]);
+    const color = useMemo(() => getColorByState(resourceState) || "grey", [resourceState]);
     return <TimelineDot color={color} />;
 };
 
@@ -51,7 +51,7 @@ export default function PodLifecycleEvent(props: PodLifecycleEventProps) {
     const timeString = useMemo(
         () => format(
             new Date(last_updated_epoch_seconds * 1000),
-            'LLL\xa0d,\xa0yyyy\xa0h:mm:ss\xa0a'), [last_updated_epoch_seconds]);
+            "LLL\xa0d,\xa0yyyy\xa0h:mm:ss\xa0a"), [last_updated_epoch_seconds]);
 
     return <TimelineItem>
         <TimelineSeparator>

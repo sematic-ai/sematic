@@ -1,7 +1,7 @@
-import { useCallback } from 'react';
+import { useCallback } from "react";
 import TwoColumns from "src/layout/TwoColumns";
-import RunList from 'src/pages/RunSearch/RunList';
-import SearchFilters from 'src/pages/RunSearch/SearchFilters';
+import RunList from "src/pages/RunSearch/RunList";
+import SearchFilters from "src/pages/RunSearch/SearchFilters";
 
 const RunSearch = () => {
 

@@ -9,8 +9,8 @@ export type AliasTypeRepr = ["typing", string, { args: Array<TypeParamRepr> }];
 export type TypeRegistry = Map<string, Array<AnyTypeRepr>>;
 
 export type SpecificTypeSerialization<TRepr> = {
-  type: TRepr;
-  registry: TypeRegistry;
+    type: TRepr;
+    registry: TypeRegistry;
 };
 
 // TypeRepr types

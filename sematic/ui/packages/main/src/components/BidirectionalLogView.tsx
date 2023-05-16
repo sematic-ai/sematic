@@ -43,7 +43,7 @@ enum Buttons {
     LoadNext
 }
 
-const loadingText = 'loading...';
+const loadingText = "loading...";
 interface BidirectionalLogViewProps {
     logSource: string;
     filterString: string;
@@ -105,7 +105,7 @@ const BidirectionalLogView = (props: BidirectionalLogViewProps) => {
         }
 
         return <StyledButton onClick={onJumpToEnd} disabled={isLoading}>{
-            isLoading && lastPressedButton === Buttons.JumpToEnd ? loadingText : 'jump to end'
+            isLoading && lastPressedButton === Buttons.JumpToEnd ? loadingText : "jump to end"
         }</StyledButton>
 
     }, [canContinueForward, lastPressedButton, isLoading, onJumpToEnd]);
@@ -128,10 +128,10 @@ const BidirectionalLogView = (props: BidirectionalLogViewProps) => {
     return <Container>
         {canContinueBackward && <>
             <JumpToBeginningButton onClick={onJumpToBeginning} disabled={isLoading}>{
-                isLoading && lastPressedButton === Buttons.JumpToBeginning ? loadingText : 'jump to beginning'
+                isLoading && lastPressedButton === Buttons.JumpToBeginning ? loadingText : "jump to beginning"
             }</JumpToBeginningButton>
             <StyledButton onClick={onGetPrev} disabled={isLoading}>{
-                isLoading && lastPressedButton === Buttons.LoadPrevious ? loadingText : 'load previous'
+                isLoading && lastPressedButton === Buttons.LoadPrevious ? loadingText : "load previous"
             }</StyledButton>
         </>
         }
@@ -161,7 +161,7 @@ const BidirectionalLogView = (props: BidirectionalLogViewProps) => {
         </ScrollableContainer>
         {canContinueForward && <>
             <StyledButton onClick={onGetNext} disabled={isLoading}>{
-                isLoading && lastPressedButton === Buttons.LoadNext ? loadingText : 'load next'
+                isLoading && lastPressedButton === Buttons.LoadNext ? loadingText : "load next"
             }</StyledButton>
         </>}
         {

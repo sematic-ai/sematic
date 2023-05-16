@@ -2,7 +2,7 @@
 /// <reference types="cypress" />
 
 declare namespace Cypress {
-    type mount = typeof import('cypress/react18').mount;
+    type mount = typeof import("cypress/react18").mount;
 
     interface Chainable {
     //   login(email: string, password: string): Chainable<void>

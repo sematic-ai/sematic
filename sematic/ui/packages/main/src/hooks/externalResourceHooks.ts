@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import useAsyncRetry from "react-use/lib/useAsyncRetry";
 import usePreviousDistinct from "react-use/lib/usePreviousDistinct";
 
-export const TERMINATE_STATE: ExternalResourceState = 'DEACTIVATED';
+export const TERMINATE_STATE: ExternalResourceState = "DEACTIVATED";
 const POLL_EXTERNAL_RESOURCE_INTERVAL = 1000;
 
 export function useExternalResource(run: Run) {
@@ -17,11 +17,11 @@ export function useExternalResource(run: Run) {
 
         const payload = await response.json();
 
-        if (!payload['content']) {
-            throw Error('external_resources response is not in the correct format.')
+        if (!payload["content"]) {
+            throw Error("external_resources response is not in the correct format.")
         }
 
-        return payload['content'] as Array<ExternalResource>
+        return payload["content"] as Array<ExternalResource>
     }, [fetch, run.id]);
 
     const timerHandler = useRef<number>();

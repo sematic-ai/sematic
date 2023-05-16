@@ -1,11 +1,11 @@
-import OtherFiltersSection from 'src/pages/RunSearch/filters/OtherFilterSection';
-import OwnersFilterSection from 'src/pages/RunSearch/filters/OwnersFilterSection';
-import SearchTextSection from 'src/pages/RunSearch/filters/SearchTextSection';
-import StatusFilterSection from 'src/pages/RunSearch/filters/StatusFilterSection';
-import TagsFilterSection from 'src/pages/RunSearch/filters/TagsFilterSection';
-import Button from '@mui/material/Button';
-import styled from '@emotion/styled';
-import theme from 'src/theme/new';
+import OtherFiltersSection from "src/pages/RunSearch/filters/OtherFilterSection";
+import OwnersFilterSection from "src/pages/RunSearch/filters/OwnersFilterSection";
+import SearchTextSection from "src/pages/RunSearch/filters/SearchTextSection";
+import StatusFilterSection from "src/pages/RunSearch/filters/StatusFilterSection";
+import TagsFilterSection from "src/pages/RunSearch/filters/TagsFilterSection";
+import Button from "@mui/material/Button";
+import styled from "@emotion/styled";
+import theme from "src/theme/new";
 
 const StyledButton = styled(Button)`
     margin: 0 -${theme.spacing(5)};

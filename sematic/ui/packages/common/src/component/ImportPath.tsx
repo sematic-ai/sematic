@@ -1,6 +1,6 @@
-import Typograph from '@mui/material/Typography';
-import { useCallback } from 'react';
-import TooltipManager from 'src/component/TooltipManager';
+import Typograph from "@mui/material/Typography";
+import { useCallback } from "react";
+import TooltipManager from "src/component/TooltipManager";
 
 interface ImportPathProps {
     className?: string;

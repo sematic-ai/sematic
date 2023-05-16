@@ -1,9 +1,9 @@
-import { Components, Theme } from '@mui/material/styles';
-import { fontFamilyCode, fontWeightBold } from 'src/theme/new/typography';
+import { Components, Theme } from "@mui/material/styles";
+import { fontFamilyCode, fontWeightBold } from "src/theme/new/typography";
 import { KeyboardArrowDown } from "@mui/icons-material";
-import { selectClasses } from '@mui/material/Select'
-import { inputBaseClasses } from '@mui/material/InputBase'
-import { chipClasses } from '@mui/material/Chip'
+import { selectClasses } from "@mui/material/Select"
+import { inputBaseClasses } from "@mui/material/InputBase"
+import { chipClasses } from "@mui/material/Chip"
 
 const components: Components = {
     MuiCssBaseline: {
@@ -12,98 +12,98 @@ const components: Components = {
                 color: theme.palette.lightGrey.main,
                 fontSize: theme.typography.small.fontSize,
                 lineHeight: 1,
-                textTransform: 'uppercase',
+                textTransform: "uppercase",
                 marginTop: 0,
             },
             pre: {
-                whiteSpace: 'pre-wrap'
+                whiteSpace: "pre-wrap"
             }
         })) as any
     },
     MuiLink: {
         defaultProps: {
-            underline: 'none'
+            underline: "none"
         },
         styleOverrides: {
             root: (({ theme }: { theme: Theme }) => ({
-                cursor: 'pointer',
+                cursor: "pointer",
                 marginBottom: 0,
                 color: theme.palette.black.main,
                 fontSize: theme.typography.fontSize,
 
-                '&:hover': {
+                "&:hover": {
                     color: theme.palette.primary.main,
                 }
             })) as any
         },
         variants: [
             {
-                props: { variant: 'logo' },
+                props: { variant: "logo" },
                 style: {
-                    display: 'flex',
-                    justifyContent: 'center',
-                    textTransform: 'none',
+                    display: "flex",
+                    justifyContent: "center",
+                    textTransform: "none",
                     width: 50,
                     height: 50
                 },
             },
             {
-                props: { variant: 'subtitle1', type: 'menu' },
+                props: { variant: "subtitle1", type: "menu" },
                 style: ({ theme }) => {
                     return {
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
                         color: theme.palette.black.main,
-                        width: 'fit-content',
+                        width: "fit-content",
                         fontSize: 14,
-                        fontStyle: 'normal',
+                        fontStyle: "normal",
                         marginLeft: 20,
                         marginRight: 20,
                         fontWeight: fontWeightBold,
                         height: 50,
-                        overflow: 'ellipsis',
-                        '&:hover': {
+                        overflow: "ellipsis",
+                        "&:hover": {
                             color: theme.palette.primary.main
                         },
-                        '&::before': {
+                        "&::before": {
                             width: 100,
                             content: '""',
                             height: 0,
-                            position: 'relative',
+                            position: "relative",
                             marginLeft: -20,
                             marginRight: -20,
                         },
-                        '&::after': {
-                            width: '100%',
+                        "&::after": {
+                            width: "100%",
                             paddingLeft: 20,
                             paddingRight: 20,
                             content: '""',
                             height: 2,
-                            position: 'absolute',
+                            position: "absolute",
                             bottom: 0,
-                            display: 'none',
+                            display: "none",
                         },
-                        '&.selected': {
-                            position: 'relative'
+                        "&.selected": {
+                            position: "relative"
                         },
-                        '&.selected::after': {
-                            display: 'block',
+                        "&.selected::after": {
+                            display: "block",
                             backgroundColor: theme.palette.primary.main
                         }
                     }
                 },
             },
             {
-                props: { variant: 'small' },
+                props: { variant: "small" },
                 style: ({ theme }) => ({
                     color: theme.palette.lightGrey.main,
                     fontSize: theme.typography.small.fontSize,
                 }),
             },
             {
-                props: { type: 'code' },
+                props: { type: "code" },
                 style: {
                     fontFamily: fontFamilyCode,
                 },
@@ -121,7 +121,7 @@ const components: Components = {
         },
         variants: [
             {
-                props: { variant: 'code' },
+                props: { variant: "code" },
                 style: ({ theme }) => {
                     return {
                         color: theme.palette.mediumGrey.main,
@@ -133,7 +133,7 @@ const components: Components = {
     MuiFormControl: {
         variants: [
             {
-                props: { size: 'small' },
+                props: { size: "small" },
                 style: {
                     [`& .${inputBaseClasses.root}`]: {
                         height: 25
@@ -143,7 +143,7 @@ const components: Components = {
                         width: 20,
                         height: 20,
                         right: 3,
-                        top: 'calc(50% - 10px)'
+                        top: "calc(50% - 10px)"
                     }
                 }
             }
@@ -171,7 +171,7 @@ const components: Components = {
     MuiChip: {
         variants: [
             {
-                props: { variant: 'tag' },
+                props: { variant: "tag" },
                 style: ({ theme }) => ({
                     height: 25,
                     borderRadius: 0,
@@ -192,25 +192,25 @@ const components: Components = {
     MuiButton: {
         variants: [
             {
-                props: { variant: 'text' },
+                props: { variant: "text" },
                 style: ({ theme }) => {
                     return {
                         color: theme.palette.lightGrey.main,
-                        '&:hover': {
+                        "&:hover": {
                             color: theme.palette.primary.main,
-                            background: 'transparent',
+                            background: "transparent",
                         }
                     }
                 }
             },
             {
-                props: { variant: 'contained' },
+                props: { variant: "contained" },
                 style: {
                     borderRadius: 0,
                 }
             },
             {
-                props: { size: 'small' },
+                props: { size: "small" },
                 style: ({ theme }) => {
                     return {
                         fontSize: theme.typography.small.fontSize,
@@ -222,9 +222,9 @@ const components: Components = {
     MuiListItemButton: {
         styleOverrides: {
             root: (({ theme }: { theme: Theme }) => ({
-                '&:hover': {
+                "&:hover": {
                     color: theme.palette.primary.main,
-                    background: 'transparent',
+                    background: "transparent",
                 },
             })) as any
         }
@@ -232,7 +232,7 @@ const components: Components = {
     MuiTooltip: {
         styleOverrides: {
             tooltipPlacementBottom: (({ theme }: { theme: Theme }) => ({
-                'marginTop': `${theme.spacing(1.5)}!important`,
+                "marginTop": `${theme.spacing(1.5)}!important`,
             })) as any
         }
     },
@@ -240,7 +240,7 @@ const components: Components = {
         styleOverrides: {
             "root": (({ theme }: { theme: Theme }) => ({
                 "&.Mui-selected": {
-                    'color': `${theme.palette.black.main}`
+                    "color": `${theme.palette.black.main}`
                 }
             })) as any
         }
@@ -248,30 +248,30 @@ const components: Components = {
     MuiAccordion: {
         styleOverrides: {
             root: {
-                'boxShadow': 'none',
+                "boxShadow": "none",
             }
         }
     },
     MuiAccordionSummary: {
         styleOverrides: {
             root: {
-                'padding': '0',
-                'minHeight': '50px',
-                '&.Mui-expanded': {
-                    'minHeight': '50px'
+                "padding": "0",
+                "minHeight": "50px",
+                "&.Mui-expanded": {
+                    "minHeight": "50px"
                 }
             },
             content: (({ theme }: { theme: Theme }) => ({
-                '&.Mui-expanded': {
-                    'marginTop': theme.spacing(2.4),
-                    'marginBottom': theme.spacing(2.4)
+                "&.Mui-expanded": {
+                    "marginTop": theme.spacing(2.4),
+                    "marginBottom": theme.spacing(2.4)
                 }
             })) as any,
             expandIconWrapper: (({ theme }: { theme: Theme }) => ({
-                'color': theme.palette.black.main,
+                "color": theme.palette.black.main,
 
-                '&.Mui-expanded': {
-                    'color': theme.palette.primary.main,
+                "&.Mui-expanded": {
+                    "color": theme.palette.primary.main,
                 }
             })) as any
         }
@@ -279,15 +279,15 @@ const components: Components = {
     MuiAccordionDetails: {
         styleOverrides: {
             root: (({ theme }: { theme: Theme }) => ({
-                'padding': `${theme.spacing(2.4)} 0`,
+                "padding": `${theme.spacing(2.4)} 0`,
             })) as any
         }
     },
     MuiTableHead: {
         styleOverrides: {
             root: (({ theme }: { theme: Theme }) => ({
-                'fontSize': `${theme.typography.fontSize}px`,
-                'textAlign': 'left',
+                "fontSize": `${theme.typography.fontSize}px`,
+                "textAlign": "left",
             })) as any
         }
     }

@@ -2,18 +2,18 @@ import { MemoryRouter } from "react-router-dom";
 import { useAuthentication } from "@sematic/main/src/hooks/appHooks"
 
 
-describe('useAutentication hook', () => {
+describe("useAutentication hook", () => {
     it("produces app context value if auth is not enabled", () => {
         cy.intercept(
             {
-              method: 'GET',
-              url: '/authenticate',
+                method: "GET",
+                url: "/authenticate",
             },
             {
                 "authenticate": false,
                 "providers": {}
             }
-          );
+        );
         
         let result: ReturnType<typeof useAuthentication> | undefined;
 
@@ -23,9 +23,9 @@ describe('useAutentication hook', () => {
         }
 
         cy.mount(<MemoryRouter><Wrapper /></MemoryRouter>);
-        cy.get("[data-cy=result]").should('have.text', 'true');
+        cy.get("[data-cy=result]").should("have.text", "true");
         
-        cy.get("[data-cy=result]").should('have.text', 'false').then(() => {
+        cy.get("[data-cy=result]").should("have.text", "false").then(() => {
             expect(result).to.eql({
                 "isAuthenticationEnabled": false,
                 "authProviderDetails": {},
@@ -38,16 +38,16 @@ describe('useAutentication hook', () => {
     it("produces app context value if auth is enabled", () => {
         cy.intercept(
             {
-              method: 'GET',
-              url: '/authenticate',
+                method: "GET",
+                url: "/authenticate",
             },
             {
                 "authenticate": true,
                 "providers": {
-                  "GOOGLE_OAUTH_CLIENT_ID": "12345.apps.googleusercontent.com"
+                    "GOOGLE_OAUTH_CLIENT_ID": "12345.apps.googleusercontent.com"
                 }
-              }
-          );
+            }
+        );
         
         let result: ReturnType<typeof useAuthentication> | undefined;
 
@@ -57,7 +57,7 @@ describe('useAutentication hook', () => {
         }
 
         cy.mount(<MemoryRouter><Wrapper /></MemoryRouter>);
-        cy.get("[data-cy=result]").should('have.text', 'false').then(() => {
+        cy.get("[data-cy=result]").should("have.text", "false").then(() => {
             expect(result).to.eql({
                 "isAuthenticationEnabled": true,
                 "authProviderDetails": {

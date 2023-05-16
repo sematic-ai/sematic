@@ -8,17 +8,17 @@ export default function TupleValueView(props: AliasValueViewProps) {
     let elementTypesRepr = typeRepr[2].args;
   
     return (
-      <List>
-        {Array.from(props.valueSummary).map((element, index) => (
-          <ListItem key={index}>
-            {renderSummary(
-              props.typeSerialization,
-              element,
-              elementTypesRepr[index].type,
-              index.toString()
-            )}
-          </ListItem>
-        ))}
-      </List>
+        <List>
+            {Array.from(props.valueSummary).map((element, index) => (
+                <ListItem key={index}>
+                    {renderSummary(
+                        props.typeSerialization,
+                        element,
+                        elementTypesRepr[index].type,
+                        index.toString()
+                    )}
+                </ListItem>
+            ))}
+        </List>
     );
-  }
+}

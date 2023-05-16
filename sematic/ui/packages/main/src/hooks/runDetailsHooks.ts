@@ -5,7 +5,7 @@ export function useRunPanelContext() {
     const contextValue = useContext(RunPanelContext);
 
     if (!contextValue) {
-        throw new Error('useRunPanelContext() should be called under a provider.')
+        throw new Error("useRunPanelContext() should be called under a provider.")
     }
 
     return contextValue;

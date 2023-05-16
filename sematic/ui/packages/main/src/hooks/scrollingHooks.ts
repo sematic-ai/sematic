@@ -2,7 +2,7 @@ import { useLogger } from "@sematic/common/src/utils/logging";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSetTimeout } from "./setTimeoutHooks";
 
-const SCROLL_EVENTS = ['mousewheel', 'DOMMouseScroll', 'wheel', 'MozMousePixelScroll'];
+const SCROLL_EVENTS = ["mousewheel", "DOMMouseScroll", "wheel", "MozMousePixelScroll"];
 const SCROLL_DOWN_CONTINUATION = 800;
 
 function _hasElementScrolledToBottom(refElement: HTMLElement | undefined) {
@@ -51,12 +51,12 @@ export function usePulldownTrigger(
         isPullDownTriggerCallInitiated
     ] = useSetTimeout(useCallback(async () => {
         setPulldownProgress(100);
-        devLogger('Pulldown triggered');
+        devLogger("Pulldown triggered");
         cancelDroppingPulldownTrigger();
         pulldownCallbackInprogress.current = true;
 
         await callback();
-        devLogger('Pulled down callback completed');
+        devLogger("Pulled down callback completed");
 
         setPulldownProgress(0);
         pulldownCallbackInprogress.current = false;
@@ -152,7 +152,7 @@ export function usePulldownTrigger(
 
 export function useScrollTracker(
     refElement: React.MutableRefObject<HTMLElement | undefined>
-    ) {
+) {
     
     const [hasReachedBottom, setHasReachedBottom] = useState(false);
 
