@@ -17,6 +17,7 @@ export function useHttpClient(): HttpClient {
         if (user?.api_key) {
             headers.set("X-API-KEY", user?.api_key);
         }
+        headers.set("X-REQUEST-ID", Math.floor(Math.random() * Math.pow(16, 9)).toString(16))
 
         return headers;
     }, [user?.api_key]);
@@ -51,7 +52,7 @@ export function useHttpClient(): HttpClient {
 
             return response;
         } catch (e: any) {
-            if (e instanceof DOMException && e.name === 'AbortError') {
+            if (e instanceof DOMException && e.name === "AbortError") {
                 devLogger("fetch() was voluntarily cancelled.")
             }
             throw e;

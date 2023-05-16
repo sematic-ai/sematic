@@ -19,11 +19,11 @@ export function useRunJobHistory(runId: string) {
 
         const payload: RunJobPayload = await response.json();
 
-        if (!payload['content']) {
-            throw Error('jobs response is not in the correct format.')
+        if (!payload["content"]) {
+            throw Error("jobs response is not in the correct format.")
         }
 
-        return payload['content'] as Array<Job>
+        return payload["content"] as Array<Job>
     }, [fetch, runId]);
 
     const latestReload = useLatest(reload);

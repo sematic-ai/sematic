@@ -1,12 +1,12 @@
-import styled from '@emotion/styled';
-import Box from '@mui/material/Box';
-import List from '@mui/material/List';
-import ListItemButton, { listItemButtonClasses } from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import { SuccessStateChip } from 'src/component/RunStateChips';
-import theme from 'src/theme/new';
-import { Fragment } from 'react';
+import styled from "@emotion/styled";
+import Box from "@mui/material/Box";
+import List from "@mui/material/List";
+import ListItemButton, { listItemButtonClasses } from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import { SuccessStateChip } from "src/component/RunStateChips";
+import theme from "src/theme/new";
+import { Fragment } from "react";
 
 const StyledList = styled(List)`
     padding: 0;
@@ -38,7 +38,7 @@ const RunTree = (props: RunTreeProps) => {
     return <StyledList>
         {runTreeNodes.map(({ value, children, selected }, index) => (
             <Fragment key={`${index}---${value}`} >
-                <ListItemButton className={selected ? 'selected' : ''}
+                <ListItemButton className={selected ? "selected" : ""}
                     onClick={() => onSelect?.(value)}>
                     <ListItemIcon sx={{ minWidth: "20px" }}>
                         <SuccessStateChip size={"small"} />

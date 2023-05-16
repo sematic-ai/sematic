@@ -1,9 +1,9 @@
 import {
-  Box,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText
+    Box,
+    List,
+    ListItemButton,
+    ListItemIcon,
+    ListItemText
 } from "@mui/material";
 import { Run } from "@sematic/common/src/Models";
 import { Fragment, useCallback } from "react";
@@ -15,54 +15,54 @@ import { RunTreeNode } from "src/interfaces/graph";
 import PipelinePanelsContext from "src/pipelines/PipelinePanelsContext";
 
 export default function RunTree(props: {
-  runTreeNodes: Array<RunTreeNode>;
+    runTreeNodes: Array<RunTreeNode>;
 }) {
-  let { runTreeNodes } = props;
+    let { runTreeNodes } = props;
 
-  // We need to filter out runs whose functions are present in the hidden run name list.
-  // The default "" value is required since indexOf does not accept an undefined value.
-  runTreeNodes = runTreeNodes.filter(({run}) => HIDDEN_RUN_NAME_LIST.indexOf(run?.name ?? "")===-1);
+    // We need to filter out runs whose functions are present in the hidden run name list.
+    // The default "" value is required since indexOf does not accept an undefined value.
+    runTreeNodes = runTreeNodes.filter(({run}) => HIDDEN_RUN_NAME_LIST.indexOf(run?.name ?? "")===-1);
 
-  const { selectedRun, setSelectedPanelItem, setSelectedRunId, setSelectedArtifactName  } 
+    const { selectedRun, setSelectedPanelItem, setSelectedRunId, setSelectedArtifactName  } 
   = usePipelinePanelsContext() as ExtractContextType<typeof PipelinePanelsContext> & {
-    selectedRun: Run
+      selectedRun: Run
   };
 
-  const onSelectRun = useCallback((runId: string) => {
-    setSelectedArtifactName("");
-    setSelectedRunId(runId);
-    setSelectedPanelItem('run');
-  }, [setSelectedArtifactName, setSelectedPanelItem, setSelectedRunId]);
+    const onSelectRun = useCallback((runId: string) => {
+        setSelectedArtifactName("");
+        setSelectedRunId(runId);
+        setSelectedPanelItem("run");
+    }, [setSelectedArtifactName, setSelectedPanelItem, setSelectedRunId]);
 
-  if (runTreeNodes.length === 0) {
-    return <></>;
-  }
-  return (
-    <List
-      sx={{
-        pt: 0,
-      }}
-    >
-      {runTreeNodes.map(({run, children}) => (
-        <Fragment key={`${run!.id}---${run!.future_state}`}>
-          <ListItemButton
-            onClick={() => onSelectRun(run!.id)}
-            key={run!.id}
-            sx={{ height: "30px" }}
-            selected={selectedRun.id === run!.id}
-          >
-            <ListItemIcon sx={{ minWidth: "20px" }}>
-              <RunStateChip run={run!} />
-            </ListItemIcon>
-            <ListItemText primary={run!.name} />
-          </ListItemButton>
-          {children.length > 0 && (
-            <Box marginLeft={3}>
-              <RunTree runTreeNodes={children}/>
-            </Box>
-          )}
-        </Fragment>
-      ))}
-    </List>
-  );
+    if (runTreeNodes.length === 0) {
+        return <></>;
+    }
+    return (
+        <List
+            sx={{
+                pt: 0,
+            }}
+        >
+            {runTreeNodes.map(({run, children}) => (
+                <Fragment key={`${run!.id}---${run!.future_state}`}>
+                    <ListItemButton
+                        onClick={() => onSelectRun(run!.id)}
+                        key={run!.id}
+                        sx={{ height: "30px" }}
+                        selected={selectedRun.id === run!.id}
+                    >
+                        <ListItemIcon sx={{ minWidth: "20px" }}>
+                            <RunStateChip run={run!} />
+                        </ListItemIcon>
+                        <ListItemText primary={run!.name} />
+                    </ListItemButton>
+                    {children.length > 0 && (
+                        <Box marginLeft={3}>
+                            <RunTree runTreeNodes={children}/>
+                        </Box>
+                    )}
+                </Fragment>
+            ))}
+        </List>
+    );
 }

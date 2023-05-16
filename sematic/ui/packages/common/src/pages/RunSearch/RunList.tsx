@@ -16,7 +16,8 @@ import RunStatusColumn from "src/pages/RunSearch/RunStatusColumn";
 import TagsColumn from "src/pages/RunSearch/TagsColumn";
 import theme from "src/theme/new";
 import LayoutServiceContext from "src/context/LayoutServiceContext";
-import { useContext, useEffect, useCallback } from "react";
+import { useContext, useEffect, useCallback, useMemo } from "react";
+import { AllFilters, convertMiscellaneousFilterToRunFilters, convertOwnersFilterToRunFilters, convertStatusFilterToRunFilters, FilterType, StatusFilters } from "src/pages/RunSearch/filters/common";
 
 const Container = styled.div`
     display: flex;
@@ -69,23 +70,23 @@ const StyledTableComponent = styled(TableComponent)<TableComponentProps<Run>>`
 const columnHelper = createColumnHelper<Run>()
 
 const columns = [
-    columnHelper.accessor('id', {
+    columnHelper.accessor("id", {
         meta: {
             columnStyles: {
                 width: "5.923%",
             }
         },
-        header: 'ID',
+        header: "ID",
         cell: info => <StyledRunReferenceLink runId={info.getValue()} />,
     }),
-    columnHelper.accessor('created_at', {
+    columnHelper.accessor("created_at", {
         meta: {
             columnStyles: {
                 width: "12.3396%",
                 minWidth: "150px"
             }
         },
-        header: 'Submitted at',
+        header: "Submitted at",
         cell: info => DateTimeLongConcise(parseJSON(info.getValue())),
     }),
     columnHelper.accessor(run => [run.name, run.function_path], {
@@ -95,7 +96,7 @@ const columns = [
                 maxWidth: "calc(100vw - 1060px)"
             }
         },
-        header: 'Name',
+        header: "Name",
         cell: info => {
             const [name, importPath] = info.getValue();
             return <NameSection>
@@ -104,14 +105,14 @@ const columns = [
             </NameSection>
         },
     }),
-    columnHelper.accessor('tags', {
+    columnHelper.accessor("tags", {
         meta: {
             columnStyles: {
                 width: "14.5114%",
                 minWidth: "160px"
             }
         },
-        header: 'Tags',
+        header: "Tags",
         cell: info => <TagsColumn tags={info.getValue()} />,
     }),
     columnHelper.accessor(data => `${data.user?.first_name} ${data.user?.last_name}`, {
@@ -121,7 +122,7 @@ const columns = [
                 minWidth: "100px"
             }
         },
-        header: 'Owner',
+        header: "Owner",
         cell: info => <NameTag>{info.getValue()}</NameTag>,
     }),
     columnHelper.accessor(data => ({
@@ -136,16 +137,74 @@ const columns = [
                 minWidth: "200px"
             }
         },
-        header: 'Status',
+        header: "Status",
         cell: info => <RunStatusColumn {...info.getValue() as any} />,
     })
 ]
 
 interface RunListProps {
+    filters: AllFilters | null;
 }
 
 const RunList = (props: RunListProps) => {
-    const { runs, page, isLoading, totalPages, totalRuns, nextPage, previousPage } = useRunsPagination();
+    const { filters } = props;
+
+    const runFilter = useMemo(() => {
+        const conditions = [];
+
+        if (!filters) {
+            return undefined;
+        }
+
+        if (filters[FilterType.STATUS]) {
+            const statusFilters = convertStatusFilterToRunFilters(filters[FilterType.STATUS] as StatusFilters[]);
+            if (statusFilters) {
+                conditions.push(statusFilters);
+            }
+        }
+
+        if (filters[FilterType.OWNER]) {
+            const ownersFilters = convertOwnersFilterToRunFilters(filters[FilterType.OWNER]!);
+            if (ownersFilters) {
+                conditions.push(ownersFilters);
+            }
+        }
+
+        if (filters[FilterType.OTHER]) {
+            const miscellaneousFilters = convertMiscellaneousFilterToRunFilters(filters[FilterType.OTHER]!);
+            if (miscellaneousFilters) {
+                conditions.push(miscellaneousFilters);
+            }
+        }
+
+        if (conditions.length > 1 ) {
+            return {
+                "AND": conditions
+            }
+        }
+
+        if (conditions.length === 0) {
+            return undefined;
+        }
+        return conditions[0];
+    }, [filters]);
+
+    const queryParams = useMemo(() => {
+        if (!filters) {
+            return undefined;
+        }
+
+        if (filters[FilterType.SEARCH]) {
+            return {
+                "search": filters[FilterType.SEARCH]![0]
+            };
+        }
+    }, [filters]);
+
+
+    const { runs, page, isLoading, totalPages, totalRuns, nextPage, previousPage } = useRunsPagination(
+        runFilter as any, queryParams
+    );
 
     const { setIsLoading } = useContext(LayoutServiceContext);
 
@@ -165,7 +224,7 @@ const RunList = (props: RunListProps) => {
 
     return <Container>
         <Stats>
-            <Typography variant={'bold'}>{`${totalRuns || '?'} ${totalRuns === 1 ? 'Run' : 'Runs'}`}</Typography>
+            <Typography variant={"bold"}>{`${totalRuns || "?"} ${totalRuns === 1 ? "Run" : "Runs"}`}</Typography>
         </Stats>
         <StyledTableComponent table={tableInstance} getRowLink={getRowLink} />
         <Pagination>

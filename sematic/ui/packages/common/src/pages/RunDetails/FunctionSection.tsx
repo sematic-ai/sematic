@@ -1,17 +1,17 @@
-import styled from '@emotion/styled';
-import Box from '@mui/material/Box';
+import styled from "@emotion/styled";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import parseJSON from 'date-fns/parseJSON';
-import { DateTimeLong, Duration } from 'src/component/DateTime';
-import Headline from 'src/component/Headline';
-import ImportPath from 'src/component/ImportPath';
-import MoreVertButton from 'src/component/MoreVertButton';
-import PipelineTitle from 'src/component/PipelineTitle';
+import parseJSON from "date-fns/parseJSON";
+import { DateTimeLong, Duration } from "src/component/DateTime";
+import Headline from "src/component/Headline";
+import ImportPath from "src/component/ImportPath";
+import MoreVertButton from "src/component/MoreVertButton";
+import PipelineTitle from "src/component/PipelineTitle";
 import { RunReferenceLink } from "src/component/RunReference";
-import { SuccessStateChip } from 'src/component/RunStateChips';
-import Section from 'src/component/Section';
-import TagsList from 'src/component/TagsList';
-import theme from 'src/theme/new';
+import { SuccessStateChip } from "src/component/RunStateChips";
+import Section from "src/component/Section";
+import TagsList from "src/component/TagsList";
+import theme from "src/theme/new";
 
 const StyledSection = styled(Section)`
     height: fit-content;
@@ -93,7 +93,7 @@ const FunctionSection = () => {
                     <StyledRunReferenceLink runId={"qwc2ldf"} />
                     {`Completed in ${Duration(
                         parseJSON("2012-04-23T18:14:23.511Z"), parseJSON("2012-04-23T18:25:43.511Z")
-                        )} on ${DateTimeLong(new Date())}`}
+                    )} on ${DateTimeLong(new Date())}`}
                 </div>
             </div>
         </BoxContainer>
@@ -102,7 +102,7 @@ const FunctionSection = () => {
         </ImportPathContainer>
         <StyledVertButton />
         <TagsContainer>
-            <div><TagsList tags={['example', 'torch', 'mnist']} /></div>
+            <div><TagsList tags={["example", "torch", "mnist"]} /></div>
             <Button variant={"text"} size={"small"}>add tags</Button>
         </TagsContainer>
         

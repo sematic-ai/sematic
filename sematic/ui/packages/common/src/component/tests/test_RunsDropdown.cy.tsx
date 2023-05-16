@@ -1,6 +1,6 @@
 import RunsDropdown from "../RunsDropdown";
 
-describe('RunStateChip component', () => {
+describe("RunStateChip component", () => {
     it("should render", () => {
         cy.mount(<RunsDropdown />);
         cy.get("[data-cy-root]").matchImage({

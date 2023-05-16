@@ -5,8 +5,8 @@ const NameTag = (props: {
 }) => {
     const { children } = props;
 
-    return <span style={{ maxWidth: '100px' }}>
-        <PipelineTitle variant={'small'} >
+    return <span style={{ maxWidth: "100px" }}>
+        <PipelineTitle variant={"small"} >
             {children}
         </PipelineTitle>
     </span>;

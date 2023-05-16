@@ -5,7 +5,7 @@ import TabPanel from "@mui/lab/TabPanel";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import { useState } from "react";
-import theme from 'src/theme/new';
+import theme from "src/theme/new";
 
 
 const StyledTabsContainer = styled(Box)`

@@ -1,13 +1,13 @@
-import styled from '@emotion/styled';
-import FormControl from '@mui/material/FormControl';
-import MenuItem from '@mui/material/MenuItem';
-import Box from '@mui/material/Box';
-import Select, {selectClasses} from '@mui/material/Select';
-import Typography, { typographyClasses } from '@mui/material/Typography';
+import styled from "@emotion/styled";
+import FormControl from "@mui/material/FormControl";
+import MenuItem from "@mui/material/MenuItem";
+import Box from "@mui/material/Box";
+import Select, {selectClasses} from "@mui/material/Select";
+import Typography, { typographyClasses } from "@mui/material/Typography";
 import { useCallback } from "react";
 import theme from "src/theme/new";
 import { svgIconClasses } from "@mui/material/SvgIcon";
-import { SuccessStateChip } from 'src/component/RunStateChips';
+import { SuccessStateChip } from "src/component/RunStateChips";
 
 const StyledSelect = styled(Select)`
     width: 100%;
@@ -62,7 +62,7 @@ const RunsDropdown = (prop: RunsDropdownProps) => {
         return <ValuePresentation value={value as string} />;
     }, []);
 
-    return <FormControl style={{ width: '100%' }} size="small">
+    return <FormControl style={{ width: "100%" }} size="small">
         <StyledSelect defaultValue={"1"} renderValue={renderValue} onChange={onChange}>
             <StyledMenuItem value="1">
                 <ValuePresentation value="1" />

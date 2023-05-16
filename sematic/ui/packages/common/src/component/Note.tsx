@@ -29,7 +29,7 @@ const Container = styled(Section, {
     shouldForwardProp: (prop) => !["isExpanded", "contentHeight"].includes(prop as any),
 }) <ExtendedStyleProps>`
     min-height: 100px;
-    height: ${props => props.isExpanded ? 'max-content' : '100px'};
+    height: ${props => props.isExpanded ? "max-content" : "100px"};
     padding-bottom: calc(${footerHeight}px);
     box-sizing: border-box;
     position: relative;
@@ -104,7 +104,7 @@ const NoteComponent = (prop: NoteProps) => {
     return <Container ref={containerRef} isExpanded={isExpanded} contentHeight={contentHeight} >
         <div ref={contentArea}>
             <Title>
-                <Box style={{ display: 'flex' }}>
+                <Box style={{ display: "flex" }}>
                     <NameTag>{name}</NameTag>
                     <Typography variant="small" color={theme.palette.lightGrey.main} paragraph={false}>
                         {"\xa0on run"}

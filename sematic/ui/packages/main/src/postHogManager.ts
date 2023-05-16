@@ -1,6 +1,6 @@
-import posthog from 'posthog-js';
+import posthog from "posthog-js";
 
-export const optOutStorageKey = 'posthog_opt_out';
+export const optOutStorageKey = "posthog_opt_out";
 
 export function setupPostHogOptout() {
     let shouldUserOptout = false;
@@ -8,11 +8,11 @@ export function setupPostHogOptout() {
     const optOutValue = window.localStorage.getItem(optOutStorageKey);
         
     if (optOutValue === null) {
-        if (!!(navigator as unknown as any)['globalPrivacyControl']) {
+        if (!!(navigator as unknown as any)["globalPrivacyControl"]) {
             shouldUserOptout = true;
         }
     } else {
-        shouldUserOptout = (optOutValue === 'true');
+        shouldUserOptout = (optOutValue === "true");
     }
 
     applyPostHogOptOutSetting(shouldUserOptout);

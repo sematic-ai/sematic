@@ -20,7 +20,7 @@ const TableScroller = styled.div`
 `;
 
 const StyledHeader = styled(TableHead, {
-    shouldForwardProp: (prop) => prop !== 'stickyHeader'
+    shouldForwardProp: (prop) => prop !== "stickyHeader"
 }) <{
     stickyHeader: boolean;
 }>`
@@ -36,7 +36,7 @@ const StyledHeader = styled(TableHead, {
                 background: ${theme.palette.white.main};
             }
         `
-    }
+}
     
     &:after {
         content: '';

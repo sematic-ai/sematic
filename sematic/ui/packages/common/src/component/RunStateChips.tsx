@@ -58,7 +58,7 @@ export const SubmittedStateChip = (props: StateChipBaseProps) => {
     return <ArrowUpward color={"lightGrey"} style={styles} />;
 }
 
-export function getRunStateChipByState(futureState: string, size: StateChipBaseProps['size'] = "large") {
+export function getRunStateChipByState(futureState: string, size: StateChipBaseProps["size"] = "large") {
     if (["RESOLVED", "SUCCEEDED"].includes(futureState)) {
         return <SuccessStateChip size={size} />;
     }

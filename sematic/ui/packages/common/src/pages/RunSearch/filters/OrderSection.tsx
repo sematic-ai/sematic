@@ -1,8 +1,8 @@
-import styled from '@emotion/styled';
+import styled from "@emotion/styled";
 import { KeyboardArrowDown } from "@mui/icons-material";
-import CollapseableFilterSection from 'src/pages/RunSearch/filters/CollapseableFilterSection';
+import CollapseableFilterSection from "src/pages/RunSearch/filters/CollapseableFilterSection";
 import theme from "src/theme/new";
-import Typography from '@mui/material/Typography';
+import Typography from "@mui/material/Typography";
 import { useState, useCallback } from "react";
 
 const Container = styled.div`
@@ -14,7 +14,7 @@ const Container = styled.div`
     align-items: center;
 `;
 
-type State = 'asc' | 'desc';
+type State = "asc" | "desc";
 
 type SortButtonProps = {
     state: State;
@@ -23,7 +23,7 @@ type SortButtonProps = {
 const StyledSortButton = styled(KeyboardArrowDown)<SortButtonProps>`
     cursor: pointer;
     color: ${theme.palette.black.main};
-    transform: ${({state}) => state === 'asc' ? "rotate(180deg)" : "rotate(0deg)"};
+    transform: ${({state}) => state === "asc" ? "rotate(180deg)" : "rotate(0deg)"};
     transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
 `;
 
@@ -32,10 +32,10 @@ interface OwnersFilterSectionProps {
 }
 
 const OrderSection = (props: OwnersFilterSectionProps) => {
-    const [state, setState] = useState<State>('desc');
+    const [state, setState] = useState<State>("desc");
 
     const onSortClick = useCallback(() => {
-        setState((state) => state === 'asc' ? 'desc' : 'asc');
+        setState((state) => state === "asc" ? "desc" : "asc");
     }, [setState]);
 
     return <CollapseableFilterSection title={"Order"} >

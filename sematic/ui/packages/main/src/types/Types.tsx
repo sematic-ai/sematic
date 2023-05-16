@@ -1,10 +1,10 @@
 import { AnyTypeRepr } from "@sematic/common/src/types";
 import BoolValueView from "src/types/boolean";
 import {
-  CommonValueViewProps,
-  TypeComponents,
-  ValueView,
-  ValueViewProps,
+    CommonValueViewProps,
+    TypeComponents,
+    ValueView,
+    ValueViewProps,
 } from "src/types/common";
 import DataclassValueView from "src/types/dataclass";
 import DataFrameValueView from "src/types/dataframetable";
@@ -26,66 +26,66 @@ export { renderSummary } from "src/types/common";
 
 // ValueComponent props
 type GenerateValueViewProps<U> = U extends AnyTypeRepr
-  ? ValueViewProps<U>
-  : never;
+    ? ValueViewProps<U>
+    : never;
 type AllValueViewProps =
   | CommonValueViewProps
   | GenerateValueViewProps<AnyTypeRepr>;
 type ExpandViewFunc<U> = U extends AllValueViewProps
-  ? (props: U) => JSX.Element
-  : never;
+    ? (props: U) => JSX.Element
+    : never;
 
 export type ComponentRenderDetails = {
-  value: ExpandViewFunc<AllValueViewProps>;
+    value: ExpandViewFunc<AllValueViewProps>;
 };
 
 // The Registry (fill data)
 const meta: Array<[string, ComponentRenderDetails]> = [
-  ["NoneType", { value: NoneValueView }],
-  ["float", { value: FloatValueView }],
-  ["str", { value: StrValueView }],
-  ["int", { value: IntValueView }],
-  ["bool", { value: BoolValueView }],
-  ["FloatInRange", { value: FloatValueView }],
-  ["list", { value: ListValueView }],
-  ["tuple", { value: TupleValueView }],
-  ["dict", { value: DictValueView }],
-  ["dataclass", { value: DataclassValueView }],
-  ["Union", { value: ValueView }],
-  ["Link", { value: LinkValueView }],
-  ["datetime.datetime", { value: DatetimeValueView }],
-  ["enum.Enum", { value: EnumValueView }],
-  [
-    "torch.utils.data.dataloader.DataLoader",
-    { value: TorchDataLoaderValueView },
-  ],
-  ["plotly.graph_objs._figure.Figure", { value: PlotlyFigureValueView }],
-  [
-    "pandas.core.frame.DataFrame",
-    {
-      value: DataFrameValueView,
-    },
-  ],
-  [
-    "sematic.types.types.aws.s3.S3Bucket",
-    {
-      value: S3BucketValueView,
-    },
-  ],
-  [
-    "sematic.types.types.aws.s3.S3Location",
-    {
-      value: S3LocationValueView,
-    },
-  ],
-  [
-    "sematic.types.types.image.Image",
-    {
-      value: ImageValueView,
-    },
-  ],
+    ["NoneType", { value: NoneValueView }],
+    ["float", { value: FloatValueView }],
+    ["str", { value: StrValueView }],
+    ["int", { value: IntValueView }],
+    ["bool", { value: BoolValueView }],
+    ["FloatInRange", { value: FloatValueView }],
+    ["list", { value: ListValueView }],
+    ["tuple", { value: TupleValueView }],
+    ["dict", { value: DictValueView }],
+    ["dataclass", { value: DataclassValueView }],
+    ["Union", { value: ValueView }],
+    ["Link", { value: LinkValueView }],
+    ["datetime.datetime", { value: DatetimeValueView }],
+    ["enum.Enum", { value: EnumValueView }],
+    [
+        "torch.utils.data.dataloader.DataLoader",
+        { value: TorchDataLoaderValueView },
+    ],
+    ["plotly.graph_objs._figure.Figure", { value: PlotlyFigureValueView }],
+    [
+        "pandas.core.frame.DataFrame",
+        {
+            value: DataFrameValueView,
+        },
+    ],
+    [
+        "sematic.types.types.aws.s3.S3Bucket",
+        {
+            value: S3BucketValueView,
+        },
+    ],
+    [
+        "sematic.types.types.aws.s3.S3Location",
+        {
+            value: S3LocationValueView,
+        },
+    ],
+    [
+        "sematic.types.types.image.Image",
+        {
+            value: ImageValueView,
+        },
+    ],
 ];
 
 meta.forEach(([key, value]) => {
-  TypeComponents.set(key, value);
+    TypeComponents.set(key, value);
 });

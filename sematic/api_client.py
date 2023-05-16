@@ -1,6 +1,7 @@
 # Standard Library
 import json
 import logging
+import uuid
 from enum import Enum
 from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, cast
 from urllib.parse import urlencode
@@ -27,6 +28,7 @@ from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
+from sematic.logging import REQUEST_ID_HEADER
 from sematic.metrics.metric_point import MetricPoint
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.utils.retry import retry, retry_call
@@ -778,6 +780,9 @@ def request(
     kwargs = kwargs if kwargs is not None else dict()
     headers = kwargs.get("headers", {})
     headers["Content-Type"] = "application/json"
+
+    # request id just so we can correlate logs between front/backend.
+    headers[REQUEST_ID_HEADER] = str(uuid.uuid4().hex[:9])
     if attempt_auth:
         headers[API_KEY_HEADER] = _get_api_key(user)
 
@@ -837,6 +842,9 @@ def _raise_for_response(
 
     except Exception:
         pass
+
+    request_id = response.request.headers.get(REQUEST_ID_HEADER)
+    details = f"{details} You may search the server logs for request id '{request_id}'"
 
     if response.status_code == 404:
         exception = ResourceNotFoundError(f"Resource {url} was not found")

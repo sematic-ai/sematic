@@ -69,7 +69,7 @@ const TagsList = (props: TagsListProps) => {
 
     useEffect(() => {
         if (width < measureWidth) {
-            const chips = refMeasureDom.current!.querySelectorAll('.tag-candiate');
+            const chips = refMeasureDom.current!.querySelectorAll(".tag-candiate");
             const widths = (Array.from(chips).map(chip => chip.getBoundingClientRect().width));
             let fold = 0, sum = 0; const gap = 40; // 40 is an estimation of the width of the "+{N}" chip
 
@@ -91,7 +91,7 @@ const TagsList = (props: TagsListProps) => {
     // (Assume that the user will not need to see more than 20 tags in the actual display)
     const TagsInTrialRenderingLimit = useMemo(() => take(tags, 20), [tags]);
 
-    return <div style={{ position: 'relative', width: '100%' }}>
+    return <div style={{ position: "relative", width: "100%" }}>
         <MeasurementContainer ref={setRef}>
             {TagsInTrialRenderingLimit.map(tag => <Chip key={tag} className={"tag-candiate"} label={tag} variant={"tag"} />)}
         </MeasurementContainer>

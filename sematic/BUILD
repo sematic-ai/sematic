@@ -82,6 +82,7 @@ sematic_py_lib(
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
+        "//sematic:logging",
         "//sematic/metrics:metric_point",
         "//sematic/plugins:abstract_external_resource",
         "//sematic/scheduling:job_details",
@@ -101,7 +102,9 @@ sematic_py_lib(
 sematic_py_lib(
     name = "logging",
     srcs = ["logging.py"],
-    pip_deps = [],
+    pip_deps = [
+        "flask",
+    ],
     # buildifier: leave-alone
     deps = [
         "//sematic/config:config",
