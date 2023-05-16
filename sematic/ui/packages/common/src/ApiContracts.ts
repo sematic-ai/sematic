@@ -67,3 +67,11 @@ export type Filter = FilterCondition | {
     OR: Array<FilterCondition>
 }
 
+export type MetricsPayload = {
+    content: {
+        metric_name: string;
+        metric_type: string;
+        columns: string[];
+        series: [number, any[]][];
+    };
+};

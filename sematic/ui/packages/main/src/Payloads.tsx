@@ -65,8 +65,8 @@ export type SemanticVersion = [number, number, number];
 export interface VersionPayload {
     min_client_supported: SemanticVersion;
     server: SemanticVersion;
-} 
+}
 
 export type RunJobPayload = {
-    content: Array<Job>
-}
+    content: Array<Job>;
+};

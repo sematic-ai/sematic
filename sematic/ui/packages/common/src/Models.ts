@@ -59,6 +59,12 @@ export interface Run extends HasUserMixin {
     failed_at: Date | null;
 }
 
+export function runIsInTerminalState(run: Run): boolean {
+  return ["RESOLVED", "FAILED", "NESTED_FAILED", "CANCELED"].includes(
+    run.future_state
+  );
+}
+
 export type Artifact = {
     id: string;
     json_summary: any;
@@ -149,4 +155,12 @@ export type Job = {
     state: string;
     status_history_serialization: Array<PodHistoryStatusSerialization>;
     updated_at: Date;
+};
+
+export type MetricPoint = {
+  name: string;
+  value: number;
+  labels: { [k: string]: any };
+  metric_time: Date;
+  metric_type: string;
 };
