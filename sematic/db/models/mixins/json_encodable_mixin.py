@@ -8,6 +8,7 @@ from typing import Any
 # Third-party
 import dateutil.parser
 from sqlalchemy import Column, inspect, types
+from sqlalchemy.sql.elements import ColumnElement
 
 
 class JSONEncodableMixin:
@@ -58,7 +59,7 @@ ALIAS_KEY = "alias"
 CONTAIN_FILTER_KEY = "contain_filter"
 
 
-def json_string_list_contains(column: Column, value: Any):
+def json_string_list_contains(column: Column, value: Any) -> ColumnElement:
     """For a column that's the string-encoding of a json list, check for the value."""
     # it may appear that we are risking SQLinjection here, since we are
     # constructing part of a query as a string. However, SQLAlchemy
