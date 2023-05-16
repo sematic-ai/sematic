@@ -369,4 +369,7 @@ def _extract_single_predicate(
     if operator == "in":
         return column.in_(value)
 
+    if operator == "contains":
+        return column.has_any(value)
+
     raise NotImplementedError(f"Unsupported filter: {filter_}")
