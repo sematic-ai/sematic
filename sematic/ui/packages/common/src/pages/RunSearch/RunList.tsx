@@ -16,7 +16,8 @@ import RunStatusColumn from "src/pages/RunSearch/RunStatusColumn";
 import TagsColumn from "src/pages/RunSearch/TagsColumn";
 import theme from "src/theme/new";
 import LayoutServiceContext from "src/context/LayoutServiceContext";
-import { useContext, useEffect, useCallback } from "react";
+import { useContext, useEffect, useCallback, useMemo } from "react";
+import { AllFilters, convertMiscellaneousFilterToRunFilters, convertOwnersFilterToRunFilters, convertStatusFilterToRunFilters, FilterType, StatusFilters } from "src/pages/RunSearch/filters/common";
 
 const Container = styled.div`
     display: flex;
@@ -142,10 +143,68 @@ const columns = [
 ]
 
 interface RunListProps {
+    filters: AllFilters | null;
 }
 
 const RunList = (props: RunListProps) => {
-    const { runs, page, isLoading, totalPages, totalRuns, nextPage, previousPage } = useRunsPagination();
+    const { filters } = props;
+
+    const runFilter = useMemo(() => {
+        const conditions = [];
+
+        if (!filters) {
+            return undefined;
+        }
+
+        if (filters[FilterType.STATUS]) {
+            const statusFilters = convertStatusFilterToRunFilters(filters[FilterType.STATUS] as StatusFilters[]);
+            if (statusFilters) {
+                conditions.push(statusFilters);
+            }
+        }
+
+        if (filters[FilterType.OWNER]) {
+            const ownersFilters = convertOwnersFilterToRunFilters(filters[FilterType.OWNER]!);
+            if (ownersFilters) {
+                conditions.push(ownersFilters);
+            }
+        }
+
+        if (filters[FilterType.OTHER]) {
+            const miscellaneousFilters = convertMiscellaneousFilterToRunFilters(filters[FilterType.OTHER]!);
+            if (miscellaneousFilters) {
+                conditions.push(miscellaneousFilters);
+            }
+        }
+
+        if (conditions.length > 1 ) {
+            return {
+                "AND": conditions
+            }
+        }
+
+        if (conditions.length === 0) {
+            return undefined;
+        }
+        return conditions[0];
+    }, [filters]);
+
+    const queryParams = useMemo(() => {
+        if (!filters) {
+            return undefined;
+        }
+
+        if (filters[FilterType.SEARCH]) {
+            return {
+                "search": filters[FilterType.SEARCH]![0]
+            };
+        }
+    }, [filters]);
+
+
+    const { runs, page, isLoading, totalPages, totalRuns, nextPage, previousPage } = useRunsPagination(
+        runFilter as any, queryParams
+    );
 
     const { setIsLoading } = useContext(LayoutServiceContext);
 
