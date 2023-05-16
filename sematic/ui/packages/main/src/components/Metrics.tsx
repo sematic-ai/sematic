@@ -1,8 +1,6 @@
 import { MetricsFilter, useMetrics } from "src/hooks/metricsHooks";
-import { Alert, Box, Skeleton } from "@mui/material";
+import { Alert, Skeleton } from "@mui/material";
 import { useMemo } from "react";
-import styled from "@emotion/styled";
-import { theme } from "@sematic/common/src/theme/mira/index";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -55,7 +53,7 @@ export function TimeseriesMetric(props: {
     });
 
     return cData;
-  }, [payload]);
+  }, [payload, color, metricsFilter.metricName]);
 
   return (
     <>
