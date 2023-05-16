@@ -1,4 +1,4 @@
-import { Run } from "src/Models";
+import { Run, User } from "src/Models";
 
 export type RunListPayload = {
     current_page_url: string;
@@ -9,9 +9,13 @@ export type RunListPayload = {
     content: Run[];
 };
 
+export type UserListPayload = {
+    content: User[];
+};
+
 type Operator = "eq";
 
-type FilterCondition = {
+export type FilterCondition = {
     [key: string]: { [eq in Operator]?: string | null } | undefined
 }
 

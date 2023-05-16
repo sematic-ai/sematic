@@ -1,17 +1,27 @@
-import { useCallback } from "react";
+import { useCallback, useState, useMemo } from "react";
 import TwoColumns from "src/layout/TwoColumns";
 import RunList from "src/pages/RunSearch/RunList";
 import SearchFilters from "src/pages/RunSearch/SearchFilters";
+import { AllFilters } from "src/pages/RunSearch/filters/common";
 
 const RunSearch = () => {
+    const [filters, setFilters] = useState<AllFilters | null>(null);
+
+    const onFiltersChanged = useCallback((filters: AllFilters) => {
+        setFilters(filters);
+    }, []);
 
     const onRenderLeft = useCallback(() => {
-        return <SearchFilters />;
-    }, []);
+        return <SearchFilters onFiltersChanged={onFiltersChanged} />;
+    }, [onFiltersChanged]);
+
+    const filtersKey = useMemo(() => JSON.stringify(filters), [filters]);
 
     const onRenderRight = useCallback(() => {
-        return <RunList />;
-    }, []);
+        return <RunList key={filtersKey} filters={filters} />;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filtersKey]);
+
 
     return <TwoColumns onRenderLeft={onRenderLeft} onRenderRight={onRenderRight} />;
 }
