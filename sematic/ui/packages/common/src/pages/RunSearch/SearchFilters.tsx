@@ -1,11 +1,14 @@
+import styled from "@emotion/styled";
+import Button from "@mui/material/Button";
+import { useCallback, useRef } from "react";
 import OtherFiltersSection from "src/pages/RunSearch/filters/OtherFilterSection";
 import OwnersFilterSection from "src/pages/RunSearch/filters/OwnersFilterSection";
 import SearchTextSection from "src/pages/RunSearch/filters/SearchTextSection";
 import StatusFilterSection from "src/pages/RunSearch/filters/StatusFilterSection";
 import TagsFilterSection from "src/pages/RunSearch/filters/TagsFilterSection";
-import Button from "@mui/material/Button";
-import styled from "@emotion/styled";
+import { ResettableHandle } from "src/component/common";
 import theme from "src/theme/new";
+import { AllFilters, FilterType } from "src/pages/RunSearch/filters/common";
 
 const StyledButton = styled(Button)`
     margin: 0 -${theme.spacing(5)};
@@ -15,16 +18,62 @@ const StyledButton = styled(Button)`
     border-radius: 2px;
 `;
 
-const SearchFilters = () => {
+interface SearchFiltersProps {
+    onFiltersChanged: (filters: AllFilters) => void;
+}
+
+const SearchFilters = (props: SearchFiltersProps) => {
+    const { onFiltersChanged } = props;
+
+    const allFilters = useRef<AllFilters>({});
+
+    const searchTextRef = useRef<ResettableHandle>(null);
+    const tagsFiltersRef = useRef<ResettableHandle>(null);
+    const statusFiltersRef = useRef<ResettableHandle>(null);
+    const ownersFiltersRef = useRef<ResettableHandle>(null);
+    const otherFiltersRef = useRef<ResettableHandle>(null);
+
+    const resetAll = useCallback(() => {
+        searchTextRef.current?.reset();
+        tagsFiltersRef.current?.reset();
+        ownersFiltersRef.current?.reset();
+        statusFiltersRef.current?.reset();
+        otherFiltersRef.current?.reset();
+
+        allFilters.current = {}; 
+    }, []);
+
+    const onSearchTextChanged = useCallback((searchText: string) => {
+        allFilters.current[FilterType.SEARCH] = [searchText];
+    }, []);
+
+    const onStatusFilterChanged = useCallback((filters: string[]) => {
+        allFilters.current[FilterType.STATUS] = filters;
+    }, []);
+
+    const onOwnersFilterChanged = useCallback((filters: string[]) => {
+        allFilters.current[FilterType.OWNER] = filters;
+    }, []);
+
+    const onOtherFilterChanged = useCallback((filters: string[]) => {
+        allFilters.current[FilterType.OTHER] = filters;
+    }, []);
+
+    const applyFilters = useCallback(() => {
+        onFiltersChanged({...allFilters.current});
+    }, [onFiltersChanged]);
+
     return <>
-        <SearchTextSection />
-        <TagsFilterSection />
-        <StatusFilterSection />
-        <OwnersFilterSection />
-        <OtherFiltersSection />
+        <SearchTextSection ref={searchTextRef} onSearchChanged={onSearchTextChanged} />
+        <TagsFilterSection ref={tagsFiltersRef} />
+        <StatusFilterSection ref={statusFiltersRef} onFiltersChanged={onStatusFilterChanged} />
+        <OwnersFilterSection ref={ownersFiltersRef} onFiltersChanged={onOwnersFilterChanged} />
+        <OtherFiltersSection ref={otherFiltersRef} onFiltersChanged={onOtherFilterChanged} />
         {/* <OrderSection /> disabled for now */}
-        <StyledButton variant="contained" disableElevation>Filter runs</StyledButton>
-        <StyledButton variant="contained" disableElevation color={"white"}>Clear filters</StyledButton>
+        <StyledButton variant="contained" disableElevation onClick={applyFilters}>Filter runs</StyledButton>
+        <StyledButton variant="contained" disableElevation color={"white"} onClick={resetAll} >
+            Clear filters
+        </StyledButton>
     </>;
 }
 

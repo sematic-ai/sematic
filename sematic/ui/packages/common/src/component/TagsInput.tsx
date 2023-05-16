@@ -1,7 +1,8 @@
 import styled from "@emotion/styled";
 import Chip from "@mui/material/Chip";
 import TextField from "@mui/material/TextField";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, forwardRef, useImperativeHandle } from "react";
+import { ResettableHandle } from "src/component/common";
 import theme from "src/theme/new";
 
 interface OverflowComponentProps {
@@ -62,7 +63,12 @@ const InputContainer = styled("div", {
   }
 `;
 
-const TagsInput = () => {
+interface TagsInputProps {
+    onTagsChange?: (tags: string[]) => void;
+}
+
+const TagsInput = forwardRef<ResettableHandle, TagsInputProps>((props, ref) => {
+    const { onTagsChange } = props;
     const [tags, setTags] = useState<string[]>([]);
     const [inputValue, setInputValue] = useState("");
     const [overflow, setOverflow] = useState(false);
@@ -75,20 +81,30 @@ const TagsInput = () => {
 
     const handleAddTag = useCallback(() => {
         if (inputValue.trim() !== "") {
-            setTags([...tags, inputValue.trim()]);
+            const newTags = [...tags, inputValue.trim()];
+            setTags(newTags);
+            onTagsChange?.(newTags);
             setInputValue("");
             syncOverflowState();
         }
-    }, [tags, inputValue, syncOverflowState]);
+    }, [tags, inputValue, onTagsChange, syncOverflowState]);
 
     const handleRemoveTag = useCallback((tag: string) => {
         const updatedTags = tags.filter((t) => t !== tag);
         setTags(updatedTags);
-    }, [tags]);
+        onTagsChange?.(updatedTags);
+    }, [tags, onTagsChange]);
 
     const handleInputChange = useCallback((e: any) => {
         setInputValue(e.target.value);
     }, []);
+
+    useImperativeHandle(ref, () => ({
+        reset: () => {
+            setTags([]);
+            setInputValue("");
+        }
+    }));
 
     return (
         <>
@@ -117,6 +133,6 @@ const TagsInput = () => {
             </InputContainer>
         </>
     );
-};
+});
 
 export default TagsInput;

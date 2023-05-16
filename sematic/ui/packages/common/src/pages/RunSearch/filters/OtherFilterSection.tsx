@@ -3,6 +3,8 @@ import Checkbox from "@mui/material/Checkbox";
 import { collapseClasses } from "@mui/material/Collapse";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormGroup from "@mui/material/FormGroup";
+import { forwardRef, useState, useImperativeHandle, useCallback } from "react";
+import { ResettableHandle } from "src/component/common";
 import CollapseableFilterSection from "src/pages/RunSearch/filters/CollapseableFilterSection";
 import theme from "src/theme/new";
 
@@ -25,18 +27,35 @@ const StyledFormControlLabel = styled(FormControlLabel)`
     margin-left: ${theme.spacing(2.9)};
 `;
 
-interface OwnersFilterSectionProps {
+interface OtherFilterSectionProps {
     onFiltersChanged?: (filters: string[]) => void;
 }
 
-const OtherFiltersSection = (props: OwnersFilterSectionProps) => {
+const OtherFiltersSection = forwardRef<ResettableHandle, OtherFilterSectionProps>((props, ref) => {
+    const { onFiltersChanged } = props;
+    const [rootRunsOnly, setRootRunsOnly] = useState<boolean>(false);
+
+    useImperativeHandle(ref, () => ({
+        reset: () => {
+            setRootRunsOnly(false);
+        }
+    }));
+
+    const onRootRunsOnlyChanged = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+        const checked = event.target.checked;
+        setRootRunsOnly(checked);
+        onFiltersChanged?.(checked ? ["rootRunsOnly"] : []);
+    }, [setRootRunsOnly, onFiltersChanged]);
+
+
     return <StyledCollapseableFilterSection title={"Filters"} >
         <Container>
             <FormGroup>
-                <StyledFormControlLabel control={<Checkbox defaultChecked />} label="Root runs only" />
+                <StyledFormControlLabel control={
+                    <Checkbox checked={rootRunsOnly} onChange={onRootRunsOnlyChanged} />} label="Root runs only" />
             </FormGroup>
         </Container>
     </StyledCollapseableFilterSection>;
-}
+});
 
 export default OtherFiltersSection;
