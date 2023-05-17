@@ -38,7 +38,7 @@ def mock_image() -> mock.Mock:
 
     def mock_reload():
         mock_image.attrs = {
-            "RepoTags": [_REMOTE_IMAGE_NAME, _LOCAL_IMAGE_NAME],
+            "RepoTags": [_LOCAL_IMAGE_NAME, _REMOTE_IMAGE_NAME],
             "RepoDigests": [_REMOTE_IMAGE_URI],
         }
 
