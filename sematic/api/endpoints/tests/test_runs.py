@@ -401,6 +401,45 @@ def test_list_runs_search_fields(
     assert run5.id in ids
 
 
+def test_list_runs_search_tag_filters(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    runs = (
+        make_run(tags=["food"]),
+        make_run(tags=["foo", "bar"]),
+        make_run(tags=["foo", "baz"]),
+        make_run(tags=["qux", "bar"]),
+    )
+
+    for run_ in runs:
+        save_run(run_)
+    run1, run2, run3, run4 = runs
+
+    def expect(filters, runs):
+        filters = dict(filters=json.dumps(filters))
+        response = test_client.get(f"/api/v1/runs?{urlencode(filters)}")
+
+        assert response.status_code == 200
+
+        payload = response.json
+        payload = typing.cast(typing.Dict[str, typing.Any], payload)
+        assert len(payload["content"]) == len(runs)
+        assert {run.id for run in runs} == {  # noqa: F811
+            r["id"] for r in payload["content"]
+        }
+
+    expect({"tags": {"contains": "foo"}}, [run2, run3])
+    expect({"tags": {"contains": "food"}}, [run1])
+    expect({"tags": {"contains": "oo"}}, [])
+    expect(
+        {"AND": [{"tags": {"contains": "foo"}}, {"tags": {"contains": "bar"}}]}, [run2]
+    )
+    expect(
+        {"OR": [{"tags": {"contains": "foo"}}, {"tags": {"contains": "bar"}}]},
+        [run2, run3, run4],
+    )
+
+
 def test_list_runs_search_tags(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):

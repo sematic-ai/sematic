@@ -16,9 +16,11 @@ from sematic.abstract_future import FutureState
 from sematic.db.models.base import Base
 from sematic.db.models.mixins.has_user_mixin import HasUserMixin
 from sematic.db.models.mixins.json_encodable_mixin import (
+    CONTAIN_FILTER_KEY,
     ENUM_KEY,
     JSON_KEY,
     JSONEncodableMixin,
+    json_string_list_contains,
 )
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.types.serialization import (
@@ -104,7 +106,10 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
     root_id: str = Column(types.String(), ForeignKey("runs.id"), nullable=False)
     description: Optional[str] = Column(types.String(), nullable=True)
     tags: List[str] = Column(  # type: ignore
-        types.String(), nullable=False, default="[]", info={JSON_KEY: True}
+        types.String(),
+        nullable=False,
+        default="[]",
+        info={JSON_KEY: True, CONTAIN_FILTER_KEY: json_string_list_contains},
     )
     source_code: str = Column(types.String(), nullable=False)
     nested_future_id: Optional[str] = Column(types.String(), nullable=True)
