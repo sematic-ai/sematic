@@ -9,6 +9,7 @@ import TagsFilterSection from "src/pages/RunSearch/filters/TagsFilterSection";
 import { ResettableHandle } from "src/component/common";
 import theme from "src/theme/new";
 import { AllFilters, FilterType } from "src/pages/RunSearch/filters/common";
+import isEmpty from "lodash/isEmpty";
 
 const StyledButton = styled(Button)`
     margin: 0 -${theme.spacing(5)};
@@ -44,19 +45,35 @@ const SearchFilters = (props: SearchFiltersProps) => {
     }, []);
 
     const onSearchTextChanged = useCallback((searchText: string) => {
-        allFilters.current[FilterType.SEARCH] = [searchText];
+        if (isEmpty(searchText)) {
+            delete allFilters.current[FilterType.SEARCH];
+        } else {
+            allFilters.current[FilterType.SEARCH] = [searchText];
+        }
     }, []);
 
     const onStatusFilterChanged = useCallback((filters: string[]) => {
-        allFilters.current[FilterType.STATUS] = filters;
+        if (isEmpty(filters)) {
+            delete allFilters.current[FilterType.STATUS];
+        } else {
+            allFilters.current[FilterType.STATUS] = filters;
+        }
     }, []);
 
     const onOwnersFilterChanged = useCallback((filters: string[]) => {
-        allFilters.current[FilterType.OWNER] = filters;
+        if (isEmpty(filters)) {
+            delete allFilters.current[FilterType.OWNER];
+        } else {
+            allFilters.current[FilterType.STATUS] = filters;
+        }
     }, []);
 
     const onOtherFilterChanged = useCallback((filters: string[]) => {
-        allFilters.current[FilterType.OTHER] = filters;
+        if (isEmpty(filters)) {
+            delete allFilters.current[FilterType.OTHER];
+        } else {
+            allFilters.current[FilterType.OTHER] = filters;
+        }
     }, []);
 
     const applyFilters = useCallback(() => {

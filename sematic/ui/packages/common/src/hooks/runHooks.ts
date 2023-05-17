@@ -3,6 +3,7 @@ import { useHttpClient } from "@sematic/common/src/hooks/httpHooks";
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import useAsyncFn from "react-use/lib/useAsyncFn";
 import { Run } from "src/Models";
+import { AllFilters, FilterType, StatusFilters, convertMiscellaneousFilterToRunFilters, convertOwnersFilterToRunFilters, convertStatusFilterToRunFilters } from "src/pages/RunSearch/filters/common";
 
 export type QueryParams = {[key: string]: string};
 export const PAGE_SIZE = 25;
@@ -57,6 +58,62 @@ export function useFetchRuns(runFilters: Filter | undefined = undefined,
     return {isLoaded, isLoading, error, runs: runs?.content, reloadRuns};
 }
 
+export function useFiltersConverter(filters: AllFilters | null) {
+    const runFilter = useMemo(() => {
+        const conditions = [];
+
+        if (!filters) {
+            return undefined;
+        }
+
+        if (filters[FilterType.STATUS]) {
+            const statusFilters = convertStatusFilterToRunFilters(filters[FilterType.STATUS] as StatusFilters[]);
+            if (statusFilters) {
+                conditions.push(statusFilters);
+            }
+        }
+
+        if (filters[FilterType.OWNER]) {
+            const ownersFilters = convertOwnersFilterToRunFilters(filters[FilterType.OWNER]!);
+            if (ownersFilters) {
+                conditions.push(ownersFilters);
+            }
+        }
+
+        if (filters[FilterType.OTHER]) {
+            const miscellaneousFilters = convertMiscellaneousFilterToRunFilters(filters[FilterType.OTHER]!);
+            if (miscellaneousFilters) {
+                conditions.push(miscellaneousFilters);
+            }
+        }
+
+        if (conditions.length > 1) {
+            return {
+                "AND": conditions
+            }
+        }
+
+        if (conditions.length === 0) {
+            return undefined;
+        }
+        return conditions[0];
+    }, [filters]);
+
+    const queryParams = useMemo(() => {
+        if (!filters) {
+            return undefined;
+        }
+
+        if (filters[FilterType.SEARCH]) {
+            return {
+                "search": filters[FilterType.SEARCH]![0]
+            };
+        }
+    }, [filters]);
+
+    return {runFilter, queryParams};
+}
+
 export function useRunsPagination(runFilters: Filter | undefined = undefined,
     otherQueryParams: {[key: string]: string} = defaultQueryParams) {
     
@@ -102,7 +159,7 @@ export function useRunsPagination(runFilters: Filter | undefined = undefined,
         }
     }, [isLoaded]);
 
-    const totalPages = useMemo(() => Math.ceil((totalRuns || 0) / PAGE_SIZE), [totalRuns]);
+    const totalPages = useMemo(() => Math.ceil((totalRuns || 0) / PAGE_SIZE) || 1, [totalRuns]);
     
     useEffect(() => {
         (async () => {
