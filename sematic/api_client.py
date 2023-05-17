@@ -816,6 +816,7 @@ def request(
             fargs=[_url(endpoint)],
             fkwargs=kwargs,
             exceptions=Exception,
+            # See https://github.com/sematic-ai/sematic/issues/832
             tries=1,
             delay=1,
             backoff=API_CALLS_BACKOFF,
