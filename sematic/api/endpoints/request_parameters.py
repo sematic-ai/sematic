@@ -22,6 +22,9 @@ import flask
 import sqlalchemy
 from sqlalchemy.sql.elements import BooleanClauseList, ColumnElement
 
+# Sematic
+from sematic.db.models.mixins.json_encodable_mixin import CONTAIN_FILTER_KEY
+
 logger = logging.getLogger(__name__)
 
 # Default page size
@@ -368,5 +371,11 @@ def _extract_single_predicate(
 
     if operator == "in":
         return column.in_(value)
+
+    if operator == "contains":
+        contains_filter = column.info.get(CONTAIN_FILTER_KEY)
+        if contains_filter is None:
+            raise ValueError(f"'contains' search not supported for column {column.key}")
+        return contains_filter(column, value)
 
     raise NotImplementedError(f"Unsupported filter: {filter_}")
