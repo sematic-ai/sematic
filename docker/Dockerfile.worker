@@ -5,10 +5,10 @@ FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND=noninteractive
 ENV PATH="/sematic/bin/:${PATH}"
 
-RUN apt update -y
-RUN apt install -y software-properties-common
+RUN apt-get update -y
+RUN apt-get install -y software-properties-common
 RUN add-apt-repository -y ppa:deadsnakes/ppa
-RUN apt install -y python3.9
+RUN apt-get install -y python3.9
 
 RUN rm /usr/bin/python3
 RUN ln -s /usr/bin/python3.9 /usr/bin/python3

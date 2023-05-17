@@ -49,8 +49,10 @@ _DOCKERFILE_BASE_TEMPLATE = """
 FROM {base_uri}
 WORKDIR /
 
-RUN which pip3 || apt update -y && apt install -y python3-pip
-RUN python3 -c "import distutils" || apt update -y && apt install --reinstall -y python$(python3 -c "import sys; print(f'{{sys.version_info.major}}.{{sys.version_info.minor}}')")-distutils
+RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
+
+RUN which pip3 || apt-get update -y && apt-get install -y python3-pip
+RUN python3 -c "import distutils" || apt-get update -y && apt-get install --reinstall -y python$(python3 -c "import sys; print(f'{{sys.version_info.major}}.{{sys.version_info.minor}}')")-distutils
 
 ENV PATH="/sematic/bin/:${{PATH}}"
 RUN echo '#!/bin/sh' > entrypoint.sh && echo '/usr/bin/python3 -m sematic.resolvers.worker "$@"' >> entrypoint.sh
