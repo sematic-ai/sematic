@@ -11,20 +11,19 @@ import {
 } from "@mui/material";
 import { Resolution, Run } from "@sematic/common/src/Models";
 import MuiRouterLink from "@sematic/common/src/component/MuiRouterLink";
+import TimeAgo from "@sematic/common/src/component/TimeAgo";
 import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
 import UserContext from "@sematic/common/src/context/UserContext";
-import { useFetchRuns } from "@sematic/common/src/hooks/runHooks";
+import { useFetchRuns, useRunNavigation } from "@sematic/common/src/hooks/runHooks";
+import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { useCallback, useContext, useEffect, useMemo } from "react";
 import { ActionMenu, ActionMenuItem } from "src/components/ActionMenu";
 import CalculatorPath from "src/components/CalculatorPath";
 import GitInfoBox from "src/components/GitInfo";
 import Loading from "src/components/Loading";
 import RunStateChip from "src/components/RunStateChip";
-import TimeAgo from "src/components/TimeAgo";
-import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import {
     usePipelineRunContext,
-    useRunNavigation,
 } from "src/hooks/pipelineHooks";
 import PipelineRunViewContext from "src/pipelines/PipelineRunViewContext";
 import { pipelineSocket } from "src/sockets";

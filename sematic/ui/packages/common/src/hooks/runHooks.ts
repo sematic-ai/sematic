@@ -1,9 +1,15 @@
-import { Filter, RunListPayload } from "@sematic/common/src/ApiContracts";
+import { Filter, RunListPayload, RunViewPayload } from "@sematic/common/src/ApiContracts";
 import { useHttpClient } from "@sematic/common/src/hooks/httpHooks";
-import { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import { atomWithHashCustomSerialization, updateHash } from "@sematic/common/src/utils/url";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import useAsyncFn from "react-use/lib/useAsyncFn";
 import { Run } from "src/Models";
 import { AllFilters, FilterType, StatusFilters, convertMiscellaneousFilterToRunFilters, convertOwnersFilterToRunFilters, convertStatusFilterToRunFilters } from "src/pages/RunSearch/filters/common";
+import useAsync from "react-use/lib/useAsync";
+
+export const selectedRunHashAtom = atomWithHashCustomSerialization("run", "")
+export const selectedTabHashAtom = atomWithHashCustomSerialization("tab", "")
 
 export type QueryParams = {[key: string]: string};
 export const PAGE_SIZE = 25;
@@ -176,3 +182,41 @@ export function useRunsPagination(runFilters: Filter | undefined = undefined,
 export function getRunUrlPattern(runID: string) {
     return `/runs/${runID}`;
 }
+
+export function useRunNavigation() {
+    const navigate = useNavigate();
+    const { hash } = useLocation();
+
+    return useCallback((requestedRootId: string, replace: boolean = false,
+        hashOverrideValues: Record<string, string | Symbol> | undefined = undefined) => {
+
+        let newHashValue = hash.replace(/^#/, "");
+
+        if (hashOverrideValues) {
+            newHashValue = updateHash(hash, hashOverrideValues);
+        }
+
+        navigate({
+            pathname: getRunUrlPattern(requestedRootId),
+            hash: newHashValue
+        }, {
+            replace
+        });
+    }, [hash, navigate]);
+}
+
+export function useFetchRun(runID: string): [
+    Run | undefined, boolean, Error | undefined
+] {
+    const {fetch} = useHttpClient();
+
+    const {value, loading, error} = useAsync(async () => {
+        const response = await fetch({
+            url: `/api/v1/runs/${runID}`
+        });
+        return (await response.json() as RunViewPayload).content
+    }, [runID]);
+    
+    return [value, loading, error];
+}
+

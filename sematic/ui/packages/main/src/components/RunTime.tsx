@@ -1,6 +1,6 @@
 import { Typography } from "@mui/material";
 import { Run } from "@sematic/common/src/Models";
-import {durationSecondsToString} from "src/utils";
+import { durationSecondsToString } from "@sematic/common/src/utils/datetime";
 
 function InstantRunTime({ prefix }: { prefix?: string}) {
     return (
