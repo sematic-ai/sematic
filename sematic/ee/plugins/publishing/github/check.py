@@ -81,7 +81,8 @@ def check_runs(runs: List[Run], target_url: str) -> CheckResult:
             target_url=target_url,
         )
     n_complete = sum(
-        (1 for run in runs if FutureState[run.future_state].is_terminal()), 0  # type: ignore
+        (1 for r in runs if FutureState[r.future_state].is_terminal()),  # type: ignore
+        0,
     )
     if n_complete == len(runs):
         return CheckResult(
