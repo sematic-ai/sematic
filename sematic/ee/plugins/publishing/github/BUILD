@@ -12,6 +12,7 @@ sematic_py_lib(
         "//sematic/config:settings",
         "//sematic/db:db",
         "//sematic/db/models/mixins:json_encodable_mixin",
+        "//sematic/db/models:git_info",
         "//sematic/db/models:run",
     ],
 )
@@ -41,6 +42,7 @@ sematic_py_lib(
         "//sematic/config:server_settings",
         "//sematic/config:settings",
         "//sematic/db/models:resolution",
+        "//sematic/db:queries",
         "//sematic/plugins:abstract_publisher",
     ],
 )

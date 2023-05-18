@@ -1,24 +1,29 @@
 # Standard Library
 import logging
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from enum import Enum, unique
 from typing import List, Literal, Optional
 from urllib.parse import urlencode
+
+# Third-party
+import requests
 
 # Sematic
 from sematic.abstract_future import FutureState
 from sematic.abstract_plugin import AbstractPluginSettingsVar
 from sematic.config.server_settings import ServerSettingsVar, get_server_setting
-
-# from sematic.config.settings import get_plugin_setting
+from sematic.config.settings import get_plugin_setting
 from sematic.db.db import db
+from sematic.db.models.git_info import GitInfo
 from sematic.db.models.mixins.json_encodable_mixin import CONTAIN_FILTER_KEY
+from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 
 logger = logging.getLogger(__name__)
 
 
 COMMIT_CHECK_PREFIX = "checks-commit:"
+CHECK_NAME = "sematic-pipelines-pass"
 
 
 class GitHubPublisherSettingsVar(AbstractPluginSettingsVar):
@@ -52,13 +57,14 @@ class CheckResult:
     target_url: str
 
 
-def check_commit(commit_sha: str) -> CheckResult:
+def check_commit(git_info: GitInfo) -> CheckResult:
+    commit_sha = git_info.commit
     runs = _get_runs(commit_sha)
     target_url = _details_url(commit_sha)
-    check_result = _validate_run_git_info(runs, commit_sha)
+    check_result = _validate_run_git_info(runs, git_info, target_url)
     if check_result is None:
         check_result = check_runs(runs, target_url)
-    _update_github(commit_sha, check_result)
+    _update_github(check_result, git_info)
     return check_result
 
 
@@ -117,10 +123,87 @@ def _details_url(commit_sha: str) -> str:
     return f"{base_external_url}/runs?{urlencode(dict(search=tag))}"
 
 
-def _validate_run_git_info(runs, commit_sha) -> Optional[CheckResult]:
-    # TODO: verify all runs are associated with clean git commits on the given sha.
-    return None
+def _validate_run_git_info(
+    runs: List[Run], git_info: GitInfo, target_url: str
+) -> Optional[CheckResult]:
+    non_root_run = next((run for run in runs if run.root_id != run.id), None)
+    if non_root_run is not None:
+        return CheckResult(
+            state=State.error.value,
+            description=f"Run {non_root_run.id} is not the root run of a pipeline.",
+            target_url=target_url,
+        )
+
+    resolution_ids = [run.id for run in runs]
+    with db().get_session() as session:
+        resolutions = (
+            session.query(Resolution)
+            .filter(
+                Resolution.root_id in resolution_ids,
+            )
+            .all()
+        )
+
+    error_message = None
+    for resolution in resolutions:
+        if resolution.git_info is None:
+            error_message = f"Run {resolution.root_id} doesn't have Git info."
+            break
+        run_git_info: GitInfo = resolution.git_info
+        if run_git_info.commit != git_info.commit:
+            error_message = (
+                f"Run {resolution.root_id} isn't "
+                f"using code for commit {git_info.commit}"
+            )
+            break
+        if run_git_info.dirty:
+            error_message = (
+                f"Run {resolution.root_id} was generated "
+                f"from code with uncommitted changes"
+            )
+            break
+    if error_message is None:
+        return None
+    return CheckResult(
+        state=State.error.value,
+        description=error_message,
+        target_url=target_url,
+    )
 
 
-def _update_github(commit_sha: str, check_result: CheckResult) -> None:
-    logger.warning("Not imoplemented! %s", check_result)
+def _update_github(check_result: CheckResult, git_info: GitInfo) -> None:
+    access_token = get_access_token()
+    owner, repo = git_info.remote.split("/")[-2:]
+    repo = repo.replace(".git", "")
+    response = requests.post(
+        f"https://api.github.com/repos/{owner}/{repo}/statuses/{git_info.commit}",
+        json=dict(
+            context=CHECK_NAME,
+            **asdict(check_result),
+        ),
+        headers={
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {access_token}",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    )
+    logger.debug("GitHub commit update response: %s", response.text)
+    try:
+        response.raise_for_status()
+    except Exception as e:
+        logger.error("GitHub commit update error response: %s", response.text)
+        raise RuntimeError(
+            f"Error updating GitHub with check for commit {git_info.commit}"
+        ) from e
+
+
+def get_access_token() -> str:
+    # local import to break the dependency cycle
+    # publisher -> check -> publisher
+    # Sematic
+    from sematic.ee.plugins.publishing.github.publisher import GitHubPublisher
+
+    return get_plugin_setting(
+        GitHubPublisher,
+        GitHubPublisherSettingsVar.GITHUB_ACCESS_TOKEN,
+    )

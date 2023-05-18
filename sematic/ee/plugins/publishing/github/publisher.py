@@ -15,10 +15,16 @@ from sematic.abstract_plugin import (
     PluginVersion,
 )
 from sematic.db.models.resolution import Resolution
-from sematic.ee.plugins.publishing.github.check import GitHubPublisherSettingsVar
+from sematic.db.queries import get_run
+from sematic.ee.plugins.publishing.github.check import (
+    COMMIT_CHECK_PREFIX,
+    GitHubPublisherSettingsVar,
+    check_commit,
+)
 from sematic.plugins.abstract_publisher import AbstractPublisher
 
 logger = logging.getLogger(__name__)
+
 
 _PLUGIN_VERSION = (0, 1, 0)
 
@@ -43,4 +49,13 @@ class GitHubPublisher(AbstractPublisher, AbstractPlugin):
             return
 
         resolution = cast(Resolution, event)
-        logger.warning("Not implemented! %s", resolution)
+        run = get_run(resolution.root_id)
+        is_part_of_check = any(tag.startswith(COMMIT_CHECK_PREFIX) for tag in run.tags)
+        if is_part_of_check:
+            if resolution.git_info is None:
+                logger.error(
+                    "Not updating GitHub for resolution %s because it has no GitInfo.",
+                    resolution.root_id,
+                )
+                return
+            check_commit(resolution.git_info)
