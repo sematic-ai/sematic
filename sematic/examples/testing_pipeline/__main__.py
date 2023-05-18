@@ -18,6 +18,7 @@ from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
 )
+from sematic.utils.git import get_git_info
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
 
 logger = logging.getLogger(__name__)
@@ -418,10 +419,11 @@ def main() -> None:
     logger.info("Pipeline arguments: %s", effective_args)
 
     resolver = _get_resolver(args)
+    git_info = get_git_info(main)
 
     future = testing_pipeline(**effective_args).set(
         name="Sematic Testing Pipeline",
-        tags=["example", "testing"],
+        tags=["example", "testing", f"checks-commit:{git_info.commit}"],
     )
 
     logger.info("Invoking the pipeline...")
