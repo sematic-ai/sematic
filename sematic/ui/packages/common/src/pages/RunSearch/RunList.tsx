@@ -181,7 +181,7 @@ const RunList = (props: RunListProps) => {
         }
         const hasFilters = filters && Object.keys(filters).length > 0;
         return <EmptyStateContainer >
-            { hasFilters ? <NoRunWithFilters /> :<NoRunNoFilters /> }
+            { hasFilters ? <NoRunWithFilters /> : <NoRunNoFilters /> }
         </EmptyStateContainer>;
     }, [runs, filters, isLoaded]);
 
