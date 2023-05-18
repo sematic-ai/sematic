@@ -774,8 +774,30 @@ def request(
     validate_json indicates whether the response is expected to contain
     valid json.
     """
+
     if validate_version_compatibility:
         validate_server_compatibility()
+
+    if retry:
+        return retry_call(
+            f=request,
+            fargs=[],
+            fkwargs=dict(
+                method=method,
+                endpoint=endpoint,
+                kwargs=kwargs,
+                attempt_auth=attempt_auth,
+                validate_version_compatibility=False,
+                validate_json=validate_json,
+                user=user,
+                retry=False,
+            ),
+            exceptions=Exception,
+            tries=API_CALLS_TRIES,
+            delay=1,
+            backoff=API_CALLS_BACKOFF,
+            jitter=0.1,
+        )
 
     kwargs = kwargs if kwargs is not None else dict()
     headers = kwargs.get("headers", {})
@@ -794,7 +816,8 @@ def request(
             fargs=[_url(endpoint)],
             fkwargs=kwargs,
             exceptions=Exception,
-            tries=API_CALLS_TRIES if retry else 1,
+            # See https://github.com/sematic-ai/sematic/issues/832
+            tries=1,
             delay=1,
             backoff=API_CALLS_BACKOFF,
             jitter=0.1,

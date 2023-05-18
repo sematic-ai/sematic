@@ -634,6 +634,7 @@ def test_update_future_states(
     persisted_run: Run,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
     mock_broadcast_graph_update: mock.MagicMock,  # noqa: F811
+    mock_socketio: mock.MagicMock,  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
         persisted_run.future_state = FutureState.CREATED
