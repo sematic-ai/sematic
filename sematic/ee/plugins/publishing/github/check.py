@@ -59,6 +59,7 @@ class CheckResult:
 
 def check_commit(git_info: GitInfo) -> CheckResult:
     commit_sha = git_info.commit
+    logger.info("Checking git commit %s", commit_sha)
     runs = _get_runs(commit_sha)
     target_url = _details_url(commit_sha)
     check_result = _validate_run_git_info(runs, git_info, target_url)
@@ -174,9 +175,11 @@ def _validate_run_git_info(
 def _update_github(check_result: CheckResult, git_info: GitInfo) -> None:
     access_token = get_access_token()
     owner, repo = git_info.remote.split("/")[-2:]
+    owner = owner.replace("git@github.com:", "")
     repo = repo.replace(".git", "")
+    url = f"https://api.github.com/repos/{owner}/{repo}/statuses/{git_info.commit}"
     response = requests.post(
-        f"https://api.github.com/repos/{owner}/{repo}/statuses/{git_info.commit}",
+        url,
         json=dict(
             context=CHECK_NAME,
             **asdict(check_result),
@@ -191,7 +194,12 @@ def _update_github(check_result: CheckResult, git_info: GitInfo) -> None:
     try:
         response.raise_for_status()
     except Exception as e:
-        logger.error("GitHub commit update error response: %s", response.text)
+        logger.error(
+            "GitHub commit update %s response for %s: %s",
+            response.status_code,
+            url,
+            response.text,
+        )
         raise RuntimeError(
             f"Error updating GitHub with check for commit {git_info.commit}"
         ) from e

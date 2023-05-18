@@ -14,7 +14,7 @@ from sematic.abstract_plugin import (
     AbstractPluginSettingsVar,
     PluginVersion,
 )
-from sematic.db.models.resolution import Resolution
+from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.queries import get_run
 from sematic.ee.plugins.publishing.github.check import (
     COMMIT_CHECK_PREFIX,
@@ -49,8 +49,14 @@ class GitHubPublisher(AbstractPublisher, AbstractPlugin):
             return
 
         resolution = cast(Resolution, event)
+        if not ResolutionStatus[resolution.status].is_terminal():  # type: ignore
+            logger.debug("The received event is not a resolution termination")
+            return
+
         run = get_run(resolution.root_id)
-        is_part_of_check = any(tag.startswith(COMMIT_CHECK_PREFIX) for tag in run.tags)
+        is_part_of_check = any(
+            tag.startswith(COMMIT_CHECK_PREFIX) for tag in run.tag_list
+        )
         if is_part_of_check:
             if resolution.git_info is None:
                 logger.error(
