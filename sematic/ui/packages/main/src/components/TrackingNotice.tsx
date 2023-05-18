@@ -86,7 +86,7 @@ export default function TrackingNotice({ sx }: TrackingNoticeProps) {
                 <DialogContentText>
           If you have any questions, reach out to us on
                     <Link
-                        href="https://discord.gg/PFCpatvy"
+                        href="https://discord.gg/4KZJ6kYVax"
                         underline="none"
                         target="_blank"
                     > Discord </Link> or at&nbsp; 
