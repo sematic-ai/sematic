@@ -20,7 +20,7 @@ logger = getLogger(__name__)
 
 @sematic_api.route(
     "/api/v1/github/commit-check/<owner>/<repo>/<commit_sha>",
-    methods=["GET"],
+    methods=["POST"],
 )
 @authenticate
 def run_commit_check(
