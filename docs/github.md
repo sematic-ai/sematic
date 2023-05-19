@@ -111,16 +111,24 @@ of the page. Finally, copy the token you are given and store it in a secure plac
 need this token later to configure Sematic.
 
 #### Approve Personal Access Token
-```TODO: Refine```
 
-This step is only required if you required administrator approval for
-Personal Access Token usage in the
+Now that you have requested a personal access token, you may need to have your
+token request approved by an organization administrator. You may be able to skip
+this step if: (a) an organization administrator requested the token (in which case the
+token request may have been auto-approved), or (b) your organization chose not
+to require approval for new Personal Access Token access.
+
+As in the
 [Allow Usage of Personal Access Tokens](#allow-usage-of-personal-access-tokens)
-section above.
+section, you first need to navigate to
+*Organization Settings > Third-party Access section > Personal access tokens*
 
-*Organization Settings > Third-party Access section > Personal access tokens > Pending requests*
+![Organization's personal access token approvals](images/github/organizationSettings.jpg)
 
-Approve the Personal Access Token request.
+From there, open "Pending requests" and review the token request. If the requested
+access is in line with the description from 
+[Create a Personal Access Token](#create-a-personal-access-token), then approve the
+token request.
 
 ### Requiring Sematic Checks to Pass
 
