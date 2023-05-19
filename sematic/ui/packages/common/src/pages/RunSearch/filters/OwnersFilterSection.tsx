@@ -79,7 +79,7 @@ const OwnersFilterSection = forwardRef<ResettableHandle, OwnersFilterSectionProp
                     (user, index) =>
                         <StyledFormControlLabel key={index} control={<Checkbox
                             onChange={(event) => toogleFilter(user.id, event.target.checked)} />}
-                        label={<NameTag>{`${user.first_name} ${user.last_name}`}</NameTag>}
+                        label={<NameTag firstName={user.first_name} lastName={user.last_name} />}
                         checked={filters.has(user.id)} />
                 )}
             </FormGroup>

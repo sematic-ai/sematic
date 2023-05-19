@@ -11,11 +11,12 @@ import NameTag from "src/component/NameTag";
 import { RunReference } from "src/component/RunReference";
 import TableComponent, { TableComponentProps } from "src/component/Table";
 import LayoutServiceContext from "src/context/LayoutServiceContext";
-import { getRunUrlPattern, useRunsPagination } from "src/hooks/runHooks";
+import { getRunUrlPattern, useFiltersConverter, useRunsPagination } from "src/hooks/runHooks";
 import NameColumn from "src/pages/RunSearch/NameColumn";
+import { NoRunNoFilters, NoRunWithFilters } from "src/pages/RunSearch/RunListEmptyState";
 import RunStatusColumn from "src/pages/RunSearch/RunStatusColumn";
 import TagsColumn from "src/pages/RunSearch/TagsColumn";
-import { AllFilters, FilterType, StatusFilters, convertMiscellaneousFilterToRunFilters, convertOwnersFilterToRunFilters, convertStatusFilterToRunFilters } from "src/pages/RunSearch/filters/common";
+import { AllFilters } from "src/pages/RunSearch/filters/common";
 import theme from "src/theme/new";
 
 const Container = styled.div`
@@ -49,11 +50,23 @@ const Pagination = styled.div`
     }
 `;
 
+const EmptyStateContainer = styled.div`
+    position: absolute;
+    right: 0;
+    left: 0;
+    top: 100px;
+    bottom: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`;
+
+
 const StyledRunReferenceLink = styled(RunReference)`
     color: ${theme.palette.mediumGrey.main};
 `;
 
-const StyledTableComponent = styled(TableComponent)<TableComponentProps<Run>>`
+const StyledTableComponent = styled(TableComponent) <TableComponentProps<Run>>`
     min-width: 850px;
 ` as typeof TableComponent;
 
@@ -83,7 +96,7 @@ const columns = [
         meta: {
             columnStyles: {
                 width: "1px",
-                maxWidth: "calc(100vw - 1060px)"
+                maxWidth: "calc(100vw - 1100px)"
             }
         },
         header: "Name",
@@ -102,15 +115,18 @@ const columns = [
         header: "Tags",
         cell: info => <TagsColumn tags={info.getValue()} />,
     }),
-    columnHelper.accessor(data => `${data.user?.first_name} ${data.user?.last_name}`, {
+    columnHelper.accessor(data => ({
+        firstName: data.user?.first_name,
+        lastName: data.user?.last_name
+    }), {
         meta: {
             columnStyles: {
                 width: "8.39092%",
-                minWidth: "100px"
+                maxWidth: "max(100px, 8.39092%)",
             }
         },
         header: "Owner",
-        cell: info => <NameTag>{info.getValue()}</NameTag>,
+        cell: info => <NameTag {...info.getValue()} />,
     }),
     columnHelper.accessor(data => ({
         futureState: data.future_state,
@@ -136,70 +152,38 @@ interface RunListProps {
 const RunList = (props: RunListProps) => {
     const { filters } = props;
 
-    const runFilter = useMemo(() => {
-        const conditions = [];
+    const { runFilter, queryParams } = useFiltersConverter(filters);
 
-        if (!filters) {
-            return undefined;
-        }
-
-        if (filters[FilterType.STATUS]) {
-            const statusFilters = convertStatusFilterToRunFilters(filters[FilterType.STATUS] as StatusFilters[]);
-            if (statusFilters) {
-                conditions.push(statusFilters);
-            }
-        }
-
-        if (filters[FilterType.OWNER]) {
-            const ownersFilters = convertOwnersFilterToRunFilters(filters[FilterType.OWNER]!);
-            if (ownersFilters) {
-                conditions.push(ownersFilters);
-            }
-        }
-
-        if (filters[FilterType.OTHER]) {
-            const miscellaneousFilters = convertMiscellaneousFilterToRunFilters(filters[FilterType.OTHER]!);
-            if (miscellaneousFilters) {
-                conditions.push(miscellaneousFilters);
-            }
-        }
-
-        if (conditions.length > 1 ) {
-            return {
-                "AND": conditions
-            }
-        }
-
-        if (conditions.length === 0) {
-            return undefined;
-        }
-        return conditions[0];
-    }, [filters]);
-
-    const queryParams = useMemo(() => {
-        if (!filters) {
-            return undefined;
-        }
-
-        if (filters[FilterType.SEARCH]) {
-            return {
-                "search": filters[FilterType.SEARCH]![0]
-            };
-        }
-    }, [filters]);
-
-
-    const { runs, page, isLoading, totalPages, totalRuns, nextPage, previousPage } = useRunsPagination(
+    const { runs, page, isLoaded, isLoading, totalPages, totalRuns, nextPage, previousPage } = useRunsPagination(
         runFilter as any, queryParams
     );
 
     const { setIsLoading } = useContext(LayoutServiceContext);
+
+    const totalRunsText = useMemo(() => {
+        if (!isLoading && totalRuns === 0) {
+            return "No Runs";
+        }
+        const noun = totalRuns === 1 ? "Run" : "Runs";
+
+        return `${totalRuns || "?"} ${noun}`;
+    }, [isLoading, totalRuns]);
 
     const tableInstance = useReactTable({
         data: runs,
         columns,
         getCoreRowModel: getCoreRowModel()
     });
+
+    const emtpyStateComponent = useMemo(() => {
+        if (!isLoaded || runs.length > 0) {
+            return null;
+        }
+        const hasFilters = filters && Object.keys(filters).length > 0;
+        return <EmptyStateContainer >
+            { hasFilters ? <NoRunWithFilters /> : <NoRunNoFilters /> }
+        </EmptyStateContainer>;
+    }, [runs, filters, isLoaded]);
 
     const getRowLink = useCallback((row: Row<Run>): string => {
         return getRunUrlPattern(row.original.id);
@@ -211,9 +195,10 @@ const RunList = (props: RunListProps) => {
 
     return <Container>
         <Stats>
-            <Typography variant={"bold"}>{`${totalRuns || "?"} ${totalRuns === 1 ? "Run" : "Runs"}`}</Typography>
+            <Typography variant={"bold"}>{totalRunsText}</Typography>
         </Stats>
         <StyledTableComponent table={tableInstance} getRowLink={getRowLink} />
+        {emtpyStateComponent}
         <Pagination>
             <IconButton aria-label="previous" disabled={page === 0} onClick={previousPage}>
                 <ChevronLeft />

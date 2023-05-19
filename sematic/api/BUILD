@@ -23,8 +23,6 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         ":app",
-        # DON'T COMMIT
-        "//sematic/ee/plugins/publishing/github:publisher",
         "//sematic/api/endpoints:artifacts",
         "//sematic/api/endpoints:auth",
         "//sematic/api/endpoints:edges",

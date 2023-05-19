@@ -13,6 +13,7 @@ sematic_py_lib(
         "//sematic/db:db",
         "//sematic/db/models/mixins:json_encodable_mixin",
         "//sematic/db/models:git_info",
+        "//sematic/db/models:resolution",
         "//sematic/db/models:run",
     ],
 )

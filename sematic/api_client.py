@@ -533,7 +533,7 @@ def is_github_plugin_enabled() -> bool:
 
 
 def check_github_commit(repo_owner: str, repo_name: str, commit_sha: str) -> str:
-    """Check if Sematic's GitHub plugin is enabled on the server."""
+    """Check the commit, update GitHub, and return a message about the result."""
     content = _post(f"/github/commit-check/{repo_owner}/{repo_name}/{commit_sha}")[
         "content"
     ]

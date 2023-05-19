@@ -1,55 +1,20 @@
-import { ContentCopy } from "@mui/icons-material";
 import {
     Alert,
     Box,
-    ButtonBase,
     Container,
     Divider,
     Grid,
     Typography,
-    useTheme,
+    useTheme
 } from "@mui/material";
+import MuiRouterLink from "@sematic/common/src/component/MuiRouterLink";
+import ShellCommand from "@sematic/common/src/component/ShellCommand";
 import UserContext from "@sematic/common/src/context/UserContext";
 import { useFetchRuns } from "@sematic/common/src/hooks/runHooks";
-import { useCallback, useContext, useMemo, useState } from "react";
+import { useContext, useMemo } from "react";
 import { SiDiscord, SiGithub, SiReadthedocs } from "react-icons/si";
-import MuiRouterLink from "@sematic/common/src/component/MuiRouterLink";
 import RunStateChip from "./components/RunStateChip";
 import TrackingNotice from "./components/TrackingNotice";
-
-function ShellCommand(props: { command: string }) {
-    const { command } = props;
-
-    const [content, setContent] = useState("$ " + command);
-
-    const theme = useTheme();
-
-    const onClick = useCallback(() => {
-        navigator.clipboard.writeText(command);
-        setContent("Copied!");
-        setTimeout(() => setContent("$ " + command), 1000);
-    }, [command]);
-
-    return (
-        <ButtonBase
-            sx={{
-                backgroundColor: theme.palette.grey[800],
-                color: theme.palette.grey[100],
-                py: 1,
-                px: 2,
-                borderRadius: 1,
-                display: "flex",
-                width: "100%",
-                textAlign: "left",
-                boxShadow: "rgba(0,0,0,0.5) 0px 0px 5px 0px",
-            }}
-            onClick={onClick}
-        >
-            <code style={{ flexGrow: 1 }}>{content}</code>
-            <ContentCopy fontSize="small" sx={{ color: theme.palette.grey[600] }} />
-        </ButtonBase>
-    );
-}
 
 export default function Home() {
     const { user } = useContext(UserContext);
@@ -194,7 +159,7 @@ export default function Home() {
                     >
                         <Grid item sx={{ textAlign: "center" }}>
                             <MuiRouterLink
-                                href="https://discord.gg/PFCpatvy"
+                                href="https://discord.gg/4KZJ6kYVax"
                                 underline="none"
                                 target="_blank"
                             >
