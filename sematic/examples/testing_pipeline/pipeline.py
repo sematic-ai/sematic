@@ -593,3 +593,5 @@ def testing_pipeline(
     # collect all values
     result = add_all(futures) if len(futures) > 1 else futures[0]
     return result
+
+# just to change commit
