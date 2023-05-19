@@ -68,20 +68,47 @@ Once you've enabled access, don't forget to use the "Save" button so that the
 settings take effect!
 
 #### Create a Personal Access Token
-```TODO: Refine```
 
-*User settings > Developer Settings > Personal access tokens > Fine-grained tokens*
+The previous section described how to configure the GitHub organization to
+allow API access via Personal Access Tokens. Now you need to actually create
+a token that Sematic can use to access the API.
 
-Generate New Token
+First, go to your GitHub user settings. In the menu, navigate to
+"Developer Settings."
 
-- fill out name
-- fill out description
-- set expiration for one year
-- Select "Resource owner" to be the GitHub organization you wish to check commits in
-- Under "Repository access", select repositories you wish to use Sematic's GitHub integration with
-- *Permissions > Repository permissions > Commit statuses*. Set access to "Read and write"
-- "Generate Token" button
-- Copy the token, save it to a secure place
+
+![Developer Settings](images/github/developerSettings.jpg)
+
+From there, go to "Personal access tokens" and then "Fine-grained tokens." Then click
+"Generate new token."
+
+![Generate Token](images/github/generateToken.jpg)
+
+Once you're on the page to create a new token, you need to fill out the following:
+
+- **Name**: A simple name for the token's purpose, like "Sematic Commit Checker"
+- **Expiration**: The duration that the token will be valid for. When this time expires,
+you will need to generate a new token and configure Sematic to use it. It's thus best to
+set it for long enough that you won't be too inconvenienced by replacing it.
+- **Description**: A simple description of the token's usage. Ex: "A token to use Sematic
+runs to validate GitHub commits."
+- **Resource owner**: Select the GitHub organization you wish to integrate with Sematic.
+If you don't see that organization listed, you may need to go back to the
+[Allow Usage of Personal Access Tokens](#allow-usage-of-personal-access-tokens)
+section.
+
+![Basic token settings](images/github/basicTokenSettings.jpg)
+
+- **Repository Access**: Select the repository (or repositories) you wish to allow Sematic
+to interact with.
+- **Permissions**: Under *Permissions > Repository Permissions*, select "Read and write"
+permission for "Commit statuses" access.
+
+![Token Permissions](images/github/permissionSelection.jpg)
+
+Once you have finished configuring the token, click the "Generate token" button at the bottom
+of the page. Finally, copy the token you are given and store it in a secure place. You will
+need this token later to configure Sematic.
 
 #### Approve Personal Access Token
 ```TODO: Refine```
