@@ -12,7 +12,7 @@ import { styled } from "@mui/system";
 import MuiRouterLink from "@sematic/common/src/component/MuiRouterLink";
 import { getRunUrlPattern } from "@sematic/common/src/hooks/runHooks";
 import { Run } from "@sematic/common/src/Models";
-import React, { ChangeEvent, FormEvent, useCallback, useState } from "react";
+import React, { ChangeEvent, FormEvent, useCallback, useEffect, useState } from "react";
 import CalculatorPath from "src/components/CalculatorPath";
 import Id from "src/components/Id";
 import { RunList, RunListColumn } from "src/components/RunList";
@@ -144,8 +144,10 @@ const TableColumns: Array<RunListColumn> = [
 ];
 
 export function RunIndex() {
+    const params = new URLSearchParams(document.location.search);
+    const defaultSearchString = params.get("search");
     const [searchString, setSearchString] = useState<string | undefined>(
-        undefined
+        !!defaultSearchString ? defaultSearchString : undefined
     );
     const [submitedSearchString, setSubmitedSearchString] = useState<
     string | undefined
@@ -163,6 +165,16 @@ export function RunIndex() {
         [searchString]
     );
 
+    const [submitedDefault, setSubmitedDefault] = useState(false);
+
+    useEffect(() => {
+        if(submitedDefault || !defaultSearchString) {
+            return;
+        }
+        setSubmitedSearchString(defaultSearchString);
+        setSubmitedDefault(true);
+    }, [submitedDefault, setSubmitedDefault, setSubmitedSearchString, defaultSearchString]);
+
     return (
         <StyledScroller>
             <Typography variant="h4" component="h2">
@@ -176,6 +188,7 @@ export function RunIndex() {
                             label="Search"
                             variant="outlined"
                             onChange={onChange}
+                            defaultValue={defaultSearchString}
                         />
                     </Box>
                     <Box sx={{ gridColumn: 2 }}>
