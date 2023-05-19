@@ -1,6 +1,6 @@
 pytest_test(
     name = "test_docker_builder",
-    srcs = ["test_docker_builder.py"],
+    srcs = ["test_docker_builder.py", "test_docker_client_utils.py"],
     data = glob([
         "fixtures/**",
     ]),
