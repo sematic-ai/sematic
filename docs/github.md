@@ -164,6 +164,69 @@ Finally, click the "Save changes" button to finalize your configuration.
 ## CI Configuration
 
 ```TODO: Write```
+This section describes how to configure your CI to leverage Sematic's GitHub
+integration. Since everyone's CI and infrastructure setup is different, the
+details of this step will differ for everyone. However, the high-level steps
+remain the same:
+
+1. Ensure your CI has network access to your Sematic deployment
+2. Get a Sematic API key to use via your CI. This can just be the API key of
+an individual user.
+3. Set the `SEMATIC_API_ADDRESS` environment variable on your CI worker to
+point to your Sematic deployment.
+4. Set the `SEMATIC_API_KEY` environment variable on your CI worker to
+enable Sematic access.
+5. Configure your CI to run the command line command to launch your Sematic
+pipelines. Any run that should be considered as a requirement for the check
+to pass should have the tag `checks-commit:<git sha being built by CI>`.
+6. Configure your CI to run
+`sematic github check-commit sematic-ai/sematic:<git sha being built by CI>`
+after all desired pipelines have been launched.
+
+For step 5, you will likely need to edit your launch script to enable tagging
+from the command line. For example:
+
+```python
+# an example launch script that allows tagging from the command line
+import argparse
+import sematic
+from my_package import my_pipeline
+
+
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser("Launch my_pipeline")
+    parser.add_argument(
+        "-t",
+        "--tag",
+        dest="tags",
+        action="append",
+        default=[],
+        nargs=1,
+        help="Add a tag to the run",
+        type=str,
+    )
+    args = parser.parse_args()
+    args.tags = [tag[0] for tag in args.tags]
+    return args
+
+
+def main():
+    args = parse_arguments()
+    resolver = sematic.CloudResolver()
+    future = my_pipeline().set(tags=args.tags)
+    resolver.resolve(future)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+To make a resulting run that was used in Sematic's check,
+the pipeline could then be launched from the command line as:
+
+```shell
+bazel run //my_package/my_pipeline:main -- --tag "checks-commit:$GIT_COMMIT_SHA"
+```
 
 ## Sematic Configuration
 
