@@ -27,9 +27,23 @@ data:
   LOCAL_STORAGE_PATH: {{ .Values.local_storage.local_storage_path | quote }}
 {{ end }}
 {{ end }}
+  # Each configurable publisher can be added as an element
+  # in this string list. Leading comma ensures the string is
+  # interpreted as such even when no plugins are
+  # activated.
+  PUBLISH: >
+    ,
 {{ if .Values.slack.enabled }}
-  PUBLISH: "sematic.plugins.publishing.slack.SlackPublisher"
+    sematic.plugins.publishing.slack.SlackPublisher,
+{{ end }}
+{{ if .Values.github.enabled }}
+    sematic.ee.plugins.publishing.github.publisher.GitHubPublisher,
+{{ end }}
+{{ if .Values.slack.enabled }}
   SLACK_WEBHOOK_TOKEN: {{ .Values.slack.slack_webhook_token | quote }}
+{{ end }}
+{{ if .Values.github.enabled }}
+  GITHUB_ACCESS_TOKEN: {{ .Values.github.github_access_token | quote }}
 {{ end }}
   KUBERNETES_NAMESPACE: {{ .Release.Namespace }}
   SEMATIC_WORKER_KUBERNETES_SA: {{ .Values.worker.service_account.name | quote }}

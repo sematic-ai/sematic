@@ -16,6 +16,10 @@ slack:
   enabled: true
   slack_webhook_token: XXX/YYY/ZZZ # REPLACE ME
 
+github:
+  enabled: false  # This feature can only be enabled with Sematic EE.
+  github_access_token: github_pat_1234 # REPLACE ME
+
 secret:
   create: true
 
