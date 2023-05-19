@@ -1,13 +1,21 @@
 # Testing Sematic Pipelines
 
 As a tool for creating
-[Continuous Learning](https://medium.com/sematic-blog/continuous-learning-for-safer-and-better-ml-models-42e51851b4bd)
+[Continuous Learning](https://www.sematic.dev/blog/continuous-learning-for-safer-and-better-ml-models)
 pipelines, Sematic fully appreciates the value of tests. Regardless of whether
 your pipeline is handling updates to a production machine learning model,
 manipulating some internal data, or doing regression testing itself, it's
 important to make sure the pipeline itself is healthy. You don't want to
 have your pipeline execute for hours or days, and then have it fail near
 the end for a simple error!
+
+Luckily, Sematic provides out-of-the-box support for unit testing your
+Sematic pipelines. With Sematic Enterprise Edition, you can also
+integrate Sematic with your version control system to block PRs
+and perform other commit checking. See our [GitHub](./github.md)
+integration for more information.
+
+## Unit Testing
 
 Sematic will perform some up-front checks, like performing some early
 [type checking](https://docs.sematic.dev/type-support/type-support)
