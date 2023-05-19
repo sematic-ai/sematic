@@ -132,9 +132,34 @@ token request.
 
 ### Requiring Sematic Checks to Pass
 
-(Optional)
+This section describes how you can configure your GitHub to require Sematic checks
+to pass before allowing commits to merge to your protected branches (e.g.
+`main`/`master`). **It should only be performed once you have successfully**
+**executed a Sematic check on one of your commits in your repository.**
+If you attempt it before that point, you will not see Sematic's check as an
+option to require, and you may risk blocking PRs before you're ready to
+have Sematic checks performed.
 
-```TODO: Write```
+Once you're ready, go to the repository you wish to add this protection to,
+and navigate to its settings page. From there, select "Branches" from the
+side menu.
+
+![Configuring branch protection](images/github/branchProtection.jpg)
+
+Either edit an existing branch protection rule or add a new one (with the
+"Add rule" button), depending on whether the branch you're protecting already
+has other protections in place.
+
+Once you're editing the branch protection, ensure the branch name pattern matches
+the branch you wish to protect, then go to the "Protect matching branches"
+configuration box. There, enable "Require status checks to pass before merging".
+
+You may then search for the `sematic-pipelines-pass` check, and add it to the
+list of required checks.
+
+![Require check](images/github/requireCheck.jpg)
+
+Finally, click the "Save changes" button to finalize your configuration.
 
 ## CI Configuration
 
