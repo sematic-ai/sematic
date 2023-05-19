@@ -140,7 +140,7 @@ def _validate_run_git_info(
         resolutions = (
             session.query(Resolution)
             .filter(
-                Resolution.root_id in resolution_ids,
+                Resolution.root_id.in_(resolution_ids),
             )
             .all()
         )
