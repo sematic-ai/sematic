@@ -5,11 +5,12 @@ import { ResettableHandle } from "src/component/common";
 
 interface SearchTextSectionProps {
     onSearchChanged?: (search: string) => void;
+    defaultSearchString?: string | undefined;
 }
 
 const SearchTextSection = forwardRef<ResettableHandle, SearchTextSectionProps>((props, ref) => {
-    const { onSearchChanged } = props;    
-    const [search, setSearch] = useState<string>("");
+    const { onSearchChanged, defaultSearchString } = props;
+    const [search, setSearch] = useState<string>(!!defaultSearchString ? defaultSearchString : "");
 
     const _onSearchChanged = useCallback((search: string) => {
         setSearch(search);
