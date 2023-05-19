@@ -55,7 +55,7 @@
     "test": "REACT_APP_GIT_HASH=$(git rev-parse --short HEAD) react-app-rewired test",
     "eject": "react-scripts eject",
     "analyze": "source-map-explorer 'build/static/js/*.js'",
-    "lint": "eslint --ext .js,.ts,.tsx --max-warnings=0 ./src"
+    "lint": "eslint --ext .js,.ts,.tsx --max-warnings=0 --fix ./src"
   },
   "eslintConfig": {
     "extends": [

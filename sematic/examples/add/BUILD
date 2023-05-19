@@ -2,6 +2,9 @@ load("//bazel:pipeline.bzl", "sematic_pipeline")
 
 sematic_example(
     name = "add",
+    extras = [
+        "//sematic/ee:metrics",
+    ],
 )
 
 sematic_pipeline(

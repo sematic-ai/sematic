@@ -61,6 +61,7 @@ export default function RunTabs(props: { artifacts: IOArtifacts }) {
                     >
                         <Tab label="Input" value="input" />
                         <Tab label="Output" value="output" />
+                        <Tab label="Metrics" value="metrics" />
                         <Tab label="Source" value="source" />
                         <Tab label="Logs" value="logs" />
                         {grafanaTab}
