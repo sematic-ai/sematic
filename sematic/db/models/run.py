@@ -266,3 +266,10 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
             module=dict_["module"],  # type: ignore
             ancestors=dict_.get("ancestors", []),  # type: ignore
         )
+
+    @property
+    def tag_list(self) -> List[str]:
+        # See https://github.com/sematic-ai/sematic/issues/838
+        if isinstance(self.tags, str):
+            return json.loads(self.tags)
+        return self.tags

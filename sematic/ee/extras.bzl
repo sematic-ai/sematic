@@ -9,6 +9,10 @@ EXTRAS = {
         sematic_module="//sematic/ee:ray",
         requires=["ray[default]>=2.1.0"]
     ),
+    "github": dict(
+        sematic_module="//sematic/ee/plugins/publishing/github:publisher",
+        requires=[],
+    ),
 }
 
 EXTRA_SEMATIC_DEPS = [value["sematic_module"] for value in EXTRAS.values()]

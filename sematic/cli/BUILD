@@ -6,6 +6,7 @@ sematic_py_lib(
         ":cancel",
         ":clean",
         ":cli",
+        ":github",
         ":logs",
         ":start",
         ":stop",
@@ -64,6 +65,18 @@ sematic_py_lib(
     ],
 )
 
+sematic_py_lib(
+    name = "github",
+    srcs = ["github.py"],
+    pip_deps = [
+        "click",
+    ],
+    deps = [
+        ":cli",
+        "//sematic:api_client",
+        "//sematic/config:config",
+    ],
+)
 
 sematic_py_lib(
     name = "logs",
