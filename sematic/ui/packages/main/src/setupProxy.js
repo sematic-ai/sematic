@@ -8,4 +8,5 @@ module.exports = function (app) {
     app.use("/api", proxy);
     app.use("/authenticate", proxy);
     app.use("/login", proxy);
+    app.use("/socket.io", proxy);
 };
