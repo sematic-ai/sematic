@@ -43,7 +43,7 @@ class Function(AbstractFunction):
     """
     A Function is Sematic's base unit of computation in a graph.
 
-    Functions decorated with the `@func` decorator become
+    Python functions decorated with the `@func` decorator become
     instances of `Function`.
     """
 
@@ -59,6 +59,7 @@ class Function(AbstractFunction):
         base_image_tag: Optional[str] = None,
         timeout_mins: Optional[int] = None,
     ) -> None:
+        super(Function, self).__init__()
         self._validate_func(func)
         self._func = func
 

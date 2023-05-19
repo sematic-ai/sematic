@@ -105,7 +105,7 @@ const NoteComponent = (prop: NoteProps) => {
         <div ref={contentArea}>
             <Title>
                 <Box style={{ display: "flex" }}>
-                    <NameTag>{name}</NameTag>
+                    <NameTag firstName={name} />
                     <Typography variant="small" color={theme.palette.lightGrey.main} paragraph={false}>
                         {"\xa0on run"}
                     </Typography>
