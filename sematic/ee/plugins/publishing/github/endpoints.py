@@ -35,19 +35,15 @@ def run_commit_check(
     and target_url. These correspond to the fields described here:
     https://docs.github.com/en/rest/commits/statuses?apiVersion=2022-11-28#create-a-commit-status
     """
-    payload = dict(
-        content=asdict(
-            check_commit(
-                GitInfo(
-                    remote=f"https://github.com/{owner}/{repo}.git",
-                    # doesn't matter; commit checks aren't associated with branches
-                    branch="main",
-                    commit=commit_sha,
-                    dirty=False,
-                ),
-            )
-        ),
+    git_info = GitInfo(
+        remote=f"https://github.com/{owner}/{repo}.git",
+        # doesn't matter; commit checks aren't associated with branches
+        branch="main",
+        commit=commit_sha,
+        dirty=False,
     )
+    check_result = check_commit(git_info)
+    payload = dict(content=asdict(check_result))
 
     return flask.jsonify(payload)
 
