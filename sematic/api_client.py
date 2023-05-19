@@ -523,6 +523,23 @@ def clean_resource(resource_id: str, force: bool) -> str:
     return response["content"]
 
 
+def is_github_plugin_enabled() -> bool:
+    """Check if Sematic's GitHub plugin is enabled on the server."""
+    try:
+        return _get("/github/enabled")["content"]
+    except Exception:
+        # endpoint is only available if the plugin is enabled.
+        return False
+
+
+def check_github_commit(repo_owner: str, repo_name: str, commit_sha: str) -> str:
+    """Check the commit, update GitHub, and return a message about the result."""
+    content = _post(f"/github/commit-check/{repo_owner}/{repo_name}/{commit_sha}")[
+        "content"
+    ]
+    return f"{content['state']}: {content['description']}"
+
+
 @retry(tries=3, delay=10, jitter=1)
 def update_run_future_states(run_ids: List[str]) -> Dict[str, FutureState]:
     """Ask the server to update the status of given run ids if needed and return them.
