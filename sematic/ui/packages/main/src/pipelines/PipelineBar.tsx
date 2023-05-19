@@ -181,6 +181,7 @@ export default function PipelineBar() {
     useEffect(() => {
         pipelineSocket.removeAllListeners("update");
         pipelineSocket.on("update", async (args: { function_path: string }) => {
+            console.log("pipeline update", args);
             if (args.function_path === pipelinePath) {
                 const runs = await reloadRuns();
                 if (runs[0].id !== latestRuns[0].id) {

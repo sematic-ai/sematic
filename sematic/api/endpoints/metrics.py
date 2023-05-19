@@ -72,8 +72,8 @@ def get_metric_endpoint(user: Optional[User], metric_name: str) -> flask.Respons
 
     filter = MetricsFilter(
         name=metric_name,
-        from_time=datetime.datetime.fromtimestamp(from_time_ts),
-        to_time=datetime.datetime.fromtimestamp(to_time_ts),
+        from_time=datetime.datetime.utcfromtimestamp(from_time_ts),
+        to_time=datetime.datetime.utcfromtimestamp(to_time_ts),
         labels=labels,
     )
 

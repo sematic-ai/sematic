@@ -113,7 +113,7 @@ export function useMetrics(
         const labelsJSON = JSON.stringify(metricsFilter.labels);
         const groupBysStr = metricsFilter.groupBys.join(",");
         const response = await fetch({
-            url: `/api/v1/metrics/${metricsFilter.metricName}?labels=${labelsJSON}&group_by=${groupBysStr}`,
+            url: `/api/v1/metrics/${metricsFilter.metricName}?labels=${labelsJSON}&group_by=${groupBysStr}&rollup=auto`,
         });
         return (await response.json()) as MetricsPayload;
     }, [broadcastEvent]);
