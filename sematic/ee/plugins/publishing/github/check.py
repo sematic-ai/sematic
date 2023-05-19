@@ -18,6 +18,7 @@ from sematic.db.models.git_info import GitInfo
 from sematic.db.models.mixins.json_encodable_mixin import CONTAIN_FILTER_KEY
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
+from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +95,7 @@ def check_runs(runs: List[Run], target_url: str) -> CheckResult:
     if n_complete == len(runs):
         return CheckResult(
             state=State.success.value,
-            description=f"All {len(runs)} runs have succeeded",
+            description=f"All {len(runs)} runs have succeeded.",
             target_url=target_url,
         )
 
@@ -172,6 +173,7 @@ def _validate_run_git_info(
     )
 
 
+@retry(exceptions=(Exception,), tries=5, delay=3, jitter=1)
 def _update_github(check_result: CheckResult, git_info: GitInfo) -> None:
     access_token = get_access_token()
     owner, repo = git_info.remote.split("/")[-2:]

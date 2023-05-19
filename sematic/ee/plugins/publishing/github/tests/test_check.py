@@ -22,7 +22,6 @@ from sematic.db.tests.fixtures import (  # noqa: F401
 from sematic.ee.plugins.publishing.github.check import (
     State,
     _get_runs,
-    _update_github,
     _validate_run_git_info,
     check_commit,
     check_runs,
@@ -45,7 +44,7 @@ class Fixture:
 
 
 @pytest.fixture
-def commit_check_environment(test_db, allow_any_run_state_transition):
+def commit_check_environment(test_db, allow_any_run_state_transition):  # noqa: F811
     commit_sha_1 = 40 * "1"
     commit_sha_2 = 40 * "2"
 
@@ -90,7 +89,7 @@ def commit_check_environment(test_db, allow_any_run_state_transition):
         future_state=FutureState.SCHEDULED,
     )
 
-    for run in [run_1a, run_1b, run_2a, run_2b]:
+    for run in [run_1a, run_1b, run_2a, run_2b]:  # noqa: F402
         save_run(run)
 
     for resolution in [resolution_1a, resolution_1b, resolution_2a, resolution_2b]:
@@ -210,3 +209,83 @@ def test_validate_run_git_info(commit_check_environment):
         commit_check_environment.runs_by_commit_sha[info_1.commit], info_1, target_url
     )
     assert check_result is None
+
+
+CHECK_RUNS_CASES = [
+    ([], State.success, "All 0 runs have succeeded."),
+    (
+        [make_run(future_state=FutureState.CREATED.value)],
+        State.pending,
+        "Completed 0 runs of 1.",
+    ),
+    (
+        [make_run(future_state=FutureState.RAN.value)],
+        State.pending,
+        "Completed 0 runs of 1.",
+    ),
+    (
+        [make_run(future_state=FutureState.RESOLVED.value)],
+        State.success,
+        "All 1 runs have succeeded.",
+    ),
+    (
+        [make_run(future_state=FutureState.CANCELED.value, id=32 * "1")],
+        State.failure,
+        "Run 11111111111111111111111111111111 for 'path.to.test_run' did not succeed.",
+    ),
+    (
+        [make_run(future_state=FutureState.FAILED.value, id=32 * "1")],
+        State.failure,
+        "Run 11111111111111111111111111111111 for 'path.to.test_run' did not succeed.",
+    ),
+    (
+        [make_run(future_state=FutureState.NESTED_FAILED.value, id=32 * "1")],
+        State.failure,
+        "Run 11111111111111111111111111111111 for 'path.to.test_run' did not succeed.",
+    ),
+    (
+        [
+            make_run(future_state=FutureState.SCHEDULED.value, id=32 * "1"),
+            make_run(future_state=FutureState.RAN.value, id=32 * "2"),
+        ],
+        State.pending,
+        "Completed 0 runs of 2.",
+    ),
+    (
+        [
+            make_run(future_state=FutureState.SCHEDULED.value, id=32 * "1"),
+            make_run(future_state=FutureState.RESOLVED.value, id=32 * "2"),
+        ],
+        State.pending,
+        "Completed 1 runs of 2.",
+    ),
+    (
+        [
+            make_run(future_state=FutureState.SCHEDULED.value, id=32 * "1"),
+            make_run(future_state=FutureState.FAILED.value, id=32 * "2"),
+        ],
+        State.failure,
+        "Run 22222222222222222222222222222222 for 'path.to.test_run' did not succeed.",
+    ),
+    (
+        [
+            make_run(future_state=FutureState.RESOLVED.value, id=32 * "1"),
+            make_run(future_state=FutureState.RESOLVED.value, id=32 * "2"),
+        ],
+        State.success,
+        "All 2 runs have succeeded.",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "runs, expected_state, expected_description",
+    CHECK_RUNS_CASES,
+)
+def test_check_runs(runs, expected_state, expected_description):
+    fake_url = "http://localhost:5001/fake/url"
+    result = check_runs(runs, fake_url)
+    assert result is not None
+    assert result.target_url == fake_url
+    assert result.state == expected_state.value
+    assert result.description == expected_description
