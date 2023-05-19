@@ -230,7 +230,15 @@ bazel run //my_package/my_pipeline:main -- --tag "checks-commit:$GIT_COMMIT_SHA"
 
 ## Sematic Configuration
 
-```TODO: Write```
+Once you have completed [GitHub Configuration](#gitHub-configuration) you
+should have a personal access token. Your Sematic server administrator should
+configure your helm chart for Sematic to have the following settings:
+
+```yaml
+github:
+  enabled: true
+  github_access_token: <TOKEN FROM GITHUB>
+```
 
 [^1]: This feature of Sematic is only available with the "Enterprise Edition."
 Before using, please reach out to Sematic via support@sematic.dev to obtain a
