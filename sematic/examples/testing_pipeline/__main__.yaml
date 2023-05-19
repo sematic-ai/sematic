@@ -1,0 +1,17 @@
+version: 1
+#base_uri: "sematicai/sematic-worker-base:latest@sha256:bea3926876a3024c33fe08e0a6b2c0377a7eb600d7b3061a3f3f39d711152e3c"
+image_script: "sematic/examples/testing_pipeline/build_image.sh"
+#build:
+#  platform: "linux/amd64"
+#  requirements: "sematic/examples/testing_pipeline/requirements.txt"
+#  data: ["sematic/examples/testing_pipeline/resources"]
+#  src: ["sematic"]
+#  src: [
+#    "sematic/__init__.py",
+#    "sematic/examples/__init__.py",
+#    "sematic/examples/testing_pipeline/*.py"
+#  ]
+push:
+  registry: "558717131297.dkr.ecr.us-west-2.amazonaws.com"
+  repository: "sematic-dev"
+#  tag_suffix: "testing_pipeline"
