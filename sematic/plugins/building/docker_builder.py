@@ -101,25 +101,6 @@ class ImageURI:
             repository=match.group(1), tag=match.group(2), digest=match.group(3)
         )
 
-    @classmethod
-    def from_image(cls, image: Image) -> "ImageURI":
-        """
-        Returns an `ImageURI` that identifies the specified image.
-
-        Raises
-        ------
-        ValueError:
-            The specified image does not have a defined repository/tag, which is required
-            for generating a URI in the `<repository>:<tag>@<digest>` format.
-        """
-        if len(image.attrs.get("RepoTags", [])) == 0:
-            raise ValueError(
-                f"Container image '{image.id}' does not have any defined tags!"
-            )
-
-        repository, tag = image.attrs["RepoTags"][-1].split(":")
-        return ImageURI(repository=repository, tag=tag, digest=image.id)
-
     def __str__(self):
         """
         Returns a short `<repository>:<tag>` version of this image URI.
@@ -602,7 +583,7 @@ def _build_image_from_base(
     if status_updates is None:
         logger.warning("Built image '%s' without any response", built_image_name)
         image = docker_client.images.get(str(effective_base_uri))
-        return image, ImageURI.from_image(image)
+        return image, ImageURI.from_uri(f"{built_image_name}@{image.id}")
 
     error_update = _rolling_print_status_updates(status_updates)
     if error_update is not None:
@@ -614,7 +595,7 @@ def _build_image_from_base(
         )
 
     image = docker_client.images.get(built_image_name)
-    return image, ImageURI.from_image(image)
+    return image, ImageURI.from_uri(f"{built_image_name}@{image.id}")
 
 
 def _generate_dockerfile_contents(
@@ -792,10 +773,11 @@ def _reload_image_uri(image: Image) -> ImageURI:  # type: ignore
     # couldn't find any better way of doing this
     # we know "RepoTags" and "RepoDigests" exist because we just pushed the image,
     # filling in those attrs
-    digest = image.attrs["RepoDigests"][0].split("@")[1]
+    repository, digest = image.attrs["RepoDigests"][0].split("@")
     # "RepoDigests" does not contain the fully qualified repo and tag;
     # we must use "RepoTags"
-    repository, tag = image.attrs["RepoTags"][-1].split(":")
+    # the repos here come in random order, but they all have the same tag
+    _, tag = image.attrs["RepoTags"][0].split(":")
 
     return ImageURI(repository=repository, tag=tag, digest=digest)
 

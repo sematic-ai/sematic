@@ -38,8 +38,10 @@ def mock_image() -> mock.Mock:
 
     def mock_reload():
         mock_image.attrs = {
+            # "RepoTags" misses digests
             "RepoTags": [_LOCAL_IMAGE_NAME, _REMOTE_IMAGE_NAME],
-            "RepoDigests": [_REMOTE_IMAGE_URI],
+            # "RepoDigests" misses tags
+            "RepoDigests": [f"my_registry.com/my_repository@{_IMAGE_SHA}"],
         }
 
     mock_image.reload.side_effect = mock_reload
@@ -100,7 +102,9 @@ def test_build_image_script_happy(
 ):
     # determine loading the image_script build config
     target = os.path.join(_RESOURCE_PATH, "good_minimal.py")
-    expected_local_uri = docker_builder.ImageURI.from_uri(_LOCAL_IMAGE_URI)
+    expected_local_uri = docker_builder.ImageURI.from_uri(
+        f"fixtures:default@{_IMAGE_SHA}"
+    )
     mock_make_docker_client.return_value = mock_docker_client
     mock_push_image.return_value = docker_builder.ImageURI.from_uri(_REMOTE_IMAGE_URI)
 
