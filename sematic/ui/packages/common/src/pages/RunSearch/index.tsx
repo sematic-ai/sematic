@@ -5,7 +5,7 @@ import SearchFilters from "src/pages/RunSearch/SearchFilters";
 import { AllFilters } from "src/pages/RunSearch/filters/common";
 
 const RunSearch = () => {
-    const [filters, setFilters] = useState<AllFilters | null>(null);
+    const [filters, setFilters] = useState<AllFilters>({});
 
     const onFiltersChanged = useCallback((filters: AllFilters) => {
         setFilters(filters);
