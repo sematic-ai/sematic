@@ -3,4 +3,5 @@
 # Examples:
 # pandas
 # seaborn
+# sematic
 # torch
