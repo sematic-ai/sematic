@@ -1,30 +1,19 @@
 import { useCallback, useState, useMemo } from "react";
-import { useLocation } from "react-router-dom";
 import TwoColumns from "src/layout/TwoColumns";
 import RunList from "src/pages/RunSearch/RunList";
 import SearchFilters from "src/pages/RunSearch/SearchFilters";
-import { AllFilters, FilterType } from "src/pages/RunSearch/filters/common";
+import { AllFilters } from "src/pages/RunSearch/filters/common";
 
 const RunSearch = () => {
-    const location = useLocation();
-    const params = new URLSearchParams(location.hash.replace("#", "?"));
-    const defaultSearchString = !!params.get("search") ? params.get("search") as string : undefined;
-    const defaultFilters: AllFilters = useMemo(() => {
-        const filters: AllFilters = {}
-        if(!!defaultSearchString){
-            filters[FilterType.SEARCH] = [defaultSearchString];
-        }
-        return filters;
-    }, [defaultSearchString]);
-    const [filters, setFilters] = useState<AllFilters>(defaultFilters);
+    const [filters, setFilters] = useState<AllFilters>({});
 
     const onFiltersChanged = useCallback((filters: AllFilters) => {
         setFilters(filters);
     }, []);
 
     const onRenderLeft = useCallback(() => {
-        return <SearchFilters onFiltersChanged={onFiltersChanged} defaultFilters={defaultFilters} />;
-    }, [onFiltersChanged, defaultFilters]);
+        return <SearchFilters onFiltersChanged={onFiltersChanged} />;
+    }, [onFiltersChanged]);
 
     const filtersKey = useMemo(() => JSON.stringify(filters), [filters]);
 

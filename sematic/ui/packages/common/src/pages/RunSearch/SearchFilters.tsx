@@ -21,13 +21,12 @@ const StyledButton = styled(Button)`
 
 interface SearchFiltersProps {
     onFiltersChanged: (filters: AllFilters) => void;
-    defaultFilters: AllFilters;
 }
 
 const SearchFilters = (props: SearchFiltersProps) => {
-    const { onFiltersChanged, defaultFilters } = props;
+    const { onFiltersChanged } = props;
 
-    const allFilters = useRef<AllFilters>(defaultFilters);
+    const allFilters = useRef<AllFilters>({});
 
     const searchTextRef = useRef<ResettableHandle>(null);
     const tagsFiltersRef = useRef<ResettableHandle>(null);
@@ -81,11 +80,8 @@ const SearchFilters = (props: SearchFiltersProps) => {
         onFiltersChanged({...allFilters.current});
     }, [onFiltersChanged]);
 
-    const defaultSearchFilter = allFilters.current[FilterType.SEARCH];
-    const defaultSearchString = !!defaultSearchFilter ? defaultSearchFilter[0] : undefined;
-
     return <>
-        <SearchTextSection ref={searchTextRef} onSearchChanged={onSearchTextChanged} defaultSearchString={defaultSearchString} />
+        <SearchTextSection ref={searchTextRef} onSearchChanged={onSearchTextChanged} />
         <TagsFilterSection ref={tagsFiltersRef} />
         <StatusFilterSection ref={statusFiltersRef} onFiltersChanged={onStatusFilterChanged} />
         <OwnersFilterSection ref={ownersFiltersRef} onFiltersChanged={onOwnersFilterChanged} />
