@@ -13,7 +13,6 @@ that you can validate your commits (for PRs or any other purpose) using Sematic 
 <img
   alt="GitHub Integration Example"
   src="images/github/GitHubIntegrationDocs.gif"
-  width="200"
 />
 
 The key idea is that once you have configured Sematic and GitHub, you can launch
@@ -59,7 +58,7 @@ To begin, go to your GitHub organization's settings page. Then navigate to the
 <img 
   alt="Organization's personal access token settings"
   src="images/github/organizationSettings.jpg"
-  width="200"
+  width="350"
 />
 
 Once you've done that, you need to indicate that your organization will allow usage of
@@ -68,7 +67,7 @@ personal access tokens.
 <img
   alt="Enable personal access tokens"
   src="images/github/allowPersonalAccessTokens.jpg"
-  width="200"
+  width="900"
 />
 
 Below this, there is also an option to require that new tokens be approved by
@@ -92,7 +91,7 @@ First, go to your GitHub user settings. In the menu, navigate to
 <img
   alt="Developer Settings"
   src="images/github/developerSettings.jpg"
-  width="200"
+  width="350"
 />
 
 From there, go to "Personal access tokens" and then "Fine-grained tokens." Then click
@@ -101,7 +100,7 @@ From there, go to "Personal access tokens" and then "Fine-grained tokens." Then 
 <img
   alt="Generate Token"
   src="images/github/generateToken.jpg"
-  width="200"
+  width="1200"
 />
 
 Once you're on the page to create a new token, you need to fill out the following:
@@ -120,7 +119,7 @@ section.
 <img
   alt="Basic token settings"
   src="images/github/basicTokenSettings.jpg"
-  width="200"
+  width="600"
 />
 
 - **Repository Access**: Select the repository (or repositories) you wish to allow Sematic
@@ -131,7 +130,7 @@ permission for "Commit statuses" access.
 <img
   alt="Token Permissions"
   src="images/github/permissionSelection.jpg"
-  width="200"
+  width="800"
 />
 
 Once you have finished configuring the token, click the "Generate token" button at the bottom
@@ -154,7 +153,7 @@ section, you first need to navigate to
 <img
   alt="Organization's personal access token approvals"
   src="images/github/organizationSettings.jpg"
-  width="200"
+  width="350"
 />
 
 From there, open "Pending requests" and review the token request. If the requested
@@ -179,7 +178,7 @@ side menu.
 <img
   alt="Configuring branch protection"
   src="images/github/branchProtection.jpg"
-  width="200"
+  width="1200"
 />
 
 Either edit an existing branch protection rule or add a new one (with the
@@ -196,7 +195,7 @@ list of required checks.
 <img
   alt="Require check"
   src="images/github/requireCheck.jpg"
-  width="200"
+  width="800"
 />
 
 Finally, click the "Save changes" button to finalize your configuration.
