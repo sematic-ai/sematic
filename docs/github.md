@@ -100,7 +100,7 @@ From there, go to "Personal access tokens" and then "Fine-grained tokens." Then 
 <img
   alt="Generate Token"
   src="images/github/generateToken.jpg"
-  width="200"
+  width="1200"
 />
 
 Once you're on the page to create a new token, you need to fill out the following:
@@ -119,7 +119,7 @@ section.
 <img
   alt="Basic token settings"
   src="images/github/basicTokenSettings.jpg"
-  width="200"
+  width="600"
 />
 
 - **Repository Access**: Select the repository (or repositories) you wish to allow Sematic
@@ -130,7 +130,7 @@ permission for "Commit statuses" access.
 <img
   alt="Token Permissions"
   src="images/github/permissionSelection.jpg"
-  width="200"
+  width="800"
 />
 
 Once you have finished configuring the token, click the "Generate token" button at the bottom
@@ -153,7 +153,7 @@ section, you first need to navigate to
 <img
   alt="Organization's personal access token approvals"
   src="images/github/organizationSettings.jpg"
-  width="200"
+  width="350"
 />
 
 From there, open "Pending requests" and review the token request. If the requested
