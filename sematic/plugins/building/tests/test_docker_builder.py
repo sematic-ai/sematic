@@ -548,17 +548,6 @@ def test_reload_image_uri(mock_image: mock.Mock):
     mock_image.reload.assert_called()
 
 
-def test_docker_status_update_to_str():
-    actual_str = docker_builder._docker_status_update_to_str({})
-    assert actual_str is None
-
-    actual_str = docker_builder._docker_status_update_to_str({"k1": " v1 "})
-    assert actual_str == "k1=v1"
-
-    actual_str = docker_builder._docker_status_update_to_str({"k1": " v1 ", "k2": ""})
-    assert actual_str == "k1=v1 k2="
-
-
 def test_get_local_image_name():
     mock_build_config = mock.Mock(docker_builder.BuildConfig)
 

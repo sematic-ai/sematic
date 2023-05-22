@@ -1,4 +1,16 @@
 pytest_test(
+    name = "test_docker_client_utils",
+    srcs = ["test_docker_client_utils.py"],
+    data = glob([
+        "fixtures/**",
+    ]),
+    pip_deps = ["docker"],
+    deps = [
+        "//sematic/plugins/building:docker_client_utils",
+    ],
+)
+
+pytest_test(
     name = "test_docker_builder",
     srcs = ["test_docker_builder.py"],
     data = glob([
