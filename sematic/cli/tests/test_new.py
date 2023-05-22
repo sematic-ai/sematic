@@ -34,6 +34,7 @@ def test_new(project_name):
 
     assert set(files) == {
         "__main__.py",
+        "__main__.yaml",
         "__init__.py",
         "requirements.txt",
         "pipeline.py",
