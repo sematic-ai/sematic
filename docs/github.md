@@ -178,7 +178,7 @@ side menu.
 <img
   alt="Configuring branch protection"
   src="images/github/branchProtection.jpg"
-  width="200"
+  width="1200"
 />
 
 Either edit an existing branch protection rule or add a new one (with the
@@ -195,7 +195,7 @@ list of required checks.
 <img
   alt="Require check"
   src="images/github/requireCheck.jpg"
-  width="200"
+  width="800"
 />
 
 Finally, click the "Save changes" button to finalize your configuration.
