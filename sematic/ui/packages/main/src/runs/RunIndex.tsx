@@ -1,3 +1,4 @@
+import { useAtom } from "jotai";
 import { SearchOutlined } from "@mui/icons-material";
 import {
     Box,
@@ -21,7 +22,7 @@ import { RunTime } from "src/components/RunTime";
 import Tags from "src/components/Tags";
 import TimeAgo from "src/components/TimeAgo";
 import UserAvatar from "src/components/UserAvatar";
-import { spacing } from "src/utils";
+import { spacing, atomWithHashCustomSerialization } from "src/utils";
 
 const StyledScroller = styled(Container)`
   padding-top: ${spacing(10)};
@@ -143,17 +144,18 @@ const TableColumns: Array<RunListColumn> = [
     },
 ];
 
+const searchAtom = atomWithHashCustomSerialization("search", "");
+
 export function RunIndex() {
-    const [searchString, setSearchString] = useState<string | undefined>(
-        undefined
-    );
+    const [searchString, setSearchString] = useAtom(searchAtom);
+    
     const [submitedSearchString, setSubmitedSearchString] = useState<
     string | undefined
-    >(undefined);
+    >(searchString);
 
     const onChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         setSearchString(event.target.value);
-    }, []);
+    }, [setSearchString]);
 
     const onSubmit = useCallback(
         (event: FormEvent<HTMLFormElement>) => {
@@ -176,6 +178,7 @@ export function RunIndex() {
                             label="Search"
                             variant="outlined"
                             onChange={onChange}
+                            value={searchString}
                         />
                     </Box>
                     <Box sx={{ gridColumn: 2 }}>
