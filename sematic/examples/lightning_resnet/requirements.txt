@@ -5,7 +5,6 @@ plotly
 pytorch-lightning
 ray
 ray-lightning
-sematic
 torch
 torchmetrics
 torchvision

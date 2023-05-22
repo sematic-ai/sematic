@@ -5,4 +5,3 @@ torchmetrics
 pillow
 plotly
 ray[air]
-sematic
