@@ -186,3 +186,17 @@ def pipeline():
 
 * `foo` is the **upstream** function/future/run of `bar`,
 * `bar` is the **downstream** function/future/run of `foo`.
+
+## Tag
+
+Tags are short strings you can associate with runs that can help you
+organize and search for runs. To use them, set the `tags` property on
+a future before resolving it.
+
+```python
+pipeline().set(tags=["my-tag", "size:large"])
+```
+
+In this example, a run of the pipeline will have two tags associated
+with it: `my-tag` and `size:large`. Both will be displayed with the run
+in the dashboard and be usable in the run search page.

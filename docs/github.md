@@ -86,7 +86,7 @@ From there, go to "Personal access tokens" and then "Fine-grained tokens." Then 
 
 Once you're on the page to create a new token, you need to fill out the following:
 
-- **Name**: A simple name for the token's purpose, like "Sematic Commit Checker"
+- **Name**: A simple name for the token's purpose, like "Sematic Commit Checker".
 - **Expiration**: The duration that the token will be valid for. When this time expires,
 you will need to generate a new token and configure Sematic to use it. It's thus best to
 set it for long enough that you won't be too inconvenienced by replacing it.
@@ -163,22 +163,23 @@ Finally, click the "Save changes" button to finalize your configuration.
 
 ## CI Configuration
 
-```TODO: Write```
 This section describes how to configure your CI to leverage Sematic's GitHub
 integration. Since everyone's CI and infrastructure setup is different, the
 details of this step will differ for everyone. However, the high-level steps
 remain the same:
 
-1. Ensure your CI has network access to your Sematic deployment
+1. Ensure your CI has network access to your Sematic deployment.
 2. Get a Sematic API key to use via your CI. This can just be the API key of
-an individual user.
+an individual user (this would be the same as the API key you use for
+[`SEMATIC_API_KEY`](./cli.md)).
 3. Set the `SEMATIC_API_ADDRESS` environment variable on your CI worker to
 point to your Sematic deployment.
 4. Set the `SEMATIC_API_KEY` environment variable on your CI worker to
 enable Sematic access.
-5. Configure your CI to run the command line command to launch your Sematic
+5. Configure your CI to run the CLI command to launch your Sematic
 pipelines. Any run that should be considered as a requirement for the check
-to pass should have the tag `checks-commit:<git sha being built by CI>`.
+to pass should have the [tag](./glossary.md#tag)
+`checks-commit:<git sha being built by CI>`.
 6. Configure your CI to run
 `sematic github check-commit sematic-ai/sematic:<git sha being built by CI>`
 after all desired pipelines have been launched.
@@ -225,6 +226,7 @@ To make a resulting run that was used in Sematic's check,
 the pipeline could then be launched from the command line as:
 
 ```shell
+GIT_COMMIT_SHA=$(git rev-parse HEAD)
 bazel run //my_package/my_pipeline:main -- --tag "checks-commit:$GIT_COMMIT_SHA"
 ```
 
@@ -232,7 +234,9 @@ bazel run //my_package/my_pipeline:main -- --tag "checks-commit:$GIT_COMMIT_SHA"
 
 Once you have completed [GitHub Configuration](#gitHub-configuration) you
 should have a personal access token. Your Sematic server administrator should
-configure your helm chart for Sematic to have the following settings:
+configure your
+[helm chart](./deploy.md#deployment-option-2-sematic-with-cloud-execution)
+for Sematic to have the following settings:
 
 ```yaml
 github:
