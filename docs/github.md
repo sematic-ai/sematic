@@ -10,7 +10,11 @@ involving your data and models.
 If you have deployed Sematic EE[^1], you can configure it to integrate with GitHub such
 that you can validate your commits (for PRs or any other purpose) using Sematic runs.
 
-![GitHub Integration Example](images/github/GitHubIntegrationDocs.gif)
+<img
+  alt="GitHub Integration Example"
+  src="images/github/GitHubIntegrationDocs.gif"
+  width="200"
+/>
 
 The key idea is that once you have configured Sematic and GitHub, you can launch
 Sematic runs from your CI. Any run you tag with `checks-commit:<git commit sha>`
@@ -53,15 +57,19 @@ To begin, go to your GitHub organization's settings page. Then navigate to the
 
 
 <img 
-  src="images/github/organizationSettings.jpg"
   alt="Organization's personal access token settings"
+  src="images/github/organizationSettings.jpg"
   width="200"
 />
 
 Once you've done that, you need to indicate that your organization will allow usage of
 personal access tokens.
 
-![Enable personal access tokens](images/github/allowPersonalAccessTokens.jpg)
+<img
+  alt="Enable personal access tokens"
+  src="images/github/allowPersonalAccessTokens.jpg"
+  width="200"
+/>
 
 Below this, there is also an option to require that new tokens be approved by
 an organization administrator before they can be used. While not required for
@@ -81,12 +89,20 @@ First, go to your GitHub user settings. In the menu, navigate to
 "Developer Settings."
 
 
-![Developer Settings](images/github/developerSettings.jpg)
+<img
+  alt="Developer Settings"
+  src="images/github/developerSettings.jpg"
+  width="200"
+/>
 
 From there, go to "Personal access tokens" and then "Fine-grained tokens." Then click
 "Generate new token."
 
-![Generate Token](images/github/generateToken.jpg)
+<img
+  alt="Generate Token"
+  src="images/github/generateToken.jpg"
+  width="200"
+/>
 
 Once you're on the page to create a new token, you need to fill out the following:
 
@@ -101,14 +117,22 @@ If you don't see that organization listed, you may need to go back to the
 [Allow Usage of Personal Access Tokens](#allow-usage-of-personal-access-tokens)
 section.
 
-![Basic token settings](images/github/basicTokenSettings.jpg)
+<img
+  alt="Basic token settings"
+  src="images/github/basicTokenSettings.jpg"
+  width="200"
+/>
 
 - **Repository Access**: Select the repository (or repositories) you wish to allow Sematic
 to interact with.
 - **Permissions**: Under *Permissions > Repository Permissions*, select "Read and write"
 permission for "Commit statuses" access.
 
-![Token Permissions](images/github/permissionSelection.jpg)
+<img
+  alt="Token Permissions"
+  src="images/github/permissionSelection.jpg"
+  width="200"
+/>
 
 Once you have finished configuring the token, click the "Generate token" button at the bottom
 of the page. Finally, copy the token you are given and store it in a secure place. You will
@@ -127,7 +151,11 @@ As in the
 section, you first need to navigate to
 *Organization Settings > Third-party Access section > Personal access tokens*
 
-![Organization's personal access token approvals](images/github/organizationSettings.jpg)
+<img
+  alt="Organization's personal access token approvals"
+  src="images/github/organizationSettings.jpg"
+  width="200"
+/>
 
 From there, open "Pending requests" and review the token request. If the requested
 access is in line with the description from 
@@ -148,7 +176,11 @@ Once you're ready, go to the repository you wish to add this protection to,
 and navigate to its settings page. From there, select "Branches" from the
 side menu.
 
-![Configuring branch protection](images/github/branchProtection.jpg)
+<img
+  alt="Configuring branch protection"
+  src="images/github/branchProtection.jpg"
+  width="200"
+/>
 
 Either edit an existing branch protection rule or add a new one (with the
 "Add rule" button), depending on whether the branch you're protecting already
@@ -161,7 +193,11 @@ configuration box. There, enable "Require status checks to pass before merging".
 You may then search for the `sematic-pipelines-pass` check, and add it to the
 list of required checks.
 
-![Require check](images/github/requireCheck.jpg)
+<img
+  alt="Require check"
+  src="images/github/requireCheck.jpg"
+  width="200"
+/>
 
 Finally, click the "Save changes" button to finalize your configuration.
 
