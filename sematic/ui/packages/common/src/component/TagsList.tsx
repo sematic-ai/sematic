@@ -2,6 +2,7 @@ import styled from "@emotion/styled";
 import Box from "@mui/material/Box";
 import { buttonClasses } from "@mui/material/Button";
 import Chip, { chipClasses } from "@mui/material/Chip";
+import isEmpty from "lodash/isEmpty";
 import take from "lodash/take";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useMeasure from "react-use/lib/useMeasure";
@@ -69,6 +70,9 @@ const TagsList = (props: TagsListProps) => {
 
     useEffect(() => {
         if (width < measureWidth) {
+            if (!refMeasureDom.current) {
+                return ;
+            }
             const chips = refMeasureDom.current!.querySelectorAll(".tag-candiate");
             const widths = (Array.from(chips).map(chip => chip.getBoundingClientRect().width));
             let fold = 0, sum = 0; const gap = 40; // 40 is an estimation of the width of the "+{N}" chip
@@ -90,6 +94,10 @@ const TagsList = (props: TagsListProps) => {
     // Limit to 20 tags in trial rendering, to avoid too many tags in the UI
     // (Assume that the user will not need to see more than 20 tags in the actual display)
     const TagsInTrialRenderingLimit = useMemo(() => take(tags, 20), [tags]);
+
+    if (isEmpty(tags)) {
+        return null;
+    }
 
     return <div style={{ position: "relative", width: "100%" }}>
         <MeasurementContainer ref={setRef}>

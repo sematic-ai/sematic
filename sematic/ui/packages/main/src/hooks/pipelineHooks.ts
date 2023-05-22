@@ -1,6 +1,5 @@
-import { atomWithHashCustomSerialization, updateHash } from "@sematic/common/src/utils/url";
-import { useCallback, useContext } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { atomWithHashCustomSerialization } from "@sematic/common/src/utils/url";
+import { useContext } from "react";
 import PipelinePanelsContext from "src/pipelines/PipelinePanelsContext";
 import PipelineRunViewContext from "src/pipelines/PipelineRunViewContext";
 
@@ -26,22 +25,4 @@ export function usePipelinePanelsContext() {
     }
 
     return contextValue;
-}
-
-export function useHashUpdater() {
-    const { hash } = useLocation();
-    const navigate = useNavigate();
-
-    return useCallback((
-        hashOverrideValues: Record<string, string | Symbol>, replace: boolean = false) => {
-        let newHashValue = hash.replace(/^#/, "");
-
-        newHashValue = updateHash(newHashValue, hashOverrideValues);
-
-        navigate({
-            hash: newHashValue
-        }, {
-            replace
-        });
-    }, [hash, navigate]);
 }

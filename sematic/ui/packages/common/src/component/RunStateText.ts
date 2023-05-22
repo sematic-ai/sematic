@@ -1,11 +1,17 @@
 import { parseJSON } from "date-fns";
 import { DurationShort } from "src/component/DateTime";
 
+export enum DateFormats {
+    SHORT,
+    LONG,
+}
+
 export function getRunStateText(futureState: string,
     timestamps: {
         createdAt: string, resolvedAt?: string, failedAt?: string, endedAt?: string
-    }) {
+    }, dateFormat: DateFormats = DateFormats.SHORT) {
     const { createdAt, resolvedAt, failedAt, endedAt } = timestamps;
+
 
     if (["RESOLVED", "SUCCEEDED"].includes(futureState)) {
         if (!resolvedAt) {

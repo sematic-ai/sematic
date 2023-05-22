@@ -28,3 +28,18 @@ export function atomWithHashCustomSerialization(
     return atomWithHash<string>(name, initialValue, options as any); 
 }
 
+/**
+ * Turns the following remote formats:
+ * - git@gihub.com:sematic-ai/sematic.git
+ * - https://github.com/sematic-ai/sematic.git
+ * into clickable links:
+ * - https://github.com/sematic-ai/sematic/tree/<branch>
+ * - https://github.com/sematic-ai/sematic/commit/<SHA>
+ */
+export function makeGithubLink(remote: string, path: string) {
+    let domain = remote
+        .replace(/^(git@)|(https:\/\/)/, "")
+        .replace(/(\.git)$/, "")
+        .replace(/:/, "/");
+    return "https://" + domain + "/" + path;
+}

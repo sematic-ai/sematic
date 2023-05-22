@@ -1,7 +1,7 @@
 import { Box, styled } from "@mui/material";
 import { FlowWithProvider } from "src/pipelines/graph/ReactFlowDag";
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
-import { useGraphContext } from "src/hooks/graphHooks";
+import { useGraphContext } from "@sematic/common/src/hooks/graphHooks";
 import { RunDetailsPanel } from "src/pipelines/RunDetailsPanel";
 import BasicMetricsPanel from "src/pipelines/BasicMetricsPanel";
 import RunPanelContext from "src/pipelines//RunDetailsContext";

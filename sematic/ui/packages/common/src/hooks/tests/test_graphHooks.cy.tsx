@@ -1,6 +1,6 @@
-import { Graph, RunTreeNode } from "../../interfaces/graph";
-import { useRunsTree } from "../graphHooks";
-import { createRun } from "@sematic/ui-test/support/utils"
+import { createRun } from "@sematic/ui-test/support/utils";
+import { useRunsTree } from "src/hooks/graphHooks";
+import { Graph, RunTreeNode } from "src/interfaces/graph";
 
 describe("useRunsTree hook", () => {
     it("create a run tree from graph data", () => {

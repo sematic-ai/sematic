@@ -1,5 +1,5 @@
 import React from "react";
-import { Graph } from "../../interfaces/graph";
+import { Graph } from "@sematic/common/src/interfaces/graph";
 
 export const GraphContext = React.createContext<{
     graph: Graph | undefined;

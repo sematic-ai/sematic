@@ -8,9 +8,9 @@ import {
     ListItemText,
     useTheme,
 } from "@mui/material";
-import { useRunsTree, useGraphContext } from "../hooks/graphHooks";
-import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
+import { useGraphContext, useRunsTree } from "@sematic/common/src/hooks/graphHooks";
 import Loading from "../components/Loading";
+import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
 import RunTree from "./RunTree";
 
 export default function MenuPanel() {

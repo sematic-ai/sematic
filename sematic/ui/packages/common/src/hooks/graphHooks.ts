@@ -1,12 +1,14 @@
-import { useHttpClient } from "@sematic/common/src/hooks/httpHooks";
-import { useLogger } from "@sematic/common/src/utils/logging";
+import { useHttpClient } from "src/hooks/httpHooks";
+import { useLogger } from "src/utils/logging";
 import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import useAsyncRetry from "react-use/lib/useAsyncRetry";
 import usePrevious from "react-use/lib/usePrevious";
-import { RunGraphPayload } from "../Payloads";
-import { Graph, RunTreeNode } from "../interfaces/graph";
-import GraphContext from "../pipelines/graph/graphContext";
+import { RunGraphPayload } from "src/ApiContracts";
+import { Graph, RunTreeNode } from "src/interfaces/graph";
+import GraphContext from "src/context/graphContext";
 import { graphSocket } from "../sockets";
+import includes from "lodash/includes";
+import { HIDDEN_RUN_NAME_LIST } from "src/constants";
 
 export function useGraph(runRootId: string): [
     Graph | undefined,
@@ -127,13 +129,16 @@ export function useRunsTree(graph: Graph | undefined) {
             children: []
         };
 
+        // We need to filter out runs whose functions are present in the hidden run name list.
+        const filteredRuns = graph.runs.filter(run => !includes(HIDDEN_RUN_NAME_LIST, run.name));
+
         const runTreeNodeMappinng = new Map<string, RunTreeNode>(
-            graph.runs.map(run => {
+            filteredRuns.map(run => {
                 return [run.id, { run, children: []}];
             })
         );
 
-        graph.runs.forEach(run => {
+        filteredRuns.forEach(run => {
             const {id, parent_id} = run;
             const parentNode = parent_id ? runTreeNodeMappinng.get(parent_id) : rootTreeNode;
             const treeNode = runTreeNodeMappinng.get(id);
