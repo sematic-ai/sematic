@@ -52,7 +52,11 @@ To begin, go to your GitHub organization's settings page. Then navigate to the
 *Organization Settings > Third-party Access section > Personal access tokens > Settings*
 
 
-![Organization's personal access token settings](images/github/organizationSettings.jpg)
+<img 
+  src="images/github/organizationSettings.jpg"
+  alt="Organization's personal access token settings"
+  width="200"
+/>
 
 Once you've done that, you need to indicate that your organization will allow usage of
 personal access tokens.
