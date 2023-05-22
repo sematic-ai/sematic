@@ -4,11 +4,7 @@ build:
   platform: "linux/amd64"
   requirements: "sematic/examples/mnist/pytorch/requirements.txt"
   data: []
-  src: [
-    "sematic/examples/mnist/pytorch/__init__.py",
-    "sematic/examples/mnist/pytorch/mnist_learning_rates.py",
-    "sematic/examples/mnist/pytorch/pipeline.py"
-  ]
+  src: []
 push:
   registry: "558717131297.dkr.ecr.us-west-2.amazonaws.com"
   repository: "sematic-dev"
