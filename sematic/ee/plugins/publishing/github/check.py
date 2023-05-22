@@ -122,7 +122,7 @@ def _details_url(commit_sha: str) -> str:
     base_external_url = get_server_setting(ServerSettingsVar.SEMATIC_DASHBOARD_URL)
     # TODO: Update once this is implemented:
     # https://github.com/sematic-ai/sematic/issues/835
-    return f"{base_external_url}/runs?{urlencode(dict(search=tag))}"
+    return f"{base_external_url}/runs#{urlencode(dict(search=tag))}"
 
 
 def _validate_run_git_info(
