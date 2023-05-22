@@ -1,3 +1,4 @@
+import { useAtom } from "jotai";
 import { SearchOutlined } from "@mui/icons-material";
 import {
     Box,
@@ -12,7 +13,7 @@ import { styled } from "@mui/system";
 import MuiRouterLink from "@sematic/common/src/component/MuiRouterLink";
 import { getRunUrlPattern } from "@sematic/common/src/hooks/runHooks";
 import { Run } from "@sematic/common/src/Models";
-import React, { ChangeEvent, FormEvent, useCallback, useEffect, useState } from "react";
+import React, { ChangeEvent, FormEvent, useCallback, useState } from "react";
 import CalculatorPath from "src/components/CalculatorPath";
 import Id from "src/components/Id";
 import { RunList, RunListColumn } from "src/components/RunList";
@@ -21,7 +22,7 @@ import { RunTime } from "src/components/RunTime";
 import Tags from "src/components/Tags";
 import TimeAgo from "src/components/TimeAgo";
 import UserAvatar from "src/components/UserAvatar";
-import { spacing } from "src/utils";
+import { spacing, atomWithHashCustomSerialization } from "src/utils";
 
 const StyledScroller = styled(Container)`
   padding-top: ${spacing(10)};
@@ -143,19 +144,18 @@ const TableColumns: Array<RunListColumn> = [
     },
 ];
 
+const searchAtom = atomWithHashCustomSerialization("search", "");
+
 export function RunIndex() {
-    const params = new URLSearchParams(document.location.search);
-    const defaultSearchString = params.get("search");
-    const [searchString, setSearchString] = useState<string | undefined>(
-        !!defaultSearchString ? defaultSearchString : undefined
-    );
+    const [searchString, setSearchString] = useAtom(searchAtom);
+    
     const [submitedSearchString, setSubmitedSearchString] = useState<
     string | undefined
-    >(undefined);
+    >(searchString);
 
     const onChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         setSearchString(event.target.value);
-    }, []);
+    }, [setSearchString]);
 
     const onSubmit = useCallback(
         (event: FormEvent<HTMLFormElement>) => {
@@ -164,16 +164,6 @@ export function RunIndex() {
         },
         [searchString]
     );
-
-    const [submitedDefault, setSubmitedDefault] = useState(false);
-
-    useEffect(() => {
-        if(submitedDefault || !defaultSearchString) {
-            return;
-        }
-        setSubmitedSearchString(defaultSearchString);
-        setSubmitedDefault(true);
-    }, [submitedDefault, setSubmitedDefault, setSubmitedSearchString, defaultSearchString]);
 
     return (
         <StyledScroller>
@@ -188,7 +178,7 @@ export function RunIndex() {
                             label="Search"
                             variant="outlined"
                             onChange={onChange}
-                            defaultValue={defaultSearchString}
+                            value={searchString}
                         />
                     </Box>
                     <Box sx={{ gridColumn: 2 }}>
