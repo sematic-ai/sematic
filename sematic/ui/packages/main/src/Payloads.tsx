@@ -1,4 +1,4 @@
-import { Artifact, Edge, Job, Note, Resolution, Run, User } from "@sematic/common/src/Models";
+import { Artifact, Edge, Job, Resolution, Run, User } from "@sematic/common/src/Models";
 
 export type RunViewPayload = {
     content: Run;
@@ -42,15 +42,6 @@ export type LogLineResult = {
 
 export type LogLineRequestResponse = {
     content: LogLineResult;
-};
-
-export type NoteListPayload = {
-    content: Note[];
-    authors: User[];
-};
-
-export type NoteCreatePayload = {
-    content: Note;
 };
 
 export type GoogleLoginPayload = {

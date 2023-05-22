@@ -76,7 +76,7 @@ const GitInfoBox = () => {
         if (isResolutionLoading) {
             return <Skeleton />
         }
-        if (resolution!.git_info_json === undefined) {
+        if (!resolution!.git_info_json) {
             return <GitInfoBoxPresentation hasGitInfo={false} />
         }
         const branchName = resolution!.git_info_json!.branch;

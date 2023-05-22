@@ -1,4 +1,4 @@
-import { Artifact, Edge, Resolution, Run, User } from "src/Models";
+import { Artifact, Edge, Note, Resolution, Run, User } from "src/Models";
 
 export type RunViewPayload = {
     content: Run;
@@ -23,6 +23,25 @@ export type RunGraphPayload = {
     edges: Edge[];
     artifacts: Artifact[];
 };
+
+export type NoteListPayload = {
+    content: Note[];
+    authors: User[];
+};
+
+export type NoteCreateRequestPayload = {
+    note: {
+        author_id: string,
+        note: string,
+        root_id: string,
+        run_id: string,
+    }
+};
+
+export type NoteCreateResponsePayload = {
+    content: Note;
+};
+
 
 export type UserListPayload = {
     content: User[];
