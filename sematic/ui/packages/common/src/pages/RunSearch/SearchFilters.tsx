@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import Button from "@mui/material/Button";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import OtherFiltersSection from "src/pages/RunSearch/filters/OtherFilterSection";
 import OwnersFilterSection from "src/pages/RunSearch/filters/OwnersFilterSection";
 import SearchTextSection from "src/pages/RunSearch/filters/SearchTextSection";
@@ -21,14 +21,13 @@ const StyledButton = styled(Button)`
 
 interface SearchFiltersProps {
     onFiltersChanged: (filters: AllFilters) => void;
+    defaultFilters: AllFilters;
 }
 
 const SearchFilters = (props: SearchFiltersProps) => {
-    const { onFiltersChanged } = props;
-    const params = new URLSearchParams(document.location.search);
-    const defaultSearchString = !!params.get("search") ? params.get("search") as string : undefined;
+    const { onFiltersChanged, defaultFilters } = props;
 
-    const allFilters = useRef<AllFilters>({});
+    const allFilters = useRef<AllFilters>(defaultFilters);
 
     const searchTextRef = useRef<ResettableHandle>(null);
     const tagsFiltersRef = useRef<ResettableHandle>(null);
@@ -82,17 +81,8 @@ const SearchFilters = (props: SearchFiltersProps) => {
         onFiltersChanged({...allFilters.current});
     }, [onFiltersChanged]);
 
-    const [submitedDefaults, setSubmitedDefaults] = useState(false);
-    useEffect(() => {
-        if(submitedDefaults) {
-            return;
-        }
-        if(!!defaultSearchString) {
-            allFilters.current[FilterType.SEARCH] = [defaultSearchString];
-        }
-        applyFilters();
-        setSubmitedDefaults(true);
-    }, [submitedDefaults, setSubmitedDefaults, applyFilters, allFilters, defaultSearchString]);
+    const defaultSearchFilter = allFilters.current[FilterType.SEARCH];
+    const defaultSearchString = !!defaultSearchFilter ? defaultSearchFilter[0] : undefined;
 
     return <>
         <SearchTextSection ref={searchTextRef} onSearchChanged={onSearchTextChanged} defaultSearchString={defaultSearchString} />

@@ -10,7 +10,7 @@ interface SearchTextSectionProps {
 
 const SearchTextSection = forwardRef<ResettableHandle, SearchTextSectionProps>((props, ref) => {
     const { onSearchChanged, defaultSearchString } = props;
-    const [search, setSearch] = useState<string>(!!defaultSearchString ? defaultSearchString : "");
+    const [search, setSearch] = useState<string>(defaultSearchString || "");
 
     const _onSearchChanged = useCallback((search: string) => {
         setSearch(search);
