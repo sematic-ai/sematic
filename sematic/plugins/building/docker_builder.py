@@ -8,6 +8,7 @@ import logging
 import os
 import re
 import runpy
+import signal
 import subprocess
 import sys
 import tempfile
@@ -36,7 +37,7 @@ from sematic.plugins.abstract_builder import (
     BuildConfigurationError,
     BuildError,
 )
-from sematic.plugins.building.docker_client_utils import _rolling_print_status_updates
+from sematic.plugins.building.docker_client_utils import rolling_print_status_updates
 from sematic.utils.env import environment_variables
 from sematic.utils.types import as_bool
 
@@ -571,7 +572,7 @@ def _build_image_from_base(
         image = docker_client.images.get(str(effective_base_uri))
         return image, ImageURI.from_uri(f"{built_image_name}@{image.id}")
 
-    error_update = _rolling_print_status_updates(status_updates)
+    error_update = rolling_print_status_updates(status_updates)
     if error_update is not None:
         logger.error(
             "Image build error details: '%s'", str(error_update.get("errorDetail"))
@@ -602,27 +603,30 @@ def _build_from_dockerfile(
     spinner_process = Process(target=_print_spinner)
     spinner_process.start()
 
-    # we have to create a tmp dockerfile and pass it instead of using the `fileobj` option
-    # of the docker_client, because it does not work with contexts, so operations like
-    # COPY do not work, as there exists no working dir context to copy the targets from
-    # API: https://docker-py.readthedocs.io/en/stable/api.html#module-docker.api.build
-    # Reported unresolved issue: https://github.com/docker/docker-py/issues/2105
-    with tempfile.NamedTemporaryFile(mode="wt", delete=True) as dockerfile:
-        dockerfile.write(dockerfile_contents)
-        dockerfile.flush()
+    try:
+        # we have to create a tmp dockerfile and pass it instead of using the `fileobj`
+        # option of the docker_client, because it does not work with contexts, so
+        # operations like COPY do not work, as there exists no working dir context to copy
+        # the targets from
+        # API: https://docker-py.readthedocs.io/en/stable/api.html#module-docker.api.build
+        # Reported unresolved issue: https://github.com/docker/docker-py/issues/2105
+        with tempfile.NamedTemporaryFile(mode="wt", delete=True) as dockerfile:
+            dockerfile.write(dockerfile_contents)
+            dockerfile.flush()
 
-        status_updates = docker_client.api.build(
-            dockerfile=dockerfile.name,
-            # use the project root as the context
-            # TODO: switch from project-relative paths to build file-relative paths
-            path=os.getcwd(),
-            tag=built_image_name,
-            decode=True,
-            **optional_kwargs,
-        )
+            status_updates = docker_client.api.build(
+                dockerfile=dockerfile.name,
+                # use the project root as the context
+                # TODO: switch from project-relative paths to build file-relative paths
+                path=os.getcwd(),
+                tag=built_image_name,
+                decode=True,
+                **optional_kwargs,
+            )
 
-    spinner_process.terminate()
-    spinner_process.join()
+    finally:
+        spinner_process.terminate()
+        spinner_process.join()
 
     return status_updates
 
@@ -634,9 +638,6 @@ def _print_spinner() -> None:
     This is meant to be used in a different process. Execution terminates when the process
     receives a `SIGTERM` signal.
     """
-    # Standard Library
-    import signal
-
     do_spin = True
 
     def _handler(_: Any, __: Any) -> None:
@@ -806,7 +807,7 @@ def _push_image(
         )
         return _reload_image_uri(image=image)
 
-    error_update = _rolling_print_status_updates(status_updates)
+    error_update = rolling_print_status_updates(status_updates)
     if error_update is not None:
         logger.error(
             "Image push error details: '%s'", str(error_update.get("errorDetail"))
