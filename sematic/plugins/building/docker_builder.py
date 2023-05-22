@@ -8,12 +8,14 @@ import logging
 import os
 import re
 import runpy
+import signal
 import subprocess
 import sys
 import tempfile
 import time
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, Generator, List, Optional, TextIO, Tuple
+from multiprocessing import Process
+from typing import Any, Dict, Generator, List, Optional, Tuple
 
 # isort: off
 
@@ -35,6 +37,7 @@ from sematic.plugins.abstract_builder import (
     BuildConfigurationError,
     BuildError,
 )
+from sematic.plugins.building.docker_client_utils import rolling_print_status_updates
 from sematic.utils.env import environment_variables
 from sematic.utils.types import as_bool
 
@@ -64,8 +67,6 @@ _DOCKERFILE_REQUIREMENTS_TEMPLATE = """
 COPY {requirements_file} requirements.txt
 RUN pip3 install --no-cache -r requirements.txt
 """
-
-_ROLLING_PRINT_WINDOW = 10
 
 
 @dataclass
@@ -557,35 +558,21 @@ def _build_image_from_base(
     )
     logger.debug("Using Dockerfile:\n%s", dockerfile_contents)
 
-    # we have to create a tmp dockerfile and pass it instead of using the `fileobj` option
-    # of the docker_client, because it does not work with contexts, so operations like
-    # COPY do not work, as there exists no working dir context to copy the targets from
-    # API: https://docker-py.readthedocs.io/en/stable/api.html#module-docker.api.build
-    # Reported unresolved issue: https://github.com/docker/docker-py/issues/2105
-    with tempfile.NamedTemporaryFile(mode="wt", delete=True) as dockerfile:
-        dockerfile.write(dockerfile_contents)
-        dockerfile.flush()
-
-        optional_kwargs = dict()
-        if build_config.build is not None and build_config.build.platform is not None:
-            optional_kwargs["platform"] = build_config.build.platform
-
-        status_updates = docker_client.api.build(
-            dockerfile=dockerfile.name,
-            # use the project root as the context
-            # TODO: switch from project-relative paths to build file-relative paths
-            path=os.getcwd(),
-            tag=built_image_name,
-            decode=True,
-            **optional_kwargs,
-        )
+    status_updates = _build_from_dockerfile(
+        built_image_name=built_image_name,
+        dockerfile_contents=dockerfile_contents,
+        platform=build_config.build.platform
+        if build_config.build is not None
+        else None,
+        docker_client=docker_client,
+    )
 
     if status_updates is None:
         logger.warning("Built image '%s' without any response", built_image_name)
         image = docker_client.images.get(str(effective_base_uri))
         return image, ImageURI.from_uri(f"{built_image_name}@{image.id}")
 
-    error_update = _rolling_print_status_updates(status_updates)
+    error_update = rolling_print_status_updates(status_updates)
     if error_update is not None:
         logger.error(
             "Image build error details: '%s'", str(error_update.get("errorDetail"))
@@ -596,6 +583,77 @@ def _build_image_from_base(
 
     image = docker_client.images.get(built_image_name)
     return image, ImageURI.from_uri(f"{built_image_name}@{image.id}")
+
+
+def _build_from_dockerfile(
+    built_image_name: str,
+    dockerfile_contents: str,
+    platform: Optional[str],
+    docker_client: docker.DockerClient,  # type: ignore
+) -> Generator[Dict[str, Any], None, None]:
+    """
+    Builds a Docker image starting from Dockerfile contents.
+    """
+    optional_kwargs = dict()
+    if platform is not None:
+        optional_kwargs["platform"] = platform
+
+    # the call to build below is blocking and takes a while
+    # print a spinner in the meantime
+    spinner_process = Process(target=_print_spinner)
+    spinner_process.start()
+
+    try:
+        # we have to create a tmp dockerfile and pass it instead of using the `fileobj`
+        # option of the docker_client, because it does not work with contexts, so
+        # operations like COPY do not work, as there exists no working dir context to copy
+        # the targets from
+        # API: https://docker-py.readthedocs.io/en/stable/api.html#module-docker.api.build
+        # Reported unresolved issue: https://github.com/docker/docker-py/issues/2105
+        with tempfile.NamedTemporaryFile(mode="wt", delete=True) as dockerfile:
+            dockerfile.write(dockerfile_contents)
+            dockerfile.flush()
+
+            status_updates = docker_client.api.build(
+                dockerfile=dockerfile.name,
+                # use the project root as the context
+                # TODO: switch from project-relative paths to build file-relative paths
+                path=os.getcwd(),
+                tag=built_image_name,
+                decode=True,
+                **optional_kwargs,
+            )
+
+    finally:
+        spinner_process.terminate()
+        spinner_process.join()
+
+    return status_updates
+
+
+def _print_spinner() -> None:
+    """
+    Prints a spinning character to stdout.
+
+    This is meant to be used in a different process. Execution terminates when the process
+    receives a `SIGTERM` signal.
+    """
+    do_spin = True
+
+    def _handler(_: Any, __: Any) -> None:
+        nonlocal do_spin
+        do_spin = False
+
+    signal.signal(signal.SIGTERM, _handler)
+
+    while do_spin:
+        for char in "\\|/-":
+            print(char)
+            time.sleep(0.1)
+            sys.stdout.write("\033[F\033[K")
+            sys.stdout.flush()
+            if not do_spin:
+                break
 
 
 def _generate_dockerfile_contents(
@@ -749,7 +807,7 @@ def _push_image(
         )
         return _reload_image_uri(image=image)
 
-    error_update = _rolling_print_status_updates(status_updates)
+    error_update = rolling_print_status_updates(status_updates)
     if error_update is not None:
         logger.error(
             "Image push error details: '%s'", str(error_update.get("errorDetail"))
@@ -780,55 +838,6 @@ def _reload_image_uri(image: Image) -> ImageURI:  # type: ignore
     _, tag = image.attrs["RepoTags"][0].split(":")
 
     return ImageURI(repository=repository, tag=tag, digest=digest)
-
-
-def _rolling_print_status_updates(
-    status_updates: Generator[Dict[str, Any], None, None],
-    output_handle: TextIO = sys.stderr,
-) -> Optional[Dict[str, Any]]:
-    """
-    Prints a rolling window of Docker server status message updates.
-    """
-    message_window = []
-
-    for status_update in status_updates:
-        if "error" in status_update.keys():
-            return status_update
-
-        update_str = _docker_status_update_to_str(status_update)
-        if update_str is None:
-            continue
-
-        message_window.append(update_str)
-        if len(message_window) <= _ROLLING_PRINT_WINDOW:
-            print(update_str, file=output_handle)
-        else:
-            message_window = message_window[1:]
-            print(f"\033[{_ROLLING_PRINT_WINDOW + 1}F\033[K[...]", file=output_handle)
-            for message in message_window:
-                print(f"\033[K{message}", file=output_handle)
-
-    return None
-
-
-def _docker_status_update_to_str(status_update: Dict[str, Any]) -> Optional[str]:
-    """
-    Returns a textual representation of the status update dict received from the Docker
-    server, or None if it was devoid of useful information.
-    """
-    length = len(status_update)
-
-    if length == 0:
-        return None
-
-    if length == 1:
-        k, v = next(iter(status_update.items()))
-        if v is None or len(str(v).strip()) == 0:
-            # only one key with an empty value
-            return None
-        return f"{k}={str(v).strip()}"
-
-    return " ".join(sorted([f"{k}={str(v).strip()}" for k, v in status_update.items()]))
 
 
 def _get_local_image_name(target: str, build_config: BuildConfig) -> str:
