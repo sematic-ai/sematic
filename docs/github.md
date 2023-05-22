@@ -272,7 +272,7 @@ bazel run //my_package/my_pipeline:main -- --tag "checks-commit:$GIT_COMMIT_SHA"
 
 ## Sematic Configuration
 
-Once you have completed [GitHub Configuration](#gitHub-configuration) you
+Once you have completed [GitHub Configuration](#github-configuration) you
 should have a personal access token. Your Sematic server administrator should
 configure your
 [helm chart](./deploy.md#deployment-option-2-sematic-with-cloud-execution)
