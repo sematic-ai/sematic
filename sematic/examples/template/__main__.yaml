@@ -1,0 +1,10 @@
+version: 1
+base_uri: # The URI for your base image
+build:
+  requirements: # The path to your requirements.txt file
+  data: [
+      # List any data file globs
+  ]
+  src: [
+      # List your source file globs
+  ]
