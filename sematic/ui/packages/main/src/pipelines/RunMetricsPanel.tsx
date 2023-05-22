@@ -26,10 +26,11 @@ export default function RunMetricsPanel() {
     >();
 
     useEffect(() => {
-        if (runIsInTerminalState(run)) return;
+        //if (runIsInTerminalState(run)) return;
+        console.log("hooking up metrics socket", run.id);
         metricsSocket.removeAllListeners("update");
-        metricsSocket.on("update", (args: { metric_points: MetricPoint[] }) => {
-            console.log("metrics update", args)
+        metricsSocket.on("update", async (args: { metric_points: MetricPoint[] }) => {
+            console.log("metrics update", args);
             const currentRunMetricPoints = args.metric_points.filter(
                 (point) =>
                     point.labels["run_id"] === run.id &&
