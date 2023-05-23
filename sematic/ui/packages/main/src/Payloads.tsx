@@ -76,14 +76,6 @@ export interface VersionPayload {
     server: SemanticVersion;
 } 
 
-export type BasicMetricsPayload = {
-    content: {
-        avg_runtime_children: {[k: string]: number},
-        count_by_state: {[k: string]: number},
-        total_count: number
-    }
-}
-
 export type RunJobPayload = {
     content: Array<Job>
 }

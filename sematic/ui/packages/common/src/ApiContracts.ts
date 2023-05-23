@@ -1,4 +1,8 @@
-import { Run, User } from "src/Models";
+import { Resolution, Run, User } from "src/Models";
+
+export type RunViewPayload = {
+    content: Run;
+};
 
 export type RunListPayload = {
     current_page_url: string;
@@ -9,9 +13,21 @@ export type RunListPayload = {
     content: Run[];
 };
 
+export type ResolutionPayload = {
+    content: Resolution;
+};
+
 export type UserListPayload = {
     content: User[];
 };
+
+export type BasicMetricsPayload = {
+    content: {
+        avg_runtime_children: {[k: string]: number},
+        count_by_state: {[k: string]: number},
+        total_count: number
+    }
+}
 
 type Operator = "eq";
 

@@ -1,11 +1,11 @@
 import Box from "@mui/material/Box";
 import { Run } from "@sematic/common/src/Models";
-import { useAtom } from "jotai";
-import { useEffect, useMemo } from "react";
+import { useFetchResolution } from "@sematic/common/src/hooks/resolutionHooks";
+import { createRunRouter } from "@sematic/common/src/pages/RunDetails/RunRouter";
+import { ExtractContextType } from "@sematic/common/src/utils/typings";
+import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import Loading from "src/components/Loading";
-import { ExtractContextType } from "@sematic/common/src/utils/typings";
-import { selectedRunHashAtom, useFetchResolution, useFetchRun, useRunNavigation } from "src/hooks/pipelineHooks";
 import PipelineBar from "src/pipelines/PipelineBar";
 import PipelinePanels from "src/pipelines/PipelinePanels";
 import PipelineRunViewContext from "src/pipelines/PipelineRunViewContext";
@@ -45,41 +45,7 @@ export function RunViewPresentation({
     );
 }
 
-export function RunViewRouter() {
-    const { rootId } = useParams();
-
-    if (!rootId) {
-        throw new Error(
-            "`rootId` is expected from the URL. This component might be used with wrong route.");
-    }
-    const navigate = useRunNavigation();
-    const [run, isLoading, error] = useFetchRun(rootId!);
-    const [, setSelectedRunId] = useAtom(selectedRunHashAtom);
-
-    useEffect(() => {
-        if (!run) {
-            return;
-        }
-        if (rootId !== run.root_id) { 
-            // in case `rootId` is actually a nested run. Navigate to new URL
-            const nestedRunId = rootId!;
-            navigate(run.root_id, true, {"run": nestedRunId});
-        }
-    }, [run, rootId, navigate, setSelectedRunId]);
-
-    if (error || isLoading) {
-        return <Loading error={error} isLoaded={!isLoading} />
-    }
-
-    if (rootId !== run!.root_id) { 
-    // in case `rootId` is actually a nested run. Render nothing. Page
-    // will be redirected soon.
-        return <></>;
-    }
-
-    // Otherwise, load `PipelineRunViewPresentation` to actually render root run.
-    return <RunViewPresentation rootRun={run!} />
-}
+const RunViewRouter = createRunRouter(RunViewPresentation);
 
 export default function RunViewWraper() {
     const { rootId } = useParams();

@@ -10,8 +10,11 @@ import {
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/system";
 import MuiRouterLink from "@sematic/common/src/component/MuiRouterLink";
+import TimeAgo from "@sematic/common/src/component/TimeAgo";
 import { getRunUrlPattern } from "@sematic/common/src/hooks/runHooks";
 import { Run } from "@sematic/common/src/Models";
+import { atomWithHashCustomSerialization } from "@sematic/common/src/utils/url";
+import { useAtom } from "jotai";
 import React, { ChangeEvent, FormEvent, useCallback, useState } from "react";
 import CalculatorPath from "src/components/CalculatorPath";
 import Id from "src/components/Id";
@@ -19,7 +22,6 @@ import { RunList, RunListColumn } from "src/components/RunList";
 import RunStateChip from "src/components/RunStateChip";
 import { RunTime } from "src/components/RunTime";
 import Tags from "src/components/Tags";
-import TimeAgo from "src/components/TimeAgo";
 import UserAvatar from "src/components/UserAvatar";
 import { spacing } from "src/utils";
 
@@ -143,17 +145,18 @@ const TableColumns: Array<RunListColumn> = [
     },
 ];
 
+const searchAtom = atomWithHashCustomSerialization("search", "");
+
 export function RunIndex() {
-    const [searchString, setSearchString] = useState<string | undefined>(
-        undefined
-    );
+    const [searchString, setSearchString] = useAtom(searchAtom);
+    
     const [submitedSearchString, setSubmitedSearchString] = useState<
     string | undefined
-    >(undefined);
+    >(searchString);
 
     const onChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         setSearchString(event.target.value);
-    }, []);
+    }, [setSearchString]);
 
     const onSubmit = useCallback(
         (event: FormEvent<HTMLFormElement>) => {
@@ -176,6 +179,7 @@ export function RunIndex() {
                             label="Search"
                             variant="outlined"
                             onChange={onChange}
+                            value={searchString}
                         />
                     </Box>
                     <Box sx={{ gridColumn: 2 }}>
