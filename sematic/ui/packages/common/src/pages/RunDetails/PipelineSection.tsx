@@ -1,12 +1,17 @@
 import styled from "@emotion/styled";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Skeleton from "@mui/material/Skeleton";
 import Typograph from "@mui/material/Typography";
 import Headline from "src/component/Headline";
 import ImportPath from "src/component/ImportPath";
 import MoreVertButton from "src/component/MoreVertButton";
 import PipelineTitle from "src/component/PipelineTitle";
 import Section from "src/component/Section";
+import RootRunContext, { useRootRunContext } from "src/context/RootRunContext";
+import useBasicMetrics from "src/hooks/metricsHooks";
 import theme from "src/theme/new";
+import { ExtractContextType, RemoveUndefined } from "src/utils/typings";
 
 const TopSection = styled(Section)`
   height: 100px;
@@ -42,30 +47,52 @@ const StyledPipelineTitle = styled(PipelineTitle)`
   margin-right: ${theme.spacing(2)};
 `;
 
+const SkeletonForMetrics = styled(Skeleton)`
+    width: 80px;
+    margin: 10px ${theme.spacing(2.5)};
+
+    &:first-of-type {
+        width: 75px;
+        margin-left: ${theme.spacing(5)};
+    }
+    &:last-of-type {
+        width: 75px;
+        margin-right: ${theme.spacing(5)};
+    }
+`;
+
 const PipelineSection = () => {
+    const { rootRun } = useRootRunContext() as RemoveUndefined<ExtractContextType<typeof RootRunContext>>;
+
+    const { error, avgRuntime, successRate, totalCount, loading }
+        = useBasicMetrics({ runId: rootRun.id, rootFunctionPath: rootRun.function_path });
+
     return (
         <>
             <TopSection>
                 <Headline>Pipeline</Headline>
-                <StyledPipelineTitle>MNIST PyTorch Example</StyledPipelineTitle>
+                <StyledPipelineTitle>{rootRun.name}</StyledPipelineTitle>
                 <ImportPath>
-          sematic.examples.mnist.pipeline.with.very.long.path
+                    {rootRun.function_path}
                 </ImportPath>
                 <StyledVertButton />
             </TopSection>
             <BottomSection>
-                <Box>
-                    <Typograph variant="bigBold">257</Typograph>
-                    <Typograph variant="body1">runs</Typograph>
-                </Box>
-                <Box>
-                    <Typograph variant="bigBold">74 min.</Typograph>
-                    <Typograph variant="body1">avg. runtime</Typograph>
-                </Box>
-                <Box>
-                    <Typograph variant="bigBold">62%</Typograph>
-                    <Typograph variant="body1">success</Typograph>
-                </Box>
+                {error && <Alert severity="error">{error.message}</Alert>}
+                {!error && <>
+                    {loading ? <SkeletonForMetrics /> : <Box>
+                        <Typograph variant="bigBold">{totalCount}</Typograph>
+                        <Typograph variant="body1">runs</Typograph>
+                    </Box>}
+                    {loading ? <SkeletonForMetrics /> : <Box>
+                        <Typograph variant="bigBold">{`${avgRuntime}`}</Typograph>
+                        <Typograph variant="body1">avg. runtime</Typograph>
+                    </Box>}
+                    {loading ? <SkeletonForMetrics /> : <Box>
+                        <Typograph variant="bigBold">{successRate}</Typograph>
+                        <Typograph variant="body1">success</Typograph>
+                    </Box>}
+                </>}
             </BottomSection>
         </>
     );

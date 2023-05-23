@@ -1,6 +1,7 @@
 import { useTheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import { format, parseJSON, intervalToDuration, formatDuration } from "date-fns";
+import { durationToString } from "src/utils/datetime";
 
 interface DateTimeProps {
     datetime: Date | string;
@@ -31,13 +32,16 @@ export const Duration = (start: Date, end: Date) => {
         end
     });
 
-    const formatString = formatDuration(duration, { format: ["minutes", "seconds"], zero: false});
+    const formatString = formatDuration(duration, { zero: false});
 
     return formatString.replace(/\s0\sseconds$/g, "");
 }
 
 export function DurationShort(start: Date, end: Date) {
-    return Duration(start, end).replace(/\sminutes?/g, "m").replace(/\sseconds?/g, "s");
+    return durationToString(intervalToDuration({
+        start,
+        end
+    }));
 }
 
 export default DateTime;

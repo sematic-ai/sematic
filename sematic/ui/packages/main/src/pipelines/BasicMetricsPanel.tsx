@@ -1,7 +1,5 @@
-import { Run } from "@sematic/common/src/Models";
-import { usePipelineRunContext } from "src/hooks/pipelineHooks";
-import useBasicMetrics from "src/hooks/metricsHooks";
-import Loading from "src/components/Loading";
+import styled from "@emotion/styled";
+import HelpIcon from "@mui/icons-material/Help";
 import {
     Alert,
     Box,
@@ -13,12 +11,14 @@ import {
     TableRow,
     Typography,
 } from "@mui/material";
-import { useMemo } from "react";
-import { durationSecondsToString } from "src/utils";
-import CalculatorPath from "src/components/CalculatorPath";
-import HelpIcon from "@mui/icons-material/Help";
-import styled from "@emotion/styled";
+import { Run } from "@sematic/common/src/Models";
+import useBasicMetrics from "@sematic/common/src/hooks/metricsHooks";
 import { theme } from "@sematic/common/src/theme/mira/index";
+import { durationSecondsToString } from "@sematic/common/src/utils/datetime";
+import { useMemo } from "react";
+import CalculatorPath from "src/components/CalculatorPath";
+import Loading from "src/components/Loading";
+import { usePipelineRunContext } from "src/hooks/pipelineHooks";
 
 const MetricBox = styled(Box)`
   text-align: center;
@@ -70,54 +70,11 @@ function TopMetric(props: { value: string; label: string; docs?: string }) {
     );
 }
 
-export function runSuccessRate(
-    countByState: { [k: string]: number },
-    run: Run
-): string {
-    const numeratorStates = ["RESOLVED"];
-    const denominatorStates = ["RESOLVED", "FAILED", "NESTED_FAILED"];
-
-    const countForStates = (states: string[]) =>
-        states.reduce(
-            (sum: number, state: string) => (sum += countByState[state] || 0),
-            0
-        );
-
-    const percentRate =
-    (countForStates(numeratorStates) /
-      (countForStates(denominatorStates) || 1)) *
-    100;
-
-    return `${Math.floor(percentRate)}%`;
-}
-
-export function runAvgRunTime(
-    avgRuntimeChildren: { [k: string]: number },
-    run: Run
-): string {
-    return durationSecondsToString(avgRuntimeChildren[run.function_path] || 0);
-}
-
 export default function BasicMetricsPanel() {
     const { rootRun } = usePipelineRunContext() as { rootRun: Run };
 
-    const [payload, loading, error] = useBasicMetrics({ runId: rootRun!.id });
-
-    const totalCount = useMemo(() => payload?.content.total_count, [payload]);
-
-    const successRate = useMemo(
-        () =>
-            payload ? runSuccessRate(payload.content.count_by_state, rootRun) : "0%",
-        [payload, rootRun]
-    );
-
-    const avgRuntime = useMemo(
-        () =>
-            payload
-                ? runAvgRunTime(payload.content.avg_runtime_children, rootRun)
-                : "0s",
-        [payload, rootRun]
-    );
+    const { payload, loading, error, totalCount, successRate, avgRuntime} 
+        = useBasicMetrics({ runId: rootRun!.id, rootFunctionPath: rootRun!.function_path });
 
     const sortedAvgRuntimeChildren = useMemo(
         () =>

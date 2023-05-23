@@ -1,5 +1,4 @@
 import { User } from "@sematic/common/src/Models";
-import { atomWithHash } from "jotai-location";
 
 interface IFetchJSON {
     url: string;
@@ -58,17 +57,6 @@ export function fetchJSON({
         );
 }
 
-export function atomWithHashCustomSerialization(
-    name: string, initialValue: string, 
-    options: Parameters<typeof atomWithHash>[2] = {}) {
-    let overridenOptions = options || {};
-    // Use custom serialization function to avoid generating `"`(%22) in the hash
-    overridenOptions.serialize = (value: unknown) => (value as any).toString() ;
-    overridenOptions.deserialize = (value: unknown) => value as string ;
-
-    return atomWithHash<string>(name, initialValue, options as any); 
-}
-
 export const spacing = (val: number) => ({theme}: any) => theme.spacing(val);
 
 export async function sha1(text: string) {
@@ -89,24 +77,6 @@ export function abbreviatedUserName(user: User | null): string {
     const {first_name, last_name} = user;
 
     return `${first_name} ${(last_name || "").substring(0, 1)}.`
-}
-
-
-export function durationSecondsToString(durationS: number) : string {
-    const displayH: number = Math.floor(durationS / 3600);
-    const displayM: number = Math.floor((durationS % 3600) / 60);
-    const displayS: number = Math.round(durationS % 60);
-
-    const final = [
-        displayH > 0 ? displayH.toString() + "h" : "",
-        displayM > 0 ? displayM.toString() + "m " : "",
-        displayS > 0 ? displayS.toString() + "s" : "",
-        displayS === 0 ? "<1s" : "",
-    ]
-        .join(" ")
-        .trim();
-
-    return final;
 }
 
 let ID = 0;
