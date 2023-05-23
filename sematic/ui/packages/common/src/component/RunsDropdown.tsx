@@ -1,13 +1,17 @@
 import styled from "@emotion/styled";
+import Box from "@mui/material/Box";
 import FormControl from "@mui/material/FormControl";
 import MenuItem from "@mui/material/MenuItem";
-import Box from "@mui/material/Box";
-import Select, {selectClasses} from "@mui/material/Select";
-import Typography, { typographyClasses } from "@mui/material/Typography";
-import { useCallback } from "react";
-import theme from "src/theme/new";
+import Select, { SelectChangeEvent, selectClasses } from "@mui/material/Select";
 import { svgIconClasses } from "@mui/material/SvgIcon";
-import { SuccessStateChip } from "src/component/RunStateChips";
+import Typography, { typographyClasses } from "@mui/material/Typography";
+import isEmpty from "lodash/isEmpty";
+import keyBy from "lodash/keyBy";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Run } from "src/Models";
+import { getRunStateChipByState } from "src/component/RunStateChips";
+import TimeAgo from "src/component/TimeAgo";
+import theme from "src/theme/new";
 
 const StyledSelect = styled(Select)`
     width: 100%;
@@ -40,39 +44,60 @@ const StyledMenuItem = styled(MenuItem)`
 `;
 
 interface ValuePresentationProps {
-    value: any;
+    run: Run;
 }
 const ValuePresentation = (props: ValuePresentationProps) => {
-    const { value } = props;
+    const { run } = props;
+    const stateChip = useMemo(() => getRunStateChipByState(run.future_state, "small"), [run.future_state]);
     return <StyledBox {...props}>
-        <SuccessStateChip size="small" />
-        <Typography variant="code">{`02wqdf5-${value}`}</Typography>
-        <Typography variant="small">2d ago</Typography>
+        {stateChip}
+        <Typography variant="code">{run.id.substring(0, 7)}</Typography>
+        <Typography variant="small">
+            <TimeAgo date={run.created_at}  />
+        </Typography>
     </StyledBox>
 }
 
-interface RunsDropdownProps {
+export interface RunsDropdownProps {
     onChange?: (value: unknown) => void;
+    runs: Array<Run>;
 }
 
 const RunsDropdown = (prop: RunsDropdownProps) => {
-    const { onChange } = prop;
+    const { onChange: reportChange, runs } = prop;
 
-    const renderValue = useCallback((value: unknown) => {
-        return <ValuePresentation value={value as string} />;
-    }, []);
+    const [value, setValue] = useState<string>("");
+
+    const runsMap = useMemo(() => keyBy(runs, "id"), [runs]);
+
+    const renderValue = useCallback((runId: unknown) => {
+        const run = runsMap[runId as string];
+        if (!run) {
+            return null;
+        }
+        return <ValuePresentation run={run} />;
+    }, [runsMap]);
+
+    const onChange = useCallback((event: SelectChangeEvent<unknown>) => {
+        const newValue = event.target.value as string;
+        setValue(newValue);
+        reportChange?.(newValue);
+    }, [setValue, reportChange]);
+
+    useEffect(() => {
+        if (isEmpty(runs)) {
+            return;
+        }
+        if (value === "") {
+            setValue(runs[0].id);
+        }
+    }, [runs, value, setValue]);
 
     return <FormControl style={{ width: "100%" }} size="small">
-        <StyledSelect defaultValue={"1"} renderValue={renderValue} onChange={onChange}>
-            <StyledMenuItem value="1">
-                <ValuePresentation value="1" />
-            </StyledMenuItem>
-            <StyledMenuItem value="2">
-                <ValuePresentation value="2" />
-            </StyledMenuItem>
-            <StyledMenuItem value="3">
-                <ValuePresentation value="3" />
-            </StyledMenuItem>
+        <StyledSelect value={value} renderValue={renderValue} onChange={onChange}>
+            {runs.map((run) => <StyledMenuItem key={run.id} value={run.id}>
+                <ValuePresentation run={run} />
+            </StyledMenuItem>)}            
         </StyledSelect>
     </FormControl>;
 }
