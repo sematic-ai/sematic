@@ -43,7 +43,7 @@
 * Apache Spark
 -->
 * [Ray](ray.md)
-* [Github](github.md)
+* [GitHub](github.md)
 * [Snowflake](snowflake.md)
 * [Grafana](grafana.md)
 * [Slack](slack.md)
