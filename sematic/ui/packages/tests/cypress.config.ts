@@ -9,6 +9,7 @@ export default defineConfig({
     env: {
         pluginVisualRegressionImagesPath: "cypress_screenshots/upper_level/{spec_path}",
         pluginVisualRegressionForceDeviceScaleFactor: true,
+        pluginVisualRegressionDiffConfig: { threshold: 0.01 }
     },
     e2e: {
         baseUrl: "http://127.0.0.1:5001",

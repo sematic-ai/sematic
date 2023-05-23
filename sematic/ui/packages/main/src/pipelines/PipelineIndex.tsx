@@ -10,6 +10,8 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/system";
 import MuiRouterLink from "@sematic/common/src/component/MuiRouterLink";
+import TimeAgo from "@sematic/common/src/component/TimeAgo";
+import useBasicMetrics from "@sematic/common/src/hooks/metricsHooks";
 import { useFetchRuns } from "@sematic/common/src/hooks/runHooks";
 import { Run } from "@sematic/common/src/Models";
 import { useCallback, useMemo } from "react";
@@ -20,9 +22,6 @@ import RunStateChip, {
 } from "src/components/RunStateChip";
 import { RunTime } from "src/components/RunTime";
 import Tags from "src/components/Tags";
-import TimeAgo from "src/components/TimeAgo";
-import useBasicMetrics from "src/hooks/metricsHooks";
-import { runAvgRunTime, runSuccessRate } from "src/pipelines/BasicMetricsPanel";
 import { pipelineSocket } from "src/sockets";
 
 const RecentStatusesWithStyles = styled("span")`
@@ -68,19 +67,8 @@ function PipelineMetric(props: { value: string; label: string }) {
 
 function PipelineMetrics(props: { run: Run }) {
     const { run } = props;
-    const [payload, loading, error] = useBasicMetrics({ runId: run.id });
-
-    const successRate = useMemo(
-        () =>
-            payload ? runSuccessRate(payload.content.count_by_state, run) : "0%",
-        [payload, run]
-    );
-
-    const avgRuntime = useMemo(
-        () =>
-            payload ? runAvgRunTime(payload.content.avg_runtime_children, run) : "0s",
-        [payload, run]
-    );
+    const {payload, loading, error, successRate, avgRuntime} = useBasicMetrics({ runId: run.id, 
+        rootFunctionPath: run.function_path });
 
     return (
         <>
