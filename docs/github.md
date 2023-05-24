@@ -1,5 +1,10 @@
 # GitHub[^1]
 
+{% hint style="info" %}
+This feature is only available in Sematic
+Enterprise Edition.
+{% endhint %}
+
 ## Summary
 
 At Sematic, we believe testing is crucial to enhancing your development loop, whether
