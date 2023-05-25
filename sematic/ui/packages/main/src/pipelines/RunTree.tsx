@@ -6,22 +6,17 @@ import {
     ListItemText
 } from "@mui/material";
 import { Run } from "@sematic/common/src/Models";
+import { RunTreeNode } from "@sematic/common/src/interfaces/graph";
+import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { Fragment, useCallback } from "react";
 import RunStateChip from "src/components/RunStateChip";
-import { ExtractContextType } from "@sematic/common/src/utils/typings";
-import { HIDDEN_RUN_NAME_LIST } from "src/constants";
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
-import { RunTreeNode } from "src/interfaces/graph";
 import PipelinePanelsContext from "src/pipelines/PipelinePanelsContext";
 
 export default function RunTree(props: {
     runTreeNodes: Array<RunTreeNode>;
 }) {
     let { runTreeNodes } = props;
-
-    // We need to filter out runs whose functions are present in the hidden run name list.
-    // The default "" value is required since indexOf does not accept an undefined value.
-    runTreeNodes = runTreeNodes.filter(({run}) => HIDDEN_RUN_NAME_LIST.indexOf(run?.name ?? "")===-1);
 
     const { selectedRun, setSelectedPanelItem, setSelectedRunId, setSelectedArtifactName  } 
   = usePipelinePanelsContext() as ExtractContextType<typeof PipelinePanelsContext> & {

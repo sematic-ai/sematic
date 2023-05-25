@@ -13,7 +13,7 @@ function _commonConvertor(displayH: number, displayM: number, displayS: number) 
     return final;
 
 }
-export function durationToString(duration: Duration) : string {
+export function durationToString(duration: Duration): string {
     const displayH: number = duration.hours!;
     const displayM: number = duration.minutes!;
     const displayS: number = duration.seconds!;
@@ -21,7 +21,7 @@ export function durationToString(duration: Duration) : string {
 }
 
 
-export function durationSecondsToString(durationS: number) : string {
+export function durationSecondsToString(durationS: number): string {
     const displayH: number = Math.floor(durationS / 3600);
     const displayM: number = Math.floor((durationS % 3600) / 60);
     const displayS: number = Math.round(durationS % 60);

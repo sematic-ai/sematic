@@ -46,7 +46,11 @@ const RunTreeStory: React.FC<StoryProps> = (props) => {
     const widthValue = width ? sizeOptions[width] : 200;
 
     const valueExpander = (value: string) => ({
-        value,
+        run: {
+            id: value,
+            name: value,
+            future_state: "RESOLVED",
+        },
         selected: selectedValue === value
     })
 
@@ -68,7 +72,7 @@ const RunTreeStory: React.FC<StoryProps> = (props) => {
     ]
 
     return <div style={{ maxWidth: widthValue }}>
-        <RunTreeComponent runTreeNodes={ExampleTreeData} onSelect={(value) => {
+        <RunTreeComponent runTreeNodes={ExampleTreeData as any} onSelect={(value) => {
             onChange(value);
             setSelectedValue(value);
         }} />

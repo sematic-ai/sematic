@@ -1,4 +1,4 @@
-import { Resolution, Run, User } from "src/Models";
+import { Artifact, Edge, Resolution, Run, User } from "src/Models";
 
 export type RunViewPayload = {
     content: Run;
@@ -15,6 +15,13 @@ export type RunListPayload = {
 
 export type ResolutionPayload = {
     content: Resolution;
+};
+
+export type RunGraphPayload = {
+    root_id: string;
+    runs: Run[];
+    edges: Edge[];
+    artifacts: Artifact[];
 };
 
 export type UserListPayload = {
