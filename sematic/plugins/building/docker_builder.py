@@ -161,7 +161,6 @@ def _launch(target: str, image_uri: ImageURI) -> None:
     """
     Launches the specified user code target, using the specified image.
     """
-    # TODO: switch from project-relative paths to build file-relative paths
     sys.path.append(os.getcwd())
     logger.info("Launching target: '%s'", target)
 
@@ -323,7 +322,6 @@ def _build_from_dockerfile(
             status_updates = docker_client.api.build(
                 dockerfile=dockerfile.name,
                 # use the project root as the context
-                # TODO: switch from project-relative paths to build file-relative paths
                 path=os.getcwd(),
                 tag=built_image_name,
                 decode=True,
@@ -551,7 +549,6 @@ def _get_local_image_name(target: str, build_config: BuildConfig) -> str:
     Returns a local name to give to an image build for the specified target script,
     according to the specified build configuration.
     """
-    # TODO: switch from project-relative paths to build file-relative paths
     dir_name = os.path.basename(os.path.dirname(os.path.abspath(target)))
     if dir_name == "/":
         dir_name = "default"
