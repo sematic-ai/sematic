@@ -1,10 +1,13 @@
 import styled from "@emotion/styled";
-import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import theme from "src/theme/new";
-import RunTree from "src/component/RunTree";
-import Section from "src/component/Section";
+import Typography from "@mui/material/Typography";
 import Headline from "src/component/Headline";
+import RunTree, { RunTreeSkeleton } from "src/component/RunTree";
+import Section from "src/component/Section";
+import { useRootRunContext } from "src/context/RootRunContext";
+import { useRunDetailsSelectionContext } from "src/context/RunDetailsSelectionContext";
+import { useRunsTree } from "src/hooks/graphHooks";
+import theme from "src/theme/new";
 
 const StyledSection = styled(Section)`
     display: flex;
@@ -62,23 +65,10 @@ const RunTreeContainer = styled(Box)`
 `;
 
 const RunTreeSection = () => {
-    const nodes = [
-        {
-            value: "MNIST PyTorch Example", children: [
-                { value: "Load train dataset", children: [] as any },
-                { value: "Load test dataset", children: [] as any },
-                { value: "get_dataloader", children: [] as any },
-                { value: "get_dataloader", children: [] as any },
-                {
-                    value: "train_eval", children: [
-                        { value: "train_model", children: [] as any },
-                        { value: "evaluate_model", selected: true, children: [] as any }
-                    ] as any
-                },
-            ] as any
-        }
+    const { graph, isGraphLoading } = useRootRunContext();
+    const { selectedRun, setSelectedRunId } = useRunDetailsSelectionContext();
 
-    ]
+    const runTreeNode = useRunsTree(graph);
 
     return <>
         <StyledSection>
@@ -87,7 +77,11 @@ const RunTreeSection = () => {
         </StyledSection>
         <ScrollableStyledSection>
             <RunTreeContainer>
-                <RunTree runTreeNodes={nodes} />
+                {isGraphLoading ?
+                    <RunTreeSkeleton /> :
+                    <RunTree runTreeNodes={runTreeNode?.children || []} selectedRunId={selectedRun?.id}
+                        onSelect={setSelectedRunId} />
+                }
             </RunTreeContainer>
         </ScrollableStyledSection>
     </>;
