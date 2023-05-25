@@ -1,19 +1,19 @@
 import styled from "@emotion/styled";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
+import { useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import Headline from "src/component/Headline";
 import MoreVertButton from "src/component/MoreVertButton";
+import NameTag from "src/component/NameTag";
 import RunsDropdown from "src/component/RunsDropdown";
 import Section from "src/component/Section";
 import TagsList from "src/component/TagsList";
-import { useFetchRuns } from "src/hooks/runHooks";
-import theme from "src/theme/new";
-import { useMemo } from "react";
 import RootRunContext, { useRootRunContext } from "src/context/RootRunContext";
+import { getRunUrlPattern, useFetchRuns } from "src/hooks/runHooks";
+import theme from "src/theme/new";
 import { ExtractContextType, RemoveUndefined } from "src/utils/typings";
-import NameTag from "src/component/NameTag";
 
 const StyledSection = styled(Section)`
   margin-bottom: ${theme.spacing(3)};
@@ -28,12 +28,13 @@ const BoxContainer = styled(Box)`
   align-items: center;
 `;
 
-const StyledTypography = styled(Typography)`
+const OwnerContainer = styled.span`
   margin-right: ${theme.spacing(2)};
 `;
 
 const RunSection = () => {
     const theme = useTheme();
+    const navigate = useNavigate();
 
     const { rootRun, resolution } = useRootRunContext() as RemoveUndefined<ExtractContextType<typeof RootRunContext>>;
 
@@ -67,22 +68,25 @@ const RunSection = () => {
 
     const { runs } = useFetchRuns(runFilters, otherQueryParams);
 
+    const onRootRunChange = useCallback((newRootRunId: unknown) => {
+        navigate(getRunUrlPattern(newRootRunId as string));
+    }, [navigate]);
+
     return (
         <StyledSection>
             <Headline>Pipeline Run</Headline>
             <BoxContainer style={{ marginBottom: theme.spacing(3) }}>
-                <RunsDropdown runs={runs || []} />
+                <RunsDropdown runs={runs || []} onChange={onRootRunChange} defaultValue={rootRun.id} />
                 <StyledVertButton />
             </BoxContainer>
             <BoxContainer style={{ marginBottom: theme.spacing(2) }}>
-                <StyledTypography>
-                    {owner}
-                </StyledTypography>
+                <OwnerContainer>{owner}</OwnerContainer>
                 <Typography variant="small">{resolverKind}</Typography>
             </BoxContainer>
             <BoxContainer>
                 <div><TagsList tags={rootRun.tags} /></div>
-                <Button variant={"text"} size={"small"}>add tags</Button>
+                {/** Adding tag is not currently supported will re-enable later */}
+                {/* <Button variant={"text"} size={"small"}>add tags</Button> */}
             </BoxContainer>
         </StyledSection>
     );

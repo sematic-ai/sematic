@@ -1,19 +1,22 @@
 import { Box } from "@mui/material";
 import { Edge, Run } from "@sematic/common/src/Models";
+import { HIDDEN_RUN_NAME_LIST } from "@sematic/common/src/constants";
+import { useGraphContext } from "@sematic/common/src/hooks/graphHooks";
+import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { useCallback, useEffect, useMemo } from "react";
 import ReactFlow, {
     Background,
-    BackgroundVariant, Edge as RFEdge, Node, ReactFlowInstance, ReactFlowProvider, useEdgesState, useNodesState
+    BackgroundVariant,
+    Node,
+    Edge as RFEdge,
+    ReactFlowInstance, ReactFlowProvider, useEdgesState, useNodesState
 } from "react-flow-renderer";
 import buildDagLayout from "src/components/utils/buildDagLayout";
-import { ExtractContextType } from "@sematic/common/src/utils/typings";
-import { HIDDEN_RUN_NAME_LIST } from "src/constants";
-import { useGraphContext } from "src/hooks/graphHooks";
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
+import PipelinePanelsContext from "src/pipelines/PipelinePanelsContext";
 import ArtifactNode from "src/pipelines/graph/ArtifactNode";
 import HiddenRunNode from "src/pipelines/graph/HiddenRunNode";
 import RunNode from "src/pipelines/graph/RunNode";
-import PipelinePanelsContext from "src/pipelines/PipelinePanelsContext";
 
 var util = require("dagre/lib/util");
 var graphlib = require("graphlib");

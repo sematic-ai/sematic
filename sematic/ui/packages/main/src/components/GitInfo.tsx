@@ -3,22 +3,7 @@ import { Box, Link, Tooltip, Typography, useTheme } from "@mui/material";
 import { Resolution } from "@sematic/common/src/Models";
 import { RiGitBranchLine, RiGitCommitLine } from "react-icons/ri";
 import CopyButton from "@sematic/common/src/component/CopyButton";
-
-/**
- * Turns the following remote formats:
- * - git@gihub.com:sematic-ai/sematic.git
- * - https://github.com/sematic-ai/sematic.git
- * into clickable links:
- * - https://github.com/sematic-ai/sematic/tree/<branch>
- * - https://github.com/sematic-ai/sematic/commit/<SHA>
- */
-function makeGithubLink(remote: string, path: string) {
-    let domain = remote
-        .replace(/^(git@)|(https:\/\/)/, "")
-        .replace(/(\.git)$/, "")
-        .replace(/:/, "/");
-    return "https://" + domain + "/" + path;
-}
+import { makeGithubLink} from "@sematic/common/src/utils/url";
 
 function GitInfo(props: {
     text: string;

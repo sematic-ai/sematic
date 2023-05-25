@@ -60,13 +60,14 @@ const ValuePresentation = (props: ValuePresentationProps) => {
 
 export interface RunsDropdownProps {
     onChange?: (value: unknown) => void;
+    defaultValue?: string;
     runs: Array<Run>;
 }
 
 const RunsDropdown = (prop: RunsDropdownProps) => {
-    const { onChange: reportChange, runs } = prop;
+    const { onChange: reportChange, defaultValue, runs } = prop;
 
-    const [value, setValue] = useState<string>("");
+    const [value, setValue] = useState<string>(defaultValue || "");
 
     const runsMap = useMemo(() => keyBy(runs, "id"), [runs]);
 

@@ -1,16 +1,20 @@
 import styled from "@emotion/styled";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
+import Skeleton from "@mui/material/Skeleton";
 import parseJSON from "date-fns/parseJSON";
-import { DateTimeLong, Duration } from "src/component/DateTime";
+import { useMemo } from "react";
+import { DateTimeLong } from "src/component/DateTime";
 import Headline from "src/component/Headline";
 import ImportPath from "src/component/ImportPath";
 import MoreVertButton from "src/component/MoreVertButton";
 import PipelineTitle from "src/component/PipelineTitle";
 import { RunReferenceLink } from "src/component/RunReference";
-import { SuccessStateChip } from "src/component/RunStateChips";
+import { getRunStateChipByState } from "src/component/RunStateChips";
+import getRunStateText, { DateFormats } from "src/component/RunStateText";
 import Section from "src/component/Section";
 import TagsList from "src/component/TagsList";
+import { useRootRunContext } from "src/context/RootRunContext";
+import { useRunDetailsSelectionContext } from "src/context/RunDetailsSelectionContext";
 import theme from "src/theme/new";
 
 const StyledSection = styled(Section)`
@@ -70,42 +74,80 @@ const TagsContainer = styled(Box)`
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  & .tags-list-wrapper {
+    width: auto;
+    flex-grow: 0;
+  }
 `;
 
 const StyledRunReferenceLink = styled(RunReferenceLink)`
     font-size: ${theme.typography.fontSize}px ;
 `;
 
+const SmallPlaceholderSkeleton = styled(Skeleton)`
+    width: 25px;
+`;
+
+const MediumPlaceholderSkeleton = styled(Skeleton)`
+    width: 100px;
+`;
+
+const LongPlaceholderSkeleton = styled(Skeleton)`
+    width: 300px;
+`;
+
 const FunctionName = PipelineTitle
 
 const FunctionSection = () => {
+    const { isGraphLoading } = useRootRunContext();
+    const { selectedRun } = useRunDetailsSelectionContext();
+
+    const statusText = useMemo(() => {
+        if (!selectedRun) {
+            return null;
+        }
+
+        const runDuration = getRunStateText(selectedRun.future_state, {
+            createdAt: selectedRun.created_at as unknown as string,
+            failedAt: selectedRun.failed_at as unknown as string,
+            resolvedAt: selectedRun.resolved_at as unknown as string
+        }, DateFormats.LONG);
+
+        const completeAt = DateTimeLong(parseJSON((selectedRun.resolved_at || selectedRun.failed_at
+            || selectedRun.ended_at) as unknown as string));
+
+        return `${runDuration} on ${completeAt}`;
+    }, [selectedRun]);
+
     return <StyledSection>
         <Headline>Function Run</Headline>
         <BoxContainer>
             <RunStateContainer>
-                <SuccessStateChip size={"large"} />
+                {isGraphLoading ? <SmallPlaceholderSkeleton /> : getRunStateChipByState(selectedRun!.future_state)}
             </RunStateContainer>
             <div className='Info'>
                 <FunctionName>
-                    evaluate_model
+                    {isGraphLoading ? <MediumPlaceholderSkeleton /> : selectedRun!.name}
                 </FunctionName>
                 <div>
-                    <StyledRunReferenceLink runId={"qwc2ldf"} />
-                    {`Completed in ${Duration(
-                        parseJSON("2012-04-23T18:14:23.511Z"), parseJSON("2012-04-23T18:25:43.511Z")
-                    )} on ${DateTimeLong(new Date())}`}
+                    {isGraphLoading ? <MediumPlaceholderSkeleton /> : <StyledRunReferenceLink runId={selectedRun!.id} />}
+                    {isGraphLoading ? <LongPlaceholderSkeleton /> : statusText}
                 </div>
             </div>
         </BoxContainer>
         <ImportPathContainer>
-            <ImportPath>examples.mnist.train_eval.evaluate_model</ImportPath>
+            {isGraphLoading ? <LongPlaceholderSkeleton />
+                : <ImportPath>{selectedRun?.function_path}</ImportPath>}
         </ImportPathContainer>
         <StyledVertButton />
-        <TagsContainer>
-            <div><TagsList tags={["example", "torch", "mnist"]} /></div>
-            <Button variant={"text"} size={"small"}>add tags</Button>
-        </TagsContainer>
-        
+        {isGraphLoading ? <MediumPlaceholderSkeleton />
+            : <TagsContainer>
+                <div className={"tags-list-wrapper"} key={selectedRun?.id}><TagsList tags={selectedRun?.tags || []} /></div>
+                {/** Adding tag is not currently supported will re-enable later */}
+                {/* <Button variant={"text"} size={"small"} style={
+                    {...(isEmpty(selectedRun?.tags) ? {marginLeft: "-8px"} : {})}
+                }>add tags</Button> */}
+            </TagsContainer>}
     </StyledSection>;
 }
 

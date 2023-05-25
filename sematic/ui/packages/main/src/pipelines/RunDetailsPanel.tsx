@@ -13,7 +13,7 @@ import RunStateChip from "src/components/RunStateChip";
 import { RunTime } from "src/components/RunTime";
 import Tags from "src/components/Tags";
 import { ExtractContextType } from "@sematic/common/src/utils/typings";
-import { useGraphContext } from "src/hooks/graphHooks";
+import { useGraphContext } from "@sematic/common/src/hooks/graphHooks";
 import {
     usePipelinePanelsContext,
     usePipelineRunContext,
