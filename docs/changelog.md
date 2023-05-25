@@ -6,6 +6,11 @@ with nothing else on the line.
 -->
 * HEAD
     * [deprecation] `Calculator` renamed to `Function`
+* [0.30.0](https://pypi.org/project/sematic/0.30.0/)
+    * [feature] Garbage collection CRON job
+    * [improvement] Enable backward logs scrolling
+    * [deprecation] Remove direct support for matplotlib figures, use `Image` instead
+    * [bugfix] Constraint plotly version for MNIST example
 * [0.29.0](https://pypi.org/project/sematic/0.29.0/)
     * [feature] Garbage collection CRON job
     * [feature] Enable customization of local storage path
