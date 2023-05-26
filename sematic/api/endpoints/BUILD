@@ -30,7 +30,7 @@ sematic_py_lib(
     srcs = ["events.py"],
     pip_deps = [
         "flask",
-        "flask-socketio",
+        # "flask-socketio",
         "requests",
     ],
     deps = [
@@ -67,7 +67,7 @@ sematic_py_lib(
     pip_deps = [
         "flask",
         "sqlalchemy",
-        "flask-socketio",
+        # "flask-socketio",
     ],
     deps = [
         ":auth",

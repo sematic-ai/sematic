@@ -3,4 +3,4 @@
 # not monkey patching early enough, unless you have the gevent monkey patch applied VERY
 # early (like user/sitecustomize).
 # Monkey patching: https://github.com/gevent/gevent/issues/1235
-import gevent.monkey; gevent.monkey.patch_all()
+# import gevent.monkey; gevent.monkey.patch_all()

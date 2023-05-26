@@ -1,6 +1,6 @@
 if __name__ == "__main__":
     # Third-party
-    import gevent.monkey  # type: ignore
+    # import gevent.monkey  # type: ignore
 
     # This enables us to use websockets and standard HTTP requests in
     # the same server locally, which is what we want. If you try to
@@ -8,7 +8,8 @@ if __name__ == "__main__":
     # not monkey patching early enough, unless you have the gevent
     # monkey patch applied VERY early (like user/sitecustomize).
     # Monkey patching: https://github.com/gevent/gevent/issues/1235
-    gevent.monkey.patch_all()
+    # gevent.monkey.patch_all()
+    pass
 
 # Standard Library
 import argparse
@@ -22,7 +23,9 @@ from typing import Optional
 # Third-party
 import flask
 from flask import jsonify, send_file
-from flask_socketio import Namespace, SocketIO  # type: ignore
+from socketio import AsyncServer, ASGIApp, Namespace  # type: ignore
+import socketio
+import uvicorn
 
 # Sematic
 # Endpoint modules need to be imported for endpoints
@@ -124,17 +127,17 @@ def log_request_end(response):
     return response
 
 
-def init_socketio():
-    socketio = SocketIO(sematic_api, cors_allowed_origins="*")
-    # This is necessary because starting version 5.7.0 python-socketio does not
-    # accept connections to undeclared namespaces
-    socketio.on_namespace(Namespace("/pipeline"))
-    socketio.on_namespace(Namespace("/graph"))
-    socketio.on_namespace(Namespace("/job"))
-    return socketio
+# def init_socketio():
+#     socketio = SocketIO(sematic_api, cors_allowed_origins="*")
+#     # This is necessary because starting version 5.7.0 python-socketio does not
+#     # accept connections to undeclared namespaces
+#     socketio.on_namespace(Namespace("/pipeline"))
+#     socketio.on_namespace(Namespace("/graph"))
+#     socketio.on_namespace(Namespace("/job"))
+#     return socketio
 
 
-socketio = init_socketio()
+# socketio = init_socketio()
 
 
 def register_signal_handlers():
@@ -165,15 +168,16 @@ def run_socketio(debug=False):
     with open(get_config().server_pid_file_path, "w+") as fp:
         fp.write(str(os.getpid()))
 
-    dictConfig(make_log_config(log_to_disk=True))
+    dictConfig(make_log_config(log_to_disk=True, level=logging.DEBUG))
     register_signal_handlers()
 
-    socketio.run(
-        sematic_api,
-        port=get_config().port,
-        host=get_config().server_address,
-        debug=debug,
-    )
+    # socketio.run(
+    #     sematic_api,
+    #     port=get_config().port,
+    #     host=get_config().server_address,
+    #     debug=debug,
+    # )
+    run_wsgi(daemon=False)
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -193,9 +197,13 @@ def run_wsgi(daemon: bool):
         "logconfig_dict": make_log_config(log_to_disk=True),
         "certfile": os.environ.get("CERTIFICATE"),
         "keyfile": os.environ.get("PRIVATE_KEY"),
+        "port": get_config().port,
+        "host":get_config().server_address,
     }
     register_signal_handlers()
-    SematicWSGI(sematic_api, options).run()
+    sio = socketio.AsyncServer(async_mode='asgi')
+    app = socketio.ASGIApp(sio, sematic_api)
+    SematicWSGI(app, options).run()
 
 
 if __name__ == "__main__":

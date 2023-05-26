@@ -16,9 +16,10 @@ sematic_py_lib(
     data = ["//sematic/ui:ui_build"],
     pip_deps = [
         "flask",
-        "flask-socketio",
-        "gevent",
-        "gevent-websocket",
+        # "flask-socketio",
+        # "gevent",
+        # "gevent-websocket",
+        "uvicorn",
     ],
     # buildifier: leave-alone
     deps = [
@@ -60,7 +61,8 @@ sematic_py_lib(
     srcs = ["wsgi.py"],
     pip_deps = [
         "flask",
-        "gunicorn",
+        # "gunicorn",
+        "uvicorn",
     ],
     deps = [],
 )

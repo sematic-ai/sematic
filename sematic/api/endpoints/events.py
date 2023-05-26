@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 
 # Third-party
 import flask
-import flask_socketio  # type: ignore
+# import flask_socketio  # type: ignore
 import requests
 
 # Sematic
@@ -27,12 +27,12 @@ def events(user: Optional[User], namespace: str, event: str) -> flask.Response:
     logger.info("Broadcasting: namespace=%s; event=%s", namespace, event)
     logger.debug("Broadcasting: json payload=%s", flask.request.json)
 
-    flask_socketio.emit(
-        event,
-        flask.request.json,
-        namespace="/{}".format(namespace),
-        broadcast=True,
-    )
+    # flask_socketio.emit(
+    #     event,
+    #     flask.request.json,
+    #     namespace="/{}".format(namespace),
+    #     broadcast=True,
+    # )
 
     return flask.jsonify({})
 

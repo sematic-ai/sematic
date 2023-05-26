@@ -3,11 +3,10 @@ from typing import Any, Dict, Optional
 
 # Third-party
 import flask
-import gunicorn.app.base  # type: ignore
-from gunicorn.util import daemonize  # type: ignore
+import uvicorn
 
 
-class SematicWSGI(gunicorn.app.base.BaseApplication):
+class SematicWSGI:
     """The standalone application class for gunicorn.
 
     https://docs.gunicorn.org/en/stable/custom.html
@@ -64,6 +63,9 @@ class SematicWSGI(gunicorn.app.base.BaseApplication):
         return self.application
 
     def run(self):
-        if self.cfg.daemon:
-            daemonize(self.cfg.enable_stdio_inheritance)
-        super().run()
+        # TODO: clean this up
+        uvicorn.run(
+            self.application,
+            host=self.options.get("host", "127.0.0.1"),
+            port=self.options.get("port", "5001"),
+        )
