@@ -340,13 +340,6 @@ def _generate_dockerfile_contents(
     """
     dockerfile_contents = _DOCKERFILE_BASE_TEMPLATE.format(base_uri=base_uri)
 
-    if source_build_config is not None and source_build_config.requirements is not None:
-        logger.debug("Adding requirements file: %s", source_build_config.requirements)
-        requirements_contents = _DOCKERFILE_REQUIREMENTS_TEMPLATE.format(
-            requirements_file=source_build_config.requirements
-        )
-        dockerfile_contents = f"{dockerfile_contents}{requirements_contents}"
-
     if source_build_config is not None and source_build_config.data is not None:
         logger.debug("Adding data files: %s", source_build_config.data)
         for data_glob in source_build_config.data:
@@ -359,6 +352,13 @@ def _generate_dockerfile_contents(
                     )
         # provide an empty line between data and src, for readability
         dockerfile_contents = f"{dockerfile_contents}\n"
+
+    if source_build_config is not None and source_build_config.requirements is not None:
+        logger.debug("Adding requirements file: %s", source_build_config.requirements)
+        requirements_contents = _DOCKERFILE_REQUIREMENTS_TEMPLATE.format(
+            requirements_file=source_build_config.requirements
+        )
+        dockerfile_contents = f"{dockerfile_contents}{requirements_contents}"
 
     if source_build_config is not None and source_build_config.src is not None:
         logger.debug("Adding source files: %s", source_build_config.src)
