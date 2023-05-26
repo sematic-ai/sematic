@@ -27,7 +27,12 @@ from docker.models.images import Image  # type: ignore
 # Sematic
 from sematic.abstract_plugin import SEMATIC_PLUGIN_AUTHOR, PluginVersion
 from sematic.container_images import CONTAINER_IMAGE_ENV_VAR
-from sematic.plugins.abstract_builder import AbstractBuilder, BuildError
+from sematic.plugins.abstract_builder import (
+    BUILD_CONFIG_ENV_VAR,
+    RUN_COMMAND_ENV_VAR,
+    AbstractBuilder,
+    BuildError,
+)
 from sematic.plugins.building.docker_builder_config import (
     BuildConfig,
     DockerClientConfig,
@@ -102,7 +107,7 @@ class DockerBuilder(AbstractBuilder):
     def get_version() -> PluginVersion:
         return _PLUGIN_VERSION
 
-    def build_and_launch(self, target: str) -> None:
+    def build_and_launch(self, target: str, run_command: Optional[str]) -> None:
         """
         Builds a container image and launches the specified target launch script, based on
         proprietary build configuration files.
@@ -112,6 +117,8 @@ class DockerBuilder(AbstractBuilder):
         target: str
             The path to the Pipeline target to launch; the built image must support this
             target's execution.
+        run_command: Optional[str]
+            The CLI command used to launch the pipeline, if applicable.
 
         Raises
         ------
@@ -122,14 +129,19 @@ class DockerBuilder(AbstractBuilder):
         SystemExit:
             A subprocess exited with an unexpected code.
         """
-        image_uri = _build(target=target)
-        _launch(target=target, image_uri=image_uri)
+        image_uri, build_config = _build(target=target)
+        _launch(
+            target=target,
+            run_command=run_command,
+            image_uri=image_uri,
+            build_config=build_config,
+        )
 
 
-def _build(target: str) -> ImageURI:
+def _build(target: str) -> Tuple[ImageURI, BuildConfig]:
     """
     Builds the container image, returning the image URI that can be used to launch
-    executions.
+    executions, and the build configuration object used to build the image.
     """
     build_config = load_build_config(script_path=target)
     logger.debug("Loaded build configuration: %s", build_config)
@@ -153,17 +165,28 @@ def _build(target: str) -> ImageURI:
 
     logger.debug("Using image: %s", repr(build_image_uri))
 
-    return build_image_uri
+    return build_image_uri, build_config
 
 
-def _launch(target: str, image_uri: ImageURI) -> None:
+def _launch(
+    target: str,
+    run_command: Optional[str],
+    image_uri: ImageURI,
+    build_config: BuildConfig,
+) -> None:
     """
     Launches the specified user code target, using the specified image.
     """
     sys.path.append(os.getcwd())
     logger.info("Launching target: '%s'", target)
 
-    with environment_variables({CONTAINER_IMAGE_ENV_VAR: repr(image_uri)}):
+    with environment_variables(
+        {
+            RUN_COMMAND_ENV_VAR: run_command,
+            CONTAINER_IMAGE_ENV_VAR: repr(image_uri),
+            BUILD_CONFIG_ENV_VAR: repr(build_config),
+        }
+    ):
         runpy.run_path(path_name=target, run_name="__main__")
 
     logger.debug("Finished launching target: '%s'", target)

@@ -81,7 +81,7 @@ def test_build_base_uri_happy(
     mock_make_docker_client.return_value = mock_docker_client
     mock_push_image.return_value = docker_builder.ImageURI.from_uri(_REMOTE_IMAGE_URI)
 
-    actual_image_uri = docker_builder._build(target=LAUNCH_SCRIPT)
+    actual_image_uri, _ = docker_builder._build(target=LAUNCH_SCRIPT)
 
     assert repr(actual_image_uri) == _REMOTE_IMAGE_URI
     mock_push_image.assert_called_once_with(
@@ -108,7 +108,7 @@ def test_build_image_script_happy(
     mock_make_docker_client.return_value = mock_docker_client
     mock_push_image.return_value = docker_builder.ImageURI.from_uri(_REMOTE_IMAGE_URI)
 
-    actual_image_uri = docker_builder._build(target=target)
+    actual_image_uri, _ = docker_builder._build(target=target)
 
     assert repr(actual_image_uri) == _REMOTE_IMAGE_URI
     mock_push_image.assert_called_once_with(
@@ -208,6 +208,8 @@ def test_build_image_build_script(
 
 def test_launch_happy():
     image_uri = docker_builder.ImageURI.from_uri(_BASE_IMAGE_URI)
+    expected_run_command = f"sematic run --build {LAUNCH_SCRIPT}"
+    expected_build_config = "mock build config"
 
     with tempfile.NamedTemporaryFile(delete=True) as f:
         orig_argv = sys.argv.copy()
@@ -217,19 +219,30 @@ def test_launch_happy():
             # this way we test both argument passing to the script, and image uri passing
             # to the runner
             sys.argv = ["/dummy.py", f.name]
-            docker_builder._launch(target=LAUNCH_SCRIPT, image_uri=image_uri)
+            docker_builder._launch(
+                target=LAUNCH_SCRIPT,
+                run_command=expected_run_command,
+                image_uri=image_uri,
+                build_config=expected_build_config,  # type: ignore
+            )
+
         finally:
             sys.argv = orig_argv
 
         with open(f.name, "rt") as g:
-            actual_image_uri = g.read()
+            actual_image_uri = g.readline().strip()
+            actual_run_command = g.readline().strip()
+            actual_build_config = g.readline().strip()
 
     assert actual_image_uri == _BASE_IMAGE_URI
+    assert actual_run_command == expected_run_command
+    assert actual_build_config == f"'{expected_build_config}'"
 
 
 def test_launch_error():
     target = os.path.join(RESOURCE_PATH, "bad_launch_script.py")
     image_uri = docker_builder.ImageURI.from_uri(_BASE_IMAGE_URI)
+    mock_build_config = mock.Mock(docker_builder.BuildConfig)
 
     # we go through the same motions as for the happy path, because we are honourable
     with tempfile.NamedTemporaryFile(delete=True) as f:
@@ -237,7 +250,12 @@ def test_launch_error():
         try:
             sys.argv = ["/dummy.py", f.name]
             with pytest.raises(SystemExit, match="42"):
-                docker_builder._launch(target=target, image_uri=image_uri)
+                docker_builder._launch(
+                    target=target,
+                    run_command=f"sematic run --build {target}",
+                    image_uri=image_uri,
+                    build_config=mock_build_config,
+                )
         finally:
             sys.argv = orig_argv
 

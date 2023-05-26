@@ -429,6 +429,13 @@ class BuildConfig:
         build_configs = map(cls.load_build_config_file, build_config_files)
         return functools.reduce(lambda c1, c2: c1.merge(c2), build_configs)
 
+    def __repr__(self):
+        """
+        Returns the complete textual representation of this configuration, as it would
+        appear in a configuration file.
+        """
+        return yaml.dump(asdict(self), Dumper=yaml.Dumper)
+
 
 def load_build_config(script_path: str) -> BuildConfig:
     """

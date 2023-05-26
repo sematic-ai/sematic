@@ -26,6 +26,7 @@ from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.graph import Graph, RerunMode
+from sematic.plugins.abstract_builder import get_build_config, get_run_command
 from sematic.resolvers.resource_managers.server_manager import ServerResourceManager
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
@@ -368,6 +369,8 @@ class LocalResolver(SilentResolver):
             cache_namespace=self._cache_namespace_str,
             # the user_id is overwritten on the API call based on the user's API key
             user_id=None,
+            run_command=get_run_command(),
+            build_config=get_build_config(),
         )
 
         return resolution

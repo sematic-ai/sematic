@@ -88,6 +88,7 @@ def run(build: bool, log_level: str, script_path: str, script_arguments: Tuple[s
     # ensure the server is reachable before doing all the work
     validate_server_compatibility(use_cached=False)
 
+    run_command = " ".join(sys.argv)
     # This is ugly, better way to do this?
     sys.argv = [script_path] + list(script_arguments)
     pseudo_command = " ".join(sys.argv)
@@ -111,7 +112,7 @@ def run(build: bool, log_level: str, script_path: str, script_arguments: Tuple[s
 
     click.echo(f"Building image and launching: {pseudo_command}")
     start_time = time.time()
-    builder.build_and_launch(target=script_path)
+    builder.build_and_launch(target=script_path, run_command=run_command)
     stop_time = time.time()
 
     duration_seconds = math.floor((stop_time - start_time) * 100) / 100.0
