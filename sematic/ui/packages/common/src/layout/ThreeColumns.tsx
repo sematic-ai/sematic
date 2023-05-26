@@ -27,9 +27,21 @@ export const Left = styled.div`
 const Center = styled.div`
     height: 100%;
     flex-grow: 1;
+    flex-shrink: 1;
     padding: 0 25px;
     border-right: 1px solid ${theme.palette.p3border.main};
     position: relative;
+    width: 0;
+    display: flex;
+    flex-direction: column;
+
+    @media (max-width: 1700px) {
+        min-width: 800px;
+    }
+
+    @media (max-width: 1200px) {
+        min-width: 700px;
+    }
 `;
 
 export const Right = styled.div`
