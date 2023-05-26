@@ -31,3 +31,23 @@ mid-execution from a programming error. See [`test_pipeline.py`](./tests/test_pi
 ![Results](./lightningResults.jpg)
 *Display statistics, plotly figures, and more to summarize*
 *the results of your execution*
+
+## Running
+
+### Bazel
+
+After updating [BUILD](./BUILD) with your own registry and repository, you can
+launch the pipeline with:
+
+```bash
+$ bazel run sematic/examples/lightning_resnet:main -- --cloud
+```
+
+### Native Docker
+
+After updating [main.yaml](./main.yaml) with your own registry and repository,
+you can launch the pipeline with:
+
+```bash
+$ sematic run --build sematic/examples/lightning_resnet/main.py -- --cloud
+```

@@ -5,3 +5,23 @@ The arguments control the shape of the pipeline, as described in the individual 
 the arguments have dependencies on other arguments, and missing values will be reported to the user.
 At the end of the pipeline execution, the individual future outputs are collected in a future list and
 reduced.
+
+## Running
+
+### Bazel
+
+After updating [BUILD](./BUILD) with your own registry and repository, you can
+launch the pipeline with:
+
+```bash
+$ bazel run sematic/examples/testing_pipeline:__main__ -- --cloud
+```
+
+### Native Docker
+
+After updating [main.yaml](./__main__.yaml) with your own registry and repository,
+you can launch the pipeline with:
+
+```bash
+$ sematic run --build sematic/examples/testing_pipeline/__main__.py -- --cloud
+```

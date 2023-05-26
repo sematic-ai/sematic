@@ -2,7 +2,7 @@ load("//bazel:pipeline.bzl", "sematic_pipeline")
 
 sematic_example(
     name = "testing_pipeline",
-    data = ["resources/sammy.png"],
+    data = ["resources/sammy.png", "sematic-0.30.0-py3-none-any.whl"],
     extras = [
         "//sematic/ee:ray",
     ],
