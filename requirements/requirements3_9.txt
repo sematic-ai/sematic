@@ -118,10 +118,6 @@ anyio==3.6.2 \
     --hash=sha256:25ea0d673ae30af41a0c442f81cf3b38c7e79fdc7b60335a4c14e05eb0947421 \
     --hash=sha256:fbbe32bd270d2a2ef3ed1c5d45041250284e31fc0a4df4a5a6071842051a51e3
     # via starlette
-asgiref==3.7.1 \
-    --hash=sha256:33958cb2e4b3cd8b1b06ef295bd8605cde65b11df51d3beab39e2e149a610ab3 \
-    --hash=sha256:8de379fcc383bcfe4507e229fc31209ea23d4831c850f74063b2c11639474dd2
-    # via daphne
 asn1crypto==1.5.1 \
     --hash=sha256:13ae38502be632115abf8a24cbe5f4da52e3b5231990aff31123c805306ccb9c \
     --hash=sha256:db4e40728b728508912cbb3d44f19ce188f218e9eba635821bb4b68564f8fd67
@@ -142,19 +138,9 @@ attrs==22.2.0 \
     --hash=sha256:c9227bfc2f01993c03f68db37d1d15c9690188323c067c641f1a35ca58185f99
     # via
     #   aiohttp
-    #   automat
     #   jsonschema
     #   pytest
     #   ray
-    #   service-identity
-    #   twisted
-autobahn==23.1.2 \
-    --hash=sha256:c5ef8ca7422015a1af774a883b8aef73d4954c9fcd182c9b5244e08e973f7c3a
-    # via daphne
-automat==22.10.0 \
-    --hash=sha256:c3164f8742b9dc440f3682482d32aaff7bb53f71740dd018533f9de286b64180 \
-    --hash=sha256:e56beb84edad19dcc11d30e8d9b895f75deeb5ef5e96b84a467066b3b84bb04e
-    # via twisted
 backcall==0.2.0 \
     --hash=sha256:5cbdbf27be5e7cfadb448baf0aa95508f91f2bbc6c6437cd9cd06e2a4c215e1e \
     --hash=sha256:fbbce6a29f263178a1f7915c1940bde0ec2b2a967566fe1c65c1dfb7422bd255
@@ -279,10 +265,6 @@ colorful==0.5.5 \
     --hash=sha256:62c187e27c1433db9463ff93b1451898d1e7e23a7e553583fd9daeb6325182e4 \
     --hash=sha256:66f8c1264b2a26f7293b96a03bb7a76c4bc8b9634369a0bffdcd12d618056a1d
     # via ray
-constantly==15.1.0 \
-    --hash=sha256:586372eb92059873e29eba4f9dec8381541b4d3834660707faf8ba59146dfc35 \
-    --hash=sha256:dd2fa9d6b1a51a83f0d7dd76293d734046aa176e384bf6e33b7e44880eb37c5d
-    # via twisted
 contourpy==1.0.7 \
     --hash=sha256:031154ed61f7328ad7f97662e48660a150ef84ee1bc8876b6472af88bf5a9b98 \
     --hash=sha256:0f9d350b639db6c2c233d92c7f213d94d2e444d8e8fc5ca44c9706cf72193772 \
@@ -369,9 +351,7 @@ cryptography==39.0.1 \
     --hash=sha256:fdd188c8a6ef8769f148f88f859884507b954cc64db6b52f66ef199bb9ad660a \
     --hash=sha256:fe913f20024eb2cb2f323e42a64bdf2911bb9738a15dba7d3cce48151034e3a8
     # via
-    #   autobahn
     #   pyopenssl
-    #   service-identity
     #   snowflake-connector-python
 cycler==0.11.0 \
     --hash=sha256:3a27e95f763a428a739d2add979fa7494c912a32c17c4c38c4d5f082cad165a3 \
@@ -418,10 +398,6 @@ cython==0.29.33 \
     --hash=sha256:e8922fa3d7e76b7186bbd0810e170ca61f83661ab1b29dc75e88ff2327aaf49d \
     --hash=sha256:f271f90005064c49b47a93f456dc6cf0a21d21ef835bd33ac1e0db10ad51f84f \
     --hash=sha256:f67b7306fd00d55f271009335cecadc506d144205c7891070aad889928d85750
-    # via -r requirements/requirements.in
-daphne==4.0.0 \
-    --hash=sha256:a288ece46012b6b719c37150be67c69ebfca0793a8521bf821533bad983179b2 \
-    --hash=sha256:cce9afc8f49a4f15d4270b8cfb0e0fe811b770a5cc795474e97e4da287497666
     # via -r requirements/requirements.in
 debugpy==1.6.6 \
     --hash=sha256:0ea1011e94416e90fb3598cc3ef5e08b0a4dd6ce6b9b33ccd436c1dffc8cd664 \
@@ -719,21 +695,13 @@ h11==0.14.0 \
     --hash=sha256:8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d \
     --hash=sha256:e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761
     # via uvicorn
-hyperlink==21.0.0 \
-    --hash=sha256:427af957daa58bc909471c6c40f74c5450fa123dd093fc53efd2e91d2705a56b \
-    --hash=sha256:e6b14c37ecb73e89c77d78cdb4c2cc8f3fb59a885c5b3f819ff4ed80f25af1b4
-    # via
-    #   autobahn
-    #   twisted
 idna==3.4 \
     --hash=sha256:814f528e8dead7d329833b91c5faa87d60bf71824cd12a7530b5526063d02cb4 \
     --hash=sha256:90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2
     # via
     #   anyio
-    #   hyperlink
     #   requests
     #   snowflake-connector-python
-    #   twisted
     #   yarl
 importlib-metadata==6.0.0 \
     --hash=sha256:7efb448ec9a5e313a57655d35aa54cd3e01b7e1fbcf72dce1bf06119420f5bad \
@@ -747,10 +715,6 @@ importlib-resources==5.10.2 \
     # via
     #   jsonschema
     #   matplotlib
-incremental==22.10.0 \
-    --hash=sha256:912feeb5e0f7e0188e6f42241d2f450002e11bbc0937c65865045854c24c0bd0 \
-    --hash=sha256:b864a1f30885ee72c5ac2835a761b8fe8aa9c28b9395cacf27286602688d3e51
-    # via twisted
 iniconfig==2.0.0 \
     --hash=sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3 \
     --hash=sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374
@@ -1520,13 +1484,10 @@ pyasn1==0.4.8 \
     # via
     #   pyasn1-modules
     #   rsa
-    #   service-identity
 pyasn1-modules==0.2.8 \
     --hash=sha256:905f84c712230b2c592c19470d3ca8d552de726050d1d1716282a1f6146be65e \
     --hash=sha256:a50b808ffeb97cb3601dd25981f6b016cbb3d31fbf57a8b8a87428e6158d0c74
-    # via
-    #   google-auth
-    #   service-identity
+    # via google-auth
 pycparser==2.21 \
     --hash=sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9 \
     --hash=sha256:e644fdec12f7872f86c58ff790da456218b10f863970249516d60a5eaca77206
@@ -1624,7 +1585,6 @@ pyopenssl==23.0.0 \
     # via
     #   -r requirements/requirements.in
     #   snowflake-connector-python
-    #   twisted
 pyparsing==3.0.9 \
     --hash=sha256:2b020ecf7d21b687f219b71ecad3631f644a47f01403fa1d1036b0c6416d70fb \
     --hash=sha256:5026bae9a10eeaefb61dab2f09052b9f4307d44aee4eda64b309723d8d206bbc
@@ -1863,16 +1823,11 @@ seaborn==0.12.2 \
     --hash=sha256:374645f36509d0dcab895cba5b47daf0586f77bfe3b36c97c607db7da5be0139 \
     --hash=sha256:ebf15355a4dba46037dfd65b7350f014ceb1f13c05e814eda2c9f5fd731afc08
     # via -r requirements/requirements.in
-service-identity==21.1.0 \
-    --hash=sha256:6e6c6086ca271dc11b033d17c3a8bea9f24ebff920c587da090afc9519419d34 \
-    --hash=sha256:f0b0caac3d40627c3c04d7a51b6e06721857a0e10a8775f2d1d7e72901b3a7db
-    # via twisted
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
     --hash=sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254
     # via
     #   asttokens
-    #   automat
     #   blessed
     #   flask-cors
     #   google-auth
@@ -1880,7 +1835,6 @@ six==1.16.0 \
     #   kubernetes
     #   patsy
     #   python-dateutil
-    #   service-identity
 smart-open==6.3.0 \
     --hash=sha256:b4c9ae193ad6d3e7add50944b86afa0d150bd821ab8ec21edb26d9a06b66f6a8 \
     --hash=sha256:d5238825fe9a9340645fac3d75b287c08fbb99fb2b422477de781c9f5f09e019
@@ -2097,14 +2051,6 @@ traitlets==5.9.0 \
     # via
     #   ipython
     #   matplotlib-inline
-twisted[tls]==22.10.0 \
-    --hash=sha256:32acbd40a94f5f46e7b42c109bfae2b302250945561783a8b7a059048f2d4d31 \
-    --hash=sha256:86c55f712cc5ab6f6d64e02503352464f0400f66d4f079096d744080afcccbd0
-    # via daphne
-txaio==23.1.1 \
-    --hash=sha256:aaea42f8aad50e0ecfb976130ada140797e9dcb85fad2cf72b0f37f8cefcb490 \
-    --hash=sha256:f9a9216e976e5e3246dfd112ad7ad55ca915606b60b84a757ac769bd404ff704
-    # via autobahn
 types-pytz==2022.7.1.0 \
     --hash=sha256:10ec7d009a02340f1cecd654ac03f0c29b6088a03b63d164401fc52df45936b2 \
     --hash=sha256:918f9c3e7a950ba7e7d6f84b18a7cacabc8886cb7125fb1927ff1c752b4b59de
@@ -2113,7 +2059,6 @@ typing-extensions==4.5.0 \
     --hash=sha256:5cb5f4a79139d699607b3ef622a1dedafa84e115ab0024e0d9c044a9479ca7cb \
     --hash=sha256:fb33085c39dd998ac16d1431ebc293a8b3eedd00fd4a32de0ff79002c19511b4
     # via
-    #   asgiref
     #   pydantic
     #   pytorch-lightning
     #   snowflake-connector-python
@@ -2121,7 +2066,6 @@ typing-extensions==4.5.0 \
     #   torch
     #   torchmetrics
     #   torchvision
-    #   twisted
 urllib3==1.26.14 \
     --hash=sha256:076907bf8fd355cde77728471316625a4d2f7e713c125f51953bb5b3eecf4f72 \
     --hash=sha256:75edcdc2f7d85b137124a6c3c9fc3933cdeaa12ecb9a6a959f22797a0feca7e1
@@ -2135,7 +2079,9 @@ urllib3==1.26.14 \
 uvicorn==0.20.0 \
     --hash=sha256:a4e12017b940247f836bc90b72e725d7dfd0c8ed1c51eb365f5ba30d9f5127d8 \
     --hash=sha256:c3ed1598a5668208723f2bb49336f4509424ad198d6ab2615b7783db58d919fd
-    # via ray
+    # via
+    #   -r requirements/requirements.in
+    #   ray
 virtualenv==20.19.0 \
     --hash=sha256:37a640ba82ed40b226599c522d411e4be5edb339a0c0de030c0dc7b646d61590 \
     --hash=sha256:54eb59e7352b573aa04d53f80fc9736ed0ad5143af445a1e539aada6eb947dd1
@@ -2254,44 +2200,6 @@ zipp==3.13.0 \
     # via
     #   importlib-metadata
     #   importlib-resources
-zope-interface==5.5.2 \
-    --hash=sha256:008b0b65c05993bb08912f644d140530e775cf1c62a072bf9340c2249e613c32 \
-    --hash=sha256:0217a9615531c83aeedb12e126611b1b1a3175013bbafe57c702ce40000eb9a0 \
-    --hash=sha256:0fb497c6b088818e3395e302e426850f8236d8d9f4ef5b2836feae812a8f699c \
-    --hash=sha256:17ebf6e0b1d07ed009738016abf0d0a0f80388e009d0ac6e0ead26fc162b3b9c \
-    --hash=sha256:311196634bb9333aa06f00fc94f59d3a9fddd2305c2c425d86e406ddc6f2260d \
-    --hash=sha256:3218ab1a7748327e08ef83cca63eea7cf20ea7e2ebcb2522072896e5e2fceedf \
-    --hash=sha256:404d1e284eda9e233c90128697c71acffd55e183d70628aa0bbb0e7a3084ed8b \
-    --hash=sha256:4087e253bd3bbbc3e615ecd0b6dd03c4e6a1e46d152d3be6d2ad08fbad742dcc \
-    --hash=sha256:40f4065745e2c2fa0dff0e7ccd7c166a8ac9748974f960cd39f63d2c19f9231f \
-    --hash=sha256:5334e2ef60d3d9439c08baedaf8b84dc9bb9522d0dacbc10572ef5609ef8db6d \
-    --hash=sha256:604cdba8f1983d0ab78edc29aa71c8df0ada06fb147cea436dc37093a0100a4e \
-    --hash=sha256:6373d7eb813a143cb7795d3e42bd8ed857c82a90571567e681e1b3841a390d16 \
-    --hash=sha256:655796a906fa3ca67273011c9805c1e1baa047781fca80feeb710328cdbed87f \
-    --hash=sha256:65c3c06afee96c654e590e046c4a24559e65b0a87dbff256cd4bd6f77e1a33f9 \
-    --hash=sha256:696f3d5493eae7359887da55c2afa05acc3db5fc625c49529e84bd9992313296 \
-    --hash=sha256:6e972493cdfe4ad0411fd9abfab7d4d800a7317a93928217f1a5de2bb0f0d87a \
-    --hash=sha256:7579960be23d1fddecb53898035a0d112ac858c3554018ce615cefc03024e46d \
-    --hash=sha256:765d703096ca47aa5d93044bf701b00bbce4d903a95b41fff7c3796e747b1f1d \
-    --hash=sha256:7e66f60b0067a10dd289b29dceabd3d0e6d68be1504fc9d0bc209cf07f56d189 \
-    --hash=sha256:8a2ffadefd0e7206adc86e492ccc60395f7edb5680adedf17a7ee4205c530df4 \
-    --hash=sha256:959697ef2757406bff71467a09d940ca364e724c534efbf3786e86eee8591452 \
-    --hash=sha256:9d783213fab61832dbb10d385a319cb0e45451088abd45f95b5bb88ed0acca1a \
-    --hash=sha256:a16025df73d24795a0bde05504911d306307c24a64187752685ff6ea23897cb0 \
-    --hash=sha256:a2ad597c8c9e038a5912ac3cf166f82926feff2f6e0dabdab956768de0a258f5 \
-    --hash=sha256:bfee1f3ff62143819499e348f5b8a7f3aa0259f9aca5e0ddae7391d059dce671 \
-    --hash=sha256:d169ccd0756c15bbb2f1acc012f5aab279dffc334d733ca0d9362c5beaebe88e \
-    --hash=sha256:d514c269d1f9f5cd05ddfed15298d6c418129f3f064765295659798349c43e6f \
-    --hash=sha256:d692374b578360d36568dd05efb8a5a67ab6d1878c29c582e37ddba80e66c396 \
-    --hash=sha256:dbaeb9cf0ea0b3bc4b36fae54a016933d64c6d52a94810a63c00f440ecb37dd7 \
-    --hash=sha256:dc26c8d44472e035d59d6f1177eb712888447f5799743da9c398b0339ed90b1b \
-    --hash=sha256:e1574980b48c8c74f83578d1e77e701f8439a5d93f36a5a0af31337467c08fcf \
-    --hash=sha256:e74a578172525c20d7223eac5f8ad187f10940dac06e40113d62f14f3adb1e8f \
-    --hash=sha256:e945de62917acbf853ab968d8916290548df18dd62c739d862f359ecd25842a6 \
-    --hash=sha256:f0980d44b8aded808bec5059018d64692f0127f10510eca71f2f0ace8fb11188 \
-    --hash=sha256:f98d4bd7bbb15ca701d19b93263cc5edfd480c3475d163f137385f49e5b3a3a7 \
-    --hash=sha256:fb68d212efd057596dee9e6582daded9f8ef776538afdf5feceb3059df2d2e7b
-    # via twisted
 
 # The following packages are considered to be unsafe in a requirements file:
 setuptools==58.1.0 \
@@ -2299,9 +2207,7 @@ setuptools==58.1.0 \
     --hash=sha256:7324fd4b66efa05cdfc9c89174573a4410acc7848f318cc0565c7fb659dfdc81
     # via
     #   -r requirements/requirements.in
-    #   autobahn
     #   ipython
     #   kubernetes
     #   snowflake-connector-python
     #   tensorboard
-    #   zope-interface

@@ -34,7 +34,7 @@ responses==0.20.0  # 0.21.0 breaks mypy checks https://github.com/getsentry/resp
 werkzeug
 python-dateutil
 google-auth
-daphne
+uvicorn
 
 # CLI
 click
