@@ -108,7 +108,6 @@ export function useMetrics(
     );
 
     const { value, loading, error } = useAsync(async () => {
-        console.log("useAsync", broadcastEvent);
         if (broadcastEvent && !eventMatchesFilter()) return;
         const labelsJSON = JSON.stringify(metricsFilter.labels);
         const groupBysStr = metricsFilter.groupBys.join(",");
@@ -123,7 +122,7 @@ export function useMetrics(
 
 export function useListMetrics(labels: {
     [k: string]: any;
-}): [{ content: string[] } | undefined, boolean, Error | undefined] {
+}, broadcastEvent?: MetricPoint[]): [{ content: string[] } | undefined, boolean, Error | undefined] {
     const { fetch } = useHttpClient();
 
     const { value, loading, error } = useAsync(async () => {
@@ -132,7 +131,7 @@ export function useListMetrics(labels: {
             url: `/api/v1/metrics?labels=${labelsJSON}`,
         });
         return (await response.json()) as { content: string[] };
-    }, [labels]);
+    }, [labels, broadcastEvent]);
 
     return [value, loading, error];
 }

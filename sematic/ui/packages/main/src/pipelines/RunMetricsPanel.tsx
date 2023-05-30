@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Loading from "src/components/Loading";
 import { TimeseriesMetric } from "src/components/Metrics";
-import { METRIC_SCOPES } from "src/constants";
-import { MetricsFilter, useListMetrics } from "src/hooks/metricsHooks";
+import { METRIC_SCOPES } from "@sematic/common/src/constants";
+import { MetricsFilter, useListMetrics } from "@sematic/common/src/hooks/metricsHooks";
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
 import { getChartColor } from "src/utils";
 import {
@@ -26,11 +26,9 @@ export default function RunMetricsPanel() {
     >();
 
     useEffect(() => {
-        //if (runIsInTerminalState(run)) return;
-        console.log("hooking up metrics socket", run.id);
+        if (runIsInTerminalState(run)) return;
         metricsSocket.removeAllListeners("update");
         metricsSocket.on("update", async (args: { metric_points: MetricPoint[] }) => {
-            console.log("metrics update", args);
             const currentRunMetricPoints = args.metric_points.filter(
                 (point) =>
                     point.labels["run_id"] === run.id &&
@@ -46,7 +44,7 @@ export default function RunMetricsPanel() {
         return { run_id: run.id, __scope__: METRIC_SCOPES.run };
     }, [run.id]);
 
-    const [payload, loading, error] = useListMetrics(labels);
+    const [payload, loading, error] = useListMetrics(labels, latestBroadcastEvent);
 
     const metricFilters = useMemo(() => {
         if (payload === undefined) return undefined;

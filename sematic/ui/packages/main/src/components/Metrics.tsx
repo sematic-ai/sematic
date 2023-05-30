@@ -1,4 +1,4 @@
-import { MetricsFilter, useMetrics } from "src/hooks/metricsHooks";
+import { MetricsFilter, useMetrics } from "@sematic/common/src/hooks/metricsHooks";
 import { Alert, Skeleton } from "@mui/material";
 import { useMemo } from "react";
 import {
