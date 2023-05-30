@@ -48,7 +48,7 @@ export function TimeseriesMetric(props: {
         if (payload === undefined) return cData;
 
         payload.content.series.forEach((item) => {
-            let label = new Date(item[1][0]);
+            let label = new Date(item[1][0] * 1000);
             cData.labels?.push(label.toLocaleString());
             cData.datasets[0].data.push(item[0]);
         });
