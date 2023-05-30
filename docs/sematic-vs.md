@@ -20,7 +20,7 @@ rest.
 
 ### Lowest barrier to entry
 
-In 2022, with all the great technology there is out there, it is entirely
+In 2023, with all the great technology there is out there, it is entirely
 possible to provide an amazing turn-key onboarding experience with a very low
 barrier to entry for all sets of skills, from beginner padawan to advanced
 ninja.
@@ -49,11 +49,6 @@ and effortless, and flexibility to not hinder our users' creativity.
 
 In this section we try to discuss Sematic's differentiators in the most candid
 and transparent way possible.
-
-Sematic is a brand-new product (founded May 2022 👶), and is therefore obviously
-not as mature, reliable, or stable as some of these long-established products.
-
-But bear with us, we'll catch up fast!
 
 {% endhint %}
 
@@ -166,7 +161,7 @@ tools.
 ### ... Weights & Biases
 
 Weights & Biases excels at experiment tracking and visualization. You can
-absolutely use W&B together with Sematic, they are complementary tols.
+absolutely use W&B together with Sematic, they are complementary tools.
 
 ### ... HuggingFace
 
