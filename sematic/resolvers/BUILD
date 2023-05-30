@@ -28,6 +28,7 @@ sematic_py_lib(
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
         "//sematic/db/models:run",
+        "//sematic/plugins:abstract_builder",
         "//sematic/resolvers:abstract_resource_manager",
         "//sematic/resolvers/resource_managers:server_manager",
         "//sematic/utils:exceptions",
