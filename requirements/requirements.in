@@ -1,3 +1,5 @@
+
+
 # Tests
 pytest==7.1.1
 testing-postgresql
@@ -58,6 +60,12 @@ statsmodels
 scikit-learn
 numpy
 xgboost
+accelerate
+datasets
+huggingface-hub
+peft
+transformers
+
 
 # Types
 ## Snowflake
