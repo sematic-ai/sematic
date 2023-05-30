@@ -116,6 +116,12 @@ delta, but only:
 when performing the upgrade.
 {% endhint %}
 
+### vX.X.X to v0.30.0
+
+Default Kubernetes deployments of the Sematic server will now run with 2 pods
+for the API server, in order to enable high availability.  As such, the memory
+and CPU requests and limits for each pod has been halved.
+
 ### v0.28.X to v0.29.0
 
 Direct support for Matplotlib figures was dropped in favor of the [`Image`
