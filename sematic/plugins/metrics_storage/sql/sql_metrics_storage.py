@@ -178,15 +178,11 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
                     query = query.group_by(*group_by_clauses)
 
                 if rollup == "auto":
-                    field_ = MetricValue.metric_time
+                    field_ = func.extract("epoch", MetricValue.metric_time)
                     record_count = query.add_columns(field_).group_by(field_).count()
 
                     if record_count > _MAX_SERIES_POINTS:
-                        field_ = (
-                            func.extract("epoch", MetricValue.metric_time)
-                            / interval_seconds
-                            * interval_seconds
-                        )
+                        field_ = field_ / interval_seconds * interval_seconds
 
                     query = query.add_columns(field_).group_by(field_)
                     extra_field_names.append("timestamp")
