@@ -17,6 +17,8 @@ from sematic.plugins.metrics_storage.sql.models.metric_value import MetricValue
 from sematic.plugins.metrics_storage.sql.sql_metrics_storage import SQLMetricsStorage
 from sematic.utils.exceptions import DataIntegrityError
 
+_STARTED_AT = datetime.now() - timedelta(days=1)
+
 
 @pytest.mark.parametrize(
     "future_state, original_run_id, started_at, resolved_at, expected_value",
@@ -68,10 +70,8 @@ def twelve_runs(test_db: DB):  # noqa: F811
             id=str(i),
             future_state=FutureState.CREATED if i == 0 else FutureState.RESOLVED,
             original_run_id="foo" if i == 1 else None,
-            resolved_at=(
-                None if i == 2 else datetime(2023, 4, 27) + timedelta(seconds=10 + i)
-            ),
-            started_at=None if i == 3 else datetime(2023, 4, 27) + timedelta(seconds=i),
+            resolved_at=(None if i == 2 else _STARTED_AT + timedelta(seconds=10 + i)),
+            started_at=None if i == 3 else _STARTED_AT + timedelta(seconds=i),
             root_id="0",
         )
         for i in range(12)
