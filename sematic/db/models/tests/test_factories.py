@@ -206,6 +206,11 @@ def test_clone_resolution(resolution: Resolution):  # noqa: F811
     assert cloned_resolution.settings_env_vars == resolution.settings_env_vars
     assert cloned_resolution.container_image_uri == resolution.container_image_uri
     assert cloned_resolution.container_image_uris == resolution.container_image_uris
+    assert cloned_resolution.client_version == resolution.client_version
+    assert cloned_resolution.cache_namespace == resolution.cache_namespace
+    assert cloned_resolution.user_id == resolution.user_id
+    assert cloned_resolution.run_command == resolution.run_command
+    assert cloned_resolution.build_config == resolution.build_config
 
 
 def test_new():
