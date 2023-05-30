@@ -26,6 +26,7 @@ with nothing else on the line.
     * [bugfix] Fixed application logs being duplicated
     * [bugfix] Adjust the Name column width distribution
     * [bugfix] Add missing call to init to Function
+    * [bugfix] Fixed broken link for Plotly docs
 * [0.29.0](https://pypi.org/project/sematic/0.29.0/)
     * [feature] Garbage collection CRON job
     * [feature] Enable customization of local storage path
