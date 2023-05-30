@@ -6,13 +6,11 @@ import glob
 import logging
 import os
 import runpy
-import signal
 import subprocess
 import sys
 import tempfile
 import time
 from dataclasses import asdict
-from multiprocessing import Process
 from typing import Any, Dict, Generator, Optional, Tuple
 
 # isort: off
@@ -40,6 +38,7 @@ from sematic.plugins.building.docker_builder_config import (
 )
 from sematic.plugins.building.docker_client_utils import rolling_print_status_updates
 from sematic.utils.env import environment_variables
+from sematic.utils.spinner import with_stdout_spinner
 
 logger = logging.getLogger(__name__)
 
@@ -305,10 +304,7 @@ def _build_from_dockerfile(
 
     # the call to build below is blocking and takes a while
     # print a spinner in the meantime
-    spinner_process = Process(target=_print_spinner)
-    spinner_process.start()
-
-    try:
+    with with_stdout_spinner():
         # we have to create a tmp dockerfile and pass it instead of using the `fileobj`
         # option of the docker_client, because it does not work with contexts, so
         # operations like COPY do not work, as there exists no working dir context to copy
@@ -328,36 +324,7 @@ def _build_from_dockerfile(
                 **optional_kwargs,
             )
 
-    finally:
-        spinner_process.terminate()
-        spinner_process.join()
-
     return status_updates
-
-
-def _print_spinner() -> None:
-    """
-    Prints a spinning character to stdout.
-
-    This is meant to be used in a different process. Execution terminates when the process
-    receives a `SIGTERM` signal.
-    """
-    do_spin = True
-
-    def _handler(_: Any, __: Any) -> None:
-        nonlocal do_spin
-        do_spin = False
-
-    signal.signal(signal.SIGTERM, _handler)
-
-    while do_spin:
-        for char in "\\|/-":
-            print(char)
-            time.sleep(0.1)
-            sys.stdout.write("\033[F\033[K")
-            sys.stdout.flush()
-            if not do_spin:
-                break
 
 
 def _generate_dockerfile_contents(
@@ -498,9 +465,12 @@ def _push_image(
         "Tagged image '%s' in repository '%s' with tag '%s'", image_uri, repository, tag
     )
 
-    status_updates = docker_client.images.push(
-        repository=repository, tag=tag, stream=True, decode=True
-    )
+    # the call to build below is blocking and takes a while
+    # print a spinner in the meantime
+    with with_stdout_spinner():
+        status_updates = docker_client.images.push(
+            repository=repository, tag=tag, stream=True, decode=True
+        )
 
     if status_updates is None:
         logger.warning(

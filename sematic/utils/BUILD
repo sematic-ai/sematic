@@ -73,6 +73,12 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "spinner",
+    srcs = ["spinner.py"],
+    deps = [],
+)
+
+sematic_py_lib(
     name = "stdout",
     srcs = ["stdout.py"],
     deps = [],
