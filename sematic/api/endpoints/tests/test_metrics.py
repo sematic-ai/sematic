@@ -1,6 +1,6 @@
 # Standard Library
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 
 # Third-party
@@ -47,8 +47,8 @@ def test_run_created(persisted_run: Run):  # noqa: F811
 
 def test_run_state_changed(persisted_run: Run):  # noqa: F811
     persisted_run.future_state = FutureState.RESOLVED.value  # type: ignore
-    persisted_run.started_at = datetime(2023, 4, 27)
-    persisted_run.resolved_at = datetime(2023, 4, 27, 0, 0, 10)
+    persisted_run.resolved_at = datetime.now() - timedelta(days=1)
+    persisted_run.started_at = persisted_run.resolved_at - timedelta(seconds=10)
 
     save_event_metrics(MetricEvent.run_state_changed, [persisted_run])
 
