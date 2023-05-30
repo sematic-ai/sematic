@@ -11,13 +11,9 @@ with nothing else on the line.
     * [feature] Add horizontal pod autoscaling and pod disruption budget support
     * [feature] Health endpoint to display DB health in dashboard
     * [feature] Add support for set types
-    * [feature] Search for runs in dashboard
     * [feature] Add GitHub commit check support
-    * [feature] Search by tags
-    * [improvement] Endpoint to list users
     * [improvement] Have resolver continue in in a new resolution if resolver restarts
     * [improvement] Log request IDs in server
-    * [improvement] Better linting
     * [improvement] Early resolution failure is more robust
     * [improvement] Make API retries more robust
     * [improvement] Enable run search deep links
@@ -26,7 +22,6 @@ with nothing else on the line.
     * [bugfix] Fixed application logs being duplicated
     * [bugfix] Adjust the Name column width distribution
     * [bugfix] Add missing call to init to Function
-    * [bugfix] Fixed broken link for Plotly docs
 * [0.29.0](https://pypi.org/project/sematic/0.29.0/)
     * [feature] Garbage collection CRON job
     * [feature] Enable customization of local storage path
