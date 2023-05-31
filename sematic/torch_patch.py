@@ -1,3 +1,7 @@
+# This code is based on code from:
+# https://github.com/pytorch/pytorch/blob/1a6ab8a5dcce45789a6dd61261bc73428439ddb8/torch/__init__.py#L196
+# It enables loading of nvidia .so libraries depended on by pytorch when those
+# libs are provided via bazel on Linux.
 import ctypes
 import platform
 import os
