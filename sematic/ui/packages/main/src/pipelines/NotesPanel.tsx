@@ -1,6 +1,8 @@
 import { Box, Stack, TextField, useTheme } from "@mui/material";
-import { Note, Run, User } from "@sematic/common/src/Models";
+import { Run, User } from "@sematic/common/src/Models";
 import UserContext from "@sematic/common/src/context/UserContext";
+import { useNoteSubmission, usePipelineNotes } from "@sematic/common/src/hooks/noteHooks";
+import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import {
     KeyboardEvent,
     useCallback,
@@ -10,28 +12,25 @@ import {
     useRef,
     useState,
 } from "react";
-import { NoteCreatePayload, NoteListPayload } from "src/Payloads";
 import { NoteView } from "src/components/Notes";
-import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import {
     usePipelinePanelsContext,
     usePipelineRunContext,
 } from "src/hooks/pipelineHooks";
 import PipelinePanelsContext from "src/pipelines/PipelinePanelsContext";
 import PipelineRunViewContext from "src/pipelines/PipelineRunViewContext";
-import { fetchJSON } from "src/utils";
 
 export default function NotesPanel() {
     const theme = useTheme();
     const { user } = useContext(UserContext);
 
     const { rootRun } = usePipelineRunContext() as ExtractContextType<
-    typeof PipelineRunViewContext
+        typeof PipelineRunViewContext
     > & {
         rootRun: Run;
     };
     const { selectedRun } = usePipelinePanelsContext() as ExtractContextType<
-    typeof PipelinePanelsContext
+        typeof PipelinePanelsContext
     > & {
         selectedRun: Run;
     };
@@ -53,47 +52,33 @@ export default function NotesPanel() {
         []
     );
 
-    const [notes, setNotes] = useState<Note[]>([]);
     const [inputDisabled, setInputDisabled] = useState(false);
     const [composedNote, setComposedNote] = useState("");
 
-    useEffect(() => {
-        fetchJSON({
-            url: "/api/v1/notes?function_path=" + functionPath,
-            apiKey: user?.api_key,
-            callback: (payload: NoteListPayload) => {
-                setNotes(payload.content);
-            },
-        });
-    }, [functionPath, user?.api_key]);
+    const { notes, reload: reloadNotes } = usePipelineNotes(functionPath)
+    const [, submitNoteToServer] = useNoteSubmission();
 
     const submitNote = useCallback(
-        (event: KeyboardEvent) => {
+        async (event: KeyboardEvent) => {
             if (event.key !== "Enter" || event.shiftKey) return;
             if (composedNote.length === 0) return;
 
             setInputDisabled(true);
 
-            fetchJSON({
-                url: "/api/v1/notes",
-                apiKey: user?.api_key,
-                method: "POST",
-                body: {
-                    note: {
-                        author_id: (user || anonymousUser).email,
-                        note: composedNote,
-                        root_id: rootRun.id,
-                        run_id: selectedRun.id,
-                    },
-                },
-                callback: (payload: NoteCreatePayload) => {
-                    setNotes([...notes, payload.content]);
-                    setComposedNote("");
-                    setInputDisabled(false);
-                },
-            });
+            await submitNoteToServer({
+                note: {
+                    author_id: (user || anonymousUser).email,
+                    note: composedNote,
+                    root_id: rootRun.id,
+                    run_id: selectedRun.id,
+                }
+            })
+
+            reloadNotes();
+            setComposedNote("");
+            setInputDisabled(false);
         },
-        [composedNote, rootRun, selectedRun, notes, anonymousUser, user]
+        [composedNote, rootRun, selectedRun, reloadNotes, submitNoteToServer, anonymousUser, user]
     );
 
     const bottomRef = useRef<null | HTMLDivElement>(null);
@@ -131,7 +116,7 @@ export default function NotesPanel() {
                         <Box sx={{ gridRow: 1 }}></Box>
 
                         <Stack sx={{ gridRow: 2 }}>
-                            {notes.map((note, idx) => (
+                            {(notes || []).map((note, idx) => (
                                 <NoteView
                                     note={note}
                                     key={idx}
