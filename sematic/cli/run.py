@@ -15,7 +15,7 @@ from sematic.api_client import validate_server_compatibility
 from sematic.cli.cli import cli
 from sematic.cli.examples_utils import is_example
 from sematic.config.config import get_config, switch_env
-from sematic.logs import make_log_config
+from sematic.logging import make_log_config
 from sematic.plugins.abstract_builder import get_builder_plugin
 from sematic.plugins.building.docker_builder import DockerBuilder
 
