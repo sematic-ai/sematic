@@ -2,7 +2,7 @@ version: 1
 base_uri: "sematicai/sematic-worker-base:cuda@sha256:6cbedeffdbf8ef0e5182819b4ae05a12972f61a4cd862fe41e4b3aaca01888da"
 build:
   platform: "linux/amd64"
-  requirements: "sematic/examples/mnist/pytorch/requirements.txt"
+  requirements: "requirements.txt"
   data: []
   src: []
 push:
