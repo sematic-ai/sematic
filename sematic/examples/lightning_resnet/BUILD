@@ -3,7 +3,6 @@ load("//bazel:pipeline.bzl", "sematic_pipeline")
 
 sematic_py_lib(
     name = "lib",
-    data = ["sematic-0.30.0-py3-none-any.whl"],
     srcs = glob([
         "*.py",
         "**/*.py",

@@ -5,7 +5,7 @@ plotly
 pytorch-lightning
 ray
 ray-lightning
-sematic-0.30.0-py3-none-any.whl[ray]
+sematic[ray]
 torch
 torchmetrics
 torchvision
