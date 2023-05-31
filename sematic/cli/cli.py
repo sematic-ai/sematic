@@ -8,7 +8,7 @@ import click
 # Sematic
 from sematic.config.config import switch_env
 from sematic.db.migrate import migrate_up
-from sematic.logging import make_log_config
+from sematic.logs import make_log_config
 
 
 @click.group("sematic")

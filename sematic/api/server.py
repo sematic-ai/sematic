@@ -42,7 +42,7 @@ from sematic.api.app import sematic_api
 from sematic.api.wsgi import SematicWSGI
 from sematic.config.config import get_config, switch_env  # noqa: F401
 from sematic.config.settings import import_plugins
-from sematic.logging import make_log_config
+from sematic.logs import make_log_config
 
 # Some plugins may register endpoints
 import_plugins()

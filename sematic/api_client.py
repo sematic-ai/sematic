@@ -28,7 +28,7 @@ from sematic.db.models.job import Job
 from sematic.db.models.resolution import Resolution
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
-from sematic.logging import REQUEST_ID_HEADER
+from sematic.logs import REQUEST_ID_HEADER
 from sematic.metrics.metric_point import MetricPoint
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.utils.retry import retry, retry_call
