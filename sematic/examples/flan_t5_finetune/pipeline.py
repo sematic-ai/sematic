@@ -4,7 +4,6 @@ from enum import Enum, unique
 import sematic
 from transformers import AutoModelForSeq2SeqLM, PreTrainedModel
 
-
 @unique
 class ModelSize(Enum):
     small = "small" 
@@ -20,7 +19,7 @@ class HuggingFaceModelReference:
     repo: str
 
     @classmethod
-    def from_string(class, as_string: str) -> "HuggingFaceModel":
+    def from_string(cls, as_string: str) -> "HuggingFaceModel":
         owner, repo = as_string.rsplit("/", maxsplit=1)
         return HuggingFaceModel(owner=owner, repo=repo)
 
@@ -51,4 +50,4 @@ def summarize(source_model: HuggingFaceModelReference) -> ResultSummary:
 
 @sematic.func
 def pipeline(training_config: TrainingConfig) -> ResultSummary:
-    return pick_model(training_config.model_size)
+    return summarize(pick_model(training_config.model_size))
