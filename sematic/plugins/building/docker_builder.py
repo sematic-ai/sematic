@@ -51,8 +51,8 @@ WORKDIR /
 
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 
-RUN which pip3 || apt-get update -y && apt-get install -y python3-pip
 RUN python3 -c "import distutils" || apt-get update -y && apt-get install --reinstall -y python$(python3 -c "import sys; print(f'{{sys.version_info.major}}.{{sys.version_info.minor}}')")-distutils
+RUN which pip3 || apt-get update -y && apt-get install -y python3-pip && python3 -m pip install --upgrade pip==23.1.2
 
 ENV PATH="/sematic/bin/:${{PATH}}"
 RUN echo '#!/bin/sh' > entrypoint.sh && echo '/usr/bin/python3 -m sematic.resolvers.worker "$@"' >> entrypoint.sh
@@ -62,7 +62,7 @@ ENTRYPOINT ["/entrypoint.sh"]
 
 _DOCKERFILE_REQUIREMENTS_TEMPLATE = """
 COPY {requirements_file} requirements.txt
-RUN pip3 install --no-cache -r requirements.txt
+RUN pip3 install --no-cache --ignore-installed -r requirements.txt
 """
 
 
