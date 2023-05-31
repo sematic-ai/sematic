@@ -3,25 +3,22 @@ The native Docker Builder plugin implementation.
 """
 # Standard Library
 import glob
-import json
 import logging
 import os
-import re
 import runpy
 import signal
 import subprocess
 import sys
 import tempfile
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 from multiprocessing import Process
-from typing import Any, Dict, Generator, List, Optional, Tuple
+from typing import Any, Dict, Generator, Optional, Tuple
 
 # isort: off
 
 # Third-party
 import docker
-import yaml
 
 # there is a collision between the docker-py library and the sematic/docker directory,
 # so we need to add `# type: ignore` everywhere a component of the docker module is used
@@ -32,19 +29,19 @@ from docker.models.images import Image  # type: ignore
 # Sematic
 from sematic.abstract_plugin import SEMATIC_PLUGIN_AUTHOR, PluginVersion
 from sematic.container_images import CONTAINER_IMAGE_ENV_VAR
-from sematic.plugins.abstract_builder import (
-    AbstractBuilder,
-    BuildConfigurationError,
-    BuildError,
+from sematic.plugins.abstract_builder import AbstractBuilder, BuildError
+from sematic.plugins.building.docker_builder_config import (
+    BuildConfig,
+    DockerClientConfig,
+    ImagePushConfig,
+    ImageURI,
+    SourceBuildConfig,
+    load_build_config,
 )
 from sematic.plugins.building.docker_client_utils import rolling_print_status_updates
 from sematic.utils.env import environment_variables
-from sematic.utils.types import as_bool
 
 logger = logging.getLogger(__name__)
-
-# Version of the build file schema
-BUILD_SCHEMA_VERSION = 1
 
 _PLUGIN_VERSION = (0, 1, 0)
 
@@ -69,260 +66,6 @@ RUN pip3 install --no-cache -r requirements.txt
 """
 
 
-@dataclass
-class ImageURI:
-    """
-    A URI that uniquely identifies a container image.
-    """
-
-    repository: str
-    tag: str
-    digest: str
-
-    @classmethod
-    def from_uri(cls, uri: str) -> "ImageURI":
-        """
-        Returns an `ImageURI` object based on the supplied URI string.
-
-        Raises
-        ------
-        BuildConfigurationError:
-            The specified value is not a correct and complete container image URI in the
-            required `<repository>:<tag>@<digest>` format.
-        """
-        match = re.match("(.+):(.+)@(.+)", uri)
-
-        if match is None:
-            raise BuildConfigurationError(
-                f"Container image URI '{uri}' does not conform to the required "
-                f"`<repository>:<tag>@<digest>` format!"
-            )
-
-        return ImageURI(
-            repository=match.group(1), tag=match.group(2), digest=match.group(3)
-        )
-
-    def __str__(self):
-        """
-        Returns a short `<repository>:<tag>` version of this image URI.
-        """
-        return f"{self.repository}:{self.tag}"
-
-    def __repr__(self):
-        """
-        Returns the full image URI in the `<repository>:<tag>@<digest>` format.
-        """
-        return f"{self.repository}:{self.tag}@{self.digest}"
-
-
-@dataclass
-class SourceBuildConfig:
-    """
-    A packaged build source file configuration.
-    """
-
-    platform: Optional[str] = None
-    requirements: Optional[str] = None
-    data: Optional[List[str]] = None
-    src: Optional[List[str]] = None
-
-
-@dataclass
-class ImagePushConfig:
-    """
-    A packaged build image push configuration.
-    """
-
-    registry: str
-    repository: str
-    tag_suffix: Optional[str] = None
-
-    def __post_init__(self):
-        """
-        Validates the contents of this object.
-        """
-        if not self.registry or not self.repository:
-            raise BuildConfigurationError(
-                "When `push` is specified, `registry` and `repository` must be non-empty!"
-            )
-
-    def get_repository_str(self) -> str:
-        """
-        Returns a string that identifies the repository according to the `docker` library
-        naming convention.
-        """
-        return f"{self.registry}/{self.repository}"
-
-    def get_tag(self) -> str:
-        """
-        Returns the effective tag to use for the image.
-        """
-        if not self.tag_suffix:
-            return "default"
-        return f"default_{self.tag_suffix}"
-
-
-@dataclass
-class DockerClientConfig:
-    """
-    The Docker Client connection details to use to connect to the Docker Server.
-
-    See https://docker-py.readthedocs.io/en/stable/client.html#client-reference for more
-    details.
-    """
-
-    base_url: str = "unix://var/run/docker.sock"
-    version: str = "auto"
-    timeout: Optional[int] = None
-    tls: bool = False
-    user_agent: Optional[str] = None
-    credstore_env: Optional[Dict[str, str]] = None
-    use_ssh_client: bool = False
-    max_pool_size: Optional[int] = None
-
-    def __post_init__(self):
-        """
-        Validates the contents of this object.
-        """
-        if self.timeout is not None and isinstance(self.timeout, str):
-            self.timeout = int(self.timeout)
-
-        self.tls = as_bool(self.tls)
-
-        if self.credstore_env is not None and isinstance(self.credstore_env, str):
-            self.credstore_env = json.loads(self.credstore_env)
-
-        self.use_ssh_client = as_bool(self.use_ssh_client)
-
-        if self.max_pool_size is not None and isinstance(self.max_pool_size, str):
-            self.max_pool_size = int(self.max_pool_size)
-
-
-@dataclass
-class BuildConfig:
-    """
-    A packaged build configuration object that describes how to construct a container
-    image that is meant to execute a Runner and Standalone Functions for a specific
-    Pipeline.
-
-    Attributes
-    ----------
-    version: int
-        The version of the configuration semantics to which this object adheres.
-    image_script: Optional[str]
-        An optional path to a script which must write only a container image URI in the
-        `<repository>:<tag>@<digest>` format to standard output. This image will be used
-        as the base from which the Runner and Standalone Function image will be created.
-        Exactly one of `image_script` and `base_uri` must be specified. Defaults to
-        `None`.
-
-        This script is meant to be a hook that the user can leverage to build a base
-        image. It is the user's responsibility to ensure the resulting base image is
-        usable by Sematic in order to construct a Standalone container image:
-        - Must contain a `python3` executable in the env `PATH`.
-        - Must contain all the source code, data files, and installed Python requirements,
-        unless otherwise handled in the `build` field of this configuration.
-        - Does not need to specify a workdir, Any specified workdir will be overwritten.
-        - Does not need to specify an entry point. Any specified entry point will be
-        overwritten.
-
-        The script may write anything to standard error. The script may be written in any
-        language supported by the system, as long as it has the executable bit set, and
-        the system can determine how to execute it (i.e. specifies a shebang, or is an ELF
-        executable).
-    base_uri: Optional[ImageURI]
-        An optional container image URI in the `<repository>:<tag>@<digest>` format. This
-        image will be used as the base from which the Runner and Standalone Function image
-        will be created. Exactly one of `image_script` and `base_uri` must be specified.
-        Defaults to `None`.
-    build: Optional[SourceBuildConfig]
-        An object that configures how to package source code, data files, and Python
-        requirements inside the container image. Defaults to `None`, meaning nothing with
-        be copied to the image, except for the target launch script when using the
-        `base_uri` option. When using the `image_script` option, it is the user's
-        responsibility to ensure the launch script is present.
-    push: Optional[ImagePushConfig]
-        An object that configures how to push the resulting container image to registry
-        that is accessible from the Sematic Server that will execute the Pipeline.
-        Defaults to `None`, meaning that the resulting image will not be pushed to a
-        remote registry, and will only be kept on the Docker server user to construct it.
-    docker: Optional[DockerClientConfig]
-        The Docker Client connection configuration to use to connect to the Docker Server.
-        Defaults to `None`, meaning the system Client configuration will be used.
-    """
-
-    version: int
-    image_script: Optional[str] = None
-    base_uri: Optional[ImageURI] = None
-    build: Optional[SourceBuildConfig] = None
-    push: Optional[ImagePushConfig] = None
-    docker: Optional[DockerClientConfig] = None
-
-    def __post_init__(self):
-        """
-        Validates and casts the contents of this object.
-
-        Raises
-        ------
-        BuildConfigurationError:
-            There was an error when loading the specified build configuration.
-        """
-        if self.version != BUILD_SCHEMA_VERSION:
-            # TODO: implement migration mechanism
-            raise BuildConfigurationError(
-                f"Unsupported build schema version! Expected: {BUILD_SCHEMA_VERSION}; "
-                f"got: {self.version}"
-            )
-
-        if (
-            self.image_script is None
-            and self.base_uri is None
-            or self.image_script is not None
-            and self.base_uri is not None
-        ):
-            raise BuildConfigurationError(
-                "Exactly one of `image_script` and `base_uri` must be specified!"
-            )
-
-        if self.base_uri is not None and isinstance(self.base_uri, str):
-            self.base_uri = ImageURI.from_uri(uri=self.base_uri)
-
-        if self.build is not None and isinstance(self.build, dict):
-            self.build = SourceBuildConfig(**self.build)
-
-        if self.push is not None and isinstance(self.push, dict):
-            self.push = ImagePushConfig(**self.push)
-
-        if self.docker is not None and isinstance(self.docker, dict):
-            self.docker = DockerClientConfig(**self.docker)
-
-        # TODO: switch from project-relative paths to build file-relative paths,
-        #  and mangle these path fields
-        # TODO: validate absolute paths are not used
-
-    @classmethod
-    def load_build_config_file(cls, build_file_path: str) -> "BuildConfig":
-        """
-        Loads the contents of a build configuration file, and returns a `BuildConfig`
-        object.
-
-        Raises
-        ------
-        BuildConfigurationError:
-            An error occurred during loading or interpreting of the build file.
-        """
-        try:
-            with open(build_file_path, "r") as f:
-                loaded_yaml = yaml.load(f, yaml.Loader)
-
-            return BuildConfig(**loaded_yaml)
-
-        except Exception as e:
-            raise BuildConfigurationError(
-                f"Unable to load build configuration from '{build_file_path}': {e}"
-            ) from e
-
-
 class DockerBuilder(AbstractBuilder):
     """
     Docker-based Build System plugin implementation.
@@ -336,6 +79,7 @@ class DockerBuilder(AbstractBuilder):
     base_uri: <base image URI>
     image_script: <custom image URI script>
     build:
+        platform: <docker platform>
         requirements: <requirements file>
         data: <list of data file globs>
         src: <list of source file globs>
@@ -343,6 +87,8 @@ class DockerBuilder(AbstractBuilder):
         registry: <image push registry>
         repository: <image push repository>
         tag_suffix: <optional image push tag suffix>
+    docker:
+        <docker-py configuration arguments>
     ```
 
     It then launches the target Pipeline by submitting its execution to Sematic Server,
@@ -386,7 +132,7 @@ def _build(target: str) -> ImageURI:
     Builds the container image, returning the image URI that can be used to launch
     executions.
     """
-    build_config = _get_build_config(script_path=target)
+    build_config = load_build_config(script_path=target)
     logger.debug("Loaded build configuration: %s", build_config)
 
     docker_client = _make_docker_client(build_config.docker)
@@ -415,7 +161,6 @@ def _launch(target: str, image_uri: ImageURI) -> None:
     """
     Launches the specified user code target, using the specified image.
     """
-    # TODO: switch from project-relative paths to build file-relative paths
     sys.path.append(os.getcwd())
     logger.info("Launching target: '%s'", target)
 
@@ -423,46 +168,6 @@ def _launch(target: str, image_uri: ImageURI) -> None:
         runpy.run_path(path_name=target, run_name="__main__")
 
     logger.debug("Finished launching target: '%s'", target)
-
-
-def _get_build_config(script_path: str) -> BuildConfig:
-    """
-    Handles the entire instantiation of the definite `BuildConfig` object for the
-    specified script.
-
-    Raises
-    ------
-    BuildConfigurationError:
-        There was an error when loading or validating the specified build configuration.
-    """
-    build_config_files = _find_build_config_files(script_path=script_path)
-    logger.debug(
-        "Script '%s' has these corresponding build files: %s",
-        script_path,
-        build_config_files,
-    )
-
-    # TODO: override several config files, env vars, and cli arguments
-    if len(build_config_files) == 0:
-        raise BuildConfigurationError(
-            f"Unable to find any build files corresponding to script '{script_path}'! "
-            f"Please see TODO for build configuration details!"
-        )
-
-    return BuildConfig.load_build_config_file(build_config_files[0])
-
-
-def _find_build_config_files(script_path: str) -> List[str]:
-    """
-    Searches for build configuration files that correspond to the specified script file,
-    and returns a list containing their paths.
-    """
-    # TODO: also load `sematic_build.yaml` files on the file hierarchy between the cwd and
-    #  the script directory
-    root = os.path.splitext(script_path)[0]
-    file_candidate = f"{root}.yaml"
-
-    return [file_candidate] if os.path.isfile(file_candidate) else []
 
 
 def _make_docker_client(
@@ -617,7 +322,6 @@ def _build_from_dockerfile(
             status_updates = docker_client.api.build(
                 dockerfile=dockerfile.name,
                 # use the project root as the context
-                # TODO: switch from project-relative paths to build file-relative paths
                 path=os.getcwd(),
                 tag=built_image_name,
                 decode=True,
@@ -845,7 +549,6 @@ def _get_local_image_name(target: str, build_config: BuildConfig) -> str:
     Returns a local name to give to an image build for the specified target script,
     according to the specified build configuration.
     """
-    # TODO: switch from project-relative paths to build file-relative paths
     dir_name = os.path.basename(os.path.dirname(os.path.abspath(target)))
     if dir_name == "/":
         dir_name = "default"
