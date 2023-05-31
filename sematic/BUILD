@@ -82,7 +82,7 @@ sematic_py_lib(
         "//sematic/db/models:resolution",
         "//sematic/db/models:run",
         "//sematic/db/models:user",
-        "//sematic:logging",
+        "//sematic:logs",
         "//sematic/metrics:metric_point",
         "//sematic/plugins:abstract_external_resource",
         "//sematic/scheduling:job_details",
@@ -100,8 +100,8 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
-    name = "logging",
-    srcs = ["logging.py"],
+    name = "logs",
+    srcs = ["logs.py"],
     pip_deps = [
         "flask",
     ],
