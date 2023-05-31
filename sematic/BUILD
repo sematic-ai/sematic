@@ -204,6 +204,12 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "torch_patch",
+    srcs = ["torch_patch.py"],
+    deps = [],
+)
+
+sematic_py_lib(
     name = "versions",
     srcs = ["versions.py"],
     deps = [],

@@ -7,6 +7,7 @@ pytest_test(
     deps = [
         "//sematic/ee/plugins/external_resource/ray:checkpoint",
     ],
+    data = []
 )
 
 pytest_test(
