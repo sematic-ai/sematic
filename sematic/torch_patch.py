@@ -1,10 +1,12 @@
 # This code is based on code from:
 # https://github.com/pytorch/pytorch/blob/1a6ab8a5dcce45789a6dd61261bc73428439ddb8/torch/__init__.py#L196
 # It enables loading of nvidia .so libraries depended on by pytorch when those
-# libs are provided via bazel on Linux.
+# libs are provided via bazel on Linux. The pytorch code this is patching is only executed
+# on Linux, and is only broken in certain bazel setups.
 # Standard Library
 import ctypes
 import glob
+import importlib.util
 import logging
 import os
 import platform
@@ -16,6 +18,12 @@ try:
     _RUNNING_IN_BAZEL = True
 except ImportError:
     _RUNNING_IN_BAZEL = False
+
+# Check whether pytorch is defined; we only want to perform
+# the patch if it is. But we don't want to actually
+# import it until after the patch.
+_torch_spec = importlib.util.find_spec("torch")
+_PYTORCH_IS_DEFINED = _torch_spec is not None
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +68,8 @@ def _preload_cuda_deps(lib_folder, lib_name):
     ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
 
 
-if platform.system() == "Linux" and _RUNNING_IN_BAZEL:
+if platform.system() == "Linux" and _RUNNING_IN_BAZEL and _PYTORCH_IS_DEFINED:
+    print("Patching torch nvidia loading")
     for lib_folder, lib_name in cuda_libs.items():
         try:
             _preload_cuda_deps(lib_folder, lib_name)

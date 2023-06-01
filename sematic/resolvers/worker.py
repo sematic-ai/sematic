@@ -15,6 +15,14 @@ import cloudpickle
 
 # Sematic
 import sematic.api_client as api_client
+
+# Note: this will not actually import pytorch,
+# and it will only perform the patch if (a) pytorch
+# is actually importable (b) we're running
+# in bazel (c) we're running in Linux
+# Needs to be done here in case user's func uses torch.
+# We want to make sure we can unpickle it.
+import sematic.torch_patch
 from sematic.abstract_future import FutureState
 from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR
 from sematic.config.user_settings import UserSettingsVar
