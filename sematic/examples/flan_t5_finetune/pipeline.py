@@ -1,43 +1,27 @@
 # Standard Library
 from dataclasses import dataclass
-from enum import Enum, unique
+from typing import Tuple
 
 # Third-party
-from transformers import AutoModelForSeq2SeqLM, PreTrainedModel
+from datasets import Dataset
+from peft import PeftModelForSeq2SeqLM
 
 # Sematic
 import sematic
-
-
-@unique
-class ModelSize(Enum):
-    small = "small"
-    base = "base"
-    large = "large"
-    xl = "xl"
-    xxl = "xxl"
-
-
-# TODO: move to hugging face module and give it a visualization
-@dataclass
-class HuggingFaceModelReference:
-    owner: str
-    repo: str
-
-    @classmethod
-    def from_string(cls, as_string: str) -> "HuggingFaceModel":
-        owner, repo = as_string.rsplit("/", maxsplit=1)
-        return HuggingFaceModel(owner=owner, repo=repo)
+from sematic.examples.flan_t5_finetune.train_eval import (
+    DatasetConfig,
+    HuggingFaceModelReference,
+    ModelSize,
+    TrainingConfig,
+    prepare_data,
+)
+from sematic.examples.flan_t5_finetune.train_eval import train as do_train
 
 
 @dataclass
 class ResultSummary:
     source_model: HuggingFaceModelReference
-
-
-@dataclass
-class TrainingConfig:
-    model_size: ModelSize
+    trained_model: PeftModelForSeq2SeqLM
 
 
 @sematic.func
@@ -46,12 +30,40 @@ def pick_model(model_size: ModelSize) -> HuggingFaceModelReference:
 
 
 @sematic.func
-def summarize(source_model: HuggingFaceModelReference) -> ResultSummary:
+def train(
+    model_reference: HuggingFaceModelReference,
+    training_config: TrainingConfig,
+    train_data: Dataset,
+) -> PeftModelForSeq2SeqLM:
+    model = do_train(model_reference.to_string(), training_config, train_data)
+    return model
+
+
+@sematic.func
+def prepare_datasets(
+    dataset_config: DatasetConfig,
+    model_reference: HuggingFaceModelReference,
+) -> Tuple[Dataset, Dataset]:
+    train_dataset, test_dataset = prepare_data(dataset_config, model_reference)
+    return train_dataset, test_dataset
+
+
+@sematic.func
+def summarize(
+    source_model: HuggingFaceModelReference, trained_model: PeftModelForSeq2SeqLM
+) -> ResultSummary:
     return ResultSummary(
         source_model=source_model,
+        trained_model=trained_model,
     )
 
 
 @sematic.func
-def pipeline(training_config: TrainingConfig) -> ResultSummary:
-    return summarize(pick_model(training_config.model_size))
+def pipeline(
+    training_config: TrainingConfig,
+    dataset_config: DatasetConfig,
+) -> ResultSummary:
+    model_ref = pick_model(training_config.model_size)
+    train_data, test_data = prepare_datasets(dataset_config, model_ref)
+    model = train(model_ref, training_config, train_data)
+    return summarize(source_model=model_ref, trained_model=model)
