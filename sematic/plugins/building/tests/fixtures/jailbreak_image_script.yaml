@@ -3,8 +3,8 @@ image_script: "phony/../../home/bob/.bashrc"
 build:
   platform: "linux/amd64"
   requirements: "requirements.txt"
-  data: ["**.txt"]
-  src: ["**.py"]
+  data: ["**/*.txt"]
+  src: ["**/*.py"]
 push:
   registry: "my_registry"
   repository: "my_repository"

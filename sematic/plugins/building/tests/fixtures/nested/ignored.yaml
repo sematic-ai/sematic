@@ -1,4 +1,4 @@
 version: 1
 base_uri: "x:y@z"
 build:
-  data: ["**.ignored"]
+  data: ["**/*.ignored"]
