@@ -4,9 +4,18 @@
 # libs are provided via bazel on Linux.
 import ctypes
 import platform
+import logging
 import os
 import sys
 import glob
+
+try:
+    import bazel_tools  # isort:skip
+    _RUNNING_IN_BAZEL = True 
+except ImportError:
+    _RUNNING_IN_BAZEL = False 
+
+logger = logging.getLogger(__name__)
 
 class NotFound(Exception):
     pass
@@ -43,10 +52,14 @@ def _preload_cuda_deps(lib_folder, lib_name):
         raise NotFound(f"{lib_name} not found in the system path {sys.path}")
     ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
 
-if platform.system() == 'Linux':
+
+if platform.system() == 'Linux' and _RUNNING_IN_BAZEL:
     for lib_folder, lib_name in cuda_libs.items():
         try:
             _preload_cuda_deps(lib_folder, lib_name)
         except NotFound:
             pass
+        except Exception as e:
+            logger.warning("Error loading %s from %s: %s", lib_name, lib_folder, e)
+            
 

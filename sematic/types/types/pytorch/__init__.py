@@ -1,9 +1,9 @@
 # Standard Library
 import logging
+import sematic.torch_patch  # isort: skip
 
 logger = logging.getLogger(__name__)
 
-import sematic.torch_patch
 try:
     # Third-party
     import torch  # noqa: F401
