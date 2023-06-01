@@ -2,23 +2,27 @@
 # https://github.com/pytorch/pytorch/blob/1a6ab8a5dcce45789a6dd61261bc73428439ddb8/torch/__init__.py#L196
 # It enables loading of nvidia .so libraries depended on by pytorch when those
 # libs are provided via bazel on Linux.
+# Standard Library
 import ctypes
-import platform
+import glob
 import logging
 import os
+import platform
 import sys
-import glob
 
 try:
     import bazel_tools  # isort:skip
-    _RUNNING_IN_BAZEL = True 
+
+    _RUNNING_IN_BAZEL = True
 except ImportError:
-    _RUNNING_IN_BAZEL = False 
+    _RUNNING_IN_BAZEL = False
 
 logger = logging.getLogger(__name__)
 
+
 class NotFound(Exception):
     pass
+
 
 cuda_libs = {
     "cublas": "libcublas.so.*[0-9]",
@@ -34,16 +38,19 @@ cuda_libs = {
     "nvtx": "libnvToolsExt.so.*[0-9]",
 }
 
+
 def _preload_cuda_deps(lib_folder, lib_name):
     """Preloads cuda deps if they could not be found otherwise."""
     # Should only be called on Linux if default path resolution have failed
-    assert platform.system() == 'Linux', 'Should only be called on Linux'
+    assert platform.system() == "Linux", "Should only be called on Linux"
     lib_path = None
     for path in sys.path:
-        nvidia_path = os.path.join(path, 'nvidia')
+        nvidia_path = os.path.join(path, "nvidia")
         if not os.path.exists(nvidia_path):
             continue
-        candidate_lib_paths = glob.glob(os.path.join(nvidia_path, lib_folder, 'lib', lib_name))
+        candidate_lib_paths = glob.glob(
+            os.path.join(nvidia_path, lib_folder, "lib", lib_name)
+        )
         if candidate_lib_paths and not lib_path:
             lib_path = candidate_lib_paths[0]
         if lib_path:
@@ -53,7 +60,7 @@ def _preload_cuda_deps(lib_folder, lib_name):
     ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
 
 
-if platform.system() == 'Linux' and _RUNNING_IN_BAZEL:
+if platform.system() == "Linux" and _RUNNING_IN_BAZEL:
     for lib_folder, lib_name in cuda_libs.items():
         try:
             _preload_cuda_deps(lib_folder, lib_name)
@@ -61,5 +68,3 @@ if platform.system() == 'Linux' and _RUNNING_IN_BAZEL:
             pass
         except Exception as e:
             logger.warning("Error loading %s from %s: %s", lib_name, lib_folder, e)
-            
-

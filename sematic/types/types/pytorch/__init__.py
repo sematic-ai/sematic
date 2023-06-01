@@ -1,5 +1,6 @@
 # Standard Library
 import logging
+
 import sematic.torch_patch  # isort: skip
 
 logger = logging.getLogger(__name__)

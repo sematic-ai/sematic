@@ -1,16 +1,22 @@
+# Standard Library
 from dataclasses import dataclass
 from enum import Enum, unique
 
-import sematic
+# Third-party
 from transformers import AutoModelForSeq2SeqLM, PreTrainedModel
+
+# Sematic
+import sematic
+
 
 @unique
 class ModelSize(Enum):
-    small = "small" 
+    small = "small"
     base = "base"
     large = "large"
     xl = "xl"
     xxl = "xxl"
+
 
 # TODO: move to hugging face module and give it a visualization
 @dataclass
@@ -22,6 +28,7 @@ class HuggingFaceModelReference:
     def from_string(cls, as_string: str) -> "HuggingFaceModel":
         owner, repo = as_string.rsplit("/", maxsplit=1)
         return HuggingFaceModel(owner=owner, repo=repo)
+
 
 @dataclass
 class ResultSummary:
@@ -35,10 +42,7 @@ class TrainingConfig:
 
 @sematic.func
 def pick_model(model_size: ModelSize) -> HuggingFaceModelReference:
-    return HuggingFaceModelReference(
-        owner="google",
-        repo=f"flan-t5-{model_size.value}"
-    )
+    return HuggingFaceModelReference(owner="google", repo=f"flan-t5-{model_size.value}")
 
 
 @sematic.func
