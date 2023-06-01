@@ -350,7 +350,7 @@ def _generate_dockerfile_contents(
     if source_build_config is not None and source_build_config.data is not None:
         logger.debug("Adding data files: %s", source_build_config.data)
         for data_glob in source_build_config.data:
-            data_files = glob.glob(data_glob)
+            data_files = glob.glob(data_glob, recursive=True)
             if len(data_files) > 0:
                 # sorting for determinism
                 for data_file in sorted(data_files):
@@ -363,7 +363,7 @@ def _generate_dockerfile_contents(
     if source_build_config is not None and source_build_config.src is not None:
         logger.debug("Adding source files: %s", source_build_config.src)
         for src_glob in source_build_config.src:
-            src_files = glob.glob(src_glob)
+            src_files = glob.glob(src_glob, recursive=True)
             if len(src_files) > 0:
                 # sorting for determinism
                 for src_file in sorted(src_files):

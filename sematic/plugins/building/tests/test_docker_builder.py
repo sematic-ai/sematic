@@ -340,6 +340,7 @@ def test_make_docker_client_error(mock_retrieve_server_version: mock.MagicMock):
                     "*.sh",
                     "//sematic/plugins/building/tests/fixtures/no_image*",
                     "../**/two_images*",
+                    "**/third_level.*",
                 ],
                 # check the target is not duplicated
                 # this actually results in an unexpected __init__.py file being included

@@ -4,7 +4,7 @@ build:
   platform: "linux/amd64"
   requirements: "requirements.txt"
   data: ["./../../.././../../../home/bob"]
-  src: ["**.py"]
+  src: ["**/*.py"]
 push:
   registry: "my_registry"
   repository: "my_repository"

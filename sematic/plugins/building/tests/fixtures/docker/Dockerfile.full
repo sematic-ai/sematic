@@ -19,8 +19,8 @@ COPY sematic/plugins/building/tests/fixtures/bad_image_script.sh sematic/plugins
 COPY sematic/plugins/building/tests/fixtures/good_image_script.sh sematic/plugins/building/tests/fixtures/good_image_script.sh
 COPY sematic/plugins/building/tests/fixtures/no_image.yaml sematic/plugins/building/tests/fixtures/no_image.yaml
 COPY sematic/plugins/building/tests/fixtures/two_images.yaml sematic/plugins/building/tests/fixtures/two_images.yaml
+COPY sematic/plugins/building/tests/fixtures/nested/third_level/third_level.txt sematic/plugins/building/tests/fixtures/nested/third_level/third_level.txt
 
-COPY sematic/plugins/building/tests/fixtures/__init__.py sematic/plugins/building/tests/fixtures/__init__.py
 COPY sematic/plugins/building/tests/fixtures/bad_launch_script.py sematic/plugins/building/tests/fixtures/bad_launch_script.py
 COPY sematic/plugins/building/tests/fixtures/good_launch_script.py sematic/plugins/building/tests/fixtures/good_launch_script.py
 COPY sematic/plugins/building/tests/fixtures/good_minimal.py sematic/plugins/building/tests/fixtures/good_minimal.py
