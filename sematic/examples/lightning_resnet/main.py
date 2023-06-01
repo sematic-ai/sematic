@@ -100,7 +100,7 @@ def main():
 
     args = parser.parse_args()
 
-    logger.info("Starting CIFAR Classifier example...")
+    logger.info("Starting Lightning ResNet example...")
 
     if args.cloud:
         resolver = sematic.CloudResolver()
