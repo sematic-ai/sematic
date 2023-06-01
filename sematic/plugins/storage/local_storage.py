@@ -111,7 +111,7 @@ def download_endpoint(user: Optional[User], namespace: str, key: str) -> flask.R
             content = file.read()
     except FileNotFoundError:
         return jsonify_error(
-            error="No such namespace or key: {namespace} {key}",
+            error=f"No such namespace or key: {namespace} {key}",
             status=HTTPStatus.NOT_FOUND,
         )
 
