@@ -145,6 +145,8 @@ def clone_resolution(resolution: Resolution, root_id: str) -> Resolution:
         cache_namespace=resolution.cache_namespace,
         # the user_id is overwritten on the API call based on the user's API key
         user_id=None,
+        run_command=resolution.run_command,
+        build_config=resolution.build_config,
     )
 
     # Set this outside the constructor because the constructor expects
