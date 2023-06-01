@@ -128,6 +128,8 @@ class LocalResolver(SilentResolver):
         Instead of simply queuing the root future, this method seeds the future graph
         from a clone of another execution of same pipeline.
         """
+        rerun_mode = rerun_mode or RerunMode.SPECIFIC_RUN
+
         try:
             run = api_client.get_run(from_run_id)
         except api_client.ResourceNotFoundError as e:
