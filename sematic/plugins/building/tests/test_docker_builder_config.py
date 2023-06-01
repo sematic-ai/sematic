@@ -132,6 +132,7 @@ def test_load_build_config_full_base_uri_happy():
         "sematic/plugins/building/tests/fixtures/*.sh",
         "sematic/plugins/building/tests/fixtures/no_image*",
         "sematic/plugins/building/tests/**/two_images*",
+        "sematic/plugins/building/tests/fixtures/**/third_level.*",
     ]
     assert actual_config.build.src == ["sematic/plugins/building/tests/fixtures/*.py"]
     assert actual_config.push is not None
@@ -211,10 +212,10 @@ def test_load_build_config_merge_and_normalize_w_specific_config():
             platform="linux/amd64",
             requirements=os.path.join(RESOURCE_PATH, "requirements.txt"),
             data=[
-                os.path.join(RESOURCE_PATH, "nested", "**.txt"),
-                os.path.join(RESOURCE_PATH, "nested", "**.dat"),
+                os.path.join(RESOURCE_PATH, "nested", "**/*.txt"),
+                os.path.join(RESOURCE_PATH, "nested", "**/*.dat"),
             ],
-            src=[os.path.join(RESOURCE_PATH, "nested", "**.py")],
+            src=[os.path.join(RESOURCE_PATH, "nested", "**/*.py")],
         ),
         push=None,
         docker=None,
@@ -235,7 +236,7 @@ def test_load_build_config_merge_and_normalize_no_specific_config():
         build=docker_builder_config.SourceBuildConfig(
             platform="linux/amd64",
             requirements="sematic/plugins/building/tests/fixtures/requirements.txt",
-            data=[os.path.join(RESOURCE_PATH, "nested", "**.txt")],
+            data=[os.path.join(RESOURCE_PATH, "nested", "**/*.txt")],
             src=None,
         ),
         push=None,
