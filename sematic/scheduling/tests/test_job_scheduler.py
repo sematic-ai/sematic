@@ -67,6 +67,8 @@ def resolution(run):
         ),
         settings_env_vars={"SOME_ENV_VAR": "some_value"},
         client_version=CURRENT_VERSION_STR,
+        run_command="sematic run my_pipeline.py",
+        build_config='version: 1\nbase_uri: "a:b@c"',
     )
 
 

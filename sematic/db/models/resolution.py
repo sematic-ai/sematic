@@ -182,6 +182,10 @@ class Resolution(HasUserMixin, Base, JSONEncodableMixin):
         be cached, as long as they also have the `cache` flag activated.
     user_id:
         User who submitted this resolution.
+    run_command:
+        The CLI command used to launch this resolution, if applicable.
+    build_config:
+        The configuration used to build the pipeline container image, if applicable.
     """
 
     __tablename__ = "resolutions"
@@ -205,12 +209,14 @@ class Resolution(HasUserMixin, Base, JSONEncodableMixin):
     # we consider this field to be immutable, so we will just re-use
     # whatever was already in the DB for it
     settings_env_vars: Dict[str, str] = Column(
-        types.JSON, nullable=False, default=lambda: {}, info={REDACTED_KEY: True}
+        types.JSON(), nullable=False, default=lambda: {}, info={REDACTED_KEY: True}
     )
     container_image_uris: Optional[Dict[str, str]] = Column(types.JSON(), nullable=True)
     container_image_uri: Optional[str] = Column(types.String(), nullable=True)
     client_version: Optional[str] = Column(types.String(), nullable=True)
     cache_namespace: Optional[str] = Column(types.String(), nullable=True)
+    run_command: Optional[str] = Column(types.String(), nullable=True)
+    build_config: Optional[str] = Column(types.String(), nullable=True)
 
     @validates("status")
     def validate_status(self, key, value) -> str:
