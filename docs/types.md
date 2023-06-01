@@ -66,4 +66,4 @@ See [Snowflake integration](./snowflake.md).
 
 ## Plotly figures
 
-See [Plotly integration](./plotly.md).
+Simply return any `plotly.graph_objs.Figure` from a Sematic func (either directly or as part of a `dataclass`, `Dict`, `List`, or other supported collection type) and it will be displayed in the UI.
