@@ -1,5 +1,5 @@
 # Standard Library
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from enum import Enum, unique
 from typing import List, Tuple
 
@@ -11,27 +11,46 @@ from transformers import (
     AutoTokenizer,
     PreTrainedTokenizerBase,
     Trainer,
-    TrainingArguments,
 )
-
-# Sematic
-from sematic.types.types.aws import S3Location
+from transformers import TrainingArguments
+from transformers import TrainingArguments as HfTrainingArguments
 
 
 @unique
 class ModelSize(Enum):
     small = "small"
     base = "base"
-    large = "large"
-    xl = "xl"
-    xxl = "xxl"
+    # TODO: can't post large/xl/xxl to the server
+    # because when they're serialized as one blob they
+    # are too large. This will have to wait for
+    # implementing new serialization that allows
+    # multiple blobs for models.
+    # large = "large"
+    # xl = "xl"
+    # xxl = "xxl"
+
+
+# works around: https://github.com/huggingface/transformers/issues/23958
+@dataclass
+class TrainingArguments:
+    output_dir: str
+    evaluation_strategy: str
+    learning_rate: float
+    gradient_accumulation_steps: int
+    auto_find_batch_size: bool
+    num_train_epochs: int
+    save_steps: int
+    save_total_limit: int
+
+    def to_hugging_face(self) -> HfTrainingArguments:
+        return HfTrainingArguments(**asdict(self))
 
 
 @dataclass
 class TrainingConfig:
     model_size: ModelSize
     lora_config: LoraConfig
-    checkpoint_location: S3Location
+    training_arguments: TrainingArguments
 
 
 @dataclass
@@ -44,7 +63,6 @@ class EvaluationResults:
     continuations: List[Tuple[str, str]]
 
 
-# TODO: move to hugging face module and give it a visualization
 @dataclass
 class HuggingFaceModelReference:
     owner: str
@@ -144,10 +162,21 @@ def prepare_data(
 
 
 def train(
-    model_name: str, train_config: TrainingConfig, train_data: Dataset
+    model_name: str,
+    train_config: TrainingConfig,
+    train_data: Dataset,
+    eval_data: Dataset,
 ) -> PeftModelForSeq2SeqLM:
     model = load_model(model_name)
     model = get_peft_model(model, train_config.lora_config)
+    trainer = Trainer(
+        model=model,
+        args=train_config.training_arguments.to_hugging_face(),
+        train_dataset=train_data,
+        eval_dataset=eval_data,
+    )
+    model.config.use_cache = False
+    trainer.train()
     return model
 
 
@@ -158,7 +187,7 @@ def evaluate(
 ) -> EvaluationResults:
     model.eval()
     results: List[Tuple[str, str]] = []
-    temp = tokenizer("Hi my name is Josh", return_tensors="pt")
+    model.config.use_cache = True
     eval_dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
     for i, row in enumerate(eval_dataset.iter(batch_size=1)):
         print(f"Eval sample {i}")

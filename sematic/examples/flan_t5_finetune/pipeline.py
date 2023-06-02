@@ -48,8 +48,14 @@ def train(
     model_reference: HuggingFaceModelReference,
     training_config: TrainingConfig,
     train_data: Dataset,
+    eval_data: Dataset,
 ) -> PeftModelForSeq2SeqLM:
-    model = do_train(model_reference.to_string(), training_config, train_data)
+    model = do_train(
+        model_reference.to_string(),
+        training_config,
+        train_data,
+        eval_data,
+    )
     return model
 
 
@@ -92,7 +98,7 @@ def pipeline(
     model_ref = pick_model(training_config.model_size)
     tokenizer = load_tokenizer(model_ref)
     train_data, test_data = prepare_datasets(dataset_config, tokenizer)
-    model = train(model_ref, training_config, train_data)
+    model = train(model_ref, training_config, train_data, test_data)
     eval_results = eval(model, test_data, tokenizer)
     return summarize(
         source_model=model_ref, trained_model=model, evaluation_results=eval_results
