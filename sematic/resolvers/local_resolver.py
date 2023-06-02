@@ -80,7 +80,7 @@ class LocalResolver(SilentResolver):
         self,
         cache_namespace: Optional[CacheNamespace] = None,
         rerun_from: Optional[str] = None,
-        rerun_mode: RerunMode = RerunMode.SPECIFIC_RUN,
+        rerun_mode: Optional[RerunMode] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -123,12 +123,14 @@ class LocalResolver(SilentResolver):
             self._seed_from_clone(future, self._rerun_from_run_id, self._rerun_mode)
 
     def _seed_from_clone(
-        self, future: AbstractFuture, from_run_id: str, rerun_mode: RerunMode
+        self, future: AbstractFuture, from_run_id: str, rerun_mode: Optional[RerunMode]
     ):
         """
         Instead of simply queuing the root future, this method seeds the future graph
         from a clone of another execution of same pipeline.
         """
+        rerun_mode = rerun_mode or RerunMode.SPECIFIC_RUN
+
         try:
             run = api_client.get_run(from_run_id)
         except api_client.ResourceNotFoundError as e:
