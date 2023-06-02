@@ -46,8 +46,10 @@ from sematic.resolver import Resolver  # noqa: F401,E402
 from sematic.resolvers.cloud_resolver import CloudResolver  # noqa: F401,E402
 from sematic.resolvers.local_resolver import LocalResolver, RerunMode  # noqa: F401,E402
 from sematic.resolvers.resource_requirements import (  # noqa: F401,E402
+    KubernetesCapabilities,
     KubernetesResourceRequirements,
     KubernetesSecretMount,
+    KubernetesSecurityContext,
     KubernetesToleration,
     KubernetesTolerationEffect,
     KubernetesTolerationOperator,
