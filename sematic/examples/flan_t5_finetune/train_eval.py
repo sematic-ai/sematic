@@ -1,7 +1,7 @@
 # Standard Library
 from dataclasses import asdict, dataclass
 from enum import Enum, unique
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 # Third-party
 from datasets import Dataset, load_dataset
@@ -20,14 +20,9 @@ from transformers import TrainingArguments as HfTrainingArguments
 class ModelSize(Enum):
     small = "small"
     base = "base"
-    # TODO: can't post large/xl/xxl to the server
-    # because when they're serialized as one blob they
-    # are too large. This will have to wait for
-    # implementing new serialization that allows
-    # multiple blobs for models.
-    # large = "large"
-    # xl = "xl"
-    # xxl = "xxl"
+    large = "large"
+    xl = "xl"
+    xxl = "xxl"
 
 
 # works around: https://github.com/huggingface/transformers/issues/23958
@@ -51,11 +46,15 @@ class TrainingConfig:
     model_size: ModelSize
     lora_config: LoraConfig
     training_arguments: TrainingArguments
+    storage_directory: str
 
 
 @dataclass
 class DatasetConfig:
-    test_fraction: float
+    max_output_length: int
+    max_input_length: int
+    max_train_samples: Optional[int] = None
+    max_test_samples: Optional[int] = None
 
 
 @dataclass
@@ -103,13 +102,12 @@ def load_tokenizer(model_name) -> PreTrainedTokenizerBase:
     return AutoTokenizer.from_pretrained(model_name)
 
 
-def _finance_preprocess_function(examples, tokenizer):
-    # data preprocessing
-    text_column = "sentence"
-    label_column = "text_label"
-    max_length = 128
-    output_token_max_length = 300
-    inputs = examples[text_column]
+def _docs_preprocess_function(examples, tokenizer, dataset_config):
+    text_column = "context"
+    label_column = "summary"
+    max_length = dataset_config.max_input_length
+    output_token_max_length = dataset_config.max_output_length
+    inputs = [f"Please summarize: {ctx}. Summary: " for ctx in examples[text_column]]
     targets = examples[label_column]
     model_inputs = tokenizer(
         inputs,
@@ -135,21 +133,19 @@ def prepare_data(
     dataset_config: DatasetConfig,
     tokenizer: PreTrainedTokenizerBase,
 ):
-    dataset = load_dataset("financial_phrasebank", "sentences_allagree")
-    dataset = dataset["train"].train_test_split(
-        test_size=dataset_config.test_fraction,
-    )
+    dataset = load_dataset("pacovaldez/pandas-documentation", "train")
+    if dataset_config.max_train_samples is not None:
+        dataset["train"] = dataset["train"].select(
+            range(dataset_config.max_train_samples)
+        )
+    if dataset_config.max_test_samples is not None:
+        dataset["test"] = dataset["test"].select(range(dataset_config.max_test_samples))
+
     dataset["validation"] = dataset["test"]
     del dataset["test"]
 
-    classes = dataset["train"].features["label"].names
-    dataset = dataset.map(
-        lambda x: {"text_label": [classes[label] for label in x["label"]]},
-        batched=True,
-        num_proc=1,
-    )
     processed_datasets = dataset.map(
-        lambda example: _finance_preprocess_function(example, tokenizer),
+        lambda example: _docs_preprocess_function(example, tokenizer, dataset_config),
         batched=True,
         num_proc=1,
         remove_columns=dataset["train"].column_names,
@@ -191,8 +187,6 @@ def evaluate(
     eval_dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
     for i, row in enumerate(eval_dataset.iter(batch_size=1)):
         print(f"Eval sample {i}")
-        if i >= 10:
-            break
         eval_tokens = row["input_ids"]
         input_text = tokenizer.batch_decode(
             eval_tokens.detach().cpu().numpy(), skip_special_tokens=True
@@ -201,5 +195,11 @@ def evaluate(
         output_text = tokenizer.batch_decode(
             output_tokens.detach().cpu().numpy(), skip_special_tokens=True
         )
-        results.append((input_text[0], output_text[0]))
-    return EvaluationResults(results)
+        results.append((sanitize(input_text[0]), sanitize(output_text[0])))
+    eval_results = EvaluationResults(results)
+    return eval_results
+
+
+def sanitize(string: str):
+    string = string.replace("NaN", "?")
+    return string

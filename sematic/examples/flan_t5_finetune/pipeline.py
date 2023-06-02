@@ -1,11 +1,12 @@
 # Standard Library
+import os
 from dataclasses import dataclass
 from typing import Tuple
 
 # Third-party
 from datasets import Dataset
-from peft import PeftModelForSeq2SeqLM
-from transformers import PreTrainedTokenizerBase
+from peft import PeftModel, PeftModelForSeq2SeqLM
+from transformers import AutoModelForSeq2SeqLM, PreTrainedTokenizerBase
 
 # Sematic
 import sematic
@@ -25,9 +26,37 @@ from sematic.examples.flan_t5_finetune.train_eval import train as do_train
 
 
 @dataclass
+class StoredModel:
+    path: str
+    model_type: str
+
+    @classmethod
+    def store(cls, model: PeftModel, directory: str) -> "StoredModel":
+        directory = os.path.expanduser(directory)
+        model.get_base_model().save_pretrained(os.path.join(directory, "base"))
+        model.save_pretrained(os.path.join(directory, "peft"))
+        return StoredModel(
+            path=os.path.abspath(directory),
+            model_type=type(model).__name__,
+        )
+
+    def load(self) -> PeftModel:
+        model = AutoModelForSeq2SeqLM.from_pretrained(
+            os.path.join(self.path, "base"),
+            device_map="auto",
+        )
+        model = PeftModel.from_pretrained(
+            model,
+            os.path.join(self.path, "peft"),
+            device_map="auto",
+        )
+        return model
+
+
+@dataclass
 class ResultSummary:
     source_model: HuggingFaceModelReference
-    trained_model: PeftModelForSeq2SeqLM
+    trained_model: StoredModel
     evaluation_results: EvaluationResults
 
 
@@ -49,23 +78,23 @@ def train(
     training_config: TrainingConfig,
     train_data: Dataset,
     eval_data: Dataset,
-) -> PeftModelForSeq2SeqLM:
+) -> StoredModel:
     model = do_train(
         model_reference.to_string(),
         training_config,
         train_data,
         eval_data,
     )
-    return model
+    return StoredModel.store(model, training_config.storage_directory)
 
 
 @sematic.func
 def eval(
-    model: PeftModelForSeq2SeqLM,
+    model: StoredModel,
     eval_data: Dataset,
     tokenizer: PreTrainedTokenizerBase,
 ) -> EvaluationResults:
-    return evaluate(model, eval_data, tokenizer)
+    return evaluate(model.load(), eval_data, tokenizer)
 
 
 @sematic.func
@@ -80,7 +109,7 @@ def prepare_datasets(
 @sematic.func
 def summarize(
     source_model: HuggingFaceModelReference,
-    trained_model: PeftModelForSeq2SeqLM,
+    trained_model: StoredModel,
     evaluation_results: EvaluationResults,
 ) -> ResultSummary:
     return ResultSummary(
