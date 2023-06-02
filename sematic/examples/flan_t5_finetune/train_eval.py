@@ -1,13 +1,15 @@
 # Standard Library
 from dataclasses import dataclass
 from enum import Enum, unique
+from typing import List, Tuple
 
 # Third-party
 from datasets import Dataset, load_dataset
-from peft import LoraConfig, get_peft_model
+from peft import LoraConfig, PeftModelForSeq2SeqLM, get_peft_model
 from transformers import (
     AutoModelForSeq2SeqLM,
     AutoTokenizer,
+    PreTrainedTokenizerBase,
     Trainer,
     TrainingArguments,
 )
@@ -35,6 +37,11 @@ class TrainingConfig:
 @dataclass
 class DatasetConfig:
     test_fraction: float
+
+
+@dataclass
+class EvaluationResults:
+    continuations: List[Tuple[str, str]]
 
 
 # TODO: move to hugging face module and give it a visualization
@@ -74,7 +81,7 @@ def load_model(model_name):
     return model
 
 
-def load_tokenizer(model_name):
+def load_tokenizer(model_name) -> PreTrainedTokenizerBase:
     return AutoTokenizer.from_pretrained(model_name)
 
 
@@ -107,9 +114,9 @@ def _finance_preprocess_function(examples, tokenizer):
 
 
 def prepare_data(
-    dataset_config: DatasetConfig, model_reference: HuggingFaceModelReference
+    dataset_config: DatasetConfig,
+    tokenizer: PreTrainedTokenizerBase,
 ):
-    tokenizer = load_tokenizer(model_reference.to_string())
     dataset = load_dataset("financial_phrasebank", "sentences_allagree")
     dataset = dataset["train"].train_test_split(
         test_size=dataset_config.test_fraction,
@@ -138,7 +145,32 @@ def prepare_data(
 
 def train(
     model_name: str, train_config: TrainingConfig, train_data: Dataset
-) -> S3Location:
+) -> PeftModelForSeq2SeqLM:
     model = load_model(model_name)
     model = get_peft_model(model, train_config.lora_config)
     return model
+
+
+def evaluate(
+    model: PeftModelForSeq2SeqLM,
+    eval_dataset: Dataset,
+    tokenizer: PreTrainedTokenizerBase,
+) -> EvaluationResults:
+    model.eval()
+    results: List[Tuple[str, str]] = []
+    temp = tokenizer("Hi my name is Josh", return_tensors="pt")
+    eval_dataset.set_format(type="torch", columns=["input_ids", "attention_mask"])
+    for i, row in enumerate(eval_dataset.iter(batch_size=1)):
+        print(f"Eval sample {i}")
+        if i >= 10:
+            break
+        eval_tokens = row["input_ids"]
+        input_text = tokenizer.batch_decode(
+            eval_tokens.detach().cpu().numpy(), skip_special_tokens=True
+        )
+        output_tokens = model.generate(input_ids=eval_tokens, max_new_tokens=500)
+        output_text = tokenizer.batch_decode(
+            output_tokens.detach().cpu().numpy(), skip_special_tokens=True
+        )
+        results.append((input_text[0], output_text[0]))
+    return EvaluationResults(results)
