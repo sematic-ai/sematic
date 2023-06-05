@@ -171,6 +171,7 @@ def test_build_image_base_uri(
         target=LAUNCH_SCRIPT,
         effective_base_uri=base_uri,
         build_config=mock_build_config,
+        platform=mock_build_config.build.platform,
         docker_client=mock_docker_client,
     )
 
@@ -188,6 +189,7 @@ def test_build_image_build_script(
     mock_build_config = mock.Mock(docker_builder.BuildConfig)
     mock_build_config.base_uri = None
     mock_build_config.image_script = image_script
+    mock_build_config.build = None
     mock_build_image_from_base.return_value = mock_image, local_uri
 
     actual_image, actual_uri = docker_builder._build_image(
@@ -202,6 +204,7 @@ def test_build_image_build_script(
         target=LAUNCH_SCRIPT,
         effective_base_uri=base_uri,
         build_config=mock_build_config,
+        platform=None,
         docker_client=mock_docker_client,
     )
 

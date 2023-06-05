@@ -1,12 +1,13 @@
 FROM sematicai/sematic-worker-base:latest
 WORKDIR /
 
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
-
-RUN python3 -c "import distutils" || apt-get update -y && apt-get install --reinstall -y python$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")-distutils
-RUN which pip3 || apt-get update -y && apt-get install -y python3-pip && python3 -m pip install --upgrade pip==23.1.2
-
-ENV PATH="/sematic/bin/:${PATH}"
-RUN echo '#!/bin/sh' > entrypoint.sh && echo '/usr/bin/python3 -m sematic.resolvers.worker "$@"' >> entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN ( echo '#!/bin/sh' > entrypoint.sh && echo '/usr/bin/python3 -m sematic.resolvers.worker "$@"' >> entrypoint.sh && chmod +x /entrypoint.sh )
 ENTRYPOINT ["/entrypoint.sh"]
+
+RUN python3 -c "from distutils import cmd, util" || ( apt-get update -y && apt-get install -y --reinstall --no-install-recommends python$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")-distutils )
+
+RUN which pip || ( export PYTHONDONTWRITEBYTECODE=1 && apt-get update -y && apt-get install -y --no-install-recommends wget && wget --no-verbose -O get-pip.py https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py && rm get-pip.py && unset PYTHONDONTWRITEBYTECODE )
+
+RUN python3 -c "import sematic" || ( export PYTHONDONTWRITEBYTECODE=1 && pip install --no-cache-dir --ignore-installed --root-user-action=ignore sematic && unset PYTHONDONTWRITEBYTECODE )
+
+ENV PATH="/sematic/bin/:$PATH"

@@ -3,8 +3,6 @@ base_uri: "sematicai/sematic-worker-base:cuda@sha256:6cbedeffdbf8ef0e5182819b4ae
 build:
   platform: "linux/amd64"
   requirements: "requirements.txt"
-  data: []
-  src: []
 push:
   registry: "558717131297.dkr.ecr.us-west-2.amazonaws.com"
   repository: "sematic-dev"

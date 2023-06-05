@@ -8,7 +8,7 @@ from typing import Any
 
 
 @contextmanager
-def with_stdout_spinner():
+def stdout_spinner():
     """
     Prints a spinning character to stdout while execution is inside this context.
     """
