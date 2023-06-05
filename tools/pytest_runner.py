@@ -3,7 +3,7 @@ import sys
 
 import debugpy
 import pytest
-import sematic.torch_patch
+import sematic.torch_patch  # noqa: F401
 
 if __name__ == "__main__":
     if os.environ.get("DEBUGPY", None) is not None:

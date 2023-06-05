@@ -70,55 +70,93 @@ def parse_args() -> Tuple[
     TrainingConfig, DatasetConfig, Optional[HuggingFaceModelReference]
 ]:
     parser = argparse.ArgumentParser("HuggingFace Flan Example")
+    size_options = ", ".join([size.name for size in ModelSize])
     parser.add_argument(
-        "--model-size", type=str, default=TRAINING_CONFIG.model_size.name
-    )
-    parser.add_argument("--epochs", type=int, default=1)
-    parser.add_argument(
-        "--learning-rate", type=float, default=TRAINING_ARGS.learning_rate
-    )
-    parser.add_argument(
-        "--max-train-samples", type=int, default=DATASET_CONFIG.max_train_samples
-    )
-    parser.add_argument(
-        "--max-test-samples", type=int, default=DATASET_CONFIG.max_test_samples
+        "--model-size",
+        type=lambda size: ModelSize[size],
+        default=TRAINING_CONFIG.model_size.name,
+        help=(
+            f"Select a model size (see https://huggingface.co/google/flan-t5-base)"
+            f". Options:  {size_options}."
+        ),
     )
     parser.add_argument(
-        "--max-input-length", type=int, default=DATASET_CONFIG.max_input_length
+        "--epochs",
+        type=int,
+        default=1,
+        help="The number of epochs to train on.",
+    ),
+    parser.add_argument(
+        "--learning-rate",
+        type=float,
+        default=TRAINING_ARGS.learning_rate,
+        help="The learning rate for the training.",
     )
     parser.add_argument(
-        "--max-output-length", type=int, default=DATASET_CONFIG.max_output_length
+        "--max-train-samples",
+        type=int,
+        default=DATASET_CONFIG.max_train_samples,
+        help="Maximum number of samples in a single training epoch.",
+    )
+    parser.add_argument(
+        "--max-test-samples",
+        type=int,
+        default=DATASET_CONFIG.max_test_samples,
+        help="Maximum number of samples in testing.",
+    )
+    parser.add_argument(
+        "--max-input-length",
+        type=int,
+        default=DATASET_CONFIG.max_input_length,
+        help="Maximum number of tokens in the input prompt.",
+    )
+    parser.add_argument(
+        "--max-output-length",
+        type=int,
+        default=DATASET_CONFIG.max_output_length,
+        help="Maximum number of output tokens in response to the prompt.",
     )
     parser.add_argument(
         "--model-export-repo",
         type=str,
         default=None,
+        help=(
+            "A huggingface repo to export the model to. "
+            "Should be provided as <repo-owner>/<repo name>."
+        ),
     )
     parser.add_argument(
         "--lora-r",
         type=int,
         default=LORA_CONFIG.r,
+        help="The number of dimensions for the LoRA matrix.",
     )
     parser.add_argument(
         "--lora-alpha",
         type=int,
         default=LORA_CONFIG.lora_alpha,
+        help="The scaling factor for the LoRA trained weights.",
     )
     parser.add_argument(
         "--lora-dropout",
         type=float,
         default=LORA_CONFIG.lora_dropout,
+        help="The dropout probability for LoRA layers.",
     )
     parser.add_argument(
         "--login",
         default=False,
         action="store_true",
+        help=(
+            "Whether or not to prompt for HuggingFace login. "
+            "Should be done on first script execution."
+        ),
     )
     args = parser.parse_args()
 
     training_config = replace(
         TRAINING_CONFIG,
-        model_size=ModelSize[args.model_size],
+        model_size=args.model_size,
         training_arguments=replace(
             TRAINING_ARGS,
             learning_rate=args.learning_rate,
