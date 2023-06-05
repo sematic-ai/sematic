@@ -13,7 +13,7 @@ import platform
 import sys
 
 try:
-    import bazel_tools  # isort:skip
+    import bazel_tools  # type: ignore # isort:skip # noqa: F401
 
     _RUNNING_IN_BAZEL = True
 except ImportError:

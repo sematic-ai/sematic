@@ -1,10 +1,11 @@
 # Standard Library
 import argparse
 from dataclasses import replace
+from typing import Optional, Tuple
 
 # Third-party
-from peft import LoraConfig
-from transformers import TrainingArguments
+from huggingface_hub import login
+from peft import LoraConfig, PeftType
 
 # Sematic
 from sematic import LocalResolver
@@ -14,7 +15,10 @@ from sematic.examples.flan_t5_finetune.pipeline import (
     TrainingConfig,
     pipeline,
 )
-from sematic.examples.flan_t5_finetune.train_eval import TrainingArguments
+from sematic.examples.flan_t5_finetune.train_eval import (
+    HuggingFaceModelReference,
+    TrainingArguments,
+)
 
 LORA_CONFIG = LoraConfig(
     r=16,
@@ -22,6 +26,7 @@ LORA_CONFIG = LoraConfig(
     target_modules=["q", "v"],
     lora_dropout=0.05,
     bias="none",
+    peft_type=PeftType.LORA,
     task_type="SEQ_2_SEQ_LM",
     base_model_name_or_path="",
 )
@@ -53,15 +58,17 @@ DATASET_CONFIG = DatasetConfig(
 
 
 def main():
-    training_config, dataset_config = parse_args()
+    training_config, dataset_config, export_reference = parse_args()
     resolver = LocalResolver()
-    future = pipeline(training_config, dataset_config).set(
+    future = pipeline(training_config, dataset_config, export_reference).set(
         tags=[f"model-size:{training_config.model_size.name}"]
     )
     resolver.resolve(future)
 
 
-def parse_args():
+def parse_args() -> Tuple[
+    TrainingConfig, DatasetConfig, Optional[HuggingFaceModelReference]
+]:
     parser = argparse.ArgumentParser("HuggingFace Flan Example")
     parser.add_argument(
         "--model-size", type=str, default=TRAINING_CONFIG.model_size.name
@@ -82,6 +89,31 @@ def parse_args():
     parser.add_argument(
         "--max-output-length", type=int, default=DATASET_CONFIG.max_output_length
     )
+    parser.add_argument(
+        "--model-export-repo",
+        type=str,
+        default=None,
+    )
+    parser.add_argument(
+        "--lora-r",
+        type=int,
+        default=LORA_CONFIG.r,
+    )
+    parser.add_argument(
+        "--lora-alpha",
+        type=int,
+        default=LORA_CONFIG.lora_alpha,
+    )
+    parser.add_argument(
+        "--lora-dropout",
+        type=float,
+        default=LORA_CONFIG.lora_dropout,
+    )
+    parser.add_argument(
+        "--login",
+        default=False,
+        action="store_true",
+    )
     args = parser.parse_args()
 
     training_config = replace(
@@ -91,6 +123,12 @@ def parse_args():
             TRAINING_ARGS,
             learning_rate=args.learning_rate,
             num_train_epochs=args.epochs,
+        ),
+        lora_config=replace(
+            LORA_CONFIG,
+            r=args.lora_r,
+            lora_alpha=args.lora_alpha,
+            lora_dropout=args.lora_dropout,
         ),
     )
 
@@ -102,7 +140,16 @@ def parse_args():
         max_output_length=args.max_output_length,
     )
 
-    return training_config, dataset_config
+    export_model_reference = None
+    if args.model_export_repo is not None:
+        export_model_reference = HuggingFaceModelReference.from_string(
+            args.model_export_repo
+        )
+
+    if args.login:
+        login()
+
+    return training_config, dataset_config, export_model_reference
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ class JSONEncodableMixin:
     """
 
     def to_json_encodable(self, redact: bool = True):
-        for column in self.__table__.columns:
+        for column in self.__table__.columns:  # type: ignore
             try:
                 _to_json_encodable(getattr(self, column.key), column)
             except Exception as e:

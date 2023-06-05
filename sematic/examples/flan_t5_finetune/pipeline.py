@@ -1,11 +1,11 @@
 # Standard Library
 import os
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Optional, Tuple
 
 # Third-party
 from datasets import Dataset
-from peft import PeftModel, PeftModelForSeq2SeqLM
+from peft import PeftModel
 from transformers import AutoModelForSeq2SeqLM, PreTrainedTokenizerBase
 
 # Sematic
@@ -17,6 +17,7 @@ from sematic.examples.flan_t5_finetune.train_eval import (
     ModelSize,
     TrainingConfig,
     evaluate,
+    export_model,
 )
 from sematic.examples.flan_t5_finetune.train_eval import (
     load_tokenizer as do_load_tokenizer,
@@ -25,7 +26,7 @@ from sematic.examples.flan_t5_finetune.train_eval import prepare_data
 from sematic.examples.flan_t5_finetune.train_eval import train as do_train
 
 
-@dataclass
+@dataclass(frozen=True)
 class StoredModel:
     path: str
     model_type: str
@@ -53,11 +54,12 @@ class StoredModel:
         return model
 
 
-@dataclass
+@dataclass(frozen=True)
 class ResultSummary:
     source_model: HuggingFaceModelReference
     trained_model: StoredModel
     evaluation_results: EvaluationResults
+    pushed_model_reference: Optional[HuggingFaceModelReference]
 
 
 @sematic.func
@@ -107,15 +109,25 @@ def prepare_datasets(
 
 
 @sematic.func
+def export(
+    model: StoredModel,
+    push_model_ref: HuggingFaceModelReference,
+) -> HuggingFaceModelReference:
+    return export_model(model.load(), push_model_ref)
+
+
+@sematic.func
 def summarize(
     source_model: HuggingFaceModelReference,
     trained_model: StoredModel,
     evaluation_results: EvaluationResults,
+    pushed_model_reference: Optional[HuggingFaceModelReference],
 ) -> ResultSummary:
     return ResultSummary(
         source_model=source_model,
         trained_model=trained_model,
         evaluation_results=evaluation_results,
+        pushed_model_reference=pushed_model_reference,
     )
 
 
@@ -123,12 +135,21 @@ def summarize(
 def pipeline(
     training_config: TrainingConfig,
     dataset_config: DatasetConfig,
+    export_reference: Optional[HuggingFaceModelReference],
 ) -> ResultSummary:
     model_ref = pick_model(training_config.model_size)
     tokenizer = load_tokenizer(model_ref)
     train_data, test_data = prepare_datasets(dataset_config, tokenizer)
     model = train(model_ref, training_config, train_data, test_data)
     eval_results = eval(model, test_data, tokenizer)
+
+    exported_model_reference = None
+    if export_reference is not None:
+        exported_model_reference = export(model, export_reference)
+
     return summarize(
-        source_model=model_ref, trained_model=model, evaluation_results=eval_results
+        source_model=model_ref,
+        trained_model=model,
+        evaluation_results=eval_results,
+        pushed_model_reference=exported_model_reference,
     )

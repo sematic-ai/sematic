@@ -22,7 +22,7 @@ import sematic.api_client as api_client
 # in bazel (c) we're running in Linux
 # Needs to be done here in case user's func uses torch.
 # We want to make sure we can unpickle it.
-import sematic.torch_patch
+import sematic.torch_patch  # noqa: F401
 from sematic.abstract_future import FutureState
 from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR
 from sematic.config.user_settings import UserSettingsVar

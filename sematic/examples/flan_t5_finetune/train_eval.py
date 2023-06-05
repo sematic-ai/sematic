@@ -1,5 +1,5 @@
 # Standard Library
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from enum import Enum, unique
 from typing import List, Optional, Tuple
 
@@ -12,7 +12,6 @@ from transformers import (
     PreTrainedTokenizerBase,
     Trainer,
 )
-from transformers import TrainingArguments
 from transformers import TrainingArguments as HfTrainingArguments
 
 
@@ -66,6 +65,7 @@ class EvaluationResults:
 class HuggingFaceModelReference:
     owner: str
     repo: str
+    commit_sha: Optional[str] = None
 
     @classmethod
     def from_string(cls, as_string: str) -> "HuggingFaceModelReference":
@@ -198,6 +198,14 @@ def evaluate(
         results.append((sanitize(input_text[0]), sanitize(output_text[0])))
     eval_results = EvaluationResults(results)
     return eval_results
+
+
+def export_model(
+    model: PeftModelForSeq2SeqLM,
+    push_model_reference: HuggingFaceModelReference,
+) -> HuggingFaceModelReference:
+    commit = model.push_to_hub(push_model_reference.to_string(), use_auth_token=True)
+    return replace(push_model_reference, commit_sha=commit.oid)
 
 
 def sanitize(string: str):
