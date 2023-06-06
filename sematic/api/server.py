@@ -21,9 +21,10 @@ from logging.config import dictConfig
 from typing import Optional
 
 # Third-party
+from asgiref.wsgi import WsgiToAsgi
 import flask
 from flask import jsonify, send_file
-from socketio import AsyncServer, ASGIApp, Namespace  # type: ignore
+from socketio import AsyncServer, ASGIApp, AsyncNamespace, Namespace  # type: ignore
 import socketio
 import uvicorn
 
@@ -134,7 +135,11 @@ def log_request_end(response):
 #     socketio.on_namespace(Namespace("/pipeline"))
 #     socketio.on_namespace(Namespace("/graph"))
 #     socketio.on_namespace(Namespace("/job"))
-#     return socketio
+#     return socketioio
+
+#     sio.namespace("/pipeline")
+#     sio.namespace("/graph")
+#     sio.namespace("/job")
 
 
 # socketio = init_socketio()
@@ -171,13 +176,25 @@ def run_socketio(debug=False):
     dictConfig(make_log_config(log_to_disk=True, level=logging.DEBUG))
     register_signal_handlers()
 
+    sio = socketio.Server(async_mode="threading", cors_allowed_origins="*")
+    sio.register_namespace(Namespace("/pipeline"))
+    sio.register_namespace(Namespace("/graph"))
+    sio.register_namespace(Namespace("/job"))
+    sematic.api.endpoints.events.register_sio_server(sio)
+    sematic_api.wsgi_app = socketio.WSGIApp(sio, sematic_api.wsgi_app)
+    sematic_api.run(
+        port=get_config().port,
+        host=get_config().server_address,
+        debug=debug,
+    )
+
     # socketio.run(
     #     sematic_api,
     #     port=get_config().port,
     #     host=get_config().server_address,
     #     debug=debug,
     # )
-    run_wsgi(daemon=False)
+    # run_wsgi(daemon=False)
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -201,9 +218,18 @@ def run_wsgi(daemon: bool):
         "host":get_config().server_address,
     }
     register_signal_handlers()
-    sio = socketio.AsyncServer(async_mode='asgi')
-    app = socketio.ASGIApp(sio, sematic_api)
-    SematicWSGI(app, options).run()
+    if os.environ.get("SEMATIC_SOCKET_IO_ONLY", "") == "":
+        sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins="*")
+        sio.register_namespace(AsyncNamespace("/pipeline"))
+        sio.register_namespace(AsyncNamespace("/graph"))
+        sio.register_namespace(AsyncNamespace("/job"))
+
+        sematic.api.endpoints.events.register_sio_server(sio)
+        app = socketio.ASGIApp(sio)
+        SematicWSGI(app, options).run()
+    else:
+        SematicWSGI(WsgiToAsgi(sematic_api), options).run()
+        
 
 
 if __name__ == "__main__":

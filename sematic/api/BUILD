@@ -15,6 +15,7 @@ sematic_py_lib(
     srcs = ["server.py"],
     data = ["//sematic/ui:ui_build"],
     pip_deps = [
+        "asgiref",
         "flask",
         # "flask-socketio",
         # "gevent",

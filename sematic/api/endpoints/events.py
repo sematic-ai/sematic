@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional
 import flask
 # import flask_socketio  # type: ignore
 import requests
+import socketio
 
 # Sematic
 from sematic import api_client
@@ -15,6 +16,15 @@ from sematic.api.endpoints.auth import authenticate
 from sematic.db.models.user import User
 
 logger = logging.getLogger(__name__)
+
+_sio_server = None
+
+
+def register_sio_server(sio_server):
+    global _sio_server
+    if _sio_server is not None:
+        raise RuntimeError("SocketIO Server already registered.")
+    _sio_server = sio_server
 
 
 @sematic_api.route("/api/v1/events/<namespace>/<event>", methods=["POST"])
@@ -33,6 +43,11 @@ def events(user: Optional[User], namespace: str, event: str) -> flask.Response:
     #     namespace="/{}".format(namespace),
     #     broadcast=True,
     # )
+    _sio_server.emit(
+        event,
+        flask.request.json,
+        namespace=f"/{namespace}",
+    )
 
     return flask.jsonify({})
 

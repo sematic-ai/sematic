@@ -32,6 +32,7 @@ sematic_py_lib(
         "flask",
         # "flask-socketio",
         "requests",
+        "python-socketio",
     ],
     deps = [
         ":auth",
