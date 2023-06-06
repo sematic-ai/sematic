@@ -4,4 +4,3 @@ torchmetrics
 plotly>=5.5.0
 pandas
 scikit-learn
-sematic
