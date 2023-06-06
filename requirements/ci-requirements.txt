@@ -2,7 +2,7 @@
 # Linters and such. Pin them so that different devs
 # don't get different results from using them.
 flake8==5.0.4
-mypy==0.971
+mypy==0.982
 black==22.6.0
 isort==5.10.1
 
