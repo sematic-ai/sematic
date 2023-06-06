@@ -174,6 +174,8 @@ def make_resolution(**kwargs) -> Resolution:
         container_image_uri="some.uri",
         settings_env_vars={"MY_SETTING": "MY_VALUE"},
         user_id=None,
+        run_command="sematic run my_pipeline.py",
+        build_config='version: 1\nbase_uri: "a:b@c"',
     )
 
     # Set this outside the constructor because the constructor expects

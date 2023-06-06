@@ -132,7 +132,7 @@ def test_simulate_cloud_exec(
         resolution_id=future.id,
         max_parallelism=None,
         rerun_from=None,
-        rerun_mode=RerunMode.SPECIFIC_RUN,
+        rerun_mode=None,
     )
     assert api_client.get_resolution(future.id).status == ResolutionStatus.CREATED.value
 

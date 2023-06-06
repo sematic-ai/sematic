@@ -96,6 +96,8 @@ performed in order, without skipping any. If any errors occur, you must fix
 them and then go back and redo all the steps that have been affected by the
 changes.
 
+1. Announce internally that a `main` merge freeze has started.
+
 1. Bump the version in:
    - `wheel_constants.bzl` - `wheel_version_string`
    - `helm/sematic-server/Chart.yaml` - `appVersion`
@@ -220,6 +222,8 @@ changes.
     $ git push origin $RELEASE_VERSION
     ```
 
+1. Announce internally that the `main` merge freeze is over.
+
 1. Build and push the Server Docker image. Use the Dockerfile at
   `docker/Dockerfile.server`.
     ```bash
@@ -296,6 +300,18 @@ changes.
     - Add a `"Full Changelog"` link, and validate it.
     - Attach the wheel in the `"Assets"` section.
 
+### Patch Releases
+
+If an issue is discovered on the latest release which impacts users to an extent that
+warrants a hotpatch, then instead of performing the release from the `main` branch, we:
+- create a separate hotpatch release branch starting from the previous release tag and
+  switch to that branch
+- fix the issue and merge it into the release branch via either the normal PR review
+  procedure, or by merging directly in time sensitive situations
+- follow all the other steps from the [Releasing](#releasing) section
+- switch to the `main` branch, cherry-pick all the changes contained in the hotpatch
+  branch, and merge a PR with these commits
+
 ### Special Releases
 
 Sometimes we want to cut releases that contain only a subset of changes that
@@ -306,7 +322,7 @@ cases, instead of performing the release from the `main` branch, we:
 - cherry-pick the commits we want to include
 - follow all the other steps from the [Releasing](#releasing) section
 - switch to the `main` branch, make a commit that contains the previous version
-  increases and reconciles the changelog, and merge a PR with this commit
+  increase and reconciles the changelog, and merge a PR with this commit
 
 ## Updating the CircleCi Image
 

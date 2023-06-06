@@ -1,0 +1,6 @@
+version: 1
+image_script: "../good_image_script.sh"
+build:
+  platform: "linux/amd64"
+  requirements: "//sematic/plugins/building/tests/fixtures/requirements.txt"
+  data: ["**/*.txt"]

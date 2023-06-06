@@ -1,0 +1,6 @@
+version: 1
+base_uri: "d:e@f"
+build:
+  platform: null
+  data: ["**/*.dat"]
+  src: ["**/*.py"]

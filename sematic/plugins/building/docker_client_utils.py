@@ -2,9 +2,12 @@
 Utility code for interacting with the `docker-py` client.
 """
 # Standard Library
+import logging
 import sys
 import textwrap
 from typing import Any, Dict, Generator, List, Optional, TextIO
+
+logger = logging.getLogger(__name__)
 
 _ROLLING_PRINT_COLUMNS = 120
 _ROLLING_PRINT_ROWS = 10
@@ -18,9 +21,13 @@ def rolling_print_status_updates(
 ) -> Optional[Dict[str, Any]]:
     """
     Prints a rolling window of Docker server status message updates.
+
+    This behavior is deactivated if the logging level is `DEBUG`, in which case all the
+    messages are kept.
     """
     output_handle = output_handle or sys.stderr
     message_window: List[str] = []
+    debugging = logger.isEnabledFor(logging.DEBUG)
 
     for status_update in status_updates:
 
@@ -29,6 +36,11 @@ def rolling_print_status_updates(
 
         update_str = _docker_status_update_to_str(status_update)
         if update_str is None:
+            continue
+
+        if debugging:
+            # disable the rolling window
+            print(update_str, file=output_handle)
             continue
 
         # wrap the new status messages and add them to the rolling window

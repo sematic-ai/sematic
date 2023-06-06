@@ -5,7 +5,23 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.30.0](https://pypi.org/project/sematic/0.30.0/)
+    * [feature] Grafana dashboards tailored for Sematic installable via Helm
+    * [feature] User metrics SDK
+    * [feature] Add horizontal pod autoscaling and pod disruption budget support
+    * [feature] Health endpoint to display DB health in dashboard
+    * [feature] Add support for set types
+    * [feature] Add GitHub commit check support
+    * [improvement] Have resolver continue in in a new resolution if resolver restarts
+    * [improvement] Log request IDs in server
+    * [improvement] Early resolution failure is more robust
+    * [improvement] Make API retries more robust
+    * [improvement] Enable run search deep links
     * [deprecation] `Calculator` renamed to `Function`
+    * [bugfix] Fixed a DAG view display issue
+    * [bugfix] Fixed application logs being duplicated
+    * [bugfix] Adjust the Name column width distribution
+    * [bugfix] Add missing call to init to Function
 * [0.29.0](https://pypi.org/project/sematic/0.29.0/)
     * [feature] Garbage collection CRON job
     * [feature] Enable customization of local storage path

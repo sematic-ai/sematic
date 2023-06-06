@@ -27,6 +27,8 @@ from sqlalchemy.engine import Connection
 from sematic.config.config import get_config, switch_env
 from sematic.db.db import db
 
+_DEFAULT_SCHEMA_FILE = "sematic/db/schema.sql.sqlite"
+
 
 def _get_migration_files() -> List[str]:
     migrations_dir = get_config().migrations_dir
@@ -195,7 +197,7 @@ def _apply_common_options(env, verbose):
     "--schema-file",
     "file",
     type=click.STRING,
-    default="schema.sql",
+    default=_DEFAULT_SCHEMA_FILE,
     help="File into which to dump the new schema.",
 )
 def _migrate_up(env: str, verbose: bool, file: str):
@@ -246,7 +248,7 @@ def migrate_up():
     "--schema-file",
     "file",
     type=click.STRING,
-    default="schema.sql",
+    default=_DEFAULT_SCHEMA_FILE,
     help="File into which to dump the new schema.",
 )
 def _migrate_down(env: str, verbose: bool, file: str):
@@ -289,7 +291,7 @@ def migrate_down():
     "--schema-file",
     "file",
     type=click.STRING,
-    default="schema.sql",
+    default=_DEFAULT_SCHEMA_FILE,
     help="File into which to dump the new schema.",
 )
 def _dump_schema(env: str, verbose: bool, file: str):

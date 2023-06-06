@@ -30,6 +30,7 @@ const Container = styled(Section, {
 }) <ExtendedStyleProps>`
     min-height: 100px;
     height: ${props => props.isExpanded ? "max-content" : "100px"};
+    padding-left: ${theme.spacing(2.4)};
     padding-bottom: calc(${footerHeight}px);
     box-sizing: border-box;
     position: relative;
@@ -77,6 +78,7 @@ const Footer = styled(Box,  {
     background-image: linear-gradient(rgba(255,255,255,0), ${theme.palette.background.paper} 60%);
 
     & svg {
+        margin-right: ${theme.spacing(2)};
         cursor: pointer;
         transform: ${props => props.isExpanded ? "rotate(180deg)" : "rotate(0deg)"};
         transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;

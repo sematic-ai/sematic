@@ -43,7 +43,7 @@ CREATE TABLE resolutions (
     status TEXT NOT NULL,
     kind TEXT NOT NULL,
     container_image_uri TEXT,
-    settings_env_vars JSONB NOT NULL, external_jobs_json JSONB, git_info_json JSONB, container_image_uris JSONB, client_version TEXT, cache_namespace TEXT, user_id character(32) REFERENCES users(id),
+    settings_env_vars JSONB NOT NULL, external_jobs_json JSONB, git_info_json JSONB, container_image_uris JSONB, client_version TEXT, cache_namespace TEXT, user_id character(32) REFERENCES users(id), run_command TEXT, build_config TEXT,
 
     PRIMARY KEY (root_id),
     FOREIGN KEY (root_id) REFERENCES runs(id)
@@ -173,4 +173,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20230324182512'),
   ('20230403153220'),
   ('20230419080554'),
-  ('20230428225443');
+  ('20230428225443'),
+  ('20230526141354');

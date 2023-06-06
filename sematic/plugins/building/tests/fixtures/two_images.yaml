@@ -4,8 +4,8 @@ image_script: "good_image_script.sh"
 build:
   platform: "linux/amd64"
   requirements: "requirements.txt"
-  data: ["**.txt"]
-  src: ["**.py"]
+  data: ["**/*.txt"]
+  src: ["**/*.py"]
 push:
   registry: "my_registry"
   repository: "my_repository"

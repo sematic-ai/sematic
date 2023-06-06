@@ -3,8 +3,8 @@ base_uri: "sematicai/sematic-worker-base:latest@sha256:bea3926876a3024c33fe08e0a
 build:
   platform: "linux/amd64"
   requirements: "requirements.txt"
-  data: ["**.txt"]
-  src: ["**.py"]
+  data: ["**/*.txt"]
+  src: ["**/*.py"]
 push:
   registry: "my_registry"
   repository: "my_repository"
