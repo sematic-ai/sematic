@@ -29,6 +29,7 @@ python-socketio
 flask
 flask-cors
 cloudpickle
+hypercorn
 requests
 responses==0.20.0  # 0.21.0 breaks mypy checks https://github.com/getsentry/responses/issues/556
 werkzeug
