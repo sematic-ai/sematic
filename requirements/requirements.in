@@ -35,6 +35,7 @@ werkzeug
 python-dateutil
 google-auth
 uvicorn
+asgiref
 
 # CLI
 click
