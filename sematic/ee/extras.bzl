@@ -15,8 +15,11 @@ EXTRAS = {
     ),
 }
 
-EXTRA_SEMATIC_DEPS = [value["sematic_module"] for value in EXTRAS.values()]
-EXTRA_REQUIRES = {key: value["requires"] for key, value in EXTRAS.items()}
+EXAMPLE_MODULES = [
+    "//sematic/examples/cifar_classifier:cifar_classifier_lib",
+    "//sematic/examples/lightning_resnet:lib",
+    "//sematic/examples/testing_pipeline:testing_pipeline_lib",
+]
 
 def _get_all_extra_requires():
     all_extra_requires = []
@@ -24,4 +27,8 @@ def _get_all_extra_requires():
         all_extra_requires.extend(value["requires"])
     return all_extra_requires
 
+EXTRA_REQUIRES = {key: value["requires"] for key, value in EXTRAS.items()}
 EXTRA_REQUIRES["all"] = _get_all_extra_requires()
+
+EXTRA_SEMATIC_DEPS = [value["sematic_module"] for value in EXTRAS.values()]
+EXTRA_SEMATIC_DEPS.extend(EXAMPLE_MODULES)
