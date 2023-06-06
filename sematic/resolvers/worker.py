@@ -299,6 +299,7 @@ def wrap_main_with_logging():
     if _EMULATE_INTERPRETER_ARG in sys.argv:
         exit_code = _emulate_interpreter(_sanitize_interpreter_args(sys.argv))
         os._exit(exit_code)
+
     print("Starting Sematic Worker")
     args = parse_args()
     prefix = log_prefix(args.run_id, JobKind.resolver if args.resolve else JobKind.run)
@@ -325,6 +326,7 @@ def wrap_main_with_logging():
         logger.info("Worker CLI args: resolve=%s", args.resolve)
         logger.info("Worker CLI args: max-parallelism=%s", args.max_parallelism)
         logger.info("Worker CLI args: rerun_from=%s", args.rerun_from)
+        logger.info("Worker CLI args: rerun_mode=%s", args.rerun_mode)
 
         main(
             run_id=args.run_id,

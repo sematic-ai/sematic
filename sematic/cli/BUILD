@@ -34,7 +34,7 @@ sematic_py_lib(
     ],
     deps = [
         "//sematic/db:migrate_lib",
-        "//sematic:logging",
+        "//sematic:logs",
     ],
 )
 
@@ -59,7 +59,7 @@ sematic_py_lib(
     deps = [
         ":cli",
         "//sematic:api_client",
-        "//sematic:logging",
+        "//sematic:logs",
         "//sematic/api/endpoints:auth",
         "//sematic/config:user_settings",
         "//sematic/config:config",

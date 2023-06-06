@@ -26,6 +26,7 @@ from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.graph import Graph, RerunMode
+from sematic.plugins.abstract_builder import get_build_config, get_run_command
 from sematic.resolvers.resource_managers.server_manager import ServerResourceManager
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
@@ -79,7 +80,7 @@ class LocalResolver(SilentResolver):
         self,
         cache_namespace: Optional[CacheNamespace] = None,
         rerun_from: Optional[str] = None,
-        rerun_mode: RerunMode = RerunMode.SPECIFIC_RUN,
+        rerun_mode: Optional[RerunMode] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -122,12 +123,14 @@ class LocalResolver(SilentResolver):
             self._seed_from_clone(future, self._rerun_from_run_id, self._rerun_mode)
 
     def _seed_from_clone(
-        self, future: AbstractFuture, from_run_id: str, rerun_mode: RerunMode
+        self, future: AbstractFuture, from_run_id: str, rerun_mode: Optional[RerunMode]
     ):
         """
         Instead of simply queuing the root future, this method seeds the future graph
         from a clone of another execution of same pipeline.
         """
+        rerun_mode = rerun_mode or RerunMode.SPECIFIC_RUN
+
         try:
             run = api_client.get_run(from_run_id)
         except api_client.ResourceNotFoundError as e:
@@ -368,6 +371,8 @@ class LocalResolver(SilentResolver):
             cache_namespace=self._cache_namespace_str,
             # the user_id is overwritten on the API call based on the user's API key
             user_id=None,
+            run_command=get_run_command(),
+            build_config=get_build_config(),
         )
 
         return resolution
