@@ -1,16 +1,3 @@
-if __name__ == "__main__":
-    # Third-party
-    # import gevent.monkey  # type: ignore
-
-    # This enables us to use websockets and standard HTTP requests in
-    # the same server locally, which is what we want. If you try to
-    # use Gunicorn to do this, gevent will complain about
-    # not monkey patching early enough, unless you have the gevent
-    # monkey patch applied VERY early (like user/sitecustomize).
-    # Monkey patching: https://github.com/gevent/gevent/issues/1235
-    # gevent.monkey.patch_all()
-    pass
-
 # Standard Library
 import argparse
 import logging
@@ -31,6 +18,7 @@ import uvicorn
 # Sematic
 # Endpoint modules need to be imported for endpoints
 # to be registered.
+from sematic.api.endpoints.events import starlette_app, register_sio_server
 import sematic.api.endpoints.artifacts  # noqa: F401
 import sematic.api.endpoints.auth  # noqa: F401
 import sematic.api.endpoints.edges  # noqa: F401
@@ -43,10 +31,18 @@ import sematic.api.endpoints.runs  # noqa: F401
 import sematic.api.endpoints.storage  # noqa: F401
 import sematic.api.endpoints.users  # noqa: F401
 from sematic.api.app import sematic_api
-from sematic.api.wsgi import SematicWSGI
 from sematic.config.config import get_config, switch_env  # noqa: F401
 from sematic.config.settings import import_plugins
 from sematic.logs import make_log_config
+from sematic.utils.daemonize import daemonize
+
+
+SOCKET_IO_NAMESPACES = [
+    "/pipeline",
+    "/graph",
+    "/job",
+]
+
 
 # Some plugins may register endpoints
 import_plugins()
@@ -128,23 +124,6 @@ def log_request_end(response):
     return response
 
 
-# def init_socketio():
-#     socketio = SocketIO(sematic_api, cors_allowed_origins="*")
-#     # This is necessary because starting version 5.7.0 python-socketio does not
-#     # accept connections to undeclared namespaces
-#     socketio.on_namespace(Namespace("/pipeline"))
-#     socketio.on_namespace(Namespace("/graph"))
-#     socketio.on_namespace(Namespace("/job"))
-#     return socketioio
-
-#     sio.namespace("/pipeline")
-#     sio.namespace("/graph")
-#     sio.namespace("/job")
-
-
-# socketio = init_socketio()
-
-
 def register_signal_handlers():
     def handler(signum, frame):
         logger = logging.getLogger()
@@ -169,32 +148,37 @@ def register_signal_handlers():
     signal.signal(signal.SIGHUP, handler)
 
 
-def run_locally(debug=False):
+def init_socket_io_server(make_async):
+    server_class = socketio.AsyncServer if make_async else socketio.Server
+    async_mode = "asgi" if make_async else "threading"
+    namespace_class = AsyncNamespace if make_async else Namespace
+
+    sio = server_class(async_mode=async_mode, cors_allowed_origins="*")
+    for namespace in SOCKET_IO_NAMESPACES:
+        sio.register_namespace(namespace_class(namespace))
+    register_sio_server(sio)
+
+
+def run_locally(debug=False, make_daemon=False):
+    dictConfig(make_log_config(log_to_disk=True, level=logging.INFO))
+    register_signal_handlers()
+
+    sio = init_socket_io_server(make_async=False)
+    sematic_api.wsgi_app = socketio.WSGIApp(sio, sematic_api.wsgi_app)
+    if make_daemon:
+        daemonize(False)
+        
     with open(get_config().server_pid_file_path, "w+") as fp:
         fp.write(str(os.getpid()))
 
-    dictConfig(make_log_config(log_to_disk=True, level=logging.DEBUG))
-    register_signal_handlers()
-
-    sio = socketio.Server(async_mode="threading", cors_allowed_origins="*")
-    sio.register_namespace(Namespace("/pipeline"))
-    sio.register_namespace(Namespace("/graph"))
-    sio.register_namespace(Namespace("/job"))
-    sematic.api.endpoints.events.register_sio_server(sio)
-    sematic_api.wsgi_app = socketio.WSGIApp(sio, sematic_api.wsgi_app)
-    sematic_api.run(
-        port=get_config().port,
+    uvicorn.run(
+        sematic_api,
         host=get_config().server_address,
-        debug=debug,
+        port=get_config().port,
+        log_config=make_log_config(log_to_disk=True),
+        interface="wsgi",
+        workers=None,
     )
-
-    # socketio.run(
-    #     sematic_api,
-    #     port=get_config().port,
-    #     host=get_config().server_address,
-    #     debug=debug,
-    # )
-    # run_wsgi(daemon=False)
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -204,43 +188,26 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def run_wsgi(daemon: bool):
-    options = {
-        "bind": f"{get_config().server_address}:{get_config().port}",
-        "workers": get_config().wsgi_workers_count,
-        "worker_class": "geventwebsocket.gunicorn.workers.GeventWebSocketWorker",
-        "daemon": daemon,
-        "pidfile": get_config().server_pid_file_path,
-        "logconfig_dict": make_log_config(log_to_disk=True),
-        "certfile": os.environ.get("CERTIFICATE"),
-        "keyfile": os.environ.get("PRIVATE_KEY"),
-        "port": get_config().port,
-        "host":get_config().server_address,
-    }
+def app():
+    dictConfig(make_log_config(log_to_disk=True, level=logging.INFO))
     register_signal_handlers()
-    dictConfig(make_log_config(log_to_disk=True, level=logging.DEBUG))
-    SematicWSGI("sematic.api.server:app", options).run()
 
+    if os.environ.get("SEMATIC_SOCKET_IO_ONLY", "") != "":
+        sio = init_socket_io_server(make_async=True)
+        full_app = socketio.ASGIApp(sio, starlette_app)
+    else:
+        full_app = WsgiToAsgi(sematic_api)
 
-if os.environ.get("SEMATIC_SOCKET_IO_ONLY", "") != "":
-    sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins="*")
-    sio.register_namespace(AsyncNamespace("/pipeline"))
-    sio.register_namespace(AsyncNamespace("/graph"))
-    sio.register_namespace(AsyncNamespace("/job"))
+    return full_app
 
-    sematic.api.endpoints.events.register_sio_server(sio)
-
-    app = socketio.ASGIApp(sio, sematic.api.endpoints.events.starlette_app)
-    print("SocketIO!")
-else:
-    app = WsgiToAsgi(sematic_api)
 
 if __name__ == "__main__":
     args = parse_arguments()
     switch_env(args.env)
 
     if args.debug:
-        run_locally(args.debug)
+        run_locally(args.debug, make_daemon=False)
 
     else:
-        run_wsgi(False)
+        print("To run the server in production, please launch it using uvicorn directly")
+        sys.exit(1)

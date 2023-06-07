@@ -31,5 +31,6 @@ CMD python3 -m sematic.db.migrate up --verbose --env cloud && \
     SEMATIC_API_ADDRESS=http://localhost:80 uvicorn \
 	  --host 0.0.0.0 \
 	  --port 80 \
+	  --factory \
 	  --workers $SEMATIC_WSGI_WORKERS_COUNT \
 	  --log-level debug sematic.api.server:app

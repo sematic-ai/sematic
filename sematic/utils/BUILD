@@ -5,6 +5,12 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "daemonize",
+    srcs = ["daemonize.py"],
+    deps = [],
+)
+
+sematic_py_lib(
     name = "db",
     srcs = ["db.py"],
     pip_deps = [

@@ -5,9 +5,7 @@ sematic_py_lib(
         "flask",
         "flask-cors",
     ],
-    deps = [
-        ":wsgi",
-    ],
+    deps = [],
 )
 
 sematic_py_lib(
@@ -18,9 +16,6 @@ sematic_py_lib(
         "asgiref",
         "flask",
         "starlette",
-        # "flask-socketio",
-        # "gevent",
-        # "gevent-websocket",
         "uvicorn",
     ],
     # buildifier: leave-alone
@@ -43,6 +38,7 @@ sematic_py_lib(
         "//sematic/plugins/storage:local_storage",
         "//sematic/plugins:abstract_publisher",
         "//sematic/plugins/publishing:slack",
+        "//sematic/utils:daemonize",
     ],
 )
 
@@ -58,16 +54,6 @@ py_binary(
     ],
 )
 
-sematic_py_lib(
-    name = "wsgi",
-    srcs = ["wsgi.py"],
-    pip_deps = [
-        "flask",
-        # "gunicorn",
-        "uvicorn",
-    ],
-    deps = [],
-)
 
 # Does not work just yet on M1 mac
 # Toolchain resolution issues
