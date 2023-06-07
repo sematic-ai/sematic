@@ -26,7 +26,7 @@ websocket-client
 python-socketio
 
 # API server
-flask
+flask[async]
 flask-cors
 cloudpickle
 requests
