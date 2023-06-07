@@ -35,7 +35,7 @@ werkzeug
 python-dateutil
 starlette
 google-auth
-uvicorn
+uvicorn[standard]
 asgiref
 
 # CLI
