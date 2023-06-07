@@ -43,10 +43,10 @@ deployment:
   node_selector: {}
   resources:
     limits:
-      cpu: 250m
+      cpu: 750m
       memory: 3000Mi
     requests:
-      cpu: 250m
+      cpu: 750m
       memory: 3000Mi
   autoscaling:
     enabled: false
@@ -69,19 +69,19 @@ deployment:
       path: /
       port: http
       scheme: HTTP
-    initialDelaySeconds: 1000
+    initialDelaySeconds: 200
     periodSeconds: 5
     successThreshold: 1
     timeoutSeconds: 1
   readiness_probe:
-    failureThreshold: 10
+    failureThreshold: 30
     httpGet:
       path: /
       port: http
       scheme: HTTP
-    initialDelaySeconds: 1000
+    initialDelaySeconds: 10
     periodSeconds: 5
-    successThreshold: 1
+    successThreshold: 2
     timeoutSeconds: 1
 
 image:

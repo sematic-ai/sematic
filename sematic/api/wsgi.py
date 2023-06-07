@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 # Third-party
 import flask
 import uvicorn
+from logging import getLogger
 
 
 class SematicWSGI:
@@ -65,19 +66,13 @@ class SematicWSGI:
     def run(self):
         # TODO: clean this up
         # get_config().wsgi_workers_count
-        import time
-        start = time.time()
-        while time.time() - start < 30:
-            print(f"Waiting to start at {start + 30}")
-            time.sleep(1)
+        logger = getLogger(__name__)
+
+        logger.info("Running application: %s", self.application)
         uvicorn.run(
             self.application,
             host=self.options.get("host", "127.0.0.1"),
             port=self.options.get("port", "5001"),
-            log_level="debug",
+            log_config=self.options.get("logconfig_dict", None),
+            workers=self.options.get("workers", 1),
         )
-        import time
-        start = time.time()
-        while time.time() - start < 1200:
-            print(f"Waiting after start at {start}")
-            time.sleep(1)

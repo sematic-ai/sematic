@@ -17,6 +17,7 @@ sematic_py_lib(
     pip_deps = [
         "asgiref",
         "flask",
+        "starlette",
         # "flask-socketio",
         # "gevent",
         # "gevent-websocket",

@@ -27,4 +27,4 @@ COPY sematic-*.whl .
 RUN pip install $(ls ./sematic-*.whl)["${EXTRA}"]
 
 EXPOSE 80
-CMD python3 -m sematic.db.migrate up --verbose --env cloud && python3 -m sematic.api.server --env cloud
+CMD python3 -m sematic.db.migrate up --verbose --env cloud && uvicorn --host 0.0.0.0 --port 80 --workers $SEMATIC_WSGI_WORKERS_COUNT --log-level debug sematic.api.server:app

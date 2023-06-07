@@ -169,7 +169,7 @@ def register_signal_handlers():
     signal.signal(signal.SIGHUP, handler)
 
 
-def run_socketio(debug=False):
+def run_locally(debug=False):
     with open(get_config().server_pid_file_path, "w+") as fp:
         fp.write(str(os.getpid()))
 
@@ -218,26 +218,28 @@ def run_wsgi(daemon: bool):
         "host":get_config().server_address,
     }
     register_signal_handlers()
-    if os.environ.get("SEMATIC_SOCKET_IO_ONLY", "") == "":
-        sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins="*")
-        sio.register_namespace(AsyncNamespace("/pipeline"))
-        sio.register_namespace(AsyncNamespace("/graph"))
-        sio.register_namespace(AsyncNamespace("/job"))
-
-        sematic.api.endpoints.events.register_sio_server(sio)
-        app = socketio.ASGIApp(sio)
-        SematicWSGI(app, options).run()
-    else:
-        SematicWSGI(WsgiToAsgi(sematic_api), options).run()
+    dictConfig(make_log_config(log_to_disk=True, level=logging.DEBUG))
+    SematicWSGI("sematic.api.server:app", options).run()
         
 
+if os.environ.get("SEMATIC_SOCKET_IO_ONLY", "") != "":
+    sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins="*")
+    sio.register_namespace(AsyncNamespace("/pipeline"))
+    sio.register_namespace(AsyncNamespace("/graph"))
+    sio.register_namespace(AsyncNamespace("/job"))
+
+    sematic.api.endpoints.events.register_sio_server(sio)
+    app = socketio.ASGIApp(sio, WsgiToAsgi(sematic_api))
+    print("SocketIO & API!")
+else:
+    app = WsgiToAsgi(sematic_api)
 
 if __name__ == "__main__":
     args = parse_arguments()
     switch_env(args.env)
 
     if args.debug:
-        run_socketio(args.debug)
+        run_locally(args.debug)
 
     else:
         run_wsgi(False)
