@@ -8,6 +8,9 @@ import flask
 # import flask_socketio  # type: ignore
 import requests
 import socketio
+from starlette.applications import Starlette
+from starlette.responses import JSONResponse
+from starlette.routing import Route
 
 # Sematic
 from sematic import api_client
@@ -19,6 +22,8 @@ logger = logging.getLogger(__name__)
 
 _sio_server = None
 
+_ROUTE = "/api/v1/events/<namespace>/<event>"
+_STARLETTE_ROUTE = _ROUTE.replace("<", "{").replace(">", "}")
 
 def register_sio_server(sio_server):
     global _sio_server
@@ -27,9 +32,9 @@ def register_sio_server(sio_server):
     _sio_server = sio_server
 
 
-@sematic_api.route("/api/v1/events/<namespace>/<event>", methods=["POST"])
+@sematic_api.route(_ROUTE, methods=["POST"])
 @authenticate
-def events(user: Optional[User], namespace: str, event: str) -> flask.Response:
+def sync_events(user: Optional[User], namespace: str, event: str) -> flask.Response:
     """
     Sends out a socketio broadcast notification to all subscribed listeners (Resolvers,
     the Dashboard, etc.).
@@ -37,12 +42,6 @@ def events(user: Optional[User], namespace: str, event: str) -> flask.Response:
     logger.info("Broadcasting: namespace=%s; event=%s", namespace, event)
     logger.debug("Broadcasting: json payload=%s", flask.request.json)
 
-    # flask_socketio.emit(
-    #     event,
-    #     flask.request.json,
-    #     namespace="/{}".format(namespace),
-    #     broadcast=True,
-    # )
     _sio_server.emit(
         event,
         flask.request.json,
@@ -51,6 +50,35 @@ def events(user: Optional[User], namespace: str, event: str) -> flask.Response:
 
     return flask.jsonify({})
 
+
+async def async_events(request):
+    """
+    Sends out a socketio broadcast notification to all subscribed listeners (Resolvers,
+    the Dashboard, etc.).
+    """
+    namespace = request.path_params["namespace"]
+    event = request.path_params["event"]
+    request_json = await request.json()
+    logger.info("Broadcasting: namespace=%s; event=%s", namespace, event)
+    logger.debug("Broadcasting: json payload=%s", request_json)
+
+    await _sio_server.emit(
+        event,
+        request_json,
+        namespace=f"/{namespace}",
+    )
+
+    return JSONResponse({})
+
+
+async def health_check(request):
+    return JSONResponse({})    
+
+
+starlette_app = Starlette(routes=[
+    Route(_STARLETTE_ROUTE, async_events, methods=["POST"]),
+    Route("/", health_check),
+])
 
 def broadcast_graph_update(
     root_id: str,
@@ -103,6 +131,7 @@ def _call_broadcast_endpoint(
             endpoint=url,
             kwargs=dict(json=json_payload),
             user=user,
+            validate_version_compatibility=False,
         )
     except Exception:
         logger.exception("Unable to broadcast event")

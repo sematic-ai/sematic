@@ -9,7 +9,7 @@ import webbrowser
 import click
 
 # Sematic
-from sematic.api.server import run_socketio
+from sematic.api.server import run_locally
 from sematic.cli.cli import cli
 from sematic.cli.process_utils import server_is_running
 from sematic.config.config import get_config
@@ -40,4 +40,4 @@ def start():
     # patch applied VERY early (like user/sitecustomize).
     # monkey patching:
     # https://github.com/gevent/gevent/issues/1235
-    run_socketio(False)
+    run_locally(False)

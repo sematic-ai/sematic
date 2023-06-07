@@ -220,7 +220,7 @@ def run_wsgi(daemon: bool):
     register_signal_handlers()
     dictConfig(make_log_config(log_to_disk=True, level=logging.DEBUG))
     SematicWSGI("sematic.api.server:app", options).run()
-        
+
 
 if os.environ.get("SEMATIC_SOCKET_IO_ONLY", "") != "":
     sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins="*")
@@ -229,8 +229,9 @@ if os.environ.get("SEMATIC_SOCKET_IO_ONLY", "") != "":
     sio.register_namespace(AsyncNamespace("/job"))
 
     sematic.api.endpoints.events.register_sio_server(sio)
-    app = socketio.ASGIApp(sio, WsgiToAsgi(sematic_api))
-    print("SocketIO & API!")
+
+    app = socketio.ASGIApp(sio, sematic.api.endpoints.events.starlette_app)
+    print("SocketIO!")
 else:
     app = WsgiToAsgi(sematic_api)
 
