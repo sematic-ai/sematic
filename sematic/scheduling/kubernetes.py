@@ -605,6 +605,26 @@ def _schedule_kubernetes_job(
         ),
     )
 
+    aws_access_key_id = kubernetes.client.V1EnvVar(  # type: ignore
+        name="AWS_ACCESS_KEY_ID",
+        value_from=kubernetes.client.V1EnvVarSource(  # type: ignore
+            secret_key_ref=kubernetes.client.V1SecretKeySelector(  # type: ignore
+                key="AWS_ACCESS_KEY_ID",
+                name="sematic-server",
+            )
+        ),
+    )
+
+    aws_secret_access_key = kubernetes.client.V1EnvVar(  # type: ignore
+        name="AWS_SECRET_ACCESS_KEY",
+        value_from=kubernetes.client.V1EnvVarSource(  # type: ignore
+            secret_key_ref=kubernetes.client.V1SecretKeySelector(  # type: ignore
+                key="AWS_SECRET_ACCESS_KEY",
+                name="sematic-server",
+            )
+        ),
+    )
+
     # See client documentation here:
     # https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Job.md
     job = kubernetes.client.V1Job(  # type: ignore
@@ -642,6 +662,8 @@ def _schedule_kubernetes_job(
                                     value="1",
                                 ),
                                 pod_name_env_var,
+                                aws_access_key_id,
+                                aws_secret_access_key,
                             ]
                             + [
                                 kubernetes.client.V1EnvVar(  # type: ignore
