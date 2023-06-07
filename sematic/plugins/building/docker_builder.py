@@ -397,6 +397,8 @@ def _generate_dockerfile_contents(
         logger.debug("Adding target source file: %s", target)
         dockerfile_contents = f"{dockerfile_contents}\nCOPY {target} {target}"
 
+    dockerfile_contents = f"{dockerfile_contents}\nRUN rm /usr/local/lib/python3.10/dist-packages/sematic.pth"
+
     return dockerfile_contents.strip()
 
 
