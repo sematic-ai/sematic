@@ -213,5 +213,9 @@ if __name__ == "__main__":
         # Using uvicorn.run with more than one worker appears to crash it, but
         # using more than one worker when invoking `uvircorn` on the command line
         # works.
-        print("To run the server in production, please launch it using uvicorn directly")
+        print(
+            "To run the server in production, please launch it using uvicorn directly. "
+            "For an example call, refer to "
+            "https://github.com/sematic-ai/sematic/blob/main/docker/Dockerfile.server"
+        )
         sys.exit(1)

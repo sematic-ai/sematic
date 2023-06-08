@@ -22,15 +22,11 @@ def daemonize(enable_stdio_inheritance=False):
     os.umask(0o22)
 
     # In both the following any file descriptors above stdin
-    # stdout and stderr are left untouched. The inheritance
-    # option simply allows one to have output go to a file
-    # specified by way of shell redirection when not wanting
-    # to use --error-log option.
+    # stdout and stderr are left untouched.
 
     if not enable_stdio_inheritance:
         # Remap all of stdin, stdout and stderr on to
-        # /dev/null. The expectation is that users have
-        # specified the --error-log option.
+        # /dev/null.
 
         closerange(0, 3)
 
