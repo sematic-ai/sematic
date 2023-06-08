@@ -6,10 +6,9 @@ from typing import Any, Dict, Optional
 # Third-party
 import flask
 import requests
-import socketio
-from starlette.applications import Starlette
-from starlette.responses import JSONResponse
-from starlette.routing import Route
+from starlette.applications import Starlette  # type: ignore
+from starlette.responses import JSONResponse  # type: ignore
+from starlette.routing import Route  # type: ignore
 
 # Sematic
 from sematic import api_client
@@ -23,6 +22,7 @@ _sio_server = None
 
 _ROUTE = "/api/v1/events/<namespace>/<event>"
 _STARLETTE_ROUTE = _ROUTE.replace("<", "{").replace(">", "}")
+
 
 def register_sio_server(sio_server):
     global _sio_server
@@ -40,6 +40,7 @@ def sync_events(user: Optional[User], namespace: str, event: str) -> flask.Respo
     """
     logger.info("Broadcasting: namespace=%s; event=%s", namespace, event)
     logger.debug("Broadcasting: json payload=%s", flask.request.json)
+    assert _sio_server is not None  # satisfy mypy
 
     _sio_server.emit(
         event,
@@ -51,7 +52,7 @@ def sync_events(user: Optional[User], namespace: str, event: str) -> flask.Respo
 
 
 @authenticate_starlette
-async def async_events(request):
+async def async_events(user: Optional[User], request):
     """
     Sends out a socketio broadcast notification to all subscribed listeners (Resolvers,
     the Dashboard, etc.).
@@ -61,6 +62,7 @@ async def async_events(request):
     request_json = await request.json()
     logger.info("Broadcasting: namespace=%s; event=%s", namespace, event)
     logger.debug("Broadcasting: json payload=%s", request_json)
+    assert _sio_server is not None  # satisfy mypy
 
     await _sio_server.emit(
         event,
@@ -72,13 +74,16 @@ async def async_events(request):
 
 
 async def health_check(request):
-    return JSONResponse({})    
+    return JSONResponse({})
 
 
-starlette_app = Starlette(routes=[
-    Route(_STARLETTE_ROUTE, async_events, methods=["POST"]),
-    Route("/", health_check),
-])
+starlette_app = Starlette(
+    routes=[
+        Route(_STARLETTE_ROUTE, async_events, methods=["POST"]),
+        Route("/", health_check),
+    ]
+)
+
 
 def broadcast_graph_update(
     root_id: str,

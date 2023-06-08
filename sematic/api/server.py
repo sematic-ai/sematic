@@ -8,17 +8,14 @@ from logging.config import dictConfig
 from typing import Optional
 
 # Third-party
-from asgiref.wsgi import WsgiToAsgi
 import flask
+import socketio  # type: ignore
+import uvicorn  # type: ignore
+from asgiref.wsgi import WsgiToAsgi  # type: ignore
 from flask import jsonify, send_file
-from socketio import AsyncServer, ASGIApp, AsyncNamespace, Namespace  # type: ignore
-import socketio
-import uvicorn
+from socketio import ASGIApp, AsyncNamespace, AsyncServer, Namespace  # type: ignore
 
 # Sematic
-# Endpoint modules need to be imported for endpoints
-# to be registered.
-from sematic.api.endpoints.events import starlette_app, register_sio_server
 import sematic.api.endpoints.artifacts  # noqa: F401
 import sematic.api.endpoints.auth  # noqa: F401
 import sematic.api.endpoints.edges  # noqa: F401
@@ -31,11 +28,14 @@ import sematic.api.endpoints.runs  # noqa: F401
 import sematic.api.endpoints.storage  # noqa: F401
 import sematic.api.endpoints.users  # noqa: F401
 from sematic.api.app import sematic_api
+
+# Endpoint modules need to be imported for endpoints
+# to be registered.
+from sematic.api.endpoints.events import register_sio_server, starlette_app
 from sematic.config.config import get_config, switch_env  # noqa: F401
 from sematic.config.settings import import_plugins
 from sematic.logs import make_log_config
 from sematic.utils.daemonize import daemonize
-
 
 SOCKET_IO_NAMESPACES = [
     "/pipeline",
@@ -149,7 +149,7 @@ def register_signal_handlers():
 
 
 def init_socket_io_server(make_async):
-    server_class = socketio.AsyncServer if make_async else socketio.Server
+    server_class = AsyncServer if make_async else socketio.Server
     async_mode = "asgi" if make_async else "threading"
     namespace_class = AsyncNamespace if make_async else Namespace
 
@@ -195,7 +195,7 @@ def app():
 
     if os.environ.get("SEMATIC_SOCKET_IO_ONLY", "") != "":
         sio = init_socket_io_server(make_async=True)
-        full_app = socketio.ASGIApp(sio, starlette_app)
+        full_app = ASGIApp(sio, starlette_app)
     else:
         full_app = WsgiToAsgi(sematic_api)
 

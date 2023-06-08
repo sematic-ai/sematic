@@ -1,10 +1,11 @@
 # This code is copied from
 # https://github.com/benoitc/gunicorn/blob/add8a4c951f02a67ca1f81264e5c107fa68e6496/gunicorn/util.py#L471
+# Standard Library
 import os
-from os import closerange
 import sys
+from os import closerange
 
-REDIRECT_TO = getattr(os, 'devnull', '/dev/null')
+REDIRECT_TO = getattr(os, "devnull", "/dev/null")
 
 
 def daemonize(enable_stdio_inheritance=False):

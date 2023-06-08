@@ -170,6 +170,7 @@ sematic_py_lib(
         "flask",
         "google-auth",
         "requests",
+        "starlette",
         "sqlalchemy",
     ],
     deps = [
