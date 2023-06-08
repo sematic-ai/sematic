@@ -25,9 +25,7 @@ sematic_py_lib(
     data = [
         "//:sematic.pth",
     ],
-    pip_deps = [
-        # "gevent",
-    ],
+    pip_deps = [],
     deps = [
         ":container_images",
         ":function",

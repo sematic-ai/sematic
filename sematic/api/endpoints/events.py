@@ -5,7 +5,6 @@ from typing import Any, Dict, Optional
 
 # Third-party
 import flask
-# import flask_socketio  # type: ignore
 import requests
 import socketio
 from starlette.applications import Starlette
