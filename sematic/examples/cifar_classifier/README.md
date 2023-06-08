@@ -23,3 +23,23 @@ context.
 ![Outputs](./rayAirOutputs.jpg)
 *Display statistics, plotly figures, and more to summarize*
 *the results of your execution*
+
+## Running
+
+### Bazel
+
+After updating [BUILD](./BUILD) with your own registry and repository, you can
+launch the pipeline with:
+
+```bash
+$ bazel run sematic/examples/cifar_classifier:main -- --cloud
+```
+
+### Native Docker
+
+After updating [main.yaml](./main.yaml) with your own registry and repository,
+you can launch the pipeline with:
+
+```bash
+$ sematic run --build sematic/examples/cifar_classifier/main.py -- --cloud
+```

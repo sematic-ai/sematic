@@ -29,8 +29,8 @@ sematic_pipeline(
     name = "main",
     dev = True,
     base = "@sematic-worker-cuda//image",
-    registry = "558717131297.dkr.ecr.us-west-2.amazonaws.com",
-    repository = "sematic-dev",
+    registry = "558717131297.dkr.ecr.us-west-2.amazonaws.com", # update this to your own registry
+    repository = "sematic-dev", # update this to your own repository
 
     # Specifying image layers is not required, but helps
     # ensure docker image caching works well for image build & push
