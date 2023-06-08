@@ -45,9 +45,7 @@ sematic_py_lib(
 py_binary(
     name = "server",
     srcs = ["server.py"],
-    data = [
-        "//:sematic.pth",
-    ],
+    data = [],
     main = "server.py",
     deps = [
         ":server_lib",

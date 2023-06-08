@@ -190,12 +190,11 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def app():
-    dictConfig(make_log_config(log_to_disk=True, level=logging.DEBUG))
+    dictConfig(make_log_config(log_to_disk=True, level=logging.INFO))
     register_signal_handlers()
 
     if os.environ.get("SEMATIC_SOCKET_IO_ONLY", "") != "":
         sio = init_socket_io_server(make_async=True)
-        register_sio_server(sio)
         full_app = socketio.ASGIApp(sio, starlette_app)
     else:
         full_app = WsgiToAsgi(sematic_api)
@@ -211,5 +210,8 @@ if __name__ == "__main__":
         run_locally(args.debug, make_daemon=False)
 
     else:
+        # Using uvicorn.run with more than one worker appears to crash it, but
+        # using more than one worker when invoking `uvircorn` on the command line
+        # works.
         print("To run the server in production, please launch it using uvicorn directly")
         sys.exit(1)

@@ -33,4 +33,5 @@ CMD python3 -m sematic.db.migrate up --verbose --env cloud && \
 	  --port 80 \
 	  --factory \
 	  --workers $SEMATIC_WSGI_WORKERS_COUNT \
-	  --log-level debug sematic.api.server:app
+	  --log-level info \
+	  sematic.api.server:app

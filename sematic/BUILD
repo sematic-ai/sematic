@@ -22,9 +22,7 @@ load(
 sematic_py_lib(
     name = "init",
     srcs = ["__init__.py"],
-    data = [
-        "//:sematic.pth",
-    ],
+    data = [],
     pip_deps = [],
     deps = [
         ":container_images",
