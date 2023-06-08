@@ -157,6 +157,7 @@ def init_socket_io_server(make_async):
     for namespace in SOCKET_IO_NAMESPACES:
         sio.register_namespace(namespace_class(namespace))
     register_sio_server(sio)
+    return sio
 
 
 def run_locally(debug=False, make_daemon=False):
@@ -167,7 +168,7 @@ def run_locally(debug=False, make_daemon=False):
     sematic_api.wsgi_app = socketio.WSGIApp(sio, sematic_api.wsgi_app)
     if make_daemon:
         daemonize(False)
-        
+
     with open(get_config().server_pid_file_path, "w+") as fp:
         fp.write(str(os.getpid()))
 
@@ -189,11 +190,12 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def app():
-    dictConfig(make_log_config(log_to_disk=True, level=logging.INFO))
+    dictConfig(make_log_config(log_to_disk=True, level=logging.DEBUG))
     register_signal_handlers()
 
     if os.environ.get("SEMATIC_SOCKET_IO_ONLY", "") != "":
         sio = init_socket_io_server(make_async=True)
+        register_sio_server(sio)
         full_app = socketio.ASGIApp(sio, starlette_app)
     else:
         full_app = WsgiToAsgi(sematic_api)
