@@ -8,6 +8,8 @@ import { useRootRunContext } from "src/context/RootRunContext";
 import { useRunDetailsSelectionContext } from "src/context/RunDetailsSelectionContext";
 import { useRunsTree } from "src/hooks/graphHooks";
 import theme from "src/theme/new";
+import { useCallback, useEffect, useState } from "react";
+import { RESET } from "jotai/utils";
 
 const StyledSection = styled(Section)`
     display: flex;
@@ -54,10 +56,31 @@ const ScrollableStyledSection = styled(StyledSection)`
 
 `;
 
-const StyledTypography = styled(Typography)`
-    height: ${theme.spacing(6)};
+const StyledTypography = styled(Typography, {
+    shouldForwardProp: (prop) => prop !== "selected",
+})<{
+    selected?: boolean;
+}>`
+    height: 50px;
     align-items: center;
     display: flex;
+    cursor: pointer;
+    padding-left: ${theme.spacing(2.4)};
+    margin-right: -${theme.spacing(5)};
+    position: relative;
+
+    ${({ selected }) => selected && 
+    `background-color: ${theme.palette.p3border.main};
+    &::after {
+        content: "";
+        position: absolute;
+        width: 2px;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        background-color: ${theme.palette.primary.main};
+    }
+    `}
 `;
 const RunTreeContainer = styled(Box)`
     direction: ltr;
@@ -66,21 +89,39 @@ const RunTreeContainer = styled(Box)`
 
 const RunTreeSection = () => {
     const { graph, isGraphLoading } = useRootRunContext();
-    const { selectedRun, setSelectedRunId } = useRunDetailsSelectionContext();
+    const { selectedRun, setSelectedRunId, setSelectedPanel, selectedPanel } = useRunDetailsSelectionContext();
 
     const runTreeNode = useRunsTree(graph);
+
+    const onGraphClicked = useCallback(() => {
+        setSelectedPanel("dag");
+    }, [setSelectedPanel]);
+
+    const onRunClicked = useCallback((runId: string) => {
+        setSelectedPanel(RESET);
+        setSelectedRunId(runId);        
+    }, [setSelectedRunId, setSelectedPanel]);
+
+    const [runTreeAvailable, setRunTreeAvailable] = useState(false);
+
+    useEffect(() => {
+        if (!isGraphLoading) {
+            setRunTreeAvailable(true);
+        }
+    }, [isGraphLoading]);
 
     return <>
         <StyledSection>
             <Headline>Graph</Headline>
-            <StyledTypography >Execution Graph</StyledTypography>
+            <StyledTypography onClick={onGraphClicked} selected={selectedPanel === "dag"}>
+                Execution Graph
+            </StyledTypography>
         </StyledSection>
         <ScrollableStyledSection>
             <RunTreeContainer>
-                {isGraphLoading ?
-                    <RunTreeSkeleton /> :
+                {runTreeAvailable ?
                     <RunTree runTreeNodes={runTreeNode?.children || []} selectedRunId={selectedRun?.id}
-                        onSelect={setSelectedRunId} />
+                        onSelect={onRunClicked} /> : <RunTreeSkeleton />
                 }
             </RunTreeContainer>
         </ScrollableStyledSection>
