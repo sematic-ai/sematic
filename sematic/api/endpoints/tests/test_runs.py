@@ -561,7 +561,10 @@ def test_schedule_run(
 
 
 def test_clean_jobs(
-    mock_auth, persisted_run: Run, test_client: flask.testing.FlaskClient  # noqa: F811
+    mock_auth,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_socketio,  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
         persisted_run.future_state = FutureState.CREATED
@@ -745,6 +748,7 @@ def test_update_run_k8_pod_error(
     persisted_run: Run,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
     test_db,  # noqa: F811
+    empty_settings_file,  # noqa: F811
 ):
     with mock.patch("sematic.scheduling.job_scheduler.k8s") as mock_k8s:
         job = make_job(name="job1", run_id=persisted_run.id)
@@ -896,6 +900,7 @@ def test_get_run_external_resources(
     persisted_run,  # noqa: F811
     persisted_external_resource,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
+    empty_settings_file,  # noqa: F811
 ):
     save_run_external_resource_links([persisted_external_resource.id], persisted_run.id)
 
@@ -917,7 +922,7 @@ def test_set_run_user(
     run: Run,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
     mock_requests,  # noqa: F811
-    empty_settings_file,  # noqa: F811
+    mock_socketio,  # noqa: F811
 ):
     with mock_plugin_settings(
         ServerSettings, {ServerSettingsVar.SEMATIC_AUTHENTICATE: "1"}
