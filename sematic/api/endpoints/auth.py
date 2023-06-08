@@ -9,6 +9,8 @@ from google.auth.exceptions import GoogleAuthError
 from google.auth.transport import requests
 from google.oauth2 import id_token
 from sqlalchemy.orm.exc import NoResultFound
+from starlette.responses import JSONResponse
+
 
 # Sematic
 from sematic.api.app import sematic_api
@@ -183,5 +185,29 @@ def authenticate(endpoint_fn: Callable) -> Callable:
             return jsonify_error("Missing API key", HTTPStatus.UNAUTHORIZED)
 
         return endpoint_fn(user, *args, **kwargs)
+
+    return endpoint
+
+
+def authenticate_starlette(endpoint_fn: Callable) -> Callable:
+
+    @functools.wraps(endpoint_fn)
+    async def endpoint(request):
+        authenticate = get_bool_server_setting(
+            ServerSettingsVar.SEMATIC_AUTHENTICATE, False
+        )
+        if not authenticate:
+            return await endpoint_fn(request)
+
+        request_api_key = request.headers.get(API_KEY_HEADER)
+        if request_api_key is None:
+            return JSONResponse({"error": "Missing API key"}, HTTPStatus.UNAUTHORIZED)
+
+        try:
+            user = get_user_by_api_key(request_api_key)
+        except NoResultFound:
+            return JSONResponse({"error": "Missing API key"}, HTTPStatus.UNAUTHORIZED)
+
+        return await endpoint_fn(request)
 
     return endpoint
