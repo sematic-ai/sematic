@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+import Alert from "@mui/material/Alert";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { Row, createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
@@ -154,7 +155,7 @@ const RunList = (props: RunListProps) => {
 
     const { runFilter, queryParams } = useFiltersConverter(filters);
 
-    const { runs, page, isLoaded, isLoading, totalPages, totalRuns, nextPage, previousPage } = useRunsPagination(
+    const { runs, error, page, isLoaded, isLoading, totalPages, totalRuns, nextPage, previousPage } = useRunsPagination(
         runFilter as any, queryParams
     );
 
@@ -192,6 +193,10 @@ const RunList = (props: RunListProps) => {
     useEffect(() => {
         setIsLoading(isLoading)
     }, [setIsLoading, isLoading]);
+
+    if (error)  {
+        return <Alert severity="error">{error.message}</Alert>
+    }
 
     return <Container>
         <Stats>

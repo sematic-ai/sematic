@@ -29,6 +29,8 @@ interface TagsFilterSectionProps {
 }
 
 const TagsFilterSection = forwardRef<ResettableHandle, TagsFilterSectionProps>((props, ref) => {
+    const { onFiltersChanged } = props;
+
     const [expanded, setExpanded] = useState(false);
 
     const tagInputRef = useRef<ResettableHandle>(null);
@@ -42,7 +44,7 @@ const TagsFilterSection = forwardRef<ResettableHandle, TagsFilterSectionProps>((
     return <StyledScrollableSection title={"Tags"} expanded={expanded}
         onChange={(_, expanded) => setExpanded(expanded)}>
         <Container>
-            <TagsInput ref={tagInputRef} />
+            <TagsInput ref={tagInputRef} onTagsChange={onFiltersChanged} />
         </Container>
     </StyledScrollableSection>;
 });
