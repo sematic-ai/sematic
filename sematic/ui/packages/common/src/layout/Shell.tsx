@@ -34,7 +34,7 @@ const Shell = () => {
                 <Grid style={{ flexShrink: 0, flexGrow: 0 }}>
                     <HeaderMenu selectedKey={selectionKey} />
                 </Grid>
-                <Grid style={{ flexGrow: 1, height: 0 }}>
+                <Grid style={{ flexGrow: 1, height: 0, maxWidth: "100%" }}>
                     <Outlet />
                 </Grid>
             </StyledGrid>

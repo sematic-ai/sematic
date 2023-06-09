@@ -1,10 +1,10 @@
 import { OpenInNew } from "@mui/icons-material";
 import { Button, Tooltip } from "@mui/material";
-import { useTextSelection } from "@sematic/common/src/hooks/textSelectionHooks";
-import { CommonValueViewProps } from "./common";
-import S3Icon from "./s3.png";
+import { useTextSelection } from "src/hooks/textSelectionHooks";
+import S3 from "src/static/amazon-s3";
+import { ValueComponentProps } from "src/typeViz/common";
 
-export function S3LocationValueView(props: CommonValueViewProps) {
+export function S3LocationValueView(props: ValueComponentProps) {
     const { valueSummary } = props;
     const { values } = valueSummary;
 
@@ -13,7 +13,7 @@ export function S3LocationValueView(props: CommonValueViewProps) {
     return <S3Button region={bucketSummary.region} bucket={bucketSummary.name} location={values.location} />;
 }
 
-export function S3BucketValueView(props: CommonValueViewProps) {
+export function S3BucketValueView(props: ValueComponentProps) {
     const { valueSummary } = props;
     const { values } = valueSummary;
 
@@ -48,7 +48,7 @@ function S3Button(props: { region?: string, bucket: string, location?: string })
             draggable={false}
             style={{ userSelect: "text" }}
         >
-            <img src={S3Icon} width="20px" style={{ paddingRight: "5px" }} draggable="false" alt="" />
+            <S3 style={{width: "20px", marginRight: "5px"}} />
             <div ref={elementRef} style={{ cursor: "text" }} >{s3URI}</div>
         </Button>
     </Tooltip>;
