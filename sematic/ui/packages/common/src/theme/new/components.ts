@@ -245,6 +245,13 @@ const components: Components = {
             })) as any
         }
     },
+    MuiTabPanel: {
+        styleOverrides: {
+            root: {
+                padding: 0
+            }
+        }
+    },
     MuiAccordion: {
         styleOverrides: {
             root: {
