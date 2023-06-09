@@ -69,19 +69,29 @@ deployment:
       path: /
       port: http
       scheme: HTTP
-    initialDelaySeconds: 200
+    initialDelaySeconds: 10
     periodSeconds: 5
     successThreshold: 1
     timeoutSeconds: 1
   readiness_probe:
-    failureThreshold: 30
+    failureThreshold: 6
     httpGet:
       path: /
       port: http
       scheme: HTTP
     initialDelaySeconds: 10
     periodSeconds: 5
-    successThreshold: 2
+    successThreshold: 1
+    timeoutSeconds: 1
+  startup_probe:
+    failureThreshold: 15
+    httpGet:
+      path: /
+      port: http
+      scheme: HTTP
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    successThreshold: 1
     timeoutSeconds: 1
 
 image:

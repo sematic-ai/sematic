@@ -37,6 +37,9 @@ from sematic.config.settings import import_plugins
 from sematic.logs import make_log_config
 from sematic.utils.daemonize import daemonize
 
+#
+
+
 SOCKET_IO_NAMESPACES = [
     "/pipeline",
     "/graph",
@@ -95,6 +98,7 @@ def ping():
 
 
 def _request_string(request) -> str:
+    """Get a string representing the request for use in logs."""
     query_string = (
         f"?{str(request.query_string, encoding='utf8')}"
         if len(request.query_string) > 0
@@ -109,6 +113,7 @@ def _request_string(request) -> str:
 
 @sematic_api.before_request
 def log_request_start():
+    """Log that the request is starting."""
     logger().info(
         "Request start: %s",
         _request_string(flask.request),
@@ -117,6 +122,7 @@ def log_request_start():
 
 @sematic_api.after_request
 def log_request_end(response):
+    """Log that the request is ending."""
     logger().info(
         "Request end: %s",
         _request_string(flask.request),
@@ -125,6 +131,8 @@ def log_request_end(response):
 
 
 def register_signal_handlers():
+    """Register handlers to log messages and exit the server for appropriate signals."""
+
     def handler(signum, frame):
         logger = logging.getLogger()
         if signum == signal.SIGHUP:
@@ -149,6 +157,7 @@ def register_signal_handlers():
 
 
 def init_socket_io_server(make_async):
+    """Declare namespaces for SocketIO and init the SocketIO WSGI/ASGI app."""
     server_class = AsyncServer if make_async else socketio.Server
     async_mode = "asgi" if make_async else "threading"
     namespace_class = AsyncNamespace if make_async else Namespace
@@ -161,6 +170,7 @@ def init_socket_io_server(make_async):
 
 
 def run_locally(debug=False, make_daemon=False):
+    """Run the server for local (non-production) usage."""
     dictConfig(make_log_config(log_to_disk=True, level=logging.INFO))
     register_signal_handlers()
 
@@ -183,6 +193,7 @@ def run_locally(debug=False, make_daemon=False):
 
 
 def parse_arguments() -> argparse.Namespace:
+    """Parse the command line arguments."""
     parser = argparse.ArgumentParser("Sematic API server")
     parser.add_argument("--env", required=False, default="local", type=str)
     parser.add_argument("--debug", required=False, default=False, action="store_true")
@@ -190,6 +201,7 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def app():
+    """Callable to produce a WSGI/ASGI app for a WSGI/ASGI server."""
     dictConfig(make_log_config(log_to_disk=True, level=logging.INFO))
     register_signal_handlers()
 

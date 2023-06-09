@@ -189,6 +189,8 @@ def authenticate(endpoint_fn: Callable) -> Callable:
 
 
 def authenticate_starlette(endpoint_fn: Callable) -> Callable:
+    """Decorator for starlette endpoints who need authentication."""
+
     @functools.wraps(endpoint_fn)
     async def endpoint(request):
         authenticate = get_bool_server_setting(
