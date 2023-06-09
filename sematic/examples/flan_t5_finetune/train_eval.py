@@ -49,9 +49,43 @@ class TrainingConfig:
 
 
 @dataclass
+class HuggingFaceDatasetReference:
+    owner: Optional[str]
+    repo: str
+    subset: Optional[str] = None
+
+    @classmethod
+    def from_string(cls, as_string: str) -> "HuggingFaceDatasetReference":
+        if "/" in as_string:
+            owner, repo = as_string.rsplit("/", maxsplit=1)
+        else:
+            owner = None
+            repo = as_string
+        subset = None
+        if ":" in repo:
+            repo, subset = repo.split(":", 1)
+        return HuggingFaceDatasetReference(owner=owner, repo=repo, subset=subset)
+
+    def to_string(self) -> str:
+        if self.subset is not None:
+            return f"{self.to_full_dataset_string()}:{self.subset}"
+        else:
+            return f"{self.to_full_dataset_string()}"
+
+    def to_full_dataset_string(self) -> str:
+        if self.owner is not None:
+            return f"{self.owner}/{self.repo}"
+        else:
+            return self.repo
+
+
+@dataclass
 class DatasetConfig:
     max_output_length: int
     max_input_length: int
+    dataset_ref: HuggingFaceDatasetReference
+    text_column: str
+    summary_column: str
     max_train_samples: Optional[int] = None
     max_test_samples: Optional[int] = None
 
@@ -76,20 +110,6 @@ class HuggingFaceModelReference:
         return f"{self.owner}/{self.repo}"
 
 
-@dataclass
-class HuggingFaceDatasetReference:
-    owner: str
-    repo: str
-
-    @classmethod
-    def from_string(cls, as_string: str) -> "HuggingFaceDatasetReference":
-        owner, repo = as_string.rsplit("/", maxsplit=1)
-        return HuggingFaceDatasetReference(owner=owner, repo=repo)
-
-    def to_string(self) -> str:
-        return f"{self.owner}/{self.repo}"
-
-
 def load_model(model_name):
     model = AutoModelForSeq2SeqLM.from_pretrained(
         model_name,
@@ -99,16 +119,18 @@ def load_model(model_name):
 
 
 def load_tokenizer(model_name) -> PreTrainedTokenizerBase:
-    return AutoTokenizer.from_pretrained(model_name)
+    return AutoTokenizer.from_pretrained(model_name, device_map="auto")
 
 
 def _docs_preprocess_function(examples, tokenizer, dataset_config):
-    text_column = "context"
-    label_column = "summary"
+    text_column = "article"
+    label_column = "highlights"
     max_length = dataset_config.max_input_length
     output_token_max_length = dataset_config.max_output_length
-    inputs = [f"Please summarize: {ctx}. Summary: " for ctx in examples[text_column]]
-    targets = examples[label_column]
+    inputs = [
+        f"<Please summarize>: {ctx}. <Summary>: " for ctx in examples[text_column]
+    ]
+    targets = [target for target in examples[label_column]]
     model_inputs = tokenizer(
         inputs,
         max_length=max_length,
@@ -133,7 +155,10 @@ def prepare_data(
     dataset_config: DatasetConfig,
     tokenizer: PreTrainedTokenizerBase,
 ):
-    dataset = load_dataset("pacovaldez/pandas-documentation", "train")
+    dataset = load_dataset(
+        dataset_config.dataset_ref.to_full_dataset_string(),
+        dataset_config.dataset_ref.subset,
+    )
     if dataset_config.max_train_samples is not None:
         dataset["train"] = dataset["train"].select(
             range(dataset_config.max_train_samples)

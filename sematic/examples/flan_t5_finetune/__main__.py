@@ -1,14 +1,19 @@
+""" Launch script for the FLAN finetuning
+isort:skip_file
+"""
 # Standard Library
 import argparse
 from dataclasses import replace
 from typing import Optional, Tuple
 
 # Third-party
+from sematic import torch_patch
 from huggingface_hub import login
 from peft import LoraConfig, PeftType
 
 # Sematic
 from sematic import LocalResolver
+from sematic.config.config import switch_env
 from sematic.examples.flan_t5_finetune.pipeline import (
     DatasetConfig,
     ModelSize,
@@ -16,9 +21,11 @@ from sematic.examples.flan_t5_finetune.pipeline import (
     pipeline,
 )
 from sematic.examples.flan_t5_finetune.train_eval import (
+    HuggingFaceDatasetReference,
     HuggingFaceModelReference,
     TrainingArguments,
 )
+
 
 LORA_CONFIG = LoraConfig(
     r=16,
@@ -54,10 +61,15 @@ DATASET_CONFIG = DatasetConfig(
     max_output_length=256,
     max_train_samples=None,
     max_test_samples=None,
+    dataset_ref=HuggingFaceDatasetReference.from_string("cnn_dailymail:1.0.0"),
+    text_column="article",
+    summary_column="highlights",
 )
 
 
 def main():
+    switch_env("user")
+
     training_config, dataset_config, export_reference = parse_args()
     resolver = LocalResolver()
     future = pipeline(training_config, dataset_config, export_reference).set(
@@ -115,6 +127,33 @@ def parse_args() -> Tuple[
         type=int,
         default=DATASET_CONFIG.max_output_length,
         help="Maximum number of output tokens in response to the prompt.",
+    )
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default=DATASET_CONFIG.dataset_ref.to_string(),
+        help=(
+            "The Hugging Face dataset to use. Should be structured as: "
+            "<owner>/<repo>:<subset>. For datasets owned by HuggingFace, omit <owner>/ "
+            "Ex: cnn_dailymail:1.0.0 for https://huggingface.co/datasets/cnn_dailymail"
+        ),
+    )
+    parser.add_argument(
+        "--text-column",
+        type=str,
+        default=DATASET_CONFIG.text_column,
+        help=(
+            "The name of the column in the source dataset holding the text to summarize"
+        ),
+    )
+    parser.add_argument(
+        "--summary-column",
+        type=str,
+        default=DATASET_CONFIG.summary_column,
+        help=(
+            "The name of the column in the source dataset holding the summary of "
+            "the text."
+        ),
     )
     parser.add_argument(
         "--model-export-repo",
@@ -176,6 +215,9 @@ def parse_args() -> Tuple[
         max_test_samples=args.max_test_samples,
         max_input_length=args.max_input_length,
         max_output_length=args.max_output_length,
+        dataset_ref=HuggingFaceDatasetReference.from_string(args.dataset),
+        text_column=args.text_column,
+        summary_column=args.summary_column,
     )
 
     export_model_reference = None

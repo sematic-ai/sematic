@@ -17,10 +17,12 @@ The model variants are:
 
 This example shows a simple Sematic pipeline which:
 
-- Downloads and splits a HuggingFace
-[dataset](https://huggingface.co/datasets/pacovaldez/pandas-documentation) 
-containing sections of [pandas](https://pandas.pydata.org/) documentation
-paired with summaries of that documentation.
+- Downloads and splits a HuggingFace dataset containing contextual text paired
+with a summary of that text. By default, uses the
+[`cnn_dailymail`](https://huggingface.co/datasets/cnn_dailymail) dataset,
+which contains news articles and summaries of those articles. However,
+any dataset that has one column containing context and one column with a
+summary of that text can be used.
 - Fine-tunes a specified variant of FLAN-T5 using
 [LoRA](https://arxiv.org/abs/2106.09685) (a mechanism to fine-tune LLMs while
 leveraging far fewer free parameters in the tuning than are present in the original
@@ -38,7 +40,3 @@ This example only supports local execution. To run it:
 - View the pipeline results in the Sematic UI at `http://localhost:5001`.
 - Change the configuration to the pipeline as desired. See the CLI help
 with `sematic run examples/flan_t5_finetune -- --help` for options.
-
-#### TODO: file ticket for remote-compatible hugging face type serializations
-#### TODO: file ticket for remote-compatible hugging face type visualizations
-#### TODO: file ticket for getting pytorch 1.13.1 working for Ray examples
