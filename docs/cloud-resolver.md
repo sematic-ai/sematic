@@ -24,9 +24,9 @@ pipeline(...).resolve(CloudResolver())
 ```
 
 This makes the assumption that a container image was built and registered with a
-container registry. At this time, Sematic only supports Bazel as a way to build
-and register Docker images at runtime. See [Container
-images](./container-images.md).
+container registry. Sematic supports either `Bazel` or `Docker` as a way to build
+and register container images at runtime. See [Container
+images](./container-images.md) for more information.
 
 {% hint style="info" %}
 
