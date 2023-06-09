@@ -1,8 +1,8 @@
 import { Skeleton, Typography } from "@mui/material";
+import useFetchBlob from "@sematic/common/src/hooks/blobHooks";
+import { base64ArrayBuffer } from "@sematic/common/src/utils/base64ArrayBuffer";
 import { useMemo } from "react";
 import { CommonValueViewProps } from "src/types/common";
-import { base64ArrayBuffer } from "src/base64ArrayBuffer";
-import useFetchBlob from "src/hooks/blobHooks";
 
 export default function ImageValueView(props: CommonValueViewProps) {
     const { valueSummary } = props;
