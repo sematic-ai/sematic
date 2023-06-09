@@ -1,4 +1,4 @@
-# This code is copied from
+# This code is copied (and lightly modified) from
 # https://github.com/benoitc/gunicorn/blob/add8a4c951f02a67ca1f81264e5c107fa68e6496/gunicorn/util.py#L471
 # Standard Library
 import os
@@ -63,18 +63,6 @@ def daemonize(enable_stdio_inheritance=False):
         # original file descriptors, then all bets are
         # off and all we can really do is leave them as
         # they were.
-        #
-        # This will allow 'gunicorn ... > output.log 2>&1'
-        # to work with stdout/stderr going to the file
-        # as expected.
-        #
-        # Note that if using --error-log option, the log
-        # file specified through shell redirection will
-        # only be used up until the log file specified
-        # by the option takes over. As it replaces stdout
-        # and stderr at the file descriptor level, then
-        # anything using stdout or stderr, including having
-        # cached a reference to them, will still work.
 
         def redirect(stream, fd_expect):
             try:
