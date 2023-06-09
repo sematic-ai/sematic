@@ -38,7 +38,3 @@ This example only supports local execution. To run it:
 - View the pipeline results in the Sematic UI at `http://localhost:5001`.
 - Change the configuration to the pipeline as desired. See the CLI help
 with `sematic run examples/flan_t5_finetune -- --help` for options.
-
-#### TODO: file ticket for remote-compatible hugging face type serializations
-#### TODO: file ticket for remote-compatible hugging face type visualizations
-#### TODO: file ticket for getting pytorch 1.13.1 working for Ray examples
