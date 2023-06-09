@@ -123,8 +123,8 @@ def load_tokenizer(model_name) -> PreTrainedTokenizerBase:
 
 
 def _docs_preprocess_function(examples, tokenizer, dataset_config):
-    text_column = "article"
-    label_column = "highlights"
+    text_column = dataset_config.text_column
+    label_column = dataset_config.summary_column
     max_length = dataset_config.max_input_length
     output_token_max_length = dataset_config.max_output_length
     inputs = [
@@ -159,15 +159,29 @@ def prepare_data(
         dataset_config.dataset_ref.to_full_dataset_string(),
         dataset_config.dataset_ref.subset,
     )
+    if "validation" not in dataset:
+        if "test" not in dataset:
+            test_size = 0.1
+            if (
+                dataset_config.max_train_samples is not None and
+                dataset_config.max_test_samples is not None
+            ):
+                test_size = dataset_config.max_test_samples / (
+                    dataset_config.max_test_samples + dataset_config.max_train_samples
+                )
+                
+            dataset = dataset["train"].train_test_split(test_size=test_size, seed=42)
+            
+        if "test" in dataset:
+            dataset["validation"] = dataset["test"]
+            del dataset["test"]
+            
     if dataset_config.max_train_samples is not None:
         dataset["train"] = dataset["train"].select(
             range(dataset_config.max_train_samples)
         )
     if dataset_config.max_test_samples is not None:
-        dataset["test"] = dataset["test"].select(range(dataset_config.max_test_samples))
-
-    dataset["validation"] = dataset["test"]
-    del dataset["test"]
+        dataset["validation"] = dataset["validation"].select(range(dataset_config.max_test_samples))
 
     processed_datasets = dataset.map(
         lambda example: _docs_preprocess_function(example, tokenizer, dataset_config),
