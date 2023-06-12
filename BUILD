@@ -12,7 +12,6 @@ exports_files(["README.md"])
 exports_files(["README.rst"])
 exports_files(["docs/changelog.md"])
 exports_files(["helm/sematic-server/Chart.yaml"])
-exports_files(["sematic.pth"])
 
 stamp_build_setting(name = "stamp")
 
