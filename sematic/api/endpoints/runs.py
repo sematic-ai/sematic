@@ -577,7 +577,13 @@ def save_graph_endpoint(user: Optional[User]):
 
     run_ids = [run.id for run in runs]
     existing_run_ids = get_existing_run_ids(run_ids)
-    new_runs = [run for run in runs if run.id not in existing_run_ids]
+    new_runs = []
+    for run in runs:
+        if run.id not in existing_run_ids:
+            # run.started_at is set by the client. This may cause NTP drift
+            # wrt server's time. Overwriting to prevent that.
+            run.started_at = datetime.datetime.utcnow()
+            new_runs.append(run)
 
     # save graph BEFORE ensuring jobs are stopped. This way
     # code that is checking on job status will be ok if it

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hacker News</title>
+</head>
+<body>
+  <h1>Hacker News Summaries for: {{ query }}</h1>
+  
+  <ul>
+    {% for story in stories %}
+    <li>
+      <h2>{{ story.title }}</h2>
+      <p><strong>Author:</strong> {{ story.author }}</p>
+      <p><strong>Created At:</strong> {{ story.created_at }}</p>
+      <p><strong>Points:</strong> {{ story.points }}</p>
+      <p><strong>Summary:</strong> {{ story.summary }}</p>
+      <p><strong>URL:</strong> <a href="{{ story.url }}">{{ story.url }}</a></p>
+    </li>
+    {% endfor %}
+  </ul>
+
+</body>
+</html>
