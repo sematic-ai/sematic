@@ -38,6 +38,8 @@ spec:
           env:
           - name: SEMATIC_WSGI_WORKERS_COUNT
             value: "1"
+          - name: SEMATIC_SOCKET_IO_ONLY
+            value: "1"
           envFrom:
           - configMapRef:
               name: {{ .Release.Name }}
@@ -51,6 +53,8 @@ spec:
             {{- toYaml .Values.deployment.liveness_probe | nindent 12 }}
           readinessProbe:
             {{- toYaml .Values.deployment.readiness_probe | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.deployment.startup_probe | nindent 12 }}
           resources:
             {{- toYaml .Values.deployment.resources | nindent 12 }}
       {{- with .Values.deployment.node_selector }}
