@@ -7,4 +7,7 @@ sematic_example(
         "sematic",
         "openai",
     ],
+    data = [
+        "template.html"
+    ]
 )

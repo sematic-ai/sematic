@@ -257,10 +257,10 @@ def prepare_report_html(query: str, stories: typing.List[Story]) -> str:
     ## Output
     - filepath of the html page
     """
-    template = "template.html"
+    template = "sematic/examples/hackernews_summarization/template.html"
     with open(template) as f:
         template = Template(f.read())
-    write_file = "report.html"
+    write_file = "sematic/examples/hackernews_summarization/report.html"
     with open(write_file, "w") as f:
         f.write(template.render(query=query, stories=stories))
     return write_file
