@@ -52,6 +52,14 @@ const SearchFilters = (props: SearchFiltersProps) => {
         }
     }, []);
 
+    const onTagsFilterChanged = useCallback((filters: string[]) => {
+        if (isEmpty(filters)) {
+            delete allFilters.current[FilterType.TAGS];
+        } else {
+            allFilters.current[FilterType.TAGS] = filters;
+        }
+    }, []);
+
     const onStatusFilterChanged = useCallback((filters: string[]) => {
         if (isEmpty(filters)) {
             delete allFilters.current[FilterType.STATUS];
@@ -64,7 +72,7 @@ const SearchFilters = (props: SearchFiltersProps) => {
         if (isEmpty(filters)) {
             delete allFilters.current[FilterType.OWNER];
         } else {
-            allFilters.current[FilterType.STATUS] = filters;
+            allFilters.current[FilterType.OWNER] = filters;
         }
     }, []);
 
@@ -82,7 +90,7 @@ const SearchFilters = (props: SearchFiltersProps) => {
 
     return <>
         <SearchTextSection ref={searchTextRef} onSearchChanged={onSearchTextChanged} />
-        <TagsFilterSection ref={tagsFiltersRef} />
+        <TagsFilterSection ref={tagsFiltersRef} onFiltersChanged={onTagsFilterChanged} />
         <StatusFilterSection ref={statusFiltersRef} onFiltersChanged={onStatusFilterChanged} />
         <OwnersFilterSection ref={ownersFiltersRef} onFiltersChanged={onOwnersFilterChanged} />
         <OtherFiltersSection ref={otherFiltersRef} onFiltersChanged={onOtherFilterChanged} />
