@@ -67,7 +67,7 @@ export interface RunsDropdownProps {
 const RunsDropdown = (prop: RunsDropdownProps) => {
     const { onChange: reportChange, defaultValue, runs } = prop;
 
-    const [value, setValue] = useState<string>(defaultValue || "");
+    const [value, setValue] = useState<string>("");
 
     const runsMap = useMemo(() => keyBy(runs, "id"), [runs]);
 
@@ -90,15 +90,15 @@ const RunsDropdown = (prop: RunsDropdownProps) => {
             return;
         }
         if (value === "") {
-            setValue(runs[0].id);
+            setValue(defaultValue ?? "");
         }
-    }, [runs, value, setValue]);
+    }, [runs, value, defaultValue, setValue]);
 
     return <FormControl style={{ width: "100%" }} size="small">
         <StyledSelect value={value} renderValue={renderValue} onChange={onChange}>
             {runs.map((run) => <StyledMenuItem key={run.id} value={run.id}>
                 <ValuePresentation run={run} />
-            </StyledMenuItem>)}            
+            </StyledMenuItem>)}
         </StyledSelect>
     </FormControl>;
 }

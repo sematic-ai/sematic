@@ -6,10 +6,10 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import CopyButton from "@sematic/common/src/component/CopyButton";
+import { useTextSelection } from "@sematic/common/src/hooks/textSelectionHooks";
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
 import { useRunJobHistory } from "src/hooks/podHistoryHooks";
 import { useRunPanelLoadingIndicator } from "src/hooks/runDetailsHooks";
-import { useTextSelection } from "src/hooks/textSelectionHooks";
 import PodEventHistory from "src/pipelines/pod_lifecycle/PodEventHistory";
 
 const StyledCode = styled.code`

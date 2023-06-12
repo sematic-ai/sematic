@@ -21,6 +21,8 @@ const StyledSection = styled(Section)`
     height: fit-content;
     min-height: 200px;
     position: relative;
+    flex-grow: 0;
+    flex-shrink: 0;
 
     &:after {
         content: '';
@@ -112,6 +114,10 @@ const FunctionSection = () => {
             failedAt: selectedRun.failed_at as unknown as string,
             resolvedAt: selectedRun.resolved_at as unknown as string
         }, DateFormats.LONG);
+
+        if (!(selectedRun.resolved_at || selectedRun.failed_at|| selectedRun.ended_at)){
+            return runDuration;
+        }
 
         const completeAt = DateTimeLong(parseJSON((selectedRun.resolved_at || selectedRun.failed_at
             || selectedRun.ended_at) as unknown as string));
