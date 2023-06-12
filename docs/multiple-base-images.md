@@ -48,7 +48,7 @@ This feature is only currently supported by the [Bazel Build System](./container
 The API to specify a **single** base image for all your pipeline is as follows in your pipeline's
 Bazel `BUILD` file:
 
-```
+```starlark
 load("@rules_sematic//:pipeline.bzl", "sematic_pipeline")
 
 sematic_pipeline(
@@ -63,7 +63,7 @@ sematic_pipeline(
 To specify different base images for different steps, remove the `base` argument and instead
 pass a mapping to the `bases` argument:
 
-```
+```starlark
 sematic_pipeline(
   name="main",
   ...
