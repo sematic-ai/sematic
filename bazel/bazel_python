@@ -13,6 +13,10 @@ if (( $BAZEL_BUILT_IMAGE != 1 )); then
     exit 1
 fi
 
+CUBLAS_PATH=$(python -c "import os; import glob; print(''.join(glob.glob(os.path.join(os.getcwd(), '../pip_*nvidia_cublas*/site-packages/nvidia/cublas/lib'))))")
+CUDNN_PATH=$(python -c "import os; import glob; print(''.join(glob.glob(os.path.join(os.getcwd(), '../pip_*nvidia_cudnn*/site-packages/nvidia/cudnn/lib'))))")
+LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$CUBLAS_PATH:$CUDNN_PATH"
+
 # bazel builds the following structure:
 # /app/<bazel package of target>/<image target name>.binary
 # /app/<bazel package of target>/<image target name>.binary.runfiles/
