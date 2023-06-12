@@ -55,7 +55,7 @@ export type BasicMetricsPayload = {
     }
 }
 
-type Operator = "eq";
+type Operator = "eq" | "contains";
 
 export type FilterCondition = {
     [key: string]: { [eq in Operator]?: string | null } | undefined
