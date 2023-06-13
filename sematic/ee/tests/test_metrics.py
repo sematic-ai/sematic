@@ -50,7 +50,7 @@ def test_log_metric(
                 metric_time=datetime.fromtimestamp(0),
                 metric_type=kwargs.get("metric_type", MetricType.GAUGE),
                 labels={
-                    "__scope__": kwargs.get("scope", MetricScope.RUN.value),
+                    "__scope__": kwargs.get("scope", MetricScope.RUN).value,
                     "run_id": "foo",
                     "function_path": "function_path",
                     "root_id": "bar",

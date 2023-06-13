@@ -2,7 +2,7 @@
 import abc
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 # Third-party
 import sqlalchemy.orm
@@ -12,7 +12,7 @@ from sematic.db.db import db
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import get_function_path
-from sematic.metrics.metric_point import MetricPoint, MetricType
+from sematic.metrics.metric_point import MetricPoint, MetricsLabels, MetricType
 from sematic.plugins.abstract_metrics_storage import (
     AbstractMetricsStorage,
     GroupBy,
@@ -178,7 +178,7 @@ class AbstractSystemMetric(abc.ABC):
 
     def aggregate(
         self,
-        labels: Dict[str, Union[int, float, str, bool, None]],
+        labels: MetricsLabels,
         group_by: List[GroupBy],
         rollup: RollUp = None,
     ) -> Dict[str, MetricSeries]:
