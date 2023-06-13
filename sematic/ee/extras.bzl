@@ -13,6 +13,10 @@ EXTRAS = {
         sematic_module="//sematic/ee/plugins/publishing/github:publisher",
         requires=[],
     ),
+    "metrics": dict(
+        sematic_module="//sematic/ee:metrics",
+        requires=[]
+    )
 }
 
 EXAMPLE_MODULES = [

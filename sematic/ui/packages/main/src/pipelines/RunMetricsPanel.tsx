@@ -32,7 +32,7 @@ export default function RunMetricsPanel() {
             const currentRunMetricPoints = args.metric_points.filter(
                 (point) =>
                     point.labels["run_id"] === run.id &&
-                    point.labels["__scope__"] === 0
+                    point.labels["__scope__"] ===  METRIC_SCOPES.run
             );
 
             if (currentRunMetricPoints.length > 0)
