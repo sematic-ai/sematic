@@ -58,10 +58,13 @@ statsmodels
 scikit-learn
 numpy
 xgboost
+trafilatura
+cohere
+openai
 
 # Types
 ## Snowflake
-snowflake-connector-python>=2.8.0
+snowflake-connector-python
 pyOpenSSL
 pyarrow
 python-magic

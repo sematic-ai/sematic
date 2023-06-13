@@ -1,13 +1,12 @@
 sematic_example(
     name = "hackernews_summarization",
-    requirements=[
-        "trafilatura==1.6.0",
+    requirements = [
+        "trafilatura",
         "requests",
         "cohere",
-        "sematic",
         "openai",
     ],
     data = [
-        "template.html"
-    ]
+        "template.html",
+    ],
 )
