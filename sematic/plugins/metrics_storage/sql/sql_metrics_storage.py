@@ -252,7 +252,7 @@ def _make_metric_label(metric_point: MetricPoint) -> MetricLabel:
 
 def _make_predicates_from_labels(labels: MetricsLabels):
     predicates = [
-        MetricLabel.metric_labels[key].astext == value  # type: ignore
+        MetricLabel.metric_labels[key].astext == str(value)  # type: ignore
         for key, value in labels.items()
         if key != "root"
     ]
