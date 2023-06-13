@@ -11,18 +11,22 @@ This example uses LLMs via API so you need to either have
 ## Usage
 
 Arguments
-- `--query` (required) : Search query. Example "llm", "generative AI"
+- `--query` **(required)** : Search query. Example "llm", "generative AI"
 - `--past-n-days`: Past N number of days to fetch stories for
 - `--max-stories` : Number of stories you'd want to fetch from HN
 
 ### For Cohere
 - `--cohere-model` : Model you want to use for text summarization.
-- `--cohere-api-key` (required): API key
+- `--cohere-api-key` **(required)**: API key
 - `--cohere-max-tokens` : Max number of tokens
 
 ### For OpenAI
 - `--openai-model` : Model you want to use for text summarization.
-- `--openai-api-key` (required): API key
+- `--openai-api-key` **(required)**: API key
 - `--openai-max-tokens` : Max number of tokens
 
-### 
+Example usage:
+
+```shell
+bazel run sematic/examples/hackernews_summarization:hackernews_summarization -- --query llm --openai-api-key '<API_KEY>'
+```
