@@ -44,6 +44,7 @@ SOCKET_IO_NAMESPACES = [
     "/pipeline",
     "/graph",
     "/job",
+    "/metrics",
 ]
 
 
