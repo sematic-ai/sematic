@@ -191,6 +191,10 @@ export function getRunUrlPattern(runID: string) {
     return `/runs/${runID}`;
 }
 
+export function getPipelineRunsPattern(functionPath: string) {
+    return `/pipeline/${functionPath}`;
+}
+
 export function useRunNavigation() {
     const navigate = useNavigate();
     const { hash } = useLocation();

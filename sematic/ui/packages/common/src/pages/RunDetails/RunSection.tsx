@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Headline from "src/component/Headline";
 import MoreVertButton from "src/component/MoreVertButton";
@@ -12,6 +12,7 @@ import Section from "src/component/Section";
 import TagsList from "src/component/TagsList";
 import RootRunContext, { useRootRunContext } from "src/context/RootRunContext";
 import { getRunUrlPattern, useFetchRuns } from "src/hooks/runHooks";
+import RunSectionActionMenu from "src/pages/RunDetails/contextMenus/RunSectionMenu";
 import theme from "src/theme/new";
 import { ExtractContextType, RemoveUndefined } from "src/utils/typings";
 
@@ -72,12 +73,15 @@ const RunSection = () => {
         navigate(getRunUrlPattern(newRootRunId as string));
     }, [navigate]);
 
+    const contextMenuAnchor = useRef<HTMLButtonElement>(null);
+
     return (
         <StyledSection>
             <Headline>Pipeline Run</Headline>
             <BoxContainer style={{ marginBottom: theme.spacing(3) }}>
                 <RunsDropdown runs={runs || []} onChange={onRootRunChange} defaultValue={rootRun.id} />
-                <StyledVertButton />
+                <StyledVertButton ref={contextMenuAnchor} />
+                <RunSectionActionMenu anchorEl={contextMenuAnchor.current} />
             </BoxContainer>
             <BoxContainer style={{ marginBottom: theme.spacing(2) }}>
                 <OwnerContainer>{owner}</OwnerContainer>
