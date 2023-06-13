@@ -1,5 +1,9 @@
+# Standard Library
+import time
+
 # Sematic
 import sematic
+from sematic.ee.metrics import log_metric
 
 
 @sematic.func
@@ -7,6 +11,9 @@ def add(a: float, b: float) -> float:
     """
     Adds two numbers.
     """
+    for i in range(10):
+        log_metric("i", i)
+        time.sleep(5)
     return a + b
 
 

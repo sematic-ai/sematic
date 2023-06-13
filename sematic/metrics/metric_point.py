@@ -2,7 +2,7 @@
 import enum
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 
 class MetricType(enum.IntEnum):
@@ -17,7 +17,7 @@ class MetricType(enum.IntEnum):
     # HISTOGRAM = 2  # Aggregation by counts in buckets
 
 
-MetricsLabels = Dict[str, Union[int, float, str, bool, None]]
+MetricsLabels = Dict[str, str]
 
 
 @dataclass(frozen=True)

@@ -1,6 +1,6 @@
 import { Timeline } from "@mui/icons-material";
 import { Box, Typography, useTheme } from "@mui/material";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Loading from "src/components/Loading";
 import { TimeseriesMetric } from "src/components/Metrics";
@@ -25,20 +25,24 @@ export default function RunMetricsPanel() {
     MetricPoint[] | undefined
     >();
 
+    const metricsUpdateListener = useCallback((args: { metric_points: MetricPoint[] }) => {
+        const currentRunMetricPoints = args.metric_points.filter(
+            (point) =>
+                point.labels["run_id"] === run.id &&
+                point.labels["__scope__"] ===  METRIC_SCOPES.run
+        );
+
+        if (currentRunMetricPoints.length > 0)
+            setLatestBroadcastEvent(currentRunMetricPoints);
+    }, [run.id, setLatestBroadcastEvent]);
+
     useEffect(() => {
         if (runIsInTerminalState(run)) return;
-        metricsSocket.removeAllListeners("update");
-        metricsSocket.on("update", async (args: { metric_points: MetricPoint[] }) => {
-            const currentRunMetricPoints = args.metric_points.filter(
-                (point) =>
-                    point.labels["run_id"] === run.id &&
-                    point.labels["__scope__"] ===  METRIC_SCOPES.run
-            );
-
-            if (currentRunMetricPoints.length > 0)
-                setLatestBroadcastEvent(currentRunMetricPoints);
-        });
-    }, [run]);
+        metricsSocket.on("update", metricsUpdateListener);
+        return () => {
+            metricsSocket.off("update", metricsUpdateListener);
+        }
+    }, [run, metricsUpdateListener]);
 
     const labels = useMemo(() => {
         return { run_id: run.id, __scope__: METRIC_SCOPES.run };
@@ -79,7 +83,7 @@ export default function RunMetricsPanel() {
                     <Typography sx={{ color: "gray" }}>
                             No metrics logged for this run.
                         <br />
-                            Read the <Link to="">documentation</Link> to get
+                            Read the <Link to="TODO">documentation</Link> to get
                             started.
                     </Typography>
                 </Box>
