@@ -48,15 +48,27 @@ export function TimeseriesMetric(props: {
 
     useMemo(() => {
         if (payload === undefined) return;
+        let labels: string[] = [];
+        let data: number[] = [];
         payload.content.series.forEach((item) => {
             let label = (new Date(item[1][0] * 1000)).toLocaleString();
-            if (!chartData.labels?.includes(label)) {
-                chartData.labels?.push(label);
-                chartData.datasets[0].data.push(item[0]);
-            }
+            labels.push(label.toLocaleString());
+            data.push(item[0]);
         });
 
-    }, [payload, color, metricsFilter.metricName, chartData]);
+        const cData: ChartData<"line", number[], string> = {
+            labels: labels,
+            datasets: [
+                {
+                    label: metricsFilter.metricName,
+                    data: data,
+                    backgroundColor: color,
+                    borderColor: color,
+                },
+            ],
+        };
+        setChartData(cData);
+    }, [payload, color, metricsFilter.metricName, setChartData]);
 
     return (
         <>
@@ -65,7 +77,7 @@ export function TimeseriesMetric(props: {
                     Unable to load metric: {error.message}
                 </Alert>
             )}
-            {error === undefined && <Line data={chartData} />}
+            {error === undefined && <Line data={chartData} options={{animation: false}}/>}
         </>
     );
 }
