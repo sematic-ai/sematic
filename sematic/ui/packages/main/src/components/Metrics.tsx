@@ -1,6 +1,6 @@
 import { MetricsFilter, useMetrics } from "@sematic/common/src/hooks/metricsHooks";
-import { Alert, Skeleton } from "@mui/material";
-import { useMemo } from "react";
+import { Alert} from "@mui/material";
+import { useMemo, useState } from "react";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -33,38 +33,39 @@ export function TimeseriesMetric(props: {
     const { metricsFilter, color, broadcastEvent } = props;
     const [payload, loading, error] = useMetrics(metricsFilter, broadcastEvent);
 
-    const chartData = useMemo(() => {
-        const cData: ChartData<"line", number[], string> = {
-            labels: [],
-            datasets: [
-                {
-                    label: metricsFilter.metricName,
-                    data: [],
-                    backgroundColor: color,
-                    borderColor: color,
-                },
-            ],
-        };
-        if (payload === undefined) return cData;
+    const [chartData, setChartData] = useState<ChartData<"line", number[], string>>({
+        labels: [],
+        datasets: [
+            {
+                label: metricsFilter.metricName,
+                data: [],
+                backgroundColor: color,
+                borderColor: color,
+            },
+        ],
+    });
 
+
+    useMemo(() => {
+        if (payload === undefined) return;
         payload.content.series.forEach((item) => {
-            let label = new Date(item[1][0] * 1000);
-            cData.labels?.push(label.toLocaleString());
-            cData.datasets[0].data.push(item[0]);
+            let label = (new Date(item[1][0] * 1000)).toLocaleString();
+            if (!chartData.labels?.includes(label)) {
+                chartData.labels?.push(label);
+                chartData.datasets[0].data.push(item[0]);
+            }
         });
 
-        return cData;
-    }, [payload, color, metricsFilter.metricName]);
+    }, [payload, color, metricsFilter.metricName, chartData]);
 
     return (
         <>
-            {loading && <Skeleton />}
             {error && (
                 <Alert severity="error">
                     Unable to load metric: {error.message}
                 </Alert>
             )}
-            {payload !== undefined && <Line data={chartData} />}
+            {error === undefined && <Line data={chartData} />}
         </>
     );
 }
