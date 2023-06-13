@@ -55,10 +55,10 @@ export type BasicMetricsPayload = {
     }
 }
 
-type Operator = "eq" | "contains";
+type Operator = "eq" | "contains" | "in";
 
 export type FilterCondition = {
-    [key: string]: { [eq in Operator]?: string | null } | undefined
+    [key: string]: { [eq in Operator]?: string | null | Array<string> } | undefined
 }
 
 export type Filter = FilterCondition | {
