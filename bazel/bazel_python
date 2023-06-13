@@ -13,22 +13,6 @@ if (( $BAZEL_BUILT_IMAGE != 1 )); then
     exit 1
 fi
 
-# Before we launch the interpreter, we need to make sure
-# that it is set up to find the .so files that bazel included
-# in the image via nvidia pip dependencies. We have to do this
-# dynamically rather than at image build time because the
-# bazel image construction mechanisms don't allow us to introspect
-# enough on the python target to know the absolute path where
-# the libs will be placed. Thus we don't know how to set
-# LD_LIBRARY_PATH in advance. It should be noted that doing
-# this should negate the need for sematic.torch_patch, BUT
-# this hack only happens in cases where we are hacking the
-# python interpreter launch to go through this script (e.g.
-# for Ray worker images).
-CUBLAS_PATH=$(python -c "import os; import glob; print(''.join(glob.glob(os.path.join(os.getcwd(), '../pip_*nvidia_cublas*/site-packages/nvidia/cublas/lib'))))")
-CUDNN_PATH=$(python -c "import os; import glob; print(''.join(glob.glob(os.path.join(os.getcwd(), '../pip_*nvidia_cudnn*/site-packages/nvidia/cudnn/lib'))))")
-LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$CUBLAS_PATH:$CUDNN_PATH"
-
 # bazel builds the following structure:
 # /app/<bazel package of target>/<image target name>.binary
 # /app/<bazel package of target>/<image target name>.binary.runfiles/
