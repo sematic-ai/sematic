@@ -18,6 +18,7 @@ import LinkValueView from "src/types/link";
 import ListValueView from "src/types/list";
 import NoneValueView from "src/types/none";
 import PlotlyFigureValueView from "src/types/plotly";
+import PromptResponseValueView from "src/types/prompt_response";
 import StrValueView from "src/types/str";
 import TorchDataLoaderValueView from "src/types/torchDataLoader";
 import TupleValueView from "src/types/tuple";
@@ -66,6 +67,7 @@ const meta: Array<[string, ComponentRenderDetails]> = [
             value: DataFrameValueView,
         },
     ],
+    ["sematic.types.types.prompt_response.PromptResponse", { value: PromptResponseValueView }],
     [
         "sematic.types.types.aws.s3.S3Bucket",
         {
