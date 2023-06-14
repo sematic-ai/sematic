@@ -36,3 +36,22 @@ for more information about how to configure the `AutoScalerConfig`.
 Note that the autoscaler will execute in the same Kubernetes pod as
 the Ray head, so you must have a Kubernetes node available which can
 accomodate the resources for the head PLUS the autoscaler.
+
+## cannot open shared object file
+
+```
+OSError: libcublas.so.11: cannot open shared object file: No such file or directory
+```
+
+Cuda shared libraries can't be found. There are two possible fixes for this:
+
+(1) Ensure that the required Cuda libraries are installed in your base docker image and
+in your development environment, and ensure that the location where they are installed
+are on the image's (and your dev environment's) `LD_LIBRARY_PATH`
+(2) Ensure that you have pytorch 1.30 or greater in your dependencies, and import
+`sematic.torch_patch` before you import pytorch (or anything that imports pytorch
+transitively). 
+
+Solution (1) is preferred if you are not using bazel, but will work even if you are using
+bazel. Solution (2) is preferred if you are using bazel, and will not work if you are
+not using bazel.
