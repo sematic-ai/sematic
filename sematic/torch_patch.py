@@ -67,13 +67,11 @@ def _preload_cuda_deps(lib_folder, lib_name) -> str:
     if not lib_path:
         raise NotFound(f"{lib_name} not found in the system path {sys.path}")
     ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
-
     return lib_path
 
 
 if platform.system() == "Linux" and _RUNNING_IN_BAZEL and _PYTORCH_IS_DEFINED:
     print("Patching torch nvidia loading")
-
     new_paths = []
     for lib_folder, lib_name in cuda_libs.items():
         try:

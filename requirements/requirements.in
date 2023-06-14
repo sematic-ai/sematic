@@ -1,5 +1,3 @@
-
-
 # Tests
 pytest==7.1.1
 testing-postgresql
