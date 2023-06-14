@@ -14,8 +14,6 @@ import flask
 from sematic.abstract_system_metric import AbstractSystemMetric
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
-
-# from sematic.api.endpoints.events import broadcast_metrics_update
 from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -72,8 +70,8 @@ def get_metric_endpoint(user: Optional[User], metric_name: str) -> flask.Respons
 
     filter = MetricsFilter(
         name=metric_name,
-        from_time=datetime.datetime.fromtimestamp(from_time_ts),
-        to_time=datetime.datetime.fromtimestamp(to_time_ts),
+        from_time=datetime.datetime.utcfromtimestamp(from_time_ts),
+        to_time=datetime.datetime.utcfromtimestamp(to_time_ts),
         labels=labels,
     )
 
@@ -116,8 +114,6 @@ def log_metric_endpoint(user: Optional[User]) -> flask.Response:
         metric_points.append(metric_point)
 
     plugin.store_metrics(metric_points)
-
-    # broadcast_metrics_update(metric_points, user)
 
     return flask.jsonify({})
 
