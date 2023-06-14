@@ -1,77 +1,27 @@
-import React, { SyntheticEvent, useCallback, useState } from "react";
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import Typography from '@mui/material/Typography';
 import { ValueComponentProps, ViewComponentProps} from "src/typeViz/common";
 
-const SUMMARY_MAX_LENGTH = 100;
-
 export default function PromptResponseCollapsedView(props: ValueComponentProps) {
-    const { valueSummary } = props;
     return <span>Prompt/Response Text</span>;
 }
 
 export function PromptResponseExpandedView(props: ViewComponentProps) {
     let { valueSummary } = props;
     let { values } = valueSummary;
-    const [expanded, setExpanded] = useState<string | false>(false);
     const prompt = values.prompt;
     const response = values.response;
-
-    const promptComponent = TextSummaryAccordion({text: prompt, textKind: "Prompt"});
-    const responseComponent = TextSummaryAccordion({text: response, textKind: "Response"});
+    const promptJsx = prompt.split("\n").map((str: string) => <p>{str}</p>);
+    const responseJsx = response.split("\n").map((str: string) => <p>{str}</p>);
 
     return (
         <div>
-            {promptComponent}
-            {responseComponent}
+            <div>
+                <span><strong>Prompt</strong></span>
+                <div>{promptJsx}</div>
+            </div>
+            <div>
+                <span><strong>Response</strong></span>
+                <div>{responseJsx}</div>
+            </div>
         </div>
-    );
-}
-
-interface TextSummaryAccordionProps {
-    text: string;
-    textKind: string;
-}
-
-function TextSummaryAccordion(props: TextSummaryAccordionProps) {
-    let { text, textKind } = props;
-    const [expanded, setExpanded] = useState<boolean>(false);
-
-    const handleChange = () => (event: SyntheticEvent, isExpanded: boolean) => {
-        setExpanded(!expanded);
-    };
-    const textIsLong = text.length > SUMMARY_MAX_LENGTH; 
-    const shortText = (
-        textIsLong ?
-            text.substring(0, SUMMARY_MAX_LENGTH) + "..." :
-            text
-    );
-    const textJsx = text.split("\n").map((str: string) => <p>{str}</p>);
-    const textColor = textIsLong ? "text.secondary" : "text.primary";
-    const expandIcon = textIsLong ? (<ExpandMoreIcon />) : (<div/>);
-    const cursor = textIsLong ? "pointer" : "default";
-
-    return (
-        <Accordion
-            expanded={expanded && textIsLong}
-            onChange={handleChange()}
-            style={{cursor: cursor}}
-        >
-            <AccordionSummary
-                expandIcon={expandIcon}
-                style={{cursor: cursor}}
-            >
-                <Typography sx={{ width: "15%", flexShrink: 0, fontWeight: "bolder" }}>
-                    {textKind}
-                </Typography>
-                <Typography sx={{ color: textColor }}>{shortText}</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-                <Typography >{textJsx}</Typography>
-            </AccordionDetails>
-        </Accordion>
     );
 }
