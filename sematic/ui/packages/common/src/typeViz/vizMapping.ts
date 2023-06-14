@@ -10,6 +10,7 @@ import FloatValueView from "src/typeViz/views/float";
 import ImageValueView, { ImageExpandedView } from "src/typeViz/views/image";
 import IntValueView from "src/typeViz/views/int";
 import LinkValueView from "src/typeViz/views/link";
+import PromptResponseCollapsedView, { PromptResponseExpandedView } from "src/typeViz/views/prompt_response";
 import ListValueView, { ListElementsView } from "src/typeViz/views/list";
 import NoneValueView from "src/typeViz/views/none";
 import PlotlyFigureValueView, { PlotlyFigureExpandedView } from "src/typeViz/views/plotly";
@@ -52,6 +53,7 @@ const meta: Array<[string, RenderDetails]> = [
     ["sematic.types.types.aws.s3.S3Bucket", { value: S3BucketValueView }],
     ["sematic.types.types.aws.s3.S3Location", { value: S3LocationValueView }],
     ["sematic.types.types.image.Image", {value: ImageValueView, nested: ImageExpandedView}],
+    ["sematic.types.types.prompt_response.PromptResponse", { value: PromptResponseCollapsedView, nested: PromptResponseExpandedView}],
     ["matplotlib.figure.Figure", {value: ImageValueView, nested: ImageExpandedView}]
 ];
 
