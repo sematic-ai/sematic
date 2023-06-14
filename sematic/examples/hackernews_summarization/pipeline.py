@@ -1,6 +1,7 @@
 # Standard Library
 import datetime
 import logging
+import os
 import re
 import time
 import typing
@@ -194,8 +195,7 @@ def summarize(stories: typing.List[Story], config: _LLMConfig) -> typing.List[St
                 response = co.generate(
                     model=config.model,
                     prompt=f"""
-                        Summarize the prompt from HackerNews story in 3-5 sentences:
-                        \n{story.text}""",
+                        {story.text}\nSummarize the article above""",
                     max_tokens=config.max_tokens,
                     temperature=0.9,
                     k=0,
@@ -260,7 +260,9 @@ def prepare_report_html(query: str, stories: typing.List[Story]) -> str:
     template = "sematic/examples/hackernews_summarization/template.html"
     with open(template) as f:
         template = Template(f.read())
-    write_file = "sematic/examples/hackernews_summarization/report.html"
+    write_file = os.path.join(
+        os.getcwd(), "sematic/examples/hackernews_summarization/report.html"
+    )
     with open(write_file, "w") as f:
         f.write(template.render(query=query, stories=stories))
     return write_file

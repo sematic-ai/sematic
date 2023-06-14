@@ -1,23 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Hacker News</title>
+    <title>Hacker News</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .article {
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        
+        .article h2 {
+            margin-top: 0;
+        }
+        
+        .article .meta {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .article .summary {
+            margin-bottom: 10px;
+        }
+        
+        .article .url {
+            color: #428bca;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        
+        .article .url:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-  <h1>Hacker News Summaries for: {{ query }}</h1>
-  
-  <ul>
+    <h1>Hacker News Summary for {{ query }}</h1>
     {% for story in stories %}
-    <li>
-      <h2>{{ story.title }}</h2>
-      <p><strong>Author:</strong> {{ story.author }}</p>
-      <p><strong>Created At:</strong> {{ story.created_at }}</p>
-      <p><strong>Points:</strong> {{ story.points }}</p>
-      <p><strong>Summary:</strong> {{ story.summary }}</p>
-      <p><strong>URL:</strong> <a href="{{ story.url }}">{{ story.url }}</a></p>
-    </li>
+    <div class="article">
+        <h2>{{ story.title }}</h2>
+        <div class="meta">
+            <span>Author: {{ story.author }}</span>
+            <span>Published: {{ story.created_at }}</span>
+            <span>Points: {{ story.points }}</span>
+        </div>
+        <div class="summary">{{ story.summary }}</div>
+        <a class="url" href="{{ story.url }}" target="_blank">Read More</a>
+    </div>
     {% endfor %}
-  </ul>
-
 </body>
 </html>
