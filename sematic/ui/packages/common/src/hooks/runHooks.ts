@@ -9,6 +9,7 @@ import { AllFilters, FilterType, StatusFilters, convertMiscellaneousFilterToRunF
 import useAsync from "react-use/lib/useAsync";
 
 export const selectedRunHashAtom = atomWithHashCustomSerialization("run", "")
+export const selectedPanelAtom = atomWithHashCustomSerialization("panel", "")
 export const selectedTabHashAtom = atomWithHashCustomSerialization("tab", "")
 
 export type QueryParams = {[key: string]: string};
