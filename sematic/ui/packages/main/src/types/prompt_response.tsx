@@ -11,7 +11,6 @@ const SUMMARY_MAX_LENGTH = 100;
 export default function PromptResponseValueView(props: CommonValueViewProps) {
     let { valueSummary } = props;
     let { values } = valueSummary;
-    const [expanded, setExpanded] = useState<string | false>(false);
     const prompt = values.prompt;
     const response = values.response;
 

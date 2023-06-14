@@ -10,7 +10,7 @@ import FloatValueView from "src/typeViz/views/float";
 import ImageValueView, { ImageExpandedView } from "src/typeViz/views/image";
 import IntValueView from "src/typeViz/views/int";
 import LinkValueView from "src/typeViz/views/link";
-import PromptResponseValueView from "src/typeViz/views/prompt_response";
+import PromptResponseCollapsedView, { PromptResponseExpandedView } from "src/typeViz/views/prompt_response";
 import ListValueView, { ListElementsView } from "src/typeViz/views/list";
 import NoneValueView from "src/typeViz/views/none";
 import PlotlyFigureValueView, { PlotlyFigureExpandedView } from "src/typeViz/views/plotly";
@@ -46,7 +46,7 @@ const meta: Array<[string, RenderDetails]> = [
     ["datetime.datetime", { value: DatetimeValueView }],
     ["enum.Enum", { value: EnumValueView }],
     ["plotly.graph_objs._figure.Figure", { value: PlotlyFigureValueView, nested: PlotlyFigureExpandedView }],
-    ["sematic.types.types.prompt_response.PromptResponse", { value: PromptResponseValueView }],
+    ["sematic.types.types.prompt_response.PromptResponse", { value: PromptResponseCollapsedView, nested: PromptResponseExpandedView}],
     ["torch.utils.data.dataloader.DataLoader", { value: TorchDataLoaderValueView, nested: TorchDataFieldsView }],
     ["pandas.core.frame.DataFrame", { value: DataFrameValueView, nested: DataFrameDetailsView }],
     ["DataFrameDataPreview", { value: DataFrameSummaryView, nested: DataFrameSummaryExpandedView }],

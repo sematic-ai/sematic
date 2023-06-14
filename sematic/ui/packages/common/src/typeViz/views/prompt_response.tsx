@@ -4,11 +4,16 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Typography from '@mui/material/Typography';
-import { ValueComponentProps } from "src/typeViz/common";
+import { ValueComponentProps, ViewComponentProps} from "src/typeViz/common";
 
 const SUMMARY_MAX_LENGTH = 100;
 
-export default function PromptResponseValueView(props: ValueComponentProps) {
+export default function PromptResponseCollapsedView(props: ValueComponentProps) {
+    const { valueSummary } = props;
+    return <span>Prompt/Response Text</span>;
+}
+
+export function PromptResponseExpandedView(props: ViewComponentProps) {
     let { valueSummary } = props;
     let { values } = valueSummary;
     const [expanded, setExpanded] = useState<string | false>(false);
