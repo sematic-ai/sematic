@@ -88,6 +88,7 @@ def pytest_test(
     if len(py_versions) < 1:
         fail("There must be at least one python version to test")
     py_versions = sorted(py_versions, key=lambda k: int(k.replace("PY3_", "")))
+    deps = deps + ["//sematic:torch_patch"]
     for i, py3_version in enumerate(py_versions):
         (pyenv, runfiles) = env_and_runfiles_for_python(py3_version)
         final_deps = full_versioned_deps(

@@ -4,6 +4,7 @@ sematic_py_lib(
     deps = [
         ":dataloader",
         ":module",
+        "//sematic:torch_patch",
     ],
 )
 
