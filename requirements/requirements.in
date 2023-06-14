@@ -31,23 +31,20 @@ python-socketio
 flask
 flask-cors
 cloudpickle
-flask-socketio
-gevent
-gevent-websocket
 requests
 werkzeug
-gunicorn
 python-dateutil
+starlette
 google-auth
+uvicorn[standard]
+asgiref
 
 # CLI
 click
 
 # Examples
-# torch at 1.13.0 or later gives trouble with cuda dependencies
-torch==1.13.1 -f https://download.pytorch.org/whl/cu111/torch
+torch==1.13.1
 torchvision==0.14.1
-nvidia-cublas-cu11==11.10.3.66
 pytorch-lightning
 ray-lightning
 torchmetrics

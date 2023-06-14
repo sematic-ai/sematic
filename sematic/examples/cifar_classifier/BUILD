@@ -24,8 +24,8 @@ sematic_py_lib(
 sematic_pipeline(
     name = "main",
     dev = True,
-    registry = "558717131297.dkr.ecr.us-west-2.amazonaws.com",
-    repository = "sematic-dev",
+    registry = "558717131297.dkr.ecr.us-west-2.amazonaws.com", # update this to your own registry
+    repository = "sematic-dev", # update this to your own repository
     base = "@sematic-worker-cuda//image",
     image_layers = [
         requirement("torch"),

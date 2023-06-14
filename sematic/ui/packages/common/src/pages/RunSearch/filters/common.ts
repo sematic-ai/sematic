@@ -12,6 +12,23 @@ export type AllFilters = Partial<Record<FilterType, string[]>>;
 
 export type StatusFilters = "completed" | "failed" | "running" | "canceled";
 
+export function convertTagsFilterToRunFilters(filters: string[]): Filter | null {
+
+    if (!!filters && filters.length > 0) {
+        const conditions = filters.map((tag) => ({
+            "tags": { contains: tag}
+        }));        
+        if (conditions.length > 1) {
+            return {
+                "OR": conditions
+            }
+        } 
+        return conditions[0];
+    }
+    
+    return null;
+}
+
 export function convertStatusFilterToRunFilters(filters: StatusFilters[]): Filter | null {
     const filtersSet = new Set(filters);
 

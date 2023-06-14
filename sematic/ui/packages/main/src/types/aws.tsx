@@ -1,6 +1,6 @@
 import { OpenInNew } from "@mui/icons-material";
 import { Button, Tooltip } from "@mui/material";
-import { useTextSelection } from "src/hooks/textSelectionHooks";
+import { useTextSelection } from "@sematic/common/src/hooks/textSelectionHooks";
 import { CommonValueViewProps } from "./common";
 import S3Icon from "./s3.png";
 

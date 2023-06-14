@@ -11,6 +11,7 @@ import logging
 import os
 import platform
 import sys
+from itertools import chain
 
 try:
     import bazel_tools  # type: ignore # isort:skip # noqa: F401
@@ -47,7 +48,7 @@ cuda_libs = {
 }
 
 
-def _preload_cuda_deps(lib_folder, lib_name):
+def _preload_cuda_deps(lib_folder, lib_name) -> str:
     """Preloads cuda deps if they could not be found otherwise."""
     # Should only be called on Linux if default path resolution have failed
     assert platform.system() == "Linux", "Should only be called on Linux"
@@ -67,13 +68,26 @@ def _preload_cuda_deps(lib_folder, lib_name):
         raise NotFound(f"{lib_name} not found in the system path {sys.path}")
     ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
 
+    return lib_path
+
 
 if platform.system() == "Linux" and _RUNNING_IN_BAZEL and _PYTORCH_IS_DEFINED:
     print("Patching torch nvidia loading")
+
+    new_paths = []
     for lib_folder, lib_name in cuda_libs.items():
         try:
-            _preload_cuda_deps(lib_folder, lib_name)
+            new_paths.append(_preload_cuda_deps(lib_folder, lib_name))
         except NotFound:
             pass
         except Exception as e:
             logger.warning("Error loading %s from %s: %s", lib_name, lib_folder, e)
+
+    # This doesn't fix anything for the current process, but should properly
+    # fix things for subprocesses of this process without them needing to
+    # re-import this patch file.
+    LD_LIBRARY_PATH = os.environ.get("LD_LIBRARY_PATH", "")
+    LD_LIBRARY_PATH = ":".join(
+        chain([LD_LIBRARY_PATH], [os.path.dirname(p) for p in new_paths])
+    )
+    os.environ["LD_LIBRARY_PATH"] = LD_LIBRARY_PATH

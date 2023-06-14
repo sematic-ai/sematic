@@ -163,25 +163,27 @@ def prepare_data(
         if "test" not in dataset:
             test_size = 0.1
             if (
-                dataset_config.max_train_samples is not None and
-                dataset_config.max_test_samples is not None
+                dataset_config.max_train_samples is not None
+                and dataset_config.max_test_samples is not None
             ):
                 test_size = dataset_config.max_test_samples / (
                     dataset_config.max_test_samples + dataset_config.max_train_samples
                 )
-                
+
             dataset = dataset["train"].train_test_split(test_size=test_size, seed=42)
-            
+
         if "test" in dataset:
             dataset["validation"] = dataset["test"]
             del dataset["test"]
-            
+
     if dataset_config.max_train_samples is not None:
         dataset["train"] = dataset["train"].select(
             range(dataset_config.max_train_samples)
         )
     if dataset_config.max_test_samples is not None:
-        dataset["validation"] = dataset["validation"].select(range(dataset_config.max_test_samples))
+        dataset["validation"] = dataset["validation"].select(
+            range(dataset_config.max_test_samples)
+        )
 
     processed_datasets = dataset.map(
         lambda example: _docs_preprocess_function(example, tokenizer, dataset_config),

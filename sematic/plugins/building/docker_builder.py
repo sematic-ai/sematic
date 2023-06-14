@@ -43,7 +43,7 @@ from sematic.plugins.building.docker_builder_config import (
 )
 from sematic.plugins.building.docker_client_utils import rolling_print_status_updates
 from sematic.utils.env import environment_variables
-from sematic.utils.spinner import with_stdout_spinner
+from sematic.utils.spinner import stdout_spinner
 
 logger = logging.getLogger(__name__)
 
@@ -53,20 +53,51 @@ _DOCKERFILE_BASE_TEMPLATE = """
 FROM {base_uri}
 WORKDIR /
 
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
-
-RUN python3 -c "import distutils" || apt-get update -y && apt-get install --reinstall -y python$(python3 -c "import sys; print(f'{{sys.version_info.major}}.{{sys.version_info.minor}}')")-distutils
-RUN which pip3 || apt-get update -y && apt-get install -y python3-pip && python3 -m pip install --upgrade pip==23.1.2
-
-ENV PATH="/sematic/bin/:${{PATH}}"
-RUN echo '#!/bin/sh' > entrypoint.sh && echo '/usr/bin/python3 -m sematic.resolvers.worker "$@"' >> entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN \
+( \
+echo '#!/bin/sh' > entrypoint.sh && \
+echo '/usr/bin/python3 -m sematic.resolvers.worker "$@"' >> entrypoint.sh && \
+chmod +x /entrypoint.sh \
+)
 ENTRYPOINT ["/entrypoint.sh"]
 """  # noqa: E501
 
+# `pip = 23.1.2` due to: https://github.com/pypa/pip/issues/10851
+_DOCKERFILE_ENSURE_PIP_TEMPLATE = """
+RUN python3 -c "from distutils import cmd, util" || \
+( \
+apt-get update -y && \
+apt-get install -y --reinstall --no-install-recommends python$(python3 -c "import sys; print(f'{{sys.version_info.major}}.{{sys.version_info.minor}}')")-distutils \
+)
+
+RUN which pip || \
+( \
+export PYTHONDONTWRITEBYTECODE=1 && \
+apt-get update -y && \
+apt-get install -y --no-install-recommends wget && \
+wget --no-verbose -O get-pip.py https://bootstrap.pypa.io/get-pip.py && \
+python3 get-pip.py && \
+rm get-pip.py && \
+unset PYTHONDONTWRITEBYTECODE \
+)
+"""  # noqa: E501
+
+# `--ignore-installed` due to:
+#   `pip cannot uninstall <package>: "It is a distutils installed project"`
 _DOCKERFILE_REQUIREMENTS_TEMPLATE = """
 COPY {requirements_file} requirements.txt
-RUN pip3 install --no-cache --ignore-installed -r requirements.txt
+RUN pip install --no-cache-dir --ignore-installed --root-user-action=ignore -r requirements.txt
+"""  # noqa: E501
+
+_DOCKERFILE_ENSURE_SEMATIC = """
+RUN python3 -c "import sematic" || \
+( \
+export PYTHONDONTWRITEBYTECODE=1 && \
+pip install --no-cache-dir --ignore-installed --root-user-action=ignore sematic && \
+unset PYTHONDONTWRITEBYTECODE \
+)
+
+ENV PATH="/sematic/bin/:$PATH"
 """
 
 
@@ -254,18 +285,90 @@ def _build_image(
     # appease mypy
     assert effective_base_uri is not None
 
+    platform = build_config.build.platform if build_config.build is not None else None
+
+    # attempt to pull previously-existent layers for this image from the remote repo,
+    # in order to speed up local-first-time builds and stale builds
+    #
+    # Q: Why do this and not use the `cache_from` Docker feature?
+    # A: Because that feature requires the `BUILDKIT_INLINE_CACHE` flag be set on the
+    # image while building, and this seems to require the image to already exist locally,
+    # which makes first building an image impossible.
+    _pull_existing_layers(
+        push_config=build_config.push,
+        platform=platform,
+        docker_client=docker_client,
+    )
+
     return _build_image_from_base(
         target=target,
         effective_base_uri=effective_base_uri,
         build_config=build_config,
+        platform=platform,
         docker_client=docker_client,
     )
+
+
+def _pull_existing_layers(
+    push_config: Optional[ImagePushConfig],
+    platform: Optional[str],
+    docker_client: docker.DockerClient,  # type: ignore
+) -> None:
+    """
+    Attempts to pull previously existent layers from the configured remote repository
+    locally.
+    """
+    if push_config is None:
+        logger.info("Remote repo not configured; skipping image pulling")
+        return
+
+    repository = push_config.get_repository_str()
+    tag = push_config.get_tag()
+
+    logger.info(
+        "Pulling existing layers from repository '%s' with tag '%s'", repository, tag
+    )
+
+    optional_kwargs = dict()
+    if platform is not None:
+        optional_kwargs["platform"] = platform
+
+    try:
+        # the call to build below is blocking and takes a while
+        # print a spinner in the meantime
+        with stdout_spinner():
+            status_updates = docker_client.api.pull(
+                repository=repository,
+                tag=tag,
+                stream=True,
+                decode=True,
+                **optional_kwargs,
+            )
+
+        if status_updates is None:
+            logger.warning(
+                "Pulled existing layers from repository '%s' with tag '%s', "
+                "without any response",
+                repository,
+                tag,
+            )
+            return
+
+        error_update = rolling_print_status_updates(status_updates)
+        if error_update is not None:
+            logger.warning(
+                "Image pull error details: '%s'", str(error_update.get("errorDetail"))
+            )
+
+    except Exception as e:
+        logger.warning("Ignoring image pull error: %s", e)
 
 
 def _build_image_from_base(
     target: str,
     effective_base_uri: ImageURI,
     build_config: BuildConfig,
+    platform: Optional[str],
     docker_client: docker.DockerClient,  # type: ignore
 ) -> Tuple[Image, ImageURI]:
     """
@@ -288,9 +391,7 @@ def _build_image_from_base(
     status_updates = _build_from_dockerfile(
         built_image_name=built_image_name,
         dockerfile_contents=dockerfile_contents,
-        platform=build_config.build.platform
-        if build_config.build is not None
-        else None,
+        platform=platform,
         docker_client=docker_client,
     )
 
@@ -327,7 +428,7 @@ def _build_from_dockerfile(
 
     # the call to build below is blocking and takes a while
     # print a spinner in the meantime
-    with with_stdout_spinner():
+    with stdout_spinner():
         # we have to create a tmp dockerfile and pass it instead of using the `fileobj`
         # option of the docker_client, because it does not work with contexts, so
         # operations like COPY do not work, as there exists no working dir context to copy
@@ -344,6 +445,7 @@ def _build_from_dockerfile(
                 path=os.getcwd(),
                 tag=built_image_name,
                 decode=True,
+                pull=True,
                 **optional_kwargs,
             )
 
@@ -363,12 +465,10 @@ def _generate_dockerfile_contents(
     """
     dockerfile_contents = _DOCKERFILE_BASE_TEMPLATE.format(base_uri=base_uri)
 
-    if source_build_config is not None and source_build_config.requirements is not None:
-        logger.debug("Adding requirements file: %s", source_build_config.requirements)
-        requirements_contents = _DOCKERFILE_REQUIREMENTS_TEMPLATE.format(
-            requirements_file=source_build_config.requirements
-        )
-        dockerfile_contents = f"{dockerfile_contents}{requirements_contents}"
+    # pip is always required to install the requirements file and/or sematic; see below
+    logger.debug("Ensuring pip is present")
+    pip_contents = _DOCKERFILE_ENSURE_PIP_TEMPLATE.format()
+    dockerfile_contents = f"{dockerfile_contents}{pip_contents}"
 
     if source_build_config is not None and source_build_config.data is not None:
         logger.debug("Adding data files: %s", source_build_config.data)
@@ -382,6 +482,16 @@ def _generate_dockerfile_contents(
                     )
         # provide an empty line between data and src, for readability
         dockerfile_contents = f"{dockerfile_contents}\n"
+
+    if source_build_config is not None and source_build_config.requirements is not None:
+        logger.debug("Adding requirements file: %s", source_build_config.requirements)
+        requirements_contents = _DOCKERFILE_REQUIREMENTS_TEMPLATE.format(
+            requirements_file=source_build_config.requirements
+        )
+        dockerfile_contents = f"{dockerfile_contents}{requirements_contents}"
+
+    logger.debug("Ensuring Sematic is present")
+    dockerfile_contents = f"{dockerfile_contents}{_DOCKERFILE_ENSURE_SEMATIC}"
 
     if source_build_config is not None and source_build_config.src is not None:
         logger.debug("Adding source files: %s", source_build_config.src)
@@ -470,7 +580,7 @@ def _push_image(
         There was an error when executing the `docker` commands.
     """
     if push_config is None:
-        logger.info("Image pushing not configured; skipping")
+        logger.info("Remote repo not configured; skipping image pushing")
         return image_uri
 
     repository = push_config.get_repository_str()
@@ -490,7 +600,7 @@ def _push_image(
 
     # the call to build below is blocking and takes a while
     # print a spinner in the meantime
-    with with_stdout_spinner():
+    with stdout_spinner():
         status_updates = docker_client.images.push(
             repository=repository, tag=tag, stream=True, decode=True
         )

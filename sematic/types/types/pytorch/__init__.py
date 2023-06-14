@@ -1,7 +1,8 @@
 # Standard Library
 import logging
 
-import sematic.torch_patch  # isort: skip
+# Sematic
+import sematic.torch_patch
 
 logger = logging.getLogger(__name__)
 
