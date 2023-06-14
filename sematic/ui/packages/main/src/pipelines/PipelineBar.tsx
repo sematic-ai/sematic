@@ -187,7 +187,7 @@ export default function PipelineBar() {
                     setSnackMessage({
                         message: "New run available.",
                         actionName: "view",
-                        autoHide: true,
+                        autoHide: false,
                         closable: true,
                         onClick: () => changeRootId(runs[0].id),
                     });

@@ -1,9 +1,12 @@
 import React from "react";
 import { Run } from "src/Models";
+import { RESET } from "jotai/utils";
 
 export const RunDetailsSelectionContext = React.createContext<{
     selectedRun: Run | undefined;
     setSelectedRunId: (runId: string) => void;
+    selectedPanel: string | undefined;
+    setSelectedPanel: (panel: string | typeof RESET | undefined) => void;
 } | null>(null);
 
 export default RunDetailsSelectionContext;
