@@ -12,55 +12,61 @@ export default function PromptResponseValueView(props: CommonValueViewProps) {
     let { valueSummary } = props;
     let { values } = valueSummary;
     const [expanded, setExpanded] = useState<string | false>(false);
+    const prompt = values.prompt;
+    const response = values.response;
 
-    const handleChange = (panel: string) => (event: SyntheticEvent, isExpanded: boolean) => {
-        setExpanded(isExpanded ? panel : false);
-    };
-    let shortPrompt = (
-        values.prompt.length > SUMMARY_MAX_LENGTH ?
-            values.prompt.substring(0, SUMMARY_MAX_LENGTH) + "..." :
-            values.prompt
-    );
-    const promptJsx = values.prompt.split("\n").map((str: string) => <p>{str}</p>);
-    let shortResponse = (
-        values.response.length > SUMMARY_MAX_LENGTH ?
-            values.response.substring(0, SUMMARY_MAX_LENGTH) + "..." :
-            values.response
-    );
-    const responseJsx = values.response.split("\n").map((str: string) => <p>{str}</p>);
+    const promptComponent = TextSummaryAccordion({text: prompt, textKind: "Prompt"});
+    const responseComponent = TextSummaryAccordion({text: response, textKind: "Response"});
 
     return (
         <div>
-            <Accordion expanded={expanded === "panel1"} onChange={handleChange("panel1")}>
-                <AccordionSummary
-                    expandIcon={<ExpandMoreIcon />}
-                    aria-controls="panel1bh-content"
-                    id="panel1bh-header"
-                >
-                    <Typography sx={{ width: "33%", flexShrink: 0, fontWeight: "bolder" }}>
-                      Prompt
-                    </Typography>
-                    <Typography sx={{ color: "text.secondary" }}>{shortPrompt}</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                    <Typography >{promptJsx}</Typography>
-                </AccordionDetails>
-            </Accordion>
-            <Accordion expanded={expanded === "panel2"} onChange={handleChange("panel2")}>
-                <AccordionSummary
-                    expandIcon={<ExpandMoreIcon />}
-                    aria-controls="panel2bh-content"
-                    id="panel2bh-header"
-                >
-                    <Typography sx={{ width: "33%", flexShrink: 0, fontWeight: "bolder" }}>
-                      Response
-                    </Typography>
-                    <Typography sx={{ color: "text.secondary" }}>{shortResponse}</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                    <Typography >{responseJsx}</Typography>
-                </AccordionDetails>
-            </Accordion>
+            {promptComponent}
+            {responseComponent}
         </div>
+    );
+}
+
+interface TextSummaryAccordionProps {
+    text: string;
+    textKind: string;
+}
+
+function TextSummaryAccordion(props: TextSummaryAccordionProps) {
+    let { text, textKind } = props;
+    const [expanded, setExpanded] = useState<boolean>(false);
+
+    const handleChange = () => (event: SyntheticEvent, isExpanded: boolean) => {
+        setExpanded(!expanded);
+    };
+    const textIsLong = text.length > SUMMARY_MAX_LENGTH; 
+    const shortText = (
+        textIsLong ?
+            text.substring(0, SUMMARY_MAX_LENGTH) + "..." :
+            text
+    );
+    const textJsx = text.split("\n").map((str: string) => <p>{str}</p>);
+    const textColor = textIsLong ? "text.secondary" : "text.primary";
+    const expandIcon = textIsLong ? (<ExpandMoreIcon />) : (<div/>);
+    const cursor = textIsLong ? "pointer" : "default";
+
+    return (
+        <Accordion
+            expanded={expanded && textIsLong}
+            onChange={handleChange()}
+            style={{cursor: cursor}}
+        >
+            <AccordionSummary
+                expandIcon={expandIcon}
+                style={{cursor: cursor}}
+            >
+                <Typography sx={{ width: "15%", flexShrink: 0, fontWeight: "bolder" }}>
+                    {textKind}
+                </Typography>
+                <Typography sx={{ color: textColor }}>{shortText}</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+                <Typography >{textJsx}</Typography>
+            </AccordionDetails>
+        </Accordion>
     );
 }
