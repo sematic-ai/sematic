@@ -13,6 +13,8 @@ from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 from torchmetrics import PrecisionRecallCurve  # type: ignore
 
+# from sematic.ee.metrics import log_metric
+
 
 class Net(nn.Module):
     def __init__(self):
@@ -67,6 +69,7 @@ def train(
                     loss.item(),
                 )
             )
+            # log_metric("loss", loss.item())
             if dry_run:
                 break
     return loss.item()

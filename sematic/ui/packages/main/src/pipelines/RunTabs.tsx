@@ -15,26 +15,25 @@ import ExternalResourcePanel from "src/pipelines/external_resource/ExternalResou
 import PodLifecycle from "src/pipelines/pod_lifecycle/PodLifecycle";
 import LogPanel from "src/pipelines/LogPanel";
 import OutputPanel from "src/pipelines/OutputPanel";
+import RunMetricsPanel from "src/pipelines/RunMetricsPanel";
 
 const StickyHeader = styled(Box)`
-  position: sticky;
-  top: 70px;
-  background: white;
-  z-index: 200;
+    position: sticky;
+    top: 70px;
+    background: white;
+    z-index: 200;
 `;
-
 
 export type IOArtifacts = {
     input: Map<string, Artifact | undefined>;
     output: Map<string, Artifact | undefined>;
 };
 
-export default function RunTabs(props: {
-    artifacts: IOArtifacts;
-}) {
+export default function RunTabs(props: { artifacts: IOArtifacts }) {
     const { artifacts } = props;
 
-    const {selectedRunTab, setSelectedRunTab, setSelectedArtifactName} = usePipelinePanelsContext();
+    const { selectedRunTab, setSelectedRunTab, setSelectedArtifactName } =
+        usePipelinePanelsContext();
     const handleChange = (event: React.SyntheticEvent, newValue: string) => {
         setSelectedArtifactName("");
         setSelectedRunTab(newValue);
@@ -49,10 +48,20 @@ export default function RunTabs(props: {
     return (
         <>
             <TabContext value={selectedRunTab}>
-                <StickyHeader sx={{ borderBottom: 1, borderColor: "divider", flexShrink: 1 }}>
-                    <TabList onChange={handleChange} aria-label="Selected run tabs">
+                <StickyHeader
+                    sx={{
+                        borderBottom: 1,
+                        borderColor: "divider",
+                        flexShrink: 1,
+                    }}
+                >
+                    <TabList
+                        onChange={handleChange}
+                        aria-label="Selected run tabs"
+                    >
                         <Tab label="Input" value="input" />
                         <Tab label="Output" value="output" />
+                        <Tab label="Metrics" value="metrics" />
                         <Tab label="Source" value="source" />
                         <Tab label="Logs" value="logs" />
                         {grafanaTab}
@@ -66,6 +75,9 @@ export default function RunTabs(props: {
                 <TabPanel value="output" sx={{ pt: 5 }}>
                     <OutputPanel outputArtifacts={artifacts.output} />
                 </TabPanel>
+                <TabPanel value="metrics">
+                    <RunMetricsPanel />
+                </TabPanel>
                 <TabPanel hidden={selectedRunTab !== "logs"} value="logs">
                     <LogPanel />
                 </TabPanel>
@@ -78,7 +90,10 @@ export default function RunTabs(props: {
                 <TabPanel hidden={selectedRunTab !== "ext_res"} value="ext_res">
                     <ExternalResourcePanel />
                 </TabPanel>
-                <TabPanel hidden={selectedRunTab !== "pod_lifecycle"} value="pod_lifecycle">
+                <TabPanel
+                    hidden={selectedRunTab !== "pod_lifecycle"}
+                    value="pod_lifecycle"
+                >
                     <PodLifecycle />
                 </TabPanel>
             </TabContext>

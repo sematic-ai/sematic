@@ -54,6 +54,7 @@ sematic_pipeline(
     repository = "sematic-dev",
     deps = [
         ":mnist_train_lib",
+        "//sematic/ee:metrics",
     ],
 )
 

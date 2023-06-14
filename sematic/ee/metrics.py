@@ -9,9 +9,9 @@ from sematic.future_context import NotInSematicFuncError, context
 from sematic.metrics.metric_point import MetricPoint, MetricType
 
 
-class MetricScope(enum.IntEnum):
-    RUN = 0
-    PIPELINE = 1
+class MetricScope(enum.Enum):
+    RUN = "0"
+    PIPELINE = "1"
     # ORGANIZATION = 2
 
 
