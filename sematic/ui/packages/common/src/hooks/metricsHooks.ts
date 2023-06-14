@@ -1,8 +1,9 @@
 import { useHttpClient } from "@sematic/common/src/hooks/httpHooks";
 import useAsync from "react-use/lib/useAsync";
-import { BasicMetricsPayload } from "@sematic/common/src/ApiContracts";
+import { BasicMetricsPayload, MetricsPayload } from "@sematic/common/src/ApiContracts";
 import { useMemo } from "react";
 import { durationSecondsToString } from "@sematic/common/src/utils/datetime";
+import { MetricPoint } from "src/Models";
 
 export function runSuccessRate(
     countByState: { [k: string]: number },
@@ -68,4 +69,66 @@ export default function useBasicMetrics({ runId, rootFunctionPath }: {
     );
 
     return { payload: value, loading, error, totalCount, successRate, avgRuntime };
+}
+
+export type MetricsFilter = {
+    metricName: string;
+    labels: { [k: string]: any };
+    groupBys: string[];
+};
+
+function eventMatchesFilter(metricsFilter: MetricsFilter, latestMetricPoints?: MetricPoint[]) {
+    return latestMetricPoints &&
+        !!latestMetricPoints.find(
+            (metricPoint) =>
+                metricPoint.name === metricsFilter.metricName &&
+                [
+                    "run_id",
+                    "function_path",
+                    "root_id",
+                    "root_function_path",
+                ].every(
+                    (key) =>
+                        // Filter does not filter on key
+                        metricsFilter.labels[key] === undefined ||
+                        // or it does and the value matches
+                        metricsFilter.labels[key] ===
+                            metricPoint.labels[key]
+                )
+        )
+};
+
+export function useMetrics(
+    metricsFilter: MetricsFilter,
+    latestMetricPoints?: MetricPoint[]
+): [MetricsPayload | undefined, boolean, Error | undefined] {
+    const { fetch } = useHttpClient();
+
+    const { value, loading, error } = useAsync(async () => {
+        if (latestMetricPoints && !eventMatchesFilter(metricsFilter, latestMetricPoints)) return;
+        const labelsJSON = JSON.stringify(metricsFilter.labels);
+        const groupBysStr = metricsFilter.groupBys.join(",");
+        const response = await fetch({
+            url: `/api/v1/metrics/${metricsFilter.metricName}?labels=${labelsJSON}&group_by=${groupBysStr}&rollup=auto`,
+        });
+        return (await response.json()) as MetricsPayload;
+    }, [latestMetricPoints, metricsFilter, eventMatchesFilter]);
+
+    return [value, loading, error];
+}
+
+export function useListMetrics(labels: {
+    [k: string]: any;
+}, broadcastEvent?: MetricPoint[]): [{ content: string[] } | undefined, boolean, Error | undefined] {
+    const { fetch } = useHttpClient();
+
+    const { value, loading, error } = useAsync(async () => {
+        const labelsJSON = JSON.stringify(labels);
+        const response = await fetch({
+            url: `/api/v1/metrics?labels=${labelsJSON}`,
+        });
+        return (await response.json()) as { content: string[] };
+    }, [labels, broadcastEvent]);
+
+    return [value, loading, error];
 }

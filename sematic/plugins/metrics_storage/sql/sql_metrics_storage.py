@@ -186,7 +186,6 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
                     query = query.add_columns(field_).group_by(field_)
                     extra_field_names.append("timestamp")
-
                 records = query.all()
         except sqlalchemy.exc.OperationalError as e:
             # User has old SQLite version that does not support querying JSONB fields.
@@ -253,7 +252,7 @@ def _make_metric_label(metric_point: MetricPoint) -> MetricLabel:
 
 def _make_predicates_from_labels(labels: MetricsLabels):
     predicates = [
-        MetricLabel.metric_labels[key].astext == value  # type: ignore
+        MetricLabel.metric_labels[key].astext == str(value)  # type: ignore
         for key, value in labels.items()
         if key != "root"
     ]

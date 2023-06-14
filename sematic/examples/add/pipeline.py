@@ -1,6 +1,3 @@
-# Standard Library
-import time
-
 # Sematic
 import sematic
 
@@ -10,7 +7,6 @@ def add(a: float, b: float) -> float:
     """
     Adds two numbers.
     """
-    time.sleep(5)
     return a + b
 
 
