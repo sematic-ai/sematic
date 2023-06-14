@@ -13,6 +13,7 @@ sematic_py_lib(
         "//sematic/types/types:union",
         "//sematic/types/types:list",
         "//sematic/types/types:link",
+        "//sematic/types/types:prompt_response",
         "//sematic/types/types:tuple",
         "//sematic/types/types:dict",
         "//sematic/types/types:str",
