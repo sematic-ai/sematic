@@ -1,15 +1,3 @@
-if __name__ == "__main__":
-    # Third-party
-    import gevent.monkey  # type: ignore
-
-    # This enables us to use websockets and standard HTTP requests in
-    # the same server locally, which is what we want. If you try to
-    # use Gunicorn to do this, gevent will complain about
-    # not monkey patching early enough, unless you have the gevent
-    # monkey patch applied VERY early (like user/sitecustomize).
-    # Monkey patching: https://github.com/gevent/gevent/issues/1235
-    gevent.monkey.patch_all()
-
 # Standard Library
 import argparse
 import logging
@@ -21,12 +9,13 @@ from typing import Optional
 
 # Third-party
 import flask
+import socketio  # type: ignore
+import uvicorn  # type: ignore
+from asgiref.wsgi import WsgiToAsgi  # type: ignore
 from flask import jsonify, send_file
-from flask_socketio import Namespace, SocketIO  # type: ignore
+from socketio import ASGIApp, AsyncNamespace, AsyncServer, Namespace  # type: ignore
 
 # Sematic
-# Endpoint modules need to be imported for endpoints
-# to be registered.
 import sematic.api.endpoints.artifacts  # noqa: F401
 import sematic.api.endpoints.auth  # noqa: F401
 import sematic.api.endpoints.edges  # noqa: F401
@@ -39,10 +28,24 @@ import sematic.api.endpoints.runs  # noqa: F401
 import sematic.api.endpoints.storage  # noqa: F401
 import sematic.api.endpoints.users  # noqa: F401
 from sematic.api.app import sematic_api
-from sematic.api.wsgi import SematicWSGI
+
+# Endpoint modules need to be imported for endpoints
+# to be registered.
+from sematic.api.endpoints.events import register_sio_server, starlette_app
 from sematic.config.config import get_config, switch_env  # noqa: F401
 from sematic.config.settings import import_plugins
 from sematic.logs import make_log_config
+from sematic.utils.daemonize import daemonize
+
+#
+
+
+SOCKET_IO_NAMESPACES = [
+    "/pipeline",
+    "/graph",
+    "/job",
+]
+
 
 # Some plugins may register endpoints
 import_plugins()
@@ -95,6 +98,7 @@ def ping():
 
 
 def _request_string(request) -> str:
+    """Get a string representing the request for use in logs."""
     query_string = (
         f"?{str(request.query_string, encoding='utf8')}"
         if len(request.query_string) > 0
@@ -109,6 +113,7 @@ def _request_string(request) -> str:
 
 @sematic_api.before_request
 def log_request_start():
+    """Log that the request is starting."""
     logger().info(
         "Request start: %s",
         _request_string(flask.request),
@@ -117,6 +122,7 @@ def log_request_start():
 
 @sematic_api.after_request
 def log_request_end(response):
+    """Log that the request is ending."""
     logger().info(
         "Request end: %s",
         _request_string(flask.request),
@@ -124,20 +130,9 @@ def log_request_end(response):
     return response
 
 
-def init_socketio():
-    socketio = SocketIO(sematic_api, cors_allowed_origins="*")
-    # This is necessary because starting version 5.7.0 python-socketio does not
-    # accept connections to undeclared namespaces
-    socketio.on_namespace(Namespace("/pipeline"))
-    socketio.on_namespace(Namespace("/graph"))
-    socketio.on_namespace(Namespace("/job"))
-    return socketio
-
-
-socketio = init_socketio()
-
-
 def register_signal_handlers():
+    """Register handlers to log messages and exit the server for appropriate signals."""
+
     def handler(signum, frame):
         logger = logging.getLogger()
         if signum == signal.SIGHUP:
@@ -161,41 +156,62 @@ def register_signal_handlers():
     signal.signal(signal.SIGHUP, handler)
 
 
-def run_socketio(debug=False):
+def init_socket_io_server(make_async):
+    """Declare namespaces for SocketIO and init the SocketIO WSGI/ASGI app."""
+    server_class = AsyncServer if make_async else socketio.Server
+    async_mode = "asgi" if make_async else "threading"
+    namespace_class = AsyncNamespace if make_async else Namespace
+
+    sio = server_class(async_mode=async_mode, cors_allowed_origins="*")
+    for namespace in SOCKET_IO_NAMESPACES:
+        sio.register_namespace(namespace_class(namespace))
+    register_sio_server(sio)
+    return sio
+
+
+def run_locally(debug=False, make_daemon=False):
+    """Run the server for local (non-production) usage."""
+    dictConfig(make_log_config(log_to_disk=True, level=logging.INFO))
+    register_signal_handlers()
+
+    sio = init_socket_io_server(make_async=False)
+    sematic_api.wsgi_app = socketio.WSGIApp(sio, sematic_api.wsgi_app)
+    if make_daemon:
+        daemonize(False)
+
     with open(get_config().server_pid_file_path, "w+") as fp:
         fp.write(str(os.getpid()))
 
-    dictConfig(make_log_config(log_to_disk=True))
-    register_signal_handlers()
-
-    socketio.run(
+    uvicorn.run(
         sematic_api,
-        port=get_config().port,
         host=get_config().server_address,
-        debug=debug,
+        port=get_config().port,
+        log_config=make_log_config(log_to_disk=True),
+        interface="wsgi",
+        workers=None,
     )
 
 
 def parse_arguments() -> argparse.Namespace:
+    """Parse the command line arguments."""
     parser = argparse.ArgumentParser("Sematic API server")
     parser.add_argument("--env", required=False, default="local", type=str)
     parser.add_argument("--debug", required=False, default=False, action="store_true")
     return parser.parse_args()
 
 
-def run_wsgi(daemon: bool):
-    options = {
-        "bind": f"{get_config().server_address}:{get_config().port}",
-        "workers": get_config().wsgi_workers_count,
-        "worker_class": "geventwebsocket.gunicorn.workers.GeventWebSocketWorker",
-        "daemon": daemon,
-        "pidfile": get_config().server_pid_file_path,
-        "logconfig_dict": make_log_config(log_to_disk=True),
-        "certfile": os.environ.get("CERTIFICATE"),
-        "keyfile": os.environ.get("PRIVATE_KEY"),
-    }
+def app():
+    """Callable to produce a WSGI/ASGI app for a WSGI/ASGI server."""
+    dictConfig(make_log_config(log_to_disk=True, level=logging.INFO))
     register_signal_handlers()
-    SematicWSGI(sematic_api, options).run()
+
+    if os.environ.get("SEMATIC_SOCKET_IO_ONLY", "") != "":
+        sio = init_socket_io_server(make_async=True)
+        full_app = ASGIApp(sio, starlette_app)
+    else:
+        full_app = WsgiToAsgi(sematic_api)
+
+    return full_app
 
 
 if __name__ == "__main__":
@@ -203,7 +219,15 @@ if __name__ == "__main__":
     switch_env(args.env)
 
     if args.debug:
-        run_socketio(args.debug)
+        run_locally(args.debug, make_daemon=False)
 
     else:
-        run_wsgi(False)
+        # Using uvicorn.run with more than one worker appears to crash it, but
+        # using more than one worker when invoking `uvircorn` on the command line
+        # works.
+        print(
+            "To run the server in production, please launch it using uvicorn directly. "
+            "For an example call, refer to "
+            "https://github.com/sematic-ai/sematic/blob/main/docker/Dockerfile.server"
+        )
+        sys.exit(1)

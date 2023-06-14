@@ -83,6 +83,16 @@ deployment:
     periodSeconds: 5
     successThreshold: 1
     timeoutSeconds: 1
+  startup_probe:
+    failureThreshold: 90
+    httpGet:
+      path: /
+      port: http
+      scheme: HTTP
+    initialDelaySeconds: 2
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 1
 
 image:
   repository: sematic/sematic-server
