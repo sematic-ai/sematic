@@ -12,20 +12,14 @@ export type AllFilters = Partial<Record<FilterType, string[]>>;
 
 export type StatusFilters = "completed" | "failed" | "running" | "canceled";
 
-export function convertTagsFilterToRunFilters(filters: string[]): Filter | null {
+export function convertTagsFilterToRunFilters(filters: string[]): Filter[] | null {
 
     if (!!filters && filters.length > 0) {
-        const conditions = filters.map((tag) => ({
-            "tags": { contains: tag}
-        }));        
-        if (conditions.length > 1) {
-            return {
-                "OR": conditions
-            }
-        } 
-        return conditions[0];
+        return filters.map((tag) => ({
+            "tags": { contains: tag }
+        }));
     }
-    
+
     return null;
 }
 
@@ -37,33 +31,39 @@ export function convertStatusFilterToRunFilters(filters: StatusFilters[]): Filte
     if (filtersSet.has("completed")) {
         ["RESOLVED", "SUCCEEDED"].forEach((state) => {
             conditions.push({
-                "future_state": {eq: state}
+                "future_state": { eq: state }
             });
         });
     }
     if (filtersSet.has("failed")) {
         ["FAILED", "NESTED_FAILED"].forEach((state) => {
             conditions.push({
-                "future_state": {eq: state}
+                "future_state": { eq: state }
             });
         });
     }
+
     if (filtersSet.has("running")) {
         ["SCHEDULED", "RAN"].forEach((state) => {
             conditions.push({
-                "future_state": {eq: state}
+                "future_state": { eq: state }
             });
         });
     }
+
     if (filtersSet.has("canceled")) {
         conditions.push({
-            "future_state": {eq: "CANCELED"}
+            "future_state": { eq: "CANCELED" }
         });
     }
 
     if (conditions.length > 1) {
         return {
-            "OR": conditions
+            "future_state": {
+                "in": conditions.map(
+                    (condition) => condition.future_state!.eq as string
+                )
+            }
         }
     }
 
@@ -88,15 +88,19 @@ export function convertOwnersFilterToRunFilters(filters: string[]): Filter | nul
 
     if (!!filters && filters.length > 0) {
         const conditions = filters.map((owner) => ({
-            "user_id": {eq: owner}
+            "user_id": { eq: owner }
         }));
         if (conditions.length > 1) {
             return {
-                "OR": conditions
+                "user_id": {
+                    "in": conditions.map(
+                        (condition) => condition.user_id!.eq as string
+                    )
+                }
             }
-        } 
-        return conditions[0];        
+        }
+        return conditions[0];
     }
-    
+
     return null;
 }

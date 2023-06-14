@@ -75,7 +75,7 @@ export function useFiltersConverter(filters: AllFilters | null) {
         if (filters[FilterType.TAGS]) {
             const statusFilters = convertTagsFilterToRunFilters(filters[FilterType.TAGS] as StatusFilters[]);
             if (statusFilters) {
-                conditions.push(statusFilters);
+                statusFilters.forEach(filter => conditions.push(filter));
             }
         }
 
