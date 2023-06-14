@@ -1,10 +1,10 @@
-import { useHttpClient } from "@sematic/common/src/hooks/httpHooks";
-import { useRefFn } from "@sematic/common/src/utils/hooks";
-import { useLogger } from "@sematic/common/src/utils/logging";
 import { useCallback, useRef, useState } from "react";
 import useAsyncFn from "react-use/lib/useAsyncFn";
 import useList from "react-use/lib/useList";
-import { LogLineRequestResponse } from "../Payloads";
+import { LogLineRequestResponse } from "src/ApiContracts";
+import { useHttpClient } from "src/hooks/httpHooks";
+import { useRefFn } from "src/utils/hooks";
+import { useLogger } from "src/utils/logging";
 
 const MAX_LINES = 2000;
 export interface GetNextResult {

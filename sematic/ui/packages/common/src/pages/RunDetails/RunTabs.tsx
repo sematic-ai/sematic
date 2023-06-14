@@ -4,10 +4,12 @@ import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
-import { useState } from "react";
+import { selectedTabHashAtom } from "src/hooks/runHooks";
 import InputPane from "src/pages/RunDetails/artifacts/InputPane";
 import OutputPane from "src/pages/RunDetails/artifacts/OutputPane";
+import LogsPane from "src/pages/RunDetails/logs/LogsPane";
 import theme from "src/theme/new";
+import { useAtom } from "jotai";
 
 
 const StyledTabsContainer = styled(Box)`
@@ -36,17 +38,24 @@ const StyledTabPanel = styled(TabPanel)`
     margin-right: -${theme.spacing(5)};
 `;
 
+const FixedTabPanel = styled(TabPanel)`
+    flex-grow: 1;
+    overflow: hidden;
+    margin-left: -${theme.spacing(5)};
+    margin-right: -${theme.spacing(5)};
+`;
+
 interface RunTabsProps {
 }
 
 const RunTabs = (props: RunTabsProps) => {
-    const [selectedRunTab, setSelectedRunTab] = useState("output");
+    const [selectedRunTab, setSelectedRunTab] = useAtom(selectedTabHashAtom);
 
     const handleChange = (event: React.SyntheticEvent, newValue: string) => {
         setSelectedRunTab(newValue);
     };
 
-    return <TabContext value={selectedRunTab}>
+    return <TabContext value={selectedRunTab || "output"}>
         <StyledTabsContainer>
             <TabList onChange={handleChange} aria-label="Selected run tabs">
                 <Tab label="Input" value="input" />
@@ -65,9 +74,9 @@ const RunTabs = (props: RunTabsProps) => {
         <TabPanel value="source">
             <div />
         </TabPanel>
-        <TabPanel value="logs">
-            <div />
-        </TabPanel>
+        <FixedTabPanel value="logs">
+            <LogsPane />
+        </FixedTabPanel>
         <TabPanel value="ext_res">
             <div />
         </TabPanel>
