@@ -4,12 +4,18 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import UserContext from "@sematic/common/src/context/UserContext";
 import NewShell, { HeaderSelectionKey } from "@sematic/common/src/layout/Shell";
+import NewRunDetails from "@sematic/common/src/pages/RunDetails";
+import NewRunSearch from "@sematic/common/src/pages/RunSearch";
+import { getFeatureFlagValue } from "@sematic/common/src/utils/FeatureFlagManager";
+import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { useAtom } from "jotai";
 import { RESET } from "jotai/utils";
 import posthog, { Properties } from "posthog-js";
 import React, { useCallback, useMemo } from "react";
 import ReactDOM from "react-dom/client";
 import { Outlet, Route, RouterProvider, createBrowserRouter, createRoutesFromElements, redirect, useNavigate } from "react-router-dom";
+import "reactflow/dist/style.css";
+import Helper from "src/components/tests/tеst_normal";
 import Home from "./Home";
 import {
     VersionPayload,
@@ -20,7 +26,6 @@ import Health from "./components/Health";
 import Loading from "./components/Loading";
 import Shell from "./components/Shell";
 import { SnackBarProvider } from "./components/SnackBarProvider";
-import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { useAuthentication, userAtom } from "./hooks/appHooks";
 import "./index.css";
 import LoginPage from "./login";
@@ -30,10 +35,6 @@ import PipelineView from "./pipelines/PipelineView";
 import { setupPostHogOptout } from "./postHogManager";
 import { RunIndex } from "./runs/RunIndex";
 import { sha1 } from "./utils";
-import NewRunDetails from "@sematic/common/src/pages/RunDetails";
-import NewRunSearch from "@sematic/common/src/pages/RunSearch";
-import { getFeatureFlagValue } from "@sematic/common/src/utils/FeatureFlagManager";
-import Helper from "src/components/tests/tеst_normal";
 
 export const EnvContext = React.createContext<Map<string, string>>(new Map());
 
