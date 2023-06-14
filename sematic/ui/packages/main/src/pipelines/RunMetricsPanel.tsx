@@ -1,18 +1,18 @@
 import { Timeline } from "@mui/icons-material";
 import { Box, Typography, useTheme } from "@mui/material";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import Loading from "src/components/Loading";
-import { TimeseriesMetric } from "src/components/Metrics";
-import { METRIC_SCOPES } from "@sematic/common/src/constants";
-import { useListMetrics } from "@sematic/common/src/hooks/metricsHooks";
-import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
-import { getChartColor } from "src/utils";
 import {
     MetricPoint,
     runIsInTerminalState,
 } from "@sematic/common/lib/src/Models";
+import { METRIC_SCOPES } from "@sematic/common/src/constants";
+import { useListMetrics } from "@sematic/common/src/hooks/metricsHooks";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import Loading from "src/components/Loading";
+import { TimeseriesMetric } from "src/components/Metrics";
+import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
 import { metricsSocket } from "src/sockets";
+import { getChartColor } from "src/utils";
 
 export default function RunMetricsPanel() {
     const theme = useTheme();
