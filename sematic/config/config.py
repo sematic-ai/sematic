@@ -1,9 +1,11 @@
 # Standard Library
 import logging
 import os
+import re
 import sqlite3
 from dataclasses import asdict, dataclass
 from enum import Enum
+from functools import lru_cache as cache
 from typing import Optional
 from urllib.parse import urljoin
 
@@ -25,6 +27,19 @@ SQLITE_WARNING_MESSAGE = (
     f"Python is using {sqlite3.sqlite_version}. Please upgrade. "
     f"You may find this useful: https://stackoverflow.com/a/55729735/2540669"
 )
+
+# Regex for parsing the password out of the DB URL.
+# SQLAlchemy docs state that URLs generally follow RFC-1738
+# https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls
+# https://www.ietf.org/rfc/rfc1738.txt
+# Note that python's urllib parsing doesn't support arbitrary schemes
+# like postgres: or sqlite:, so we will have to parse a bit ourselves.
+_URL_NON_RESERVED_CHARS = r"[^:/@]+"
+_DB_URL_USERNAME_PASSWORD = (
+    f"{_URL_NON_RESERVED_CHARS}(:(?P<password>{_URL_NON_RESERVED_CHARS}))?"
+)
+_DB_URL_REGEX = f"{_URL_NON_RESERVED_CHARS}://{_DB_URL_USERNAME_PASSWORD}@.*"
+
 
 
 def _check_sqlite_version():
@@ -152,6 +167,26 @@ class Config:
             return server_address
         port = os.environ.get("PORT", 80)
         return f"http://{server_address}:{port}"
+
+    def __repr__(self) -> str:
+        repr = super().__repr__()
+        return _scrub_db_url(repr)
+
+    def __str__(self) -> str:
+        as_str = super().__str__()
+        return _scrub_db_password(as_str)
+
+    @cache
+    def _scrub_db_password(cls, text: str) -> str:
+        db_password = _get_db_password(self.db_url)
+        return text.replace(db_password, "<REDACTED>")
+
+
+def _get_db_password(db_url: str) -> Optional[str]:
+    match = re.match(_DB_URL_REGEX, db_url)
+    if match is None:
+        return None
+    return match.group("password")
 
 
 _SQLITE_FILE = "db.sqlite3"
