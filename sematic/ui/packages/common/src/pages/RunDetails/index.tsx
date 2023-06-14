@@ -8,7 +8,7 @@ import RunDetailsSelectionContext from "src/context/RunDetailsSelectionContext";
 import { useGraph } from "src/hooks/graphHooks";
 import useHashUpdater from "src/hooks/hashHooks";
 import { useFetchResolution } from "src/hooks/resolutionHooks";
-import { selectedRunHashAtom } from "src/hooks/runHooks";
+import { selectedPanelAtom, selectedRunHashAtom } from "src/hooks/runHooks";
 import ThreeColumns from "src/layout/ThreeColumns";
 import CenterPane from "src/pages/RunDetails/CenterPane";
 import MetaDataPane from "src/pages/RunDetails/MetaDataPane";
@@ -23,6 +23,7 @@ const RunDetails = (props: RunDetailsProps) => {
     const { rootRun } = props;
 
     const [selectedRunIdHash, setSelectedRunId] = useAtom(selectedRunHashAtom);
+    const [selectedPanel, setSelectedPanel] = useAtom(selectedPanelAtom);
 
     const [resolution, isResolutionLoading] = useFetchResolution(rootRun.id!);
     const [graph, isGraphLoading] = useGraph(rootRun.id!);
@@ -60,8 +61,10 @@ const RunDetails = (props: RunDetailsProps) => {
 
     const runDetailsSelectionContext = useMemo(() => ({
         selectedRun,
-        setSelectedRunId
-    }), [selectedRun, setSelectedRunId]);
+        setSelectedRunId,
+        selectedPanel,
+        setSelectedPanel: setSelectedPanel as (panel: string | typeof RESET | undefined) => void
+    }), [selectedRun, selectedPanel, setSelectedRunId, setSelectedPanel]);
 
     const updateHash = useHashUpdater();
 
