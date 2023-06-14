@@ -6,33 +6,67 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Typography from '@mui/material/Typography';
 import { ValueComponentProps } from "src/typeViz/common";
 
-export default function PromptResponseValueView(props: ValueComponentProps ) {
+const SUMMARY_MAX_LENGTH = 100;
+
+export default function PromptResponseValueView(props: ValueComponentProps) {
     let { valueSummary } = props;
     let { values } = valueSummary;
     const [expanded, setExpanded] = useState<string | false>(false);
+    const prompt = values.prompt;
+    const response = values.response;
 
-    const handleChange =
-      (panel: string) => (event: SyntheticEvent, isExpanded: boolean) => {
-        setExpanded(isExpanded ? panel : false);
-      };
+    const promptComponent = TextSummaryAccordion({text: prompt, textKind: "Prompt"});
+    const responseComponent = TextSummaryAccordion({text: response, textKind: "Response"});
 
     return (
-      <Accordion expanded={expanded === 'panel1'} onChange={handleChange('panel1')}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          id="panel1bh-header"
+        <div>
+            {promptComponent}
+            {responseComponent}
+        </div>
+    );
+}
+
+interface TextSummaryAccordionProps {
+    text: string;
+    textKind: string;
+}
+
+function TextSummaryAccordion(props: TextSummaryAccordionProps) {
+    let { text, textKind } = props;
+    const [expanded, setExpanded] = useState<boolean>(false);
+
+    const handleChange = () => (event: SyntheticEvent, isExpanded: boolean) => {
+        setExpanded(!expanded);
+    };
+    const textIsLong = text.length > SUMMARY_MAX_LENGTH; 
+    const shortText = (
+        textIsLong ?
+            text.substring(0, SUMMARY_MAX_LENGTH) + "..." :
+            text
+    );
+    const textJsx = text.split("\n").map((str: string) => <p>{str}</p>);
+    const textColor = textIsLong ? "text.secondary" : "text.primary";
+    const expandIcon = textIsLong ? (<ExpandMoreIcon />) : (<div/>);
+    const cursor = textIsLong ? "pointer" : "default";
+
+    return (
+        <Accordion
+            expanded={expanded && textIsLong}
+            onChange={handleChange()}
+            style={{cursor: cursor}}
         >
-          <Typography sx={{ width: '33%', flexShrink: 0 }}>
-            General settings
-          </Typography>
-          <Typography sx={{ color: 'text.secondary' }}>I am an accordion</Typography>
-          <AccordionDetails>
-            <Typography>
-              Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat.
-              Aliquam eget maximus est, id dignissim quam.
-            </Typography>
-          </AccordionDetails>
-        </AccordionSummary>
-      </Accordion>
+            <AccordionSummary
+                expandIcon={expandIcon}
+                style={{cursor: cursor}}
+            >
+                <Typography sx={{ width: "15%", flexShrink: 0, fontWeight: "bolder" }}>
+                    {textKind}
+                </Typography>
+                <Typography sx={{ color: textColor }}>{shortText}</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+                <Typography >{textJsx}</Typography>
+            </AccordionDetails>
+        </Accordion>
     );
 }
