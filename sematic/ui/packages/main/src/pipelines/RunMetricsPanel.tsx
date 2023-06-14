@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import Loading from "src/components/Loading";
 import { TimeseriesMetric } from "src/components/Metrics";
 import { METRIC_SCOPES } from "@sematic/common/src/constants";
-import { MetricsFilter, useListMetrics } from "@sematic/common/src/hooks/metricsHooks";
+import { useListMetrics } from "@sematic/common/src/hooks/metricsHooks";
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
 import { getChartColor } from "src/utils";
 import {
@@ -21,7 +21,7 @@ export default function RunMetricsPanel() {
 
     let run = selectedRun!;
 
-    const [latestBroadcastEvent, setLatestBroadcastEvent] = useState<
+    const [latestmetricPoints, setLatestMetricPoints] = useState<
     MetricPoint[] | undefined
     >();
 
@@ -29,12 +29,12 @@ export default function RunMetricsPanel() {
         const currentRunMetricPoints = args.metric_points.filter(
             (point) =>
                 point.labels["run_id"] === run.id &&
-                point.labels["__scope__"] ===  METRIC_SCOPES.run
+                point.labels["__scope__"] === METRIC_SCOPES.run
         );
 
         if (currentRunMetricPoints.length > 0)
-            setLatestBroadcastEvent(currentRunMetricPoints);
-    }, [run.id, setLatestBroadcastEvent]);
+            setLatestMetricPoints(currentRunMetricPoints);
+    }, [run.id, setLatestMetricPoints]);
 
     useEffect(() => {
         if (runIsInTerminalState(run)) return;
@@ -48,23 +48,16 @@ export default function RunMetricsPanel() {
         return { run_id: run.id, __scope__: METRIC_SCOPES.run };
     }, [run.id]);
 
-    const [payload, loading, error] = useListMetrics(labels, latestBroadcastEvent);
+    const [payload, loading, error] = useListMetrics(labels, latestmetricPoints);
 
     const metricFilters = useMemo(() => {
         if (payload === undefined) return undefined;
 
-        return payload.content.reduce((accumulator, item) => {
-            if (!item.startsWith("sematic.")) {
-                const filter: MetricsFilter = {
-                    metricName: item,
-                    labels: labels,
-                    groupBys: []
-                };
-                accumulator.push(filter);
-            }
-
-            return accumulator;
-        }, new Array<MetricsFilter>());
+        return payload.content.filter(
+            item => !item.startsWith("sematic.")
+        ).map(
+            item => ({ metricName: item, labels, groupBys: [] })
+        );
     }, [payload, labels]);
 
     return (
@@ -98,7 +91,7 @@ export default function RunMetricsPanel() {
                         <TimeseriesMetric
                             metricsFilter={metricFilter}
                             color={getChartColor(idx)}
-                            broadcastEvent={latestBroadcastEvent}
+                            latestMetricPoints={latestmetricPoints}
                         />
                     </Box>
                 ))}

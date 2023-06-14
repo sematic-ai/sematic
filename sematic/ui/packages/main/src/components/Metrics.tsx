@@ -28,10 +28,10 @@ ChartJS.register(
 export function TimeseriesMetric(props: {
     metricsFilter: MetricsFilter;
     color: string;
-    broadcastEvent?: MetricPoint[];
+    latestMetricPoints?: MetricPoint[];
 }) {
-    const { metricsFilter, color, broadcastEvent } = props;
-    const [payload, loading, error] = useMetrics(metricsFilter, broadcastEvent);
+    const { metricsFilter, color, latestMetricPoints } = props;
+    const [payload, , error] = useMetrics(metricsFilter, latestMetricPoints);
 
     const [chartData, setChartData] = useState<ChartData<"line", number[], string>>({
         labels: [],
