@@ -1,4 +1,4 @@
-import React, { SyntheticEvent, useState } from "react";
+import React, { useState, useCallback } from "react";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -14,8 +14,8 @@ export default function PromptResponseValueView(props: CommonValueViewProps) {
     const prompt = values.prompt;
     const response = values.response;
 
-    const promptComponent = TextSummaryAccordion({text: prompt, textKind: "Prompt"});
-    const responseComponent = TextSummaryAccordion({text: response, textKind: "Response"});
+    const promptComponent = (<TextSummaryAccordion text={prompt} textKind={"Prompt"} />);
+    const responseComponent = (<TextSummaryAccordion text={response} textKind={"Response"} />);
 
     return (
         <div>
@@ -34,9 +34,10 @@ function TextSummaryAccordion(props: TextSummaryAccordionProps) {
     let { text, textKind } = props;
     const [expanded, setExpanded] = useState<boolean>(false);
 
-    const handleChange = () => (event: SyntheticEvent, isExpanded: boolean) => {
+    const handleChange = useCallback(() => {
         setExpanded(!expanded);
-    };
+    }, [expanded]);
+
     const textIsLong = text.length > SUMMARY_MAX_LENGTH; 
     const shortText = (
         textIsLong ?
@@ -51,7 +52,7 @@ function TextSummaryAccordion(props: TextSummaryAccordionProps) {
     return (
         <Accordion
             expanded={expanded && textIsLong}
-            onChange={handleChange()}
+            onChange={handleChange}
             style={{cursor: cursor}}
         >
             <AccordionSummary

@@ -1,7 +1,7 @@
 import { ValueComponentProps, ViewComponentProps} from "src/typeViz/common";
 
 export default function PromptResponseCollapsedView(props: ValueComponentProps) {
-    return <span>Prompt/Response Text</span>;
+    return <span>view prompt & response</span>;
 }
 
 export function PromptResponseExpandedView(props: ViewComponentProps) {

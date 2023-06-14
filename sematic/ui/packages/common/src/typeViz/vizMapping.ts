@@ -46,7 +46,6 @@ const meta: Array<[string, RenderDetails]> = [
     ["datetime.datetime", { value: DatetimeValueView }],
     ["enum.Enum", { value: EnumValueView }],
     ["plotly.graph_objs._figure.Figure", { value: PlotlyFigureValueView, nested: PlotlyFigureExpandedView }],
-    ["sematic.types.types.prompt_response.PromptResponse", { value: PromptResponseCollapsedView, nested: PromptResponseExpandedView}],
     ["torch.utils.data.dataloader.DataLoader", { value: TorchDataLoaderValueView, nested: TorchDataFieldsView }],
     ["pandas.core.frame.DataFrame", { value: DataFrameValueView, nested: DataFrameDetailsView }],
     ["DataFrameDataPreview", { value: DataFrameSummaryView, nested: DataFrameSummaryExpandedView }],
@@ -54,6 +53,7 @@ const meta: Array<[string, RenderDetails]> = [
     ["sematic.types.types.aws.s3.S3Bucket", { value: S3BucketValueView }],
     ["sematic.types.types.aws.s3.S3Location", { value: S3LocationValueView }],
     ["sematic.types.types.image.Image", {value: ImageValueView, nested: ImageExpandedView}],
+    ["sematic.types.types.prompt_response.PromptResponse", { value: PromptResponseCollapsedView, nested: PromptResponseExpandedView}],
     ["matplotlib.figure.Figure", {value: ImageValueView, nested: ImageExpandedView}]
 ];
 
