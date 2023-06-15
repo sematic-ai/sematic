@@ -11,11 +11,20 @@ from transformers import (
     AutoTokenizer,
     PreTrainedTokenizerBase,
     Trainer,
+    TrainerCallback,
 )
 from transformers import TrainingArguments as HfTrainingArguments
 
 # Sematic
+from sematic.ee.metrics import MetricScope, log_metric
 from sematic.types import PromptResponse
+
+
+class LogMetricsCallback(TrainerCallback):
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        log_metric("step", state.global_step)
+        for metric, value in logs.items():
+            log_metric(metric, value)
 
 
 @unique
@@ -38,6 +47,7 @@ class TrainingArguments:
     num_train_epochs: int
     save_steps: int
     save_total_limit: int
+    logging_steps: int
 
     def to_hugging_face(self) -> HfTrainingArguments:
         return HfTrainingArguments(**asdict(self))
@@ -214,6 +224,7 @@ def train(
         args=train_config.training_arguments.to_hugging_face(),
         train_dataset=train_data,
         eval_dataset=eval_data,
+        callbacks=[LogMetricsCallback()],
     )
     model.config.use_cache = False
     trainer.train()

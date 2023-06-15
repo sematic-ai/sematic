@@ -47,6 +47,7 @@ TRAINING_ARGS = TrainingArguments(
     num_train_epochs=1,
     save_steps=100,
     save_total_limit=8,
+    logging_steps=100,
 )
 
 TRAINING_CONFIG = TrainingConfig(
@@ -104,6 +105,12 @@ def parse_args() -> Tuple[
         type=float,
         default=TRAINING_ARGS.learning_rate,
         help="The learning rate for the training.",
+    )
+    parser.add_argument(
+        "--logging-steps",
+        type=int,
+        default=TRAINING_ARGS.logging_steps,
+        help="Number of steps between logging metrics during training.",
     )
     parser.add_argument(
         "--max-train-samples",
@@ -201,6 +208,7 @@ def parse_args() -> Tuple[
             TRAINING_ARGS,
             learning_rate=args.learning_rate,
             num_train_epochs=args.epochs,
+            logging_steps=args.logging_steps,
         ),
         lora_config=replace(
             LORA_CONFIG,
