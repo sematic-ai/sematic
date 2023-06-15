@@ -14,6 +14,9 @@ from transformers import (
 )
 from transformers import TrainingArguments as HfTrainingArguments
 
+# Sematic
+from sematic.types import PromptResponse
+
 
 @unique
 class ModelSize(Enum):
@@ -92,7 +95,7 @@ class DatasetConfig:
 
 @dataclass
 class EvaluationResults:
-    continuations: List[Tuple[str, str]]
+    continuations: List[PromptResponse]
 
 
 @dataclass
@@ -236,7 +239,9 @@ def evaluate(
         output_text = tokenizer.batch_decode(
             output_tokens.detach().cpu().numpy(), skip_special_tokens=True
         )
-        results.append((sanitize(input_text[0]), sanitize(output_text[0])))
+        results.append(
+            PromptResponse(sanitize(input_text[0]), sanitize(output_text[0]))
+        )
     eval_results = EvaluationResults(results)
     return eval_results
 

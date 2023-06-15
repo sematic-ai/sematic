@@ -7,7 +7,7 @@ from dataclasses import replace
 from typing import Optional, Tuple
 
 # Third-party
-from sematic import torch_patch
+from sematic import torch_patch  # noqa: F401
 from huggingface_hub import login
 from peft import LoraConfig, PeftType
 
@@ -73,7 +73,8 @@ def main():
     training_config, dataset_config, export_reference = parse_args()
     resolver = LocalResolver()
     future = pipeline(training_config, dataset_config, export_reference).set(
-        tags=[f"model-size:{training_config.model_size.name}"]
+        name="Flan Summarization Fine-Tuning",
+        tags=[f"model-size:{training_config.model_size.name}"],
     )
     resolver.resolve(future)
 
