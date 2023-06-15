@@ -58,6 +58,7 @@ class OpenAIConfig(_LLMConfig):
 
 @dataclass
 class Story:
+    id: str
     created_at: str
     author: str
     title: str
@@ -108,7 +109,7 @@ def split_stories(
     stories: typing.List[typing.Dict[object, object]]
 ) -> typing.Dict[str, typing.List[Story]]:
     """
-    # Split stories into stories that have text and those don't
+    # Split stories into stories that have text and into those that don't
     - Response coming from HackerNews contains stories that
         - have the story text (which will later be summarized)
         - don't have the text but a url pointing to the page that contains story text.
@@ -128,6 +129,7 @@ def split_stories(
         # we don't want ask HN stories
         if not re.search("Ask HN", title, re.IGNORECASE):
             story = Story(
+                story_dict.get("objectID"),
                 story_dict.get("created_at"),
                 story_dict.get("author"),
                 title,
@@ -137,7 +139,7 @@ def split_stories(
             )
             if story_text:
                 text_stories.append(story)
-            # have only those stories that link to an story
+            # have only those stories that link to a story
             elif story.url:
                 to_fetch_text_stories.append(story)
     logger.info(f"Stories containing story text: {len(text_stories)}")
@@ -153,7 +155,7 @@ def scrape_story_text(stories: typing.List[Story]) -> typing.List[Story]:
     ## Input
     - **stories**: List of `Story` to scrape the text
 
-    ## Otuput
+    ## Output
     - List of `Story` containing scraped story text
     """
     fetched_stories = []
@@ -190,12 +192,12 @@ def summarize(stories: typing.List[Story], config: _LLMConfig) -> typing.List[St
         summarized_stories = []
         co = cohere.Client(config.api_key)
         for i, story in enumerate(stories):
-            time.sleep(15)  # cohere APIs are ratelimited to 5calls/min for free tire.
+            time.sleep(15)  # cohere APIs are ratelimited to 5calls/min for free tier.
             try:
                 response = co.generate(
                     model=config.model,
                     prompt=f"""
-                        {story.text}\nSummarize the article above""",
+                        {story.text}\n\nTl;dr""",
                     max_tokens=config.max_tokens,
                     temperature=0.9,
                     k=0,

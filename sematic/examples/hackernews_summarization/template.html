@@ -48,12 +48,15 @@
     <div class="article">
         <h2>{{ story.title }}</h2>
         <div class="meta">
-            <span>Author: {{ story.author }}</span>
-            <span>Published: {{ story.created_at }}</span>
-            <span>Points: {{ story.points }}</span>
+            <span>Author: <a href="https://news.ycombinator.com/user?id={{ story.author }}">{{ story.author }}</a> | </span>
+            <span>Published: {{ story.created_at }} | </span>
+            <span>Points: {{ story.points }} | </span>
+            <span><a href="https://news.ycombinator.com/item?id={{ story.id }}">Original HN Post</a></span>
         </div>
         <div class="summary">{{ story.summary }}</div>
+        {% if story.url is not none %}
         <a class="url" href="{{ story.url }}" target="_blank">Read More</a>
+        {% endif %}
     </div>
     {% endfor %}
 </body>

@@ -38,6 +38,15 @@ def main():
     )
 
     parser.add_argument(
+        "--max-tokens",
+        type=int,
+        action="store",
+        default=100,
+        help="Max number of tokens",
+        required=False,
+    )
+
+    parser.add_argument(
         "--cohere-model",
         type=str,
         action="store",
@@ -51,15 +60,6 @@ def main():
         type=str,
         action="store",
         help="API key for cohere",
-        required=False,
-    )
-
-    parser.add_argument(
-        "--cohere-max-tokens",
-        type=int,
-        action="store",
-        default=100,
-        help="Max number of tokens",
         required=False,
     )
 
@@ -80,15 +80,6 @@ def main():
         required=False,
     )
 
-    parser.add_argument(
-        "--openai-max-tokens",
-        type=int,
-        action="store",
-        default=100,
-        help="Max number of tokens",
-        required=False,
-    )
-
     args = parser.parse_args()
 
     if not args.openai_api_key and not args.cohere_api_key:
@@ -97,11 +88,11 @@ def main():
         raise ValueError("Please pass only one API key.")
     if args.openai_api_key:
         llm_config = OpenAIConfig(
-            args.openai_api_key, args.openai_model, args.openai_max_tokens
+            args.openai_api_key, args.openai_model, args.max_tokens
         )
     elif args.cohere_api_key:
         llm_config = CohereConfig(
-            args.cohere_api_key, args.cohere_model, args.cohere_max_tokens
+            args.cohere_api_key, args.cohere_model, args.max_tokens
         )
 
     hn_config = HNFetchConfig(args.past_n_days, args.max_stories)
