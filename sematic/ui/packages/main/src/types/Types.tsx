@@ -86,6 +86,12 @@ const meta: Array<[string, ComponentRenderDetails]> = [
             value: ImageValueView,
         },
     ],
+    [
+        "matplotlib.figure.Figure",
+        {
+            value: ImageValueView,
+        },
+    ],
 ];
 
 meta.forEach(([key, value]) => {

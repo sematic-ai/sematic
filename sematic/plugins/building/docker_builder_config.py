@@ -458,7 +458,8 @@ def load_build_config(script_path: str) -> BuildConfig:
     if len(build_config_files) == 0:
         raise BuildConfigurationError(
             f"Unable to find any build files corresponding to script '{script_path}'! "
-            f"Please see TODO for build configuration details!"
+            f"Please see https://docs.sematic.dev/cloud-execution/container-images#docker"
+            f" for build configuration details!"
         )
 
     return BuildConfig.load_build_config_files(build_config_files=build_config_files)
