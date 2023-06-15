@@ -13,11 +13,15 @@ from sematic.api.tests.fixtures import (  # noqa: F401
     mock_socketio,
     test_client,
 )
+from sematic.db.db import DB
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.external_resource import ExternalResource
-from sematic.db.models.factories import make_artifact
+from sematic.db.models.factories import make_artifact, make_user
+from sematic.db.models.organization import Organization
+from sematic.db.models.organization_user import OrganizationUser
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
+from sematic.db.models.user import User
 from sematic.db.queries import (
     count_jobs_by_run_id,
     count_runs,
@@ -42,6 +46,7 @@ from sematic.db.queries import (
     save_resolution,
     save_run,
     save_run_external_resource_links,
+    save_user,
 )
 from sematic.db.tests.fixtures import make_job  # noqa: F811
 from sematic.db.tests.fixtures import (  # noqa: F401
@@ -547,7 +552,7 @@ def test_save_read_jobs(test_db):  # noqa: F811
 
     with pytest.raises(
         IllegalStateTransitionError,
-        match=(r"Tried to update status from .* to .*, " r"but the latter was older"),
+        match=r"Tried to update status from .* to .*, but the latter was older",
     ):
         save_job(retry_job_from_scratch)
 
@@ -627,3 +632,82 @@ def test_get_resolution_ids_with_orphaned_jobs(test_db):  # noqa: F811
 
     resolution_ids = get_resolution_ids_with_orphaned_jobs()
     assert resolution_ids == [resolution_2.root_id]
+
+
+def test_save_user(
+    test_db: DB,  # noqa: F811
+):
+    # save the first user
+    user1 = make_user(
+        email="elvis@graceland.com",
+        first_name="Elvis",
+        last_name="Presley",
+        avatar_url="https://?:",
+    )
+    save_user(user1)
+
+    with test_db.get_session() as session:
+        users = session.query(User).all()
+        assert len(users) == 1
+        assert users[0].id is not None
+        assert users[0].email == "elvis@graceland.com"
+        assert users[0].first_name == "Elvis"
+        assert users[0].last_name == "Presley"
+        assert users[0].avatar_url == "https://?:"
+        assert users[0].api_key is not None
+
+        organizations = session.query(Organization).all()
+        assert len(organizations) == 1
+        assert organizations[0].id == users[0].id
+        assert organizations[0].name == "Elvis Presley"
+        assert organizations[0].kubernetes_namespace is None
+
+        organizations_users = session.query(OrganizationUser).all()
+        assert len(organizations_users) == 1
+        assert organizations_users[0].organization_id == organizations[0].id
+        assert organizations_users[0].user_id == users[0].id
+        assert organizations_users[0].admin is True
+
+    # save the second user
+    user2 = make_user(
+        email="michael@wonderland.com",
+        first_name="Michael",
+        last_name="Jackson",
+        avatar_url="https://B)",
+    )
+    save_user(user2)
+
+    with test_db.get_session() as session:
+        users = session.query(User).all()
+        assert len(users) == 2
+        assert users[1].id is not None
+        assert users[1].email == "michael@wonderland.com"
+        assert users[1].first_name == "Michael"
+        assert users[1].last_name == "Jackson"
+        assert users[1].avatar_url == "https://B)"
+        assert users[1].api_key is not None
+
+        organizations = session.query(Organization).all()
+        assert len(organizations) == 2
+        assert organizations[1].id == users[1].id
+        assert organizations[1].name == "Michael Jackson"
+        assert organizations[1].kubernetes_namespace is None
+
+        organizations_users = session.query(OrganizationUser).all()
+        assert len(organizations_users) == 2
+        assert organizations_users[1].organization_id == organizations[1].id
+        assert organizations_users[1].user_id == users[1].id
+        assert organizations_users[1].admin is True
+
+    # save the first user again
+    save_user(user1)
+
+    with test_db.get_session() as session:
+        users = session.query(User).all()
+        assert len(users) == 2
+
+        organizations = session.query(Organization).all()
+        assert len(organizations) == 2
+
+        organizations_users = session.query(OrganizationUser).all()
+        assert len(organizations_users) == 2

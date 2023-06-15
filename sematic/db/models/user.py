@@ -37,3 +37,15 @@ class User(Base, JSONEncodableMixin):
         default=datetime.datetime.utcnow,
         onupdate=datetime.datetime.utcnow,
     )
+
+    def get_friendly_name(self) -> str:
+        """
+        Returns a name that can be used to address the User, based on the filled values.
+        """
+        if self.first_name is not None and self.last_name is not None:
+            return f"{self.first_name} {self.last_name}"
+        if self.first_name is not None:
+            return self.first_name
+        if self.last_name is not None:
+            return self.last_name
+        return self.email

@@ -23,6 +23,8 @@ import sematic.api.endpoints.events  # noqa: F401
 import sematic.api.endpoints.external_resources  # noqa: F401
 import sematic.api.endpoints.meta  # noqa: F401
 import sematic.api.endpoints.notes  # noqa: F401
+import sematic.api.endpoints.organizations  # noqa: F401
+import sematic.api.endpoints.organizations_users  # noqa: F401
 import sematic.api.endpoints.resolutions  # noqa: F401
 import sematic.api.endpoints.runs  # noqa: F401
 import sematic.api.endpoints.storage  # noqa: F401
