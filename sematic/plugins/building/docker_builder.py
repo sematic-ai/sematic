@@ -493,7 +493,11 @@ def _generate_dockerfile_contents(
     logger.debug("Ensuring Sematic is present")
     dockerfile_contents = f"{dockerfile_contents}{_DOCKERFILE_ENSURE_SEMATIC}"
 
-    if source_build_config is not None and source_build_config.src is not None:
+    if (
+        source_build_config is not None
+        and source_build_config.src is not None
+        and len(source_build_config.src) > 0
+    ):
         logger.debug("Adding source files: %s", source_build_config.src)
         for src_glob in source_build_config.src:
             src_files = glob.glob(src_glob, recursive=True)
