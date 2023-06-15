@@ -1,9 +1,11 @@
 # Standard Library
 import logging
 import os
+import re
 import sqlite3
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, fields
 from enum import Enum
+from functools import lru_cache as cache
 from typing import Optional
 from urllib.parse import urljoin
 
@@ -25,6 +27,18 @@ SQLITE_WARNING_MESSAGE = (
     f"Python is using {sqlite3.sqlite_version}. Please upgrade. "
     f"You may find this useful: https://stackoverflow.com/a/55729735/2540669"
 )
+
+# Regex for parsing the password out of the DB URL.
+# SQLAlchemy docs state that URLs generally follow RFC-1738
+# https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls
+# https://www.ietf.org/rfc/rfc1738.txt
+# Note that python's urllib parsing doesn't support arbitrary schemes
+# like postgres: or sqlite:, so we will have to parse a bit ourselves.
+_URL_NON_RESERVED_CHARS = r"[^:/@]+"
+_DB_URL_USERNAME_PASSWORD = (
+    f"{_URL_NON_RESERVED_CHARS}(:(?P<password>{_URL_NON_RESERVED_CHARS}))?"
+)
+_DB_URL_REGEX = f"{_URL_NON_RESERVED_CHARS}://{_DB_URL_USERNAME_PASSWORD}@.*"
 
 
 def _check_sqlite_version():
@@ -152,6 +166,32 @@ class Config:
             return server_address
         port = os.environ.get("PORT", 80)
         return f"http://{server_address}:{port}"
+
+    def __repr__(self) -> str:
+        # can't use super() because dataclass __repr__ is generated
+        # dynamically rather than coming from a parent class.
+        field_str = ", ".join(
+            f"{field.name}={getattr(self, field.name)}" for field in fields(self)
+        )
+        repr = f"Config({field_str})"
+        return self._scrub_db_password(repr)
+
+    def __str__(self) -> str:
+        return repr(self)
+
+    def _scrub_db_password(self, text: str) -> str:
+        db_password = _get_db_password(self.db_url)
+        if db_password is None:
+            return text
+        return text.replace(db_password, "<REDACTED>")
+
+
+@cache
+def _get_db_password(db_url: str) -> Optional[str]:
+    match = re.match(_DB_URL_REGEX, db_url)
+    if match is None:
+        return None
+    return match.group("password")
 
 
 _SQLITE_FILE = "db.sqlite3"
