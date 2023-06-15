@@ -36,7 +36,7 @@ export function useGraph(runRootId: string): [
         return {
             runs,
             runsById: new Map(runs.map((run) => [run.id, run])), 
-            edges, 
+            edges,
             artifacts,
             artifactsById: new Map((artifacts || []).map((artifact) => [artifact.id, artifact]))
         }

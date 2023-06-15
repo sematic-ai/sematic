@@ -17,7 +17,7 @@ class MetricType(enum.IntEnum):
     # HISTOGRAM = 2  # Aggregation by counts in buckets
 
 
-MetricsLabels = Dict[str, Union[int, float, str, bool, None]]
+MetricsLabels = Dict[str, Union[str, None]]
 
 
 @dataclass(frozen=True)

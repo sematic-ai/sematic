@@ -28,7 +28,10 @@ export function fetchJSON({
     if (apiKey) {
         headers.set("X-API-KEY", apiKey);
     }
-    headers.set("X-REQUEST-ID", Math.floor(Math.random() * Math.pow(16, 9)).toString(16))
+    headers.set(
+        "X-REQUEST-ID",
+        Math.floor(Math.random() * Math.pow(16, 9)).toString(16)
+    );
 
     method = method || "GET";
 
@@ -69,14 +72,13 @@ export async function sha1(text: string) {
     return hashHex;
 }
 
-
 export function abbreviatedUserName(user: User | null): string {
     if (!user) {
         return "";
     }
-    const {first_name, last_name} = user;
+    const { first_name, last_name } = user;
 
-    return `${first_name} ${(last_name || "").substring(0, 1)}.`
+    return `${first_name} ${(last_name || "").substring(0, 1)}.`;
 }
 
 let ID = 0;
@@ -102,14 +104,14 @@ export class AsyncInvocationQueue {
 
         // Wait until all the promises before this one have been resolved
         while (this.queue.length !== 0) {
-            if (this.queue[0] === waitingPromise) { 
+            if (this.queue[0] === waitingPromise) {
                 break;
             }
             await this.queue.shift();
             // sleep
             await new Promise((resolve) => setTimeout(resolve, 50));
         }
-    
+
         // The resolve function can be used to release to the next item in the queue
         return resolve;
     }
@@ -121,4 +123,17 @@ export class AsyncInvocationQueue {
     get IsBusy() {
         return this.queue.length > 0;
     }
+}
+
+const CHART_COLORS = [
+    "rgb(255, 99, 132)",
+    "rgb(54, 162, 235)",
+    "rgb(255, 206, 86)",
+    "rgb(75, 192, 192)",
+    "rgb(153, 102, 255)",
+    "rgb(255, 159, 64)",
+];
+
+export function getChartColor(index: number): string {
+    return CHART_COLORS[index % CHART_COLORS.length];
 }
