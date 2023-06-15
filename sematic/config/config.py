@@ -3,7 +3,7 @@ import logging
 import os
 import re
 import sqlite3
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, fields
 from enum import Enum
 from functools import lru_cache as cache
 from typing import Optional
@@ -39,7 +39,6 @@ _DB_URL_USERNAME_PASSWORD = (
     f"{_URL_NON_RESERVED_CHARS}(:(?P<password>{_URL_NON_RESERVED_CHARS}))?"
 )
 _DB_URL_REGEX = f"{_URL_NON_RESERVED_CHARS}://{_DB_URL_USERNAME_PASSWORD}@.*"
-
 
 
 def _check_sqlite_version():
@@ -169,19 +168,23 @@ class Config:
         return f"http://{server_address}:{port}"
 
     def __repr__(self) -> str:
-        repr = super().__repr__()
-        return _scrub_db_url(repr)
+        field_str = ", ".join(
+            f"{field.name}={getattr(self, field.name)}" for field in fields(self)
+        )
+        repr = f"Config({field_str})"
+        return self._scrub_db_password(repr)
 
     def __str__(self) -> str:
-        as_str = super().__str__()
-        return _scrub_db_password(as_str)
+        return repr(self)
 
-    @cache
-    def _scrub_db_password(cls, text: str) -> str:
+    def _scrub_db_password(self, text: str) -> str:
         db_password = _get_db_password(self.db_url)
+        if db_password is None:
+            return text
         return text.replace(db_password, "<REDACTED>")
 
 
+@cache
 def _get_db_password(db_url: str) -> Optional[str]:
     match = re.match(_DB_URL_REGEX, db_url)
     if match is None:

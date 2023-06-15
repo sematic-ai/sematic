@@ -61,6 +61,9 @@ where DATABASE_URL is the fully-qualified URL of your Postgres database. It shou
 postgresql://<username>:<password>@<hostname>:<port>/<database>
 ```
 
+See The [SQLAlchemy docs](https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls)
+for how to escape reserved characters in the DB password if required.
+
 Now you should be able to visit http://my-remote-server.dev and see the landing page.
 
 #### Configuration
