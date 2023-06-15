@@ -168,6 +168,8 @@ class Config:
         return f"http://{server_address}:{port}"
 
     def __repr__(self) -> str:
+        # can't use super() because dataclass __repr__ is generated
+        # dynamically rather than coming from a parent class.
         field_str = ", ".join(
             f"{field.name}={getattr(self, field.name)}" for field in fields(self)
         )
