@@ -28,11 +28,11 @@ them:
 - If you have a step which is really lightweight, there's a better option than
   having a small new container: _no_ new container. This is a great case for
   [Inline Functions](./glossary.md#standalone-inline-function). See the
-  [CloudResolver docs](cloud-resolver.md#when-to-use-inline) for more.
+  [CloudResolver docs](./cloud-resolver.md#when-to-use-standalone-or-inline) for more.
 
-### Multiple images if you must
+### Multiple images, if you must
 
-There are cases where step-specific images can be warranted. For example one
+There are cases where step-specific images can be warranted. For example, one
 step uses a third-party library that comes packaged as a container image.
 
 For this reason, Sematic enables specifying multiple **base** images. This means
@@ -41,7 +41,12 @@ pipeline code will be packaged to make sure the necessary code and dependencies
 are available at runtime. Sematic will also override the entry point of the
 image with the standard Sematic worker entry point.
 
-The API to specify a **single** base image for all your pipeline is as follows in your pipeline's Bazel `BUILD` file:
+{% hint style="warning" %}
+This feature is only currently supported by the [Bazel Build System](./container-images.md#bazel).
+{% endhint %}
+
+The API to specify a **single** base image for all your pipeline is as follows in your pipeline's
+Bazel `BUILD` file:
 
 ```starlark
 load("@rules_sematic//:pipeline.bzl", "sematic_pipeline")
@@ -55,7 +60,8 @@ sematic_pipeline(
 )
 ```
 
-To specify different base images for different steps remove the `base` argument and instead pass a mapping to the `bases` argument:
+To specify different base images for different steps, remove the `base` argument and instead
+pass a mapping to the `bases` argument:
 
 ```starlark
 sematic_pipeline(
