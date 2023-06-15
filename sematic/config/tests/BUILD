@@ -1,4 +1,12 @@
 pytest_test(
+    name = "test_config",
+    srcs = ["test_config.py"],
+    deps = [
+        "//sematic/config:config",
+    ],
+)
+
+pytest_test(
     name = "test_config_dir",
     srcs = ["test_config_dir.py"],
     deps = [
