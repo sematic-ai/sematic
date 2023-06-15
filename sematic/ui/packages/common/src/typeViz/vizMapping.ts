@@ -47,6 +47,7 @@ const meta: Array<[string, RenderDetails]> = [
     ["enum.Enum", { value: EnumValueView }],
     ["plotly.graph_objs._figure.Figure", { value: PlotlyFigureValueView, nested: PlotlyFigureExpandedView }],
     ["torch.utils.data.dataloader.DataLoader", { value: TorchDataLoaderValueView, nested: TorchDataFieldsView }],
+    ["matplotlib.figure.Figure", {value: ImageValueView, nested: ImageExpandedView}],
     ["pandas.core.frame.DataFrame", { value: DataFrameValueView, nested: DataFrameDetailsView }],
     ["DataFrameDataPreview", { value: DataFrameSummaryView, nested: DataFrameSummaryExpandedView }],
     ["DataFrameDataDescribe", { value: DataFrameSummaryView, nested: DataFrameSummaryExpandedView }],
