@@ -9,6 +9,7 @@ import { AllFilters, FilterType, StatusFilters, convertMiscellaneousFilterToRunF
 import useAsync from "react-use/lib/useAsync";
 
 export const selectedRunHashAtom = atomWithHashCustomSerialization("run", "")
+export const selectedPanelAtom = atomWithHashCustomSerialization("panel", "")
 export const selectedTabHashAtom = atomWithHashCustomSerialization("tab", "")
 
 export type QueryParams = {[key: string]: string};
@@ -75,7 +76,7 @@ export function useFiltersConverter(filters: AllFilters | null) {
         if (filters[FilterType.TAGS]) {
             const statusFilters = convertTagsFilterToRunFilters(filters[FilterType.TAGS] as StatusFilters[]);
             if (statusFilters) {
-                conditions.push(statusFilters);
+                statusFilters.forEach(filter => conditions.push(filter));
             }
         }
 

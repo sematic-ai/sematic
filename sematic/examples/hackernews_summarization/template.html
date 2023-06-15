@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hacker News</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .article {
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        
+        .article h2 {
+            margin-top: 0;
+        }
+        
+        .article .meta {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .article .summary {
+            margin-bottom: 10px;
+        }
+        
+        .article .url {
+            color: #428bca;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        
+        .article .url:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hacker News Summary for {{ query }}</h1>
+    {% for story in stories %}
+    <div class="article">
+        <h2>{{ story.title }}</h2>
+        <div class="meta">
+            <span>Author: <a href="https://news.ycombinator.com/user?id={{ story.author }}">{{ story.author }}</a> | </span>
+            <span>Published: {{ story.created_at }} | </span>
+            <span>Points: {{ story.points }} | </span>
+            <span><a href="https://news.ycombinator.com/item?id={{ story.id }}">Original HN Post</a></span>
+        </div>
+        <div class="summary">{{ story.summary }}</div>
+        {% if story.url is not none %}
+        <a class="url" href="{{ story.url }}" target="_blank">Read More</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</body>
+</html>

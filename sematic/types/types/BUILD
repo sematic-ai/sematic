@@ -117,6 +117,12 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "prompt_response",
+    srcs = ["prompt_response.py"],
+    deps = [],
+)
+
+sematic_py_lib(
     name = "datetime",
     srcs = ["datetime.py"],
     deps = [],
