@@ -5,6 +5,20 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.31.0](https://pypi.org/project/sematic/0.31.0/)
+    * [feature] Support live-metrics during Sematic Function execution[^1]
+    * [feature] Have Docker-build config files use relative paths & enable project relative paths
+    * [feature] Add visualization for Prompt/Response pairs
+    * [improvement] Show the full Docker build logs when logging at the debug level
+    * [improvement] Expose all Kubernetes classes in the base `sematic` module
+    * [improvement] Optimize Docker-build time and image size
+    * [improvement] Switch from a WSGI server & gevent to an ASGI server (uvicorn)
+    * [bugfix] Ensure UI-reruns don't automatically "rerun from here" for the root run
+    * [bugfix] Fix an issue that prevented rendering of matplotlib figures
+    * [bugfix] Remove a password that could be shown in cleaner logs
+    * [bugfix] Have Docker-build pin certain versions to avoid pip resolution errors
+    * [bugfix] Fix a bug with Docker-build recursive file path globbing
+    * [bugfix] Include missing information from a local storage error message
 * [0.30.0](https://pypi.org/project/sematic/0.30.0/)
     * [feature] Grafana dashboards tailored for Sematic installable via Helm
     * [feature] User metrics SDK
