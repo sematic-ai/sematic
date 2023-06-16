@@ -6,6 +6,7 @@ import UserContext from "@sematic/common/src/context/UserContext";
 import NewShell, { HeaderSelectionKey } from "@sematic/common/src/layout/Shell";
 import NewRunDetails from "@sematic/common/src/pages/RunDetails";
 import NewRunSearch from "@sematic/common/src/pages/RunSearch";
+import PipelineList from "@sematic/common/src/pages/PipelineList";
 import { getFeatureFlagValue } from "@sematic/common/src/utils/FeatureFlagManager";
 import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { useAtom } from "jotai";
@@ -85,6 +86,9 @@ const isNewUIEnabled = getFeatureFlagValue("newui");
 const NewRoutesOverrides = isNewUIEnabled ? (<>
     <Route path="runs" element={<NewShell />} >
         <Route index element={<NewRunSearch />} handle={{[HeaderSelectionKey]: "runs"}} />
+    </Route>
+    <Route path="pipelines" element={<NewShell />} >
+        <Route index element={<PipelineList />} handle={{[HeaderSelectionKey]: "pipelines"}} />
     </Route>
     <Route path="runs/:rootId" element={<NewShell />} >
         <Route index element={<NewRunDetails />} />

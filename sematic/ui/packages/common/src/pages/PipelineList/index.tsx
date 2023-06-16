@@ -1,10 +1,10 @@
 import { useCallback, useState, useMemo } from "react";
 import TwoColumns from "src/layout/TwoColumns";
-import RunList from "src/pages/RunSearch/RunList";
-import SearchFilters from "src/pages/RunSearch/SearchFilters";
 import { AllFilters } from "src/pages/RunTableCommon/filters";
+import PipelineListPresentation from "src/pages/PipelineList/PipelineList";
+import SearchFilters from "src/pages/PipelineList/SearchFilters";
 
-const RunSearch = () => {
+function PipelineList() {
     const [filters, setFilters] = useState<AllFilters>({});
 
     const onFiltersChanged = useCallback((filters: AllFilters) => {
@@ -18,7 +18,7 @@ const RunSearch = () => {
     const filtersKey = useMemo(() => JSON.stringify(filters), [filters]);
 
     const onRenderRight = useCallback(() => {
-        return <RunList key={filtersKey} filters={filters} />;
+        return <PipelineListPresentation key={filtersKey} filters={filters} />;
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filtersKey]);
 
@@ -26,4 +26,4 @@ const RunSearch = () => {
     return <TwoColumns onRenderLeft={onRenderLeft} onRenderRight={onRenderRight} />;
 }
 
-export default RunSearch;
+export default PipelineList;
