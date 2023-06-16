@@ -83,6 +83,7 @@ const FoldingControlContainer = styled("div", {
     top: 50%;
     translate: ${({ folded }) => folded ? "0" : "50%"} -50%;
     opacity: 0.5;
+    z-index: 255;
 
     &:hover {
         opacity: 1;
