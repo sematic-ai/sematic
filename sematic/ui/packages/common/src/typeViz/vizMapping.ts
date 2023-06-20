@@ -55,7 +55,6 @@ const meta: Array<[string, RenderDetails]> = [
     ["sematic.types.types.aws.s3.S3Location", { value: S3LocationValueView }],
     ["sematic.types.types.image.Image", {value: ImageValueView, nested: ImageExpandedView}],
     ["sematic.types.types.prompt_response.PromptResponse", { value: PromptResponseCollapsedView, nested: PromptResponseExpandedView}],
-    ["matplotlib.figure.Figure", {value: ImageValueView, nested: ImageExpandedView}]
 ];
 
 export const TypeComponents = new Map<string, RenderDetails>();

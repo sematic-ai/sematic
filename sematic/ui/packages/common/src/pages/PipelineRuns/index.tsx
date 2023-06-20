@@ -70,7 +70,7 @@ function PipelineRunsFilter() {
 
     if (!functionPath) {
         throw new Error(
-            "`functionPath` is expected from the URL. This component might be used with wrong route.");
+            "`functionPath` is expected from the URL. This component might be used with the wrong route.");
     }
 
     const runFilters = useMemo(

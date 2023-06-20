@@ -37,10 +37,18 @@ const Center = styled.div`
 
     @media (max-width: 1700px) {
         min-width: 800px;
+
+        & .runs-table {
+            min-width: 800px;
+        }
     }
 
     @media (max-width: 1200px) {
         min-width: 700px;
+
+        & .runs-table {
+            min-width: 700px;
+        }
     }
 `;
 

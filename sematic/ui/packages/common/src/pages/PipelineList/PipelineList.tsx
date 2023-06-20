@@ -47,7 +47,7 @@ const columns = [
     columnHelper.accessor(({ run }) => run.tags, {
         meta: {
             columnStyles: {
-                width: "22.5352%",
+                width: "22.5352%", // this is the minWidth(160px) divided by the sum of the minWidths of all other columns.
                 minWidth: "160px"
             }
         },
@@ -57,7 +57,7 @@ const columns = [
     columnHelper.accessor(extendedRun => extendedRun, {
         meta: {
             columnStyles: {
-                width: "14.0845%",
+                width: "14.0845%", // this is the minWidth(100px) divided by the sum of the minWidths of all other columns.
                 minWidth: "100px"
             }
         },
@@ -67,7 +67,7 @@ const columns = [
     columnHelper.accessor(({ metadata, run }) => [run.id, metadata], {
         meta: {
             columnStyles: {
-                width: "14.0845%",
+                width: "14.0845%", // this is the minWidth(100px) divided by the sum of the minWidths of all other columns.
                 minWidth: "100px"
             }
         },
@@ -82,7 +82,7 @@ const columns = [
     columnHelper.accessor(({ metadata, run }) => [run.id, metadata], {
         meta: {
             columnStyles: {
-                width: "14.0845%",
+                width: "14.0845%", // this is the minWidth(100px) divided by the sum of the minWidths of all other columns.
                 minWidth: "100px"
             }
         },
@@ -97,7 +97,7 @@ const columns = [
     columnHelper.accessor(({ metadata }) => metadata, {
         meta: {
             columnStyles: {
-                width: "14.0845%",
+                width: "16.9014%", // this is the minWidth(120px) divided by the sum of the minWidths of all other columns.
                 minWidth: "120px"
             }
         },
@@ -107,7 +107,7 @@ const columns = [
     columnHelper.accessor(extendedRun => extendedRun, {
         meta: {
             columnStyles: {
-                width: "21.1268%",
+                width: "21.1268%", // this is the minWidth(150px) divided by the sum of the minWidths of all other columns.
                 minWidth: "150px"
             }
         },

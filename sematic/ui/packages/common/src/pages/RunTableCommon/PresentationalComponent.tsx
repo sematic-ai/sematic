@@ -51,9 +51,6 @@ const EmptyStateContainer = styled.div`
     align-items: center;
 `;
 
-const StyledTableComponent = styled(TableComponent)`
-    min-width: 850px;
-` as typeof TableComponent;
 
 interface RunsTableTemplateProps<T> {
     isLoading: boolean;
@@ -102,7 +99,7 @@ export function RunsTableTemplate<T>(props: RunsTableTemplateProps<T>) {
         <Stats>
             <Typography variant={"bold"}>{totalRunsText}</Typography>
         </Stats>
-        <StyledTableComponent table={tableInstance} getRowLink={getRowLink} />
+        <TableComponent table={tableInstance} getRowLink={getRowLink} className={"runs-table"} />
         {emtpyStateComponent}
         <Pagination>
             <IconButton aria-label="previous" disabled={currentPage === 0} onClick={onPreviousPageClicked}>

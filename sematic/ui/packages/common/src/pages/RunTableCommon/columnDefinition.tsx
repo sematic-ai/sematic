@@ -19,7 +19,7 @@ export const IdColumnDef = (columnHelper: ColumnHelper<Run>) =>
     columnHelper.accessor("id", {
         meta: {
             columnStyles: {
-                width: "5.923%",
+                width: "5.923%", // this is the remainder value of 1 substracting the percentage of all other columns
             }
         },
         header: "ID",
@@ -30,7 +30,7 @@ export const SubmissionTimeColumnDef = (columnHelper: ColumnHelper<Run>) =>
     columnHelper.accessor("created_at", {
         meta: {
             columnStyles: {
-                width: "12.3396%",
+                width: "12.3396%", // this is the minWidth(150px) divided by the sum of the minWidths of all other columns.
                 minWidth: "150px"
             }
         },
@@ -57,7 +57,7 @@ export const TagsColumnDef = (columnHelper: ColumnHelper<Run>) =>
     columnHelper.accessor("tags", {
         meta: {
             columnStyles: {
-                width: "14.5114%",
+                width: "14.5114%", // this is the minWidth(160px) divided by the sum of the minWidths of all other columns.
                 minWidth: "160px"
             }
         },
@@ -72,7 +72,7 @@ export const OwnerColumnDef = (columnHelper: ColumnHelper<Run>) =>
     }), {
         meta: {
             columnStyles: {
-                width: "8.39092%",
+                width: "8.39092%", // this is the minWidth (100px) divided by the sum of the minWidths of all other columns.
                 maxWidth: "max(100px, 8.39092%)",
             }
         },
@@ -89,7 +89,7 @@ export const StatusColumnDef = (columnHelper: ColumnHelper<Run>) =>
     }), {
         meta: {
             columnStyles: {
-                width: "15.7947%",
+                width: "15.7947%", // this is the minWidth (200px) divided by the sum of the minWidths of all other columns.
                 minWidth: "200px"
             }
         },
