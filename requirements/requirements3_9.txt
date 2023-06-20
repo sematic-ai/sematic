@@ -2053,6 +2053,7 @@ pyyaml==6.0 \
     #   peft
     #   pytorch-lightning
     #   ray
+    #   responses
     #   transformers
     #   uvicorn
 ray[air,default]==2.3.0 \
@@ -2193,6 +2194,7 @@ requests==2.28.2 \
     #   openai
     #   ray
     #   requests-oauthlib
+    #   responses
     #   snowflake-connector-python
     #   tensorboard
     #   torchvision
@@ -2203,6 +2205,10 @@ requests-oauthlib==1.3.1 \
     # via
     #   google-auth-oauthlib
     #   kubernetes
+responses==0.23.1 \
+    --hash=sha256:8a3a5915713483bf353b6f4079ba8b2a29029d1d1090a503c70b0dc5d9d0c7bd \
+    --hash=sha256:c4d9aa9fc888188f0c673eff79a8dadbe2e75b7fe879dc80a221a06e0a68138f
+    # via -r requirements/requirements.in
 rsa==4.9 \
     --hash=sha256:90260d9058e514786967344d0ef75fa8727eed8a7d2e43ce9f4bcf1b536174f7 \
     --hash=sha256:e38464a49c6c85d7f1351b0126661487a7e0a14a50f1675ec50eb34d4f20ef21
@@ -2611,6 +2617,10 @@ types-pytz==2022.7.1.0 \
     --hash=sha256:10ec7d009a02340f1cecd654ac03f0c29b6088a03b63d164401fc52df45936b2 \
     --hash=sha256:918f9c3e7a950ba7e7d6f84b18a7cacabc8886cb7125fb1927ff1c752b4b59de
     # via pandas-stubs
+types-pyyaml==6.0.12.10 \
+    --hash=sha256:662fa444963eff9b68120d70cda1af5a5f2aa57900003c2006d7626450eaae5f \
+    --hash=sha256:ebab3d0700b946553724ae6ca636ea932c1b0868701d4af121630e78d695fc97
+    # via responses
 typing-extensions==4.5.0 \
     --hash=sha256:5cb5f4a79139d699607b3ef622a1dedafa84e115ab0024e0d9c044a9479ca7cb \
     --hash=sha256:fb33085c39dd998ac16d1431ebc293a8b3eedd00fd4a32de0ff79002c19511b4
@@ -2638,6 +2648,7 @@ urllib3==1.26.14 \
     #   htmldate
     #   kubernetes
     #   requests
+    #   responses
     #   snowflake-connector-python
     #   trafilatura
 uvicorn[standard]==0.20.0 \
