@@ -116,11 +116,27 @@ delta, but only:
 when performing the upgrade.
 {% endhint %}
 
+### <v0.30.0 to v0.31.0
+
+Normally Sematic tries to preserve a server/client compatibility support window
+of at least two releases. In other words, a client at release `N` should be able
+to execute against a server at release `N+2`. However, for this release the
+server can only support clients at v0.30.0 (the previous release). 
+
+The python webserver running on Kubernetes has also changed (from gunicorn to
+uvicorn), which has increased the startup latency for new server pods.
+
 ### vX.X.X to v0.30.0
 
 Default Kubernetes deployments of the Sematic server will now run with 2 pods
 for the API server, in order to enable high availability.  As such, the memory
 and CPU requests and limits for each pod has been halved.
+
+Sematic clients at versions <v0.30.0 may break when used with the server at
+version 0.30.0, so it is recommended that you follow the procedure described
+in
+[Upgrading the server past supported client versions](#upgrading-the-server-past-supported-client-versions)
+when deploying this release.
 
 ### v0.28.X to v0.29.0
 

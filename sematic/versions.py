@@ -23,7 +23,7 @@ CURRENT_VERSION = (0, 31, 0)
 # at the CURRENT_VERSION. Should be updated any time a breaking change
 # is made to the web API. If there is a breaking change, there should
 # be a TODO below
-MIN_CLIENT_SERVER_SUPPORTS = (0, 29, 0)
+MIN_CLIENT_SERVER_SUPPORTS = (0, 30, 0)
 
 # Version of the settings file schema
 SETTINGS_SCHEMA_VERSION = 1
