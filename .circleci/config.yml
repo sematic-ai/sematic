@@ -20,6 +20,7 @@ commands:
     steps:
       - python/install-packages:
           pkg-manager: pip
+          args: --no-cache-dir
           app-dir: ~/project/requirements  # If you're requirements.txt isn't in the root directory.
           pip-dependency-file: ci-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
       - run:
