@@ -1,13 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
-import { useLogStream } from "src/hooks/logHooks";
 import styled from "@emotion/styled";
+import { Button } from "@mui/material";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import { useTheme } from "@mui/material/styles";
-import Alert from "@mui/material/Alert";
-import { useRunPanelContext, useRunPanelLoadingIndicator } from "src/hooks/runDetailsHooks";
-import { Button } from "@mui/material";
-import { theme } from "@sematic/common/src/theme/mira";
-import { useScrollTracker } from "src/hooks/scrollingHooks";
+import { useLogStream } from "@sematic/common/src/hooks/logHooks";
+import { useScrollTracker } from "@sematic/common/src/hooks/scrollingHooks";
+import { useCallback, useEffect, useState } from "react";
+import theme from "src/theme/new";
 
 const Container = styled(Box)`
     display: flex;
@@ -33,7 +32,7 @@ const StyledButton = styled(Button)`
 
 const JumpToBeginningButton = styled(StyledButton)`
     position: sticky;
-    top: 118px;
+    top: 0;
 `;
 
 enum Buttons {
@@ -47,14 +46,15 @@ const loadingText = "loading...";
 interface BidirectionalLogViewProps {
     logSource: string;
     filterString: string;
+    setIsLoading: (isLoading: boolean) => void;
+    setFooterRenderProp: (renderProp: (() => JSX.Element) | null) => void;
+    scrollContainerRef: React.MutableRefObject<HTMLElement | undefined>;
+    LineTemplate?: React.FC<LineTemplateProps>;
 }
 
 const BidirectionalLogView = (props: BidirectionalLogViewProps) => {
-    const { logSource, filterString } = props;
-
-    const theme = useTheme();
-
-    const { setFooterRenderProp, scrollContainerRef } = useRunPanelContext();
+    const { logSource, filterString, setIsLoading, setFooterRenderProp, scrollContainerRef,
+        LineTemplate = DefaultLineTemplate} = props;
 
     const { lines, isLoading, error, canContinueBackward, canContinueForward,
         fetchBeginning, fetchEnd, getNext, getPrev } = useLogStream(logSource, filterString);
@@ -110,8 +110,6 @@ const BidirectionalLogView = (props: BidirectionalLogViewProps) => {
 
     }, [canContinueForward, lastPressedButton, isLoading, onJumpToEnd]);
 
-    useRunPanelLoadingIndicator(isLoading);
-
     useEffect(() => {
         fetchBeginning();
         // eslint-disable-next-line react-hooks/exhaustive-deps 
@@ -125,9 +123,13 @@ const BidirectionalLogView = (props: BidirectionalLogViewProps) => {
         }
     }, [setFooterRenderProp, renderNextButton]);
 
+    useEffect(() => {
+        setIsLoading(isLoading);
+    }, [isLoading, setIsLoading]);
+
     return <Container>
         {canContinueBackward && <>
-            <JumpToBeginningButton onClick={onJumpToBeginning} disabled={isLoading}>{
+            <JumpToBeginningButton onClick={onJumpToBeginning} disabled={isLoading} className={"jump-to-beginning"}>{
                 isLoading && lastPressedButton === Buttons.JumpToBeginning ? loadingText : "jump to beginning"
             }</JumpToBeginningButton>
             <StyledButton onClick={onGetPrev} disabled={isLoading}>{
@@ -141,22 +143,7 @@ const BidirectionalLogView = (props: BidirectionalLogViewProps) => {
             </Alert>}
 
             {lines.map((line, index) => (
-                <Box
-                    sx={{
-                        borderTop: 1,
-                        borderColor: theme.palette.grey[200],
-                        fontSize: 12,
-                        py: 2,
-                        pl: 1,
-                        color: theme.palette.grey[800],
-                        backgroundColor:
-                            index % 2 === 0 ? "white" : theme.palette.grey[50],
-                        paddingRight: 1
-                    }}
-                    key={index}
-                >
-                    <code>{line}</code>
-                </Box>
+                <LineTemplate key={index} index={index} line={line} />
             ))}
         </ScrollableContainer>
         {canContinueForward && <>
@@ -171,5 +158,56 @@ const BidirectionalLogView = (props: BidirectionalLogViewProps) => {
         }
     </Container>;
 };
+
+interface LineTemplateProps {
+    line: string;
+    index: number;
+}
+
+export const DefaultLineTemplate = ({ line, index }: LineTemplateProps) => {
+    const theme = useTheme();
+    return <Box
+        sx={{
+            borderTop: 1,
+            borderColor: theme.palette.grey[200],
+            fontSize: 12,
+            py: 2,
+            pl: 1,
+            color: theme.palette.grey[800],
+            backgroundColor:
+                index % 2 === 0 ? "white" : theme.palette.grey[50],
+            paddingRight: 1
+        }}
+        key={index}
+    >
+        <code>{line}</code>
+    </Box>;
+}
+
+const StyledConciseLine = styled(Box)`
+    border-bottom: 1px solid ${theme.palette.grey[200]};
+
+    &:nth-child(even) {
+        background-color: ${theme.palette.grey[50]};
+    }
+`;
+
+export const ConciseLineTemplate = ({ line, index }: LineTemplateProps) => {
+    const theme = useTheme();
+    return <StyledConciseLine
+        sx={{
+            fontSize: 12,
+            color: theme.palette.grey[800],
+            paddingRight: 1,
+            paddingLeft: 5,
+            minHeight: "25px",
+            display: "flex",
+            alignItems: "center"
+        }}
+        key={index}
+    >
+        <code>{line}</code>
+    </StyledConciseLine>;
+}
 
 export default BidirectionalLogView
