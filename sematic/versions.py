@@ -12,10 +12,8 @@ logger = logging.getLogger(__name__)
 CURRENT_VERSION = (0, 31, 0)
 
 # TO DEPRECATE
-# 0.30.0
-# - https://github.com/sematic-ai/sematic/issues/700
+# 0.32.0
 # - https://github.com/sematic-ai/sematic/issues/710
-# 0.31.0
 # - https://github.com/sematic-ai/sematic/issues/785
 
 
