@@ -153,6 +153,7 @@ sematic/ui/node_modules
 
 # IDEA
 .idea/*
+.ijwb/*
 
 # misc
 .DS_Store
