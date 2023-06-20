@@ -1,19 +1,23 @@
 import styled from "@emotion/styled";
-import { useMemo } from "react";
+import { useMemo, useCallback, useContext } from "react";
 import { NodeProps, Position } from "reactflow";
 import { getRunStateChipByState, getRunStateColorByState } from "src/component/RunStateChips";
 import { useHasIncoming } from "src/hooks/dagHooks";
-import { LEFT_NODE_MAX_WIDTH, StyledHandle } from "src/pages/RunDetails/dag/common";
+import { DagViewServiceContext, LEFT_NODE_MAX_WIDTH, StyledHandle } from "src/pages/RunDetails/dag/common";
 import { SPACING } from "src/pages/RunDetails/dag/dagLayout";
 import theme from "src/theme/new";
 
-const LeftNodeContainer = styled.div`
+const LeftNodeContainer = styled("div", {
+    shouldForwardProp: (prop) => prop !== "selected"
+}) <{
+    selected?: boolean;
+}>`
     width: max-content;
     max-width: ${LEFT_NODE_MAX_WIDTH}px;
     height: 50px;
     display: flex;
     align-items: center;
-    border: 1px solid #ccc;
+    border: ${({ selected }) => selected ? 2 : 1}px solid #ccc;
     border-radius: 4px;
 `;
 
@@ -32,12 +36,20 @@ export const LabelContainer = styled.div`
 
 function LeafNode(props: NodeProps) {
     const { data } = props;
-    const { run } = data;
+    const { run, selected } = data;
     const stateChip = useMemo(() => getRunStateChipByState(run.future_state), [run.future_state]);
     const color = useMemo(() => getRunStateColorByState(run.future_state), [run.future_state]);
     const hasIncoming = useHasIncoming();
 
-    return <LeftNodeContainer style={{ paddingRight: `${SPACING}px`, borderColor: color }}>
+    const { onNodeClick } = useContext(DagViewServiceContext)
+
+    const onClick = useCallback(() => {
+        onNodeClick(run.id);
+    }, [onNodeClick, run]);
+
+    return <LeftNodeContainer selected={selected} style={{ paddingRight: `${SPACING}px`, borderColor: color }}
+        onClick={onClick}
+    >
         {hasIncoming && <StyledHandle type="target" position={Position.Top} isConnectable={false} id={"t"} />}
         <LabelContainer>
             {stateChip}
