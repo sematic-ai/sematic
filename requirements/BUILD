@@ -11,6 +11,7 @@ compile_pip_requirements(
     size = "large",
     timeout = "long",
     extra_args = [
+        "--resolver=backtracking",
         "--allow-unsafe",
     ],
     requirements_in = "//requirements:requirements.in",
@@ -23,6 +24,7 @@ compile_pip_requirements(
     size = "large",
     timeout = "long",
     extra_args = [
+        "--resolver=backtracking",
         "--allow-unsafe",
     ],
     requirements_in = "//requirements:requirements.in",
@@ -35,6 +37,7 @@ compile_pip_requirements(
     size = "large",
     timeout = "long",
     extra_args = [
+        "--resolver=backtracking",
         "--allow-unsafe",
     ],
     requirements_in = "//requirements:requirements.in",

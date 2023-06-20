@@ -119,11 +119,6 @@ aiosignal==1.3.1 \
 anyio==3.6.2 \
     --hash=sha256:25ea0d673ae30af41a0c442f81cf3b38c7e79fdc7b60335a4c14e05eb0947421 \
     --hash=sha256:fbbe32bd270d2a2ef3ed1c5d45041250284e31fc0a4df4a5a6071842051a51e3
-    # via starlette
-appnope==0.1.3 \
-    --hash=sha256:02bd91c4de869fbb1e1c50aafc4098827a7a54ab2f39d9dcba6c9547ed920e24 \
-    --hash=sha256:265a455292d0bd8a72453494fa24df5a11eb18373a60c7c0430889f22548605e
-    # via ipython
     # via
     #   starlette
     #   watchfiles
@@ -2216,7 +2211,6 @@ six==1.16.0 \
     #   flask-cors
     #   google-auth
     #   gpustat
-    #   grpcio
     #   kubernetes
     #   patsy
     #   python-dateutil
@@ -2751,5 +2745,4 @@ setuptools==58.1.0 \
     #   kubernetes
     #   nvidia-cublas-cu11
     #   nvidia-cuda-runtime-cu11
-    #   snowflake-connector-python
     #   tensorboard
