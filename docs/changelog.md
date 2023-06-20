@@ -9,6 +9,7 @@ with nothing else on the line.
     * [feature] Enable remote execution using pure-Docker, without bazel
     * [feature] Support live-metrics during Sematic Function execution[^1]
     * [feature] Add visualization for Prompt/Response pairs
+    * [example] Add Hacker News summarization example
     * [improvement] Expose all Kubernetes classes in the base `sematic` module
     * [improvement] Switch from a WSGI server & gevent to an ASGI server (uvicorn)
     * [bugfix] Ensure UI-reruns don't automatically "rerun from here" for the root run
