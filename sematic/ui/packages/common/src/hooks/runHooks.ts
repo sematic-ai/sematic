@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAsyncFn from "react-use/lib/useAsyncFn";
 import { Run } from "src/Models";
-import { AllFilters, FilterType, StatusFilters, convertMiscellaneousFilterToRunFilters, convertOwnersFilterToRunFilters, convertStatusFilterToRunFilters, convertTagsFilterToRunFilters } from "src/pages/RunSearch/filters/common";
+import { AllFilters, FilterType, StatusFilters, convertMiscellaneousFilterToRunFilters, convertOwnersFilterToRunFilters, convertStatusFilterToRunFilters, convertTagsFilterToRunFilters } from "src/pages/RunTableCommon/filters";
 import useAsync from "react-use/lib/useAsync";
 
 export const selectedRunHashAtom = atomWithHashCustomSerialization("run", "")
