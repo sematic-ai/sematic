@@ -30,7 +30,6 @@ flask
 flask-cors
 cloudpickle
 requests
-responses==0.20.0  # 0.21.0 breaks mypy checks https://github.com/getsentry/responses/issues/556
 werkzeug
 python-dateutil
 starlette
@@ -59,6 +58,8 @@ xgboost
 trafilatura
 cohere
 openai
+accelerate
+huggingface-hub
 
 # Types
 ## Snowflake
@@ -66,6 +67,9 @@ snowflake-connector-python
 pyOpenSSL
 pyarrow
 python-magic
+peft
+transformers
+datasets
 
 # Cloud execution
 kubernetes
