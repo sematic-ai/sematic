@@ -26,7 +26,7 @@ commands:
           # This is necessary because some packages have platform-dependent dependencies
           # For example sqlalchemy requires greenlet only on certain platforms
           name: Freeze requirements
-          command: pip-compile --allow-unsafe ~/project/requirements/requirements.in > ~/project/requirements/requirements.txt
+          command: pip-compile --resolver=backtracking --allow-unsafe ~/project/requirements/requirements.in > ~/project/requirements/requirements.txt
   
   install-npm-dependencies:
     description: Install NPM dependencies in the UI folder
