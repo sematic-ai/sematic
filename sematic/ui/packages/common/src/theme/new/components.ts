@@ -297,6 +297,28 @@ const components: Components = {
                 "textAlign": "left",
             })) as any
         }
+    },
+    MuiMenu: {
+        styleOverrides: {
+            "list": {
+                "padding": "0",
+            }
+        }
+    },
+    MuiMenuItem: {
+        styleOverrides: {
+            root: (({ theme }: { theme: Theme }) => ({
+                "fontSize": `${theme.typography.fontSize}px`,
+                "textAlign": "left",
+                "width": "300px",
+                "height": "50px",
+                "fontWeight": theme.typography.fontWeightBold,
+                "&:hover": {
+                    "backgroundColor": theme.palette.primary.main,
+                    "color": theme.palette.white.main,
+                }
+            })) as any
+        }
     }
 }
 
