@@ -13,3 +13,11 @@ pytest_test(
         "//sematic/types/types/huggingface:model_reference",
     ],
 )
+
+pytest_test(
+    name = "test_stored_model",
+    srcs = ["test_stored_model.py"],
+    deps = [
+        "//sematic/types/types/huggingface:stored_model",
+    ],
+)
