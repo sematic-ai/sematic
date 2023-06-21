@@ -6,7 +6,7 @@ from typing import Any, Dict, Union
 import pytest
 
 # Sematic
-from sematic.types.types.huggingface.stored_model import StoredModel
+from sematic.types.types.huggingface.stored_model import HuggingFaceStoredModel
 
 # get_base_model
 # save_pretrained
@@ -49,7 +49,7 @@ class PeftModel:
     @classmethod
     def from_pretrained(
         cls, base_model: Model, path: str, device_map: Union[str, Dict[str, Any]]
-    ) -> "Model":
+    ) -> "PeftModel":
         return PeftModel(state=_MOCK_STORAGE[path], base_model=base_model)
 
     def get_base_model(self) -> Model:
@@ -59,7 +59,7 @@ class PeftModel:
 def test_store_load_non_peft(mock_storage):
     storage_path = "/some/path/for/model"
     model = Model(state="foo")
-    stored_model = StoredModel.store(model, storage_path)
+    stored_model = HuggingFaceStoredModel.store(model, storage_path)
     loaded = stored_model.load(device_map="auto")
     assert loaded == model
 
@@ -68,6 +68,6 @@ def test_store_load_peft(mock_storage):
     storage_path = "/some/path/for/model"
     base_model = Model(state="foo")
     peft_model = PeftModel(state="bar", base_model=base_model)
-    stored_model = StoredModel.store(peft_model, storage_path)
+    stored_model = HuggingFaceStoredModel.store(peft_model, storage_path)
     loaded = stored_model.load(device_map="auto")
     assert loaded == peft_model

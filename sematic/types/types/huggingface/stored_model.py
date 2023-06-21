@@ -13,7 +13,7 @@ _FULL_MODEL_SUFFIX = "full"
 
 
 @dataclass(frozen=True)
-class StoredModel:
+class HuggingFaceStoredModel:
     """A HuggingFace model stored in storage.
 
     May be a peft fine-tuning of a model.
@@ -35,7 +35,7 @@ class StoredModel:
     peft_model_type: Optional[str] = None
 
     @classmethod
-    def store(cls, model, directory: str) -> "StoredModel":
+    def store(cls, model, directory: str) -> "HuggingFaceStoredModel":
         directory = os.path.expanduser(directory)
         model_type: str = _type_to_str(type(model))
         peft_type: Optional[str] = None
@@ -49,7 +49,7 @@ class StoredModel:
         else:
             model.save_pretrained(os.path.join(directory, _FULL_MODEL_SUFFIX))
 
-        return StoredModel(
+        return HuggingFaceStoredModel(
             path=os.path.abspath(directory),
             model_type=model_type,
             peft_model_type=peft_type,

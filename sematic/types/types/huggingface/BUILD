@@ -3,6 +3,8 @@ sematic_py_lib(
     srcs = ["__init__.py"],
     deps = [
         ":dataset_reference",
+        ":model_reference",
+        ":stored_model",
     ],
 )
 
