@@ -12,6 +12,7 @@ import DatetimeValueView from "src/types/datatime";
 import DictValueView from "src/types/dict";
 import EnumValueView from "src/types/enum";
 import FloatValueView from "src/types/float";
+import { HuggingFaceDatasetReferenceValueView, HuggingFaceModelReferenceValueView } from "src/types/hugging_face_reference";
 import ImageValueView from "src/types/image";
 import IntValueView from "src/types/int";
 import LinkValueView from "src/types/link";
@@ -67,6 +68,8 @@ const meta: Array<[string, ComponentRenderDetails]> = [
             value: DataFrameValueView,
         },
     ],
+    ["sematic.types.types.huggingface.model_reference.HuggingFaceModelReference", { value: HuggingFaceModelReferenceValueView }],
+    ["sematic.types.types.huggingface.dataset_reference.HuggingFaceDatasetReference", { value: HuggingFaceDatasetReferenceValueView }],
     ["sematic.types.types.prompt_response.PromptResponse", { value: PromptResponseValueView }],
     [
         "sematic.types.types.aws.s3.S3Bucket",
