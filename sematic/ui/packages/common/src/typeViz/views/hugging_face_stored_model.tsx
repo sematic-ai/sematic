@@ -16,7 +16,7 @@ function HuggingFaceStoredModelView(props: ValueComponentProps | ViewComponentPr
     const modelTypeShortName = modelTypePieces[modelTypePieces.length - 1];
     const contents = (
         short ?
-            modelTypeShortName :
+            "model" :
             (<span><strong>{modelTypeShortName}</strong>: {values.path}</span>)
     );
 

@@ -88,7 +88,7 @@ function HuggingFaceButton(props: {
   
     const elementRef = useTextSelection<HTMLDivElement>();
     if(short) {
-        slug = repo;
+        slug = "";
     }
 
     return <Tooltip title="View on Hugging Face">
