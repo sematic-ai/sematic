@@ -18,6 +18,7 @@ const StyledSection = styled(Section)`
 
 const ScrollableStyledSection = styled(StyledSection)`
     margin-top: 0;
+    padding-top: 0;
     margin-bottom: ${theme.spacing(3)};
     overflow-y: auto;
     overflow-x: hidden;
