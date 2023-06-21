@@ -40,10 +40,18 @@ const Center = styled.div`
 
     @media (max-width: 1700px) {
         min-width: 800px;
+
+        & .runs-table {
+            min-width: 800px;
+        }
     }
 
     @media (max-width: 1200px) {
         min-width: 700px;
+
+        & .runs-table {
+            min-width: 700px;
+        }
     }
 `;
 
@@ -98,6 +106,7 @@ const FoldingControlContainer = styled("div", {
     top: 50%;
     translate: ${({ folded }) => folded ? "0" : "50%"} -50%;
     opacity: 0.5;
+    z-index: 255;
 
     &:hover {
         opacity: 1;
