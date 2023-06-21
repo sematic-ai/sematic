@@ -4,11 +4,12 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 # Sematic
 from sematic.db.models.base import Base
+from sematic.db.models.mixins.has_organization_mixin import HasOrganizationMixin
 from sematic.metrics.metric_point import MetricsLabels, MetricType
 from sematic.utils.db import IntEnum
 
 
-class MetricLabel(Base):
+class MetricLabel(HasOrganizationMixin, Base):
     """
     A unique set of labels for a given metric name.
 
@@ -25,6 +26,8 @@ class MetricLabel(Base):
         A key/value dictionary of labels.
     metric_type: MetricType
         The metric's type.
+    organization_id: Optional[str]
+        The organization under which this resolution was submitted.
     """
 
     __tablename__ = "metric_labels"

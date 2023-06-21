@@ -32,6 +32,7 @@ from sqlalchemy.orm import validates
 # Sematic
 from sematic.db.models.base import Base
 from sematic.db.models.git_info import GitInfo
+from sematic.db.models.mixins.has_organization_mixin import HasOrganizationMixin
 from sematic.db.models.mixins.has_user_mixin import HasUserMixin
 from sematic.db.models.mixins.json_encodable_mixin import (
     ENUM_KEY,
@@ -155,7 +156,7 @@ class ResolutionKind(Enum):
     KUBERNETES = "KUBERNETES"  # for detached mode
 
 
-class Resolution(HasUserMixin, Base, JSONEncodableMixin):
+class Resolution(HasUserMixin, HasOrganizationMixin, Base, JSONEncodableMixin):
     """Represents a session of a resolver.
 
     Attributes
@@ -187,6 +188,8 @@ class Resolution(HasUserMixin, Base, JSONEncodableMixin):
         be cached, as long as they also have the `cache` flag activated.
     user_id:
         User who submitted this resolution.
+    organization_id:
+        The organization under which this resolution was submitted.
     run_command:
         The CLI command used to launch this resolution, if applicable.
     build_config:

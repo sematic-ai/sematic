@@ -181,6 +181,84 @@ CREATE TABLE organizations_users (
     FOREIGN KEY(organization_id) REFERENCES organizations (id),
     FOREIGN KEY(user_id) REFERENCES users (id)
 );
+CREATE TABLE IF NOT EXISTS "resolutions" (
+                    root_id TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    container_image_uri TEXT,
+                    settings_env_vars JSONB NOT NULL,
+                    git_info_json JSONB,
+                    container_image_uris JSONB,
+                    client_version TEXT,
+                    cache_namespace TEXT,
+                    user_id character(32),
+                    run_command TEXT,
+                    build_config TEXT,
+                    organization_id character(32),
+
+                    PRIMARY KEY (root_id),
+                    FOREIGN KEY (root_id) REFERENCES runs(id),
+                    FOREIGN KEY (user_id) REFERENCES users(id),
+                    FOREIGN KEY (organization_id) REFERENCES organizations(id)
+                );
+CREATE TABLE IF NOT EXISTS "runs" (
+                    id character(32) NOT NULL,
+                    future_state TEXT NOT NULL,
+                    name TEXT,
+                    function_path TEXT NOT NULL,
+                    created_at timestamp WITH time zone NOT NULL,
+                    updated_at timestamp WITH time zone NOT NULL,
+                    started_at timestamp,
+                    ended_at timestamp,
+                    resolved_at timestamp,
+                    failed_at timestamp,
+                    parent_id character(32),
+                    description TEXT,
+                    tags TEXT NOT NULL,
+                    source_code TEXT NOT NULL,
+                    root_id character(32) NOT NULL,
+                    nested_future_id character(32),
+                    resource_requirements_json JSONB,
+                    exception_metadata_json JSONB,
+                    container_image_uri TEXT,
+                    external_exception_metadata_json JSONB,
+                    original_run_id character(32),
+                    cache_key TEXT,
+                    user_id character(32),
+                    organization_id character(32),
+
+                    PRIMARY KEY (id),
+
+                    FOREIGN KEY(root_id) REFERENCES runs (id),
+                    FOREIGN KEY (user_id) REFERENCES users(id),
+                    FOREIGN KEY (organization_id) REFERENCES organizations(id)
+                );
+CREATE INDEX ix_runs_cache_key ON runs (cache_key);
+CREATE INDEX ix_runs_function_path ON runs (function_path);
+CREATE TABLE IF NOT EXISTS "metric_labels" (
+                    metric_id TEXT NOT NULL,
+                    metric_name TEXT NOT NULL,
+                    metric_labels JSONB NOT NULL DEFAULT '{}',
+                    metric_type SMALLINT NOT NULL,
+                    organization_id character(32),
+
+                    PRIMARY KEY (metric_id),
+
+                    FOREIGN KEY (organization_id) REFERENCES organizations(id)
+                );
+CREATE UNIQUE INDEX metric_labels_name_labels_idx ON metric_labels(metric_name, metric_labels);
+CREATE TABLE IF NOT EXISTS "artifacts" (
+                id character(40) NOT NULL,
+                json_summary JSONB NOT NULL,
+                created_at timestamp NOT NULL,
+                updated_at timestamp NOT NULL,
+                type_serialization JSONB NOT NULL,
+                organization_id character(32),
+
+                PRIMARY KEY (id),
+
+                FOREIGN KEY (organization_id) REFERENCES organizations(id)
+            );
 -- schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
   ('20220424062956'),
