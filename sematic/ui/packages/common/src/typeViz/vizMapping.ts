@@ -7,6 +7,12 @@ import DatetimeValueView from "src/typeViz/views/datatime";
 import DictValueView, { DictElementsView } from "src/typeViz/views/dict";
 import EnumValueView from "src/typeViz/views/enum";
 import FloatValueView from "src/typeViz/views/float";
+import {
+    HuggingFaceDatasetReferenceShortView,
+    HuggingFaceDatasetReferenceValueView,
+    HuggingFaceModelReferenceShortView,
+    HuggingFaceModelReferenceValueView
+} from "src/typeViz/views/hugging_face_reference";
 import ImageValueView, { ImageExpandedView } from "src/typeViz/views/image";
 import IntValueView from "src/typeViz/views/int";
 import LinkValueView from "src/typeViz/views/link";
@@ -53,6 +59,14 @@ const meta: Array<[string, RenderDetails]> = [
     ["DataFrameDataDescribe", { value: DataFrameSummaryView, nested: DataFrameSummaryExpandedView }],
     ["sematic.types.types.aws.s3.S3Bucket", { value: S3BucketValueView }],
     ["sematic.types.types.aws.s3.S3Location", { value: S3LocationValueView }],
+    ["sematic.types.types.huggingface.dataset_reference.HuggingFaceDatasetReference", {
+        value: HuggingFaceDatasetReferenceShortView, nested: HuggingFaceDatasetReferenceValueView
+      }
+    ],
+    ["sematic.types.types.huggingface.model_reference.HuggingFaceModelReference", {
+        value: HuggingFaceModelReferenceShortView, nested: HuggingFaceModelReferenceValueView
+      }
+    ],
     ["sematic.types.types.image.Image", {value: ImageValueView, nested: ImageExpandedView}],
     ["sematic.types.types.prompt_response.PromptResponse", { value: PromptResponseCollapsedView, nested: PromptResponseExpandedView}],
     ["matplotlib.figure.Figure", {value: ImageValueView, nested: ImageExpandedView}]

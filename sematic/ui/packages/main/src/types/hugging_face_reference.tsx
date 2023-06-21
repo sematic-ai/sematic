@@ -11,7 +11,12 @@ export function HuggingFaceModelReferenceValueView(props: CommonValueViewProps) 
     const repo = values.repo;
     const commitSha = values.commit_sha;
 
-    return <HuggingFaceButton owner={owner} repo={repo} commitSha={commitSha} objectTypePrefix="" />;
+    return <HuggingFaceButton
+        owner={owner}
+        repo={repo}
+        commitSha={commitSha}
+        objectTypePrefix=""
+    />;
 }
 
 export function HuggingFaceDatasetReferenceValueView(props: CommonValueViewProps) {
@@ -23,20 +28,24 @@ export function HuggingFaceDatasetReferenceValueView(props: CommonValueViewProps
     const subset = values.subset;
     const commitSha = values.commit_sha;
 
-    return <HuggingFaceButton owner={owner} repo={repo} subset={subset} commitSha={commitSha} objectTypePrefix="/datasets" />;
+    return <HuggingFaceButton
+        owner={owner}
+        repo={repo}
+        subset={subset}
+        commitSha={commitSha}
+        objectTypePrefix="/datasets"
+    />;
 }
 
-function HuggingFaceButton(props: { owner?: string, repo: string, subset?: string, commitSha?: string, objectTypePrefix: string }) {
+function HuggingFaceButton(props: {
+    owner?: string,
+    repo: string,
+    subset?: string,
+    commitSha?: string,
+    objectTypePrefix: string,
+}) {
     const { owner, repo, subset, commitSha, objectTypePrefix } = props;
 
-
-  
-    // https://huggingface.co/datasets/mozilla-foundation/common_voice_13_0
-    // https://huggingface.co/datasets/mozilla-foundation/common_voice_13_0/tree/87395faea1d2df9ffa566af5f666da47161b125b
-    // https://huggingface.co/datasets/mozilla-foundation/common_voice_13_0/viewer/az
-    // https://huggingface.co/datasets/glue
-    // https://huggingface.co/datasets/glue/tree/fd8e86499fa5c264fcaad392a8f49ddf58bf4037
-    // https://huggingface.co/datasets/glue/viewer/rte
     const ownerSegment = owner ? "/" + owner : "";
     const repoPath = objectTypePrefix + ownerSegment + "/" + repo;
 
@@ -71,7 +80,7 @@ function HuggingFaceButton(props: { owner?: string, repo: string, subset?: strin
             draggable={false}
             style={{ userSelect: "text" }}
         >
-            <div ref={elementRef} style={{ cursor: "text" }} >🤗{slug}</div>
+            <div ref={elementRef} style={{ cursor: "text" }} >🤗 {slug}</div>
         </Button>
     </Tooltip>;
 }
