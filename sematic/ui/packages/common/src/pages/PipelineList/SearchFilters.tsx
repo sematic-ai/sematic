@@ -1,15 +1,13 @@
 import styled from "@emotion/styled";
 import Button from "@mui/material/Button";
+import isEmpty from "lodash/isEmpty";
 import { useCallback, useRef } from "react";
-import OtherFiltersSection from "src/pages/RunSearch/filters/OtherFilterSection";
+import { ResettableHandle } from "src/component/common";
+import { AllFilters, FilterType } from "src/pages/RunTableCommon/filters";
 import OwnersFilterSection from "src/pages/RunTableCommon/filters/OwnersFilterSection";
 import SearchTextSection from "src/pages/RunTableCommon/filters/SearchTextSection";
-import StatusFilterSection from "src/pages/RunSearch/filters/StatusFilterSection";
 import TagsFilterSection from "src/pages/RunTableCommon/filters/TagsFilterSection";
-import { ResettableHandle } from "src/component/common";
 import theme from "src/theme/new";
-import { AllFilters, FilterType } from "src/pages/RunTableCommon/filters";
-import isEmpty from "lodash/isEmpty";
 
 const StyledButton = styled(Button)`
     margin: 0 -${theme.spacing(5)};
@@ -30,16 +28,12 @@ const SearchFilters = (props: SearchFiltersProps) => {
 
     const searchTextRef = useRef<ResettableHandle>(null);
     const tagsFiltersRef = useRef<ResettableHandle>(null);
-    const statusFiltersRef = useRef<ResettableHandle>(null);
     const ownersFiltersRef = useRef<ResettableHandle>(null);
-    const otherFiltersRef = useRef<ResettableHandle>(null);
 
     const resetAll = useCallback(() => {
         searchTextRef.current?.reset();
         tagsFiltersRef.current?.reset();
         ownersFiltersRef.current?.reset();
-        statusFiltersRef.current?.reset();
-        otherFiltersRef.current?.reset();
 
         allFilters.current = {}; 
         onFiltersChanged({});
@@ -61,27 +55,11 @@ const SearchFilters = (props: SearchFiltersProps) => {
         }
     }, []);
 
-    const onStatusFilterChanged = useCallback((filters: string[]) => {
-        if (isEmpty(filters)) {
-            delete allFilters.current[FilterType.STATUS];
-        } else {
-            allFilters.current[FilterType.STATUS] = filters;
-        }
-    }, []);
-
     const onOwnersFilterChanged = useCallback((filters: string[]) => {
         if (isEmpty(filters)) {
             delete allFilters.current[FilterType.OWNER];
         } else {
             allFilters.current[FilterType.OWNER] = filters;
-        }
-    }, []);
-
-    const onOtherFilterChanged = useCallback((filters: string[]) => {
-        if (isEmpty(filters)) {
-            delete allFilters.current[FilterType.OTHER];
-        } else {
-            allFilters.current[FilterType.OTHER] = filters;
         }
     }, []);
 
@@ -92,10 +70,7 @@ const SearchFilters = (props: SearchFiltersProps) => {
     return <>
         <SearchTextSection ref={searchTextRef} onSearchChanged={onSearchTextChanged} />
         <TagsFilterSection ref={tagsFiltersRef} onFiltersChanged={onTagsFilterChanged} />
-        <StatusFilterSection ref={statusFiltersRef} onFiltersChanged={onStatusFilterChanged} />
         <OwnersFilterSection ref={ownersFiltersRef} onFiltersChanged={onOwnersFilterChanged} />
-        <OtherFiltersSection ref={otherFiltersRef} onFiltersChanged={onOtherFilterChanged} />
-        {/* <OrderSection /> disabled for now */}
         <StyledButton variant="contained" disableElevation onClick={applyFilters}>Filter runs</StyledButton>
         <StyledButton variant="contained" disableElevation color={"white"} onClick={resetAll} >
             Clear filters

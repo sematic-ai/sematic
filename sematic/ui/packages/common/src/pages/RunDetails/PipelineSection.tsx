@@ -1,8 +1,10 @@
 import styled from "@emotion/styled";
-import Alert from "@mui/material/Alert";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
+import Tooltip from "@mui/material/Tooltip";
 import Typograph from "@mui/material/Typography";
+import { useRef } from "react";
 import Headline from "src/component/Headline";
 import ImportPath from "src/component/ImportPath";
 import MoreVertButton from "src/component/MoreVertButton";
@@ -10,6 +12,7 @@ import PipelineTitle from "src/component/PipelineTitle";
 import Section from "src/component/Section";
 import RootRunContext, { useRootRunContext } from "src/context/RootRunContext";
 import useBasicMetrics from "src/hooks/metricsHooks";
+import PipelineSectionActionMenu from "src/pages/RunDetails/contextMenus/PipelineSectionMenu";
 import theme from "src/theme/new";
 import { ExtractContextType, RemoveUndefined } from "src/utils/typings";
 
@@ -24,6 +27,7 @@ const BottomSection = styled.section`
   border-bottom: 1px solid ${theme.palette.p3border.main};
   display: flex;
   margin: 0 -25px;
+
   & .MuiBox-root {
     width: 100px;
     min-height: 100px;
@@ -61,11 +65,28 @@ const SkeletonForMetrics = styled(Skeleton)`
     }
 `;
 
+const StyledErrorOutlineIcon = styled(ErrorOutlineIcon)`
+    color: ${theme.palette.error.main};
+    width: 18px;
+    height: 18px;
+`;
+
+function ErrorComponent(props: {
+    error: Error
+}) {
+    const { error } = props;
+    return <Tooltip title={error.message}>
+        <StyledErrorOutlineIcon />
+    </Tooltip>;
+}
+
 const PipelineSection = () => {
     const { rootRun } = useRootRunContext() as RemoveUndefined<ExtractContextType<typeof RootRunContext>>;
 
     const { error, avgRuntime, successRate, totalCount, loading }
         = useBasicMetrics({ runId: rootRun.id, rootFunctionPath: rootRun.function_path });
+
+    const contextMenuAnchor = useRef<HTMLButtonElement>(null);
 
     return (
         <>
@@ -75,24 +96,30 @@ const PipelineSection = () => {
                 <ImportPath>
                     {rootRun.function_path}
                 </ImportPath>
-                <StyledVertButton />
+                <StyledVertButton ref={contextMenuAnchor} />
+                <PipelineSectionActionMenu anchorEl={contextMenuAnchor.current} />
             </TopSection>
             <BottomSection>
-                {error && <Alert severity="error">{error.message}</Alert>}
-                {!error && <>
+                <>
                     {loading ? <SkeletonForMetrics /> : <Box>
-                        <Typograph variant="bigBold">{totalCount}</Typograph>
+                        <Typograph variant="bigBold">
+                            {error ? <ErrorComponent error={error} /> : totalCount}
+                        </Typograph>
                         <Typograph variant="body1">runs</Typograph>
                     </Box>}
                     {loading ? <SkeletonForMetrics /> : <Box>
-                        <Typograph variant="bigBold">{`${avgRuntime}`}</Typograph>
+                        <Typograph variant="bigBold">
+                            {error ? <ErrorComponent error={error} /> : avgRuntime}
+                        </Typograph>
                         <Typograph variant="body1">avg. runtime</Typograph>
                     </Box>}
                     {loading ? <SkeletonForMetrics /> : <Box>
-                        <Typograph variant="bigBold">{successRate}</Typograph>
+                        <Typograph variant="bigBold">
+                            {error ? <ErrorComponent error={error} /> : successRate}
+                        </Typograph>
                         <Typograph variant="body1">success</Typograph>
                     </Box>}
-                </>}
+                </>
             </BottomSection>
         </>
     );

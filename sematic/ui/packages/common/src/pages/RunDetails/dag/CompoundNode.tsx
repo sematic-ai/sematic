@@ -2,18 +2,22 @@ import styled from "@emotion/styled";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import IconButton from "@mui/material/IconButton";
-import { useMemo } from "react";
+import { useCallback, useContext, useMemo } from "react";
 import { NodeProps, Position } from "reactflow";
 import { getRunStateChipByState, getRunStateColorByState } from "src/component/RunStateChips";
 import { useHasIncoming, useNodeExpandStateToggle } from "src/hooks/dagHooks";
-import { StyledHandle } from "src/pages/RunDetails/dag/common";
+import { DagViewServiceContext, StyledHandle } from "src/pages/RunDetails/dag/common";
 import theme from "src/theme/new";
 
-const CompoundNodeContainer = styled.div`
+const CompoundNodeContainer = styled("div", {
+    shouldForwardProp: (prop) => prop !== "selected"
+}) <{
+    selected?: boolean;
+}>`
     width: min-content;
     display: flex;
     align-items: center;
-    border-width: 1px;
+    border-width: ${({ selected }) => selected ? 2 : 1}px;
     border-style: solid;
     border-radius: 4px;
 `;
@@ -47,7 +51,7 @@ export const StyledIconButton = styled(IconButton)`
 
 function CompoundNode(props: NodeProps) {
     const { data } = props;
-    const { run } = data;
+    const { run, selected } = data;
 
     const { toggleExpanded, expanded } = useNodeExpandStateToggle(data);
 
@@ -55,7 +59,15 @@ function CompoundNode(props: NodeProps) {
 
     const stateChip = useMemo(() => getRunStateChipByState(run.future_state), [run.future_state]);
     const color = useMemo(() => getRunStateColorByState(run.future_state), [run.future_state]);
-    return <CompoundNodeContainer style={{ width: `${data.width}px`, height: `${data.height}px`, borderColor: color }}>
+
+    const { onNodeClick } = useContext(DagViewServiceContext)
+
+    const onClick = useCallback(() => {
+        onNodeClick(run.id);
+    }, [onNodeClick, run]);
+
+    return <CompoundNodeContainer selected={selected} onClick={onClick}
+        style={{ width: `${data.width}px`, height: `${data.height}px`, borderColor: color }}>
         {hasIncoming && <StyledHandle type="target" color={color} position={Position.Top} isConnectable={false} id={"t"} />}
         <LabelContainer>
             {stateChip}
