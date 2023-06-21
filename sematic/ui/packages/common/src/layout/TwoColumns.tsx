@@ -12,6 +12,10 @@ const Right = styled(RightBase)`
     flex-grow: 1;
     padding: 0 ${theme.spacing(5)};
     position: relative;
+
+    & .runs-table {
+        min-width: 850px;
+    }
 `
 
 const LoadingOverlay = styled(Box)`
