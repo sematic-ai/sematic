@@ -17,6 +17,7 @@ export const Left = styled.div`
     padding: 0 25px;
     box-sizing: border-box;
     overflow: hidden;
+    background: ${theme.palette.p1black.main};
 
     display: flex;
     flex-direction: column;
@@ -63,6 +64,7 @@ export const Right = styled.div`
     height: 100%;
     padding: 0 ${theme.spacing(2.4)};
     box-sizing: border-box;
+    background: ${theme.palette.p1black.main};
 `;
 
 export const Container = styled.div`
