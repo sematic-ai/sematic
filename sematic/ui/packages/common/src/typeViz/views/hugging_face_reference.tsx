@@ -3,6 +3,13 @@ import { Button, Tooltip } from "@mui/material";
 import { useTextSelection } from "@sematic/common/src/hooks/textSelectionHooks";
 import { ValueComponentProps, ViewComponentProps} from "src/typeViz/common";
 
+type Reference = {
+    owner: string | null;
+    repo: string;
+    commit_sha: string | null;
+    subset?: string | null | undefined;
+}
+
 export function HuggingFaceModelReferenceShortView(props: ViewComponentProps) {
     const { valueSummary } = props;
     const { values } = valueSummary;

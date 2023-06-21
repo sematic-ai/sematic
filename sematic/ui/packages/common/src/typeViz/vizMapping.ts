@@ -13,6 +13,7 @@ import {
     HuggingFaceModelReferenceShortView,
     HuggingFaceModelReferenceValueView
 } from "src/typeViz/views/hugging_face_reference";
+import { HuggingFaceStoredModelShortView, HuggingFaceStoredModelFullView } from "src/typeViz/views/hugging_face_stored_model";
 import ImageValueView, { ImageExpandedView } from "src/typeViz/views/image";
 import IntValueView from "src/typeViz/views/int";
 import LinkValueView from "src/typeViz/views/link";
@@ -59,6 +60,10 @@ const meta: Array<[string, RenderDetails]> = [
     ["DataFrameDataDescribe", { value: DataFrameSummaryView, nested: DataFrameSummaryExpandedView }],
     ["sematic.types.types.aws.s3.S3Bucket", { value: S3BucketValueView }],
     ["sematic.types.types.aws.s3.S3Location", { value: S3LocationValueView }],
+    ["sematic.types.types.huggingface.stored_model.HuggingFaceStoredModel", {
+        value: HuggingFaceStoredModelShortView, nested: HuggingFaceStoredModelFullView
+      }
+    ],
     ["sematic.types.types.huggingface.dataset_reference.HuggingFaceDatasetReference", {
         value: HuggingFaceDatasetReferenceShortView, nested: HuggingFaceDatasetReferenceValueView
       }
