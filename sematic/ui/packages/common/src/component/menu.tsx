@@ -38,7 +38,10 @@ const HeaderMenu = (props: HeaderMenuProps) => {
             {/* <Link variant="subtitle1" type='menu' className={selectedKey === "metrics" ? "selected" : ""}>Metrics</Link> */}
         </Box>
         <Box style={{ flexGrow: 1, display: "flex", justifyContent: "end" }} >
-            <Link variant="subtitle1" type='menu'>Get Started</Link>
+            <MuiRouterLink variant="subtitle1" type='menu' href={"/"}
+                className={selectedKey === "gettingstarted" ? "selected" : ""}>
+                Get Started
+            </MuiRouterLink>
             <Link variant="subtitle1" type='menu'>Docs</Link>
             <Link variant="subtitle1" type='menu'>Support</Link>
             <Link variant="subtitle1" type='menu'>Developer E</Link>

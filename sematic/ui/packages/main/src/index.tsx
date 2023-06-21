@@ -8,6 +8,7 @@ import NewRunDetails from "@sematic/common/src/pages/RunDetails";
 import NewRunSearch from "@sematic/common/src/pages/RunSearch";
 import PipelineList from "@sematic/common/src/pages/PipelineList";
 import PipelineRuns from "@sematic/common/src/pages/PipelineRuns";
+import GettingStarted from "@sematic/common/src/pages/GettingStarted";
 import { getFeatureFlagValue } from "@sematic/common/src/utils/FeatureFlagManager";
 import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { useAtom } from "jotai";
@@ -96,6 +97,9 @@ const NewRoutesOverrides = isNewUIEnabled ? (<>
     </Route>
     <Route path="runs/:rootId" element={<NewShell />} >
         <Route index element={<NewRunDetails />} />
+    </Route>
+    <Route path="/" element={<NewShell />} >
+        <Route index element={<GettingStarted />} handle={{[HeaderSelectionKey]: "gettingstarted"}} />
     </Route>
 </>) : null;
 

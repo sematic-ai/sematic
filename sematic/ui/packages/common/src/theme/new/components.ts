@@ -8,6 +8,9 @@ import { chipClasses } from "@mui/material/Chip"
 const components: Components = {
     MuiCssBaseline: {
         styleOverrides: ((theme: Theme) => ({
+            h1: {
+                fontSize: "24px"
+            },
             h2: {
                 color: theme.palette.lightGrey.main,
                 fontSize: theme.typography.small.fontSize,
