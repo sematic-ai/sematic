@@ -60,17 +60,17 @@ const meta: Array<[string, RenderDetails]> = [
     ["DataFrameDataDescribe", { value: DataFrameSummaryView, nested: DataFrameSummaryExpandedView }],
     ["sematic.types.types.aws.s3.S3Bucket", { value: S3BucketValueView }],
     ["sematic.types.types.aws.s3.S3Location", { value: S3LocationValueView }],
-    ["sematic.types.types.huggingface.stored_model.HuggingFaceStoredModel", {
-        value: HuggingFaceStoredModelShortView, nested: HuggingFaceStoredModelFullView
-      }
+    [
+        "sematic.types.types.huggingface.stored_model.HuggingFaceStoredModel",
+        {value: HuggingFaceStoredModelShortView, nested: HuggingFaceStoredModelFullView}
     ],
-    ["sematic.types.types.huggingface.dataset_reference.HuggingFaceDatasetReference", {
-        value: HuggingFaceDatasetReferenceShortView, nested: HuggingFaceDatasetReferenceValueView
-      }
+    [
+        "sematic.types.types.huggingface.dataset_reference.HuggingFaceDatasetReference",
+        {value: HuggingFaceDatasetReferenceShortView, nested: HuggingFaceDatasetReferenceValueView}
     ],
-    ["sematic.types.types.huggingface.model_reference.HuggingFaceModelReference", {
-        value: HuggingFaceModelReferenceShortView, nested: HuggingFaceModelReferenceValueView
-      }
+    [
+        "sematic.types.types.huggingface.model_reference.HuggingFaceModelReference",
+        {value: HuggingFaceModelReferenceShortView, nested: HuggingFaceModelReferenceValueView}
     ],
     ["sematic.types.types.image.Image", {value: ImageValueView, nested: ImageExpandedView}],
     ["sematic.types.types.prompt_response.PromptResponse", { value: PromptResponseCollapsedView, nested: PromptResponseExpandedView}],

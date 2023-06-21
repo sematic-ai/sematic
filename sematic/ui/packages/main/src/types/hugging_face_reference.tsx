@@ -3,18 +3,19 @@ import { Button, Tooltip } from "@mui/material";
 import { useTextSelection } from "@sematic/common/src/hooks/textSelectionHooks";
 import { CommonValueViewProps } from "./common";
 
+type Reference = {
+    owner: string | null;
+    repo: string;
+    commit_sha: string | null;
+    subset?: string | null | undefined;
+}
+
 export function HuggingFaceModelReferenceValueView(props: CommonValueViewProps) {
     const { valueSummary } = props;
     const { values } = valueSummary;
 
-    const owner = values.owner;
-    const repo = values.repo;
-    const commitSha = values.commit_sha;
-
     return <HuggingFaceButton
-        owner={owner}
-        repo={repo}
-        commitSha={commitSha}
+        reference={values}
         objectTypePrefix=""
     />;
 }
@@ -23,28 +24,20 @@ export function HuggingFaceDatasetReferenceValueView(props: CommonValueViewProps
     const { valueSummary } = props;
     const { values } = valueSummary;
   
-    const owner = values.owner;
-    const repo = values.repo;
-    const subset = values.subset;
-    const commitSha = values.commit_sha;
-
     return <HuggingFaceButton
-        owner={owner}
-        repo={repo}
-        subset={subset}
-        commitSha={commitSha}
+        reference={values}
         objectTypePrefix="/datasets"
     />;
 }
 
 function HuggingFaceButton(props: {
-    owner?: string,
-    repo: string,
-    subset?: string,
+    reference: Reference,
     commitSha?: string,
     objectTypePrefix: string,
 }) {
-    const { owner, repo, subset, commitSha, objectTypePrefix } = props;
+
+    const { reference, objectTypePrefix } = props;
+    const { owner, repo, subset, commit_sha } = reference;
 
     const ownerSegment = owner ? "/" + owner : "";
     const repoPath = objectTypePrefix + ownerSegment + "/" + repo;
@@ -53,8 +46,8 @@ function HuggingFaceButton(props: {
     // commit and subset in the UI at the same time. If there
     // is a specific commit referenced, let that take precedence.
     let path = repoPath;
-    if(commitSha) {
-        path = repoPath + "/tree/" + commitSha;
+    if(commit_sha) {
+        path = repoPath + "/tree/" + commit_sha;
     } else if(subset) {
         path = repoPath + "/viewer/" + subset;
     }
@@ -65,8 +58,8 @@ function HuggingFaceButton(props: {
     if(subset) {
         slug += ":" + subset;
     }
-    if(commitSha) {
-        slug += "@" + commitSha.substring(0, 7);
+    if(commit_sha) {
+        slug += "@" + commit_sha.substring(0, 7);
     }
   
     const elementRef = useTextSelection<HTMLDivElement>();

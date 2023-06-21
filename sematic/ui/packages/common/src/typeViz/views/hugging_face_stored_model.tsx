@@ -1,11 +1,11 @@
 import { ValueComponentProps, ViewComponentProps} from "src/typeViz/common";
 
 export function HuggingFaceStoredModelShortView(props: ValueComponentProps) {
-  return HuggingFaceStoredModelView(props, true);
+    return HuggingFaceStoredModelView(props, true);
 }
 
 export function HuggingFaceStoredModelFullView(props: ViewComponentProps) {
-  return HuggingFaceStoredModelView(props, false);
+    return HuggingFaceStoredModelView(props, false);
 }
 
 function HuggingFaceStoredModelView(props: ValueComponentProps | ViewComponentProps, short: boolean) {
@@ -16,8 +16,8 @@ function HuggingFaceStoredModelView(props: ValueComponentProps | ViewComponentPr
     const modelTypeShortName = modelTypePieces[modelTypePieces.length - 1];
     const contents = (
         short ?
-        modelTypeShortName :
-        (<span><strong>{modelTypeShortName}</strong>: {values.path}</span>)
+            modelTypeShortName :
+            (<span><strong>{modelTypeShortName}</strong>: {values.path}</span>)
     );
 
     return (
