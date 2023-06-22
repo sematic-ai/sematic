@@ -91,7 +91,7 @@ const GettingStarted = () => {
         <Container>
             <Left>
                 <h1>Set your API key</h1>
-                <p>To get started, store your API key in your local settings files located at ~/.sematic/settings.</p>
+                <p>To get started, store your API key in your local settings file located at <code>~/.sematic/settings.yaml</code>.</p>
                 <ShellCommandRelaxed command={"sematic settings set SEMATIC_API_KEY wyOZshRWQ1m81xml-CTWAw"}
                     style={{ marginBottom: theme.spacing(10) }} />
                 <h1>Run an example pipeline</h1>
@@ -143,7 +143,7 @@ const GettingStarted = () => {
                 <LinkRow>
                     <a href={"https://www.youtube.com/@sematic-ai"}>
                         <span>
-                            <SiYoutube fontSize={25} color={"#ff0000"}/>
+                            <SiYoutube fontSize={25} color={"#ff0000"} />
                         </span>
                         <span>Watch tutorials on our YouTube channel</span>
                     </a>
