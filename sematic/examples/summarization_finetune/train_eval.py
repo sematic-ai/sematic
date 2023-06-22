@@ -17,7 +17,11 @@ from transformers import TrainingArguments as HfTrainingArguments
 
 # Sematic
 from sematic.ee.metrics import MetricScope, log_metric
-from sematic.types import PromptResponse
+from sematic.types import (
+    HuggingFaceDatasetReference,
+    HuggingFaceModelReference,
+    PromptResponse,
+)
 
 
 class LogMetricsCallback(TrainerCallback):
@@ -62,37 +66,6 @@ class TrainingConfig:
 
 
 @dataclass
-class HuggingFaceDatasetReference:
-    owner: Optional[str]
-    repo: str
-    subset: Optional[str] = None
-
-    @classmethod
-    def from_string(cls, as_string: str) -> "HuggingFaceDatasetReference":
-        if "/" in as_string:
-            owner, repo = as_string.rsplit("/", maxsplit=1)
-        else:
-            owner = None
-            repo = as_string
-        subset = None
-        if ":" in repo:
-            repo, subset = repo.split(":", 1)
-        return HuggingFaceDatasetReference(owner=owner, repo=repo, subset=subset)
-
-    def to_string(self) -> str:
-        if self.subset is not None:
-            return f"{self.to_full_dataset_string()}:{self.subset}"
-        else:
-            return f"{self.to_full_dataset_string()}"
-
-    def to_full_dataset_string(self) -> str:
-        if self.owner is not None:
-            return f"{self.owner}/{self.repo}"
-        else:
-            return self.repo
-
-
-@dataclass
 class DatasetConfig:
     max_output_length: int
     max_input_length: int
@@ -106,21 +79,6 @@ class DatasetConfig:
 @dataclass
 class EvaluationResults:
     continuations: List[PromptResponse]
-
-
-@dataclass
-class HuggingFaceModelReference:
-    owner: str
-    repo: str
-    commit_sha: Optional[str] = None
-
-    @classmethod
-    def from_string(cls, as_string: str) -> "HuggingFaceModelReference":
-        owner, repo = as_string.rsplit("/", maxsplit=1)
-        return HuggingFaceModelReference(owner=owner, repo=repo)
-
-    def to_string(self) -> str:
-        return f"{self.owner}/{self.repo}"
 
 
 def load_model(model_name):
@@ -169,7 +127,7 @@ def prepare_data(
     tokenizer: PreTrainedTokenizerBase,
 ):
     dataset = load_dataset(
-        dataset_config.dataset_ref.to_full_dataset_string(),
+        dataset_config.dataset_ref.to_string(full_dataset=True),
         dataset_config.dataset_ref.subset,
     )
     if "validation" not in dataset:

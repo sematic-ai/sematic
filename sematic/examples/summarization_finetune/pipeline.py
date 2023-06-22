@@ -24,34 +24,7 @@ from sematic.examples.summarization_finetune.train_eval import (
 )
 from sematic.examples.summarization_finetune.train_eval import prepare_data
 from sematic.examples.summarization_finetune.train_eval import train as do_train
-
-
-@dataclass(frozen=True)
-class StoredModel:
-    path: str
-    model_type: str
-
-    @classmethod
-    def store(cls, model: PeftModel, directory: str) -> "StoredModel":
-        directory = os.path.expanduser(directory)
-        model.get_base_model().save_pretrained(os.path.join(directory, "base"))
-        model.save_pretrained(os.path.join(directory, "peft"))
-        return StoredModel(
-            path=os.path.abspath(directory),
-            model_type=type(model).__name__,
-        )
-
-    def load(self) -> PeftModel:
-        model = AutoModelForSeq2SeqLM.from_pretrained(
-            os.path.join(self.path, "base"),
-            device_map="auto",
-        )
-        model = PeftModel.from_pretrained(
-            model,
-            os.path.join(self.path, "peft"),
-            device_map="auto",
-        )
-        return model
+from sematic.types import HuggingFaceStoredModel as StoredModel
 
 
 @dataclass(frozen=True)
