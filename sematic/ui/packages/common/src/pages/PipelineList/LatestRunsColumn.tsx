@@ -20,7 +20,7 @@ const StyledChipContainer = styled.span`
 `;
 
 function StatusChips({ runs }: { runs: Run[] }) {
-    return <>{runs.map(run => <MuiRouterLink href={getRunUrlPattern(run.id)}>
+    return <>{runs.map((run, index) => <MuiRouterLink key={index} href={getRunUrlPattern(run.id)}>
         <StyledChipContainer key={`${run.id}---${run.future_state}`}>
             {getRunStateChipByState(run.future_state)}
         </StyledChipContainer></MuiRouterLink>)}

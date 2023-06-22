@@ -6,6 +6,7 @@ import { Run } from "src/Models";
 import LayoutServiceContext from "src/context/LayoutServiceContext";
 import RootRunContext from "src/context/RootRunContext";
 import RunDetailsSelectionContext from "src/context/RunDetailsSelectionContext";
+import usePipelineSocketMonitor from "src/hooks/pipelineSocketMonitorHooks";
 import { useFetchRuns } from "src/hooks/runHooks";
 import ThreeColumns from "src/layout/ThreeColumns";
 import PipelineInfoPane from "src/pages/PipelineRuns/PipelineInfoPane";
@@ -56,6 +57,7 @@ const PipelineRuns = (props: PipelineRunsProps) => {
         setSelectedPanel: noop
     }), [rootRun]);
 
+    usePipelineSocketMonitor(rootRun.function_path);
 
     return <RootRunContext.Provider value={rootRunContextValue}>
         <RunDetailsSelectionContext.Provider value={runSelectionContextValue}>
