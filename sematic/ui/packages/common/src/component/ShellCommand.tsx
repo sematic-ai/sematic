@@ -1,19 +1,18 @@
-import { ContentCopy } from "@mui/icons-material";
-import {
-    ButtonBase,
-    useTheme
-} from "@mui/material";
-import { useCallback, useState } from "react";
 import styled from "@emotion/styled";
+import { ContentCopy } from "@mui/icons-material";
+import { useTheme } from "@mui/material";
+import ButtonBase from "@mui/material/ButtonBase";
+import { CSSProperties, useCallback, useState } from "react";
 import theme from "src/theme/new";
 
 interface ShellCommandProps {
     command: string;
     className?: string;
+    style?: CSSProperties;
 }
 
 function ShellCommand(props: ShellCommandProps) {
-    const { command, className } = props;
+    const { command, className, style } = props;
 
     const [content, setContent] = useState("$ " + command);
 
@@ -42,6 +41,7 @@ function ShellCommand(props: ShellCommandProps) {
             }}
             onClick={onClick}
             className={className}
+            style={style}
         >
             <code style={{ flexGrow: 1 }}>{content}</code>
             <ContentCopy fontSize="small" sx={{ color: theme.palette.grey[600] }} />
@@ -52,6 +52,8 @@ function ShellCommand(props: ShellCommandProps) {
 export const ShellCommandRelaxed = styled(ShellCommand)`
     padding-top: ${theme.spacing(5)};
     padding-bottom: ${theme.spacing(5)};
+
+    background-color: ${theme.palette.black.main};
 `;
 
 export default ShellCommand;
