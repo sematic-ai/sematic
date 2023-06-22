@@ -5,6 +5,17 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.31.0](https://pypi.org/project/sematic/0.31.0/)
+    * [feature] Enable remote execution using pure-Docker, without bazel
+    * [feature] Support live-metrics during Sematic Function execution[^1]
+    * [feature] Add visualization for Prompt/Response pairs
+    * [example] Add Hacker News summarization example
+    * [improvement] Expose all Kubernetes classes in the base `sematic` module
+    * [improvement] Switch from a WSGI server & gevent to an ASGI server (uvicorn)
+    * [bugfix] Ensure UI-reruns don't automatically "rerun from here" for the root run
+    * [bugfix] Fix an issue that prevented rendering of matplotlib figures
+    * [bugfix] Remove a password that could be shown in cleaner logs
+    * [bugfix] Include missing information from a local storage error message
 * [0.30.0](https://pypi.org/project/sematic/0.30.0/)
     * [feature] Grafana dashboards tailored for Sematic installable via Helm
     * [feature] User metrics SDK

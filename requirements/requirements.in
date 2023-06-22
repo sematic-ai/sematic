@@ -30,6 +30,7 @@ flask
 flask-cors
 cloudpickle
 requests
+responses
 werkzeug
 python-dateutil
 starlette
@@ -55,15 +56,11 @@ statsmodels
 scikit-learn
 numpy
 xgboost
-accelerate
-datasets
-huggingface-hub
-peft
-transformers
-
 trafilatura
 cohere
 openai
+accelerate
+huggingface-hub
 
 # Types
 ## Snowflake
@@ -71,6 +68,9 @@ snowflake-connector-python
 pyOpenSSL
 pyarrow
 python-magic
+peft
+transformers
+datasets
 
 # Cloud execution
 kubernetes

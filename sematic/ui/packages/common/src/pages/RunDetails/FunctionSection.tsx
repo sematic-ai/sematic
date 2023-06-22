@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
 import parseJSON from "date-fns/parseJSON";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { DateTimeLong } from "src/component/DateTime";
 import Headline from "src/component/Headline";
 import ImportPath from "src/component/ImportPath";
@@ -15,6 +15,7 @@ import Section from "src/component/Section";
 import TagsList from "src/component/TagsList";
 import { useRootRunContext } from "src/context/RootRunContext";
 import { useRunDetailsSelectionContext } from "src/context/RunDetailsSelectionContext";
+import FunctionSectionActionMenu from "src/pages/RunDetails/contextMenus/FunctionSectionMenu";
 import theme from "src/theme/new";
 
 const StyledSection = styled(Section)`
@@ -125,6 +126,8 @@ const FunctionSection = () => {
         return `${runDuration} on ${completeAt}`;
     }, [selectedRun]);
 
+    const contextMenuAnchor = useRef<HTMLButtonElement>(null);
+
     return <StyledSection>
         <Headline>Function Run</Headline>
         <BoxContainer>
@@ -145,7 +148,8 @@ const FunctionSection = () => {
             {isGraphLoading ? <LongPlaceholderSkeleton />
                 : <ImportPath>{selectedRun?.function_path}</ImportPath>}
         </ImportPathContainer>
-        <StyledVertButton />
+        <StyledVertButton ref={contextMenuAnchor} />
+        <FunctionSectionActionMenu anchorEl={contextMenuAnchor.current} />
         {isGraphLoading ? <MediumPlaceholderSkeleton />
             : <TagsContainer>
                 <div className={"tags-list-wrapper"} key={selectedRun?.id}><TagsList tags={selectedRun?.tags || []} /></div>

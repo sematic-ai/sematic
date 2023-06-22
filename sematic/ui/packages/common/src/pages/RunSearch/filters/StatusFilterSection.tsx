@@ -6,7 +6,7 @@ import CollapseableFilterSection from "src/pages/RunSearch/filters/CollapseableF
 import theme from "src/theme/new";
 import memoize from "lodash/memoize";
 import { ResettableHandle } from "src/component/common";
-import { StatusFilters } from "src/pages/RunSearch/filters/common";
+import { StatusFilters } from "src/pages/RunTableCommon/filters";
 
 const StyledChip = styled(Chip)`
     padding-left: ${theme.spacing(1)};
