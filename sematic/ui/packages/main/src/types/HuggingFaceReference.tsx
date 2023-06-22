@@ -37,7 +37,7 @@ function HuggingFaceButton(props: {
     objectTypePrefix: string,
 }) {
 
-    const { reference, objectTypePrefix, short } = props;
+    const { reference, objectTypePrefix } = props;
     const { owner, repo, subset, commit_sha } = reference;
 
     const displayedHref = useMemo(
@@ -70,11 +70,8 @@ function HuggingFaceButton(props: {
                 slug += "@" + commit_sha.substring(0, 7);
             }
   
-            if(short) {
-                slug = "";
-            }
             return slug;
-        }, [owner, repo, subset, commit_sha, short]
+        }, [owner, repo, subset, commit_sha]
     );
     const elementRef = useTextSelection<HTMLDivElement>();
 

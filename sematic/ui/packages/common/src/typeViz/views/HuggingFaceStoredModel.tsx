@@ -1,35 +1,47 @@
-import { useMemo } from "react";
-import { ValueComponentProps, ViewComponentProps} from "src/typeViz/common";
+import { useCallback, useContext, useMemo } from "react";
+import { Chip, Tooltip } from "@mui/material";
+import { ContentCopy } from "@mui/icons-material";
+import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
+import { ViewComponentProps} from "src/typeViz/common";
 
 
-interface HuggingFaceStoredModelViewProps extends ValueComponentProps { short: boolean }
-
-export function HuggingFaceStoredModelShortView(props: ValueComponentProps) {
-    return <HuggingFaceStoredModelView {...props} short={true} />;
+export function HuggingFaceStoredModelShortView() {
+    return (<span>🤗 model</span>);
 }
 
 export function HuggingFaceStoredModelFullView(props: ViewComponentProps) {
-    return <HuggingFaceStoredModelView {...props} short={false} />;
-}
-
-function HuggingFaceStoredModelView(props: HuggingFaceStoredModelViewProps) {
-    const { valueSummary, short } = props;
+    const { valueSummary } = props;
     const { values } = valueSummary;
+    const { setSnackMessage } = useContext(SnackBarContext);
+
+    const copy = useCallback(() => {
+        setSnackMessage({ message: "Copied path to model" });
+        navigator.clipboard.writeText(values.path);
+    }, [values, setSnackMessage]);
+
     const contents = useMemo(
         () => {
-            const modelType = values.peft_model_type ? values.peft_model_type : values.model_type;
-            const modelTypePieces = modelType.split(".");
-            const modelTypeShortName = modelTypePieces[modelTypePieces.length - 1];
-            const contents = (
-                short ?
-                    "model" :
-                    (<span><strong>{modelTypeShortName}</strong>: {values.path}</span>)
-            );
+            const modelTypeShortName = getShortName(values.peft_model_type, values.model_type);
 
             return (
-                <span>🤗 {contents}</span>
+                <Tooltip title={"Copy path to model: " + values.path}>
+                    <Chip
+                        icon={<ContentCopy />}
+                        onClick={copy}
+                        size="small"
+                        label={"🤗 "+ modelTypeShortName}
+                        variant="outlined"
+                    />
+                </Tooltip>
             );
-        }, [values, short]
+        }, [values, copy]
     );
     return contents;
+}
+
+function getShortName(peftModelType: string | null, modelType: string) {
+    const modelTypeToDisplay = peftModelType ? peftModelType : modelType;
+    const modelTypePieces = modelTypeToDisplay.split(".");
+    const modelTypeShortName = modelTypePieces[modelTypePieces.length - 1];
+    return modelTypeShortName;
 }
