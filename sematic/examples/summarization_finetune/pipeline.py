@@ -14,7 +14,7 @@ from sematic.examples.summarization_finetune.train_eval import (
     DatasetConfig,
     EvaluationResults,
     HuggingFaceModelReference,
-    ModelSize,
+    ModelSelection,
     TrainingConfig,
     evaluate,
     export_model,
@@ -36,8 +36,13 @@ class ResultSummary:
 
 
 @sematic.func
-def pick_model(model_size: ModelSize) -> HuggingFaceModelReference:
-    return HuggingFaceModelReference(owner="google", repo=f"flan-t5-{model_size.value}")
+def pick_model(model: ModelSelection) -> HuggingFaceModelReference:
+    if model.value.startswith("flan"):
+        size = model.value.replace("flan_", "")
+        return HuggingFaceModelReference(owner="google", repo=f"flan-t5-{size}")
+    else:
+        name = model.value.replace("_", "-")
+        return HuggingFaceModelReference(owner="tiiuae", repo=name)
 
 
 @sematic.func
@@ -110,7 +115,7 @@ def pipeline(
     dataset_config: DatasetConfig,
     export_reference: Optional[HuggingFaceModelReference],
 ) -> ResultSummary:
-    model_ref = pick_model(training_config.model_size)
+    model_ref = pick_model(training_config.model_selection)
     tokenizer = load_tokenizer(model_ref)
     train_data, test_data = prepare_datasets(dataset_config, tokenizer)
     model = train(model_ref, training_config, train_data, test_data)

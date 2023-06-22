@@ -1,6 +1,11 @@
 accelerate
+bitsandbytes
 datasets
 huggingface-hub
+nvidia-cusparse-cu11
 peft
+scipy
 torch
 transformers
+trl
+einops

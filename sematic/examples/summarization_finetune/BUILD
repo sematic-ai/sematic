@@ -2,9 +2,13 @@ load("//bazel:pipeline.bzl", "sematic_pipeline")
 
 pip_deps = [
     "accelerate",
+    "bitsandbytes",
     "datasets",
+    "einops",
     "huggingface-hub",
+    "nvidia-cusparse-cu11",
     "peft",
+    "scipy",
     "torch",
     "transformers",
 ]

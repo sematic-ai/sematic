@@ -41,8 +41,8 @@ asgiref
 click
 
 # Examples
-torch==1.13.1
-torchvision==0.14.1
+torch==2.0.1
+torchvision==0.15.2
 pytorch-lightning
 ray-lightning
 torchmetrics
@@ -60,6 +60,10 @@ datasets>=2.12.0
 huggingface-hub
 peft
 transformers
+trl
+einops
+bitsandbytes
+nvidia-cusparse-cu11
 
 trafilatura
 cohere

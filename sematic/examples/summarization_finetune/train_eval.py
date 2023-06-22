@@ -1,19 +1,21 @@
 # Standard Library
 from dataclasses import asdict, dataclass, replace
 from enum import Enum, unique
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Type, Any
 
 # Third-party
 from datasets import Dataset, load_dataset
 from peft import LoraConfig, PeftModelForSeq2SeqLM, get_peft_model
 from transformers import (
     AutoModelForSeq2SeqLM,
+    AutoModelForCausalLM,
     AutoTokenizer,
     PreTrainedTokenizerBase,
     Trainer,
     TrainerCallback,
 )
 from transformers import TrainingArguments as HfTrainingArguments
+import torch
 
 # Sematic
 from sematic.ee.metrics import MetricScope, log_metric
@@ -32,12 +34,59 @@ class LogMetricsCallback(TrainerCallback):
 
 
 @unique
-class ModelSize(Enum):
-    small = "small"
-    base = "base"
-    large = "large"
-    xl = "xl"
-    xxl = "xxl"
+class ModelSelection(Enum):
+    flan_small = "flan_small"
+    flan_base = "flan_base"
+    flan_large = "flan_large"
+    flan_xl = "flan_xl"
+    flan_xxl = "flan_xxl"
+    falcon_7b = "falcon_7b"
+    falcon_40b = "falcon_40b"
+
+    @classmethod
+    def from_model_reference(cls, ref: HuggingFaceModelReference) -> "ModelSelection":
+        if "flan" in ref.repo:
+            return ModelSelection[ref.repo.replace("flan-t5", "")]
+        else:
+            return ModelSelection[ref.repo.replace("-", "_")]
+
+    def is_flan(self) -> bool:
+        return self in {
+            ModelSelection.flan_small,
+            ModelSelection.flan_base,
+            ModelSelection.flan_large,
+            ModelSelection.flan_xl,
+            ModelSelection.flan_xxl,
+        }
+
+
+@dataclass(frozen=True)
+class ModelProperties:
+    model_type: Type[Any]
+    pad_token: Optional[str] = None
+    trust_remote_code: bool = False
+    load_in_8bit: bool = False
+    torch_dtype: Optional[torch.dtype] = None
+
+
+_FLAN_PROPS = ModelProperties(model_type=AutoModelForSeq2SeqLM)
+_FALCON_PROPS = ModelProperties(
+    model_type=AutoModelForCausalLM,
+    pad_token="eos_token",
+    trust_remote_code=True,
+    load_in_8bit=True,
+    torch_dtype=torch.bfloat16,
+)
+
+_MODEL_PROPERTIES = {
+    ModelSelection.flan_small: _FLAN_PROPS,
+    ModelSelection.flan_base: _FLAN_PROPS,
+    ModelSelection.flan_large: _FLAN_PROPS,
+    ModelSelection.flan_xl: _FLAN_PROPS,
+    ModelSelection.flan_xxl: _FLAN_PROPS,
+    ModelSelection.falcon_7b: _FALCON_PROPS,
+    ModelSelection.falcon_40b: _FALCON_PROPS,
+}
 
 
 # works around: https://github.com/huggingface/transformers/issues/23958
@@ -59,7 +108,7 @@ class TrainingArguments:
 
 @dataclass
 class TrainingConfig:
-    model_size: ModelSize
+    model_selection: ModelSelection
     lora_config: LoraConfig
     training_arguments: TrainingArguments
     storage_directory: str
@@ -82,15 +131,27 @@ class EvaluationResults:
 
 
 def load_model(model_name):
-    model = AutoModelForSeq2SeqLM.from_pretrained(
+    model_props = _MODEL_PROPERTIES[ModelSelection.from_model_reference(
+        HuggingFaceModelReference.from_string(model_name)
+    )]
+    model = model_props.model_type.from_pretrained(
         model_name,
         device_map="auto",
+        trust_remote_code=model_props.trust_remote_code,
+        load_in_8bit=model_props.load_in_8bit,
+        torch_dtype=model_props.torch_dtype,
     )
     return model
 
 
 def load_tokenizer(model_name) -> PreTrainedTokenizerBase:
-    return AutoTokenizer.from_pretrained(model_name, device_map="auto")
+    model_props = _MODEL_PROPERTIES[ModelSelection.from_model_reference(
+        HuggingFaceModelReference.from_string(model_name)
+    )]
+    tokenizer = AutoTokenizer.from_pretrained(model_name, device_map="auto")
+    if model_props.pad_token is not None:
+        tokenizer.pad_token = getattr(tokenizer, model_props.pad_token)
+    return tokenizer
 
 
 def _docs_preprocess_function(examples, tokenizer, dataset_config):
@@ -99,7 +160,7 @@ def _docs_preprocess_function(examples, tokenizer, dataset_config):
     max_length = dataset_config.max_input_length
     output_token_max_length = dataset_config.max_output_length
     inputs = [
-        f"<Please summarize>: {ctx}. <Summary>: " for ctx in examples[text_column]
+        f"*Please summarize*: {ctx}. *Summary*: " for ctx in examples[text_column]
     ]
     targets = [target for target in examples[label_column]]
     model_inputs = tokenizer(

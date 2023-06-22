@@ -16,7 +16,7 @@ from sematic import LocalResolver
 from sematic.config.config import switch_env
 from sematic.examples.summarization_finetune.pipeline import (
     DatasetConfig,
-    ModelSize,
+    ModelSelection,
     TrainingConfig,
     pipeline,
 )
@@ -27,7 +27,7 @@ from sematic.examples.summarization_finetune.train_eval import (
 )
 
 
-LORA_CONFIG = LoraConfig(
+LORA_CONFIG_FLAN = LoraConfig(
     r=16,
     lora_alpha=1,
     target_modules=["q", "v"],
@@ -35,6 +35,18 @@ LORA_CONFIG = LoraConfig(
     bias="none",
     peft_type=PeftType.LORA,
     task_type="SEQ_2_SEQ_LM",
+    base_model_name_or_path="",
+)
+
+LORA_CONFIG_FALCON = replace(
+    LORA_CONFIG_FLAN,
+    target_modules=[
+        "query_key_value",
+        "dense",
+        "dense_h_to_4h",
+        "dense_4h_to_h",
+    ],
+    task_type="CAUSAL_LM",
     base_model_name_or_path="",
 )
 
@@ -51,8 +63,8 @@ TRAINING_ARGS = TrainingArguments(
 )
 
 TRAINING_CONFIG = TrainingConfig(
-    model_size=ModelSize.base,
-    lora_config=LORA_CONFIG,
+    model_selection=ModelSelection.flan_base,
+    lora_config=LORA_CONFIG_FLAN,
     training_arguments=TRAINING_ARGS,
     storage_directory="~/tmp/summarization-tuned-model",
 )
@@ -73,9 +85,10 @@ def main():
 
     training_config, dataset_config, export_reference = parse_args()
     resolver = LocalResolver()
+    model_tag = training_config.model_selection.name.replace("_", "-")
     future = pipeline(training_config, dataset_config, export_reference).set(
         name="Summarization Fine-Tuning",
-        tags=[f"model-size:{training_config.model_size.name}"],
+        tags=[f"model-selection:{model_tag}"],
     )
     resolver.resolve(future)
 
@@ -84,14 +97,14 @@ def parse_args() -> Tuple[
     TrainingConfig, DatasetConfig, Optional[HuggingFaceModelReference]
 ]:
     parser = argparse.ArgumentParser("Hugging Face Summarization Example")
-    size_options = ", ".join([size.name for size in ModelSize])
+    selection_options = ", ".join([selection.name.replace("_", "-") for selection in ModelSelection])
     parser.add_argument(
-        "--model-size",
-        type=lambda size: ModelSize[size],
-        default=TRAINING_CONFIG.model_size.name,
+        "--model-selection",
+        type=lambda selection: ModelSelection[selection.replace("-", "_")],
+        default=TRAINING_CONFIG.model_selection.name,
         help=(
-            f"Select a model size (see https://huggingface.co/google/flan-t5-base)"
-            f". Options:  {size_options}."
+            f"Select a model"
+            f". Options:  {selection_options}."
         ),
     )
     parser.add_argument(
@@ -143,8 +156,7 @@ def parse_args() -> Tuple[
         help=(
             "The Hugging Face dataset to use. Should be structured as: "
             "<owner>/<repo>:<subset>. For datasets owned by HuggingFace, omit <owner>/ "
-            "Ex: cnn_dailymail:1.0.0 for https://huggingface.co/datasets/cnn_dailymail"
-        ),
+        )
     )
     parser.add_argument(
         "--text-column",
@@ -175,19 +187,19 @@ def parse_args() -> Tuple[
     parser.add_argument(
         "--lora-r",
         type=int,
-        default=LORA_CONFIG.r,
+        default=LORA_CONFIG_FLAN.r,
         help="The number of dimensions for the LoRA matrix.",
     )
     parser.add_argument(
         "--lora-alpha",
         type=int,
-        default=LORA_CONFIG.lora_alpha,
+        default=LORA_CONFIG_FLAN.lora_alpha,
         help="The scaling factor for the LoRA trained weights.",
     )
     parser.add_argument(
         "--lora-dropout",
         type=float,
-        default=LORA_CONFIG.lora_dropout,
+        default=LORA_CONFIG_FLAN.lora_dropout,
         help="The dropout probability for LoRA layers.",
     )
     parser.add_argument(
@@ -201,21 +213,22 @@ def parse_args() -> Tuple[
     )
     args = parser.parse_args()
 
+    lora_config = replace(
+        LORA_CONFIG_FLAN if args.model_selection.is_flan() else LORA_CONFIG_FALCON,
+        r=args.lora_r,
+        lora_alpha=args.lora_alpha,
+        lora_dropout=args.lora_dropout,
+    )
     training_config = replace(
         TRAINING_CONFIG,
-        model_size=args.model_size,
+        model_selection=args.model_selection,
         training_arguments=replace(
             TRAINING_ARGS,
             learning_rate=args.learning_rate,
             num_train_epochs=args.epochs,
             logging_steps=args.logging_steps,
         ),
-        lora_config=replace(
-            LORA_CONFIG,
-            r=args.lora_r,
-            lora_alpha=args.lora_alpha,
-            lora_dropout=args.lora_dropout,
-        ),
+        lora_config=lora_config,
     )
 
     dataset_config = replace(
@@ -228,6 +241,8 @@ def parse_args() -> Tuple[
         text_column=args.text_column,
         summary_column=args.summary_column,
     )
+    if dataset_config.dataset_ref.commit_sha is not None:
+        raise ValueError("Using a specific commit of a dataset is not supported.")
 
     export_model_reference = None
     if args.model_export_repo is not None:
