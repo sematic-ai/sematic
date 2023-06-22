@@ -35,7 +35,7 @@ const HeaderMenu = (props: HeaderMenuProps) => {
                 className={selectedKey === "pipelines" ? "selected" : ""}>
                 Pipelines
             </MuiRouterLink>
-            <Link variant="subtitle1" type='menu' className={selectedKey === "metrics" ? "selected" : ""}>Metrics</Link>
+            {/* <Link variant="subtitle1" type='menu' className={selectedKey === "metrics" ? "selected" : ""}>Metrics</Link> */}
         </Box>
         <Box style={{ flexGrow: 1, display: "flex", justifyContent: "end" }} >
             <Link variant="subtitle1" type='menu'>Get Started</Link>

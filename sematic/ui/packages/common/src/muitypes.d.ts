@@ -20,6 +20,7 @@ declare module "@mui/material/styles" {
         lightGrey: PaletteColor;
         mediumGrey: PaletteColor;
         p3border: PaletteColor;
+        p1black: PaletteColor;
         white: PaletteColor;
     }
 }
