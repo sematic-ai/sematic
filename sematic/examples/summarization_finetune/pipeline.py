@@ -10,7 +10,7 @@ from transformers import AutoModelForSeq2SeqLM, PreTrainedTokenizerBase
 
 # Sematic
 import sematic
-from sematic.examples.flan_t5_finetune.train_eval import (
+from sematic.examples.summarization_finetune.train_eval import (
     DatasetConfig,
     EvaluationResults,
     HuggingFaceModelReference,
@@ -19,11 +19,11 @@ from sematic.examples.flan_t5_finetune.train_eval import (
     evaluate,
     export_model,
 )
-from sematic.examples.flan_t5_finetune.train_eval import (
+from sematic.examples.summarization_finetune.train_eval import (
     load_tokenizer as do_load_tokenizer,
 )
-from sematic.examples.flan_t5_finetune.train_eval import prepare_data
-from sematic.examples.flan_t5_finetune.train_eval import train as do_train
+from sematic.examples.summarization_finetune.train_eval import prepare_data
+from sematic.examples.summarization_finetune.train_eval import train as do_train
 
 
 @dataclass(frozen=True)

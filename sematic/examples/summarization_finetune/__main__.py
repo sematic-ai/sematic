@@ -1,4 +1,4 @@
-""" Launch script for the FLAN finetuning
+""" Launch script for the summarization model finetuning
 isort:skip_file
 """
 # Standard Library
@@ -14,13 +14,13 @@ from peft import LoraConfig, PeftType
 # Sematic
 from sematic import LocalResolver
 from sematic.config.config import switch_env
-from sematic.examples.flan_t5_finetune.pipeline import (
+from sematic.examples.summarization_finetune.pipeline import (
     DatasetConfig,
     ModelSize,
     TrainingConfig,
     pipeline,
 )
-from sematic.examples.flan_t5_finetune.train_eval import (
+from sematic.examples.summarization_finetune.train_eval import (
     HuggingFaceDatasetReference,
     HuggingFaceModelReference,
     TrainingArguments,
@@ -54,7 +54,7 @@ TRAINING_CONFIG = TrainingConfig(
     model_size=ModelSize.base,
     lora_config=LORA_CONFIG,
     training_arguments=TRAINING_ARGS,
-    storage_directory="~/tmp/flan-tuned-model",
+    storage_directory="~/tmp/summarization-tuned-model",
 )
 
 DATASET_CONFIG = DatasetConfig(
@@ -74,7 +74,7 @@ def main():
     training_config, dataset_config, export_reference = parse_args()
     resolver = LocalResolver()
     future = pipeline(training_config, dataset_config, export_reference).set(
-        name="Flan Summarization Fine-Tuning",
+        name="Summarization Fine-Tuning",
         tags=[f"model-size:{training_config.model_size.name}"],
     )
     resolver.resolve(future)
@@ -83,7 +83,7 @@ def main():
 def parse_args() -> Tuple[
     TrainingConfig, DatasetConfig, Optional[HuggingFaceModelReference]
 ]:
-    parser = argparse.ArgumentParser("HuggingFace Flan Example")
+    parser = argparse.ArgumentParser("Hugging Face Summarization Example")
     size_options = ", ".join([size.name for size in ModelSize])
     parser.add_argument(
         "--model-size",

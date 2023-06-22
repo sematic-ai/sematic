@@ -10,7 +10,7 @@ pip_deps = [
 ]
 
 sematic_example(
-    name = "flan_t5_finetune",
+    name = "summarization_finetune",
     requirements = pip_deps,
     extras = ["//sematic/ee:metrics"]
 )
