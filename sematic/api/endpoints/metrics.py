@@ -15,6 +15,7 @@ from sematic.abstract_system_metric import AbstractSystemMetric
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
+from sematic.db.models.organization import Organization
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.metrics.func_effective_runtime_metric import FuncEffectiveRuntimeMetric
@@ -50,7 +51,10 @@ def _get_rollup(args: Dict[str, str]) -> RollUp:
 
 @sematic_api.route("/api/v1/metrics/<metric_name>", methods=["GET"])
 @authenticate
-def get_metric_endpoint(user: Optional[User], metric_name: str) -> flask.Response:
+def get_metric_endpoint(
+    user: Optional[User], organization: Optional[Organization], metric_name: str
+) -> flask.Response:
+
     metrics_storage = SQLMetricsStorage()
 
     from_time_ts = float(flask.request.args.get("from_time", 0))
@@ -97,7 +101,10 @@ def get_metric_endpoint(user: Optional[User], metric_name: str) -> flask.Respons
 
 @sematic_api.route("/api/v1/metrics", methods=["POST"])
 @authenticate
-def log_metric_endpoint(user: Optional[User]) -> flask.Response:
+def log_metric_endpoint(
+    user: Optional[User] = None, organization: Optional[Organization] = None
+) -> flask.Response:
+
     plugin_class = get_metrics_storage_plugins(default=[SQLMetricsStorage])[0]
 
     plugin = plugin_class()
@@ -120,7 +127,10 @@ def log_metric_endpoint(user: Optional[User]) -> flask.Response:
 
 @sematic_api.route("/api/v1/metrics", methods=["GET"])
 @authenticate
-def list_metrics_endpoint(user: Optional[User]) -> flask.Response:
+def list_metrics_endpoint(
+    user: Optional[User] = None, organization: Optional[Organization] = None
+) -> flask.Response:
+
     try:
         labels: Dict = json.loads(flask.request.args.get("labels", "{}"))
     except Exception as e:

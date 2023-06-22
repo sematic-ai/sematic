@@ -12,6 +12,7 @@ import flask
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.db.models.git_info import GitInfo
+from sematic.db.models.organization import Organization
 from sematic.db.models.user import User
 from sematic.ee.plugins.publishing.github.check import check_commit
 
@@ -24,9 +25,14 @@ logger = getLogger(__name__)
 )
 @authenticate
 def run_commit_check(
-    user: Optional[User], owner: str, repo: str, commit_sha: str
+    user: Optional[User],
+    organization: Optional[Organization],
+    owner: str,
+    repo: str,
+    commit_sha: str,
 ) -> flask.Response:
-    """Perform a check on the specified commit, update GitHub with the result and return.
+    """
+    Perform a check on the specified commit, update GitHub with the result and return.
 
     Returns
     -------
@@ -50,8 +56,11 @@ def run_commit_check(
 
 @sematic_api.route("/api/v1/github/enabled", methods=["GET"])
 @authenticate
-def is_github_enabled(user: Optional[User]) -> flask.Response:
-    """Confirm that the GitHub plugin is enabled
+def is_github_enabled(
+    user: Optional[User], organization: Optional[Organization]
+) -> flask.Response:
+    """
+    Confirm that the GitHub plugin is enabled.
 
     Returns
     -------

@@ -9,6 +9,7 @@ from google.auth.exceptions import GoogleAuthError
 from google.auth.transport import requests
 from google.oauth2 import id_token
 from sqlalchemy.orm.exc import NoResultFound
+from starlette.requests import Request  # type: ignore
 from starlette.responses import JSONResponse  # type: ignore
 
 # Sematic
@@ -21,7 +22,12 @@ from sematic.config.server_settings import (
 )
 from sematic.config.settings import MissingSettingsError
 from sematic.db.models.factories import make_user
-from sematic.db.queries import get_user_by_api_key, get_user_by_email, save_user
+from sematic.db.queries import (
+    get_organizations,
+    get_user_by_api_key,
+    get_user_by_email,
+    save_user,
+)
 
 # Email address for pseudo-user for the cron job that periodically
 # makes requests to the API to clean up dangling resources.
@@ -37,11 +43,11 @@ def authenticate_endpoint() -> flask.Response:
     friction, we let users run locally without authentication.
     """
     providers = {}
-    authenticate = get_bool_server_setting(
+    do_authenticate = get_bool_server_setting(
         ServerSettingsVar.SEMATIC_AUTHENTICATE, False
     )
 
-    if authenticate:
+    if do_authenticate:
         for var in (
             ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID,
             # TODO: Github needs more work, npm package is broken
@@ -159,20 +165,24 @@ def get_cleaner_api_key() -> str:
 
 
 API_KEY_HEADER = "X-API-KEY"
+ORGANIZATION_ID_HEADER = "X-ORG-ID"
 
 
 def authenticate(endpoint_fn: Callable) -> Callable:
     """
     Decorator for endpoints who need authentication.
+
+    This decorator expects the wrapped function to take the User and the Organization as
+    the first two parameters.
     """
 
     @functools.wraps(endpoint_fn)
     def endpoint(*args, **kwargs) -> flask.Response:
-        authenticate = get_bool_server_setting(
+        do_authenticate = get_bool_server_setting(
             ServerSettingsVar.SEMATIC_AUTHENTICATE, False
         )
-        if not authenticate:
-            return endpoint_fn(None, *args, **kwargs)
+        if not do_authenticate:
+            return endpoint_fn(None, None, *args, **kwargs)
 
         request_api_key = flask.request.headers.get(API_KEY_HEADER)
         if request_api_key is None:
@@ -183,21 +193,36 @@ def authenticate(endpoint_fn: Callable) -> Callable:
         except NoResultFound:
             return jsonify_error("Missing API key", HTTPStatus.UNAUTHORIZED)
 
-        return endpoint_fn(user, *args, **kwargs)
+        # if no org id header is specified, default to the user's personal org
+        organization_id = flask.request.headers.get(
+            ORGANIZATION_ID_HEADER, default=user.id
+        )
+        user_organizations = get_organizations(user=user)
+
+        for organization in user_organizations:
+            if organization.id == organization_id:
+                return endpoint_fn(user, organization, *args, **kwargs)
+
+        return jsonify_error("Missing Organization ID", HTTPStatus.UNAUTHORIZED)
 
     return endpoint
 
 
 def authenticate_starlette(endpoint_fn: Callable) -> Callable:
-    """Decorator for starlette endpoints who need authentication."""
+    """
+    Decorator for starlette endpoints who need authentication.
+
+    This decorator expects the wrapped function to take the User and the Organization as
+    the first two parameters.
+    """
 
     @functools.wraps(endpoint_fn)
-    async def endpoint(request):
-        authenticate = get_bool_server_setting(
+    async def endpoint(request: Request):
+        do_authenticate = get_bool_server_setting(
             ServerSettingsVar.SEMATIC_AUTHENTICATE, False
         )
-        if not authenticate:
-            return await endpoint_fn(None, request)
+        if not do_authenticate:
+            return await endpoint_fn(None, None, request)
 
         request_api_key = request.headers.get(API_KEY_HEADER)
         if request_api_key is None:
@@ -208,6 +233,16 @@ def authenticate_starlette(endpoint_fn: Callable) -> Callable:
         except NoResultFound:
             return JSONResponse({"error": "Missing API key"}, HTTPStatus.UNAUTHORIZED)
 
-        return await endpoint_fn(user, request)
+        # if no org id header is specified, default to the user's personal org
+        organization_id = request.headers.get(ORGANIZATION_ID_HEADER, default=user.id)
+        user_organizations = get_organizations(user=user)
+
+        for organization in user_organizations:
+            if organization.id == organization_id:
+                return await endpoint_fn(user, organization, request)
+
+        return JSONResponse(
+            {"error": "Missing Organization ID"}, HTTPStatus.UNAUTHORIZED
+        )
 
     return endpoint

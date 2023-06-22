@@ -16,6 +16,7 @@ from sematic.api.endpoints.request_parameters import (
 )
 from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
+from sematic.db.models.organization import Organization
 from sematic.db.models.user import User
 from sematic.db.queries import get_artifact
 
@@ -24,7 +25,9 @@ logger = logging.getLogger(__name__)
 
 @sematic_api.route("/api/v1/artifacts", methods=["GET"])
 @authenticate
-def list_artifacts_endpoint(user: Optional[User] = None) -> flask.Response:
+def list_artifacts_endpoint(
+    user: Optional[User] = None, organization: Optional[Organization] = None
+) -> flask.Response:
 
     parameters = get_request_parameters(args=flask.request.args, model=Artifact)
     limit, order, sql_predicates = (
@@ -50,7 +53,11 @@ def list_artifacts_endpoint(user: Optional[User] = None) -> flask.Response:
 
 @sematic_api.route("/api/v1/artifacts/<artifact_id>", methods=["GET"])
 @authenticate
-def get_artifact_endpoint(user: Optional[User], artifact_id: str) -> flask.Response:
+def get_artifact_endpoint(
+    user: Optional[User],
+    organization: Optional[Organization],
+    artifact_id: str,
+) -> flask.Response:
     """
     Retrieve an artifact by its ID.
 

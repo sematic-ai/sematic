@@ -14,6 +14,7 @@ from sematic.api.endpoints.auth import authenticate
 from sematic.config.server_settings import ServerSettingsVar, get_server_setting
 from sematic.config.settings import MissingSettingsError
 from sematic.db.db import db
+from sematic.db.models.organization import Organization
 from sematic.db.models.user import User
 from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 
@@ -43,8 +44,12 @@ def get_server_version_info() -> flask.Response:
 
 @sematic_api.route("/api/v1/meta/env", methods=["GET"])
 @authenticate
-def env_endpoint(user: Optional[User]) -> flask.Response:
-    """Return a dictionary with information about the configuration of the server."""
+def env_endpoint(
+    user: Optional[User] = None, organization: Optional[Organization] = None
+) -> flask.Response:
+    """
+    Return a dictionary with information about the configuration of the server.
+    """
     env = {}
     for settings in (
         ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID,

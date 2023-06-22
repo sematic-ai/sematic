@@ -32,6 +32,7 @@ from sematic.api.endpoints.request_parameters import (
 from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.factories import clone_resolution, clone_root_run
+from sematic.db.models.organization import Organization
 from sematic.db.models.resolution import InvalidResolution, Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -70,7 +71,10 @@ _GARBAGE_COLLECTION_QUERIES = {
 
 @sematic_api.route("/api/v1/resolutions/<resolution_id>", methods=["GET"])
 @authenticate
-def get_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.Response:
+def get_resolution_endpoint(
+    user: Optional[User], organization: Optional[Organization], resolution_id: str
+) -> flask.Response:
+
     try:
         resolution = get_resolution(resolution_id)
     except NoResultFound:
@@ -86,7 +90,10 @@ def get_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
 
 @sematic_api.route("/api/v1/resolutions/<resolution_id>", methods=["PUT"])
 @authenticate
-def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.Response:
+def put_resolution_endpoint(
+    user: Optional[User], organization: Optional[Organization], resolution_id: str
+) -> flask.Response:
+
     if (
         not flask.request
         or not flask.request.json
@@ -207,8 +214,9 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
 @sematic_api.route("/api/v1/resolutions/<resolution_id>/schedule", methods=["POST"])
 @authenticate
 def schedule_resolution_endpoint(
-    user: Optional[User], resolution_id: str
+    user: Optional[User], organization: Optional[Organization], resolution_id: str
 ) -> flask.Response:
+
     resolution = get_resolution(resolution_id)
 
     max_parallelism, rerun_from, rerun_mode = None, None, None
@@ -281,8 +289,9 @@ def schedule_resolution_endpoint(
 @sematic_api.route("/api/v1/resolutions/<resolution_id>/rerun", methods=["POST"])
 @authenticate
 def rerun_resolution_endpoint(
-    user: Optional[User], resolution_id: str
+    user: Optional[User], organization: Optional[Organization], resolution_id: str
 ) -> flask.Response:
+
     original_resolution = get_resolution(resolution_id)
 
     if original_resolution.container_image_uri is None:
@@ -356,8 +365,9 @@ def rerun_resolution_endpoint(
 @sematic_api.route("/api/v1/resolutions/<resolution_id>/cancel", methods=["PUT"])
 @authenticate
 def cancel_resolution_endpoint(
-    user: Optional[User], resolution_id: str
+    user: Optional[User], organization: Optional[Organization], resolution_id: str
 ) -> flask.Response:
+
     try:
         resolution = get_resolution(resolution_id)
     except NoResultFound:
@@ -404,7 +414,10 @@ def cancel_resolution_endpoint(
     "/api/v1/resolutions/<resolution_id>/external_resources", methods=["GET"]
 )
 @authenticate
-def get_resources_endpoint(user: Optional[User], resolution_id: str) -> flask.Response:
+def get_resources_endpoint(
+    user: Optional[User], organization: Optional[Organization], resolution_id: str
+) -> flask.Response:
+
     resources = get_resources_by_root_id(resolution_id)
     payload = dict(
         external_resources=[resource.to_json_encodable() for resource in resources]
@@ -483,7 +496,9 @@ def _update_resolution_user(
 
 @sematic_api.route("/api/v1/resolutions", methods=["GET"])
 @authenticate
-def list_resolutions_endpoint(user: Optional[User]) -> flask.Response:
+def list_resolutions_endpoint(
+    user: Optional[User] = None, organization: Optional[Organization] = None
+) -> flask.Response:
     """
     GET /api/v1/resolutions endpoint.
 
@@ -552,8 +567,9 @@ def list_resolutions_endpoint(user: Optional[User]) -> flask.Response:
 @sematic_api.route("/api/v1/resolutions/<root_id>/clean_jobs", methods=["POST"])
 @authenticate
 def clean_orphaned_resolution_jobs_endpoint(
-    user: Optional[User], root_id: str
+    user: Optional[User], organization: Optional[Organization], root_id: str
 ) -> flask.Response:
+
     resolution = get_resolution(root_id)
     if not ResolutionStatus[resolution.status].is_terminal():  # type: ignore
         message = (
@@ -575,8 +591,9 @@ def clean_orphaned_resolution_jobs_endpoint(
 @sematic_api.route("/api/v1/resolutions/<root_id>/clean", methods=["POST"])
 @authenticate
 def clean_stale_resolution_endpoint(
-    user: Optional[User], root_id: str
+    user: Optional[User], organization: Optional[Organization], root_id: str
 ) -> flask.Response:
+
     resolution = get_resolution(root_id)
     root_run = get_run(root_id)
 

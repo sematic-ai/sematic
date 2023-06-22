@@ -19,6 +19,7 @@ from sematic.api.endpoints.auth import API_KEY_HEADER, authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.config.config import get_config
 from sematic.config.settings import get_plugin_setting
+from sematic.db.models.organization import Organization
 from sematic.db.models.user import User
 from sematic.plugins.abstract_storage import AbstractStorage, StorageDestination
 
@@ -90,7 +91,10 @@ def _make_headers(user: Optional[User]) -> Dict[str, str]:
 
 @sematic_api.route("/api/v1/storage/<namespace>/<key>/local", methods=["PUT"])
 @authenticate
-def upload_endpoint(user: Optional[User], namespace: str, key: str) -> flask.Response:
+def upload_endpoint(
+    user: Optional[User], organization: Optional[Organization], namespace: str, key: str
+) -> flask.Response:
+
     # TODO: Validate that user has permissions to upload.
     # TODO: Breakdown into two different endpoints for artifacts and futures
     payload = flask.request.data
@@ -105,7 +109,10 @@ def upload_endpoint(user: Optional[User], namespace: str, key: str) -> flask.Res
 
 @sematic_api.route("/api/v1/storage/<namespace>/<key>/local", methods=["GET"])
 @authenticate
-def download_endpoint(user: Optional[User], namespace: str, key: str) -> flask.Response:
+def download_endpoint(
+    user: Optional[User], organization: Optional[Organization], namespace: str, key: str
+) -> flask.Response:
+
     try:
         with open(os.path.join(_get_data_dir(), namespace, key), "rb") as file:
             content = file.read()

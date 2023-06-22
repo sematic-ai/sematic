@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional
 import flask
 import requests
 from starlette.applications import Starlette  # type: ignore
+from starlette.requests import Request  # type: ignore
 from starlette.responses import JSONResponse  # type: ignore
 from starlette.routing import Route  # type: ignore
 
@@ -14,6 +15,7 @@ from starlette.routing import Route  # type: ignore
 from sematic import api_client
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate, authenticate_starlette
+from sematic.db.models.organization import Organization
 from sematic.db.models.user import User
 
 logger = logging.getLogger(__name__)
@@ -33,7 +35,12 @@ def register_sio_server(sio_server):
 
 @sematic_api.route(_ROUTE, methods=["POST"])
 @authenticate
-def sync_events(user: Optional[User], namespace: str, event: str) -> flask.Response:
+def sync_events(
+    user: Optional[User],
+    organization: Optional[Organization],
+    namespace: str,
+    event: str,
+) -> flask.Response:
     """
     Sends out a socketio broadcast notification to all subscribed listeners (Runners,
     the Dashboard, etc.).
@@ -52,7 +59,9 @@ def sync_events(user: Optional[User], namespace: str, event: str) -> flask.Respo
 
 
 @authenticate_starlette
-async def async_events(user: Optional[User], request):
+async def async_events(
+    user: Optional[User], organization: Optional[Organization], request: Request
+):
     """
     Sends out a socketio broadcast notification to all subscribed listeners (Runners,
     the Dashboard, etc.).
@@ -73,7 +82,7 @@ async def async_events(user: Optional[User], request):
     return JSONResponse({})
 
 
-async def health_check(request):
+async def health_check(request: Request):
     return JSONResponse({})
 
 

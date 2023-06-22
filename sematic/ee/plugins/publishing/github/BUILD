@@ -28,6 +28,7 @@ sematic_py_lib(
         ":check",
         "//sematic/api:app",
         "//sematic/api/endpoints:auth",
+        "//sematic/db/models:organization",
         "//sematic/db/models:user",
     ],
 )

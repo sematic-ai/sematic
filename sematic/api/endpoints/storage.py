@@ -12,6 +12,7 @@ from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.config.config import get_config
+from sematic.db.models.organization import Organization
 from sematic.db.models.user import User
 from sematic.plugins.abstract_storage import StorageDestination, get_storage_plugins
 from sematic.plugins.storage.local_storage import LocalStorage
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 @sematic_api.route("/api/v1/storage/<path:namespace>/<key>/location", methods=["GET"])
 @authenticate
 def get_storage_location(
-    user: Optional[User], namespace: str, key: str
+    user: Optional[User], organization: Optional[Organization], namespace: str, key: str
 ) -> flask.Response:
     """
     Get the URL to which to PUT the payload to store.
@@ -61,7 +62,9 @@ def get_storage_location(
 
 @sematic_api.route("/api/v1/storage/<namespace>/<key>/data", methods=["GET"])
 @authenticate
-def get_storage_data_endpoint(user: Optional[User], namespace: str, key: str):
+def get_storage_data_endpoint(
+    user: Optional[User], organization: Optional[Organization], namespace: str, key: str
+) -> flask.Response:
     """
     Redirect to the location of the stored payload.
 

@@ -34,6 +34,7 @@ from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.job import Job
+from sematic.db.models.organization import Organization
 from sematic.db.models.resolution import ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -75,7 +76,9 @@ _GARBAGE_COLLECTION_QUERIES = {
 
 @sematic_api.route("/api/v1/runs", methods=["GET"])
 @authenticate
-def list_runs_endpoint(user: Optional[User]) -> flask.Response:
+def list_runs_endpoint(
+    user: Optional[User] = None, organization: Optional[Organization] = None
+) -> flask.Response:
     """
     GET /api/v1/runs endpoint.
 
@@ -279,7 +282,10 @@ def _generate_search_predicate(
 
 @sematic_api.route("/api/v1/runs/<run_id>", methods=["GET"])
 @authenticate
-def get_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+def get_run_endpoint(
+    user: Optional[User], organization: Optional[Organization], run_id: str
+) -> flask.Response:
+
     try:
         run = get_run(run_id)
     except NoResultFound:
@@ -294,8 +300,12 @@ def get_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 
 @sematic_api.route("/api/v1/runs/<run_id>/schedule", methods=["POST"])
 @authenticate
-def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
-    """Schedule the run for execution on external compute, like k8s."""
+def schedule_run_endpoint(
+    user: Optional[User], organization: Optional[Organization], run_id: str
+) -> flask.Response:
+    """
+    Schedule the run for execution on external compute, like k8s.
+    """
     try:
         run = get_run(run_id)
     except NoResultFound:
@@ -325,8 +335,12 @@ def schedule_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 
 @sematic_api.route("/api/v1/runs/<run_id>/logs", methods=["GET"])
 @authenticate
-def get_logs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
-    """Get portions of the logs for the run if possible"""
+def get_logs_endpoint(
+    user: Optional[User], organization: Optional[Organization], run_id: str
+) -> flask.Response:
+    """
+    Get portions of the logs for the run, if possible.
+    """
 
     kwarg_overrides: Dict[str, Union[str, List[str]]] = dict(flask.request.args)
     if "filter_string" in kwarg_overrides:
@@ -445,8 +459,12 @@ def _get_run_and_jobs_if_modified(
 @sematic_api.route("/api/v1/runs/future_states", methods=["POST"])
 @authenticate
 @retry(_DetectedRunRaceCondition, tries=3, delay=10, jitter=1)
-def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
-    """Update the state of runs based on external job status, and return results."""
+def update_run_status_endpoint(
+    user: Optional[User] = None, organization: Optional[Organization] = None
+) -> flask.Response:
+    """
+    Update the state of runs based on external job status, and return results.
+    """
     input_payload: Dict[str, Any] = flask.request.json  # type: ignore
     if "run_ids" not in input_payload:
         return jsonify_error(
@@ -512,7 +530,9 @@ def update_run_status_endpoint(user: Optional[User]) -> flask.Response:
 
 @sematic_api.route("/api/v1/runs/<run_id>/graph", methods=["GET"])
 @authenticate
-def get_run_graph_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+def get_run_graph_endpoint(
+    user: Optional[User], organization: Optional[Organization], run_id: str
+) -> flask.Response:
     """
     Retrieve graph objects for run with id `run_id`.
 
@@ -553,7 +573,10 @@ def get_run_graph_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 
 @sematic_api.route("/api/v1/graph", methods=["PUT"])
 @authenticate
-def save_graph_endpoint(user: Optional[User]):
+def save_graph_endpoint(
+    user: Optional[User] = None, organization: Optional[Organization] = None
+) -> flask.Response:
+
     if not flask.request or not flask.request.json or "graph" not in flask.request.json:
         return jsonify_error(
             "Please provide a graph payload in JSON format.",
@@ -601,7 +624,10 @@ def save_graph_endpoint(user: Optional[User]):
 
 @sematic_api.route("/api/v1/runs/<run_id>/external_resources", methods=["GET"])
 @authenticate
-def get_run_external_resources(user: Optional[User], run_id):
+def get_run_external_resources(
+    user: Optional[User], organization: Optional[Organization], run_id
+) -> flask.Response:
+
     external_resources = get_external_resources_by_run_id(run_id)
 
     return flask.jsonify(
@@ -616,7 +642,10 @@ def get_run_external_resources(user: Optional[User], run_id):
 
 @sematic_api.route("/api/v1/runs/<run_id>/external_resources", methods=["POST"])
 @authenticate
-def link_resource_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+def link_resource_endpoint(
+    user: Optional[User], organization: Optional[Organization], run_id: str
+) -> flask.Response:
+
     if (
         not flask.request
         or not flask.request.json
@@ -633,7 +662,10 @@ def link_resource_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 
 @sematic_api.route("/api/v1/runs/<run_id>/metrics", methods=["GET"])
 @authenticate
-def run_metrics_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+def run_metrics_endpoint(
+    user: Optional[User], organization: Optional[Organization], run_id: str
+) -> flask.Response:
+
     run = get_run(run_id)
     pipeline_metrics = get_basic_pipeline_metrics(run.function_path)
     return flask.jsonify(dict(content=asdict(pipeline_metrics)))
@@ -644,7 +676,10 @@ def run_metrics_endpoint(user: Optional[User], run_id: str) -> flask.Response:
 # (rather than a client posting a job to the server).
 @sematic_api.route("/api/v1/runs/<run_id>/jobs", methods=["GET"])
 @authenticate
-def get_run_jobs(user: Optional[User], run_id: str) -> flask.Response:
+def get_run_jobs(
+    user: Optional[User], organization: Optional[Organization], run_id: str
+) -> flask.Response:
+
     jobs = [job.to_json_encodable() for job in get_jobs_by_run_id(run_id=run_id)]
     return flask.jsonify(
         dict(
@@ -655,7 +690,10 @@ def get_run_jobs(user: Optional[User], run_id: str) -> flask.Response:
 
 @sematic_api.route("/api/v1/runs/<run_id>/clean", methods=["POST"])
 @authenticate
-def clean_orphaned_run_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+def clean_orphaned_run_endpoint(
+    user: Optional[User], organization: Optional[Organization], run_id: str
+) -> flask.Response:
+
     run = get_run(run_id)
     resolution = get_resolution(run.root_id)
     if not ResolutionStatus[resolution.status].is_terminal():  # type: ignore
@@ -701,7 +739,10 @@ def clean_orphaned_run_endpoint(user: Optional[User], run_id: str) -> flask.Resp
 
 @sematic_api.route("/api/v1/runs/<run_id>/clean_jobs", methods=["POST"])
 @authenticate
-def clean_orphaned_jobs_endpoint(user: Optional[User], run_id: str) -> flask.Response:
+def clean_orphaned_jobs_endpoint(
+    user: Optional[User], organization: Optional[Organization], run_id: str
+) -> flask.Response:
+
     run = get_run(run_id)
     if not FutureState[run.future_state].is_terminal():  # type: ignore
         message = (

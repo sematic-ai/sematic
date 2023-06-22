@@ -10,6 +10,7 @@ from sematic.abstract_plugin import SEMATIC_PLUGIN_AUTHOR, AbstractPlugin, Plugi
 from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import API_KEY_HEADER, authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
+from sematic.db.models.organization import Organization
 from sematic.db.models.user import User
 from sematic.plugins.abstract_storage import (
     AbstractStorage,
@@ -90,8 +91,9 @@ def _make_headers(user: Optional[User]) -> Dict[str, str]:
 @sematic_api.route("/api/v1/storage/<namespace>/<key>/memory", methods=["GET"])
 @authenticate
 def memory_download_endpoint(
-    user: Optional[User], namespace: str, key: str
+    user: Optional[User], organization: Optional[Organization], namespace: str, key: str
 ) -> flask.Response:
+
     try:
         content = MemoryStorage.get(f"{namespace}/{key}")
     except NoSuchStorageKeyError:
@@ -105,8 +107,9 @@ def memory_download_endpoint(
 @sematic_api.route("/api/v1/storage/<namespace>/<key>/memory", methods=["PUT"])
 @authenticate
 def memory_upload_endpoint(
-    user: Optional[User], namespace: str, key: str
+    user: Optional[User], organization: Optional[Organization], namespace: str, key: str
 ) -> flask.Response:
+
     payload = flask.request.data
 
     MemoryStorage.set(f"{namespace}/{key}", payload)

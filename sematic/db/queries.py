@@ -67,12 +67,31 @@ def get_artifact(artifact_id: str) -> Artifact:
         return session.query(Artifact).filter(Artifact.id == artifact_id).one()
 
 
-def get_organizations() -> List[Organization]:
+def get_organizations(user: Optional[User]) -> List[Organization]:
     """
-    Get all organizations from the database.
+    Get all organizations for the specified user.
+
+    Parameters
+    ----------
+    user: Optional[User]
+        The user for which to return the list of organizations.
+
+    Returns
+    -------
+    List[Organization]
+        The list of organizations in which the specified user has membership
     """
+    if user is None:
+        return []
+
     with db().get_session() as session:
-        return session.query(Organization).order_by(Organization.name).all()
+        return (
+            session.query(Organization)
+            .join(OrganizationUser, Organization.id == OrganizationUser.organization_id)
+            .filter(OrganizationUser.user_id == user.id)
+            .order_by(Organization.name)
+            .all()
+        )
 
 
 def get_users() -> List[User]:

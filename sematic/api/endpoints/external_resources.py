@@ -13,6 +13,7 @@ from sematic.api.app import sematic_api
 from sematic.api.endpoints.auth import authenticate
 from sematic.api.endpoints.request_parameters import jsonify_error
 from sematic.db.models.external_resource import ExternalResource
+from sematic.db.models.organization import Organization
 from sematic.db.models.user import User
 from sematic.db.queries import (
     get_external_resource_record,
@@ -30,7 +31,10 @@ logger = logging.getLogger(__name__)
 
 @sematic_api.route("/api/v1/external_resources/<resource_id>", methods=["GET"])
 @authenticate
-def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Response:
+def get_resource_endpoint(
+    user: Optional[User], organization: Optional[Organization], resource_id: str
+) -> flask.Response:
+
     refresh_remote = flask.request.args.get("refresh_remote", "false").lower() == "true"
 
     record = get_external_resource_record(resource_id=resource_id)
@@ -77,7 +81,7 @@ def get_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Respo
 )
 @authenticate
 def activate_resource_endpoint(
-    user: Optional[User], resource_id: str
+    user: Optional[User], organization: Optional[Organization], resource_id: str
 ) -> flask.Response:
 
     record = get_external_resource_record(resource_id=resource_id)
@@ -111,7 +115,7 @@ def activate_resource_endpoint(
 )
 @authenticate
 def deactivate_resource_endpoint(
-    user: Optional[User], resource_id: str
+    user: Optional[User], organization: Optional[Organization], resource_id: str
 ) -> flask.Response:
 
     record = get_external_resource_record(resource_id=resource_id)
@@ -142,7 +146,10 @@ def deactivate_resource_endpoint(
 
 @sematic_api.route("/api/v1/external_resources", methods=["POST"])
 @authenticate
-def save_resource_endpoint(user: Optional[User]) -> flask.Response:
+def save_resource_endpoint(
+    user: Optional[User] = None, organization: Optional[Organization] = None
+) -> flask.Response:
+
     if (
         not flask.request
         or not flask.request.json
@@ -162,14 +169,20 @@ def save_resource_endpoint(user: Optional[User]) -> flask.Response:
 
 @sematic_api.route("/api/v1/external_resources/orphaned", methods=["GET"])
 @authenticate
-def get_orphaned_resources_endpoint(user: Optional[User]) -> flask.Response:
+def get_orphaned_resources_endpoint(
+    user: Optional[User] = None, organization: Optional[Organization] = None
+) -> flask.Response:
+
     resources = get_orphaned_resource_records()
     return flask.jsonify({"content": [resource.id for resource in resources]})
 
 
 @sematic_api.route("/api/v1/external_resources/<resource_id>/clean", methods=["POST"])
 @authenticate
-def clean_resource_endpoint(user: Optional[User], resource_id: str) -> flask.Response:
+def clean_resource_endpoint(
+    user: Optional[User], organization: Optional[Organization], resource_id: str
+) -> flask.Response:
+
     resource = get_external_resource_record(resource_id)
     if resource is None:
         return jsonify_error(f"No such resource: {resource_id}", HTTPStatus.NOT_FOUND)

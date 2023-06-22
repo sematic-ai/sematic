@@ -17,6 +17,7 @@ from sematic.api.endpoints.request_parameters import (
 )
 from sematic.db.db import db
 from sematic.db.models.note import Note
+from sematic.db.models.organization import Organization
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import delete_note, get_note, save_note
@@ -24,7 +25,10 @@ from sematic.db.queries import delete_note, get_note, save_note
 
 @sematic_api.route("/api/v1/notes", methods=["GET"])
 @authenticate
-def list_notes_endpoint(user: Optional[User]) -> flask.Response:
+def list_notes_endpoint(
+    user: Optional[User] = None, organization: Optional[Organization] = None
+) -> flask.Response:
+
     parameters = get_request_parameters(
         args=flask.request.args, model=Note, default_order="asc"
     )
@@ -54,7 +58,10 @@ def list_notes_endpoint(user: Optional[User]) -> flask.Response:
 
 @sematic_api.route("/api/v1/notes", methods=["POST"])
 @authenticate
-def create_note_endpoint(user: Optional[User]) -> flask.Response:
+def create_note_endpoint(
+    user: Optional[User] = None, organization: Optional[Organization] = None
+) -> flask.Response:
+
     if not flask.request or not flask.request.json or "note" not in flask.request.json:
         return flask.Response(
             json.dumps(dict(error="Malformed payload")),
@@ -84,7 +91,10 @@ def create_note_endpoint(user: Optional[User]) -> flask.Response:
 
 @sematic_api.route("/api/v1/notes/<note_id>", methods=["DELETE"])
 @authenticate
-def delete_note_endpoint(user: Optional[User], note_id: str) -> flask.Response:
+def delete_note_endpoint(
+    user: Optional[User], organization: Optional[Organization], note_id: str
+) -> flask.Response:
+
     try:
         note = get_note(note_id)
     except NoResultFound:

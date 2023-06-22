@@ -13,13 +13,16 @@ from sematic.api.endpoints.request_parameters import (
     jsonify_error,
 )
 from sematic.db.db import db
+from sematic.db.models.organization import Organization
 from sematic.db.models.organization_user import OrganizationUser
 from sematic.db.models.user import User
 
 
 @sematic_api.route("/api/v1/organizations_users", methods=["GET"])
 @authenticate
-def list_organizations_users_endpoint(user: Optional[User]) -> flask.Response:
+def list_organizations_users_endpoint(
+    user: Optional[User] = None, organization: Optional[Organization] = None
+) -> flask.Response:
     """
     Retrieve information about users' membership in organizations.
     """
