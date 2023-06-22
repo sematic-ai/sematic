@@ -20,6 +20,11 @@ import sematic.types.types.tuple  # noqa: F401
 import sematic.types.types.union  # noqa: F401
 from sematic.types.types.aws import S3Bucket, S3Location  # noqa: F401
 from sematic.types.types.datetime import datetime  # noqa: F401
+from sematic.types.types.huggingface import (  # noqa: F401
+    HuggingFaceDatasetReference,
+    HuggingFaceModelReference,
+    HuggingFaceStoredModel,
+)
 from sematic.types.types.image import Image  # noqa: F401
 from sematic.types.types.link import Link  # noqa: F401
 from sematic.types.types.prompt_response import PromptResponse  # noqa: F401
