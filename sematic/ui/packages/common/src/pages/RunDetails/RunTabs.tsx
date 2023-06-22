@@ -12,6 +12,7 @@ import RunMetricsPanel from "src/pages/RunDetails/metrics";
 import ExternalResourcePanel from "src/pages/RunDetails/externalResource";
 import theme from "src/theme/new";
 import { useAtom } from "jotai";
+import SourceCodePanel from "src/pages/RunDetails/sourcecode";
 
 
 const StyledTabsContainer = styled(Box)`
@@ -35,7 +36,6 @@ const StyledTabPanel = styled(TabPanel)`
     flex-shrink: 1;
     overflow-x: hidden;
     overflow-y: auto;
-    scrollbar-gutter: stable;
     padding-top: ${theme.spacing(5)};
 `;
 
@@ -79,9 +79,9 @@ const RunTabs = (props: RunTabsProps) => {
         <StyledTabPanelWithoutMargin value="output">
             <OutputPane />
         </StyledTabPanelWithoutMargin>
-        <TabPanel value="source">
-            <div />
-        </TabPanel>
+        <StyledTabPanelWithoutMargin value="source">
+            <SourceCodePanel />
+        </StyledTabPanelWithoutMargin>
         <FixedTabPanel value="logs">
             <LogsPane />
         </FixedTabPanel>
