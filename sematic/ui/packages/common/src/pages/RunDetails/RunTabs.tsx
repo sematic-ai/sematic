@@ -8,6 +8,7 @@ import { selectedTabHashAtom } from "src/hooks/runHooks";
 import InputPane from "src/pages/RunDetails/artifacts/InputPane";
 import OutputPane from "src/pages/RunDetails/artifacts/OutputPane";
 import LogsPane from "src/pages/RunDetails/logs/LogsPane";
+import RunMetricsPanel from "src/pages/RunDetails/metrics";
 import theme from "src/theme/new";
 import { useAtom } from "jotai";
 
@@ -34,6 +35,9 @@ const StyledTabPanel = styled(TabPanel)`
     overflow-x: hidden;
     overflow-y: auto;
     scrollbar-gutter: stable;
+`;
+
+const StyledTabPanelWithoutMargin = styled(StyledTabPanel)`
     margin-left: -${theme.spacing(5)};
     margin-right: -${theme.spacing(5)};
 `;
@@ -62,21 +66,25 @@ const RunTabs = (props: RunTabsProps) => {
                 <Tab label="Output" value="output" />
                 <Tab label="Source" value="source" />
                 <Tab label="Logs" value="logs" />
+                <Tab label="Metrics" value="metrics" />
                 <Tab label="Resources" value="ext_res" />
             </TabList>
         </StyledTabsContainer>
-        <StyledTabPanel value="input">
+        <StyledTabPanelWithoutMargin value="input">
             <InputPane />
-        </StyledTabPanel>
-        <StyledTabPanel value="output">
+        </StyledTabPanelWithoutMargin>
+        <StyledTabPanelWithoutMargin value="output">
             <OutputPane />
-        </StyledTabPanel>
+        </StyledTabPanelWithoutMargin>
         <TabPanel value="source">
             <div />
         </TabPanel>
         <FixedTabPanel value="logs">
             <LogsPane />
         </FixedTabPanel>
+        <StyledTabPanel value="metrics">
+            <RunMetricsPanel />
+        </StyledTabPanel>
         <TabPanel value="ext_res">
             <div />
         </TabPanel>
