@@ -12,7 +12,7 @@ def up():
     with db().get_engine().begin() as conn:
         results = conn.execute(
             "SELECT "
-            "* "
+            "id, name "
             "FROM runs "
             "WHERE function_path IS NULL;"
         )
@@ -93,55 +93,44 @@ def up():
 
         results = conn.execute(
             "SELECT "
-            "source_run_id, destination_run_id, destination_name, created_at "
-            "FROM edges "
-            "WHERE destination_run_id IS NOT NULL "
-            "AND destination_run_id NOT IN ( "
-            "   SELECT id "
-            "   FROM runs "
-            ");"
+            "edges.source_run_id, edges.destination_run_id, edges.destination_name, edges.created_at "
+            "FROM edges LEFT OUTER JOIN runs ON edges.destination_run_id = runs.id "
+            "WHERE runs.id IS NULL;"
         )
 
         print('edges destination_run_id', list(results))
 
         results = conn.execute(
             "SELECT "
-            "source_run_id, destination_run_id, destination_name, created_at "
-            "FROM edges "
-            "WHERE source_run_id IS NOT NULL "
-            "AND source_run_id NOT IN ( "
-            "   SELECT id "
-            "   FROM runs "
-            ");"
+            "edges.source_run_id, edges.destination_run_id, edges.destination_name, edges.created_at "
+            "FROM edges LEFT OUTER JOIN runs ON edges.source_run_id = runs.id "
+            "WHERE runs.id IS NULL;"
         )
 
         print('edges source_run_id', list(results))
 
         results = conn.execute(
             "SELECT "
-            "metric_id, created_at "
-            "FROM metric_values "
-            "WHERE metric_id IS NOT NULL "
-            "AND metric_id NOT IN ( "
-            "   SELECT metric_id "
-            "   FROM metric_labels "
-            ");"
+            "metric_values.metric_id, metric_values.created_at "
+            "FROM metric_values LEFT OUTER JOIN metric_labels ON metric_values.metric_id = metric_labels.metric_id "
+            "WHERE metric_labels.metric_id IS NULL;"
         )
 
         print('metric_values metric_id', list(results))
 
         results = conn.execute(
             "SELECT "
-            "* "
-            "FROM runs "
-            "WHERE root_id IS NOT NULL "
-            "AND root_id NOT IN ( "
-            "   SELECT id "
-            "   FROM runs "
-            ");"
+            "runs_left.id, runs_left.name "
+            "FROM runs runs_left LEFT OUTER JOIN runs runs_right ON runs_left.id = runs_right.id "
+            "WHERE runs_right.id IS NULL;"
         )
 
         print('runs root_id fk', list(results))
 
 if __name__ == '__main__':
     up()
+
+# 45 SELECT edges.source_run_id, edges.destination_run_id, edges.destination_name, edges.created_at FROM edges LEFT OUTER JOIN runs ON edges.destination_run_id = runs.id WHERE runs.id IS NULL;
+# 263 SELECT edges.source_run_id, edges.destination_run_id, edges.destination_name, edges.created_at FROM edges LEFT OUTER JOIN runs ON edges.source_run_id = runs.id WHERE runs.id IS NULL;
+# 0 SELECT metric_values.metric_id, metric_values.created_at FROM metric_values LEFT OUTER JOIN metric_labels ON metric_values.metric_id = metric_labels.metric_id WHERE metric_labels.metric_id IS NULL;
+# 0 SELECT runs_left.id, runs_left.name FROM runs runs_left LEFT OUTER JOIN runs runs_right ON runs_left.id = runs_right.id WHERE runs_right.id IS NULL;
