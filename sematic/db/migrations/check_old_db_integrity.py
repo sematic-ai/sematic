@@ -21,7 +21,7 @@ def up():
 
         results = conn.execute(
             "SELECT "
-            "* "
+            "id, created_at"
             "FROM artifacts "
             "WHERE type_serialization IS NULL;"
         )
