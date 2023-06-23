@@ -6,9 +6,9 @@ import TimelineSeparator from "@mui/lab/TimelineSeparator/TimelineSeparator";
 import Chip from "@mui/material/Chip/Chip";
 import Typography from "@mui/material/Typography/Typography";
 import { styled } from "@mui/system";
-import { ExternalResourceHistorySerialization, ExternalResourceState as ExternalResourceStateType } from "@sematic/common/src/Models";
 import { format } from "date-fns";
 import { useMemo } from "react";
+import { ExternalResourceHistorySerialization, ExternalResourceState as ExternalResourceStateType } from "src/Models";
 import { TERMINATE_STATE } from "src/hooks/externalResourceHooks";
 
 const HighLightenedText = styled(Typography)`
