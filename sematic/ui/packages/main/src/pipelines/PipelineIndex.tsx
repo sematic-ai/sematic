@@ -14,6 +14,7 @@ import TimeAgo from "@sematic/common/src/component/TimeAgo";
 import useBasicMetrics from "@sematic/common/src/hooks/metricsHooks";
 import { useFetchRuns } from "@sematic/common/src/hooks/runHooks";
 import { Run } from "@sematic/common/src/Models";
+import { pipelineSocket } from "@sematic/common/src/sockets";
 import { useCallback, useMemo } from "react";
 import CalculatorPath from "src/components/CalculatorPath";
 import { RunList, RunListColumn } from "src/components/RunList";
@@ -22,7 +23,6 @@ import RunStateChip, {
 } from "src/components/RunStateChip";
 import { RunTime } from "src/components/RunTime";
 import Tags from "src/components/Tags";
-import { pipelineSocket } from "src/sockets";
 
 const RecentStatusesWithStyles = styled("span")`
   flex-direction: row;
