@@ -106,7 +106,7 @@ def up():
 
         results = conn.execute(
             "SELECT "
-            "* "
+            "source_run_id, destination_run_id, destination_name, created_at "
             "FROM edges "
             "WHERE source_run_id IS NOT NULL "
             "AND source_run_id NOT IN ( "
