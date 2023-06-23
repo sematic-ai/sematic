@@ -16,6 +16,8 @@ import { RunsTableTemplate } from "src/pages/RunTableCommon/PresentationalCompon
 import TagsColumn from "src/pages/RunTableCommon/TagsColumn";
 import { AllFilters } from "src/pages/RunTableCommon/filters";
 import MuiRouterLink from "src/component/MuiRouterLink";
+import useCounter from "react-use/lib/useCounter";
+import { pipelineSocket } from "@sematic/common/src/sockets";
 
 declare module "@tanstack/react-table" {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -62,7 +64,11 @@ const columns = [
             }
         },
         header: "Runs",
-        cell: info => <TotalRunsColumn extendedRun={info.getValue()} tableMeta={info.table.options.meta} />,
+        cell: info => {
+            const value = info.getValue();
+            return <TotalRunsColumn key={`${value.run.id}---${value.run.future_state}`}
+                extendedRun={value} tableMeta={info.table.options.meta} />
+        },
     }),
     columnHelper.accessor(({ metadata, run }) => [run.id, metadata], {
         meta: {
@@ -112,7 +118,11 @@ const columns = [
             }
         },
         header: "Last 5 runs",
-        cell: info => <LatestRunsColumn extendedRun={info.getValue()} tableMeta={info.table.options.meta} />,
+        cell: info => {
+            const value = info.getValue();
+            return <LatestRunsColumn key={`${value.run.id}---${value.run.future_state}`}
+                extendedRun={value} tableMeta={info.table.options.meta} />
+        },
     })
 ]
 
@@ -125,6 +135,7 @@ function PipelineList(props: RunListProps) {
     const { filters } = props;
 
     const { setIsLoading } = useContext(LayoutServiceContext);
+    const [renderCounter, { inc }] = useCounter(0);
 
     const { runFilter, queryParams } = useFiltersConverter(filters);
 
@@ -140,8 +151,8 @@ function PipelineList(props: RunListProps) {
     }, [runFilter]);
 
     const combinedQueryParams = useMemo(() => {
-        return { ...queryParams, group_by: "function_path" };
-    }, [queryParams]);
+        return { ...queryParams, group_by: "function_path", "refresh_token": `${renderCounter}` };
+    }, [queryParams, renderCounter]);
 
     const { runs, error, page, isLoaded, isLoading, totalPages, totalRuns, nextPage, previousPage } = useRunsPagination(
         combinedRunFilter, combinedQueryParams
@@ -182,6 +193,17 @@ function PipelineList(props: RunListProps) {
     useEffect(() => {
         setIsLoading(isLoading)
     }, [setIsLoading, isLoading]);
+
+    useEffect(() => {
+        const updateCallback = () => {
+            inc();
+        }
+        pipelineSocket.on("update", updateCallback);
+
+        return () => {
+            pipelineSocket.off("update", updateCallback);
+        }
+    }, [inc]);
 
     return <RunsTableTemplate
         isLoading={isLoading}
