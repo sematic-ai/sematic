@@ -95,7 +95,7 @@ def up():
             "SELECT "
             "edges.source_run_id, edges.destination_run_id, edges.destination_name, edges.created_at "
             "FROM edges LEFT OUTER JOIN runs ON edges.destination_run_id = runs.id "
-            "WHERE runs.id IS NULL;"
+            "WHERE runs.id IS NULL AND edges.destination_run_id IS NOT NULL;"
         )
 
         print('edges destination_run_id', list(results))
@@ -104,7 +104,7 @@ def up():
             "SELECT "
             "edges.source_run_id, edges.destination_run_id, edges.destination_name, edges.created_at "
             "FROM edges LEFT OUTER JOIN runs ON edges.source_run_id = runs.id "
-            "WHERE runs.id IS NULL;"
+            "WHERE runs.id IS NULL AND edges.source_run_id IS NOT NULL;"
         )
 
         print('edges source_run_id', list(results))
@@ -121,7 +121,7 @@ def up():
         results = conn.execute(
             "SELECT "
             "runs_left.id, runs_left.name "
-            "FROM runs runs_left LEFT OUTER JOIN runs runs_right ON runs_left.id = runs_right.id "
+            "FROM runs runs_left LEFT OUTER JOIN runs runs_right ON runs_left.root_id = runs_right.id "
             "WHERE runs_right.id IS NULL;"
         )
 
@@ -129,8 +129,3 @@ def up():
 
 if __name__ == '__main__':
     up()
-
-# 45 SELECT edges.source_run_id, edges.destination_run_id, edges.destination_name, edges.created_at FROM edges LEFT OUTER JOIN runs ON edges.destination_run_id = runs.id WHERE runs.id IS NULL;
-# 263 SELECT edges.source_run_id, edges.destination_run_id, edges.destination_name, edges.created_at FROM edges LEFT OUTER JOIN runs ON edges.source_run_id = runs.id WHERE runs.id IS NULL;
-# 0 SELECT metric_values.metric_id, metric_values.created_at FROM metric_values LEFT OUTER JOIN metric_labels ON metric_values.metric_id = metric_labels.metric_id WHERE metric_labels.metric_id IS NULL;
-# 0 SELECT runs_left.id, runs_left.name FROM runs runs_left LEFT OUTER JOIN runs runs_right ON runs_left.id = runs_right.id WHERE runs_right.id IS NULL;
