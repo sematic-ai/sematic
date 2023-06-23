@@ -141,7 +141,7 @@ def up():
             ");"
         )
 
-        print('metric_values metric_id', list(results))
+        print('runs root_id fk', list(results))
 
 if __name__ == '__main__':
     up()
