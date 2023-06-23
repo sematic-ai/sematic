@@ -1,13 +1,15 @@
+import styled from "@emotion/styled";
 import CssBaseline from "@mui/material/CssBaseline";
 import Grid from "@mui/material/Grid";
 import { ThemeProvider } from "@mui/material/styles";
+import { useAppContext } from "@sematic/common/src/hooks/appHooks";
 import find from "lodash/find";
-import { useMemo } from "react";
-import { Outlet, useMatches } from "react-router-dom";
+import { useContext, useMemo } from "react";
+import { Navigate, Outlet, useMatches } from "react-router-dom";
 import HeaderMenu from "src/component/menu";
 import SnackBarProvider from "src/context/SnackBarProvider";
+import UserContext from "src/context/UserContext";
 import theme from "src/theme/new/index";
-import styled from "@emotion/styled";
 
 const StyledGrid = styled(Grid)`
   height: 100vh;
@@ -26,6 +28,13 @@ const Shell = () => {
             !!match.handle && (match.handle as any)[HeaderSelectionKey] !== undefined);
         return found ? (found.handle as any)[HeaderSelectionKey] : undefined;
     }, [matches]);
+
+    const { authenticationEnabled } = useAppContext()
+    const { user } = useContext(UserContext);
+
+    if (authenticationEnabled && !user) {
+        return <Navigate to="/login" />;
+    }
 
     return <SnackBarProvider>
         <ThemeProvider theme={theme}>
