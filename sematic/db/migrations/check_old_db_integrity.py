@@ -39,7 +39,7 @@ def up():
 
         results = conn.execute(
             "SELECT "
-            "* "
+            "run_id, name, created_at "
             "FROM jobs "
             "WHERE updated_at IS NULL;"
         )
