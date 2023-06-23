@@ -494,3 +494,34 @@ Output content of the table to a `pandas.DataFrame`.
 - `limit`: Optional[int]
     
     Maximum number of rows to return. Defaults to -1, i.e. all.
+
+
+## Custom metrics
+
+{% hint style="info" %}
+
+Custom metrics are an Enteprise feature. Get in touch at
+[support@sematic.dev](mailto:support@sematic.dev) to learn more.
+
+{% endhint %}
+
+### `log_metric`
+
+Logs a timeseries metric value.
+
+#### Parameters
+
+- `name`: str
+
+    Name of metric to log.
+
+- `value`: float
+
+    Metric value to log.
+
+- `metric_type`: `MetricType`
+
+    Defaults to `MetricType.GAUGE`. Specifies how a particular metric is
+    aggregated. `MetricType.GAUGE` will average values within a given
+    aggregation bucket while `MetricType.COUNT` will sum values within a given
+    aggregation bucket.
