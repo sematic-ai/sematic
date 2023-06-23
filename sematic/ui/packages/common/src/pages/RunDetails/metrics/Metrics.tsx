@@ -1,4 +1,4 @@
-import { MetricsFilter, useMetrics } from "@sematic/common/src/hooks/metricsHooks";
+import { MetricsFilter, useMetrics } from "src/hooks/metricsHooks";
 import { Alert} from "@mui/material";
 import { useMemo, useState } from "react";
 import {
@@ -13,7 +13,7 @@ import {
     ChartData,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import { MetricPoint } from "@sematic/common/lib/src/Models";
+import { MetricPoint } from "src/Models";
 
 ChartJS.register(
     CategoryScale,
