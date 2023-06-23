@@ -84,7 +84,7 @@ def up():
 
         results = conn.execute(
             "SELECT "
-            "* "
+            "id, created_at "
             "FROM runs "
             "WHERE source_code IS NULL;"
         )
