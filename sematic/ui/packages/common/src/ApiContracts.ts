@@ -1,4 +1,4 @@
-import { Artifact, Edge, Note, Resolution, Run, User } from "src/Models";
+import { Artifact, Edge, Job, Note, Resolution, Run, User } from "src/Models";
 
 export type RunViewPayload = {
     content: Run;
@@ -22,6 +22,10 @@ export type RunGraphPayload = {
     runs: Run[];
     edges: Edge[];
     artifacts: Artifact[];
+};
+
+export type RunJobPayload = {
+    content: Array<Job>;
 };
 
 export type NoteListPayload = {
