@@ -143,8 +143,8 @@ function SlugChip(props: {
                 <Tooltip title={"Copy " + fullSlug}>
                     <Chip
                         icon={<ContentCopy />}
+                        sx={{ paddingLeft: 2, paddingRight: 2}}
                         onClick={copy}
-                        size="small"
                         label={"🤗 "+ displayedSlug}
                         variant="outlined"
                     />

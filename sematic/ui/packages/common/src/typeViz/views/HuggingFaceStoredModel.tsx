@@ -28,7 +28,7 @@ export function HuggingFaceStoredModelFullView(props: ViewComponentProps) {
                     <Chip
                         icon={<ContentCopy />}
                         onClick={copy}
-                        size="small"
+                        sx={{ paddingLeft: 2, paddingRight: 2}}
                         label={"🤗 "+ modelTypeShortName}
                         variant="outlined"
                     />
