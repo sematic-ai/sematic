@@ -1,6 +1,6 @@
 # Metrics
 
-Sematic surfaces a number of high-level metrics in the Dashboard.
+Sematic surfaces a number of high-level metrics in the Dashboard, and lets 
 
 ## Pipeline metrics
 
@@ -28,3 +28,65 @@ in-progress runs.
 
 The pipeline average run time is the average of the pipeline's wall time
 computed over all successful runs. Failed and canceled runs are not included.
+
+## Custom metrics
+
+{% hint style="info" %}
+
+Custom metrics are an Enteprise feature. Get in touch at
+[support@sematic.dev](mailto:support@sematic.dev) to learn more.
+
+{% endhint %}
+
+In addition to tracking and visualizing inputs and outpus of all your Functions,
+Sematic lets you log timeseries metrics during the execution of your pipeline
+and surfaces them in the Dashboard in real-time.
+
+This feature can be used to display a loss curve during training or track the
+evolution of certain hyperparameters such as learning rate. This is a similar
+functionality to what tools like Tensoboard offer.
+
+To log a metric value, simply call the `log_metric` API as such:
+
+```python
+from sematic.ee.metrics import log_metric
+
+@sematic.func
+def train_model(...):
+    for epoch in epochs:
+        _train(...)
+        
+        log_metric("loss", loss)
+```
+
+The logged values are plotted in real-time in the Metrics tab of the Run detais page.
+
+![Real-time metrics](images/liveMetrics.png)
+
+### Metric types
+
+Following the [OpenTelemetry
+specification](https://opentelemetry.io/docs/specs/otel/metrics/data-model/#point-kinds),
+metrics can be aggregated in different ways. Sematic supports the following two
+aggregation mode:
+
+* Gauge (default) – within a given aggregation bucket, values are averaged.
+* Count – within a given aggregation bucket, values are summed.
+
+By default, metrics logged with `log_metric` are aggregated as gauges. To
+specify a different metric type, simply specify the `metric_type` argument:
+
+```python
+from sematic.ee.metrics import log_metric, MetricType
+
+@sematic.func
+def train_model(...):
+    for epoch in epochs:
+        _train(...)
+        
+        log_metric(
+            "invalid_images",
+            n_invalid_images,
+            metric_type=MetricType.COUNT
+        )
+```
