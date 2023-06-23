@@ -48,7 +48,7 @@ def up():
 
         results = conn.execute(
             "SELECT "
-            "* "
+            "id "
             "FROM notes "
             "WHERE created_at IS NULL;"
         )
