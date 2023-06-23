@@ -66,7 +66,7 @@ def up():
 
         results = conn.execute(
             "SELECT "
-            "* "
+            "id, created_at "
             "FROM runs "
             "WHERE root_id IS NULL;"
         )
