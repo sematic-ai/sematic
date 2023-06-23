@@ -11,6 +11,7 @@ import RunsDropdown from "src/component/RunsDropdown";
 import Section from "src/component/Section";
 import TagsList from "src/component/TagsList";
 import RootRunContext, { useRootRunContext } from "src/context/RootRunContext";
+import usePipelineSocketMonitor from "src/hooks/pipelineSocketMonitorHooks";
 import { getRunUrlPattern, useFetchRuns } from "src/hooks/runHooks";
 import RunSectionActionMenu from "src/pages/RunDetails/contextMenus/RunSectionMenu";
 import theme from "src/theme/new";
@@ -67,13 +68,17 @@ const RunSection = () => {
 
     }, [resolution])
 
-    const { runs } = useFetchRuns(runFilters, otherQueryParams);
+    const { runs, reloadRuns } = useFetchRuns(runFilters, otherQueryParams);
 
     const onRootRunChange = useCallback((newRootRunId: unknown) => {
         navigate(getRunUrlPattern(newRootRunId as string));
     }, [navigate]);
 
     const contextMenuAnchor = useRef<HTMLButtonElement>(null);
+
+    usePipelineSocketMonitor(rootRun.function_path, useMemo(() => ({
+        onCancel: reloadRuns
+    }), [reloadRuns]));
 
     return (
         <StyledSection>

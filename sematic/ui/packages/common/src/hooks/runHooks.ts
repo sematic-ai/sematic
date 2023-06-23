@@ -65,6 +65,32 @@ export function useFetchRuns(runFilters: Filter | undefined = undefined,
     return {isLoaded, isLoading, error, runs: runs?.content, reloadRuns};
 }
 
+export function useFetchLatestRun(functionPath: string) {
+    const runFilters = useMemo(
+        () => ({
+            AND: [
+                { parent_id: { eq: null } },
+                { function_path: { eq: functionPath } },
+            ],
+        }),
+        [functionPath]
+    );
+
+    const otherQueryParams = useMemo(
+        () => ({
+            limit: "1",
+        }), []
+    );
+
+    const {load} = useFetchRunsFn(runFilters, otherQueryParams);
+
+    const getRun = useCallback(async () => {
+        const payload = await load();
+        return payload.content[0];
+    }, [load]);
+    return getRun;
+}
+
 export function useFiltersConverter(filters: AllFilters | null) {
     const runFilter = useMemo(() => {
         const conditions = [];
