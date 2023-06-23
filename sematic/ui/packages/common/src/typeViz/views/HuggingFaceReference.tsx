@@ -1,6 +1,8 @@
 import { OpenInNew } from "@mui/icons-material";
-import { Button, Tooltip } from "@mui/material";
-import { useMemo } from "react";
+import { useCallback, useContext, useMemo } from "react";
+import { Button, Chip, Tooltip } from "@mui/material";
+import { ContentCopy } from "@mui/icons-material";
+import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
 import { useTextSelection } from "@sematic/common/src/hooks/textSelectionHooks";
 import { ViewComponentProps, ValueComponentProps} from "src/typeViz/common";
 
@@ -37,23 +39,14 @@ export function HuggingFaceModelReferenceValueView(props: ViewComponentProps) {
     const { valueSummary } = props;
     const { values } = valueSummary;
   
-    return <HuggingFaceButton
-        reference={values}
-        objectTypePrefix=""
-        short={false}
-    />;
-
+    return <SlugChip reference={values} />;
 }
 
 export function HuggingFaceDatasetReferenceValueView(props: ViewComponentProps) {
     const { valueSummary } = props;
     const { values } = valueSummary;
 
-    return <HuggingFaceButton
-        reference={values}
-        objectTypePrefix="/datasets"
-        short={false}
-    />;
+    return <SlugChip reference={values} />;
 }
 
 function HuggingFaceButton(props: {
@@ -114,4 +107,50 @@ function HuggingFaceButton(props: {
             <div ref={elementRef} style={{ cursor: "text" }} >🤗 {displayedSlug}</div>
         </Button>
     </Tooltip>;
+}
+
+function SlugChip(props: {
+    reference: Reference,
+}) {
+    const { reference } = props;
+    const { owner, repo, subset, commit_sha } = reference;
+
+    const [displayedSlug, fullSlug] = useMemo(
+        () => {
+            let slug = (owner ? owner + "/" : "") + repo;
+            if(subset) {
+                slug += ":" + subset;
+            }
+            let fullSlug = slug;
+            if(commit_sha) {
+                slug += "@" + commit_sha.substring(0, 7);
+                fullSlug += "@" + commit_sha;
+            }
+            return [slug, fullSlug];
+        }, [owner, repo, subset, commit_sha]
+    );
+    
+    const { setSnackMessage } = useContext(SnackBarContext);
+
+    const copy = useCallback(() => {
+        setSnackMessage({ message: "Copied " + fullSlug });
+        navigator.clipboard.writeText(fullSlug);
+    }, [fullSlug, setSnackMessage]);
+    
+    const contents = useMemo(
+        () => {
+            return (
+                <Tooltip title={"Copy " + fullSlug}>
+                    <Chip
+                        icon={<ContentCopy />}
+                        onClick={copy}
+                        size="small"
+                        label={"🤗 "+ displayedSlug}
+                        variant="outlined"
+                    />
+                </Tooltip>
+            );
+        }, [displayedSlug, fullSlug, copy]
+    );
+    return contents;
 }
