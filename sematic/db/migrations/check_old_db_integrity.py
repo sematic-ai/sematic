@@ -119,7 +119,7 @@ def up():
 
         results = conn.execute(
             "SELECT "
-            "* "
+            "metric_id, created_at "
             "FROM metric_values "
             "WHERE metric_id IS NOT NULL "
             "AND metric_id NOT IN ( "
