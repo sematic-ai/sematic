@@ -284,6 +284,7 @@ changes.
     $ helm repo add sematic-ai https://sematic-ai.github.io/helm-charts
 
     $ # STAGE:
+    $ helm repo update
     $ helm upgrade sematic-server sematic-ai/sematic-server -n stage -f /path/to/stage_values.yml
     $ helm list -n stage  # check that the expected APP VERSION was deployed
     ```
