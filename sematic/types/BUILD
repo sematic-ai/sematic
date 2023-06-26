@@ -20,6 +20,8 @@ sematic_py_lib(
         "//sematic/types/types:set",
         "//sematic/types/types:datetime",
         "//sematic/types/types:image",
+        # Does not actually create a dependency on hugging face
+        "//sematic/types/types/huggingface:init",
         # Does not actually create a dependency on torch
         "//sematic/types/types/pytorch:init",
         # Does not actually create a dependency on plotly
