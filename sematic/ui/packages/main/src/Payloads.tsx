@@ -1,4 +1,4 @@
-import { Artifact, Edge, Job, Resolution, Run, User } from "@sematic/common/src/Models";
+import { Artifact, Edge, Resolution, Run, User } from "@sematic/common/src/Models";
 
 export type RunViewPayload = {
     content: Run;
@@ -66,7 +66,3 @@ export interface VersionPayload {
     min_client_supported: SemanticVersion;
     server: SemanticVersion;
 }
-
-export type RunJobPayload = {
-    content: Array<Job>;
-};
