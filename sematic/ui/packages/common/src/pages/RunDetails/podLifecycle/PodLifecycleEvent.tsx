@@ -6,7 +6,7 @@ import TimelineSeparator from "@mui/lab/TimelineSeparator/TimelineSeparator";
 import Chip from "@mui/material/Chip/Chip";
 import Typography from "@mui/material/Typography/Typography";
 import styled from "@emotion/styled";
-import { Job } from "@sematic/common/src/Models";
+import { Job } from "src/Models";
 import { format } from "date-fns";
 import { useMemo } from "react";
 

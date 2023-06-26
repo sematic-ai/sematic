@@ -10,6 +10,7 @@ import OutputPane from "src/pages/RunDetails/artifacts/OutputPane";
 import LogsPane from "src/pages/RunDetails/logs/LogsPane";
 import RunMetricsPanel from "src/pages/RunDetails/metrics";
 import ExternalResourcePanel from "src/pages/RunDetails/externalResource";
+import PodLifecyclePanel from "src/pages/RunDetails/podLifecycle";
 import theme from "src/theme/new";
 import { useAtom } from "jotai";
 import SourceCodePanel from "src/pages/RunDetails/sourcecode";
@@ -71,6 +72,7 @@ const RunTabs = (props: RunTabsProps) => {
                 <Tab label="Logs" value="logs" />
                 <Tab label="Metrics" value="metrics" />
                 <Tab label="Resources" value="ext_res" />
+                <Tab label="Pods" value="pod_lifecycle" />
             </TabList>
         </StyledTabsContainer>
         <StyledTabPanelWithoutMargin value="input">
@@ -90,6 +92,9 @@ const RunTabs = (props: RunTabsProps) => {
         </StyledTabPanel>
         <StyledTabPanel value="ext_res">
             <ExternalResourcePanel />
+        </StyledTabPanel>
+        <StyledTabPanel value="pod_lifecycle">
+            <PodLifecyclePanel />
         </StyledTabPanel>
     </TabContext>
 };
