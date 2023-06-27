@@ -1,19 +1,20 @@
-import { MetricsFilter, useMetrics } from "src/hooks/metricsHooks";
-import { Alert} from "@mui/material";
-import { useMemo, useState } from "react";
+import { Alert } from "@mui/material";
 import {
-    Chart as ChartJS,
     CategoryScale,
+    ChartData,
+    Chart as ChartJS,
+    Legend,
+    LineElement,
     LinearScale,
     PointElement,
-    LineElement,
     Title,
     Tooltip,
-    Legend,
-    ChartData,
 } from "chart.js";
+import { useEffect, useMemo, useRef } from "react";
 import { Line } from "react-chartjs-2";
+import useCounter from "react-use/lib/useCounter";
 import { MetricPoint } from "src/Models";
+import { MetricsFilter, useMetrics } from "src/hooks/metricsHooks";
 
 ChartJS.register(
     CategoryScale,
@@ -33,42 +34,50 @@ export function TimeseriesMetric(props: {
     const { metricsFilter, color, latestMetricPoints } = props;
     const [payload, , error] = useMetrics(metricsFilter, latestMetricPoints);
 
-    const [chartData, setChartData] = useState<ChartData<"line", number[], string>>({
-        labels: [],
+    const dataStore = useRef({
+        labels: [] as string[],
+        labelSet: new Set<string>(),
+        data: [] as number[],
+    });
+
+    const [dataVersion, { inc: bumpDataVersion }] = useCounter();
+
+    useEffect(() => {
+        if (payload === undefined) return;
+        const labels: string[] = [];
+        const data: number[] = [];
+        let existingDataReadCursor = 0;
+        payload.content.series.forEach((item) => {
+            let label = (new Date(item[1][0] * 1000)).toLocaleString();
+            labels.push(label.toLocaleString());
+
+            if (dataStore.current.labelSet.has(label)) {
+                data.push(dataStore.current.data[existingDataReadCursor++]);
+            } else {
+                data.push(item[0]);
+                dataStore.current.labelSet.add(label);
+            }
+        });
+
+
+        dataStore.current.labels = labels;
+        dataStore.current.data = data;
+
+        bumpDataVersion();
+    }, [payload, bumpDataVersion]);
+
+    const cData: ChartData<"line", number[], string> = useMemo(() => ({
+        labels: dataStore.current.labels,
         datasets: [
             {
                 label: metricsFilter.metricName,
-                data: [],
+                data: dataStore.current.data,
                 backgroundColor: color,
                 borderColor: color,
             },
         ],
-    });
-
-
-    useMemo(() => {
-        if (payload === undefined) return;
-        let labels: string[] = [];
-        let data: number[] = [];
-        payload.content.series.forEach((item) => {
-            let label = (new Date(item[1][0] * 1000)).toLocaleString();
-            labels.push(label.toLocaleString());
-            data.push(item[0]);
-        });
-
-        const cData: ChartData<"line", number[], string> = {
-            labels: labels,
-            datasets: [
-                {
-                    label: metricsFilter.metricName,
-                    data: data,
-                    backgroundColor: color,
-                    borderColor: color,
-                },
-            ],
-        };
-        setChartData(cData);
-    }, [payload, color, metricsFilter.metricName, setChartData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), [dataVersion, color, metricsFilter.metricName]);
 
     return (
         <>
@@ -77,7 +86,11 @@ export function TimeseriesMetric(props: {
                     Unable to load metric: {error.message}
                 </Alert>
             )}
-            {error === undefined && <Line data={chartData} options={{animation: false}}/>}
+            {error === undefined && <Line data={cData} options={{
+                animation: {
+                    duration: 2000
+                }
+            }} />}
         </>
     );
 }
