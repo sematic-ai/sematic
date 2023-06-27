@@ -8,6 +8,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@emotion/css": "^11.11.2",
     "@tanstack/react-table": "^8.9.1",
     "reactflow": "^11.7.2"
   }

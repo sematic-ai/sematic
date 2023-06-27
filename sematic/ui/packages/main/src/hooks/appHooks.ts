@@ -1,23 +1,13 @@
 import { User } from "@sematic/common/src/Models";
+import AppContext from "@sematic/common/src/context/appContext";
 import { useHttpClient } from "@sematic/common/src/hooks/httpHooks";
 import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { atomWithStorage } from "jotai/utils";
-import { useContext, useMemo } from "react";
+import { useMemo } from "react";
 import useAsync from "react-use/lib/useAsync";
 import { AuthenticatePayload, EnvPayload } from "src/Payloads";
-import AppContext from "src/appContext";
 
 export const userAtom = atomWithStorage<User | null>("user", null);
-
-export function useAppContext() {
-    const contextValue = useContext(AppContext);
-
-    if (!contextValue) {
-        throw new Error("useAppContext() should be called under a provider.")
-    }
-
-    return contextValue;
-}
 
 export function useAuthentication() {
     const {fetch} = useHttpClient();
