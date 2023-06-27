@@ -1,21 +1,24 @@
-import React from "react";
+import Typograph from "@mui/material/Typography";
+import { forwardRef } from "react";
 import PipelineTitle from "src/component/PipelineTitle";
 
 interface NameTagProps {
     firstName?: string | null;
     lastName?: string | null;
+    variant?: React.ComponentProps<typeof Typograph>["variant"];
+    className?: string;
 }
 
-const NameTag = (props: NameTagProps ) => {
-    const { firstName, lastName } = props;
+const NameTag = forwardRef<HTMLElement, NameTagProps>((props, ref) => {
+    const { firstName, lastName, className, variant = "small" } = props;
 
     const name = !!firstName && !!lastName ? `${firstName} ${lastName}` : firstName || lastName || "Unknown";
 
-    return <span style={{ maxWidth: "100px" }}>
-        <PipelineTitle variant={"small"} >
+    return <span style={{ maxWidth: "100px" }} ref={ref} className={className}>
+        <PipelineTitle variant={variant} >
             {name}
         </PipelineTitle>
     </span>;
-}
+});
 
 export default NameTag;
