@@ -7,6 +7,7 @@ import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import NameTag from "src/component/NameTag";
 import UserContext from "src/context/UserContext";
 import theme from "src/theme/new";
+import Link from "@mui/material/Link";
 
 const ANCHOR_OFFSET = { x: 5, y: 15 };
 
@@ -58,6 +59,12 @@ function UserMenu(props: UserMenuProps) {
         setOpen((open) => !open);
     }, [setOpen]);
 
+    const switchToOldUI = useCallback(() => {
+        window.localStorage.removeItem("sematic-feature-flag-newui");
+        window.location.reload();
+    }, []);
+
+
     const virtualAnchorElement = useMemo(() => ({
         nodeType: 1,
         getBoundingClientRect: () => {
@@ -100,6 +107,11 @@ function UserMenu(props: UserMenuProps) {
                 <Typography color="GrayText">
                     API key: <code>{user?.api_key}</code>
                 </Typography>
+            </SectionWithBorder>
+            <SectionWithBorder>
+                <Link style={{ cursor: "pointer" }} onClick={switchToOldUI}>
+                    Switch to old UI
+                </Link>
             </SectionWithBorder>
             {/* Hide for now, will re-enable when we have organization support */}
             {/* <SectionWithBorder>
