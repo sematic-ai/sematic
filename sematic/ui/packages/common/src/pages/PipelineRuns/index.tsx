@@ -1,4 +1,6 @@
 import Alert from "@mui/material/Alert";
+import { useAtom } from "jotai";
+import { RESET } from "jotai/utils";
 import noop from "lodash/noop";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -7,7 +9,7 @@ import LayoutServiceContext from "src/context/LayoutServiceContext";
 import RootRunContext from "src/context/RootRunContext";
 import RunDetailsSelectionContext from "src/context/RunDetailsSelectionContext";
 import usePipelineSocketMonitor from "src/hooks/pipelineSocketMonitorHooks";
-import { useFetchRuns } from "src/hooks/runHooks";
+import { selectedPanelAtom, useFetchRuns } from "src/hooks/runHooks";
 import ThreeColumns from "src/layout/ThreeColumns";
 import PipelineInfoPane from "src/pages/PipelineRuns/PipelineInfoPane";
 import PipelineRunsList from "src/pages/PipelineRuns/PipelineRunsList";
@@ -20,6 +22,8 @@ interface PipelineRunsProps {
 
 const PipelineRuns = (props: PipelineRunsProps) => {
     const { rootRun } = props;
+    
+    const [selectedPanel, setSelectedPanel] = useAtom(selectedPanelAtom);
 
     const [filters, setFilters] = useState<AllFilters>({});
 
@@ -53,9 +57,9 @@ const PipelineRuns = (props: PipelineRunsProps) => {
     const runSelectionContextValue = useMemo(() => ({
         selectedRun: rootRun,
         setSelectedRunId: noop,
-        selectedPanel: undefined,
-        setSelectedPanel: noop
-    }), [rootRun]);
+        selectedPanel,
+        setSelectedPanel: setSelectedPanel as (panel: string | typeof RESET | undefined) => void
+    }), [rootRun, selectedPanel, setSelectedPanel]);
 
     usePipelineSocketMonitor(rootRun.function_path);
 
