@@ -1,4 +1,4 @@
-import MetricsPane from "src/pages/RunDetails/metrics/MetricsPane";
+import MetricsPane from "src/pages/RunDetails/metricsTab/MetricsPane";
 import { useContext } from "react";
 import { useRunDetailsSelectionContext } from "src/context/RunDetailsSelectionContext";
 import LayoutServiceContext from "src/context/LayoutServiceContext";

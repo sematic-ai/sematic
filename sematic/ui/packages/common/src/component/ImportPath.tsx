@@ -12,7 +12,7 @@ const ImportPath = (props: ImportPathProps) => {
     const { className, style, children } = props;
 
     const onRender = useCallback((ref: any) => (
-        <Typograph ref={ref} variant='code' className={className} style={style || {}}>
+        <Typograph ref={ref} variant='code' className={className} style={style || {}} component={"p"}>
             {children}
         </Typograph>
     ), [className, style, children]);
