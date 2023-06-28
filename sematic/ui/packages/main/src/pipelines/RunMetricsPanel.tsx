@@ -1,4 +1,4 @@
-import MetricsPane from "@sematic/common/src/pages/RunDetails/metrics/MetricsPane";
+import MetricsPane from "@sematic/common/src/pages/RunDetails/metricsTab/MetricsPane";
 import { useState } from "react";
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
 import { useRunPanelLoadingIndicator } from "src/hooks/runDetailsHooks";

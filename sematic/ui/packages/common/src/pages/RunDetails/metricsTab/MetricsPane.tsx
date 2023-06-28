@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { MetricPoint, Run, runIsInTerminalState } from "src/Models";
 import { METRIC_SCOPES } from "src/constants";
 import { useListMetrics } from "src/hooks/metricsHooks";
-import { TimeseriesMetric } from "src/pages/RunDetails/metrics/Metrics";
+import { TimeseriesMetric } from "src/pages/RunDetails/metricsTab/Metrics";
 import { getChartColor } from "src/utils/color";
 
 interface MetricsPaneProps {

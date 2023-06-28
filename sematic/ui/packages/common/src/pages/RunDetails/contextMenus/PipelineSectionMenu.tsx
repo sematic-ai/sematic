@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { useRootRunContext } from "src/context/RootRunContext";
 import { useNavigate } from "react-router-dom";
 import { getPipelineRunsPattern } from "src/hooks/runHooks";
+import { useRunDetailsSelectionContext } from "src/context/RunDetailsSelectionContext";
 
 const ANCHOR_OFFSET = {x: 13, y: -11};
 interface PipelineSectionActionMenuProps {
@@ -14,6 +15,7 @@ function PipelineSectionActionMenu(props: PipelineSectionActionMenuProps) {
 
     const { rootRun } = useRootRunContext();
     const navigate = useNavigate();
+    const { setSelectedPanel } = useRunDetailsSelectionContext();
 
 
     const commands = useMemo(() => {
@@ -26,10 +28,12 @@ function PipelineSectionActionMenu(props: PipelineSectionActionMenuProps) {
             },
             {
                 title: "Metrics",
-                onClick: () => { }
+                onClick: () => { 
+                    setSelectedPanel("metrics");
+                }
             }
         ]
-    }, [rootRun, navigate]);
+    }, [rootRun, navigate, setSelectedPanel]);
 
     return <ContextMenu anchorEl={anchorEl} commands={commands} anchorOffset={ANCHOR_OFFSET} />;
 }
