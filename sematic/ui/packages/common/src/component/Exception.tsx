@@ -1,5 +1,5 @@
 import { Alert, AlertTitle, Link } from "@mui/material";
-import { ExceptionMetadata } from "@sematic/common/src/Models";
+import { ExceptionMetadata } from "src/Models";
 
 const DISCORD_MESSAGE = (
     "For assistance with this error message, you can reach out to us on "
@@ -13,6 +13,7 @@ function DiscordHelp() {
         </pre>
     );
 }
+
 
 export function Exception(props: { exception_metadata: ExceptionMetadata }) {
     const { exception_metadata } = props;
