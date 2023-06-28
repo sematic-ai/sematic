@@ -83,7 +83,7 @@ export default function MetricsPane(props: MetricsPaneProps) {
                     </Typography>
                 </Box>
             )}
-            {!loading &&
+            {
                 metricFilters !== undefined &&
                 metricFilters.map((metricFilter, idx) => (
                     <Box sx={{ mt: 10, float: "left", width: 500 }} key={idx}>
