@@ -4,6 +4,9 @@ import ArtifactComponent from "src/pages/RunDetails/artifacts/artifact";
 import { useMemo } from "react";
 import { Artifact } from "src/Models";
 import { ArtifactPaneContainer } from "src/pages/RunDetails/artifacts/common";
+import { Exception, ExternalException } from "src/component/Exception";
+import { Box } from "@mui/material";
+import Alert from "@mui/material/Alert";
 
 function OutputPane() {
     const { selectedRun } = useRunDetailsSelectionContext();
@@ -21,7 +24,7 @@ function OutputPane() {
         edges.forEach((edge) => {
             if (edge.source_run_id === selectedRun?.id) {
                 if (!edge.artifact_id || !artifactsById.has(edge.artifact_id!)) {
-                    console.error(Error("Artifact missing"));
+                    console.warn(Error("Artifact missing"));
                     return;
                 }
                 outputArtifacts.push({
@@ -35,8 +38,43 @@ function OutputPane() {
 
     }, [graph, selectedRun?.id]);
 
+    const exceptions = useMemo(() => {
+        if (isGraphLoading) {
+            return null;
+        }
+        const { future_state, external_exception_metadata_json, exception_metadata_json } = selectedRun!;
+
+        if (["FAILED", "NESTED_FAILED"].includes(future_state)) {
+            return <>
+                {external_exception_metadata_json && <Box sx={{ paddingBottom: 4, }} >
+                    <ExternalException
+                        exception_metadata={external_exception_metadata_json} />
+                </Box>}
+
+                {exception_metadata_json && <Box sx={{ paddingBottom: 4, }} >
+                    <Exception exception_metadata={exception_metadata_json} /></Box>}
+            </>
+        }
+
+        return null;
+    }, [isGraphLoading, selectedRun]);
+
     if (isGraphLoading) {
         return null;
+    }
+
+    const { future_state } = selectedRun! || {};
+
+    if (["CREATED", "SCHEDULED", "RAN"].includes(future_state)) {
+        return <Alert severity="info">No output yet. Run has not completed.</Alert>;
+    }
+    if (["FAILED", "NESTED_FAILED"].includes(future_state)) {
+        return <>
+            <Alert severity="error">
+                Run has failed.
+            </Alert>
+            {exceptions}
+        </>;
     }
 
     return <OutputPanePresentation outputArtifacts={outputArtifact || []} />;
