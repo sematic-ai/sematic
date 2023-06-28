@@ -11,10 +11,11 @@ import {
     Stack,
     Typography,
 } from "@mui/material";
+import Link from "@mui/material/Link";
 import { useTheme } from "@mui/material/styles";
 import MuiRouterLink from "@sematic/common/src/component/MuiRouterLink";
 import UserContext from "@sematic/common/src/context/UserContext";
-import { useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { SiDiscord, SiReadthedocs } from "react-icons/si";
 import logo from "../Fox.png";
 import UserAvatar from "./UserAvatar";
@@ -110,6 +111,11 @@ function UserMenu() {
     const handleClose = () => {
         setAnchorEl(null);
     };
+    
+    const switchToNewUI = useCallback(() => {
+        window.localStorage.setItem("sematic-feature-flag-newui", "true");
+        window.location.reload();
+    }, []);
 
     return user && signOut ? (
         <>
@@ -160,7 +166,15 @@ function UserMenu() {
                 </ListItem>
                 <ListItem sx={{ pt: 0, pb: 4 }}>
                     <Typography color="GrayText">
-            API key: <code>{user.api_key}</code>
+                        API key: <code>{user.api_key}</code>
+                    </Typography>
+                </ListItem>
+                <Divider />
+                <ListItem sx={{ height: "50px", display: "flex", alignItems: "center"}}>
+                    <Typography color="GrayText">
+                        <Link style={{ cursor: "pointer"}} onClick={switchToNewUI}>
+                            Switch to new UI
+                        </Link>
                     </Typography>
                 </ListItem>
                 <Divider />
@@ -169,7 +183,7 @@ function UserMenu() {
                         <ListItemIcon>
                             <Logout fontSize="small" />
                         </ListItemIcon>
-            Sign out
+                        Sign out
                     </ButtonBase>
                 </MenuItem>
             </Menu>
