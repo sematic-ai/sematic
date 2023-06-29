@@ -78,7 +78,7 @@ const RunStateColorMap: Map<React.FC<StateChipBaseProps>, {
 
 export function getRunStateChipComponentByState(futureState: string) {
     if (["RESOLVED", "SUCCEEDED"].includes(futureState)) {
-        return SuccessStateChip;
+        return SubmittedStateChip;
     }
     if (["FAILED", "NESTED_FAILED"].includes(futureState)) {
         return FailedStateChip;
