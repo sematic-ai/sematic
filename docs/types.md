@@ -60,6 +60,88 @@ a summary of that data frame being displayed.
 
 ![Data Frame view in the UI](./images/DataFrame.png)
 
+
+## AWS Types
+
+### `S3Bucket`
+
+This type represents a storage bucket in S3. You can initialize it as follows:
+
+```python
+from sematic.types import S3Bucket
+
+@sematic.func
+def my_function() -> S3Bucket:
+    return S3Bucket(
+        name="my-bucket",
+        region="us-west-1",  # region is optional
+    )
+```
+
+Taking this as an input or returning it as an output will render a link to the bucket
+in the Sematic dashboard.
+
+### `S3Location`
+
+This type represents a blob or directory in S3. You can initialize it as follows:
+
+```python
+from sematic.types import S3Bucket, S3Location
+
+@sematic.func
+def my_function() -> S3Location:
+    return S3Location(
+        bucket=S3Bucket(
+            name="my-bucket",
+            region="us-west-1",  # region is optional
+        ),
+        location="path/to/blob",
+    )
+```
+
+Alternatively, a shorthand for the above would be:
+
+```python
+from sematic.types import S3Location
+
+@sematic.func
+def my_function() -> S3Location:
+    return S3Location.from_uri(
+        uri="s3://my-bucket/path/to/blob",
+        region="us-west-1",  # region is optional
+    )
+```
+
+Taking this as an input or returning it as an output will render a link to the bucket
+in the Sematic dashboard.
+
+![S3 Location view in the Dashboard](./images/s3Location.jpg)
+
+S3 only emulates a file system through key-value pairs and does not have an actual
+hierarchical directory structure. As a convention, locations that end in a "/" are
+rendered as "directories", and those that do not are interpreted as fully-qualified
+file paths.
+
+`S3Location` can also be used in the following ways:
+
+```python
+
+location = S3Location.from_uri("s3://my-bucket/path/to/blob")
+
+
+# refers to s3://my-bucket/path/to
+dir_location = location.parent_directory
+
+# refers to s3://my-bucket/path/to/other-blob
+sib_location = location.sibling_location("other-blob")
+
+# refers to s3://my-bucket/path/to/yet-another-blob
+another_location = dir_location.child_location("yet-another-blob")
+
+# refers to s3://my-bucket/path/to/the-last-one
+last_blob = dir_location / "the-last-one"
+```
+
 ## Snowflake tables
 
 See [Snowflake integration](./snowflake.md).
@@ -67,3 +149,11 @@ See [Snowflake integration](./snowflake.md).
 ## Plotly figures
 
 Simply return any `plotly.graph_objs.Figure` from a Sematic func (either directly or as part of a `dataclass`, `Dict`, `List`, or other supported collection type) and it will be displayed in the UI.
+
+## Hugging Face Types
+
+### Stored Model
+
+### Model Reference
+
+### Dataset Reference
