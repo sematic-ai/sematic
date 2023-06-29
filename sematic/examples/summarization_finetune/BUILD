@@ -12,5 +12,7 @@ pip_deps = [
 sematic_example(
     name = "summarization_finetune",
     requirements = pip_deps,
-    extras = ["//sematic/ee:metrics"]
+    # Uncomment to allow running with metrics; must also
+    # uncomment import in train_eval
+    # extras = ["//sematic/ee:metrics"]
 )
