@@ -5,6 +5,8 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.31.1](https://pypi.org/project/sematic/0.31.1/)
+    * [improvement] Add index on edges for source/dest run ids
 * [0.31.0](https://pypi.org/project/sematic/0.31.0/)
     * [feature] Enable remote execution using pure-Docker, without bazel
     * [feature] Support live-metrics during Sematic Function execution[^1]
