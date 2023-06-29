@@ -505,7 +505,7 @@ Custom metrics are an Enteprise feature. Get in touch at
 
 {% endhint %}
 
-### `log_metric`
+### `sematic.ee.metrics.log_metric`
 
 Logs a timeseries metric value.
 
