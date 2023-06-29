@@ -13,7 +13,6 @@ from peft import LoraConfig, PeftType
 
 # Sematic
 from sematic import LocalResolver
-from sematic.config.config import switch_env
 from sematic.examples.summarization_finetune.pipeline import (
     DatasetConfig,
     ModelSize,
