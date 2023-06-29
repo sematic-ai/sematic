@@ -1,19 +1,30 @@
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useAtom } from "jotai";
+import { RESET } from "jotai/utils";
+import isEmpty from "lodash/isEmpty";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import useLatest from "react-use/lib/useLatest";
+import { searchAtom } from "src/hooks/runHooks";
 import TwoColumns from "src/layout/TwoColumns";
 import RunList from "src/pages/RunSearch/RunList";
 import SearchFilters from "src/pages/RunSearch/SearchFilters";
-import { AllFilters } from "src/pages/RunTableCommon/filters";
-import useLatest from "react-use/lib/useLatest";
+import { AllFilters, FilterType } from "src/pages/RunTableCommon/filters";
 
 const RunSearch = () => {
     const [filters, setFilters] = useState<AllFilters | null>(null);
 
     const latestFilters = useLatest(filters);
+    const [, setSearchHash] = useAtom(searchAtom);
+
 
     const onFiltersChanged = useCallback((filters: AllFilters) => {
         setFilters(filters);
+        if (!isEmpty(filters[FilterType.SEARCH])) {
+            setSearchHash(filters[FilterType.SEARCH]![0]);
+        }else {
+            setSearchHash(RESET);
+        }
         (latestFilters.current as any) = filters;
-    }, [latestFilters]);
+    }, [latestFilters, setSearchHash]);
 
     const onRenderLeft = useCallback(() => {
         return <SearchFilters onFiltersChanged={onFiltersChanged} />;
