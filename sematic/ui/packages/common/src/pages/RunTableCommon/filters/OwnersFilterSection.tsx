@@ -12,6 +12,7 @@ import NameTag from "src/component/NameTag";
 import isEmpty from "lodash/isEmpty";
 import { User } from "src/Models";
 
+
 const Container = styled.div`
     display: flex;
     flex-direction: row;
@@ -85,7 +86,6 @@ const OwnersFilterSection = forwardRef<ResettableHandle, OwnersFilterSectionProp
                     label={<NameTag firstName={user.first_name} lastName={user.last_name} />}
                     checked={filters.has(user.id)} />
                 )}
-                {!currentUser && isEmpty(otherUsers) && <StyledFormControlLabel label={"N/A"} control={<></>} />}
             </FormGroup>
         </Container>
     </ScrollableCollapseableFilterSection>;
