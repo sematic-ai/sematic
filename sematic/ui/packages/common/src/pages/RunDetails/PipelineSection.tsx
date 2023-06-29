@@ -80,7 +80,12 @@ function ErrorComponent(props: {
     </Tooltip>;
 }
 
-const PipelineSection = () => {
+interface PipelineSectionProps {
+    onMetricsSectionClicked: () => void;
+}
+
+const PipelineSection = (props: PipelineSectionProps) => {
+    const { onMetricsSectionClicked } = props;
     const { rootRun } = useRootRunContext() as RemoveUndefined<ExtractContextType<typeof RootRunContext>>;
 
     const { error, avgRuntime, successRate, totalCount, loading }
@@ -99,7 +104,7 @@ const PipelineSection = () => {
                 <StyledVertButton ref={contextMenuAnchor} />
                 <PipelineSectionActionMenu anchorEl={contextMenuAnchor.current} />
             </TopSection>
-            <BottomSection>
+            <BottomSection onClick={onMetricsSectionClicked} style={{cursor: "pointer"}}>
                 <>
                     {loading ? <SkeletonForMetrics /> : <Box>
                         <Typograph variant="bigBold">

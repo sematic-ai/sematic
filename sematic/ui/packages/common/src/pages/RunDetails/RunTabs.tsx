@@ -8,7 +8,7 @@ import { selectedTabHashAtom } from "src/hooks/runHooks";
 import InputPane from "src/pages/RunDetails/artifacts/InputPane";
 import OutputPane from "src/pages/RunDetails/artifacts/OutputPane";
 import LogsPane from "src/pages/RunDetails/logs/LogsPane";
-import RunMetricsPanel from "src/pages/RunDetails/metrics";
+import RunMetricsPanel from "src/pages/RunDetails/metricsTab";
 import ExternalResourcePanel from "src/pages/RunDetails/externalResource";
 import PodLifecyclePanel from "src/pages/RunDetails/podLifecycle";
 import theme from "src/theme/new";

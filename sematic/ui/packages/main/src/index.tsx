@@ -3,12 +3,13 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import UserContext from "@sematic/common/src/context/UserContext";
+import AppContext from "@sematic/common/src/context/appContext";
 import NewShell, { HeaderSelectionKey } from "@sematic/common/src/layout/Shell";
-import NewRunDetails from "@sematic/common/src/pages/RunDetails";
-import NewRunSearch from "@sematic/common/src/pages/RunSearch";
+import GettingStarted from "@sematic/common/src/pages/GettingStarted";
 import PipelineList from "@sematic/common/src/pages/PipelineList";
 import PipelineRuns from "@sematic/common/src/pages/PipelineRuns";
-import GettingStarted from "@sematic/common/src/pages/GettingStarted";
+import NewRunDetails from "@sematic/common/src/pages/RunDetails";
+import NewRunSearch from "@sematic/common/src/pages/RunSearch";
 import { getFeatureFlagValue } from "@sematic/common/src/utils/FeatureFlagManager";
 import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { useAtom } from "jotai";
@@ -23,7 +24,6 @@ import Home from "./Home";
 import {
     VersionPayload,
 } from "./Payloads";
-import AppContext from "./appContext";
 import EnvironmentProvider from "./components/EnvironmentProvider";
 import Health from "./components/Health";
 import Loading from "./components/Loading";
