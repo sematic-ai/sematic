@@ -9,6 +9,7 @@ import IconButton from "@mui/material/IconButton";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { useTheme } from "@mui/material/styles";
+import ErrorBoundary from "src/component/ErrorBoundary";
 
 
 const ContainerBase = styled.div`
@@ -68,6 +69,14 @@ const Value = styled.div`
     flex-shrink: 1;
 `;
 
+function RenderError({children}: {
+    children: React.ReactNode;
+}) {
+    return <ArtifactExpanderContainer>
+        <span style={{color: theme.palette.error.main}}>{children}</span>
+    </ArtifactExpanderContainer>
+}
+
 export function ArtifactLine(props: { name: string, type?: string, children: React.ReactNode }) {
     const { name, type, children } = props;
     return <Container className={"artifact-row"} style={{ marginRight: "-20px" }}>
@@ -115,7 +124,7 @@ function ArtifactVizTemplate(props: ArtifactVizTemplateProps) {
             </span>;
         }
 
-        return <div style={{marginRight: theme.spacing(8)}}>
+        return <div style={{ marginRight: theme.spacing(8) }}>
             {component}
         </div>;
     }, [toggleOpen, open, hasNested, theme, ValueComponent, valueSummary, typeSerialization]);
@@ -128,7 +137,9 @@ function ArtifactVizTemplate(props: ArtifactVizTemplateProps) {
 
     return <Fragment key={name}>
         <ArtifactLine name={name} type={type}>
-            {valueComponent}
+            <ErrorBoundary fallback={<RenderError>Cannot render value</RenderError>}>
+                {valueComponent}
+            </ErrorBoundary>
             {hasNested && <ExpandMoreIconCotainer>
                 <IconButton onClick={toggleOpen} style={{ visibility: open ? "hidden" : "visible" }}>
                     <ExpandMoreIcon />
@@ -136,7 +147,13 @@ function ArtifactVizTemplate(props: ArtifactVizTemplateProps) {
             </ExpandMoreIconCotainer>}
         </ArtifactLine>
         {open && !!NestedComponent && <NestedContainer className={expandLessHovered ? "hover" : ""}>
-            <NestedComponent valueSummary={valueSummary} typeSerialization={typeSerialization} />
+            <ErrorBoundary fallback={
+                <RenderError>
+                    Error encountered when rendering the nested representation.
+                </RenderError>}>
+                <NestedComponent valueSummary={valueSummary} typeSerialization={typeSerialization} />
+            </ErrorBoundary>
+
             <ExpandLessIconCotainer>
                 <IconButton onClick={toggleOpen} onMouseEnter={() => setExpandLessHovered(true)}
                     onMouseLeave={() => setExpandLessHovered(false)}>
