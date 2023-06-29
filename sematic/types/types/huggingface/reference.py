@@ -82,4 +82,3 @@ class HuggingFaceReference:
             as_string += f"{self.owner}/"
         as_string += self.repo
         return as_string
-        

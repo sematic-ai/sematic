@@ -2,8 +2,9 @@
 import importlib
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Type, Union
+from typing import Any, Optional, Type
 
+# Sematic
 from sematic.types.types.huggingface.model_reference import HuggingFaceModelReference
 
 # Path suffixes to use for storage if the model is a peft model
@@ -34,7 +35,7 @@ class HuggingFaceStoredModel:
         This parameter ONLY applies for Peft models. By default, the base model
         for Peft models is stored and retrieved to/from the provided storage path.
         If this parameter is set, however, the base model will NOT be stored, and
-        will be retrieved from Hugging Face Hub. 
+        will be retrieved from Hugging Face Hub.
     """
 
     path: str
@@ -43,7 +44,12 @@ class HuggingFaceStoredModel:
     base_model_reference: Optional[HuggingFaceModelReference] = None
 
     @classmethod
-    def store(cls, model, directory: str, base_model_reference: Optional[HuggingFaceModelReference]=None) -> "HuggingFaceStoredModel":
+    def store(
+        cls,
+        model,
+        directory: str,
+        base_model_reference: Optional[HuggingFaceModelReference] = None,
+    ) -> "HuggingFaceStoredModel":
         directory = os.path.expanduser(directory)
         model_type: str = _type_to_str(type(model))
         peft_type: Optional[str] = None
