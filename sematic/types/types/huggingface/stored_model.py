@@ -2,8 +2,9 @@
 import importlib
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Type, Union
+from typing import Any, Optional, Type
 
+# Sematic
 from sematic.types.types.huggingface.model_reference import HuggingFaceModelReference
 
 # Path suffixes to use for storage if the model is a peft model
@@ -34,7 +35,7 @@ class HuggingFaceStoredModel:
         This parameter ONLY applies for Peft models. By default, the base model
         for Peft models is stored and retrieved to/from the provided storage path.
         If this parameter is set, however, the base model will NOT be stored, and
-        will be retrieved from Hugging Face Hub. 
+        will be retrieved from Hugging Face Hub.
     """
 
     path: str
@@ -43,7 +44,31 @@ class HuggingFaceStoredModel:
     base_model_reference: Optional[HuggingFaceModelReference] = None
 
     @classmethod
-    def store(cls, model, directory: str, base_model_reference: Optional[HuggingFaceModelReference]=None) -> "HuggingFaceStoredModel":
+    def store(
+        cls,
+        model,
+        directory: str,
+        base_model_reference: Optional[HuggingFaceModelReference] = None,
+    ) -> "HuggingFaceStoredModel":
+        """Store the model in remote storage.
+
+        Parameters
+        ----------
+        model:
+            The model as a Hugging Face transformer model.
+        directory:
+            The directory to store the model in.
+        base_model_reference:
+            This parameter only applies to Peft models. If this parameter
+            is supplied, instead of storing the base model at the specified
+            location, the base model will not be stored. At model load time,
+            the base model will be re-pulled from Hugging Face Hub using the
+            supplied reference.
+
+        Returns
+        -------
+        A reference to the stored model.
+        """
         directory = os.path.expanduser(directory)
         model_type: str = _type_to_str(type(model))
         peft_type: Optional[str] = None
@@ -66,6 +91,18 @@ class HuggingFaceStoredModel:
         )
 
     def load(self, **from_pretrained_kwargs):
+        """Load the model from storage.
+
+        Parameters
+        ----------
+        **from_pretrained_kwargs:
+            Arguments to the model's 'from_pretrained' method from Hugging Face's
+            transformers model.
+
+        Returns
+        -------
+        An instance of the model as a Hugging Face transformer model.
+        """
         base_path = (
             _FULL_MODEL_SUFFIX if self.peft_model_type is None else _BASE_MODEL_SUFFIX
         )
