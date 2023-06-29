@@ -68,7 +68,6 @@ DATASET_CONFIG = DatasetConfig(
 
 
 def main():
-
     training_config, dataset_config, export_reference = parse_args()
     resolver = LocalResolver()
     future = pipeline(training_config, dataset_config, export_reference).set(
