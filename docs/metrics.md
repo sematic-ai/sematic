@@ -1,6 +1,7 @@
 # Metrics
 
-Sematic surfaces a number of high-level metrics in the Dashboard, and lets 
+Sematic surfaces a number of high-level metrics in the Dashboard, and lets
+Enterprise users log their own metrics at runtime.
 
 ## Pipeline metrics
 
@@ -18,7 +19,9 @@ from the CLI, the dashboard, or external systems.
 
 ### Success rate
 
-The pipeline success rate is the percentage of successful runs among all terminated runs of the pipeline's [root function](./glossary.md#root-entry-point-function).
+The pipeline success rate is the percentage of successful runs among all
+terminated runs of the pipeline's [root
+function](./glossary.md#root-entry-point-function).
 
 Terminated runs include successful and failed runs. It does not include canceled
 runs as those were intentionally interrupted by users. It does not include
