@@ -75,3 +75,11 @@ class HuggingFaceReference:
         if self.commit_sha is not None:
             as_string += f"@{self.commit_sha}"
         return as_string
+
+    def repo_reference(self) -> str:
+        as_string = ""
+        if self.owner is not None:
+            as_string += f"{self.owner}/"
+        as_string += self.repo
+        return as_string
+        
