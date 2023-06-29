@@ -85,6 +85,10 @@ with `sematic run examples/summarization_finetune -- --help` for options.
 
 ### Troubleshooting
 
+If you don't have CUDA set up or installed, you may need to do that. Some Cuda dependencies will likely
+get installed transitively when installing PyTorch, but some separate installation may be required.
+You may find it helpful to `pip install nvidia-cusparse-cu11`.
+
 If you see this error:
 ```
 AttributeError: /lib/python3.9/site-packages/bitsandbytes/libbitsandbytes_cpu.so: undefined symbol: cget_col_row_stats
