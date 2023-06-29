@@ -63,7 +63,7 @@ TRAINING_CONFIG = TrainingConfig(
     model_selection=ModelSelection.flan_base,
     lora_config=LORA_CONFIG_FLAN,
     training_arguments=TRAINING_ARGS,
-    storage_directory="~/tmp/summarization-tuned-model",
+    storage_directory="/tmp/summarization-tuned-model",
 )
 
 DATASET_CONFIG = DatasetConfig(
