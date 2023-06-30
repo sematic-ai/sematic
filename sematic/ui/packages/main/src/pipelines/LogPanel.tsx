@@ -1,7 +1,18 @@
 import { Box, TextField } from "@mui/material";
 import { useCallback, useState } from "react";
 import { usePipelinePanelsContext } from "../hooks/pipelineHooks";
-import BidirectionalLogView from "src/components/BidirectionalLogView";
+import BidirectionalLogView from "@sematic/common/src/pages/RunDetails/logs/BidirectionalLogView";
+import { useRunPanelContext, useRunPanelLoadingIndicator } from "src/hooks/runDetailsHooks";
+import styled from "@emotion/styled";
+
+const StyledContainer = styled(Box)`
+    display: flex;
+    flexDirection: column;
+
+    & .jump-to-beginning {
+        top: 118px;
+    }
+`;
 
 export default function LogPanel() {
     const { selectedRun } = usePipelinePanelsContext();
@@ -15,9 +26,14 @@ export default function LogPanel() {
         [setFilterString]
     );
 
+    const { setFooterRenderProp, scrollContainerRef } = useRunPanelContext();
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    useRunPanelLoadingIndicator(isLoading);
+
     return (
         <Box >
-            <Box sx={{ display: "flex", flexDirection: "column"}} >
+            <StyledContainer sx={{ display: "flex", flexDirection: "column"}} >
                 <TextField
                     variant="standard"
                     fullWidth={true}
@@ -26,8 +42,9 @@ export default function LogPanel() {
                     style={{ flexShrink: 1 }}
                 />
                 <BidirectionalLogView key={`${id}---${filterString}`} logSource={id}
-                    filterString={filterString} />
-            </Box>
+                    filterString={filterString} scrollContainerRef={scrollContainerRef} 
+                    setFooterRenderProp={setFooterRenderProp} setIsLoading={setIsLoading} />
+            </StyledContainer>
         </Box>
     );
 }

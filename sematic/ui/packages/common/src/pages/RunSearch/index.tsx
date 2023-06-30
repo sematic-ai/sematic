@@ -2,7 +2,7 @@ import { useCallback, useState, useMemo } from "react";
 import TwoColumns from "src/layout/TwoColumns";
 import RunList from "src/pages/RunSearch/RunList";
 import SearchFilters from "src/pages/RunSearch/SearchFilters";
-import { AllFilters } from "src/pages/RunSearch/filters/common";
+import { AllFilters } from "src/pages/RunTableCommon/filters";
 
 const RunSearch = () => {
     const [filters, setFilters] = useState<AllFilters>({});

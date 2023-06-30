@@ -74,6 +74,7 @@ required by the latest version (See the section
 ["From vX1.X2.X3 to vY1.Y2.Y3"](#from-vx1x2x3-to-vy1y2y3) below). Then:
 
 ```bash
+helm repo update
 helm upgrade sematic-server -f /path/to.values.yaml
 ```
 

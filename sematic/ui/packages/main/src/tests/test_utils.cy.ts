@@ -1,4 +1,5 @@
-import { abbreviatedUserName, sha1, AsyncInvocationQueue } from "@sematic/main/src/utils";
+import { AsyncInvocationQueue } from "@sematic/common/src/utils/async";
+import { abbreviatedUserName, sha1 } from "@sematic/main/src/utils";
 import user from "@sematic/ui-test/fixtures/user";
 
 describe("sha1", () => {

@@ -15,6 +15,7 @@ import TimeAgo from "@sematic/common/src/component/TimeAgo";
 import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
 import UserContext from "@sematic/common/src/context/UserContext";
 import { useFetchRuns, useRunNavigation } from "@sematic/common/src/hooks/runHooks";
+import { pipelineSocket } from "@sematic/common/src/sockets";
 import { ExtractContextType } from "@sematic/common/src/utils/typings";
 import { useCallback, useContext, useEffect, useMemo } from "react";
 import { ActionMenu, ActionMenuItem } from "src/components/ActionMenu";
@@ -26,7 +27,6 @@ import {
     usePipelineRunContext,
 } from "src/hooks/pipelineHooks";
 import PipelineRunViewContext from "src/pipelines/PipelineRunViewContext";
-import { pipelineSocket } from "src/sockets";
 import { abbreviatedUserName, fetchJSON } from "src/utils";
 
 function PipelineActionMenu(props: { onCancel: () => void }) {
