@@ -456,6 +456,26 @@ def test_custom_service_account():
     )
 
 
+def test_custom_busybox_image():
+    custom_busybox = "awesomebox"
+    with environment_variables(
+        {
+            "RAY_BUSYBOX_PULL_OVERRIDE": json.dumps(custom_busybox),
+        }
+    ):
+        manifest = StandardKuberayWrapper.create_cluster_manifest(  # type: ignore
+            image_uri=_TEST_IMAGE_URI,
+            cluster_name=_TEST_CLUSTER_NAME,
+            cluster_config=_MULTIPLE_WORKER_GROUP_CONFIG,
+            kuberay_version=_TEST_KUBERAY_VERSION,
+        )
+    worker_group = manifest["spec"]["workerGroupSpecs"][0]
+
+    assert (
+        worker_group["template"]["spec"]["initContainers"][0]["image"] == custom_busybox
+    )
+
+
 def test_autoscaling_configuration():
     autoscaling_config = _SINGLE_WORKER_GROUP_CONFIG
     static_config = _MULTIPLE_WORKER_GROUP_CONFIG

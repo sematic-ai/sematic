@@ -108,6 +108,7 @@ ray:
   gpu_tolerations: []
   non_gpu_tolerations: []
   gpu_resource_request_key: null
+  busybox_image: "busybox:1.28"
 
 rbac:
   create: true
