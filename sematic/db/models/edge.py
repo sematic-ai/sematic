@@ -19,11 +19,11 @@ class Edge(Base, JSONEncodableMixin):
 
     # Edge endpoints
     source_run_id: Optional[str] = Column(
-        types.String(), ForeignKey("artifacts.id"), nullable=True
+        types.String(), ForeignKey("artifacts.id"), nullable=True, index=True
     )
     source_name: Optional[str] = Column(types.String(), nullable=True)
     destination_run_id: Optional[str] = Column(
-        types.String(), ForeignKey("artifacts.id"), nullable=True
+        types.String(), ForeignKey("artifacts.id"), nullable=True, index=True
     )
     destination_name: Optional[str] = Column(types.String(), nullable=True)
 
