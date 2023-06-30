@@ -7,6 +7,7 @@ with nothing else on the line.
 * HEAD
 * [0.31.2](https://pypi.org/project/sematic/0.31.2/)
     * [improvement] Add ability to customize images for Ray workers
+    * [improvement] Add image pull secrets and pull policy to migration pod
 * [0.31.1](https://pypi.org/project/sematic/0.31.1/)
     * [improvement] Add index on edges for source/dest run ids
 * [0.31.0](https://pypi.org/project/sematic/0.31.0/)
