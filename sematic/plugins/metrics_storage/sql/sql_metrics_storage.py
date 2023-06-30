@@ -174,7 +174,11 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
         try:
             with db().get_session() as session:
-                query = session.query(*select_fields).filter(*predicates)
+                query = (
+                    session.query(*select_fields)
+                    .filter(*predicates)
+                    .order_by(MetricValue.metric_time)
+                )
 
                 if len(group_by_clauses) > 0:
                     query = query.group_by(*group_by_clauses)

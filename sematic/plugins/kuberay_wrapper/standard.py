@@ -44,6 +44,12 @@ class StandardKuberaySettingsVar(AbstractPluginSettingsVar):
     RAY_SUPPORTS_GPUS:
         Whether Ray heads/workers can be assigned to Kubernetes nodes with
         GPUs. Should be either set to "true" or "false".
+    RAY_BUSYBOX_PULL_OVERRIDE:
+        The Ray workers use the busybox Docker image to ensure they
+        start at an appropriate time relative to the head. If you like,
+        you can customize the image URI used to pull this image. This
+        can be helpful if you would like to limit how often you are making
+        pulls from Dockerhub to avoid rate limiting.
     """
 
     RAY_GPU_NODE_SELECTOR = "RAY_GPU_NODE_SELECTOR"
@@ -52,6 +58,7 @@ class StandardKuberaySettingsVar(AbstractPluginSettingsVar):
     RAY_NON_GPU_TOLERATIONS = "RAY_NON_GPU_TOLERATIONS"
     RAY_GPU_RESOURCE_REQUEST_KEY = "RAY_GPU_RESOURCE_REQUEST_KEY"
     RAY_SUPPORTS_GPUS = "RAY_SUPPORTS_GPUS"
+    RAY_BUSYBOX_PULL_OVERRIDE = "RAY_BUSYBOX_PULL_OVERRIDE"
 
 
 class _NeedsOverride:
@@ -61,6 +68,7 @@ class _NeedsOverride:
 
 
 MIN_SUPPORTED_KUBERAY_VERSION = (0, 4, 0)
+_DEFAULT_BUSYBOX_PULL = "busybox:1.28"
 
 
 _WORKER_GROUP_TEMPLATE: Dict[str, Any] = {
@@ -88,7 +96,7 @@ _WORKER_GROUP_TEMPLATE: Dict[str, Any] = {
             "initContainers": [
                 {
                     "name": "init",
-                    "image": "busybox:1.28",
+                    "image": _NeedsOverride,
                     "command": [
                         "sh",
                         "-c",
@@ -272,6 +280,10 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
         group_manifest["template"]["spec"][
             "serviceAccountName"
         ] = _get_service_account()
+        group_manifest["template"]["spec"]["initContainers"][0]["image"] = _get_setting(
+            StandardKuberaySettingsVar.RAY_BUSYBOX_PULL_OVERRIDE,
+            _DEFAULT_BUSYBOX_PULL,
+        )
 
         return group_manifest
 
