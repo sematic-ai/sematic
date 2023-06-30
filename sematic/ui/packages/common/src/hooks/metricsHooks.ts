@@ -112,7 +112,7 @@ export function useMetrics(
             url: `/api/v1/metrics/${metricsFilter.metricName}?labels=${labelsJSON}&group_by=${groupBysStr}&rollup=auto`,
         });
         return (await response.json()) as MetricsPayload;
-    }, [latestMetricPoints, metricsFilter, eventMatchesFilter]);
+    }, [latestMetricPoints, metricsFilter ]);
 
     return [value, loading, error];
 }
