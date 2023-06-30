@@ -30,7 +30,8 @@ def cli(verbose: int):
         pass
 
     switch_env("local")
-    migrate_up()
+    print("Hack! TODO: make DB-related code only execute for necessary paths e.g. sematic start")
+    # migrate_up()
 
 
 @cli.group("advanced")

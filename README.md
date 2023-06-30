@@ -143,3 +143,21 @@ and get in touch with us on [Discord](https://discord.gg/4KZJ6kYVax).
 
 
 ![scarf pixel](https://static.scarf.sh/a.png?x-pxid=80c3593f-25a0-4b06-90a1-0b670a6567d4)
+
+
+## MOVEME
+
+How one can build a wheel on a host that only has docker:
+```
+mycomputer $$ cd ~/path/to/my/sematic
+mycomputer $$ docker build -t sematic-builder -f docker/Dockerfile.ci .
+mycomputer $$ docker run -it -v`pwd`:/opt/sematic:z -w /opt/sematic sematic-builder bash
+indocker $ bazel build //sematic:wheel
+
+indocker $ echo "find where bazel puts the wheel"
+indocker $ find /home/circleci/.cache/bazel | grep "sematic.*whl"
+
+indocker $ sudo cp /home/circleci/.cache/bazel/_bazel_circleci/fd05bc6c9f852e8bc5f7503beb035cc5/execroot/sematic/bazel-out/k8-fastbuild/bin/sematic/sematic-0.31.1-py3-none-any.whl  ./
+
+mycomputer $$ echo "your wheel is now at ~/path/to/my/sematic/sematic-0.31.1-py3-none-any.whl"
+```

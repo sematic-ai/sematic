@@ -160,16 +160,17 @@ class DockerBuilder(AbstractBuilder):
         SystemExit:
             A subprocess exited with an unexpected code.
         """
-        image_uri, build_config = _build(target=target)
+        image_uri, build_config, effective_base_uri = _build(target=target)
         _launch(
             target=target,
             run_command=run_command,
             image_uri=image_uri,
+            effective_base_uri=effective_base_uri,
             build_config=build_config,
         )
 
 
-def _build(target: str) -> Tuple[ImageURI, BuildConfig]:
+def _build(target: str) -> Tuple[ImageURI, BuildConfig, ImageURI]:
     """
     Builds the container image, returning the image URI that can be used to launch
     executions, and the build configuration object used to build the image.
@@ -182,10 +183,10 @@ def _build(target: str) -> Tuple[ImageURI, BuildConfig]:
         "Instantiated docker client for server: %s", docker_client.api.base_url
     )
 
-    image, image_uri = _build_image(
+    image, image_uri, effective_base_uri = _build_image(
         target=target, build_config=build_config, docker_client=docker_client
     )
-    logger.debug("Built local image: %s", repr(image_uri))
+    logger.debug("Built local image: %s from base image %s", repr(image_uri), repr(effective_base_uri))
 
     build_image_uri = _push_image(
         image=image,
@@ -196,29 +197,96 @@ def _build(target: str) -> Tuple[ImageURI, BuildConfig]:
 
     logger.debug("Using image: %s", repr(build_image_uri))
 
-    return build_image_uri, build_config
+    return build_image_uri, build_config, effective_base_uri
 
 
 def _launch(
     target: str,
     run_command: Optional[str],
     image_uri: ImageURI,
+    effective_base_uri: ImageURI,
     build_config: BuildConfig,
 ) -> None:
     """
     Launches the specified user code target, using the specified image.
     """
-    sys.path.append(os.getcwd())
+    # ummm sematic.cli.run() w/out build does not modify sys.path ....
+    # sys.path.append(os.getcwd())
     logger.info("Launching target: '%s'", target)
 
     with environment_variables(
         {
             RUN_COMMAND_ENV_VAR: run_command,
             CONTAINER_IMAGE_ENV_VAR: repr(image_uri),
-            BUILD_CONFIG_ENV_VAR: repr(build_config),
+            
+            # Maybe this isn't actually needed? it's not read?
+            # BUILD_CONFIG_ENV_VAR: repr(build_config),
         }
     ):
-        runpy.run_path(path_name=target, run_name="__main__")
+
+        # We really really really really need to actually run in the actual docker image
+        # that the user provided so that there is a close similarity between what
+        # happens locally and what the k8s pod will do.  Otherwise users can and will
+        # get stuck in a really slow iteration cycle to debug things like:
+        #  * tools that connect to non-public services like shared filesystems, and the code paths
+        #      that run those tools need to be in-container code / binaries versus whatever is
+        #      available in parent `sematic run` launching shell.
+        #  * native libraries, including user-built native C++ code that might fine in the
+        #      shell but needs to be installed properly into a docker to run on the cluster
+        #      e.g. with proper LD_LIBRARY_PATH
+        #  * torch version and other python packages that might be on the PYTHONPATH of
+        #      this shell but do not match the `image_script` env.  for example,
+        #      how is the 'intermediate' example here https://github.com/sematic-ai/example_docker/tree/main/intermediate
+        #      supposed to work unless the user installs the requirements.txt ?
+        #      sure the user can do that, but it's then really easy for the state of their
+        #      env to get confused with the env that will get run on the cloud.
+        #  * privs of certain files in the docker image
+        #  * access keys e.g. AWS keys and access to other services like databases
+        #      that might not be dockerized properly
+        #  etc etc etc
+
+        if os.environ.get('SEMATIC_IS_RUNNING_IN_DOCKER') == 'True':
+            
+            # Then we're already in docker and we can launch
+            runpy.run_path(path_name=target, run_name="__main__")
+        
+        else:
+            # TODO try to port the command below to docker-py, but the docker-py
+            # run() method hasn't really been touched in 7 years according to
+            # git blame, so maybe it's better to use the system docker executable anyways
+
+            HOME = os.environ.get('HOME', os.path.expanduser("~"))
+            sematic_settings_path = os.path.join(HOME, '.sematic')
+
+            # --env {RUN_COMMAND_ENV_VAR}="{run_command}" \
+            #     --env {CONTAINER_IMAGE_ENV_VAR}="{repr(image_uri)}" \
+            #     --env {BUILD_CONFIG_ENV_VAR}="{repr(build_config)}" \
+
+            # --build will try to run docker again, which is what we don't want
+            run_command_no_build = run_command.replace('--build', '')
+
+            docker_cmd = f"""
+                docker run \
+                --rm \
+                -it \
+                --privileged \
+                --runtime=nvidia \
+                --gpus=all \
+                --net=host \
+                --env SEMATIC_IS_RUNNING_IN_DOCKER=True \
+                --env {CONTAINER_IMAGE_ENV_VAR}="{repr(image_uri)}" \
+                --ipc=host \
+                -v {sematic_settings_path}/:/root/.sematic:ro \
+                -v {os.getcwd()}:/app:z \
+                -w /app \
+                    {effective_base_uri} {run_command_no_build}
+                """
+            logger.info(f"Dropping into docker: {docker_cmd}")
+            os.execvpe(
+                    "docker",
+                    docker_cmd.strip().split(),
+                    os.environ,
+                )
 
     logger.debug("Finished launching target: '%s'", target)
 
@@ -246,7 +314,7 @@ def _build_image(
     target: str,
     build_config: BuildConfig,
     docker_client: docker.DockerClient,  # type: ignore
-) -> Tuple[Image, ImageURI]:
+) -> Tuple[Image, ImageURI, ImageURI]:
     """
     Builds the container image to use, according to the build configuration, and returns
     an `ImageURI` that identifies it.
@@ -263,8 +331,9 @@ def _build_image(
 
     Returns
     -------
-    Tuple[Image, ImageURI]:
-        The build container image and a URI that identifies the image.
+    Tuple[Image, ImageURI, ImageURI]:
+        The build container image and a URI that identifies the image, as well as the base URI (non-cloud)
+        image for e.g. local execution use.
 
     Raises
     ------
@@ -370,7 +439,7 @@ def _build_image_from_base(
     build_config: BuildConfig,
     platform: Optional[str],
     docker_client: docker.DockerClient,  # type: ignore
-) -> Tuple[Image, ImageURI]:
+) -> Tuple[Image, ImageURI, ImageURI]:
     """
     Builds the container image to use by adding layers to an existing base image.
     """
@@ -410,7 +479,7 @@ def _build_image_from_base(
         )
 
     image = docker_client.images.get(built_image_name)
-    return image, ImageURI.from_uri(f"{built_image_name}@{image.id}")
+    return image, ImageURI.from_uri(f"{built_image_name}@{image.id}"), effective_base_uri
 
 
 def _build_from_dockerfile(
@@ -445,7 +514,7 @@ def _build_from_dockerfile(
                 path=os.getcwd(),
                 tag=built_image_name,
                 decode=True,
-                pull=True,
+                pull=False,
                 **optional_kwargs,
             )
 
