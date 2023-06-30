@@ -3,7 +3,11 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import UserContext from "@sematic/common/src/context/UserContext";
+import AppContext from "@sematic/common/src/context/appContext";
 import NewShell, { HeaderSelectionKey } from "@sematic/common/src/layout/Shell";
+import GettingStarted from "@sematic/common/src/pages/GettingStarted";
+import PipelineList from "@sematic/common/src/pages/PipelineList";
+import PipelineRuns from "@sematic/common/src/pages/PipelineRuns";
 import NewRunDetails from "@sematic/common/src/pages/RunDetails";
 import NewRunSearch from "@sematic/common/src/pages/RunSearch";
 import { getFeatureFlagValue } from "@sematic/common/src/utils/FeatureFlagManager";
@@ -20,7 +24,6 @@ import Home from "./Home";
 import {
     VersionPayload,
 } from "./Payloads";
-import AppContext from "./appContext";
 import EnvironmentProvider from "./components/EnvironmentProvider";
 import Health from "./components/Health";
 import Loading from "./components/Loading";
@@ -86,8 +89,17 @@ const NewRoutesOverrides = isNewUIEnabled ? (<>
     <Route path="runs" element={<NewShell />} >
         <Route index element={<NewRunSearch />} handle={{[HeaderSelectionKey]: "runs"}} />
     </Route>
+    <Route path="pipelines" element={<NewShell />} >
+        <Route index element={<PipelineList />} handle={{[HeaderSelectionKey]: "pipelines"}} />
+    </Route>
+    <Route path="pipeline/:functionPath" element={<NewShell />} >
+        <Route index element={<PipelineRuns />} />
+    </Route>
     <Route path="runs/:rootId" element={<NewShell />} >
         <Route index element={<NewRunDetails />} />
+    </Route>
+    <Route path="/" element={<NewShell />} >
+        <Route index element={<GettingStarted />} handle={{[HeaderSelectionKey]: "gettingstarted"}} />
     </Route>
 </>) : null;
 

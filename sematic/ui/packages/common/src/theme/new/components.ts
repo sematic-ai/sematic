@@ -8,6 +8,9 @@ import { chipClasses } from "@mui/material/Chip"
 const components: Components = {
     MuiCssBaseline: {
         styleOverrides: ((theme: Theme) => ({
+            h1: {
+                fontSize: "24px"
+            },
             h2: {
                 color: theme.palette.lightGrey.main,
                 fontSize: theme.typography.small.fontSize,
@@ -295,6 +298,28 @@ const components: Components = {
             root: (({ theme }: { theme: Theme }) => ({
                 "fontSize": `${theme.typography.fontSize}px`,
                 "textAlign": "left",
+            })) as any
+        }
+    },
+    MuiMenu: {
+        styleOverrides: {
+            "list": {
+                "padding": "0",
+            }
+        }
+    },
+    MuiMenuItem: {
+        styleOverrides: {
+            root: (({ theme }: { theme: Theme }) => ({
+                "fontSize": `${theme.typography.fontSize}px`,
+                "textAlign": "left",
+                "width": "300px",
+                "height": "50px",
+                "fontWeight": theme.typography.fontWeightBold,
+                "&:hover": {
+                    "backgroundColor": theme.palette.primary.main,
+                    "color": theme.palette.white.main,
+                }
             })) as any
         }
     }
