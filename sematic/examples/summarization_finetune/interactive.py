@@ -111,7 +111,7 @@ def launch_summary_app(
         )
         stop_button.click(lambda: close())
 
-    blocks.launch(inbrowser=True, prevent_thread_lock=True)
+    blocks.launch(server_name="0.0.0.0", inbrowser=True, prevent_thread_lock=True)
     while not should_close:
         time.sleep(1)
     blocks.close()
