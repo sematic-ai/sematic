@@ -9,6 +9,8 @@ import theme from "src/theme/new";
 import { useUsersList } from "src/hooks/userHooks";
 import UserContext from "src/context/UserContext";
 import NameTag from "src/component/NameTag";
+import isEmpty from "lodash/isEmpty";
+import { User } from "src/Models";
 
 
 const Container = styled.div`
@@ -32,12 +34,15 @@ interface OwnersFilterSectionProps {
     onFiltersChanged?: (filters: string[]) => void;
 }
 
-const OwnersFilterSection = forwardRef<ResettableHandle, OwnersFilterSectionProps>((props, ref) => {
-    const { onFiltersChanged } = props;
-    const [filters, setFilters] = useState<Set<string>>(() => new Set());
+interface OwnersFilterSectionPropsExtended {
+    users: User[];
+    currentUser: User;
+    onFiltersChanged?: (filters: string[]) => void;
+}
 
-    const { users } = useUsersList();
-    const { user: currentUser } = useContext(UserContext);
+const OwnersFilterSection = forwardRef<ResettableHandle, OwnersFilterSectionPropsExtended>((props, ref) => {
+    const { onFiltersChanged, users, currentUser } = props;
+    const [filters, setFilters] = useState<Set<string>>(() => new Set());
 
     const otherUsers = useMemo(() => {
         if (!users || users.length === 0) {
@@ -71,20 +76,32 @@ const OwnersFilterSection = forwardRef<ResettableHandle, OwnersFilterSectionProp
     return <ScrollableCollapseableFilterSection title={"Owner"} >
         <Container>
             <FormGroup>
-                <StyledFormControlLabel control={<Checkbox
+                {currentUser && <StyledFormControlLabel control={<Checkbox
                     checked={filters.has(currentUser!.id)}
                     onChange={(event) => toogleFilter(currentUser!.id, event.target.checked)} />} label="Your runs"
-                />
+                />}
                 {!!otherUsers && otherUsers.map(
-                    (user, index) =>
-                        <StyledFormControlLabel key={index} control={<Checkbox
-                            onChange={(event) => toogleFilter(user.id, event.target.checked)} />}
-                        label={<NameTag firstName={user.first_name} lastName={user.last_name} />}
-                        checked={filters.has(user.id)} />
+                    (user, index) => <StyledFormControlLabel key={index} control={<Checkbox
+                        onChange={(event) => toogleFilter(user.id, event.target.checked)} />}
+                    label={<NameTag firstName={user.first_name} lastName={user.last_name} />}
+                    checked={filters.has(user.id)} />
                 )}
             </FormGroup>
         </Container>
     </ScrollableCollapseableFilterSection>;
 })
 
-export default OwnersFilterSection;
+const OwnersFilterSectionUserCheck = forwardRef<ResettableHandle, OwnersFilterSectionProps>((props, ref) => {
+    const { users, isLoading } = useUsersList();
+    const { user: currentUser } = useContext(UserContext);
+
+    if (isLoading) {
+        return null;
+    }
+    if (!currentUser && isEmpty(users))  {
+        return null;
+    }
+    return <OwnersFilterSection {...props} ref={ref} users={users!} currentUser={currentUser!} />;
+});
+
+export default OwnersFilterSectionUserCheck;

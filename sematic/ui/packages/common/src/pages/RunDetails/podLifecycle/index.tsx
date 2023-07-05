@@ -5,6 +5,7 @@ import { useRunDetailsSelectionContext } from "src/context/RunDetailsSelectionCo
 import styled from "@emotion/styled";
 import { accordionDetailsClasses} from "@mui/material/AccordionDetails";
 import theme from "src/theme/new";
+import useUnmount from "react-use/lib/useUnmount";
 
 const StyledPodLifecycleComponent = styled(PodLifecycleComponent)`
     & .${accordionDetailsClasses.root} {
@@ -15,6 +16,10 @@ const StyledPodLifecycleComponent = styled(PodLifecycleComponent)`
 export default function PodLifecyclePanel() {
     const { selectedRun } = useRunDetailsSelectionContext();
     const { setIsLoading } = useContext(LayoutServiceContext);
+
+    useUnmount(() => {
+        setIsLoading(false);
+    });
 
     if (!selectedRun) {
         return null;

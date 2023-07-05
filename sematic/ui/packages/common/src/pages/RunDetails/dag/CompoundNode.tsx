@@ -6,7 +6,7 @@ import { useCallback, useContext, useMemo } from "react";
 import { NodeProps, Position } from "reactflow";
 import { getRunStateChipByState, getRunStateColorByState } from "src/component/RunStateChips";
 import { useHasIncoming, useNodeExpandStateToggle } from "src/hooks/dagHooks";
-import { DagViewServiceContext, StyledHandle } from "src/pages/RunDetails/dag/common";
+import { DagViewServiceContext, StyledHandleTop, StyledHandleBottom } from "src/pages/RunDetails/dag/common";
 import theme from "src/theme/new";
 
 const CompoundNodeContainer = styled("div", {
@@ -68,7 +68,7 @@ function CompoundNode(props: NodeProps) {
 
     return <CompoundNodeContainer selected={selected} onClick={onClick}
         style={{ width: `${data.width}px`, height: `${data.height}px`, borderColor: color }}>
-        {hasIncoming && <StyledHandle type="target" color={color} position={Position.Top} isConnectable={false} id={"t"} />}
+        {hasIncoming && <StyledHandleTop type="target" color={color} position={Position.Top} isConnectable={false} id={"t"} />}
         <LabelContainer>
             {stateChip}
             <label style={{ flexGrow: 1 }}>{data.label}</label>
@@ -76,13 +76,13 @@ function CompoundNode(props: NodeProps) {
                 {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </StyledIconButton>
         </LabelContainer>
-        <StyledHandle
+        <StyledHandleBottom
             type="source"
             position={Position.Bottom}
             id="sb"
             isConnectable={false}
         />
-        <StyledHandle type="target" position={Position.Bottom} isConnectable={false} id={"tb"} />
+        <StyledHandleBottom type="target" position={Position.Bottom} isConnectable={false} id={"tb"} />
     </CompoundNodeContainer>
 }
 

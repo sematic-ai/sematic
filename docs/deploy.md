@@ -51,7 +51,7 @@ $ sudo docker run -d -p 80:80 \
     -v /home/ubuntu/.sematic:/root/.sematic \
     [-e SEMATIC_AUTHENTICATE=1 -e GOOGLE_OAUTH_CLIENT_ID=123456789.apps.googleusercontent.com \]
     [-e SEMATIC_AUTHORIZED_EMAIL_DOMAIN=yourdomain.com \]
-    [-p 443:443 -e CERTIFICATE=/path/to/certificate.pem -e PRIVATE_KEY=/path/to/private.key \]
+    [-p 80:80 \]
     sematic/sematic-server:$DEPLOY_VERSION
 ```
 
@@ -85,10 +85,7 @@ authenticate to use it. Everyone will be the "Anonymous" user.
 ##### SSL
 
 If you have an SSL certificate for the domain on which you are deploying Sematic,
-you can pass it to the server container with the `CERTIFICATE` and `PRIVATE_KEY`
-environment variables when calling docker run. Make sure that the certificate and
-private key files are accessible within the container (e.g. place them in the
-`~/.sematic` directory). Also make sure to add `-p 443:443` to the forwarded ports.
+is is recommended you handle it in a reverse proxy in front of Sematic.
 
 ## Deployment Option 2: Sematic with Cloud Execution
 
