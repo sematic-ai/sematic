@@ -25,7 +25,7 @@ from sematic.examples.summarization_finetune.train_eval import (
 from sematic.examples.summarization_finetune.train_eval import prepare_data
 from sematic.examples.summarization_finetune.train_eval import train as do_train
 from sematic.types import HuggingFaceStoredModel as StoredModel
-from sematic.types import PromptResponse
+from sematic.types import Link, PromptResponse
 
 
 @dataclass(frozen=True)
@@ -118,6 +118,7 @@ def export(
 
 @sematic.func
 def launch_interactively(
+    app_url: Link,  # ignored, but makes the link show in the UI
     model: StoredModel,
     tokenizer: PreTrainedTokenizerBase,
     model_type: ModelType,
@@ -163,6 +164,10 @@ def pipeline(
     model = train(model_ref, training_config, train_data, test_data, tokenizer)
     if launch_interactive:
         transcript = launch_interactively(
+            app_url=Link(
+                label="Interactive Evaluation App",
+                url="http://localhost:7861",
+            ),
             model=model,
             tokenizer=tokenizer,
             model_type=model_type,
