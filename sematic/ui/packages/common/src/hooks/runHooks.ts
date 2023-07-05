@@ -11,6 +11,7 @@ import useAsync from "react-use/lib/useAsync";
 export const selectedRunHashAtom = atomWithHashCustomSerialization("run", "")
 export const selectedPanelAtom = atomWithHashCustomSerialization("panel", "")
 export const selectedTabHashAtom = atomWithHashCustomSerialization("tab", "")
+export const searchAtom = atomWithHashCustomSerialization("search", "");
 
 export type QueryParams = {[key: string]: string};
 export const PAGE_SIZE = 25;
