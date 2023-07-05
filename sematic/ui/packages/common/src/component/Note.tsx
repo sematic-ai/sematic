@@ -75,7 +75,7 @@ const Footer = styled(Box,  {
     width: 100%;
     padding-bottom: ${theme.spacing(1)};
     bottom: 0;
-    background-image: linear-gradient(rgba(255,255,255,0), ${theme.palette.background.paper} 60%);
+    background-image: linear-gradient(rgba(0,0,0,0), ${theme.palette.p1black.main} 60%);
 
     & svg {
         margin-right: ${theme.spacing(2)};

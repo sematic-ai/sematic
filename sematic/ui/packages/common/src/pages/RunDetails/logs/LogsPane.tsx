@@ -6,6 +6,7 @@ import LayoutServiceContext from "src/context/LayoutServiceContext";
 import { useRunDetailsSelectionContext } from "src/context/RunDetailsSelectionContext";
 import theme from "src/theme/new";
 import { buttonClasses } from "@mui/material/Button"
+import useUnmount from "react-use/lib/useUnmount";
 
 const Container = styled.div`
     max-height: 100%;
@@ -72,6 +73,10 @@ export default function LogsPane() {
     }, []);
 
     const { setIsLoading } = useContext(LayoutServiceContext);
+
+    useUnmount(() => {
+        setIsLoading(false);
+    });
 
     if (!selectedRun) {
         return null;

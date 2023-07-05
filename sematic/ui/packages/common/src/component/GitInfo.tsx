@@ -62,7 +62,7 @@ export const GitInfoBoxPresentation = (prop: GitInfoBoxProps) => {
         </StyledBox>
         {!!hasUncommittedChanges && <StyledBox>
             <Code />
-            <Tooltip title={"This run used code with uncommitted changed on top of the above commit."} arrow={true} >
+            <Tooltip title={"This run used code with uncommitted changes on top of the above commit."} arrow={true} >
                 <Typography variant="small">Uncommited changes</Typography>
             </Tooltip>
         </StyledBox>}

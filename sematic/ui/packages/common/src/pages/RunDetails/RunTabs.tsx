@@ -46,6 +46,10 @@ const StyledTabPanelWithoutMargin = styled(StyledTabPanel)`
     margin-right: -${theme.spacing(5)};
 `;
 
+const ArtifactPanel = styled(StyledTabPanelWithoutMargin)`
+    scrollbar-gutter: stable;
+`;
+
 const FixedTabPanel = styled(TabPanel)`
     flex-grow: 1;
     overflow: hidden;
@@ -75,12 +79,12 @@ const RunTabs = (props: RunTabsProps) => {
                 <Tab label="Pods" value="pod_lifecycle" />
             </TabList>
         </StyledTabsContainer>
-        <StyledTabPanelWithoutMargin value="input">
+        <ArtifactPanel value="input">
             <InputPane />
-        </StyledTabPanelWithoutMargin>
-        <StyledTabPanelWithoutMargin value="output">
+        </ArtifactPanel>
+        <ArtifactPanel value="output">
             <OutputPane />
-        </StyledTabPanelWithoutMargin>
+        </ArtifactPanel>
         <StyledTabPanelWithoutMargin value="source">
             <SourceCodePanel />
         </StyledTabPanelWithoutMargin>
