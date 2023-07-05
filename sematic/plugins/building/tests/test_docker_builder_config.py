@@ -23,6 +23,22 @@ def test_image_uri_happy():
     assert str(image_uri) == "a:b"
     assert repr(image_uri) == "a:b@c"
 
+    image_uri = docker_builder_config.ImageURI.from_uri("'ab:cd@ef'")
+
+    assert image_uri.repository == "ab"
+    assert image_uri.tag == "cd"
+    assert image_uri.digest == "ef"
+    assert str(image_uri) == "ab:cd"
+    assert repr(image_uri) == "ab:cd@ef"
+
+    image_uri = docker_builder_config.ImageURI.from_uri('"a:b@sha256:c"')
+
+    assert image_uri.repository == "a"
+    assert image_uri.tag == "b"
+    assert image_uri.digest == "sha256:c"
+    assert str(image_uri) == "a:b"
+    assert repr(image_uri) == "a:b@sha256:c"
+
 
 def test_image_uri_malformed():
     with pytest.raises(
@@ -30,6 +46,12 @@ def test_image_uri_malformed():
         match=".*does not conform to the required.*",
     ):
         docker_builder_config.ImageURI.from_uri("a:b")
+
+    with pytest.raises(
+        docker_builder_config.BuildConfigurationError,
+        match=".*does not conform to the required.*",
+    ):
+        docker_builder_config.ImageURI.from_uri("a'b:c@sha256:d")
 
 
 def test_validate_paths_happy():
