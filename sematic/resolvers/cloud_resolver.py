@@ -135,7 +135,7 @@ class CloudResolver(LocalResolver):
         if not self._detach:
             return super().resolve(future)
 
-        with self._catch_resolution_errors():
+        with self._catch_pipeline_run_errors():
             self._enqueue_root_future(future)
             return self._detach_resolution(future)
 
@@ -332,11 +332,11 @@ class CloudResolver(LocalResolver):
 
         self._update_future_with_value(future, value)
 
-    def _resolution_did_fail(
+    def _pipeline_run_did_fail(
         self, error: Exception, reason: Optional[str] = None
     ) -> None:
         if not isinstance(error, ResolverRestartError):
-            super()._resolution_did_fail(error)
+            super()._pipeline_run_did_fail(error)
             return
 
         try:
@@ -359,7 +359,7 @@ class CloudResolver(LocalResolver):
             )
             logger.error(reason)
         finally:
-            super()._resolution_did_fail(error, reason)
+            super()._pipeline_run_did_fail(error, reason)
 
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
         # Unlike LocalResolver._future_did_fail, we only care about

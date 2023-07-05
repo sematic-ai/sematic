@@ -200,6 +200,14 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "runner",
+    srcs = ["runner.py"],
+    deps = [
+        ":abstract_future",
+    ],
+)
+
+sematic_py_lib(
     name = "torch_patch",
     srcs = ["torch_patch.py"],
     deps = [],

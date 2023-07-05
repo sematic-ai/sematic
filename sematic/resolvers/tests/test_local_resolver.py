@@ -33,7 +33,7 @@ from sematic.tests.fixtures import (  # noqa: F401
     test_storage,
     valid_client_version,
 )
-from sematic.utils.exceptions import ExceptionMetadata, ResolutionError
+from sematic.utils.exceptions import ExceptionMetadata, PipelineRunError
 
 
 @func
@@ -190,7 +190,7 @@ def test_failure(
     resolver = LocalResolver()
     future = pipeline()
 
-    with pytest.raises(ResolutionError, match="some message") as exc_info:
+    with pytest.raises(PipelineRunError, match="some message") as exc_info:
         future.resolve(resolver)
 
     assert isinstance(exc_info.value.__context__, FunctionError)
@@ -258,7 +258,7 @@ def test_resolver_error(
     resolver._future_did_resolve = intentional_fail
     future = pipeline()
 
-    with pytest.raises(ResolutionError, match="some message") as exc_info:
+    with pytest.raises(PipelineRunError, match="some message") as exc_info:
         future.resolve(resolver)
 
     # this test doesn't really go through the entire Resolver logic due to
@@ -465,7 +465,7 @@ def test_exceptions(
 
     future = pipeline()
 
-    with pytest.raises(ResolutionError, match="FAIL!") as exc_info:
+    with pytest.raises(PipelineRunError, match="FAIL!") as exc_info:
         future.resolve(resolver)
 
     assert isinstance(exc_info.value.__context__, FunctionError)
@@ -525,7 +525,7 @@ def test_retry(
     future = try_three_times()
     resolver = CallbackTrackingResolver()
 
-    with pytest.raises(ResolutionError) as exc_info:
+    with pytest.raises(PipelineRunError) as exc_info:
         future.resolve(resolver)
 
     assert isinstance(exc_info.value.__context__, FunctionError)

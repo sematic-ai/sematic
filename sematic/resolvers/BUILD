@@ -40,14 +40,8 @@ sematic_py_lib(
     name = "state_machine_resolver",
     srcs = ["state_machine_resolver.py"],
     deps = [
-        "//sematic:abstract_function",
-        "//sematic:abstract_future",
         "//sematic:resolver",
-        "//sematic/plugins:abstract_external_resource",
-        "//sematic/resolvers:abstract_resource_manager",
-        "//sematic/utils:exceptions",
-        "//sematic/utils:signals",
-        "//sematic/utils:timeout",
+        "//sematic/runners:state_machine_runner",
     ],
 )
 

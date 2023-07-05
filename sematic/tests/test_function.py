@@ -20,7 +20,7 @@ from sematic.resolvers.resource_requirements import (  # noqa: F401
     KubernetesResourceRequirements,
     ResourceRequirements,
 )
-from sematic.utils.exceptions import ResolutionError
+from sematic.utils.exceptions import PipelineRunError
 
 
 def test_decorator_no_params():
@@ -350,8 +350,8 @@ def test_resolve_error():
     def f():
         raise ValueError("Intentional error")
 
-    with pytest.raises(ResolutionError) as exc_info:
-        # resolving should surface the ResolutionError,
+    with pytest.raises(PipelineRunError) as exc_info:
+        # resolving should surface the PipelineRunError,
         # with root cause as __context__
         # see https://peps.python.org/pep-0409/#language-details
         f().resolve(tracking=False)
@@ -401,8 +401,8 @@ def unused_results_list_pipeline(create_unused: bool) -> List[int]:
 
 
 def test_unused_future():
-    with pytest.raises(ResolutionError, match=r".*output.*does not depend on.*"):
+    with pytest.raises(PipelineRunError, match=r".*output.*does not depend on.*"):
         unused_results_pipeline().resolve(tracking=False)
-    with pytest.raises(ResolutionError, match=r".*output.*does not depend on.*"):
+    with pytest.raises(PipelineRunError, match=r".*output.*does not depend on.*"):
         unused_results_list_pipeline(True).resolve(tracking=False)
     unused_results_list_pipeline(False).resolve(tracking=False)

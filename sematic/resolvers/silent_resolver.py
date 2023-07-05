@@ -13,7 +13,7 @@ from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 from sematic.resolvers.resource_managers.memory_manager import MemoryResourceManager
 from sematic.resolvers.state_machine_resolver import StateMachineResolver
 from sematic.utils.exceptions import (
-    ResolutionError,
+    PipelineRunError,
     TimeoutError,
     format_exception_for_run,
 )
@@ -60,8 +60,8 @@ class SilentResolver(StateMachineResolver):
                 except TimeoutError:
                     self._fail_future_with_timeout(future, timeout_restricting_future)
             self._update_future_with_value(future, value)
-        except ResolutionError:
-            # only we raise ResolutionError when determining a failure is unrecoverable
+        except PipelineRunError:
+            # only we raise PipelineRunError when determining a failure is unrecoverable
             # if we got this exception type, then the failure has already been properly
             # handled and all is left to do is to terminate the execution.
             raise
@@ -82,7 +82,7 @@ class SilentResolver(StateMachineResolver):
     def _wait_for_scheduled_runs(self) -> None:
         pass
 
-    def _resolution_did_fail(self, error: Exception) -> None:
+    def _pipeline_run_did_fail(self, error: Exception) -> None:
         self._deactivate_all_resources()
 
     @classmethod

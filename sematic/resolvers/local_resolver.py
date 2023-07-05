@@ -175,7 +175,7 @@ class LocalResolver(SilentResolver):
         self._runs.clear()
 
         for future in self._futures:
-            future.resolved_kwargs = self._get_resolved_kwargs(future)
+            future.resolved_kwargs = self._get_concrete_kwargs(future)
 
             if future.state == FutureState.RESOLVED:
                 self._artifacts_by_run_id[future.id][
@@ -272,7 +272,7 @@ class LocalResolver(SilentResolver):
                 "Could not cleanly disconnect from the socket.io server: %s", e
             )
 
-    def _resolution_will_start(self) -> None:
+    def _pipeline_run_will_start(self) -> None:
         self._connect_to_sio_server()
 
         @self._sio_client.on("cancel", namespace="/pipeline")
@@ -344,8 +344,8 @@ class LocalResolver(SilentResolver):
             )
             return None
 
-    def _resolution_did_cancel(self) -> None:
-        super()._resolution_did_cancel()
+    def _pipeline_run_did_cancel(self) -> None:
+        super()._pipeline_run_did_cancel()
         api_client.cancel_resolution(self._root_future.id)
         self._clean_up_resolution(save_graph=True)
 
@@ -576,16 +576,16 @@ class LocalResolver(SilentResolver):
             self._runs[self._root_future.id].function_path
         )
 
-    def _resolution_did_succeed(self) -> None:
-        super()._resolution_did_succeed()
+    def _pipeline_run_did_succeed(self) -> None:
+        super()._pipeline_run_did_succeed()
         self._update_resolution_status(ResolutionStatus.COMPLETE)
         self._notify_pipeline_update()
         self._disconnect_from_sio_server()
 
-    def _resolution_did_fail(
+    def _pipeline_run_did_fail(
         self, error: Exception, reason: Optional[str] = None
     ) -> None:
-        super()._resolution_did_fail(error)
+        super()._pipeline_run_did_fail(error)
 
         if isinstance(error, FunctionError):
             reason = reason or (

@@ -16,7 +16,7 @@ from sematic.retry_settings import RetrySettings
 from sematic.tests.utils import RUN_SLOW_TESTS
 from sematic.utils.exceptions import (
     ExternalResourceError,
-    ResolutionError,
+    PipelineRunError,
     TimeoutError,
 )
 
@@ -100,7 +100,7 @@ def test_silent_resolver_context():
 
 
 def test_nested_resolve():
-    with pytest.raises(ResolutionError):
+    with pytest.raises(PipelineRunError):
         SilentResolver().resolve(nested_resolve_func())
 
 
@@ -121,7 +121,7 @@ def retry_three_times():
 def test_retry():
     future = retry_three_times()
 
-    with pytest.raises(ResolutionError) as exc_info:
+    with pytest.raises(PipelineRunError) as exc_info:
         SilentResolver().resolve(future)
 
     assert isinstance(exc_info.value.__context__, FunctionError)

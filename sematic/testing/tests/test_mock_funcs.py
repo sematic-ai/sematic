@@ -9,7 +9,7 @@ from sematic.abstract_function import FunctionError
 from sematic.function import func
 from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.testing.mock_funcs import mock_sematic_funcs
-from sematic.utils.exceptions import ResolutionError
+from sematic.utils.exceptions import PipelineRunError
 
 
 @func
@@ -33,7 +33,7 @@ def identity_func(x: int) -> int:
 
 
 def test_mock_sematic_funcs():
-    with pytest.raises(ResolutionError, match=r"Oh no.*") as exc_info:
+    with pytest.raises(PipelineRunError, match=r"Oh no.*") as exc_info:
         pipeline().resolve(SilentResolver())
 
     assert isinstance(exc_info.value.__context__, FunctionError)
@@ -59,7 +59,7 @@ def test_mock_sematic_funcs_use_original():
 
 def test_mock_sematic_funcs_still_type_checks():
     with pytest.raises(
-        ResolutionError,
+        PipelineRunError,
         match=r"for 'sematic.testing.tests.test_mock_funcs.remote_only_func'.*",
     ) as exc_info:
         with mock_sematic_funcs([remote_only_func]) as mock_funcs:

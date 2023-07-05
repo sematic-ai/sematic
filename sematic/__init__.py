@@ -57,5 +57,8 @@ from sematic.resolvers.resource_requirements import (  # noqa: F401,E402
 )
 from sematic.resolvers.silent_resolver import SilentResolver  # noqa: F401,E402
 from sematic.retry_settings import RetrySettings  # noqa: F401, E402
-from sematic.utils.exceptions import KubernetesError, ResolutionError  # noqa: F401,E402
+from sematic.utils.exceptions import (  # noqa: F401,E402
+    KubernetesError,
+    PipelineRunError,
+)
 from sematic.versions import CURRENT_VERSION_STR as __version__  # noqa: F401,E402

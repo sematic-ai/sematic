@@ -40,14 +40,14 @@ def my_other_namespace(_: AbstractFuture) -> str:
 @pytest.fixture(scope="function")
 def my_future() -> AbstractFuture:
     future = my_pipeline(1, {"test_key": 2})
-    future.resolved_kwargs = StateMachineResolver._get_resolved_kwargs(future)
+    future.resolved_kwargs = StateMachineResolver._get_concrete_kwargs(future)
     return future
 
 
 @pytest.fixture(scope="function")
 def my_other_future() -> AbstractFuture:
     future = my_other_pipeline(1)
-    future.resolved_kwargs = StateMachineResolver._get_resolved_kwargs(future)
+    future.resolved_kwargs = StateMachineResolver._get_concrete_kwargs(future)
     return future
 
 
