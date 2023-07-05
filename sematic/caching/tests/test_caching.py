@@ -9,7 +9,7 @@ import pytest
 from sematic import func
 from sematic.abstract_future import AbstractFuture
 from sematic.caching.caching import get_future_cache_key, resolve_cache_namespace
-from sematic.resolvers.state_machine_resolver import StateMachineResolver
+from sematic.resolvers.state_machine_runner import StateMachineRunner
 
 # these values were calculated by hand on paper to validate the algorithm
 # (they were all correct on the first try)
@@ -40,14 +40,14 @@ def my_other_namespace(_: AbstractFuture) -> str:
 @pytest.fixture(scope="function")
 def my_future() -> AbstractFuture:
     future = my_pipeline(1, {"test_key": 2})
-    future.resolved_kwargs = StateMachineResolver._get_concrete_kwargs(future)
+    future.resolved_kwargs = StateMachineRunner._get_concrete_kwargs(future)
     return future
 
 
 @pytest.fixture(scope="function")
 def my_other_future() -> AbstractFuture:
     future = my_other_pipeline(1)
-    future.resolved_kwargs = StateMachineResolver._get_concrete_kwargs(future)
+    future.resolved_kwargs = StateMachineRunner._get_concrete_kwargs(future)
     return future
 
 

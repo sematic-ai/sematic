@@ -51,18 +51,18 @@ sematic_py_lib(
     ],
 )
 
-# sematic_py_lib(
-#     name = "silent_resolver",
-#     srcs = ["silent_resolver.py"],
-#     deps = [
-#         "//sematic:abstract_future",
-#         "//sematic:future_context",
-#         "//sematic/plugins:abstract_external_resource",
-#         "//sematic/resolvers:abstract_resource_manager",
-#         "//sematic/resolvers:state_machine_resolver",
-#         "//sematic/resolvers/resource_managers:memory_manager",
-#     ],
-# )
+sematic_py_lib(
+    name = "silent_runner",
+    srcs = ["silent_runner.py"],
+    deps = [
+        "//sematic:abstract_future",
+        "//sematic:future_context",
+        "//sematic/plugins:abstract_external_resource",
+        "//sematic/resolvers:abstract_resource_manager",
+        "//sematic/resolvers/resource_managers:memory_manager",
+        "//sematic/runners:state_machine_runner",
+    ],
+)
 
 # sematic_py_lib(
 #     name = "cloud_resolver",

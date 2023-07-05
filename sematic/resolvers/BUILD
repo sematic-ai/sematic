@@ -49,12 +49,7 @@ sematic_py_lib(
     name = "silent_resolver",
     srcs = ["silent_resolver.py"],
     deps = [
-        "//sematic:abstract_future",
-        "//sematic:future_context",
-        "//sematic/plugins:abstract_external_resource",
-        "//sematic/resolvers:abstract_resource_manager",
-        "//sematic/resolvers:state_machine_resolver",
-        "//sematic/resolvers/resource_managers:memory_manager",
+        "//sematic/runners:silent_runner",
     ],
 )
 
