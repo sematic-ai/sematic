@@ -249,7 +249,9 @@ def get_basic_pipeline_metrics(function_path: str):
     return BasicPipelineMetrics(
         total_count=total_count,
         count_by_state={state: count for state, count in count_by_state},
-        avg_runtime_children={path: runtime for path, runtime in avg_runtime_children},
+        avg_runtime_children={
+            str(path): runtime for path, runtime in avg_runtime_children
+        },
     )
 
 

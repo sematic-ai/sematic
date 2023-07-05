@@ -24,6 +24,10 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name | quote }}
         helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     spec:
+      {{- with .Values.image.pull_secrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       restartPolicy: Never
       containers:
       - name: pre-install-migration
@@ -31,5 +35,6 @@ spec:
         - secretRef:
             name: {{ .Release.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pull_policy }}
         command: ["python3", "-m", "sematic.db.migrate", "up", "--verbose", "--env", "cloud"]
 {{- end }}
