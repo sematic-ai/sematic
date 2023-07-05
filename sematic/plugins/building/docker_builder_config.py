@@ -28,6 +28,14 @@ _PROJECT_ROOT_PREFIX = "//"
 _PARENT_PATH_ELEMENT = ".."
 
 
+_URI_QUOTES = "[\"']"
+_URI_NON_RESERVED_CHARS = "[^\"'@:]"
+_URI_TAGGED_IMAGE = f"({_URI_NON_RESERVED_CHARS}+):({_URI_NON_RESERVED_CHARS}+)"
+_URI_DIGEST = f"{_URI_NON_RESERVED_CHARS}+:?{_URI_NON_RESERVED_CHARS}*"
+_URI_TAGGED_IMAGE_WITH_DIGEST = f"{_URI_TAGGED_IMAGE}@({_URI_DIGEST})"
+_URI_REGEX = f"{_URI_QUOTES}?{_URI_TAGGED_IMAGE_WITH_DIGEST}{_URI_QUOTES}?"
+
+
 @dataclass
 class ImageURI:
     """
@@ -49,7 +57,7 @@ class ImageURI:
             The specified value is not a correct and complete container image URI in the
             required `<repository>:<tag>@<digest>` format.
         """
-        match = re.match("(.+):(.+)@(.+)", uri)
+        match = re.match(_URI_REGEX, uri)
 
         if match is None:
             raise BuildConfigurationError(
