@@ -11,7 +11,7 @@ export enum NodeTypes {
     COMPOUND = "compoundNode",
 }
 
-export const StyledHandle = styled(Handle, {
+const StyledHandle = styled(Handle, {
     shouldForwardProp: (prop) => prop !== "color",
 }) <{
     color?: string;
@@ -19,7 +19,16 @@ export const StyledHandle = styled(Handle, {
     height: 12px;
     width: 12px;
     background-color: ${(props) => props.color || theme.palette.success.main};
+    border: none;
 `;
+
+export const StyledHandleTop = styled(StyledHandle)`
+    transform: translateX(-50%) translateY(-1px);
+`; 
+
+export const StyledHandleBottom = styled(StyledHandle)`
+    transform: translateX(-50%) translateY(1px);
+`; 
 
 export const DagViewServiceContext = createContext<{
     onNodeClick: (nodeId: string) => void;
