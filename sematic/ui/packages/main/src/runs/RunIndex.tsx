@@ -11,9 +11,8 @@ import Typography from "@mui/material/Typography";
 import { styled } from "@mui/system";
 import MuiRouterLink from "@sematic/common/src/component/MuiRouterLink";
 import TimeAgo from "@sematic/common/src/component/TimeAgo";
-import { getRunUrlPattern } from "@sematic/common/src/hooks/runHooks";
+import { getRunUrlPattern, searchAtom } from "@sematic/common/src/hooks/runHooks";
 import { Run } from "@sematic/common/src/Models";
-import { atomWithHashCustomSerialization } from "@sematic/common/src/utils/url";
 import { useAtom } from "jotai";
 import React, { ChangeEvent, FormEvent, useCallback, useState } from "react";
 import CalculatorPath from "src/components/CalculatorPath";
@@ -144,8 +143,6 @@ const TableColumns: Array<RunListColumn> = [
         render: (run: Run) => <RunStateChip run={run} variant="full" />,
     },
 ];
-
-const searchAtom = atomWithHashCustomSerialization("search", "");
 
 export function RunIndex() {
     const [searchString, setSearchString] = useAtom(searchAtom);
