@@ -88,6 +88,8 @@ const valueComponentClass = css`
     flex-shrink: 1;
     overflow: hidden;
     text-overflow: ellipsis;
+    align-items: center;
+    display: flex;
 `;
 
 function RenderError({children}: {
