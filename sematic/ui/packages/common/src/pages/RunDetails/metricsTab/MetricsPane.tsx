@@ -78,7 +78,7 @@ export default function MetricsPane(props: MetricsPaneProps) {
                     <Typography sx={{ color: "gray" }}>
                             No metrics logged for this run.
                         <br />
-                            Read the <Link to="TODO">documentation</Link> to get
+                            Read the <Link to="https://docs.sematic.dev/diving-deeper/metrics#custom-metrics">documentation</Link> to get
                             started.
                     </Typography>
                 </Box>

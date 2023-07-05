@@ -16,10 +16,10 @@ const pallette: Record<string, PaletteColorOptions> = {
         contrastText: common["white"]
     },
     p3border: {
-        main: "rgba(0, 0, 0, 0.03)"
+        main: "rgba(246, 246, 246, 1)"
     },
     p1black: {
-        main: "rgba(0, 0, 0, 0.01)"
+        main: "rgba(252, 252, 252, 1)"
     },
     white: {
         main: common["white"],

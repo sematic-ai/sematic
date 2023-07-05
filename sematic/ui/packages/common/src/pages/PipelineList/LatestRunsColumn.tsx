@@ -15,7 +15,6 @@ const StyledChipContainer = styled.span`
     display: inline-block;
     &:hover {
         filter: drop-shadow(1px 2px 2px rgb(0 0 0 / 0.4));
-        transform: translate(-1px, -1px);
     }
 `;
 

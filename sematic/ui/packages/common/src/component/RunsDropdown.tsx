@@ -48,7 +48,7 @@ interface ValuePresentationProps {
 }
 const ValuePresentation = (props: ValuePresentationProps) => {
     const { run } = props;
-    const stateChip = useMemo(() => getRunStateChipByState(run.future_state, "small"), [run.future_state]);
+    const stateChip = useMemo(() => getRunStateChipByState(run.future_state, "large"), [run.future_state]);
     return <StyledBox {...props}>
         {stateChip}
         <Typography variant="code">{run.id.substring(0, 7)}</Typography>

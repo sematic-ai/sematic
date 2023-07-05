@@ -2,7 +2,7 @@ import BoltIcon from "@mui/icons-material/Bolt";
 import Check from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
 import StopIcon from "@mui/icons-material/Stop";
-import ArrowUpward from "@mui/icons-material/ArrowUpward";
+import HourglassEmpty from "@mui/icons-material/HourglassEmpty";
 import { useMemo } from "react";
 import theme from "src/theme/new";
 import { SvgIconTypeMap } from "@mui/material/SvgIcon";
@@ -63,7 +63,7 @@ export const SubmittedStateChip = (props: StateChipBaseProps) => {
     const { size } = props;
     const styles = useStylesHook({ size });
     const color = RunStateColorMap.get(SubmittedStateChip)!.color;
-    return <ArrowUpward color={color} style={styles} />;
+    return <HourglassEmpty color={color} style={styles} />;
 }
 
 const RunStateColorMap: Map<React.FC<StateChipBaseProps>, {
