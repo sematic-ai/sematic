@@ -3,11 +3,11 @@ import { useMemo, useCallback, useContext } from "react";
 import { NodeProps, Position } from "reactflow";
 import { getRunStateChipByState, getRunStateColorByState } from "src/component/RunStateChips";
 import { useHasIncoming } from "src/hooks/dagHooks";
-import { DagViewServiceContext, LEFT_NODE_MAX_WIDTH, StyledHandle } from "src/pages/RunDetails/dag/common";
+import { DagViewServiceContext, LEFT_NODE_MAX_WIDTH, StyledHandleTop, StyledHandleBottom } from "src/pages/RunDetails/dag/common";
 import { SPACING } from "src/pages/RunDetails/dag/dagLayout";
 import theme from "src/theme/new";
 
-const LeftNodeContainer = styled("div", {
+const LeafNodeContainer = styled("div", {
     shouldForwardProp: (prop) => prop !== "selected"
 }) <{
     selected?: boolean;
@@ -47,22 +47,21 @@ function LeafNode(props: NodeProps) {
         onNodeClick(run.id);
     }, [onNodeClick, run]);
 
-    return <LeftNodeContainer selected={selected} style={{ paddingRight: `${SPACING}px`, borderColor: color }}
+    return <LeafNodeContainer selected={selected} style={{ paddingRight: `${SPACING}px`, borderColor: color }}
         onClick={onClick}
     >
-        {hasIncoming && <StyledHandle type="target" position={Position.Top} isConnectable={false} id={"t"} />}
+        {hasIncoming && <StyledHandleTop type="target" position={Position.Top} isConnectable={false} id={"t"} />}
         <LabelContainer>
             {stateChip}
             <label >{data.label}</label>
         </LabelContainer>
-        <StyledHandle
+        <StyledHandleBottom
             type="source"
             position={Position.Bottom}
             id="sb"
             isConnectable={false}
         />
-        <StyledHandle type="target" position={Position.Bottom} isConnectable={false} id={"tb"} />
-    </LeftNodeContainer>
+    </LeafNodeContainer>
 }
 
 export default LeafNode;
