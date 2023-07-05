@@ -29,7 +29,7 @@ const HeaderMenu = (props: HeaderMenuProps) => {
 
     const { user } = useContext(UserContext);
     const contextMenuAnchor = useRef(null);
-    const [renderTimes, {inc}] = useCounter();
+    const [renderTimes, { inc }] = useCounter();
 
     const latestAnchor = useLatest(contextMenuAnchor.current);
 
@@ -61,10 +61,10 @@ const HeaderMenu = (props: HeaderMenuProps) => {
                 className={selectedKey === "gettingstarted" ? "selected" : ""}>
                 Get Started
             </MuiRouterLink>
-            <Link variant="subtitle1" type='menu'>Docs</Link>
-            <Link variant="subtitle1" type='menu'>Support</Link>
+            <MuiRouterLink href={"https://docs.sematic.dev"} variant="subtitle1" type='menu'>Docs</MuiRouterLink>
+            <MuiRouterLink href={"https://discord.gg/4KZJ6kYVax"} variant="subtitle1" type='menu'>Discord</MuiRouterLink>
             <Link variant="subtitle1" type='menu'>
-                <NameTag firstName={user?.first_name} lastName={user?.last_name} variant={"inherit"} 
+                <NameTag firstName={user?.first_name} lastName={undefined} variant={"inherit"}
                     ref={contextMenuAnchor} />
             </Link>
             <UserMenu anchorEl={contextMenuAnchor.current} />

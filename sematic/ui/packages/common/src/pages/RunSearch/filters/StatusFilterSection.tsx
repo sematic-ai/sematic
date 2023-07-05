@@ -1,12 +1,11 @@
 import styled from "@emotion/styled";
 import Chip, { chipClasses } from "@mui/material/Chip";
-import { useCallback, useImperativeHandle, forwardRef, useState } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { CanceledStateChip, FailedStateChip, RunningStateChip, SuccessStateChip } from "src/component/RunStateChips";
-import CollapseableFilterSection from "src/pages/RunSearch/filters/CollapseableFilterSection";
-import theme from "src/theme/new";
-import memoize from "lodash/memoize";
 import { ResettableHandle } from "src/component/common";
+import CollapseableFilterSection from "src/pages/RunSearch/filters/CollapseableFilterSection";
 import { StatusFilters } from "src/pages/RunTableCommon/filters";
+import theme from "src/theme/new";
 
 const StyledChip = styled(Chip)`
     padding-left: ${theme.spacing(1)};
@@ -37,12 +36,11 @@ interface StatusFilterSectionProps {
     onFiltersChanged?: (filters: string[]) => void;
 }
 
-const toogleFilterGenerator = memoize((
+const useToogleFilterCallbackGenerator = (
     filter: StatusFilters,
     setFilters: React.Dispatch<React.SetStateAction<Set<string>>>,
-    onFiltersChanged: StatusFilterSectionProps["onFiltersChanged"]
-) =>
-    () => useCallback(() => {
+    onFiltersChanged: StatusFilterSectionProps["onFiltersChanged"]) =>
+    useCallback(() => {
         let newFilters: any;
         setFilters((filters) => {
             if (filters.has(filter)) {
@@ -52,20 +50,19 @@ const toogleFilterGenerator = memoize((
             }
 
             newFilters = filters;
+            onFiltersChanged?.(Array.from(newFilters));
             return new Set(filters);
         });
-
-        onFiltersChanged?.(Array.from(newFilters));
-    }, []));
+    }, [filter, setFilters, onFiltersChanged]);
 
 const StatusFilterSection = forwardRef<ResettableHandle, StatusFilterSectionProps>((props, ref) => {
     const { onFiltersChanged } = props;
     const [filters, setFilters] = useState<Set<string>>(() => new Set());
 
-    const toggleFilterComplete = toogleFilterGenerator("completed", setFilters, onFiltersChanged!)();
-    const toggleFilterFailed = toogleFilterGenerator("failed", setFilters, onFiltersChanged!)();
-    const toggleFilterRunning = toogleFilterGenerator("running", setFilters, onFiltersChanged!)();
-    const toggleFilterCanceled = toogleFilterGenerator("canceled", setFilters, onFiltersChanged!)();
+    const toggleFilterComplete = useToogleFilterCallbackGenerator("completed", setFilters, onFiltersChanged!);
+    const toggleFilterFailed = useToogleFilterCallbackGenerator("failed", setFilters, onFiltersChanged!);
+    const toggleFilterRunning = useToogleFilterCallbackGenerator("running", setFilters, onFiltersChanged!);
+    const toggleFilterCanceled = useToogleFilterCallbackGenerator("canceled", setFilters, onFiltersChanged!);
 
     useImperativeHandle(ref, () => ({
         reset: () => setFilters(new Set())

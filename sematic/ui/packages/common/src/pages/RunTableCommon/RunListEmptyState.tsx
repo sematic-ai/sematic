@@ -48,5 +48,4 @@ export const NoRunNoFilters = () => <InitialGuide >
     </StyledTypography>
 </InitialGuide>
 
-export const NoRunWithFilters = () => <StyledTitle>No runs found.&nbsp; 
-    <StyledLink href="/get_started">Get Started</StyledLink>.</StyledTitle>
+export const NoRunWithFilters = () => <StyledTitle>No runs found.</StyledTitle>
