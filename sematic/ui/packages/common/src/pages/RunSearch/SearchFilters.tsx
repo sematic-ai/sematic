@@ -10,6 +10,7 @@ import { ResettableHandle } from "src/component/common";
 import theme from "src/theme/new";
 import { AllFilters, FilterType } from "src/pages/RunTableCommon/filters";
 import isEmpty from "lodash/isEmpty";
+import useEffectOnce from "react-use/lib/useEffectOnce";
 
 const StyledButton = styled(Button)`
     margin: 0 -${theme.spacing(5)};
@@ -88,6 +89,12 @@ const SearchFilters = (props: SearchFiltersProps) => {
     const applyFilters = useCallback(() => {
         onFiltersChanged({...allFilters.current});
     }, [onFiltersChanged]);
+
+    useEffectOnce(() => {
+        if (!isEmpty(allFilters.current)) {
+            applyFilters();
+        }
+    });
 
     return <>
         <SearchTextSection ref={searchTextRef} onSearchChanged={onSearchTextChanged} />
