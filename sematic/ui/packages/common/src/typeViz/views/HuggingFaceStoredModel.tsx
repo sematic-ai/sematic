@@ -2,7 +2,8 @@ import { useCallback, useContext, useMemo } from "react";
 import { Chip, Tooltip } from "@mui/material";
 import { ContentCopy } from "@mui/icons-material";
 import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
-import { ViewComponentProps} from "src/typeViz/common";
+import { ViewComponentProps } from "src/typeViz/common";
+import { ArtifactInfoContainer } from "src/typeViz/ArtifactVizTemplate";
 
 
 export function HuggingFaceStoredModelShortView() {
@@ -24,15 +25,17 @@ export function HuggingFaceStoredModelFullView(props: ViewComponentProps) {
             const modelTypeShortName = getShortName(values.peft_model_type, values.model_type);
 
             return (
-                <Tooltip title={"Copy path to model: " + values.path}>
-                    <Chip
-                        icon={<ContentCopy />}
-                        onClick={copy}
-                        sx={{ paddingLeft: 2, paddingRight: 2}}
-                        label={"🤗 "+ modelTypeShortName}
-                        variant="outlined"
-                    />
-                </Tooltip>
+                <ArtifactInfoContainer>
+                    <Tooltip title={"Copy path to model: " + values.path}>
+                        <Chip
+                            icon={<ContentCopy />}
+                            onClick={copy}
+                            sx={{ paddingLeft: 2, paddingRight: 2 }}
+                            label={"🤗 " + modelTypeShortName}
+                            variant="outlined"
+                        />
+                    </Tooltip>
+                </ArtifactInfoContainer>
             );
         }, [values, copy]
     );
