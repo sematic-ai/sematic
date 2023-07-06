@@ -1,6 +1,3 @@
-# Standard Library
-from typing import Optional
-
 # Third-party
 from sqlalchemy import Column, ForeignKey, types
 from sqlalchemy.ext.declarative import declared_attr

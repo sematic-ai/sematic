@@ -7,7 +7,7 @@ from dataclasses import asdict
 from typing import Any, Dict, List, Optional, Union
 
 # Third-party
-from sqlalchemy import Column, ForeignKey, Index, types
+from sqlalchemy import Column, ForeignKey, types
 from sqlalchemy.orm import relationship, validates
 
 # Sematic
