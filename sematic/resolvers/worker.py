@@ -97,7 +97,7 @@ def _fail_run(run: Run, e: BaseException) -> None:
     run.failed_at = datetime.datetime.utcnow()
 
     if run.exception_metadata is None:
-        # this means the exception probably happened in the Resolver code
+        # this means the exception probably happened in the Runner code
         run.exception_metadata = format_exception_for_run(e)
     else:
         # if the run already has an exception marked on it, then it's the innermost cause
@@ -169,24 +169,24 @@ def main(
         kwargs = _get_input_kwargs(run.id, artifacts, edges)
 
         if resolve:
-            logger.info("Resolving %s", func.__name__)
+            logger.info("Executing pipeline run for %s", func.__name__)
             future: Future = func(**kwargs)
             future.id = run.id
 
-            # the resolution object has required configurations for the resolver
-            resolution = api_client.get_resolution(root_id=run.id)
+            # the pipeline run object has required configurations for the runner
+            pipeline_run = api_client.get_resolution(root_id=run.id)
 
-            resolver = CloudRunner(
-                cache_namespace=resolution.cache_namespace,
+            runner = CloudRunner(
+                cache_namespace=pipeline_run.cache_namespace,
                 detach=False,
                 max_parallelism=max_parallelism,
                 rerun_from=rerun_from,
                 rerun_mode=rerun_mode,
                 _is_running_remotely=True,
             )
-            resolver.set_graph(runs=runs, artifacts=artifacts, edges=edges)
+            runner.set_graph(runs=runs, artifacts=artifacts, edges=edges)
 
-            resolver.resolve(future)
+            runner.run(future)
 
         else:
             logger.info("Executing %s", func.__name__)

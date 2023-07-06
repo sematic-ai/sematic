@@ -23,7 +23,7 @@ from sematic.config.tests.fixtures import mock_settings
 from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact, make_run_from_future
-from sematic.db.models.resolution import ResolutionStatus
+from sematic.db.models.resolution import PipelineRunStatus
 from sematic.db.queries import (
     get_resolution,
     get_root_graph,
@@ -51,9 +51,9 @@ def pipeline(a: float, b: float) -> float:
 
 
 @mock.patch(
-    "sematic.resolvers.cloud_resolver.get_image_uris", return_value=dict(default="foo")
+    "sematic.runners.cloud_runner.get_image_uris", return_value=dict(default="foo")
 )
-@mock.patch("sematic.resolvers.silent_resolver.set_context")
+@mock.patch("sematic.runners.silent_runner.set_context")
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
 def test_main(
@@ -68,14 +68,14 @@ def test_main(
     valid_client_version,  # noqa: F811
 ):
     # On the user's machine
-    resolver = CloudRunner(detach=True)
+    runner = CloudRunner(detach=True)
 
     future = pipeline(1, 2)
 
-    future.resolve(resolver)
-    resolution = get_resolution(future.id)
-    resolution.status = ResolutionStatus.SCHEDULED
-    save_resolution(resolution)
+    runner.run(future)
+    pipeline_run = get_resolution(future.id)
+    pipeline_run.status = PipelineRunStatus.SCHEDULED
+    save_resolution(pipeline_run)
 
     # In the driver job
 
@@ -97,7 +97,7 @@ def test_main(
 
 
 @mock.patch(
-    "sematic.resolvers.cloud_resolver.get_image_uris", return_value=dict(default="foo")
+    "sematic.runners.cloud_runner.get_image_uris", return_value=dict(default="foo")
 )
 @mock.patch("sematic.resolvers.worker.set_context")
 @mock.patch("sematic.api_client.schedule_resolution")
@@ -186,7 +186,7 @@ def fail():
 
 
 @mock.patch(
-    "sematic.resolvers.cloud_resolver.get_image_uris", return_value=dict(default="foo")
+    "sematic.runners.cloud_runner.get_image_uris", return_value=dict(default="foo")
 )
 @mock.patch("sematic.api_client.schedule_resolution")
 @mock.patch("kubernetes.config.load_kube_config")
@@ -200,14 +200,14 @@ def test_fail(
     valid_client_version,  # noqa: F811
 ):
     # On the user's machine
-    resolver = CloudRunner(detach=True)
+    runner = CloudRunner(detach=True)
 
     future = fail()
 
-    future.resolve(resolver)
-    resolution = get_resolution(future.id)
-    resolution.status = ResolutionStatus.SCHEDULED
-    save_resolution(resolution)
+    runner.run(future)
+    pipeline_run = get_resolution(future.id)
+    pipeline_run.status = PipelineRunStatus.SCHEDULED
+    save_resolution(pipeline_run)
 
     # In the driver job
     with pytest.raises(Exception, match="FAIL!"):

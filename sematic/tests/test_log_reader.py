@@ -31,7 +31,7 @@ from sematic.log_reader import (
     reversed,
     to_line_id,
 )
-from sematic.resolvers.cloud_resolver import (
+from sematic.runners.cloud_runner import (
     END_INLINE_RUN_INDICATOR,
     START_INLINE_RUN_INDICATOR,
 )
