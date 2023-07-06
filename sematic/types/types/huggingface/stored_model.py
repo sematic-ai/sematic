@@ -51,6 +51,25 @@ class HuggingFaceStoredModel:
         directory: str,
         base_model_reference: Optional[HuggingFaceModelReference] = None,
     ) -> "HuggingFaceStoredModel":
+        """Store the model in remote storage.
+
+        Parameters
+        ----------
+        model:
+            The model as a Hugging Face transformer model.
+        directory:
+            The directory to store the model in.
+        base_model_reference:
+            This parameter only applies to Peft models. If this parameter
+            is supplied, instead of storing the base model at the specified
+            location, the base model will not be stored. At model load time,
+            the base model will be re-pulled from Hugging Face Hub using the
+            supplied reference.
+
+        Returns
+        -------
+        A reference to the stored model.
+        """
         directory = os.path.expanduser(directory)
         model_type: str = _type_to_str(type(model))
         peft_type: Optional[str] = None
@@ -74,6 +93,18 @@ class HuggingFaceStoredModel:
 
     @lru_cache
     def load(self, **from_pretrained_kwargs):
+        """Load the model from storage.
+
+        Parameters
+        ----------
+        **from_pretrained_kwargs:
+            Arguments to the model's 'from_pretrained' method from Hugging Face's
+            transformers model.
+
+        Returns
+        -------
+        An instance of the model as a Hugging Face transformer model.
+        """
         base_path = (
             _FULL_MODEL_SUFFIX if self.peft_model_type is None else _BASE_MODEL_SUFFIX
         )

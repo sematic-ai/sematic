@@ -1,6 +1,6 @@
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
-import OwnersFilterSection from "@sematic/common/src/pages/RunSearch/filters/OwnersFilterSection";
+import OwnersFilterSection from "@sematic/common/src/pages/RunTableCommon/filters/OwnersFilterSection";
 import StatusFilterSection from "@sematic/common/src/pages/RunSearch/filters/StatusFilterSection";
 import UserContext from "@sematic/common/src/context/UserContext";
 import { ResettableHandle } from "@sematic/common/src/component/common";

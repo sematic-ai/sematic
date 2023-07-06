@@ -1,5 +1,6 @@
 # Standard Library
 import logging
+import os
 from logging.config import dictConfig
 
 # Third-party
@@ -23,6 +24,12 @@ def cli(verbose: int):
     Run an example:
         $ sematic run examples/mnist/pytorch
     """
+    if "BUILD_WORKING_DIRECTORY" in os.environ:
+        # if the CLI is being executed via bazel (ex: during development
+        # of the CLI), run from the directory the user invoked bazel
+        # from, rather than the sandbox dir bazel uses by default. That
+        # emulates how the real CLI will behave more accurately.
+        os.chdir(os.environ["BUILD_WORKING_DIRECTORY"])
     if verbose == 1:
         dictConfig(make_log_config(log_to_disk=False, level=logging.INFO))
     elif verbose > 1:
