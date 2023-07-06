@@ -64,27 +64,27 @@ sematic_py_lib(
     ],
 )
 
-# sematic_py_lib(
-#     name = "cloud_resolver",
-#     srcs = ["cloud_resolver.py"],
-#     pip_deps = [
-#         "cloudpickle",
-#     ],
-#     deps = [
-#         ":local_resolver",
-#         "//sematic:abstract_future",
-#         "//sematic:api_client",
-#         "//sematic:container_images",
-#         "//sematic/db/models:artifact",
-#         "//sematic/db/models:edge",
-#         "//sematic/db/models:resolution",
-#         "//sematic/db/models:run",
-#         "//sematic:graph",
-#         "//sematic/plugins:abstract_external_resource",
-#         "//sematic/utils:exceptions",
-#         "//sematic/utils:memoized_property",
-#     ],
-# )
+sematic_py_lib(
+    name = "cloud_runner",
+    srcs = ["cloud_runner.py"],
+    pip_deps = [
+        "cloudpickle",
+    ],
+    deps = [
+        ":local_runner",
+        "//sematic:abstract_future",
+        "//sematic:api_client",
+        "//sematic:container_images",
+        "//sematic/db/models:artifact",
+        "//sematic/db/models:edge",
+        "//sematic/db/models:resolution",
+        "//sematic/db/models:run",
+        "//sematic:graph",
+        "//sematic/plugins:abstract_external_resource",
+        "//sematic/utils:exceptions",
+        "//sematic/utils:memoized_property",
+    ],
+)
 
 # sematic_py_lib(
 #     name = "type_utils",

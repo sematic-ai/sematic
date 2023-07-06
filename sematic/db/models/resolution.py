@@ -7,7 +7,7 @@ https://github.com/sematic-ai/sematic/issues/959
 
 Notes regarding container images
 --------------------------------
-In the case of cloud resolution (using `CloudResolver`), the default behavior
+In the case of cloud resolution (using `CloudRunner`), the default behavior
 uses a single container image for remote jobs (driver job + worker jobs). See
 docs/multiple-base-images.md for the rationale behind this design choice.
 

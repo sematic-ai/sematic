@@ -67,7 +67,7 @@ class RayCluster(AbstractExternalResource):
     ----------
     config:
         A configuration for the RayCluster that will be started. If using
-        LocalResolver or SilentResolver, this will be ignored and a local
+        LocalRunner or SilentRunner, this will be ignored and a local
         cluster will be started instead.
     forward_logs:
         Whether or not to have logs from Ray workers returned back to the

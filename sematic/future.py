@@ -79,7 +79,7 @@ class Future(AbstractFuture):
         name: str
             The future's name. This will be used to name the run in the UI.
         standalone: bool
-            When using the `CloudResolver`, whether the instrumented function
+            When using the `CloudRunner`, whether the instrumented function
             should be executed in a standalone container or inside the same
             process and worker that is executing the `Resolver` itself.
 
@@ -92,7 +92,7 @@ class Future(AbstractFuture):
 
             Do not activate this on a non-deterministic function!
         resource_requirements: ResourceRequirements
-            When using the `CloudResolver`, specifies what special execution
+            When using the `CloudRunner`, specifies what special execution
             resources the function requires. Defaults to `None`.
         tags: List[str]
             A list of strings tags to attach to the resulting run.

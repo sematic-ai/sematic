@@ -63,22 +63,22 @@ pytest_test(
 #     ],
 # )
 
-# pytest_test(
-#     name = "test_cloud_resolver",
-#     srcs = ["test_cloud_resolver.py"],
-#     deps = [
-#         "//sematic:api_client",
-#         "//sematic:function",
-#         "//sematic/api/tests:fixtures",
-#         "//sematic/db/models:factories",
-#         "//sematic/db/models:resolution",
-#         "//sematic/db/tests:fixtures",
-#         "//sematic/resolvers:cloud_resolver",
-#         "//sematic/resolvers:resource_requirements",
-#         "//sematic/tests:fixtures",
-#         "//sematic/utils:env",
-#     ],
-# )
+pytest_test(
+    name = "test_cloud_runner",
+    srcs = ["test_cloud_runner.py"],
+    deps = [
+        "//sematic:api_client",
+        "//sematic:function",
+        "//sematic/api/tests:fixtures",
+        "//sematic/db/models:factories",
+        "//sematic/db/models:resolution",
+        "//sematic/db/tests:fixtures",
+        "//sematic/runners:cloud_runner",
+        "//sematic/resolvers:resource_requirements",
+        "//sematic/tests:fixtures",
+        "//sematic/utils:env",
+    ],
+)
 
 # pytest_test(
 #     name = "test_worker",

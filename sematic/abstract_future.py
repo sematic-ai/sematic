@@ -210,7 +210,7 @@ class AbstractFuture(abc.ABC):
         The input arguments to the function. Can be concrete values or other
         futures.
     standalone: bool
-        When using the `CloudResolver`, whether the instrumented function should
+        When using the `CloudRunner`, whether the instrumented function should
         be executed as a standalone Kubernetes job or inside the same process
         and worker that is executing the `Resolver` itself.
     original_future_id: Optional[str]
@@ -221,7 +221,7 @@ class AbstractFuture(abc.ABC):
 
         Do not activate this on a non-deterministic function!
     resource_requirements: Optional[ResourceRequirements]
-        When using the `CloudResolver`, specifies what special execution
+        When using the `CloudRunner`, specifies what special execution
         resources the function requires. Defaults to `None`.
     retry_settings: Optional[RetrySettings]
         Specifies in case of which Exceptions the function's execution should be

@@ -3,7 +3,7 @@ Testing public API imports
 """
 
 # Sematic
-from sematic import LocalResolver, Resolver, func  # noqa: F401
+from sematic import LocalRunner, Runner, func  # noqa: F401
 
 
 def test_pass():

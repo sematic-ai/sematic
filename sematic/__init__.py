@@ -58,6 +58,7 @@ from sematic.resolvers.resource_requirements import (  # noqa: F401,E402
 from sematic.resolvers.silent_resolver import SilentResolver  # noqa: F401,E402
 from sematic.retry_settings import RetrySettings  # noqa: F401, E402
 from sematic.runner import Runner  # noqa: F401,E402
+from sematic.runners.cloud_runner import CloudRunner  # noqa: F401,E402
 from sematic.runners.local_runner import LocalRunner, RerunMode  # noqa: F401,E402
 from sematic.runners.silent_runner import SilentRunner  # noqa: F401,E402
 from sematic.utils.exceptions import (  # noqa: F401,E402

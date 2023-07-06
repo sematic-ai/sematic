@@ -33,7 +33,7 @@ from sematic.db.queries import (
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.function import func
 from sematic.future_context import PrivateContext, SematicContext
-from sematic.resolvers.cloud_resolver import CloudResolver
+from sematic.runners.cloud_runner import CloudRunner
 from sematic.resolvers.worker import _emulate_interpreter, main, wrap_main_with_logging
 from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 from sematic.utils.env import environment_variables
@@ -68,7 +68,7 @@ def test_main(
     valid_client_version,  # noqa: F811
 ):
     # On the user's machine
-    resolver = CloudResolver(detach=True)
+    resolver = CloudRunner(detach=True)
 
     future = pipeline(1, 2)
 
@@ -90,7 +90,7 @@ def test_main(
             run_id=future.id,
             root_id=future.id,
             private=PrivateContext(
-                runner_class_path=CloudResolver.classpath(),
+                runner_class_path=CloudRunner.classpath(),
             ),
         )
     )
@@ -174,7 +174,7 @@ def test_main_func(
             run_id=future.id,
             root_id=future.id,
             private=PrivateContext(
-                runner_class_path=CloudResolver.classpath(),
+                runner_class_path=CloudRunner.classpath(),
             ),
         )
     )
@@ -200,7 +200,7 @@ def test_fail(
     valid_client_version,  # noqa: F811
 ):
     # On the user's machine
-    resolver = CloudResolver(detach=True)
+    resolver = CloudRunner(detach=True)
 
     future = fail()
 

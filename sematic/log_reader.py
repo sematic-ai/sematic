@@ -15,11 +15,11 @@ from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionS
 from sematic.db.models.run import Run
 from sematic.plugins.abstract_storage import get_storage_plugins
 from sematic.plugins.storage.local_storage import LocalStorage
-from sematic.resolvers.cloud_resolver import (
+from sematic.resolvers.log_streamer import MAX_LINES_PER_LOG_FILE
+from sematic.runners.cloud_runner import (
     END_INLINE_RUN_INDICATOR,
     START_INLINE_RUN_INDICATOR,
 )
-from sematic.resolvers.log_streamer import MAX_LINES_PER_LOG_FILE
 from sematic.scheduling.job_details import JobKind, JobKindString
 
 V2_LOG_PREFIX = "logs/v2"
@@ -464,7 +464,7 @@ def _load_inline_logs(
             reverse_cursor_token=None,
             log_info_message=(
                 "UI logs are only available for runs that "
-                "(a) are executed using the CloudResolver and "
+                "(a) are executed using the CloudRunner and "
                 "(b) are using the resolver in non-detached mode OR have standalone=True."
             ),
         )

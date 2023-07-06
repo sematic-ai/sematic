@@ -35,7 +35,7 @@ from sematic.future import Future
 from sematic.future_context import PrivateContext, SematicContext, set_context
 from sematic.graph import RerunMode
 from sematic.log_reader import log_prefix
-from sematic.resolvers.cloud_resolver import CloudResolver
+from sematic.runners.cloud_runner import CloudRunner
 from sematic.resolvers.log_streamer import ingested_logs, log_ingestion_enabled
 from sematic.scheduling.job_details import JobKind
 from sematic.utils.exceptions import format_exception_for_run
@@ -176,7 +176,7 @@ def main(
             # the resolution object has required configurations for the resolver
             resolution = api_client.get_resolution(root_id=run.id)
 
-            resolver = CloudResolver(
+            resolver = CloudRunner(
                 cache_namespace=resolution.cache_namespace,
                 detach=False,
                 max_parallelism=max_parallelism,
@@ -196,7 +196,7 @@ def main(
                     run_id=run.id,
                     root_id=run.root_id,
                     private=PrivateContext(
-                        runner_class_path=CloudResolver.classpath(),
+                        runner_class_path=CloudRunner.classpath(),
                     ),
                 )
             ):

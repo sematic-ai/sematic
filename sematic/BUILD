@@ -126,8 +126,8 @@ sematic_py_lib(
         "//sematic/db/models:run",
         "//sematic/plugins:abstract_storage",
         "//sematic/plugins/storage:local_storage",
-        "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:log_streamer",
+        "//sematic/runners:cloud_runner",
         "//sematic/scheduling:job_details",
     ],
 )
