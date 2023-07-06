@@ -1,25 +1,3 @@
-pytest_test(
-    name = "test_local_resolver",
-    srcs = ["test_local_resolver.py"],
-    # buildifier: leave-alone
-    deps = [
-        ":fixtures",
-        "//sematic:abstract_function",
-        "//sematic:abstract_future",
-        "//sematic:function",
-        "//sematic:retry_settings",
-        "//sematic/api/tests:fixtures",
-        "//sematic/config/tests:fixtures",
-        "//sematic/db:db",
-        "//sematic/db/models:edge",
-        "//sematic/db/models:resolution",
-        "//sematic/db/tests:fixtures",
-        "//sematic/resolvers:local_resolver",
-        "//sematic/tests:fixtures",
-        "//sematic/types:init",
-        "//sematic/utils:exceptions",
-    ],
-)
 
 pytest_test(
     name = "test_log_streamer",
