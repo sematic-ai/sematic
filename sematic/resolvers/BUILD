@@ -9,30 +9,11 @@ sematic_py_lib(
 sematic_py_lib(
     name = "local_resolver",
     srcs = ["local_resolver.py"],
-    pip_deps = [
-        "python-socketio",
-        "websocket-client",
-    ],
+    pip_deps = [],
     # buildifier: leave-alone
     deps = [
-        ":silent_resolver",
-        "//sematic:abstract_function",
-        "//sematic:abstract_future",
-        "//sematic:api_client",
-        "//sematic:graph",
-        "//sematic:versions",
-        "//sematic/caching:init",
-        "//sematic/config:config",
-        "//sematic/config:user_settings",
-        "//sematic/db/models:artifact",
-        "//sematic/db/models:edge",
-        "//sematic/db/models:factories",
-        "//sematic/db/models:run",
-        "//sematic/plugins:abstract_builder",
-        "//sematic/resolvers:abstract_resource_manager",
-        "//sematic/resolvers/resource_managers:server_manager",
-        "//sematic/utils:exceptions",
-        "//sematic/utils:git",
+        "//sematic:resolver",
+        "//sematic/runners:local_runner",
     ],
 )
 
@@ -49,6 +30,7 @@ sematic_py_lib(
     name = "silent_resolver",
     srcs = ["silent_resolver.py"],
     deps = [
+        "//sematic:resolver",
         "//sematic/runners:silent_runner",
     ],
 )

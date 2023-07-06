@@ -1,5 +1,5 @@
 # Standard Library
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from warnings import warn  # noqa: F401
 
 # Sematic
@@ -8,6 +8,13 @@ from sematic.resolver import Resolver
 from sematic.resolvers.local_resolver import LocalResolver
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.resolvers.silent_resolver import SilentResolver
+
+# To avoid creating a dependency of Future on Runner.
+# Recall that .resolve will be removed from future, at
+# which point there will be no need for such a dependency
+# anyway.
+Runner = Any
+
 
 _MUTABLE_FIELDS = {
     "name",
@@ -35,7 +42,7 @@ class Future(AbstractFuture):
     """
 
     def resolve(
-        self, resolver: Optional[Resolver] = None, tracking: bool = True
+        self, resolver: Optional[Union[Resolver, Runner]] = None, tracking: bool = True
     ) -> Any:
         """
         Trigger the resolution of the future and all its nested futures.
@@ -50,6 +57,11 @@ class Future(AbstractFuture):
             in the database and viewable in the UI. If `False`, no tracking is
             persisted to the DB.
         """
+        warn(
+            "future.resolve(...) will soon be deprecated. "
+            "Please update your code to use runner.run(future) instead.",
+            DeprecationWarning,
+        )
         if self.state != FutureState.RESOLVED:
             default_resolver = LocalResolver if tracking else SilentResolver
             resolver = resolver or default_resolver()

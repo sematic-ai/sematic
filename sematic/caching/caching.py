@@ -20,7 +20,7 @@ CacheNamespace = Optional[Union[str, CacheNamespaceCallable]]
 logger = logging.getLogger(__name__)
 
 
-def resolve_cache_namespace(
+def determine_cache_namespace(
     cache_namespace: CacheNamespace, root_future: AbstractFuture
 ) -> str:
     """

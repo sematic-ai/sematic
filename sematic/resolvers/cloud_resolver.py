@@ -21,11 +21,8 @@ from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.graph import RerunMode
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
-from sematic.resolvers.local_resolver import (
-    LocalResolver,
-    ResolverRestartError,
-    make_edge_key,
-)
+from sematic.resolvers.local_resolver import LocalResolver
+from sematic.runners.local_runner import RunnerRestartError, make_edge_key
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.utils.memoized_property import memoized_property
 
@@ -113,7 +110,7 @@ class CloudResolver(LocalResolver):
         #           machine
         self._detach = detach
 
-        self._resolution_was_created = _is_running_remotely
+        self._pipeline_run_was_created = _is_running_remotely
 
         # _is_running_remotely:
         #   True: we are running in a remote driver job
@@ -200,16 +197,16 @@ class CloudResolver(LocalResolver):
         except KeyError:
             raise MissingContainerImage(f"{tag} was not built.")
 
-    def _create_resolution(self, root_future):
+    def _create_pipeline_run(self, root_future):
         if self._is_running_remotely:
             # resolution should have been created prior to the resolver
             # actually starting its remote resolution.
             return
 
-        return super()._create_resolution(root_future)
+        return super()._create_pipeline_run(root_future)
 
-    def _make_resolution(self, root_future):
-        resolution = super()._make_resolution(root_future)
+    def _make_pipeline_run(self, root_future):
+        resolution = super()._make_pipeline_run(root_future)
 
         # Mapping for the rest of the runs in the graph
         resolution.container_image_uris = self._container_image_uris
@@ -240,7 +237,7 @@ class CloudResolver(LocalResolver):
         run = self._populate_run_and_artifacts(future)
         self._save_graph()
         self._cache_namespace_str = self._make_cache_namespace()
-        self._create_resolution(future)
+        self._create_pipeline_run(future)
         run.root_id = future.id
 
         api_client.notify_pipeline_update(run.function_path)
@@ -335,7 +332,7 @@ class CloudResolver(LocalResolver):
     def _pipeline_run_did_fail(
         self, error: Exception, reason: Optional[str] = None
     ) -> None:
-        if not isinstance(error, ResolverRestartError):
+        if not isinstance(error, RunnerRestartError):
             super()._pipeline_run_did_fail(error)
             return
 

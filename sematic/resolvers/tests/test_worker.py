@@ -90,7 +90,7 @@ def test_main(
             run_id=future.id,
             root_id=future.id,
             private=PrivateContext(
-                resolver_class_path=CloudResolver.classpath(),
+                runner_class_path=CloudResolver.classpath(),
             ),
         )
     )
@@ -174,7 +174,7 @@ def test_main_func(
             run_id=future.id,
             root_id=future.id,
             private=PrivateContext(
-                resolver_class_path=CloudResolver.classpath(),
+                runner_class_path=CloudResolver.classpath(),
             ),
         )
     )

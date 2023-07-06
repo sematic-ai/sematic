@@ -226,7 +226,7 @@ def test_make_run(_, base_image_tag, expected_image):
         (True, ResolutionStatus.CREATED, ResolutionKind.KUBERNETES, None, "foo"),
     ),
 )
-def test_make_resolution(
+def test_make_pipeline_run(
     _,
     detach: bool,
     expected_status: ResolutionStatus,
@@ -246,7 +246,7 @@ def test_make_resolution(
         else CloudResolver(detach=detach)
     )
 
-    resolution = resolver._make_resolution(future)
+    resolution = resolver._make_pipeline_run(future)
 
     assert resolution.status == expected_status.value
     assert resolution.kind == expected_kind.value

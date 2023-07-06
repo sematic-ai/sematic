@@ -196,7 +196,7 @@ def main(
                     run_id=run.id,
                     root_id=run.root_id,
                     private=PrivateContext(
-                        resolver_class_path=CloudResolver.classpath(),
+                        runner_class_path=CloudResolver.classpath(),
                     ),
                 )
             ):

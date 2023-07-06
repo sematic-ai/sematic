@@ -10,9 +10,9 @@ from sematic.abstract_future import FutureState
 from sematic.function import func
 from sematic.future_context import PrivateContext, SematicContext, context, set_context
 from sematic.plugins.abstract_external_resource import ResourceState
-from sematic.resolvers.silent_runner import SilentRunner
 from sematic.resolvers.tests.fixtures import FakeExternalResource
 from sematic.retry_settings import RetrySettings
+from sematic.runners.silent_runner import SilentRunner
 from sematic.tests.utils import RUN_SLOW_TESTS
 from sematic.utils.exceptions import (
     ExternalResourceError,
@@ -49,10 +49,10 @@ def direct_context_func() -> SematicContext:
 
 
 @func
-def nested_resolve_func() -> int:
-    # If you don't use SilentResolver() here, the test process
+def nested_run_func() -> int:
+    # If you don't use SilentRunner() here, the test process
     # takes MUCH longer to complete
-    return add(1, 2).resolve(SilentRunner())
+    return SilentRunner().run(add(1, 2))
 
 
 @func
@@ -82,26 +82,26 @@ def timeout_pipeline(long_child: bool, long_grandchild: bool) -> int:
     return nested_sleep(120.0 if long_grandchild else 0, partial).set(timeout_mins=1)
 
 
-def test_silent_resolver():
-    assert SilentRunner().resolve(pipeline(3, 5)) == 24
+def test_silent_runner():
+    assert SilentRunner().run(pipeline(3, 5)) == 24
 
 
-def test_silent_resolver_context():
+def test_silent_runner_context():
     future = context_pipeline()
-    result = SilentRunner().resolve(future)
+    result = SilentRunner().run(future)
     assert result.root_id == future.id
     assert result.run_id != future.id
-    assert result.private.load_resolver_class() is SilentRunner
+    assert result.private.load_runner_class() is SilentRunner
 
     future = direct_context_func()
-    result = SilentRunner().resolve(future)
+    result = SilentRunner().run(future)
     assert result.root_id == future.id
     assert result.run_id == future.id
 
 
-def test_nested_resolve():
+def test_nested_run():
     with pytest.raises(PipelineRunError):
-        SilentRunner().resolve(nested_resolve_func())
+        SilentRunner().run(nested_run_func())
 
 
 _tried = 0
@@ -122,7 +122,7 @@ def test_retry():
     future = retry_three_times()
 
     with pytest.raises(PipelineRunError) as exc_info:
-        SilentRunner().resolve(future)
+        SilentRunner().run(future)
 
     assert isinstance(exc_info.value.__context__, FunctionError)
     assert isinstance(exc_info.value.__context__.__context__, SomeException)
@@ -133,7 +133,7 @@ def test_retry():
 
 def test_custom_resources():
     FakeExternalResource.reset_history()
-    result = custom_resource_func().resolve(SilentRunner())
+    result = SilentRunner().run(custom_resource_func())
     assert result == 144
     ids = FakeExternalResource.all_resource_ids()
     assert len(ids) == 2
@@ -212,7 +212,7 @@ def test_activation_failures_for_resource():
             SematicContext(
                 run_id=run_id,
                 root_id=root_id,
-                private=PrivateContext(resolver_class_path=SilentRunner.classpath()),
+                private=PrivateContext(runner_class_path=SilentRunner.classpath()),
             )
         ):
             with FakeExternalResource(
@@ -231,7 +231,7 @@ def test_activation_failures_for_resource():
             SematicContext(
                 run_id=run_id,
                 root_id=root_id,
-                private=PrivateContext(resolver_class_path=SilentRunner.classpath()),
+                private=PrivateContext(runner_class_path=SilentRunner.classpath()),
             )
         ):
             with FakeExternalResource(
@@ -244,7 +244,7 @@ def test_activation_failures_for_resource():
     assert len(resources) == 1
     stored = resources[0]
 
-    # not deactivated because the resolver failed to get an update
+    # not deactivated because the runner failed to get an update
     # about the status while trying to deactivate
     assert stored.status.state == ResourceState.DEACTIVATING
 
@@ -258,7 +258,7 @@ def test_activation_timeout_for_resource():
             SematicContext(
                 run_id=run_id,
                 root_id=root_id,
-                private=PrivateContext(resolver_class_path=SilentRunner.classpath()),
+                private=PrivateContext(runner_class_path=SilentRunner.classpath()),
             )
         ):
             started_activate = time.time()
@@ -281,7 +281,7 @@ def test_deactivation_timeout_for_resource():
             SematicContext(
                 run_id=run_id,
                 root_id=root_id,
-                private=PrivateContext(resolver_class_path=SilentRunner.classpath()),
+                private=PrivateContext(runner_class_path=SilentRunner.classpath()),
             )
         ):
             started_activate = time.time()
@@ -307,7 +307,7 @@ def test_deactivation_failures_for_resource():
             SematicContext(
                 run_id=run_id,
                 root_id=root_id,
-                private=PrivateContext(resolver_class_path=SilentRunner.classpath()),
+                private=PrivateContext(runner_class_path=SilentRunner.classpath()),
             )
         ):
             with FakeExternalResource(
@@ -327,15 +327,15 @@ def test_deactivation_failures_for_resource():
     reason="This test takes a long time to execute, and is disabled by default",
 )
 def test_timeout():
-    result = timeout_pipeline(long_child=False, long_grandchild=False).resolve(
-        SilentRunner()
+    result = SilentRunner().run(
+        timeout_pipeline(long_child=False, long_grandchild=False)
     )
     assert result == 42.0
 
     future = timeout_pipeline(long_child=True, long_grandchild=False)
     error_text = None
     try:
-        future.resolve(SilentRunner())
+        SilentRunner().run(future)
     except Exception as e:
         error_text = str(e)
     assert TimeoutError.__name__ in error_text
@@ -343,7 +343,7 @@ def test_timeout():
     future = timeout_pipeline(long_child=False, long_grandchild=True)
     error_text = None
     try:
-        future.resolve(SilentRunner())
+        SilentRunner().run(future)
     except Exception as e:
         error_text = str(e)
     assert TimeoutError.__name__ in error_text
@@ -351,7 +351,7 @@ def test_timeout():
     future = do_sleep(120).set(timeout_mins=1)
     error_text = None
     try:
-        future.resolve(SilentRunner())
+        SilentRunner().run(future)
     except Exception as e:
         error_text = str(e)
     assert TimeoutError.__name__ in error_text

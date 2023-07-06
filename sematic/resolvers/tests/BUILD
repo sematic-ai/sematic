@@ -40,22 +40,6 @@ pytest_test(
 )
 
 pytest_test(
-    name = "test_silent_resolver",
-    srcs = ["test_silent_resolver.py"],
-    deps = [
-        "//sematic:abstract_function",
-        "//sematic:function",
-        "//sematic:future_context",
-        "//sematic:retry_settings",
-        "//sematic/plugins:abstract_external_resource",
-        "//sematic/resolvers:silent_resolver",
-        "//sematic/resolvers/tests:fixtures",
-        "//sematic/tests:utils",
-        "//sematic/utils:exceptions",
-    ],
-)
-
-pytest_test(
     name = "test_type_utils",
     srcs = ["test_type_utils.py"],
     deps = [

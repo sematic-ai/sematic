@@ -6,35 +6,35 @@
 #     ],
 # )
 
-# sematic_py_lib(
-#     name = "local_resolver",
-#     srcs = ["local_resolver.py"],
-#     pip_deps = [
-#         "python-socketio",
-#         "websocket-client",
-#     ],
-#     # buildifier: leave-alone
-#     deps = [
-#         ":silent_resolver",
-#         "//sematic:abstract_function",
-#         "//sematic:abstract_future",
-#         "//sematic:api_client",
-#         "//sematic:graph",
-#         "//sematic:versions",
-#         "//sematic/caching:init",
-#         "//sematic/config:config",
-#         "//sematic/config:user_settings",
-#         "//sematic/db/models:artifact",
-#         "//sematic/db/models:edge",
-#         "//sematic/db/models:factories",
-#         "//sematic/db/models:run",
-#         "//sematic/plugins:abstract_builder",
-#         "//sematic/resolvers:abstract_resource_manager",
-#         "//sematic/resolvers/resource_managers:server_manager",
-#         "//sematic/utils:exceptions",
-#         "//sematic/utils:git",
-#     ],
-# )
+sematic_py_lib(
+    name = "local_runner",
+    srcs = ["local_runner.py"],
+    pip_deps = [
+        "python-socketio",
+        "websocket-client",
+    ],
+    # buildifier: leave-alone
+    deps = [
+        ":silent_runner",
+        "//sematic:abstract_function",
+        "//sematic:abstract_future",
+        "//sematic:api_client",
+        "//sematic:graph",
+        "//sematic:versions",
+        "//sematic/caching:init",
+        "//sematic/config:config",
+        "//sematic/config:user_settings",
+        "//sematic/db/models:artifact",
+        "//sematic/db/models:edge",
+        "//sematic/db/models:factories",
+        "//sematic/db/models:run",
+        "//sematic/plugins:abstract_builder",
+        "//sematic/resolvers:abstract_resource_manager",
+        "//sematic/resolvers/resource_managers:server_manager",
+        "//sematic/utils:exceptions",
+        "//sematic/utils:git",
+    ],
+)
 
 sematic_py_lib(
     name = "state_machine_runner",
