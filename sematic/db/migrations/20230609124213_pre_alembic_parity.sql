@@ -1,6 +1,12 @@
 -- migrate:up
 
-UPDATE runs SET function_path = '' WHERE function_path IS NULL;
+UPDATE runs SET function_path = 'UNKNOWN.UNKNOWN' WHERE function_path IS NULL;
+UPDATE runs SET tags = '[]' WHERE tags IS NULL;
+UPDATE runs SET source_code = 'source code unavailable' WHERE source_code IS NULL;
+UPDATE jobs SET created_at = to_timestamp(0) WHERE created_at IS NULL;
+UPDATE jobs SET updated_at = to_timestamp(0) WHERE updated_at IS NULL;
+UPDATE notes SET created_at = to_timestamp(0) WHERE created_at IS NULL;
+UPDATE notes SET updated_at = to_timestamp(0) WHERE updated_at IS NULL;
 
 ALTER TABLE artifacts ALTER COLUMN type_serialization SET NOT NULL;
 ALTER TABLE jobs ALTER COLUMN created_at SET NOT NULL;

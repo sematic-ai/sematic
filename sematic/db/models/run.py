@@ -113,8 +113,8 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
     )
     source_code: str = Column(types.String(), nullable=False)
 
-    # WARNING: deprecated column, do not remove until Python-packaged SQLite supports
-    # column removal across all supported Python versions
+    # TODO #303: deprecated column, do not remove until Python-packaged SQLite
+    # supports column removal across all supported Python versions
     exception: str = Column(types.String(), nullable=True)  # DEPRECATED
 
     nested_future_id: Optional[str] = Column(types.String(), nullable=True)
@@ -125,8 +125,8 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
         Dict[str, Union[str, List[str]]]
     ] = Column(types.JSON(), nullable=True)
 
-    # WARNING: deprecated column, do not remove until Python-packaged SQLite supports
-    # column removal across all supported Python versions
+    # TODO #303: deprecated column, do not remove until Python-packaged SQLite
+    # supports column removal across all supported Python versions
     external_jobs_json: Optional[List[Dict[str, Any]]] = Column(
         types.JSON(), nullable=True
     )  # DEPRECATED
