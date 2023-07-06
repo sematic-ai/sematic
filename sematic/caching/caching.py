@@ -57,7 +57,7 @@ def determine_cache_namespace(
     if root_future is None:
         raise ValueError("`root_future` cannot be None!")
     if not root_future.is_root_future():
-        raise ValueError("`root_future` must be a Resolution root Future!")
+        raise ValueError("`root_future` must be a pipeline run root Future!")
 
     logger.debug("Calling cache_namespace %s", cache_namespace)
 

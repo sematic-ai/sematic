@@ -157,7 +157,7 @@ class CloudRunner(LocalRunner):
         # execution, the environment doesn't contain the image URIs. So we will
         # need to get the image URIs frm the pipeline run we put them in earlier.
         if self._is_running_remotely:
-            pipeline_run = api_client.get_resolution(self._root_future.id)
+            pipeline_run = api_client.get_pipeline_run(self._root_future.id)
             uri_mapping = pipeline_run.container_image_uris
             if uri_mapping is None:
                 # probably shouldn't happen: the only pipeline runs without this
@@ -242,8 +242,8 @@ class CloudRunner(LocalRunner):
         api_client.notify_pipeline_update(run.function_path)
 
         # SUBMIT RUNNER JOB
-        api_client.schedule_resolution(
-            resolution_id=future.id,
+        api_client.schedule_pipeline_run(
+            pipeline_run_id=future.id,
             max_parallelism=self._max_parallelism,
             rerun_from=self._rerun_from_run_id,
             rerun_mode=self._rerun_mode,
@@ -345,7 +345,7 @@ class CloudRunner(LocalRunner):
                 max_parallelism=self._max_parallelism,
                 _base_image_tag=self._base_image_tag,
             )
-            new_runner._git_info = api_client.get_resolution(
+            new_runner._git_info = api_client.get_pipeline_run(
                 self._root_future.id
             ).git_info
             new_runner.run(new_root_future)

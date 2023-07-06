@@ -46,8 +46,11 @@ class ObjectSource(Enum):
     API = (api_client,)
     DB = (db_queries,)
 
-    def get_resolution(self, resolution_id: str) -> Resolution:
-        return self.value[0].get_resolution(resolution_id)
+    def get_pipeline_run(self, resolution_id: str) -> Resolution:
+        if hasattr(self.value[0], "get_pipeline_run"):
+            return self.value[0].get_pipeline_run(resolution_id)
+        else:
+            return self.value[0].get_resolution(resolution_id)
 
     def get_run(self, run_id: str) -> Run:
         return self.value[0].get_run(run_id)
@@ -272,7 +275,7 @@ def load_log_lines(
 
     run_state = FutureState[run.future_state]  # type: ignore
     still_running = not (run_state.is_terminal() or run_state == FutureState.RAN)
-    resolution = object_source.get_resolution(run.root_id)
+    resolution = object_source.get_pipeline_run(run.root_id)
     filter_strings = filter_strings if filter_strings is not None else []
     forward_cursor = (
         Cursor.from_token(forward_cursor_token)
@@ -483,7 +486,7 @@ def _load_inline_logs(
             reverse_cursor_token=None,
             lines=[],
             line_ids=[],
-            log_info_message="Resolver logs are missing",
+            log_info_message="Runner logs are missing",
         )
 
     prefix = log_prefix(resolution.root_id, JobKind.resolver)

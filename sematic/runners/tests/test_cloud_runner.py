@@ -67,11 +67,11 @@ _INSTRUMENTED_INSTANCES: List[InstrumentedCloudRunner] = []
 @mock.patch("sematic.api_client.update_run_future_states")
 @mock.patch("sematic.runners.cloud_runner.get_image_uris")
 @mock.patch("sematic.api_client.schedule_run")
-@mock.patch("sematic.api_client.schedule_resolution")
+@mock.patch("sematic.api_client.schedule_pipeline_run")
 @mock.patch("kubernetes.config.load_kube_config")
 def test_simulate_cloud_exec(
     mock_load_kube_config: mock.MagicMock,
-    mock_schedule_resolution: mock.MagicMock,
+    mock_schedule_pipeline_run: mock.MagicMock,
     mock_schedule_run: mock.MagicMock,
     mock_get_images: mock.MagicMock,
     mock_update_run_future_states: mock.MagicMock,
@@ -128,21 +128,21 @@ def test_simulate_cloud_exec(
 
     mock_update_run_future_states.side_effect = fake_update_run_future_states
 
-    mock_schedule_resolution.assert_called_once_with(
-        resolution_id=future.id,
+    mock_schedule_pipeline_run.assert_called_once_with(
+        pipeline_run_id=future.id,
         max_parallelism=None,
         rerun_from=None,
         rerun_mode=None,
     )
     assert (
-        api_client.get_resolution(future.id).status == PipelineRunStatus.CREATED.value
+        api_client.get_pipeline_run(future.id).status == PipelineRunStatus.CREATED.value
     )
 
-    pipeline_run = api_client.get_resolution(future.id)
+    pipeline_run = api_client.get_pipeline_run(future.id)
     root_run = api_client.get_run(future.id)
     assert root_run.container_image_uri == images["default"]
     pipeline_run.status = PipelineRunStatus.SCHEDULED
-    api_client.save_resolution(pipeline_run)
+    api_client.save_pipeline_run(pipeline_run)
     mock_schedule_run.assert_not_called()
 
     # In the driver job
@@ -153,13 +153,15 @@ def test_simulate_cloud_exec(
 
     driver_runner.set_graph(runs=runs, artifacts=artifacts, edges=edges)
     assert (
-        api_client.get_resolution(future.id).status == PipelineRunStatus.SCHEDULED.value
+        api_client.get_pipeline_run(future.id).status
+        == PipelineRunStatus.SCHEDULED.value
     )
     output = driver_runner.run(future)
 
     assert output == 3
     assert (
-        api_client.get_resolution(future.id).status == PipelineRunStatus.COMPLETE.value
+        api_client.get_pipeline_run(future.id).status
+        == PipelineRunStatus.COMPLETE.value
     )
     assert mock_get_images.call_count == 1
     assert driver_runner._get_tagged_image("cuda") == images["cuda"]

@@ -33,8 +33,8 @@ from sematic.db.queries import (
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.function import func
 from sematic.future_context import PrivateContext, SematicContext
-from sematic.runners.cloud_runner import CloudRunner
 from sematic.resolvers.worker import _emulate_interpreter, main, wrap_main_with_logging
+from sematic.runners.cloud_runner import CloudRunner
 from sematic.tests.fixtures import test_storage, valid_client_version  # noqa: F401
 from sematic.utils.env import environment_variables
 from sematic.utils.stdout import redirect_to_file
@@ -54,7 +54,7 @@ def pipeline(a: float, b: float) -> float:
     "sematic.runners.cloud_runner.get_image_uris", return_value=dict(default="foo")
 )
 @mock.patch("sematic.runners.silent_runner.set_context")
-@mock.patch("sematic.api_client.schedule_resolution")
+@mock.patch("sematic.api_client.schedule_pipeline_run")
 @mock.patch("kubernetes.config.load_kube_config")
 def test_main(
     mock_load_kube_config: mock.MagicMock,
@@ -100,7 +100,7 @@ def test_main(
     "sematic.runners.cloud_runner.get_image_uris", return_value=dict(default="foo")
 )
 @mock.patch("sematic.resolvers.worker.set_context")
-@mock.patch("sematic.api_client.schedule_resolution")
+@mock.patch("sematic.api_client.schedule_pipeline_run")
 @mock.patch("kubernetes.config.load_kube_config")
 def test_main_func(
     mock_load_kube_config: mock.MagicMock,
@@ -188,7 +188,7 @@ def fail():
 @mock.patch(
     "sematic.runners.cloud_runner.get_image_uris", return_value=dict(default="foo")
 )
-@mock.patch("sematic.api_client.schedule_resolution")
+@mock.patch("sematic.api_client.schedule_pipeline_run")
 @mock.patch("kubernetes.config.load_kube_config")
 def test_fail(
     mock_load_kube_config: mock.MagicMock,

@@ -26,7 +26,7 @@ class _InMemoryResourceRecord:
 
     # For now, resources can only be used by one run. However, this might
     # be changed at some point, so we want the database to allow for multiple
-    # runs per resource. The in-memory representation for the SilentResolver
+    # runs per resource. The in-memory representation for the SilentRunner
     # should mirror the database representation in this regard.
     run_id_root_id_pairs: FrozenSet[Tuple[str, str]]
 

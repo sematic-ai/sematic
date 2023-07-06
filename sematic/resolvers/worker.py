@@ -35,8 +35,8 @@ from sematic.future import Future
 from sematic.future_context import PrivateContext, SematicContext, set_context
 from sematic.graph import RerunMode
 from sematic.log_reader import log_prefix
-from sematic.runners.cloud_runner import CloudRunner
 from sematic.resolvers.log_streamer import ingested_logs, log_ingestion_enabled
+from sematic.runners.cloud_runner import CloudRunner
 from sematic.scheduling.job_details import JobKind
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.versions import CURRENT_VERSION_STR
@@ -174,7 +174,7 @@ def main(
             future.id = run.id
 
             # the pipeline run object has required configurations for the runner
-            pipeline_run = api_client.get_resolution(root_id=run.id)
+            pipeline_run = api_client.get_pipeline_run(root_id=run.id)
 
             runner = CloudRunner(
                 cache_namespace=pipeline_run.cache_namespace,

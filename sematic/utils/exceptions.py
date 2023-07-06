@@ -195,7 +195,7 @@ class PipelineRunError(Exception):
             f"{exception_msg}{external_exception_msg}"
         )
 
-        super(ResolutionError, self).__init__(self._msg)
+        super(PipelineRunError, self).__init__(self._msg)
 
     @staticmethod
     def _make_metadata_msg(

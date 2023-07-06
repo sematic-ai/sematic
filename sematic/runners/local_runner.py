@@ -346,7 +346,7 @@ class LocalRunner(SilentRunner):
 
     def _pipeline_run_did_cancel(self) -> None:
         super()._pipeline_run_did_cancel()
-        api_client.cancel_resolution(self._root_future.id)
+        api_client.cancel_pipeline_run(self._root_future.id)
         self._clean_up_pipeline_run(save_graph=True)
 
     def _get_tagged_image(self, tag: str) -> Optional[str]:
@@ -355,7 +355,7 @@ class LocalRunner(SilentRunner):
     def _create_pipeline_run(self, root_future):
         """Make a Pipeline Run instance and persist it."""
         pipeline_run = self._make_pipeline_run(root_future)
-        api_client.save_resolution(pipeline_run)
+        api_client.save_pipeline_run(pipeline_run)
         self._pipeline_run_was_created = True
         self._notify_pipeline_update()
 
@@ -647,7 +647,7 @@ class LocalRunner(SilentRunner):
         self._save_graph()
 
     def _update_pipeline_run_status(self, status: PipelineRunStatus):
-        pipeline_run = api_client.get_resolution(self._root_future.id)
+        pipeline_run = api_client.get_pipeline_run(self._root_future.id)
         current_status = PipelineRunStatus[pipeline_run.status]  # type: ignore
         if (
             status == PipelineRunStatus.RUNNING
@@ -658,7 +658,7 @@ class LocalRunner(SilentRunner):
                 "The cluster may be under pressure."
             )
         pipeline_run.status = status
-        api_client.save_resolution(pipeline_run)
+        api_client.save_pipeline_run(pipeline_run)
 
     def _get_run(self, run_id) -> Run:
         run = api_client.get_run(run_id)

@@ -131,7 +131,7 @@ def test_invalid_args_resolve_namespace(my_future: AbstractFuture):
 
     nested_future = mock.MagicMock()
     nested_future.is_root_future.return_value = False
-    with pytest.raises(ValueError, match="must be a Resolution root Future"):
+    with pytest.raises(ValueError, match="must be a pipeline run root Future"):
         determine_cache_namespace(my_namespace, nested_future)
 
 

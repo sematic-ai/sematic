@@ -81,14 +81,14 @@ class Future(AbstractFuture):
         standalone: bool
             When using the `CloudRunner`, whether the instrumented function
             should be executed in a standalone container or inside the same
-            process and worker that is executing the `Resolver` itself.
+            process and worker that is executing the `Runner` itself.
 
             Defaults to `False`, as most pipeline functions are expected to be
             lightweight. Set to `True` in order to distribute
             its execution to a worker and parallelize its execution.
         cache: bool
             Whether to cache the function's output value under the
-            `cache_namespace` configured in the `Resolver`. Defaults to `False`.
+            `cache_namespace` configured in the `Runner`. Defaults to `False`.
 
             Do not activate this on a non-deterministic function!
         resource_requirements: ResourceRequirements

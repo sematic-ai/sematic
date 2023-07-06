@@ -35,7 +35,7 @@ def register_sio_server(sio_server):
 @authenticate
 def sync_events(user: Optional[User], namespace: str, event: str) -> flask.Response:
     """
-    Sends out a socketio broadcast notification to all subscribed listeners (Resolvers,
+    Sends out a socketio broadcast notification to all subscribed listeners (Runners,
     the Dashboard, etc.).
     """
     logger.info("Broadcasting: namespace=%s; event=%s", namespace, event)
@@ -54,7 +54,7 @@ def sync_events(user: Optional[User], namespace: str, event: str) -> flask.Respo
 @authenticate_starlette
 async def async_events(user: Optional[User], request):
     """
-    Sends out a socketio broadcast notification to all subscribed listeners (Resolvers,
+    Sends out a socketio broadcast notification to all subscribed listeners (Runners,
     the Dashboard, etc.).
     """
     namespace = request.path_params["namespace"]
@@ -126,7 +126,7 @@ def _call_broadcast_endpoint(
     """
     Calls the endpoint that can send out a socketio broadcast notification.
 
-    This is the endpoint where listeners have subscribed (Resolvers, the Dashboard, etc.).
+    This is the endpoint where listeners have subscribed (Runners, the Dashboard, etc.).
     """
     logger.debug("Calling broadcast: url=%s; json_payload=%s", url, json_payload)
 
