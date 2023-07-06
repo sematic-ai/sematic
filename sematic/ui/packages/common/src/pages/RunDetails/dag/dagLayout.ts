@@ -161,6 +161,7 @@ export function getReactFlowDag(graph: Graph | undefined, selectedRun: Run | und
         }
 
         if (!newEdge.target) {
+            // This is the case that a child node is connected to the parent node.
             newEdge.target = runsById.get(newEdge.source)?.parent_id!;
             newEdge.targetHandle = "tb";
             newEdge.sourceHandle = "sb";

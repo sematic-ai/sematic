@@ -14,6 +14,7 @@ const BoldHeader = styled.div`
 
 const StyledAccordion = styled(Accordion)`
     max-height: 100%;
+    background-color: ${theme.palette.p1black.main};
 `;
 
 interface CollapseableFilterSectionProps {

@@ -16,6 +16,7 @@ const Right = styled(RightBase)`
     & .runs-table {
         min-width: 850px;
     }
+    background: ${theme.palette.white.main};
 `
 
 const LoadingOverlay = styled(Box)`

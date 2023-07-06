@@ -1,15 +1,13 @@
 # Standard Library
 from dataclasses import dataclass
-from typing import Any, Dict, Union
+from typing import Any, Dict, Optional, Union
 
 # Third-party
 import pytest
 
 # Sematic
+from sematic.types.types.huggingface.model_reference import HuggingFaceModelReference
 from sematic.types.types.huggingface.stored_model import HuggingFaceStoredModel
-
-# get_base_model
-# save_pretrained
 
 _MOCK_STORAGE = {}
 
@@ -33,7 +31,10 @@ class Model:
 
     @classmethod
     def from_pretrained(
-        cls, path: str, device_map: Union[str, Dict[str, Any]]
+        cls,
+        path: str,
+        device_map: Union[str, Dict[str, Any]] = "auto",
+        revision: Optional[str] = None,
     ) -> "Model":
         return Model(state=_MOCK_STORAGE[path])
 
@@ -69,5 +70,19 @@ def test_store_load_peft(mock_storage):
     base_model = Model(state="foo")
     peft_model = PeftModel(state="bar", base_model=base_model)
     stored_model = HuggingFaceStoredModel.store(peft_model, storage_path)
+    loaded = stored_model.load(device_map="auto")
+    assert loaded == peft_model
+
+
+def test_store_load_peft_hf_base(mock_storage):
+    storage_path = "/some/path/for/model"
+    base_model = Model(state="foo")
+    peft_model = PeftModel(state="bar", base_model=base_model)
+    base_model_ref = HuggingFaceModelReference.from_string("foo-owner/bar-model")
+    _MOCK_STORAGE[base_model_ref.repo_reference()] = base_model.state
+    stored_model = HuggingFaceStoredModel.store(
+        peft_model, storage_path, base_model_ref
+    )
+    assert stored_model.base_model_reference == base_model_ref
     loaded = stored_model.load(device_map="auto")
     assert loaded == peft_model

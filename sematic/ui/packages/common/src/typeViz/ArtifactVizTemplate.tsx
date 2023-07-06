@@ -9,6 +9,9 @@ import IconButton from "@mui/material/IconButton";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { useTheme } from "@mui/material/styles";
+import ErrorBoundary from "src/component/ErrorBoundary";
+import ImportPath from "src/component/ImportPath";
+import { css } from "@emotion/css";
 
 
 const ContainerBase = styled.div`
@@ -22,6 +25,7 @@ const ContainerBase = styled.div`
 
 const Container = styled(ContainerBase)`
     min-height: 50px;
+    column-gap: ${theme.spacing(2)};
 `;
 
 const NestedContainer = styled.div`
@@ -35,18 +39,25 @@ const NestedContainer = styled.div`
 `;
 
 const NameType = styled.div`
-    flex-shrink: 0;
+    flex-shrink: 2;    
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
     & > span:last-of-type {
+        flex-shrink: 1;
         font-size: 12px;
+        overflow: hidden;
         color: ${theme.palette.grey[400]};
     }
 
     & > span:first-of-type {
+        flex-shrink: 0;
         font-weight: ${fontWeightBold};
         margin-right: ${theme.spacing(5)}};
     }
 `;
 const ExpandMoreIconCotainer = styled.span`
+    flex-shrink: 0;
 `;
 
 const ExpandLessIconCotainer = styled.div`
@@ -66,14 +77,35 @@ const ExpandLessIconCotainer = styled.div`
 
 const Value = styled.div`
     flex-shrink: 1;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    white-space: nowrap;
+    column-gap: ${theme.spacing(2)};
 `;
+
+const valueComponentClass = css`
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+`;
+
+function RenderError({children}: {
+    children: React.ReactNode;
+}) {
+    return <ArtifactExpanderContainer>
+        <span style={{color: theme.palette.error.main}}>{children}</span>
+    </ArtifactExpanderContainer>
+}
 
 export function ArtifactLine(props: { name: string, type?: string, children: React.ReactNode }) {
     const { name, type, children } = props;
     return <Container className={"artifact-row"} style={{ marginRight: "-20px" }}>
-        <NameType>
+        <NameType >
             <span>{name}</span>
-            <span>{type}</span>
+            <span>
+                <ImportPath>{type}</ImportPath>
+            </span>
         </NameType>
         <Value>
             {children}
@@ -110,12 +142,12 @@ function ArtifactVizTemplate(props: ArtifactVizTemplateProps) {
             typeSerialization={typeSerialization} />;
 
         if (hasNested) {
-            return <span onClick={toggleOpen} style={{ cursor: "pointer" }}>
+            return <span onClick={toggleOpen} style={{ cursor: "pointer" }} className={valueComponentClass}>
                 {component}
             </span>;
         }
 
-        return <div style={{marginRight: theme.spacing(8)}}>
+        return <div style={{marginRight: theme.spacing(8)}} className={valueComponentClass}>
             {component}
         </div>;
     }, [toggleOpen, open, hasNested, theme, ValueComponent, valueSummary, typeSerialization]);
@@ -128,7 +160,9 @@ function ArtifactVizTemplate(props: ArtifactVizTemplateProps) {
 
     return <Fragment key={name}>
         <ArtifactLine name={name} type={type}>
-            {valueComponent}
+            <ErrorBoundary fallback={<RenderError>Cannot render value</RenderError>}>
+                {valueComponent}
+            </ErrorBoundary>
             {hasNested && <ExpandMoreIconCotainer>
                 <IconButton onClick={toggleOpen} style={{ visibility: open ? "hidden" : "visible" }}>
                     <ExpandMoreIcon />
@@ -136,7 +170,13 @@ function ArtifactVizTemplate(props: ArtifactVizTemplateProps) {
             </ExpandMoreIconCotainer>}
         </ArtifactLine>
         {open && !!NestedComponent && <NestedContainer className={expandLessHovered ? "hover" : ""}>
-            <NestedComponent valueSummary={valueSummary} typeSerialization={typeSerialization} />
+            <ErrorBoundary fallback={
+                <RenderError>
+                    Error encountered when rendering the nested representation.
+                </RenderError>}>
+                <NestedComponent valueSummary={valueSummary} typeSerialization={typeSerialization} />
+            </ErrorBoundary>
+
             <ExpandLessIconCotainer>
                 <IconButton onClick={toggleOpen} onMouseEnter={() => setExpandLessHovered(true)}
                     onMouseLeave={() => setExpandLessHovered(false)}>
