@@ -23,7 +23,9 @@ sematic_py_lib(
 sematic_py_lib(
     name = "stored_model",
     srcs = ["stored_model.py"],
-    deps = [],
+    deps = [
+        ":model_reference",
+    ],
 )
 
 sematic_py_lib(
