@@ -31,7 +31,6 @@ ALTER INDEX runs_calculator_path RENAME TO ix_runs_function_path;
 -- migrate:down
 
 ALTER TABLE artifacts ALTER COLUMN type_serialization DROP NOT NULL;
-ALTER TABLE edges ALTER COLUMN artifact_id DROP NOT NULL;
 ALTER TABLE jobs ALTER COLUMN created_at DROP NOT NULL;
 ALTER TABLE jobs ALTER COLUMN updated_at DROP NOT NULL;
 ALTER TABLE notes ALTER COLUMN created_at DROP NOT NULL;
