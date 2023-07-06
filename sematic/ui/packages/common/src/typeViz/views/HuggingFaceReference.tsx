@@ -4,7 +4,8 @@ import { Button, Chip, Tooltip } from "@mui/material";
 import { ContentCopy } from "@mui/icons-material";
 import SnackBarContext from "@sematic/common/src/context/SnackBarContext";
 import { useTextSelection } from "@sematic/common/src/hooks/textSelectionHooks";
-import { ViewComponentProps, ValueComponentProps} from "src/typeViz/common";
+import { ViewComponentProps, ValueComponentProps } from "src/typeViz/common";
+import { ArtifactInfoContainer } from "src/typeViz/ArtifactVizTemplate";
 
 type Reference = {
     owner: string | null;
@@ -38,7 +39,7 @@ export function HuggingFaceDatasetReferenceShortView(props: ValueComponentProps)
 export function HuggingFaceModelReferenceValueView(props: ViewComponentProps) {
     const { valueSummary } = props;
     const { values } = valueSummary;
-  
+
     return <SlugChip reference={values} />;
 }
 
@@ -66,9 +67,9 @@ function HuggingFaceButton(props: {
             // commit and subset in the UI at the same time. If there
             // is a specific commit referenced, let that take precedence.
             let path = repoPath;
-            if(commit_sha) {
+            if (commit_sha) {
                 path = repoPath + "/tree/" + commit_sha;
-            } else if(subset) {
+            } else if (subset) {
                 path = repoPath + "/viewer/" + subset;
             }
 
@@ -80,14 +81,14 @@ function HuggingFaceButton(props: {
     const displayedSlug = useMemo(
         () => {
             let slug = (owner ? owner + "/" : "") + repo;
-            if(subset) {
+            if (subset) {
                 slug += ":" + subset;
             }
-            if(commit_sha) {
+            if (commit_sha) {
                 slug += "@" + commit_sha.substring(0, 7);
             }
-  
-            if(short) {
+
+            if (short) {
                 slug = "";
             }
             return slug;
@@ -118,37 +119,39 @@ function SlugChip(props: {
     const [displayedSlug, fullSlug] = useMemo(
         () => {
             let slug = (owner ? owner + "/" : "") + repo;
-            if(subset) {
+            if (subset) {
                 slug += ":" + subset;
             }
             let fullSlug = slug;
-            if(commit_sha) {
+            if (commit_sha) {
                 slug += "@" + commit_sha.substring(0, 7);
                 fullSlug += "@" + commit_sha;
             }
             return [slug, fullSlug];
         }, [owner, repo, subset, commit_sha]
     );
-    
+
     const { setSnackMessage } = useContext(SnackBarContext);
 
     const copy = useCallback(() => {
         setSnackMessage({ message: "Copied " + fullSlug });
         navigator.clipboard.writeText(fullSlug);
     }, [fullSlug, setSnackMessage]);
-    
+
     const contents = useMemo(
         () => {
             return (
-                <Tooltip title={"Copy " + fullSlug}>
-                    <Chip
-                        icon={<ContentCopy />}
-                        sx={{ paddingLeft: 2, paddingRight: 2}}
-                        onClick={copy}
-                        label={"🤗 "+ displayedSlug}
-                        variant="outlined"
-                    />
-                </Tooltip>
+                <ArtifactInfoContainer>
+                    <Tooltip title={"Copy " + fullSlug}>
+                        <Chip
+                            icon={<ContentCopy />}
+                            sx={{ paddingLeft: 2, paddingRight: 2 }}
+                            onClick={copy}
+                            label={"🤗 " + displayedSlug}
+                            variant="outlined"
+                        />
+                    </Tooltip>
+                </ArtifactInfoContainer>
             );
         }, [displayedSlug, fullSlug, copy]
     );

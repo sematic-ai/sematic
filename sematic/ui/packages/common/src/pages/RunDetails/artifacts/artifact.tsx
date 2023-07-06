@@ -26,7 +26,7 @@ const StyledVertButton = styled(MoreVertButton)`
 `;
 
 const ArtifactRepresentation = styled.div`
-    margin-left: -${theme.spacing(5)};
+    margin-left: 0;
 `;
 
 interface ArtifactProps {

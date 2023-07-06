@@ -19,8 +19,6 @@ const ContainerBase = styled.div`
     align-items: center;
     justify-content: space-between;
 
-    padding-left: ${theme.spacing(5)};
-    border-left: 1px solid ${theme.palette.p3border.main};
 `;
 
 const Container = styled(ContainerBase)`
@@ -29,13 +27,27 @@ const Container = styled(ContainerBase)`
 `;
 
 const NestedContainer = styled.div`
-    margin-left: ${theme.spacing(5)};
+    margin-left: ${theme.spacing(5)};    
+
+    > .nested-artifact-container {
+        border-left: 1px solid ${theme.palette.p3border.main};
+
+        margin-left: -${theme.spacing(5)};
+        padding-left: ${theme.spacing(5)};
+    }
 
     &.hover {
-        > .artifact-row {
+        > .nested-artifact-container {
             border-left: 1px solid ${theme.palette.primary.main};
         }
     }
+`;
+
+const NestedValueContainer = styled(ContainerBase)`
+    display: flex;
+    flex-direction: column;
+
+    align-items: stretch;
 `;
 
 const NameType = styled.div`
@@ -88,13 +100,15 @@ const valueComponentClass = css`
     flex-shrink: 1;
     overflow: hidden;
     text-overflow: ellipsis;
+    align-items: center;
+    display: flex;
 `;
 
-function RenderError({children}: {
+function RenderError({ children }: {
     children: React.ReactNode;
 }) {
     return <ArtifactExpanderContainer>
-        <span style={{color: theme.palette.error.main}}>{children}</span>
+        <span style={{ color: theme.palette.error.main }}>{children}</span>
     </ArtifactExpanderContainer>
 }
 
@@ -147,7 +161,7 @@ function ArtifactVizTemplate(props: ArtifactVizTemplateProps) {
             </span>;
         }
 
-        return <div style={{marginRight: theme.spacing(8)}} className={valueComponentClass}>
+        return <div style={{ marginRight: theme.spacing(8) }} className={valueComponentClass}>
             {component}
         </div>;
     }, [toggleOpen, open, hasNested, theme, ValueComponent, valueSummary, typeSerialization]);
@@ -170,12 +184,15 @@ function ArtifactVizTemplate(props: ArtifactVizTemplateProps) {
             </ExpandMoreIconCotainer>}
         </ArtifactLine>
         {open && !!NestedComponent && <NestedContainer className={expandLessHovered ? "hover" : ""}>
-            <ErrorBoundary fallback={
-                <RenderError>
-                    Error encountered when rendering the nested representation.
-                </RenderError>}>
-                <NestedComponent valueSummary={valueSummary} typeSerialization={typeSerialization} />
-            </ErrorBoundary>
+            <NestedValueContainer className={"nested-artifact-container"}>
+                <ErrorBoundary fallback={
+                    <RenderError>
+                        Error encountered when rendering the nested representation.
+                    </RenderError>}>
+                    <NestedComponent valueSummary={valueSummary} typeSerialization={typeSerialization} />
+                </ErrorBoundary>
+            </NestedValueContainer>
+
 
             <ExpandLessIconCotainer>
                 <IconButton onClick={toggleOpen} onMouseEnter={() => setExpandLessHovered(true)}
@@ -187,18 +204,24 @@ function ArtifactVizTemplate(props: ArtifactVizTemplateProps) {
     </Fragment>;
 }
 
+const ArtifactInfoWrapper = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+`;
+
 export function ArtifactInfoContainer(props: { children: React.ReactNode }) {
-    return <Container className={"artifact-row"}>
+    return <ArtifactInfoWrapper>
         {props.children}
-    </Container>;
+    </ArtifactInfoWrapper>;
 }
 
-const ExpanderContainer = styled(ContainerBase)`
+const ExpanderContainer = styled(ArtifactInfoWrapper)`
     justify-content: flex-end;
 `;
 
 export function ArtifactExpanderContainer(props: { children: React.ReactNode }) {
-    return <ExpanderContainer className={"artifact-row"}>
+    return <ExpanderContainer>
         {props.children}
     </ExpanderContainer>;
 }

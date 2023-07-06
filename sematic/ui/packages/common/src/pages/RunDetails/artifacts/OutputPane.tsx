@@ -1,12 +1,12 @@
+import { Box } from "@mui/material";
+import Alert from "@mui/material/Alert";
+import { useMemo } from "react";
+import { Artifact } from "src/Models";
+import { Exception, ExternalException } from "src/component/Exception";
 import { useRootRunContext } from "src/context/RootRunContext";
 import { useRunDetailsSelectionContext } from "src/context/RunDetailsSelectionContext";
 import ArtifactComponent from "src/pages/RunDetails/artifacts/artifact";
-import { useMemo } from "react";
-import { Artifact } from "src/Models";
 import { ArtifactPaneContainer } from "src/pages/RunDetails/artifacts/common";
-import { Exception, ExternalException } from "src/component/Exception";
-import { Box } from "@mui/material";
-import Alert from "@mui/material/Alert";
 
 function OutputPane() {
     const { selectedRun } = useRunDetailsSelectionContext();
@@ -59,11 +59,11 @@ function OutputPane() {
         return null;
     }, [isGraphLoading, selectedRun]);
 
-    if (isGraphLoading) {
+    const { future_state } = selectedRun! || {};
+
+    if (!future_state) {
         return null;
     }
-
-    const { future_state } = selectedRun! || {};
 
     if (["CREATED", "SCHEDULED", "RAN"].includes(future_state)) {
         return <Alert severity="info">No output yet. Run has not completed.</Alert>;
