@@ -62,6 +62,7 @@ data:
   RAY_NON_GPU_TOLERATIONS: {{ toJson .Values.ray.non_gpu_tolerations | quote }}
   RAY_GPU_RESOURCE_REQUEST_KEY: {{ toJson .Values.ray.gpu_resource_request_key | quote }}
   RAY_SUPPORTS_GPUS: {{ toJson .Values.ray.supports_gpus | quote }}
+  RAY_BUSYBOX_PULL_OVERRIDE: {{ toJson .Values.ray.busybox_image | quote }}
 {{ end }}
   # Each configurable external resource can be added as an element
   # in this string list. Leading comma ensures the string is

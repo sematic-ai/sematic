@@ -5,12 +5,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAsyncFn from "react-use/lib/useAsyncFn";
 import { Run } from "src/Models";
-import { AllFilters, FilterType, StatusFilters, convertMiscellaneousFilterToRunFilters, convertOwnersFilterToRunFilters, convertStatusFilterToRunFilters, convertTagsFilterToRunFilters } from "src/pages/RunSearch/filters/common";
+import { AllFilters, FilterType, StatusFilters, convertMiscellaneousFilterToRunFilters, convertOwnersFilterToRunFilters, convertStatusFilterToRunFilters, convertTagsFilterToRunFilters } from "src/pages/RunTableCommon/filters";
 import useAsync from "react-use/lib/useAsync";
 
 export const selectedRunHashAtom = atomWithHashCustomSerialization("run", "")
 export const selectedPanelAtom = atomWithHashCustomSerialization("panel", "")
 export const selectedTabHashAtom = atomWithHashCustomSerialization("tab", "")
+export const searchAtom = atomWithHashCustomSerialization("search", "");
 
 export type QueryParams = {[key: string]: string};
 export const PAGE_SIZE = 25;
@@ -63,6 +64,32 @@ export function useFetchRuns(runFilters: Filter | undefined = undefined,
     }, [load])
 
     return {isLoaded, isLoading, error, runs: runs?.content, reloadRuns};
+}
+
+export function useFetchLatestRun(functionPath: string) {
+    const runFilters = useMemo(
+        () => ({
+            AND: [
+                { parent_id: { eq: null } },
+                { function_path: { eq: functionPath } },
+            ],
+        }),
+        [functionPath]
+    );
+
+    const otherQueryParams = useMemo(
+        () => ({
+            limit: "1",
+        }), []
+    );
+
+    const {load} = useFetchRunsFn(runFilters, otherQueryParams);
+
+    const getRun = useCallback(async () => {
+        const payload = await load();
+        return payload.content[0];
+    }, [load]);
+    return getRun;
 }
 
 export function useFiltersConverter(filters: AllFilters | null) {
@@ -189,6 +216,10 @@ export function useRunsPagination(runFilters: Filter | undefined = undefined,
 
 export function getRunUrlPattern(runID: string) {
     return `/runs/${runID}`;
+}
+
+export function getPipelineRunsPattern(functionPath: string) {
+    return `/pipeline/${functionPath}`;
 }
 
 export function useRunNavigation() {

@@ -2,14 +2,15 @@ import styled from "@emotion/styled";
 import Button from "@mui/material/Button";
 import { useCallback, useRef } from "react";
 import OtherFiltersSection from "src/pages/RunSearch/filters/OtherFilterSection";
-import OwnersFilterSection from "src/pages/RunSearch/filters/OwnersFilterSection";
-import SearchTextSection from "src/pages/RunSearch/filters/SearchTextSection";
+import OwnersFilterSection from "src/pages/RunTableCommon/filters/OwnersFilterSection";
+import SearchTextSection from "src/pages/RunTableCommon/filters/SearchTextSection";
 import StatusFilterSection from "src/pages/RunSearch/filters/StatusFilterSection";
-import TagsFilterSection from "src/pages/RunSearch/filters/TagsFilterSection";
+import TagsFilterSection from "src/pages/RunTableCommon/filters/TagsFilterSection";
 import { ResettableHandle } from "src/component/common";
 import theme from "src/theme/new";
-import { AllFilters, FilterType } from "src/pages/RunSearch/filters/common";
+import { AllFilters, FilterType } from "src/pages/RunTableCommon/filters";
 import isEmpty from "lodash/isEmpty";
+import useEffectOnce from "react-use/lib/useEffectOnce";
 
 const StyledButton = styled(Button)`
     margin: 0 -${theme.spacing(5)};
@@ -42,7 +43,8 @@ const SearchFilters = (props: SearchFiltersProps) => {
         otherFiltersRef.current?.reset();
 
         allFilters.current = {}; 
-    }, []);
+        onFiltersChanged({});
+    }, [onFiltersChanged]);
 
     const onSearchTextChanged = useCallback((searchText: string) => {
         if (isEmpty(searchText)) {
@@ -87,6 +89,12 @@ const SearchFilters = (props: SearchFiltersProps) => {
     const applyFilters = useCallback(() => {
         onFiltersChanged({...allFilters.current});
     }, [onFiltersChanged]);
+
+    useEffectOnce(() => {
+        if (!isEmpty(allFilters.current)) {
+            applyFilters();
+        }
+    });
 
     return <>
         <SearchTextSection ref={searchTextRef} onSearchChanged={onSearchTextChanged} />

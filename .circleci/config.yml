@@ -26,7 +26,7 @@ commands:
           # This is necessary because some packages have platform-dependent dependencies
           # For example sqlalchemy requires greenlet only on certain platforms
           name: Freeze requirements
-          command: pip-compile --allow-unsafe ~/project/requirements/requirements.in > ~/project/requirements/requirements.txt
+          command: pip-compile --resolver=backtracking --allow-unsafe ~/project/requirements/requirements.in > ~/project/requirements/requirements.txt
   
   install-npm-dependencies:
     description: Install NPM dependencies in the UI folder
@@ -67,7 +67,7 @@ commands:
       - run:
           name: Run Non-coverage Tests
           # This assumes pytest is installed via the install-package step above
-          command: PYTHONUNBUFFERED=1 bazel test --action_env=RUN_SLOW_TESTS=1 //sematic/... --test_output=all
+          command: PYTHONUNBUFFERED=1 bazel test --experimental_repository_downloader_retries=5 --action_env=RUN_SLOW_TESTS=1 //sematic/... --test_output=all
 
   installation-tests:
     description: Do a test of installing sematic via wheel

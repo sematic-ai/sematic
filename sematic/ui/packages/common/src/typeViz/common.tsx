@@ -34,44 +34,46 @@ function getComponentRenderDetails(typeSerialization: AnyTypeSerialization): {
     type: AnyTypeRepr
 } | undefined {
     const typeRepr = typeSerialization.type as AnyTypeRepr;
-    if (!typeRepr)  {
+    if (!typeRepr) {
         return undefined;
     }
-    let typeKey = typeRepr[1];
+    const simpleTypeKey = typeRepr[1];
 
     // Prioritize on adopting the mapping with the full import path.
     // This makes it so we don't have to create a shadow dataclass
     // to have a custom viz for a particular dataclass. We can just
     // register the React component with the full import path of the dataclass.
     if ("import_path" in typeRepr[2]) {
-        typeKey = typeRepr[2]["import_path"] + "." + typeKey;
-    }
+        const fullTypeKey = typeRepr[2]["import_path"] + "." + simpleTypeKey;
 
-    let renderDetails = TypeComponents.get(typeKey);
-    if (renderDetails) {
+        if (TypeComponents.has(fullTypeKey)) {
+            return {
+                renderDetails: TypeComponents.get(fullTypeKey)!,
+                type: typeRepr
+            }
+        }
+    } 
+    if (TypeComponents.has(simpleTypeKey)) {
         return {
-            renderDetails,
+            renderDetails: TypeComponents.get(simpleTypeKey)!,
             type: typeRepr
         }
     }
 
-    if (typeRepr[0] === "dataclass" && !renderDetails) {
+    if (typeRepr[0] === "dataclass") {
         return {
             renderDetails: TypeComponents.get("dataclass")!,
             type: typeRepr
         }
     }
 
-    if (!renderDetails) {
-        // Try to find a parent type that has a registered component
-        const registry = typeSerialization.registry as unknown as Record<string, AnyTypeRepr[]>;
-        typeKey = typeRepr[1];
-        const parentTypes = registry[typeKey];
-        if (parentTypes && parentTypes.length > 0) {
-            return getComponentRenderDetails({
-                registry: typeSerialization.registry, type: parentTypes[0]
-            });
-        }
+    // Try to find a parent type that has a registered component
+    const registry = typeSerialization.registry as unknown as Record<string, AnyTypeRepr[]>;
+    const parentTypes = registry[simpleTypeKey];
+    if (parentTypes && parentTypes.length > 0) {
+        return getComponentRenderDetails({
+            registry: typeSerialization.registry, type: parentTypes[0]
+        });
     }
 
     return undefined;
@@ -81,7 +83,7 @@ type renderArtifactRowOptions = {
     expanded?: boolean;
 }
 
-export function renderArtifactRow(name: string, typeSerialization: AnyTypeSerialization, valueSummary: any, 
+export function renderArtifactRow(name: string, typeSerialization: AnyTypeSerialization, valueSummary: any,
     options = {} as renderArtifactRowOptions) {
     const { expanded = false } = options;
     let result = getComponentRenderDetails(typeSerialization);

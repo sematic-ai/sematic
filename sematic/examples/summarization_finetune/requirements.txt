@@ -1,0 +1,11 @@
+accelerate
+bitsandbytes
+datasets
+huggingface-hub
+# If training on linux, this dependency may be required.
+#nvidia-cusparse-cu11
+peft
+scipy
+torch<=2.0.0
+transformers
+trl

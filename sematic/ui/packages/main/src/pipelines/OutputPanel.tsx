@@ -3,7 +3,7 @@ import { Artifact } from "@sematic/common/src/Models";
 import { useMemo } from "react";
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
 import { ArtifactList } from "src/pipelines/Artifacts";
-import { Exception, ExternalException } from "src/components/Exception";
+import { Exception, ExternalException } from "@sematic/common/src/component/Exception";
 
 export default function OutputPanel(props: {
     outputArtifacts: Map<string, Artifact | undefined>

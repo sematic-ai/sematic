@@ -13,7 +13,7 @@ def test_upload_download(
 ):
     value = b"foo"
 
-    response = test_client.get("/api/v1/storage/artifacts/123/location")
+    response = test_client.get("/api/v1/storage/artifacts/123/location?origin=")
     assert response.status_code == 200
 
     url = response.json["url"]  # type: ignore

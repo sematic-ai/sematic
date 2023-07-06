@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
 import parseJSON from "date-fns/parseJSON";
-import { useMemo } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { DateTimeLong } from "src/component/DateTime";
 import Headline from "src/component/Headline";
 import ImportPath from "src/component/ImportPath";
@@ -15,6 +15,7 @@ import Section from "src/component/Section";
 import TagsList from "src/component/TagsList";
 import { useRootRunContext } from "src/context/RootRunContext";
 import { useRunDetailsSelectionContext } from "src/context/RunDetailsSelectionContext";
+import FunctionSectionActionMenu from "src/pages/RunDetails/contextMenus/FunctionSectionMenu";
 import theme from "src/theme/new";
 
 const StyledSection = styled(Section)`
@@ -104,6 +105,8 @@ const FunctionSection = () => {
     const { isGraphLoading } = useRootRunContext();
     const { selectedRun } = useRunDetailsSelectionContext();
 
+    const [isGraphLoaded, setIsGraphLoaded] = useState(() => !isGraphLoading);
+
     const statusText = useMemo(() => {
         if (!selectedRun) {
             return null;
@@ -125,28 +128,37 @@ const FunctionSection = () => {
         return `${runDuration} on ${completeAt}`;
     }, [selectedRun]);
 
+    const contextMenuAnchor = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        if (!isGraphLoading) {
+            setIsGraphLoaded(true);
+        }
+    }, [isGraphLoading]);
+
     return <StyledSection>
         <Headline>Function Run</Headline>
         <BoxContainer>
             <RunStateContainer>
-                {isGraphLoading ? <SmallPlaceholderSkeleton /> : getRunStateChipByState(selectedRun!.future_state)}
+                {!isGraphLoaded ? <SmallPlaceholderSkeleton /> : getRunStateChipByState(selectedRun!.future_state)}
             </RunStateContainer>
             <div className='Info'>
                 <FunctionName>
-                    {isGraphLoading ? <MediumPlaceholderSkeleton /> : selectedRun!.name}
+                    {!isGraphLoaded ? <MediumPlaceholderSkeleton /> : selectedRun!.name}
                 </FunctionName>
                 <div>
-                    {isGraphLoading ? <MediumPlaceholderSkeleton /> : <StyledRunReferenceLink runId={selectedRun!.id} />}
-                    {isGraphLoading ? <LongPlaceholderSkeleton /> : statusText}
+                    {!isGraphLoaded ? <MediumPlaceholderSkeleton /> : <StyledRunReferenceLink runId={selectedRun!.id} />}
+                    {!isGraphLoaded ? <LongPlaceholderSkeleton /> : statusText}
                 </div>
             </div>
         </BoxContainer>
         <ImportPathContainer>
-            {isGraphLoading ? <LongPlaceholderSkeleton />
+            {!isGraphLoaded ? <LongPlaceholderSkeleton />
                 : <ImportPath>{selectedRun?.function_path}</ImportPath>}
         </ImportPathContainer>
-        <StyledVertButton />
-        {isGraphLoading ? <MediumPlaceholderSkeleton />
+        <StyledVertButton ref={contextMenuAnchor} />
+        <FunctionSectionActionMenu anchorEl={contextMenuAnchor.current} />
+        {!isGraphLoaded ? <MediumPlaceholderSkeleton />
             : <TagsContainer>
                 <div className={"tags-list-wrapper"} key={selectedRun?.id}><TagsList tags={selectedRun?.tags || []} /></div>
                 {/** Adding tag is not currently supported will re-enable later */}

@@ -129,12 +129,15 @@ export function getReactFlowDag(graph: Graph | undefined, selectedRun: Run | und
         return {
             type: NodeTypes.LEAF,
             id: run.id,
-            data: { label: run.name, run, argNames: runArgNames },
+            data: {
+                label: run.name, run, argNames: runArgNames,
+                selected: run.id === selectedRun?.id,
+            },
             parentNode: run.parent_id === null ? undefined : run.parent_id,
-            selected: run.id === selectedRun?.id,
             position: { x: 0, y: 0 },
             extent: run.parent_id === null ? undefined : "parent",
             zIndex: 0,
+            selectable: false
         };
     });
     
@@ -158,6 +161,7 @@ export function getReactFlowDag(graph: Graph | undefined, selectedRun: Run | und
         }
 
         if (!newEdge.target) {
+            // This is the case that a child node is connected to the parent node.
             newEdge.target = runsById.get(newEdge.source)?.parent_id!;
             newEdge.targetHandle = "tb";
             newEdge.sourceHandle = "sb";

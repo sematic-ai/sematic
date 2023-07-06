@@ -147,6 +147,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
             MetricLabel.metric_name,
             MetricLabel.metric_type,
         ]
+        order_by_field = MetricValue.metric_time
 
         time_range = filter.to_time - filter.from_time
         # Ceil to make sure we always have fewer than _MAX_SERIES_POINTS
@@ -162,6 +163,7 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
             select_fields.append(field_)
             group_by_clauses.append(field_)
             extra_field_names.append("timestamp")
+            order_by_field = field_  # type: ignore
 
         for gb in group_by:
             extra_field_names.append(gb.value)
@@ -172,7 +174,11 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
         try:
             with db().get_session() as session:
-                query = session.query(*select_fields).filter(*predicates)
+                query = (
+                    session.query(*select_fields)
+                    .filter(*predicates)
+                    .order_by(MetricValue.metric_time)
+                )
 
                 if len(group_by_clauses) > 0:
                     query = query.group_by(*group_by_clauses)
@@ -183,10 +189,11 @@ class SQLMetricsStorage(AbstractMetricsStorage, AbstractPlugin):
 
                     if record_count > _MAX_SERIES_POINTS:
                         field_ = field_ / interval_seconds * interval_seconds
+                    order_by_field = field_  # type: ignore
 
                     query = query.add_columns(field_).group_by(field_)
                     extra_field_names.append("timestamp")
-                records = query.all()
+                records = query.order_by(order_by_field).all()
         except sqlalchemy.exc.OperationalError as e:
             # User has old SQLite version that does not support querying JSONB fields.
             if str(e).startswith('(sqlite3.OperationalError) near ">>"'):
