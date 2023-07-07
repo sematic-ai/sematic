@@ -34,14 +34,14 @@ def identity_func(x: int) -> int:
 
 def test_mock_sematic_funcs():
     with pytest.raises(PipelineRunError, match=r"Oh no.*") as exc_info:
-        pipeline().resolve(SilentRunner())
+        SilentRunner().run(pipeline())
 
     assert isinstance(exc_info.value.__context__, FunctionError)
     assert isinstance(exc_info.value.__context__.__context__, ValueError)
 
     with mock_sematic_funcs([remote_only_func]) as mock_funcs:
         mock_funcs[remote_only_func].mock.return_value = 1
-        result = pipeline().resolve(SilentRunner())
+        result = SilentRunner().run(pipeline())
         assert result == 5
 
 
@@ -49,12 +49,12 @@ def test_mock_sematic_funcs_use_original():
     with mock_sematic_funcs([remote_only_func, identity_func]) as mock_funcs:
         mock_funcs[remote_only_func].mock.return_value = 1
         mock_funcs[identity_func].mock.side_effect = mock_funcs[identity_func].original
-        result = pipeline().resolve(SilentRunner())
+        result = SilentRunner().run(pipeline())
         assert result == 5
 
         mock_funcs[identity_func].mock.assert_called()
 
-    assert identity_func(16).resolve(SilentRunner()) == 16
+    assert SilentRunner().run(identity_func(16)) == 16
 
 
 def test_mock_sematic_funcs_still_type_checks():
@@ -64,7 +64,7 @@ def test_mock_sematic_funcs_still_type_checks():
     ) as exc_info:
         with mock_sematic_funcs([remote_only_func]) as mock_funcs:
             mock_funcs[remote_only_func].mock.return_value = "this is the wrong type!"
-            pipeline().resolve(SilentRunner())
+            SilentRunner().run(pipeline())
 
     # the exception occurs when casting the function's output value inside the resolver
     # it is not a FunctionError per se

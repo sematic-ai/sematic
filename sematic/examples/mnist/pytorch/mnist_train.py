@@ -10,7 +10,7 @@ import argparse
 import logging
 
 # Sematic
-from sematic import CloudResolver, LocalResolver
+from sematic import CloudRunner, LocalRunner
 from sematic.examples.mnist.pytorch.pipeline import (
     DataLoaderConfig,
     PipelineConfig,
@@ -47,11 +47,13 @@ def main():
         dataloader_config=DataLoaderConfig(), train_config=train_config
     )
 
-    resolver = LocalResolver() if args.local else CloudResolver()
+    runner = LocalRunner() if args.local else CloudRunner()
 
-    pipeline(config=config).set(
-        name="PyTorch MNIST Example", tags=["pytorch", "example", "mnist"]
-    ).resolve(resolver)
+    runner.run(
+        pipeline(config=config).set(
+            name="PyTorch MNIST Example", tags=["pytorch", "example", "mnist"]
+        )
+    )
 
 
 if __name__ == "__main__":

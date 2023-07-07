@@ -82,7 +82,7 @@ def set_context(ctx: SematicContext):
 
     if _current_context is not None:
         raise RuntimeError(
-            f"You have called .resolve() within a Sematic func. Usually people "
+            f"You have called runner.run(...) within a Sematic func. Usually people "
             f"do this when they have a future object and want it to be resolved to "
             f"an actual value in the middle of a Sematic func's body for usage "
             f"downstream. If this is your use-case, consider wrapping the downstream "

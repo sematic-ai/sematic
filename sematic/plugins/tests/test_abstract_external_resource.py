@@ -186,7 +186,7 @@ def invalid_use_in_pipeline() -> int:
 def test_using_future():
     error = None
     try:
-        invalid_use_in_pipeline().resolve(SilentRunner())
+        SilentRunner().run(invalid_use_in_pipeline())
     except Exception as e:
         error = e
     assert "SomeImpl" in str(error)

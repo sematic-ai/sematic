@@ -1,5 +1,6 @@
 # Titianic survival prediction example
 # Sematic
+from sematic import LocalRunner
 from sematic.examples.titanic_survival_prediction.pipeline import pipeline
 
 
@@ -14,10 +15,12 @@ def main():
     ```
     """
 
-    pipeline().set(
-        name="Titanic survival prediction",
-        tags=["Beginner", "EDA", "Classification", "Structured Data"],
-    ).resolve()
+    LocalRunner().run(
+        pipeline().set(
+            name="Titanic survival prediction",
+            tags=["Beginner", "EDA", "Classification", "Structured Data"],
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ import ray  # type: ignore
 from kubernetes.client.rest import ApiException  # type: ignore
 
 # Sematic
+from sematic import SilentRunner
 from sematic.ee.plugins.external_resource.ray.cluster import RayCluster
 from sematic.function import func
 from sematic.plugins.abstract_external_resource import (
@@ -67,7 +68,7 @@ def test_timeout():
 
 
 def test_local_cluster():
-    result = add(1, 2).resolve(tracking=False)
+    result = SilentRunner().run(add(1, 2))
     assert result == 3
 
     # ray should have been shutdown

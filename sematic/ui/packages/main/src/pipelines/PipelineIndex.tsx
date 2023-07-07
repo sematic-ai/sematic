@@ -203,7 +203,7 @@ function PipelineIndex() {
                     <AlertTitle>Your latest pipelines are listed here</AlertTitle>
                     <p>
             Pipelines are identified by the import path of their entry point,
-            which is the function you called <code>.resolve()</code> on.
+            which is the function you called <code>runner.run(...)</code> with.
                     </p>
                 </Alert>
             </Box>

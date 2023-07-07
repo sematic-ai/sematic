@@ -3,6 +3,7 @@ This is an example implementation of the MNIST pipeline in PyTorch on sematic.
 """
 # Sematic
 # MNIST example
+from sematic import LocalRunner
 from sematic.examples.mnist.pytorch.pipeline import (
     DataLoaderConfig,
     PipelineConfig,
@@ -26,9 +27,11 @@ def main():
     $ sematic run examples/mnist/pytorch
     ```
     """
-    pipeline(PIPELINE_CONFIG).set(
-        name="PyTorch MNIST Example", tags=["pytorch", "example", "mnist"]
-    ).resolve()
+    LocalRunner().run(
+        pipeline(PIPELINE_CONFIG).set(
+            name="PyTorch MNIST Example", tags=["pytorch", "example", "mnist"]
+        )
+    )
 
 
 if __name__ == "__main__":
