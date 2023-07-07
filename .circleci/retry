@@ -20,3 +20,5 @@ retry() {
         fi
     done
 }
+
+retry "$@"
