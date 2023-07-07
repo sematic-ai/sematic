@@ -61,7 +61,14 @@ This example only supports local execution. To run it:
 - `sematic start`
 - `sematic run examples/summarization_finetune -- --help`
 - If you see an error about missing libraries, install them with the provided command.
-- `sematic run examples/summarization_finetune -- --max-train-samples 1 --max-test-samples 1 --model-selection flan-small`
+- Run the pipeline with the `flan-small` example, and an interactive evaluation:
+```shell
+sematic run examples/summarization_finetune -- \
+  --max-train-samples 1 \
+  --max-test-samples 1 \
+  --model-selection flan-small \
+  --launch-interactive
+```
 - View the pipeline results in the Sematic UI at `http://localhost:5001`.
 - Try a different dataset:
 

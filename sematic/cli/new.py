@@ -13,7 +13,7 @@ from sematic.cli.examples_utils import all_examples, is_example
 from sematic.config.config import get_config
 
 
-@cli.command("new", short_help="Create new project")
+@cli.command("new", short_help="Create new project")  # type: ignore
 @click.argument("project_name", type=click.STRING)
 @click.option(
     "--from",

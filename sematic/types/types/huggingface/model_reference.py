@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from sematic.types.types.huggingface.reference import HuggingFaceReference
 
 
-@dataclass
+@dataclass(frozen=True)
 class HuggingFaceModelReference(HuggingFaceReference):
     """A reference to a model on Hugging Face Hub.
 
