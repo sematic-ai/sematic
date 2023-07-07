@@ -14,6 +14,10 @@ accelerate==0.19.0 \
     # via
     #   -r requirements/requirements.in
     #   peft
+aiofiles==23.1.0 \
+    --hash=sha256:9312414ae06472eb6f1d163f555e466a23aed1c8f60c30cccf7121dba2e53eb2 \
+    --hash=sha256:edd247df9a19e0db16534d4baaf536d6609a43e1de5401d7a4c1c148753a1635
+    # via gradio
 aiohttp==3.8.4 \
     --hash=sha256:03543dcf98a6619254b409be2d22b51f21ec66272be4ebda7b04e6412e4b2e14 \
     --hash=sha256:03baa76b730e4e15a45f81dfe29a8d910314143414e528737f8589ec60cf7391 \
@@ -107,6 +111,7 @@ aiohttp==3.8.4 \
     #   cohere
     #   datasets
     #   fsspec
+    #   gradio
     #   openai
     #   ray
 aiohttp-cors==0.7.0 \
@@ -123,10 +128,15 @@ aiosignal==1.3.1 \
     # via
     #   aiohttp
     #   ray
+altair==5.0.1 \
+    --hash=sha256:087d7033cb2d6c228493a053e12613058a5d47faf6a36aea3ff60305fd8b4cb0 \
+    --hash=sha256:9f3552ed5497d4dfc14cf48a76141d8c29ee56eae2873481b4b28134268c9bbe
+    # via gradio
 anyio==3.6.2 \
     --hash=sha256:25ea0d673ae30af41a0c442f81cf3b38c7e79fdc7b60335a4c14e05eb0947421 \
     --hash=sha256:fbbe32bd270d2a2ef3ed1c5d45041250284e31fc0a4df4a5a6071842051a51e3
     # via
+    #   httpcore
     #   starlette
     #   watchfiles
 asgiref==3.7.2 \
@@ -208,6 +218,8 @@ certifi==2022.12.7 \
     --hash=sha256:35824b4c3a97115964b408844d64aa14db1cc518f6562e8d7261699d1350a9e3 \
     --hash=sha256:4ad3232f5e926d6718ec31cfc1fcadfde020920e278684144551c91769c7bc18
     # via
+    #   httpcore
+    #   httpx
     #   kubernetes
     #   requests
     #   snowflake-connector-python
@@ -572,7 +584,12 @@ executing==1.2.0 \
 fastapi==0.92.0 \
     --hash=sha256:023a0f5bd2c8b2609014d3bba1e14a1d7df96c6abea0a73070621c9862b9a4de \
     --hash=sha256:ae7b97c778e2f2ec3fb3cb4fb14162129411d99907fb71920f6d69a524340ebf
-    # via ray
+    # via
+    #   gradio
+    #   ray
+ffmpy==0.3.0 \
+    --hash=sha256:757591581eee25b4a50ac9ffb9b58035a2794533db47e0512f53fb2d7b6f9adc
+    # via gradio
 filelock==3.9.0 \
     --hash=sha256:7b319f24340b51f55a2bf7a12ac0755a9b03e718311dac567a0f4f7fabd2f5de \
     --hash=sha256:f58d535af89bb9ad5cd4df046f741f8553a418c01a7856bf0d173bbc9f6bd16d
@@ -680,6 +697,7 @@ fsspec[http]==2023.1.0 \
     --hash=sha256:fbae7f20ff801eb5f7d0bedf81f25c787c0dfac5e982d98fa3884a9cde2b5411
     # via
     #   datasets
+    #   gradio-client
     #   huggingface-hub
     #   pytorch-lightning
     #   ray
@@ -719,6 +737,14 @@ googleapis-common-protos==1.58.0 \
 gpustat==1.0.0 \
     --hash=sha256:581e8ff858c32c95a322bb8f03f1d9dc3d177b4ecb33ddcbed2c373c67f4e3f1
     # via ray
+gradio==3.35.2 \
+    --hash=sha256:6dc42dedaab583198dbbecc605759cbb154f6066f4f0515b26cf976331786c9a \
+    --hash=sha256:72bafe6e0278e28df0a7ce729b5e4ad8cdb2e07f3cac853b0a73463f38d63bbb
+    # via -r requirements/requirements.in
+gradio-client==0.2.7 \
+    --hash=sha256:4a7ec6bb1341c626051f1ed24d50cb960ff1a4cd1a5db031dd4caaf1ee7d2d0a \
+    --hash=sha256:c83008df8a1dd3f81a290c0a24c03d0ab70317741991b60f713620ed39ad8f12
+    # via gradio
 greenlet==2.0.2 \
     --hash=sha256:03a8f4f3430c3b3ff8d10a2a86028c660355ab637cee9333d63d66b56f09d52a \
     --hash=sha256:0bf60faf0bc2468089bdc5edd10555bab6e85152191df713e2ab1fcc86382b5a \
@@ -833,11 +859,17 @@ grpcio==1.51.1 \
 h11==0.14.0 \
     --hash=sha256:8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d \
     --hash=sha256:e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761
-    # via uvicorn
+    # via
+    #   httpcore
+    #   uvicorn
 htmldate==1.4.3 \
     --hash=sha256:d529a319a2fae8329c2beaa54c45af9295d0eca425dfba33b81e4665e8e8a78e \
     --hash=sha256:ec50f084b997fdf6b26f8c31447e5789f4deb71fe69342cda1d7af0c9f91e01b
     # via trafilatura
+httpcore==0.17.2 \
+    --hash=sha256:125f8375ab60036db632f34f4b627a9ad085048eef7cb7d2616fea0f739f98af \
+    --hash=sha256:5581b9c12379c4288fe70f43c710d16060c10080617001e6b22a3b6dbcbefd36
+    # via httpx
 httptools==0.5.0 \
     --hash=sha256:0297822cea9f90a38df29f48e40b42ac3d48a28637368f3ec6d15eebefd182f9 \
     --hash=sha256:1af91b3650ce518d226466f30bbba5b6376dbd3ddb1b2be8b0658c6799dd450b \
@@ -881,18 +913,27 @@ httptools==0.5.0 \
     --hash=sha256:f659d7a48401158c59933904040085c200b4be631cb5f23a7d561fbae593ec1f \
     --hash=sha256:fe9c766a0c35b7e3d6b6939393c8dfdd5da3ac5dec7f971ec9134f284c6c36d6
     # via uvicorn
+httpx==0.24.1 \
+    --hash=sha256:06781eb9ac53cde990577af654bd990a4949de37a28bdb4a230d434f3a30b9bd \
+    --hash=sha256:5853a43053df830c20f8110c5e69fe44d035d850b2dfe795e196f00fdb774bdd
+    # via
+    #   gradio
+    #   gradio-client
 huggingface-hub==0.14.1 \
     --hash=sha256:9ab899af8e10922eac65e290d60ab956882ab0bf643e3d990b1394b6b47b7fbc \
     --hash=sha256:9fc619170d800ff3793ad37c9757c255c8783051e1b5b00501205eb43ccc4f27
     # via
     #   -r requirements/requirements.in
     #   datasets
+    #   gradio
+    #   gradio-client
     #   transformers
 idna==3.4 \
     --hash=sha256:814f528e8dead7d329833b91c5faa87d60bf71824cd12a7530b5526063d02cb4 \
     --hash=sha256:90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2
     # via
     #   anyio
+    #   httpx
     #   requests
     #   snowflake-connector-python
     #   yarl
@@ -927,7 +968,10 @@ jedi==0.18.2 \
 jinja2==3.1.2 \
     --hash=sha256:31351a702a408a9e7595a8fc6150fc3f43bb6bf7e319770cbc0db9df9437e852 \
     --hash=sha256:6088930bfe239f0e6710546ab9c19c9ef35e29792895fed6e6e31a023a182a61
-    # via flask
+    # via
+    #   altair
+    #   flask
+    #   gradio
 jmespath==1.0.1 \
     --hash=sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980 \
     --hash=sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe
@@ -941,7 +985,9 @@ joblib==1.2.0 \
 jsonschema==4.17.3 \
     --hash=sha256:0f864437ab8b6076ba6707453ef8f98a6a0d512a80e93f8abdb676f737ecb60d \
     --hash=sha256:a870ad254da1a8ca84b6a2905cac29d265f805acc57af304784962a2aa6508f6
-    # via ray
+    # via
+    #   altair
+    #   ray
 justext==3.0.0 \
     --hash=sha256:7640e248218795f6be65f6c35fe697325a3280fcb4675d1525bcdff2b86faadf \
     --hash=sha256:86b48f5b1d99505acd072f5831def6cd3f1306043651c524a1c609e62e3544e4
@@ -1024,6 +1070,10 @@ langcodes==3.3.0 \
     --hash=sha256:4d89fc9acb6e9c8fdef70bcdf376113a3db09b67285d9e1d534de6d8818e7e69 \
     --hash=sha256:794d07d5a28781231ac335a1561b8442f8648ca07cd518310aeb45d6f0807ef6
     # via courlan
+linkify-it-py==2.0.2 \
+    --hash=sha256:19f3060727842c254c808e99d465c80c49d2c7306788140987a1a7a29b0d6ad2 \
+    --hash=sha256:a3a24428f6c96f27370d7fe61d2ac0be09017be5190d68d8658233171f1b6541
+    # via markdown-it-py
 lxml==4.9.2 \
     --hash=sha256:01d36c05f4afb8f7c20fd9ed5badca32a2029b93b1750f571ccc0b142531caf7 \
     --hash=sha256:04876580c050a8c5341d706dd464ff04fd597095cc8c023252566a8826505726 \
@@ -1110,6 +1160,12 @@ markdown==3.4.1 \
     --hash=sha256:08fb8465cffd03d10b9dd34a5c3fea908e20391a2a90b88d66362cb05beed186 \
     --hash=sha256:3b809086bb6efad416156e00a0da66fe47618a5d6918dd688f53f40c8e4cfeff
     # via tensorboard
+markdown-it-py[linkify]==2.2.0 \
+    --hash=sha256:5a35f8d1870171d9acc47b99612dc146129b631baf04970128b568f190d0cc30 \
+    --hash=sha256:7c9a5e412688bc771c67432cbfebcdd686c93ce6484913dccf06cb5a0bea35a1
+    # via
+    #   gradio
+    #   mdit-py-plugins
 markupsafe==2.1.2 \
     --hash=sha256:0576fe974b40a400449768941d5d0858cc624e3249dfd1e0c33674e5c7ca7aed \
     --hash=sha256:085fd3201e7b12809f9e6e9bc1e5c96a368c8523fad5afb02afe3c051ae4afcc \
@@ -1162,6 +1218,7 @@ markupsafe==2.1.2 \
     --hash=sha256:f2bfb563d0211ce16b63c7cb9395d2c682a23187f54c3d79bfec33e6705473c6 \
     --hash=sha256:f8ffb705ffcf5ddd0e80b65ddf7bed7ee4f5a441ea7d3419e861a12eaf41af58
     # via
+    #   gradio
     #   jinja2
     #   werkzeug
 matplotlib==3.7.0 \
@@ -1208,11 +1265,20 @@ matplotlib==3.7.0 \
     --hash=sha256:fb0304c1cd802e9a25743414c887e8a7cd51d96c9ec96d388625d2cd1c137ae3
     # via
     #   -r requirements/requirements.in
+    #   gradio
     #   seaborn
 matplotlib-inline==0.1.6 \
     --hash=sha256:f1f41aab5328aa5aaea9b16d083b128102f8712542f819fe7e6a420ff581b311 \
     --hash=sha256:f887e5f10ba98e8d2b150ddcf4702c1e5f8b3a20005eb0f74bfdbd360ee6f304
     # via ipython
+mdit-py-plugins==0.3.3 \
+    --hash=sha256:36d08a29def19ec43acdcd8ba471d3ebab132e7879d442760d963f19913e04b9 \
+    --hash=sha256:5cfd7e7ac582a594e23ba6546a2f406e94e42eb33ae596d0734781261c251260
+    # via gradio
+mdurl==0.1.2 \
+    --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
+    --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
+    # via markdown-it-py
 msgpack==1.0.4 \
     --hash=sha256:002b5c72b6cd9b4bafd790f364b8480e859b4712e91f43014fe01e4f957b8467 \
     --hash=sha256:0a68d3ac0104e2d3510de90a1091720157c319ceeb90d74f7b5295a6bee51bae \
@@ -1393,8 +1459,10 @@ numpy==1.24.2 \
     # via
     #   -r requirements/requirements.in
     #   accelerate
+    #   altair
     #   contourpy
     #   datasets
+    #   gradio
     #   matplotlib
     #   pandas
     #   patsy
@@ -1451,6 +1519,54 @@ opencensus-context==0.1.3 \
     --hash=sha256:073bb0590007af276853009fac7e4bab1d523c3f03baf4cb4511ca38967c6039 \
     --hash=sha256:a03108c3c10d8c80bb5ddf5c8a1f033161fa61972a9917f9b9b3a18517f0088c
     # via opencensus
+orjson==3.9.1 \
+    --hash=sha256:06f6ab4697fab090517f295915318763a97a12ee8186054adf21c1e6f6abbd3d \
+    --hash=sha256:08927970365d2e1f3ce4894f9ff928a7b865d53f26768f1bbdd85dd4fee3e966 \
+    --hash=sha256:09faf14f74ed47e773fa56833be118e04aa534956f661eb491522970b7478e3b \
+    --hash=sha256:0b53b5f72cf536dd8aa4fc4c95e7e09a7adb119f8ff8ee6cc60f735d7740ad6a \
+    --hash=sha256:0b7ab18d55ecb1de543d452f0a5f8094b52282b916aa4097ac11a4c79f317b86 \
+    --hash=sha256:0fd828e0656615a711c4cc4da70f3cac142e66a6703ba876c20156a14e28e3fa \
+    --hash=sha256:103952c21575b9805803c98add2eaecd005580a1e746292ed2ec0d76dd3b9746 \
+    --hash=sha256:125f63e56d38393daa0a1a6dc6fedefca16c538614b66ea5997c3bd3af35ef26 \
+    --hash=sha256:15d28872fb055bf17ffca913826e618af61b2f689d2b170f72ecae1a86f80d52 \
+    --hash=sha256:19f70ba1f441e1c4bb1a581f0baa092e8b3e3ce5b2aac2e1e090f0ac097966da \
+    --hash=sha256:1e4d905338f9ef32c67566929dfbfbb23cc80287af8a2c38930fb0eda3d40b76 \
+    --hash=sha256:20f2804b5a1dbd3609c086041bd243519224d47716efd7429db6c03ed28b7cc3 \
+    --hash=sha256:24d4ddaa2876e657c0fd32902b5c451fd2afc35159d66a58da7837357044b8c2 \
+    --hash=sha256:2cb0121e6f2c9da3eddf049b99b95fef0adf8480ea7cb544ce858706cdf916eb \
+    --hash=sha256:31229f9d0b8dc2ef7ee7e4393f2e4433a28e16582d4b25afbfccc9d68dc768f8 \
+    --hash=sha256:375d65f002e686212aac42680aed044872c45ee4bc656cf63d4a215137a6124a \
+    --hash=sha256:393d0697d1dfa18d27d193e980c04fdfb672c87f7765b87952f550521e21b627 \
+    --hash=sha256:402f9d3edfec4560a98880224ec10eba4c5f7b4791e4bc0d4f4d8df5faf2a006 \
+    --hash=sha256:46b4facc32643b2689dfc292c0c463985dac4b6ab504799cf51fc3c6959ed668 \
+    --hash=sha256:4751cee4a7b1daeacb90a7f5adf2170ccab893c3ab7c5cea58b45a13f89b30b3 \
+    --hash=sha256:48a27da6c7306965846565cc385611d03382bbd84120008653aa2f6741e2105d \
+    --hash=sha256:49c0d78dcd34626e2e934f1192d7c052b94e0ecadc5f386fd2bda6d2e03dadf5 \
+    --hash=sha256:503eb86a8d53a187fe66aa80c69295a3ca35475804da89a9547e4fce5f803822 \
+    --hash=sha256:5d1dbf36db7240c61eec98c8d21545d671bce70be0730deb2c0d772e06b71af3 \
+    --hash=sha256:6d173d3921dd58a068c88ec22baea7dbc87a137411501618b1292a9d6252318e \
+    --hash=sha256:761b6efd33c49de20dd73ce64cc59da62c0dab10aa6015f582680e0663cc792c \
+    --hash=sha256:78d9a2a4b2302d5ebc3695498ebc305c3568e5ad4f3501eb30a6405a32d8af22 \
+    --hash=sha256:80a1e384626f76b66df615f7bb622a79a25c166d08c5d2151ffd41f24c4cc104 \
+    --hash=sha256:8515867713301fa065c58ec4c9053ba1a22c35113ab4acad555317b8fd802e50 \
+    --hash=sha256:9e20bca5e13041e31ceba7a09bf142e6d63c8a7467f5a9c974f8c13377c75af2 \
+    --hash=sha256:a4cc5d21e68af982d9a2528ac61e604f092c60eed27aef3324969c68f182ec7e \
+    --hash=sha256:ae47ef8c0fe89c4677db7e9e1fb2093ca6e66c3acbee5442d84d74e727edad5e \
+    --hash=sha256:c4434b7b786fdc394b95d029fb99949d7c2b05bbd4bf5cb5e3906be96ffeee3b \
+    --hash=sha256:d1c2b0b4246c992ce2529fc610a446b945f1429445ece1c1f826a234c829a918 \
+    --hash=sha256:d3a40b0fbe06ccd4d6a99e523d20b47985655bcada8d1eba485b1b32a43e4904 \
+    --hash=sha256:d4b68d01a506242316a07f1d2f29fb0a8b36cee30a7c35076f1ef59dce0890c1 \
+    --hash=sha256:d4edee78503016f4df30aeede0d999b3cb11fb56f47e9db0e487bce0aaca9285 \
+    --hash=sha256:d8ae0467d01eb1e4bcffef4486d964bfd1c2e608103e75f7074ed34be5df48cc \
+    --hash=sha256:d96747662d3666f79119e5d28c124e7d356c7dc195cd4b09faea4031c9079dc9 \
+    --hash=sha256:d9dd4abe6c6fd352f00f4246d85228f6a9847d0cc14f4d54ee553718c225388f \
+    --hash=sha256:db373a25ec4a4fccf8186f9a72a1b3442837e40807a736a815ab42481e83b7d0 \
+    --hash=sha256:db774344c39041f4801c7dfe03483df9203cbd6c84e601a65908e5552228dd25 \
+    --hash=sha256:e186ae76b0d97c505500664193ddf508c13c1e675d9b25f1f4414a7606100da6 \
+    --hash=sha256:ec53d648176f873203b9c700a0abacab33ca1ab595066e9d616f98cdc56f4434 \
+    --hash=sha256:ec7c8a0f1bf35da0d5fd14f8956f3b82a9a6918a3c6963d718dfd414d6d3b604 \
+    --hash=sha256:f9a744e212d4780ecd67f4b6b128b2e727bee1df03e7059cddb2dfe1083e7dc4
+    # via gradio
 oscrypto==1.3.0 \
     --hash=sha256:2b2f1d2d42ec152ca90ccb5682f3e051fb55986e1b170ebde472b133713e7085 \
     --hash=sha256:6f5fef59cb5b3708321db7cca56aed8ad7e662853351e7991fcf60ec606d47a4
@@ -1462,6 +1578,7 @@ packaging==23.0 \
     #   accelerate
     #   datasets
     #   docker
+    #   gradio-client
     #   huggingface-hub
     #   matplotlib
     #   peft
@@ -1502,7 +1619,9 @@ pandas==1.5.3 \
     --hash=sha256:f76d097d12c82a535fda9dfe5e8dd4127952b45fea9b0276cb30cca5ea313fbc
     # via
     #   -r requirements/requirements.in
+    #   altair
     #   datasets
+    #   gradio
     #   ray
     #   seaborn
     #   statsmodels
@@ -1613,6 +1732,7 @@ pillow==9.4.0 \
     --hash=sha256:f715c32e774a60a337b2bb8ad9839b4abf75b267a0f18806f6f4f5f1688c4b5a \
     --hash=sha256:fb5c1ad6bad98c57482236a21bf985ab0ef42bd51f7ad4e4538e89a997624e12
     # via
+    #   gradio
     #   matplotlib
     #   torchvision
 pkgutil-resolve-name==1.3.10 \
@@ -1902,15 +2022,22 @@ pydantic==1.10.4 \
     --hash=sha256:fdf8d759ef326962b4678d89e275ffc55b7ce59d917d9f72233762061fd04a2d
     # via
     #   fastapi
+    #   gradio
     #   ray
 pydeprecate==0.3.2 \
     --hash=sha256:d481116cc5d7f6c473e7c4be820efdd9b90a16b594b350276e9e66a6cb5bdd29 \
     --hash=sha256:ed86b68ed837e6465245904a3de2f59bf9eef78ac7a2502ee280533d04802457
     # via pytorch-lightning
+pydub==0.25.1 \
+    --hash=sha256:65617e33033874b59d87db603aa1ed450633288aefead953b30bded59cb599a6 \
+    --hash=sha256:980a33ce9949cab2a569606b65674d748ecbca4f0796887fd6f46173a7b0d30f
+    # via gradio
 pygments==2.14.0 \
     --hash=sha256:b3ed06a9e8ac9a9aae5a6f5dbe78a8a58655d17b43b93c078f094ddc476ae297 \
     --hash=sha256:fa7bd7bd2771287c0de303af8bfdfc731f51bd2c6a47ab69d117138893b82717
-    # via ipython
+    # via
+    #   gradio
+    #   ipython
 pyjwt==2.7.0 \
     --hash=sha256:ba2b425b15ad5ef12f200dc67dd56af4e26de2331f965c5439994dad075876e1 \
     --hash=sha256:bd6ca4a3c4285c1a2d4349e5a035fdf8fb94e04ccd0fcbe6ba289dae9cc3e074
@@ -1982,6 +2109,10 @@ python-magic==0.4.27 \
     --hash=sha256:c1ba14b08e4a5f5c31a302b7721239695b2f0f058d125bd5ce1ee36b9d9d3c3b \
     --hash=sha256:c212960ad306f700aa0d01e5d7a325d20548ff97eb9920dcd29513174f0294d3
     # via -r requirements/requirements.in
+python-multipart==0.0.6 \
+    --hash=sha256:e9925a80bb668529f1b67c7fdb0a5dacdd7cbfc6fb0bff3ea443fe22bdd62132 \
+    --hash=sha256:ee698bab5ef148b0a760751c261902cd096e57e10558e11aca17646b74ee1c18
+    # via gradio
 python-socketio==5.7.2 \
     --hash=sha256:92395062d9db3c13d30e7cdedaa0e1330bba78505645db695415f9a3c628d097 \
     --hash=sha256:d9a9f047e6fdd306c852fbac36516f4b495c2096f8ad9ceb8803b8e5ff5622e3
@@ -2044,6 +2175,7 @@ pyyaml==6.0 \
     #   -r requirements/requirements.in
     #   accelerate
     #   datasets
+    #   gradio
     #   huggingface-hub
     #   kubernetes
     #   peft
@@ -2184,6 +2316,8 @@ requests==2.28.2 \
     #   docker
     #   fsspec
     #   google-api-core
+    #   gradio
+    #   gradio-client
     #   huggingface-hub
     #   kubernetes
     #   openai
@@ -2269,6 +2403,10 @@ seaborn==0.12.2 \
     --hash=sha256:374645f36509d0dcab895cba5b47daf0586f77bfe3b36c97c607db7da5be0139 \
     --hash=sha256:ebf15355a4dba46037dfd65b7350f014ceb1f13c05e814eda2c9f5fd731afc08
     # via -r requirements/requirements.in
+semantic-version==2.10.0 \
+    --hash=sha256:bdabb6d336998cbb378d4b9db3a4b56a1e3235701dc05ea2690d9a997ed5041c \
+    --hash=sha256:de78a3b8e0feda74cabc54aab2da702113e33ac9d9eb9d2389bcf1f58b7d9177
+    # via gradio
 six==1.16.0 \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
     --hash=sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254
@@ -2292,7 +2430,10 @@ smmap==5.0.0 \
 sniffio==1.3.0 \
     --hash=sha256:e60305c5e5d314f5389259b7f22aaa33d8f7dee49763119234af3755c55b9101 \
     --hash=sha256:eecefdce1e5bbfb7ad2eeaabf7c1eeb404d7757c379bd1f7e5cce9d8bf425384
-    # via anyio
+    # via
+    #   anyio
+    #   httpcore
+    #   httpx
 snowflake-connector-python==3.0.4 \
     --hash=sha256:08b2041c6e33379cb4ec482b4e6ba3106580abc5c89f8647b6c99c203fb910ac \
     --hash=sha256:099dca938a52419be3ce4d332f7af2587f1316b2a63b109b2e1e18aac00e9ba9 \
@@ -2485,6 +2626,10 @@ tomli==2.0.1 \
     --hash=sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc \
     --hash=sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f
     # via pytest
+toolz==0.12.0 \
+    --hash=sha256:2059bd4148deb1884bb0eb770a3cde70e7f954cfbbdc2285f1f2de01fd21eb6f \
+    --hash=sha256:88c570861c440ee3f2f6037c4654613228ff40c93a6c25e0eba70d17282c6194
+    # via altair
 torch==1.13.1 \
     --hash=sha256:0122806b111b949d21fa1a5f9764d1fd2fcc4a47cb7f8ff914204fd4fc752ed5 \
     --hash=sha256:0aa46f0ac95050c604bcf9ef71da9f1172e5037fdf2ebe051962d47b123848e7 \
@@ -2574,7 +2719,9 @@ typing-extensions==4.5.0 \
     --hash=sha256:5cb5f4a79139d699607b3ef622a1dedafa84e115ab0024e0d9c044a9479ca7cb \
     --hash=sha256:fb33085c39dd998ac16d1431ebc293a8b3eedd00fd4a32de0ff79002c19511b4
     # via
+    #   altair
     #   asgiref
+    #   gradio-client
     #   huggingface-hub
     #   pydantic
     #   pytorch-lightning
@@ -2587,6 +2734,10 @@ tzlocal==5.0.1 \
     --hash=sha256:46eb99ad4bdb71f3f72b7d24f4267753e240944ecfc16f25d2719ba89827a803 \
     --hash=sha256:f3596e180296aaf2dbd97d124fe76ae3a0e3d32b258447de7b939b3fd4be992f
     # via dateparser
+uc-micro-py==1.0.2 \
+    --hash=sha256:30ae2ac9c49f39ac6dce743bd187fcd2b574b16ca095fa74cd9396795c954c54 \
+    --hash=sha256:8c9110c309db9d9e87302e2f4ad2c3152770930d88ab385cd544e7a7e75f3de0
+    # via linkify-it-py
 urllib3==1.26.14 \
     --hash=sha256:076907bf8fd355cde77728471316625a4d2f7e713c125f51953bb5b3eecf4f72 \
     --hash=sha256:75edcdc2f7d85b137124a6c3c9fc3933cdeaa12ecb9a6a959f22797a0feca7e1
@@ -2605,6 +2756,7 @@ uvicorn[standard]==0.20.0 \
     --hash=sha256:c3ed1598a5668208723f2bb49336f4509424ad198d6ab2615b7783db58d919fd
     # via
     #   -r requirements/requirements.in
+    #   gradio
     #   ray
 uvloop==0.17.0 \
     --hash=sha256:0949caf774b9fcefc7c5756bacbbbd3fc4c05a6b7eebc7c7ad6f825b23998d6d \
@@ -2750,7 +2902,10 @@ websockets==11.0.3 \
     --hash=sha256:f61bdb1df43dc9c131791fbc2355535f9024b9a04398d3bd0684fc16ab07df74 \
     --hash=sha256:fb06eea71a00a7af0ae6aefbb932fb8a7df3cb390cc217d51a9ad7343de1b8d0 \
     --hash=sha256:ffd7dcaf744f25f82190856bc26ed81721508fc5cbf2a330751e135ff1283564
-    # via uvicorn
+    # via
+    #   gradio
+    #   gradio-client
+    #   uvicorn
 werkzeug==2.2.3 \
     --hash=sha256:2e1ccc9417d4da358b9de6f174e3ac094391ea1d4fbef2d667865d819dfd0afe \
     --hash=sha256:56433961bc1f12533306c624f3be5e744389ac61d722175d543e1751285da612

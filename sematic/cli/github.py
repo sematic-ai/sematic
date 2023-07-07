@@ -37,7 +37,9 @@ def github():
         sys.exit(1)
 
 
-@github.command("check-commit", short_help="Have Sematic check the status of a commit.")
+@github.command(  # type: ignore
+    "check-commit", short_help="Have Sematic check the status of a commit."
+)
 @click.argument("commit", required=True)
 def check_commit(commit):
     """Have Sematic check the status of a commit on GitHub.

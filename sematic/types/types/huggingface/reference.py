@@ -16,7 +16,7 @@ _COMPILED_REGEX = re.compile(_REGEX)
 T = TypeVar("T")
 
 
-@dataclass
+@dataclass(frozen=True)
 class HuggingFaceReference:
     """A reference to an object on Hugging Face Hub.
 

@@ -17,7 +17,7 @@ from sematic.config.user_settings import UserSettingsVar
 logger = logging.getLogger(__name__)
 
 
-@cli.command("clean", short_help="Clean up orphaned objects")
+@cli.command("clean", short_help="Clean up orphaned objects")  # type: ignore
 @click.option(
     "--orphaned-runs",
     is_flag=True,

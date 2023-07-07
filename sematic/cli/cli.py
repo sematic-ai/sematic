@@ -12,7 +12,7 @@ from sematic.db.migrate import migrate_up
 from sematic.logs import make_log_config
 
 
-@click.group("sematic")
+@click.group("sematic")  # type: ignore
 @click.option("-v", "--verbose", count=True)
 def cli(verbose: int):
     """
