@@ -6,7 +6,7 @@ import sematic.api_client as api_client
 from sematic.cli.cli import cli
 
 
-@cli.command("cancel", short_help="Cancel a run")
+@cli.command("cancel", short_help="Cancel a run")  # type: ignore
 @click.argument("run_id", type=click.STRING)
 def cancel(run_id: str):
     """

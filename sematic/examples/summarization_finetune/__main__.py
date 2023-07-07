@@ -3,8 +3,9 @@ isort:skip_file
 """
 # Standard Library
 import argparse
-from dataclasses import replace
-from typing import Optional, Tuple
+import logging
+from dataclasses import dataclass, replace
+from typing import Optional
 
 # Third-party
 from sematic import torch_patch  # noqa: F401
@@ -78,19 +79,32 @@ DATASET_CONFIG = DatasetConfig(
 
 
 def main():
-    training_config, dataset_config, export_reference, cache_namespace = parse_args()
-    resolver = LocalResolver(cache_namespace=cache_namespace)
-    model_tag = training_config.model_selection.name.replace("_", "-")
-    future = pipeline(training_config, dataset_config, export_reference).set(
+    logging.basicConfig(level=logging.INFO)
+    parsed_args = parse_args()
+    resolver = LocalResolver(cache_namespace=parsed_args.cache_namespace)
+    model_tag = parsed_args.training_config.model_selection.name.replace("_", "-")
+    future = pipeline(
+        training_config=parsed_args.training_config,
+        dataset_config=parsed_args.dataset_config,
+        export_reference=parsed_args.export_reference,
+        launch_interactive=parsed_args.launch_interactive,
+    ).set(
         name="Summarization Fine-Tuning",
         tags=[f"model-selection:{model_tag}"],
     )
     resolver.resolve(future)
 
 
-def parse_args() -> Tuple[
-    TrainingConfig, DatasetConfig, Optional[HuggingFaceModelReference], str
-]:
+@dataclass(frozen=True)
+class ParsedArgs:
+    training_config: TrainingConfig
+    dataset_config: DatasetConfig
+    export_reference: Optional[HuggingFaceModelReference]
+    cache_namespace: Optional[str]
+    launch_interactive: bool
+
+
+def parse_args() -> ParsedArgs:
     parser = argparse.ArgumentParser("Hugging Face Summarization Example")
     selection_options = ", ".join(
         [selection.name.replace("_", "-") for selection in ModelSelection]
@@ -212,6 +226,13 @@ def parse_args() -> Tuple[
         default=None,
         help="Namespace under which cached values will be stored and retrieved.",
     )
+    parser.add_argument(
+        "--launch-interactively",
+        action="store_true",
+        default=False,
+        help="Launch an interactive Gradio app to test the model.",
+    )
+
     args = parser.parse_args()
 
     lora_config = replace(
@@ -254,7 +275,13 @@ def parse_args() -> Tuple[
     if args.login:
         login()
 
-    return training_config, dataset_config, export_model_reference, args.cache_namespace
+    return ParsedArgs(
+        training_config,
+        dataset_config,
+        export_model_reference,
+        args.cache_namespace,
+        args.launch_interactively,
+    )
 
 
 if __name__ == "__main__":

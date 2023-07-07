@@ -9,6 +9,7 @@ pip_deps = [
     # are newer versions of the libs.
     "accelerate",
     "datasets",
+    "gradio",
     "huggingface-hub",
     "peft",
     "torch",
