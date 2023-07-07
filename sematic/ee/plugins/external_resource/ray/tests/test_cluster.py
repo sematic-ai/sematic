@@ -6,7 +6,6 @@ import ray  # type: ignore
 from kubernetes.client.rest import ApiException  # type: ignore
 
 # Sematic
-from sematic import SilentRunner
 from sematic.ee.plugins.external_resource.ray.cluster import RayCluster
 from sematic.function import func
 from sematic.plugins.abstract_external_resource import (
@@ -15,6 +14,7 @@ from sematic.plugins.abstract_external_resource import (
     ResourceStatus,
 )
 from sematic.plugins.abstract_kuberay_wrapper import RayNodeConfig, SimpleRayCluster
+from sematic.runners.silent_runner import SilentRunner
 from sematic.utils.env import environment_variables
 
 
