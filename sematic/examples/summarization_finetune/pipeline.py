@@ -1,6 +1,6 @@
 # Standard Library
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 # Third-party
 from datasets import Dataset
@@ -8,6 +8,7 @@ from transformers import PreTrainedTokenizerBase
 
 # Sematic
 import sematic
+from sematic.examples.summarization_finetune.interactive import launch_summary_app
 from sematic.examples.summarization_finetune.train_eval import (
     DatasetConfig,
     EvaluationResults,
@@ -24,6 +25,7 @@ from sematic.examples.summarization_finetune.train_eval import (
 from sematic.examples.summarization_finetune.train_eval import prepare_data
 from sematic.examples.summarization_finetune.train_eval import train as do_train
 from sematic.types import HuggingFaceStoredModel as StoredModel
+from sematic.types import Link, PromptResponse
 
 
 @dataclass(frozen=True)
@@ -32,6 +34,7 @@ class ResultSummary:
     trained_model: StoredModel
     evaluation_results: EvaluationResults
     pushed_model_reference: Optional[HuggingFaceModelReference]
+    interactive_eval_transcript: List[PromptResponse]
 
 
 @sematic.func
@@ -113,18 +116,38 @@ def export(
     return export_model(model.load(), push_model_ref)
 
 
+@sematic.func
+def launch_interactively(
+    app_url: Link,  # ignored, but makes the link show in the UI
+    model: StoredModel,
+    tokenizer: PreTrainedTokenizerBase,
+    model_type: ModelType,
+    max_input_tokens: int,
+    max_new_tokens: int,
+) -> List[PromptResponse]:
+    return launch_summary_app(
+        model=model.load(),
+        tokenizer=tokenizer,
+        model_type=model_type,
+        max_input_tokens=max_input_tokens,
+        max_new_tokens=max_new_tokens,
+    )
+
+
 @sematic.func(cache=True)
 def summarize(
     source_model: HuggingFaceModelReference,
     trained_model: StoredModel,
     evaluation_results: EvaluationResults,
     pushed_model_reference: Optional[HuggingFaceModelReference],
+    interactive_eval_transcript: List[PromptResponse],
 ) -> ResultSummary:
     return ResultSummary(
         source_model=source_model,
         trained_model=trained_model,
         evaluation_results=evaluation_results,
         pushed_model_reference=pushed_model_reference,
+        interactive_eval_transcript=interactive_eval_transcript,
     )
 
 
@@ -133,11 +156,26 @@ def pipeline(
     training_config: TrainingConfig,
     dataset_config: DatasetConfig,
     export_reference: Optional[HuggingFaceModelReference],
+    launch_interactive: bool,
 ) -> ResultSummary:
     model_ref, model_type = pick_model(training_config.model_selection)
     tokenizer = load_tokenizer(model_ref)
     train_data, test_data = prepare_datasets(dataset_config, tokenizer, model_type)
     model = train(model_ref, training_config, train_data, test_data, tokenizer)
+    if launch_interactive:
+        transcript = launch_interactively(
+            app_url=Link(
+                label="Interactive Evaluation App",
+                url="http://localhost:7861",
+            ),
+            model=model,
+            tokenizer=tokenizer,
+            model_type=model_type,
+            max_input_tokens=dataset_config.max_input_length,
+            max_new_tokens=dataset_config.max_output_length,
+        )
+    else:
+        transcript = []
     eval_results = eval(model, test_data, tokenizer, model_type, dataset_config)
 
     exported_model_reference = None
@@ -149,4 +187,5 @@ def pipeline(
         trained_model=model,
         evaluation_results=eval_results,
         pushed_model_reference=exported_model_reference,
+        interactive_eval_transcript=transcript,
     )

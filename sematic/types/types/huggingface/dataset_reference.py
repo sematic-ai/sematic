@@ -6,7 +6,7 @@ from typing import Optional
 from sematic.types.types.huggingface.reference import HuggingFaceReference
 
 
-@dataclass
+@dataclass(frozen=True)
 class HuggingFaceDatasetReference(HuggingFaceReference):
     """A reference to a dataset on Hugging Face Hub.
 

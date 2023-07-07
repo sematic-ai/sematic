@@ -56,7 +56,7 @@ def _run_example(example_path: str):
         click.echo("\tpip3 install -r {}".format(_get_requirements_path(example_path)))
 
 
-@cli.command("run", short_help="Run a pipeline, or a packaged example.")
+@cli.command("run", short_help="Run a pipeline, or a packaged example.")  # type: ignore
 @click.option(
     "-b",
     "--build",
