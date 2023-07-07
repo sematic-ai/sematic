@@ -191,7 +191,7 @@ def _apply_common_options(env, verbose):
         logging.basicConfig(level=logging.INFO)
 
 
-@main.command("up", short_help="Apply outstanding migrations")
+@main.command("up", short_help="Apply outstanding migrations")  # type: ignore
 @common_options
 @click.option(
     "--schema-file",
@@ -242,7 +242,7 @@ def migrate_up():
         last_successful = migration_file
 
 
-@main.command("down", short_help="Revert last migration")
+@main.command("down", short_help="Revert last migration")  # type: ignore
 @common_options
 @click.option(
     "--schema-file",
@@ -285,7 +285,7 @@ def migrate_down():
             continue
 
 
-@main.command("dump", short_help="Dump schema")
+@main.command("dump", short_help="Dump schema")  # type: ignore
 @common_options
 @click.option(
     "--schema-file",
@@ -364,7 +364,7 @@ def status(env: str, verbose: bool):
     print(f"Outstanding:\t{outstanding_count:3}")
 
 
-@main.command("new", short_help="Create new migration file")
+@main.command("new", short_help="Create new migration file")  # type: ignore
 @click.argument("name")
 def new(name: str):
     extension = os.path.splitext(name)[1]

@@ -5,6 +5,7 @@ from enum import Enum, unique
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Third-party
+import torch
 from datasets import Dataset, load_dataset
 from peft import LoraConfig, PeftModelForSeq2SeqLM, get_peft_model
 from transformers import (
@@ -34,10 +35,12 @@ from sematic.types import (
     PromptResponse,
 )
 
-_SUMMARY_START_INDICATOR = "**Summary**: "
+_SUMMARY_START_INDICATOR = "**Summary**:"
+_CONTEXT_START_INDICATOR = "**Please Summarize**:"
+_SUMMARY_END_INDICATOR = "**End**"
 
 
-def log_metric(name, value):
+def log_metric(name: str, value: float) -> None:
     """Stand-in for Sematic's `log_metric` that prints to stdout.
 
     Sematic's log_metric is only available for EE users.
@@ -193,12 +196,23 @@ def load_tokenizer(model_name) -> PreTrainedTokenizerBase:
     return tokenizer
 
 
+def wrap_context(ctx: str) -> str:
+    return f"{_CONTEXT_START_INDICATOR} {ctx}. {_SUMMARY_START_INDICATOR} "
+
+
+def extract_summary(text: str) -> str:
+    start_index = max(0, text.find(_SUMMARY_START_INDICATOR))
+    end_indicator_index = text.find(_SUMMARY_END_INDICATOR)
+    end_index = len(text) if end_indicator_index < 0 else end_indicator_index
+    return text[start_index:end_index]
+
+
 def _causal_preprocess_function(examples, tokenizer, dataset_config):
     text_column = dataset_config.text_column
     label_column = dataset_config.summary_column
 
     inputs = [
-        f"**Please summarize**: {ctx}. " f"{_SUMMARY_START_INDICATOR}{summary} **End**"
+        f"{wrap_context(ctx)} {summary} {_SUMMARY_END_INDICATOR}"
         for ctx, summary in zip(examples[text_column], examples[label_column])
     ]
 
@@ -210,10 +224,10 @@ def _seq_2_seq_preprocess_function(examples, tokenizer, dataset_config):
     label_column = dataset_config.summary_column
     max_length = dataset_config.max_input_length
     output_token_max_length = dataset_config.max_output_length
-    inputs = [
-        f"**Please summarize**: {ctx}. **Summary**: " for ctx in examples[text_column]
+    inputs = [wrap_context(ctx) for ctx in examples[text_column]]
+    targets = [
+        f"{target} {_SUMMARY_END_INDICATOR}" for target in examples[label_column]
     ]
-    targets = [target for target in examples[label_column]]
     model_inputs = tokenizer(
         inputs,
         max_length=max_length,
@@ -407,27 +421,56 @@ def evaluate(
         seconds_since_start = int(time.time() - started)
         print(f"Eval sample {i} (after {seconds_since_start} s)")
         eval_tokens = row["input_ids"]
-        input_text = tokenizer.batch_decode(
-            eval_tokens.detach().cpu().numpy(), skip_special_tokens=True
+        input_text, output_text = evaluate_single_text(
+            model,
+            tokenizer,
+            model_type,
+            dataset_config.max_output_length,
+            eval_tokens[0],
         )
-        output_tokens = model.generate(
-            input_ids=eval_tokens,
-            max_new_tokens=dataset_config.max_output_length,
-            pad_token_id=tokenizer.pad_token_id,
-        )
-        output_text = tokenizer.batch_decode(
-            output_tokens.detach().cpu().numpy(), skip_special_tokens=True
-        )
-        if model_type is ModelType.causal:
-            # Causal ML models extend the input. In our case, we want to
-            # consider the "response" to only be the new part, not counting
-            # the input.
-            output_text = [output_text[0].replace(input_text[0], "", 1)]
-        results.append(
-            PromptResponse(sanitize(input_text[0]), sanitize(output_text[0]))
-        )
+        results.append(PromptResponse(sanitize(input_text[0]), sanitize(output_text)))
     eval_results = EvaluationResults(results)
     return eval_results
+
+
+def evaluate_single_text(
+    model, tokenizer, model_type, max_new_tokens, eval_tokens=None, eval_text=None
+) -> Tuple[str, str]:
+    if eval_tokens is None and eval_text is None:
+        raise ValueError("One of eval_tokens or eval_text must be provided.")
+    if eval_tokens is not None and eval_text is not None:
+        raise ValueError("Only one of eval_tokens or eval_text must be provided.")
+
+    if eval_text is not None:
+        eval_tokens = torch.tensor(
+            tokenizer(
+                [eval_text],
+                max_length=max_new_tokens,
+                padding="max_length",
+                truncation=True,
+                return_tensors="pt",
+            )[0].ids
+        )
+    else:
+        eval_text = tokenizer.batch_decode(
+            torch.unsqueeze(eval_tokens, 0).detach().cpu().numpy(),
+            skip_special_tokens=True,
+        )[0]
+
+    output_tokens = model.generate(
+        input_ids=torch.unsqueeze(eval_tokens, 0),
+        max_new_tokens=max_new_tokens,
+        pad_token_id=tokenizer.pad_token_id,
+    )
+    output_text = tokenizer.batch_decode(
+        output_tokens.detach().cpu().numpy(), skip_special_tokens=True
+    )
+    if model_type is ModelType.causal:
+        # Causal ML models extend the input. In our case, we want to
+        # consider the "response" to only be the new part, not counting
+        # the input.
+        output_text = [output_text[0].replace(eval_text, "", 1)]
+    return eval_text, output_text[0]
 
 
 def export_model(
