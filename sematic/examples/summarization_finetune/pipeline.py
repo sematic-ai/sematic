@@ -12,7 +12,8 @@ from sematic.examples.summarization_finetune.train_eval import (
     DatasetConfig,
     EvaluationResults,
     HuggingFaceModelReference,
-    ModelSize,
+    ModelSelection,
+    ModelType,
     TrainingConfig,
     evaluate,
     export_model,
@@ -34,31 +35,47 @@ class ResultSummary:
 
 
 @sematic.func
-def pick_model(model_size: ModelSize) -> HuggingFaceModelReference:
-    return HuggingFaceModelReference(owner="google", repo=f"flan-t5-{model_size.value}")
+def pick_model(model: ModelSelection) -> Tuple[HuggingFaceModelReference, ModelType]:
+    if model.value.startswith("flan"):
+        size = model.value.replace("flan_", "")
+        return (
+            HuggingFaceModelReference(owner="google", repo=f"flan-t5-{size}"),
+            ModelType.seq_to_seq,
+        )
+    else:
+        name = model.value.replace("_", "-")
+        return (
+            HuggingFaceModelReference(owner="EleutherAI", repo=name),
+            ModelType.causal,
+        )
 
 
-@sematic.func
+@sematic.func(cache=True)
 def load_tokenizer(
     model_reference: HuggingFaceModelReference,
 ) -> PreTrainedTokenizerBase:
     return do_load_tokenizer(model_reference.to_string())
 
 
-@sematic.func
+@sematic.func(cache=True)
 def train(
     model_reference: HuggingFaceModelReference,
     training_config: TrainingConfig,
     train_data: Dataset,
     eval_data: Dataset,
+    tokenizer: PreTrainedTokenizerBase,
 ) -> StoredModel:
     model = do_train(
         model_reference.to_string(),
         training_config,
         train_data,
         eval_data,
+        tokenizer,
     )
-    return StoredModel.store(model, training_config.storage_directory)
+    stored_model = StoredModel.store(
+        model, training_config.storage_directory, base_model_reference=model_reference
+    )
+    return stored_model
 
 
 @sematic.func
@@ -66,16 +83,25 @@ def eval(
     model: StoredModel,
     eval_data: Dataset,
     tokenizer: PreTrainedTokenizerBase,
+    model_type: ModelType,
+    dataset_config: DatasetConfig,
 ) -> EvaluationResults:
-    return evaluate(model.load(), eval_data, tokenizer)
+    return evaluate(
+        model.load(device_map="auto", offload_folder="temp/offload"),
+        eval_data,
+        tokenizer,
+        model_type,
+        dataset_config,
+    )
 
 
-@sematic.func
+@sematic.func(cache=True)
 def prepare_datasets(
     dataset_config: DatasetConfig,
     tokenizer: PreTrainedTokenizerBase,
+    model_type: ModelType,
 ) -> Tuple[Dataset, Dataset]:
-    train_dataset, test_dataset = prepare_data(dataset_config, tokenizer)
+    train_dataset, test_dataset = prepare_data(dataset_config, tokenizer, model_type)
     return train_dataset, test_dataset
 
 
@@ -87,7 +113,7 @@ def export(
     return export_model(model.load(), push_model_ref)
 
 
-@sematic.func
+@sematic.func(cache=True)
 def summarize(
     source_model: HuggingFaceModelReference,
     trained_model: StoredModel,
@@ -108,11 +134,11 @@ def pipeline(
     dataset_config: DatasetConfig,
     export_reference: Optional[HuggingFaceModelReference],
 ) -> ResultSummary:
-    model_ref = pick_model(training_config.model_size)
+    model_ref, model_type = pick_model(training_config.model_selection)
     tokenizer = load_tokenizer(model_ref)
-    train_data, test_data = prepare_datasets(dataset_config, tokenizer)
-    model = train(model_ref, training_config, train_data, test_data)
-    eval_results = eval(model, test_data, tokenizer)
+    train_data, test_data = prepare_datasets(dataset_config, tokenizer, model_type)
+    model = train(model_ref, training_config, train_data, test_data, tokenizer)
+    eval_results = eval(model, test_data, tokenizer, model_type, dataset_config)
 
     exported_model_reference = None
     if export_reference is not None:

@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
 import Typography from "@mui/material/Typography";
+import isEmpty from "lodash/isEmpty";
 import { useMemo } from "react";
 import { Artifact } from "src/Models";
 import { useRootRunContext } from "src/context/RootRunContext";
@@ -8,6 +9,7 @@ import ArtifactComponent from "src/pages/RunDetails/artifacts/artifact";
 import { ArtifactPaneContainer } from "src/pages/RunDetails/artifacts/common";
 import theme from "src/theme/new";
 
+
 const StyledTypography = styled(Typography)`
     margin-top: ${theme.spacing(5)};
 `;
@@ -15,7 +17,7 @@ const StyledTypography = styled(Typography)`
 
 function InputPane() {
     const { selectedRun } = useRunDetailsSelectionContext();
-    const { graph, isGraphLoading } = useRootRunContext();
+    const { graph } = useRootRunContext();
 
     const inputArtifacts = useMemo(() => {
         if (!graph) {
@@ -43,11 +45,11 @@ function InputPane() {
 
     }, [graph, selectedRun?.id]);
 
-    if (isGraphLoading) {
+    if (isEmpty(inputArtifacts)) {
         return null;
     }
 
-    return <InputPanePresentation inputArtifacts={inputArtifacts || []} />;
+    return <InputPanePresentation inputArtifacts={inputArtifacts!} />;
 }
 
 interface InputPanePresentationProps {

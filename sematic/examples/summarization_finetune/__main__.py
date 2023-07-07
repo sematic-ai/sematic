@@ -15,7 +15,7 @@ from peft import LoraConfig, PeftType
 from sematic import LocalResolver
 from sematic.examples.summarization_finetune.pipeline import (
     DatasetConfig,
-    ModelSize,
+    ModelSelection,
     TrainingConfig,
     pipeline,
 )
@@ -26,7 +26,7 @@ from sematic.examples.summarization_finetune.train_eval import (
 )
 
 
-LORA_CONFIG = LoraConfig(
+LORA_CONFIG_FLAN = LoraConfig(
     r=16,
     lora_alpha=1,
     target_modules=["q", "v"],
@@ -37,6 +37,16 @@ LORA_CONFIG = LoraConfig(
     base_model_name_or_path="",
 )
 
+LORA_CONFIG_GPT_J = replace(
+    LORA_CONFIG_FLAN,
+    target_modules=[
+        "q_proj",
+        "v_proj",
+    ],
+    task_type="CAUSAL_LM",
+    base_model_name_or_path="",
+)
+
 TRAINING_ARGS = TrainingArguments(
     "temp",
     evaluation_strategy="epoch",
@@ -44,16 +54,16 @@ TRAINING_ARGS = TrainingArguments(
     gradient_accumulation_steps=1,
     auto_find_batch_size=True,
     num_train_epochs=1,
-    save_steps=100,
+    save_strategy="epoch",
     save_total_limit=8,
     logging_steps=100,
 )
 
 TRAINING_CONFIG = TrainingConfig(
-    model_size=ModelSize.base,
-    lora_config=LORA_CONFIG,
+    model_selection=ModelSelection.flan_base,
+    lora_config=LORA_CONFIG_FLAN,
     training_arguments=TRAINING_ARGS,
-    storage_directory="~/tmp/summarization-tuned-model",
+    storage_directory="/tmp/summarization-tuned-model",
 )
 
 DATASET_CONFIG = DatasetConfig(
@@ -68,28 +78,28 @@ DATASET_CONFIG = DatasetConfig(
 
 
 def main():
-    training_config, dataset_config, export_reference = parse_args()
-    resolver = LocalResolver()
+    training_config, dataset_config, export_reference, cache_namespace = parse_args()
+    resolver = LocalResolver(cache_namespace=cache_namespace)
+    model_tag = training_config.model_selection.name.replace("_", "-")
     future = pipeline(training_config, dataset_config, export_reference).set(
         name="Summarization Fine-Tuning",
-        tags=[f"model-size:{training_config.model_size.name}"],
+        tags=[f"model-selection:{model_tag}"],
     )
     resolver.resolve(future)
 
 
 def parse_args() -> Tuple[
-    TrainingConfig, DatasetConfig, Optional[HuggingFaceModelReference]
+    TrainingConfig, DatasetConfig, Optional[HuggingFaceModelReference], str
 ]:
     parser = argparse.ArgumentParser("Hugging Face Summarization Example")
-    size_options = ", ".join([size.name for size in ModelSize])
+    selection_options = ", ".join(
+        [selection.name.replace("_", "-") for selection in ModelSelection]
+    )
     parser.add_argument(
-        "--model-size",
-        type=lambda size: ModelSize[size],
-        default=TRAINING_CONFIG.model_size.name,
-        help=(
-            f"Select a model size (see https://huggingface.co/google/flan-t5-base)"
-            f". Options:  {size_options}."
-        ),
+        "--model-selection",
+        type=lambda selection: ModelSelection[selection.replace("-", "_")],
+        default=TRAINING_CONFIG.model_selection,
+        help=(f"Select a model" f". Options:  {selection_options}."),
     )
     parser.add_argument(
         "--epochs",
@@ -172,19 +182,19 @@ def parse_args() -> Tuple[
     parser.add_argument(
         "--lora-r",
         type=int,
-        default=LORA_CONFIG.r,
+        default=LORA_CONFIG_FLAN.r,
         help="The number of dimensions for the LoRA matrix.",
     )
     parser.add_argument(
         "--lora-alpha",
         type=int,
-        default=LORA_CONFIG.lora_alpha,
+        default=LORA_CONFIG_FLAN.lora_alpha,
         help="The scaling factor for the LoRA trained weights.",
     )
     parser.add_argument(
         "--lora-dropout",
         type=float,
-        default=LORA_CONFIG.lora_dropout,
+        default=LORA_CONFIG_FLAN.lora_dropout,
         help="The dropout probability for LoRA layers.",
     )
     parser.add_argument(
@@ -196,23 +206,30 @@ def parse_args() -> Tuple[
             "Should be done on first script execution."
         ),
     )
+    parser.add_argument(
+        "--cache-namespace",
+        type=str,
+        default=None,
+        help="Namespace under which cached values will be stored and retrieved.",
+    )
     args = parser.parse_args()
 
+    lora_config = replace(
+        LORA_CONFIG_FLAN if args.model_selection.is_flan() else LORA_CONFIG_GPT_J,
+        r=args.lora_r,
+        lora_alpha=args.lora_alpha,
+        lora_dropout=args.lora_dropout,
+    )
     training_config = replace(
         TRAINING_CONFIG,
-        model_size=args.model_size,
+        model_selection=args.model_selection,
         training_arguments=replace(
             TRAINING_ARGS,
             learning_rate=args.learning_rate,
             num_train_epochs=args.epochs,
             logging_steps=args.logging_steps,
         ),
-        lora_config=replace(
-            LORA_CONFIG,
-            r=args.lora_r,
-            lora_alpha=args.lora_alpha,
-            lora_dropout=args.lora_dropout,
-        ),
+        lora_config=lora_config,
     )
 
     dataset_config = replace(
@@ -225,6 +242,8 @@ def parse_args() -> Tuple[
         text_column=args.text_column,
         summary_column=args.summary_column,
     )
+    if dataset_config.dataset_ref.commit_sha is not None:
+        raise ValueError("Using a specific commit of a dataset is not supported.")
 
     export_model_reference = None
     if args.model_export_repo is not None:
@@ -235,7 +254,7 @@ def parse_args() -> Tuple[
     if args.login:
         login()
 
-    return training_config, dataset_config, export_model_reference
+    return training_config, dataset_config, export_model_reference, args.cache_namespace
 
 
 if __name__ == "__main__":

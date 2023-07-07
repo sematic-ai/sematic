@@ -1,6 +1,12 @@
 load("//bazel:pipeline.bzl", "sematic_pipeline")
 
 pip_deps = [
+    # Note that this does not exactly match the
+    # requirements in the example's requirements.txt.
+    # This is because bazel isn't playing nicely with
+    # all of the reqs in the requirements.txt.
+    # You should check on this again later, once there
+    # are newer versions of the libs.
     "accelerate",
     "datasets",
     "huggingface-hub",
@@ -12,5 +18,7 @@ pip_deps = [
 sematic_example(
     name = "summarization_finetune",
     requirements = pip_deps,
-    extras = ["//sematic/ee:metrics"]
+    # Uncomment to allow running with metrics; must also
+    # uncomment import in train_eval
+    # extras = ["//sematic/ee:metrics"]
 )

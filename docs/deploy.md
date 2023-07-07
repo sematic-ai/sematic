@@ -48,6 +48,7 @@ launch the server
 ```shell
 $ sudo docker run -d -p 80:80 \
     -e DATABASE_URL=<DATABASE_URL> \
+    -e SEMATIC_WSGI_WORKERS_COUNT=1 \
     -v /home/ubuntu/.sematic:/root/.sematic \
     [-e SEMATIC_AUTHENTICATE=1 -e GOOGLE_OAUTH_CLIENT_ID=123456789.apps.googleusercontent.com \]
     [-e SEMATIC_AUTHORIZED_EMAIL_DOMAIN=yourdomain.com \]
