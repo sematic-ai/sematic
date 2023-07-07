@@ -80,20 +80,9 @@ commands:
     steps:
       - run:
           name: Build wheel
-          command: make wheel
-      - run:
-          # The wheel building can be flaky due to lib download issues
-          name: Build wheel (2)
-          command: make wheel
-          when: on_fail
-      - run:
-          name: Build wheel (3)
-          command: make wheel
-          when: on_fail
-      - run:
-          name: Build wheel (4)
-          command: make wheel
-          when: on_fail
+          command: |
+            PATH="$PATH:$CIRCLE_WORKING_DIRECTORY/.circleci/"
+            retry 5 make wheel
       - run:
           name: Test pip install
           command: bazel run //sematic/tests/integration:test_pip_install
