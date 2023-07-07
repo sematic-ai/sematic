@@ -19,7 +19,7 @@ from sematic.log_reader import (
 DEFAULT_LOG_LOAD_MAX_SIZE = 1000
 
 
-@cli.command("logs", short_help="Read logs for a run")
+@cli.command("logs", short_help="Read logs for a run")  # type: ignore
 @click.option("-f", "--follow", default=False, is_flag=True)
 @click.argument("run_id", type=click.STRING)
 def logs(run_id: str, follow: bool):
@@ -77,7 +77,7 @@ def logs(run_id: str, follow: bool):
             click.echo(line)
 
 
-@advanced.command(
+@advanced.command(  # type: ignore
     "dump-log-storage", short_help="Dumps all logs in a blob storage directory"
 )
 @click.argument("storage_key", type=click.STRING)
