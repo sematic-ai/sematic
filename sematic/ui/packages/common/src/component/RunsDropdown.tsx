@@ -96,7 +96,7 @@ const RunsDropdown = (prop: RunsDropdownProps) => {
 
     return <FormControl style={{ width: "100%" }} size="small">
         <StyledSelect value={value} renderValue={renderValue} onChange={onChange}>
-            {runs.map((run) => <StyledMenuItem key={run.id} value={run.id}>
+            {runs.map((run) => <StyledMenuItem key={`${run.id}--${run.future_state}`} value={run.id}>
                 <ValuePresentation run={run} />
             </StyledMenuItem>)}
         </StyledSelect>
