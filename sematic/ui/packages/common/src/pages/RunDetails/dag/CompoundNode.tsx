@@ -6,13 +6,15 @@ import { useCallback, useContext, useMemo } from "react";
 import { NodeProps, Position } from "reactflow";
 import { getRunStateChipByState, getRunStateColorByState } from "src/component/RunStateChips";
 import { useHasIncoming, useNodeExpandStateToggle } from "src/hooks/dagHooks";
-import { DagViewServiceContext, StyledHandleTop, StyledHandleBottom } from "src/pages/RunDetails/dag/common";
+import { DagViewServiceContext, StyledHandleBottom, StyledHandleTop } from "src/pages/RunDetails/dag/common";
 import theme from "src/theme/new";
+import includes from "lodash/includes";
 
 const CompoundNodeContainer = styled("div", {
-    shouldForwardProp: (prop) => prop !== "selected"
+    shouldForwardProp: (prop) => !includes(["selected", "color"], prop)
 }) <{
     selected?: boolean;
+    color: string;
 }>`
     width: min-content;
     display: flex;
@@ -20,6 +22,12 @@ const CompoundNodeContainer = styled("div", {
     border-width: ${({ selected }) => selected ? 2 : 1}px;
     border-style: solid;
     border-radius: 4px;
+    border-color: ${({ color }) => color};
+    cursor: pointer;
+
+    label {
+        cursor: pointer;
+    }
 `;
 
 export const LabelContainer = styled.div`
@@ -66,8 +74,8 @@ function CompoundNode(props: NodeProps) {
         onNodeClick(run.id);
     }, [onNodeClick, run]);
 
-    return <CompoundNodeContainer selected={selected} onClick={onClick}
-        style={{ width: `${data.width}px`, height: `${data.height}px`, borderColor: color }}>
+    return <CompoundNodeContainer selected={selected} onClick={onClick} color={color}
+        style={{ width: `${data.width}px`, height: `${data.height}px` }}>
         {hasIncoming && <StyledHandleTop type="target" color={color} position={Position.Top} isConnectable={false} id={"t"} />}
         <LabelContainer>
             {stateChip}
@@ -80,9 +88,9 @@ function CompoundNode(props: NodeProps) {
             type="source"
             position={Position.Bottom}
             id="sb"
-            isConnectable={false}
+            isConnectable={false} color={color} 
         />
-        <StyledHandleBottom type="target" position={Position.Bottom} isConnectable={false} id={"tb"} />
+        <StyledHandleBottom type="target" position={Position.Bottom} isConnectable={false} id={"tb"} color={color} />
     </CompoundNodeContainer>
 }
 
