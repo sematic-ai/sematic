@@ -10,7 +10,7 @@ Sematic has 3 versioned entities, depending on your usage:
 - **pip package**: If you are using Sematic only locally, this is
 the only versioned entity you need. This determines the code
 that will be used for your code to interact with the server,
-including how Sematic resolvers interact with the server.
+including how Sematic runners interact with the server.
 - **Server**: If you are using Sematic in the cloud, you need this
 and the pip package.
 - **bazel integration**: If you are using `bazel` with Sematic, you
@@ -83,7 +83,7 @@ helm upgrade sematic-server -f /path/to.values.yaml
 For purposes of this discussion, "client" generally refers to
 the code installed with your pip package, which applies to how your
 source code interacts with the Server API via our SDK, including
-how remote resolution jobs interact with that Server API.
+how remote runner jobs interact with that Server API.
 
 You will always want to upgrade the server before upgrading the pip package.
 If the server is being upgraded to a version that still supports the version being

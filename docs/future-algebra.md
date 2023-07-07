@@ -79,7 +79,7 @@ nesting of Sematic Functions.
 {% hint style="info" %}
 
 Note that the inputs of the outermost Sematic Function (i.e. the one on which
-you call `.resolve()`) must all be [concrete](./glossary.md#concrete-inputs).
+you call `runner.run(future)`) must all be [concrete](./glossary.md#concrete-inputs).
 
 {% endhint %}
 
@@ -271,7 +271,7 @@ def pipeline() -> float:
 ### Unused futures
 
 If a future is not passed as input to a Sematic Function or returned as output
-of a parent future, it will not be resolved.
+of a parent future, it will not be executed.
 
 For example, consider the following case:
 

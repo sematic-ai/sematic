@@ -27,7 +27,7 @@ To aid in the creation of pipeline unit tests, Sematic provides
 ```python
 import pytest
 import sematic
-from sematic.resolvers.silent_resolver import SilentResolver
+from sematic.runners.silent_runner import SilentRunner
 from sematic.testing import mock_sematic_funcs
 
 
@@ -60,9 +60,9 @@ def test_mock_sematic_funcs():
         # underlying code before it had @sematic.func applied
         mock_funcs[remote_only_func].mock.return_value = 1
 
-        # The SilentResolver is great for tests: it executes your pipeline
+        # The SilentRunner is great for tests: it executes your pipeline
         # locally and without making any API calls
-        result = pipeline().resolve(SilentResolver())
+        result = SilentRunner().run(pipeline())
 
         # sum([1, 1, 3])
         assert result == 5
@@ -75,7 +75,7 @@ def test_mock_sematic_funcs():
         # want to verify that the original was called, but still
         # want it to behave as it always did
         mock_funcs[identity_func].mock.side_effect = mock_funcs[identity_func].original
-        result = pipeline().resolve(SilentResolver())
+        result = SilentRunner().run(pipeline())
 
         # sum([1, 1, 3])
         assert result == 5
@@ -85,21 +85,21 @@ def test_mock_sematic_funcs():
     # Even when you've mocked a Sematic func, type checking will still
     # occur to make sure the connections between the inputs and outputs
     # in the pipeline are all correct. During execution, calling the
-    # funcs will always return unresolved futures at first as well, just
-    # as they do in a real (unmocked) execution. This helps ensure that
-    # your "future" logic is all correct. These checks are the primary
-    # advantage of mocking with Sematic's mock_sematic_funcs instead of
-    # unittest.mock mocking mechanisms. 
+    # funcs will always return futures without concrete values at first
+    # as well, just as they do in a real (unmocked) execution. This helps
+    # ensure that your "future" logic is all correct. These checks are the
+    # primary advantage of mocking with Sematic's mock_sematic_funcs instead 
+    # of unittest.mock mocking mechanisms. 
     with pytest.raises(
         TypeError,
         match=r"for 'sematic.testing.tests.test_mock_funcs.remote_only_func'.*",
     ):
         with mock_sematic_funcs([remote_only_func]) as mock_funcs:
             mock_funcs[remote_only_func].mock.return_value = "this is the wrong type!"
-            pipeline().resolve(SilentResolver())
+            SilentRunner().run(pipeline())
     
     # The mocking only lasts within the `with` context
-    assert identity_func(16).resolve(SilentResolver()) == 16
+    assert SilentRunner().run(identity_func(16)) == 16
 ```
 
 Note that this is able to test the connections between your pipeline
