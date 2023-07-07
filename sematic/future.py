@@ -66,7 +66,7 @@ class Future(AbstractFuture):
             default_resolver = LocalResolver if tracking else SilentResolver
             resolver = resolver or default_resolver()
 
-            self.value = resolver.resolve(self)
+            self.value = resolver.run(self)
 
         return self.value
 

@@ -1,10 +1,13 @@
 # Standard Library
 import abc
+import logging
 import typing
 
 # Sematic
 from sematic.abstract_future import AbstractFuture
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
+
+logger = logging.getLogger(__name__)
 
 
 class Resolver(abc.ABC):
@@ -12,7 +15,6 @@ class Resolver(abc.ABC):
     Abstract base class for all resolvers. Defines the `Resolver` interfaces.
     """
 
-    @abc.abstractmethod
     def resolve(self, future: AbstractFuture) -> typing.Any:
         """
         Abstract method. Entry-point for the resolution algorithm.
@@ -27,6 +29,14 @@ class Resolver(abc.ABC):
         Any
             output of the pipeline.
         """
+        # TODO: https://github.com/sematic-ai/sematic/issues/957
+        logger.warning(
+            "Calling .resolve(...) will soon be deprecated. Please use .run(...) instead."
+        )
+        return self.run(future)
+
+    @abc.abstractmethod
+    def run(self, future: AbstractFuture) -> typing.Any:
         pass
 
     @classmethod

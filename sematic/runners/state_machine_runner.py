@@ -47,13 +47,6 @@ class StateMachineRunner(Runner, abc.ABC):
 
         return self._futures[0]
 
-    def resolve(self, future: AbstractFuture) -> typing.Any:
-        # TODO: https://github.com/sematic-ai/sematic/issues/957
-        logger.warning(
-            "Calling .resolve(...) will soon be deprecated. Please use .run(...) instead."
-        )
-        return self.run(future)
-
     def run(self, future: AbstractFuture) -> typing.Any:
         with self._catch_pipeline_run_errors():
             self._seed_graph(future)
