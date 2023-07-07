@@ -364,7 +364,7 @@ def status(env: str, verbose: bool):
     print(f"Outstanding:\t{outstanding_count:3}")
 
 
-@main.command("new", short_help="Create new migration file")
+@main.command("new", short_help="Create new migration file")  # type: ignore
 @click.argument("name")
 def new(name: str):
     extension = os.path.splitext(name)[1]
