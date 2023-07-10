@@ -3,11 +3,11 @@ import { ColumnHelper } from "@tanstack/react-table";
 import { parseJSON } from "date-fns";
 import { Run } from "src/Models";
 import { DateTimeLongConcise } from "src/component/DateTime";
-import NameTag from "src/component/NameTag";
 import { RunReference } from "src/component/RunReference";
 import RunStatusColumn from "src/pages/RunSearch/RunStatusColumn";
 import NameColumn from "src/pages/RunTableCommon/NameColumn";
 import TagsColumn from "src/pages/RunTableCommon/TagsColumn";
+import OwnerColumn from "src/pages/RunTableCommon/ownerColumn";
 import theme from "src/theme/new";
 
 
@@ -66,10 +66,7 @@ export const TagsColumnDef = (columnHelper: ColumnHelper<Run>) =>
     });
 
 export const OwnerColumnDef = (columnHelper: ColumnHelper<Run>) =>
-    columnHelper.accessor(data => ({
-        firstName: data.user?.first_name,
-        lastName: data.user?.last_name
-    }), {
+    columnHelper.accessor(data => data.user, {
         meta: {
             columnStyles: {
                 width: "8.39092%", // this is the minWidth (100px) divided by the sum of the minWidths of all other columns.
@@ -77,7 +74,7 @@ export const OwnerColumnDef = (columnHelper: ColumnHelper<Run>) =>
             }
         },
         header: "Owner",
-        cell: info => <NameTag {...info.getValue()} />,
+        cell: info => <OwnerColumn user={info.getValue()} />,
     });
 
 export const StatusColumnDef = (columnHelper: ColumnHelper<Run>) =>
