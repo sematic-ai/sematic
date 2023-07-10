@@ -174,7 +174,7 @@ def _assert_resolution_is_scheduleable(resolution: Resolution):
         raise StateNotSchedulable(
             f"The resolution {resolution.root_id} was in the state {resolution.status}, "
             f"and could not be scheduled. Resolution can only be scheduled if they "
-            f"are in the {ResolutionStatus.CREATED} state."
+            f"are in the {ResolutionStatus.CREATED} state.",
         )
     if resolution.container_image_uri is None:
         raise StateNotSchedulable(
@@ -190,10 +190,11 @@ def _assert_resolution_is_scheduleable(resolution: Resolution):
         # You may wonder how we can get here given that clients check for server
         # compatibility. This can still happen if somebody tries to rerun an old
         # resolution (ex: from the UI).
+        min_version_str = ".".join(str(v) for v in MIN_CLIENT_SERVER_SUPPORTS)
         raise StateNotSchedulable(
             f"The resolution {resolution.root_id} uses Sematic version "
             f"{resolution.client_version}, but the server requires at least "
-            f"version {MIN_CLIENT_SERVER_SUPPORTS}"
+            f"version {min_version_str}"
         )
 
 
@@ -205,7 +206,7 @@ def _assert_is_scheduleable(
         raise StateNotSchedulable(
             f"The run {run.id} was in the state {run.future_state}, and could "
             f"not be scheduled. Runs can only be scheduled if they are in the "
-            f"{FutureState.CREATED} state."
+            f"{FutureState.CREATED} state.",
         )
 
     for job in existing_jobs:
@@ -215,7 +216,7 @@ def _assert_is_scheduleable(
         ):
             raise StateNotSchedulable(
                 f"The run {run.id} already had an active job "
-                f"{job.namespace}/{job.name} and thus could not be scheduled."
+                f"{job.namespace}/{job.name} and thus could not be scheduled.",
             )
     if resolution.status != ResolutionStatus.RUNNING.value:
         raise StateNotSchedulable(
