@@ -10,11 +10,13 @@ import NameTag from "src/component/NameTag";
 import RunsDropdown from "src/component/RunsDropdown";
 import Section from "src/component/Section";
 import TagsList from "src/component/TagsList";
+import UserAvatar from "src/component/UserAvatar";
 import RootRunContext, { useRootRunContext } from "src/context/RootRunContext";
 import usePipelineSocketMonitor from "src/hooks/pipelineSocketMonitorHooks";
 import { getRunUrlPattern, useFetchRuns } from "src/hooks/runHooks";
 import RunSectionActionMenu from "src/pages/RunDetails/contextMenus/RunSectionMenu";
 import theme from "src/theme/new";
+import { getUserInitials } from "src/utils/string";
 import { ExtractContextType, RemoveUndefined } from "src/utils/typings";
 
 const StyledSection = styled(Section)`
@@ -32,6 +34,12 @@ const BoxContainer = styled(Box)`
 
 const OwnerContainer = styled.span`
   margin-right: ${theme.spacing(2)};
+  display: flex;
+  flex-direction: row;
+
+  & > :first-of-type {
+    margin-right: ${theme.spacing(1)};
+  }
 `;
 
 const RunSection = () => {
@@ -57,8 +65,17 @@ const RunSection = () => {
         []
     );
 
-    const owner = useMemo(() => <NameTag firstName={rootRun.user?.first_name} lastName={rootRun.user?.last_name} />
-        , [rootRun]);
+    const owner = useMemo(() => {
+        if (!rootRun.user) {
+            return null;
+        }
+        const user = rootRun.user;
+        return <>
+            <UserAvatar initials={getUserInitials(user?.first_name, user?.last_name, user?.email)}
+                hoverText={user?.first_name || user?.email} avatarUrl={user?.avatar_url} />
+            <NameTag firstName={rootRun.user?.first_name} lastName={rootRun.user?.last_name} />
+        </>;
+    }, [rootRun]);
 
     const resolverKind = useMemo(() => {
         if (!resolution) {
