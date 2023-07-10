@@ -96,6 +96,7 @@ with `sematic run examples/summarization_finetune -- --help` for options.
 Here are some screenshots of what you'll get by using this example:
 
 ![DAG](./images/DAG.jpg)
+
 *The execution graph for the pipeline. When running live, the status*
 *of each run will be updated as execution progresses. The export step*
 *and an interactive debug step will only be shown if the pipeline is*
