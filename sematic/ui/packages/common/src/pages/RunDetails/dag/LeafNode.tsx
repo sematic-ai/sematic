@@ -6,11 +6,13 @@ import { useHasIncoming } from "src/hooks/dagHooks";
 import { DagViewServiceContext, LEFT_NODE_MAX_WIDTH, StyledHandleTop, StyledHandleBottom } from "src/pages/RunDetails/dag/common";
 import { SPACING } from "src/pages/RunDetails/dag/dagLayout";
 import theme from "src/theme/new";
+import includes from "lodash/includes";
 
 const LeafNodeContainer = styled("div", {
-    shouldForwardProp: (prop) => prop !== "selected"
+    shouldForwardProp: (prop) => !includes(["selected", "color"], prop)
 }) <{
     selected?: boolean;
+    color: string;
 }>`
     width: max-content;
     max-width: ${LEFT_NODE_MAX_WIDTH}px;
@@ -19,6 +21,12 @@ const LeafNodeContainer = styled("div", {
     align-items: center;
     border: ${({ selected }) => selected ? 2 : 1}px solid #ccc;
     border-radius: 4px;
+    border-color: ${({ color }) => color};
+    cursor: pointer;
+
+    label {
+        cursor: pointer;
+    }
 `;
 
 export const LabelContainer = styled.div`
@@ -47,10 +55,11 @@ function LeafNode(props: NodeProps) {
         onNodeClick(run.id);
     }, [onNodeClick, run]);
 
-    return <LeafNodeContainer selected={selected} style={{ paddingRight: `${SPACING}px`, borderColor: color }}
+    return <LeafNodeContainer selected={selected} color={color} style={{ paddingRight: `${SPACING}px` }}
         onClick={onClick}
     >
-        {hasIncoming && <StyledHandleTop type="target" position={Position.Top} isConnectable={false} id={"t"} />}
+        {hasIncoming && <StyledHandleTop type="target" position={Position.Top} isConnectable={false}
+            id={"t"} color={color} />}
         <LabelContainer>
             {stateChip}
             <label >{data.label}</label>
@@ -60,6 +69,7 @@ function LeafNode(props: NodeProps) {
             position={Position.Bottom}
             id="sb"
             isConnectable={false}
+            color={color}
         />
     </LeafNodeContainer>
 }

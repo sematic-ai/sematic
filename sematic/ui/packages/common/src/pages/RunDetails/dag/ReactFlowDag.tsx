@@ -74,11 +74,11 @@ function ReactFlowDagStaging() {
     }, [setLayoutDone, edges, incVersion]);
 
     const onNodeSelectionChange = useCallback((nodeId: string) => {
+        setSelectedPanel(RESET);
         if (nodeId === selectedRun?.id) {
             return;
         }
         setSelectedRunId(nodeId);
-        setSelectedPanel(RESET)
     }, [selectedRun, setSelectedRunId, setSelectedPanel]);
 
     useEffect(() => {
@@ -134,7 +134,9 @@ function ReactFlowDag(props: ReactFlowDagProps) {
     useEffect(() => {
         setNodes([..._nodes]);
         setEdges([..._edges]);
-        reactFlowRef.current?.fitView();
+        reactFlowRef.current?.fitView({
+            maxZoom: 1,
+        });
     }, [_nodes, _edges, setNodes, setEdges]);
 
     return <div style={{ width: "100%", height: "100%" }}>
@@ -144,8 +146,9 @@ function ReactFlowDag(props: ReactFlowDagProps) {
             nodeTypes={nodeTypes}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
-            fitView
             onInit={reactFlow => reactFlowRef.current = reactFlow}
+            fitView
+            fitViewOptions={{maxZoom: 1}}
         />
     </div>;
 }
