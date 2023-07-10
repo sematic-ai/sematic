@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Headline from "src/component/Headline";
 import MoreVertButton from "src/component/MoreVertButton";
@@ -38,7 +38,7 @@ const RunSection = () => {
     const theme = useTheme();
     const navigate = useNavigate();
 
-    const { rootRun, resolution } = useRootRunContext() as RemoveUndefined<ExtractContextType<typeof RootRunContext>>;
+    const { rootRun, resolution, isGraphLoading } = useRootRunContext() as RemoveUndefined<ExtractContextType<typeof RootRunContext>>;
 
     const runFilters = useMemo(
         () => ({
@@ -79,6 +79,13 @@ const RunSection = () => {
     usePipelineSocketMonitor(rootRun.function_path, useMemo(() => ({
         onCancel: reloadRuns
     }), [reloadRuns]));
+
+    useEffect(() => {
+        if (isGraphLoading) {
+            return;
+        }
+        reloadRuns();
+    }, [isGraphLoading, reloadRuns])
 
     return (
         <StyledSection>

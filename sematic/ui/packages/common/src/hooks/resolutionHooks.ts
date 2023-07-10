@@ -31,7 +31,7 @@ export function useRerun(rootRunId?: string, rerunFrom?: string) {
                 rerun_from: rerunFrom,
             }
         });
-    }, [fetch]);
+    }, [fetch, rerunFrom, rootRunId]);
 }
 
 export function useCancelRun(rootRunId: string) {
@@ -42,5 +42,5 @@ export function useCancelRun(rootRunId: string) {
             url: `/api/v1/resolutions/${rootRunId}/cancel`,
             method: "PUT"
         });
-    }, [fetch]);
+    }, [fetch, rootRunId]);
 }
