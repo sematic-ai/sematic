@@ -67,21 +67,9 @@ commands:
       # Pre-build Sematic so we can retry if there are errors due to downloading deps
       - run:
           name: Pre-build Sematic
-          command: bazel build --experimental_repository_downloader_retries=5 //sematic/...
-      - run:
-          # Unfortunately this is the best way to retry in Circle CI
-          # https://support.circleci.com/hc/en-us/articles/360043188514-How-to-Retry-a-Failed-Step-with-when-Attribute-
-          name: Pre-build Sematic (2)
-          command: bazel build --experimental_repository_downloader_retries=5 //sematic/...
-          when: on_fail
-      - run:
-          name: Pre-build Sematic (3)
-          command: bazel build --experimental_repository_downloader_retries=5 //sematic/...
-          when: on_fail
-      - run:
-          name: Pre-build Sematic (4)
-          command: bazel build --experimental_repository_downloader_retries=5 //sematic/...
-          when: on_fail
+          command: |
+            PATH="$PATH:$CIRCLE_WORKING_DIRECTORY/.circleci/"
+            retry 5 bazel build --experimental_repository_downloader_retries=5 //sematic/...
       - run:
           name: Run Non-coverage Tests
           # This assumes pytest is installed via the install-package step above
@@ -92,20 +80,9 @@ commands:
     steps:
       - run:
           name: Build wheel
-          command: make wheel
-      - run:
-          # The wheel building can be flaky due to lib download issues
-          name: Build wheel (2)
-          command: make wheel
-          when: on_fail
-      - run:
-          name: Build wheel (3)
-          command: make wheel
-          when: on_fail
-      - run:
-          name: Build wheel (4)
-          command: make wheel
-          when: on_fail
+          command: |
+            PATH="$PATH:$CIRCLE_WORKING_DIRECTORY/.circleci/"
+            retry 5 make wheel
       - run:
           name: Test pip install
           command: bazel run //sematic/tests/integration:test_pip_install
