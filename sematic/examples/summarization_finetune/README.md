@@ -61,7 +61,14 @@ This example only supports local execution. To run it:
 - `sematic start`
 - `sematic run examples/summarization_finetune -- --help`
 - If you see an error about missing libraries, install them with the provided command.
-- `sematic run examples/summarization_finetune -- --max-train-samples 1 --max-test-samples 1 --model-selection flan-small`
+- Run the pipeline with the `flan-small` example, and an interactive evaluation:
+```shell
+sematic run examples/summarization_finetune -- \
+  --max-train-samples 1 \
+  --max-test-samples 1 \
+  --model-selection flan-small \
+  --launch-interactive
+```
 - View the pipeline results in the Sematic UI at `http://localhost:5001`.
 - Try a different dataset:
 
@@ -82,6 +89,40 @@ sematic run examples/summarization_finetune -- \
 
 - Change the configuration to the pipeline as desired. See the CLI help
 with `sematic run examples/summarization_finetune -- --help` for options.
+
+
+### Results
+
+Here are some screenshots of what you'll get by using this example:
+
+![DAG](./images/DAG.jpg)
+
+*The execution graph for the pipeline. When running live, the status*
+*of each run will be updated as execution progresses. The export step*
+*and an interactive debug step will only be shown if the pipeline is*
+*launched with the appropriate arguments.*
+
+![dashboard](./images/dashboard.jpg)
+*A part of the dashboard for the pipeline. 🤗 buttons link to the*
+*corresponding resources on Hugging Face Hub. Input and output displays*
+*are available for the overall pipeline, as well as all of the steps*
+*within it.*
+
+![Run search](./images/runSearch.jpg)
+*Runs can be searched using tags, free text search, and more.*
+
+![Gradio example](./images/gradioSample.jpg)
+*An interactive Gradio app can be optionally launched as part*
+*of the pipeline. You can provide new prompts and view the summaries*
+*the newly tuned model produces.*
+
+![Interactive prompt response pairs](./images/interactiveTranscript.jpg)
+*The prompts and responses from the interactive Gradio session are*
+*tracked along with other pipeline inputs/outputs.*
+
+![CNN Summary Sample](./images/cnnSummary.jpg)
+*Results from the automatic evaluation are always tracked and*
+*displayed.*
 
 ### Troubleshooting
 

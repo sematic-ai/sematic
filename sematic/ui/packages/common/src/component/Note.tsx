@@ -9,14 +9,8 @@ import DateTime from "src/component/DateTime";
 import NameTag from "src/component/NameTag";
 import { RunReferenceLink } from "src/component/RunReference";
 import Section from "src/component/Section";
+import UserAvatar from "src/component/UserAvatar";
 import theme from "src/theme/new";
-
-export interface Note {
-    name: string;
-    content: string;
-    createdAt: string;
-    runId: string;
-}
 
 type ExtendedStyleProps = {
     isExpanded?: boolean;
@@ -85,11 +79,22 @@ const Footer = styled(Box,  {
     }
 `;
 
-interface NoteProps extends Note {
+const StyledAvatar = styled(UserAvatar)`
+    margin-right: ${theme.spacing(1)};
+`;
+
+interface NoteProps {
+    name: string;
+    content: string;
+    createdAt: string;
+    runId: string;
+    avatarInitials?: string;
+    avatarHoverText?: string | null;
+    avatarUrl?: string | null;
 }
 
 const NoteComponent = (prop: NoteProps) => {
-    const { name, content, createdAt, runId } = prop;
+    const { name, content, createdAt, runId, avatarInitials, avatarHoverText, avatarUrl } = prop;
 
     const theme = useTheme();
     const [isExpanded, setIsExpanded] = useState(false);
@@ -107,7 +112,8 @@ const NoteComponent = (prop: NoteProps) => {
         <div ref={contentArea}>
             <Title>
                 <Box style={{ display: "flex" }}>
-                    <NameTag firstName={name} />
+                    {!!avatarInitials && <StyledAvatar initials={avatarInitials} hoverText={avatarHoverText} avatarUrl={avatarUrl} />}
+                    {!!name && <NameTag firstName={name} />}
                     <Typography variant="small" color={theme.palette.lightGrey.main} paragraph={false}>
                         {"\xa0on run"}
                     </Typography>

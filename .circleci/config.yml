@@ -64,6 +64,12 @@ commands:
   non-coverage-tests:
     description: Do tests without tracking code coverage
     steps:
+      # Pre-build Sematic so we can retry if there are errors due to downloading deps
+      - run:
+          name: Pre-build Sematic
+          command: |
+            PATH="$PATH:$CIRCLE_WORKING_DIRECTORY/.circleci/"
+            retry 5 bazel build --experimental_repository_downloader_retries=5 //sematic/...
       - run:
           name: Run Non-coverage Tests
           # This assumes pytest is installed via the install-package step above
@@ -74,7 +80,9 @@ commands:
     steps:
       - run:
           name: Build wheel
-          command: make wheel
+          command: |
+            PATH="$PATH:$CIRCLE_WORKING_DIRECTORY/.circleci/"
+            retry 5 make wheel
       - run:
           name: Test pip install
           command: bazel run //sematic/tests/integration:test_pip_install

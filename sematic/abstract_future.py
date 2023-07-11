@@ -92,6 +92,8 @@ _ALLOWED_TRANSITIONS = {
             # Not all that uncommon: if run is downstream from something that
             # is canceled/failed, it goes from CREATED -> CANCELLED
             FutureState.CANCELED,
+            # Happens if the run can't be scheduled.
+            FutureState.FAILED,
         }
     ),
     FutureState.SCHEDULED: frozenset(

@@ -32,7 +32,7 @@ def show_settings_cli() -> None:
     click.echo(f"Active profile settings:\n\n{settings_dump}")
 
 
-@settings.command("set", short_help="Set a user settings value")
+@settings.command("set", short_help="Set a user settings value")  # type: ignore
 @click.argument("var", type=click.STRING)
 @click.argument("value", type=click.STRING)
 @click.option(
@@ -73,7 +73,7 @@ def _set_plugin_settings_cli(
     click.echo(f"Successfully set {var} to {repr(value)}\n")
 
 
-@settings.command("delete", short_help="Delete a user setting value")
+@settings.command("delete", short_help="Delete a user setting value")  # type: ignore
 @click.argument("var", type=click.STRING)
 def delete_settings_cli(var: str) -> None:
     """
@@ -114,7 +114,7 @@ def show_server_settings_cli() -> None:
     show_settings_cli()
 
 
-@server_settings.command("set", short_help="Set a server setting value")
+@server_settings.command("set", short_help="Set a server setting value")  # type: ignore
 @click.argument("var", type=click.STRING)
 @click.argument("value", type=click.STRING)
 def set_server_settings_cli(var: str, value: str) -> None:
@@ -124,7 +124,9 @@ def set_server_settings_cli(var: str, value: str) -> None:
     _set_plugin_settings_cli(var=var, value=value, plugin=ServerSettings)
 
 
-@server_settings.command("delete", short_help="Delete a server setting value")
+@server_settings.command(  # type: ignore
+    "delete", short_help="Delete a server setting value"
+)
 @click.argument("var", type=click.STRING)
 def delete_server_settings_cli(var: str) -> None:
     """
