@@ -7,5 +7,5 @@ from sqlalchemy.orm import declarative_mixin
 @declarative_mixin
 class HasUserMixin:
     @declared_attr
-    def user_id(cls):
+    def user_id(cls) -> Column[types.String]:
         return Column(types.String(), ForeignKey("users.id"), nullable=True)
