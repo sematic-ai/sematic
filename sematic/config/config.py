@@ -179,6 +179,10 @@ class Config:
     def __str__(self) -> str:
         return repr(self)
 
+    @property
+    def redacted_db_url(self):
+        return self._scrub_db_password(self.db_url)
+
     def _scrub_db_password(self, text: str) -> str:
         db_password = _get_db_password(self.db_url)
         if db_password is None:
