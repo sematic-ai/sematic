@@ -31,9 +31,7 @@ _SLACK_URL_TEMPLATE = "https://hooks.slack.com/services/{webhook_token}"
 # TODO: implement server-side dedicated components that build urls that point to specific
 #  resources - e.g. have resolutions.py build this url for us
 # currently, this needs to be updated here whenever the endpoints change
-_RESOLUTION_URL_TEMPLATE = (
-    "{external_url}/pipelines/{pipeline_import_path}/{resolution_id}#tab=logs"
-)
+_RESOLUTION_URL_TEMPLATE = "{external_url}/runs/{resolution_id}#tab=logs"
 _MESSAGE_TEMPLATE = (
     ":red_circle: {resolution_name} run "
     "<{resolution_url}|{short_resolution_id}> has failed."
@@ -90,7 +88,6 @@ class SlackPublisher(AbstractPublisher, AbstractPlugin):
         #  redirect to the full url path
         resolution_url = _RESOLUTION_URL_TEMPLATE.format(
             external_url=external_url,
-            pipeline_import_path=root_run.function_path,
             resolution_id=resolution.root_id,
         )
 
