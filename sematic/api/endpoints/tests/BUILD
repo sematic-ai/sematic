@@ -30,6 +30,7 @@ pytest_test(
         "//sematic/db/tests:fixtures",
         "//sematic/plugins:abstract_publisher",
         "//sematic/scheduling:kubernetes",
+        "//sematic/scheduling:job_scheduler",
         "//sematic/utils:env",
     ],
 )

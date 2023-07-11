@@ -190,10 +190,11 @@ def _assert_resolution_is_scheduleable(resolution: Resolution):
         # You may wonder how we can get here given that clients check for server
         # compatibility. This can still happen if somebody tries to rerun an old
         # resolution (ex: from the UI).
+        min_version_str = ".".join(str(v) for v in MIN_CLIENT_SERVER_SUPPORTS)
         raise StateNotSchedulable(
             f"The resolution {resolution.root_id} uses Sematic version "
             f"{resolution.client_version}, but the server requires at least "
-            f"version {MIN_CLIENT_SERVER_SUPPORTS}"
+            f"version {min_version_str}"
         )
 
 

@@ -60,6 +60,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
 )
 from sematic.plugins.abstract_publisher import AbstractPublisher
 from sematic.scheduling.job_details import JobKind
+from sematic.scheduling.job_scheduler import StateNotSchedulable
 from sematic.utils.env import environment_variables
 
 test_get_resolution_auth = make_auth_test("/api/v1/resolutions/123")
@@ -348,6 +349,25 @@ def test_schedule_resolution_endpoint_no_auth(
     )
 
 
+def test_schedule_resolution_unschedulable(
+    mock_auth,  # noqa: F811
+    persisted_resolution: Resolution,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    mock_schedule_resolution: mock.MagicMock,
+):
+
+    mock_schedule_resolution.side_effect = StateNotSchedulable("fake error")
+    response = test_client.post(
+        "/api/v1/resolutions/{}/schedule".format(persisted_resolution.root_id),
+        json={"max_parallelism": 3, "rerun_from": "rerun_from_run_id"},
+    )
+
+    assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
+    run = get_run(persisted_resolution.root_id)  # noqa: F811
+    assert run.future_state == FutureState.FAILED.value
+    assert "fake error" in repr(run.exception_metadata)
+
+
 def test_clean_resolution(
     mock_auth,  # noqa: F811
     persisted_resolution: Resolution,  # noqa: F811
@@ -545,6 +565,27 @@ def test_cancel_resolution(
 
     canceled_resolution = get_resolution(persisted_resolution.root_id)
     assert canceled_resolution.status == ResolutionStatus.CANCELED.value
+
+
+@mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
+def test_rerun_resolution_unschedulable(
+    mock_broadcast_update: mock.MagicMock,
+    persisted_resolution: Resolution,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_auth,  # noqa: F811
+    mock_schedule_resolution: mock.MagicMock,
+):
+
+    mock_schedule_resolution.side_effect = StateNotSchedulable("fake error")
+    response = test_client.post(
+        f"/api/v1/resolutions/{persisted_resolution.root_id}/rerun",
+        json={"rerun_from": persisted_resolution.root_id},
+    )
+    mock_broadcast_update.assert_called()
+
+    assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert "fake error" in response.json["error"]  # type: ignore
 
 
 @mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
