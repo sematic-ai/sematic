@@ -363,7 +363,7 @@ def test_schedule_resolution_unschedulable(
     )
 
     assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
-    run = get_run(persisted_resolution.root_id)
+    run = get_run(persisted_resolution.root_id)  # noqa: F811
     assert run.future_state == FutureState.FAILED.value
     assert "fake error" in repr(run.exception_metadata)
 
@@ -568,7 +568,7 @@ def test_cancel_resolution(
 
 
 @mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
-def test_rerun_resolution_endpoint_no_auth(
+def test_rerun_resolution_unschedulable(
     mock_broadcast_update: mock.MagicMock,
     persisted_resolution: Resolution,  # noqa: F811
     test_client: flask.testing.FlaskClient,  # noqa: F811
@@ -585,7 +585,7 @@ def test_rerun_resolution_endpoint_no_auth(
     mock_broadcast_update.assert_called()
 
     assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
-    assert "fake error" in response.json["error"]
+    assert "fake error" in response.json["error"]  # type: ignore
 
 
 @mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
