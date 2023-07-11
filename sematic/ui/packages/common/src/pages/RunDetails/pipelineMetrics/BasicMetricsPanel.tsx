@@ -124,7 +124,7 @@ export default function BasicMetricsPanel(props: BasicMetricsPanelProps) {
                     </Grid>
                     <Typography variant="h3">Average run time by function</Typography>
                     <Box sx={{ my: 10 }}>
-                        <Table>
+                        <Table sx={{position: "relative"}}>
                             <TableBody>
                                 {sortedAvgRuntimeChildren.map(
                                     ([functionPath, runtimeS], idx) => (
