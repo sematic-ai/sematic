@@ -8,6 +8,7 @@ import UserContext from "src/context/UserContext";
 import { useNoteSubmission, usePipelineNotes } from "src/hooks/noteHooks";
 import SubmitNoteSection from "src/pages/RunDetails/SubmitNoteSection";
 import theme from "src/theme/new";
+import { getUserInitials } from "src/utils/string";
 import { ExtractContextType } from "src/utils/typings";
 
 const Notes = styled.section`
@@ -60,6 +61,8 @@ const NotesPane = () => {
         <Notes>
             {(notes || []).map(({ note, run_id, created_at, user }, index) =>
                 <Note key={index} content={note} name={getUserName(user)} runId={run_id}
+                    avatarInitials={getUserInitials(user?.first_name, user?.last_name, user?.email)}
+                    avatarUrl={user?.avatar_url} avatarHoverText={user?.first_name || user?.email}
                     createdAt={created_at as unknown as string} />)}
         </Notes>
     </>;
