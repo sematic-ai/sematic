@@ -6,13 +6,25 @@ from sematic.db.db import db
 def up():
     if db().get_engine().url.drivername == "sqlite":
         with db().get_engine().begin() as conn:
-            conn.execute("UPDATE runs SET function_path = 'UNKNOWN.UNKNOWN' WHERE function_path IS NULL;")
+            conn.execute(
+                "UPDATE runs SET function_path = 'UNKNOWN.UNKNOWN' WHERE function_path IS NULL;"
+            )
             conn.execute("UPDATE runs SET tags = '[]' WHERE tags IS NULL;")
-            conn.execute("UPDATE runs SET source_code = 'source code unavailable' WHERE source_code IS NULL;")
-            conn.execute("UPDATE jobs SET created_at = datetime(0, 'unixepoch') WHERE created_at IS NULL;")
-            conn.execute("UPDATE jobs SET updated_at = datetime(0, 'unixepoch') WHERE updated_at IS NULL;")
-            conn.execute("UPDATE notes SET created_at = datetime(0, 'unixepoch') WHERE created_at IS NULL;")
-            conn.execute("UPDATE notes SET updated_at = datetime(0, 'unixepoch') WHERE updated_at IS NULL;")
+            conn.execute(
+                "UPDATE runs SET source_code = 'source code unavailable' WHERE source_code IS NULL;"
+            )
+            conn.execute(
+                "UPDATE jobs SET created_at = datetime(0, 'unixepoch') WHERE created_at IS NULL;"
+            )
+            conn.execute(
+                "UPDATE jobs SET updated_at = datetime(0, 'unixepoch') WHERE updated_at IS NULL;"
+            )
+            conn.execute(
+                "UPDATE notes SET created_at = datetime(0, 'unixepoch') WHERE created_at IS NULL;"
+            )
+            conn.execute(
+                "UPDATE notes SET updated_at = datetime(0, 'unixepoch') WHERE updated_at IS NULL;"
+            )
 
             conn.execute(
                 """
@@ -45,10 +57,13 @@ def up():
 
                     FOREIGN KEY(root_id) REFERENCES runs (id)
                 );
-                """)
+                """
+            )
 
             conn.execute("CREATE INDEX ix_runs_cache_key ON runs_new (cache_key);")
-            conn.execute("CREATE INDEX ix_runs_function_path ON runs_new (function_path);")
+            conn.execute(
+                "CREATE INDEX ix_runs_function_path ON runs_new (function_path);"
+            )
 
             conn.execute(
                 """
@@ -78,7 +93,8 @@ def up():
                         cache_key,
                         user_id
                     FROM runs;
-                """)
+                """
+            )
 
             conn.execute("DROP TABLE runs;")
             conn.execute("ALTER TABLE runs_new RENAME TO runs;")
@@ -94,7 +110,8 @@ def up():
 
                     PRIMARY KEY (id)
                 );
-                """)
+                """
+            )
             conn.execute("INSERT INTO artifacts_new SELECT * FROM artifacts;")
             conn.execute("DROP TABLE artifacts;")
             conn.execute("ALTER TABLE artifacts_new RENAME TO artifacts;")
@@ -119,7 +136,8 @@ def up():
                     PRIMARY KEY (root_id),
                     FOREIGN KEY (root_id) REFERENCES runs(id)
                 );
-                """)
+                """
+            )
 
             conn.execute(
                 """
@@ -138,7 +156,8 @@ def up():
                         run_command,
                         build_config
                     FROM resolutions;
-                """)
+                """
+            )
             conn.execute("DROP TABLE resolutions;")
             conn.execute("ALTER TABLE resolutions_new RENAME TO resolutions;")
 
@@ -161,7 +180,8 @@ def up():
 
                     FOREIGN KEY(run_id) REFERENCES runs (id)
                 );
-                """)
+                """
+            )
 
             conn.execute("CREATE INDEX ix_jobs_run_id ON jobs_new (run_id);")
             conn.execute("INSERT INTO jobs_new SELECT * FROM jobs;")
@@ -185,7 +205,8 @@ def up():
                     FOREIGN KEY(root_id) REFERENCES runs (id),
                     FOREIGN KEY(user_id) REFERENCES users (id)
                 );
-                """)
+                """
+            )
             conn.execute("INSERT INTO notes_new SELECT * FROM notes;")
             conn.execute("DROP TABLE notes;")
             conn.execute("ALTER TABLE notes_new RENAME TO notes;")
@@ -210,11 +231,16 @@ def up():
                     FOREIGN KEY(destination_run_id) REFERENCES runs (id),
                     FOREIGN KEY(source_run_id) REFERENCES runs (id)
                 );
-                """)
+                """
+            )
             conn.execute("INSERT INTO edges_new SELECT * FROM edges;")
             conn.execute("DROP TABLE edges;")
-            conn.execute("CREATE INDEX ix_edges_source_run_id ON edges_new (source_run_id);")
-            conn.execute("CREATE INDEX ix_edges_destination_run_id ON edges_new (destination_run_id);")
+            conn.execute(
+                "CREATE INDEX ix_edges_source_run_id ON edges_new (source_run_id);"
+            )
+            conn.execute(
+                "CREATE INDEX ix_edges_destination_run_id ON edges_new (destination_run_id);"
+            )
             conn.execute("ALTER TABLE edges_new RENAME TO edges;")
 
             conn.execute(
@@ -227,11 +253,16 @@ def up():
 
                     FOREIGN KEY(metric_id) REFERENCES metric_labels (metric_id)
                 );
-                """)
+                """
+            )
             conn.execute("INSERT INTO metric_values_new SELECT * FROM metric_values;")
             conn.execute("DROP TABLE metric_values;")
-            conn.execute("CREATE INDEX metric_values_id_time_idx ON metric_values_new (metric_id, metric_time DESC);")
-            conn.execute("CREATE INDEX metric_values_time_idx ON metric_values_new (metric_time DESC);")
+            conn.execute(
+                "CREATE INDEX metric_values_id_time_idx ON metric_values_new (metric_id, metric_time DESC);"
+            )
+            conn.execute(
+                "CREATE INDEX metric_values_time_idx ON metric_values_new (metric_time DESC);"
+            )
             conn.execute("ALTER TABLE metric_values_new RENAME TO metric_values;")
     else:
         with db().get_engine().begin() as conn:
@@ -269,7 +300,8 @@ def up():
                 ALTER INDEX jobs_run_id RENAME TO ix_jobs_run_id;
                 ALTER INDEX runs_cache_key_index RENAME TO ix_runs_cache_key;
                 ALTER INDEX runs_calculator_path RENAME TO ix_runs_function_path;
-                """)
+                """
+            )
 
 
 def down():
@@ -303,4 +335,5 @@ def down():
                 ALTER INDEX ix_jobs_run_id RENAME TO jobs_run_id;
                 ALTER INDEX ix_runs_cache_key RENAME TO runs_cache_key_index;
                 ALTER INDEX ix_runs_function_path RENAME TO runs_calculator_path;
-                """)
+                """
+            )

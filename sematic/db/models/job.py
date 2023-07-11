@@ -63,8 +63,9 @@ class Job(Base, JSONEncodableMixin):
 
     name: str = Column(types.String(), primary_key=True)
     namespace: str = Column(types.String(), primary_key=True)
-    run_id: str = Column(types.String(), ForeignKey("runs.id"), nullable=False,
-                         index=True)
+    run_id: str = Column(
+        types.String(), ForeignKey("runs.id"), nullable=False, index=True
+    )
     last_updated_epoch_seconds: float = Column(types.Float(), nullable=False)
     state: KubernetesJobStateString = Column(types.String(), nullable=False)
     kind: JobKindString = Column(types.String(), nullable=False)
