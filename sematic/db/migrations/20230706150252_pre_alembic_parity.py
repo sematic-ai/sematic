@@ -19,7 +19,6 @@ def up():
             conn.execute("UPDATE notes SET created_at = datetime(0, 'unixepoch') WHERE created_at IS NULL;")
             conn.execute("UPDATE notes SET updated_at = datetime(0, 'unixepoch') WHERE updated_at IS NULL;")
 
-        with db().get_engine().begin() as conn:
             conn.execute(
                 """
                 CREATE TABLE runs_new (
@@ -90,7 +89,6 @@ def up():
             conn.execute("DROP TABLE runs;")
             conn.execute("ALTER TABLE runs_new RENAME TO runs;")
 
-        with db().get_engine().begin() as conn:
             conn.execute(
                 """
                 CREATE TABLE artifacts_new (
@@ -108,7 +106,6 @@ def up():
             conn.execute("ALTER TABLE artifacts_new RENAME TO artifacts;")
 
 
-        with db().get_engine().begin() as conn:
             conn.execute(
                 """
                 CREATE TABLE resolutions_new (
@@ -152,7 +149,6 @@ def up():
             conn.execute("DROP TABLE resolutions;")
             conn.execute("ALTER TABLE resolutions_new RENAME TO resolutions;")
 
-        with db().get_engine().begin() as conn:
             conn.execute(
                 """
                 CREATE TABLE jobs_new (
@@ -179,7 +175,6 @@ def up():
             conn.execute("DROP TABLE jobs;")
             conn.execute("ALTER TABLE jobs_new RENAME TO jobs;")
 
-        with db().get_engine().begin() as conn:
             conn.execute(
                 """
                 CREATE TABLE notes_new (
@@ -202,7 +197,6 @@ def up():
             conn.execute("DROP TABLE notes;")
             conn.execute("ALTER TABLE notes_new RENAME TO notes;")
 
-        with db().get_engine().begin() as conn:
             conn.execute(
                 """
                 CREATE TABLE edges_new (
@@ -230,7 +224,6 @@ def up():
             conn.execute("CREATE INDEX ix_edges_destination_run_id ON edges_new (destination_run_id);")
             conn.execute("ALTER TABLE edges_new RENAME TO edges;")
 
-        with db().get_engine().begin() as conn:
             conn.execute(
                 """
                 CREATE TABLE metric_values_new (
