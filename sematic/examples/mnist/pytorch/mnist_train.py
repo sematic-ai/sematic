@@ -49,11 +49,10 @@ def main():
 
     runner = LocalRunner() if args.local else CloudRunner()
 
-    runner.run(
-        pipeline(config=config).set(
-            name="PyTorch MNIST Example", tags=["pytorch", "example", "mnist"]
-        )
+    future = pipeline(config=config).set(
+        name="PyTorch MNIST Example", tags=["pytorch", "example", "mnist"]
     )
+    runner.run(future)
 
 
 if __name__ == "__main__":

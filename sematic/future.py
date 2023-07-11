@@ -13,6 +13,7 @@ from sematic.resolvers.silent_resolver import SilentResolver
 # Recall that .resolve will be removed from future, at
 # which point there will be no need for such a dependency
 # anyway.
+# TODO: https://github.com/sematic-ai/sematic/issues/975
 Runner = Any
 
 

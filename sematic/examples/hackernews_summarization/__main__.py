@@ -99,9 +99,8 @@ def main():
     hn_config = HNFetchConfig(args.past_n_days, args.max_stories)
     query = args.query
 
-    LocalRunner().run(
-        pipeline(query, hn_config, llm_config).set(name="HackerNews summary")
-    )
+    future = pipeline(query, hn_config, llm_config).set(name="HackerNews summary")
+    LocalRunner().run(future)
 
 
 if __name__ == "__main__":

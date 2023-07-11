@@ -12,7 +12,8 @@ def main():
     """
     Entry point of my pipeline.
     """
-    LocalRunner().run(pipeline())
+    future = pipeline()
+    LocalRunner().run(future)
 
 
 if __name__ == "__main__":

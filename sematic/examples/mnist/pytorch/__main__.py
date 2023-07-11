@@ -27,11 +27,10 @@ def main():
     $ sematic run examples/mnist/pytorch
     ```
     """
-    LocalRunner().run(
-        pipeline(PIPELINE_CONFIG).set(
-            name="PyTorch MNIST Example", tags=["pytorch", "example", "mnist"]
-        )
+    future = pipeline(PIPELINE_CONFIG).set(
+        name="PyTorch MNIST Example", tags=["pytorch", "example", "mnist"]
     )
+    LocalRunner().run(future)
 
 
 if __name__ == "__main__":

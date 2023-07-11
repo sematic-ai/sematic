@@ -50,11 +50,10 @@ def main():
         for learning_rate in learning_rates
     ]
 
-    CloudRunner(detach=args.detach).run(
-        scan_learning_rate(
-            dataloader_config=DataLoaderConfig(), train_configs=train_configs
-        ).set(name="Scan MNIST learning rates")
-    )
+    future = scan_learning_rate(
+        dataloader_config=DataLoaderConfig(), train_configs=train_configs
+    ).set(name="Scan MNIST learning rates")
+    CloudRunner(detach=args.detach).run(future)
 
 
 if __name__ == "__main__":

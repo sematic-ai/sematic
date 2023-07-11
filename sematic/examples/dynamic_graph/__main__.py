@@ -15,9 +15,10 @@ def main(ntries: int):
     """
     Entry point of my pipeline.
     """
-    LocalRunner().run(
-        pipeline(ntries).set(name="Dynamic graph example", tags=["examples", "dynamic"])
+    future = pipeline(ntries).set(
+        name="Dynamic graph example", tags=["examples", "dynamic"]
     )
+    LocalRunner().run(future)
 
 
 if __name__ == "__main__":

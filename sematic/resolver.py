@@ -15,6 +15,8 @@ class Resolver(abc.ABC):
     Abstract base class for all resolvers. Defines the `Resolver` interfaces.
     """
 
+    # TODO: https://github.com/sematic-ai/sematic/issues/975
+
     def resolve(self, future: AbstractFuture) -> typing.Any:
         """
         Abstract method. Entry-point for the resolution algorithm.
@@ -29,7 +31,6 @@ class Resolver(abc.ABC):
         Any
             output of the pipeline.
         """
-        # TODO: https://github.com/sematic-ai/sematic/issues/957
         logger.warning(
             "Calling .resolve(...) will soon be deprecated. Please use .run(...) instead."
         )

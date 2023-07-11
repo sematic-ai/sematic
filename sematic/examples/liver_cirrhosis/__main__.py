@@ -21,12 +21,11 @@ def main():
         os.path.dirname(os.path.realpath(__file__)), "data", "cirrhosis.csv"
     )
 
-    LocalRunner().run(
-        pipeline(csv_path).set(
-            name="Liver disease prediction",
-            tags=["example", "seaborn", "matplotlib", "pandas"],
-        )
+    future = pipeline(csv_path).set(
+        name="Liver disease prediction",
+        tags=["example", "seaborn", "matplotlib", "pandas"],
     )
+    LocalRunner().run(future)
 
 
 if __name__ == "__main__":

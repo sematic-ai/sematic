@@ -15,12 +15,11 @@ def main():
     ```
     """
 
-    LocalRunner().run(
-        pipeline().set(
-            name="Titanic survival prediction",
-            tags=["Beginner", "EDA", "Classification", "Structured Data"],
-        )
+    future = pipeline().set(
+        name="Titanic survival prediction",
+        tags=["Beginner", "EDA", "Classification", "Structured Data"],
     )
+    LocalRunner().run(future)
 
 
 if __name__ == "__main__":

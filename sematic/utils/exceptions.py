@@ -209,6 +209,7 @@ class PipelineRunError(Exception):
 # In case anybody is using this still.
 # should deprecate it after resolver -> runner rename
 # has been done for a while.
+# TODO: https://github.com/sematic-ai/sematic/issues/975
 ResolutionError = PipelineRunError
 
 

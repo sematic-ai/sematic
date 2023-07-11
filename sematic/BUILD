@@ -39,7 +39,7 @@ sematic_py_lib(
         "//sematic/resolvers:silent_resolver",
         "//sematic/resolvers:resource_requirements",
         "//sematic/resolvers:worker",
-        # "//sematic/runners:cloud_runner",
+        "//sematic/runners:cloud_runner",
         "//sematic/runners:local_runner",
         "//sematic/runners:silent_runner",
         "//sematic/types:casting",
