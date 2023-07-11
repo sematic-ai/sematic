@@ -214,7 +214,7 @@ def migrate_up():
     """
     Migrate the DB to the latest version.
     """
-    logging.info("Running migrations on {}".format(get_config().db_url))
+    logging.info("Running migrations on {}".format(get_config().redacted_db_url))
 
     versions = _get_current_versions()
 
