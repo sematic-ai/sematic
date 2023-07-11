@@ -1,8 +1,8 @@
-import { useAtom } from "jotai";
-import { EnvContext } from "../index";
-import { useEnv, userAtom } from "../hooks/appHooks";
-import { ReactNode } from "react";
 import Alert from "@mui/material/Alert/Alert";
+import EnvContext from "@sematic/common/src/context/envContext";
+import { useAtom } from "jotai";
+import { ReactNode } from "react";
+import { useEnv, userAtom } from "../hooks/appHooks";
 
 export default function EnvironmentProvider({ children }: { children: ReactNode }) {
     const [user] = useAtom(userAtom);

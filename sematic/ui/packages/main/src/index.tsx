@@ -2,6 +2,7 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
+import PluginsProvider from "@sematic/common/src/context/PluginsProvider";
 import UserContext from "@sematic/common/src/context/UserContext";
 import AppContext from "@sematic/common/src/context/appContext";
 import NewShell, { HeaderSelectionKey } from "@sematic/common/src/layout/Shell";
@@ -38,8 +39,7 @@ import PipelineView from "./pipelines/PipelineView";
 import { setupPostHogOptout } from "./postHogManager";
 import { RunIndex } from "./runs/RunIndex";
 import { sha1 } from "./utils";
-
-export const EnvContext = React.createContext<Map<string, string>>(new Map());
+import PluginsLoader from "src/PluginsLoader";
 
 function App() {
     const [user, setUser] = useAtom(userAtom);
@@ -70,17 +70,20 @@ function App() {
         return <Loading error={error} isLoaded={!loading} />;
     }
 
-    return <AppContext.Provider value={appContextValue}>
-        <UserContext.Provider value={userContextValue}>
-            <EnvironmentProvider>
-                <SnackBarProvider>
-                    <Helper />
-                    <Health />
-                    <Outlet />
-                </SnackBarProvider>
-            </EnvironmentProvider>
-        </UserContext.Provider>
-    </AppContext.Provider>;
+    return <PluginsProvider>
+        <AppContext.Provider value={appContextValue}>
+            <UserContext.Provider value={userContextValue}>
+                <EnvironmentProvider>
+                    <SnackBarProvider>
+                        <Helper />
+                        <Health />
+                        <Outlet />
+                        <PluginsLoader />
+                    </SnackBarProvider>
+                </EnvironmentProvider>
+            </UserContext.Provider>
+        </AppContext.Provider>
+    </PluginsProvider>;
 }
 
 const isNewUIEnabled = getFeatureFlagValue("newui");

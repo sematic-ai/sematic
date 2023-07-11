@@ -5,17 +5,17 @@ import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import { styled } from "@mui/system";
 import { Artifact } from "@sematic/common/src/Models";
+import EnvContext from "@sematic/common/src/context/envContext";
 import { useContext } from "react";
-import { EnvContext } from "src";
 import GrafanaPanel from "src/addons/grafana/GrafanaPanel";
 import SourceCode from "src/components/SourceCode";
 import { usePipelinePanelsContext } from "src/hooks/pipelineHooks";
 import { ArtifactList } from "src/pipelines/Artifacts";
-import ExternalResourcePanel from "src/pipelines/external_resource/ExternalResource";
-import PodLifecycle from "src/pipelines/pod_lifecycle/PodLifecycle";
 import LogPanel from "src/pipelines/LogPanel";
 import OutputPanel from "src/pipelines/OutputPanel";
 import RunMetricsPanel from "src/pipelines/RunMetricsPanel";
+import ExternalResourcePanel from "src/pipelines/external_resource/ExternalResource";
+import PodLifecycle from "src/pipelines/pod_lifecycle/PodLifecycle";
 
 const StickyHeader = styled(Box)`
     position: sticky;

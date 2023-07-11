@@ -4,17 +4,19 @@ import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
+import { Slot } from "@sematic/react-slot-fill/src";
+import { useAtom } from "jotai";
+import { useContext } from "react";
+import PluginsContext from "src/context/pluginsContext";
 import { selectedTabHashAtom } from "src/hooks/runHooks";
 import InputPane from "src/pages/RunDetails/artifacts/InputPane";
 import OutputPane from "src/pages/RunDetails/artifacts/OutputPane";
+import ExternalResourcePanel from "src/pages/RunDetails/externalResource";
 import LogsPane from "src/pages/RunDetails/logs/LogsPane";
 import RunMetricsPanel from "src/pages/RunDetails/metricsTab";
-import ExternalResourcePanel from "src/pages/RunDetails/externalResource";
 import PodLifecyclePanel from "src/pages/RunDetails/podLifecycle";
-import theme from "src/theme/new";
-import { useAtom } from "jotai";
 import SourceCodePanel from "src/pages/RunDetails/sourcecode";
-
+import theme from "src/theme/new";
 
 const StyledTabsContainer = styled(Box)`
     position: relative;
@@ -67,6 +69,8 @@ const RunTabs = (props: RunTabsProps) => {
         setSelectedRunTab(newValue);
     };
 
+    const { RunTabs: { tabs } } = useContext(PluginsContext);
+
     return <TabContext value={selectedRunTab || "output"}>
         <StyledTabsContainer>
             <TabList onChange={handleChange} aria-label="Selected run tabs">
@@ -77,6 +81,8 @@ const RunTabs = (props: RunTabsProps) => {
                 <Tab label="Metrics" value="metrics" />
                 <Tab label="Resources" value="ext_res" />
                 <Tab label="Pods" value="pod_lifecycle" />
+                {/* The below are the tabs added by plugins */}
+                { tabs.map((tab, index) => <Tab key={index} label={tab} value={tab} />)}
             </TabList>
         </StyledTabsContainer>
         <ArtifactPanel value="input">
@@ -100,6 +106,7 @@ const RunTabs = (props: RunTabsProps) => {
         <StyledTabPanel value="pod_lifecycle">
             <PodLifecyclePanel />
         </StyledTabPanel>
+        <Slot name="run-tabs" />
     </TabContext>
 };
 

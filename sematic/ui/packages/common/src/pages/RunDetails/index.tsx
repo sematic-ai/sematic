@@ -1,4 +1,4 @@
-import { useAtom } from "jotai";
+import { atom, useAtom } from "jotai";
 import { RESET } from "jotai/utils";
 import { useCallback, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
@@ -16,6 +16,8 @@ import NotesPane from "src/pages/RunDetails/NotesPane";
 import { createRunRouter } from "src/pages/RunDetails/RunRouter";
 import { ExtractContextType } from "src/utils/typings";
 
+export const selectedRunAtom = atom<Run | undefined>(undefined);
+
 interface RunDetailsProps {
     rootRun: Run;
 }
@@ -24,7 +26,7 @@ const RunDetails = (props: RunDetailsProps) => {
 
     const [selectedRunIdHash, setSelectedRunId] = useAtom(selectedRunHashAtom);
     const [selectedPanel, setSelectedPanel] = useAtom(selectedPanelAtom);
-
+    const [, setSelectRun ] = useAtom(selectedRunAtom);
     const [resolution, isResolutionLoading] = useFetchResolution(rootRun.id!);
     const [graph, isGraphLoading] = useGraph(rootRun.id!);
 
@@ -79,6 +81,12 @@ const RunDetails = (props: RunDetailsProps) => {
             return;
         }
     }, [selectedRunIdHash, graph, rootRun, updateHash]);
+
+    // sync the selected run with the atom, so that the atom can be used in other
+    // components.
+    useEffect(() => {
+        setSelectRun(selectedRun);
+    }, [selectedRun, setSelectRun]);
 
     return <RootRunContext.Provider value={rootRunContextValue}>
         <RunDetailsSelectionContext.Provider value={runDetailsSelectionContext}>
