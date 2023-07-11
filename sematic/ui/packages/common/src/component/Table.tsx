@@ -93,7 +93,7 @@ const TableComponent = <T,>(props: TableComponentProps<T>) => {
 
     const navigate = useNavigate();
 
-    return <TableScroller className={className}>
+    return <TableScroller className={className} data-cy={"RunList"}>
         <TableMui>
             <StyledHeader stickyHeader={stickyHeader}>
                 <TableRow>
@@ -108,7 +108,7 @@ const TableComponent = <T,>(props: TableComponentProps<T>) => {
             </StyledHeader>
             <TableBody>
                 {table.getRowModel().rows.map(row => (
-                    <TableDataRow key={row.id} onClick={() => !!getRowLink && navigate(getRowLink(row))}>
+                    <TableDataRow key={row.id} onClick={() => !!getRowLink && navigate(getRowLink(row))} data-cy={"runlist-row"}>
                         {row.getVisibleCells().map(cell => (
                             <TableCell key={cell.id} style={(cell.column.columnDef.meta as any).columnStyles}>
                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
