@@ -3,6 +3,14 @@ import LayoutServiceContext from "src/context/LayoutServiceContext";
 import { useRootRunContext } from "src/context/RootRunContext";
 import BasicMetricsPanel from "src/pages/RunDetails/pipelineMetrics/BasicMetricsPanel";
 import useUnmount from "react-use/lib/useUnmount";
+import styled from "@emotion/styled";
+
+
+const ScrollContainerWrapper = styled.div`
+    overflow-y: auto;
+    margin-right: -25px;
+    height: 100%;
+`;
 
 function PipelineMetrics() {
     const { rootRun } = useRootRunContext();
@@ -13,13 +21,15 @@ function PipelineMetrics() {
         setIsLoading(false);
     });
 
-    if (!rootRun ) {
+    if (!rootRun) {
         return null;
     }
 
-    return <BasicMetricsPanel runId={rootRun.id} functionPath={rootRun.function_path}
-        setIsLoading={setIsLoading} />
-        
+    return <ScrollContainerWrapper>
+        <BasicMetricsPanel runId={rootRun.id} functionPath={rootRun.function_path}
+            setIsLoading={setIsLoading} />
+    </ScrollContainerWrapper>;
+
 }
 
 
