@@ -303,7 +303,7 @@ def rerun_resolution_endpoint(
     original_root_run = original_runs[0]
 
     root_run, edges = clone_root_run(original_root_run, original_edges)
-    logger.warning("Cloning %s to %s", resolution_id, root_run.id)
+    logger.info("Cloning %s to %s", resolution_id, root_run.id)
 
     if user is not None:
         root_run.user_id = user.id
@@ -311,7 +311,6 @@ def rerun_resolution_endpoint(
     save_graph(runs=[root_run], edges=edges, artifacts=[])
 
     resolution = clone_resolution(resolution=original_resolution, root_id=root_run.id)
-    logger.warning("Cloned resolution %s", root_run.id)
 
     resolution, updated = _update_resolution_user(resolution=resolution, user=user)
     if updated:
@@ -321,7 +320,7 @@ def rerun_resolution_endpoint(
         save_resolution(resolution)
 
     try:
-        logger.warning("Scheduling resolution %s", root_run.id)
+        logger.info("Scheduling resolution %s", root_run.id)
         resolution, post_schedule_job = schedule_resolution(
             resolution=resolution, rerun_from=rerun_from
         )

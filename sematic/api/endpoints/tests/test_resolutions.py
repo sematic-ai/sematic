@@ -59,8 +59,8 @@ from sematic.db.tests.fixtures import (  # noqa: F401
     test_db,
 )
 from sematic.plugins.abstract_publisher import AbstractPublisher
-from sematic.scheduling.job_scheduler import StateNotSchedulable
 from sematic.scheduling.job_details import JobKind
+from sematic.scheduling.job_scheduler import StateNotSchedulable
 from sematic.utils.env import environment_variables
 
 test_get_resolution_auth = make_auth_test("/api/v1/resolutions/123")
