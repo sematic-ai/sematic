@@ -213,12 +213,6 @@ class Resolution(HasUserMixin, Base, JSONEncodableMixin):
         types.JSON(), nullable=False, default=lambda: {}, info={REDACTED_KEY: True}
     )
 
-    # TODO #303: deprecated column, do not remove until Python-packaged SQLite
-    # supports column removal across all supported Python versions
-    external_jobs_json: Optional[List[Dict[str, Any]]] = Column(
-        types.JSON(), nullable=True
-    )  # DEPRECATED
-
     container_image_uris: Optional[Dict[str, str]] = Column(types.JSON(), nullable=True)
     container_image_uri: Optional[str] = Column(types.String(), nullable=True)
     client_version: Optional[str] = Column(types.String(), nullable=True)

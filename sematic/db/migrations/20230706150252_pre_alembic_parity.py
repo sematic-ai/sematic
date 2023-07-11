@@ -39,8 +39,6 @@ def up():
                     source_code TEXT NOT NULL,
                     root_id character(32) NOT NULL,
                     nested_future_id character(32),
-                    exception TEXT,
-                    external_jobs_json JSONB,
                     resource_requirements_json JSONB,
                     exception_metadata_json JSONB,
                     container_image_uri TEXT,
@@ -57,7 +55,38 @@ def up():
 
             conn.execute("CREATE INDEX ix_runs_cache_key ON runs_new (cache_key);")
             conn.execute("CREATE INDEX ix_runs_function_path ON runs_new (function_path);")
-            conn.execute("INSERT INTO runs_new SELECT * FROM runs;")
+
+            conn.execute(
+                """
+                INSERT INTO runs_new
+                    SELECT
+                        id,
+                        future_state,
+                        name,
+                        function_path,
+                        created_at,
+                        updated_at,
+                        started_at,
+                        ended_at,
+                        resolved_at,
+                        failed_at,
+                        parent_id,
+                        description,
+                        tags,
+                        source_code,
+                        root_id,
+                        nested_future_id,
+                        resource_requirements_json,
+                        exception_metadata_json,
+                        container_image_uri,
+                        external_exception_metadata_json,
+                        original_run_id,
+                        cache_key,
+                        user_id,
+
+                    FROM runs;
+                """)
+
             conn.execute("DROP TABLE runs;")
             conn.execute("ALTER TABLE runs_new RENAME TO runs;")
 
@@ -77,6 +106,51 @@ def up():
             conn.execute("INSERT INTO artifacts_new SELECT * FROM artifacts;")
             conn.execute("DROP TABLE artifacts;")
             conn.execute("ALTER TABLE artifacts_new RENAME TO artifacts;")
+
+
+        with db().get_engine().begin() as conn:
+            conn.execute(
+                """
+                CREATE TABLE resolutions_new (
+                    root_id TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    container_image_uri TEXT,
+                    settings_env_vars JSONB NOT NULL,
+                    git_info_json JSONB,
+                    container_image_uris JSONB,
+                    client_version TEXT,
+                    cache_namespace TEXT,
+                    user_id character(32)
+                    REFERENCES users(id),
+                    run_command TEXT,
+                    build_config TEXT,
+
+                    PRIMARY KEY (root_id),
+                    FOREIGN KEY (root_id) REFERENCES runs(id)
+                );
+                """)
+
+            conn.execute(
+                """
+                INSERT INTO resolutions_new
+                    SELECT
+                        root_id,
+                        status,
+                        kind,
+                        container_image_uri,
+                        settings_env_vars,
+                        git_info_json,
+                        container_image_uris,
+                        client_version,
+                        cache_namespace,
+                        user_id,
+                        run_command,
+                        build_config,
+                    FROM resolutions;
+                """)
+            conn.execute("DROP TABLE resolutions;")
+            conn.execute("ALTER TABLE resolutions_new RENAME TO resolutions;")
 
         with db().get_engine().begin() as conn:
             conn.execute(
@@ -201,6 +275,11 @@ def up():
             ALTER TABLE metric_values ADD CONSTRAINT metric_values_metric_id_fkey FOREIGN KEY (metric_id) REFERENCES metric_labels(metric_id);
             ALTER TABLE runs ADD CONSTRAINT runs_root_id_fkey FOREIGN KEY (root_id) REFERENCES runs(id);
 
+            ALTER TABLE runs DROP COLUMN exception;
+            ALTER TABLE runs DROP COLUMN external_jobs_json;
+
+            ALTER TABLE resolutions DROP COLUMN external_jobs_json;
+
             ALTER INDEX jobs_run_id RENAME TO ix_jobs_run_id;
             ALTER INDEX runs_cache_key_index RENAME TO ix_runs_cache_key;
             ALTER INDEX runs_calculator_path RENAME TO ix_runs_function_path;
@@ -230,6 +309,11 @@ def down():
 
             ALTER TABLE metric_values DROP CONSTRAINT metric_values_metric_id_fkey;
             ALTER TABLE runs DROP CONSTRAINT runs_root_id_fkey;
+
+            ALTER TABLE runs ADD COLUMN exception TEXT;
+            ALTER TABLE runs ADD COLUMN external_jobs_json JSONB;
+
+            ALTER TABLE resolutions ADD COLUMN external_jobs_json JSONB;
 
             ALTER INDEX ix_jobs_run_id RENAME TO jobs_run_id;
             ALTER INDEX ix_runs_cache_key RENAME TO runs_cache_key_index;
