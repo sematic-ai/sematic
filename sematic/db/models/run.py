@@ -4,7 +4,7 @@ import importlib
 import json
 import re
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 # Third-party
 from sqlalchemy import Column, ForeignKey, types

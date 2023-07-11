@@ -19,7 +19,7 @@ import dataclasses
 import json
 import logging
 from enum import Enum, unique
-from typing import Any, Dict, FrozenSet, List, Optional, Union
+from typing import Dict, FrozenSet, Optional, Union
 
 # Third-party
 from sqlalchemy import Column, ForeignKey, types

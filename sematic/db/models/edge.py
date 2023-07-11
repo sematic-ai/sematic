@@ -33,7 +33,7 @@ class Edge(Base, JSONEncodableMixin):
     )
 
     parent_id: Optional[str] = Column(types.String(), ForeignKey("edges.id"),
-        nullable=True)
+                                      nullable=True)
 
     # Lifecycle timestamps
     created_at: datetime.datetime = Column(

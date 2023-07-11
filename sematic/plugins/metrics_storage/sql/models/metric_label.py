@@ -35,4 +35,4 @@ class MetricLabel(Base):
     metric_type: MetricType = Column(IntEnum(MetricType), nullable=False)
 
     __table_args__ = (Index("metric_labels_name_labels_idx", "metric_name",
-        "metric_labels", unique=True), )
+                            "metric_labels", unique=True), )
