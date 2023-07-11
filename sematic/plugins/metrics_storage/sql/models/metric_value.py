@@ -2,7 +2,7 @@
 import datetime
 
 # Third-party
-from sqlalchemy import Column, ForeignKey, types, Index
+from sqlalchemy import Column, ForeignKey, Index, types
 
 # Sematic
 from sematic.db.models.base import Base

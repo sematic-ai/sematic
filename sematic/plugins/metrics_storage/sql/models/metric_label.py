@@ -1,5 +1,5 @@
 # Third-party
-from sqlalchemy import Column, types, Index
+from sqlalchemy import Column, Index, types
 from sqlalchemy.dialects.postgresql import JSONB
 
 # Sematic
