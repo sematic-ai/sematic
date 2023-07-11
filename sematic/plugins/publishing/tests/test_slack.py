@@ -53,7 +53,7 @@ def test_publish_happy(
 
     expected_message = (
         f":red_circle: test_run run "
-        f"<https://my.sematic/pipelines/path.to.test_run/{id}#tab=logs|{id[0:6]}> "
+        f"<https://my.sematic/runs/{id}#tab=logs|{id[0:6]}> "
         f"has failed."
     )
 
