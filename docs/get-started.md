@@ -42,7 +42,7 @@ This will launch the Dashboard in your browser.
 
 {% hint style="info" %}
 This runs the Sematic app on your local machine. To
-deploy it within your cloud environment, see [Deploying Sematic](deployment.md).
+deploy it within your cloud environment, see [Deploying Sematic](deploy.md).
 If you want to run the local version of the app for yourself, but
 access it from a different machine (ex: if you are running the
 app from within a docker container or on a cloud development
