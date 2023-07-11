@@ -81,8 +81,7 @@ def up():
                         external_exception_metadata_json,
                         original_run_id,
                         cache_key,
-                        user_id,
-
+                        user_id
                     FROM runs;
                 """)
 
@@ -143,7 +142,7 @@ def up():
                         cache_namespace,
                         user_id,
                         run_command,
-                        build_config,
+                        build_config
                     FROM resolutions;
                 """)
             conn.execute("DROP TABLE resolutions;")
