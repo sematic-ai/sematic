@@ -7,9 +7,9 @@ import pytest
 # Sematic
 from sematic.abstract_function import FunctionError
 from sematic.function import func
-from sematic.resolvers.silent_resolver import SilentResolver
+from sematic.runners.silent_runner import SilentRunner
 from sematic.testing.mock_funcs import mock_sematic_funcs
-from sematic.utils.exceptions import ResolutionError
+from sematic.utils.exceptions import PipelineRunError
 
 
 @func
@@ -33,15 +33,15 @@ def identity_func(x: int) -> int:
 
 
 def test_mock_sematic_funcs():
-    with pytest.raises(ResolutionError, match=r"Oh no.*") as exc_info:
-        pipeline().resolve(SilentResolver())
+    with pytest.raises(PipelineRunError, match=r"Oh no.*") as exc_info:
+        SilentRunner().run(pipeline())
 
     assert isinstance(exc_info.value.__context__, FunctionError)
     assert isinstance(exc_info.value.__context__.__context__, ValueError)
 
     with mock_sematic_funcs([remote_only_func]) as mock_funcs:
         mock_funcs[remote_only_func].mock.return_value = 1
-        result = pipeline().resolve(SilentResolver())
+        result = SilentRunner().run(pipeline())
         assert result == 5
 
 
@@ -49,22 +49,22 @@ def test_mock_sematic_funcs_use_original():
     with mock_sematic_funcs([remote_only_func, identity_func]) as mock_funcs:
         mock_funcs[remote_only_func].mock.return_value = 1
         mock_funcs[identity_func].mock.side_effect = mock_funcs[identity_func].original
-        result = pipeline().resolve(SilentResolver())
+        result = SilentRunner().run(pipeline())
         assert result == 5
 
         mock_funcs[identity_func].mock.assert_called()
 
-    assert identity_func(16).resolve(SilentResolver()) == 16
+    assert SilentRunner().run(identity_func(16)) == 16
 
 
 def test_mock_sematic_funcs_still_type_checks():
     with pytest.raises(
-        ResolutionError,
+        PipelineRunError,
         match=r"for 'sematic.testing.tests.test_mock_funcs.remote_only_func'.*",
     ) as exc_info:
         with mock_sematic_funcs([remote_only_func]) as mock_funcs:
             mock_funcs[remote_only_func].mock.return_value = "this is the wrong type!"
-            pipeline().resolve(SilentResolver())
+            SilentRunner().run(pipeline())
 
     # the exception occurs when casting the function's output value inside the resolver
     # it is not a FunctionError per se

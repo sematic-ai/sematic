@@ -7,6 +7,7 @@ This is where you import the pipeline function from its module and resolve it.
 import argparse
 
 # Sematic
+from sematic import LocalRunner
 from sematic.examples.dynamic_graph.pipeline import pipeline
 
 
@@ -14,9 +15,10 @@ def main(ntries: int):
     """
     Entry point of my pipeline.
     """
-    pipeline(ntries).set(
+    future = pipeline(ntries).set(
         name="Dynamic graph example", tags=["examples", "dynamic"]
-    ).resolve()
+    )
+    LocalRunner().run(future)
 
 
 if __name__ == "__main__":

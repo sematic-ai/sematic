@@ -11,7 +11,7 @@ from typing import Optional, Tuple
 import debugpy  # type: ignore
 
 # Sematic
-from sematic import CloudResolver, LocalResolver, Resolver, SilentResolver
+from sematic import CloudRunner, LocalRunner, Runner, SilentRunner
 from sematic.ee.plugins.external_resource.ray.tests.load_testing.pipeline import (
     CollatzConfig,
     MnistConfig,
@@ -34,11 +34,11 @@ DESCRIPTION = (
     "with a variety of learning rates."
 )
 CLOUD_HELP = (
-    "Whether to run the resolution in the cloud, or locally. Defaults to False. "
+    "Whether to run the pipeline in the cloud, or locally. Defaults to False. "
     "Only one of --silent or --cloud are allowed."
 )
 SILENT_HELP = (
-    "Whether to run the resolution using the SilentResolver. Defaults to False. "
+    "Whether to run the pipeline using the SilentRunner. Defaults to False. "
     "Only one of --silent or --cloud are allowed."
 )
 COLLATZ_N_WORKERS_HELP = "Number of workers when doing the Collatz load test"
@@ -77,7 +77,7 @@ def _parse_args() -> Tuple[
     """Parses the command line arguments."""
     parser = argparse.ArgumentParser(prog=BAZEL_COMMAND, description=DESCRIPTION)
 
-    # Resolver args:
+    # Runner args:
     parser.add_argument(
         "--cloud",
         action="store_true",
@@ -188,14 +188,14 @@ def _parse_args() -> Tuple[
     return args, collatz_config, mnist_config
 
 
-def _get_resolver(args: argparse.Namespace) -> Resolver:
-    """Instantiates the Resolver based on the passed arguments."""
+def _get_runner(args: argparse.Namespace) -> Runner:
+    """Instantiates the Runner based on the passed arguments."""
     if args.silent:
-        return SilentResolver()
+        return SilentRunner()
     if not args.cloud:
-        return LocalResolver()
+        return LocalRunner()
 
-    return CloudResolver(
+    return CloudRunner(
         detach=True,
     )
 
@@ -222,7 +222,7 @@ def main() -> None:
     if mnist_config is not None:
         tags.append("mnist-tested")
 
-    resolver = _get_resolver(args)
+    runner = _get_runner(args)
 
     future = load_test_ray(collatz_config, mnist_config).set(
         name="Load Test Ray",
@@ -230,7 +230,7 @@ def main() -> None:
     )
 
     logger.info("Invoking the pipeline...")
-    result = future.resolve(resolver)
+    result = runner.run(future)
     logger.info("Pipeline result: %s", result)
 
 

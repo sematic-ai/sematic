@@ -3,7 +3,7 @@ import argparse
 import logging
 
 # Sematic
-from sematic import CloudResolver, LocalResolver
+from sematic import CloudRunner, LocalRunner
 from sematic.examples.add.pipeline import pipeline
 
 if __name__ == "__main__":
@@ -20,12 +20,12 @@ if __name__ == "__main__":
         name="Basic add example pipeline", tags=["example", "basic", "final"]
     )
 
-    resolver = (
-        CloudResolver(detach=args.detach, rerun_from=args.rerun_from)
+    runner = (
+        CloudRunner(detach=args.detach, rerun_from=args.rerun_from)
         if args.cloud
-        else LocalResolver(rerun_from=args.rerun_from)
+        else LocalRunner(rerun_from=args.rerun_from)
     )
 
-    result = future.resolve(resolver)
+    result = runner.run(future)
 
     logging.info(result)

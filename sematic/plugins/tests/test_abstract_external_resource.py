@@ -13,7 +13,7 @@ from sematic.plugins.abstract_external_resource import (
     ResourceState,
     ResourceStatus,
 )
-from sematic.resolvers.silent_resolver import SilentResolver
+from sematic.runners.silent_runner import SilentRunner
 
 
 def test_update():
@@ -186,7 +186,7 @@ def invalid_use_in_pipeline() -> int:
 def test_using_future():
     error = None
     try:
-        invalid_use_in_pipeline().resolve(SilentResolver())
+        SilentRunner().run(invalid_use_in_pipeline())
     except Exception as e:
         error = e
     assert "SomeImpl" in str(error)

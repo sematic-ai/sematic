@@ -13,7 +13,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.db.tests.fixtures import test_db  # noqa: F401
 from sematic.function import func
 from sematic.graph import Graph
-from sematic.resolvers.local_resolver import LocalResolver
+from sematic.runners.local_runner import LocalRunner
 
 
 @func
@@ -39,8 +39,8 @@ def test_clone_futures(
     mock_requests,  # noqa: F811
 ):
     future = pipeline(1, 2, 3)
-    resolver = LocalResolver()
-    output = future.resolve(resolver)
+    runner = LocalRunner()
+    output = runner.run(future)
 
     assert output == 17
 
@@ -59,7 +59,7 @@ def test_clone_futures(
     assert root_future.state == FutureState.RESOLVED
     assert root_future.function._func is pipeline._func
     assert root_future.is_root_future()
-    # the entire pipeline resolution was cloned,
+    # the entire pipeline run was cloned,
     # so the root run was never actually executed
     assert root_future.original_future_id == future.id
 
@@ -116,8 +116,8 @@ def test_clone_futures_reset(
     mock_requests,  # noqa: F811
 ):
     future = pipeline(1, 2, 3)
-    resolver = LocalResolver()
-    future.resolve(resolver)
+    runner = LocalRunner()
+    runner.run(future)
 
     runs, artifacts, edges = api_client.get_graph(future.id, root=True)
 
@@ -203,12 +203,12 @@ def test_reset_failed(
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
 ):
-    resolver = LocalResolver()
+    runner = LocalRunner()
 
     future = add4(1, 2, 3, 4)
 
     with pytest.raises(Exception):
-        future.resolve(resolver)
+        runner.run(future)
 
     runs, artifacts, edges = api_client.get_graph(future.id, root=True)
 
@@ -238,7 +238,7 @@ def test_run_execution_ordering(
     mock_requests,  # noqa: F811
 ):
     future = order_test()
-    future.resolve(LocalResolver())
+    LocalRunner().run(future)
 
     runs, artifacts, edges = api_client.get_graph(future.id, root=True)
 
@@ -272,7 +272,7 @@ def test_run_reverse_ordering(
     mock_requests,  # noqa: F811
 ):
     future = order_test()
-    future.resolve(LocalResolver())
+    LocalRunner().run(future)
 
     runs, artifacts, edges = api_client.get_graph(future.id, root=True)
 
@@ -313,10 +313,10 @@ def test_nested_fail(
     mock_requests,  # noqa: F811
 ):
     future = pipeline_fail(1)
-    resolver = LocalResolver()
+    runner = LocalRunner()
 
     with pytest.raises(Exception, match="fail"):
-        future.resolve(resolver)
+        runner.run(future)
 
     runs, artifacts, edges = api_client.get_graph(future.id, root=True)
 

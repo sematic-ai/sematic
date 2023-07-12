@@ -1,10 +1,13 @@
 # Standard Library
 import abc
+import logging
 import typing
 
 # Sematic
 from sematic.abstract_future import AbstractFuture
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
+
+logger = logging.getLogger(__name__)
 
 
 class Resolver(abc.ABC):
@@ -12,7 +15,8 @@ class Resolver(abc.ABC):
     Abstract base class for all resolvers. Defines the `Resolver` interfaces.
     """
 
-    @abc.abstractmethod
+    # TODO: https://github.com/sematic-ai/sematic/issues/975
+
     def resolve(self, future: AbstractFuture) -> typing.Any:
         """
         Abstract method. Entry-point for the resolution algorithm.
@@ -27,62 +31,13 @@ class Resolver(abc.ABC):
         Any
             output of the pipeline.
         """
-        pass
+        logger.warning(
+            "Calling .resolve(...) will soon be deprecated. Please use .run(...) instead."
+        )
+        return self.run(future)
 
-    @abc.abstractclassmethod
-    def activate_resource_for_run(
-        cls, resource: AbstractExternalResource, run_id: str, root_id: str
-    ) -> AbstractExternalResource:
-        """Associate the provided resource with the given run and activate it.
-
-        This call will block until the resource is in either the ACTIVE state
-        or a terminal state (in the case of failure to activate the resource).
-        If the resource can't be activated, will raise ExternalResourceError.
-
-        Parameters
-        ----------
-        resource:
-            The external resource to activate
-        run_id:
-            The id of the future/run that is using the resource
-        root_id:
-            The id of the root run for the given run_id
-
-        Returns
-        -------
-        The active version of the resource
-
-        Raises
-        ------
-        ExternalResourceError:
-            If the external resource could not be activated
-        """
-        pass
-
-    @abc.abstractclassmethod
-    def deactivate_resource(cls, resource_id: str) -> AbstractExternalResource:
-        """Deactivate the resource with the given id.
-
-        This call should block until the resource is deactivated or the
-        resource has failed to deactivate. If the resource fails to deactivate,
-        will raise an ExternalResourceError.
-
-        This may be called even if the resource is already deactivated.
-
-        Parameters
-        ----------
-        resource_id:
-            The id of the resource to deactivate
-
-        Returns
-        -------
-        The deactivated resource.
-
-        Raises
-        ------
-        ExternalResourceError:
-            If the resource fails to deactivate.
-        """
+    @abc.abstractmethod
+    def run(self, future: AbstractFuture) -> typing.Any:
         pass
 
     @classmethod

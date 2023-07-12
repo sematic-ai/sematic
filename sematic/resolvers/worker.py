@@ -35,8 +35,8 @@ from sematic.future import Future
 from sematic.future_context import PrivateContext, SematicContext, set_context
 from sematic.graph import RerunMode
 from sematic.log_reader import log_prefix
-from sematic.resolvers.cloud_resolver import CloudResolver
 from sematic.resolvers.log_streamer import ingested_logs, log_ingestion_enabled
+from sematic.runners.cloud_runner import CloudRunner
 from sematic.scheduling.job_details import JobKind
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.versions import CURRENT_VERSION_STR
@@ -97,7 +97,7 @@ def _fail_run(run: Run, e: BaseException) -> None:
     run.failed_at = datetime.datetime.utcnow()
 
     if run.exception_metadata is None:
-        # this means the exception probably happened in the Resolver code
+        # this means the exception probably happened in the Runner code
         run.exception_metadata = format_exception_for_run(e)
     else:
         # if the run already has an exception marked on it, then it's the innermost cause
@@ -169,24 +169,24 @@ def main(
         kwargs = _get_input_kwargs(run.id, artifacts, edges)
 
         if resolve:
-            logger.info("Resolving %s", func.__name__)
+            logger.info("Executing pipeline run for %s", func.__name__)
             future: Future = func(**kwargs)
             future.id = run.id
 
-            # the resolution object has required configurations for the resolver
-            resolution = api_client.get_resolution(root_id=run.id)
+            # the pipeline run object has required configurations for the runner
+            pipeline_run = api_client.get_pipeline_run(root_id=run.id)
 
-            resolver = CloudResolver(
-                cache_namespace=resolution.cache_namespace,
+            runner = CloudRunner(
+                cache_namespace=pipeline_run.cache_namespace,
                 detach=False,
                 max_parallelism=max_parallelism,
                 rerun_from=rerun_from,
                 rerun_mode=rerun_mode,
                 _is_running_remotely=True,
             )
-            resolver.set_graph(runs=runs, artifacts=artifacts, edges=edges)
+            runner.set_graph(runs=runs, artifacts=artifacts, edges=edges)
 
-            resolver.resolve(future)
+            runner.run(future)
 
         else:
             logger.info("Executing %s", func.__name__)
@@ -196,7 +196,7 @@ def main(
                     run_id=run.id,
                     root_id=run.root_id,
                     private=PrivateContext(
-                        resolver_class_path=CloudResolver.classpath(),
+                        runner_class_path=CloudRunner.classpath(),
                     ),
                 )
             ):

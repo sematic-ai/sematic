@@ -5,6 +5,7 @@ from typing import Tuple
 import sematic.future_operators.iter  # # noqa: F401
 from sematic.function import func
 from sematic.future import Future
+from sematic.runners.silent_runner import SilentRunner
 
 
 @func
@@ -31,5 +32,5 @@ def test_iter():
     assert b.function.output_type is str
 
 
-def test_resolution():
-    assert pipeline().resolve(tracking=False) == "foo"
+def test_pipeline_run():
+    assert SilentRunner().run(pipeline()) == "foo"

@@ -14,6 +14,7 @@ from sematic.plugins.abstract_external_resource import (
     ResourceStatus,
 )
 from sematic.plugins.abstract_kuberay_wrapper import RayNodeConfig, SimpleRayCluster
+from sematic.runners.silent_runner import SilentRunner
 from sematic.utils.env import environment_variables
 
 
@@ -67,7 +68,7 @@ def test_timeout():
 
 
 def test_local_cluster():
-    result = add(1, 2).resolve(tracking=False)
+    result = SilentRunner().run(add(1, 2))
     assert result == 3
 
     # ray should have been shutdown

@@ -41,7 +41,7 @@ def mock_sematic_funcs(
         with mock_sematic_funcs(funcs=[pipeline_step_1, pipeline_step2]) as mocks:
             mocks[pipeline_step_1].mock.return_value = ...
             mocks[pipeline_step_2].mock.return_value = ...
-            pipeline().resolve(sematic.SilentResolver())
+            sematic.SilentRunner().run(pipeline())
     ```
 
     When a function decorated with @sematic.func is provided here, it will still

@@ -103,12 +103,12 @@ def main():
     logger.info("Starting Lightning ResNet example...")
 
     if args.cloud:
-        resolver = sematic.CloudResolver()
+        runner = sematic.CloudRunner()
         train_config = REMOTE_TRAINING_CONFIG
         eval_config = REMOTE_EVAL_CONFIG
         data_config = REMOTE_DATA_CONFIG
     else:
-        resolver = sematic.LocalResolver()
+        runner = sematic.LocalRunner()
         train_config = LOCAL_TRAINING_CONFIG
         eval_config = LOCAL_EVAL_CONFIG
         data_config = LOCAL_DATA_CONFIG
@@ -119,7 +119,7 @@ def main():
         name="Distributed Training Resnet Example"
     )
 
-    print(future.resolve(resolver))
+    print(runner.run(future))
 
 
 if __name__ == "__main__":

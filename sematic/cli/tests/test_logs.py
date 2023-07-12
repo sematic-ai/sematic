@@ -72,7 +72,7 @@ def test_logs(
     runner = CliRunner()
     fill_log_dir(mock_storage, MOCK_LINES, log_prefix(run.id, "run"))
     mock_api_client.get_run = lambda x: run
-    mock_api_client.get_resolution = lambda x: resolution
+    mock_api_client.get_pipeline_run = lambda x: resolution
 
     result = runner.invoke(logs, [run.id])
     assert result.exit_code == 0
@@ -95,7 +95,7 @@ def test_follow_logs(
     save_resolution(resolution)
     runner = CliRunner()
     mock_api_client.get_run = lambda x: run
-    mock_api_client.get_resolution = lambda x: resolution
+    mock_api_client.get_pipeline_run = lambda x: resolution
     early_lines = ["out a", "out b", "out c"]
     late_lines = ["out d", "out e"]
 
@@ -171,7 +171,7 @@ def test_empty_logs(
     save_resolution(resolution)
     runner = CliRunner()
     mock_api_client.get_run = lambda x: run
-    mock_api_client.get_resolution = lambda x: resolution
+    mock_api_client.get_pipeline_run = lambda x: resolution
 
     result = runner.invoke(logs, [run.id])
     assert result.exit_code == 1

@@ -3,6 +3,7 @@ import pytest
 
 # Sematic
 from sematic.function import Function, func
+from sematic.runners.silent_runner import SilentRunner
 
 
 def test_decorator_3_10_style_hints():
@@ -11,7 +12,7 @@ def test_decorator_3_10_style_hints():
         return 42
 
     assert isinstance(f, Function)
-    result = f([1, 2, 3], {"hi": "there"}).resolve(tracking=False)
+    result = SilentRunner().run(f([1, 2, 3], {"hi": "there"}))
     assert result == 42
 
 
