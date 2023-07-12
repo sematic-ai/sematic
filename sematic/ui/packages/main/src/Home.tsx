@@ -9,12 +9,12 @@ import {
 } from "@mui/material";
 import MuiRouterLink from "@sematic/common/src/component/MuiRouterLink";
 import ShellCommand from "@sematic/common/src/component/ShellCommand";
+import { TrackingNoticeFooter } from "@sematic/common/src/component/TrackingNotice";
 import UserContext from "@sematic/common/src/context/UserContext";
 import { useFetchRuns } from "@sematic/common/src/hooks/runHooks";
 import { useContext, useMemo } from "react";
 import { SiDiscord, SiGithub, SiReadthedocs } from "react-icons/si";
 import RunStateChip from "./components/RunStateChip";
-import TrackingNotice from "./components/TrackingNotice";
 
 export default function Home() {
     const { user } = useContext(UserContext);
@@ -205,7 +205,7 @@ export default function Home() {
                     </Typography>
                 </Grid>
             </Grid>
-            <TrackingNotice sx={{ pr: `${theme.spacing(4)}!important` }} />
+            <TrackingNoticeFooter sx={{ pr: `${theme.spacing(4)}!important` }} />
         </Container>
     );
 }
