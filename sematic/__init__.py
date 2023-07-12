@@ -44,7 +44,7 @@ from sematic.plugins.kuberay_wrapper.standard import (  # noqa: F401,E402
 )
 from sematic.resolver import Resolver  # noqa: F401,E402
 from sematic.resolvers.cloud_resolver import CloudResolver  # noqa: F401,E402
-from sematic.resolvers.local_resolver import LocalResolver, RerunMode  # noqa: F401,E402
+from sematic.resolvers.local_resolver import LocalResolver  # noqa: F401,E402
 from sematic.resolvers.resource_requirements import (  # noqa: F401,E402
     KubernetesCapabilities,
     KubernetesResourceRequirements,
@@ -57,5 +57,12 @@ from sematic.resolvers.resource_requirements import (  # noqa: F401,E402
 )
 from sematic.resolvers.silent_resolver import SilentResolver  # noqa: F401,E402
 from sematic.retry_settings import RetrySettings  # noqa: F401, E402
-from sematic.utils.exceptions import KubernetesError, ResolutionError  # noqa: F401,E402
+from sematic.runner import Runner  # noqa: F401,E402
+from sematic.runners.cloud_runner import CloudRunner  # noqa: F401,E402
+from sematic.runners.local_runner import LocalRunner, RerunMode  # noqa: F401,E402
+from sematic.runners.silent_runner import SilentRunner  # noqa: F401,E402
+from sematic.utils.exceptions import (  # noqa: F401,E402
+    KubernetesError,
+    PipelineRunError,
+)
 from sematic.versions import CURRENT_VERSION_STR as __version__  # noqa: F401,E402

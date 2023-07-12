@@ -74,7 +74,7 @@ def main():
         "--cloud",
         default=False,
         action="store_true",
-        help="Whether to use CloudResolver (otherwise LocalResolver is used)",
+        help="Whether to use CloudRunner (otherwise LocalRunner is used)",
     )
     parser.add_argument(
         "--checkpoint-dir",
@@ -88,11 +88,11 @@ def main():
     logger.info("Starting CIFAR Classifier example...")
 
     if args.cloud:
-        resolver = sematic.CloudResolver()
+        runner = sematic.CloudRunner()
         train_config = REMOTE_TRAINING_CONFIG
         eval_config = REMOTE_EVAL_CONFIG
     else:
-        resolver = sematic.LocalResolver()
+        runner = sematic.LocalRunner()
         train_config = LOCAL_TRAINING_CONFIG
         eval_config = LOCAL_EVAL_CONFIG
 
@@ -100,7 +100,7 @@ def main():
 
     future = pipeline(train_config, eval_config).set(name="CIFAR Classifier Example")
 
-    future.resolve(resolver)
+    runner.run(future)
 
 
 if __name__ == "__main__":

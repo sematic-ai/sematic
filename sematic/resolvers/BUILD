@@ -9,30 +9,11 @@ sematic_py_lib(
 sematic_py_lib(
     name = "local_resolver",
     srcs = ["local_resolver.py"],
-    pip_deps = [
-        "python-socketio",
-        "websocket-client",
-    ],
+    pip_deps = [],
     # buildifier: leave-alone
     deps = [
-        ":silent_resolver",
-        "//sematic:abstract_function",
-        "//sematic:abstract_future",
-        "//sematic:api_client",
-        "//sematic:graph",
-        "//sematic:versions",
-        "//sematic/caching:init",
-        "//sematic/config:config",
-        "//sematic/config:user_settings",
-        "//sematic/db/models:artifact",
-        "//sematic/db/models:edge",
-        "//sematic/db/models:factories",
-        "//sematic/db/models:run",
-        "//sematic/plugins:abstract_builder",
-        "//sematic/resolvers:abstract_resource_manager",
-        "//sematic/resolvers/resource_managers:server_manager",
-        "//sematic/utils:exceptions",
-        "//sematic/utils:git",
+        "//sematic:resolver",
+        "//sematic/runners:local_runner",
     ],
 )
 
@@ -40,14 +21,8 @@ sematic_py_lib(
     name = "state_machine_resolver",
     srcs = ["state_machine_resolver.py"],
     deps = [
-        "//sematic:abstract_function",
-        "//sematic:abstract_future",
         "//sematic:resolver",
-        "//sematic/plugins:abstract_external_resource",
-        "//sematic/resolvers:abstract_resource_manager",
-        "//sematic/utils:exceptions",
-        "//sematic/utils:signals",
-        "//sematic/utils:timeout",
+        "//sematic/runners:state_machine_runner",
     ],
 )
 
@@ -55,34 +30,18 @@ sematic_py_lib(
     name = "silent_resolver",
     srcs = ["silent_resolver.py"],
     deps = [
-        "//sematic:abstract_future",
-        "//sematic:future_context",
-        "//sematic/plugins:abstract_external_resource",
-        "//sematic/resolvers:abstract_resource_manager",
-        "//sematic/resolvers:state_machine_resolver",
-        "//sematic/resolvers/resource_managers:memory_manager",
+        "//sematic:resolver",
+        "//sematic/runners:silent_runner",
     ],
 )
 
 sematic_py_lib(
     name = "cloud_resolver",
     srcs = ["cloud_resolver.py"],
-    pip_deps = [
-        "cloudpickle",
-    ],
+    pip_deps = [],
     deps = [
-        ":local_resolver",
-        "//sematic:abstract_future",
-        "//sematic:api_client",
-        "//sematic:container_images",
-        "//sematic/db/models:artifact",
-        "//sematic/db/models:edge",
-        "//sematic/db/models:resolution",
-        "//sematic/db/models:run",
-        "//sematic:graph",
-        "//sematic/plugins:abstract_external_resource",
-        "//sematic/utils:exceptions",
-        "//sematic/utils:memoized_property",
+        "//sematic:resolver",
+        "//sematic/runners:cloud_runner",
     ],
 )
 
@@ -133,8 +92,8 @@ sematic_py_lib(
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
-        "//sematic/resolvers:cloud_resolver",
-        "//sematic/resolvers:local_resolver",
+        "//sematic/runners:cloud_runner",
+        "//sematic/runners:local_runner",
         "//sematic/scheduling:job_details",
         "//sematic/utils:exceptions",
     ],

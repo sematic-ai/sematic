@@ -53,6 +53,7 @@ from sematic.db.tests.fixtures import (  # noqa: F401
 from sematic.function import func
 from sematic.log_reader import LogLineResult
 from sematic.metrics.run_count_metric import RunCountMetric
+from sematic.runners.local_runner import LocalRunner
 from sematic.scheduling.job_details import PodSummary
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
 from sematic.utils.exceptions import ExceptionMetadata, InfrastructureError
@@ -880,7 +881,7 @@ def test_get_run_graph_endpoint(
     valid_client_version,  # noqa: F811
 ):
     future = pipeline(1, 2)
-    future.resolve()
+    LocalRunner().run(future)
 
     response = test_client.get(f"/api/v1/runs/{future.id}/graph?root={root}")
 

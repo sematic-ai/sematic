@@ -8,7 +8,7 @@ def get_git_sha_caching_namespace(future: AbstractFuture) -> str:
     Returns a caching namespace based on the specified `Future` func's source code git
     commit SHA.
 
-    Must only be used when launching the `Resolution` from a development environment that
+    Must only be used when launching the `PipelineRun` from a development environment that
     is versioned by git! Otherwise, this will raise an exception, and the cache will not
     be used!
 

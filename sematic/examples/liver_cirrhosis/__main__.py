@@ -3,6 +3,7 @@ import os
 
 # Sematic
 # Liver cirrhosis
+from sematic import LocalRunner
 from sematic.examples.liver_cirrhosis.pipeline import pipeline
 
 
@@ -20,10 +21,11 @@ def main():
         os.path.dirname(os.path.realpath(__file__)), "data", "cirrhosis.csv"
     )
 
-    pipeline(csv_path).set(
+    future = pipeline(csv_path).set(
         name="Liver disease prediction",
         tags=["example", "seaborn", "matplotlib", "pandas"],
-    ).resolve()
+    )
+    LocalRunner().run(future)
 
 
 if __name__ == "__main__":
