@@ -1,6 +1,16 @@
 # flake8: noqa E501
+# Standard Library
+import logging
+import os
+import shutil
+
 # Sematic
+from sematic.config.config import get_config
 from sematic.db.db import db
+
+SQLITE_SCHEMA = "sqlite://"
+
+logger = logging.getLogger(__name__)
 
 
 def _back_up_db_file(suffix: str) -> None:
