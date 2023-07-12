@@ -59,11 +59,6 @@ def sqlite_up():
             """
         )
 
-        conn.execute("CREATE INDEX ix_runs_cache_key ON runs_new (cache_key);")
-        conn.execute(
-            "CREATE INDEX ix_runs_function_path ON runs_new (function_path);"
-        )
-
         conn.execute(
             """
             INSERT INTO runs_new
@@ -97,6 +92,11 @@ def sqlite_up():
 
         conn.execute("DROP TABLE runs;")
         conn.execute("ALTER TABLE runs_new RENAME TO runs;")
+        conn.execute("CREATE INDEX ix_runs_cache_key ON runs (cache_key);")
+        conn.execute(
+            "CREATE INDEX ix_runs_function_path ON runs (function_path);"
+        )
+
 
         conn.execute(
             """
@@ -182,10 +182,10 @@ def sqlite_up():
             """
         )
 
-        conn.execute("CREATE INDEX ix_jobs_run_id ON jobs_new (run_id);")
         conn.execute("INSERT INTO jobs_new SELECT * FROM jobs;")
         conn.execute("DROP TABLE jobs;")
         conn.execute("ALTER TABLE jobs_new RENAME TO jobs;")
+        conn.execute("CREATE INDEX ix_jobs_run_id ON jobs (run_id);")
 
         conn.execute(
             """
@@ -234,13 +234,13 @@ def sqlite_up():
         )
         conn.execute("INSERT INTO edges_new SELECT * FROM edges;")
         conn.execute("DROP TABLE edges;")
-        conn.execute(
-            "CREATE INDEX ix_edges_source_run_id ON edges_new (source_run_id);"
-        )
-        conn.execute(
-            "CREATE INDEX ix_edges_destination_run_id ON edges_new (destination_run_id);"
-        )
         conn.execute("ALTER TABLE edges_new RENAME TO edges;")
+        conn.execute(
+            "CREATE INDEX ix_edges_source_run_id ON edges (source_run_id);"
+        )
+        conn.execute(
+            "CREATE INDEX ix_edges_destination_run_id ON edges (destination_run_id);"
+        )
 
         conn.execute(
             """
@@ -256,13 +256,13 @@ def sqlite_up():
         )
         conn.execute("INSERT INTO metric_values_new SELECT * FROM metric_values;")
         conn.execute("DROP TABLE metric_values;")
-        conn.execute(
-            "CREATE INDEX metric_values_id_time_idx ON metric_values_new (metric_id, metric_time DESC);"
-        )
-        conn.execute(
-            "CREATE INDEX metric_values_time_idx ON metric_values_new (metric_time DESC);"
-        )
         conn.execute("ALTER TABLE metric_values_new RENAME TO metric_values;")
+        conn.execute(
+            "CREATE INDEX metric_values_id_time_idx ON metric_values (metric_id, metric_time DESC);"
+        )
+        conn.execute(
+            "CREATE INDEX metric_values_time_idx ON metric_values (metric_time DESC);"
+        )
 
 
 def sqlite_down():
