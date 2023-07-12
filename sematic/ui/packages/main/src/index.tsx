@@ -2,7 +2,6 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
-import PluginsProvider from "@sematic/common/src/context/PluginsProvider";
 import UserContext from "@sematic/common/src/context/UserContext";
 import AppContext from "@sematic/common/src/context/appContext";
 import NewShell, { HeaderSelectionKey } from "@sematic/common/src/layout/Shell";
@@ -40,6 +39,7 @@ import { setupPostHogOptout } from "./postHogManager";
 import { RunIndex } from "./runs/RunIndex";
 import { sha1 } from "./utils";
 import PluginsLoader from "src/PluginsLoader";
+import { Provider as SlotFillProvider } from "@sematic/react-slot-fill/src";
 
 function App() {
     const [user, setUser] = useAtom(userAtom);
@@ -70,7 +70,7 @@ function App() {
         return <Loading error={error} isLoaded={!loading} />;
     }
 
-    return <PluginsProvider>
+    return <SlotFillProvider>
         <AppContext.Provider value={appContextValue}>
             <UserContext.Provider value={userContextValue}>
                 <EnvironmentProvider>
@@ -83,7 +83,7 @@ function App() {
                 </EnvironmentProvider>
             </UserContext.Provider>
         </AppContext.Provider>
-    </PluginsProvider>;
+    </SlotFillProvider>;
 }
 
 const isNewUIEnabled = getFeatureFlagValue("newui");

@@ -13,12 +13,7 @@ export default function GrafanaPanel(props: GrafanaPanelProps) {
 
     const iframeTitle = useMemo(() => `Grafana panel for run ${run.id}`, [run]);
 
-    // in principle this should never show because the tab shouldn't show up if Grafana is off.
-    if (!grafanaPanelUrlSettings) {
-        return <p>Grafana not configured.</p>;
-    }
-
-    const grafanaPanelUrl: URL = new URL(grafanaPanelUrlSettings);
+    const grafanaPanelUrl: URL = new URL(grafanaPanelUrlSettings!);
 
     const runEnd: Date | null = run.failed_at || run.resolved_at || run.ended_at;
 
