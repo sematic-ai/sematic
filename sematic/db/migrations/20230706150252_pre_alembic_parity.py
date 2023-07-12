@@ -163,7 +163,18 @@ def sqlite_up():
             );
             """
         )
-        conn.execute("INSERT INTO artifacts_new SELECT * FROM artifacts;")
+        conn.execute(
+            """
+            INSERT INTO artifacts_new
+                SELECT
+                    id,
+                    json_summary,
+                    created_at,
+                    updated_at,
+                    type_serialization
+                FROM artifacts;
+            """
+        )
         conn.execute("DROP TABLE artifacts;")
         conn.execute("ALTER TABLE artifacts_new RENAME TO artifacts;")
 
@@ -234,7 +245,24 @@ def sqlite_up():
             """
         )
 
-        conn.execute("INSERT INTO jobs_new SELECT * FROM jobs;")
+        conn.execute(
+            """
+            INSERT INTO jobs_new
+                SELECT
+                    name,
+                    namespace,
+                    run_id,
+                    last_updated_epoch_seconds,
+                    state,
+                    kind,
+                    message,
+                    detail_serialization,
+                    status_history_serialization,
+                    created_at,
+                    updated_at
+                FROM jobs;
+            """
+        )
         conn.execute("DROP TABLE jobs;")
         conn.execute("ALTER TABLE jobs_new RENAME TO jobs;")
         conn.execute("CREATE INDEX ix_jobs_run_id ON jobs (run_id);")
@@ -258,7 +286,20 @@ def sqlite_up():
             );
             """
         )
-        conn.execute("INSERT INTO notes_new SELECT * FROM notes;")
+        conn.execute(
+            """
+            INSERT INTO notes_new
+                SELECT
+                    id,
+                    user_id,
+                    note,
+                    run_id,
+                    root_id,
+                    created_at,
+                    updated_at
+            FROM notes;
+            """
+        )
         conn.execute("DROP TABLE notes;")
         conn.execute("ALTER TABLE notes_new RENAME TO notes;")
 
@@ -284,7 +325,22 @@ def sqlite_up():
             );
             """
         )
-        conn.execute("INSERT INTO edges_new SELECT * FROM edges;")
+        conn.execute(
+            """
+            INSERT INTO edges_new
+            SELECT
+                id,
+                source_run_id,
+                source_name,
+                destination_run_id,
+                destination_name,
+                artifact_id,
+                parent_id,
+                created_at,
+                updated_at
+            FROM edges;
+            """
+        )
         conn.execute("DROP TABLE edges;")
         conn.execute("ALTER TABLE edges_new RENAME TO edges;")
         conn.execute("CREATE INDEX ix_edges_source_run_id ON edges (source_run_id);")
@@ -304,7 +360,17 @@ def sqlite_up():
             );
             """
         )
-        conn.execute("INSERT INTO metric_values_new SELECT * FROM metric_values;")
+        conn.execute(
+            """
+            INSERT INTO metric_values_new
+            SELECT
+                metric_id,
+                value,
+                metric_time,
+                created_at
+            FROM metric_values;
+            """
+        )
         conn.execute("DROP TABLE metric_values;")
         conn.execute("ALTER TABLE metric_values_new RENAME TO metric_values;")
         conn.execute(
