@@ -1,11 +1,12 @@
 import styled from "@emotion/styled";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useCounter from "react-use/lib/useCounter";
 import useLatest from "react-use/lib/useLatest";
 import { Artifact as ArtifactType } from "src/Models";
 import Headline from "src/component/Headline";
 import MoreVertButton from "src/component/MoreVertButton";
 import Section from "src/component/Section";
+import ArtifactCoordinationContext, { ArtifactCoordinationState } from "src/context/artifactCoordinationContext";
 import ArtifactMenu from "src/pages/RunDetails/contextMenus/ArtifactMenu";
 import theme from "src/theme/new";
 import { renderArtifactRow } from "src/typeViz/common";
@@ -39,7 +40,13 @@ function Artifact(props: ArtifactProps) {
     const { name, artifact, expanded } = props;
 
     const { type_serialization, json_summary } = artifact;
-    const [renderTimes, {inc}] = useCounter();
+    const [renderTimes, { inc }] = useCounter();
+    const [coordinationState, setCoordinationState] = useState<ArtifactCoordinationState>(
+        ArtifactCoordinationState.DIRTY);
+
+    const contextValue = useMemo(() => ({
+        coordinationState, setCoordinationState
+    }), [coordinationState]);
 
     const contextMenuAnchor = useRef<HTMLButtonElement>(null);
     const latestAnchor = useLatest(contextMenuAnchor.current);
@@ -51,7 +58,7 @@ function Artifact(props: ArtifactProps) {
         }
     }, [renderTimes, inc, latestAnchor]);
 
-    return <>
+    return <ArtifactCoordinationContext.Provider value={contextValue}>
         <StyledSection>
             <Headline>Artifact</Headline>
             <StyledVertButton ref={contextMenuAnchor} />
@@ -60,7 +67,7 @@ function Artifact(props: ArtifactProps) {
         <ArtifactRepresentation>
             {renderArtifactRow(name, type_serialization, json_summary, { expanded })}
         </ArtifactRepresentation>
-    </>;
+    </ArtifactCoordinationContext.Provider>;
 }
 
 export default Artifact;
