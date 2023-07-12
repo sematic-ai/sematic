@@ -85,6 +85,19 @@ $ make ui
 $ make wheel
 ```
 
+## SQLite vs Postgres Migrations
+
+When modifying existing tables in the database, there are some important differences in
+the types of operations that are supported by SQLite, and so care must be taken to ensure
+that the migration works for both types of databases.
+
+[SQLite ALTER TABLE docs] (https://www.sqlite.org/lang_altertable.html) explain this well.
+
+If your PR does need to perform database-specific migrations, you can use one of the
+existing migrations in `sematic/db/migrations` that do this as a reference.  All PRs that
+are affected by the table modification incompatibilities *must* resolve the issue in this
+manner.
+
 ## Releasing
 
 **Note:** Actually pushing the artifacts and accessing some of the repositories listed in
@@ -292,7 +305,7 @@ changes.
 1. Finally, draft the release on GitHub, from
   [the tag you previously committed](https://github.com/sematic-ai/sematic/tags):
     - Pick the `"previous tag"` from the dropdown to refer to the previous release.
-    - Add a `"What's Changed"` section, and copy the 
+    - Add a `"What's Changed"` section, and copy the newly added section of the `changelog.md`.
     - If `MIN_CLIENT_SERVER_SUPPORTS` was bumped and/or if `docs/upgrades.md` contains an
       entry for upgrading to the released version, add an `"Upgrade Instructions"`
       section, and list and link all these steps.
