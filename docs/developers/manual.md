@@ -56,6 +56,56 @@ $ cd sematic/ui
 $ npm run storybook
 ```
 
+## Plugin System in the Front End space
+The FE plugin system extensively utilizes the functionality provided by  [react-slot-fill](https://github.com/camwest/react-slot-fill).
+
+To comprehend the workings of the plugin system at a higher level, let's consider the example of RunTabs. In the case of RunTabs, we want plugins to dynamically add additional TabPanels in a decoupled manner.
+
+To achieve this, we define a `<Slot>` within the `<TabContext>` in __RunTabs.tsx__:
+
+```
+<TabContext>
+    <TabPanel value="input"/>
+    <TabPanel value="output"/>
+    ....
+    <Slot name="run-tabs" />
+</TabContext>
+```
+Next, in the __index.tsx__ file of the __main__ package, we render a `<PluginsLoader />` component:
+
+```
+<PluginsLoader />
+```
+
+The content of __PluginsLoader.tsx__ would be as follows:
+
+```
+import MyNewPlugin from "@sematic/addon-new-panel";
+
+export default function PluginsLoader() {
+    return <MyNewPlugin/>;
+}
+```
+
+Finally, in `<MyNewPlugin/>`, we render a `<Fill>` component as follows:
+
+```
+function MyNewPlugin() {
+    return <Fill name="run-tabs" >
+        <TabPanel value="newPanel">
+            <NewPanelImpl />
+        </TabPanel>
+    </Fill>
+}
+```
+
+Whenever and wherever the `<MyNewPlugin />` component is rendered, its content within the `<Fill>` component will be attached to the `<Slot>` with the same name. This results in the expansion of panels rendered by RunTabs.tsx.
+
+Both the `<Fill>` and `<Slot>` components can exist at different locations in the React Virtual DOM tree as long as they share a common ancestor node `<Provider>` from the [react-slot-fill](https://github.com/camwest/react-slot-fill) package. This implementation ensures decoupling, making it well-suited for the plugin system.
+
+If, at a later stage, we need to remove the __MyNewPlugin__ component for any reason, we simply need to delete the entire __@sematic/addon-new-panel__ package and remove the reference from __PluginsLoader.tsx__.
+
+
 ## Building the Sematic Wheel
 
 This is if you want to package a dev Sematic version for installation somewhere else:
