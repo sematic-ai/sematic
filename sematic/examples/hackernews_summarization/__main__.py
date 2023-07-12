@@ -2,6 +2,7 @@
 import argparse
 
 # Sematic
+from sematic import LocalRunner
 from sematic.examples.hackernews_summarization.pipeline import (
     CohereConfig,
     HNFetchConfig,
@@ -98,7 +99,8 @@ def main():
     hn_config = HNFetchConfig(args.past_n_days, args.max_stories)
     query = args.query
 
-    pipeline(query, hn_config, llm_config).set(name="HackerNews summary").resolve()
+    future = pipeline(query, hn_config, llm_config).set(name="HackerNews summary")
+    LocalRunner().run(future)
 
 
 if __name__ == "__main__":

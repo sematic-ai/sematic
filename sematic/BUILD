@@ -29,14 +29,19 @@ sematic_py_lib(
         ":function",
         ":resolver",
         ":retry_settings",
+        ":runner",
         "//sematic:future_context",
         "//sematic/future_operators:init",
         "//sematic/plugins/external_resource:timed_message",
         "//sematic/plugins/kuberay_wrapper:standard",
         "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:local_resolver",
+        "//sematic/resolvers:silent_resolver",
         "//sematic/resolvers:resource_requirements",
         "//sematic/resolvers:worker",
+        "//sematic/runners:cloud_runner",
+        "//sematic/runners:local_runner",
+        "//sematic/runners:silent_runner",
         "//sematic/types:casting",
         "//sematic/types:init",
         "//sematic/utils:exceptions",
@@ -121,8 +126,8 @@ sematic_py_lib(
         "//sematic/db/models:run",
         "//sematic/plugins:abstract_storage",
         "//sematic/plugins/storage:local_storage",
-        "//sematic/resolvers:cloud_resolver",
         "//sematic/resolvers:log_streamer",
+        "//sematic/runners:cloud_runner",
         "//sematic/scheduling:job_details",
     ],
 )
@@ -196,6 +201,14 @@ sematic_py_lib(
     srcs = ["retry_settings.py"],
     deps = [
         "//sematic/utils:exceptions",
+    ],
+)
+
+sematic_py_lib(
+    name = "runner",
+    srcs = ["runner.py"],
+    deps = [
+        ":abstract_future",
     ],
 )
 

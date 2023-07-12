@@ -306,20 +306,20 @@ def func(
     func: Optional[Callable]
         The `Callable` to instrument; usually the decorated function.
     standalone: bool
-        When using the `CloudResolver`, whether the instrumented function should
+        When using the `CloudRunner`, whether the instrumented function should
         be executed in a standalone Kubernetes Job or inside the same process
-        and worker that is executing the `Resolver` itself.
+        and worker that is executing the `Runner` itself.
 
         Defaults to `False`, as most pipeline functions are expected to be
         lightweight. Set this to `True` in order to distribute its
         execution to a worker and parallelize its execution.
     cache: bool
         Whether to cache the function's output value under the `cache_namespace`
-        configured in the `Resolver`. Defaults to `False`.
+        configured in the `Runner`. Defaults to `False`.
 
         Do not activate this on a non-deterministic function!
     resource_requirements: Optional[ResourceRequirements]
-        When using the `CloudResolver`, specifies what special execution
+        When using the `CloudRunner`, specifies what special execution
         resources the function requires. Defaults to `None`.
     retry: Optional[RetrySettings]
         Specifies in case of which Exceptions the function's execution should be

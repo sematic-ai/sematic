@@ -1,5 +1,5 @@
 # Standard Library
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from warnings import warn  # noqa: F401
 
 # Sematic
@@ -8,6 +8,14 @@ from sematic.resolver import Resolver
 from sematic.resolvers.local_resolver import LocalResolver
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.resolvers.silent_resolver import SilentResolver
+
+# To avoid creating a dependency of Future on Runner.
+# Recall that .resolve will be removed from future, at
+# which point there will be no need for such a dependency
+# anyway.
+# TODO: https://github.com/sematic-ai/sematic/issues/975
+Runner = Any
+
 
 _MUTABLE_FIELDS = {
     "name",
@@ -35,7 +43,7 @@ class Future(AbstractFuture):
     """
 
     def resolve(
-        self, resolver: Optional[Resolver] = None, tracking: bool = True
+        self, resolver: Optional[Union[Resolver, Runner]] = None, tracking: bool = True
     ) -> Any:
         """
         Trigger the resolution of the future and all its nested futures.
@@ -50,11 +58,16 @@ class Future(AbstractFuture):
             in the database and viewable in the UI. If `False`, no tracking is
             persisted to the DB.
         """
+        warn(
+            "future.resolve(...) will soon be deprecated. "
+            "Please update your code to use runner.run(future) instead.",
+            DeprecationWarning,
+        )
         if self.state != FutureState.RESOLVED:
             default_resolver = LocalResolver if tracking else SilentResolver
             resolver = resolver or default_resolver()
 
-            self.value = resolver.resolve(self)
+            self.value = resolver.run(self)
 
         return self.value
 
@@ -67,20 +80,20 @@ class Future(AbstractFuture):
         name: str
             The future's name. This will be used to name the run in the UI.
         standalone: bool
-            When using the `CloudResolver`, whether the instrumented function
+            When using the `CloudRunner`, whether the instrumented function
             should be executed in a standalone container or inside the same
-            process and worker that is executing the `Resolver` itself.
+            process and worker that is executing the `Runner` itself.
 
             Defaults to `False`, as most pipeline functions are expected to be
             lightweight. Set to `True` in order to distribute
             its execution to a worker and parallelize its execution.
         cache: bool
             Whether to cache the function's output value under the
-            `cache_namespace` configured in the `Resolver`. Defaults to `False`.
+            `cache_namespace` configured in the `Runner`. Defaults to `False`.
 
             Do not activate this on a non-deterministic function!
         resource_requirements: ResourceRequirements
-            When using the `CloudResolver`, specifies what special execution
+            When using the `CloudRunner`, specifies what special execution
             resources the function requires. Defaults to `None`.
         tags: List[str]
             A list of strings tags to attach to the resulting run.

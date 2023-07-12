@@ -10,13 +10,13 @@ from sematic.abstract_future import FutureState
 from sematic.function import func
 from sematic.future_context import PrivateContext, SematicContext, context, set_context
 from sematic.plugins.abstract_external_resource import ResourceState
-from sematic.resolvers.silent_resolver import SilentResolver
 from sematic.resolvers.tests.fixtures import FakeExternalResource
 from sematic.retry_settings import RetrySettings
+from sematic.runners.silent_runner import SilentRunner
 from sematic.tests.utils import RUN_SLOW_TESTS
 from sematic.utils.exceptions import (
     ExternalResourceError,
-    ResolutionError,
+    PipelineRunError,
     TimeoutError,
 )
 
@@ -49,10 +49,10 @@ def direct_context_func() -> SematicContext:
 
 
 @func
-def nested_resolve_func() -> int:
-    # If you don't use SilentResolver() here, the test process
+def nested_run_func() -> int:
+    # If you don't use SilentRunner() here, the test process
     # takes MUCH longer to complete
-    return add(1, 2).resolve(SilentResolver())
+    return SilentRunner().run(add(1, 2))
 
 
 @func
@@ -82,26 +82,26 @@ def timeout_pipeline(long_child: bool, long_grandchild: bool) -> int:
     return nested_sleep(120.0 if long_grandchild else 0, partial).set(timeout_mins=1)
 
 
-def test_silent_resolver():
-    assert SilentResolver().resolve(pipeline(3, 5)) == 24
+def test_silent_runner():
+    assert SilentRunner().run(pipeline(3, 5)) == 24
 
 
-def test_silent_resolver_context():
+def test_silent_runner_context():
     future = context_pipeline()
-    result = SilentResolver().resolve(future)
+    result = SilentRunner().run(future)
     assert result.root_id == future.id
     assert result.run_id != future.id
-    assert result.private.load_resolver_class() is SilentResolver
+    assert result.private.load_runner_class() is SilentRunner
 
     future = direct_context_func()
-    result = SilentResolver().resolve(future)
+    result = SilentRunner().run(future)
     assert result.root_id == future.id
     assert result.run_id == future.id
 
 
-def test_nested_resolve():
-    with pytest.raises(ResolutionError):
-        SilentResolver().resolve(nested_resolve_func())
+def test_nested_run():
+    with pytest.raises(PipelineRunError):
+        SilentRunner().run(nested_run_func())
 
 
 _tried = 0
@@ -121,8 +121,8 @@ def retry_three_times():
 def test_retry():
     future = retry_three_times()
 
-    with pytest.raises(ResolutionError) as exc_info:
-        SilentResolver().resolve(future)
+    with pytest.raises(PipelineRunError) as exc_info:
+        SilentRunner().run(future)
 
     assert isinstance(exc_info.value.__context__, FunctionError)
     assert isinstance(exc_info.value.__context__.__context__, SomeException)
@@ -133,7 +133,7 @@ def test_retry():
 
 def test_custom_resources():
     FakeExternalResource.reset_history()
-    result = custom_resource_func().resolve(SilentResolver())
+    result = SilentRunner().run(custom_resource_func())
     assert result == 144
     ids = FakeExternalResource.all_resource_ids()
     assert len(ids) == 2
@@ -181,7 +181,7 @@ def test_custom_resources():
     # The first resource should be deactivated before the second is activated
     assert first_resource_deactivated_index < second_resource_activating_index
 
-    # SilentResolver should use local activation
+    # SilentRunner should use local activation
     assert "_do_activate(True)" in FakeExternalResource.call_history_by_id(
         first_resource_id
     )
@@ -195,12 +195,12 @@ def test_activate_resource_for_run():
     to_activate = FakeExternalResource()
     run_id = "abc123"
     root_id = "xyz789"
-    activated = SilentResolver.activate_resource_for_run(to_activate, run_id, root_id)
+    activated = SilentRunner.activate_resource_for_run(to_activate, run_id, root_id)
     assert activated.status.state == ResourceState.ACTIVE
 
-    stored = SilentResolver._resource_manager.get_resource_for_id(to_activate.id)
+    stored = SilentRunner._resource_manager.get_resource_for_id(to_activate.id)
     assert stored == activated
-    assert SilentResolver._resource_manager.resources_by_root_id(root_id) == [stored]
+    assert SilentRunner._resource_manager.resources_by_root_id(root_id) == [stored]
 
 
 def test_activation_failures_for_resource():
@@ -212,14 +212,14 @@ def test_activation_failures_for_resource():
             SematicContext(
                 run_id=run_id,
                 root_id=root_id,
-                private=PrivateContext(resolver_class_path=SilentResolver.classpath()),
+                private=PrivateContext(runner_class_path=SilentRunner.classpath()),
             )
         ):
             with FakeExternalResource(
                 raise_on_activate=True, activation_timeout_seconds=0.1
             ):
                 pass
-    resources = SilentResolver._resource_manager.resources_by_root_id(root_id)
+    resources = SilentRunner._resource_manager.resources_by_root_id(root_id)
     assert len(resources) == 1
     stored = resources[0]
     assert stored.status.state == ResourceState.DEACTIVATED
@@ -231,7 +231,7 @@ def test_activation_failures_for_resource():
             SematicContext(
                 run_id=run_id,
                 root_id=root_id,
-                private=PrivateContext(resolver_class_path=SilentResolver.classpath()),
+                private=PrivateContext(runner_class_path=SilentRunner.classpath()),
             )
         ):
             with FakeExternalResource(
@@ -240,11 +240,11 @@ def test_activation_failures_for_resource():
                 deactivation_timeout_seconds=0.1,
             ):
                 raise AssertionError("Should not reach here")
-    resources = SilentResolver._resource_manager.resources_by_root_id(root_id)
+    resources = SilentRunner._resource_manager.resources_by_root_id(root_id)
     assert len(resources) == 1
     stored = resources[0]
 
-    # not deactivated because the resolver failed to get an update
+    # not deactivated because the runner failed to get an update
     # about the status while trying to deactivate
     assert stored.status.state == ResourceState.DEACTIVATING
 
@@ -258,7 +258,7 @@ def test_activation_timeout_for_resource():
             SematicContext(
                 run_id=run_id,
                 root_id=root_id,
-                private=PrivateContext(resolver_class_path=SilentResolver.classpath()),
+                private=PrivateContext(runner_class_path=SilentRunner.classpath()),
             )
         ):
             started_activate = time.time()
@@ -267,7 +267,7 @@ def test_activation_timeout_for_resource():
             ):
                 raise AssertionError("Should not reach here")
     exited_with_block = time.time()
-    resources = SilentResolver._resource_manager.resources_by_root_id(root_id)
+    resources = SilentRunner._resource_manager.resources_by_root_id(root_id)
     assert len(resources) == 1
     assert exited_with_block - started_activate < 5
 
@@ -281,7 +281,7 @@ def test_deactivation_timeout_for_resource():
             SematicContext(
                 run_id=run_id,
                 root_id=root_id,
-                private=PrivateContext(resolver_class_path=SilentResolver.classpath()),
+                private=PrivateContext(runner_class_path=SilentRunner.classpath()),
             )
         ):
             started_activate = time.time()
@@ -290,7 +290,7 @@ def test_deactivation_timeout_for_resource():
             ):
                 raise AssertionError("Should not reach here")
     exited_with_block = time.time()
-    resources = SilentResolver._resource_manager.resources_by_root_id(root_id)
+    resources = SilentRunner._resource_manager.resources_by_root_id(root_id)
     assert len(resources) == 1
     assert exited_with_block - started_activate < 5
 
@@ -307,7 +307,7 @@ def test_deactivation_failures_for_resource():
             SematicContext(
                 run_id=run_id,
                 root_id=root_id,
-                private=PrivateContext(resolver_class_path=SilentResolver.classpath()),
+                private=PrivateContext(runner_class_path=SilentRunner.classpath()),
             )
         ):
             with FakeExternalResource(
@@ -315,7 +315,7 @@ def test_deactivation_failures_for_resource():
             ):
                 reached_inside_with_block = True
     assert reached_inside_with_block
-    resources = SilentResolver._resource_manager.resources_by_root_id(root_id)
+    resources = SilentRunner._resource_manager.resources_by_root_id(root_id)
     assert len(resources) == 1
     stored = resources[0]
 
@@ -327,15 +327,15 @@ def test_deactivation_failures_for_resource():
     reason="This test takes a long time to execute, and is disabled by default",
 )
 def test_timeout():
-    result = timeout_pipeline(long_child=False, long_grandchild=False).resolve(
-        SilentResolver()
+    result = SilentRunner().run(
+        timeout_pipeline(long_child=False, long_grandchild=False)
     )
     assert result == 42.0
 
     future = timeout_pipeline(long_child=True, long_grandchild=False)
     error_text = None
     try:
-        future.resolve(SilentResolver())
+        SilentRunner().run(future)
     except Exception as e:
         error_text = str(e)
     assert TimeoutError.__name__ in error_text
@@ -343,7 +343,7 @@ def test_timeout():
     future = timeout_pipeline(long_child=False, long_grandchild=True)
     error_text = None
     try:
-        future.resolve(SilentResolver())
+        SilentRunner().run(future)
     except Exception as e:
         error_text = str(e)
     assert TimeoutError.__name__ in error_text
@@ -351,7 +351,7 @@ def test_timeout():
     future = do_sleep(120).set(timeout_mins=1)
     error_text = None
     try:
-        future.resolve(SilentResolver())
+        SilentRunner().run(future)
     except Exception as e:
         error_text = str(e)
     assert TimeoutError.__name__ in error_text

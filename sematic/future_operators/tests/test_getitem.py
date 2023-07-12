@@ -5,6 +5,7 @@ from typing import List
 import sematic.future_operators.getitem  # # noqa: F401
 from sematic.function import func
 from sematic.future import Future
+from sematic.runners.silent_runner import SilentRunner
 
 
 @func
@@ -25,5 +26,5 @@ def test_getitem():
     assert a.function.output_type is str
 
 
-def test_resolution():
-    assert pipeline().resolve(tracking=False) == "bar"
+def test_pipeline_run():
+    assert SilentRunner().run(pipeline()) == "bar"

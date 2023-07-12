@@ -423,17 +423,15 @@ class AbstractExternalResource(AbstractPlugin):
                 f"made while executing a Sematic func."
             )
         try:
-            updated = ctx.private.load_resolver_class().activate_resource_for_run(
+            updated = ctx.private.load_runner_class().activate_resource_for_run(
                 resource=self, run_id=ctx.run_id, root_id=ctx.root_id
             )
             if updated.status.state != ResourceState.ACTIVE:
                 raise IllegalStateTransitionError(
-                    f"Resolver {ctx.private.load_resolver_class()} failed to "
+                    f"Runner {ctx.private.load_runner_class()} failed to "
                     f"activate {updated}."
                 )
-            ctx.private.load_resolver_class().entering_resource_context(
-                resource=updated
-            )
+            ctx.private.load_runner_class().entering_resource_context(resource=updated)
             return updated
         except Exception:
             self.__exit__()  # type: ignore
@@ -441,11 +439,11 @@ class AbstractExternalResource(AbstractPlugin):
 
     def __exit__(self, exc_type=None, exc_value=None, exc_traceback=None):
         ctx: SematicContext = context()
-        ctx.private.load_resolver_class().exiting_resource_context(self.id)
-        deactivated = ctx.private.load_resolver_class().deactivate_resource(self.id)
+        ctx.private.load_runner_class().exiting_resource_context(self.id)
+        deactivated = ctx.private.load_runner_class().deactivate_resource(self.id)
         if deactivated.status.state != ResourceState.DEACTIVATED:
             raise IllegalStateTransitionError(
-                f"Resolver {ctx.private.load_resolver_class()} failed to "
+                f"Runner {ctx.private.load_runner_class()} failed to "
                 f"deactivate {deactivated}."
             )
 
