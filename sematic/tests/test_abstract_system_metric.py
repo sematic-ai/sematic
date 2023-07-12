@@ -55,6 +55,7 @@ def runs(test_db: DB):  # noqa: F811
         Run(
             id="a",
             function_path="count_me",
+            source_code="some code",
             started_at=datetime.utcnow(),
             future_state=FutureState.CREATED,
             root_id="b",
@@ -62,20 +63,26 @@ def runs(test_db: DB):  # noqa: F811
         Run(
             id="b",
             function_path="count_me",
+            source_code="some code",
             started_at=None,
             future_state=FutureState.CREATED,
+            root_id="b",
         ),
         Run(
             id="c",
             function_path="do_not_count_me",
+            source_code="some code",
             started_at=datetime.utcnow(),
             future_state=FutureState.CREATED,
+            root_id="b",
         ),
         Run(
             id="d",
             function_path="do_not_query",
+            source_code="some code",
             started_at=datetime.utcnow(),
             future_state=FutureState.CREATED,
+            root_id="b",
         ),
     ]
     with test_db.get_session() as session:
