@@ -50,11 +50,12 @@ def sqlite_up():
                 external_exception_metadata_json JSONB,
                 original_run_id character(32),
                 cache_key TEXT,
-                user_id character(32) REFERENCES users(id),
+                user_id character(32),
 
                 PRIMARY KEY (id),
 
-                FOREIGN KEY(root_id) REFERENCES runs (id)
+                FOREIGN KEY(root_id) REFERENCES runs (id),
+                FOREIGN KEY(user_id) REFERENCES users (id)
             );
             """
         )
