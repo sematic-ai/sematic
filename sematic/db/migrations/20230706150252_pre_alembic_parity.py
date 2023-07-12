@@ -128,13 +128,13 @@ def up():
                     container_image_uris JSONB,
                     client_version TEXT,
                     cache_namespace TEXT,
-                    user_id character(32)
-                    REFERENCES users(id),
+                    user_id character(32),
                     run_command TEXT,
                     build_config TEXT,
 
                     PRIMARY KEY (root_id),
-                    FOREIGN KEY (root_id) REFERENCES runs(id)
+                    FOREIGN KEY (root_id) REFERENCES runs(id),
+                    FOREIGN KEY (user_id) REFERENCES users(id)
                 );
                 """
             )
