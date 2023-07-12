@@ -36,6 +36,12 @@ def list_artifacts_endpoint(
         parameters.filters,
     )
 
+    # TODO: restrict artifact access to members of the organization that produced it
+    #  The complication is that the artifacts are content-addressable, with their ids
+    #  being generated based on their values. This means that by just restricting access
+    #  to the owning organization with the current id schema, only the first organization
+    #  that will have produced a value would have access to it. All others would miss when
+    #  looking up the value.
     with db().get_session() as session:
         query = session.query(Artifact)
 
@@ -46,7 +52,7 @@ def list_artifacts_endpoint(
 
         artifacts: List[Artifact] = query.limit(limit).all()
 
-    payload = dict(content=[artifacts.to_json_encodable() for artifacts in artifacts])
+    payload = dict(content=[artifact.to_json_encodable() for artifact in artifacts])
 
     return flask.jsonify(payload)
 
@@ -72,10 +78,11 @@ def get_artifact_endpoint(
         The requested artifact in JSON format
     """
     try:
-        artifact = get_artifact(artifact_id)
+        artifact = get_artifact(artifact_id=artifact_id, organization=organization)
+
     except NoResultFound:
         return jsonify_error(
-            "No Artifact with id {}".format(repr(artifact_id)), HTTPStatus.NOT_FOUND
+            f"No Artifact with id {repr(artifact_id)}", HTTPStatus.NOT_FOUND
         )
 
     payload = dict(content=artifact.to_json_encodable())

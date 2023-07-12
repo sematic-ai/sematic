@@ -11,6 +11,7 @@ from typing import Iterable, List, Optional, TypeVar
 from sematic import api_client
 from sematic.abstract_future import FutureState
 from sematic.db import queries as db_queries
+from sematic.db.models.organization import Organization
 from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.plugins.abstract_storage import get_storage_plugins
@@ -52,8 +53,8 @@ class ObjectSource(Enum):
         else:
             return self.value[0].get_resolution(resolution_id)
 
-    def get_run(self, run_id: str) -> Run:
-        return self.value[0].get_run(run_id)
+    def get_run(self, run_id: str, organization: Optional[Organization]) -> Run:
+        return self.value[0].get_run(run_id=run_id, organization=organization)
 
     def run_is_inline(self, run_id: str) -> bool:
         """Determine if a scheduled run is inline.
@@ -206,6 +207,7 @@ def _assert_valid_cursor(cursor: Cursor, run_id: str, filter_strings: Iterable[s
 
 def load_log_lines(
     run_id: str,
+    organization: Optional[Organization],
     forward_cursor_token: Optional[str],
     reverse_cursor_token: Optional[str],
     max_lines: int,
@@ -213,12 +215,15 @@ def load_log_lines(
     object_source: ObjectSource = ObjectSource.DB,
     reverse: bool = False,
 ) -> LogLineResult:
-    """Load a portion of the logs for a particular run.
+    """
+    Load a portion of the logs for a particular run.
 
     Parameters
     ----------
     run_id:
         The id of the run to get logs for
+    organization:
+        The organization in which the run is expected to have been submitted, if any.
     forward_cursor_token:
         A cursor indicating where to continue reading logs from. Should be
         None if the logs are being read from the beginning or `reverse` is
@@ -252,12 +257,12 @@ def load_log_lines(
         reverse,
     )
     default_log_info_message = None
-    run = object_source.get_run(run_id)
+    run = object_source.get_run(run_id=run_id, organization=organization)
 
     if run.original_run_id is not None:
         # we source the logs from the original run, and also inform the user of this
         run_id = run.original_run_id
-        run = object_source.get_run(run_id)
+        run = object_source.get_run(run_id=run_id, organization=organization)
         default_log_info_message = f"Run logs sourced from original run {run_id}."
 
     run_state = FutureState[run.future_state]  # type: ignore

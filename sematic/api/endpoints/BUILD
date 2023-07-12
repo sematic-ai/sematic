@@ -114,6 +114,7 @@ sematic_py_lib(
     ],
     deps = [
         "//sematic/db/models/mixins:json_encodable_mixin",
+        "//sematic/db/models:organization",
     ],
 )
 

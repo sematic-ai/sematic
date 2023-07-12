@@ -199,6 +199,8 @@ def authenticate(endpoint_fn: Callable) -> Callable:
         )
         user_organizations = get_organizations(user=user)
 
+        # ensure the user doesn't have access to resources owned by an organization they
+        # aren't a member of
         for organization in user_organizations:
             if organization.id == organization_id:
                 return endpoint_fn(user, organization, *args, **kwargs)
@@ -237,6 +239,8 @@ def authenticate_starlette(endpoint_fn: Callable) -> Callable:
         organization_id = request.headers.get(ORGANIZATION_ID_HEADER, default=user.id)
         user_organizations = get_organizations(user=user)
 
+        # ensure the user doesn't have access to resources owned by an organization they
+        # aren't a member of
         for organization in user_organizations:
             if organization.id == organization_id:
                 return await endpoint_fn(user, organization, request)

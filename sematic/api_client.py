@@ -12,7 +12,7 @@ from requests.exceptions import ConnectionError
 
 # Sematic
 from sematic.abstract_future import FutureState
-from sematic.api.endpoints.auth import API_KEY_HEADER
+from sematic.api.endpoints.auth import API_KEY_HEADER, ORGANIZATION_ID_HEADER
 from sematic.config.config import get_config
 from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import UserSettings, UserSettingsVar, get_user_setting
@@ -25,6 +25,7 @@ from sematic.db.models.factories import (
     deserialize_artifact_value,
 )
 from sematic.db.models.job import Job
+from sematic.db.models.organization import Organization
 from sematic.db.models.resolution import PipelineRun
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -170,11 +171,17 @@ def _get_stored_bytes(namespace: str, key: str) -> bytes:
     )
 
 
-def get_run(run_id: str) -> Run:
+def get_run(run_id: str, organization: Optional[Organization] = None) -> Run:
     """
-    Get run
+    Get a specific run by id.
+
+    run_id: str
+        ID of run to retrieve.
+    organization: Optional[Organization]
+        The organization in which the run is expected to have been submitted, if any.
+        Defaults to `None`, in which case the user-configured organization will be used.
     """
-    response = _get(f"/runs/{run_id}")
+    response = _get(f"/runs/{run_id}", organization=organization)
 
     return Run.from_json_encodable(response["content"])
 
@@ -603,7 +610,12 @@ def _notify_event(namespace: str, event: str, payload: Any = None):
         logger.exception("Error notifying %s/%s", namespace, event)
 
 
-def _get(endpoint: str, decode_json: bool = True, retry: bool = True) -> Any:
+def _get(
+    endpoint: str,
+    organization: Optional[Organization] = None,
+    decode_json: bool = True,
+    retry: bool = True,
+) -> Any:
     """
     GETs a payload from the API server.
 
@@ -612,6 +624,9 @@ def _get(endpoint: str, decode_json: bool = True, retry: bool = True) -> Any:
     endpoint: str
         Endpoint to GET from. `/api/v1` will be prepended and authentication headers will
         be added.
+    organization: Optional[Organization]
+        The Organization for which to return the model elements, if any. Defaults to
+        `None`.
     decode_json: bool
         Whether the returned payload should be JSON-decoded. Defaults to `True`.
     retry: bool
@@ -622,7 +637,9 @@ def _get(endpoint: str, decode_json: bool = True, retry: bool = True) -> Any:
     Any:
         The contents obtained form the server, in either raw or JSON-decoded format.
     """
-    response = request(method=requests.get, endpoint=endpoint, retry=retry)
+    response = request(
+        method=requests.get, endpoint=endpoint, organization=organization, retry=retry,
+    )
     logger.debug("[_get] Got response with raw content: %s", response.content)
 
     if decode_json:
@@ -781,9 +798,11 @@ def request(
     validate_version_compatibility: bool = True,
     validate_json: bool = False,
     user: Optional[User] = None,
+    organization: Optional[Organization] = None,
     retry: bool = True,
 ) -> requests.Response:
-    """Internal function for wrapping requests.<get/put/etc.>.
+    """
+    Internal function for wrapping requests.<get/put/etc.>.
 
     validate_version_compatibility indicates whether we should check that the
     Sematic server is compatible with this Sematic client.
@@ -807,6 +826,7 @@ def request(
                 validate_version_compatibility=False,
                 validate_json=validate_json,
                 user=user,
+                organization=organization,
                 retry=False,
             ),
             exceptions=Exception,
@@ -822,8 +842,10 @@ def request(
 
     # request id just so we can correlate logs between front/backend.
     headers[REQUEST_ID_HEADER] = str(uuid.uuid4().hex[:9])
+
     if attempt_auth:
         headers[API_KEY_HEADER] = _get_api_key(user)
+        headers[ORGANIZATION_ID_HEADER] = _get_organization_id(organization)
 
     kwargs["headers"] = headers
 
@@ -947,6 +969,17 @@ def _get_api_key(user: Optional[User] = None) -> Optional[str]:
         return get_user_setting(UserSettingsVar.SEMATIC_API_KEY)
     except MissingSettingsError:
         return None
+
+
+def _get_organization_id(organization: Optional[Organization] = None) -> Optional[str]:
+    """
+    TODO
+    """
+    if organization is not None:
+        return organization.id
+
+    # TODO: add organization selection support to user settings
+    return None
 
 
 def _get_encoded_query_filters(filters: Dict[str, Any]) -> str:

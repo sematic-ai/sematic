@@ -49,20 +49,28 @@ def count_runs() -> int:
     return run_count
 
 
-def get_artifact(artifact_id: str) -> Artifact:
+def get_artifact(artifact_id: str, organization: Optional[Organization]) -> Artifact:
     """
     Get an artifact from the database.
 
     Parameters
     ----------
-    artifact_id : str
+    artifact_id: str
         ID of artifact to retrieve.
+    organization: Optional[Organization]
+        The organization in which the artifact is expected to have been produced, if any.
 
     Returns
     -------
     Artifact
         Fetched artifact
     """
+    # TODO: restrict artifact access to members of the organization that produced it
+    #  The complication is that the artifacts are content-addressable, with their ids
+    #  being generated based on their values. This means that by just restricting access
+    #  to the owning organization with the current id schema, only the first organization
+    #  that will have produced a value would have access to it. All others would miss when
+    #  looking up the value.
     with db().get_session() as session:
         return session.query(Artifact).filter(Artifact.id == artifact_id).one()
 
@@ -156,14 +164,16 @@ def get_user_by_email(email: str) -> User:
         return session.query(User).filter(User.email == email).one()
 
 
-def get_run(run_id: str) -> Run:
+def get_run(run_id: str, organization: Optional[Organization]) -> Run:
     """
     Get a run from the database.
 
     Parameters
     ----------
-    run_id : str
+    run_id: str
         ID of run to retrieve.
+    organization: Optional[Organization]
+        The organization in which the run is expected to have been submitted, if any.
 
     Returns
     -------
@@ -171,7 +181,12 @@ def get_run(run_id: str) -> Run:
         Fetched run
     """
     with db().get_session() as session:
-        return session.query(Run).filter(Run.id == run_id).one()
+        query = session.query(Run).filter(Run.id == run_id)
+
+        if organization is not None:
+            query = query.filter(Run.organization_id == organization.id)
+
+        return query.one()
 
 
 def get_existing_run_ids(run_ids: Iterable[str]) -> Set[str]:
@@ -371,6 +386,7 @@ def save_job(job: Job) -> Job:
 
 
 def get_run_ids_with_orphaned_jobs() -> List[str]:
+    # TODO: enforce cluster-admin org privileges
     with db().get_session() as session:
         query_results = list(
             session.query(
@@ -438,6 +454,7 @@ def get_orphaned_run_ids() -> List[str]:
     -------
     A list of ids.
     """
+    # TODO: enforce cluster-admin org privileges
     with db().get_session() as session:
         query_results = list(
             session.query(

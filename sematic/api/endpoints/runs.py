@@ -128,7 +128,7 @@ def list_runs_endpoint(
         request_args, list(_GARBAGE_COLLECTION_QUERIES.keys())
     )
     if len(garbage_filters) == 0:
-        return _standard_list_runs(request_args)
+        return _standard_list_runs(organization=organization, args=request_args)
 
     logger.info(
         "Searching for runs to garbage collect with filters: %s", garbage_filters
@@ -141,15 +141,19 @@ def list_runs_endpoint(
         )
 
     return list_garbage_ids(
-        garbage_filters[0],
-        flask.request.url,
-        _GARBAGE_COLLECTION_QUERIES,
-        Run,
-        urlencode(request_args),
+        organization=organization,
+        garbage_filter=garbage_filters[0],
+        request_url=flask.request.url,
+        queries=_GARBAGE_COLLECTION_QUERIES,
+        model=Run,
+        encoded_request_args=urlencode(request_args),
     )
 
 
-def _standard_list_runs(args: Dict[str, str]) -> flask.Response:
+def _standard_list_runs(
+    organization: Optional[Organization], args: Dict[str, str]
+) -> flask.Response:
+
     try:
         parameters = get_request_parameters(args=args, model=Run)
     except ValueError as e:
@@ -180,6 +184,9 @@ def _standard_list_runs(args: Dict[str, str]) -> flask.Response:
 
     with db().get_session() as session:
         query = session.query(Run)
+
+        if organization is not None:
+            query = query.filter(Run.organization_id == organization.id)
 
         if group_by_column is not None:
             sub_query = (
@@ -287,11 +294,10 @@ def get_run_endpoint(
 ) -> flask.Response:
 
     try:
-        run = get_run(run_id)
+        run = get_run(run_id=run_id, organization=organization)
+
     except NoResultFound:
-        return jsonify_error(
-            "No runs with id {}".format(repr(run_id)), HTTPStatus.NOT_FOUND
-        )
+        return jsonify_error(f"No runs with id {repr(run_id)}", HTTPStatus.NOT_FOUND)
 
     payload = dict(content=get_run_payload(run))
 
@@ -307,14 +313,16 @@ def schedule_run_endpoint(
     Schedule the run for execution on external compute, like k8s.
     """
     try:
-        run = get_run(run_id)
+        # is execution passes this call, then the user has permissions to perform all
+        # other actions
+        run = get_run(run_id=run_id, organization=organization)
+
     except NoResultFound:
-        return jsonify_error(
-            "No runs with id {}".format(repr(run_id)), HTTPStatus.NOT_FOUND
-        )
+        return jsonify_error(f"No runs with id {repr(run_id)}", HTTPStatus.NOT_FOUND)
+
     jobs = get_jobs_by_run_id(run_id)
 
-    resolution = get_resolution(run.root_id)
+    resolution = get_resolution(run.root_id, organization=organization)
     run, post_schedule_jobs = schedule_run(run, resolution, jobs)
     logger.info("Scheduled run with job: %s", post_schedule_jobs[-1])
     run.started_at = datetime.datetime.utcnow()
@@ -367,6 +375,7 @@ def get_logs_endpoint(
 
     result = load_log_lines(
         run_id=run_id,
+        organization=organization,
         **kwargs,  # type: ignore
     )
 

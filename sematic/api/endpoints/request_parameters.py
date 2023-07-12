@@ -24,6 +24,7 @@ from sqlalchemy.sql.elements import BooleanClauseList, ColumnElement
 
 # Sematic
 from sematic.db.models.mixins.json_encodable_mixin import CONTAIN_FILTER_KEY
+from sematic.db.models.organization import Organization
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +127,7 @@ def get_gc_filters(
 
 
 def list_garbage_ids(
+    organization: Optional[Organization],
     garbage_filter: str,
     request_url: str,
     queries: Dict[str, Callable[[], List[str]]],
@@ -133,10 +135,13 @@ def list_garbage_ids(
     encoded_request_args: str,
     id_field: Optional[str] = None,
 ) -> flask.Response:
-    """Return a flask response for a search on ids of garbage data.
+    """
+    Return a flask response for a search on ids of garbage data.
 
     Parameters
     ----------
+    organization: Optional[Organization]
+        The Organization for which to return the model elements, if any.
     garbage_filter:
         A string representing which garbage collection filter is being used.
     request_url:
@@ -203,6 +208,11 @@ def list_garbage_ids(
         (scheme, netloc, path, encoded_request_args, fragment)
     )
 
+    # TODO: enforce cluster-admin org privileges
+    #  Currently the pods are not filtered by org ownership in order to enable the gc job
+    #  to clean pods from all orgs. Once cluster-admin accounts are implemented, this
+    #  filtering can be restricted to an org, given that the gc cleaner will be running in
+    #  this admin org, and able to find all pods anyway.
     ids = queries[garbage_filter]()
 
     payload = dict(
