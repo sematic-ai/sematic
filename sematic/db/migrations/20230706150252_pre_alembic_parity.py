@@ -94,10 +94,7 @@ def sqlite_up():
         conn.execute("DROP TABLE runs;")
         conn.execute("ALTER TABLE runs_new RENAME TO runs;")
         conn.execute("CREATE INDEX ix_runs_cache_key ON runs (cache_key);")
-        conn.execute(
-            "CREATE INDEX ix_runs_function_path ON runs (function_path);"
-        )
-
+        conn.execute("CREATE INDEX ix_runs_function_path ON runs (function_path);")
 
         conn.execute(
             """
@@ -236,9 +233,7 @@ def sqlite_up():
         conn.execute("INSERT INTO edges_new SELECT * FROM edges;")
         conn.execute("DROP TABLE edges;")
         conn.execute("ALTER TABLE edges_new RENAME TO edges;")
-        conn.execute(
-            "CREATE INDEX ix_edges_source_run_id ON edges (source_run_id);"
-        )
+        conn.execute("CREATE INDEX ix_edges_source_run_id ON edges (source_run_id);")
         conn.execute(
             "CREATE INDEX ix_edges_destination_run_id ON edges (destination_run_id);"
         )
