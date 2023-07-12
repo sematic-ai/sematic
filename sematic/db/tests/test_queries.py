@@ -61,6 +61,7 @@ from sematic.plugins.abstract_external_resource import (
     ManagedBy,
     ResourceState,
 )
+from sematic.runners.local_runner import LocalRunner
 from sematic.scheduling.job_details import (
     JobDetails,
     JobKind,
@@ -224,7 +225,7 @@ def test_get_run_graph(
     valid_client_version,  # noqa: F811
 ):
     future = pipeline(1, 2)
-    future.resolve()
+    LocalRunner().run(future)
 
     runs, artifacts, edges = fn(future.id)
 

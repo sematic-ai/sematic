@@ -11,11 +11,11 @@ from sematic.utils.exceptions import NotInSematicFuncError
 FUTURE_ALGEBRA_DOC_LINK = "https://docs.sematic.dev/diving-deeper/future-algebra"
 
 
-# We can't depend on Resolver without creating the dependency cycle:
+# We can't depend on Runner without creating the dependency cycle:
 # future_context -> resolver -> external_resource -> future_context
 # This alias is just to satisfy mypy while also giving code readers
 # a sense of what's going on for the type hints in this module.
-Resolver = Any
+Runner = Any
 
 
 @dataclass(frozen=True)
@@ -27,22 +27,22 @@ class PrivateContext:
 
     Attributes
     ----------
-    resolver_class_path:
-        The import path for the resolver being used.
+    runner_class_path:
+        The import path for the runner being used.
     created_futures:
         Futures created while the context was active.
     """
 
-    resolver_class_path: str
+    runner_class_path: str
     created_futures: List[AbstractFuture] = field(default_factory=list)
 
-    def load_resolver_class(self) -> Type[Resolver]:
-        module_name, resolver_name = self.resolver_class_path.rsplit(".", maxsplit=1)
+    def load_runner_class(self) -> Type[Runner]:
+        module_name, runner_name = self.runner_class_path.rsplit(".", maxsplit=1)
         module = import_module(module_name)
-        resolver_class = getattr(module, resolver_name, None)
-        if resolver_class is None:
-            raise ImportError(f"No class named '{resolver_name}' in {module_name}")
-        return resolver_class
+        runner_class = getattr(module, runner_name, None)
+        if runner_class is None:
+            raise ImportError(f"No class named '{runner_name}' in {module_name}")
+        return runner_class
 
 
 @dataclass(frozen=True)
@@ -82,7 +82,7 @@ def set_context(ctx: SematicContext):
 
     if _current_context is not None:
         raise RuntimeError(
-            f"You have called .resolve() within a Sematic func. Usually people "
+            f"You have called runner.run(...) within a Sematic func. Usually people "
             f"do this when they have a future object and want it to be resolved to "
             f"an actual value in the middle of a Sematic func's body for usage "
             f"downstream. If this is your use-case, consider wrapping the downstream "

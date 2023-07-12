@@ -16,9 +16,9 @@ from sematic.db.tests.fixtures import (  # noqa: F401
 
 
 @mock.patch("sematic.cli.cancel.api_client.get_run")
-@mock.patch("sematic.cli.cancel.api_client.cancel_resolution")
+@mock.patch("sematic.cli.cancel.api_client.cancel_pipeline_run")
 def test_cancel_abort(
-    mock_cancel_resolution: mock.MagicMock,
+    mock_cancel_pipeline_run: mock.MagicMock,
     mock_get_run: mock.MagicMock,
     persisted_run: Run,  # noqa: F811
 ):
@@ -28,13 +28,13 @@ def test_cancel_abort(
 
     runner.invoke(cancel, ["abc"], input="n")
 
-    mock_cancel_resolution.assert_not_called()
+    mock_cancel_pipeline_run.assert_not_called()
 
 
 @mock.patch("sematic.cli.cancel.api_client.get_run")
-@mock.patch("sematic.cli.cancel.api_client.cancel_resolution")
+@mock.patch("sematic.cli.cancel.api_client.cancel_pipeline_run")
 def test_cancel_confirm(
-    mock_cancel_resolution: mock.MagicMock,
+    mock_cancel_pipeline_run: mock.MagicMock,
     mock_get_run: mock.MagicMock,
     persisted_run: Run,  # noqa: F811
 ):
@@ -44,4 +44,4 @@ def test_cancel_confirm(
 
     runner.invoke(cancel, ["abc"], input="Y")
 
-    mock_cancel_resolution.assert_called_with(persisted_run.root_id)
+    mock_cancel_pipeline_run.assert_called_with(persisted_run.root_id)

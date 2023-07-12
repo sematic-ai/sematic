@@ -8,7 +8,7 @@ import argparse
 import logging
 
 # Sematic
-from sematic import CloudResolver
+from sematic import CloudRunner
 from sematic.examples.mnist.pytorch.pipeline import (
     DataLoaderConfig,
     PipelineConfig,
@@ -50,9 +50,10 @@ def main():
         for learning_rate in learning_rates
     ]
 
-    scan_learning_rate(
+    future = scan_learning_rate(
         dataloader_config=DataLoaderConfig(), train_configs=train_configs
-    ).set(name="Scan MNIST learning rates").resolve(CloudResolver(detach=args.detach))
+    ).set(name="Scan MNIST learning rates")
+    CloudRunner(detach=args.detach).run(future)
 
 
 if __name__ == "__main__":

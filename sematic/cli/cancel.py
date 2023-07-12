@@ -20,12 +20,12 @@ def cancel(run_id: str):
 
     click.confirm(
         (
-            f"Canceling resolution for run {run_id}, "
+            f"Canceling pipeline run {run_id}, "
             f"all runs in the pipeline will be cancelled. Proceed?"
         ),
         abort=True,
     )
 
-    api_client.cancel_resolution(run.root_id)
+    api_client.cancel_pipeline_run(run.root_id)
 
-    click.echo("Resolution was canceled successfully.")
+    click.echo("Pipeline run was canceled successfully.")

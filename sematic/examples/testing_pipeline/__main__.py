@@ -12,13 +12,13 @@ from typing import Dict, Optional
 import debugpy
 
 # Sematic
-from sematic import CloudResolver, LocalResolver, SilentResolver
+from sematic import CloudRunner, LocalRunner, SilentRunner
 from sematic.examples.testing_pipeline.pipeline import testing_pipeline
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
 )
-from sematic.resolvers.state_machine_resolver import StateMachineResolver
+from sematic.runners.state_machine_runner import StateMachineRunner
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ BAZEL_COMMAND = "bazel run //sematic/examples/testing_pipeline:__main__ --"
 
 DESCRIPTION = (
     "This is the Sematic Testing Pipeline. "
-    "It is used to test the behavior of the Server and of the Resolver. "
+    "It is used to test the behavior of the Server and of the Runner. "
     "The arguments control the shape of the pipeline, as described in the individual "
     "help strings. "
     "Some of the arguments have dependencies on other arguments, and missing values will "
@@ -35,13 +35,13 @@ DESCRIPTION = (
     "in a future list and reduced."
 )
 
-LOG_LEVEL_HELP = "The log level for the pipeline and Resolver. Defaults to INFO."
+LOG_LEVEL_HELP = "The log level for the pipeline and Runner. Defaults to INFO."
 CLOUD_HELP = (
-    "Whether to run the resolution in the cloud, or locally. Defaults to False. "
+    "Whether to run the pipeline in the cloud, or locally. Defaults to False. "
     "Only one of --silent or --cloud are allowed."
 )
 SILENT_HELP = (
-    "Whether to run the resolution using the SilentResolver. Defaults to False. "
+    "Whether to run the pipeline using the SilentRunner. Defaults to False. "
     "Only one of --silent or --cloud are allowed."
 )
 DETACH_HELP = (
@@ -50,9 +50,9 @@ DETACH_HELP = (
     "prompt will return as soon as the driver job as been submitted. Defaults to False."
 )
 RERUN_FROM_HELP = (
-    "The id of a run to rerun as part of a new pipeline resolution. This will copy the "
-    "previous resolution, while invalidating any failed runs, this specified run, and "
-    "any of its downstream runs, and then continue the resolution from there. Defaults "
+    "The id of a run to rerun as part of a new pipeline run. This will copy the "
+    "previous pipeline run, while invalidating any failed runs, this specified run, and "
+    "any of its downstream runs, and then continue the pipeline from there. Defaults "
     "to None."
 )
 MAX_PARALLELISM_HELP = (
@@ -195,7 +195,7 @@ def _parse_args() -> argparse.Namespace:
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
-    # Resolver args:
+    # Runner args:
     parser.add_argument("--log-level", type=str, default="INFO", help=LOG_LEVEL_HELP)
     parser.add_argument(
         "--cloud",
@@ -365,16 +365,16 @@ def _parse_args() -> argparse.Namespace:
     return args
 
 
-def _get_resolver(args: argparse.Namespace) -> StateMachineResolver:
-    """Instantiates the Resolver based on the passed arguments."""
+def _get_runner(args: argparse.Namespace) -> StateMachineRunner:
+    """Instantiates the Runner based on the passed arguments."""
     if args.silent:
-        return SilentResolver()
+        return SilentRunner()
     if not args.cloud:
-        return LocalResolver(
+        return LocalRunner(
             rerun_from=args.rerun_from, cache_namespace=args.cache_namespace
         )
 
-    return CloudResolver(
+    return CloudRunner(
         detach=args.detach,
         cache_namespace=args.cache_namespace,
         max_parallelism=args.max_parallelism,
@@ -417,7 +417,7 @@ def main() -> None:
     effective_args = {key: vars(args)[key] for key in effective_arg_keys}
     logger.info("Pipeline arguments: %s", effective_args)
 
-    resolver = _get_resolver(args)
+    runner = _get_runner(args)
 
     future = testing_pipeline(**effective_args).set(
         name="Sematic Testing Pipeline",
@@ -425,7 +425,7 @@ def main() -> None:
     )
 
     logger.info("Invoking the pipeline...")
-    result = future.resolve(resolver)
+    result = runner.run(future)
     logger.info("Pipeline result: %s", result)
 
 
