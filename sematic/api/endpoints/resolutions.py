@@ -465,13 +465,17 @@ def _update_resolution_user(
             return resolution, False
 
         resolution.user_id = None
-        del resolution.settings_env_vars[var_key]
+        if resolution.settings_env_vars is not None:
+            del resolution.settings_env_vars[var_key]
+
         return resolution, True
 
     if user.id == resolution.user_id:
         return resolution, False
 
     resolution.user_id = user.id
+    if resolution.settings_env_vars is None:
+        resolution.settings_env_vars = {}
     resolution.settings_env_vars[var_key] = user.api_key
 
     return resolution, True

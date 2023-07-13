@@ -524,19 +524,6 @@ def count_jobs_by_run_id(run_id: str, kind: JobKindString = JobKind.run) -> int:
         )
 
 
-# TODO: Remove this function
-# https://github.com/sematic-ai/sematic/issues/710
-# Will also need to be removed if this issue is fixed:
-# https://github.com/sematic-ai/sematic/issues/302
-def run_has_legacy_jobs(run_id: str) -> bool:
-    with db().get_session() as session:
-        statement = sqlalchemy.text(
-            "SELECT external_jobs_json FROM runs WHERE id=:run_id"
-        ).bindparams(run_id=run_id)
-        jobs = list(session.execute(statement))[0]["external_jobs_json"]
-        return jobs is not None and len(jobs) > 0
-
-
 def save_external_resource_record(record: ExternalResource):
     """Save an ExternalResource to the DB"""
     if record.resource_state == ResourceState.FORCE_KILLED:

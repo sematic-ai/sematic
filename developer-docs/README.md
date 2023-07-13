@@ -118,7 +118,7 @@ changes.
      there are any TODOs mentioning this should be done
    - `./README.md` - PyPI badge
 
-1. Increment the minor version of the `version` field in
+1. Increment the patch version of the `version` field in
   `helm/sematic-server/Chart.yaml`. Note that this will be DIFFERENT
   from the Sematic version you changed in prior steps (chart version
   will be `1.X.Y`, Sematic version is `0.M.N`).
