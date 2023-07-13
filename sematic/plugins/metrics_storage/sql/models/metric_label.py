@@ -1,5 +1,5 @@
 # Third-party
-from sqlalchemy import Column, types
+from sqlalchemy import Column, Index, types
 from sqlalchemy.dialects.postgresql import JSONB
 
 # Sematic
@@ -33,3 +33,9 @@ class MetricLabel(Base):
     metric_name: str = Column(types.String(), nullable=False)
     metric_labels: MetricsLabels = Column(JSONB(), nullable=False)
     metric_type: MetricType = Column(IntEnum(MetricType), nullable=False)
+
+    __table_args__ = (
+        Index(
+            "metric_labels_name_labels_idx", "metric_name", "metric_labels", unique=True
+        ),
+    )
