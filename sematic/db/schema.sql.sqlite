@@ -1,53 +1,4 @@
 CREATE TABLE IF NOT EXISTS "schema_migrations" (version varchar(255) primary key);
-CREATE TABLE runs (
-    id character(32) NOT NULL,
-    future_state TEXT NOT NULL,
-    name TEXT,
-    function_path TEXT,
-    created_at timestamp WITH time zone NOT NULL,
-    updated_at timestamp WITH time zone NOT NULL,
-    started_at timestamp,
-    ended_at timestamp,
-    resolved_at timestamp,
-    failed_at timestamp,
-    parent_id character(32), description TEXT, tags TEXT, source_code TEXT, root_id character(32), nested_future_id character(32), exception TEXT, external_jobs_json JSONB, resource_requirements_json JSONB, exception_metadata_json JSONB, container_image_uri TEXT, external_exception_metadata_json JSONB, original_run_id character(32), cache_key TEXT, user_id character(32) REFERENCES users(id),
-
-    PRIMARY KEY (id)
-);
-CREATE TABLE artifacts (
-        id character(40) NOT NULL,
-    json_summary JSONB NOT NULL,
-    created_at timestamp NOT NULL,
-    updated_at timestamp NOT NULL, type_serialization JSONB,
-
-    PRIMARY KEY (id)
-);
-CREATE TABLE edges (
-    id character(32) NOT NULL,
-    source_run_id character(32),
-    source_name TEXT,
-    destination_run_id character(32),
-    destination_name TEXT,
-    artifact_id character(40),
-    parent_id character(32),
-    created_at timestamp NOT NULL,
-    updated_at timestamp NOT NULL,
-
-    PRIMARY KEY (id),
-
-    FOREIGN KEY(artifact_id) REFERENCES artifacts (id),
-    FOREIGN KEY(parent_id) REFERENCES edges (id)
-);
-CREATE TABLE resolutions (
-    root_id TEXT NOT NULL,
-    status TEXT NOT NULL,
-    kind TEXT NOT NULL,
-    container_image_uri TEXT,
-    settings_env_vars JSONB NOT NULL, external_jobs_json JSONB, git_info_json JSONB, container_image_uris JSONB, client_version TEXT, cache_namespace TEXT, user_id character(32) REFERENCES users(id), run_command TEXT, build_config TEXT,
-
-    PRIMARY KEY (root_id),
-    FOREIGN KEY (root_id) REFERENCES runs(id)
-);
 CREATE TABLE external_resources (
     id character(32) NOT NULL,
     resource_state TEXT NOT NULL,
@@ -68,7 +19,6 @@ CREATE TABLE runs_external_resources (
     FOREIGN KEY(resource_id) REFERENCES external_resources (id),
     FOREIGN KEY(run_id) REFERENCES runs (id)
 );
-CREATE INDEX runs_cache_key_index ON runs(cache_key);
 CREATE TABLE IF NOT EXISTS "users" (
     id character(32) NOT NULL,
     email TEXT NOT NULL,
@@ -81,40 +31,6 @@ CREATE TABLE IF NOT EXISTS "users" (
 
     PRIMARY KEY (id)
 );
-CREATE TABLE IF NOT EXISTS "notes" (
-    id character(32) NOT NULL,
-    user_id character(32),
-    note TEXT NOT NULL,
-    run_id character(32) NOT NULL,
-    root_id character(32) NOT NULL,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone,
-
-    PRIMARY KEY(id),
-
-    FOREIGN KEY(run_id) REFERENCES runs (id),
-    FOREIGN KEY(root_id) REFERENCES runs (id),
-    FOREIGN KEY(user_id) REFERENCES users (id)
-);
-CREATE TABLE jobs (
-    name TEXT NOT NULL,
-    namespace TEXT NOT NULL,
-    run_id character(32) NOT NULL,
-    last_updated_epoch_seconds double precision NOT NULL,
-    state TEXT NOT NULL,
-    kind TEXT NOT NULL,
-    message TEXT NOT NULL,
-    detail_serialization JSONB NOT NULL,
-    status_history_serialization JSONB NOT NULL,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone,
-
-    PRIMARY KEY(name, namespace),
-
-    FOREIGN KEY(run_id) REFERENCES runs (id)
-);
-CREATE INDEX runs_calculator_path ON runs (function_path);
-CREATE INDEX jobs_run_id ON jobs (run_id);
 CREATE TABLE metric_labels (
     metric_id TEXT NOT NULL PRIMARY KEY,
     metric_name TEXT NOT NULL,
@@ -122,16 +38,128 @@ CREATE TABLE metric_labels (
     metric_type SMALLINT NOT NULL
 );
 CREATE UNIQUE INDEX metric_labels_name_labels_idx ON metric_labels(metric_name, metric_labels);
-CREATE TABLE metric_values (
-    metric_id TEXT NOT NULL,
-    value FLOAT NOT NULL,
-    metric_time TIMESTAMP NOT NULL,
-    created_at TIMESTAMP NOT NULL
-);
-CREATE INDEX metric_values_id_time_idx ON metric_values(metric_id, metric_time DESC);
-CREATE INDEX metric_values_time_idx ON metric_values(metric_time DESC);
+CREATE TABLE IF NOT EXISTS "runs" (
+                id character(32) NOT NULL,
+                future_state TEXT NOT NULL,
+                name TEXT,
+                function_path TEXT NOT NULL,
+                created_at timestamp WITH time zone NOT NULL,
+                updated_at timestamp WITH time zone NOT NULL,
+                started_at timestamp,
+                ended_at timestamp,
+                resolved_at timestamp,
+                failed_at timestamp,
+                parent_id character(32),
+                description TEXT,
+                tags TEXT NOT NULL,
+                source_code TEXT NOT NULL,
+                root_id character(32) NOT NULL,
+                nested_future_id character(32),
+                resource_requirements_json JSONB,
+                exception_metadata_json JSONB,
+                container_image_uri TEXT,
+                external_exception_metadata_json JSONB,
+                original_run_id character(32),
+                cache_key TEXT,
+                user_id character(32),
+
+                PRIMARY KEY (id),
+
+                FOREIGN KEY(root_id) REFERENCES runs (id),
+                FOREIGN KEY(user_id) REFERENCES users (id)
+            );
+CREATE INDEX ix_runs_cache_key ON runs (cache_key);
+CREATE INDEX ix_runs_function_path ON runs (function_path);
+CREATE TABLE IF NOT EXISTS "artifacts" (
+                id character(40) NOT NULL,
+                json_summary JSONB NOT NULL,
+                created_at timestamp NOT NULL,
+                updated_at timestamp NOT NULL,
+                type_serialization JSONB NOT NULL,
+
+                PRIMARY KEY (id)
+            );
+CREATE TABLE IF NOT EXISTS "resolutions" (
+                root_id TEXT NOT NULL,
+                status TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                container_image_uri TEXT,
+                settings_env_vars JSONB NOT NULL,
+                git_info_json JSONB,
+                container_image_uris JSONB,
+                client_version TEXT,
+                cache_namespace TEXT,
+                user_id character(32),
+                run_command TEXT,
+                build_config TEXT,
+
+                PRIMARY KEY (root_id),
+                FOREIGN KEY (root_id) REFERENCES runs(id),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            );
+CREATE TABLE IF NOT EXISTS "jobs" (
+                name TEXT NOT NULL,
+                namespace TEXT NOT NULL,
+                run_id character(32) NOT NULL,
+                last_updated_epoch_seconds double precision NOT NULL,
+                state TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                message TEXT NOT NULL,
+                detail_serialization JSONB NOT NULL,
+                status_history_serialization JSONB NOT NULL,
+                created_at timestamp without time zone NOT NULL,
+                updated_at timestamp without time zone NOT NULL,
+
+                PRIMARY KEY(name, namespace),
+
+                FOREIGN KEY(run_id) REFERENCES runs (id)
+            );
+CREATE INDEX ix_jobs_run_id ON jobs (run_id);
+CREATE TABLE IF NOT EXISTS "notes" (
+                id character(32) NOT NULL,
+                user_id character(32),
+                note TEXT NOT NULL,
+                run_id character(32) NOT NULL,
+                root_id character(32) NOT NULL,
+                created_at timestamp without time zone NOT NULL,
+                updated_at timestamp without time zone NOT NULL,
+
+                PRIMARY KEY(id),
+
+                FOREIGN KEY(run_id) REFERENCES runs (id),
+                FOREIGN KEY(root_id) REFERENCES runs (id),
+                FOREIGN KEY(user_id) REFERENCES users (id)
+            );
+CREATE TABLE IF NOT EXISTS "edges" (
+                id character(32) NOT NULL,
+                source_run_id character(32),
+                source_name TEXT,
+                destination_run_id character(32),
+                destination_name TEXT,
+                artifact_id character(40),
+                parent_id character(32),
+                created_at timestamp NOT NULL,
+                updated_at timestamp NOT NULL,
+
+                PRIMARY KEY (id),
+
+                FOREIGN KEY(artifact_id) REFERENCES artifacts (id),
+                FOREIGN KEY(parent_id) REFERENCES edges (id),
+                FOREIGN KEY(destination_run_id) REFERENCES runs (id),
+                FOREIGN KEY(source_run_id) REFERENCES runs (id)
+            );
 CREATE INDEX ix_edges_source_run_id ON edges (source_run_id);
 CREATE INDEX ix_edges_destination_run_id ON edges (destination_run_id);
+CREATE TABLE IF NOT EXISTS "metric_values" (
+                metric_id TEXT NOT NULL,
+                value FLOAT NOT NULL,
+                metric_time TIMESTAMP NOT NULL,
+                created_at TIMESTAMP NOT NULL,
+
+                FOREIGN KEY(metric_id) REFERENCES metric_labels (metric_id)
+            );
+CREATE INDEX metric_values_id_time_idx ON metric_values (metric_id, metric_time DESC);
+CREATE INDEX metric_values_time_idx ON metric_values (metric_time DESC);
 -- schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
   ('20220424062956'),
@@ -177,4 +205,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20230419080554'),
   ('20230428225443'),
   ('20230526141354'),
-  ('20230627153433');
+  ('20230627153433'),
+  ('20230706150252');

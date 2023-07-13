@@ -1,9 +1,13 @@
 """
 Module defining the Resolution data model.
 
+Note that this class is sometimes referred to as a "Pipeline Run."
+It will be formally renamed to that with
+https://github.com/sematic-ai/sematic/issues/959
+
 Notes regarding container images
 --------------------------------
-In the case of cloud resolution (using `CloudResolver`), the default behavior
+In the case of cloud execution (using `CloudRunner`), the default behavior
 uses a single container image for remote jobs (driver job + worker jobs). See
 docs/multiple-base-images.md for the rationale behind this design choice.
 
@@ -22,7 +26,7 @@ from enum import Enum, unique
 from typing import Dict, FrozenSet, Optional, Union
 
 # Third-party
-from sqlalchemy import Column, types
+from sqlalchemy import Column, ForeignKey, types
 from sqlalchemy.orm import validates
 
 # Sematic
@@ -192,6 +196,7 @@ class Resolution(HasUserMixin, Base, JSONEncodableMixin):
 
     root_id: str = Column(
         types.String(),
+        ForeignKey("runs.id"),
         nullable=False,
         primary_key=True,
     )
@@ -211,6 +216,7 @@ class Resolution(HasUserMixin, Base, JSONEncodableMixin):
     settings_env_vars: Dict[str, str] = Column(
         types.JSON(), nullable=False, default=lambda: {}, info={REDACTED_KEY: True}
     )
+
     container_image_uris: Optional[Dict[str, str]] = Column(types.JSON(), nullable=True)
     container_image_uri: Optional[str] = Column(types.String(), nullable=True)
     client_version: Optional[str] = Column(types.String(), nullable=True)
@@ -321,3 +327,25 @@ class Resolution(HasUserMixin, Base, JSONEncodableMixin):
         # for the same reason, we can't use value_to_json_encodable, because it imposes
         # the values/types/root_type semantics
         self.git_info_json = json.dumps(dataclasses.asdict(value), sort_keys=True)
+
+
+# Aliases to aid in the rename of resolution -> pipeline run
+# The current code takes the following convention with regards
+# to which variant is used in what places:
+# - Runner code uses the "pipeline run" variants
+# - API client python method names use the "pipeline run" variants
+# - API client HTTP paths use "resolution" API paths
+# - Server-side API supports only "resolution" HTTP paths
+# - DB queries module uses "resolution" name
+# - DB tables use "resolution" name
+#
+# The plan is to progress down this list in order
+# as changes are implemented. For the server-side API
+# endpoints, there will be a transition period where
+# both /api/v1/resolution and api/v1/pipeline_run
+# variants will be accepted, to support backwards
+# compatibility.
+PipelineRunStatus = ResolutionStatus
+InvalidPipelineRun = InvalidResolution
+PipelineRunKind = ResolutionKind
+PipelineRun = Resolution

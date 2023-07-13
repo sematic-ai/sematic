@@ -66,7 +66,7 @@ export default function Home() {
     const h1 = user ? "Hi " + user.first_name : "Welcome to Sematic";
 
     return (
-        <Container sx={{ pt: 10, height: "100vh" }}>
+        <Container sx={{ pt: 10, height: "100%" }}>
             <Typography variant="h1">{h1}</Typography>
             <Box sx={{ mt: 15, mb: 10, minHeight: "1px" }}>
                 {!!error && (

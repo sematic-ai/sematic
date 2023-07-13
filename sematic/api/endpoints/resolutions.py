@@ -52,8 +52,13 @@ from sematic.db.queries import (
 from sematic.graph import RerunMode
 from sematic.plugins.abstract_publisher import get_publishing_plugins
 from sematic.scheduling.job_details import JobKind
-from sematic.scheduling.job_scheduler import clean_jobs, schedule_resolution
+from sematic.scheduling.job_scheduler import (
+    StateNotSchedulable,
+    clean_jobs,
+    schedule_resolution,
+)
 from sematic.scheduling.kubernetes import cancel_job
+from sematic.utils.exceptions import ExceptionMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -249,6 +254,22 @@ def schedule_resolution_endpoint(
     except MissingSettingsError as e:
         return jsonify_error(str(e), status=HTTPStatus.BAD_REQUEST)
 
+    except StateNotSchedulable as e:
+        root_run = get_run(resolution_id)
+        root_run.exception_metadata = ExceptionMetadata(
+            repr=f"Failed because the runner job could not be scheduled: {e}",
+            name=StateNotSchedulable.__name__,
+            module=StateNotSchedulable.__module__,
+            ancestors=ExceptionMetadata.ancestors_from_exception(StateNotSchedulable),
+        )
+        root_run.failed_at = datetime.utcnow()
+        root_run.future_state = FutureState.FAILED
+        save_graph(runs=[root_run], artifacts=[], edges=[])
+        resolution.status = ResolutionStatus.FAILED
+        save_resolution(resolution)
+        logger.exception("Exception saved for resolution %s", root_run.id)
+        broadcast_pipeline_update(function_path=root_run.function_path, user=user)
+        return jsonify_error(str(e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
     except Exception as e:
         return jsonify_error(str(e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
@@ -282,6 +303,7 @@ def rerun_resolution_endpoint(
     original_root_run = original_runs[0]
 
     root_run, edges = clone_root_run(original_root_run, original_edges)
+    logger.info("Cloning %s to %s", resolution_id, root_run.id)
 
     if user is not None:
         root_run.user_id = user.id
@@ -297,9 +319,29 @@ def rerun_resolution_endpoint(
         )
         save_resolution(resolution)
 
-    resolution, post_schedule_job = schedule_resolution(
-        resolution=resolution, rerun_from=rerun_from
-    )
+    try:
+        logger.info("Scheduling resolution %s", root_run.id)
+        resolution, post_schedule_job = schedule_resolution(
+            resolution=resolution, rerun_from=rerun_from
+        )
+    except StateNotSchedulable as e:
+        logger.exception("Exception scheduling resolution %s", root_run.id)
+        root_run.exception_metadata = ExceptionMetadata(
+            repr=f"Failed because the runner job could not be scheduled: {e}",
+            name=StateNotSchedulable.__name__,
+            module=StateNotSchedulable.__module__,
+            ancestors=ExceptionMetadata.ancestors_from_exception(StateNotSchedulable),
+        )
+        root_run.failed_at = datetime.utcnow()
+        root_run.future_state = FutureState.FAILED
+        save_graph(runs=[root_run], artifacts=[], edges=[])
+        resolution.status = ResolutionStatus.FAILED
+        save_resolution(resolution)
+        logger.exception("Exception saved for resolution %s", root_run.id)
+        broadcast_pipeline_update(function_path=root_run.function_path, user=user)
+        return jsonify_error(str(e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    except Exception as e:
+        return jsonify_error(str(e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     save_resolution(resolution)
     save_job(post_schedule_job)

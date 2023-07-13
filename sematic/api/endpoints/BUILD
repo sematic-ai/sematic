@@ -78,6 +78,7 @@ sematic_py_lib(
         "//sematic/db:queries",
         "//sematic/db/models:resolution",
         "//sematic/db/models:user",
+        "//sematic/utils:exceptions",
     ],
 )
 

@@ -87,6 +87,8 @@ def twelve_runs(test_db: DB) -> List[Run]:  # noqa: F811
         Run(
             id=str(i),
             future_state=states[i // 3],
+            function_path=str(i // 6),
+            source_code="some code",
             original_run_id=str(i) if i % 3 == 0 else None,
             root_id="0",
             started_at=datetime.utcnow(),

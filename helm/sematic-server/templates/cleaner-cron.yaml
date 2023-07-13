@@ -38,7 +38,7 @@ spec:
             - --verbose
             - clean
             - --orphaned-runs
-            - --stale-resolutions
+            - --stale-pipeline-runs
             - --orphaned-jobs
             - --orphaned-resources
           restartPolicy: Never

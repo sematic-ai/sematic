@@ -163,8 +163,8 @@ class TimeoutError(RuntimeError):
     pass
 
 
-class ResolutionError(Exception):
-    """The pipeline resolution has failed.
+class PipelineRunError(Exception):
+    """The pipeline run has failed.
 
     Should only be generated to halt execution. Should not be handled.
 
@@ -172,7 +172,7 @@ class ResolutionError(Exception):
     ----------
     exception_metadata:
         Metadata describing an exception which occurred during code execution
-        (Pipeline, Resolver, Driver)
+        (Pipeline, Runner, Driver)
     external_exception_metadata:
         Metadata describing an exception which occurred in external compute
         infrastructure
@@ -183,19 +183,19 @@ class ResolutionError(Exception):
         exception_metadata: Optional[ExceptionMetadata] = None,
         external_exception_metadata: Optional[ExceptionMetadata] = None,
     ):
-        exception_msg = ResolutionError._make_metadata_msg(
+        exception_msg = PipelineRunError._make_metadata_msg(
             "\n\nPipeline failure:\n", exception_metadata
         )
-        external_exception_msg = ResolutionError._make_metadata_msg(
+        external_exception_msg = PipelineRunError._make_metadata_msg(
             "\n\nExternal failure:\n", external_exception_metadata
         )
 
         self._msg = (
-            "The pipeline resolution failed due to previous errors!"
+            "The pipeline run failed due to previous errors!"
             f"{exception_msg}{external_exception_msg}"
         )
 
-        super(ResolutionError, self).__init__(self._msg)
+        super(PipelineRunError, self).__init__(self._msg)
 
     @staticmethod
     def _make_metadata_msg(
@@ -204,6 +204,13 @@ class ResolutionError(Exception):
         if metadata is not None and metadata.repr is not None:
             return f"{msg_prefix}{metadata.repr}"
         return ""
+
+
+# In case anybody is using this still.
+# should deprecate it after resolver -> runner rename
+# has been done for a while.
+# TODO: https://github.com/sematic-ai/sematic/issues/975
+ResolutionError = PipelineRunError
 
 
 class MissingPluginError(Exception):

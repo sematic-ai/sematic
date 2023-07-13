@@ -21,19 +21,19 @@ from sematic.db.db import DB
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
-from sematic.db.models.resolution import ResolutionKind, ResolutionStatus
+from sematic.db.models.resolution import PipelineRunKind, PipelineRunStatus
 from sematic.db.models.run import Run
 from sematic.db.queries import get_resolution, get_root_graph, get_run
 from sematic.db.tests.fixtures import pg_mock, test_db  # noqa: F401
 from sematic.function import func
-from sematic.resolvers.local_resolver import LocalResolver
 from sematic.retry_settings import RetrySettings
+from sematic.runners.local_runner import LocalRunner
 from sematic.tests.fixtures import (  # noqa: F401
     DIVERSE_VALUES_WITH_TYPES,
     test_storage,
     valid_client_version,
 )
-from sematic.utils.exceptions import ExceptionMetadata, ResolutionError
+from sematic.utils.exceptions import ExceptionMetadata, PipelineRunError
 
 
 @func
@@ -62,7 +62,7 @@ def test_single_function(
 ):
     future = add(1, 2)
 
-    result = future.set(name="AAA").resolve(LocalResolver())
+    result = LocalRunner().run(future.set(name="AAA"))
 
     assert result == 3
 
@@ -117,7 +117,7 @@ def test_add_add(
 ):
     future = add_add_add(1, 2)
 
-    result = future.resolve(LocalResolver())
+    result = LocalRunner().run(future)
 
     assert result == 7
 
@@ -135,23 +135,23 @@ def test_pipeline(
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
-    resolver = CallbackTrackingResolver()
+    runner = CallbackTrackingRunner()
     future = pipeline(3, 5)
 
-    result = future.resolve(resolver)
+    result = runner.run(future)
 
     assert result == 24
     assert isinstance(result, float)
     assert future.state == FutureState.RESOLVED
 
     runs, artifacts, edges = get_root_graph(future.id)
-    assert get_resolution(future.id).status == ResolutionStatus.COMPLETE.value
+    assert get_resolution(future.id).status == PipelineRunStatus.COMPLETE.value
 
     assert len(runs) == 6
     assert len(artifacts) == 5
     assert len(edges) == 16
-    pipeline_callbacks = resolver.callback_by_future_id(future.id)
-    final_add_callbacks = resolver.callback_by_future_id(future.nested_future.id)
+    pipeline_callbacks = runner.callback_by_future_id(future.id)
+    final_add_callbacks = runner.callback_by_future_id(future.nested_future.id)
     assert pipeline_callbacks == [
         "_future_did_schedule",
         "_future_did_run",
@@ -187,27 +187,27 @@ def test_failure(
     def pipeline():
         return failure(success())
 
-    resolver = LocalResolver()
+    runner = LocalRunner()
     future = pipeline()
 
-    with pytest.raises(ResolutionError, match="some message") as exc_info:
-        future.resolve(resolver)
+    with pytest.raises(PipelineRunError, match="some message") as exc_info:
+        runner.run(future)
 
     assert isinstance(exc_info.value.__context__, FunctionError)
     assert isinstance(exc_info.value.__context__.__context__, CustomException)
 
-    assert get_resolution(future.id).status == ResolutionStatus.FAILED.value
+    assert get_resolution(future.id).status == PipelineRunStatus.FAILED.value
     expected_states = dict(
         pipeline=FutureState.NESTED_FAILED,
         success=FutureState.RESOLVED,
         failure=FutureState.FAILED,
     )
 
-    for future in resolver._futures:
+    for future in runner._futures:
         assert future.state == expected_states[future.function.__name__]
 
 
-def test_pre_resolution_creation_failure(
+def test_pre_pipeline_run_creation_failure(
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
@@ -224,17 +224,17 @@ def test_pre_resolution_creation_failure(
     def pipeline() -> None:
         return None
 
-    resolver = LocalResolver()
-    resolver._make_resolution = do_fail
+    runner = LocalRunner()
+    runner._make_pipeline_run = do_fail
     future = pipeline()
 
     with pytest.raises(CustomException):
         # this confirms the exception isn't swallowed by another when trying
-        # to fail the resolution.
-        future.resolve(resolver)
+        # to fail the pipeline run.
+        runner.run(future)
 
 
-def test_resolver_error(
+def test_runner_error(
     mock_socketio,  # noqa: F811
     mock_auth,  # noqa: F811
     test_db,  # noqa: F811
@@ -249,24 +249,24 @@ def test_resolver_error(
     def pipeline() -> int:
         return add(add(1, 2), add(3, 4))
 
-    resolver = LocalResolver()
+    runner = LocalRunner()
 
     def intentional_fail(*_, **__):
         raise ValueError("some message")
 
-    # Random failure in resolution logic
-    resolver._future_did_resolve = intentional_fail
+    # Random failure in pipeline run logic
+    runner._future_did_resolve = intentional_fail
     future = pipeline()
 
-    with pytest.raises(ResolutionError, match="some message") as exc_info:
-        future.resolve(resolver)
+    with pytest.raises(PipelineRunError, match="some message") as exc_info:
+        runner.run(future)
 
-    # this test doesn't really go through the entire Resolver logic due to
+    # this test doesn't really go through the entire Runner logic due to
     # the custom setting of _future_did_resolve above, so no FunctionError here
     # TODO: replace with testing logic that goes through the entire tested code logic
     assert isinstance(exc_info.value.__context__, ValueError)
 
-    assert get_resolution(future.id).status == ResolutionStatus.FAILED.value
+    assert get_resolution(future.id).status == PipelineRunStatus.FAILED.value
     assert get_run(future.id).future_state == FutureState.NESTED_FAILED.value
     assert get_run(future.nested_future.id).future_state == FutureState.CANCELED.value
     assert (
@@ -279,7 +279,7 @@ def test_resolver_error(
     )
 
 
-class DBStateMachineTestResolver(LocalResolver):
+class DBStateMachineTestRunner(LocalRunner):
     def _future_will_schedule(self, future) -> None:
         super()._future_will_schedule(future)
 
@@ -363,7 +363,7 @@ class DBStateMachineTestResolver(LocalResolver):
         assert all(edge.artifact_id is None for edge in output_edges)
 
 
-class CallbackTrackingResolver(LocalResolver):
+class CallbackTrackingRunner(LocalRunner):
     def __init__(self, rerun_from=None, **kwargs):
         super().__init__(rerun_from, **kwargs)
         # list of tuples: (callback name, future, future_state)
@@ -430,7 +430,7 @@ def test_db_state_machine(
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
-    pipeline(1, 2).resolve(DBStateMachineTestResolver())
+    DBStateMachineTestRunner().run(pipeline(1, 2))
 
 
 def test_list_conversion(
@@ -444,7 +444,7 @@ def test_list_conversion(
     def alist(a: float, b: float) -> List[float]:
         return [add(a, b), add(a, b)]
 
-    assert alist(1, 2).resolve() == [3, 3]
+    assert LocalRunner().run(alist(1, 2)) == [3, 3]
 
 
 def test_exceptions(
@@ -453,7 +453,7 @@ def test_exceptions(
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
-    resolver = CallbackTrackingResolver()
+    runner = CallbackTrackingRunner()
 
     @func
     def fail():
@@ -465,8 +465,8 @@ def test_exceptions(
 
     future = pipeline()
 
-    with pytest.raises(ResolutionError, match="FAIL!") as exc_info:
-        future.resolve(resolver)
+    with pytest.raises(PipelineRunError, match="FAIL!") as exc_info:
+        runner.run(future)
 
     assert isinstance(exc_info.value.__context__, FunctionError)
     assert isinstance(exc_info.value.__context__.__context__, Exception)
@@ -486,8 +486,8 @@ def test_exceptions(
     assert runs_by_id[future.nested_future.id].future_state == FutureState.FAILED.value
     assert "FAIL!" in runs_by_id[future.nested_future.id].exception_metadata.repr
 
-    parent_callbacks = resolver.callback_by_future_id(future.id)
-    nested_callbacks = resolver.callback_by_future_id(future.nested_future.id)
+    parent_callbacks = runner.callback_by_future_id(future.id)
+    nested_callbacks = runner.callback_by_future_id(future.nested_future.id)
     assert parent_callbacks == [
         "_future_did_schedule",
         "_future_did_run",
@@ -523,10 +523,10 @@ def test_retry(
     valid_client_version,  # noqa: F811
 ):
     future = try_three_times()
-    resolver = CallbackTrackingResolver()
+    runner = CallbackTrackingRunner()
 
-    with pytest.raises(ResolutionError) as exc_info:
-        future.resolve(resolver)
+    with pytest.raises(PipelineRunError) as exc_info:
+        runner.run(future)
 
     assert isinstance(exc_info.value.__context__, FunctionError)
     assert isinstance(exc_info.value.__context__.__context__, SomeException)
@@ -534,7 +534,7 @@ def test_retry(
     assert future.props.retry_settings.retry_count == 3
     assert future.state == FutureState.FAILED
     assert _tried == 4
-    callbacks = resolver.callback_by_future_id(future.id)
+    callbacks = runner.callback_by_future_id(future.id)
     assert callbacks == [
         "_future_did_schedule",
         "_future_did_get_marked_for_retry",
@@ -548,23 +548,23 @@ def test_retry(
     ]
 
 
-def test_make_resolution():
+def test_make_pipeline_run():
     @func
     def foo():
         pass
 
     future = foo()
 
-    resolution = LocalResolver()._make_resolution(future)
+    pipeline_run = LocalRunner()._make_pipeline_run(future)
 
-    assert resolution.root_id == future.id
-    assert resolution.status == ResolutionStatus.SCHEDULED.value
-    assert resolution.kind == ResolutionKind.LOCAL.value
-    assert resolution.container_image_uris is None
-    assert resolution.container_image_uri is None
+    assert pipeline_run.root_id == future.id
+    assert pipeline_run.status == PipelineRunStatus.SCHEDULED.value
+    assert pipeline_run.kind == PipelineRunKind.LOCAL.value
+    assert pipeline_run.container_image_uris is None
+    assert pipeline_run.container_image_uri is None
 
 
-class RerunTestResolver(LocalResolver):
+class RerunTestRunner(LocalRunner):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.scheduled_run_counts = defaultdict(lambda: 0)
@@ -584,7 +584,7 @@ def test_rerun_from_here(
 ):
     future = pipeline(1, 2)
 
-    output = future.resolve()
+    output = LocalRunner().run(future)
 
     runs, _, __ = get_root_graph(future.id)
 
@@ -597,13 +597,13 @@ def test_rerun_from_here(
     }.items():
         new_future = pipeline(1, 2)
 
-        resolver = RerunTestResolver(rerun_from=run_id)
+        runner = RerunTestRunner(rerun_from=run_id)
 
-        new_output = new_future.resolve(resolver)
+        new_output = runner.run(new_future)
 
         assert output == new_output
 
-        assert resolver.scheduled_run_counts == expected_scheduled_run_counts
+        assert runner.scheduled_run_counts == expected_scheduled_run_counts
 
 
 def test_cancel_non_terminal_futures(
@@ -613,12 +613,12 @@ def test_cancel_non_terminal_futures(
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
-    resolver = CallbackTrackingResolver()
+    runner = CallbackTrackingRunner()
 
     @func
     def pass_through(x: int, cancel: bool) -> int:
         if cancel:
-            resolver._cancel_non_terminal_futures()
+            runner._cancel_non_terminal_futures()
         return x
 
     @func
@@ -629,16 +629,16 @@ def test_cancel_non_terminal_futures(
         return x
 
     future = pipeline()
-    future.resolve(resolver)
+    runner.run(future)
     root_future_id = future.id
     last_func_id = future.nested_future.id
     middle_func_id = future.nested_future.kwargs["x"].id
     first_func_id = future.nested_future.kwargs["x"].kwargs["x"].id
 
-    root_future_callbacks = resolver.callback_by_future_id(root_future_id)
-    first_func_callbacks = resolver.callback_by_future_id(first_func_id)
-    middle_func_callbacks = resolver.callback_by_future_id(middle_func_id)
-    last_func_callbacks = resolver.callback_by_future_id(last_func_id)
+    root_future_callbacks = runner.callback_by_future_id(root_future_id)
+    first_func_callbacks = runner.callback_by_future_id(first_func_id)
+    middle_func_callbacks = runner.callback_by_future_id(middle_func_id)
+    last_func_callbacks = runner.callback_by_future_id(last_func_id)
 
     assert root_future_callbacks == [
         "_future_did_schedule",
@@ -662,10 +662,10 @@ def test_cancel_non_terminal_futures(
     ]
     assert last_func_callbacks == ["_future_did_terminate"]
 
-    root_future_states = resolver.state_sequence_by_future_id(root_future_id)
-    first_func_states = resolver.state_sequence_by_future_id(first_func_id)
-    middle_func_states = resolver.state_sequence_by_future_id(middle_func_id)
-    last_func_states = resolver.state_sequence_by_future_id(last_func_id)
+    root_future_states = runner.state_sequence_by_future_id(root_future_id)
+    first_func_states = runner.state_sequence_by_future_id(first_func_id)
+    middle_func_states = runner.state_sequence_by_future_id(middle_func_id)
+    last_func_states = runner.state_sequence_by_future_id(last_func_id)
 
     assert root_future_states == [
         FutureState.SCHEDULED,
@@ -712,17 +712,17 @@ def test_cached_output_happy(
         return param
 
     # original run:
-    resolver = LocalResolver(cache_namespace="test_namespace")
+    runner = LocalRunner(cache_namespace="test_namespace")
     original_future = cache_func(param=value)
-    output = original_future.resolve(resolver)
+    output = runner.run(original_future)
 
     assert output == value
 
     # second run, which should be cached:
-    # resolvers are single-use, so we instantiate a new one
-    resolver = LocalResolver(cache_namespace="test_namespace")
+    # runners are single-use, so we instantiate a new one
+    runner = LocalRunner(cache_namespace="test_namespace")
     cache_future = cache_func(param=value)
-    output = cache_future.resolve(resolver)
+    output = runner.run(cache_future)
 
     assert output == value
 
@@ -749,17 +749,17 @@ def test_cached_output_different_namespaces(
         return param
 
     # original run:
-    resolver = LocalResolver(cache_namespace="test_namespace1")
+    runner = LocalRunner(cache_namespace="test_namespace1")
     future1 = cache_func(param=42)
-    output1 = future1.resolve(resolver)
+    output1 = runner.run(future1)
 
     assert output1 == 42
 
     # second run, which should be cached:
-    # resolvers are single-use, so we instantiate a new one
-    resolver = LocalResolver(cache_namespace="test_namespace2")
+    # runners are single-use, so we instantiate a new one
+    runner = LocalRunner(cache_namespace="test_namespace2")
     future2 = cache_func(param=42)
-    output2 = future2.resolve(resolver)
+    output2 = runner.run(future2)
 
     assert output2 == 42
 
@@ -793,17 +793,17 @@ def test_cached_output_different_funcs(
         return param
 
     # original run:
-    resolver = LocalResolver(cache_namespace="test_namespace")
+    runner = LocalRunner(cache_namespace="test_namespace")
     future1 = cache_func1(param=42)
-    output1 = future1.resolve(resolver)
+    output1 = runner.run(future1)
 
     assert output1 == 42
 
     # second run, which should be cached:
-    # resolvers are single-use, so we instantiate a new one
-    resolver = LocalResolver(cache_namespace="test_namespace")
+    # runners are single-use, so we instantiate a new one
+    runner = LocalRunner(cache_namespace="test_namespace")
     future2 = cache_func2(param=42)
-    output2 = future2.resolve(resolver)
+    output2 = runner.run(future2)
 
     assert output2 == 42
 
@@ -833,17 +833,17 @@ def test_cached_output_different_inputs(
         return param
 
     # original run:
-    resolver = LocalResolver(cache_namespace="test_namespace")
+    runner = LocalRunner(cache_namespace="test_namespace")
     future1 = cache_func(param=42)
-    output1 = future1.resolve(resolver)
+    output1 = runner.run(future1)
 
     assert output1 == 42
 
     # second run, which should be cached:
-    # resolvers are single-use, so we instantiate a new one
-    resolver = LocalResolver(cache_namespace="test_namespace")
+    # runners are single-use, so we instantiate a new one
+    runner = LocalRunner(cache_namespace="test_namespace")
     future2 = cache_func(param=43)
-    output2 = future2.resolve(resolver)
+    output2 = runner.run(future2)
 
     assert output2 == 43
 
@@ -883,9 +883,9 @@ def test_subprocess_signal_handling(
         return param
 
     future = fork_func(param=42)
-    result = future.resolve(LocalResolver())
+    result = LocalRunner().run(future)
 
-    # assert killing the subprocess did not cancel the resolution
+    # assert killing the subprocess did not cancel the pipeline run
     assert result == 42
 
 
@@ -907,7 +907,7 @@ def test_subprocess_no_cleanup(
         return param
 
     future = fork_func(param=42)
-    result = future.resolve(LocalResolver())
+    result = LocalRunner().run(future)
 
     # assert the subprocess did not execute worker code,
     # messing up the actual worker's workflow
@@ -933,7 +933,7 @@ def test_subprocess_error(
         return param
 
     future = fork_func(param=42)
-    result = future.resolve(LocalResolver())
+    result = LocalRunner().run(future)
 
-    # assert the subprocess' death did not cancel the resolution
+    # assert the subprocess' death did not cancel the pipeline run
     assert result == 42

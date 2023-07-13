@@ -20,7 +20,8 @@ from sematic.resolvers.resource_requirements import (  # noqa: F401
     KubernetesResourceRequirements,
     ResourceRequirements,
 )
-from sematic.utils.exceptions import ResolutionError
+from sematic.runners.silent_runner import SilentRunner
+from sematic.utils.exceptions import PipelineRunError
 
 
 def test_decorator_no_params():
@@ -249,12 +250,12 @@ def tuple_pipeline() -> Tuple[str, int, str]:
 
 
 def test_pipeline():
-    output = pipeline().resolve(tracking=False)
+    output = SilentRunner().run(pipeline())
     assert output == ["foo", "bar", "baz"]
 
 
 def test_tuple_pipeline():
-    output = tuple_pipeline().resolve(tracking=False)
+    output = SilentRunner().run(tuple_pipeline())
     assert output == ("foo", 42, "qux")
 
 
@@ -291,7 +292,7 @@ def test_convert_lists():
     ):
         return [1, foo(), [2, bar()], 3, [4, [5, foo()]]]  # type: ignore
 
-    assert pipeline().resolve(tracking=False) == [
+    assert SilentRunner().run(pipeline()) == [
         1,
         "foo",
         [2, "bar"],
@@ -311,7 +312,7 @@ def test_convert_tuples():
     def pipeline() -> expected_type:
         return value
 
-    assert pipeline().resolve(tracking=False) == (42, [1, 42, 3], ("foo", "bar"), "foo")
+    assert SilentRunner().run(pipeline()) == (42, [1, 42, 3], ("foo", "bar"), "foo")
 
 
 def test_standalone_default():
@@ -350,11 +351,11 @@ def test_resolve_error():
     def f():
         raise ValueError("Intentional error")
 
-    with pytest.raises(ResolutionError) as exc_info:
-        # resolving should surface the ResolutionError,
+    with pytest.raises(PipelineRunError) as exc_info:
+        # resolving should surface the PipelineRunError,
         # with root cause as __context__
         # see https://peps.python.org/pep-0409/#language-details
-        f().resolve(tracking=False)
+        SilentRunner().run(f())
 
     assert isinstance(exc_info.value.__context__, FunctionError)
     assert isinstance(exc_info.value.__context__.__context__, ValueError)
@@ -401,8 +402,8 @@ def unused_results_list_pipeline(create_unused: bool) -> List[int]:
 
 
 def test_unused_future():
-    with pytest.raises(ResolutionError, match=r".*output.*does not depend on.*"):
-        unused_results_pipeline().resolve(tracking=False)
-    with pytest.raises(ResolutionError, match=r".*output.*does not depend on.*"):
-        unused_results_list_pipeline(True).resolve(tracking=False)
-    unused_results_list_pipeline(False).resolve(tracking=False)
+    with pytest.raises(PipelineRunError, match=r".*output.*does not depend on.*"):
+        SilentRunner().run(unused_results_pipeline())
+    with pytest.raises(PipelineRunError, match=r".*output.*does not depend on.*"):
+        SilentRunner().run(unused_results_list_pipeline(True))
+    SilentRunner().run(unused_results_list_pipeline(False))

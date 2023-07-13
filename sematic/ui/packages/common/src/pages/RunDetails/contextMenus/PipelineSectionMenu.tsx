@@ -2,7 +2,7 @@ import ContextMenu from "src/component/ContextMenu";
 import { useMemo } from "react";
 import { useRootRunContext } from "src/context/RootRunContext";
 import { useNavigate } from "react-router-dom";
-import { getPipelineRunsPattern } from "src/hooks/runHooks";
+import { getPipelineRunsPattern, useRunNavigation } from "src/hooks/runHooks";
 import { useRunDetailsSelectionContext } from "src/context/RunDetailsSelectionContext";
 
 const ANCHOR_OFFSET = {x: 13, y: -11};
@@ -16,6 +16,7 @@ function PipelineSectionActionMenu(props: PipelineSectionActionMenuProps) {
     const { rootRun } = useRootRunContext();
     const navigate = useNavigate();
     const { setSelectedPanel } = useRunDetailsSelectionContext();
+    const navigateToRun = useRunNavigation();
 
 
     const commands = useMemo(() => {
@@ -29,11 +30,12 @@ function PipelineSectionActionMenu(props: PipelineSectionActionMenuProps) {
             {
                 title: "Metrics",
                 onClick: () => { 
+                    navigateToRun(rootRun!.id, false, { panel: "metrics"});
                     setSelectedPanel("metrics");
                 }
             }
         ]
-    }, [rootRun, navigate, setSelectedPanel]);
+    }, [rootRun, navigate, navigateToRun, setSelectedPanel]);
 
     return <ContextMenu anchorEl={anchorEl} commands={commands} anchorOffset={ANCHOR_OFFSET} />;
 }

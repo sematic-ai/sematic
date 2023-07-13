@@ -13,7 +13,7 @@ from huggingface_hub import login
 from peft import LoraConfig, PeftType
 
 # Sematic
-from sematic import LocalResolver
+from sematic import LocalRunner
 from sematic.examples.summarization_finetune.pipeline import (
     DatasetConfig,
     ModelSelection,
@@ -81,7 +81,7 @@ DATASET_CONFIG = DatasetConfig(
 def main():
     logging.basicConfig(level=logging.INFO)
     parsed_args = parse_args()
-    resolver = LocalResolver(cache_namespace=parsed_args.cache_namespace)
+    runner = LocalRunner(cache_namespace=parsed_args.cache_namespace)
     model_tag = parsed_args.training_config.model_selection.name.replace("_", "-")
     future = pipeline(
         training_config=parsed_args.training_config,
@@ -92,7 +92,7 @@ def main():
         name="Summarization Fine-Tuning",
         tags=[f"model-selection:{model_tag}"],
     )
-    resolver.resolve(future)
+    runner.run(future)
 
 
 @dataclass(frozen=True)

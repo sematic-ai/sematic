@@ -25,7 +25,7 @@ from sematic.db.models.factories import (
     deserialize_artifact_value,
 )
 from sematic.db.models.job import Job
-from sematic.db.models.resolution import Resolution
+from sematic.db.models.resolution import PipelineRun
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.logs import REQUEST_ID_HEADER
@@ -36,7 +36,7 @@ from sematic.versions import CURRENT_VERSION, version_as_string
 
 logger = logging.getLogger(__name__)
 
-# set 6 retries for resolver -> server API calls in other to weather network disruptions
+# set 6 retries for runner -> server API calls in other to weather network disruptions
 API_CALLS_TRIES = 7
 # 2^7 exponential backoff = 63 seconds
 API_CALLS_BACKOFF = 2
@@ -46,7 +46,7 @@ API_CALLS_BACKOFF = 2
 # time. This caches whether we have validated it or not.
 # TODO: encapsulate this flag and the API call functions in a stateful client class that
 #  can also keep track of a flag that suppresses cleanup stack traces on unsuccessful
-#  resolution terminations
+#  pipeline run terminations
 _validated_client_version = False
 
 
@@ -258,19 +258,19 @@ def get_graph(
     return runs, artifacts, edges
 
 
-def save_resolution(resolution: Resolution):
+def save_pipeline_run(pipeline_run: PipelineRun):
     payload = {
-        "resolution": resolution.to_json_encodable(redact=False),
+        "resolution": pipeline_run.to_json_encodable(redact=False),
     }
-    _put(f"/resolutions/{resolution.root_id}", payload)
+    _put(f"/resolutions/{pipeline_run.root_id}", payload)
 
 
-def get_resolution(root_id: str) -> Resolution:
+def get_pipeline_run(root_id: str) -> PipelineRun:
     """
-    Get resolution.
+    Get pipeline run.
     """
     response = _get(f"/resolutions/{root_id}")
-    return Resolution.from_json_encodable(response["content"])
+    return PipelineRun.from_json_encodable(response["content"])
 
 
 def get_jobs_by_run_id(run_id: str) -> List[Job]:
@@ -279,14 +279,14 @@ def get_jobs_by_run_id(run_id: str) -> List[Job]:
     return [Job.from_json_encodable(job) for job in response["content"]]
 
 
-def cancel_resolution(resolution_id: str) -> Resolution:
-    """Ask the server to cancel a resolution."""
-    # not retrying because resolver-initiated cancelations usually happen because of
+def cancel_pipeline_run(pipeline_run_id: str) -> PipelineRun:
+    """Ask the server to cancel a pipeline run."""
+    # not retrying because runner-initiated cancelations usually happen because of
     # server connection issues, and because they need to be responsive anyway
     response = _put(
-        f"/resolutions/{resolution_id}/cancel", json_payload={}, retry=False
+        f"/resolutions/{pipeline_run_id}/cancel", json_payload={}, retry=False
     )
-    return Resolution.from_json_encodable(response["content"])
+    return PipelineRun.from_json_encodable(response["content"])
 
 
 def schedule_run(run_id: str) -> Run:
@@ -295,15 +295,15 @@ def schedule_run(run_id: str) -> Run:
     return Run.from_json_encodable(response["content"])
 
 
-def schedule_resolution(
-    resolution_id: str,
+def schedule_pipeline_run(
+    pipeline_run_id: str,
     max_parallelism: Optional[int] = None,
     rerun_from: Optional[str] = None,
     # We use "Enum" instead of "RerunMode" because the latter
     # would create a dependency cycle.
     rerun_mode: Optional[Enum] = None,
-) -> Resolution:
-    """Ask the server to start a detached resolution execution."""
+) -> PipelineRun:
+    """Ask the server to start a detached pipeline run execution."""
     payload: Dict[str, Any] = {}
 
     if max_parallelism is not None:
@@ -315,8 +315,8 @@ def schedule_resolution(
     if rerun_mode is not None:
         payload["rerun_mode"] = rerun_mode.value
 
-    response = _post(f"/resolutions/{resolution_id}/schedule", json_payload=payload)
-    return Resolution.from_json_encodable(response["content"])
+    response = _post(f"/resolutions/{pipeline_run_id}/schedule", json_payload=payload)
+    return PipelineRun.from_json_encodable(response["content"])
 
 
 def save_external_resource(
@@ -419,7 +419,7 @@ def get_resources_by_root_run_id(root_run_id: str) -> List[AbstractExternalResou
     Parameters
     ----------
     root_run_id:
-        The id of the root run of a resolution.
+        The id of the root run of a pipeline run.
 
     Returns
     -------
@@ -438,7 +438,7 @@ def get_run_ids_with_orphaned_jobs() -> List[str]:
 
 
 def get_orphaned_run_ids() -> List[str]:
-    """Get ids of runs that have not terminated, which have a terminal resolution."""
+    """Get ids of runs that have not terminated, which have a terminal pipeline run."""
     return _search_for_gc_runs("orphaned")
 
 
@@ -459,45 +459,45 @@ def clean_jobs_for_run(run_id: str, force: bool) -> List[str]:
 
 
 def clean_orphaned_run(run_id: str) -> str:
-    """Clean up a run whose resolution has terminated."""
+    """Clean up a run whose pipeline run has terminated."""
     response = _post(f"/runs/{run_id}/clean", retry=True)
     return response["content"]
 
 
-def clean_stale_resolution(run_id: str) -> str:
-    """Clean up a resolution whose run has terminated."""
+def clean_stale_pipeline_run(run_id: str) -> str:
+    """Clean up a pipeline run whose run has terminated."""
     response = _post(f"/resolutions/{run_id}/clean", retry=True)
     return response["content"]
 
 
-def get_resolution_ids_with_orphaned_jobs() -> List[str]:
-    """Get ids of resolutions that have terminated which still have non-terminal jobs."""
-    return _search_for_gc_resolutions("orphaned_jobs")
+def get_pipeline_run_ids_with_orphaned_jobs() -> List[str]:
+    """Get ids of pipeline runs that have terminated but still have non-terminal jobs."""
+    return _search_for_gc_pipeline_runs("orphaned_jobs")
 
 
-def get_resolutions_with_stale_statuses() -> List[str]:
-    """Get ids of resolutions that have terminated which still have non-terminal jobs."""
-    return _search_for_gc_resolutions("stale")
+def get_pipeline_runs_with_stale_statuses() -> List[str]:
+    """Get ids of pipeline runs that have terminated but still have non-terminal jobs."""
+    return _search_for_gc_pipeline_runs("stale")
 
 
-def _search_for_gc_resolutions(filter_name: str) -> List[str]:
+def _search_for_gc_pipeline_runs(filter_name: str) -> List[str]:
     filters = {filter_name: {"eq": True}}
     query_params = {
         "filters": json.dumps(filters),
         "fields": json.dumps(["root_id"]),
     }
     response = _get("/resolutions?{}".format(urlencode(query_params)))
-    return [resolution["root_id"] for resolution in response["content"]]
+    return [pipeline_run["root_id"] for pipeline_run in response["content"]]
 
 
-def clean_orphaned_jobs_for_resolution(root_run_id: str, force: bool) -> List[str]:
-    """Clean up the jobs for the resolution with the given id."""
+def clean_orphaned_jobs_for_pipeline_run(root_run_id: str, force: bool) -> List[str]:
+    """Clean up the jobs for the pipeline run with the given id."""
     response = _post(f"/resolutions/{root_run_id}/clean_jobs?force={force}", retry=True)
     return response["content"]
 
 
 def get_orphaned_resource_ids() -> List[str]:
-    """Get the ids of resources whose resolutions are no longer active."""
+    """Get the ids of resources whose pipeline runs are no longer active."""
     response = _get("/external_resources/orphaned")
     return response["content"]
 

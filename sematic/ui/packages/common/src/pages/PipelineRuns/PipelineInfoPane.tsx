@@ -32,12 +32,12 @@ interface PipelineInfoPaneProps {
 
 function PipelineInfoPane(props: PipelineInfoPaneProps) {
     const { onFiltersChanged } = props;
-    const { setSelectedPanel, selectedRun } = useRunDetailsSelectionContext();
+    const { selectedRun, setSelectedPanel } = useRunDetailsSelectionContext();
 
     const navigate = useRunNavigation();
 
     const onMetricsSectionClicked = useCallback(() => {
-        navigate(selectedRun!.id);
+        navigate(selectedRun!.id, false, { panel: "metrics"});
         setSelectedPanel("metrics");
     }, [selectedRun, setSelectedPanel, navigate]);
 

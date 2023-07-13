@@ -2,7 +2,7 @@
 import pandas as pd
 
 # Sematic
-from sematic import SilentResolver
+from sematic import SilentRunner
 from sematic.examples.lightning_resnet.checkpointing import SematicCheckpointIO
 from sematic.examples.lightning_resnet.main import (
     LOCAL_DATA_CONFIG,
@@ -63,11 +63,12 @@ def test_pipeline():
             confusion_matrix_plot=mock_confusion_plot,
         )
 
-        result = pipeline(
+        future = pipeline(
             train_config=LOCAL_TRAINING_CONFIG,
             data_config=LOCAL_DATA_CONFIG,
             eval_config=LOCAL_EVAL_CONFIG,
-        ).resolve(resolver=SilentResolver())
+        )
+        result = SilentRunner().run(future)
 
         assert isinstance(result, PipelineResults)
         assert result.evaluation_results.accuracy == 0.5

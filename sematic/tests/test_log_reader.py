@@ -31,7 +31,7 @@ from sematic.log_reader import (
     reversed,
     to_line_id,
 )
-from sematic.resolvers.cloud_resolver import (
+from sematic.runners.cloud_runner import (
     END_INLINE_RUN_INDICATOR,
     START_INLINE_RUN_INDICATOR,
 )
@@ -489,7 +489,7 @@ def test_load_inline_logs(
     assert not result.can_continue_forward  # run isn't alive and resolver logs missing
     assert result.lines == []
     assert result.forward_cursor_token is None
-    assert result.log_info_message == "Resolver logs are missing"
+    assert result.log_info_message == "Runner logs are missing"
 
     log_preparation_function(run.id, text_lines, mock_storage, JobKind.resolver)
 

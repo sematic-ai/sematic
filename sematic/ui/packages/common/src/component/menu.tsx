@@ -13,10 +13,26 @@ import Fox from "src/static/fox";
 import palette from "src/theme/new/palette";
 import useLatest from "react-use/lib/useLatest";
 import useCounter from "react-use/lib/useCounter";
+import UserAvatar from "src/component/UserAvatar";
+import { getUserInitials } from "src/utils/string";
+import theme from "src/theme/new";
 
 const StyledGridContainer = styled(Grid)`
     border-bottom: 1px solid ${() => (palette.p3border as SimplePaletteColorOptions).main};
     flex-wrap: nowrap;
+`;
+
+const StyledLink = styled(Link)`
+    display: flex;
+    flex-direction: row;
+
+    & > :first-of-type {
+        margin-right: ${theme.spacing(1)};
+    }
+
+    &:before {
+        display: none;
+    }
 `;
 
 interface HeaderMenuProps {
@@ -63,10 +79,11 @@ const HeaderMenu = (props: HeaderMenuProps) => {
             </MuiRouterLink>
             <MuiRouterLink href={"https://docs.sematic.dev"} variant="subtitle1" type='menu'>Docs</MuiRouterLink>
             <MuiRouterLink href={"https://discord.gg/4KZJ6kYVax"} variant="subtitle1" type='menu'>Discord</MuiRouterLink>
-            <Link variant="subtitle1" type='menu'>
-                <NameTag firstName={user?.first_name} lastName={undefined} variant={"inherit"}
-                    ref={contextMenuAnchor} />
-            </Link>
+            <StyledLink variant="subtitle1" type='menu' ref={contextMenuAnchor}>
+                {!!user && <UserAvatar initials={getUserInitials(user?.first_name, user?.last_name, user?.email)} 
+                    hoverText={user?.first_name || user?.email} avatarUrl={user?.avatar_url} size={"medium"}/>}
+                <NameTag firstName={user?.first_name} lastName={undefined} variant={"inherit"} />
+            </StyledLink>
             <UserMenu anchorEl={contextMenuAnchor.current} />
         </Box>
     </StyledGridContainer>;

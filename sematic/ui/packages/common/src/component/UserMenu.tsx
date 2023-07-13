@@ -9,7 +9,7 @@ import UserContext from "src/context/UserContext";
 import theme from "src/theme/new";
 import Link from "@mui/material/Link";
 
-const ANCHOR_OFFSET = { x: 5, y: 15 };
+const ANCHOR_OFFSET = { x: 5, y: 0 };
 
 const Container = styled.div`
     min-width: 300px;

@@ -7,6 +7,7 @@ from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
     ResourceRequirements,
 )
+from sematic.runners.silent_runner import SilentRunner
 
 
 @func
@@ -86,7 +87,7 @@ def test_set_validate_fields():
 
 
 def test_no_tracking():
-    assert foo().resolve(tracking=False) == "foo"
+    assert SilentRunner().run(foo()) == "foo"
 
 
 def test_bool():

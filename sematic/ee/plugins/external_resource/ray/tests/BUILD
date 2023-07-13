@@ -21,6 +21,7 @@ pytest_test(
         "//sematic:function",
         "//sematic/ee/plugins/external_resource/ray:cluster",
         "//sematic/plugins:abstract_external_resource",
+        "//sematic/runners:silent_runner",
         "//sematic/utils:env",
     ],
 )

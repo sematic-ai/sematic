@@ -1,4 +1,5 @@
 import memoize from "lodash/memoize";
+import { atomWithStorage } from "jotai/utils";
 
 function convertBooleanLikeValue(value: any) {
     if (value === "true" || value === "1") {
@@ -10,13 +11,15 @@ function convertBooleanLikeValue(value: any) {
     }
 }
 
+const fullyQualifiedFeatureFlagKey = (key: string) => `sematic-feature-flag-${key}`;
+
 export const getFeatureFlagValue = memoize(function getFeatureFlagValue(featureName: string) {
     const search = window.location.search;
 
     const strValue = (new URLSearchParams(search)).get(featureName)?.toLocaleLowerCase();
     const featureFlagUrlValue = convertBooleanLikeValue(strValue);
 
-    const localStorageName = `sematic-feature-flag-${featureName}`;
+    const localStorageName = fullyQualifiedFeatureFlagKey(featureName);
 
     const localStorageValue = window.localStorage.getItem(localStorageName);
 
@@ -34,3 +37,7 @@ export const getFeatureFlagValue = memoize(function getFeatureFlagValue(featureN
     }
     return undefined;
 });
+
+export const NewDashBoardPromotionOptoutAtom = atomWithStorage(
+    fullyQualifiedFeatureFlagKey("new-dashboard-promotion-optout"), 
+    getFeatureFlagValue("new-dashboard-promotion-optout") ?? false);

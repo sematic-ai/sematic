@@ -23,14 +23,14 @@ logger = logging.getLogger(__name__)
     is_flag=True,
     show_default=True,
     default=False,
-    help="Clean runs whose associated resolutions have stopped.",
+    help="Clean runs whose associated pipeline runs have stopped.",
 )
 @click.option(
-    "--stale-resolutions",
+    "--stale-pipeline-runs",
     is_flag=True,
     show_default=True,
     default=False,
-    help="Clean resolutions whose root runs have stopped.",
+    help="Clean pipeline runs whose root runs have stopped.",
 )
 @click.option(
     "--orphaned-jobs",
@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
 )
 def clean(
     orphaned_runs: bool,
-    stale_resolutions: bool,
+    stale_pipeline_runs: bool,
     orphaned_jobs: bool,
     orphaned_resources: bool,
     force: bool,
@@ -85,9 +85,9 @@ def clean(
         messages = clean_orphaned_runs()
         cleaned_messages.extend(messages)
 
-    if stale_resolutions:
-        echo("Cleaning stale resolutions...")
-        messages = clean_stale_resolutions()
+    if stale_pipeline_runs:
+        echo("Cleaning stale pipeline runs...")
+        messages = clean_stale_pipeline_runs()
         cleaned_messages.extend(messages)
 
     if orphaned_jobs:
@@ -117,11 +117,11 @@ def clean_orphaned_runs() -> List[str]:
     )
 
 
-def clean_stale_resolutions() -> List[str]:
+def clean_stale_pipeline_runs() -> List[str]:
     return clean_ids(
-        ids=api_client.get_resolutions_with_stale_statuses(),
-        object_name="resolution",
-        clean_query=api_client.clean_stale_resolution,
+        ids=api_client.get_pipeline_runs_with_stale_statuses(),
+        object_name="pipeline_run",
+        clean_query=api_client.clean_stale_pipeline_run,
     )
 
 
@@ -141,17 +141,17 @@ def clean_ids(
 
 
 def clean_orphaned_jobs(force: bool) -> List[str]:
-    resolution_ids: List[str] = api_client.get_resolution_ids_with_orphaned_jobs()
-    resolution_updates_by_kind: Counter = Counter()
-    for root_id in resolution_ids:
+    pipeline_run_ids: List[str] = api_client.get_pipeline_run_ids_with_orphaned_jobs()
+    pipeline_run_updates_by_kind: Counter = Counter()
+    for root_id in pipeline_run_ids:
         try:
-            logger.info("Cleaning jobs for resolution %s", root_id)
-            state_changes = api_client.clean_orphaned_jobs_for_resolution(
+            logger.info("Cleaning jobs for pipeline_run %s", root_id)
+            state_changes = api_client.clean_orphaned_jobs_for_pipeline_run(
                 root_id, force
             )
-            resolution_updates_by_kind.update(state_changes)
+            pipeline_run_updates_by_kind.update(state_changes)
         except Exception:
-            logger.exception("Error cleaning jobs for resolution %s", root_id)
+            logger.exception("Error cleaning jobs for pipeline_run %s", root_id)
 
     run_ids = api_client.get_run_ids_with_orphaned_jobs()
     run_updates_by_kind: Counter = Counter()
@@ -163,8 +163,8 @@ def clean_orphaned_jobs(force: bool) -> List[str]:
         except Exception:
             logger.exception("Error cleaning jobs for run %s", run_id)
 
-    messages = messages_from_counter("Resolution jobs:", resolution_updates_by_kind)
-    messages.extend(messages_from_counter("Run jobs:", run_updates_by_kind))
+    messages = messages_from_counter("Runner jobs:", pipeline_run_updates_by_kind)
+    messages.extend(messages_from_counter("Function jobs:", run_updates_by_kind))
     return messages
 
 
