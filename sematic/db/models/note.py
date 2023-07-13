@@ -3,7 +3,7 @@ import datetime
 import uuid
 
 # Third-party
-from sqlalchemy import Column, types
+from sqlalchemy import Column, ForeignKey, types
 
 # Sematic
 from sematic.db.models.base import Base
@@ -17,8 +17,8 @@ class Note(HasUserMixin, Base, JSONEncodableMixin):
 
     id: str = Column(types.String(), primary_key=True, default=lambda: uuid.uuid4().hex)
     note: str = Column(types.String(), nullable=False)
-    run_id: str = Column(types.String(), nullable=False)
-    root_id: str = Column(types.String(), nullable=False)
+    run_id: str = Column(types.String(), ForeignKey("runs.id"), nullable=False)
+    root_id: str = Column(types.String(), ForeignKey("runs.id"), nullable=False)
     # Lifecycle timestamps
     created_at: datetime.datetime = Column(
         types.DateTime(), nullable=False, default=datetime.datetime.utcnow

@@ -26,7 +26,7 @@ from enum import Enum, unique
 from typing import Dict, FrozenSet, Optional, Union
 
 # Third-party
-from sqlalchemy import Column, types
+from sqlalchemy import Column, ForeignKey, types
 from sqlalchemy.orm import validates
 
 # Sematic
@@ -196,6 +196,7 @@ class Resolution(HasUserMixin, Base, JSONEncodableMixin):
 
     root_id: str = Column(
         types.String(),
+        ForeignKey("runs.id"),
         nullable=False,
         primary_key=True,
     )
@@ -215,6 +216,7 @@ class Resolution(HasUserMixin, Base, JSONEncodableMixin):
     settings_env_vars: Dict[str, str] = Column(
         types.JSON(), nullable=False, default=lambda: {}, info={REDACTED_KEY: True}
     )
+
     container_image_uris: Optional[Dict[str, str]] = Column(types.JSON(), nullable=True)
     container_image_uri: Optional[str] = Column(types.String(), nullable=True)
     client_version: Optional[str] = Column(types.String(), nullable=True)

@@ -69,6 +69,8 @@ def twelve_runs(test_db: DB):  # noqa: F811
         Run(
             id=str(i),
             future_state=FutureState.CREATED if i == 0 else FutureState.RESOLVED,
+            function_path=str(i // 6),
+            source_code="some code",
             original_run_id="foo" if i == 1 else None,
             resolved_at=(None if i == 2 else _STARTED_AT + timedelta(seconds=10 + i)),
             started_at=None if i == 3 else _STARTED_AT + timedelta(seconds=i),
