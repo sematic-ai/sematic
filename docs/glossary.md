@@ -81,13 +81,16 @@ See [Root function](#root-entry-point-function).
 ## Runners
 
 {% hint style="info" %}
-This concept used to be referred to as Resolvers. So don't
+This concept used to be referred to as `Resolvers`. So don't
 worry if you're familiar with that terminology! Everything
 you know about Resolvers applies to Runners as well, except
-that `.resolve(...)` has been renamed to `.run(...)`. 
+that `.resolve(...)` has been renamed to `.run(...)`.
+Additionally, futures cann't call `.run(runner)` in the same
+way they could call `.resolve(resolver)`. Using the
+`runner.run(future)` form is now required.
 {% endhint %}
 
-Runners dictate how your pipeline gets "ran". Running a pipeline means
+Runners dictate how your pipeline gets "run." Running a pipeline means
 going through its DAG (in-memory graph of `Future` objects), and proceeding to
 executing each step as its inputs are available.
 

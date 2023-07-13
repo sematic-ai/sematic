@@ -230,12 +230,11 @@ def main():
         train_config=TrainConfig(epochs=args.epochs),
     )
 
-    sematic.LocalRunner().run(
-        pipeline(pipeline).set(
-            name="My MNIST Example",
-            tags=["pytorch", "example", "mnist", args.version],
-        )
+    future = pipeline(pipeline).set(
+        name="My MNIST Example",
+        tags=["pytorch", "example", "mnist", args.version],
     )
+    sematic.LocalRunner().run(future)
 
 
 if __name__ == "__main__":

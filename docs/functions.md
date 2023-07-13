@@ -32,11 +32,10 @@ def pipeline(a: float, b: float, c) -> float:
     return add3(sum1, sum2, sum3)
 
 if __name__ == "__main__":
-    sematic.LocalRunner().run(
-        pipeline(1, 2, 3).set(
-            name="Basic add example pipeline"
-        )
+    future = pipeline(1, 2, 3).set(
+        name="Basic add example pipeline"
     )
+    sematic.LocalRunner().run(future)
 ```
 
 Running this pipeline yields the following graph:

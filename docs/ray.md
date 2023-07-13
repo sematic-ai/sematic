@@ -134,8 +134,8 @@ using it to do distributed training on a ResNet model.
 A representation of the cluster that will be created.
 
 - **config** (*[`RayClusterConfig`](#rayclusterconfig)*): A configuration for
-the compute resources that will be started. If using LocalRunner or
-SilentRunner, this will be ignored and a local cluster will be started instead.
+the compute resources that will be started. If using `LocalRunner` or
+`SilentRunner`, this will be ignored and a local cluster will be started instead.
 - **forward_logs** (*bool*): Whether or not to have logs from Ray workers returned
 back to the stdout of the Sematic func this resource is used in. Sets `log_to_driver`
 in [`ray.init`](https://docs.ray.io/en/latest/ray-core/package-ref.html?highlight=init#ray.init)

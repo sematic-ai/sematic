@@ -1,7 +1,7 @@
 ## Re-running Executions
 
 There are cases when you would want to duplicate an existing pipeline
-[Pipeline Run](glossary.md#pipelinerun), only to re-execute one or two
+[Pipeline Run](glossary.md#pipeline-run), only to re-execute one or two
 [Run](glossary.md#run). For example, you might have experienced an external
 resource outage that caused the pipeline to fail mid-execution, and you just
 want to be able to pick up the execution from where it failed. Or you might
@@ -48,7 +48,7 @@ CloudRunner(rerun_from="<my-run-id>").run(my_pipeline([...]))
 ## Caching Func Runs
 
 If you have deterministic functions which take the exact same inputs between
-[Pipeline Runs](glossary.md#pipelineruns) and whose executions take a lot of time
+[Pipeline Runs](glossary.md#pipeline-run) and whose executions take a lot of time
 or resources to complete, such as data pre-processing, then you can mark those
 functions for caching, under a specific caching namespace.
 

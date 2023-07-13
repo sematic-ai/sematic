@@ -16,8 +16,8 @@ Sematic](./deploy.md).
 
 ## `CloudRunner` usage
 
-In order to use `CloudRunner`, simply pass a top-level
-Sematic Function to its `run` method:
+In order to use `CloudRunner`, simply pass the future returned by
+a top-level Sematic Function to its `run` method:
 
 ```python
 CloudRunner().run(pipeline(...))

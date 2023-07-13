@@ -530,7 +530,7 @@ the job (either for local execution or for execution in the cloud). We refer to
 this as the "launch script." You may want to have your launch script behave
 differently depending on whether a suitable cloud image is available. Sematic
 has provided `sematic.has_container_image` to enable this use case. A common
-pattern is to determine which Runner to use based on the result of this
+pattern is to determine which `Runner` to use based on the result of this
 function:
 
 ```python
