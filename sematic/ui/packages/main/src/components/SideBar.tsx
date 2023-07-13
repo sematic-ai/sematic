@@ -32,7 +32,7 @@ export default function SideBar() {
                 backgroundColor: theme.palette.grey[800],
                 color: "rgba(255, 255, 255, 0.5)",
                 textAlign: "center",
-                height: "100vh",
+                height: "100%",
             }}
         >
             <Stack sx={{ gridRow: 1, spacing: 2, paddingTop: 3 }}>
