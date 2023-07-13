@@ -3,6 +3,7 @@ import Check from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
 import StopIcon from "@mui/icons-material/Stop";
 import HourglassEmpty from "@mui/icons-material/HourglassEmpty";
+import DoneOutline from "@mui/icons-material/DoneOutline";
 import { useMemo } from "react";
 import theme from "src/theme/new";
 import { SvgIconTypeMap } from "@mui/material/SvgIcon";
@@ -66,6 +67,13 @@ export const SubmittedStateChip = (props: StateChipBaseProps) => {
     return <HourglassEmpty color={color} style={styles} />;
 }
 
+export const CachedStateChip = (props: StateChipBaseProps) => {
+    const { size } = props;
+    const styles = useStylesHook({ size });
+    const color = RunStateColorMap.get(CachedStateChip)!.color;
+    return <DoneOutline color={color} style={styles} />;
+}
+
 const RunStateColorMap: Map<React.FC<StateChipBaseProps>, {
     color: SvgIconTypeMap<{}>["props"]["color"];
 }> = new Map([
@@ -74,9 +82,13 @@ const RunStateColorMap: Map<React.FC<StateChipBaseProps>, {
     [RunningStateChip, { color: "primary" }],
     [CanceledStateChip, { color: "error" }],
     [SubmittedStateChip, { color: "lightGrey" }],
+    [CachedStateChip, { color: "success" }],
 ]);
 
-export function getRunStateChipComponentByState(futureState: string) {
+function getRunStateChipComponentByState(futureState: string, orignalRunId: string | null) {
+    if (orignalRunId) {
+        return CachedStateChip;
+    }
     if (["RESOLVED", "SUCCEEDED"].includes(futureState)) {
         return SuccessStateChip;
     }
@@ -99,19 +111,28 @@ export function getRunStateChipComponentByState(futureState: string) {
     return null;
 }
 
-export function getRunStateChipByState(futureState: string, size: StateChipBaseProps["size"] = "large") {
-    const Component = getRunStateChipComponentByState(futureState);
-    if (!Component) {
-        return null;
-    }
-    return <Component size={size} />;
-}
-
-export function getRunStateColorByState(futureState: string) {
-    const Component = getRunStateChipComponentByState(futureState);
+export function getRunStateColorByState(futureState: string, orignalRunId: string | null) {
+    const Component = getRunStateChipComponentByState(futureState, orignalRunId);
     if (!Component) {
         return null;
     }
     const color = RunStateColorMap.get(Component)!.color! as unknown as string
     return (theme.palette as any)[color].main;
+}
+
+interface RunStateChipProps {
+    futureState: string;
+    orignalRunId: string | null;
+    size?: StateChipBaseProps["size"];
+}
+
+export default function RunStateChip(props: RunStateChipProps) {
+    const { futureState, orignalRunId, size = "large" } = props;
+
+    const Component = useMemo(
+        () => getRunStateChipComponentByState(futureState, orignalRunId), [futureState, orignalRunId]);
+    if (!Component) {
+        return null;
+    }
+    return <Component size={size} />;
 }

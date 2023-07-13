@@ -4,7 +4,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import IconButton from "@mui/material/IconButton";
 import { useCallback, useContext, useMemo } from "react";
 import { NodeProps, Position } from "reactflow";
-import { getRunStateChipByState, getRunStateColorByState } from "src/component/RunStateChips";
+import RunStateChip, { getRunStateColorByState } from "src/component/RunStateChips";
 import { useHasIncoming, useNodeExpandStateToggle } from "src/hooks/dagHooks";
 import { DagViewServiceContext, StyledHandleBottom, StyledHandleTop } from "src/pages/RunDetails/dag/common";
 import theme from "src/theme/new";
@@ -65,8 +65,8 @@ function CompoundNode(props: NodeProps) {
 
     const hasIncoming = useHasIncoming();
 
-    const stateChip = useMemo(() => getRunStateChipByState(run.future_state), [run.future_state]);
-    const color = useMemo(() => getRunStateColorByState(run.future_state), [run.future_state]);
+    const color = useMemo(() => getRunStateColorByState(run.future_state, run.original_run_id), 
+        [run.future_state, run.original_run_id]);
 
     const { onNodeClick } = useContext(DagViewServiceContext)
 
@@ -78,7 +78,7 @@ function CompoundNode(props: NodeProps) {
         style={{ width: `${data.width}px`, height: `${data.height}px` }}>
         {hasIncoming && <StyledHandleTop type="target" color={color} position={Position.Top} isConnectable={false} id={"t"} />}
         <LabelContainer>
-            {stateChip}
+            <RunStateChip futureState={run.future_state} orignalRunId={run.original_run_id} />
             <label style={{ flexGrow: 1 }}>{data.label}</label>
             <StyledIconButton onClick={toggleExpanded} >
                 {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}

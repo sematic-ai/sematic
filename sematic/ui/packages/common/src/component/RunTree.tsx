@@ -5,7 +5,7 @@ import ListItemButton, { listItemButtonClasses } from "@mui/material/ListItemBut
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import { Fragment } from "react";
-import { getRunStateChipByState } from "src/component/RunStateChips";
+import RunStateChip from "src/component/RunStateChips";
 import { RunTreeNode } from "src/interfaces/graph";
 import theme from "src/theme/new";
 import range from "lodash/range";
@@ -45,7 +45,8 @@ const RunTree = (props: RunTreeProps) => {
                 <ListItemButton className={selectedRunId === run.id ? "selected" : ""}
                     onClick={() => onSelect?.(run.id)}>
                     <ListItemIcon sx={{ minWidth: "20px" }}>
-                        {getRunStateChipByState(run.future_state, "small")}
+                        <RunStateChip futureState={run.future_state} 
+                            orignalRunId={run.original_run_id} size={"small"} />
                     </ListItemIcon>
                     <ListItemText >{run.name}</ListItemText>
                 </ListItemButton>

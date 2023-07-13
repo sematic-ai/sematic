@@ -2,15 +2,15 @@ import styled from "@emotion/styled";
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
 import parseJSON from "date-fns/parseJSON";
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DateTimeLong } from "src/component/DateTime";
 import Headline from "src/component/Headline";
 import ImportPath from "src/component/ImportPath";
 import MoreVertButton from "src/component/MoreVertButton";
 import PipelineTitle from "src/component/PipelineTitle";
 import { RunReferenceLink } from "src/component/RunReference";
-import { getRunStateChipByState } from "src/component/RunStateChips";
-import getRunStateText, { DateFormats } from "src/component/RunStateText";
+import RunStateChip from "src/component/RunStateChips";
+import getRunStateText from "src/component/RunStateText";
 import Section from "src/component/Section";
 import TagsList from "src/component/TagsList";
 import { useRootRunContext } from "src/context/RootRunContext";
@@ -112,11 +112,13 @@ const FunctionSection = () => {
             return null;
         }
 
-        const runDuration = getRunStateText(selectedRun.future_state, {
-            createdAt: selectedRun.created_at as unknown as string,
-            failedAt: selectedRun.failed_at as unknown as string,
-            resolvedAt: selectedRun.resolved_at as unknown as string
-        }, DateFormats.LONG);
+        const runDuration = getRunStateText(
+            selectedRun.future_state, 
+            selectedRun.original_run_id, {
+                createdAt: selectedRun.created_at as unknown as string,
+                failedAt: selectedRun.failed_at as unknown as string,
+                resolvedAt: selectedRun.resolved_at as unknown as string
+            });
 
         if (!(selectedRun.resolved_at || selectedRun.failed_at|| selectedRun.ended_at)){
             return runDuration;
@@ -140,7 +142,8 @@ const FunctionSection = () => {
         <Headline>Function Run</Headline>
         <BoxContainer>
             <RunStateContainer>
-                {!isGraphLoaded ? <SmallPlaceholderSkeleton /> : getRunStateChipByState(selectedRun!.future_state)}
+                {!isGraphLoaded ? <SmallPlaceholderSkeleton /> : 
+                    <RunStateChip futureState={selectedRun!.future_state}  orignalRunId={selectedRun!.original_run_id} />}
             </RunStateContainer>
             <div className='Info'>
                 <FunctionName>

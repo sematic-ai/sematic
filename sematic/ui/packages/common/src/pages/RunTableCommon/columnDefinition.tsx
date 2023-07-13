@@ -80,6 +80,7 @@ export const OwnerColumnDef = (columnHelper: ColumnHelper<Run>) =>
 export const StatusColumnDef = (columnHelper: ColumnHelper<Run>) =>
     columnHelper.accessor(data => ({
         futureState: data.future_state,
+        originalRunId: data.original_run_id,
         createdAt: data.created_at,
         failedAt: data.failed_at,
         resolvedAt: data.resolved_at

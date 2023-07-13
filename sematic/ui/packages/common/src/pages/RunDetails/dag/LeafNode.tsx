@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 import { useMemo, useCallback, useContext } from "react";
 import { NodeProps, Position } from "reactflow";
-import { getRunStateChipByState, getRunStateColorByState } from "src/component/RunStateChips";
+import RunStateChip, { getRunStateColorByState } from "src/component/RunStateChips";
 import { useHasIncoming } from "src/hooks/dagHooks";
 import { DagViewServiceContext, LEFT_NODE_MAX_WIDTH, StyledHandleTop, StyledHandleBottom } from "src/pages/RunDetails/dag/common";
 import { SPACING } from "src/pages/RunDetails/dag/dagLayout";
@@ -45,8 +45,8 @@ export const LabelContainer = styled.div`
 function LeafNode(props: NodeProps) {
     const { data } = props;
     const { run, selected } = data;
-    const stateChip = useMemo(() => getRunStateChipByState(run.future_state), [run.future_state]);
-    const color = useMemo(() => getRunStateColorByState(run.future_state), [run.future_state]);
+    const color = useMemo(() => getRunStateColorByState(run.future_state, run.original_run_id), 
+        [run.future_state, run.original_run_id]);
     const hasIncoming = useHasIncoming();
 
     const { onNodeClick } = useContext(DagViewServiceContext)
@@ -61,7 +61,7 @@ function LeafNode(props: NodeProps) {
         {hasIncoming && <StyledHandleTop type="target" position={Position.Top} isConnectable={false}
             id={"t"} color={color} />}
         <LabelContainer>
-            {stateChip}
+            <RunStateChip futureState={run.future_state} orignalRunId={run.original_run_id} />
             <label >{data.label}</label>
         </LabelContainer>
         <StyledHandleBottom
