@@ -16,11 +16,10 @@ with nothing else on the line.
     * [improvement] Improve error messaging for unschedulable pipeline runs
     * [improvement] When running the CLI via Bazel, use the current directory as the working
       directory
-    * [improvement] Minor CI and documentation improvements, fixes, and cleanups
     * [improvement] Add Hugging Face model types, visualizations, and documentation
     * [example] Add an example pipeline which fine tunes LLMs that summarize a text
-    * [deprecation] Ended backwards-compatibility support for `Function`, which had been renamed to
-      `Calculator` in v0.30.0
+    * [deprecation] Ended backwards-compatibility support for `Calculator`, which had been renamed
+      to `Function` in v0.30.0
     * [deprecation] Ended backwards-compatibility support for pre-v0.27.0 log message sourcing and
       for an API response serialization
     * [bugfix] Fix a bug where long running jobs' durations were not correctly rendered
