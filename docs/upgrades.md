@@ -117,6 +117,54 @@ delta, but only:
 when performing the upgrade.
 {% endhint %}
 
+### vX.X.X to v0.32.0
+
+In v0.32.0 new constraints were added to the schema of the database that
+maintains Sematic's data model, in order to improve validations and data
+consistency. In case your database contains corrupt entries (due to unknown and
+unforeseen errors), the upgrade to v0.32.0 might fail with an error message. If
+this happens, please contact us on [Discord](https://discord.gg/4KZJ6kYVax) and
+share the error details, so we can help you with the upgrade.
+
+This version also comes with a new version of the Dashboard UI, which is
+currently in "Beta". You can switch to it by clicking on the banner that pops
+up when opening the old version of the Dashboard, or by selecting the new
+version from your profile icon pop-up in the bottom-left of the old version of
+the Dashboard. You can switch back the same way, only now the profile icon is
+located in the top-right of the new Dashboard.
+
+In order to improve the clarity of the concepts in our architecture, the "Resolver" term
+was renamed to "Runner". Also, now when executing a pipeline `Future`, you need to
+explicitly pass it to a specific `Runner`, instead of relying on a default one. There
+will be a deprecation period of two releases in which both API versions will still be
+supported, but you should consider performing this migration in your code soon:
+
+You need to update your code which looks like this:
+```python
+my_future = my_pipeline([...])
+
+my_future.resolve()
+# or:
+my_future.resolve(CloudResolver([...]))
+# or:
+my_future.resolve(LocalResolver([...]))
+# or:
+my_future.resolve(SilentResolver([...]))
+```
+
+To this:
+```python
+my_future = my_pipeline([...])
+
+my_runner = CloudRunner([...])
+# or:
+my_runner = LocalRunner([...])
+# or:
+my_runner = SilentRunner([...])
+
+my_runner.run(my_future)
+```
+
 ### <v0.30.0 to v0.31.0
 
 Normally Sematic tries to preserve a server/client compatibility support window
@@ -150,7 +198,7 @@ type](./types.md#the-image-type).
 Please perform this upgrade at a time when there are no runs or where failures
 are acceptable.
 
-As of this release, the minumum supported Kubernetes version has been changed to >1.23.
+As of this release, the minimum supported Kubernetes version has been changed to >1.23.
 Non supported versions *may* continue to work, but are not validated. Please upgrade
 your Kubernetes if you are on an older version.
 

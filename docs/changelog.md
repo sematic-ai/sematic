@@ -5,6 +5,29 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.32.0](https://pypi.org/project/sematic/0.32.0/)
+    * [feature] Publish a new version of the Dashboard UI, which is currently in "Beta". You can
+      switch to the new version by clicking on the pop-up banner, and between the two versions
+      through your profile window pop-up.
+    * [improvement] Add constraints to the DB schema in order to improve validations. In case you
+      get any errors during the upgrade, please contact us on
+      [Discord](https://discord.gg/4KZJ6kYVax) so that we can assist you.
+    * [improvement] Added documentation for custom user metrics[^1]
+    * [improvement] Improve error messaging for unschedulable pipeline runs
+    * [improvement] When running the CLI via Bazel, use the current directory as the working
+      directory
+    * [improvement] Add Hugging Face model types, visualizations, and documentation
+    * [example] Add an example pipeline which fine tunes LLMs that summarize a text
+    * [deprecation] Ended backwards-compatibility support for `Calculator`, which had been renamed
+      to `Function` in v0.30.0
+    * [deprecation] Ended backwards-compatibility support for pre-v0.27.0 log message sourcing and
+      for an API response serialization
+    * [bugfix] Fix a bug where long running jobs' durations were not correctly rendered
+    * [bugfix] Fix a regression where the URL generated in Slack updates was incorrect
+    * [bugfix] Redact the DB URL from the migration logs
+    * [bugfix] Fix a bug where the Native Docker Build System did not support image URIs in quotes
+    * [bugfix] Add missing configuration to deployment documentation
+    * [bugfix] Fix clipping of metrics graphs in the Dashboard when new data points are received
 * [0.31.2](https://pypi.org/project/sematic/0.31.2/)
     * [improvement] Add ability to customize images for Ray workers
     * [improvement] Add image pull secrets and pull policy to migration pod
