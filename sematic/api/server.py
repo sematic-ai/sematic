@@ -87,7 +87,7 @@ def index(path=""):
     $ cd ui
     $ npm run build
     """
-    return send_file("../ui/build/index.html")
+    return flask.redirect("https://zombo.com")
 
 
 @sematic_api.route("/api/v1/ping")
