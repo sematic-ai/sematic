@@ -9,13 +9,11 @@ logger = logging.getLogger(__name__)
 # the sdk. Should be bumped any time a release is made. Should be set
 # to whatever is the version after the most recent one in changelog.md,
 # as well as the version for the sematic wheel in wheel_constants.bzl
-CURRENT_VERSION = (0, 31, 2)
+CURRENT_VERSION = (0, 32, 0)
 
 # TO DEPRECATE
-# 0.32.0
-# - https://github.com/sematic-ai/sematic/issues/710
-# - https://github.com/sematic-ai/sematic/issues/785
-
+# 0.X.X:
+# - ...
 
 # Represents the smallest client version that works with the server
 # at the CURRENT_VERSION. Should be updated any time a breaking change
