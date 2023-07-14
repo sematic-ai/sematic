@@ -49,7 +49,10 @@
     "typescript": "^4.6.4",
     "uuid": "^9.0.0",
     "web-vitals": "^2.1.4",
-    "konami": "^1.6.3"
+    "konami": "^1.6.3",
+    "@sematic/common": "*",
+    "@sematic/react-slot-fill": "*",
+    "@sematic/addon-grafana": "*"
   },
   "scripts": {
     "start": "REACT_APP_HOST=127.0.0.1 REACT_APP_GIT_HASH=$(git rev-parse --short HEAD) react-app-rewired start",
@@ -79,7 +82,6 @@
   },
   "devDependencies": {
     "@frsource/cypress-plugin-visual-regression-diff": "^3.2.8",
-    "@sematic/common": "*",
     "@types/d3": "^7.4.0",
     "@types/dagre": "^0.7.47",
     "@types/mocha": "^10.0.1",

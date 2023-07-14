@@ -4,17 +4,18 @@ import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
+import { Slot } from "@sematic/react-slot-fill/src";
+import { useAtom } from "jotai";
+import { useCallback } from "react";
 import { selectedTabHashAtom } from "src/hooks/runHooks";
 import InputPane from "src/pages/RunDetails/artifacts/InputPane";
 import OutputPane from "src/pages/RunDetails/artifacts/OutputPane";
+import ExternalResourcePanel from "src/pages/RunDetails/externalResource";
 import LogsPane from "src/pages/RunDetails/logs/LogsPane";
 import RunMetricsPanel from "src/pages/RunDetails/metricsTab";
-import ExternalResourcePanel from "src/pages/RunDetails/externalResource";
 import PodLifecyclePanel from "src/pages/RunDetails/podLifecycle";
-import theme from "src/theme/new";
-import { useAtom } from "jotai";
 import SourceCodePanel from "src/pages/RunDetails/sourcecode";
-
+import theme from "src/theme/new";
 
 const StyledTabsContainer = styled(Box)`
     position: relative;
@@ -57,27 +58,31 @@ const FixedTabPanel = styled(TabPanel)`
     margin-right: -${theme.spacing(5)};
 `;
 
-interface RunTabsProps {
-}
-
-const RunTabs = (props: RunTabsProps) => {
+const RunTabs = () => {
     const [selectedRunTab, setSelectedRunTab] = useAtom(selectedTabHashAtom);
 
-    const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+    const handleChange = useCallback((event: React.SyntheticEvent, newValue: string) => {
         setSelectedRunTab(newValue);
-    };
+    }, [setSelectedRunTab]);
+
+    const renderTabsSection = useCallback((aggElements: React.ReactNode[]) => {
+        return <TabList onChange={handleChange} aria-label="Selected run tabs">
+            <Tab label="Input" value="input" />
+            <Tab label="Output" value="output" />
+            <Tab label="Source" value="source" />
+            <Tab label="Logs" value="logs" />
+            <Tab label="Metrics" value="metrics" />
+            <Tab label="Resources" value="ext_res" />
+            <Tab label="Pods" value="pod_lifecycle" />
+            {aggElements}
+        </TabList>;
+    }, [handleChange]);
 
     return <TabContext value={selectedRunTab || "output"}>
         <StyledTabsContainer>
-            <TabList onChange={handleChange} aria-label="Selected run tabs">
-                <Tab label="Input" value="input" />
-                <Tab label="Output" value="output" />
-                <Tab label="Source" value="source" />
-                <Tab label="Logs" value="logs" />
-                <Tab label="Metrics" value="metrics" />
-                <Tab label="Resources" value="ext_res" />
-                <Tab label="Pods" value="pod_lifecycle" />
-            </TabList>
+            <Slot name="run-tabs" >
+                {renderTabsSection as any}
+            </Slot>
         </StyledTabsContainer>
         <ArtifactPanel value="input">
             <InputPane />
@@ -100,6 +105,7 @@ const RunTabs = (props: RunTabsProps) => {
         <StyledTabPanel value="pod_lifecycle">
             <PodLifecyclePanel />
         </StyledTabPanel>
+        <Slot name="run-tabs-panels" />
     </TabContext>
 };
 
