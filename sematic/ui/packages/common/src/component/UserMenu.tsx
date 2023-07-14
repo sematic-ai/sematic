@@ -3,11 +3,12 @@ import styled from "@emotion/styled";
 import Button from "@mui/material/Button";
 import Popover from "@mui/material/Popover";
 import Typography from "@mui/material/Typography";
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState, useRef } from "react";
 import NameTag from "src/component/NameTag";
 import UserContext from "src/context/UserContext";
 import theme from "src/theme/new";
 import Link from "@mui/material/Link";
+import { TrackingNoticeButton, TrackingNoticeDialogRefType } from "src/component/TrackingNotice";
 
 const ANCHOR_OFFSET = { x: 5, y: 0 };
 
@@ -53,6 +54,8 @@ function UserMenu(props: UserMenuProps) {
     const [open, setOpen] = useState(false);
     const [anchorEl, setAnchorElement] = useState<HTMLElement>();
 
+    const privacySettingsControl = useRef<TrackingNoticeDialogRefType>(null);
+
     const { user, signOut } = useContext(UserContext);
 
     const buttonClickEvent = useCallback(() => {
@@ -63,7 +66,6 @@ function UserMenu(props: UserMenuProps) {
         window.localStorage.removeItem("sematic-feature-flag-newui");
         window.location.reload();
     }, []);
-
 
     const virtualAnchorElement = useMemo(() => ({
         nodeType: 1,
@@ -112,6 +114,13 @@ function UserMenu(props: UserMenuProps) {
                 <Link style={{ cursor: "pointer" }} onClick={switchToOldUI}>
                     Switch to old UI
                 </Link>
+            </SectionWithBorder>
+            <SectionWithBorder>
+                <TrackingNoticeButton ref={privacySettingsControl}>
+                    <Link style={{ cursor: "pointer" }} onClick={() => privacySettingsControl.current?.setOpen(true)}>
+                        Privacy Settings
+                    </Link>
+                </TrackingNoticeButton>
             </SectionWithBorder>
             {/* Hide for now, will re-enable when we have organization support */}
             {/* <SectionWithBorder>
