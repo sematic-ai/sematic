@@ -73,6 +73,8 @@ In `hello_world/__main__.py`, write the following code:
 ```python
 import argparse
 
+import sematic
+
 from hello_world.pipeline import pipeline
 
 if __name__ == "__main__":
@@ -81,7 +83,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    pipeline(args.name).resolve()
+    sematic.LocalRunner().run(pipeline(args.name))
 ```
 
 Now you can run it with
@@ -135,24 +137,24 @@ new functionalities every week. See [Future Algebra](future-algebra.md) for more
 details.
 
 In order to trigger the actual execution of a graph, you need to call
-`.resolve()` on the entry point of your graph, that is typically the function
-called `pipeline`. See the [Glossary](glossary.md#pipeline) for more details.
+`runner.run(pipeline())` on the entry point of your graph, that is typically the
+function called `pipeline`. See the [Glossary](glossary.md#pipeline) for more
+details.
 
 {% endhint %}
 
-## What happens when I call `.resolve()` on the `pipeline` function?
+## What happens when I call `.run()` with the `pipeline` function?
 
-Calling `resolve` will trigger the actual "resolution" of your pipeline's
+Calling `run` will trigger the actual execution of your pipeline's
 execution graph. Sematic will do the following things:
 
 * Perform some "pseudo-static" type checking to ensure connected pipeline steps
   do not have incompatible types (e.g. passing a `bool` to a function requiring
   an `int`). See [Type support](type-support.md) for more details.
-* Start resolving the nested graph layer by layer. See [Graph
-  resolution](graph-resolution.md) for more details.
-* For each layer, Sematic will resolve Futures (your functions) in topological
+* Start executing the nested graph layer by layer.
+* For each layer, Sematic will execute Futures (your functions) in topological
   order (parallelizing execution when possible depending on the chosen
-  resolution strategy).
+  execution strategy).
 * For each individual function
     * the concrete input values are type-checked against the type annotations
   you have specified in your function's signature
@@ -163,7 +165,7 @@ execution graph. Sematic will do the following things:
 
 {% hint style="info" %}
 
-`.resolve()` should be called **only  once** per pipeline. If you want to nest
+`.run(...)` should be called **only  once** per pipeline. If you want to nest
 pipeline steps, simply call the function and return the resulting Future.
 
 {% endhint %}
@@ -176,5 +178,5 @@ If you want to learn more, explore the following resources:
 * More details about [Sematic Functions](functions.md)
 * All about types: [Type support](type-support.md)
 * Operations supported on Futures: [Future algebra](future-algebra.md)
-* Sematic's [Graph resolution](graph-resolution.md) mechanism
+* Sematic's [CloudRunner](cloud-runner.md) mechanism
 * [Glossary](glossary.md) for all the definitions

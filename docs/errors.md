@@ -19,7 +19,7 @@ def foo():
 ```
 
 Note that this only works with the
-[`CloudResolver`](./glossary.md#cloud-execution).
+[`CloudRunner`](./glossary.md#cloud-execution).
 
 ## Your RayClusterConfig would require autoscaling
 

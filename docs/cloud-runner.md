@@ -1,8 +1,8 @@
-In Sematic, resolvers implement different so-called "resolution" strategies. For
+In Sematic, runners implement different execution strategies. For
 example, as described in [Local execution](./local-execution.md),
-`LocalResolver` will resolve your pipeline graph and execute all steps on your local machine.
+`LocalRunner` will run your pipeline graph and execute all steps on your local machine.
 
-`CloudResolver` will resolve your pipeline graph in a Kubernetes cluster.
+`CloudRunner` will run your pipeline graph in a Kubernetes cluster.
 
 {% hint style="info" %}
 
@@ -14,13 +14,13 @@ Sematic](./deploy.md).
 
 {% endhint %}
 
-## `CloudResolver` usage
+## `CloudRunner` usage
 
-In order to use `CloudResolver`, simply pass an instance to your top-level
-Sematic Function's `resolve` method:
+In order to use `CloudRunner`, simply pass the future returned by
+a top-level Sematic Function to its `run` method:
 
 ```python
-pipeline(...).resolve(CloudResolver())
+CloudRunner().run(pipeline(...))
 ```
 
 This makes the assumption that a container image was built and registered with a
@@ -46,7 +46,7 @@ can be overridden by environment variables.
 Sematic will run two types of pods for each pipeline:
 
 * **Driver pod** – this is where the graph of your pipeline gets processed, and
-  where the `Resolver` and [Inline
+  where the `Runner` and [Inline
   Functions](./glossary.md#standalone-inline-function) run. This pod has the
   word "driver" in its name.
 * **Worker pods** – this is where [Standalone Functions](./glossary.md#standalone-inline-function)
@@ -55,7 +55,7 @@ Sematic will run two types of pods for each pipeline:
 
 By default, the execution of the graph and all [Sematic
 Functions](./glossary.md#sematic-function) will run in a single pod, the
-resolver pod. This is fine for minor pipeline steps that take up little time and
+runner pod. This is fine for minor pipeline steps that take up little time and
 resources. Some Functions may require specific resources (e.g. GPUs) and
 need to run in their own standalone containers. This can be achieved as follows:
 
@@ -196,12 +196,12 @@ execute just like any other python code--immediately at the time they
 are called, in the same process as the code that called them. In this case,
 Sematic will not track or visualize the functions.
 
-### When to call `.resolve()`
+### When to call `.run()`
 
 Sometimes you will find yourself in the middle of a Sematic function
 with a Future that you wish to use as a regular python object. Given
-that calling `.resolve()` on a Future turns that `Future` into a
-concrete value, you may be tempted to do the following:
+that calling `runner.run(future)` with a Future turns that `Future`
+into a concrete value, you may be tempted to do the following:
 
 ```python
 @sematic.func
@@ -210,7 +210,7 @@ def pipeline() -> int:
     intermediate_result = nested_sematic_func()
 
     # DON'T DO THIS!!!
-    return intermediate_result.resolve().some_method()
+    return runner.run(intermediate_result).some_method()
 ```
 
 The reason you don't want to do this is that it will create an

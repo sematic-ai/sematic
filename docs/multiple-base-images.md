@@ -28,7 +28,7 @@ them:
 - If you have a step which is really lightweight, there's a better option than
   having a small new container: _no_ new container. This is a great case for
   [Inline Functions](./glossary.md#standalone-inline-function). See the
-  [CloudResolver docs](./cloud-resolver.md#when-to-use-standalone-or-inline) for more.
+  [CloudRunner docs](./cloud-runner.md#when-to-use-standalone-or-inline) for more.
 
 ### Multiple images, if you must
 
