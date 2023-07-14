@@ -1,17 +1,37 @@
 import { parseJSON } from "date-fns";
+import { ReactNode } from "react";
 import { DurationShort } from "src/component/DateTime";
+import { RunReferenceLink } from "src/component/RunReference";
+import styled from "@emotion/styled";
+import theme from "src/theme/new";
+
+const StyledRunReferenceLink = styled(RunReferenceLink)`
+    color: ${theme.palette.lightGrey.main};
+`;
+
 
 export enum DateFormats {
     SHORT,
     LONG,
 }
 
-export function getRunStateText(futureState: string,
+interface GetRunStateTextOptions {
+    short?: boolean;
+}
+
+export function getRunStateText(futureState: string, originalRunId: string | null,
     timestamps: {
         createdAt: string, resolvedAt?: string, failedAt?: string, endedAt?: string
-    }, dateFormat: DateFormats = DateFormats.SHORT) {
+    }, options: GetRunStateTextOptions = {}): ReactNode {
     const { createdAt, resolvedAt, failedAt, endedAt } = timestamps;
+    const { short = false } = options;
 
+    if (originalRunId) {
+        return short ? "Cached" : <>
+            {"Cached from"}
+            <StyledRunReferenceLink runId={originalRunId} variant="code" />
+        </>;
+    }
 
     if (["RESOLVED", "SUCCEEDED"].includes(futureState)) {
         if (!resolvedAt) {
