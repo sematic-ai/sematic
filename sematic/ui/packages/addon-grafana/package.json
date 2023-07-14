@@ -1,0 +1,14 @@
+{
+  "name": "@sematic/addon-grafana",
+  "version": "0.0.1",
+  "description": "sematic addon for Grafana",
+  "scripts": {
+    "lint": "eslint --ext .ts,.tsx,.js --max-warnings=0 ./src"
+  },
+  "main": "./src/index.tsx",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@sematic/common": "*"
+  }
+}
