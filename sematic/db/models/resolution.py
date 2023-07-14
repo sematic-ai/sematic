@@ -171,7 +171,8 @@ class Resolution(HasUserMixin, Base, JSONEncodableMixin):
         for the environment from which the resolution was submitted
     settings_env_vars:
         The Sematic settings from the user's environment for the user
-        who launched this resolution.
+        who launched this resolution. Removed from the API payload for
+        obfuscation purposes.
     container_image_uri:
         The image URI used for the driver job.
     container_image_uris:

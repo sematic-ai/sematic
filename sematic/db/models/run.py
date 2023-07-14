@@ -99,9 +99,7 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
         types.String(), nullable=False, info={ENUM_KEY: FutureState}
     )
     name: str = Column(types.String(), nullable=True)
-    function_path: str = Column(
-        types.String(), nullable=False, info={"alias": "calculator_path"}, index=True
-    )
+    function_path: str = Column(types.String(), nullable=False, index=True)
     parent_id: Optional[str] = Column(types.String(), nullable=True)
     root_id: str = Column(types.String(), ForeignKey("runs.id"), nullable=False)
     description: Optional[str] = Column(types.String(), nullable=True)

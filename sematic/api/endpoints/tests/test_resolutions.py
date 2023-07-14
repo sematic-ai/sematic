@@ -152,7 +152,7 @@ def test_get_resolution_endpoint(
     assert payload["content"]["root_id"] == persisted_resolution.root_id
 
     # Should have been scrubbed
-    assert payload["content"]["settings_env_vars"] == {}
+    assert "settings_env_vars" not in payload["content"]
 
 
 def test_put_resolution_endpoint_no_auth(
@@ -174,7 +174,7 @@ def test_put_resolution_endpoint_no_auth(
 
     encodable = response.json["content"]  # type: ignore
 
-    assert encodable["settings_env_vars"] == {}
+    assert "settings_env_vars" not in encodable
 
     read = get_resolution(resolution.root_id)
     assert read.settings_env_vars == resolution.settings_env_vars
@@ -234,7 +234,7 @@ def test_put_resolution_endpoint_auth(
 
     encodable = response.json["content"]  # type: ignore
 
-    assert encodable["settings_env_vars"] == {}
+    assert "settings_env_vars" not in encodable
 
     read = get_resolution(resolution.root_id)
 
@@ -337,7 +337,7 @@ def test_schedule_resolution_endpoint_no_auth(
     assert payload["content"]["root_id"] == persisted_resolution.root_id
     assert count_jobs_by_run_id(persisted_resolution.root_id, "resolver") == 1
     assert payload["content"]["user_id"] is None
-    assert payload["content"]["settings_env_vars"] == {}
+    assert "settings_env_vars" not in payload["content"]
     mock_schedule_resolution.assert_called_once()
 
     scheduled_resolution = mock_schedule_resolution.call_args.kwargs["resolution"]
@@ -483,7 +483,7 @@ def test_schedule_resolution_endpoint_auth(
     assert payload["content"]["root_id"] == persisted_resolution.root_id
     assert count_jobs_by_run_id(persisted_resolution.root_id, "resolver") == 1
     assert payload["content"]["user_id"] == persisted_user.id
-    assert payload["content"]["settings_env_vars"] == {}
+    assert "settings_env_vars" not in payload["content"]
     mock_schedule_resolution.assert_called_once()
 
     scheduled_resolution = mock_schedule_resolution.call_args.kwargs["resolution"]

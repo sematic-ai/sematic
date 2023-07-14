@@ -62,20 +62,7 @@ class ObjectSource(Enum):
         since we know the run has at least reached SCHEDULED due to it
         not being CREATED.
         """
-        if self is ObjectSource.DB:
-            has_non_legacy_jobs = self.value[0].count_jobs_by_run_id(run_id) > 0
-            if has_non_legacy_jobs:
-                return False
-            else:
-                # TODO: remove this
-                # https://github.com/sematic-ai/sematic/issues/710
-                return not db_queries.run_has_legacy_jobs(run_id)
-        else:
-            # we don't look for legacy jobs here, so using the CLI
-            # to read logs won't work for old runs. Seems a fair
-            # trade off to avoid exposing run_has_legacy_jobs as an
-            # API endpoint.
-            return len(self.value[0].get_jobs_by_run_id(run_id)) == 0
+        return len(self.value[0].get_jobs_by_run_id(run_id)) == 0
 
 
 def log_prefix(run_id: str, job_kind: JobKindString):
