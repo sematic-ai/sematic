@@ -24,7 +24,7 @@
 ## Cloud execution
 
 * [Deploy Sematic](deploy.md)
-* [Cloud resolver](cloud-resolver.md)
+* [Cloud runner](cloud-runner.md)
 * [Container images](container-images.md)
 * [Support for multiple images](multiple-base-images.md)
 

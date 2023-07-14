@@ -32,13 +32,13 @@ def pipeline(a: float, b: float, c) -> float:
     return add3(sum1, sum2, sum3)
 
 if __name__ == "__main__":
-    pipeline(1, 2, 3).set(
+    future = pipeline(1, 2, 3).set(
         name="Basic add example pipeline"
-    ).resolve()
-
+    )
+    sematic.LocalRunner().run(future)
 ```
 
-Resolving this pipeline yields the following graph:
+Running this pipeline yields the following graph:
 
 ![Nested functions graph](./images/NestedFunctions.png)
 
@@ -101,10 +101,10 @@ inputs and outputs are not persisted, and no runtime type checking is performed.
 When you decorate a function with `@sematic.func`:
 
 * Calling the function will return a Future of its output value. See [Future Algebra](future-algebra.md)
-* It will only be executed at Graph resolution time, once all its inputs have
-  been resolved too. It will be executed either in-memory (see [Local
-  resolution](./local-execution.md)) or as an isolated cloud job with its own
-  resources (See [Cloud resolver](./cloud-resolver.md)).
+* It will only be executed at Graph execution time, once all its inputs have
+  been made concrete too. It will be executed either in-memory (see [Local
+  execution](./local-execution.md)) or as an isolated cloud job with its own
+  resources (See [Cloud runner](./cloud-runner.md)).
 * Its inputs and outputs will be type-checked against the declared type annotations
 * Its code and documentation are extracted, tracked and viewable in the UI
 * Its execution status is tracked and viewable in the UI. See [Execution status](#execution-status)

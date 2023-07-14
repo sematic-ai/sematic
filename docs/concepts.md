@@ -70,8 +70,8 @@ future is essentially a tuple of the function itself and its input arguments:
 Future(generate_data, {"config": config.data_config, "dataset": data})
 ```
 
-A future is actually executed, i.e. "resolved", when all its inputs are ready
-(resolved).
+A future is actually executed, i.e. given a concrete value, when all
+its inputs are also concrete.
 
 Future objects support a sub-set of the native Python operations. See [Future
 algebra](./future-algebra.md) for more details.
@@ -104,24 +104,34 @@ in the web dashboard.
 
 See [Artifacts](./artifacts.md) for more details.
 
-### Resolvers
+### Runners
 
-Resolvers dictate how your pipeline gets "resolved". Resolving a pipeline means
+{% hint style="info" %}
+This concept used to be referred to as `Resolvers`. So don't
+worry if you're familiar with that terminology! Everything
+you know about Resolvers applies to Runners as well, except
+that `.resolve(...)` has been renamed to `.run(...)`.
+Additionally, futures cann't call `.run(runner)` in the same
+way they could call `.resolve(resolver)`. Using the
+`runner.run(future)` form is now required.
+{% endhint %}
+
+Runners dictate how your pipeline gets "ran". Running a pipeline means
 going through its DAG (in-memory graph of `Future` objects), and proceeding to
 executing each step as its inputs are available.
 
-Different resolvers offer different resolution strategies:
+Different runners offer different execution strategies:
 
-- **`SilentResolver`** – will resolve a pipeline without persisting anything to
+- **`SilentRunner`** – will run a pipeline without persisting anything to
   disk or the database. This is ideal for testing or iterating without poluting
-  the database. This also means that pipelines resolved with `SilentResolver`
+  the database. This also means that pipelines executed with `SilentRunner`
   are not tracked and therefore not visualizable in the web dashboard.
-- **`LocalResolver`** – will resolve a pipeline on the machine where it was
+- **`LocalRunner`** – will run a pipeline on the machine where it was
   called (typically you local dev machine). It will persist artifacts and track
   metadata in the database. Runs will be visualizable in the dashboard. No
   parallelization is applied, the graph is topologically sorted. See [Local
   execution](./local-execution.md).
-- **`CloudResolver`** – will submit a pipeline to execute on a Kubernetes
+- **`CloudRunner`** – will submit a pipeline to execute on a Kubernetes
   cluster. This can be used to leverage step-dependent cloud resources (e.g.
-  GPUs, high-memory VMs, etc.). See [Cloud resolver](./cloud-resolver.md). Note
+  GPUs, high-memory VMs, etc.). See [Cloud runner](./cloud-runner.md). Note
   that to submit cloud pipelines, you need to [Deploy Sematic](./deploy.md).

@@ -13,7 +13,7 @@ $ make install-dev-deps
 
 ## Testing
 
-Guideline for testing changes that might impact resolution:
+Guideline for testing changes that might impact pipeline runs:
 - the CI tests must pass
 - test locally
 - test remotely in non-detached mode

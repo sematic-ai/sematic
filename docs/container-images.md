@@ -1,7 +1,7 @@
 # Sematic and Container Images
 
 When Sematic runs your code in the cloud (in other words, when you are using
-`CloudResolver`), it does so in a Docker container. Your code and all its
+`CloudRunner`), it does so in a Docker container. Your code and all its
 dependencies need to be in that Docker image for it to run.
 
 Where does this Docker image come from? There are a few options, but a general
@@ -123,7 +123,7 @@ Options:
 ```
 
 For example, if the launch script which uses
-[CloudResolver](./cloud-resolver.md) is `path/to/my/hello_world.py`, then we can
+[CloudRunner](./cloud-runner.md) is `path/to/my/hello_world.py`, then we can
 use this `path/to/my/hello_world.yaml` build configuration file:
 
 ```yaml
@@ -144,7 +144,7 @@ $ sematic run --build path/to/my/hello_world.py
 
 Omitting the `--build` flag results in skipping the entire build process, with
 the entire pipeline being executed locally. Only using
-[LocalResolver or SilentResolver](https://docs.sematic.dev/diving-deeper/concepts#resolvers)
+[LocalRunner or SilentRunner](https://docs.sematic.dev/diving-deeper/concepts#runners)
 makes sense in this context.
 
 {% hint style="warning" %}
@@ -300,7 +300,7 @@ For example, when running
 7. The `path/to/my/launch_script.py` is executed locally with the `my_arg1` and
    `my_arg2` arguments, and with the `"SEMATIC_CONTAINER_IMAGE"` environment
    variable set to the remote image URI, if pushing was configured, or to the
-   local image URI, if it was not. This way, the `Resolver` will instruct the
+   local image URI, if it was not. This way, the `Runner` will instruct the
    Sematic Server to use the image for cloud workloads.
 
 #### Custom base images with Docker
@@ -530,14 +530,14 @@ the job (either for local execution or for execution in the cloud). We refer to
 this as the "launch script." You may want to have your launch script behave
 differently depending on whether a suitable cloud image is available. Sematic
 has provided `sematic.has_container_image` to enable this use case. A common
-pattern is to determine which Resolver to use based on the result of this
+pattern is to determine which `Runner` to use based on the result of this
 function:
 
 ```python
-from sematic import has_container_image, CloudResolver
+from sematic import has_container_image, CloudRunner
 
 from my_package import my_pipeline
 
-resolver = CloudResolver() if has_container_image() else None
-my_pipeline().resolve(resolver)
+runner = CloudRunner() if has_container_image() else None
+runner.run(my_pipeline())
 ```

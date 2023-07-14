@@ -16,9 +16,9 @@ in the Sematic UI.
 
 - `standalone`: bool
     
-    When using the `CloudResolver`, whether the instrumented function should be
+    When using the `CloudRunner`, whether the instrumented function should be
     executed inside its own container job (`True`) or in the same process and
-    worker that is executing the `Resolver` itself (`False`).
+    worker that is executing the `Runner` itself (`False`).
 
     Defaults to `False`, as most pipeline functions are expected to be
     lightweight. Set this to `True` in order to distribute its
@@ -27,13 +27,13 @@ in the Sematic UI.
 - `cache`: bool
 
     Whether to cache the function's output value under the `cache_namespace`
-    configured in the `Resolver`. Defaults to `False`.
+    configured in the `Runner`. Defaults to `False`.
 
     Do not activate this on a non-deterministic function!
 
 - `resource_requirements`: Optional[ResourceRequirements]
 
-    When using the `CloudResolver`, specifies what special execution
+    When using the `CloudRunner`, specifies what special execution
     resources the function requires. Defaults to `None`.
 
 - `retry`: Optional[RetrySettings]
@@ -54,21 +54,31 @@ Union[Calculator, Callable]
 
 An internal instrumentation wrapper over the decorated function.
 
-## Resolvers
+## Runners
 
-### `Resolver`
+{% hint style="info" %}
+This concept used to be referred to as `Resolvers`. So don't
+worry if you're familiar with that terminology! Everything
+you know about Resolvers applies to Runners as well, except
+that `.resolve(...)` has been renamed to `.run(...)`. 
+Additionally, futures cann't call `.run(runner)` in the same
+way they could call `.resolve(resolver)`. Using the
+`runner.run(future)` form is now required.
+{% endhint %}
 
-Abstract base class for all resolvers. Defines the `Resolver` interfaces.
+### `Runner`
 
-#### `Resolver.resolve`
+Abstract base class for all runners. Defines the `Runner` interfaces.
 
-Abstract method. Entry-point for the resolution algorithm.
+#### `Runner.run`
+
+Abstract method. Entry-point for the pipeline execution algorithm.
 
 ##### Parameters
 
 - `future`: AbstractFuture
     
-    Root future of the graph to resolve.
+    Root future of the graph to execute.
 
 ##### Returns
 
@@ -76,11 +86,11 @@ Any
 
 output of the pipeline.
 
-### `LocalResolver`
+### `LocalRunner`
 
-A resolver to resolver a graph in-memory.
+A runner to run a graph in-memory.
 
-Each Future's resolution is tracked in the DB as a run. Each individual function's
+Each Future's state is tracked in the DB as a run. Each individual function's
 input arguments and output value are tracked as artifacts.
 
 #### Parameters
@@ -92,22 +102,22 @@ input arguments and output value are tracked as artifacts.
     be cached, as long as they also have the `cache` flag activated. Defaults to
     `None`.
 
-    The `Callable` option takes as input the `Resolution` root `Future`. All the other
+    The `Callable` option takes as input the `PipelineRun` root `Future`. All the other
     required variables must be enclosed in the `Callables`' context. The `Callable`
     must have a small memory footprint and must return immediately!
 
 - `rerun_from`: Optional[str]
     
-    When `None`, the pipeline is resolved from scratch, as normally. When not `None`,
-    must be the id of a `Run` from a previous resolution. Instead of running from
-    scratch, parts of that previous resolution is cloned up until the specified `Run`,
+    When `None`, the pipeline is executed from scratch, as normally. When not `None`,
+    must be the id of a `Run` from a previous pipeline run. Instead of running from
+    scratch, parts of that previous pipeline run is cloned up until the specified `Run`,
     and only the specified `Run`, nested and downstream `Future`s are executed. This
     is meant to be used for retries or for hotfixes, without needing to re-run the
     entire pipeline again.
 
-### `CloudResolver`
+### `CloudRunner`
 
-Resolves a pipeline on a Kubernetes cluster.
+Executes a pipeline on a Kubernetes cluster.
 
 #### Parameters
 
@@ -118,36 +128,36 @@ Resolves a pipeline on a Kubernetes cluster.
     be cached, as long as they also have the `cache` flag activated. Defaults to
     `None`.
 
-    The `Callable` option takes as input the `Resolution` root `Future`. All the other
+    The `Callable` option takes as input the `PipelineRun` root `Future`. All the other
     required variables must be enclosed in the `Callables`' context. The `Callable`
     must have a small memory footprint and must return immediately!
 
 - `max_parallelism`: Optional[int]
 
     The maximum number of [Standalone
-    Runs](./glossary.md#standalone-inline-function) that this resolver will
+    Runs](./glossary.md#standalone-inline-function) that this runner will
     allow to be in the `SCHEDULED` state at any one time. Must be a positive
     integer, or `None` for unlimited runs. Defaults to `None`.
 
     This is intended as a simple mechanism to limit the amount of computing resources
     consumed by one pipeline execution for pipelines with a high degree of
-    parallelism. Note that if other resolvers are active, runs from them will not be
+    parallelism. Note that if other runners are active, runs from them will not be
     considered in this parallelism limit. Note also that runs that are in the RAN
     state do not contribute to the limit, since they do not consume computing
     resources.
 
 - `rerun_from`: Optional[str]
 
-    When `None`, the pipeline is resolved from scratch, as normally. When not `None`,
-    must be the id of a `Run` from a previous resolution. Instead of running from
-    scratch, parts of that previous resolution is cloned up until the specified `Run`,
+    When `None`, the pipeline is executed from scratch, as normally. When not `None`,
+    must be the id of a `Run` from a previous pipeline run. Instead of running from
+    scratch, parts of that previous pipeline run is cloned up until the specified `Run`,
     and only the specified `Run`, nested and downstream `Future`s are executed. This
     is meant to be used for retries or for hotfixes, without needing to re-run the
     entire pipeline again.
 
-### `SilentResolver`
+### `SilentRunner`
 
-A resolver to resolver a DAG in memory, without tracking to the DB.
+A runner to execute a DAG in memory, without tracking to the DB.
 
 ## Resource requirements
 
@@ -415,7 +425,7 @@ Contextual information about the execution of the current Sematic function
 
 - `root_id`: str
 
-    The id of the root future for a resolution. For cloud executions, this is
+    The id of the root future for a pipeline run. For cloud executions, this is
     equivalent to the id for the root run.
 
 ### `context`

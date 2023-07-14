@@ -257,9 +257,9 @@ def parse_arguments() -> argparse.Namespace:
 
 def main():
     args = parse_arguments()
-    resolver = sematic.CloudResolver()
+    runner = sematic.CloudRunner()
     future = my_pipeline().set(tags=args.tags)
-    resolver.resolve(future)
+    runner.run(future)
 
 
 if __name__ == "__main__":
