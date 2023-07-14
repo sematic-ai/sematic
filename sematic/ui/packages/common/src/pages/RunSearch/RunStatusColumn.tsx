@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 import { useMemo } from "react";
 import ErrorBoundary from "src/component/ErrorBoundary";
-import { getRunStateChipByState } from "src/component/RunStateChips";
+import RunStateChip from "src/component/RunStateChips";
 import getRunStateText from "src/component/RunStateText";
 import theme from "src/theme/new";
 
@@ -17,6 +17,7 @@ const StyledContainer = styled.div`
 
 interface RunStatusColumnProps {
     futureState: string;
+    originalRunId: string | null;
     createdAt: string;
     failedAt?: string;
     resolvedAt?: string;
@@ -24,16 +25,17 @@ interface RunStatusColumnProps {
 }
 
 const RunStatusColumn = (props: RunStatusColumnProps) => {
-    const { futureState, createdAt, failedAt, resolvedAt, endedAt } = props;
-
-    const runStateChip = useMemo(() => getRunStateChipByState(futureState), [futureState]);
+    const { futureState, originalRunId, createdAt, failedAt, resolvedAt, endedAt } = props;
 
     const runStateText = useMemo(() => getRunStateText(
-        futureState,
-        {createdAt, failedAt, resolvedAt, endedAt}
-    ), [futureState, createdAt, failedAt, resolvedAt, endedAt]);
+        futureState, originalRunId,
+        {createdAt, failedAt, resolvedAt, endedAt},
+        { short: true }
+    ), [futureState, createdAt, failedAt, resolvedAt, endedAt, originalRunId]);
 
-    return <StyledContainer>{runStateChip} {runStateText}</StyledContainer>;
+    return <StyledContainer>
+        <RunStateChip futureState={futureState} orignalRunId={originalRunId} /> {runStateText}
+    </StyledContainer>;
 }
 
 const RunStatusColumnWithErrorBoundary = (props: RunStatusColumnProps) => {

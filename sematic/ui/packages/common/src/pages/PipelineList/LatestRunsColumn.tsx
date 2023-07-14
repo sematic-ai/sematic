@@ -4,7 +4,7 @@ import { TableMeta } from "@tanstack/react-table";
 import { useEffect, useMemo } from "react";
 import { Run } from "src/Models";
 import MuiRouterLink from "src/component/MuiRouterLink";
-import { getRunStateChipByState } from "src/component/RunStateChips";
+import RunStateChip from "src/component/RunStateChips";
 import { getRunUrlPattern, useFetchRuns } from "src/hooks/runHooks";
 import { ExtendedRunMetadata } from "src/pages/PipelineList/common";
 
@@ -21,7 +21,8 @@ const StyledChipContainer = styled.span`
 function StatusChips({ runs }: { runs: Run[] }) {
     return <>{runs.map((run, index) => <MuiRouterLink key={index} href={getRunUrlPattern(run.id)}>
         <StyledChipContainer key={`${run.id}---${run.future_state}`}>
-            {getRunStateChipByState(run.future_state)}
+            <RunStateChip futureState={run.future_state} 
+                orignalRunId={run.original_run_id} size={"large"} />
         </StyledChipContainer></MuiRouterLink>)}
     </>;
 }

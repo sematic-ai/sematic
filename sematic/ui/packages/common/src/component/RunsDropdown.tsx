@@ -9,7 +9,7 @@ import isEmpty from "lodash/isEmpty";
 import keyBy from "lodash/keyBy";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Run } from "src/Models";
-import { getRunStateChipByState } from "src/component/RunStateChips";
+import RunStateChip from "src/component/RunStateChips";
 import TimeAgo from "src/component/TimeAgo";
 import theme from "src/theme/new";
 
@@ -48,7 +48,8 @@ interface ValuePresentationProps {
 }
 const ValuePresentation = (props: ValuePresentationProps) => {
     const { run } = props;
-    const stateChip = useMemo(() => getRunStateChipByState(run.future_state, "large"), [run.future_state]);
+    const stateChip = useMemo(() => <RunStateChip futureState={run.future_state} 
+        orignalRunId={run.original_run_id} size={"large"} />, [run.future_state, run.original_run_id]);
     return <StyledBox {...props}>
         {stateChip}
         <Typography variant="code">{run.id.substring(0, 7)}</Typography>
