@@ -209,6 +209,7 @@ script in `my_mnist_example/__main__.py`:
 ```python
 import argparse
 
+import sematic
 from my_mnist_example.pipeline import (
     pipeline,
     PipelineConfig,
@@ -229,9 +230,11 @@ def main():
         train_config=TrainConfig(epochs=args.epochs),
     )
 
-    pipeline(pipeline).set(
-        name="My MNIST Example", tags=["pytorch", "example", "mnist", args.version]
-    ).resolve()
+    future = pipeline(pipeline).set(
+        name="My MNIST Example",
+        tags=["pytorch", "example", "mnist", args.version],
+    )
+    sematic.LocalRunner().run(future)
 
 
 if __name__ == "__main__":

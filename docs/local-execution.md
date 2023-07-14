@@ -3,11 +3,11 @@ execution on a Kubernetes cluster in your cloud environment. Even locally, you
 get some great Sematic perks such as the web dashboard, traceability, and
 visualizations of artifacts.
 
-To do so, select and pass an instance of the `LocalResolver` to your top-level
-pipeline function's `resolve` method.
+To do so, use an instance of the `LocalRunner` to call `run` with
+your top-level pipeline function.
 
 ```python
-pipeline(...).resolve(LocalResolver())
+LocalRunner().run(pipeline(...))
 ```
 
 This will execute all steps of your pipeline on the machine where you issued the
@@ -16,7 +16,7 @@ you are editing code.
 
 ## Metadata tracking
 
-When using `LocalResolver`, pipeline and artifact metadata (e.g. pipeline graph,
+When using `LocalRunner`, pipeline and artifact metadata (e.g. pipeline graph,
 execution status, artifact summaries, etc.) are persisted into the Sematic
 server.
 

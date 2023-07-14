@@ -4,7 +4,7 @@ This feature is in "Beta."
 
 ## Using Slack with Sematic
 
-Sematic currently automatically sends [Resolution](glossary.md#resolution)
+Sematic currently automatically sends [Pipeline Run](glossary.md#pipeline-run)
 failure notifications to a [Slack](https://slack.com/) channel that has
 [Incoming Webhooks configured](https://api.slack.com/messaging/webhooks), if
 configured:

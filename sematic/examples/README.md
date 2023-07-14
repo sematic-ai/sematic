@@ -9,7 +9,7 @@ $ sematic run examples/add
 Examples are shorthand simple pipelines declared using the `sematic_pipeline`
 Bazel rule, which expects a `__main__.py` file as the execution entry point.
 They can only be executed locally. For cloud execution, you will need to
-declare your own entry points which invoke resolution using `CloudResolver`.
+declare your own entry points which invoke execution using `CloudRunner`.
 
 In order to write your own pipeline (an example pipeline, or a more complex
 pipeline), you can quickly clone the entire required file structure from the

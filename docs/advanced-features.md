@@ -1,14 +1,14 @@
 ## Re-running Executions
 
 There are cases when you would want to duplicate an existing pipeline
-[Resolution](glossary.md#resolution), only to re-execute one or two
+[Pipeline Run](glossary.md#pipeline-run), only to re-execute one or two
 [Run](glossary.md#run). For example, you might have experienced an external
 resource outage that caused the pipeline to fail mid-execution, and you just
 want to be able to pick up the execution from where it failed. Or you might
 have an expensive pipeline that failed with a corner case bug, and after
 patching it, not have to re-execute the entire pipeline.
 
-In these cases, you can just reuse an original Resolution, while only
+In these cases, you can just reuse an original Pipeline Run, while only
 invalidating a specific Run.
 
 For cloud executions that don't require code changes, such as in the outage
@@ -17,24 +17,24 @@ click the re-run option from the Run `Actions` drop-down:
 
 ![Rerun from Run drop-down](images/RerunFromRunDropdown.png)
 
-You can also re-run the entire Resolution, which is equivalent to re-submitting
+You can also re-run the entire Pipeline Run, which is equivalent to re-submitting
 the pipeline from scratch, by clicking the corresponding option on the
-Resolution `Actions` drop-down:
+Pipeline Run `Actions` drop-down:
 
-![Rerun Resolution drop-down](images/RerunResolutionDropdown.png)
+![Rerun Pipeline drop-down](images/RerunResolutionDropdown.png)
 
 In both of these cases, the same Docker image that was submitted for the
 original run is reused.
 
 For cases when code updates are required, such as in the bug patching example,
-or for cases where you want to re-run a Resolution that was executed locally
-instead of in the cloud, you need to re-run the Resolution programmatically.
+or for cases where you want to re-run a Pipeline Run that was executed locally
+instead of in the cloud, you need to re-run the Pipeline Run programmatically.
 This can be done by passing the value of the `Run ID` that you want to
 re-execute to the `rerun_from` parameter when instantiating the
-[LocalResolver](api.md#localresolver) or the
-[CloudResolver](api.md#cloudresolver). The Resolver submission will then
-package the new version of the pipeline code, clone the original Resolution and
-only re-execute the specified Run and any of its
+[LocalRunner](api.md#localrunner) or the
+[CloudRunner](api.md#cloudrunner). The Runner submission will then
+package the new version of the pipeline code, clone the original Pipeline Run
+and only re-execute the specified Run and any of its
 [nested](glossary.md#parent-child-run) or
 [downstream](glossary.md#upstream-downstream-function) Runs, using this new
 version of the code.
@@ -42,13 +42,13 @@ version of the code.
 Example API usage:
 
 ```python
-my_pipeline([...]).resolve(CloudResolver(rerun_from="<my-run-id>"))
+CloudRunner(rerun_from="<my-run-id>").run(my_pipeline([...]))
 ```
 
 ## Caching Func Runs
 
 If you have deterministic functions which take the exact same inputs between
-[Resolutions](glossary.md#resolution) and whose executions take a lot of time
+[Pipeline Runs](glossary.md#pipeline-run) and whose executions take a lot of time
 or resources to complete, such as data pre-processing, then you can mark those
 functions for caching, under a specific caching namespace.
 
@@ -65,7 +65,7 @@ namespace, in order to manage the caching behavior between different pipelines
 that reuse the same cached funcs, or to  invalidate the cache. this namespace
 can either be a string, or a `Callable` which takes as input the root
 [Future](glossary.md#future) and returns a string. This `Callable` will be
-executed immediately after the Resolution starts.
+executed immediately after the Pipeline Run starts.
 
 In order to enable this behavior:
 
@@ -76,9 +76,9 @@ In order to enable this behavior:
       [...]
     ```
 
-- Instantiate the [Resolver](glossary.md#resolvers) with a cache namespace:
+- Instantiate the [Runner](glossary.md#runners) with a cache namespace:
     ```python
-    my_pipeline([...]).resolve(CloudResolver(cache_namespace="my namespace"))
+    CloudRunner(cache_namespace="my namespace").run(my_pipeline([...]))
     ```
 
 ## Context

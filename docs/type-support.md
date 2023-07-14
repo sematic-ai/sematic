@@ -44,10 +44,10 @@ Now let's pass a valid `int`:
 
 ```
 >>> future = f(1)
->>> future.resolve(tracking=False)
+>>> sematic.SilentRunner().run(future)
 TypeError: Invalid output type for '__main__.f'. Cannot cast foo to <class 'int'>
 ```
-Generating the future works fine since `1` is a valid `int`, however resolving
+Generating the future works fine since `1` is a valid `int`, however running
 the future (i.e. actually executing the function) raises a `TypeError` since the
 output value `"foo"` is not a valid `int`.
 

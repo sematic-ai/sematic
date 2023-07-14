@@ -66,8 +66,8 @@ def train(
 
 When you use this code, it will:
 
-- Start up an ephemeral Ray cluster. If using the `LocalResolver`, the cluster will
-be backed by local processes. If using the `CloudResolver`, the cluster will be
+- Start up an ephemeral Ray cluster. If using the `LocalRunner`, the cluster will
+be backed by local processes. If using the `CloudRunner`, the cluster will be
 backed by Ray workers that are spun up on your Kubernetes worker.
 - Ensure your dependencies are usable for training. Anything you can `import` and
 use in your Sematic functions can automatically be imported and used for the code
@@ -134,8 +134,8 @@ using it to do distributed training on a ResNet model.
 A representation of the cluster that will be created.
 
 - **config** (*[`RayClusterConfig`](#rayclusterconfig)*): A configuration for
-the compute resources that will be started. If using LocalResolver or
-SilentResolver, this will be ignored and a local cluster will be started instead.
+the compute resources that will be started. If using `LocalRunner` or
+`SilentRunner`, this will be ignored and a local cluster will be started instead.
 - **forward_logs** (*bool*): Whether or not to have logs from Ray workers returned
 back to the stdout of the Sematic func this resource is used in. Sets `log_to_driver`
 in [`ray.init`](https://docs.ray.io/en/latest/ray-core/package-ref.html?highlight=init#ray.init)
