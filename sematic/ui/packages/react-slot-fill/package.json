@@ -1,0 +1,13 @@
+{
+  "name": "@sematic/react-slot-fill",
+  "version": "0.0.1",
+  "description": "react-slot-fill",
+  "scripts": {
+    "lint": "eslint --ext .ts,.tsx,.js --max-warnings=0 ./src"
+  },
+  "author": "https://github.com/camwest/react-slot-fill/tree/master",
+  "license": "MIT",
+  "dependencies": {
+    "mitt": "^3.0.1"
+  }
+}

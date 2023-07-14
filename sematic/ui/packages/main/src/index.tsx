@@ -38,8 +38,8 @@ import PipelineView from "./pipelines/PipelineView";
 import { setupPostHogOptout } from "./postHogManager";
 import { RunIndex } from "./runs/RunIndex";
 import { sha1 } from "./utils";
-
-export const EnvContext = React.createContext<Map<string, string>>(new Map());
+import PluginsLoader from "src/PluginsLoader";
+import { Provider as SlotFillProvider } from "@sematic/react-slot-fill/src";
 
 function App() {
     const [user, setUser] = useAtom(userAtom);
@@ -70,17 +70,20 @@ function App() {
         return <Loading error={error} isLoaded={!loading} />;
     }
 
-    return <AppContext.Provider value={appContextValue}>
-        <UserContext.Provider value={userContextValue}>
-            <EnvironmentProvider>
-                <SnackBarProvider>
-                    <Helper />
-                    <Health />
-                    <Outlet />
-                </SnackBarProvider>
-            </EnvironmentProvider>
-        </UserContext.Provider>
-    </AppContext.Provider>;
+    return <SlotFillProvider>
+        <AppContext.Provider value={appContextValue}>
+            <UserContext.Provider value={userContextValue}>
+                <EnvironmentProvider>
+                    <SnackBarProvider>
+                        <Helper />
+                        <Health />
+                        <Outlet />
+                        <PluginsLoader />
+                    </SnackBarProvider>
+                </EnvironmentProvider>
+            </UserContext.Provider>
+        </AppContext.Provider>
+    </SlotFillProvider>;
 }
 
 const isNewUIEnabled = getFeatureFlagValue("newui");
