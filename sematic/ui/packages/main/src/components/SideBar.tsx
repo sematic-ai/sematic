@@ -1,4 +1,4 @@
-import { Logout, PlayCircle, Timeline } from "@mui/icons-material";
+import { Logout, PlayCircle, Timeline, NewReleases } from "@mui/icons-material";
 import {
     Box,
     ButtonBase,
@@ -15,10 +15,15 @@ import Link from "@mui/material/Link";
 import { useTheme } from "@mui/material/styles";
 import MuiRouterLink from "@sematic/common/src/component/MuiRouterLink";
 import UserContext from "@sematic/common/src/context/UserContext";
-import { useCallback, useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { SiDiscord, SiReadthedocs } from "react-icons/si";
 import logo from "../Fox.png";
 import UserAvatar from "./UserAvatar";
+
+const switchToNewUI = () => {
+    window.localStorage.setItem("sematic-feature-flag-newui", "true");
+    window.location.reload();
+};
 
 export default function SideBar() {
     const theme = useTheme();
@@ -112,11 +117,6 @@ function UserMenu() {
         setAnchorEl(null);
     };
     
-    const switchToNewUI = useCallback(() => {
-        window.localStorage.setItem("sematic-feature-flag-newui", "true");
-        window.location.reload();
-    }, []);
-
     return user && signOut ? (
         <>
             <Box>
@@ -189,6 +189,14 @@ function UserMenu() {
             </Menu>
         </>
     ) : (
-        <></>
+        <>
+            <Box sx={{display: "flex", marginTop: "0!important", justifyContent: "center"}}>
+                <IconButton onClick={switchToNewUI} sx={{ color: "rgba(255, 255, 255, 0.5)", 
+                    display: "flex", flexDirection: "column" }}>
+                    <NewReleases />
+                    <Typography fontSize={10}>new UI</Typography>
+                </IconButton>
+            </Box>
+        </>
     );
 }
