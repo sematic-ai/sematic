@@ -1,72 +1,16 @@
 # flake8: noqa E501
 # Standard Library
 import logging
-import os
-import shutil
 
 # Sematic
-from sematic.config.config import get_config
 from sematic.db.db import db
-
-SQLITE_SCHEMA = "sqlite://"
+from sematic.db.migration_utils import back_up_db_file, reinstate_db_file_from_backup
 
 logger = logging.getLogger(__name__)
 
 
-def _back_up_db_file(suffix: str) -> None:
-    try:
-        url = get_config().db_url
-        if not url.startswith(SQLITE_SCHEMA):
-            raise ValueError(
-                f"Unable to locate Sqlite database file based on configuration: {url}"
-            )
-
-        db_file_path = url[len(SQLITE_SCHEMA) :]
-        if not os.path.exists(db_file_path):
-            raise ValueError(f"Sqlite database file {db_file_path} does not exist")
-
-        backup_file_path = f"{db_file_path}_{suffix}.bck"
-
-        if os.path.exists(backup_file_path):
-            os.remove(backup_file_path)
-
-        shutil.copyfile(db_file_path, backup_file_path)
-
-    except BaseException as e:
-        logger.exception("Unable to back up Sqlite database file: %s", str(e))
-
-
-def _reinstate_db_file_from_backup(suffix: str) -> None:
-    try:
-        url = get_config().db_url
-        if not url.startswith(SQLITE_SCHEMA):
-            raise ValueError(
-                f"Unable to locate Sqlite database file based on configuration: {url}"
-            )
-
-        db_file_path = url[len(SQLITE_SCHEMA) :]
-        backup_file_path = f"{db_file_path}_{suffix}.bck"
-
-        if not os.path.exists(backup_file_path):
-            raise ValueError(
-                f"Sqlite database backup file {backup_file_path} does not exist"
-            )
-        if os.path.getsize(backup_file_path) == 0:
-            raise ValueError(f"Sqlite database backup file {backup_file_path} is empty")
-
-        if os.path.exists(db_file_path):
-            down_backup_file_path = f"{db_file_path}.down.bck"
-            shutil.copyfile(db_file_path, down_backup_file_path)
-            os.remove(db_file_path)
-
-        shutil.copyfile(backup_file_path, db_file_path)
-
-    except BaseException as e:
-        logger.exception("Unable to reinstate Sqlite database backup file: %s", str(e))
-
-
 def up_sqlite():
-    _back_up_db_file(suffix="0.31.2")
+    back_up_db_file(suffix="0.32.0")
 
     with db().get_engine().begin() as conn:
         conn.execute(
@@ -255,7 +199,7 @@ def up_sqlite():
 
 
 def down_sqlite():
-    _reinstate_db_file_from_backup(suffix="0.31.2")
+    reinstate_db_file_from_backup(suffix="0.32.0")
 
 
 def up_postgres():
