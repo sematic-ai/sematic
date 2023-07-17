@@ -26,6 +26,8 @@ sematic_py_lib(
         ":artifact",
         ":edge",
         ":job",
+        ":organization",
+        ":organization_user",
         ":resolution",
         ":run",
         ":user",
@@ -145,8 +147,32 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "organization",
+    srcs = ["organization.py"],
+    pip_deps = [
+        "sqlalchemy",
+    ],
+    deps = [
+        ":base",
+        "//sematic/db/models/mixins:json_encodable_mixin",
+    ],
+)
+
+sematic_py_lib(
     name = "user",
     srcs = ["user.py"],
+    pip_deps = [
+        "sqlalchemy",
+    ],
+    deps = [
+        ":base",
+        "//sematic/db/models/mixins:json_encodable_mixin",
+    ],
+)
+
+sematic_py_lib(
+    name = "organization_user",
+    srcs = ["organization_user.py"],
     pip_deps = [
         "sqlalchemy",
     ],

@@ -28,6 +28,8 @@ sematic_py_lib(
         "//sematic/api/endpoints:external_resources",
         "//sematic/api/endpoints:meta",
         "//sematic/api/endpoints:notes",
+        "//sematic/api/endpoints:organizations",
+        "//sematic/api/endpoints:organizations_users",
         "//sematic/api/endpoints:resolutions",
         "//sematic/api/endpoints:runs",
         "//sematic/api/endpoints:storage",
