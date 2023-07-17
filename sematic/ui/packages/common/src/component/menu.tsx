@@ -4,7 +4,7 @@ import Grid from "@mui/material/Grid";
 import Link from "@mui/material/Link";
 import { SimplePaletteColorOptions } from "@mui/material/styles";
 import useTheme from "@mui/material/styles/useTheme";
-import { useContext, useRef, useEffect } from "react";
+import { useContext, useRef, useEffect, useMemo } from "react";
 import MuiRouterLink from "src/component/MuiRouterLink";
 import NameTag from "src/component/NameTag";
 import UserMenu from "src/component/UserMenu";
@@ -16,6 +16,7 @@ import useCounter from "react-use/lib/useCounter";
 import UserAvatar from "src/component/UserAvatar";
 import { getUserInitials } from "src/utils/string";
 import theme from "src/theme/new";
+import SettingsMenu from "src/component/SettingsMenu";
 
 const StyledGridContainer = styled(Grid)`
     border-bottom: 1px solid ${() => (palette.p3border as SimplePaletteColorOptions).main};
@@ -49,6 +50,27 @@ const HeaderMenu = (props: HeaderMenuProps) => {
 
     const latestAnchor = useLatest(contextMenuAnchor.current);
 
+    const profileMenuLabel = useMemo(() => {
+        if (!user) {
+            return "Settings";
+        }
+
+        return <>
+            <UserAvatar initials={getUserInitials(user?.first_name, user?.last_name, user?.email)} 
+                hoverText={user?.first_name || user?.email} avatarUrl={user?.avatar_url} size={"medium"}/>
+            <NameTag firstName={user?.first_name} lastName={undefined} variant={"inherit"} />
+        </>
+    }, [user]);
+
+    const profileMenu = useMemo(() => {
+        if (!user) {
+            return <SettingsMenu anchorEl={contextMenuAnchor.current} />;
+        }
+
+        return <UserMenu anchorEl={contextMenuAnchor.current} />
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, renderTimes]);
+
     useEffect(() => {
         // re-render until the context menu anchor is set
         if (latestAnchor.current === null) {
@@ -80,11 +102,9 @@ const HeaderMenu = (props: HeaderMenuProps) => {
             <MuiRouterLink href={"https://docs.sematic.dev"} variant="subtitle1" type='menu'>Docs</MuiRouterLink>
             <MuiRouterLink href={"https://discord.gg/4KZJ6kYVax"} variant="subtitle1" type='menu'>Discord</MuiRouterLink>
             <StyledLink variant="subtitle1" type='menu' ref={contextMenuAnchor}>
-                {!!user && <UserAvatar initials={getUserInitials(user?.first_name, user?.last_name, user?.email)} 
-                    hoverText={user?.first_name || user?.email} avatarUrl={user?.avatar_url} size={"medium"}/>}
-                <NameTag firstName={user?.first_name} lastName={undefined} variant={"inherit"} />
+                {profileMenuLabel}
             </StyledLink>
-            <UserMenu anchorEl={contextMenuAnchor.current} />
+            { profileMenu }
         </Box>
     </StyledGridContainer>;
 };
