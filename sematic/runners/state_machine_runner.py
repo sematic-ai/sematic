@@ -158,7 +158,9 @@ class StateMachineRunner(Runner, abc.ABC):
 
                 # Raising an error ensures execution doesn't resume where it left off
                 # after the handler exits.
-                raise CancellationError(f"Pipeline run cancelled due to signal {signum}")
+                raise CancellationError(
+                    f"Pipeline run cancelled due to signal {signum}"
+                )
 
             # this branch is possible when using LocalRunner,
             # or if inlined funcs spawn processes when using CloudRunner

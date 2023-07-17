@@ -33,7 +33,6 @@ from sematic.types.type import get_origin, is_type
 from sematic.utils.algorithms import breadth_first_search
 from sematic.utils.exceptions import CancellationError
 
-
 _EXTRA_FUTURE_DOCS_LINK = (
     "https://docs.sematic.dev/diving-deeper/future-algebra#unused-futures"
 )

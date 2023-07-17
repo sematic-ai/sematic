@@ -1,8 +1,8 @@
 # Standard Library
 import datetime
 import logging
-import signal
 import os
+import signal
 import uuid
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -31,7 +31,7 @@ from sematic.graph import Graph, RerunMode
 from sematic.plugins.abstract_builder import get_build_config, get_run_command
 from sematic.resolvers.resource_managers.server_manager import ServerResourceManager
 from sematic.runners.silent_runner import SilentRunner
-from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run, CancellationError
+from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
 from sematic.utils.git import get_git_info
 from sematic.utils.retry import retry_call
 from sematic.versions import CURRENT_VERSION_STR
@@ -347,7 +347,7 @@ class LocalRunner(SilentRunner):
 
     def _read_refreshed_state(self, future: AbstractFuture) -> FutureState:
         run = self._get_run(future.id)
-        return FutureState[run.future_state]
+        return FutureState[run.future_state]  # type: ignore
 
     def _get_tagged_image(self, tag: str) -> Optional[str]:
         return None
@@ -540,8 +540,8 @@ class LocalRunner(SilentRunner):
 
     def _future_did_cancel(self, canceled_future: AbstractFuture) -> None:
         run = self._get_run(canceled_future.id)
-        if not FutureState[run.future_state].is_terminal():
-            run.future_state = FutureState.CANCELED.value
+        if not FutureState[run.future_state].is_terminal():  # type: ignore
+            run.future_state = FutureState.CANCELED.value  # type: ignore
             self._add_run(run)
         self._save_graph()
 
