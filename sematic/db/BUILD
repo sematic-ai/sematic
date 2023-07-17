@@ -43,7 +43,7 @@ exports_files(
 
 sematic_py_lib(
     name = "migrate_lib",
-    srcs = ["migrate.py"],
+    srcs = ["migrate.py", "migration_utils.py"],
     data = glob(
         [
             "migrations/*.sql",

@@ -10,6 +10,15 @@ sematic_py_lib(
 )
 
 sematic_py_lib(
+    name = "has_organization_mixin",
+    srcs = ["has_organization_mixin.py"],
+    pip_deps = [
+        "sqlalchemy",
+    ],
+    deps = [],
+)
+
+sematic_py_lib(
     name = "has_user_mixin",
     srcs = ["has_user_mixin.py"],
     pip_deps = [

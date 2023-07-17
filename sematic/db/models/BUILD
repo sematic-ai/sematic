@@ -6,6 +6,7 @@ sematic_py_lib(
     ],
     deps = [
         ":base",
+        "//sematic/db/models/mixins:has_organization_mixin",
         "//sematic/db/models/mixins:json_encodable_mixin",
     ],
 )
@@ -100,6 +101,7 @@ sematic_py_lib(
         ":base",
         "//sematic:abstract_function",
         "//sematic:abstract_future",
+        "//sematic/db/models/mixins:has_organization_mixin",
         "//sematic/db/models/mixins:has_user_mixin",
         "//sematic/db/models/mixins:json_encodable_mixin",
         "//sematic/types:serialization",
@@ -128,6 +130,7 @@ sematic_py_lib(
     deps = [
         ":base",
         ":git_info",
+        "//sematic/db/models/mixins:has_organization_mixin",
         "//sematic/db/models/mixins:has_user_mixin",
         "//sematic/db/models/mixins:json_encodable_mixin",
     ],
