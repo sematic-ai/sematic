@@ -1,6 +1,8 @@
 # Standard Library
 import datetime
 import logging
+import signal
+import os
 import uuid
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -29,7 +31,7 @@ from sematic.graph import Graph, RerunMode
 from sematic.plugins.abstract_builder import get_build_config, get_run_command
 from sematic.resolvers.resource_managers.server_manager import ServerResourceManager
 from sematic.runners.silent_runner import SilentRunner
-from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run
+from sematic.utils.exceptions import ExceptionMetadata, format_exception_for_run, CancellationError
 from sematic.utils.git import get_git_info
 from sematic.utils.retry import retry_call
 from sematic.versions import CURRENT_VERSION_STR
@@ -282,14 +284,9 @@ class LocalRunner(SilentRunner):
 
             logger.warning("Received cancelation event")
 
-            root_run = self._get_run(self._root_future.id)
-            if root_run.future_state != FutureState.CANCELED.value:
-                raise RuntimeError("Cancelation was not effective.")
-
-            # If we are here, the cancelation was applied successfully server-side
-            # so it is safe to mark non-terminal futures as CANCELED
-            # This will precipitate the termination of the pipeline run loop.
-            self._clean_up_pipeline_run(save_graph=False)
+            # Rely on signal handlers to perform the cancellation and cleanup
+            # of local resources.
+            os.kill(os.getpid(), signal.SIGINT)
 
         self._populate_run_and_artifacts(self._root_future)
         self._save_graph()
@@ -346,8 +343,11 @@ class LocalRunner(SilentRunner):
 
     def _pipeline_run_did_cancel(self) -> None:
         super()._pipeline_run_did_cancel()
-        api_client.cancel_pipeline_run(self._root_future.id)
         self._clean_up_pipeline_run(save_graph=True)
+
+    def _read_refreshed_state(self, future: AbstractFuture) -> FutureState:
+        run = self._get_run(future.id)
+        return FutureState[run.future_state]
 
     def _get_tagged_image(self, tag: str) -> Optional[str]:
         return None
@@ -536,6 +536,13 @@ class LocalRunner(SilentRunner):
         run.future_state = FutureState.RETRYING
 
         self._add_run(run)
+        self._save_graph()
+
+    def _future_did_cancel(self, canceled_future: AbstractFuture) -> None:
+        run = self._get_run(canceled_future.id)
+        if not FutureState[run.future_state].is_terminal():
+            run.future_state = FutureState.CANCELED.value
+            self._add_run(run)
         self._save_graph()
 
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:

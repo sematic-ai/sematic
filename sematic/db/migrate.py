@@ -223,6 +223,8 @@ def migrate_up():
     last_successful: Optional[str] = None
 
     for migration_file in migration_files:
+        if "20230712121255" in migration_file:
+            continue
         version = migration_file.split("_")[0]
 
         if version in versions:

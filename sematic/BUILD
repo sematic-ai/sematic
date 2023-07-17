@@ -171,6 +171,7 @@ sematic_py_lib(
         "//sematic/types:registry",
         "//sematic/types:type",
         "//sematic/utils:algorithms",
+        "//sematic/utils:exceptions",
         "//sematic/utils:memoized_property",
     ],
 )

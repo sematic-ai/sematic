@@ -13,6 +13,7 @@ from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 from sematic.resolvers.resource_managers.memory_manager import MemoryResourceManager
 from sematic.runners.state_machine_runner import StateMachineRunner
 from sematic.utils.exceptions import (
+    CancellationError,
     PipelineRunError,
     TimeoutError,
     format_exception_for_run,
@@ -60,8 +61,12 @@ class SilentRunner(StateMachineRunner):
                 except TimeoutError:
                     self._fail_future_with_timeout(future, timeout_restricting_future)
             self._update_future_with_value(future, value)
+        except CancellationError:
+            # We don't want to go through the normal failure logic so that futures/runs
+            # are marked as cancelled instead of failed.
+            raise
         except PipelineRunError:
-            # only we raise PipelineRunError when determining a failure is unrecoverable
+            # we only raise PipelineRunError when determining a failure is unrecoverable
             # if we got this exception type, then the failure has already been properly
             # handled and all is left to do is to terminate the execution.
             raise
