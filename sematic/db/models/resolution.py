@@ -156,7 +156,7 @@ class ResolutionKind(Enum):
     KUBERNETES = "KUBERNETES"  # for detached mode
 
 
-class Resolution(HasUserMixin, HasOrganizationMixin, Base, JSONEncodableMixin):
+class Resolution(Base, HasUserMixin, HasOrganizationMixin, JSONEncodableMixin):
     """Represents a session of a resolver.
 
     Attributes

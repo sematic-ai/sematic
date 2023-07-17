@@ -10,7 +10,7 @@ from sematic.db.models.mixins.has_organization_mixin import HasOrganizationMixin
 from sematic.db.models.mixins.json_encodable_mixin import JSON_KEY, JSONEncodableMixin
 
 
-class Artifact(HasOrganizationMixin, Base, JSONEncodableMixin):
+class Artifact(Base, HasOrganizationMixin, JSONEncodableMixin):
     # we use content-addressed values for artifacts, with the id being
     # generated from the type and value themselves
     # when a resolution generates an artifact which has been seen before and which is
