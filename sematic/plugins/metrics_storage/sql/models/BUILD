@@ -4,6 +4,7 @@ sematic_py_lib(
     pip_deps = ["sqlalchemy"],
     deps = [
         "//sematic/db/models:base",
+        "//sematic/db/models/mixins:has_organization_mixin",
         "//sematic/metrics:metric_point",
         "//sematic/utils:db",
     ],

@@ -14,6 +14,7 @@ from sqlalchemy.orm import relationship, validates
 from sematic.abstract_function import AbstractFunction
 from sematic.abstract_future import FutureState
 from sematic.db.models.base import Base
+from sematic.db.models.mixins.has_organization_mixin import HasOrganizationMixin
 from sematic.db.models.mixins.has_user_mixin import HasUserMixin
 from sematic.db.models.mixins.json_encodable_mixin import (
     CONTAIN_FILTER_KEY,
@@ -30,7 +31,7 @@ from sematic.types.serialization import (
 from sematic.utils.exceptions import ExceptionMetadata
 
 
-class Run(HasUserMixin, Base, JSONEncodableMixin):
+class Run(HasUserMixin, HasOrganizationMixin, Base, JSONEncodableMixin):
     """
     SQLAlchemy model for runs.
 
@@ -89,6 +90,8 @@ class Run(HasUserMixin, Base, JSONEncodableMixin):
         If present, the key under which the run's output artifact will be cached.
     user_id: Optional[str]
         Users who submitted this run.
+    organization_id: Optional[str]
+        The organization under which this resolution was submitted.
     """
 
     __tablename__ = "runs"
