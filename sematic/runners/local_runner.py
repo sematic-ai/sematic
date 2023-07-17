@@ -301,6 +301,21 @@ class LocalRunner(SilentRunner):
         if save_graph:
             self._save_graph()
 
+        root_run = self._get_run(self._root_future.id)
+        pipeline_run = api_client.get_pipeline_run(self._root_future.id)
+
+        status = PipelineRunStatus[pipeline_run.status]  # type: ignore
+        if not status.is_terminal():
+            if root_run.future_state == FutureState.CANCELED.value:
+                pipeline_run.status = PipelineRunStatus.CANCELED
+            elif root_run.future_state == FutureState.RESOLVED.value:
+                # this method doesn't normally get called for successful runs,
+                # but if it does we want it to have the expected behavior.
+                pipeline_run.status = PipelineRunStatus.COMPLETE
+            else:
+                pipeline_run.status = PipelineRunStatus.FAILED
+            api_client.save_pipeline_run(pipeline_run)
+
     def _make_cache_namespace(self) -> Optional[str]:
         """
         Attempts to produce a string cache namespace for the Pipeline Run.
