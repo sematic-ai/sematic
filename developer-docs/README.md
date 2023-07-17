@@ -156,8 +156,11 @@ changes.
     1. **Test an upgrade deployment** in the `stage` environment, **where the previous
     version is already deployed**, use
     [`serve-dev`](https://github.com/sematic-ai/infrastructure/tree/main/bin) to upgrade
-    the deployment with a Docker image built on-the-fly from the current release commit:
+    the deployment with a Docker image built on-the-fly from the current release commit.
+    You must set `BUILD_UI=1` in the `me.sh` script in order to ensure the UI is built, so
+    you don't package an older version of the UI with the deployment:
         ```bash
+        $ vim ~/infrastructure/bin/me.sh  # add: BUILD_UI=1 at the end
         $ # STAGE:
         $ serve-dev stage
         $ helm list -n stage  # check that the expected APP VERSION was deployed
@@ -192,6 +195,16 @@ changes.
               --fork-subprocess exit 1 \
               --fork-subprocess signal 2 \
               --fork-subprocess signal 15
+        ```
+    
+    1. Test client backwards compatibility. Install the version of Sematic that matches
+    `MIN_CLIENT_SERVER_SUPPORTS` from `sematic/versions.py` in a virtual env and validate
+    that this older client can run a packaged example pipeline end-to-end successfully on
+    the new Server.
+        ```bash
+        $ sematic version #  check that the correct min version is installed
+        $ STAGE:
+        $ sematic run examples/mnist/pytorch
         ```
 
     1. **Test a clean installation** in the same `stage` environment.
@@ -282,6 +295,7 @@ changes.
         $ mv index.yaml $HELM_REPO/index.yaml
         $ mv *.tgz $HELM_REPO/sematic-grafana-dashboards/
         ```
+       
     1. You should now have a new `sematic-server/sematic-server-X.X.X.tgz` file in the
     `helm-charts` repo, and a modified `index.yaml` file. If you optionally created a package
     for the Grafana dashboards, you should also have a
@@ -305,13 +319,15 @@ changes.
 1. Finally, draft the release on GitHub, from
   [the tag you previously committed](https://github.com/sematic-ai/sematic/tags):
     - Pick the `"previous tag"` from the dropdown to refer to the previous release.
-    - Add a `"What's Changed"` section, and copy the newly added section of the `changelog.md`.
-    - If `MIN_CLIENT_SERVER_SUPPORTS` was bumped and/or if `docs/upgrades.md` contains an
-      entry for upgrading to the released version, add an `"Upgrade Instructions"`
-      section, and list and link all these steps.
-    - Add a `"New Contributors"` section, if this applies. List all external contributors
-      who have made commits since the last release, and thank them.
+    - Add a `"## What's Changed"` section, and copy the newly added section of the
+      `changelog.md`.
     - Add a `"Full Changelog"` link, and validate it.
+    - Add a `"## Compatibility"` section which states that only clients versions down to
+      `MIN_CLIENT_SERVER_SUPPORTS` from `sematic/versions.py` are supported.
+    - If `docs/upgrades.md` contains an entry for upgrading to the released version, add
+      an `"## Upgrade Instructions"` section, and list and link this documentation entry.
+    - Add a `"## New Contributors"` section, if this applies. List all external
+      contributors who have made commits since the last release, and thank them.
     - Attach the wheel in the `"Assets"` section.
 
 ### Patch Releases
