@@ -62,3 +62,11 @@ pytest_test(
         "//sematic/db/tests:fixtures",
     ],
 )
+
+pytest_test(
+    name = "test_user",
+    srcs = ["test_user.py"],
+    deps = [
+        "//sematic/db/models:factories",
+    ],
+)

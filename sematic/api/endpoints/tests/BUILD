@@ -163,6 +163,17 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_organizations",
+    srcs = ["test_organizations.py"],
+    deps = [
+        "//sematic/db:db",
+        "//sematic/db/models:organization",
+        "//sematic/api/tests:fixtures",
+        "//sematic/db/tests:fixtures",
+    ],
+)
+
+pytest_test(
     name = "test_users",
     srcs = ["test_users.py"],
     # buildifier: leave-alone

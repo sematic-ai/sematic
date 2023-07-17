@@ -18,8 +18,11 @@ from sematic.db.db import db
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
+from sematic.db.models.factories import make_personal_organization
 from sematic.db.models.job import Job
 from sematic.db.models.note import Note
+from sematic.db.models.organization import Organization
+from sematic.db.models.organization_user import OrganizationUser
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.runs_external_resource import RunExternalResource
@@ -64,7 +67,18 @@ def get_artifact(artifact_id: str) -> Artifact:
         return session.query(Artifact).filter(Artifact.id == artifact_id).one()
 
 
+def get_organizations() -> List[Organization]:
+    """
+    Get all organizations from the database.
+    """
+    with db().get_session() as session:
+        return session.query(Organization).order_by(Organization.name).all()
+
+
 def get_users() -> List[User]:
+    """
+    Get all users from the database.
+    """
     with db().get_session() as session:
         return session.query(User).order_by(User.first_name).all()
 
@@ -874,11 +888,34 @@ def get_user_by_api_key(api_key: str) -> User:
 
 def save_user(user: User) -> User:
     """
-    Save a user to the DB
+    Save a user to the DB, together with a personal organization.
     """
     with db().get_session() as session:
+        logger.debug("Saving user '%s'", user.email)
         session.add(user)
+        # flush & refresh to get autoinc id
+        session.flush()
+        session.refresh(user)
+
+        # also ensure the user is a member of their own personal organization
+        row = (
+            session.query(OrganizationUser)
+            .filter(OrganizationUser.user_id == user.id)
+            .join(Organization, OrganizationUser.organization_id == Organization.id)
+            .one_or_none()
+        )
+
+        if row is None:
+            logger.debug("Creating personal org for user '%s'", user.email)
+            organization, organization_user = make_personal_organization(user=user)
+            session.add(organization)
+            session.add(organization_user)
+
         session.commit()
+
+        # re-refresh after committing in order to eagerly load attributes
+        # omitting to do this would result in an error whenever accessing any
+        # attributes which hadn't been effectively loaded
         session.refresh(user)
 
     return user
