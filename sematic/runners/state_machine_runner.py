@@ -270,7 +270,6 @@ class StateMachineRunner(Runner, abc.ABC):
                     future.state,
                     state,
                 )
-            logger.warning("Cleaning up %s in state %s, is_terminal=%s", future.function.__name__, state, future.state.is_terminal())  # TODO: don't commit
             if not state.is_terminal():
                 self._set_future_state(future, FutureState.CANCELED)
 
