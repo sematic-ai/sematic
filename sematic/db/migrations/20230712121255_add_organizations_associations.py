@@ -206,10 +206,10 @@ def up_postgres():
     with db().get_engine().begin() as conn:
         conn.execute(
             """
-            ALTER TABLE resolutions ADD COLUMN organization_id REFERENCES organizations(id);
-            ALTER TABLE runs ADD COLUMN organization_id REFERENCES organizations(id);
-            ALTER TABLE metric_labels ADD COLUMN organization_id REFERENCES organizations(id);
-            ALTER TABLE artifacts ADD COLUMN organization_id REFERENCES organizations(id);
+            ALTER TABLE resolutions ADD COLUMN organization_id character(32) REFERENCES organizations(id);
+            ALTER TABLE runs ADD COLUMN organization_id character(32) REFERENCES organizations(id);
+            ALTER TABLE metric_labels ADD COLUMN organization_id character(32) REFERENCES organizations(id);
+            ALTER TABLE artifacts ADD COLUMN organization_id character(32) REFERENCES organizations(id);
             """
         )
 
