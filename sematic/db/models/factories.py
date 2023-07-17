@@ -14,6 +14,8 @@ from sematic.abstract_future import AbstractFuture, FutureState, make_future_id
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.job import Job
+from sematic.db.models.organization import Organization
+from sematic.db.models.organization_user import OrganizationUser
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -266,12 +268,12 @@ def deserialize_artifact_value(artifact: Artifact, payload: bytes) -> Any:
 
 def make_user(
     email: str,
-    first_name: Optional[str],
-    last_name: Optional[str],
-    avatar_url: Optional[str],
+    first_name: Optional[str] = None,
+    last_name: Optional[str] = None,
+    avatar_url: Optional[str] = None,
 ) -> User:
     """
-    Make a user
+    Make a user.
     """
     api_key = _make_api_key()
 
@@ -289,3 +291,20 @@ def _make_api_key() -> str:
     Generate an API key
     """
     return secrets.token_urlsafe(16)
+
+
+def make_personal_organization(user: User) -> Tuple[Organization, OrganizationUser]:
+    """
+    Makes a personal organization for the user, as well as the membership & admin
+    relationship between the two.
+
+    The user is expected to have an `id` field, meaning the entry was flushed to the DB.
+    """
+
+    organization = Organization(
+        id=user.id, name=user.get_friendly_name(), kubernetes_namespace=None
+    )
+    organization_user = OrganizationUser(
+        organization_id=organization.id, user_id=user.id, admin=True
+    )
+    return organization, organization_user
