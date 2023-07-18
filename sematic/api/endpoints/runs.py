@@ -247,7 +247,7 @@ def _standard_list_runs(args: Dict[str, str]) -> flask.Response:
     if parameters.fields == ["id"]:
         # TODO: it would be better to push this field subsetting
         # down to the DB query level, but for now we'll do it here.
-        content = [{"id": run["id"] for run in content}]
+        content = [{"id": run["id"]} for run in content]
 
     payload = dict(
         current_page_url=current_page_url,
@@ -255,7 +255,7 @@ def _standard_list_runs(args: Dict[str, str]) -> flask.Response:
         limit=limit,
         next_cursor=next_cursor,
         after_cursor_count=after_cursor_count,
-        content=get_runs_payload(runs),
+        content=content,
     )
 
     return flask.jsonify(payload)
