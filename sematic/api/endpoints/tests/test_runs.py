@@ -162,6 +162,49 @@ def test_list_runs_group_by(
     assert {run_["name"] for run_ in payload["content"]} == set(runs)
 
 
+def test_list_runs_fields(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    run1 = make_run(name="abc", function_path="abc")
+    run2 = make_run(name="def", function_path="abc")
+
+    save_run(run2)
+    save_run(run1)
+
+    # test that without "fields" the entire runs are returned
+    response = test_client.get("/api/v1/runs")
+
+    assert response.status_code == 200
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == 2
+
+    assert payload["content"][0]["id"] == run1.id
+    assert payload["content"][0]["name"] == run1.name
+    assert payload["content"][0]["function_path"] == run1.function_path
+
+    assert payload["content"][1]["id"] == run2.id
+    assert payload["content"][1]["name"] == run2.name
+    assert payload["content"][1]["function_path"] == run2.function_path
+
+    # test that only the specified fields are returned
+    query_params = {"fields": json.dumps(["id"])}
+    response = test_client.get("/api/v1/runs?{}".format(urlencode(query_params)))
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == 2
+
+    assert payload["content"][0]["id"] == run1.id
+    assert len(payload["content"][0]) == 1
+
+    assert payload["content"][1]["id"] == run2.id
+    assert len(payload["content"][1]) == 1
+
+
 def test_list_runs_filters(
     mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
