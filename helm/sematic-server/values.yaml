@@ -8,6 +8,14 @@ aws:
   storage_bucket: my-s3-bucket # REPLACE ME
   bucket_region: my-s3-region # REPLACE ME
 
+gcp:
+  enabled: false
+  storage_bucket: my-bucket # REPLACE ME
+  sa_secret:
+    use: false
+    name: gcp-sa # REPLACE ME
+    file: the-key.json # REPLACE ME
+
 local_storage:
   enabled: false
   local_storage_path: /path/to/storage # REPLACE ME. Optional, defaults to ~/.sematic/data
