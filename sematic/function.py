@@ -31,6 +31,7 @@ from sematic.types.casting import can_cast_type, safe_cast
 from sematic.types.registry import validate_type_annotation
 from sematic.types.type import get_origin, is_type
 from sematic.utils.algorithms import breadth_first_search
+from sematic.utils.exceptions import CancellationError
 
 _EXTRA_FUTURE_DOCS_LINK = (
     "https://docs.sematic.dev/diving-deeper/future-algebra#unused-futures"
@@ -188,6 +189,10 @@ class Function(AbstractFunction):
     def execute(self, **kwargs) -> Any:
         try:
             output = self.func(**kwargs)
+        except CancellationError:
+            # need to catch this separately so cancellations don't look
+            # like user code errors.
+            raise
         except Exception as e:
             raise FunctionError(f"Error from running {self.func.__name__}") from e
 
