@@ -46,6 +46,11 @@ def add(a: float, b: float) -> float:
 
 
 @func
+def bad_add(a: float, b: float) -> float:
+    raise RuntimeError("Inentional fail")
+
+
+@func
 def add3(a: float, b: float, c: float) -> float:
     return add(add(a, b), c)
 
@@ -66,7 +71,7 @@ def do_cancel(x: float) -> float:
 def cancelling_pipeline(a: float, b: float) -> float:
     c = add(a, b)
     d = do_cancel(add3(a, b, c))
-    return add(c, d)
+    return bad_add(c, d)
 
 
 def test_single_function(

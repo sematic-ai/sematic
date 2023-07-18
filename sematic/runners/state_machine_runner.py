@@ -278,6 +278,9 @@ class StateMachineRunner(Runner, abc.ABC):
     def _read_refreshed_state(self, future: AbstractFuture) -> FutureState:
         """Refresh state from the 'source of truth.'
 
+        The refreshed state should be returned, but the `state` field of
+        `future` should be unmodified.
+
         For silent runner, the source of truth is in-memory. Runners that
         use a server should refresh the state from there.
         """

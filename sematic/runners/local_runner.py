@@ -284,6 +284,9 @@ class LocalRunner(SilentRunner):
 
             logger.warning("Received cancelation event")
 
+            # If we are here, the cancelation should have been applied
+            # successfully server-side.
+
             # Rely on signal handlers to perform the cancellation and cleanup
             # of local resources.
             os.kill(os.getpid(), signal.SIGINT)
