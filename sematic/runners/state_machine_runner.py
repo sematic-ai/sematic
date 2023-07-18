@@ -21,6 +21,7 @@ from sematic.plugins.abstract_external_resource import (
 from sematic.resolvers.abstract_resource_manager import AbstractResourceManager
 from sematic.runner import Runner
 from sematic.utils.exceptions import (
+    CancellationError,
     ExceptionMetadata,
     ExternalResourceError,
     PipelineRunError,
@@ -112,6 +113,10 @@ class StateMachineRunner(Runner, abc.ABC):
     def _catch_pipeline_run_errors(self):
         try:
             yield
+        except CancellationError as e:
+            logger.warning("Terminating runner loop due to cancellation.")
+            self._pipeline_run_did_cancel()
+            raise e
         except Exception as e:
             logger.info(
                 "Pipeline run %s has failed; starting cleanup; look for details below",
@@ -150,6 +155,12 @@ class StateMachineRunner(Runner, abc.ABC):
             if runner_pid == os.getpid():
                 logger.warning("Received signal %s; canceling pipeline run...", signum)
                 self._pipeline_run_did_cancel()
+
+                # Raising an error ensures execution doesn't resume where it left off
+                # after the handler exits.
+                raise CancellationError(
+                    f"Pipeline run cancelled due to signal {signum}"
+                )
 
             # this branch is possible when using LocalRunner,
             # or if inlined funcs spawn processes when using CloudRunner
@@ -253,8 +264,27 @@ class StateMachineRunner(Runner, abc.ABC):
 
     def _cancel_non_terminal_futures(self):
         for future in self._futures:
-            if not future.state.is_terminal():
+            state = self._read_refreshed_state(future)
+            if state != future.state:
+                logger.warning(
+                    "In-memory future state '%s' differs from refreshed state"
+                    "'%s' during cleanup.",
+                    future.state,
+                    state,
+                )
+            if not state.is_terminal():
                 self._set_future_state(future, FutureState.CANCELED)
+
+    def _read_refreshed_state(self, future: AbstractFuture) -> FutureState:
+        """Refresh state from the 'source of truth.'
+
+        The refreshed state should be returned, but the `state` field of
+        `future` should be unmodified.
+
+        For silent runner, the source of truth is in-memory. Runners that
+        use a server should refresh the state from there.
+        """
+        return future.state
 
     @typing.final
     def _set_future_state(self, future, state):
@@ -269,6 +299,7 @@ class StateMachineRunner(Runner, abc.ABC):
             FutureState.RAN: self._future_did_run,
             FutureState.FAILED: self._future_did_fail,
             FutureState.NESTED_FAILED: self._future_did_fail,
+            FutureState.CANCELED: self._future_did_cancel,
             FutureState.RESOLVED: self._future_did_resolve,
             FutureState.RETRYING: self._future_did_get_marked_for_retry,
         }
@@ -340,6 +371,17 @@ class StateMachineRunner(Runner, abc.ABC):
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
         """
         Callback allowing specific runners to react when a future is marked failed.
+        """
+        pass
+
+    def _future_did_cancel(self, canceled_future: AbstractFuture) -> None:
+        """
+        Callback allowing specific runners to react when a future is marked canceled.
+
+        Note that if a run was marked cancelled on the server, this callback may not
+        be invoked for the corresponding future. It should thus be used primarily for
+        ensuring the server state reflects cancellation if the cancellation is detected
+        by the runner before the server handles it.
         """
         pass
 

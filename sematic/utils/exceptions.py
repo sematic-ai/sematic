@@ -249,3 +249,9 @@ class DataIntegrityError(Exception):
     """
 
     pass
+
+
+class CancellationError(Exception):
+    """The pipeline run was cancelled."""
+
+    pass
