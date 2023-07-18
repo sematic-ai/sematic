@@ -4,7 +4,7 @@ import { fontWeightBold } from "src/theme/new/typography";
 import { getTypeName } from "src/typeViz/common";
 import { RenderDetails } from "src/typeViz/vizMapping";
 import { AnyTypeSerialization } from "src/types";
-import { useState, useMemo, useCallback, useEffect, Fragment } from "react";
+import { useState, useMemo, useCallback, useEffect, useContext, Fragment } from "react";
 import IconButton from "@mui/material/IconButton";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
@@ -12,6 +12,7 @@ import { useTheme } from "@mui/material/styles";
 import ErrorBoundary from "src/component/ErrorBoundary";
 import ImportPath from "src/component/ImportPath";
 import { css } from "@emotion/css";
+import ArtifactCoordinationContext, { ArtifactCoordinationState } from "src/context/artifactCoordinationContext";
 
 
 const ContainerBase = styled.div`
@@ -145,7 +146,12 @@ function ArtifactVizTemplate(props: ArtifactVizTemplateProps) {
 
     const type = getTypeName(typeSerialization);
 
-    const toggleOpen = useCallback(() => setOpen(open => !open), [setOpen]);
+    const { coordinationState, setCoordinationState } = useContext(ArtifactCoordinationContext);
+
+    const toggleOpen = useCallback(() => {
+        setOpen(open => !open);
+        setCoordinationState(ArtifactCoordinationState.DIRTY);
+    }, [setOpen, setCoordinationState]);
 
     const [expandLessHovered, setExpandLessHovered] = useState(false);
 
@@ -171,6 +177,16 @@ function ArtifactVizTemplate(props: ArtifactVizTemplateProps) {
             setExpandLessHovered(false);
         }
     }, [open]);
+
+
+    // Sync open state with the overall coordination state
+    useEffect(() => {
+        if (coordinationState === ArtifactCoordinationState.COLLAPSE_ALL) {
+            setOpen(false);
+        } else if (coordinationState === ArtifactCoordinationState.EXPAND_ALL) {
+            setOpen(true);
+        }
+    }, [coordinationState]);
 
     return <Fragment key={name}>
         <ArtifactLine name={name} type={type}>
