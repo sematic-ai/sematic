@@ -7,8 +7,26 @@ import DoneOutline from "@mui/icons-material/DoneOutline";
 import { useMemo } from "react";
 import theme from "src/theme/new";
 import { SvgIconTypeMap } from "@mui/material/SvgIcon";
+import { css } from "@emotion/css";
+
+const AnimatedChip = css`
+    @keyframes svg-gaussian-blur {
+        0%   {filter: url(#gaussian-blur-1); transform: scale(1.3); }
+        25%  {filter: url(#gaussian-blur-0.5); }
+        50%  {filter: url(#gaussian-blur-0); transform: scale(1);}
+        75%  {filter: url(#gaussian-blur-0.5); }
+        100%  {filter: url(#gaussian-blur-1); transform: scale(1.3);}
+    }
+
+    animation-name: svg-gaussian-blur;
+    animation-duration: 1.5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+`;
+
 interface StateChipBaseProps {
     size?: "small" | "medium" | "large";
+    animated?: boolean;
 }
 
 const useStylesHook = (props: StateChipBaseProps) => {
@@ -47,10 +65,10 @@ export const FailedStateChip = (props: StateChipBaseProps) => {
 }
 
 export const RunningStateChip = (props: StateChipBaseProps) => {
-    const { size } = props;
+    const { size, animated = false } = props;
     const styles = useStylesHook({ size });
     const color = RunStateColorMap.get(RunningStateChip)!.color;
-    return <BoltIcon color={color} style={styles} />;
+    return <BoltIcon color={color} style={styles} className={animated ? AnimatedChip : undefined} />;
 }
 
 export const CanceledStateChip = (props: StateChipBaseProps) => {
@@ -120,19 +138,18 @@ export function getRunStateColorByState(futureState: string, orignalRunId: strin
     return (theme.palette as any)[color].main;
 }
 
-interface RunStateChipProps {
+interface RunStateChipProps extends StateChipBaseProps{
     futureState: string;
     orignalRunId: string | null;
-    size?: StateChipBaseProps["size"];
 }
 
 export default function RunStateChip(props: RunStateChipProps) {
-    const { futureState, orignalRunId, size = "large" } = props;
+    const { futureState, orignalRunId, size = "large", animated } = props;
 
     const Component = useMemo(
         () => getRunStateChipComponentByState(futureState, orignalRunId), [futureState, orignalRunId]);
     if (!Component) {
         return null;
     }
-    return <Component size={size} />;
+    return <Component size={size} animated={animated} />;
 }

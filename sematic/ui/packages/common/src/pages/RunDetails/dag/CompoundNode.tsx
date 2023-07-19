@@ -78,7 +78,7 @@ function CompoundNode(props: NodeProps) {
         style={{ width: `${data.width}px`, height: `${data.height}px` }}>
         {hasIncoming && <StyledHandleTop type="target" color={color} position={Position.Top} isConnectable={false} id={"t"} />}
         <LabelContainer>
-            <RunStateChip futureState={run.future_state} orignalRunId={run.original_run_id} />
+            <RunStateChip animated={true} futureState={run.future_state} orignalRunId={run.original_run_id} />
             <label style={{ flexGrow: 1 }}>{data.label}</label>
             <StyledIconButton onClick={toggleExpanded} >
                 {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}

@@ -10,6 +10,7 @@ import HeaderMenu from "src/component/menu";
 import SnackBarProvider from "src/context/SnackBarProvider";
 import UserContext from "src/context/UserContext";
 import theme from "src/theme/new/index";
+import SvgFilters from "src/theme/new/svgfilters";
 
 const StyledGrid = styled(Grid)`
   height: 100vh;
@@ -39,6 +40,7 @@ const Shell = () => {
     return <SnackBarProvider>
         <ThemeProvider theme={theme}>
             <CssBaseline />
+            <SvgFilters />
             <StyledGrid container spacing={0} direction={"column"} >
                 <Grid style={{ flexShrink: 0, flexGrow: 0 }}>
                     <HeaderMenu selectedKey={selectionKey} />
