@@ -36,6 +36,9 @@ class AbstractBuilder(AbstractPlugin):
     Abstract base class to represent a container image builder and launcher.
     """
 
+    def __init__(self, **_):
+        super().__init__()
+
     @abc.abstractmethod
     def build_and_launch(self, target: str, run_command: Optional[str]) -> None:
         """
