@@ -1,7 +1,7 @@
 import Link from "@mui/material/Link";
 import Typography, { TypographyProps } from "@mui/material/Typography";
-import { Link as RouterLink } from "react-router-dom";
-import { getRunUrlPattern } from "src/hooks/runHooks";
+import { useCallback } from "react";
+import { useRunNavigation } from "src/hooks/runHooks";
 
 
 interface RunReferenceLinkProps {
@@ -13,8 +13,13 @@ interface RunReferenceLinkProps {
 export const RunReferenceLink = (props: RunReferenceLinkProps) => {
     const { runId, className, variant = "small" } = props;
 
-    return <Link to={getRunUrlPattern(runId)} variant={variant} type={"code"} className={className}
-        component={RouterLink}>
+    const navigate = useRunNavigation();
+
+    const onClick = useCallback(() => {
+        navigate(runId);
+    }, [navigate, runId]);
+
+    return <Link onClick={onClick} variant={variant} type={"code"} className={className}>
         {runId.substring(0, 7)}
     </Link>
 }
