@@ -61,7 +61,7 @@ function CompoundNode(props: NodeProps) {
     const { data } = props;
     const { run, selected } = data;
 
-    const { toggleExpanded, expanded } = useNodeExpandStateToggle(data);
+    const { toggleExpanded: toggleExpandedFromContext, expanded } = useNodeExpandStateToggle(data);
 
     const hasIncoming = useHasIncoming();
 
@@ -73,6 +73,11 @@ function CompoundNode(props: NodeProps) {
     const onClick = useCallback(() => {
         onNodeClick(run.id);
     }, [onNodeClick, run]);
+
+    const toggleExpanded = useCallback((e: React.MouseEvent<HTMLButtonElement> ) => {
+        toggleExpandedFromContext();
+        e.stopPropagation();
+    }, [toggleExpandedFromContext]);
 
     return <CompoundNodeContainer selected={selected} onClick={onClick} color={color}
         style={{ width: `${data.width}px`, height: `${data.height}px` }}>
