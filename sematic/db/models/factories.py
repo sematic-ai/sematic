@@ -51,8 +51,8 @@ def make_run_from_future(future: AbstractFuture) -> Run:
         description=future.function.__doc__,
         tags=future.props.tags,
         source_code=future.function.get_source(),
-        created_at=None,
-        updated_at=None,
+        # created_at=None,
+        # updated_at=None,
         cache_key=None,
         # the user_id is overwritten on the API call based on the user's API key
         user_id=None,
@@ -233,8 +233,8 @@ def make_artifact(value: Any, type_: Any) -> Tuple[Artifact, Tuple[UploadPayload
         id=artifact_id,
         json_summary=fix_nan_inf(json.dumps(json_summary, sort_keys=True, default=str)),
         type_serialization=json.dumps(type_serialization, sort_keys=True),
-        created_at=None,
-        updated_at=None,
+        # created_at=None,
+        # updated_at=None,
     )
 
     payload = json.dumps(value_serialization, sort_keys=True).encode("utf-8")

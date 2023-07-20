@@ -205,8 +205,8 @@ class LocalRunner(SilentRunner):
         """
         edge = Edge(
             id=uuid.uuid4().hex,
-            created_at=None,
-            updated_at=None,
+            # created_at=None,
+            # updated_at=None,
             source_run_id=source_run_id,
             destination_run_id=destination_run_id,
             destination_name=destination_name,
