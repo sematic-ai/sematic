@@ -197,6 +197,7 @@ class Resolution(Base, HasUserMixin, HasOrganizationMixin, JSONEncodableMixin):
     """
 
     __tablename__ = "resolutions"
+    __allow_unmapped__ = True
 
     root_id: str = Column(
         types.String(),
