@@ -102,7 +102,6 @@ _ALLOWED_TRANSITIONS = {
             FutureState.RETRYING,
             FutureState.CANCELED,
             FutureState.RESOLVED,
-            # TODO: remove (See https://github.com/sematic-ai/sematic/issues/609)
             FutureState.FAILED,
         }
     ),
@@ -112,12 +111,7 @@ _ALLOWED_TRANSITIONS = {
     FutureState.RETRYING: frozenset(
         {FutureState.FAILED, FutureState.SCHEDULED, FutureState.CANCELED}
     ),
-    FutureState.FAILED: frozenset(
-        {
-            # TODO: remove (See https://github.com/sematic-ai/sematic/issues/609)
-            FutureState.RETRYING
-        }
-    ),
+    FutureState.FAILED: frozenset(),
     FutureState.NESTED_FAILED: frozenset(),
     FutureState.CANCELED: frozenset(),
     FutureState.RESOLVED: frozenset(),
