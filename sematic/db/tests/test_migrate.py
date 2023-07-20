@@ -4,6 +4,7 @@ from unittest.mock import patch
 # Third-party
 import pytest
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.sql import text
 
 # Sematic
 from sematic.db.db import db
@@ -83,7 +84,7 @@ def test_migrate(_, test_db_empty):  # noqa: F811
 
     with pytest.raises(OperationalError):
         with db().get_engine().connect() as conn:
-            conn.execute("SELECT version FROM schema_migrations;")
+            conn.execute(text("SELECT version FROM schema_migrations;"))
 
     migrate_up()
 
@@ -93,7 +94,7 @@ def test_migrate(_, test_db_empty):  # noqa: F811
 
     # Test tables were created
     with db().get_engine().connect() as conn:
-        run_count = conn.execute("SELECT COUNT(*) from runs;")
+        run_count = conn.execute(text("SELECT COUNT(*) from runs;"))
 
     assert list(run_count)[0][0] == 0
 
