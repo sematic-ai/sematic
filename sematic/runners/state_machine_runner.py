@@ -266,7 +266,7 @@ class StateMachineRunner(Runner, abc.ABC):
         for future in self._futures:
             state = self._read_refreshed_state(future)
             if state != future.state:
-                logger.warning(
+                logger.debug(
                     "In-memory future state '%s' differs from refreshed state"
                     "'%s' during cleanup.",
                     future.state,
