@@ -2,7 +2,7 @@
 import datetime
 
 # Third-party
-from sqlalchemy import Column, types
+from sqlalchemy import Column, text, types
 
 # Sematic
 from sematic.db.models.base import Base
@@ -27,13 +27,13 @@ class Artifact(Base, HasOrganizationMixin, JSONEncodableMixin):
         types.JSON(), nullable=False, info={JSON_KEY: True}
     )
     created_at: datetime.datetime = Column(
-        types.DateTime(), nullable=False, default=datetime.datetime.utcnow
+        types.DateTime(), nullable=False, server_default=text('NOW()')
     )
     updated_at: datetime.datetime = Column(
         types.DateTime(),
         nullable=False,
-        default=datetime.datetime.utcnow,
-        onupdate=datetime.datetime.utcnow,
+        server_default=text('NOW()'),
+        server_onupdate=text('NOW()'),
     )
 
     def assert_matches(self, other: "Artifact") -> None:

@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import Any, Dict, Tuple, Type, Union
 
 # Third-party
-from sqlalchemy import Column, types
+from sqlalchemy import Column, text, types
 from sqlalchemy.orm import validates
 
 # Sematic
@@ -99,13 +99,13 @@ class ExternalResource(Base, JSONEncodableMixin):
         types.JSON(), nullable=False
     )
     created_at: datetime.datetime = Column(
-        types.DateTime(), nullable=False, default=datetime.datetime.utcnow
+        types.DateTime(), nullable=False, server_default=text('NOW()')
     )
     updated_at: datetime.datetime = Column(
         types.DateTime(),
         nullable=False,
-        default=datetime.datetime.utcnow,
-        onupdate=datetime.datetime.utcnow,
+        server_default=text('NOW()'),
+        server_onupdate=text('NOW()'),
     )
 
     @validates("resource_state")

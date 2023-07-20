@@ -2,7 +2,7 @@
 import datetime
 
 # Third-party
-from sqlalchemy import Column, ForeignKey, Index, types
+from sqlalchemy import Column, ForeignKey, Index, text, types
 
 # Sematic
 from sematic.db.models.base import Base
@@ -39,7 +39,7 @@ class MetricValue(Base):
         types.DateTime(), nullable=False, primary_key=True
     )
     created_at: datetime.datetime = Column(
-        types.DateTime(), nullable=False, default=datetime.datetime.utcnow
+        types.DateTime(), nullable=False, server_default=text('NOW()')
     )
 
 

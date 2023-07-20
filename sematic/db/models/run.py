@@ -7,7 +7,7 @@ from dataclasses import asdict
 from typing import Dict, List, Optional, Union
 
 # Third-party
-from sqlalchemy import Column, ForeignKey, types
+from sqlalchemy import Column, ForeignKey, text, types
 from sqlalchemy.orm import relationship, validates
 
 # Sematic
@@ -126,13 +126,13 @@ class Run(HasUserMixin, HasOrganizationMixin, Base, JSONEncodableMixin):
 
     # Lifecycle timestamps
     created_at: datetime.datetime = Column(
-        types.DateTime(), nullable=False, default=datetime.datetime.utcnow
+        types.DateTime(), nullable=False, server_default=text('NOW()')
     )
     updated_at: datetime.datetime = Column(
         types.DateTime(),
         nullable=False,
-        default=datetime.datetime.utcnow,
-        onupdate=datetime.datetime.utcnow,
+        server_default=text('NOW()'),
+        server_onupdate=text('NOW()'),
     )
     started_at: Optional[datetime.datetime] = Column(types.DateTime(), nullable=True)
     ended_at: Optional[datetime.datetime] = Column(types.DateTime(), nullable=True)

@@ -4,7 +4,7 @@ import uuid
 from typing import Optional
 
 # Third-party
-from sqlalchemy import Column, ForeignKey, types
+from sqlalchemy import Column, ForeignKey, text, types
 
 # Sematic
 from sematic.db.models.base import Base
@@ -38,13 +38,13 @@ class Edge(Base, JSONEncodableMixin):
 
     # Lifecycle timestamps
     created_at: datetime.datetime = Column(
-        types.DateTime(), nullable=False, default=datetime.datetime.utcnow
+        types.DateTime(), nullable=False, server_default=text('NOW()')
     )
     updated_at: datetime.datetime = Column(
         types.DateTime(),
         nullable=False,
-        default=datetime.datetime.utcnow,
-        onupdate=datetime.datetime.utcnow,
+        server_default=text('NOW()'),
+        server_onupdate=text('NOW()'),
     )
 
     _EQUALITY_FIELDS = (

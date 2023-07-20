@@ -4,7 +4,7 @@ import uuid
 from typing import Optional
 
 # Third-party
-from sqlalchemy import Column, types
+from sqlalchemy import Column, text, types
 
 # Sematic
 from sematic.db.models.base import Base
@@ -29,13 +29,13 @@ class User(Base, JSONEncodableMixin):
     api_key: str = Column(types.String(), nullable=False, info={REDACTED_KEY: True})
 
     created_at: datetime.datetime = Column(
-        types.DateTime(), nullable=False, default=datetime.datetime.utcnow
+        types.DateTime(), nullable=False, server_default=text('NOW()')
     )
     updated_at: datetime.datetime = Column(
         types.DateTime(),
         nullable=False,
-        default=datetime.datetime.utcnow,
-        onupdate=datetime.datetime.utcnow,
+        server_default=text('NOW()'),
+        server_onupdate=text('NOW()'),
     )
 
     def get_friendly_name(self) -> str:
