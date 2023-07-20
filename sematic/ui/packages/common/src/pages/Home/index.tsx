@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import Community from "src/pages/Home/Community";
-import Blog from "src/pages/Home/blog";
+import Blog from "src/pages/Home/Blog";
 import LatestPipelines from "src/pages/Home/latestPipelines";
 import LatestRuns from "src/pages/Home/latestRuns";
 import theme from "src/theme/new";
@@ -29,8 +29,6 @@ const Container = styled.div`
         display: flex;
         flex-direction: row;
         
-        border-top: 1px solid ${theme.palette.p3border.main};
-
         > div {
             flex-grow: 1;
             flex-shrink: 1;
@@ -46,7 +44,7 @@ const Container = styled.div`
                 flex-grow: 1;
                 flex-shrink: 1;
                 flex: 1;
-                padding: ${theme.spacing(2)} ${theme.spacing(5)};
+                padding: 0 ${theme.spacing(5)} ${theme.spacing(2)} ${theme.spacing(5)};
                 &:first-of-type {
                     border-bottom: 1px solid ${theme.palette.p3border.main};
                 }
@@ -65,7 +63,6 @@ const Container = styled.div`
 export default function Home() {
     return (
         <Container>
-            {/* <div id={"version-check"}>v</div> */}
             <div id={"main-content"}>
                 <div>
                     <div id={"latest-runs"}>

@@ -89,7 +89,7 @@ export interface TableComponentProps<T> {
 }
 
 const TableComponent = <T,>(props: TableComponentProps<T>) => {
-    const { table, headerless= false, stickyHeader = true, getRowLink, className } = props;
+    const { table, headerless = false, stickyHeader = true, getRowLink, className } = props;
     const { getLeafHeaders } = table;
 
     const navigate = useNavigate();

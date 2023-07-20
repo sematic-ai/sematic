@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
 import ChevronRight from "@mui/icons-material/ChevronRight";
+import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { ReactNode, useCallback, useRef } from "react";
 import Headline from "src/component/Headline";
@@ -80,6 +81,7 @@ export default function Community() {
     return <Container>
         <StyledHeadline>Community</StyledHeadline>
         <CommunityLinks onRenderLinkEntry={onRenderLinkEntry} />
-        <StyledTypography >If you have any questions, email us at support@sematic.dev.</StyledTypography>
+        <StyledTypography>If you have any questions, email us at&nbsp; 
+            <Link href="mailto:support@sematic.dev">support@sematic.dev.</Link></StyledTypography>
     </Container>;
 }

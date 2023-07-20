@@ -15,7 +15,6 @@ const StyledSection = styled.section`
     align-items: center;
     width: 100%;
     height: 50px;
-    margin-top: -${theme.spacing(2)};
 
     font-size: ${theme.typography.fontSize}px;
     font-weight: ${theme.typography.fontWeightBold};
@@ -65,7 +64,7 @@ export default function LatestRuns() {
                 Your latest runs
             </span>
             <span>
-                <MuiRouterLink variant="subtitle1" type='menu' href={"/runs"}>
+                <MuiRouterLink variant="subtitle1" type="menu" href={"/runs"}>
                     See all
                 </MuiRouterLink>
             </span>
