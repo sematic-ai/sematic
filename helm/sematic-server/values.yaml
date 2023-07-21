@@ -9,12 +9,14 @@ aws:
   bucket_region: my-s3-region # REPLACE ME
 
 gcp:
-  enabled: false
-  storage_bucket: my-bucket # REPLACE ME
-  sa_secret:
-    use: false
-    name: gcp-sa # REPLACE ME
-    file: the-key.json # REPLACE ME
+  storage:
+    enabled: false
+    bucket:  my-bucket # REPLACE ME
+  service_account:
+    secret:
+      enabled: false
+      name: gcp-sa # REPLACE ME
+      file: the-key.json # REPLACE ME
 
 local_storage:
   enabled: false
