@@ -107,7 +107,7 @@ class GcsStorage(AbstractStorage, AbstractPlugin):
 
     @retry(tries=3, delay=5)
     def get_child_paths(self, key_prefix: str) -> List[str]:
-        """Get all descendants of the 'directory' specified by the prefix
+        """Get all descendants of the 'directory' specified by the prefix.
 
         Parameters
         ----------
