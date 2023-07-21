@@ -61,7 +61,7 @@ function CompoundNode(props: NodeProps) {
     const { data } = props;
     const { run, selected } = data;
 
-    const { toggleExpanded, expanded } = useNodeExpandStateToggle(data);
+    const { toggleExpanded: toggleExpandedFromContext, expanded } = useNodeExpandStateToggle(data);
 
     const hasIncoming = useHasIncoming();
 
@@ -74,11 +74,16 @@ function CompoundNode(props: NodeProps) {
         onNodeClick(run.id);
     }, [onNodeClick, run]);
 
+    const toggleExpanded = useCallback((e: React.MouseEvent<HTMLButtonElement> ) => {
+        toggleExpandedFromContext();
+        e.stopPropagation();
+    }, [toggleExpandedFromContext]);
+
     return <CompoundNodeContainer selected={selected} onClick={onClick} color={color}
         style={{ width: `${data.width}px`, height: `${data.height}px` }}>
         {hasIncoming && <StyledHandleTop type="target" color={color} position={Position.Top} isConnectable={false} id={"t"} />}
         <LabelContainer>
-            <RunStateChip futureState={run.future_state} orignalRunId={run.original_run_id} />
+            <RunStateChip animated={true} futureState={run.future_state} orignalRunId={run.original_run_id} />
             <label style={{ flexGrow: 1 }}>{data.label}</label>
             <StyledIconButton onClick={toggleExpanded} >
                 {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}

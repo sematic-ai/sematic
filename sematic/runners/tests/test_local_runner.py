@@ -33,12 +33,21 @@ from sematic.tests.fixtures import (  # noqa: F401
     test_storage,
     valid_client_version,
 )
-from sematic.utils.exceptions import ExceptionMetadata, PipelineRunError
+from sematic.utils.exceptions import (
+    CancellationError,
+    ExceptionMetadata,
+    PipelineRunError,
+)
 
 
 @func
 def add(a: float, b: float) -> float:
     return a + b
+
+
+@func
+def bad_add(a: float, b: float) -> float:
+    raise RuntimeError("Inentional fail")
 
 
 @func
@@ -51,6 +60,18 @@ def pipeline(a: float, b: float) -> float:
     c = add(a, b)
     d = add3(a, b, c)
     return add(c, d)
+
+
+@func
+def do_cancel(x: float) -> float:
+    raise CancellationError("Fake cancellation")
+
+
+@func
+def cancelling_pipeline(a: float, b: float) -> float:
+    c = add(a, b)
+    d = do_cancel(add3(a, b, c))
+    return bad_add(c, d)
 
 
 def test_single_function(
@@ -163,6 +184,38 @@ def test_pipeline(
         "_future_did_resolve",
         "_future_did_terminate",
     ]
+
+
+def test_cancelling_pipeline(
+    mock_socketio,  # noqa: F811
+    mock_auth,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+    valid_client_version,  # noqa: F811
+):
+    # note that this doesn't test the full cancellation flow,
+    # which would require using an OS signal on this process.
+    # It should at least confirm that we invoke some of the
+    # cleanup logic though.
+    runner = CallbackTrackingRunner()
+    future = cancelling_pipeline(3, 5)
+
+    with pytest.raises(CancellationError):
+        runner.run(future)
+
+    root_run = get_run(future.id)
+    assert root_run.future_state == FutureState.CANCELED.value
+
+    runs, _, __ = get_root_graph(future.id)
+
+    for run in runs:
+        assert run.future_state in (
+            FutureState.CANCELED.value,
+            FutureState.RESOLVED.value,
+        )
+
+    pipeline_run = get_resolution(root_run.id)
+    assert pipeline_run.status == PipelineRunStatus.CANCELED.value
 
 
 def test_failure(

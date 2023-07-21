@@ -1,6 +1,8 @@
 # Standard Library
 import datetime
 import logging
+import os
+import signal
 import uuid
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -282,14 +284,12 @@ class LocalRunner(SilentRunner):
 
             logger.warning("Received cancelation event")
 
-            root_run = self._get_run(self._root_future.id)
-            if root_run.future_state != FutureState.CANCELED.value:
-                raise RuntimeError("Cancelation was not effective.")
+            # If we are here, the cancelation should have been applied
+            # successfully server-side.
 
-            # If we are here, the cancelation was applied successfully server-side
-            # so it is safe to mark non-terminal futures as CANCELED
-            # This will precipitate the termination of the pipeline run loop.
-            self._clean_up_pipeline_run(save_graph=False)
+            # Rely on signal handlers to perform the cancellation and cleanup
+            # of local resources.
+            os.kill(os.getpid(), signal.SIGINT)
 
         self._populate_run_and_artifacts(self._root_future)
         self._save_graph()
@@ -303,6 +303,21 @@ class LocalRunner(SilentRunner):
         self._disconnect_from_sio_server()
         if save_graph:
             self._save_graph()
+
+        root_run = self._get_run(self._root_future.id)
+        pipeline_run = api_client.get_pipeline_run(self._root_future.id)
+
+        status = PipelineRunStatus[pipeline_run.status]  # type: ignore
+        if not status.is_terminal():
+            if root_run.future_state == FutureState.CANCELED.value:
+                pipeline_run.status = PipelineRunStatus.CANCELED
+            elif root_run.future_state == FutureState.RESOLVED.value:
+                # this method doesn't normally get called for successful runs,
+                # but if it does we want it to have the expected behavior.
+                pipeline_run.status = PipelineRunStatus.COMPLETE
+            else:
+                pipeline_run.status = PipelineRunStatus.FAILED
+            api_client.save_pipeline_run(pipeline_run)
 
     def _make_cache_namespace(self) -> Optional[str]:
         """
@@ -346,8 +361,11 @@ class LocalRunner(SilentRunner):
 
     def _pipeline_run_did_cancel(self) -> None:
         super()._pipeline_run_did_cancel()
-        api_client.cancel_pipeline_run(self._root_future.id)
         self._clean_up_pipeline_run(save_graph=True)
+
+    def _read_refreshed_state(self, future: AbstractFuture) -> FutureState:
+        run = self._get_run(future.id)
+        return FutureState[run.future_state]  # type: ignore
 
     def _get_tagged_image(self, tag: str) -> Optional[str]:
         return None
@@ -536,6 +554,13 @@ class LocalRunner(SilentRunner):
         run.future_state = FutureState.RETRYING
 
         self._add_run(run)
+        self._save_graph()
+
+    def _future_did_cancel(self, canceled_future: AbstractFuture) -> None:
+        run = self._get_run(canceled_future.id)
+        if not FutureState[run.future_state].is_terminal():  # type: ignore
+            run.future_state = FutureState.CANCELED.value  # type: ignore
+            self._add_run(run)
         self._save_graph()
 
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
