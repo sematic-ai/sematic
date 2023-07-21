@@ -538,7 +538,7 @@ def testing_pipeline(
         futures.append(do_raise(initial_future))
 
     if raise_retry_probability:
-        futures.append(do_retry(initial_future))
+        futures.append(do_retry(initial_future, raise_retry_probability))
 
     if timeout_settings and timeout_settings[0] > 0:
         futures.append(
