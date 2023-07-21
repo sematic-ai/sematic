@@ -367,10 +367,10 @@ def postgres_up():
             ALTER TABLE metric_values ADD CONSTRAINT metric_values_metric_id_fkey FOREIGN KEY (metric_id) REFERENCES metric_labels(metric_id);
             ALTER TABLE runs ADD CONSTRAINT runs_root_id_fkey FOREIGN KEY (root_id) REFERENCES runs(id);
 
-            ALTER TABLE runs DROP COLUMN exception;
-            ALTER TABLE runs DROP COLUMN external_jobs_json;
+            ALTER TABLE runs DROP COLUMN IF EXISTS exception;
+            ALTER TABLE runs DROP COLUMN IF EXISTS external_jobs_json;
 
-            ALTER TABLE resolutions DROP COLUMN external_jobs_json;
+            ALTER TABLE resolutions DROP COLUMN IF EXISTS external_jobs_json;
 
             ALTER INDEX jobs_run_id RENAME TO ix_jobs_run_id;
             ALTER INDEX runs_cache_key_index RENAME TO ix_runs_cache_key;
