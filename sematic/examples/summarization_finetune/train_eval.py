@@ -40,6 +40,13 @@ _CONTEXT_START_INDICATOR = "**Please Summarize**:"
 _SUMMARY_END_INDICATOR = "**End**"
 
 
+@dataclass
+class PromptFormat:
+    context_start_indicator: str
+    summary_start_indicator: str
+    summary_end_indicator: str
+
+
 def log_metric(name: str, value: float) -> None:
     """Stand-in for Sematic's `log_metric` that prints to stdout.
 
@@ -78,13 +85,16 @@ class ModelSelection(Enum):
     flan_xl = "flan_xl"
     flan_xxl = "flan_xxl"
     gpt_j_6b = "gpt_j_6b"
+    llama_2_chat_7b = "llama_2_7b_chat"
 
     @classmethod
     def from_model_reference(cls, ref: HuggingFaceModelReference) -> "ModelSelection":
         if "flan" in ref.repo:
             return ModelSelection[ref.repo.replace("flan-t5-", "flan_")]
-        else:
+        elif "gpt_j" in ref.repo:
             return ModelSelection[ref.repo.replace("-", "_")]
+        else:
+            return ModelSelection[ref.repo.replace("-", "_").replace("Llama", "llama")]
 
     def is_flan(self) -> bool:
         return self in {
@@ -95,21 +105,49 @@ class ModelSelection(Enum):
             ModelSelection.flan_xxl,
         }
 
+    def is_llama(self) -> bool:
+        return self in {ModelSelection.llama_2_chat_7b}
+
 
 @dataclass(frozen=True)
 class ModelProperties:
     model_type: ModelType
+    prompt_format: PromptFormat
     pad_token: Optional[str] = None
     load_in_8bit: bool = False
     device_map: Optional[Union[str, Dict[str, Any]]] = "auto"
 
 
-_FLAN_PROPS = ModelProperties(model_type=ModelType.seq_to_seq)
+_DEFAULT_PROMPT_FORMAT = PromptFormat(
+    context_start_indicator="**Please Summarize**:",
+    summary_start_indicator="**Summary**:",
+    summary_end_indicator="**End**",
+)
+
+_FLAN_PROPS = ModelProperties(model_type=ModelType.seq_to_seq, prompt_format=_DEFAULT_PROMPT_FORMAT)
 _GPTJ_PROPS = ModelProperties(
     model_type=ModelType.causal,
+    prompt_format=_DEFAULT_PROMPT_FORMAT,
     pad_token="eos_token",
     device_map=None,
     load_in_8bit=True,
+)
+_LLAMA_PROPS = ModelProperties(
+    model_type=ModelType.causal,
+    prompt_format=PromptFormat(
+        context_start_indicator=(
+            "<s>[INST] <<SYS>>\n"
+            "You are a helpful assistant that summarizes text provided to you by the "
+            "user concisely. Your summaries should draw statements from the text provided.\n"
+            "<</SYS>>"
+            "Please summarize this text: "
+        ),
+        summary_start_indicator="[/INST]",
+        summary_end_indicator="</s>",
+    ),
+    pad_token="eos_token",
+    device_map=None,
+    # load_in_8bit=True,
 )
 
 _MODEL_PROPERTIES = {
@@ -119,6 +157,7 @@ _MODEL_PROPERTIES = {
     ModelSelection.flan_xl: _FLAN_PROPS,
     ModelSelection.flan_xxl: _FLAN_PROPS,
     ModelSelection.gpt_j_6b: _GPTJ_PROPS,
+    ModelSelection.llama_2_chat_7b: _LLAMA_PROPS,
 }
 
 
