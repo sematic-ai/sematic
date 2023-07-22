@@ -60,7 +60,7 @@ function FunctionSectionActionMenu(props: FunctionSectionActionMenuProps) {
     const commands = useMemo(() => {
         return [
             {
-                title: "Rerun",
+                title: "Rerun from here",
                 disabled: !rerunEnable,
                 onClick: async () => {
                     try {
