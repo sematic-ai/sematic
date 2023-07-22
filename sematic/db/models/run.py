@@ -23,6 +23,7 @@ from sematic.db.models.mixins.json_encodable_mixin import (
     JSONEncodableMixin,
     json_string_list_contains,
 )
+from sematic.db.models.resolution import Resolution
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.types.serialization import (
     value_from_json_encodable,
@@ -145,6 +146,13 @@ class Run(HasUserMixin, HasOrganizationMixin, Base, JSONEncodableMixin):
 
     # Relationships
     root_run: "Run" = relationship("Run", remote_side=[id], lazy="select")
+    pipeline_run: Resolution = relationship(
+        "Resolution",
+        foreign_keys=[root_id],
+        viewonly=True,
+        primaryjoin="Resolution.root_id == Run.root_id",
+        lazy="select",
+    )
 
     @validates("future_state")
     def validate_future_state(self, _, value) -> str:

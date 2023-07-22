@@ -99,6 +99,7 @@ sematic_py_lib(
     ],
     deps = [
         ":base",
+        ":resolution",
         "//sematic:abstract_function",
         "//sematic:abstract_future",
         "//sematic/db/models/mixins:has_organization_mixin",
