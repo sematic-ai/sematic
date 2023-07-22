@@ -23,6 +23,13 @@ interface PodLifecycleProps {
     className?: string;
 }
 
+
+const disclaimer = <Typography fontSize="small" color="GrayText" style={{ marginBottom: "1em" }}>
+The information in this tab is provided for debugging purposes.
+The information it displays is periodically polled from Kubernetes,
+and some intermediate states may not be represented in the timelines.
+</Typography>;
+
 // Separate component to assign key to the component, so that it will be re-mounted when runId changes
 export default function PodLifecycle(prop: PodLifecycleProps) {
     const { runId, setIsLoading, className } = prop;
@@ -37,14 +44,13 @@ export default function PodLifecycle(prop: PodLifecycleProps) {
     }, [loading, setIsLoading]);
 
     if (!value) return null;
-    if (value?.length === 0) return <Typography variant="body2">No pod history found.</Typography>;
+    if (value?.length === 0) return <>
+        {disclaimer}
+        <Typography variant="body2">No pod history found.</Typography>
+    </>;
 
     return <>
-        <Typography fontSize="small" color="GrayText" style={{ marginBottom: "1em" }}>
-      The information in this tab is provided for debugging purposes.
-      The information it displays is periodically polled from Kubernetes,
-      and some intermediate states may not be represented in the timelines.
-        </Typography>
+        {disclaimer}
         {value!.map(
             (job, index) =>
                 <Accordion key={index} defaultExpanded={index === value.length - 1} className={className}>

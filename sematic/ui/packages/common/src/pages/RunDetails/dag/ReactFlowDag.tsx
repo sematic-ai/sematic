@@ -135,7 +135,7 @@ function ReactFlowDag(props: ReactFlowDagProps) {
         setNodes([..._nodes]);
         setEdges([..._edges]);
         reactFlowRef.current?.fitView({
-            maxZoom: 1,
+            maxZoom: 1, minZoom: 0.5
         });
     }, [_nodes, _edges, setNodes, setEdges]);
 
@@ -148,7 +148,8 @@ function ReactFlowDag(props: ReactFlowDagProps) {
             onEdgesChange={onEdgesChange}
             onInit={reactFlow => reactFlowRef.current = reactFlow}
             fitView
-            fitViewOptions={{maxZoom: 1}}
+            fitViewOptions={{maxZoom: 1, minZoom: 0.5}}
+            minZoom={0.1}
         />
     </div>;
 }
