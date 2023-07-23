@@ -91,7 +91,7 @@ class HuggingFaceStoredModel:
             base_model_reference=base_model_reference,
         )
 
-    @lru_cache
+    # @lru_cache
     def load(self, **from_pretrained_kwargs):
         """Load the model from storage.
 

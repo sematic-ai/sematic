@@ -5,17 +5,19 @@ import time
 import gradio as gr
 
 # Sematic
-from sematic.examples.summarization_finetune.train_eval import (
-    evaluate_single_text,
-    extract_prompt,
-    extract_summary,
-    wrap_context,
-)
+from sematic.examples.summarization_finetune.train_eval import evaluate_single_text
 from sematic.types import PromptResponse
 
 
 def summarize(
-    context, history, model, tokenizer, model_type, max_input_tokens, max_new_tokens
+    context,
+    history,
+    model,
+    tokenizer,
+    model_type,
+    max_input_tokens,
+    max_new_tokens,
+    prompt_format,
 ):
     """Summarize the text given the model, and update the provided history.
 
@@ -37,12 +39,16 @@ def summarize(
         The maximum number of tokens that can be used for the input.
     max_new_tokens:
         The maximum number of new tokens generated fot the output.
+    prompt_format:
+        The format of the prompt.
 
     Returns
     -------
     The summary of the context object.
     """
-    prompt = extract_prompt(wrap_context(context), max_input_tokens)
+    prompt = prompt_format.extract_prompt(
+        prompt_format.wrap_context(context), max_input_tokens
+    )
 
     _, output_text = evaluate_single_text(
         model=model,
@@ -52,7 +58,7 @@ def summarize(
         eval_text=prompt,
     )
 
-    summary = extract_summary(output_text)
+    summary = prompt_format.extract_summary(output_text)
     history.append(PromptResponse(context, summary))
     return summary
 
@@ -63,6 +69,7 @@ def launch_summary_app(
     model_type,
     max_input_tokens,
     max_new_tokens,
+    prompt_format,
 ):
     """Launch an interactive Gradio app to generate summaries using the given model.
 
@@ -78,6 +85,8 @@ def launch_summary_app(
         The maximum number of tokens that can be used for the input.
     max_new_tokens:
         The maximum number of new tokens generated fot the output.
+    prompt_format:
+        The format of the prompt.
 
     Returns
     -------
@@ -105,6 +114,7 @@ def launch_summary_app(
                 model_type,
                 max_input_tokens,
                 max_new_tokens,
+                prompt_format,
             ),
             inputs=[context],
             outputs=[summary],

@@ -232,6 +232,16 @@ def parse_args() -> ParsedArgs:
         default=False,
         help="Launch an interactive Gradio app to test the model.",
     )
+    parser.add_argument(
+        "--storage-directory",
+        type=str,
+        default=TRAINING_CONFIG.storage_directory,
+        help=(
+            "Directory used to store objects related to pipeline execution. "
+            "If you are using Llama 2, this directory must contain a subdirectory "
+            "named 'llama' that contains the tokenizer and models downloaded from Meta."
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -250,6 +260,7 @@ def parse_args() -> ParsedArgs:
             num_train_epochs=args.epochs,
             logging_steps=args.logging_steps,
         ),
+        storage_directory=args.storage_directory,
         lora_config=lora_config,
     )
 
