@@ -159,7 +159,7 @@ GPTJ_PROPS = ModelProperties(
     model_type=ModelType.causal,
     prompt_format=_DEFAULT_PROMPT_FORMAT,
     pad_token="eos_token",
-    device_map=None,
+    device_map="auto",
     load_in_8bit=True,
 )
 LLAMA_PROPS = ModelProperties(
