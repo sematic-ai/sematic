@@ -108,7 +108,7 @@ _FLAN_PROPS = ModelProperties(model_type=ModelType.seq_to_seq)
 _GPTJ_PROPS = ModelProperties(
     model_type=ModelType.causal,
     pad_token="eos_token",
-    device_map=None,
+    device_map="auto",
     load_in_8bit=True,
 )
 
@@ -428,7 +428,7 @@ def evaluate(
             dataset_config.max_output_length,
             eval_tokens[0],
         )
-        results.append(PromptResponse(sanitize(input_text[0]), sanitize(output_text)))
+        results.append(PromptResponse(sanitize(input_text), sanitize(output_text)))
     eval_results = EvaluationResults(results)
     return eval_results
 
