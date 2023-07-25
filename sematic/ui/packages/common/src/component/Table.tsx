@@ -83,19 +83,20 @@ const TableDataRow = styled(TableRow)`
 export interface TableComponentProps<T> {
     table: Table<T>;
     stickyHeader?: boolean;
+    headerless?: boolean;
     getRowLink?: (row: Row<T>) => string;
     className?: string;
 }
 
 const TableComponent = <T,>(props: TableComponentProps<T>) => {
-    const { table, stickyHeader = true, getRowLink, className } = props;
+    const { table, headerless = false, stickyHeader = true, getRowLink, className } = props;
     const { getLeafHeaders } = table;
 
     const navigate = useNavigate();
 
     return <TableScroller className={className} data-cy={"RunList"}>
         <TableMui>
-            <StyledHeader stickyHeader={stickyHeader}>
+            {!headerless && <StyledHeader stickyHeader={stickyHeader}>
                 <TableRow>
                     {getLeafHeaders().map(header =>
                         <th key={header.id} style={(header.column.columnDef.meta! as any).columnStyles}>
@@ -105,7 +106,7 @@ const TableComponent = <T,>(props: TableComponentProps<T>) => {
                             )}
                         </th>)}
                 </TableRow>
-            </StyledHeader>
+            </StyledHeader>}
             <TableBody>
                 {table.getRowModel().rows.map(row => (
                     <TableDataRow key={row.id} onClick={() => !!getRowLink && navigate(getRowLink(row))} data-cy={"runlist-row"}>

@@ -1,9 +1,9 @@
 describe("Sematic application", () => {
-    it("renders the landing page", () => {
+    it("renders the get started page", () => {
         cy.then(() => {
             window.localStorage.setItem("sematic-feature-flag-newui", "true");
         });
-        cy.visit("/");
+        cy.visit("/getstarted");
         cy.contains("Start your own project");
     });
 

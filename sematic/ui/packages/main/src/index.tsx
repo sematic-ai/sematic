@@ -10,16 +10,19 @@ import PipelineList from "@sematic/common/src/pages/PipelineList";
 import PipelineRuns from "@sematic/common/src/pages/PipelineRuns";
 import NewRunDetails from "@sematic/common/src/pages/RunDetails";
 import NewRunSearch from "@sematic/common/src/pages/RunSearch";
+import NewHome from "@sematic/common/src/pages/Home";
 import { getFeatureFlagValue } from "@sematic/common/src/utils/FeatureFlagManager";
 import { setupPostHogOptout } from "@sematic/common/src/utils/postHogManager";
 import { ExtractContextType } from "@sematic/common/src/utils/typings";
+import { Provider as SlotFillProvider } from "@sematic/react-slot-fill/src";
 import { useAtom } from "jotai";
 import { RESET } from "jotai/utils";
 import posthog, { Properties } from "posthog-js";
-import React, { useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import ReactDOM from "react-dom/client";
 import { Outlet, Route, RouterProvider, createBrowserRouter, createRoutesFromElements, redirect, useNavigate } from "react-router-dom";
 import "reactflow/dist/style.css";
+import PluginsLoader from "src/PluginsLoader";
 import Helper from "src/components/tests/tеst_normal";
 import Home from "./Home";
 import {
@@ -38,8 +41,6 @@ import RunView from "./pipelines/PipelineRunView";
 import PipelineView from "./pipelines/PipelineView";
 import { RunIndex } from "./runs/RunIndex";
 import { sha1 } from "./utils";
-import PluginsLoader from "src/PluginsLoader";
-import { Provider as SlotFillProvider } from "@sematic/react-slot-fill/src";
 
 function App() {
     const [user, setUser] = useAtom(userAtom);
@@ -101,8 +102,11 @@ const NewRoutesOverrides = isNewUIEnabled ? (<>
     <Route path="runs/:rootId" element={<NewShell />} >
         <Route index element={<NewRunDetails />} />
     </Route>
-    <Route path="/" element={<NewShell />} >
+    <Route path="/getstarted" element={<NewShell />} >
         <Route index element={<GettingStarted />} handle={{[HeaderSelectionKey]: "gettingstarted"}} />
+    </Route>
+    <Route path="/" element={<NewShell />} >
+        <Route index element={<NewHome />} />
     </Route>
 </>) : null;
 
