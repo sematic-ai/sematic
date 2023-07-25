@@ -2,7 +2,6 @@
 import importlib
 import os
 from dataclasses import dataclass
-from functools import lru_cache
 from typing import Any, Optional, Type
 
 # Sematic
@@ -91,7 +90,6 @@ class HuggingFaceStoredModel:
             base_model_reference=base_model_reference,
         )
 
-    @lru_cache
     def load(self, **from_pretrained_kwargs):
         """Load the model from storage.
 

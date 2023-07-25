@@ -10,11 +10,15 @@ from transformers import PreTrainedTokenizerBase
 import sematic
 from sematic.examples.summarization_finetune.interactive import launch_summary_app
 from sematic.examples.summarization_finetune.train_eval import (
+    FLAN_PROPS,
+    GPTJ_PROPS,
+    LLAMA_PROPS,
     DatasetConfig,
     EvaluationResults,
     HuggingFaceModelReference,
     ModelSelection,
     ModelType,
+    PromptFormat,
     TrainingConfig,
     evaluate,
     export_model,
@@ -38,18 +42,33 @@ class ResultSummary:
 
 
 @sematic.func
-def pick_model(model: ModelSelection) -> Tuple[HuggingFaceModelReference, ModelType]:
+def pick_model(
+    model: ModelSelection, storage_directory: str
+) -> Tuple[HuggingFaceModelReference, ModelType, PromptFormat]:
     if model.value.startswith("flan"):
         size = model.value.replace("flan_", "")
         return (
             HuggingFaceModelReference(owner="google", repo=f"flan-t5-{size}"),
             ModelType.seq_to_seq,
+            FLAN_PROPS.prompt_format,
         )
-    else:
+    elif "gpt" in model.value:
         name = model.value.replace("_", "-")
         return (
             HuggingFaceModelReference(owner="EleutherAI", repo=name),
             ModelType.causal,
+            GPTJ_PROPS.prompt_format,
+        )
+    else:
+        name = model.value.replace("_", "-")
+        name = f"L{name[1:]}"  # captialize starting L
+        return (
+            HuggingFaceModelReference(
+                owner="meta-llama",
+                repo=f"{name}-hf",
+            ),
+            ModelType.causal,
+            LLAMA_PROPS.prompt_format,
         )
 
 
@@ -57,7 +76,7 @@ def pick_model(model: ModelSelection) -> Tuple[HuggingFaceModelReference, ModelT
 def load_tokenizer(
     model_reference: HuggingFaceModelReference,
 ) -> PreTrainedTokenizerBase:
-    return do_load_tokenizer(model_reference.to_string())
+    return do_load_tokenizer(model_reference)
 
 
 @sematic.func(cache=True)
@@ -69,7 +88,7 @@ def train(
     tokenizer: PreTrainedTokenizerBase,
 ) -> StoredModel:
     model = do_train(
-        model_reference.to_string(),
+        model_reference,
         training_config,
         train_data,
         eval_data,
@@ -88,13 +107,16 @@ def eval(
     tokenizer: PreTrainedTokenizerBase,
     model_type: ModelType,
     dataset_config: DatasetConfig,
+    prompt_format: PromptFormat,
 ) -> EvaluationResults:
+
     return evaluate(
         model.load(device_map="auto", offload_folder="temp/offload"),
         eval_data,
         tokenizer,
         model_type,
         dataset_config,
+        prompt_format,
     )
 
 
@@ -103,8 +125,11 @@ def prepare_datasets(
     dataset_config: DatasetConfig,
     tokenizer: PreTrainedTokenizerBase,
     model_type: ModelType,
+    prompt_format: PromptFormat,
 ) -> Tuple[Dataset, Dataset]:
-    train_dataset, test_dataset = prepare_data(dataset_config, tokenizer, model_type)
+    train_dataset, test_dataset = prepare_data(
+        dataset_config, tokenizer, model_type, prompt_format
+    )
     return train_dataset, test_dataset
 
 
@@ -124,6 +149,7 @@ def launch_interactively(
     model_type: ModelType,
     max_input_tokens: int,
     max_new_tokens: int,
+    prompt_format: PromptFormat,
 ) -> List[PromptResponse]:
     return launch_summary_app(
         model=model.load(),
@@ -131,6 +157,7 @@ def launch_interactively(
         model_type=model_type,
         max_input_tokens=max_input_tokens,
         max_new_tokens=max_new_tokens,
+        prompt_format=prompt_format,
     )
 
 
@@ -158,9 +185,13 @@ def pipeline(
     export_reference: Optional[HuggingFaceModelReference],
     launch_interactive: bool,
 ) -> ResultSummary:
-    model_ref, model_type = pick_model(training_config.model_selection)
+    model_ref, model_type, prompt_format = pick_model(
+        training_config.model_selection, training_config.storage_directory
+    )
     tokenizer = load_tokenizer(model_ref)
-    train_data, test_data = prepare_datasets(dataset_config, tokenizer, model_type)
+    train_data, test_data = prepare_datasets(
+        dataset_config, tokenizer, model_type, prompt_format
+    )
     model = train(model_ref, training_config, train_data, test_data, tokenizer)
     if launch_interactive:
         transcript = launch_interactively(
@@ -173,10 +204,13 @@ def pipeline(
             model_type=model_type,
             max_input_tokens=dataset_config.max_input_length,
             max_new_tokens=dataset_config.max_output_length,
+            prompt_format=prompt_format,
         )
     else:
         transcript = []
-    eval_results = eval(model, test_data, tokenizer, model_type, dataset_config)
+    eval_results = eval(
+        model, test_data, tokenizer, model_type, dataset_config, prompt_format
+    )
 
     exported_model_reference = None
     if export_reference is not None:
