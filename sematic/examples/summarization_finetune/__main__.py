@@ -48,6 +48,16 @@ LORA_CONFIG_GPT_J = replace(
     base_model_name_or_path="",
 )
 
+LORA_LLAMA_2 = replace(
+    LORA_CONFIG_FLAN,
+    target_modules=[
+        "q_proj",
+        "v_proj",
+    ],
+    task_type="CAUSAL_LM",
+    base_model_name_or_path="",
+)
+
 TRAINING_ARGS = TrainingArguments(
     "temp",
     evaluation_strategy="epoch",
@@ -232,11 +242,27 @@ def parse_args() -> ParsedArgs:
         default=False,
         help="Launch an interactive Gradio app to test the model.",
     )
+    parser.add_argument(
+        "--storage-directory",
+        type=str,
+        default=TRAINING_CONFIG.storage_directory,
+        help=(
+            "Directory used to store objects related to pipeline execution. "
+            "If you are using Llama 2, this directory must contain a subdirectory "
+            "named 'llama' that contains the tokenizer and models downloaded from Meta."
+        ),
+    )
 
     args = parser.parse_args()
 
+    lora_config = LORA_CONFIG_GPT_J
+    if args.model_selection.is_flan():
+        lora_config = LORA_CONFIG_FLAN
+    elif args.model_selection.is_llama():
+        lora_config = LORA_LLAMA_2
+
     lora_config = replace(
-        LORA_CONFIG_FLAN if args.model_selection.is_flan() else LORA_CONFIG_GPT_J,
+        lora_config,
         r=args.lora_r,
         lora_alpha=args.lora_alpha,
         lora_dropout=args.lora_dropout,
@@ -250,6 +276,7 @@ def parse_args() -> ParsedArgs:
             num_train_epochs=args.epochs,
             logging_steps=args.logging_steps,
         ),
+        storage_directory=args.storage_directory,
         lora_config=lora_config,
     )
 

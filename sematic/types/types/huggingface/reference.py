@@ -46,6 +46,7 @@ class HuggingFaceReference:
     owner: Optional[str]
     repo: str
     commit_sha: Optional[str] = None
+    local_override_dir: Optional[str] = None
 
     def __post_init__(self):
         if not isinstance(self.repo, str):
