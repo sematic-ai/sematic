@@ -128,7 +128,17 @@ class DockerBuilder(AbstractBuilder):
 
     It then launches the target Pipeline by submitting its execution to Sematic Server,
     using the build image to execute `@func`s in the cloud.
+
+    Parameters
+    ----------
+    no_cache: bool
+        When set, builds the image from scratch, ignoring previous versions.
+        Defaults to `False`.
     """
+
+    def __init__(self, no_cache: bool = False, **_):
+        self.no_cache = no_cache
+        super().__init__()
 
     @staticmethod
     def get_author() -> str:
@@ -160,7 +170,7 @@ class DockerBuilder(AbstractBuilder):
         SystemExit:
             A subprocess exited with an unexpected code.
         """
-        image_uri, build_config = _build(target=target)
+        image_uri, build_config = _build(target=target, no_cache=self.no_cache)
         _launch(
             target=target,
             run_command=run_command,
@@ -169,7 +179,7 @@ class DockerBuilder(AbstractBuilder):
         )
 
 
-def _build(target: str) -> Tuple[ImageURI, BuildConfig]:
+def _build(target: str, no_cache: bool = False) -> Tuple[ImageURI, BuildConfig]:
     """
     Builds the container image, returning the image URI that can be used to launch
     executions, and the build configuration object used to build the image.
@@ -183,7 +193,10 @@ def _build(target: str) -> Tuple[ImageURI, BuildConfig]:
     )
 
     image, image_uri = _build_image(
-        target=target, build_config=build_config, docker_client=docker_client
+        target=target,
+        build_config=build_config,
+        docker_client=docker_client,
+        no_cache=no_cache,
     )
     logger.debug("Built local image: %s", repr(image_uri))
 
@@ -246,6 +259,7 @@ def _build_image(
     target: str,
     build_config: BuildConfig,
     docker_client: docker.DockerClient,  # type: ignore
+    no_cache: bool = False,
 ) -> Tuple[Image, ImageURI]:
     """
     Builds the container image to use, according to the build configuration, and returns
@@ -260,6 +274,9 @@ def _build_image(
         The configuration that controls the image build.
     docker_client: docker.DockerClient
         The client to use for executing the operations.
+    no_cache: bool
+        When set, builds the image from scratch, ignoring previous versions.
+        Defaults to `False`.
 
     Returns
     -------
@@ -294,11 +311,12 @@ def _build_image(
     # A: Because that feature requires the `BUILDKIT_INLINE_CACHE` flag be set on the
     # image while building, and this seems to require the image to already exist locally,
     # which makes first building an image impossible.
-    _pull_existing_layers(
-        push_config=build_config.push,
-        platform=platform,
-        docker_client=docker_client,
-    )
+    if not no_cache:
+        _pull_existing_layers(
+            push_config=build_config.push,
+            platform=platform,
+            docker_client=docker_client,
+        )
 
     return _build_image_from_base(
         target=target,
@@ -306,6 +324,7 @@ def _build_image(
         build_config=build_config,
         platform=platform,
         docker_client=docker_client,
+        no_cache=no_cache,
     )
 
 
@@ -370,6 +389,7 @@ def _build_image_from_base(
     build_config: BuildConfig,
     platform: Optional[str],
     docker_client: docker.DockerClient,  # type: ignore
+    no_cache: bool = False,
 ) -> Tuple[Image, ImageURI]:
     """
     Builds the container image to use by adding layers to an existing base image.
@@ -393,6 +413,7 @@ def _build_image_from_base(
         dockerfile_contents=dockerfile_contents,
         platform=platform,
         docker_client=docker_client,
+        no_cache=no_cache,
     )
 
     if status_updates is None:
@@ -418,6 +439,7 @@ def _build_from_dockerfile(
     dockerfile_contents: str,
     platform: Optional[str],
     docker_client: docker.DockerClient,  # type: ignore
+    no_cache: bool = False,
 ) -> Generator[Dict[str, Any], None, None]:
     """
     Builds a Docker image starting from Dockerfile contents.
@@ -445,6 +467,7 @@ def _build_from_dockerfile(
                 path=os.getcwd(),
                 tag=built_image_name,
                 decode=True,
+                nocache=no_cache,
                 **optional_kwargs,
             )
 

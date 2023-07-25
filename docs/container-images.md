@@ -117,6 +117,9 @@ Options:
                         the pipeline, using the configured build plugin.
                         Defaults to `False`. If not set, the pipeline will be
                         run locally in the current environment.
+  -n, --no_cache        When `--build` is specified, builds the image from
+                        scratch, ignoring previous versions. Defaults to
+                        `False`.
   -l, --log-level TEXT  The log level to use for building and launching the
                         pipeline. Defaults to `INFO`.
   --help                Show this message and exit.
@@ -146,6 +149,15 @@ Omitting the `--build` flag results in skipping the entire build process, with
 the entire pipeline being executed locally. Only using
 [LocalRunner or SilentRunner](https://docs.sematic.dev/diving-deeper/concepts#runners)
 makes sense in this context.
+
+Building the image uses layer caching for temporal and spatial optimization. If
+you find that you have an image with stale layers that, for example, have an
+older version of a library installed, then you can deactivate the caching and
+force a complete rebuild of the image by passing the `--no_cache` flag:
+
+```bash
+$ sematic run --build --no_cache path/to/my/hello_world.py
+```
 
 {% hint style="warning" %}
 The launch script is executed locally, using the local Python installation.
