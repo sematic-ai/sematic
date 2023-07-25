@@ -1,5 +1,4 @@
 # Standard Library
-import os
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
@@ -67,8 +66,6 @@ def pick_model(
             HuggingFaceModelReference(
                 owner="meta-llama",
                 repo=f"{name}-hf",
-                local_override_dir=model_dir,
-                local_tokenizer_override_dir=tokenizer_path,
             ),
             ModelType.causal,
             LLAMA_PROPS.prompt_format,
@@ -112,9 +109,9 @@ def eval(
     dataset_config: DatasetConfig,
     prompt_format: PromptFormat,
 ) -> EvaluationResults:
+
     return evaluate(
-        # model.load(device_map="auto", offload_folder="temp/offload"),
-        model.load(device_map=None, offload_folder="temp/offload"),
+        model.load(device_map="auto", offload_folder="temp/offload"),
         eval_data,
         tokenizer,
         model_type,

@@ -122,7 +122,9 @@ class ModelSelection(Enum):
         elif "gpt_j" in ref.repo:
             return ModelSelection[ref.repo.replace("-", "_")]
         else:
-            return ModelSelection[ref.repo.replace("-", "_").replace("Llama", "llama").replace("_hf", "")]
+            return ModelSelection[
+                ref.repo.replace("-", "_").replace("Llama", "llama").replace("_hf", "")
+            ]
 
     def is_flan(self) -> bool:
         return self in {
@@ -168,8 +170,8 @@ LLAMA_PROPS = ModelProperties(
         context_start_indicator=(
             "<s>[INST] <<SYS>>\n"
             "You are a helpful assistant that summarizes text provided to you by the "
-            "user concisely. Your summaries should draw statements from the text provided.\n"
-            "<</SYS>>"
+            "user concisely. Your summaries should draw statements from the "
+            "text provided.\n<</SYS>>"
             "Please summarize this text: "
         ),
         summary_start_indicator="[/INST]",
@@ -177,7 +179,7 @@ LLAMA_PROPS = ModelProperties(
     ),
     pad_token="eos_token",
     device_map="auto",
-    load_in_8bit=True,
+    load_in_8bit=False,
 )
 
 _MODEL_PROPERTIES = {
@@ -233,7 +235,9 @@ class EvaluationResults:
 
 
 def load_model(model_reference: HuggingFaceModelReference):
-    model_props = _MODEL_PROPERTIES[ModelSelection.from_model_reference(model_reference)]
+    model_props = _MODEL_PROPERTIES[
+        ModelSelection.from_model_reference(model_reference)
+    ]
     auto_model_type = (
         AutoModelForSeq2SeqLM
         if model_props.model_type is ModelType.seq_to_seq
@@ -241,7 +245,7 @@ def load_model(model_reference: HuggingFaceModelReference):
     )
 
     model = auto_model_type.from_pretrained(
-        model_reference.load_reference(),
+        model_reference.repo_reference(),
         device_map=model_props.device_map,
         load_in_8bit=model_props.load_in_8bit,
     )
@@ -252,9 +256,13 @@ def load_model(model_reference: HuggingFaceModelReference):
 def load_tokenizer(
     model_reference: HuggingFaceModelReference,
 ) -> PreTrainedTokenizerBase:
-    model_props = _MODEL_PROPERTIES[ModelSelection.from_model_reference(model_reference)]
+    model_props = _MODEL_PROPERTIES[
+        ModelSelection.from_model_reference(model_reference)
+    ]
     tokenizer = AutoTokenizer.from_pretrained(
-        model_reference.tokenizer_load_reference(), device_map="auto", use_auth_token=True,
+        model_reference.repo_reference(),
+        device_map="auto",
+        use_auth_token=True,
     )
     if model_props.pad_token is not None:
         tokenizer.pad_token = getattr(tokenizer, model_props.pad_token)
@@ -266,7 +274,8 @@ def _causal_preprocess_function(examples, tokenizer, dataset_config, prompt_form
     label_column = dataset_config.summary_column
 
     inputs = [
-        f"{prompt_format.wrap_context(ctx)} {summary} {prompt_format.summary_end_indicator}"
+        f"{prompt_format.wrap_context(ctx)} {summary} "
+        f"{prompt_format.summary_end_indicator}"
         for ctx, summary in zip(examples[text_column], examples[label_column])
     ]
 
@@ -414,9 +423,6 @@ def _run_eval_tokenizer(examples, tokenizer, max_tokens):
     inputs = examples["text"]
     model_inputs = tokenizer(
         inputs,
-        max_length=max_tokens,
-        padding="max_length",
-        truncation=True,
         return_tensors="pt",
     )
     return model_inputs
@@ -460,6 +466,16 @@ def evaluate(
         seconds_since_start = int(time.time() - started)
         print(f"Eval sample {i} (after {seconds_since_start} s)")
         eval_tokens = row["input_ids"]
+
+        # Yes, I am indeed un-tokenizing and then re-tokenizing the text here.
+        # Why? Because the dataset mapping above keeps left-padding the text,
+        # which confuses models that haven't been trained on left-padded text.
+        # This returns the eval tokens to the appropriate length to directly
+        # represent the text. Yes this is sloppy, will fix later!
+        eval_tokens = tokenizer(
+            tokenizer.batch_decode(eval_tokens, skip_special_tokens=True),
+            return_tensors="pt",
+        ).input_ids
         input_text, output_text = evaluate_single_text(
             model,
             tokenizer,

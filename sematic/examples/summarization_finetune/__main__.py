@@ -48,6 +48,16 @@ LORA_CONFIG_GPT_J = replace(
     base_model_name_or_path="",
 )
 
+LORA_LLAMA_2 = replace(
+    LORA_CONFIG_FLAN,
+    target_modules=[
+        "q_proj",
+        "v_proj",
+    ],
+    task_type="CAUSAL_LM",
+    base_model_name_or_path="",
+)
+
 TRAINING_ARGS = TrainingArguments(
     "temp",
     evaluation_strategy="epoch",
@@ -245,8 +255,14 @@ def parse_args() -> ParsedArgs:
 
     args = parser.parse_args()
 
+    lora_config = LORA_CONFIG_GPT_J
+    if args.model_selection.is_flan():
+        lora_config = LORA_CONFIG_FLAN
+    elif args.model_selection.is_llama():
+        lora_config = LORA_LLAMA_2
+
     lora_config = replace(
-        LORA_CONFIG_FLAN if args.model_selection.is_flan() else LORA_CONFIG_GPT_J,
+        lora_config,
         r=args.lora_r,
         lora_alpha=args.lora_alpha,
         lora_dropout=args.lora_dropout,
