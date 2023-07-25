@@ -69,8 +69,8 @@ def _run_example(example_path: str):
     is_flag=True,
 )
 @click.option(
-    "-c",
-    "--clean",
+    "-n",
+    "--no-cache",
     help=(
         "When `--build` is specified, builds the image from scratch, "
         "ignoring previous versions. Defaults to `False`."
@@ -91,14 +91,14 @@ def _run_example(example_path: str):
 @click.argument("script_arguments", nargs=-1, type=click.STRING)
 def run(
     build: bool,
-    clean: bool,
+    no_cache: bool,
     log_level: str,
     script_path: str,
     script_arguments: Tuple[str],
 ):
     # custom option validation
-    if clean and not build:
-        click.echo("Can only pass `--clean` together with `--build`.")
+    if no_cache and not build:
+        click.echo("Can only pass `--no-cache` together with `--build`.")
         sys.exit(1)
 
     # ensure the client is pointing to the intended server
@@ -128,7 +128,7 @@ def run(
         return
 
     builder_class = get_builder_plugin(default=DockerBuilder)
-    builder = builder_class(clean=clean)
+    builder = builder_class(no_cache=no_cache)
 
     click.echo(f"Building image and launching: {pseudo_command}")
     start_time = time.time()

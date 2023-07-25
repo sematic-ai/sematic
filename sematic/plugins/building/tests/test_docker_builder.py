@@ -173,7 +173,7 @@ def test_build_image_base_uri(
         build_config=mock_build_config,
         platform=mock_build_config.build.platform,
         docker_client=mock_docker_client,
-        clean=False,
+        no_cache=False,
     )
 
 
@@ -207,7 +207,7 @@ def test_build_image_build_script(
         build_config=mock_build_config,
         platform=None,
         docker_client=mock_docker_client,
-        clean=False,
+        no_cache=False,
     )
 
 
