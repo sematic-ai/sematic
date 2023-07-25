@@ -80,28 +80,30 @@ const HeaderMenu = (props: HeaderMenuProps) => {
 
     return <StyledGridContainer container spacing={0}>
         <Box style={{ flexGrow: 1, display: "flex" }} >
-            <Link variant={"logo"} style={{ marginRight: theme.spacing(6) }}>
+            <MuiRouterLink variant={"logo"} href={"/"} style={{ marginRight: theme.spacing(6) }}>
                 <Fox style={{ width: "16px" }} />
-            </Link>
+            </MuiRouterLink>
 
-            <MuiRouterLink variant="subtitle1" type='menu' href={"/runs"}
+            <MuiRouterLink variant="subtitle1" type="menu" href={"/runs"}
                 className={selectedKey === "runs" ? "selected" : ""}>
                 Runs
             </MuiRouterLink>
-            <MuiRouterLink variant="subtitle1" type='menu' href={"/pipelines"}
+            <MuiRouterLink variant="subtitle1" type="menu" href={"/pipelines"}
                 className={selectedKey === "pipelines" ? "selected" : ""}>
                 Pipelines
             </MuiRouterLink>
-            {/* <Link variant="subtitle1" type='menu' className={selectedKey === "metrics" ? "selected" : ""}>Metrics</Link> */}
+            {/* <Link variant="subtitle1" type="menu" className={selectedKey === "metrics" ? "selected" : ""}>Metrics</Link> */}
         </Box>
         <Box style={{ flexGrow: 1, display: "flex", justifyContent: "end" }} >
-            <MuiRouterLink variant="subtitle1" type='menu' href={"/"}
+            <MuiRouterLink variant="subtitle1" type="menu" href={"/getstarted"}
                 className={selectedKey === "gettingstarted" ? "selected" : ""}>
                 Get Started
             </MuiRouterLink>
-            <MuiRouterLink href={"https://docs.sematic.dev"} variant="subtitle1" type='menu'>Docs</MuiRouterLink>
-            <MuiRouterLink href={"https://discord.gg/4KZJ6kYVax"} variant="subtitle1" type='menu'>Discord</MuiRouterLink>
-            <StyledLink variant="subtitle1" type='menu' ref={contextMenuAnchor}>
+            <MuiRouterLink href={"https://docs.sematic.dev"} target={"_blank"} variant="subtitle1" type="menu">
+                Docs</MuiRouterLink>
+            <MuiRouterLink href={"https://discord.gg/4KZJ6kYVax"} target={"_blank"} variant="subtitle1" type="menu">
+                Discord</MuiRouterLink>
+            <StyledLink variant="subtitle1" type="menu" ref={contextMenuAnchor}>
                 {profileMenuLabel}
             </StyledLink>
             { profileMenu }

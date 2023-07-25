@@ -5,6 +5,7 @@ import { ShellCommandRelaxed } from "src/component/ShellCommand";
 import { useTheme } from "@mui/material";
 import { SiDiscord, SiGithub, SiLinkedin, SiYoutube, SiTwitter } from "react-icons/si";
 import { MdMenuBook } from "react-icons/md";
+import identity from "lodash/identity";
 
 export const Container = styled.div`
     width: 100%;
@@ -84,6 +85,64 @@ const LinkRow = styled.div`
     }   
 `;
 
+interface CommunityLinksProps {
+    onRenderLinkEntry?: (link: React.ReactNode) => React.ReactNode;
+}
+
+export function CommunityLinks(props: CommunityLinksProps) {
+    const { onRenderLinkEntry = identity } = props;
+
+    return <>{onRenderLinkEntry(<LinkRow>
+        <a href={"https://discord.gg/4KZJ6kYVax"} target={"_blank"} rel="noreferrer" >
+            <span>
+                <SiDiscord fontSize={25} color="#4a5feb" />
+            </span>
+            <span>Join our Discord server</span>
+        </a>
+    </LinkRow>)}
+    {onRenderLinkEntry(<LinkRow>
+        <a href={"https://github.com/sematic-ai/sematic"} target={"_blank"} rel="noreferrer" >
+            <span>
+                <SiGithub fontSize={25} />
+            </span>
+            <span>Star our GitHub repository</span>
+        </a>
+    </LinkRow>)}
+    {onRenderLinkEntry(<LinkRow>
+        <a href={"https://www.linkedin.com/company/sematic-ai"} target={"_blank"} rel="noreferrer" >
+            <span>
+                <SiLinkedin fontSize={25} color={"#0077b7"} />
+            </span>
+            <span>Follow us on LinkedIn</span>
+        </a>
+    </LinkRow>)}
+    {onRenderLinkEntry(<LinkRow>
+        <a href={"https://www.youtube.com/@sematic-ai"} target={"_blank"} rel="noreferrer" >
+            <span>
+                <SiYoutube fontSize={25} color={"#ff0000"} />
+            </span>
+            <span>Watch tutorials on our YouTube channel</span>
+        </a>
+    </LinkRow>)}
+    {onRenderLinkEntry(<LinkRow>
+        <a href={"https://twitter.com/SematicAI"} target={"_blank"} rel="noreferrer" >
+            <span>
+                <SiTwitter fontSize={25} color={"#009ef7"} />
+            </span>
+            <span>Follow us on Twitter</span>
+        </a>
+    </LinkRow>)}
+    {onRenderLinkEntry(<LinkRow>
+        <a href={"https://docs.sematic.dev"} target={"_blank"} rel="noreferrer" >
+            <span>
+                <MdMenuBook fontSize={25} />
+            </span>
+            <span>Read our Documentation</span>
+        </a>
+    </LinkRow>)}
+    </> ;
+}
+
 const GettingStarted = () => {
     const theme = useTheme();
 
@@ -116,55 +175,7 @@ const GettingStarted = () => {
                 <StyledShellCommand command={"python3 -m my_new_project"}
                     style={{ marginBottom: theme.spacing(10) }} />
                 <StyledHeadline>Join the Community</StyledHeadline>
-                <LinkRow>
-                    <a href={"https://discord.gg/4KZJ6kYVax"}>
-                        <span>
-                            <SiDiscord fontSize={25} color="#4a5feb" />
-                        </span>
-                        <span>Join our Discord server</span>
-                    </a>
-                </LinkRow>
-                <LinkRow>
-                    <a href={"https://github.com/sematic-ai/sematic"}>
-                        <span>
-                            <SiGithub fontSize={25} />
-                        </span>
-                        <span>Star our GitHub repository</span>
-                    </a>
-                </LinkRow>
-                <LinkRow>
-                    <a href={"https://www.linkedin.com/company/sematic-ai"}>
-                        <span>
-                            <SiLinkedin fontSize={25} color={"#0077b7"} />
-                        </span>
-                        <span>Follow us on LinkedIn</span>
-                    </a>
-                </LinkRow>
-                <LinkRow>
-                    <a href={"https://www.youtube.com/@sematic-ai"}>
-                        <span>
-                            <SiYoutube fontSize={25} color={"#ff0000"} />
-                        </span>
-                        <span>Watch tutorials on our YouTube channel</span>
-                    </a>
-                </LinkRow>
-                <LinkRow>
-                    <a href={"https://twitter.com/SematicAI"}>
-                        <span>
-                            <SiTwitter fontSize={25} color={"#009ef7"} />
-                        </span>
-                        <span>Follow us on Twitter</span>
-                    </a>
-                </LinkRow>
-                <LinkRow>
-                    <a href={"https://docs.sematic.dev"}>
-                        <span>
-                            <MdMenuBook fontSize={25} />
-                        </span>
-                        <span>Read our Documentation</span>
-                    </a>
-                </LinkRow>
-
+                <CommunityLinks />
             </Right>
         </Container >
     );
