@@ -5,6 +5,23 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.33.0](https://pypi.org/project/sematic/0.33.0/)
+    * [feature] Enable the Grafana plugin in the new UI
+    * [feature] Show user privacy in the new UI
+    * [feature] Support expand/collapse all in the new UI artifact display
+    * [feature] New landing page in the new UI
+    * [feature] Add `--no-cache` option for Docker builds
+    * [improvement] Display cloned state icon for cloned runs in the new UI
+    * [improvement] Changes to backend data model in preparation for upcoming features
+    * [improvement] Improve run cancellations for local runs
+    * [improvement] Minor visual improvements to new DAG view UI
+    * [improvement] Add Llama 2 to fine-tuning example
+    * [bugfix] Make the recent DB upgrade script more robust
+    * [bugfix] Allow changing back to old UI from unauthenicated local executions
+    * [bugfix] Resolve an issue with node expand/collapses in new DAG view
+    * [bugfix] Miscellaneous bug fixes in the new UI
+    * [bugfix] Fix prompt display in fine-tuning example
+    * [bugfix] Avoid collisions with public Docker repos for Docker builds
 * [0.32.0](https://pypi.org/project/sematic/0.32.0/)
     * [feature] Publish a new version of the Dashboard UI, which is currently in "Beta". You can
       switch to the new version by clicking on the pop-up banner, and between the two versions
