@@ -61,7 +61,7 @@ function LeafNode(props: NodeProps) {
         {hasIncoming && <StyledHandleTop type="target" position={Position.Top} isConnectable={false}
             id={"t"} color={color} />}
         <LabelContainer>
-            <RunStateChip futureState={run.future_state} orignalRunId={run.original_run_id} />
+            <RunStateChip futureState={run.future_state} animated={true} orignalRunId={run.original_run_id} />
             <label >{data.label}</label>
         </LabelContainer>
         <StyledHandleBottom

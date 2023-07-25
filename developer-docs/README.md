@@ -196,7 +196,7 @@ changes.
               --fork-subprocess signal 2 \
               --fork-subprocess signal 15
         ```
-    
+
     1. Test client backwards compatibility. Install the version of Sematic that matches
     `MIN_CLIENT_SERVER_SUPPORTS` from `sematic/versions.py` in a virtual env and validate
     that this older client can run a packaged example pipeline end-to-end successfully on
@@ -295,7 +295,7 @@ changes.
         $ mv index.yaml $HELM_REPO/index.yaml
         $ mv *.tgz $HELM_REPO/sematic-grafana-dashboards/
         ```
-       
+
     1. You should now have a new `sematic-server/sematic-server-X.X.X.tgz` file in the
     `helm-charts` repo, and a modified `index.yaml` file. If you optionally created a package
     for the Grafana dashboards, you should also have a
@@ -322,6 +322,8 @@ changes.
     - Add a `"## What's Changed"` section, and copy the newly added section of the
       `changelog.md`.
     - Add a `"Full Changelog"` link, and validate it.
+    - Add a `"# Helm Chart Version` section, and list the `appVersion` field here from
+      `helm/sematic-server/Chart.yaml`.
     - Add a `"## Compatibility"` section which states that only clients versions down to
       `MIN_CLIENT_SERVER_SUPPORTS` from `sematic/versions.py` are supported.
     - If `docs/upgrades.md` contains an entry for upgrading to the released version, add

@@ -58,6 +58,31 @@ def test_update_status():
     job.status_history == (new_status, status)
 
 
+def test_force_clean():
+    status = JobStatus(
+        state=KubernetesJobState.Requested,
+        message="Just created",
+        last_updated_epoch_seconds=time.time(),
+    )
+    details = JobDetails(try_number=0)
+    job = make_job(
+        name="foo",
+        namespace="bar",
+        run_id="abc123",
+        status=status,
+        details=details,
+        kind=JobKind.run,
+    )
+    details = details.force_clean()
+    job.details = details
+
+    new_status = details.get_status(
+        last_updated_epoch_seconds=status.last_updated_epoch_seconds + 1
+    )
+    job.update_status(new_status)
+    assert job.state == "Deleted"
+
+
 def test_update_with_out_of_order_status():
     status = JobStatus(
         state=KubernetesJobState.Requested,

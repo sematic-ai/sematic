@@ -277,6 +277,16 @@ class JobDetails:
     # Indicates whether the job has been canceled by Sematic.
     canceled: bool = False
 
+    def force_clean(self) -> "JobDetails":
+        """Update the job details to appear terminal, regardless of K8s state of truth."""
+        # In this case, we want the job to appear terminal, but we don't want to
+        # assume that there are no longer pods for the job. So we will leave
+        # those untouched.
+
+        self.has_infra_failure = True
+        self.canceled = True
+        return self
+
     def latest_pod_summary(self) -> Optional[PodSummary]:
         if len(self.current_pods) == 0:
             return None

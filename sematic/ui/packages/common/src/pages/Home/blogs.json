@@ -1,0 +1,23 @@
+[
+    {
+        "title": "Tuning and serving FLAN-T5 and GPT-J 6B with LoRA, Sematic, and Gradio",
+        "link": "https://www.sematic.dev/blog/tuning-and-serving-flan-t5-and-gpt-j-6b-with-lora-sematic-and-gradio",
+        "description": "Fine-tune FLAN-T5 and GPT-J with Sematic and serve them with Gradio. Read our in-depth article.",
+        "author": "Josh Bauer",
+        "time": "July 18, 2023"
+    },
+    {
+        "title": "How Voxel cut model retraining time by 80%",
+        "link": "https://www.sematic.dev/blog/how-voxel-cut-model-retraining-from-3-weeks-to-3-days-with-sematic",
+        "description": "Voxel uses Sematic to increase productivity across their Machine Learning (ML) team and retrain Computer Vision models faster. Sematic enabled Voxel to reduce their model turnaround time from 3 weeks to 3 days at a 20x cost saving.",
+        "author": "Emmanuel Turlay",
+        "time": "July 5, 2023"
+    },
+    {
+        "title": "Release Notes – 0.31.0",
+        "link": "https://www.sematic.dev/blog/release-notes-0-31-0",
+        "description": "Read up on what's new in 0.31.0: GitHub integration, real-time metrics, LLM example, and native dependency packaging.",
+        "author": "Josh Bauer",
+        "time": "June 29, 2023"
+    }
+]

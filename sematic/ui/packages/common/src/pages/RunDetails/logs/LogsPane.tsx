@@ -1,12 +1,14 @@
 import styled from "@emotion/styled";
 import { TextField } from "@mui/material";
+import Alert from "@mui/material/Alert";
+import { buttonClasses } from "@mui/material/Button";
 import BidirectionalLogView, { ConciseLineTemplate } from "@sematic/common/src/pages/RunDetails/logs/BidirectionalLogView";
-import { useCallback, useRef, useState, useContext } from "react";
+import includes from "lodash/includes";
+import { useCallback, useContext, useMemo, useRef, useState } from "react";
+import useUnmount from "react-use/lib/useUnmount";
 import LayoutServiceContext from "src/context/LayoutServiceContext";
 import { useRunDetailsSelectionContext } from "src/context/RunDetailsSelectionContext";
 import theme from "src/theme/new";
-import { buttonClasses } from "@mui/material/Button"
-import useUnmount from "react-use/lib/useUnmount";
 
 const Container = styled.div`
     max-height: 100%;
@@ -78,12 +80,16 @@ export default function LogsPane() {
         setIsLoading(false);
     });
 
-    if (!selectedRun) {
-        return null;
-    }
-
-    return (
-        <Container style={{ display: "flex", flexDirection: "column" }}>
+    const logsSection = useMemo(() => {
+        if (!selectedRun ) {
+            return null;
+        }
+        if (includes(["CREATED", "SCHEDULED"], selectedRun.future_state)) {
+            return <Alert severity="info" sx={{ mt: 3 }}>
+                {"Run has not started. There are no logs yet."}
+            </Alert>
+        }
+        return <>
             <StyledTextField
                 variant="standard"
                 fullWidth={true}
@@ -102,6 +108,12 @@ export default function LogsPane() {
                     </FloatingFooterAnchor>
                 </FloatingFooter>
             </ScrollContainer>
+        </>;
+    }, [filterString, footerRenderProp, id, onFilterStringChange, selectedRun, setFooterRenderProp, setIsLoading]);
+
+    return (
+        <Container style={{ display: "flex", flexDirection: "column" }}>
+            {logsSection}
         </Container>
     );
 }
