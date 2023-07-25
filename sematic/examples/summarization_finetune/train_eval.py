@@ -114,6 +114,8 @@ class ModelSelection(Enum):
     flan_xxl = "flan_xxl"
     gpt_j_6b = "gpt_j_6b"
     llama_2_7b_chat = "llama_2_7b_chat"
+    llama_2_13b_chat = "llama_2_13b_chat"
+    llama_2_70b_chat = "llama_2_70b_chat"
 
     @classmethod
     def from_model_reference(cls, ref: HuggingFaceModelReference) -> "ModelSelection":
@@ -136,7 +138,11 @@ class ModelSelection(Enum):
         }
 
     def is_llama(self) -> bool:
-        return self in {ModelSelection.llama_2_7b_chat}
+        return self in {
+            ModelSelection.llama_2_7b_chat,
+            ModelSelection.llama_2_13b_chat,
+            ModelSelection.llama_2_70b_chat,
+        }
 
 
 @dataclass(frozen=True)

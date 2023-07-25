@@ -34,6 +34,22 @@ The model variants are:
 - **Flan-T5-XL**: 3B parameters
 - **Flan-T5-XXL**: 11B parameters
 
+### Llama 2
+
+Meta's [Llama 2](https://huggingface.co/meta-llama/Llama-2-7b-chat) model
+is a group of causal language models of varying sizes and fine-tunings.
+Here, the variants used are fine-tuned for chat purposes. This example
+pipeline will fine-tune them further for use-case specific summarization
+tasks. Even the smallest variant has 7 billion parameters and will generally
+require more than one GPU to effectively fine-tune. However, the performance
+of Llama 2 models is state-of-the-art.
+
+The model variants are:
+- **Llama 2 7b Chat**
+- **Llama 2 13b Chat**
+- **Llama 2 70b Chat**
+
+
 ### GPT-J 6b
 
 EleutherAI's (GPT-J 6b)[https://huggingface.co/EleutherAI/gpt-j-6b] model is
@@ -83,7 +99,10 @@ sematic run examples/summarization_finetune -- \
  --max-output-length 64
 ```
 
-- Try GPT-J using `--model-selection gpt-j-6b` (though note this requires compatible hardware).
+- Try Llama 2 using `--model-selection llama-2-7b-chat`
+(though note this requires compatible hardware).
+- Try GPT-J using `--model-selection gpt-j-6b`
+(though note this requires compatible hardware).
 - Try exporting your fine-tuned model to Hugging Face Hub using:
 `--login --model-export-repo <hugging face repo owner>/<hugging face repo name>`.
 
@@ -148,5 +167,6 @@ library versions. For reference on the hardware this example has been tested on:
 - **Flan small/base**: M1 Mac, AWS `g5.2xlarge`
 - **Flan large**: AWS `g5.2xlarge`
 - **GPT-J 6b**: AWS `g5.2xlarge`
+- **Llama 2 7b Chat**: AWS `g5.12xlarge`
 
 If you try an example on other hardware, submit a PR to let others know!
