@@ -83,14 +83,13 @@ const HeaderMenu = (props: HeaderMenuProps) => {
             <MuiRouterLink variant={"logo"} href={"/"} style={{ marginRight: theme.spacing(6) }}>
                 <Fox style={{ width: "16px" }} />
             </MuiRouterLink>
-
-            <MuiRouterLink variant="subtitle1" type="menu" href={"/runs"}
-                className={selectedKey === "runs" ? "selected" : ""}>
-                Runs
-            </MuiRouterLink>
             <MuiRouterLink variant="subtitle1" type="menu" href={"/pipelines"}
                 className={selectedKey === "pipelines" ? "selected" : ""}>
                 Pipelines
+            </MuiRouterLink>
+            <MuiRouterLink variant="subtitle1" type="menu" href={"/runs"}
+                className={selectedKey === "runs" ? "selected" : ""}>
+                Runs
             </MuiRouterLink>
             {/* <Link variant="subtitle1" type="menu" className={selectedKey === "metrics" ? "selected" : ""}>Metrics</Link> */}
         </Box>

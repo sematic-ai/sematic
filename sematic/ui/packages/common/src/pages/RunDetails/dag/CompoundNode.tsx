@@ -46,6 +46,12 @@ export const LabelContainer = styled.div`
         margin: 0 ${theme.spacing(2)}};
         flex-grow: 0;
     }
+
+    & label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 `;
 
 export const StyledIconButton = styled(IconButton)`

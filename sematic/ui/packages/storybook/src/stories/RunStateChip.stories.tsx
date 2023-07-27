@@ -3,7 +3,8 @@ import { SuccessStateChip as SuccessStateChipComponent,
     FailedStateChip as FailedStateChipComponent,
     RunningStateChip as RunningStateChipComponent,
     CanceledStateChip as CanceledStateChipComponent,
-    SubmittedStateChip as SubmittedStateChipComponent
+    SubmittedStateChip as SubmittedStateChipComponent,
+    CachedStateChip as CachedStateChipComponent
 } from "@sematic/common/src/component/RunStateChips";
 import theme from "@sematic/common/src/theme/new";
 import { Meta, StoryFn } from "@storybook/react";
@@ -16,7 +17,8 @@ const typeOptions = {
     "Failed": FailedStateChipComponent,
     "Running": RunningStateChipComponent,
     "Canceled": CanceledStateChipComponent,
-    "Submitted": SubmittedStateChipComponent
+    "Submitted": SubmittedStateChipComponent,
+    "Cached": CachedStateChipComponent
 }
 
 export default {
@@ -74,3 +76,9 @@ export const SubmittedStateChip = Template.bind({});
 SubmittedStateChip.args = {
     type: "Submitted",
 }
+
+export const CachedStateChip = Template.bind({});
+CachedStateChip.args = {
+    type: "Cached",
+}
+
