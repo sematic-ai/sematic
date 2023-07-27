@@ -1,9 +1,9 @@
-import BoltIcon from "@mui/icons-material/Bolt";
-import Check from "@mui/icons-material/Check";
-import ClearIcon from "@mui/icons-material/Clear";
-import StopIcon from "@mui/icons-material/Stop";
+import BoltIcon from "@mui/icons-material/OfflineBolt";
+import CheckCircle from "@mui/icons-material/CheckCircle";
+import FailedIcon from "@mui/icons-material/Cancel";
+import StopIcon from "@mui/icons-material/StopCircle";
 import HourglassEmpty from "@mui/icons-material/HourglassEmpty";
-import DoneOutline from "@mui/icons-material/DoneOutline";
+import CheckCircleOutline from "@mui/icons-material/CheckCircleOutline";
 import { useMemo } from "react";
 import theme from "src/theme/new";
 import { SvgIconTypeMap } from "@mui/material/SvgIcon";
@@ -11,11 +11,11 @@ import { css } from "@emotion/css";
 
 const AnimatedChip = css`
     @keyframes svg-gaussian-blur {
-        0%   {filter: url(#gaussian-blur-1); transform: scale(1.3); }
+        0%   {filter: url(#gaussian-blur-1); transform: scale(1.1); }
         25%  {filter: url(#gaussian-blur-0.5); }
         50%  {filter: url(#gaussian-blur-0); transform: scale(1);}
         75%  {filter: url(#gaussian-blur-0.5); }
-        100%  {filter: url(#gaussian-blur-1); transform: scale(1.3);}
+        100%  {filter: url(#gaussian-blur-1); transform: scale(1.1);}
     }
 
     animation-name: svg-gaussian-blur;
@@ -54,14 +54,14 @@ export const SuccessStateChip = (props: StateChipBaseProps) => {
     const { size } = props;
     const styles = useStylesHook({ size });
     const color = RunStateColorMap.get(SuccessStateChip)!.color;
-    return <Check color={color} style={styles} />;
+    return <CheckCircle color={color} style={styles} />;
 }
 
 export const FailedStateChip = (props: StateChipBaseProps) => {
     const { size } = props;
     const styles = useStylesHook({ size });
     const color = RunStateColorMap.get(FailedStateChip)!.color;
-    return <ClearIcon color={color} style={styles} />;
+    return <FailedIcon color={color} style={styles} />;
 }
 
 export const RunningStateChip = (props: StateChipBaseProps) => {
@@ -89,7 +89,7 @@ export const CachedStateChip = (props: StateChipBaseProps) => {
     const { size } = props;
     const styles = useStylesHook({ size });
     const color = RunStateColorMap.get(CachedStateChip)!.color;
-    return <DoneOutline color={color} style={styles} />;
+    return <CheckCircleOutline color={color} style={styles} />;
 }
 
 const RunStateColorMap: Map<React.FC<StateChipBaseProps>, {

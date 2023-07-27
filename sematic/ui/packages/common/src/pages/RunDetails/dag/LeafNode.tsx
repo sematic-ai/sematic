@@ -37,8 +37,17 @@ export const LabelContainer = styled.div`
     font-weight: ${theme.typography.fontWeightBold};
     justify-content: flex-start;
 
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
     & svg {
         margin: 0 ${theme.spacing(2)}};
+    }
+
+    & label {
+        text-overflow: ellipsis;
+        overflow: hidden;
     }
 `;
 

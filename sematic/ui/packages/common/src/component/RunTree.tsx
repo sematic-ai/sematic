@@ -25,6 +25,11 @@ const StyledList = styled(List)`
     }
 `;
 
+const StyledListItemText = styled(ListItemText)`
+    overflow: hidden;
+    text-overflow: ellipsis;
+`;
+
 const StyledSkeleton = styled(Skeleton)`
     width: 100%;
     margin-right: ${theme.spacing(5)};
@@ -48,7 +53,7 @@ const RunTree = (props: RunTreeProps) => {
                         <RunStateChip futureState={run.future_state} 
                             orignalRunId={run.original_run_id} size={"small"} />
                     </ListItemIcon>
-                    <ListItemText >{run.name}</ListItemText>
+                    <StyledListItemText >{run.name}</StyledListItemText>
                 </ListItemButton>
                 {
                     children.length > 0 && (
