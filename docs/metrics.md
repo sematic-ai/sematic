@@ -93,3 +93,25 @@ def train_model(...):
             metric_type=MetricType.COUNT
         )
 ```
+
+#### Run vs Pipeline Metrics
+
+You can create your own pipeline-level metrics to track how a pipeline's results are changing over time. To do this,
+use the `scope` parameter of `log_metric`:
+
+```python
+from sematic.ee.metrics import log_metric, MetricType, MetricScope
+
+@sematic.func
+def eval_model(...):
+    # ...
+    log_metric(
+        "accuracy",
+        accuracy,
+        metric_type=MetricType.GAUGE,
+        scope=MetricScope.PIPELINE,
+    )
+```
+
+Instead of appearing in the "Metrics" tab of a run's view, pipeline-level metrics will appear in the
+metric details view obtained by clicking on the pipeline summary metrics (run count, success rate, etc).
