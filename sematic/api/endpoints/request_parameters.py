@@ -355,6 +355,32 @@ def _get_sql_predicates(
 def _extract_predicate(
     filter: ColumnPredicate, column_mapping: ColumnMapping, model: type
 ):
+    """
+    Extract a predicate for a single column.
+
+    The column can be a relationship, in which case the predicate is applied to the
+    relationship's model.
+
+    Parameters
+    ----------
+    filter : ColumnPredicate
+        The filter to extract the predicate from.
+
+        Supported filter formats:
+        ```
+        {"column_name": {"operator": "value"}}
+        {"relationship_name.column_name": {"operator": "value"}}
+        ```
+    column_mapping : ColumnMapping
+        A mapping of column name to column.
+    model : type
+        The SQLAlchemy model.
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.BooleanClauseList
+
+    """
     column_name = list(filter.keys())[0]
 
     if "." in column_name:
@@ -364,6 +390,28 @@ def _extract_predicate(
 
 
 def _extract_relationship_predicate(filter: ColumnPredicate, model: type):
+    """
+    Extract a predicate for a relationship column.
+
+    The predicate is applied to the relationship's model.
+
+    Parameters
+    ----------
+    filter : ColumnPredicate
+        The filter to extract the predicate from.
+
+        Supported filter formats:
+        ```
+        {"relationship_name.column_name": {"operator": "value"}}
+        ```
+    model : type
+        The SQLAlchemy model.
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.BooleanClauseList
+
+    """
     filter_key = list(filter.keys())[0]
     relationship_name, field = filter_key.split(".")
 
