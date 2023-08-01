@@ -76,6 +76,7 @@ python-magic
 # Cloud execution
 kubernetes
 boto3
+google-cloud-storage
 
 # External Resource Plugins
 ## Ray

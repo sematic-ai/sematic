@@ -10,6 +10,17 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_gcs_storage",
+    srcs = ["test_gcs_storage.py"],
+    pip_deps = ["flask"],
+    deps = [
+        "//sematic/api/tests:fixtures",
+        "//sematic/db/tests:fixtures",
+        "//sematic/plugins/storage:gcs_storage",
+    ],
+)
+
+pytest_test(
     name = "test_local_storage",
     srcs = ["test_local_storage.py"],
     pip_deps = ["flask"],
