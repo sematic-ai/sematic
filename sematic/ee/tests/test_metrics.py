@@ -27,7 +27,9 @@ from sematic.utils.exceptions import NotInSematicFuncError
 @mock.patch(
     "sematic.ee.metrics.context",
     return_value=SematicContext(
-        run_id="foo", root_id="bar", private=PrivateContext(runner_class_path="bat")
+        run_id="foo",
+        root_id="bar",
+        private=PrivateContext(runner_class_path="bat", is_standalone=True),
     ),
 )
 @mock.patch("sematic.ee.metrics._get_function_path", return_value="function_path")

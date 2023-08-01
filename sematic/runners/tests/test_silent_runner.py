@@ -212,7 +212,9 @@ def test_activation_failures_for_resource():
             SematicContext(
                 run_id=run_id,
                 root_id=root_id,
-                private=PrivateContext(runner_class_path=SilentRunner.classpath()),
+                private=PrivateContext(
+                    runner_class_path=SilentRunner.classpath(), is_standalone=False
+                ),
             )
         ):
             with FakeExternalResource(
@@ -231,7 +233,9 @@ def test_activation_failures_for_resource():
             SematicContext(
                 run_id=run_id,
                 root_id=root_id,
-                private=PrivateContext(runner_class_path=SilentRunner.classpath()),
+                private=PrivateContext(
+                    runner_class_path=SilentRunner.classpath(), is_standalone=False
+                ),
             )
         ):
             with FakeExternalResource(
@@ -258,7 +262,9 @@ def test_activation_timeout_for_resource():
             SematicContext(
                 run_id=run_id,
                 root_id=root_id,
-                private=PrivateContext(runner_class_path=SilentRunner.classpath()),
+                private=PrivateContext(
+                    runner_class_path=SilentRunner.classpath(), is_standalone=False
+                ),
             )
         ):
             started_activate = time.time()
@@ -281,7 +287,9 @@ def test_deactivation_timeout_for_resource():
             SematicContext(
                 run_id=run_id,
                 root_id=root_id,
-                private=PrivateContext(runner_class_path=SilentRunner.classpath()),
+                private=PrivateContext(
+                    runner_class_path=SilentRunner.classpath(), is_standalone=False
+                ),
             )
         ):
             started_activate = time.time()
@@ -307,7 +315,9 @@ def test_deactivation_failures_for_resource():
             SematicContext(
                 run_id=run_id,
                 root_id=root_id,
-                private=PrivateContext(runner_class_path=SilentRunner.classpath()),
+                private=PrivateContext(
+                    runner_class_path=SilentRunner.classpath(), is_standalone=False
+                ),
             )
         ):
             with FakeExternalResource(

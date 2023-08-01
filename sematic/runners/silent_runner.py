@@ -52,6 +52,7 @@ class SilentRunner(StateMachineRunner):
                     root_id=self._root_future.id,
                     private=PrivateContext(
                         runner_class_path=self.classpath(),
+                        is_standalone=False,
                     ),
                 )
             ):
