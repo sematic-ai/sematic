@@ -26,7 +26,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.config.server_settings import ServerSettings, ServerSettingsVar
 from sematic.config.tests.fixtures import empty_settings_file  # noqa: F401
 from sematic.config.user_settings import UserSettings, UserSettingsVar
-from sematic.db.models.resolution import Resolution, ResolutionStatus
+from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
@@ -286,6 +286,89 @@ def test_list_runs_or_filters(
     assert len(payload["content"]) == 2
     assert payload["content"][0]["id"] == run3.id
     assert payload["content"][1]["id"] == run1.id
+
+
+def test_list_runs_relationship_filters(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    run1 = make_run(name="abc", function_path="abc")
+    run2 = make_run(name="def", function_path="ghi")
+    run3 = make_run(name="def", function_path="def")
+
+    for run_ in [run1, run2, run3]:
+        save_run(run_)
+
+    run2.root_id = run1.root_id
+    save_run(run2)
+    resolution1 = make_resolution(root_id=run1.id)
+    save_resolution(resolution1)
+
+    resolution2 = make_resolution(root_id=run3.id, kind=ResolutionKind.LOCAL)
+    save_resolution(resolution2)
+
+    filters = {
+        "OR": [
+            {"pipeline_run.kind": {"eq": ResolutionKind.KUBERNETES.value}},
+            {"function_path": {"eq": "ghi"}},
+        ]
+    }
+
+    results = test_client.get(f"/api/v1/runs?filters={json.dumps(filters)}")
+
+    payload = results.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    assert len(payload["content"]) == 2
+    function_paths = [result["function_path"] for result in payload["content"]]
+
+    assert run1.function_path in function_paths
+    assert run2.function_path in function_paths
+
+
+def test_list_runs_relationship_filters_errors(
+    mock_auth, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    # invalid field
+    filters = {"non_exist_fld.kind": {"eq": ResolutionKind.KUBERNETES.value}}
+
+    results = test_client.get(f"/api/v1/runs?filters={json.dumps(filters)}")
+
+    assert results.status_code == 400
+    assert (
+        "is not a field of"
+        in typing.cast(typing.Dict[str, typing.Any], results.json)["error"]
+    )
+
+    # not relationship field
+    filters = {"description.kind": {"eq": ResolutionKind.KUBERNETES.value}}
+
+    results = test_client.get(f"/api/v1/runs?filters={json.dumps(filters)}")
+
+    assert results.status_code == 400
+    assert (
+        "is not a relationship property"
+        in typing.cast(typing.Dict[str, typing.Any], results.json)["error"]
+    )
+
+    # field doesn't exist for related model
+    filters = {"pipeline_run.non_exist_fld": {"eq": ResolutionKind.KUBERNETES.value}}
+
+    results = test_client.get(f"/api/v1/runs?filters={json.dumps(filters)}")
+
+    assert results.status_code == 400
+    payload = typing.cast(typing.Dict[str, typing.Any], results.json)
+    assert "is not a field of" in payload["error"] and "Resolution" in payload["error"]
+
+    # unsupported operator
+    filters = {"pipeline_run.kind": {"eat": ResolutionKind.KUBERNETES.value}}
+
+    results = test_client.get(f"/api/v1/runs?filters={json.dumps(filters)}")
+
+    assert results.status_code == 400
+    assert (
+        "only 'eq' is supported"
+        in typing.cast(typing.Dict[str, typing.Any], results.json)["error"]
+    )
 
 
 def test_list_runs_limit(
