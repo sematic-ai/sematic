@@ -160,3 +160,8 @@ class TimedMessage(AbstractExternalResource):
                 message="Nothing has changed...",
             ),
         )
+
+    @classmethod
+    def cloud_requires_standalone(cls) -> bool:
+        """Indicate if CloudRunner should require wrapping functions to be standalone."""
+        return False
