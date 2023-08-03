@@ -457,3 +457,8 @@ class AbstractExternalResource(AbstractPlugin):
                 message=message,
             ),
         )
+
+    @classmethod
+    def cloud_requires_standalone(cls) -> bool:
+        """Indicate if CloudRunner should require wrapping functions to be standalone."""
+        return True

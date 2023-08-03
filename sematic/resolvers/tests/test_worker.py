@@ -90,7 +90,7 @@ def test_main(
             run_id=future.id,
             root_id=future.id,
             private=PrivateContext(
-                runner_class_path=CloudRunner.classpath(),
+                runner_class_path=CloudRunner.classpath(), is_standalone=False
             ),
         )
     )
@@ -174,7 +174,7 @@ def test_main_func(
             run_id=future.id,
             root_id=future.id,
             private=PrivateContext(
-                runner_class_path=CloudRunner.classpath(),
+                runner_class_path=CloudRunner.classpath(), is_standalone=True
             ),
         )
     )

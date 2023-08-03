@@ -34,6 +34,7 @@ class PrivateContext:
     """
 
     runner_class_path: str
+    is_standalone: bool
     created_futures: List[AbstractFuture] = field(default_factory=list)
 
     def load_runner_class(self) -> Type[Runner]:

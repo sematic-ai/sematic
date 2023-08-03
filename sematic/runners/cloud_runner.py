@@ -19,6 +19,7 @@ from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.resolution import PipelineRunKind, PipelineRunStatus
 from sematic.db.models.run import Run
+from sematic.future_context import context
 from sematic.graph import RerunMode
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
 from sematic.runners.local_runner import LocalRunner, RunnerRestartError, make_edge_key
@@ -479,6 +480,14 @@ class CloudRunner(LocalRunner):
     def _do_resource_activate(
         cls, resource: AbstractExternalResource
     ) -> AbstractExternalResource:
+
+        # Raising the message here rather than from the server ensures the
+        # user gets the full message and trace in their logs and dashboard.
+        if resource.cloud_requires_standalone() and not context().private.is_standalone:
+            raise RuntimeError(
+                f"{resource.__class__.__name__} must be activated from a "
+                "standalone function."
+            )
         resource = api_client.activate_external_resource(resource.id)
         return resource
 
