@@ -23,6 +23,7 @@ from sematic.db.models.mixins.json_encodable_mixin import (
     JSONEncodableMixin,
     json_string_list_contains,
 )
+from sematic.db.models.resolution import Resolution
 from sematic.resolvers.resource_requirements import ResourceRequirements
 from sematic.types.serialization import (
     value_from_json_encodable,
@@ -37,6 +38,20 @@ class Run(HasUserMixin, HasOrganizationMixin, Base, JSONEncodableMixin):
 
     Runs represent the execution of a :class:`sematic.Function`. They are
     created upon scheduling of a :class:`sematic.Future`.
+
+    The relationship fields can also be used to filter runs. For example,
+    to get all runs that have the resolution with kind "LOCAL", you can use
+    filter like this:
+
+    {"pipeline_run.kind": {"operator": "LOCAL"}}
+
+    Currently supported relationship fields are:
+
+    - root_run.*
+    - pipeline_run.*
+
+    Refer _extract_predicate() from request_parameters.py for more details.
+
 
     Attributes
     ----------
@@ -145,6 +160,13 @@ class Run(HasUserMixin, HasOrganizationMixin, Base, JSONEncodableMixin):
 
     # Relationships
     root_run: "Run" = relationship("Run", remote_side=[id], lazy="select")
+    pipeline_run: Resolution = relationship(
+        "Resolution",
+        foreign_keys=[root_id],
+        viewonly=True,
+        primaryjoin="Resolution.root_id == Run.root_id",
+        lazy="select",
+    )
 
     @validates("future_state")
     def validate_future_state(self, _, value) -> str:

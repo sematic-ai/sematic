@@ -21,6 +21,10 @@ data:
   AWS_S3_REGION: {{ .Values.aws.bucket_region | quote }}
   STORAGE: "sematic.plugins.storage.s3_storage.S3Storage"
 {{ end }}
+{{ if .Values.gcp.storage.enabled }}
+  GCP_GCS_BUCKET: {{ .Values.gcp.storage.bucket | quote }}
+  STORAGE: "sematic.plugins.storage.gcs_storage.GcsStorage"
+{{ end }}
 {{ if .Values.local_storage.enabled }}
   STORAGE: "sematic.plugins.storage.local_storage.LocalStorage"
 {{ if .Values.local_storage.local_storage_path }}

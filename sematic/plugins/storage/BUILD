@@ -1,3 +1,19 @@
+
+sematic_py_lib(
+    name = "gcs_storage",
+    srcs = ["gcs_storage.py"],
+    pip_deps = [
+        "google-cloud-storage",
+    ],
+    deps = [
+        "//sematic:abstract_plugin",
+        "//sematic/config:settings",
+        "//sematic/plugins:abstract_storage",
+        "//sematic/utils:memoized_property",
+        "//sematic/utils:retry",
+    ],
+)
+
 sematic_py_lib(
     name = "local_storage",
     srcs = ["local_storage.py"],

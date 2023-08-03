@@ -270,7 +270,9 @@ def get_request_parameters(
         raise ValueError(f"Malformed filters: {filters_json}, error: {e}")
 
     sql_predicates = (
-        _get_sql_predicates(filters, column_mapping) if len(filters) > 0 else None
+        _get_sql_predicates(filters, column_mapping, model)
+        if len(filters) > 0
+        else None
     )
 
     order = ORDER_BY_DIRECTIONS.get(args.get("order", default_order))
@@ -307,7 +309,9 @@ def _get_column_mapping(model: type) -> Dict[str, sqlalchemy.Column]:
 
 
 def _get_sql_predicates(
-    filters: Filters, column_mapping: ColumnMapping
+    filters: Filters,
+    column_mapping: ColumnMapping,
+    model: type,
 ) -> BooleanClauseList:
     """
     Basic support for AND and OR filter predicates.
@@ -339,13 +343,109 @@ def _get_sql_predicates(
         operator = dict(AND=sqlalchemy.and_, OR=sqlalchemy.or_)[operand]
         return operator(
             *[
-                _extract_single_predicate(filter_, column_mapping)
+                _extract_predicate(filter_, column_mapping, model)
                 for filter_ in filters[operand]
             ]
         )
     else:
         filter_ = cast(ColumnPredicate, filters)
-        return sqlalchemy.and_(_extract_single_predicate(filter_, column_mapping))
+        return sqlalchemy.and_(_extract_predicate(filter_, column_mapping, model))
+
+
+def _extract_predicate(
+    filter: ColumnPredicate, column_mapping: ColumnMapping, model: type
+):
+    """
+    Extract a predicate for a single column.
+
+    The column can be a relationship, in which case the predicate is applied to the
+    relationship's model.
+
+    Parameters
+    ----------
+    filter : ColumnPredicate
+        The filter to extract the predicate from.
+
+        Supported filter formats:
+        ```
+        {"column_name": {"operator": "value"}}
+        {"relationship_name.column_name": {"operator": "value"}}
+        ```
+    column_mapping : ColumnMapping
+        A mapping of column name to column.
+    model : type
+        The SQLAlchemy model.
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.BooleanClauseList
+
+    """
+    column_name = list(filter.keys())[0]
+
+    if "." in column_name:
+        return _extract_relationship_predicate(filter, model)
+    else:
+        return _extract_single_predicate(filter, column_mapping)
+
+
+def _extract_relationship_predicate(filter: ColumnPredicate, model: type):
+    """
+    Extract a predicate for a relationship column.
+
+    The predicate is applied to the relationship's model.
+
+    Parameters
+    ----------
+    filter : ColumnPredicate
+        The filter to extract the predicate from.
+
+        Supported filter formats:
+        ```
+        {"relationship_name.column_name": {"operator": "value"}}
+        ```
+    model : type
+        The SQLAlchemy model.
+
+    Returns
+    -------
+    sqlalchemy.sql.elements.BooleanClauseList
+
+    """
+    filter_key = list(filter.keys())[0]
+    relationship_name, field = filter_key.split(".")
+
+    if not hasattr(model, relationship_name):
+        raise ValueError(f"{relationship_name} is not a field of {model}")
+
+    relationship_attribute = getattr(model, relationship_name)
+
+    if not isinstance(
+        relationship_attribute.property,
+        sqlalchemy.orm.relationships.RelationshipProperty,
+    ):
+        raise ValueError(
+            f"{relationship_name} is not a relationship property of {model}"
+        )
+
+    relationship_model = relationship_attribute.property.mapper.class_
+
+    if not hasattr(relationship_model, field):
+        raise ValueError(f"{field} is not a field of {relationship_model}")
+
+    relationship_model_field = getattr(relationship_model, field)
+
+    condition = filter[filter_key]
+    if len(condition) == 0:
+        raise ValueError(f"Empty filter: {filter}")
+
+    operator = list(condition.keys())[0]
+    value = condition[operator]
+
+    if operator != "eq":
+        raise ValueError("Currently only 'eq' is supported for relationship filters")
+
+    return relationship_attribute.has(relationship_model_field.__eq__(value))
 
 
 def _extract_single_predicate(

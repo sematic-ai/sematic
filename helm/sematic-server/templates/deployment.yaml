@@ -51,6 +51,10 @@ spec:
           env:
           - name: SEMATIC_WSGI_WORKERS_COUNT
             value: "{{ .Values.deployment.worker_count }}"
+          {{- if .Values.gcp.service_account.secret.enabled }}
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: "/gcp/secrets/{{ .Values.gcp.service_account.secret.file }}"
+          {{- end }}
           envFrom:
           - configMapRef:
               name: {{ .Release.Name }}
@@ -60,6 +64,12 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
+          {{- if .Values.gcp.service_account.secret.enabled }}
+          volumeMounts:
+          - name: gcp-sa-secret
+            mountPath: /gcp/secrets
+            readOnly: true
+          {{- end }}
           livenessProbe:
             {{- toYaml .Values.deployment.liveness_probe | nindent 12 }}
           readinessProbe:
@@ -68,6 +78,12 @@ spec:
             {{- toYaml .Values.deployment.startup_probe | nindent 12 }}
           resources:
             {{- toYaml .Values.deployment.resources | nindent 12 }}
+      {{- if .Values.gcp.service_account.secret.enabled }}
+      volumes:
+        - name: gcp-sa-secret
+          secret:
+            secretName: {{ .Values.gcp.service_account.secret.name }}
+      {{- end }}
       {{- with .Values.deployment.node_selector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
