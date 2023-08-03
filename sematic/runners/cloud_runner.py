@@ -480,6 +480,9 @@ class CloudRunner(LocalRunner):
     def _do_resource_activate(
         cls, resource: AbstractExternalResource
     ) -> AbstractExternalResource:
+
+        # Raising the message here rather than from the server ensures the
+        # user gets the full message and trace in their logs and dashboard.
         if resource.cloud_requires_standalone() and not context().private.is_standalone:
             raise RuntimeError(
                 f"{resource.__class__.__name__} must be activated from a "
