@@ -196,7 +196,7 @@ def main(
                     run_id=run.id,
                     root_id=run.root_id,
                     private=PrivateContext(
-                        runner_class_path=CloudRunner.classpath(),
+                        runner_class_path=CloudRunner.classpath(), is_standalone=True
                     ),
                 )
             ):
