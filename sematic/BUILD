@@ -236,7 +236,6 @@ sematic_py_lib(
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
         "//sematic/db/models:run",
-        "//sematic/resolvers:type_utils",
         "//sematic/utils:algorithms",
         "//sematic/utils:memoized_property",
     ],

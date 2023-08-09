@@ -34,6 +34,7 @@ sematic_py_lib(
         ":user",
         "//sematic:abstract_future",
         "//sematic/scheduling:job_details",
+        "//sematic/resolvers:type_utils",
         "//sematic/types:serialization",
         "//sematic/types/types:union",
         "//sematic/utils:hashing",
