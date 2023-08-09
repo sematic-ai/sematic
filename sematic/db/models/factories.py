@@ -129,7 +129,10 @@ def initialize_future_from_run(
         future.id = run.id
     future.props.name = run.name
     future.props.tags = json.loads(str(run.tags))
-    future.props.state = run.future_state
+    future_state = run.future_state
+    if isinstance(future_state, str):
+        future_state = FutureState[future_state]
+    future.props.state = future_state
     future.props.resource_requirements = run.resource_requirements
     if run.started_at is not None:
         future.props.scheduled_epoch_time = run.started_at.timestamp()

@@ -29,6 +29,7 @@ from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import UploadPayload, make_artifact
+from sematic.db.models.resolution import PipelineRunStatus
 from sematic.db.models.run import Run
 from sematic.function import Function
 from sematic.future import Future
@@ -175,6 +176,19 @@ def main(
 
             # the pipeline run object has required configurations for the runner
             pipeline_run = api_client.get_pipeline_run(root_id=run.id)
+            pipeline_run_status = pipeline_run.status
+            if isinstance(pipeline_run_status, str):
+                pipeline_run_status = PipelineRunStatus[  # type: ignore
+                    pipeline_run_status  # type: ignore
+                ]
+
+            if pipeline_run_status == PipelineRunStatus.RUNNING:
+                logger.warning(
+                    "Runner was restarted mid-execution. Attempting to pick up "
+                    "where the execution left off."
+                )
+                rerun_from = run.id
+                rerun_mode = RerunMode.REENTER
 
             runner = CloudRunner(
                 cache_namespace=pipeline_run.cache_namespace,

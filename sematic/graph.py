@@ -34,12 +34,20 @@ class RerunMode(Enum):
         whatever runs are required to determine the final result of the
         graph.
     CONTINUE:
-        Execute only runs that are required to determine the final
+        Clone the state of the provided pipeline run, then
+        execute only runs that are required to determine the final
         result of the graph.
+    REENTER:
+        Attempt to recreate an existing future graph in memory
+        and pick up where it was left off. This differs from
+        CONTINUE in that CONTINUE represents an entirely new
+        graph (cloned from an original), while REENTER uses
+        the existing graph.
     """
 
     SPECIFIC_RUN = "SPECIFIC_RUN"
     CONTINUE = "CONTINUE"
+    REENTER = "REENTER"
 
 
 @dataclass
