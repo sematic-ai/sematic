@@ -334,7 +334,7 @@ class CloudRunner(LocalRunner):
         else:
             output_edge = self._get_output_edges(run.id)[0]
 
-            # Pleasing mymy
+            # Pleasing mypy
             if output_edge.artifact_id is None:
                 raise RuntimeError("Missing output artifact")
 

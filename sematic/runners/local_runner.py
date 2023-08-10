@@ -131,6 +131,27 @@ class LocalRunner(SilentRunner):
         else:
             self._seed_from_existing(future, self._rerun_from_run_id, self._rerun_mode)
 
+    def _reenter_inline_runs(self, futures, runs):
+        """During runner reentry, correct the state of any inline futures/runs.
+
+        A correction may be needed if the future was executing in the runner when the
+        runner restarted. In this case, this method will mark the future and run for retry.
+        The update to the future and run happen in-place.
+        """
+        for future in futures:
+            if not future.props.standalone and future.state == FutureState.SCHEDULED:
+                # The future was executing in the runner when the runner restarted.
+                # So we need to start it again.
+                logger.warning(
+                    "The future %s was executing in the runner when the runner "
+                    "restarted. Restarting execution of the future.",
+                    future.id,
+                )
+                future.state = FutureState.RETRYING
+                inline_run = next(run for run in runs if run.id == future.id)
+                inline_run.future_state = FutureState.RETRYING
+                api_client.save_run(inline_run)
+
     def _seed_from_existing(
         self, future: AbstractFuture, from_run_id: str, rerun_mode: Optional[RerunMode]
     ):
@@ -190,6 +211,9 @@ class LocalRunner(SilentRunner):
             future_graph.set_root_future_id(future.id)  # type: ignore
 
         self._futures = list(future_graph.futures_by_run_id.values())
+
+        if rerun_mode == RerunMode.REENTER:
+            self._reenter_inline_runs(self._futures, runs)
 
         # This is necessary, otherwise the root run will not be updated with its
         # cloned status. In detached execution, or rerun, the root run is
@@ -814,7 +838,8 @@ class LocalRunner(SilentRunner):
         edges: List[Edge],
     ):
         """Update the in-memory caches of the graph objects using the provided objects"""
-        self._edges = {edge.id: edge for edge in edges}
+        for edge in edges:
+            self._add_edge(edge)
         self._runs = {run.id: run for run in runs}
         self._artifacts = {artifact.id: artifact for artifact in artifacts}
 
