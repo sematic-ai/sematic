@@ -193,7 +193,49 @@ def test_clone_root_run(run: Run):  # noqa: F811
 
     assert cloned_edges[2].destination_run_id is None
     assert cloned_edges[2].source_run_id == cloned_run.id
-    assert cloned_edges[2].artifact_id == "ghi789"
+    assert cloned_edges[2].artifact_id is None
+
+
+def test_clone_root_run_artifacts_override(run: Run):  # noqa: F811
+    edges = [
+        Edge(destination_run_id=run.id, destination_name="foo", artifact_id="abc123"),
+        Edge(destination_run_id=run.id, destination_name="bar", artifact_id="def456"),
+        Edge(source_run_id=run.id, artifact_id="ghi789"),
+    ]
+
+    cloned_run, cloned_edges = clone_root_run(
+        run=run, edges=edges, artifacts_override={"foo": "jkl123"}
+    )
+
+    assert cloned_run.id != run.id
+    assert cloned_run.root_id == cloned_run.id
+    assert cloned_run.future_state is FutureState.CREATED.value
+    assert cloned_run.name == run.name
+    assert cloned_run.function_path == run.function_path
+    assert cloned_run.parent_id is None
+    assert cloned_run.description is not None
+    assert cloned_run.description == run.description
+    assert cloned_run.tags == run.tags
+    assert cloned_run.source_code is not None
+    assert cloned_run.source_code == run.source_code
+    assert cloned_run.container_image_uri is not None
+    assert cloned_run.container_image_uri == run.container_image_uri
+    assert cloned_run.resource_requirements is not None
+    assert cloned_run.resource_requirements == run.resource_requirements
+
+    assert cloned_edges[0].destination_run_id == cloned_run.id
+    assert cloned_edges[0].source_run_id is None
+    assert cloned_edges[0].destination_name == "foo"
+    assert cloned_edges[0].artifact_id == "jkl123"
+
+    assert cloned_edges[1].destination_run_id == cloned_run.id
+    assert cloned_edges[1].source_run_id is None
+    assert cloned_edges[1].destination_name == "bar"
+    assert cloned_edges[1].artifact_id == "def456"
+
+    assert cloned_edges[2].destination_run_id is None
+    assert cloned_edges[2].source_run_id == cloned_run.id
+    assert cloned_edges[2].artifact_id is None
 
 
 def test_clone_resolution(resolution: Resolution):  # noqa: F811
