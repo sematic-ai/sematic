@@ -17,6 +17,8 @@ import { useRootRunContext } from "src/context/RootRunContext";
 import { useRunDetailsSelectionContext } from "src/context/RunDetailsSelectionContext";
 import FunctionSectionActionMenu from "src/pages/RunDetails/contextMenus/FunctionSectionMenu";
 import theme from "src/theme/new";
+import useCounter from "react-use/lib/useCounter";
+import useLatest from "react-use/lib/useLatest";
 
 const StyledSection = styled(Section)`
     height: fit-content;
@@ -131,12 +133,22 @@ const FunctionSection = () => {
     }, [selectedRun]);
 
     const contextMenuAnchor = useRef<HTMLButtonElement>(null);
+    const latestAnchor = useLatest(contextMenuAnchor.current);
 
     useEffect(() => {
         if (!isGraphLoading) {
             setIsGraphLoaded(true);
         }
     }, [isGraphLoading]);
+    
+    const [counter, { inc }] = useCounter();
+
+    useEffect(() => {
+        // Re-render until the context menu anchor is set
+        if (!latestAnchor.current) {
+            inc();
+        }
+    }, [latestAnchor, counter, inc]);
 
     return <StyledSection>
         <Headline>Function Run</Headline>
@@ -160,7 +172,7 @@ const FunctionSection = () => {
                 : <ImportPath>{selectedRun?.function_path}</ImportPath>}
         </ImportPathContainer>
         <StyledVertButton ref={contextMenuAnchor} />
-        <FunctionSectionActionMenu anchorEl={contextMenuAnchor.current} />
+        <FunctionSectionActionMenu anchorEl={latestAnchor.current} />
         {!isGraphLoaded ? <MediumPlaceholderSkeleton />
             : <TagsContainer>
                 <div className={"tags-list-wrapper"} key={selectedRun?.id}><TagsList tags={selectedRun?.tags || []} /></div>
