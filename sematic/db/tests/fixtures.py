@@ -11,6 +11,7 @@ import testing.postgresql  # type: ignore
 # Sematic
 import sematic.db.db as db
 from sematic.abstract_future import FutureState
+from sematic.db.models.edge import Edge
 from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.factories import make_artifact
 from sematic.db.models.factories import make_job as factory_make_job
@@ -215,7 +216,30 @@ def allow_any_run_state_transition():
 
 @pytest.fixture
 def persisted_run(run, test_db, allow_any_run_state_transition) -> Run:  # noqa: F811
-    return save_run(run)
+    saved_run = save_run(run)
+
+    edges = [
+        Edge(
+            destination_run_id=saved_run.id,
+            destination_name="a",
+            artifact_id="param a's artifact id",
+        ),
+        Edge(
+            destination_run_id=saved_run.id,
+            destination_name="b",
+            artifact_id="param b's artifact id",
+        ),
+        Edge(
+            source_run_id=saved_run.id,
+            artifact_id="output's artifact id",
+        ),
+    ]
+
+    with test_db.get_session() as session:
+        session.add_all(edges)
+        session.commit()
+
+    return saved_run
 
 
 @pytest.fixture

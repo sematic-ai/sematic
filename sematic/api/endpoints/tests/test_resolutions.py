@@ -37,6 +37,7 @@ from sematic.db.queries import (
     get_jobs_by_run_id,
     get_resolution,
     get_run,
+    get_run_graph,
     save_job,
     save_resolution,
     save_run,
@@ -625,6 +626,29 @@ def test_rerun_resolution_endpoint_no_auth(
         == persisted_resolution.root_id
     )
 
+    runs, _, edges = get_run_graph(run_id=cloned_resolution.root_id)
+
+    assert len(runs) == 1
+    assert runs[0].id == run.id
+
+    assert len(edges) == 3
+    edge_dict = {edge.destination_name: edge for edge in edges}
+
+    assert "a" in edge_dict
+    assert edge_dict["a"].source_run_id is None
+    assert edge_dict["a"].destination_run_id == run.id
+    assert edge_dict["a"].artifact_id == "param a's artifact id"
+
+    assert "b" in edge_dict
+    assert edge_dict["b"].source_run_id is None
+    assert edge_dict["b"].destination_run_id == run.id
+    assert edge_dict["b"].artifact_id == "param b's artifact id"
+
+    assert None in edge_dict
+    assert edge_dict[None].source_run_id == run.id
+    assert edge_dict[None].destination_run_id is None
+    assert edge_dict[None].artifact_id is None
+
 
 @mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
 def test_rerun_resolution_endpoint_auth_same_user(
@@ -723,6 +747,103 @@ def test_rerun_resolution_endpoint_auth_no_user_fails(
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     mock_broadcast_update.assert_not_called()
+
+
+@mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
+def test_rerun_resolution_endpoint_corrupt_artifacts_override_fails(
+    mock_broadcast_update: mock.MagicMock,
+    persisted_resolution: Resolution,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_auth,  # noqa: F811
+    mock_schedule_resolution: mock.MagicMock,
+):
+    response = test_client.post(
+        f"/api/v1/resolutions/{persisted_resolution.root_id}/rerun",
+        json={"artifacts": "this should be a dict"},
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    mock_broadcast_update.assert_not_called()
+
+
+@mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
+def test_rerun_resolution_endpoint_exclusive_parameters_fails(
+    mock_broadcast_update: mock.MagicMock,
+    persisted_resolution: Resolution,  # noqa: F811
+    persisted_run: Run,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_auth,  # noqa: F811
+    mock_schedule_resolution: mock.MagicMock,
+):
+    response = test_client.post(
+        f"/api/v1/resolutions/{persisted_resolution.root_id}/rerun",
+        json={
+            "rerun_from": persisted_resolution.root_id,
+            "artifacts": {"a": "test id"},
+        },
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    mock_broadcast_update.assert_not_called()
+
+
+@mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
+def test_rerun_resolution_endpoint_artifact_override(
+    mock_broadcast_update: mock.MagicMock,
+    persisted_resolution: Resolution,  # noqa: F811
+    test_client: flask.testing.FlaskClient,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_auth,  # noqa: F811
+    mock_schedule_resolution: mock.MagicMock,
+):
+    response = test_client.post(
+        f"/api/v1/resolutions/{persisted_resolution.root_id}/rerun",
+        json={"artifacts": {"a": "test id"}},
+    )
+    mock_broadcast_update.assert_called()
+
+    assert response.status_code == HTTPStatus.OK
+
+    payload = response.json
+    payload = typing.cast(typing.Dict[str, typing.Any], payload)
+
+    cloned_resolution = get_resolution(payload["content"]["root_id"])
+
+    assert cloned_resolution.status == ResolutionStatus.SCHEDULED.value
+    assert cloned_resolution.user_id is None
+
+    run = get_run(cloned_resolution.root_id)  # noqa: F811
+
+    assert run.parent_id is None
+    assert run.future_state == FutureState.CREATED.value
+    assert run.user_id is None
+
+    mock_schedule_resolution.assert_called_once()
+
+    runs, _, edges = get_run_graph(run_id=cloned_resolution.root_id)
+
+    assert len(runs) == 1
+    assert runs[0].id == run.id
+
+    assert len(edges) == 3
+    edge_dict = {edge.destination_name: edge for edge in edges}
+
+    assert "a" in edge_dict
+    assert edge_dict["a"].source_run_id is None
+    assert edge_dict["a"].destination_run_id == run.id
+    assert edge_dict["a"].artifact_id == "test id"
+
+    assert "b" in edge_dict
+    assert edge_dict["b"].source_run_id is None
+    assert edge_dict["b"].destination_run_id == run.id
+    assert edge_dict["b"].artifact_id == "param b's artifact id"
+
+    assert None in edge_dict
+    assert edge_dict[None].source_run_id == run.id
+    assert edge_dict[None].destination_run_id is None
+    assert edge_dict[None].artifact_id is None
 
 
 def test_list_external_resources_empty(
