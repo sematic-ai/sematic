@@ -289,8 +289,8 @@ def rerun_resolution_endpoint(
         return jsonify_error(
             (
                 f"Resolution {original_resolution.root_id} cannot be re-run: "
-                "it was initially resolved locally, and therefore "
-                "no container image was built"
+                f"it was initially resolved locally, and therefore "
+                f"no container image was built"
             ),
             HTTPStatus.BAD_REQUEST,
         )
@@ -298,11 +298,36 @@ def rerun_resolution_endpoint(
     rerun_from = None
     if flask.request.json and "rerun_from" in flask.request.json:
         rerun_from = flask.request.json["rerun_from"]
+        logger.debug("Rerunning from: %s", rerun_from)
 
-    original_runs, _, original_edges = get_run_graph(original_resolution.root_id)
+    artifacts_override = {}
+    if flask.request.json and "artifacts" in flask.request.json:
+        artifacts_override = flask.request.json["artifacts"]
+        if not isinstance(artifacts_override, dict):
+            return jsonify_error(
+                f"Malformed parameter `artifacts`: {artifacts_override}",
+                HTTPStatus.BAD_REQUEST,
+            )
+        logger.debug("Rerunning with artifacts override: %s", artifacts_override)
+
+    if rerun_from is not None and len(artifacts_override):
+        # specifying `rerun_from` invalidates a subgraph (in the general case)
+        # specifying `artifacts` results in the entire resolution being invalidated,
+        # effectively being equivalent to  always passing `rerun_from` with the root run
+        # id, so no other value can be supported
+        return jsonify_error(
+            "Cannot specify both `rerun_from` and `artifacts` when rerunning a pipeline.",
+            HTTPStatus.BAD_REQUEST,
+        )
+
+    original_runs, _, original_edges = get_run_graph(run_id=original_resolution.root_id)
     original_root_run = original_runs[0]
 
-    root_run, edges = clone_root_run(original_root_run, original_edges)
+    root_run, edges = clone_root_run(
+        run=original_root_run,
+        edges=original_edges,
+        artifacts_override=artifacts_override,
+    )
     logger.info("Cloning %s to %s", resolution_id, root_run.id)
 
     if user is not None:
@@ -324,6 +349,7 @@ def rerun_resolution_endpoint(
         resolution, post_schedule_job = schedule_resolution(
             resolution=resolution, rerun_from=rerun_from
         )
+
     except StateNotSchedulable as e:
         logger.exception("Exception scheduling resolution %s", root_run.id)
         root_run.exception_metadata = ExceptionMetadata(
@@ -340,6 +366,7 @@ def rerun_resolution_endpoint(
         logger.exception("Exception saved for resolution %s", root_run.id)
         broadcast_pipeline_update(function_path=root_run.function_path, user=user)
         return jsonify_error(str(e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
     except Exception as e:
         return jsonify_error(str(e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 

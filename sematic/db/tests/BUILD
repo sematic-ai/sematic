@@ -14,6 +14,7 @@ sematic_py_lib(
         "//sematic:abstract_future",
         "//sematic/db:db",
         "//sematic/db:queries",
+        "//sematic/db/models:edge",
         "//sematic/db/models:external_resource",
         "//sematic/db/models:factories",
         "//sematic/db/models:job",

@@ -65,6 +65,9 @@ INLINE_HELP = (
 )
 NESTED_HELP = "Whether to include nested functions in the pipeline. Defaults to False."
 NO_INPUT_HELP = "Whether to include a function that takes no input. Defaults to False."
+RANDOM_HELP = (
+    "Whether to include a function that adds a random number. Defaults to False."
+)
 SLEEP_HELP = (
     "If greater than zero, includes a function which sleeps for the specified number of "
     "seconds, logging a message every second. Defaults to 0."
@@ -244,6 +247,9 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--no-input", action="store_true", default=False, help=NO_INPUT_HELP
+    )
+    parser.add_argument(
+        "--random", action="store_true", default=False, help=RANDOM_HELP
     )
     parser.add_argument(
         "--sleep", type=int, default=0, dest="sleep_time", help=SLEEP_HELP
