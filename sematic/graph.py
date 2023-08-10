@@ -52,9 +52,28 @@ class RerunMode(Enum):
 
 @dataclass
 class FutureGraph:
-    """A graph of futures and their associated artifacts."""
+    """A graph of futures and their associated artifacts.
 
-    futures_by_id: OrderedDictType[RunID, AbstractFuture] = field(
+    Attributes
+    ----------
+    futures_by_run_id:
+        A dictionary of futures stored using the id of a corresponding run.
+        This can be the id of the future itself, or potentially a run that
+        the future was derived from.
+    input_artifacts:
+        A dictionary mapping a run id to the input artifacts for that run.
+        The input artifacts for a given run will itself be a dictionary from
+        the name of the input parameter for the run to the Artifact object
+        that should be used as its input. The graph may be in a partially
+        executed state, in which case not all runs may have known input
+        artifacts.
+    output_artifacts:
+        A dictionary mapping run ids to the Artifact object resulting from
+        that run. The graph may be in a partially executed state, in which
+        case not all runs will have known output artifacts.
+    """
+
+    futures_by_run_id: OrderedDictType[RunID, AbstractFuture] = field(
         init=False, default_factory=OrderedDict
     )
     input_artifacts: Dict[RunID, Dict[str, Artifact]] = field(
@@ -66,12 +85,12 @@ class FutureGraph:
         """Sort futures in-place according to the order of run_ids."""
         ordered_futures = OrderedDict(
             (
-                (run_id, self.futures_by_id[run_id])
+                (run_id, self.futures_by_run_id[run_id])
                 for run_id in run_ids
-                if run_id in self.futures_by_id
+                if run_id in self.futures_by_run_id
             )
         )
-        self.futures_by_id = ordered_futures
+        self.futures_by_run_id = ordered_futures
 
 
 @dataclass
@@ -79,23 +98,16 @@ class ClonedFutureGraph(FutureGraph):
     """
     A cloned future graph. This graph is potentially partial, as it is meant to
     be used as a resolution seed.
+
+    Its futures_by_run_id field maps the id of a run to the future cloned from that
+    run.
     """
-
-    @property
-    def futures_by_original_id(self) -> OrderedDictType[RunID, AbstractFuture]:
-        return self.futures_by_id
-
-    @futures_by_original_id.setter
-    def futures_by_original_id(
-        self, futures_by_id: OrderedDictType[RunID, AbstractFuture]
-    ) -> None:
-        self.futures_by_id = futures_by_id
 
     def set_root_future_id(self, root_id: str):
         """Update the id of the root future in this graph to match the passed one."""
         root_future = next(
             future
-            for future in self.futures_by_original_id.values()
+            for future in self.futures_by_run_id.values()
             if future.is_root_future()
         )
 
@@ -477,7 +489,7 @@ class Graph:
             if input_edge.source_run_id is not None:
                 # We set the input as the upstream future to mimick what
                 # happens in a greenfield resolution.
-                kwargs[input_edge.destination_name] = future_graph.futures_by_id[
+                kwargs[input_edge.destination_name] = future_graph.futures_by_run_id[
                     input_edge.source_run_id
                 ]
 
@@ -531,7 +543,7 @@ class Graph:
         if run.parent_id is None:
             return
 
-        parent_future = future_graph.futures_by_id[run.parent_id]
+        parent_future = future_graph.futures_by_run_id[run.parent_id]
 
         future.parent_future = parent_future
 
@@ -567,7 +579,7 @@ class Graph:
             run.parent_id is not None
             and self._runs_by_id[run.parent_id].nested_future_id == run.id
         ):
-            parent_future = cloned_graph.futures_by_original_id[run.parent_id]
+            parent_future = cloned_graph.futures_by_run_id[run.parent_id]
             if run.id in reset_run_ids:
                 parent_future.state = FutureState.RAN
 
@@ -655,11 +667,11 @@ class Graph:
             if run_id in skip_run_ids:
                 continue
 
-            cloned_graph.futures_by_original_id[run_id] = self._clone_future(
+            cloned_graph.futures_by_run_id[run_id] = self._clone_future(
                 run_id, cloned_graph, reset_run_ids
             )
 
-        if reset_from is None and len(cloned_graph.futures_by_original_id) != len(
+        if reset_from is None and len(cloned_graph.futures_by_run_id) != len(
             list(self.runs)
         ):
             raise RuntimeError("Not all futures duplicated")
@@ -687,11 +699,11 @@ class Graph:
         )
 
         for run_id in run_ids_by_execution_order:
-            future_graph.futures_by_id[run_id] = self._future_from_run(
+            future_graph.futures_by_run_id[run_id] = self._future_from_run(
                 run_id, future_graph
             )
 
-        if len(future_graph.futures_by_id) != len(list(self.runs)):
+        if len(future_graph.futures_by_run_id) != len(list(self.runs)):
             raise RuntimeError("Not all futures duplicated")
 
         # We return future sorted by how they would be sorted for a resolution

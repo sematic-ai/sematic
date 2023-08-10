@@ -189,7 +189,7 @@ class LocalRunner(SilentRunner):
             # Making sure we honor id of future passed from the outside
             future_graph.set_root_future_id(future.id)  # type: ignore
 
-        self._futures = list(future_graph.futures_by_id.values())
+        self._futures = list(future_graph.futures_by_run_id.values())
 
         # This is necessary, otherwise the root run will not be updated with its
         # cloned status. In detached execution, or rerun, the root run is
