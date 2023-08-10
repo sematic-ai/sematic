@@ -1,6 +1,3 @@
-# Standard Library
-import time
-
 # Sematic
 import sematic
 
@@ -10,7 +7,6 @@ def add(a: float, b: float) -> float:
     """
     Adds two numbers.
     """
-    time.sleep(3)
     return a + b
 
 
@@ -20,16 +16,6 @@ def add3(a: float, b: float, c: float) -> float:
     Adds three numbers.
     """
     return add(add(a, b), c)
-
-
-@sematic.func
-def chain(a: float) -> float:
-    x = add(0, a)
-    x = add(0, x)
-    x = add(0, x)
-    x = add(0, x)
-    x = add(0, x)
-    return x
 
 
 @sematic.func
@@ -46,8 +32,7 @@ def pipeline(a: float, b: float, c: float) -> float:
 
     `pretty_cool`.
     """
-    return chain(a)
-    # sum1 = add(a, b)
-    # sum2 = add(b, c)
-    # sum3 = add(a, c)
-    # return add3(sum1, sum2, sum3)
+    sum1 = add(a, b)
+    sum2 = add(b, c)
+    sum3 = add(a, c)
+    return add3(sum1, sum2, sum3)
