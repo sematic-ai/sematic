@@ -457,7 +457,7 @@ class Graph:
                 value = self._get_artifact_value(artifact.id)
 
             if input_edge.source_run_id is not None:
-                # We set the input as the upstream future to mimick what
+                # We set the input as the upstream future to mimic what
                 # happens in a greenfield resolution.
                 kwargs[
                     input_edge.destination_name

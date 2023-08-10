@@ -258,11 +258,12 @@ class LocalRunner(SilentRunner):
                 f=self._sio_client.connect,
                 fargs=[get_config().socket_io_url],
                 fkwargs=dict(namespaces=["/pipeline"]),
+                delay=1,
                 tries=4,
             )
         except BaseException as e:
             # provide the user with useful information, and then continue failing
-            logger.error("Could not connect to the socket.io server: %s", e)
+            logger.exception("Could not connect to the socket.io server", exc_info=e)
             raise
 
     def _disconnect_from_sio_server(self):
