@@ -647,7 +647,7 @@ def test_rerun_resolution_endpoint_no_auth(
     assert None in edge_dict
     assert edge_dict[None].source_run_id == run.id
     assert edge_dict[None].destination_run_id is None
-    assert edge_dict[None].artifact_id == "output's artifact id"
+    assert edge_dict[None].artifact_id is None
 
 
 @mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
@@ -689,29 +689,6 @@ def test_rerun_resolution_endpoint_auth_same_user(
         == persisted_resolution_w_user.root_id
     )
 
-    runs, _, edges = get_run_graph(run_id=cloned_resolution.root_id)
-
-    assert len(runs) == 1
-    assert runs[0].id == run.id
-
-    assert len(edges) == 3
-    edge_dict = {edge.destination_name: edge for edge in edges}
-
-    assert "a" in edge_dict
-    assert edge_dict["a"].source_run_id is None
-    assert edge_dict["a"].destination_run_id == run.id
-    assert edge_dict["a"].artifact_id == "param a's artifact id"
-
-    assert "b" in edge_dict
-    assert edge_dict["b"].source_run_id is None
-    assert edge_dict["b"].destination_run_id == run.id
-    assert edge_dict["b"].artifact_id == "param b's artifact id"
-
-    assert None in edge_dict
-    assert edge_dict[None].source_run_id == run.id
-    assert edge_dict[None].destination_run_id is None
-    assert edge_dict[None].artifact_id == "output's artifact id"
-
 
 @mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
 def test_rerun_resolution_endpoint_auth_different_user(
@@ -752,29 +729,6 @@ def test_rerun_resolution_endpoint_auth_different_user(
         mock_schedule_resolution.call_args.kwargs["rerun_from"]
         == persisted_resolution_w_user.root_id
     )
-
-    runs, _, edges = get_run_graph(run_id=cloned_resolution.root_id)
-
-    assert len(runs) == 1
-    assert runs[0].id == run.id
-
-    assert len(edges) == 3
-    edge_dict = {edge.destination_name: edge for edge in edges}
-
-    assert "a" in edge_dict
-    assert edge_dict["a"].source_run_id is None
-    assert edge_dict["a"].destination_run_id == run.id
-    assert edge_dict["a"].artifact_id == "param a's artifact id"
-
-    assert "b" in edge_dict
-    assert edge_dict["b"].source_run_id is None
-    assert edge_dict["b"].destination_run_id == run.id
-    assert edge_dict["b"].artifact_id == "param b's artifact id"
-
-    assert None in edge_dict
-    assert edge_dict[None].source_run_id == run.id
-    assert edge_dict[None].destination_run_id is None
-    assert edge_dict[None].artifact_id == "output's artifact id"
 
 
 @mock.patch("sematic.api.endpoints.resolutions.broadcast_pipeline_update")
@@ -889,7 +843,7 @@ def test_rerun_resolution_endpoint_artifact_override(
     assert None in edge_dict
     assert edge_dict[None].source_run_id == run.id
     assert edge_dict[None].destination_run_id is None
-    assert edge_dict[None].artifact_id == "output's artifact id"
+    assert edge_dict[None].artifact_id is None
 
 
 def test_list_external_resources_empty(

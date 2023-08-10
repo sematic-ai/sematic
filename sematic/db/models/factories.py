@@ -120,8 +120,11 @@ def clone_root_run(
             destination_run_id=(run_id if edge.destination_run_id == run.id else None),
             source_run_id=(run_id if edge.source_run_id == run.id else None),
             destination_name=edge.destination_name,
-            artifact_id=artifacts_override.get(
-                edge.destination_name, edge.artifact_id  # type: ignore
+            artifact_id=(
+                artifacts_override.get(edge.destination_name, edge.artifact_id)
+                # the output artifact MUST be reset
+                if edge.destination_name is not None
+                else None
             ),
         )
         for edge in edges
