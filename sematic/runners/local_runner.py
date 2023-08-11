@@ -152,7 +152,9 @@ class LocalRunner(SilentRunner):
                 future.state = FutureState.RETRYING
                 inline_run = next(run for run in runs if run.id == future.id)
                 inline_run.future_state = FutureState.RETRYING
-                api_client.save_run(inline_run)
+                api_client.save_graph(
+                    self._root_future.id, runs=[inline_run], artifacts=[], edges=[]
+                )
 
     def _seed_from_existing(
         self, future: AbstractFuture, from_run_id: str, rerun_mode: Optional[RerunMode]
