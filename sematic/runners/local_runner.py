@@ -144,7 +144,9 @@ class LocalRunner(SilentRunner):
                 # So we need to start it again.
                 logger.warning(
                     "The future %s was executing in the runner when the runner "
-                    "restarted. Restarting execution of the future.",
+                    "restarted. Restarting execution of the future. "
+                    "Some of the future's properties may have changed "
+                    "(see Issue #1032)",
                     future.id,
                 )
                 future.state = FutureState.RETRYING
@@ -173,6 +175,8 @@ class LocalRunner(SilentRunner):
         if rerun_mode is RerunMode.CONTINUE and run.id != run.root_id:
             raise ValueError("Cannot use RerunMode.CONTINUE with a non-root run.")
         elif rerun_mode is RerunMode.REENTER and run.id != future.id:
+            # This should be impossible. Raise a helpful message in case
+            # it ever happens anyway.
             raise ValueError(
                 f"Seeding from the DB for a reentered runner requires that "
                 f"The root future id ('{future.id}') must match the rerun id "
@@ -203,8 +207,10 @@ class LocalRunner(SilentRunner):
         elif rerun_mode is RerunMode.CONTINUE:
             future_graph = graph.clone_futures()
             is_clone = True
-        else:
+        elif rerun_mode is RerunMode.REENTER:
             future_graph = graph.to_future_graph()
+        else:
+            raise ValueError(f"Unrecognized rerun mode: {rerun_mode}")
 
         if is_clone:
             # Making sure we honor id of future passed from the outside
@@ -235,8 +241,9 @@ class LocalRunner(SilentRunner):
 
             if is_clone:
                 self._populate_graph_from_future(future)
-            else:
-                self._populate_graph_from_objects(runs, artifacts, edges)
+
+        if not is_clone:
+            self._populate_graph_from_objects(runs, artifacts, edges)
 
         self._save_graph()
 
@@ -838,7 +845,7 @@ class LocalRunner(SilentRunner):
         artifacts: List[Artifact],
         edges: List[Edge],
     ):
-        """Update the in-memory caches of the graph objects using the provided objects"""
+        """Update the in-memory caches of the graph objects using the provided objects."""
         for edge in edges:
             self._add_edge(edge)
         self._runs = {run.id: run for run in runs}
