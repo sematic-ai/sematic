@@ -226,7 +226,7 @@ if __name__ == "__main__":
 
     else:
         # Using uvicorn.run with more than one worker appears to crash it, but
-        # using more than one worker when invoking `uvircorn` on the command line
+        # using more than one worker when invoking `uvicorn` on the command line
         # works.
         print(
             "To run the server in production, please launch it using uvicorn directly. "

@@ -17,28 +17,28 @@ def the_beatles(test_db: DB):  # noqa: F811
     users = [
         User(
             id="0",
-            email="paul@thebeatles.com",
+            email="paul@thebeatles.co.uk",
             first_name="Paul",
             last_name="McCartney",
             api_key="0",
         ),
         User(
             id="1",
-            email="george@thebeatles.com",
+            email="george@thebeatles.co.uk",
             first_name="George",
             last_name="Harrison",
             api_key="1",
         ),
         User(
             id="2",
-            email="john@thebeatles.com",
+            email="john@thebeatles.co.uk",
             first_name="John",
             last_name="Lennon",
             api_key="2",
         ),
         User(
             id="3",
-            email="ringo@thebeatles.com",
+            email="ringo@thebeatles.co.uk",
             first_name="Ringo",
             last_name="Starr",
             api_key="3",

@@ -140,7 +140,9 @@ def initialize_future_from_run(
     return future
 
 
-def clone_root_run(run: Run, edges: List[Edge]) -> Tuple[Run, List[Edge]]:
+def clone_root_run(
+    run: Run, edges: List[Edge], artifacts_override: Optional[Dict[str, str]] = None
+) -> Tuple[Run, List[Edge]]:
     """
     Clone a root run and its edges.
 
@@ -150,6 +152,11 @@ def clone_root_run(run: Run, edges: List[Edge]) -> Tuple[Run, List[Edge]]:
         Original run to clone.
     edges: List[Edge]
         Original run's input and output edges.
+    artifacts_override: Optional[Dict[str, str]]
+        A mapping between Function parameter names and Artifact ids. Used to overwrite the
+        original Run Artifact ids in the cloned Run, in order to produce reruns with
+        different input Artifacts. Defaults to None, meaning rerunning with the same
+        inputs.
 
     Returns
     -------
@@ -157,6 +164,8 @@ def clone_root_run(run: Run, edges: List[Edge]) -> Tuple[Run, List[Edge]]:
         A tuple whose first element is the cloned run, and the second element is
         the list of cloned edges.
     """
+    artifacts_override = artifacts_override or {}
+
     run_id = make_future_id()
     cloned_run = Run(
         id=run_id,
@@ -185,7 +194,12 @@ def clone_root_run(run: Run, edges: List[Edge]) -> Tuple[Run, List[Edge]]:
             destination_run_id=(run_id if edge.destination_run_id == run.id else None),
             source_run_id=(run_id if edge.source_run_id == run.id else None),
             destination_name=edge.destination_name,
-            artifact_id=edge.artifact_id,
+            artifact_id=(
+                artifacts_override.get(edge.destination_name, edge.artifact_id)
+                # the output artifact MUST be reset
+                if edge.destination_name is not None
+                else None
+            ),
         )
         for edge in edges
     ]

@@ -135,8 +135,8 @@ class LocalRunner(SilentRunner):
         """During runner reentry, correct the state of any inline futures/runs.
 
         A correction may be needed if the future was executing in the runner when the
-        runner restarted. In this case, this method will mark the future and run for retry.
-        The update to the future and run happen in-place.
+        runner restarted. In this case, this method will mark the future and run for
+        retry. The update to the future and run happen in-place.
         """
         for future in futures:
             if not future.props.standalone and future.state == FutureState.SCHEDULED:
@@ -306,11 +306,12 @@ class LocalRunner(SilentRunner):
                 f=self._sio_client.connect,
                 fargs=[get_config().socket_io_url],
                 fkwargs=dict(namespaces=["/pipeline"]),
+                delay=1,
                 tries=4,
             )
         except BaseException as e:
             # provide the user with useful information, and then continue failing
-            logger.error("Could not connect to the socket.io server: %s", e)
+            logger.exception("Could not connect to the socket.io server", exc_info=e)
             raise
 
     def _disconnect_from_sio_server(self):

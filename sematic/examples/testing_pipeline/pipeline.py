@@ -200,6 +200,17 @@ def add_fan_out(val: float, fan_out: int) -> float:
 
 
 @sematic.func(standalone=True)
+def add_random(a: float) -> float:
+    """
+    Adds a random integer between 0 and 10 to the specified number.
+    """
+    logger.info("Executing: add_random(a=%s)", a)
+    time.sleep(5)
+    b = int(random.random() * 11)
+    return a + b
+
+
+@sematic.func(standalone=True)
 def do_sleep(val: float, sleep_time: int) -> float:
     """
     Sleeps for the specified number of seconds, in 1-second stretches, logging an INFO
@@ -416,6 +427,7 @@ def testing_pipeline(
     inline: bool = False,
     nested: bool = False,
     no_input: bool = False,
+    random: bool = False,
     fan_out: int = 0,
     sleep_time: int = 0,
     spam_logs: int = 0,
@@ -447,6 +459,8 @@ def testing_pipeline(
         Whether to include nested functions in the pipeline. Defaults to False.
     no_input: bool
         Whether to include a function that takes no input. Defaults to False.
+    random: bool
+        Whether to include a function that adds a random number. Defaults to False.
     sleep_time: int
         If greater than zero, includes a function which sleeps for the specified number of
         seconds, logging a message every second. Defaults to 0.
@@ -524,6 +538,9 @@ def testing_pipeline(
 
     if no_input:
         futures.append(do_no_input())
+
+    if random:
+        futures.append(add_random(initial_future))
 
     if sleep_time > 0:
         futures.append(do_sleep(initial_future, sleep_time))

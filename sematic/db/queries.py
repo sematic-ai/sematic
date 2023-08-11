@@ -690,7 +690,7 @@ def get_resolution(resolution_id: str) -> Resolution:
     Parameters
     ----------
     resolution_id:
-        ID of resoution to retrieve.
+        ID of resolution to retrieve.
 
     Returns
     -------
