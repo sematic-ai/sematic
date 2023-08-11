@@ -688,6 +688,10 @@ class Graph:
         return cloned_graph
 
     def to_future_graph(self) -> FutureGraph:
+        """Convert this `Run` graph into a corresponding graph of `Future`s
+
+        The future graph will use all the same ids as the runs.
+        """
         future_graph = FutureGraph()
 
         # run order guarantees parents and upstream come first
