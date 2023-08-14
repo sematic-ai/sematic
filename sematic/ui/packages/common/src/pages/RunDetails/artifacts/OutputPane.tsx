@@ -10,7 +10,7 @@ import { ArtifactPaneContainer } from "src/pages/RunDetails/artifacts/common";
 
 function OutputPane() {
     const { selectedRun } = useRunDetailsSelectionContext();
-    const { graph, isGraphLoading } = useRootRunContext();
+    const { graph } = useRootRunContext();
 
     const outputArtifact = useMemo(() => {
         if (!graph) {
@@ -39,7 +39,7 @@ function OutputPane() {
     }, [graph, selectedRun?.id]);
 
     const exceptions = useMemo(() => {
-        if (isGraphLoading) {
+        if (!selectedRun) {
             return null;
         }
         const { future_state, external_exception_metadata_json, exception_metadata_json } = selectedRun!;
@@ -57,7 +57,7 @@ function OutputPane() {
         }
 
         return null;
-    }, [isGraphLoading, selectedRun]);
+    }, [selectedRun]);
 
     const { future_state } = selectedRun! || {};
 
