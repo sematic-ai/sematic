@@ -17,10 +17,10 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import PipelineRunKind, PipelineRunStatus
-from sematic.db.queries import get_run, save_graph, save_resolution
+from sematic.db.queries import get_run, save_graph, save_resolution, save_run
+from sematic.db.tests.fixtures import make_resolution  # noqa: F401
 from sematic.db.tests.fixtures import make_run  # noqa: F401
 from sematic.db.tests.fixtures import persisted_resolution  # noqa: F401
-from sematic.db.tests.fixtures import persisted_run  # noqa: F401
 from sematic.db.tests.fixtures import pg_mock  # noqa: F401
 from sematic.db.tests.fixtures import run  # noqa: F401
 from sematic.db.tests.fixtures import (  # noqa: F401
@@ -272,13 +272,15 @@ def test_runner_restart(
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811
-    persisted_resolution,  # noqa: F811
+    run,  # noqa: F811
     mock_get_artifact_value,  # noqa: F811
 ):
     # Emulate the state of a pipeline run which was partially
     # done already
-    persisted_pipeline_run = persisted_resolution
-    persisted_pipeline_run.status = PipelineRunStatus.RUNNING
+    saved_run = save_run(run)
+    persisted_pipeline_run = make_resolution(
+        root_id=saved_run.id, status=PipelineRunStatus.RUNNING
+    )
     save_resolution(persisted_pipeline_run)
 
     foo_func_path = f"{foo.__module__}.{foo.__name__}"
