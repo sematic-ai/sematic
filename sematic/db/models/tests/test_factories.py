@@ -2,6 +2,7 @@
 import hashlib
 import json
 import time
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Union
 
 # Third-party
@@ -13,6 +14,7 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.factories import (
     clone_resolution,
     clone_root_run,
+    initialize_future_from_run,
     make_artifact,
     make_job,
     make_run_from_future,
@@ -45,6 +47,11 @@ def f():
     An informative docstring.
     """
     pass  # Some note
+
+
+@func
+def f2(a: int, b: int) -> int:
+    return a + b
 
 
 def test_make_run_from_future():
@@ -253,6 +260,57 @@ def test_clone_resolution(resolution: Resolution):  # noqa: F811
     assert cloned_resolution.user_id == resolution.user_id
     assert cloned_resolution.run_command == resolution.run_command
     assert cloned_resolution.build_config == resolution.build_config
+
+
+def test_initialize_future_from_run():
+    created_at = datetime(
+        year=2023, month=8, day=10, tzinfo=timezone(timedelta(hours=4))
+    )
+    run = Run(  # noqa: F811
+        id="theid",
+        original_run_id=None,
+        future_state=FutureState.RAN,
+        name="the name",
+        function_path=f"{f2.__module__}.{f2.__name__}",
+        parent_id="parentid",
+        root_id="rootid",
+        description="the description",
+        tags=["foo", "bar"],
+        nested_future_id="nestedid",
+        container_image_uri="imageuri",
+        created_at=created_at,
+        updated_at=created_at + timedelta(hours=2),
+        started_at=created_at + timedelta(hours=1),
+        ended_at=created_at + timedelta(2),
+        resolved_at=created_at + timedelta(2),
+        failed_at=None,
+        cache_key="cachekey",
+    )
+    requirements = ResourceRequirements(
+        kubernetes=KubernetesResourceRequirements(
+            node_selector={"foo": "bar"},
+        )
+    )
+    run.resource_requirements = requirements
+
+    kwargs = {"a": 1, "b": 2}
+    future = initialize_future_from_run(run, kwargs=kwargs, use_same_id=True)
+
+    assert future.id == run.id
+    assert future.function is f2
+    assert future.props.name == run.name
+    assert future.props.tags == json.loads(run.tags)  # type: ignore
+    assert future.props.state == FutureState[run.future_state]  # type: ignore
+    assert future.props.resource_requirements == requirements
+    assert future.props.scheduled_epoch_time == 1691614800
+    assert future.kwargs == kwargs
+
+    future2 = initialize_future_from_run(run, kwargs, use_same_id=False)
+    assert future2.id != future.id
+
+    run.function_path = "sematic.function._make_list"
+    future3 = initialize_future_from_run(run, kwargs={"v0": 0, "v1": 1})
+    assert future3.function.execute(**future3.kwargs) == [0, 1]
 
 
 def test_new():

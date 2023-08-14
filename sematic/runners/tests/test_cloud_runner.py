@@ -17,10 +17,10 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.db.models.edge import Edge
 from sematic.db.models.factories import make_artifact
 from sematic.db.models.resolution import PipelineRunKind, PipelineRunStatus
-from sematic.db.queries import get_root_graph, get_run, save_graph, save_resolution
+from sematic.db.queries import get_run, save_graph, save_resolution, save_run
+from sematic.db.tests.fixtures import make_resolution  # noqa: F401
 from sematic.db.tests.fixtures import make_run  # noqa: F401
 from sematic.db.tests.fixtures import persisted_resolution  # noqa: F401
-from sematic.db.tests.fixtures import persisted_run  # noqa: F401
 from sematic.db.tests.fixtures import pg_mock  # noqa: F401
 from sematic.db.tests.fixtures import run  # noqa: F401
 from sematic.db.tests.fixtures import (  # noqa: F401
@@ -45,20 +45,28 @@ def pipeline() -> float:
     return add(1, 2)
 
 
+@pytest.fixture
+def mock_get_artifact_value():
+    with mock.patch("sematic.api_client.get_artifact_value") as patched:
+        yield patched
+
+
 class InstrumentedCloudRunner(CloudRunner):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, no_op_main_loop=False, **kwargs):
         super().__init__(*args, **kwargs)
         _INSTRUMENTED_INSTANCES.append(self)
         self._init_args = (args, kwargs)
         self._run_called_with = None
         self._detach_pipeline_run_called_with = None
+        self._no_op_main_loop = no_op_main_loop
 
     def run(self, future):  # noqa: F811
         self._run_called_with = future
         super().run(future)
 
-    def _detach_pipeline_run(self, future):
-        self._detach_pipeline_run_called_with = future
+    def _pipeline_run_loop(self):
+        if not self._no_op_main_loop:
+            super()._pipeline_run_loop()
 
 
 _INSTRUMENTED_INSTANCES: List[InstrumentedCloudRunner] = []
@@ -264,73 +272,88 @@ def test_runner_restart(
     test_db,  # noqa: F811
     mock_requests,  # noqa: F811
     valid_client_version,  # noqa: F811
-    persisted_resolution,  # noqa: F811
+    run,  # noqa: F811
+    mock_get_artifact_value,  # noqa: F811
 ):
     # Emulate the state of a pipeline run which was partially
     # done already
-    persisted_pipeline_run = persisted_resolution
-    persisted_pipeline_run.status = PipelineRunStatus.RUNNING
+    saved_run = save_run(run)
+    persisted_pipeline_run = make_resolution(
+        root_id=saved_run.id, status=PipelineRunStatus.RUNNING
+    )
     save_resolution(persisted_pipeline_run)
 
-    @func
-    def bar() -> int:
-        return 1
-
-    @func
-    def foo() -> List[int]:
-        child1 = bar()
-        child2 = bar()
-        child3 = bar()
-        return [child1, child2, child3]
-
+    foo_func_path = f"{foo.__module__}.{foo.__name__}"
+    bar_func_path = f"{bar.__module__}.{bar.__name__}"
     root_run = get_run(persisted_pipeline_run.root_id)
+    root_run.function_path = foo_func_path
     root_run.future_state = FutureState.RAN
     child_run1 = make_run(
         id="a" * 32,
-        future_state=FutureState.RAN,
+        future_state=FutureState.RESOLVED,
         parent_id=persisted_pipeline_run.root_id,
         root_id=persisted_pipeline_run.root_id,
+        function_path=bar_func_path,
     )
     child_run2 = make_run(
         id="b" * 32,
         future_state=FutureState.RESOLVED,
         parent_id=persisted_pipeline_run.root_id,
         root_id=persisted_pipeline_run.root_id,
+        function_path=bar_func_path,
     )
     child_run3 = make_run(
         id="c" * 32,
         future_state=FutureState.CREATED,
         parent_id=persisted_pipeline_run.root_id,
         root_id=persisted_pipeline_run.root_id,
+        function_path=bar_func_path,
     )
     child_run4 = make_run(
         id="d" * 32,
         future_state=FutureState.CREATED,
         parent_id=persisted_pipeline_run.root_id,
         root_id=persisted_pipeline_run.root_id,
+        function_path="sematic.function._make_list",
     )
+    root_run.nested_future_id = child_run4.id
     runs = [root_run, child_run1, child_run2, child_run3, child_run4]
 
+    artifact1, _ = make_artifact(1, int)
+    artifact2, _ = make_artifact(2, int)
+
+    def fake_get_value(artifact):
+        return {
+            artifact1.id: 1,
+            artifact2.id: 2,
+        }[artifact.id]
+
+    mock_get_artifact_value.side_effect = fake_get_value
+
     edge1 = Edge(
+        id="e1" * 16,
         destination_run_id=child_run4.id,
         source_run_id=child_run1.id,
         destination_name="i0",
-        artifact_id=None,
+        artifact_id=artifact1.id,
     )
     edge2 = Edge(
+        id="e2" * 16,
         destination_run_id=child_run4.id,
         source_run_id=child_run2.id,
         destination_name="i1",
-        artifact_id=None,
+        artifact_id=artifact2.id,
     )
     edge3 = Edge(
+        id="e3" * 16,
         destination_run_id=child_run4.id,
         source_run_id=child_run3.id,
         destination_name="i2",
         artifact_id=None,
     )
     edges = [edge1, edge2, edge3]
-    save_graph(runs=runs, artifacts=[], edges=edges)
+    artifacts = [artifact1, artifact2]
+    save_graph(runs=runs, artifacts=artifacts, edges=edges)
 
     # Now that we have a partially executed pipeline run, see
     # what would happen if the runner restarted.
@@ -338,23 +361,60 @@ def test_runner_restart(
     future.id = root_run.id
     future.state = FutureState[root_run.future_state]
     with environment_variables({"SEMATIC_CONTAINER_IMAGE": "foo:bar"}):
-        with pytest.raises(Exception):
-            InstrumentedCloudRunner(_is_running_remotely=True, detach=False).run(future)
-    runs, _, __ = get_root_graph(root_run.id)
-    read_run_state_by_id = {run.id: run.future_state for run in runs}  # noqa: F811
-    assert read_run_state_by_id[child_run1.id] == FutureState.CANCELED.value
+        reentrant_runner = InstrumentedCloudRunner(
+            _is_running_remotely=True,
+            detach=False,
+            rerun_from=root_run.id,
+            rerun_mode=RerunMode.REENTER,
+            no_op_main_loop=True,
+        )
+        reentrant_runner.run(future)
+    read_run_state_by_id = {
+        run.id: run.future_state
+        for run in reentrant_runner._runs.values()  # noqa: F811
+    }
+    assert read_run_state_by_id[child_run1.id] == FutureState.RESOLVED.value
     assert read_run_state_by_id[child_run2.id] == FutureState.RESOLVED.value
-    assert read_run_state_by_id[child_run3.id] == FutureState.CANCELED.value
+    assert read_run_state_by_id[child_run3.id] == FutureState.CREATED.value
+    assert read_run_state_by_id[root_run.id] == FutureState.RAN.value
 
-    # We want the root run to show up as Failed in this circumstance.
-    assert read_run_state_by_id[root_run.id] == FutureState.FAILED.value
+    assert reentrant_runner._run_called_with.function is future.function
+    assert reentrant_runner._run_called_with.kwargs == future.kwargs
+    assert reentrant_runner._run_called_with.id == future.id
+    assert reentrant_runner._init_args[1]["rerun_from"] == root_run.id
+    assert reentrant_runner._init_args[1]["rerun_mode"] == RerunMode.REENTER
 
-    new_runner = _INSTRUMENTED_INSTANCES[-1]
-    assert new_runner._run_called_with.function is future.function
-    assert new_runner._run_called_with.kwargs == future.kwargs
-    assert new_runner._run_called_with.id != future.id
-    assert (
-        new_runner._detach_pipeline_run_called_with.id == new_runner._run_called_with.id
-    )
-    assert new_runner._init_args[1]["rerun_from"] == root_run.id
-    assert new_runner._init_args[1]["rerun_mode"] == RerunMode.CONTINUE
+    assert {e.id for e in edges} == {e.id for e in reentrant_runner._edges.values()}
+    assert {a.id for a in artifacts} == {
+        a.id for a in reentrant_runner._artifacts.values()
+    }
+
+    root_future = next(f for f in reentrant_runner._futures if f.id == root_run.id)
+    future1 = next(f for f in reentrant_runner._futures if f.id == child_run1.id)
+    future2 = next(f for f in reentrant_runner._futures if f.id == child_run2.id)
+    future3 = next(f for f in reentrant_runner._futures if f.id == child_run3.id)
+    future4 = next(f for f in reentrant_runner._futures if f.id == child_run4.id)
+    assert root_future.nested_future is future4
+    assert future4.kwargs == {
+        "v0": future1,
+        "v1": future2,
+        "v2": future3,
+    }
+    assert future4.resolved_kwargs == {
+        "v0": 1,
+        "v1": 2,
+        # "v2": 3,  # the run for this hasn't executed yet
+    }
+
+
+@func
+def bar() -> int:
+    return 1
+
+
+@func
+def foo() -> List[int]:
+    child1 = bar()
+    child2 = bar()
+    child3 = bar()
+    return [child1, child2, child3]

@@ -92,6 +92,8 @@ sematic_py_lib(
         "//sematic/db/models:artifact",
         "//sematic/db/models:edge",
         "//sematic/db/models:factories",
+        "//sematic/db/models:run",
+        "//sematic/db/models:resolution",
         "//sematic/runners:cloud_runner",
         "//sematic/runners:local_runner",
         "//sematic/scheduling:job_details",

@@ -27,7 +27,7 @@ from sematic.db.models.factories import make_artifact, make_run_from_future
 from sematic.db.models.git_info import GitInfo
 from sematic.db.models.resolution import PipelineRun, PipelineRunKind, PipelineRunStatus
 from sematic.db.models.run import Run
-from sematic.graph import Graph, RerunMode
+from sematic.graph import FutureGraph, Graph, RerunMode
 from sematic.plugins.abstract_builder import get_build_config, get_run_command
 from sematic.resolvers.resource_managers.server_manager import ServerResourceManager
 from sematic.runners.silent_runner import SilentRunner
@@ -74,6 +74,13 @@ class LocalRunner(SilentRunner):
             In this case, the run id passed to rerun_from must be the root id of a
             pipeline run. The new pipeline run will use any available results from the
             old one and only execute what is necessary to determine the final result.
+            The new pipeline run will use a NEW future graph, cloned from the old one.
+        `RerunMode.REENTER`:
+            In this case, the run id passed to rerun_from must be the root id of the
+            pipeline run. The new pipeline run will use any available results from the
+            old one and only execute what is necessary to determine the final result.
+            The new pipeline run will use the EXISTING future graph, recreated from
+            the runs in the DB.
     """
 
     _resource_manager: Optional[ServerResourceManager] = None  # type: ignore
@@ -122,14 +129,41 @@ class LocalRunner(SilentRunner):
         if self._rerun_from_run_id is None:
             super()._seed_graph(future)
         else:
-            self._seed_from_clone(future, self._rerun_from_run_id, self._rerun_mode)
+            self._seed_from_existing(future, self._rerun_from_run_id, self._rerun_mode)
 
-    def _seed_from_clone(
+    def _reenter_inline_runs(self, futures, runs):
+        """During runner reentry, correct the state of any inline futures/runs.
+
+        A correction may be needed if the future was executing in the runner when the
+        runner restarted. In this case, this method will mark the future and run for
+        retry. The update to the future and run happen in-place.
+        """
+        for future in futures:
+            if not future.props.standalone and future.state == FutureState.SCHEDULED:
+                # The future was executing in the runner when the runner restarted.
+                # So we need to start it again.
+                logger.warning(
+                    "The future %s was executing in the runner when the runner "
+                    "restarted. Restarting execution of the future. "
+                    "Some of the future's properties may have changed "
+                    "(see Issue #1032)",
+                    future.id,
+                )
+                future.state = FutureState.RETRYING
+                inline_run = next(run for run in runs if run.id == future.id)
+                inline_run.future_state = FutureState.RETRYING
+                api_client.save_graph(
+                    self._root_future.id, runs=[inline_run], artifacts=[], edges=[]
+                )
+
+    def _seed_from_existing(
         self, future: AbstractFuture, from_run_id: str, rerun_mode: Optional[RerunMode]
     ):
         """
         Instead of simply queuing the root future, this method seeds the future graph
-        from a clone of another execution of same pipeline.
+        from an existing execution. This execution may be another execution of
+        same pipeline, or it may be the same execution of that pipeline that originated
+        from an earlier runner pod (if the runner pod has restarted).
         """
         rerun_mode = rerun_mode or RerunMode.SPECIFIC_RUN
 
@@ -142,6 +176,14 @@ class LocalRunner(SilentRunner):
 
         if rerun_mode is RerunMode.CONTINUE and run.id != run.root_id:
             raise ValueError("Cannot use RerunMode.CONTINUE with a non-root run.")
+        elif rerun_mode is RerunMode.REENTER and run.id != future.id:
+            # This should be impossible. Raise a helpful message in case
+            # it ever happens anyway.
+            raise ValueError(
+                f"Seeding from the DB for a reentered runner requires that "
+                f"The root future id ('{future.id}') must match the rerun id "
+                f"('{run.id}')."
+            )
 
         runs, artifacts, edges = api_client.get_graph(run.root_id, root=True)
 
@@ -158,17 +200,28 @@ class LocalRunner(SilentRunner):
 
         logger.info(f"Attempting to rerun from {from_run_id}")
 
+        is_clone = False
         if rerun_mode is RerunMode.SPECIFIC_RUN:
-            cloned_graph = graph.clone_futures(
+            future_graph: FutureGraph = graph.clone_futures(
                 reset_from=from_run_id,
             )
+            is_clone = True
+        elif rerun_mode is RerunMode.CONTINUE:
+            future_graph = graph.clone_futures()
+            is_clone = True
+        elif rerun_mode is RerunMode.REENTER:
+            future_graph = graph.to_future_graph()
         else:
-            cloned_graph = graph.clone_futures()
+            raise ValueError(f"Unrecognized rerun mode: {rerun_mode}")
 
-        # Making sure we honor id of future passed from the outside
-        cloned_graph.set_root_future_id(future.id)
+        if is_clone:
+            # Making sure we honor id of future passed from the outside
+            future_graph.set_root_future_id(future.id)  # type: ignore
 
-        self._futures = list(cloned_graph.futures_by_original_id.values())
+        self._futures = list(future_graph.futures_by_run_id.values())
+
+        if rerun_mode == RerunMode.REENTER:
+            self._reenter_inline_runs(self._futures, runs)
 
         # This is necessary, otherwise the root run will not be updated with its
         # cloned status. In detached execution, or rerun, the root run is
@@ -182,13 +235,17 @@ class LocalRunner(SilentRunner):
             if future.state == FutureState.RESOLVED:
                 self._artifacts_by_run_id[future.id][
                     None
-                ] = cloned_graph.output_artifacts[future.id]
+                ] = future_graph.output_artifacts[future.id]
 
             if future.state in {FutureState.RESOLVED, FutureState.RAN}:
-                for name, artifact in cloned_graph.input_artifacts[future.id].items():
+                for name, artifact in future_graph.input_artifacts[future.id].items():
                     self._artifacts_by_run_id[future.id][name] = artifact
 
-            self._populate_graph(future)
+            if is_clone:
+                self._populate_graph_from_future(future)
+
+        if not is_clone:
+            self._populate_graph_from_objects(runs, artifacts, edges)
 
         self._save_graph()
 
@@ -248,7 +305,7 @@ class LocalRunner(SilentRunner):
         if len(future.kwargs) != len(future.resolved_kwargs):
             raise RuntimeError("Not all input arguments are concrete")
 
-        run = self._populate_graph(future)
+        run = self._populate_graph_from_future(future)
 
         return run
 
@@ -296,7 +353,8 @@ class LocalRunner(SilentRunner):
         self._save_graph()
         self._cache_namespace_str = self._make_cache_namespace()
         self._create_pipeline_run(self._root_future)
-        self._update_pipeline_run_status(PipelineRunStatus.RUNNING)
+        if self._rerun_mode != RerunMode.REENTER:
+            self._update_pipeline_run_status(PipelineRunStatus.RUNNING)
 
     def _clean_up_pipeline_run(self, save_graph: bool) -> None:
         self._cancel_non_terminal_futures()
@@ -532,7 +590,7 @@ class LocalRunner(SilentRunner):
 
         run.nested_future_id = future.nested_future.id
 
-        self._populate_graph(future.nested_future)
+        self._populate_graph_from_future(future.nested_future)
         self._add_run(run)
         self._save_graph()
 
@@ -543,7 +601,7 @@ class LocalRunner(SilentRunner):
         run.future_state = FutureState.RESOLVED
         run.resolved_at = datetime.datetime.utcnow()
 
-        self._populate_graph(future)
+        self._populate_graph_from_future(future)
         self._add_run(run)
         self._save_graph()
 
@@ -783,7 +841,19 @@ class LocalRunner(SilentRunner):
 
         return artifact
 
-    def _populate_graph(self, future: AbstractFuture) -> Run:
+    def _populate_graph_from_objects(
+        self,
+        runs: List[Run],
+        artifacts: List[Artifact],
+        edges: List[Edge],
+    ):
+        """Update the in-memory caches of the graph objects using the provided objects."""
+        for edge in edges:
+            self._add_edge(edge)
+        self._runs = {run.id: run for run in runs}
+        self._artifacts = {artifact.id: artifact for artifact in artifacts}
+
+    def _populate_graph_from_future(self, future: AbstractFuture) -> Run:
         """
         Update the graph to include the given Future.
         """
@@ -897,7 +967,7 @@ class LocalRunner(SilentRunner):
         # populate the graph for upstream futures
         for value in future.kwargs.values():
             if isinstance(value, AbstractFuture):
-                self._populate_graph(value)
+                self._populate_graph_from_future(value)
 
         return self._runs[future.id]
 

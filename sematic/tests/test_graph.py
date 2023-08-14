@@ -52,9 +52,9 @@ def test_clone_futures(
 
     cloned_graph = graph.clone_futures()
 
-    assert len(cloned_graph.futures_by_original_id) == len(runs)
+    assert len(cloned_graph.futures_by_run_id) == len(runs)
 
-    root_future = cloned_graph.futures_by_original_id[future.id]
+    root_future = cloned_graph.futures_by_run_id[future.id]
 
     assert root_future.state == FutureState.RESOLVED
     assert root_future.function._func is pipeline._func
@@ -63,7 +63,7 @@ def test_clone_futures(
     # so the root run was never actually executed
     assert root_future.original_future_id == future.id
 
-    for original_run_id, future_ in cloned_graph.futures_by_original_id.items():
+    for original_run_id, future_ in cloned_graph.futures_by_run_id.items():
         original_run = runs_by_id[original_run_id]
         # No reset so state should be the same
         assert future.state.value == original_run.future_state
@@ -73,8 +73,7 @@ def test_clone_futures(
         if original_run.parent_id is not None:
             parent_run = runs_by_id[original_run.parent_id]
             assert (
-                cloned_graph.futures_by_original_id[parent_run.id]
-                is future_.parent_future
+                cloned_graph.futures_by_run_id[parent_run.id] is future_.parent_future
             )
 
         # Making sure all future kwargs are correct
@@ -89,7 +88,7 @@ def test_clone_futures(
                 value = api_client.get_artifact_value(artifact)
                 assert future_.kwargs[input_edge.destination_name] == value
             else:
-                upstream_future = cloned_graph.futures_by_original_id[
+                upstream_future = cloned_graph.futures_by_run_id[
                     input_edge.source_run_id
                 ]
                 assert future_.kwargs[input_edge.destination_name] is upstream_future
@@ -103,10 +102,57 @@ def test_clone_futures(
             assert future_.value == value
             if output_edge.destination_run_id is not None:
                 downstream_run = runs_by_id[output_edge.destination_run_id]
-                downstream_future = cloned_graph.futures_by_original_id[
-                    downstream_run.id
-                ]
+                downstream_future = cloned_graph.futures_by_run_id[downstream_run.id]
                 assert downstream_future.kwargs[output_edge.destination_name] is future_
+
+
+def test_to_future_graph(
+    mock_auth,  # noqa: F811
+    mock_socketio,  # noqa: F811
+    test_db,  # noqa: F811
+    mock_requests,  # noqa: F811
+):
+    name = "the name"
+    original_future = pipeline(1, 2, 3).set(name=name)
+    runner = LocalRunner()
+    result = runner.run(original_future)
+
+    runs, artifacts, edges = api_client.get_graph(original_future.id, root=True)
+
+    graph = Graph(runs=runs, edges=edges, artifacts=artifacts)
+    future_graph = graph.to_future_graph()
+    root_future = future_graph.futures_by_run_id[original_future.id]
+    assert root_future.props.name == name
+    assert root_future.kwargs == {"a": 1.0, "b": 2.0, "c": 3.0}
+    assert root_future.function is pipeline
+
+    nested_future = root_future.nested_future
+    assert nested_future.function is add3
+    d_future = nested_future.kwargs["a"]
+    assert nested_future.kwargs["b"] == 2.0
+    assert nested_future.kwargs["c"] == 3.0
+
+    assert d_future.function is add3
+
+    add_future1 = d_future.kwargs["a"]
+    add_future2 = d_future.kwargs["b"]
+    add_future3 = d_future.kwargs["c"]
+
+    assert add_future1.function is add
+    assert add_future2.function is add
+    assert add_future3.function is add
+
+    assert add_future1.kwargs == {"a": 1.0, "b": 2.0}
+    assert add_future2.kwargs == {"a": 2.0, "b": 3.0}
+    assert add_future3.kwargs == {"a": 1.0, "b": 3.0}
+
+    assert future_graph.output_artifacts[add_future1.id].json_summary == "3.0"
+    assert future_graph.output_artifacts[add_future2.id].json_summary == "5.0"
+    assert future_graph.output_artifacts[add_future3.id].json_summary == "4.0"
+    assert future_graph.output_artifacts[root_future.id].json_summary == str(result)
+
+    assert future_graph.input_artifacts[add_future1.id]["a"].json_summary == "1.0"
+    assert future_graph.input_artifacts[add_future1.id]["b"].json_summary == "2.0"
 
 
 def test_clone_futures_reset(
@@ -127,7 +173,7 @@ def test_clone_futures_reset(
 
     cloned_graph = graph.clone_futures(reset_from=reset_from_run_id)
 
-    root_future = cloned_graph.futures_by_original_id[future.id]
+    root_future = cloned_graph.futures_by_run_id[future.id]
 
     assert root_future.state == FutureState.RAN
     assert root_future.function._func is pipeline._func
@@ -141,7 +187,7 @@ def test_clone_futures_reset(
     # Check that the second add3 future has no children
     assert not any(
         future_.parent_future is second_add3_future
-        for future_ in cloned_graph.futures_by_original_id.values()
+        for future_ in cloned_graph.futures_by_run_id.values()
     )
 
     first_add3_future = second_add3_future.kwargs["a"]
@@ -150,7 +196,7 @@ def test_clone_futures_reset(
 
     first_add3_child_futures = [
         future_
-        for future_ in cloned_graph.futures_by_original_id.values()
+        for future_ in cloned_graph.futures_by_run_id.values()
         if future_.parent_future is first_add3_future
     ]
 
@@ -164,7 +210,7 @@ def test_clone_futures_reset(
 
     top_level_add_futures = [
         future_
-        for future_ in cloned_graph.futures_by_original_id.values()
+        for future_ in cloned_graph.futures_by_run_id.values()
         if future_.parent_future is root_future
         and future_ not in {first_add3_future, second_add3_future}
     ]
@@ -176,7 +222,7 @@ def test_clone_futures_reset(
 
     top_level_add_futures_ids = {
         id
-        for id, future_ in cloned_graph.futures_by_original_id.items()
+        for id, future_ in cloned_graph.futures_by_run_id.items()
         if future_.function._func is add._func
     }
     top_level_add_futures_original_ids = {
@@ -218,7 +264,7 @@ def test_reset_failed(
 
     cloned_graph = graph.clone_futures(reset_from=reset_from_run_id)
 
-    root_future = cloned_graph.futures_by_original_id[future.id]
+    root_future = cloned_graph.futures_by_run_id[future.id]
 
     assert root_future.state is FutureState.RAN
     assert root_future.nested_future.state is FutureState.CREATED

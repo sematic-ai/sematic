@@ -12,6 +12,7 @@ sematic_py_lib(
     # buildifier: leave-alone
     deps = [
         "//sematic:abstract_future",
+        "//sematic:function",
         "//sematic/db:db",
         "//sematic/db:queries",
         "//sematic/db/models:edge",

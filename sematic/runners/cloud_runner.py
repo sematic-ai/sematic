@@ -9,7 +9,7 @@ import cloudpickle
 
 # Sematic
 import sematic.api_client as api_client
-from sematic.abstract_future import AbstractFuture, FutureState, clone_future
+from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.container_images import (
     DEFAULT_BASE_IMAGE_TAG,
     MissingContainerImage,
@@ -20,9 +20,8 @@ from sematic.db.models.edge import Edge
 from sematic.db.models.resolution import PipelineRunKind, PipelineRunStatus
 from sematic.db.models.run import Run
 from sematic.future_context import context
-from sematic.graph import RerunMode
 from sematic.plugins.abstract_external_resource import AbstractExternalResource
-from sematic.runners.local_runner import LocalRunner, RunnerRestartError, make_edge_key
+from sematic.runners.local_runner import LocalRunner, make_edge_key
 from sematic.utils.exceptions import format_exception_for_run
 from sematic.utils.memoized_property import memoized_property
 
@@ -75,13 +74,29 @@ class CloudRunner(LocalRunner):
         that runs that are in the RAN state do not contribute to the limit,
         since they do not consume computing resources.
     rerun_from: Optional[str]
-        When `None`, the pipeline is executed from scratch, as normally. When
-        not `None`, must be the id of a `Run` from a previous pipeline run.
-        Instead of running from scratch, parts of that previous pipeline run is
-        cloned up until the specified `Run`, and only the specified `Run`,
-        nested and downstream `Future`s are executed. This is meant to be used
-        for retries or for hotfixes, without needing to re-run the entire
-        pipeline again.
+        When `None`, the pipeline is executed from scratch, as normally. When not `None`,
+        must be the id of a `Run` from a previous pipeline run. The nature of the rerun
+        when an id is specified will depend on the `rerun_mode` parameter.
+    rerun_mode: RerunMode
+        This option is only used when `rerun_from` has been given a run id.
+        If set to
+        `RerunMode.SPECIFIC_RUN` (the default):
+            Instead of running from scratch, parts of that previous
+            pipeline run will be cloned up until the specific `Run`, and only the
+            specified `Run`, nested and downstream `Future`s will be executed.
+            This is meant to be used for retries or for hotfixes, without needing to
+            re-run the entire pipeline again.
+        `RerunMode.CONTINUE`:
+            In this case, the run id passed to rerun_from must be the root id of a
+            pipeline run. The new pipeline run will use any available results from the
+            old one and only execute what is necessary to determine the final result.
+            The new pipeline run will use a NEW future graph, cloned from the old one.
+        `RerunMode.REENTER`:
+            In this case, the run id passed to rerun_from must be the root id of the
+            pipeline run. The new pipeline run will use any available results from the
+            old one and only execute what is necessary to determine the final result.
+            The new pipeline run will use the EXISTING future graph, recreated from
+            the runs in the DB.
     _is_running_remotely: bool
         For Sematic internal usage. End users should always leave this at the
         default value of `False`.
@@ -319,7 +334,7 @@ class CloudRunner(LocalRunner):
         else:
             output_edge = self._get_output_edges(run.id)[0]
 
-            # Pleasing mymy
+            # Pleasing mypy
             if output_edge.artifact_id is None:
                 raise RuntimeError("Missing output artifact")
 
@@ -328,35 +343,6 @@ class CloudRunner(LocalRunner):
             value = api_client.get_artifact_value(output_artifact)
 
         self._update_future_with_value(future, value)
-
-    def _pipeline_run_did_fail(
-        self, error: Exception, reason: Optional[str] = None
-    ) -> None:
-        if not isinstance(error, RunnerRestartError):
-            super()._pipeline_run_did_fail(error)
-            return
-
-        try:
-            new_root_future = clone_future(self._root_future)
-            new_runner = self.__class__(
-                cache_namespace=self._cache_namespace_str,
-                rerun_from=self._root_future.id,
-                rerun_mode=RerunMode.CONTINUE,
-                detach=True,
-                max_parallelism=self._max_parallelism,
-                _base_image_tag=self._base_image_tag,
-            )
-            new_runner._git_info = api_client.get_pipeline_run(
-                self._root_future.id
-            ).git_info
-            new_runner.run(new_root_future)
-            reason = (
-                f"Pipeline Run restarted mid-execution. A new one has been started "
-                f"with the id {new_root_future.id}"
-            )
-            logger.error(reason)
-        finally:
-            super()._pipeline_run_did_fail(error, reason)
 
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
         # Unlike LocalRunner._future_did_fail, we only care about
