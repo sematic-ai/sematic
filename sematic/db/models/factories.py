@@ -19,6 +19,7 @@ from sematic.db.models.organization_user import OrganizationUser
 from sematic.db.models.resolution import Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
+from sematic.resolvers.type_utils import make_list_type, make_tuple_type
 from sematic.scheduling.job_details import JobDetails, JobKindString, JobStatus
 from sematic.types.serialization import (
     get_json_encodable_summary,
@@ -36,6 +37,8 @@ def make_run_from_future(future: AbstractFuture) -> Run:
     """
     Create a Run model instance from a future.
     """
+    # Note: when updating this you likely need to also update
+    # initialize_future_from_run below.
     run = Run(
         id=future.id,
         original_run_id=future.original_future_id,
@@ -64,6 +67,77 @@ def make_run_from_future(future: AbstractFuture) -> Run:
     run.resource_requirements = future.props.resource_requirements
 
     return run
+
+
+def initialize_future_from_run(
+    run: Run, kwargs: Dict[str, Any], use_same_id: bool = True
+) -> AbstractFuture:
+    """Initialize a future using corresponding properties in the run.
+
+    Only properties that are completely represented
+    in the run itself or its corresponding Sematic Function arguments will
+    be set. In particular, properties requiring access to a broader run graph
+    or external sources of information will NOT be updated by this function.
+    It is thus primarily useful in conjunction with something constructing
+    futures with access to a full run graph (ex: see graph.py).
+
+    A list (not necessarily exhaustive) of fields that will explicitly
+    NOT be updated on the future from the run, due to lack of broader
+    graph access or other listed reasons:
+
+    - resolved_kwargs: requires full graph access
+    - value: requires full graph access
+    - parent_future: requires full graph access
+    - nested_future: requires full graph access
+    - standalone: May be set by the run's function; see Issue #1032
+    - cache: May be set by the run's function; see Issue #1032
+    - timeout_mins: May be set by the run's function; see Issue #1032
+    - retry_settings: May be set by the run's function; see Issue #1032
+
+    Parameters
+    ----------
+    run:
+        The run to update properties from.
+    kwargs:
+        The keyword arguments for the future.
+    use_same_id:
+        Whether the new future should have the same id as the provided run.
+        Defaults to True.
+
+    Returns
+    -------
+    A future created from the given run.
+    """
+    # Note: when updating this you likely need to also update
+    # make_run_from_future above.
+    func = run.get_func()
+
+    # _make_list and _make_tuple need special treatment as they are not
+    # decorated functions, but factories that dynamically generate futures.
+    if run.function_path == "sematic.function._make_list":
+        # Dict values insertion order guaranteed as of Python 3.7
+        input_list = list(kwargs.values())
+        future = func(make_list_type(input_list), input_list)  # type: ignore
+    elif run.function_path == "sematic.function._make_tuple":
+        # Dict values insertion order guaranteed as of Python 3.7
+        input_tuple = tuple(kwargs.values())
+        future = func(make_tuple_type(input_tuple), input_tuple)  # type: ignore
+    else:
+        future = func(**kwargs)
+
+    if use_same_id:
+        future.id = run.id
+    future.props.name = run.name
+    future.props.tags = json.loads(str(run.tags))
+    future_state = run.future_state
+    if isinstance(future_state, str):
+        future_state = FutureState[future_state]
+    future.props.state = future_state
+    future.props.resource_requirements = run.resource_requirements
+    if run.started_at is not None:
+        future.props.scheduled_epoch_time = run.started_at.timestamp()
+
+    return future
 
 
 def clone_root_run(

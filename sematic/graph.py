@@ -1,5 +1,4 @@
 # Standard Library
-import json
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass, field
 from enum import Enum, unique
@@ -12,8 +11,8 @@ import sematic.api_client as api_client
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.db.models.artifact import Artifact
 from sematic.db.models.edge import Edge
+from sematic.db.models.factories import initialize_future_from_run
 from sematic.db.models.run import Run
-from sematic.resolvers.type_utils import make_list_type, make_tuple_type
 from sematic.utils.algorithms import breadth_first_search, topological_sort
 from sematic.utils.memoized_property import memoized_indexed, memoized_property
 
@@ -35,22 +34,48 @@ class RerunMode(Enum):
         whatever runs are required to determine the final result of the
         graph.
     CONTINUE:
-        Execute only runs that are required to determine the final
+        Clone the state of the provided pipeline run, then
+        execute only runs that are required to determine the final
         result of the graph.
+    REENTER:
+        Attempt to recreate an existing future graph in memory
+        and pick up where it was left off. This differs from
+        CONTINUE in that CONTINUE represents an entirely new
+        graph (cloned from an original), while REENTER uses
+        the existing graph.
     """
 
     SPECIFIC_RUN = "SPECIFIC_RUN"
     CONTINUE = "CONTINUE"
 
+    # We keep CONTINUE as distinct because it can still be used to rerun from failed.
+    REENTER = "REENTER"
+
 
 @dataclass
-class ClonedFutureGraph:
-    """
-    A cloned future graph. This graph is potentially partial, as it is meant to
-    be used as a resolution seed.
+class FutureGraph:
+    """A graph of futures and their associated artifacts.
+
+    Attributes
+    ----------
+    futures_by_run_id:
+        A dictionary of futures stored using the id of a corresponding run.
+        This can be the id of the future itself, or potentially a run that
+        the future was derived from.
+    input_artifacts:
+        A dictionary mapping a run id to the input artifacts for that run.
+        The input artifacts for a given run will itself be a dictionary from
+        the name of the input parameter for the run to the Artifact object
+        that should be used as its input. The graph may be in a partially
+        executed state, in which case not all runs may have known input
+        artifacts.
+    output_artifacts:
+        A dictionary mapping run ids to the Artifact object resulting from
+        that run. The graph may be in a partially executed state, in which
+        case not all runs will have known output artifacts.
     """
 
-    futures_by_original_id: OrderedDictType[RunID, AbstractFuture] = field(
+    futures_by_run_id: OrderedDictType[RunID, AbstractFuture] = field(
         init=False, default_factory=OrderedDict
     )
     input_artifacts: Dict[RunID, Dict[str, Artifact]] = field(
@@ -59,25 +84,32 @@ class ClonedFutureGraph:
     output_artifacts: Dict[RunID, Artifact] = field(init=False, default_factory=dict)
 
     def sort_by(self, run_ids: List[RunID]):
-        """
-        Sort futures according to the order of run_ids.
-        """
+        """Sort futures in-place according to the order of run_ids."""
         ordered_futures = OrderedDict(
             (
-                (run_id, self.futures_by_original_id[run_id])
+                (run_id, self.futures_by_run_id[run_id])
                 for run_id in run_ids
-                if run_id in self.futures_by_original_id
+                if run_id in self.futures_by_run_id
             )
         )
-        self.futures_by_original_id = ordered_futures
+        self.futures_by_run_id = ordered_futures
+
+
+@dataclass
+class ClonedFutureGraph(FutureGraph):
+    """
+    A cloned future graph. This graph is potentially partial, as it is meant to
+    be used as a resolution seed.
+
+    Its futures_by_run_id field maps the id of a run to the future cloned from that
+    run.
+    """
 
     def set_root_future_id(self, root_id: str):
-        """
-        Set the root future ID
-        """
+        """Update the id of the root future in this graph to match the passed one."""
         root_future = next(
             future
-            for future in self.futures_by_original_id.values()
+            for future in self.futures_by_run_id.values()
             if future.is_root_future()
         )
 
@@ -436,8 +468,8 @@ class Graph:
         artifact = self._artifacts_by_id[artifact_id]
         return api_client.get_artifact_value(artifact)
 
-    def _get_cloned_future_inputs(
-        self, run_id: RunID, cloned_graph: ClonedFutureGraph
+    def _get_future_inputs(
+        self, run_id: RunID, future_graph: FutureGraph
     ) -> Tuple[Dict[str, Any], Dict[str, Artifact]]:
         kwargs: Dict[str, Any] = {}
 
@@ -459,9 +491,9 @@ class Graph:
             if input_edge.source_run_id is not None:
                 # We set the input as the upstream future to mimic what
                 # happens in a greenfield resolution.
-                kwargs[
-                    input_edge.destination_name
-                ] = cloned_graph.futures_by_original_id[input_edge.source_run_id]
+                kwargs[input_edge.destination_name] = future_graph.futures_by_run_id[
+                    input_edge.source_run_id
+                ]
 
             elif input_edge.artifact_id is not None:
                 kwargs[input_edge.destination_name] = value
@@ -485,17 +517,35 @@ class Graph:
 
         return None, None
 
-    def _set_cloned_parent_future(
+    def _set_parent_future_using_run(
         self,
         future: AbstractFuture,
         run: Run,
-        cloned_graph: ClonedFutureGraph,
-        reset_run_ids: List[RunID],
-    ):
+        future_graph: FutureGraph,
+    ) -> None:
+        """Use this run graph and provided run to set the parent future in future_graph.
+
+        To be used in the process of constructing a FutureGraph from this run graph
+        (potentially as a cloned future graph). This method will update futures in
+        future_graph in-place.
+
+        The parent run of the provided run will be used to identify the appropriate
+        parent future for the provided future. The provided future and its parent
+        future will be modified as necessary.
+
+        Parameters
+        ----------
+        future:
+           The future whose parent should be updated.
+        run:
+            The run to be used as a reference to update the future's parent.
+        future_graph:
+            The future graph being constructed.
+        """
         if run.parent_id is None:
             return
 
-        parent_future = cloned_graph.futures_by_original_id[run.parent_id]
+        parent_future = future_graph.futures_by_run_id[run.parent_id]
 
         future.parent_future = parent_future
 
@@ -503,37 +553,18 @@ class Graph:
         if self._runs_by_id[run.parent_id].nested_future_id == run.id:
             parent_future.nested_future = future
 
-            if run.id in reset_run_ids:
-                parent_future.state = FutureState.RAN
-
     def _clone_future(
         self, run_id: RunID, cloned_graph: ClonedFutureGraph, reset_run_ids: List[RunID]
     ) -> AbstractFuture:
         run = self._runs_by_id[run_id]
 
-        kwargs, run_input_artifacts = self._get_cloned_future_inputs(
-            run_id, cloned_graph
-        )
+        kwargs, run_input_artifacts = self._get_future_inputs(run_id, cloned_graph)
 
-        func = run.get_func()
+        future = initialize_future_from_run(run, kwargs, use_same_id=False)
 
-        # _make_list and _make_tuple need special treatment as they are not
-        # decorated functions, but factories that dynamically generate futures.
-        if run.function_path == "sematic.function._make_list":
-            # Dict values insertion order guaranteed as of Python 3.7
-            input_list = list(kwargs.values())
-            future = func(make_list_type(input_list), input_list)  # type: ignore
-        elif run.function_path == "sematic.function._make_tuple":
-            # Dict values insertion order guaranteed as of Python 3.7
-            input_tuple = tuple(kwargs.values())
-            future = func(make_tuple_type(input_tuple), input_tuple)  # type: ignore
-        else:
-            future = func(**kwargs)
-
-        future.name = run.name
-
-        future.props.name = run.name
-        future.props.tags = json.loads(str(run.tags))
+        # For cloning a graph, we want the default state of the future to be
+        # created unless explicitly updated to a different value.
+        future.props.state = FutureState.CREATED
 
         cloned_graph.input_artifacts[future.id] = run_input_artifacts
 
@@ -543,7 +574,16 @@ class Graph:
                 cloned_graph.output_artifacts[future.id] = output_artifact
                 future.value = value
 
-        self._set_cloned_parent_future(future, run, cloned_graph, reset_run_ids)
+        self._set_parent_future_using_run(future, run, cloned_graph)
+
+        # Is future parent_future's nested future?
+        if (
+            run.parent_id is not None
+            and self._runs_by_id[run.parent_id].nested_future_id == run.id
+        ):
+            parent_future = cloned_graph.futures_by_run_id[run.parent_id]
+            if run.id in reset_run_ids:
+                parent_future.state = FutureState.RAN
 
         # Settings state for resolved runs unless reset
         if FutureState[run.future_state] == FutureState.RESOLVED:  # type: ignore
@@ -553,6 +593,24 @@ class Graph:
                 future.original_future_id = (
                     run.original_run_id if run.original_run_id is not None else run_id
                 )
+
+        return future
+
+    def _future_from_run(
+        self, run_id: RunID, future_graph: FutureGraph
+    ) -> AbstractFuture:
+        run = self._runs_by_id[run_id]
+        kwargs, run_input_artifacts = self._get_future_inputs(run_id, future_graph)
+
+        future = initialize_future_from_run(run, kwargs)
+        future_graph.input_artifacts[future.id] = run_input_artifacts
+
+        value, output_artifact = self._get_run_output(run_id)
+        if output_artifact is not None:
+            future_graph.output_artifacts[future.id] = output_artifact
+            future.value = value
+
+        self._set_parent_future_using_run(future, run, future_graph)
 
         return future
 
@@ -611,11 +669,11 @@ class Graph:
             if run_id in skip_run_ids:
                 continue
 
-            cloned_graph.futures_by_original_id[run_id] = self._clone_future(
+            cloned_graph.futures_by_run_id[run_id] = self._clone_future(
                 run_id, cloned_graph, reset_run_ids
             )
 
-        if reset_from is None and len(cloned_graph.futures_by_original_id) != len(
+        if reset_from is None and len(cloned_graph.futures_by_run_id) != len(
             list(self.runs)
         ):
             raise RuntimeError("Not all futures duplicated")
@@ -630,3 +688,37 @@ class Graph:
         cloned_graph.sort_by(run_ids_by_reverse_execution_order)
 
         return cloned_graph
+
+    def to_future_graph(self) -> FutureGraph:
+        """Convert this `Run` graph into a corresponding graph of `Future`s.
+
+        The future graph will use all the same ids as the runs.
+        """
+        future_graph = FutureGraph()
+
+        # run order guarantees parents and upstream come first
+        # This is necessary because we want upstream futures
+        # to be created before downstreams so that the appropriate
+        # kwargs can be built
+        run_ids_by_execution_order = self._sorted_run_ids_by_layer(
+            run_sorter=self._execution_order
+        )
+
+        for run_id in run_ids_by_execution_order:
+            future_graph.futures_by_run_id[run_id] = self._future_from_run(
+                run_id, future_graph
+            )
+
+        if len(future_graph.futures_by_run_id) != len(list(self.runs)):
+            raise RuntimeError("Not all futures duplicated")
+
+        # We return future sorted by how they would be sorted for a resolution
+        # from scratch: grouped by layer (outermost first), and sorter in reverse
+        # execution order within each layer
+        run_ids_by_reverse_execution_order = self._sorted_run_ids_by_layer(
+            run_sorter=self._reverse_execution_order
+        )
+
+        future_graph.sort_by(run_ids_by_reverse_execution_order)
+
+        return future_graph
