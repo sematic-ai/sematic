@@ -47,6 +47,8 @@ class RerunMode(Enum):
 
     SPECIFIC_RUN = "SPECIFIC_RUN"
     CONTINUE = "CONTINUE"
+
+    # We keep CONTINUE as distinct because it can still be used to rerun from failed.
     REENTER = "REENTER"
 
 
