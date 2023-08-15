@@ -5,6 +5,13 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.34.0](https://pypi.org/project/sematic/0.33.0/)
+    * [feature] New API to trigger a Pipeline rerun with Artifact ID overrides for 
+      the root run function's input parameters.
+    * [improvement] Adjust header menu order to better align with user habits
+    * [improvement] Restyle the state icons to make it more obvious
+    * [improvement] Better error message for Ray cluster from non-standalone function
+    * [improvement] Make runner reentrant
 * [0.33.0](https://pypi.org/project/sematic/0.33.0/)
     * [feature] Enable the Grafana plugin in the new UI
     * [feature] Show user privacy in the new UI
