@@ -241,6 +241,18 @@ changes.
     $ make release
     ```
 
+  If you have 2FA enabled for your account, you need to use an API token as password and 
+  `__token__` as username when prompted by the CLI for credential. To set up a `pypi.org` 
+  API token, go to "Account Settings" -> "API tokens". 
+
+  Instead of manually typing the username and password, one can also edit `~/.pypirc`, adding 
+  below:
+    ```
+      [pypi]
+      username = __token__
+      password = <the token>
+    ```    
+
 1. Add the git tag.
     ```bash
     $ export RELEASE_VERSION=v$(python3.9 ./sematic/versions.py)
