@@ -23,6 +23,7 @@ def sematic_pipeline(
         bases = None,
         tags = None,
         image_layers = None,
+        image_macro = py3_image,
         env = None,
         insecure_repository = None,
         dev = False):
@@ -60,6 +61,8 @@ def sematic_pipeline(
             binary target. So if you are including direct dependencies
             of the binary here, you will need to *also* pass them in
             to "deps".
+
+        image_macro: (optional) replacement for the py3_image macro
 
         env: (optional) mapping of environment variables to set in the container
 
@@ -131,7 +134,7 @@ def sematic_pipeline(
         # which python environment to use: the host python
         # env or the bazel-managed one.
         env["BAZEL_BUILT_IMAGE"] = "1"
-        py3_image(
+        image_macro(
             name = "{}_{}_image".format(name, tag),
             main = main,
             srcs = srcs,
