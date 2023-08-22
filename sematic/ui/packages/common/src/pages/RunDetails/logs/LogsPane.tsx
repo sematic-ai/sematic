@@ -84,7 +84,7 @@ export default function LogsPane() {
         if (!selectedRun ) {
             return null;
         }
-        if (includes(["CREATED", "SCHEDULED"], selectedRun.future_state)) {
+        if (selectedRun.future_state === "CREATED") {
             return <Alert severity="info" sx={{ mt: 3 }}>
                 {"Run has not started. There are no logs yet."}
             </Alert>
