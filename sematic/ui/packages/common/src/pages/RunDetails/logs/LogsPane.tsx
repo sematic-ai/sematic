@@ -3,7 +3,6 @@ import { TextField } from "@mui/material";
 import Alert from "@mui/material/Alert";
 import { buttonClasses } from "@mui/material/Button";
 import BidirectionalLogView, { ConciseLineTemplate } from "@sematic/common/src/pages/RunDetails/logs/BidirectionalLogView";
-import includes from "lodash/includes";
 import { useCallback, useContext, useMemo, useRef, useState } from "react";
 import useUnmount from "react-use/lib/useUnmount";
 import LayoutServiceContext from "src/context/LayoutServiceContext";
@@ -84,7 +83,7 @@ export default function LogsPane() {
         if (!selectedRun ) {
             return null;
         }
-        if (includes(["CREATED", "SCHEDULED"], selectedRun.future_state)) {
+        if (selectedRun.future_state === "CREATED") {
             return <Alert severity="info" sx={{ mt: 3 }}>
                 {"Run has not started. There are no logs yet."}
             </Alert>
