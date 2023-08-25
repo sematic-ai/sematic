@@ -99,6 +99,9 @@ jobs:
   init:
     docker:
       - image: $SEMATIC_CI_IMAGE
+        auth:
+            username: $SEMATIC_DOCKERHUB_USER
+            password: $SEMATIC_DOCKERHUB_PASSWORD
     steps:
       - checkout
       - install-ci-pip-deps
@@ -113,6 +116,9 @@ jobs:
   lint:
     docker:
       - image: $SEMATIC_CI_IMAGE
+        auth:
+            username: $SEMATIC_DOCKERHUB_USER
+            password: $SEMATIC_DOCKERHUB_PASSWORD
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -121,6 +127,9 @@ jobs:
   schemas:
     docker:
       - image: $SEMATIC_CI_IMAGE
+        auth:
+            username: $SEMATIC_DOCKERHUB_USER
+            password: $SEMATIC_DOCKERHUB_PASSWORD
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -129,6 +138,9 @@ jobs:
   unit-tests:
     docker:
       - image: $SEMATIC_CI_IMAGE
+        auth:
+            username: $SEMATIC_DOCKERHUB_USER
+            password: $SEMATIC_DOCKERHUB_PASSWORD
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -148,6 +160,9 @@ jobs:
   installation:
     docker:
       - image: $SEMATIC_CI_IMAGE
+        auth:
+            username: $SEMATIC_DOCKERHUB_USER
+            password: $SEMATIC_DOCKERHUB_PASSWORD
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -164,6 +179,9 @@ jobs:
   integration-test:
     docker:
       - image: $SEMATIC_CI_IMAGE
+        auth:
+            username: $SEMATIC_DOCKERHUB_USER
+            password: $SEMATIC_DOCKERHUB_PASSWORD
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -188,6 +206,9 @@ jobs:
   fe-unit-tests:
     docker:
       - image: $SEMATIC_CI_IMAGE
+        auth:
+            username: $SEMATIC_DOCKERHUB_USER
+            password: $SEMATIC_DOCKERHUB_PASSWORD
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -207,8 +228,6 @@ jobs:
       - image: cimg/base:2023.01
     steps:
       - notify-completion
-
-
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
@@ -241,4 +260,3 @@ workflows:
             - unit-tests
             - integration-test
             - fe-unit-tests
-
