@@ -85,7 +85,7 @@ def _can_cast_to_set(
     """
     err_prefix = "Can't cast {} to {}:".format(from_type, to_type)
 
-    if not isinstance(from_type, typing._GenericAlias):  # type: ignore
+    if len(typing.get_args(from_type)) == 0:  # type: ignore
         return False, "{} not a subscripted generic".format(err_prefix)
 
     if not (
