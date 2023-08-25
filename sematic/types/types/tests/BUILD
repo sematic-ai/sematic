@@ -49,6 +49,16 @@ pytest_test(
 )
 
 pytest_test(
+    name = "test_set",
+    srcs = ["test_set.py"],
+    deps = [
+        "//sematic/types:casting",
+        "//sematic/types:init",
+        "//sematic/types:serialization",
+    ],
+)
+
+pytest_test(
     name = "test_tuple",
     srcs = ["test_tuple.py"],
     deps = [
