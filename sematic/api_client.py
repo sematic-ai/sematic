@@ -44,10 +44,12 @@ API_CALLS_BACKOFF = 2
 # The client should always verify that it is compatible with the server
 # it is talking to before using the API, but we don't want to do that every
 # time. This caches whether we have validated it or not.
+# When it is set, it stores the json_encodable response from
+# the server's meta/versions API call.
 # TODO: encapsulate this flag and the API call functions in a stateful client class that
 #  can also keep track of a flag that suppresses cleanup stack traces on unsuccessful
 #  pipeline run terminations
-_validated_client_version = False
+_server_version_metadata = None
 
 
 class APIConnectionError(ConnectionError):
@@ -706,15 +708,15 @@ def _put(
     return response.json()
 
 
-def validate_server_compatibility(use_cached: bool = True) -> None:
+def validate_server_compatibility(use_cached: bool = True) -> Dict[Literal["server", "min_client_supported"], List[int]]:
     """Check that the client is compatible with the server.
 
     Raises an error if the server and client are incompatible, or if this can't be
     verified.
     """
-    global _validated_client_version
-    if _validated_client_version and use_cached:
-        return
+    global _server_version_metadata 
+    if _server_version_metadata and use_cached:
+        return _server_version_metadata 
 
     base_url = get_config().api_url.replace("/api/v1", "")
     unexpected_server_response_error = IncompatibleClientError(
@@ -770,7 +772,7 @@ def validate_server_compatibility(use_cached: bool = True) -> None:
         version_as_string(server_version),
     )
 
-    _validated_client_version = True
+    _server_version_metadata = response_json
 
 
 def request(
@@ -911,6 +913,9 @@ def _raise_for_response(
     if exception is None:
         return
 
+    if response.status_code == 413:
+        import pdb; pdb.set_trace()
+        logger.error(response.request.body)
     logger.error(
         "Server returned %s for %s %s: %s",
         response.status_code,

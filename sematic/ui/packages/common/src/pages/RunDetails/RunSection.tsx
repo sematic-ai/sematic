@@ -81,7 +81,7 @@ const RunSection = () => {
         if (!resolution) {
             return "-";
         }
-        return resolution.kind === "KUBERNETES" ? "CloudResolver" : "LocalResolver";
+        return resolution.kind === "KUBERNETES" ? "CloudRunner" : "LocalRunner";
 
     }, [resolution])
 

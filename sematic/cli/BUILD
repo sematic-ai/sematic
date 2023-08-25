@@ -203,6 +203,7 @@ sematic_py_lib(
     deps = [
         ":cli",
         "//sematic:versions",
+        "//sematic:api_client",
     ],
 )
 
