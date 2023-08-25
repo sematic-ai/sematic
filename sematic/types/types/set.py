@@ -33,7 +33,7 @@ def _set_safe_cast(
     if not isinstance(value, typing.Iterable):
         return None, f"{value} not an iterable"
 
-    element_type = type_.__args__[0]
+    element_type = typing.get_args(type_)[0]
 
     result: typing.Set[element_type] = set()  # type: ignore
 
@@ -52,7 +52,7 @@ def _set_to_json_encodable(value: set, type_: typing.Any) -> typing.List:
     """
     Serialization of sets
     """
-    element_type = type_.__args__[0]
+    element_type = typing.get_args(type_)[0]
     return [value_to_json_encodable(item, element_type) for item in value]
 
 
@@ -61,7 +61,7 @@ def _set_from_json_encodable(value: set, type_: typing.Any) -> typing.Set[typing
     """
     Deserialize a sets
     """
-    element_type = type_.__args__[0]
+    element_type = typing.get_args(type_)[0]
     return set(value_from_json_encodable(item, element_type) for item in value)
 
 
@@ -85,18 +85,18 @@ def _can_cast_to_set(
     """
     err_prefix = "Can't cast {} to {}:".format(from_type, to_type)
 
-    if not isinstance(from_type, typing._GenericAlias):  # type: ignore
+    if len(typing.get_args(from_type)) == 0:  # type: ignore
         return False, "{} not a subscripted generic".format(err_prefix)
 
     if not (
-        isinstance(from_type.__origin__, type)
-        and issubclass(from_type.__origin__, typing.Iterable)
+        isinstance(typing.get_origin(from_type), type)
+        and issubclass(typing.get_origin(from_type), typing.Iterable)  # type: ignore
     ):
         return False, "{} not an iterable".format(err_prefix)
 
-    from_type_args = from_type.__args__
+    from_type_args = typing.get_args(from_type)
 
-    element_type = to_type.__args__[0]
+    element_type = typing.get_args(to_type)[0]
 
     for from_element_type in from_type_args:
         can_cast, error = can_cast_type(from_element_type, element_type)
@@ -114,7 +114,7 @@ def _set_to_json_encodable_summary(
     Summary for the UI
     """
     complete_summary, blobs = [], []
-    element_type = type_.__args__[0]
+    element_type = typing.get_args(type_)[0]
 
     for item in value:
         item_summary, item_blob = get_json_encodable_summary(item, element_type)
