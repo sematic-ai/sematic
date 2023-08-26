@@ -894,9 +894,6 @@ def _raise_for_response(
     if response.status_code == 404:
         exception = ResourceNotFoundError(f"Resource {url} was not found")
 
-    if response.status_code == 413:
-        logger.info(response.request.body)
-
     elif 400 <= response.status_code < 500:
         exception = BadRequestError(
             f"The {method} request to {url} was invalid, "
