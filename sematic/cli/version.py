@@ -26,6 +26,6 @@ def version():
         )
         click.echo(f"The server is at version v{server_version}")
         click.echo(f"Client versions >= v{min_client_version} are supported.")
-        click.echo(f"Python v{platform.python_version()} is running this binary.")
     except api_client.IncompatibleClientError as e:
         click.echo(str(e))
+    click.echo(f"Python v{platform.python_version()} is running this binary.")
