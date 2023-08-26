@@ -130,7 +130,7 @@ def test(model: nn.Module, device: torch.device, test_loader: DataLoader):
     )
 
     # We don't need every point to make a useful plot, so we'll subsample
-    # every nth row (with `reduction_factor` as n), targeting 
+    # every nth row (with `reduction_factor` as n), targeting
     # a size of about 2000 points.
     reduction_factor = int(len(df) / _N_POINTS_PR_CURVE) + 1
     df = df.iloc[::reduction_factor, :]
