@@ -708,15 +708,17 @@ def _put(
     return response.json()
 
 
-def validate_server_compatibility(use_cached: bool = True) -> Dict[Literal["server", "min_client_supported"], List[int]]:
+def validate_server_compatibility(
+    use_cached: bool = True,
+) -> Dict[Literal["server", "min_client_supported"], List[int]]:
     """Check that the client is compatible with the server.
 
     Raises an error if the server and client are incompatible, or if this can't be
     verified.
     """
-    global _server_version_metadata 
+    global _server_version_metadata
     if _server_version_metadata and use_cached:
-        return _server_version_metadata 
+        return _server_version_metadata
 
     base_url = get_config().api_url.replace("/api/v1", "")
     unexpected_server_response_error = IncompatibleClientError(
@@ -773,6 +775,7 @@ def validate_server_compatibility(use_cached: bool = True) -> Dict[Literal["serv
     )
 
     _server_version_metadata = response_json
+    return _server_version_metadata
 
 
 def request(
@@ -891,6 +894,9 @@ def _raise_for_response(
     if response.status_code == 404:
         exception = ResourceNotFoundError(f"Resource {url} was not found")
 
+    if response.status_code == 413:
+        logger.info(response.request.body)
+
     elif 400 <= response.status_code < 500:
         exception = BadRequestError(
             f"The {method} request to {url} was invalid, "
@@ -913,9 +919,6 @@ def _raise_for_response(
     if exception is None:
         return
 
-    if response.status_code == 413:
-        import pdb; pdb.set_trace()
-        logger.error(response.request.body)
     logger.error(
         "Server returned %s for %s %s: %s",
         response.status_code,
