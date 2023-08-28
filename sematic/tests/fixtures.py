@@ -10,6 +10,7 @@ import pytest
 import sematic.api_client as api_client
 from sematic.abstract_future import FutureState
 from sematic.plugins.storage.memory_storage import MemoryStorage
+from sematic.versions import CURRENT_VERSION, MIN_CLIENT_SERVER_SUPPORTS
 
 
 @pytest.fixture(scope="function")
@@ -19,14 +20,17 @@ def test_storage():
 
 @pytest.fixture
 def valid_client_version():
-    current_validated_client_version = api_client._validated_client_version
+    current_version_metadata = api_client._server_version_metadata
 
-    api_client._validated_client_version = True
+    api_client._server_version_metadata = {
+        "server": CURRENT_VERSION,
+        "min_client_supported": MIN_CLIENT_SERVER_SUPPORTS,
+    }
 
     try:
         yield
     finally:
-        api_client._validated_client_version = current_validated_client_version
+        api_client._server_version_metadata = current_version_metadata
 
 
 @pytest.fixture
