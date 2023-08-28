@@ -221,6 +221,19 @@ $ sematic settings set SEMATIC_API_ADDRESS http://my-remote-server.dev
 
 This is required regardless of whether you deployed using Option 1 or Option 2.
 
+You'll also likely need to set your API key:
+
+```shell
+$ sematic settings set SEMATIC_API_KEY sUpErSeCr3t
+```
+
+You can get your API key by clicking on your avatar in the web dashboard.
+Finally, you can try executing an example pipeline:
+
+```shell
+$ sematic run examples/mnist/pytorch
+```
+
 ### Run pipelines in your cloud
 
 In order to benefit from cloud resources (e.g. GPUs, high memory, etc.), Sematic
@@ -251,15 +264,23 @@ Before you proceed, the following must be true:
   configuration files as described in
   [Docker Container Images](./container-images.md#docker). This will enable
   `bazel run` or `sematic run` commands to execute the launch script to start
-  your cloud jobs.
+  your cloud jobs. You can refer to bazel based examples
+  [here](https://github.com/sematic-ai/example_bazel) and Docker based
+  examples [here](https://github.com/sematic-ai/example_docker)
 
-When you are set, the following settings should be visible to Sematic
+When you are set, the following settings should be visible to Sematic:
 
 ```
 $ sematic settings show
-Active user settings:
+Active profile settings:
 
-SEMATIC_API_ADDRESS: <web-app-server-address>
+scopes: {}
+settings:
+  sematic.config.server_settings.ServerSettings: {}
+  sematic.config.user_settings.UserSettings:
+    SEMATIC_API_ADDRESS: <your API address>
+    SEMATIC_API_KEY: <your API key>
+    __version__: 0.1.0
 ```
 
 {% hint style="warning" %}
@@ -268,8 +289,10 @@ If you have chosen to deploy Sematic in such a way that users of Sematic
 will use a different URL for the server from what should be used for
 jobs on your Kubernetes cluster (e.g. users access via a reverse proxy
 that's not needed on Kubernetes), you may also need to set the
-`SEMATIC_WORKER_API_ADDRESS` server setting. That will set the URL to be used
-from Kubernetes, while `SEMATIC_API_ADDRESS` will be used from your machine.
+`SEMATIC_WORKER_API_ADDRESS` server setting via your
+[helm deployment](#additional-configuration-options).
+That will set the URL to be used from Kubernetes, while
+`SEMATIC_API_ADDRESS` will be used from your machine.
 {% endhint %}
 
 #### Cloud storage bucket
