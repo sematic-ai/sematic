@@ -55,3 +55,20 @@ transitively).
 Solution (1) is preferred if you are not using bazel, but will work even if you are using
 bazel. Solution (2) is preferred if you are using bazel, and will not work if you are
 not using bazel.
+
+## 413 Request Entity Too Large
+
+```
+2023-08-28 11:20:41,960  [ERROR] sematic.api_client: Server returned 413 for PUT https://josh.dev-usw2-sematic0.sematic.cloud/api/v1/graph: <html>
+<head><title>413 Request Entity Too Large</title></head>
+<body>
+<center><h1>413 Request Entity Too Large</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+sematic.api_client.BadRequestError: The PUT request to https://example.url.cloud/api/v1/graph was invalid, response was 413.
+Please check the Sematic Server logs for more information. You may search the server logs for request id '09e9d9b4d'
+```
+
+This usually indicates that one of your artifacts (aka function inputs/outputs) are too large.
+Consider finding a way to reduce their size.
