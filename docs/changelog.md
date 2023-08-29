@@ -5,7 +5,14 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
-* [0.34.0](https://pypi.org/project/sematic/0.33.0/)
+* [0.34.1](https://pypi.org/project/sematic/0.34.1/)
+    * [feature] Make bazel image generation macro configurable
+    * [improvement] Various improvements to `sematic version`
+    * [improvement] Speed up cleanup for certain pipeline cancellations/failures
+    * [bugfix] Fix bug with displaying live logs in the new dashboard
+    * [bugfix] Enable proper type-checking for `list`, `set` in python >=3.10
+    * [bugfix] Remove possibility for "payload too large" with mnist example
+* [0.34.0](https://pypi.org/project/sematic/0.34.0/)
     * [feature] New API to trigger a Pipeline rerun with Artifact ID overrides for 
       the root run function's input parameters.
     * [improvement] Adjust header menu order to better align with user habits
