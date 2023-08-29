@@ -361,7 +361,7 @@ class LocalRunner(SilentRunner):
         self._deactivate_all_resources()
         self._disconnect_from_sio_server()
         if save_graph:
-            self._save_graph()
+            self._save_graph(runs_only=True, retry=False)
 
         root_run = self._get_run(self._root_future.id)
         pipeline_run = api_client.get_pipeline_run(self._root_future.id)
@@ -620,7 +620,7 @@ class LocalRunner(SilentRunner):
         if not FutureState[run.future_state].is_terminal():  # type: ignore
             run.future_state = FutureState.CANCELED.value  # type: ignore
             self._add_run(run)
-        self._save_graph()
+        self._save_graph(runs_only=True, retry=False)
 
     def _future_did_fail(self, failed_future: AbstractFuture) -> None:
         super()._future_did_fail(failed_future)
@@ -654,7 +654,7 @@ class LocalRunner(SilentRunner):
                 )
 
         self._add_run(run)
-        self._save_graph()
+        self._save_graph(runs_only=True, retry=False)
 
     def _notify_pipeline_update(self):
         api_client.notify_pipeline_update(
@@ -728,7 +728,7 @@ class LocalRunner(SilentRunner):
 
             self._add_run(run)
 
-        self._save_graph()
+        self._save_graph(runs_only=True, retry=False)
 
     def _update_pipeline_run_status(self, status: PipelineRunStatus):
         pipeline_run = api_client.get_pipeline_run(self._root_future.id)
@@ -971,24 +971,48 @@ class LocalRunner(SilentRunner):
 
         return self._runs[future.id]
 
-    def _save_graph(self):
+    def _save_graph(self, runs_only: bool = False, retry: bool = True):
         """
-        Persist the graph to the DB
+        Persist the graph to the DB.
+
+        Parameters
+        ----------
+        runs_only:
+            If true, only runs will be persisted. Artifacts and edges
+            will remain buffered. Should be set to True if the graph is
+            being saved only to move the runs to a terminal state, as
+            saving only the runs reduces the chances that the entire
+            save fails.
+        retry:
+            Whether the graph saved will be retried. Should be set to
+            False when _save_graph is called for cleanup operations so we can
+            exit quickly and cleanly.
         """
         runs = list(self._buffer_runs.values())
-        artifacts = list(self._buffer_artifacts.values())
-        edges = list(self._buffer_edges.values())
 
-        if not any(len(buffer) for buffer in (runs, artifacts, edges)):
+        if runs_only:
+            artifacts = []
+            edges = []
+        else:
+            artifacts = list(self._buffer_artifacts.values())
+            edges = list(self._buffer_edges.values())
+
+        if not any(len(buffer) for buffer in (runs, artifacts, edges)):  # type: ignore
             return
 
         api_client.save_graph(
-            root_id=self._futures[0].id, runs=runs, artifacts=artifacts, edges=edges
+            root_id=self._futures[0].id,
+            runs=runs,
+            artifacts=artifacts,
+            edges=edges,
+            retry=retry,
         )
 
         self._buffer_runs.clear()
-        self._buffer_artifacts.clear()
-        self._buffer_edges.clear()
+
+        if not runs_only:
+            self._buffer_artifacts.clear()
+            self._buffer_edges.clear()
 
     @classmethod
     def _get_resource_manager(cls) -> ServerResourceManager:
