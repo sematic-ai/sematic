@@ -214,7 +214,11 @@ def get_runs(
 
 
 def save_graph(
-    root_id: str, runs: List[Run], artifacts: List[Artifact], edges: List[Edge]
+    root_id: str,
+    runs: List[Run],
+    artifacts: List[Artifact],
+    edges: List[Edge],
+    retry: bool = True,
 ):
     """
     Persist a graph.
@@ -227,7 +231,7 @@ def save_graph(
         }
     }
 
-    _put("/graph", payload)
+    _put("/graph", payload, retry=retry)
     notify_graph_update(root_id)
 
 
