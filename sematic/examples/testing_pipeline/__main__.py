@@ -132,6 +132,10 @@ S3_URIS_HELP = (
     "If any values are supplied, includes a function that composes `S3Location` "
     "dataclasses for the specified URIs. Defaults to None."
 )
+COUNT_LETTERS_HELP = (
+    "If not None, includes a function which counts the number of letters in this string. "
+    "Defaults to None."
+)
 VIRTUAL_FUNCS_HELP = (
     "Whether to explicitly include the `_make_list`, `_make_tuple`, and `_getitem` "
     "virtual functions. Defaults to False. Note: If this pipeline is invoked with any "
@@ -321,6 +325,13 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--s3-uris", type=str, default=None, nargs="+", help=S3_URIS_HELP
+    )
+    parser.add_argument(
+        "--count-letters",
+        type=str,
+        default=None,
+        dest="count_letters_string",
+        help=COUNT_LETTERS_HELP,
     )
     parser.add_argument(
         "--virtual-funcs",
