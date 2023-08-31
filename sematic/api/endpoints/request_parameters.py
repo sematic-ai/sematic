@@ -315,7 +315,7 @@ def jsonify_error(error: str, status: HTTPStatus):
     # We also want to show the stack trace for the root cause exception,
     # if there indeed was one.
     exception_type, exception, trace = sys.exc_info()
-    if exception:
+    if exception is None:
         logger.warning("No exception cause")
     else:
         for line in traceback.format_exception(
