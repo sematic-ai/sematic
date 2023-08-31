@@ -4,6 +4,7 @@ import click
 # Sematic
 import sematic.api_client as api_client
 from sematic.cli.cli import cli
+from sematic.config.config import switch_env
 
 
 @cli.command("cancel", short_help="Cancel a run")  # type: ignore
@@ -12,6 +13,7 @@ def cancel(run_id: str):
     """
     Cancel a pipeline execution.
     """
+    switch_env("user")
     try:
         run = api_client.get_run(run_id)
     except api_client.BadRequestError:

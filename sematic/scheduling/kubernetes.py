@@ -619,6 +619,7 @@ def _schedule_kubernetes_job(
                     },
                 ),
                 spec=kubernetes.client.V1PodSpec(  # type: ignore
+                    image_pull_secrets=[kubernetes.client.V1LocalObjectReference("artifact-registry")],
                     node_selector=node_selector,
                     containers=[
                         kubernetes.client.V1Container(  # type: ignore

@@ -1,6 +1,8 @@
 # Standard Library
 import json
 import logging
+import sys
+import traceback
 from dataclasses import dataclass
 from http import HTTPStatus
 from typing import (
@@ -86,7 +88,7 @@ def get_gc_filters(
     except Exception as e:
         raise ValueError(f"Malformed filters: {filters_json}, error: {e}")
 
-    if len(filters) == 0:
+    if filters is None or len(filters) == 0:
         return False, []
 
     operand = list(filters.keys())[0]
@@ -240,7 +242,8 @@ def get_request_parameters(
     """
     logger.debug("Raw request parameters: %s; model: %s", args, model)
 
-    limit: int = int(args.get("limit", DEFAULT_LIMIT))
+    limit_or_none = args.get("limit", DEFAULT_LIMIT)
+    limit: int = int(limit_or_none if limit_or_none is not None else DEFAULT_LIMIT)
     if not (limit == -1 or limit > 0):
         raise ValueError("limit must be greater than 0 or -1")
 
@@ -271,7 +274,7 @@ def get_request_parameters(
 
     sql_predicates = (
         _get_sql_predicates(filters, column_mapping, model)
-        if len(filters) > 0
+        if filters is None or len(filters) > 0
         else None
     )
 
@@ -294,6 +297,30 @@ def get_request_parameters(
 
 
 def jsonify_error(error: str, status: HTTPStatus):
+    is_warning = False
+
+    if status is None:
+        logger.error("Attempting to create an error without a code: %s", error)
+    elif 400 <= status.value < 500:
+        logger.warning("Bad request error: '%s'", error, stack_info=True)
+        is_warning = True
+    else:
+        logger.exception("Server error: '%s'", error)
+
+    # The above prints the error summary and stack to *this* call.
+    # We also want to show the stack trace for the root cause exception,
+    # if there indeed was one.
+    exception_type, exception, trace = sys.exc_info()
+    if exception:
+        logger.warning("No exception cause")
+    else:
+        for line in traceback.format_exception(etype=exception_type, value=exception, tb=trace):
+            line = line[:-1]  # strip terminal newline
+            if is_warning:
+                logger.warning(line)
+            else:
+                logger.error(line)
+
     return flask.Response(
         json.dumps(dict(error=error)),
         status=status.value,
