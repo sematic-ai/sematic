@@ -355,6 +355,20 @@ def do_s3_locations(val: float, s3_uris: List[str]) -> float:
 
 
 @sematic.func(standalone=True)
+def do_count_letters(val: float, count_letters_string: str) -> float:
+    """
+    Adds the number of letters in the specified string to the specified number.
+    """
+    logger.info(
+        "Executing: count_letters_string(val=%s, count_letters_string='%s')",
+        val,
+        count_letters_string,
+    )
+    time.sleep(5)
+    return val + len(count_letters_string)
+
+
+@sematic.func(standalone=True)
 def do_virtual_funcs(a: float, b: float, c: float) -> float:
     """
     Adds three numbers while explicitly including _make_tuple, _make_list, and _getitem.
@@ -442,6 +456,7 @@ def testing_pipeline(
     cache: bool = False,
     images: bool = False,
     s3_uris: Optional[List[str]] = None,
+    count_letters_string: Optional[str] = None,
     virtual_funcs: bool = False,
     fork_actions: Optional[List[Tuple[str, int]]] = None,
     exit_code: Optional[int] = None,
@@ -493,7 +508,7 @@ def testing_pipeline(
         Defaults to False.
     external_resource: bool
         Whether to use an external resource. Defaults to False.
-    ray_resource:
+    ray_resource: bool
         If True, two numbers will be added using a Ray task that executes on
         a remote cluster.
     cache: bool
@@ -505,6 +520,9 @@ def testing_pipeline(
     s3_uris: Optional[List[str]]
         If non-empty, includes a function that composes `S3Location` dataclasses for the
         specified URIs. Defaults to None.
+    count_letters_string: Optional[str]
+        If not None, includes a function which counts the number of letters in this
+        string. Defaults to None.
     virtual_funcs: bool
         Whether to include the `_make_list`, `_make_tuple`, and `_getitem` virtual
         functions. Defaults to False.
@@ -591,6 +609,9 @@ def testing_pipeline(
 
     if s3_uris is not None and len(s3_uris) > 0:
         futures.append(do_s3_locations(initial_future, s3_uris))
+
+    if count_letters_string is not None:
+        futures.append(do_count_letters(initial_future, count_letters_string))
 
     if virtual_funcs:
         futures.append(do_virtual_funcs(initial_future, 2, 3))
