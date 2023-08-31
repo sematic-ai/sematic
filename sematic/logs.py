@@ -53,7 +53,7 @@ def make_log_config(log_to_disk: bool = False, level: Union[int, str] = logging.
                     **_LOG_FILE_ROTATION_SETTINGS,  # type: ignore
                 ),
                 "error": dict(
-                    level="ERROR",
+                    level="WARNING",
                     filters=["request_context"],
                     filename=os.path.join(get_config().config_dir, "error.log"),
                     **_LOG_FILE_ROTATION_SETTINGS,  # type: ignore
