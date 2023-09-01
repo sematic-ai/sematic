@@ -1,5 +1,6 @@
 # Standard Library
 import functools
+import json
 from typing import Dict, Tuple, Type, cast
 
 # Sematic
@@ -42,6 +43,10 @@ class ServerSettingsVar(AbstractPluginSettingsVar):
     # Controls which Kubernetes Service Account the server
     # uses for jobs.
     SEMATIC_WORKER_KUBERNETES_SA = "SEMATIC_WORKER_KUBERNETES_SA"
+
+    # What, if any, imagePullSecrets should be used for runner and
+    # standalone jobs?
+    WORKER_IMAGE_PULL_SECRETS = "WORKER_IMAGE_PULL_SECRETS"
 
     # Controls whether users who are defining pipelines can
     # customize the Kubernetes security context in which their
@@ -89,3 +94,15 @@ def get_bool_server_setting(var: ServerSettingsVar, *args) -> bool:
     on the first optional vararg as a default value. If that does not exist, it raises.
     """
     return as_bool(get_server_setting(var, *args))
+
+
+def get_json_server_setting(var: ServerSettingsVar, *args):
+    """
+    Retrieves and returns the specified settings value as a json-encodable, with
+    environment override.
+
+    Loads and returns the specified settings value. If it does not exist, it falls back
+    on the first optional vararg as a default value. If that does not exist, it raises.
+    """
+    as_str = get_server_setting(var, *[json.dumps(arg) for arg in args])
+    return json.loads(as_str)
