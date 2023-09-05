@@ -20,12 +20,12 @@ metadata:
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     {{- end }}
     {{- end }}
-  {{- with .Values.ingress.annotations }}
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- with .Values.ingress.annotations }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
-  {{- if .Values.ingress.class_name }}
-  ingressClassName: {{ .Values.ingress.class_name }}
+  {{- with .Values.ingress.class_name }}
+  ingressClassName: {{ . }}
   {{- end }}
   {{- with .Values.ingress.tls }}
   tls:
