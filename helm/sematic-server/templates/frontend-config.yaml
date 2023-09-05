@@ -1,0 +1,14 @@
+{{- if .Values.gcp.enabled }}
+{{- if .Values.ingress.force_ssl }}
+apiVersion: networking.gke.io/v1beta1
+kind: FrontendConfig
+metadata:
+  name: {{ .Release.Name }}-https-redirect
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "sematic-server.labels" . | nindent 4 }}
+spec:
+  redirectToHttps:
+    enabled: true
+{{- end }}
+{{- end }}

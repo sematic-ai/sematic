@@ -9,6 +9,7 @@ aws:
   bucket_region: my-s3-region # REPLACE ME
 
 gcp:
+  enabled: false
   storage:
     enabled: false
     bucket:  my-bucket # REPLACE ME
