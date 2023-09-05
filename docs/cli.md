@@ -81,7 +81,7 @@ settings by setting the environment variable `SEMATIC_CONFIG_DIR`. This can
 be either a relative path (it will be treated as relative to your home
 directory) or an absolute path.
 
-This is the full list of supported user settings:
+This is a partial list of supported user settings:
 - `SEMATIC_API_ADDRESS`: the address of the Sematic server to use for pipeline
   executions; optional
 - `SEMATIC_API_KEY`: the user's personal API key, used to associate pipeline
@@ -100,24 +100,15 @@ This is the full list of supported user settings:
 The same way that certain settings need to be kept on the user side, certain
 ones need to configure the backend Server.
 
-These can be accessed and modified just like the user settings, but by using
-the `sematic server-settings` command instead:
+The way you configure these depends on how the server you are using is deployed.
+If you are using a local server, created with `sematic start`, you can use:
 
 ```shell
-$ sematic server-settings show
-Active server settings:
-
-KUBERNETES_NAMESPACE: default
-SEMATIC_AUTHORIZED_EMAIL_DOMAIN: XXX
-SEMATIC_AUTHENTICATE: 'true'
-GOOGLE_OAUTH_CLIENT_ID: XXX
-GRAFANA_PANEL_URL: XXX
-
+$ sematic settings set -p sematic.config.server_settings.ServerSettings GRAFANA_PANEL_URL https://grafana.com/
 ```
 
-These settings are simply stored in the `~/.sematic/server.yaml` file on the
-machine which needs to start a backend Server (this file does not have the
-settings nested under a "default" entry):
+These settings are simply stored in the same `~/.sematic/settings.yaml` file on the
+machine where the user settings are stored:
 
 ```shell
 $ cat ~/.sematic/server.yaml
@@ -130,9 +121,10 @@ GRAFANA_PANEL_URL: XXX
 ```
 
 They can also be overridden via environment variables, just like the user
-settings.
+settings. If you have deployed your Sematic server in a Docker container, environment
+variables are the preferred way to configure it.
 
-This is the full list of supported server settings:
+This is a partial list of supported server settings:
 - `SEMATIC_AUTHENTICATE`: whether to require authentication on API calls;
   optional
 - `SEMATIC_AUTHORIZED_EMAIL_DOMAIN`: the email domain that is allowed to create
@@ -140,14 +132,20 @@ This is the full list of supported server settings:
 - `SEMATIC_WORKER_API_ADDRESS`: the address of the remote cloud worker API,
   such as the Kubernetes API; optional; if set, this should be set to the DNS
   location of the Sematic service within Kubernetes
+- `SEMATIC_DASHBOARD_URL`: the address that will be used to construct links
+  to locations in the dashboard (ex: in log outputs).
 - `GOOGLE_OAUTH_CLIENT_ID`: the Google OAuth client ID to use for
   authentication; optional
 - `GITHUB_OAUTH_CLIENT_ID`: the GitHub OAuth client ID to use for
   authentication; optional
-- `KUBERNETES_NAMESPACE`: the namespace to use for Kubernetes jobs; required
-  only for cloud pipeline submissions
 - `GRAFANA_PANEL_URL`: the URL of the Grafana deployment that tracks jobs
   details
+
+There are other settings which are only relevant in the case that you have done
+a helm deployment of Sematic. For these configurations, please refer to our
+(helm docs)[https://sematic-ai.github.io/helm-charts/sematic-server/].
+Note that those docs also provide ways to configure the settings above via helm,
+which is preferred for helm deployments.
 
 ### Cancel pipelines
 
