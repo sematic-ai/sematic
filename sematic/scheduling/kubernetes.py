@@ -901,6 +901,8 @@ def _get_image_pull_secrets() -> Optional[
 ]:
     """Get custom image pull secrets based on server configuration.
 
+    Uses the WORKER_IMAGE_PULL_SECRETS configuration.
+
     Returns
     -------
     Either None (if no custom pull secrets are configured), or a list of
