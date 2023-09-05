@@ -32,7 +32,6 @@ spec:
     {{- toYaml . | nindent 2 }}
   {{- end }}
   rules:
-  {{- if .Values.gcp.enabled }}
   {{- range .Values.ingress.hosts }}
   - host: {{ .host }}
     http:
@@ -68,42 +67,5 @@ spec:
               number: {{ $servicePort }}
       {{- end }}
       {{- end }}
-  {{- end }}
-  {{- else }}
-  {{- range .Values.ingress.hosts }}
-  - host: {{ .host }}
-    paths:
-    {{- range .paths }}
-    - path: {{ .path }}
-      {{- if .pathType }}
-      pathType: {{ .pathType }}
-      {{- end }}
-      backend:
-        service:
-          name: {{ $serviceName }}
-          port:
-            number: {{ $servicePort }}
-    {{- if $.Values.deployment.socket_io.dedicated }}
-    - path: {{ printf "%s/socket.io" (.path | trimSuffix "/") }}
-      {{- if .pathType }}
-      pathType: {{ .pathType }}
-      {{- end }}
-      backend:
-        service:
-          name: {{ $socketioServiceName }}
-          port:
-            number: {{ $servicePort }}
-    - path: {{ printf "%s/api/v1/events" (.path | trimSuffix "/") }}
-      {{- if .pathType }}
-      pathType: {{ .pathType }}
-      {{- end }}
-      backend:
-        service:
-          name: {{ $socketioServiceName }}
-          port:
-            number: {{ $servicePort }}
-    {{- end }}
-    {{- end }}
-  {{- end }}
   {{- end }}
 {{- end }}
