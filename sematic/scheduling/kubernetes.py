@@ -23,6 +23,7 @@ from sematic.config.config import KUBERNETES_POD_NAME_ENV_VAR, ON_WORKER_ENV_VAR
 from sematic.config.server_settings import (
     ServerSettingsVar,
     get_bool_server_setting,
+    get_json_server_setting,
     get_server_setting,
 )
 from sematic.config.settings import get_plugin_setting
@@ -543,6 +544,7 @@ def _schedule_kubernetes_job(
     secret_env_vars = []
     tolerations = []
     security_context = None
+    image_pull_secrets = _get_image_pull_secrets()
 
     if resource_requirements is not None:
         node_selector = resource_requirements.kubernetes.node_selector
@@ -620,6 +622,7 @@ def _schedule_kubernetes_job(
                 ),
                 spec=kubernetes.client.V1PodSpec(  # type: ignore
                     node_selector=node_selector,
+                    image_pull_secrets=image_pull_secrets,
                     containers=[
                         kubernetes.client.V1Container(  # type: ignore
                             name=name,
@@ -891,3 +894,46 @@ def _shared_memory() -> Tuple[V1Volume, V1VolumeMount]:
     volume_mount = V1VolumeMount(mount_path="/dev/shm", name=volume_name)
 
     return volume, volume_mount
+
+
+def _get_image_pull_secrets() -> Optional[
+    List[kubernetes.client.V1LocalObjectReference]
+]:
+    """Get custom image pull secrets based on server configuration.
+
+    Uses the WORKER_IMAGE_PULL_SECRETS configuration.
+
+    Returns
+    -------
+    Either None (if no custom pull secrets are configured), or a list of
+    pull secret object references.
+    https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1LocalObjectReference.md
+    """
+
+    def encodable_to_obj(encodable):
+        if not isinstance(encodable, dict):
+            raise ValueError(
+                f"{ServerSettingsVar.WORKER_IMAGE_PULL_SECRETS.value} should be "
+                f"a list of dictionaries. One entry was: {encodable}"
+            )
+        if "name" not in encodable:
+            raise ValueError(
+                f"An entry in {ServerSettingsVar.WORKER_IMAGE_PULL_SECRETS.value} "
+                f"was missing the 'name' key: {encodable}"
+            )
+        return kubernetes.client.V1LocalObjectReference(name=encodable["name"])
+
+    as_encodables = get_json_server_setting(
+        ServerSettingsVar.WORKER_IMAGE_PULL_SECRETS, None
+    )
+
+    if as_encodables is None:
+        return None
+
+    if not isinstance(as_encodables, list):
+        raise ValueError(
+            f"{ServerSettingsVar.WORKER_IMAGE_PULL_SECRETS.value} should be "
+            f"a list of dictionaries. Got: {as_encodables}"
+        )
+
+    return [encodable_to_obj(encodable) for encodable in as_encodables]

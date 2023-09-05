@@ -9,21 +9,26 @@ from unittest import mock
 import pytest
 
 # Sematic
+from sematic.api.tests.fixtures import mock_auth  # noqa: F401
+from sematic.api.tests.fixtures import test_client  # noqa: F401
 from sematic.api.tests.fixtures import (  # noqa: F401
     mock_requests as mock_requests_fixture,
 )
-from sematic.api.tests.fixtures import test_client  # noqa: F401
 from sematic.api_client import (
     IncompatibleClientError,
     _notify_event,
     get_artifact_value_by_id,
+    get_runs,
     save_metric_points,
     validate_server_compatibility,
 )
 from sematic.config.config import get_config
 from sematic.db.db import DB
+from sematic.db.queries import save_run
 from sematic.db.tests.fixtures import (  # noqa: F401
+    make_run,
     persisted_artifact,
+    pg_mock,
     test_db,
     test_storage,
 )
@@ -188,3 +193,30 @@ def test_save_metrics_points(
 
     with test_db.get_session() as session:
         assert session.query(MetricValue).count() == len(metric_points)
+
+
+def test_list_runs(test_db, mock_requests_fixture):  # noqa: F811
+    created_runs = [
+        save_run(make_run(name="foo" if i % 2 == 0 else "bar")) for i in range(5)
+    ]
+
+    created_runs = sorted(created_runs, key=lambda run_: run_.created_at, reverse=True)
+
+    results = get_runs(limit=1, order="desc", id=created_runs[3].id)
+    assert len(results) == 1
+    assert results[0].id == created_runs[3].id
+
+    results = get_runs(limit=1, order="desc", name="foo")
+    assert len(results) == 1
+    assert results[0].name == "foo"
+
+    results = get_runs(limit=5, order="desc", name="foo")
+    assert len(results) == 3
+    assert all(r.name == "foo" for r in results)
+
+    results = get_runs()
+    assert set(r.id for r in results) == set(r.id for r in created_runs)
+
+    ids_desc = [r.id for r in get_runs(limit=5, order="desc")]
+    ids_asc = [r.id for r in get_runs(limit=5, order="asc")]
+    assert ids_desc == list(reversed(ids_asc))

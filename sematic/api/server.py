@@ -14,6 +14,7 @@ import uvicorn  # type: ignore
 from asgiref.wsgi import WsgiToAsgi  # type: ignore
 from flask import jsonify, send_file
 from socketio import ASGIApp, AsyncNamespace, AsyncServer, Namespace  # type: ignore
+from werkzeug.exceptions import HTTPException, InternalServerError
 
 # Sematic
 import sematic.api.endpoints.artifacts  # noqa: F401
@@ -100,16 +101,17 @@ def ping():
     return jsonify({"status": "ok"})
 
 
-def _request_string(request) -> str:
+def _request_string(request, response_code: Optional[int] = None) -> str:
     """Get a string representing the request for use in logs."""
     query_string = (
         f"?{str(request.query_string, encoding='utf8')}"
         if len(request.query_string) > 0
         else ""
     )
+    response_code_section = f" {response_code}" if response_code is not None else ""
     request_string = (
         f"{request.remote_addr} {request.user_agent} "
-        f"{request.method} {request.path}{query_string}"
+        f"{request.method} {request.path}{query_string}{response_code_section}"
     )
     return request_string
 
@@ -123,12 +125,25 @@ def log_request_start():
     )
 
 
+@sematic_api.errorhandler(Exception)
+def handle_exception(e):
+    # Ensure we've logged uncaught exceptions
+    logger().exception(e)
+
+    # pass through HTTP errors, they are already valid responses for flask.
+    if isinstance(e, HTTPException):
+        return e
+
+    # convert other remaining to generic 500s.
+    return InternalServerError(description="Unknown error", original_exception=e)
+
+
 @sematic_api.after_request
 def log_request_end(response):
     """Log that the request is ending."""
     logger().info(
         "Request end: %s",
-        _request_string(flask.request),
+        _request_string(flask.request, response.status_code),
     )
     return response
 
