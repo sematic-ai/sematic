@@ -15,6 +15,7 @@ metadata:
     {{- if .Values.ingress.create }}
     cloud.google.com/neg: '{"ingress": true}'
     {{- end }}
+    {{- end }}
     {{- toYaml .Values.service.annotations | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
