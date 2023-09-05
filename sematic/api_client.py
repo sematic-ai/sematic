@@ -205,7 +205,14 @@ def get_runs(
     """
     # update this function whenever you need to add more query parameters
     query_filters = _get_encoded_query_filters(filters)
-    query_string = f"/runs?limit={limit}&order={order}&filters={query_filters}"
+    param_strings = []
+    param_strings.extend(
+        [f"filters={query_filters}"] if query_filters is not None else []
+    )
+    param_strings.extend([f"limit={limit}"] if limit is not None else [])
+    param_strings.extend([f"order={order}"] if order is not None else [])
+    param_string = f"?{'&'.join(param_strings)}" if len(param_strings) > 0 else ""
+    query_string = f"/runs{param_string}"
     logger.debug("Fetching runs with query string: %s", query_string)
 
     response = _get(query_string)
@@ -958,7 +965,7 @@ def _get_api_key(user: Optional[User] = None) -> Optional[str]:
         return None
 
 
-def _get_encoded_query_filters(filters: Dict[str, Any]) -> str:
+def _get_encoded_query_filters(filters: Dict[str, Any]) -> Optional[str]:
     """
     Returns the encoded "filters" parameter value that can be given to `_request` from a
     freeform key-value dict.
@@ -970,4 +977,4 @@ def _get_encoded_query_filters(filters: Dict[str, Any]) -> str:
     if len(filters) > 1:
         return json.dumps({"AND": [{col: {"eq": filters[col]}} for col in filters]})
 
-    return json.dumps(None)
+    return None
