@@ -899,6 +899,14 @@ def _shared_memory() -> Tuple[V1Volume, V1VolumeMount]:
 def _get_image_pull_secrets() -> Optional[
     List[kubernetes.client.V1LocalObjectReference]
 ]:
+    """Get custom image pull secrets based on server configuration.
+
+    Returns
+    -------
+    Either None (if no custom pull secrets are configured), or a list of
+    pull secret object references.
+    https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1LocalObjectReference.md
+    """
     def encodable_to_obj(encodable):
         if not isinstance(encodable, dict):
             raise ValueError(
