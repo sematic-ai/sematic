@@ -139,6 +139,7 @@ worker:
   service_account:
     name: default
   can_customize_security_context: false
+  image_pull_secrets: null
 
 service:
   create: false

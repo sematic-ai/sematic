@@ -1,4 +1,5 @@
 # Standard Library
+import json
 from datetime import datetime
 from unittest import mock
 
@@ -99,7 +100,11 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     )
 
     with environment_variables(
-        {"SEMATIC_CONTAINER_IMAGE": image_uri, "ALLOW_CUSTOM_SECURITY_CONTEXTS": "true"}
+        {
+            "SEMATIC_CONTAINER_IMAGE": image_uri,
+            "ALLOW_CUSTOM_SECURITY_CONTEXTS": "true",
+            "WORKER_IMAGE_PULL_SECRETS": json.dumps([{"name": "foo-secret"}]),
+        }
     ):
         _schedule_kubernetes_job(
             name=name,
@@ -127,6 +132,9 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     shared_memory_volume = job.spec.template.spec.volumes[1]
     assert shared_memory_volume.name == "expanded-shared-memory-volume"
     assert shared_memory_volume.empty_dir.medium == "Memory"
+
+    assert len(job.spec.template.spec.image_pull_secrets) == 1
+    assert job.spec.template.spec.image_pull_secrets[0].name == "foo-secret"
 
     container = job.spec.template.spec.containers[0]
     assert container.args == args
