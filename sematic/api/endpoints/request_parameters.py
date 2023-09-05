@@ -2,7 +2,6 @@
 import json
 import logging
 import sys
-import traceback
 from dataclasses import dataclass
 from http import HTTPStatus
 from typing import (
@@ -296,36 +295,16 @@ def get_request_parameters(
 
 
 def jsonify_error(error: str, status: HTTPStatus):
-    is_warning = False
+    cause = sys.exc_info()[1]
 
-    # Since jsonify_error is explicitly called to handle the
-    # error, there is no uncaught exception to be handled by
-    # the "catch all" exception handler & logger. This ensures
-    # that we generate a log message even for these explicitly
-    # handled errors, so we can triage more easily.
     if status is None:
         logger.error("Attempting to create an error without a code: %s", error)
     elif 400 <= status.value < 500:
-        logger.warning("Bad request error: '%s'", error, stack_info=True)
-        is_warning = True
+        logger.warning(
+            "Bad request error: '%s'", error, exc_info=cause, stack_info=cause is None
+        )
     else:
-        logger.exception("Server error: '%s'", error)
-
-    # The above prints the error summary and stack to *this* call.
-    # We also want to show the stack trace for the root cause exception,
-    # if there indeed was one.
-    exception_type, exception, trace = sys.exc_info()
-    if exception is None:
-        logger.warning("No exception cause")
-    else:
-        for line in traceback.format_exception(
-            etype=exception_type, value=exception, tb=trace
-        ):
-            line = line[:-1]  # strip terminal newline
-            if is_warning:
-                logger.warning(line)
-            else:
-                logger.error(line)
+        logger.error("Server error: '%s'", error, exc_info=cause)
 
     return flask.Response(
         json.dumps(dict(error=error)),
