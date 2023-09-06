@@ -1,8 +1,6 @@
 Sematic dashboard url: {{ if .Values.ingress.create -}}
-{{- range $host := .Values.ingress.hosts -}}
-  {{- range .paths -}}
-  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
-  {{- end }}
+{{- with index .Values.ingress.hosts 0 -}}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}{{ .path }}
 {{- end -}}
 {{- else if contains "NodePort" .Values.service.type }}
   export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ .Release.Name }})
