@@ -11,7 +11,14 @@ metadata:
     app.kubernetes.io/component: all
     {{- end }}
   annotations:
-    {{- toYaml .Values.service.annotations | nindent 4 }}
+    {{- if .Values.gcp.enabled }}
+    {{- if .Values.ingress.create }}
+    cloud.google.com/neg: '{"ingress": true}'
+    {{- end }}
+    {{- end }}
+    {{- with .Values.service.annotations }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   type: {{ .Values.service.type }}
   ports:

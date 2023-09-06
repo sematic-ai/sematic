@@ -9,56 +9,72 @@ metadata:
   labels:
     {{- include "sematic-server.labels" . | nindent 4 }}
   annotations:
+    {{- if .Values.gcp.enabled }}
+    {{- if .Values.ingress.tls }}
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    {{- if .Values.gcp.ingress.issuer.cluster }}
+    cert-manager.io/cluster-issuer: {{ .Values.gcp.ingress.issuer.name }}
+    {{- else }}
+    cert-manager.io/issuer: {{ .Values.gcp.ingress.issuer.name }}
+    {{- end }}
+    {{- end }}
+    kubernetes.io/ingress.class: {{ .Values.ingress.class_name }}
+    kubernetes.io/ingress.global-static-ip-name: {{ .Values.gcp.ingress.static_ip_name }}
+    {{- if .Values.ingress.force_ssl }}
+    networking.gke.io/v1beta1.FrontendConfig: {{ .Release.Name }}-https-redirect
+    {{- end }}
+    {{- else }}
     {{- if .Values.ingress.force_ssl }}
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     {{- end }}
-  {{- with .Values.ingress.annotations }}
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
+    {{- with .Values.ingress.annotations }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
-  {{- if .Values.ingress.class_name }}
-  ingressClassName: {{ .Values.ingress.class_name }}
+  {{- with .Values.ingress.class_name }}
+  ingressClassName: {{ . }}
   {{- end }}
-  {{- if .Values.ingress.tls }}
+  {{- with .Values.ingress.tls }}
   tls:
-    {{- toYaml . | nindent 4 }}
+    {{- toYaml . | nindent 2 }}
   {{- end }}
   rules:
-    {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
-      http:
-        paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            {{- if .pathType }}
-            pathType: {{ .pathType }}
-            {{- end }}
-            backend:
-              service:
-                name: {{ $serviceName }}
-                port:
-                  number: {{ $servicePort }}
-          {{- if $.Values.deployment.socket_io.dedicated }}
-          - path: {{ printf "%s/socket.io" (.path | trimSuffix "/") }}
-            {{- if .pathType }}
-            pathType: {{ .pathType }}
-            {{- end }}
-            backend:
-              service:
-                name: {{ $socketioServiceName }}
-                port:
-                  number: {{ $servicePort }}
-          - path: {{ printf "%s/api/v1/events" (.path | trimSuffix "/") }}
-            {{- if .pathType }}
-            pathType: {{ .pathType }}
-            {{- end }}
-            backend:
-              service:
-                name: {{ $socketioServiceName }}
-                port:
-                  number: {{ $servicePort }}
-          {{- end }}
-          {{- end }}
-    {{- end }}
+  {{- range .Values.ingress.hosts }}
+  - host: {{ .host }}
+    http:
+      paths:
+      {{- range .paths }}
+      - path: {{ .path }}
+        {{- if .pathType }}
+        pathType: {{ .pathType }}
+        {{- end }}
+        backend:
+          service:
+            name: {{ $serviceName }}
+            port:
+              number: {{ $servicePort }}
+      {{- if $.Values.deployment.socket_io.dedicated }}
+      - path: {{ printf "%s/socket.io" (.path | trimSuffix "/") }}
+        {{- if .pathType }}
+        pathType: {{ .pathType }}
+        {{- end }}
+        backend:
+          service:
+            name: {{ $socketioServiceName }}
+            port:
+              number: {{ $servicePort }}
+      - path: {{ printf "%s/api/v1/events" (.path | trimSuffix "/") }}
+        {{- if .pathType }}
+        pathType: {{ .pathType }}
+        {{- end }}
+        backend:
+          service:
+            name: {{ $socketioServiceName }}
+            port:
+              number: {{ $servicePort }}
+      {{- end }}
+      {{- end }}
+  {{- end }}
 {{- end }}
