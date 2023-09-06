@@ -18,6 +18,10 @@ gcp:
       enabled: false
       name: gcp-sa # REPLACE ME
       file: the-key.json # REPLACE ME
+  ingress:
+    issuer:
+      cluster: true
+      name: letsencrypt-prod  # REPLACE ME
 
 local_storage:
   enabled: false
