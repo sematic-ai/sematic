@@ -210,7 +210,8 @@ def _is_dataclass(type_: typing.Any) -> bool:
     # We don't use dataclasses.is_dataclass because we don't
     # want to know whether any parent classes are dataclasses, just
     # this one
-    return "__dataclass_fields__" in type_.__dict__
+    dunder_dict = getattr(type_, "__dict__", {})
+    return "__dataclass_fields__" in dunder_dict
 
 
 def _get_category(type_: typing.Any) -> str:
