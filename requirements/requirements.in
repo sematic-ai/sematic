@@ -13,7 +13,7 @@ SQLAlchemy==1.4.36
 psycopg2-binary
 
 # Code
-pyyaml
+pyyaml==6.0.1
 
 # Git integration
 git-python
