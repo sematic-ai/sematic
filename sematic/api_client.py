@@ -721,6 +721,7 @@ def _put(
 
 def validate_server_compatibility(
     use_cached: bool = True,
+    retry: bool = True,
 ) -> Dict[Literal["server", "min_client_supported"], List[int]]:
     """Check that the client is compatible with the server.
 
@@ -750,6 +751,7 @@ def validate_server_compatibility(
             attempt_auth=False,
             validate_version_compatibility=False,  # to avoid recursion
             validate_json=True,
+            retry=retry,
         )
     except (BadRequestError, InvalidResponseError):
         raise unexpected_server_response_error
