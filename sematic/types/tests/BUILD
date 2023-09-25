@@ -29,3 +29,11 @@ pytest_test(
         "//sematic/types:registry",
     ]
 )
+
+pytest_test(
+    name = "test_serialization",
+    srcs = ["test_serialization.py"],
+    deps = [
+        "//sematic/types:serialization",
+    ]
+)
