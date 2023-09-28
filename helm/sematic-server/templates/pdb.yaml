@@ -8,9 +8,5 @@ spec:
   selector:
     matchLabels:
       {{- include "sematic-server.labels" . | nindent 6 }}
-      {{- if .Values.deployment.socket_io.dedicated }}
       app.kubernetes.io/component: api
-      {{- else }}
-      app.kubernetes.io/component: all
-      {{- end }}
 {{- end }}

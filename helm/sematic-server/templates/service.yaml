@@ -5,11 +5,7 @@ metadata:
   name: {{ .Release.Name }}
   labels:
     {{- include "sematic-server.labels" . | nindent 4 }}
-    {{- if .Values.deployment.socket_io.dedicated }}
     app.kubernetes.io/component: api
-    {{- else }}
-    app.kubernetes.io/component: all
-    {{- end }}
   annotations:
     {{- if .Values.gcp.enabled }}
     {{- if .Values.ingress.create }}
@@ -28,9 +24,5 @@ spec:
       name: http
   selector:
     {{- include "sematic-server.selectorLabels" . | nindent 4 }}
-    {{- if .Values.deployment.socket_io.dedicated }}
     sematic.ai/component: api
-    {{- else }}
-    sematic.ai/component: all
-    {{- end }}
 {{- end }}

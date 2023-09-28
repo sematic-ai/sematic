@@ -1,5 +1,4 @@
 {{- if .Values.service.create }}
-{{- if .Values.deployment.socket_io.dedicated }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -19,5 +18,4 @@ spec:
   selector:
     {{- include "sematic-server.selectorLabels" . | nindent 4 }}
     sematic.ai/component: socket_io
-{{- end }}
 {{- end }}
