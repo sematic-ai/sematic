@@ -117,7 +117,7 @@ Options:
                         the pipeline, using the configured build plugin.
                         Defaults to `False`. If not set, the pipeline will be
                         run locally in the current environment.
-  -n, --no_cache        When `--build` is specified, builds the image from
+  -n, --no-cache        When `--build` is specified, builds the image from
                         scratch, ignoring previous versions. Defaults to
                         `False`.
   -l, --log-level TEXT  The log level to use for building and launching the
@@ -153,10 +153,10 @@ makes sense in this context.
 Building the image uses layer caching for temporal and spatial optimization. If
 you find that you have an image with stale layers that, for example, have an
 older version of a library installed, then you can deactivate the caching and
-force a complete rebuild of the image by passing the `--no_cache` flag:
+force a complete rebuild of the image by passing the `--no-cache` flag:
 
 ```bash
-$ sematic run --build --no_cache path/to/my/hello_world.py
+$ sematic run --build --no-cache path/to/my/hello_world.py
 ```
 
 {% hint style="warning" %}
