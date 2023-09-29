@@ -87,7 +87,7 @@ function App() {
     </SlotFillProvider>;
 }
 
-const isNewUIEnabled = getFeatureFlagValue("newui");
+const isNewUIEnabled = !getFeatureFlagValue("oldui");
 
 const NewRoutesOverrides = isNewUIEnabled ? (<>
     <Route path="runs" element={<NewShell />} >
