@@ -21,7 +21,7 @@ import logo from "../Fox.png";
 import UserAvatar from "./UserAvatar";
 
 const switchToNewUI = () => {
-    window.localStorage.setItem("sematic-feature-flag-newui", "true");
+    window.localStorage.removeItem("sematic-feature-flag-oldui");
     window.location.reload();
 };
 
