@@ -22,11 +22,6 @@ commands:
           pkg-manager: pip
           app-dir: ~/project/requirements  # If you're requirements.txt isn't in the root directory.
           pip-dependency-file: ci-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
-      - run:
-          # This is necessary because some packages have platform-dependent dependencies
-          # For example sqlalchemy requires greenlet only on certain platforms
-          name: Freeze requirements
-          command: pip-compile --resolver=backtracking --allow-unsafe ~/project/requirements/requirements.in > ~/project/requirements/requirements.txt
   
   install-npm-dependencies:
     description: Install NPM dependencies in the UI folder

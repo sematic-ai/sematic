@@ -54,9 +54,7 @@ data:
   ALLOW_CUSTOM_SECURITY_CONTEXTS: {{ .Values.worker.can_customize_security_context | quote }}
   WORKER_IMAGE_PULL_SECRETS: {{ toJson .Values.worker.image_pull_secrets | quote }}
   SEMATIC_WORKER_API_ADDRESS: "http://{{ .Release.Name }}"
-{{ if .Values.deployment.socket_io.dedicated }}
   SEMATIC_WORKER_SOCKET_IO_ADDRESS: {{ printf "http://%s-socketio" .Release.Name }}
-{{ end }}
 {{ if .Values.ingress.sematic_dashboard_url }}
   SEMATIC_DASHBOARD_URL: {{ .Values.ingress.sematic_dashboard_url | quote }}
 {{ end }}

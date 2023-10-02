@@ -48,9 +48,7 @@ database:
   auto_migrate: true
 
 deployment:
-  socket_io:
-    dedicated: false
-  worker_count: 1 # if you want to increase this, enable socket_io.dedicated above
+  worker_count: 1
   replica_count: 2
   affinity: {}
   annotations: {}
@@ -147,7 +145,7 @@ worker:
   image_pull_secrets: null
 
 service:
-  create: false
+  create: true
   type: ClusterIP
   port: 80
 
