@@ -117,6 +117,20 @@ delta, but only:
 when performing the upgrade.
 {% endhint %}
 
+### vX.X.X to v0.35.0
+
+In v0.35.0 support for deploying Sematic with a combined API and SocketIO server
+was removed. Most users deploy with a dedicated SocketIO server anyway, in which
+case this change does not impact you. You may still want to remove the
+`deployment.socket_io.dedicated` configuration from your helm values, as it will
+now be ignored.
+
+The default for the helm configuration `service.create` was changed to `true` as
+well. Again, most users have this set to `true` in which case it does not impact
+you. If you were relying on the default to be `false` so you could create your
+own Kubernetes service object for Sematic, you now must explicitly set
+`service.create` to `false` in your helm values.
+ 
 ### vX.X.X to v0.32.0
 
 In v0.32.0 new constraints were added to the schema of the database that

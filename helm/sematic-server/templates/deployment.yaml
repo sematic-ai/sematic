@@ -4,11 +4,7 @@ metadata:
   name: {{ .Release.Name }}
   labels:
     {{- include "sematic-server.labels" . | nindent 4 }}
-    {{- if .Values.deployment.socket_io.dedicated }}
     app.kubernetes.io/component: api
-    {{- else }}
-    app.kubernetes.io/component: all
-    {{- end }}
 spec:
   {{- if not .Values.deployment.autoscaling.enabled }}
   replicas: {{ .Values.deployment.replica_count }}
@@ -16,11 +12,7 @@ spec:
   selector:
     matchLabels:
       {{- include "sematic-server.selectorLabels" . | nindent 6 }}
-      {{- if .Values.deployment.socket_io.dedicated }}
       sematic.ai/component: api
-      {{- else }}
-      sematic.ai/component: all
-      {{- end }}
   template:
     metadata:
       {{- with .Values.deployment.annotations }}
@@ -29,11 +21,7 @@ spec:
       {{- end }}
       labels:
         {{- include "sematic-server.selectorLabels" . | nindent 8 }}
-        {{- if .Values.deployment.socket_io.dedicated }}
         sematic.ai/component: api
-        {{- else }}
-        sematic.ai/component: all
-        {{- end }}
     spec:
       {{- with .Values.image.pull_secrets }}
       imagePullSecrets:
