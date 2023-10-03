@@ -32,7 +32,7 @@ const PromotionBanner = (props: PromotionBannerProps) => {
     const { onClose } = props;
 
     const switchToNewUI = useCallback(() => {
-        window.localStorage.setItem("sematic-feature-flag-newui", "true");
+        window.localStorage.removeItem("sematic-feature-flag-oldui");
         window.location.reload();
     }, []);
 
