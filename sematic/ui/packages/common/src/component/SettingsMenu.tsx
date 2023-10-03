@@ -25,7 +25,7 @@ const PaperStyleOverride = css`
 
 export function SwitchUICommand() {
     const switchToOldUI = useCallback(() => {
-        window.localStorage.removeItem("sematic-feature-flag-newui");
+        window.localStorage.setItem("sematic-feature-flag-oldui", "true");
         window.location.reload();
     }, []);
 

@@ -1,16 +1,10 @@
 describe("Sematic application", () => {
     it("renders the get started page", () => {
-        cy.then(() => {
-            window.localStorage.setItem("sematic-feature-flag-newui", "true");
-        });
         cy.visit("/getstarted");
         cy.contains("Start your own project");
     });
 
     it("renders the pipeline index page", () => {
-        cy.then(() => {
-            window.localStorage.setItem("sematic-feature-flag-newui", "true");
-        });
         cy.visit("/pipelines");
 
         const table = cy.getBySel("RunList");
@@ -22,9 +16,6 @@ describe("Sematic application", () => {
     });
 
     it("renders the run search page", () => {
-        cy.then(() => {
-            window.localStorage.setItem("sematic-feature-flag-newui", "true");
-        });
         cy.visit("/runs");
 
         const table = cy.getBySel("RunList");
@@ -36,9 +27,6 @@ describe("Sematic application", () => {
     });
 
     it("renders the run details page", () => {
-        cy.then(() => {
-            window.localStorage.setItem("sematic-feature-flag-newui", "true");
-        });
         cy.visit("/runs");
 
         cy.getBySel("runlist-row").first().click();
