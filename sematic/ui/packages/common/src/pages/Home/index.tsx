@@ -65,18 +65,18 @@ export default function Home() {
         <Container>
             <div id={"main-content"}>
                 <div>
-                    <div id={"latest-runs"}>
-                        <LatestRuns />
-                    </div>
-                    <div><Blog /></div>
-                </div>
-                <div>
                     <div id={"latest-pipelines"}>
                         <LatestPipelines />
                     </div>
                     <div>
                         <Community />
                     </div>
+                </div>
+                <div>
+                    <div id={"latest-runs"}>
+                        <LatestRuns />
+                    </div>
+                    <div><Blog /></div>
                 </div>
             </div>
         </Container>
