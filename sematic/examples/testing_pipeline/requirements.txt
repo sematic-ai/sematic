@@ -1,3 +1,4 @@
 debugpy
+psutil
 ray>=2.2.0
 sematic[ray]

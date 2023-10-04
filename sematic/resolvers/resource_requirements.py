@@ -52,7 +52,7 @@ class KubernetesSecretMount:
 
 @unique
 class KubernetesTolerationOperator(Enum):
-    """The way that a toleration should be checked to see if it applies
+    """The way that a toleration should be checked to see if it applies.
 
     See Kubernetes documentation for more:
     https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
@@ -77,7 +77,7 @@ class KubernetesTolerationOperator(Enum):
 
 @unique
 class KubernetesTolerationEffect(Enum):
-    """The effect that the toleration is meant to tolerate
+    """The effect that the toleration is meant to tolerate.
 
     See Kubernetes documentation for more:
     https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
@@ -110,7 +110,7 @@ class KubernetesTolerationEffect(Enum):
 
 @dataclass(frozen=True)
 class KubernetesToleration:
-    """Toleration for a node taint, enabling the pod for the function to run on the node
+    """Toleration for a node taint, enabling the pod for the function to run on the node.
 
     See Kubernetes documentation for more:
     https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
@@ -142,7 +142,7 @@ class KubernetesToleration:
     toleration_seconds: Optional[int] = None
 
     def to_api_keyword_args(self) -> Dict[str, Optional[Union[str, int]]]:
-        """Convert to the format for kwargs the API python client API for tolerations"""
+        """Convert to the format for kwargs the API python client API for tolerations."""
         effect: Optional[str] = self.effect.value
         if self.effect == KubernetesTolerationEffect.All:
             # the actual API makes "all" the default behavior with no other way to
@@ -158,7 +158,7 @@ class KubernetesToleration:
         )
 
     def __post_init__(self):
-        """Ensure that the values in the toleration are valid; raise otherwise
+        """Ensure that the values in the toleration are valid; raise otherwise.
 
         Raises
         ------
@@ -203,9 +203,9 @@ class KubernetesCapabilities:
 
     Attributes
     ----------
-    add:
+    add: List[str]
         Added capabilities
-    drop:
+    drop: List[str]
         Dropped capabilities
     """
 
@@ -222,17 +222,17 @@ class KubernetesSecurityContext:
 
     Attributes
     ----------
-    allow_privilege_escalation:
+    allow_privilege_escalation: bool
         AllowPrivilegeEscalation controls whether a process can gain more privileges
         than its parent process. This bool directly controls if the no_new_privs
         flag will be set on the container process. AllowPrivilegeEscalation is true
         always when the container is: 1) run as Privileged 2) has CAP_SYS_ADMIN Note
         that this field cannot be set when spec.os.name is windows.
-    privileged:
+    privileged: bool
         Run container in privileged mode. Processes in privileged containers are
         essentially equivalent to root on the host. Defaults to false. Note that
         this field cannot be set when spec.os.name is windows.
-    capabilities:
+    capabilities: KubernetesCapabilities
         The capabilities to add/drop when running containers. Defaults to the default
         set of capabilities granted by the container runtime. Note that this field
         cannot be set when spec.os.name is windows.
@@ -244,18 +244,47 @@ class KubernetesSecurityContext:
 
 
 @dataclass(frozen=True)
+class KubernetesHostPathMount:
+    """A "hostPath"-type configuration for a volume to mount on the pod to allow access to
+    the underlying node's file system.
+
+    More details can be found here:
+    https://kubernetes.io/docs/concepts/storage/volumes/#hostpath
+
+    Attributes
+    ----------
+    name: str
+        The name of the volume. Corresponds to the "name" configuration.
+    node_path: str
+        The path on the underlying node to mount into the pod. Corresponds to the "path"
+        configuration.
+    pod_mount_path: str
+        The path where to mount the volume in the pod. Corresponds to the "mountPath"
+        configuration.
+    type: str
+        The type of the volume mount. Corresponds to the "type" configuration. Defaults to
+        the empty string.
+    """
+
+    name: str
+    node_path: str
+    pod_mount_path: str
+    type: str = field(default="")
+
+
+@dataclass(frozen=True)
 class KubernetesResourceRequirements:
     """Information on the Kubernetes resources required.
 
     Attributes
     ----------
     node_selector: Dict[str, str]
-        The kind of Kubernetes node that the job must run on. More detail can
+        The kind of Kubernetes node that the job must run on. More details can
         be found here:
         https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
         The value of this field will be used as the nodeSelector described there.
     requests: Dict[str, str]
-        Requests for resources on a kubernetes pod. More detail can be found
+        Requests for resources on a kubernetes pod. More details can be found
         here:
         https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
         The values used here will apply to both the "requests" and the "limits" of the
@@ -277,6 +306,10 @@ class KubernetesResourceRequirements:
         The Kubernetes security context the job will run with. Note that this
         field will only be respected if ALLOW_CUSTOM_SECURITY_CONTEXTS has been
         enabled by your Sematic administrator.
+    host_path_mounts: List[KubernetesHostPathMount]
+        The "hostPath"-type configurations for volumes to mount on the pod to allow access
+        to the underlying nodes' file systems. More details can be found here:
+        https://kubernetes.io/docs/concepts/storage/volumes/#hostpath
     """
 
     node_selector: Dict[str, str] = field(default_factory=dict)
@@ -284,7 +317,8 @@ class KubernetesResourceRequirements:
     secret_mounts: KubernetesSecretMount = field(default_factory=KubernetesSecretMount)
     tolerations: List[KubernetesToleration] = field(default_factory=list)
     mount_expanded_shared_memory: bool = field(default=False)
-    security_context: Optional[KubernetesSecurityContext] = None
+    security_context: Optional[KubernetesSecurityContext] = field(default=None)
+    host_path_mounts: List[KubernetesHostPathMount] = field(default_factory=list)
 
     def clone(self) -> "KubernetesResourceRequirements":
         """Deep copy these requirements."""

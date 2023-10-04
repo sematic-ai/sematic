@@ -76,7 +76,15 @@ steps (Sematic Functions).
 Pass a `ResourceRequirements` object to the Sematic decorator as follows:
 
 ```python
-from sematic import ResourceRequirements, KubernetesResourceRequirements
+from sematic import (
+    KubernetesCapabilities,
+    KubernetesHostPathMount,
+    KubernetesResourceRequirements,
+    KubernetesSecretMount,
+    KubernetesSecurityContext,
+    KubernetesToleration,
+    ResourceRequirements,
+)
 
 GPU_RESOURCE_REQS = ResourceRequirements(
     kubernetes=KubernetesResourceRequirements(
@@ -87,14 +95,50 @@ GPU_RESOURCE_REQS = ResourceRequirements(
         node_selector={"node.kubernetes.io/instance-type": "g4dn.xlarge"},
 
         # The resource requirements of the job. Information on the format of valid
-        # values can be found here: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-        # the dictionary provided here will be used for both "limits" and "requests".
+        # values can be found here:
+        # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+        # The dictionary provided here will be used for both "limits" and "requests".
         requests={"cpu": "1", "memory": "1Gi"},
+
+        # Requests to take the contents of Kubernetes secrets and expose them as
+        # environment variables or files on disk when running in the cloud.
+        secret_mounts=KubernetesSecretMount(
+            environment_secrets={"a": "b"},
+            file_secret_root_path="/foo/bar",
+            file_secrets={"c": "d"},
+        ),
+        
+        # If your Kubernetes configuration uses node taints to control which workloads
+        # get scheduled on which nodes, this enables control over how your workload
+        # interacts with these node taints. More information can be found here:
+        # https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+        tolerations=KubernetesToleration(key="nvidia.com/gpu"),
 
         # By default, Docker uses a 64MB /dev/shm partition. If this flag is set,
         # a memory-backed tmpfs that expands up to half of the available memory file
         # is used instead.
         mount_expanded_shared_memory=True,
+        
+        # The Kubernetes security context the job will run with. Note that this
+        # field will only be respected if ALLOW_CUSTOM_SECURITY_CONTEXTS has been
+        # enabled by your cluster administrator.
+        security_context=KubernetesSecurityContext(
+            privileged=True,
+            allow_privilege_escalation=True,
+            capabilities=KubernetesCapabilities(add=["SYS_ADMIN"]),
+        ),
+        
+        # The "hostPath"-type configurations for volumes to mount on the pod to allow
+        # access to the underlying nodes' file systems. More details can be found here:
+        # https://kubernetes.io/docs/concepts/storage/volumes/#hostpath
+        host_path_mounts=[
+          KubernetesHostPathMount(
+              name="volume-tmp",
+              node_path="/tmp",
+              pod_mount_path="/host_tmp",
+              type="Directory",
+          ),
+        ],
     )
 )
 

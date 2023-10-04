@@ -1,6 +1,8 @@
 # Standard Library
 import logging
+import os
 import pathlib
+import re
 import time
 import uuid
 from dataclasses import replace
@@ -11,6 +13,7 @@ import kubernetes
 from kubernetes.client.exceptions import ApiException, OpenApiException
 from kubernetes.client.models import (
     V1ContainerStatus,
+    V1HostPathVolumeSource,
     V1Pod,
     V1PodCondition,
     V1Volume,
@@ -35,6 +38,7 @@ from sematic.graph import RerunMode
 from sematic.plugins.storage.s3_storage import S3Storage, S3StorageSettingsVar
 from sematic.resolvers.resource_requirements import (
     KUBERNETES_SECRET_NAME,
+    KubernetesHostPathMount,
     KubernetesResourceRequirements,
     KubernetesSecretMount,
     ResourceRequirements,
@@ -76,6 +80,12 @@ RESOLUTION_RESOURCE_REQUIREMENTS = ResourceRequirements(
 )
 
 DEFAULT_WORKER_SERVICE_ACCOUNT = "default"
+
+# from the kubernetes documentation:
+# > a lowercase RFC 1123 label must consist of lower case alphanumeric characters or '-',
+# > and must start and end with an alphanumeric character (e.g. 'my-name',  or '123-abc',
+# > regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?')
+LABEL_REGEX_PATTERN = re.compile(r"[a-z0-9]([-a-z0-9]*[a-z0-9])?")
 
 
 def _unique_job_id_suffix() -> str:
@@ -580,6 +590,11 @@ def _schedule_kubernetes_job(
                 ),
             )
 
+        for host_path_mount in resource_requirements.kubernetes.host_path_mounts:
+            volume, mount = _host_path_volumes(host_path_mount=host_path_mount)
+            volumes.append(volume)
+            volume_mounts.append(mount)
+
         secret_env_vars.extend(
             _environment_secrets(resource_requirements.kubernetes.secret_mounts)
         )
@@ -876,9 +891,7 @@ def _environment_secrets(
 
 
 def _shared_memory() -> Tuple[V1Volume, V1VolumeMount]:
-    """
-    Returns a memory-backed shared memory partition and mount with a default size.
-    """
+    """Returns a memory-backed shared memory partition and mount with a default size."""
     # the "Memory" medium cannot have a size_limit specified by default;
     # it requires the SizeMemoryBackedVolumes feature gate be activated by the
     # cluster admin - please see
@@ -892,6 +905,50 @@ def _shared_memory() -> Tuple[V1Volume, V1VolumeMount]:
 
     volume = V1Volume(name=volume_name, empty_dir=empty_dir)
     volume_mount = V1VolumeMount(mount_path="/dev/shm", name=volume_name)
+
+    return volume, volume_mount
+
+
+def _host_path_volumes(
+    host_path_mount: KubernetesHostPathMount,
+) -> Tuple[V1Volume, V1VolumeMount]:
+    """Returns the volume and mount for the specified "hostPath" configuration."""
+
+    if not host_path_mount.name:
+        raise ValueError("Host path volume name must not be empty")
+
+    if not re.fullmatch(LABEL_REGEX_PATTERN, host_path_mount.name):
+        raise ValueError(
+            f"Host path volume name must start with an alphanumeric character and only"
+            f"contain alphanumeric characters and dashes. Got: '{host_path_mount.name}'"
+        )
+
+    if host_path_mount.node_path is None or not os.path.isabs(
+        host_path_mount.node_path
+    ):
+        raise ValueError(
+            f"'hostPath' node path must be a valid absolute path. "
+            f"Got: '{host_path_mount.node_path}'"
+        )
+
+    if host_path_mount.pod_mount_path is None or not os.path.isabs(
+        host_path_mount.pod_mount_path
+    ):
+        raise ValueError(
+            f"'hostPath' mount path must be a valid absolute path. "
+            f"Got: '{host_path_mount.pod_mount_path}'"
+        )
+
+    volume = V1Volume(
+        name=host_path_mount.name,
+        host_path=V1HostPathVolumeSource(
+            path=host_path_mount.node_path, type=host_path_mount.type
+        ),
+    )
+
+    volume_mount = V1VolumeMount(
+        mount_path=host_path_mount.pod_mount_path, name=host_path_mount.name
+    )
 
     return volume, volume_mount
 

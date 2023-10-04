@@ -4,6 +4,7 @@ import pytest
 # Sematic
 from sematic.resolvers.resource_requirements import (
     KubernetesCapabilities,
+    KubernetesHostPathMount,
     KubernetesResourceRequirements,
     KubernetesSecretMount,
     KubernetesSecurityContext,
@@ -43,6 +44,14 @@ def test_is_serializable():
                 allow_privilege_escalation=True,
                 capabilities=KubernetesCapabilities(add=["SYS_ADMIN"]),
             ),
+            host_path_mounts=[
+                KubernetesHostPathMount(
+                    name="volume-tmp",
+                    node_path="/tmp",
+                    pod_mount_path="/host_tmp",
+                    type="Directory",
+                ),
+            ],
         )
     )
     encoded = value_to_json_encodable(requirements, ResourceRequirements)

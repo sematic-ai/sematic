@@ -214,6 +214,12 @@ Information on the Kubernetes resources required.
     if your Sematic administrator has enabled the
     `ALLOW_CUSTOM_SECURITY_CONTEXTS` server setting.
 
+- `host_path_mounts`: List[KubernetesHostPathMount]
+
+    The "hostPath"-type configurations for volumes to mount on the pod to allow access to
+    the underlying nodes' file systems. More details can be found here:
+    https://kubernetes.io/docs/concepts/storage/volumes/#hostpath
+
 ### `KubernetesSecretMount`
 
 Information about how to expose Kubernetes secrets when running a Sematic func.
@@ -393,6 +399,35 @@ For more up-to-date documentation, please refer to those docs.
 - `drop`: List[str]
 
     The capabilities to drop.
+
+### `KubernetesHostPathMount`
+
+A "hostPath"-type configuration for a volume to mount on the pod to allow access to the
+underlying node's file system.
+
+More details can be found here:
+https://kubernetes.io/docs/concepts/storage/volumes/#hostpath
+
+#### Parameters
+
+- `name`: str
+
+    The name of the volume. Corresponds to the "name" configuration.
+
+- `node_path`: str
+
+    The path on the underlying node to mount into the pod. Corresponds to the "path"
+    configuration.
+
+- `pod_mount_path`: str
+
+    The path where to mount the volume in the pod. Corresponds to the "mountPath"
+    configuration.
+
+- `type`: str
+
+    The type of the volume mount. Corresponds to the "type" configuration. Defaults to
+    the empty string.
 
 ## Fault tolerance
 
