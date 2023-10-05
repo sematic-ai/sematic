@@ -187,6 +187,8 @@ changes.
               --raise-retry 0.7 \
               --external-resource \
               --expand-shared-memory \
+              --mount-host-path /tmp /test \
+              --mount-host-path /tmp /test2 \
               --cache-namespace test \
               --images \
               --virtual-funcs \
