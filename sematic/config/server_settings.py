@@ -53,6 +53,10 @@ class ServerSettingsVar(AbstractPluginSettingsVar):
     # job runs.
     ALLOW_CUSTOM_SECURITY_CONTEXTS = "ALLOW_CUSTOM_SECURITY_CONTEXTS"
 
+    # Controls whether users can mount underlying Kubernetes node
+    # paths into the Worker pods.
+    ALLOW_HOST_PATH_MOUNTING = "ALLOW_HOST_PATH_MOUNTING"
+
     # GRAFANA
     GRAFANA_PANEL_URL = "GRAFANA_PANEL_URL"
 

@@ -660,17 +660,8 @@ def testing_pipeline(
         k8_host_path_mounts = []
         pod_mount_paths = []
         for node_path, pod_mount_path in mount_host_paths:
-            # from the kubernetes documentation:
-            # > a lowercase RFC 1123 label must consist of lower case alphanumeric
-            # > characters or '-', and must start and end with an alphanumeric character
-            # > (e.g. 'my-name',  or '123-abc', regex used for validation is
-            # > '[a-z0-9]([-a-z0-9]*[a-z0-9])?')
-            name = f"volume{pod_mount_path.replace('/', '-')}"
             host_path_mount = KubernetesHostPathMount(
-                name=name,
-                node_path=node_path,
-                pod_mount_path=pod_mount_path,
-                type="Directory",
+                node_path=node_path, pod_mount_path=pod_mount_path, type="Directory"
             )
             k8_host_path_mounts.append(host_path_mount)
             pod_mount_paths.append(pod_mount_path)

@@ -83,7 +83,7 @@ DEFAULT_WORKER_SERVICE_ACCOUNT = "default"
 
 # from the kubernetes documentation:
 # > a lowercase RFC 1123 label must consist of lower case alphanumeric characters or '-',
-# > and must start and end with an alphanumeric character (e.g. 'my-name',  or '123-abc',
+# > and must start and end with an alphanumeric character (e.g. 'my-name', or '123-abc',
 # > regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?')
 LABEL_REGEX_PATTERN = re.compile(r"[a-z0-9]([-a-z0-9]*[a-z0-9])?")
 
@@ -454,7 +454,6 @@ def _get_pods_for_job(
     The second element of the tuple is a boolean indicating if there was
     an infra failure during pod retrieval (True if there was an error).
     """
-    k8s_pods = None
     has_infra_failure = False
     try:
         k8s_pods = kubernetes.client.CoreV1Api().list_namespaced_pod(
@@ -590,10 +589,20 @@ def _schedule_kubernetes_job(
                 ),
             )
 
-        for host_path_mount in resource_requirements.kubernetes.host_path_mounts:
-            volume, mount = _host_path_volumes(host_path_mount=host_path_mount)
-            volumes.append(volume)
-            volume_mounts.append(mount)
+        if resource_requirements.kubernetes.host_path_mounts:
+            allow_mounting = get_bool_server_setting(
+                ServerSettingsVar.ALLOW_HOST_PATH_MOUNTING, False
+            )
+            if not allow_mounting:
+                raise ValueError(
+                    "User tried to mount host paths for their Sematic function, but "
+                    "ALLOW_HOST_PATH_MOUNTING is not enabled."
+                )
+
+            for host_path_mount in resource_requirements.kubernetes.host_path_mounts:
+                volume, mount = _host_path_volumes(host_path_mount=host_path_mount)
+                volumes.append(volume)
+                volume_mounts.append(mount)
 
         secret_env_vars.extend(
             _environment_secrets(resource_requirements.kubernetes.secret_mounts)
@@ -914,14 +923,9 @@ def _host_path_volumes(
 ) -> Tuple[V1Volume, V1VolumeMount]:
     """Returns the volume and mount for the specified "hostPath" configuration."""
 
-    if not host_path_mount.name:
-        raise ValueError("Host path volume name must not be empty")
-
-    if not re.fullmatch(LABEL_REGEX_PATTERN, host_path_mount.name):
-        raise ValueError(
-            f"Host path volume name must start with an alphanumeric character and only"
-            f"contain alphanumeric characters and dashes. Got: '{host_path_mount.name}'"
-        )
+    _validate_rfc1123_label(
+        label_value=host_path_mount.name, label_name="Host path volume name"
+    )
 
     if host_path_mount.node_path is None or not os.path.isabs(
         host_path_mount.node_path
@@ -994,3 +998,22 @@ def _get_image_pull_secrets() -> Optional[
         )
 
     return [encodable_to_obj(encodable) for encodable in as_encodables]
+
+
+def _validate_rfc1123_label(label_value: str, label_name: str) -> None:
+    """Validates that the specified label value is an acceptable RFC 1123 max 64-character
+    label name that can be used in Kubernetes, raising `ValueError` if not.
+    """
+    if not label_value:
+        raise ValueError(f"{label_name} must not be empty.")
+
+    if len(label_value) > 64:
+        raise ValueError(
+            f"{label_name} must have at most 64 characters. Got: '{label_value}'"
+        )
+
+    if not re.fullmatch(LABEL_REGEX_PATTERN, label_value):
+        raise ValueError(
+            f"{label_name} must start with an alphanumeric character and only contain "
+            f"alphanumeric characters and dashes. Got: '{label_value}'"
+        )
