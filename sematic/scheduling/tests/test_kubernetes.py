@@ -13,6 +13,7 @@ from sematic.config.server_settings import ServerSettingsVar
 from sematic.db.tests.fixtures import make_job
 from sematic.resolvers.resource_requirements import (
     KubernetesCapabilities,
+    KubernetesHostPathMount,
     KubernetesResourceRequirements,
     KubernetesSecretMount,
     KubernetesSecurityContext,
@@ -27,6 +28,7 @@ from sematic.scheduling.job_details import (
     PodSummary,
 )
 from sematic.scheduling.kubernetes import (
+    _host_path_volumes,
     _schedule_kubernetes_job,
     cancel_job,
     refresh_job,
@@ -96,6 +98,20 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
                 allow_privilege_escalation=True,
                 capabilities=KubernetesCapabilities(add=["SYS_ADMIN"]),
             ),
+            host_path_mounts=[
+                KubernetesHostPathMount(
+                    name="volume-tmp1",
+                    node_path="/tmp",
+                    pod_mount_path="/host_tmp1",
+                    type="Directory",
+                ),
+                KubernetesHostPathMount(
+                    name="volume-tmp2",
+                    node_path="/tmp",
+                    pod_mount_path="/host_tmp2",
+                    type="Directory",
+                ),
+            ],
         )
     )
 
@@ -103,6 +119,7 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
         {
             "SEMATIC_CONTAINER_IMAGE": image_uri,
             "ALLOW_CUSTOM_SECURITY_CONTEXTS": "true",
+            "ALLOW_HOST_PATH_MOUNTING": "true",
             "WORKER_IMAGE_PULL_SECRETS": json.dumps([{"name": "foo-secret"}]),
         }
     ):
@@ -122,16 +139,6 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     assert kwargs["namespace"] == namespace
     job = kwargs["body"]
     assert job.spec.template.spec.node_selector == node_selector
-
-    secret_volume = job.spec.template.spec.volumes[0]
-    assert secret_volume.name == "sematic-func-secrets-volume"
-    assert secret_volume.secret.items[0].key == next(iter(file_secrets.keys()))
-    assert secret_volume.secret.items[0].path == next(iter(file_secrets.values()))
-    assert job.spec.template.spec.service_account_name == custom_service_account
-
-    shared_memory_volume = job.spec.template.spec.volumes[1]
-    assert shared_memory_volume.name == "expanded-shared-memory-volume"
-    assert shared_memory_volume.empty_dir.medium == "Memory"
 
     assert len(job.spec.template.spec.image_pull_secrets) == 1
     assert job.spec.template.spec.image_pull_secrets[0].name == "foo-secret"
@@ -159,6 +166,42 @@ def test_schedule_kubernetes_job(k8s_batch_client, mock_kube_config):
     assert container.image == image_uri
     assert container.resources.limits == requests
     assert container.resources.requests == requests
+
+    secret_volume = job.spec.template.spec.volumes[0]
+    assert secret_volume.name == "sematic-func-secrets-volume"
+    assert secret_volume.secret.items[0].key == next(iter(file_secrets.keys()))
+    assert secret_volume.secret.items[0].path == next(iter(file_secrets.values()))
+    assert job.spec.template.spec.service_account_name == custom_service_account
+
+    secret_volume_mount = container.volume_mounts[0]
+    assert secret_volume_mount.mount_path == secret_root
+    assert secret_volume_mount.name == "sematic-func-secrets-volume"
+
+    shared_memory_volume = job.spec.template.spec.volumes[1]
+    assert shared_memory_volume.name == "expanded-shared-memory-volume"
+    assert shared_memory_volume.empty_dir.medium == "Memory"
+
+    secret_volume_mount = container.volume_mounts[1]
+    assert secret_volume_mount.mount_path == "/dev/shm"
+    assert secret_volume_mount.name == "expanded-shared-memory-volume"
+
+    host_path_volume1 = job.spec.template.spec.volumes[2]
+    assert host_path_volume1.name == "volume-tmp1"
+    assert host_path_volume1.host_path.path == "/tmp"
+    assert host_path_volume1.host_path.type == "Directory"
+
+    host_path_volume_mount1 = container.volume_mounts[2]
+    assert host_path_volume_mount1.mount_path == "/host_tmp1"
+    assert host_path_volume_mount1.name == "volume-tmp1"
+
+    host_path_volume2 = job.spec.template.spec.volumes[3]
+    assert host_path_volume2.name == "volume-tmp2"
+    assert host_path_volume2.host_path.path == "/tmp"
+    assert host_path_volume2.host_path.type == "Directory"
+
+    host_path_volume_mount2 = container.volume_mounts[3]
+    assert host_path_volume_mount2.mount_path == "/host_tmp2"
+    assert host_path_volume_mount2.name == "volume-tmp2"
 
     tolerations = job.spec.template.spec.tolerations
     assert len(tolerations) == 2
@@ -224,6 +267,7 @@ def test_schedule_security_context_feature_flag(k8s_batch_client, mock_kube_conf
                 allow_privilege_escalation=True,
                 capabilities=KubernetesCapabilities(add=["SYS_ADMIN"]),
             ),
+            host_path_mounts=[],
         )
     )
 
@@ -233,7 +277,9 @@ def test_schedule_security_context_feature_flag(k8s_batch_client, mock_kube_conf
             "ALLOW_CUSTOM_SECURITY_CONTEXTS": "false",
         }
     ):
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError, match=".* ALLOW_CUSTOM_SECURITY_CONTEXTS is not enabled."
+        ):
             _schedule_kubernetes_job(
                 name=name,
                 image=image_uri,
@@ -606,3 +652,159 @@ def test_schedule_run_job(mock_uuid, mock_schedule_k8s_job):
         resource_requirements=resource_requests,
         args=["--run_id", run_id],
     )
+
+
+@mock.patch("sematic.scheduling.kubernetes.load_kube_config")
+@mock.patch("sematic.scheduling.kubernetes.kubernetes.client.BatchV1Api")
+def test_schedule_host_path_mounting_flag(k8s_batch_client, mock_kube_config):
+    name = "the-name"
+    requests = {"cpu": "42"}
+    node_selector = {"foo": "bar"}
+    environment_secrets = {"api_key_1": "MY_API_KEY"}
+    file_secrets = {"api_key_2": "the_file.txt"}
+    secret_root = "/the-secrets"
+    image_uri = "the-image"
+    namespace = "the-namespace"
+    custom_service_account = "custom-sa"
+    args = ["a", "b", "c"]
+    configured_env_vars = {
+        "SOME_ENV_VAR": "some-env-var-value",
+        "SEMATIC_API_ADDRESS": "http://theurl.com",
+    }
+    api_url_override = "http://urloverride.com"
+
+    resource_requirements = ResourceRequirements(
+        kubernetes=KubernetesResourceRequirements(
+            requests=requests,
+            node_selector=node_selector,
+            secret_mounts=KubernetesSecretMount(
+                environment_secrets=environment_secrets,
+                file_secrets=file_secrets,
+                file_secret_root_path=secret_root,
+            ),
+            tolerations=[
+                KubernetesToleration(
+                    key="foo",
+                    operator=KubernetesTolerationOperator.Equal,
+                    effect=KubernetesTolerationEffect.NoExecute,
+                    value="bar",
+                    toleration_seconds=42,
+                ),
+                KubernetesToleration(),
+            ],
+            mount_expanded_shared_memory=True,
+            security_context=None,
+            host_path_mounts=[
+                KubernetesHostPathMount(
+                    name="volume-tmp1",
+                    node_path="/tmp",
+                    pod_mount_path="/host_tmp1",
+                    type="Directory",
+                ),
+                KubernetesHostPathMount(
+                    name="volume-tmp2",
+                    node_path="/tmp",
+                    pod_mount_path="/host_tmp2",
+                    type="Directory",
+                ),
+            ],
+        )
+    )
+
+    with environment_variables(
+        {"SEMATIC_CONTAINER_IMAGE": image_uri, "ALLOW_HOST_PATH_MOUNTING": "false"}
+    ):
+        with pytest.raises(
+            ValueError, match=".* ALLOW_HOST_PATH_MOUNTING is not enabled."
+        ):
+            _schedule_kubernetes_job(
+                name=name,
+                image=image_uri,
+                environment_vars=configured_env_vars,
+                namespace=namespace,
+                service_account=custom_service_account,
+                resource_requirements=resource_requirements,
+                api_address_override=api_url_override,
+                args=args,
+            )
+
+    with environment_variables(
+        {"SEMATIC_CONTAINER_IMAGE": image_uri, "ALLOW_HOST_PATH_MOUNTING": "true"}
+    ):
+        _schedule_kubernetes_job(
+            name=name,
+            image=image_uri,
+            environment_vars=configured_env_vars,
+            namespace=namespace,
+            service_account=custom_service_account,
+            resource_requirements=resource_requirements,
+            api_address_override=api_url_override,
+            args=args,
+        )
+
+    k8s_batch_client.return_value.create_namespaced_job.assert_called_once()
+
+
+def test_host_path_volumes_validation():
+    with pytest.raises(
+        ValueError,
+        match="Host path volume name must have at most 64 characters.*",
+    ):
+        name = "0123456789012345678901234567890123456789012345678901234567890123456789"
+        _host_path_volumes(
+            KubernetesHostPathMount(
+                name=name,
+                node_path="/tmp",
+                pod_mount_path="/host_tmp",
+            )
+        )
+
+    with pytest.raises(
+        ValueError,
+        match="Host path volume name must start with an alphanumeric.*",
+    ):
+        _host_path_volumes(
+            KubernetesHostPathMount(
+                name="/tmp", node_path="/tmp", pod_mount_path="/host_tmp"
+            )
+        )
+
+    with pytest.raises(
+        ValueError,
+        match=".* only contain alphanumeric characters and dashes.*",
+    ):
+        _host_path_volumes(
+            KubernetesHostPathMount(
+                name="a_b", node_path="/tmp", pod_mount_path="/host_tmp"
+            )
+        )
+
+    with pytest.raises(
+        ValueError,
+        match=".* node path must be a valid absolute path.*",
+    ):
+        _host_path_volumes(
+            KubernetesHostPathMount(node_path="", pod_mount_path="/host_tmp")
+        )
+
+    with pytest.raises(
+        ValueError,
+        match=".* node path must be a valid absolute path.*",
+    ):
+        _host_path_volumes(
+            KubernetesHostPathMount(node_path="abc", pod_mount_path="/host_tmp")
+        )
+
+    with pytest.raises(
+        ValueError,
+        match=".* mount path must be a valid absolute path.*",
+    ):
+        _host_path_volumes(KubernetesHostPathMount(node_path="/tmp", pod_mount_path=""))
+
+    with pytest.raises(
+        ValueError,
+        match=".* mount path must be a valid absolute path.*",
+    ):
+        _host_path_volumes(
+            KubernetesHostPathMount(node_path="/tmp", pod_mount_path="abc")
+        )

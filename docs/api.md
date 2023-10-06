@@ -211,8 +211,15 @@ Information on the Kubernetes resources required.
 - `security_context`: KubernetesSecurityContext
 
     Custom security context for your container to run in. Can ONLY be set
-    if your Sematic administrator has enabled the
-    `ALLOW_CUSTOM_SECURITY_CONTEXTS` server setting.
+    if your Sematic cluster administrator has enabled the
+    `ALLOW_CUSTOM_SECURITY_CONTEXTS` Server setting.
+
+- `host_path_mounts`: List[KubernetesHostPathMount]
+
+    The "hostPath"-type configurations for volumes to mount on the pod to allow access to
+    the underlying nodes' file systems. Can ONLY be used if your Sematic cluster
+    administrator has enabled the `ALLOW_HOST_PATH_MOUNTING` Server setting. More details
+    can be found here: https://kubernetes.io/docs/concepts/storage/volumes/#hostpath
 
 ### `KubernetesSecretMount`
 
@@ -350,7 +357,8 @@ https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
 
 ### `KubernetesSecurityContext`
 
-A custom security context for your Sematic job to run in. The
+A custom security context for your Sematic job to run in. Can ONLY be used if your Sematic
+cluster administrator has enabled the `ALLOW_CUSTOM_SECURITY_CONTEXTS` Server setting. The
 following docs are sourced from the
 [Kubernetes docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#securitycontext-v1-core).
 For more up-to-date documentation, please refer to those docs.
@@ -393,6 +401,38 @@ For more up-to-date documentation, please refer to those docs.
 - `drop`: List[str]
 
     The capabilities to drop.
+
+### `KubernetesHostPathMount`
+
+A "hostPath"-type configuration for a volume to mount on the pod to allow access to the
+underlying node's file system. Can ONLY be used if your Sematic cluster administrator has
+enabled the `ALLOW_HOST_PATH_MOUNTING` Server setting.
+
+More details can be found here:
+https://kubernetes.io/docs/concepts/storage/volumes/#hostpath
+
+#### Parameters
+
+- `node_path`: str
+
+    The path on the underlying node to mount into the pod. Corresponds to the "path"
+    configuration.
+
+- `pod_mount_path`: str
+
+    The path where to mount the volume in the pod. Corresponds to the "mountPath"
+    configuration.
+
+- `name`: str
+
+    The name of the volume. Must be an RFC 1123-compliant max 64-character label.
+    Corresponds to the "name" configuration. If unspecified, or set as None or empty, will
+    default to a label that is auto-generated based on the `pod_mount_path`.
+
+- `type`: str
+
+    The type of the volume mount. Corresponds to the "type" configuration. Defaults to
+    the empty string.
 
 ## Fault tolerance
 

@@ -6,7 +6,7 @@ import argparse
 import logging
 import os
 import sys
-from typing import Dict, Optional
+from typing import Dict
 
 # Third-party
 import debugpy
@@ -14,10 +14,6 @@ import debugpy
 # Sematic
 from sematic import CloudRunner, LocalRunner, SilentRunner
 from sematic.examples.testing_pipeline.pipeline import testing_pipeline
-from sematic.resolvers.resource_requirements import (
-    KubernetesResourceRequirements,
-    ResourceRequirements,
-)
 from sematic.runners.state_machine_runner import StateMachineRunner
 
 logger = logging.getLogger(__name__)
@@ -120,6 +116,11 @@ EXPAND_SHARED_MEMORY_HELP = (
     "KubernetesResourceRequirements configuration containing all the relevant specified "
     "CLI parameters. Defaults to False."
 )
+MOUNT_HOST_PATH_HELP = (
+    "Includes a function that runs on a Kubernetes pod which mounts the specified "
+    "underlying node directory path to the specified pod path, as a Kubernetes "
+    '"hostPath" volume configuration.'
+)
 CACHE_HELP = (
     "The cache namespace to use for funcs whose outputs will be cached. "
     "Defaults to None, which deactivates caching."
@@ -189,6 +190,21 @@ class AppendForkAction(argparse._AppendAction):
         setattr(namespace, self.dest, items)
 
 
+class AppendHostPathAction(argparse._AppendAction):
+    """Custom action to append a Kubernetes "hostPath" volume mount configuration."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values is None or len(values) != 2:
+            raise ValueError(
+                f"Invalid paths for parameter '--mount-host-path': {values}"
+            )
+
+        items = getattr(namespace, self.dest) or []
+        items = items[:]
+        items.append(values)
+        setattr(namespace, self.dest, items)
+
+
 def _required_by(*args: str) -> Dict[str, bool]:
     """Syntactic sugar to specify argparse dependencies between arguments."""
     return {"required": any([arg in sys.argv for arg in args])}
@@ -212,6 +228,7 @@ def _parse_args() -> argparse.Namespace:
         **_required_by(
             "--detach",
             "--expand-shared-memory",
+            "--mount-host-path",
             "--max-parallelism",
             "--oom",
             "--ray-resource",
@@ -308,6 +325,14 @@ def _parse_args() -> argparse.Namespace:
         help=EXPAND_SHARED_MEMORY_HELP,
     )
     parser.add_argument(
+        "--mount-host-path",
+        dest="mount_host_paths",
+        action=AppendHostPathAction,
+        metavar=("node_path", "pod_mount_path"),
+        nargs="*",
+        help=MOUNT_HOST_PATH_HELP,
+    )
+    parser.add_argument(
         "--ray-resource",
         action="store_true",
         default=False,
@@ -375,10 +400,6 @@ def _parse_args() -> argparse.Namespace:
             "Only one of '--silent' or '--cloud' can be used, but both were specified"
         )
 
-    resource_requirements = _get_resource_requirements(args)
-    if resource_requirements is not None:
-        args.resource_requirements = resource_requirements
-
     return args
 
 
@@ -397,21 +418,6 @@ def _get_runner(args: argparse.Namespace) -> StateMachineRunner:
         max_parallelism=args.max_parallelism,
         rerun_from=args.rerun_from,
     )
-
-
-def _get_resource_requirements(
-    args: argparse.Namespace,
-) -> Optional[ResourceRequirements]:
-    """Instantiates ResourceRequirements based on the passed arguments."""
-    # add all new resource requirements here
-    if not args.expand_shared_memory:
-        return None
-
-    k8_resource_requirements = KubernetesResourceRequirements(
-        mount_expanded_shared_memory=args.expand_shared_memory
-    )
-
-    return ResourceRequirements(kubernetes=k8_resource_requirements)
 
 
 def _wait_for_debugger():
