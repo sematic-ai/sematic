@@ -111,7 +111,7 @@ These settings are simply stored in the same `~/.sematic/settings.yaml` file on 
 machine where the user settings are stored:
 
 ```shell
-$ cat ~/.sematic/server.yaml
+$ cat ~/.sematic/settings.yaml
 AWS_S3_BUCKET: XXX
 KUBERNETES_NAMESPACE: default
 SEMATIC_AUTHORIZED_EMAIL_DOMAIN: XXX

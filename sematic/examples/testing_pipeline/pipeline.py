@@ -5,11 +5,14 @@ Flexible-structure pipeline meant to be used in testing.
 import logging
 import os
 import random
+import shutil
 import sys
 import time
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 # Third-party
+import psutil
 import ray
 
 # Sematic
@@ -17,7 +20,11 @@ import sematic
 from sematic.ee.ray import RayCluster, RayNodeConfig, SimpleRayCluster
 from sematic.function import _make_tuple
 from sematic.plugins.external_resource.timed_message import TimedMessage
-from sematic.resolvers.resource_requirements import ResourceRequirements
+from sematic.resolvers.resource_requirements import (
+    KubernetesHostPathMount,
+    KubernetesResourceRequirements,
+    ResourceRequirements,
+)
 from sematic.types import Image, S3Location
 from sematic.types.serialization import get_json_encodable_summary
 
@@ -104,15 +111,51 @@ def add_using_resource(a: float, b: float) -> float:
 
 
 @sematic.func(standalone=True)
-def add_with_resource_requirements(a: float, b: float) -> float:
+def add_with_expanded_shared_memory(a: float, b: float) -> float:
     """
-    Adds two numbers with ResourceRequirements.
+    Adds two numbers with an expanded shared memory partition.
     """
     # Disclaimer: Does not come with ResourceRequirements!
     # You need to specify your own by doing:
-    #   function = add_with_resource_requirements(...)
+    #   function = add_with_*(...)
     #   function.set(resource_requirements=my_resource_requirements)
-    logger.info("Executing: add_with_resource_requirements(a=%s, b=%s)", a, b)
+    logger.info("Executing: add_with_expanded_shared_memory(a=%s, b=%s)", a, b)
+
+    memory_mb = int(psutil.virtual_memory().total / 1024 / 1024)
+    logger.info("System memory capacity: %s MB", memory_mb)
+    root_mb = int(shutil.disk_usage("/")[0] / 1024 / 1024)
+    logger.info("Root partition size: %s MB", root_mb)
+    shm_mb = int(shutil.disk_usage("/dev/shm")[0] / 1024 / 1024)
+    logger.info("Shared memory partition size: %s MB", shm_mb)
+
+    time.sleep(5)
+    return a + b
+
+
+@sematic.func(standalone=True)
+def add_with_host_path_mounts(a: float, b: float, pod_mount_paths: List[str]) -> float:
+    """
+    Adds two numbers with mounted host paths.
+    """
+    # Disclaimer: Does not come with ResourceRequirements!
+    # You need to specify your own by doing:
+    #   function = add_with_*(...)
+    #   function.set(resource_requirements=my_resource_requirements)
+    logger.info(
+        "Executing: add_with_host_path_mounts(a=%s, b=%s, pod_mount_paths=%s)",
+        a,
+        b,
+        pod_mount_paths,
+    )
+
+    for pod_mount_path in pod_mount_paths:
+        with open(Path(pod_mount_path) / "sammy.txt", "wt") as f:
+            f.write("Sammy was here")
+
+        logger.info("Contents of '%s':", pod_mount_path)
+        os.system(f"ls -la {pod_mount_path}")
+        sys.stdout.flush()
+
     time.sleep(5)
     return a + b
 
@@ -452,7 +495,8 @@ def testing_pipeline(
     oom: bool = False,
     external_resource: bool = False,
     ray_resource: bool = False,
-    resource_requirements: Optional[ResourceRequirements] = None,
+    expand_shared_memory: bool = False,
+    mount_host_paths: Optional[List[Tuple[str, str]]] = None,
     cache: bool = False,
     images: bool = False,
     s3_uris: Optional[List[str]] = None,
@@ -503,9 +547,13 @@ def testing_pipeline(
     oom: bool
         Whether to include a function that causes an Out of Memory error.
         Defaults to False.
-    resource_requirements: Optional[ResourceRequirements]
-        If not None, includes a function that runs with the specified requirements.
+    expand_shared_memory: bool
+        Whether to include a function that mounts an expanded shared memory volume.
         Defaults to False.
+    mount_host_paths: Optional[List[Tuple[str, str]]]
+        If not None, includes a function that mounts the specified volumes from the
+        underlying node into the pod, and creates testimony files in each of these
+        locations. Defaults to None.
     external_resource: bool
         Whether to use an external resource. Defaults to False.
     ray_resource: bool
@@ -596,8 +644,36 @@ def testing_pipeline(
         futures.append(add_using_resource(initial_future, 1.0))
         futures.append(add_inline_using_resource(initial_future, 1.0))
 
-    if resource_requirements is not None:
-        future = add_with_resource_requirements(initial_future, 3)
+    if expand_shared_memory:
+        k8_resource_requirements = KubernetesResourceRequirements(
+            mount_expanded_shared_memory=True
+        )
+        resource_requirements = ResourceRequirements(
+            kubernetes=k8_resource_requirements
+        )
+
+        future = add_with_expanded_shared_memory(initial_future, 3)
+        future.set(resource_requirements=resource_requirements)
+        futures.append(future)
+
+    if mount_host_paths:
+        k8_host_path_mounts = []
+        pod_mount_paths = []
+        for node_path, pod_mount_path in mount_host_paths:
+            host_path_mount = KubernetesHostPathMount(
+                node_path=node_path, pod_mount_path=pod_mount_path, type="Directory"
+            )
+            k8_host_path_mounts.append(host_path_mount)
+            pod_mount_paths.append(pod_mount_path)
+
+        k8_resource_requirements = KubernetesResourceRequirements(
+            host_path_mounts=k8_host_path_mounts
+        )
+        resource_requirements = ResourceRequirements(
+            kubernetes=k8_resource_requirements
+        )
+
+        future = add_with_host_path_mounts(initial_future, 3, pod_mount_paths)
         future.set(resource_requirements=resource_requirements)
         futures.append(future)
 
