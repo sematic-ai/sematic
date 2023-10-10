@@ -84,7 +84,7 @@ function PipelineActionMenu(props: { onCancel: () => void }) {
 
     const onCopyShareClick = useCallback(() => {
         navigator.clipboard.writeText(window.location.href);
-        setSnackMessage({ message: "Resolution link copied" });
+        setSnackMessage({ message: "Pipeline Run link copied" });
     }, [setSnackMessage]);
 
     const cancelEnabled = useMemo(
@@ -109,14 +109,14 @@ function PipelineActionMenu(props: { onCancel: () => void }) {
                     onClick={() => onRerunClick(rootRun.id)}
                 >
                     <Typography>Rerun pipeline from scratch.</Typography>
-                    <Typography>Only available for remote resolutions.</Typography>
+                    <Typography>Only available for remote Pipeline Runs.</Typography>
                 </ActionMenuItem>
                 <ActionMenuItem title="Retry from failure" enabled={false} soon>
                     <Typography>Rerun pipeline from where it failed.</Typography>
                     <Typography>Coming soon.</Typography>
                 </ActionMenuItem>
                 <ActionMenuItem title="Copy share link" onClick={onCopyShareClick}>
-                    <Typography>Copy link to this exact resolution.</Typography>
+                    <Typography>Copy link to this exact Pipeline Run.</Typography>
                 </ActionMenuItem>
                 <ActionMenuItem
                     title="Cancel Execution"

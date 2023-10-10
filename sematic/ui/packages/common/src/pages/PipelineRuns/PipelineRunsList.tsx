@@ -73,8 +73,8 @@ const PipelineRunsList = (props: PipelineRunsListProps) => {
         isLoaded={isLoaded}
         hasFilters={hasFilters}
         totalRuns={totalRuns}
-        singularNoun={"Resolution"}
-        pluralNoun={"Resolutions"}
+        singularNoun={"Pipeline Run"}
+        pluralNoun={"Pipeline Runs"}
         error={error}
         currentPage={page}
         totalPages={totalPages}
