@@ -103,8 +103,8 @@ const RunStateColorMap: Map<React.FC<StateChipBaseProps>, {
     [CachedStateChip, { color: "success" }],
 ]);
 
-function getRunStateChipComponentByState(futureState: string, orignalRunId: string | null) {
-    if (orignalRunId) {
+function getRunStateChipComponentByState(futureState: string, originalRunId: string | null) {
+    if (originalRunId) {
         return CachedStateChip;
     }
     if (["RESOLVED", "SUCCEEDED"].includes(futureState)) {
@@ -129,8 +129,8 @@ function getRunStateChipComponentByState(futureState: string, orignalRunId: stri
     return null;
 }
 
-export function getRunStateColorByState(futureState: string, orignalRunId: string | null) {
-    const Component = getRunStateChipComponentByState(futureState, orignalRunId);
+export function getRunStateColorByState(futureState: string, originalRunId: string | null) {
+    const Component = getRunStateChipComponentByState(futureState, originalRunId);
     if (!Component) {
         return null;
     }
@@ -140,14 +140,14 @@ export function getRunStateColorByState(futureState: string, orignalRunId: strin
 
 interface RunStateChipProps extends StateChipBaseProps{
     futureState: string;
-    orignalRunId: string | null;
+    originalRunId: string | null;
 }
 
 export default function RunStateChip(props: RunStateChipProps) {
-    const { futureState, orignalRunId, size = "large", animated } = props;
+    const { futureState, originalRunId, size = "large", animated } = props;
 
     const Component = useMemo(
-        () => getRunStateChipComponentByState(futureState, orignalRunId), [futureState, orignalRunId]);
+        () => getRunStateChipComponentByState(futureState, originalRunId), [futureState, originalRunId]);
     if (!Component) {
         return null;
     }

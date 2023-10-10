@@ -22,7 +22,7 @@ function StatusChips({ runs }: { runs: Run[] }) {
     return <>{runs.map((run, index) => <MuiRouterLink key={index} href={getRunUrlPattern(run.id)}>
         <StyledChipContainer key={`${run.id}---${run.future_state}`}>
             <RunStateChip futureState={run.future_state} 
-                orignalRunId={run.original_run_id} size={"large"} />
+                originalRunId={run.original_run_id} size={"large"} />
         </StyledChipContainer></MuiRouterLink>)}
     </>;
 }

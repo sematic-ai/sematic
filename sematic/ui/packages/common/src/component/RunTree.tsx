@@ -51,7 +51,7 @@ const RunTree = (props: RunTreeProps) => {
                     onClick={() => onSelect?.(run.id)}>
                     <ListItemIcon sx={{ minWidth: "20px" }}>
                         <RunStateChip futureState={run.future_state} 
-                            orignalRunId={run.original_run_id} size={"small"} />
+                            originalRunId={run.original_run_id} size={"small"} />
                     </ListItemIcon>
                     <StyledListItemText >{run.name}</StyledListItemText>
                 </ListItemButton>
