@@ -129,7 +129,11 @@ const FunctionSection = () => {
         const completeAt = DateTimeLong(parseJSON((selectedRun.resolved_at || selectedRun.failed_at
             || selectedRun.ended_at) as unknown as string));
 
-        return `${runDuration} on ${completeAt}`;
+        return <>
+            {runDuration}
+            on&nbsp;
+            {completeAt}
+        </>;
     }, [selectedRun]);
 
     const contextMenuAnchor = useRef<HTMLButtonElement>(null);
