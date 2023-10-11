@@ -186,7 +186,7 @@ function RunActionMenu(props: { run: Run; inputEdges: Edge[] }) {
                 enabled={rerunEnabled}
             >
                 <Typography>All upstream runs will use cached outputs.</Typography>
-                <Typography>Only available for cloud resolution.</Typography>
+                <Typography>Only available for cloud Pipeline Run.</Typography>
             </ActionMenuItem>
 
             <ActionMenuItem title="Copy share link" onClick={onCopyShareClick}>

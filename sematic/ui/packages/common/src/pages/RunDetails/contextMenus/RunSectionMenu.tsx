@@ -41,7 +41,7 @@ function RunSectionActionMenu(props: RunSectionActionMenuProps) {
 
     const onCopyShareClick = useCallback(() => {
         navigator.clipboard.writeText(window.location.href);
-        setSnackMessage({ message: "Resolution link copied" });
+        setSnackMessage({ message: "Pipeline Run link copied" });
     }, [setSnackMessage]);
 
     const commands = useMemo(() => {
