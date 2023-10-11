@@ -159,7 +159,7 @@ const FunctionSection = () => {
         <BoxContainer>
             <RunStateContainer>
                 {!isGraphLoaded ? <SmallPlaceholderSkeleton /> : 
-                    <RunStateChip futureState={selectedRun!.future_state}  orignalRunId={selectedRun!.original_run_id} />}
+                    <RunStateChip futureState={selectedRun!.future_state}  originalRunId={selectedRun!.original_run_id} />}
             </RunStateContainer>
             <div className='Info'>
                 <FunctionName>

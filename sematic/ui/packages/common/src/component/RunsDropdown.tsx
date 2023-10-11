@@ -49,7 +49,7 @@ interface ValuePresentationProps {
 const ValuePresentation = (props: ValuePresentationProps) => {
     const { run } = props;
     const stateChip = useMemo(() => <RunStateChip futureState={run.future_state} 
-        orignalRunId={run.original_run_id} size={"large"} />, [run.future_state, run.original_run_id]);
+        originalRunId={run.original_run_id} size={"large"} />, [run.future_state, run.original_run_id]);
     return <StyledBox {...props}>
         {stateChip}
         <Typography variant="code">{run.id.substring(0, 7)}</Typography>

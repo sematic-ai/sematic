@@ -34,7 +34,7 @@ const RunStatusColumn = (props: RunStatusColumnProps) => {
     ), [futureState, createdAt, failedAt, resolvedAt, endedAt, originalRunId]);
 
     return <StyledContainer>
-        <RunStateChip futureState={futureState} orignalRunId={originalRunId} /> {runStateText}
+        <RunStateChip futureState={futureState} originalRunId={originalRunId} /> {runStateText}
     </StyledContainer>;
 }
 
