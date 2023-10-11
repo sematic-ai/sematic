@@ -1,8 +1,9 @@
-numpy
-torch
-torchvision
-torchmetrics
+numpy==1.24.2
+torch==1.13.1
+torchvision==0.14.1
+torchmetrics==0.11.1
 pillow
 plotly
-ray[air]
+pydantic==1.10.4
+ray[air]==2.3.0
 sematic[ray]
