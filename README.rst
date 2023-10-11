@@ -6,8 +6,8 @@
 
 
 
-.. image:: https://img.shields.io/pypi/v/sematic/0.34.1?style=for-the-badge
-   :target: https://img.shields.io/pypi/v/sematic/0.34.1?style=for-the-badge
+.. image:: https://img.shields.io/pypi/v/sematic/0.35.0?style=for-the-badge
+   :target: https://img.shields.io/pypi/v/sematic/0.35.0?style=for-the-badge
    :alt: PyPI
 
 
@@ -191,6 +191,11 @@ Contribute!
 To contribute to Sematic, check out `open issues tagged "good first
 issue" <https://github.com/sematic-ai/sematic/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22>`_\ ,
 and get in touch with us on `Discord <https://discord.gg/4KZJ6kYVax>`_.
+You can find instructions on how to get your development environment set up
+in our `developer docs <./developer-docs/README.md>`_. If you'd like to add
+an example, you may also find
+`this guide <https://docs.sematic.dev/project/contributor-guide/contribute-example>`_
+helpful.
 
 
 .. image:: https://static.scarf.sh/a.png?x-pxid=80c3593f-25a0-4b06-90a1-0b670a6567d4

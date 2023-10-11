@@ -5,6 +5,26 @@ Lines for version numbers should always be formatted as
 with nothing else on the line.
 -->
 * HEAD
+* [0.35.0](https://pypi.org/project/sematic/0.35.0/)
+    * [feature] Add support for deploying to GKE on GCP
+    * [feature] Make the new Dashboard the default version. This had been an opt-in Beta
+      until now. You can still switch back to the old version from your user icon
+    * [feature] Allow pulling images from private image registries that aren't
+      automatically accessible on the basis of the Service Accounts
+    * [improvement] Minor documentation, Dashboard, logging, and internal API validation
+      improvements
+    * [improvement] Minor improvement to Dashboard homepage layout for ergonomics
+    * [improvement] Improve visibility of development documentation
+    * [bugfix] BREAKING CHANGE: Avoid corner-case deployment error by always requiring a
+      dedicated Socket.io microservice instance
+    * [bugfix] Fix a bug where the CLI pipeline cancelation signal was sent to an
+      incorrect Server address
+    * [bugfix] Fix transitive dependency errors
+    * [bugfix] Fix a serialization error for the Union type
+    * [bugfix] Avoid logging an unhelpful stack trace for the CLI version command when the
+      Server is unreachable
+    * [bugfix] Fix incorrect Dashboard rendering of an info message for cached Runs
+    * [bugfix] Propagate concept renaming to user-facing messages in the Dashboard
 * [0.34.1](https://pypi.org/project/sematic/0.34.1/)
     * [feature] Make bazel image generation macro configurable
     * [improvement] Various improvements to `sematic version`
