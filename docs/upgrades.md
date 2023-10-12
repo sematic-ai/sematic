@@ -130,6 +130,11 @@ well. Again, most users have this set to `true` in which case it does not impact
 you. If you were relying on the default to be `false` so you could create your
 own Kubernetes service object for Sematic, you now must explicitly set
 `service.create` to `false` in your helm values.
+
+If you were using a non-dedicated SocketIO deployment (`deployment.socket_io.dedicated`
+set to `false`, or unspecified), you must now adopt the new setup with dedicated API and
+SocketIO servers. You must first uninstall the old deployment, and then deploy the updated
+charts, because a direct upgrade will fail.
  
 ### vX.X.X to v0.32.0
 
