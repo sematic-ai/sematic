@@ -15,10 +15,13 @@ spec:
       sematic.ai/component: api
   template:
     metadata:
-      {{- with .Values.deployment.annotations }}
       annotations:
+      {{- with .Values.deployment.annotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
+        # forces a pod restart when config values change, without this configmap
+        # changes don't cause the deployment to restart pods
+        sematic.ai/config-checksum: {{ tpl (toYaml .Values) . | sha256sum }}
       labels:
         {{- include "sematic-server.selectorLabels" . | nindent 8 }}
         sematic.ai/component: api
