@@ -22,7 +22,7 @@ from sematic.utils.retry import retry
 
 logger = logging.getLogger(__name__)
 
-_PLUGIN_VERSION = (0, 1, 0)
+_PLUGIN_VERSION = (0, 1, 1)
 
 
 class S3ClientMethod(enum.Enum):
@@ -33,6 +33,10 @@ class S3ClientMethod(enum.Enum):
 class S3StorageSettingsVar(AbstractPluginSettingsVar):
     AWS_S3_BUCKET = "AWS_S3_BUCKET"
     AWS_S3_REGION = "AWS_S3_REGION"
+
+    # For S3-compatible services
+    S3_ENDPOINT_URL = "S3_ENDPOINT_URL"
+    S3_TLS_VERIFY = "S3_TLS_VERIFY"
 
 
 class S3Storage(AbstractStorage, AbstractPlugin):
@@ -62,14 +66,34 @@ class S3Storage(AbstractStorage, AbstractPlugin):
 
     @memoized_property
     def _region(self) -> str:
-        return get_plugin_setting(self.__class__, S3StorageSettingsVar.AWS_S3_REGION)
+        return get_plugin_setting(self.__class__, S3StorageSettingsVar.AWS_S3_REGION, None)
+
+    @memoized_property
+    def _endpoint_url(self) -> str:
+        return get_plugin_setting(self.__class__, S3StorageSettingsVar.S3_ENDPOINT_URL, None)
+
+    @memoized_property
+    def _verify(self) -> str:
+        # NB: can also be a path string `path/to/cert/bundle.pem`
+        value = get_plugin_setting(self.__class__, S3StorageSettingsVar.S3_TLS_VERIFY, None)
+        
+        # Coerce to Python type; boto accepts str, boolean, or None (default)
+        if value in ('true', 'True'):
+          return True
+        elif value in ('false', 'False'):
+          return False
+        else:
+          return value
 
     @memoized_property
     def _s3_client(self):
         return boto3.client(
             "s3",
+            endpoint_url=self._endpoint_url,
+            verify=self._verify,
             config=botocore.config.Config(
-                region_name=self._region, signature_version="s3v4"
+                region_name=self._region,
+                signature_version="s3v4",
             ),
         )
 

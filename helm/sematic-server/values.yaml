@@ -7,6 +7,17 @@ aws:
   enabled: true
   storage_bucket: my-s3-bucket # REPLACE ME
   bucket_region: my-s3-region # REPLACE ME
+  
+  # NB: When using a custom S3-compatible storage, you may omit the
+  # bucket_region parameter above
+  # endpoint_url: "https://my-s3-compatible-storage"
+  # tls_verify: "false"
+
+  # For supplying your AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from
+  # an existing secret.
+  secret:
+    enabled: false
+    name: my-s3-secret-name
 
 gcp:
   enabled: false
@@ -35,6 +46,7 @@ github:
   enabled: false  # This feature can only be enabled with Sematic EE.
   github_access_token: github_pat_1234 # REPLACE ME
 
+# TODO maybe should rename to database-secret or scope it under database
 secret:
   create: true
 

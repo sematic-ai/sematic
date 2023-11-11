@@ -167,6 +167,28 @@ When deployed in the cloud, Sematic artifacts need to be stored in an AWS S3
 bucket.  You'll need to set the `aws.enabled` setting to `true`, as well as set
 the `aws.storage_bucket` value to the name of your AWS S3 bucket.
 
+For example:
+
+```shell
+$ kubectl create secret generic <S3 SECRET NAME> \
+    --namespace=<NAMESPACE FOR DEPLOYING> \
+    --from-literal "AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>" \
+    --from-literal "AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY>"
+```
+
+Then in your helm `values.yaml` set `aws.secret.enabled` to `true` and 
+`aws.secret.name` to `<S3 SECRET NAME>`.
+
+###### Custom S3-compatible storage
+
+You may use the `aws.endpoint_url` parameter to provide a url to an 
+S3-compatible storage service.  This URL must be accessible to not just the
+Sematic Server pod but also the Worker pods (for writing artifacts when
+run under `CloudResolver`) as well as machines that use the `LocalResolver`
+(e.g. for local testing) and save artifacts.
+
+TODO: link to blog with minio example?
+
 ##### Authentication
 
 In the `values.yaml` file above, three settings dictate the

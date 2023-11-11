@@ -18,7 +18,15 @@ data:
 {{ end }}
 {{ if .Values.aws.enabled }}
   AWS_S3_BUCKET: {{ .Values.aws.storage_bucket | quote }}
+  {{ if .Values.aws.bucket_region }}
   AWS_S3_REGION: {{ .Values.aws.bucket_region | quote }}
+  {{ end }}
+  {{ if .Values.aws.endpoint_url }}
+  S3_ENDPOINT_URL: {{ .Values.aws.endpoint_url | quote }}
+  {{ end }}
+  {{ if .Values.aws.tls_verify }}
+  S3_TLS_VERIFY: {{ .Values.aws.tls_verify | quote }}
+  {{ end }}
   STORAGE: "sematic.plugins.storage.s3_storage.S3Storage"
 {{ end }}
 {{ if .Values.gcp.storage.enabled }}

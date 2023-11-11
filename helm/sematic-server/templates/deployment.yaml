@@ -51,6 +51,10 @@ spec:
               name: {{ .Release.Name }}
           - secretRef:
               name: {{ .Release.Name }}
+          {{- if .Values.aws.secret.enabled }}
+          - secretRef:
+              name: {{ .Values.aws.secret.name }}
+          {{- end }}
           ports:
             - name: http
               containerPort: 80

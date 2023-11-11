@@ -76,6 +76,8 @@ def __retry_internal(
         try:
             return f()
         except exceptions as e:
+            if isinstance(e, (KeyboardInterrupt,)):
+                raise e
             _tries = max(-1, _tries - 1)
             if _tries == 0:
                 raise

@@ -146,12 +146,21 @@ def store_payloads(payloads: Iterable[UploadPayload]) -> None:
 def _store_bytes(namespace: str, key: str, bytes_: bytes) -> None:
     origin = get_config().server_url
 
-    response = _get(f"/storage/{namespace}/{key}/location?origin={origin}")
+    kwargs = None
+    if True: # TODO: feature flag / user config flag ?
+      kwargs = {}
+      kwargs['verify'] = False
+
+    response = _get(f"/storage/{namespace}/{key}/location?origin={origin}", kwargs=kwargs)
 
     url: str = response["url"]
     headers: Dict[str, str] = response["request_headers"]
 
-    requests.put(url, data=bytes_, headers=headers)
+    # TODO why is this not wrapped in retry logic ... ?
+    verify = True
+    if True: # TODO feature flag ...
+        verify = False
+    requests.put(url, data=bytes_, headers=headers, verify=verify)
 
 
 def _get_artifact_bytes(artifact_id: str) -> bytes:
@@ -166,9 +175,15 @@ def get_future_bytes(future_id: str) -> bytes:
 def _get_stored_bytes(namespace: str, key: str) -> bytes:
     origin = get_config().server_url
 
+    kwargs = None
+    if True: # TODO: feature flag / user config flag ?
+      kwargs = {}
+      kwargs['verify'] = False
+
     return _get(
         f"/storage/{namespace}/{key}/data?origin={origin}",
         decode_json=False,
+        kwargs=kwargs,
     )
 
 
@@ -616,7 +631,8 @@ def _notify_event(namespace: str, event: str, payload: Any = None):
         logger.exception("Error notifying %s/%s", namespace, event)
 
 
-def _get(endpoint: str, decode_json: bool = True, retry: bool = True) -> Any:
+def _get(endpoint: str, decode_json: bool = True, retry: bool = True,
+         kwargs: Optional[Dict[str, Any]] = None) -> Any:
     """
     GETs a payload from the API server.
 
@@ -629,13 +645,15 @@ def _get(endpoint: str, decode_json: bool = True, retry: bool = True) -> Any:
         Whether the returned payload should be JSON-decoded. Defaults to `True`.
     retry: bool
         Whether to use retires in case the connection fails. Defaults to `True`.
-
+    kwargs: Dict[str, Any]
+        Extra kwargs to the `method` to call
+        
     Returns
     -------
     Any:
         The contents obtained form the server, in either raw or JSON-decoded format.
     """
-    response = request(method=requests.get, endpoint=endpoint, retry=retry)
+    response = request(method=requests.get, endpoint=endpoint, retry=retry, kwargs=kwargs)
     logger.debug("[_get] Got response with raw content: %s", response.content)
 
     if decode_json:
@@ -659,7 +677,7 @@ def _post(
         The contents to POST to the specified endpoint. Defaults to `None`.
     retry: bool
         Whether to use retires in case the connection fails. Defaults to `True`.
-
+        
     Returns
     -------
     Any:
@@ -827,7 +845,7 @@ def request(
                 user=user,
                 retry=False,
             ),
-            exceptions=Exception,
+            exceptions=Exception, # FIXME really really needs to ignore keyboardinterrupt
             tries=API_CALLS_TRIES,
             delay=1,
             backoff=API_CALLS_BACKOFF,
@@ -857,13 +875,14 @@ def request(
             backoff=API_CALLS_BACKOFF,
             jitter=0.1,
         )
-    except ConnectionError:
+    except ConnectionError as e:
         raise APIConnectionError(
             (
                 f"Unable to connect to the Sematic API at {get_config().server_url}.\n"
                 f"Make sure the correct server address is set with\n"
                 f"\t$ sematic settings set {UserSettingsVar.SEMATIC_API_ADDRESS.value} "
                 f"<address>"
+                f"Exception: {e}"
             )
         )
 
