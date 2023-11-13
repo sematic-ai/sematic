@@ -367,6 +367,10 @@ def test_timeout():
     assert TimeoutError.__name__ in error_text
 
     runner = SilentRunner()
-    runner._futures = [do_sleep(2).set(timeout_mins=1), do_sleep(2).set(timeout_mins=1)]
+    futures = [do_sleep(2).set(timeout_mins=1), do_sleep(2).set(timeout_mins=1)]
+    start_time = time.time()
+    for future in futures:
+        future.props.scheduled_epoch_time = start_time
+    runner._futures = futures
     seconds_to_timeout, future = runner._get_seconds_to_next_timeout()
     assert abs(seconds_to_timeout - 60) < 5
