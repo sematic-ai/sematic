@@ -260,7 +260,14 @@ class StateMachineRunner(Runner, abc.ABC):
         ]
         if len(remaining_timeout_future_pairs) == 0:
             return None, None
-        return min(remaining_timeout_future_pairs)
+
+        # If there are two futures that timeout at the same time (ex: parallel
+        # runs that used the same timeout duration and started simultaneously),
+        # we fall back to comparing ids lexically to break the tie (future objects
+        # are not comparable, so we use the id).
+        return min(
+            remaining_timeout_future_pairs, key=lambda pair: (pair[0], pair[1].id)
+        )
 
     def _cancel_non_terminal_futures(self):
         for future in self._futures:
