@@ -88,8 +88,8 @@ def test_login_new_user(idinfo, test_client: flask.testing.FlaskClient):  # noqa
 
 
 def test_login_new_user_no_hd(
-    idinfo, test_client: flask.testing.FlaskClient
-):  # noqa: F811
+    idinfo, test_client: flask.testing.FlaskClient  # noqa: F811
+):
     idinfo["hd"] = None
     with mock_server_settings({ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID: "ABC123"}):
         with mock.patch(
