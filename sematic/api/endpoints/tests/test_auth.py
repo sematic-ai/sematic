@@ -87,6 +87,30 @@ def test_login_new_user(idinfo, test_client: flask.testing.FlaskClient):  # noqa
         assert len(user.api_key) > 0
 
 
+def test_login_new_user_no_hd(
+    idinfo, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    idinfo["hd"] = None
+    with mock_server_settings({ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID: "ABC123"}):
+        with mock.patch(
+            "google.oauth2.id_token.verify_oauth2_token", return_value=idinfo
+        ):
+            response = test_client.post("/login/google", json={"token": "abc"})
+
+            returned_user = User.from_json_encodable(
+                response.json["user"]  # type: ignore
+            )
+
+    saved_user = get_user(response.json["user"]["id"])  # type: ignore
+
+    for user in (returned_user, saved_user):
+        assert user.first_name == "Ringo"
+        assert user.last_name == "Starr"
+        assert user.email == "ringo@example.com"
+        assert user.avatar_url == "https://picture"
+        assert len(user.api_key) > 0
+
+
 def test_login_existing_user(
     persisted_user: User, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
@@ -153,6 +177,27 @@ def test_login_invalid_domain(test_client: flask.testing.FlaskClient):  # noqa: 
 def test_login_valid_domain(
     idinfo, test_client: flask.testing.FlaskClient  # noqa: F811
 ):
+    with mock_server_settings(
+        {
+            ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID: "ABC123",
+            ServerSettingsVar.SEMATIC_AUTHORIZED_EMAIL_DOMAIN: (
+                "example.com,example2.com"
+            ),
+        }
+    ):
+        with mock.patch(
+            "google.oauth2.id_token.verify_oauth2_token",
+            return_value=idinfo,
+        ):
+            response = test_client.post("/login/google", json={"token": "abc"})
+
+            assert response.status_code == HTTPStatus.OK
+
+
+def test_login_valid_domain_no_hd(
+    idinfo, test_client: flask.testing.FlaskClient  # noqa: F811
+):
+    idinfo["hd"] = None
     with mock_server_settings(
         {
             ServerSettingsVar.GOOGLE_OAUTH_CLIENT_ID: "ABC123",
