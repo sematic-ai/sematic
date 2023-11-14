@@ -151,7 +151,8 @@ def _store_bytes(namespace: str, key: str, bytes_: bytes) -> None:
     url: str = response["url"]
     headers: Dict[str, str] = response["request_headers"]
 
-    requests.put(url, data=bytes_, headers=headers)
+    put_response = requests.put(url, data=bytes_, headers=headers)
+    put_response.raise_for_status()
 
 
 def _get_artifact_bytes(artifact_id: str) -> bytes:
