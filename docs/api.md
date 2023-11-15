@@ -155,6 +155,13 @@ Executes a pipeline on a Kubernetes cluster.
     is meant to be used for retries or for hotfixes, without needing to re-run the
     entire pipeline again.
 
+- `resources`: ResourceRequirements
+
+    Specifies [resource requiremets](#resource-requirements) that will be used to
+    execute the runner itself. Note that these are the resources that will be
+    available when executing non-standalone (aka inline) runs. Defaults to use
+    half a CPU and 2 Gi of memory.
+
 ### `SilentRunner`
 
 A runner to execute a DAG in memory, without tracking to the DB.
