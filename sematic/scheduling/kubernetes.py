@@ -37,9 +37,9 @@ from sematic.db.models.job import Job
 from sematic.graph import RerunMode
 from sematic.plugins.storage.s3_storage import S3Storage, S3StorageSettingsVar
 from sematic.resolvers.resource_requirements import (
+    DEFAULT_RUNNER_RESOURCES,
     KUBERNETES_SECRET_NAME,
     KubernetesHostPathMount,
-    KubernetesResourceRequirements,
     KubernetesSecretMount,
     ResourceRequirements,
 )
@@ -73,11 +73,6 @@ POD_CONDITION_PRECEDENCE = [
     "PodHasNetwork",
     "PodScheduled",
 ]
-RESOLUTION_RESOURCE_REQUIREMENTS = ResourceRequirements(
-    kubernetes=KubernetesResourceRequirements(
-        requests={"cpu": "500m", "memory": "2Gi"},
-    )
-)
 
 DEFAULT_WORKER_SERVICE_ACCOUNT = "default"
 
@@ -708,6 +703,7 @@ def schedule_resolution_job(
     resolution_id: str,
     image: str,
     user_settings: Dict[str, str],
+    resource_requirements: Optional[ResourceRequirements] = None,
     max_parallelism: Optional[int] = None,
     rerun_from: Optional[str] = None,
     rerun_mode: Optional[RerunMode] = None,
@@ -722,6 +718,7 @@ def schedule_resolution_job(
     socketio_address_override = get_server_setting(
         ServerSettingsVar.SEMATIC_WORKER_SOCKET_IO_ADDRESS, None
     )
+    resource_requirements = resource_requirements or DEFAULT_RUNNER_RESOURCES
 
     job = make_job(
         namespace=namespace,
@@ -760,7 +757,7 @@ def schedule_resolution_job(
         service_account=service_account,
         api_address_override=api_address_override,
         socketio_address_override=socketio_address_override,
-        resource_requirements=RESOLUTION_RESOURCE_REQUIREMENTS,
+        resource_requirements=resource_requirements,
         args=args,
     )
     return job

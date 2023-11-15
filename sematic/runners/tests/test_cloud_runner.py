@@ -29,6 +29,10 @@ from sematic.db.tests.fixtures import (  # noqa: F401
 )
 from sematic.function import func
 from sematic.graph import RerunMode
+from sematic.resolvers.resource_requirements import (
+    KubernetesResourceRequirements,
+    ResourceRequirements,
+)
 from sematic.runners.cloud_runner import CloudRunner
 from sematic.tests.fixtures import valid_client_version  # noqa: F401
 from sematic.utils.env import environment_variables
@@ -89,8 +93,11 @@ def test_simulate_cloud_exec(
     test_db,  # noqa: F811
     valid_client_version,  # noqa: F811
 ):
+    custom_resource_reqs = ResourceRequirements(
+        kubernetes=KubernetesResourceRequirements(requests={"memory": "1000Ti"})
+    )
     # On the user's machine
-    runner = CloudRunner(detach=True)
+    runner = CloudRunner(detach=True, resources=custom_resource_reqs)
 
     future = pipeline()
     images = {
@@ -149,6 +156,7 @@ def test_simulate_cloud_exec(
     pipeline_run = api_client.get_pipeline_run(future.id)
     root_run = api_client.get_run(future.id)
     assert root_run.container_image_uri == images["default"]
+    assert pipeline_run.resource_requirements == custom_resource_reqs
     pipeline_run.status = PipelineRunStatus.SCHEDULED
     api_client.save_pipeline_run(pipeline_run)
     mock_schedule_run.assert_not_called()
