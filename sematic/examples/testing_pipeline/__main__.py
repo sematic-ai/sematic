@@ -158,7 +158,10 @@ EXIT_HELP = (
     "Includes a function which will exit with the specified code. "
     "If specified without a value, defaults to 0. Defaults to None."
 )
-CUSTOM_RUNNER_RESOURCES_HELP = "Specifies custom resources for the CloudRunner."
+CUSTOM_RUNNER_RESOURCES_HELP = (
+    "Specifies custom resources for the CloudRunner. When used, a hard-coded "
+    "custom resource config will be used."
+)
 
 
 class StoreCacheNamespace(argparse.Action):
