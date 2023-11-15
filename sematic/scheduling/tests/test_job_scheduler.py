@@ -100,6 +100,26 @@ def test_schedule_resolution(mock_k8s, resolution: Resolution):
         resolution_id=resolution.root_id,
         image=resolution.container_image_uri,
         user_settings=resolution.settings_env_vars,
+        resource_requirements=None,
+        max_parallelism=3,
+        rerun_from="foobar",
+        rerun_mode=None,
+    )
+
+
+def test_schedule_resolution_custom_resources(mock_k8s, resolution: Resolution):
+    custom_reqs = ResourceRequirements(
+        kubernetes=KubernetesResourceRequirements(requests={"memory": "1000Ti"}),
+    )
+    resolution.resource_requirements = custom_reqs
+    _, job = schedule_resolution(resolution, max_parallelism=3, rerun_from="foobar")
+    assert isinstance(job, Job)
+    mock_k8s.schedule_resolution_job.assert_called_once()
+    mock_k8s.schedule_resolution_job.assert_called_with(
+        resolution_id=resolution.root_id,
+        image=resolution.container_image_uri,
+        user_settings=resolution.settings_env_vars,
+        resource_requirements=custom_reqs,
         max_parallelism=3,
         rerun_from="foobar",
         rerun_mode=None,
