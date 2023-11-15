@@ -369,3 +369,10 @@ class ResourceRequirements:
             self,
             kubernetes=self.kubernetes.clone(),
         )
+
+
+DEFAULT_RUNNER_RESOURCES = ResourceRequirements(
+    kubernetes=KubernetesResourceRequirements(
+        requests={"cpu": "500m", "memory": "2Gi"},
+    )
+)

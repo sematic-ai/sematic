@@ -128,7 +128,7 @@ CREATE TABLE IF NOT EXISTS "resolutions" (
                     user_id character(32),
                     run_command TEXT,
                     build_config TEXT,
-                    organization_id character(32),
+                    organization_id character(32), resource_requirements_json JSONB,
 
                     PRIMARY KEY (root_id),
                     FOREIGN KEY (root_id) REFERENCES runs(id),
@@ -241,4 +241,5 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20230627153433'),
   ('20230706150252'),
   ('20230712105529'),
-  ('20230712121255');
+  ('20230712121255'),
+  ('20231115163910');

@@ -281,6 +281,7 @@ def _schedule_resolution_job(
         resolution_id=resolution.root_id,
         image=resolution.container_image_uri,
         user_settings=resolution.settings_env_vars,
+        resource_requirements=resolution.resource_requirements,
         max_parallelism=max_parallelism,
         rerun_from=rerun_from,
         rerun_mode=rerun_mode,
