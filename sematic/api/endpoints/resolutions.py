@@ -209,6 +209,14 @@ def put_resolution_endpoint(user: Optional[User], resolution_id: str) -> flask.R
     save_resolution(resolution)
     _publish_resolution_event(resolution)
 
+    try:
+        jobs = get_jobs_by_run_id(resolution.root_id, kind=JobKind.resolver)
+        updated_jobs = refresh_jobs(jobs)
+        for job in updated_jobs:
+            save_job(job)
+    except Exception:
+        logger.exception("Error updating jobs for resolution %s", resolution.id)
+
     return flask.jsonify({})
 
 
@@ -676,7 +684,11 @@ def _get_zombie_resolution_ids() -> List[str]:
             jobs = refresh_jobs(original_jobs)
             active_jobs = [job for job in jobs if job.get_latest_status().is_active()]
             if len(active_jobs) > 0:
-                logger.info("Resolution has active job %s", active_jobs[0].name)
+                logger.info(
+                    "Resolution has active job %s: %s",
+                    active_jobs[0].name,
+                    active_jobs[0].details,
+                )
                 continue
             logger.warning(
                 "Resolution %s has no active job; likely a zombie",
@@ -688,6 +700,14 @@ def _get_zombie_resolution_ids() -> List[str]:
                 job for job in refreshed_jobs if job.get_latest_status().is_active()
             ]
             if len(active_run_jobs) > 0:
+                # Why not consider it to be a zombie when the resolution has
+                # no job but a run does? Because (a) the run might still be doing
+                # useful work that we want it to complete (ex: to view, or for reruns)
+                # and (b) it's possible (though not likely) that we happened to catch
+                # the resolution at a moment when its pod was evicted, and it might
+                # recover with a reschedule. Making sure we only consider it a zombie
+                # if it still has runs with active jobs avoids this potential
+                # mis-identification.
                 logger.warning(
                     "Resolution may be defunct but a run job is still active: %s",
                     active_run_jobs[0].name,
