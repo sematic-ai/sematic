@@ -6,7 +6,7 @@ Module keeping all /api/v*/runs/* API endpoints.
 import logging
 from datetime import datetime
 from http import HTTPStatus
-from typing import Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 from urllib.parse import urlencode
 
 # Third-party
@@ -37,6 +37,7 @@ from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
     count_jobs_by_run_id,
+    get_active_resolution_ids,
     get_graph,
     get_jobs_by_run_id,
     get_resolution,
@@ -55,6 +56,7 @@ from sematic.scheduling.job_details import JobKind
 from sematic.scheduling.job_scheduler import (
     StateNotSchedulable,
     clean_jobs,
+    refresh_jobs,
     schedule_resolution,
 )
 from sematic.scheduling.kubernetes import cancel_job
@@ -62,9 +64,14 @@ from sematic.utils.exceptions import ExceptionMetadata
 
 logger = logging.getLogger(__name__)
 
-_GARBAGE_COLLECTION_QUERIES = {
+_GARBAGE_COLLECTION_QUERIES: Dict[str, Callable[[], List[str]]] = {
     "orphaned_jobs": get_resolution_ids_with_orphaned_jobs,
     "stale": get_stale_resolution_ids,
+    # Note: This is replaced below once it's defined.
+    # Unlike the first two, which require only looking in the
+    # server's metadata, to identify zombies we need to check the actual
+    # k8s cluster to see if the runner pod is still around.
+    "zombie": lambda: [],
 }
 
 
@@ -606,11 +613,30 @@ def clean_stale_resolution_endpoint(
 ) -> flask.Response:
     resolution = get_resolution(root_id)
     root_run = get_run(root_id)
+    logger.warning(
+        "Cleaning resolution %s with status %s and root run state %s",
+        root_id,
+        resolution.status,
+        root_run.future_state,
+    )
 
-    if not FutureState[root_run.future_state].is_terminal():  # type: ignore
+    resolution_jobs = get_jobs_by_run_id(root_id, kind=JobKind.resolver)
+    refreshed_resolution_jobs = refresh_jobs(resolution_jobs)
+    has_active_jobs = any(
+        job.get_latest_status().is_active() for job in refreshed_resolution_jobs
+    )
+    metadata_shows_running = not ResolutionStatus[
+        resolution.status  # type: ignore
+    ].is_terminal()
+    is_zombie = metadata_shows_running and not has_active_jobs
+
+    root_run_running = not FutureState[
+        root_run.future_state  # type: ignore
+    ].is_terminal()
+    if root_run_running and not is_zombie:  # type: ignore
         return jsonify_error(
             f"Couldn't clean resolution {root_id} because its root run "
-            f"is in state {root_run.future_state}",
+            f"is in state {root_run.future_state}, and it still has active jobs.",
             status=HTTPStatus.CONFLICT,
         )
 
@@ -624,8 +650,37 @@ def clean_stale_resolution_endpoint(
         state_change = ResolutionStatus.FAILED.value
         save_resolution(resolution)
 
+    for old_job, new_job in zip(resolution_jobs, refreshed_resolution_jobs):
+        if (
+            old_job.get_latest_status().is_active()
+            and not new_job.get_latest_status().is_active()
+        ):
+            save_job(new_job)
+
     return flask.jsonify(
         dict(
             content=state_change,
         )
     )
+
+
+def _get_zombie_resolution_ids() -> List[str]:
+    active_ids = get_active_resolution_ids()
+    zombie_ids = []
+    for active_resolution_id in active_ids:
+        try:
+            original_jobs = get_jobs_by_run_id(
+                active_resolution_id, kind=JobKind.resolver
+            )
+            jobs = refresh_jobs(original_jobs)
+            if not any(job.get_latest_status().is_active() for job in jobs):
+                logger.warning("Resolution %s is a zombie", active_resolution_id)
+                zombie_ids.append(active_resolution_id)
+        except Exception:
+            logger.exception(
+                "Error refreshing jobs for resolution %s", active_resolution_id
+            )
+    return zombie_ids
+
+
+_GARBAGE_COLLECTION_QUERIES["zombie"] = _get_zombie_resolution_ids

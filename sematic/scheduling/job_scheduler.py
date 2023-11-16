@@ -46,7 +46,7 @@ def schedule_run(
     the second element is the new list of jobs associated with the run.
     """
     # before scheduling a new run, update the information about previous runs
-    existing_jobs = _refresh_jobs(existing_jobs)
+    existing_jobs = refresh_jobs(existing_jobs)
     _assert_is_scheduleable(run, resolution, existing_jobs)
     jobs = list(existing_jobs) + [_schedule_job(run, resolution, existing_jobs)]
     run.future_state = FutureState.SCHEDULED
@@ -121,7 +121,7 @@ def update_run_status(
                 future_state,
                 jobs,
             )
-            refreshed_jobs = _refresh_jobs(jobs)
+            refreshed_jobs = refresh_jobs(jobs)
             logger.warning(
                 "After refresh, jobs are: " "%s",
                 refreshed_jobs,
@@ -147,7 +147,7 @@ def update_run_status(
     if len(jobs) < 1:
         raise ValueError("No jobs for run")
 
-    jobs = _refresh_jobs(jobs)
+    jobs = refresh_jobs(jobs)
 
     if future_state.value == FutureState.SCHEDULED.value:
         if jobs[-1].latest_status.is_active():
@@ -227,7 +227,7 @@ def _assert_is_scheduleable(
         raise StateNotSchedulable(f"Run {run.id} has no container image URI")
 
 
-def _refresh_jobs(jobs: Iterable[Job]) -> Sequence[Job]:
+def refresh_jobs(jobs: Iterable[Job]) -> Sequence[Job]:
     """For any jobs that are still active, refresh them from external compute"""
     refreshed = []
     for job in jobs:
