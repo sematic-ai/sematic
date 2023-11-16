@@ -7,8 +7,6 @@ from click.testing import CliRunner
 # Sematic
 from sematic.cli.clean import clean
 
-# clean_zombie_pipeline_runs
-
 
 @mock.patch("sematic.cli.clean.clean_zombie_pipeline_runs")
 @mock.patch("sematic.cli.clean.clean_stale_pipeline_runs")
