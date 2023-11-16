@@ -33,6 +33,13 @@ logger = logging.getLogger(__name__)
     help="Clean pipeline runs whose root runs have stopped.",
 )
 @click.option(
+    "--zombie-pipeline-runs",
+    is_flag=True,
+    show_default=True,
+    default=False,
+    help="Clean pipeline runs whose kubernetes pods are gone.",
+)
+@click.option(
     "--orphaned-jobs",
     is_flag=True,
     show_default=True,
@@ -59,6 +66,7 @@ logger = logging.getLogger(__name__)
 def clean(
     orphaned_runs: bool,
     stale_pipeline_runs: bool,
+    zombie_pipeline_runs: bool,
     orphaned_jobs: bool,
     orphaned_resources: bool,
     force: bool,
@@ -83,6 +91,11 @@ def clean(
     if orphaned_runs:
         echo("Cleaning orphaned runs...")
         messages = clean_orphaned_runs()
+        cleaned_messages.extend(messages)
+
+    if zombie_pipeline_runs:
+        echo("Cleaning zombie pipeline runs...")
+        messages = clean_zombie_pipeline_runs()
         cleaned_messages.extend(messages)
 
     if stale_pipeline_runs:
@@ -121,7 +134,15 @@ def clean_stale_pipeline_runs() -> List[str]:
     return clean_ids(
         ids=api_client.get_pipeline_runs_with_stale_statuses(),
         object_name="pipeline_run",
-        clean_query=api_client.clean_stale_pipeline_run,
+        clean_query=api_client.clean_pipeline_run,
+    )
+
+
+def clean_zombie_pipeline_runs() -> List[str]:
+    return clean_ids(
+        ids=api_client.get_zombie_pipeline_run_ids(),
+        object_name="pipeline_run",
+        clean_query=api_client.clean_pipeline_run,
     )
 
 

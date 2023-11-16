@@ -41,5 +41,6 @@ spec:
             - --stale-pipeline-runs
             - --orphaned-jobs
             - --orphaned-resources
+            - --zombie-pipeline-runs
           restartPolicy: Never
 {{- end }}

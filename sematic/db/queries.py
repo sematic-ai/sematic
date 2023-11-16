@@ -23,7 +23,7 @@ from sematic.db.models.job import Job
 from sematic.db.models.note import Note
 from sematic.db.models.organization import Organization
 from sematic.db.models.organization_user import OrganizationUser
-from sematic.db.models.resolution import Resolution, ResolutionStatus
+from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.runs_external_resource import RunExternalResource
 from sematic.db.models.user import User
@@ -407,6 +407,31 @@ def get_resolution_ids_with_orphaned_jobs() -> List[str]:
                 root_id,
                 status,
                 job_state,
+            )
+            resolution_ids.append(root_id)
+    return resolution_ids
+
+
+def get_active_resolution_ids(
+    resolution_kind: ResolutionKind = ResolutionKind.KUBERNETES,
+) -> List[str]:
+    with db().get_session() as session:
+        query_results = list(
+            session.query(Resolution.root_id, Resolution.status, Resolution.kind)
+            .filter(
+                Resolution.status.in_(
+                    [status.value for status in ResolutionStatus.non_terminal_states()]
+                )
+            )
+            .filter(Resolution.kind == resolution_kind.value)
+            .all()
+        )
+        resolution_ids = []
+        for root_id, status, _ in query_results:
+            logger.info(
+                "Resolution %s is active with status: %s",
+                root_id,
+                status,
             )
             resolution_ids.append(root_id)
     return resolution_ids
