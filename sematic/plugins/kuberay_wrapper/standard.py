@@ -1,7 +1,7 @@
 # Standard Library
 import json
 from copy import deepcopy
-from typing import Any, Dict, Type, Union
+from typing import Any, Dict, Tuple, Type, Union
 
 # Sematic
 from sematic.abstract_plugin import AbstractPluginSettingsVar
@@ -289,9 +289,7 @@ class StandardKuberayWrapper(AbstractKuberayWrapper):
 
     @classmethod
     def _validate_kuberay_version(cls, kuberay_version: str):
-        int_tuple_version = tuple(
-            int(v) for v in kuberay_version.replace("v", "").split(".")
-        )
+        int_tuple_version = _version_tuple_from_string(kuberay_version)
         if (
             len(int_tuple_version) != 3
             or int_tuple_version < MIN_SUPPORTED_KUBERAY_VERSION
@@ -430,3 +428,11 @@ def _get_service_account() -> str:
     return get_server_setting(
         ServerSettingsVar.SEMATIC_WORKER_KUBERNETES_SA, DEFAULT_WORKER_SERVICE_ACCOUNT
     )
+
+
+def _version_tuple_from_string(version_string) -> Tuple[int, ...]:
+    try:
+        version_string = "".join(c for c in version_string if c in "1234567890.")
+        return tuple([int(v) for v in version_string.split(".")])
+    except Exception:
+        raise UnsupportedVersionError(f"Unsupported version {version_string}")
