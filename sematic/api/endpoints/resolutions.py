@@ -622,7 +622,7 @@ def clean_stale_resolution_endpoint(
 ) -> flask.Response:
     resolution = get_resolution(root_id)
     root_run = get_run(root_id)
-    logger.warning(
+    logger.info(
         "Cleaning resolution %s with status %s and root run state %s",
         root_id,
         resolution.status,
@@ -642,6 +642,11 @@ def clean_stale_resolution_endpoint(
     root_run_running = not FutureState[
         root_run.future_state  # type: ignore
     ].is_terminal()
+
+    # If the root run is running, we don't want to risk stopping useful
+    # work. But zombies already are known to not have any jobs for themselves
+    # or their runs (but due to the dead resolver, they might have left runs in
+    # non-terminal states).
     if root_run_running and not is_zombie:  # type: ignore
         return jsonify_error(
             f"Couldn't clean resolution {root_id} because its root run "
@@ -674,6 +679,7 @@ def clean_stale_resolution_endpoint(
 
 
 def _get_zombie_resolution_ids() -> List[str]:
+    """Get ids of resolutions with no jobs still alive, but which appear non-terminal"""
     active_ids = get_active_resolution_ids()
     zombie_ids = []
     for active_resolution_id in active_ids:

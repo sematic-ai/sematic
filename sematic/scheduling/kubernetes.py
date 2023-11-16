@@ -57,7 +57,7 @@ _kubeconfig_loaded = False
 
 
 # If a job still hasn't started after this time, consider it dead.
-_JOB_START_TIMEOUT_SECONDS = 600  # 24 * 3600
+_JOB_START_TIMEOUT_SECONDS = 24 * 3600
 
 # ordered from highest to lowest precedence
 # to be interpreted as: pods with phases earlier in the list are newer

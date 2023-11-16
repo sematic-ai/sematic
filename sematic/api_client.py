@@ -495,7 +495,7 @@ def get_pipeline_runs_with_stale_statuses() -> List[str]:
 
 
 def get_zombie_pipeline_run_ids() -> List[str]:
-    """Get ids of pipeline runs that are non-terminal but have no associated."""
+    """Get ids of pipeline runs that are non-terminal but have no associated pod."""
     return _search_for_gc_pipeline_runs("zombie")
 
 
