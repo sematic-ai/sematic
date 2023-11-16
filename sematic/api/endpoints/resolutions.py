@@ -32,6 +32,7 @@ from sematic.api.endpoints.request_parameters import (
 from sematic.config.settings import MissingSettingsError
 from sematic.config.user_settings import UserSettingsVar
 from sematic.db.models.factories import clone_resolution, clone_root_run
+from sematic.db.models.job import Job
 from sematic.db.models.resolution import InvalidResolution, Resolution, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
@@ -673,14 +674,50 @@ def _get_zombie_resolution_ids() -> List[str]:
                 active_resolution_id, kind=JobKind.resolver
             )
             jobs = refresh_jobs(original_jobs)
-            if not any(job.get_latest_status().is_active() for job in jobs):
-                logger.warning("Resolution %s is a zombie", active_resolution_id)
-                zombie_ids.append(active_resolution_id)
+            active_jobs = [job for job in jobs if job.get_latest_status().is_active()]
+            if len(active_jobs) > 0:
+                logger.info("Resolution has active job %s", active_jobs[0].name)
+                continue
+            logger.warning(
+                "Resolution %s has no active job; likely a zombie",
+                active_resolution_id,
+            )
+            run_jobs = _get_active_jobs_for_resolution_id(active_resolution_id)
+            refreshed_jobs = refresh_jobs(run_jobs)
+            active_run_jobs = [
+                job for job in refreshed_jobs if job.get_latest_status().is_active()
+            ]
+            if len(active_run_jobs) > 0:
+                logger.warning(
+                    "Resolution may be defunct but a run job is still active: %s",
+                    active_run_jobs[0].name,
+                )
+                continue
+            else:
+                logger.warning(
+                    "Jobs for runs of resolution with id %s are no longer active",
+                    active_resolution_id,
+                )
+
+            zombie_ids.append(active_resolution_id)
         except Exception:
             logger.exception(
                 "Error refreshing jobs for resolution %s", active_resolution_id
             )
     return zombie_ids
+
+
+def _get_active_jobs_for_resolution_id(resolution_id: str) -> List[Job]:
+    runs = get_graph(Run.root_id == resolution_id)[0]
+    active_run_jobs: List[Job] = []
+    for run in runs:
+        if FutureState[run.future_state] != FutureState.SCHEDULED:  # type: ignore
+            continue
+        run_jobs = get_jobs_by_run_id(run.id, kind=JobKind.run)
+        active_run_jobs.extend(
+            job for job in run_jobs if job.get_latest_status().is_active()
+        )
+    return active_run_jobs
 
 
 _GARBAGE_COLLECTION_QUERIES["zombie"] = _get_zombie_resolution_ids
