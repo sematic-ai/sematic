@@ -1,6 +1,7 @@
 # Standard Library
 import json
 import logging
+import time
 import uuid
 from enum import Enum
 from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, cast
@@ -981,3 +982,85 @@ def _get_encoded_query_filters(filters: Dict[str, Any]) -> Optional[str]:
         return json.dumps({"AND": [{col: {"eq": filters[col]}} for col in filters]})
 
     return None
+
+
+def block_on_run(
+    run_id: str, delay_seconds: float = 5.0, max_wait_seconds: Optional[float] = None
+) -> None:
+    """Block on the run with the given id until it is in a terminal state.
+
+    Terminal states include successful completion, failure and cancellation.
+    Only successful completion returns without error, other terminal states
+    result in `RuntimeError` being raised.
+
+    Parameters
+    ----------
+    run_id:
+        The id of the run to block on.
+    delay_seconds:
+        The number of seconds between polling for updates to the run's
+        status.
+    max_wait_seconds:
+        If the run has not terminated after this number of seconds, will raise
+        `TimeoutError`. If this is `None`, will wait indefinitely. Note that
+        if `block_on_run` has failed with a timeout, this does NOT mean the run
+        itself has failed or timed out; the run may continue unimpacted. This
+        timeout is only for the block call itself.
+    """
+    terminal_state = None
+    start_time = time.time()
+    while terminal_state is None:
+        state = get_run(run_id).future_state
+
+        if isinstance(state, str):
+            state = FutureState[state]
+
+        if state.is_terminal():
+            terminal_state = state
+        else:
+            time.sleep(delay_seconds)
+        if max_wait_seconds is not None and time.time() - start_time > max_wait_seconds:
+            raise TimeoutError(
+                f"Run {run_id} did not complete in {max_wait_seconds} seconds"
+            )
+
+    if terminal_state is not FutureState.RESOLVED:
+        raise RuntimeError("Run did not complete successfully")
+
+
+def get_run_output(run_id: str) -> Any:
+    """Get the output of the run with the given id.
+
+    The run MUST be complete before this function is called.
+    If the run is still in progress, RuntimeError will be raised.
+
+    Parameters
+    ----------
+    run_id:
+        The id of the run whose output should be retrieved
+
+    Returns
+    -------
+    The output of the run with the given id.
+    """
+    runs, _, edges = get_graph(run_id)
+    runs = [r for r in runs if r.id == run_id]
+    assert len(runs) == 1
+    run = runs[0]
+    state = run.future_state
+
+    if isinstance(state, str):
+        state = FutureState[state]
+
+    if state is not FutureState.RESOLVED:
+        raise RuntimeError("Can't get output of unresolved run.")
+
+    artifact_id = None
+    for edge in edges:
+        if edge.source_run_id == run_id:
+            artifact_id = edge.artifact_id
+
+    if artifact_id is None:
+        raise RuntimeError("Could not find output artifact for run.")
+
+    return get_artifact_value_by_id(artifact_id)
