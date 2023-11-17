@@ -42,6 +42,8 @@ class Future(AbstractFuture):
     * A set of input arguments, that can be concrete values or futures themselves
     """
 
+    __hash__ = AbstractFuture.__hash__
+
     def resolve(
         self, resolver: Optional[Union[Resolver, Runner]] = None, tracking: bool = True
     ) -> Any:
@@ -203,4 +205,31 @@ class Future(AbstractFuture):
     def __itruediv__(self, _):
         raise NotImplementedError(
             "Future.__itruediv__ is not supported yet. Find a workaround at https://docs.sematic.dev/diving-deeper/future-algebra#arithmetic-operations"  # noqa: E501
+        )
+
+    def __eq__(self, _value: Any):
+        if isinstance(_value, AbstractFuture):
+            return super(Future, self).__eq__(_value)
+        raise NotImplementedError(
+            "Future.__eq__ is not supported yet. Find a workaround at https://docs.sematic.dev/diving-deeper/future-algebra#arithmetic-operations"  # noqa: E501
+        )
+
+    def __gt__(self, _):
+        raise NotImplementedError(
+            "Future.__gt__ is not supported yet. Find a workaround at https://docs.sematic.dev/diving-deeper/future-algebra#arithmetic-operations"  # noqa: E501
+        )
+
+    def __ge__(self, _):
+        raise NotImplementedError(
+            "Future.__ge__ is not supported yet. Find a workaround at https://docs.sematic.dev/diving-deeper/future-algebra#arithmetic-operations"  # noqa: E501
+        )
+
+    def __lt__(self, _):
+        raise NotImplementedError(
+            "Future.__lt__ is not supported yet. Find a workaround at https://docs.sematic.dev/diving-deeper/future-algebra#arithmetic-operations"  # noqa: E501
+        )
+
+    def __le__(self, _):
+        raise NotImplementedError(
+            "Future.__le__ is not supported yet. Find a workaround at https://docs.sematic.dev/diving-deeper/future-algebra#arithmetic-operations"  # noqa: E501
         )
