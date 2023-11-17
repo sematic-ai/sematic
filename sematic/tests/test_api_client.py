@@ -261,4 +261,6 @@ def test_block_on_run(mock_get_run: mock.MagicMock):  # noqa: F811
     mock_get_run.side_effect = get_long_run
 
     with pytest.raises(TimeoutError):
-        block_on_run(created_run.id, polling_interval_seconds=0.01, max_wait_seconds=0.5)
+        block_on_run(
+            created_run.id, polling_interval_seconds=0.01, max_wait_seconds=0.5
+        )

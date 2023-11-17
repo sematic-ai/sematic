@@ -1034,8 +1034,10 @@ def block_on_run(
             if state.is_terminal():
                 terminal_state = state
             else:
-                logger.debug("Waiting for run completion for %s s", delay_seconds)
-                time.sleep(delay_seconds)
+                logger.debug(
+                    "Waiting for run completion for %s s", polling_interval_seconds
+                )
+                time.sleep(polling_interval_seconds)
             if (
                 max_wait_seconds is not None
                 and time.time() - start_time > max_wait_seconds
