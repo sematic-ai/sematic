@@ -509,3 +509,21 @@ def test_autoscaling_configuration():
         "cpu": "1500m",
         "memory": "1536Mi",
     }
+
+
+_VERSION_VALIDATION_CASES = [
+    ("", False),
+    ("0.9.9", True),
+    ("0.1.1", False),
+    ("v0.9.9", True),
+    ("1.0.0-rc", True),
+]
+
+
+@pytest.mark.parametrize("version, is_valid", _VERSION_VALIDATION_CASES)
+def test_version_validation(version, is_valid):
+    if is_valid:
+        StandardKuberayWrapper._validate_kuberay_version(version)
+    else:
+        with pytest.raises(UnsupportedVersionError):
+            StandardKuberayWrapper._validate_kuberay_version(version)
