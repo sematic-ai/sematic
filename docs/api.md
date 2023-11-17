@@ -552,6 +552,80 @@ Output content of the table to a `pandas.DataFrame`.
     
     Maximum number of rows to return. Defaults to -1, i.e. all.
 
+## API Client
+
+
+### `sematic.client.block_on_run`
+
+
+Block on the run with the given id until it is in a terminal state.
+
+Terminal states include successful completion, failure and cancelation.
+Only successful completion returns without error, other terminal states
+result in `RuntimeError` being raised.
+
+#### Parameters
+
+- `run_id`: str
+
+    The id of the run to block on.
+
+- `polling_interval_seconds`: float
+
+    The number of seconds between polling for updates to the run's status.
+
+- `max_wait_seconds`: Optional[float]
+
+    If the run has not terminated after this number of seconds, will raise
+    `TimeoutError`. If this is `None` (the default), will wait indefinitely.
+    Note that if `block_on_run` has failed with a timeout, this does NOT mean the run
+    itself has failed or timed out; the run may continue unimpacted unless
+    `cancel_on_exit` is set to `True`.
+
+- `cancel_on_exit`: bool
+
+    Whether to cancel the run when this block exits (ex: due to a timeout or
+    a SIGTERM on the process where the block is occurring). Defaults to `False`.
+
+#### Raises
+
+`RuntimeError`
+
+If the run does not complete successfully.
+
+`TimeoutError`
+
+If the run takes longer than the specified maximum to complete.
+
+### `sematic.client.get_run_output`
+
+
+Get the output of the run with the given id.
+
+The run MUST be complete before this function is called.
+If the run is still in progress, `RuntimeError` will be raised.
+
+#### Parameters
+
+- `run_id`: str
+
+    The id of the run whose output should be retrieved
+
+#### Raises
+
+`RuntimeError`
+
+If the run is still in progress.
+
+#### Returns
+
+`Any`
+
+The output of the run with the given id.
+
+### `sematic.client.get_artifact_value`
+
+See [artifact documentation](/diving-deeper/artifacts#accessing-artifacts)
 
 ## Custom metrics
 

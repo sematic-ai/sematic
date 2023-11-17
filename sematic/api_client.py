@@ -1,6 +1,7 @@
 # Standard Library
 import json
 import logging
+import time
 import uuid
 from enum import Enum
 from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, cast
@@ -986,3 +987,107 @@ def _get_encoded_query_filters(filters: Dict[str, Any]) -> Optional[str]:
         return json.dumps({"AND": [{col: {"eq": filters[col]}} for col in filters]})
 
     return None
+
+
+def block_on_run(
+    run_id: str,
+    polling_interval_seconds: float = 5.0,
+    max_wait_seconds: Optional[float] = None,
+    cancel_on_exit: bool = False,
+) -> None:
+    """Block on the run with the given id until it is in a terminal state.
+
+    Terminal states include successful completion, failure and cancelation.
+    Only successful completion returns without error, other terminal states
+    result in `RuntimeError` being raised.
+
+    Parameters
+    ----------
+    run_id:
+        The id of the run to block on.
+    polling_interval_seconds:
+        The number of seconds between polling for updates to the run's
+        status.
+    max_wait_seconds:
+        If the run has not terminated after this number of seconds, will raise
+        `TimeoutError`. If this is `None`, will wait indefinitely. Note that
+        if `block_on_run` has failed with a timeout, this does NOT mean the run
+        itself has failed or timed out; the run may continue unimpacted unless
+        `cancel_on_exit` is set to `True`.
+    cancel_on_exit:
+        Whether to cancel the run when this block exits (ex: due to a timeout or
+        a SIGTERM on the process where the block is occurring). Defaults to `False`.
+    """
+    terminal_state = None
+    start_time = time.time()
+    root_run_id = None
+
+    try:
+        while terminal_state is None:
+            run = get_run(run_id)
+            state = run.future_state
+            root_run_id = run.root_id
+
+            if isinstance(state, str):
+                state = FutureState[state]
+
+            if state.is_terminal():
+                terminal_state = state
+            else:
+                logger.debug(
+                    "Waiting for run completion for %s s", polling_interval_seconds
+                )
+                time.sleep(polling_interval_seconds)
+            if (
+                max_wait_seconds is not None
+                and time.time() - start_time > max_wait_seconds
+            ):
+                raise TimeoutError(
+                    f"Run {run_id} did not complete in {max_wait_seconds} seconds"
+                )
+
+        if terminal_state is not FutureState.RESOLVED:
+            raise RuntimeError(f"Run terminated in state: {terminal_state}")
+    finally:
+        if terminal_state is None and cancel_on_exit and root_run_id is not None:
+            logger.error("Cancelling run due to error in blocking.")
+            cancel_pipeline_run(root_run_id)
+
+
+def get_run_output(run_id: str) -> Any:
+    """Get the output of the run with the given id.
+
+    The run MUST have completed successfully before this function
+    is called. If the run is still in progress,
+    `RuntimeError` will be raised.
+
+    Parameters
+    ----------
+    run_id:
+        The id of the run whose output should be retrieved
+
+    Returns
+    -------
+    The output of the run with the given id.
+    """
+    runs, _, edges = get_graph(run_id)
+    runs = [r for r in runs if r.id == run_id]
+    assert len(runs) == 1
+    run = runs[0]
+    state = run.future_state
+
+    if isinstance(state, str):
+        state = FutureState[state]
+
+    if state is not FutureState.RESOLVED:
+        raise RuntimeError("Can't get output of unresolved run.")
+
+    artifact_id = None
+    for edge in edges:
+        if edge.source_run_id == run_id:
+            artifact_id = edge.artifact_id
+
+    if artifact_id is None:
+        raise RuntimeError("Could not find output artifact for run.")
+
+    return get_artifact_value_by_id(artifact_id)
