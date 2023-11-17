@@ -133,3 +133,28 @@ def test_idiv():
     with pytest.raises(NotImplementedError, match="docs.sematic.dev"):
         f = foo()
         f /= 1
+
+
+def test_eq():
+    with pytest.raises(NotImplementedError, match="docs.sematic.dev"):
+        foo() == 1
+
+
+def test_ge():
+    with pytest.raises(NotImplementedError, match="docs.sematic.dev"):
+        foo() >= 1
+
+
+def test_gt():
+    with pytest.raises(NotImplementedError, match="docs.sematic.dev"):
+        foo() > 1
+
+
+def test_le():
+    with pytest.raises(NotImplementedError, match="docs.sematic.dev"):
+        foo() <= 1
+
+
+def test_lt():
+    with pytest.raises(NotImplementedError, match="docs.sematic.dev"):
+        foo() < 1
