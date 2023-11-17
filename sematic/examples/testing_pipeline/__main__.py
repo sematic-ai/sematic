@@ -492,7 +492,7 @@ def main() -> None:
         run_output = result
     else:
         logger.info("Blocking to wait for run...")
-        api_client.block_on_run(future.id)
+        api_client.block_on_run(future.id, cancel_on_exit=True)
         run_output = api_client.get_run_output(future.id)
 
     logger.info("Run output: %s", run_output)

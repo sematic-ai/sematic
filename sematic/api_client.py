@@ -990,7 +990,10 @@ def _get_encoded_query_filters(filters: Dict[str, Any]) -> Optional[str]:
 
 
 def block_on_run(
-    run_id: str, delay_seconds: float = 5.0, max_wait_seconds: Optional[float] = None
+    run_id: str,
+    delay_seconds: float = 5.0,
+    max_wait_seconds: Optional[float] = None,
+    cancel_on_exit: bool = False,
 ) -> None:
     """Block on the run with the given id until it is in a terminal state.
 
@@ -1009,28 +1012,44 @@ def block_on_run(
         If the run has not terminated after this number of seconds, will raise
         `TimeoutError`. If this is `None`, will wait indefinitely. Note that
         if `block_on_run` has failed with a timeout, this does NOT mean the run
-        itself has failed or timed out; the run may continue unimpacted. This
-        timeout is only for the block call itself.
+        itself has failed or timed out; the run may continue unimpacted unless
+        `cancel_on_exit` is set to `True`
+    cancel_on_exit:
+        Whether to cancel the run when this block exits (ex: due to a timeout or
+        a SIGTERM on the process where the block is occurring).
     """
     terminal_state = None
     start_time = time.time()
-    while terminal_state is None:
-        state = get_run(run_id).future_state
+    root_run_id = None
 
-        if isinstance(state, str):
-            state = FutureState[state]
+    try:
+        while terminal_state is None:
+            run = get_run(run_id)
+            state = run.future_state
+            root_run_id = run.root_id
 
-        if state.is_terminal():
-            terminal_state = state
-        else:
-            time.sleep(delay_seconds)
-        if max_wait_seconds is not None and time.time() - start_time > max_wait_seconds:
-            raise TimeoutError(
-                f"Run {run_id} did not complete in {max_wait_seconds} seconds"
-            )
+            if isinstance(state, str):
+                state = FutureState[state]
 
-    if terminal_state is not FutureState.RESOLVED:
-        raise RuntimeError("Run did not complete successfully")
+            if state.is_terminal():
+                terminal_state = state
+            else:
+                logger.debug("Waiting for run completion for %s s", delay_seconds)
+                time.sleep(delay_seconds)
+            if (
+                max_wait_seconds is not None
+                and time.time() - start_time > max_wait_seconds
+            ):
+                raise TimeoutError(
+                    f"Run {run_id} did not complete in {max_wait_seconds} seconds"
+                )
+
+        if terminal_state is not FutureState.RESOLVED:
+            raise RuntimeError("Run did not complete successfully")
+    finally:
+        if terminal_state is None and cancel_on_exit and root_run_id is not None:
+            logger.error("Cancelling run due to error in blocking.")
+            cancel_pipeline_run(root_run_id)
 
 
 def get_run_output(run_id: str) -> Any:
