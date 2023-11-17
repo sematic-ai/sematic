@@ -114,6 +114,10 @@ class ResolutionStatus(Enum):
     def terminal_states(cls) -> FrozenSet:
         return _TERMINAL_STATES
 
+    @classmethod
+    def non_terminal_states(cls) -> FrozenSet:
+        return _NON_TERMINAL_STATES
+
 
 _ALLOWED_TRANSITIONS = {
     # Local resolver can jump straight to RUNNING
@@ -146,6 +150,9 @@ _ALLOWED_TRANSITIONS = {
 
 _TERMINAL_STATES = frozenset(
     {state for state in ResolutionStatus if state.is_terminal()}
+)
+_NON_TERMINAL_STATES = frozenset(
+    {state for state in ResolutionStatus if not state.is_terminal()}
 )
 
 

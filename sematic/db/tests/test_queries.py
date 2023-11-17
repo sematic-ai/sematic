@@ -19,12 +19,13 @@ from sematic.db.models.external_resource import ExternalResource
 from sematic.db.models.factories import make_artifact, make_user
 from sematic.db.models.organization import Organization
 from sematic.db.models.organization_user import OrganizationUser
-from sematic.db.models.resolution import Resolution, ResolutionStatus
+from sematic.db.models.resolution import Resolution, ResolutionKind, ResolutionStatus
 from sematic.db.models.run import Run
 from sematic.db.models.user import User
 from sematic.db.queries import (
     count_jobs_by_run_id,
     count_runs,
+    get_active_resolution_ids,
     get_artifact,
     get_external_resource_record,
     get_external_resources_by_run_id,
@@ -711,3 +712,38 @@ def test_save_user(
 
         organizations_users = session.query(OrganizationUser).all()
         assert len(organizations_users) == 2
+
+
+def test_get_active_resolution_ids(
+    test_db, allow_any_run_state_transition  # noqa: F811
+):
+    root_run_1 = make_run(future_state=FutureState.SCHEDULED)
+    resolution_1 = make_resolution(
+        root_id=root_run_1.id, status=ResolutionStatus.RUNNING
+    )
+
+    root_run_2 = make_run(future_state=FutureState.CREATED)
+    resolution_2 = make_resolution(
+        root_id=root_run_2.id, status=ResolutionStatus.CREATED
+    )
+
+    root_run_3 = make_run(future_state=FutureState.RESOLVED)
+    resolution_3 = make_resolution(
+        root_id=root_run_3.id, status=ResolutionStatus.COMPLETE
+    )
+
+    root_run_4 = make_run(future_state=FutureState.SCHEDULED)
+    resolution_4 = make_resolution(
+        root_id=root_run_4.id,
+        status=ResolutionStatus.RUNNING,
+        kind=ResolutionKind.LOCAL,
+    )
+
+    for run in [root_run_1, root_run_2, root_run_3, root_run_4]:  # noqa: F402
+        save_run(run)
+
+    for resolution in [resolution_1, resolution_2, resolution_3, resolution_4]:
+        save_resolution(resolution)
+
+    active_resolution_ids = get_active_resolution_ids(ResolutionKind.KUBERNETES)
+    assert set(active_resolution_ids) == {resolution_1.root_id, resolution_2.root_id}

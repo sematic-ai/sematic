@@ -19,7 +19,7 @@ from sematic.resolvers.resource_requirements import (
 from sematic.scheduling.job_details import JobStatus, KubernetesJobState
 from sematic.scheduling.job_scheduler import (
     StateNotSchedulable,
-    _refresh_jobs,
+    refresh_jobs,
     schedule_resolution,
     schedule_run,
 )
@@ -136,7 +136,7 @@ def test_schedule_resolution_bad_version(mock_k8s, resolution: Resolution):
 def test_refresh_jobs(mock_k8s):
     job1 = make_job(name="job1")
     job2 = make_job(name="job2")
-    refreshed = _refresh_jobs([job1, job2])
+    refreshed = refresh_jobs([job1, job2])
     assert [job.identifier() for job in refreshed] == [
         job1.identifier(),
         job2.identifier(),
@@ -152,7 +152,7 @@ def test_refresh_jobs(mock_k8s):
             last_updated_epoch_seconds=time.time(),
         )
     )
-    refreshed = _refresh_jobs([job1, job2])
+    refreshed = refresh_jobs([job1, job2])
     assert [job.identifier() for job in refreshed] == [
         job1.identifier(),
         job2.identifier(),
