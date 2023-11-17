@@ -8,6 +8,7 @@ from typing import Any, List, Tuple, Type
 import pytest
 
 # Sematic
+from sematic import api_client
 from sematic.abstract_function import FunctionError
 from sematic.abstract_future import AbstractFuture, FutureState
 from sematic.api.tests.fixtures import (  # noqa: F401
@@ -120,6 +121,8 @@ def test_single_function(
             artifact_id=artifact_output.id,
         ),
     }
+
+    assert result == api_client.get_run_output(future.id)
 
 
 @func

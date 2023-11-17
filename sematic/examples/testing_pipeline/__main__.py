@@ -12,7 +12,7 @@ from typing import Dict
 import debugpy
 
 # Sematic
-from sematic import CloudRunner, LocalRunner, SilentRunner
+from sematic import CloudRunner, LocalRunner, SilentRunner, api_client
 from sematic.examples.testing_pipeline.pipeline import testing_pipeline
 from sematic.resolvers.resource_requirements import (
     KubernetesResourceRequirements,
@@ -39,6 +39,10 @@ LOG_LEVEL_HELP = "The log level for the pipeline and Runner. Defaults to INFO."
 CLOUD_HELP = (
     "Whether to run the pipeline in the cloud, or locally. Defaults to False. "
     "Only one of --silent or --cloud are allowed."
+)
+BLOCK_HELP = (
+    "Whether to block until the run is finished. If true, will print the run output "
+    "upon completion."
 )
 SILENT_HELP = (
     "Whether to run the pipeline using the SilentRunner. Defaults to False. "
@@ -248,6 +252,12 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         default=False,
         help=SILENT_HELP,
+    )
+    parser.add_argument(
+        "--block",
+        action="store_true",
+        default=False,
+        help=BLOCK_HELP,
     )
     parser.add_argument(
         "--detach",
@@ -473,6 +483,19 @@ def main() -> None:
     logger.info("Invoking the pipeline...")
     result = runner.run(future)
     logger.info("Pipeline result: %s", result)
+
+    if not args.block:
+        return
+
+    if args.silent:
+        # no need to actually wait; the runner.run was blocking.
+        run_output = result
+    else:
+        logger.info("Blocking to wait for run...")
+        api_client.block_on_run(future.id, cancel_on_exit=True)
+        run_output = api_client.get_run_output(future.id)
+
+    logger.info("Run output: %s", run_output)
 
 
 if __name__ == "__main__":

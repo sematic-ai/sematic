@@ -9,6 +9,7 @@ from unittest import mock
 import pytest
 
 # Sematic
+from sematic.abstract_future import FutureState
 from sematic.api.tests.fixtures import mock_auth  # noqa: F401
 from sematic.api.tests.fixtures import test_client  # noqa: F401
 from sematic.api.tests.fixtures import (  # noqa: F401
@@ -17,6 +18,7 @@ from sematic.api.tests.fixtures import (  # noqa: F401
 from sematic.api_client import (
     IncompatibleClientError,
     _notify_event,
+    block_on_run,
     get_artifact_value_by_id,
     get_runs,
     save_metric_points,
@@ -220,3 +222,45 @@ def test_list_runs(test_db, mock_requests_fixture):  # noqa: F811
     ids_desc = [r.id for r in get_runs(limit=5, order="desc")]
     ids_asc = [r.id for r in get_runs(limit=5, order="asc")]
     assert ids_desc == list(reversed(ids_asc))
+
+
+@mock.patch("sematic.api_client.get_run")
+def test_block_on_run(mock_get_run: mock.MagicMock):  # noqa: F811
+    created_run = make_run(name="foo", future_state=FutureState.SCHEDULED)
+
+    def fake_get_run(run_id):
+        if mock_get_run.call_count >= 3:
+            created_run.future_state = FutureState.RESOLVED
+        return created_run
+
+    mock_get_run.side_effect = fake_get_run
+
+    block_on_run(created_run.id, polling_interval_seconds=0.01, max_wait_seconds=5)
+
+    # unsuccessful run
+    mock_get_run.reset_mock()
+    created_run.future_state = FutureState.SCHEDULED
+
+    def get_unsuccessful_run(run_id):
+        if mock_get_run.call_count >= 3:
+            created_run.future_state = FutureState.FAILED
+        return created_run
+
+    mock_get_run.side_effect = get_unsuccessful_run
+
+    with pytest.raises(RuntimeError):
+        block_on_run(created_run.id, polling_interval_seconds=0.01, max_wait_seconds=5)
+
+    # Long run
+    mock_get_run.reset_mock()
+    created_run.future_state = FutureState.SCHEDULED
+
+    def get_long_run(run_id):
+        return created_run
+
+    mock_get_run.side_effect = get_long_run
+
+    with pytest.raises(TimeoutError):
+        block_on_run(
+            created_run.id, polling_interval_seconds=0.01, max_wait_seconds=0.5
+        )
