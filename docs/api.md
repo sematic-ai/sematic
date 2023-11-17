@@ -625,7 +625,7 @@ The output of the run with the given id.
 
 ### `sematic.client.get_artifact_value`
 
-See [artifact documentation](./artifacts#accessing-artifacts)
+See [artifact documentation](/diving-deeper/artifacts#accessing-artifacts)
 
 ## Custom metrics
 
