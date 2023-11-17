@@ -94,7 +94,7 @@ const TableComponent = <T,>(props: TableComponentProps<T>) => {
     const { getLeafHeaders } = table;
 
     const navigate = useNavigate();
-    const onClick = useCallback((event: React.MouseEvent, row: Row<T>)=>{
+    const onClick = useCallback((event: React.MouseEvent, row: Row<T>) => {
         if (!getRowLink) {
             return;
         }
