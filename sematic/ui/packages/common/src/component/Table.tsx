@@ -5,6 +5,7 @@ import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import { Table, flexRender, Row } from "@tanstack/react-table";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import theme from "src/theme/new";
 
@@ -93,6 +94,17 @@ const TableComponent = <T,>(props: TableComponentProps<T>) => {
     const { getLeafHeaders } = table;
 
     const navigate = useNavigate();
+    const onClick = useCallback((event: React.MouseEvent, row: Row<T>) => {
+        if (!getRowLink) {
+            return;
+        }
+        if(event.metaKey || event.ctrlKey) {
+            // open in a new tab
+            window.open(getRowLink(row), "_blank");
+        } else {
+            navigate(getRowLink(row));
+        }
+    }, [getRowLink, navigate]);
 
     return <TableScroller className={className} data-cy={"RunList"}>
         <TableMui>
@@ -109,7 +121,7 @@ const TableComponent = <T,>(props: TableComponentProps<T>) => {
             </StyledHeader>}
             <TableBody>
                 {table.getRowModel().rows.map(row => (
-                    <TableDataRow key={row.id} onClick={() => !!getRowLink && navigate(getRowLink(row))} data-cy={"runlist-row"}>
+                    <TableDataRow key={row.id} onClick={(event) => onClick(event, row)} data-cy={"runlist-row"}>
                         {row.getVisibleCells().map(cell => (
                             <TableCell key={cell.id} style={(cell.column.columnDef.meta as any).columnStyles}>
                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
