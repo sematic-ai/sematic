@@ -560,7 +560,7 @@ Output content of the table to a `pandas.DataFrame`.
 
 Block on the run with the given id until it is in a terminal state.
 
-Terminal states include successful completion, failure and cancellation.
+Terminal states include successful completion, failure and cancelation.
 Only successful completion returns without error, other terminal states
 result in `RuntimeError` being raised.
 
@@ -570,17 +570,22 @@ result in `RuntimeError` being raised.
 
     The id of the run to block on.
 
-- `delay_seconds`: float
+- `polling_interval_seconds`: float
 
     The number of seconds between polling for updates to the run's status.
 
-- `max_wait_seconds`: float
+- `max_wait_seconds`: Optional[float]
 
     If the run has not terminated after this number of seconds, will raise
-    `TimeoutError`. If this is `None`, will wait indefinitely. Note that
-    if `block_on_run` has failed with a timeout, this does NOT mean the run
-    itself has failed or timed out; the run may continue unimpacted. This
-    timeout is only for the block call itself.
+    `TimeoutError`. If this is `None` (the default), will wait indefinitely.
+    Note that if `block_on_run` has failed with a timeout, this does NOT mean the run
+    itself has failed or timed out; the run may continue unimpacted unless
+    `cancel_on_exit` is set to `True`.
+
+- `cancel_on_exit`: bool
+
+    Whether to cancel the run when this block exits (ex: due to a timeout or
+    a SIGTERM on the process where the block is occurring). Defaults to `False`.
 
 #### Raises
 
@@ -599,10 +604,6 @@ Get the output of the run with the given id.
 
 The run MUST be complete before this function is called.
 If the run is still in progress, `RuntimeError` will be raised.
-
-    Returns
-    -------
-    The output of the run with the given id.
 
 #### Parameters
 

@@ -991,13 +991,13 @@ def _get_encoded_query_filters(filters: Dict[str, Any]) -> Optional[str]:
 
 def block_on_run(
     run_id: str,
-    delay_seconds: float = 5.0,
+    polling_interval_seconds: float = 5.0,
     max_wait_seconds: Optional[float] = None,
     cancel_on_exit: bool = False,
 ) -> None:
     """Block on the run with the given id until it is in a terminal state.
 
-    Terminal states include successful completion, failure and cancellation.
+    Terminal states include successful completion, failure and cancelation.
     Only successful completion returns without error, other terminal states
     result in `RuntimeError` being raised.
 
@@ -1005,7 +1005,7 @@ def block_on_run(
     ----------
     run_id:
         The id of the run to block on.
-    delay_seconds:
+    polling_interval_seconds:
         The number of seconds between polling for updates to the run's
         status.
     max_wait_seconds:
@@ -1013,10 +1013,10 @@ def block_on_run(
         `TimeoutError`. If this is `None`, will wait indefinitely. Note that
         if `block_on_run` has failed with a timeout, this does NOT mean the run
         itself has failed or timed out; the run may continue unimpacted unless
-        `cancel_on_exit` is set to `True`
+        `cancel_on_exit` is set to `True`.
     cancel_on_exit:
         Whether to cancel the run when this block exits (ex: due to a timeout or
-        a SIGTERM on the process where the block is occurring).
+        a SIGTERM on the process where the block is occurring). Defaults to `False`.
     """
     terminal_state = None
     start_time = time.time()
@@ -1045,7 +1045,7 @@ def block_on_run(
                 )
 
         if terminal_state is not FutureState.RESOLVED:
-            raise RuntimeError("Run did not complete successfully")
+            raise RuntimeError(f"Run terminated in state: {terminal_state}")
     finally:
         if terminal_state is None and cancel_on_exit and root_run_id is not None:
             logger.error("Cancelling run due to error in blocking.")
@@ -1055,8 +1055,9 @@ def block_on_run(
 def get_run_output(run_id: str) -> Any:
     """Get the output of the run with the given id.
 
-    The run MUST be complete before this function is called.
-    If the run is still in progress, RuntimeError will be raised.
+    The run MUST have completed successfully before this function
+    is called. If the run is still in progress,
+    `RuntimeError` will be raised.
 
     Parameters
     ----------

@@ -235,7 +235,7 @@ def test_block_on_run(mock_get_run: mock.MagicMock):  # noqa: F811
 
     mock_get_run.side_effect = fake_get_run
 
-    block_on_run(created_run.id, delay_seconds=0.01, max_wait_seconds=5)
+    block_on_run(created_run.id, polling_interval_seconds=0.01, max_wait_seconds=5)
 
     # unsuccessful run
     mock_get_run.reset_mock()
@@ -249,7 +249,7 @@ def test_block_on_run(mock_get_run: mock.MagicMock):  # noqa: F811
     mock_get_run.side_effect = get_unsuccessful_run
 
     with pytest.raises(RuntimeError):
-        block_on_run(created_run.id, delay_seconds=0.01, max_wait_seconds=5)
+        block_on_run(created_run.id, polling_interval_seconds=0.01, max_wait_seconds=5)
 
     # Long run
     mock_get_run.reset_mock()
@@ -261,4 +261,4 @@ def test_block_on_run(mock_get_run: mock.MagicMock):  # noqa: F811
     mock_get_run.side_effect = get_long_run
 
     with pytest.raises(TimeoutError):
-        block_on_run(created_run.id, delay_seconds=0.01, max_wait_seconds=0.5)
+        block_on_run(created_run.id, polling_interval_seconds=0.01, max_wait_seconds=0.5)
